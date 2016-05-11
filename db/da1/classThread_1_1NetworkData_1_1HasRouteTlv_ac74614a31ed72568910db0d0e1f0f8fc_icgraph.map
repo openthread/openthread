@@ -1,0 +1,4 @@
+<map id="Thread::NetworkData::HasRouteTlv::GetEntry" name="Thread::NetworkData::HasRouteTlv::GetEntry">
+<area shape="rect" id="node2" href="$d4/d80/group__core-netdata-core.html#ga91ced18d726877f3bd4a1fbcf2871b22" title="This method strips non&#45;stable Sub&#45;TLVs from a Prefix TLV. " alt="" coords="219,5,473,44"/>
+<area shape="rect" id="node3" href="$dd/dd1/classThread_1_1NetworkData_1_1Local.html#abdce87272d09f0d5aa77b8bc3886c950" title="This method adds a Has Route entry to the Thread Network data. " alt="" coords="254,68,439,107"/>
+</map>

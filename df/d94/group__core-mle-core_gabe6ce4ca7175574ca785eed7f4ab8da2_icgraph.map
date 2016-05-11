@@ -1,0 +1,6 @@
+<map id="Thread::Mle::Mle::BecomeChild" name="Thread::Mle::Mle::BecomeChild">
+<area shape="rect" id="node2" href="$df/d94/group__core-mle-core.html#ga01c7e5a022360a6f35e30d07221dbfea" title="This method starts the MLE protocol operation. " alt="" coords="241,5,398,31"/>
+<area shape="rect" id="node4" href="$df/d94/group__core-mle-core.html#ga965b4a6e302d906d47e6a72b0e2a1e41" title="This method causes the Thread interface to detach from the Thread network. " alt="" coords="231,55,409,93"/>
+<area shape="rect" id="node3" href="$d3/d8e/classThread_1_1ThreadNetif.html#a50d195eeba8c64bdb46767f1113a7a65" title="This method enables the Thread network interface. " alt="" coords="486,5,651,31"/>
+<area shape="rect" id="node5" href="$df/d94/group__core-mle-core.html#ga453d94c377c5825a4a5e8b66a728e591" title="This method sets the Device Mode as reported in the Mode TLV. " alt="" coords="457,61,680,87"/>
+</map>

@@ -1,0 +1,11 @@
+<map id="Thread::Mle::MleRouter::BecomeRouter" name="Thread::Mle::MleRouter::BecomeRouter">
+<area shape="rect" id="node2" href="$dc/d75/classThread_1_1Ip6_1_1UdpSocket.html#aaa9112c22813ceb55338050f0365c598" title="This method opens the UDP socket. " alt="" coords="220,5,382,44"/>
+<area shape="rect" id="node3" href="$d1/d40/classThread_1_1Timer.html#a9acdec1cdf4edf947c563d40871f2bc8" title="This method stops the timer. " alt="" coords="231,68,371,93"/>
+<area shape="rect" id="node5" href="$d4/dcf/classThread_1_1AddressResolver.html#af9e813b464854994a8beda21d91c989c" title="This method clears the EID&#45;to&#45;RLOC cache. " alt="" coords="215,117,387,156"/>
+<area shape="rect" id="node6" href="$d1/d40/classThread_1_1Timer.html#a475731e21b59be6b17b24f5b5e175f62" title="This method schedules the timer to fire a dt milliseconds from now. " alt="" coords="231,180,371,205"/>
+<area shape="rect" id="node4" href="$df/d1f/classThread_1_1TimerScheduler.html#a6bcb9ef68dd35e2006c4273e8c58d48b" title="This static method removes a timer instance to the timer scheduler. " alt="" coords="435,61,600,100"/>
+<area shape="rect" id="node7" href="$d1/d40/classThread_1_1Timer.html#a49ded72fbbf2588e1ddb545fa3f1f9f0" title="This method schedules the timer to fire at dt milliseconds from t0. " alt="" coords="441,155,594,180"/>
+<area shape="rect" id="node9" href="$d1/d40/classThread_1_1Timer.html#a0596072dec177b5e2b494db19800267d" title="This static method returns the current time in milliseconds. " alt="" coords="437,204,598,229"/>
+<area shape="rect" id="node8" href="$df/d1f/classThread_1_1TimerScheduler.html#ab72e28a36c92b4a87296d6d1afb2449e" title="This static method adds a timer instance to the timer scheduler. " alt="" coords="648,155,844,180"/>
+<area shape="rect" id="node10" href="$dd/db6/group__alarm.html#gaf8829e3591e03e29e136685fcdeb3300" title="Get the current current time. " alt="" coords="677,204,815,229"/>
+</map>

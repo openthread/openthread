@@ -1,0 +1,5 @@
+<map id="Thread::Mac::Frame::InitMacHeader" name="Thread::Mac::Frame::InitMacHeader">
+<area shape="rect" id="node2" href="$d5/d19/classThread_1_1Mac_1_1Frame.html#aebe2c17f0f922618d8d9de522ca66ae7" title="This method returns a pointer to the PSDU. " alt="" coords="195,5,338,44"/>
+<area shape="rect" id="node3" href="$d5/d19/classThread_1_1Mac_1_1Frame.html#a1d52519678ee06d6e23481aaad1407e9" title="This method sets the IEEE 802.15.4 PSDU length. " alt="" coords="195,68,338,107"/>
+<area shape="rect" id="node4" href="$d5/d19/classThread_1_1Mac_1_1Frame.html#a518f92d5d97631d411d94f1015c7cf1d" title="This method returns the MAC footer size. " alt="" coords="195,131,338,169"/>
+</map>

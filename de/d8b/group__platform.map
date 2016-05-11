@@ -1,0 +1,8 @@
+<map id="Platform Abstraction" name="Platform Abstraction">
+<area shape="rect" id="node1" href="$d3/de8/group__atomic.html" title="This module includes the platform abstraction to support critical sections. " alt="" coords="199,5,261,31"/>
+<area shape="rect" id="node2" href="$d8/dff/group__logging.html" title="This module includes the platform abstraction for the debug log service. " alt="" coords="195,55,264,80"/>
+<area shape="rect" id="node3" href="$dd/db6/group__alarm.html" title="This module includes the platform abstraction for the alarm service. " alt="" coords="202,104,258,129"/>
+<area shape="rect" id="node4" href="$d0/d5b/group__radio.html" title="This module includes the platform abstraction for radio communication. " alt="" coords="202,153,258,179"/>
+<area shape="rect" id="node5" href="$dd/d10/group__random.html" title="This module includes the platform abstraction to support critical sections. " alt="" coords="194,203,266,228"/>
+<area shape="rect" id="node7" href="$dd/d89/group__serial.html" title="This module includes the platform abstraction for serial communication. " alt="" coords="202,252,258,277"/>
+</map>

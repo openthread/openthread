@@ -1,0 +1,5 @@
+<map id="Thread::Timer::SecToMsec" name="Thread::Timer::SecToMsec">
+<area shape="rect" id="node2" href="$df/d94/group__core-mle-core.html#ga3aa8531c34bed98206a8ce98e8a13a6e" title="This method sets the Device State to Child. " alt="" coords="242,5,422,44"/>
+<area shape="rect" id="node4" href="$df/d94/group__core-mle-core.html#gafb51db61e6e184d664a9e7cc3833dcf4" title="This method sets the MLE Timeout value. " alt="" coords="234,68,431,93"/>
+<area shape="rect" id="node3" href="$df/d94/group__core-mle-core.html#ga453d94c377c5825a4a5e8b66a728e591" title="This method sets the Device Mode as reported in the Mode TLV. " alt="" coords="479,12,702,37"/>
+</map>

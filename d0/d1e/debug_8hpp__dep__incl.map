@@ -1,0 +1,19 @@
+<map id="src/core/common/debug.hpp" name="src/core/common/debug.hpp">
+<area shape="rect" id="node2" href="$d8/d6a/message_8cpp.html" title="This file implements the message buffer pool and message buffers. " alt="" coords="5,85,212,111"/>
+<area shape="rect" id="node3" href="$d0/d54/tasklet_8cpp.html" title="This file implements the tasklet scheduler. " alt="" coords="236,85,427,111"/>
+<area shape="rect" id="node4" href="$dc/dce/aes__ccm_8cpp.html" title="This file implements AES&#45;CCM. " alt="" coords="451,79,585,117"/>
+<area shape="rect" id="node5" href="$d4/dd9/mac_8cpp.html" title="This file implements the subset of IEEE 802.15.4 primitives required for Thread. " alt="" coords="609,85,760,111"/>
+<area shape="rect" id="node6" href="$d3/d9e/mac__frame_8cpp.html" title="This file implements IEEE 802.15.4 header generation and processing. " alt="" coords="784,85,977,111"/>
+<area shape="rect" id="node7" href="$df/d5b/icmp6_8cpp.html" title="This file implements ICMPv6. " alt="" coords="1002,85,1157,111"/>
+<area shape="rect" id="node8" href="$d5/d8d/ip6_8cpp.html" title="This file implements IPv6 networking. " alt="" coords="1181,85,1319,111"/>
+<area shape="rect" id="node9" href="$d9/db7/netif_8cpp.html" title="This file implements IPv6 network interfaces. " alt="" coords="1343,85,1488,111"/>
+<area shape="rect" id="node10" href="$da/d60/openthread_8cpp.html" title="This file implements the top&#45;level interface to the OpenThread stack. " alt="" coords="1511,85,1677,111"/>
+<area shape="rect" id="node11" href="$de/d27/address__resolver_8cpp.html" title="This file implements Thread&#39;s EID&#45;to&#45;RLOC mapping and caching. " alt="" coords="1700,79,1861,117"/>
+<area shape="rect" id="node12" href="$d6/d2b/lowpan_8cpp.html" title="This file implements 6LoWPAN header compression. " alt="" coords="1886,85,2067,111"/>
+<area shape="rect" id="node13" href="$df/d6b/mesh__forwarder_8cpp.html" title="This file implements mesh forwarding of IPv6/6LoWPAN messages. " alt="" coords="2091,79,2238,117"/>
+<area shape="rect" id="node14" href="$d1/df9/mle_8cpp.html" title="This file implements MLE functionality required for the Thread Child, Router and Leader roles..." alt="" coords="2262,85,2422,111"/>
+<area shape="rect" id="node15" href="$d9/d88/mle__router_8cpp.html" title="This file implements MLE functionality required for the Thread Router and Leader roles. " alt="" coords="2446,79,2582,117"/>
+<area shape="rect" id="node16" href="$d9/d20/network__data_8cpp.html" title="This file implements common methods for manipulating Thread Network Data. " alt="" coords="2606,79,2766,117"/>
+<area shape="rect" id="node17" href="$d0/d0f/network__data__leader_8cpp.html" title="This file implements the Thread Network Data managed by the Thread Leader. " alt="" coords="2790,79,2950,117"/>
+<area shape="rect" id="node18" href="$dd/d90/network__data__local_8cpp.html" title="This file implements the local Thread Network Data. " alt="" coords="2974,79,3134,117"/>
+</map>

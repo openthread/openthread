@@ -1,0 +1,6 @@
+<map id="Thread::Ip6::Netif::IsMulticastSubscribed" name="Thread::Ip6::Netif::IsMulticastSubscribed">
+<area shape="rect" id="node2" href="$d9/db1/classThread_1_1Ip6_1_1Address.html#abee97978cb61c9eff664a3a277ac3d8c" title="This method indicates whether or not the IPv6 address is a link&#45;local all nodes multicast address..." alt="" coords="223,5,424,44"/>
+<area shape="rect" id="node3" href="$d9/db1/classThread_1_1Ip6_1_1Address.html#a93d389acbb866c3901ee565f1acaf551" title="This method indicates whether or not the IPv6 address is a realm&#45;local all nodes multicast address..." alt="" coords="216,68,431,107"/>
+<area shape="rect" id="node4" href="$d9/db1/classThread_1_1Ip6_1_1Address.html#a17b1f0739fe8928caf31f86625c36dea" title="This method indicates whether or not the IPv6 address is a link&#45;local all routers multicast address..." alt="" coords="219,131,428,169"/>
+<area shape="rect" id="node5" href="$d9/db1/classThread_1_1Ip6_1_1Address.html#a6cc8ec59ac4c6b8162fba7ca194e0d11" title="This method indicates whether or not the IPv6 address is a realm&#45;local all routers multicast address..." alt="" coords="212,193,435,232"/>
+</map>

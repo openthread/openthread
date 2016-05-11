@@ -1,0 +1,4 @@
+<map id="Thread::Mle::LeaderDataTlv::GetLeaderRouterId" name="Thread::Mle::LeaderDataTlv::GetLeaderRouterId">
+<area shape="rect" id="node2" href="$df/d94/group__core-mle-core.html#gafad11b19276e5719ba2d877327738144" title="This method returns the Router ID of the Leader. " alt="" coords="241,5,444,31"/>
+<area shape="rect" id="node3" href="$df/d94/group__core-mle-core.html#gab96dca53cc6ec25ace821730835d96fc" title="This method retrieves the Leader&#39;s RLOC. " alt="" coords="246,55,438,93"/>
+</map>

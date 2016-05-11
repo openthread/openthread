@@ -1,0 +1,7 @@
+<map id="Thread::NetworkData::NetworkData::RemoveTemporaryData" name="Thread::NetworkData::NetworkData::RemoveTemporaryData">
+<area shape="rect" id="node2" href="$d5/d81/classThread_1_1NetworkData_1_1NetworkDataTlv.html#a30c105cfada5eeffd6a9f99c9187ee84" title="This method returns the Type value. " alt="" coords="316,5,497,44"/>
+<area shape="rect" id="node3" href="$d0/d48/classThread_1_1NetworkData_1_1PrefixTlv.html#af03628b4c4e83e968aaebed104496552" title="This method returns the Sub&#45;TLVs length in bytes. " alt="" coords="307,68,506,107"/>
+<area shape="rect" id="node4" href="$d5/d81/classThread_1_1NetworkData_1_1NetworkDataTlv.html#ae8fa9bac54dd256c88ccc5df8e3b0ef8" title="This method returns the Length value. " alt="" coords="554,97,747,136"/>
+<area shape="rect" id="node5" href="$d5/d81/classThread_1_1NetworkData_1_1NetworkDataTlv.html#af812881954a5608981bfa430eca30731" title="This method returns a pointer to the next Network Data TLV. " alt="" coords="317,183,497,221"/>
+<area shape="rect" id="node6" href="$d5/d81/classThread_1_1NetworkData_1_1NetworkDataTlv.html#acf2d4444312a7b915bfd8005aee13fa8" title="This method indicates whether or not the Stable bit is set. " alt="" coords="317,245,496,284"/>
+</map>

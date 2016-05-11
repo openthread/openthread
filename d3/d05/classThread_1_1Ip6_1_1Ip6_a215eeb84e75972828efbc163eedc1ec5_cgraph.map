@@ -1,0 +1,6 @@
+<map id="Thread::Ip6::Ip6::NewMessage" name="Thread::Ip6::Ip6::NewMessage">
+<area shape="rect" id="node2" href="$dc/d3c/classThread_1_1Message.html#a91be16485334ce1fa61f289b1eeb682a" title="This static method is used to obtain a new message. " alt="" coords="257,31,416,56"/>
+<area shape="rect" id="node3" href="$dc/d3c/classThread_1_1Message.html#acecf07ee065974c8b211c151ea5d6e14" title="This method sets the number of bytes in the message. " alt="" coords="464,5,657,31"/>
+<area shape="rect" id="node5" href="$dc/d3c/classThread_1_1Message.html#a3ab9d6d42d7ae9054eaf0cad0c4e44bb" title="This static method is used to free a message and return all message buffers to the buffer pool..." alt="" coords="481,55,641,80"/>
+<area shape="rect" id="node4" href="$dc/d3c/classThread_1_1Message.html#a2cf440376e834030c38bb2ced4ca49e9" title="This method returns the number of bytes in the message. " alt="" coords="705,5,900,31"/>
+</map>

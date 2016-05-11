@@ -1,0 +1,10 @@
+<map id="Thread::NetworkData::NetworkDataTlv::IsStable" name="Thread::NetworkData::NetworkDataTlv::IsStable">
+<area shape="rect" id="node2" href="$d4/d80/group__core-netdata-core.html#gacaa88ef88dee8b6be852ec7d19b19fa0" title="This method strips non&#45;stable data from the Thread Network Data. " alt="" coords="232,36,487,75"/>
+<area shape="rect" id="node8" href="$d4/d80/group__core-netdata-core.html#ga7abcf2b9efea9803dbb1f54e50524588" title="This method returns a pointer to the stable or non&#45;stable Border Router TLV within a given Prefix TLV..." alt="" coords="250,99,469,137"/>
+<area shape="rect" id="node9" href="$d4/d80/group__core-netdata-core.html#gae6fcdcf78495e36118524d8e858869ae" title="This method returns a pointer to the stable or non&#45;stable Has Route TLV within a given Prefix TLV..." alt="" coords="260,161,459,200"/>
+<area shape="rect" id="node3" href="$d4/d80/group__core-netdata-core.html#ga8772a76056134e6ad65d37cad55225c1" title="This method provides a full or stable copy of the Thread Network Data. " alt="" coords="535,5,746,44"/>
+<area shape="rect" id="node7" href="$d6/d9b/classThread_1_1NetworkData_1_1Leader.html#a428d60927d6f4b4ac8e878e792d2f716" title="This method is used by non&#45;Leader devices to set newly received Network Data from the Leader..." alt="" coords="553,68,728,107"/>
+<area shape="rect" id="node4" href="$df/d94/group__core-mle-core.html#gac150d5a295f9ca73f5b97f4ba551a075" title="This method appends a Network Data TLV to the message. " alt="" coords="794,5,969,44"/>
+<area shape="rect" id="node5" href="$df/d94/group__core-mle-core.html#ga4a192897e2fe5f4b0ab2ed1535fd2657" title="This method generates an MLE Data Response message. " alt="" coords="1017,5,1205,44"/>
+<area shape="rect" id="node6" href="$db/dec/group__core-mle-router.html#gaf13c43af2bf2f9057629cbb74fca0af0" title="This method handles MAC Data Poll messages. " alt="" coords="1253,5,1427,44"/>
+</map>

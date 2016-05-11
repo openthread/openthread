@@ -1,0 +1,5 @@
+<map id="Thread::Mle::AddressRegistrationTlv::GetAddressEntry" name="Thread::Mle::AddressRegistrationTlv::GetAddressEntry">
+<area shape="rect" id="node2" href="$dc/d39/classThread_1_1Mle_1_1Tlv.html#a2ca0e457786d652857a47519d7629bea" title="This method returns the Length value. " alt="" coords="290,5,477,31"/>
+<area shape="rect" id="node3" href="$df/d6c/classThread_1_1Mle_1_1AddressRegistrationEntry.html#a39276c30327ff9905f0dfdf43628ded1" title="This method returns the IPv6 address or IID length. " alt="" coords="273,55,493,93"/>
+<area shape="rect" id="node4" href="$df/d6c/classThread_1_1Mle_1_1AddressRegistrationEntry.html#a71772ad3182275186cb911578c30c614" title="This method indicates whether or not the Compressed flag is set. " alt="" coords="541,55,761,93"/>
+</map>

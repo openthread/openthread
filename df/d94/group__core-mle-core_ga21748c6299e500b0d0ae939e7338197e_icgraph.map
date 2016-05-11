@@ -1,0 +1,5 @@
+<map id="Thread::Mle::Mle::GetRouterId" name="Thread::Mle::Mle::GetRouterId">
+<area shape="rect" id="node2" href="$db/dec/group__core-mle-router.html#ga9eda784c38508449a3427f50529736a0" title="This method returns the next hop towards an RLOC16 destination. " alt="" coords="255,5,416,44"/>
+<area shape="rect" id="node3" href="$db/dec/group__core-mle-router.html#gac7d2542017033898d0bc0f17a65d4656" title="This method checks if the destination is reachable. " alt="" coords="464,35,626,73"/>
+<area shape="rect" id="node4" href="$db/dec/group__core-mle-router.html#gabbfa652c1e43eaef63701c615d7a9ec5" title="This method returns the route cost to a RLOC16. " alt="" coords="255,120,416,159"/>
+</map>

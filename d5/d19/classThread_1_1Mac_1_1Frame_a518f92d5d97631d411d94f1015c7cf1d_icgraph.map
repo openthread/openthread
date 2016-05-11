@@ -1,0 +1,7 @@
+<map id="Thread::Mac::Frame::GetFooterLength" name="Thread::Mac::Frame::GetFooterLength">
+<area shape="rect" id="node2" href="$d5/d19/classThread_1_1Mac_1_1Frame.html#aa5f37ed63238174ba28f29d949accb8b" title="This method initializes the MAC header. " alt="" coords="207,5,349,44"/>
+<area shape="rect" id="node3" href="$d5/d19/classThread_1_1Mac_1_1Frame.html#a2987d830fda299a4d8f45894f19dfa1a" title="This method returns the maximum MAC Payload length for the given MAC header and footer. " alt="" coords="195,68,360,107"/>
+<area shape="rect" id="node4" href="$d5/d19/classThread_1_1Mac_1_1Frame.html#ad71176e2e535e1d386d7ffddb2fb1c5c" title="This method returns the current MAC Payload length. " alt="" coords="207,131,349,169"/>
+<area shape="rect" id="node5" href="$d5/d19/classThread_1_1Mac_1_1Frame.html#af8559daadb5cba55452522c3df961467" title="This method sets the MAC Payload length. " alt="" coords="207,193,349,232"/>
+<area shape="rect" id="node6" href="$d5/d19/classThread_1_1Mac_1_1Frame.html#aa840430bfe9ca943731425c6c011e565" title="This method returns a pointer to the MAC Footer. " alt="" coords="207,256,349,295"/>
+</map>

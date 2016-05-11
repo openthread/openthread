@@ -1,0 +1,34 @@
+<map id="Thread::Message::Free" name="Thread::Message::Free">
+<area shape="rect" id="node2" href="$dc/d3c/classThread_1_1Message.html#a91be16485334ce1fa61f289b1eeb682a" title="This static method is used to obtain a new message. " alt="" coords="216,374,375,399"/>
+<area shape="rect" id="node11" href="$df/d94/group__core-mle-core.html#gac13477847483bba0aeab32fd93a7dbac" title="This method generates an MLE Data Request message. " alt="" coords="1233,678,1421,716"/>
+<area shape="rect" id="node12" href="$df/d94/group__core-mle-core.html#ga4a192897e2fe5f4b0ab2ed1535fd2657" title="This method generates an MLE Data Response message. " alt="" coords="1233,527,1421,566"/>
+<area shape="rect" id="node14" href="$df/d94/group__core-mle-core.html#ga09239c621861382d25163980ab5d983b" title="This method generates an MLE Child Update Request message. " alt="" coords="1232,412,1422,451"/>
+<area shape="rect" id="node23" href="$db/dec/group__core-mle-router.html#ga7126c084ace25827febebc4210928cd4" title="This method generates an MLE Link Reject. " alt="" coords="1246,615,1408,654"/>
+<area shape="rect" id="node24" href="$dd/dd1/classThread_1_1NetworkData_1_1Local.html#a26b8189963fc960e308f137f1d6e31d8" title="This method sends a Server Data Registration message to the Leader. " alt="" coords="990,311,1138,350"/>
+<area shape="rect" id="node25" href="$d3/d05/classThread_1_1Ip6_1_1Ip6.html#a4aa215eb5c0d575403b5ca683e8427c2" title="This static method sends an IPv6 datagram. " alt="" coords="426,304,639,330"/>
+<area shape="rect" id="node29" href="$d3/d05/classThread_1_1Ip6_1_1Ip6.html#a4c138c4d117606c791172ba4788e9ebd" title="This static method processes a received IPv6 datagram. " alt="" coords="213,311,378,350"/>
+<area shape="rect" id="node30" href="$d4/d7c/group__messages.html#ga538d36d69a14bd432d651e062070bc06" title="Free an allocated message buffer. " alt="" coords="476,46,590,71"/>
+<area shape="rect" id="node31" href="$dd/d1d/classThread_1_1MeshForwarder.html#a9a108930edeab22236a5eae4ced14ca6" title="This method disables mesh forwarding and the IEEE 802.15.4 MAC layer. " alt="" coords="214,830,378,868"/>
+<area shape="rect" id="node33" href="$dd/d1d/classThread_1_1MeshForwarder.html#a7668817d03306dadcb36ff9eaad72299" title="This method is called by the address resolver when an EID&#45;to&#45;RLOC mapping has been resolved..." alt="" coords="214,892,378,931"/>
+<area shape="rect" id="node3" href="$d3/d05/classThread_1_1Ip6_1_1Ip6.html#a215eeb84e75972828efbc163eedc1ec5" title="This static method allocates a new message buffer from the buffer pool. " alt="" coords="431,371,634,396"/>
+<area shape="rect" id="node4" href="$dc/ddf/classThread_1_1Ip6_1_1IcmpEcho.html#abe01fa9b5c27147270cae355f78fa552" title="This method sends an ICMPv6 Echo Request message. " alt="" coords="714,360,870,399"/>
+<area shape="rect" id="node5" href="$da/dd7/classThread_1_1Ip6_1_1Icmp.html#a1652c3864180133512f7d6499cd684f2" title="This static method sends an ICMPv6 error message. " alt="" coords="725,212,858,251"/>
+<area shape="rect" id="node8" href="$de/ded/classThread_1_1Ip6_1_1Udp.html#afe746fb2f5c83a97c20e54fdb9c595a3" title="This static method returns a new UDP message with sufficient header space reserved. " alt="" coords="687,475,897,500"/>
+<area shape="rect" id="node6" href="$df/d94/group__core-mle-core.html#ga27bbb63f94a4f59d1249fce8baa830ed" title="This method checks if the destination is reachable. " alt="" coords="945,147,1184,172"/>
+<area shape="rect" id="node7" href="$db/dec/group__core-mle-router.html#gac7d2542017033898d0bc0f17a65d4656" title="This method checks if the destination is reachable. " alt="" coords="1246,166,1408,204"/>
+<area shape="rect" id="node9" href="$d2/d11/group__udp.html#ga72f15295aa34b47739d39924a640a38e" title="Allocate a new message buffer for sending a UDP message. " alt="" coords="995,374,1133,399"/>
+<area shape="rect" id="node10" href="$dc/df5/classThread_1_1Cli_1_1Udp.html#a423f423b8c86c0a7baeab0e22e9624d0" title="This method delivers output to the client. " alt="" coords="1244,283,1410,308"/>
+<area shape="rect" id="node13" href="$db/dec/group__core-mle-router.html#gaf13c43af2bf2f9057629cbb74fca0af0" title="This method handles MAC Data Poll messages. " alt="" coords="1494,531,1668,570"/>
+<area shape="rect" id="node15" href="$df/d94/group__core-mle-core.html#ga01c7e5a022360a6f35e30d07221dbfea" title="This method starts the MLE protocol operation. " alt="" coords="1503,320,1660,346"/>
+<area shape="rect" id="node17" href="$df/d94/group__core-mle-core.html#gafb51db61e6e184d664a9e7cc3833dcf4" title="This method sets the MLE Timeout value. " alt="" coords="1483,370,1680,395"/>
+<area shape="rect" id="node18" href="$df/d94/group__core-mle-core.html#ga453d94c377c5825a4a5e8b66a728e591" title="This method sets the Device Mode as reported in the Mode TLV. " alt="" coords="1470,419,1693,444"/>
+<area shape="rect" id="node19" href="$df/d94/group__core-mle-core.html#gaac7d42ff61704aa43e94dbb781c78c5e" title="This method notifes MLE that the Network Data has changed. " alt="" coords="1496,468,1667,507"/>
+<area shape="rect" id="node16" href="$d3/d8e/classThread_1_1ThreadNetif.html#a50d195eeba8c64bdb46767f1113a7a65" title="This method enables the Thread network interface. " alt="" coords="1762,320,1927,346"/>
+<area shape="rect" id="node20" href="$d6/d9b/classThread_1_1NetworkData_1_1Leader.html#a428d60927d6f4b4ac8e878e792d2f716" title="This method is used by non&#45;Leader devices to set newly received Network Data from the Leader..." alt="" coords="1757,499,1932,538"/>
+<area shape="rect" id="node21" href="$d6/d9b/classThread_1_1NetworkData_1_1Leader.html#a5baddd109ff06b58140e2678e3c97a16" title="This method removes Network Data associated with a given RLOC16. " alt="" coords="1741,436,1948,475"/>
+<area shape="rect" id="node22" href="$db/dec/group__core-mle-router.html#ga179fad5b4b75849e76811006761d2b3e" title="This method release a given Router ID. " alt="" coords="1996,436,2158,475"/>
+<area shape="rect" id="node26" href="$dc/d75/classThread_1_1Ip6_1_1UdpSocket.html#ac4fb0ea0ae514fa0edfeaa91dfbdabca" title="This method sends a UDP message. " alt="" coords="711,298,873,336"/>
+<area shape="rect" id="node27" href="$de/d76/classThread_1_1Coap_1_1Server.html#aeb97e0257808d7cad4adceccd87f6b7d" title="This method sends a CoAP response from the server. " alt="" coords="989,248,1139,287"/>
+<area shape="rect" id="node28" href="$df/d94/group__core-mle-core.html#ga0ea27201cf13a4e1b0680a9da6c54a64" title="This method submits an MLE message to the UDP socket. " alt="" coords="957,576,1171,602"/>
+<area shape="rect" id="node32" href="$d3/d8e/classThread_1_1ThreadNetif.html#a1a24f802ede854243223bcae3b7cb5ad" title="This method disables the Thread network interface. " alt="" coords="462,830,603,868"/>
+</map>

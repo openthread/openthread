@@ -1,0 +1,6 @@
+<map id="Thread::NetworkData::NetworkData::FindBorderRouter" name="Thread::NetworkData::NetworkData::FindBorderRouter">
+<area shape="rect" id="node2" href="$d4/d80/group__core-netdata-core.html#ga91ced18d726877f3bd4a1fbcf2871b22" title="This method strips non&#45;stable Sub&#45;TLVs from a Prefix TLV. " alt="" coords="273,5,527,44"/>
+<area shape="rect" id="node3" href="$d6/d9b/classThread_1_1NetworkData_1_1Leader.html#a0a137f0793d018f957e8e20513150ae1" title="This method indicates whether or not the given IPv6 address is on&#45;mesh. " alt="" coords="326,68,474,107"/>
+<area shape="rect" id="node4" href="$dd/dd1/classThread_1_1NetworkData_1_1Local.html#a17c1405fce7ac53fc91207cc49750441" title="This method removes a Border Router entry from the Thread Network Data. " alt="" coords="298,131,501,169"/>
+<area shape="rect" id="node5" href="$dd/dd1/classThread_1_1NetworkData_1_1Local.html#acb2d4a7ec739450fbaec0459cf6b0bc5" title="This method adds a Border Router entry to the Thread Network Data. " alt="" coords="575,131,751,169"/>
+</map>

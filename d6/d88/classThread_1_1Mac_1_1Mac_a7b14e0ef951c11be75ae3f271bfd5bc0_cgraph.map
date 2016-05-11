@@ -1,0 +1,5 @@
+<map id="Thread::Mac::Mac::SetExtendedPanId" name="Thread::Mac::Mac::SetExtendedPanId">
+<area shape="rect" id="node2" href="$df/d94/group__core-mle-core.html#gae7aa1071a61d1f253c5847cf682a0980" title="This method sets the Mesh Local Prefix. " alt="" coords="266,37,447,76"/>
+<area shape="rect" id="node3" href="$d9/d13/classThread_1_1Ip6_1_1NetifUnicastAddress.html#a2bb426bd29e271bd1fc09b61d1044911" title="This method returns the unicast address. " alt="" coords="499,5,668,44"/>
+<area shape="rect" id="node4" href="$d6/d94/classThread_1_1Ip6_1_1NetifMulticastAddress.html#a10800bf39d15ffa0735e857c13e8d489" title="This method returns the multicast address. " alt="" coords="495,68,672,107"/>
+</map>

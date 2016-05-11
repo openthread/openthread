@@ -1,0 +1,20 @@
+<map id="Thread::Mle::Mle::SetStateChild" name="Thread::Mle::Mle::SetStateChild">
+<area shape="rect" id="node2" href="$df/d94/group__core-mle-core.html#ga228b07b6cd812413027a0c94d5b4e6f1" title="This method sets the RLOC16 assigned to the Thread interface. " alt="" coords="233,137,424,163"/>
+<area shape="rect" id="node14" href="$d1/d40/classThread_1_1Timer.html#a475731e21b59be6b17b24f5b5e175f62" title="This method schedules the timer to fire a dt milliseconds from now. " alt="" coords="258,256,398,281"/>
+<area shape="rect" id="node19" href="$d1/d40/classThread_1_1Timer.html#a38c2681adb35b234d62b9848f89318b0" title="This static method returns the number of milliseonds given seconds. " alt="" coords="238,305,419,331"/>
+<area shape="rect" id="node3" href="$d9/d13/classThread_1_1Ip6_1_1NetifUnicastAddress.html#a2bb426bd29e271bd1fc09b61d1044911" title="This method returns the unicast address. " alt="" coords="481,131,650,169"/>
+<area shape="rect" id="node4" href="$d2/d55/classThread_1_1Ip6_1_1Netif.html#ad891ec81750a2f7c4c722d07d7dc2632" title="This method adds a unicast address to the network interface. " alt="" coords="493,193,638,232"/>
+<area shape="rect" id="node11" href="$d2/d55/classThread_1_1Ip6_1_1Netif.html#ad00e58b94ab00cc71a5f3a242b7ef42c" title="This method removes a unicast address from the network interface. " alt="" coords="480,68,651,107"/>
+<area shape="rect" id="node12" href="$d6/d88/classThread_1_1Mac_1_1Mac.html#ad80edbfa825466831f487f7c57d247c2" title="This method sets the IEEE 802.15.4 Short Address. " alt="" coords="472,5,660,44"/>
+<area shape="rect" id="node5" href="$d9/d13/classThread_1_1Ip6_1_1NetifUnicastAddress.html#ac7f38e1322075b0e6dfc7afc048f7eec" title="This method returns the next unicast address assigned to the interface. " alt="" coords="721,103,890,141"/>
+<area shape="rect" id="node6" href="$d4/d92/classThread_1_1Tasklet.html#a50a39a6f422851035b89aace87482425" title="This method puts the tasklet on the run queue. " alt="" coords="732,183,879,208"/>
+<area shape="rect" id="node7" href="$d8/de8/classThread_1_1TaskletScheduler.html#a137292acddf92acdef54cc7a33ea5fac" title="This static method enqueues a tasklet into the run queue. " alt="" coords="951,176,1124,215"/>
+<area shape="rect" id="node8" href="$d3/de8/group__atomic.html#ga5eb5de0dbc130f745e31b1085f798e4f" title="Begin critical section. " alt="" coords="1187,133,1317,159"/>
+<area shape="rect" id="node9" href="$d1/de3/group__execution.html#ga0d8ce270d8b69230a851ac7b9538ed56" title="OpenThread calls this function when the tasklet queue transitions from empty to non&#45;empty. " alt="" coords="1172,183,1332,208"/>
+<area shape="rect" id="node10" href="$d3/de8/group__atomic.html#gac1707ea0096fa1501a356013982f7b35" title="End critical section. " alt="" coords="1192,232,1312,257"/>
+<area shape="rect" id="node13" href="$d1/d69/group__radio-config.html#ga275c098ae520634e7fad587e8ddca424" title="Set the Short Address for address filtering. " alt="" coords="710,12,901,37"/>
+<area shape="rect" id="node15" href="$d1/d40/classThread_1_1Timer.html#a49ded72fbbf2588e1ddb545fa3f1f9f0" title="This method schedules the timer to fire at dt milliseconds from t0. " alt="" coords="489,256,642,281"/>
+<area shape="rect" id="node17" href="$d1/d40/classThread_1_1Timer.html#a0596072dec177b5e2b494db19800267d" title="This static method returns the current time in milliseconds. " alt="" coords="486,305,646,331"/>
+<area shape="rect" id="node16" href="$df/d1f/classThread_1_1TimerScheduler.html#ab72e28a36c92b4a87296d6d1afb2449e" title="This static method adds a timer instance to the timer scheduler. " alt="" coords="708,256,903,281"/>
+<area shape="rect" id="node18" href="$dd/db6/group__alarm.html#gaf8829e3591e03e29e136685fcdeb3300" title="Get the current current time. " alt="" coords="736,305,875,331"/>
+</map>

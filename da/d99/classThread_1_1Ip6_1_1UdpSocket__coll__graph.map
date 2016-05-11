@@ -1,0 +1,6 @@
+<map id="Thread::Ip6::UdpSocket" name="Thread::Ip6::UdpSocket">
+<area shape="rect" id="node2" href="$da/dfd/structotUdpSocket.html" title="This structure represents a UDP socket. " alt="" coords="60,205,158,231"/>
+<area shape="rect" id="node3" href="$d3/d28/structotSockAddr.html" title="This structure represents an IPv6 socket address. " alt="" coords="5,105,96,131"/>
+<area shape="rect" id="node4" href="$d6/d55/structotIp6Address.html" title="This structure represents an IPv6 address. " alt="" coords="66,5,166,31"/>
+<area shape="rect" id="node5" href="$dd/d76/structotMessageInfo.html" title="This structure represents the local and peer IPv6 socket addresses. " alt="" coords="120,105,229,131"/>
+</map>

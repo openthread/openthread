@@ -1,0 +1,4 @@
+<map id="Thread::Message::MoveOffset" name="Thread::Message::MoveOffset">
+<area shape="rect" id="node2" href="$dc/d3c/classThread_1_1Message.html#ac8304ee00c9e0b303539687e98e192e0" title="This method returns the byte offset within the message. " alt="" coords="256,5,446,31"/>
+<area shape="rect" id="node3" href="$dc/d3c/classThread_1_1Message.html#a2cf440376e834030c38bb2ced4ca49e9" title="This method returns the number of bytes in the message. " alt="" coords="254,55,449,80"/>
+</map>

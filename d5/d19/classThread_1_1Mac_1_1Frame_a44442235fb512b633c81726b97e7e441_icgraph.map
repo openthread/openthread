@@ -1,0 +1,5 @@
+<map id="Thread::Mac::Frame::GetPsduLength" name="Thread::Mac::Frame::GetPsduLength">
+<area shape="rect" id="node2" href="$d5/d19/classThread_1_1Mac_1_1Frame.html#a1d4368e69d78cc6c14cefa5016b64bb1" title="This method returns the MAC Frame Length. " alt="" coords="195,5,338,44"/>
+<area shape="rect" id="node3" href="$d5/d19/classThread_1_1Mac_1_1Frame.html#ad71176e2e535e1d386d7ffddb2fb1c5c" title="This method returns the current MAC Payload length. " alt="" coords="195,68,338,107"/>
+<area shape="rect" id="node4" href="$d5/d19/classThread_1_1Mac_1_1Frame.html#aa840430bfe9ca943731425c6c011e565" title="This method returns a pointer to the MAC Footer. " alt="" coords="195,131,338,169"/>
+</map>

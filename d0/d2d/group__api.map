@@ -1,0 +1,7 @@
+<map id="API" name="API">
+<area shape="rect" id="node1" href="$d2/d11/group__udp.html" title="This module includes functions that control UDP communication. " alt="" coords="132,5,181,31"/>
+<area shape="rect" id="node3" href="$d8/dd2/group__diags.html" title="This module includes functions that expose internal state. " alt="" coords="112,55,202,80"/>
+<area shape="rect" id="node4" href="$d4/d7c/group__messages.html" title="This module includes functions that manipulate OpenThread message buffers. " alt="" coords="96,104,217,129"/>
+<area shape="rect" id="node5" href="$d1/de3/group__execution.html" title="This module includes functions that control the Thread stack&#39;s execution. " alt="" coords="117,153,197,179"/>
+<area shape="rect" id="node6" href="$d1/d44/group__config.html" title="This module includes functions for configuration. " alt="" coords="106,203,207,228"/>
+</map>

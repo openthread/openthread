@@ -1,0 +1,7 @@
+<map id="Thread::NetworkData::NetworkDataTlv::GetValue" name="Thread::NetworkData::NetworkDataTlv::GetValue">
+<area shape="rect" id="node2" href="$db/da1/classThread_1_1NetworkData_1_1HasRouteTlv.html#ac74614a31ed72568910db0d0e1f0f8fc" title="This method returns a pointer to the i&#39;th HasRoute entry. " alt="" coords="249,37,415,76"/>
+<area shape="rect" id="node5" href="$d2/d89/classThread_1_1NetworkData_1_1BorderRouterTlv.html#ab4baf1f4d38f6ae76abdce624a9b2019" title="This method returns a pointer to the i&#39;th Border Router entry. " alt="" coords="239,100,426,139"/>
+<area shape="rect" id="node3" href="$d4/d80/group__core-netdata-core.html#ga91ced18d726877f3bd4a1fbcf2871b22" title="This method strips non&#45;stable Sub&#45;TLVs from a Prefix TLV. " alt="" coords="474,68,728,107"/>
+<area shape="rect" id="node4" href="$dd/dd1/classThread_1_1NetworkData_1_1Local.html#abdce87272d09f0d5aa77b8bc3886c950" title="This method adds a Has Route entry to the Thread Network data. " alt="" coords="508,5,693,44"/>
+<area shape="rect" id="node6" href="$dd/dd1/classThread_1_1NetworkData_1_1Local.html#acb2d4a7ec739450fbaec0459cf6b0bc5" title="This method adds a Border Router entry to the Thread Network Data. " alt="" coords="512,131,689,169"/>
+</map>

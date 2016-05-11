@@ -1,0 +1,15 @@
+<map id="Thread::Ip6::Udp::HandleMessage" name="Thread::Ip6::Udp::HandleMessage">
+<area shape="rect" id="node2" href="$dc/d3c/classThread_1_1Message.html#a2cf440376e834030c38bb2ced4ca49e9" title="This method returns the number of bytes in the message. " alt="" coords="512,93,707,119"/>
+<area shape="rect" id="node3" href="$dc/d3c/classThread_1_1Message.html#ac8304ee00c9e0b303539687e98e192e0" title="This method returns the byte offset within the message. " alt="" coords="515,237,705,263"/>
+<area shape="rect" id="node4" href="$d3/d05/classThread_1_1Ip6_1_1Ip6.html#a5f39ba98f1e62d4b618aa83ac8c047b6" title="This static method computes the pseudoheader checksum. " alt="" coords="255,205,432,244"/>
+<area shape="rect" id="node6" href="$da/d46/classThread_1_1Ip6_1_1MessageInfo.html#a794b87e17aa877f3551c00aa8c892072" title="This method returns a reference to the peer socket address. " alt="" coords="257,320,430,359"/>
+<area shape="rect" id="node7" href="$da/d46/classThread_1_1Ip6_1_1MessageInfo.html#a97e94677a677f600a227dd970f4a02e8" title="This method returns a reference to the local socket address. " alt="" coords="257,383,430,421"/>
+<area shape="rect" id="node8" href="$dc/d3c/classThread_1_1Message.html#a97e576ca01bc7a858f2d5cd35c82b731" title="This method is used to update a checksum value. " alt="" coords="224,55,463,80"/>
+<area shape="rect" id="node10" href="$dc/d3c/classThread_1_1Message.html#ad5cd679cc64dd84fa4609d52878c664b" title="This method reads bytes from the message. " alt="" coords="261,5,426,31"/>
+<area shape="rect" id="node11" href="$dc/d3c/classThread_1_1Message.html#a7b45edaa8ba9f31a437aea73cfca387c" title="This method moves the byte offset within the message. " alt="" coords="243,156,444,181"/>
+<area shape="rect" id="node12" href="$d7/dd3/classThread_1_1Ip6_1_1UdpHeader.html#a83d995609237751bce5a8905c0bf837f" title="This method returns the UDP Source Port. " alt="" coords="261,445,426,484"/>
+<area shape="rect" id="node13" href="$d7/dd3/classThread_1_1Ip6_1_1UdpHeader.html#a21cbe8e5d4940ca6192f2fa58636c8cc" title="This method returns the UDP Destination Port. " alt="" coords="261,508,426,547"/>
+<area shape="rect" id="node14" href="$d9/db1/classThread_1_1Ip6_1_1Address.html#a37b709740053966d80e6c4b65e38ad2e" title="This method indicates whether or not the IPv6 address is multicast address. " alt="" coords="271,571,417,609"/>
+<area shape="rect" id="node5" href="$d3/d05/classThread_1_1Ip6_1_1Ip6.html#a65af4f070c4734601f0308ab48affba8" title="This static method updates a checksum. " alt="" coords="527,175,693,213"/>
+<area shape="rect" id="node9" href="$db/d50/classThread_1_1Buffer.html#a34ab22941ccd9bb222d251a6a18c95bf" title="This method returns a pointer to the next message buffer. " alt="" coords="511,31,709,56"/>
+</map>

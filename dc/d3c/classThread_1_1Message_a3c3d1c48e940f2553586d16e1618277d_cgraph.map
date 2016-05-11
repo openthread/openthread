@@ -1,0 +1,6 @@
+<map id="Thread::Message::Append" name="Thread::Message::Append">
+<area shape="rect" id="node2" href="$dc/d3c/classThread_1_1Message.html#a2cf440376e834030c38bb2ced4ca49e9" title="This method returns the number of bytes in the message. " alt="" coords="475,24,669,49"/>
+<area shape="rect" id="node3" href="$dc/d3c/classThread_1_1Message.html#acecf07ee065974c8b211c151ea5d6e14" title="This method sets the number of bytes in the message. " alt="" coords="232,24,425,49"/>
+<area shape="rect" id="node4" href="$dc/d3c/classThread_1_1Message.html#add75c76a1fa70eb5d4eb03b68c5d1df8" title="This method writes bytes to the message. " alt="" coords="247,73,410,98"/>
+<area shape="rect" id="node5" href="$db/d50/classThread_1_1Buffer.html#a34ab22941ccd9bb222d251a6a18c95bf" title="This method returns a pointer to the next message buffer. " alt="" coords="473,73,671,98"/>
+</map>

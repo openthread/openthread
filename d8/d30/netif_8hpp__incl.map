@@ -1,0 +1,12 @@
+<map id="src/core/net/netif.hpp" name="src/core/net/netif.hpp">
+<area shape="rect" id="node2" href="$d5/d8c/message_8hpp.html" title="This file includes definitions for the message buffer pool and message buffers. " alt="" coords="338,79,494,104"/>
+<area shape="rect" id="node9" href="$d1/d97/mac__frame_8hpp.html" title="This file includes definitions for generating and processing IEEE 802.15.4 MAC frames. " alt="" coords="524,152,667,177"/>
+<area shape="rect" id="node12" href="$df/d84/tasklet_8hpp.html" title="This file includes definitions for tasklets and the tasklet scheduler. " alt="" coords="672,79,813,104"/>
+<area shape="rect" id="node13" href="$dc/d02/ip6__address_8hpp.html" title="This file includes definitions for IPv6 addresses. " alt="" coords="793,225,935,251"/>
+<area shape="rect" id="node14" href="$da/dfc/socket_8hpp.html" title="This file includes definitions for IPv6 sockets. " alt="" coords="888,152,996,177"/>
+<area shape="rect" id="node5" href="$dc/dbf/openthread-types_8h.html" title="This file defines the types and structures used in the OpenThread library API. " alt="" coords="637,299,773,324"/>
+<area shape="rect" id="node6" href="$df/dcb/openthread-core-config_8h.html" title="This file includes compile&#45;time configuration constants for OpenThread. " alt="" coords="331,152,501,177"/>
+<area shape="rect" id="node7" href="$da/d7b/code__utils_8hpp.html" title="This file includes macros for validating runtime conditions. " alt="" coords="5,152,167,177"/>
+<area shape="rect" id="node11" href="$d7/d62/radio_8h.html" title="This file defines the radio interface for OpenThread. " alt="" coords="416,225,530,251"/>
+<area shape="rect" id="node15" href="$dd/d45/openthread_8h.html" title="This file defines the top&#45;level functions for the OpenThread library. " alt="" coords="959,225,1059,251"/>
+</map>

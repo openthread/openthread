@@ -1,0 +1,5 @@
+<map id="Thread::Mle::Mle::SetRloc16" name="Thread::Mle::Mle::SetRloc16">
+<area shape="rect" id="node2" href="$df/d94/group__core-mle-core.html#ga965b4a6e302d906d47e6a72b0e2a1e41" title="This method causes the Thread interface to detach from the Thread network. " alt="" coords="245,5,422,44"/>
+<area shape="rect" id="node4" href="$df/d94/group__core-mle-core.html#ga3aa8531c34bed98206a8ce98e8a13a6e" title="This method sets the Device State to Child. " alt="" coords="244,68,424,107"/>
+<area shape="rect" id="node3" href="$df/d94/group__core-mle-core.html#ga453d94c377c5825a4a5e8b66a728e591" title="This method sets the Device Mode as reported in the Mode TLV. " alt="" coords="472,44,694,69"/>
+</map>

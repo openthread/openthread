@@ -1,0 +1,15 @@
+<map id="Thread::TimerScheduler::Remove" name="Thread::TimerScheduler::Remove">
+<area shape="rect" id="node2" href="$d1/d40/classThread_1_1Timer.html#a9acdec1cdf4edf947c563d40871f2bc8" title="This method stops the timer. " alt="" coords="218,143,357,168"/>
+<area shape="rect" id="node3" href="$d6/d88/classThread_1_1Mac_1_1Mac.html#a3bd89acb5004e00ea42580f0aae14644" title="This method stops the MAC. " alt="" coords="406,5,569,31"/>
+<area shape="rect" id="node4" href="$dd/d1d/classThread_1_1MeshForwarder.html#a9a108930edeab22236a5eae4ced14ca6" title="This method disables mesh forwarding and the IEEE 802.15.4 MAC layer. " alt="" coords="625,48,790,87"/>
+<area shape="rect" id="node6" href="$dd/d1d/classThread_1_1MeshForwarder.html#a2343ec6e8df3c5885415fa912889a752" title="This method sets the rx&#45;on&#45;when&#45;idle mode. " alt="" coords="405,107,570,145"/>
+<area shape="rect" id="node7" href="$df/d94/group__core-mle-core.html#gaa5ec48ae440f38d5bf24f9d09ca66c65" title="This method sets the Device State to Detached. " alt="" coords="618,152,798,191"/>
+<area shape="rect" id="node13" href="$db/dec/group__core-mle-router.html#ga493d0eba47e07933998ce3013bd32cba" title="This method generates an Address Solicit request for a Router ID. " alt="" coords="627,215,788,253"/>
+<area shape="rect" id="node14" href="$db/dec/group__core-mle-router.html#ga3f865671b35cf4f88b555fb1873ca79a" title="This method causes the Thread interface to become a Leader and start a new partition. " alt="" coords="407,272,568,311"/>
+<area shape="rect" id="node5" href="$d3/d8e/classThread_1_1ThreadNetif.html#a1a24f802ede854243223bcae3b7cb5ad" title="This method disables the Thread network interface. " alt="" coords="1112,73,1253,112"/>
+<area shape="rect" id="node8" href="$df/d94/group__core-mle-core.html#ga01c7e5a022360a6f35e30d07221dbfea" title="This method starts the MLE protocol operation. " alt="" coords="856,219,1013,244"/>
+<area shape="rect" id="node10" href="$df/d94/group__core-mle-core.html#gab0d4493caf85385a335ec64e1eb1b70c" title="This method stops the MLE protocol operation. " alt="" coords="856,105,1013,131"/>
+<area shape="rect" id="node11" href="$df/d94/group__core-mle-core.html#ga965b4a6e302d906d47e6a72b0e2a1e41" title="This method causes the Thread interface to detach from the Thread network. " alt="" coords="846,155,1023,193"/>
+<area shape="rect" id="node9" href="$d3/d8e/classThread_1_1ThreadNetif.html#a50d195eeba8c64bdb46767f1113a7a65" title="This method enables the Thread network interface. " alt="" coords="1100,219,1265,244"/>
+<area shape="rect" id="node12" href="$df/d94/group__core-mle-core.html#ga453d94c377c5825a4a5e8b66a728e591" title="This method sets the Device Mode as reported in the Mode TLV. " alt="" coords="1071,161,1294,187"/>
+</map>

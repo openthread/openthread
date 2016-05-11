@@ -1,0 +1,6 @@
+<map id="Thread::MessageInfo" name="Thread::MessageInfo">
+<area shape="rect" id="node4" href="$db/d50/classThread_1_1Buffer.html" title="This class represents a Message buffer. " alt="" coords="100,92,207,117"/>
+<area shape="rect" id="node2" href="$d9/dd7/structThread_1_1MessageListEntry.html" title="This structure contains pointers to the MessageList structure, the next Message, and previous Message..." alt="" coords="50,355,227,380"/>
+<area shape="rect" id="node3" href="$dc/d3c/classThread_1_1Message.html" title="This class represents a message. " alt="" coords="76,167,201,192"/>
+<area shape="rect" id="node5" href="$da/d60/structThread_1_1MessageList.html" title="This structure contains pointers to the head and tail of a Message list. " alt="" coords="66,267,212,293"/>
+</map>

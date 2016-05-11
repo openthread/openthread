@@ -1,0 +1,51 @@
+<map id="Thread::NetworkData::Local::Register" name="Thread::NetworkData::Local::Register">
+<area shape="rect" id="node2" href="$dc/d75/classThread_1_1Ip6_1_1UdpSocket.html#aaa9112c22813ceb55338050f0365c598" title="This method opens the UDP socket. " alt="" coords="225,5,387,44"/>
+<area shape="rect" id="node3" href="$dd/d10/group__random.html#gaa20820ca4e6e1ce8cd47ded9762b14ca" title="Get a 32&#45;bit true random value. " alt="" coords="243,68,370,93"/>
+<area shape="rect" id="node4" href="$d0/d7f/classThread_1_1Coap_1_1Header.html#ad221953768fdb61bd62fa1bc3ffd4c89" title="This method initializes the CoAP header. " alt="" coords="229,117,383,156"/>
+<area shape="rect" id="node5" href="$d0/d7f/classThread_1_1Coap_1_1Header.html#a411c64839fe9cf63ac201f9a6760199c" title="This method sets the Version value. " alt="" coords="229,180,383,219"/>
+<area shape="rect" id="node6" href="$d0/d7f/classThread_1_1Coap_1_1Header.html#ad4147a19a4e8861f321c8aaaa5db6baa" title="This method sets the Type value. " alt="" coords="229,243,383,281"/>
+<area shape="rect" id="node7" href="$d0/d7f/classThread_1_1Coap_1_1Header.html#a0a2c1cf0ff97aab363e71f716254a736" title="This method sets the Code value. " alt="" coords="229,305,383,344"/>
+<area shape="rect" id="node8" href="$d0/d7f/classThread_1_1Coap_1_1Header.html#a7a374b4bd31694216d9397e1409209a0" title="This method sets the Message ID value. " alt="" coords="229,368,383,407"/>
+<area shape="rect" id="node9" href="$d0/d7f/classThread_1_1Coap_1_1Header.html#a9d8d2a7b438e4a7d27ce3b979b0bb2a0" title="This method sets the Token value and length. " alt="" coords="229,431,383,469"/>
+<area shape="rect" id="node10" href="$d0/d7f/classThread_1_1Coap_1_1Header.html#a1df234ef27c9000081fbbe24e7c97dd6" title="This method appends a Uri&#45;Path option. " alt="" coords="224,493,389,532"/>
+<area shape="rect" id="node12" href="$d0/d7f/classThread_1_1Coap_1_1Header.html#a0884aa8b02fc83496540a6cd2e9b7a73" title="This method appends a Content&#45;Format option. " alt="" coords="205,556,408,595"/>
+<area shape="rect" id="node13" href="$d0/d7f/classThread_1_1Coap_1_1Header.html#aecbcbb8b836e0283559b89bd64fbc47f" title="This method terminates the CoAP header. " alt="" coords="229,619,383,657"/>
+<area shape="rect" id="node14" href="$de/ded/classThread_1_1Ip6_1_1Udp.html#afe746fb2f5c83a97c20e54fdb9c595a3" title="This static method returns a new UDP message with sufficient header space reserved. " alt="" coords="201,733,411,759"/>
+<area shape="rect" id="node19" href="$dc/d3c/classThread_1_1Message.html#a3ab9d6d42d7ae9054eaf0cad0c4e44bb" title="This static method is used to free a message and return all message buffers to the buffer pool..." alt="" coords="967,733,1127,759"/>
+<area shape="rect" id="node20" href="$dc/d3c/classThread_1_1Message.html#a3c3d1c48e940f2553586d16e1618277d" title="This method appends bytes to the end of the message. " alt="" coords="722,833,900,859"/>
+<area shape="rect" id="node23" href="$d0/d7f/classThread_1_1Coap_1_1Header.html#a5259ece3cbe8e332599f7de4c488ad32" title="This method returns a pointer to the first byte of the header. " alt="" coords="229,835,383,873"/>
+<area shape="rect" id="node24" href="$d0/d7f/classThread_1_1Coap_1_1Header.html#ae1679d627108d5381dc1ae45d2254299" title="This method returns the header length in bytes. " alt="" coords="229,897,383,936"/>
+<area shape="rect" id="node25" href="$dc/d75/classThread_1_1Ip6_1_1UdpSocket.html#ac4fb0ea0ae514fa0edfeaa91dfbdabca" title="This method sends a UDP message. " alt="" coords="225,1115,387,1153"/>
+<area shape="rect" id="node11" href="$d0/d7f/classThread_1_1Coap_1_1Header.html#ac047d4a2285b8315c1f11d66c04994a4" title="This method appends a CoAP option. " alt="" coords="488,525,642,564"/>
+<area shape="rect" id="node15" href="$d3/d05/classThread_1_1Ip6_1_1Ip6.html#a215eeb84e75972828efbc163eedc1ec5" title="This static method allocates a new message buffer from the buffer pool. " alt="" coords="463,733,667,759"/>
+<area shape="rect" id="node16" href="$dc/d3c/classThread_1_1Message.html#a91be16485334ce1fa61f289b1eeb682a" title="This static method is used to obtain a new message. " alt="" coords="731,784,891,809"/>
+<area shape="rect" id="node17" href="$dc/d3c/classThread_1_1Message.html#acecf07ee065974c8b211c151ea5d6e14" title="This method sets the number of bytes in the message. " alt="" coords="950,783,1144,808"/>
+<area shape="rect" id="node18" href="$dc/d3c/classThread_1_1Message.html#a2cf440376e834030c38bb2ced4ca49e9" title="This method returns the number of bytes in the message. " alt="" coords="1193,959,1388,984"/>
+<area shape="rect" id="node21" href="$dc/d3c/classThread_1_1Message.html#add75c76a1fa70eb5d4eb03b68c5d1df8" title="This method writes bytes to the message. " alt="" coords="965,884,1129,909"/>
+<area shape="rect" id="node22" href="$db/d50/classThread_1_1Buffer.html#a34ab22941ccd9bb222d251a6a18c95bf" title="This method returns a pointer to the next message buffer. " alt="" coords="1192,884,1390,909"/>
+<area shape="rect" id="node26" href="$da/d46/classThread_1_1Ip6_1_1MessageInfo.html#a97e94677a677f600a227dd970f4a02e8" title="This method returns a reference to the local socket address. " alt="" coords="724,1929,898,1968"/>
+<area shape="rect" id="node27" href="$d9/db1/classThread_1_1Ip6_1_1Address.html#a51cfd76548da9f661a0d7a47a8d5e813" title="This method indicates whether or not the IPv6 address is the Unspecified Address. ..." alt="" coords="738,1992,884,2031"/>
+<area shape="rect" id="node28" href="$d2/d7a/classThread_1_1Ip6_1_1SockAddr.html#a9f92ec4fbccf1d095aa8a43dd882dd2f" title="This method returns a reference to the IPv6 address. " alt="" coords="488,835,643,873"/>
+<area shape="rect" id="node29" href="$d7/dd3/classThread_1_1Ip6_1_1UdpHeader.html#a3e48adfe7fb163bd8dd6e6f26cb5dda4" title="This method sets the UDP Source Port. " alt="" coords="483,897,648,936"/>
+<area shape="rect" id="node30" href="$d7/dd3/classThread_1_1Ip6_1_1UdpHeader.html#aa6b4ee310b27450ea21696b8a1ab9e36" title="This method sets the UDP Destination Port. " alt="" coords="483,960,648,999"/>
+<area shape="rect" id="node31" href="$d7/dd3/classThread_1_1Ip6_1_1UdpHeader.html#a232ac624d1b666065516cd2b7dc5f729" title="This method sets the UDP Length. " alt="" coords="483,1023,648,1061"/>
+<area shape="rect" id="node32" href="$d7/dd3/classThread_1_1Ip6_1_1UdpHeader.html#ada31b17064f026a602cac8ce755cffcf" title="This method sets the UDP Checksum. " alt="" coords="483,1085,648,1124"/>
+<area shape="rect" id="node33" href="$dc/d3c/classThread_1_1Message.html#a9c900e4c1ddbb44f1d9c87d10172f63a" title="This method prepends bytes to the front of the message. " alt="" coords="720,932,902,957"/>
+<area shape="rect" id="node34" href="$dc/d3c/classThread_1_1Message.html#acaa6ed0d0c060a524cb5da25451acc0d" title="This method sets the byte offset within the message. " alt="" coords="953,983,1141,1008"/>
+<area shape="rect" id="node36" href="$d3/d05/classThread_1_1Ip6_1_1Ip6.html#a4aa215eb5c0d575403b5ca683e8427c2" title="This static method sends an IPv6 datagram. " alt="" coords="459,1417,672,1443"/>
+<area shape="rect" id="node35" href="$dc/d3c/classThread_1_1Message.html#ac8304ee00c9e0b303539687e98e192e0" title="This method returns the byte offset within the message. " alt="" coords="952,933,1142,959"/>
+<area shape="rect" id="node37" href="$d8/d6e/classThread_1_1Ip6_1_1Header.html#ae759dab83ad87de26f3e5661d4331a54" title="This method initializes the IPv6 header. " alt="" coords="741,1084,881,1123"/>
+<area shape="rect" id="node38" href="$d8/d6e/classThread_1_1Ip6_1_1Header.html#aec92bb6790fffab9ddb424d85a1e39b3" title="This method sets the IPv6 Payload Length value. " alt="" coords="741,1147,881,1185"/>
+<area shape="rect" id="node39" href="$d8/d6e/classThread_1_1Ip6_1_1Header.html#afc6dbaaca33c8996ce396195cb6f8978" title="This method sets the IPv6 Next Header value. " alt="" coords="741,1261,881,1300"/>
+<area shape="rect" id="node40" href="$d8/d6e/classThread_1_1Ip6_1_1Header.html#a60add06692d13d0b9ff26d1d1459cafa" title="This method sets the IPv6 Hop Limit value. " alt="" coords="741,1324,881,1363"/>
+<area shape="rect" id="node41" href="$d2/d55/classThread_1_1Ip6_1_1Netif.html#a39b8ed4f77c60d76f5f1d1072750c98e" title="This static method perform default source address selection. " alt="" coords="732,1439,889,1477"/>
+<area shape="rect" id="node42" href="$da/d46/classThread_1_1Ip6_1_1MessageInfo.html#a794b87e17aa877f3551c00aa8c892072" title="This method returns a reference to the peer socket address. " alt="" coords="960,1409,1134,1448"/>
+<area shape="rect" id="node43" href="$d9/db1/classThread_1_1Ip6_1_1Address.html#a95748f9c0a5048ce8700cd040d7efc52" title="This method indicates whether or not the IPv6 address scope is Link&#45;Local. " alt="" coords="974,1685,1120,1724"/>
+<area shape="rect" id="node44" href="$d9/d13/classThread_1_1Ip6_1_1NetifUnicastAddress.html#a2bb426bd29e271bd1fc09b61d1044911" title="This method returns the unicast address. " alt="" coords="963,1261,1131,1300"/>
+<area shape="rect" id="node45" href="$d8/d6e/classThread_1_1Ip6_1_1Header.html#a73e5209e71173a59f2295cbbc905e296" title="This method sets the IPv6 Source address. " alt="" coords="741,1501,881,1540"/>
+<area shape="rect" id="node46" href="$d8/d6e/classThread_1_1Ip6_1_1Header.html#ab519252dba4f3843a511aec35a8a0756" title="This method sets the IPv6 Destination address. " alt="" coords="741,1564,881,1603"/>
+<area shape="rect" id="node47" href="$d8/d6e/classThread_1_1Ip6_1_1Header.html#a24b065a50a342b00d2d8907b2fb3a66a" title="This method returns the IPv6 Destination address. " alt="" coords="741,1627,881,1665"/>
+<area shape="rect" id="node48" href="$d9/db1/classThread_1_1Ip6_1_1Address.html#a25eecfa3d5faa101e497e8fde3964e13" title="This method indicates whether or not the IPv6 address is a link&#45;local multicast address. " alt="" coords="737,1689,885,1728"/>
+<area shape="rect" id="node49" href="$d9/db1/classThread_1_1Ip6_1_1Address.html#ab70000abd6ac0e216974ab012d4159d6" title="This method indicates whether or not the IPv6 address is a realm&#45;local multicast address. " alt="" coords="730,1752,892,1791"/>
+<area shape="rect" id="node50" href="$d3/d05/classThread_1_1Ip6_1_1Ip6.html#a5f39ba98f1e62d4b618aa83ac8c047b6" title="This static method computes the pseudoheader checksum. " alt="" coords="722,1815,899,1853"/>
+</map>

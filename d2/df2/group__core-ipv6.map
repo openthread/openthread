@@ -1,0 +1,7 @@
+<map id="IPv6" name="IPv6">
+<area shape="rect" id="node2" href="$d9/dbe/group__core-ip6-icmp6.html" title="This module includes definitions for ICMPv6. " alt="" coords="231,5,300,31"/>
+<area shape="rect" id="node3" href="$d5/d43/group__core-ip6-netif.html" title="This module includes definitions for IPv6 network interfaces. " alt="" coords="200,55,332,80"/>
+<area shape="rect" id="node4" href="$d9/dea/group__core-ip6-mpl.html" title="This module includes definitions for MPL. " alt="" coords="241,104,290,129"/>
+<area shape="rect" id="node5" href="$d9/dcf/group__core-ip6-ip6.html" title="This module includes definitions for core IPv6 networking. " alt="" coords="242,153,290,179"/>
+<area shape="rect" id="node6" href="$d0/de1/group__core.html" title="This module includes the core OpenThread stack. " alt="" coords="5,80,56,105"/>
+</map>

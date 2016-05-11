@@ -1,0 +1,4 @@
+<map id="Thread::Cli::Server" name="Thread::Cli::Server">
+<area shape="rect" id="node2" href="$df/d6e/classThread_1_1Cli_1_1Serial.html" title="This class implements the CLI server on top of the serial platform abstraction. " alt="" coords="5,79,133,104"/>
+<area shape="rect" id="node3" href="$dc/df5/classThread_1_1Cli_1_1Udp.html" title="This class implements the CLI server on top of a UDP socket. " alt="" coords="157,79,275,104"/>
+</map>

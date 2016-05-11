@@ -1,0 +1,5 @@
+<map id="Thread::Ip6::IcmpHeader::SetCode" name="Thread::Ip6::IcmpHeader::SetCode">
+<area shape="rect" id="node2" href="$da/dd7/classThread_1_1Ip6_1_1Icmp.html#a1652c3864180133512f7d6499cd684f2" title="This static method sends an ICMPv6 error message. " alt="" coords="223,24,356,63"/>
+<area shape="rect" id="node3" href="$df/d94/group__core-mle-core.html#ga27bbb63f94a4f59d1249fce8baa830ed" title="This method checks if the destination is reachable. " alt="" coords="404,5,643,31"/>
+<area shape="rect" id="node4" href="$db/dec/group__core-mle-router.html#gac7d2542017033898d0bc0f17a65d4656" title="This method checks if the destination is reachable. " alt="" coords="691,24,853,63"/>
+</map>

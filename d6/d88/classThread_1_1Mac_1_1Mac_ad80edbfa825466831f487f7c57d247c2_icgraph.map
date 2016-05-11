@@ -1,0 +1,6 @@
+<map id="Thread::Mac::Mac::SetShortAddress" name="Thread::Mac::Mac::SetShortAddress">
+<area shape="rect" id="node2" href="$df/d94/group__core-mle-core.html#ga228b07b6cd812413027a0c94d5b4e6f1" title="This method sets the RLOC16 assigned to the Thread interface. " alt="" coords="241,44,432,69"/>
+<area shape="rect" id="node3" href="$df/d94/group__core-mle-core.html#ga965b4a6e302d906d47e6a72b0e2a1e41" title="This method causes the Thread interface to detach from the Thread network. " alt="" coords="481,5,658,44"/>
+<area shape="rect" id="node5" href="$df/d94/group__core-mle-core.html#ga3aa8531c34bed98206a8ce98e8a13a6e" title="This method sets the Device State to Child. " alt="" coords="480,68,660,107"/>
+<area shape="rect" id="node4" href="$df/d94/group__core-mle-core.html#ga453d94c377c5825a4a5e8b66a728e591" title="This method sets the Device Mode as reported in the Mode TLV. " alt="" coords="708,44,931,69"/>
+</map>

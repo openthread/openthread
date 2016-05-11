@@ -1,0 +1,8 @@
+<map id="Thread::Mac::Mac::Mac" name="Thread::Mac::Mac::Mac">
+<area shape="rect" id="node2" href="$dd/d10/group__random.html#gaa20820ca4e6e1ce8cd47ded9762b14ca" title="Get a 32&#45;bit true random value. " alt="" coords="271,5,399,31"/>
+<area shape="rect" id="node3" href="$d6/d88/classThread_1_1Mac_1_1Mac.html#a7b14e0ef951c11be75ae3f271bfd5bc0" title="This method sets the IEEE 802.15.4 Extended PAN ID. " alt="" coords="229,55,441,93"/>
+<area shape="rect" id="node7" href="$d6/d88/classThread_1_1Mac_1_1Mac.html#a5e193dd2519ecb5ffde4b7ae486e42e5" title="This method sets the IEEE 802.15.4 Network Name. " alt="" coords="215,117,455,143"/>
+<area shape="rect" id="node4" href="$df/d94/group__core-mle-core.html#gae7aa1071a61d1f253c5847cf682a0980" title="This method sets the Mesh Local Prefix. " alt="" coords="503,55,685,93"/>
+<area shape="rect" id="node5" href="$d9/d13/classThread_1_1Ip6_1_1NetifUnicastAddress.html#a2bb426bd29e271bd1fc09b61d1044911" title="This method returns the unicast address. " alt="" coords="737,23,906,61"/>
+<area shape="rect" id="node6" href="$d6/d94/classThread_1_1Ip6_1_1NetifMulticastAddress.html#a10800bf39d15ffa0735e857c13e8d489" title="This method returns the multicast address. " alt="" coords="733,85,910,124"/>
+</map>

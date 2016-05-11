@@ -1,0 +1,17 @@
+<map id="Thread::Mle::MleRouter::BecomeLeader" name="Thread::Mle::MleRouter::BecomeLeader">
+<area shape="rect" id="node2" href="$dc/d75/classThread_1_1Ip6_1_1UdpSocket.html#aaa9112c22813ceb55338050f0365c598" title="This method opens the UDP socket. " alt="" coords="227,5,389,44"/>
+<area shape="rect" id="node3" href="$d1/d40/classThread_1_1Timer.html#a9acdec1cdf4edf947c563d40871f2bc8" title="This method stops the timer. " alt="" coords="239,68,378,93"/>
+<area shape="rect" id="node5" href="$d1/d40/classThread_1_1Timer.html#a475731e21b59be6b17b24f5b5e175f62" title="This method schedules the timer to fire a dt milliseconds from now. " alt="" coords="238,117,378,143"/>
+<area shape="rect" id="node10" href="$d4/dcf/classThread_1_1AddressResolver.html#af9e813b464854994a8beda21d91c989c" title="This method clears the EID&#45;to&#45;RLOC cache. " alt="" coords="222,167,395,205"/>
+<area shape="rect" id="node11" href="$d6/d88/classThread_1_1Mac_1_1Mac.html#a95ec637c1529d1258cd5316e93e4b8c9" title="This method returns a pointer to the IEEE 802.15.4 Extended Address. " alt="" coords="220,229,397,268"/>
+<area shape="rect" id="node12" href="$d5/d64/classThread_1_1Mle_1_1LeaderDataTlv.html#aed8eb6c9397ff3498bf84dfccf96d798" title="This method sets the Partition ID value. " alt="" coords="215,292,402,331"/>
+<area shape="rect" id="node13" href="$dd/d10/group__random.html#gaa20820ca4e6e1ce8cd47ded9762b14ca" title="Get a 32&#45;bit true random value. " alt="" coords="469,447,596,472"/>
+<area shape="rect" id="node14" href="$d5/d64/classThread_1_1Mle_1_1LeaderDataTlv.html#ad078baea1e5c12f0dc26ac09bdab0644" title="This method sets the Weighting value. " alt="" coords="215,407,402,445"/>
+<area shape="rect" id="node15" href="$d5/d64/classThread_1_1Mle_1_1LeaderDataTlv.html#af9b1ed8c384eb1bc073fc863d951beb5" title="This method sets the Leader Router ID value. " alt="" coords="215,469,402,508"/>
+<area shape="rect" id="node16" href="$d6/d9b/classThread_1_1NetworkData_1_1Leader.html#a631f664fa6b994e74b133b9761fae421" title="This method reset the Thread Network Data. " alt="" coords="234,532,382,571"/>
+<area shape="rect" id="node4" href="$df/d1f/classThread_1_1TimerScheduler.html#a6bcb9ef68dd35e2006c4273e8c58d48b" title="This static method removes a timer instance to the timer scheduler. " alt="" coords="450,55,615,93"/>
+<area shape="rect" id="node6" href="$d1/d40/classThread_1_1Timer.html#a49ded72fbbf2588e1ddb545fa3f1f9f0" title="This method schedules the timer to fire at dt milliseconds from t0. " alt="" coords="456,117,609,143"/>
+<area shape="rect" id="node8" href="$d1/d40/classThread_1_1Timer.html#a0596072dec177b5e2b494db19800267d" title="This static method returns the current time in milliseconds. " alt="" coords="452,167,612,192"/>
+<area shape="rect" id="node7" href="$df/d1f/classThread_1_1TimerScheduler.html#ab72e28a36c92b4a87296d6d1afb2449e" title="This static method adds a timer instance to the timer scheduler. " alt="" coords="663,117,858,143"/>
+<area shape="rect" id="node9" href="$dd/db6/group__alarm.html#gaf8829e3591e03e29e136685fcdeb3300" title="Get the current current time. " alt="" coords="691,167,830,192"/>
+</map>

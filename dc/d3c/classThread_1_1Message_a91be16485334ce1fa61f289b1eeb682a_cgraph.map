@@ -1,0 +1,5 @@
+<map id="Thread::Message::New" name="Thread::Message::New">
+<area shape="rect" id="node2" href="$dc/d3c/classThread_1_1Message.html#acecf07ee065974c8b211c151ea5d6e14" title="This method sets the number of bytes in the message. " alt="" coords="213,5,406,31"/>
+<area shape="rect" id="node4" href="$dc/d3c/classThread_1_1Message.html#a3ab9d6d42d7ae9054eaf0cad0c4e44bb" title="This static method is used to free a message and return all message buffers to the buffer pool..." alt="" coords="229,55,389,80"/>
+<area shape="rect" id="node3" href="$dc/d3c/classThread_1_1Message.html#a2cf440376e834030c38bb2ced4ca49e9" title="This method returns the number of bytes in the message. " alt="" coords="454,5,649,31"/>
+</map>

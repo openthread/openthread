@@ -1,0 +1,8 @@
+<map id="Thread::Ip6::UdpSocket::Open" name="Thread::Ip6::UdpSocket::Open">
+<area shape="rect" id="node2" href="$de/d76/classThread_1_1Coap_1_1Server.html#a3352908cff3adc599389f65cc16d219e" title="This method starts the CoAP server. " alt="" coords="429,5,578,44"/>
+<area shape="rect" id="node4" href="$df/d94/group__core-mle-core.html#ga01c7e5a022360a6f35e30d07221dbfea" title="This method starts the MLE protocol operation. " alt="" coords="425,68,582,93"/>
+<area shape="rect" id="node5" href="$db/dec/group__core-mle-router.html#ga493d0eba47e07933998ce3013bd32cba" title="This method generates an Address Solicit request for a Router ID. " alt="" coords="215,113,377,152"/>
+<area shape="rect" id="node6" href="$db/dec/group__core-mle-router.html#ga3f865671b35cf4f88b555fb1873ca79a" title="This method causes the Thread interface to become a Leader and start a new partition. " alt="" coords="215,176,377,215"/>
+<area shape="rect" id="node7" href="$dd/dd1/classThread_1_1NetworkData_1_1Local.html#a26b8189963fc960e308f137f1d6e31d8" title="This method sends a Server Data Registration message to the Leader. " alt="" coords="222,239,370,277"/>
+<area shape="rect" id="node3" href="$d3/d8e/classThread_1_1ThreadNetif.html#a50d195eeba8c64bdb46767f1113a7a65" title="This method enables the Thread network interface. " alt="" coords="630,40,795,65"/>
+</map>

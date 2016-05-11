@@ -1,0 +1,13 @@
+<map id="Thread::Cli::Udp::Output" name="Thread::Cli::Udp::Output">
+<area shape="rect" id="node2" href="$d2/d11/group__udp.html#ga72f15295aa34b47739d39924a640a38e" title="Allocate a new message buffer for sending a UDP message. " alt="" coords="224,5,362,31"/>
+<area shape="rect" id="node9" href="$d4/d7c/group__messages.html#gaac267d70f2030fc0f0fe9716a3bcc33e" title="Set the message length in bytes. " alt="" coords="219,55,367,80"/>
+<area shape="rect" id="node10" href="$d4/d7c/group__messages.html#gacbea00276153042b1c6807bc6c61917e" title="Write bytes to a message. " alt="" coords="234,104,352,129"/>
+<area shape="rect" id="node11" href="$d2/d11/group__udp.html#gaafd3057272c0b42c69aa7d35956f5c92" title="Send a UDP/IPv6 message. " alt="" coords="249,153,337,179"/>
+<area shape="rect" id="node12" href="$d4/d7c/group__messages.html#ga538d36d69a14bd432d651e062070bc06" title="Free an allocated message buffer. " alt="" coords="462,131,576,156"/>
+<area shape="rect" id="node3" href="$de/ded/classThread_1_1Ip6_1_1Udp.html#afe746fb2f5c83a97c20e54fdb9c595a3" title="This static method returns a new UDP message with sufficient header space reserved. " alt="" coords="415,11,624,36"/>
+<area shape="rect" id="node4" href="$d3/d05/classThread_1_1Ip6_1_1Ip6.html#a215eeb84e75972828efbc163eedc1ec5" title="This static method allocates a new message buffer from the buffer pool. " alt="" coords="672,48,876,73"/>
+<area shape="rect" id="node5" href="$dc/d3c/classThread_1_1Message.html#a91be16485334ce1fa61f289b1eeb682a" title="This static method is used to obtain a new message. " alt="" coords="924,57,1083,83"/>
+<area shape="rect" id="node6" href="$dc/d3c/classThread_1_1Message.html#acecf07ee065974c8b211c151ea5d6e14" title="This method sets the number of bytes in the message. " alt="" coords="1131,57,1324,83"/>
+<area shape="rect" id="node8" href="$dc/d3c/classThread_1_1Message.html#a3ab9d6d42d7ae9054eaf0cad0c4e44bb" title="This static method is used to free a message and return all message buffers to the buffer pool..." alt="" coords="1148,109,1308,135"/>
+<area shape="rect" id="node7" href="$dc/d3c/classThread_1_1Message.html#a2cf440376e834030c38bb2ced4ca49e9" title="This method returns the number of bytes in the message. " alt="" coords="1372,57,1567,83"/>
+</map>

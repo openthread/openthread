@@ -1,0 +1,13 @@
+<map id="Thread::Ip6::NetifMulticastAddress::GetAddress" name="Thread::Ip6::NetifMulticastAddress::GetAddress">
+<area shape="rect" id="node2" href="$df/d94/group__core-mle-core.html#ga7e32ce7f27d8c98579441f446c1b399d" title="This constructor initializes the MLE object. " alt="" coords="254,5,404,31"/>
+<area shape="rect" id="node3" href="$df/d94/group__core-mle-core.html#gae7aa1071a61d1f253c5847cf682a0980" title="This method sets the Mesh Local Prefix. " alt="" coords="238,55,420,93"/>
+<area shape="rect" id="node9" href="$df/d94/group__core-mle-core.html#ga39bc719ebb2d894113255e52c680a2ed" title="This method returns a pointer to the link&#45;local all Thread nodes multicast address. " alt="" coords="230,117,428,156"/>
+<area shape="rect" id="node12" href="$df/d94/group__core-mle-core.html#ga842fa21a8b0ec0362d0db614de0f18d5" title="This method returns a pointer to the realm&#45;local all Thread nodes multicast address. " alt="" coords="230,180,428,219"/>
+<area shape="rect" id="node4" href="$d6/d88/classThread_1_1Mac_1_1Mac.html#a7b14e0ef951c11be75ae3f271bfd5bc0" title="This method sets the IEEE 802.15.4 Extended PAN ID. " alt="" coords="476,55,689,93"/>
+<area shape="rect" id="node5" href="$d6/d88/classThread_1_1Mac_1_1Mac.html#afe65837f6f2e5f566187fc410786ef86" title="This constructor initializes the MAC object. " alt="" coords="738,27,899,52"/>
+<area shape="rect" id="node6" href="$d6/d88/classThread_1_1Mac_1_1Mac.html#a34333ba31586b2a5a6cfb5d0b71cfe63" title="This method starts the MAC. " alt="" coords="737,76,901,101"/>
+<area shape="rect" id="node7" href="$dd/d1d/classThread_1_1MeshForwarder.html#a8d509a0b25136785f88ecfc8404e6ba8" title="This method enables mesh forwarding and the IEEE 802.15.4 MAC layer. " alt="" coords="949,69,1113,108"/>
+<area shape="rect" id="node8" href="$d3/d8e/classThread_1_1ThreadNetif.html#a50d195eeba8c64bdb46767f1113a7a65" title="This method enables the Thread network interface. " alt="" coords="1161,76,1326,101"/>
+<area shape="rect" id="node10" href="$dd/d1d/classThread_1_1MeshForwarder.html#a361ef901f6b665b3c7feac206089a7df" title="This method submits a message to the mesh forwarder for forwarding. " alt="" coords="500,139,664,177"/>
+<area shape="rect" id="node11" href="$d3/d8e/classThread_1_1ThreadNetif.html#a95f2ad1f6785b0de74e660e43ac86d33" title="This method submits a message to the network interface. " alt="" coords="748,139,889,177"/>
+</map>

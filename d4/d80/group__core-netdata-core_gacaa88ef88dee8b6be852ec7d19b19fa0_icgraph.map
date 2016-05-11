@@ -1,0 +1,7 @@
+<map id="Thread::NetworkData::NetworkData::RemoveTemporaryData" name="Thread::NetworkData::NetworkData::RemoveTemporaryData">
+<area shape="rect" id="node2" href="$d4/d80/group__core-netdata-core.html#ga8772a76056134e6ad65d37cad55225c1" title="This method provides a full or stable copy of the Thread Network Data. " alt="" coords="307,5,519,44"/>
+<area shape="rect" id="node6" href="$d6/d9b/classThread_1_1NetworkData_1_1Leader.html#a428d60927d6f4b4ac8e878e792d2f716" title="This method is used by non&#45;Leader devices to set newly received Network Data from the Leader..." alt="" coords="326,68,501,107"/>
+<area shape="rect" id="node3" href="$df/d94/group__core-mle-core.html#gac150d5a295f9ca73f5b97f4ba551a075" title="This method appends a Network Data TLV to the message. " alt="" coords="567,5,742,44"/>
+<area shape="rect" id="node4" href="$df/d94/group__core-mle-core.html#ga4a192897e2fe5f4b0ab2ed1535fd2657" title="This method generates an MLE Data Response message. " alt="" coords="790,5,978,44"/>
+<area shape="rect" id="node5" href="$db/dec/group__core-mle-router.html#gaf13c43af2bf2f9057629cbb74fca0af0" title="This method handles MAC Data Poll messages. " alt="" coords="1026,5,1200,44"/>
+</map>

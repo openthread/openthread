@@ -1,0 +1,10 @@
+<map id="otPlatRadioSetShortAddress" name="otPlatRadioSetShortAddress">
+<area shape="rect" id="node2" href="$d6/d88/classThread_1_1Mac_1_1Mac.html#a34333ba31586b2a5a6cfb5d0b71cfe63" title="This method starts the MAC. " alt="" coords="256,12,421,37"/>
+<area shape="rect" id="node5" href="$d6/d88/classThread_1_1Mac_1_1Mac.html#ad80edbfa825466831f487f7c57d247c2" title="This method sets the IEEE 802.15.4 Short Address. " alt="" coords="244,61,432,100"/>
+<area shape="rect" id="node3" href="$dd/d1d/classThread_1_1MeshForwarder.html#a8d509a0b25136785f88ecfc8404e6ba8" title="This method enables mesh forwarding and the IEEE 802.15.4 MAC layer. " alt="" coords="493,5,658,44"/>
+<area shape="rect" id="node4" href="$d3/d8e/classThread_1_1ThreadNetif.html#a50d195eeba8c64bdb46767f1113a7a65" title="This method enables the Thread network interface. " alt="" coords="726,12,891,37"/>
+<area shape="rect" id="node6" href="$df/d94/group__core-mle-core.html#ga228b07b6cd812413027a0c94d5b4e6f1" title="This method sets the RLOC16 assigned to the Thread interface. " alt="" coords="480,68,671,93"/>
+<area shape="rect" id="node7" href="$df/d94/group__core-mle-core.html#ga965b4a6e302d906d47e6a72b0e2a1e41" title="This method causes the Thread interface to detach from the Thread network. " alt="" coords="720,61,898,100"/>
+<area shape="rect" id="node9" href="$df/d94/group__core-mle-core.html#ga3aa8531c34bed98206a8ce98e8a13a6e" title="This method sets the Device State to Child. " alt="" coords="719,124,899,163"/>
+<area shape="rect" id="node8" href="$df/d94/group__core-mle-core.html#ga453d94c377c5825a4a5e8b66a728e591" title="This method sets the Device Mode as reported in the Mode TLV. " alt="" coords="947,100,1170,125"/>
+</map>

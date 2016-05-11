@@ -1,0 +1,12 @@
+<map id="Thread::Mle::AddressRegistrationEntry::SetIp6Address" name="Thread::Mle::AddressRegistrationEntry::SetIp6Address">
+<area shape="rect" id="node2" href="$df/d94/group__core-mle-core.html#gad555ca36631eff9b978e448ecbcf8e2e" title="This method appends an Address Registration TLV to a message. " alt="" coords="273,73,448,112"/>
+<area shape="rect" id="node3" href="$df/d94/group__core-mle-core.html#ga09239c621861382d25163980ab5d983b" title="This method generates an MLE Child Update Request message. " alt="" coords="496,73,686,112"/>
+<area shape="rect" id="node4" href="$df/d94/group__core-mle-core.html#ga01c7e5a022360a6f35e30d07221dbfea" title="This method starts the MLE protocol operation. " alt="" coords="767,5,924,31"/>
+<area shape="rect" id="node6" href="$df/d94/group__core-mle-core.html#gafb51db61e6e184d664a9e7cc3833dcf4" title="This method sets the MLE Timeout value. " alt="" coords="748,55,944,80"/>
+<area shape="rect" id="node7" href="$df/d94/group__core-mle-core.html#ga453d94c377c5825a4a5e8b66a728e591" title="This method sets the Device Mode as reported in the Mode TLV. " alt="" coords="734,104,957,129"/>
+<area shape="rect" id="node8" href="$df/d94/group__core-mle-core.html#gaac7d42ff61704aa43e94dbb781c78c5e" title="This method notifes MLE that the Network Data has changed. " alt="" coords="760,153,931,192"/>
+<area shape="rect" id="node5" href="$d3/d8e/classThread_1_1ThreadNetif.html#a50d195eeba8c64bdb46767f1113a7a65" title="This method enables the Thread network interface. " alt="" coords="1026,5,1191,31"/>
+<area shape="rect" id="node9" href="$d6/d9b/classThread_1_1NetworkData_1_1Leader.html#a428d60927d6f4b4ac8e878e792d2f716" title="This method is used by non&#45;Leader devices to set newly received Network Data from the Leader..." alt="" coords="1022,121,1196,160"/>
+<area shape="rect" id="node10" href="$d6/d9b/classThread_1_1NetworkData_1_1Leader.html#a5baddd109ff06b58140e2678e3c97a16" title="This method removes Network Data associated with a given RLOC16. " alt="" coords="1005,184,1213,223"/>
+<area shape="rect" id="node11" href="$db/dec/group__core-mle-router.html#ga179fad5b4b75849e76811006761d2b3e" title="This method release a given Router ID. " alt="" coords="1261,184,1422,223"/>
+</map>

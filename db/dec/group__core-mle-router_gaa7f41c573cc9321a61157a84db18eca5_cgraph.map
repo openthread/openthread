@@ -1,0 +1,5 @@
+<map id="Thread::Mle::MleRouter::GetLeaderAge" name="Thread::Mle::MleRouter::GetLeaderAge">
+<area shape="rect" id="node2" href="$d1/d40/classThread_1_1Timer.html#a8d56b463dc5c9f2fa82764efe3a700c7" title="This static method returns the number of seconds given milliseconds. " alt="" coords="215,5,396,31"/>
+<area shape="rect" id="node3" href="$d1/d40/classThread_1_1Timer.html#a0596072dec177b5e2b494db19800267d" title="This static method returns the current time in milliseconds. " alt="" coords="225,55,385,80"/>
+<area shape="rect" id="node4" href="$dd/db6/group__alarm.html#gaf8829e3591e03e29e136685fcdeb3300" title="Get the current current time. " alt="" coords="444,55,582,80"/>
+</map>

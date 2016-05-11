@@ -1,0 +1,5 @@
+<map id="Thread::Ip6::UdpSocket::Close" name="Thread::Ip6::UdpSocket::Close">
+<area shape="rect" id="node2" href="$de/d76/classThread_1_1Coap_1_1Server.html#ae3cd8474a329165783b06b5d6f235266" title="This method stops the CoAP server. " alt="" coords="219,5,368,44"/>
+<area shape="rect" id="node4" href="$df/d94/group__core-mle-core.html#gab0d4493caf85385a335ec64e1eb1b70c" title="This method stops the MLE protocol operation. " alt="" coords="215,68,372,93"/>
+<area shape="rect" id="node3" href="$d3/d8e/classThread_1_1ThreadNetif.html#a1a24f802ede854243223bcae3b7cb5ad" title="This method disables the Thread network interface. " alt="" coords="420,33,560,72"/>
+</map>

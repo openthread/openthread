@@ -1,0 +1,5 @@
+<map id="Thread::Coap::Header::AppendOption" name="Thread::Coap::Header::AppendOption">
+<area shape="rect" id="node2" href="$d0/d7f/classThread_1_1Coap_1_1Header.html#a1df234ef27c9000081fbbe24e7c97dd6" title="This method appends a Uri&#45;Path option. " alt="" coords="226,5,391,44"/>
+<area shape="rect" id="node4" href="$d0/d7f/classThread_1_1Coap_1_1Header.html#a0884aa8b02fc83496540a6cd2e9b7a73" title="This method appends a Content&#45;Format option. " alt="" coords="207,68,410,107"/>
+<area shape="rect" id="node3" href="$dd/dd1/classThread_1_1NetworkData_1_1Local.html#a26b8189963fc960e308f137f1d6e31d8" title="This method sends a Server Data Registration message to the Leader. " alt="" coords="458,37,606,76"/>
+</map>

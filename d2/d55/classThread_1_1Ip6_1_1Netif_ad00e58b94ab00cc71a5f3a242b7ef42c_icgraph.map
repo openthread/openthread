@@ -1,0 +1,8 @@
+<map id="Thread::Ip6::Netif::RemoveUnicastAddress" name="Thread::Ip6::Netif::RemoveUnicastAddress">
+<area shape="rect" id="node2" href="$df/d94/group__core-mle-core.html#gab0d4493caf85385a335ec64e1eb1b70c" title="This method stops the MLE protocol operation. " alt="" coords="242,19,398,44"/>
+<area shape="rect" id="node4" href="$df/d94/group__core-mle-core.html#ga228b07b6cd812413027a0c94d5b4e6f1" title="This method sets the RLOC16 assigned to the Thread interface. " alt="" coords="225,75,415,100"/>
+<area shape="rect" id="node3" href="$d3/d8e/classThread_1_1ThreadNetif.html#a1a24f802ede854243223bcae3b7cb5ad" title="This method disables the Thread network interface. " alt="" coords="483,5,624,44"/>
+<area shape="rect" id="node5" href="$df/d94/group__core-mle-core.html#ga965b4a6e302d906d47e6a72b0e2a1e41" title="This method causes the Thread interface to detach from the Thread network. " alt="" coords="465,68,642,107"/>
+<area shape="rect" id="node7" href="$df/d94/group__core-mle-core.html#ga3aa8531c34bed98206a8ce98e8a13a6e" title="This method sets the Device State to Child. " alt="" coords="463,131,643,169"/>
+<area shape="rect" id="node6" href="$df/d94/group__core-mle-core.html#ga453d94c377c5825a4a5e8b66a728e591" title="This method sets the Device Mode as reported in the Mode TLV. " alt="" coords="691,107,914,132"/>
+</map>

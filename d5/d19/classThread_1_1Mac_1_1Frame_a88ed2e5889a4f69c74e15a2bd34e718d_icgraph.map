@@ -1,0 +1,8 @@
+<map id="Thread::Mac::Frame::GetPayload" name="Thread::Mac::Frame::GetPayload">
+<area shape="rect" id="node2" href="$d5/d19/classThread_1_1Mac_1_1Frame.html#a09d352ee711d0b403e55094a2fbb4365" title="This method gets the Command ID. " alt="" coords="195,5,338,44"/>
+<area shape="rect" id="node3" href="$d5/d19/classThread_1_1Mac_1_1Frame.html#a5abadb07493b48d463d0cf468ba303fe" title="This method sets the Command ID. " alt="" coords="195,68,338,107"/>
+<area shape="rect" id="node4" href="$d5/d19/classThread_1_1Mac_1_1Frame.html#a2a266a9026c141543aa6772f4c43f695" title="This method returns the MAC header size. " alt="" coords="195,131,338,169"/>
+<area shape="rect" id="node5" href="$d5/d19/classThread_1_1Mac_1_1Frame.html#a2987d830fda299a4d8f45894f19dfa1a" title="This method returns the maximum MAC Payload length for the given MAC header and footer. " alt="" coords="386,68,550,107"/>
+<area shape="rect" id="node6" href="$d5/d19/classThread_1_1Mac_1_1Frame.html#ad71176e2e535e1d386d7ffddb2fb1c5c" title="This method returns the current MAC Payload length. " alt="" coords="397,131,539,169"/>
+<area shape="rect" id="node7" href="$d5/d19/classThread_1_1Mac_1_1Frame.html#af8559daadb5cba55452522c3df961467" title="This method sets the MAC Payload length. " alt="" coords="397,193,539,232"/>
+</map>

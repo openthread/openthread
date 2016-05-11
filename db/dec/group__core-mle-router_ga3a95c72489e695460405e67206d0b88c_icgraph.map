@@ -1,0 +1,4 @@
+<map id="Thread::Mle::MleRouter::GetChildren" name="Thread::Mle::MleRouter::GetChildren">
+<area shape="rect" id="node2" href="$dd/d1d/classThread_1_1MeshForwarder.html#a361ef901f6b665b3c7feac206089a7df" title="This method submits a message to the mesh forwarder for forwarding. " alt="" coords="215,5,379,44"/>
+<area shape="rect" id="node3" href="$d3/d8e/classThread_1_1ThreadNetif.html#a95f2ad1f6785b0de74e660e43ac86d33" title="This method submits a message to the network interface. " alt="" coords="427,5,568,44"/>
+</map>

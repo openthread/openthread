@@ -1,0 +1,7 @@
+<map id="Configuration" name="Configuration">
+<area shape="rect" id="node1" href="$db/d57/group__config-test.html" title="This module includes functions that manage configuration parameters required for Thread Certification..." alt="" coords="275,5,321,31"/>
+<area shape="rect" id="node2" href="$df/d4f/group__config-general.html" title="This module includes functions that manage configuration parameters for the Thread Child..." alt="" coords="264,55,332,80"/>
+<area shape="rect" id="node3" href="$d0/d2d/group__api.html" title="This module includes the application programming interface to the OpenThread stack. " alt="" coords="5,80,48,105"/>
+<area shape="rect" id="node4" href="$db/da2/group__config-br.html" title="This module includes functions that manage configuration parameters that apply to the Thread Border R..." alt="" coords="246,104,351,129"/>
+<area shape="rect" id="node6" href="$da/d96/group__config-router.html" title="This module includes functions that manage configuration parameters for the Thread Router and Leader ..." alt="" coords="245,153,351,179"/>
+</map>

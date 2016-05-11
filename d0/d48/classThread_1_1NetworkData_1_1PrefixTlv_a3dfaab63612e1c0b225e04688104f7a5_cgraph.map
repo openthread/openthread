@@ -1,0 +1,7 @@
+<map id="Thread::NetworkData::PrefixTlv::Init" name="Thread::NetworkData::PrefixTlv::Init">
+<area shape="rect" id="node2" href="$d5/d81/classThread_1_1NetworkData_1_1NetworkDataTlv.html#aac4e144713568670ae504b4d40bbcc5d" title="This method initializes TLV. " alt="" coords="225,5,374,44"/>
+<area shape="rect" id="node3" href="$d5/d81/classThread_1_1NetworkData_1_1NetworkDataTlv.html#a16dd006580876eac0a702c12b6f9db81" title="This method sets the Type value. " alt="" coords="210,68,390,107"/>
+<area shape="rect" id="node4" href="$d0/d48/classThread_1_1NetworkData_1_1PrefixTlv.html#aba35dd736801e79069757eee1d30d204" title="This method returns a pointer to the Prefix. " alt="" coords="226,131,374,169"/>
+<area shape="rect" id="node5" href="$d0/d48/classThread_1_1NetworkData_1_1PrefixTlv.html#ada87986e83826285dadc2d7164d670e8" title="This method sets the Sub&#45;TLVs length in bytes. " alt="" coords="201,193,398,232"/>
+<area shape="rect" id="node6" href="$d5/d81/classThread_1_1NetworkData_1_1NetworkDataTlv.html#a317f61172c3e2a2c6e03caa4921014d5" title="This method sets the Length value. " alt="" coords="446,193,638,232"/>
+</map>

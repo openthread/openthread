@@ -1,0 +1,7 @@
+<map id="Thread::Message::Prepend" name="Thread::Message::Prepend">
+<area shape="rect" id="node2" href="$dc/d3c/classThread_1_1Message.html#acaa6ed0d0c060a524cb5da25451acc0d" title="This method sets the byte offset within the message. " alt="" coords="237,5,425,31"/>
+<area shape="rect" id="node4" href="$dc/d3c/classThread_1_1Message.html#ac8304ee00c9e0b303539687e98e192e0" title="This method returns the byte offset within the message. " alt="" coords="236,55,426,80"/>
+<area shape="rect" id="node5" href="$dc/d3c/classThread_1_1Message.html#add75c76a1fa70eb5d4eb03b68c5d1df8" title="This method writes bytes to the message. " alt="" coords="249,104,413,129"/>
+<area shape="rect" id="node3" href="$dc/d3c/classThread_1_1Message.html#a2cf440376e834030c38bb2ced4ca49e9" title="This method returns the number of bytes in the message. " alt="" coords="475,31,670,56"/>
+<area shape="rect" id="node6" href="$db/d50/classThread_1_1Buffer.html#a34ab22941ccd9bb222d251a6a18c95bf" title="This method returns a pointer to the next message buffer. " alt="" coords="474,104,672,129"/>
+</map>

@@ -1,0 +1,5 @@
+<map id="Thread::Ip6::Address::GetScope" name="Thread::Ip6::Address::GetScope">
+<area shape="rect" id="node2" href="$d9/db1/classThread_1_1Ip6_1_1Address.html#a37b709740053966d80e6c4b65e38ad2e" title="This method indicates whether or not the IPv6 address is multicast address. " alt="" coords="199,5,345,44"/>
+<area shape="rect" id="node3" href="$d9/db1/classThread_1_1Ip6_1_1Address.html#a95748f9c0a5048ce8700cd040d7efc52" title="This method indicates whether or not the IPv6 address scope is Link&#45;Local. " alt="" coords="199,68,345,107"/>
+<area shape="rect" id="node4" href="$d9/db1/classThread_1_1Ip6_1_1Address.html#adf30776c446d5413a6bc783fe967311b" title="This method indicates whether or not the IPv6 address is the Loopback Address. " alt="" coords="199,131,345,169"/>
+</map>

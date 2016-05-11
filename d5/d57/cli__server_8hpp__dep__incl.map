@@ -1,0 +1,8 @@
+<map id="src/cli/cli_server.hpp" name="src/cli/cli_server.hpp">
+<area shape="rect" id="node2" href="$d3/db5/cli_8hpp.html" title="This file contains definitions for the CLI interpreter. " alt="" coords="166,79,264,104"/>
+<area shape="rect" id="node6" href="$d7/dd9/cli__serial_8hpp.html" title="This file contains definitions for a CLI server on the serial service. " alt="" coords="5,79,142,104"/>
+<area shape="rect" id="node7" href="$d2/d1a/cli__udp_8hpp.html" title="This file contains definitions for a CLI server on a UDP socket. " alt="" coords="287,79,415,104"/>
+<area shape="rect" id="node3" href="$dd/d48/cli_8cpp.html" title="This file implements the CLI interpreter. " alt="" coords="167,152,264,177"/>
+<area shape="rect" id="node4" href="$d3/d33/cli__serial_8cpp.html" title="This file implements the CLI server on the serial service. " alt="" coords="6,152,142,177"/>
+<area shape="rect" id="node5" href="$df/d8a/cli__udp_8cpp.html" title="This file implements the CLI server on a UDP socket. " alt="" coords="288,152,414,177"/>
+</map>

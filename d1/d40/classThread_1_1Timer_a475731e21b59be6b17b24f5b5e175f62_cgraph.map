@@ -1,0 +1,6 @@
+<map id="Thread::Timer::Start" name="Thread::Timer::Start">
+<area shape="rect" id="node2" href="$d1/d40/classThread_1_1Timer.html#a49ded72fbbf2588e1ddb545fa3f1f9f0" title="This method schedules the timer to fire at dt milliseconds from t0. " alt="" coords="197,5,350,31"/>
+<area shape="rect" id="node4" href="$d1/d40/classThread_1_1Timer.html#a0596072dec177b5e2b494db19800267d" title="This static method returns the current time in milliseconds. " alt="" coords="193,55,354,80"/>
+<area shape="rect" id="node3" href="$df/d1f/classThread_1_1TimerScheduler.html#ab72e28a36c92b4a87296d6d1afb2449e" title="This static method adds a timer instance to the timer scheduler. " alt="" coords="402,5,597,31"/>
+<area shape="rect" id="node5" href="$dd/db6/group__alarm.html#gaf8829e3591e03e29e136685fcdeb3300" title="Get the current current time. " alt="" coords="430,55,569,80"/>
+</map>

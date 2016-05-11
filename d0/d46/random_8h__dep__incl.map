@@ -1,0 +1,10 @@
+<map id="include/platform/random.h" name="include/platform/random.h">
+<area shape="rect" id="node2" href="$d4/dd9/mac_8cpp.html" title="This file implements the subset of IEEE 802.15.4 primitives required for Thread. " alt="" coords="5,85,157,111"/>
+<area shape="rect" id="node3" href="$da/d60/openthread_8cpp.html" title="This file implements the top&#45;level interface to the OpenThread stack. " alt="" coords="181,85,346,111"/>
+<area shape="rect" id="node4" href="$de/d27/address__resolver_8cpp.html" title="This file implements Thread&#39;s EID&#45;to&#45;RLOC mapping and caching. " alt="" coords="370,79,531,117"/>
+<area shape="rect" id="node5" href="$df/d6b/mesh__forwarder_8cpp.html" title="This file implements mesh forwarding of IPv6/6LoWPAN messages. " alt="" coords="555,79,701,117"/>
+<area shape="rect" id="node6" href="$d1/df9/mle_8cpp.html" title="This file implements MLE functionality required for the Thread Child, Router and Leader roles..." alt="" coords="725,85,886,111"/>
+<area shape="rect" id="node7" href="$d9/d88/mle__router_8cpp.html" title="This file implements MLE functionality required for the Thread Router and Leader roles. " alt="" coords="909,79,1045,117"/>
+<area shape="rect" id="node8" href="$d0/d0f/network__data__leader_8cpp.html" title="This file implements the Thread Network Data managed by the Thread Leader. " alt="" coords="1069,79,1230,117"/>
+<area shape="rect" id="node9" href="$dd/d90/network__data__local_8cpp.html" title="This file implements the local Thread Network Data. " alt="" coords="1253,79,1414,117"/>
+</map>

@@ -1,0 +1,4 @@
+<map id="Thread::Mle::MleRouter::GetNeighbor" name="Thread::Mle::MleRouter::GetNeighbor">
+<area shape="rect" id="node2" href="$db/dec/group__core-mle-router.html#gae77c691904889226f188bf0b7847baa8" title="This method returns a pointer to a Neighbor object. " alt="" coords="215,5,376,44"/>
+<area shape="rect" id="node3" href="$df/d94/group__core-mle-core.html#gaf9288bc975f39346b4e5d15796bf08b6" title="This method returns a pointer to the neighbor object. " alt="" coords="424,12,628,37"/>
+</map>
