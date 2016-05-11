@@ -452,9 +452,9 @@ Done
 
 ### whitelist remove \<extaddr\>
 
-Add an IEEE 802.15.4 Extended Address to the whitelist.
+Remove an IEEE 802.15.4 Extended Address from the whitelist.
 
 ```bash
-$ whitelist add dead00beef00cafe
+$ whitelist remove dead00beef00cafe
 Done
 ```
