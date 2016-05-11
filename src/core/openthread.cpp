@@ -1,0 +1,553 @@
+/*
+ *    Copyright (c) 2016, Nest Labs, Inc.
+ *    All rights reserved.
+ *
+ *    Redistribution and use in source and binary forms, with or without
+ *    modification, are permitted provided that the following conditions are met:
+ *    1. Redistributions of source code must retain the above copyright
+ *       notice, this list of conditions and the following disclaimer.
+ *    2. Redistributions in binary form must reproduce the above copyright
+ *       notice, this list of conditions and the following disclaimer in the
+ *       documentation and/or other materials provided with the distribution.
+ *    3. Neither the name of the copyright holder nor the
+ *       names of its contributors may be used to endorse or promote products
+ *       derived from this software without specific prior written permission.
+ *
+ *    THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+ *    ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+ *    WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ *    DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY
+ *    DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+ *    (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+ *    LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+ *    ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ *    (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+ *    SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
+/**
+ * @file
+ *   This file implements the top-level interface to the OpenThread stack.
+ */
+
+#include <new>
+
+#include <openthread.h>
+#include <common/code_utils.hpp>
+#include <common/debug.hpp>
+#include <common/logging.hpp>
+#include <common/message.hpp>
+#include <common/tasklet.hpp>
+#include <common/timer.hpp>
+#include <platform/random.h>
+#include <thread/thread_netif.hpp>
+
+namespace Thread {
+
+// Allocate the structure using "raw" storage.
+#define otDEFINE_ALIGNED_VAR(name, size, align_type)            \
+    align_type name[(((size) + (sizeof (align_type) - 1)) / sizeof (align_type))]
+
+static otDEFINE_ALIGNED_VAR(sThreadNetifRaw, sizeof(ThreadNetif), uint64_t);
+
+static ThreadNetif *sThreadNetif;
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+void otInit()
+{
+    otLogInfoApi("Init\n");
+    Message::Init();
+    sThreadNetif = new(&sThreadNetifRaw) ThreadNetif;
+}
+
+void otProcessNextTasklet(void)
+{
+    TaskletScheduler::RunNextTasklet();
+}
+
+bool otAreTaskletsPending(void)
+{
+    return TaskletScheduler::AreTaskletsPending();
+}
+
+uint8_t otGetChannel(void)
+{
+    return sThreadNetif->GetMac().GetChannel();
+}
+
+ThreadError otSetChannel(uint8_t aChannel)
+{
+    return sThreadNetif->GetMac().SetChannel(aChannel);
+}
+
+uint32_t otGetChildTimeout(void)
+{
+    return sThreadNetif->GetMle().GetTimeout();
+}
+
+void otSetChildTimeout(uint32_t aTimeout)
+{
+    sThreadNetif->GetMle().SetTimeout(aTimeout);
+}
+
+const uint8_t *otGetExtendedAddress(void)
+{
+    return reinterpret_cast<const uint8_t *>(sThreadNetif->GetMac().GetExtAddress());
+}
+
+const uint8_t *otGetExtendedPanId(void)
+{
+    return sThreadNetif->GetMac().GetExtendedPanId();
+}
+
+void otSetExtendedPanId(const uint8_t *aExtendedPanId)
+{
+    sThreadNetif->GetMac().SetExtendedPanId(aExtendedPanId);
+}
+
+otLinkModeConfig otGetLinkMode(void)
+{
+    otLinkModeConfig config = {};
+    uint8_t mode = sThreadNetif->GetMle().GetDeviceMode();
+
+    if (mode & Mle::ModeTlv::kModeRxOnWhenIdle)
+    {
+        config.mRxOnWhenIdle = 1;
+    }
+
+    if (mode & Mle::ModeTlv::kModeSecureDataRequest)
+    {
+        config.mSecureDataRequests = 1;
+    }
+
+    if (mode & Mle::ModeTlv::kModeFFD)
+    {
+        config.mDeviceType = 1;
+    }
+
+    if (mode & Mle::ModeTlv::kModeFullNetworkData)
+    {
+        config.mNetworkData = 1;
+    }
+
+    return config;
+}
+
+ThreadError otSetLinkMode(otLinkModeConfig aConfig)
+{
+    uint8_t mode = 0;
+
+    if (aConfig.mRxOnWhenIdle)
+    {
+        mode |= Mle::ModeTlv::kModeRxOnWhenIdle;
+    }
+
+    if (aConfig.mSecureDataRequests)
+    {
+        mode |= Mle::ModeTlv::kModeSecureDataRequest;
+    }
+
+    if (aConfig.mDeviceType)
+    {
+        mode |= Mle::ModeTlv::kModeFFD;
+    }
+
+    if (aConfig.mNetworkData)
+    {
+        mode |= Mle::ModeTlv::kModeFullNetworkData;
+    }
+
+    return sThreadNetif->GetMle().SetDeviceMode(mode);
+}
+
+const uint8_t *otGetMasterKey(uint8_t *aKeyLength)
+{
+    return sThreadNetif->GetKeyManager().GetMasterKey(aKeyLength);
+}
+
+ThreadError otSetMasterKey(const uint8_t *aKey, uint8_t aKeyLength)
+{
+    return sThreadNetif->GetKeyManager().SetMasterKey(aKey, aKeyLength);
+}
+
+const char *otGetNetworkName(void)
+{
+    return sThreadNetif->GetMac().GetNetworkName();
+}
+
+ThreadError otSetNetworkName(const char *aNetworkName)
+{
+    return sThreadNetif->GetMac().SetNetworkName(aNetworkName);
+}
+
+uint16_t otGetPanId(void)
+{
+    return sThreadNetif->GetMac().GetPanId();
+}
+
+ThreadError otSetPanId(uint16_t aPanId)
+{
+    return sThreadNetif->GetMac().SetPanId(aPanId);
+}
+
+uint8_t otGetLocalLeaderWeight(void)
+{
+    return sThreadNetif->GetMle().GetLeaderWeight();
+}
+
+void otSetLocalLeaderWeight(uint8_t aWeight)
+{
+    sThreadNetif->GetMle().SetLeaderWeight(aWeight);
+}
+
+ThreadError otAddBorderRouter(const otBorderRouterConfig *aConfig)
+{
+    uint8_t flags = 0;
+
+    if (aConfig->mSlaacPreferred)
+    {
+        flags |= NetworkData::BorderRouterEntry::kPreferredFlag;
+    }
+
+    if (aConfig->mSlaacValid)
+    {
+        flags |= NetworkData::BorderRouterEntry::kValidFlag;
+    }
+
+    if (aConfig->mDhcp)
+    {
+        flags |= NetworkData::BorderRouterEntry::kDhcpFlag;
+    }
+
+    if (aConfig->mConfigure)
+    {
+        flags |= NetworkData::BorderRouterEntry::kConfigureFlag;
+    }
+
+    if (aConfig->mDefaultRoute)
+    {
+        flags |= NetworkData::BorderRouterEntry::kDefaultRouteFlag;
+    }
+
+    return sThreadNetif->GetNetworkDataLocal().AddOnMeshPrefix(aConfig->mPrefix.mPrefix.m8, aConfig->mPrefix.mLength,
+                                                               aConfig->mPreference, flags, aConfig->mStable);
+}
+
+ThreadError otRemoveBorderRouter(const otIp6Prefix *aPrefix)
+{
+    return sThreadNetif->GetNetworkDataLocal().RemoveOnMeshPrefix(aPrefix->mPrefix.m8, aPrefix->mLength);
+}
+
+ThreadError otAddExternalRoute(const otExternalRouteConfig *aConfig)
+{
+    return sThreadNetif->GetNetworkDataLocal().AddHasRoutePrefix(aConfig->mPrefix.mPrefix.m8, aConfig->mPrefix.mLength,
+                                                                 aConfig->mPreference, aConfig->mStable);
+}
+
+ThreadError otRemoveExternalRoute(const otIp6Prefix *aPrefix)
+{
+    return sThreadNetif->GetNetworkDataLocal().RemoveHasRoutePrefix(aPrefix->mPrefix.m8, aPrefix->mLength);
+}
+
+ThreadError otSendServerData(void)
+{
+    Ip6::Address destination;
+    sThreadNetif->GetMle().GetLeaderAddress(destination);
+    return sThreadNetif->GetNetworkDataLocal().Register(destination);
+}
+
+uint32_t otGetContextIdReuseDelay(void)
+{
+    return sThreadNetif->GetNetworkDataLeader().GetContextIdReuseDelay();
+}
+
+void otSetContextIdReuseDelay(uint32_t aDelay)
+{
+    sThreadNetif->GetNetworkDataLeader().SetContextIdReuseDelay(aDelay);
+}
+
+uint32_t otGetKeySequenceCounter(void)
+{
+    return sThreadNetif->GetKeyManager().GetCurrentKeySequence();
+}
+
+void otSetKeySequenceCounter(uint32_t aKeySequenceCounter)
+{
+    sThreadNetif->GetKeyManager().SetCurrentKeySequence(aKeySequenceCounter);
+}
+
+uint32_t otGetNetworkIdTimeout(void)
+{
+    return sThreadNetif->GetMle().GetNetworkIdTimeout();
+}
+
+void otSetNetworkIdTimeout(uint32_t aTimeout)
+{
+    sThreadNetif->GetMle().SetNetworkIdTimeout(aTimeout);
+}
+
+uint8_t otGetRouterUpgradeThreshold(void)
+{
+    return sThreadNetif->GetMle().GetRouterUpgradeThreshold();
+}
+
+void otSetRouterUpgradeThreshold(uint8_t aThreshold)
+{
+    sThreadNetif->GetMle().SetRouterUpgradeThreshold(aThreshold);
+}
+
+ThreadError otReleaseRouterId(uint8_t aRouterId)
+{
+    return sThreadNetif->GetMle().ReleaseRouterId(aRouterId);
+}
+
+ThreadError otAddMacWhitelist(const uint8_t *aExtAddr)
+{
+    ThreadError error = kThreadError_None;
+
+    if (sThreadNetif->GetMac().GetWhitelist().Add(*reinterpret_cast<const Mac::ExtAddress *>(aExtAddr)) == NULL)
+    {
+        error = kThreadError_NoBufs;
+    }
+
+    return error;
+}
+
+ThreadError otAddMacWhitelistRssi(const uint8_t *aExtAddr, int8_t aRssi)
+{
+    ThreadError error = kThreadError_None;
+    Thread::Mac::Whitelist::Entry *entry;
+
+    entry = sThreadNetif->GetMac().GetWhitelist().Add(*reinterpret_cast<const Mac::ExtAddress *>(aExtAddr));
+    VerifyOrExit(entry != NULL, error = kThreadError_NoBufs);
+    sThreadNetif->GetMac().GetWhitelist().SetConstantRssi(*entry, aRssi);
+
+exit:
+    return error;
+}
+
+void otRemoveMacWhitelist(const uint8_t *aExtAddr)
+{
+    sThreadNetif->GetMac().GetWhitelist().Remove(*reinterpret_cast<const Mac::ExtAddress *>(aExtAddr));
+}
+
+void otClearMacWhitelist()
+{
+    sThreadNetif->GetMac().GetWhitelist().Clear();
+}
+
+void otDisableMacWhitelist()
+{
+    sThreadNetif->GetMac().GetWhitelist().Disable();
+}
+
+void otEnableMacWhitelist()
+{
+    sThreadNetif->GetMac().GetWhitelist().Enable();
+}
+
+ThreadError otBecomeDetached()
+{
+    return sThreadNetif->GetMle().BecomeDetached();
+}
+
+ThreadError otBecomeChild(otMleAttachFilter aFilter)
+{
+    return sThreadNetif->GetMle().BecomeChild(aFilter);
+}
+
+ThreadError otBecomeRouter()
+{
+    return sThreadNetif->GetMle().BecomeRouter();
+}
+
+ThreadError otBecomeLeader()
+{
+    return sThreadNetif->GetMle().BecomeLeader();
+}
+
+otDeviceRole otGetDeviceRole()
+{
+    otDeviceRole rval = kDeviceRoleDisabled;
+
+    switch (sThreadNetif->GetMle().GetDeviceState())
+    {
+    case Mle::kDeviceStateDisabled:
+        rval = kDeviceRoleDisabled;
+        break;
+
+    case Mle::kDeviceStateDetached:
+        rval = kDeviceRoleDetached;
+        break;
+
+    case Mle::kDeviceStateChild:
+        rval = kDeviceRoleChild;
+        break;
+
+    case Mle::kDeviceStateRouter:
+        rval = kDeviceRoleRouter;
+        break;
+
+    case Mle::kDeviceStateLeader:
+        rval = kDeviceRoleLeader;
+        break;
+    }
+
+    return rval;
+}
+
+uint8_t otGetLeaderRouterId()
+{
+    return sThreadNetif->GetMle().GetLeaderDataTlv().GetLeaderRouterId();
+}
+
+uint8_t otGetLeaderWeight()
+{
+    return sThreadNetif->GetMle().GetLeaderDataTlv().GetWeighting();
+}
+
+uint8_t otGetNetworkDataVersion()
+{
+    return sThreadNetif->GetMle().GetLeaderDataTlv().GetDataVersion();
+}
+
+uint32_t otGetPartitionId()
+{
+    return sThreadNetif->GetMle().GetLeaderDataTlv().GetPartitionId();
+}
+
+uint16_t otGetRloc16(void)
+{
+    return sThreadNetif->GetMle().GetRloc16();
+}
+
+uint8_t otGetRouterIdSequence()
+{
+    return sThreadNetif->GetMle().GetRouterIdSequence();
+}
+
+uint8_t otGetStableNetworkDataVersion()
+{
+    return sThreadNetif->GetMle().GetLeaderDataTlv().GetStableDataVersion();
+}
+
+bool otIsIp6AddressEqual(const otIp6Address *a, const otIp6Address *b)
+{
+    return *static_cast<const Ip6::Address *>(a) == *static_cast<const Ip6::Address *>(b);
+}
+
+ThreadError otIp6AddressFromString(const char *str, otIp6Address *address)
+{
+    return static_cast<Ip6::Address *>(address)->FromString(str);
+}
+
+const otNetifAddress *otGetUnicastAddresses()
+{
+    return sThreadNetif->GetUnicastAddresses();
+}
+
+ThreadError otAddUnicastAddress(otNetifAddress *address)
+{
+    return sThreadNetif->AddUnicastAddress(*static_cast<Ip6::NetifUnicastAddress *>(address));
+}
+
+ThreadError otRemoveUnicastAddress(otNetifAddress *address)
+{
+    return sThreadNetif->RemoveUnicastAddress(*static_cast<Ip6::NetifUnicastAddress *>(address));
+}
+
+ThreadError otEnable(void)
+{
+    return sThreadNetif->Up();
+}
+
+ThreadError otDisable(void)
+{
+    return sThreadNetif->Down();
+}
+
+otMessage otNewUdpMessage()
+{
+    return Ip6::Udp::NewMessage(0);
+}
+
+ThreadError otFreeMessage(otMessage aMessage)
+{
+    return Message::Free(*static_cast<Message *>(aMessage));
+}
+
+uint16_t otGetMessageLength(otMessage aMessage)
+{
+    Message *message = static_cast<Message *>(aMessage);
+    return message->GetLength();
+}
+
+ThreadError otSetMessageLength(otMessage aMessage, uint16_t aLength)
+{
+    Message *message = static_cast<Message *>(aMessage);
+    return message->SetLength(aLength);
+}
+
+uint16_t otGetMessageOffset(otMessage aMessage)
+{
+    Message *message = static_cast<Message *>(aMessage);
+    return message->GetOffset();
+}
+
+ThreadError otSetMessageOffset(otMessage aMessage, uint16_t aOffset)
+{
+    Message *message = static_cast<Message *>(aMessage);
+    return message->SetOffset(aOffset);
+}
+
+int otAppendMessage(otMessage aMessage, const void *aBuf, uint16_t aLength)
+{
+    Message *message = static_cast<Message *>(aMessage);
+    return message->Append(aBuf, aLength);
+}
+
+int otReadMessage(otMessage aMessage, uint16_t aOffset, void *aBuf, uint16_t aLength)
+{
+    Message *message = static_cast<Message *>(aMessage);
+    return message->Read(aOffset, aLength, aBuf);
+}
+
+int otWriteMessage(otMessage aMessage, uint16_t aOffset, const void *aBuf, uint16_t aLength)
+{
+    Message *message = static_cast<Message *>(aMessage);
+    return message->Write(aOffset, aLength, aBuf);
+}
+
+ThreadError otOpenUdpSocket(otUdpSocket *aSocket, otUdpReceive aCallback, void *aContext)
+{
+    Ip6::UdpSocket *socket = reinterpret_cast<Ip6::UdpSocket *>(aSocket);
+    return socket->Open(aCallback, aContext);
+}
+
+ThreadError otCloseUdpSocket(otUdpSocket *aSocket)
+{
+    Ip6::UdpSocket *socket = reinterpret_cast<Ip6::UdpSocket *>(aSocket);
+    return socket->Close();
+}
+
+ThreadError otBindUdpSocket(otUdpSocket *aSocket, otSockAddr *aSockName)
+{
+    Ip6::UdpSocket *socket = reinterpret_cast<Ip6::UdpSocket *>(aSocket);
+    return socket->Bind(*reinterpret_cast<const Ip6::SockAddr *>(aSockName));
+}
+
+ThreadError otSendUdpMessage(otUdpSocket *aSocket, otMessage aMessage, const otMessageInfo *aMessageInfo)
+{
+    Ip6::UdpSocket *socket = reinterpret_cast<Ip6::UdpSocket *>(aSocket);
+    return socket->SendTo(*reinterpret_cast<Message *>(aMessage),
+                          *reinterpret_cast<const Ip6::MessageInfo *>(aMessageInfo));
+}
+
+#ifdef __cplusplus
+}  // extern "C"
+#endif
+
+}  // namespace Thread

@@ -1,0 +1,8 @@
+language: cpp
+
+before_install:
+  - sudo apt-get install python-pexpect
+
+script:
+  - ./bootstrap-configure --enable-minimum-set-of-tests
+  - make check
