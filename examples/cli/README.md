@@ -69,7 +69,7 @@ Wait a few seconds and verify that the device has become a Thread Router:
 
 ```bash
 $ state
-leader
+router
 Done
 ```
 
