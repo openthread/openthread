@@ -144,7 +144,7 @@ Done
 
 ### ipaddr del \<ipaddr\>
 
-Delete an IPv6 address to the Thread interface.
+Delete an IPv6 address from the Thread interface.
 
 ```bash
 $ ipaddr del 2001::dead:beef:cafe
