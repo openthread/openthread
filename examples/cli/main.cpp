@@ -46,8 +46,6 @@ int main(int argc, char *argv[])
 {
     uint32_t atomic_state;
 
-    memset(&args_info, 0, sizeof(args_info));
-
     if (cmdline_parser(argc, argv, &args_info) != 0)
     {
         exit(1);
