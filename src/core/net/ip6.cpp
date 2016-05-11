@@ -172,11 +172,7 @@ ThreadError Ip6::SendDatagram(Message &message, MessageInfo &messageInfo, IpProt
 
 exit:
 
-    if (error != kThreadError_None)
-    {
-        Message::Free(message);
-    }
-    else
+    if (error == kThreadError_None)
     {
         error = HandleDatagram(message, NULL, messageInfo.mInterfaceId, NULL, false);
     }
