@@ -209,6 +209,12 @@ exit:
     return error;
 }
 
+bool Mac::IsActiveScanInProgress(void)
+{
+    return (mState == kStateActiveScan) || mActiveScanRequest;
+}
+
+
 ThreadError Mac::RegisterReceiver(Receiver &aReceiver)
 {
     assert(mReceiveTail != &aReceiver && aReceiver.mNext == NULL);
