@@ -666,6 +666,8 @@ exit:
 
 void Interpreter::ProcessPrefix(int argc, char *argv[])
 {
+    VerifyOrExit(argc > 0, ;);
+
     if (strcmp(argv[0], "add") == 0)
     {
         SuccessOrExit(ProcessPrefixAdd(argc - 1, argv + 1));
@@ -714,6 +716,8 @@ ThreadError Interpreter::ProcessRouteAdd(int argc, char *argv[])
 
     char *prefixLengthStr;
     char *endptr;
+
+    VerifyOrExit(argc > 0, error = kThreadError_Parse);
 
     if ((prefixLengthStr = strchr(argv[argcur], '/')) == NULL)
     {
@@ -770,6 +774,8 @@ ThreadError Interpreter::ProcessRouteRemove(int argc, char *argv[])
     char *prefixLengthStr;
     char *endptr;
 
+    VerifyOrExit(argc > 0, error = kThreadError_Parse);
+
     if ((prefixLengthStr = strchr(argv[argcur], '/')) == NULL)
     {
         ExitNow();
@@ -794,6 +800,8 @@ exit:
 
 void Interpreter::ProcessRoute(int argc, char *argv[])
 {
+    VerifyOrExit(argc > 0, ;);
+
     if (strcmp(argv[0], "add") == 0)
     {
         SuccessOrExit(ProcessRouteAdd(argc - 1, argv + 1));
