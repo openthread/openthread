@@ -63,7 +63,7 @@ ThreadError IcmpEcho::SendEchoRequest(const SockAddr &aDestination,
 {
     ThreadError error = kThreadError_None;
     MessageInfo messageInfo;
-    Message *message;
+    Message *message = NULL;
     IcmpHeader icmp6Header;
 
     VerifyOrExit((message = Ip6::NewMessage(0)) != NULL, error = kThreadError_NoBufs);
@@ -85,6 +85,12 @@ ThreadError IcmpEcho::SendEchoRequest(const SockAddr &aDestination,
     otLogInfoIcmp("Sent echo request\n");
 
 exit:
+
+    if (error != kThreadError_None && message != NULL)
+    {
+        Message::Free(*message);
+    }
+
     return error;
 }
 
@@ -112,7 +118,7 @@ ThreadError Icmp::SendError(const Address &aDestination, IcmpHeader::Type aType,
 {
     ThreadError error = kThreadError_None;
     MessageInfo messageInfo;
-    Message *message;
+    Message *message = NULL;
     IcmpHeader icmp6Header;
 
     VerifyOrExit((message = Ip6::NewMessage(0)) != NULL, error = kThreadError_NoBufs);
@@ -133,6 +139,12 @@ ThreadError Icmp::SendError(const Address &aDestination, IcmpHeader::Type aType,
     otLogInfoIcmp("Sent ICMPv6 Error\n");
 
 exit:
+
+    if (error != kThreadError_None && message != NULL)
+    {
+        Message::Free(*message);
+    }
+
     return error;
 }
 
@@ -188,7 +200,7 @@ ThreadError Icmp::HandleEchoRequest(Message &aRequestMessage, const MessageInfo 
 {
     ThreadError error = kThreadError_None;
     IcmpHeader icmp6Header;
-    Message *replyMessage;
+    Message *replyMessage = NULL;
     MessageInfo replyMessageInfo;
     uint16_t payloadLength;
 
@@ -221,6 +233,12 @@ ThreadError Icmp::HandleEchoRequest(Message &aRequestMessage, const MessageInfo 
     otLogInfoIcmp("Sent Echo Reply\n");
 
 exit:
+
+    if (error != kThreadError_None && replyMessage != NULL)
+    {
+        Message::Free(*replyMessage);
+    }
+
     return error;
 }
 
