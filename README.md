@@ -40,6 +40,10 @@ tests | Unit and Thread conformance tests
 third_party | Third-party code used by OpenThread
 
 
+## Docs
+The Doxygen reference docs are [hosted online](http://openthread.github.io/openthread/) and generated as part of the build.
+
+
 # Getting Help
 
 Submit bugs and feature requests to [issue tracker](https://github.com/openthread/openthread/issues). Usage questions? Post questions to [Stack Overflow](http://stackoverflow.com/) using the [[openthread] tag](http://stackoverflow.com/questions/tagged/openthread). We also use Google Groups for discussion and announcements:
