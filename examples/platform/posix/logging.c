@@ -50,63 +50,64 @@ void otPlatLog(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aFormat
     switch (aLogLevel)
     {
     case kLogLevelNone:
-        printf("NONE ");
+        fprintf(stderr, "NONE ");
         break;
 
     case kLogLevelCrit:
-        printf("CRIT ");
+        fprintf(stderr, "CRIT ");
         break;
 
     case kLogLevelWarn:
-        printf("WARN ");
+        fprintf(stderr, "WARN ");
         break;
 
     case kLogLevelInfo:
-        printf("INFO ");
+        fprintf(stderr, "INFO ");
         break;
 
     case kLogLevelDebg:
-        printf("DEBG ");
+        fprintf(stderr, "DEBG ");
         break;
     }
 
     switch (aLogRegion)
     {
     case kLogRegionApi:
-        printf("API  ");
+        fprintf(stderr, "API  ");
         break;
 
     case kLogRegionMle:
-        printf("MLE  ");
+        fprintf(stderr, "MLE  ");
         break;
 
     case kLogRegionArp:
-        printf("ARP  ");
+        fprintf(stderr, "ARP  ");
         break;
 
     case kLogRegionNetData:
-        printf("NETD ");
+        fprintf(stderr, "NETD ");
         break;
 
     case kLogRegionIp6:
-        printf("IPV6 ");
+        fprintf(stderr, "IPV6 ");
         break;
 
     case kLogRegionIcmp:
-        printf("ICMP ");
+        fprintf(stderr, "ICMP ");
         break;
 
     case kLogRegionMac:
-        printf("MAC  ");
+        fprintf(stderr, "MAC  ");
         break;
 
     case kLogRegionMem:
-        printf("MEM  ");
+        fprintf(stderr, "MEM  ");
         break;
     }
 
     va_start(args, aFormat);
-    vprintf(aFormat, args);
+    vfprintf(stderr, aFormat, args);
+    fprintf(stderr, "\r");
     va_end(args);
 }
 
