@@ -61,7 +61,14 @@ enum PhyState
     kStateListen = 3,
     kStateReceive = 4,
     kStateTransmit = 5,
+    kStateAckWait = 6,
 };
+
+struct RadioMessage
+{
+    uint8_t mChannel;
+    uint8_t mPsdu[Mac::Frame::kMTU];
+} __attribute__((packed));
 
 static void *phy_receive_thread(void *arg);
 
@@ -171,6 +178,7 @@ ThreadError otPlatRadioIdle()
 
     case kStateListen:
     case kStateTransmit:
+    case kStateAckWait:
         s_state = kStateIdle;
         pthread_cond_signal(&s_condition_variable);
         break;
@@ -205,6 +213,7 @@ ThreadError otPlatRadioTransmit(RadioPacket *packet)
 {
     ThreadError error = kThreadError_None;
     struct sockaddr_in sockaddr;
+    RadioMessage message;
 
     pthread_mutex_lock(&s_mutex);
     VerifyOrExit(s_state == kStateIdle, error = kThreadError_Busy);
@@ -218,6 +227,9 @@ ThreadError otPlatRadioTransmit(RadioPacket *packet)
     sockaddr.sin_family = AF_INET;
     inet_pton(AF_INET, "127.0.0.1", &sockaddr.sin_addr);
 
+    message.mChannel = s_transmit_frame->mChannel;
+    memcpy(message.mPsdu, s_transmit_frame->mPsdu, s_transmit_frame->mLength);
+
     for (int i = 1; i < 34; i++)
     {
         if (args_info.nodeid_arg == i)
@@ -226,11 +238,14 @@ ThreadError otPlatRadioTransmit(RadioPacket *packet)
         }
 
         sockaddr.sin_port = htons(9000 + i);
-        sendto(s_sockfd, s_transmit_frame->mPsdu, s_transmit_frame->mLength, 0,
-               (struct sockaddr *)&sockaddr, sizeof(sockaddr));
+        sendto(s_sockfd, &message, 1 + s_transmit_frame->mLength, 0, (struct sockaddr *)&sockaddr, sizeof(sockaddr));
     }
 
-    if (!reinterpret_cast<Mac::Frame *>(s_transmit_frame)->GetAckRequest())
+    if (reinterpret_cast<Mac::Frame *>(s_transmit_frame)->GetAckRequest())
+    {
+        s_state = kStateAckWait;
+    }
+    else
     {
         otPlatRadioSignalTransmitDone();
     }
@@ -249,7 +264,7 @@ ThreadError otPlatRadioHandleTransmitDone(bool *rxPending)
 {
     ThreadError error = kThreadError_None;
 
-    VerifyOrExit(s_state == kStateTransmit, error = kThreadError_InvalidState);
+    VerifyOrExit(s_state == kStateTransmit || s_state == kStateAckWait, error = kThreadError_InvalidState);
 
     pthread_mutex_lock(&s_mutex);
     s_state = kStateIdle;
@@ -273,6 +288,7 @@ void *phy_receive_thread(void *arg)
     int length;
     uint8_t tx_sequence, rx_sequence;
     uint8_t command_id;
+    RadioMessage message;
 
     while (1)
     {
@@ -288,7 +304,7 @@ void *phy_receive_thread(void *arg)
 
         pthread_mutex_lock(&s_mutex);
 
-        while (s_state == kStateIdle)
+        while (s_state == kStateIdle || s_state == kStateTransmit)
         {
             pthread_cond_wait(&s_condition_variable, &s_mutex);
         }
@@ -302,7 +318,12 @@ void *phy_receive_thread(void *arg)
             break;
 
         case kStateTransmit:
-            length = recvfrom(s_sockfd, receive_frame.mPsdu, Mac::Frame::kMTU, 0, NULL, NULL);
+            break;
+
+        case kStateAckWait:
+            length = recvfrom(s_sockfd, &message, sizeof(message), 0, NULL, NULL);
+            receive_frame.mLength = length - 1;
+            memcpy(receive_frame.mPsdu, message.mPsdu, receive_frame.mLength);
 
             if (length < 0)
             {
@@ -337,7 +358,17 @@ void *phy_receive_thread(void *arg)
             break;
 
         case kStateListen:
+            length = recvfrom(s_sockfd, &message, sizeof(message), 0, NULL, NULL);
+
+            if (s_receive_frame->mChannel != message.mChannel)
+            {
+                break;
+            }
+
             s_state = kStateReceive;
+            s_receive_frame->mLength = length - 1;
+            memcpy(s_receive_frame->mPsdu, message.mPsdu, s_receive_frame->mLength);
+
             otPlatRadioSignalReceiveDone();
 
             while (s_state == kStateReceive)
@@ -361,6 +392,7 @@ void *phy_receive_thread(void *arg)
 void send_ack()
 {
     Mac::Frame *ack_frame;
+    RadioMessage message;
     uint8_t sequence;
     struct sockaddr_in sockaddr;
 
@@ -374,6 +406,9 @@ void send_ack()
     sockaddr.sin_family = AF_INET;
     inet_pton(AF_INET, "127.0.0.1", &sockaddr.sin_addr);
 
+    message.mChannel = s_receive_frame->mChannel;
+    memcpy(message.mPsdu, m_ack_packet.mPsdu, m_ack_packet.mLength);
+
     for (int i = 1; i < 34; i++)
     {
         if (args_info.nodeid_arg == i)
@@ -382,8 +417,7 @@ void send_ack()
         }
 
         sockaddr.sin_port = htons(9000 + i);
-        sendto(s_sockfd, m_ack_packet.mPsdu, m_ack_packet.mLength, 0,
-               (struct sockaddr *)&sockaddr, sizeof(sockaddr));
+        sendto(s_sockfd, &message, 1 + m_ack_packet.mLength, 0, (struct sockaddr *)&sockaddr, sizeof(sockaddr));
     }
 }
 
@@ -393,11 +427,9 @@ ThreadError otPlatRadioHandleReceiveDone()
     Mac::Frame *receive_frame;
     uint16_t dstpan;
     Mac::Address dstaddr;
-    int length;
 
     VerifyOrExit(s_state == kStateReceive, error = kThreadError_InvalidState);
 
-    length = recvfrom(s_sockfd, s_receive_frame->mPsdu, Mac::Frame::kMTU, 0, NULL, NULL);
     receive_frame = reinterpret_cast<Mac::Frame *>(s_receive_frame);
 
     receive_frame->GetDstAddr(dstaddr);
@@ -425,7 +457,6 @@ ThreadError otPlatRadioHandleReceiveDone()
         ExitNow(error = kThreadError_Abort);
     }
 
-    s_receive_frame->mLength = length;
     s_receive_frame->mPower = -20;
 
     // generate acknowledgment

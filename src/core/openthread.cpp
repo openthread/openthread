@@ -45,6 +45,10 @@
 
 namespace Thread {
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 // Allocate the structure using "raw" storage.
 #define otDEFINE_ALIGNED_VAR(name, size, align_type)            \
     align_type name[(((size) + (sizeof (align_type) - 1)) / sizeof (align_type))]
@@ -53,9 +57,7 @@ static otDEFINE_ALIGNED_VAR(sThreadNetifRaw, sizeof(ThreadNetif), uint64_t);
 
 static ThreadNetif *sThreadNetif;
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+static void HandleActiveScanResult(void *aContext, Mac::Frame *aFrame);
 
 void otInit()
 {
@@ -184,12 +186,12 @@ ThreadError otSetNetworkName(const char *aNetworkName)
     return sThreadNetif->GetMac().SetNetworkName(aNetworkName);
 }
 
-uint16_t otGetPanId(void)
+otPanId otGetPanId(void)
 {
     return sThreadNetif->GetMac().GetPanId();
 }
 
-ThreadError otSetPanId(uint16_t aPanId)
+ThreadError otSetPanId(otPanId aPanId)
 {
     return sThreadNetif->GetMac().SetPanId(aPanId);
 }
@@ -468,6 +470,52 @@ ThreadError otEnable(void)
 ThreadError otDisable(void)
 {
     return sThreadNetif->Down();
+}
+
+ThreadError otActiveScan(uint16_t aScanChannels, uint16_t aScanDuration, otHandleActiveScanResult aCallback)
+{
+    return sThreadNetif->GetMac().ActiveScan(aScanChannels, aScanDuration, &HandleActiveScanResult,
+                                             reinterpret_cast<void *>(aCallback));
+}
+
+void HandleActiveScanResult(void *aContext, Mac::Frame *aFrame)
+{
+    otHandleActiveScanResult handler = reinterpret_cast<otHandleActiveScanResult>(aContext);
+    otActiveScanResult result = {};
+    Mac::Address address;
+    Mac::Beacon *beacon;
+    uint8_t payloadLength;
+
+    if (aFrame == NULL)
+    {
+        handler(NULL);
+        ExitNow();
+    }
+
+    SuccessOrExit(aFrame->GetSrcAddr(address));
+    VerifyOrExit(address.mLength == sizeof(address.mExtAddress), ;);
+    memcpy(&result.mExtAddress, &address.mExtAddress, sizeof(result.mExtAddress));
+
+    aFrame->GetSrcPanId(result.mPanId);
+    result.mChannel = aFrame->GetChannel();
+    result.mRssi = aFrame->GetPower();
+
+    payloadLength = aFrame->GetPayloadLength();
+    beacon = reinterpret_cast<Mac::Beacon *>(aFrame->GetPayload());
+
+    if (payloadLength >= sizeof(*beacon) && beacon->IsValid())
+    {
+        result.mVersion = beacon->GetProtocolVersion();
+        result.mIsJoinable = beacon->IsJoiningPermitted();
+        result.mIsNative = beacon->IsNative();
+        result.mNetworkName = beacon->GetNetworkName();
+        result.mExtPanId = beacon->GetExtendedPanId();
+    }
+
+    handler(&result);
+
+exit:
+    return;
 }
 
 otMessage otNewUdpMessage()

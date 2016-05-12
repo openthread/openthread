@@ -27,6 +27,7 @@ OpenThread test scripts use this CLI to execute test cases.
 * [rloc16](#rloc16)
 * [route](#route)
 * [routerupgradethreshold](#routerupgradethreshold)
+* [scan](#scan)
 * [start](#start)
 * [state](#state)
 * [stop](#stop)
@@ -393,6 +394,20 @@ Set the ROUTER_UPGRADE_THRESHOLD value.
 
 ```bash
 $ routerupgradethreshold 16
+Done
+```
+
+### scan \[channel\]
+
+Perform an IEEE 802.15.4 Active Scan.
+
+* channel: The channel to scan on.  If no channel is provided, the active scan will cover all valid channels.
+
+```bash
+$ scan
+| J | Network Name     | Extended PAN     | PAN  | MAC Address      | Ch | dBm |
++---+------------------+------------------+------+------------------+----+-----+
+| 0 | OpenThread       | dead00beef00cafe | ffff | f1d92a82c8d8fe43 | 11 | -20 |
 Done
 ```
 

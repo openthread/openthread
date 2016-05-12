@@ -85,11 +85,12 @@ Mac::Mac(ThreadNetif &aThreadNetif):
     mRxOnWhenIdle = true;
     mCsmaAttempts = 0;
     mTransmitBeacon = false;
+    mBeacon.Init();
 
     mActiveScanRequest = false;
     mScanChannel = kPhyMinChannel;
-    mScanChannelMask = 0xff;
-    mScanIntervalPerChannel = 0;
+    mScanChannels = 0xff;
+    mScanDuration = 0;
     mActiveScanHandler = NULL;
     mActiveScanContext = NULL;
 
@@ -103,7 +104,7 @@ Mac::Mac(ThreadNetif &aThreadNetif):
 
     for (size_t i = 0; i < sizeof(mExtAddress); i++)
     {
-        mExtAddress.mBytes[i] = otPlatRandomGet();
+        mExtAddress.m8[i] = otPlatRandomGet();
     }
 
     SetExtendedPanId(sExtendedPanidInit);
@@ -121,7 +122,7 @@ ThreadError Mac::Start(void)
 
     SuccessOrExit(error = otPlatRadioEnable());
 
-    SetExtendedPanId(mExtendedPanid);
+    SetExtendedPanId(mBeacon.GetExtendedPanId());
     otPlatRadioSetPanId(mPanId);
     otPlatRadioSetShortAddress(mShortAddress);
     {
@@ -129,7 +130,7 @@ ThreadError Mac::Start(void)
 
         for (size_t i = 0; i < sizeof(buf); i++)
         {
-            buf[i] = mExtAddress.mBytes[7 - i];
+            buf[i] = mExtAddress.m8[7 - i];
         }
 
         otPlatRadioSetExtendedAddress(buf);
@@ -174,8 +175,7 @@ exit:
     return error;
 }
 
-ThreadError Mac::ActiveScan(uint16_t aIntervalPerChannel, uint16_t aChannelMask,
-                            ActiveScanHandler aHandler, void *aContext)
+ThreadError Mac::ActiveScan(uint16_t aScanChannels, uint16_t aScanDuration, ActiveScanHandler aHandler, void *aContext)
 {
     ThreadError error = kThreadError_None;
 
@@ -184,21 +184,21 @@ ThreadError Mac::ActiveScan(uint16_t aIntervalPerChannel, uint16_t aChannelMask,
 
     mActiveScanHandler = aHandler;
     mActiveScanContext = aContext;
-    mScanChannelMask = (aChannelMask == 0) ? kScanChannelMaskAll : aChannelMask;
-    mScanIntervalPerChannel = (aIntervalPerChannel == 0) ? kScanDefaultInterval : aIntervalPerChannel;
+    mScanChannels = (aScanChannels == 0) ? kScanChannelsAll : aScanChannels;
+    mScanDuration = (aScanDuration == 0) ? kScanDurationDefault : aScanDuration;
 
     mScanChannel = kPhyMinChannel;
 
-    while ((mScanChannelMask & 1) == 0)
+    while ((mScanChannels & 1) == 0)
     {
-        mScanChannelMask >>= 1;
+        mScanChannels >>= 1;
         mScanChannel++;
     }
 
     if (mState == kStateIdle)
     {
         mState = kStateActiveScan;
-        mBeginTransmit.Post();
+        StartCsmaBackoff();
     }
     else
     {
@@ -266,22 +266,21 @@ ThreadError Mac::SetChannel(uint8_t aChannel)
 
 const char *Mac::GetNetworkName(void) const
 {
-    return mNetworkName;
+    return mBeacon.GetNetworkName();
 }
 
 ThreadError Mac::SetNetworkName(const char *aNetworkName)
 {
-    memset(mNetworkName, 0, sizeof(mNetworkName));
-    strncpy(mNetworkName, aNetworkName, sizeof(mNetworkName));
+    mBeacon.SetNetworkName(aNetworkName);
     return kThreadError_None;
 }
 
-uint16_t Mac::GetPanId(void) const
+PanId Mac::GetPanId(void) const
 {
     return mPanId;
 }
 
-ThreadError Mac::SetPanId(uint16_t aPanId)
+ThreadError Mac::SetPanId(PanId aPanId)
 {
     mPanId = aPanId;
     return otPlatRadioSetPanId(mPanId);
@@ -289,13 +288,13 @@ ThreadError Mac::SetPanId(uint16_t aPanId)
 
 const uint8_t *Mac::GetExtendedPanId(void) const
 {
-    return mExtendedPanid;
+    return mBeacon.GetExtendedPanId();
 }
 
 ThreadError Mac::SetExtendedPanId(const uint8_t *aExtPanId)
 {
-    memcpy(mExtendedPanid, aExtPanId, sizeof(mExtendedPanid));
-    mMle.SetMeshLocalPrefix(mExtendedPanid);
+    mBeacon.SetExtendedPanId(aExtPanId);
+    mMle.SetMeshLocalPrefix(aExtPanId);
     return kThreadError_None;
 }
 
@@ -366,7 +365,6 @@ void Mac::ScheduleNextTransmission(void)
     else if (mTransmitBeacon)
     {
         mTransmitBeacon = false;
-        assert(false);
         mState = kStateTransmitBeacon;
         StartCsmaBackoff();
     }
@@ -386,7 +384,7 @@ void Mac::GenerateNonce(const ExtAddress &aAddress, uint32_t aFrameCounter, uint
     // source address
     for (int i = 0; i < 8; i++)
     {
-        aNonce[i] = aAddress.mBytes[i];
+        aNonce[i] = aAddress.m8[i];
     }
 
     aNonce += 8;
@@ -416,7 +414,6 @@ void Mac::SendBeaconRequest(Frame &aFrame)
 
 void Mac::SendBeacon(Frame &aFrame)
 {
-    uint8_t *payload;
     uint16_t fcf;
 
     // initialize MAC header
@@ -426,38 +423,8 @@ void Mac::SendBeacon(Frame &aFrame)
     aFrame.SetSrcAddr(mExtAddress);
 
     // write payload
-    payload = aFrame.GetPayload();
-
-    // Superframe Specification
-    payload[0] = 0xff;
-    payload[1] = 0x0f;
-    payload += 2;
-
-    // GTS Fields
-    payload[0] = 0x00;
-    payload++;
-
-    // Pending Address Fields
-    payload[0] = 0x00;
-    payload++;
-
-    // Protocol ID
-    payload[0] = 0x03;
-    payload++;
-
-    // Version and Flags
-    payload[0] = 0x1 << 4 | 0x1;
-    payload++;
-
-    // Network Name
-    memcpy(payload, mNetworkName, sizeof(mNetworkName));
-    payload += sizeof(mNetworkName);
-
-    // Extended PAN
-    memcpy(payload, mExtendedPanid, sizeof(mExtendedPanid));
-    payload += sizeof(mExtendedPanid);
-
-    aFrame.SetPayloadLength(payload - aFrame.GetPayload());
+    memcpy(aFrame.GetPayload(), &mBeacon, sizeof(mBeacon));
+    aFrame.SetPayloadLength(sizeof(mBeacon));
 
     otLogInfoMac("Sent Beacon\n");
 }
@@ -590,7 +557,7 @@ void Mac::TransmitDoneTask(void)
     switch (mState)
     {
     case kStateActiveScan:
-        mAckTimer.Start(mScanIntervalPerChannel);
+        mAckTimer.Start(mScanDuration);
         break;
 
     case kStateTransmitBeacon:
@@ -634,17 +601,17 @@ void Mac::HandleAckTimer(void)
     case kStateActiveScan:
         do
         {
-            mScanChannelMask >>= 1;
+            mScanChannels >>= 1;
             mScanChannel++;
 
-            if (mScanChannelMask == 0 || mScanChannel > kPhyMaxChannel)
+            if (mScanChannels == 0 || mScanChannel > kPhyMaxChannel)
             {
                 mActiveScanHandler(mActiveScanContext, NULL);
                 ScheduleNextTransmission();
                 ExitNow();
             }
         }
-        while ((mScanChannelMask & 1) == 0);
+        while ((mScanChannels & 1) == 0);
 
         StartCsmaBackoff();
         break;
@@ -684,7 +651,7 @@ void Mac::SentFrame(bool aAcked)
     switch (mState)
     {
     case kStateActiveScan:
-        mAckTimer.Start(mScanIntervalPerChannel);
+        mAckTimer.Start(mScanDuration);
         break;
 
     case kStateTransmitBeacon:
@@ -908,7 +875,7 @@ void Mac::ReceiveDoneTask(void)
     switch (mState)
     {
     case kStateActiveScan:
-        HandleBeaconFrame();
+        mActiveScanHandler(mActiveScanContext, &mReceiveFrame);
         break;
 
     default:
@@ -934,71 +901,6 @@ exit:
     NextOperation();
 }
 
-void Mac::HandleBeaconFrame(void)
-{
-    uint8_t *payload = mReceiveFrame.GetPayload();
-    uint8_t payloadLength = mReceiveFrame.GetPayloadLength();
-    ActiveScanResult result;
-    Address address;
-
-    if (mReceiveFrame.GetType() != Frame::kFcfFrameBeacon)
-    {
-        ExitNow();
-    }
-
-#if 0
-
-    // Superframe Specification, GTS fields, and Pending Address fields
-    if (payloadLength < 4 || payload[0] != 0xff || payload[1] != 0x0f || payload[2] != 0x00 || payload[3] != 0x00)
-    {
-        ExitNow();
-    }
-
-#endif
-    payload += 4;
-    payloadLength -= 4;
-
-#if 0
-
-    // Protocol ID
-    if (payload[0] != 3)
-    {
-        ExitNow();
-    }
-
-#endif
-    payload++;
-
-    // skip Version and Flags
-    payload++;
-
-    // network name
-    strncpy(result.mNetworkName, reinterpret_cast<char*>(payload), kNetworkNameSize);
-    payload += kNetworkNameSize;
-
-    // extended panid
-    memcpy(result.mExtPanid, payload, kExtPanIdSize);
-    payload += kExtPanIdSize;
-
-    // extended address
-    mReceiveFrame.GetSrcAddr(address);
-    memcpy(result.mExtAddr, &address.mExtAddress, sizeof(result.mExtAddr));
-
-    // panid
-    mReceiveFrame.GetSrcPanId(result.mPanId);
-
-    // channel
-    result.mChannel = mReceiveFrame.GetChannel();
-
-    // rssi
-    result.mRssi = mReceiveFrame.GetPower();
-
-    mActiveScanHandler(mActiveScanContext, &result);
-
-exit:
-    {}
-}
-
 ThreadError Mac::HandleMacCommand(void)
 {
     ThreadError error = kThreadError_None;
@@ -1012,10 +914,9 @@ ThreadError Mac::HandleMacCommand(void)
 
         if (mState == kStateIdle)
         {
-            assert(false);
             mState = kStateTransmitBeacon;
             mTransmitBeacon = false;
-            mBeginTransmit.Post();
+            StartCsmaBackoff();
         }
 
         ExitNow(error = kThreadError_Drop);

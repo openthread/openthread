@@ -41,8 +41,8 @@ namespace Mac {
 
 void ExtAddress::Set(const Ip6::Address &aIpAddress)
 {
-    memcpy(mBytes, aIpAddress.GetIid(), kLength);
-    mBytes[0] ^= 0x02;
+    memcpy(m8, aIpAddress.GetIid(), sizeof(m8));
+    m8[0] ^= 0x02;
 }
 
 ThreadError Frame::InitMacHeader(uint16_t aFcf, uint8_t aSecurityControl)
@@ -287,7 +287,7 @@ ThreadError Frame::GetDstAddr(Address &aAddress)
 
         for (unsigned int i = 0; i < sizeof(ExtAddress); i++)
         {
-            aAddress.mExtAddress.mBytes[i] = buf[sizeof(ExtAddress) - 1 - i];
+            aAddress.mExtAddress.m8[i] = buf[sizeof(ExtAddress) - 1 - i];
         }
 
         break;
@@ -329,7 +329,7 @@ ThreadError Frame::SetDstAddr(const ExtAddress &aExtAddress)
 
     for (unsigned int i = 0; i < sizeof(ExtAddress); i++)
     {
-        buf[i] = aExtAddress.mBytes[sizeof(ExtAddress) - 1 - i];
+        buf[i] = aExtAddress.m8[sizeof(ExtAddress) - 1 - i];
     }
 
     return kThreadError_None;
@@ -444,7 +444,7 @@ ThreadError Frame::GetSrcAddr(Address &address)
 
         for (unsigned int i = 0; i < sizeof(ExtAddress); i++)
         {
-            address.mExtAddress.mBytes[i] = buf[sizeof(ExtAddress) - 1 - i];
+            address.mExtAddress.m8[i] = buf[sizeof(ExtAddress) - 1 - i];
         }
 
         break;
@@ -486,7 +486,7 @@ ThreadError Frame::SetSrcAddr(const ExtAddress &aExtAddress)
 
     for (unsigned int i = 0; i < sizeof(aExtAddress); i++)
     {
-        buf[i] = aExtAddress.mBytes[sizeof(aExtAddress) - 1 - i];
+        buf[i] = aExtAddress.m8[sizeof(aExtAddress) - 1 - i];
     }
 
     return kThreadError_None;

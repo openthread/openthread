@@ -116,7 +116,7 @@ void Address::SetIid(const uint8_t *aIid)
 
 void Address::SetIid(const Mac::ExtAddress &aEui64)
 {
-    memcpy(m8 + kInterfaceIdentifierOffset, aEui64.mBytes, kInterfaceIdentifierSize);
+    memcpy(m8 + kInterfaceIdentifierOffset, aEui64.m8, kInterfaceIdentifierSize);
     m8[kInterfaceIdentifierOffset] ^= 0x02;
 }
 

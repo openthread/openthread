@@ -159,6 +159,7 @@ private:
     static ThreadError ProcessRouteRemove(int argc, char *argv[]);
     static void ProcessRouterUpgradeThreshold(int argc, char *argv[]);
     static void ProcessRloc16(int argc, char *argv[]);
+    static void ProcessScan(int argc, char *argv[]);
     static void ProcessShutdown(int argc, char *argv[]);
     static void ProcessStart(int argc, char *argv[]);
     static void ProcessState(int argc, char *argv[]);
@@ -166,6 +167,7 @@ private:
     static void ProcessWhitelist(int argc, char *argv[]);
 
     static void HandleEchoResponse(void *aContext, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    static void HandleActiveScanResult(otActiveScanResult *aResult);
     static int Hex2Bin(const char *aHex, uint8_t *aBin, uint16_t aBinLength);
     static ThreadError ParseLong(char *argv, long &value);
 
