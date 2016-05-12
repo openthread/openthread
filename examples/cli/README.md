@@ -80,6 +80,8 @@ ping fdde:ad00:beef:0:558:f56b:d688:799
 16 bytes from fdde:ad00:beef:0:558:f56b:d688:799: icmp_seq=1 hlim=64
 ```
 
-## 4. Ready for More?
+## 4. Want More?
+
+You may note that the example above did not include any network parameter configuration, such as the IEEE 802.15.4 PAN ID or the Thread Master Key.  OpenThread currently implements default values for network parameters.  However, you may use the CLI to change network parameters, other configurations, and perform other operations.
 
 See the [OpenThread CLI Reference README.md](../../src/cli/README.md) to explore more.
