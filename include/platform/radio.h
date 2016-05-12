@@ -158,7 +158,7 @@ void otPlatRadioInit();
  * @retval ::kThreadError_None  Successfully transitioned to Idle.
  * @retval ::kThreadError_Fail  Failed to transition to Idle.
  */
-ThreadError otPlatRadioEnable();
+ThreadError otPlatRadioEnable(void);
 
 /**
  * Disable the radio.
@@ -166,7 +166,7 @@ ThreadError otPlatRadioEnable();
  * @retval ::kThreadError_None  Successfully transitioned to Disabled.
  * @retval ::kThreadError_Fail  Failed to transition to Disabled.
  */
-ThreadError otPlatRadioDisable();
+ThreadError otPlatRadioDisable(void);
 
 /**
  * Transition the radio to Sleep.
@@ -174,7 +174,7 @@ ThreadError otPlatRadioDisable();
  * @retval ::kThreadError_None  Successfully transitioned to Sleep.
  * @retval ::kThreadError_Fail  Failed to transition to Sleep.
  */
-ThreadError otPlatRadioSleep();
+ThreadError otPlatRadioSleep(void);
 
 /**
  * Transition the radio to Idle.
@@ -182,7 +182,7 @@ ThreadError otPlatRadioSleep();
  * @retval ::kThreadError_None  Successfully transitioned to Idle.
  * @retval ::kThreadError_Fail  Failed to transition to Idle.
  */
-ThreadError otPlatRadioIdle();
+ThreadError otPlatRadioIdle(void);
 
 /**
  * Begins the receive sequence on the radio.
@@ -210,7 +210,7 @@ ThreadError otPlatRadioReceive(RadioPacket *aPacket);
  * This may be called from interrupt context.  The MAC layer will then schedule a call to otPlatRadioHandleReceive().
  */
 
-extern void otPlatRadioSignalReceiveDone();
+extern void otPlatRadioSignalReceiveDone(void);
 
 /**
  * Complete the receive sequence.
@@ -219,7 +219,7 @@ extern void otPlatRadioSignalReceiveDone();
  * @retval ::kThreadError_Abort         Reception was aborted and a frame was not received.
  * @retval ::kThreadError_InvalidState  The radio was not in Receive.
  */
-ThreadError otPlatRadioHandleReceiveDone();
+ThreadError otPlatRadioHandleReceiveDone(void);
 
 /**
  * Begins the transmit sequence on the radio.
@@ -249,7 +249,7 @@ ThreadError otPlatRadioTransmit(RadioPacket *aPacket);
  * This may be called from interrupt context.  OpenThread will then schedule a call to
  * otPlatRadio_handle_transmit_done().
  */
-extern void otPlatRadioSignalTransmitDone();
+extern void otPlatRadioSignalTransmitDone(void);
 
 /**
  * Complete the transmit sequence on the radio.
@@ -269,7 +269,7 @@ ThreadError otPlatRadioHandleTransmitDone(bool *aFramePending);
  *
  * @returns The noise floor value in dBm when the noise floor value is valid.  127 when noise floor value is invalid.
  */
-int8_t otPlatRadioGetNoiseFloor();
+int8_t otPlatRadioGetNoiseFloor(void);
 
 /**
  * @}

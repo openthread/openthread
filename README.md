@@ -1,6 +1,6 @@
 <a href="https://github.com/openthread/openthread">![Logo](doc/images/openthread_logo.png)</a>
 
-[![Build Status](https://travis-ci.com/openthread/openthread.svg?token=s77bfgh3PmZjpphKXGGK&branch=master)](https://travis-ci.com/openthread/openthread)
+[![Build Status](https://travis-ci.org/openthread/openthread.svg?branch=master)](https://travis-ci.org/openthread/openthread)
 
 OpenThread is an open-source implementation of the [Thread](http://threadgroup.org/technology/ourtechnology) networking protocol. With OpenThread, Nest is making the technology used in Nest products more broadly available to accelerate the development of products for the connected home.
 

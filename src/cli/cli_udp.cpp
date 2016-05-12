@@ -62,7 +62,6 @@ void Udp::HandleUdpReceive(void *aContext, otMessage aMessage, const otMessageIn
 
 void Udp::HandleUdpReceive(otMessage aMessage, const otMessageInfo *aMessageInfo)
 {
-    ThreadError error = kThreadError_None;
     uint16_t payloadLength = otGetMessageLength(aMessage) - otGetMessageOffset(aMessage);
     char buf[512];
 
