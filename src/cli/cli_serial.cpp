@@ -32,6 +32,7 @@
  */
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 #include <cli/cli.hpp>
@@ -99,6 +100,10 @@ void Serial::ReceiveTask(void)
                 ProcessCommand();
             }
 
+            break;
+
+        case 3: // CTRL-C
+            exit(1);
             break;
 
         case '\b':
