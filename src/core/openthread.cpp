@@ -478,6 +478,11 @@ ThreadError otActiveScan(uint16_t aScanChannels, uint16_t aScanDuration, otHandl
                                              reinterpret_cast<void *>(aCallback));
 }
 
+bool otActiveScanInProgress(void)
+{
+    return sThreadNetif->GetMac().IsActiveScanInProgress();
+}
+
 void HandleActiveScanResult(void *aContext, Mac::Frame *aFrame)
 {
     otHandleActiveScanResult handler = reinterpret_cast<otHandleActiveScanResult>(aContext);

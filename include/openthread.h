@@ -183,6 +183,13 @@ typedef void (*otHandleActiveScanResult)(otActiveScanResult *aResult);
 ThreadError otActiveScan(uint16_t aScanChannels, uint16_t aScanDuration, otHandleActiveScanResult aCallback);
 
 /**
+ * This function determines if an IEEE 802.15.4 Active Scan is currently in progress.
+ *
+ * @returns true if an active scan is in progress.
+ */
+bool otActiveScanInProgress(void);
+
+/**
  * @}
  *
  */
