@@ -57,6 +57,19 @@ static int s_out_fd;
 static pthread_t s_pthread;
 static sem_t *s_semaphore;
 
+static struct termios original_stdin_termios;
+static struct termios original_stdout_termios;
+
+static void restore_stdin_termios()
+{
+    tcsetattr(s_in_fd, TCSAFLUSH, &original_stdin_termios);
+}
+
+static void restore_stdout_termios()
+{
+    tcsetattr(s_out_fd, TCSAFLUSH, &original_stdout_termios);
+}
+
 ThreadError otPlatSerialEnable(void)
 {
     ThreadError error = kThreadError_None;
@@ -69,6 +82,18 @@ ThreadError otPlatSerialEnable(void)
         s_in_fd = dup(STDIN_FILENO);
         s_out_fd = dup(STDOUT_FILENO);
         dup2(STDERR_FILENO, STDOUT_FILENO);
+
+        if (isatty(s_in_fd))
+        {
+            tcgetattr(s_in_fd, &original_stdin_termios);
+            atexit(&restore_stdin_termios);
+        }
+
+        if (isatty(s_out_fd))
+        {
+            tcgetattr(s_out_fd, &original_stdin_termios);
+            atexit(&restore_stdout_termios);
+        }
     }
     else
     {
@@ -106,7 +131,6 @@ ThreadError otPlatSerialEnable(void)
     {
         // get current configuration
         VerifyOrExit(tcgetattr(s_in_fd, &termios) == 0, perror("tcgetattr"); error = kThreadError_Error);
-        s_in_termios = termios;
 
         // turn off input processing
         termios.c_iflag &= ~(IGNBRK | BRKINT | ICRNL | INLCR | PARMRK | INPCK | ISTRIP | IXON);
@@ -116,7 +140,7 @@ ThreadError otPlatSerialEnable(void)
 
         // turn off character processing
         termios.c_cflag &= ~(CSIZE | PARENB);
-        termios.c_cflag |= CS8;
+        termios.c_cflag |= CS8|HUPCL|CREAD|CLOCAL;
 
         // return 1 byte at a time
         termios.c_cc[VMIN]  = 1;
@@ -135,14 +159,13 @@ ThreadError otPlatSerialEnable(void)
     {
         // get current configuration
         VerifyOrExit(tcgetattr(s_out_fd, &termios) == 0, perror("tcgetattr"); error = kThreadError_Error);
-        s_out_termios = termios;
 
         // turn off output processing
         termios.c_oflag = 0;
 
         // turn off character processing
         termios.c_cflag &= ~(CSIZE | PARENB);
-        termios.c_cflag |= CS8;
+        termios.c_cflag |= CS8|HUPCL|CREAD|CLOCAL;
 
         // configure baud rate
         VerifyOrExit(cfsetospeed(&termios, B115200) == 0, perror("cfsetospeed"); error = kThreadError_Error);
@@ -167,18 +190,8 @@ ThreadError otPlatSerialDisable(void)
 {
     ThreadError error = kThreadError_None;
 
-    if (isatty(s_out_fd))
-    {
-        tcsetattr(s_out_fd, TCSANOW, &s_out_termios);
-    }
-
-    if (isatty(s_in_fd))
-    {
-        tcsetattr(s_in_fd, TCSANOW, &s_in_termios);
-    }
-
-    close(s_out_fd);
     close(s_in_fd);
+    close(s_out_fd);
 
     return error;
 }
