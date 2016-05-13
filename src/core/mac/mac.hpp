@@ -65,36 +65,19 @@ namespace Mac {
  */
 enum
 {
-    kMinBE                = 3,    ///< macMinBE (IEEE 802.15.4-2006)
-    kMaxBE                = 6,    ///< macMaxBE (IEEE 802.15.4-2006)
-    kMaxCSMABackoffs      = 12,   ///< macMaxCSMABackoffs (IEEE 802.15.4-2006)
-    kUnitBackoffPeriod    = 20,   ///< Number of symbols (IEEE 802.15.4-2006)
+    kMinBE                = 3,       ///< macMinBE (IEEE 802.15.4-2006)
+    kMaxBE                = 6,       ///< macMaxBE (IEEE 802.15.4-2006)
+    kMaxCSMABackoffs      = 12,      ///< macMaxCSMABackoffs (IEEE 802.15.4-2006)
+    kUnitBackoffPeriod    = 20,      ///< Number of symbols (IEEE 802.15.4-2006)
 
-    kMinBackoff           = 16,   ///< Minimum backoff (milliseconds).
+    kMinBackoff           = 16,      ///< Minimum backoff (milliseconds).
 
-    kAckTimeout           = 16,   ///< Timeout for waiting on an ACK (milliseconds).
-    kDataPollTimeout      = 100,  ///< Timeout for receivint Data Frame (milliseconds).
-    kNonceSize            = 13,   ///< Size of IEEE 802.15.4 Nonce (bytes).
+    kAckTimeout           = 16,      ///< Timeout for waiting on an ACK (milliseconds).
+    kDataPollTimeout      = 100,     ///< Timeout for receivint Data Frame (milliseconds).
+    kNonceSize            = 13,      ///< Size of IEEE 802.15.4 Nonce (bytes).
 
-    kScanChannelMaskAll   = 0xffff,
-    kScanDefaultInterval  = 128,  ///< Default interval between channels (milliseconds).
-
-    kNetworkNameSize      = 16,   ///< Size of Thread Network Name (bytes).
-    kExtPanIdSize         = 8,    ///< Size of Thread Extended PAN ID.
-};
-
-/**
- * This structure represents an Active Scan result.
- *
- */
-struct ActiveScanResult
-{
-    char     mNetworkName[kNetworkNameSize];  ///<  The Thread Network Name.
-    uint8_t  mExtPanid[kExtPanIdSize];        ///<  The Thread Extended PAN ID.
-    uint8_t  mExtAddr[ExtAddress::kLength];   ///<  The IEEE 802.15.4 Extended Address.
-    uint16_t mPanId;                          ///<  The IEEE 802.15.4 PAN ID.
-    uint8_t  mChannel;                        ///<  The IEEE 802.15.4 Channel.
-    int8_t   mRssi;                           ///<  The RSSI in dBm.
+    kScanChannelsAll      = 0xffff,  ///< All channels.
+    kScanDurationDefault  = 200,     ///< Default interval between channels (milliseconds).
 };
 
 /**
@@ -225,23 +208,22 @@ public:
     /**
      * This function pointer is called on receiving an IEEE 802.15.4 Beacon during an Active Scan.
      *
-     * @param[in]  aContext  A pointer to arbitrary context information.
-     * @param[in]  aResult   A reference to the Active Scan result.
+     * @param[in]  aContext       A pointer to arbitrary context information.
+     * @param[in]  aBeaconFrame   A pointer to the Beacon frame.
      *
      */
-    typedef void (*ActiveScanHandler)(void *aContext, ActiveScanResult *aResult);
+    typedef void (*ActiveScanHandler)(void *aContext, Frame *aBeaconFrame);
 
     /**
      * This method starts an IEEE 802.15.4 Active Scan.
      *
-     * @param[in]  aIntervalPerChannel  The time in milliseconds to spend scanning each channel.
-     * @param[in]  aChannelMask         A bit vector indicating which channels to scan.
-     * @param[in]  aHandler             A pointer to a function that is called on receiving an IEEE 802.15.4 Beacon.
-     * @param[in]  aContext             A pointer to arbitrary context information.
+     * @param[in]  aScanChannels  A bit vector indicating which channels to scan.
+     * @param[in]  aScanDuration  The time in milliseconds to spend scanning each channel.
+     * @param[in]  aHandler       A pointer to a function that is called on receiving an IEEE 802.15.4 Beacon.
+     * @param[in]  aContext       A pointer to arbitrary context information.
      *
      */
-    ThreadError ActiveScan(uint16_t aIntervalPerChannel, uint16_t aChannelMask,
-                           ActiveScanHandler aHandler, void *aContext);
+    ThreadError ActiveScan(uint16_t aScanChannels, uint16_t aScanDuration, ActiveScanHandler aHandler, void *aContext);
 
     /**
      * This method indicates whether or not rx-on-when-idle is enabled.
@@ -413,7 +395,6 @@ private:
     void SendBeaconRequest(Frame &aFrame);
     void SendBeacon(Frame &aFrame);
     void StartBackoff(void);
-    void HandleBeaconFrame(void);
     ThreadError HandleMacCommand(void);
 
     static void HandleAckTimer(void *aContext);
@@ -438,10 +419,10 @@ private:
 
     ExtAddress mExtAddress;
     ShortAddress mShortAddress;
-    uint16_t mPanId;
-    uint8_t mExtendedPanid[kExtPanIdSize];
-    char mNetworkName[kNetworkNameSize];
+    PanId mPanId;
     uint8_t mChannel;
+
+    Beacon mBeacon;
 
     Frame mSendFrame;
     Frame mReceiveFrame;
@@ -466,8 +447,8 @@ private:
 
     bool mActiveScanRequest;
     uint8_t mScanChannel;
-    uint16_t mScanChannelMask;
-    uint16_t mScanIntervalPerChannel;
+    uint16_t mScanChannels;
+    uint16_t mScanDuration;
     ActiveScanHandler mActiveScanHandler;
     void *mActiveScanContext;
 

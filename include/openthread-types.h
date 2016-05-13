@@ -65,6 +65,49 @@ typedef enum ThreadError
     kThreadError_Error = 255,
 } ThreadError;
 
+
+#define OT_EXT_ADDRESS_SIZE   8   ///< Size of an IEEE 802.15.4 Extended Address (bytes)
+#define OT_EXT_PAN_ID_SIZE    8   ///< Size of a Thread PAN ID (bytes)
+#define OT_NETWORK_NAME_SIZE  16  ///< Size of the Thread Network Name field (bytes)
+
+/**
+ * This type represents the IEEE 802.15.4 PAN ID.
+ *
+ */
+typedef uint16_t otPanId;
+
+/**
+ * This type represents the IEEE 802.15.4 Short Address.
+ *
+ */
+typedef uint16_t otShortAddress;
+
+/**
+ * This type represents the IEEE 802.15.4 Extended Address.
+ *
+ */
+typedef struct otExtAddress
+{
+    uint8_t m8[OT_EXT_ADDRESS_SIZE];  ///< IEEE 802.15.4 Extended Address bytes
+} otExtAddress;
+
+/**
+ * This struct represents a received IEEE 802.15.4 Beacon.
+ *
+ */
+typedef struct otActiveScanResult
+{
+    otExtAddress   mExtAddress;      ///< IEEE 802.15.4 Extended Address
+    const char    *mNetworkName;     ///< Thread Network Name
+    const uint8_t *mExtPanId;        ///< Thread Extended PAN ID
+    uint16_t       mPanId;           ///< IEEE 802.15.4 PAN ID
+    uint8_t        mChannel;         ///< IEEE 802.15.4 Channel
+    int8_t         mRssi;            ///< RSSI (dBm)
+    uint8_t        mVersion : 4;     ///< Version
+    bool           mIsNative : 1;    ///< Native Commissioner flag
+    bool           mIsJoinable : 1;  ///< Joining Permitted flag
+} otActiveScanResult;
+
 /**
  * @addtogroup config  Configuration
  *

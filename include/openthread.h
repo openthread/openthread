@@ -51,6 +51,7 @@ extern "C" {
  * @{
  *
  * @defgroup execution Execution
+ * @defgroup commands Commands
  * @defgroup config Configuration
  * @defgroup diags Diagnostics
  * @defgroup messages Message Buffers
@@ -129,6 +130,57 @@ bool otAreTaskletsPending(void);
  *
  */
 extern void otSignalTaskletPending(void);
+
+/**
+ * @}
+ *
+ */
+
+/**
+ * @addtogroup commands  Commands
+ *
+ * @brief
+ *   This module includes functions for OpenThread commands.
+ *
+ * @{
+ *
+ */
+
+/**
+ * Enable the Thread interface.
+ *
+ * @retval kThreadErrorNone  Successfully enabled the Thread interface.
+ */
+ThreadError otEnable(void);
+
+/**
+ * Disable the Thread interface.
+ *
+ * @retval kThreadErrorNone  Successfully disabled the Thread interface.
+ */
+ThreadError otDisable(void);
+
+/**
+ * This function pointer is called during an IEEE 802.15.4 Active Scan when an IEEE 802.15.4 Beacon is received or
+ * the scan completes.
+ *
+ * @param[in]  aResult  A valid pointer to the beacon information or NULL when the active scan completes.
+ *
+ */
+typedef void (*otHandleActiveScanResult)(otActiveScanResult *aResult);
+
+/**
+ * This function starts an IEEE 802.15.4 Active Scan
+ *
+ * @param[in]  aScanChannels  A bit vector indicating which channels to scan.
+ * @param[in]  aScanDuration  The time in milliseconds to spend scanning each channel.
+ * @param[in]  aCallback      A pointer to a function that is called when a beacon is received or the scan completes.
+ *
+ * @retval kThreadError_None  Accepted the Active Scan request.
+ * @retval kThreadError_Busy  Already performing an Active Scan.
+ *
+ */
+ThreadError otActiveScan(uint16_t aScanChannels, uint16_t aScanDuration, otHandleActiveScanResult aCallback);
 
 /**
  * @}
@@ -289,7 +341,7 @@ ThreadError otSetNetworkName(const char *aNetworkName);
  *
  * @sa otSetPanId
  */
-uint16_t otGetPanId(void);
+otPanId otGetPanId(void);
 
 /**
  * Set the IEEE 802.15.4 PAN ID.
@@ -301,7 +353,34 @@ uint16_t otGetPanId(void);
  *
  * @sa otGetPanId
  */
-ThreadError otSetPanId(uint16_t aPanId);
+ThreadError otSetPanId(otPanId aPanId);
+
+/**
+ * Get the list of IPv6 addresses assigned to the Thread interface.
+ *
+ * @returns A pointer to the first Network Inteface Address.
+ */
+const otNetifAddress *otGetUnicastAddresses();
+
+/**
+ * Add a Network Interface Address to the Thread interface.
+ *
+ * @param[in]  aAddress  A pointer to a Network Interface Address.
+ *
+ * @retval kThreadErrorNone  Successfully added the Network Interface Address.
+ * @retval kThreadErrorBusy  The Network Interface Address pointed to by @p aAddress is already added.
+ */
+ThreadError otAddUnicastAddress(otNetifAddress *aAddress);
+
+/**
+ * Remove a Network Interface Address from the Thread interface.
+ *
+ * @param[in]  aAddress  A pointer to a Network Interface Address.
+ *
+ * @retval kThreadErrorNone      Successfully removed the Network Interface Address.
+ * @retval kThreadErrorNotFound  The Network Interface Address point to by @p aAddress was not added.
+ */
+ThreadError otRemoveUnicastAddress(otNetifAddress *aAddress);
 
 /**
  * @}
@@ -729,47 +808,6 @@ bool otIsIp6AddressEqual(const otIp6Address *a, const otIp6Address *b);
  * @retval kThreadErrorInvalidArg  Failed to parse the string.
  */
 ThreadError otIp6AddressFromString(const char *aString, otIp6Address *aAddress);
-
-/**
- * Get the list of IPv6 addresses assigned to the Thread interface.
- *
- * @returns A pointer to the first Network Inteface Address.
- */
-const otNetifAddress *otGetUnicastAddresses();
-
-/**
- * Add a Network Interface Address to the Thread interface.
- *
- * @param[in]  aAddress  A pointer to a Network Interface Address.
- *
- * @retval kThreadErrorNone  Successfully added the Network Interface Address.
- * @retval kThreadErrorBusy  The Network Interface Address pointed to by @p aAddress is already added.
- */
-ThreadError otAddUnicastAddress(otNetifAddress *aAddress);
-
-/**
- * Remove a Network Interface Address from the Thread interface.
- *
- * @param[in]  aAddress  A pointer to a Network Interface Address.
- *
- * @retval kThreadErrorNone      Successfully removed the Network Interface Address.
- * @retval kThreadErrorNotFound  The Network Interface Address point to by @p aAddress was not added.
- */
-ThreadError otRemoveUnicastAddress(otNetifAddress *aAddress);
-
-/**
- * Enable the Thread interface.
- *
- * @retval kThreadErrorNone  Successfully enabled the Thread interface.
- */
-ThreadError otEnable(void);
-
-/**
- * Disable the Thread interface.
- *
- * @retval kThreadErrorNone  Successfully disabled the Thread interface.
- */
-ThreadError otDisable(void);
 
 /**
  * @addtogroup messages  Message Buffers

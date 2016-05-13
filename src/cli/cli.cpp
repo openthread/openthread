@@ -69,6 +69,7 @@ const struct Command Interpreter::sCommands[] =
     { "rloc16", &ProcessRloc16 },
     { "route", &ProcessRoute },
     { "routerupgradethreshold", &ProcessRouterUpgradeThreshold },
+    { "scan", &ProcessScan },
     { "shutdown", &ProcessShutdown },
     { "start", &ProcessStart },
     { "state", &ProcessState },
@@ -167,7 +168,7 @@ void Interpreter::ProcessChannel(int argc, char *argv[])
     sResponse.Append("Done\r\n");
 
 exit:
-    {}
+    return;
 }
 
 void Interpreter::ProcessChildTimeout(int argc, char *argv[])
@@ -187,7 +188,7 @@ void Interpreter::ProcessChildTimeout(int argc, char *argv[])
     sResponse.Append("Done\r\n");
 
 exit:
-    {}
+    return;
 }
 
 void Interpreter::ProcessContextIdReuseDelay(int argc, char *argv[])
@@ -207,7 +208,7 @@ void Interpreter::ProcessContextIdReuseDelay(int argc, char *argv[])
     sResponse.Append("Done\r\n");
 
 exit:
-    {}
+    return;
 }
 
 void Interpreter::ProcessExtAddress(int argc, char *argv[])
@@ -240,7 +241,7 @@ void Interpreter::ProcessExtPanId(int argc, char *argv[])
     sResponse.Append("Done\r\n");
 
 exit:
-    {}
+    return;
 }
 
 ThreadError Interpreter::ProcessIpAddrAdd(int argc, char *argv[])
@@ -302,7 +303,7 @@ void Interpreter::ProcessIpAddr(int argc, char *argv[])
     sResponse.Append("Done\r\n");
 
 exit:
-    {}
+    return;
 }
 
 void Interpreter::ProcessKeySequence(int argc, char *argv[])
@@ -322,7 +323,7 @@ void Interpreter::ProcessKeySequence(int argc, char *argv[])
     sResponse.Append("Done\r\n");
 
 exit:
-    {}
+    return;
 }
 
 void Interpreter::ProcessLeaderWeight(int argc, char *argv[])
@@ -342,7 +343,7 @@ void Interpreter::ProcessLeaderWeight(int argc, char *argv[])
     sResponse.Append("Done\r\n");
 
 exit:
-    {}
+    return;
 }
 
 void Interpreter::ProcessMasterKey(int argc, char *argv[])
@@ -371,7 +372,7 @@ void Interpreter::ProcessMasterKey(int argc, char *argv[])
     sResponse.Append("Done\r\n");
 
 exit:
-    {}
+    return;
 }
 
 void Interpreter::ProcessMode(int argc, char *argv[])
@@ -437,7 +438,7 @@ void Interpreter::ProcessMode(int argc, char *argv[])
     sResponse.Append("Done\r\n");
 
 exit:
-    {}
+    return;
 }
 
 void Interpreter::ProcessNetworkDataRegister(int argc, char *argv[])
@@ -446,7 +447,7 @@ void Interpreter::ProcessNetworkDataRegister(int argc, char *argv[])
     sResponse.Append("Done\r\n");
 
 exit:
-    {}
+    return;
 }
 
 void Interpreter::ProcessNetworkIdTimeout(int argc, char *argv[])
@@ -466,7 +467,7 @@ void Interpreter::ProcessNetworkIdTimeout(int argc, char *argv[])
     sResponse.Append("Done\r\n");
 
 exit:
-    {}
+    return;
 }
 
 void Interpreter::ProcessNetworkName(int argc, char *argv[])
@@ -483,7 +484,7 @@ void Interpreter::ProcessNetworkName(int argc, char *argv[])
     sResponse.Append("Done\r\n");
 
 exit:
-    {}
+    return;
 }
 
 void Interpreter::ProcessPanId(int argc, char *argv[])
@@ -503,7 +504,7 @@ void Interpreter::ProcessPanId(int argc, char *argv[])
     sResponse.Append("Done\r\n");
 
 exit:
-    {}
+    return;
 }
 
 void Interpreter::HandleEchoResponse(void *aContext, Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
@@ -544,7 +545,7 @@ void Interpreter::ProcessPing(int argc, char *argv[])
     sResponse.Init();
 
 exit:
-    {}
+    return;
 }
 
 ThreadError Interpreter::ProcessPrefixAdd(int argc, char *argv[])
@@ -685,7 +686,7 @@ void Interpreter::ProcessPrefix(int argc, char *argv[])
     sResponse.Append("Done\r\n");
 
 exit:
-    {}
+    return;
 }
 
 void Interpreter::ProcessReleaseRouterId(int argc, char *argv[])
@@ -700,7 +701,7 @@ void Interpreter::ProcessReleaseRouterId(int argc, char *argv[])
     }
 
 exit:
-    {}
+    return;
 }
 
 void Interpreter::ProcessRloc16(int argc, char *argv[])
@@ -819,7 +820,7 @@ void Interpreter::ProcessRoute(int argc, char *argv[])
     sResponse.Append("Done\r\n");
 
 exit:
-    {}
+    return;
 }
 
 void Interpreter::ProcessRouterUpgradeThreshold(int argc, char *argv[])
@@ -839,7 +840,72 @@ void Interpreter::ProcessRouterUpgradeThreshold(int argc, char *argv[])
     sResponse.Append("Done\r\n");
 
 exit:
-    {}
+    return;
+}
+
+void Interpreter::ProcessScan(int argc, char *argv[])
+{
+    uint16_t scanChannels = 0;
+    long value;
+
+    if (argc > 0)
+    {
+        SuccessOrExit(ParseLong(argv[0], value));
+        scanChannels = 1 << (value - kPhyMinChannel);
+    }
+
+    SuccessOrExit(otActiveScan(scanChannels, 0, &HandleActiveScanResult));
+    sResponse.Append("| J | Network Name     | Extended PAN     | PAN  | MAC Address      | Ch | dBm |\r\n");
+    sResponse.Append("+---+------------------+------------------+------+------------------+----+-----+\r\n");
+
+exit:
+    return;
+}
+
+void Interpreter::HandleActiveScanResult(otActiveScanResult *aResult)
+{
+    const uint8_t *bytes;
+
+    sResponse.Init();
+
+    if (aResult == NULL)
+    {
+        sResponse.Append("Done\r\n");
+        ExitNow();
+    }
+
+    sResponse.Append("| %d ", aResult->mIsJoinable);
+
+    if (aResult->mNetworkName != NULL)
+    {
+        sResponse.Append("| %-16s ", aResult->mNetworkName);
+    }
+    else
+    {
+        sResponse.Append("| ---------------- ");
+    }
+
+    if (aResult->mExtPanId != NULL)
+    {
+        bytes = aResult->mExtPanId;
+        sResponse.Append("| %02x%02x%02x%02x%02x%02x%02x%02x ",
+                         bytes[0], bytes[1], bytes[2], bytes[3], bytes[4], bytes[5], bytes[6], bytes[7]);
+    }
+    else
+    {
+        sResponse.Append("| ---------------- ");
+    }
+
+    sResponse.Append("| %04x ", aResult->mPanId);
+
+    bytes = aResult->mExtAddress.m8;
+    sResponse.Append("| %02x%02x%02x%02x%02x%02x%02x%02x ",
+                     bytes[0], bytes[1], bytes[2], bytes[3], bytes[4], bytes[5], bytes[6], bytes[7]);
+    sResponse.Append("| %02d ", aResult->mChannel);
+    sResponse.Append("| %03d |\r\n", aResult->mRssi);
+
+exit:
+    sServer->Output(sResponse.GetResponse(), sResponse.GetResponseLength());
 }
 
 void Interpreter::ProcessShutdown(int argc, char *argv[])
@@ -856,7 +922,7 @@ void Interpreter::ProcessStart(int argc, char *argv[])
     sResponse.Append("Done\r\n");
 
 exit:
-    {}
+    return;
 }
 
 void Interpreter::ProcessState(int argc, char *argv[])
@@ -913,7 +979,7 @@ void Interpreter::ProcessState(int argc, char *argv[])
     sResponse.Append("Done\r\n");
 
 exit:
-    {}
+    return;
 }
 
 void Interpreter::ProcessStop(int argc, char *argv[])
@@ -922,7 +988,7 @@ void Interpreter::ProcessStop(int argc, char *argv[])
     sResponse.Append("Done\r\n");
 
 exit:
-    {}
+    return;
 }
 
 void Interpreter::ProcessWhitelist(int argc, char *argv[])
@@ -973,7 +1039,7 @@ void Interpreter::ProcessWhitelist(int argc, char *argv[])
     sResponse.Append("Done\r\n");
 
 exit:
-    {}
+    return;
 }
 
 void Interpreter::ProcessLine(char *aBuf, uint16_t aBufLength, Server &aServer)
@@ -1012,7 +1078,7 @@ void Interpreter::ProcessLine(char *aBuf, uint16_t aBufLength, Server &aServer)
     }
 
 exit:
-    {}
+    return;
 }
 
 }  // namespace Cli

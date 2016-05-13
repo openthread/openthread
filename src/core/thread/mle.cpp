@@ -437,12 +437,8 @@ void Mle::GenerateNonce(const Mac::ExtAddress &aMacAddr, uint32_t aFrameCounter,
                         uint8_t *aNonce)
 {
     // source address
-    for (int i = 0; i < 8; i++)
-    {
-        aNonce[i] = aMacAddr.mBytes[i];
-    }
-
-    aNonce += 8;
+    memcpy(aNonce, aMacAddr.m8, sizeof(aMacAddr));
+    aNonce += sizeof(aMacAddr);
 
     // frame counter
     aNonce[0] = aFrameCounter >> 24;

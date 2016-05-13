@@ -36,7 +36,9 @@
 
 #include <limits.h>
 #include <stdint.h>
+#include <string.h>
 
+#include <common/encoding.hpp>
 #include <openthread-types.h>
 #include <platform/radio.h>
 
@@ -64,19 +66,19 @@ enum
  * This type represents the IEEE 802.15.4 PAN ID.
  *
  */
-typedef uint16_t PanId;
+typedef otPanId PanId;
 
 /**
  * This type represents the IEEE 802.15.4 Short Address.
  *
  */
-typedef uint16_t ShortAddress;
+typedef otShortAddress ShortAddress;
 
 /**
  * This structure represents an IEEE 802.15.4 Extended Address.
  *
  */
-class ExtAddress
+class ExtAddress: public otExtAddress
 {
 public:
     /**
@@ -86,12 +88,6 @@ public:
      *
      */
     void Set(const Ip6::Address &aIpAddress);
-
-    enum
-    {
-        kLength = 8,   ///< Size of IEEE 802.15.4 Extended Address in bytes.
-    };
-    uint8_t mBytes[kLength];  ///< The IEEE 802.15.4 Extended Address bytes.
 };
 
 /**
@@ -583,6 +579,157 @@ private:
     uint8_t *FindSrcAddr(void);
     uint8_t *FindSecurityHeader(void);
 };
+
+/**
+ * This class implements IEEE 802.15.4 Beacon generation and parsing.
+ *
+ */
+class Beacon
+{
+public:
+    enum
+    {
+        kSuperFrameSpec   = 0x0fff,                 ///< Superframe Specification value.
+        kProtocolId       = 3,                      ///< Thread Protocol ID.
+        kNetworkNameSize  = 16,                     ///< Size of Thread Network Name (bytes).
+        kExtPanIdSize     = 8,                      ///< Size of Thread Extended PAN ID.
+    };
+
+    enum
+    {
+        kProtocolVersion  = 1,                      ///< Thread Protocol version.
+        kVersionOffset    = 4,                      ///< Version field bit offset.
+        kVersionMask      = 0xf << kVersionOffset,  ///< Version field mask.
+        kNativeFlag       = 1 << 3,                 ///< Native Commissioner flag.
+        kJoiningFlag      = 1 << 0,                 ///< Joining Permitted flag.
+    };
+
+    /**
+     * This method initializes the Beacon message.
+     *
+     */
+    void Init(void) {
+        mSuperframeSpec = Thread::Encoding::LittleEndian::HostSwap16(kSuperFrameSpec);
+        mGtsSpec = 0;
+        mPendingAddressSpec = 0;
+        mProtocolId = kProtocolId;
+        mFlags = kProtocolVersion << kVersionOffset;
+    }
+
+    /**
+     * This method indicates whether or not the beacon appears to be a valid Thread Beacon message.
+     *
+     * @retval TRUE  if the beacon appears to be a valid Thread Beacon message.
+     * @retval FALSE if the beacon does not appear to be a valid Thread Beacon message.
+     *
+     */
+    bool IsValid(void) {
+        return (mSuperframeSpec == Thread::Encoding::LittleEndian::HostSwap16(kSuperFrameSpec)) &&
+               (mGtsSpec == 0) && (mPendingAddressSpec == 0) && (mProtocolId == kProtocolId);
+    }
+
+    /**
+     * This method returns the Protocol ID value.xs
+     *
+     * @returns the Protocol ID value.
+     *
+     */
+    uint8_t GetProtocolId(void) const { return mProtocolId; }
+
+    /**
+     * This method returns the Protocol Version value.
+     *
+     * @returns The Protocol Version value.
+     *
+     */
+    uint8_t GetProtocolVersion(void) const { return mFlags >> kVersionOffset; }
+
+    /**
+     * This method indicates whether or not the Native Commissioner flag is set.
+     *
+     * @retval TRUE   if the Native Commissioner flag is set.
+     * @retval FALSE  if the Native Commissioner flag is not set.
+     *
+     */
+    bool IsNative(void) const { return (mFlags & kNativeFlag) != 0; }
+
+    /**
+     * This method clears the Native Commissioner flag.
+     *
+     */
+    void ClearNative(void) { mFlags &= ~kNativeFlag; }
+
+    /**
+     * This method sets the Native Commissioner flag.
+     *
+     */
+    void SetNative(void) { mFlags |= kNativeFlag; }
+
+    /**
+     * This method indicates whether or not the Joining Permitted flag is set.
+     *
+     * @retval TRUE   if the Joining Permitted flag is set.
+     * @retval FALSE  if the Joining Permitted flag is not set.
+     *
+     */
+    bool IsJoiningPermitted(void) const { return (mFlags & kJoiningFlag) != 0; }
+
+    /**
+     * This method clears the Joining Permitted flag.
+     *
+     */
+    void ClearJoiningPermitted(void) { mFlags &= ~kJoiningFlag; }
+
+    /**
+     * This method sets the Joining Permitted flag.
+     *
+     */
+    void SetJoiningPermitted(void) { mFlags |= kJoiningFlag; }
+
+    /**
+     * This method returns a pointer to the Network Name field.
+     *
+     * @returns A pointer to the network name field.
+     *
+     */
+    const char *GetNetworkName(void) const { return mNetworkName; }
+
+    /**
+     * This method sets the Network Name field.
+     *
+     * @param[in]  aNetworkName  A pointer to the Network Name.
+     *
+     */
+    void SetNetworkName(const char *aNetworkName) {
+        memset(mNetworkName, 0, sizeof(mNetworkName));
+        strncpy(mNetworkName, aNetworkName, sizeof(mNetworkName));
+    }
+
+    /**
+     * This method returns a pointer to the Extended PAN ID field.
+     *
+     * @returns A pointer to the Extended PAN ID field.
+     *
+     */
+    const uint8_t *GetExtendedPanId(void) const { return mExtendedPanId; }
+
+    /**
+     * This method sets the Extended PAN ID field.
+     *
+     * @param[in]  aExtPanId  A pointer to the Extended PAN ID.
+     *
+     */
+    void SetExtendedPanId(const uint8_t *aExtPanId) { memcpy(mExtendedPanId, aExtPanId, sizeof(mExtendedPanId)); }
+
+private:
+    uint16_t mSuperframeSpec;
+    uint8_t  mGtsSpec;
+    uint8_t  mPendingAddressSpec;
+    uint8_t  mProtocolId;
+    uint8_t  mFlags;
+    char     mNetworkName[kNetworkNameSize];
+    uint8_t  mExtendedPanId[kExtPanIdSize];
+} __attribute__((packed));
 
 /**
  * @}
