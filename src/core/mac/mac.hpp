@@ -385,6 +385,12 @@ public:
      */
     static void TransmitDoneTask(void *aContext);
 
+    /**
+     * This method returns if an active scan is in progress.
+     *
+     */
+    bool IsActiveScanInProgress(void);
+
 private:
     void GenerateNonce(const ExtAddress &aAddress, uint32_t aFrameCounter, uint8_t aSecurityLevel, uint8_t *aNonce);
     void NextOperation(void);
