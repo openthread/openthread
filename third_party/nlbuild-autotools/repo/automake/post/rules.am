@@ -21,4 +21,5 @@
 #
 
 include $(abs_top_nlbuild_autotools_dir)/automake/post/rules/coverage.am
+include $(abs_top_nlbuild_autotools_dir)/automake/post/rules/pretty.am
 include $(abs_top_nlbuild_autotools_dir)/automake/post/rules/headers.am

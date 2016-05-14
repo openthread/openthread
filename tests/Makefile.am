@@ -42,6 +42,12 @@ SUBDIRS                                 = \
     unit                                  \
     $(NULL)
 
+# Always pretty (e.g. for 'make pretty') these subdirectories.
+
+PRETTY_SUBDIRS                          = \
+    unit                                  \
+    $(NULL)
+
 if OPENTHREAD_BUILD_TESTS
 if OPENTHREAD_BUILD_COVERAGE
 CLEANFILES                             = $(wildcard *.gcda *.gcno)

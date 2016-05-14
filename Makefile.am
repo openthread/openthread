@@ -42,6 +42,7 @@ SUBDIRS                             = \
     $(NULL)
 
 EXTRA_DIST                          = \
+    .astyle-opts                      \
     .default-version                  \
     bootstrap                         \
     bootstrap-configure               \
@@ -57,6 +58,13 @@ dist_doc_DATA                       = \
 
 DISTCLEANFILES                      = \
     .local-version                    \
+    $(NULL)
+
+PRETTY_SUBDIRS                      = \
+    examples                          \
+    include                           \
+    src                               \
+    tests                             \
     $(NULL)
 
 #
