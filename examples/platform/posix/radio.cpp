@@ -260,6 +260,11 @@ int8_t otPlatRadioGetNoiseFloor()
     return 0;
 }
 
+bool otPlatRadioIsAckTimeoutSupported()
+{
+    return false;
+}
+
 ThreadError otPlatRadioHandleTransmitDone(bool *rxPending)
 {
     ThreadError error = kThreadError_None;

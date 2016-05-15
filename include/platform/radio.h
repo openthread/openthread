@@ -273,6 +273,14 @@ ThreadError otPlatRadioHandleTransmitDone(bool *aFramePending);
 int8_t otPlatRadioGetNoiseFloor(void);
 
 /**
+ * Check whether radio supports ACK timeout or not.
+ *
+ * @retval ::true         Radio supports ACK timeout.
+ * @retval ::false        Radio does not support ACK timeout.
+ */
+bool otPlatRadioIsAckTimeoutSupported(void);
+
+/**
  * @}
  *
  */
