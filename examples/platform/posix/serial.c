@@ -48,9 +48,6 @@ char *ptsname(int fd);
 
 extern struct gengetopt_args_info args_info;
 
-static struct termios s_in_termios;
-static struct termios s_out_termios;
-
 static uint8_t s_receive_buffer[128];
 static int s_in_fd;
 static int s_out_fd;
