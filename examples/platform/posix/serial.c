@@ -137,7 +137,7 @@ ThreadError otPlatSerialEnable(void)
 
         // turn off character processing
         termios.c_cflag &= ~(CSIZE | PARENB);
-        termios.c_cflag |= CS8|HUPCL|CREAD|CLOCAL;
+        termios.c_cflag |= CS8 | HUPCL | CREAD | CLOCAL;
 
         // return 1 byte at a time
         termios.c_cc[VMIN]  = 1;
@@ -162,7 +162,7 @@ ThreadError otPlatSerialEnable(void)
 
         // turn off character processing
         termios.c_cflag &= ~(CSIZE | PARENB);
-        termios.c_cflag |= CS8|HUPCL|CREAD|CLOCAL;
+        termios.c_cflag |= CS8 | HUPCL | CREAD | CLOCAL;
 
         // configure baud rate
         VerifyOrExit(cfsetospeed(&termios, B115200) == 0, perror("cfsetospeed"); error = kThreadError_Error);
