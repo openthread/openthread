@@ -40,6 +40,7 @@ libopenthread_cli_a_CPPFLAGS =        \
 libopenthread_cli_a_SOURCES         = \
     cli.cpp                           \
     cli_serial.cpp                    \
+    cli_udp.cpp                       \
     $(NULL)
 
 noinst_HEADERS                      = \
