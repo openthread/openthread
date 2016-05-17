@@ -30,7 +30,10 @@ include $(abs_top_nlbuild_autotools_dir)/automake/pre.am
 
 EXTRA_DIST                                      = \
     $(srcdir)/Doxyfile.in                         \
-    $(srcdir)/index.dox                           \
+    $(srcdir)/header.html                         \
+    $(srcdir)/images/Open-Thread-Logo-200x42.png  \
+    $(srcdir)/images/openthread_contrib.png       \
+    $(srcdir)/images/openthread_logo.png          \
     $(NULL)
 
 #
@@ -45,18 +48,18 @@ VERSION                                         = $(PACKAGE_VERSION)
 
 docdistdir                                     ?= .
 
-openthread_docdist_alias             = \
+openthread_docdist_alias                        = \
     $(PACKAGE_TARNAME)-docs
 
-openthread_docdist_name              = \
+openthread_docdist_name                         = \
     $(openthread_docdist_alias)-$(VERSION)
 
-openthread_docdist_archive           = \
+openthread_docdist_archive                      = \
     $(docdistdir)/$(openthread_docdist_name).tar.gz
 
 CLEANFILES                                      = \
     Doxyfile                                      \
-    $(openthread_docdist_archive)      \
+    $(openthread_docdist_archive)                 \
     $(NULL)
 
 if OPENTHREAD_BUILD_DOCS

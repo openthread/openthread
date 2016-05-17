@@ -42,10 +42,12 @@ libopenthread_cli_a_SOURCES         = \
     cli_serial.cpp                    \
     $(NULL)
 
-include_HEADERS                     = \
+noinst_HEADERS                      = \
+    cli.hpp                           \
+    cli_serial.hpp                    \
+    cli_server.hpp                    \
+    cli_udp.hpp                       \
     $(NULL)
-
-install-headers: install-includeHEADERS
 
 if OPENTHREAD_BUILD_COVERAGE
 CLEANFILES                          = $(wildcard *.gcda *.gcno)

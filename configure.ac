@@ -416,6 +416,9 @@ NL_RESTORE_WERROR
 #
 AC_CONFIG_FILES([
 Makefile
+include/Makefile
+include/crypto/Makefile
+include/platform/Makefile
 src/Makefile
 src/cli/Makefile
 src/core/Makefile
