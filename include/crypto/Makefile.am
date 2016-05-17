@@ -28,18 +28,11 @@
 
 include $(abs_top_nlbuild_autotools_dir)/automake/pre.am
 
-# Always package (e.g. for 'make dist') these subdirectories.
-
-DIST_SUBDIRS                            = \
-    cli                                   \
-    core                                  \
+include_HEADERS                         = \
+    aes_ecb.h                             \
+    hmac_sha256.h                         \
     $(NULL)
 
-# Always build (e.g. for 'make all') these subdirectories.
-
-SUBDIRS                                 = \
-    cli                                   \
-    core                                  \
-    $(NULL)
+install-headers: install-includeHEADERS
 
 include $(abs_top_nlbuild_autotools_dir)/automake/post.am

@@ -42,8 +42,6 @@ SUBDIRS                                 = \
     unit                                  \
     $(NULL)
 
-all:
-
 if OPENTHREAD_BUILD_TESTS
 if OPENTHREAD_BUILD_COVERAGE
 CLEANFILES                             = $(wildcard *.gcda *.gcno)
