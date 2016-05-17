@@ -31,15 +31,22 @@ include $(abs_top_nlbuild_autotools_dir)/automake/pre.am
 # Always package (e.g. for 'make dist') these subdirectories.
 
 DIST_SUBDIRS                            = \
-    cli                                   \
-    core                                  \
+    crypto                                \
+    platform                              \
     $(NULL)
 
 # Always build (e.g. for 'make all') these subdirectories.
 
 SUBDIRS                                 = \
-    cli                                   \
-    core                                  \
+    crypto                                \
+    platform                              \
     $(NULL)
+
+include_HEADERS                         = \
+    openthread.h                          \
+    openthread-types.h                    \
+    $(NULL)
+
+install-headers: install-includeHEADERS
 
 include $(abs_top_nlbuild_autotools_dir)/automake/post.am

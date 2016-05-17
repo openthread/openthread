@@ -68,10 +68,46 @@ libopenthread_a_SOURCES             = \
     thread/thread_tlvs.cpp            \
     $(NULL)
 
-include_HEADERS                     = \
+noinst_HEADERS                      = \
+    openthread-core-config.h          \
+    coap/coap_header.hpp              \
+    coap/coap_server.hpp              \
+    common/code_utils.hpp             \
+    common/debug.hpp                  \
+    common/encoding.hpp               \
+    common/logging.hpp                \
+    common/message.hpp                \
+    common/tasklet.hpp                \
+    common/timer.hpp                  \
+    crypto/aes_ccm.hpp                \
+    mac/mac.hpp                       \
+    mac/mac_frame.hpp                 \
+    mac/mac_whitelist.hpp             \
+    net/icmp6.hpp                     \
+    net/ip6.hpp                       \
+    net/ip6_address.hpp               \
+    net/ip6_mpl.hpp                   \
+    net/ip6_routes.hpp                \
+    net/netif.hpp                     \
+    net/socket.hpp                    \
+    net/udp6.hpp                      \
+    thread/address_resolver.hpp       \
+    thread/key_manager.hpp            \
+    thread/lowpan.hpp                 \
+    thread/mesh_forwarder.hpp         \
+    thread/mle.hpp                    \
+    thread/mle_constants.hpp          \
+    thread/mle_router.hpp             \
+    thread/mle_tlvs.hpp               \
+    thread/network_data.hpp           \
+    thread/network_data_leader.hpp    \
+    thread/network_data_local.hpp     \
+    thread/network_data_tlvs.hpp      \
+    thread/thread_netif.hpp           \
+    thread/thread_tlvs.hpp            \
+    thread/thread_uris.hpp            \
+    thread/topology.hpp               \
     $(NULL)
-
-install-headers: install-includeHEADERS
 
 if OPENTHREAD_BUILD_COVERAGE
 CLEANFILES                          = $(wildcard *.gcda *.gcno)

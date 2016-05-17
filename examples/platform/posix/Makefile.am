@@ -61,6 +61,8 @@ libopenthread_posix_a_SOURCES             = \
     $(NULL)
 
 include_HEADERS                           = \
+    cmdline.h                               \
+    platform.h                              \
     $(NULL)
 
 install-headers: install-includeHEADERS
