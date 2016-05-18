@@ -729,11 +729,6 @@ ThreadError MeshForwarder::SendMesh(Message &aMessage, Mac::Frame &aFrame)
     aFrame.SetSrcAddr(mMacSource.mShortAddress);
 
     // write payload
-    if (aMessage.GetLength() > aFrame.GetMaxPayloadLength())
-    {
-        fprintf(stderr, "%d %d\n", aMessage.GetLength(), aFrame.GetMaxPayloadLength());
-    }
-
     assert(aMessage.GetLength() <= aFrame.GetMaxPayloadLength());
     aMessage.Read(0, aMessage.GetLength(), aFrame.GetPayload());
     aFrame.SetPayloadLength(aMessage.GetLength());

@@ -110,7 +110,7 @@ extern "C" {
 /**
  * Initialize the OpenThread library.
  */
-void otInit();
+void otInit(void);
 
 /**
  * Run the next queued tasklet in OpenThread.
