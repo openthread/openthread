@@ -192,7 +192,7 @@ endif # OPENTHREAD_WITH_ESSENTIAL_TESTS_ONLY
 
 TESTS_ENVIRONMENT                                                  = \
     export                                                           \
-    top_srcdir='$(top_srcdir)'                                       \
+    top_builddir='$(top_builddir)'                                   \
     VERBOSE=1;                                                       \
     $(NULL)
 
