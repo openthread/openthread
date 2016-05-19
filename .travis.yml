@@ -1,7 +1,12 @@
 language: cpp
 
+os:
+  - linux
+  - osx
+
 before_install:
-  - sudo apt-get install python-pexpect
+  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then sudo apt-get install python-pexpect; fi
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then sudo easy_install pexpect; fi
 
 script:
   - ./bootstrap-configure --enable-minimum-set-of-tests
