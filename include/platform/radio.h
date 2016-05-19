@@ -77,6 +77,11 @@ enum
     kPhyUsPerSymbol     = ((kPhyBitsPerOctet / kPhySymbolsPerOctet) * 1000000) / kPhyBitRate,
 };
 
+enum
+{
+    kRadioCapsAckTimeout  = 0x1,
+};
+
 /**
  * This structure represents an IEEE 802.15.4 radio frame.
  */
@@ -273,12 +278,11 @@ ThreadError otPlatRadioHandleTransmitDone(bool *aFramePending);
 int8_t otPlatRadioGetNoiseFloor(void);
 
 /**
- * Check whether radio supports ACK timeout or not.
+ * Get the radio capabilities.
  *
- * @retval ::true         Radio supports ACK timeout.
- * @retval ::false        Radio does not support ACK timeout.
+ * @returns The radio capabilities.
  */
-bool otPlatRadioIsAckTimeoutSupported(void);
+uint32_t otPlatRadioGetCaps(void);
 
 /**
  * @}

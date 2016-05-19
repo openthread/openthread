@@ -260,9 +260,9 @@ int8_t otPlatRadioGetNoiseFloor()
     return 0;
 }
 
-bool otPlatRadioIsAckTimeoutSupported()
+uint32_t otPlatRadioGetCaps()
 {
-    return false;
+    return 0;
 }
 
 ThreadError otPlatRadioHandleTransmitDone(bool *rxPending)

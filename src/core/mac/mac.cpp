@@ -516,7 +516,7 @@ void Mac::HandleBeginTransmit(void)
 
     SuccessOrExit(error = otPlatRadioTransmit(&mSendFrame));
 
-    if (mSendFrame.GetAckRequest() && !otPlatRadioIsAckTimeoutSupported())
+    if (mSendFrame.GetAckRequest() && !(otPlatRadioGetCaps() & kRadioCapsAckTimeout))
     {
         mAckTimer.Start(kAckTimeout);
         otLogDebgMac("ack timer start\n");
