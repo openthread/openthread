@@ -323,7 +323,7 @@ Add a valid prefix to the Network Data.
 * c: DHCPv6 Other Configuration flag
 * s: Stable flag
 * r: Default Route flag
-* prf: Default router preference. An integer in the range [-1, 1]
+* prf: Default router preference, which may be: 'high', 'med', or 'low'.
 
 ```bash
 $ prefix add 2001:dead:beef:cafe::/64 pvsr 0
@@ -361,8 +361,7 @@ Done
 Add a valid prefix to the Network Data.
 
 * s: Stable flag
-* r: Default Route flag
-* prf: Default router preference. An integer in the range [-1, 1]
+* prf: Default router preference, which may be: 'high', 'med', or 'low'.
 
 ```bash
 $ route add 2001:dead:beef:cafe::/64 pvsr 0
