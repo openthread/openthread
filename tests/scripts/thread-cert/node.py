@@ -52,8 +52,8 @@ class Node:
 
     def __init_sim(self, nodeid):
         """ Initialize a simulation node. """
-        if "top_srcdir" in os.environ.keys():
-            srcdir = os.environ['top_srcdir']
+        if "top_builddir" in os.environ.keys():
+            srcdir = os.environ['top_builddir']
             cmd = '%s/examples/cli/soc' % srcdir
         else:
             cmd = './soc'

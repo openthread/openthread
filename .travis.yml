@@ -10,4 +10,4 @@ before_install:
 
 script:
   - ./bootstrap-configure --enable-minimum-set-of-tests
-  - make check
+  - make distcheck
