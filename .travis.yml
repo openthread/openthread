@@ -8,6 +8,16 @@ before_install:
   - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then sudo apt-get install python-pexpect; fi
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then sudo easy_install pexpect; fi
 
+install:
+  - pushd ~
+  - wget https://sourceforge.net/projects/astyle/files/astyle/astyle%202.05.1/astyle_2.05.1_linux.tar.gz/download -O astyle.tar.gz
+  - tar -xzvf astyle.tar.gz
+  - pushd astyle/build/gcc && LDFLAGS=" " make
+  - export PATH=$PWD/bin:$PATH
+  - popd
+  - popd
+
 script:
   - ./bootstrap-configure --enable-minimum-set-of-tests
+  - make pretty-check
   - make distcheck

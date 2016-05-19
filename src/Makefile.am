@@ -42,4 +42,11 @@ SUBDIRS                                 = \
     core                                  \
     $(NULL)
 
+# Always pretty (e.g. for 'make pretty') these subdirectories.
+
+PRETTY_SUBDIRS                          = \
+    cli                                   \
+    core                                  \
+    $(NULL)
+
 include $(abs_top_nlbuild_autotools_dir)/automake/post.am
