@@ -48,9 +48,6 @@ char *ptsname(int fd);
 
 extern struct gengetopt_args_info args_info;
 
-static struct termios s_in_termios;
-static struct termios s_out_termios;
-
 static uint8_t s_receive_buffer[128];
 static int s_in_fd;
 static int s_out_fd;
@@ -140,7 +137,7 @@ ThreadError otPlatSerialEnable(void)
 
         // turn off character processing
         termios.c_cflag &= ~(CSIZE | PARENB);
-        termios.c_cflag |= CS8|HUPCL|CREAD|CLOCAL;
+        termios.c_cflag |= CS8 | HUPCL | CREAD | CLOCAL;
 
         // return 1 byte at a time
         termios.c_cc[VMIN]  = 1;
@@ -165,7 +162,7 @@ ThreadError otPlatSerialEnable(void)
 
         // turn off character processing
         termios.c_cflag &= ~(CSIZE | PARENB);
-        termios.c_cflag |= CS8|HUPCL|CREAD|CLOCAL;
+        termios.c_cflag |= CS8 | HUPCL | CREAD | CLOCAL;
 
         // configure baud rate
         VerifyOrExit(cfsetospeed(&termios, B115200) == 0, perror("cfsetospeed"); error = kThreadError_Error);

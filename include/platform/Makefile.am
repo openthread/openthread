@@ -28,18 +28,15 @@
 
 include $(abs_top_nlbuild_autotools_dir)/automake/pre.am
 
-# Always package (e.g. for 'make dist') these subdirectories.
-
-DIST_SUBDIRS                            = \
-    cli                                   \
-    core                                  \
+include_HEADERS                         = \
+    atomic.h                              \
+    alarm.h                               \
+    logging.h                             \
+    radio.h                               \
+    random.h                              \
+    serial.h                              \
     $(NULL)
 
-# Always build (e.g. for 'make all') these subdirectories.
-
-SUBDIRS                                 = \
-    cli                                   \
-    core                                  \
-    $(NULL)
+install-headers: install-includeHEADERS
 
 include $(abs_top_nlbuild_autotools_dir)/automake/post.am

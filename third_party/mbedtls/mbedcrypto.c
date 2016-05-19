@@ -41,7 +41,7 @@ static unsigned char sMemoryBuf[MBED_MEMORY_BUF_SIZE];
 static mbedtls_aes_context sAesContext;
 static mbedtls_md_context_t sSha256Context;
 
-void mbedInit()
+void mbedInit(void)
 {
     if (sIsInitialized)
     {

@@ -40,6 +40,4 @@ SUBDIRS                                 = \
     mbedtls                               \
     $(NULL)
 
-all:
-
 include $(abs_top_nlbuild_autotools_dir)/automake/post.am
