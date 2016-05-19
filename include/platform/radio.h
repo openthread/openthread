@@ -285,14 +285,6 @@ int8_t otPlatRadioGetNoiseFloor(void);
 uint32_t otPlatRadioGetCapabilities(void);
 
 /**
- * Check whether radio supports ACK timeout or not.
- *
- * @retval ::true         Radio supports ACK timeout.
- * @retval ::false        Radio does not support ACK timeout.
- */
-bool otPlatRadioIsAckTimeoutSupported(void);
-
-/**
  * @}
  *
  */

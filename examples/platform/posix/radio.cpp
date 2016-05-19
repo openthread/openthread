@@ -265,11 +265,6 @@ uint32_t otPlatRadioGetCapabilities()
     return 0;
 }
 
-bool otPlatRadioIsAckTimeoutSupported()
-{
-    return false;
-}
-
 ThreadError otPlatRadioHandleTransmitDone(bool *rxPending)
 {
     ThreadError error = kThreadError_None;
