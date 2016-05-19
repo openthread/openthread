@@ -42,6 +42,13 @@ SUBDIRS                                 = \
     platform                              \
     $(NULL)
 
+# Always pretty (e.g. for 'make pretty') these subdirectories.
+
+PRETTY_SUBDIRS                          = \
+    crypto                                \
+    platform                              \
+    $(NULL)
+
 include_HEADERS                         = \
     openthread.h                          \
     openthread-types.h                    \
