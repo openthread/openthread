@@ -53,11 +53,11 @@ AM_CPPFLAGS                                                    = \
     -I$(top_srcdir)/third_party/mbedtls/repo/include             \
     $(NULL)
 
-COMMON_LDADD                                                   = \
-    $(top_srcdir)/src/core/libopenthread.a                       \
-    $(top_srcdir)/examples/platform/posix/libopenthread-posix.a  \
-    $(top_srcdir)/third_party/mbedtls/libmbedcrypto.a            \
-    -lpthread                                                    \
+COMMON_LDADD                                                   =  \
+    $(top_builddir)/src/core/libopenthread.a                      \
+    $(top_builddir)/examples/platform/posix/libopenthread-posix.a \
+    $(top_builddir)/third_party/mbedtls/libmbedcrypto.a           \
+    -lpthread                                                     \
     $(NULL)
 
 # Test applications that should be run when the 'check' target is run.

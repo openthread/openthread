@@ -39,12 +39,12 @@ soc_CPPFLAGS                                                   = \
     $(OPENTHREAD_TARGET_DEFINES)                                 \
     $(NULL)
 
-soc_LDADD                                                      = \
-    $(top_srcdir)/src/core/libopenthread.a                       \
-    $(top_srcdir)/src/cli/libopenthread-cli.a                    \
-    $(top_srcdir)/examples/platform/posix/libopenthread-posix.a  \
-    $(top_srcdir)/third_party/mbedtls/libmbedcrypto.a            \
-    -lpthread                                                    \
+soc_LDADD                                                      =  \
+    $(top_builddir)/src/core/libopenthread.a                      \
+    $(top_builddir)/src/cli/libopenthread-cli.a                   \
+    $(top_builddir)/examples/platform/posix/libopenthread-posix.a \
+    $(top_builddir)/third_party/mbedtls/libmbedcrypto.a           \
+    -lpthread                                                     \
     $(NULL)
 
 soc_SOURCES                                                    = \

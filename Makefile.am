@@ -30,6 +30,8 @@ include $(abs_top_nlbuild_autotools_dir)/automake/pre.am
 
 AM_MAKEFLAGS                        = --no-print-directory
 
+AM_DISTCHECK_CONFIGURE_FLAGS        = --enable-minimum-set-of-tests
+
 SUBDIRS                             = \
     include                           \
     src                               \
@@ -90,6 +92,14 @@ OPENTHREAD_VERSION                ?= $(shell cat $(VERSION_FILE) 2> /dev/null)
 
 PACKAGE_VERSION                    = $(OPENTHREAD_VERSION)
 VERSION                            = $(PACKAGE_VERSION)
+
+distdir = $(PACKAGE)-$(shell                                     \
+if [ "$(origin OPENTHREAD_VERSION)" != "file" ]; then            \
+    echo "$(OPENTHREAD_VERSION)" ;                               \
+else                                                             \
+    $(abs_top_nlbuild_autotools_dir)/scripts/mkversion           \
+        -b "$(OPENTHREAD_VERSION)" "$(top_srcdir)";              \
+fi )
 
 #
 # check-file-.local-version
