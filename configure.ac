@@ -429,6 +429,7 @@ include/crypto/Makefile
 include/platform/Makefile
 src/Makefile
 src/cli/Makefile
+src/ncp/Makefile
 src/core/Makefile
 third_party/Makefile
 third_party/mbedtls/Makefile
@@ -436,6 +437,7 @@ examples/Makefile
 examples/platform/Makefile
 examples/platform/posix/Makefile
 examples/cli/Makefile
+examples/ncp/Makefile
 tests/Makefile
 tests/scripts/Makefile
 tests/unit/Makefile
