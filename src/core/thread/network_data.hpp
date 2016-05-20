@@ -168,6 +168,19 @@ protected:
     PrefixTlv *FindPrefix(const uint8_t *aPrefix, uint8_t aPrefixLength);
 
     /**
+     * This method returns a pointer to a Prefix TLV in a specified tlvs buffer.
+     *
+     * @param[in]  aPrefix        A pointer to an IPv6 prefix.
+     * @param[in]  aPrefixLength  The prefix length pointed to by @p aPrefix.
+     * @param[in]  aTlvs          A pointer to a specified tlvs buffer.
+     * @param[in]  aTlvsLength    The specified tlvs buffer length pointed to by @p aTlvs.
+     *
+     * @returns A pointer to the Prefix TLV is one is found or NULL if no matching Prefix TLV exists.
+     *
+     */
+    PrefixTlv *FindPrefix(const uint8_t *aPrefix, uint8_t aPrefixLength, uint8_t *aTlvs, uint8_t aTlvsLength);
+
+    /**
      * This method inserts bytes into the Network Data.
      *
      * @param[in]  aStart   A pointer to the beginning of the insertion.
