@@ -204,6 +204,14 @@ private:
     void GetPropertyHandler_IPV6_ADDRESS_TABLE(uint8_t header, spinel_prop_key_t key);
     void GetPropertyHandler_IPV6_ROUTE_TABLE(uint8_t header, spinel_prop_key_t key);
     void GetPropertyHandler_STREAM_NET(uint8_t header, spinel_prop_key_t key);
+    void GetPropertyHandler_MAC_SCAN_MASK(uint8_t header, spinel_prop_key_t key);
+    void GetPropertyHandler_MAC_SCAN_PERIOD(uint8_t header, spinel_prop_key_t key);
+    void GetPropertyHandler_THREAD_LEADER_ADDR(uint8_t header, spinel_prop_key_t key);
+    void GetPropertyHandler_THREAD_LEADER_RID(uint8_t header, spinel_prop_key_t key);
+    void GetPropertyHandler_THREAD_LEADER_WEIGHT(uint8_t header, spinel_prop_key_t key);
+    void GetPropertyHandler_THREAD_LOCAL_LEADER_WEIGHT(uint8_t header, spinel_prop_key_t key);
+    void GetPropertyHandler_THREAD_NETWORK_DATA_VERSION(uint8_t header, spinel_prop_key_t key);
+    void GetPropertyHandler_THREAD_STABLE_NETWORK_DATA_VERSION(uint8_t header, spinel_prop_key_t key);
 
     void SetPropertyHandler_POWER_STATE(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr, uint16_t value_len);
     void SetPropertyHandler_PHY_TX_POWER(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr, uint16_t value_len);
@@ -221,6 +229,10 @@ private:
     void SetPropertyHandler_STREAM_NET_INSECURE(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr, uint16_t value_len);
     void SetPropertyHandler_STREAM_NET(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr, uint16_t value_len);
     void SetPropertyHandler_IPV6_ML_PREFIX(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr, uint16_t value_len);
+    void SetPropertyHandler_PHY_ENABLED(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr, uint16_t value_len);
+    void SetPropertyHandler_PHY_PROMISCUOUS_MODE(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr, uint16_t value_len);
+    void SetPropertyHandler_MAC_SCAN_PERIOD(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr, uint16_t value_len);
+    void SetPropertyHandler_THREAD_LOCAL_LEADER_WEIGHT(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr, uint16_t value_len);
 
     void InsertPropertyHandler_IPV6_ADDRESS_TABLE(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr, uint16_t value_len);
     void RemovePropertyHandler_IPV6_ADDRESS_TABLE(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr, uint16_t value_len);
@@ -234,6 +246,8 @@ private:
     uint32_t mChannelMask;
 
     uint8_t mQueuedGetHeader;
+
+    uint16_t mScanPeriod;
 
     spinel_prop_key_t mQueuedGetKey;
 
