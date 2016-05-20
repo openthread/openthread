@@ -260,6 +260,11 @@ int8_t otPlatRadioGetNoiseFloor()
     return 0;
 }
 
+uint32_t otPlatRadioGetCapabilities()
+{
+    return 0;
+}
+
 ThreadError otPlatRadioHandleTransmitDone(bool *rxPending)
 {
     ThreadError error = kThreadError_None;

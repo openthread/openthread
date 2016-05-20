@@ -77,6 +77,11 @@ enum
     kPhyUsPerSymbol     = ((kPhyBitsPerOctet / kPhySymbolsPerOctet) * 1000000) / kPhyBitRate,
 };
 
+enum
+{
+    kRadioCapsAckTimeout  = 0x1,
+};
+
 /**
  * This structure represents an IEEE 802.15.4 radio frame.
  */
@@ -271,6 +276,13 @@ ThreadError otPlatRadioHandleTransmitDone(bool *aFramePending);
  * @returns The noise floor value in dBm when the noise floor value is valid.  127 when noise floor value is invalid.
  */
 int8_t otPlatRadioGetNoiseFloor(void);
+
+/**
+ * Get the radio capabilities.
+ *
+ * @returns The radio capabilities.
+ */
+uint32_t otPlatRadioGetCapabilities(void);
 
 /**
  * @}
