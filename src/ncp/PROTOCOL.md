@@ -331,7 +331,7 @@ several properties that are required in all implementations.
 
 * 0: `PROP_LAST_STATUS`
 * 1: `PROP_PROTOCOL_VERSION`
-* 2: `PROP_CAPABILITIES`
+* 2: `PROP_CAPS`
 * 3: `PROP_NCP_VERSION`
 * 4: `PROP_INTERFACE_COUNT`
 * 5: `PROP_POWER_STATE`
@@ -416,7 +416,7 @@ host.
 #### 5.2.3 Vendor Identifier ####
 
 
-### 5.3. PROP 2: `PROP_CAPABILITIES`
+### 5.3. PROP 2: `PROP_CAPS`
 
 * Type: Read-Only
 * Packed-Encoding: `A(i)`
@@ -855,7 +855,7 @@ present, allows the host to save and recall network credentials and
 state to and from nonvolatile storage.
 
 The presence of this feature can be detected by checking for the
-presence of the `CAP_NET_SAVE` capability in `PROP_CAPABILITIES`.
+presence of the `CAP_NET_SAVE` capability in `PROP_CAPS`.
 
 ### B.1. Commands
 
@@ -934,7 +934,7 @@ that can be recalled at a later time.
 
 The presence of this feature can be detected by the host by
 checking for the presence of the `CAP_HBO`
-capability in `PROP_CAPABILITIES`.
+capability in `PROP_CAPS`.
 
 ### C.1. Commands
 
@@ -994,7 +994,7 @@ host to a non-zero value before the NCP will begin offloading blocks.
 This value is encoded as an unsigned 32-bit integer.
 
 This property is only available if the `CAP_HBO`
-capability is present in `PROP_CAPABILITIES`.
+capability is present in `PROP_CAPS`.
 
 #### C.2.1. PROP 7: `PROP_HBO_BLOCK_MAX`
 
@@ -1012,7 +1012,7 @@ host block offload to be effectively disabled.
 This value is encoded as an unsigned 16-bit integer.
 
 This property is only available if the `CAP_HBO`
-capability is present in `PROP_CAPABILITIES`.
+capability is present in `PROP_CAPS`.
 
 
 

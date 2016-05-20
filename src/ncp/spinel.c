@@ -798,8 +798,8 @@ spinel_prop_key_to_cstr(spinel_prop_key_t prop_key)
         ret = "PROP_PROTOCOL_VERSION";
         break;
 
-    case SPINEL_PROP_CAPABILITIES:
-        ret = "PROP_CAPABILITIES";
+    case SPINEL_PROP_CAPS:
+        ret = "PROP_CAPS";
         break;
 
     case SPINEL_PROP_NCP_VERSION:

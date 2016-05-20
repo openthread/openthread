@@ -163,6 +163,7 @@ typedef struct in6_addr spinel_ipv6addr_t;
 typedef int spinel_ssize_t;
 typedef unsigned int spinel_size_t;
 typedef uint8_t spinel_tid_t;
+typedef unsigned int spinel_cid_t;
 
 enum
 {
@@ -244,7 +245,7 @@ typedef enum
 {
     SPINEL_PROP_LAST_STATUS             = 0,        // status [i]
     SPINEL_PROP_PROTOCOL_VERSION        = 1,        // interface type, major, minor, vendor [i,i,i,i]
-    SPINEL_PROP_CAPABILITIES            = 2,        // capability list [A(i)]
+    SPINEL_PROP_CAPS                    = 2,        // capability list [A(i)]
     SPINEL_PROP_NCP_VERSION             = 3,        // version string [U]
     SPINEL_PROP_INTERFACE_COUNT         = 4,        // Interface count [C]
     SPINEL_PROP_POWER_STATE             = 5,        // PowerState [C]
@@ -262,6 +263,7 @@ typedef enum
     SPINEL_PROP_PHY_TX_POWER            = SPINEL_PROP_PHY__BEGIN + 5, // [c]
     SPINEL_PROP_PHY_RSSI                = SPINEL_PROP_PHY__BEGIN + 6, // dBm [c]
     SPINEL_PROP_PHY_RAW_STREAM_ENABLED  = SPINEL_PROP_PHY__BEGIN + 7, // [C]
+    SPINEL_PROP_PHY_PROMISCUOUS_MODE    = SPINEL_PROP_PHY__BEGIN + 8, // [C]
     SPINEL_PROP_PHY__END                = 0x30,
 
     SPINEL_PROP_MAC__BEGIN           = 0x30,
