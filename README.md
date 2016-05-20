@@ -63,9 +63,35 @@ OpenThread follows [the Semantic Versioning guidelines](http://semver.org/) for 
 See the [CONTRIBUTING.md](CONTRIBUTING.md) file for more information.
 
 
+# About the Thread Group
+
+OpenThread is an open source implementation of the Thread 1.0.1 Final Specification.
+The Thread 1.0.1 Final Specification is promulgated by the Thread Group. The Thread
+Group is a non-profit organization formed for the purposes of defining one or
+more specifications, best practices, reference architectures, implementation
+guidelines and certification programs to promote the availability of compliant
+implementations of the Thread protocol. Information on becoming a Member, including
+information about the benefits thereof, can be found at <http://threadgroup.org>.
+
+OpenThread is not affiliated with or endorsed by the Thread Group. Implementation
+of this OpenThread code does not assure compliance with the Thread 1.0.1 Final
+Specification and does not convey the right to identify any final product as Thread
+certified. Members of the Thread Group may hold patents and other intellectual
+property rights relating to the Thread 1.0.1 Final Specification, ownership and
+licenses of which are subject to the Thread Group’s IP Policies, and not this license.
+
+
 # License
 
 OpenThread is released under the [BSD 3-Clause license](LICENSE).
 See the [LICENSE](LICENSE) file for more information.
 
-Please only use the OpenThread name and marks when accurately referencing this software distribution, and do not use these marks in a way that suggests you are endorsed by or otherwise affiliated with Nest, Google, or The Thread Group.
+The included copyright to the OpenThread code is subject to the license in the
+LICENSE file, and all other rights and licenses are expressly reserved.
+No warranty or assurance is made with respect to additional rights that may be
+required to implement this code.
+
+Please only use the OpenThread name and marks when accurately
+referencing this software distribution, and do not use these marks in
+a way that suggests you are endorsed by or otherwise affiliated with
+Nest, Google, or The Thread Group.
