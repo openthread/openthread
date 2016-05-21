@@ -78,6 +78,17 @@ enum
 };
 
 /**
+ *   This enum represents radio capabilities.
+ *
+ */
+
+typedef enum otRadioCaps
+{
+    kRadioCapsNone          = 0,  ///< None
+    kRadioCapsAckTimeout    = 1,  ///< Radio supports AckTime event
+} otRadioCaps;
+
+/**
  * This structure represents an IEEE 802.15.4 radio frame.
  */
 typedef struct RadioPacket
@@ -271,6 +282,13 @@ ThreadError otPlatRadioHandleTransmitDone(bool *aFramePending);
  * @returns The noise floor value in dBm when the noise floor value is valid.  127 when noise floor value is invalid.
  */
 int8_t otPlatRadioGetNoiseFloor(void);
+
+/**
+ * Get the radio capabilities.
+ *
+ * @returns The radio capability bit vector. The stack enables or disables some functions based on this value.
+ */
+otRadioCaps otPlatRadioGetCaps(void);
 
 /**
  * @}
