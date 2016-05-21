@@ -516,8 +516,23 @@ void Leader::SetNetworkData(uint8_t aVersion, uint8_t aStableVersion, bool aStab
 
 void Leader::RemoveBorderRouter(uint16_t aRloc16)
 {
-    RemoveRloc(aRloc16);
-    ConfigureAddresses();
+    bool rlocIn = false;
+    bool rlocStable = false;
+    RlocLookup(aRloc16, rlocIn, rlocStable, mTlvs, mLength);
+
+    if (rlocIn)
+    {
+        RemoveRloc(aRloc16);
+        mVersion++;
+
+        if (rlocStable)
+        {
+            mStableVersion++;
+        }
+
+        ConfigureAddresses();
+    }
+
     mMle.HandleNetworkDataUpdate();
 }
 
@@ -577,15 +592,178 @@ exit:
     }
 }
 
+void Leader::RlocLookup(uint16_t aRloc16, bool &aIn, bool &aStable, uint8_t *aTlvs, uint8_t aTlvsLength)
+{
+    NetworkDataTlv *cur = reinterpret_cast<NetworkDataTlv *>(aTlvs);
+    NetworkDataTlv *end = reinterpret_cast<NetworkDataTlv *>(aTlvs + aTlvsLength);
+    NetworkDataTlv *subCur;
+    NetworkDataTlv *subEnd;
+    PrefixTlv *prefix;
+    BorderRouterTlv *borderRouter;
+    HasRouteTlv *hasRoute;
+    BorderRouterEntry *borderRouterEntry;
+    HasRouteEntry *hasRouteEntry;
+
+    while (cur < end)
+    {
+        if (cur->GetType() == NetworkDataTlv::kTypePrefix)
+        {
+            prefix = reinterpret_cast<PrefixTlv *>(cur);
+            subCur = reinterpret_cast<NetworkDataTlv *>(prefix->GetSubTlvs());
+            subEnd = reinterpret_cast<NetworkDataTlv *>(prefix->GetSubTlvs() + prefix->GetSubTlvsLength());
+
+            while (subCur < subEnd)
+            {
+                switch (subCur->GetType())
+                {
+                case NetworkDataTlv::kTypeBorderRouter:
+                    borderRouter = FindBorderRouter(*prefix);
+
+                    for (int i = 0; i < borderRouter->GetNumEntries(); i++)
+                    {
+                        borderRouterEntry = borderRouter->GetEntry(i);
+
+                        if (borderRouterEntry->GetRloc() == aRloc16)
+                        {
+                            aIn = true;
+
+                            if (borderRouter->IsStable())
+                            {
+                                aStable = true;
+                            }
+                        }
+                    }
+
+                    break;
+
+                case NetworkDataTlv::kTypeHasRoute:
+                    hasRoute = FindHasRoute(*prefix);
+
+                    for (int i = 0; i < hasRoute->GetNumEntries(); i++)
+                    {
+                        hasRouteEntry = hasRoute->GetEntry(i);
+
+                        if (hasRouteEntry->GetRloc() == aRloc16)
+                        {
+                            aIn = true;
+
+                            if (hasRoute->IsStable())
+                            {
+                                aStable = true;
+                            }
+                        }
+                    }
+
+                    break;
+
+                default:
+                    break;
+                }
+
+                if (aIn && aStable)
+                {
+                    ExitNow();
+                }
+
+                subCur = subCur->GetNext();
+            }
+        }
+
+        cur = cur->GetNext();
+    }
+
+exit:
+    return;
+}
+
+bool Leader::IsStableUpdated(uint16_t aRloc16, uint8_t *aTlvs, uint8_t aTlvsLength, uint8_t *aTlvsBase,
+                             uint8_t aTlvsBaseLength)
+{
+    bool rval = false;
+    NetworkDataTlv *cur = reinterpret_cast<NetworkDataTlv *>(aTlvs);
+    NetworkDataTlv *end = reinterpret_cast<NetworkDataTlv *>(aTlvs + aTlvsLength);
+    PrefixTlv *prefix;
+    PrefixTlv *prefixBase;
+    BorderRouterTlv *borderRouter;
+    HasRouteTlv *hasRoute;
+    ContextTlv *context;
+
+    while (cur < end)
+    {
+        if (cur->GetType() == NetworkDataTlv::kTypePrefix)
+        {
+            prefix = reinterpret_cast<PrefixTlv *>(cur);
+            context = FindContext(*prefix);
+            borderRouter = FindBorderRouter(*prefix);
+            hasRoute = FindHasRoute(*prefix);
+
+            if (cur->IsStable() && (!context || borderRouter))
+            {
+                prefixBase = FindPrefix(prefix->GetPrefix(), prefix->GetPrefixLength(), aTlvsBase, aTlvsBaseLength);
+
+                if (!prefixBase)
+                {
+                    ExitNow(rval = true);
+                }
+
+                if (borderRouter && memcmp(borderRouter, FindBorderRouter(*prefixBase), borderRouter->GetLength()) != 0)
+                {
+                    ExitNow(rval = true);
+                }
+
+                if (hasRoute && (memcmp(hasRoute, FindHasRoute(*prefixBase), hasRoute->GetLength()) != 0))
+                {
+                    ExitNow(rval = true);
+                }
+            }
+        }
+
+        cur = cur->GetNext();
+    }
+
+exit:
+    return rval;
+}
+
 ThreadError Leader::RegisterNetworkData(uint16_t aRloc16, uint8_t *aTlvs, uint8_t aTlvsLength)
 {
     ThreadError error = kThreadError_None;
+    bool rlocIn = false;
+    bool rlocStable = false;
+    bool stableUpdated = false;
 
-    SuccessOrExit(error = RemoveRloc(aRloc16));
-    SuccessOrExit(error = AddNetworkData(aTlvs, aTlvsLength));
+    RlocLookup(aRloc16, rlocIn, rlocStable, mTlvs, mLength);
 
-    mVersion++;
-    mStableVersion++;
+    if (rlocIn)
+    {
+        if (IsStableUpdated(aRloc16, aTlvs, aTlvsLength, mTlvs, mLength) ||
+            IsStableUpdated(aRloc16, mTlvs, mLength, aTlvs, aTlvsLength))
+        {
+            stableUpdated = true;
+        }
+
+        SuccessOrExit(error = RemoveRloc(aRloc16));
+        SuccessOrExit(error = AddNetworkData(aTlvs, aTlvsLength));
+
+        mVersion++;
+
+        if (stableUpdated)
+        {
+            mStableVersion++;
+        }
+    }
+    else
+    {
+        RlocLookup(aRloc16, rlocIn, rlocStable, aTlvs, aTlvsLength);
+        SuccessOrExit(error = AddNetworkData(aTlvs, aTlvsLength));
+
+        mVersion++;
+
+        if (rlocStable)
+        {
+            mStableVersion++;
+        }
+    }
 
     ConfigureAddresses();
     mMle.HandleNetworkDataUpdate();

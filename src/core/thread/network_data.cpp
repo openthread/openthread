@@ -310,8 +310,13 @@ exit:
 
 PrefixTlv *NetworkData::FindPrefix(const uint8_t *aPrefix, uint8_t aPrefixLength)
 {
-    NetworkDataTlv *cur = reinterpret_cast<NetworkDataTlv *>(mTlvs);
-    NetworkDataTlv *end = reinterpret_cast<NetworkDataTlv *>(mTlvs + mLength);
+    return FindPrefix(aPrefix, aPrefixLength, mTlvs, mLength);
+}
+
+PrefixTlv *NetworkData::FindPrefix(const uint8_t *aPrefix, uint8_t aPrefixLength, uint8_t *aTlvs, uint8_t aTlvsLength)
+{
+    NetworkDataTlv *cur = reinterpret_cast<NetworkDataTlv *>(aTlvs);
+    NetworkDataTlv *end = reinterpret_cast<NetworkDataTlv *>(aTlvs + aTlvsLength);
     PrefixTlv *compare;
 
     while (cur < end)

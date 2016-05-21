@@ -230,6 +230,10 @@ private:
     ThreadError ExternalRouteLookup(uint8_t aDomainId, const Ip6::Address &destination,
                                     uint8_t *aPrefixMatch, uint16_t *aRloc16);
     ThreadError DefaultRouteLookup(PrefixTlv &aPrefix, uint16_t *aRloc16);
+    void RlocLookup(uint16_t aRloc16, bool &aIn, bool &aStable, uint8_t *aTlvs, uint8_t aTlvsLength);
+    bool IsStableUpdated(uint16_t aRloc16, uint8_t *aTlvs, uint8_t aTlvsLength, uint8_t *aTlvsBase,
+                         uint8_t aTlvsBaseLength);
+
 
     /**
      * Thread Specification Constants
