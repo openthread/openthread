@@ -163,6 +163,7 @@ typedef struct in6_addr spinel_ipv6addr_t;
 typedef int spinel_ssize_t;
 typedef unsigned int spinel_size_t;
 typedef uint8_t spinel_tid_t;
+typedef unsigned int spinel_cid_t;
 
 enum
 {
@@ -244,7 +245,7 @@ typedef enum
 {
     SPINEL_PROP_LAST_STATUS             = 0,        // status [i]
     SPINEL_PROP_PROTOCOL_VERSION        = 1,        // interface type, major, minor, vendor [i,i,i,i]
-    SPINEL_PROP_CAPABILITIES            = 2,        // capability list [A(i)]
+    SPINEL_PROP_CAPS                    = 2,        // capability list [A(i)]
     SPINEL_PROP_NCP_VERSION             = 3,        // version string [U]
     SPINEL_PROP_INTERFACE_COUNT         = 4,        // Interface count [C]
     SPINEL_PROP_POWER_STATE             = 5,        // PowerState [C]
@@ -262,6 +263,7 @@ typedef enum
     SPINEL_PROP_PHY_TX_POWER            = SPINEL_PROP_PHY__BEGIN + 5, // [c]
     SPINEL_PROP_PHY_RSSI                = SPINEL_PROP_PHY__BEGIN + 6, // dBm [c]
     SPINEL_PROP_PHY_RAW_STREAM_ENABLED  = SPINEL_PROP_PHY__BEGIN + 7, // [C]
+    SPINEL_PROP_PHY_PROMISCUOUS_MODE    = SPINEL_PROP_PHY__BEGIN + 8, // [C]
     SPINEL_PROP_PHY__END                = 0x30,
 
     SPINEL_PROP_MAC__BEGIN           = 0x30,
@@ -286,26 +288,36 @@ typedef enum
     SPINEL_PROP_NET_PARTITION_ID     = SPINEL_PROP_NET__BEGIN + 8, // [L]
     SPINEL_PROP_NET__END             = 0x50,
 
-    SPINEL_PROP_THREAD__BEGIN      = 0x50,
-    SPINEL_PROP_THREAD_LEADER      = SPINEL_PROP_THREAD__BEGIN + 0, // [6]
-    SPINEL_PROP_THREAD_PARENT      = SPINEL_PROP_THREAD__BEGIN + 1, // LADDR, SADDR [ES]
-    SPINEL_PROP_THREAD_CHILD_TABLE = SPINEL_PROP_THREAD__BEGIN + 2, // [A(T(ES))]
-    SPINEL_PROP_THREAD__END        = 0x60,
+    SPINEL_PROP_THREAD__BEGIN          = 0x50,
+    SPINEL_PROP_THREAD_LEADER_ADDR     = SPINEL_PROP_THREAD__BEGIN + 0, // [6]
+    SPINEL_PROP_THREAD_PARENT          = SPINEL_PROP_THREAD__BEGIN + 1, // LADDR, SADDR [ES]
+    SPINEL_PROP_THREAD_CHILD_TABLE     = SPINEL_PROP_THREAD__BEGIN + 2, // [A(T(ES))]
+    SPINEL_PROP_THREAD_LEADER_RID      = SPINEL_PROP_THREAD__BEGIN + 3, // [C]
+    SPINEL_PROP_THREAD_LEADER_WEIGHT   = SPINEL_PROP_THREAD__BEGIN + 4, // [6]
+    SPINEL_PROP_THREAD_LOCAL_LEADER_WEIGHT
+                                       = SPINEL_PROP_THREAD__BEGIN + 5, // [6]
+    SPINEL_PROP_THREAD_NETWORK_DATA    = SPINEL_PROP_THREAD__BEGIN + 6, // [D]
+    SPINEL_PROP_THREAD_NETWORK_DATA_VERSION
+                                       = SPINEL_PROP_THREAD__BEGIN + 7, // [S]
+    SPINEL_PROP_THREAD_STABLE_NETWORK_DATA_VERSION
+                                       = SPINEL_PROP_THREAD__BEGIN + 8, // [S]
+    SPINEL_PROP_THREAD__END            = 0x60,
 
-    SPINEL_PROP_IPV6__BEGIN         = 0x60,
-    SPINEL_PROP_IPV6_LL_ADDR        = SPINEL_PROP_IPV6__BEGIN + 0, // [6]
-    SPINEL_PROP_IPV6_ML_ADDR        = SPINEL_PROP_IPV6__BEGIN + 1, // [6C]
-    SPINEL_PROP_IPV6_ML_PREFIX      = SPINEL_PROP_IPV6__BEGIN + 2, // [6C]
-    SPINEL_PROP_IPV6_ADDRESS_TABLE  = SPINEL_PROP_IPV6__BEGIN + 3, // array(ipv6addr,prefixlen,flags) [A(6CL)]
-    SPINEL_PROP_IPV6_ROUTE_TABLE    = SPINEL_PROP_IPV6__BEGIN + 4, // array(ipv6prefix,prefixlen,nexthop,flags) [A(6C6L)]
-    SPINEL_PROP_IPV6__END           = 0x70,
+    SPINEL_PROP_IPV6__BEGIN          = 0x60,
+    SPINEL_PROP_IPV6_LL_ADDR         = SPINEL_PROP_IPV6__BEGIN + 0, // [6]
+    SPINEL_PROP_IPV6_ML_ADDR         = SPINEL_PROP_IPV6__BEGIN + 1, // [6C]
+    SPINEL_PROP_IPV6_ML_PREFIX       = SPINEL_PROP_IPV6__BEGIN + 2, // [6C]
+    SPINEL_PROP_IPV6_ADDRESS_TABLE   = SPINEL_PROP_IPV6__BEGIN + 3, // array(ipv6addr,prefixlen,flags) [A(6CL)]
+    SPINEL_PROP_IPV6_ROUTE_TABLE     = SPINEL_PROP_IPV6__BEGIN + 4, // array(ipv6prefix,prefixlen,iface,flags) [A(6CCL)]
+    SPINEL_PROP_IPV6_EXT_ROUTE_TABLE = SPINEL_PROP_IPV6__BEGIN + 5, // array(ipv6prefix,prefixlen,flags) [A(6CL)]
+    SPINEL_PROP_IPV6__END            = 0x70,
 
-    SPINEL_PROP_STREAM__BEGIN       = 112,
+    SPINEL_PROP_STREAM__BEGIN       = 0x70,
     SPINEL_PROP_STREAM_DEBUG        = SPINEL_PROP_STREAM__BEGIN + 0, // [U]
     SPINEL_PROP_STREAM_RAW          = SPINEL_PROP_STREAM__BEGIN + 1, // [D]
     SPINEL_PROP_STREAM_NET          = SPINEL_PROP_STREAM__BEGIN + 2, // [D]
     SPINEL_PROP_STREAM_NET_INSECURE = SPINEL_PROP_STREAM__BEGIN + 3, // [D]
-    SPINEL_PROP_STREAM__END         = 128,
+    SPINEL_PROP_STREAM__END         = 0x80,
 
     SPINEL_PROP_15_4_PIB__BEGIN     = 1024,
     // For direct access to the 802.15.4 PID.

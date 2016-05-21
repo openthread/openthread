@@ -798,8 +798,8 @@ spinel_prop_key_to_cstr(spinel_prop_key_t prop_key)
         ret = "PROP_PROTOCOL_VERSION";
         break;
 
-    case SPINEL_PROP_CAPABILITIES:
-        ret = "PROP_CAPABILITIES";
+    case SPINEL_PROP_CAPS:
+        ret = "PROP_CAPS";
         break;
 
     case SPINEL_PROP_NCP_VERSION:
@@ -878,6 +878,10 @@ spinel_prop_key_to_cstr(spinel_prop_key_t prop_key)
         ret = "PROP_PHY_RAW_STREAM_ENABLED";
         break;
 
+    case SPINEL_PROP_PHY_PROMISCUOUS_MODE:
+        ret = "PROP_PHY_PROMISCUOUS_MODE";
+        break;
+
     case SPINEL_PROP_MAC_SCAN_STATE:
         ret = "PROP_MAC_SCAN_STATE";
         break;
@@ -888,6 +892,10 @@ spinel_prop_key_to_cstr(spinel_prop_key_t prop_key)
 
     case SPINEL_PROP_MAC_SCAN_BEACON:
         ret = "PROP_MAC_SCAN_BEACON";
+        break;
+
+    case SPINEL_PROP_MAC_SCAN_PERIOD:
+        ret = "PROP_MAC_SCAN_PERIOD";
         break;
 
     case SPINEL_PROP_MAC_15_4_LADDR:
@@ -938,12 +946,32 @@ spinel_prop_key_to_cstr(spinel_prop_key_t prop_key)
         ret = "PROP_NET_PARTITION_ID";
         break;
 
-    case SPINEL_PROP_THREAD_LEADER:
-        ret = "PROP_THREAD_LEADER";
+    case SPINEL_PROP_THREAD_LEADER_ADDR:
+        ret = "PROP_THREAD_LEADER_ADDR";
         break;
 
-    case SPINEL_PROP_THREAD_PARENT:
-        ret = "PROP_THREAD_PARENT";
+    case SPINEL_PROP_THREAD_LEADER_RID:
+        ret = "PROP_THREAD_LEADER_RID";
+        break;
+
+    case SPINEL_PROP_THREAD_LEADER_WEIGHT:
+        ret = "PROP_THREAD_LEADER_WEIGHT";
+        break;
+
+    case SPINEL_PROP_THREAD_LOCAL_LEADER_WEIGHT:
+        ret = "PROP_THREAD_LOCAL_LEADER_WEIGHT";
+        break;
+
+    case SPINEL_PROP_THREAD_NETWORK_DATA_VERSION:
+        ret = "PROP_THREAD_NETWORK_DATA_VERSION";
+        break;
+
+    case SPINEL_PROP_THREAD_STABLE_NETWORK_DATA_VERSION:
+        ret = "PROP_THREAD_STABLE_NETWORK_DATA_VERSION";
+        break;
+
+    case SPINEL_PROP_THREAD_NETWORK_DATA:
+        ret = "PROP_THREAD_NETWORK_DATA";
         break;
 
     case SPINEL_PROP_THREAD_CHILD_TABLE:
@@ -968,6 +996,10 @@ spinel_prop_key_to_cstr(spinel_prop_key_t prop_key)
 
     case SPINEL_PROP_IPV6_ROUTE_TABLE:
         ret = "PROP_IPV6_ROUTE_TABLE";
+        break;
+
+    case SPINEL_PROP_IPV6_EXT_ROUTE_TABLE:
+        ret = "PROP_IPV6_EXT_ROUTE_TABLE";
         break;
 
     default:
