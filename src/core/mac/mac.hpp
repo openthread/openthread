@@ -188,24 +188,6 @@ public:
     explicit Mac(ThreadNetif &aThreadNetif);
 
     /**
-     * This method starts the MAC.
-     *
-     * @retval kThreadError_None  Successfully started the MAC.
-     * @retval kThreadError_Busy  The MAC could not be started.
-     *
-     */
-    ThreadError Start(void);
-
-    /**
-     * This method stops the MAC.
-     *
-     * @retval kThreadError_None  Successfully stopped the MAC.
-     * @retval kThreadError_Busy  The MAC could not be stopped.
-     *
-     */
-    ThreadError Stop(void);
-
-    /**
      * This function pointer is called on receiving an IEEE 802.15.4 Beacon during an Active Scan.
      *
      * @param[in]  aContext       A pointer to arbitrary context information.
@@ -270,6 +252,16 @@ public:
      *
      */
     const ExtAddress *GetExtAddress(void) const;
+
+    /**
+     * This method sets the IEEE 802.15.4 Extended Address
+     *
+     * @param[in]  aExtAddress  A reference to the IEEE 802.15.4 Extended Address.
+     *
+     * @retval kThreadError_None  Successfully set the IEEE 802.15.4 Extended Address.
+     *
+     */
+    ThreadError SetExtAddress(const ExtAddress &aExtAddress);
 
     /**
      * This method returns the IEEE 802.15.4 Short Address.
@@ -437,8 +429,7 @@ private:
 
     enum
     {
-        kStateDisabled = 0,
-        kStateIdle,
+        kStateIdle = 0,
         kStateActiveScan,
         kStateTransmitBeacon,
         kStateTransmitData,
