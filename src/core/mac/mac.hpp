@@ -65,19 +65,21 @@ namespace Mac {
  */
 enum
 {
-    kMinBE                = 3,       ///< macMinBE (IEEE 802.15.4-2006)
-    kMaxBE                = 6,       ///< macMaxBE (IEEE 802.15.4-2006)
-    kMaxCSMABackoffs      = 12,      ///< macMaxCSMABackoffs (IEEE 802.15.4-2006)
-    kUnitBackoffPeriod    = 20,      ///< Number of symbols (IEEE 802.15.4-2006)
+    kMinBE                = 3,                     ///< macMinBE (IEEE 802.15.4-2006)
+    kMaxBE                = 6,                     ///< macMaxBE (IEEE 802.15.4-2006)
+    kMaxCSMABackoffs      = 4,                     ///< macMaxCSMABackoffs (IEEE 802.15.4-2006)
+    kMaxFrameRetries      = 15,                    ///< macMaxFrameRetries (IEEE 802.15.4-2006)
+    kUnitBackoffPeriod    = 20,                    ///< Number of symbols (IEEE 802.15.4-2006)
 
-    kMinBackoff           = 16,      ///< Minimum backoff (milliseconds).
+    kMinBackoff           = 16,                    ///< Minimum backoff (milliseconds).
+    kMaxFrameAttempts     = kMaxFrameRetries + 1,  ///< Number of transmission attempts.
 
-    kAckTimeout           = 16,      ///< Timeout for waiting on an ACK (milliseconds).
-    kDataPollTimeout      = 100,     ///< Timeout for receivint Data Frame (milliseconds).
-    kNonceSize            = 13,      ///< Size of IEEE 802.15.4 Nonce (bytes).
+    kAckTimeout           = 16,                    ///< Timeout for waiting on an ACK (milliseconds).
+    kDataPollTimeout      = 100,                   ///< Timeout for receivint Data Frame (milliseconds).
+    kNonceSize            = 13,                    ///< Size of IEEE 802.15.4 Nonce (bytes).
 
-    kScanChannelsAll      = 0xffff,  ///< All channels.
-    kScanDurationDefault  = 200,     ///< Default interval between channels (milliseconds).
+    kScanChannelsAll      = 0xffff,                ///< All channels.
+    kScanDurationDefault  = 200,                   ///< Default interval between channels (milliseconds).
 };
 
 /**
@@ -449,6 +451,7 @@ private:
     uint8_t mDataSequence;
     bool mRxOnWhenIdle;
     uint8_t mCsmaAttempts;
+    uint8_t mTransmitAttempts;
     bool mTransmitBeacon;
 
     bool mActiveScanRequest;

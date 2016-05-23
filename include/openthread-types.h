@@ -62,6 +62,18 @@ typedef enum ThreadError
     kThreadError_NotImplemented = 13,
     kThreadError_InvalidState = 14,
     kThreadError_NoTasklets = 15,
+
+    /**
+     * No acknowledgment was received after macMaxFrameRetries (IEEE 802.15.4-2006).
+     */
+    kThreadError_NoAck = 16,
+
+    /**
+     * A transmission could not take place due to activity on the channel, i.e., the CSMA-CA mechanism has failed
+     * (IEEE 802.15.4-2006).
+     */
+    kThreadError_ChannelAccessFailure = 17,
+
     kThreadError_Error = 255,
 } ThreadError;
 
