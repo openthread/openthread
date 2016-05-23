@@ -37,6 +37,7 @@
 #include <common/encoding.hpp>
 #include <common/message.hpp>
 #include <net/ip6.hpp>
+#include <net/udp6.hpp>
 #include <net/netif.hpp>
 #include <net/udp6.hpp>
 #include <platform/random.h>
@@ -1016,6 +1017,7 @@ void MeshForwarder::HandleReceivedFrame(Mac::Frame &aFrame, ThreadError aError)
 
     SuccessOrExit(aFrame.GetDstAddr(macDest));
     messageInfo.mLinkMargin = aFrame.GetPower() - -100;
+    messageInfo.mSecurityValid = aFrame.GetSecurityValid();
 
     payload = aFrame.GetPayload();
     payloadLength = aFrame.GetPayloadLength();
@@ -1048,7 +1050,7 @@ void MeshForwarder::HandleReceivedFrame(Mac::Frame &aFrame, ThreadError aError)
 
         if (commandId == Mac::Frame::kMacCmdDataRequest)
         {
-            HandleDataRequest(macSource);
+            HandleDataRequest(macSource, messageInfo);
         }
 
         break;
@@ -1066,7 +1068,8 @@ void MeshForwarder::HandleMesh(uint8_t *aFrame, uint8_t aFrameLength, const Thre
     Mac::Address meshSource;
     Lowpan::MeshHeader *meshHeader = reinterpret_cast<Lowpan::MeshHeader *>(aFrame);
 
-    VerifyOrExit(meshHeader->IsValid(), error = kThreadError_Drop);
+    // Security Check: only process Mesh Header frames that had security enabled.
+    VerifyOrExit(aMessageInfo.mSecurityValid && meshHeader->IsValid(), error = kThreadError_Drop);
 
     meshSource.mLength = sizeof(meshSource.mShortAddress);
     meshSource.mShortAddress = meshHeader->GetSource();
@@ -1100,6 +1103,7 @@ void MeshForwarder::HandleMesh(uint8_t *aFrame, uint8_t aFrameLength, const Thre
         VerifyOrExit((message = Message::New(Message::kType6lowpan, 0)) != NULL, error = kThreadError_Drop);
         SuccessOrExit(error = message->SetLength(aFrameLength));
         message->Write(0, aFrameLength, aFrame);
+        message->SetSecurityValid(aMessageInfo.mSecurityValid);
 
         SendMessage(*message);
     }
@@ -1143,10 +1147,11 @@ void MeshForwarder::HandleFragment(uint8_t *aFrame, uint8_t aFrameLength,
                                    const Mac::Address &aMacSource, const Mac::Address &aMacDest,
                                    const ThreadMessageInfo &aMessageInfo)
 {
+    ThreadError error = kThreadError_None;
     Lowpan::FragmentHeader *fragmentHeader = reinterpret_cast<Lowpan::FragmentHeader *>(aFrame);
     uint16_t datagramLength = fragmentHeader->GetDatagramSize();
     uint16_t datagramTag = fragmentHeader->GetDatagramTag();
-    Message *message;
+    Message *message = NULL;
     int headerLength;
 
     if (fragmentHeader->GetDatagramOffset() == 0)
@@ -1154,17 +1159,18 @@ void MeshForwarder::HandleFragment(uint8_t *aFrame, uint8_t aFrameLength,
         aFrame += fragmentHeader->GetHeaderLength();
         aFrameLength -= fragmentHeader->GetHeaderLength();
 
-        VerifyOrExit((message = Message::New(Message::kTypeIp6, 0)) != NULL, ;);
+        VerifyOrExit((message = Message::New(Message::kTypeIp6, 0)) != NULL, error = kThreadError_NoBufs);
         headerLength = mLowpan.Decompress(*message, aMacSource, aMacDest, aFrame, aFrameLength, datagramLength);
-        VerifyOrExit(headerLength > 0, Message::Free(*message));
+        VerifyOrExit(headerLength > 0, error = kThreadError_NoBufs);
         aFrame += headerLength;
         aFrameLength -= headerLength;
 
-        VerifyOrExit(message->SetLength(datagramLength) == kThreadError_None, Message::Free(*message));
+        VerifyOrExit(message->SetLength(datagramLength) == kThreadError_None, error = kThreadError_NoBufs);
         datagramLength = HostSwap16(datagramLength - sizeof(Ip6::Header));
         message->Write(Ip6::Header::GetPayloadLengthOffset(), sizeof(datagramLength), &datagramLength);
         message->SetDatagramTag(datagramTag);
         message->SetTimeout(kReassemblyTimeout);
+        message->SetSecurityValid(aMessageInfo.mSecurityValid);
 
         mReassemblyList.Enqueue(*message);
 
@@ -1180,9 +1186,11 @@ void MeshForwarder::HandleFragment(uint8_t *aFrame, uint8_t aFrameLength,
 
         for (message = mReassemblyList.GetHead(); message; message = message->GetNext())
         {
+            // Security Check: only consider reassembly buffers that had the same Security Enabled setting.
             if (message->GetLength() == datagramLength &&
                 message->GetDatagramTag() == datagramTag &&
-                message->GetOffset() == fragmentHeader->GetDatagramOffset())
+                message->GetOffset() == fragmentHeader->GetDatagramOffset() &&
+                message->GetSecurityValid() == aMessageInfo.mSecurityValid)
             {
                 break;
             }
@@ -1199,10 +1207,14 @@ void MeshForwarder::HandleFragment(uint8_t *aFrame, uint8_t aFrameLength,
     VerifyOrExit(message->GetOffset() >= message->GetLength(), ;);
 
     mReassemblyList.Dequeue(*message);
-    Ip6::Ip6::HandleDatagram(*message, &mNetif, mNetif.GetInterfaceId(), &aMessageInfo, false);
+    SuccessOrExit(error = HandleDatagram(*message, aMessageInfo));
 
 exit:
-    {}
+
+    if (error != kThreadError_None && message != NULL)
+    {
+        Message::Free(*message);
+    }
 }
 
 void MeshForwarder::HandleReassemblyTimer(void *aContext)
@@ -1260,24 +1272,56 @@ void MeshForwarder::HandleLowpanHC(uint8_t *aFrame, uint8_t aFrameLength,
     message->Write(Ip6::Header::GetPayloadLengthOffset(), sizeof(ip6PayloadLength), &ip6PayloadLength);
 
     message->Write(message->GetOffset(), aFrameLength, aFrame);
-    Ip6::Ip6::HandleDatagram(*message, &mNetif, mNetif.GetInterfaceId(), &aMessageInfo, false);
+    message->SetSecurityValid(aMessageInfo.mSecurityValid);
+
+    SuccessOrExit(error = HandleDatagram(*message, aMessageInfo));
 
 exit:
 
-    if (error != kThreadError_None)
+    if (error != kThreadError_None && message != NULL)
     {
         Message::Free(*message);
     }
+}
+
+ThreadError MeshForwarder::HandleDatagram(Message &aMessage, const ThreadMessageInfo &aMessageInfo)
+{
+    ThreadError error = kThreadError_Drop;
+    Ip6::Header ip6;
+    Ip6::UdpHeader udp;
+
+    // Security Check: only pass up IPv6 datagrams that were received with Security Enabled or all of the following:
+    // 1) Message contains IPv6 header
+    // 2) IPv6 Destination has link-local scope
+    // 3) IPv6 Next Header is UDP
+    // 4) Message contains UDP header
+    // 5) UDP Destination Port is the MLE port
+    VerifyOrExit(aMessage.GetSecurityValid() ||
+                 (sizeof(ip6) == aMessage.Read(0, sizeof(ip6), &ip6) &&
+                  (ip6.GetDestination().IsLinkLocal() || ip6.GetDestination().IsLinkLocalMulticast()) &&
+                  ip6.GetNextHeader() == Ip6::kProtoUdp &&
+                  sizeof(udp) == aMessage.Read(sizeof(ip6), sizeof(udp), &udp) &&
+                  udp.GetDestinationPort() == Mle::kUdpPort),
+                 ;);
+
+    Ip6::Ip6::HandleDatagram(aMessage, &mNetif, mNetif.GetInterfaceId(), &aMessageInfo, false);
+    error = kThreadError_None;
+
+exit:
+    return error;
 }
 
 void MeshForwarder::UpdateFramePending()
 {
 }
 
-void MeshForwarder::HandleDataRequest(const Mac::Address &aMacSource)
+void MeshForwarder::HandleDataRequest(const Mac::Address &aMacSource, const ThreadMessageInfo &aMessageInfo)
 {
     Neighbor *neighbor;
     int childIndex;
+
+    // Security Check: only process secure Data Poll frames.
+    VerifyOrExit(aMessageInfo.mSecurityValid, ;);
 
     assert(mMle.GetDeviceState() != Mle::kDeviceStateDetached);
 

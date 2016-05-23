@@ -97,6 +97,7 @@ typedef struct RadioPacket
     uint8_t mPsdu[kMaxPHYPacketSize];  ///< The PSDU.
     uint8_t mChannel;                  ///< Channel used to transmit/receive the frame.
     int8_t  mPower;                    ///< Transmit/receive power in dBm.
+    bool    mSecurityValid;            ///< Security Enabled flag is set and frame passes security checks.
 } RadioPacket;
 
 /**

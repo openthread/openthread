@@ -215,7 +215,8 @@ private:
  */
 struct ThreadMessageInfo
 {
-    uint8_t mLinkMargin;  ///< The Link Margin for a received message in dBm.
+    uint8_t mLinkMargin;     ///< The Link Margin for a received message in dBm.
+    bool    mSecurityValid;  ///< Link security on all received frames was enabled and passed validation.
 };
 
 /**
