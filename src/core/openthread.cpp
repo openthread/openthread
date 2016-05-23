@@ -112,6 +112,7 @@ const uint8_t *otGetExtendedPanId(void)
 void otSetExtendedPanId(const uint8_t *aExtendedPanId)
 {
     sThreadNetif->GetMac().SetExtendedPanId(aExtendedPanId);
+    sThreadNetif->GetMle().SetMeshLocalPrefix(aExtendedPanId);
 }
 
 otLinkModeConfig otGetLinkMode(void)
