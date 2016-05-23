@@ -102,10 +102,6 @@ void Serial::ReceiveTask(void)
 
             break;
 
-        case 3: // CTRL-C
-            exit(1);
-            break;
-
         case '\b':
         case 127:
             otPlatSerialSend(sEraseString, sizeof(sEraseString));
