@@ -60,7 +60,7 @@ __BEGIN_DECLS
 
 // ----------------------------------------------------------------------------
 
-#define SPINEL_PROTOCOL_VERSION_THREAD_MAJOR    0
+#define SPINEL_PROTOCOL_VERSION_THREAD_MAJOR    4
 #define SPINEL_PROTOCOL_VERSION_THREAD_MINOR    0
 
 #define SPINEL_FRAME_MAX_SIZE                   1300
@@ -243,80 +243,82 @@ enum
 
 typedef enum
 {
-    SPINEL_PROP_LAST_STATUS             = 0,        // status [i]
-    SPINEL_PROP_PROTOCOL_VERSION        = 1,        // interface type, major, minor, vendor [i,i,i,i]
-    SPINEL_PROP_CAPS                    = 2,        // capability list [A(i)]
-    SPINEL_PROP_NCP_VERSION             = 3,        // version string [U]
-    SPINEL_PROP_INTERFACE_COUNT         = 4,        // Interface count [C]
-    SPINEL_PROP_POWER_STATE             = 5,        // PowerState [C]
-    SPINEL_PROP_HWADDR                  = 6,        // PermEUI64 [E]
-    SPINEL_PROP_LOCK                    = 7,        // PropLock [b]
-    SPINEL_PROP_HBO_MEM_MAX             = 8,        // Max offload mem [S]
-    SPINEL_PROP_HBO_BLOCK_MAX           = 9,        // Max offload block [S]
+    SPINEL_PROP_LAST_STATUS             = 0,        ///< status [i]
+    SPINEL_PROP_PROTOCOL_VERSION        = 1,        ///< major, minor [i,i]
+    SPINEL_PROP_NCP_VERSION             = 2,        ///< version string [U]
+    SPINEL_PROP_INTERFACE_TYPE          = 3,        ///< [i]
+    SPINEL_PROP_VENDOR_ID               = 4,        ///< [i]
+    SPINEL_PROP_CAPS                    = 5,        ///< capability list [A(i)]
+    SPINEL_PROP_INTERFACE_COUNT         = 6,        ///< Interface count [C]
+    SPINEL_PROP_POWER_STATE             = 7,        ///< PowerState [C]
+    SPINEL_PROP_HWADDR                  = 8,        ///< PermEUI64 [E]
+    SPINEL_PROP_LOCK                    = 9,        ///< PropLock [b]
+    SPINEL_PROP_HBO_MEM_MAX             = 10,       ///< Max offload mem [S]
+    SPINEL_PROP_HBO_BLOCK_MAX           = 11,       ///< Max offload block [S]
 
     SPINEL_PROP_PHY__BEGIN              = 0x20,
-    SPINEL_PROP_PHY_ENABLED             = SPINEL_PROP_PHY__BEGIN + 0, // [b]
-    SPINEL_PROP_PHY_CHAN                = SPINEL_PROP_PHY__BEGIN + 1, // [C]
-    SPINEL_PROP_PHY_CHAN_SUPPORTED      = SPINEL_PROP_PHY__BEGIN + 2, // [A(C)]
-    SPINEL_PROP_PHY_FREQ                = SPINEL_PROP_PHY__BEGIN + 3, // kHz [L]
-    SPINEL_PROP_PHY_CCA_THRESHOLD       = SPINEL_PROP_PHY__BEGIN + 4, // dBm [c]
-    SPINEL_PROP_PHY_TX_POWER            = SPINEL_PROP_PHY__BEGIN + 5, // [c]
-    SPINEL_PROP_PHY_RSSI                = SPINEL_PROP_PHY__BEGIN + 6, // dBm [c]
-    SPINEL_PROP_PHY_RAW_STREAM_ENABLED  = SPINEL_PROP_PHY__BEGIN + 7, // [C]
-    SPINEL_PROP_PHY_PROMISCUOUS_MODE    = SPINEL_PROP_PHY__BEGIN + 8, // [C]
+    SPINEL_PROP_PHY_ENABLED             = SPINEL_PROP_PHY__BEGIN + 0, ///< [b]
+    SPINEL_PROP_PHY_CHAN                = SPINEL_PROP_PHY__BEGIN + 1, ///< [C]
+    SPINEL_PROP_PHY_CHAN_SUPPORTED      = SPINEL_PROP_PHY__BEGIN + 2, ///< [A(C)]
+    SPINEL_PROP_PHY_FREQ                = SPINEL_PROP_PHY__BEGIN + 3, ///< kHz [L]
+    SPINEL_PROP_PHY_CCA_THRESHOLD       = SPINEL_PROP_PHY__BEGIN + 4, ///< dBm [c]
+    SPINEL_PROP_PHY_TX_POWER            = SPINEL_PROP_PHY__BEGIN + 5, ///< [c]
+    SPINEL_PROP_PHY_RSSI                = SPINEL_PROP_PHY__BEGIN + 6, ///< dBm [c]
+    SPINEL_PROP_PHY_RAW_STREAM_ENABLED  = SPINEL_PROP_PHY__BEGIN + 7, ///< [C]
+    SPINEL_PROP_PHY_PROMISCUOUS_MODE    = SPINEL_PROP_PHY__BEGIN + 8, ///< [C]
     SPINEL_PROP_PHY__END                = 0x30,
 
     SPINEL_PROP_MAC__BEGIN           = 0x30,
-    SPINEL_PROP_MAC_SCAN_STATE       = SPINEL_PROP_MAC__BEGIN + 0, // [C]
-    SPINEL_PROP_MAC_SCAN_MASK        = SPINEL_PROP_MAC__BEGIN + 1, // [A(C)]
-    SPINEL_PROP_MAC_SCAN_PERIOD      = SPINEL_PROP_MAC__BEGIN + 2, // ms-per-channel [S]
-    SPINEL_PROP_MAC_SCAN_BEACON      = SPINEL_PROP_MAC__BEGIN + 3, // chan,rssi,(laddr,saddr,panid,lqi),(proto,xtra) [CcT(ESSC)T(i).]
-    SPINEL_PROP_MAC_15_4_LADDR       = SPINEL_PROP_MAC__BEGIN + 4, // [E]
-    SPINEL_PROP_MAC_15_4_SADDR       = SPINEL_PROP_MAC__BEGIN + 5, // [S]
-    SPINEL_PROP_MAC_15_4_PANID       = SPINEL_PROP_MAC__BEGIN + 6, // [S]
+    SPINEL_PROP_MAC_SCAN_STATE       = SPINEL_PROP_MAC__BEGIN + 0, ///< [C]
+    SPINEL_PROP_MAC_SCAN_MASK        = SPINEL_PROP_MAC__BEGIN + 1, ///< [A(C)]
+    SPINEL_PROP_MAC_SCAN_PERIOD      = SPINEL_PROP_MAC__BEGIN + 2, ///< ms-per-channel [S]
+    SPINEL_PROP_MAC_SCAN_BEACON      = SPINEL_PROP_MAC__BEGIN + 3, ///< chan,rssi,(laddr,saddr,panid,lqi),(proto,xtra) [CcT(ESSC)T(i).]
+    SPINEL_PROP_MAC_15_4_LADDR       = SPINEL_PROP_MAC__BEGIN + 4, ///< [E]
+    SPINEL_PROP_MAC_15_4_SADDR       = SPINEL_PROP_MAC__BEGIN + 5, ///< [S]
+    SPINEL_PROP_MAC_15_4_PANID       = SPINEL_PROP_MAC__BEGIN + 6, ///< [S]
     SPINEL_PROP_MAC__END             = 0x40,
 
     SPINEL_PROP_NET__BEGIN           = 0x40,
-    SPINEL_PROP_NET_SAVED            = SPINEL_PROP_NET__BEGIN + 0, // [b]
-    SPINEL_PROP_NET_ENABLED          = SPINEL_PROP_NET__BEGIN + 1, // [b]
-    SPINEL_PROP_NET_STATE            = SPINEL_PROP_NET__BEGIN + 2, // [C]
-    SPINEL_PROP_NET_ROLE             = SPINEL_PROP_NET__BEGIN + 3, // [C]
-    SPINEL_PROP_NET_NETWORK_NAME     = SPINEL_PROP_NET__BEGIN + 4, // [U]
-    SPINEL_PROP_NET_XPANID           = SPINEL_PROP_NET__BEGIN + 5, // [D]
-    SPINEL_PROP_NET_MASTER_KEY       = SPINEL_PROP_NET__BEGIN + 6, // [D]
-    SPINEL_PROP_NET_KEY_SEQUENCE     = SPINEL_PROP_NET__BEGIN + 7, // [L]
-    SPINEL_PROP_NET_PARTITION_ID     = SPINEL_PROP_NET__BEGIN + 8, // [L]
+    SPINEL_PROP_NET_SAVED            = SPINEL_PROP_NET__BEGIN + 0, ///< [b]
+    SPINEL_PROP_NET_ENABLED          = SPINEL_PROP_NET__BEGIN + 1, ///< [b]
+    SPINEL_PROP_NET_STATE            = SPINEL_PROP_NET__BEGIN + 2, ///< [C]
+    SPINEL_PROP_NET_ROLE             = SPINEL_PROP_NET__BEGIN + 3, ///< [C]
+    SPINEL_PROP_NET_NETWORK_NAME     = SPINEL_PROP_NET__BEGIN + 4, ///< [U]
+    SPINEL_PROP_NET_XPANID           = SPINEL_PROP_NET__BEGIN + 5, ///< [D]
+    SPINEL_PROP_NET_MASTER_KEY       = SPINEL_PROP_NET__BEGIN + 6, ///< [D]
+    SPINEL_PROP_NET_KEY_SEQUENCE     = SPINEL_PROP_NET__BEGIN + 7, ///< [L]
+    SPINEL_PROP_NET_PARTITION_ID     = SPINEL_PROP_NET__BEGIN + 8, ///< [L]
     SPINEL_PROP_NET__END             = 0x50,
 
     SPINEL_PROP_THREAD__BEGIN          = 0x50,
-    SPINEL_PROP_THREAD_LEADER_ADDR     = SPINEL_PROP_THREAD__BEGIN + 0, // [6]
-    SPINEL_PROP_THREAD_PARENT          = SPINEL_PROP_THREAD__BEGIN + 1, // LADDR, SADDR [ES]
-    SPINEL_PROP_THREAD_CHILD_TABLE     = SPINEL_PROP_THREAD__BEGIN + 2, // [A(T(ES))]
-    SPINEL_PROP_THREAD_LEADER_RID      = SPINEL_PROP_THREAD__BEGIN + 3, // [C]
-    SPINEL_PROP_THREAD_LEADER_WEIGHT   = SPINEL_PROP_THREAD__BEGIN + 4, // [6]
+    SPINEL_PROP_THREAD_LEADER_ADDR     = SPINEL_PROP_THREAD__BEGIN + 0, ///< [6]
+    SPINEL_PROP_THREAD_PARENT          = SPINEL_PROP_THREAD__BEGIN + 1, ///< LADDR, SADDR [ES]
+    SPINEL_PROP_THREAD_CHILD_TABLE     = SPINEL_PROP_THREAD__BEGIN + 2, ///< [A(T(ES))]
+    SPINEL_PROP_THREAD_LEADER_RID      = SPINEL_PROP_THREAD__BEGIN + 3, ///< [C]
+    SPINEL_PROP_THREAD_LEADER_WEIGHT   = SPINEL_PROP_THREAD__BEGIN + 4, ///< [6]
     SPINEL_PROP_THREAD_LOCAL_LEADER_WEIGHT
-                                       = SPINEL_PROP_THREAD__BEGIN + 5, // [6]
-    SPINEL_PROP_THREAD_NETWORK_DATA    = SPINEL_PROP_THREAD__BEGIN + 6, // [D]
+                                       = SPINEL_PROP_THREAD__BEGIN + 5, ///< [6]
+    SPINEL_PROP_THREAD_NETWORK_DATA    = SPINEL_PROP_THREAD__BEGIN + 6, ///< [D]
     SPINEL_PROP_THREAD_NETWORK_DATA_VERSION
-                                       = SPINEL_PROP_THREAD__BEGIN + 7, // [S]
+                                       = SPINEL_PROP_THREAD__BEGIN + 7, ///< [S]
     SPINEL_PROP_THREAD_STABLE_NETWORK_DATA_VERSION
-                                       = SPINEL_PROP_THREAD__BEGIN + 8, // [S]
+                                       = SPINEL_PROP_THREAD__BEGIN + 8, ///< [S]
     SPINEL_PROP_THREAD__END            = 0x60,
 
     SPINEL_PROP_IPV6__BEGIN          = 0x60,
-    SPINEL_PROP_IPV6_LL_ADDR         = SPINEL_PROP_IPV6__BEGIN + 0, // [6]
-    SPINEL_PROP_IPV6_ML_ADDR         = SPINEL_PROP_IPV6__BEGIN + 1, // [6C]
-    SPINEL_PROP_IPV6_ML_PREFIX       = SPINEL_PROP_IPV6__BEGIN + 2, // [6C]
-    SPINEL_PROP_IPV6_ADDRESS_TABLE   = SPINEL_PROP_IPV6__BEGIN + 3, // array(ipv6addr,prefixlen,flags) [A(6CL)]
-    SPINEL_PROP_IPV6_ROUTE_TABLE     = SPINEL_PROP_IPV6__BEGIN + 4, // array(ipv6prefix,prefixlen,iface,flags) [A(6CCL)]
-    SPINEL_PROP_IPV6_EXT_ROUTE_TABLE = SPINEL_PROP_IPV6__BEGIN + 5, // array(ipv6prefix,prefixlen,flags) [A(6CL)]
+    SPINEL_PROP_IPV6_LL_ADDR         = SPINEL_PROP_IPV6__BEGIN + 0, ///< [6]
+    SPINEL_PROP_IPV6_ML_ADDR         = SPINEL_PROP_IPV6__BEGIN + 1, ///< [6C]
+    SPINEL_PROP_IPV6_ML_PREFIX       = SPINEL_PROP_IPV6__BEGIN + 2, ///< [6C]
+    SPINEL_PROP_IPV6_ADDRESS_TABLE   = SPINEL_PROP_IPV6__BEGIN + 3, ///< array(ipv6addr,prefixlen,flags) [A(6CL)]
+    SPINEL_PROP_IPV6_ROUTE_TABLE     = SPINEL_PROP_IPV6__BEGIN + 4, ///< array(ipv6prefix,prefixlen,iface,flags) [A(6CCL)]
+    SPINEL_PROP_IPV6_EXT_ROUTE_TABLE = SPINEL_PROP_IPV6__BEGIN + 5, ///< array(ipv6prefix,prefixlen,flags) [A(6CL)]
     SPINEL_PROP_IPV6__END            = 0x70,
 
     SPINEL_PROP_STREAM__BEGIN       = 0x70,
-    SPINEL_PROP_STREAM_DEBUG        = SPINEL_PROP_STREAM__BEGIN + 0, // [U]
-    SPINEL_PROP_STREAM_RAW          = SPINEL_PROP_STREAM__BEGIN + 1, // [D]
-    SPINEL_PROP_STREAM_NET          = SPINEL_PROP_STREAM__BEGIN + 2, // [D]
-    SPINEL_PROP_STREAM_NET_INSECURE = SPINEL_PROP_STREAM__BEGIN + 3, // [D]
+    SPINEL_PROP_STREAM_DEBUG        = SPINEL_PROP_STREAM__BEGIN + 0, ///< [U]
+    SPINEL_PROP_STREAM_RAW          = SPINEL_PROP_STREAM__BEGIN + 1, ///< [D]
+    SPINEL_PROP_STREAM_NET          = SPINEL_PROP_STREAM__BEGIN + 2, ///< [D]
+    SPINEL_PROP_STREAM_NET_INSECURE = SPINEL_PROP_STREAM__BEGIN + 3, ///< [D]
     SPINEL_PROP_STREAM__END         = 0x80,
 
     SPINEL_PROP_15_4_PIB__BEGIN     = 1024,

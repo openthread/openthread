@@ -174,6 +174,8 @@ private:
 
     void GetPropertyHandler_LAST_STATUS(uint8_t header, spinel_prop_key_t key);
     void GetPropertyHandler_PROTOCOL_VERSION(uint8_t header, spinel_prop_key_t key);
+    void GetPropertyHandler_INTERFACE_TYPE(uint8_t header, spinel_prop_key_t key);
+    void GetPropertyHandler_VENDOR_ID(uint8_t header, spinel_prop_key_t key);
     void GetPropertyHandler_CAPS(uint8_t header, spinel_prop_key_t key);
     void GetPropertyHandler_NCP_VERSION(uint8_t header, spinel_prop_key_t key);
     void GetPropertyHandler_INTERFACE_COUNT(uint8_t header, spinel_prop_key_t key);
