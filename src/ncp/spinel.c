@@ -798,6 +798,14 @@ spinel_prop_key_to_cstr(spinel_prop_key_t prop_key)
         ret = "PROP_PROTOCOL_VERSION";
         break;
 
+    case SPINEL_PROP_INTERFACE_TYPE:
+        ret = "PROP_INTERFACE_TYPE";
+        break;
+
+    case SPINEL_PROP_VENDOR_ID:
+        ret = "PROP_VENDOR_ID";
+        break;
+
     case SPINEL_PROP_CAPS:
         ret = "PROP_CAPS";
         break;

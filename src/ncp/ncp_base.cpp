@@ -60,6 +60,8 @@ const NcpBase::GetPropertyHandlerEntry NcpBase::mGetPropertyHandlerTable[] =
 {
     { SPINEL_PROP_LAST_STATUS, &NcpBase::GetPropertyHandler_LAST_STATUS },
     { SPINEL_PROP_PROTOCOL_VERSION, &NcpBase::GetPropertyHandler_PROTOCOL_VERSION },
+    { SPINEL_PROP_INTERFACE_TYPE, &NcpBase::GetPropertyHandler_INTERFACE_TYPE },
+    { SPINEL_PROP_VENDOR_ID, &NcpBase::GetPropertyHandler_VENDOR_ID },
     { SPINEL_PROP_CAPS, &NcpBase::GetPropertyHandler_CAPS },
     { SPINEL_PROP_NCP_VERSION, &NcpBase::GetPropertyHandler_NCP_VERSION },
     { SPINEL_PROP_INTERFACE_COUNT, &NcpBase::GetPropertyHandler_INTERFACE_COUNT },
@@ -840,13 +842,30 @@ void NcpBase::GetPropertyHandler_PROTOCOL_VERSION(uint8_t header, spinel_prop_ke
         header,
         SPINEL_CMD_PROP_VALUE_IS,
         key,
-        SPINEL_DATATYPE_UINT_PACKED_S
-            SPINEL_DATATYPE_UINT_PACKED_S
-            SPINEL_DATATYPE_UINT_PACKED_S
-            SPINEL_DATATYPE_UINT_PACKED_S,
-        SPINEL_PROTOCOL_TYPE_THREAD,
+        SPINEL_DATATYPE_UINT_PACKED_S SPINEL_DATATYPE_UINT_PACKED_S,
         SPINEL_PROTOCOL_VERSION_THREAD_MAJOR,
-        SPINEL_PROTOCOL_VERSION_THREAD_MINOR,
+        SPINEL_PROTOCOL_VERSION_THREAD_MINOR
+    );
+}
+
+void NcpBase::GetPropertyHandler_INTERFACE_TYPE(uint8_t header, spinel_prop_key_t key)
+{
+    SendPropteryUpdate(
+        header,
+        SPINEL_CMD_PROP_VALUE_IS,
+        key,
+        SPINEL_DATATYPE_UINT_PACKED_S,
+        SPINEL_PROTOCOL_TYPE_THREAD
+    );
+}
+
+void NcpBase::GetPropertyHandler_VENDOR_ID(uint8_t header, spinel_prop_key_t key)
+{
+    SendPropteryUpdate(
+        header,
+        SPINEL_CMD_PROP_VALUE_IS,
+        key,
+        SPINEL_DATATYPE_UINT_PACKED_S,
         0 // Vendor ID. Zero for unknown.
     );
 }

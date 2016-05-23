@@ -331,21 +331,31 @@ several properties that are required in all implementations.
 
 * 0: `PROP_LAST_STATUS`
 * 1: `PROP_PROTOCOL_VERSION`
-* 2: `PROP_CAPS`
-* 3: `PROP_NCP_VERSION`
-* 4: `PROP_INTERFACE_COUNT`
-* 5: `PROP_POWER_STATE`
-* 6: `PROP_HWADDR`
-* 7: `PROP_LOCK`
-* 8: `PROP_HBO_MEM_MAX` (See section C.2.1.)
-* 9: `PROP_HBO_BLOCK_MAX` (See section C.2.2.)
+* 2: `PROP_NCP_VERSION`
+* 3: `PROP_INTERFACE_TYPE`
+* 4: `PROP_VENDOR_ID`
+* 5: `PROP_CAPS`
+* 6: `PROP_INTERFACE_COUNT`
+* 7: `PROP_POWER_STATE`
+* 8: `PROP_HWADDR`
+* 9: `PROP_LOCK`
+* 10: `PROP_HBO_MEM_MAX` (See section C.2.1.)
+* 11: `PROP_HBO_BLOCK_MAX` (See section C.2.2.)
 * 112: `PROP_STREAM_DEBUG`
 * 113: `PROP_STREAM_RAW`
 * 114: `PROP_STREAM_NET`
 * 115: `PROP_STREAM_NET_INSECURE`
 
+Additionally, future property allocations SHALL be made from the
+following allocation plan:
 
-
+Property ID Range     | Description
+----------------------|------------------
+0 - 127               | Reserved for frequently-used core properties
+128 - 15,359          | *UNALLOCATED*
+15,360 - 16,383       | Vendor-specific
+16,384 - 1,999,999    | *UNALLOCATED*
+2,000,000 - 2,097,151 | Experimental use only
 
 ### 5.1. PROP 0: `PROP_LAST_STATUS`
 
@@ -370,21 +380,66 @@ See section 6 for the complete list of status codes.
 ### 5.2. PROP 1: `PROP_PROTOCOL_VERSION`
 
 * Type: Read-Only
-* Encoding: `iiii`
+* Encoding: `ii`
 
-Octets: |       1-3      |      1-3      |      1-3      |        1-3
---------|----------------|---------------|---------------|-------------------
-Fields: | INTERFACE_TYPE | MAJOR_VERSION | MINOR_VERSION | VENDOR_IDENTIFIER
+Octets: |       1-3      |      1-3
+--------|----------------|---------------
+Fields: |  MAJOR_VERSION | MINOR_VERSION
 
 Describes the protocol version information. This property contains
 four fields, each encoded as a packed unsigned integer:
 
- *  Interface Type
  *  Major Version Number
  *  Minor Version Number
- *  Vendor Identifier
 
-#### 5.2.1 Interface Type ####
+
+#### 5.2.1 Major Version Number ####
+
+The major version number is used to identify large and incompatible
+differences between protocol versions.
+
+The host MUST enter a FAULT state if it does not explicitly support
+the given major version number.
+
+#### 5.2.2 Minor Version Number ####
+
+The minor version number is used to identify small but otherwise
+compatible differences between protocol versions. A mismatch between
+the advertised minor version number and the minor version that is
+supported by the host SHOULD NOT be fatal to the operation of the
+host.
+
+### 5.3. PROP 2: `PROP_NCP_VERSION`
+
+* Type: Read-Only
+* Packed-Encoding: `U`
+
+Octets: |       *n*
+--------|-------------------
+Fields: | `NCP_VESION_STRING`
+
+Contains a string which describes the firmware currently running on
+the NCP. Encoded as a zero-terminated UTF-8 string.
+
+The format of the string is not strictly defined, but it is intended
+to present similarly to the "User-Agent" string from HTTP. The
+RECOMMENDED format of the string is as follows:
+
+    <STACK-NAME>/<STACK-VERSION>[<BUILD_INFO>][; <OTHER_INFO>]; <BUILD_DATE_AND_TIME>
+
+Examples:
+
+ *  `OpenThread/1.0d26-25-gb684c7f; DEBUG; May 9 2016 18:22:04`
+ *  `ConnectIP/2.0b125 s1 ALPHA; Sept 24 2015 20:49:19`
+
+### 5.4. PROP 3: `PROP_INTERFACE_TYPE`
+
+* Type: Read-Only
+* Encoding: `i`
+
+Octets: |       1-3
+--------|----------------
+Fields: | INTERFACE_TYPE
 
 This integer identifies what the network protocol for this NCP.
 Currently defined values are:
@@ -397,26 +452,18 @@ Currently defined values are:
 The host MUST enter a FAULT state if it does not recognize the
 protocol given by the NCP.
 
-#### 5.2.2 Major Version Number ####
+### 5.5. PROP 4: `PROP_INTERFACE_VENDOR_ID`
 
-The major version number is used to identify large and incompatible
-differences between protocol versions.
+* Type: Read-Only
+* Encoding: `i`
 
-The host MUST enter a FAULT state if it does not explicitly support
-the given major version number.
+Octets: |       1-3
+--------|----------------
+Fields: | VENDOR_ID
 
-#### 5.2.3 Minor Version Number ####
+Vendor identifier.
 
-The minor version number is used to identify small but otherwise
-compatible differences between protocol versions. A mismatch between
-the advertised minor version number and the minor version that is
-supported by the host SHOULD NOT be fatal to the operation of the
-host.
-
-#### 5.2.3 Vendor Identifier ####
-
-
-### 5.3. PROP 2: `PROP_CAPS`
+### 5.6. PROP 2: `PROP_CAPS`
 
 * Type: Read-Only
 * Packed-Encoding: `A(i)`
@@ -458,35 +505,13 @@ following allocation plan:
 Capability Range      | Description
 ----------------------|------------------
 0 - 127               | Reserved for core capabilities
-64 - 15,359           | *UNALLOCATED*
+128 - 15,359          | *UNALLOCATED*
 15,360 - 16,383       | Vendor-specific
 16,384 - 1,999,999    | *UNALLOCATED*
 2,000,000 - 2,097,151 | Experimental use only
 
-### 5.4. PROP 3: `PROP_NCP_VERSION`
 
-* Type: Read-Only
-* Packed-Encoding: `U`
-
-Octets: |       *n*
---------|-------------------
-Fields: | `NCP_VESION_STRING`
-
-Contains a string which describes the firmware currently running on
-the NCP. Encoded as a zero-terminated UTF-8 string.
-
-The format of the string is not strictly defined, but it is intended
-to present similarly to the "User-Agent" string from HTTP. The
-RECOMMENDED format of the string is as follows:
-
-    <STACK-NAME>/<STACK-VERSION>[<BUILD_INFO>][; <OTHER_INFO>]; <BUILD_DATE_AND_TIME>
-
-Examples:
-
- *  `OpenThread/1.0d26-25-gb684c7f; DEBUG; May 9 2016 18:22:04`
- *  `ConnectIP/2.0b125 s1 ALPHA; Sept 24 2015 20:49:19`
-
-### 5.5. PROP 4: `PROP_INTERFACE_COUNT`
+### 5.7. PROP 4: `PROP_INTERFACE_COUNT`
 
 * Type: Read-Only
 * Packed-Encoding: `C`
@@ -501,7 +526,7 @@ always be one.
 
 This value is encoded as an unsigned 8-bit integer.
 
-### 5.6. PROP 5: `PROP_POWER_STATE`
+### 5.8. PROP 5: `PROP_POWER_STATE`
 
 * Type: Read-Write
 * Packed-Encoding: `C`
@@ -528,7 +553,7 @@ Defined values are:
  *  4: `POWER_STATE_ONLINE`: NCP is fully powered. (e.g. "Parent"
     node)
 
-### 5.7. PROP 6: `PROP_HWADDR`
+### 5.9. PROP 6: `PROP_HWADDR`
 
 * Type: Read-Only*
 * Packed-Encoding: `E`
@@ -540,7 +565,7 @@ Fields: | PROP_HWADDR
 The static EUI64 address of the device. This value is read-only, but
 may be writable under certain vendor-defined circumstances.
 
-### 5.8. PROP 6: `PROP_LOCK`
+### 5.10. PROP 6: `PROP_LOCK`
 
 * Type: Read-Write
 * Packed-Encoding: `b`
@@ -556,7 +581,7 @@ NCP is effectively frozen until it is cleared.
 
 This property is only supported if the `CAP_LOCK` capability is present.
 
-### 5.9. PROP 112: `PROP_STREAM_DEBUG`
+### 5.11. PROP 112: `PROP_STREAM_DEBUG`
 
 * Type: Read-Only-Stream
 * Packed-Encoding: `U`
@@ -572,7 +597,7 @@ output which may be displayed in the host logs.
 To receive the debugging stream, you wait for `CMD_PROP_VALUE_IS` commands for
 this property from the NCP.
 
-### 5.10. PROP 113: `PROP_STREAM_RAW`
+### 5.12. PROP 113: `PROP_STREAM_RAW`
 
 * Type: Read-Write-Stream
 * Packed-Encoding: `DD`
@@ -596,7 +621,7 @@ on this property with the value of the raw packet.
 Any data past the end of `FRAME_DATA_LEN` is considered metadata. The format
 of the metadata is defined by the associated MAC and PHY being used.
 
-### 5.11. PROP 114: `PROP_STREAM_NET`
+### 5.13. PROP 114: `PROP_STREAM_NET`
 
 * Type: Read-Write-Stream
 * Packed-Encoding: `DD`
@@ -619,7 +644,7 @@ the value of the packet.
 Any data past the end of `FRAME_DATA_LEN` is considered metadata. The format
 of the metadata is defined by the associated network protocol.
 
-### 5.12. PROP 114: `PROP_STREAM_NET_INSECURE`
+### 5.14. PROP 114: `PROP_STREAM_NET_INSECURE`
 
 * Type: Read-Write-Stream
 * Packed-Encoding: `DD`
