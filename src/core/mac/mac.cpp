@@ -55,7 +55,7 @@ static Tasklet sTransmitDoneTask(&Mac::TransmitDoneTask, NULL);
 
 void Mac::StartCsmaBackoff(void)
 {
-    uint32_t backoffExponent = kMinBE + mCsmaAttempts;
+    uint32_t backoffExponent = kMinBE + mTransmitAttempts + mCsmaAttempts;
     uint32_t backoff;
 
     if (backoffExponent > kMaxBE)
@@ -84,6 +84,7 @@ Mac::Mac(ThreadNetif &aThreadNetif):
 
     mRxOnWhenIdle = true;
     mCsmaAttempts = 0;
+    mTransmitAttempts = 0;
     mTransmitBeacon = false;
     mBeacon.Init();
 
@@ -499,16 +500,15 @@ void Mac::TransmitDoneTask(void)
 
     mAckTimer.Stop();
 
-    if (error != kThreadError_None)
+    if (error == kThreadError_ChannelAccessFailure &&
+        mCsmaAttempts < kMaxCSMABackoffs)
     {
-        if (mCsmaAttempts < kMaxCSMABackoffs)
-        {
-            mCsmaAttempts++;
-        }
-
+        mCsmaAttempts++;
         StartCsmaBackoff();
         ExitNow();
     }
+
+    mCsmaAttempts = 0;
 
     switch (mState)
     {
@@ -530,7 +530,7 @@ void Mac::TransmitDoneTask(void)
             mReceiveTimer.Stop();
         }
 
-        SentFrame(true);
+        SentFrame(error == kThreadError_None);
         break;
 
     default:
@@ -619,9 +619,9 @@ void Mac::SentFrame(bool aAcked)
         {
             otDumpDebgMac("NO ACK", mSendFrame.GetHeader(), 16);
 
-            if (mCsmaAttempts < kMaxCSMABackoffs)
+            if (mTransmitAttempts < kMaxFrameAttempts)
             {
-                mCsmaAttempts++;
+                mTransmitAttempts++;
                 StartCsmaBackoff();
                 ExitNow();
             }
@@ -634,7 +634,7 @@ void Mac::SentFrame(bool aAcked)
             }
         }
 
-        mCsmaAttempts = 0;
+        mTransmitAttempts = 0;
 
         sender = mSendHead;
         mSendHead = mSendHead->mNext;
