@@ -66,6 +66,8 @@ MeshForwarder::MeshForwarder(ThreadNetif &aThreadNetif):
     mSendMessage = NULL;
     mSendBusy = false;
     mEnabled = false;
+
+    mMac.RegisterReceiver(mMacReceiver);
 }
 
 ThreadError MeshForwarder::Start()
@@ -73,10 +75,7 @@ ThreadError MeshForwarder::Start()
     ThreadError error = kThreadError_None;
 
     VerifyOrExit(mEnabled == false, error = kThreadError_Busy);
-
-    mMac.RegisterReceiver(mMacReceiver);
-    SuccessOrExit(error = mMac.Start());
-
+    mMac.SetRxOnWhenIdle(true);
     mEnabled = true;
 
 exit:
@@ -106,8 +105,7 @@ ThreadError MeshForwarder::Stop()
     }
 
     mEnabled = false;
-
-    SuccessOrExit(error = mMac.Stop());
+    mMac.SetRxOnWhenIdle(false);
 
 exit:
     return error;

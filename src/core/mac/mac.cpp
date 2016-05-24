@@ -80,7 +80,7 @@ Mac::Mac(ThreadNetif &aThreadNetif):
 {
     sMac = this;
 
-    mState = kStateDisabled;
+    mState = kStateIdle;
 
     mRxOnWhenIdle = true;
     mCsmaAttempts = 0;
@@ -109,78 +109,21 @@ Mac::Mac(ThreadNetif &aThreadNetif):
 
     SetExtendedPanId(sExtendedPanidInit);
     SetNetworkName(sNetworkNameInit);
+    SetPanId(kPanIdBroadcast);
+    SetExtAddress(mExtAddress);
+    SetShortAddress(kShortAddrInvalid);
 
     mBeaconSequence = otPlatRandomGet();
     mDataSequence = otPlatRandomGet();
-}
 
-ThreadError Mac::Start(void)
-{
-    ThreadError error = kThreadError_None;
-
-    VerifyOrExit(mState == kStateDisabled, ;);
-
-    SuccessOrExit(error = otPlatRadioEnable());
-
-    SetExtendedPanId(mBeacon.GetExtendedPanId());
-    otPlatRadioSetPanId(mPanId);
-    otPlatRadioSetShortAddress(mShortAddress);
-    {
-        uint8_t buf[8];
-
-        for (size_t i = 0; i < sizeof(buf); i++)
-        {
-            buf[i] = mExtAddress.m8[7 - i];
-        }
-
-        otPlatRadioSetExtendedAddress(buf);
-    }
-    mState = kStateIdle;
-    NextOperation();
-
-exit:
-    return error;
-}
-
-ThreadError Mac::Stop(void)
-{
-    ThreadError error = kThreadError_None;
-
-    SuccessOrExit(error = otPlatRadioDisable());
-    mAckTimer.Stop();
-    mBackoffTimer.Stop();
-    mState = kStateDisabled;
-
-    while (mSendHead != NULL)
-    {
-        Sender *cur;
-        cur = mSendHead;
-        mSendHead = mSendHead->mNext;
-        cur->mNext = NULL;
-    }
-
-    mSendTail = NULL;
-
-    while (mReceiveHead != NULL)
-    {
-        Receiver *cur;
-        cur = mReceiveHead;
-        mReceiveHead = mReceiveHead->mNext;
-        cur->mNext = NULL;
-    }
-
-    mReceiveTail = NULL;
-
-exit:
-    return error;
+    otPlatRadioEnable();
 }
 
 ThreadError Mac::ActiveScan(uint16_t aScanChannels, uint16_t aScanDuration, ActiveScanHandler aHandler, void *aContext)
 {
     ThreadError error = kThreadError_None;
 
-    VerifyOrExit(mState != kStateDisabled && mState != kStateActiveScan && mActiveScanRequest == false,
-                 error = kThreadError_Busy);
+    VerifyOrExit(mState != kStateActiveScan && mActiveScanRequest == false, error = kThreadError_Busy);
 
     mActiveScanHandler = aHandler;
     mActiveScanContext = aContext;
@@ -248,6 +191,19 @@ const ExtAddress *Mac::GetExtAddress(void) const
     return &mExtAddress;
 }
 
+ThreadError Mac::SetExtAddress(const ExtAddress &aExtAddress)
+{
+    uint8_t buf[8];
+
+    for (size_t i = 0; i < sizeof(buf); i++)
+    {
+        buf[i] = mExtAddress.m8[7 - i];
+    }
+
+    mExtAddress = aExtAddress;
+    return otPlatRadioSetExtendedAddress(buf);
+}
+
 ShortAddress Mac::GetShortAddress(void) const
 {
     return mShortAddress;
@@ -300,7 +256,6 @@ const uint8_t *Mac::GetExtendedPanId(void) const
 ThreadError Mac::SetExtendedPanId(const uint8_t *aExtPanId)
 {
     mBeacon.SetExtendedPanId(aExtPanId);
-    mMle.SetMeshLocalPrefix(aExtPanId);
     return kThreadError_None;
 }
 
@@ -308,9 +263,7 @@ ThreadError Mac::SendFrameRequest(Sender &aSender)
 {
     ThreadError error = kThreadError_None;
 
-    VerifyOrExit(mState != kStateDisabled &&
-                 mSendTail != &aSender && aSender.mNext == NULL,
-                 error = kThreadError_Busy);
+    VerifyOrExit(mSendTail != &aSender && aSender.mNext == NULL, error = kThreadError_Busy);
 
     if (mSendHead == NULL)
     {
@@ -337,9 +290,6 @@ void Mac::NextOperation(void)
 {
     switch (mState)
     {
-    case kStateDisabled:
-        break;
-
     case kStateActiveScan:
         mReceiveFrame.SetChannel(mScanChannel);
         otPlatRadioReceive(&mReceiveFrame);
@@ -881,7 +831,11 @@ void Mac::ReceiveDoneTask(void)
     switch (mState)
     {
     case kStateActiveScan:
-        mActiveScanHandler(mActiveScanContext, &mReceiveFrame);
+        if (mReceiveFrame.GetType() == Frame::kFcfFrameBeacon)
+        {
+            mActiveScanHandler(mActiveScanContext, &mReceiveFrame);
+        }
+
         break;
 
     default:
