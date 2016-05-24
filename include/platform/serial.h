@@ -82,38 +82,19 @@ ThreadError otPlatSerialDisable(void);
 ThreadError otPlatSerialSend(const uint8_t *aBuf, uint16_t aBufLength);
 
 /**
- * Signal that the bytes send operation has completed.
+ * The serial driver calls this method to notify OpenThread that the requested bytes have been sent.
  *
- * This may be called from interrupt context.  This will schedule calls to otPlatSerialHandleSendDone().
  */
-extern void otPlatSerialSignalSendDone(void);
+extern void otPlatSerialSendDone(void);
 
 /**
- * Complete the send sequence.
- */
-void otPlatSerialHandleSendDone(void);
-
-/**
- * Signal that bytes have been received.
+ * The serial driver calls this method to notify OpenThread that bytes have been received.
  *
- * This may be called from interrupt context.  This will schedule calls to otPlatSerialGetReceivedBytes() and
- * otPlatSerialHandleReceiveDone().
- */
-extern void otPlatSerialSignalReceive(void);
-
-/**
- * Get a pointer to the received bytes.
+ * @param[in]  aBuf        A pointer to the received bytes.
+ * @param[in]  aBufLength  The number of bytes received.
  *
- * @param[out]  aBufLength  A pointer to a variable that this function will put the number of bytes received.
- *
- * @returns A pointer to the received bytes.  NULL, if there are no received bytes to process.
  */
-const uint8_t *otPlatSerialGetReceivedBytes(uint16_t *aBufLength);
-
-/**
- * Release received bytes.
- */
-void otPlatSerialHandleReceiveDone(void);
+extern void otPlatSerialReceived(const uint8_t *aBuf, uint16_t aBufLength);
 
 /**
  * @}

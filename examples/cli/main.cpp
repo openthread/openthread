@@ -32,7 +32,6 @@
 
 #include <openthread.h>
 #include <cli/cli_serial.hpp>
-#include <platform/atomic.h>
 #include <platform.h>
 
 struct gengetopt_args_info args_info;
@@ -45,32 +44,19 @@ void otSignalTaskletPending(void)
 
 int main(int argc, char *argv[])
 {
-    uint32_t atomic_state;
-
     if (cmdline_parser(argc, argv, &args_info) != 0)
     {
         exit(1);
     }
 
-    hwAlarmInit();
-    hwRadioInit();
-    hwRandomInit();
-
+    PlatformInit();
     otInit();
     sCliServer.Start();
 
     while (1)
     {
         otProcessNextTasklet();
-
-        atomic_state = otPlatAtomicBegin();
-
-        if (!otAreTaskletsPending())
-        {
-            hwSleep();
-        }
-
-        otPlatAtomicEnd(atomic_state);
+        PlatformProcessDrivers();
     }
 
     return 0;

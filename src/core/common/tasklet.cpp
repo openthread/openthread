@@ -35,7 +35,6 @@
 #include <common/code_utils.hpp>
 #include <common/debug.hpp>
 #include <common/tasklet.hpp>
-#include <platform/atomic.h>
 
 namespace Thread {
 
@@ -57,7 +56,6 @@ ThreadError Tasklet::Post(void)
 ThreadError TaskletScheduler::Post(Tasklet &aTasklet)
 {
     ThreadError error = kThreadError_None;
-    uint32_t    state = otPlatAtomicBegin();
 
     VerifyOrExit(sTail != &aTasklet && aTasklet.mNext == NULL, error = kThreadError_Busy);
 
@@ -74,8 +72,6 @@ ThreadError TaskletScheduler::Post(Tasklet &aTasklet)
     }
 
 exit:
-    otPlatAtomicEnd(state);
-
     return error;
 }
 
@@ -105,12 +101,9 @@ bool TaskletScheduler::AreTaskletsPending(void)
 
 void TaskletScheduler::RunNextTasklet(void)
 {
-    uint32_t  state;
     Tasklet  *task;
 
-    state = otPlatAtomicBegin();
     task = PopTasklet();
-    otPlatAtomicEnd(state);
 
     if (task != NULL)
     {

@@ -41,7 +41,7 @@ extern struct gengetopt_args_info args_info;
 
 static uint32_t s_state = 1;
 
-void hwRandomInit(void)
+void PlatformRandomInit(void)
 {
     s_state = args_info.nodeid_arg;
 }

@@ -26,7 +26,6 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <pthread.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <string.h>
@@ -34,20 +33,13 @@
 
 #include <platform/alarm.h>
 
-static void *alarm_thread(void *arg);
-
 static bool s_is_running = false;
 static uint32_t s_alarm = 0;
 static struct timeval s_start;
 
-static pthread_t s_thread;
-static pthread_mutex_t s_mutex = PTHREAD_MUTEX_INITIALIZER;
-static pthread_cond_t s_cond = PTHREAD_COND_INITIALIZER;
-
-void hwAlarmInit(void)
+void PlatformAlarmInit(void)
 {
     gettimeofday(&s_start, NULL);
-    pthread_create(&s_thread, NULL, alarm_thread, NULL);
 }
 
 uint32_t otPlatAlarmGetNow(void)
@@ -62,65 +54,58 @@ uint32_t otPlatAlarmGetNow(void)
 
 void otPlatAlarmStartAt(uint32_t t0, uint32_t dt)
 {
-    pthread_mutex_lock(&s_mutex);
     s_alarm = t0 + dt;
     s_is_running = true;
-    pthread_mutex_unlock(&s_mutex);
-    pthread_cond_signal(&s_cond);
 }
 
 void otPlatAlarmStop(void)
 {
-    pthread_mutex_lock(&s_mutex);
     s_is_running = false;
-    pthread_mutex_unlock(&s_mutex);
 }
 
-void *alarm_thread(void *arg)
+void PlatformAlarmUpdateTimeout(struct timeval *aTimeout)
 {
     int32_t remaining;
-    struct timeval tva;
-    struct timeval tvb;
-    struct timespec ts;
 
-    while (1)
+    if (aTimeout == NULL)
     {
-        pthread_mutex_lock(&s_mutex);
+        return;
+    }
 
-        if (!s_is_running)
+    if (s_is_running)
+    {
+        remaining = s_alarm - otPlatAlarmGetNow();
+
+        if (remaining > 0)
         {
-            // alarm is not running, wait indefinitely
-            pthread_cond_wait(&s_cond, &s_mutex);
-            pthread_mutex_unlock(&s_mutex);
+            aTimeout->tv_sec = remaining / 1000;
+            aTimeout->tv_usec = (remaining % 1000) * 1000;
         }
         else
         {
-            // alarm is running
-            remaining = s_alarm - otPlatAlarmGetNow();
-
-            if (remaining > 0)
-            {
-                // alarm has not passed, wait
-                gettimeofday(&tva, NULL);
-                tvb.tv_sec = remaining / 1000;
-                tvb.tv_usec = (remaining % 1000) * 1000;
-                timeradd(&tva, &tvb, &tva);
-
-                ts.tv_sec = tva.tv_sec;
-                ts.tv_nsec = tva.tv_usec * 1000;
-
-                pthread_cond_timedwait(&s_cond, &s_mutex, &ts);
-                pthread_mutex_unlock(&s_mutex);
-            }
-            else
-            {
-                // alarm has passed, signal
-                s_is_running = false;
-                pthread_mutex_unlock(&s_mutex);
-                otPlatAlarmSignalFired();
-            }
+            aTimeout->tv_sec = 0;
+            aTimeout->tv_usec = 0;
         }
     }
+    else
+    {
+        aTimeout->tv_sec = 10;
+        aTimeout->tv_usec = 0;
+    }
+}
 
-    return NULL;
+void PlatformAlarmProcess(void)
+{
+    int32_t remaining;
+
+    if (s_is_running)
+    {
+        remaining = s_alarm - otPlatAlarmGetNow();
+
+        if (remaining <= 0)
+        {
+            s_is_running = false;
+            otPlatAlarmFired();
+        }
+    }
 }

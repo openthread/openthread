@@ -80,7 +80,7 @@ public:
 private:
     enum
     {
-        kMaxLineLength = 80,
+        kMaxLineLength = 128,
     };
 
     static void HandleUdpReceive(void *aContext, otMessage aMessage, const otMessageInfo *aMessageInfo);

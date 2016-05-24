@@ -71,7 +71,7 @@ void otPlatAlarmStartAt(uint32_t aT0, uint32_t aDt);
 void otPlatAlarmStop(void);
 
 /**
- * Get the current current time.
+ * Get the current time.
  *
  * @returns The current time in milliseconds.
  */
@@ -80,7 +80,7 @@ uint32_t otPlatAlarmGetNow(void);
 /**
  * Signal that the alarm has fired.
  */
-extern void otPlatAlarmSignalFired(void);
+extern void otPlatAlarmFired(void);
 
 /**
  * @}
