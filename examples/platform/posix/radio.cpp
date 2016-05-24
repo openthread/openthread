@@ -463,6 +463,7 @@ ThreadError otPlatRadioHandleReceiveDone()
     }
 
     s_receive_frame->mPower = -20;
+    s_receive_frame->mLqi = kPhyNoLqi;
 
     // generate acknowledgment
     if (reinterpret_cast<Mac::Frame *>(s_receive_frame)->GetAckRequest())

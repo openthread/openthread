@@ -88,7 +88,7 @@ private:
     {
         kRxBufferSize = 128,
         kTxBufferSize = 512,
-        kMaxLineLength = 80,
+        kMaxLineLength = 128,
     };
 
     static void ReceiveTask(void *aContext);

@@ -852,8 +852,8 @@ void Interpreter::ProcessScan(int argc, char *argv[])
     }
 
     SuccessOrExit(error = otActiveScan(scanChannels, 0, &HandleActiveScanResult));
-    sServer->OutputFormat("| J | Network Name     | Extended PAN     | PAN  | MAC Address      | Ch | dBm |\r\n");
-    sServer->OutputFormat("+---+------------------+------------------+------+------------------+----+-----+\r\n");
+    sServer->OutputFormat("| J | Network Name     | Extended PAN     | PAN  | MAC Address      | Ch | dBm | LQI |\r\n");
+    sServer->OutputFormat("+---+------------------+------------------+------+------------------+----+-----+-----+\r\n");
 
     return;
 
@@ -898,8 +898,9 @@ void Interpreter::HandleActiveScanResult(otActiveScanResult *aResult)
     bytes = aResult->mExtAddress.m8;
     sServer->OutputFormat("| %02x%02x%02x%02x%02x%02x%02x%02x ",
                           bytes[0], bytes[1], bytes[2], bytes[3], bytes[4], bytes[5], bytes[6], bytes[7]);
-    sServer->OutputFormat("| %02d ", aResult->mChannel);
-    sServer->OutputFormat("| %03d |\r\n", aResult->mRssi);
+    sServer->OutputFormat("| %2d ", aResult->mChannel);
+    sServer->OutputFormat("| %3d ", aResult->mRssi);
+    sServer->OutputFormat("| %3d |\r\n", aResult->mLqi);
 
 exit:
     return;
