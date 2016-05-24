@@ -324,14 +324,14 @@ typedef enum otMleAttachFilter
 /**
  * Represents a Thread device role.
  */
-enum otDeviceRole
+typedef enum
 {
     kDeviceRoleDisabled,  ///< The Thread stack is disabled.
     kDeviceRoleDetached,  ///< Not currently participating in a Thread network/partition.
     kDeviceRoleChild,     ///< The Thread Child role.
     kDeviceRoleRouter,    ///< The Thread Router role.
     kDeviceRoleLeader,    ///< The Thread Leader role.
-};
+} otDeviceRole;
 
 /**
  * @}

@@ -62,7 +62,7 @@ static otDEFINE_ALIGNED_VAR(sThreadNetifRaw, sizeof(ThreadNetif), uint64_t);
 
 static void HandleActiveScanResult(void *aContext, Mac::Frame *aFrame);
 
-void otInit()
+void otInit(void)
 {
     otLogInfoApi("Init\n");
     Message::Init();
@@ -341,22 +341,22 @@ void otRemoveMacWhitelist(const uint8_t *aExtAddr)
     sThreadNetif->GetMac().GetWhitelist().Remove(*reinterpret_cast<const Mac::ExtAddress *>(aExtAddr));
 }
 
-void otClearMacWhitelist()
+void otClearMacWhitelist(void)
 {
     sThreadNetif->GetMac().GetWhitelist().Clear();
 }
 
-void otDisableMacWhitelist()
+void otDisableMacWhitelist(void)
 {
     sThreadNetif->GetMac().GetWhitelist().Disable();
 }
 
-void otEnableMacWhitelist()
+void otEnableMacWhitelist(void)
 {
     sThreadNetif->GetMac().GetWhitelist().Enable();
 }
 
-ThreadError otBecomeDetached()
+ThreadError otBecomeDetached(void)
 {
     return sThreadNetif->GetMle().BecomeDetached();
 }
@@ -366,17 +366,17 @@ ThreadError otBecomeChild(otMleAttachFilter aFilter)
     return sThreadNetif->GetMle().BecomeChild(aFilter);
 }
 
-ThreadError otBecomeRouter()
+ThreadError otBecomeRouter(void)
 {
     return sThreadNetif->GetMle().BecomeRouter();
 }
 
-ThreadError otBecomeLeader()
+ThreadError otBecomeLeader(void)
 {
     return sThreadNetif->GetMle().BecomeLeader();
 }
 
-otDeviceRole otGetDeviceRole()
+otDeviceRole otGetDeviceRole(void)
 {
     otDeviceRole rval = kDeviceRoleDisabled;
 
@@ -406,22 +406,22 @@ otDeviceRole otGetDeviceRole()
     return rval;
 }
 
-uint8_t otGetLeaderRouterId()
+uint8_t otGetLeaderRouterId(void)
 {
     return sThreadNetif->GetMle().GetLeaderDataTlv().GetLeaderRouterId();
 }
 
-uint8_t otGetLeaderWeight()
+uint8_t otGetLeaderWeight(void)
 {
     return sThreadNetif->GetMle().GetLeaderDataTlv().GetWeighting();
 }
 
-uint8_t otGetNetworkDataVersion()
+uint8_t otGetNetworkDataVersion(void)
 {
     return sThreadNetif->GetMle().GetLeaderDataTlv().GetDataVersion();
 }
 
-uint32_t otGetPartitionId()
+uint32_t otGetPartitionId(void)
 {
     return sThreadNetif->GetMle().GetLeaderDataTlv().GetPartitionId();
 }
@@ -431,12 +431,12 @@ uint16_t otGetRloc16(void)
     return sThreadNetif->GetMle().GetRloc16();
 }
 
-uint8_t otGetRouterIdSequence()
+uint8_t otGetRouterIdSequence(void)
 {
     return sThreadNetif->GetMle().GetRouterIdSequence();
 }
 
-uint8_t otGetStableNetworkDataVersion()
+uint8_t otGetStableNetworkDataVersion(void)
 {
     return sThreadNetif->GetMle().GetLeaderDataTlv().GetStableDataVersion();
 }
@@ -451,7 +451,7 @@ ThreadError otIp6AddressFromString(const char *str, otIp6Address *address)
     return static_cast<Ip6::Address *>(address)->FromString(str);
 }
 
-const otNetifAddress *otGetUnicastAddresses()
+const otNetifAddress *otGetUnicastAddresses(void)
 {
     return sThreadNetif->GetUnicastAddresses();
 }
@@ -527,7 +527,7 @@ exit:
     return;
 }
 
-otMessage otNewUdpMessage()
+otMessage otNewUdpMessage(void)
 {
     return Ip6::Udp::NewMessage(0);
 }
