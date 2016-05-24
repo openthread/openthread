@@ -70,7 +70,6 @@ const struct Command Interpreter::sCommands[] =
     { "route", &ProcessRoute },
     { "routerupgradethreshold", &ProcessRouterUpgradeThreshold },
     { "scan", &ProcessScan },
-    { "shutdown", &ProcessShutdown },
     { "start", &ProcessStart },
     { "state", &ProcessState },
     { "stop", &ProcessStop },
@@ -913,14 +912,6 @@ void Interpreter::HandleActiveScanResult(otActiveScanResult *aResult)
 
 exit:
     sServer->Output(sResponse.GetResponse(), sResponse.GetResponseLength());
-}
-
-void Interpreter::ProcessShutdown(int argc, char *argv[])
-{
-    AppendResult(kThreadError_None);
-    sServer->Output(sResponse.GetResponse(), sResponse.GetResponseLength());
-    otPlatSerialDisable();
-    exit(0);
 }
 
 void Interpreter::ProcessStart(int argc, char *argv[])
