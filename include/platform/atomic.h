@@ -55,7 +55,7 @@ extern "C" {
 /**
  * Begin critical section.
  */
-uint32_t otPlatAtomicBegin();
+uint32_t otPlatAtomicBegin(void);
 
 /**
  * End critical section.

@@ -113,7 +113,7 @@ const uint8_t *otPlatSerialGetReceivedBytes(uint16_t *aBufLength);
 /**
  * Release received bytes.
  */
-void otPlatSerialHandleReceiveDone();
+void otPlatSerialHandleReceiveDone(void);
 
 /**
  * @}

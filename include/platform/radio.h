@@ -162,7 +162,7 @@ ThreadError otPlatRadioSetShortAddress(uint16_t aShortAddress);
 /**
  * Intialize the radio.
  */
-void otPlatRadioInit();
+void otPlatRadioInit(void);
 
 /**
  * Enable the radio.
