@@ -55,15 +55,26 @@ public:
     virtual ThreadError Start() = 0;
 
     /**
-     * This method delivers output to the client.
+     * This method delivers raw characters to the client.
      *
      * @param[in]  aBuf        A pointer to a buffer.
      * @param[in]  aBufLength  Number of bytes in the buffer.
      *
-     * @retval kThreadError_None  Successfully delivered output the client.
+     * @returns The number of bytes placed in the output queue.
      *
      */
-    virtual ThreadError Output(const char *aBuf, uint16_t aBufLength) = 0;
+    virtual int Output(const char *aBuf, uint16_t aBufLength) = 0;
+
+    /**
+     * This method delivers formatted output to the client.
+     *
+     * @param[in]  aFmt  A pointer to the format string.
+     * @param[in]  ...   A variable list of arguments to format.
+     *
+     * @returns The number of bytes placed in the output queue.
+     *
+     */
+    virtual int OutputFormat(const char *fmt, ...) = 0;
 };
 
 }  // namespace Cli

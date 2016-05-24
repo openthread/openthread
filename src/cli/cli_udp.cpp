@@ -31,6 +31,7 @@
  *   This file implements the CLI server on a UDP socket.
  */
 
+#include <stdarg.h>
 #include <stdio.h>
 #include <string.h>
 
@@ -87,7 +88,7 @@ exit:
     {}
 }
 
-ThreadError Udp::Output(const char *aBuf, uint16_t aBufLength)
+int Udp::Output(const char *aBuf, uint16_t aBufLength)
 {
     ThreadError error = kThreadError_None;
     otMessage message;
@@ -102,9 +103,22 @@ exit:
     if (error != kThreadError_None && message != NULL)
     {
         otFreeMessage(message);
+        aBufLength = 0;
     }
 
-    return error;
+    return aBufLength;
+}
+
+int Udp::OutputFormat(const char *fmt, ...)
+{
+    char buf[kMaxLineLength];
+    va_list ap;
+
+    va_start(ap, fmt);
+    vsnprintf(buf, sizeof(buf), fmt, ap);
+    va_end(ap);
+
+    return Output(buf, strlen(buf));
 }
 
 }  // namespace Cli
