@@ -36,6 +36,7 @@
 #define OPENTHREAD_H_
 
 #include <stdint.h>
+#include <stdbool.h>
 
 #include <openthread-types.h>
 
@@ -367,7 +368,7 @@ ThreadError otSetPanId(otPanId aPanId);
  *
  * @returns A pointer to the first Network Inteface Address.
  */
-const otNetifAddress *otGetUnicastAddresses();
+const otNetifAddress *otGetUnicastAddresses(void);
 
 /**
  * Add a Network Interface Address to the Thread interface.
@@ -651,7 +652,7 @@ void otRemoveMacWhitelist(const uint8_t *aExtAddr);
  * @sa otDisableMacWhitelist
  * @sa otEnableMacWhitelist
  */
-void otClearMacWhitelist();
+void otClearMacWhitelist(void);
 
 /**
  * Disable MAC whitelist filtering.
@@ -663,7 +664,7 @@ void otClearMacWhitelist();
  * @sa otClearMacWhitelist
  * @sa otEnableMacWhitelist
  */
-void otDisableMacWhitelist();
+void otDisableMacWhitelist(void);
 
 /**
  * Enable MAC whitelist filtering.
@@ -674,7 +675,7 @@ void otDisableMacWhitelist();
  * @sa otClearMacWhitelist
  * @sa otDisableMacWhitelist
  */
-void otEnableMacWhitelist();
+void otEnableMacWhitelist(void);
 
 /**
  * Detach from the Thread network.
@@ -682,7 +683,7 @@ void otEnableMacWhitelist();
  * @retval kThreadErrorNone    Successfully detached from the Thread network.
  * @retval kThreadErrorBusy    Thread is disabled.
  */
-ThreadError otBecomeDetached();
+ThreadError otBecomeDetached(void);
 
 /**
  * Attempt to reattach as a child.
@@ -700,14 +701,14 @@ ThreadError otBecomeChild(otMleAttachFilter aFilter);
  * @retval kThreadErrorNone    Successfully begin attempt to become a router.
  * @retval kThreadErrorBusy    Thread is disabled or already operating in a router or leader role.
  */
-ThreadError otBecomeRouter();
+ThreadError otBecomeRouter(void);
 
 /**
  * Become a leader and start a new partition.
  *
  * @retval kThreadErrorNone  Successfully became a leader and started a new partition.
  */
-ThreadError otBecomeLeader();
+ThreadError otBecomeLeader(void);
 
 /**
  * @}
@@ -738,35 +739,35 @@ ThreadError otBecomeLeader();
  * @retval ::kDeviceRoleRouter    The device is currently operating as a Thread Router.
  * @retval ::kDeviceRoleLeader    The device is currently operating as a Thread Leader.
  */
-otDeviceRole otGetDeviceRole();
+otDeviceRole otGetDeviceRole(void);
 
 /**
  * Get the Leader's Router ID.
  *
  * @returns The Leader's Router ID.
  */
-uint8_t otGetLeaderRouterId();
+uint8_t otGetLeaderRouterId(void);
 
 /**
  * Get the Leader's Weight.
  *
  * @returns The Leader's Weight.
  */
-uint8_t otGetLeaderWeight();
+uint8_t otGetLeaderWeight(void);
 
 /**
  * Get the Network Data Version.
  *
  * @returns The Network Data Version.
  */
-uint8_t otGetNetworkDataVersion();
+uint8_t otGetNetworkDataVersion(void);
 
 /**
  * Get the Partition ID.
  *
  * @returns The Partition ID.
  */
-uint32_t otGetPartitionId();
+uint32_t otGetPartitionId(void);
 
 /**
  * Get the RLOC16.
@@ -780,14 +781,14 @@ uint16_t otGetRloc16(void);
  *
  * @returns The Router ID Sequence.
  */
-uint8_t otGetRouterIdSequence();
+uint8_t otGetRouterIdSequence(void);
 
 /**
  * Get the Stable Network Data Version.
  *
  * @returns The Stable Network Data Version.
  */
-uint8_t otGetStableNetworkDataVersion();
+uint8_t otGetStableNetworkDataVersion(void);
 
 /**
  * @}
@@ -1010,7 +1011,7 @@ int otWriteMessage(otMessage aMessage, uint16_t aOffset, const void *aBuf, uint1
  *
  * @sa otFreeMessage
  */
-otMessage otNewUdpMessage();
+otMessage otNewUdpMessage(void);
 
 /**
  * Open a UDP/IPv6 socket.
