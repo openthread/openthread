@@ -128,6 +128,8 @@ Mle::Mle(ThreadNetif &aThreadNetif) :
     mRealmLocalAllThreadNodes.GetAddress().m16[7] = HostSwap16(0x0001);
     mNetif.SubscribeMulticast(mRealmLocalAllThreadNodes);
 
+    SetMeshLocalPrefix(mMac.GetExtendedPanId());
+
     mNetif.RegisterHandler(mNetifHandler);
 }
 

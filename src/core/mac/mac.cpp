@@ -300,7 +300,6 @@ const uint8_t *Mac::GetExtendedPanId(void) const
 ThreadError Mac::SetExtendedPanId(const uint8_t *aExtPanId)
 {
     mBeacon.SetExtendedPanId(aExtPanId);
-    mMle.SetMeshLocalPrefix(aExtPanId);
     return kThreadError_None;
 }
 
