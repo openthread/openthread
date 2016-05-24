@@ -144,6 +144,13 @@ enum
     SPINEL_PROTOCOL_TYPE_THREAD    = 3,
 };
 
+enum
+{
+    SPINEL_PHY_MODE_NORMAL       = 0, ///< Normal PHY filtering is in place.
+    SPINEL_PHY_MODE_PROMISCUOUS  = 1, ///< All PHY packets matching network are passed up the stack.
+    SPINEL_PHY_MODE_MONITOR      = 2, ///< All decoded PHY packets are passed up the stack.
+};
+
 typedef struct
 {
     uint8_t bytes[8];
@@ -265,7 +272,7 @@ typedef enum
     SPINEL_PROP_PHY_TX_POWER            = SPINEL_PROP_PHY__BEGIN + 5, ///< [c]
     SPINEL_PROP_PHY_RSSI                = SPINEL_PROP_PHY__BEGIN + 6, ///< dBm [c]
     SPINEL_PROP_PHY_RAW_STREAM_ENABLED  = SPINEL_PROP_PHY__BEGIN + 7, ///< [C]
-    SPINEL_PROP_PHY_PROMISCUOUS_MODE    = SPINEL_PROP_PHY__BEGIN + 8, ///< [C]
+    SPINEL_PROP_PHY_MODE                = SPINEL_PROP_PHY__BEGIN + 8, ///< [C]
     SPINEL_PROP_PHY__END                = 0x30,
 
     SPINEL_PROP_MAC__BEGIN           = 0x30,

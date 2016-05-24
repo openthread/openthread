@@ -115,7 +115,7 @@ const NcpBase::SetPropertyHandlerEntry NcpBase::mSetPropertyHandlerTable[] =
     { SPINEL_PROP_PHY_ENABLED, &NcpBase::SetPropertyHandler_PHY_ENABLED },
     { SPINEL_PROP_PHY_TX_POWER, &NcpBase::NcpBase::SetPropertyHandler_PHY_TX_POWER },
     { SPINEL_PROP_PHY_CHAN, &NcpBase::NcpBase::SetPropertyHandler_PHY_CHAN },
-    { SPINEL_PROP_PHY_PROMISCUOUS_MODE, &NcpBase::SetPropertyHandler_PHY_PROMISCUOUS_MODE },
+    { SPINEL_PROP_PHY_MODE, &NcpBase::SetPropertyHandler_PHY_MODE },
 
     { SPINEL_PROP_MAC_SCAN_MASK, &NcpBase::NcpBase::SetPropertyHandler_MAC_SCAN_MASK },
     { SPINEL_PROP_MAC_SCAN_STATE, &NcpBase::NcpBase::SetPropertyHandler_MAC_SCAN_STATE },
@@ -1534,10 +1534,50 @@ void NcpBase::SetPropertyHandler_PHY_CHAN(uint8_t header, spinel_prop_key_t key,
     }
 }
 
-void NcpBase::SetPropertyHandler_PHY_PROMISCUOUS_MODE(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr, uint16_t value_len)
+void NcpBase::SetPropertyHandler_PHY_MODE(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr,
+                                                      uint16_t value_len)
 {
-    // TODO: Implement PHY_PROMISCUOUS_MODE, once the API becomes available.
-    SendLastStatus(header, SPINEL_STATUS_UNIMPLEMENTED);
+    uint8_t i = 0;
+    spinel_ssize_t parsedLength;
+    ThreadError errorCode = kThreadError_None;
+
+    parsedLength = spinel_datatype_unpack(
+                       value_ptr,
+                       value_len,
+                       SPINEL_DATATYPE_UINT8_S,
+                       &i
+                   );
+
+    if (parsedLength > 0)
+    {
+        errorCode = kThreadError_NotImplemented;
+
+/*      // Uncomment when API is available.
+        switch (i) {
+        case SPINEL_PHY_MODE_NORMAL:
+            errorCode = otPlatRadioSetPromiscuous(false);
+            break;
+
+        case SPINEL_PHY_MODE_PROMISCUOUS:
+        case SPINEL_PHY_MODE_MONITOR:
+            errorCode = otPlatRadioSetPromiscuous(true);
+            break;
+        }
+*/
+
+        if (errorCode == kThreadError_None)
+        {
+            SendLastStatus(header, SPINEL_STATUS_OK);
+        }
+        else
+        {
+            SendLastStatus(header, ThreadErrorToSpinelStatus(errorCode));
+        }
+    }
+    else
+    {
+        SendLastStatus(header, SPINEL_STATUS_PARSE_ERROR);
+    }
 }
 
 void NcpBase::SetPropertyHandler_MAC_SCAN_MASK(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr, uint16_t value_len)
