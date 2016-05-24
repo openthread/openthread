@@ -132,6 +132,8 @@ private:
         kMaxArgs = 8,
     };
 
+    static void AppendResult(ThreadError error);
+
     static void ProcessHelp(int argc, char *argv[]);
     static void ProcessChannel(int argc, char *argv[]);
     static void ProcessChildTimeout(int argc, char *argv[]);

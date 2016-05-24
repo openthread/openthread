@@ -136,6 +136,18 @@ int Interpreter::Hex2Bin(const char *aHex, uint8_t *aBin, uint16_t aBinLength)
     return cur - aBin;
 }
 
+void Interpreter::AppendResult(ThreadError error)
+{
+    if (error == kThreadError_None)
+    {
+        sResponse.Append("Done\r\n");
+    }
+    else
+    {
+        sResponse.Append("Error %d\r\n", error);
+    }
+}
+
 ThreadError Interpreter::ParseLong(char *argv, long &value)
 {
     char *endptr;
@@ -153,6 +165,7 @@ void Interpreter::ProcessHelp(int argc, char *argv[])
 
 void Interpreter::ProcessChannel(int argc, char *argv[])
 {
+    ThreadError error = kThreadError_None;
     long value;
 
     if (argc == 0)
@@ -161,18 +174,17 @@ void Interpreter::ProcessChannel(int argc, char *argv[])
     }
     else
     {
-        SuccessOrExit(ParseLong(argv[0], value));
+        SuccessOrExit(error = ParseLong(argv[0], value));
         otSetChannel(value);
     }
 
-    sResponse.Append("Done\r\n");
-
 exit:
-    return;
+    AppendResult(error);
 }
 
 void Interpreter::ProcessChildTimeout(int argc, char *argv[])
 {
+    ThreadError error = kThreadError_None;
     long value;
 
     if (argc == 0)
@@ -181,18 +193,17 @@ void Interpreter::ProcessChildTimeout(int argc, char *argv[])
     }
     else
     {
-        SuccessOrExit(ParseLong(argv[0], value));
+        SuccessOrExit(error = ParseLong(argv[0], value));
         otSetChildTimeout(value);
     }
 
-    sResponse.Append("Done\r\n");
-
 exit:
-    return;
+    AppendResult(error);
 }
 
 void Interpreter::ProcessContextIdReuseDelay(int argc, char *argv[])
 {
+    ThreadError error = kThreadError_None;
     long value;
 
     if (argc == 0)
@@ -205,10 +216,8 @@ void Interpreter::ProcessContextIdReuseDelay(int argc, char *argv[])
         otSetContextIdReuseDelay(value);
     }
 
-    sResponse.Append("Done\r\n");
-
 exit:
-    return;
+    AppendResult(error);
 }
 
 void Interpreter::ProcessExtAddress(int argc, char *argv[])
@@ -217,11 +226,13 @@ void Interpreter::ProcessExtAddress(int argc, char *argv[])
     sResponse.Append("%02x%02x%02x%02x%02x%02x%02x%02x\r\n",
                      extAddress[0], extAddress[1], extAddress[2], extAddress[3],
                      extAddress[4], extAddress[5], extAddress[6], extAddress[7]);
-    sResponse.Append("Done\r\n");
+    AppendResult(kThreadError_None);
 }
 
 void Interpreter::ProcessExtPanId(int argc, char *argv[])
 {
+    ThreadError error = kThreadError_None;
+
     if (argc == 0)
     {
         const uint8_t *extPanId = otGetExtendedPanId();
@@ -233,15 +244,13 @@ void Interpreter::ProcessExtPanId(int argc, char *argv[])
     {
         uint8_t extPanId[8];
 
-        VerifyOrExit(Hex2Bin(argv[0], extPanId, sizeof(extPanId)) >= 0, ;);
+        VerifyOrExit(Hex2Bin(argv[0], extPanId, sizeof(extPanId)) >= 0, error = kThreadError_Parse);
 
         otSetExtendedPanId(extPanId);
     }
 
-    sResponse.Append("Done\r\n");
-
 exit:
-    return;
+    AppendResult(error);
 }
 
 ThreadError Interpreter::ProcessIpAddrAdd(int argc, char *argv[])
@@ -277,6 +286,8 @@ exit:
 
 void Interpreter::ProcessIpAddr(int argc, char *argv[])
 {
+    ThreadError error = kThreadError_None;
+
     if (argc == 0)
     {
         for (const otNetifAddress *addr = otGetUnicastAddresses(); addr; addr = addr->mNext)
@@ -292,22 +303,21 @@ void Interpreter::ProcessIpAddr(int argc, char *argv[])
     {
         if (strcmp(argv[0], "add") == 0)
         {
-            SuccessOrExit(ProcessIpAddrAdd(argc - 1, argv + 1));
+            SuccessOrExit(error = ProcessIpAddrAdd(argc - 1, argv + 1));
         }
         else if (strcmp(argv[0], "del") == 0)
         {
-            SuccessOrExit(ProcessIpAddrDel(argc - 1, argv + 1));
+            SuccessOrExit(error = ProcessIpAddrDel(argc - 1, argv + 1));
         }
     }
 
-    sResponse.Append("Done\r\n");
-
 exit:
-    return;
+    AppendResult(error);
 }
 
 void Interpreter::ProcessKeySequence(int argc, char *argv[])
 {
+    ThreadError error = kThreadError_None;
     long value;
 
     if (argc == 0)
@@ -316,18 +326,17 @@ void Interpreter::ProcessKeySequence(int argc, char *argv[])
     }
     else
     {
-        SuccessOrExit(ParseLong(argv[0], value));
+        SuccessOrExit(error = ParseLong(argv[0], value));
         otSetKeySequenceCounter(value);
     }
 
-    sResponse.Append("Done\r\n");
-
 exit:
-    return;
+    AppendResult(error);
 }
 
 void Interpreter::ProcessLeaderWeight(int argc, char *argv[])
 {
+    ThreadError error = kThreadError_None;
     long value;
 
     if (argc == 0)
@@ -336,18 +345,17 @@ void Interpreter::ProcessLeaderWeight(int argc, char *argv[])
     }
     else
     {
-        SuccessOrExit(ParseLong(argv[0], value));
+        SuccessOrExit(error = ParseLong(argv[0], value));
         otSetLocalLeaderWeight(value);
     }
 
-    sResponse.Append("Done\r\n");
-
 exit:
-    return;
+    AppendResult(error);
 }
 
 void Interpreter::ProcessMasterKey(int argc, char *argv[])
 {
+    ThreadError error = kThreadError_None;
     uint8_t keyLength;
 
     if (argc == 0)
@@ -365,18 +373,17 @@ void Interpreter::ProcessMasterKey(int argc, char *argv[])
     {
         uint8_t key[16];
 
-        VerifyOrExit((keyLength = Hex2Bin(argv[0], key, sizeof(key))) >= 0, ;);
-        SuccessOrExit(otSetMasterKey(key, keyLength));
+        VerifyOrExit((keyLength = Hex2Bin(argv[0], key, sizeof(key))) >= 0, error = kThreadError_Parse);
+        SuccessOrExit(error = otSetMasterKey(key, keyLength));
     }
 
-    sResponse.Append("Done\r\n");
-
 exit:
-    return;
+    AppendResult(error);
 }
 
 void Interpreter::ProcessMode(int argc, char *argv[])
 {
+    ThreadError error = kThreadError_None;
     otLinkModeConfig linkMode = {};
 
     if (argc == 0)
@@ -428,30 +435,29 @@ void Interpreter::ProcessMode(int argc, char *argv[])
                 break;
 
             default:
-                ExitNow();
+                ExitNow(error = kThreadError_Parse);
             }
         }
 
-        SuccessOrExit(otSetLinkMode(linkMode));
+        SuccessOrExit(error = otSetLinkMode(linkMode));
     }
 
-    sResponse.Append("Done\r\n");
-
 exit:
-    return;
+    AppendResult(error);
 }
 
 void Interpreter::ProcessNetworkDataRegister(int argc, char *argv[])
 {
-    SuccessOrExit(otSendServerData());
-    sResponse.Append("Done\r\n");
+    ThreadError error = kThreadError_None;
+    SuccessOrExit(error = otSendServerData());
 
 exit:
-    return;
+    AppendResult(error);
 }
 
 void Interpreter::ProcessNetworkIdTimeout(int argc, char *argv[])
 {
+    ThreadError error = kThreadError_None;
     long value;
 
     if (argc == 0)
@@ -460,35 +466,34 @@ void Interpreter::ProcessNetworkIdTimeout(int argc, char *argv[])
     }
     else
     {
-        SuccessOrExit(ParseLong(argv[0], value));
+        SuccessOrExit(error = ParseLong(argv[0], value));
         otSetNetworkIdTimeout(value);
     }
 
-    sResponse.Append("Done\r\n");
-
 exit:
-    return;
+    AppendResult(error);
 }
 
 void Interpreter::ProcessNetworkName(int argc, char *argv[])
 {
+    ThreadError error = kThreadError_None;
+
     if (argc == 0)
     {
         sResponse.Append("%.*s\r\n", OT_NETWORK_NAME_SIZE, otGetNetworkName());
     }
     else
     {
-        SuccessOrExit(otSetNetworkName(argv[0]));
+        SuccessOrExit(error = otSetNetworkName(argv[0]));
     }
 
-    sResponse.Append("Done\r\n");
-
 exit:
-    return;
+    AppendResult(error);
 }
 
 void Interpreter::ProcessPanId(int argc, char *argv[])
 {
+    ThreadError error = kThreadError_None;
     long value;
 
     if (argc == 0)
@@ -497,14 +502,12 @@ void Interpreter::ProcessPanId(int argc, char *argv[])
     }
     else
     {
-        SuccessOrExit(ParseLong(argv[0], value));
+        SuccessOrExit(error = ParseLong(argv[0], value));
         otSetPanId(value);
     }
 
-    sResponse.Append("Done\r\n");
-
 exit:
-    return;
+    AppendResult(error);
 }
 
 void Interpreter::HandleEchoResponse(void *aContext, Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
@@ -527,25 +530,28 @@ void Interpreter::HandleEchoResponse(void *aContext, Message &aMessage, const Ip
 
 void Interpreter::ProcessPing(int argc, char *argv[])
 {
+    ThreadError error = kThreadError_None;
     long length = 8;
 
-    VerifyOrExit(argc > 0, ;);
+    VerifyOrExit(argc > 0, error = kThreadError_Parse);
 
     memset(&sSockAddr, 0, sizeof(sSockAddr));
-    SuccessOrExit(sSockAddr.GetAddress().FromString(argv[0]));
+    SuccessOrExit(error = sSockAddr.GetAddress().FromString(argv[0]));
     sSockAddr.mScopeId = 1;
 
     if (argc > 1)
     {
-        SuccessOrExit(ParseLong(argv[1], length));
+        SuccessOrExit(error = ParseLong(argv[1], length));
     }
 
     sIcmpEcho.SendEchoRequest(sSockAddr, sEchoRequest, length);
 
     sResponse.Init();
 
-exit:
     return;
+
+exit:
+    AppendResult(error);
 }
 
 ThreadError Interpreter::ProcessPrefixAdd(int argc, char *argv[])
@@ -668,40 +674,39 @@ exit:
 
 void Interpreter::ProcessPrefix(int argc, char *argv[])
 {
-    VerifyOrExit(argc > 0, ;);
+    ThreadError error = kThreadError_None;
+
+    VerifyOrExit(argc > 0, error = kThreadError_Parse);
 
     if (strcmp(argv[0], "add") == 0)
     {
-        SuccessOrExit(ProcessPrefixAdd(argc - 1, argv + 1));
+        SuccessOrExit(error = ProcessPrefixAdd(argc - 1, argv + 1));
     }
     else if (strcmp(argv[0], "remove") == 0)
     {
-        SuccessOrExit(ProcessPrefixRemove(argc - 1, argv + 1));
+        SuccessOrExit(error = ProcessPrefixRemove(argc - 1, argv + 1));
     }
     else
     {
-        ExitNow();
+        ExitNow(error = kThreadError_Parse);
     }
 
-    sResponse.Append("Done\r\n");
-
 exit:
-    return;
+    AppendResult(error);
 }
 
 void Interpreter::ProcessReleaseRouterId(int argc, char *argv[])
 {
+    ThreadError error = kThreadError_None;
     long value;
 
-    if (argc != 0)
-    {
-        SuccessOrExit(ParseLong(argv[0], value));
-        SuccessOrExit(otReleaseRouterId(value));
-        sResponse.Append("Done\r\n");
-    }
+    VerifyOrExit(argc > 0, error = kThreadError_Parse);
+
+    SuccessOrExit(error = ParseLong(argv[0], value));
+    SuccessOrExit(error = otReleaseRouterId(value));
 
 exit:
-    return;
+    AppendResult(error);
 }
 
 void Interpreter::ProcessRloc16(int argc, char *argv[])
@@ -802,29 +807,30 @@ exit:
 
 void Interpreter::ProcessRoute(int argc, char *argv[])
 {
-    VerifyOrExit(argc > 0, ;);
+    ThreadError error = kThreadError_None;
+
+    VerifyOrExit(argc > 0, error = kThreadError_Parse);
 
     if (strcmp(argv[0], "add") == 0)
     {
-        SuccessOrExit(ProcessRouteAdd(argc - 1, argv + 1));
+        SuccessOrExit(error = ProcessRouteAdd(argc - 1, argv + 1));
     }
     else if (strcmp(argv[0], "remove") == 0)
     {
-        SuccessOrExit(ProcessRouteRemove(argc - 1, argv + 1));
+        SuccessOrExit(error = ProcessRouteRemove(argc - 1, argv + 1));
     }
     else
     {
-        ExitNow();
+        ExitNow(error = kThreadError_Parse);
     }
 
-    sResponse.Append("Done\r\n");
-
 exit:
-    return;
+    AppendResult(error);
 }
 
 void Interpreter::ProcessRouterUpgradeThreshold(int argc, char *argv[])
 {
+    ThreadError error = kThreadError_None;
     long value;
 
     if (argc == 0)
@@ -833,33 +839,34 @@ void Interpreter::ProcessRouterUpgradeThreshold(int argc, char *argv[])
     }
     else
     {
-        SuccessOrExit(ParseLong(argv[0], value));
+        SuccessOrExit(error = ParseLong(argv[0], value));
         otSetRouterUpgradeThreshold(value);
     }
 
-    sResponse.Append("Done\r\n");
-
 exit:
-    return;
+    AppendResult(error);
 }
 
 void Interpreter::ProcessScan(int argc, char *argv[])
 {
+    ThreadError error = kThreadError_None;
     uint16_t scanChannels = 0;
     long value;
 
     if (argc > 0)
     {
-        SuccessOrExit(ParseLong(argv[0], value));
+        SuccessOrExit(error = ParseLong(argv[0], value));
         scanChannels = 1 << (value - kPhyMinChannel);
     }
 
-    SuccessOrExit(otActiveScan(scanChannels, 0, &HandleActiveScanResult));
+    SuccessOrExit(error = otActiveScan(scanChannels, 0, &HandleActiveScanResult));
     sResponse.Append("| J | Network Name     | Extended PAN     | PAN  | MAC Address      | Ch | dBm |\r\n");
     sResponse.Append("+---+------------------+------------------+------+------------------+----+-----+\r\n");
 
-exit:
     return;
+
+exit:
+    AppendResult(error);
 }
 
 void Interpreter::HandleActiveScanResult(otActiveScanResult *aResult)
@@ -910,7 +917,7 @@ exit:
 
 void Interpreter::ProcessShutdown(int argc, char *argv[])
 {
-    sResponse.Append("Done\r\n");
+    AppendResult(kThreadError_None);
     sServer->Output(sResponse.GetResponse(), sResponse.GetResponseLength());
     otPlatSerialDisable();
     exit(0);
@@ -918,15 +925,18 @@ void Interpreter::ProcessShutdown(int argc, char *argv[])
 
 void Interpreter::ProcessStart(int argc, char *argv[])
 {
-    SuccessOrExit(otEnable());
-    sResponse.Append("Done\r\n");
+    ThreadError error = kThreadError_None;
+
+    SuccessOrExit(error = otEnable());
 
 exit:
-    return;
+    AppendResult(error);
 }
 
 void Interpreter::ProcessState(int argc, char *argv[])
 {
+    ThreadError error = kThreadError_None;
+
     if (argc == 0)
     {
         switch (otGetDeviceRole())
@@ -956,65 +966,65 @@ void Interpreter::ProcessState(int argc, char *argv[])
     {
         if (strcmp(argv[0], "detached") == 0)
         {
-            SuccessOrExit(otBecomeDetached());
+            SuccessOrExit(error = otBecomeDetached());
         }
         else if (strcmp(argv[0], "child") == 0)
         {
-            SuccessOrExit(otBecomeChild(kMleAttachSamePartition));
+            SuccessOrExit(error = otBecomeChild(kMleAttachSamePartition));
         }
         else if (strcmp(argv[0], "router") == 0)
         {
-            SuccessOrExit(otBecomeRouter());
+            SuccessOrExit(error = otBecomeRouter());
         }
         else if (strcmp(argv[0], "leader") == 0)
         {
-            SuccessOrExit(otBecomeLeader());
+            SuccessOrExit(error = otBecomeLeader());
         }
         else
         {
-            ExitNow();
+            ExitNow(error = kThreadError_Parse);
         }
     }
 
-    sResponse.Append("Done\r\n");
-
 exit:
-    return;
+    AppendResult(error);
 }
 
 void Interpreter::ProcessStop(int argc, char *argv[])
 {
-    SuccessOrExit(otDisable());
-    sResponse.Append("Done\r\n");
+    ThreadError error = kThreadError_None;
+
+    SuccessOrExit(error = otDisable());
 
 exit:
-    return;
+    AppendResult(error);
 }
 
 void Interpreter::ProcessWhitelist(int argc, char *argv[])
 {
+    ThreadError error = kThreadError_None;
     int argcur = 0;
     uint8_t extAddr[8];
     int8_t rssi;
 
     if (argcur >= argc)
     {
-        ;
+        ExitNow(error = kThreadError_Parse);
     }
     else if (strcmp(argv[argcur], "add") == 0)
     {
-        VerifyOrExit(++argcur < argc, ;);
-        VerifyOrExit(Hex2Bin(argv[argcur], extAddr, sizeof(extAddr)) == sizeof(extAddr), ;);
+        VerifyOrExit(++argcur < argc, error = kThreadError_Parse);
+        VerifyOrExit(Hex2Bin(argv[argcur], extAddr, sizeof(extAddr)) == sizeof(extAddr), error = kThreadError_Parse);
 
         if (++argcur < argc)
         {
             rssi = strtol(argv[argcur], NULL, 0);
-            VerifyOrExit(otAddMacWhitelistRssi(extAddr, rssi) == kThreadError_None, ;);
+            VerifyOrExit(otAddMacWhitelistRssi(extAddr, rssi) == kThreadError_None, error = kThreadError_Parse);
         }
         else
         {
             otAddMacWhitelist(extAddr);
-            VerifyOrExit(otAddMacWhitelist(extAddr) == kThreadError_None, ;);
+            VerifyOrExit(otAddMacWhitelist(extAddr) == kThreadError_None, error = kThreadError_Parse);
         }
     }
     else if (strcmp(argv[argcur], "clear") == 0)
@@ -1031,15 +1041,13 @@ void Interpreter::ProcessWhitelist(int argc, char *argv[])
     }
     else if (strcmp(argv[argcur], "remove") == 0)
     {
-        VerifyOrExit(++argcur < argc, ;);
-        VerifyOrExit(Hex2Bin(argv[argcur], extAddr, sizeof(extAddr)) == sizeof(extAddr), ;);
+        VerifyOrExit(++argcur < argc, error = kThreadError_Parse);
+        VerifyOrExit(Hex2Bin(argv[argcur], extAddr, sizeof(extAddr)) == sizeof(extAddr), error = kThreadError_Parse);
         otRemoveMacWhitelist(extAddr);
     }
 
-    sResponse.Append("Done\r\n");
-
 exit:
-    return;
+    AppendResult(error);
 }
 
 void Interpreter::ProcessLine(char *aBuf, uint16_t aBufLength, Server &aServer)
