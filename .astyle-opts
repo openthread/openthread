@@ -1,4 +1,4 @@
---style="allman"
+--style=allman
 --max-code-length=120
 --max-instatement-indent=100
 --attach-namespaces --attach-inlines
