@@ -59,31 +59,54 @@ public:
     ThreadError Start(void);
 
     /**
-     * This method delivers output to the client.
+     * This method delivers raw characters to the client.
      *
      * @param[in]  aBuf        A pointer to a buffer.
      * @param[in]  aBufLength  Number of bytes in the buffer.
      *
-     * @retval kThreadError_None  Successfully delivered output the client.
+     * @returns The number of bytes placed in the output queue.
      *
      */
-    ThreadError Output(const char *aBuf, uint16_t aBufLength);
+    int Output(const char *aBuf, uint16_t aBufLength);
+
+    /**
+     * This method delivers formatted output to the client.
+     *
+     * @param[in]  aFmt  A pointer to the format string.
+     * @param[in]  ...   A variable list of arguments to format.
+     *
+     * @returns The number of bytes placed in the output queue.
+     *
+     */
+    int OutputFormat(const char *fmt, ...);
 
     static Tasklet sReceiveTask;
+    static Tasklet sSendDoneTask;
 
 private:
     enum
     {
         kRxBufferSize = 128,
+        kTxBufferSize = 512,
+        kMaxLineLength = 80,
     };
 
     static void ReceiveTask(void *aContext);
+    static void SendDoneTask(void *aContext);
 
     ThreadError ProcessCommand(void);
     void ReceiveTask(void);
+    void SendDoneTask(void);
+    void Send(void);
 
     char mRxBuffer[kRxBufferSize];
     uint16_t mRxLength;
+
+    char mTxBuffer[kTxBufferSize];
+    uint16_t mTxHead;
+    uint16_t mTxLength;
+
+    uint16_t mSendLength;
 };
 
 }  // namespace Cli

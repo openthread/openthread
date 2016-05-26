@@ -148,7 +148,7 @@ class Node:
 
     def get_key_sequence(self):
         self.send_command('keysequence')
-        i = self.pexpect.expect('(\d+)')
+        i = self.pexpect.expect('(\d+)\r\n')
         if i == 0:
             key_sequence = int(self.pexpect.match.groups()[0])
         self.pexpect.expect('Done')
@@ -205,7 +205,7 @@ class Node:
 
     def get_timeout(self):
         self.send_command('childtimeout')
-        i = self.pexpect.expect('(\d+)')
+        i = self.pexpect.expect('(\d+)\r\n')
         if i == 0:
             timeout = self.pexpect.match.groups()[0]
         self.pexpect.expect('Done')
@@ -218,7 +218,7 @@ class Node:
 
     def get_weight(self):
         self.send_command('leaderweight')
-        i = self.pexpect.expect('(\d+)')
+        i = self.pexpect.expect('(\d+)\r\n')
         if i == 0:
             weight = self.pexpect.match.groups()[0]
         self.pexpect.expect('Done')
@@ -239,7 +239,7 @@ class Node:
         self.send_command('ipaddr')
 
         while True:
-            i = self.pexpect.expect(['(\S+:\S+)', 'Done'])
+            i = self.pexpect.expect(['(\S+:\S+)\r\n', 'Done'])
             if i == 0:
                 addrs.append(self.pexpect.match.groups()[0])
             elif i == 1:
@@ -249,7 +249,7 @@ class Node:
 
     def get_context_reuse_delay(self):
         self.send_command('contextreusedelay')
-        i = self.pexpect.expect('(\d+)')
+        i = self.pexpect.expect('(\d+)\r\n')
         if i == 0:
             timeout = self.pexpect.match.groups()[0]
         self.pexpect.expect('Done')
@@ -289,7 +289,7 @@ class Node:
 
         results = []
         while True:
-            i = self.pexpect.expect(['\|\s(\S+)\s+\|\s(\S+)\s+\|\s([0-9a-fA-F]{4})\s\|\s([0-9a-fA-F]{16})\s\|\s(\d+)',
+            i = self.pexpect.expect(['\|\s(\S+)\s+\|\s(\S+)\s+\|\s([0-9a-fA-F]{4})\s\|\s([0-9a-fA-F]{16})\s\|\s(\d+)\r\n',
                                      'Done'])
             if i == 0:
                 results.append(self.pexpect.match.groups())

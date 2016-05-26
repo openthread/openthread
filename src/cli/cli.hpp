@@ -51,55 +51,6 @@ namespace Thread {
 namespace Cli {
 
 /**
- * This class implements the response buffer for CLI command results.
- *
- */
-class ResponseBuffer
-{
-public:
-    /**
-     * This method initializes the response buffer.
-     *
-     */
-    void Init(void) { mEnd = mBuffer; }
-
-    /**
-     * This method appends output according to the format string.
-     *
-     * @param[in]  fmt  A pointer to the NULL-terminated format string.
-     * @param[in]  ...  Arguments for the format specification.
-     *
-     */
-    void Append(const char *fmt, ...) {
-        va_list ap;
-        va_start(ap, fmt);
-        vsnprintf(mEnd, sizeof(mBuffer) - (mEnd - mBuffer), fmt, ap);
-        va_end(ap);
-        mEnd += strlen(mEnd);
-    }
-
-    /**
-     * This method returns a pointer to the response string.
-     *
-     * @returns A pointer to the response string.
-     *
-     */
-    const char *GetResponse(void) { return mBuffer; }
-
-    /**
-     * This method returns the length of the response string.
-     *
-     * @returns The length to the response string.
-     *
-     */
-    uint16_t GetResponseLength(void) { return mEnd - mBuffer; }
-
-private:
-    char mBuffer[512];
-    char *mEnd;
-};
-
-/**
  * This structure represents a CLI command.
  *
  */
@@ -173,8 +124,6 @@ private:
     static ThreadError ParseLong(char *argv, long &value);
 
     static const struct Command sCommands[];
-    static ResponseBuffer sResponse;
-
     static otNetifAddress sAddress;
 
     static Ip6::SockAddr sSockAddr;

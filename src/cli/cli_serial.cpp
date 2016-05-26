@@ -31,6 +31,7 @@
  *   This file implements the CLI server on the serial service.
  */
 
+#include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -45,11 +46,12 @@
 namespace Thread {
 namespace Cli {
 
-static const uint8_t sEraseString[] = {'\b', ' ', '\b'};
-static const uint8_t CRNL[] = {'\r', '\n'};
+static const char sEraseString[] = {'\b', ' ', '\b'};
+static const char CRNL[] = {'\r', '\n'};
 static Serial *sServer;
 
 Tasklet Serial::sReceiveTask(&ReceiveTask, NULL);
+Tasklet Serial::sSendDoneTask(&SendDoneTask, NULL);
 
 Serial::Serial(void)
 {
@@ -59,12 +61,11 @@ Serial::Serial(void)
 ThreadError Serial::Start(void)
 {
     mRxLength = 0;
+    mTxHead = 0;
+    mTxLength = 0;
+    mSendLength = 0;
     otPlatSerialEnable();
     return kThreadError_None;
-}
-
-extern "C" void otPlatSerialSignalSendDone(void)
-{
 }
 
 extern "C" void otPlatSerialSignalReceive(void)
@@ -92,7 +93,7 @@ void Serial::ReceiveTask(void)
         {
         case '\r':
         case '\n':
-            otPlatSerialSend(CRNL, sizeof(CRNL));
+            Output(CRNL, sizeof(CRNL));
 
             if (mRxLength > 0)
             {
@@ -104,7 +105,7 @@ void Serial::ReceiveTask(void)
 
         case '\b':
         case 127:
-            otPlatSerialSend(sEraseString, sizeof(sEraseString));
+            Output(sEraseString, sizeof(sEraseString));
 
             if (mRxLength > 0)
             {
@@ -114,7 +115,7 @@ void Serial::ReceiveTask(void)
             break;
 
         default:
-            otPlatSerialSend(buf, 1);
+            Output(reinterpret_cast<const char *>(buf), 1);
             mRxBuffer[mRxLength++] = *buf;
             break;
         }
@@ -144,9 +145,79 @@ ThreadError Serial::ProcessCommand(void)
     return error;
 }
 
-ThreadError Serial::Output(const char *aBuf, uint16_t aBufLength)
+int Serial::Output(const char *aBuf, uint16_t aBufLength)
 {
-    return otPlatSerialSend(reinterpret_cast<const uint8_t *>(aBuf), aBufLength);
+    uint16_t remaining = kTxBufferSize - mTxLength;
+    uint16_t tail = (mTxHead + mTxLength) % kTxBufferSize;
+
+    if (aBufLength > remaining)
+    {
+        aBufLength = remaining;
+    }
+
+    for (int i = 0; i < aBufLength; i++)
+    {
+        tail = (mTxHead + mTxLength) % kTxBufferSize;
+        mTxBuffer[tail] = *aBuf++;
+        mTxLength++;
+    }
+
+    Send();
+
+    return aBufLength;
+}
+
+int Serial::OutputFormat(const char *fmt, ...)
+{
+    char buf[kMaxLineLength];
+    va_list ap;
+
+    va_start(ap, fmt);
+    vsnprintf(buf, sizeof(buf), fmt, ap);
+    va_end(ap);
+
+    return Output(buf, strlen(buf));
+}
+
+void Serial::Send(void)
+{
+    VerifyOrExit(mSendLength == 0, ;);
+
+    if (mTxHead + mTxLength > kTxBufferSize)
+    {
+        mSendLength = kTxBufferSize - mTxHead;
+    }
+    else
+    {
+        mSendLength = mTxLength;
+    }
+
+    if (mSendLength > 0)
+    {
+        otPlatSerialSend(reinterpret_cast<uint8_t *>(mTxBuffer + mTxHead), mSendLength);
+    }
+
+exit:
+    return;
+}
+
+extern "C" void otPlatSerialSignalSendDone(void)
+{
+    Serial::sSendDoneTask.Post();
+}
+
+void Serial::SendDoneTask(void *aContext)
+{
+    sServer->SendDoneTask();
+}
+
+void Serial::SendDoneTask(void)
+{
+    mTxHead = (mTxHead + mSendLength) % kTxBufferSize;
+    mTxLength -= mSendLength;
+    mSendLength = 0;
+
+    Send();
 }
 
 }  // namespace Cli
