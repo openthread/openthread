@@ -162,7 +162,6 @@ private:
     static void ProcessRouterUpgradeThreshold(int argc, char *argv[]);
     static void ProcessRloc16(int argc, char *argv[]);
     static void ProcessScan(int argc, char *argv[]);
-    static void ProcessShutdown(int argc, char *argv[]);
     static void ProcessStart(int argc, char *argv[]);
     static void ProcessState(int argc, char *argv[]);
     static void ProcessStop(int argc, char *argv[]);

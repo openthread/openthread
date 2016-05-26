@@ -69,10 +69,6 @@ class Node:
         self.pexpect = fdpexpect.fdspawn(os.open(serialPort, os.O_RDWR|os.O_NONBLOCK|os.O_NOCTTY))
 
     def __del__(self):
-        if self.node_type == 'sim':
-            self.send_command('shutdown')
-            self.pexpect.expect('Done')
-
         self.pexpect.terminate()
         self.pexpect.close(force=True)
 
