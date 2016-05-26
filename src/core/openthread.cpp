@@ -508,6 +508,7 @@ void HandleActiveScanResult(void *aContext, Mac::Frame *aFrame)
     aFrame->GetSrcPanId(result.mPanId);
     result.mChannel = aFrame->GetChannel();
     result.mRssi = aFrame->GetPower();
+    result.mLqi = aFrame->GetLqi();
 
     payloadLength = aFrame->GetPayloadLength();
     beacon = reinterpret_cast<Mac::Beacon *>(aFrame->GetPayload());

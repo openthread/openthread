@@ -116,6 +116,7 @@ typedef struct otActiveScanResult
     uint16_t       mPanId;           ///< IEEE 802.15.4 PAN ID
     uint8_t        mChannel;         ///< IEEE 802.15.4 Channel
     int8_t         mRssi;            ///< RSSI (dBm)
+    uint8_t        mLqi;             ///< LQI
     uint8_t        mVersion : 4;     ///< Version
     bool           mIsNative : 1;    ///< Native Commissioner flag
     bool           mIsJoinable : 1;  ///< Joining Permitted flag

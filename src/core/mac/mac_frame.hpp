@@ -516,6 +516,22 @@ public:
     void SetPower(int8_t aPower) { mPower = aPower; }
 
     /**
+     * This method returns the receive Link Quality Indicator.
+     *
+     * @returns The receive Link Quality Indicator.
+     *
+     */
+    int8_t GetLqi(void) const { return mLqi; }
+
+    /**
+     * This method sets the receive Link Quality Indicator.
+     *
+     * @param[in]  aLqi  The receive Link Quality Indicator.
+     *
+     */
+    void SetLqi(int8_t aLqi) { mLqi = aLqi; }
+
+    /**
      * This method indicates whether or not frame security was enabled and passed security validation.
      *
      * @retval TRUE   Frame security was enabled and passed security validation.
