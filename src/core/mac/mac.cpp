@@ -672,6 +672,8 @@ ThreadError Mac::ProcessReceiveSecurity(const Address &aSrcAddr, Neighbor *aNeig
     const uint8_t *macKey;
     Crypto::AesCcm aesCcm;
 
+    mReceiveFrame.SetSecurityValid(false);
+
     if (mReceiveFrame.GetSecurityEnabled() == false)
     {
         ExitNow();
@@ -743,6 +745,8 @@ ThreadError Mac::ProcessReceiveSecurity(const Address &aSrcAddr, Neighbor *aNeig
     }
 
     aNeighbor->mValid.mLinkFrameCounter = frameCounter + 1;
+
+    mReceiveFrame.SetSecurityValid(true);
 
 exit:
     return error;

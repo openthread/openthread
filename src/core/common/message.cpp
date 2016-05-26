@@ -498,6 +498,16 @@ void Message::SetDirectTransmission(void)
     mInfo.mDirectTx = true;
 }
 
+bool Message::GetSecurityValid(void) const
+{
+    return mInfo.mSecurityValid;
+}
+
+void Message::SetSecurityValid(bool aSecurityValid)
+{
+    mInfo.mSecurityValid = aSecurityValid;
+}
+
 uint16_t Message::UpdateChecksum(uint16_t aChecksum, uint16_t aOffset, uint16_t aLength) const
 {
     Buffer *curBuffer;

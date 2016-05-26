@@ -100,20 +100,21 @@ struct MessageInfo
 {
     enum
     {
-        kListAll = 0,                ///< Identifies the all messages list.
-        kListInterface = 1,          ///< Identifies the per-inteface message list.
+        kListAll = 0,                    ///< Identifies the all messages list.
+        kListInterface = 1,              ///< Identifies the per-inteface message list.
     };
-    MessageListEntry mList[2];       ///< Message lists.
-    uint16_t         mReserved;      ///< Number of header bytes reserved for the message.
-    uint16_t         mLength;        ///< Number of bytes within the message.
-    uint16_t         mOffset;        ///< A byte offset within the message.
-    uint16_t         mDatagramTag;   ///< The datagram tag used for 6LoWPAN fragmentation.
-    uint8_t          mTimeout;       ///< Seconds remaining before dropping the message.
+    MessageListEntry mList[2];           ///< Message lists.
+    uint16_t         mReserved;          ///< Number of header bytes reserved for the message.
+    uint16_t         mLength;            ///< Number of bytes within the message.
+    uint16_t         mOffset;            ///< A byte offset within the message.
+    uint16_t         mDatagramTag;       ///< The datagram tag used for 6LoWPAN fragmentation.
+    uint8_t          mTimeout;           ///< Seconds remaining before dropping the message.
 
-    uint8_t          mChildMask[8];  ///< A bit-vector to indicate which sleepy children need to receive this message.
+    uint8_t          mChildMask[8];      ///< A bit-vector to indicate which sleepy children need to receive this message.
 
-    uint8_t          mType : 2;      ///< Identifies the type of message.
-    bool             mDirectTx : 1;  ///< Used to indicate whether a direct transmission is required.
+    uint8_t          mType : 2;          ///< Identifies the type of message.
+    bool             mDirectTx : 1;      ///< Used to indicate whether a direct transmission is required.
+    bool             mSecurityValid : 1; ///< Indicates whether received frames were secure and passed validation.
 };
 
 /**
@@ -422,6 +423,23 @@ public:
      *
      */
     void SetDirectTransmission(void);
+
+    /**
+     * This method indicates whether or not the message was secure and passed validation at the link layer.
+     *
+     * @retval TRUE   If the message was secure and passed validation at the link layer.
+     * @retval FALSE  If the message was not secure or did not pass validation at the link layer.
+     *
+     */
+    bool GetSecurityValid(void) const;
+
+    /**
+     * This method sets whether or not the message was secure and passed validation at the link layer.
+     *
+     * @param[in]  aSecurityValid  TRUE if the message was secure and passed link layer validation, FALSE otherwise.
+     *
+     */
+    void SetSecurityValid(bool aSecurityValid);
 
     /**
      * This method is used to update a checksum value.

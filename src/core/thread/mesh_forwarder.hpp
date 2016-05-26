@@ -160,7 +160,7 @@ private:
     void HandleLowpanHC(uint8_t *aFrame, uint8_t aPayloadLength,
                         const Mac::Address &aMacSource, const Mac::Address &aMacDest,
                         const ThreadMessageInfo &aMessageInfo);
-    void HandleDataRequest(const Mac::Address &aMacSource);
+    void HandleDataRequest(const Mac::Address &aMacSource, const ThreadMessageInfo &aMessageInfo);
     void MoveToResolving(const Ip6::Address &aDestination);
     ThreadError SendPoll(Message &aMessage, Mac::Frame &aFrame);
     ThreadError SendMesh(Message &aMessage, Mac::Frame &aFrame);
@@ -168,6 +168,7 @@ private:
     void UpdateFramePending(void);
     ThreadError UpdateIp6Route(Message &aMessage);
     ThreadError UpdateMeshRoute(Message &aMessage);
+    ThreadError HandleDatagram(Message &aMessage, const ThreadMessageInfo &aMessageInfo);
 
     static void HandleReceivedFrame(void *aContext, Mac::Frame &aFrame, ThreadError aError);
     void HandleReceivedFrame(Mac::Frame &aFrame, ThreadError aError);
