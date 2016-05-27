@@ -436,6 +436,10 @@ SPINEL_API_EXTERN const char *spinel_next_packed_datatype(const char *pack_forma
 
 // ----------------------------------------------------------------------------
 
+SPINEL_API_EXTERN const char* spinel_prop_key_to_cstr(spinel_prop_key_t prop_key);
+
+// ----------------------------------------------------------------------------
+
 __END_DECLS
 
 #endif /* defined(SPINEL_HEADER_INCLUDED) */
