@@ -331,17 +331,17 @@ void NcpBase::HandleActiveScanResult(otActiveScanResult *result)
             SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0,
             SPINEL_CMD_PROP_VALUE_INSERTED,
             SPINEL_PROP_MAC_SCAN_BEACON,
-            "CcT(ESSC)T(iCUD.).",
-            result->mChannel,//chan
-            result->mRssi,//rssi
-            result->mExtAddress.m8,// laddr
-            0xFFFF, // saddr, Not given
-            result->mPanId,//panid
-            0xFF,//lqi, not given
-            SPINEL_PROTOCOL_TYPE_THREAD,//proto
+            "CcT(ESSC.)T(iCUD.).",
+            result->mChannel,
+            result->mRssi,
+            result->mExtAddress.m8, // laddr
+            0xFFFF,                 // saddr, Not given
+            result->mPanId,
+            result->mLqi,
+            SPINEL_PROTOCOL_TYPE_THREAD,
             flags,
-            result->mNetworkName,//networkid
-            result->mExtPanId, sizeof(result->mExtPanId) //xpanid
+            result->mNetworkName,
+            result->mExtPanId, sizeof(result->mExtPanId)
         );
     }
     else

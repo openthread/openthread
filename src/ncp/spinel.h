@@ -282,7 +282,7 @@ typedef enum
     SPINEL_PROP_MAC_SCAN_STATE       = SPINEL_PROP_MAC__BEGIN + 0, ///< [C]
     SPINEL_PROP_MAC_SCAN_MASK        = SPINEL_PROP_MAC__BEGIN + 1, ///< [A(C)]
     SPINEL_PROP_MAC_SCAN_PERIOD      = SPINEL_PROP_MAC__BEGIN + 2, ///< ms-per-channel [S]
-    SPINEL_PROP_MAC_SCAN_BEACON      = SPINEL_PROP_MAC__BEGIN + 3, ///< chan,rssi,(laddr,saddr,panid,lqi),(proto,xtra) [CcT(ESSC)T(i).]
+    SPINEL_PROP_MAC_SCAN_BEACON      = SPINEL_PROP_MAC__BEGIN + 3, ///< chan,rssi,(laddr,saddr,panid,lqi),(proto,xtra) [CcT(ESSC.)T(i).]
     SPINEL_PROP_MAC_15_4_LADDR       = SPINEL_PROP_MAC__BEGIN + 4, ///< [E]
     SPINEL_PROP_MAC_15_4_SADDR       = SPINEL_PROP_MAC__BEGIN + 5, ///< [S]
     SPINEL_PROP_MAC_15_4_PANID       = SPINEL_PROP_MAC__BEGIN + 6, ///< [S]
