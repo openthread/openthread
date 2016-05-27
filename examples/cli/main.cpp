@@ -28,13 +28,9 @@
 
 #include <stdlib.h>
 
-#include <platform/posix/cmdline.h>
-
 #include <openthread.h>
 #include <cli/cli_serial.hpp>
 #include <platform.h>
-
-struct gengetopt_args_info args_info;
 
 Thread::Cli::Serial sCliServer;
 
@@ -44,10 +40,12 @@ void otSignalTaskletPending(void)
 
 int main(int argc, char *argv[])
 {
-    if (cmdline_parser(argc, argv, &args_info) != 0)
+    if (argc != 2)
     {
         exit(1);
     }
+
+    NODE_ID = atoi(argv[1]);
 
     PlatformInit();
     otInit();

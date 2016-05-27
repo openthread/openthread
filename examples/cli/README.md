@@ -20,7 +20,7 @@ Spawn the process:
 
 ```bash
 $ cd openthread/examples/cli
-$ ./soc --nodeid=1 -S
+$ ./soc 1
 ```
 
 Start OpenThread:
@@ -55,7 +55,7 @@ Spawn the process:
 
 ```bash
 $ cd openthread/examples/cli
-$ ./soc --nodeid=2 -S
+$ ./soc 2
 ```
 
 Start OpenThread:

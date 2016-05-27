@@ -40,7 +40,10 @@
 
 #include <openthread.h>
 #include <platform/alarm.h>
+
 #include "platform.h"
+
+uint32_t NODE_ID = 1;
 
 void PlatformInit(void)
 {
@@ -74,3 +77,4 @@ void PlatformProcessDrivers(void)
     PlatformRadioProcess();
     PlatformAlarmProcess();
 }
+

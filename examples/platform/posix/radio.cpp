@@ -38,18 +38,16 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
-#include <platform/posix/cmdline.h>
-
 #include <common/code_utils.hpp>
 #include <common/debug.hpp>
 #include <mac/mac.hpp>
 #include <platform/radio.h>
 
+#include "platform.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-extern struct gengetopt_args_info args_info;
 
 namespace Thread {
 
@@ -112,7 +110,7 @@ void PlatformRadioInit(void)
     struct sockaddr_in sockaddr;
     memset(&sockaddr, 0, sizeof(sockaddr));
     sockaddr.sin_family = AF_INET;
-    sockaddr.sin_port = htons(9000 + args_info.nodeid_arg);
+    sockaddr.sin_port = htons(9000 + NODE_ID);
     sockaddr.sin_addr.s_addr = INADDR_ANY;
 
     s_sockfd = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
@@ -306,7 +304,7 @@ int radioTransmit(void)
 {
     struct sockaddr_in sockaddr;
     RadioMessage message;
-    int rval;
+    int rval = 0;
 
     memset(&sockaddr, 0, sizeof(sockaddr));
     sockaddr.sin_family = AF_INET;
@@ -315,9 +313,9 @@ int radioTransmit(void)
     message.mChannel = s_transmit_frame->mChannel;
     memcpy(message.mPsdu, s_transmit_frame->mPsdu, s_transmit_frame->mLength);
 
-    for (int i = 1; i < 34; i++)
+    for (unsigned i = 1; i < 34; i++)
     {
-        if (args_info.nodeid_arg == i)
+        if (NODE_ID == i)
         {
             continue;
         }
@@ -365,7 +363,7 @@ void PlatformRadioUpdateFdSet(fd_set *aReadFdSet, fd_set *aWriteFdSet, int *aMax
     }
 }
 
-int PlatformRadioProcess(void)
+void PlatformRadioProcess(void)
 {
     const int flags = POLLRDNORM | POLLERR | POLLNVAL | POLLHUP;
     struct pollfd pollfd = { s_sockfd, flags, 0 };
@@ -379,8 +377,6 @@ int PlatformRadioProcess(void)
     {
         radioTransmit();
     }
-
-    return 0;
 }
 
 void radioSendAck(void)
@@ -403,9 +399,9 @@ void radioSendAck(void)
     message.mChannel = s_receive_frame->mChannel;
     memcpy(message.mPsdu, m_ack_packet.mPsdu, m_ack_packet.mLength);
 
-    for (int i = 1; i < 34; i++)
+    for (unsigned i = 1; i < 34; i++)
     {
-        if (args_info.nodeid_arg == i)
+        if (NODE_ID == i)
         {
             continue;
         }

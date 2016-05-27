@@ -44,6 +44,12 @@ extern "C" {
 #endif
 
 /**
+ * Unique ID used by a simulated node.
+ *
+ */
+extern uint32_t NODE_ID;
+
+/**
  * This method performs all platform-specific initialization.
  *
  */
