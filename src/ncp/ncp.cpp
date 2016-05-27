@@ -36,8 +36,6 @@
 
 namespace Thread {
 
-static Tasklet sSendDoneTask(&Ncp::SendDoneTask, NULL);
-static Tasklet sReceiveTask(&Ncp::ReceiveTask, NULL);
 static Ncp *sNcp;
 
 Ncp::Ncp():
@@ -146,17 +144,12 @@ Ncp::OutboundFrameSend(void)
     return errorCode;
 }
 
-extern "C" void otPlatSerialSignalSendDone()
-{
-    sSendDoneTask.Post();
-}
-
-void Ncp::SendDoneTask(void *context)
+extern "C" void otPlatSerialSendDone(void)
 {
     sNcp->SendDoneTask();
 }
 
-void Ncp::SendDoneTask()
+void Ncp::SendDoneTask(void)
 {
     mSending = false;
 
@@ -169,26 +162,14 @@ void Ncp::SendDoneTask()
     super_t::HandleSendDone();
 }
 
-extern "C" void otPlatSerialSignalReceive()
+extern "C" void otPlatSerialReceived(const uint8_t *aBuf, uint16_t aBufLength)
 {
-    sReceiveTask.Post();
+    sNcp->ReceiveTask(aBuf, aBufLength);
 }
 
-void Ncp::ReceiveTask(void *context)
+void Ncp::ReceiveTask(const uint8_t *aBuf, uint16_t aBufLength)
 {
-    sNcp->ReceiveTask();
-}
-
-void Ncp::ReceiveTask()
-{
-    const uint8_t *buf;
-    uint16_t bufLength;
-
-    buf = otPlatSerialGetReceivedBytes(&bufLength);
-
-    mFrameDecoder.Decode(buf, bufLength);
-
-    otPlatSerialHandleReceiveDone();
+    mFrameDecoder.Decode(aBuf, aBufLength);
 }
 
 void Ncp::HandleFrame(void *context, uint8_t *aBuf, uint16_t aBufLength)

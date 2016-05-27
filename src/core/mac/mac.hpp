@@ -366,18 +366,23 @@ public:
     /**
      * This method is called to handle receive events.
      *
-     * @param[in]  aContext  A pointer to arbitrary context information.
+     * @param[in]  aError   ::kThreadError_None when successfully received a frame, ::kThreadError_Abort when reception
+     *                      was aborted and a frame was not received.
      *
      */
-    static void ReceiveDoneTask(void *aContext);
+    void ReceiveDoneTask(ThreadError aError);
 
     /**
      * This method is called to handle transmit events.
      *
-     * @param[in]  aContext  A pointer to arbitrary context information.
+     * @param[in]  aFramePending  TRUE if an ACK frame was received and the Frame Pending bit was set.
+     * @param[in]  aError  ::kThreadError_None when the frame was transmitted, ::kThreadError_NoAck when the frame was
+     *                     transmitted but no ACK was received, ::kThreadError_ChannelAccessFailure when the transmission
+     *                     could not take place due to activity on the channel, ::kThreadError_Abort when transmission
+     *                     was aborted for other reasons.
      *
      */
-    static void TransmitDoneTask(void *aContext);
+    void TransmitDoneTask(bool aRxPending, ThreadError aError);
 
     /**
      * This method returns if an active scan is in progress.
@@ -405,9 +410,6 @@ private:
     void HandleReceiveTimer(void);
 
     void StartCsmaBackoff(void);
-
-    void ReceiveDoneTask(void);
-    void TransmitDoneTask(void);
 
     Tasklet mBeginTransmit;
     Timer mAckTimer;

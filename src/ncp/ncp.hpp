@@ -57,13 +57,11 @@ public:
     virtual ThreadError OutboundFrameSend(void);
 
     static void HandleFrame(void *context, uint8_t *aBuf, uint16_t aBufLength);
-    static void SendDoneTask(void *context);
-    static void ReceiveTask(void *context);
+    void SendDoneTask(void);
+    void ReceiveTask(const uint8_t *aBuf, uint16_t aBufLength);
 
 private:
     void HandleFrame(uint8_t *aBuf, uint16_t aBufLength);
-    void SendDoneTask();
-    void ReceiveTask();
 
     Hdlc::Encoder mFrameEncoder;
     Hdlc::Decoder mFrameDecoder;

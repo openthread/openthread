@@ -30,7 +30,6 @@
 #include <platform/posix/cmdline.h>
 
 #include <ncp/ncp.hpp>
-#include <platform/atomic.h>
 #include <platform.h>
 
 struct gengetopt_args_info args_info;
@@ -43,19 +42,12 @@ void otSignalTaskletPending(void)
 
 int main(int argc, char *argv[])
 {
-    uint32_t atomic_state;
-
-    memset(&args_info, 0, sizeof(args_info));
-
     if (cmdline_parser(argc, argv, &args_info) != 0)
     {
         exit(1);
     }
 
-    hwAlarmInit();
-    hwRadioInit();
-    hwRandomInit();
-
+    PlatformInit();
     otInit();
 
     sNcp.Start();
@@ -63,15 +55,7 @@ int main(int argc, char *argv[])
     while (1)
     {
         otProcessNextTasklet();
-
-        atomic_state = otPlatAtomicBegin();
-
-        if (!otAreTaskletsPending())
-        {
-            hwSleep();
-        }
-
-        otPlatAtomicEnd(atomic_state);
+	PlatformProcessDrivers();
     }
 
     return 0;

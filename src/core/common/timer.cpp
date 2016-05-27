@@ -37,7 +37,6 @@
 
 namespace Thread {
 
-static Tasklet  sTask(&TimerScheduler::FireTimers, NULL);
 static Timer   *sHead = NULL;
 static Timer   *sTail = NULL;
 
@@ -144,25 +143,18 @@ void TimerScheduler::SetAlarm(void)
         }
     }
 
-    if (minRemaining <= 0)
-    {
-        sTask.Post();
-    }
-    else
-    {
-        otPlatAlarmStartAt(now, minRemaining);
-    }
+    otPlatAlarmStartAt(now, minRemaining);
 
 exit:
     {}
 }
 
-extern "C" void otPlatAlarmSignalFired(void)
+extern "C" void otPlatAlarmFired(void)
 {
-    Thread::sTask.Post();
+    TimerScheduler::FireTimers();
 }
 
-void TimerScheduler::FireTimers(void *aContext)
+void TimerScheduler::FireTimers(void)
 {
     uint32_t now = otPlatAlarmGetNow();
     uint32_t elapsed;
