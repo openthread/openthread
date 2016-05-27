@@ -698,6 +698,7 @@ int Lowpan::DecompressBaseHeader(Ip6::Header &ip6Header, const Mac::Address &aMa
                 VerifyOrExit(dstContextValid, error = kThreadError_Parse);
                 ip6Header.GetDestination().m8[1] = cur[0];
                 ip6Header.GetDestination().m8[2] = cur[1];
+                ip6Header.GetDestination().m8[3] = dstContext.mPrefixLength;
                 memcpy(ip6Header.GetDestination().m8 + 4, dstContext.mPrefix, 8);
                 memcpy(ip6Header.GetDestination().m8 + 12, cur + 2, 4);
                 cur += 6;
