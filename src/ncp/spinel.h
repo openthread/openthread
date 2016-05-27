@@ -311,8 +311,10 @@ typedef enum
     SPINEL_PROP_THREAD_NETWORK_DATA    = SPINEL_PROP_THREAD__BEGIN + 6, ///< [D]
     SPINEL_PROP_THREAD_NETWORK_DATA_VERSION
                                        = SPINEL_PROP_THREAD__BEGIN + 7, ///< [S]
+    SPINEL_PROP_THREAD_STABLE_NETWORK_DATA
+                                       = SPINEL_PROP_THREAD__BEGIN + 8, ///< [D]
     SPINEL_PROP_THREAD_STABLE_NETWORK_DATA_VERSION
-                                       = SPINEL_PROP_THREAD__BEGIN + 8, ///< [S]
+                                       = SPINEL_PROP_THREAD__BEGIN + 9,  ///< [S]
     SPINEL_PROP_THREAD__END            = 0x60,
 
     SPINEL_PROP_IPV6__BEGIN          = 0x60,

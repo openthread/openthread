@@ -1010,8 +1010,12 @@ spinel_prop_key_to_cstr(spinel_prop_key_t prop_key)
         ret = "PROP_IPV6_EXT_ROUTE_TABLE";
         break;
 
-    default:
+    case SPINEL_PROP_THREAD_STABLE_NETWORK_DATA:
+        ret = "SPINEL_PROP_THREAD_STABLE_NETWORK_DATA";
         break;
+
+	default:
+		break;
     }
 
     return ret;

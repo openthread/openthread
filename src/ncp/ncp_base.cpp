@@ -95,7 +95,9 @@ const NcpBase::GetPropertyHandlerEntry NcpBase::mGetPropertyHandlerTable[] =
     { SPINEL_PROP_THREAD_LEADER_RID, &NcpBase::GetPropertyHandler_THREAD_LEADER_RID },
     { SPINEL_PROP_THREAD_LEADER_WEIGHT, &NcpBase::GetPropertyHandler_THREAD_LEADER_WEIGHT },
     { SPINEL_PROP_THREAD_LOCAL_LEADER_WEIGHT, &NcpBase::GetPropertyHandler_THREAD_LOCAL_LEADER_WEIGHT },
+    { SPINEL_PROP_THREAD_NETWORK_DATA, &NcpBase::GetPropertyHandler_THREAD_NETWORK_DATA },
     { SPINEL_PROP_THREAD_NETWORK_DATA_VERSION, &NcpBase::GetPropertyHandler_THREAD_NETWORK_DATA_VERSION },
+    { SPINEL_PROP_THREAD_STABLE_NETWORK_DATA, &NcpBase::GetPropertyHandler_THREAD_STABLE_NETWORK_DATA },
     { SPINEL_PROP_THREAD_STABLE_NETWORK_DATA_VERSION, &NcpBase::GetPropertyHandler_THREAD_STABLE_NETWORK_DATA_VERSION },
 
 
@@ -1284,6 +1286,72 @@ void NcpBase::GetPropertyHandler_THREAD_STABLE_NETWORK_DATA_VERSION(uint8_t head
         SPINEL_DATATYPE_UINT8_S,
         otGetStableNetworkDataVersion()
     );
+}
+
+void NcpBase::GetPropertyHandler_THREAD_NETWORK_DATA(uint8_t header, spinel_prop_key_t key)
+{
+    ThreadError errorCode(OutboundFrameBegin());
+    uint8_t network_data[255];
+    uint8_t network_data_len = 255;
+
+    if (errorCode == kThreadError_None)
+    {
+        errorCode = OutboundFrameFeedPacked("Cii", header, SPINEL_CMD_PROP_VALUE_IS, key);
+    }
+
+    if (errorCode == kThreadError_None)
+    {
+        sThreadNetif->GetNetworkDataLocal().GetNetworkData(
+            false, // Stable?
+            network_data,
+            network_data_len
+        );
+
+        errorCode = OutboundFrameFeedData(network_data, network_data_len);
+    }
+
+    if (errorCode == kThreadError_None)
+    {
+        errorCode = OutboundFrameSend();
+    }
+
+    if (errorCode != kThreadError_None)
+    {
+        SendLastStatus(header, SPINEL_STATUS_INTERNAL_ERROR);
+    }
+}
+
+void NcpBase::GetPropertyHandler_THREAD_STABLE_NETWORK_DATA(uint8_t header, spinel_prop_key_t key)
+{
+    ThreadError errorCode(OutboundFrameBegin());
+    uint8_t network_data[255];
+    uint8_t network_data_len = 255;
+
+    if (errorCode == kThreadError_None)
+    {
+        errorCode = OutboundFrameFeedPacked("Cii", header, SPINEL_CMD_PROP_VALUE_IS, key);
+    }
+
+    if (errorCode == kThreadError_None)
+    {
+        sThreadNetif->GetNetworkDataLocal().GetNetworkData(
+            true, // Stable?
+            network_data,
+            network_data_len
+        );
+
+        errorCode = OutboundFrameFeedData(network_data, network_data_len);
+    }
+
+    if (errorCode == kThreadError_None)
+    {
+        errorCode = OutboundFrameSend();
+    }
+
+    if (errorCode != kThreadError_None)
+    {
+        SendLastStatus(header, SPINEL_STATUS_INTERNAL_ERROR);
+    }
 }
 
 void NcpBase::GetPropertyHandler_THREAD_LEADER_RID(uint8_t header, spinel_prop_key_t key)
