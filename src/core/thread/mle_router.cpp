@@ -2768,6 +2768,11 @@ ThreadError MleRouter::AppendChildAddresses(Message &aMessage, Child &aChild)
 
     for (size_t i = 0; i < sizeof(aChild.mIp6Address) / sizeof(aChild.mIp6Address[0]); i++)
     {
+        if (aChild.mIp6Address[i].IsUnspecified())
+        {
+            break;
+        }
+
         if (mNetworkData.GetContext(aChild.mIp6Address[i], context) == kThreadError_None)
         {
             // compressed entry
