@@ -99,7 +99,7 @@ const NcpBase::GetPropertyHandlerEntry NcpBase::mGetPropertyHandlerTable[] =
     { SPINEL_PROP_THREAD_NETWORK_DATA_VERSION, &NcpBase::GetPropertyHandler_THREAD_NETWORK_DATA_VERSION },
     { SPINEL_PROP_THREAD_STABLE_NETWORK_DATA, &NcpBase::GetPropertyHandler_THREAD_STABLE_NETWORK_DATA },
     { SPINEL_PROP_THREAD_STABLE_NETWORK_DATA_VERSION, &NcpBase::GetPropertyHandler_THREAD_STABLE_NETWORK_DATA_VERSION },
-
+    { SPINEL_PROP_THREAD_LOCAL_ROUTES, &NcpBase::NcpBase::GetPropertyHandler_THREAD_LOCAL_ROUTES },
 
     { SPINEL_PROP_IPV6_ML_PREFIX, &NcpBase::GetPropertyHandler_IPV6_ML_PREFIX },
     { SPINEL_PROP_IPV6_ML_ADDR, &NcpBase::GetPropertyHandler_IPV6_ML_ADDR },
@@ -143,11 +143,15 @@ const NcpBase::SetPropertyHandlerEntry NcpBase::mSetPropertyHandlerTable[] =
 const NcpBase::InsertPropertyHandlerEntry NcpBase::mInsertPropertyHandlerTable[] =
 {
     { SPINEL_PROP_IPV6_ADDRESS_TABLE, &NcpBase::NcpBase::InsertPropertyHandler_IPV6_ADDRESS_TABLE },
+    { SPINEL_PROP_THREAD_LOCAL_ROUTES, &NcpBase::NcpBase::InsertPropertyHandler_THREAD_LOCAL_ROUTES },
+    { SPINEL_PROP_THREAD_ON_MESH_NETS, &NcpBase::NcpBase::InsertPropertyHandler_THREAD_ON_MESH_NETS },
 };
 
 const NcpBase::RemovePropertyHandlerEntry NcpBase::mRemovePropertyHandlerTable[] =
 {
     { SPINEL_PROP_IPV6_ADDRESS_TABLE, &NcpBase::NcpBase::RemovePropertyHandler_IPV6_ADDRESS_TABLE },
+    { SPINEL_PROP_THREAD_LOCAL_ROUTES, &NcpBase::NcpBase::RemovePropertyHandler_THREAD_LOCAL_ROUTES },
+    { SPINEL_PROP_THREAD_ON_MESH_NETS, &NcpBase::NcpBase::RemovePropertyHandler_THREAD_ON_MESH_NETS },
 };
 
 // ----------------------------------------------------------------------------
@@ -1517,6 +1521,12 @@ void NcpBase::GetPropertyHandler_IPV6_ROUTE_TABLE(uint8_t header, spinel_prop_ke
     SendLastStatus(header, SPINEL_STATUS_UNIMPLEMENTED);
 }
 
+void NcpBase::GetPropertyHandler_THREAD_LOCAL_ROUTES(uint8_t header, spinel_prop_key_t key)
+{
+    // TODO: Implement get external route table
+    SendLastStatus(header, SPINEL_STATUS_UNIMPLEMENTED);
+}
+
 void NcpBase::GetPropertyHandler_STREAM_NET(uint8_t header, spinel_prop_key_t key)
 {
     // TODO: Implement explicit data poll.
@@ -2298,6 +2308,120 @@ void NcpBase::InsertPropertyHandler_IPV6_ADDRESS_TABLE(uint8_t header, spinel_pr
     }
 }
 
+void NcpBase::InsertPropertyHandler_THREAD_LOCAL_ROUTES(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr,
+                                                      uint16_t value_len)
+{
+    const static int kPreferenceOffset = 6;
+    const static int kPreferenceMask = 3 << kPreferenceOffset;
+
+    spinel_ssize_t parsedLength;
+    ThreadError errorCode = kThreadError_None;
+
+    otExternalRouteConfig ext_route_config = {};
+    otIp6Address *addr_ptr;
+    bool stable = false;
+    uint8_t flags = 0;
+
+    parsedLength = spinel_datatype_unpack(
+                       value_ptr,
+                       value_len,
+                       "6CbC",
+                       &addr_ptr,
+                       &ext_route_config.mPrefix.mLength,
+                       &stable,
+                       &flags
+                   );
+
+    if (parsedLength > 0)
+    {
+        ext_route_config.mPrefix.mPrefix = *addr_ptr;
+        ext_route_config.mStable = stable;
+        ext_route_config.mPreference = ((flags & kPreferenceMask) >> kPreferenceOffset);
+        errorCode = otAddExternalRoute(&ext_route_config);
+
+        if (errorCode == kThreadError_None)
+        {
+            SendPropteryUpdate(
+                header,
+                SPINEL_CMD_PROP_VALUE_INSERTED,
+                key,
+                value_ptr,
+                value_len
+            );
+        }
+        else
+        {
+            SendLastStatus(header, ThreadErrorToSpinelStatus(errorCode));
+        }
+    }
+    else
+    {
+        SendLastStatus(header, SPINEL_STATUS_PARSE_ERROR);
+    }
+}
+
+void NcpBase::InsertPropertyHandler_THREAD_ON_MESH_NETS(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr,
+                                                        uint16_t value_len)
+{
+    const static int kPreferenceOffset = 6;
+    const static int kPreferenceMask = 3 << kPreferenceOffset;
+    const static int kPreferredFlag = 1 << 5;
+    const static int kValidFlag = 1 << 4;
+    const static int kDhcpFlag = 1 << 3;
+    const static int kConfigureFlag = 1 << 2;
+    const static int kDefaultRouteFlag = 1 << 1;
+
+    spinel_ssize_t parsedLength;
+    ThreadError errorCode = kThreadError_None;
+
+    otBorderRouterConfig border_router_config = {};
+    otIp6Address *addr_ptr;
+    bool stable = false;
+    uint8_t flags = 0;
+
+    parsedLength = spinel_datatype_unpack(
+                       value_ptr,
+                       value_len,
+                       "6CbC",
+                       &addr_ptr,
+                       &border_router_config.mPrefix.mLength,
+                       &stable,
+                       &flags
+                   );
+
+    if (parsedLength > 0)
+    {
+        border_router_config.mPrefix.mPrefix = *addr_ptr;
+        border_router_config.mStable = stable;
+        border_router_config.mPreference = ((flags & kPreferenceMask) >> kPreferenceOffset);
+        border_router_config.mSlaacPreferred = ((flags & kPreferredFlag) == kPreferredFlag);
+        border_router_config.mSlaacValid = ((flags & kValidFlag) == kValidFlag);
+        border_router_config.mDhcp = ((flags & kDhcpFlag) == kDhcpFlag);
+        border_router_config.mConfigure = ((flags & kConfigureFlag) == kConfigureFlag);
+        border_router_config.mDefaultRoute = ((flags & kDefaultRouteFlag) == kDefaultRouteFlag);
+
+        errorCode = otAddBorderRouter(&border_router_config);
+
+        if (errorCode == kThreadError_None)
+        {
+            SendPropteryUpdate(
+                header,
+                SPINEL_CMD_PROP_VALUE_INSERTED,
+                key,
+                value_ptr,
+                value_len
+            );
+        }
+        else
+        {
+            SendLastStatus(header, ThreadErrorToSpinelStatus(errorCode));
+        }
+    }
+    else
+    {
+        SendLastStatus(header, SPINEL_STATUS_PARSE_ERROR);
+    }
+}
 
 // ----------------------------------------------------------------------------
 // MARK: Individual Property Removers
@@ -2348,6 +2472,91 @@ void NcpBase::RemovePropertyHandler_IPV6_ADDRESS_TABLE(uint8_t header, spinel_pr
     }
 }
 
+void NcpBase::RemovePropertyHandler_THREAD_LOCAL_ROUTES(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr,
+                                                      uint16_t value_len)
+{
+    spinel_ssize_t parsedLength;
+    ThreadError errorCode = kThreadError_None;
+
+    otIp6Prefix ip6_prefix = {};
+    otIp6Address *addr_ptr;
+
+    parsedLength = spinel_datatype_unpack(
+                       value_ptr,
+                       value_len,
+                       "6C",
+                       &addr_ptr,
+                       &ip6_prefix.mLength
+                   );
+
+    if (parsedLength > 0)
+    {
+        ip6_prefix.mPrefix = *addr_ptr;
+        errorCode = otRemoveExternalRoute(&ip6_prefix);
+
+        if (errorCode == kThreadError_None)
+        {
+            SendPropteryUpdate(
+                header,
+                SPINEL_CMD_PROP_VALUE_REMOVED,
+                key,
+                value_ptr,
+                value_len
+            );
+        }
+        else
+        {
+            SendLastStatus(header, ThreadErrorToSpinelStatus(errorCode));
+        }
+    }
+    else
+    {
+        SendLastStatus(header, SPINEL_STATUS_PARSE_ERROR);
+    }
+}
+
+void NcpBase::RemovePropertyHandler_THREAD_ON_MESH_NETS(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr,
+                                                        uint16_t value_len)
+{
+    spinel_ssize_t parsedLength;
+    ThreadError errorCode = kThreadError_None;
+
+    otIp6Prefix ip6_prefix = {};
+    otIp6Address *addr_ptr;
+
+    parsedLength = spinel_datatype_unpack(
+                       value_ptr,
+                       value_len,
+                       "6C",
+                       &addr_ptr,
+                       &ip6_prefix.mLength
+                   );
+
+    if (parsedLength > 0)
+    {
+        ip6_prefix.mPrefix = *addr_ptr;
+        errorCode = otRemoveBorderRouter(&ip6_prefix);
+
+        if (errorCode == kThreadError_None)
+        {
+            SendPropteryUpdate(
+                header,
+                SPINEL_CMD_PROP_VALUE_REMOVED,
+                key,
+                value_ptr,
+                value_len
+            );
+        }
+        else
+        {
+            SendLastStatus(header, ThreadErrorToSpinelStatus(errorCode));
+        }
+    }
+    else
+    {
+        SendLastStatus(header, SPINEL_STATUS_PARSE_ERROR);
+    }
+}
 
 
 }  // namespace Thread

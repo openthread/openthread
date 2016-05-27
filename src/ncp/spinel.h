@@ -315,15 +315,17 @@ typedef enum
                                        = SPINEL_PROP_THREAD__BEGIN + 8, ///< [D]
     SPINEL_PROP_THREAD_STABLE_NETWORK_DATA_VERSION
                                        = SPINEL_PROP_THREAD__BEGIN + 9,  ///< [S]
+    SPINEL_PROP_THREAD_ON_MESH_NETS    = SPINEL_PROP_THREAD__BEGIN + 10, ///< array(ipv6prefix,prefixlen,stable,flags) [A(T(6CbC))]
+    SPINEL_PROP_THREAD_LOCAL_ROUTES    = SPINEL_PROP_THREAD__BEGIN + 11, ///< array(ipv6prefix,prefixlen,stable,flags) [A(T(6CbC))]
+    SPINEL_PROP_THREAD_ASSISTING_PORTS = SPINEL_PROP_THREAD__BEGIN + 12, ///< array(portn) [A(S)]
     SPINEL_PROP_THREAD__END            = 0x60,
 
     SPINEL_PROP_IPV6__BEGIN          = 0x60,
     SPINEL_PROP_IPV6_LL_ADDR         = SPINEL_PROP_IPV6__BEGIN + 0, ///< [6]
     SPINEL_PROP_IPV6_ML_ADDR         = SPINEL_PROP_IPV6__BEGIN + 1, ///< [6C]
     SPINEL_PROP_IPV6_ML_PREFIX       = SPINEL_PROP_IPV6__BEGIN + 2, ///< [6C]
-    SPINEL_PROP_IPV6_ADDRESS_TABLE   = SPINEL_PROP_IPV6__BEGIN + 3, ///< array(ipv6addr,prefixlen,flags) [A(6CL)]
-    SPINEL_PROP_IPV6_ROUTE_TABLE     = SPINEL_PROP_IPV6__BEGIN + 4, ///< array(ipv6prefix,prefixlen,iface,flags) [A(6CCL)]
-    SPINEL_PROP_IPV6_EXT_ROUTE_TABLE = SPINEL_PROP_IPV6__BEGIN + 5, ///< array(ipv6prefix,prefixlen,flags) [A(6CL)]
+    SPINEL_PROP_IPV6_ADDRESS_TABLE   = SPINEL_PROP_IPV6__BEGIN + 3, ///< array(ipv6addr,prefixlen,flags) [A(T(6CL))]
+    SPINEL_PROP_IPV6_ROUTE_TABLE     = SPINEL_PROP_IPV6__BEGIN + 4, ///< array(ipv6prefix,prefixlen,iface,flags) [A(T(6CCL))]
     SPINEL_PROP_IPV6__END            = 0x70,
 
     SPINEL_PROP_STREAM__BEGIN       = 0x70,

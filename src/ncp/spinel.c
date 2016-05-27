@@ -1006,12 +1006,24 @@ spinel_prop_key_to_cstr(spinel_prop_key_t prop_key)
         ret = "PROP_IPV6_ROUTE_TABLE";
         break;
 
-    case SPINEL_PROP_IPV6_EXT_ROUTE_TABLE:
-        ret = "PROP_IPV6_EXT_ROUTE_TABLE";
+    case SPINEL_PROP_THREAD_PARENT:
+        ret = "SPINEL_PROP_THREAD_PARENT";
         break;
 
     case SPINEL_PROP_THREAD_STABLE_NETWORK_DATA:
         ret = "SPINEL_PROP_THREAD_STABLE_NETWORK_DATA";
+        break;
+
+    case SPINEL_PROP_THREAD_ON_MESH_NETS:
+        ret = "SPINEL_PROP_THREAD_ON_MESH_NETS";
+        break;
+
+    case SPINEL_PROP_THREAD_LOCAL_ROUTES:
+        ret = "PROP_THREAD_LOCAL_ROUTES";
+        break;
+
+    case SPINEL_PROP_THREAD_ASSISTING_PORTS:
+        ret = "PROP_THREAD_ASSISTING_PORTS";
         break;
 
 	default:
