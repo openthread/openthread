@@ -194,6 +194,14 @@ static spinel_status_t ThreadErrorToSpinelStatus(ThreadError error)
         ret = SPINEL_STATUS_INVALID_STATE;
         break;
 
+    case kThreadError_NoAck:
+        ret = SPINEL_STATUS_NO_ACK;
+        break;
+
+    case kThreadError_ChannelAccessFailure:
+        ret = SPINEL_STATUS_CCA_FAILURE;
+        break;
+
     default:
         ret = SPINEL_STATUS_FAILURE;
         break;
@@ -482,7 +490,7 @@ void NcpBase::HandleCommandPropertyGet(uint8_t header, spinel_prop_key_t key)
     }
     else
     {
-        SendLastStatus(header, SPINEL_STATUS_PROPERTY_NOT_FOUND);
+        SendLastStatus(header, SPINEL_STATUS_PROP_NOT_FOUND);
     }
 
 exit:
@@ -523,7 +531,7 @@ void NcpBase::HandleCommandPropertySet(uint8_t header, spinel_prop_key_t key, co
     }
     else
     {
-        SendLastStatus(header, SPINEL_STATUS_PROPERTY_NOT_FOUND);
+        SendLastStatus(header, SPINEL_STATUS_PROP_NOT_FOUND);
     }
 
 exit:
@@ -564,7 +572,7 @@ void NcpBase::HandleCommandPropertyInsert(uint8_t header, spinel_prop_key_t key,
     }
     else
     {
-        SendLastStatus(header, SPINEL_STATUS_PROPERTY_NOT_FOUND);
+        SendLastStatus(header, SPINEL_STATUS_PROP_NOT_FOUND);
     }
 
 exit:
@@ -605,7 +613,7 @@ void NcpBase::HandleCommandPropertyRemove(uint8_t header, spinel_prop_key_t key,
     }
     else
     {
-        SendLastStatus(header, SPINEL_STATUS_PROPERTY_NOT_FOUND);
+        SendLastStatus(header, SPINEL_STATUS_PROP_NOT_FOUND);
     }
 
 exit:

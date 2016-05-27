@@ -69,23 +69,26 @@ __BEGIN_DECLS
 
 typedef enum
 {
-    SPINEL_STATUS_OK                = 0, //!< Operation has completed successfully.
-    SPINEL_STATUS_FAILURE           = 1, //!< Operation has failed for some undefined reason.
+    SPINEL_STATUS_OK                = 0, ///< Operation has completed successfully.
+    SPINEL_STATUS_FAILURE           = 1, ///< Operation has failed for some undefined reason.
 
-    SPINEL_STATUS_UNIMPLEMENTED     = 2,
-    SPINEL_STATUS_INVALID_ARGUMENT  = 3,
-    SPINEL_STATUS_INVALID_STATE     = 4,
-    SPINEL_STATUS_INVALID_COMMAND   = 5,
-    SPINEL_STATUS_INVALID_INTERFACE = 6,
-    SPINEL_STATUS_INTERNAL_ERROR    = 7,
-    SPINEL_STATUS_SECURITY_ERROR    = 8,
-    SPINEL_STATUS_PARSE_ERROR       = 9,
-    SPINEL_STATUS_IN_PROGRESS       = 10,
-    SPINEL_STATUS_NOMEM             = 11,
-    SPINEL_STATUS_BUSY              = 12,
-    SPINEL_STATUS_PROPERTY_NOT_FOUND = 12,
-    SPINEL_STATUS_DROPPED           = 14,
-    SPINEL_STATUS_EMPTY             = 15,
+    SPINEL_STATUS_UNIMPLEMENTED     = 2, ///< Given operation has not been implemented.
+    SPINEL_STATUS_INVALID_ARGUMENT  = 3, ///< An argument to the operation is invalid.
+    SPINEL_STATUS_INVALID_STATE     = 4, ///< This operation is invalid for the current device state.
+    SPINEL_STATUS_INVALID_COMMAND   = 5, ///< This command is not recognized.
+    SPINEL_STATUS_INVALID_INTERFACE = 6, ///< This interface is not supported.
+    SPINEL_STATUS_INTERNAL_ERROR    = 7, ///< An internal runtime error has occured.
+    SPINEL_STATUS_SECURITY_ERROR    = 8, ///< A security/authentication error has occured.
+    SPINEL_STATUS_PARSE_ERROR       = 9, ///< A error has occured while parsing the command.
+    SPINEL_STATUS_IN_PROGRESS       = 10, ///< This operation is in progress.
+    SPINEL_STATUS_NOMEM             = 11, ///< Operation prevented due to memory pressure.
+    SPINEL_STATUS_BUSY              = 12, ///< The device is currently performing an mutually exclusive operation
+    SPINEL_STATUS_PROP_NOT_FOUND    = 12, ///< The given property is not recognized.
+    SPINEL_STATUS_DROPPED           = 14, ///< A/The packet was dropped.
+    SPINEL_STATUS_EMPTY             = 15, ///< The result of the operation is empty.
+    SPINEL_STATUS_CMD_TOO_BIG       = 16, ///< The command was too large to fit in the internal buffer.
+    SPINEL_STATUS_NO_ACK            = 17, ///< The packet was not acknowledged.
+    SPINEL_STATUS_CCA_FAILURE       = 18, ///< The packet was not sent due to a CCA failure.
 
     SPINEL_STATUS_RESET__BEGIN      = 112,
     SPINEL_STATUS_RESET_POWER_ON    = SPINEL_STATUS_RESET__BEGIN + 0,
