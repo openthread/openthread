@@ -261,7 +261,9 @@ void NcpBase::HandleDatagramFromStack(Message &message)
                             "CiiS",
                             SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0,
                             SPINEL_CMD_PROP_VALUE_IS,
-                            SPINEL_PROP_STREAM_NET,
+                            message.GetSecurityValid()
+                            ? SPINEL_PROP_STREAM_NET
+                            : SPINEL_PROP_STREAM_NET_INSECURE,
                             message.GetLength()
                         );
         }
@@ -2111,7 +2113,59 @@ void NcpBase::SetPropertyHandler_THREAD_LOCAL_LEADER_WEIGHT(uint8_t header, spin
 
 void NcpBase::SetPropertyHandler_STREAM_NET_INSECURE(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr, uint16_t value_len)
 {
-    SendLastStatus(header, SPINEL_STATUS_UNIMPLEMENTED);
+    spinel_ssize_t parsedLength;
+    ThreadError errorCode = kThreadError_None;
+    const uint8_t *frame_ptr(NULL);
+    unsigned int frame_len(0);
+    const uint8_t *meta_ptr(NULL);
+    unsigned int meta_len(0);
+    Message *message(Ip6::Ip6::NewMessage(0));
+
+    if (message == NULL)
+    {
+        errorCode = kThreadError_NoBufs;
+    }
+    else
+    {
+        // STREAM_NET_INSECURE packets are not secured at layer 2.
+        message->SetSecurityValid(false);
+
+        parsedLength = spinel_datatype_unpack(
+                           value_ptr,
+                           value_len,
+                           SPINEL_DATATYPE_DATA_S SPINEL_DATATYPE_DATA_S,
+                           &frame_ptr,
+                           &frame_len,
+                           &meta_ptr,
+                           &meta_len
+                       );
+
+        // We ignore metadata for now.
+        // May later include TX power, allow retransmits, etc...
+        (void)meta_ptr;
+        (void)meta_len;
+
+        errorCode = message->Append(frame_ptr, frame_len);
+    }
+
+    if (errorCode == kThreadError_None)
+    {
+        errorCode = Ip6::Ip6::HandleDatagram(*message, NULL, sThreadNetif->GetInterfaceId(), NULL, true);
+    }
+
+    if (errorCode == kThreadError_None)
+    {
+        if (SPINEL_HEADER_GET_TID(header) != 0)
+        {
+            // Only send a successful status update if
+            // there was a transaction id in the header.
+            SendLastStatus(header, SPINEL_STATUS_OK);
+        }
+    }
+    else
+    {
+        SendLastStatus(header, ThreadErrorToSpinelStatus(errorCode));
+    }
 }
 
 void NcpBase::SetPropertyHandler_STREAM_NET(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr, uint16_t value_len)
@@ -2130,6 +2184,9 @@ void NcpBase::SetPropertyHandler_STREAM_NET(uint8_t header, spinel_prop_key_t ke
     }
     else
     {
+        // STREAM_NET requires layer 2 security.
+        message->SetSecurityValid(true);
+
         parsedLength = spinel_datatype_unpack(
                            value_ptr,
                            value_len,
@@ -2141,6 +2198,7 @@ void NcpBase::SetPropertyHandler_STREAM_NET(uint8_t header, spinel_prop_key_t ke
                        );
 
         // We ignore metadata for now.
+        // May later include TX power, allow retransmits, etc...
         (void)meta_ptr;
         (void)meta_len;
 
