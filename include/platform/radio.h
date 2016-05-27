@@ -295,6 +295,13 @@ int8_t otPlatRadioGetNoiseFloor(void);
 otRadioCaps otPlatRadioGetCaps(void);
 
 /**
+ * Enable or disable promiscuous mode.
+ *
+ * @param[in]  aEnable  A value to enable or disable promiscuous mode.
+ */
+void otPlatRadioPromiscuous(bool aEnable);
+
+/**
  * @}
  *
  */

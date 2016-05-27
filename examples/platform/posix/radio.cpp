@@ -87,6 +87,9 @@ static pthread_mutex_t s_mutex = PTHREAD_MUTEX_INITIALIZER;
 static pthread_cond_t s_condition_variable = PTHREAD_COND_INITIALIZER;
 static int s_sockfd;
 
+static bool s_promiscuous = false;
+static uint8_t s_wellknown_nodeid = 34;
+
 ThreadError otPlatRadioSetPanId(uint16_t panid)
 {
     s_panid = panid;
@@ -114,7 +117,14 @@ void hwRadioInit()
     struct sockaddr_in sockaddr;
     memset(&sockaddr, 0, sizeof(sockaddr));
     sockaddr.sin_family = AF_INET;
-    sockaddr.sin_port = htons(9000 + args_info.nodeid_arg);
+    if (s_promiscuous)
+    {
+        sockaddr.sin_port = htons(9000 + s_wellknown_nodeid);
+    }
+    else
+    {
+        sockaddr.sin_port = htons(9000 + args_info.nodeid_arg);
+    }
     sockaddr.sin_addr.s_addr = INADDR_ANY;
 
     s_sockfd = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
@@ -230,7 +240,7 @@ ThreadError otPlatRadioTransmit(RadioPacket *packet)
     message.mChannel = s_transmit_frame->mChannel;
     memcpy(message.mPsdu, s_transmit_frame->mPsdu, s_transmit_frame->mLength);
 
-    for (int i = 1; i < 34; i++)
+    for (int i = 1; i < s_wellknown_nodeid; i++)
     {
         if (args_info.nodeid_arg == i)
         {
@@ -240,6 +250,8 @@ ThreadError otPlatRadioTransmit(RadioPacket *packet)
         sockaddr.sin_port = htons(9000 + i);
         sendto(s_sockfd, &message, 1 + s_transmit_frame->mLength, 0, (struct sockaddr *)&sockaddr, sizeof(sockaddr));
     }
+    sockaddr.sin_port = htons(9000 + s_wellknown_nodeid);
+    sendto(s_sockfd, &message, 1 + s_transmit_frame->mLength, 0, (struct sockaddr *)&sockaddr, sizeof(sockaddr));
 
     if (reinterpret_cast<Mac::Frame *>(s_transmit_frame)->GetAckRequest())
     {
@@ -263,6 +275,11 @@ int8_t otPlatRadioGetNoiseFloor()
 otRadioCaps otPlatRadioGetCaps()
 {
     return kRadioCapsNone;
+}
+
+void otPlatRadioPromiscuous(bool aEnable)
+{
+    s_promiscuous = aEnable;
 }
 
 ThreadError otPlatRadioHandleTransmitDone(bool *rxPending)
@@ -414,7 +431,7 @@ void send_ack()
     message.mChannel = s_receive_frame->mChannel;
     memcpy(message.mPsdu, m_ack_packet.mPsdu, m_ack_packet.mLength);
 
-    for (int i = 1; i < 34; i++)
+    for (int i = 1; i < s_wellknown_nodeid; i++)
     {
         if (args_info.nodeid_arg == i)
         {
@@ -424,6 +441,8 @@ void send_ack()
         sockaddr.sin_port = htons(9000 + i);
         sendto(s_sockfd, &message, 1 + m_ack_packet.mLength, 0, (struct sockaddr *)&sockaddr, sizeof(sockaddr));
     }
+    sockaddr.sin_port = htons(9000 + s_wellknown_nodeid);
+    sendto(s_sockfd, &message, 1 + m_ack_packet.mLength, 0, (struct sockaddr *)&sockaddr, sizeof(sockaddr));
 }
 
 ThreadError otPlatRadioHandleReceiveDone()
@@ -434,6 +453,7 @@ ThreadError otPlatRadioHandleReceiveDone()
     Mac::Address dstaddr;
 
     VerifyOrExit(s_state == kStateReceive, error = kThreadError_InvalidState);
+    VerifyOrExit(s_promiscuous == false, error = kThreadError_None);
 
     receive_frame = reinterpret_cast<Mac::Frame *>(s_receive_frame);
 
