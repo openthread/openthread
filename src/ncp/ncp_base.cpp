@@ -117,7 +117,7 @@ const NcpBase::SetPropertyHandlerEntry NcpBase::mSetPropertyHandlerTable[] =
     { SPINEL_PROP_PHY_ENABLED, &NcpBase::SetPropertyHandler_PHY_ENABLED },
     { SPINEL_PROP_PHY_TX_POWER, &NcpBase::NcpBase::SetPropertyHandler_PHY_TX_POWER },
     { SPINEL_PROP_PHY_CHAN, &NcpBase::NcpBase::SetPropertyHandler_PHY_CHAN },
-    { SPINEL_PROP_PHY_MODE, &NcpBase::SetPropertyHandler_PHY_MODE },
+    { SPINEL_PROP_MAC_FILTER_MODE, &NcpBase::SetPropertyHandler_MAC_FILTER_MODE },
 
     { SPINEL_PROP_MAC_SCAN_MASK, &NcpBase::NcpBase::SetPropertyHandler_MAC_SCAN_MASK },
     { SPINEL_PROP_MAC_SCAN_STATE, &NcpBase::NcpBase::SetPropertyHandler_MAC_SCAN_STATE },
@@ -1634,7 +1634,7 @@ void NcpBase::SetPropertyHandler_PHY_CHAN(uint8_t header, spinel_prop_key_t key,
     }
 }
 
-void NcpBase::SetPropertyHandler_PHY_MODE(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr,
+void NcpBase::SetPropertyHandler_MAC_FILTER_MODE(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr,
                                           uint16_t value_len)
 {
     uint8_t i = 0;
@@ -1654,12 +1654,12 @@ void NcpBase::SetPropertyHandler_PHY_MODE(uint8_t header, spinel_prop_key_t key,
 
         /* Uncomment when API is available.
         switch (i) {
-        case SPINEL_PHY_MODE_NORMAL:
+        case SPINEL_MAC_FILTER_MODE_NORMAL:
             errorCode = otPlatRadioSetPromiscuous(false);
             break;
 
-        case SPINEL_PHY_MODE_PROMISCUOUS:
-        case SPINEL_PHY_MODE_MONITOR:
+        case SPINEL_MAC_FILTER_MODE_PROMISCUOUS:
+        case SPINEL_MAC_FILTER_MODE_MONITOR:
             errorCode = otPlatRadioSetPromiscuous(true);
             break;
         }

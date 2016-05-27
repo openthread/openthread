@@ -255,7 +255,7 @@ private:
                                            uint16_t value_len);
     void SetPropertyHandler_PHY_ENABLED(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr,
                                         uint16_t value_len);
-    void SetPropertyHandler_PHY_MODE(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr,
+    void SetPropertyHandler_MAC_FILTER_MODE(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr,
                                      uint16_t value_len);
     void SetPropertyHandler_MAC_SCAN_PERIOD(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr,
                                             uint16_t value_len);

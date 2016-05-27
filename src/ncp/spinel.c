@@ -882,12 +882,12 @@ spinel_prop_key_to_cstr(spinel_prop_key_t prop_key)
         ret = "PROP_PHY_RSSI";
         break;
 
-    case SPINEL_PROP_PHY_RAW_STREAM_ENABLED:
-        ret = "PROP_PHY_RAW_STREAM_ENABLED";
+    case SPINEL_PROP_MAC_RAW_STREAM_ENABLED:
+        ret = "PROP_MAC_RAW_STREAM_ENABLED";
         break;
 
-    case SPINEL_PROP_PHY_MODE:
-        ret = "PROP_PHY_MODE";
+    case SPINEL_PROP_MAC_FILTER_MODE:
+        ret = "PROP_MAC_FILTER_MODE";
         break;
 
     case SPINEL_PROP_MAC_SCAN_STATE:
