@@ -26,18 +26,16 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <assert.h>
 #include <fcntl.h>
-#include <pthread.h>
-#include <semaphore.h>
+#include <poll.h>
 #include <stdlib.h>
 #include <termios.h>
 #include <unistd.h>
 
 #include <common/code_utils.hpp>
-#include <platform/posix/cmdline.h>
 #include <platform/serial.h>
-
-static void *serial_receive_thread(void *arg);
+#include "platform.h"
 
 #ifdef OPENTHREAD_TARGET_LINUX
 int posix_openpt(int oflag);
@@ -46,23 +44,21 @@ int unlockpt(int fd);
 char *ptsname(int fd);
 #endif  // OPENTHREAD_TARGET_LINUX
 
-extern struct gengetopt_args_info args_info;
-
 static uint8_t s_receive_buffer[128];
+static const uint8_t *s_write_buffer;
+static uint16_t s_write_length;
 static int s_in_fd;
 static int s_out_fd;
-static pthread_t s_pthread;
-static sem_t *s_semaphore;
 
 static struct termios original_stdin_termios;
 static struct termios original_stdout_termios;
 
-static void restore_stdin_termios()
+static void restore_stdin_termios(void)
 {
     tcsetattr(s_in_fd, TCSAFLUSH, &original_stdin_termios);
 }
 
-static void restore_stdout_termios()
+static void restore_stdout_termios(void)
 {
     tcsetattr(s_out_fd, TCSAFLUSH, &original_stdout_termios);
 }
@@ -71,57 +67,21 @@ ThreadError otPlatSerialEnable(void)
 {
     ThreadError error = kThreadError_None;
     struct termios termios;
-    char *path;
-    char cmd[256];
 
-    if (args_info.stdserial_given == 1)
+    s_in_fd = dup(STDIN_FILENO);
+    s_out_fd = dup(STDOUT_FILENO);
+    dup2(STDERR_FILENO, STDOUT_FILENO);
+
+    if (isatty(s_in_fd))
     {
-        s_in_fd = dup(STDIN_FILENO);
-        s_out_fd = dup(STDOUT_FILENO);
-        dup2(STDERR_FILENO, STDOUT_FILENO);
-
-        if (isatty(s_in_fd))
-        {
-            tcgetattr(s_in_fd, &original_stdin_termios);
-            atexit(&restore_stdin_termios);
-        }
-
-        if (isatty(s_out_fd))
-        {
-            tcgetattr(s_out_fd, &original_stdin_termios);
-            atexit(&restore_stdout_termios);
-        }
+        tcgetattr(s_in_fd, &original_stdin_termios);
+        atexit(&restore_stdin_termios);
     }
-    else
+
+    if (isatty(s_out_fd))
     {
-        // open file
-#ifdef OPENTHREAD_TARGET_DARWIN
-
-        asprintf(&path, "/dev/ptyp%d", args_info.nodeid_arg);
-        VerifyOrExit((s_in_fd = open(path, O_RDWR | O_NOCTTY)) >= 0, perror("posix_openpt"); error = kThreadError_Error);
-        free(path);
-
-        // print pty path
-        printf("/dev/ttyp%d\n", args_info.nodeid_arg);
-
-#elif defined(OPENTHREAD_TARGET_LINUX)
-
-        VerifyOrExit((s_in_fd = posix_openpt(O_RDWR | O_NOCTTY)) >= 0, perror("posix_openpt"); error = kThreadError_Error);
-        VerifyOrExit(grantpt(s_in_fd) == 0, perror("grantpt"); error = kThreadError_Error);
-        VerifyOrExit(unlockpt(s_in_fd) == 0, perror("unlockpt"); error = kThreadError_Error);
-
-        // print pty path
-        VerifyOrExit((path = ptsname(s_in_fd)) != NULL, perror("ptsname"); error = kThreadError_Error);
-        printf("%s\n", path);
-
-#else
-#error "Unknown platform."
-#endif
-
-        // check if file descriptor is pointing to a TTY device
-        VerifyOrExit(isatty(s_in_fd), error = kThreadError_Error);
-
-        s_out_fd = dup(s_in_fd);
+        tcgetattr(s_out_fd, &original_stdin_termios);
+        atexit(&restore_stdout_termios);
     }
 
     if (isatty(s_in_fd))
@@ -171,10 +131,6 @@ ThreadError otPlatSerialEnable(void)
         VerifyOrExit(tcsetattr(s_out_fd, TCSANOW, &termios) == 0, perror("tcsetattr"); error = kThreadError_Error);
     }
 
-    snprintf(cmd, sizeof(cmd), "thread_serial_semaphore_%d", args_info.nodeid_arg);
-    s_semaphore = sem_open(cmd, O_CREAT, 0644, 0);
-    pthread_create(&s_pthread, NULL, &serial_receive_thread, NULL);
-
     return error;
 
 exit:
@@ -197,54 +153,56 @@ ThreadError otPlatSerialSend(const uint8_t *aBuf, uint16_t aBufLength)
 {
     ThreadError error = kThreadError_None;
 
-    VerifyOrExit(write(s_out_fd, aBuf, aBufLength) >= 0, error = kThreadError_Error);
-    otPlatSerialSignalSendDone();
+    VerifyOrExit(s_write_length == 0, error = kThreadError_Busy);
+
+    s_write_buffer = aBuf;
+    s_write_length = aBufLength;
 
 exit:
     return error;
 }
 
-void otPlatSerialHandleSendDone(void)
+void PlatformSerialUpdateFdSet(fd_set *aReadFdSet, fd_set *aWriteFdSet, int *aMaxFd)
 {
-}
-
-void *serial_receive_thread(void *aContext)
-{
-    fd_set fds;
-    int rval;
-
-    while (1)
+    if (aReadFdSet != NULL)
     {
-        FD_ZERO(&fds);
-        FD_SET(s_in_fd, &fds);
+        FD_SET(s_in_fd, aReadFdSet);
 
-        rval = select(s_in_fd + 1, &fds, NULL, NULL, NULL);
-
-        if (rval >= 0 && FD_ISSET(s_in_fd, &fds))
+        if (aMaxFd != NULL && *aMaxFd < s_in_fd)
         {
-            otPlatSerialSignalReceive();
-            sem_wait(s_semaphore);
+            *aMaxFd = s_in_fd;
         }
     }
 
-    return NULL;
+    if (aWriteFdSet != NULL && s_write_length > 0)
+    {
+        FD_SET(s_out_fd, aWriteFdSet);
+
+        if (aMaxFd != NULL && *aMaxFd < s_out_fd)
+        {
+            *aMaxFd = s_out_fd;
+        }
+    }
 }
 
-const uint8_t *otPlatSerialGetReceivedBytes(uint16_t *aBufLength)
+void PlatformSerialProcess(void)
 {
-    size_t length;
+    const int flags = POLLRDNORM | POLLERR | POLLNVAL | POLLHUP;
+    struct pollfd pollfd = { s_in_fd, flags, 0 };
+    int rval;
 
-    length = read(s_in_fd, s_receive_buffer, sizeof(s_receive_buffer));
-
-    if (aBufLength != NULL)
+    if (poll(&pollfd, 1, 0) > 0 && (pollfd.revents & flags) != 0)
     {
-        *aBufLength = length;
+        rval = read(s_in_fd, s_receive_buffer, sizeof(s_receive_buffer));
+        assert(rval >= 0);
+        otPlatSerialReceived(s_receive_buffer, rval);
     }
 
-    return s_receive_buffer;
-}
-
-void otPlatSerialHandleReceiveDone(void)
-{
-    sem_post(s_semaphore);
+    if (s_write_length > 0)
+    {
+        rval = write(s_out_fd, s_write_buffer, s_write_length);
+        assert(rval >= 0);
+        s_write_length = 0;
+        otPlatSerialSendDone();
+    }
 }

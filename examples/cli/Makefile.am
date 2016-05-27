@@ -44,7 +44,6 @@ soc_LDADD                                                      =  \
     $(top_builddir)/src/cli/libopenthread-cli.a                   \
     $(top_builddir)/examples/platform/posix/libopenthread-posix.a \
     $(top_builddir)/third_party/mbedtls/libmbedcrypto.a           \
-    -lpthread                                                     \
     $(NULL)
 
 soc_SOURCES                                                    = \

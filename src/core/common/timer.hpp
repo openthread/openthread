@@ -95,7 +95,7 @@ public:
      * @param[in]  aContext  A pointer to arbitrary context information.
      *
      */
-    static void FireTimers(void *aContext);
+    static void FireTimers(void);
 
 private:
     static void SetAlarm(void);

@@ -52,16 +52,14 @@ libopenthread_posix_a_CXXFLAGS            = \
 
 libopenthread_posix_a_SOURCES             = \
     alarm.c                                 \
-    atomic.c                                \
-    cmdline.c                               \
     logging.c                               \
+    platform.c                              \
     radio.cpp                               \
     random.c                                \
     serial.c                                \
     $(NULL)
 
 include_HEADERS                           = \
-    cmdline.h                               \
     platform.h                              \
     $(NULL)
 

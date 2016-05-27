@@ -28,14 +28,9 @@
 
 #include <stdlib.h>
 
-#include <platform/posix/cmdline.h>
-
 #include <openthread.h>
 #include <cli/cli_serial.hpp>
-#include <platform/atomic.h>
 #include <platform.h>
-
-struct gengetopt_args_info args_info;
 
 Thread::Cli::Serial sCliServer;
 
@@ -45,32 +40,21 @@ void otSignalTaskletPending(void)
 
 int main(int argc, char *argv[])
 {
-    uint32_t atomic_state;
-
-    if (cmdline_parser(argc, argv, &args_info) != 0)
+    if (argc != 2)
     {
         exit(1);
     }
 
-    hwAlarmInit();
-    hwRadioInit();
-    hwRandomInit();
+    NODE_ID = atoi(argv[1]);
 
+    PlatformInit();
     otInit();
     sCliServer.Start();
 
     while (1)
     {
         otProcessNextTasklet();
-
-        atomic_state = otPlatAtomicBegin();
-
-        if (!otAreTaskletsPending())
-        {
-            hwSleep();
-        }
-
-        otPlatAtomicEnd(atomic_state);
+        PlatformProcessDrivers();
     }
 
     return 0;

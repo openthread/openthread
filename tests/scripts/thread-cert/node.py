@@ -57,7 +57,7 @@ class Node:
             cmd = '%s/examples/cli/soc' % srcdir
         else:
             cmd = './soc'
-        cmd += ' --nodeid=%d -S' % nodeid
+        cmd += ' %d' % nodeid
         print cmd
 
         self.pexpect = pexpect.spawn(cmd, timeout=2)

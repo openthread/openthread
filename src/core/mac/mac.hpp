@@ -366,18 +366,24 @@ public:
     /**
      * This method is called to handle receive events.
      *
-     * @param[in]  aContext  A pointer to arbitrary context information.
+     * @param[in]  aFrame  A pointer to the received frame, or NULL if the receive operation aborted.
+     * @param[in]  aError  ::kThreadError_None when successfully received a frame, ::kThreadError_Abort when reception
+     *                     was aborted and a frame was not received.
      *
      */
-    static void ReceiveDoneTask(void *aContext);
+    void ReceiveDoneTask(Frame *aFrame, ThreadError aError);
 
     /**
      * This method is called to handle transmit events.
      *
-     * @param[in]  aContext  A pointer to arbitrary context information.
+     * @param[in]  aFramePending  TRUE if an ACK frame was received and the Frame Pending bit was set.
+     * @param[in]  aError  ::kThreadError_None when the frame was transmitted, ::kThreadError_NoAck when the frame was
+     *                     transmitted but no ACK was received, ::kThreadError_ChannelAccessFailure when the transmission
+     *                     could not take place due to activity on the channel, ::kThreadError_Abort when transmission
+     *                     was aborted for other reasons.
      *
      */
-    static void TransmitDoneTask(void *aContext);
+    void TransmitDoneTask(bool aRxPending, ThreadError aError);
 
     /**
      * This method returns if an active scan is in progress.
@@ -388,14 +394,14 @@ public:
 private:
     void GenerateNonce(const ExtAddress &aAddress, uint32_t aFrameCounter, uint8_t aSecurityLevel, uint8_t *aNonce);
     void NextOperation(void);
-    void ProcessTransmitSecurity(void);
-    ThreadError ProcessReceiveSecurity(const Address &aSrcAddr, Neighbor *aNeighbor);
+    void ProcessTransmitSecurity(Frame &aFrame);
+    ThreadError ProcessReceiveSecurity(Frame &aFrame, const Address &aSrcAddr, Neighbor *aNeighbor);
     void ScheduleNextTransmission(void);
     void SentFrame(bool aAcked);
     void SendBeaconRequest(Frame &aFrame);
     void SendBeacon(Frame &aFrame);
     void StartBackoff(void);
-    ThreadError HandleMacCommand(void);
+    ThreadError HandleMacCommand(Frame &aFrame);
 
     static void HandleAckTimer(void *aContext);
     void HandleAckTimer(void);
@@ -405,9 +411,6 @@ private:
     void HandleReceiveTimer(void);
 
     void StartCsmaBackoff(void);
-
-    void ReceiveDoneTask(void);
-    void TransmitDoneTask(void);
 
     Tasklet mBeginTransmit;
     Timer mAckTimer;
@@ -424,8 +427,6 @@ private:
 
     Beacon mBeacon;
 
-    Frame mSendFrame;
-    Frame mReceiveFrame;
     Sender *mSendHead, *mSendTail;
     Receiver *mReceiveHead, *mReceiveTail;
 

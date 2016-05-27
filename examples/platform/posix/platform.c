@@ -26,28 +26,56 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <pthread.h>
-#include <stdio.h>
+/**
+ * @file
+ * @brief
+ *   This file includes the platform-specific initializers.
+ */
 
-#include <platform/atomic.h>
-#include <platform/posix/platform.h>
+#include <assert.h>
+#include <errno.h>
+#include <stddef.h>
+#include <stdint.h>
+#include <sys/time.h>
 
-static pthread_mutex_t s_mutex = PTHREAD_MUTEX_INITIALIZER;
-static pthread_cond_t s_cond = PTHREAD_COND_INITIALIZER;
+#include <openthread.h>
+#include <platform/alarm.h>
 
-uint32_t otPlatAtomicBegin(void)
+#include "platform.h"
+
+uint32_t NODE_ID = 1;
+uint32_t WELLKNOWN_NODE_ID = 34;
+
+void PlatformInit(void)
 {
-    pthread_mutex_lock(&s_mutex);
-    return 0;
+    PlatformAlarmInit();
+    PlatformRadioInit();
+    PlatformRandomInit();
 }
 
-void otPlatAtomicEnd(uint32_t state)
+void PlatformProcessDrivers(void)
 {
-    pthread_mutex_unlock(&s_mutex);
-    pthread_cond_signal(&s_cond);
+    fd_set read_fds;
+    fd_set write_fds;
+    int max_fd = -1;
+    struct timeval timeout;
+    int rval;
+
+    FD_ZERO(&read_fds);
+    FD_ZERO(&write_fds);
+
+    PlatformSerialUpdateFdSet(&read_fds, &write_fds, &max_fd);
+    PlatformRadioUpdateFdSet(&read_fds, &write_fds, &max_fd);
+    PlatformAlarmUpdateTimeout(&timeout);
+
+    if (!otAreTaskletsPending())
+    {
+        rval = select(max_fd + 1, &read_fds, &write_fds, NULL, &timeout);
+        assert(rval >= 0 && errno != ETIME);
+    }
+
+    PlatformSerialProcess();
+    PlatformRadioProcess();
+    PlatformAlarmProcess();
 }
 
-void hwSleep(void)
-{
-    pthread_cond_wait(&s_cond, &s_mutex);
-}

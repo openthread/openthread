@@ -50,9 +50,6 @@ static const char sEraseString[] = {'\b', ' ', '\b'};
 static const char CRNL[] = {'\r', '\n'};
 static Serial *sServer;
 
-Tasklet Serial::sReceiveTask(&ReceiveTask, NULL);
-Tasklet Serial::sSendDoneTask(&SendDoneTask, NULL);
-
 Serial::Serial(void)
 {
     sServer = this;
@@ -68,28 +65,20 @@ ThreadError Serial::Start(void)
     return kThreadError_None;
 }
 
-extern "C" void otPlatSerialSignalReceive(void)
+extern "C" void otPlatSerialReceived(const uint8_t *aBuf, uint16_t aBufLength)
 {
-    Serial::sReceiveTask.Post();
+    sServer->ReceiveTask(aBuf, aBufLength);
 }
 
-void Serial::ReceiveTask(void *aContext)
+void Serial::ReceiveTask(const uint8_t *aBuf, uint16_t aBufLength)
 {
-    sServer->ReceiveTask();
-}
-
-void Serial::ReceiveTask(void)
-{
-    uint16_t bufLength;
-    const uint8_t *buf;
     const uint8_t *end;
 
-    buf = otPlatSerialGetReceivedBytes(&bufLength);
-    end = buf + bufLength;
+    end = aBuf + aBufLength;
 
-    for (; buf < end; buf++)
+    for (; aBuf < end; aBuf++)
     {
-        switch (*buf)
+        switch (*aBuf)
         {
         case '\r':
         case '\n':
@@ -115,13 +104,11 @@ void Serial::ReceiveTask(void)
             break;
 
         default:
-            Output(reinterpret_cast<const char *>(buf), 1);
-            mRxBuffer[mRxLength++] = *buf;
+            Output(reinterpret_cast<const char *>(aBuf), 1);
+            mRxBuffer[mRxLength++] = *aBuf;
             break;
         }
     }
-
-    otPlatSerialHandleReceiveDone();
 }
 
 ThreadError Serial::ProcessCommand(void)
@@ -148,7 +135,7 @@ ThreadError Serial::ProcessCommand(void)
 int Serial::Output(const char *aBuf, uint16_t aBufLength)
 {
     uint16_t remaining = kTxBufferSize - mTxLength;
-    uint16_t tail = (mTxHead + mTxLength) % kTxBufferSize;
+    uint16_t tail;
 
     if (aBufLength > remaining)
     {
@@ -183,7 +170,7 @@ void Serial::Send(void)
 {
     VerifyOrExit(mSendLength == 0, ;);
 
-    if (mTxHead + mTxLength > kTxBufferSize)
+    if (mTxLength > kTxBufferSize - mTxHead)
     {
         mSendLength = kTxBufferSize - mTxHead;
     }
@@ -201,12 +188,7 @@ exit:
     return;
 }
 
-extern "C" void otPlatSerialSignalSendDone(void)
-{
-    Serial::sSendDoneTask.Post();
-}
-
-void Serial::SendDoneTask(void *aContext)
+extern "C" void otPlatSerialSendDone(void)
 {
     sServer->SendDoneTask();
 }

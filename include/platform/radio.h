@@ -95,12 +95,12 @@ typedef enum otRadioCaps
  */
 typedef struct RadioPacket
 {
-    uint8_t mLength;                   ///< Length of the PSDU.
-    uint8_t mPsdu[kMaxPHYPacketSize];  ///< The PSDU.
-    uint8_t mChannel;                  ///< Channel used to transmit/receive the frame.
-    int8_t  mPower;                    ///< Transmit/receive power in dBm.
-    uint8_t mLqi;                      ///< Link Quality Indicator for received frames.
-    bool    mSecurityValid;            ///< Security Enabled flag is set and frame passes security checks.
+    uint8_t *mPsdu;          ///< The PSDU.
+    uint8_t mLength;         ///< Length of the PSDU.
+    uint8_t mChannel;        ///< Channel used to transmit/receive the frame.
+    int8_t  mPower;          ///< Transmit/receive power in dBm.
+    uint8_t mLqi;            ///< Link Quality Indicator for received frames.
+    bool    mSecurityValid;  ///< Security Enabled flag is set and frame passes security checks.
 } RadioPacket;
 
 /**
@@ -208,77 +208,60 @@ ThreadError otPlatRadioIdle(void);
  * 2. Remain in Receive until a packet is received or reception is aborted.
  * 3. Return to Idle.
  *
- * Upon completion of the receive sequence, otPlatRadioSignalReceiveDone() is called to signal completion to the MAC
- * layer.
- *
- * @param[in]  aPacket  A pointer to a packet buffer.
- *
- * @note The channel is specified in @p aPacket.
+ * @param[in]  aChannel  The channel to use for receiving.
  *
  * @retval ::kThreadError_None  Successfully transitioned to Receive.
  * @retval ::kThreadError_Fail  Failed to transition to Receive.
  */
-ThreadError otPlatRadioReceive(RadioPacket *aPacket);
+ThreadError otPlatRadioReceive(uint8_t aChannel);
 
 /**
- * Signal that a packet has been received.
+ * The radio driver calls this method to notify OpenThread of a received packet.
  *
- * This may be called from interrupt context.  The MAC layer will then schedule a call to otPlatRadioHandleReceive().
- */
-
-extern void otPlatRadioSignalReceiveDone(void);
-
-/**
- * Complete the receive sequence.
+ * @param[in]  aError   ::kThreadError_None when successfully received a frame, ::kThreadError_Abort when reception
+ *                      was aborted and a frame was not received.
  *
- * @retval ::kThreadError_None          Successfully received a frame.
- * @retval ::kThreadError_Abort         Reception was aborted and a frame was not received.
- * @retval ::kThreadError_InvalidState  The radio was not in Receive.
  */
-ThreadError otPlatRadioHandleReceiveDone(void);
+extern void otPlatRadioReceiveDone(RadioPacket *aPacket, ThreadError error);
 
 /**
- * Begins the transmit sequence on the radio.
+ * This method returns a pointer to the transmit buffer.
+ *
+ * The caller forms the IEEE 802.15.4 frame in this buffer then calls otPlatRadioTransmit() to request transmission.
+ *
+ * @returns A pointer to the transmit buffer.
+ *
+ */
+RadioPacket *otPlatRadioGetTransmitBuffer(void);
+
+/**
+ * This method begins the transmit sequence on the radio.
+ *
+ * The caller must form the IEEE 802.15.4 frame in the buffer provided by otPlatRadioGetTransmitBuffer() before requesting
+ * transmission.  The channel and transmit power are also included in the RadioPacket structure.
  *
  * The transmit sequence consists of:
  * 1. Transitioning the radio to Transmit from Idle.
  * 2. Transmits the psdu on the given channel and at the given transmit power.
  * 3. Return to Idle.
  *
- * Upon completion of the transmit sequence, otPlatRadioSignalTransmitDone() is called to signal completion to the MAC
- * layer.
- *
- * @param[in]  aPacket  A pointer to a packet buffer.
- *
- * @note The channel is specified in @p aPacket.
- * @note The transmit power is specified in @p aPacket.
- *
  * @retval ::kThreadError_None         Successfully transitioned to Transmit.
  * @retval ::kThreadError_InvalidArgs  One or more parameters in @p aPacket are invalid.
  * @retval ::kThreadError_Fail         Failed to transition to Transmit.
  */
-ThreadError otPlatRadioTransmit(RadioPacket *aPacket);
+ThreadError otPlatRadioTransmit(void);
 
 /**
- * Signal that the requested transmission is complete.
+ * The radio driver calls this method to notify OpenThread that the transmission has completed.
  *
- * This may be called from interrupt context.  OpenThread will then schedule a call to
- * otPlatRadio_handle_transmit_done().
+ * @param[in]  aFramePending  TRUE if an ACK frame was received and the Frame Pending bit was set.
+ * @param[in]  aError  ::kThreadError_None when the frame was transmitted, ::kThreadError_NoAck when the frame was
+ *                     transmitted but no ACK was received, ::kThreadError_ChannelAccessFailure when the transmission
+ *                     could not take place due to activity on the channel, ::kThreadError_Abort when transmission was
+ *                     aborted for other reasons.
+ *
  */
-extern void otPlatRadioSignalTransmitDone(void);
-
-/**
- * Complete the transmit sequence on the radio.
- *
- * @param[out]  aFramePending  TRUE if an ACK frame was received and the Frame Pending bit was set.
- *
- * @retval ::kThreadError_None          The frame was transmitted.
- * @retval ::kThreadError_NoAck         The frame was transmitted, but no ACK was received.
- * @retval ::kThreadError_CcaFailed     The transmission was aborted due to CCA failure.
- * @retval ::kThreadError_Abort         The transmission was aborted for other reasons.
- * @retval ::kThreadError_InvalidState  The radio did not transmit a packet.
- */
-ThreadError otPlatRadioHandleTransmitDone(bool *aFramePending);
+extern void otPlatRadioTransmitDone(bool aFramePending, ThreadError error);
 
 /**
  * Get the most recent RSSI measurement.
@@ -299,7 +282,15 @@ otRadioCaps otPlatRadioGetCaps(void);
  *
  * @param[in]  aEnable  A value to enable or disable promiscuous mode.
  */
-void otPlatRadioPromiscuous(bool aEnable);
+void otPlatRadioSetPromiscuous(bool aEnable);
+
+/**
+ * Get the status of promiscuous mode.
+ *
+ * @retval ::true          The promiscuous mode is enabled.
+ * @retval ::false         The promiscuous mode is disabled.
+ */
+bool otPlatRadioGetPromiscuous(void);
 
 /**
  * @}

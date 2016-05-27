@@ -36,34 +36,106 @@
 #define PLATFORM_H_
 
 #include <stdint.h>
+#include <sys/select.h>
+#include <sys/time.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 /**
+ * Unique ID used by a simulated node.
+ *
+ */
+extern uint32_t NODE_ID;
+
+/**
+ * Well-known Unique ID used by a simulated radio that supports promiscuous mode.
+ *
+ */
+extern uint32_t WELLKNOWN_NODE_ID;
+
+/**
+ * This method performs all platform-specific initialization.
+ *
+ */
+void PlatformInit(void);
+
+/**
+ * This method performs all platform-specific processing.
+ *
+ */
+void PlatformProcessDrivers(void);
+
+/**
  * This method initializes the alarm service used by OpenThread.
  *
  */
-void hwAlarmInit(void);
+void PlatformAlarmInit(void);
+
+/**
+ * This method retrieves the time remaining until the alarm fires.
+ *
+ * @param[out]  aTimeval  A pointer to the timeval struct.
+ *
+ */
+void PlatformAlarmUpdateTimeout(struct timeval *tv);
+
+/**
+ * This method performs alarm driver processing.
+ *
+ */
+void PlatformAlarmProcess(void);
 
 /**
  * This method initializes the radio service used by OpenThread.
  *
  */
-void hwRadioInit(void);
+void PlatformRadioInit(void);
+
+/**
+ * This method updates the file descriptor sets with file descriptors used by the radio driver.
+ *
+ * @param[inout]  aReadFdSet   A pointer to the read file descriptors.
+ * @param[inout]  aWriteFdSet  A pointer to the write file descriptors.
+ * @param[inout]  aMaxFd       A pointer to the max file descriptor.
+ *
+ */
+void PlatformRadioUpdateFdSet(fd_set *aReadFdSet, fd_set *aWriteFdSet, int *aMaxFd);
+
+/**
+ * This method performs radio driver processing.
+ *
+ */
+void PlatformRadioProcess(void);
 
 /**
  * This method initializes the random number service used by OpenThread.
  *
  */
-void hwRandomInit(void);
+void PlatformRandomInit(void);
+
+/**
+ * This method updates the file descriptor sets with file descriptors used by the serial driver.
+ *
+ * @param[inout]  aReadFdSet   A pointer to the read file descriptors.
+ * @param[inout]  aWriteFdSet  A pointer to the write file descriptors.
+ * @param[inout]  aMaxFd       A pointer to the max file descriptor.
+ *
+ */
+void PlatformSerialUpdateFdSet(fd_set *aReadFdSet, fd_set *aWriteFdSet, int *aMaxFd);
+
+/**
+ * This method performs radio driver processing.
+ *
+ */
+void PlatformSerialProcess(void);
 
 /**
  * This method puts the thread executing OpenThread to sleep.
  *
  */
-void hwSleep(void);
+void PlatformSleep(void);
 
 #ifdef __cplusplus
 }  // extern "C"

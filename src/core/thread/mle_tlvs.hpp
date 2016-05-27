@@ -1362,7 +1362,7 @@ public:
             aIndex--;
         }
 
-        return entry;
+        return (cur < end) ? entry : NULL;
     }
 
 private:
