@@ -95,12 +95,12 @@ typedef enum otRadioCaps
  */
 typedef struct RadioPacket
 {
-    uint8_t mLength;                   ///< Length of the PSDU.
-    uint8_t mPsdu[kMaxPHYPacketSize];  ///< The PSDU.
-    uint8_t mChannel;                  ///< Channel used to transmit/receive the frame.
-    int8_t  mPower;                    ///< Transmit/receive power in dBm.
-    uint8_t mLqi;                      ///< Link Quality Indicator for received frames.
-    bool    mSecurityValid;            ///< Security Enabled flag is set and frame passes security checks.
+    uint8_t *mPsdu;          ///< The PSDU.
+    uint8_t mLength;         ///< Length of the PSDU.
+    uint8_t mChannel;        ///< Channel used to transmit/receive the frame.
+    int8_t  mPower;          ///< Transmit/receive power in dBm.
+    uint8_t mLqi;            ///< Link Quality Indicator for received frames.
+    bool    mSecurityValid;  ///< Security Enabled flag is set and frame passes security checks.
 } RadioPacket;
 
 /**
@@ -208,14 +208,12 @@ ThreadError otPlatRadioIdle(void);
  * 2. Remain in Receive until a packet is received or reception is aborted.
  * 3. Return to Idle.
  *
- * @param[in]  aPacket  A pointer to a packet buffer.
- *
- * @note The channel is specified in @p aPacket.
+ * @param[in]  aChannel  The channel to use for receiving.
  *
  * @retval ::kThreadError_None  Successfully transitioned to Receive.
  * @retval ::kThreadError_Fail  Failed to transition to Receive.
  */
-ThreadError otPlatRadioReceive(RadioPacket *aPacket);
+ThreadError otPlatRadioReceive(uint8_t aChannel);
 
 /**
  * The radio driver calls this method to notify OpenThread of a received packet.
@@ -224,26 +222,34 @@ ThreadError otPlatRadioReceive(RadioPacket *aPacket);
  *                      was aborted and a frame was not received.
  *
  */
-extern void otPlatRadioReceiveDone(ThreadError error);
+extern void otPlatRadioReceiveDone(RadioPacket *aPacket, ThreadError error);
 
 /**
- * Begins the transmit sequence on the radio.
+ * This method returns a pointer to the transmit buffer.
+ *
+ * The caller forms the IEEE 802.15.4 frame in this buffer then calls otPlatRadioTransmit() to request transmission.
+ *
+ * @returns A pointer to the transmit buffer.
+ *
+ */
+RadioPacket *otPlatRadioGetTransmitBuffer(void);
+
+/**
+ * This method begins the transmit sequence on the radio.
+ *
+ * The caller must form the IEEE 802.15.4 frame in the buffer provided by otPlatRadioGetTransmitBuffer() before requesting
+ * transmission.  The channel and transmit power are also included in the RadioPacket structure.
  *
  * The transmit sequence consists of:
  * 1. Transitioning the radio to Transmit from Idle.
  * 2. Transmits the psdu on the given channel and at the given transmit power.
  * 3. Return to Idle.
  *
- * @param[in]  aPacket  A pointer to a packet buffer.
- *
- * @note The channel is specified in @p aPacket.
- * @note The transmit power is specified in @p aPacket.
- *
  * @retval ::kThreadError_None         Successfully transitioned to Transmit.
  * @retval ::kThreadError_InvalidArgs  One or more parameters in @p aPacket are invalid.
  * @retval ::kThreadError_Fail         Failed to transition to Transmit.
  */
-ThreadError otPlatRadioTransmit(RadioPacket *aPacket);
+ThreadError otPlatRadioTransmit(void);
 
 /**
  * The radio driver calls this method to notify OpenThread that the transmission has completed.

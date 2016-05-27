@@ -65,19 +65,22 @@ enum PhyState
 struct RadioMessage
 {
     uint8_t mChannel;
-    uint8_t mPsdu[Mac::Frame::kMTU];
+    uint8_t mPsdu[kMaxPHYPacketSize];
 } __attribute__((packed));
 
 static void radioSendAck(void);
 static void radioProcessFrame(void);
 
 static PhyState s_state = kStateDisabled;
-static RadioPacket *s_receive_frame = NULL;
-static RadioPacket *s_transmit_frame = NULL;
-static RadioPacket m_ack_packet;
+static RadioMessage s_receive_message;
+static RadioMessage s_transmit_message;
+static RadioMessage s_ack_message;
+static RadioPacket s_receive_frame;
+static RadioPacket s_transmit_frame;
+static RadioPacket s_ack_frame;
 static bool s_data_pending = false;
 
-static uint8_t s_extended_address[8];
+static uint8_t s_extended_address[OT_EXT_ADDRESS_SIZE];
 static uint16_t s_short_address;
 static uint16_t s_panid;
 
@@ -93,7 +96,7 @@ ThreadError otPlatRadioSetExtendedAddress(uint8_t *address)
 {
     for (unsigned i = 0; i < sizeof(s_extended_address); i++)
     {
-        s_extended_address[i] = address[7 - i];
+        s_extended_address[i] = address[sizeof(s_extended_address) - 1 - i];
     }
 
     return kThreadError_None;
@@ -115,6 +118,10 @@ void PlatformRadioInit(void)
 
     s_sockfd = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
     bind(s_sockfd, (struct sockaddr *)&sockaddr, sizeof(sockaddr));
+
+    s_receive_frame.mPsdu = s_receive_message.mPsdu;
+    s_transmit_frame.mPsdu = s_transmit_message.mPsdu;
+    s_ack_frame.mPsdu = s_ack_message.mPsdu;
 }
 
 ThreadError otPlatRadioEnable(void)
@@ -173,25 +180,29 @@ exit:
     return error;
 }
 
-ThreadError otPlatRadioReceive(RadioPacket *packet)
+ThreadError otPlatRadioReceive(uint8_t aChannel)
 {
     ThreadError error = kThreadError_None;
 
     VerifyOrExit(s_state == kStateIdle, error = kThreadError_Busy);
     s_state = kStateListen;
-    s_receive_frame = packet;
+    s_receive_frame.mChannel = aChannel;
 
 exit:
     return error;
 }
 
-ThreadError otPlatRadioTransmit(RadioPacket *packet)
+RadioPacket *otPlatRadioGetTransmitBuffer(void)
+{
+    return &s_transmit_frame;
+}
+
+ThreadError otPlatRadioTransmit(void)
 {
     ThreadError error = kThreadError_None;
 
     VerifyOrExit(s_state == kStateIdle, error = kThreadError_Busy);
     s_state = kStateTransmit;
-    s_transmit_frame = packet;
     s_data_pending = false;
 
 exit:
@@ -227,8 +238,6 @@ exit:
 
 void radioReceive(void)
 {
-    RadioPacket receive_frame;
-    RadioMessage message;
     uint8_t tx_sequence, rx_sequence;
     uint8_t command_id;
     int rval;
@@ -236,7 +245,7 @@ void radioReceive(void)
     VerifyOrExit(s_state == kStateDisabled || s_state == kStateSleep || s_state == kStateListen ||
                  s_state == kStateAckWait, ;);
 
-    rval = recvfrom(s_sockfd, &message, sizeof(message), 0, NULL, NULL);
+    rval = recvfrom(s_sockfd, &s_receive_message, sizeof(s_receive_message), 0, NULL, NULL);
     assert(rval >= 0);
 
     switch (s_state)
@@ -248,25 +257,24 @@ void radioReceive(void)
         break;
 
     case kStateAckWait:
-        receive_frame.mLength = rval - 1;
-        memcpy(receive_frame.mPsdu, message.mPsdu, receive_frame.mLength);
+        s_receive_frame.mLength = rval - 1;
 
-        if (reinterpret_cast<Mac::Frame *>(&receive_frame)->GetType() != Mac::Frame::kFcfFrameAck)
+        if (reinterpret_cast<Mac::Frame *>(&s_receive_frame)->GetType() != Mac::Frame::kFcfFrameAck)
         {
             break;
         }
 
-        tx_sequence = reinterpret_cast<Mac::Frame *>(s_transmit_frame)->GetSequence();
-        rx_sequence = reinterpret_cast<Mac::Frame *>(&receive_frame)->GetSequence();
+        tx_sequence = reinterpret_cast<Mac::Frame *>(&s_transmit_frame)->GetSequence();
+        rx_sequence = reinterpret_cast<Mac::Frame *>(&s_receive_frame)->GetSequence();
 
         if (tx_sequence != rx_sequence)
         {
             break;
         }
 
-        if (reinterpret_cast<Mac::Frame *>(s_transmit_frame)->GetType() == Mac::Frame::kFcfFrameMacCmd)
+        if (reinterpret_cast<Mac::Frame *>(&s_transmit_frame)->GetType() == Mac::Frame::kFcfFrameMacCmd)
         {
-            reinterpret_cast<Mac::Frame *>(s_transmit_frame)->GetCommandId(command_id);
+            reinterpret_cast<Mac::Frame *>(&s_transmit_frame)->GetCommandId(command_id);
 
             if (command_id == Mac::Frame::kMacCmdDataRequest)
             {
@@ -279,14 +287,13 @@ void radioReceive(void)
         break;
 
     case kStateListen:
-        if (s_receive_frame->mChannel != message.mChannel)
+        if (s_receive_frame.mChannel != s_receive_message.mChannel)
         {
             break;
         }
 
         s_state = kStateReceive;
-        s_receive_frame->mLength = rval - 1;
-        memcpy(s_receive_frame->mPsdu, message.mPsdu, s_receive_frame->mLength);
+        s_receive_frame.mLength = rval - 1;
 
         radioProcessFrame();
         break;
@@ -303,15 +310,13 @@ exit:
 int radioTransmit(void)
 {
     struct sockaddr_in sockaddr;
-    RadioMessage message;
     int rval = 0;
 
     memset(&sockaddr, 0, sizeof(sockaddr));
     sockaddr.sin_family = AF_INET;
     inet_pton(AF_INET, "127.0.0.1", &sockaddr.sin_addr);
 
-    message.mChannel = s_transmit_frame->mChannel;
-    memcpy(message.mPsdu, s_transmit_frame->mPsdu, s_transmit_frame->mLength);
+    s_transmit_message.mChannel = s_transmit_frame.mChannel;
 
     for (unsigned i = 1; i < 34; i++)
     {
@@ -321,12 +326,12 @@ int radioTransmit(void)
         }
 
         sockaddr.sin_port = htons(9000 + i);
-        rval = sendto(s_sockfd, &message, 1 + s_transmit_frame->mLength, 0, (struct sockaddr *)&sockaddr,
+        rval = sendto(s_sockfd, &s_transmit_message, 1 + s_transmit_frame.mLength, 0, (struct sockaddr *)&sockaddr,
                       sizeof(sockaddr));
         assert(rval >= 0);
     }
 
-    if (reinterpret_cast<Mac::Frame *>(s_transmit_frame)->GetAckRequest())
+    if (reinterpret_cast<Mac::Frame *>(&s_transmit_frame)->GetAckRequest())
     {
         s_state = kStateAckWait;
     }
@@ -382,13 +387,12 @@ void PlatformRadioProcess(void)
 void radioSendAck(void)
 {
     Mac::Frame *ack_frame;
-    RadioMessage message;
     uint8_t sequence;
     struct sockaddr_in sockaddr;
 
-    sequence = reinterpret_cast<Mac::Frame *>(s_receive_frame)->GetSequence();
+    sequence = reinterpret_cast<Mac::Frame *>(&s_receive_frame)->GetSequence();
 
-    ack_frame = reinterpret_cast<Mac::Frame *>(&m_ack_packet);
+    ack_frame = reinterpret_cast<Mac::Frame *>(&s_ack_frame);
     ack_frame->InitMacHeader(Mac::Frame::kFcfFrameAck, Mac::Frame::kSecNone);
     ack_frame->SetSequence(sequence);
 
@@ -396,8 +400,7 @@ void radioSendAck(void)
     sockaddr.sin_family = AF_INET;
     inet_pton(AF_INET, "127.0.0.1", &sockaddr.sin_addr);
 
-    message.mChannel = s_receive_frame->mChannel;
-    memcpy(message.mPsdu, m_ack_packet.mPsdu, m_ack_packet.mLength);
+    s_ack_message.mChannel = s_receive_frame.mChannel;
 
     for (unsigned i = 1; i < 34; i++)
     {
@@ -407,7 +410,7 @@ void radioSendAck(void)
         }
 
         sockaddr.sin_port = htons(9000 + i);
-        sendto(s_sockfd, &message, 1 + m_ack_packet.mLength, 0, (struct sockaddr *)&sockaddr, sizeof(sockaddr));
+        sendto(s_sockfd, &s_ack_message, 1 + s_ack_frame.mLength, 0, (struct sockaddr *)&sockaddr, sizeof(sockaddr));
     }
 }
 
@@ -418,7 +421,7 @@ void radioProcessFrame(void)
     uint16_t dstpan;
     Mac::Address dstaddr;
 
-    receive_frame = reinterpret_cast<Mac::Frame *>(s_receive_frame);
+    receive_frame = reinterpret_cast<Mac::Frame *>(&s_receive_frame);
     receive_frame->GetDstAddr(dstaddr);
 
     switch (dstaddr.mLength)
@@ -444,11 +447,11 @@ void radioProcessFrame(void)
         ExitNow(error = kThreadError_Abort);
     }
 
-    s_receive_frame->mPower = -20;
-    s_receive_frame->mLqi = kPhyNoLqi;
+    s_receive_frame.mPower = -20;
+    s_receive_frame.mLqi = kPhyNoLqi;
 
     // generate acknowledgment
-    if (reinterpret_cast<Mac::Frame *>(s_receive_frame)->GetAckRequest())
+    if (reinterpret_cast<Mac::Frame *>(&s_receive_frame)->GetAckRequest())
     {
         radioSendAck();
     }
@@ -460,7 +463,12 @@ exit:
         s_state = kStateIdle;
     }
 
-    otPlatRadioReceiveDone(error);
+    if (error != kThreadError_None)
+    {
+        receive_frame = NULL;
+    }
+
+    otPlatRadioReceiveDone(receive_frame, error);
 }
 
 #ifdef __cplusplus

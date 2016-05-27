@@ -289,15 +289,13 @@ void Mac::NextOperation(void)
     switch (mState)
     {
     case kStateActiveScan:
-        mReceiveFrame.SetChannel(mScanChannel);
-        otPlatRadioReceive(&mReceiveFrame);
+        otPlatRadioReceive(mScanChannel);
         break;
 
     default:
         if (mRxOnWhenIdle || mReceiveTimer.IsRunning())
         {
-            mReceiveFrame.SetChannel(mChannel);
-            otPlatRadioReceive(&mReceiveFrame);
+            otPlatRadioReceive(mChannel);
         }
         else
         {
@@ -389,34 +387,33 @@ void Mac::HandleBeginTransmit(void *aContext)
     obj->HandleBeginTransmit();
 }
 
-void Mac::ProcessTransmitSecurity(void)
+void Mac::ProcessTransmitSecurity(Frame &aFrame)
 {
     uint8_t securityLevel;
     uint8_t nonce[kNonceSize];
     uint8_t tagLength;
     Crypto::AesCcm aesCcm;
 
-    if (mSendFrame.GetSecurityEnabled() == false)
+    if (aFrame.GetSecurityEnabled() == false)
     {
         ExitNow();
     }
 
-    mSendFrame.GetSecurityLevel(securityLevel);
-    mSendFrame.SetFrameCounter(mKeyManager.GetMacFrameCounter());
+    aFrame.GetSecurityLevel(securityLevel);
+    aFrame.SetFrameCounter(mKeyManager.GetMacFrameCounter());
 
-    mSendFrame.SetKeyId((mKeyManager.GetCurrentKeySequence() & 0x7f) + 1);
+    aFrame.SetKeyId((mKeyManager.GetCurrentKeySequence() & 0x7f) + 1);
 
     GenerateNonce(mExtAddress, mKeyManager.GetMacFrameCounter(), securityLevel, nonce);
 
     aesCcm.SetKey(mKeyManager.GetCurrentMacKey(), 16);
-    tagLength = mSendFrame.GetFooterLength() - Frame::kFcsSize;
+    tagLength = aFrame.GetFooterLength() - Frame::kFcsSize;
 
-    aesCcm.Init(mSendFrame.GetHeaderLength(), mSendFrame.GetPayloadLength(), tagLength,
-                nonce, sizeof(nonce));
+    aesCcm.Init(aFrame.GetHeaderLength(), aFrame.GetPayloadLength(), tagLength, nonce, sizeof(nonce));
 
-    aesCcm.Header(mSendFrame.GetHeader(), mSendFrame.GetHeaderLength());
-    aesCcm.Payload(mSendFrame.GetPayload(), mSendFrame.GetPayload(), mSendFrame.GetPayloadLength(), true);
-    aesCcm.Finalize(mSendFrame.GetFooter(), &tagLength);
+    aesCcm.Header(aFrame.GetHeader(), aFrame.GetHeaderLength());
+    aesCcm.Payload(aFrame.GetPayload(), aFrame.GetPayload(), aFrame.GetPayloadLength(), true);
+    aesCcm.Finalize(aFrame.GetFooter(), &tagLength);
 
     mKeyManager.IncrementMacFrameCounter();
 
@@ -426,6 +423,7 @@ exit:
 
 void Mac::HandleBeginTransmit(void)
 {
+    Frame &sendFrame(*static_cast<Frame *>(otPlatRadioGetTransmitBuffer()));
     ThreadError error = kThreadError_None;
 
     if (otPlatRadioIdle() != kThreadError_None)
@@ -437,21 +435,21 @@ void Mac::HandleBeginTransmit(void)
     switch (mState)
     {
     case kStateActiveScan:
-        mSendFrame.SetChannel(mScanChannel);
-        SendBeaconRequest(mSendFrame);
-        mSendFrame.SetSequence(0);
+        sendFrame.SetChannel(mScanChannel);
+        SendBeaconRequest(sendFrame);
+        sendFrame.SetSequence(0);
         break;
 
     case kStateTransmitBeacon:
-        mSendFrame.SetChannel(mChannel);
-        SendBeacon(mSendFrame);
-        mSendFrame.SetSequence(mBeaconSequence++);
+        sendFrame.SetChannel(mChannel);
+        SendBeacon(sendFrame);
+        sendFrame.SetSequence(mBeaconSequence++);
         break;
 
     case kStateTransmitData:
-        mSendFrame.SetChannel(mChannel);
-        SuccessOrExit(error = mSendHead->HandleFrameRequest(mSendFrame));
-        mSendFrame.SetSequence(mDataSequence);
+        sendFrame.SetChannel(mChannel);
+        SuccessOrExit(error = mSendHead->HandleFrameRequest(sendFrame));
+        sendFrame.SetSequence(mDataSequence);
         break;
 
     default:
@@ -460,11 +458,11 @@ void Mac::HandleBeginTransmit(void)
     }
 
     // Security Processing
-    ProcessTransmitSecurity();
+    ProcessTransmitSecurity(sendFrame);
 
-    SuccessOrExit(error = otPlatRadioTransmit(&mSendFrame));
+    SuccessOrExit(error = otPlatRadioTransmit());
 
-    if (mSendFrame.GetAckRequest() && !(otPlatRadioGetCaps() & kRadioCapsAckTimeout))
+    if (sendFrame.GetAckRequest() && !(otPlatRadioGetCaps() & kRadioCapsAckTimeout))
     {
         mAckTimer.Start(kAckTimeout);
         otLogDebgMac("ack timer start\n");
@@ -587,6 +585,7 @@ void Mac::HandleReceiveTimer(void)
 
 void Mac::SentFrame(bool aAcked)
 {
+    Frame &sendFrame(*static_cast<Frame *>(otPlatRadioGetTransmitBuffer()));
     Address destination;
     Neighbor *neighbor;
     Sender *sender;
@@ -602,9 +601,9 @@ void Mac::SentFrame(bool aAcked)
         break;
 
     case kStateTransmitData:
-        if (mSendFrame.GetAckRequest() && !aAcked)
+        if (sendFrame.GetAckRequest() && !aAcked)
         {
-            otDumpDebgMac("NO ACK", mSendFrame.GetHeader(), 16);
+            otDumpDebgMac("NO ACK", sendFrame.GetHeader(), 16);
 
             if (mTransmitAttempts < kMaxFrameAttempts)
             {
@@ -613,7 +612,7 @@ void Mac::SentFrame(bool aAcked)
                 ExitNow();
             }
 
-            mSendFrame.GetDstAddr(destination);
+            sendFrame.GetDstAddr(destination);
 
             if ((neighbor = mMle.GetNeighbor(destination)) != NULL)
             {
@@ -632,7 +631,7 @@ void Mac::SentFrame(bool aAcked)
         }
 
         mDataSequence++;
-        sender->HandleSentFrame(mSendFrame);
+        sender->HandleSentFrame(sendFrame);
 
         ScheduleNextTransmission();
         break;
@@ -646,7 +645,7 @@ exit:
     {}
 }
 
-ThreadError Mac::ProcessReceiveSecurity(const Address &aSrcAddr, Neighbor *aNeighbor)
+ThreadError Mac::ProcessReceiveSecurity(Frame &aFrame, const Address &aSrcAddr, Neighbor *aNeighbor)
 {
     ThreadError error = kThreadError_None;
     uint8_t securityLevel;
@@ -659,23 +658,23 @@ ThreadError Mac::ProcessReceiveSecurity(const Address &aSrcAddr, Neighbor *aNeig
     const uint8_t *macKey;
     Crypto::AesCcm aesCcm;
 
-    mReceiveFrame.SetSecurityValid(false);
+    aFrame.SetSecurityValid(false);
 
-    if (mReceiveFrame.GetSecurityEnabled() == false)
+    if (aFrame.GetSecurityEnabled() == false)
     {
         ExitNow();
     }
 
     VerifyOrExit(aNeighbor != NULL, error = kThreadError_Security);
 
-    mReceiveFrame.GetSecurityLevel(securityLevel);
-    mReceiveFrame.GetFrameCounter(frameCounter);
+    aFrame.GetSecurityLevel(securityLevel);
+    aFrame.GetFrameCounter(frameCounter);
 
     GenerateNonce(aSrcAddr.mExtAddress, frameCounter, securityLevel, nonce);
 
-    tagLength = mReceiveFrame.GetFooterLength() - Frame::kFcsSize;
+    tagLength = aFrame.GetFooterLength() - Frame::kFcsSize;
 
-    mReceiveFrame.GetKeyId(keyid);
+    aFrame.GetKeyId(keyid);
     keyid--;
 
     if (keyid == (mKeyManager.GetCurrentKeySequence() & 0x7f))
@@ -705,21 +704,19 @@ ThreadError Mac::ProcessReceiveSecurity(const Address &aSrcAddr, Neighbor *aNeig
     {
         for (Receiver *receiver = mReceiveHead; receiver; receiver = receiver->mNext)
         {
-            receiver->HandleReceivedFrame(mReceiveFrame, kThreadError_Security);
+            receiver->HandleReceivedFrame(aFrame, kThreadError_Security);
         }
 
         ExitNow(error = kThreadError_Security);
     }
 
     aesCcm.SetKey(macKey, 16);
-    aesCcm.Init(mReceiveFrame.GetHeaderLength(), mReceiveFrame.GetPayloadLength(),
-                tagLength, nonce, sizeof(nonce));
-    aesCcm.Header(mReceiveFrame.GetHeader(), mReceiveFrame.GetHeaderLength());
-    aesCcm.Payload(mReceiveFrame.GetPayload(), mReceiveFrame.GetPayload(), mReceiveFrame.GetPayloadLength(),
-                   false);
+    aesCcm.Init(aFrame.GetHeaderLength(), aFrame.GetPayloadLength(), tagLength, nonce, sizeof(nonce));
+    aesCcm.Header(aFrame.GetHeader(), aFrame.GetHeaderLength());
+    aesCcm.Payload(aFrame.GetPayload(), aFrame.GetPayload(), aFrame.GetPayloadLength(), false);
     aesCcm.Finalize(tag, &tagLength);
 
-    VerifyOrExit(memcmp(tag, mReceiveFrame.GetFooter(), tagLength) == 0, error = kThreadError_Security);
+    VerifyOrExit(memcmp(tag, aFrame.GetFooter(), tagLength) == 0, error = kThreadError_Security);
 
     if (keySequence > mKeyManager.GetCurrentKeySequence())
     {
@@ -733,18 +730,18 @@ ThreadError Mac::ProcessReceiveSecurity(const Address &aSrcAddr, Neighbor *aNeig
 
     aNeighbor->mValid.mLinkFrameCounter = frameCounter + 1;
 
-    mReceiveFrame.SetSecurityValid(true);
+    aFrame.SetSecurityValid(true);
 
 exit:
     return error;
 }
 
-extern "C" void otPlatRadioReceiveDone(ThreadError aError)
+extern "C" void otPlatRadioReceiveDone(RadioPacket *aFrame, ThreadError aError)
 {
-    sMac->ReceiveDoneTask(aError);
+    sMac->ReceiveDoneTask(static_cast<Frame *>(aFrame), aError);
 }
 
-void Mac::ReceiveDoneTask(ThreadError aError)
+void Mac::ReceiveDoneTask(Frame *aFrame, ThreadError aError)
 {
     Address srcaddr;
     Address dstaddr;
@@ -753,9 +750,9 @@ void Mac::ReceiveDoneTask(ThreadError aError)
     Whitelist::Entry *entry;
     int8_t rssi;
 
-    VerifyOrExit(aError == kThreadError_None, ;);
+    VerifyOrExit(aError == kThreadError_None && aFrame != NULL, ;);
 
-    mReceiveFrame.GetSrcAddr(srcaddr);
+    aFrame->GetSrcAddr(srcaddr);
     neighbor = mMle.GetNeighbor(srcaddr);
 
     switch (srcaddr.mLength)
@@ -783,12 +780,12 @@ void Mac::ReceiveDoneTask(ThreadError aError)
 
         if (mWhitelist.GetConstantRssi(*entry, rssi) == kThreadError_None)
         {
-            mReceiveFrame.mPower = rssi;
+            aFrame->mPower = rssi;
         }
     }
 
     // Destination Address Filtering
-    mReceiveFrame.GetDstAddr(dstaddr);
+    aFrame->GetDstAddr(dstaddr);
 
     switch (dstaddr.mLength)
     {
@@ -796,28 +793,28 @@ void Mac::ReceiveDoneTask(ThreadError aError)
         break;
 
     case sizeof(ShortAddress):
-        mReceiveFrame.GetDstPanId(panid);
+        aFrame->GetDstPanId(panid);
         VerifyOrExit((panid == kShortAddrBroadcast || panid == mPanId) &&
                      ((mRxOnWhenIdle && dstaddr.mShortAddress == kShortAddrBroadcast) ||
                       dstaddr.mShortAddress == mShortAddress), ;);
         break;
 
     case sizeof(ExtAddress):
-        mReceiveFrame.GetDstPanId(panid);
+        aFrame->GetDstPanId(panid);
         VerifyOrExit(panid == mPanId &&
                      memcmp(&dstaddr.mExtAddress, &mExtAddress, sizeof(dstaddr.mExtAddress)) == 0, ;);
         break;
     }
 
     // Security Processing
-    SuccessOrExit(ProcessReceiveSecurity(srcaddr, neighbor));
+    SuccessOrExit(ProcessReceiveSecurity(*aFrame, srcaddr, neighbor));
 
     switch (mState)
     {
     case kStateActiveScan:
-        if (mReceiveFrame.GetType() == Frame::kFcfFrameBeacon)
+        if (aFrame->GetType() == Frame::kFcfFrameBeacon)
         {
-            mActiveScanHandler(mActiveScanContext, &mReceiveFrame);
+            mActiveScanHandler(mActiveScanContext, aFrame);
         }
 
         break;
@@ -828,14 +825,14 @@ void Mac::ReceiveDoneTask(ThreadError aError)
             mReceiveTimer.Stop();
         }
 
-        if (mReceiveFrame.GetType() == Frame::kFcfFrameMacCmd)
+        if (aFrame->GetType() == Frame::kFcfFrameMacCmd)
         {
-            SuccessOrExit(HandleMacCommand());
+            SuccessOrExit(HandleMacCommand(*aFrame));
         }
 
         for (Receiver *receiver = mReceiveHead; receiver; receiver = receiver->mNext)
         {
-            receiver->HandleReceivedFrame(mReceiveFrame, kThreadError_None);
+            receiver->HandleReceivedFrame(*aFrame, kThreadError_None);
         }
 
         break;
@@ -845,11 +842,12 @@ exit:
     NextOperation();
 }
 
-ThreadError Mac::HandleMacCommand(void)
+ThreadError Mac::HandleMacCommand(Frame &aFrame)
 {
     ThreadError error = kThreadError_None;
     uint8_t commandId;
-    mReceiveFrame.GetCommandId(commandId);
+
+    aFrame.GetCommandId(commandId);
 
     if (commandId == Frame::kMacCmdBeaconRequest)
     {

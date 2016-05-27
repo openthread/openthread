@@ -135,7 +135,7 @@ ThreadError Serial::ProcessCommand(void)
 int Serial::Output(const char *aBuf, uint16_t aBufLength)
 {
     uint16_t remaining = kTxBufferSize - mTxLength;
-    uint16_t tail = (mTxHead + mTxLength) % kTxBufferSize;
+    uint16_t tail;
 
     if (aBufLength > remaining)
     {
@@ -170,7 +170,7 @@ void Serial::Send(void)
 {
     VerifyOrExit(mSendLength == 0, ;);
 
-    if (mTxHead + mTxLength > kTxBufferSize)
+    if (mTxLength > kTxBufferSize - mTxHead)
     {
         mSendLength = kTxBufferSize - mTxHead;
     }

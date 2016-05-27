@@ -366,11 +366,12 @@ public:
     /**
      * This method is called to handle receive events.
      *
-     * @param[in]  aError   ::kThreadError_None when successfully received a frame, ::kThreadError_Abort when reception
-     *                      was aborted and a frame was not received.
+     * @param[in]  aFrame  A pointer to the received frame, or NULL if the receive operation aborted.
+     * @param[in]  aError  ::kThreadError_None when successfully received a frame, ::kThreadError_Abort when reception
+     *                     was aborted and a frame was not received.
      *
      */
-    void ReceiveDoneTask(ThreadError aError);
+    void ReceiveDoneTask(Frame *aFrame, ThreadError aError);
 
     /**
      * This method is called to handle transmit events.
@@ -393,14 +394,14 @@ public:
 private:
     void GenerateNonce(const ExtAddress &aAddress, uint32_t aFrameCounter, uint8_t aSecurityLevel, uint8_t *aNonce);
     void NextOperation(void);
-    void ProcessTransmitSecurity(void);
-    ThreadError ProcessReceiveSecurity(const Address &aSrcAddr, Neighbor *aNeighbor);
+    void ProcessTransmitSecurity(Frame &aFrame);
+    ThreadError ProcessReceiveSecurity(Frame &aFrame, const Address &aSrcAddr, Neighbor *aNeighbor);
     void ScheduleNextTransmission(void);
     void SentFrame(bool aAcked);
     void SendBeaconRequest(Frame &aFrame);
     void SendBeacon(Frame &aFrame);
     void StartBackoff(void);
-    ThreadError HandleMacCommand(void);
+    ThreadError HandleMacCommand(Frame &aFrame);
 
     static void HandleAckTimer(void *aContext);
     void HandleAckTimer(void);
@@ -426,8 +427,6 @@ private:
 
     Beacon mBeacon;
 
-    Frame mSendFrame;
-    Frame mReceiveFrame;
     Sender *mSendHead, *mSendTail;
     Receiver *mReceiveHead, *mReceiveTail;
 

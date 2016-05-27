@@ -74,7 +74,11 @@ void TestMacHeader(void)
 
     for (unsigned i = 0; i < sizeof(tests) / sizeof(tests[0]); i++)
     {
+        uint8_t psdu[Mac::Frame::kMTU];
         Mac::Frame frame;
+
+        frame.mPsdu = psdu;
+
         frame.InitMacHeader(tests[i].fcf, tests[i].secCtl);
         printf("%d\n", frame.GetHeaderLength());
         VerifyOrQuit(frame.GetHeaderLength() == tests[i].headerLength,
