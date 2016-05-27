@@ -27,12 +27,8 @@
 
 #include <stdlib.h>
 
-#include <platform/posix/cmdline.h>
-
 #include <ncp/ncp.hpp>
 #include <platform.h>
-
-struct gengetopt_args_info args_info;
 
 Thread::Ncp sNcp;
 
@@ -42,11 +38,12 @@ void otSignalTaskletPending(void)
 
 int main(int argc, char *argv[])
 {
-    if (cmdline_parser(argc, argv, &args_info) != 0)
+    if (argc != 2)
     {
         exit(1);
     }
 
+    NODE_ID = atoi(argv[1]);
     PlatformInit();
     otInit();
 

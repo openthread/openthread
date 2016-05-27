@@ -52,7 +52,6 @@ libopenthread_posix_a_CXXFLAGS            = \
 
 libopenthread_posix_a_SOURCES             = \
     alarm.c                                 \
-    cmdline.c                               \
     logging.c                               \
     platform.c                              \
     radio.cpp                               \
@@ -61,7 +60,6 @@ libopenthread_posix_a_SOURCES             = \
     $(NULL)
 
 include_HEADERS                           = \
-    cmdline.h                               \
     platform.h                              \
     $(NULL)
 

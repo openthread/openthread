@@ -34,8 +34,8 @@
 #include <unistd.h>
 
 #include <common/code_utils.hpp>
-#include <platform/posix/cmdline.h>
 #include <platform/serial.h>
+#include "platform.h"
 
 #ifdef OPENTHREAD_TARGET_LINUX
 int posix_openpt(int oflag);
@@ -43,8 +43,6 @@ int grantpt(int fildes);
 int unlockpt(int fd);
 char *ptsname(int fd);
 #endif  // OPENTHREAD_TARGET_LINUX
-
-extern struct gengetopt_args_info args_info;
 
 static uint8_t s_receive_buffer[128];
 static const uint8_t *s_write_buffer;
@@ -69,56 +67,21 @@ ThreadError otPlatSerialEnable(void)
 {
     ThreadError error = kThreadError_None;
     struct termios termios;
-    char *path;
 
-    if (args_info.stdserial_given == 1)
+    s_in_fd = dup(STDIN_FILENO);
+    s_out_fd = dup(STDOUT_FILENO);
+    dup2(STDERR_FILENO, STDOUT_FILENO);
+
+    if (isatty(s_in_fd))
     {
-        s_in_fd = dup(STDIN_FILENO);
-        s_out_fd = dup(STDOUT_FILENO);
-        dup2(STDERR_FILENO, STDOUT_FILENO);
-
-        if (isatty(s_in_fd))
-        {
-            tcgetattr(s_in_fd, &original_stdin_termios);
-            atexit(&restore_stdin_termios);
-        }
-
-        if (isatty(s_out_fd))
-        {
-            tcgetattr(s_out_fd, &original_stdin_termios);
-            atexit(&restore_stdout_termios);
-        }
+        tcgetattr(s_in_fd, &original_stdin_termios);
+        atexit(&restore_stdin_termios);
     }
-    else
+
+    if (isatty(s_out_fd))
     {
-        // open file
-#ifdef OPENTHREAD_TARGET_DARWIN
-
-        asprintf(&path, "/dev/ptyp%d", args_info.nodeid_arg);
-        VerifyOrExit((s_in_fd = open(path, O_RDWR | O_NOCTTY)) >= 0, perror("posix_openpt"); error = kThreadError_Error);
-        free(path);
-
-        // print pty path
-        printf("/dev/ttyp%d\n", args_info.nodeid_arg);
-
-#elif defined(OPENTHREAD_TARGET_LINUX)
-
-        VerifyOrExit((s_in_fd = posix_openpt(O_RDWR | O_NOCTTY)) >= 0, perror("posix_openpt"); error = kThreadError_Error);
-        VerifyOrExit(grantpt(s_in_fd) == 0, perror("grantpt"); error = kThreadError_Error);
-        VerifyOrExit(unlockpt(s_in_fd) == 0, perror("unlockpt"); error = kThreadError_Error);
-
-        // print pty path
-        VerifyOrExit((path = ptsname(s_in_fd)) != NULL, perror("ptsname"); error = kThreadError_Error);
-        printf("%s\n", path);
-
-#else
-#error "Unknown platform."
-#endif
-
-        // check if file descriptor is pointing to a TTY device
-        VerifyOrExit(isatty(s_in_fd), error = kThreadError_Error);
-
-        s_out_fd = dup(s_in_fd);
+        tcgetattr(s_out_fd, &original_stdin_termios);
+        atexit(&restore_stdout_termios);
     }
 
     if (isatty(s_in_fd))
