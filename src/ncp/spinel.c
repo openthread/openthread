@@ -1026,8 +1026,8 @@ spinel_prop_key_to_cstr(spinel_prop_key_t prop_key)
         ret = "PROP_THREAD_ASSISTING_PORTS";
         break;
 
-	default:
-		break;
+    default:
+        break;
     }
 
     return ret;
