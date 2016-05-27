@@ -986,7 +986,7 @@ void NcpBase::GetPropertyHandler_PHY_FREQ(uint8_t header, spinel_prop_key_t key)
     }
     else if (chan < 26)
     {
-        freq_khz = 2405 - (5000 * 11) + 5000 * (chan);
+        freq_khz = 2405000 - (5000 * 11) + 5000 * (chan);
     }
 
     SendPropteryUpdate(
@@ -994,12 +994,14 @@ void NcpBase::GetPropertyHandler_PHY_FREQ(uint8_t header, spinel_prop_key_t key)
         SPINEL_CMD_PROP_VALUE_IS,
         key,
         SPINEL_DATATYPE_UINT32_S,
-        &freq_khz
+        freq_khz
     );
 }
 
 void NcpBase::GetPropertyHandler_PHY_CHAN_SUPPORTED(uint8_t header, spinel_prop_key_t key)
 {
+    // TODO: This list should ideally come from the PHY layer
+    //       because 802.15.4 doesn't just run on 2.4GHz.
     static const uint8_t supported_channels[] =
     {
         11, 12, 13, 14, 15, 16, 17, 18,
