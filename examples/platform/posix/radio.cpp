@@ -115,6 +115,7 @@ void PlatformRadioInit(void)
     struct sockaddr_in sockaddr;
     memset(&sockaddr, 0, sizeof(sockaddr));
     sockaddr.sin_family = AF_INET;
+
     if (s_promiscuous)
     {
         sockaddr.sin_port = htons(9000 + WELLKNOWN_NODE_ID);
@@ -123,6 +124,7 @@ void PlatformRadioInit(void)
     {
         sockaddr.sin_port = htons(9000 + NODE_ID);
     }
+
     sockaddr.sin_addr.s_addr = INADDR_ANY;
 
     s_sockfd = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
@@ -349,6 +351,7 @@ int radioTransmit(void)
                       sizeof(sockaddr));
         assert(rval >= 0);
     }
+
     sockaddr.sin_port = htons(9000 + WELLKNOWN_NODE_ID);
     rval = sendto(s_sockfd, &s_transmit_message, 1 + s_transmit_frame.mLength, 0, (struct sockaddr *)&sockaddr,
                   sizeof(sockaddr));
@@ -435,6 +438,7 @@ void radioSendAck(void)
         sockaddr.sin_port = htons(9000 + i);
         sendto(s_sockfd, &s_ack_message, 1 + s_ack_frame.mLength, 0, (struct sockaddr *)&sockaddr, sizeof(sockaddr));
     }
+
     sockaddr.sin_port = htons(9000 + WELLKNOWN_NODE_ID);
     sendto(s_sockfd, &s_ack_message, 1 + s_ack_frame.mLength, 0, (struct sockaddr *)&sockaddr, sizeof(sockaddr));
 }
