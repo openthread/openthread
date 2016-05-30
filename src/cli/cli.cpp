@@ -52,6 +52,7 @@ const struct Command Interpreter::sCommands[] =
     { "channel", &ProcessChannel },
     { "childtimeout", &ProcessChildTimeout },
     { "contextreusedelay", &ProcessContextIdReuseDelay },
+    { "counter", &ProcessCounter },
     { "extaddr", &ProcessExtAddress },
     { "extpanid", &ProcessExtPanId },
     { "ipaddr", &ProcessIpAddr },
@@ -215,6 +216,36 @@ void Interpreter::ProcessContextIdReuseDelay(int argc, char *argv[])
 
 exit:
     AppendResult(error);
+}
+
+void Interpreter::ProcessCounter(int argc, char *argv[])
+{
+    if (argc == 0)
+    {
+        sServer->OutputFormat("mac\r\n");
+        sServer->OutputFormat("Done\r\n");
+    }
+    else
+    {
+        if (strcmp(argv[0], "mac") == 0)
+        {
+            const otMacCounter *counter = otGetMacCounter();
+            sServer->OutputFormat("TxData: %d\r\n", counter->mTxData);
+            sServer->OutputFormat("TxBeacon: %d\r\n", counter->mTxBeacon);
+            sServer->OutputFormat("TxBeaconRequest: %d\r\n", counter->mTxBeaconRequest);
+            sServer->OutputFormat("TxDataRetry: %d\r\n", counter->mTxDataRetry);
+            sServer->OutputFormat("TxDataErrAck: %d\r\n", counter->mTxDataErrAck);
+            sServer->OutputFormat("TxErrCca: %d\r\n", counter->mTxErrCca);
+            sServer->OutputFormat("RxData: %d\r\n", counter->mRxData);
+            sServer->OutputFormat("RxBeacon: %d\r\n", counter->mRxBeacon);
+            sServer->OutputFormat("RxBeaconRequest: %d\r\n", counter->mRxBeaconRequest);
+            sServer->OutputFormat("RxErrSec: %d\r\n", counter->mRxErrSec);
+        }
+        else
+        {
+            sServer->OutputFormat("Done\r\n");
+        }
+    }
 }
 
 void Interpreter::ProcessExtAddress(int argc, char *argv[])

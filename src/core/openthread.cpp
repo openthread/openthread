@@ -515,6 +515,11 @@ exit:
     return error;
 }
 
+const otMacCounter *otGetMacCounter(void)
+{
+    return &sThreadNetif->GetMac().GetCounter();
+}
+
 bool otIsIp6AddressEqual(const otIp6Address *a, const otIp6Address *b)
 {
     return *static_cast<const Ip6::Address *>(a) == *static_cast<const Ip6::Address *>(b);

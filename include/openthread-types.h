@@ -341,6 +341,23 @@ typedef enum
 } otDeviceRole;
 
 /**
+ * This structure represents the MAC layer counter.
+ */
+typedef struct otMacCounter
+{
+    uint32_t mTxData;
+    uint32_t mTxBeacon;
+    uint32_t mTxBeaconRequest;
+    uint32_t mTxDataRetry;
+    uint32_t mTxDataErrAck;
+    uint32_t mTxErrCca;
+    uint32_t mRxData;
+    uint32_t mRxBeacon;
+    uint32_t mRxBeaconRequest;
+    uint32_t mRxErrSec;
+} otMacCounter;
+
+/**
  * @}
  *
  */

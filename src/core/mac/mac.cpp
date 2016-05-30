@@ -105,6 +105,8 @@ Mac::Mac(ThreadNetif &aThreadNetif):
         mExtAddress.m8[i] = otPlatRandomGet();
     }
 
+    memset(&mCounter, 0, sizeof(otMacCounter));
+
     SetExtendedPanId(sExtendedPanidInit);
     SetNetworkName(sNetworkNameInit);
     SetPanId(kPanIdBroadcast);
@@ -362,6 +364,7 @@ void Mac::SendBeaconRequest(Frame &aFrame)
     aFrame.SetDstAddr(kShortAddrBroadcast);
     aFrame.SetCommandId(Frame::kMacCmdBeaconRequest);
 
+    mCounter.mTxBeaconRequest += 1;
     otLogInfoMac("Sent Beacon Request\n");
 }
 
@@ -379,6 +382,7 @@ void Mac::SendBeacon(Frame &aFrame)
     memcpy(aFrame.GetPayload(), &mBeacon, sizeof(mBeacon));
     aFrame.SetPayloadLength(sizeof(mBeacon));
 
+    mCounter.mTxBeacon += 1;
     otLogInfoMac("Sent Beacon\n");
 }
 
@@ -491,6 +495,9 @@ void Mac::TransmitDoneTask(bool aRxPending, ThreadError aError)
     {
         mCsmaAttempts++;
         StartCsmaBackoff();
+
+        mCounter.mTxErrCca += 1;
+
         ExitNow();
     }
 
@@ -606,10 +613,15 @@ void Mac::SentFrame(bool aAcked)
         {
             otDumpDebgMac("NO ACK", sendFrame.GetHeader(), 16);
 
+            mCounter.mTxDataErrAck += 1;
+
             if (mTransmitAttempts < kMaxFrameAttempts)
             {
                 mTransmitAttempts++;
                 StartCsmaBackoff();
+
+                mCounter.mTxDataRetry += 1;
+
                 ExitNow();
             }
 
@@ -619,6 +631,10 @@ void Mac::SentFrame(bool aAcked)
             {
                 neighbor->mState = Neighbor::kStateInvalid;
             }
+        }
+        else
+        {
+            mCounter.mTxData += 1;
         }
 
         mTransmitAttempts = 0;
@@ -734,6 +750,12 @@ ThreadError Mac::ProcessReceiveSecurity(Frame &aFrame, const Address &aSrcAddr, 
     aFrame.SetSecurityValid(true);
 
 exit:
+
+    if (error != kThreadError_None)
+    {
+        mCounter.mRxErrSec += 1;
+    }
+
     return error;
 }
 
@@ -822,6 +844,7 @@ void Mac::ReceiveDoneTask(Frame *aFrame, ThreadError aError)
     case kStateActiveScan:
         if (aFrame->GetType() == Frame::kFcfFrameBeacon)
         {
+            mCounter.mRxBeacon += 1;
             mActiveScanHandler(mActiveScanContext, aFrame);
         }
 
@@ -843,6 +866,8 @@ void Mac::ReceiveDoneTask(Frame *aFrame, ThreadError aError)
             receiver->HandleReceivedFrame(*aFrame, kThreadError_None);
         }
 
+        mCounter.mRxData += 1;
+
         break;
     }
 
@@ -859,7 +884,9 @@ ThreadError Mac::HandleMacCommand(Frame &aFrame)
 
     if (commandId == Frame::kMacCmdBeaconRequest)
     {
+        mCounter.mRxBeaconRequest += 1;
         otLogInfoMac("Received Beacon Request\n");
+
         mTransmitBeacon = true;
 
         if (mState == kStateIdle)
@@ -900,6 +927,11 @@ exit:
 Whitelist &Mac::GetWhitelist(void)
 {
     return mWhitelist;
+}
+
+otMacCounter &Mac::GetCounter(void)
+{
+    return mCounter;
 }
 
 }  // namespace Mac
