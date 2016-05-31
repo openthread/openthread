@@ -39,6 +39,7 @@
 #include <openthread-types.h>
 #include <common/encoding.hpp>
 #include <common/message.hpp>
+#include <common/checksum.hpp>
 #include <net/ip6_address.hpp>
 #include <net/netif.hpp>
 #include <net/socket.hpp>
@@ -512,41 +513,6 @@ public:
      */
     static ThreadError HandleDatagram(Message &aMessage, Netif *aNetif, uint8_t aInterfaceId,
                                       const void *aLinkMessageInfo, bool aFromNcpHost);
-
-    /**
-     * This static method updates a checksum.
-     *
-     * @param[in]  aChecksum  The checksum value to update.
-     * @param[in]  aValue     The 16-bit value to update @p aChecksum with.
-     *
-     * @returns The updated checksum.
-     *
-     */
-    static uint16_t UpdateChecksum(uint16_t aChecksum, uint16_t aValue);
-
-
-    /**
-     * This static method updates a checksum.
-     *
-     * @param[in]  aChecksum  The checksum value to update.
-     * @param[in]  aBuf       A pointer to a buffer.
-     * @param[in]  aLength    The number of bytes in @p aBuf.
-     *
-     * @returns The updated checksum.
-     *
-     */
-    static uint16_t UpdateChecksum(uint16_t aChecksum, const void *aBuf, uint16_t aLength);
-
-    /**
-     * This static method updates a checksum.
-     *
-     * @param[in]  aChecksum  The checksum value to update.
-     * @param[in]  aAddress   A reference to an IPv6 address.
-     *
-     * @returns The updated checksum.
-     *
-     */
-    static uint16_t UpdateChecksum(uint16_t aChecksum, const Address &aAddress);
 
     /**
      * This static method computes the pseudoheader checksum.

@@ -43,6 +43,7 @@ libopenthread_a_SOURCES             = \
     common/message.cpp                \
     common/tasklet.cpp                \
     common/timer.cpp                  \
+    common/checksum.cpp               \
     crypto/aes_ccm.cpp                \
     mac/mac.cpp                       \
     mac/mac_frame.cpp                 \
@@ -79,6 +80,7 @@ noinst_HEADERS                      = \
     common/message.hpp                \
     common/tasklet.hpp                \
     common/timer.hpp                  \
+    common/checksum.hpp               \
     crypto/aes_ccm.hpp                \
     mac/mac.hpp                       \
     mac/mac_frame.hpp                 \

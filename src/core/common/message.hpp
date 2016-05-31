@@ -37,6 +37,7 @@
 #include <stdint.h>
 #include <string.h>
 
+#include <common/checksum.hpp>
 #include <openthread-types.h>
 #include <openthread-core-config.h>
 #include <common/code_utils.hpp>

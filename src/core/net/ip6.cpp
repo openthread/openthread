@@ -58,37 +58,14 @@ Message *Ip6::NewMessage(uint16_t reserved)
                         sizeof(Header) + sizeof(HopByHopHeader) + sizeof(OptionMpl) + reserved);
 }
 
-uint16_t Ip6::UpdateChecksum(uint16_t checksum, uint16_t val)
-{
-    uint16_t result = checksum + val;
-    return result + (result < checksum);
-}
-
-uint16_t Ip6::UpdateChecksum(uint16_t checksum, const void *buf, uint16_t len)
-{
-    const uint8_t *bytes = reinterpret_cast<const uint8_t *>(buf);
-
-    for (int i = 0; i < len; i++)
-    {
-        checksum = Ip6::UpdateChecksum(checksum, (i & 1) ? bytes[i] : (static_cast<uint16_t>(bytes[i])) << 8);
-    }
-
-    return checksum;
-}
-
-uint16_t Ip6::UpdateChecksum(uint16_t checksum, const Address &address)
-{
-    return Ip6::UpdateChecksum(checksum, address.m8, sizeof(address));
-}
-
 uint16_t Ip6::ComputePseudoheaderChecksum(const Address &src, const Address &dst, uint16_t length, IpProto proto)
 {
     uint16_t checksum;
 
-    checksum = Ip6::UpdateChecksum(0, length);
-    checksum = Ip6::UpdateChecksum(checksum, proto);
-    checksum = UpdateChecksum(checksum, src);
-    checksum = UpdateChecksum(checksum, dst);
+    checksum = CalculateChecksum16(0, length);
+    checksum = CalculateChecksum16(checksum, proto);
+    checksum = CalculateChecksum(checksum, src.m8, sizeof(src));
+    checksum = CalculateChecksum(checksum, dst.m8, sizeof(dst));
 
     return checksum;
 }
