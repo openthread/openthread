@@ -224,7 +224,8 @@ NcpBase::NcpBase():
     mNetifHandler(&HandleUnicastAddressesChanged, this),
     mUpdateAddressesTask(&RunUpdateAddressesTask, this)
 {
-    mChannelMask = (0xFFFF << 11); // Default to all channels
+    mSupportedChannelMask = (0xFFFF << 11); // Default to 2.4GHz 802.15.4 channels.
+    mChannelMask = mSupportedChannelMask;
     mScanPeriod = 200; // ms
 }
 
@@ -1004,21 +1005,7 @@ void NcpBase::GetPropertyHandler_PHY_FREQ(uint8_t header, spinel_prop_key_t key)
 
 void NcpBase::GetPropertyHandler_PHY_CHAN_SUPPORTED(uint8_t header, spinel_prop_key_t key)
 {
-    // TODO: This list should ideally come from the PHY layer
-    //       because 802.15.4 doesn't just run on 2.4GHz.
-    static const uint8_t supported_channels[] =
-    {
-        11, 12, 13, 14, 15, 16, 17, 18,
-        19, 20, 21, 22, 23, 24, 25, 26
-    };
-    SendPropteryUpdate(
-        header,
-        SPINEL_CMD_PROP_VALUE_IS,
-        key,
-        SPINEL_DATATYPE_DATA_S,
-        supported_channels,
-        sizeof(supported_channels)
-    );
+    GetPropertyHandler_ChannelMaskHelper(header, key, mSupportedChannelMask);
 }
 
 void NcpBase::GetPropertyHandler_PHY_CHAN(uint8_t header, spinel_prop_key_t key)
@@ -1078,7 +1065,7 @@ void NcpBase::GetPropertyHandler_MAC_SCAN_PERIOD(uint8_t header, spinel_prop_key
     );
 }
 
-void NcpBase::GetPropertyHandler_MAC_SCAN_MASK(uint8_t header, spinel_prop_key_t key)
+void NcpBase::GetPropertyHandler_ChannelMaskHelper(uint8_t header, spinel_prop_key_t key, uint32_t channel_mask)
 {
     ThreadError errorCode(OutboundFrameBegin());
 
@@ -1094,7 +1081,7 @@ void NcpBase::GetPropertyHandler_MAC_SCAN_MASK(uint8_t header, spinel_prop_key_t
             break;
         }
 
-        if (0 != (mChannelMask & (1 << i)))
+        if (0 != (channel_mask & (1 << i)))
         {
             errorCode = OutboundFrameFeedPacked(SPINEL_DATATYPE_UINT8_S, i);
         }
@@ -1109,6 +1096,11 @@ void NcpBase::GetPropertyHandler_MAC_SCAN_MASK(uint8_t header, spinel_prop_key_t
     {
         SendLastStatus(header, SPINEL_STATUS_INTERNAL_ERROR);
     }
+}
+
+void NcpBase::GetPropertyHandler_MAC_SCAN_MASK(uint8_t header, spinel_prop_key_t key)
+{
+    GetPropertyHandler_ChannelMaskHelper(header, key, mChannelMask);
 }
 
 void NcpBase::GetPropertyHandler_MAC_15_4_PANID(uint8_t header, spinel_prop_key_t key)
@@ -1688,8 +1680,9 @@ void NcpBase::SetPropertyHandler_MAC_SCAN_MASK(uint8_t header, spinel_prop_key_t
 
     for (; value_len != 0; value_len--, value_ptr++)
     {
-        if (value_ptr[0] > 31)
-        {
+        if ( (value_ptr[0] > 31)
+          || (mSupportedChannelMask & (1 << value_ptr[0])) == 0
+        ) {
             errorCode = kThreadError_InvalidArgs;
             break;
         }
@@ -1724,6 +1717,7 @@ void NcpBase::SetPropertyHandler_MAC_SCAN_PERIOD(uint8_t header, spinel_prop_key
     if (parsedLength > 0)
     {
         mScanPeriod = tmp;
+        HandleCommandPropertyGet(header, key);
     }
     else
     {
@@ -1734,14 +1728,14 @@ void NcpBase::SetPropertyHandler_MAC_SCAN_PERIOD(uint8_t header, spinel_prop_key
 void NcpBase::SetPropertyHandler_MAC_SCAN_STATE(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr,
                                                 uint16_t value_len)
 {
-    unsigned int i = 0;
+    uint8_t i = 0;
     spinel_ssize_t parsedLength;
     ThreadError errorCode = kThreadError_None;
 
     parsedLength = spinel_datatype_unpack(
                        value_ptr,
                        value_len,
-                       SPINEL_DATATYPE_UINT_PACKED_S,
+                       SPINEL_DATATYPE_UINT8_S,
                        &i
                    );
 

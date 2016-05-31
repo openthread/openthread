@@ -180,6 +180,8 @@ private:
     void CommandHandler_PROP_VALUE_INSERT(uint8_t header, unsigned int command, const uint8_t *arg_ptr, uint16_t arg_len);
     void CommandHandler_PROP_VALUE_REMOVE(uint8_t header, unsigned int command, const uint8_t *arg_ptr, uint16_t arg_len);
 
+    void GetPropertyHandler_ChannelMaskHelper(uint8_t header, spinel_prop_key_t key, uint32_t channel_mask);
+
     void GetPropertyHandler_LAST_STATUS(uint8_t header, spinel_prop_key_t key);
     void GetPropertyHandler_PROTOCOL_VERSION(uint8_t header, spinel_prop_key_t key);
     void GetPropertyHandler_INTERFACE_TYPE(uint8_t header, spinel_prop_key_t key);
@@ -281,6 +283,8 @@ private:
     Ip6::NetifHandler mNetifHandler;
 
     spinel_status_t mLastStatus;
+
+    uint32_t mSupportedChannelMask;
 
     uint32_t mChannelMask;
 
