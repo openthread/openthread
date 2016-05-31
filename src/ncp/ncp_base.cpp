@@ -81,6 +81,7 @@ const NcpBase::GetPropertyHandlerEntry NcpBase::mGetPropertyHandlerTable[] =
     { SPINEL_PROP_MAC_15_4_PANID, &NcpBase::GetPropertyHandler_MAC_15_4_PANID },
     { SPINEL_PROP_MAC_15_4_LADDR, &NcpBase::GetPropertyHandler_MAC_15_4_LADDR },
     { SPINEL_PROP_MAC_15_4_SADDR, &NcpBase::GetPropertyHandler_MAC_15_4_SADDR },
+    { SPINEL_PROP_MAC_FILTER_MODE, &NcpBase::GetPropertyHandler_MAC_FILTER_MODE },
 
     { SPINEL_PROP_NET_ENABLED, &NcpBase::GetPropertyHandler_NET_ENABLED },
     { SPINEL_PROP_NET_STATE, &NcpBase::GetPropertyHandler_NET_STATE },
@@ -1114,6 +1115,19 @@ void NcpBase::GetPropertyHandler_MAC_15_4_PANID(uint8_t header, spinel_prop_key_
     );
 }
 
+void NcpBase::GetPropertyHandler_MAC_FILTER_MODE(uint8_t header, spinel_prop_key_t key)
+{
+    SendPropteryUpdate(
+        header,
+        SPINEL_CMD_PROP_VALUE_IS,
+        key,
+        SPINEL_DATATYPE_INT8_S,
+        otPlatRadioGetPromiscuous()
+        ? SPINEL_MAC_FILTER_MODE_15_4_PROMISCUOUS
+        : SPINEL_MAC_FILTER_MODE_NORMAL
+    );
+}
+
 void NcpBase::GetPropertyHandler_MAC_15_4_LADDR(uint8_t header, spinel_prop_key_t key)
 {
     SendPropteryUpdate(
@@ -1642,24 +1656,22 @@ void NcpBase::SetPropertyHandler_MAC_FILTER_MODE(uint8_t header, spinel_prop_key
 
     if (parsedLength > 0)
     {
-        errorCode = kThreadError_NotImplemented;
-
-        /* Uncomment when API is available.
         switch (i) {
         case SPINEL_MAC_FILTER_MODE_NORMAL:
-            errorCode = otPlatRadioSetPromiscuous(false);
+            otPlatRadioSetPromiscuous(false);
+            errorCode = kThreadError_None;
             break;
 
         case SPINEL_MAC_FILTER_MODE_PROMISCUOUS:
         case SPINEL_MAC_FILTER_MODE_MONITOR:
-            errorCode = otPlatRadioSetPromiscuous(true);
+            otPlatRadioSetPromiscuous(true);
+            errorCode = kThreadError_None;
             break;
         }
-        */
 
         if (errorCode == kThreadError_None)
         {
-            SendLastStatus(header, SPINEL_STATUS_OK);
+            HandleCommandPropertyGet(header, key);
         }
         else
         {
