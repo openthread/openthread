@@ -69,23 +69,26 @@ __BEGIN_DECLS
 
 typedef enum
 {
-    SPINEL_STATUS_OK                = 0, //!< Operation has completed successfully.
-    SPINEL_STATUS_FAILURE           = 1, //!< Operation has failed for some undefined reason.
+    SPINEL_STATUS_OK                = 0, ///< Operation has completed successfully.
+    SPINEL_STATUS_FAILURE           = 1, ///< Operation has failed for some undefined reason.
 
-    SPINEL_STATUS_UNIMPLEMENTED     = 2,
-    SPINEL_STATUS_INVALID_ARGUMENT  = 3,
-    SPINEL_STATUS_INVALID_STATE     = 4,
-    SPINEL_STATUS_INVALID_COMMAND   = 5,
-    SPINEL_STATUS_INVALID_INTERFACE = 6,
-    SPINEL_STATUS_INTERNAL_ERROR    = 7,
-    SPINEL_STATUS_SECURITY_ERROR    = 8,
-    SPINEL_STATUS_PARSE_ERROR       = 9,
-    SPINEL_STATUS_IN_PROGRESS       = 10,
-    SPINEL_STATUS_NOMEM             = 11,
-    SPINEL_STATUS_BUSY              = 12,
-    SPINEL_STATUS_PROPERTY_NOT_FOUND = 12,
-    SPINEL_STATUS_DROPPED           = 14,
-    SPINEL_STATUS_EMPTY             = 15,
+    SPINEL_STATUS_UNIMPLEMENTED     = 2, ///< Given operation has not been implemented.
+    SPINEL_STATUS_INVALID_ARGUMENT  = 3, ///< An argument to the operation is invalid.
+    SPINEL_STATUS_INVALID_STATE     = 4, ///< This operation is invalid for the current device state.
+    SPINEL_STATUS_INVALID_COMMAND   = 5, ///< This command is not recognized.
+    SPINEL_STATUS_INVALID_INTERFACE = 6, ///< This interface is not supported.
+    SPINEL_STATUS_INTERNAL_ERROR    = 7, ///< An internal runtime error has occured.
+    SPINEL_STATUS_SECURITY_ERROR    = 8, ///< A security/authentication error has occured.
+    SPINEL_STATUS_PARSE_ERROR       = 9, ///< A error has occured while parsing the command.
+    SPINEL_STATUS_IN_PROGRESS       = 10, ///< This operation is in progress.
+    SPINEL_STATUS_NOMEM             = 11, ///< Operation prevented due to memory pressure.
+    SPINEL_STATUS_BUSY              = 12, ///< The device is currently performing an mutually exclusive operation
+    SPINEL_STATUS_PROP_NOT_FOUND    = 12, ///< The given property is not recognized.
+    SPINEL_STATUS_DROPPED           = 14, ///< A/The packet was dropped.
+    SPINEL_STATUS_EMPTY             = 15, ///< The result of the operation is empty.
+    SPINEL_STATUS_CMD_TOO_BIG       = 16, ///< The command was too large to fit in the internal buffer.
+    SPINEL_STATUS_NO_ACK            = 17, ///< The packet was not acknowledged.
+    SPINEL_STATUS_CCA_FAILURE       = 18, ///< The packet was not sent due to a CCA failure.
 
     SPINEL_STATUS_RESET__BEGIN      = 112,
     SPINEL_STATUS_RESET_POWER_ON    = SPINEL_STATUS_RESET__BEGIN + 0,
@@ -142,6 +145,23 @@ enum
     SPINEL_PROTOCOL_TYPE_ZIGBEE    = 1,
     SPINEL_PROTOCOL_TYPE_ZIGBEE_IP = 2,
     SPINEL_PROTOCOL_TYPE_THREAD    = 3,
+};
+
+enum
+{
+    SPINEL_MAC_FILTER_MODE_NORMAL      = 0, ///< Normal MAC filtering is in place.
+    SPINEL_MAC_FILTER_MODE_PROMISCUOUS = 1, ///< All MAC packets matching network are passed up the stack.
+    SPINEL_MAC_FILTER_MODE_MONITOR     = 2, ///< All decoded MAC packets are passed up the stack.
+
+    /// 802.15.4's definition of "Promiscuous" mode.
+    /** 802.15.4 defines promiscuous mode to be what
+     *  is generally considered to be "Monitor" mode.
+     *  This definition will hopefully help people who
+     *  are familiar with the 802.15.4 spec from being
+     *  confused about what they need to set this
+     *  property to in order to get the desired behavior.
+     */
+    SPINEL_MAC_FILTER_MODE_15_4_PROMISCUOUS = SPINEL_MAC_FILTER_MODE_MONITOR,
 };
 
 typedef struct
@@ -205,19 +225,19 @@ enum
     SPINEL_CAP_HBO                   = 3,
     SPINEL_CAP_POWER_SAVE            = 4,
 
-    SPINEL_CAP_802_15_4__BEGIN       = 16,
-    SPINEL_CAP_802_15_4_2003         = (SPINEL_CAP_802_15_4__BEGIN + 0),
-    SPINEL_CAP_802_15_4_2006         = (SPINEL_CAP_802_15_4__BEGIN + 1),
-    SPINEL_CAP_802_15_4_2011         = (SPINEL_CAP_802_15_4__BEGIN + 2),
-    SPINEL_CAP_802_15_4_PIB          = (SPINEL_CAP_802_15_4__BEGIN + 5),
+    SPINEL_CAP_802_15_4__BEGIN        = 16,
+    SPINEL_CAP_802_15_4_2003          = (SPINEL_CAP_802_15_4__BEGIN + 0),
+    SPINEL_CAP_802_15_4_2006          = (SPINEL_CAP_802_15_4__BEGIN + 1),
+    SPINEL_CAP_802_15_4_2011          = (SPINEL_CAP_802_15_4__BEGIN + 2),
+    SPINEL_CAP_802_15_4_PIB           = (SPINEL_CAP_802_15_4__BEGIN + 5),
     SPINEL_CAP_802_15_4_2450MHZ_OQPSK = (SPINEL_CAP_802_15_4__BEGIN + 8),
-    SPINEL_CAP_802_15_4_915MHZ_OQPSK = (SPINEL_CAP_802_15_4__BEGIN + 9),
-    SPINEL_CAP_802_15_4_868MHZ_OQPSK = (SPINEL_CAP_802_15_4__BEGIN + 10),
-    SPINEL_CAP_802_15_4_915MHZ_BPSK  = (SPINEL_CAP_802_15_4__BEGIN + 11),
-    SPINEL_CAP_802_15_4_868MHZ_BPSK  = (SPINEL_CAP_802_15_4__BEGIN + 12),
-    SPINEL_CAP_802_15_4_915MHZ_ASK   = (SPINEL_CAP_802_15_4__BEGIN + 13),
-    SPINEL_CAP_802_15_4_868MHZ_ASK   = (SPINEL_CAP_802_15_4__BEGIN + 14),
-    SPINEL_CAP_802_15_4__END         = 32,
+    SPINEL_CAP_802_15_4_915MHZ_OQPSK  = (SPINEL_CAP_802_15_4__BEGIN + 9),
+    SPINEL_CAP_802_15_4_868MHZ_OQPSK  = (SPINEL_CAP_802_15_4__BEGIN + 10),
+    SPINEL_CAP_802_15_4_915MHZ_BPSK   = (SPINEL_CAP_802_15_4__BEGIN + 11),
+    SPINEL_CAP_802_15_4_868MHZ_BPSK   = (SPINEL_CAP_802_15_4__BEGIN + 12),
+    SPINEL_CAP_802_15_4_915MHZ_ASK    = (SPINEL_CAP_802_15_4__BEGIN + 13),
+    SPINEL_CAP_802_15_4_868MHZ_ASK    = (SPINEL_CAP_802_15_4__BEGIN + 14),
+    SPINEL_CAP_802_15_4__END          = 32,
 
     SPINEL_CAP_ROLE__BEGIN           = 48,
     SPINEL_CAP_ROLE_ROUTER           = (SPINEL_CAP_ROLE__BEGIN + 0),
@@ -264,19 +284,19 @@ typedef enum
     SPINEL_PROP_PHY_CCA_THRESHOLD       = SPINEL_PROP_PHY__BEGIN + 4, ///< dBm [c]
     SPINEL_PROP_PHY_TX_POWER            = SPINEL_PROP_PHY__BEGIN + 5, ///< [c]
     SPINEL_PROP_PHY_RSSI                = SPINEL_PROP_PHY__BEGIN + 6, ///< dBm [c]
-    SPINEL_PROP_PHY_RAW_STREAM_ENABLED  = SPINEL_PROP_PHY__BEGIN + 7, ///< [C]
-    SPINEL_PROP_PHY_PROMISCUOUS_MODE    = SPINEL_PROP_PHY__BEGIN + 8, ///< [C]
     SPINEL_PROP_PHY__END                = 0x30,
 
-    SPINEL_PROP_MAC__BEGIN           = 0x30,
-    SPINEL_PROP_MAC_SCAN_STATE       = SPINEL_PROP_MAC__BEGIN + 0, ///< [C]
-    SPINEL_PROP_MAC_SCAN_MASK        = SPINEL_PROP_MAC__BEGIN + 1, ///< [A(C)]
-    SPINEL_PROP_MAC_SCAN_PERIOD      = SPINEL_PROP_MAC__BEGIN + 2, ///< ms-per-channel [S]
-    SPINEL_PROP_MAC_SCAN_BEACON      = SPINEL_PROP_MAC__BEGIN + 3, ///< chan,rssi,(laddr,saddr,panid,lqi),(proto,xtra) [CcT(ESSC)T(i).]
-    SPINEL_PROP_MAC_15_4_LADDR       = SPINEL_PROP_MAC__BEGIN + 4, ///< [E]
-    SPINEL_PROP_MAC_15_4_SADDR       = SPINEL_PROP_MAC__BEGIN + 5, ///< [S]
-    SPINEL_PROP_MAC_15_4_PANID       = SPINEL_PROP_MAC__BEGIN + 6, ///< [S]
-    SPINEL_PROP_MAC__END             = 0x40,
+    SPINEL_PROP_MAC__BEGIN             = 0x30,
+    SPINEL_PROP_MAC_SCAN_STATE         = SPINEL_PROP_MAC__BEGIN + 0, ///< [C]
+    SPINEL_PROP_MAC_SCAN_MASK          = SPINEL_PROP_MAC__BEGIN + 1, ///< [A(C)]
+    SPINEL_PROP_MAC_SCAN_PERIOD        = SPINEL_PROP_MAC__BEGIN + 2, ///< ms-per-channel [S]
+    SPINEL_PROP_MAC_SCAN_BEACON        = SPINEL_PROP_MAC__BEGIN + 3, ///< chan,rssi,(laddr,saddr,panid,lqi),(proto,xtra) [CcT(ESSC.)T(i).]
+    SPINEL_PROP_MAC_15_4_LADDR         = SPINEL_PROP_MAC__BEGIN + 4, ///< [E]
+    SPINEL_PROP_MAC_15_4_SADDR         = SPINEL_PROP_MAC__BEGIN + 5, ///< [S]
+    SPINEL_PROP_MAC_15_4_PANID         = SPINEL_PROP_MAC__BEGIN + 6, ///< [S]
+    SPINEL_PROP_MAC_RAW_STREAM_ENABLED = SPINEL_PROP_MAC__BEGIN + 7, ///< [C]
+    SPINEL_PROP_MAC_FILTER_MODE        = SPINEL_PROP_MAC__BEGIN + 8, ///< [C]
+    SPINEL_PROP_MAC__END               = 0x40,
 
     SPINEL_PROP_NET__BEGIN           = 0x40,
     SPINEL_PROP_NET_SAVED            = SPINEL_PROP_NET__BEGIN + 0, ///< [b]
@@ -301,17 +321,21 @@ typedef enum
     SPINEL_PROP_THREAD_NETWORK_DATA    = SPINEL_PROP_THREAD__BEGIN + 6, ///< [D]
     SPINEL_PROP_THREAD_NETWORK_DATA_VERSION
                                        = SPINEL_PROP_THREAD__BEGIN + 7, ///< [S]
+    SPINEL_PROP_THREAD_STABLE_NETWORK_DATA
+                                       = SPINEL_PROP_THREAD__BEGIN + 8, ///< [D]
     SPINEL_PROP_THREAD_STABLE_NETWORK_DATA_VERSION
-                                       = SPINEL_PROP_THREAD__BEGIN + 8, ///< [S]
+                                       = SPINEL_PROP_THREAD__BEGIN + 9,  ///< [S]
+    SPINEL_PROP_THREAD_ON_MESH_NETS    = SPINEL_PROP_THREAD__BEGIN + 10, ///< array(ipv6prefix,prefixlen,stable,flags) [A(T(6CbC))]
+    SPINEL_PROP_THREAD_LOCAL_ROUTES    = SPINEL_PROP_THREAD__BEGIN + 11, ///< array(ipv6prefix,prefixlen,stable,flags) [A(T(6CbC))]
+    SPINEL_PROP_THREAD_ASSISTING_PORTS = SPINEL_PROP_THREAD__BEGIN + 12, ///< array(portn) [A(S)]
     SPINEL_PROP_THREAD__END            = 0x60,
 
     SPINEL_PROP_IPV6__BEGIN          = 0x60,
     SPINEL_PROP_IPV6_LL_ADDR         = SPINEL_PROP_IPV6__BEGIN + 0, ///< [6]
     SPINEL_PROP_IPV6_ML_ADDR         = SPINEL_PROP_IPV6__BEGIN + 1, ///< [6C]
     SPINEL_PROP_IPV6_ML_PREFIX       = SPINEL_PROP_IPV6__BEGIN + 2, ///< [6C]
-    SPINEL_PROP_IPV6_ADDRESS_TABLE   = SPINEL_PROP_IPV6__BEGIN + 3, ///< array(ipv6addr,prefixlen,flags) [A(6CL)]
-    SPINEL_PROP_IPV6_ROUTE_TABLE     = SPINEL_PROP_IPV6__BEGIN + 4, ///< array(ipv6prefix,prefixlen,iface,flags) [A(6CCL)]
-    SPINEL_PROP_IPV6_EXT_ROUTE_TABLE = SPINEL_PROP_IPV6__BEGIN + 5, ///< array(ipv6prefix,prefixlen,flags) [A(6CL)]
+    SPINEL_PROP_IPV6_ADDRESS_TABLE   = SPINEL_PROP_IPV6__BEGIN + 3, ///< array(ipv6addr,prefixlen,flags) [A(T(6CL))]
+    SPINEL_PROP_IPV6_ROUTE_TABLE     = SPINEL_PROP_IPV6__BEGIN + 4, ///< array(ipv6prefix,prefixlen,iface,flags) [A(T(6CCL))]
     SPINEL_PROP_IPV6__END            = 0x70,
 
     SPINEL_PROP_STREAM__BEGIN       = 0x70,
@@ -326,6 +350,13 @@ typedef enum
     // Individual registers are fetched using
     // `SPINEL_PROP_15_4_PIB__BEGIN+[PIB_IDENTIFIER]`
     // Only supported if SPINEL_CAP_15_4_PIB is set.
+    //
+    // For brevity, the entire 802.15.4 PIB space is
+    // not defined here, but a few choice attributes
+    // are defined for illustration and convenience.
+    SPINEL_PROP_15_4_PIB_PHY_CHANNELS_SUPPORTED = SPINEL_PROP_15_4_PIB__BEGIN + 0x01, ///< [A(L)]
+    SPINEL_PROP_15_4_PIB_MAC_PROMISCUOUS_MODE   = SPINEL_PROP_15_4_PIB__BEGIN + 0x51, ///< [b]
+    SPINEL_PROP_15_4_PIB_MAC_SECURITY_ENABLED   = SPINEL_PROP_15_4_PIB__BEGIN + 0x5d, ///< [b]
     SPINEL_PROP_15_4_PIB__END       = 1280,
 
     SPINEL_PROP_NEST__BEGIN         = 15296,
@@ -421,6 +452,10 @@ SPINEL_API_EXTERN spinel_ssize_t spinel_packed_uint_encode(uint8_t *bytes, spine
 SPINEL_API_EXTERN spinel_ssize_t spinel_packed_uint_size(unsigned int value);
 
 SPINEL_API_EXTERN const char *spinel_next_packed_datatype(const char *pack_format);
+
+// ----------------------------------------------------------------------------
+
+SPINEL_API_EXTERN const char *spinel_prop_key_to_cstr(spinel_prop_key_t prop_key);
 
 // ----------------------------------------------------------------------------
 

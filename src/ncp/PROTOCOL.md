@@ -1081,11 +1081,6 @@ for managing a thread NCP.
 * Packed-Encoding: `c`
 * Unit: dBm
 
-#### D.1.7. PROP x: `PROP_PHY_RAW_STREAM_ENABLED`
-* Type: Read-Write
-* Packed-Encoding: `b`
-
-Set to true to enable raw frames to be emitted from `PROP_STREAM_RAW`.
 
 
 
@@ -1137,9 +1132,21 @@ chan,rssi,(laddr,saddr,panid,lqi),(proto,flags,networkid,xpanid) [CcT(ESSC)T(iCU
 * Type: Read-Write
 * Packed-Encoding: `S`
 
+#### D.2.7. PROP x: `PROP_MAC_RAW_STREAM_ENABLED`
+* Type: Read-Write
+* Packed-Encoding: `b`
 
+Set to true to enable raw MAC frames to be emitted from `PROP_STREAM_RAW`.
 
+#### D.2.8. PROP x: `PROP_MAC_FILTER_MODE`
+* Type: Read-Write
+* Packed-Encoding: `C`
 
+Possible Values:
+
+* 0: `MAC_FILTER_MODE_NORMAL`: Normal MAC filtering is in place.
+* 1: `MAC_FILTER_MODE_PROMISCUOUS`: All MAC packets matching network are passed up the stack.
+* 2: `MAC_FILTER_MODE_MONITOR`: All decoded MAC packets are passed up the stack.
 
 ### D.3. NET Properties
 
