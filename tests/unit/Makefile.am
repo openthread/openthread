@@ -67,6 +67,7 @@ check_PROGRAMS                                                 = \
     test-hmac-sha256                                             \
     test-mac-frame                                               \
     test-message                                                 \
+    test-timer                                                   \
     $(NULL)
 
 # Test applications and scripts that should be built and run when the
@@ -95,6 +96,9 @@ test_mac_frame_SOURCES       = test_mac_frame.cpp
 
 test_message_LDADD           = $(COMMON_LDADD)
 test_message_SOURCES         = test_message.cpp
+
+test_timer_LDADD             = $(COMMON_LDADD)
+test_timer_SOURCES           = test_timer.cpp
 
 endif # OPENTHREAD_BUILD_TESTS
 
