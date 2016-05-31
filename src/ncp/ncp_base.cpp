@@ -766,7 +766,8 @@ void NcpBase::CommandHandler_NOOP(uint8_t header, unsigned int command, const ui
 void NcpBase::CommandHandler_RESET(uint8_t header, unsigned int command, const uint8_t *arg_ptr, uint16_t arg_len)
 {
     // TODO: Figure out how to actually perform a reset.
-    SendLastStatus(0, SPINEL_STATUS_RESET_SOFTWARE);
+    otInit();
+    SendLastStatus(SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0, SPINEL_STATUS_RESET_SOFTWARE);
 }
 
 void NcpBase::CommandHandler_PROP_VALUE_GET(uint8_t header, unsigned int command, const uint8_t *arg_ptr,
