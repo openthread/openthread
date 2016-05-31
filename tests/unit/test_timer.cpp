@@ -33,7 +33,8 @@
 #include <platform/alarm.h>
 #include <string.h>
 
-enum {
+enum
+{
     kCallCountIndexAlarmStop = 0,
     kCallCountIndexAlarmStart,
     kCallCountIndexTimerHandler,
@@ -47,27 +48,26 @@ static uint32_t sPlatDt;
 static bool     sTimerOn;
 static uint32_t sCallCount[kCallCountIndexMax];
 
-extern "C"
-{
+extern "C" {
 
-void otPlatAlarmStop(void)
-{
-    sTimerOn = false;
-    sCallCount[kCallCountIndexAlarmStop]++;
-}
+    void otPlatAlarmStop(void)
+    {
+        sTimerOn = false;
+        sCallCount[kCallCountIndexAlarmStop]++;
+    }
 
-void otPlatAlarmStartAt(uint32_t aT0, uint32_t aDt)
-{
-    sTimerOn = true;
-    sCallCount[kCallCountIndexAlarmStart]++;
-    sPlatT0 = aT0;
-    sPlatDt = aDt;
-}
+    void otPlatAlarmStartAt(uint32_t aT0, uint32_t aDt)
+    {
+        sTimerOn = true;
+        sCallCount[kCallCountIndexAlarmStart]++;
+        sPlatT0 = aT0;
+        sPlatDt = aDt;
+    }
 
-uint32_t otPlatAlarmGetNow(void)
-{
-    return sNow;
-}
+    uint32_t otPlatAlarmGetNow(void)
+    {
+        return sNow;
+    }
 
 } // extern "C"
 
@@ -101,7 +101,7 @@ int TestOneTimer(void)
 
     sNow = kTimeT0;
     timer.Start(kTimerInterval);
-    
+
     VerifyOrQuit(sCallCount[kCallCountIndexAlarmStart]    == 1, "TestOneTimer: Start CallCount Failed.\n");
     VerifyOrQuit(sCallCount[kCallCountIndexAlarmStop]     == 0, "TestOneTimer: Stop CallCount Failed.\n");
     VerifyOrQuit(sCallCount[kCallCountIndexTimerHandler]  == 0, "TestOneTimer: Handler CallCount Failed.\n");
@@ -120,10 +120,10 @@ int TestOneTimer(void)
     VerifyOrQuit(sTimerOn == false,                             "TestOneTimer: Platform Timer State Failed.\n");
 
     // Test one Timer that spans the 32-bit wrap.
-    
+
     InitCounters();
 
-    sNow = 0 - (kTimerInterval - 2);  // will force the timer delta to have a trigger value that is 2 msec beyond the timer wrap.
+    sNow = 0 - (kTimerInterval - 2);
     timer.Start(kTimerInterval);
 
     VerifyOrQuit(sCallCount[kCallCountIndexAlarmStart]    == 1,         "TestOneTimer: Start CallCount Failed.\n");
@@ -149,7 +149,7 @@ int TestOneTimer(void)
 
     sNow = kTimeT0;
     timer.Start(kTimerInterval);
-    
+
     VerifyOrQuit(sCallCount[kCallCountIndexAlarmStart]    == 1, "TestOneTimer: Start CallCount Failed.\n");
     VerifyOrQuit(sCallCount[kCallCountIndexAlarmStop]     == 0, "TestOneTimer: Stop CallCount Failed.\n");
     VerifyOrQuit(sCallCount[kCallCountIndexTimerHandler]  == 0, "TestOneTimer: Handler CallCount Failed.\n");
@@ -173,7 +173,7 @@ int TestOneTimer(void)
 
     sNow = kTimeT0;
     timer.Start(kTimerInterval);
-    
+
     VerifyOrQuit(sCallCount[kCallCountIndexAlarmStart]    == 1, "TestOneTimer: Start CallCount Failed.\n");
     VerifyOrQuit(sCallCount[kCallCountIndexAlarmStop]     == 0, "TestOneTimer: Stop CallCount Failed.\n");
     VerifyOrQuit(sCallCount[kCallCountIndexTimerHandler]  == 0, "TestOneTimer: Handler CallCount Failed.\n");
@@ -227,11 +227,11 @@ int TestTenTimers(void)
     const uint32_t kTimerInterval[kNumTimers] =
     {
         20,
-        100, 
+        100,
         (0 - kTimeT0[2]),
         100000,
         1000000,
-        10, 
+        10,
         (1000 - kTimeT0[6]),
         200,
         200,
@@ -249,17 +249,17 @@ int TestTenTimers(void)
     //   4      1001003
     //   2            0 <timer wrapped>
     //   6         1000 <timer wrapped>
-    const uint32_t kTriggerTimes[kNumTriggers] = 
+    const uint32_t kTriggerTimes[kNumTriggers] =
     {
-        1014, 
-        1020, 
-        1100, 
-        1207, 
+        1014,
+        1020,
+        1100,
+        1207,
         101004,
-        /* timer wrap here */ 
-        2, 
+        /* timer wrap here */
+        2,
         1000
-    };  
+    };
     // Expected timers fired by each kTriggerTimes[] value
     //  Trigger #    Timers Fired
     //    0             5
@@ -269,7 +269,7 @@ int TestTenTimers(void)
     //    4             9, 3
     //    5             4, 2
     //    6             6
-    const bool kTimerStateAfterTrigger [kNumTriggers][kNumTimers] = 
+    const bool kTimerStateAfterTrigger [kNumTriggers][kNumTimers] =
     {
         {  true,  true,  true,  true,  true, false, true,   true,  true,  true},  // 5
         { false,  true,  true,  true,  true, false, true,   true,  true,  true},  // 0
@@ -280,7 +280,7 @@ int TestTenTimers(void)
         { false, false, false, false, false, false, false, false, false, false}   // 6
     };
 
-    const bool kSchedulerStateAfterTrigger[kNumTriggers] = 
+    const bool kSchedulerStateAfterTrigger[kNumTriggers] =
     {
         true,
         true,
@@ -291,7 +291,7 @@ int TestTenTimers(void)
         false
     };
 
-    const uint32_t kTimerHandlerCountAfterTrigger[kNumTriggers] = 
+    const uint32_t kTimerHandlerCountAfterTrigger[kNumTriggers] =
     {
         1,
         2,
@@ -302,7 +302,7 @@ int TestTenTimers(void)
         10
     };
 
-    const uint32_t kTimerStopCountAfterTrigger[kNumTriggers] = 
+    const uint32_t kTimerStopCountAfterTrigger[kNumTriggers] =
     {
         0,
         0,
@@ -313,7 +313,7 @@ int TestTenTimers(void)
         1
     };
 
-    const uint32_t kTimerStartCountAfterTrigger[kNumTriggers] = 
+    const uint32_t kTimerStartCountAfterTrigger[kNumTriggers] =
     {
         3,
         4,
@@ -367,7 +367,7 @@ int TestTenTimers(void)
     {
         sNow = kTriggerTimes[trigger];
 
-        do 
+        do
         {
             // By design, each call to otPlatAlarmFired() can result in 0 or 1 calls to a timer handler.
             // For some combinations of sNow and Timers queued, it is necessary to call otPlatAlarmFired()
@@ -376,12 +376,17 @@ int TestTenTimers(void)
             // that value is 0, then otPlatAlarmFired should be fired immediately. This loop calls otPlatAlarmFired()
             // the requisite number of times based on the aDt argument.
             otPlatAlarmFired();
-        } while (sPlatDt == 0);
+        }
+        while (sPlatDt == 0);
 
-        VerifyOrQuit(sCallCount[kCallCountIndexAlarmStart]    == kTimerStartCountAfterTrigger[trigger],   "TestTenTimer: Start CallCount Failed.\n");
-        VerifyOrQuit(sCallCount[kCallCountIndexAlarmStop]     == kTimerStopCountAfterTrigger[trigger],    "TestTenTimer: Stop CallCount Failed.\n");
-        VerifyOrQuit(sCallCount[kCallCountIndexTimerHandler]  == kTimerHandlerCountAfterTrigger[trigger], "TestTenTimer: Handler CallCount Failed.\n");
-        VerifyOrQuit(sTimerOn                                 == kSchedulerStateAfterTrigger[trigger],    "TestTenTimer: Platform Timer State Failed.\n");
+        VerifyOrQuit(sCallCount[kCallCountIndexAlarmStart]    == kTimerStartCountAfterTrigger[trigger],
+                     "TestTenTimer: Start CallCount Failed.\n");
+        VerifyOrQuit(sCallCount[kCallCountIndexAlarmStop]     == kTimerStopCountAfterTrigger[trigger],
+                     "TestTenTimer: Stop CallCount Failed.\n");
+        VerifyOrQuit(sCallCount[kCallCountIndexTimerHandler]  == kTimerHandlerCountAfterTrigger[trigger],
+                     "TestTenTimer: Handler CallCount Failed.\n");
+        VerifyOrQuit(sTimerOn                                 == kSchedulerStateAfterTrigger[trigger],
+                     "TestTenTimer: Platform Timer State Failed.\n");
 
         for (i = 0 ; i < kNumTimers ; i++)
         {
