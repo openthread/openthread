@@ -50,6 +50,12 @@ extern "C" {
 extern uint32_t NODE_ID;
 
 /**
+ * Well-known Unique ID used by a simulated radio that supports promiscuous mode.
+ *
+ */
+extern uint32_t WELLKNOWN_NODE_ID;
+
+/**
  * This method performs all platform-specific initialization.
  *
  */

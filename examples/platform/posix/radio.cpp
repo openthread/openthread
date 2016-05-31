@@ -86,6 +86,8 @@ static uint16_t s_panid;
 
 static int s_sockfd;
 
+static bool s_promiscuous = false;
+
 ThreadError otPlatRadioSetPanId(uint16_t panid)
 {
     s_panid = panid;
@@ -113,7 +115,16 @@ void PlatformRadioInit(void)
     struct sockaddr_in sockaddr;
     memset(&sockaddr, 0, sizeof(sockaddr));
     sockaddr.sin_family = AF_INET;
-    sockaddr.sin_port = htons(9000 + NODE_ID);
+
+    if (s_promiscuous)
+    {
+        sockaddr.sin_port = htons(9000 + WELLKNOWN_NODE_ID);
+    }
+    else
+    {
+        sockaddr.sin_port = htons(9000 + NODE_ID);
+    }
+
     sockaddr.sin_addr.s_addr = INADDR_ANY;
 
     s_sockfd = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
@@ -219,6 +230,16 @@ otRadioCaps otPlatRadioGetCaps(void)
     return kRadioCapsNone;
 }
 
+void otPlatRadioSetPromiscuous(bool aEnable)
+{
+    s_promiscuous = aEnable;
+}
+
+bool otPlatRadioGetPromiscuous(void)
+{
+    return s_promiscuous;
+}
+
 ThreadError otPlatRadioHandleTransmitDone(bool *rxPending)
 {
     ThreadError error = kThreadError_None;
@@ -318,7 +339,7 @@ int radioTransmit(void)
 
     s_transmit_message.mChannel = s_transmit_frame.mChannel;
 
-    for (unsigned i = 1; i < 34; i++)
+    for (unsigned i = 1; i < WELLKNOWN_NODE_ID; i++)
     {
         if (NODE_ID == i)
         {
@@ -330,6 +351,11 @@ int radioTransmit(void)
                       sizeof(sockaddr));
         assert(rval >= 0);
     }
+
+    sockaddr.sin_port = htons(9000 + WELLKNOWN_NODE_ID);
+    rval = sendto(s_sockfd, &s_transmit_message, 1 + s_transmit_frame.mLength, 0, (struct sockaddr *)&sockaddr,
+                  sizeof(sockaddr));
+    assert(rval >= 0);
 
     if (reinterpret_cast<Mac::Frame *>(&s_transmit_frame)->GetAckRequest())
     {
@@ -402,7 +428,7 @@ void radioSendAck(void)
 
     s_ack_message.mChannel = s_receive_frame.mChannel;
 
-    for (unsigned i = 1; i < 34; i++)
+    for (unsigned i = 1; i < WELLKNOWN_NODE_ID; i++)
     {
         if (NODE_ID == i)
         {
@@ -412,6 +438,9 @@ void radioSendAck(void)
         sockaddr.sin_port = htons(9000 + i);
         sendto(s_sockfd, &s_ack_message, 1 + s_ack_frame.mLength, 0, (struct sockaddr *)&sockaddr, sizeof(sockaddr));
     }
+
+    sockaddr.sin_port = htons(9000 + WELLKNOWN_NODE_ID);
+    sendto(s_sockfd, &s_ack_message, 1 + s_ack_frame.mLength, 0, (struct sockaddr *)&sockaddr, sizeof(sockaddr));
 }
 
 void radioProcessFrame(void)
@@ -421,6 +450,7 @@ void radioProcessFrame(void)
     uint16_t dstpan;
     Mac::Address dstaddr;
 
+    VerifyOrExit(s_promiscuous == false, error = kThreadError_None);
     receive_frame = reinterpret_cast<Mac::Frame *>(&s_receive_frame);
     receive_frame->GetDstAddr(dstaddr);
 
