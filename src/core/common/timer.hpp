@@ -99,7 +99,7 @@ public:
 
 private:
     static void SetAlarm(void);
-    
+
     /**
      * This static method compares two timers and returns a value to indicate
      * which timer will fire earlier.

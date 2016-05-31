@@ -191,7 +191,7 @@ void TimerScheduler::FireTimers(void)
     else
     {
         SetAlarm();
-    }    
+    }
 }
 
 bool TimerScheduler::TimerCompare(const Timer &aTimerA, const Timer &aTimerB)
