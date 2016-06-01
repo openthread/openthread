@@ -28,22 +28,44 @@
 
 include $(abs_top_nlbuild_autotools_dir)/automake/pre.am
 
-# Always package (e.g. for 'make dist') these subdirectories.
+lib_LIBRARIES                             = libopenthread-posix.a
 
-DIST_SUBDIRS                            = \
-    posix                                 \
+libopenthread_posix_a_CPPFLAGS            = \
+    -I$(top_srcdir)/include                 \
+    -I$(top_srcdir)/src                     \
+    -I$(top_srcdir)/src/core                \
+    -I$(top_srcdir)/examples/posix/platform \
+    $(OPENTHREAD_TARGET_DEFINES)            \
+    -D_BSD_SOURCE                           \
+    -D_GNU_SOURCE                           \
     $(NULL)
 
-# Always build (e.g. for 'make all') these subdirectories.
-
-SUBDIRS                                 = \
-    posix                                 \
+libopenthread_posix_a_CXXFLAGS            = \
+    -I$(top_srcdir)/include                 \
+    -I$(top_srcdir)/src                     \
+    -I$(top_srcdir)/src/core                \
+    -I$(top_srcdir)/examples/posix/platform \
+    $(OPENTHREAD_TARGET_DEFINES)            \
     $(NULL)
 
-# Always pretty (e.g. for 'make pretty') these subdirectories.
-
-PRETTY_SUBDIRS                          = \
-    posix                                 \
+libopenthread_posix_a_SOURCES             = \
+    alarm.c                                 \
+    logging.c                               \
+    platform.c                              \
+    posix-platform.c                        \
+    radio.cpp                               \
+    random.c                                \
+    serial.c                                \
     $(NULL)
+
+include_HEADERS                           = \
+    posix-platform.h                        \
+    $(NULL)
+
+install-headers: install-includeHEADERS
+
+if OPENTHREAD_BUILD_COVERAGE
+CLEANFILES                          = $(wildcard *.gcda *.gcno)
+endif # OPENTHREAD_BUILD_COVERAGE
 
 include $(abs_top_nlbuild_autotools_dir)/automake/post.am

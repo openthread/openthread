@@ -19,7 +19,7 @@ $ make
 Spawn the process:
 
 ```bash
-$ cd openthread/examples/cli
+$ cd openthread/examples/posix/app/cli
 $ ./soc 1
 ```
 
@@ -54,7 +54,7 @@ Done
 Spawn the process:
 
 ```bash
-$ cd openthread/examples/cli
+$ cd openthread/examples/posix/app/cli
 $ ./soc 2
 ```
 

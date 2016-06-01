@@ -28,40 +28,53 @@
 
 /**
  * @file
- *   This file implements a pseudo-random number generator.
- *
- * @warning
- *   This implementation is not a true random number generator and does @em satisfy the Thread requirements.
+ * @brief
+ *   This file includes the platform-specific initializers.
  */
 
-#include <platform/random.h>
-#include "platform.h"
+#include <assert.h>
+#include <errno.h>
+#include <stddef.h>
+#include <stdint.h>
+#include <sys/time.h>
 
-static uint32_t s_state = 1;
+#include <openthread.h>
+#include <platform/alarm.h>
+#include <posix-platform.h>
 
-void PlatformRandomInit(void)
+uint32_t NODE_ID = 1;
+uint32_t WELLKNOWN_NODE_ID = 34;
+
+void posixPlatformInit(void)
 {
-    s_state = NODE_ID;
+    posixPlatformAlarmInit();
+    posixPlatformRadioInit();
+    posixPlatformRandomInit();
 }
 
-uint32_t otPlatRandomGet(void)
+void posixPlatformProcessDrivers(void)
 {
-    uint32_t mlcg, p, q;
-    uint64_t tmpstate;
+    fd_set read_fds;
+    fd_set write_fds;
+    int max_fd = -1;
+    struct timeval timeout;
+    int rval;
 
-    tmpstate = (uint64_t)33614 * (uint64_t)s_state;
-    q = tmpstate & 0xffffffff;
-    q = q >> 1;
-    p = tmpstate >> 32;
-    mlcg = p + q;
+    FD_ZERO(&read_fds);
+    FD_ZERO(&write_fds);
 
-    if (mlcg & 0x80000000)
+    posixPlatformSerialUpdateFdSet(&read_fds, &write_fds, &max_fd);
+    posixPlatformRadioUpdateFdSet(&read_fds, &write_fds, &max_fd);
+    posixPlatformAlarmUpdateTimeout(&timeout);
+
+    if (!otAreTaskletsPending())
     {
-        mlcg &= 0x7fffffff;
-        mlcg++;
+        rval = select(max_fd + 1, &read_fds, &write_fds, NULL, &timeout);
+        assert(rval >= 0 && errno != ETIME);
     }
 
-    s_state = mlcg;
-
-    return mlcg;
+    posixPlatformSerialProcess();
+    posixPlatformRadioProcess();
+    posixPlatformAlarmProcess();
 }
+

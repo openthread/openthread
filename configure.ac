@@ -434,10 +434,11 @@ src/core/Makefile
 third_party/Makefile
 third_party/mbedtls/Makefile
 examples/Makefile
-examples/platform/Makefile
-examples/platform/posix/Makefile
-examples/cli/Makefile
-examples/ncp/Makefile
+examples/posix/Makefile
+examples/posix/app/Makefile
+examples/posix/app/cli/Makefile
+examples/posix/app/ncp/Makefile
+examples/posix/platform/Makefile
 tests/Makefile
 tests/scripts/Makefile
 tests/unit/Makefile

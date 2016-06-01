@@ -45,7 +45,8 @@ contributing to the ongoing development of OpenThread.
 # Getting Started #
 
 The easiest way to get started is to run the CLI example in
-`/examples/cli`. See the [CLI example README](examples/cli/README.md)
+`/examples/posix/app/cli`. See the
+[CLI example README](examples/posix/app/cli/README.md)
 for more details.
 
 

@@ -42,8 +42,7 @@
 #include <common/debug.hpp>
 #include <mac/mac.hpp>
 #include <platform/radio.h>
-
-#include "platform.h"
+#include <posix-platform.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -110,7 +109,7 @@ ThreadError otPlatRadioSetShortAddress(uint16_t address)
     return kThreadError_None;
 }
 
-void PlatformRadioInit(void)
+void posixPlatformRadioInit(void)
 {
     struct sockaddr_in sockaddr;
     memset(&sockaddr, 0, sizeof(sockaddr));
@@ -370,7 +369,7 @@ int radioTransmit(void)
     return rval;
 }
 
-void PlatformRadioUpdateFdSet(fd_set *aReadFdSet, fd_set *aWriteFdSet, int *aMaxFd)
+void posixPlatformRadioUpdateFdSet(fd_set *aReadFdSet, fd_set *aWriteFdSet, int *aMaxFd)
 {
     if (aReadFdSet != NULL &&
         (s_state == kStateDisabled || s_state == kStateSleep || s_state == kStateListen || s_state == kStateAckWait))
@@ -394,7 +393,7 @@ void PlatformRadioUpdateFdSet(fd_set *aReadFdSet, fd_set *aWriteFdSet, int *aMax
     }
 }
 
-void PlatformRadioProcess(void)
+void posixPlatformRadioProcess(void)
 {
     const int flags = POLLRDNORM | POLLERR | POLLNVAL | POLLHUP;
     struct pollfd pollfd = { s_sockfd, flags, 0 };
