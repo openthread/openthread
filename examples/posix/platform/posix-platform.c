@@ -26,36 +26,13 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <stdlib.h>
+/**
+ * @file
+ * @brief
+ *   This file includes the platform-specific initializers.
+ */
 
-#include <openthread.h>
-#include <cli/cli_serial.hpp>
-#include <platform.h>
+#include <posix-platform.h>
 
-Thread::Cli::Serial sCliServer;
+uint32_t NODE_ID = 1;
 
-void otSignalTaskletPending(void)
-{
-}
-
-int main(int argc, char *argv[])
-{
-    if (argc != 2)
-    {
-        exit(1);
-    }
-
-    NODE_ID = atoi(argv[1]);
-
-    PlatformInit();
-    otInit();
-    sCliServer.Start();
-
-    while (1)
-    {
-        otProcessNextTasklet();
-        PlatformProcessDrivers();
-    }
-
-    return 0;
-}

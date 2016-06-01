@@ -32,12 +32,13 @@
 #include <sys/time.h>
 
 #include <platform/alarm.h>
+#include <posix-platform.h>
 
 static bool s_is_running = false;
 static uint32_t s_alarm = 0;
 static struct timeval s_start;
 
-void PlatformAlarmInit(void)
+void posixPlatformAlarmInit(void)
 {
     gettimeofday(&s_start, NULL);
 }
@@ -63,7 +64,7 @@ void otPlatAlarmStop(void)
     s_is_running = false;
 }
 
-void PlatformAlarmUpdateTimeout(struct timeval *aTimeout)
+void posixPlatformAlarmUpdateTimeout(struct timeval *aTimeout)
 {
     int32_t remaining;
 
@@ -94,7 +95,7 @@ void PlatformAlarmUpdateTimeout(struct timeval *aTimeout)
     }
 }
 
-void PlatformAlarmProcess(void)
+void posixPlatformAlarmProcess(void)
 {
     int32_t remaining;
 

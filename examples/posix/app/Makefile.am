@@ -28,25 +28,24 @@
 
 include $(abs_top_nlbuild_autotools_dir)/automake/pre.am
 
-bin_PROGRAMS = ncp
+# Always package (e.g. for 'make dist') these subdirectories.
 
-ncp_CPPFLAGS                                                   = \
-    -I$(top_srcdir)/include                                      \
-    -I$(top_srcdir)/src                                          \
-    -I$(top_srcdir)/src/core                                     \
-    -I$(top_srcdir)/examples                                     \
-    -I$(top_srcdir)/examples/platform/posix                      \
-    -I$(top_srcdir)/third_party                                  \
-    $(OPENTHREAD_TARGET_DEFINES)                                 \
+DIST_SUBDIRS                            = \
+    cli                                   \
+    ncp                                   \
     $(NULL)
 
-ncp_LDADD                                                       = \
-    $(top_builddir)/src/ncp/libopenthread-ncp.a                   \
-    $(top_builddir)/src/core/libopenthread.a                      \
-    $(top_builddir)/examples/platform/posix/libopenthread-posix.a \
-    $(top_builddir)/third_party/mbedtls/libmbedcrypto.a           \
+# Always build (e.g. for 'make all') these subdirectories.
+
+SUBDIRS                                 = \
+    cli                                   \
+    ncp                                   \
     $(NULL)
 
-ncp_SOURCES = main.cpp
+# Always pretty (e.g. for 'make pretty') these subdirectories.
+
+PRETTY_SUBDIRS                          = \
+    cli                                   \
+    $(NULL)
 
 include $(abs_top_nlbuild_autotools_dir)/automake/post.am

@@ -29,11 +29,11 @@
 /**
  * @file
  * @brief
- *   This file includes the platform-specific initializers.
+ *   This file includes the posix platform-specific initializers.
  */
 
-#ifndef PLATFORM_H_
-#define PLATFORM_H_
+#ifndef POSIX_PLATFORM_H_
+#define POSIX_PLATFORM_H_
 
 #include <stdint.h>
 #include <sys/select.h>
@@ -44,7 +44,7 @@ extern "C" {
 #endif
 
 /**
- * Unique ID used by a simulated node.
+ * Unique node ID.
  *
  */
 extern uint32_t NODE_ID;
@@ -59,19 +59,19 @@ extern uint32_t WELLKNOWN_NODE_ID;
  * This method performs all platform-specific initialization.
  *
  */
-void PlatformInit(void);
+void posixPlatformInit(void);
 
 /**
  * This method performs all platform-specific processing.
  *
  */
-void PlatformProcessDrivers(void);
+void posixPlatformProcessDrivers(void);
 
 /**
  * This method initializes the alarm service used by OpenThread.
  *
  */
-void PlatformAlarmInit(void);
+void posixPlatformAlarmInit(void);
 
 /**
  * This method retrieves the time remaining until the alarm fires.
@@ -79,19 +79,19 @@ void PlatformAlarmInit(void);
  * @param[out]  aTimeval  A pointer to the timeval struct.
  *
  */
-void PlatformAlarmUpdateTimeout(struct timeval *tv);
+void posixPlatformAlarmUpdateTimeout(struct timeval *tv);
 
 /**
  * This method performs alarm driver processing.
  *
  */
-void PlatformAlarmProcess(void);
+void posixPlatformAlarmProcess(void);
 
 /**
  * This method initializes the radio service used by OpenThread.
  *
  */
-void PlatformRadioInit(void);
+void posixPlatformRadioInit(void);
 
 /**
  * This method updates the file descriptor sets with file descriptors used by the radio driver.
@@ -101,19 +101,19 @@ void PlatformRadioInit(void);
  * @param[inout]  aMaxFd       A pointer to the max file descriptor.
  *
  */
-void PlatformRadioUpdateFdSet(fd_set *aReadFdSet, fd_set *aWriteFdSet, int *aMaxFd);
+void posixPlatformRadioUpdateFdSet(fd_set *aReadFdSet, fd_set *aWriteFdSet, int *aMaxFd);
 
 /**
  * This method performs radio driver processing.
  *
  */
-void PlatformRadioProcess(void);
+void posixPlatformRadioProcess(void);
 
 /**
  * This method initializes the random number service used by OpenThread.
  *
  */
-void PlatformRandomInit(void);
+void posixPlatformRandomInit(void);
 
 /**
  * This method updates the file descriptor sets with file descriptors used by the serial driver.
@@ -123,22 +123,16 @@ void PlatformRandomInit(void);
  * @param[inout]  aMaxFd       A pointer to the max file descriptor.
  *
  */
-void PlatformSerialUpdateFdSet(fd_set *aReadFdSet, fd_set *aWriteFdSet, int *aMaxFd);
+void posixPlatformSerialUpdateFdSet(fd_set *aReadFdSet, fd_set *aWriteFdSet, int *aMaxFd);
 
 /**
  * This method performs radio driver processing.
  *
  */
-void PlatformSerialProcess(void);
-
-/**
- * This method puts the thread executing OpenThread to sleep.
- *
- */
-void PlatformSleep(void);
+void posixPlatformSerialProcess(void);
 
 #ifdef __cplusplus
 }  // extern "C"
 #endif
 
-#endif  // PLATFORM_H_
+#endif  // POSIX_PLATFORM_H_

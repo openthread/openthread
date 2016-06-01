@@ -54,7 +54,7 @@ class Node:
         """ Initialize a simulation node. """
         if "top_builddir" in os.environ.keys():
             srcdir = os.environ['top_builddir']
-            cmd = '%s/examples/cli/soc' % srcdir
+            cmd = '%s/examples/posix/app/cli/soc' % srcdir
         else:
             cmd = './soc'
         cmd += ' %d' % nodeid

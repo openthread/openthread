@@ -28,45 +28,24 @@
 
 include $(abs_top_nlbuild_autotools_dir)/automake/pre.am
 
-lib_LIBRARIES                             = libopenthread-posix.a
+bin_PROGRAMS = ncp
 
-libopenthread_posix_a_CPPFLAGS            = \
-    -I$(top_srcdir)/include                 \
-    -I$(top_srcdir)/src                     \
-    -I$(top_srcdir)/src/core                \
-    -I$(top_srcdir)/examples                \
-    -I$(top_srcdir)/examples/platform/posix \
-    $(OPENTHREAD_TARGET_DEFINES)            \
-    -D_BSD_SOURCE                           \
-    -D_GNU_SOURCE                           \
+ncp_CPPFLAGS                                                   = \
+    -I$(top_srcdir)/include                                      \
+    -I$(top_srcdir)/src                                          \
+    -I$(top_srcdir)/src/core                                     \
+    -I$(top_srcdir)/examples/posix/platform                      \
+    -I$(top_srcdir)/third_party                                  \
+    $(OPENTHREAD_TARGET_DEFINES)                                 \
     $(NULL)
 
-libopenthread_posix_a_CXXFLAGS            = \
-    -I$(top_srcdir)/include                 \
-    -I$(top_srcdir)/src                     \
-    -I$(top_srcdir)/src/core                \
-    -I$(top_srcdir)/examplse                \
-    -I$(top_srcdir)/examples/platform/posix \
-    $(OPENTHREAD_TARGET_DEFINES)            \
+ncp_LDADD                                                       = \
+    $(top_builddir)/src/ncp/libopenthread-ncp.a                   \
+    $(top_builddir)/src/core/libopenthread.a                      \
+    $(top_builddir)/examples/posix/platform/libopenthread-posix.a \
+    $(top_builddir)/third_party/mbedtls/libmbedcrypto.a           \
     $(NULL)
 
-libopenthread_posix_a_SOURCES             = \
-    alarm.c                                 \
-    logging.c                               \
-    platform.c                              \
-    radio.cpp                               \
-    random.c                                \
-    serial.c                                \
-    $(NULL)
-
-include_HEADERS                           = \
-    platform.h                              \
-    $(NULL)
-
-install-headers: install-includeHEADERS
-
-if OPENTHREAD_BUILD_COVERAGE
-CLEANFILES                          = $(wildcard *.gcda *.gcno)
-endif # OPENTHREAD_BUILD_COVERAGE
+ncp_SOURCES = main.cpp
 
 include $(abs_top_nlbuild_autotools_dir)/automake/post.am

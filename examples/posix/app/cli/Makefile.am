@@ -28,22 +28,25 @@
 
 include $(abs_top_nlbuild_autotools_dir)/automake/pre.am
 
-# Always package (e.g. for 'make dist') these subdirectories.
+bin_PROGRAMS = soc
 
-DIST_SUBDIRS                            = \
-    posix                                 \
+soc_CPPFLAGS                                                   = \
+    -I$(top_srcdir)/include                                      \
+    -I$(top_srcdir)/src                                          \
+    -I$(top_srcdir)/src/core                                     \
+    -I$(top_srcdir)/examples/posix/platform                      \
+    $(OPENTHREAD_TARGET_DEFINES)                                 \
     $(NULL)
 
-# Always build (e.g. for 'make all') these subdirectories.
-
-SUBDIRS                                 = \
-    posix                                 \
+soc_LDADD                                                      =  \
+    $(top_builddir)/src/core/libopenthread.a                      \
+    $(top_builddir)/src/cli/libopenthread-cli.a                   \
+    $(top_builddir)/examples/posix/platform/libopenthread-posix.a \
+    $(top_builddir)/third_party/mbedtls/libmbedcrypto.a           \
     $(NULL)
 
-# Always pretty (e.g. for 'make pretty') these subdirectories.
-
-PRETTY_SUBDIRS                          = \
-    posix                                 \
+soc_SOURCES                                                    = \
+    main.cpp                                                     \
     $(NULL)
 
 include $(abs_top_nlbuild_autotools_dir)/automake/post.am
