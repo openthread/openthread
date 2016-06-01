@@ -99,6 +99,18 @@ public:
 
 private:
     static void SetAlarm(void);
+
+    /**
+     * This static method compares two timers and returns a value to indicate
+     * which timer will fire earlier.
+     *
+     * @param[in] aTimerA   The first timer for comparison.
+     * @param[in] aTimerB   The second timer for comparison.
+     *
+     * @returns true if aTimerA will fire before aTimerB.
+     * @returns false if aTimerA will fire at the same time or after aTimerB.
+     */
+    static bool TimerCompare(const Timer &aTimerA, const Timer &aTimerB);
 };
 
 /**

@@ -44,20 +44,48 @@ void TimerScheduler::Add(Timer &aTimer)
 {
     VerifyOrExit(aTimer.mNext == NULL && sTail != &aTimer, ;);
 
-    if (sTail == NULL)
+    if (sHead == NULL)
     {
         sHead = &aTimer;
+        sTail = &aTimer;
+        SetAlarm();
     }
     else
     {
-        sTail->mNext = &aTimer;
+        Timer *prev = NULL;
+        Timer *cur;
+
+        for (cur = sHead; cur; cur = cur->mNext)
+        {
+            if (TimerCompare(aTimer, *cur))
+            {
+                if (prev)
+                {
+                    aTimer.mNext = cur;
+                    prev->mNext = &aTimer;
+                }
+                else
+                {
+                    aTimer.mNext = sHead;
+                    sHead = &aTimer;
+                    SetAlarm();
+                }
+
+                break;
+            }
+
+            prev = cur;
+        }
+
+        if (cur == NULL)
+        {
+            sTail->mNext = &aTimer;
+            sTail = &aTimer;
+        }
     }
 
-    aTimer.mNext = NULL;
-    sTail = &aTimer;
-
 exit:
-    SetAlarm();
+    return;
 }
 
 void TimerScheduler::Remove(Timer &aTimer)
@@ -72,6 +100,8 @@ void TimerScheduler::Remove(Timer &aTimer)
         {
             sTail = NULL;
         }
+
+        SetAlarm();
     }
     else
     {
@@ -92,20 +122,14 @@ void TimerScheduler::Remove(Timer &aTimer)
     }
 
     aTimer.mNext = NULL;
-    SetAlarm();
 
 exit:
-    {}
+    return;
 }
 
 bool TimerScheduler::IsAdded(const Timer &aTimer)
 {
     bool rval = false;
-
-    if (sHead == &aTimer)
-    {
-        ExitNow(rval = true);
-    }
 
     for (Timer *cur = sHead; cur; cur = cur->mNext)
     {
@@ -122,31 +146,21 @@ exit:
 void TimerScheduler::SetAlarm(void)
 {
     uint32_t now = otPlatAlarmGetNow();
-    int32_t  minRemaining = (1UL << 31) - 1;
     uint32_t elapsed;
-    int32_t  remaining;
+    uint32_t remaining;
+    Timer *timer = sHead;
 
-    if (sHead == NULL)
+    if (timer == NULL)
     {
         otPlatAlarmStop();
-        ExitNow();
     }
-
-    for (Timer *timer = sHead; timer; timer = timer->mNext)
+    else
     {
         elapsed = now - timer->mT0;
-        remaining = timer->mDt - elapsed;
+        remaining = (timer->mDt > elapsed) ? timer->mDt - elapsed : 0;
 
-        if (remaining < minRemaining)
-        {
-            minRemaining = remaining;
-        }
+        otPlatAlarmStartAt(now, remaining);
     }
-
-    otPlatAlarmStartAt(now, minRemaining);
-
-exit:
-    {}
 }
 
 extern "C" void otPlatAlarmFired(void)
@@ -158,20 +172,61 @@ void TimerScheduler::FireTimers(void)
 {
     uint32_t now = otPlatAlarmGetNow();
     uint32_t elapsed;
+    Timer *timer = sHead;
 
-    for (Timer *cur = sHead; cur; cur = cur->mNext)
+    if (timer)
     {
-        elapsed = now - cur->mT0;
+        elapsed = now - timer->mT0;
 
-        if (elapsed >= cur->mDt)
+        if (elapsed >= timer->mDt)
         {
-            Remove(*cur);
-            cur->Fired();
-            break;
+            Remove(*timer);
+            timer->Fired();
+        }
+        else
+        {
+            SetAlarm();
+        }
+    }
+    else
+    {
+        SetAlarm();
+    }
+}
+
+bool TimerScheduler::TimerCompare(const Timer &aTimerA, const Timer &aTimerB)
+{
+    uint32_t now = otPlatAlarmGetNow();
+    uint32_t elapsedA = now - aTimerA.mT0;
+    uint32_t elapsedB = now - aTimerB.mT0;
+    bool retval = false;
+
+    if (aTimerA.mDt >= elapsedA && aTimerB.mDt >= elapsedB)
+    {
+        uint32_t remainingA = aTimerA.mDt - elapsedA;
+        uint32_t remainingB = aTimerB.mDt - elapsedB;
+
+        if (remainingA < remainingB)
+        {
+            retval = true;
+        }
+    }
+    else if (aTimerA.mDt < elapsedA && aTimerB.mDt >= elapsedB)
+    {
+        retval = true;
+    }
+    else if (aTimerA.mDt < elapsedA && aTimerB.mDt < elapsedB)
+    {
+        uint32_t expiredByA = elapsedA - aTimerA.mDt;
+        uint32_t expiredByB = elapsedB - aTimerB.mDt;
+
+        if (expiredByB < expiredByA)
+        {
+            retval = true;
         }
     }
 
-    SetAlarm();
+    return retval;
 }
 
 }  // namespace Thread
