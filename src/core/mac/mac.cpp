@@ -279,6 +279,7 @@ ThreadError Mac::SendFrameRequest(Sender &aSender)
 
     if (mState == kStateIdle)
     {
+        mCounter.mTx += 1;
         mState = kStateTransmitData;
         StartCsmaBackoff();
     }
@@ -364,6 +365,7 @@ void Mac::SendBeaconRequest(Frame &aFrame)
     aFrame.SetDstAddr(kShortAddrBroadcast);
     aFrame.SetCommandId(Frame::kMacCmdBeaconRequest);
 
+    mCounter.mTx += 1;
     mCounter.mTxBeaconRequest += 1;
     otLogInfoMac("Sent Beacon Request\n");
 }
@@ -382,6 +384,7 @@ void Mac::SendBeacon(Frame &aFrame)
     memcpy(aFrame.GetPayload(), &mBeacon, sizeof(mBeacon));
     aFrame.SetPayloadLength(sizeof(mBeacon));
 
+    mCounter.mTx += 1;
     mCounter.mTxBeacon += 1;
     otLogInfoMac("Sent Beacon\n");
 }
@@ -613,17 +616,17 @@ void Mac::SentFrame(bool aAcked)
         {
             otDumpDebgMac("NO ACK", sendFrame.GetHeader(), 16);
 
-            mCounter.mTxDataErrAck += 1;
-
             if (mTransmitAttempts < kMaxFrameAttempts)
             {
                 mTransmitAttempts++;
                 StartCsmaBackoff();
 
-                mCounter.mTxDataRetry += 1;
+                mCounter.mTxRetry += 1;
 
                 ExitNow();
             }
+
+            mCounter.mTxErrAck += 1;
 
             sendFrame.GetDstAddr(destination);
 
@@ -634,7 +637,17 @@ void Mac::SentFrame(bool aAcked)
         }
         else
         {
-            mCounter.mTxData += 1;
+            if (mReceiveTimer.IsRunning())
+            {
+                mCounter.mTxDataPoll += 1;
+            }
+            else
+            {
+                mCounter.mTxData += 1;
+            }
+
+            mCounter.mRx += 1;
+            mCounter.mRxAck += 1;
         }
 
         mTransmitAttempts = 0;
@@ -750,12 +763,6 @@ ThreadError Mac::ProcessReceiveSecurity(Frame &aFrame, const Address &aSrcAddr, 
     aFrame.SetSecurityValid(true);
 
 exit:
-
-    if (error != kThreadError_None)
-    {
-        mCounter.mRxErrSec += 1;
-    }
-
     return error;
 }
 
@@ -772,8 +779,19 @@ void Mac::ReceiveDoneTask(Frame *aFrame, ThreadError aError)
     Neighbor *neighbor;
     Whitelist::Entry *entry;
     int8_t rssi;
+    ThreadError error = kThreadError_None;
 
-    VerifyOrExit(aError == kThreadError_None && aFrame != NULL, ;);
+    if (aError != kThreadError_None || aFrame == NULL)
+    {
+        error = aError;
+
+        if (error == kThreadError_None)
+        {
+            error = kThreadError_Error;
+        }
+
+        ExitNow();
+    }
 
     aFrame->mSecurityValid = false;
 
@@ -791,7 +809,13 @@ void Mac::ReceiveDoneTask(Frame *aFrame, ThreadError aError)
         break;
 
     case sizeof(ShortAddress):
-        VerifyOrExit(neighbor != NULL, otLogDebgMac("drop not neighbor\n"));
+        if (neighbor == NULL)
+        {
+            otLogDebgMac("drop not neighbor\n");
+            error = kThreadError_Error;
+            ExitNow();
+        }
+
         srcaddr.mLength = sizeof(srcaddr.mExtAddress);
         memcpy(&srcaddr.mExtAddress, &neighbor->mMacAddr, sizeof(srcaddr.mExtAddress));
         break;
@@ -800,13 +824,20 @@ void Mac::ReceiveDoneTask(Frame *aFrame, ThreadError aError)
         break;
 
     default:
+        error = kThreadError_Error;
         ExitNow();
     }
 
     // Source Whitelist Processing
     if (srcaddr.mLength != 0 && mWhitelist.IsEnabled())
     {
-        VerifyOrExit((entry = mWhitelist.Find(srcaddr.mExtAddress)) != NULL, ;);
+        entry = mWhitelist.Find(srcaddr.mExtAddress);
+
+        if (entry == NULL)
+        {
+            error = kThreadError_Error;
+            ExitNow();
+        }
 
         if (mWhitelist.GetConstantRssi(*entry, rssi) == kThreadError_None)
         {
@@ -824,20 +855,36 @@ void Mac::ReceiveDoneTask(Frame *aFrame, ThreadError aError)
 
     case sizeof(ShortAddress):
         aFrame->GetDstPanId(panid);
-        VerifyOrExit((panid == kShortAddrBroadcast || panid == mPanId) &&
-                     ((mRxOnWhenIdle && dstaddr.mShortAddress == kShortAddrBroadcast) ||
-                      dstaddr.mShortAddress == mShortAddress), ;);
+
+        if (!((panid == kShortAddrBroadcast || panid == mPanId) &&
+              ((mRxOnWhenIdle && dstaddr.mShortAddress == kShortAddrBroadcast) ||
+               dstaddr.mShortAddress == mShortAddress)))
+        {
+            error = kThreadError_Error;
+            ExitNow();
+        }
+
         break;
 
     case sizeof(ExtAddress):
         aFrame->GetDstPanId(panid);
-        VerifyOrExit(panid == mPanId &&
-                     memcmp(&dstaddr.mExtAddress, &mExtAddress, sizeof(dstaddr.mExtAddress)) == 0, ;);
+
+        if (panid != mPanId ||
+            memcmp(&dstaddr.mExtAddress, &mExtAddress, sizeof(dstaddr.mExtAddress)))
+        {
+            error = kThreadError_Error;
+            ExitNow();
+        }
+
         break;
     }
 
     // Security Processing
-    SuccessOrExit(ProcessReceiveSecurity(*aFrame, srcaddr, neighbor));
+    if (ProcessReceiveSecurity(*aFrame, srcaddr, neighbor) != kThreadError_None)
+    {
+        error = kThreadError_Security;
+        ExitNow();
+    }
 
     switch (mState)
     {
@@ -872,6 +919,24 @@ void Mac::ReceiveDoneTask(Frame *aFrame, ThreadError aError)
     }
 
 exit:
+
+    if (error == kThreadError_None)
+    {
+        mCounter.mRx += 1;
+    }
+    else if (error == kThreadError_Security)
+    {
+        mCounter.mRxErrSec += 1;
+    }
+    else if (error == kThreadError_FcsErr)
+    {
+        mCounter.mRxErrFcs += 1;
+    }
+    else
+    {
+        mCounter.mRxFiltering += 1;
+    }
+
     NextOperation();
 }
 
@@ -897,6 +962,10 @@ ThreadError Mac::HandleMacCommand(Frame &aFrame)
         }
 
         ExitNow(error = kThreadError_Drop);
+    }
+    else if (commandId == Frame::kMacCmdDataRequest)
+    {
+        mCounter.mRxDataPoll += 1;
     }
 
 exit:

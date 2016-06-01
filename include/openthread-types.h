@@ -80,6 +80,11 @@ typedef enum ThreadError
      */
     kThreadError_Detached = 18,
 
+    /**
+     * FCS check failure while receiving.
+     */
+    kThreadError_FcsErr = 19,
+
     kThreadError_Error = 255,
 } ThreadError;
 
@@ -345,16 +350,23 @@ typedef enum
  */
 typedef struct otMacCounter
 {
-    uint32_t mTxData;
-    uint32_t mTxBeacon;
-    uint32_t mTxBeaconRequest;
-    uint32_t mTxDataRetry;
-    uint32_t mTxDataErrAck;
-    uint32_t mTxErrCca;
-    uint32_t mRxData;
-    uint32_t mRxBeacon;
-    uint32_t mRxBeaconRequest;
-    uint32_t mRxErrSec;
+    uint32_t mTx;                  ///< The total number of transmissions.
+    uint32_t mTxData;              ///< The number of transmitted data.
+    uint32_t mTxDataPoll;          ///< The number of transmitted data poll.
+    uint32_t mTxBeacon;            ///< The number of transmitted beacon.
+    uint32_t mTxBeaconRequest;     ///< The number of transmitted beacon request.
+    uint32_t mTxRetry;             ///< The number of retransmission times.
+    uint32_t mTxErrAck;            ///< The number of unacked transmissions.
+    uint32_t mTxErrCca;            ///< The number of CCA failure times.
+    uint32_t mRx;                  ///< The total number of received packets.
+    uint32_t mRxData;              ///< The number of received data.
+    uint32_t mRxDataPoll;          ///< The number of received data poll.
+    uint32_t mRxBeacon;            ///< The number of received beacon.
+    uint32_t mRxBeaconRequest;     ///< The number of received beacon request.
+    uint32_t mRxAck;               ///< The number of received ACK in response to transmission.
+    uint32_t mRxFiltering;         ///< The number of recevied packets that have been filtered.
+    uint32_t mRxErrSec;            ///< The number of recevied packets with security error.
+    uint32_t mRxErrFcs;            ///< The number of recevied packets with FCS error.
 } otMacCounter;
 
 /**
