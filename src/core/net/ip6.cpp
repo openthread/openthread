@@ -421,7 +421,7 @@ exit:
         Message::Free(message);
     }
 
-    return kThreadError_None;
+    return error;
 }
 
 ThreadError ForwardMessage(Message &message, MessageInfo &messageInfo)
