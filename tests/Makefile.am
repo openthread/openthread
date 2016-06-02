@@ -31,15 +31,15 @@ include $(abs_top_nlbuild_autotools_dir)/automake/pre.am
 # Always package (e.g. for 'make dist') these subdirectories.
 
 DIST_SUBDIRS                            = \
-    scripts                               \
     unit                                  \
+    scripts                               \
     $(NULL)
 
 # Always build (e.g. for 'make all') these subdirectories.
 
 SUBDIRS                                 = \
-    scripts                               \
     unit                                  \
+    scripts                               \
     $(NULL)
 
 # Always pretty (e.g. for 'make pretty') these subdirectories.

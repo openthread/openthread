@@ -28,6 +28,10 @@
 
 include $(abs_top_nlbuild_autotools_dir)/automake/pre.am
 
+EXTRA_DIST                              = \
+    nlbuild-autotools                     \
+    $(NULL)
+
 # Always package (e.g. for 'make dist') these subdirectories.
 
 DIST_SUBDIRS                            = \

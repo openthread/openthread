@@ -46,6 +46,7 @@ SUBDIRS                                 = \
 
 PRETTY_SUBDIRS                          = \
     cli                                   \
+    ncp                                   \
     $(NULL)
 
 include $(abs_top_nlbuild_autotools_dir)/automake/post.am
