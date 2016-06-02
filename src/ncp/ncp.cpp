@@ -30,31 +30,27 @@
  *   This file implements an HDLC interface to the Thread stack.
  */
 
+#include <new>
+
 #include <common/code_utils.hpp>
+#include <ncp/ncp.h>
 #include <ncp/ncp.hpp>
 #include <platform/serial.h>
 
 namespace Thread {
 
+static otDEFINE_ALIGNED_VAR(sNcpRaw, sizeof(Ncp), uint64_t);
 static Ncp *sNcp;
+
+extern "C" void otNcpInit(void)
+{
+    sNcp = new(&sNcpRaw) Ncp;
+}
 
 Ncp::Ncp():
     NcpBase(),
     mFrameDecoder(mReceiveFrame, sizeof(mReceiveFrame), &HandleFrame, this)
 {
-    sNcp = this;
-}
-
-ThreadError Ncp::Start()
-{
-    otPlatSerialEnable();
-    return super_t::Start();
-}
-
-ThreadError Ncp::Stop()
-{
-    otPlatSerialDisable();
-    return super_t::Stop();
 }
 
 uint16_t

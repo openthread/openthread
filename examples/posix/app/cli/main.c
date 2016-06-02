@@ -26,77 +26,34 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-/**
- * @file
- *   This file contains definitions for a CLI server on the serial service.
- */
+#include <stdlib.h>
 
-#ifndef CLI_SERIAL_HPP_
-#define CLI_SERIAL_HPP_
+#include <openthread.h>
+#include <cli/cli-serial.h>
+#include <posix-platform.h>
 
-#include <openthread-types.h>
-#include <cli/cli_server.hpp>
-#include <common/tasklet.hpp>
-
-namespace Thread {
-namespace Cli {
-
-/**
- * This class implements the CLI server on top of the serial platform abstraction.
- *
- */
-class Serial: public Server
+void otSignalTaskletPending(void)
 {
-public:
-    Serial(void);
+}
 
-    /**
-     * This method delivers raw characters to the client.
-     *
-     * @param[in]  aBuf        A pointer to a buffer.
-     * @param[in]  aBufLength  Number of bytes in the buffer.
-     *
-     * @returns The number of bytes placed in the output queue.
-     *
-     */
-    int Output(const char *aBuf, uint16_t aBufLength);
-
-    /**
-     * This method delivers formatted output to the client.
-     *
-     * @param[in]  aFmt  A pointer to the format string.
-     * @param[in]  ...   A variable list of arguments to format.
-     *
-     * @returns The number of bytes placed in the output queue.
-     *
-     */
-    int OutputFormat(const char *fmt, ...);
-
-    void ReceiveTask(const uint8_t *aBuf, uint16_t aBufLength);
-    void SendDoneTask(void);
-
-private:
-    enum
+int main(int argc, char *argv[])
+{
+    if (argc != 2)
     {
-        kRxBufferSize = 128,
-        kTxBufferSize = 512,
-        kMaxLineLength = 128,
-    };
+        exit(1);
+    }
 
-    ThreadError ProcessCommand(void);
-    void Send(void);
+    NODE_ID = atoi(argv[1]);
 
-    char mRxBuffer[kRxBufferSize];
-    uint16_t mRxLength;
+    posixPlatformInit();
+    otInit();
+    otCliSerialInit();
 
-    char mTxBuffer[kTxBufferSize];
-    uint16_t mTxHead;
-    uint16_t mTxLength;
+    while (1)
+    {
+        otProcessNextTasklet();
+        posixPlatformProcessDrivers();
+    }
 
-    uint16_t mSendLength;
-};
-
-}  // namespace Cli
-}  // namespace Thread
-
-#endif  // CLI_SERIAL_HPP_
+    return 0;
+}

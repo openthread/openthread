@@ -47,9 +47,6 @@ public:
 
     NcpBase();
 
-    ThreadError Start();
-    ThreadError Stop();
-
 protected:
 
     virtual ThreadError OutboundFrameBegin(void) = 0;

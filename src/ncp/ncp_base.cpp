@@ -228,19 +228,10 @@ NcpBase::NcpBase():
     mSupportedChannelMask = (0xFFFF << 11); // Default to 2.4GHz 802.15.4 channels.
     mChannelMask = mSupportedChannelMask;
     mScanPeriod = 200; // ms
-}
 
-ThreadError NcpBase::Start()
-{
     assert(sThreadNetif != NULL);
     sThreadNetif->RegisterHandler(mNetifHandler);
     Ip6::Ip6::SetNcpReceivedHandler(&HandleDatagramFromStack, this);
-    return kThreadError_None;
-}
-
-ThreadError NcpBase::Stop()
-{
-    return kThreadError_None;
 }
 
 // ----------------------------------------------------------------------------

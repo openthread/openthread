@@ -28,36 +28,8 @@
 
 include $(abs_top_nlbuild_autotools_dir)/automake/pre.am
 
-# Always package (e.g. for 'make dist') these subdirectories.
-
-DIST_SUBDIRS                            = \
-    cli                                   \
-    crypto                                \
-    ncp                                   \
-    platform                              \
-    $(NULL)
-
-# Always build (e.g. for 'make all') these subdirectories.
-
-SUBDIRS                                 = \
-    cli                                   \
-    crypto                                \
-    ncp                                   \
-    platform                              \
-    $(NULL)
-
-# Always pretty (e.g. for 'make pretty') these subdirectories.
-
-PRETTY_SUBDIRS                          = \
-    cli                                   \
-    crypto                                \
-    ncp                                   \
-    platform                              \
-    $(NULL)
-
 include_HEADERS                         = \
-    openthread.h                          \
-    openthread-types.h                    \
+    ncp.h                                 \
     $(NULL)
 
 install-headers: install-includeHEADERS

@@ -46,10 +46,6 @@ class Ncp : public NcpBase
 public:
     Ncp();
 
-    ThreadError Start();
-    ThreadError Stop();
-
-
     virtual ThreadError OutboundFrameBegin(void);
     virtual uint16_t OutboundFrameGetRemaining(void);
     virtual ThreadError OutboundFrameFeedData(const uint8_t *frame, uint16_t frameLength);

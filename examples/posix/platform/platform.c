@@ -40,6 +40,7 @@
 
 #include <openthread.h>
 #include <platform/alarm.h>
+#include <platform/serial.h>
 #include <posix-platform.h>
 
 uint32_t NODE_ID = 1;
@@ -50,6 +51,7 @@ void posixPlatformInit(void)
     posixPlatformAlarmInit();
     posixPlatformRadioInit();
     posixPlatformRandomInit();
+    otPlatSerialEnable();
 }
 
 void posixPlatformProcessDrivers(void)

@@ -26,36 +26,27 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <stdlib.h>
+/**
+ * @file
+ * @brief
+ *  This file defines the top-level functions for the OpenThread CLI server.
+ */
 
-#include <openthread.h>
-#include <cli/cli_serial.hpp>
-#include <posix-platform.h>
+#ifndef NCP_H_
+#define NCP_H_
 
-Thread::Cli::Serial sCliServer;
+#ifdef __cplusplus
+extern "C" {
+#endif
 
-void otSignalTaskletPending(void)
-{
-}
+/**
+ * Initialize the CLI serial server.
+ *
+ */
+void otNcpInit(void);
 
-int main(int argc, char *argv[])
-{
-    if (argc != 2)
-    {
-        exit(1);
-    }
+#ifdef __cplusplus
+}  // extern "C"
+#endif
 
-    NODE_ID = atoi(argv[1]);
-
-    posixPlatformInit();
-    otInit();
-    sCliServer.Start();
-
-    while (1)
-    {
-        otProcessNextTasklet();
-        posixPlatformProcessDrivers();
-    }
-
-    return 0;
-}
+#endif

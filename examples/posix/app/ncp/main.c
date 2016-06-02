@@ -27,10 +27,9 @@
 
 #include <stdlib.h>
 
-#include <ncp/ncp.hpp>
+#include <openthread.h>
+#include <ncp/ncp.h>
 #include <posix-platform.h>
-
-Thread::Ncp sNcp;
 
 void otSignalTaskletPending(void)
 {
@@ -46,8 +45,7 @@ int main(int argc, char *argv[])
     NODE_ID = atoi(argv[1]);
     posixPlatformInit();
     otInit();
-
-    sNcp.Start();
+    otNcpInit();
 
     while (1)
     {
