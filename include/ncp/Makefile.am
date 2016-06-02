@@ -28,9 +28,12 @@
 
 include $(abs_top_nlbuild_autotools_dir)/automake/pre.am
 
-include_HEADERS                         = \
+ot_ncp_headers                          = \
     ncp.h                                 \
     $(NULL)
+
+ot_ncpdir = $(includedir)/ncp
+dist_ot_ncp_HEADERS = $(ot_ncp_headers)
 
 install-headers: install-includeHEADERS
 
