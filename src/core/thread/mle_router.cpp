@@ -1252,15 +1252,7 @@ void MleRouter::UpdateRoutes(const RouteTlv &aRoute, uint8_t aRouterId)
                     }
                 }
 
-                if (i != aRouterId && cost == 0 && mRouters[i].mNextHop == aRouterId)
-                {
-                    // route nexthop is neighbor, but neighbor no longer has route
-                    ResetAdvertiseInterval();
-                    mRouters[i].mNextHop = kMaxRouterId;
-                    mRouters[i].mCost = 0;
-                    mRouters[i].mLastHeard = Timer::GetNow();
-                }
-                else if (mRouters[i].mNextHop == kMaxRouterId || mRouters[i].mNextHop == aRouterId)
+                if (mRouters[i].mNextHop == kMaxRouterId || mRouters[i].mNextHop == aRouterId)
                 {
                     // route has no nexthop or nexthop is neighbor
                     newCost = cost + GetLinkCost(aRouterId);
