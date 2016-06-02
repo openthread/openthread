@@ -105,7 +105,7 @@ Mac::Mac(ThreadNetif &aThreadNetif):
         mExtAddress.m8[i] = otPlatRandomGet();
     }
 
-    memset(&mCounter, 0, sizeof(otMacCounter));
+    memset(&mCounter, 0, sizeof(otMacCounters));
 
     SetExtendedPanId(sExtendedPanidInit);
     SetNetworkName(sNetworkNameInit);
@@ -279,7 +279,7 @@ ThreadError Mac::SendFrameRequest(Sender &aSender)
 
     if (mState == kStateIdle)
     {
-        mCounter.mTx += 1;
+        mCounter.mTx++;
         mState = kStateTransmitData;
         StartCsmaBackoff();
     }
@@ -365,8 +365,8 @@ void Mac::SendBeaconRequest(Frame &aFrame)
     aFrame.SetDstAddr(kShortAddrBroadcast);
     aFrame.SetCommandId(Frame::kMacCmdBeaconRequest);
 
-    mCounter.mTx += 1;
-    mCounter.mTxBeaconRequest += 1;
+    mCounter.mTx++;
+    mCounter.mTxBeaconRequest++;
     otLogInfoMac("Sent Beacon Request\n");
 }
 
@@ -384,8 +384,8 @@ void Mac::SendBeacon(Frame &aFrame)
     memcpy(aFrame.GetPayload(), &mBeacon, sizeof(mBeacon));
     aFrame.SetPayloadLength(sizeof(mBeacon));
 
-    mCounter.mTx += 1;
-    mCounter.mTxBeacon += 1;
+    mCounter.mTx++;
+    mCounter.mTxBeacon++;
     otLogInfoMac("Sent Beacon\n");
 }
 
@@ -499,7 +499,7 @@ void Mac::TransmitDoneTask(bool aRxPending, ThreadError aError)
         mCsmaAttempts++;
         StartCsmaBackoff();
 
-        mCounter.mTxErrCca += 1;
+        mCounter.mTxErrCca++;
 
         ExitNow();
     }
@@ -621,12 +621,12 @@ void Mac::SentFrame(bool aAcked)
                 mTransmitAttempts++;
                 StartCsmaBackoff();
 
-                mCounter.mTxRetry += 1;
+                mCounter.mTxRetry++;
 
                 ExitNow();
             }
 
-            mCounter.mTxErrAck += 1;
+            mCounter.mTxDataUnAcked++;
 
             sendFrame.GetDstAddr(destination);
 
@@ -635,19 +635,20 @@ void Mac::SentFrame(bool aAcked)
                 neighbor->mState = Neighbor::kStateInvalid;
             }
         }
-        else
+        else if (sendFrame.GetAckRequest() && aAcked)
         {
             if (mReceiveTimer.IsRunning())
             {
-                mCounter.mTxDataPoll += 1;
+                mCounter.mTxDataPoll++;
             }
             else
             {
-                mCounter.mTxData += 1;
+                mCounter.mTxDataAcked++;
             }
-
-            mCounter.mRx += 1;
-            mCounter.mRxAck += 1;
+        }
+        else
+        {
+            mCounter.mTxData++;
         }
 
         mTransmitAttempts = 0;
@@ -831,13 +832,7 @@ void Mac::ReceiveDoneTask(Frame *aFrame, ThreadError aError)
     // Source Whitelist Processing
     if (srcaddr.mLength != 0 && mWhitelist.IsEnabled())
     {
-        entry = mWhitelist.Find(srcaddr.mExtAddress);
-
-        if (entry == NULL)
-        {
-            error = kThreadError_Error;
-            ExitNow();
-        }
+        VerifyOrExit((entry = mWhitelist.Find(srcaddr.mExtAddress)) != NULL, error = kThreadError_Error);
 
         if (mWhitelist.GetConstantRssi(*entry, rssi) == kThreadError_None)
         {
@@ -855,43 +850,27 @@ void Mac::ReceiveDoneTask(Frame *aFrame, ThreadError aError)
 
     case sizeof(ShortAddress):
         aFrame->GetDstPanId(panid);
-
-        if (!((panid == kShortAddrBroadcast || panid == mPanId) &&
-              ((mRxOnWhenIdle && dstaddr.mShortAddress == kShortAddrBroadcast) ||
-               dstaddr.mShortAddress == mShortAddress)))
-        {
-            error = kThreadError_Error;
-            ExitNow();
-        }
-
+        VerifyOrExit((panid == kShortAddrBroadcast || panid == mPanId) &&
+                     ((mRxOnWhenIdle && dstaddr.mShortAddress == kShortAddrBroadcast) ||
+                      dstaddr.mShortAddress == mShortAddress), error = kThreadError_Error);
         break;
 
     case sizeof(ExtAddress):
         aFrame->GetDstPanId(panid);
-
-        if (panid != mPanId ||
-            memcmp(&dstaddr.mExtAddress, &mExtAddress, sizeof(dstaddr.mExtAddress)))
-        {
-            error = kThreadError_Error;
-            ExitNow();
-        }
-
+        VerifyOrExit(panid == mPanId &&
+                     memcmp(&dstaddr.mExtAddress, &mExtAddress, sizeof(dstaddr.mExtAddress)) == 0, error = kThreadError_Error);
         break;
     }
 
     // Security Processing
-    if (ProcessReceiveSecurity(*aFrame, srcaddr, neighbor) != kThreadError_None)
-    {
-        error = kThreadError_Security;
-        ExitNow();
-    }
+    SuccessOrExit(error = ProcessReceiveSecurity(*aFrame, srcaddr, neighbor));
 
     switch (mState)
     {
     case kStateActiveScan:
         if (aFrame->GetType() == Frame::kFcfFrameBeacon)
         {
-            mCounter.mRxBeacon += 1;
+            mCounter.mRxBeacon++;
             mActiveScanHandler(mActiveScanContext, aFrame);
         }
 
@@ -913,7 +892,7 @@ void Mac::ReceiveDoneTask(Frame *aFrame, ThreadError aError)
             receiver->HandleReceivedFrame(*aFrame, kThreadError_None);
         }
 
-        mCounter.mRxData += 1;
+        mCounter.mRxData++;
 
         break;
     }
@@ -922,19 +901,19 @@ exit:
 
     if (error == kThreadError_None)
     {
-        mCounter.mRx += 1;
+        mCounter.mRx++;
     }
     else if (error == kThreadError_Security)
     {
-        mCounter.mRxErrSec += 1;
+        mCounter.mRxErrSec++;
     }
     else if (error == kThreadError_FcsErr)
     {
-        mCounter.mRxErrFcs += 1;
+        mCounter.mRxErrFcs++;
     }
     else
     {
-        mCounter.mRxFiltering += 1;
+        mCounter.mRxFiltered++;
     }
 
     NextOperation();
@@ -949,7 +928,7 @@ ThreadError Mac::HandleMacCommand(Frame &aFrame)
 
     if (commandId == Frame::kMacCmdBeaconRequest)
     {
-        mCounter.mRxBeaconRequest += 1;
+        mCounter.mRxBeaconRequest++;
         otLogInfoMac("Received Beacon Request\n");
 
         mTransmitBeacon = true;
@@ -965,7 +944,7 @@ ThreadError Mac::HandleMacCommand(Frame &aFrame)
     }
     else if (commandId == Frame::kMacCmdDataRequest)
     {
-        mCounter.mRxDataPoll += 1;
+        mCounter.mRxDataPoll++;
     }
 
 exit:
@@ -998,7 +977,7 @@ Whitelist &Mac::GetWhitelist(void)
     return mWhitelist;
 }
 
-otMacCounter &Mac::GetCounter(void)
+otMacCounters &Mac::GetCounters(void)
 {
     return mCounter;
 }

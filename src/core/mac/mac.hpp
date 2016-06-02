@@ -425,7 +425,7 @@ public:
      * @returns A reference to the MAC counter.
      *
      */
-    otMacCounter &GetCounter(void);
+    otMacCounters &GetCounters(void);
 
 private:
     void GenerateNonce(const ExtAddress &aAddress, uint32_t aFrameCounter, uint8_t aSecurityLevel, uint8_t *aNonce);
@@ -493,7 +493,7 @@ private:
 
     Whitelist mWhitelist;
 
-    otMacCounter mCounter;
+    otMacCounters mCounter;
 };
 
 /**

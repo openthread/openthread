@@ -515,9 +515,9 @@ exit:
     return error;
 }
 
-const otMacCounter *otGetMacCounter(void)
+const otMacCounters *otGetMacCounters(void)
 {
-    return &sThreadNetif->GetMac().GetCounter();
+    return &sThreadNetif->GetMac().GetCounters();
 }
 
 bool otIsIp6AddressEqual(const otIp6Address *a, const otIp6Address *b)
