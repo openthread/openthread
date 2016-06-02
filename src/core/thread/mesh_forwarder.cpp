@@ -368,7 +368,7 @@ Message *MeshForwarder::GetIndirectTransmission(const Child &aChild)
         mAddMeshHeader = false;
         GetMacSourceAddress(ip6Header.GetSource(), mMacSource);
 
-        if (ip6Header.GetDestination().IsLinkLocal() || ip6Header.GetDestination().IsMulticast())
+        if (ip6Header.GetDestination().IsLinkLocal())
         {
             GetMacDestinationAddress(ip6Header.GetDestination(), mMacDest);
         }
@@ -946,6 +946,7 @@ void MeshForwarder::HandleSentFrame(Mac::Frame &aFrame)
         else
         {
             mSendMessage->ClearDirectTransmission();
+            mSendMessage->SetOffset(0);
         }
     }
 
