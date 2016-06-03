@@ -27,6 +27,7 @@
  */
 
 #include <arpa/inet.h>
+#include <assert.h>
 #include <fcntl.h>
 #include <netinet/in.h>
 #include <poll.h>
@@ -38,19 +39,37 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
-#include <common/code_utils.hpp>
-#include <common/debug.hpp>
-#include <mac/mac.hpp>
 #include <platform/radio.h>
-#include <posix-platform.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+#include <common/code_utils.hpp>
+#include "posix-platform.h"
 
-namespace Thread {
+enum
+{
+    IEEE802154_MIN_LENGTH         = 5,
+    IEEE802154_MAX_LENGTH         = 127,
+    IEEE802154_ACK_LENGTH         = 5,
 
-enum PhyState
+    IEEE802154_BROADCAST          = 0xffff,
+
+    IEEE802154_FRAME_TYPE_ACK     = 2 << 0,
+    IEEE802154_FRAME_TYPE_MACCMD  = 3 << 0,
+    IEEE802154_FRAME_TYPE_MASK    = 7 << 0,
+
+    IEEE802154_FRAME_PENDING      = 1 << 4,
+    IEEE802154_ACK_REQUEST        = 1 << 5,
+
+    IEEE802154_DST_ADDR_NONE      = 0 << 2,
+    IEEE802154_DST_ADDR_SHORT     = 2 << 2,
+    IEEE802154_DST_ADDR_EXT       = 3 << 2,
+    IEEE802154_DST_ADDR_MASK      = 3 << 2,
+
+    IEEE802154_DSN_OFFSET         = 2,
+    IEEE802154_DSTPAN_OFFSET      = 3,
+    IEEE802154_DSTADDR_OFFSET     = 5,
+};
+
+typedef enum PhyState
 {
     kStateDisabled = 0,
     kStateSleep = 1,
@@ -59,7 +78,7 @@ enum PhyState
     kStateReceive = 4,
     kStateTransmit = 5,
     kStateAckWait = 6,
-};
+} PhyState;
 
 struct RadioMessage
 {
@@ -71,9 +90,9 @@ static void radioSendAck(void);
 static void radioProcessFrame(void);
 
 static PhyState s_state = kStateDisabled;
-static RadioMessage s_receive_message;
-static RadioMessage s_transmit_message;
-static RadioMessage s_ack_message;
+static struct RadioMessage s_receive_message;
+static struct RadioMessage s_transmit_message;
+static struct RadioMessage s_ack_message;
 static RadioPacket s_receive_frame;
 static RadioPacket s_transmit_frame;
 static RadioPacket s_ack_frame;
@@ -87,6 +106,46 @@ static int s_sockfd;
 
 static bool s_promiscuous = false;
 
+static inline bool isFrameTypeAck(const uint8_t *frame)
+{
+    return (frame[0] & IEEE802154_FRAME_TYPE_MASK) == IEEE802154_FRAME_TYPE_ACK;
+}
+
+static inline bool isFrameTypeMacCmd(const uint8_t *frame)
+{
+    return (frame[0] & IEEE802154_FRAME_TYPE_MASK) == IEEE802154_FRAME_TYPE_MACCMD;
+}
+
+static inline bool isAckRequested(const uint8_t *frame)
+{
+    return (frame[0] & IEEE802154_ACK_REQUEST) != 0;
+}
+
+static inline uint8_t getDsn(const uint8_t *frame)
+{
+    return frame[IEEE802154_DSN_OFFSET];
+}
+
+static inline otPanId getDstPan(const uint8_t *frame)
+{
+    return (((otPanId)frame[IEEE802154_DSTPAN_OFFSET + 1]) << 8) | frame[IEEE802154_DSTPAN_OFFSET];
+}
+
+static inline otShortAddress getShortAddress(const uint8_t *frame)
+{
+    return (((otShortAddress)frame[IEEE802154_DSTADDR_OFFSET + 1]) << 8) | frame[IEEE802154_DSTADDR_OFFSET];
+}
+
+static inline void getExtAddress(const uint8_t *frame, otExtAddress *address)
+{
+    size_t i;
+
+    for (i = 0; i < sizeof(address); i++)
+    {
+        address->m8[i] = frame[IEEE802154_DSTADDR_OFFSET + (7 - i)];
+    }
+}
+
 ThreadError otPlatRadioSetPanId(uint16_t panid)
 {
     s_panid = panid;
@@ -95,7 +154,9 @@ ThreadError otPlatRadioSetPanId(uint16_t panid)
 
 ThreadError otPlatRadioSetExtendedAddress(uint8_t *address)
 {
-    for (unsigned i = 0; i < sizeof(s_extended_address); i++)
+    size_t i;
+
+    for (i = 0; i < sizeof(s_extended_address); i++)
     {
         s_extended_address[i] = address[sizeof(s_extended_address) - 1 - i];
     }
@@ -259,7 +320,6 @@ exit:
 void radioReceive(void)
 {
     uint8_t tx_sequence, rx_sequence;
-    uint8_t command_id;
     int rval;
 
     VerifyOrExit(s_state == kStateDisabled || s_state == kStateSleep || s_state == kStateListen ||
@@ -279,27 +339,22 @@ void radioReceive(void)
     case kStateAckWait:
         s_receive_frame.mLength = rval - 1;
 
-        if (reinterpret_cast<Mac::Frame *>(&s_receive_frame)->GetType() != Mac::Frame::kFcfFrameAck)
+        if (!isFrameTypeAck(s_receive_frame.mPsdu))
         {
             break;
         }
 
-        tx_sequence = reinterpret_cast<Mac::Frame *>(&s_transmit_frame)->GetSequence();
-        rx_sequence = reinterpret_cast<Mac::Frame *>(&s_receive_frame)->GetSequence();
+        tx_sequence = getDsn(s_transmit_frame.mPsdu);
+        rx_sequence = getDsn(s_receive_frame.mPsdu);
 
         if (tx_sequence != rx_sequence)
         {
             break;
         }
 
-        if (reinterpret_cast<Mac::Frame *>(&s_transmit_frame)->GetType() == Mac::Frame::kFcfFrameMacCmd)
+        if (isFrameTypeMacCmd(s_transmit_frame.mPsdu))
         {
-            reinterpret_cast<Mac::Frame *>(&s_transmit_frame)->GetCommandId(command_id);
-
-            if (command_id == Mac::Frame::kMacCmdDataRequest)
-            {
-                s_data_pending = true;
-            }
+            s_data_pending = true;
         }
 
         s_state = kStateIdle;
@@ -331,6 +386,7 @@ int radioTransmit(void)
 {
     struct sockaddr_in sockaddr;
     int rval = 0;
+    int i;
 
     memset(&sockaddr, 0, sizeof(sockaddr));
     sockaddr.sin_family = AF_INET;
@@ -338,7 +394,7 @@ int radioTransmit(void)
 
     s_transmit_message.mChannel = s_transmit_frame.mChannel;
 
-    for (unsigned i = 1; i < WELLKNOWN_NODE_ID; i++)
+    for (i = 1; i < WELLKNOWN_NODE_ID; i++)
     {
         if (NODE_ID == i)
         {
@@ -356,7 +412,7 @@ int radioTransmit(void)
                   sizeof(sockaddr));
     assert(rval >= 0);
 
-    if (reinterpret_cast<Mac::Frame *>(&s_transmit_frame)->GetAckRequest())
+    if (isAckRequested(s_transmit_frame.mPsdu))
     {
         s_state = kStateAckWait;
     }
@@ -411,15 +467,13 @@ void posixPlatformRadioProcess(void)
 
 void radioSendAck(void)
 {
-    Mac::Frame *ack_frame;
-    uint8_t sequence;
     struct sockaddr_in sockaddr;
+    int i;
 
-    sequence = reinterpret_cast<Mac::Frame *>(&s_receive_frame)->GetSequence();
-
-    ack_frame = reinterpret_cast<Mac::Frame *>(&s_ack_frame);
-    ack_frame->InitMacHeader(Mac::Frame::kFcfFrameAck, Mac::Frame::kSecNone);
-    ack_frame->SetSequence(sequence);
+    s_ack_frame.mLength = IEEE802154_ACK_LENGTH;
+    s_ack_message.mPsdu[0] = IEEE802154_FRAME_TYPE_ACK;
+    s_ack_message.mPsdu[1] = 0;
+    s_ack_message.mPsdu[2] = getDsn(s_receive_frame.mPsdu);
 
     memset(&sockaddr, 0, sizeof(sockaddr));
     sockaddr.sin_family = AF_INET;
@@ -427,7 +481,7 @@ void radioSendAck(void)
 
     s_ack_message.mChannel = s_receive_frame.mChannel;
 
-    for (unsigned i = 1; i < WELLKNOWN_NODE_ID; i++)
+    for (i = 1; i < WELLKNOWN_NODE_ID; i++)
     {
         if (NODE_ID == i)
         {
@@ -445,30 +499,30 @@ void radioSendAck(void)
 void radioProcessFrame(void)
 {
     ThreadError error = kThreadError_None;
-    Mac::Frame *receive_frame;
-    uint16_t dstpan;
-    Mac::Address dstaddr;
+    otPanId dstpan;
+    otShortAddress short_address;
+    otExtAddress ext_address;
 
     VerifyOrExit(s_promiscuous == false, error = kThreadError_None);
-    receive_frame = reinterpret_cast<Mac::Frame *>(&s_receive_frame);
-    receive_frame->GetDstAddr(dstaddr);
 
-    switch (dstaddr.mLength)
+    switch (s_receive_frame.mPsdu[1] & IEEE802154_DST_ADDR_MASK)
     {
-    case 0:
+    case IEEE802154_DST_ADDR_NONE:
         break;
 
-    case 2:
-        receive_frame->GetDstPanId(dstpan);
-        VerifyOrExit((dstpan == Mac::kShortAddrBroadcast || dstpan == s_panid) &&
-                     (dstaddr.mShortAddress == Mac::kShortAddrBroadcast || dstaddr.mShortAddress == s_short_address),
+    case IEEE802154_DST_ADDR_SHORT:
+        dstpan = getDstPan(s_receive_frame.mPsdu);
+        short_address = getShortAddress(s_receive_frame.mPsdu);
+        VerifyOrExit((dstpan == IEEE802154_BROADCAST || dstpan == s_panid) &&
+                     (short_address == IEEE802154_BROADCAST || short_address == s_short_address),
                      error = kThreadError_Abort);
         break;
 
-    case 8:
-        receive_frame->GetDstPanId(dstpan);
-        VerifyOrExit((dstpan == Mac::kShortAddrBroadcast || dstpan == s_panid) &&
-                     memcmp(&dstaddr.mExtAddress, s_extended_address, sizeof(dstaddr.mExtAddress)) == 0,
+    case IEEE802154_DST_ADDR_EXT:
+        dstpan = getDstPan(s_receive_frame.mPsdu);
+        getExtAddress(s_receive_frame.mPsdu, &ext_address);
+        VerifyOrExit((dstpan == IEEE802154_BROADCAST || dstpan == s_panid) &&
+                     memcmp(&ext_address, s_extended_address, sizeof(ext_address)) == 0,
                      error = kThreadError_Abort);
         break;
 
@@ -480,7 +534,7 @@ void radioProcessFrame(void)
     s_receive_frame.mLqi = kPhyNoLqi;
 
     // generate acknowledgment
-    if (reinterpret_cast<Mac::Frame *>(&s_receive_frame)->GetAckRequest())
+    if (isAckRequested(s_receive_frame.mPsdu))
     {
         radioSendAck();
     }
@@ -492,16 +546,5 @@ exit:
         s_state = kStateIdle;
     }
 
-    if (error != kThreadError_None)
-    {
-        receive_frame = NULL;
-    }
-
-    otPlatRadioReceiveDone(receive_frame, error);
+    otPlatRadioReceiveDone(error == kThreadError_None ? &s_receive_frame : NULL, error);
 }
-
-#ifdef __cplusplus
-}  // end of extern "C"
-#endif
-
-}  // namespace Thread
