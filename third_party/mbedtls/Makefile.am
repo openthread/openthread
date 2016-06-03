@@ -16,15 +16,20 @@
 
 include $(abs_top_nlbuild_autotools_dir)/automake/pre.am
 
+EXTRA_DIST                                    = \
+    mbedtls-config.h                            \
+    repo/include                                \
+    $(NULL)
+
 lib_LIBRARIES                                 = libmbedcrypto.a
 
-MBEDTLS_DIR                                   = $(top_srcdir)/third_party/mbedtls/repo
+MBEDTLS_SRCDIR                                = $(top_srcdir)/third_party/mbedtls/repo
 
 libmbedcrypto_a_CPPFLAGS                      = \
     -I$(top_srcdir)/include                     \
     -I$(top_srcdir)/src/core                    \
-    -I$(MBEDTLS_DIR)/include                    \
-    -I$(MBEDTLS_DIR)/include/mbedtls            \
+    -I$(MBEDTLS_SRCDIR)/include                 \
+    -I$(MBEDTLS_SRCDIR)/include/mbedtls         \
     -DMBEDTLS_CONFIG_FILE=\"mbedtls-config.h\"  \
     $(NULL)
 
@@ -38,15 +43,8 @@ libmbedcrypto_a_SOURCES                       = \
     repo/library/sha256.c                       \
     $(NULL)
 
-include_HEADERS                               = \
-    $(NULL)
-
-install-headers: install-includeHEADERS
-
 if OPENTHREAD_BUILD_COVERAGE
 CLEANFILES                                    = $(wildcard *.gcda *.gcno)
 endif # OPENTHREAD_BUILD_COVERAGE
-
-all:
 
 include $(abs_top_nlbuild_autotools_dir)/automake/post.am

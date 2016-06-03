@@ -18,6 +18,8 @@ install:
   - popd
 
 script:
-  - ./bootstrap-configure --enable-minimum-set-of-tests
+  - ./bootstrap
+  - ./configure
   - make pretty-check
-  - make distcheck
+  - make distclean
+  - make -f Makefile-Standalone distcheck

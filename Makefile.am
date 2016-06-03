@@ -46,7 +46,6 @@ EXTRA_DIST                          = \
     .default-version                  \
     bootstrap                         \
     bootstrap-configure               \
-    $(srcdir)/third_party             \
     $(NULL)
 
 BUILT_SOURCES                       = \
