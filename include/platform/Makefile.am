@@ -28,13 +28,16 @@
 
 include $(abs_top_nlbuild_autotools_dir)/automake/pre.am
 
-include_HEADERS                         = \
+ot_platform_headers                      =\
     alarm.h                               \
     logging.h                             \
     radio.h                               \
     random.h                              \
     serial.h                              \
     $(NULL)
+
+ot_platformdir = $(includedir)/platform
+dist_ot_platform_HEADERS = $(ot_platform_headers)
 
 install-headers: install-includeHEADERS
 

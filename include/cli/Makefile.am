@@ -28,9 +28,12 @@
 
 include $(abs_top_nlbuild_autotools_dir)/automake/pre.am
 
-include_HEADERS                         = \
+ot_cli_headers                          = \
     cli-serial.h                          \
     $(NULL)
+
+ot_clidir = $(includedir)/cli
+dist_ot_cli_HEADERS = $(ot_cli_headers)
 
 install-headers: install-includeHEADERS
 
