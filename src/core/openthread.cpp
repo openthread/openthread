@@ -106,8 +106,15 @@ const uint8_t *otGetExtendedPanId(void)
 
 void otSetExtendedPanId(const uint8_t *aExtendedPanId)
 {
+    uint8_t mlPrefix[8];
+
     sThreadNetif->GetMac().SetExtendedPanId(aExtendedPanId);
-    sThreadNetif->GetMle().SetMeshLocalPrefix(aExtendedPanId);
+
+    mlPrefix[0] = 0xfd;
+    memcpy(mlPrefix + 1, aExtendedPanId, 5);
+    mlPrefix[6] = 0x00;
+    mlPrefix[7] = 0x00;
+    sThreadNetif->GetMle().SetMeshLocalPrefix(mlPrefix);
 }
 
 ThreadError otGetLeaderRloc(otIp6Address *aAddress)

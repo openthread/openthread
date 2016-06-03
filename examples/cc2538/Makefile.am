@@ -28,28 +28,30 @@
 
 include $(abs_top_nlbuild_autotools_dir)/automake/pre.am
 
+EXTRA_DIST                              = \
+    Makefile-cc2538                       \
+    README.md                             \
+    $(NULL)
+
 # Always package (e.g. for 'make dist') these subdirectories.
 
 DIST_SUBDIRS                            = \
-    posix                                 \
-    cc2538                                \
+    platform                              \
+    app                                   \
     $(NULL)
 
 # Always build (e.g. for 'make all') these subdirectories.
 
-if OPENTHREAD_EXAMPLES_POSIX
-SUBDIRS                                 = posix
-endif
-
-if OPENTHREAD_EXAMPLES_CC2538
-SUBDIRS                                 = cc2538
-endif
+SUBDIRS                                 = \
+    platform                              \
+    app                                   \
+    $(NULL)
 
 # Always pretty (e.g. for 'make pretty') these subdirectories.
 
 PRETTY_SUBDIRS                          = \
-    posix                                 \
-    cc2538                                \
+    platform                              \
+    app                                   \
     $(NULL)
 
 include $(abs_top_nlbuild_autotools_dir)/automake/post.am
