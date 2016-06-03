@@ -1059,6 +1059,7 @@ ThreadError Mle::SendChildUpdateRequest(void)
     if ((mDeviceMode & ModeTlv::kModeRxOnWhenIdle) == 0)
     {
         mMesh.SetPollPeriod(kAttachDataPollPeriod);
+        mMesh.SetRxOnWhenIdle(false);
     }
 
 exit:
@@ -1736,7 +1737,8 @@ ThreadError Mle::HandleChildUpdateResponse(const Message &aMessage, const Ip6::M
                      error = kThreadError_Drop);
 
         SetStateChild(GetRloc16());
-        break;
+
+    // fall through
 
     case kDeviceStateChild:
         // Leader Data
@@ -1758,11 +1760,12 @@ ThreadError Mle::HandleChildUpdateResponse(const Message &aMessage, const Ip6::M
             ExitNow();
         }
 
-        // Timeout
-        SuccessOrExit(error = Tlv::GetTlv(aMessage, Tlv::kTimeout, sizeof(timeout), timeout));
-        VerifyOrExit(timeout.IsValid(), error = kThreadError_Parse);
-
-        mTimeout = timeout.GetTimeout();
+        // Timeout optional
+        if (Tlv::GetTlv(aMessage, Tlv::kTimeout, sizeof(timeout), timeout) == kThreadError_None)
+        {
+            VerifyOrExit(timeout.IsValid(), error = kThreadError_Parse);
+            mTimeout = timeout.GetTimeout();
+        }
 
         if ((mode.GetMode() & ModeTlv::kModeRxOnWhenIdle) == 0)
         {
