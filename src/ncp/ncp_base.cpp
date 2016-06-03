@@ -258,7 +258,7 @@ void NcpBase::HandleDatagramFromStack(Message &message)
                             "CiiS",
                             SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0,
                             SPINEL_CMD_PROP_VALUE_IS,
-                            message.GetSecurityValid()
+                            message.IsLinkSecurityEnabled()
                             ? SPINEL_PROP_STREAM_NET
                             : SPINEL_PROP_STREAM_NET_INSECURE,
                             message.GetLength()
@@ -2164,7 +2164,7 @@ void NcpBase::SetPropertyHandler_STREAM_NET_INSECURE(uint8_t header, spinel_prop
     else
     {
         // STREAM_NET_INSECURE packets are not secured at layer 2.
-        message->SetSecurityValid(false);
+        message->SetLinkSecurityEnabled(false);
 
         parsedLength = spinel_datatype_unpack(
                            value_ptr,
@@ -2222,7 +2222,7 @@ void NcpBase::SetPropertyHandler_STREAM_NET(uint8_t header, spinel_prop_key_t ke
     else
     {
         // STREAM_NET requires layer 2 security.
-        message->SetSecurityValid(true);
+        message->SetLinkSecurityEnabled(true);
 
         parsedLength = spinel_datatype_unpack(
                            value_ptr,

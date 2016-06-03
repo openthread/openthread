@@ -114,7 +114,7 @@ struct MessageInfo
 
     uint8_t          mType : 2;          ///< Identifies the type of message.
     bool             mDirectTx : 1;      ///< Used to indicate whether a direct transmission is required.
-    bool             mSecurityValid : 1; ///< Indicates whether received frames were secure and passed validation.
+    bool             mLinkSecurity : 1;  ///< Indicates whether or not link security is enabled.
 };
 
 /**
@@ -425,21 +425,21 @@ public:
     void SetDirectTransmission(void);
 
     /**
-     * This method indicates whether or not the message was secure and passed validation at the link layer.
+     * This method indicates whether or not link security is enabled for the message.
      *
-     * @retval TRUE   If the message was secure and passed validation at the link layer.
-     * @retval FALSE  If the message was not secure or did not pass validation at the link layer.
+     * @retval TRUE   If link security is enabled.
+     * @retval FALSE  If link security is not enabled.
      *
      */
-    bool GetSecurityValid(void) const;
+    bool IsLinkSecurityEnabled(void) const;
 
     /**
-     * This method sets whether or not the message was secure and passed validation at the link layer.
+     * This method sets whether or not link security is enabled for the message.
      *
-     * @param[in]  aSecurityValid  TRUE if the message was secure and passed link layer validation, FALSE otherwise.
+     * @param[in]  aLinkSecurityEnabled  TRUE if link security is enabled, FALSE otherwise.
      *
      */
-    void SetSecurityValid(bool aSecurityValid);
+    void SetLinkSecurityEnabled(bool aLinkSecurityEnabled);
 
     /**
      * This method is used to update a checksum value.
