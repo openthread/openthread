@@ -220,6 +220,7 @@ private:
  * This class implements Mesh Header generation and processing.
  *
  */
+OT_TOOL_PACKED_BEGIN
 class MeshHeader
 {
 public:
@@ -316,12 +317,13 @@ private:
     uint8_t mDispatchHopsLeft;
     uint16_t mSource;
     uint16_t mDestination;
-} __attribute__((packed));
+} OT_TOOL_PACKED_END;
 
 /**
  * This class implements Fragment Header generation and parsing.
  *
  */
+OT_TOOL_PACKED_BEGIN
 class FragmentHeader
 {
 public:
@@ -421,10 +423,10 @@ private:
     {
         uint8_t mDispatchOffsetSize;
         uint16_t mSize;
-    } __attribute__((packed));
+    } OT_TOOL_PACKED_END;
     uint16_t mTag;
     uint8_t mOffset;
-} __attribute__((packed));
+} OT_TOOL_PACKED_END;
 
 /**
  * @}

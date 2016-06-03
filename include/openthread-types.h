@@ -37,6 +37,7 @@
 
 #include <stdint.h>
 #include <stdbool.h>
+#include <platform/toolchain.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -192,7 +193,7 @@ enum
 /**
  * This structure represents an IPv6 address.
  */
-typedef struct otIp6Address
+typedef OT_TOOL_PACKED_BEGIN struct otIp6Address
 {
     union
     {
@@ -200,7 +201,7 @@ typedef struct otIp6Address
         uint16_t m16[kIp6AddressSize / sizeof(uint16_t)];
         uint32_t m32[kIp6AddressSize / sizeof(uint32_t)];
     };
-} __attribute__((packed)) otIp6Address;
+} OT_TOOL_PACKED_END otIp6Address;
 
 /**
  * This structure represents an IPv6 prefix.

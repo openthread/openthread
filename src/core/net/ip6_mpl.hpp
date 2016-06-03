@@ -56,6 +56,7 @@ namespace Ip6 {
  * This class implements MPL header generation and parsing.
  *
  */
+OT_TOOL_PACKED_BEGIN
 class OptionMpl: public OptionHeader
 {
 public:
@@ -160,7 +161,7 @@ private:
     uint8_t  mControl;
     uint8_t  mSequence;
     uint16_t mSeed;
-} __attribute__((packed));
+} OT_TOOL_PACKED_END;
 
 /**
  * This class implements MPL message processing.

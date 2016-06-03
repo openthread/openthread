@@ -54,6 +54,7 @@ enum
  * This class implements Network Layer TLV generation and parsing.
  *
  */
+OT_TOOL_PACKED_BEGIN
 class ThreadTlv
 {
 public:
@@ -119,12 +120,13 @@ public:
 private:
     uint8_t mType;
     uint8_t mLength;
-} __attribute__((packed));
+} OT_TOOL_PACKED_END;
 
 /**
  * This class implements Target EID TLV generation and parsing.
  *
  */
+OT_TOOL_PACKED_BEGIN
 class ThreadTargetTlv: public ThreadTlv
 {
 public:
@@ -161,7 +163,7 @@ public:
 
 private:
     Ip6::Address mTarget;
-} __attribute__((packed));
+} OT_TOOL_PACKED_END;
 
 /**
  * This class implements Extended MAC Address TLV generation and parsing.
@@ -209,6 +211,7 @@ private:
  * This class implements RLOC16 TLV generation and parsing.
  *
  */
+OT_TOOL_PACKED_BEGIN
 class ThreadRloc16Tlv: public ThreadTlv
 {
 public:
@@ -245,12 +248,13 @@ public:
 
 private:
     uint16_t mRloc16;
-} __attribute__((packed));
+} OT_TOOL_PACKED_END;
 
 /**
  * This class implements ML-EID TLV generation and parsing.
  *
  */
+OT_TOOL_PACKED_BEGIN
 class ThreadMeshLocalEidTlv: public ThreadTlv
 {
 public:
@@ -287,12 +291,13 @@ public:
 
 private:
     uint8_t mIid[8];
-} __attribute__((packed));
+} OT_TOOL_PACKED_END;
 
 /**
  * This class implements Status TLV generation and parsing.
  *
  */
+OT_TOOL_PACKED_BEGIN
 class ThreadStatusTlv: public ThreadTlv
 {
 public:
@@ -339,12 +344,13 @@ public:
 
 private:
     uint8_t mStatus;
-} __attribute__((packed));
+} OT_TOOL_PACKED_END;
 
 /**
  * This class implements Time Since Last Transaction TLV generation and parsing.
  *
  */
+OT_TOOL_PACKED_BEGIN
 class ThreadLastTransactionTimeTlv: public ThreadTlv
 {
 public:
@@ -381,7 +387,7 @@ public:
 
 private:
     uint32_t mTime;
-} __attribute__((packed));
+} OT_TOOL_PACKED_END;
 
 
 /**

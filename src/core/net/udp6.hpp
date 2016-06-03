@@ -167,18 +167,20 @@ private:
     static UdpSocket *sSockets;
 };
 
+OT_TOOL_PACKED_BEGIN
 struct UdpHeaderPoD
 {
     uint16_t mSource;
     uint16_t mDestination;
     uint16_t mLength;
     uint16_t mChecksum;
-} __attribute__((packed));
+} OT_TOOL_PACKED_END;
 
 /**
  * This class implements UDP header generation and parsing.
  *
  */
+OT_TOOL_PACKED_BEGIN
 class UdpHeader: private UdpHeaderPoD
 {
 public:
@@ -262,7 +264,7 @@ public:
      */
     static uint8_t GetChecksumOffset(void) { return offsetof(UdpHeaderPoD, mChecksum); }
 
-} __attribute__((packed));
+} OT_TOOL_PACKED_END;
 
 /**
  * @}

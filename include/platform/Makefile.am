@@ -34,6 +34,7 @@ ot_platform_headers                      =\
     radio.h                               \
     random.h                              \
     serial.h                              \
+    toolchain.h                           \
     $(NULL)
 
 ot_platformdir = $(includedir)/platform

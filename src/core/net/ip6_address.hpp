@@ -52,6 +52,7 @@ namespace Ip6 {
  * This class implements an IPv6 address object.
  *
  */
+OT_TOOL_PACKED_BEGIN
 class Address: public otIp6Address
 {
 public:
@@ -277,7 +278,7 @@ private:
     {
         kInterfaceIdentifierOffset = 8,  ///< Interface Identifier offset in bytes.
     };
-} __attribute__((packed));
+} OT_TOOL_PACKED_END;
 
 /**
  * @}

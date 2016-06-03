@@ -106,6 +106,7 @@ enum DeviceState
  * This class implements MLE Header generation and parsing.
  *
  */
+OT_TOOL_PACKED_BEGIN
 class Header
 {
 public:
@@ -307,7 +308,7 @@ private:
     uint32_t mFrameCounter;
     uint8_t mKeyIdentifier[5];
     uint8_t mCommand;
-} __attribute__((packed));
+} OT_TOOL_PACKED_END;
 
 /**
  * This class implements MLE functionality required by the Thread EndDevices, Router, and Leader roles.
