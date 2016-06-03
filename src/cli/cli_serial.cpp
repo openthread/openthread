@@ -31,12 +31,15 @@
  *   This file implements the CLI server on the serial service.
  */
 
+#include <new>
+
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
 #include <cli/cli.hpp>
+#include <cli/cli-serial.h>
 #include <cli/cli_serial.hpp>
 #include <common/code_utils.hpp>
 #include <common/encoding.hpp>
@@ -50,19 +53,19 @@ static const char sEraseString[] = {'\b', ' ', '\b'};
 static const char CRNL[] = {'\r', '\n'};
 static Serial *sServer;
 
-Serial::Serial(void)
+static otDEFINE_ALIGNED_VAR(sCliSerialRaw, sizeof(Serial), uint64_t);
+
+extern "C" void otCliSerialInit(void)
 {
-    sServer = this;
+    sServer = new(&sCliSerialRaw) Serial;
 }
 
-ThreadError Serial::Start(void)
+Serial::Serial(void)
 {
     mRxLength = 0;
     mTxHead = 0;
     mTxLength = 0;
     mSendLength = 0;
-    otPlatSerialEnable();
-    return kThreadError_None;
 }
 
 extern "C" void otPlatSerialReceived(const uint8_t *aBuf, uint16_t aBufLength)

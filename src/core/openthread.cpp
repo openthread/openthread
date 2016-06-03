@@ -54,10 +54,6 @@ ThreadNetif *sThreadNetif;
 extern "C" {
 #endif
 
-// Allocate the structure using "raw" storage.
-#define otDEFINE_ALIGNED_VAR(name, size, align_type)            \
-    align_type name[(((size) + (sizeof (align_type) - 1)) / sizeof (align_type))]
-
 static otDEFINE_ALIGNED_VAR(sThreadNetifRaw, sizeof(ThreadNetif), uint64_t);
 
 static void HandleActiveScanResult(void *aContext, Mac::Frame *aFrame);

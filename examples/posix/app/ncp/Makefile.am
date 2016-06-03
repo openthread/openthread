@@ -44,8 +44,11 @@ ncp_LDADD                                                       = \
     $(top_builddir)/src/core/libopenthread.a                      \
     $(top_builddir)/examples/posix/platform/libopenthread-posix.a \
     $(top_builddir)/third_party/mbedtls/libmbedcrypto.a           \
+    -lstdc++                                                      \
     $(NULL)
 
-ncp_SOURCES = main.cpp
+ncp_SOURCES                                                     = \
+    main.c                                                        \
+    $(NULL)
 
 include $(abs_top_nlbuild_autotools_dir)/automake/post.am

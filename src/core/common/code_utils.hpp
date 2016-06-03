@@ -36,6 +36,10 @@
 
 #include <stdbool.h>
 
+// Allocate the structure using "raw" storage.
+#define otDEFINE_ALIGNED_VAR(name, size, align_type)            \
+    align_type name[(((size) + (sizeof (align_type) - 1)) / sizeof (align_type))]
+
 #define SuccessOrExit(ERR)                      \
   do {                                          \
     if ((ERR) != 0) {                           \

@@ -47,14 +47,6 @@ class Server
 {
 public:
     /**
-     * This method starts the CLI server.
-     *
-     * @retval kThreadError_None  Successfully started the server.
-     *
-     */
-    virtual ThreadError Start() = 0;
-
-    /**
      * This method delivers raw characters to the client.
      *
      * @param[in]  aBuf        A pointer to a buffer.
