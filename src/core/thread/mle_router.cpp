@@ -595,6 +595,7 @@ ThreadError MleRouter::HandleLinkRequest(const Message &aMessage, const Ip6::Mes
             if (neighbor->mState != Neighbor::kStateValid)
             {
                 memcpy(&neighbor->mMacAddr, &macAddr, sizeof(neighbor->mMacAddr));
+                neighbor->mRssi = reinterpret_cast<const ThreadMessageInfo *>(aMessageInfo.mLinkInfo)->mLinkMargin;
                 neighbor->mState = Neighbor::kStateLinkRequest;
             }
             else
@@ -629,6 +630,7 @@ ThreadError MleRouter::SendLinkAccept(const Ip6::MessageInfo &aMessageInfo, Neig
                                       const TlvRequestTlv &aTlvRequest, const ChallengeTlv &aChallenge)
 {
     ThreadError error = kThreadError_None;
+    static const uint8_t routerTlvs[] = {Tlv::kLinkMargin};
     Message *message;
     Header::Command command;
     int8_t linkMargin;
@@ -688,6 +690,7 @@ ThreadError MleRouter::SendLinkAccept(const Ip6::MessageInfo &aMessageInfo, Neig
 
         SuccessOrExit(error = AppendChallenge(*message, aNeighbor->mPending.mChallenge,
                                               sizeof(aNeighbor->mPending.mChallenge)));
+        SuccessOrExit(error = AppendTlvRequest(*message, routerTlvs, sizeof(routerTlvs)));
         aNeighbor->mState = Neighbor::kStateLinkRequest;
     }
 
@@ -835,8 +838,11 @@ ThreadError MleRouter::HandleLinkAccept(const Message &aMessage, const Ip6::Mess
         break;
 
     case kDeviceStateChild:
-        mRouters[routerId].mLinkQualityOut = 3;
-        mRouters[routerId].mLinkQualityIn = 3;
+        SuccessOrExit(error = Tlv::GetTlv(aMessage, Tlv::kLinkMargin, sizeof(linkMargin), linkMargin));
+        VerifyOrExit(linkMargin.IsValid(), error = kThreadError_Parse);
+        mRouters[routerId].mLinkQualityOut = LinkMarginToQuality(linkMargin.GetLinkMargin());
+        mRouters[routerId].mLinkQualityIn = LinkMarginToQuality(reinterpret_cast<const ThreadMessageInfo *>
+                                                                (aMessageInfo.mLinkInfo)->mLinkMargin);
         break;
 
     case kDeviceStateRouter:
@@ -849,8 +855,9 @@ ThreadError MleRouter::HandleLinkAccept(const Message &aMessage, const Ip6::Mess
         // Link Margin
         SuccessOrExit(error = Tlv::GetTlv(aMessage, Tlv::kLinkMargin, sizeof(linkMargin), linkMargin));
         VerifyOrExit(linkMargin.IsValid(), error = kThreadError_Parse);
-        mRouters[routerId].mLinkQualityOut = 3;
-        mRouters[routerId].mLinkQualityIn = 3;
+        mRouters[routerId].mLinkQualityOut = LinkMarginToQuality(linkMargin.GetLinkMargin());
+        mRouters[routerId].mLinkQualityIn = LinkMarginToQuality(reinterpret_cast<const ThreadMessageInfo *>
+                                                                (aMessageInfo.mLinkInfo)->mLinkMargin);
 
         // update routing table
         if (routerId != mRouterId && mRouters[routerId].mNextHop == kMaxRouterId)
