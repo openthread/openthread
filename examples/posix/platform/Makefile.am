@@ -53,7 +53,7 @@ libopenthread_posix_a_SOURCES             = \
     logging.c                               \
     platform.c                              \
     posix-platform.c                        \
-    radio.cpp                               \
+    radio.c                                 \
     random.c                                \
     serial.c                                \
     $(NULL)
