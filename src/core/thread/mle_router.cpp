@@ -2185,7 +2185,7 @@ void MleRouter::SetLeaderWeight(uint8_t aWeight)
     mLeaderWeight = aWeight;
 }
 
-void MleRouter::HandleMacDataRequest(const Child &aChild)
+void MleRouter::HandleMacDataRequest(Child &aChild)
 {
     static const uint8_t tlvs[] = {Tlv::kLeaderData, Tlv::kNetworkData};
     Ip6::Address destination;
@@ -2200,6 +2200,7 @@ void MleRouter::HandleMacDataRequest(const Child &aChild)
     {
         if (aChild.mNetworkDataVersion != mNetworkData.GetVersion())
         {
+            aChild.mNetworkDataVersion = mNetworkData.GetVersion();
             SendDataResponse(destination, tlvs, sizeof(tlvs));
         }
     }
@@ -2207,6 +2208,7 @@ void MleRouter::HandleMacDataRequest(const Child &aChild)
     {
         if (aChild.mNetworkDataVersion != mNetworkData.GetStableVersion())
         {
+            aChild.mNetworkDataVersion = mNetworkData.GetStableVersion();
             SendDataResponse(destination, tlvs, sizeof(tlvs));
         }
     }
