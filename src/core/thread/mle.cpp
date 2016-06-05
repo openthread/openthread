@@ -1684,9 +1684,11 @@ ThreadError Mle::HandleChildIdResponse(const Message &aMessage, const Ip6::Messa
     SuccessOrExit(error = SetStateChild(shortAddress.GetRloc16()));
 
     // Route
-    if (Tlv::GetTlv(aMessage, Tlv::kRoute, sizeof(route), route) == kThreadError_None)
+    if ((Tlv::GetTlv(aMessage, Tlv::kRoute, sizeof(route), route) == kThreadError_None) &&
+        (mDeviceMode & ModeTlv::kModeFFD))
     {
         numRouters = 0;
+        SuccessOrExit(error = mMleRouter.ProcessRouteTlv(route));
 
         for (int i = 0; i < kMaxRouterId; i++)
         {
