@@ -279,7 +279,6 @@ ThreadError Mac::SendFrameRequest(Sender &aSender)
 
     if (mState == kStateIdle)
     {
-        mCounter.mTx++;
         mState = kStateTransmitData;
         StartCsmaBackoff();
     }
@@ -365,7 +364,7 @@ void Mac::SendBeaconRequest(Frame &aFrame)
     aFrame.SetDstAddr(kShortAddrBroadcast);
     aFrame.SetCommandId(Frame::kMacCmdBeaconRequest);
 
-    mCounter.mTx++;
+    mCounter.mTxNoAckRequested++;
     mCounter.mTxBeaconRequest++;
     otLogInfoMac("Sent Beacon Request\n");
 }
@@ -384,7 +383,7 @@ void Mac::SendBeacon(Frame &aFrame)
     memcpy(aFrame.GetPayload(), &mBeacon, sizeof(mBeacon));
     aFrame.SetPayloadLength(sizeof(mBeacon));
 
-    mCounter.mTx++;
+    mCounter.mTxNoAckRequested++;
     mCounter.mTxBeacon++;
     otLogInfoMac("Sent Beacon\n");
 }
@@ -626,8 +625,6 @@ void Mac::SentFrame(bool aAcked)
                 ExitNow();
             }
 
-            mCounter.mTxDataUnAcked++;
-
             sendFrame.GetDstAddr(destination);
 
             if ((neighbor = mMle.GetNeighbor(destination)) != NULL)
@@ -635,20 +632,28 @@ void Mac::SentFrame(bool aAcked)
                 neighbor->mState = Neighbor::kStateInvalid;
             }
         }
-        else if (sendFrame.GetAckRequest() && aAcked)
+
+        if (mReceiveTimer.IsRunning())
         {
-            if (mReceiveTimer.IsRunning())
-            {
-                mCounter.mTxDataPoll++;
-            }
-            else
-            {
-                mCounter.mTxDataAcked++;
-            }
+            mCounter.mTxDataPoll++;
         }
         else
         {
             mCounter.mTxData++;
+        }
+
+        if (sendFrame.GetAckRequest())
+        {
+            mCounter.mTxAckRequested++;
+
+            if (aAcked)
+            {
+                mCounter.mTxAcked++;
+            }
+        }
+        else
+        {
+            mCounter.mTxNoAckRequested++;
         }
 
         mTransmitAttempts = 0;
@@ -899,11 +904,7 @@ void Mac::ReceiveDoneTask(Frame *aFrame, ThreadError aError)
 
 exit:
 
-    if (error == kThreadError_None)
-    {
-        mCounter.mRx++;
-    }
-    else if (error == kThreadError_Security)
+    if (error == kThreadError_Security)
     {
         mCounter.mRxErrSec++;
     }
@@ -911,7 +912,7 @@ exit:
     {
         mCounter.mRxErrFcs++;
     }
-    else
+    else if (error == kThreadError_Error)
     {
         mCounter.mRxFiltered++;
     }
@@ -945,6 +946,7 @@ ThreadError Mac::HandleMacCommand(Frame &aFrame)
     else if (commandId == Frame::kMacCmdDataRequest)
     {
         mCounter.mRxDataPoll++;
+        ExitNow(error = kThreadError_Drop);
     }
 
 exit:
@@ -979,6 +981,8 @@ Whitelist &Mac::GetWhitelist(void)
 
 otMacCounters &Mac::GetCounters(void)
 {
+    mCounter.mTxTotal = mCounter.mTxData + mCounter.mTxDataPoll + mCounter.mTxBeacon + mCounter.mTxBeaconRequest;
+    mCounter.mRxTotal = mCounter.mRxData + mCounter.mRxDataPoll + mCounter.mRxBeacon + mCounter.mRxBeaconRequest;
     return mCounter;
 }
 

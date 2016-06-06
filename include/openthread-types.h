@@ -350,16 +350,17 @@ typedef enum
  */
 typedef struct otMacCounters
 {
-    uint32_t mTx;                  ///< The total number of transmissions.
-    uint32_t mTxDataAcked;         ///< The number of acked data transmissions.
-    uint32_t mTxData;              ///< The number of transmitted data that does not request ack.
+    uint32_t mTxTotal;             ///< The total number of transmissions.
+    uint32_t mTxAckRequested;      ///< The number of transmissions with ack request.
+    uint32_t mTxAcked;             ///< The number of transmissions that were acked.
+    uint32_t mTxNoAckRequested;    ///< The number of transmissions without ack request.
+    uint32_t mTxData;              ///< The number of transmitted data.
     uint32_t mTxDataPoll;          ///< The number of transmitted data poll.
     uint32_t mTxBeacon;            ///< The number of transmitted beacon.
     uint32_t mTxBeaconRequest;     ///< The number of transmitted beacon request.
-    uint32_t mTxDataUnAcked;       ///< The number of unacked data transmissions.
     uint32_t mTxRetry;             ///< The number of retransmission times.
     uint32_t mTxErrCca;            ///< The number of CCA failure times.
-    uint32_t mRx;                  ///< The total number of received packets.
+    uint32_t mRxTotal;             ///< The total number of received packets.
     uint32_t mRxData;              ///< The number of received data.
     uint32_t mRxDataPoll;          ///< The number of received data poll.
     uint32_t mRxBeacon;            ///< The number of received beacon.

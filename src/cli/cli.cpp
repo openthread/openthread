@@ -230,16 +230,17 @@ void Interpreter::ProcessCounters(int argc, char *argv[])
         if (strcmp(argv[0], "mac") == 0)
         {
             const otMacCounters *counter = otGetMacCounters();
-            sServer->OutputFormat("Tx: %d\r\n", counter->mTx);
-            sServer->OutputFormat("TxDataAcked: %d\r\n", counter->mTxDataAcked);
+            sServer->OutputFormat("TxTotal: %d\r\n", counter->mTxTotal);
+            sServer->OutputFormat("TxAckRequested: %d\r\n", counter->mTxAckRequested);
+            sServer->OutputFormat("TxAcked: %d\r\n", counter->mTxAcked);
+            sServer->OutputFormat("TxNoAckRequested: %d\r\n", counter->mTxNoAckRequested);
             sServer->OutputFormat("TxData: %d\r\n", counter->mTxData);
             sServer->OutputFormat("TxDataPoll: %d\r\n", counter->mTxDataPoll);
             sServer->OutputFormat("TxBeacon: %d\r\n", counter->mTxBeacon);
             sServer->OutputFormat("TxBeaconRequest: %d\r\n", counter->mTxBeaconRequest);
-            sServer->OutputFormat("TxDataUnAcked: %d\r\n", counter->mTxDataUnAcked);
             sServer->OutputFormat("TxRetry: %d\r\n", counter->mTxRetry);
             sServer->OutputFormat("TxErrCca: %d\r\n", counter->mTxErrCca);
-            sServer->OutputFormat("Rx: %d\r\n", counter->mRx);
+            sServer->OutputFormat("RxTotal: %d\r\n", counter->mRxTotal);
             sServer->OutputFormat("RxData: %d\r\n", counter->mRxData);
             sServer->OutputFormat("RxDataPoll: %d\r\n", counter->mRxDataPoll);
             sServer->OutputFormat("RxBeacon: %d\r\n", counter->mRxBeacon);
