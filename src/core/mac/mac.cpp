@@ -891,13 +891,19 @@ void Mac::ReceiveDoneTask(Frame *aFrame, ThreadError aError)
         {
             SuccessOrExit(HandleMacCommand(*aFrame));
         }
+        else if (aFrame->GetType() == Frame::kFcfFrameBeacon)
+        {
+            mCounter.mRxBeacon++;
+        }
+        else if (aFrame->GetType() == Frame::kFcfFrameData)
+        {
+            mCounter.mRxData++;
+        }
 
         for (Receiver *receiver = mReceiveHead; receiver; receiver = receiver->mNext)
         {
             receiver->HandleReceivedFrame(*aFrame, kThreadError_None);
         }
-
-        mCounter.mRxData++;
 
         break;
     }
@@ -946,7 +952,6 @@ ThreadError Mac::HandleMacCommand(Frame &aFrame)
     else if (commandId == Frame::kMacCmdDataRequest)
     {
         mCounter.mRxDataPoll++;
-        ExitNow(error = kThreadError_Drop);
     }
 
 exit:
