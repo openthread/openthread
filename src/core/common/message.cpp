@@ -107,6 +107,7 @@ Message *Message::New(uint8_t aType, uint16_t aReserved)
     memset(message, 0, sizeof(*message));
     message->SetType(aType);
     message->SetReserved(aReserved);
+    message->SetLinkSecurityEnabled(true);
 
     VerifyOrExit(message->SetLength(0) == kThreadError_None, Message::Free(*message));
 
@@ -498,14 +499,14 @@ void Message::SetDirectTransmission(void)
     mInfo.mDirectTx = true;
 }
 
-bool Message::GetSecurityValid(void) const
+bool Message::IsLinkSecurityEnabled(void) const
 {
-    return mInfo.mSecurityValid;
+    return mInfo.mLinkSecurity;
 }
 
-void Message::SetSecurityValid(bool aSecurityValid)
+void Message::SetLinkSecurityEnabled(bool aLinkSecurityEnabled)
 {
-    mInfo.mSecurityValid = aSecurityValid;
+    mInfo.mLinkSecurity = aLinkSecurityEnabled;
 }
 
 uint16_t Message::UpdateChecksum(uint16_t aChecksum, uint16_t aOffset, uint16_t aLength) const
