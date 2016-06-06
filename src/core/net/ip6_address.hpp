@@ -179,6 +179,15 @@ public:
     bool IsRealmLocalAllRoutersMulticast(void) const;
 
     /**
+     * This method indicates whether or not the IPv6 address is a RLOC address.
+     *
+     * @retval TRUE   If the IPv6 address is a RLOC address.
+     * @retval FALSE  If the IPv6 address is not a RLOC address.
+     *
+     */
+    bool IsRoutingLocator(void) const;
+
+    /**
      * This method returns a pointer to the Interface Identifier.
      *
      * @returns A pointer to the Interface Identifier.

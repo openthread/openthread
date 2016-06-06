@@ -99,6 +99,12 @@ bool Address::IsRealmLocalAllRoutersMulticast(void) const
             m32[2] == 0 && m32[3] == HostSwap32(0x02));
 }
 
+bool Address::IsRoutingLocator(void) const
+{
+    return (m16[4] == HostSwap16(0x0000) && m16[5] == HostSwap16(0x00ff) &&
+            m16[6] == HostSwap16(0xfe00));
+}
+
 const uint8_t *Address::GetIid(void) const
 {
     return m8 + kInterfaceIdentifierOffset;

@@ -281,7 +281,10 @@ ThreadError Netif::AddUnicastAddress(NetifUnicastAddress &aAddress)
     aAddress.mNext = mUnicastAddresses;
     mUnicastAddresses = &aAddress;
 
-    mUnicastChangedTask.Post();
+    if (!aAddress.GetAddress().IsRoutingLocator())
+    {
+        mUnicastChangedTask.Post();
+    }
 
 exit:
     return error;
@@ -311,7 +314,12 @@ ThreadError Netif::RemoveUnicastAddress(const NetifUnicastAddress &aAddress)
     ExitNow(error = kThreadError_Error);
 
 exit:
-    mUnicastChangedTask.Post();
+
+    if (!aAddress.GetAddress().IsRoutingLocator())
+    {
+        mUnicastChangedTask.Post();
+    }
+
     return error;
 }
 
