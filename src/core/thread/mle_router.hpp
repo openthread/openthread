@@ -295,7 +295,7 @@ public:
      * @param[in]  aChild  The Child that sent the MAC Data Poll message.
      *
      */
-    void HandleMacDataRequest(const Child &aChild);
+    void HandleMacDataRequest(Child &aChild);
 
     /**
      * This method checks if the destination is reachable.
