@@ -850,6 +850,12 @@ ThreadError Mle::SendParentRequest(void)
     {
     case kParentRequestRouter:
         scanMask = ScanMaskTlv::kRouterFlag;
+
+        if (mParentRequestMode == kMleAttachSamePartition)
+        {
+            scanMask |= ScanMaskTlv::kEndDeviceFlag;
+        }
+
         break;
 
     case kParentRequestChild:
