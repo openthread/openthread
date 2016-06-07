@@ -58,7 +58,7 @@ extern "C" {
 #include "intrinsics.h"
 
 #define OT_TOOL_PACKED_BEGIN                __packed
-#define OT_TOOL_PACKED_END                  
+#define OT_TOOL_PACKED_END
 #define OT_TOOL_DEPRECATED(symbol)
 
 #elif defined(_MSC_VER)
