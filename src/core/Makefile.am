@@ -77,6 +77,7 @@ noinst_HEADERS                      = \
     common/encoding.hpp               \
     common/logging.hpp                \
     common/message.hpp                \
+    common/new.hpp                    \
     common/tasklet.hpp                \
     common/timer.hpp                  \
     crypto/aes_ccm.hpp                \
