@@ -39,6 +39,7 @@
 #include <stdbool.h>
 
 #include <openthread-types.h>
+#include <platform/radio.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -789,6 +790,50 @@ uint8_t otGetRouterIdSequence(void);
  * @returns The Stable Network Data Version.
  */
 uint8_t otGetStableNetworkDataVersion(void);
+
+/**
+ * This function pointer is called when an IEEE 802.15.4 frame is received.
+ *
+ * @note This callback is called after FCS processing and @p aFrame may not contain the actual FCS that was received.
+ *
+ * @note This callback is called before IEEE 802.15.4 security processing and mSecurityValid in @p aFrame will
+ * always be false.
+ *
+ * @param[in]  aFrame  A pointer to the received IEEE 802.15.4 frame.
+ *
+ */
+typedef void (*otLinkPcapCallback)(const RadioPacket *aFrame);
+
+/**
+ * This function registers a callback to provide received raw IEEE 802.15.4 frames.
+ *
+ * @param[in]  aPcapCallback  A pointer to a function that is called when receiving an IEEE 802.15.4 link frame or
+ *                            NULL to disable the callback.
+ *
+ */
+void otSetLinkPcapCallback(otLinkPcapCallback aPcapCallback);
+
+/**
+ * This function indicates whether or not promiscuous mode is enabled at the link layer.
+ *
+ * @retval true   Promiscuous mode is enabled.
+ * @retval false  Promiscuous mode is not enabled.
+ *
+ */
+bool otIsLinkPromiscuous(void);
+
+/**
+ * This function enables or disables the link layer promiscuous mode.
+ *
+ * @note Promiscuous mode may only be enabled when the Thread interface is disabled.
+ *
+ * @param[in]  aPromiscuous  true to enable promiscuous mode, or false otherwise.
+ *
+ * @retval kThreadError_None  Successfully enabled promiscuous mode.
+ * @retval kThreadError_Busy  Could not enable promiscuous mode because the Thread interface is enabled.
+ *
+ */
+ThreadError otSetLinkPromiscuous(bool aPromiscuous);
 
 /**
  * @}

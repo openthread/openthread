@@ -437,6 +437,29 @@ uint8_t otGetStableNetworkDataVersion(void)
     return sThreadNetif->GetMle().GetLeaderDataTlv().GetStableDataVersion();
 }
 
+void otSetLinkPcapCallback(otLinkPcapCallback aPcapCallback)
+{
+    sThreadNetif->GetMac().SetPcapCallback(aPcapCallback);
+}
+
+bool otIsLinkPromiscuous(void)
+{
+    return sThreadNetif->GetMac().IsPromiscuous();
+}
+
+ThreadError otSetLinkPromiscuous(bool aPromiscuous)
+{
+    ThreadError error = kThreadError_None;
+
+    // cannot enable IEEE 802.15.4 promiscuous mode if the Thread interface is enabled
+    VerifyOrExit(sThreadNetif->IsUp() == false, error = kThreadError_Busy);
+
+    sThreadNetif->GetMac().SetPromiscuous(aPromiscuous);
+
+exit:
+    return error;
+}
+
 bool otIsIp6AddressEqual(const otIp6Address *a, const otIp6Address *b)
 {
     return *static_cast<const Ip6::Address *>(a) == *static_cast<const Ip6::Address *>(b);
@@ -464,7 +487,15 @@ ThreadError otRemoveUnicastAddress(otNetifAddress *address)
 
 ThreadError otEnable(void)
 {
-    return sThreadNetif->Up();
+    ThreadError error = kThreadError_None;
+
+    // cannot enable the Thread stack if IEEE 802.15.4 promiscuous mode is enabled
+    VerifyOrExit(otPlatRadioGetPromiscuous() == false, error = kThreadError_Busy);
+
+    SuccessOrExit(error = sThreadNetif->Up());
+
+exit:
+    return error;
 }
 
 ThreadError otDisable(void)
