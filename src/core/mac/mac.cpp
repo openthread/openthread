@@ -785,19 +785,10 @@ void Mac::ReceiveDoneTask(Frame *aFrame, ThreadError aError)
     Neighbor *neighbor;
     Whitelist::Entry *entry;
     int8_t rssi;
-    ThreadError error = kThreadError_None;
+    ThreadError error = aError;
 
-    if (aError != kThreadError_None || aFrame == NULL)
-    {
-        error = aError;
-
-        if (error == kThreadError_None)
-        {
-            error = kThreadError_Error;
-        }
-
-        ExitNow();
-    }
+    VerifyOrExit(error == kThreadError_None, ;);
+    VerifyOrExit(aFrame != NULL, error = kThreadError_Error);
 
     aFrame->mSecurityValid = false;
 
@@ -818,8 +809,7 @@ void Mac::ReceiveDoneTask(Frame *aFrame, ThreadError aError)
         if (neighbor == NULL)
         {
             otLogDebgMac("drop not neighbor\n");
-            error = kThreadError_Error;
-            ExitNow();
+            ExitNow(error = kThreadError_Error);
         }
 
         srcaddr.mLength = sizeof(srcaddr.mExtAddress);
@@ -830,8 +820,7 @@ void Mac::ReceiveDoneTask(Frame *aFrame, ThreadError aError)
         break;
 
     default:
-        error = kThreadError_Error;
-        ExitNow();
+        ExitNow(error = kThreadError_Error);
     }
 
     // Source Whitelist Processing
