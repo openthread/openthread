@@ -31,8 +31,6 @@
  *   This file implements the CLI server on the serial service.
  */
 
-#include <new>
-
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -43,6 +41,7 @@
 #include <cli/cli_serial.hpp>
 #include <common/code_utils.hpp>
 #include <common/encoding.hpp>
+#include <common/new.hpp>
 #include <common/tasklet.hpp>
 #include <platform/serial.h>
 

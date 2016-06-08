@@ -31,13 +31,12 @@
  *   This file implements the top-level interface to the OpenThread stack.
  */
 
-#include <new>
-
 #include <openthread.h>
 #include <common/code_utils.hpp>
 #include <common/debug.hpp>
 #include <common/logging.hpp>
 #include <common/message.hpp>
+#include <common/new.hpp>
 #include <common/tasklet.hpp>
 #include <common/timer.hpp>
 #include <platform/random.h>

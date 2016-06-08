@@ -30,9 +30,8 @@
  *   This file implements an HDLC interface to the Thread stack.
  */
 
-#include <new>
-
 #include <common/code_utils.hpp>
+#include <common/new.hpp>
 #include <ncp/ncp.h>
 #include <ncp/ncp.hpp>
 #include <platform/serial.h>
