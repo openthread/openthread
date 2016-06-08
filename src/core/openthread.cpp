@@ -110,6 +110,18 @@ void otSetExtendedPanId(const uint8_t *aExtendedPanId)
     sThreadNetif->GetMle().SetMeshLocalPrefix(aExtendedPanId);
 }
 
+ThreadError otGetLeaderRloc(otIp6Address *aAddress)
+{
+    ThreadError error;
+
+    VerifyOrExit(aAddress != NULL, error = kThreadError_InvalidArgs);
+
+    error = sThreadNetif->GetMle().GetLeaderAddress(*static_cast<Ip6::Address *>(aAddress));
+
+exit:
+    return error;
+}
+
 otLinkModeConfig otGetLinkMode(void)
 {
     otLinkModeConfig config = {};
@@ -175,6 +187,45 @@ ThreadError otSetMasterKey(const uint8_t *aKey, uint8_t aKeyLength)
     return sThreadNetif->GetKeyManager().SetMasterKey(aKey, aKeyLength);
 }
 
+const otIp6Address *otGetMeshLocalEid(void)
+{
+    return sThreadNetif->GetMle().GetMeshLocal64();
+}
+
+const uint8_t *otGetMeshLocalPrefix(void)
+{
+    return sThreadNetif->GetMle().GetMeshLocalPrefix();
+}
+
+ThreadError otSetMeshLocalPrefix(const uint8_t *aMeshLocalPrefix)
+{
+    return sThreadNetif->GetMle().SetMeshLocalPrefix(aMeshLocalPrefix);
+}
+
+ThreadError otGetNetworkDataLeader(bool aStable, uint8_t *aData, uint8_t *aDataLength)
+{
+    ThreadError error = kThreadError_None;
+
+    VerifyOrExit(aData != NULL && aDataLength != NULL, error = kThreadError_InvalidArgs);
+
+    sThreadNetif->GetNetworkDataLeader().GetNetworkData(aStable, aData, *aDataLength);
+
+exit:
+    return error;
+}
+
+ThreadError otGetNetworkDataLocal(bool aStable, uint8_t *aData, uint8_t *aDataLength)
+{
+    ThreadError error = kThreadError_None;
+
+    VerifyOrExit(aData != NULL && aDataLength != NULL, error = kThreadError_InvalidArgs);
+
+    sThreadNetif->GetNetworkDataLocal().GetNetworkData(aStable, aData, *aDataLength);
+
+exit:
+    return error;
+}
+
 const char *otGetNetworkName(void)
 {
     return sThreadNetif->GetMac().GetNetworkName();
@@ -193,6 +244,11 @@ otPanId otGetPanId(void)
 ThreadError otSetPanId(otPanId aPanId)
 {
     return sThreadNetif->GetMac().SetPanId(aPanId);
+}
+
+otShortAddress otGetShortAddress(void)
+{
+    return sThreadNetif->GetMac().GetShortAddress();
 }
 
 uint8_t otGetLocalLeaderWeight(void)
@@ -521,6 +577,17 @@ void HandleActiveScanResult(void *aContext, Mac::Frame *aFrame)
 
 exit:
     return;
+}
+
+void otSetReceiveIp6DatagramCallback(otReceiveIp6DatagramCallback aCallback)
+{
+    Ip6::Ip6::SetReceiveDatagramCallback(aCallback);
+}
+
+ThreadError otSendIp6Datagram(otMessage aMessage)
+{
+    return Ip6::Ip6::HandleDatagram(*static_cast<Message *>(aMessage), NULL, sThreadNetif->GetInterfaceId(),
+                                    NULL, true);
 }
 
 otMessage otNewUdpMessage(void)

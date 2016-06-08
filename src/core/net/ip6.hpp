@@ -563,22 +563,13 @@ public:
                                                 uint16_t aLength, IpProto aProto);
 
     /**
-     * This function pointer is called when an IPv6 message is received.
+     * This function registers a callback to provide receivd raw IPv6 datagrams.
      *
-     * @param[in]  aContext  A pointer to arbitrary context information.
-     * @param[in]  aMessage  A reference to the IPv6 message.
-     *
-     */
-    typedef void (*NcpReceivedDatagramHandler)(void *aContext, Message &aMessage);
-
-    /**
-     * This method sets the NCP receive handler.
-     *
-     * @param[in]  aHandler  A pointer to a function that is called when IPv6 messages are received.
-     * @param[in]  aContext  A pointer to arbitrary context information.
+     * @param[in]  aCallback  A pointer to a function that is called when an IPv6 datagram is received or NULL to disable
+     *                        the callback.
      *
      */
-    static void SetNcpReceivedHandler(NcpReceivedDatagramHandler aHandler, void *aContext);
+    static void SetReceiveDatagramCallback(otReceiveIp6DatagramCallback aCallback);
 
 };
 

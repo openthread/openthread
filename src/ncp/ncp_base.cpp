@@ -42,6 +42,8 @@ namespace Thread {
 
 extern ThreadNetif *sThreadNetif;
 
+static NcpBase *sNcpContext = NULL;
+
 // ----------------------------------------------------------------------------
 // MARK: Command/Property Jump Tables
 // ----------------------------------------------------------------------------
@@ -228,20 +230,20 @@ NcpBase::NcpBase():
     mSupportedChannelMask = (0xFFFF << 11); // Default to 2.4GHz 802.15.4 channels.
     mChannelMask = mSupportedChannelMask;
     mScanPeriod = 200; // ms
+    sNcpContext = this;
 
     assert(sThreadNetif != NULL);
     sThreadNetif->RegisterHandler(mNetifHandler);
-    Ip6::Ip6::SetNcpReceivedHandler(&HandleDatagramFromStack, this);
+    otSetReceiveIp6DatagramCallback(&HandleDatagramFromStack);
 }
 
 // ----------------------------------------------------------------------------
 // MARK: Outbound Datagram Handling
 // ----------------------------------------------------------------------------
 
-void NcpBase::HandleDatagramFromStack(void *context, Message &message)
+void NcpBase::HandleDatagramFromStack(otMessage message)
 {
-    NcpBase *obj = reinterpret_cast<NcpBase *>(context);
-    obj->HandleDatagramFromStack(message);
+    sNcpContext->HandleDatagramFromStack(*static_cast<Message *>(message));
 }
 
 void NcpBase::HandleDatagramFromStack(Message &message)
@@ -1138,7 +1140,7 @@ void NcpBase::GetPropertyHandler_MAC_15_4_SADDR(uint8_t header, spinel_prop_key_
         SPINEL_CMD_PROP_VALUE_IS,
         key,
         SPINEL_DATATYPE_UINT16_S,
-        sThreadNetif->GetMac().GetShortAddress()
+        otGetShortAddress()
     );
 }
 
@@ -1313,10 +1315,10 @@ void NcpBase::GetPropertyHandler_THREAD_NETWORK_DATA(uint8_t header, spinel_prop
 
     if (errorCode == kThreadError_None)
     {
-        sThreadNetif->GetNetworkDataLocal().GetNetworkData(
+        otGetNetworkDataLocal(
             false, // Stable?
             network_data,
-            network_data_len
+            &network_data_len
         );
 
         errorCode = OutboundFrameFeedData(network_data, network_data_len);
@@ -1346,10 +1348,10 @@ void NcpBase::GetPropertyHandler_THREAD_STABLE_NETWORK_DATA(uint8_t header, spin
 
     if (errorCode == kThreadError_None)
     {
-        sThreadNetif->GetNetworkDataLocal().GetNetworkData(
+        otGetNetworkDataLocal(
             true, // Stable?
             network_data,
-            network_data_len
+            &network_data_len
         );
 
         errorCode = OutboundFrameFeedData(network_data, network_data_len);
@@ -1402,8 +1404,8 @@ void NcpBase::GetPropertyHandler_THREAD_LEADER_WEIGHT(uint8_t header, spinel_pro
 void NcpBase::GetPropertyHandler_THREAD_LEADER_ADDR(uint8_t header, spinel_prop_key_t key)
 {
     ThreadError errorCode;
-    Ip6::Address address;
-    errorCode = sThreadNetif->GetMle().GetLeaderAddress(address);
+    otIp6Address address;
+    errorCode = otGetLeaderRloc(&address);
 
     if (errorCode == kThreadError_None)
     {
@@ -1423,7 +1425,7 @@ void NcpBase::GetPropertyHandler_THREAD_LEADER_ADDR(uint8_t header, spinel_prop_
 
 void NcpBase::GetPropertyHandler_IPV6_ML_PREFIX(uint8_t header, spinel_prop_key_t key)
 {
-    const uint8_t *ml_prefix = sThreadNetif->GetMle().GetMeshLocalPrefix();
+    const uint8_t *ml_prefix = otGetMeshLocalPrefix();
 
     if (ml_prefix)
     {
@@ -1456,7 +1458,7 @@ void NcpBase::GetPropertyHandler_IPV6_ML_PREFIX(uint8_t header, spinel_prop_key_
 
 void NcpBase::GetPropertyHandler_IPV6_ML_ADDR(uint8_t header, spinel_prop_key_t key)
 {
-    const Ip6::Address *ml64 = sThreadNetif->GetMle().GetMeshLocal64();
+    const otIp6Address *ml64 = otGetMeshLocalEid();
 
     if (ml64)
     {
@@ -2186,7 +2188,7 @@ void NcpBase::SetPropertyHandler_STREAM_NET_INSECURE(uint8_t header, spinel_prop
 
     if (errorCode == kThreadError_None)
     {
-        errorCode = Ip6::Ip6::HandleDatagram(*message, NULL, sThreadNetif->GetInterfaceId(), NULL, true);
+        errorCode = otSendIp6Datagram(message);
     }
 
     if (errorCode == kThreadError_None)
@@ -2244,7 +2246,7 @@ void NcpBase::SetPropertyHandler_STREAM_NET(uint8_t header, spinel_prop_key_t ke
 
     if (errorCode == kThreadError_None)
     {
-        errorCode = Ip6::Ip6::HandleDatagram(*message, NULL, sThreadNetif->GetInterfaceId(), NULL, true);
+        errorCode = otSendIp6Datagram(message);
     }
 
     if (errorCode == kThreadError_None)
@@ -2269,7 +2271,7 @@ void NcpBase::SetPropertyHandler_IPV6_ML_PREFIX(uint8_t header, spinel_prop_key_
 
     if (value_len >= 8)
     {
-        errorCode = sThreadNetif->GetMle().SetMeshLocalPrefix(value_ptr);
+        errorCode = otSetMeshLocalPrefix(value_ptr);
         HandleCommandPropertyGet(header, key);
     }
     else

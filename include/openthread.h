@@ -56,6 +56,7 @@ extern "C" {
  * @defgroup config Configuration
  * @defgroup diags Diagnostics
  * @defgroup messages Message Buffers
+ * @defgroup ip6 IPv6
  * @defgroup udp UDP
  *
  * @}
@@ -278,6 +279,18 @@ const uint8_t *otGetExtendedPanId(void);
 void otSetExtendedPanId(const uint8_t *aExtendedPanId);
 
 /**
+ * This function returns a pointer to the Leader's RLOC.
+ *
+ * @param[out]  aLeaderRloc  A pointer to where the Leader's RLOC will be written.
+ *
+ * @retval kThreadError_None         The Leader's RLOC was successfully written to @p aLeaderRloc.
+ * @retval kThreadError_InvalidArgs  @p aLeaderRloc was NULL.
+ * @retval kThreadError_Detached     Not currently attached to a Thread Partition.
+ *
+ */
+ThreadError otGetLeaderRloc(otIp6Address *aLeaderRloc);
+
+/**
  * Get the MLE Link Mode configuration.
  *
  * @returns The MLE Link Mode configuration.
@@ -323,6 +336,52 @@ const uint8_t *otGetMasterKey(uint8_t *aKeyLength);
 ThreadError otSetMasterKey(const uint8_t *aKey, uint8_t aKeyLength);
 
 /**
+ * This function returns a pointer to the Mesh Local EID.
+ *
+ * @returns A pointer to the Mesh Local EID.
+ *
+ */
+const otIp6Address *otGetMeshLocalEid(void);
+
+/**
+ * This function returns a pointer to the Mesh Local Prefix.
+ *
+ * @returns A pointer to the Mesh Local Prefix.
+ *
+ */
+const uint8_t *otGetMeshLocalPrefix(void);
+
+/**
+ * This function sets the Mesh Local Prefix.
+ *
+ * @param[in]  aMeshLocalPrefix  A pointer to the Mesh Local Prefix.
+ *
+ * @retval kThreadError_None  Successfully set the Mesh Local Prefix.
+ *
+ */
+ThreadError otSetMeshLocalPrefix(const uint8_t *aMeshLocalPrefix);
+
+/**
+ * This method provides a full or stable copy of the Leader's Thread Network Data.
+ *
+ * @param[in]     aStable      TRUE when copying the stable version, FALSE when copying the full version.
+ * @param[out]    aData        A pointer to the data buffer.
+ * @param[inout]  aDataLength  On entry, size of the data buffer pointed to by @p aData.
+ *                             On exit, number of copied bytes.
+ */
+ThreadError otGetNetworkDataLeader(bool aStable, uint8_t *aData, uint8_t *aDataLength);
+
+/**
+ * This method provides a full or stable copy of the local Thread Network Data.
+ *
+ * @param[in]     aStable      TRUE when copying the stable version, FALSE when copying the full version.
+ * @param[out]    aData        A pointer to the data buffer.
+ * @param[inout]  aDataLength  On entry, size of the data buffer pointed to by @p aData.
+ *                             On exit, number of copied bytes.
+ */
+ThreadError otGetNetworkDataLocal(bool aStable, uint8_t *aData, uint8_t *aDataLength);
+
+/**
  * Get the Thread Network Name.
  *
  * @returns A pointer to the Thread Network Name.
@@ -362,6 +421,13 @@ otPanId otGetPanId(void);
  * @sa otGetPanId
  */
 ThreadError otSetPanId(otPanId aPanId);
+
+/**
+ * Get the IEEE 802.15.4 Short Address.
+ *
+ * @returns A pointer to the IEEE 802.15.4 Short Address.
+ */
+otShortAddress otGetShortAddress(void);
 
 /**
  * Get the list of IPv6 addresses assigned to the Thread interface.
@@ -988,6 +1054,46 @@ int otReadMessage(otMessage aMessage, uint16_t aOffset, void *aBuf, uint16_t aLe
  * @sa otReadMessage
  */
 int otWriteMessage(otMessage aMessage, uint16_t aOffset, const void *aBuf, uint16_t aLength);
+
+/**
+ * @}
+ *
+ */
+
+/**
+ * @addtogroup ip6  IPv6
+ *
+ * @brief
+ *   This module includes functions that control IPv6 communication.
+ *
+ * @{
+ *
+ */
+
+/**
+ * This function pointer is called when an IPv6 datagram is received.
+ *
+ * @param[in]  aMessage  A pointer to the message buffer containing the received IPv6 datagram.
+ *
+ */
+typedef void (*otReceiveIp6DatagramCallback)(otMessage aMessage);
+
+/**
+ * This function registers a callback to provide received IPv6 datagrams.
+ *
+ * @param[in]  aCallback  A pointer to a function that is called when an IPv6 datagram is received or NULL to disable
+ *                        the callback.
+ *
+ */
+void otSetReceiveIp6DatagramCallback(otReceiveIp6DatagramCallback aCallback);
+
+/**
+ * This function sends an IPv6 datagram via the Thread interface.
+ *
+ * @param[in]  aMessage  A pointer to the message buffer containing the IPv6 datagram.
+ *
+ */
+ThreadError otSendIp6Datagram(otMessage aMessage);
 
 /**
  * @}

@@ -97,6 +97,13 @@ Mle::Mle(ThreadNetif &aThreadNetif) :
     mLinkLocal16.mPreferredLifetime = 0xffffffff;
     mLinkLocal16.mValidLifetime = 0xffffffff;
 
+    // initialize Mesh Local Prefix
+    mMeshLocal64.GetAddress().m8[0] = 0xfd;
+    memcpy(mMeshLocal64.GetAddress().m8 + 1, mMac.GetExtendedPanId(), 5);
+    mMeshLocal64.GetAddress().m8[6] = 0x00;
+    mMeshLocal64.GetAddress().m8[7] = 0x00;
+    SetMeshLocalPrefix(mMeshLocal64.GetAddress().m8);
+
     // mesh-local 64
     for (int i = 8; i < 16; i++)
     {
@@ -127,8 +134,6 @@ Mle::Mle(ThreadNetif &aThreadNetif) :
     mRealmLocalAllThreadNodes.GetAddress().m16[6] = HostSwap16(0x0000);
     mRealmLocalAllThreadNodes.GetAddress().m16[7] = HostSwap16(0x0001);
     mNetif.SubscribeMulticast(mRealmLocalAllThreadNodes);
-
-    SetMeshLocalPrefix(mMac.GetExtendedPanId());
 
     mNetif.RegisterHandler(mNetifHandler);
 }
@@ -326,20 +331,16 @@ const uint8_t *Mle::GetMeshLocalPrefix(void) const
     return mMeshLocal16.GetAddress().m8;
 }
 
-ThreadError Mle::SetMeshLocalPrefix(const uint8_t *aExtendedPanId)
+ThreadError Mle::SetMeshLocalPrefix(const uint8_t *aMeshLocalPrefix)
 {
-    mMeshLocal64.GetAddress().m8[0] = 0xfd;
-    memcpy(mMeshLocal64.GetAddress().m8 + 1, aExtendedPanId, 5);
-    mMeshLocal64.GetAddress().m8[6] = 0x00;
-    mMeshLocal64.GetAddress().m8[7] = 0x00;
-
-    memcpy(&mMeshLocal16.GetAddress(), &mMeshLocal64.GetAddress(), 8);
+    memcpy(mMeshLocal64.GetAddress().m8, aMeshLocalPrefix, 8);
+    memcpy(mMeshLocal16.GetAddress().m8, mMeshLocal64.GetAddress().m8, 8);
 
     mLinkLocalAllThreadNodes.GetAddress().m8[3] = 64;
-    memcpy(mLinkLocalAllThreadNodes.GetAddress().m8 + 4, &mMeshLocal64.GetAddress(), 8);
+    memcpy(mLinkLocalAllThreadNodes.GetAddress().m8 + 4, mMeshLocal64.GetAddress().m8, 8);
 
     mRealmLocalAllThreadNodes.GetAddress().m8[3] = 64;
-    memcpy(mRealmLocalAllThreadNodes.GetAddress().m8 + 4, &mMeshLocal64.GetAddress(), 8);
+    memcpy(mRealmLocalAllThreadNodes.GetAddress().m8 + 4, mMeshLocal64.GetAddress().m8, 8);
 
     return kThreadError_None;
 }
@@ -416,7 +417,7 @@ ThreadError Mle::GetLeaderAddress(Ip6::Address &aAddress) const
 {
     ThreadError error = kThreadError_None;
 
-    VerifyOrExit(GetRloc16() != Mac::kShortAddrInvalid, error = kThreadError_Error);
+    VerifyOrExit(GetRloc16() != Mac::kShortAddrInvalid, error = kThreadError_Detached);
 
     memcpy(&aAddress, &mMeshLocal16.GetAddress(), 8);
     aAddress.m16[4] = HostSwap16(0x0000);
