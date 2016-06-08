@@ -1112,9 +1112,7 @@ ThreadError MleRouter::HandleAdvertisement(const Message &aMessage, const Ip6::M
     SuccessOrExit(error = Tlv::GetTlv(aMessage, Tlv::kRoute, sizeof(route), route));
     VerifyOrExit(route.IsValid(), error = kThreadError_Parse);
 
-    if ((GetDeviceState() == kDeviceStateChild &&
-         memcmp(&mParent.mMacAddr, &macAddr, sizeof(mParent.mMacAddr)) == 0) ||
-        GetDeviceState() == kDeviceStateRouter || GetDeviceState() == kDeviceStateLeader)
+    if (mDeviceMode & ModeTlv::kModeFFD)
     {
         SuccessOrExit(error = ProcessRouteTlv(route));
     }
