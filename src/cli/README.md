@@ -40,7 +40,7 @@ OpenThread test scripts use this CLI to execute test cases.
 Get the IEEE 802.15.4 Channel value.
 
 ```bash
-$ channel
+> channel
 11
 Done
 ```
@@ -50,7 +50,7 @@ Done
 Set the IEEE 802.15.4 Channel value.
 
 ```bash
-$ channel 11
+> channel 11
 Done
 ```
 
@@ -59,7 +59,7 @@ Done
 Get the Thread Child Timeout value.
 
 ```bash
-$ childtimeout
+> childtimeout
 300
 Done
 ```
@@ -69,7 +69,7 @@ Done
 Set the Thread Child Timeout value.
 
 ```bash
-$ childtimeout 300
+> childtimeout 300
 Done
 ```
 
@@ -78,7 +78,7 @@ Done
 Get the CONTEXT_ID_REUSE_DELAY value.
 
 ```bash
-$ contextreusedelay
+> contextreusedelay
 11
 Done
 ```
@@ -88,7 +88,7 @@ Done
 Set the CONTEXT_ID_REUSE_DELAY value.
 
 ```bash
-$ contextreusedelay 11
+> contextreusedelay 11
 Done
 ```
 
@@ -97,7 +97,7 @@ Done
 Get the IEEE 802.15.4 Extended Address.
 
 ```bash
-$ extaddr
+> extaddr
 0xdead00beef00cafe
 Done
 ```
@@ -107,7 +107,7 @@ Done
 Get the Thread Extended PAN ID value.
 
 ```bash
-$ extpanid
+> extpanid
 0xdead00beef00cafe
 Done
 ```
@@ -117,7 +117,7 @@ Done
 Set the Thread Extended PAN ID value.
 
 ```bash
-$ extpanid dead00beef00cafe
+> extpanid dead00beef00cafe
 Done
 ```
 
@@ -126,7 +126,7 @@ Done
 List all IPv6 addresses assigned to the Thread interface.
 
 ```bash
-$ ipaddr
+> ipaddr
 fdde:ad00:beef:0:0:ff:fe00:0
 fe80:0:0:0:0:ff:fe00:0
 fdde:ad00:beef:0:558:f56b:d688:799
@@ -139,7 +139,7 @@ Done
 Add an IPv6 address to the Thread interface.
 
 ```bash
-$ ipaddr add 2001::dead:beef:cafe
+> ipaddr add 2001::dead:beef:cafe
 Done
 ```
 
@@ -148,7 +148,7 @@ Done
 Delete an IPv6 address from the Thread interface.
 
 ```bash
-$ ipaddr del 2001::dead:beef:cafe
+> ipaddr del 2001::dead:beef:cafe
 Done
 ```
 
@@ -157,7 +157,7 @@ Done
 Get the Thread Key Sequence.
 
 ```bash
-$ keysequence
+> keysequence
 10
 Done
 ```
@@ -167,7 +167,7 @@ Done
 Set the Thread Key Sequence.
 
 ```bash
-$ keysequence 10
+> keysequence 10
 Done
 ```
 
@@ -176,7 +176,7 @@ Done
 Get the Thread Leader Weight.
 
 ```bash
-$ leaderweight
+> leaderweight
 128
 Done
 ```
@@ -186,7 +186,7 @@ Done
 Set the Thread Leader Weight.
 
 ```bash
-$ leaderweight 128
+> leaderweight 128
 Done
 ```
 
@@ -195,7 +195,7 @@ Done
 Get the Thread Master Key value.
 
 ```bash
-$ masterkey
+> masterkey
 00112233445566778899aabbccddeeff
 Done
 ```
@@ -205,7 +205,7 @@ Done
 Set the Thread Master Key value.
 
 ```bash
-$ masterkey 00112233445566778899aabbccddeeff
+> masterkey 00112233445566778899aabbccddeeff
 Done
 ```
 
@@ -219,7 +219,7 @@ Get the Thread Device Mode value.
 * n: Full Network Data
 
 ```bash
-$ mode
+> mode
 rsdn
 Done
 ```
@@ -234,7 +234,7 @@ Set the Thread Device Mode value.
 * n: Full Network Data
 
 ```bash
-$ mode rsdn
+> mode rsdn
 Done
 ```
 
@@ -243,7 +243,7 @@ Done
 Register local network data with Thread Leader.
 
 ```bash
-$ netdataregister
+> netdataregister
 Done
 ```
 
@@ -252,7 +252,7 @@ Done
 Get the NETWORK_ID_TIMEOUT parameter used in the Router role.  
 
 ```bash
-$ networkidtimeout
+> networkidtimeout
 120
 Done
 ```
@@ -262,7 +262,7 @@ Done
 Set the NETWORK_ID_TIMEOUT parameter used in the Router role.  
 
 ```bash
-$ networkidtimeout 120
+> networkidtimeout 120
 Done
 ```
 
@@ -271,7 +271,7 @@ Done
 Get the Thread Network Name.  
 
 ```bash
-$ networkname
+> networkname
 OpenThread
 Done
 ```
@@ -281,7 +281,7 @@ Done
 Set the Thread Network Name.  
 
 ```bash
-$ networkname OpenThread
+> networkname OpenThread
 Done
 ```
 
@@ -290,7 +290,7 @@ Done
 Get the IEEE 802.15.4 PAN ID value.
 
 ```bash
-$ panid
+> panid
 0xdead
 Done
 ```
@@ -300,7 +300,7 @@ Done
 Set the IEEE 802.15.4 PAN ID value.
 
 ```bash
-$ panid 0xdead
+> panid 0xdead
 Done
 ```
 
@@ -309,7 +309,7 @@ Done
 Send an ICMPv6 Echo Request.
 
 ```bash
-$ ping fdde:ad00:beef:0:558:f56b:d688:799
+> ping fdde:ad00:beef:0:558:f56b:d688:799
 16 bytes from fdde:ad00:beef:0:558:f56b:d688:799: icmp_seq=1 hlim=64
 ```
 
@@ -326,7 +326,7 @@ Add a valid prefix to the Network Data.
 * prf: Default router preference, which may be: 'high', 'med', or 'low'.
 
 ```bash
-$ prefix add 2001:dead:beef:cafe::/64 pvsr 0
+> prefix add 2001:dead:beef:cafe::/64 pvsr 0
 Done
 ```
 
@@ -335,14 +335,14 @@ Done
 Invalidate a prefix in the network data.
 
 ```bash
-$ prefix remove 2001:dead:beef:cafe::/64
+> prefix remove 2001:dead:beef:cafe::/64
 Done
 ```
 
 ### releaserouterid \<routerid\>
 Release a Router ID that has been allocated by the device in the Leader role.
 ```bash
-$ releaserouterid 16
+> releaserouterid 16
 Done
 ```
 
@@ -351,7 +351,7 @@ Done
 Get the Thread RLOC16 value.
 
 ```bash
-$ rloc16
+> rloc16
 0xdead
 Done
 ```
@@ -364,7 +364,7 @@ Add a valid prefix to the Network Data.
 * prf: Default router preference, which may be: 'high', 'med', or 'low'.
 
 ```bash
-$ route add 2001:dead:beef:cafe::/64 pvsr 0
+> route add 2001:dead:beef:cafe::/64 pvsr 0
 Done
 ```
 
@@ -373,7 +373,7 @@ Done
 Invalidate a prefix in the network data.
 
 ```bash
-$ route remove 2001:dead:beef:cafe::/64
+> route remove 2001:dead:beef:cafe::/64
 Done
 ```
 
@@ -382,7 +382,7 @@ Done
 Get the ROUTER_UPGRADE_THRESHOLD value.
 
 ```bash
-$ routerupgradethreshold
+> routerupgradethreshold
 16
 Done
 ```
@@ -392,7 +392,7 @@ Done
 Set the ROUTER_UPGRADE_THRESHOLD value.
 
 ```bash
-$ routerupgradethreshold 16
+> routerupgradethreshold 16
 Done
 ```
 
@@ -403,7 +403,7 @@ Perform an IEEE 802.15.4 Active Scan.
 * channel: The channel to scan on.  If no channel is provided, the active scan will cover all valid channels.
 
 ```bash
-$ scan
+> scan
 | J | Network Name     | Extended PAN     | PAN  | MAC Address      | Ch | dBm |
 +---+------------------+------------------+------+------------------+----+-----+
 | 0 | OpenThread       | dead00beef00cafe | ffff | f1d92a82c8d8fe43 | 11 | -20 |
@@ -415,7 +415,7 @@ Done
 Enable OpenThread.
 
 ```bash
-$ start
+> start
 Done
 ```
 
@@ -424,7 +424,7 @@ Done
 Disable OpenThread.
 
 ```bash
-$ stop
+> stop
 Done
 ```
 
@@ -433,7 +433,7 @@ Done
 Add an IEEE 802.15.4 Extended Address to the whitelist.
 
 ```bash
-$ whitelist add dead00beef00cafe
+> whitelist add dead00beef00cafe
 Done
 ```
 
@@ -442,7 +442,7 @@ Done
 Clear all entries from the whitelist.
 
 ```bash
-$ whitelist clear
+> whitelist clear
 Done
 ```
 
@@ -451,7 +451,7 @@ Done
 Disable MAC whitelist filtering.
 
 ```bash
-$ whitelist disable
+> whitelist disable
 Done
 ```
 
@@ -460,7 +460,7 @@ Done
 Enable MAC whitelist filtering.
 
 ```bash
-$ whitelist enable
+> whitelist enable
 Done
 ```
 
@@ -469,6 +469,6 @@ Done
 Remove an IEEE 802.15.4 Extended Address from the whitelist.
 
 ```bash
-$ whitelist remove dead00beef00cafe
+> whitelist remove dead00beef00cafe
 Done
 ```
