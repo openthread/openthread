@@ -959,8 +959,9 @@ ThreadError Mac::HandleMacCommand(Frame &aFrame)
 
     aFrame.GetCommandId(commandId);
 
-    if (commandId == Frame::kMacCmdBeaconRequest)
+    switch (commandId)
     {
+    case Frame::kMacCmdBeaconRequest:
         mCounters.mRxBeaconRequest++;
         otLogInfoMac("Received Beacon Request\n");
 
@@ -974,14 +975,14 @@ ThreadError Mac::HandleMacCommand(Frame &aFrame)
         }
 
         ExitNow(error = kThreadError_Drop);
-    }
-    else if (commandId == Frame::kMacCmdDataRequest)
-    {
+
+    case Frame::kMacCmdDataRequest:
         mCounters.mRxDataPoll++;
-    }
-    else
-    {
+        break;
+
+    default:
         mCounters.mRxOther++;
+        break;
     }
 
 exit:

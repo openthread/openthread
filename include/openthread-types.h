@@ -84,12 +84,31 @@ typedef enum ThreadError
      * FCS check failure while receiving.
      */
     kThreadError_FcsErr = 19,
-    kThreadError_FcsErr = 19,
-    kThreadError_NoFrameReceived = 20,
-    kThreadError_UnknownNeighbor = 21,
-    kThreadError_InvalidSourceAddress = 22,
-    kThreadError_WhitelistFiltered = 23,
-    kThreadError_DestinationAddressFiltered = 24,
+
+    /**
+     * No frame received.
+     */
+    kThreadError_NoFrameReceived = 19,
+
+    /**
+     * Received a frame from an unknown neighbor.
+     */
+    kThreadError_UnknownNeighbor = 20,
+
+    /**
+     * Received a frame from an invalid source address.
+     */
+    kThreadError_InvalidSourceAddress = 21,
+
+    /**
+     * Received a frame filtered by the whitelist.
+     */
+    kThreadError_WhitelistFiltered = 22,
+
+    /**
+     * Received a frame filtered by the destination address check.
+     */
+    kThreadError_DestinationAddressFiltered = 23,
 
     kThreadError_Error = 255,
 } ThreadError;
