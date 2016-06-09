@@ -54,7 +54,7 @@ extern "C" {
  *
  *    @code
  *
- *    typedef 
+ *    typedef
  *    OT_TOOL_PACKED_BEGIN
  *    struct {
  *       char field1;
@@ -70,7 +70,7 @@ extern "C" {
 /**
  * @def OT_TOOL_PACKED_FIELD
  *
- * Indicate to the compiler a nested struct or union to be packed 
+ * Indicate to the compiler a nested struct or union to be packed
  * within byte packed class or struct.
  *
  */
@@ -85,7 +85,7 @@ extern "C" {
 /**
  * @def OT_TOOL_DEPRECATED
  *
- * Indicate to the compiler to warn upon use that a field or function 
+ * Indicate to the compiler to warn upon use that a field or function
  * has been deprecated.
  *
  * @param[in]  symbol      The name of the field or function to deprecate.
