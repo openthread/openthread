@@ -125,7 +125,7 @@ extern "C" {
 
 #elif defined(__SDCC)
 
-// Structures are packed by default by sdcc.
+// Structures are packed by default in sdcc, as it primarily targets 8-bit MCUs.
 
 #define OT_TOOL_PACKED_BEGIN
 #define OT_TOOL_PACKED_FIELD
