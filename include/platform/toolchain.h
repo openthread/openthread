@@ -138,7 +138,7 @@ extern "C" {
 // Symbols for Doxygen
 
 #define OT_TOOL_PACKED_BEGIN
-#define OT_TOOL_PACKED
+#define OT_TOOL_PACKED_FIELD
 #define OT_TOOL_PACKED_END
 #define OT_TOOL_DEPRECATED(symbol)
 
