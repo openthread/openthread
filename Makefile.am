@@ -46,6 +46,10 @@ EXTRA_DIST                          = \
     .default-version                  \
     bootstrap                         \
     bootstrap-configure               \
+    README.md                         \
+    NOTICE                            \
+    CONTRIBUTING.md                   \
+    LICENSE                           \
     $(NULL)
 
 BUILT_SOURCES                       = \
