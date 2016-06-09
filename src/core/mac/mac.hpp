@@ -493,7 +493,7 @@ private:
 
     Whitelist mWhitelist;
 
-    otMacCounters mCounter;
+    otMacCounters mCounters;
 };
 
 /**

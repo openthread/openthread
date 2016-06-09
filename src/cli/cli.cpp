@@ -229,25 +229,32 @@ void Interpreter::ProcessCounters(int argc, char *argv[])
     {
         if (strcmp(argv[0], "mac") == 0)
         {
-            const otMacCounters *counter = otGetMacCounters();
-            sServer->OutputFormat("TxTotal: %d\r\n", counter->mTxTotal);
-            sServer->OutputFormat("TxAckRequested: %d\r\n", counter->mTxAckRequested);
-            sServer->OutputFormat("TxAcked: %d\r\n", counter->mTxAcked);
-            sServer->OutputFormat("TxNoAckRequested: %d\r\n", counter->mTxNoAckRequested);
-            sServer->OutputFormat("TxData: %d\r\n", counter->mTxData);
-            sServer->OutputFormat("TxDataPoll: %d\r\n", counter->mTxDataPoll);
-            sServer->OutputFormat("TxBeacon: %d\r\n", counter->mTxBeacon);
-            sServer->OutputFormat("TxBeaconRequest: %d\r\n", counter->mTxBeaconRequest);
-            sServer->OutputFormat("TxRetry: %d\r\n", counter->mTxRetry);
-            sServer->OutputFormat("TxErrCca: %d\r\n", counter->mTxErrCca);
-            sServer->OutputFormat("RxTotal: %d\r\n", counter->mRxTotal);
-            sServer->OutputFormat("RxData: %d\r\n", counter->mRxData);
-            sServer->OutputFormat("RxDataPoll: %d\r\n", counter->mRxDataPoll);
-            sServer->OutputFormat("RxBeacon: %d\r\n", counter->mRxBeacon);
-            sServer->OutputFormat("RxBeaconRequest: %d\r\n", counter->mRxBeaconRequest);
-            sServer->OutputFormat("RxFiltered: %d\r\n", counter->mRxFiltered);
-            sServer->OutputFormat("RxErrSec: %d\r\n", counter->mRxErrSec);
-            sServer->OutputFormat("RxErrFcs: %d\r\n", counter->mRxErrFcs);
+            const otMacCounters *counters = otGetMacCounters();
+            sServer->OutputFormat("TxTotal: %d\r\n", counters->mTxTotal);
+            sServer->OutputFormat("    TxAckRequested: %d\r\n", counters->mTxAckRequested);
+            sServer->OutputFormat("    TxAcked: %d\r\n", counters->mTxAcked);
+            sServer->OutputFormat("    TxNoAckRequested: %d\r\n", counters->mTxNoAckRequested);
+            sServer->OutputFormat("    TxData: %d\r\n", counters->mTxData);
+            sServer->OutputFormat("    TxDataPoll: %d\r\n", counters->mTxDataPoll);
+            sServer->OutputFormat("    TxBeacon: %d\r\n", counters->mTxBeacon);
+            sServer->OutputFormat("    TxBeaconRequest: %d\r\n", counters->mTxBeaconRequest);
+            sServer->OutputFormat("    TxOther: %d\r\n", counters->mTxOther);
+            sServer->OutputFormat("    TxRetry: %d\r\n", counters->mTxRetry);
+            sServer->OutputFormat("    TxErrCca: %d\r\n", counters->mTxErrCca);
+            sServer->OutputFormat("RxTotal: %d\r\n", counters->mRxTotal);
+            sServer->OutputFormat("    RxData: %d\r\n", counters->mRxData);
+            sServer->OutputFormat("    RxDataPoll: %d\r\n", counters->mRxDataPoll);
+            sServer->OutputFormat("    RxBeacon: %d\r\n", counters->mRxBeacon);
+            sServer->OutputFormat("    RxBeaconRequest: %d\r\n", counters->mRxBeaconRequest);
+            sServer->OutputFormat("    RxOther: %d\r\n", counters->mRxOther);
+            sServer->OutputFormat("    RxWhitelistFiltered: %d\r\n", counters->mRxWhitelistFiltered);
+            sServer->OutputFormat("    RxDestAddrFiltered: %d\r\n", counters->mRxDestAddrFiltered);
+            sServer->OutputFormat("    RxErrNoFrame: %d\r\n", counters->mRxErrNoFrame);
+            sServer->OutputFormat("    RxErrNoUnknownNeighbor: %d\r\n", counters->mRxErrUnknownNeighbor);
+            sServer->OutputFormat("    RxErrInvalidSrcAddr: %d\r\n", counters->mRxErrInvalidSrcAddr);
+            sServer->OutputFormat("    RxErrSec: %d\r\n", counters->mRxErrSec);
+            sServer->OutputFormat("    RxErrFcs: %d\r\n", counters->mRxErrFcs);
+            sServer->OutputFormat("    RxErrOther: %d\r\n", counters->mRxErrOther);
         }
     }
 }
