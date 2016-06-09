@@ -101,8 +101,8 @@ test_message_SOURCES         = test_message.cpp
 test_timer_LDADD             = $(COMMON_LDADD)
 test_timer_SOURCES           = test_timer.cpp
 
-test_toolchain_LDADD             = $(COMMON_LDADD)
-test_toolchain_SOURCES           = test_toolchain.cpp
+test_toolchain_LDADD         = $(COMMON_LDADD)
+test_toolchain_SOURCES       = test_toolchain.cpp
 
 endif # OPENTHREAD_BUILD_TESTS
 

@@ -27,18 +27,70 @@
  */
 
 /**
- * @file
+ * @defgroup toolchain Toolchain
+ * @ingroup platform
+ *
  * @brief
- *   This file defines a toolchain abstraction layer through macros.
+ *   This module defines a toolchain abstraction layer through macros.
+ *
+ * @{
  *
  */
 
-#ifndef _TOOLCHAIN_H_
-#define _TOOLCHAIN_H_
+#ifndef TOOLCHAIN_H_
+#define TOOLCHAIN_H_
 
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+
+/**
+ * @def OT_TOOL_PACKED_BEGIN
+ *
+ * Indicate to the compiler that a class or struct should be byte packed.
+ *
+ * Usage:
+ *
+ *    @code
+ *
+ *    typedef 
+ *    OT_TOOL_PACKED_BEGIN
+ *    struct {
+ *       char field1;
+ *       union {
+ *          char field2;
+ *          long field2;
+ *       } OT_TOOL_PACKED_FIELD;
+ *    } OT_TOOL_PACKED_END;
+ *
+ *    @endcode
+ */
+
+/**
+ * @def OT_TOOL_PACKED
+ *
+ * Indicate to the compiler a nested struct or union to be packed 
+ * within byte packed class or struct.
+ *
+ */
+
+/**
+ * @def OT_TOOL_PACKED_END
+ *
+ * Indicate to the compiler the end of a byte packed class or struct.
+ *
+ */
+
+/**
+ * @def OT_TOOL_DEPRECATED
+ *
+ * Indicate to the compiler to warn upon use that a field or function 
+ * has been deprecated.
+ *
+ * @param[in]  symbol      The name of the field or function to deprecate.
+ *
+ */
 
 // =========== TOOLCHAIN SELECTION : START ===========
 
@@ -48,6 +100,7 @@ extern "C" {
 // http://www.keil.com/support/man/docs/armcc/armcc_chr1359124973480.htm
 
 #define OT_TOOL_PACKED_BEGIN
+#define OT_TOOL_PACKED                      __attribute__((packed))
 #define OT_TOOL_PACKED_END                  __attribute__((packed))
 #define OT_TOOL_DEPRECATED(symbol)          __attribute__((deprecated))
 
@@ -58,12 +111,14 @@ extern "C" {
 #include "intrinsics.h"
 
 #define OT_TOOL_PACKED_BEGIN                __packed
+#define OT_TOOL_PACKED
 #define OT_TOOL_PACKED_END
 #define OT_TOOL_DEPRECATED(symbol)
 
 #elif defined(_MSC_VER)
 
 #define OT_TOOL_PACKED_BEGIN                __pragma(pack(push,1))
+#define OT_TOOL_PACKED
 #define OT_TOOL_PACKED_END                  __pragma(pack(pop))
 #define OT_TOOL_DEPRECATED(symbol)          __pragma(deprecated(symbol))
 
@@ -72,6 +127,7 @@ extern "C" {
 // 8051 is always byte aligned and packed
 
 #define OT_TOOL_PACKED_BEGIN
+#define OT_TOOL_PACKED
 #define OT_TOOL_PACKED_END
 #define OT_TOOL_DEPRECATED(symbol)
 
@@ -79,12 +135,24 @@ extern "C" {
 
 #error "Error: No valid Toolchain specified"
 
+// Symbols for Doxygen
+
+#define OT_TOOL_PACKED_BEGIN
+#define OT_TOOL_PACKED
+#define OT_TOOL_PACKED_END
+#define OT_TOOL_DEPRECATED(symbol)
+
 #endif
 
 // =========== TOOLCHAIN SELECTION : END ===========
 
+/**
+ * @}
+ *
+ */
+
 #ifdef __cplusplus
-}
+}  // extern "C"
 #endif
 
-#endif // _TOOL_H_
+#endif // TOOLCHAIN_H_
