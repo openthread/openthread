@@ -944,7 +944,7 @@ exit:
     {
         mCounters.mRxDestAddrFiltered++;
     }
-    else
+    else if (error != kThreadError_None)
     {
         mCounters.mRxErrOther++;
     }
