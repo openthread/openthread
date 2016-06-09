@@ -33,6 +33,22 @@
  * @brief
  *   This module defines a toolchain abstraction layer through macros.
  *
+ * Usage:
+ *
+ *    @code
+ *
+ *    typedef
+ *    OT_TOOL_PACKED_BEGIN
+ *    struct {
+ *       char field1;
+ *       union {
+ *          char field2;
+ *          long field2;
+ *       } OT_TOOL_PACKED_FIELD;
+ *    } OT_TOOL_PACKED_END packed_struct_t;
+ *
+ *    @endcode
+ *
  * @{
  *
  */
@@ -50,21 +66,6 @@ extern "C" {
  *
  * Compiler-specific indication that a class or struct must be byte packed.
  *
- * Usage:
- *
- *    @code
- *
- *    typedef
- *    OT_TOOL_PACKED_BEGIN
- *    struct {
- *       char field1;
- *       union {
- *          char field2;
- *          long field2;
- *       } OT_TOOL_PACKED_FIELD;
- *    } OT_TOOL_PACKED_END packed_struct_t;
- *
- *    @endcode
  */
 
 /**
