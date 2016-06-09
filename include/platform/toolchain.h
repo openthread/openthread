@@ -125,7 +125,7 @@ extern "C" {
 
 #elif defined(__SDCC)
 
-// 8051 is always byte aligned and packed
+// Structures are packed by default by sdcc.
 
 #define OT_TOOL_PACKED_BEGIN
 #define OT_TOOL_PACKED_FIELD
