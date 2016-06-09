@@ -48,7 +48,7 @@ extern "C" {
 /**
  * @def OT_TOOL_PACKED_BEGIN
  *
- * Indicate to the compiler that a class or struct should be byte packed.
+ * Compiler-specific indication that a class or struct must be byte packed.
  *
  * Usage:
  *
@@ -78,7 +78,7 @@ extern "C" {
 /**
  * @def OT_TOOL_PACKED_END
  *
- * Indicate to the compiler the end of a byte packed class or struct.
+ * Compiler-specific indication at the end of a byte packed class or struct.
  *
  */
 
