@@ -62,7 +62,7 @@ extern "C" {
  *          char field2;
  *          long field2;
  *       } OT_TOOL_PACKED_FIELD;
- *    } OT_TOOL_PACKED_END;
+ *    } OT_TOOL_PACKED_END packed_struct_t;
  *
  *    @endcode
  */
