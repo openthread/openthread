@@ -423,7 +423,7 @@ private:
     {
         uint8_t mDispatchOffsetSize;
         uint16_t mSize;
-    } OT_TOOL_PACKED_END;
+    } OT_TOOL_PACKED_FIELD;
     uint16_t mTag;
     uint8_t mOffset;
 } OT_TOOL_PACKED_END;

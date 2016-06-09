@@ -68,7 +68,7 @@ extern "C" {
  */
 
 /**
- * @def OT_TOOL_PACKED
+ * @def OT_TOOL_PACKED_FIELD
  *
  * Indicate to the compiler a nested struct or union to be packed 
  * within byte packed class or struct.
@@ -100,7 +100,7 @@ extern "C" {
 // http://www.keil.com/support/man/docs/armcc/armcc_chr1359124973480.htm
 
 #define OT_TOOL_PACKED_BEGIN
-#define OT_TOOL_PACKED                      __attribute__((packed))
+#define OT_TOOL_PACKED_FIELD                __attribute__((packed))
 #define OT_TOOL_PACKED_END                  __attribute__((packed))
 #define OT_TOOL_DEPRECATED(symbol)          __attribute__((deprecated))
 
@@ -111,14 +111,14 @@ extern "C" {
 #include "intrinsics.h"
 
 #define OT_TOOL_PACKED_BEGIN                __packed
-#define OT_TOOL_PACKED
+#define OT_TOOL_PACKED_FIELD
 #define OT_TOOL_PACKED_END
 #define OT_TOOL_DEPRECATED(symbol)
 
 #elif defined(_MSC_VER)
 
 #define OT_TOOL_PACKED_BEGIN                __pragma(pack(push,1))
-#define OT_TOOL_PACKED
+#define OT_TOOL_PACKED_FIELD
 #define OT_TOOL_PACKED_END                  __pragma(pack(pop))
 #define OT_TOOL_DEPRECATED(symbol)          __pragma(deprecated(symbol))
 
@@ -127,7 +127,7 @@ extern "C" {
 // 8051 is always byte aligned and packed
 
 #define OT_TOOL_PACKED_BEGIN
-#define OT_TOOL_PACKED
+#define OT_TOOL_PACKED_FIELD
 #define OT_TOOL_PACKED_END
 #define OT_TOOL_DEPRECATED(symbol)
 

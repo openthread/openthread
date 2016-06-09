@@ -1332,7 +1332,7 @@ private:
     {
         uint8_t mIid[Ip6::Address::kInterfaceIdentifierSize];
         Ip6::Address mIp6Address;
-    } OT_TOOL_PACKED;
+    } OT_TOOL_PACKED_FIELD;
 } OT_TOOL_PACKED_END;
 
 /**
