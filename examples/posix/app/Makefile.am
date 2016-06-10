@@ -38,9 +38,15 @@ DIST_SUBDIRS                            = \
 # Always build (e.g. for 'make all') these subdirectories.
 
 SUBDIRS                                 = \
-    cli                                   \
-    ncp                                   \
     $(NULL)
+
+if OPENTHREAD_ENABLE_CLI
+SUBDIRS                                += cli
+endif
+
+if OPENTHREAD_ENABLE_NCP
+SUBDIRS                                += ncp
+endif
 
 # Always pretty (e.g. for 'make pretty') these subdirectories.
 

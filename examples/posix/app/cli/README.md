@@ -10,7 +10,8 @@ another emulated Thread device.
 
 ```bash
 $ cd openthread
-$ ./bootstrap-configure
+$ ./bootstrap
+$ ./configure --enable-cli --with-examples=posix
 $ make
 ```
 

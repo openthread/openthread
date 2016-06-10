@@ -37,10 +37,14 @@ DIST_SUBDIRS                            = \
 
 # Always build (e.g. for 'make all') these subdirectories.
 
+if OPENTHREAD_EXAMPLES_POSIX
+if OPENTHREAD_ENABLE_CLI
 SUBDIRS                                 = \
     unit                                  \
     scripts                               \
     $(NULL)
+endif
+endif
 
 # Always pretty (e.g. for 'make pretty') these subdirectories.
 
