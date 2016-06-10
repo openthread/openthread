@@ -35,9 +35,9 @@ void test_packed1()
 {
     typedef OT_TOOL_PACKED_BEGIN struct
     {
-        uint8_t  byte;
-        uint32_t word;
-        uint16_t half;
+        uint8_t  mByte;
+        uint32_t mWord;
+        uint16_t mShort;
     } OT_TOOL_PACKED_END packed_t;
 
     VerifyOrQuit(sizeof(packed_t) == 7, "Toolchain::OT_TOOL_PACKED failed 1\n");
@@ -47,8 +47,8 @@ void test_packed2()
 {
     typedef OT_TOOL_PACKED_BEGIN struct
     {
-        uint8_t  bytes[3];
-        uint8_t  byte;
+        uint8_t  mBytes[3];
+        uint8_t  mByte;
     } OT_TOOL_PACKED_END packed_t;
 
     VerifyOrQuit(sizeof(packed_t) == 4, "Toolchain::OT_TOOL_PACKED failed 2\n");

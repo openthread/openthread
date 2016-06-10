@@ -45,7 +45,7 @@
  *        union
  *        {
  *            char mField2;
- *            long mField2;
+ *            long mField3;
  *        } OT_TOOL_PACKED_FIELD;
  *    } OT_TOOL_PACKED_END packed_struct_t;
  *
