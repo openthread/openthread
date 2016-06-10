@@ -1,11 +1,11 @@
-# OpenThread CLI Reference
+# OpenThread CLI reference
 
 The OpenThread CLI exposes configuration and management APIs via a
-command line interface.  This CLI may be used to play with OpenThread
-and may be used along side additional application code.  The
-OpenThread test scripts use this CLI to execute test cases.
+command line interface. Use the CLI to play with OpenThread, which 
+can also be used with additional application code. The
+OpenThread test scripts use the CLI to execute test cases.
 
-## OpenThread Command List
+## OpenThread command list
 
 * [channel](#channel)
 * [childtimeout](#childtimeout)
@@ -33,11 +33,11 @@ OpenThread test scripts use this CLI to execute test cases.
 * [stop](#stop)
 * [whitelist](#whitelist)
 
-## OpenThread Command Details
+## OpenThread command details
 
 ### channel
 
-Get the IEEE 802.15.4 Channel value.
+Get the IEEE 802.15.4 channel value.
 
 ```bash
 > channel
@@ -47,7 +47,7 @@ Done
 
 ### channel \<channel\>
 
-Set the IEEE 802.15.4 Channel value.
+Set the IEEE 802.15.4 channel value.
 
 ```bash
 > channel 11
@@ -56,7 +56,7 @@ Done
 
 ### childtimeout
 
-Get the Thread Child Timeout value.
+Get the OpenThread child timeout value.
 
 ```bash
 > childtimeout
@@ -66,7 +66,7 @@ Done
 
 ### childtimeout \<timeout\>
 
-Set the Thread Child Timeout value.
+Set the OpenThread child timeout value.
 
 ```bash
 > childtimeout 300
@@ -94,7 +94,7 @@ Done
 
 ### extaddr
 
-Get the IEEE 802.15.4 Extended Address.
+Get the IEEE 802.15.4 extended address.
 
 ```bash
 > extaddr
@@ -104,7 +104,7 @@ Done
 
 ### extpanid
 
-Get the Thread Extended PAN ID value.
+Get the OpenThread extended PAN ID value.
 
 ```bash
 > extpanid
@@ -114,7 +114,7 @@ Done
 
 ### extpanid \<extpanid\>
 
-Set the Thread Extended PAN ID value.
+Set the OpenThread extended PAN ID value.
 
 ```bash
 > extpanid dead00beef00cafe
@@ -123,7 +123,7 @@ Done
 
 ### ipaddr
 
-List all IPv6 addresses assigned to the Thread interface.
+List all IPv6 addresses assigned to the OpenThread interface.
 
 ```bash
 > ipaddr
@@ -136,7 +136,7 @@ Done
 
 ### ipaddr add \<ipaddr\>
 
-Add an IPv6 address to the Thread interface.
+Add an IPv6 address to the OpenThread interface.
 
 ```bash
 > ipaddr add 2001::dead:beef:cafe
@@ -145,7 +145,7 @@ Done
 
 ### ipaddr del \<ipaddr\>
 
-Delete an IPv6 address from the Thread interface.
+Delete an IPv6 address from the OpenThread interface.
 
 ```bash
 > ipaddr del 2001::dead:beef:cafe
@@ -154,7 +154,7 @@ Done
 
 ### keysequence
 
-Get the Thread Key Sequence.
+Get the OpenThread key sequence.
 
 ```bash
 > keysequence
@@ -164,7 +164,7 @@ Done
 
 ### keysequence \<keysequence\>
 
-Set the Thread Key Sequence.
+Set the OpenThread key sequence.
 
 ```bash
 > keysequence 10
@@ -173,7 +173,7 @@ Done
 
 ### leaderweight
 
-Get the Thread Leader Weight.
+Get the OpenThread leader weight.
 
 ```bash
 > leaderweight
@@ -183,7 +183,7 @@ Done
 
 ### leaderweight \<weight\>
 
-Set the Thread Leader Weight.
+Set the OpenThread leader weight.
 
 ```bash
 > leaderweight 128
@@ -192,7 +192,7 @@ Done
 
 ### masterkey
 
-Get the Thread Master Key value.
+Get the OpenThread master key value.
 
 ```bash
 > masterkey
@@ -202,7 +202,7 @@ Done
 
 ### masterkey \<key\>
 
-Set the Thread Master Key value.
+Set the OpenThread master key value.
 
 ```bash
 > masterkey 00112233445566778899aabbccddeeff
@@ -211,12 +211,12 @@ Done
 
 ### mode
 
-Get the Thread Device Mode value.
+Get the OpenThread device mode value.
 
 * r: rx-on-when-idle
-* s: Secure IEEE 802.15.4 Data Requests
-* d: Full Function Device
-* n: Full Network Data
+* s: Secure IEEE 802.15.4 data requests
+* d: Full function device
+* n: Full network data
 
 ```bash
 > mode
@@ -226,12 +226,12 @@ Done
 
 ### mode [rsdn]
 
-Set the Thread Device Mode value.
+Set the OpenThread device mode value.
 
 * r: rx-on-when-idle
-* s: Secure IEEE 802.15.4 Data Requests
-* d: Full Function Device
-* n: Full Network Data
+* s: Secure IEEE 802.15.4 data requests
+* d: Full function device
+* n: Full network data
 
 ```bash
 > mode rsdn
@@ -240,7 +240,7 @@ Done
 
 ### netdataregister
 
-Register local network data with Thread Leader.
+Register local network data with OpenThread leader.
 
 ```bash
 > netdataregister
@@ -268,7 +268,7 @@ Done
 
 ### networkname
 
-Get the Thread Network Name.  
+Get the OpenThread network name.  
 
 ```bash
 > networkname
@@ -278,7 +278,7 @@ Done
 
 ### networkname \<name\>
 
-Set the Thread Network Name.  
+Set the OpenThread network name.  
 
 ```bash
 > networkname OpenThread
@@ -306,7 +306,7 @@ Done
 
 ### ping \<ipaddr\> [size]
 
-Send an ICMPv6 Echo Request.
+Send an ICMPv6 echo request.
 
 ```bash
 > ping fdde:ad00:beef:0:558:f56b:d688:799
@@ -315,15 +315,15 @@ Send an ICMPv6 Echo Request.
 
 ### prefix add \<prefix\> [pvdcsr] [prf]
 
-Add a valid prefix to the Network Data.
+Add a valid prefix to the network data.
 
-* p: Stateless IPv6 Address Autoconfiguration Preferred flag
-* v: Stateless IPv6 Address Autoconfiguration Valid flag
-* d: DHCPv6 IPv6 Address Configuration flag
-* c: DHCPv6 Other Configuration flag
+* p: Stateless IPv6 address autoconfiguration preferred flag
+* v: Stateless IPv6 address autoconfiguration valid flag
+* d: DHCPv6 IPv6 address configuration flag
+* c: DHCPv6 other configuration flag
 * s: Stable flag
-* r: Default Route flag
-* prf: Default router preference, which may be: 'high', 'med', or 'low'.
+* r: Default route flag
+* prf: Default router preference, which can be 'high', 'med', or 'low'.
 
 ```bash
 > prefix add 2001:dead:beef:cafe::/64 pvsr 0
@@ -348,7 +348,7 @@ Done
 
 ### rloc16
 
-Get the Thread RLOC16 value.
+Get the OpenThread RLOC16 value.
 
 ```bash
 > rloc16
@@ -358,7 +358,7 @@ Done
 
 ### route add \<prefix\> [s] [prf]
 
-Add a valid prefix to the Network Data.
+Add a valid prefix to the network data.
 
 * s: Stable flag
 * prf: Default router preference, which may be: 'high', 'med', or 'low'.
@@ -398,7 +398,7 @@ Done
 
 ### scan \[channel\]
 
-Perform an IEEE 802.15.4 Active Scan.
+Perform an IEEE 802.15.4 active scan.
 
 * channel: The channel to scan on.  If no channel is provided, the active scan will cover all valid channels.
 
@@ -430,7 +430,7 @@ Done
 
 ### whitelist add \<extaddr\>
 
-Add an IEEE 802.15.4 Extended Address to the whitelist.
+Add an IEEE 802.15.4 extended address to the whitelist.
 
 ```bash
 > whitelist add dead00beef00cafe
@@ -466,7 +466,7 @@ Done
 
 ### whitelist remove \<extaddr\>
 
-Remove an IEEE 802.15.4 Extended Address from the whitelist.
+Remove an IEEE 802.15.4 extended address from the whitelist.
 
 ```bash
 > whitelist remove dead00beef00cafe
