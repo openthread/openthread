@@ -47,11 +47,31 @@ void test_packed2()
 {
     typedef OT_TOOL_PACKED_BEGIN struct
     {
-        uint8_t  mBytes[3];
-        uint8_t  mByte;
+        uint8_t mBytes[3];
+        uint8_t mByte;
     } OT_TOOL_PACKED_END packed_t;
 
     VerifyOrQuit(sizeof(packed_t) == 4, "Toolchain::OT_TOOL_PACKED failed 2\n");
+}
+
+void test_packed_union()
+{
+    typedef struct
+    {
+        uint16_t mField;
+    } nested_t;
+
+    typedef OT_TOOL_PACKED_BEGIN struct
+    {
+        uint8_t mBytes[3];
+        union
+        {
+            nested_t mNestedStruct;
+            uint8_t  mByte;
+        } OT_TOOL_PACKED_FIELD;
+    } OT_TOOL_PACKED_END packed_t;
+
+    VerifyOrQuit(sizeof(packed_t) == 5, "Toolchain::OT_TOOL_PACKED failed 3\n");
 }
 
 int test_deprecated() OT_TOOL_DEPRECATED(test_deprecated);
@@ -65,6 +85,7 @@ void TestToolchain(void)
 {
     test_packed1();
     test_packed2();
+    test_packed_union();
 
     SuccessOrQuit(test_deprecated(), "Toolchain::OT_TOOL_DEPRECATED failed\n");
 }
