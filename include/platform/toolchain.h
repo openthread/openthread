@@ -39,12 +39,14 @@
  *
  *    typedef
  *    OT_TOOL_PACKED_BEGIN
- *    struct {
- *       char field1;
- *       union {
- *          char field2;
- *          long field2;
- *       } OT_TOOL_PACKED_FIELD;
+ *    struct
+ *    {
+ *        char mField1;
+ *        union
+ *        {
+ *            char mField2;
+ *            long mField2;
+ *        } OT_TOOL_PACKED_FIELD;
  *    } OT_TOOL_PACKED_END packed_struct_t;
  *
  *    @endcode
