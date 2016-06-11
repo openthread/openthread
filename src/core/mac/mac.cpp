@@ -79,7 +79,7 @@ Mac::Mac(ThreadNetif &aThreadNetif):
 
     mState = kStateIdle;
 
-    mRxOnWhenIdle = true;
+    mRxOnWhenIdle = false;
     mCsmaAttempts = 0;
     mTransmitAttempts = 0;
     mTransmitBeacon = false;
@@ -113,6 +113,8 @@ Mac::Mac(ThreadNetif &aThreadNetif):
 
     mBeaconSequence = otPlatRandomGet();
     mDataSequence = otPlatRandomGet();
+
+    mPcapCallback = NULL;
 
     otPlatRadioEnable();
 }
@@ -154,7 +156,6 @@ bool Mac::IsActiveScanInProgress(void)
 {
     return (mState == kStateActiveScan) || mActiveScanRequest;
 }
-
 
 ThreadError Mac::RegisterReceiver(Receiver &aReceiver)
 {
@@ -293,7 +294,7 @@ void Mac::NextOperation(void)
         break;
 
     default:
-        if (mRxOnWhenIdle || mReceiveTimer.IsRunning())
+        if (mRxOnWhenIdle || mReceiveTimer.IsRunning() || otPlatRadioGetPromiscuous())
         {
             otPlatRadioReceive(mChannel);
         }
@@ -752,6 +753,13 @@ void Mac::ReceiveDoneTask(Frame *aFrame, ThreadError aError)
 
     VerifyOrExit(aError == kThreadError_None && aFrame != NULL, ;);
 
+    aFrame->mSecurityValid = false;
+
+    if (mPcapCallback)
+    {
+        mPcapCallback(aFrame);
+    }
+
     aFrame->GetSrcAddr(srcaddr);
     neighbor = mMle.GetNeighbor(srcaddr);
 
@@ -866,6 +874,27 @@ ThreadError Mac::HandleMacCommand(Frame &aFrame)
 
 exit:
     return error;
+}
+
+void Mac::SetPcapCallback(otLinkPcapCallback aPcapCallback)
+{
+    mPcapCallback = aPcapCallback;
+}
+
+bool Mac::IsPromiscuous(void)
+{
+    return otPlatRadioGetPromiscuous();
+}
+
+void Mac::SetPromiscuous(bool aPromiscuous)
+{
+    otPlatRadioSetPromiscuous(aPromiscuous);
+
+    SuccessOrExit(otPlatRadioIdle());
+    NextOperation();
+
+exit:
+    return;
 }
 
 Whitelist &Mac::GetWhitelist(void)

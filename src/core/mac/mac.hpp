@@ -391,6 +391,34 @@ public:
      */
     bool IsActiveScanInProgress(void);
 
+    /**
+     * This function registers a callback to provide received raw IEEE 802.15.4 frames.
+     *
+     * @param[in]  aPcapCallback  A pointer to a function that is called when receiving an IEEE 802.15.4 link frame or
+     *                            NULL to disable the callback.
+     *
+     */
+    void SetPcapCallback(otLinkPcapCallback aPcapCallback);
+
+    /**
+     * This function indicates whether or not promiscuous mode is enabled at the link layer.
+     *
+     * @retval true   Promiscuous mode is enabled.
+     * @retval false  Promiscuous mode is not enabled.
+     *
+     */
+    bool IsPromiscuous(void);
+
+    /**
+     * This function enables or disables the link layer promiscuous mode.
+     *
+     * Promiscuous mode keeps the receiver enabled, overriding the value of mRxOnWhenIdle.
+     *
+     * @param[in]  aPromiscuous  true to enable promiscuous mode, or false otherwise.
+     *
+     */
+    void SetPromiscuous(bool aPromiscuous);
+
 private:
     void GenerateNonce(const ExtAddress &aAddress, uint32_t aFrameCounter, uint8_t aSecurityLevel, uint8_t *aNonce);
     void NextOperation(void);
@@ -452,6 +480,8 @@ private:
     uint16_t mScanDuration;
     ActiveScanHandler mActiveScanHandler;
     void *mActiveScanContext;
+
+    otLinkPcapCallback mPcapCallback;
 
     Whitelist mWhitelist;
 };
