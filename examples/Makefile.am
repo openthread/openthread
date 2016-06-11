@@ -36,9 +36,9 @@ DIST_SUBDIRS                            = \
 
 # Always build (e.g. for 'make all') these subdirectories.
 
-SUBDIRS                                 = \
-    posix                                 \
-    $(NULL)
+if OPENTHREAD_EXAMPLES_POSIX
+SUBDIRS                                 = posix
+endif
 
 # Always pretty (e.g. for 'make pretty') these subdirectories.
 

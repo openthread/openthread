@@ -332,6 +332,88 @@ if test "${nl_cv_build_tests}" = "yes"; then
 fi
 
 #
+# CLI Library
+#
+
+AC_ARG_ENABLE(cli,
+    [AS_HELP_STRING([--enable-cli],[Enable CLI suport @<:@default=no@:>@.])],
+    [
+        case "${enableval}" in
+
+        no|yes)
+            enable_cli=${enableval}
+            ;;
+
+        *)
+            AC_MSG_ERROR([Invalid value ${with_cli} for --enable-cli])
+            ;;
+        esac
+    ],
+    [enable_cli=no])
+AC_MSG_RESULT(${enable_cli})
+AM_CONDITIONAL([OPENTHREAD_ENABLE_CLI], [test "${enable_cli}" = "yes"])
+
+#
+# NCP Library
+#
+
+AC_ARG_ENABLE(ncp,
+    [AS_HELP_STRING([--enable-ncp],[Enable NCP suport @<:@default=no@:>@.])],
+    [
+        case "${enableval}" in
+
+        no|yes)
+            enable_ncp=${enableval}
+            ;;
+
+        *)
+            AC_MSG_ERROR([Invalid value ${with_ncp} for --enable-ncp])
+            ;;
+        esac
+    ],
+    [enable_ncp=no])
+AC_MSG_RESULT(${enable_ncp})
+AM_CONDITIONAL([OPENTHREAD_ENABLE_NCP], [test "${enable_ncp}" = "yes"])
+
+#
+# Examples
+#
+
+AC_ARG_WITH(examples,
+    [AS_HELP_STRING([--with-examples=TARGET],
+        [Specify the examples from one of: none, posix @<:@default=none@:>@.])],
+    [
+        case "${with_examples}" in
+
+        none|posix)
+            ;;
+        *)
+            AC_MSG_ERROR([Invalid value ${with_examples} for --with-examples])
+            ;;
+        esac
+    ],
+    [with_examples=none])
+
+OPENTHREAD_EXAMPLES=${with_examples}
+
+case ${with_examples} in
+
+    posix)
+        OPENTHREAD_EXAMPLES_POSIX=1
+        ;;
+
+esac
+
+AC_MSG_RESULT(${OPENTHREAD_EXAMPLES})
+
+AC_SUBST(OPENTHREAD_EXAMPLES)
+AC_DEFINE_UNQUOTED([OPENTHREAD_EXAMPLES],[${OPENTHREAD_EXAMPLES}],[OpenThread examples])
+
+AC_SUBST(OPENTHREAD_EXAMPLES_POSIX)
+AM_CONDITIONAL([OPENTHREAD_EXAMPLES_POSIX], [test "${OPENTHREAD_EXAMPLES}" = "posix"])
+AC_DEFINE_UNQUOTED([OPENTHREAD_EXAMPLES_POSIX],[${OPENTHREAD_EXAMPLES_POSIX}],[Define to 1 if you want to use posix examples])
+
+#
 # Tools
 #
 
@@ -500,8 +582,8 @@ AC_MSG_NOTICE([
   Astyle                                    : ${ASTYLE}
   Astyle pretty args                        : ${ASTYLE_PRETTY_ARGS}
   Astyle pretty check args                  : ${ASTYLE_PRETTY_CHECK_ARGS}
+  OpenThread CLI support                    : ${enable_cli}
+  OpenThread NCP support                    : ${enable_ncp}
+  OpenThread examples                       : ${OPENTHREAD_EXAMPLES}
 
 ])
-
-
-
