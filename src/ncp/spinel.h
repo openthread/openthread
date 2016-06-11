@@ -32,7 +32,6 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <sys/types.h>
-#include <arpa/inet.h>
 
 __BEGIN_DECLS
 
@@ -179,7 +178,11 @@ typedef struct
     uint8_t bytes[6];
 } spinel_eui48_t;
 
-typedef struct in6_addr spinel_ipv6addr_t;
+typedef struct
+{
+    uint8_t bytes[16];
+} spinel_ipv6addr_t;
+
 typedef int spinel_ssize_t;
 typedef unsigned int spinel_size_t;
 typedef uint8_t spinel_tid_t;
