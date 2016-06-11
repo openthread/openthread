@@ -75,6 +75,11 @@ typedef enum ThreadError
      */
     kThreadError_ChannelAccessFailure = 17,
 
+    /**
+     * Not currently attached to a Thread Partition.
+     */
+    kThreadError_Detached = 18,
+
     kThreadError_Error = 255,
 } ThreadError;
 

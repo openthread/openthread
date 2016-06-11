@@ -47,8 +47,7 @@ namespace Thread {
 namespace Ip6 {
 
 static Mpl sMpl;
-static Ip6::NcpReceivedDatagramHandler sNcpReceivedHandler = NULL;
-static void *sNcpReceivedHandlerContext = NULL;
+static otReceiveIp6DatagramCallback sReceiveIp6DatagramCallback = NULL;
 
 static ThreadError ForwardMessage(Message &message, MessageInfo &messageInfo);
 
@@ -93,10 +92,9 @@ uint16_t Ip6::ComputePseudoheaderChecksum(const Address &src, const Address &dst
     return checksum;
 }
 
-void Ip6::SetNcpReceivedHandler(NcpReceivedDatagramHandler handler, void *context)
+void Ip6::SetReceiveDatagramCallback(otReceiveIp6DatagramCallback aCallback)
 {
-    sNcpReceivedHandler = handler;
-    sNcpReceivedHandlerContext = context;
+    sReceiveIp6DatagramCallback = aCallback;
 }
 
 ThreadError AddMplOption(Message &message, Header &header, IpProto nextHeader, uint16_t payloadLength)
@@ -307,7 +305,7 @@ exit:
 }
 
 ThreadError Ip6::HandleDatagram(Message &message, Netif *netif, uint8_t interfaceId, const void *linkMessageInfo,
-                                bool fromNcpHost)
+                                bool fromLocalHost)
 {
     ThreadError error = kThreadError_Drop;
     MessageInfo messageInfo;
@@ -387,9 +385,9 @@ ThreadError Ip6::HandleDatagram(Message &message, Netif *netif, uint8_t interfac
     {
         SuccessOrExit(HandlePayload(message, messageInfo, nextHeader));
 
-        if (sNcpReceivedHandler != NULL && fromNcpHost == false)
+        if (sReceiveIp6DatagramCallback != NULL && fromLocalHost == false)
         {
-            sNcpReceivedHandler(sNcpReceivedHandlerContext, message);
+            sReceiveIp6DatagramCallback(&message);
             ExitNow(error = kThreadError_None);
         }
     }
