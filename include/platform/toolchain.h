@@ -97,7 +97,7 @@ extern "C" {
 
 // =========== TOOLCHAIN SELECTION : START ===========
 
-#if defined(__GNUC__) || defined(__CC_ARM)
+#if defined(__GNUC__) || defined(__clang__) || defined(__CC_ARM)
 
 // https://gcc.gnu.org/onlinedocs/gcc/Common-Variable-Attributes.html
 // http://www.keil.com/support/man/docs/armcc/armcc_chr1359124973480.htm
