@@ -108,6 +108,7 @@ struct Address
  * This class implements IEEE 802.15.4 MAC frame generation and parsing.
  *
  */
+OT_TOOL_PACKED_BEGIN
 class Frame: public RadioPacket
 {
 public:
@@ -762,7 +763,7 @@ private:
     uint8_t  mFlags;
     char     mNetworkName[kNetworkNameSize];
     uint8_t  mExtendedPanId[kExtPanIdSize];
-} __attribute__((packed));
+} OT_TOOL_PACKED_END;
 
 /**
  * @}

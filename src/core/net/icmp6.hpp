@@ -61,6 +61,7 @@ enum
  * This structure represents an ICMPv6 header.
  *
  */
+OT_TOOL_PACKED_BEGIN
 struct IcmpHeaderPoD
 {
     uint8_t      mType;      ///< Type
@@ -72,12 +73,13 @@ struct IcmpHeaderPoD
         uint16_t m16[kIcmp6DataSize / sizeof(uint16_t)];
         uint32_t m32[kIcmp6DataSize / sizeof(uint32_t)];
     } mData;                 ///< Message-specific data
-} __attribute__((packed));
+} OT_TOOL_PACKED_END;
 
 /**
  * This class implements ICMPv6 header generation and parsing.
  *
  */
+OT_TOOL_PACKED_BEGIN
 class IcmpHeader: private IcmpHeaderPoD
 {
 public:
@@ -202,7 +204,7 @@ public:
      */
     static uint8_t GetDataOffset() { return offsetof(IcmpHeaderPoD, mData); }
 
-} __attribute__((packed));
+} OT_TOOL_PACKED_END;
 
 /**
  * This class implements an ICMPv6 echo client.

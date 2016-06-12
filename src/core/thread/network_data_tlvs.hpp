@@ -58,6 +58,7 @@ namespace NetworkData {
  * This class implements Thread Network Data TLV generation and parsing.
  *
  */
+OT_TOOL_PACKED_BEGIN
 class NetworkDataTlv
 {
 public:
@@ -160,12 +161,13 @@ private:
     };
     uint8_t mType;
     uint8_t mLength;
-} __attribute__((packed));
+} OT_TOOL_PACKED_END;
 
 /**
  * This class implements Has Route TLV entry generation and parsing.
  *
  */
+OT_TOOL_PACKED_BEGIN
 class HasRouteEntry
 {
 public:
@@ -215,12 +217,13 @@ private:
 
     uint16_t mRloc;
     uint8_t mFlags;
-} __attribute__((packed));
+} OT_TOOL_PACKED_END;
 
 /**
  * This class implements Has Route TLV generation and parsing.
  *
  */
+OT_TOOL_PACKED_BEGIN
 class HasRouteTlv: public NetworkDataTlv
 {
 public:
@@ -249,12 +252,13 @@ public:
     HasRouteEntry *GetEntry(int i) {
         return reinterpret_cast<HasRouteEntry *>(GetValue() + (i * sizeof(HasRouteEntry)));
     }
-} __attribute__((packed));
+} OT_TOOL_PACKED_END;
 
 /**
  * This class implements Prefix TLV generation and parsing.
  *
  */
+OT_TOOL_PACKED_BEGIN
 class PrefixTlv: public NetworkDataTlv
 {
 public:
@@ -330,12 +334,13 @@ public:
 private:
     uint8_t mDomainId;
     uint8_t mPrefixLength;
-} __attribute__((packed));
+} OT_TOOL_PACKED_END;
 
 /**
  * This class implements Border Router Entry generation and parsing.
  *
  */
+OT_TOOL_PACKED_BEGIN
 class BorderRouterEntry
 {
 public:
@@ -512,12 +517,13 @@ private:
     uint16_t mRloc;
     uint8_t mFlags;
     uint8_t mReserved;
-} __attribute__((packed));
+} OT_TOOL_PACKED_END;
 
 /**
  * This class implements Border Router TLV generation and parsing.
  *
  */
+OT_TOOL_PACKED_BEGIN
 class BorderRouterTlv: public NetworkDataTlv
 {
 public:
@@ -546,12 +552,13 @@ public:
     BorderRouterEntry *GetEntry(int i) {
         return reinterpret_cast<BorderRouterEntry *>(GetValue() + (i * sizeof(BorderRouterEntry)));
     }
-} __attribute__((packed));
+} OT_TOOL_PACKED_END;
 
 /**
  * This class implements Context TLV generation and processing.
  *
  */
+OT_TOOL_PACKED_BEGIN
 class ContextTlv: public NetworkDataTlv
 {
 public:
@@ -623,7 +630,7 @@ private:
     };
     uint8_t mFlags;
     uint8_t mContextLength;
-} __attribute__((packed));
+} OT_TOOL_PACKED_END;
 
 /**
  * @}

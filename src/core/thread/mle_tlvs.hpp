@@ -63,6 +63,7 @@ namespace Mle {
  * This class implements MLE TLV generation and parsing.
  *
  */
+OT_TOOL_PACKED_BEGIN
 class Tlv
 {
 public:
@@ -142,12 +143,13 @@ public:
 private:
     uint8_t mType;
     uint8_t mLength;
-} __attribute__((packed));
+} OT_TOOL_PACKED_END;
 
 /**
  * This class implements Source Address TLV generation and parsing.
  *
  */
+OT_TOOL_PACKED_BEGIN
 class SourceAddressTlv: public Tlv
 {
 public:
@@ -184,12 +186,13 @@ public:
 
 private:
     uint16_t mRloc16;
-} __attribute__((packed));
+} OT_TOOL_PACKED_END;
 
 /**
  * This class implements Source Address TLV generation and parsing.
  *
  */
+OT_TOOL_PACKED_BEGIN
 class ModeTlv: public Tlv
 {
 public:
@@ -234,12 +237,13 @@ public:
 
 private:
     uint8_t mMode;
-} __attribute__((packed));
+} OT_TOOL_PACKED_END;
 
 /**
  * This class implements Source Address TLV generation and parsing.
  *
  */
+OT_TOOL_PACKED_BEGIN
 class TimeoutTlv: public Tlv
 {
 public:
@@ -276,12 +280,13 @@ public:
 
 private:
     uint32_t mTimeout;
-} __attribute__((packed));
+} OT_TOOL_PACKED_END;
 
 /**
  * This class implements Source Address TLV generation and parsing.
  *
  */
+OT_TOOL_PACKED_BEGIN
 class ChallengeTlv: public Tlv
 {
 public:
@@ -323,12 +328,13 @@ public:
 
 private:
     uint8_t mChallenge[kMaxSize];
-} __attribute__((packed));
+} OT_TOOL_PACKED_END;
 
 /**
  * This class implements Source Address TLV generation and parsing.
  *
  */
+OT_TOOL_PACKED_BEGIN
 class ResponseTlv: public Tlv
 {
 public:
@@ -370,12 +376,13 @@ public:
 
 private:
     uint8_t mResponse[kMaxSize];
-} __attribute__((packed));
+} OT_TOOL_PACKED_END;
 
 /**
  * This class implements Source Address TLV generation and parsing.
  *
  */
+OT_TOOL_PACKED_BEGIN
 class LinkFrameCounterTlv: public Tlv
 {
 public:
@@ -412,12 +419,13 @@ public:
 
 private:
     uint32_t mFrameCounter;
-} __attribute__((packed));
+} OT_TOOL_PACKED_END;
 
 /**
  * This class implements Source Address TLV generation and parsing.
  *
  */
+OT_TOOL_PACKED_BEGIN
 class RouteTlv: public Tlv
 {
 public:
@@ -580,12 +588,13 @@ private:
     uint8_t mRouterIdSequence;
     uint8_t mRouterIdMask[BitVectorBytes(kMaxRouterId)];
     uint8_t mRouteData[kMaxRouters];
-} __attribute__((packed));
+} OT_TOOL_PACKED_END;
 
 /**
  * This class implements Source Address TLV generation and parsing.
  *
  */
+OT_TOOL_PACKED_BEGIN
 class MleFrameCounterTlv: public Tlv
 {
 public:
@@ -622,12 +631,13 @@ public:
 
 private:
     uint32_t mFrameCounter;
-} __attribute__((packed));
+} OT_TOOL_PACKED_END;
 
 /**
  * This class implements Source Address TLV generation and parsing.
  *
  */
+OT_TOOL_PACKED_BEGIN
 class Address16Tlv: public Tlv
 {
 public:
@@ -664,12 +674,13 @@ public:
 
 private:
     uint16_t mRloc16;
-} __attribute__((packed));
+} OT_TOOL_PACKED_END;
 
 /**
  * This class implements Source Address TLV generation and parsing.
  *
  */
+OT_TOOL_PACKED_BEGIN
 class LeaderDataTlv: public Tlv
 {
 public:
@@ -774,12 +785,13 @@ private:
     uint8_t mDataVersion;
     uint8_t mStableDataVersion;
     uint8_t mLeaderRouterId;
-} __attribute__((packed));
+} OT_TOOL_PACKED_END;
 
 /**
  * This class implements Source Address TLV generation and parsing.
  *
  */
+OT_TOOL_PACKED_BEGIN
 class NetworkDataTlv: public Tlv
 {
 public:
@@ -816,12 +828,13 @@ public:
 
 private:
     uint8_t mNetworkData[255];
-} __attribute__((packed));
+} OT_TOOL_PACKED_END;
 
 /**
  * This class implements Source Address TLV generation and parsing.
  *
  */
+OT_TOOL_PACKED_BEGIN
 class TlvRequestTlv: public Tlv
 {
 public:
@@ -862,12 +875,13 @@ private:
         kMaxTlvs = 8,
     };
     uint8_t mTlvs[kMaxTlvs];
-} __attribute__((packed));
+} OT_TOOL_PACKED_END;
 
 /**
  * This class implements Source Address TLV generation and parsing.
  *
  */
+OT_TOOL_PACKED_BEGIN
 class ScanMaskTlv: public Tlv
 {
 public:
@@ -942,12 +956,13 @@ public:
 
 private:
     uint8_t mMask;
-} __attribute__((packed));
+} OT_TOOL_PACKED_END;
 
 /**
  * This class implements Source Address TLV generation and parsing.
  *
  */
+OT_TOOL_PACKED_BEGIN
 class ConnectivityTlv: public Tlv
 {
 public:
@@ -1086,12 +1101,13 @@ private:
     uint8_t mLinkQuality1;
     uint8_t mLeaderCost;
     uint8_t mIdSequence;
-}  __attribute__((packed));
+}  OT_TOOL_PACKED_END;
 
 /**
  * This class implements Source Address TLV generation and parsing.
  *
  */
+OT_TOOL_PACKED_BEGIN
 class LinkMarginTlv: public Tlv
 {
 public:
@@ -1128,12 +1144,13 @@ public:
 
 private:
     uint8_t mLinkMargin;
-} __attribute__((packed));
+} OT_TOOL_PACKED_END;
 
 /**
  * This class implements Source Address TLV generation and parsing.
  *
  */
+OT_TOOL_PACKED_BEGIN
 class StatusTlv: public Tlv
 {
 public:
@@ -1178,12 +1195,13 @@ public:
 
 private:
     uint8_t mStatus;
-} __attribute__((packed));
+} OT_TOOL_PACKED_END;
 
 /**
  * This class implements Source Address TLV generation and parsing.
  *
  */
+OT_TOOL_PACKED_BEGIN
 class VersionTlv: public Tlv
 {
 public:
@@ -1220,12 +1238,13 @@ public:
 
 private:
     uint16_t mVersion;
-} __attribute__((packed));
+} OT_TOOL_PACKED_END;
 
 /**
  * This class implements Source Address TLV generation and parsing.
  *
  */
+OT_TOOL_PACKED_BEGIN
 class AddressRegistrationEntry
 {
 public:
@@ -1313,13 +1332,14 @@ private:
     {
         uint8_t mIid[Ip6::Address::kInterfaceIdentifierSize];
         Ip6::Address mIp6Address;
-    } __attribute__((packed));
-} __attribute__((packed));
+    } OT_TOOL_PACKED_FIELD;
+} OT_TOOL_PACKED_END;
 
 /**
  * This class implements Source Address TLV generation and parsing.
  *
  */
+OT_TOOL_PACKED_BEGIN
 class AddressRegistrationTlv: public Tlv
 {
 public:
@@ -1367,7 +1387,7 @@ public:
 
 private:
     AddressRegistrationEntry mAddresses[4];
-} __attribute__((packed));
+} OT_TOOL_PACKED_END;
 
 /**
  * @}

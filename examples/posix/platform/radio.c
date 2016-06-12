@@ -80,11 +80,11 @@ typedef enum PhyState
     kStateAckWait = 6,
 } PhyState;
 
-struct RadioMessage
+struct OT_TOOL_PACKED_BEGIN RadioMessage
 {
     uint8_t mChannel;
     uint8_t mPsdu[kMaxPHYPacketSize];
-} __attribute__((packed));
+} OT_TOOL_PACKED_END;
 
 static void radioSendAck(void);
 static void radioProcessFrame(void);

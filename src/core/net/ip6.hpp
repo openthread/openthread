@@ -107,6 +107,7 @@ enum
  * This structure represents an IPv6 header.
  *
  */
+OT_TOOL_PACKED_BEGIN
 struct HeaderPoD
 {
     union
@@ -120,12 +121,13 @@ struct HeaderPoD
     uint8_t       mHopLimit;       ///< Hop Limit
     otIp6Address  mSource;         ///< Source
     otIp6Address  mDestination;    ///< Destination
-} __attribute__((packed));
+} OT_TOOL_PACKED_END;
 
 /**
  * This class implements IPv6 header generation and parsing.
  *
  */
+OT_TOOL_PACKED_BEGIN
 class Header: private HeaderPoD
 {
 public:
@@ -262,12 +264,13 @@ private:
         kVersion6 = 0x60,
         kVersionMask = 0xf0,
     };
-} __attribute__((packed));
+} OT_TOOL_PACKED_END;
 
 /**
  * This class implements IPv6 Extension Header generation and processing.
  *
  */
+OT_TOOL_PACKED_BEGIN
 class ExtensionHeader
 {
 public:
@@ -306,20 +309,22 @@ public:
 private:
     uint8_t mNextHeader;
     uint8_t mLength;
-} __attribute__((packed));
+} OT_TOOL_PACKED_END;
 
 /**
  * This class implements IPv6 Hop-by-Hop Options Header generation and parsing.
  *
  */
+OT_TOOL_PACKED_BEGIN
 class HopByHopHeader: public ExtensionHeader
 {
-} __attribute__((packed));
+} OT_TOOL_PACKED_END;
 
 /**
  * This class implements IPv6 Options generation and parsing.
  *
  */
+OT_TOOL_PACKED_BEGIN
 class OptionHeader
 {
 public:
@@ -379,12 +384,13 @@ public:
 private:
     uint8_t mType;
     uint8_t mLength;
-} __attribute__((packed));
+} OT_TOOL_PACKED_END;
 
 /**
  * This class implements IPv6 Fragment Header generation and parsing.
  *
  */
+OT_TOOL_PACKED_BEGIN
 class FragmentHeader
 {
 public:
@@ -459,7 +465,7 @@ private:
     };
     uint16_t mOffsetMore;
     uint32_t mIdentification;
-} __attribute__((packed));
+} OT_TOOL_PACKED_END;
 
 /**
  * This class implements the core IPv6 message processing.
