@@ -88,27 +88,27 @@ typedef enum ThreadError
     /**
      * No frame received.
      */
-    kThreadError_NoFrameReceived = 19,
+    kThreadError_NoFrameReceived = 20,
 
     /**
      * Received a frame from an unknown neighbor.
      */
-    kThreadError_UnknownNeighbor = 20,
+    kThreadError_UnknownNeighbor = 21,
 
     /**
      * Received a frame from an invalid source address.
      */
-    kThreadError_InvalidSourceAddress = 21,
+    kThreadError_InvalidSourceAddress = 22,
 
     /**
      * Received a frame filtered by the whitelist.
      */
-    kThreadError_WhitelistFiltered = 22,
+    kThreadError_WhitelistFiltered = 23,
 
     /**
      * Received a frame filtered by the destination address check.
      */
-    kThreadError_DestinationAddressFiltered = 23,
+    kThreadError_DestinationAddressFiltered = 24,
 
     kThreadError_Error = 255,
 } ThreadError;
