@@ -156,6 +156,16 @@
 #endif  // OPENTHREAD_CONFIG_MPL_CACHE_ENTRY_LIFETIME
 
 /**
+ * @def OPENTHREAD_CONFIG_JOINER_UDP_PORT
+ *
+ * The MPL cache entry lifetime in seconds.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_JOINER_UDP_PORT
+#define OPENTHREAD_CONFIG_JOINER_UDP_PORT                   1000
+#endif  // OPENTHREAD_CONFIG_JOINER_UDP_PORT
+
+/**
  * @def OPENTHREAD_CONFIG_LOG_LEVEL
  *
  * The log level.

@@ -35,6 +35,7 @@
 #include <common/code_utils.hpp>
 #include <ncp/ncp.h>
 #include <ncp/ncp_base.hpp>
+#include <net/ip6.hpp>
 #include <openthread.h>
 #include <openthread-diag.h>
 #include <stdarg.h>
@@ -44,9 +45,7 @@
 namespace Thread
 {
 
-extern ThreadNetif *sThreadNetif;
 extern Ip6::Ip6 *sIp6;
-
 static NcpBase *sNcpContext = NULL;
 
 #define NCP_PLAT_RESET_REASON        (1U<<31)
@@ -427,7 +426,6 @@ NcpBase::NcpBase():
     mDroppedOutboundIpFrameCounter = 0;
     mDroppedInboundIpFrameCounter = 0;
 
-    assert(sThreadNetif != NULL);
     otSetStateChangedCallback(&HandleNetifStateChanged, this);
     otSetReceiveIp6DatagramCallback(&HandleDatagramFromStack, this);
     otSetIcmpEchoEnabled(false);

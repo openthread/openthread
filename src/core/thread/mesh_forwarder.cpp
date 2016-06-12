@@ -820,6 +820,7 @@ ThreadError MeshForwarder::SendFragment(Message &aMessage, Mac::Frame &aFrame)
     int hcLength;
     uint16_t fragmentLength;
     uint16_t dstpan;
+    uint8_t secCtl = Mac::Frame::kSecNone;
 
     if (mAddMeshHeader)
     {
@@ -848,6 +849,8 @@ ThreadError MeshForwarder::SendFragment(Message &aMessage, Mac::Frame &aFrame)
     if (aMessage.IsLinkSecurityEnabled())
     {
         fcf |= Mac::Frame::kFcfSecurityEnabled;
+        secCtl = aMessage.IsJoinerEntrust() ? Mac::Frame::kKeyIdMode0 : Mac::Frame::kKeyIdMode1;
+        secCtl |= Mac::Frame::kSecEncMic32;
     }
 
     if (aMessage.IsMleDiscoverRequest() || aMessage.IsMleDiscoverResponse())
@@ -864,7 +867,7 @@ ThreadError MeshForwarder::SendFragment(Message &aMessage, Mac::Frame &aFrame)
         fcf |= Mac::Frame::kFcfPanidCompression;
     }
 
-    aFrame.InitMacHeader(fcf, Mac::Frame::kKeyIdMode1 | Mac::Frame::kSecEncMic32);
+    aFrame.InitMacHeader(fcf, secCtl);
     aFrame.SetDstPanId(dstpan);
     aFrame.SetSrcPanId(mMac.GetPanId());
 

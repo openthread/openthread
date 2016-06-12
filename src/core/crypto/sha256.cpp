@@ -28,57 +28,30 @@
 
 /**
  * @file
- *   This file includes definitions for using mbedTLS.
+ *   This file implements SHA-256.
  */
 
-#ifndef OT_MBEDTLS_HPP_
-#define OT_MBEDTLS_HPP_
-
-#include <openthread-config.h>
-#include <mbedtls/memory_buffer_alloc.h>
+#include <crypto/sha256.hpp>
 
 namespace Thread {
 namespace Crypto {
 
-/**
- * @addtogroup core-security
- *
- * @{
- *
- */
-
-/**
- * This class implements mbedTLS memory.
- *
- */
-class MbedTls
+void Sha256::Start(void)
 {
-public:
-    enum
-    {
-#if OPENTHREAD_ENABLE_DTLS
-        kMemorySize = 2048 * sizeof(void *), ///< Size of memory buffer (bytes).
-#else
-        kMemorySize = 512,                   ///< Size of memory buffer (bytes).
-#endif
-    };
+    mbedtls_sha256_init(&mContext);
+    mbedtls_sha256_starts(&mContext, 0);
+}
 
-    /**
-     * This constructor initializes the object.
-     *
-     */
-    MbedTls(void);
+void Sha256::Update(const uint8_t *aBuf, uint16_t aBufLength)
+{
+    mbedtls_sha256_update(&mContext, aBuf, aBufLength);
+}
 
-private:
-    unsigned char mMemory[kMemorySize];
-};
-
-/**
- * @}
- *
- */
+void Sha256::Finish(uint8_t aHash[kHashSize])
+{
+    mbedtls_sha256_finish(&mContext, aHash);
+    mbedtls_sha256_free(&mContext);
+}
 
 }  // namespace Crypto
 }  // namespace Thread
-
-#endif  // OT_MBEDTLS_HPP_

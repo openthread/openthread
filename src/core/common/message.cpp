@@ -552,6 +552,16 @@ void Message::SetMleDiscoverResponse(bool aMleDiscoverResponse)
     mInfo.mMleDiscoverResponse = aMleDiscoverResponse;
 }
 
+bool Message::IsJoinerEntrust(void) const
+{
+    return mInfo.mJoinerEntrust;
+}
+
+void Message::SetJoinerEntrust(bool aJoinerEntrust)
+{
+    mInfo.mJoinerEntrust = aJoinerEntrust;
+}
+
 uint16_t Message::UpdateChecksum(uint16_t aChecksum, uint16_t aOffset, uint16_t aLength) const
 {
     Buffer *curBuffer;

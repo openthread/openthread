@@ -28,57 +28,43 @@
 
 /**
  * @file
- *   This file includes definitions for using mbedTLS.
+ * @brief
+ *   This file includes the platform abstraction for the Thread Commissioner role.
  */
 
-#ifndef OT_MBEDTLS_HPP_
-#define OT_MBEDTLS_HPP_
+#ifndef OPENTHREAD_COMMISSIONER_H_
+#define OPENTHREAD_COMMISSIONER_H_
 
-#include <openthread-config.h>
-#include <mbedtls/memory_buffer_alloc.h>
-
-namespace Thread {
-namespace Crypto {
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /**
- * @addtogroup core-security
+ * @addtogroup core-commissioning
  *
  * @{
  *
  */
 
 /**
- * This class implements mbedTLS memory.
+ * This function enables the Thread Commissioner role.
  *
  */
-class MbedTls
-{
-public:
-    enum
-    {
-#if OPENTHREAD_ENABLE_DTLS
-        kMemorySize = 2048 * sizeof(void *), ///< Size of memory buffer (bytes).
-#else
-        kMemorySize = 512,                   ///< Size of memory buffer (bytes).
-#endif
-    };
+ThreadError otCommissionerStart(void);
 
-    /**
-     * This constructor initializes the object.
-     *
-     */
-    MbedTls(void);
-
-private:
-    unsigned char mMemory[kMemorySize];
-};
+/**
+ * This function disables the Thread Commissioner role.
+ *
+ */
+ThreadError otCommissionerStop(void);
 
 /**
  * @}
  *
  */
 
-}  // namespace Crypto
-}  // namespace Thread
+#ifdef __cplusplus
+}  // end of extern "C"
+#endif
 
-#endif  // OT_MBEDTLS_HPP_
+#endif  // OPENTHREAD_COMMISSIONER_H_

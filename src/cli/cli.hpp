@@ -36,10 +36,11 @@
 
 #include <stdarg.h>
 
+#include <openthread-config.h>
+
 #include <cli/cli_server.hpp>
 #include <net/icmp6.hpp>
 #include <common/timer.hpp>
-#include <openthread-config.h>
 
 namespace Thread {
 
@@ -135,9 +136,15 @@ private:
     static void ProcessChild(int argc, char *argv[]);
     static void ProcessChildTimeout(int argc, char *argv[]);
     static void ProcessChildMax(int argc, char *argv[]);
+#if OPENTHREAD_ENABLE_COMMISSIONER
+    static void ProcessCommissioner(int argc, char *argv[]);
+#endif  // OPENTHREAD_ENABLE_COMMISSIONER
     static void ProcessContextIdReuseDelay(int argc, char *argv[]);
     static void ProcessCounters(int argc, char *argv[]);
     static void ProcessDataset(int argc, char *argv[]);
+#if OPENTHREAD_ENABLE_DIAG
+    static void ProcessDiag(int argc, char *argv[]);
+#endif  // OPENTHREAD_ENABLE_DIAG
     static void ProcessDiscover(int argc, char *argv[]);
     static void ProcessEidCache(int argc, char *argv[]);
     static void ProcessExtAddress(int argc, char *argv[]);
@@ -146,6 +153,9 @@ private:
     static void ProcessIpAddr(int argc, char *argv[]);
     static ThreadError ProcessIpAddrAdd(int argc, char *argv[]);
     static ThreadError ProcessIpAddrDel(int argc, char *argv[]);
+#if OPENTHREAD_ENABLE_JOINER
+    static void ProcessJoiner(int argc, char *argv[]);
+#endif  // OPENTHREAD_ENABLE_JOINER
     static void ProcessKeySequence(int argc, char *argv[]);
     static void ProcessLeaderData(int argc, char *argv[]);
     static void ProcessLeaderPartitionId(int argc, char *argv[]);
@@ -180,10 +190,6 @@ private:
     static void ProcessThread(int argc, char *argv[]);
     static void ProcessVersion(int argc, char *argv[]);
     static void ProcessWhitelist(int argc, char *argv[]);
-
-#if OPENTHREAD_ENABLE_DIAG
-    static void ProcessDiag(int argc, char *argv[]);
-#endif
 
     static void HandleEchoResponse(void *aContext, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
     static void HandlePingTimer(void *aContext);

@@ -47,10 +47,13 @@ libopenthread_a_SOURCES             = \
     crypto/aes_ecb.cpp                \
     crypto/hmac_sha256.cpp            \
     crypto/mbedtls.cpp                \
+    crypto/sha256.cpp                 \
     mac/mac.cpp                       \
     mac/mac_frame.cpp                 \
     mac/mac_whitelist.cpp             \
     mac/mac_blacklist.cpp             \
+    meshcop/joiner_router.cpp         \
+    meshcop/leader.cpp                \
     net/icmp6.cpp                     \
     net/ip6.cpp                       \
     net/ip6_address.cpp               \
@@ -77,6 +80,24 @@ libopenthread_a_SOURCES             = \
     thread/thread_tlvs.cpp            \
     $(NULL)
 
+if OPENTHREAD_ENABLE_COMMISSIONER
+libopenthread_a_SOURCES            += \
+    meshcop/commissioner.cpp          \
+    $(NULL)
+endif  # OPENTHREAD_ENABLE_COMMISSIONER
+
+if OPENTHREAD_ENABLE_JOINER
+libopenthread_a_SOURCES            += \
+    meshcop/joiner.cpp                \
+    $(NULL)
+endif  # OPENTHREAD_ENABLE_JOINER
+
+if OPENTHREAD_ENABLE_DTLS
+libopenthread_a_SOURCES            += \
+    meshcop/dtls.cpp                  \
+    $(NULL)
+endif  # OPENTHREAD_ENABLE_DTLS
+
 noinst_HEADERS                      = \
     openthread-core-config.h          \
     openthread-core-default-config.h  \
@@ -94,10 +115,16 @@ noinst_HEADERS                      = \
     crypto/aes_ecb.hpp                \
     crypto/hmac_sha256.hpp            \
     crypto/mbedtls.hpp                \
+    crypto/sha256.hpp                 \
     mac/mac.hpp                       \
     mac/mac_frame.hpp                 \
     mac/mac_whitelist.hpp             \
     mac/mac_blacklist.hpp             \
+    meshcop/commissioner.hpp          \
+    meshcop/dtls.hpp                  \
+    meshcop/joiner.hpp                \
+    meshcop/joiner_router.hpp         \
+    meshcop/leader.hpp                \
     net/icmp6.hpp                     \
     net/ip6.hpp                       \
     net/ip6_address.hpp               \

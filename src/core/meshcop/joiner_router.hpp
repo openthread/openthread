@@ -28,57 +28,62 @@
 
 /**
  * @file
- *   This file includes definitions for using mbedTLS.
+ *  This file includes definitions for the Joiner Router role.
  */
 
-#ifndef OT_MBEDTLS_HPP_
-#define OT_MBEDTLS_HPP_
+#ifndef JOINER_ROUTER_HPP_
+#define JOINER_ROUTER_HPP_
 
-#include <openthread-config.h>
-#include <mbedtls/memory_buffer_alloc.h>
+#include <openthread-types.h>
+
+#include <coap/coap_header.hpp>
+#include <coap/coap_server.hpp>
+#include <common/message.hpp>
+#include <mac/mac_frame.hpp>
+#include <net/udp6.hpp>
 
 namespace Thread {
-namespace Crypto {
 
-/**
- * @addtogroup core-security
- *
- * @{
- *
- */
+class ThreadNetif;
 
-/**
- * This class implements mbedTLS memory.
- *
- */
-class MbedTls
+namespace MeshCoP {
+
+class JoinerRouter
 {
 public:
-    enum
-    {
-#if OPENTHREAD_ENABLE_DTLS
-        kMemorySize = 2048 * sizeof(void *), ///< Size of memory buffer (bytes).
-#else
-        kMemorySize = 512,                   ///< Size of memory buffer (bytes).
-#endif
-    };
-
     /**
-     * This constructor initializes the object.
+     * This constructor initializes the Joiner Router object.
+     *
+     * @param[in]  aThreadNetif  A reference to the Thread network interface.
      *
      */
-    MbedTls(void);
+    JoinerRouter(ThreadNetif &aNetif);
 
 private:
-    unsigned char mMemory[kMemorySize];
+    static void HandleNetifStateChanged(uint32_t aFlags, void *aContext);
+    void HandleNetifStateChanged(uint32_t aFlags);
+
+    static void HandleUdpReceive(void *aContext, otMessage aMessage, const otMessageInfo *aMessageInfo);
+    void HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+
+    static void HandleRelayTransmit(void *aContext, Coap::Header &aHeader,
+                                    Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    void HandleRelayTransmit(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+
+    ThreadError SendJoinerEntrust(const Ip6::MessageInfo &aMessageInfo);
+
+    ThreadError GetBorderAgentRloc(uint16_t &aRloc);
+    ThreadError GetJoinerPort(uint16_t &aRloc);
+
+    Ip6::NetifCallback mNetifCallback;
+    uint16_t mJoinerPort;
+
+    Ip6::UdpSocket mSocket;
+    Coap::Resource mRelayTransmit;
+    ThreadNetif &mNetif;
 };
 
-/**
- * @}
- *
- */
-
-}  // namespace Crypto
+}  // namespace MeshCoP
 }  // namespace Thread
 
-#endif  // OT_MBEDTLS_HPP_
+#endif  // JOINER_ROUTER_HPP_
