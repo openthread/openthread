@@ -105,6 +105,8 @@ Mac::Mac(ThreadNetif &aThreadNetif):
         mExtAddress.m8[i] = otPlatRandomGet();
     }
 
+    memset(&mCounters, 0, sizeof(otMacCounters));
+
     SetExtendedPanId(sExtendedPanidInit);
     SetNetworkName(sNetworkNameInit);
     SetPanId(kPanIdBroadcast);
@@ -486,11 +488,16 @@ void Mac::TransmitDoneTask(bool aRxPending, ThreadError aError)
 {
     mAckTimer.Stop();
 
+    mCounters.mTxTotal++;
+
     if (aError == kThreadError_ChannelAccessFailure &&
         mCsmaAttempts < kMaxCSMABackoffs)
     {
         mCsmaAttempts++;
         StartCsmaBackoff();
+
+        mCounters.mTxErrCca++;
+
         ExitNow();
     }
 
@@ -498,14 +505,6 @@ void Mac::TransmitDoneTask(bool aRxPending, ThreadError aError)
 
     switch (mState)
     {
-    case kStateActiveScan:
-        mAckTimer.Start(mScanDuration);
-        break;
-
-    case kStateTransmitBeacon:
-        SentFrame(true);
-        break;
-
     case kStateTransmitData:
         if (aRxPending)
         {
@@ -516,6 +515,8 @@ void Mac::TransmitDoneTask(bool aRxPending, ThreadError aError)
             mReceiveTimer.Stop();
         }
 
+    case kStateActiveScan:
+    case kStateTransmitBeacon:
         SentFrame(aError == kThreadError_None);
         break;
 
@@ -560,6 +561,7 @@ void Mac::HandleAckTimer(void)
 
     case kStateTransmitData:
         otLogDebgMac("ack timer fired\n");
+        mCounters.mTxTotal++;
         SentFrame(false);
         break;
 
@@ -591,37 +593,65 @@ void Mac::SentFrame(bool aAcked)
     Neighbor *neighbor;
     Sender *sender;
 
+    if (sendFrame.GetAckRequest() && !aAcked)
+    {
+        otDumpDebgMac("NO ACK", sendFrame.GetHeader(), 16);
+
+        if (mTransmitAttempts < kMaxFrameAttempts)
+        {
+            mTransmitAttempts++;
+            StartCsmaBackoff();
+
+            mCounters.mTxRetry++;
+
+            ExitNow();
+        }
+
+        sendFrame.GetDstAddr(destination);
+
+        if ((neighbor = mMle.GetNeighbor(destination)) != NULL)
+        {
+            neighbor->mState = Neighbor::kStateInvalid;
+        }
+    }
+
+    mTransmitAttempts = 0;
+
+    if (sendFrame.GetAckRequest())
+    {
+        mCounters.mTxAckRequested++;
+
+        if (aAcked)
+        {
+            mCounters.mTxAcked++;
+        }
+    }
+    else
+    {
+        mCounters.mTxNoAckRequested++;
+    }
+
     switch (mState)
     {
     case kStateActiveScan:
+        mCounters.mTxBeaconRequest++;
         mAckTimer.Start(mScanDuration);
         break;
 
     case kStateTransmitBeacon:
+        mCounters.mTxBeacon++;
         ScheduleNextTransmission();
         break;
 
     case kStateTransmitData:
-        if (sendFrame.GetAckRequest() && !aAcked)
+        if (mReceiveTimer.IsRunning())
         {
-            otDumpDebgMac("NO ACK", sendFrame.GetHeader(), 16);
-
-            if (mTransmitAttempts < kMaxFrameAttempts)
-            {
-                mTransmitAttempts++;
-                StartCsmaBackoff();
-                ExitNow();
-            }
-
-            sendFrame.GetDstAddr(destination);
-
-            if ((neighbor = mMle.GetNeighbor(destination)) != NULL)
-            {
-                neighbor->mState = Neighbor::kStateInvalid;
-            }
+            mCounters.mTxDataPoll++;
         }
-
-        mTransmitAttempts = 0;
+        else
+        {
+            mCounters.mTxData++;
+        }
 
         sender = mSendHead;
         mSendHead = mSendHead->mNext;
@@ -750,8 +780,12 @@ void Mac::ReceiveDoneTask(Frame *aFrame, ThreadError aError)
     Neighbor *neighbor;
     Whitelist::Entry *entry;
     int8_t rssi;
+    ThreadError error = aError;
 
-    VerifyOrExit(aError == kThreadError_None && aFrame != NULL, ;);
+    mCounters.mRxTotal++;
+
+    VerifyOrExit(error == kThreadError_None, ;);
+    VerifyOrExit(aFrame != NULL, error = kThreadError_NoFrameReceived);
 
     aFrame->mSecurityValid = false;
 
@@ -769,7 +803,12 @@ void Mac::ReceiveDoneTask(Frame *aFrame, ThreadError aError)
         break;
 
     case sizeof(ShortAddress):
-        VerifyOrExit(neighbor != NULL, otLogDebgMac("drop not neighbor\n"));
+        if (neighbor == NULL)
+        {
+            otLogDebgMac("drop not neighbor\n");
+            ExitNow(error = kThreadError_UnknownNeighbor);
+        }
+
         srcaddr.mLength = sizeof(srcaddr.mExtAddress);
         memcpy(&srcaddr.mExtAddress, &neighbor->mMacAddr, sizeof(srcaddr.mExtAddress));
         break;
@@ -778,13 +817,13 @@ void Mac::ReceiveDoneTask(Frame *aFrame, ThreadError aError)
         break;
 
     default:
-        ExitNow();
+        ExitNow(error = kThreadError_InvalidSourceAddress);
     }
 
     // Source Whitelist Processing
     if (srcaddr.mLength != 0 && mWhitelist.IsEnabled())
     {
-        VerifyOrExit((entry = mWhitelist.Find(srcaddr.mExtAddress)) != NULL, ;);
+        VerifyOrExit((entry = mWhitelist.Find(srcaddr.mExtAddress)) != NULL, error = kThreadError_WhitelistFiltered);
 
         if (mWhitelist.GetConstantRssi(*entry, rssi) == kThreadError_None)
         {
@@ -804,25 +843,31 @@ void Mac::ReceiveDoneTask(Frame *aFrame, ThreadError aError)
         aFrame->GetDstPanId(panid);
         VerifyOrExit((panid == kShortAddrBroadcast || panid == mPanId) &&
                      ((mRxOnWhenIdle && dstaddr.mShortAddress == kShortAddrBroadcast) ||
-                      dstaddr.mShortAddress == mShortAddress), ;);
+                      dstaddr.mShortAddress == mShortAddress), error = kThreadError_DestinationAddressFiltered);
         break;
 
     case sizeof(ExtAddress):
         aFrame->GetDstPanId(panid);
         VerifyOrExit(panid == mPanId &&
-                     memcmp(&dstaddr.mExtAddress, &mExtAddress, sizeof(dstaddr.mExtAddress)) == 0, ;);
+                     memcmp(&dstaddr.mExtAddress, &mExtAddress, sizeof(dstaddr.mExtAddress)) == 0,
+                     error = kThreadError_DestinationAddressFiltered);
         break;
     }
 
     // Security Processing
-    SuccessOrExit(ProcessReceiveSecurity(*aFrame, srcaddr, neighbor));
+    SuccessOrExit(error = ProcessReceiveSecurity(*aFrame, srcaddr, neighbor));
 
     switch (mState)
     {
     case kStateActiveScan:
         if (aFrame->GetType() == Frame::kFcfFrameBeacon)
         {
+            mCounters.mRxBeacon++;
             mActiveScanHandler(mActiveScanContext, aFrame);
+        }
+        else
+        {
+            mCounters.mRxOther++;
         }
 
         break;
@@ -833,9 +878,27 @@ void Mac::ReceiveDoneTask(Frame *aFrame, ThreadError aError)
             mReceiveTimer.Stop();
         }
 
-        if (aFrame->GetType() == Frame::kFcfFrameMacCmd)
+        switch (aFrame->GetType())
         {
-            SuccessOrExit(HandleMacCommand(*aFrame));
+        case Frame::kFcfFrameMacCmd:
+            if (HandleMacCommand(*aFrame) == kThreadError_Drop)
+            {
+                ExitNow(error = kThreadError_None);
+            }
+
+            break;
+
+        case Frame::kFcfFrameBeacon:
+            mCounters.mRxBeacon++;
+            break;
+
+        case Frame::kFcfFrameData:
+            mCounters.mRxData++;
+            break;
+
+        default:
+            mCounters.mRxOther++;
+            break;
         }
 
         for (Receiver *receiver = mReceiveHead; receiver; receiver = receiver->mNext)
@@ -847,6 +910,45 @@ void Mac::ReceiveDoneTask(Frame *aFrame, ThreadError aError)
     }
 
 exit:
+
+    if (error != kThreadError_None)
+    {
+        switch (error)
+        {
+        case kThreadError_Security:
+            mCounters.mRxErrSec++;
+            break;
+
+        case kThreadError_FcsErr:
+            mCounters.mRxErrFcs++;
+            break;
+
+        case kThreadError_NoFrameReceived:
+            mCounters.mRxErrNoFrame++;
+            break;
+
+        case kThreadError_UnknownNeighbor:
+            mCounters.mRxErrUnknownNeighbor++;
+            break;
+
+        case kThreadError_InvalidSourceAddress:
+            mCounters.mRxErrInvalidSrcAddr++;
+            break;
+
+        case kThreadError_WhitelistFiltered:
+            mCounters.mRxWhitelistFiltered++;
+            break;
+
+        case kThreadError_DestinationAddressFiltered:
+            mCounters.mRxDestAddrFiltered++;
+            break;
+
+        default:
+            mCounters.mRxErrOther++;
+            break;
+        }
+    }
+
     NextOperation();
 }
 
@@ -857,9 +959,12 @@ ThreadError Mac::HandleMacCommand(Frame &aFrame)
 
     aFrame.GetCommandId(commandId);
 
-    if (commandId == Frame::kMacCmdBeaconRequest)
+    switch (commandId)
     {
+    case Frame::kMacCmdBeaconRequest:
+        mCounters.mRxBeaconRequest++;
         otLogInfoMac("Received Beacon Request\n");
+
         mTransmitBeacon = true;
 
         if (mState == kStateIdle)
@@ -870,6 +975,14 @@ ThreadError Mac::HandleMacCommand(Frame &aFrame)
         }
 
         ExitNow(error = kThreadError_Drop);
+
+    case Frame::kMacCmdDataRequest:
+        mCounters.mRxDataPoll++;
+        break;
+
+    default:
+        mCounters.mRxOther++;
+        break;
     }
 
 exit:
@@ -900,6 +1013,11 @@ exit:
 Whitelist &Mac::GetWhitelist(void)
 {
     return mWhitelist;
+}
+
+otMacCounters &Mac::GetCounters(void)
+{
+    return mCounters;
 }
 
 }  // namespace Mac

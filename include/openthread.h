@@ -902,6 +902,13 @@ bool otIsLinkPromiscuous(void);
 ThreadError otSetLinkPromiscuous(bool aPromiscuous);
 
 /**
+ * Get the MAC layer counters.
+ *
+ * @returns A pointer to the MAC layer counters.
+ */
+const otMacCounters *otGetMacCounters(void);
+
+/**
  * @}
  *
  */

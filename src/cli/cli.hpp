@@ -89,6 +89,7 @@ private:
     static void ProcessChannel(int argc, char *argv[]);
     static void ProcessChildTimeout(int argc, char *argv[]);
     static void ProcessContextIdReuseDelay(int argc, char *argv[]);
+    static void ProcessCounters(int argc, char *argv[]);
     static void ProcessExtAddress(int argc, char *argv[]);
     static void ProcessExtPanId(int argc, char *argv[]);
     static void ProcessIpAddr(int argc, char *argv[]);

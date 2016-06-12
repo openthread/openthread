@@ -419,6 +419,14 @@ public:
      */
     void SetPromiscuous(bool aPromiscuous);
 
+    /**
+     * This method returns the MAC counter.
+     *
+     * @returns A reference to the MAC counter.
+     *
+     */
+    otMacCounters &GetCounters(void);
+
 private:
     void GenerateNonce(const ExtAddress &aAddress, uint32_t aFrameCounter, uint8_t aSecurityLevel, uint8_t *aNonce);
     void NextOperation(void);
@@ -484,6 +492,8 @@ private:
     otLinkPcapCallback mPcapCallback;
 
     Whitelist mWhitelist;
+
+    otMacCounters mCounters;
 };
 
 /**
