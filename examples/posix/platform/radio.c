@@ -56,17 +56,34 @@ enum
     IEEE802154_FRAME_TYPE_MACCMD  = 3 << 0,
     IEEE802154_FRAME_TYPE_MASK    = 7 << 0,
 
+    IEEE802154_SECURITY_ENABLED   = 1 << 3,
     IEEE802154_FRAME_PENDING      = 1 << 4,
     IEEE802154_ACK_REQUEST        = 1 << 5,
+    IEEE802154_PANID_COMPRESSION  = 1 << 6,
 
     IEEE802154_DST_ADDR_NONE      = 0 << 2,
     IEEE802154_DST_ADDR_SHORT     = 2 << 2,
     IEEE802154_DST_ADDR_EXT       = 3 << 2,
     IEEE802154_DST_ADDR_MASK      = 3 << 2,
 
+    IEEE802154_SRC_ADDR_NONE      = 0 << 6,
+    IEEE802154_SRC_ADDR_SHORT     = 2 << 6,
+    IEEE802154_SRC_ADDR_EXT       = 3 << 6,
+    IEEE802154_SRC_ADDR_MASK      = 3 << 6,
+
     IEEE802154_DSN_OFFSET         = 2,
     IEEE802154_DSTPAN_OFFSET      = 3,
     IEEE802154_DSTADDR_OFFSET     = 5,
+
+    IEEE802154_SEC_LEVEL_MASK     = 7 << 0,
+
+    IEEE802154_KEY_ID_MODE_0      = 0 << 3,
+    IEEE802154_KEY_ID_MODE_1      = 1 << 3,
+    IEEE802154_KEY_ID_MODE_2      = 2 << 3,
+    IEEE802154_KEY_ID_MODE_3      = 3 << 3,
+    IEEE802154_KEY_ID_MODE_MASK   = 3 << 3,
+
+    IEEE802154_MACCMD_DATA_REQ    = 4,
 };
 
 typedef enum PhyState
@@ -96,7 +113,6 @@ static struct RadioMessage s_ack_message;
 static RadioPacket s_receive_frame;
 static RadioPacket s_transmit_frame;
 static RadioPacket s_ack_frame;
-static bool s_data_pending = false;
 
 static uint8_t s_extended_address[OT_EXT_ADDRESS_SIZE];
 static uint16_t s_short_address;
@@ -116,9 +132,112 @@ static inline bool isFrameTypeMacCmd(const uint8_t *frame)
     return (frame[0] & IEEE802154_FRAME_TYPE_MASK) == IEEE802154_FRAME_TYPE_MACCMD;
 }
 
+static inline bool isSecurityEnabled(const uint8_t *frame)
+{
+    return (frame[0] & IEEE802154_SECURITY_ENABLED) != 0;
+}
+
+static inline bool isFramePending(const uint8_t *frame)
+{
+    return (frame[0] & IEEE802154_FRAME_PENDING) != 0;
+}
+
 static inline bool isAckRequested(const uint8_t *frame)
 {
     return (frame[0] & IEEE802154_ACK_REQUEST) != 0;
+}
+
+static inline bool isPanIdCompressed(const uint8_t *frame)
+{
+    return (frame[0] & IEEE802154_PANID_COMPRESSION) != 0;
+}
+
+static inline bool isDataRequest(const uint8_t *frame)
+{
+    const uint8_t *cur = frame;
+    uint8_t securityControl;
+    bool rval;
+
+    // FCF + DSN
+    cur += 2 + 1;
+
+    VerifyOrExit(isFrameTypeMacCmd(frame), rval = false);
+
+    // Destination PAN + Address
+    switch (frame[1] & IEEE802154_DST_ADDR_MASK)
+    {
+    case IEEE802154_DST_ADDR_SHORT:
+        cur += sizeof(otPanId) + sizeof(otShortAddress);
+        break;
+
+    case IEEE802154_DST_ADDR_EXT:
+        cur += sizeof(otPanId) + sizeof(otExtAddress);
+        break;
+
+    default:
+        ExitNow(rval = false);
+    }
+
+    // Source PAN + Address
+    switch (frame[1] & IEEE802154_SRC_ADDR_MASK)
+    {
+    case IEEE802154_SRC_ADDR_SHORT:
+        if (!isPanIdCompressed(frame))
+        {
+            cur += sizeof(otPanId);
+        }
+
+        cur += sizeof(otShortAddress);
+        break;
+
+    case IEEE802154_SRC_ADDR_EXT:
+        if (!isPanIdCompressed(frame))
+        {
+            cur += sizeof(otPanId);
+        }
+
+        cur += sizeof(otExtAddress);
+        break;
+
+    default:
+        ExitNow(rval = false);
+    }
+
+    // Security Control + Frame Counter + Key Identifier
+    if (isSecurityEnabled(frame))
+    {
+        securityControl = *cur;
+
+        if (securityControl & IEEE802154_SEC_LEVEL_MASK)
+        {
+            cur += 1 + 4;
+        }
+
+        switch (securityControl & IEEE802154_KEY_ID_MODE_MASK)
+        {
+        case IEEE802154_KEY_ID_MODE_0:
+            cur += 0;
+            break;
+
+        case IEEE802154_KEY_ID_MODE_1:
+            cur += 1;
+            break;
+
+        case IEEE802154_KEY_ID_MODE_2:
+            cur += 5;
+            break;
+
+        case IEEE802154_KEY_ID_MODE_3:
+            cur += 9;
+            break;
+        }
+    }
+
+    // Command ID
+    rval = cur[0] == IEEE802154_MACCMD_DATA_REQ;
+
+exit:
+    return rval;
 }
 
 static inline uint8_t getDsn(const uint8_t *frame)
@@ -274,7 +393,6 @@ ThreadError otPlatRadioTransmit(void)
 
     VerifyOrExit(s_state == kStateIdle, error = kThreadError_Busy);
     s_state = kStateTransmit;
-    s_data_pending = false;
 
 exit:
     return error;
@@ -298,23 +416,6 @@ void otPlatRadioSetPromiscuous(bool aEnable)
 bool otPlatRadioGetPromiscuous(void)
 {
     return s_promiscuous;
-}
-
-ThreadError otPlatRadioHandleTransmitDone(bool *rxPending)
-{
-    ThreadError error = kThreadError_None;
-
-    VerifyOrExit(s_state == kStateTransmit || s_state == kStateAckWait, error = kThreadError_InvalidState);
-
-    s_state = kStateIdle;
-
-    if (rxPending != NULL)
-    {
-        *rxPending = s_data_pending;
-    }
-
-exit:
-    return error;
 }
 
 void radioReceive(void)
@@ -352,13 +453,8 @@ void radioReceive(void)
             break;
         }
 
-        if (isFrameTypeMacCmd(s_transmit_frame.mPsdu))
-        {
-            s_data_pending = true;
-        }
-
         s_state = kStateIdle;
-        otPlatRadioTransmitDone(s_data_pending, kThreadError_None);
+        otPlatRadioTransmitDone(isFramePending(s_receive_frame.mPsdu), kThreadError_None);
         break;
 
     case kStateListen:
@@ -472,6 +568,12 @@ void radioSendAck(void)
 
     s_ack_frame.mLength = IEEE802154_ACK_LENGTH;
     s_ack_message.mPsdu[0] = IEEE802154_FRAME_TYPE_ACK;
+
+    if (isDataRequest(s_receive_frame.mPsdu))
+    {
+        s_ack_message.mPsdu[0] |= IEEE802154_FRAME_PENDING;
+    }
+
     s_ack_message.mPsdu[1] = 0;
     s_ack_message.mPsdu[2] = getDsn(s_receive_frame.mPsdu);
 
