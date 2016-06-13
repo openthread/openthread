@@ -696,7 +696,7 @@ ThreadError otBindUdpSocket(otUdpSocket *aSocket, otSockAddr *aSockName)
     return socket->Bind(*reinterpret_cast<const Ip6::SockAddr *>(aSockName));
 }
 
-ThreadError otSendUdpMessage(otUdpSocket *aSocket, otMessage aMessage, const otMessageInfo *aMessageInfo)
+ThreadError otSendUdp(otUdpSocket *aSocket, otMessage aMessage, const otMessageInfo *aMessageInfo)
 {
     Ip6::UdpSocket *socket = reinterpret_cast<Ip6::UdpSocket *>(aSocket);
     return socket->SendTo(*reinterpret_cast<Message *>(aMessage),
