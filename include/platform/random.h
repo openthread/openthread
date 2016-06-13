@@ -53,12 +53,6 @@ extern "C" {
  */
 
 /**
- * Initialize the true random number generator.
- *
- */
-void otPlatRandomInit(void);
-
-/**
  * Get a 32-bit true random value.
  *
  * @returns A 32-bit true random value.

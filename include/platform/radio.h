@@ -164,11 +164,6 @@ ThreadError otPlatRadioSetShortAddress(uint16_t aShortAddress);
  */
 
 /**
- * Intialize the radio.
- */
-void otPlatRadioInit(void);
-
-/**
  * Enable the radio.
  *
  * @retval ::kThreadError_None  Successfully transitioned to Idle.

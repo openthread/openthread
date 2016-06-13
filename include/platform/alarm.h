@@ -53,11 +53,6 @@ extern "C" {
  */
 
 /**
- * Initialize the Alarm.
- */
-void otPlatAlarmInit(void);
-
-/**
  * Set the alarm to fire at @p aDt milliseconds after @p aT0.
  *
  * @param[in] aT0  The reference time.
