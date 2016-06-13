@@ -4,9 +4,9 @@
 ---
 
 OpenThread is an open-source implementation of the [Thread][thread]
-networking protocol. Nest is developing OpenThread to make the technology
-used in Nest products more broadly available to developers, which should 
-accelerate the development of products for the connected home.
+networking protocol. Nest has released OpenThread to make the technology
+used in Nest products more broadly available to developers to accelerate 
+the development of products for the connected home.
 
 The Thread specification defines an IPv6-based reliable, secure and
 low-power wireless device-to-device communication protocol for home
