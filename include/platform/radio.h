@@ -124,7 +124,6 @@ typedef struct RadioPacket
  * @param[in] aPanId  The IEEE 802.15.4 PAN ID.
  *
  * @retval ::kThreadError_None  If the PAN ID was set properly.
- * @retval ::kThreadError_Fail  If the PAN ID was not set properly.
  */
 ThreadError otPlatRadioSetPanId(uint16_t aPanId);
 
@@ -134,7 +133,6 @@ ThreadError otPlatRadioSetPanId(uint16_t aPanId);
  * @param[in] aExtendedAddress  A pointer to the IEEE 802.15.4 Extended Address.
  *
  * @retval ::kThreadError_None  If the Extended Address was set properly.
- * @retval ::kThreadError_Fail  If the Extended Address was not set properly.
  */
 ThreadError otPlatRadioSetExtendedAddress(uint8_t *aExtendedAddress);
 
@@ -144,7 +142,6 @@ ThreadError otPlatRadioSetExtendedAddress(uint8_t *aExtendedAddress);
  * @param[in] aShortAddress  The IEEE 802.15.4 Short Address.
  *
  * @retval ::kThreadError_None  If the Short Address was set properly.
- * @retval ::kThreadError_Fail  If the Short Address was not set properly.
  */
 ThreadError otPlatRadioSetShortAddress(uint16_t aShortAddress);
 
@@ -164,15 +161,10 @@ ThreadError otPlatRadioSetShortAddress(uint16_t aShortAddress);
  */
 
 /**
- * Intialize the radio.
- */
-void otPlatRadioInit(void);
-
-/**
  * Enable the radio.
  *
  * @retval ::kThreadError_None  Successfully transitioned to Idle.
- * @retval ::kThreadError_Fail  Failed to transition to Idle.
+ * @retval ::kThreadError_Busy  The radio was already enabled.
  */
 ThreadError otPlatRadioEnable(void);
 
@@ -180,7 +172,6 @@ ThreadError otPlatRadioEnable(void);
  * Disable the radio.
  *
  * @retval ::kThreadError_None  Successfully transitioned to Disabled.
- * @retval ::kThreadError_Fail  Failed to transition to Disabled.
  */
 ThreadError otPlatRadioDisable(void);
 
@@ -188,7 +179,7 @@ ThreadError otPlatRadioDisable(void);
  * Transition the radio to Sleep.
  *
  * @retval ::kThreadError_None  Successfully transitioned to Sleep.
- * @retval ::kThreadError_Fail  Failed to transition to Sleep.
+ * @retval ::kThreadError_Busy  The radio was not in the Idle state.
  */
 ThreadError otPlatRadioSleep(void);
 
@@ -196,7 +187,7 @@ ThreadError otPlatRadioSleep(void);
  * Transition the radio to Idle.
  *
  * @retval ::kThreadError_None  Successfully transitioned to Idle.
- * @retval ::kThreadError_Fail  Failed to transition to Idle.
+ * @retval ::kThreadError_Busy  The radio was busy transmitting or receiving.
  */
 ThreadError otPlatRadioIdle(void);
 
@@ -211,18 +202,19 @@ ThreadError otPlatRadioIdle(void);
  * @param[in]  aChannel  The channel to use for receiving.
  *
  * @retval ::kThreadError_None  Successfully transitioned to Receive.
- * @retval ::kThreadError_Fail  Failed to transition to Receive.
+ * @retval ::kThreadError_Busy  The radio was not in the Idle state.
  */
 ThreadError otPlatRadioReceive(uint8_t aChannel);
 
 /**
  * The radio driver calls this method to notify OpenThread of a received packet.
  *
+ * @param[in]  aPacket  A pointer to the received packet or NULL if the receive operation was aborted.
  * @param[in]  aError   ::kThreadError_None when successfully received a frame, ::kThreadError_Abort when reception
  *                      was aborted and a frame was not received.
  *
  */
-extern void otPlatRadioReceiveDone(RadioPacket *aPacket, ThreadError error);
+extern void otPlatRadioReceiveDone(RadioPacket *aPacket, ThreadError aError);
 
 /**
  * This method returns a pointer to the transmit buffer.
@@ -237,8 +229,8 @@ RadioPacket *otPlatRadioGetTransmitBuffer(void);
 /**
  * This method begins the transmit sequence on the radio.
  *
- * The caller must form the IEEE 802.15.4 frame in the buffer provided by otPlatRadioGetTransmitBuffer() before requesting
- * transmission.  The channel and transmit power are also included in the RadioPacket structure.
+ * The caller must form the IEEE 802.15.4 frame in the buffer provided by otPlatRadioGetTransmitBuffer() before
+ * requesting transmission.  The channel and transmit power are also included in the RadioPacket structure.
  *
  * The transmit sequence consists of:
  * 1. Transitioning the radio to Transmit from Idle.
@@ -246,8 +238,7 @@ RadioPacket *otPlatRadioGetTransmitBuffer(void);
  * 3. Return to Idle.
  *
  * @retval ::kThreadError_None         Successfully transitioned to Transmit.
- * @retval ::kThreadError_InvalidArgs  One or more parameters in @p aPacket are invalid.
- * @retval ::kThreadError_Fail         Failed to transition to Transmit.
+ * @retval ::kThreadError_Busy         The radio was not in the Idle state.
  */
 ThreadError otPlatRadioTransmit(void);
 
@@ -261,7 +252,7 @@ ThreadError otPlatRadioTransmit(void);
  *                     aborted for other reasons.
  *
  */
-extern void otPlatRadioTransmitDone(bool aFramePending, ThreadError error);
+extern void otPlatRadioTransmitDone(bool aFramePending, ThreadError aError);
 
 /**
  * Get the most recent RSSI measurement.
@@ -278,19 +269,19 @@ int8_t otPlatRadioGetNoiseFloor(void);
 otRadioCaps otPlatRadioGetCaps(void);
 
 /**
+ * Get the status of promiscuous mode.
+ *
+ * @retval true   Promiscuous mode is enabled.
+ * @retval false  Promiscuous mode is disabled.
+ */
+bool otPlatRadioGetPromiscuous(void);
+
+/**
  * Enable or disable promiscuous mode.
  *
  * @param[in]  aEnable  A value to enable or disable promiscuous mode.
  */
 void otPlatRadioSetPromiscuous(bool aEnable);
-
-/**
- * Get the status of promiscuous mode.
- *
- * @retval ::true          The promiscuous mode is enabled.
- * @retval ::false         The promiscuous mode is disabled.
- */
-bool otPlatRadioGetPromiscuous(void);
 
 /**
  * @}
