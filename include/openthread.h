@@ -946,11 +946,6 @@ ThreadError otIp6AddressFromString(const char *aString, otIp6Address *aAddress);
  */
 
 /**
- * This type points to an OpenThread message buffer.
- */
-typedef void *otMessage;
-
-/**
  * Free an allocated message buffer.
  *
  * @param[in]  aMessage  A pointer to a message buffer.
