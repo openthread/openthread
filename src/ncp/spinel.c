@@ -47,7 +47,6 @@
 
 #include <assert.h>
 #include <string.h>
-#include <stdarg.h>
 #include <errno.h>
 #include <stdlib.h>
 
