@@ -96,6 +96,7 @@ ThreadError KeyManager::ComputeKey(uint32_t aKeySequence, uint8_t *aKey)
 
 uint32_t KeyManager::GetCurrentKeySequence() const
 {
+    mNetif.SetStateChangedFlags(OT_NET_KEY_SEQUENCE);
     return mCurrentKeySequence;
 }
 

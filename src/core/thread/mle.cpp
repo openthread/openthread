@@ -59,8 +59,7 @@ Mle::Mle(ThreadNetif &aThreadNetif) :
     mMesh(aThreadNetif.GetMeshForwarder()),
     mMleRouter(aThreadNetif.GetMle()),
     mNetworkData(aThreadNetif.GetNetworkDataLeader()),
-    mParentRequestTimer(&HandleParentRequestTimer, this),
-    mNetifHandler(&HandleUnicastAddressesChanged, this)
+    mParentRequestTimer(&HandleParentRequestTimer, this)
 {
     mDeviceState = kDeviceStateDisabled;
     mDeviceMode = ModeTlv::kModeRxOnWhenIdle | ModeTlv::kModeSecureDataRequest | ModeTlv::kModeFFD |
@@ -135,7 +134,8 @@ Mle::Mle(ThreadNetif &aThreadNetif) :
     mRealmLocalAllThreadNodes.GetAddress().m16[7] = HostSwap16(0x0001);
     mNetif.SubscribeMulticast(mRealmLocalAllThreadNodes);
 
-    mNetif.RegisterHandler(mNetifHandler);
+    mNetifCallback.Set(&HandleNetifStateChanged, this);
+    mNetif.RegisterCallback(mNetifCallback);
 }
 
 ThreadError Mle::Start(void)
@@ -229,6 +229,11 @@ DeviceState Mle::GetDeviceState(void) const
 
 ThreadError Mle::SetStateDetached(void)
 {
+    if (mDeviceState != kDeviceStateDetached)
+    {
+        mNetif.SetStateChangedFlags(OT_NET_STATE | OT_NET_ROLE);
+    }
+
     mAddressResolver.Clear();
     mDeviceState = kDeviceStateDetached;
     mParentRequestState = kParentIdle;
@@ -241,6 +246,16 @@ ThreadError Mle::SetStateDetached(void)
 
 ThreadError Mle::SetStateChild(uint16_t aRloc16)
 {
+    if (mDeviceState == kDeviceStateDetached)
+    {
+        mNetif.SetStateChangedFlags(OT_NET_STATE);
+    }
+
+    if (mDeviceState != kDeviceStateChild)
+    {
+        mNetif.SetStateChangedFlags(OT_NET_ROLE);
+    }
+
     SetRloc16(aRloc16);
     mDeviceState = kDeviceStateChild;
     mParentRequestState = kParentIdle;
@@ -401,6 +416,18 @@ ThreadError Mle::SetRloc16(uint16_t aRloc16)
 uint8_t Mle::GetLeaderId(void) const
 {
     return mLeaderData.GetLeaderRouterId();
+}
+
+void Mle::SetLeaderData(uint32_t aPartitionId, uint8_t aWeighting, uint8_t aLeaderRouterId)
+{
+    if (mLeaderData.GetPartitionId() != aPartitionId)
+    {
+        mNetif.SetStateChangedFlags(OT_NET_PARTITION_ID);
+    }
+
+    mLeaderData.SetPartitionId(aPartitionId);
+    mLeaderData.SetWeighting(aWeighting);
+    mLeaderData.SetLeaderRouterId(aLeaderRouterId);
 }
 
 const Ip6::Address *Mle::GetMeshLocal16(void) const
@@ -695,14 +722,16 @@ exit:
     return error;
 }
 
-void Mle::HandleUnicastAddressesChanged(void *aContext)
+void Mle::HandleNetifStateChanged(uint32_t aFlags, void *aContext)
 {
     Mle *obj = reinterpret_cast<Mle *>(aContext);
-    obj->HandleUnicastAddressesChanged();
+    obj->HandleNetifStateChanged(aFlags);
 }
 
-void Mle::HandleUnicastAddressesChanged(void)
+void Mle::HandleNetifStateChanged(uint32_t aFlags)
 {
+    VerifyOrExit((aFlags & (OT_IP6_ADDRESS_ADDED | OT_IP6_ADDRESS_REMOVED)) != 0, ;);
+
     if (!mNetif.IsUnicastAddress(mMeshLocal64.GetAddress()))
     {
         // Mesh Local EID was removed, choose a new one and add it back
@@ -723,6 +752,9 @@ void Mle::HandleUnicastAddressesChanged(void)
     default:
         break;
     }
+
+exit:
+    return;
 }
 
 void Mle::HandleParentRequestTimer(void *aContext)
@@ -1667,9 +1699,7 @@ ThreadError Mle::HandleChildIdResponse(const Message &aMessage, const Ip6::Messa
     // Parent Attach Success
     mParentRequestTimer.Stop();
 
-    mLeaderData.SetPartitionId(leaderData.GetPartitionId());
-    mLeaderData.SetWeighting(leaderData.GetWeighting());
-    mLeaderData.SetLeaderRouterId(leaderData.GetLeaderRouterId());
+    SetLeaderData(leaderData.GetPartitionId(), leaderData.GetWeighting(), leaderData.GetLeaderRouterId());
 
     if ((mDeviceMode & ModeTlv::kModeRxOnWhenIdle) == 0)
     {

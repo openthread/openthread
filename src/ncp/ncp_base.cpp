@@ -224,7 +224,6 @@ static spinel_status_t ThreadErrorToSpinelStatus(ThreadError error)
 // ----------------------------------------------------------------------------
 
 NcpBase::NcpBase():
-    mNetifHandler(&HandleUnicastAddressesChanged, this),
     mUpdateAddressesTask(&RunUpdateAddressesTask, this)
 {
     mSupportedChannelMask = (0xFFFF << 11); // Default to 2.4GHz 802.15.4 channels.
@@ -233,7 +232,7 @@ NcpBase::NcpBase():
     sNcpContext = this;
 
     assert(sThreadNetif != NULL);
-    sThreadNetif->RegisterHandler(mNetifHandler);
+    otSetStateChangedCallback(&HandleNetifStateChanged, this);
     otSetReceiveIp6DatagramCallback(&HandleDatagramFromStack);
 }
 
@@ -364,10 +363,13 @@ exit:
 // MARK: Address Table Changed Glue
 // ----------------------------------------------------------------------------
 
-void NcpBase::HandleUnicastAddressesChanged(void *context)
+void NcpBase::HandleNetifStateChanged(uint32_t flags, void *context)
 {
     NcpBase *obj = reinterpret_cast<NcpBase *>(context);
-    obj->mUpdateAddressesTask.Post();
+    if ((flags & (OT_IP6_ADDRESS_ADDED | OT_IP6_ADDRESS_REMOVED)) != 0)
+    {
+	obj->mUpdateAddressesTask.Post();
+    }
 }
 
 void NcpBase::RunUpdateAddressesTask(void *context)

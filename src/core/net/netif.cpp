@@ -43,30 +43,32 @@ Netif *Netif::sNetifListHead = NULL;
 int Netif::sNextInterfaceId = 1;
 
 Netif::Netif() :
-    mUnicastChangedTask(&HandleUnicastChangedTask, this)
+    mStateChangedTask(&HandleStateChangedTask, this)
 {
-    mHandlers = NULL;
+    mCallbacks = NULL;
     mUnicastAddresses = NULL;
     mMulticastAddresses = NULL;
     mInterfaceId = -1;
     mAllRoutersSubscribed = false;
     mNext = NULL;
+
+    mStateChangedFlags = 0;
 }
 
-ThreadError Netif::RegisterHandler(NetifHandler &aHandler)
+ThreadError Netif::RegisterCallback(NetifCallback &aCallback)
 {
     ThreadError error = kThreadError_None;
 
-    for (NetifHandler *cur = mHandlers; cur; cur = cur->mNext)
+    for (NetifCallback *cur = mCallbacks; cur; cur = cur->mNext)
     {
-        if (cur == &aHandler)
+        if (cur == &aCallback)
         {
             ExitNow(error = kThreadError_Busy);
         }
     }
 
-    aHandler.mNext = mHandlers;
-    mHandlers = &aHandler;
+    aCallback.mNext = mCallbacks;
+    mCallbacks = &aCallback;
 
 exit:
     return error;
@@ -283,7 +285,7 @@ ThreadError Netif::AddUnicastAddress(NetifUnicastAddress &aAddress)
 
     if (!aAddress.GetAddress().IsRoutingLocator())
     {
-        mUnicastChangedTask.Post();
+        SetStateChangedFlags(OT_IP6_ADDRESS_ADDED);
     }
 
 exit:
@@ -317,7 +319,7 @@ exit:
 
     if (!aAddress.GetAddress().IsRoutingLocator())
     {
-        mUnicastChangedTask.Post();
+        SetStateChangedFlags(OT_IP6_ADDRESS_REMOVED);
     }
 
     return error;
@@ -451,17 +453,27 @@ exit:
     return rval;
 }
 
-void Netif::HandleUnicastChangedTask(void *aContext)
+void Netif::SetStateChangedFlags(uint32_t aFlags)
 {
-    Netif *obj = reinterpret_cast<Netif *>(aContext);
-    obj->HandleUnicastChangedTask();
+    mStateChangedFlags |= aFlags;
+    mStateChangedTask.Post();
 }
 
-void Netif::HandleUnicastChangedTask()
+void Netif::HandleStateChangedTask(void *aContext)
 {
-    for (NetifHandler *handler = mHandlers; handler; handler = handler->mNext)
+    Netif *obj = reinterpret_cast<Netif *>(aContext);
+    obj->HandleStateChangedTask();
+}
+
+void Netif::HandleStateChangedTask(void)
+{
+    uint32_t flags = mStateChangedFlags;
+
+    mStateChangedFlags = 0;
+
+    for (NetifCallback *callback = mCallbacks; callback; callback = callback->mNext)
     {
-        handler->HandleUnicastAddressesChanged();
+        callback->Callback(flags);
     }
 }
 

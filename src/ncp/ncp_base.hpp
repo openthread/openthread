@@ -95,7 +95,7 @@ private:
     void RunUpdateAddressesTask(void);
 
 
-    static void HandleUnicastAddressesChanged(void *context);
+    static void HandleNetifStateChanged(uint32_t flags, void *context);
 
 private:
 
@@ -277,8 +277,6 @@ private:
                                                    uint16_t value_len);
 
 private:
-
-    Ip6::NetifHandler mNetifHandler;
 
     spinel_status_t mLastStatus;
 
