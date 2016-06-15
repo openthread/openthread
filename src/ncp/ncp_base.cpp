@@ -283,6 +283,8 @@ void NcpBase::HandleDatagramFromStack(Message &message)
         {
             SendLastStatus(SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0, SPINEL_STATUS_DROPPED);
         }
+
+        Message::Free(message);
     }
     else
     {
@@ -414,8 +416,8 @@ void NcpBase::HandleSendDone()
     if (mSendQueue.GetHead() != NULL)
     {
         Message &message(*mSendQueue.GetHead());
-        HandleDatagramFromStack(message);
         mSendQueue.Dequeue(message);
+        HandleDatagramFromStack(message);
     }
 
     if (mQueuedGetHeader != 0)
@@ -2202,6 +2204,11 @@ void NcpBase::SetPropertyHandler_STREAM_NET_INSECURE(uint8_t header, spinel_prop
     }
     else
     {
+        if (message)
+        {
+            Message::Free(*message);
+        }
+
         SendLastStatus(header, ThreadErrorToSpinelStatus(errorCode));
     }
 }
@@ -2260,6 +2267,11 @@ void NcpBase::SetPropertyHandler_STREAM_NET(uint8_t header, spinel_prop_key_t ke
     }
     else
     {
+        if (message)
+        {
+            Message::Free(*message);
+        }
+
         SendLastStatus(header, ThreadErrorToSpinelStatus(errorCode));
     }
 }
