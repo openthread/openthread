@@ -29,7 +29,6 @@
 language: cpp
 
 env:
-  - BUILD_TARGET="pretty-check"
   - BUILD_TARGET="posix"
   - BUILD_TARGET="cc2538"
 
@@ -42,11 +41,15 @@ os:
   - osx
 
 matrix:
+  include:
+    - env: BUILD_TARGET="pretty-check"
+      compiler: clang
+      os: linux
   exclude:
     - compiler: clang
       env: BUILD_TARGET="cc2538"
-    - compiler: clang
-      env: BUILD_TARGET="pretty-check"
+    - os: osx
+      env: BUILD_TARGET="cc2538"
 
 before_install:
   - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then sudo apt-get install python-pexpect; fi
