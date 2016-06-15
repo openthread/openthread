@@ -26,44 +26,21 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
+#ifndef TEST_UTIL_HPP
+#define TEST_UTIL_HPP
+
 #include "test_util.h"
 
-#include <vector>
+// STL is okay in unit tests.
 #include <string>
-#include <sstream>
-#include <iostream>
+#include <vector>
 
-void otTestHexToVector(std::string &aHex, std::vector<uint8_t> &aOutBytes)
-{
-    std::istringstream ss( aHex );
-    std::string word;
+void otTestHexToVector(std::string &aHex, std::vector<uint8_t> &aOutBytes);
 
-    while( ss >> word )
-    {
-        uint8_t n = strtol(word.data(), NULL, 16);
-	aOutBytes.push_back( n );
-    }
-}
+void otTestPrintHex(uint8_t *aBuffer, int aLength);
 
-void otTestPrintHex(uint8_t *aBuffer, int aLength)
-{
-    int i;
-    for (i = 0; i < aLength; i++) {
-        printf("%02x ", aBuffer[i]);
-	if (i % 16 == 7) printf(" ");
-	if (i % 16 == 15) printf("\n");
-    }
-    printf("\n");
-}
+void otTestPrintHex(std::vector<uint8_t> &aBytes);
 
-void otTestPrintHex(std::string &aString)
-{
-    otTestPrintHex((uint8_t*)aString.data(), aString.size());
-}
+void otTestPrintHex(std::string &aString);
 
-void otTestPrintHex(std::vector<uint8_t> &aBytes)
-{
-    otTestPrintHex((uint8_t*)&aBytes[0], aBytes.size());
-}
-        
-
+#endif

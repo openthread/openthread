@@ -26,7 +26,7 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "test_util.h"
+#include "test_util.hpp"
 #include <common/debug.hpp>
 #include <string.h>
 

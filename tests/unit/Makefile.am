@@ -34,6 +34,7 @@ include $(abs_top_nlbuild_autotools_dir)/automake/pre.am
 #
 noinst_HEADERS                                                 = \
     test_util.h                                                  \
+    test_util.hpp                                                \
     $(NULL)
 
 #
