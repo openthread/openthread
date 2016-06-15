@@ -88,11 +88,11 @@ private:
     void HandleActiveScanResult(otActiveScanResult *result);
 
     /**
-     * Trampoline for RunUpdateAddressesTask().
+     * Trampoline for UpdateChangedProps().
      */
-    static void RunUpdateAddressesTask(void *context);
+    static void UpdateChangedProps(void *context);
 
-    void RunUpdateAddressesTask(void);
+    void UpdateChangedProps(void);
 
 
     static void HandleNetifStateChanged(uint32_t flags, void *context);
@@ -290,9 +290,11 @@ private:
 
     spinel_prop_key_t mQueuedGetKey;
 
-    Tasklet mUpdateAddressesTask;
+    Tasklet mUpdateChangedPropsTask;
 
     MessageQueue mSendQueue;
+
+    uint32_t mChangedFlags;
 
 protected:
     /**

@@ -224,12 +224,13 @@ static spinel_status_t ThreadErrorToSpinelStatus(ThreadError error)
 // ----------------------------------------------------------------------------
 
 NcpBase::NcpBase():
-    mUpdateAddressesTask(&RunUpdateAddressesTask, this)
+    mUpdateChangedPropsTask(&UpdateChangedProps, this)
 {
     mSupportedChannelMask = (0xFFFF << 11); // Default to 2.4GHz 802.15.4 channels.
     mChannelMask = mSupportedChannelMask;
     mScanPeriod = 200; // ms
     sNcpContext = this;
+    mChangedFlags = 0;
 
     assert(sThreadNetif != NULL);
     otSetStateChangedCallback(&HandleNetifStateChanged, this);
@@ -368,25 +369,73 @@ exit:
 void NcpBase::HandleNetifStateChanged(uint32_t flags, void *context)
 {
     NcpBase *obj = reinterpret_cast<NcpBase *>(context);
-    if ((flags & (OT_IP6_ADDRESS_ADDED | OT_IP6_ADDRESS_REMOVED)) != 0)
-    {
-	obj->mUpdateAddressesTask.Post();
+
+    obj->mChangedFlags |= flags;
+
+    if (!obj->mSending) {
+        obj->mUpdateChangedPropsTask.Post();
     }
 }
 
-void NcpBase::RunUpdateAddressesTask(void *context)
+void NcpBase::UpdateChangedProps(void *context)
 {
     NcpBase *obj = reinterpret_cast<NcpBase *>(context);
-    obj->RunUpdateAddressesTask();
+    obj->UpdateChangedProps();
 }
 
-void NcpBase::RunUpdateAddressesTask()
+void NcpBase::UpdateChangedProps()
 {
-    // It would really be preferable to have inserted/removed notifications
-    // for the individual addresses, rather than a single "changed" event.
-    HandleCommandPropertyGet(SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0, SPINEL_PROP_IPV6_ADDRESS_TABLE);
-
-    HandleCommandPropertyGet(SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0, SPINEL_PROP_NET_STATE);
+    if (!mSending) {
+        if ((mChangedFlags & OT_NET_STATE) != 0)
+        {
+            mChangedFlags &= ~OT_NET_STATE;
+            HandleCommandPropertyGet(
+                SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0,
+                SPINEL_PROP_NET_STATE
+            );
+        }
+        else if ((mChangedFlags & OT_NET_ROLE) != 0)
+        {
+            mChangedFlags &= ~OT_NET_ROLE;
+            HandleCommandPropertyGet(
+                SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0,
+                SPINEL_PROP_NET_ROLE
+            );
+        }
+        else if ((mChangedFlags & OT_NET_PARTITION_ID) != 0)
+        {
+            mChangedFlags &= ~OT_NET_PARTITION_ID;
+            HandleCommandPropertyGet(
+                SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0,
+                SPINEL_PROP_NET_PARTITION_ID
+            );
+        }
+        else if ((mChangedFlags & OT_NET_KEY_SEQUENCE) != 0)
+        {
+            mChangedFlags &= ~OT_NET_KEY_SEQUENCE;
+            HandleCommandPropertyGet(
+                SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0,
+                SPINEL_PROP_NET_KEY_SEQUENCE
+            );
+        }
+        else if ((mChangedFlags & (OT_IP6_ADDRESS_ADDED | OT_IP6_ADDRESS_REMOVED)) != 0)
+        {
+            mChangedFlags &= ~(OT_IP6_ADDRESS_ADDED | OT_IP6_ADDRESS_REMOVED);
+            HandleCommandPropertyGet(
+                SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0,
+                SPINEL_PROP_IPV6_ADDRESS_TABLE
+            );
+        }
+        else if ((mChangedFlags & (OT_THREAD_CHILD_ADDED | OT_THREAD_CHILD_REMOVED)) != 0)
+        {
+            mChangedFlags &= ~(OT_THREAD_CHILD_ADDED | OT_THREAD_CHILD_REMOVED);
+            // TODO: Uncomment this once we add support for this property.
+            //HandleCommandPropertyGet(
+            //    SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0,
+            //    SPINEL_PROP_THREAD_CHILD_TABLE
+            //);
+        }
+    }
 }
 
 // ----------------------------------------------------------------------------
@@ -426,6 +475,10 @@ void NcpBase::HandleSendDone()
     {
         HandleCommandPropertyGet(mQueuedGetHeader, mQueuedGetKey);
         mQueuedGetHeader = 0;
+    }
+
+    if (!mSending) {
+        UpdateChangedProps();
     }
 }
 
@@ -900,11 +953,16 @@ void NcpBase::GetPropertyHandler_CAPS(uint8_t header, spinel_prop_key_t key)
     }
 
     // Begin adding capabilities //////////////////////////////////////////////
+
     OutboundFrameFeedPacked(SPINEL_DATATYPE_UINT_PACKED_S, SPINEL_CAP_NET_THREAD_1_0);
+
+    // TODO: Somehow get the following capability from the radio.
     OutboundFrameFeedPacked(SPINEL_DATATYPE_UINT_PACKED_S, SPINEL_CAP_802_15_4_2450MHZ_OQPSK);
+
 #if OPENTHREAD_CONFIG_MAX_CHILDREN > 0
     OutboundFrameFeedPacked(SPINEL_DATATYPE_UINT_PACKED_S, SPINEL_CAP_ROLE_ROUTER);
 #endif
+
     // End adding capabilities /////////////////////////////////////////////////
 
     if (errorCode == kThreadError_None)
