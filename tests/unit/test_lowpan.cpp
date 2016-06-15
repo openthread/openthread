@@ -61,6 +61,8 @@ typedef const struct
     const char *mCompressed;
     const char *mRaw;
 
+    const char *mPrefix;
+
     test_mac_vector_t mMac;
 
     uint16_t mTraffic;
@@ -75,7 +77,7 @@ typedef const struct
 test_lowpan_vector_t tests[] =
 {
     {
-        // l1_t1_AF_pass.pcap
+        // I1_t1_AF_pass.pcap
         .mTest = "LL64 unicast ICMP ping request",
         .mCompressed =
         "61 cc 1d ce fa 03 00 00  00 00 0a 6e 14 01 00 00 "
@@ -97,7 +99,7 @@ test_lowpan_vector_t tests[] =
         .mHops = 64
     },
     {
-        // l1_t1_AF_pass.pcap
+        // I1_t1_AF_pass.pcap
         .mTest = "LL64 unicast ICMP ping reply",
         .mCompressed =
         "61 cc 07 ce fa 01 00 00  00 00 0a 6e 14 03 00 00 "
@@ -116,7 +118,7 @@ test_lowpan_vector_t tests[] =
         },
     },
     {
-        // l1_t2_AF_AS_pass.pcap
+        // I1_t2_AF_AS_pass.pcap
         .mTest = "LL16 unicast ICMP ping request",
         .mCompressed =
         "61 88 13 ce fa 00 10 00  00 7a 33 3a 80 00 63 9e "
@@ -128,11 +130,11 @@ test_lowpan_vector_t tests[] =
         "41 42 43 44 45 46 47 48"
     },
     {
-        // l1_t2_AF_AS_pass.pcap
+        // I1_t2_AF_AS_pass.pcap
         .mTest = "LL16 unicast ICMP ping reply",
         .mCompressed =
-        "61 88 0f ce fa 00 00 00 10 7a 33 3a 81 00 62 9e "
-        "00 00 00 00 41 42 43 44 45 46 47 48 e0 35",
+        "61 88 0f ce fa 00 00 00  10 7a 33 3a 81 00 62 9e "
+        "00 00 00 00 41 42 43 44  45 46 47 48 e0 35",
         .mRaw =
         "60 00 00 00 00 10 3a 40  fe 80 00 00 00 00 00 00 "
         "00 00 00 ff fe 00 10 00  fe 80 00 00 00 00 00 00 "
@@ -140,11 +142,11 @@ test_lowpan_vector_t tests[] =
         "41 42 43 44 45 46 47 48"
     },
     {
-        // l1_t3_SF_pass.pcap
+        // I1_t3_SF_pass.pcap
         .mTest = "LL64 multicast FF02::1 ICMP ping request",
         .mCompressed =
-        "41 c8 99 ce fa ff ff 01 00 00 00 00 0a 6e 14 7a "
-        "3b 3a 01 80 00 54 b4 40 41 42 43 44 45 46 47 68 "
+        "41 c8 99 ce fa ff ff 01  00 00 00 00 0a 6e 14 7a "
+        "3b 3a 01 80 00 54 b4 40  41 42 43 44 45 46 47 68 "
         "44",
         .mRaw =
         "60 00 00 00 00 0c 3a 40  fe 80 00 00 00 00 00 00 "
@@ -153,11 +155,11 @@ test_lowpan_vector_t tests[] =
         "44 45 46 47 "
     },
     {
-        // l1_t3_SF_pass.pcap
+        // I1_t3_SF_pass.pcap
         .mTest = "LL64 multicast FF02::1 ICMP ping reply",
         .mCompressed =
-        "61 cc fc ce fa 01 00 00 00 00 0a 6e 14 02 00 00 "
-        "00 00 0a 6e 14 7a 33 3a 81 00 33 c7 40 41 42 43 "
+        "61 cc fc ce fa 01 00 00  00 00 0a 6e 14 02 00 00 "
+        "00 00 0a 6e 14 7a 33 3a  81 00 33 c7 40 41 42 43 "
         "44 45 46 47 1a 80",
         .mRaw =
         "60 00 00 00 00 0c 3a 40  fe 80 00 00 00 00 00 00 "
@@ -166,12 +168,12 @@ test_lowpan_vector_t tests[] =
         "44 45 46 47"
     },
     {
-        // l1_t4_FS_pass.pcap
+        // I1_t4_FS_pass.pcap
         .mTest = "LL16 multicast FF02::1 ICMP ping request",
         .mCompressed =
-        "41 88 df ce fa ff ff 00   08 7a 3b 3a 01 80 00 76 "
-        "0e 00 01 00 04 50 50 50   50 50 50 50 50 50 50 50 "
-        "50 50 50 50 50 50 50 50   50 50 50 50 50 50 50 50 "
+        "41 88 df ce fa ff ff 00  08 7a 3b 3a 01 80 00 76 "
+        "0e 00 01 00 04 50 50 50  50 50 50 50 50 50 50 50 "
+        "50 50 50 50 50 50 50 50  50 50 50 50 50 50 50 50 "
         "50 50 50 50 50 a7 d2",
         .mRaw =
         "60 00 00 00 00 28 3a 40  fe 80 00 00 00 00 00 00 "
@@ -181,13 +183,13 @@ test_lowpan_vector_t tests[] =
         "50 50 50 50 50 50 50 50  50 50 50 50 50 50 50 50 "
     },
     {
-        // l1_t4_FS_pass.pcap
+        // I1_t4_FS_pass.pcap
         .mTest = "LL16 multicast FF02::1 ICMP ping reply",
         .mCompressed =
-        "61 c8 41 ce fa 00 08 03 00 00 00 00 0a 6e 14 7a "
-        "33 3a 81 00 55 20 00 01 00 04 50 50 50 50 50 50 "
-        "50 50 50 50 50 50 50 50 50 50 50 50 50 50 50 50 "
-        "50 50 50 50 50 50 50 50 50 50 ab 56",
+        "61 c8 41 ce fa 00 08 03  00 00 00 00 0a 6e 14 7a "
+        "33 3a 81 00 55 20 00 01  00 04 50 50 50 50 50 50 "
+        "50 50 50 50 50 50 50 50  50 50 50 50 50 50 50 50 "
+        "50 50 50 50 50 50 50 50  50 50 ab 56",
         .mRaw =
         "60 00 00 00 00 28 3a 40  fe 80 00 00 00 00 00 00 "
         "16 6e 0a 00 00 00 00 03  fe 80 00 00 00 00 00 00 "
@@ -195,7 +197,6 @@ test_lowpan_vector_t tests[] =
         "50 50 50 50 50 50 50 50  50 50 50 50 50 50 50 50 "
         "50 50 50 50 50 50 50 50  50 50 50 50 50 50 50 50 "
     },
-
 };
 
 
@@ -246,8 +247,9 @@ void TestLowpanIphc(void)
 
         uint16_t ip6PayloadLength = frame.GetPayloadLength() -
                                     decompressedBytes;
-        message->Append(frame.GetPayload() + decompressedBytes,
-                        ip6PayloadLength);
+        SuccessOrQuit(message->Append(frame.GetPayload() + decompressedBytes,
+                                      ip6PayloadLength),
+                      "6lo: Message::Append failed");
         ip6PayloadLength = HostSwap16(message->GetLength() -
                                       sizeof(Ip6::Header));
         message->Write(Ip6::Header::GetPayloadLengthOffset(),
@@ -262,9 +264,18 @@ void TestLowpanIphc(void)
         SuccessOrQuit(memcmp(ipVector.data(), result, resultLength),
                       "6lo: Lowpan::Decompress failed");
 
-        SuccessOrQuit(Message::Free(*message), "6lo: Message:Free failed");
+        // ===> Test Lowpan::Compress
+        int resultLength = sMockLowpan.Compress(*message, macSource, macDest,
+                                                result);
+        printf("Compressed OpenThread:\n");
+        otTestPrintHex(result, resultLength);
 
+        SuccessOrQuit(memcmp(frame.GetPayload(), result, resultLength),
+                      "6lo: Lowpan::Compress failed");
+
+        SuccessOrQuit(Message::Free(*message), "6lo: Message:Free failed");
         printf("PASS\n\n");
+
     }
 }
 
