@@ -46,6 +46,10 @@ cd /tmp || die
         export PATH=/tmp/gcc-arm-none-eabi-4_9-2015q3/bin:$PATH || die
         arm-none-eabi-gcc --version || die
     }
+
+    [ $BUILD_TARGET != scan-build ] || {
+        sudo apt-get install clang || die
+    }
 }
 
 [ $TRAVIS_OS_NAME != osx ] || {
