@@ -55,6 +55,7 @@ AM_CPPFLAGS                                                    = \
 
 COMMON_LDADD                                                   =  \
     $(top_builddir)/src/core/libopenthread.a                      \
+    $(top_builddir)/src/cli/libopenthread-cli.a \
     $(top_builddir)/examples/posix/platform/libopenthread-posix.a \
     $(top_builddir)/third_party/mbedtls/libmbedcrypto.a           \
     -lpthread                                                     \
@@ -65,6 +66,7 @@ COMMON_LDADD                                                   =  \
 check_PROGRAMS                                                 = \
     test-aes                                                     \
     test-hmac-sha256                                             \
+    test-lowpan                                                  \
     test-mac-frame                                               \
     test-message                                                 \
     test-timer                                                   \
@@ -91,6 +93,9 @@ test_aes_SOURCES             = test_aes.cpp
 
 test_hmac_sha256_LDADD       = $(COMMON_LDADD)
 test_hmac_sha256_SOURCES     = test_hmac_sha256.cpp
+
+test_lowpan_LDADD            = $(COMMON_LDADD)
+test_lowpan_SOURCES          = test_lowpan.cpp test_util.cpp
 
 test_mac_frame_LDADD         = $(COMMON_LDADD)
 test_mac_frame_SOURCES       = test_mac_frame.cpp

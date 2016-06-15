@@ -32,6 +32,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include <string>
+#include <vector>
+
 #include <openthread-types.h>
 
 #define SuccessOrQuit(ERR, MSG)                 \
@@ -53,5 +56,13 @@
       exit(-1); \
     } \
   } while (0)
+
+void otTestHexToVector(std::string &aHex, std::vector<uint8_t> &aOutBytes);
+
+void otTestPrintHex(uint8_t *aBuffer, int aLength);
+
+void otTestPrintHex(std::vector<uint8_t> &aBytes);
+
+void otTestPrintHex(std::string &aString);
 
 #endif
