@@ -207,6 +207,24 @@ typedef struct otLinkModeConfig
 } otLinkModeConfig;
 
 /**
+ * This enumeration represents flags that indicate what configuration or state has changed within OpenThread.
+ *
+ */
+enum
+{
+    OT_IP6_ADDRESS_ADDED    = 1 << 0,  ///< IPv6 address was added
+    OT_IP6_ADDRESS_REMOVED  = 1 << 1,  ///< IPv6 address was removed
+
+    OT_NET_STATE            = 1 << 2,  ///< Device state (offline, detached, attached) changed
+    OT_NET_ROLE             = 1 << 3,  ///< Device role (disabled, detached, child, router, leader) changed
+    OT_NET_PARTITION_ID     = 1 << 4,  ///< Partition ID changed
+    OT_NET_KEY_SEQUENCE     = 1 << 5,  ///< Thread Key Sequence changed
+
+    OT_THREAD_CHILD_ADDED   = 1 << 6,  ///< Child was added
+    OT_THREAD_CHILD_REMOVED = 1 << 7   ///< Child was removed
+};
+
+/**
  * @}
  */
 

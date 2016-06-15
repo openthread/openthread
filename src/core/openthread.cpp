@@ -49,6 +49,8 @@ namespace Thread {
 // of of the features in the NCP.
 ThreadNetif *sThreadNetif;
 
+static Ip6::NetifCallback sNetifCallback;
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -543,6 +545,12 @@ ThreadError otAddUnicastAddress(otNetifAddress *address)
 ThreadError otRemoveUnicastAddress(otNetifAddress *address)
 {
     return sThreadNetif->RemoveUnicastAddress(*static_cast<Ip6::NetifUnicastAddress *>(address));
+}
+
+void otSetStateChangedCallback(otStateChangedCallback aCallback, void *aContext)
+{
+    sNetifCallback.Set(aCallback, aContext);
+    sThreadNetif->RegisterCallback(sNetifCallback);
 }
 
 ThreadError otEnable(void)

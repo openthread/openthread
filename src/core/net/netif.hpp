@@ -157,38 +157,33 @@ private:
  * This class implements network interface handlers.
  *
  */
-class NetifHandler
+class NetifCallback
 {
     friend class Netif;
 
 public:
     /**
-     * This function pointer is called when the set of assigned unicast addresses change.
+     * This method sets the callback information.
      *
-     * @param[in]  aContext  A pointer to arbitrary context information.
-     *
-     */
-    typedef void (*UnicastAddressesChangedHandler)(void *aContext);
-
-    /**
-     * This constructor initializes the network interface handlers.
-     *
-     * @param[in]  aHandler  A pointer to a function that is called when the set of assigned unicast addresses
-     *                       change.
-     * @param[in]  aContext  A pointer to arbitrary context information.
+     * @param[in]  aCallback  A pointer to a function that is called when configuration or state changes.
+     * @param[in]  aContext   A pointer to arbitrary context information.
      *
      */
-    NetifHandler(UnicastAddressesChangedHandler aHandler, void *aContext) {
-        mUnicastHandler = aHandler;
+    void Set(otStateChangedCallback aCallback, void *aContext) {
+        mCallback = aCallback;
         mContext = aContext;
     }
 
 private:
-    void HandleUnicastAddressesChanged(void) { mUnicastHandler(mContext); }
+    void Callback(uint32_t aFlags) {
+        if (mCallback != NULL) {
+            mCallback(aFlags, mContext);
+        }
+    }
 
-    UnicastAddressesChangedHandler mUnicastHandler;
+    otStateChangedCallback mCallback;
     void *mContext;
-    NetifHandler *mNext;
+    NetifCallback *mNext;
 };
 
 /**
@@ -313,14 +308,24 @@ public:
     ThreadError UnsubscribeMulticast(const NetifMulticastAddress &aAddress);
 
     /**
-     * This method registers a network interface handler.
+     * This method registers a network interface callback.
      *
-     * @param[in]  aHandler  A reference to the handler.
+     * @param[in]  aCallback  A reference to the callback.
      *
-     * @retval kThreadError_None   Successfully registered the handler.
-     * @retval kThreadError_Busy   The handler was already registered.
+     * @retval kThreadError_None   Successfully registered the callback.
+     * @retval kThreadError_Busy   The callback was already registered.
      */
-    ThreadError RegisterHandler(NetifHandler &aHandler);
+    ThreadError RegisterCallback(NetifCallback &aCallback);
+
+    /**
+     * This method schedules notification of @p aFlags.
+     *
+     * The @p aFlags are combined (bitwise-or) with other flags that have not been provided in a callback yet.
+     *
+     * @param[in]  aFlags  A bit-field indicating what configuration or state has changed.
+     *
+     */
+    void SetStateChangedFlags(uint32_t aFlags);
 
     /**
      * This virtual method enqueues an IPv6 messages on this network interface.
@@ -424,16 +429,18 @@ public:
     static int GetOnLinkNetif(const Address &aAddress);
 
 private:
-    static void HandleUnicastChangedTask(void *aContext);
-    void HandleUnicastChangedTask(void);
+    static void HandleStateChangedTask(void *aContext);
+    void HandleStateChangedTask(void);
 
-    NetifHandler *mHandlers;
+    NetifCallback *mCallbacks;
     NetifUnicastAddress *mUnicastAddresses;
     NetifMulticastAddress *mMulticastAddresses;
     int mInterfaceId;
     bool mAllRoutersSubscribed;
-    Tasklet mUnicastChangedTask;
+    Tasklet mStateChangedTask;
     Netif *mNext;
+
+    uint32_t mStateChangedFlags;
 
     static Netif *sNetifListHead;
     static int sNextInterfaceId;

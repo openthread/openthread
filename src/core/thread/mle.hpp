@@ -888,6 +888,16 @@ protected:
      */
     ThreadError SetStateChild(uint16_t aRloc16);
 
+    /**
+     * This method sets the Leader's Partition ID, Weighting, and Router ID values.
+     *
+     * @param[in]  aPartitionId     The Leader's Parititon ID value.
+     * @param[in]  aWeighting       The Leader's Weighting value.
+     * @param[in]  aLeaderRouterId  The Leader's Router ID value.
+     *
+     */
+    void SetLeaderData(uint32_t aPartitionId, uint8_t aWeighting, uint8_t aLeaderRouterId);
+
     ThreadNetif         &mNetif;            ///< The Thread Network Interface object.
     AddressResolver     &mAddressResolver;  ///< The Address Resolver object.
     KeyManager          &mKeyManager;       ///< The Key Manager object.
@@ -928,8 +938,8 @@ private:
     void GenerateNonce(const Mac::ExtAddress &aMacAddr, uint32_t aFrameCounter, uint8_t aSecurityLevel,
                        uint8_t *aNonce);
 
-    static void HandleUnicastAddressesChanged(void *aContext);
-    void HandleUnicastAddressesChanged(void);
+    static void HandleNetifStateChanged(uint32_t aFlags, void *aContext);
+    void HandleNetifStateChanged(uint32_t aFlags);
     static void HandleParentRequestTimer(void *aContext);
     void HandleParentRequestTimer(void);
     static void HandleUdpReceive(void *aContext, otMessage aMessage, const otMessageInfo *aMessageInfo);
@@ -970,7 +980,7 @@ private:
     Ip6::NetifMulticastAddress mLinkLocalAllThreadNodes;
     Ip6::NetifMulticastAddress mRealmLocalAllThreadNodes;
 
-    Ip6::NetifHandler mNetifHandler;
+    Ip6::NetifCallback mNetifCallback;
 };
 
 }  // namespace Mle

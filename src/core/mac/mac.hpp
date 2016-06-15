@@ -455,6 +455,7 @@ private:
 
     KeyManager &mKeyManager;
     Mle::MleRouter &mMle;
+    ThreadNetif &mNetif;
 
     ExtAddress mExtAddress;
     ShortAddress mShortAddress;

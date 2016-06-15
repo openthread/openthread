@@ -227,9 +227,7 @@ ThreadError MleRouter::BecomeLeader(void)
 
     memcpy(&mRouters[mRouterId].mMacAddr, mMac.GetExtAddress(), sizeof(mRouters[mRouterId].mMacAddr));
 
-    mLeaderData.SetPartitionId(otPlatRandomGet());
-    mLeaderData.SetWeighting(mLeaderWeight);
-    mLeaderData.SetLeaderRouterId(mRouterId);
+    SetLeaderData(otPlatRandomGet(), mLeaderWeight, mRouterId);
 
     mNetworkData.Reset();
 
@@ -302,6 +300,16 @@ ThreadError MleRouter::HandleChildStart(otMleAttachFilter aFilter)
 
 ThreadError MleRouter::SetStateRouter(uint16_t aRloc16)
 {
+    if (mDeviceState == kDeviceStateDetached)
+    {
+        mNetif.SetStateChangedFlags(OT_NET_STATE);
+    }
+
+    if (mDeviceState != kDeviceStateRouter)
+    {
+        mNetif.SetStateChangedFlags(OT_NET_ROLE);
+    }
+
     SetRloc16(aRloc16);
     mDeviceState = kDeviceStateRouter;
     mParentRequestState = kParentIdle;
@@ -318,6 +326,16 @@ ThreadError MleRouter::SetStateRouter(uint16_t aRloc16)
 
 ThreadError MleRouter::SetStateLeader(uint16_t aRloc16)
 {
+    if (mDeviceState == kDeviceStateDetached)
+    {
+        mNetif.SetStateChangedFlags(OT_NET_STATE);
+    }
+
+    if (mDeviceState != kDeviceStateLeader)
+    {
+        mNetif.SetStateChangedFlags(OT_NET_ROLE);
+    }
+
     SetRloc16(aRloc16);
     mDeviceState = kDeviceStateLeader;
     mParentRequestState = kParentIdle;
@@ -819,9 +837,7 @@ ThreadError MleRouter::HandleLinkAccept(const Message &aMessage, const Ip6::Mess
         // Leader Data
         SuccessOrExit(error = Tlv::GetTlv(aMessage, Tlv::kLeaderData, sizeof(leaderData), leaderData));
         VerifyOrExit(leaderData.IsValid(), error = kThreadError_Parse);
-        mLeaderData.SetPartitionId(leaderData.GetPartitionId());
-        mLeaderData.SetWeighting(leaderData.GetWeighting());
-        mLeaderData.SetLeaderRouterId(leaderData.GetLeaderRouterId());
+        SetLeaderData(leaderData.GetPartitionId(), leaderData.GetWeighting(), leaderData.GetLeaderRouterId());
 
         // Network Data
         SuccessOrExit(error = Tlv::GetTlv(aMessage, Tlv::kNetworkData, sizeof(networkData), networkData));
@@ -1456,6 +1472,7 @@ void MleRouter::HandleStateUpdateTimer(void)
         if ((Timer::GetNow() - mChildren[i].mLastHeard) >= Timer::SecToMsec(mChildren[i].mTimeout))
         {
             mChildren[i].mState = Neighbor::kStateInvalid;
+            mNetif.SetStateChangedFlags(OT_THREAD_CHILD_REMOVED);
         }
     }
 
@@ -1842,6 +1859,7 @@ ThreadError MleRouter::SendChildIdResponse(Child *aChild)
     }
 
     aChild->mState = Neighbor::kStateValid;
+    mNetif.SetStateChangedFlags(OT_THREAD_CHILD_ADDED);
 
     memset(&destination, 0, sizeof(destination));
     destination.m16[0] = HostSwap16(0xfe80);

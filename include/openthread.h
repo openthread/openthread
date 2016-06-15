@@ -458,6 +458,24 @@ ThreadError otAddUnicastAddress(otNetifAddress *aAddress);
 ThreadError otRemoveUnicastAddress(otNetifAddress *aAddress);
 
 /**
+ * This function pointer is called to notify certain configuration or state changes within OpenThread.
+ *
+ * @param[in]  aFlags    A bit-field indicating specific state that has changed.
+ * @param[in]  aContext  A pointer to application-specific context.
+ *
+ */
+typedef void (*otStateChangedCallback)(uint32_t aFlags, void *aContext);
+
+/**
+ * This function registers a callback to indicate when certain configuration or state changes within OpenThread.
+ *
+ * @param[in]  aCallback  A pointer to a function that is called with certain configuration or state changes.
+ * @param[in]  aContext   A pointer to application-specific context.
+ *
+ */
+void otSetStateChangedCallback(otStateChangedCallback aCallback, void *aContext);
+
+/**
  * @}
  */
 

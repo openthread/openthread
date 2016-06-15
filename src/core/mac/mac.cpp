@@ -73,6 +73,7 @@ Mac::Mac(ThreadNetif &aThreadNetif):
     mReceiveTimer(&HandleReceiveTimer, this),
     mKeyManager(aThreadNetif.GetKeyManager()),
     mMle(aThreadNetif.GetMle()),
+    mNetif(aThreadNetif),
     mWhitelist()
 {
     sMac = this;
@@ -611,6 +612,11 @@ void Mac::SentFrame(bool aAcked)
 
         if ((neighbor = mMle.GetNeighbor(destination)) != NULL)
         {
+            if (neighbor->mState == Neighbor::kStateValid && mMle.GetChildId(neighbor->mValid.mRloc16) != 0)
+            {
+                mNetif.SetStateChangedFlags(OT_THREAD_CHILD_REMOVED);
+            }
+
             neighbor->mState = Neighbor::kStateInvalid;
         }
     }
