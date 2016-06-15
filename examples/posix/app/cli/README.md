@@ -85,4 +85,4 @@ Done
 
 You may note that the example above did not include any network parameter configuration, such as the IEEE 802.15.4 PAN ID or the Thread Master Key. OpenThread currently implements default values for network parameters, however, you may use the CLI to change network parameters, other configurations, and perform other operations.
 
-See the [OpenThread CLI Reference README.md](../../src/cli/README.md) to explore more.
+See the [OpenThread CLI Reference README.md](../../../../src/cli/README.md) to explore more.
