@@ -516,6 +516,8 @@ void Mac::TransmitDoneTask(bool aRxPending, ThreadError aError)
             mReceiveTimer.Stop();
         }
 
+    // fall through
+
     case kStateActiveScan:
     case kStateTransmitBeacon:
         SentFrame(aError == kThreadError_None);

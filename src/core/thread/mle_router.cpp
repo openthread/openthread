@@ -95,8 +95,7 @@ int MleRouter::AllocateRouterId(void)
 
     // choose available router id at random
     uint8_t freeBit;
-    // freeBit = otPlatRandomGet() % numAvailable;
-    freeBit = 0;
+    freeBit = otPlatRandomGet() % numAvailable;
 
     // allocate router id
     for (int i = 0; i < kMaxRouterId; i++)
