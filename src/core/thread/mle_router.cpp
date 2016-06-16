@@ -67,6 +67,7 @@ MleRouter::MleRouter(ThreadNetif &aThreadNetif):
     mRouterId = kMaxRouterId;
     mPreviousRouterId = kMaxRouterId;
     mAdvertiseInterval = kAdvertiseIntervalMin;
+    mRouterIdSequenceLastUpdated = 0;
 
     mCoapMessageId = otPlatRandomGet();
 }

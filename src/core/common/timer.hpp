@@ -136,7 +136,13 @@ public:
      * @param[in]  aContext  A pointer to arbitrary context information.
      *
      */
-    Timer(Handler aHandler, void *aContext) { mNext = NULL; mHandler = aHandler; mContext = aContext; }
+    Timer(Handler aHandler, void *aContext) {
+        mHandler = aHandler;
+        mContext = aContext;
+        mT0 = 0;
+        mDt = 0;
+        mNext = NULL;
+    }
 
     /**
      * This method returns the start time in milliseconds for the timer.

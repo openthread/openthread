@@ -294,6 +294,7 @@ public:
     IcmpHandler(DstUnreachHandler aDstUnreachHandler, void *aContext) {
         mDstUnreachHandler = aDstUnreachHandler;
         mContext = aContext;
+        mNext = NULL;
     }
 
 private:
@@ -303,9 +304,9 @@ private:
 
     DstUnreachHandler    mDstUnreachHandler;
     void                *mContext;
-    IcmpHandler        *mNext;
+    IcmpHandler         *mNext;
 
-    static IcmpHandler *sHandlers;
+    static IcmpHandler  *sHandlers;
 };
 
 /**

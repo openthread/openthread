@@ -66,6 +66,7 @@ Mle::Mle(ThreadNetif &aThreadNetif) :
                   ModeTlv::kModeFullNetworkData;
     mParentRequestState = kParentIdle;
     mParentRequestMode = kMleAttachAnyPartition;
+    mParentConnectivity = 0;
     mTimeout = kMaxNeighborAge;
 
     memset(&mLeaderData, 0, sizeof(mLeaderData));
@@ -209,6 +210,7 @@ ThreadError Mle::BecomeChild(otMleAttachFilter aFilter)
 
     mParentRequestState = kParentRequestStart;
     mParentRequestMode = aFilter;
+    mParentConnectivity = 0;
     memset(&mParent, 0, sizeof(mParent));
 
     if (aFilter == kMleAttachAnyPartition)

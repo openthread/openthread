@@ -48,8 +48,11 @@ KeyManager::KeyManager(ThreadNetif &aThreadNetif):
     mNetif(aThreadNetif)
 {
     mPreviousKeyValid = false;
+    mMasterKeyLength = 0;
     mMacFrameCounter = 0;
     mMleFrameCounter = 0;
+    mCurrentKeySequence = 0;
+    mPreviousKeySequence = 0;
 }
 
 const uint8_t *KeyManager::GetMasterKey(uint8_t *aKeyLength) const
