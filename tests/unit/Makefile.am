@@ -48,6 +48,7 @@ if OPENTHREAD_BUILD_TESTS
 # makefile.
 
 AM_CPPFLAGS                                                    = \
+    -std=c++0x							 \
     -I$(top_srcdir)/include                                      \
     -I$(top_srcdir)/src                                          \
     -I$(top_srcdir)/src/core                                     \
@@ -56,7 +57,7 @@ AM_CPPFLAGS                                                    = \
 
 COMMON_LDADD                                                   =  \
     $(top_builddir)/src/core/libopenthread.a                      \
-    $(top_builddir)/src/cli/libopenthread-cli.a \
+    $(top_builddir)/src/cli/libopenthread-cli.a 		  \
     $(top_builddir)/examples/posix/platform/libopenthread-posix.a \
     $(top_builddir)/third_party/mbedtls/libmbedcrypto.a           \
     -lpthread                                                     \
