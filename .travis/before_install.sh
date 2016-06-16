@@ -1,3 +1,4 @@
+#!/bin/sh
 #
 #  Copyright (c) 2016, Nest Labs, Inc.
 #  All rights reserved.
@@ -26,33 +27,44 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-language: cpp
+die() {
+	echo " *** ERROR: " $*
+	exit 1
+}
 
-sudo: required
+set -x
 
-before_install:
-  - .travis/before_install.sh
+cd /tmp || die
 
-script:
-  - .travis/script.sh
+[ $TRAVIS_OS_NAME != linux ] || {    
+    sudo apt-get install python-pexpect || die
 
-matrix:
-  include:
-    - env: BUILD_TARGET="pretty-check"
-      compiler: clang
-      os: linux
-    - env: BUILD_TARGET="posix"
-      compiler: clang
-      os: linux
-    - env: BUILD_TARGET="posix"
-      compiler: clang
-      os: osx
-    - env: BUILD_TARGET="posix"
-      compiler: gcc
-      os: linux
-    - env: BUILD_TARGET="posix"
-      compiler: gcc
-      os: osx
-    - env: BUILD_TARGET="cc2538"
-      compiler: gcc
-      os: linux
+    [ $BUILD_TARGET != cc2538 ] || {
+        sudo apt-get install lib32z1 || die
+        wget https://launchpad.net/gcc-arm-embedded/4.9/4.9-2015-q3-update/+download/gcc-arm-none-eabi-4_9-2015q3-20150921-linux.tar.bz2 || die
+        tar xjf gcc-arm-none-eabi-4_9-2015q3-20150921-linux.tar.bz2 || die
+        export PATH=/tmp/gcc-arm-none-eabi-4_9-2015q3/bin:$PATH || die
+        arm-none-eabi-gcc --version || die
+    }
+}
+
+[ $TRAVIS_OS_NAME != osx ] || {
+    sudo easy_install pexpect || die
+
+    [ $BUILD_TARGET != cc2538 ] || {
+        wget https://launchpad.net/gcc-arm-embedded/4.9/4.9-2015-q3-update/+download/gcc-arm-none-eabi-4_9-2015q3-20150921-mac.tar.bz2 || die
+        tar xjf gcc-arm-none-eabi-4_9-2015q3-20150921-mac.tar.bz2 || die
+        export PATH=/tmp/gcc-arm-none-eabi-4_9-2015q3/bin:$PATH || die
+        arm-none-eabi-gcc --version || die
+    }
+}
+
+[ $BUILD_TARGET != pretty-check ] || {
+    wget https://sourceforge.net/projects/astyle/files/astyle/astyle%202.05.1/astyle_2.05.1_linux.tar.gz/download -O astyle.tar.gz || die
+    tar xzvf astyle.tar.gz || die
+    cd astyle/build/gcc || die
+    LDFLAGS=" " make || die
+    cd ../../..
+    export PATH=/tmp/astyle/build/gcc/bin:$PATH || die
+    astyle --version || die
+}

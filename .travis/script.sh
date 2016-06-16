@@ -1,3 +1,4 @@
+#!/bin/sh
 #
 #  Copyright (c) 2016, Nest Labs, Inc.
 #  All rights reserved.
@@ -26,33 +27,26 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-language: cpp
+die() {
+	echo " *** ERROR: " $*
+	exit 1
+}
 
-sudo: required
+set -x
 
-before_install:
-  - .travis/before_install.sh
+./bootstrap || die
 
-script:
-  - .travis/script.sh
+[ $BUILD_TARGET != pretty-check ] || {
+    export PATH=/tmp/astyle/build/gcc/bin:$PATH || die
+    ./configure || die
+    make pretty || die
+}
 
-matrix:
-  include:
-    - env: BUILD_TARGET="pretty-check"
-      compiler: clang
-      os: linux
-    - env: BUILD_TARGET="posix"
-      compiler: clang
-      os: linux
-    - env: BUILD_TARGET="posix"
-      compiler: clang
-      os: osx
-    - env: BUILD_TARGET="posix"
-      compiler: gcc
-      os: linux
-    - env: BUILD_TARGET="posix"
-      compiler: gcc
-      os: osx
-    - env: BUILD_TARGET="cc2538"
-      compiler: gcc
-      os: linux
+[ $BUILD_TARGET != posix ] || {
+    make -f Makefile-Standalone distcheck || die
+}
+
+[ $BUILD_TARGET != cc2538 ] || {
+    export PATH=/tmp/gcc-arm-none-eabi-4_9-2015q3/bin:$PATH || die
+    make -f examples/cc2538/Makefile-cc2538 || die
+}
