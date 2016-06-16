@@ -221,7 +221,9 @@ enum
     OT_NET_KEY_SEQUENCE     = 1 << 5,  ///< Thread Key Sequence changed
 
     OT_THREAD_CHILD_ADDED   = 1 << 6,  ///< Child was added
-    OT_THREAD_CHILD_REMOVED = 1 << 7   ///< Child was removed
+    OT_THREAD_CHILD_REMOVED = 1 << 7,  ///< Child was removed
+
+    OT_IP6_ML_ADDR_CHANGED  = 1 << 8,  ///< The mesh-local address has changed
 };
 
 /**

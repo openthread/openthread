@@ -101,18 +101,15 @@ Mle::Mle(ThreadNetif &aThreadNetif) :
     memcpy(mMeshLocal64.GetAddress().m8 + 1, mMac.GetExtendedPanId(), 5);
     mMeshLocal64.GetAddress().m8[6] = 0x00;
     mMeshLocal64.GetAddress().m8[7] = 0x00;
-    SetMeshLocalPrefix(mMeshLocal64.GetAddress().m8);
-
     // mesh-local 64
     for (int i = 8; i < 16; i++)
     {
         mMeshLocal64.GetAddress().m8[i] = otPlatRandomGet();
     }
-
     mMeshLocal64.mPrefixLength = 64;
     mMeshLocal64.mPreferredLifetime = 0xffffffff;
     mMeshLocal64.mValidLifetime = 0xffffffff;
-    mNetif.AddUnicastAddress(mMeshLocal64);
+    SetMeshLocalPrefix(mMeshLocal64.GetAddress().m8); // Also calls AddUnicastAddress
 
     // mesh-local 16
     mMeshLocal16.GetAddress().m16[4] = HostSwap16(0x0000);
@@ -348,6 +345,10 @@ const uint8_t *Mle::GetMeshLocalPrefix(void) const
 
 ThreadError Mle::SetMeshLocalPrefix(const uint8_t *aMeshLocalPrefix)
 {
+    // We must remove the old address before adding the new one.
+    mNetif.RemoveUnicastAddress(mMeshLocal64);
+    mNetif.RemoveUnicastAddress(mMeshLocal16);
+
     memcpy(mMeshLocal64.GetAddress().m8, aMeshLocalPrefix, 8);
     memcpy(mMeshLocal16.GetAddress().m8, mMeshLocal64.GetAddress().m8, 8);
 
@@ -356,6 +357,12 @@ ThreadError Mle::SetMeshLocalPrefix(const uint8_t *aMeshLocalPrefix)
 
     mRealmLocalAllThreadNodes.GetAddress().m8[3] = 64;
     memcpy(mRealmLocalAllThreadNodes.GetAddress().m8 + 4, mMeshLocal64.GetAddress().m8, 8);
+
+    // Add the address back into the table.
+    mNetif.AddUnicastAddress(mMeshLocal64);
+
+    // Changing the prefix also causes the mesh local address to be different.
+    mNetif.SetStateChangedFlags(OT_IP6_ML_ADDR_CHANGED);
 
     return kThreadError_None;
 }
@@ -392,6 +399,9 @@ uint16_t Mle::GetRloc16(void) const
 
 ThreadError Mle::SetRloc16(uint16_t aRloc16)
 {
+    mNetif.RemoveUnicastAddress(mLinkLocal16);
+    mNetif.RemoveUnicastAddress(mMeshLocal16);
+
     if (aRloc16 != Mac::kShortAddrInvalid)
     {
         // link-local 16
@@ -401,11 +411,6 @@ ThreadError Mle::SetRloc16(uint16_t aRloc16)
         // mesh-local 16
         mMeshLocal16.GetAddress().m16[7] = HostSwap16(aRloc16);
         mNetif.AddUnicastAddress(mMeshLocal16);
-    }
-    else
-    {
-        mNetif.RemoveUnicastAddress(mLinkLocal16);
-        mNetif.RemoveUnicastAddress(mMeshLocal16);
     }
 
     mMac.SetShortAddress(aRloc16);
@@ -741,6 +746,7 @@ void Mle::HandleNetifStateChanged(uint32_t aFlags)
         }
 
         mNetif.AddUnicastAddress(mMeshLocal64);
+        mNetif.SetStateChangedFlags(OT_IP6_ML_ADDR_CHANGED);
     }
 
     switch (mDeviceState)
