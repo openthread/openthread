@@ -369,7 +369,7 @@ public:
     /**
      * This method sets the Response value.
      *
-     * @param[in]  aResponse  A pointer to the Respones value.
+     * @param[in]  aResponse  A pointer to the Response value.
      *
      */
     void SetResponse(const uint8_t *aResponse) { memcpy(mResponse, aResponse, GetLength()); }

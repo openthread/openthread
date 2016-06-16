@@ -338,7 +338,7 @@ public:
     virtual ThreadError SendMessage(Message &aMessage) = 0;
 
     /**
-     * This virtual method returns a NULL-termianted string that names the network interface.
+     * This virtual method returns a NULL-terminated string that names the network interface.
      *
      * @returns A NULL-terminated string that names the network interface.
      *
@@ -359,7 +359,7 @@ public:
      * This virtual method performs a source-destination route lookup.
      *
      * @param[in]   aSource       A reference to the IPv6 source address.
-     * @param[in]   aDestination  A reference to the IPv6 destinationa ddress.
+     * @param[in]   aDestination  A reference to the IPv6 destination address.
      * @param[out]  aPrefixMatch  The longest prefix match result.
      *
      * @retval kThreadError_None     Successfully found a route.
@@ -398,7 +398,7 @@ public:
     static Netif *GetNetifByName(char *aName);
 
     /**
-     * This static method indicates whether or not @p aAddress is assigned to a network interfacfe.
+     * This static method indicates whether or not @p aAddress is assigned to a network interface.
      *
      * @param[in]  aAddress  A reference to the IPv6 address.
      *
@@ -423,7 +423,7 @@ public:
      *
      * @param[in]  aAddress  A reference to the IPv6 address.
      *
-     * @returns The network interafce identifier for the on-link interface or -1 if none is found.
+     * @returns The network interface identifier for the on-link interface or -1 if none is found.
      *
      */
     static int GetOnLinkNetif(const Address &aAddress);

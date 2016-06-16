@@ -236,7 +236,7 @@ public:
      * @param[in]  aOption  The CoAP Option.
      *
      * @retval kThreadError_None         Successfully appended the option.
-     * @retval kThreadError_InvalidArgs  The option type is not equal or gerater than the last option type.
+     * @retval kThreadError_InvalidArgs  The option type is not equal or greater than the last option type.
      *
      */
     ThreadError AppendOption(const Option &aOption);
@@ -247,7 +247,7 @@ public:
      * @param[in]  aUriPath  A pointer to a NULL-terminated string.
      *
      * @retval kThreadError_None         Successfully appended the option.
-     * @retval kThreadError_InvalidArgs  The option type is not equal or gerater than the last option type.
+     * @retval kThreadError_InvalidArgs  The option type is not equal or greater than the last option type.
      *
      */
     ThreadError AppendUriPathOptions(const char *aUriPath);
@@ -267,7 +267,7 @@ public:
      * @param[in]  aType  The Media Type value.
      *
      * @retval kThreadError_None         Successfully appended the option.
-     * @retval kThreadError_InvalidArgs  The option type is not equal or gerater than the last option type.
+     * @retval kThreadError_InvalidArgs  The option type is not equal or greater than the last option type.
      *
      */
     ThreadError AppendContentFormatOption(MediaType aType);

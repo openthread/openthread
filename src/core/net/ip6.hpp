@@ -508,9 +508,9 @@ public:
      *
      * @param[in]  aMessage          A reference to the message.
      * @param[in]  aNetif            A pointer to the network interface that received the message.
-     * @param[in]  aInterfaceId      The interface identier of the network interface that received the message.
+     * @param[in]  aInterfaceId      The interface identifier of the network interface that received the message.
      * @param[in]  aLinkMessageInfo  A pointer to link-specific message information.
-     * @param[in]  aFromNcpHost      TRUE if the message was submited by the NCP host, FALSE otherwise.
+     * @param[in]  aFromNcpHost      TRUE if the message was submitted by the NCP host, FALSE otherwise.
      *
      * @retval kThreadError_None   Successfully processed the message.
      * @retval kThreadError_Drop   Message processing failed and the message should be dropped.
@@ -562,14 +562,14 @@ public:
      * @param[in]  aLength       The IPv6 Payload Length value.
      * @param[in]  aProto        The IPv6 Next Header value.
      *
-     * @returns The psuedoheader checksum.
+     * @returns The pseudoheader checksum.
      *
      */
     static uint16_t ComputePseudoheaderChecksum(const Address &aSource, const Address &aDestination,
                                                 uint16_t aLength, IpProto aProto);
 
     /**
-     * This function registers a callback to provide receivd raw IPv6 datagrams.
+     * This function registers a callback to provide received raw IPv6 datagrams.
      *
      * @param[in]  aCallback  A pointer to a function that is called when an IPv6 datagram is received or NULL to disable
      *                        the callback.

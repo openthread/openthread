@@ -229,7 +229,7 @@ protected:
      *
      * @param[in]  a        A pointer to the first IPv6 Prefix.
      * @param[in]  b        A pointer to the second IPv6 prefix.
-     * @param[in]  aLength  The aximum length in bits to compare.
+     * @param[in]  aLength  The maximum length in bits to compare.
      *
      * @returns The number of matching bits.
      *

@@ -71,7 +71,7 @@ public:
      */
     enum State
     {
-        kStateInvalid,                   ///< Neighbor link is invaild
+        kStateInvalid,                   ///< Neighbor link is invalid
         kStateParentRequest,             ///< Received an MLE Parent Request message
         kStateChildIdRequest,            ///< Received an MLE Child ID Request message
         kStateLinkRequest,               ///< Sent a MLE Link Request message
@@ -81,7 +81,7 @@ public:
     uint8_t mMode : 4;                   ///< The MLE device mode
     bool    mPreviousKey : 1;            ///< Indicates whether or not the neighbor is still using a previous key
     bool    mDataRequest : 1;            ///< Indicates whether or not a Data Poll was received
-    int8_t  mRssi;                       ///< Received Signal Strengh Indicator
+    int8_t  mRssi;                       ///< Received Signal Strength Indicator
 };
 
 /**

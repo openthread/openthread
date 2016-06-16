@@ -508,7 +508,7 @@ public:
     const Ip6::Address *GetMeshLocal64(void) const;
 
     /**
-     * This method notifes MLE that the Network Data has changed.
+     * This method notifies MLE that the Network Data has changed.
      *
      */
     void HandleNetworkDataUpdate(void);
@@ -535,7 +535,7 @@ public:
     /**
      * This method returns the most recently received Leader Data TLV.
      *
-     * @returns  A reference to the most recently receievd Leader Data TLV.
+     * @returns  A reference to the most recently received Leader Data TLV.
      *
      */
     const LeaderDataTlv &GetLeaderDataTlv(void);
@@ -891,7 +891,7 @@ protected:
     /**
      * This method sets the Leader's Partition ID, Weighting, and Router ID values.
      *
-     * @param[in]  aPartitionId     The Leader's Parititon ID value.
+     * @param[in]  aPartitionId     The Leader's Partition ID value.
      * @param[in]  aWeighting       The Leader's Weighting value.
      * @param[in]  aLeaderRouterId  The Leader's Router ID value.
      *

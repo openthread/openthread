@@ -80,7 +80,7 @@ struct MessageListEntry
 {
     struct MessageList *mList;  ///< A pointer to the MessageList structure for the list.
     Message            *mNext;  ///< A pointer to the next Message in the list.
-    Message            *mPrev;  ///< A pointer to the pprevious Message in the list.
+    Message            *mPrev;  ///< A pointer to the previous Message in the list.
 };
 
 /**
@@ -101,7 +101,7 @@ struct MessageInfo
     enum
     {
         kListAll = 0,                    ///< Identifies the all messages list.
-        kListInterface = 1,              ///< Identifies the per-inteface message list.
+        kListInterface = 1,              ///< Identifies the per-interface message list.
     };
     MessageListEntry mList[2];           ///< Message lists.
     uint16_t         mReserved;          ///< Number of header bytes reserved for the message.
@@ -259,7 +259,7 @@ public:
      * @param[in]  aOffset  The number of bytes to move the current offset, which may be positive or negative.
      *
      * @retval kThreadError_None         Successfully moved the byte offset.
-     * @retval kThreadError_InvalidArgs  The requestd byte offset is not within the existing message.
+     * @retval kThreadError_InvalidArgs  The requested byte offset is not within the existing message.
      *
      */
     ThreadError SetOffset(uint16_t aOffset);
@@ -487,7 +487,7 @@ private:
      *
      * @param[in]  aList  The message list.
      *
-     * @returns A reference to a message lis.
+     * @returns A reference to a message list.
      *
      */
     MessageListEntry &GetMessageList(uint8_t aList) { return mInfo.mList[aList]; }
@@ -497,7 +497,7 @@ private:
      *
      * @param[in]  aList  The message list.
      *
-     * @returns A reference to a message lis.
+     * @returns A reference to a message list.
      *
      */
     const MessageListEntry &GetMessageList(uint8_t aList) const { return mInfo.mList[aList]; }

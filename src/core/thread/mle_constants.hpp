@@ -67,7 +67,7 @@ enum
 };
 
 /**
- * Routing Protocol Contstants
+ * Routing Protocol Constants
  *
  */
 enum

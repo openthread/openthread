@@ -128,7 +128,7 @@ public:
      * @param[in]  aResource  A reference to the resource.
      *
      * @retval kThreadError_None  Successfully added @p aResource.
-     * @retval kThreadError_Busy  The @p aResource was alerady added.
+     * @retval kThreadError_Busy  The @p aResource was already added.
      *
      */
     ThreadError AddResource(Resource &aResource);

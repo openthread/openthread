@@ -192,7 +192,7 @@ public:
     static uint32_t GetNow(void) { return otPlatAlarmGetNow(); }
 
     /**
-     * This static method returns the number of milliseonds given seconds.
+     * This static method returns the number of milliseconds given seconds.
      *
      * @returns The number of milliseconds.
      *

@@ -211,7 +211,7 @@ bool otActiveScanInProgress(void);
  * @defgroup config-general  General
  *
  * @brief
- *   This module includes functions that manage configuration parameters for the Thread Child, Router, and Leader rols.
+ *   This module includes functions that manage configuration parameters for the Thread Child, Router, and Leader roles.
  *
  * @{
  *
@@ -433,7 +433,7 @@ otShortAddress otGetShortAddress(void);
 /**
  * Get the list of IPv6 addresses assigned to the Thread interface.
  *
- * @returns A pointer to the first Network Inteface Address.
+ * @returns A pointer to the first Network Interface Address.
  */
 const otNetifAddress *otGetUnicastAddresses(void);
 
@@ -1191,8 +1191,8 @@ otMessage otNewUdpMessage(void);
  * @param[in]  aCallback  A pointer to the application callback function.
  * @param[in]  aContext   A pointer to application-specific context.
  *
- * @retval kThreadErrorNone  Successfully openned the socket.
- * @retval kThreadErrorBusy  Socket is already openned.
+ * @retval kThreadErrorNone  Successfully opened the socket.
+ * @retval kThreadErrorBusy  Socket is already opened.
  *
  * @sa otNewUdpMessage
  * @sa otCloseUdpSocket

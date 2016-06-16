@@ -75,7 +75,7 @@ enum
     kMaxFrameAttempts     = kMaxFrameRetries + 1,  ///< Number of transmission attempts.
 
     kAckTimeout           = 16,                    ///< Timeout for waiting on an ACK (milliseconds).
-    kDataPollTimeout      = 100,                   ///< Timeout for receivint Data Frame (milliseconds).
+    kDataPollTimeout      = 100,                   ///< Timeout for receiving Data Frame (milliseconds).
     kNonceSize            = 13,                    ///< Size of IEEE 802.15.4 Nonce (bytes).
 
     kScanChannelsAll      = 0xffff,                ///< All channels.
@@ -96,7 +96,7 @@ public:
      *
      * @param[in]  aContext  A pointer to arbitrary context information.
      * @param[in]  aFrame    A reference to the MAC frame.
-     * @param[in]  aError    Any errors that occured during reception.
+     * @param[in]  aError    Any errors that occurred during reception.
      *
      */
     typedef void (*ReceiveFrameHandler)(void *aContext, Frame &aFrame, ThreadError aError);

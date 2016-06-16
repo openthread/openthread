@@ -82,7 +82,7 @@ class ExtAddress: public otExtAddress
 {
 public:
     /**
-     * This method converts an IPv6 Interface Identifer to an IEEE 802.15.4 Extended Address.
+     * This method converts an IPv6 Interface Identifier to an IEEE 802.15.4 Extended Address.
      *
      * @param[in]  aIpAddress  A reference to the IPv6 address.
      *
@@ -663,7 +663,7 @@ public:
     }
 
     /**
-     * This method returns the Protocol ID value.xs
+     * This method returns the Protocol ID value.
      *
      * @returns the Protocol ID value.
      *

@@ -28,7 +28,7 @@
 
 /**
  * @file
- *   This file includes definitions for manipulating Thread Network Data maanged by the Thread Leader.
+ *   This file includes definitions for manipulating Thread Network Data managed by the Thread Leader.
  */
 
 #ifndef NETWORK_DATA_LEADER_HPP_
@@ -52,7 +52,7 @@ namespace NetworkData {
  * @addtogroup core-netdata-leader
  *
  * @brief
- *   This module includes definitions for manipulating Thread Network Data maanged by the Thread Leader.
+ *   This module includes definitions for manipulating Thread Network Data managed by the Thread Leader.
  *
  * @{
  *
