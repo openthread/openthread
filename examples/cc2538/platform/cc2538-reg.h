@@ -37,7 +37,9 @@
 
 #include <stdint.h>
 
-#define HWREG(x)                              (*((volatile uint32_t *)(x)))
+typedef volatile uint32_t cc2538_reg_t;
+
+#define HWREG(x)                              (*((cc2538_reg_t*)(x)))
 
 #define NVIC_ST_CTRL                          0xE000E010  // SysTick Control and Status
 #define NVIC_ST_RELOAD                        0xE000E014  // SysTick Reload Value Register
@@ -98,6 +100,11 @@
 #define SYS_CTRL_SYSDIV_32MHZ                 0x00000000  // Sys_div for sysclk 32MHz  
 #define SYS_CTRL_CLOCK_CTRL_AMP_DET           0x00200000
 
+#define SYS_CTRL_RCGCI2C                      0x400D2038  // I2C clocks - active mode
+#define SYS_CTRL_SCGCI2C                      0x400D203C  // I2C clocks - sleep mode
+#define SYS_CTRL_DCGCI2C                      0x400D2040  // I2C clocks - PM0
+#define SYS_CTRL_SRI2C                        0x400D2044  // I2C clocks - reset control
+
 #define SYS_CTRL_RCGCUART                     0x400D2028
 #define SYS_CTRL_SCGCUART                     0x400D202C
 #define SYS_CTRL_DCGCUART                     0x400D2030
@@ -123,11 +130,16 @@
 
 #define IOC_PA0_OVER                          0x400D4080
 #define IOC_PA1_OVER                          0x400D4084
+#define IOC_I2CMSSDA                          0x400D412C  // I2C SDA
+#define IOC_I2CMSSCL                          0x400D4130  // I2C SCL
 
 #define IOC_MUX_OUT_SEL_UART0_TXD             0x00000000
 
-#define IOC_OVERRIDE_OE                       0x00000008  // PAD Config Override Output Enable
 #define IOC_OVERRIDE_DIS                      0x00000000  // PAD Config Override Disabled
+#define IOC_OVERRIDE_ANA                      0x00000001
+#define IOC_OVERRIDE_PDE                      0x00000002
+#define IOC_OVERRIDE_PUE                      0x00000004
+#define IOC_OVERRIDE_OE                       0x00000008  // PAD Config Override Output Enable
 
 #define UART0_BASE                            0x4000C000
 #define GPIO_A_BASE                           0x400D9000  // GPIO

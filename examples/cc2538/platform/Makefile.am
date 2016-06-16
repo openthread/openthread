@@ -43,12 +43,15 @@ libopenthread_cc2538_a_SOURCES            = \
     radio.c                                 \
     random.c                                \
     serial.c                                \
+    gpio.c                                  \
     startup-gcc.c                           \
     $(NULL)
 
 noinst_HEADERS                            = \
     cc2538-reg.h                            \
     platform.h                              \
+    leds.h                                  \
+    gpio.h                                  \
     $(NULL)
 
 include $(abs_top_nlbuild_autotools_dir)/automake/post.am
