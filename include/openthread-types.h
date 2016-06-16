@@ -172,7 +172,7 @@ typedef struct otActiveScanResult
  * @defgroup config-general  General
  *
  * @brief
- *   This module includes functions that manage configuration parameters for the Thread Child, Router, and Leader rols.
+ *   This module includes functions that manage configuration parameters for the Thread Child, Router, and Leader roles.
  *
  * @{
  *
@@ -414,10 +414,10 @@ typedef struct otMacCounters
     uint32_t mRxWhitelistFiltered;    ///< The number of received packets filtered by whitelist.
     uint32_t mRxDestAddrFiltered;     ///< The number of received packets filtered by destination check.
     uint32_t mRxErrNoFrame;           ///< The number of received packets that do not contain contents.
-    uint32_t mRxErrUnknownNeighbor;   ///< The number of recevied packets from unknown neighbor.
+    uint32_t mRxErrUnknownNeighbor;   ///< The number of received packets from unknown neighbor.
     uint32_t mRxErrInvalidSrcAddr;    ///< The number of received packets whose source address is invalid.
-    uint32_t mRxErrSec;               ///< The number of recevied packets with security error.
-    uint32_t mRxErrFcs;               ///< The number of recevied packets with FCS error.
+    uint32_t mRxErrSec;               ///< The number of received packets with security error.
+    uint32_t mRxErrFcs;               ///< The number of received packets with FCS error.
     uint32_t mRxErrOther;             ///< The number of received packets with other error.
 } otMacCounters;
 

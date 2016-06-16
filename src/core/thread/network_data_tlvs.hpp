@@ -124,7 +124,7 @@ public:
     /**
      * This method returns a pointer to the next Network Data TLV.
      *
-     * @returns A pointer to the next Newtork Data TLV.
+     * @returns A pointer to the next Network Data TLV.
      *
      */
     NetworkDataTlv *GetNext() {

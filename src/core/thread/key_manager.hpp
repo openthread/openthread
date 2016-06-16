@@ -120,7 +120,7 @@ public:
     /**
      * This method indicates whether the previous key is valid.
      *
-     * @retval TRUE   If the previous key is vaild.
+     * @retval TRUE   If the previous key is valid.
      * @retval FALSE  If the previous key is not valid.
      *
      */

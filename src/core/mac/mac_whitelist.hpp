@@ -165,7 +165,7 @@ public:
      * @param[out]  aRssi   A reference to the RSSI variable.
      *
      * @retval kThreadError_None        A constant RSSI is set and written to @p aRssi.
-     * @retval kThreadError_InvalidArg  A constnat RSSI was not set.
+     * @retval kThreadError_InvalidArg  A constant RSSI was not set.
      *
      */
     ThreadError GetConstantRssi(Entry &aEntry, int8_t &aRssi) const;

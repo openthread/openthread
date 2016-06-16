@@ -82,7 +82,7 @@ public:
      * This method processes the header.
      *
      * @param[in]  aHeader        A pointer to the header.
-     * @param[in]  aHeaderLength  Lenth of header in bytes.
+     * @param[in]  aHeaderLength  Length of header in bytes.
      *
      */
     void Header(const void *aHeader, uint32_t aHeaderLength);
