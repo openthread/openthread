@@ -443,6 +443,7 @@ ThreadError MeshForwarder::UpdateIp6Route(Message &aMessage)
 {
     ThreadError error = kThreadError_None;
     Ip6::Header ip6Header;
+    uint16_t rloc16;
     Neighbor *neighbor;
 
     mAddMeshHeader = false;
@@ -462,7 +463,9 @@ ThreadError MeshForwarder::UpdateIp6Route(Message &aMessage)
             // FFD - peform full routing
             if (mMle.IsRoutingLocator(ip6Header.GetDestination()))
             {
-                mMeshDest = HostSwap16(ip6Header.GetDestination().m16[7]);
+                rloc16 = HostSwap16(ip6Header.GetDestination().m16[7]);
+                VerifyOrExit(mMle.GetRouterId(rloc16) < Mle::kMaxRouterId, error = kThreadError_Drop);
+                mMeshDest = rloc16;
             }
             else if ((neighbor = mMle.GetNeighbor(ip6Header.GetDestination())) != NULL)
             {
