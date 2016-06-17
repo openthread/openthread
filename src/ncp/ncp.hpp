@@ -65,7 +65,6 @@ private:
     uint8_t mSendFrame[1500];
     uint8_t mReceiveFrame[1500];
     uint8_t *mSendFrameIter;
-    Message *mSendMessage;
 };
 
 }  // namespace Thread
