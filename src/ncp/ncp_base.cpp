@@ -386,7 +386,15 @@ void NcpBase::UpdateChangedProps(void *context)
 void NcpBase::UpdateChangedProps()
 {
     if (!mSending) {
-        if ((mChangedFlags & OT_NET_STATE) != 0)
+        if ((mChangedFlags & OT_IP6_ML_ADDR_CHANGED) != 0)
+        {
+            mChangedFlags &= ~OT_IP6_ML_ADDR_CHANGED;
+            HandleCommandPropertyGet(
+                SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0,
+                SPINEL_PROP_IPV6_ML_ADDR
+            );
+        }
+        else if ((mChangedFlags & OT_NET_STATE) != 0)
         {
             mChangedFlags &= ~OT_NET_STATE;
             HandleCommandPropertyGet(
