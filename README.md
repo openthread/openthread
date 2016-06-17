@@ -113,7 +113,7 @@ See the [`CONTRIBUTING.md`](CONTRIBUTING.md) file for more information.
 OpenThread is released under the [BSD 3-Clause license](LICENSE). See
 the [`LICENSE`](LICENSE) file for more information.
 
-Please use only the OpenThread name and marks when accurately
+Please only use the OpenThread name and marks when accurately
 referencing this software distribution. Do not use the marks in
 a way that suggests you are endorsed by or otherwise affiliated with
 Nest, Google, or The Thread Group.
