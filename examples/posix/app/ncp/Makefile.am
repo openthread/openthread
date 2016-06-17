@@ -28,18 +28,16 @@
 
 include $(abs_top_nlbuild_autotools_dir)/automake/pre.am
 
-bin_PROGRAMS = ncp
-
-ncp_CPPFLAGS                                                   = \
-    -I$(top_srcdir)/include                                      \
-    -I$(top_srcdir)/src                                          \
-    -I$(top_srcdir)/src/core                                     \
-    -I$(top_srcdir)/examples/posix/platform                      \
-    -I$(top_srcdir)/third_party                                  \
-    $(OPENTHREAD_TARGET_DEFINES)                                 \
+bin_PROGRAMS                                                    = \
+    ot-ncp                                                        \
     $(NULL)
 
-ncp_LDADD                                                       = \
+ot_ncp_CPPFLAGS                                                 = \
+    -I$(top_srcdir)/include                                       \
+    -I$(top_srcdir)/examples/posix/platform                       \
+    $(NULL)
+
+ot_ncp_LDADD                                                    = \
     $(top_builddir)/src/ncp/libopenthread-ncp.a                   \
     $(top_builddir)/src/core/libopenthread.a                      \
     $(top_builddir)/examples/posix/platform/libopenthread-posix.a \
@@ -47,7 +45,7 @@ ncp_LDADD                                                       = \
     -lstdc++                                                      \
     $(NULL)
 
-ncp_SOURCES                                                     = \
+ot_ncp_SOURCES                                                  = \
     main.c                                                        \
     $(NULL)
 

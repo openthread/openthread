@@ -28,26 +28,25 @@
 
 include $(abs_top_nlbuild_autotools_dir)/automake/pre.am
 
-bin_PROGRAMS = soc
-
-soc_CPPFLAGS                                                   = \
-    -I$(top_srcdir)/include                                      \
-    -I$(top_srcdir)/src                                          \
-    -I$(top_srcdir)/src/core                                     \
-    -I$(top_srcdir)/examples/posix/platform                      \
-    $(OPENTHREAD_TARGET_DEFINES)                                 \
+bin_PROGRAMS                                                    = \
+    ot-cli                                                        \
     $(NULL)
 
-soc_LDADD                                                      =  \
+ot_cli_CPPFLAGS                                                 = \
+    -I$(top_srcdir)/include                                       \
+    -I$(top_srcdir)/examples/posix/platform                       \
+    $(NULL)
+
+ot_cli_LDADD                                                   =  \
     $(top_builddir)/src/core/libopenthread.a                      \
     $(top_builddir)/src/cli/libopenthread-cli.a                   \
     $(top_builddir)/examples/posix/platform/libopenthread-posix.a \
     $(top_builddir)/third_party/mbedtls/libmbedcrypto.a           \
-    -lstdc++                                                         \
+    -lstdc++                                                      \
     $(NULL)
 
-soc_SOURCES                                                    = \
-    main.c                                                       \
+ot_cli_SOURCES                                                  = \
+    main.c                                                        \
     $(NULL)
 
 include $(abs_top_nlbuild_autotools_dir)/automake/post.am

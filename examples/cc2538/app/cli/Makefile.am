@@ -28,27 +28,27 @@
 
 include $(abs_top_nlbuild_autotools_dir)/automake/pre.am
 
-bin_PROGRAMS = soc
+bin_PROGRAMS                                                      = \
+    ot-cli                                                          \
+    $(NULL)
 
-soc_CPPFLAGS                                                      = \
+ot_cli_CPPFLAGS                                                   = \
     -I$(top_srcdir)/include                                         \
-    -I$(top_srcdir)/src                                             \
-    -I$(top_srcdir)/src/core                                        \
     -I$(top_srcdir)/examples/cc2538/platform                        \
     $(NULL)
 
-soc_LDADD                                                         = \
+ot_cli_LDADD                                                      = \
     $(top_builddir)/src/core/libopenthread.a                        \
     $(top_builddir)/src/cli/libopenthread-cli.a                     \
     $(top_builddir)/examples/cc2538/platform/libopenthread-cc2538.a \
     $(top_builddir)/third_party/mbedtls/libmbedcrypto.a             \
     $(NULL)
 
-soc_LDFLAGS                                                       = \
+ot_cli_LDFLAGS                                                    = \
     -T $(top_srcdir)/examples/cc2538/platform/cc2538.ld             \
     $(NULL)
 
-soc_SOURCES                                                       = \
+ot_cli_SOURCES                                                    = \
     main.c                                                          \
     $(NULL)
 
