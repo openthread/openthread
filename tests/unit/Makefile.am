@@ -35,6 +35,7 @@ include $(abs_top_nlbuild_autotools_dir)/automake/pre.am
 noinst_HEADERS                                                 = \
     test_util.h                                                  \
     test_util.hpp                                                \
+    test_vector.h                                                \
     $(NULL)
 
 #
@@ -48,7 +49,6 @@ if OPENTHREAD_BUILD_TESTS
 # makefile.
 
 AM_CPPFLAGS                                                    = \
-    -std=c++0x							 \
     -I$(top_srcdir)/include                                      \
     -I$(top_srcdir)/src                                          \
     -I$(top_srcdir)/src/core                                     \
@@ -97,7 +97,7 @@ test_hmac_sha256_LDADD       = $(COMMON_LDADD)
 test_hmac_sha256_SOURCES     = test_hmac_sha256.cpp
 
 test_lowpan_LDADD            = $(COMMON_LDADD)
-test_lowpan_SOURCES          = test_lowpan.cpp test_util.cpp
+test_lowpan_SOURCES          = test_lowpan.cpp test_util.cpp test_vector.c
 
 test_mac_frame_LDADD         = $(COMMON_LDADD)
 test_mac_frame_SOURCES       = test_mac_frame.cpp
