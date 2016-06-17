@@ -33,7 +33,7 @@ OpenThread test scripts use the CLI to execute test cases.
 * [stop](#stop)
 * [whitelist](#whitelist)
 
-## OpenThread Dommand Details
+## OpenThread Command Details
 
 ### channel
 
@@ -272,7 +272,7 @@ Get the Thread Network Name.
 
 ```bash
 > networkname
-Thread
+OpenThread
 Done
 ```
 
@@ -281,7 +281,7 @@ Done
 Set the Thread Network Name.  
 
 ```bash
-> networkname Thread
+> networkname OpenThread
 Done
 ```
 
