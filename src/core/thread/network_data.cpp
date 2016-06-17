@@ -149,7 +149,12 @@ void NetworkData::RemoveTemporaryData(uint8_t *aData, uint8_t &aDataLength, Pref
             case NetworkDataTlv::kTypeBorderRouter:
             {
                 borderRouter = FindBorderRouter(aPrefix);
-                context = FindContext(aPrefix);
+
+                if ((context = FindContext(aPrefix)) == NULL)
+                {
+                    break;
+                }
+
                 contextId = context->GetContextId();
 
                 // replace p_border_router_16

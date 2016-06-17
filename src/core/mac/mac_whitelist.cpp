@@ -87,7 +87,7 @@ Whitelist::Entry *Whitelist::Add(const ExtAddress &address)
             continue;
         }
 
-        memcpy(&mWhitelist[i], &address, sizeof(mWhitelist[i]));
+        memcpy(&mWhitelist[i].mExtAddress, &address, sizeof(mWhitelist[i].mExtAddress));
         mWhitelist[i].mValid = true;
         mWhitelist[i].mConstantRssi = false;
         ExitNow(rval = &mWhitelist[i]);

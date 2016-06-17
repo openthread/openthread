@@ -735,8 +735,9 @@ public:
      *
      */
     void SetNetworkName(const char *aNetworkName) {
+        int length = strnlen(aNetworkName, sizeof(mNetworkName));
         memset(mNetworkName, 0, sizeof(mNetworkName));
-        strncpy(mNetworkName, aNetworkName, sizeof(mNetworkName));
+        memcpy(mNetworkName, aNetworkName, length);
     }
 
     /**

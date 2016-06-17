@@ -278,7 +278,7 @@ public:
      *
      */
     Command GetCommand(void) const {
-        const uint8_t *command = mKeyIdentifier + (IsKeyIdMode1() ? 1 : 5);
+        const uint8_t *command = IsKeyIdMode1() ? mKeyIdentifier + 1 : &mCommand;
         return static_cast<Command>(*command);
     }
 
@@ -289,7 +289,7 @@ public:
      *
      */
     void SetCommand(Command aCommand) {
-        uint8_t *commandField = mKeyIdentifier + (IsKeyIdMode1() ? 1 : 5);
+        uint8_t *commandField = IsKeyIdMode1() ? mKeyIdentifier + 1 : &mCommand;
         *commandField = static_cast<uint8_t>(aCommand);
     }
 
