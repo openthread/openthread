@@ -148,12 +148,6 @@ void Ncp::SendDoneTask(void)
 {
     mSending = false;
 
-    if (mSendMessage)
-    {
-        Message::Free(*mSendMessage);
-        mSendMessage = NULL;
-    }
-
     super_t::HandleSendDone();
 }
 
