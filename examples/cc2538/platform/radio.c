@@ -239,6 +239,7 @@ ThreadError otPlatRadioReceive(uint8_t aChannel)
     sState = kStateListen;
 
     setChannel(aChannel);
+    sReceiveFrame.mChannel = aChannel;
     enableReceiver();
 
 exit:
