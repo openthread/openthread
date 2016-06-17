@@ -41,6 +41,9 @@ matrix:
     - env: BUILD_TARGET="pretty-check"
       compiler: clang
       os: linux
+    - env: BUILD_TARGET="scan-build"
+      compiler: clang
+      os: linux
     - env: BUILD_TARGET="posix"
       compiler: clang
       os: linux
