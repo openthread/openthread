@@ -4,9 +4,9 @@
 ---
 
 OpenThread is an open-source implementation of the [Thread][thread]
-networking protocol. With OpenThread, Nest is making the technology
-used in Nest products more broadly available to accelerate the
-development of products for the connected home.
+networking protocol. Nest has released OpenThread to make the technology
+used in Nest products more broadly available to developers to accelerate 
+the development of products for the connected home.
 
 The Thread specification defines an IPv6-based reliable, secure and
 low-power wireless device-to-device communication protocol for home
@@ -22,27 +22,27 @@ applications. More information about Thread can be found on
 
 ## Features ##
 
- *  Highly portable: OS and platform agnostic, with a radio
+ *  Highly portable: OS and platform agnostic with a radio
     abstraction layer
- *  Implements the End Device, Router, Leader & Border Router roles
+ *  Implements the End Device, Router, Leader and Border Router roles
  *  Small memory footprint
 
-OpenThread implements all Thread networking layers, including IPv6,
+OpenThread implements all Thread networking layers including IPv6,
 6LoWPAN, IEEE 802.15.4 with MAC security, Mesh Link Establishment, and
 Mesh Routing.
 
 
-# Who is behind OpenThread #
+# Who is supporting OpenThread #
 
 ![OpenThread Contributor Logos](doc/images/openthread_contrib.png)
 
 Nest, along with ARM, Atmel, a subsidiary of Microchip Technology,
-Dialog Semiconductor, Qualcomm Technologies, Inc., a subsidiary of
-Qualcomm Incorporated and Texas Instruments Incorporated are
+Dialog Semiconductor, Qualcomm Technologies, Inc. (a subsidiary of
+Qualcomm Incorporated and Texas Instruments Incorporated) are
 contributing to the ongoing development of OpenThread.
 
 
-# Getting Started #
+# Getting started #
 
 The easiest way to get started is to run the CLI example in
 `/examples/posix/app/cli`. See the
@@ -72,10 +72,10 @@ as part of the build.
 [ot-docs]: http://openthread.github.io/openthread/
 
 
-# Getting Help #
+# Getting help #
 
 Submit bugs and feature requests to [issue tracker][ot-issues]. Usage
-questions? Post questions to [Stack Overflow][stackoverflow] using the
+questions? Post your questions to [Stack Overflow][stackoverflow] using the
 [`openthread` tag][ot-tag]. We also use Google Groups for discussion
 and announcements:
 
@@ -114,6 +114,6 @@ OpenThread is released under the [BSD 3-Clause license](LICENSE). See
 the [`LICENSE`](LICENSE) file for more information.
 
 Please only use the OpenThread name and marks when accurately
-referencing this software distribution, and do not use these marks in
+referencing this software distribution. Do not use the marks in
 a way that suggests you are endorsed by or otherwise affiliated with
 Nest, Google, or The Thread Group.
