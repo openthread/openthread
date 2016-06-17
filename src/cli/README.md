@@ -1,9 +1,9 @@
 # OpenThread CLI Reference
 
 The OpenThread CLI exposes configuration and management APIs via a
-command line interface.  This CLI may be used to play with OpenThread
-and may be used along side additional application code.  The
-OpenThread test scripts use this CLI to execute test cases.
+command line interface. Use the CLI to play with OpenThread, which 
+can also be used with additional application code. The
+OpenThread test scripts use the CLI to execute test cases.
 
 ## OpenThread Command List
 
@@ -214,7 +214,7 @@ Done
 Get the Thread Device Mode value.
 
 * r: rx-on-when-idle
-* s: Secure IEEE 802.15.4 Data Requests
+* s: Secure IEEE 802.15.4 data requests
 * d: Full Function Device
 * n: Full Network Data
 
@@ -229,7 +229,7 @@ Done
 Set the Thread Device Mode value.
 
 * r: rx-on-when-idle
-* s: Secure IEEE 802.15.4 Data Requests
+* s: Secure IEEE 802.15.4 data requests
 * d: Full Function Device
 * n: Full Network Data
 
@@ -323,7 +323,7 @@ Add a valid prefix to the Network Data.
 * c: DHCPv6 Other Configuration flag
 * s: Stable flag
 * r: Default Route flag
-* prf: Default router preference, which may be: 'high', 'med', or 'low'.
+* prf: Default router preference, which may be 'high', 'med', or 'low'.
 
 ```bash
 > prefix add 2001:dead:beef:cafe::/64 pvsr 0
@@ -332,7 +332,7 @@ Done
 
 ### prefix remove \<prefix\>
 
-Invalidate a prefix in the network data.
+Invalidate a prefix in the Network Data.
 
 ```bash
 > prefix remove 2001:dead:beef:cafe::/64
@@ -361,7 +361,7 @@ Done
 Add a valid prefix to the Network Data.
 
 * s: Stable flag
-* prf: Default router preference, which may be: 'high', 'med', or 'low'.
+* prf: Default Router Preference, which may be: 'high', 'med', or 'low'.
 
 ```bash
 > route add 2001:dead:beef:cafe::/64 pvsr 0
@@ -370,7 +370,7 @@ Done
 
 ### route remove \<prefix\>
 
-Invalidate a prefix in the network data.
+Invalidate a prefix in the Network Data.
 
 ```bash
 > route remove 2001:dead:beef:cafe::/64
