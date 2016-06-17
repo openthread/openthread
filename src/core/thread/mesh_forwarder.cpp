@@ -68,6 +68,13 @@ MeshForwarder::MeshForwarder(ThreadNetif &aThreadNetif):
     mSendBusy = false;
     mEnabled = false;
 
+    mMessageNextOffset = 0;
+    mMacSource.mLength = 0;
+    mMacDest.mLength = 0;
+    mMeshSource = Mac::kShortAddrInvalid;
+    mMeshDest = Mac::kShortAddrInvalid;
+    mAddMeshHeader = false;
+
     mMac.RegisterReceiver(mMacReceiver);
 }
 

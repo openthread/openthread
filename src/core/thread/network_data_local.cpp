@@ -48,6 +48,7 @@ Local::Local(ThreadNetif &aThreadNetif):
     NetworkData(),
     mMle(aThreadNetif.GetMle())
 {
+    mCoapMessageId = 0;
 }
 
 ThreadError Local::AddOnMeshPrefix(const uint8_t *aPrefix, uint8_t aPrefixLength, int8_t aPrf,
