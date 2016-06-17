@@ -873,7 +873,7 @@ ThreadError Leader::AddBorderRouter(PrefixTlv &aPrefix, BorderRouterTlv &aBorder
     PrefixTlv *dstPrefix;
     ContextTlv *dstContext;
     BorderRouterTlv *dstBorderRouter;
-    uint8_t aContextId;
+    int contextId;
 
     if ((dstPrefix = FindPrefix(aPrefix.GetPrefix(), aPrefix.GetPrefixLength())) == NULL)
     {
@@ -890,7 +890,7 @@ ThreadError Leader::AddBorderRouter(PrefixTlv &aPrefix, BorderRouterTlv &aBorder
         {
             dstContext->SetCompress();
         }
-        else if ((aContextId = AllocateContext()) >= 0)
+        else if ((contextId = AllocateContext()) >= 0)
         {
             dstContext = reinterpret_cast<ContextTlv *>(dstPrefix->GetNext());
             Insert(reinterpret_cast<uint8_t *>(dstContext), sizeof(ContextTlv));
@@ -898,7 +898,7 @@ ThreadError Leader::AddBorderRouter(PrefixTlv &aPrefix, BorderRouterTlv &aBorder
             dstContext->Init();
             dstContext->SetStable();
             dstContext->SetCompress();
-            dstContext->SetContextId(aContextId);
+            dstContext->SetContextId(contextId);
             dstContext->SetContextLength(aPrefix.GetPrefixLength());
         }
         else

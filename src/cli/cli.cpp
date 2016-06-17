@@ -395,10 +395,10 @@ exit:
 void Interpreter::ProcessMasterKey(int argc, char *argv[])
 {
     ThreadError error = kThreadError_None;
-    uint8_t keyLength;
 
     if (argc == 0)
     {
+        uint8_t keyLength;
         const uint8_t *key = otGetMasterKey(&keyLength);
 
         for (int i = 0; i < keyLength; i++)
@@ -410,6 +410,7 @@ void Interpreter::ProcessMasterKey(int argc, char *argv[])
     }
     else
     {
+        int8_t keyLength;
         uint8_t key[16];
 
         VerifyOrExit((keyLength = Hex2Bin(argv[0], key, sizeof(key))) >= 0, error = kThreadError_Parse);

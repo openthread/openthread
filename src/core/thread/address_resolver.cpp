@@ -542,7 +542,6 @@ void AddressResolver::SendAddressQueryResponse(const ThreadTargetTlv &aTargetTlv
 
     memset(&messageInfo, 0, sizeof(messageInfo));
     memcpy(&messageInfo.GetPeerAddr(), &aDestination, sizeof(messageInfo.GetPeerAddr()));
-    messageInfo.mInterfaceId = messageInfo.mInterfaceId;
     messageInfo.mPeerPort = kCoapUdpPort;
 
     SuccessOrExit(error = mSocket.SendTo(*message, messageInfo));
