@@ -62,7 +62,7 @@ MleRouter::MleRouter(ThreadNetif &aThreadNetif):
     memset(mRouters, 0, sizeof(mRouters));
 
     mNetworkIdTimeout = kNetworkIdTimeout;
-    mRouterUpgradeThreshold = kRouterUpgradeThreadhold;
+    mRouterUpgradeThreshold = kRouterUpgradeThreshold;
     mLeaderWeight = 0;
     mRouterId = kMaxRouterId;
     mPreviousRouterId = kMaxRouterId;
