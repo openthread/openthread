@@ -10,6 +10,7 @@ OpenThread test scripts use the CLI to execute test cases.
 * [channel](#channel)
 * [childtimeout](#childtimeout)
 * [contextreusedelay](#contextreusedelay)
+* [counter](#counter)
 * [extaddr](#extaddr)
 * [extpanid](#extpanid)
 * [ipaddr](#ipaddr)
@@ -90,6 +91,49 @@ Set the CONTEXT_ID_REUSE_DELAY value.
 ```bash
 > contextreusedelay 11
 Done
+```
+
+### counter
+
+Get the supported counter names.
+
+```bash
+>counter
+mac
+Done
+```
+
+### counter \<countername\>
+
+Get the counter value.
+
+```bash
+>counter mac
+TxTotal: 10
+    TxAckRequested: 4
+    TxAcked: 4
+    TxNoAckRequested: 6
+    TxData: 10
+    TxDataPoll: 0
+    TxBeacon: 0
+    TxBeaconRequest: 0
+    TxOther: 0
+    TxRetry: 0
+    TxErrCca: 0
+RxTotal: 11
+    RxData: 11
+    RxDataPoll: 0
+    RxBeacon: 0
+    RxBeaconRequest: 0
+    RxOther: 0
+    RxWhitelistFiltered: 0
+    RxDestAddrFiltered: 0
+    RxErrNoFrame: 0
+    RxErrNoUnknownNeighbor: 0
+    RxErrInvalidSrcAddr: 0
+    RxErrSec: 0
+    RxErrFcs: 0
+    RxErrOther: 0
 ```
 
 ### extaddr
