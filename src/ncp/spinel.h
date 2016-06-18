@@ -34,16 +34,26 @@
 #include <stdint.h>
 #include <sys/types.h>
 
-__BEGIN_DECLS
-
 // ----------------------------------------------------------------------------
 
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
-# if defined(__GNUC__) && !SPINEL_EMBEDDED
+
+# if defined(__GNUC__)
 #  define SPINEL_API_EXTERN              extern __attribute__ ((visibility ("default")))
 #  define SPINEL_API_NONNULL_ALL         __attribute__((nonnull))
 #  define SPINEL_API_WARN_UNUSED_RESULT  __attribute__((warn_unused_result))
 # endif // ifdef __GNUC__
+
+# if !defined(__BEGIN_DECLS) || !defined(__END_DECLS)
+#  if defined(__cplusplus)
+#   define __BEGIN_DECLS   extern "C" {
+#   define __END_DECLS     }
+#  else // if defined(__cplusplus)
+#   define __BEGIN_DECLS
+#   define __END_DECLS
+#  endif // else defined(__cplusplus)
+# endif // if !defined(__BEGIN_DECLS) || !defined(__END_DECLS)
+
 #endif // ifndef DOXYGEN_SHOULD_SKIP_THIS
 
 #ifndef SPINEL_API_EXTERN
@@ -66,6 +76,8 @@ __BEGIN_DECLS
 #define SPINEL_FRAME_MAX_SIZE                   1300
 
 // ----------------------------------------------------------------------------
+
+__BEGIN_DECLS
 
 typedef enum
 {
