@@ -1042,6 +1042,12 @@ ThreadError MleRouter::ProcessRouteTlv(const RouteTlv &aRoute)
         mRouterIdSequence = aRoute.GetRouterIdSequence();
         mRouterIdSequenceLastUpdated = Timer::GetNow();
 
+        if (GetDeviceState() == kDeviceStateRouter && !mRouters[mRouterId].mAllocated)
+        {
+            BecomeDetached();
+            ExitNow(error = kThreadError_NoRoute);
+        }
+
         for (int i = 0; i < kMaxRouterId; i++)
         {
             old = mRouters[i].mAllocated;
@@ -1050,16 +1056,10 @@ ThreadError MleRouter::ProcessRouteTlv(const RouteTlv &aRoute)
             if (old && !mRouters[i].mAllocated)
             {
                 mRouters[i].mNextHop = kMaxRouterId;
+                mRouters[i].mState = Neighbor::kStateInvalid;
                 mAddressResolver.Remove(i);
             }
         }
-
-        if (GetDeviceState() == kDeviceStateRouter && !mRouters[mRouterId].mAllocated)
-        {
-            BecomeDetached();
-            ExitNow(error = kThreadError_NoRoute);
-        }
-
     }
 
 exit:

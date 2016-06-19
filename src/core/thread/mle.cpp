@@ -102,11 +102,13 @@ Mle::Mle(ThreadNetif &aThreadNetif) :
     memcpy(mMeshLocal64.GetAddress().m8 + 1, mMac.GetExtendedPanId(), 5);
     mMeshLocal64.GetAddress().m8[6] = 0x00;
     mMeshLocal64.GetAddress().m8[7] = 0x00;
+
     // mesh-local 64
     for (int i = 8; i < 16; i++)
     {
         mMeshLocal64.GetAddress().m8[i] = otPlatRandomGet();
     }
+
     mMeshLocal64.mPrefixLength = 64;
     mMeshLocal64.mPreferredLifetime = 0xffffffff;
     mMeshLocal64.mValidLifetime = 0xffffffff;
