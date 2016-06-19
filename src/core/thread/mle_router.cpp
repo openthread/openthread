@@ -228,6 +228,7 @@ ThreadError MleRouter::BecomeLeader(void)
     memcpy(&mRouters[mRouterId].mMacAddr, mMac.GetExtAddress(), sizeof(mRouters[mRouterId].mMacAddr));
 
     SetLeaderData(otPlatRandomGet(), mLeaderWeight, mRouterId);
+    mRouterIdSequence = otPlatRandomGet();
 
     mNetworkData.Reset();
 
@@ -1083,7 +1084,6 @@ ThreadError MleRouter::HandleAdvertisement(const Message &aMessage, const Ip6::M
 
     // Source Address
     SuccessOrExit(error = Tlv::GetTlv(aMessage, Tlv::kSourceAddress, sizeof(sourceAddress), sourceAddress));
-    VerifyOrExit(sourceAddress.IsValid(), error = kThreadError_Parse);
 
     // Remove stale neighbors
     if ((neighbor = GetNeighbor(macAddr)) != NULL &&
@@ -1094,9 +1094,6 @@ ThreadError MleRouter::HandleAdvertisement(const Message &aMessage, const Ip6::M
 
     // Leader Data
     SuccessOrExit(error = Tlv::GetTlv(aMessage, Tlv::kLeaderData, sizeof(leaderData), leaderData));
-    VerifyOrExit(leaderData.IsValid(), error = kThreadError_Parse);
-
-    otLogInfoMle("Received advertisement from %04x\n", sourceAddress.GetRloc16());
 
     peerParitionId = leaderData.GetPartitionId();
 
@@ -1128,10 +1125,7 @@ ThreadError MleRouter::HandleAdvertisement(const Message &aMessage, const Ip6::M
     SuccessOrExit(error = Tlv::GetTlv(aMessage, Tlv::kRoute, sizeof(route), route));
     VerifyOrExit(route.IsValid(), error = kThreadError_Parse);
 
-    if (mDeviceMode & ModeTlv::kModeFFD)
-    {
-        SuccessOrExit(error = ProcessRouteTlv(route));
-    }
+    SuccessOrExit(error = ProcessRouteTlv(route));
 
     VerifyOrExit((routerId = GetRouterId(sourceAddress.GetRloc16())) < kMaxRouterId, error = kThreadError_Parse);
 
@@ -1154,7 +1148,7 @@ ThreadError MleRouter::HandleAdvertisement(const Message &aMessage, const Ip6::M
             }
         }
 
-        if ((mDeviceMode & ModeTlv::kModeFFD) && (routerCount < mRouterUpgradeThreshold))
+        if (routerCount < mRouterUpgradeThreshold)
         {
             BecomeRouter();
             ExitNow();

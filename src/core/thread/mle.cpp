@@ -67,6 +67,7 @@ Mle::Mle(ThreadNetif &aThreadNetif) :
     mParentRequestState = kParentIdle;
     mParentRequestMode = kMleAttachAnyPartition;
     mParentConnectivity = 0;
+    mRetrieveNewNetworkData = false;
     mTimeout = kMaxNeighborAge;
 
     memset(&mLeaderData, 0, sizeof(mLeaderData));
@@ -1415,10 +1416,21 @@ ThreadError Mle::HandleAdvertisement(const Message &aMessage, const Ip6::Message
     Mac::ExtAddress macAddr;
     bool isNeighbor;
     Neighbor *neighbor;
+    SourceAddressTlv sourceAddress;
     LeaderDataTlv leaderData;
     uint8_t tlvs[] = {Tlv::kLeaderData, Tlv::kNetworkData};
 
-    if (mDeviceState != kDeviceStateDetached)
+    // Source Address
+    SuccessOrExit(error = Tlv::GetTlv(aMessage, Tlv::kSourceAddress, sizeof(sourceAddress), sourceAddress));
+    VerifyOrExit(sourceAddress.IsValid(), error = kThreadError_Parse);
+
+    // Leader Data
+    SuccessOrExit(error = Tlv::GetTlv(aMessage, Tlv::kLeaderData, sizeof(leaderData), leaderData));
+    VerifyOrExit(leaderData.IsValid(), error = kThreadError_Parse);
+
+    otLogInfoMle("Received advertisement from %04x\n", sourceAddress.GetRloc16());
+
+    if ((mDeviceState != kDeviceStateDetached) && (mDeviceMode & ModeTlv::kModeFFD))
     {
         SuccessOrExit(error = mMleRouter.HandleAdvertisement(aMessage, aMessageInfo));
     }
@@ -1439,6 +1451,21 @@ ThreadError Mle::HandleAdvertisement(const Message &aMessage, const Ip6::Message
             break;
         }
 
+        if (mParent.mValid.mRloc16 != sourceAddress.GetRloc16())
+        {
+            SetStateDetached();
+            ExitNow(error = kThreadError_NoRoute);
+        }
+        else
+        {
+            if (leaderData.GetPartitionId() != mLeaderData.GetPartitionId() ||
+                leaderData.GetLeaderRouterId() != GetLeaderId())
+            {
+                SetLeaderData(leaderData.GetPartitionId(), leaderData.GetWeighting(), leaderData.GetLeaderRouterId());
+                mRetrieveNewNetworkData = true;
+            }
+        }
+
         isNeighbor = true;
         mParent.mLastHeard = mParentRequestTimer.GetNow();
         break;
@@ -1456,10 +1483,8 @@ ThreadError Mle::HandleAdvertisement(const Message &aMessage, const Ip6::Message
 
     if (isNeighbor)
     {
-        SuccessOrExit(error = Tlv::GetTlv(aMessage, Tlv::kLeaderData, sizeof(leaderData), leaderData));
-        VerifyOrExit(leaderData.IsValid(), error = kThreadError_Parse);
-
-        if (static_cast<int8_t>(leaderData.GetDataVersion() - mNetworkData.GetVersion()) > 0)
+        if (mRetrieveNewNetworkData ||
+            (static_cast<int8_t>(leaderData.GetDataVersion() - mNetworkData.GetVersion()) > 0))
         {
             SendDataRequest(aMessageInfo.GetPeerAddr(), tlvs, sizeof(tlvs));
         }
@@ -1499,8 +1524,27 @@ ThreadError Mle::HandleDataResponse(const Message &aMessage, const Ip6::MessageI
     SuccessOrExit(error = Tlv::GetTlv(aMessage, Tlv::kLeaderData, sizeof(leaderData), leaderData));
     VerifyOrExit(leaderData.IsValid(), error = kThreadError_Parse);
 
-    diff = leaderData.GetDataVersion() - mNetworkData.GetVersion();
-    VerifyOrExit(diff > 0, ;);
+    if ((leaderData.GetPartitionId() != mLeaderData.GetPartitionId()) ||
+        (leaderData.GetLeaderRouterId() != GetLeaderId()))
+    {
+        if ((mDeviceMode & ModeTlv::kModeRxOnWhenIdle) == 0)
+        {
+            SetLeaderData(leaderData.GetPartitionId(), leaderData.GetWeighting(), leaderData.GetLeaderRouterId());
+        }
+        else
+        {
+            ExitNow(error = kThreadError_Drop);
+        }
+    }
+    else if (mRetrieveNewNetworkData)
+    {
+        mRetrieveNewNetworkData = false;
+    }
+    else
+    {
+        diff = leaderData.GetDataVersion() - mNetworkData.GetVersion();
+        VerifyOrExit(diff > 0, ;);
+    }
 
     mNetworkData.SetNetworkData(leaderData.GetDataVersion(), leaderData.GetStableDataVersion(),
                                 (mDeviceMode & ModeTlv::kModeFullNetworkData) == 0,

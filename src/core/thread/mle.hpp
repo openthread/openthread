@@ -907,6 +907,7 @@ protected:
     NetworkData::Leader &mNetworkData;      ///< The Network Data object.
 
     LeaderDataTlv mLeaderData;              ///< Last received Leader Data TLV.
+    bool mRetrieveNewNetworkData;           ///< Indicating new Network Data is needed if set.
 
     DeviceState mDeviceState;               ///< Current Thread interface state.
     Router mParent;                         ///< Parent information.
