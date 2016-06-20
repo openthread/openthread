@@ -568,7 +568,7 @@ exit:
 void NcpBase::HandleCommandPropertySet(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr,
                                        uint16_t value_len)
 {
-    int i;
+    unsigned i;
 
     if (mSending)
     {
