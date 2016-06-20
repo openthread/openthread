@@ -48,11 +48,21 @@
 #include <assert.h>
 #include <string.h>
 #include <stdarg.h>
-#include <errno.h>
 #include <stdlib.h>
+#include <errno.h>
 
 // ----------------------------------------------------------------------------
 // MARK: -
+
+#if defined(errno) && SPINEL_PLATFORM_DOESNT_IMPLEMENT_ERRNO_VAR
+#error SPINEL_PLATFORM_DOESNT_IMPLEMENT_ERRNO_VAR is set but errno is already defined.
+#endif
+
+// Work-around for platforms that don't implement the `errno` variable.
+#if !defined(errno) && SPINEL_PLATFORM_DOESNT_IMPLEMENT_ERRNO_VAR
+static int spinel_errno_workaround_;
+#define errno spinel_errno_workaround_
+#endif // SPINEL_PLATFORM_DOESNT_IMPLEMENT_ERRNO_VAR
 
 #ifndef assert_printf
 #define assert_printf(fmt, ...) \
