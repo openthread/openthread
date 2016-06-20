@@ -225,7 +225,7 @@ private:
  */
 struct ThreadMessageInfo
 {
-    uint8_t mLinkMargin;    ///< The Link Margin for a received message in dB.
+    int8_t  mRss;           ///< The Received Signal Strength in dBm.
     uint8_t mLqi;           ///< The Link Quality Indicator for a received message.
     bool    mLinkSecurity;  ///< Indicates whether or not link security is enabled.
 };

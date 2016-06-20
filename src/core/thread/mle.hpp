@@ -806,16 +806,6 @@ protected:
     Mac::ShortAddress GetNextHop(uint16_t aDestination) const;
 
     /**
-     * This method converts a link margin value to a link quality value.
-     *
-     * @param[in]  aLinkMargin  The Link Margin in dB.
-     *
-     * @returns The link quality value.
-     *
-     */
-    uint8_t LinkMarginToQuality(uint8_t aLinkMargin);
-
-    /**
      * This method generates an MLE Data Request message.
      *
      * @param[in]  aDestination  A reference to the IPv6 address of the destination.

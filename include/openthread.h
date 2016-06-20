@@ -95,6 +95,7 @@ extern "C" {
  * @defgroup core-tasklet Tasklet
  * @defgroup core-timer Timer
  * @defgroup core-udp UDP
+ * @defgroup core-link-quality Link Quality
  *
  * @}
  *

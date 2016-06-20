@@ -57,6 +57,7 @@ libopenthread_a_SOURCES             = \
     net/udp6.cpp                      \
     thread/address_resolver.cpp       \
     thread/key_manager.cpp            \
+    thread/link_quality.cpp           \
     thread/lowpan.cpp                 \
     thread/mesh_forwarder.cpp         \
     thread/mle.cpp                    \
@@ -96,6 +97,7 @@ noinst_HEADERS                      = \
     net/udp6.hpp                      \
     thread/address_resolver.hpp       \
     thread/key_manager.hpp            \
+    thread/link_quality.hpp           \
     thread/lowpan.hpp                 \
     thread/mesh_forwarder.hpp         \
     thread/mle.hpp                    \

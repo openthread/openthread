@@ -68,6 +68,7 @@ check_PROGRAMS                                                 = \
     test-aes                                                     \
     test-hmac-sha256                                             \
     test-lowpan                                                  \
+    test-link-quality                                            \
     test-mac-frame                                               \
     test-message                                                 \
     test-timer                                                   \
@@ -94,6 +95,9 @@ test_aes_SOURCES             = test_aes.cpp
 
 test_hmac_sha256_LDADD       = $(COMMON_LDADD)
 test_hmac_sha256_SOURCES     = test_hmac_sha256.cpp
+
+test_link_quality_LDADD      = $(COMMON_LDADD)
+test_link_quality_SOURCES    = test_link_quality.cpp
 
 test_lowpan_LDADD            = $(COMMON_LDADD)
 test_lowpan_SOURCES          = test_lowpan.cpp test_util.cpp test_vector.c

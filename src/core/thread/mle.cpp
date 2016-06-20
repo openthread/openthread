@@ -1554,30 +1554,11 @@ exit:
     return error;
 }
 
-uint8_t Mle::LinkMarginToQuality(uint8_t aLinkMargin)
-{
-    if (aLinkMargin > 20)
-    {
-        return 3;
-    }
-    else if (aLinkMargin > 10)
-    {
-        return 2;
-    }
-    else if (aLinkMargin > 2)
-    {
-        return 1;
-    }
-    else
-    {
-        return 0;
-    }
-}
-
 ThreadError Mle::HandleParentResponse(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo,
                                       uint32_t aKeySequence)
 {
     ThreadError error = kThreadError_None;
+    const ThreadMessageInfo *threadMessageInfo = reinterpret_cast<const ThreadMessageInfo *>(aMessageInfo.mLinkInfo);
     ResponseTlv response;
     SourceAddressTlv sourceAddress;
     LeaderDataTlv leaderData;
@@ -1649,14 +1630,14 @@ ThreadError Mle::HandleParentResponse(const Message &aMessage, const Ip6::Messag
     SuccessOrExit(error = Tlv::GetTlv(aMessage, Tlv::kLinkMargin, sizeof(linkMarginTlv), linkMarginTlv));
     VerifyOrExit(linkMarginTlv.IsValid(), error = kThreadError_Parse);
 
-    linkMargin = reinterpret_cast<const ThreadMessageInfo *>(aMessageInfo.mLinkInfo)->mLinkMargin;
+    linkMargin = LinkQualityInfo::ConvertRssToLinkMargin(threadMessageInfo->mRss);
 
     if (linkMargin > linkMarginTlv.GetLinkMargin())
     {
         linkMargin = linkMarginTlv.GetLinkMargin();
     }
 
-    link_quality = LinkMarginToQuality(linkMargin);
+    link_quality = LinkQualityInfo::ConvertLinkMarginToLinkQuality(linkMargin);
 
     VerifyOrExit(mParentRequestState != kParentRequestRouter || link_quality == 3, ;);
 
@@ -1708,6 +1689,8 @@ ThreadError Mle::HandleParentResponse(const Message &aMessage, const Ip6::Messag
     mParent.mValid.mLinkFrameCounter = linkFrameCounter.GetFrameCounter();
     mParent.mValid.mMleFrameCounter = mleFrameCounter.GetFrameCounter();
     mParent.mMode = ModeTlv::kModeFFD | ModeTlv::kModeRxOnWhenIdle | ModeTlv::kModeFullNetworkData;
+    mParent.mLinkInfo.Clear();
+    mParent.mLinkInfo.AddRss(threadMessageInfo->mRss);
     mParent.mState = Neighbor::kStateValid;
     assert(aKeySequence == mKeyManager.GetCurrentKeySequence() ||
            aKeySequence == mKeyManager.GetPreviousKeySequence());
