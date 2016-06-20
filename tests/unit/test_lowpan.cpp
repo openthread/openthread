@@ -42,6 +42,14 @@ namespace Thread {
 
 extern "C" void otSignalTaskletPending(void) {}
 
+extern "C" bool otAreTaskletsPending(void) { return false; }
+
+extern "C" void otPlatSerialSendDone(void) {}
+
+extern "C" void otPlatSerialReceived(const uint8_t *aBuf, uint16_t aBufLength) 
+{
+}
+
 ThreadNetif sMockThreadNetif;
 Lowpan::Lowpan sMockLowpan(sMockThreadNetif);
 

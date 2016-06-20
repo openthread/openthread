@@ -31,6 +31,10 @@
 
 #include <stdint.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 typedef const struct
 {
     const char *mResult;
@@ -60,7 +64,11 @@ typedef const struct
 } test_lowpan_vector_t;
 
 
-extern test_lowpan_vector_t sTestVectorLowpan[];
-extern int sTestVectorLowpanLen;
+extern const test_lowpan_vector_t sTestVectorLowpan[];
+extern const unsigned sTestVectorLowpanLen;
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif
