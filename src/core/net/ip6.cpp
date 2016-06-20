@@ -414,7 +414,7 @@ ThreadError Ip6::HandleDatagram(Message &message, Netif *netif, uint8_t interfac
 
 exit:
 
-    if (error == kThreadError_Drop)
+    if ((error == kThreadError_Drop) || (error == kThreadError_NoRoute))
     {
         Message::Free(message);
     }
