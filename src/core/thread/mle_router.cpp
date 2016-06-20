@@ -466,8 +466,8 @@ ThreadError MleRouter::SendAdvertisement(void)
     }
 
     memset(&destination, 0, sizeof(destination));
-    destination.m16[0] = HostSwap16(0xff02);
-    destination.m16[7] = HostSwap16(0x0001);
+    destination.mFields.m16[0] = HostSwap16(0xff02);
+    destination.mFields.m16[7] = HostSwap16(0x0001);
     SuccessOrExit(error = SendMessage(*message, destination));
 
     otLogInfoMle("Sent advertisement\n");
@@ -527,9 +527,9 @@ ThreadError MleRouter::SendLinkRequest(Neighbor *aNeighbor)
         }
 
         SuccessOrExit(error = AppendChallenge(*message, mChallenge, sizeof(mChallenge)));
-        destination.m8[0] = 0xff;
-        destination.m8[1] = 0x02;
-        destination.m8[15] = 2;
+        destination.mFields.m8[0] = 0xff;
+        destination.mFields.m8[1] = 0x02;
+        destination.mFields.m8[15] = 2;
     }
     else
     {
@@ -539,7 +539,7 @@ ThreadError MleRouter::SendLinkRequest(Neighbor *aNeighbor)
         }
 
         SuccessOrExit(error = AppendChallenge(*message, mChallenge, sizeof(mChallenge)));
-        destination.m16[0] = HostSwap16(0xfe80);
+        destination.mFields.m16[0] = HostSwap16(0xfe80);
         destination.SetIid(aNeighbor->mMacAddr);
     }
 
@@ -1545,7 +1545,7 @@ ThreadError MleRouter::SendParentResponse(Child *aChild, const ChallengeTlv &cha
     SuccessOrExit(error = AppendVersion(*message));
 
     memset(&destination, 0, sizeof(destination));
-    destination.m16[0] = HostSwap16(0xfe80);
+    destination.mFields.m16[0] = HostSwap16(0xfe80);
     destination.SetIid(aChild->mMacAddr);
     SuccessOrExit(error = SendMessage(*message, destination));
 
@@ -1808,8 +1808,8 @@ ThreadError MleRouter::HandleNetworkDataUpdateRouter(void)
     VerifyOrExit(mDeviceState == kDeviceStateRouter || mDeviceState == kDeviceStateLeader, ;);
 
     memset(&destination, 0, sizeof(destination));
-    destination.m16[0] = HostSwap16(0xff02);
-    destination.m16[7] = HostSwap16(0x0001);
+    destination.mFields.m16[0] = HostSwap16(0xff02);
+    destination.mFields.m16[7] = HostSwap16(0x0001);
 
     SendDataResponse(destination, tlvs, sizeof(tlvs));
 
@@ -1863,7 +1863,7 @@ ThreadError MleRouter::SendChildIdResponse(Child *aChild)
     mNetif.SetStateChangedFlags(OT_THREAD_CHILD_ADDED);
 
     memset(&destination, 0, sizeof(destination));
-    destination.m16[0] = HostSwap16(0xfe80);
+    destination.mFields.m16[0] = HostSwap16(0xfe80);
     destination.SetIid(aChild->mMacAddr);
     SuccessOrExit(error = SendMessage(*message, destination));
 
@@ -2090,12 +2090,12 @@ Neighbor *MleRouter::GetNeighbor(const Ip6::Address &aAddress)
 
     if (aAddress.IsLinkLocal())
     {
-        if (aAddress.m16[4] == HostSwap16(0x0000) &&
-            aAddress.m16[5] == HostSwap16(0x00ff) &&
-            aAddress.m16[6] == HostSwap16(0xfe00))
+        if (aAddress.mFields.m16[4] == HostSwap16(0x0000) &&
+            aAddress.mFields.m16[5] == HostSwap16(0x00ff) &&
+            aAddress.mFields.m16[6] == HostSwap16(0xfe00))
         {
             macaddr.mLength = sizeof(macaddr.mShortAddress);
-            macaddr.mShortAddress = HostSwap16(aAddress.m16[7]);
+            macaddr.mShortAddress = HostSwap16(aAddress.mFields.m16[7]);
         }
         else
         {
@@ -2121,17 +2121,17 @@ Neighbor *MleRouter::GetNeighbor(const Ip6::Address &aAddress)
         }
 
         if (context.mContextId == 0 &&
-            aAddress.m16[4] == HostSwap16(0x0000) &&
-            aAddress.m16[5] == HostSwap16(0x00ff) &&
-            aAddress.m16[6] == HostSwap16(0xfe00) &&
-            aAddress.m16[7] == HostSwap16(child->mValid.mRloc16))
+            aAddress.mFields.m16[4] == HostSwap16(0x0000) &&
+            aAddress.mFields.m16[5] == HostSwap16(0x00ff) &&
+            aAddress.mFields.m16[6] == HostSwap16(0xfe00) &&
+            aAddress.mFields.m16[7] == HostSwap16(child->mValid.mRloc16))
         {
             ExitNow(rval = child);
         }
 
         for (int j = 0; j < Child::kMaxIp6AddressPerChild; j++)
         {
-            if (memcmp(&child->mIp6Address[j], aAddress.m8, sizeof(child->mIp6Address[j])) == 0)
+            if (memcmp(&child->mIp6Address[j], aAddress.mFields.m8, sizeof(child->mIp6Address[j])) == 0)
             {
                 ExitNow(rval = child);
             }
@@ -2149,10 +2149,10 @@ Neighbor *MleRouter::GetNeighbor(const Ip6::Address &aAddress)
             continue;
         }
 
-        if (aAddress.m16[4] == HostSwap16(0x0000) &&
-            aAddress.m16[5] == HostSwap16(0x00ff) &&
-            aAddress.m16[6] == HostSwap16(0xfe00) &&
-            aAddress.m16[7] == HostSwap16(router->mValid.mRloc16))
+        if (aAddress.mFields.m16[4] == HostSwap16(0x0000) &&
+            aAddress.mFields.m16[5] == HostSwap16(0x00ff) &&
+            aAddress.mFields.m16[6] == HostSwap16(0xfe00) &&
+            aAddress.mFields.m16[7] == HostSwap16(router->mValid.mRloc16))
         {
             ExitNow(rval = router);
         }
@@ -2222,7 +2222,7 @@ void MleRouter::HandleMacDataRequest(const Child &aChild)
     VerifyOrExit(aChild.mState == Neighbor::kStateValid && (aChild.mMode & ModeTlv::kModeRxOnWhenIdle) == 0, ;);
 
     memset(&destination, 0, sizeof(destination));
-    destination.m16[0] = HostSwap16(0xfe80);
+    destination.mFields.m16[0] = HostSwap16(0xfe80);
     destination.SetIid(aChild.mMacAddr);
 
     if (aChild.mMode & ModeTlv::kModeFullNetworkData)
@@ -2292,7 +2292,7 @@ ThreadError MleRouter::CheckReachability(uint16_t aMeshSource, uint16_t aMeshDes
     }
 
     memcpy(&destination, GetMeshLocal16(), 14);
-    destination.m16[7] = HostSwap16(aMeshSource);
+    destination.mFields.m16[7] = HostSwap16(aMeshSource);
     Ip6::Icmp::SendError(destination, Ip6::IcmpHeader::kTypeDstUnreach, Ip6::IcmpHeader::kCodeDstUnreachNoRoute,
                          aIp6Header);
 
@@ -2342,7 +2342,7 @@ ThreadError MleRouter::SendAddressSolicit(void)
     messageInfo.mPeerPort = kCoapUdpPort;
     SuccessOrExit(error = mSocket.SendTo(*message, messageInfo));
 
-    otLogInfoMle("Sent address solicit to %04x\n", HostSwap16(messageInfo.GetPeerAddr().m16[7]));
+    otLogInfoMle("Sent address solicit to %04x\n", HostSwap16(messageInfo.GetPeerAddr().mFields.m16[7]));
 
 exit:
     return error;

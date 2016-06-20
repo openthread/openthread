@@ -41,6 +41,7 @@ libopenthread_ncp_a_CPPFLAGS        = \
     -I$(top_srcdir)/src               \
     -I$(top_srcdir)/src/core          \
     -I$(top_srcdir)/third_party       \
+    -D_GNU_SOURCE                     \
     $(OPENTHREAD_TARGET_DEFINES)      \
     $(NULL)
 
@@ -71,7 +72,7 @@ if OPENTHREAD_BUILD_TESTS
 
 noinst_PROGRAMS                     = spinel-test
 spinel_test_SOURCES                 = spinel.c
-spinel_test_CFLAGS                  = -DSPINEL_SELF_TEST=1
+spinel_test_CFLAGS                  = -DSPINEL_SELF_TEST=1 -D_GNU_SOURCE
 
 TESTS = spinel-test
 
