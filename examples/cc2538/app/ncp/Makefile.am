@@ -28,27 +28,27 @@
 
 include $(abs_top_nlbuild_autotools_dir)/automake/pre.am
 
-bin_PROGRAMS = ncp
+bin_PROGRAMS                                                      = \
+    ot-ncp                                                          \
+    $(NULL)
 
-ncp_CPPFLAGS                                                      = \
+ot_ncp_CPPFLAGS                                                   = \
     -I$(top_srcdir)/include                                         \
-    -I$(top_srcdir)/src                                             \
-    -I$(top_srcdir)/src/core                                        \
     -I$(top_srcdir)/examples/cc2538/platform                        \
     $(NULL)
 
-ncp_LDADD                                                         = \
+ot_ncp_LDADD                                                      = \
     $(top_builddir)/src/ncp/libopenthread-ncp.a                     \
     $(top_builddir)/src/core/libopenthread.a                        \
     $(top_builddir)/examples/cc2538/platform/libopenthread-cc2538.a \
     $(top_builddir)/third_party/mbedtls/libmbedcrypto.a             \
     $(NULL)
 
-ncp_LDFLAGS                                                       = \
+ot_ncp_LDFLAGS                                                    = \
     -T $(top_srcdir)/examples/cc2538/platform/cc2538.ld             \
     $(NULL)
 
-ncp_SOURCES                                                       = \
+ot_ncp_SOURCES                                                    = \
     main.c                                                          \
     $(NULL)
 

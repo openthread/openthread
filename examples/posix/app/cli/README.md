@@ -21,7 +21,7 @@ Spawn the process:
 
 ```bash
 $ cd openthread/examples/posix/app/cli
-$ ./soc 1
+$ ./ot-cli 1
 ```
 
 Start OpenThread:
@@ -56,7 +56,7 @@ Spawn the process:
 
 ```bash
 $ cd openthread/examples/posix/app/cli
-$ ./soc 2
+$ ./ot-cli 2
 ```
 
 Start OpenThread:
