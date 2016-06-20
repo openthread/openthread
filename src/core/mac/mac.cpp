@@ -669,6 +669,8 @@ void Mac::SentFrame(bool aAcked)
             mSendTail = NULL;
         }
 
+        sender->mNext = NULL;
+
         mDataSequence++;
         sender->HandleSentFrame(sendFrame);
 
