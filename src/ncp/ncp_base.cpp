@@ -497,7 +497,7 @@ void NcpBase::HandleSendDone()
 
 void NcpBase::HandleCommand(uint8_t header, unsigned int command, const uint8_t *arg_ptr, uint16_t arg_len)
 {
-    int i;
+    unsigned i;
 
     // Skip if this isn't a spinel frame
     VerifyOrExit((SPINEL_HEADER_FLAG & header) == SPINEL_HEADER_FLAG, ;);
@@ -528,7 +528,7 @@ exit:
 
 void NcpBase::HandleCommandPropertyGet(uint8_t header, spinel_prop_key_t key)
 {
-    int i;
+    unsigned i;
 
     if (mSending)
     {
@@ -609,7 +609,7 @@ exit:
 void NcpBase::HandleCommandPropertyInsert(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr,
                                           uint16_t value_len)
 {
-    int i;
+    unsigned i;
 
     if (mSending)
     {
@@ -650,7 +650,7 @@ exit:
 void NcpBase::HandleCommandPropertyRemove(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr,
                                           uint16_t value_len)
 {
-    int i;
+    unsigned i;
 
     if (mSending)
     {
@@ -2252,6 +2252,7 @@ void NcpBase::SetPropertyHandler_STREAM_NET_INSECURE(uint8_t header, spinel_prop
         // May later include TX power, allow retransmits, etc...
         (void)meta_ptr;
         (void)meta_len;
+        (void)parsedLength;
 
         errorCode = message->Append(frame_ptr, frame_len);
     }
@@ -2315,6 +2316,7 @@ void NcpBase::SetPropertyHandler_STREAM_NET(uint8_t header, spinel_prop_key_t ke
         // May later include TX power, allow retransmits, etc...
         (void)meta_ptr;
         (void)meta_len;
+        (void)parsedLength;
 
         errorCode = message->Append(frame_ptr, frame_len);
     }
