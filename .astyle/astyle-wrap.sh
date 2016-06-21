@@ -27,6 +27,11 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
+#
+# astye does not return a non-zero exit code.  This wrapper exists with a
+# non-zero exit code if there is any output from astyle.
+#
+
 die() {
 	echo " *** ERROR: " $*
 	exit 1
@@ -34,24 +39,6 @@ die() {
 
 set -x
 
-./bootstrap || die
-
-[ $BUILD_TARGET != pretty-check ] || {
-    export PATH=/tmp/astyle/build/gcc/bin:$PATH || die
-    ./configure || die
-    make pretty-check || die
-}
-
-[ $BUILD_TARGET != posix ] || {
-    make -f Makefile-Standalone distcheck || die
-}
-
-[ $BUILD_TARGET != cc2538 ] || {
-    export PATH=/tmp/gcc-arm-none-eabi-4_9-2015q3/bin:$PATH || die
-    make -f examples/cc2538/Makefile-cc2538 || die
-}
-
-[ $BUILD_TARGET != scan-build ] || {
-    ./configure --with-examples=posix --enable-cli
-    scan-build --status-bugs -v make
+[ -z `$@` ] || {
+    [ $@ =~ .*dry-run.* ] || die
 }
