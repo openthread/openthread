@@ -40,11 +40,18 @@ using namespace Thread;
 
 namespace Thread {
 
-extern "C" void otSignalTaskletPending(void) {}
+extern "C" void otSignalTaskletPending(void) 
+{
+}
 
-extern "C" bool otAreTaskletsPending(void) { return false; }
+extern "C" bool otAreTaskletsPending(void) 
+{ 
+    return false; 
+}
 
-extern "C" void otPlatSerialSendDone(void) {}
+extern "C" void otPlatSerialSendDone(void) 
+{
+}
 
 extern "C" void otPlatSerialReceived(const uint8_t *aBuf, uint16_t aBufLength) 
 {
@@ -116,8 +123,8 @@ void TestLowpanIphc(void)
         printf("Decompressed OpenThread:\n");
         otTestPrintHex(result, resultLength);
 
-        SuccessOrQuit(memcmp(ipVector.data(), result, resultLength),
-                      "6lo: Lowpan::Decompress failed");
+        VerifyOrQuit(memcmp(ipVector.data(), result, resultLength) == 0,
+		     "6lo: Lowpan::Decompress failed");
 
         // ===> Test Lowpan::Compress
         int resultLength = sMockLowpan.Compress(*message, macSource, macDest,
@@ -125,8 +132,8 @@ void TestLowpanIphc(void)
         printf("Compressed OpenThread:\n");
         otTestPrintHex(result, resultLength);
 
-        SuccessOrQuit(memcmp(frame.GetPayload(), result, resultLength),
-                      "6lo: Lowpan::Compress failed");
+        VerifyOrQuit(memcmp(frame.GetPayload(), result, resultLength) == 0,
+		     "6lo: Lowpan::Compress failed");
 
         SuccessOrQuit(Message::Free(*message), "6lo: Message:Free failed");
         printf("PASS\n\n");
