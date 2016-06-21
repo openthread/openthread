@@ -70,7 +70,7 @@ $(OPENTHREAD_COVERAGE_BUNDLE):
 $(OPENTHREAD_COVERAGE_INFO): check | $(dir $(OPENTHREAD_COVERAGE_INFO))
 	$(call generate-coverage-report,${top_builddir})
 
-coverage: $(OPENTHREAD_COVERAGE_INFO)
+coverage-local: $(OPENTHREAD_COVERAGE_INFO)
 
 clean-local: clean-local-coverage
 
