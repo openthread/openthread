@@ -423,17 +423,14 @@ ThreadError MleRouter::ResetAdvertiseInterval(void)
 {
     uint32_t advertiseDelay;
 
-    VerifyOrExit(mAdvertiseInterval != kAdvertiseIntervalMin || !mAdvertiseTimer.IsRunning(), ;);
-
+    mAdvertiseTimer.Stop();
     mAdvertiseInterval = kAdvertiseIntervalMin;
-
     advertiseDelay = Timer::SecToMsec(mAdvertiseInterval) / 2;
     advertiseDelay += otPlatRandomGet() % advertiseDelay;
     mAdvertiseTimer.Start(advertiseDelay);
 
     otLogInfoMle("reset advertise interval\n");
 
-exit:
     return kThreadError_None;
 }
 
