@@ -65,11 +65,13 @@ static int spinel_errno_workaround_;
 #endif // SPINEL_PLATFORM_DOESNT_IMPLEMENT_ERRNO_VAR
 
 #ifndef assert_printf
+#if SPINEL_PLATFORM_DOESNT_IMPLEMENT_FPRINTF
 #define assert_printf(fmt, ...) \
-fprintf(stderr, \
-        __FILE__ ":%d: " fmt "\n", \
-        __LINE__, \
-        __VA_ARGS__)
+    printf(__FILE__ ":%d: " fmt "\n", __LINE__, __VA_ARGS__)
+#else // if SPINEL_PLATFORM_DOESNT_IMPLEMENT_FPRINTF
+#define assert_printf(fmt, ...) \
+    fprintf(stderr, __FILE__ ":%d: " fmt "\n", __LINE__, __VA_ARGS__)
+#endif // else SPINEL_PLATFORM_DOESNT_IMPLEMENT_FPRINTF
 #endif
 
 #ifndef require_action
