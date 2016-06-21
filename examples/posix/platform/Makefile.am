@@ -35,8 +35,8 @@ libopenthread_posix_a_CPPFLAGS            = \
     -I$(top_srcdir)/src                     \
     -I$(top_srcdir)/src/core                \
     -I$(top_srcdir)/examples/posix/platform \
+    -D_GNU_SOURCE                           \
     $(NULL)
-
 
 libopenthread_posix_a_SOURCES             = \
     alarm.c                                 \

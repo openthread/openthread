@@ -109,7 +109,7 @@ ThreadError Leader::GetContext(const Ip6::Address &aAddress, Lowpan::Context &aC
 
     aContext.mPrefixLength = 0;
 
-    if (PrefixMatch(mMle.GetMeshLocalPrefix(), aAddress.m8, 64) >= 0)
+    if (PrefixMatch(mMle.GetMeshLocalPrefix(), aAddress.mFields.m8, 64) >= 0)
     {
         aContext.mPrefix = mMle.GetMeshLocalPrefix();
         aContext.mPrefixLength = 64;
@@ -127,7 +127,7 @@ ThreadError Leader::GetContext(const Ip6::Address &aAddress, Lowpan::Context &aC
 
         prefix = reinterpret_cast<PrefixTlv *>(cur);
 
-        if (PrefixMatch(prefix->GetPrefix(), aAddress.m8, prefix->GetPrefixLength()) < 0)
+        if (PrefixMatch(prefix->GetPrefix(), aAddress.mFields.m8, prefix->GetPrefixLength()) < 0)
         {
             continue;
         }
@@ -253,7 +253,7 @@ ThreadError Leader::ConfigureAddress(PrefixTlv &aPrefix)
     {
         if (mAddresses[i].mValidLifetime != 0 &&
             mAddresses[i].mPrefixLength == aPrefix.GetPrefixLength() &&
-            PrefixMatch(mAddresses[i].mAddress.m8, aPrefix.GetPrefix(), aPrefix.GetPrefixLength()) >= 0)
+            PrefixMatch(mAddresses[i].mAddress.mFields.m8, aPrefix.GetPrefix(), aPrefix.GetPrefixLength()) >= 0)
         {
             mAddresses[i].mPreferredLifetime = entry->IsPreferred() ? 0xffffffff : 0;
             ExitNow();
@@ -269,11 +269,11 @@ ThreadError Leader::ConfigureAddress(PrefixTlv &aPrefix)
         }
 
         memset(&mAddresses[i], 0, sizeof(mAddresses[i]));
-        memcpy(mAddresses[i].mAddress.m8, aPrefix.GetPrefix(), BitVectorBytes(aPrefix.GetPrefixLength()));
+        memcpy(mAddresses[i].mAddress.mFields.m8, aPrefix.GetPrefix(), BitVectorBytes(aPrefix.GetPrefixLength()));
 
         for (size_t j = 8; j < sizeof(mAddresses[i].mAddress); j++)
         {
-            mAddresses[i].mAddress.m8[j] = otPlatRandomGet();
+            mAddresses[i].mAddress.mFields.m8[j] = otPlatRandomGet();
         }
 
         mAddresses[i].mPrefixLength = aPrefix.GetPrefixLength();
@@ -292,7 +292,7 @@ bool Leader::IsOnMesh(const Ip6::Address &aAddress)
     PrefixTlv *prefix;
     bool rval = false;
 
-    if (memcmp(aAddress.m8, mMle.GetMeshLocalPrefix(), 8) == 0)
+    if (memcmp(aAddress.mFields.m8, mMle.GetMeshLocalPrefix(), 8) == 0)
     {
         ExitNow(rval = true);
     }
@@ -308,7 +308,7 @@ bool Leader::IsOnMesh(const Ip6::Address &aAddress)
 
         prefix = reinterpret_cast<PrefixTlv *>(cur);
 
-        if (PrefixMatch(prefix->GetPrefix(), aAddress.m8, prefix->GetPrefixLength()) < 0)
+        if (PrefixMatch(prefix->GetPrefix(), aAddress.mFields.m8, prefix->GetPrefixLength()) < 0)
         {
             continue;
         }
@@ -342,7 +342,7 @@ ThreadError Leader::RouteLookup(const Ip6::Address &aSource, const Ip6::Address 
 
         prefix = reinterpret_cast<PrefixTlv *>(cur);
 
-        if (PrefixMatch(prefix->GetPrefix(), aSource.m8, prefix->GetPrefixLength()) >= 0)
+        if (PrefixMatch(prefix->GetPrefix(), aSource.mFields.m8, prefix->GetPrefixLength()) >= 0)
         {
             if (ExternalRouteLookup(prefix->GetDomainId(), aDestination, aPrefixMatch, aRloc16) == kThreadError_None)
             {
@@ -393,7 +393,7 @@ ThreadError Leader::ExternalRouteLookup(uint8_t aDomainId, const Ip6::Address &a
             continue;
         }
 
-        plen = PrefixMatch(prefix->GetPrefix(), aDestination.m8, prefix->GetPrefixLength());
+        plen = PrefixMatch(prefix->GetPrefix(), aDestination.mFields.m8, prefix->GetPrefixLength());
 
         if (plen > rval_plen)
         {
@@ -555,7 +555,7 @@ void Leader::HandleServerData(Coap::Header &aHeader, Message &aMessage,
     tlvsLength = aMessage.GetLength() - aMessage.GetOffset();
 
     aMessage.Read(aMessage.GetOffset(), tlvsLength, tlvs);
-    rloc16 = HostSwap16(aMessageInfo.mPeerAddr.m16[7]);
+    rloc16 = HostSwap16(aMessageInfo.mPeerAddr.mFields.m16[7]);
 
     SendServerDataResponse(aHeader, aMessageInfo, tlvs, tlvsLength);
     RegisterNetworkData(rloc16, tlvs, tlvsLength);

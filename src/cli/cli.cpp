@@ -332,10 +332,14 @@ void Interpreter::ProcessIpAddr(int argc, char *argv[])
         for (const otNetifAddress *addr = otGetUnicastAddresses(); addr; addr = addr->mNext)
         {
             sServer->OutputFormat("%x:%x:%x:%x:%x:%x:%x:%x\r\n",
-                                  HostSwap16(addr->mAddress.m16[0]), HostSwap16(addr->mAddress.m16[1]),
-                                  HostSwap16(addr->mAddress.m16[2]), HostSwap16(addr->mAddress.m16[3]),
-                                  HostSwap16(addr->mAddress.m16[4]), HostSwap16(addr->mAddress.m16[5]),
-                                  HostSwap16(addr->mAddress.m16[6]), HostSwap16(addr->mAddress.m16[7]));
+                                  HostSwap16(addr->mAddress.mFields.m16[0]),
+                                  HostSwap16(addr->mAddress.mFields.m16[1]),
+                                  HostSwap16(addr->mAddress.mFields.m16[2]),
+                                  HostSwap16(addr->mAddress.mFields.m16[3]),
+                                  HostSwap16(addr->mAddress.mFields.m16[4]),
+                                  HostSwap16(addr->mAddress.mFields.m16[5]),
+                                  HostSwap16(addr->mAddress.mFields.m16[6]),
+                                  HostSwap16(addr->mAddress.mFields.m16[7]));
         }
     }
     else
@@ -558,10 +562,14 @@ void Interpreter::HandleEchoResponse(void *aContext, Message &aMessage, const Ip
 
     sServer->OutputFormat("%d bytes from ", aMessage.GetLength() - aMessage.GetOffset());
     sServer->OutputFormat("%x:%x:%x:%x:%x:%x:%x:%x",
-                          HostSwap16(aMessageInfo.GetPeerAddr().m16[0]), HostSwap16(aMessageInfo.GetPeerAddr().m16[1]),
-                          HostSwap16(aMessageInfo.GetPeerAddr().m16[2]), HostSwap16(aMessageInfo.GetPeerAddr().m16[3]),
-                          HostSwap16(aMessageInfo.GetPeerAddr().m16[4]), HostSwap16(aMessageInfo.GetPeerAddr().m16[5]),
-                          HostSwap16(aMessageInfo.GetPeerAddr().m16[6]), HostSwap16(aMessageInfo.GetPeerAddr().m16[7]));
+                          HostSwap16(aMessageInfo.GetPeerAddr().mFields.m16[0]),
+                          HostSwap16(aMessageInfo.GetPeerAddr().mFields.m16[1]),
+                          HostSwap16(aMessageInfo.GetPeerAddr().mFields.m16[2]),
+                          HostSwap16(aMessageInfo.GetPeerAddr().mFields.m16[3]),
+                          HostSwap16(aMessageInfo.GetPeerAddr().mFields.m16[4]),
+                          HostSwap16(aMessageInfo.GetPeerAddr().mFields.m16[5]),
+                          HostSwap16(aMessageInfo.GetPeerAddr().mFields.m16[6]),
+                          HostSwap16(aMessageInfo.GetPeerAddr().mFields.m16[7]));
     sServer->OutputFormat(": icmp_seq=%d hlim=%d\r\n", icmp6Header.GetSequence(), aMessageInfo.mHopLimit);
 }
 

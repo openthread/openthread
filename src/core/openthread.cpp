@@ -299,24 +299,26 @@ ThreadError otAddBorderRouter(const otBorderRouterConfig *aConfig)
         flags |= NetworkData::BorderRouterEntry::kDefaultRouteFlag;
     }
 
-    return sThreadNetif->GetNetworkDataLocal().AddOnMeshPrefix(aConfig->mPrefix.mPrefix.m8, aConfig->mPrefix.mLength,
+    return sThreadNetif->GetNetworkDataLocal().AddOnMeshPrefix(aConfig->mPrefix.mPrefix.mFields.m8,
+                                                               aConfig->mPrefix.mLength,
                                                                aConfig->mPreference, flags, aConfig->mStable);
 }
 
 ThreadError otRemoveBorderRouter(const otIp6Prefix *aPrefix)
 {
-    return sThreadNetif->GetNetworkDataLocal().RemoveOnMeshPrefix(aPrefix->mPrefix.m8, aPrefix->mLength);
+    return sThreadNetif->GetNetworkDataLocal().RemoveOnMeshPrefix(aPrefix->mPrefix.mFields.m8, aPrefix->mLength);
 }
 
 ThreadError otAddExternalRoute(const otExternalRouteConfig *aConfig)
 {
-    return sThreadNetif->GetNetworkDataLocal().AddHasRoutePrefix(aConfig->mPrefix.mPrefix.m8, aConfig->mPrefix.mLength,
+    return sThreadNetif->GetNetworkDataLocal().AddHasRoutePrefix(aConfig->mPrefix.mPrefix.mFields.m8,
+                                                                 aConfig->mPrefix.mLength,
                                                                  aConfig->mPreference, aConfig->mStable);
 }
 
 ThreadError otRemoveExternalRoute(const otIp6Prefix *aPrefix)
 {
-    return sThreadNetif->GetNetworkDataLocal().RemoveHasRoutePrefix(aPrefix->mPrefix.m8, aPrefix->mLength);
+    return sThreadNetif->GetNetworkDataLocal().RemoveHasRoutePrefix(aPrefix->mPrefix.mFields.m8, aPrefix->mLength);
 }
 
 ThreadError otSendServerData(void)

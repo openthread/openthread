@@ -482,7 +482,7 @@ int radioTransmit(void)
 {
     struct sockaddr_in sockaddr;
     int rval = 0;
-    int i;
+    uint32_t i;
 
     memset(&sockaddr, 0, sizeof(sockaddr));
     sockaddr.sin_family = AF_INET;
@@ -564,7 +564,7 @@ void posixPlatformRadioProcess(void)
 void radioSendAck(void)
 {
     struct sockaddr_in sockaddr;
-    int i;
+    uint32_t i;
 
     s_ack_frame.mLength = IEEE802154_ACK_LENGTH;
     s_ack_message.mPsdu[0] = IEEE802154_FRAME_TYPE_ACK;

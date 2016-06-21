@@ -346,7 +346,7 @@ spinel_datatype_vunpack(const uint8_t *data_ptr, spinel_size_t data_len, const c
 
         case SPINEL_DATATYPE_UINT_PACKED_C:
         {
-            uint32_t *arg_ptr = va_arg(args, uint32_t *);
+            unsigned int *arg_ptr = va_arg(args, unsigned int *);
             spinel_ssize_t pui_len = spinel_packed_uint_decode(data_ptr, data_len, arg_ptr);
 
             require(pui_len > 0, bail);

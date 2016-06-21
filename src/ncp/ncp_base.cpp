@@ -1501,10 +1501,10 @@ void NcpBase::GetPropertyHandler_IPV6_ML_PREFIX(uint8_t header, spinel_prop_key_
     {
         otIp6Address addr;
 
-        memcpy(addr.m8, ml_prefix, 8);
+        memcpy(addr.mFields.m8, ml_prefix, 8);
 
         // Zero out the last 8 bytes.
-        memset(addr.m8 + 8, 0, 8);
+        memset(addr.mFields.m8 + 8, 0, 8);
 
         SendPropteryUpdate(
             header,

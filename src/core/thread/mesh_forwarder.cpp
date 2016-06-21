@@ -470,7 +470,7 @@ ThreadError MeshForwarder::UpdateIp6Route(Message &aMessage)
             // FFD - peform full routing
             if (mMle.IsRoutingLocator(ip6Header.GetDestination()))
             {
-                rloc16 = HostSwap16(ip6Header.GetDestination().m16[7]);
+                rloc16 = HostSwap16(ip6Header.GetDestination().mFields.m16[7]);
                 VerifyOrExit(mMle.GetRouterId(rloc16) < Mle::kMaxRouterId, error = kThreadError_Drop);
                 mMeshDest = rloc16;
             }
@@ -608,21 +608,21 @@ ThreadError MeshForwarder::GetMacDestinationAddress(const Ip6::Address &aIp6Addr
         aMacAddr.mLength = sizeof(aMacAddr.mShortAddress);
         aMacAddr.mShortAddress = Mac::kShortAddrBroadcast;
     }
-    else if (aIp6Addr.m16[0] == HostSwap16(0xfe80) &&
-             aIp6Addr.m16[1] == HostSwap16(0x0000) &&
-             aIp6Addr.m16[2] == HostSwap16(0x0000) &&
-             aIp6Addr.m16[3] == HostSwap16(0x0000) &&
-             aIp6Addr.m16[4] == HostSwap16(0x0000) &&
-             aIp6Addr.m16[5] == HostSwap16(0x00ff) &&
-             aIp6Addr.m16[6] == HostSwap16(0xfe00))
+    else if (aIp6Addr.mFields.m16[0] == HostSwap16(0xfe80) &&
+             aIp6Addr.mFields.m16[1] == HostSwap16(0x0000) &&
+             aIp6Addr.mFields.m16[2] == HostSwap16(0x0000) &&
+             aIp6Addr.mFields.m16[3] == HostSwap16(0x0000) &&
+             aIp6Addr.mFields.m16[4] == HostSwap16(0x0000) &&
+             aIp6Addr.mFields.m16[5] == HostSwap16(0x00ff) &&
+             aIp6Addr.mFields.m16[6] == HostSwap16(0xfe00))
     {
         aMacAddr.mLength = sizeof(aMacAddr.mShortAddress);
-        aMacAddr.mShortAddress = HostSwap16(aIp6Addr.m16[7]);
+        aMacAddr.mShortAddress = HostSwap16(aIp6Addr.mFields.m16[7]);
     }
     else if (mMle.IsRoutingLocator(aIp6Addr))
     {
         aMacAddr.mLength = sizeof(aMacAddr.mShortAddress);
-        aMacAddr.mShortAddress = HostSwap16(aIp6Addr.m16[7]);
+        aMacAddr.mShortAddress = HostSwap16(aIp6Addr.mFields.m16[7]);
     }
     else
     {
@@ -991,14 +991,14 @@ void MeshForwarder::HandleReceivedFrame(Mac::Frame &aFrame, ThreadError aError)
     if (aError == kThreadError_Security)
     {
         memset(&destination, 0, sizeof(destination));
-        destination.m16[0] = HostSwap16(0xfe80);
+        destination.mFields.m16[0] = HostSwap16(0xfe80);
 
         switch (macSource.mLength)
         {
         case 2:
-            destination.m16[5] = HostSwap16(0x00ff);
-            destination.m16[6] = HostSwap16(0xfe00);
-            destination.m16[7] = HostSwap16(macSource.mShortAddress);
+            destination.mFields.m16[5] = HostSwap16(0x00ff);
+            destination.mFields.m16[6] = HostSwap16(0xfe00);
+            destination.mFields.m16[7] = HostSwap16(macSource.mShortAddress);
             break;
 
         case 8:

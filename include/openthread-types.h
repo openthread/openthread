@@ -153,7 +153,7 @@ typedef struct otActiveScanResult
     uint8_t        mChannel;         ///< IEEE 802.15.4 Channel
     int8_t         mRssi;            ///< RSSI (dBm)
     uint8_t        mLqi;             ///< LQI
-    uint8_t        mVersion : 4;     ///< Version
+    unsigned int   mVersion : 4;     ///< Version
     bool           mIsNative : 1;    ///< Native Commissioner flag
     bool           mIsJoinable : 1;  ///< Joining Permitted flag
 } otActiveScanResult;
@@ -188,22 +188,22 @@ typedef struct otLinkModeConfig
     /**
      * 1, if the sender has its receiver on when not transmitting.  0, otherwise.
      */
-    uint8_t mRxOnWhenIdle : 1;
+    bool mRxOnWhenIdle : 1;
 
     /**
      * 1, if the sender will use IEEE 802.15.4 to secure all data requests.  0, otherwise.
      */
-    uint8_t mSecureDataRequests : 1;
+    bool mSecureDataRequests : 1;
 
     /**
      * 1, if the sender is an FFD.  0, otherwise.
      */
-    uint8_t mDeviceType : 1;
+    bool mDeviceType : 1;
 
     /**
      * 1, if the sender requires the full Network Data.  0, otherwise.
      */
-    uint8_t mNetworkData : 1;
+    bool mNetworkData : 1;
 } otLinkModeConfig;
 
 /**
@@ -252,10 +252,10 @@ typedef OT_TOOL_PACKED_BEGIN struct otIp6Address
 {
     union
     {
-        uint8_t  m8[kIp6AddressSize];
-        uint16_t m16[kIp6AddressSize / sizeof(uint16_t)];
-        uint32_t m32[kIp6AddressSize / sizeof(uint32_t)];
-    };
+        uint8_t  m8[kIp6AddressSize];                      ///< 8-bit fields
+        uint16_t m16[kIp6AddressSize / sizeof(uint16_t)];  ///< 16-bit fields
+        uint32_t m32[kIp6AddressSize / sizeof(uint32_t)];  ///< 32-bit fields
+    } mFields;                                             ///< IPv6 accessor fields
 } OT_TOOL_PACKED_END otIp6Address;
 
 /**
@@ -280,37 +280,37 @@ typedef struct otBorderRouterConfig
     /**
      * A 2-bit signed integer indicating router preference as defined in RFC 4291.
      */
-    int8_t      mPreference : 2;
+    int mPreference : 2;
 
     /**
      * TRUE, if @p mPrefix is preferred and should e used for address autoconfiguration.  FALSE, otherwise.
      */
-    uint8_t     mSlaacPreferred : 1;
+    bool mSlaacPreferred : 1;
 
     /**
      * TRUE, if @p mPrefix is valid and should be used for address autoconfiguration.  FALSE, otherwise.
      */
-    uint8_t     mSlaacValid : 1;
+    bool mSlaacValid : 1;
 
     /**
      * TRUE, if this border router is a DHCPv6 Agent that supplies IPv6 address configuration.  FALSE, otherwise.
      */
-    uint8_t     mDhcp : 1;
+    bool mDhcp : 1;
 
     /**
      * TRUE, if this border router is a DHCPv6 Agent that supplies other configuration data.  FALSE, otherwise.
      */
-    uint8_t     mConfigure : 1;
+    bool mConfigure : 1;
 
     /**
      * TRUE, if this border router is a default route for @p mPrefix.  FALSE, otherwise.
      */
-    uint8_t     mDefaultRoute : 1;
+    bool mDefaultRoute : 1;
 
     /**
      * TRUE, if this configuration is considered Stable Network Data.  FALSE, otherwise.
      */
-    uint8_t     mStable : 1;
+    bool mStable : 1;
 } otBorderRouterConfig;
 
 /**
@@ -326,12 +326,12 @@ typedef struct otExternalRouteConfig
     /**
      * A 2-bit signed integer indicating router preference as defined in RFC 4291.
      */
-    int8_t      mPreference : 2;
+    int mPreference : 2;
 
     /**
      * TRUE, if this configuration is considered Stable Network Data.  FALSE, otherwise.
      */
-    uint8_t     mStable : 1;
+    bool mStable : 1;
 } otExternalRouteConfig;
 
 /**
