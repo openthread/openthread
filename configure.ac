@@ -268,9 +268,9 @@ AM_CONDITIONAL([OPENTHREAD_BUILD_OPTIMIZED], [test "${nl_cv_build_optimized}" = 
 # Code style
 #
 
-AC_CHECK_TOOL(ASTYLE, astyle)
-AC_SUBST(ASTYLE_PRETTY_ARGS, ["--options=\${abs_top_builddir}/.astyle-opts"])
-AC_SUBST(ASTYLE_PRETTY_CHECK_ARGS, ["--options=\${abs_top_builddir}/.astyle-opts --dry-run"])
+AC_SUBST(ASTYLE, ["\${abs_top_srcdir}/.astyle/astyle-wrap.sh"])
+AC_SUBST(ASTYLE_PRETTY_ARGS, ["astyle --options=\${abs_top_builddir}/.astyle/astyle-opts"])
+AC_SUBST(ASTYLE_PRETTY_CHECK_ARGS, ["astyle --options=\${abs_top_builddir}/.astyle/astyle-opts --dry-run"])
 
 #
 # Tests

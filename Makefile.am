@@ -47,7 +47,8 @@ SUBDIRS                             = \
     $(NULL)
 
 EXTRA_DIST                          = \
-    .astyle-opts                      \
+    .astyle/astyle-opts               \
+    .astyle/astyle-wrap.sh            \
     .default-version                  \
     bootstrap                         \
     bootstrap-configure               \
