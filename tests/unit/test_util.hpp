@@ -26,40 +26,21 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef TEST_UTIL_H
-#define TEST_UTIL_H
+#ifndef TEST_UTIL_HPP
+#define TEST_UTIL_HPP
 
-#include <stdio.h>
-#include <stdlib.h>
+#include "test_util.h"
 
-#include <openthread-types.h>
+// STL is okay in unit tests.
+#include <string>
+#include <vector>
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+void otTestHexToVector(std::string &aHex, std::vector<uint8_t> &aOutBytes);
 
-#define SuccessOrQuit(ERR, MSG)                 \
-  do { \
-    if ((ERR) != kThreadError_None)     \
-    { \
-      fprintf(stderr, "%s FAILED: ", __FUNCTION__); \
-      fputs(MSG, stderr); \
-      exit(-1); \
-    } \
-  } while (0)
+void otTestPrintHex(uint8_t *aBuffer, int aLength);
 
-#define VerifyOrQuit(TST, MSG) \
-  do { \
-    if (!(TST)) \
-    { \
-      fprintf(stderr, "%s FAILED: ", __FUNCTION__); \
-      fputs(MSG, stderr); \
-      exit(-1); \
-    } \
-  } while (0)
+void otTestPrintHex(std::vector<uint8_t> &aBytes);
 
-#ifdef __cplusplus
-}
-#endif
+void otTestPrintHex(std::string &aString);
 
 #endif

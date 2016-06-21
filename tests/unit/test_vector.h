@@ -26,37 +26,46 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef TEST_UTIL_H
-#define TEST_UTIL_H
+#ifndef TEST_VECTOR_H
+#define TEST_VECTOR_H
 
-#include <stdio.h>
-#include <stdlib.h>
-
-#include <openthread-types.h>
+#include <stdint.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#define SuccessOrQuit(ERR, MSG)                 \
-  do { \
-    if ((ERR) != kThreadError_None)     \
-    { \
-      fprintf(stderr, "%s FAILED: ", __FUNCTION__); \
-      fputs(MSG, stderr); \
-      exit(-1); \
-    } \
-  } while (0)
+typedef const struct
+{
+    const char *mResult;
 
-#define VerifyOrQuit(TST, MSG) \
-  do { \
-    if (!(TST)) \
-    { \
-      fprintf(stderr, "%s FAILED: ", __FUNCTION__); \
-      fputs(MSG, stderr); \
-      exit(-1); \
-    } \
-  } while (0)
+    uint16_t mFcf;
+    uint16_t mSeq;
+    uint16_t mPanid;       ///< default panid is destination panid
+    const char *mSrc;
+    const char *mDst;
+} test_mac_vector_t;
+
+typedef const struct
+{
+    const char *mTest;
+    const char *mCompressed;
+    const char *mRaw;
+
+    const char *mPrefix;
+
+    test_mac_vector_t mMac;
+
+    uint16_t mTraffic;
+    uint16_t mFlow;
+    uint16_t mHops;
+    const char *mSrc;
+    const char *mDst;
+} test_lowpan_vector_t;
+
+
+extern const test_lowpan_vector_t sTestVectorLowpan[];
+extern const unsigned sTestVectorLowpanLen;
 
 #ifdef __cplusplus
 }
