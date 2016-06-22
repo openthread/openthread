@@ -40,20 +40,20 @@ using namespace Thread;
 
 namespace Thread {
 
-extern "C" void otSignalTaskletPending(void) 
+extern "C" void otSignalTaskletPending(void)
 {
 }
 
-extern "C" bool otAreTaskletsPending(void) 
-{ 
-    return false; 
+extern "C" bool otAreTaskletsPending(void)
+{
+    return false;
 }
 
-extern "C" void otPlatSerialSendDone(void) 
+extern "C" void otPlatSerialSendDone(void)
 {
 }
 
-extern "C" void otPlatSerialReceived(const uint8_t *aBuf, uint16_t aBufLength) 
+extern "C" void otPlatSerialReceived(const uint8_t *aBuf, uint16_t aBufLength)
 {
 }
 
@@ -124,7 +124,7 @@ void TestLowpanIphc(void)
         otTestPrintHex(result, resultLength);
 
         VerifyOrQuit(memcmp(ipVector.data(), result, resultLength) == 0,
-		     "6lo: Lowpan::Decompress failed");
+                     "6lo: Lowpan::Decompress failed");
 
         // ===> Test Lowpan::Compress
         int resultLength = sMockLowpan.Compress(*message, macSource, macDest,
@@ -133,7 +133,7 @@ void TestLowpanIphc(void)
         otTestPrintHex(result, resultLength);
 
         VerifyOrQuit(memcmp(frame.GetPayload(), result, resultLength) == 0,
-		     "6lo: Lowpan::Compress failed");
+                     "6lo: Lowpan::Compress failed");
 
         SuccessOrQuit(Message::Free(*message), "6lo: Message:Free failed");
         printf("PASS\n\n");
