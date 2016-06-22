@@ -270,6 +270,7 @@ AM_CONDITIONAL([OPENTHREAD_BUILD_OPTIMIZED], [test "${nl_cv_build_optimized}" = 
 
 AC_SUBST(PRETTY, ["\${abs_top_srcdir}/.astyle/astyle-wrap.sh"])
 AC_SUBST(PRETTY_ARGS, ["astyle --options=\${abs_top_builddir}/.astyle/astyle-opts"])
+AC_SUBST(PRETTY_CHECK, ["\${abs_top_srcdir}/.astyle/astyle-wrap.sh"])
 AC_SUBST(PRETTY_CHECK_ARGS, ["astyle --options=\${abs_top_builddir}/.astyle/astyle-opts --dry-run"])
 
 #
@@ -592,9 +593,10 @@ AC_MSG_NOTICE([
   C++ Compile flags                         : ${CXXFLAGS:--}
   Link flags                                : ${LDFLAGS:--}
   Link libraries                            : ${LIBS}
-  Astyle                                    : ${PRETTY}
-  Astyle pretty args                        : ${PRETTY_ARGS}
-  Astyle pretty check args                  : ${PRETTY_CHECK_ARGS}
+  Pretty                                    : ${PRETTY:--}
+  Pretty args                               : ${PRETTY_ARGS:--}
+  Pretty check                              : ${PRETTY_CHECK:--}
+  Pretty check args                         : ${PRETTY_CHECK_ARGS:--}
   OpenThread CLI support                    : ${enable_cli}
   OpenThread NCP support                    : ${enable_ncp}
   OpenThread examples                       : ${OPENTHREAD_EXAMPLES}
