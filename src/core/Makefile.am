@@ -50,6 +50,7 @@ libopenthread_a_SOURCES             = \
     net/icmp6.cpp                     \
     net/ip6.cpp                       \
     net/ip6_address.cpp               \
+    net/ip6_filter.cpp                \
     net/ip6_mpl.cpp                   \
     net/ip6_routes.cpp                \
     net/netif.cpp                     \
@@ -87,6 +88,7 @@ noinst_HEADERS                      = \
     net/icmp6.hpp                     \
     net/ip6.hpp                       \
     net/ip6_address.hpp               \
+    net/ip6_filter.hpp                \
     net/ip6_mpl.hpp                   \
     net/ip6_routes.hpp                \
     net/netif.hpp                     \

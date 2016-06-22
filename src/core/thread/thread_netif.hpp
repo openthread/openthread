@@ -36,6 +36,7 @@
 
 #include <openthread-types.h>
 #include <mac/mac.hpp>
+#include <net/ip6_filter.hpp>
 #include <net/netif.hpp>
 #include <thread/address_resolver.hpp>
 #include <thread/key_manager.hpp>
@@ -141,6 +142,14 @@ public:
     Coap::Server &GetCoapServer(void) { return mCoapServer; }
 
     /**
+     * This method returns a reference to the IPv6 filter object.
+     *
+     * @returns A reference to the IPv6 filter object.
+     *
+     */
+    Ip6::Filter &GetIp6Filter(void) { return mIp6Filter; }
+
+    /**
      * This method returns a pointer to the key manager object.
      *
      * @returns A pointer to the key manager object.
@@ -199,6 +208,7 @@ public:
 private:
     Coap::Server mCoapServer;
     AddressResolver mAddressResolver;
+    Ip6::Filter mIp6Filter;
     KeyManager mKeyManager;
     Lowpan::Lowpan mLowpan;
     Mac::Mac mMac;

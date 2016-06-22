@@ -328,6 +328,21 @@ ThreadError otSendServerData(void)
     return sThreadNetif->GetNetworkDataLocal().Register(destination);
 }
 
+ThreadError otAddUnsecurePort(uint16_t aPort)
+{
+    return sThreadNetif->GetIp6Filter().AddUnsecurePort(aPort);
+}
+
+ThreadError otRemoveUnsecurePort(uint16_t aPort)
+{
+    return sThreadNetif->GetIp6Filter().RemoveUnsecurePort(aPort);
+}
+
+const uint16_t *otGetUnsecurePorts(uint8_t *aNumEntries)
+{
+    return sThreadNetif->GetIp6Filter().GetUnsecurePorts(*aNumEntries);
+}
+
 uint32_t otGetContextIdReuseDelay(void)
 {
     return sThreadNetif->GetNetworkDataLeader().GetContextIdReuseDelay();

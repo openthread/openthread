@@ -587,6 +587,40 @@ ThreadError otRemoveExternalRoute(const otIp6Prefix *aPrefix);
 ThreadError otSendServerData(void);
 
 /**
+ * This function adds a port to the allowed unsecured port list.
+ *
+ * @param[in]  aPort  The port value.
+ *
+ * @retval kThreadError_None    The port was successfully added to the allowed unsecure port list.
+ * @retval kThreadError_NoBufs  The unsecure port list is full.
+ *
+ */
+ThreadError otAddUnsecurePort(uint16_t aPort);
+
+/**
+ * This function removes a port from the allowed unsecure port list.
+ *
+ * @param[in]  aPort  The port value.
+ *
+ * @retval kThreadError_None      The port was successfully removed from the allowed unsecure port list.
+ * @retval kThreadError_NotFound  The port was not found in the unsecure port list.
+ *
+ */
+ThreadError otRemoveUnsecurePort(uint16_t aPort);
+
+/**
+ * This function returns a pointer to the unsecure port list.
+ *
+ * @note Port value 0 is used to indicate an invalid entry.
+ *
+ * @param[out]  aNumEntries  The number of entries in the list.
+ *
+ * @returns A pointer to the unsecure port list.
+ *
+ */
+const uint16_t *otGetUnsecurePorts(uint8_t *aNumEntries);
+
+/**
  * @}
  *
  */

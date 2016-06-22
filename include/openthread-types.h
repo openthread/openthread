@@ -111,6 +111,11 @@ typedef enum ThreadError
      */
     kThreadError_DestinationAddressFiltered = 24,
 
+    /**
+     * The requested item could not be found.
+     */
+    kThreadError_NotFound = 25,
+
     kThreadError_Error = 255,
 } ThreadError;
 
