@@ -54,6 +54,22 @@
 // ----------------------------------------------------------------------------
 // MARK: -
 
+// IAR's errno.h apparently doesn't define EOVERFLOW.
+#ifndef EOVERFLOW
+// There is no real good choice for what to set
+// errno to in this case, so we just pick the
+// value '1' somewhat arbitrarily.
+#define EOVERFLOW 1
+#endif
+
+// IAR's errno.h apparently doesn't define EINVAL.
+#ifndef EINVAL
+// There is no real good choice for what to set
+// errno to in this case, so we just pick the
+// value '1' somewhat arbitrarily.
+#define EINVAL 1
+#endif
+
 #if defined(errno) && SPINEL_PLATFORM_DOESNT_IMPLEMENT_ERRNO_VAR
 #error SPINEL_PLATFORM_DOESNT_IMPLEMENT_ERRNO_VAR is set but errno is already defined.
 #endif
@@ -362,7 +378,8 @@ spinel_datatype_vunpack(const uint8_t *data_ptr, spinel_size_t data_len, const c
         case SPINEL_DATATYPE_UTF8_C:
         {
             const char **arg_ptr = va_arg(args, const char **);
-            ssize_t len = strnlen((const char *)data_ptr, data_len) + 1;
+            size_t len = strnlen((const char *)data_ptr, data_len) + 1;
+
             require_action((len <= data_len) || (data_ptr[data_len - 1] != 0), bail, (ret = -1, errno = EOVERFLOW));
 
             if (arg_ptr)
