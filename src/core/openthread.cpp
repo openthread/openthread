@@ -39,6 +39,7 @@
 #include <common/new.hpp>
 #include <common/tasklet.hpp>
 #include <common/timer.hpp>
+#include <net/icmp6.hpp>
 #include <platform/random.h>
 #include <thread/thread_netif.hpp>
 
@@ -733,6 +734,16 @@ ThreadError otSendUdp(otUdpSocket *aSocket, otMessage aMessage, const otMessageI
     Ip6::UdpSocket *socket = reinterpret_cast<Ip6::UdpSocket *>(aSocket);
     return socket->SendTo(*reinterpret_cast<Message *>(aMessage),
                           *reinterpret_cast<const Ip6::MessageInfo *>(aMessageInfo));
+}
+
+bool otIsIcmpEchoEnabled(void)
+{
+    return Ip6::Icmp::IsEchoEnabled();
+}
+
+void otSetIcmpEchoEnabled(bool aEnabled)
+{
+    Ip6::Icmp::SetEchoEnabled(aEnabled);
 }
 
 #ifdef __cplusplus

@@ -1195,6 +1195,23 @@ void otSetReceiveIp6DatagramCallback(otReceiveIp6DatagramCallback aCallback);
 ThreadError otSendIp6Datagram(otMessage aMessage);
 
 /**
+ * This function indicates whether or not ICMPv6 Echo processing is enabled.
+ *
+ * @retval TRUE   ICMPv6 Echo processing is enabled.
+ * @retval FALSE  ICMPv6 Echo processing is disabled.
+ *
+ */
+bool otIsIcmpEchoEnabled(void);
+
+/**
+ * This function sets whether or not ICMPv6 Echo processing is enabled.
+ *
+ * @param[in]  aEnabled  TRUE to enable ICMPv6 Echo processing, FALSE otherwise.
+ *
+ */
+void otSetIcmpEchoEnabled(bool aEnabled);
+
+/**
  * @}
  *
  */
