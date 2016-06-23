@@ -50,6 +50,10 @@ cd /tmp || die
     [ $BUILD_TARGET != scan-build ] || {
         sudo apt-get install clang || die
     }
+
+    [ $BUILD_TARGET != posix-32-bit ] || {
+        sudo apt-get install g++-multilib || die
+    }
 }
 
 [ $TRAVIS_OS_NAME != osx ] || {

@@ -56,6 +56,9 @@ matrix:
     - env: BUILD_TARGET="posix"
       compiler: gcc
       os: osx
+    - env: BUILD_TARGET="posix-32-bit"
+      compiler: gcc
+      os: linux
     - env: BUILD_TARGET="cc2538"
       compiler: gcc
       os: linux
