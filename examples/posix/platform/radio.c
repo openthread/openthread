@@ -259,9 +259,9 @@ static inline void getExtAddress(const uint8_t *frame, otExtAddress *address)
 {
     size_t i;
 
-    for (i = 0; i < sizeof(address); i++)
+    for (i = 0; i < sizeof(otExtAddress); i++)
     {
-        address->m8[i] = frame[IEEE802154_DSTADDR_OFFSET + (7 - i)];
+        address->m8[i] = frame[IEEE802154_DSTADDR_OFFSET + (sizeof(otExtAddress) - 1 - i)];
     }
 }
 
