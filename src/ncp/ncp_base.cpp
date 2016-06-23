@@ -103,6 +103,7 @@ const NcpBase::GetPropertyHandlerEntry NcpBase::mGetPropertyHandlerTable[] =
     { SPINEL_PROP_THREAD_STABLE_NETWORK_DATA, &NcpBase::GetPropertyHandler_THREAD_STABLE_NETWORK_DATA },
     { SPINEL_PROP_THREAD_STABLE_NETWORK_DATA_VERSION, &NcpBase::GetPropertyHandler_THREAD_STABLE_NETWORK_DATA_VERSION },
     { SPINEL_PROP_THREAD_LOCAL_ROUTES, &NcpBase::NcpBase::GetPropertyHandler_THREAD_LOCAL_ROUTES },
+    { SPINEL_PROP_THREAD_ASSISTING_PORTS, &NcpBase::NcpBase::GetPropertyHandler_THREAD_ASSISTING_PORTS },
 
     { SPINEL_PROP_IPV6_ML_PREFIX, &NcpBase::GetPropertyHandler_IPV6_ML_PREFIX },
     { SPINEL_PROP_IPV6_ML_ADDR, &NcpBase::GetPropertyHandler_IPV6_ML_ADDR },
@@ -136,6 +137,7 @@ const NcpBase::SetPropertyHandlerEntry NcpBase::mSetPropertyHandlerTable[] =
     { SPINEL_PROP_NET_KEY_SEQUENCE, &NcpBase::NcpBase::SetPropertyHandler_NET_KEY_SEQUENCE },
 
     { SPINEL_PROP_THREAD_LOCAL_LEADER_WEIGHT, &NcpBase::SetPropertyHandler_THREAD_LOCAL_LEADER_WEIGHT },
+    { SPINEL_PROP_THREAD_ASSISTING_PORTS, &NcpBase::NcpBase::SetPropertyHandler_THREAD_ASSISTING_PORTS },
 
     { SPINEL_PROP_STREAM_NET_INSECURE, &NcpBase::NcpBase::SetPropertyHandler_STREAM_NET_INSECURE },
     { SPINEL_PROP_STREAM_NET, &NcpBase::NcpBase::SetPropertyHandler_STREAM_NET },
@@ -148,6 +150,7 @@ const NcpBase::InsertPropertyHandlerEntry NcpBase::mInsertPropertyHandlerTable[]
     { SPINEL_PROP_IPV6_ADDRESS_TABLE, &NcpBase::NcpBase::InsertPropertyHandler_IPV6_ADDRESS_TABLE },
     { SPINEL_PROP_THREAD_LOCAL_ROUTES, &NcpBase::NcpBase::InsertPropertyHandler_THREAD_LOCAL_ROUTES },
     { SPINEL_PROP_THREAD_ON_MESH_NETS, &NcpBase::NcpBase::InsertPropertyHandler_THREAD_ON_MESH_NETS },
+    { SPINEL_PROP_THREAD_ASSISTING_PORTS, &NcpBase::NcpBase::InsertPropertyHandler_THREAD_ASSISTING_PORTS },
 };
 
 const NcpBase::RemovePropertyHandlerEntry NcpBase::mRemovePropertyHandlerTable[] =
@@ -155,6 +158,7 @@ const NcpBase::RemovePropertyHandlerEntry NcpBase::mRemovePropertyHandlerTable[]
     { SPINEL_PROP_IPV6_ADDRESS_TABLE, &NcpBase::NcpBase::RemovePropertyHandler_IPV6_ADDRESS_TABLE },
     { SPINEL_PROP_THREAD_LOCAL_ROUTES, &NcpBase::NcpBase::RemovePropertyHandler_THREAD_LOCAL_ROUTES },
     { SPINEL_PROP_THREAD_ON_MESH_NETS, &NcpBase::NcpBase::RemovePropertyHandler_THREAD_ON_MESH_NETS },
+    { SPINEL_PROP_THREAD_ASSISTING_PORTS, &NcpBase::NcpBase::RemovePropertyHandler_THREAD_ASSISTING_PORTS },
 };
 
 // ----------------------------------------------------------------------------
@@ -1493,6 +1497,39 @@ void NcpBase::GetPropertyHandler_THREAD_LEADER_ADDR(uint8_t header, spinel_prop_
     }
 }
 
+void
+NcpBase::GetPropertyHandler_THREAD_ASSISTING_PORTS(uint8_t header, spinel_prop_key_t key)
+{
+    ThreadError errorCode(OutboundFrameBegin());
+    uint8_t num_entries = 0;
+    const uint16_t* ports = otGetUnsecurePorts(&num_entries);
+
+    if (errorCode == kThreadError_None)
+    {
+        errorCode = OutboundFrameFeedPacked("Cii", header, SPINEL_CMD_PROP_VALUE_IS, key);
+    }
+
+    for (; num_entries != 0; ports++, num_entries--)
+    {
+        if (errorCode != kThreadError_None)
+        {
+            break;
+        }
+
+        errorCode = OutboundFrameFeedPacked("S", ports);
+    }
+
+    if (errorCode == kThreadError_None)
+    {
+        errorCode = OutboundFrameSend();
+    }
+
+    if (errorCode != kThreadError_None)
+    {
+        SendLastStatus(header, SPINEL_STATUS_INTERNAL_ERROR);
+    }
+}
+
 void NcpBase::GetPropertyHandler_IPV6_ML_PREFIX(uint8_t header, spinel_prop_key_t key)
 {
     const uint8_t *ml_prefix = otGetMeshLocalPrefix();
@@ -2371,6 +2408,72 @@ void NcpBase::SetPropertyHandler_IPV6_ML_PREFIX(uint8_t header, spinel_prop_key_
     }
 }
 
+void
+NcpBase::SetPropertyHandler_THREAD_ASSISTING_PORTS(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr, uint16_t value_len)
+{
+    ThreadError errorCode = kThreadError_None;
+    uint8_t num_entries = 0;
+    const uint16_t* ports = otGetUnsecurePorts(&num_entries);
+    spinel_ssize_t parsedLength = 0;
+    int ports_changed = 0;
+
+    // First, we need to remove all of the current assisting ports.
+    for (; num_entries != 0; ports++, num_entries--)
+    {
+        errorCode = otRemoveUnsecurePort(*ports);
+
+        if (errorCode != kThreadError_None)
+        {
+            break;
+        }
+
+        ports_changed++;
+    }
+
+    while ( (errorCode == kThreadError_None)
+         && (parsedLength > 0)
+         && (value_len >= 2)
+    ) {
+        uint16_t port;
+
+        parsedLength = spinel_datatype_unpack(
+                           value_ptr,
+                           value_len,
+                           "S",
+                           &port
+                       );
+
+        if (parsedLength > 0) {
+            errorCode = otAddUnsecurePort(port);
+        } else {
+            errorCode = kThreadError_Parse;
+        }
+
+        if (errorCode != kThreadError_None)
+        {
+            break;
+        }
+
+        ports_changed++;
+    }
+
+    if (errorCode == kThreadError_None)
+    {
+        HandleCommandPropertyGet(header, key);
+    }
+    else
+    {
+        SendLastStatus(header, ThreadErrorToSpinelStatus(errorCode));
+
+        if (ports_changed) {
+            // We had an error, but we've actually changed
+            // the state of these ports---so we need to report
+            // those incomplete changes via an asynchronous
+            // change event.
+            HandleCommandPropertyGet(SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0, key);
+        }
+    }
+}
 
 // ----------------------------------------------------------------------------
 // MARK: Individual Property Inserters
@@ -2536,6 +2639,46 @@ void NcpBase::InsertPropertyHandler_THREAD_ON_MESH_NETS(uint8_t header, spinel_p
     }
 }
 
+void
+NcpBase::InsertPropertyHandler_THREAD_ASSISTING_PORTS(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr, uint16_t value_len)
+{
+    spinel_ssize_t parsedLength;
+    ThreadError errorCode = kThreadError_None;
+    uint16_t port;
+
+    parsedLength = spinel_datatype_unpack(
+                       value_ptr,
+                       value_len,
+                       "S",
+                       &port
+                   );
+
+    if (parsedLength > 0)
+    {
+        errorCode = otAddUnsecurePort(port);
+
+        if (errorCode == kThreadError_None)
+        {
+            SendPropteryUpdate(
+                header,
+                SPINEL_CMD_PROP_VALUE_REMOVED,
+                key,
+                value_ptr,
+                value_len
+            );
+        }
+        else
+        {
+            SendLastStatus(header, ThreadErrorToSpinelStatus(errorCode));
+        }
+    }
+    else
+    {
+        SendLastStatus(header, SPINEL_STATUS_PARSE_ERROR);
+    }
+}
+
+
 // ----------------------------------------------------------------------------
 // MARK: Individual Property Removers
 // ----------------------------------------------------------------------------
@@ -2650,6 +2793,45 @@ void NcpBase::RemovePropertyHandler_THREAD_ON_MESH_NETS(uint8_t header, spinel_p
     {
         ip6_prefix.mPrefix = *addr_ptr;
         errorCode = otRemoveBorderRouter(&ip6_prefix);
+
+        if (errorCode == kThreadError_None)
+        {
+            SendPropteryUpdate(
+                header,
+                SPINEL_CMD_PROP_VALUE_REMOVED,
+                key,
+                value_ptr,
+                value_len
+            );
+        }
+        else
+        {
+            SendLastStatus(header, ThreadErrorToSpinelStatus(errorCode));
+        }
+    }
+    else
+    {
+        SendLastStatus(header, SPINEL_STATUS_PARSE_ERROR);
+    }
+}
+
+void
+NcpBase::RemovePropertyHandler_THREAD_ASSISTING_PORTS(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr, uint16_t value_len)
+{
+    spinel_ssize_t parsedLength;
+    ThreadError errorCode = kThreadError_None;
+    uint16_t port;
+
+    parsedLength = spinel_datatype_unpack(
+                       value_ptr,
+                       value_len,
+                       "S",
+                       &port
+                   );
+
+    if (parsedLength > 0)
+    {
+        errorCode = otRemoveUnsecurePort(port);
 
         if (errorCode == kThreadError_None)
         {
