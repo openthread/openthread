@@ -39,7 +39,6 @@
 #include <common/tasklet.hpp>
 #include <mac/mac.hpp>
 #include <net/ip6.hpp>
-#include <net/netif.hpp>
 #include <thread/address_resolver.hpp>
 #include <thread/lowpan.hpp>
 #include <thread/network_data_leader.hpp>
@@ -211,7 +210,7 @@ private:
     Tasklet mScheduleTransmissionTask;
     bool mEnabled;
 
-    Ip6::Netif &mNetif;
+    ThreadNetif &mNetif;
     AddressResolver &mAddressResolver;
     Lowpan::Lowpan &mLowpan;
     Mac::Mac &mMac;

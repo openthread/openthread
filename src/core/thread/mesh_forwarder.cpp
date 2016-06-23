@@ -37,6 +37,7 @@
 #include <common/encoding.hpp>
 #include <common/message.hpp>
 #include <net/ip6.hpp>
+#include <net/ip6_filter.hpp>
 #include <net/udp6.hpp>
 #include <net/netif.hpp>
 #include <net/udp6.hpp>
@@ -1162,6 +1163,10 @@ void MeshForwarder::HandleFragment(uint8_t *aFrame, uint8_t aFrameLength,
         message->SetLinkSecurityEnabled(aMessageInfo.mLinkSecurity);
         headerLength = mLowpan.Decompress(*message, aMacSource, aMacDest, aFrame, aFrameLength, datagramLength);
         VerifyOrExit(headerLength > 0, error = kThreadError_NoBufs);
+
+        // Security Check
+        VerifyOrExit(mNetif.GetIp6Filter().Accept(*message), error = kThreadError_Drop);
+
         aFrame += headerLength;
         aFrameLength -= headerLength;
 
@@ -1263,6 +1268,10 @@ void MeshForwarder::HandleLowpanHC(uint8_t *aFrame, uint8_t aFrameLength,
 
     headerLength = mLowpan.Decompress(*message, aMacSource, aMacDest, aFrame, aFrameLength, 0);
     VerifyOrExit(headerLength > 0, ;);
+
+    // Security Check
+    VerifyOrExit(mNetif.GetIp6Filter().Accept(*message), error = kThreadError_Drop);
+
     aFrame += headerLength;
     aFrameLength -= headerLength;
 
@@ -1285,29 +1294,8 @@ exit:
 
 ThreadError MeshForwarder::HandleDatagram(Message &aMessage, const ThreadMessageInfo &aMessageInfo)
 {
-    ThreadError error = kThreadError_Drop;
-    Ip6::Header ip6;
-    Ip6::UdpHeader udp;
-
-    // Security Check: only pass up IPv6 datagrams that were received with Security Enabled or all of the following:
-    // 1) Message contains IPv6 header
-    // 2) IPv6 Destination has link-local scope
-    // 3) IPv6 Next Header is UDP
-    // 4) Message contains UDP header
-    // 5) UDP Destination Port is the MLE port
-    VerifyOrExit(aMessage.IsLinkSecurityEnabled() ||
-                 (sizeof(ip6) == aMessage.Read(0, sizeof(ip6), &ip6) &&
-                  (ip6.GetDestination().IsLinkLocal() || ip6.GetDestination().IsLinkLocalMulticast()) &&
-                  ip6.GetNextHeader() == Ip6::kProtoUdp &&
-                  sizeof(udp) == aMessage.Read(sizeof(ip6), sizeof(udp), &udp) &&
-                  udp.GetDestinationPort() == Mle::kUdpPort),
-                 ;);
-
     Ip6::Ip6::HandleDatagram(aMessage, &mNetif, mNetif.GetInterfaceId(), &aMessageInfo, false);
-    error = kThreadError_None;
-
-exit:
-    return error;
+    return kThreadError_None;
 }
 
 void MeshForwarder::UpdateFramePending()
