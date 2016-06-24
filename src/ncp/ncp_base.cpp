@@ -239,6 +239,7 @@ NcpBase::NcpBase():
     assert(sThreadNetif != NULL);
     otSetStateChangedCallback(&HandleNetifStateChanged, this);
     otSetReceiveIp6DatagramCallback(&HandleDatagramFromStack);
+    otSetIcmpEchoEnabled(false);
 }
 
 // ----------------------------------------------------------------------------
