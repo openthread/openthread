@@ -55,6 +55,7 @@ namespace Ip6 {
 enum
 {
     kIcmp6DataSize = 4,
+    kIcmp6EchoRequestsSize = 3,
 };
 
 /**
@@ -73,6 +74,19 @@ struct IcmpHeaderPoD
         uint16_t m16[kIcmp6DataSize / sizeof(uint16_t)];
         uint32_t m32[kIcmp6DataSize / sizeof(uint32_t)];
     } mData;                 ///< Message-specific data
+} OT_TOOL_PACKED_END;
+
+/**
+ * This structure represents ICMPv6 Echo Request timestamp and sequence number information.
+ *
+ */
+OT_TOOL_PACKED_BEGIN
+struct IcmpEchoRequests
+{
+    uint32_t mEchoRequestTime[kIcmp6EchoRequestsSize];   ///< Timestamp of ICMP echo requests
+    uint8_t mEchoRequestSeq[kIcmp6EchoRequestsSize];     ///< Sequence Number of ICMP echo requests
+    uint8_t mEchoRequestHead;                            ///< Head index of ICMP echo request
+    uint8_t mEchoRequestLength;                          ///< Length of ICMP echo request
 } OT_TOOL_PACKED_END;
 
 /**
@@ -223,7 +237,7 @@ public:
      * @param[in]  aMessageInfo  A reference to message information associated with @p aMessage.
      *
      */
-    typedef void (*EchoReplyHandler)(void *aContext, Message &aMessage, const MessageInfo &aMessageInfo);
+    typedef void (*EchoReplyHandler)(void *aContext, Message &aMessage, const MessageInfo &aMessageInfo, uint32_t timestamp);
 
     /**
      * This constructor creates an ICMPv6 echo client.
@@ -248,15 +262,20 @@ public:
     ThreadError SendEchoRequest(const SockAddr &aDestination, const void *aPayload, uint16_t aPayloadLength);
 
 private:
-    void HandleEchoReply(Message &message, const MessageInfo &messageInfo) {
-        mHandler(mContext, message, messageInfo);
+    void HandleEchoReply(Message &message, const MessageInfo &messageInfo, uint32_t timestamp) {
+        mHandler(mContext, message, messageInfo, timestamp);
     }
+    void AddEchoRequest(uint8_t seq);
+    void DeleteEchoRequest(uint8_t seq);
+    uint8_t GetEchoRequest(uint8_t seq);
 
     EchoReplyHandler  mHandler;
     void             *mContext;
     uint16_t          mId;
     uint16_t          mSeq;
     IcmpEcho        *mNext;
+
+    struct IcmpEchoRequests mEchoRequests;
 
     static uint16_t   sNextId;
     static IcmpEcho *sEchoClients;

@@ -38,6 +38,7 @@
 
 #include <cli/cli_server.hpp>
 #include <net/icmp6.hpp>
+#include <common/timer.hpp>
 
 namespace Thread {
 
@@ -119,7 +120,8 @@ private:
     static void ProcessStop(int argc, char *argv[]);
     static void ProcessWhitelist(int argc, char *argv[]);
 
-    static void HandleEchoResponse(void *aContext, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    static void HandleEchoResponse(void *aContext, Message &aMessage, const Ip6::MessageInfo &aMessageInfo, uint32_t timestamp);
+    static void HandlePingTimer(void *aContext);
     static void HandleActiveScanResult(otActiveScanResult *aResult);
     static int Hex2Bin(const char *aHex, uint8_t *aBin, uint16_t aBinLength);
     static ThreadError ParseLong(char *argv, long &value);
@@ -131,6 +133,10 @@ private:
     static Ip6::IcmpEcho sIcmpEcho;
     static Server *sServer;
     static uint8_t sEchoRequest[];
+    static long sLength;
+    static long sCount;
+    static long sInterval;
+    static Timer sPingTimer;
 };
 
 }  // namespace Cli

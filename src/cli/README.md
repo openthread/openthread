@@ -348,13 +348,13 @@ Set the IEEE 802.15.4 PAN ID value.
 Done
 ```
 
-### ping \<ipaddr\> [size]
+### ping \<ipaddr\> [size] [count] [interval]
 
 Send an ICMPv6 Echo Request.
 
 ```bash
 > ping fdde:ad00:beef:0:558:f56b:d688:799
-16 bytes from fdde:ad00:beef:0:558:f56b:d688:799: icmp_seq=1 hlim=64
+16 bytes from fdde:ad00:beef:0:558:f56b:d688:799: icmp_seq=1 hlim=64 time=28ms
 ```
 
 ### prefix add \<prefix\> [pvdcsr] [prf]
