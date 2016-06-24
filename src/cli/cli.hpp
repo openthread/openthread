@@ -120,7 +120,7 @@ private:
     static void ProcessStop(int argc, char *argv[]);
     static void ProcessWhitelist(int argc, char *argv[]);
 
-    static void HandleEchoResponse(void *aContext, Message &aMessage, const Ip6::MessageInfo &aMessageInfo, uint32_t timestamp);
+    static void HandleEchoResponse(void *aContext, Message &aMessage, const Ip6::MessageInfo &aMessageInfo, uint32_t aTimestamp);
     static void HandlePingTimer(void *aContext);
     static void HandleActiveScanResult(otActiveScanResult *aResult);
     static int Hex2Bin(const char *aHex, uint8_t *aBin, uint16_t aBinLength);

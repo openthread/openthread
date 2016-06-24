@@ -558,7 +558,7 @@ exit:
     AppendResult(error);
 }
 
-void Interpreter::HandleEchoResponse(void *aContext, Message &aMessage, const Ip6::MessageInfo &aMessageInfo, uint32_t timestamp)
+void Interpreter::HandleEchoResponse(void *aContext, Message &aMessage, const Ip6::MessageInfo &aMessageInfo, uint32_t aTimestamp)
 {
     Ip6::IcmpHeader icmp6Header;
 
@@ -574,7 +574,7 @@ void Interpreter::HandleEchoResponse(void *aContext, Message &aMessage, const Ip
                           HostSwap16(aMessageInfo.GetPeerAddr().mFields.m16[5]),
                           HostSwap16(aMessageInfo.GetPeerAddr().mFields.m16[6]),
                           HostSwap16(aMessageInfo.GetPeerAddr().mFields.m16[7]));
-    sServer->OutputFormat(": icmp_seq=%d hlim=%d time=%dms\r\n", icmp6Header.GetSequence(), aMessageInfo.mHopLimit, Timer::GetNow() - timestamp);
+    sServer->OutputFormat(": icmp_seq=%d hlim=%d time=%dms\r\n", icmp6Header.GetSequence(), aMessageInfo.mHopLimit, Timer::GetNow() - aTimestamp);
 }
 
 void Interpreter::ProcessPing(int argc, char *argv[])
