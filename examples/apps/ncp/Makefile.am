@@ -28,27 +28,36 @@
 
 include $(abs_top_nlbuild_autotools_dir)/automake/pre.am
 
-# Always package (e.g. for 'make dist') these subdirectories.
-
-DIST_SUBDIRS                            = \
-    platforms                             \
-    apps                                  \
+bin_PROGRAMS                                                           = \
+    ot-ncp                                                               \
     $(NULL)
 
-# Always build (e.g. for 'make all') these subdirectories.
+ot_ncp_CPPFLAGS                                                        = \
+    -I$(top_srcdir)/include                                              \
+    -I$(top_srcdir)/examples/platforms                                   \
+    $(NULL)
 
-if OPENTHREAD_EXAMPLES
-SUBDIRS                                 = \
-    platforms                             \
-    apps                                  \
+ot_ncp_LDADD                                                           = \
+    $(top_builddir)/src/core/libopenthread.a                             \
+    $(top_builddir)/src/ncp/libopenthread-ncp.a                          \
+    $(top_builddir)/third_party/mbedtls/libmbedcrypto.a                  \
+    -lstdc++                                                             \
+    $(NULL)
+
+if OPENTHREAD_EXAMPLES_POSIX
+ot_ncp_LDADD                                                          += \
+    $(top_builddir)/examples/platforms/posix/libopenthread-posix.a       \
     $(NULL)
 endif
 
-# Always pretty (e.g. for 'make pretty') these subdirectories.
+if OPENTHREAD_EXAMPLES_CC2538
+ot_ncp_LDADD                                                          += \
+    $(top_builddir)/examples/platforms/cc2538/libopenthread-cc2538.a     \
+    $(NULL)
+endif
 
-PRETTY_SUBDIRS                          = \
-    platforms                             \
-    apps                                  \
+ot_ncp_SOURCES                                                         = \
+    main.c                                                               \
     $(NULL)
 
 include $(abs_top_nlbuild_autotools_dir)/automake/post.am

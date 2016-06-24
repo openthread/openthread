@@ -412,6 +412,7 @@ esac
 AC_MSG_RESULT(${OPENTHREAD_EXAMPLES})
 
 AC_SUBST(OPENTHREAD_EXAMPLES)
+AM_CONDITIONAL([OPENTHREAD_EXAMPLES], [test ${with_examples} != "none"])
 AC_DEFINE_UNQUOTED([OPENTHREAD_EXAMPLES],[${OPENTHREAD_EXAMPLES}],[OpenThread examples])
 
 AC_SUBST(OPENTHREAD_EXAMPLES_POSIX)
@@ -527,16 +528,12 @@ src/core/Makefile
 third_party/Makefile
 third_party/mbedtls/Makefile
 examples/Makefile
-examples/posix/Makefile
-examples/posix/app/Makefile
-examples/posix/app/cli/Makefile
-examples/posix/app/ncp/Makefile
-examples/posix/platform/Makefile
-examples/cc2538/Makefile
-examples/cc2538/app/Makefile
-examples/cc2538/app/cli/Makefile
-examples/cc2538/app/ncp/Makefile
-examples/cc2538/platform/Makefile
+examples/apps/Makefile
+examples/apps/cli/Makefile
+examples/apps/ncp/Makefile
+examples/platforms/Makefile
+examples/platforms/cc2538/Makefile
+examples/platforms/posix/Makefile
 tests/Makefile
 tests/scripts/Makefile
 tests/unit/Makefile
