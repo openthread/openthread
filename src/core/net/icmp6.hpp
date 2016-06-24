@@ -235,9 +235,10 @@ public:
      * @param[in]  aContext      A pointer to arbitrary context information.
      * @param[in]  aMessage      A reference to the received message.
      * @param[in]  aMessageInfo  A reference to message information associated with @p aMessage.
+     * @param[in]  aTimestamp    The timestamp receiving Echo Reply @p aMessage.
      *
      */
-    typedef void (*EchoReplyHandler)(void *aContext, Message &aMessage, const MessageInfo &aMessageInfo, uint32_t timestamp);
+    typedef void (*EchoReplyHandler)(void *aContext, Message &aMessage, const MessageInfo &aMessageInfo, uint32_t aTimestamp);
 
     /**
      * This constructor creates an ICMPv6 echo client.

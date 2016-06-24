@@ -141,11 +141,8 @@ exit:
 
 uint8_t IcmpEcho::GetEchoRequest(uint8_t seq)
 {
-    uint8_t index;
-    uint8_t length;
-
-    index = mEchoRequests.mEchoRequestHead;
-    length = mEchoRequests.mEchoRequestLength;
+    uint8_t index = mEchoRequests.mEchoRequestHead;
+    uint8_t length = mEchoRequests.mEchoRequestLength;
 
     while ((mEchoRequests.mEchoRequestSeq[index] != seq) && (length > 0))
     {
