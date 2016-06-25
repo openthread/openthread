@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2016, Nest Labs, Inc.
+ *  Copyright (c) 2016, Zolertia
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -28,47 +28,27 @@
 
 /**
  * @file
- * @brief
- *   This file includes the platform-specific initializers.
+ *   This file implements a basic GPIO driver
+ *
  */
 
-#include <platform/serial.h>
-#include "platform.h"
-#include "leds.h"
+#include <stdbool.h>
+#include <stdint.h>
 
-static void PlatformLedsInit(void)
+#include "cc2538-reg.h"
+#include "gpio.h"
+
+static uint32_t *ioc_over;
+static uint32_t *ioc_sel;
+
+void cc2538GpioIocOver(uint8_t port, uint8_t pin, uint8_t over)
 {
-    cc2538GpioSoftwareControl(GPIO_D_NUM, LED0_PIN);
-    cc2538GpioSoftwareControl(GPIO_D_NUM, LED1_PIN);
-    cc2538GpioSoftwareControl(GPIO_D_NUM, LED2_PIN);
-
-    cc2538GpioDirOutput(GPIO_D_NUM, LED0_PIN);
-    cc2538GpioDirOutput(GPIO_D_NUM, LED1_PIN);
-    cc2538GpioDirOutput(GPIO_D_NUM, LED2_PIN);
-
-    cc2538GpioIocOver(GPIO_D_NUM, LED0_PIN, IOC_OVERRIDE_DIS);
-    cc2538GpioIocOver(GPIO_D_NUM, LED1_PIN, IOC_OVERRIDE_DIS);
-    cc2538GpioIocOver(GPIO_D_NUM, LED2_PIN, IOC_OVERRIDE_DIS);
-
-    LED_RAINBOW();
+    ioc_over = (uint32_t *)IOC_PA0_OVER;
+    ioc_over[(port << 3) + pin] = over;
 }
 
-void PlatformInit(void)
+void cc2538GpioIocSel(uint8_t port, uint8_t pin, uint8_t sel)
 {
-    PlatformAlarmInit();
-    PlatformRadioInit();
-    PlatformRandomInit();
-    otPlatSerialEnable();
-
-    // Specific platform initialization
-    PlatformLedsInit();
-}
-
-void PlatformProcessDrivers(void)
-{
-    // should sleep and wait for interrupts here
-
-    PlatformSerialProcess();
-    PlatformRadioProcess();
-    PlatformAlarmProcess();
+    ioc_sel = (uint32_t *)IOC_PA0_SEL;
+    ioc_sel[(port << 3) + pin] = sel;
 }

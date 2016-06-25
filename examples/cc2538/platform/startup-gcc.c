@@ -66,8 +66,8 @@ void (*const vectors[])(void) =
 {
     (void (*)(void))((unsigned long)stack + sizeof(stack)),   // Initial Stack Pointer
     ResetHandler,                           // 1 The reset handler
-    ResetHandler,                       // 2 The NMI handler
-    IntDefaultHandler,                     // 3 The hard fault handler
+    ResetHandler,                           // 2 The NMI handler
+    IntDefaultHandler,                      // 3 The hard fault handler
     IntDefaultHandler,                      // 4 The MPU fault handler
     IntDefaultHandler,                      // 5 The bus fault handler
     IntDefaultHandler,                      // 6 The usage fault handler
