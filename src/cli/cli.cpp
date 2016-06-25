@@ -42,6 +42,7 @@
 #include <platform/serial.h>
 
 using Thread::Encoding::BigEndian::HostSwap16;
+using Thread::Encoding::BigEndian::HostSwap32;
 
 namespace Thread {
 namespace Cli {
@@ -558,11 +559,13 @@ exit:
     AppendResult(error);
 }
 
-void Interpreter::HandleEchoResponse(void *aContext, Message &aMessage, const Ip6::MessageInfo &aMessageInfo, uint32_t aTimestamp)
+void Interpreter::HandleEchoResponse(void *aContext, Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
     Ip6::IcmpHeader icmp6Header;
+    uint32_t timestamp;
 
     aMessage.Read(aMessage.GetOffset(), sizeof(icmp6Header), &icmp6Header);
+    aMessage.Read(aMessage.GetOffset() + sizeof(icmp6Header), sizeof(uint32_t), &timestamp);
 
     sServer->OutputFormat("%d bytes from ", aMessage.GetLength() - aMessage.GetOffset());
     sServer->OutputFormat("%x:%x:%x:%x:%x:%x:%x:%x",
@@ -574,7 +577,7 @@ void Interpreter::HandleEchoResponse(void *aContext, Message &aMessage, const Ip
                           HostSwap16(aMessageInfo.GetPeerAddr().mFields.m16[5]),
                           HostSwap16(aMessageInfo.GetPeerAddr().mFields.m16[6]),
                           HostSwap16(aMessageInfo.GetPeerAddr().mFields.m16[7]));
-    sServer->OutputFormat(": icmp_seq=%d hlim=%d time=%dms\r\n", icmp6Header.GetSequence(), aMessageInfo.mHopLimit, Timer::GetNow() - aTimestamp);
+    sServer->OutputFormat(": icmp_seq=%d hlim=%d time=%dms\r\n", icmp6Header.GetSequence(), aMessageInfo.mHopLimit, Timer::GetNow() - HostSwap32(timestamp));
 }
 
 void Interpreter::ProcessPing(int argc, char *argv[])
@@ -626,6 +629,7 @@ exit:
 
 void Interpreter::HandlePingTimer(void *aContext)
 {
+    *(uint32_t *)sEchoRequest = HostSwap32(Timer::GetNow());
     sIcmpEcho.SendEchoRequest(sSockAddr, sEchoRequest, sLength);
     sCount--;
     if (sCount)

@@ -37,7 +37,6 @@
 #include <common/debug.hpp>
 #include <common/logging.hpp>
 #include <common/message.hpp>
-#include <common/timer.hpp>
 #include <net/icmp6.hpp>
 #include <net/ip6.hpp>
 
@@ -60,7 +59,6 @@ IcmpEcho::IcmpEcho(EchoReplyHandler aHandler, void *aContext)
     mSeq = 0;
     mNext = sEchoClients;
     sEchoClients = this;
-    memset(&mEchoRequests, 0, sizeof(struct IcmpEchoRequests));
 }
 
 ThreadError IcmpEcho::SendEchoRequest(const SockAddr &aDestination,
@@ -79,7 +77,7 @@ ThreadError IcmpEcho::SendEchoRequest(const SockAddr &aDestination,
     icmp6Header.Init();
     icmp6Header.SetType(IcmpHeader::kTypeEchoRequest);
     icmp6Header.SetId(mId);
-    icmp6Header.SetSequence(mSeq);
+    icmp6Header.SetSequence(mSeq++);
     message->Write(0, sizeof(icmp6Header), &icmp6Header);
 
     memset(&messageInfo, 0, sizeof(messageInfo));
@@ -87,9 +85,6 @@ ThreadError IcmpEcho::SendEchoRequest(const SockAddr &aDestination,
     messageInfo.mInterfaceId = aDestination.mScopeId;
 
     SuccessOrExit(error = Ip6::SendDatagram(*message, messageInfo, kProtoIcmp6));
-
-    AddEchoRequest(mSeq++);
-
     otLogInfoIcmp("Sent echo request\n");
 
 exit:
@@ -100,62 +95,6 @@ exit:
     }
 
     return error;
-}
-
-void IcmpEcho::AddEchoRequest(uint8_t seq)
-{
-    uint8_t index;
-
-    if (mEchoRequests.mEchoRequestLength == kIcmp6EchoRequestsSize)
-    {
-        DeleteEchoRequest(mEchoRequests.mEchoRequestSeq[mEchoRequests.mEchoRequestHead]);
-    }
-
-    index = (mEchoRequests.mEchoRequestHead + mEchoRequests.mEchoRequestLength) % kIcmp6EchoRequestsSize;
-    mEchoRequests.mEchoRequestTime[index] = Timer::GetNow();
-    mEchoRequests.mEchoRequestSeq[index] = seq;
-    mEchoRequests.mEchoRequestLength++;
-}
-
-void IcmpEcho::DeleteEchoRequest(uint8_t seq)
-{
-    uint8_t index;
-    int length;
-
-    VerifyOrExit((index = GetEchoRequest(seq)) != 0xff, ;);
-    index++;
-
-    length = index - mEchoRequests.mEchoRequestHead;
-
-    if (length < 0)
-    {
-        length += kIcmp6EchoRequestsSize;
-    }
-
-    mEchoRequests.mEchoRequestHead = index % kIcmp6EchoRequestsSize;
-    mEchoRequests.mEchoRequestLength -= length;
-
-exit:
-    {}
-}
-
-uint8_t IcmpEcho::GetEchoRequest(uint8_t seq)
-{
-    uint8_t index = mEchoRequests.mEchoRequestHead;
-    uint8_t length = mEchoRequests.mEchoRequestLength;
-
-    while ((mEchoRequests.mEchoRequestSeq[index] != seq) && (length > 0))
-    {
-        index = (index + 1) % kIcmp6EchoRequestsSize;
-        length--;
-    }
-
-    if (length == 0)
-    {
-        index = 0xff;
-    }
-
-    return index;
 }
 
 ThreadError Icmp::RegisterCallbacks(IcmpHandler &aHandler)
@@ -310,21 +249,13 @@ exit:
 ThreadError Icmp::HandleEchoReply(Message &aMessage, const MessageInfo &aMessageInfo,
                                   const IcmpHeader &aIcmpHeader)
 {
-    uint8_t index;
-
     VerifyOrExit(sIsEchoEnabled, ;);
 
     for (IcmpEcho *client = IcmpEcho::sEchoClients; client; client = client->mNext)
     {
         if (client->mId == aIcmpHeader.GetId())
         {
-            index = client->GetEchoRequest(aIcmpHeader.GetSequence());
-
-            if (index != 0xff)
-            {
-                client->HandleEchoReply(aMessage, aMessageInfo, client->mEchoRequests.mEchoRequestTime[index]);
-                client->DeleteEchoRequest(aIcmpHeader.GetSequence());
-            }
+            client->HandleEchoReply(aMessage, aMessageInfo);
         }
     }
 
