@@ -783,7 +783,8 @@ ThreadError Mac::ProcessReceiveDataSequence(Frame &aFrame, Neighbor *aNeighbor)
 
     VerifyOrExit(aNeighbor != NULL, ;);
 
-    if ((aNeighbor->mRxDataSequence == aFrame.GetSequence()) && ((Timer::GetNow() - aNeighbor->mLastHeard) < kDuplicateThreshold))
+    if ((aNeighbor->mRxDataSequence == aFrame.GetSequence()) &&
+        ((Timer::GetNow() - aNeighbor->mLastHeard) < kDuplicateThreshold))
     {
         ExitNow(error = kThreadError_DuplicateFrameReceived);
     }
