@@ -903,9 +903,7 @@ ThreadError MleRouter::HandleLinkAccept(const Message &aMessage, const Ip6::Mess
     neighbor->mLinkInfo.Clear();
     neighbor->mLinkInfo.AddRss(threadMessageInfo->mRss);
     neighbor->mState = Neighbor::kStateValid;
-    assert(aKeySequence == mKeyManager.GetCurrentKeySequence() ||
-           aKeySequence == mKeyManager.GetPreviousKeySequence());
-    neighbor->mPreviousKey = aKeySequence == mKeyManager.GetPreviousKeySequence();
+    neighbor->mKeySequence = aKeySequence;
 
     if (aRequest)
     {
@@ -1181,7 +1179,6 @@ ThreadError MleRouter::HandleAdvertisement(const Message &aMessage, const Ip6::M
                 router->mLinkInfo.Clear();
                 router->mLinkInfo.AddRss(threadMessageInfo->mRss);
                 router->mState = Neighbor::kStateLinkRequest;
-                router->mPreviousKey = false;
                 SendLinkRequest(router);
                 ExitNow(error = kThreadError_NoRoute);
             }
@@ -1209,7 +1206,6 @@ ThreadError MleRouter::HandleAdvertisement(const Message &aMessage, const Ip6::M
             router->mLinkInfo.AddRss(threadMessageInfo->mRss);
             router->mState = Neighbor::kStateLinkRequest;
             router->mDataRequest = false;
-            router->mPreviousKey = false;
             SendLinkRequest(router);
             ExitNow(error = kThreadError_NoRoute);
         }
@@ -1414,7 +1410,6 @@ ThreadError MleRouter::HandleParentRequest(const Message &aMessage, const Ip6::M
     child->mLinkInfo.AddRss(threadMessageInfo->mRss);
     child->mState = Neighbor::kStateParentRequest;
     child->mDataRequest = false;
-    child->mPreviousKey = false;
 
     child->mTimeout = Timer::SecToMsec(2 * kParentRequestChildTimeout);
     SuccessOrExit(error = SendParentResponse(child, challenge));
@@ -1674,6 +1669,7 @@ ThreadError MleRouter::HandleChildIdRequest(const Message &aMessage, const Ip6::
     child->mLastHeard = Timer::GetNow();
     child->mValid.mLinkFrameCounter = linkFrameCounter.GetFrameCounter();
     child->mValid.mMleFrameCounter = mleFrameCounter.GetFrameCounter();
+    child->mKeySequence = aKeySequence;
     child->mMode = mode.GetMode();
     child->mLinkInfo.AddRss(threadMessageInfo->mRss);
     child->mTimeout = timeout.GetTimeout();
@@ -1688,10 +1684,6 @@ ThreadError MleRouter::HandleChildIdRequest(const Message &aMessage, const Ip6::
     }
 
     UpdateChildAddresses(address, *child);
-
-    assert(aKeySequence == mKeyManager.GetCurrentKeySequence() ||
-           aKeySequence == mKeyManager.GetPreviousKeySequence());
-    child->mPreviousKey = aKeySequence == mKeyManager.GetPreviousKeySequence();
 
     for (uint8_t i = 0; i < tlvRequest.GetLength(); i++)
     {
