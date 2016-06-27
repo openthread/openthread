@@ -867,6 +867,11 @@ void Mac::ReceiveDoneTask(Frame *aFrame, ThreadError aError)
     // Security Processing
     SuccessOrExit(error = ProcessReceiveSecurity(*aFrame, srcaddr, neighbor));
 
+    if (neighbor != NULL)
+    {
+        neighbor->mLinkInfo.AddRss(aFrame->mPower);
+    }
+
     switch (mState)
     {
     case kStateActiveScan:
