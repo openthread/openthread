@@ -82,6 +82,7 @@ public:
     bool    mPreviousKey : 1;            ///< Indicates whether or not the neighbor is still using a previous key
     bool    mDataRequest : 1;            ///< Indicates whether or not a Data Poll was received
     int8_t  mRssi;                       ///< Received Signal Strength Indicator
+    uint8_t mRxDataSequence;             ///< Received Data Sequence Number
 };
 
 /**

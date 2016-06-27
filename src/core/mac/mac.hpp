@@ -432,6 +432,7 @@ private:
     void NextOperation(void);
     void ProcessTransmitSecurity(Frame &aFrame);
     ThreadError ProcessReceiveSecurity(Frame &aFrame, const Address &aSrcAddr, Neighbor *aNeighbor);
+    ThreadError ProcessReceiveDataSequence(Frame &aFrame, Neighbor *aNeighbor);
     void ScheduleNextTransmission(void);
     void SentFrame(bool aAcked);
     void SendBeaconRequest(Frame &aFrame);
