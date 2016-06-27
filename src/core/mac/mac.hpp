@@ -80,6 +80,8 @@ enum
 
     kScanChannelsAll      = 0xffff,                ///< All channels.
     kScanDurationDefault  = 200,                   ///< Default interval between channels (milliseconds).
+
+    kDuplicateThreshold   = 600,                  ///< Threshold for checking duplicates (milliseconds).
 };
 
 /**
