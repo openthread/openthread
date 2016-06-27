@@ -577,7 +577,8 @@ void Interpreter::HandleEchoResponse(void *aContext, Message &aMessage, const Ip
                           HostSwap16(aMessageInfo.GetPeerAddr().mFields.m16[5]),
                           HostSwap16(aMessageInfo.GetPeerAddr().mFields.m16[6]),
                           HostSwap16(aMessageInfo.GetPeerAddr().mFields.m16[7]));
-    sServer->OutputFormat(": icmp_seq=%d hlim=%d time=%dms\r\n", icmp6Header.GetSequence(), aMessageInfo.mHopLimit, Timer::GetNow() - HostSwap32(timestamp));
+    sServer->OutputFormat(": icmp_seq=%d hlim=%d time=%dms\r\n", icmp6Header.GetSequence(), aMessageInfo.mHopLimit,
+                          Timer::GetNow() - HostSwap32(timestamp));
 }
 
 void Interpreter::ProcessPing(int argc, char *argv[])
@@ -595,6 +596,7 @@ void Interpreter::ProcessPing(int argc, char *argv[])
     sLength = 8;
     sCount = 1;
     sInterval = 1000;
+
     while (index < argc)
     {
         switch (index)
@@ -632,6 +634,7 @@ void Interpreter::HandlePingTimer(void *aContext)
     *(uint32_t *)sEchoRequest = HostSwap32(Timer::GetNow());
     sIcmpEcho.SendEchoRequest(sSockAddr, sEchoRequest, sLength);
     sCount--;
+
     if (sCount)
     {
         sPingTimer.Start(sInterval);
