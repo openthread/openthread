@@ -777,6 +777,24 @@ exit:
     return error;
 }
 
+ThreadError Mac::ProcessReceiveDataSequence(Frame &aFrame, Neighbor *aNeighbor)
+{
+    ThreadError error = kThreadError_None;
+
+    VerifyOrExit(aNeighbor != NULL, ;);
+
+    if ((aNeighbor->mRxDataSequence == aFrame.GetSequence()) &&
+        ((Timer::GetNow() - aNeighbor->mLastHeard) < kDuplicateThreshold))
+    {
+        ExitNow(error = kThreadError_DuplicateFrameReceived);
+    }
+
+    aNeighbor->mRxDataSequence = aFrame.GetSequence();
+
+exit:
+    return error;
+}
+
 extern "C" void otPlatRadioReceiveDone(RadioPacket *aFrame, ThreadError aError)
 {
     sMac->ReceiveDoneTask(static_cast<Frame *>(aFrame), aError);
@@ -903,6 +921,7 @@ void Mac::ReceiveDoneTask(Frame *aFrame, ThreadError aError)
             break;
 
         case Frame::kFcfFrameData:
+            SuccessOrExit(error = ProcessReceiveDataSequence(*aFrame, neighbor));
             mCounters.mRxData++;
             break;
 
@@ -951,6 +970,10 @@ exit:
 
         case kThreadError_DestinationAddressFiltered:
             mCounters.mRxDestAddrFiltered++;
+            break;
+
+        case kThreadError_DuplicateFrameReceived:
+            mCounters.mRxDuplicates++;
             break;
 
         default:

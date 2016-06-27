@@ -112,6 +112,11 @@ typedef enum ThreadError
     kThreadError_DestinationAddressFiltered = 24,
 
     /**
+     * Received a duplicate frame.
+     */
+    kThreadError_DuplicateFrameReceived = 25,
+
+    /**
      * The requested item could not be found.
      */
     kThreadError_NotFound = 25,
@@ -416,6 +421,7 @@ typedef struct otMacCounters
     uint32_t mRxBeacon;               ///< The number of received beacon.
     uint32_t mRxBeaconRequest;        ///< The number of received beacon request.
     uint32_t mRxOther;                ///< The number of received other types of frames.
+    uint32_t mRxDuplicates;           ///< The number of received duplicate frames.
     uint32_t mRxWhitelistFiltered;    ///< The number of received packets filtered by whitelist.
     uint32_t mRxDestAddrFiltered;     ///< The number of received packets filtered by destination check.
     uint32_t mRxErrNoFrame;           ///< The number of received packets that do not contain contents.
