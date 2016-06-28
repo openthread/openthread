@@ -441,6 +441,10 @@ const otNetifAddress *otGetUnicastAddresses(void);
 /**
  * Add a Network Interface Address to the Thread interface.
  *
+ * The passed in instance @p aAddress will be added and stored by the Thread interface, so the caller should ensure
+ * that the address instance remains valid (not de-alloacted) and is not modified after a successful call to this
+ * method.
+ *
  * @param[in]  aAddress  A pointer to a Network Interface Address.
  *
  * @retval kThreadErrorNone  Successfully added the Network Interface Address.
