@@ -376,6 +376,7 @@ ThreadError Leader::ExternalRouteLookup(uint8_t aDomainId, const Ip6::Address &a
     int8_t rval_plen = 0;
     int8_t plen;
     NetworkDataTlv *cur;
+    NetworkDataTlv *subCur;
 
     for (cur = reinterpret_cast<NetworkDataTlv *>(mTlvs);
          cur < reinterpret_cast<NetworkDataTlv *>(mTlvs + mLength);
@@ -398,16 +399,16 @@ ThreadError Leader::ExternalRouteLookup(uint8_t aDomainId, const Ip6::Address &a
         if (plen > rval_plen)
         {
             // select border router
-            for (cur = reinterpret_cast<NetworkDataTlv *>(prefix->GetSubTlvs());
-                 cur < reinterpret_cast<NetworkDataTlv *>(prefix->GetSubTlvs() + prefix->GetSubTlvsLength());
-                 cur = cur->GetNext())
+            for (subCur = reinterpret_cast<NetworkDataTlv *>(prefix->GetSubTlvs());
+                 subCur < reinterpret_cast<NetworkDataTlv *>(prefix->GetSubTlvs() + prefix->GetSubTlvsLength());
+                 subCur = subCur->GetNext())
             {
-                if (cur->GetType() != NetworkDataTlv::kTypeHasRoute)
+                if (subCur->GetType() != NetworkDataTlv::kTypeHasRoute)
                 {
                     continue;
                 }
 
-                hasRoute = reinterpret_cast<HasRouteTlv *>(cur);
+                hasRoute = reinterpret_cast<HasRouteTlv *>(subCur);
 
                 for (int i = 0; i < hasRoute->GetNumEntries(); i++)
                 {
