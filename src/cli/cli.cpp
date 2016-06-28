@@ -562,10 +562,9 @@ exit:
 void Interpreter::HandleEchoResponse(void *aContext, Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
     Ip6::IcmpHeader icmp6Header;
-    uint32_t timestamp;
+    uint32_t timestamp = 0;
 
     aMessage.Read(aMessage.GetOffset(), sizeof(icmp6Header), &icmp6Header);
-    aMessage.Read(aMessage.GetOffset() + sizeof(icmp6Header), sizeof(uint32_t), &timestamp);
 
     sServer->OutputFormat("%d bytes from ", aMessage.GetLength() - aMessage.GetOffset());
     sServer->OutputFormat("%x:%x:%x:%x:%x:%x:%x:%x",
@@ -577,8 +576,16 @@ void Interpreter::HandleEchoResponse(void *aContext, Message &aMessage, const Ip
                           HostSwap16(aMessageInfo.GetPeerAddr().mFields.m16[5]),
                           HostSwap16(aMessageInfo.GetPeerAddr().mFields.m16[6]),
                           HostSwap16(aMessageInfo.GetPeerAddr().mFields.m16[7]));
-    sServer->OutputFormat(": icmp_seq=%d hlim=%d time=%dms\r\n", icmp6Header.GetSequence(), aMessageInfo.mHopLimit,
-                          Timer::GetNow() - HostSwap32(timestamp));
+
+    if (aMessage.Read(aMessage.GetOffset() + sizeof(icmp6Header), sizeof(uint32_t), &timestamp) >= sizeof(uint32_t))
+    {
+        sServer->OutputFormat(": icmp_seq=%d hlim=%d time=%dms\r\n", icmp6Header.GetSequence(), aMessageInfo.mHopLimit,
+                              Timer::GetNow() - HostSwap32(timestamp));
+    }
+    else
+    {
+        sServer->OutputFormat(": icmp_seq=%d hlim=%d\r\n", icmp6Header.GetSequence(), aMessageInfo.mHopLimit);
+    }
 }
 
 void Interpreter::ProcessPing(int argc, char *argv[])
