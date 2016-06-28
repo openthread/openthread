@@ -28,7 +28,7 @@ After a successful build, the `elf` files are found in
 `<path-to-openthread>/output/bin`.  You can convert them to `bin`
 files using `arm-none-eabi-objcopy`:
 ```bash
-$ arm-none-eabi-objcopy -O binary arm-none-eabi-soc arm-none-eabi-soc.bin
+$ arm-none-eabi-objcopy -O binary arm-none-eabi-ot-cli arm-none-eabi-ot-cli.bin
 ```
 
 ## Flash Binaries
