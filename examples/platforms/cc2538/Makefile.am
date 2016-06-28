@@ -28,27 +28,30 @@
 
 include $(abs_top_nlbuild_autotools_dir)/automake/pre.am
 
-# Always package (e.g. for 'make dist') these subdirectories.
+lib_LIBRARIES                             = libopenthread-cc2538.a
 
-DIST_SUBDIRS                            = \
-    platforms                             \
-    apps                                  \
+libopenthread_cc2538_a_CPPFLAGS           = \
+    -I$(top_srcdir)/include                 \
+    -I$(top_srcdir)/src/core                \
     $(NULL)
 
-# Always build (e.g. for 'make all') these subdirectories.
-
-if OPENTHREAD_EXAMPLES
-SUBDIRS                                 = \
-    platforms                             \
-    apps                                  \
+libopenthread_cc2538_a_SOURCES            = \
+    alarm.c                                 \
+    logging.c                               \
+    platform.c                              \
+    radio.c                                 \
+    random.c                                \
+    serial.c                                \
+    startup-gcc.c                           \
     $(NULL)
-endif
 
-# Always pretty (e.g. for 'make pretty') these subdirectories.
-
-PRETTY_SUBDIRS                          = \
-    platforms                             \
-    apps                                  \
+noinst_HEADERS                            = \
+    cc2538-reg.h                            \
+    platform-cc2538.h                       \
     $(NULL)
+
+if OPENTHREAD_BUILD_COVERAGE
+CLEANFILES                                = $(wildcard *.gcda *.gcno)
+endif # OPENTHREAD_BUILD_COVERAGE
 
 include $(abs_top_nlbuild_autotools_dir)/automake/post.am
