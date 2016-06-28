@@ -42,6 +42,7 @@
 #include <platform/serial.h>
 
 using Thread::Encoding::BigEndian::HostSwap16;
+using Thread::Encoding::BigEndian::HostSwap32;
 
 namespace Thread {
 namespace Cli {
@@ -83,6 +84,10 @@ Ip6::IcmpEcho Interpreter::sIcmpEcho(&HandleEchoResponse, NULL);
 Ip6::SockAddr Interpreter::sSockAddr;
 Server *Interpreter::sServer;
 uint8_t Interpreter::sEchoRequest[1500];
+uint16_t Interpreter::sLength = 8;
+uint16_t Interpreter::sCount = 1;
+uint32_t Interpreter::sInterval = 1000;
+Timer Interpreter::sPingTimer(&HandlePingTimer, NULL);
 
 int Interpreter::Hex2Bin(const char *aHex, uint8_t *aBin, uint16_t aBinLength)
 {
@@ -557,6 +562,7 @@ exit:
 void Interpreter::HandleEchoResponse(void *aContext, Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
     Ip6::IcmpHeader icmp6Header;
+    uint32_t timestamp = 0;
 
     aMessage.Read(aMessage.GetOffset(), sizeof(icmp6Header), &icmp6Header);
 
@@ -570,31 +576,77 @@ void Interpreter::HandleEchoResponse(void *aContext, Message &aMessage, const Ip
                           HostSwap16(aMessageInfo.GetPeerAddr().mFields.m16[5]),
                           HostSwap16(aMessageInfo.GetPeerAddr().mFields.m16[6]),
                           HostSwap16(aMessageInfo.GetPeerAddr().mFields.m16[7]));
-    sServer->OutputFormat(": icmp_seq=%d hlim=%d\r\n", icmp6Header.GetSequence(), aMessageInfo.mHopLimit);
+    sServer->OutputFormat(": icmp_seq=%d hlim=%d", icmp6Header.GetSequence(), aMessageInfo.mHopLimit);
+
+    if (aMessage.Read(aMessage.GetOffset() + sizeof(icmp6Header), sizeof(uint32_t), &timestamp) >= sizeof(uint32_t))
+    {
+        sServer->OutputFormat(" time=%dms", Timer::GetNow() - HostSwap32(timestamp));
+    }
+
+    sServer->OutputFormat("\r\n");
 }
 
 void Interpreter::ProcessPing(int argc, char *argv[])
 {
     ThreadError error = kThreadError_None;
-    long length = 8;
+    uint8_t index = 1;
+    long value;
 
     VerifyOrExit(argc > 0, error = kThreadError_Parse);
+    VerifyOrExit(!sPingTimer.IsRunning(), error = kThreadError_Busy);
 
     memset(&sSockAddr, 0, sizeof(sSockAddr));
     SuccessOrExit(error = sSockAddr.GetAddress().FromString(argv[0]));
     sSockAddr.mScopeId = 1;
 
-    if (argc > 1)
+    sLength = 8;
+    sCount = 1;
+    sInterval = 1000;
+
+    while (index < argc)
     {
-        SuccessOrExit(error = ParseLong(argv[1], length));
+        SuccessOrExit(error = ParseLong(argv[index], value));
+
+        switch (index)
+        {
+        case 1:
+            sLength = (uint16_t)value;
+            break;
+
+        case 2:
+            sCount = (uint16_t)value;
+            break;
+
+        case 3:
+            sInterval = (uint32_t)value;
+            sInterval = sInterval * 1000;
+            break;
+
+        default:
+            ExitNow(error = kThreadError_Parse);
+        }
+
+        index++;
     }
 
-    sIcmpEcho.SendEchoRequest(sSockAddr, sEchoRequest, length);
+    HandlePingTimer(NULL);
 
     return;
 
 exit:
     AppendResult(error);
+}
+
+void Interpreter::HandlePingTimer(void *aContext)
+{
+    *(uint32_t *)sEchoRequest = HostSwap32(Timer::GetNow());
+    sIcmpEcho.SendEchoRequest(sSockAddr, sEchoRequest, sLength);
+    sCount--;
+
+    if (sCount)
+    {
+        sPingTimer.Start(sInterval);
+    }
 }
 
 ThreadError Interpreter::ProcessPrefixAdd(int argc, char *argv[])
