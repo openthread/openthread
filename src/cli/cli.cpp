@@ -84,9 +84,9 @@ Ip6::IcmpEcho Interpreter::sIcmpEcho(&HandleEchoResponse, NULL);
 Ip6::SockAddr Interpreter::sSockAddr;
 Server *Interpreter::sServer;
 uint8_t Interpreter::sEchoRequest[1500];
-long Interpreter::sLength = 8;
-long Interpreter::sCount = 1;
-long Interpreter::sInterval = 1000;
+uint16_t Interpreter::sLength = 8;
+uint16_t Interpreter::sCount = 1;
+uint32_t Interpreter::sInterval = 1000;
 Timer Interpreter::sPingTimer(&HandlePingTimer, NULL);
 
 int Interpreter::Hex2Bin(const char *aHex, uint8_t *aBin, uint16_t aBinLength)
@@ -592,6 +592,7 @@ void Interpreter::ProcessPing(int argc, char *argv[])
 {
     ThreadError error = kThreadError_None;
     uint8_t index = 1;
+    long value;
 
     VerifyOrExit(argc > 0, error = kThreadError_Parse);
     VerifyOrExit(!sPingTimer.IsRunning(), error = kThreadError_Busy);
@@ -606,18 +607,20 @@ void Interpreter::ProcessPing(int argc, char *argv[])
 
     while (index < argc)
     {
+        SuccessOrExit(error = ParseLong(argv[index], value));
+
         switch (index)
         {
         case 1:
-            SuccessOrExit(error = ParseLong(argv[index], sLength));
+            sLength = (uint16_t)value;
             break;
 
         case 2:
-            SuccessOrExit(error = ParseLong(argv[index], sCount));
+            sCount = (uint16_t)value;
             break;
 
         case 3:
-            SuccessOrExit(error = ParseLong(argv[index], sInterval));
+            sInterval = (uint32_t)value;
             sInterval = sInterval * 1000;
             break;
 

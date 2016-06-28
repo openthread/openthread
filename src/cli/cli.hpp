@@ -133,9 +133,9 @@ private:
     static Ip6::IcmpEcho sIcmpEcho;
     static Server *sServer;
     static uint8_t sEchoRequest[];
-    static long sLength;
-    static long sCount;
-    static long sInterval;
+    static uint16_t sLength;
+    static uint16_t sCount;
+    static uint32_t sInterval;
     static Timer sPingTimer;
 };
 
