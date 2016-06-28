@@ -576,16 +576,14 @@ void Interpreter::HandleEchoResponse(void *aContext, Message &aMessage, const Ip
                           HostSwap16(aMessageInfo.GetPeerAddr().mFields.m16[5]),
                           HostSwap16(aMessageInfo.GetPeerAddr().mFields.m16[6]),
                           HostSwap16(aMessageInfo.GetPeerAddr().mFields.m16[7]));
+    sServer->OutputFormat(": icmp_seq=%d hlim=%d", icmp6Header.GetSequence(), aMessageInfo.mHopLimit);
 
     if (aMessage.Read(aMessage.GetOffset() + sizeof(icmp6Header), sizeof(uint32_t), &timestamp) >= sizeof(uint32_t))
     {
-        sServer->OutputFormat(": icmp_seq=%d hlim=%d time=%dms\r\n", icmp6Header.GetSequence(), aMessageInfo.mHopLimit,
-                              Timer::GetNow() - HostSwap32(timestamp));
+        sServer->OutputFormat(" time=%dms", Timer::GetNow() - HostSwap32(timestamp));
     }
-    else
-    {
-        sServer->OutputFormat(": icmp_seq=%d hlim=%d\r\n", icmp6Header.GetSequence(), aMessageInfo.mHopLimit);
-    }
+
+    sServer->OutputFormat("\r\n");
 }
 
 void Interpreter::ProcessPing(int argc, char *argv[])
