@@ -118,39 +118,6 @@ public:
     const uint8_t *GetCurrentMleKey() const;
 
     /**
-     * This method indicates whether the previous key is valid.
-     *
-     * @retval TRUE   If the previous key is valid.
-     * @retval FALSE  If the previous key is not valid.
-     *
-     */
-    bool IsPreviousKeyValid() const;
-
-    /**
-     * This method returns the previous key sequence value.
-     *
-     * @returns The previous key sequence value.
-     *
-     */
-    uint32_t GetPreviousKeySequence() const;
-
-    /**
-     * This method returns a pointer to the previous MAC key.
-     *
-     * @returns A pointer to the previous MAC key.
-     *
-     */
-    const uint8_t *GetPreviousMacKey() const;
-
-    /**
-     * This method returns a pointer to the previous MLE key.
-     *
-     * @returns A pointer to the previous MLE key.
-     *
-     */
-    const uint8_t *GetPreviousMleKey() const;
-
-    /**
      * This method returns a pointer to a temporary MAC key computed from the given key sequence.
      *
      * @param[in]  aKeySequence  The key sequence value.
@@ -209,17 +176,12 @@ private:
     };
 
     ThreadError ComputeKey(uint32_t aKeySequence, uint8_t *aKey);
-    void UpdateNeighbors();
 
     uint8_t mMasterKey[kMaxKeyLength];
     uint8_t mMasterKeyLength;
 
-    uint32_t mPreviousKeySequence;
-    uint8_t mPreviousKey[otCryptoSha256Size];
-    bool mPreviousKeyValid;
-
-    uint32_t mCurrentKeySequence;
-    uint8_t mCurrentKey[otCryptoSha256Size];
+    uint32_t mKeySequence;
+    uint8_t mKey[otCryptoSha256Size];
 
     uint8_t mTemporaryKey[otCryptoSha256Size];
 

@@ -1219,12 +1219,6 @@ void Mle::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageIn
             keySequence = mKeyManager.GetCurrentKeySequence();
             mleKey = mKeyManager.GetCurrentMleKey();
         }
-        else if (mKeyManager.IsPreviousKeyValid() &&
-                 keyid == (mKeyManager.GetPreviousKeySequence() & 0x7f))
-        {
-            keySequence = mKeyManager.GetPreviousKeySequence();
-            mleKey = mKeyManager.GetPreviousMleKey();
-        }
         else
         {
             keySequence = (mKeyManager.GetCurrentKeySequence() & ~0x7f) | keyid;
@@ -1244,11 +1238,6 @@ void Mle::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageIn
         if (keySequence == mKeyManager.GetCurrentKeySequence())
         {
             mleKey = mKeyManager.GetCurrentMleKey();
-        }
-        else if (mKeyManager.IsPreviousKeyValid() &&
-                 keySequence == mKeyManager.GetPreviousKeySequence())
-        {
-            mleKey = mKeyManager.GetPreviousMleKey();
         }
         else
         {
@@ -1325,15 +1314,15 @@ void Mle::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageIn
 
     if (neighbor != NULL && neighbor->mState == Neighbor::kStateValid)
     {
-        if (keySequence == mKeyManager.GetCurrentKeySequence())
-            VerifyOrExit(neighbor->mPreviousKey == true || frameCounter >= neighbor->mValid.mMleFrameCounter,
-                         otLogDebgMle("mle frame counter reject 1\n"));
-        else if (keySequence == mKeyManager.GetPreviousKeySequence())
-            VerifyOrExit(neighbor->mPreviousKey == true && frameCounter >= neighbor->mValid.mMleFrameCounter,
-                         otLogDebgMle("mle frame counter reject 2\n"));
+        if (keySequence == neighbor->mKeySequence)
+        {
+            VerifyOrExit(frameCounter >= neighbor->mValid.mMleFrameCounter, otLogDebgMle("mle frame reject 1\n"));
+        }
         else
         {
-            assert(false);
+            VerifyOrExit(keySequence > neighbor->mKeySequence, otLogDebgMle("mle frame reject 2\n"));
+            neighbor->mKeySequence = keySequence;
+            neighbor->mValid.mLinkFrameCounter = 0;
         }
 
         neighbor->mValid.mMleFrameCounter = frameCounter + 1;
@@ -1692,9 +1681,7 @@ ThreadError Mle::HandleParentResponse(const Message &aMessage, const Ip6::Messag
     mParent.mLinkInfo.Clear();
     mParent.mLinkInfo.AddRss(threadMessageInfo->mRss);
     mParent.mState = Neighbor::kStateValid;
-    assert(aKeySequence == mKeyManager.GetCurrentKeySequence() ||
-           aKeySequence == mKeyManager.GetPreviousKeySequence());
-    mParent.mPreviousKey = aKeySequence == mKeyManager.GetPreviousKeySequence();
+    mParent.mKeySequence = aKeySequence;
     mParentConnectivity = connectivity_metric;
 
 exit:

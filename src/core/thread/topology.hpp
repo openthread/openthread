@@ -66,6 +66,8 @@ public:
         } mPending;
     };
 
+    uint32_t mKeySequence;               ///< Current key sequence
+
     /**
      * Neighbor link states.
      *
@@ -78,11 +80,11 @@ public:
         kStateLinkRequest,               ///< Sent a MLE Link Request message
         kStateValid,                     ///< Link is valid
     };
+
     State           mState : 3;          ///< The link state
     uint8_t         mMode : 4;           ///< The MLE device mode
-    bool            mPreviousKey : 1;    ///< Indicates whether or not the neighbor is still using a previous key
     bool            mDataRequest : 1;    ///< Indicates whether or not a Data Poll was received
-    LinkQualityInfo mLinkInfo;           ///< Link quality info (contains average RSS, link margin and link quality).
+    LinkQualityInfo mLinkInfo;           ///< Link quality info (contains average RSS, link margin and link quality)
 };
 
 /**
