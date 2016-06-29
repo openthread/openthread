@@ -27,6 +27,7 @@ OpenThread test scripts use the CLI to execute test cases.
 * [releaserouterid](#releaserouterid)
 * [rloc16](#rloc16)
 * [route](#route)
+* [router](#router)
 * [routerupgradethreshold](#routerupgradethreshold)
 * [scan](#scan)
 * [start](#start)
@@ -418,6 +419,50 @@ Invalidate a prefix in the Network Data.
 
 ```bash
 > route remove 2001:dead:beef:cafe::/64
+Done
+```
+
+### router list
+
+List allocated Router IDs
+
+```bash
+> router list
+8 24 50
+Done
+```
+
+### router \<id\>
+
+Print diagnostic information for a Thread Router.  The `id` may be a Router ID or an RLOC16.
+
+```bash
+> router 50
+Alloc: 1
+Router ID: 50
+Rloc: c800
+Next Hop: c800
+Link: 1
+Ext Addr: e2b3540590b0fd87
+Cost: 0
+LQI In: 3
+LQI Out: 3
+Age: 3
+Done
+```
+
+```bash
+> router 0xc800
+Alloc: 1
+Router ID: 50
+Rloc: c800
+Next Hop: c800
+Link: 1
+Ext Addr: e2b3540590b0fd87
+Cost: 0
+LQI In: 3
+LQI Out: 3
+Age: 7
 Done
 ```
 

@@ -70,6 +70,7 @@ const struct Command Interpreter::sCommands[] =
     { "releaserouterid", &ProcessReleaseRouterId },
     { "rloc16", &ProcessRloc16 },
     { "route", &ProcessRoute },
+    { "router", &ProcessRouter },
     { "routerupgradethreshold", &ProcessRouterUpgradeThreshold },
     { "scan", &ProcessScan },
     { "start", &ProcessStart },
@@ -917,6 +918,64 @@ void Interpreter::ProcessRoute(int argc, char *argv[])
     else
     {
         ExitNow(error = kThreadError_Parse);
+    }
+
+exit:
+    AppendResult(error);
+}
+
+void Interpreter::ProcessRouter(int argc, char *argv[])
+{
+    ThreadError error = kThreadError_None;
+    otRouterInfo routerInfo;
+    long value;
+
+    VerifyOrExit(argc > 0, error = kThreadError_Parse);
+
+    if (strcmp(argv[0], "list") == 0)
+    {
+        for (int i = 0; ; i++)
+        {
+            if (otGetRouterInfo(i, &routerInfo) != kThreadError_None)
+            {
+                sServer->OutputFormat("\r\n");
+                ExitNow();
+            }
+
+            if (routerInfo.mAllocated)
+            {
+                sServer->OutputFormat("%d ", i);
+            }
+        }
+    }
+
+    SuccessOrExit(error = ParseLong(argv[0], value));
+    SuccessOrExit(error = otGetRouterInfo(value, &routerInfo));
+
+    sServer->OutputFormat("Alloc: %d\r\n", routerInfo.mAllocated);
+
+    if (routerInfo.mAllocated)
+    {
+        sServer->OutputFormat("Router ID: %d\r\n", routerInfo.mRouterId);
+        sServer->OutputFormat("Rloc: %04x\r\n", routerInfo.mRloc16);
+        sServer->OutputFormat("Next Hop: %04x\r\n", static_cast<uint16_t>(routerInfo.mNextHop) << 10);
+        sServer->OutputFormat("Link: %d\r\n", routerInfo.mLinkEstablished);
+
+        if (routerInfo.mLinkEstablished)
+        {
+            sServer->OutputFormat("Ext Addr: ");
+
+            for (int j = 0; j < sizeof(routerInfo.mExtAddress); j++)
+            {
+                sServer->OutputFormat("%02x", routerInfo.mExtAddress.m8[j]);
+            }
+
+            sServer->OutputFormat("\r\n");
+            sServer->OutputFormat("Cost: %d\r\n", routerInfo.mPathCost);
+            sServer->OutputFormat("LQI In: %d\r\n", routerInfo.mLinkQualityIn);
+            sServer->OutputFormat("LQI Out: %d\r\n", routerInfo.mLinkQualityOut);
+            sServer->OutputFormat("Age: %d\r\n", routerInfo.mAge);
+        }
     }
 
 exit:

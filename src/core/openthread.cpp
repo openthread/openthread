@@ -514,6 +514,18 @@ uint8_t otGetRouterIdSequence(void)
     return sThreadNetif->GetMle().GetRouterIdSequence();
 }
 
+ThreadError otGetRouterInfo(uint16_t aRouterId, otRouterInfo *aRouterInfo)
+{
+    ThreadError error = kThreadError_None;
+
+    VerifyOrExit(aRouterInfo != NULL, error = kThreadError_InvalidArgs);
+
+    error = sThreadNetif->GetMle().GetRouterInfo(aRouterId, *aRouterInfo);
+
+exit:
+    return error;
+}
+
 uint8_t otGetStableNetworkDataVersion(void)
 {
     return sThreadNetif->GetMle().GetLeaderDataTlv().GetStableDataVersion();

@@ -395,6 +395,24 @@ typedef enum
 } otDeviceRole;
 
 /**
+ * This structure holds diagnostics information for a Thread Router
+ *
+ */
+typedef struct
+{
+    otExtAddress   mExtAddress;           ///< IEEE 802.15.4 Extended Address
+    uint16_t       mRloc16;               ///< RLOC16
+    uint8_t        mRouterId;             ///< Router ID
+    uint8_t        mNextHop;              ///< Next hop to router
+    uint8_t        mPathCost;             ///< Path cost to router
+    uint8_t        mLinkQualityIn;        ///< Link Quality In
+    uint8_t        mLinkQualityOut;       ///< Link Quality Out
+    uint8_t        mAge;                  ///< Time last heard
+    bool           mAllocated : 1;        ///< Router ID allocated or not
+    bool           mLinkEstablished : 1;  ///< Link established with Router ID or not
+} otRouterInfo;
+
+/**
  * This structure represents the MAC layer counters.
  */
 typedef struct otMacCounters
