@@ -855,6 +855,24 @@ ThreadError otBecomeLeader(void);
  */
 
 /**
+ * The function retains diagnostic information for an attached Child by its Child ID or RLOC16.
+ *
+ * @param[in]   aChildId    The Child ID or RLOC16 for the attached child.
+ * @param[out]  aChildInfo  A pointer to where the child information is placed.
+ *
+ */
+ThreadError otGetChildInfoById(uint16_t aChildId, otChildInfo *aChildInfo);
+
+/**
+ * The function retains diagnostic information for an attached Child by the internal table index.
+ *
+ * @param[in]   aChildIndex  The table index.
+ * @param[out]  aChildInfo   A pointer to where the child information is placed.
+ *
+ */
+ThreadError otGetChildInfoByIndex(uint8_t aChildIndex, otChildInfo *aChildInfo);
+
+/**
  * Get the device role.
  *
  * @retval ::kDeviceRoleDisabled  The Thread stack is disabled.

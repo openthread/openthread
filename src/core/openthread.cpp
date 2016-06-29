@@ -454,6 +454,30 @@ ThreadError otBecomeLeader(void)
     return sThreadNetif->GetMle().BecomeLeader();
 }
 
+ThreadError otGetChildInfoById(uint16_t aChildId, otChildInfo *aChildInfo)
+{
+    ThreadError error = kThreadError_None;
+
+    VerifyOrExit(aChildInfo != NULL, error = kThreadError_InvalidArgs);
+
+    error = sThreadNetif->GetMle().GetChildInfoById(aChildId, *aChildInfo);
+
+exit:
+    return error;
+}
+
+ThreadError otGetChildInfoByIndex(uint8_t aChildIndex, otChildInfo *aChildInfo)
+{
+    ThreadError error = kThreadError_None;
+
+    VerifyOrExit(aChildInfo != NULL, error = kThreadError_InvalidArgs);
+
+    error = sThreadNetif->GetMle().GetChildInfoByIndex(aChildIndex, *aChildInfo);
+
+exit:
+    return error;
+}
+
 otDeviceRole otGetDeviceRole(void)
 {
     otDeviceRole rval = kDeviceRoleDisabled;

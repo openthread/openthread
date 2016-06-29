@@ -395,21 +395,41 @@ typedef enum
 } otDeviceRole;
 
 /**
- * This structure holds diagnostics information for a Thread Router
+ * This structure holds diagnostic information for a Thread Child
  *
  */
 typedef struct
 {
-    otExtAddress   mExtAddress;           ///< IEEE 802.15.4 Extended Address
-    uint16_t       mRloc16;               ///< RLOC16
-    uint8_t        mRouterId;             ///< Router ID
-    uint8_t        mNextHop;              ///< Next hop to router
-    uint8_t        mPathCost;             ///< Path cost to router
-    uint8_t        mLinkQualityIn;        ///< Link Quality In
-    uint8_t        mLinkQualityOut;       ///< Link Quality Out
-    uint8_t        mAge;                  ///< Time last heard
-    bool           mAllocated : 1;        ///< Router ID allocated or not
-    bool           mLinkEstablished : 1;  ///< Link established with Router ID or not
+    otExtAddress   mExtAddress;            ///< IEEE 802.15.4 Extended Address
+    uint32_t       mTimeout;               ///< Timeout
+    uint16_t       mRloc16;                ///< RLOC16
+    uint8_t        mChildId;               ///< Router ID
+    uint8_t        mNetworkDataVersion;    ///< Network Data Version
+    uint8_t        mAge;                   ///< Time last heard
+    uint8_t        mLinkQualityIn;         ///< Link Quality In
+    int8_t         mAverageRssi;           ///< Average RSSI
+    bool           mRxOnWhenIdle : 1;      ///< rx-on-when-idle
+    bool           mSecureDataRequest : 1; ///< Secure Data Requests
+    bool           mFullFunction : 1;      ///< Full Function Device
+    bool           mFullNetworkData : 1;   ///< Full Network Data
+} otChildInfo;
+
+/**
+ * This structure holds diagnostic information for a Thread Router
+ *
+ */
+typedef struct
+{
+    otExtAddress   mExtAddress;            ///< IEEE 802.15.4 Extended Address
+    uint16_t       mRloc16;                ///< RLOC16
+    uint8_t        mRouterId;              ///< Router ID
+    uint8_t        mNextHop;               ///< Next hop to router
+    uint8_t        mPathCost;              ///< Path cost to router
+    uint8_t        mLinkQualityIn;         ///< Link Quality In
+    uint8_t        mLinkQualityOut;        ///< Link Quality Out
+    uint8_t        mAge;                   ///< Time last heard
+    bool           mAllocated : 1;         ///< Router ID allocated or not
+    bool           mLinkEstablished : 1;   ///< Link established with Router ID or not
 } otRouterInfo;
 
 /**

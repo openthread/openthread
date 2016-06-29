@@ -88,6 +88,7 @@ private:
 
     static void ProcessHelp(int argc, char *argv[]);
     static void ProcessChannel(int argc, char *argv[]);
+    static void ProcessChild(int argc, char *argv[]);
     static void ProcessChildTimeout(int argc, char *argv[]);
     static void ProcessContextIdReuseDelay(int argc, char *argv[]);
     static void ProcessCounters(int argc, char *argv[]);

@@ -51,6 +51,7 @@ const struct Command Interpreter::sCommands[] =
 {
     { "help", &ProcessHelp },
     { "channel", &ProcessChannel },
+    { "child", &ProcessChild },
     { "childtimeout", &ProcessChildTimeout },
     { "contextreusedelay", &ProcessContextIdReuseDelay },
     { "counter", &ProcessCounters },
@@ -181,6 +182,78 @@ void Interpreter::ProcessChannel(int argc, char *argv[])
         SuccessOrExit(error = ParseLong(argv[0], value));
         otSetChannel(value);
     }
+
+exit:
+    AppendResult(error);
+}
+
+void Interpreter::ProcessChild(int argc, char *argv[])
+{
+    ThreadError error = kThreadError_None;
+    otChildInfo childInfo;
+    long value;
+
+    VerifyOrExit(argc > 0, error = kThreadError_Parse);
+
+    if (strcmp(argv[0], "list") == 0)
+    {
+        for (int i = 0; ; i++)
+        {
+            if (otGetChildInfoByIndex(i, &childInfo) != kThreadError_None)
+            {
+                sServer->OutputFormat("\r\n");
+                ExitNow();
+            }
+
+            if (childInfo.mTimeout > 0)
+            {
+                sServer->OutputFormat("%d ", childInfo.mChildId);
+            }
+        }
+    }
+
+    SuccessOrExit(error = ParseLong(argv[0], value));
+    SuccessOrExit(error = otGetChildInfoById(value, &childInfo));
+
+    sServer->OutputFormat("Child ID: %d\r\n", childInfo.mChildId);
+    sServer->OutputFormat("Rloc: %04x\r\n", childInfo.mRloc16);
+    sServer->OutputFormat("Ext Addr: ");
+
+    for (int j = 0; j < sizeof(childInfo.mExtAddress); j++)
+    {
+        sServer->OutputFormat("%02x", childInfo.mExtAddress.m8[j]);
+    }
+
+    sServer->OutputFormat("\r\n");
+    sServer->OutputFormat("Mode: ");
+
+    if (childInfo.mRxOnWhenIdle)
+    {
+        sServer->OutputFormat("r");
+    }
+
+    if (childInfo.mSecureDataRequest)
+    {
+        sServer->OutputFormat("s");
+    }
+
+    if (childInfo.mFullFunction)
+    {
+        sServer->OutputFormat("d");
+    }
+
+    if (childInfo.mFullNetworkData)
+    {
+        sServer->OutputFormat("n");
+    }
+
+    sServer->OutputFormat("\r\n");
+
+    sServer->OutputFormat("Net Data: %d\r\n", childInfo.mNetworkDataVersion);
+    sServer->OutputFormat("Timeout: %d\r\n", childInfo.mTimeout);
+    sServer->OutputFormat("Age: %d\r\n", childInfo.mAge);
+    sServer->OutputFormat("LQI: %d\r\n", childInfo.mLinkQualityIn);
+    sServer->OutputFormat("RSSI: %d\r\n", childInfo.mAverageRssi);
 
 exit:
     AppendResult(error);
