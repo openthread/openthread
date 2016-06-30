@@ -31,6 +31,7 @@
  */
 
 #include <assert.h>
+#include <stdlib.h>
 #include <common/code_utils.hpp>
 #include <ncp/ncp.hpp>
 #include <openthread.h>
@@ -235,6 +236,11 @@ NcpBase::NcpBase():
     mScanPeriod = 200; // ms
     sNcpContext = this;
     mChangedFlags = 0;
+
+    for (unsigned i = 0; i < sizeof(mNetifAddresses) / sizeof(mNetifAddresses[0]); i++)
+    {
+        mNetifAddresses[i].mPrefixLength = kUnusedNetifAddressPrefixLen;
+    }
 
     assert(sThreadNetif != NULL);
     otSetStateChangedCallback(&HandleNetifStateChanged, this);
@@ -2486,42 +2492,76 @@ void NcpBase::InsertPropertyHandler_IPV6_ADDRESS_TABLE(uint8_t header, spinel_pr
 {
     spinel_ssize_t parsedLength;
     ThreadError errorCode = kThreadError_None;
-    otNetifAddress netif_addr = {};
+    spinel_status_t errorStatus = SPINEL_STATUS_OK;
+    otNetifAddress *netif_addr = NULL;
     otIp6Address *addr_ptr;
+    uint32_t preferred_lifetime;
+    uint32_t valid_lifetime;
+    uint8_t  prefix_len;
 
     parsedLength = spinel_datatype_unpack(
                        value_ptr,
                        value_len,
                        "6CLL",
                        &addr_ptr,
-                       &netif_addr.mPrefixLength,
-                       &netif_addr.mPreferredLifetime,
-                       &netif_addr.mValidLifetime
+                       &prefix_len,
+                       &preferred_lifetime,
+                       &valid_lifetime
                    );
 
-    if (parsedLength > 0)
-    {
-        netif_addr.mAddress = *addr_ptr;
-        errorCode = otAddUnicastAddress(&netif_addr);
+    VerifyOrExit(parsedLength > 0, errorStatus = SPINEL_STATUS_PARSE_ERROR);
 
-        if (errorCode == kThreadError_None)
+    VerifyOrExit(prefix_len != kUnusedNetifAddressPrefixLen, errorStatus = SPINEL_STATUS_INVALID_ARGUMENT);
+
+    for (unsigned i = 0; i < sizeof(mNetifAddresses) / sizeof(mNetifAddresses[0]); i++)
+    {
+        if (mNetifAddresses[i].mPrefixLength != kUnusedNetifAddressPrefixLen)
         {
-            SendPropteryUpdate(
-                header,
-                SPINEL_CMD_PROP_VALUE_INSERTED,
-                key,
-                value_ptr,
-                value_len
-            );
+            // If the address matches an already added address.
+            if (memcmp(&mNetifAddresses[i].mAddress, addr_ptr, sizeof(otIp6Address)) == 0)
+            {
+                netif_addr = &mNetifAddresses[i];
+                break;
+            }
         }
         else
         {
-            SendLastStatus(header, ThreadErrorToSpinelStatus(errorCode));
+            if (netif_addr == NULL)
+            {
+                netif_addr = &mNetifAddresses[i];
+            }
         }
     }
-    else
+
+    VerifyOrExit(netif_addr != NULL, errorStatus = SPINEL_STATUS_NOMEM);
+
+    netif_addr->mAddress = *addr_ptr;
+    netif_addr->mPrefixLength = prefix_len;
+    netif_addr->mPreferredLifetime = preferred_lifetime;
+    netif_addr->mValidLifetime = valid_lifetime;
+
+    errorCode = otAddUnicastAddress(netif_addr);
+
+    // `kThreadError_Busy` indicates that the address was already on the list. In this case the lifetimes and prefix len
+    // are updated, and the add/insert operation is considered a success.
+
+    VerifyOrExit(errorCode == kThreadError_None || errorCode == kThreadError_Busy,
+        errorStatus = ThreadErrorToSpinelStatus(errorCode));
+
+    SendPropteryUpdate(
+        header,
+        SPINEL_CMD_PROP_VALUE_INSERTED,
+        key,
+        value_ptr,
+        value_len
+    );
+
+    errorStatus = SPINEL_STATUS_OK;
+
+exit:
+    if (errorStatus != SPINEL_STATUS_OK)
     {
-        SendLastStatus(header, SPINEL_STATUS_PARSE_ERROR);
+        SendLastStatus(header, errorStatus);
     }
 }
 
@@ -2690,8 +2730,7 @@ void NcpBase::RemovePropertyHandler_IPV6_ADDRESS_TABLE(uint8_t header, spinel_pr
 {
     spinel_ssize_t parsedLength;
     ThreadError errorCode = kThreadError_None;
-
-    otNetifAddress netif_addr = {};
+    otNetifAddress *netif_addr = NULL;
     otIp6Address *addr_ptr;
 
     parsedLength = spinel_datatype_unpack(
@@ -2699,29 +2738,49 @@ void NcpBase::RemovePropertyHandler_IPV6_ADDRESS_TABLE(uint8_t header, spinel_pr
                        value_len,
                        "6CLL",
                        &addr_ptr,
-                       &netif_addr.mPrefixLength,
-                       &netif_addr.mPreferredLifetime,
-                       &netif_addr.mValidLifetime
+                       NULL,
+                       NULL,
+                       NULL
                    );
 
     if (parsedLength > 0)
     {
-        netif_addr.mAddress = *addr_ptr;
-        errorCode = otRemoveUnicastAddress(&netif_addr);
-
-        if (errorCode == kThreadError_None)
+        for (unsigned i = 0; i < sizeof(mNetifAddresses) / sizeof(mNetifAddresses[0]); i++)
         {
-            SendPropteryUpdate(
-                header,
-                SPINEL_CMD_PROP_VALUE_REMOVED,
-                key,
-                value_ptr,
-                value_len
-            );
+            if (mNetifAddresses[i].mPrefixLength != kUnusedNetifAddressPrefixLen)
+            {
+                if (memcmp(&mNetifAddresses[i].mAddress, addr_ptr, sizeof(otIp6Address)) == 0)
+                {
+                    netif_addr = &mNetifAddresses[i];
+                    break;
+                }
+            }
+        }
+
+        if (netif_addr != NULL)
+        {
+            errorCode = otRemoveUnicastAddress(netif_addr);
+
+            if (errorCode == kThreadError_None)
+            {
+                netif_addr->mNext = NULL;
+
+                SendPropteryUpdate(
+                    header,
+                    SPINEL_CMD_PROP_VALUE_REMOVED,
+                    key,
+                    value_ptr,
+                    value_len
+                );
+            }
+            else
+            {
+                SendLastStatus(header, ThreadErrorToSpinelStatus(errorCode));
+            }
         }
         else
         {
-            SendLastStatus(header, ThreadErrorToSpinelStatus(errorCode));
+            SendLastStatus(header, ThreadErrorToSpinelStatus(kThreadError_NoAddress));
         }
     }
     else
