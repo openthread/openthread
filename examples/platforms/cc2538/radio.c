@@ -142,7 +142,7 @@ ThreadError otPlatRadioSetShortAddress(uint16_t address)
     return kThreadError_None;
 }
 
-void PlatformRadioInit(void)
+void cc2538RadioInit(void)
 {
     sTransmitFrame.mLength = 0;
     sTransmitFrame.mPsdu = sTransmitPsdu;
@@ -368,7 +368,7 @@ exit:
     return;
 }
 
-int PlatformRadioProcess(void)
+void cc2538RadioProcess(void)
 {
     readFrame();
 
@@ -416,8 +416,6 @@ int PlatformRadioProcess(void)
     {
         disableReceiver();
     }
-
-    return 0;
 }
 
 void RFCoreRxTxIntHandler(void)

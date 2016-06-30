@@ -161,7 +161,7 @@ exit:
     return;
 }
 
-void PlatformSerialProcess(void)
+void cc2538SerialProcess(void)
 {
     processReceive();
     processTransmit();

@@ -49,7 +49,7 @@ static uint32_t sAlarmT0 = 0;
 static uint32_t sAlarmDt = 0;
 static bool sIsRunning = false;
 
-void PlatformAlarmInit(void)
+void cc2538AlarmInit(void)
 {
     HWREG(NVIC_ST_RELOAD) = kSystemClock / kTicksPerSec;
     HWREG(NVIC_ST_CTRL) = NVIC_ST_CTRL_CLK_SRC | NVIC_ST_CTRL_INTEN | NVIC_ST_CTRL_ENABLE;
@@ -72,7 +72,7 @@ void otPlatAlarmStop(void)
     sIsRunning = false;
 }
 
-void PlatformAlarmProcess(void)
+void cc2538AlarmProcess(void)
 {
     uint32_t expires;
     bool fire = false;
