@@ -39,7 +39,7 @@
 
 static uint32_t s_state = 1;
 
-void PlatformRandomInit(void)
+void cc2538RandomInit(void)
 {
     // use Extended Identifier portion of IEEE EUI-64 as the seed
     s_state = HWREG(IEEE_EUI64 + 4);

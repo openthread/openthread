@@ -41,18 +41,25 @@ ot_ncp_LDADD                                                           = \
     $(top_builddir)/src/core/libopenthread.a                             \
     $(top_builddir)/src/ncp/libopenthread-ncp.a                          \
     $(top_builddir)/third_party/mbedtls/libmbedcrypto.a                  \
-    -lstdc++                                                             \
+    $(NULL)
+
+ot_ncp_LDFLAGS                                                         = \
     $(NULL)
 
 if OPENTHREAD_EXAMPLES_POSIX
 ot_ncp_LDADD                                                          += \
     $(top_builddir)/examples/platforms/posix/libopenthread-posix.a       \
+    -lstdc++                                                             \
     $(NULL)
 endif
 
 if OPENTHREAD_EXAMPLES_CC2538
 ot_ncp_LDADD                                                          += \
     $(top_builddir)/examples/platforms/cc2538/libopenthread-cc2538.a     \
+    $(NULL)
+
+ot_ncp_LDFLAGS                                                        += \
+    -T $(top_srcdir)/examples/platforms/cc2538/cc2538.ld                 \
     $(NULL)
 endif
 
