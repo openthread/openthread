@@ -884,6 +884,18 @@ ThreadError otGetChildInfoByIndex(uint8_t aChildIndex, otChildInfo *aChildInfo);
 otDeviceRole otGetDeviceRole(void);
 
 /**
+ * This function gets an EID cache entry.
+ *
+ * @param[in]   aIndex  An index into the EID cache table.
+ * @param[out]  aEntry  A pointer to where the EID information is placed.
+ *
+ * @retval kThreadError_None         Successfully retreieved the EID cache entry.
+ * @retval kThreadError_InvalidArgs  @p aIndex was out of bounds or @p aEntry was NULL.
+ *
+ */
+ThreadError otGetEidCacheEntry(uint8_t aIndex, otEidCacheEntry *aEntry);
+
+/**
  * Get the Leader's Router ID.
  *
  * @returns The Leader's Router ID.

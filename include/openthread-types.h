@@ -123,6 +123,8 @@ typedef enum ThreadError
 #define OT_EXT_ADDRESS_SIZE   8   ///< Size of an IEEE 802.15.4 Extended Address (bytes)
 #define OT_EXT_PAN_ID_SIZE    8   ///< Size of a Thread PAN ID (bytes)
 #define OT_NETWORK_NAME_SIZE  16  ///< Size of the Thread Network Name field (bytes)
+#define OT_IP6_ADDRESS_SIZE   16  ///< Size of an IPv6 address (bytes)
+#define OT_IP6_IID_SIZE       8   ///< Size of an IPv6 Interface Identifier (bytes)
 
 /**
  * This type represents the IEEE 802.15.4 PAN ID.
@@ -243,11 +245,6 @@ enum
  *
  */
 
-enum
-{
-    kIp6AddressSize = 16,
-};
-
 /**
  * This structure represents an IPv6 address.
  */
@@ -255,10 +252,10 @@ typedef OT_TOOL_PACKED_BEGIN struct otIp6Address
 {
     union
     {
-        uint8_t  m8[kIp6AddressSize];                      ///< 8-bit fields
-        uint16_t m16[kIp6AddressSize / sizeof(uint16_t)];  ///< 16-bit fields
-        uint32_t m32[kIp6AddressSize / sizeof(uint32_t)];  ///< 32-bit fields
-    } mFields;                                             ///< IPv6 accessor fields
+        uint8_t  m8[OT_IP6_ADDRESS_SIZE];                      ///< 8-bit fields
+        uint16_t m16[OT_IP6_ADDRESS_SIZE / sizeof(uint16_t)];  ///< 16-bit fields
+        uint32_t m32[OT_IP6_ADDRESS_SIZE / sizeof(uint32_t)];  ///< 32-bit fields
+    } mFields;                                                 ///< IPv6 accessor fields
 } OT_TOOL_PACKED_END otIp6Address;
 
 /**
@@ -431,6 +428,17 @@ typedef struct
     bool           mAllocated : 1;         ///< Router ID allocated or not
     bool           mLinkEstablished : 1;   ///< Link established with Router ID or not
 } otRouterInfo;
+
+/**
+ * This structure represents an EID cache entry.
+ *
+ */
+typedef struct otEidCacheEntry
+{
+    otIp6Address    mTarget;          ///< Target
+    otShortAddress  mRloc16;          ///< RLOC16
+    bool            mValid : 1;       ///< Indicates whether or not the cache entry is valid
+} otEidCacheEntry;
 
 /**
  * This structure represents the MAC layer counters.

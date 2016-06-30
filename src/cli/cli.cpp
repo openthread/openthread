@@ -55,6 +55,7 @@ const struct Command Interpreter::sCommands[] =
     { "childtimeout", &ProcessChildTimeout },
     { "contextreusedelay", &ProcessContextIdReuseDelay },
     { "counter", &ProcessCounters },
+    { "eidcache", &ProcessEidCache },
     { "extaddr", &ProcessExtAddress },
     { "extpanid", &ProcessExtPanId },
     { "ipaddr", &ProcessIpAddr },
@@ -336,6 +337,35 @@ void Interpreter::ProcessCounters(int argc, char *argv[])
             sServer->OutputFormat("    RxErrOther: %d\r\n", counters->mRxErrOther);
         }
     }
+}
+
+void Interpreter::ProcessEidCache(int argc, char *argv[])
+{
+    otEidCacheEntry entry;
+
+    for (int i = 0; ; i++)
+    {
+        SuccessOrExit(otGetEidCacheEntry(i, &entry));
+
+        if (entry.mValid == false)
+        {
+            continue;
+        }
+
+        sServer->OutputFormat("%x:%x:%x:%x:%x:%x:%x:%x %04x\r\n",
+                              HostSwap16(entry.mTarget.mFields.m16[0]),
+                              HostSwap16(entry.mTarget.mFields.m16[1]),
+                              HostSwap16(entry.mTarget.mFields.m16[2]),
+                              HostSwap16(entry.mTarget.mFields.m16[3]),
+                              HostSwap16(entry.mTarget.mFields.m16[4]),
+                              HostSwap16(entry.mTarget.mFields.m16[5]),
+                              HostSwap16(entry.mTarget.mFields.m16[6]),
+                              HostSwap16(entry.mTarget.mFields.m16[7]),
+                              entry.mRloc16);
+    }
+
+exit:
+    AppendResult(kThreadError_None);
 }
 
 void Interpreter::ProcessExtAddress(int argc, char *argv[])

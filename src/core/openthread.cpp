@@ -508,6 +508,17 @@ otDeviceRole otGetDeviceRole(void)
     return rval;
 }
 
+ThreadError otGetEidCacheEntry(uint8_t aIndex, otEidCacheEntry *aEntry)
+{
+    ThreadError error;
+
+    VerifyOrExit(aEntry != NULL, error = kThreadError_InvalidArgs);
+    error = sThreadNetif->GetAddressResolver().GetEntry(aIndex, *aEntry);
+
+exit:
+    return error;
+}
+
 uint8_t otGetLeaderRouterId(void)
 {
     return sThreadNetif->GetMle().GetLeaderDataTlv().GetLeaderRouterId();

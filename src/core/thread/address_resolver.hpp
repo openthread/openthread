@@ -79,6 +79,18 @@ public:
     void Clear(void);
 
     /**
+     * This method gets an EID cache entry.
+     *
+     * @param[in]   aIndex  An index into the EID cache table.
+     * @param[out]  aEntry  A pointer to where the EID information is placed.
+     *
+     * @retval kThreadError_None         Successfully retreieved the EID cache entry.
+     * @retval kThreadError_InvalidArgs  @p aIndex was out of bounds or @p aEntry was NULL.
+     *
+     */
+    ThreadError GetEntry(uint8_t aIndex, otEidCacheEntry &aEntry) const;
+
+    /**
      * This method removes a Router ID from the EID-to-RLOC cache.
      *
      * @param[in]  aRouterId  The Router ID.

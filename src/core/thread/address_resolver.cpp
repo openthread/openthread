@@ -75,6 +75,19 @@ void AddressResolver::Clear()
     memset(&mCache, 0, sizeof(mCache));
 }
 
+ThreadError AddressResolver::GetEntry(uint8_t aIndex, otEidCacheEntry &aEntry) const
+{
+    ThreadError error = kThreadError_None;
+
+    VerifyOrExit(aIndex < kCacheEntries, error = kThreadError_InvalidArgs);
+    memcpy(&aEntry.mTarget, &mCache[aIndex].mTarget, sizeof(aEntry.mTarget));
+    aEntry.mRloc16 = mCache[aIndex].mRloc16;
+    aEntry.mValid = mCache[aIndex].mState == Cache::kStateCached;
+
+exit:
+    return error;
+}
+
 void AddressResolver::Remove(uint8_t routerId)
 {
     for (int i = 0; i < kCacheEntries; i++)
