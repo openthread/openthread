@@ -1,0 +1,109 @@
+/*###ICF### Section handled by ICF editor, don't touch! ****/
+/*-Editor annotation file-*/
+/* IcfEditorFile="$TOOLKIT_DIR$\config\ide\IcfEditor\cortex_v1_0.xml" */
+/*-Specials-*/
+define symbol __ICFEDIT_intvec_start__ = 0x00200000;
+/*-Memory Regions-*/
+define symbol __ICFEDIT_region_ROM_start__   = 0x00200000;
+define symbol __ICFEDIT_region_ROM_end__     = 0x0027ffd3;
+define symbol __ICFEDIT_region_RAM_start__   = 0x20000000;
+define symbol __ICFEDIT_region_RAM_end__     = 0x20007FFF;
+/*-Sizes-*/
+define symbol __ICFEDIT_size_cstack__   = 0x800;
+define symbol __ICFEDIT_size_heap__     = 0x1000;
+/**** End of ICF editor section. ###ICF###*/
+
+//
+// Define a memory region that covers the entire 4 GB addressible space of the
+// processor.
+//
+define memory mem with size = 4G;
+
+//
+// Define a region for the on-chip flash.
+// This device has 512KB Flash size
+//
+define region FLASH = mem:[from __ICFEDIT_region_ROM_start__ to __ICFEDIT_region_ROM_end__];
+
+//
+// Define a region for Customer Configuration Area in flash.
+//
+define region FLASH_CCA = mem:[from 0x0027ffd4 to 0x0027ffdf];
+
+//
+// Define a region for the on-chip SRAM.
+// This device has 32KB RAM size
+// 
+define region SRAM = mem:[from __ICFEDIT_region_RAM_start__ to __ICFEDIT_region_RAM_end__];
+
+//
+// Define regions of retention and non-retention RAM. The stack and other
+// variables that require retention through PM2/3 should be placed in the
+// retention RAM region
+//
+define region SRAM_NON_RETENTION = mem:[from __ICFEDIT_region_RAM_start__ to 0x20003fff];
+define region SRAM_RETENTION = mem:[from 0x20004000 to __ICFEDIT_region_RAM_end__];
+
+//
+// Define a block for the heap.  The size should be set to something other
+// than zero if things in the C library that require the heap are used.
+//
+define block HEAP with alignment = 8, size = __ICFEDIT_size_heap__ { };
+
+//
+// Indicate that the read/write values should be initialized by copying from
+// flash.
+//
+initialize by copy { readwrite };
+
+//
+// Indicate that the noinit values should be left alone.
+//
+do not initialize { section .noinit };
+
+//
+// Place the interrupt vectors at the start of flash.
+//
+place at address mem:__ICFEDIT_intvec_start__ { readonly section .intvec };
+
+//
+// Place the cca area at the end of flash (start of FLASH_CCA).
+//
+place at start of FLASH_CCA { readonly section .flashcca };
+
+//
+// Place the remainder of the read-only items into flash.
+//
+place in FLASH { readonly };
+
+//
+// Place the RAM vector table at the start of retention ram.
+//
+place at start of SRAM_RETENTION { section VTABLE };
+
+//
+// Place all read/write items into retention SRAM.
+//
+//place in SRAM_RETENTION { readwrite, block HEAP };
+place in SRAM { readwrite, block HEAP };
+
+//
+// Define CSTACK block to contain .stack section. This enables the IAR IDE
+// to properly show the stack content during debug. Place stack at end of
+// retention RAM, do not initialize (initializing the stack will destroy the
+// return address from the initialization code, causing the processor to branch
+// to zero and fault)
+//
+define block CSTACK with alignment = 8, size = __ICFEDIT_size_cstack__ { section .stack };
+do not initialize { section .stack };
+place at end of SRAM_RETENTION { block CSTACK };
+
+//
+// Export stack top symbol. Used by startup file.
+//
+define exported symbol STACK_TOP = __ICFEDIT_region_RAM_end__ + 1;
+
+//
+// Variables that do not need retention should be defined here
+//
+place in SRAM_NON_RETENTION { section .nonretenvar };
