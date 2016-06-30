@@ -151,6 +151,14 @@ void Interpreter::AppendResult(ThreadError error)
     }
 }
 
+void Interpreter::OutputBytes(const uint8_t *aBytes, uint8_t aLength)
+{
+    for (int i = 0; i < aLength; i++)
+    {
+        sServer->OutputFormat("%02x", aBytes[i]);
+    }
+}
+
 ThreadError Interpreter::ParseLong(char *argv, long &value)
 {
     char *endptr;
@@ -266,10 +274,8 @@ void Interpreter::ProcessCounters(int argc, char *argv[])
 
 void Interpreter::ProcessExtAddress(int argc, char *argv[])
 {
-    const uint8_t *extAddress = otGetExtendedAddress();
-    sServer->OutputFormat("%02x%02x%02x%02x%02x%02x%02x%02x\r\n",
-                          extAddress[0], extAddress[1], extAddress[2], extAddress[3],
-                          extAddress[4], extAddress[5], extAddress[6], extAddress[7]);
+    OutputBytes(otGetExtendedAddress(), OT_EXT_ADDRESS_SIZE);
+    sServer->OutputFormat("\r\n");
     AppendResult(kThreadError_None);
 }
 
@@ -279,10 +285,8 @@ void Interpreter::ProcessExtPanId(int argc, char *argv[])
 
     if (argc == 0)
     {
-        const uint8_t *extPanId = otGetExtendedPanId();
-        sServer->OutputFormat("%02x%02x%02x%02x%02x%02x%02x%02x\r\n",
-                              extPanId[0], extPanId[1], extPanId[2], extPanId[3],
-                              extPanId[4], extPanId[5], extPanId[6], extPanId[7]);
+        OutputBytes(otGetExtendedPanId(), OT_EXT_PAN_ID_SIZE);
+        sServer->OutputFormat("\r\n");
     }
     else
     {
@@ -966,8 +970,6 @@ exit:
 
 void Interpreter::HandleActiveScanResult(otActiveScanResult *aResult)
 {
-    const uint8_t *bytes;
-
     if (aResult == NULL)
     {
         sServer->OutputFormat("Done\r\n");
@@ -987,20 +989,16 @@ void Interpreter::HandleActiveScanResult(otActiveScanResult *aResult)
 
     if (aResult->mExtPanId != NULL)
     {
-        bytes = aResult->mExtPanId;
-        sServer->OutputFormat("| %02x%02x%02x%02x%02x%02x%02x%02x ",
-                              bytes[0], bytes[1], bytes[2], bytes[3], bytes[4], bytes[5], bytes[6], bytes[7]);
+        OutputBytes(aResult->mExtPanId, OT_EXT_PAN_ID_SIZE);
     }
     else
     {
         sServer->OutputFormat("| ---------------- ");
     }
 
-    sServer->OutputFormat("| %04x ", aResult->mPanId);
+    sServer->OutputFormat("| %04x | ", aResult->mPanId);
 
-    bytes = aResult->mExtAddress.m8;
-    sServer->OutputFormat("| %02x%02x%02x%02x%02x%02x%02x%02x ",
-                          bytes[0], bytes[1], bytes[2], bytes[3], bytes[4], bytes[5], bytes[6], bytes[7]);
+    OutputBytes(aResult->mExtAddress.m8, OT_EXT_ADDRESS_SIZE);
     sServer->OutputFormat("| %2d ", aResult->mChannel);
     sServer->OutputFormat("| %3d ", aResult->mRssi);
     sServer->OutputFormat("| %3d |\r\n", aResult->mLqi);
@@ -1089,13 +1087,43 @@ exit:
 void Interpreter::ProcessWhitelist(int argc, char *argv[])
 {
     ThreadError error = kThreadError_None;
+    otMacWhitelistEntry entry;
     int argcur = 0;
     uint8_t extAddr[8];
     int8_t rssi;
 
     if (argcur >= argc)
     {
-        ExitNow(error = kThreadError_Parse);
+        if (otIsMacWhitelistEnabled())
+        {
+            sServer->OutputFormat("Enabled\r\n");
+        }
+        else
+        {
+            sServer->OutputFormat("Disabled\r\n");
+        }
+
+        for (int i = 0; ; i++)
+        {
+            if (otGetMacWhitelistEntry(i, &entry) != kThreadError_None)
+            {
+                break;
+            }
+
+            if (entry.mValid == false)
+            {
+                continue;
+            }
+
+            OutputBytes(entry.mExtAddress.m8, OT_EXT_ADDRESS_SIZE);
+
+            if (entry.mFixedRssi)
+            {
+                sServer->OutputFormat(" %d", entry.mRssi);
+            }
+
+            sServer->OutputFormat("\r\n");
+        }
     }
     else if (strcmp(argv[argcur], "add") == 0)
     {

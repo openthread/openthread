@@ -787,7 +787,7 @@ void Mac::ReceiveDoneTask(Frame *aFrame, ThreadError aError)
     Address dstaddr;
     PanId panid;
     Neighbor *neighbor;
-    Whitelist::Entry *entry;
+    otMacWhitelistEntry *entry;
     int8_t rssi;
     ThreadError error = aError;
 
@@ -834,7 +834,7 @@ void Mac::ReceiveDoneTask(Frame *aFrame, ThreadError aError)
     {
         VerifyOrExit((entry = mWhitelist.Find(srcaddr.mExtAddress)) != NULL, error = kThreadError_WhitelistFiltered);
 
-        if (mWhitelist.GetConstantRssi(*entry, rssi) == kThreadError_None)
+        if (mWhitelist.GetFixedRssi(*entry, rssi) == kThreadError_None)
         {
             aFrame->mPower = rssi;
         }

@@ -472,6 +472,19 @@ Disable OpenThread.
 Done
 ```
 
+### whitelist
+
+List the whitelist entries.
+
+```bash
+> whitelist
+Enabled
+e2b3540590b0fd87
+d38d7f875888fccb
+c467a90a2060fa0e
+Done
+```
+
 ### whitelist add \<extaddr\>
 
 Add an IEEE 802.15.4 Extended Address to the whitelist.
