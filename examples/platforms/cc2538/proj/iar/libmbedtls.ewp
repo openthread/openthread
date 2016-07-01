@@ -229,7 +229,7 @@
         <option>
           <name>CCAllowList</name>
           <version>1</version>
-          <state>1111111</state>
+          <state>0000000</state>
         </option>
         <option>
           <name>CCDebugInfo</name>
@@ -302,7 +302,6 @@
           <state>$PROJ_DIR$\..\..\..\..\..\src\core</state>
           <state>$PROJ_DIR$\..\..\..\..\..\third_party</state>
           <state>$PROJ_DIR$\..\..\..\..\..\third_party\mbedtls</state>
-          <state>$PROJ_DIR$\..\..\..\..\..\third_party\mbedtls\repo\configs</state>
           <state>$PROJ_DIR$\..\..\..\..\..\third_party\mbedtls\repo\include</state>
           <state>$PROJ_DIR$\..\..\..\..\..\third_party\mbedtls\repo\include\mbedtls</state>
         </option>
@@ -324,7 +323,7 @@
         </option>
         <option>
           <name>CCOptLevel</name>
-          <state>3</state>
+          <state>0</state>
         </option>
         <option>
           <name>CCOptStrategy</name>
@@ -333,7 +332,7 @@
         </option>
         <option>
           <name>CCOptLevelSlave</name>
-          <state>3</state>
+          <state>0</state>
         </option>
         <option>
           <name>CompilerMisraRules98</name>
@@ -359,7 +358,7 @@
         </option>
         <option>
           <name>IccLang</name>
-          <state>2</state>
+          <state>0</state>
         </option>
         <option>
           <name>IccCDialect</name>
@@ -1876,12 +1875,6 @@
   <group>
     <name>repo</name>
     <group>
-      <name>configs</name>
-      <file>
-        <name>$PROJ_DIR$\..\..\..\..\..\third_party\mbedtls\repo\configs\config-thread.h</name>
-      </file>
-    </group>
-    <group>
       <name>include</name>
       <group>
         <name>mbedtls</name>
@@ -2091,97 +2084,7 @@
         <name>$PROJ_DIR$\..\..\..\..\..\third_party\mbedtls\repo\library\aes.c</name>
       </file>
       <file>
-        <name>$PROJ_DIR$\..\..\..\..\..\third_party\mbedtls\repo\library\aesni.c</name>
-      </file>
-      <file>
-        <name>$PROJ_DIR$\..\..\..\..\..\third_party\mbedtls\repo\library\arc4.c</name>
-      </file>
-      <file>
-        <name>$PROJ_DIR$\..\..\..\..\..\third_party\mbedtls\repo\library\asn1parse.c</name>
-      </file>
-      <file>
-        <name>$PROJ_DIR$\..\..\..\..\..\third_party\mbedtls\repo\library\asn1write.c</name>
-      </file>
-      <file>
-        <name>$PROJ_DIR$\..\..\..\..\..\third_party\mbedtls\repo\library\base64.c</name>
-      </file>
-      <file>
-        <name>$PROJ_DIR$\..\..\..\..\..\third_party\mbedtls\repo\library\bignum.c</name>
-      </file>
-      <file>
-        <name>$PROJ_DIR$\..\..\..\..\..\third_party\mbedtls\repo\library\blowfish.c</name>
-      </file>
-      <file>
-        <name>$PROJ_DIR$\..\..\..\..\..\third_party\mbedtls\repo\library\camellia.c</name>
-      </file>
-      <file>
-        <name>$PROJ_DIR$\..\..\..\..\..\third_party\mbedtls\repo\library\ccm.c</name>
-      </file>
-      <file>
-        <name>$PROJ_DIR$\..\..\..\..\..\third_party\mbedtls\repo\library\certs.c</name>
-      </file>
-      <file>
-        <name>$PROJ_DIR$\..\..\..\..\..\third_party\mbedtls\repo\library\cipher.c</name>
-      </file>
-      <file>
-        <name>$PROJ_DIR$\..\..\..\..\..\third_party\mbedtls\repo\library\cipher_wrap.c</name>
-      </file>
-      <file>
-        <name>$PROJ_DIR$\..\..\..\..\..\third_party\mbedtls\repo\library\ctr_drbg.c</name>
-      </file>
-      <file>
-        <name>$PROJ_DIR$\..\..\..\..\..\third_party\mbedtls\repo\library\debug.c</name>
-      </file>
-      <file>
-        <name>$PROJ_DIR$\..\..\..\..\..\third_party\mbedtls\repo\library\des.c</name>
-      </file>
-      <file>
-        <name>$PROJ_DIR$\..\..\..\..\..\third_party\mbedtls\repo\library\dhm.c</name>
-      </file>
-      <file>
-        <name>$PROJ_DIR$\..\..\..\..\..\third_party\mbedtls\repo\library\ecdh.c</name>
-      </file>
-      <file>
-        <name>$PROJ_DIR$\..\..\..\..\..\third_party\mbedtls\repo\library\ecdsa.c</name>
-      </file>
-      <file>
-        <name>$PROJ_DIR$\..\..\..\..\..\third_party\mbedtls\repo\library\ecjpake.c</name>
-      </file>
-      <file>
-        <name>$PROJ_DIR$\..\..\..\..\..\third_party\mbedtls\repo\library\ecp.c</name>
-      </file>
-      <file>
-        <name>$PROJ_DIR$\..\..\..\..\..\third_party\mbedtls\repo\library\ecp_curves.c</name>
-      </file>
-      <file>
-        <name>$PROJ_DIR$\..\..\..\..\..\third_party\mbedtls\repo\library\entropy.c</name>
-      </file>
-      <file>
-        <name>$PROJ_DIR$\..\..\..\..\..\third_party\mbedtls\repo\library\entropy_poll.c</name>
-      </file>
-      <file>
-        <name>$PROJ_DIR$\..\..\..\..\..\third_party\mbedtls\repo\library\error.c</name>
-      </file>
-      <file>
-        <name>$PROJ_DIR$\..\..\..\..\..\third_party\mbedtls\repo\library\gcm.c</name>
-      </file>
-      <file>
-        <name>$PROJ_DIR$\..\..\..\..\..\third_party\mbedtls\repo\library\havege.c</name>
-      </file>
-      <file>
-        <name>$PROJ_DIR$\..\..\..\..\..\third_party\mbedtls\repo\library\hmac_drbg.c</name>
-      </file>
-      <file>
         <name>$PROJ_DIR$\..\..\..\..\..\third_party\mbedtls\repo\library\md.c</name>
-      </file>
-      <file>
-        <name>$PROJ_DIR$\..\..\..\..\..\third_party\mbedtls\repo\library\md2.c</name>
-      </file>
-      <file>
-        <name>$PROJ_DIR$\..\..\..\..\..\third_party\mbedtls\repo\library\md4.c</name>
-      </file>
-      <file>
-        <name>$PROJ_DIR$\..\..\..\..\..\third_party\mbedtls\repo\library\md5.c</name>
       </file>
       <file>
         <name>$PROJ_DIR$\..\..\..\..\..\third_party\mbedtls\repo\library\md_wrap.c</name>
@@ -2190,91 +2093,10 @@
         <name>$PROJ_DIR$\..\..\..\..\..\third_party\mbedtls\repo\library\memory_buffer_alloc.c</name>
       </file>
       <file>
-        <name>$PROJ_DIR$\..\..\..\..\..\third_party\mbedtls\repo\library\net.c</name>
-      </file>
-      <file>
-        <name>$PROJ_DIR$\..\..\..\..\..\third_party\mbedtls\repo\library\oid.c</name>
-      </file>
-      <file>
-        <name>$PROJ_DIR$\..\..\..\..\..\third_party\mbedtls\repo\library\padlock.c</name>
-      </file>
-      <file>
-        <name>$PROJ_DIR$\..\..\..\..\..\third_party\mbedtls\repo\library\pem.c</name>
-      </file>
-      <file>
-        <name>$PROJ_DIR$\..\..\..\..\..\third_party\mbedtls\repo\library\pk.c</name>
-      </file>
-      <file>
-        <name>$PROJ_DIR$\..\..\..\..\..\third_party\mbedtls\repo\library\pk_wrap.c</name>
-      </file>
-      <file>
-        <name>$PROJ_DIR$\..\..\..\..\..\third_party\mbedtls\repo\library\pkcs11.c</name>
-      </file>
-      <file>
-        <name>$PROJ_DIR$\..\..\..\..\..\third_party\mbedtls\repo\library\pkcs12.c</name>
-      </file>
-      <file>
-        <name>$PROJ_DIR$\..\..\..\..\..\third_party\mbedtls\repo\library\pkcs5.c</name>
-      </file>
-      <file>
-        <name>$PROJ_DIR$\..\..\..\..\..\third_party\mbedtls\repo\library\pkparse.c</name>
-      </file>
-      <file>
-        <name>$PROJ_DIR$\..\..\..\..\..\third_party\mbedtls\repo\library\pkwrite.c</name>
-      </file>
-      <file>
         <name>$PROJ_DIR$\..\..\..\..\..\third_party\mbedtls\repo\library\platform.c</name>
       </file>
       <file>
-        <name>$PROJ_DIR$\..\..\..\..\..\third_party\mbedtls\repo\library\ripemd160.c</name>
-      </file>
-      <file>
-        <name>$PROJ_DIR$\..\..\..\..\..\third_party\mbedtls\repo\library\rsa.c</name>
-      </file>
-      <file>
-        <name>$PROJ_DIR$\..\..\..\..\..\third_party\mbedtls\repo\library\sha1.c</name>
-      </file>
-      <file>
         <name>$PROJ_DIR$\..\..\..\..\..\third_party\mbedtls\repo\library\sha256.c</name>
-      </file>
-      <file>
-        <name>$PROJ_DIR$\..\..\..\..\..\third_party\mbedtls\repo\library\sha512.c</name>
-      </file>
-      <file>
-        <name>$PROJ_DIR$\..\..\..\..\..\third_party\mbedtls\repo\library\ssl_cache.c</name>
-      </file>
-      <file>
-        <name>$PROJ_DIR$\..\..\..\..\..\third_party\mbedtls\repo\library\ssl_ciphersuites.c</name>
-      </file>
-      <file>
-        <name>$PROJ_DIR$\..\..\..\..\..\third_party\mbedtls\repo\library\ssl_cli.c</name>
-      </file>
-      <file>
-        <name>$PROJ_DIR$\..\..\..\..\..\third_party\mbedtls\repo\library\ssl_cookie.c</name>
-      </file>
-      <file>
-        <name>$PROJ_DIR$\..\..\..\..\..\third_party\mbedtls\repo\library\ssl_srv.c</name>
-      </file>
-      <file>
-        <name>$PROJ_DIR$\..\..\..\..\..\third_party\mbedtls\repo\library\ssl_ticket.c</name>
-      </file>
-      <file>
-        <name>$PROJ_DIR$\..\..\..\..\..\third_party\mbedtls\repo\library\ssl_tls.c</name>
-      </file>
-      <file>
-        <name>$PROJ_DIR$\..\..\..\..\..\third_party\mbedtls\repo\library\threading.c</name>
-      </file>
-      <file>
-        <name>$PROJ_DIR$\..\..\..\..\..\third_party\mbedtls\repo\library\timing.c</name>
-      </file>
-      <file>
-        <name>$PROJ_DIR$\..\..\..\..\..\third_party\mbedtls\repo\library\version.c</name>
-      </file>
-      <file>
-        <name>$PROJ_DIR$\..\..\..\..\..\third_party\mbedtls\repo\library\version_features.c</name>
-      </file>
-      <file>
-        <name>$PROJ_DIR$\..\..\..\..\..\third_party\mbedtls\repo\library\xtea.c</name>
       </file>
     </group>
   </group>

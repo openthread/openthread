@@ -9,7 +9,7 @@ define symbol __ICFEDIT_region_ROM_end__     = 0x0027ffd3;
 define symbol __ICFEDIT_region_RAM_start__   = 0x20000000;
 define symbol __ICFEDIT_region_RAM_end__     = 0x20007FFF;
 /*-Sizes-*/
-define symbol __ICFEDIT_size_cstack__   = 0x800;
+define symbol __ICFEDIT_size_cstack__   = 0x1000;
 define symbol __ICFEDIT_size_heap__     = 0x1000;
 /**** End of ICF editor section. ###ICF###*/
 
@@ -79,7 +79,8 @@ place in FLASH { readonly };
 //
 // Place the RAM vector table at the start of retention ram.
 //
-place at start of SRAM_RETENTION { section VTABLE };
+place at start of SRAM { section VTABLE };
+//place at start of SRAM_RETENTION { section VTABLE };
 
 //
 // Place all read/write items into retention SRAM.
@@ -96,12 +97,13 @@ place in SRAM { readwrite, block HEAP };
 //
 define block CSTACK with alignment = 8, size = __ICFEDIT_size_cstack__ { section .stack };
 do not initialize { section .stack };
-place at end of SRAM_RETENTION { block CSTACK };
+//place at end of SRAM_RETENTION { block CSTACK };
+place at end of SRAM { block CSTACK };
 
 //
 // Export stack top symbol. Used by startup file.
 //
-define exported symbol STACK_TOP = __ICFEDIT_region_RAM_end__ + 1;
+define exported symbol STACK_TOP = __ICFEDIT_region_RAM_end__;
 
 //
 // Variables that do not need retention should be defined here

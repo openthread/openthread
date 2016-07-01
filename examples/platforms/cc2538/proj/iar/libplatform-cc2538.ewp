@@ -65,21 +65,21 @@
         </option>
         <option>
           <name>OGCoreOrChip</name>
-          <state>0</state>
+          <state>1</state>
         </option>
         <option>
           <name>GRuntimeLibSelect</name>
           <version>0</version>
-          <state>1</state>
+          <state>2</state>
         </option>
         <option>
           <name>GRuntimeLibSelectSlave</name>
           <version>0</version>
-          <state>1</state>
+          <state>2</state>
         </option>
         <option>
           <name>RTDescription</name>
-          <state>To be used with the normal configuration of the C/C++ runtime library. No locale interface, C locale, no file descriptor support, no multibytes in printf and scanf, and no hex floats in strtod.</state>
+          <state>To be used with the full configuration of the C/C++ runtime library. Full locale interface, C locale, file descriptor support, multibytes in printf and scanf, and hex floats in strtod.</state>
         </option>
         <option>
           <name>OGProductVersion</name>
@@ -133,7 +133,7 @@
         </option>
         <option>
           <name>RTConfigPath2</name>
-          <state>$TOOLKIT_DIR$\INC\c\DLib_Config_Normal.h</state>
+          <state>$TOOLKIT_DIR$\INC\c\DLib_Config_Full.h</state>
         </option>
         <option>
           <name>GFPUCoreSlave</name>
@@ -1869,6 +1869,12 @@
       <data/>
     </settings>
   </configuration>
+  <group>
+    <name>link</name>
+    <file>
+      <name>$PROJ_DIR$\..\..\link\cx2538xf53.icf</name>
+    </file>
+  </group>
   <file>
     <name>$PROJ_DIR$\..\..\alarm.c</name>
   </file>
@@ -1877,6 +1883,9 @@
   </file>
   <file>
     <name>$PROJ_DIR$\..\..\logging.c</name>
+  </file>
+  <file>
+    <name>$PROJ_DIR$\..\..\platform-cc2538.h</name>
   </file>
   <file>
     <name>$PROJ_DIR$\..\..\platform.c</name>

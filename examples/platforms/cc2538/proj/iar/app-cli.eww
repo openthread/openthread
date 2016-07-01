@@ -24,7 +24,7 @@
         <configuration>Debug</configuration>
       </member>
       <member>
-        <project>libopenthread-cli</project>
+        <project>libmbedtls</project>
         <configuration>Debug</configuration>
       </member>
       <member>
@@ -32,7 +32,7 @@
         <configuration>Debug</configuration>
       </member>
       <member>
-        <project>libmbedtls</project>
+        <project>libopenthread-cli</project>
         <configuration>Debug</configuration>
       </member>
       <member>

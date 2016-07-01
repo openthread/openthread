@@ -582,7 +582,7 @@
         <option>
           <name>OOCOutputFormat</name>
           <version>2</version>
-          <state>0</state>
+          <state>2</state>
         </option>
         <option>
           <name>OCOutputOverride</name>
@@ -590,7 +590,7 @@
         </option>
         <option>
           <name>OOCOutputFile</name>
-          <state>ot-cli.srec</state>
+          <state>app-cli.bin</state>
         </option>
         <option>
           <name>OOCCommandLineProducer</name>
@@ -598,7 +598,7 @@
         </option>
         <option>
           <name>OOCObjCopyEnable</name>
-          <state>0</state>
+          <state>1</state>
         </option>
       </data>
     </settings>
