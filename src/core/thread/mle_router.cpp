@@ -976,6 +976,23 @@ Child *MleRouter::NewChild(void)
     return NULL;
 }
 
+Child *MleRouter::FindChild(uint16_t aChildId)
+{
+    Child *rval = NULL;
+
+    for (int i = 0; i < kMaxChildren; i++)
+    {
+        if (mChildren[i].mState != Neighbor::kStateInvalid &&
+            GetChildId(mChildren[i].mValid.mRloc16) == aChildId)
+        {
+            ExitNow(rval = &mChildren[i]);
+        }
+    }
+
+exit:
+    return rval;
+}
+
 Child *MleRouter::FindChild(const Mac::ExtAddress &aAddress)
 {
     Child *rval = NULL;
@@ -2250,6 +2267,56 @@ Router *MleRouter::GetRouters(uint8_t *aNumRouters)
     }
 
     return mRouters;
+}
+
+ThreadError MleRouter::GetChildInfoById(uint16_t aChildId, otChildInfo &aChildInfo)
+{
+    ThreadError error = kThreadError_None;
+    Child *child;
+
+    if ((aChildId & ~kChildIdMask) != 0)
+    {
+        aChildId = GetChildId(aChildId);
+    }
+
+    VerifyOrExit((child = FindChild(aChildId)) != NULL, error = kThreadError_NotFound);
+    GetChildInfo(*child, aChildInfo);
+
+exit:
+    return error;
+}
+
+ThreadError MleRouter::GetChildInfoByIndex(uint8_t aChildIndex, otChildInfo &aChildInfo)
+{
+    ThreadError error = kThreadError_None;
+
+    VerifyOrExit(aChildIndex < kMaxChildren, error = kThreadError_InvalidArgs);
+    GetChildInfo(mChildren[aChildIndex], aChildInfo);
+
+exit:
+    return error;
+}
+
+void MleRouter::GetChildInfo(Child &aChild, otChildInfo &aChildInfo)
+{
+    memset(&aChildInfo, 0, sizeof(aChildInfo));
+
+    if (aChild.mState == Neighbor::kStateValid)
+    {
+        memcpy(&aChildInfo.mExtAddress, &aChild.mMacAddr, sizeof(aChildInfo.mExtAddress));
+        aChildInfo.mTimeout = aChild.mTimeout;
+        aChildInfo.mRloc16 = aChild.mValid.mRloc16;
+        aChildInfo.mChildId = GetChildId(aChild.mValid.mRloc16);
+        aChildInfo.mNetworkDataVersion = aChild.mNetworkDataVersion;
+        aChildInfo.mAge = Timer::MsecToSec(Timer::GetNow() - aChild.mLastHeard);
+        aChildInfo.mLinkQualityIn = aChild.mLinkInfo.GetLinkQuality();
+        aChildInfo.mAverageRssi = aChild.mLinkInfo.GetAverageRss();
+
+        aChildInfo.mRxOnWhenIdle = (aChild.mMode & ModeTlv::kModeRxOnWhenIdle) != 0;
+        aChildInfo.mSecureDataRequest = (aChild.mMode & ModeTlv::kModeSecureDataRequest) != 0;
+        aChildInfo.mFullFunction = (aChild.mMode & ModeTlv::kModeFFD) != 0;
+        aChildInfo.mFullNetworkData = (aChild.mMode & ModeTlv::kModeFullNetworkData) != 0;
+    }
 }
 
 ThreadError MleRouter::GetRouterInfo(uint16_t aRouterId, otRouterInfo &aRouterInfo)

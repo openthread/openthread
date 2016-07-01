@@ -8,6 +8,7 @@ OpenThread test scripts use the CLI to execute test cases.
 ## OpenThread Command List
 
 * [channel](#channel)
+* [child](#child)
 * [childtimeout](#childtimeout)
 * [contextreusedelay](#contextreusedelay)
 * [counter](#counter)
@@ -53,6 +54,34 @@ Set the IEEE 802.15.4 Channel value.
 
 ```bash
 > channel 11
+Done
+```
+
+### child list
+
+List attached Child IDs
+
+```bash
+> child list
+1 2 3 6 7 8
+Done
+```
+
+### child \<id\>
+
+Print diagnostic information for an attached Thread Child.  The `id` may be a Child ID or an RLOC16.
+
+```bash
+> child 1
+Child ID: 1
+Rloc: 9c01
+Ext Addr: e2b3540590b0fd87
+Mode: rsn
+Net Data: 184
+Timeout: 100
+Age: 0
+LQI: 3
+RSSI: -20
 Done
 ```
 

@@ -280,6 +280,24 @@ public:
     Neighbor *GetNeighbor(const Ip6::Address &aAddress);
 
     /**
+     * This method retains diagnotsic information for an attached child by Child ID or RLOC16.
+     *
+     * @param[in]   aChildId    The Child ID or RLOC16 for an attached child.
+     * @param[out]  aChildInfo  The child information.
+     *
+     */
+    ThreadError GetChildInfoById(uint16_t aChildId, otChildInfo &aChildInfo);
+
+    /**
+     * This method retains diagnotsic information for an attached child by the internal table index.
+     *
+     * @param[in]   aChildIndex  The table index.
+     * @param[out]  aChildInfo   The child information.
+     *
+     */
+    ThreadError GetChildInfoByIndex(uint8_t aChildIndex, otChildInfo &aChildInfo);
+
+    /**
      * This method returns a pointer to a Router array.
      *
      * @param[out]  aNumRouters  A pointer to output the number of routers.
@@ -340,6 +358,7 @@ private:
     ThreadError AppendChildAddresses(Message &aMessage, Child &aChild);
     ThreadError AppendRoute(Message &aMessage);
     uint8_t GetLinkCost(uint8_t aRouterId);
+    void GetChildInfo(Child &aChild, otChildInfo &aChildInfo);
     ThreadError HandleDetachStart(void);
     ThreadError HandleChildStart(otMleAttachFilter aFilter);
     ThreadError HandleLinkRequest(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
@@ -388,6 +407,7 @@ private:
     static uint8_t LqiToCost(uint8_t aLqi);
 
     Child *NewChild(void);
+    Child *FindChild(uint16_t aChildId);
     Child *FindChild(const Mac::ExtAddress &aMacAddr);
 
     int AllocateRouterId(void);
