@@ -297,6 +297,7 @@
         </option>
         <option>
           <name>CCIncludePath2</name>
+          <state>$PROJ_DIR$</state>
           <state>$PROJ_DIR$\..\..\..\..\..</state>
           <state>$PROJ_DIR$\..\..\..\..\..\include</state>
           <state>$PROJ_DIR$\..\..\..\..\..\src</state>
@@ -582,7 +583,7 @@
         <option>
           <name>OOCOutputFormat</name>
           <version>2</version>
-          <state>0</state>
+          <state>2</state>
         </option>
         <option>
           <name>OCOutputOverride</name>
@@ -590,7 +591,7 @@
         </option>
         <option>
           <name>OOCOutputFile</name>
-          <state>ot-ncp.srec</state>
+          <state>app-ncp.bin</state>
         </option>
         <option>
           <name>OOCCommandLineProducer</name>
@@ -598,7 +599,7 @@
         </option>
         <option>
           <name>OOCObjCopyEnable</name>
-          <state>0</state>
+          <state>1</state>
         </option>
       </data>
     </settings>
@@ -1887,6 +1888,9 @@
       <name>$PROJ_DIR$\..\..\link\cx2538xf53.icf</name>
     </file>
   </group>
+  <file>
+    <name>$PROJ_DIR$\openthread-config.h</name>
+  </file>
 </project>
 
 

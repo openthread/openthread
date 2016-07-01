@@ -297,6 +297,7 @@
         </option>
         <option>
           <name>CCIncludePath2</name>
+          <state>$PROJ_DIR$</state>
           <state>$PROJ_DIR$\..\..\..\..\..</state>
           <state>$PROJ_DIR$\..\..\..\..\..\include</state>
           <state>$PROJ_DIR$\..\..\..\..\..\src</state>
