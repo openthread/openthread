@@ -286,32 +286,59 @@ AM_CONDITIONAL([OPENTHREAD_BUILD_TESTS], [test "${nl_cv_build_tests}" = "yes"])
 
 # Check whether to run only the minimum set of tests.
 
-AC_MSG_CHECKING([whether to run only the minimum set of tests.])
-AC_ARG_ENABLE(minimum-set-of-tests,
-    [AS_HELP_STRING([--enable-minimum-set-of-tests],[Run only the most essential tests. @<:@default=no@:>@.])],
+AC_ARG_WITH(tests,
+    [AS_HELP_STRING([--with-tests=TESTS],
+        [Specify the tests from one of: all, subset1, subset2, subset3, subset4, subset5 @<:@default=all@:>@.])],
     [
-        case "${enableval}" in
+        case "${with_tests}" in
 
-        no|yes)
-            enable_minimum_set_of_tests=${enableval}
+        all|subset1|subset2|subset3|subset4|subset5)
             ;;
-
         *)
-            AC_MSG_ERROR([Invalid value ${enableval} for --enable-minimum-set-of-tests])
+            AC_MSG_ERROR([Invalid value ${with_tests} for --with-tests])
             ;;
-
         esac
     ],
-    [enable_minimum_set_of_tests=no])
-AC_MSG_RESULT(${enable_minimum_set_of_tests})
+    [with_tests=all])
 
-AM_CONDITIONAL([OPENTHREAD_WITH_MINIMUM_SET_OF_TESTS], [test "${enable_minimum_set_of_tests}" = "yes"])
+case ${with_tests} in
 
-if test "${enable_minimum_set_of_tests}" = "yes"; then
-    if test "${nl_cv_build_coverage}" = "yes"; then
-        AC_MSG_ERROR(["Do not run code coverage only with the minimum set of tests."])
-    fi
-fi
+    all)
+        OPENTHREAD_TESTS_SUBSET1=yes
+        OPENTHREAD_TESTS_SUBSET2=yes
+        OPENTHREAD_TESTS_SUBSET3=yes
+        OPENTHREAD_TESTS_SUBSET4=yes
+        OPENTHREAD_TESTS_SUBSET5=yes
+        ;;
+
+    subset1)
+        OPENTHREAD_TESTS_SUBSET1=yes
+        ;;
+
+    subset2)
+        OPENTHREAD_TESTS_SUBSET2=yes
+        ;;
+
+    subset3)
+        OPENTHREAD_TESTS_SUBSET3=yes
+        ;;
+
+    subset4)
+        OPENTHREAD_TESTS_SUBSET4=yes
+        ;;
+
+    subset5)
+        OPENTHREAD_TESTS_SUBSET5=yes
+        ;;
+
+esac
+
+AC_SUBST(OPENTHREAD_TESTS_SUBSET1)
+AM_CONDITIONAL([OPENTHREAD_TESTS_SUBSET1], [test "${OPENTHREAD_TESTS_SUBSET1}" = "yes"])
+AM_CONDITIONAL([OPENTHREAD_TESTS_SUBSET2], [test "${OPENTHREAD_TESTS_SUBSET2}" = "yes"])
+AM_CONDITIONAL([OPENTHREAD_TESTS_SUBSET3], [test "${OPENTHREAD_TESTS_SUBSET3}" = "yes"])
+AM_CONDITIONAL([OPENTHREAD_TESTS_SUBSET4], [test "${OPENTHREAD_TESTS_SUBSET4}" = "yes"])
+AM_CONDITIONAL([OPENTHREAD_TESTS_SUBSET5], [test "${OPENTHREAD_TESTS_SUBSET5}" = "yes"])
 
 # Check for Python and Python libraries used in the tests
 if test "${nl_cv_build_tests}" = "yes"; then
@@ -572,7 +599,7 @@ AC_MSG_NOTICE([
   Genhtml                                   : ${GENHTML:--}
   Build tests                               : ${nl_cv_build_tests}
   Build tools                               : ${build_tools}
-  Minimum set of tests                      : ${enable_minimum_set_of_tests}
+  OpenThread tests                          : ${with_tests}
   Prefix                                    : ${prefix}
   Documentation support                     : ${nl_cv_build_docs}
   Doxygen                                   : ${DOXYGEN:--}
