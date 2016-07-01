@@ -44,4 +44,12 @@ SUBDIRS                                 = \
     mbedtls                               \
     $(NULL)
 
+# Only build (e.g. for 'make all') these subdirectories when requested.
+
+if OPENTHREAD_WITH_NLUNITTEST_INTERNAL
+SUBDIRS                                += \
+    nlunittest/repo                       \
+    $(NULL)
+endif # OPENTHREAD_WITH_NLUNITTEST_INTERNAL
+
 include $(abs_top_nlbuild_autotools_dir)/automake/post.am

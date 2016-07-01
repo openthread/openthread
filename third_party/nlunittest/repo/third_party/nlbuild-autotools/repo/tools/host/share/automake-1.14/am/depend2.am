@@ -1,0 +1,114 @@
+## automake - create Makefile.in from Makefile.am
+## Copyright (C) 1994-2013 Free Software Foundation, Inc.
+
+## This program is free software; you can redistribute it and/or modify
+## it under the terms of the GNU General Public License as published by
+## the Free Software Foundation; either version 2, or (at your option)
+## any later version.
+
+## This program is distributed in the hope that it will be useful,
+## but WITHOUT ANY WARRANTY; without even the implied warranty of
+## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+## GNU General Public License for more details.
+
+## You should have received a copy of the GNU General Public License
+## along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+## This file is read several times:
+## - once per *extension* (not per language) for generic compilation rules
+## - once for each file which requires specific flags.
+
+## Note it is on purpose we wrote "if %AMDEP%", since:
+##
+## - if deps are turned off, %AMDEP% is mapped onto FALSE, and therefore
+##   the "if FALSE" chunk is removed (automake-time conditionals).
+##
+## - if deps are on, %AMDEP% is mapped onto AMDEP,  and therefore
+##   the "if AMDEP" chunk is prefix with @AMDEP_TRUE@ just like for any
+##   other configure-time conditional.
+##
+## We do likewise for %FASTDEP%; this expands to an ordinary configure-time
+## conditional.  %FASTDEP% is used to speed up the common case of building
+## a package with gcc 3.x or later.  In this case we can skip the use of
+## depcomp and easily inline the dependency tracking.
+
+if %?NONLIBTOOL%
+?GENERIC?%EXT%.o:
+?!GENERIC?%OBJ%: %SOURCE%
+if %FASTDEP%
+## In fast-dep mode, we can always use -o.
+## For non-suffix rules, we must emulate a VPATH search on %SOURCE%.
+?!GENERIC?	%VERBOSE%%COMPILE% -MT %OBJ% -MD -MP -MF %DEPBASE%.Tpo %-c% -o %OBJ% %SOURCEFLAG%`test -f '%SOURCE%' || echo '$(srcdir)/'`%SOURCE%
+?!GENERIC?	%SILENT%$(am__mv) %DEPBASE%.Tpo %DEPBASE%.Po
+?GENERIC??!SUBDIROBJ?	%VERBOSE%%COMPILE% -MT %OBJ% -MD -MP -MF %DEPBASE%.Tpo %-c% -o %OBJ% %SOURCEFLAG%%SOURCE%
+?GENERIC??!SUBDIROBJ?	%SILENT%$(am__mv) %DEPBASE%.Tpo %DEPBASE%.Po
+?GENERIC??SUBDIROBJ?	%VERBOSE%depbase=`echo %OBJ% | sed 's|[^/]*$$|$(DEPDIR)/&|;s|\.o$$||'`;\
+?GENERIC??SUBDIROBJ?	%COMPILE% -MT %OBJ% -MD -MP -MF %DEPBASE%.Tpo %-c% -o %OBJ% %SOURCEFLAG%%SOURCE% &&\
+?GENERIC??SUBDIROBJ?	$(am__mv) %DEPBASE%.Tpo %DEPBASE%.Po
+else !%FASTDEP%
+if %AMDEP%
+	%VERBOSE%source='%SOURCE%' object='%OBJ%' libtool=no @AMDEPBACKSLASH@
+	DEPDIR=$(DEPDIR) $(%FPFX%DEPMODE) $(depcomp) @AMDEPBACKSLASH@
+endif %AMDEP%
+if %?GENERIC%
+?-o?	%VERBOSE-NODEP%%COMPILE% %-c% %-o% %OBJ% %SOURCEFLAG%%SOURCE%
+?!-o?	%VERBOSE-NODEP%%COMPILE% %-c% %SOURCEFLAG%%SOURCE%
+else !%?GENERIC%
+## For non-suffix rules, we must emulate a VPATH search on %SOURCE%.
+?-o?	%VERBOSE-NODEP%%COMPILE% %-c% %-o% %OBJ% %SOURCEFLAG%`test -f '%SOURCE%' || echo '$(srcdir)/'`%SOURCE%
+?!-o?	%VERBOSE-NODEP%%COMPILE% %-c% %SOURCEFLAG%`test -f '%SOURCE%' || echo '$(srcdir)/'`%SOURCE%
+endif !%?GENERIC%
+endif !%FASTDEP%
+
+?GENERIC?%EXT%.obj:
+?!GENERIC?%OBJOBJ%: %SOURCE%
+if %FASTDEP%
+## In fast-dep mode, we can always use -o.
+## For non-suffix rules, we must emulate a VPATH search on %SOURCE%.
+?!GENERIC?	%VERBOSE%%COMPILE% -MT %OBJOBJ% -MD -MP -MF %DEPBASE%.Tpo %-c% -o %OBJOBJ% %SOURCEFLAG%`if test -f '%SOURCE%'; then $(CYGPATH_W) '%SOURCE%'; else $(CYGPATH_W) '$(srcdir)/%SOURCE%'; fi`
+?!GENERIC?	%SILENT%$(am__mv) %DEPBASE%.Tpo %DEPBASE%.Po
+?GENERIC??!SUBDIROBJ?	%VERBOSE%%COMPILE% -MT %OBJOBJ% -MD -MP -MF %DEPBASE%.Tpo %-c% -o %OBJOBJ% %SOURCEFLAG%`$(CYGPATH_W) '%SOURCE%'`
+?GENERIC??!SUBDIROBJ?	%SILENT%$(am__mv) %DEPBASE%.Tpo %DEPBASE%.Po
+?GENERIC??SUBDIROBJ?	%VERBOSE%depbase=`echo %OBJ% | sed 's|[^/]*$$|$(DEPDIR)/&|;s|\.obj$$||'`;\
+?GENERIC??SUBDIROBJ?	%COMPILE% -MT %OBJOBJ% -MD -MP -MF %DEPBASE%.Tpo %-c% -o %OBJOBJ% %SOURCEFLAG%`$(CYGPATH_W) '%SOURCE%'` &&\
+?GENERIC??SUBDIROBJ?	$(am__mv) %DEPBASE%.Tpo %DEPBASE%.Po
+else !%FASTDEP%
+if %AMDEP%
+	%VERBOSE%source='%SOURCE%' object='%OBJOBJ%' libtool=no @AMDEPBACKSLASH@
+	DEPDIR=$(DEPDIR) $(%FPFX%DEPMODE) $(depcomp) @AMDEPBACKSLASH@
+endif %AMDEP%
+if %?GENERIC%
+?-o?	%VERBOSE-NODEP%%COMPILE% %-c% %-o% %OBJOBJ% %SOURCEFLAG%`$(CYGPATH_W) '%SOURCE%'`
+?!-o?	%VERBOSE-NODEP%%COMPILE% %-c% `$(CYGPATH_W) %SOURCEFLAG%'%SOURCE%'`
+else !%?GENERIC%
+## For non-suffix rules, we must emulate a VPATH search on %SOURCE%.
+?-o?	%VERBOSE-NODEP%%COMPILE% %-c% %-o% %OBJOBJ% %SOURCEFLAG%`if test -f '%SOURCE%'; then $(CYGPATH_W) '%SOURCE%'; else $(CYGPATH_W) '$(srcdir)/%SOURCE%'; fi`
+?!-o?	%VERBOSE-NODEP%%COMPILE% %-c% %SOURCEFLAG%`if test -f '%SOURCE%'; then $(CYGPATH_W) '%SOURCE%'; else $(CYGPATH_W) '$(srcdir)/%SOURCE%'; fi`
+endif !%?GENERIC%
+endif !%FASTDEP%
+endif %?NONLIBTOOL%
+
+if %?LIBTOOL%
+?GENERIC?%EXT%.lo:
+?!GENERIC?%LTOBJ%: %SOURCE%
+if %FASTDEP%
+## In fast-dep mode, we can always use -o.
+## For non-suffix rules, we must emulate a VPATH search on %SOURCE%.
+?!GENERIC?	%VERBOSE%%LTCOMPILE% -MT %LTOBJ% -MD -MP -MF %DEPBASE%.Tpo %-c% -o %LTOBJ% %SOURCEFLAG%`test -f '%SOURCE%' || echo '$(srcdir)/'`%SOURCE%
+?!GENERIC?	%SILENT%$(am__mv) %DEPBASE%.Tpo %DEPBASE%.Plo
+?GENERIC??!SUBDIROBJ?	%VERBOSE%%LTCOMPILE% -MT %LTOBJ% -MD -MP -MF %DEPBASE%.Tpo %-c% -o %LTOBJ% %SOURCEFLAG%%SOURCE%
+?GENERIC??!SUBDIROBJ?	%SILENT%$(am__mv) %DEPBASE%.Tpo %DEPBASE%.Plo
+?GENERIC??SUBDIROBJ?	%VERBOSE%depbase=`echo %OBJ% | sed 's|[^/]*$$|$(DEPDIR)/&|;s|\.lo$$||'`;\
+?GENERIC??SUBDIROBJ?	%LTCOMPILE% -MT %LTOBJ% -MD -MP -MF %DEPBASE%.Tpo %-c% -o %LTOBJ% %SOURCEFLAG%%SOURCE% &&\
+?GENERIC??SUBDIROBJ?	$(am__mv) %DEPBASE%.Tpo %DEPBASE%.Plo
+else !%FASTDEP%
+if %AMDEP%
+	%VERBOSE%source='%SOURCE%' object='%LTOBJ%' libtool=yes @AMDEPBACKSLASH@
+	DEPDIR=$(DEPDIR) $(%FPFX%DEPMODE) $(depcomp) @AMDEPBACKSLASH@
+endif %AMDEP%
+## We can always use '-o' with Libtool.
+?GENERIC?	%VERBOSE-NODEP%%LTCOMPILE% %-c% -o %LTOBJ% %SOURCEFLAG%%SOURCE%
+## For non-suffix rules, we must emulate a VPATH search on %SOURCE%.
+?!GENERIC?	%VERBOSE-NODEP%%LTCOMPILE% %-c% -o %LTOBJ% %SOURCEFLAG%`test -f '%SOURCE%' || echo '$(srcdir)/'`%SOURCE%
+endif !%FASTDEP%
+endif %?LIBTOOL%

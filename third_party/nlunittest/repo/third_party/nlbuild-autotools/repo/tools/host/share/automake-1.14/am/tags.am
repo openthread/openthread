@@ -1,0 +1,182 @@
+## automake - create Makefile.in from Makefile.am
+## Copyright (C) 1994-2013 Free Software Foundation, Inc.
+
+## This program is free software; you can redistribute it and/or modify
+## it under the terms of the GNU General Public License as published by
+## the Free Software Foundation; either version 2, or (at your option)
+## any later version.
+
+## This program is distributed in the hope that it will be useful,
+## but WITHOUT ANY WARRANTY; without even the implied warranty of
+## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+## GNU General Public License for more details.
+
+## You should have received a copy of the GNU General Public License
+## along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+# Read a list of newline-separated strings from the standard input,
+# and print each of them once, without duplicates.  Input order is
+# *not* preserved.
+am__uniquify_input = $(AWK) '\
+  BEGIN { nonempty = 0; } \
+  { items[$$0] = 1; nonempty = 1; } \
+  END { if (nonempty) { for (i in items) print i; }; } \
+'
+
+# Make sure the list of sources is unique.  This is necessary because,
+# e.g., the same source file might be shared among _SOURCES variables
+# for different programs/libraries.
+am__define_uniq_tagged_files = \
+  list='$(am__tagged_files)'; \
+  unique=`for i in $$list; do \
+## Handle VPATH correctly.
+    if test -f "$$i"; then echo $$i; else echo $(srcdir)/$$i; fi; \
+  done | $(am__uniquify_input)`
+
+## ---- ##
+## ID.  ##
+## ---- ##
+
+ID: $(am__tagged_files)
+	$(am__define_uniq_tagged_files); mkid -fID $$unique
+
+
+## ------ ##
+## TAGS.  ##
+## ------ ##
+
+ETAGS = etags
+.PHONY: TAGS tags
+if %?SUBDIRS%
+AM_RECURSIVE_TARGETS += TAGS
+RECURSIVE_TARGETS += tags-recursive
+tags: tags-recursive
+else !%?SUBDIRS%
+tags: tags-am
+endif !%?SUBDIRS%
+TAGS: tags
+
+tags-am: $(TAGS_DEPENDENCIES) $(am__tagged_files)
+## We use the positional parameters to build the subdir list with
+## absolute names, without the need to worry about white space in `pwd`.
+	set x; \
+	here=`pwd`; \
+## Exuberant Ctags wants --etags-include,
+## GNU Etags             --include
+## Furthermore Exuberant Ctags 5.5.4 fails to create TAGS files
+## when no files are supplied, despite any --etags-include option.
+## A workaround is to pass '.' as a file.  This is what $empty_fix is for.
+?SUBDIRS?	if ($(ETAGS) --etags-include --version) >/dev/null 2>&1; then \
+?SUBDIRS?	  include_option=--etags-include; \
+?SUBDIRS?	  empty_fix=.; \
+?SUBDIRS?	else \
+?SUBDIRS?	  include_option=--include; \
+?SUBDIRS?	  empty_fix=; \
+?SUBDIRS?	fi; \
+?SUBDIRS?	list='$(SUBDIRS)'; for subdir in $$list; do \
+## Do nothing if we're trying to look in '.'.
+?SUBDIRS?	  if test "$$subdir" = .; then :; else \
+?SUBDIRS?	    test ! -f $$subdir/TAGS || \
+## Note that the = is mandatory for --etags-include.
+?SUBDIRS?	      set "$$@" "$$include_option=$$here/$$subdir/TAGS"; \
+?SUBDIRS?	  fi; \
+?SUBDIRS?	done; \
+	$(am__define_uniq_tagged_files); \
+## Remove the 'x' we added first:
+	shift; \
+## Make sure we have something to run etags on.
+	if test -z "$(ETAGS_ARGS)$$*$$unique"; then :; else \
+	  test -n "$$unique" || unique=$$empty_fix; \
+	  if test $$# -gt 0; then \
+	    $(ETAGS) $(ETAGSFLAGS) $(AM_ETAGSFLAGS) $(ETAGS_ARGS) \
+	      "$$@" $$unique; \
+	  else \
+	    $(ETAGS) $(ETAGSFLAGS) $(AM_ETAGSFLAGS) $(ETAGS_ARGS) \
+	      $$unique; \
+	  fi; \
+	fi
+
+
+## --------------- ##
+## vi-style tags.  ##
+## --------------- ##
+
+CTAGS = ctags
+.PHONY: CTAGS ctags
+if %?SUBDIRS%
+AM_RECURSIVE_TARGETS += CTAGS
+RECURSIVE_TARGETS += ctags-recursive
+ctags: ctags-recursive
+else !%?SUBDIRS%
+ctags: ctags-am
+endif !%?SUBDIRS%
+
+CTAGS: ctags
+ctags-am: $(TAGS_DEPENDENCIES) $(am__tagged_files)
+	$(am__define_uniq_tagged_files); \
+## Make sure we have something to run ctags on.
+	test -z "$(CTAGS_ARGS)$$unique" \
+	  || $(CTAGS) $(CTAGSFLAGS) $(AM_CTAGSFLAGS) $(CTAGS_ARGS) \
+	     $$unique
+
+
+## --------------- ##
+## "Global tags".  ##
+## --------------- ##
+
+.PHONY: GTAGS
+GTAGS:
+	here=`$(am__cd) $(top_builddir) && pwd` \
+	  && $(am__cd) $(top_srcdir) \
+	  && gtags -i $(GTAGS_ARGS) "$$here"
+
+
+## ------- ##
+## cscope  ##
+## ------- ##
+
+if %?TOPDIR_P%
+CSCOPE = cscope
+.PHONY: cscope clean-cscope
+AM_RECURSIVE_TARGETS += cscope
+cscope: cscope.files
+	test ! -s cscope.files \
+	  || $(CSCOPE) -b -q $(AM_CSCOPEFLAGS) $(CSCOPEFLAGS) -i cscope.files $(CSCOPE_ARGS)
+clean-cscope:
+	-rm -f cscope.files
+cscope.files: clean-cscope cscopelist
+endif %?TOPDIR_P%
+
+if %?SUBDIRS%
+RECURSIVE_TARGETS += cscopelist-recursive
+cscopelist: cscopelist-recursive
+else !%?SUBDIRS%
+cscopelist: cscopelist-am
+endif !%?SUBDIRS%
+
+cscopelist-am: $(am__tagged_files)
+	list='$(am__tagged_files)'; \
+	case "$(srcdir)" in \
+	  [\\/]* | ?:[\\/]*) sdir="$(srcdir)" ;; \
+	  *) sdir=$(subdir)/$(srcdir) ;; \
+	esac; \
+	for i in $$list; do \
+	  if test -f "$$i"; then \
+	    echo "$(subdir)/$$i"; \
+	  else \
+	    echo "$$sdir/$$i"; \
+	  fi; \
+	done >> $(top_builddir)/cscope.files
+
+
+## ---------- ##
+## Cleaning.  ##
+## ---------- ##
+
+.PHONY distclean-am: distclean-tags
+
+distclean-tags:
+	-rm -f TAGS ID GTAGS GRTAGS GSYMS GPATH tags
+if %?TOPDIR_P%
+	-rm -f cscope.out cscope.in.out cscope.po.out cscope.files
+endif %?TOPDIR_P%
