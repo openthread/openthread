@@ -36,6 +36,7 @@
 #include <string.h>
 
 #include <openthread.h>
+#include <openthread-config.h>
 
 #include "cli.hpp"
 #include <common/encoding.hpp>
@@ -78,6 +79,7 @@ const struct Command Interpreter::sCommands[] =
     { "start", &ProcessStart },
     { "state", &ProcessState },
     { "stop", &ProcessStop },
+    { "version", &ProcessVersion },
     { "whitelist", &ProcessWhitelist },
 };
 
@@ -1244,6 +1246,12 @@ void Interpreter::ProcessStop(int argc, char *argv[])
 
 exit:
     AppendResult(error);
+}
+
+void Interpreter::ProcessVersion(int argc, char *argv[])
+{
+    sServer->OutputFormat("%s\r\n", PACKAGE_NAME "/" PACKAGE_VERSION "; " __DATE__ " " __TIME__);
+    AppendResult(kThreadError_None);
 }
 
 void Interpreter::ProcessWhitelist(int argc, char *argv[])
