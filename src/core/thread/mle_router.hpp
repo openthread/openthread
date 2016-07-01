@@ -290,6 +290,15 @@ public:
     Router *GetRouters(uint8_t *aNumRouters);
 
     /**
+     * This method retains diagnotsic information for a given router.
+     *
+     * @param[in]   aRouterId    The router ID or RLOC16 for a given router.
+     * @param[out]  aRouterInfo  The router information.
+     *
+     */
+    ThreadError GetRouterInfo(uint16_t aRouterId, otRouterInfo &aRouterInfo);
+
+    /**
      * This method handles MAC Data Poll messages.
      *
      * @param[in]  aChild  The Child that sent the MAC Data Poll message.

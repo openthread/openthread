@@ -908,6 +908,15 @@ uint16_t otGetRloc16(void);
 uint8_t otGetRouterIdSequence(void);
 
 /**
+ * The function retains diagnostic information for a given Thread Router.
+ *
+ * @param[in]   aRouterId    The router ID or RLOC16 for a given router.
+ * @param[out]  aRouterInfo  A pointer to where the router information is placed.
+ *
+ */
+ThreadError otGetRouterInfo(uint16_t aRouterId, otRouterInfo *aRouterInfo);
+
+/**
  * Get the Stable Network Data Version.
  *
  * @returns The Stable Network Data Version.

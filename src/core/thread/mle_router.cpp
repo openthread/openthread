@@ -2252,6 +2252,32 @@ Router *MleRouter::GetRouters(uint8_t *aNumRouters)
     return mRouters;
 }
 
+ThreadError MleRouter::GetRouterInfo(uint16_t aRouterId, otRouterInfo &aRouterInfo)
+{
+    ThreadError error = kThreadError_None;
+
+    if (aRouterId > kMaxRouterId && GetChildId(aRouterId) == 0)
+    {
+        aRouterId = GetRouterId(aRouterId);
+    }
+
+    VerifyOrExit(aRouterId <= kMaxRouterId, error = kThreadError_InvalidArgs);
+
+    memcpy(&aRouterInfo.mExtAddress, &mRouters[aRouterId].mMacAddr, sizeof(aRouterInfo.mExtAddress));
+    aRouterInfo.mAllocated = mRouters[aRouterId].mAllocated;
+    aRouterInfo.mRouterId = aRouterId;
+    aRouterInfo.mRloc16 = GetRloc16(aRouterId);
+    aRouterInfo.mNextHop = mRouters[aRouterId].mNextHop;
+    aRouterInfo.mLinkEstablished = mRouters[aRouterId].mState == Neighbor::kStateValid;
+    aRouterInfo.mPathCost = mRouters[aRouterId].mCost;
+    aRouterInfo.mLinkQualityIn = mRouters[aRouterId].mLinkInfo.GetLinkQuality();
+    aRouterInfo.mLinkQualityOut = mRouters[aRouterId].mLinkQualityOut;
+    aRouterInfo.mAge = Timer::MsecToSec(Timer::GetNow() - mRouters[aRouterId].mLastHeard);
+
+exit:
+    return error;
+}
+
 ThreadError MleRouter::CheckReachability(uint16_t aMeshSource, uint16_t aMeshDest, Ip6::Header &aIp6Header)
 {
     Ip6::Address destination;
