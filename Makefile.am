@@ -38,24 +38,24 @@ AM_DISTCHECK_CONFIGURE_FLAGS        = \
     $(NULL)
 
 SUBDIRS                             = \
+    doc                               \
+    third_party                       \
     include                           \
     src                               \
-    third_party                       \
     examples                          \
     tests                             \
-    doc                               \
     $(NULL)
 
 EXTRA_DIST                          = \
     .astyle/astyle-opts               \
     .astyle/astyle-wrap.sh            \
     .default-version                  \
-    bootstrap                         \
-    bootstrap-configure               \
-    README.md                         \
-    NOTICE                            \
     CONTRIBUTING.md                   \
     LICENSE                           \
+    NOTICE                            \
+    README.md                         \
+    bootstrap                         \
+    bootstrap-configure               \
     $(NULL)
 
 BUILT_SOURCES                       = \

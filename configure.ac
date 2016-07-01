@@ -465,11 +465,44 @@ AM_CONDITIONAL(OPENTHREAD_BUILD_DOCS, [test "${nl_cv_build_docs}" = "yes"])
 # At minimum, the following packages are optional, depending on
 # configuration:
 #
-#   * TBD
+#   * nlunittest
 #
 AC_MSG_NOTICE([checking required package dependencies])
 
-# NL_WITH_PACKAGE(...)
+#
+# Nlunittest
+#
+
+if test "${nl_cv_build_tests}" = "yes"; then
+    NL_WITH_PACKAGE(
+        [Nlunittest],
+        [NLUNITTEST],
+        [nlunittest],
+        [-lnlunittest],
+        [
+            # At this point, the internal Nlunittest package will be neither
+            # configured nor built, so the normal checks we undertake for an
+            # external package cannot be run here. Simply set the appropriate
+            # variables and trust all will be well.
+
+            NLUNITTEST_CPPFLAGS="-I\${abs_top_srcdir}/third_party/nlunittest/repo/src"
+            NLUNITTEST_LDFLAGS="-L${ac_pwd}/third_party/nlunittest/repo/src"
+            NLUNITTEST_LIBS="-lnlunittest"
+        ],
+        [
+            # Check for required Nlunittest headers.
+
+            AC_CHECK_HEADERS([nltest.h],
+            [],
+            [
+                AC_MSG_ERROR(The nlunittest header "$ac_header" is required but cannot be found.)
+            ])
+        ]
+    )
+fi
+
+AM_CONDITIONAL([OPENTHREAD_WITH_NLUNITTEST_INTERNAL], [test "${nl_with_nlunittest}" = "internal"])
+
 
 #
 # Check for headers
@@ -500,6 +533,13 @@ if test "${ac_no_link}" != "yes"; then
     AC_CHECK_FUNCS([memcpy])
 fi
 
+
+# Add any nlunittest CPPFLAGS, LDFLAGS, and LIBS
+
+CPPFLAGS="${CPPFLAGS} ${NLUNITTEST_CPPFLAGS}"
+LDFLAGS="${LDFLAGS} ${NLUNITTEST_LDFLAGS}"
+LIBS="${LIBS} ${NLUNITTEST_LIBS}"
+
 # Add any code coverage CPPFLAGS and LDFLAGS
 
 CPPFLAGS="${CPPFLAGS} ${NL_COVERAGE_CPPFLAGS}"
@@ -511,22 +551,16 @@ LDFLAGS="${LDFLAGS} ${NL_COVERAGE_LDFLAGS}"
 
 NL_RESTORE_WERROR
 
+# Configure any autotools-based subdirectories
+
+AC_CONFIG_SUBDIRS([third_party/nlunittest/repo])
+
 #
 # Identify the various makefiles and auto-generated files for the package
 #
 AC_CONFIG_FILES([
 Makefile
-include/Makefile
-include/cli/Makefile
-include/crypto/Makefile
-include/ncp/Makefile
-include/platform/Makefile
-src/Makefile
-src/cli/Makefile
-src/ncp/Makefile
-src/core/Makefile
-third_party/Makefile
-third_party/mbedtls/Makefile
+doc/Makefile
 examples/Makefile
 examples/apps/Makefile
 examples/apps/cli/Makefile
@@ -534,10 +568,20 @@ examples/apps/ncp/Makefile
 examples/platforms/Makefile
 examples/platforms/cc2538/Makefile
 examples/platforms/posix/Makefile
+include/Makefile
+include/cli/Makefile
+include/crypto/Makefile
+include/ncp/Makefile
+include/platform/Makefile
+src/Makefile
+src/cli/Makefile
+src/core/Makefile
+src/ncp/Makefile
 tests/Makefile
 tests/scripts/Makefile
 tests/unit/Makefile
-doc/Makefile
+third_party/Makefile
+third_party/mbedtls/Makefile
 ])
 
 #
@@ -577,6 +621,13 @@ AC_MSG_NOTICE([
   Documentation support                     : ${nl_cv_build_docs}
   Doxygen                                   : ${DOXYGEN:--}
   GraphViz dot                              : ${DOT:--}
+  Nlunittest source                         : ${nl_with_nlunittest:--}
+  Nlunittest compile flags                  : ${NLUNITTEST_CPPFLAGS:--}
+  Nlunittest link flags                     : ${NLUNITTEST_LDFLAGS:--}
+  Nlunittest link libraries                 : ${NLUNITTEST_LIBS:--}
+  OpenThread CLI support                    : ${enable_cli}
+  OpenThread NCP support                    : ${enable_ncp}
+  OpenThread examples                       : ${OPENTHREAD_EXAMPLES}
   C Preprocessor                            : ${CPP}
   C Compiler                                : ${CC}
   C++ Preprocessor                          : ${CXXCPP}
@@ -594,8 +645,5 @@ AC_MSG_NOTICE([
   Pretty args                               : ${PRETTY_ARGS:--}
   Pretty check                              : ${PRETTY_CHECK:--}
   Pretty check args                         : ${PRETTY_CHECK_ARGS:--}
-  OpenThread CLI support                    : ${enable_cli}
-  OpenThread NCP support                    : ${enable_ncp}
-  OpenThread examples                       : ${OPENTHREAD_EXAMPLES}
 
 ])
