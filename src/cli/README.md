@@ -12,6 +12,7 @@ OpenThread test scripts use the CLI to execute test cases.
 * [childtimeout](#childtimeout)
 * [contextreusedelay](#contextreusedelay)
 * [counter](#counter)
+* [eidcache](#eidcache)
 * [extaddr](#extaddr)
 * [extpanid](#extpanid)
 * [ipaddr](#ipaddr)
@@ -164,6 +165,17 @@ RxTotal: 11
     RxErrSec: 0
     RxErrFcs: 0
     RxErrOther: 0
+```
+
+### eidcache
+
+Print the EID-to-RLOC cache entries.
+
+```bash
+> eidcache
+fdde:ad00:beef:0:bb1:ebd6:ad10:f33 ac00
+fdde:ad00:beef:0:110a:e041:8399:17cd 6000
+Done
 ```
 
 ### extaddr
