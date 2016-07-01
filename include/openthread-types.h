@@ -148,6 +148,32 @@ typedef struct otExtAddress
 } otExtAddress;
 
 /**
+ * @addtogroup commands  Commands
+ *
+ * @{
+ *
+ */
+
+#define OT_CHANNEL_11_MASK   (1 << 11)   ///< Channel 11
+#define OT_CHANNEL_12_MASK   (1 << 12)   ///< Channel 12
+#define OT_CHANNEL_13_MASK   (1 << 13)   ///< Channel 13
+#define OT_CHANNEL_14_MASK   (1 << 14)   ///< Channel 14
+#define OT_CHANNEL_15_MASK   (1 << 15)   ///< Channel 15
+#define OT_CHANNEL_16_MASK   (1 << 16)   ///< Channel 16
+#define OT_CHANNEL_17_MASK   (1 << 17)   ///< Channel 17
+#define OT_CHANNEL_18_MASK   (1 << 18)   ///< Channel 18
+#define OT_CHANNEL_19_MASK   (1 << 19)   ///< Channel 19
+#define OT_CHANNEL_20_MASK   (1 << 20)   ///< Channel 20
+#define OT_CHANNEL_21_MASK   (1 << 21)   ///< Channel 21
+#define OT_CHANNEL_22_MASK   (1 << 22)   ///< Channel 22
+#define OT_CHANNEL_23_MASK   (1 << 23)   ///< Channel 23
+#define OT_CHANNEL_24_MASK   (1 << 24)   ///< Channel 24
+#define OT_CHANNEL_25_MASK   (1 << 25)   ///< Channel 25
+#define OT_CHANNEL_26_MASK   (1 << 26)   ///< Channel 26
+
+#define OT_CHANNEL_ALL       0xffffffff  ///< All channels
+
+/**
  * This struct represents a received IEEE 802.15.4 Beacon.
  *
  */
@@ -164,6 +190,11 @@ typedef struct otActiveScanResult
     bool           mIsNative : 1;    ///< Native Commissioner flag
     bool           mIsJoinable : 1;  ///< Joining Permitted flag
 } otActiveScanResult;
+
+/**
+ * @}
+ *
+ */
 
 /**
  * @addtogroup config  Configuration

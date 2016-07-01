@@ -1140,7 +1140,7 @@ void Interpreter::ProcessScan(int argc, char *argv[])
     if (argc > 0)
     {
         SuccessOrExit(error = ParseLong(argv[0], value));
-        scanChannels = 1 << (value - kPhyMinChannel);
+        scanChannels = 1 << value;
     }
 
     SuccessOrExit(error = otActiveScan(scanChannels, 0, &HandleActiveScanResult));

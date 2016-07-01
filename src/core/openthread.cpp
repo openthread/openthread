@@ -671,7 +671,7 @@ ThreadError otDisable(void)
     return sThreadNetif->Down();
 }
 
-ThreadError otActiveScan(uint16_t aScanChannels, uint16_t aScanDuration, otHandleActiveScanResult aCallback)
+ThreadError otActiveScan(uint32_t aScanChannels, uint16_t aScanDuration, otHandleActiveScanResult aCallback)
 {
     return sThreadNetif->GetMac().ActiveScan(aScanChannels, aScanDuration, &HandleActiveScanResult,
                                              reinterpret_cast<void *>(aCallback));
