@@ -540,6 +540,17 @@ public:
      */
     const LeaderDataTlv &GetLeaderDataTlv(void);
 
+    /**
+     * This method gets the Leader Data.
+     *
+     * @param[out]  aLeaderData  A reference to where the leader data is placed.
+     *
+     * @retval kThreadError_None         Successfully retrieved the leader data.
+     * @retval kThreadError_Detached     Not currently attached.
+     *
+     */
+    ThreadError GetLeaderData(otLeaderData &aLeaderData);
+
 protected:
     /**
      * This method appends an MLE header to a message.

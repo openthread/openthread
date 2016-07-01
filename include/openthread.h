@@ -930,6 +930,18 @@ otDeviceRole otGetDeviceRole(void);
 ThreadError otGetEidCacheEntry(uint8_t aIndex, otEidCacheEntry *aEntry);
 
 /**
+ * This function get the Thread Leader Data.
+ *
+ * @param[out]  aLeaderData  A pointer to where the leader data is placed.
+ *
+ * @retval kThreadError_None         Successfully retrieved the leader data.
+ * @retval kThreadError_Detached     Not currently attached.
+ * @retval kThreadError_InvalidArgs  @p aLeaderData is NULL.
+ *
+ */
+ThreadError otGetLeaderData(otLeaderData *aLeaderData);
+
+/**
  * Get the Leader's Router ID.
  *
  * @returns The Leader's Router ID.

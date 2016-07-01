@@ -453,6 +453,19 @@ typedef struct otEidCacheEntry
 } otEidCacheEntry;
 
 /**
+ * This structure represents the Thread Leader Data.
+ *
+ */
+typedef struct otLeaderData
+{
+    uint32_t mPartitionId;            ///< Partition ID
+    uint8_t mWeighting;               ///< Leader Weight
+    uint8_t mDataVersion;             ///< Full Network Data Version
+    uint8_t mStableDataVersion;       ///< Stable Network Data Version
+    uint8_t mLeaderRouterId;          ///< Leader Router ID
+} otLeaderData;
+
+/**
  * This structure represents the MAC layer counters.
  */
 typedef struct otMacCounters

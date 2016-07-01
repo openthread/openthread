@@ -473,6 +473,24 @@ const LeaderDataTlv &Mle::GetLeaderDataTlv(void)
     return mLeaderData;
 }
 
+ThreadError Mle::GetLeaderData(otLeaderData &aLeaderData)
+{
+    const LeaderDataTlv &leaderData(GetLeaderDataTlv());
+    ThreadError error = kThreadError_None;
+
+    VerifyOrExit(mDeviceState != kDeviceStateDisabled && mDeviceState != kDeviceStateDetached,
+                 error = kThreadError_Detached);
+
+    aLeaderData.mPartitionId = leaderData.GetPartitionId();
+    aLeaderData.mWeighting = leaderData.GetWeighting();
+    aLeaderData.mDataVersion = leaderData.GetDataVersion();
+    aLeaderData.mStableDataVersion = leaderData.GetStableDataVersion();
+    aLeaderData.mLeaderRouterId = leaderData.GetLeaderRouterId();
+
+exit:
+    return error;
+}
+
 void Mle::GenerateNonce(const Mac::ExtAddress &aMacAddr, uint32_t aFrameCounter, uint8_t aSecurityLevel,
                         uint8_t *aNonce)
 {
