@@ -85,6 +85,7 @@ private:
     };
 
     static void AppendResult(ThreadError error);
+    static void OutputBytes(const uint8_t *aBytes, uint8_t aLength);
 
     static void ProcessHelp(int argc, char *argv[]);
     static void ProcessChannel(int argc, char *argv[]);

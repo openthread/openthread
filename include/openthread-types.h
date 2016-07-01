@@ -363,6 +363,18 @@ typedef enum otMleAttachFilter
 } otMleAttachFilter;
 
 /**
+ * This structure represents a whitelist entry.
+ *
+ */
+typedef struct otMacWhitelistEntry
+{
+    otExtAddress mExtAddress;       ///< IEEE 802.15.4 Extended Address
+    int8_t       mRssi;             ///< RSSI value
+    bool         mValid : 1;        ///< Indicates whether or not the whitelist entry is vaild
+    bool         mFixedRssi : 1;    ///< Indicates whether or not the RSSI value is fixed.
+} otMacWhitelistEntry;
+
+/**
  * @}
  *
  */

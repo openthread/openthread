@@ -732,6 +732,7 @@ ThreadError otReleaseRouterId(uint8_t aRouterId);
  * @sa otAddMacWhitelistRssi
  * @sa otRemoveMacWhitelist
  * @sa otClearMacWhitelist
+ * @sa otGetMacWhitelistEntry
  * @sa otDisableMacWhitelist
  * @sa otEnableMacWhitelist
  */
@@ -749,6 +750,7 @@ ThreadError otAddMacWhitelist(const uint8_t *aExtAddr);
  * @sa otAddMacWhitelistRssi
  * @sa otRemoveMacWhitelist
  * @sa otClearMacWhitelist
+ * @sa otGetMacWhitelistEntry
  * @sa otDisableMacWhitelist
  * @sa otEnableMacWhitelist
  */
@@ -762,10 +764,23 @@ ThreadError otAddMacWhitelistRssi(const uint8_t *aExtAddr, int8_t aRssi);
  * @sa otAddMacWhitelist
  * @sa otAddMacWhitelistRssi
  * @sa otClearMacWhitelist
+ * @sa otGetMacWhitelistEntry
  * @sa otDisableMacWhitelist
  * @sa otEnableMacWhitelist
  */
 void otRemoveMacWhitelist(const uint8_t *aExtAddr);
+
+/**
+ * This function gets a MAC whitelist entry.
+ *
+ * @param[in]   aIndex  An index into the MAC whitelist table.
+ * @param[out]  aEntry  A pointer to where the information is placed.
+ *
+ * @retval kThreadError_None         Successfully retrieved the MAC whitelist entry.
+ * @retval kThreadError_InvalidArgs  @p aIndex is out of bounds or @p aEntry is NULL.
+ *
+ */
+ThreadError otGetMacWhitelistEntry(uint8_t aIndex, otMacWhitelistEntry *aEntry);
 
 /**
  *  Remove all entries from the MAC whitelist.
@@ -773,6 +788,7 @@ void otRemoveMacWhitelist(const uint8_t *aExtAddr);
  * @sa otAddMacWhitelist
  * @sa otAddMacWhitelistRssi
  * @sa otRemoveMacWhitelist
+ * @sa otGetMacWhitelistEntry
  * @sa otDisableMacWhitelist
  * @sa otEnableMacWhitelist
  */
@@ -786,6 +802,7 @@ void otClearMacWhitelist(void);
  * @sa otAddMacWhitelistRssi
  * @sa otRemoveMacWhitelist
  * @sa otClearMacWhitelist
+ * @sa otGetMacWhitelistEntry
  * @sa otEnableMacWhitelist
  */
 void otDisableMacWhitelist(void);
@@ -793,13 +810,30 @@ void otDisableMacWhitelist(void);
 /**
  * Enable MAC whitelist filtering.
  *
- * @sa otAccMacWhitelist
+ * @sa otAddMacWhitelist
  * @sa otAddMacWhitelistRssi
  * @sa otRemoveMacWhitelist
  * @sa otClearMacWhitelist
+ * @sa otGetMacWhitelistEntry
  * @sa otDisableMacWhitelist
  */
 void otEnableMacWhitelist(void);
+
+/**
+ * This function indicates whether or not the MAC whitelist is enabled.
+ *
+ * @returns TRUE if the MAC whitelist is enabled, FALSE otherwise.
+ *
+ * @sa otAddMacWhitelist
+ * @sa otAddMacWhitelistRssi
+ * @sa otRemoveMacWhitelist
+ * @sa otClearMacWhitelist
+ * @sa otGetMacWhitelistEntry
+ * @sa otDisableMacWhitelist
+ * @sa otEnableMacWhitelist
+ *
+ */
+bool otIsMacWhitelistEnabled(void);
 
 /**
  * Detach from the Thread network.

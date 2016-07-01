@@ -404,11 +404,11 @@ ThreadError otAddMacWhitelist(const uint8_t *aExtAddr)
 ThreadError otAddMacWhitelistRssi(const uint8_t *aExtAddr, int8_t aRssi)
 {
     ThreadError error = kThreadError_None;
-    Thread::Mac::Whitelist::Entry *entry;
+    otMacWhitelistEntry *entry;
 
     entry = sThreadNetif->GetMac().GetWhitelist().Add(*reinterpret_cast<const Mac::ExtAddress *>(aExtAddr));
     VerifyOrExit(entry != NULL, error = kThreadError_NoBufs);
-    sThreadNetif->GetMac().GetWhitelist().SetConstantRssi(*entry, aRssi);
+    sThreadNetif->GetMac().GetWhitelist().SetFixedRssi(*entry, aRssi);
 
 exit:
     return error;
@@ -424,6 +424,17 @@ void otClearMacWhitelist(void)
     sThreadNetif->GetMac().GetWhitelist().Clear();
 }
 
+ThreadError otGetMacWhitelistEntry(uint8_t aIndex, otMacWhitelistEntry *aEntry)
+{
+    ThreadError error;
+
+    VerifyOrExit(aEntry != NULL, error = kThreadError_InvalidArgs);
+    error = sThreadNetif->GetMac().GetWhitelist().GetEntry(aIndex, *aEntry);
+
+exit:
+    return error;
+}
+
 void otDisableMacWhitelist(void)
 {
     sThreadNetif->GetMac().GetWhitelist().Disable();
@@ -432,6 +443,11 @@ void otDisableMacWhitelist(void)
 void otEnableMacWhitelist(void)
 {
     sThreadNetif->GetMac().GetWhitelist().Enable();
+}
+
+bool otIsMacWhitelistEnabled(void)
+{
+    return sThreadNetif->GetMac().GetWhitelist().IsEnabled();
 }
 
 ThreadError otBecomeDetached(void)
