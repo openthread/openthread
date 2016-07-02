@@ -228,7 +228,7 @@ void Interpreter::ProcessChild(int argc, char *argv[])
     sServer->OutputFormat("Rloc: %04x\r\n", childInfo.mRloc16);
     sServer->OutputFormat("Ext Addr: ");
 
-    for (int j = 0; j < sizeof(childInfo.mExtAddress); j++)
+    for (size_t j = 0; j < sizeof(childInfo.mExtAddress); j++)
     {
         sServer->OutputFormat("%02x", childInfo.mExtAddress.m8[j]);
     }
@@ -686,7 +686,8 @@ void Interpreter::HandleEchoResponse(void *aContext, Message &aMessage, const Ip
                           HostSwap16(aMessageInfo.GetPeerAddr().mFields.m16[7]));
     sServer->OutputFormat(": icmp_seq=%d hlim=%d", icmp6Header.GetSequence(), aMessageInfo.mHopLimit);
 
-    if (aMessage.Read(aMessage.GetOffset() + sizeof(icmp6Header), sizeof(uint32_t), &timestamp) >= sizeof(uint32_t))
+    if (aMessage.Read(aMessage.GetOffset() + sizeof(icmp6Header), sizeof(uint32_t), &timestamp) >=
+        static_cast<int>(sizeof(uint32_t)))
     {
         sServer->OutputFormat(" time=%dms", Timer::GetNow() - HostSwap32(timestamp));
     }
@@ -747,7 +748,9 @@ exit:
 
 void Interpreter::HandlePingTimer(void *aContext)
 {
-    *(uint32_t *)sEchoRequest = HostSwap32(Timer::GetNow());
+    uint32_t timestamp = HostSwap32(Timer::GetNow());
+
+    memcpy(sEchoRequest, &timestamp, sizeof(timestamp));
     sIcmpEcho.SendEchoRequest(sSockAddr, sEchoRequest, sLength);
     sCount--;
 
@@ -1072,7 +1075,7 @@ void Interpreter::ProcessRouter(int argc, char *argv[])
         {
             sServer->OutputFormat("Ext Addr: ");
 
-            for (int j = 0; j < sizeof(routerInfo.mExtAddress); j++)
+            for (size_t j = 0; j < sizeof(routerInfo.mExtAddress); j++)
             {
                 sServer->OutputFormat("%02x", routerInfo.mExtAddress.m8[j]);
             }

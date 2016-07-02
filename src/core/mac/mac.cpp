@@ -741,8 +741,8 @@ ThreadError Mac::ProcessReceiveSecurity(Frame &aFrame, const Address &aSrcAddr, 
         ExitNow(error = kThreadError_Security);
     }
 
-    VerifyOrExit(keySequence > aNeighbor->mKeySequence ||
-                 (keySequence == aNeighbor->mKeySequence) && (frameCounter >= aNeighbor->mValid.mLinkFrameCounter),
+    VerifyOrExit((keySequence > aNeighbor->mKeySequence) ||
+                 ((keySequence == aNeighbor->mKeySequence) && (frameCounter >= aNeighbor->mValid.mLinkFrameCounter)),
                  error = kThreadError_Security);
 
     aesCcm.SetKey(macKey, 16);
