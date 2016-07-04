@@ -123,6 +123,7 @@ private:
     static void ProcessStart(int argc, char *argv[]);
     static void ProcessState(int argc, char *argv[]);
     static void ProcessStop(int argc, char *argv[]);
+    static void ProcessVersion(int argc, char *argv[]);
     static void ProcessWhitelist(int argc, char *argv[]);
 
     static void HandleEchoResponse(void *aContext, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);

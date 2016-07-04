@@ -35,6 +35,7 @@ OpenThread test scripts use the CLI to execute test cases.
 * [start](#start)
 * [state](#state)
 * [stop](#stop)
+* [version](#version)
 * [whitelist](#whitelist)
 
 ## OpenThread Command Details
@@ -555,6 +556,16 @@ Disable OpenThread.
 
 ```bash
 > stop
+Done
+```
+
+### version
+
+Print the build version information.
+
+```bash
+> version
+OPENTHREAD/gf4f2f04; Jul  1 2016 17:00:09
 Done
 ```
 
