@@ -1125,6 +1125,11 @@ ThreadError MleRouter::HandleAdvertisement(const Message &aMessage, const Ip6::M
                      leaderData.GetWeighting(), peerParitionId,
                      mLeaderData.GetWeighting(), mLeaderData.GetPartitionId());
 
+        if ((GetDeviceState() == kDeviceStateChild) && (memcmp(&mParent.mMacAddr, &macAddr, sizeof(mParent.mMacAddr)) == 0))
+        {
+            ExitNow();
+        }
+
         if ((leaderData.GetWeighting() > mLeaderData.GetWeighting()) ||
             (leaderData.GetWeighting() == mLeaderData.GetWeighting() &&
              peerParitionId > mLeaderData.GetPartitionId()))
@@ -1137,8 +1142,13 @@ ThreadError MleRouter::HandleAdvertisement(const Message &aMessage, const Ip6::M
     }
     else if (leaderData.GetLeaderRouterId() != GetLeaderId())
     {
-        BecomeDetached();
-        ExitNow(error = kThreadError_Drop);
+        if (GetDeviceState() != kDeviceStateChild)
+        {
+            BecomeDetached();
+            error = kThreadError_Drop;
+        }
+
+        ExitNow();
     }
 
     VerifyOrExit(GetChildId(sourceAddress.GetRloc16()) == 0, ;);
@@ -1147,7 +1157,10 @@ ThreadError MleRouter::HandleAdvertisement(const Message &aMessage, const Ip6::M
     SuccessOrExit(error = Tlv::GetTlv(aMessage, Tlv::kRoute, sizeof(route), route));
     VerifyOrExit(route.IsValid(), error = kThreadError_Parse);
 
-    SuccessOrExit(error = ProcessRouteTlv(route));
+    if (mDeviceMode & ModeTlv::kModeFFD)
+    {
+        SuccessOrExit(error = ProcessRouteTlv(route));
+    }
 
     VerifyOrExit((routerId = GetRouterId(sourceAddress.GetRloc16())) < kMaxRouterId, error = kThreadError_Parse);
 
@@ -1170,7 +1183,7 @@ ThreadError MleRouter::HandleAdvertisement(const Message &aMessage, const Ip6::M
             }
         }
 
-        if (routerCount < mRouterUpgradeThreshold)
+        if ((mDeviceMode & ModeTlv::kModeFFD) && (routerCount < mRouterUpgradeThreshold))
         {
             BecomeRouter();
             ExitNow();

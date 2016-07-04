@@ -1437,7 +1437,7 @@ ThreadError Mle::HandleAdvertisement(const Message &aMessage, const Ip6::Message
 
     otLogInfoMle("Received advertisement from %04x\n", sourceAddress.GetRloc16());
 
-    if ((mDeviceState != kDeviceStateDetached) && (mDeviceMode & ModeTlv::kModeFFD))
+    if (mDeviceState != kDeviceStateDetached)
     {
         SuccessOrExit(error = mMleRouter.HandleAdvertisement(aMessage, aMessageInfo));
     }
@@ -1458,19 +1458,12 @@ ThreadError Mle::HandleAdvertisement(const Message &aMessage, const Ip6::Message
             break;
         }
 
-        if (mParent.mValid.mRloc16 != sourceAddress.GetRloc16())
+        if ((mParent.mValid.mRloc16 == sourceAddress.GetRloc16()) &&
+            (leaderData.GetPartitionId() != mLeaderData.GetPartitionId() ||
+             leaderData.GetLeaderRouterId() != GetLeaderId()))
         {
-            SetStateDetached();
-            ExitNow(error = kThreadError_NoRoute);
-        }
-        else
-        {
-            if (leaderData.GetPartitionId() != mLeaderData.GetPartitionId() ||
-                leaderData.GetLeaderRouterId() != GetLeaderId())
-            {
-                SetLeaderData(leaderData.GetPartitionId(), leaderData.GetWeighting(), leaderData.GetLeaderRouterId());
-                mRetrieveNewNetworkData = true;
-            }
+            SetLeaderData(leaderData.GetPartitionId(), leaderData.GetWeighting(), leaderData.GetLeaderRouterId());
+            mRetrieveNewNetworkData = true;
         }
 
         isNeighbor = true;
