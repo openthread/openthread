@@ -110,7 +110,7 @@ Mac::Mac(ThreadNetif &aThreadNetif):
 
     SetExtendedPanId(sExtendedPanidInit);
     SetNetworkName(sNetworkNameInit);
-    SetPanId(kPanIdBroadcast);
+    SetPanId(mPanId);
     SetExtAddress(mExtAddress);
     SetShortAddress(kShortAddrInvalid);
 
