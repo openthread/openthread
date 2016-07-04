@@ -34,7 +34,6 @@ AM_DISTCHECK_CONFIGURE_FLAGS        = \
     --enable-cli                      \
     --enable-ncp                      \
     --with-examples=posix             \
-    --enable-minimum-set-of-tests     \
     $(NULL)
 
 SUBDIRS                             = \

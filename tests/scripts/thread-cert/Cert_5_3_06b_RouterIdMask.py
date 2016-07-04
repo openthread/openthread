@@ -77,13 +77,10 @@ class Cert_5_3_6_RouterIdMask(unittest.TestCase):
         time.sleep(3)
         self.assertEqual(self.nodes[ROUTER2].get_state(), 'router')
 
+        self.nodes[ROUTER1].stop()
         self.nodes[ROUTER2].stop()
 
         time.sleep(300)
-
-        self.nodes[ROUTER2].start()
-        time.sleep(5)
-        self.assertEqual(self.nodes[ROUTER2].get_state(), 'router')
 
 if __name__ == '__main__':
     unittest.main()
