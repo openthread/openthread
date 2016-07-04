@@ -100,6 +100,7 @@ private:
     static ThreadError ProcessIpAddrAdd(int argc, char *argv[]);
     static ThreadError ProcessIpAddrDel(int argc, char *argv[]);
     static void ProcessKeySequence(int argc, char *argv[]);
+    static void ProcessLeaderData(int argc, char *argv[]);
     static void ProcessLeaderWeight(int argc, char *argv[]);
     static void ProcessMasterKey(int argc, char *argv[]);
     static void ProcessMode(int argc, char *argv[]);

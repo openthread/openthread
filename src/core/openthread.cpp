@@ -535,6 +535,18 @@ exit:
     return error;
 }
 
+ThreadError otGetLeaderData(otLeaderData *aLeaderData)
+{
+    ThreadError error;
+
+    VerifyOrExit(aLeaderData != NULL, error = kThreadError_InvalidArgs);
+
+    error = sThreadNetif->GetMle().GetLeaderData(*aLeaderData);
+
+exit:
+    return error;
+}
+
 uint8_t otGetLeaderRouterId(void)
 {
     return sThreadNetif->GetMle().GetLeaderDataTlv().GetLeaderRouterId();

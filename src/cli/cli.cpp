@@ -60,6 +60,7 @@ const struct Command Interpreter::sCommands[] =
     { "extpanid", &ProcessExtPanId },
     { "ipaddr", &ProcessIpAddr },
     { "keysequence", &ProcessKeySequence },
+    { "leaderdata", &ProcessLeaderData },
     { "leaderweight", &ProcessLeaderWeight },
     { "masterkey", &ProcessMasterKey },
     { "mode", &ProcessMode },
@@ -485,6 +486,23 @@ void Interpreter::ProcessKeySequence(int argc, char *argv[])
         SuccessOrExit(error = ParseLong(argv[0], value));
         otSetKeySequenceCounter(value);
     }
+
+exit:
+    AppendResult(error);
+}
+
+void Interpreter::ProcessLeaderData(int argc, char *argv[])
+{
+    ThreadError error;
+    otLeaderData leaderData;
+
+    SuccessOrExit(error = otGetLeaderData(&leaderData));
+
+    sServer->OutputFormat("Partition ID: %d\r\n", leaderData.mPartitionId);
+    sServer->OutputFormat("Weighting: %d\r\n", leaderData.mWeighting);
+    sServer->OutputFormat("Data Version: %d\r\n", leaderData.mDataVersion);
+    sServer->OutputFormat("Stable Data Version: %d\r\n", leaderData.mStableDataVersion);
+    sServer->OutputFormat("Leader Router ID: %d\r\n", leaderData.mLeaderRouterId);
 
 exit:
     AppendResult(error);
