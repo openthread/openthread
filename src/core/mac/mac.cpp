@@ -105,6 +105,7 @@ Mac::Mac(ThreadNetif &aThreadNetif):
     {
         mExtAddress.m8[i] = otPlatRandomGet();
     }
+    mExtAddress.m8[0] &= ~1; // always remove multicast bit
 
     memset(&mCounters, 0, sizeof(otMacCounters));
 
