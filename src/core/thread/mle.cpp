@@ -374,7 +374,7 @@ ThreadError Mle::SetMeshLocalPrefix(const uint8_t *aMeshLocalPrefix)
 
 const uint8_t Mle::GetChildId(uint16_t aRloc16) const
 {
-    return aRloc16 & kChildIdMask;
+    return aRloc16 & kMaxChildId;
 }
 
 const uint8_t Mle::GetRouterId(uint16_t aRloc16) const

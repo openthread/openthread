@@ -56,7 +56,7 @@ MleRouter::MleRouter(ThreadNetif &aThreadNetif):
     mAddressRelease(OPENTHREAD_URI_ADDRESS_RELEASE, &HandleAddressRelease, this),
     mCoapServer(aThreadNetif.GetCoapServer())
 {
-    mNextChildId = 1;
+    mNextChildId = kMaxChildId;
     mRouterIdSequence = 0;
     memset(mChildren, 0, sizeof(mChildren));
     memset(mRouters, 0, sizeof(mRouters));
@@ -1857,14 +1857,20 @@ ThreadError MleRouter::SendChildIdResponse(Child *aChild)
     SuccessOrExit(error = AppendSourceAddress(*message));
     SuccessOrExit(error = AppendLeaderData(*message));
 
-    aChild->mValid.mRloc16 = mMac.GetShortAddress() | mNextChildId;
-
-    mNextChildId++;
-
-    if (mNextChildId >= 512)
+    // pick next Child ID that is not being used
+    do
     {
-        mNextChildId = 1;
+        mNextChildId++;
+
+        if (mNextChildId > kMaxChildId)
+        {
+            mNextChildId = kMinChildId;
+        }
     }
+    while (FindChild(mNextChildId) != NULL);
+
+    // allocate Child ID
+    aChild->mValid.mRloc16 = mMac.GetShortAddress() | mNextChildId;
 
     SuccessOrExit(error = AppendAddress16(*message, aChild->mValid.mRloc16));
 
@@ -2287,7 +2293,7 @@ ThreadError MleRouter::GetChildInfoById(uint16_t aChildId, otChildInfo &aChildIn
     ThreadError error = kThreadError_None;
     Child *child;
 
-    if ((aChildId & ~kChildIdMask) != 0)
+    if ((aChildId & ~kMaxChildId) != 0)
     {
         aChildId = GetChildId(aChildId);
     }
