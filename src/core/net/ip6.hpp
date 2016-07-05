@@ -530,7 +530,6 @@ public:
      */
     static uint16_t UpdateChecksum(uint16_t aChecksum, uint16_t aValue);
 
-
     /**
      * This static method updates a checksum.
      *
@@ -571,12 +570,14 @@ public:
     /**
      * This function registers a callback to provide received raw IPv6 datagrams.
      *
-     * @param[in]  aCallback  A pointer to a function that is called when an IPv6 datagram is received or NULL to disable
-     *                        the callback.
+     * @param[in]  aCallback  A pointer to a function that is called when an IPv6 datagram is received or NULL to
+     *                        disable the callback.
      *
      */
     static void SetReceiveDatagramCallback(otReceiveIp6DatagramCallback aCallback);
 
+private:
+    static void ProcessReceiveCallback(Message &aMessage);
 };
 
 /**
