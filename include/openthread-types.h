@@ -116,6 +116,12 @@ typedef enum ThreadError
      */
     kThreadError_NotFound = 25,
 
+
+    /**
+     * The operation is already in progress.
+     */
+    kThreadError_Already = 26,
+
     kThreadError_Error = 255,
 } ThreadError;
 
