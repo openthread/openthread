@@ -1707,7 +1707,7 @@ ThreadError Mle::HandleChildIdResponse(const Message &aMessage, const Ip6::Messa
     Address16Tlv shortAddress;
     NetworkDataTlv networkData;
     RouteTlv route;
-    uint8_t numRouters;
+    uint8_t numRouters = 0;
 
     otLogInfoMle("Received Child ID Response\n");
 
@@ -1735,7 +1735,6 @@ ThreadError Mle::HandleChildIdResponse(const Message &aMessage, const Ip6::Messa
     if ((Tlv::GetTlv(aMessage, Tlv::kRoute, sizeof(route), route) == kThreadError_None) &&
         (mDeviceMode & ModeTlv::kModeFFD))
     {
-        numRouters = 0;
         SuccessOrExit(error = mMleRouter.ProcessRouteTlv(route));
 
         for (int i = 0; i < kMaxRouterId; i++)
