@@ -28,7 +28,7 @@
 
 /**
  * @file
- *   This file implements the OpenThread platform abstraction for serial communication.
+ *   This file implements the OpenThread platform abstraction for UART communication.
  *
  */
 
@@ -36,7 +36,7 @@
 
 #include <openthread-types.h>
 #include <common/code_utils.hpp>
-#include <platform/serial.h>
+#include <platform/uart.h>
 #include "platform-cc2538.h"
 
 enum
@@ -58,7 +58,7 @@ static uint8_t sReceiveBuffer[kReceiveBufferSize];
 static uint16_t sReceiveHead = 0;
 static uint16_t sReceiveLength = 0;
 
-ThreadError otPlatSerialEnable(void)
+ThreadError otPlatUartEnable(void)
 {
     uint32_t div;
 
@@ -99,12 +99,12 @@ ThreadError otPlatSerialEnable(void)
     return kThreadError_None;
 }
 
-ThreadError otPlatSerialDisable(void)
+ThreadError otPlatUartDisable(void)
 {
     return kThreadError_None;
 }
 
-ThreadError otPlatSerialSend(const uint8_t *aBuf, uint16_t aBufLength)
+ThreadError otPlatUartSend(const uint8_t *aBuf, uint16_t aBufLength)
 {
     ThreadError error = kThreadError_None;
 
@@ -127,14 +127,14 @@ void processReceive(void)
 
     if (sReceiveLength >= remaining)
     {
-        otPlatSerialReceived(sReceiveBuffer + sReceiveHead, remaining);
+        otPlatUartReceived(sReceiveBuffer + sReceiveHead, remaining);
         sReceiveHead = 0;
         sReceiveLength -= remaining;
     }
 
     if (sReceiveLength > 0)
     {
-        otPlatSerialReceived(sReceiveBuffer + sReceiveHead, sReceiveLength);
+        otPlatUartReceived(sReceiveBuffer + sReceiveHead, sReceiveLength);
         sReceiveHead += sReceiveLength;
         sReceiveLength = 0;
     }
@@ -155,13 +155,13 @@ void processTransmit(void)
     }
 
     sTransmitBuffer = NULL;
-    otPlatSerialSendDone();
+    otPlatUartSendDone();
 
 exit:
     return;
 }
 
-void cc2538SerialProcess(void)
+void cc2538UartProcess(void)
 {
     processReceive();
     processTransmit();

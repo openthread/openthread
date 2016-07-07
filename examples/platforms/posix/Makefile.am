@@ -42,7 +42,7 @@ libopenthread_posix_a_SOURCES             = \
     platform.c                              \
     radio.c                                 \
     random.c                                \
-    serial.c                                \
+    uart.c                                  \
     $(NULL)
 
 noinst_HEADERS                            = \

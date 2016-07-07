@@ -41,7 +41,7 @@
 
 #include <openthread.h>
 #include <platform/alarm.h>
-#include <platform/serial.h>
+#include <platform/uart.h>
 #include "platform-posix.h"
 
 uint32_t NODE_ID = 1;
@@ -59,7 +59,7 @@ void PlatformInit(int argc, char *argv[])
     posixAlarmInit();
     posixRadioInit();
     posixRandomInit();
-    otPlatSerialEnable();
+    otPlatUartEnable();
 }
 
 void PlatformProcessDrivers(void)
@@ -73,7 +73,7 @@ void PlatformProcessDrivers(void)
     FD_ZERO(&read_fds);
     FD_ZERO(&write_fds);
 
-    posixSerialUpdateFdSet(&read_fds, &write_fds, &max_fd);
+    posixUartUpdateFdSet(&read_fds, &write_fds, &max_fd);
     posixRadioUpdateFdSet(&read_fds, &write_fds, &max_fd);
     posixAlarmUpdateTimeout(&timeout);
 
@@ -83,7 +83,7 @@ void PlatformProcessDrivers(void)
         assert(rval >= 0 && errno != ETIME);
     }
 
-    posixSerialProcess();
+    posixUartProcess();
     posixRadioProcess();
     posixAlarmProcess();
 }

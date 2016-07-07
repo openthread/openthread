@@ -27,7 +27,7 @@
  */
 
 #include <openthread.h>
-#include <cli/cli-serial.h>
+#include <cli/cli-uart.h>
 #include <platform.h>
 
 void otSignalTaskletPending(void)
@@ -38,7 +38,7 @@ int main(int argc, char *argv[])
 {
     PlatformInit(argc, argv);
     otInit();
-    otCliSerialInit();
+    otCliUartInit();
 
     while (1)
     {

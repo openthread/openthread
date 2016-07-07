@@ -28,81 +28,75 @@
 
 /**
  * @file
- * @brief
- *   This file includes the platform abstraction for serial communication.
+ *   This file contains definitions for a CLI server on the UART service.
  */
 
-#ifndef SERIAL_H_
-#define SERIAL_H_
-
-#include <stdint.h>
+#ifndef CLI_UART_HPP_
+#define CLI_UART_HPP_
 
 #include <openthread-types.h>
+#include <cli/cli_server.hpp>
+#include <common/tasklet.hpp>
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-/**
- * @defgroup serial Serial
- * @ingroup platform
- *
- * @brief
- *   This module includes the platform abstraction for serial communication.
- *
- * @{
- *
- */
+namespace Thread {
+namespace Cli {
 
 /**
- * Enable the serial.
- *
- * @retval ::kThreadError_None  Successfully enabled the serial.
- * @retval ::kThreadError_Fail  Failed to enabled the serial.
- */
-ThreadError otPlatSerialEnable(void);
-
-/**
- * Disable the serial.
- *
- * @retval ::kThreadError_None  Successfully disabled the serial.
- * @retval ::kThreadError_Fail  Failed to disable the serial.
- */
-ThreadError otPlatSerialDisable(void);
-
-/**
- * Send bytes over the serial.
- *
- * @param[in] aBuf        A pointer to the data buffer.
- * @param[in] aBufLength  Number of bytes to transmit.
- *
- * @retval ::kThreadError_None  Successfully started transmission.
- * @retval ::kThreadError_Fail  Failed to start the transmission.
- */
-ThreadError otPlatSerialSend(const uint8_t *aBuf, uint16_t aBufLength);
-
-/**
- * The serial driver calls this method to notify OpenThread that the requested bytes have been sent.
+ * This class implements the CLI server on top of the UART platform abstraction.
  *
  */
-extern void otPlatSerialSendDone(void);
+class Uart: public Server
+{
+public:
+    Uart(void);
 
-/**
- * The serial driver calls this method to notify OpenThread that bytes have been received.
- *
- * @param[in]  aBuf        A pointer to the received bytes.
- * @param[in]  aBufLength  The number of bytes received.
- *
- */
-extern void otPlatSerialReceived(const uint8_t *aBuf, uint16_t aBufLength);
+    /**
+     * This method delivers raw characters to the client.
+     *
+     * @param[in]  aBuf        A pointer to a buffer.
+     * @param[in]  aBufLength  Number of bytes in the buffer.
+     *
+     * @returns The number of bytes placed in the output queue.
+     *
+     */
+    int Output(const char *aBuf, uint16_t aBufLength);
 
-/**
- * @}
- *
- */
+    /**
+     * This method delivers formatted output to the client.
+     *
+     * @param[in]  aFmt  A pointer to the format string.
+     * @param[in]  ...   A variable list of arguments to format.
+     *
+     * @returns The number of bytes placed in the output queue.
+     *
+     */
+    int OutputFormat(const char *fmt, ...);
 
-#ifdef __cplusplus
-}  // extern "C"
-#endif
+    void ReceiveTask(const uint8_t *aBuf, uint16_t aBufLength);
+    void SendDoneTask(void);
 
-#endif  // SERIAL_H_
+private:
+    enum
+    {
+        kRxBufferSize = 128,
+        kTxBufferSize = 512,
+        kMaxLineLength = 128,
+    };
+
+    ThreadError ProcessCommand(void);
+    void Send(void);
+
+    char mRxBuffer[kRxBufferSize];
+    uint16_t mRxLength;
+
+    char mTxBuffer[kTxBufferSize];
+    uint16_t mTxHead;
+    uint16_t mTxLength;
+
+    uint16_t mSendLength;
+};
+
+}  // namespace Cli
+}  // namespace Thread
+
+#endif  // CLI_UART_HPP_

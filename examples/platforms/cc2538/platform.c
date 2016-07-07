@@ -32,7 +32,7 @@
  *   This file includes the platform-specific initializers.
  */
 
-#include <platform/serial.h>
+#include <platform/uart.h>
 #include "platform-cc2538.h"
 
 void PlatformInit(int argc, char *argv[])
@@ -40,14 +40,14 @@ void PlatformInit(int argc, char *argv[])
     cc2538AlarmInit();
     cc2538RadioInit();
     cc2538RandomInit();
-    otPlatSerialEnable();
+    otPlatUartEnable();
 }
 
 void PlatformProcessDrivers(void)
 {
     // should sleep and wait for interrupts here
 
-    cc2538SerialProcess();
+    cc2538UartProcess();
     cc2538RadioProcess();
     cc2538AlarmProcess();
 }

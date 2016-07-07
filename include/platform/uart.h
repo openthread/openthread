@@ -28,75 +28,81 @@
 
 /**
  * @file
- *   This file contains definitions for a CLI server on the serial service.
+ * @brief
+ *   This file includes the platform abstraction for UART communication.
  */
 
-#ifndef CLI_SERIAL_HPP_
-#define CLI_SERIAL_HPP_
+#ifndef UART_H_
+#define UART_H_
+
+#include <stdint.h>
 
 #include <openthread-types.h>
-#include <cli/cli_server.hpp>
-#include <common/tasklet.hpp>
 
-namespace Thread {
-namespace Cli {
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /**
- * This class implements the CLI server on top of the serial platform abstraction.
+ * @defgroup uart UART
+ * @ingroup platform
+ *
+ * @brief
+ *   This module includes the platform abstraction for UART communication.
+ *
+ * @{
  *
  */
-class Serial: public Server
-{
-public:
-    Serial(void);
 
-    /**
-     * This method delivers raw characters to the client.
-     *
-     * @param[in]  aBuf        A pointer to a buffer.
-     * @param[in]  aBufLength  Number of bytes in the buffer.
-     *
-     * @returns The number of bytes placed in the output queue.
-     *
-     */
-    int Output(const char *aBuf, uint16_t aBufLength);
+/**
+ * Enable the UART.
+ *
+ * @retval ::kThreadError_None    Successfully enabled the UART.
+ * @retval ::kThreadError_Failed  Failed to enabled the UART.
+ */
+ThreadError otPlatUartEnable(void);
 
-    /**
-     * This method delivers formatted output to the client.
-     *
-     * @param[in]  aFmt  A pointer to the format string.
-     * @param[in]  ...   A variable list of arguments to format.
-     *
-     * @returns The number of bytes placed in the output queue.
-     *
-     */
-    int OutputFormat(const char *fmt, ...);
+/**
+ * Disable the UART.
+ *
+ * @retval ::kThreadError_None    Successfully disabled the UART.
+ * @retval ::kThreadError_Failed  Failed to disable the UART.
+ */
+ThreadError otPlatUartDisable(void);
 
-    void ReceiveTask(const uint8_t *aBuf, uint16_t aBufLength);
-    void SendDoneTask(void);
+/**
+ * Send bytes over the UART.
+ *
+ * @param[in] aBuf        A pointer to the data buffer.
+ * @param[in] aBufLength  Number of bytes to transmit.
+ *
+ * @retval ::kThreadError_None    Successfully started transmission.
+ * @retval ::kThreadError_Failed  Failed to start the transmission.
+ */
+ThreadError otPlatUartSend(const uint8_t *aBuf, uint16_t aBufLength);
 
-private:
-    enum
-    {
-        kRxBufferSize = 128,
-        kTxBufferSize = 512,
-        kMaxLineLength = 128,
-    };
+/**
+ * The UART driver calls this method to notify OpenThread that the requested bytes have been sent.
+ *
+ */
+extern void otPlatUartSendDone(void);
 
-    ThreadError ProcessCommand(void);
-    void Send(void);
+/**
+ * The UART driver calls this method to notify OpenThread that bytes have been received.
+ *
+ * @param[in]  aBuf        A pointer to the received bytes.
+ * @param[in]  aBufLength  The number of bytes received.
+ *
+ */
+extern void otPlatUartReceived(const uint8_t *aBuf, uint16_t aBufLength);
 
-    char mRxBuffer[kRxBufferSize];
-    uint16_t mRxLength;
+/**
+ * @}
+ *
+ */
 
-    char mTxBuffer[kTxBufferSize];
-    uint16_t mTxHead;
-    uint16_t mTxLength;
+#ifdef __cplusplus
+}  // extern "C"
+#endif
 
-    uint16_t mSendLength;
-};
-
-}  // namespace Cli
-}  // namespace Thread
-
-#endif  // CLI_SERIAL_HPP_
+#endif  // UART_H_

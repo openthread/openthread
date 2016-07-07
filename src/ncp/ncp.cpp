@@ -34,7 +34,7 @@
 #include <common/new.hpp>
 #include <ncp/ncp.h>
 #include <ncp/ncp.hpp>
-#include <platform/serial.h>
+#include <platform/uart.h>
 
 namespace Thread {
 
@@ -128,7 +128,7 @@ Ncp::OutboundFrameSend(void)
     if (errorCode == kThreadError_None)
     {
         mSendFrameIter += outLength;
-        errorCode = otPlatSerialSend(mSendFrame, mSendFrameIter - mSendFrame);
+        errorCode = otPlatUartSend(mSendFrame, mSendFrameIter - mSendFrame);
     }
 
     if (errorCode == kThreadError_None)
@@ -139,7 +139,7 @@ Ncp::OutboundFrameSend(void)
     return errorCode;
 }
 
-extern "C" void otPlatSerialSendDone(void)
+extern "C" void otPlatUartSendDone(void)
 {
     sNcp->SendDoneTask();
 }
@@ -151,7 +151,7 @@ void Ncp::SendDoneTask(void)
     super_t::HandleSendDone();
 }
 
-extern "C" void otPlatSerialReceived(const uint8_t *aBuf, uint16_t aBufLength)
+extern "C" void otPlatUartReceived(const uint8_t *aBuf, uint16_t aBufLength)
 {
     sNcp->ReceiveTask(aBuf, aBufLength);
 }
