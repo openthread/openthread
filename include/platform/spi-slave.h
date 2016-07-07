@@ -66,11 +66,28 @@ extern "C" {
  *
  * Note that this function is always called at the end of a transaction,
  * even if otPlatSpiSlavePrepareTransaction() has not yet been called.
+ * In such cases, anOutputBufLen and anInputBufLen will be zero.
  *
- * @param[in] aContext Context pointer passed into otPlatSpiSlaveEnable()
- * @param[in] aLen     Length of the completed transaction, in bytes
+ * @param[in] aContext           Context pointer passed into
+ *                               otPlatSpiSlaveEnable()
+ * @param[in] anOutputBuf        Value of anOutputBuf from last call to
+ *                               otPlatSpiSlavePrepareTransaction()
+ * @param[in] anOutputBufLen     Value of anOutputBufLen from last call to
+ *                               otPlatSpiSlavePrepareTransaction()
+ * @param[in] anInputBuf         Value of anInputBuf from last call to
+ *                               otPlatSpiSlavePrepareTransaction()
+ * @param[in] anInputBufLen      Value of anInputBufLen from last call to
+ *                               otPlatSpiSlavePrepareTransaction()
+ * @param[in] aTransactionLength Length of the completed transaction, in bytes
  */
-typedef void (*otPlatSpiSlaveTransactionCompleteCallback)(void *aContext, uint16_t aLen);
+typedef void (*otPlatSpiSlaveTransactionCompleteCallback)(
+    void *aContext,
+    uint8_t *anOutputBuf,
+    uint16_t anOutputBufLen,
+    uint8_t *anInputBuf,
+    uint16_t anInputBufLen,
+    uint16_t aTransactionLength
+);
 
 /**
  * Initialize the SPI slave interface.
@@ -90,7 +107,10 @@ typedef void (*otPlatSpiSlaveTransactionCompleteCallback)(void *aContext, uint16
  * @retval ::kThreadError_Already SPI Slave interface is already enabled.
  * @retval ::kThreadError_Failed  Failed to enable the SPI Slave interface.
  */
-ThreadError otPlatSpiSlaveEnable(otPlatSpiSlaveTransactionCompleteCallback aCallback, void *aContext);
+ThreadError otPlatSpiSlaveEnable(
+    otPlatSpiSlaveTransactionCompleteCallback aCallback,
+    void *aContext
+);
 
 /**
  * Shutdown and disable the SPI slave interface.
@@ -144,20 +164,12 @@ void otPlatSpiSlaveDisable(void);
  * @retval ::kThreadError_InvalidState otPlatSpiSlaveEnable() hasn't been called.
  */
 ThreadError otPlatSpiSlavePrepareTransaction(
-    const uint8_t *anOutputBuf,
+    uint8_t *anOutputBuf,
     uint16_t anOutputBufLen,
     uint8_t *anInputBuf,
     uint16_t anInputBufLen,
     bool aRequestTransactionFlag
 );
-
-/**
- * Transaction-in-progress check function.
- *
- * @retval true  A SPI transaction is in progress.
- * @retval false A SPI transaction is NOT in progress.
- */
-bool otPlatSpiSlaveIsTransactionInProgress(void);
 
 /**
  * @}

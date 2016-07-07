@@ -54,16 +54,29 @@ libopenthread_ncp_a_CXXFLAGS        = \
     $(NULL)
 
 libopenthread_ncp_a_SOURCES         = \
+    ncp_base.cpp                      \
+    ncp_base.hpp                      \
+    spinel.c                          \
+    spinel.h                          \
+    $(NULL)
+
+if OPENTHREAD_ENABLE_NCP_SPI
+libopenthread_ncp_a_SOURCES        += \
+    ncp_spi.cpp                       \
+    ncp_spi.hpp                       \
+    $(NULL)
+endif
+
+if OPENTHREAD_ENABLE_NCP_UART
+libopenthread_ncp_a_SOURCES        += \
     hdlc.cpp                          \
     hdlc.hpp                          \
     flen.cpp                          \
     flen.hpp                          \
-    ncp.cpp                           \
-    ncp.hpp                           \
-    ncp_base.cpp                      \
-    ncp_base.hpp                      \
-    spinel.c spinel.h                 \
+    ncp_uart.cpp                      \
+    ncp_uart.hpp                      \
     $(NULL)
+endif
 
 include_HEADERS                     = \
     $(NULL)
