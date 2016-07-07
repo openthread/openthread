@@ -61,9 +61,10 @@ enum
 
 enum
 {
-    kChildIdMask                = 0x1ff,
-    kRouterIdOffset             = 10,
-    kRlocPrefixLength           = 14,   ///< Prefix length of RLOC in bytes
+    kMinChildId                 = 1,     ///< Minimum Child ID
+    kMaxChildId                 = 511,   ///< Maximum Child ID
+    kRouterIdOffset             = 10,    ///< Bit offset of Router ID in RLOC16
+    kRlocPrefixLength           = 14,    ///< Prefix length of RLOC in bytes
 };
 
 /**
