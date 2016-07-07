@@ -49,11 +49,11 @@ extern "C" bool otAreTaskletsPending(void)
     return false;
 }
 
-extern "C" void otPlatSerialSendDone(void)
+extern "C" void otPlatUartSendDone(void)
 {
 }
 
-extern "C" void otPlatSerialReceived(const uint8_t *aBuf, uint16_t aBufLength)
+extern "C" void otPlatUartReceived(const uint8_t *aBuf, uint16_t aBufLength)
 {
 }
 

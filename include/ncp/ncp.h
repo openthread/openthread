@@ -29,7 +29,7 @@
 /**
  * @file
  * @brief
- *  This file defines the top-level functions for the OpenThread CLI server.
+ *  This file defines the top-level functions for the OpenThread NCP module.
  */
 
 #ifndef NCP_H_
@@ -40,7 +40,7 @@ extern "C" {
 #endif
 
 /**
- * Initialize the CLI serial server.
+ * Initialize the NCP.
  *
  */
 void otNcpInit(void);

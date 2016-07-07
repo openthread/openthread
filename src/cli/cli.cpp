@@ -40,7 +40,7 @@
 
 #include "cli.hpp"
 #include <common/encoding.hpp>
-#include <platform/serial.h>
+#include <platform/uart.h>
 
 using Thread::Encoding::BigEndian::HostSwap16;
 using Thread::Encoding::BigEndian::HostSwap32;

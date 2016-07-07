@@ -70,9 +70,9 @@ void cc2538RadioProcess(void);
 void cc2538RandomInit(void);
 
 /**
- * This function performs radio driver processing.
+ * This function performs UART driver processing.
  *
  */
-void cc2538SerialProcess(void);
+void cc2538UartProcess(void);
 
 #endif  // PLATFORM_CC2538_H_
