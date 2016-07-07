@@ -176,7 +176,7 @@ typedef void (*otHandleActiveScanResult)(otActiveScanResult *aResult);
 /**
  * This function starts an IEEE 802.15.4 Active Scan
  *
- * @param[in]  aScanChannels  A bit vector indicating which channels to scan.
+ * @param[in]  aScanChannels  A bit vector indicating which channels to scan (e.g. OT_CHANNEL_11_MASK).
  * @param[in]  aScanDuration  The time in milliseconds to spend scanning each channel.
  * @param[in]  aCallback      A pointer to a function that is called when a beacon is received or the scan completes.
  *
@@ -184,7 +184,7 @@ typedef void (*otHandleActiveScanResult)(otActiveScanResult *aResult);
  * @retval kThreadError_Busy  Already performing an Active Scan.
  *
  */
-ThreadError otActiveScan(uint16_t aScanChannels, uint16_t aScanDuration, otHandleActiveScanResult aCallback);
+ThreadError otActiveScan(uint32_t aScanChannels, uint16_t aScanDuration, otHandleActiveScanResult aCallback);
 
 /**
  * This function determines if an IEEE 802.15.4 Active Scan is currently in progress.

@@ -67,11 +67,12 @@ extern "C" {
 
 enum
 {
-    kMaxPHYPacketSize   = 127,     ///< aMaxPHYPacketSize (IEEE 802.15.4-2006)
-    kPhyMinChannel      = 11,      ///< 2.4 GHz IEEE 802.15.4-2006
-    kPhyMaxChannel      = 26,      ///< 2.4 GHz IEEE 802.15.4-2006
-    kPhySymbolsPerOctet = 2,       ///< 2.4 GHz IEEE 802.15.4-2006
-    kPhyBitRate         = 250000,  ///< 2.4 GHz IEEE 802.15.4 (kilobits per second)
+    kMaxPHYPacketSize        = 127,                       ///< aMaxPHYPacketSize (IEEE 802.15.4-2006)
+    kPhyMinChannel           = 11,                        ///< 2.4 GHz IEEE 802.15.4-2006
+    kPhyMaxChannel           = 26,                        ///< 2.4 GHz IEEE 802.15.4-2006
+    kPhySupportedChannelMask = 0xffff << kPhyMinChannel,  ///< 2.4 GHz IEEE 802.15.4-2006
+    kPhySymbolsPerOctet      = 2,                         ///< 2.4 GHz IEEE 802.15.4-2006
+    kPhyBitRate              = 250000,                    ///< 2.4 GHz IEEE 802.15.4 (kilobits per second)
 
     kPhyBitsPerOctet    = 8,
     kPhyUsPerSymbol     = ((kPhyBitsPerOctet / kPhySymbolsPerOctet) * 1000000) / kPhyBitRate,

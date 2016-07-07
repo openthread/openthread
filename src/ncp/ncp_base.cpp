@@ -231,7 +231,7 @@ static spinel_status_t ThreadErrorToSpinelStatus(ThreadError error)
 NcpBase::NcpBase():
     mUpdateChangedPropsTask(&UpdateChangedProps, this)
 {
-    mSupportedChannelMask = (0xFFFF << 11); // Default to 2.4GHz 802.15.4 channels.
+    mSupportedChannelMask = kPhySupportedChannelMask;
     mChannelMask = mSupportedChannelMask;
     mScanPeriod = 200; // ms
     sNcpContext = this;
@@ -1870,7 +1870,7 @@ void NcpBase::SetPropertyHandler_MAC_SCAN_STATE(uint8_t header, spinel_prop_key_
         case SPINEL_SCAN_STATE_BEACON:
             gActiveScanContextHack = this;
             errorCode = otActiveScan(
-                            (mChannelMask >> kPhyMinChannel),
+                            mChannelMask,
                             mScanPeriod,
                             &HandleActiveScanResult_Jump
                         );

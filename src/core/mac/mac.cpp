@@ -122,7 +122,7 @@ Mac::Mac(ThreadNetif &aThreadNetif):
     otPlatRadioEnable();
 }
 
-ThreadError Mac::ActiveScan(uint16_t aScanChannels, uint16_t aScanDuration, ActiveScanHandler aHandler, void *aContext)
+ThreadError Mac::ActiveScan(uint32_t aScanChannels, uint16_t aScanDuration, ActiveScanHandler aHandler, void *aContext)
 {
     ThreadError error = kThreadError_None;
 
@@ -134,6 +134,7 @@ ThreadError Mac::ActiveScan(uint16_t aScanChannels, uint16_t aScanDuration, Acti
     mScanDuration = (aScanDuration == 0) ? kScanDurationDefault : aScanDuration;
 
     mScanChannel = kPhyMinChannel;
+    mScanChannels >>= kPhyMinChannel;
 
     while ((mScanChannels & 1) == 0)
     {
