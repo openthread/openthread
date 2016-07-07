@@ -304,6 +304,29 @@ exit:
     return error;
 }
 
+void Ip6::ProcessReceiveCallback(Message &aMessage)
+{
+    ThreadError error = kThreadError_None;
+    Message *messageCopy;
+
+    VerifyOrExit(sReceiveIp6DatagramCallback != NULL, ;);
+
+    // make a copy of the datagram to pass to host
+    VerifyOrExit((messageCopy = NewMessage(0)) != NULL, ;);
+    SuccessOrExit(error = messageCopy->SetLength(aMessage.GetLength()));
+    VerifyOrExit(aMessage.CopyTo(0, 0, aMessage.GetLength(), *messageCopy) == aMessage.GetLength(),
+                 error = kThreadError_Drop);
+
+    sReceiveIp6DatagramCallback(messageCopy);
+
+exit:
+
+    if (error != kThreadError_None && messageCopy != NULL)
+    {
+        Message::Free(*messageCopy);
+    }
+}
+
 ThreadError Ip6::HandleDatagram(Message &message, Netif *netif, uint8_t interfaceId, const void *linkMessageInfo,
                                 bool fromLocalHost)
 {
@@ -383,13 +406,12 @@ ThreadError Ip6::HandleDatagram(Message &message, Netif *netif, uint8_t interfac
     // process IPv6 Payload
     if (receive)
     {
-        SuccessOrExit(HandlePayload(message, messageInfo, nextHeader));
-
-        if (sReceiveIp6DatagramCallback != NULL && fromLocalHost == false)
+        if (fromLocalHost == false)
         {
-            sReceiveIp6DatagramCallback(&message);
-            ExitNow(error = kThreadError_None);
+            ProcessReceiveCallback(message);
         }
+
+        SuccessOrExit(HandlePayload(message, messageInfo, nextHeader));
     }
 
     if (forward)
