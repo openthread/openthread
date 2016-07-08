@@ -103,19 +103,22 @@ void enableReceiver(void)
 
 void disableReceiver(void)
 {
-    while (HWREG(RFCORE_XREG_FSMSTAT1) & RFCORE_XREG_FSMSTAT1_TX_ACTIVE);
-
-    // flush rxfifo
-    HWREG(RFCORE_SFR_RFST) = CC2538_RF_CSP_OP_ISFLUSHRX;
-    HWREG(RFCORE_SFR_RFST) = CC2538_RF_CSP_OP_ISFLUSHRX;
-
-    if (HWREG(RFCORE_XREG_RXENABLE) != 0)
+    if (sIsReceiverEnabled)
     {
-        // disable receiver
-        HWREG(RFCORE_SFR_RFST) = CC2538_RF_CSP_OP_ISRFOFF;
-    }
+        while (HWREG(RFCORE_XREG_FSMSTAT1) & RFCORE_XREG_FSMSTAT1_TX_ACTIVE);
 
-    sIsReceiverEnabled = false;
+        // flush rxfifo
+        HWREG(RFCORE_SFR_RFST) = CC2538_RF_CSP_OP_ISFLUSHRX;
+        HWREG(RFCORE_SFR_RFST) = CC2538_RF_CSP_OP_ISFLUSHRX;
+
+        if (HWREG(RFCORE_XREG_RXENABLE) != 0)
+        {
+            // disable receiver
+            HWREG(RFCORE_SFR_RFST) = CC2538_RF_CSP_OP_ISRFOFF;
+        }
+
+        sIsReceiverEnabled = false;
+    }
 }
 
 void setChannel(uint8_t channel)
@@ -202,7 +205,7 @@ ThreadError otPlatRadioSleep(void)
 {
     ThreadError error = kThreadError_None;
 
-    VerifyOrExit(error = kStateIdle, error = kThreadError_Busy);
+    VerifyOrExit(error == kStateIdle, error = kThreadError_Busy);
     sState = kStateSleep;
 
 exit:
