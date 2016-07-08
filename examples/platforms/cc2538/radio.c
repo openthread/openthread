@@ -202,7 +202,7 @@ ThreadError otPlatRadioSleep(void)
 {
     ThreadError error = kThreadError_None;
 
-    VerifyOrExit(error = kStateIdle, error = kThreadError_Busy);
+    VerifyOrExit(sState == kStateIdle, error = kThreadError_Busy);
     sState = kStateSleep;
 
 exit:

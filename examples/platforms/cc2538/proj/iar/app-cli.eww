@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+
+<workspace>
+  <project>
+    <path>$WS_DIR$\app-cli.ewp</path>
+  </project>
+  <project>
+    <path>$WS_DIR$\libmbedtls.ewp</path>
+  </project>
+  <project>
+    <path>$WS_DIR$\libopenthread.ewp</path>
+  </project>
+  <project>
+    <path>$WS_DIR$\libopenthread-cli.ewp</path>
+  </project>
+  <project>
+    <path>$WS_DIR$\libplatform-cc2538.ewp</path>
+  </project>
+  <batchBuild>
+    <batchDefinition>
+      <name>app-cli - Debug</name>
+      <member>
+        <project>libplatform-cc2538</project>
+        <configuration>Debug</configuration>
+      </member>
+      <member>
+        <project>libmbedtls</project>
+        <configuration>Debug</configuration>
+      </member>
+      <member>
+        <project>libopenthread</project>
+        <configuration>Debug</configuration>
+      </member>
+      <member>
+        <project>libopenthread-cli</project>
+        <configuration>Debug</configuration>
+      </member>
+      <member>
+        <project>app-cli</project>
+        <configuration>Debug</configuration>
+      </member>
+    </batchDefinition>
+  </batchBuild>
+</workspace>
+
+
