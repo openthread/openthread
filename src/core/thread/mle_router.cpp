@@ -224,6 +224,7 @@ ThreadError MleRouter::BecomeLeader(void)
 
     mRouterId = (mPreviousRouterId != kMaxRouterId) ? AllocateRouterId(mPreviousRouterId) : AllocateRouterId();
     VerifyOrExit(mRouterId >= 0, error = kThreadError_NoBufs);
+    mPreviousRouterId = mRouterId;
 
     memcpy(&mRouters[mRouterId].mMacAddr, mMac.GetExtAddress(), sizeof(mRouters[mRouterId].mMacAddr));
 
