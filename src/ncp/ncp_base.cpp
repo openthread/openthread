@@ -33,7 +33,7 @@
 #include <assert.h>
 #include <stdlib.h>
 #include <common/code_utils.hpp>
-#include <ncp/ncp.hpp>
+#include <ncp/ncp_base.hpp>
 #include <openthread.h>
 #include <openthread-config.h>
 #include <stdarg.h>

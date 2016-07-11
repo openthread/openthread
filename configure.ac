@@ -386,12 +386,16 @@ AM_CONDITIONAL([OPENTHREAD_ENABLE_CLI], [test "${enable_cli}" = "yes"])
 #
 
 AC_ARG_ENABLE(ncp,
-    [AS_HELP_STRING([--enable-ncp],[Enable NCP suport @<:@default=no@:>@.])],
+    [AS_HELP_STRING([--enable-ncp[[=spi|uart]]],[Enable NCP suport @<:@default=no@:>@.])],
     [
         case "${enableval}" in
 
-        no|yes)
+        no|spi|uart)
             enable_ncp=${enableval}
+            ;;
+
+        yes)
+            enable_ncp=uart
             ;;
 
         *)
@@ -401,7 +405,9 @@ AC_ARG_ENABLE(ncp,
     ],
     [enable_ncp=no])
 AC_MSG_RESULT(${enable_ncp})
-AM_CONDITIONAL([OPENTHREAD_ENABLE_NCP], [test "${enable_ncp}" = "yes"])
+AM_CONDITIONAL([OPENTHREAD_ENABLE_NCP],      [test "${enable_ncp}" != "no"])
+AM_CONDITIONAL([OPENTHREAD_ENABLE_NCP_SPI],  [test "${enable_ncp}"  = "spi"])
+AM_CONDITIONAL([OPENTHREAD_ENABLE_NCP_UART], [test "${enable_ncp}"  = "uart"])
 
 #
 # Examples
