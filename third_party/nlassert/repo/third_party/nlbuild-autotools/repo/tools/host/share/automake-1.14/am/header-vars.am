@@ -1,0 +1,141 @@
+## automake - create Makefile.in from Makefile.am
+## Copyright (C) 1994-2013 Free Software Foundation, Inc.
+
+## This program is free software; you can redistribute it and/or modify
+## it under the terms of the GNU General Public License as published by
+## the Free Software Foundation; either version 2, or (at your option)
+## any later version.
+
+## This program is distributed in the hope that it will be useful,
+## but WITHOUT ANY WARRANTY; without even the implied warranty of
+## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+## GNU General Public License for more details.
+
+## You should have received a copy of the GNU General Public License
+## along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+VPATH = @srcdir@
+
+@SET_MAKE@
+
+## We used to define this.  However, we don't because vendor makes
+## (e.g., Solaris, Irix) won't correctly propagate variables that are
+## defined in Makefile.  This particular variable can't be correctly
+## defined by configure (at least, not the current configure), so we
+## simply avoid defining it to allow the user to use this feature with
+## a vendor make.
+## DESTDIR =
+
+## Shell code that determines whether we are running under GNU make.
+## This is somewhat of an hack, and might be improved, but is good
+## enough for now.
+am__is_gnu_make = test -n '$(MAKEFILE_LIST)' && test -n '$(MAKELEVEL)'
+
+## Shell code that determines whether the current make instance is
+## running with a given one-letter option (e.g., -k, -n) that takes
+## no argument.
+am__make_running_with_option = \
+  case $${target_option-} in \
+      ?) ;; \
+      *) echo "am__make_running_with_option: internal error: invalid" \
+              "target option '$${target_option-}' specified" >&2; \
+         exit 1;; \
+  esac; \
+  has_opt=no; \
+  sane_makeflags=$$MAKEFLAGS; \
+  if $(am__is_gnu_make); then \
+## The format of $(MAKEFLAGS) is quite tricky with GNU make; the
+## variable $(MFLAGS) behaves much better in that regard.  So use it.
+    sane_makeflags=$$MFLAGS; \
+  else \
+## Non-GNU make: we must rely on $(MAKEFLAGS).  This is tricker and more
+## brittle, but is the best we can do.
+    case $$MAKEFLAGS in \
+## If we run "make TESTS='snooze nap'", FreeBSD make will export MAKEFLAGS
+## to " TESTS=foo\ nap", so that the simpler loop below (on word-split
+## $$MAKEFLAGS) would see a "make flag" equal to "nap", and would wrongly
+## misinterpret that as and indication that make is running in dry mode.
+## This has already happened in practice.  So we need this hack.
+      *\\[\ \	]*) \
+## Extra indirection with ${bs} required by FreeBSD 8.x make.
+## Not sure why (so sorry for the cargo-cult programming here).
+        bs=\\; \
+        sane_makeflags=`printf '%s\n' "$$MAKEFLAGS" \
+          | sed "s/$$bs$$bs[$$bs $$bs	]*//g"`;; \
+    esac; \
+  fi; \
+  skip_next=no; \
+  strip_trailopt () \
+  { \
+    flg=`printf '%s\n' "$$flg" | sed "s/$$1.*$$//"`; \
+  }; \
+  for flg in $$sane_makeflags; do \
+    test $$skip_next = yes && { skip_next=no; continue; }; \
+    case $$flg in \
+      *=*|--*) continue;; \
+##
+## GNU make 4.0 has changed the format of $MFLAGS, and removed the space
+## between an option and its argument (e.g., from "-I dir" to "-Idir").
+## So we need to handle both formats, at least for options valid in GNU
+## make.  OTOH, BSD make formats $(MAKEFLAGS) by separating all options,
+## and separating any option from its argument, so things are easier
+## there.
+##
+## For GNU make and BSD make.
+        -*I) strip_trailopt 'I'; skip_next=yes;; \
+      -*I?*) strip_trailopt 'I';; \
+## For GNU make >= 4.0.
+        -*O) strip_trailopt 'O'; skip_next=yes;; \
+      -*O?*) strip_trailopt 'O';; \
+## For GNU make (possibly overkill, this one).
+        -*l) strip_trailopt 'l'; skip_next=yes;; \
+      -*l?*) strip_trailopt 'l';; \
+## For BSD make.
+      -[dEDm]) skip_next=yes;; \
+## For NetBSD make.
+      -[JT]) skip_next=yes;; \
+    esac; \
+    case $$flg in \
+      *$$target_option*) has_opt=yes; break;; \
+    esac; \
+  done; \
+  test $$has_opt = yes
+
+## Shell code that determines whether make is running in "dry mode"
+## ("make -n") or not.  Useful in rules that invoke make recursively,
+## and are thus executed also with "make -n" -- either because they
+## are declared as dependencies to '.MAKE' (NetBSD make), or because
+## their recipes contain the "$(MAKE)" string (GNU and Solaris make).
+am__make_dryrun = (target_option=n; $(am__make_running_with_option))
+
+## Shell code that determines whether make is running in "keep-going mode"
+## ("make -k") or not.  Useful in rules that must recursively descend into
+## subdirectories, and decide whether to stop at the first error or not.
+am__make_keepgoing = (target_option=k; $(am__make_running_with_option))
+
+## Some derived variables that have been found to be useful.
+pkgdatadir = $(datadir)/@PACKAGE@
+pkgincludedir = $(includedir)/@PACKAGE@
+pkglibdir = $(libdir)/@PACKAGE@
+pkglibexecdir = $(libexecdir)/@PACKAGE@
+
+am__cd = CDPATH="$${ZSH_VERSION+.}$(PATH_SEPARATOR)" && cd
+install_sh_DATA = $(install_sh) -c -m 644
+install_sh_PROGRAM = $(install_sh) -c
+install_sh_SCRIPT = $(install_sh) -c
+INSTALL_HEADER = $(INSTALL_DATA)
+transform = $(program_transform_name)
+
+## These are defined because otherwise make on NetBSD V1.1 will print
+## (eg): $(NORMAL_INSTALL) expands to empty string.
+NORMAL_INSTALL = :
+PRE_INSTALL = :
+POST_INSTALL = :
+NORMAL_UNINSTALL = :
+PRE_UNINSTALL = :
+POST_UNINSTALL = :
+
+## dejagnu.am uses these variables.  Some users might rely on them too.
+?BUILD?build_triplet = @build@
+?HOST?host_triplet = @host@
+?TARGET?target_triplet = @target@
