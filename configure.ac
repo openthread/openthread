@@ -410,6 +410,33 @@ AM_CONDITIONAL([OPENTHREAD_ENABLE_NCP_SPI],  [test "${enable_ncp}"  = "spi"])
 AM_CONDITIONAL([OPENTHREAD_ENABLE_NCP_UART], [test "${enable_ncp}"  = "uart"])
 
 #
+# Nlassert library
+#
+
+NL_WITH_PACKAGE(
+    [Nlassert],
+    [NLASSERT],
+    [nlassert],
+    [],
+    [
+        NLASSERT_CPPFLAGS="-I\${abs_top_srcdir}/third_party/nlassert/repo/include"
+        NLASSERT_LDFLAGS=
+        NLASSERT_LIBS=
+    ],
+    [
+        # Check for required Nlassert headers.
+
+        AC_CHECK_HEADERS([nlassert.h],
+        [],
+        [
+            AC_MSG_ERROR(The nlassert header "$ac_header" is required but cannot be found.)
+        ])
+    ]
+)
+
+AM_CONDITIONAL([OPENTHREAD_WITH_NLASSERT_INTERNAL], [test "${nl_with_nlassert}" = "internal"])
+
+#
 # Examples
 #
 
@@ -533,6 +560,13 @@ if test "${ac_no_link}" != "yes"; then
     AC_CHECK_FUNCS([memcpy])
 fi
 
+
+# Add any nlassert CPPFLAGS, LDFLAGS, and LIBS
+
+CPPFLAGS="${CPPFLAGS} ${NLASSERT_CPPFLAGS}"
+LDFLAGS="${LDFLAGS} ${NLASSERT_LDFLAGS}"
+LIBS="${LIBS} ${NLASSERT_LIBS}"
+
 # Add any code coverage CPPFLAGS and LDFLAGS
 
 CPPFLAGS="${CPPFLAGS} ${NL_COVERAGE_CPPFLAGS}"
@@ -543,6 +577,9 @@ LDFLAGS="${LDFLAGS} ${NL_COVERAGE_LDFLAGS}"
 # transforming -Wno-error back to -Werror.
 
 NL_RESTORE_WERROR
+
+# Configure any autotools-based subdirectories
+AC_CONFIG_SUBDIRS([third_party/nlassert/repo])
 
 #
 # Identify the various makefiles and auto-generated files for the package
@@ -560,6 +597,7 @@ src/ncp/Makefile
 src/core/Makefile
 third_party/Makefile
 third_party/mbedtls/Makefile
+third_party/nlassert/repo/Makefile
 examples/Makefile
 examples/apps/Makefile
 examples/apps/cli/Makefile
@@ -632,5 +670,9 @@ AC_MSG_NOTICE([
   OpenThread CLI support                    : ${enable_cli}
   OpenThread NCP support                    : ${enable_ncp}
   OpenThread examples                       : ${OPENTHREAD_EXAMPLES}
+  Nlassert source                           : ${nl_with_nlassert:--}
+  Nlassert compile flags                    : ${NLASSERT_CPPFLAGS:--}
+  Nlassert link flags                       : ${NLASSERT_LDFLAGS:--}
+  Nlassert link libraries                   : ${NLASSERT_LIBS:--}
 
 ])

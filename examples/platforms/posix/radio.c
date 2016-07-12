@@ -39,6 +39,7 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
+#include <nlassert.h>
 #include <platform/radio.h>
 
 #include <common/code_utils.hpp>
@@ -161,7 +162,7 @@ static inline bool isDataRequest(const uint8_t *frame)
     // FCF + DSN
     cur += 2 + 1;
 
-    VerifyOrExit(isFrameTypeMacCmd(frame), rval = false);
+    nlREQUIRE_ACTION(isFrameTypeMacCmd(frame), exit, rval = false);
 
     // Destination PAN + Address
     switch (frame[1] & IEEE802154_DST_ADDR_MASK)
@@ -318,7 +319,7 @@ ThreadError otPlatRadioEnable(void)
 {
     ThreadError error = kThreadError_None;
 
-    VerifyOrExit(s_state == kStateDisabled, error = kThreadError_Busy);
+    nlREQUIRE_ACTION(s_state == kStateDisabled, exit, error = kThreadError_Busy);
     s_state = kStateSleep;
 
 exit:
@@ -335,7 +336,7 @@ ThreadError otPlatRadioSleep(void)
 {
     ThreadError error = kThreadError_None;
 
-    VerifyOrExit(s_state == kStateIdle, error = kThreadError_Busy);
+    nlREQUIRE_ACTION(s_state == kStateIdle, exit, error = kThreadError_Busy);
     s_state = kStateSleep;
 
 exit:
@@ -374,7 +375,7 @@ ThreadError otPlatRadioReceive(uint8_t aChannel)
 {
     ThreadError error = kThreadError_None;
 
-    VerifyOrExit(s_state == kStateIdle, error = kThreadError_Busy);
+    nlREQUIRE_ACTION(s_state == kStateIdle, exit, error = kThreadError_Busy);
     s_state = kStateListen;
     s_receive_frame.mChannel = aChannel;
 
@@ -391,7 +392,7 @@ ThreadError otPlatRadioTransmit(void)
 {
     ThreadError error = kThreadError_None;
 
-    VerifyOrExit(s_state == kStateIdle, error = kThreadError_Busy);
+    nlREQUIRE_ACTION(s_state == kStateIdle, exit, error = kThreadError_Busy);
     s_state = kStateTransmit;
 
 exit:
@@ -423,8 +424,8 @@ void radioReceive(void)
     uint8_t tx_sequence, rx_sequence;
     int rval;
 
-    VerifyOrExit(s_state == kStateDisabled || s_state == kStateSleep || s_state == kStateListen ||
-                 s_state == kStateAckWait, ;);
+    nlREQUIRE(s_state == kStateDisabled || s_state == kStateSleep || s_state == kStateListen ||
+                 s_state == kStateAckWait, exit);
 
     rval = recvfrom(s_sockfd, &s_receive_message, sizeof(s_receive_message), 0, NULL, NULL);
     assert(rval >= 0);
@@ -605,7 +606,7 @@ void radioProcessFrame(void)
     otShortAddress short_address;
     otExtAddress ext_address;
 
-    VerifyOrExit(s_promiscuous == false, error = kThreadError_None);
+    nlREQUIRE_ACTION(s_promiscuous == false, exit, error = kThreadError_None);
 
     switch (s_receive_frame.mPsdu[1] & IEEE802154_DST_ADDR_MASK)
     {
@@ -615,16 +616,18 @@ void radioProcessFrame(void)
     case IEEE802154_DST_ADDR_SHORT:
         dstpan = getDstPan(s_receive_frame.mPsdu);
         short_address = getShortAddress(s_receive_frame.mPsdu);
-        VerifyOrExit((dstpan == IEEE802154_BROADCAST || dstpan == s_panid) &&
+        nlREQUIRE_ACTION((dstpan == IEEE802154_BROADCAST || dstpan == s_panid) &&
                      (short_address == IEEE802154_BROADCAST || short_address == s_short_address),
+                     exit,
                      error = kThreadError_Abort);
         break;
 
     case IEEE802154_DST_ADDR_EXT:
         dstpan = getDstPan(s_receive_frame.mPsdu);
         getExtAddress(s_receive_frame.mPsdu, &ext_address);
-        VerifyOrExit((dstpan == IEEE802154_BROADCAST || dstpan == s_panid) &&
+        nlREQUIRE_ACTION((dstpan == IEEE802154_BROADCAST || dstpan == s_panid) &&
                      memcmp(&ext_address, s_extended_address, sizeof(ext_address)) == 0,
+                     exit,
                      error = kThreadError_Abort);
         break;
 

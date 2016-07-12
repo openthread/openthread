@@ -36,6 +36,7 @@ EXTRA_DIST                              = \
 
 DIST_SUBDIRS                            = \
     mbedtls                               \
+    nlassert/repo                         \
     $(NULL)
 
 # Always build (e.g. for 'make all') these subdirectories.
@@ -43,5 +44,11 @@ DIST_SUBDIRS                            = \
 SUBDIRS                                 = \
     mbedtls                               \
     $(NULL)
+
+if OPENTHREAD_WITH_NLASSERT_INTERNAL
+SUBDIRS                                += \
+    nlassert/repo                         \
+    $(NULL)
+endif # OPENTHREAD_WITH_NLASSERT_INTERNAL
 
 include $(abs_top_nlbuild_autotools_dir)/automake/post.am

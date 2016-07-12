@@ -1,0 +1,124 @@
+## automake - create Makefile.in from Makefile.am
+## Copyright (C) 1996-2013 Free Software Foundation, Inc.
+
+## This program is free software; you can redistribute it and/or modify
+## it under the terms of the GNU General Public License as published by
+## the Free Software Foundation; either version 2, or (at your option)
+## any later version.
+
+## This program is distributed in the hope that it will be useful,
+## but WITHOUT ANY WARRANTY; without even the implied warranty of
+## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+## GNU General Public License for more details.
+
+## You should have received a copy of the GNU General Public License
+## along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+if %?INSTALL%
+include inst-vars.am
+endif %?INSTALL%
+
+## ---------- ##
+## Building.  ##
+## ---------- ##
+
+.el.elc:
+## We add $(builddir) and $(srcdir) to load-path, so that any '.el' files
+## that $< depends upon can be found (including generated ones).
+## We prefer files from the build directory to those from the source
+## directory, in true VPATH spirit.
+## The destination file is normally determined by appending "c" to the
+## input (which would erronously put it in $(srcdir) in VPATH builds),
+## so we override that, too.
+	if test "$(EMACS)" != "no"; then \
+	  am__dir=. am__subdir_includes=''; \
+	  case $@ in */*) \
+	    am__dir=`echo '$@' | sed 's,/[^/]*$$,,'`; \
+	    am__subdir_includes="-L $$am__dir -L $(srcdir)/$$am__dir"; \
+	  esac; \
+## Emacs byte-compilation won't create this automatically, sadly.
+	  test -d "$$am__dir" || $(MKDIR_P) "$$am__dir" || exit 1; \
+	  $(EMACS) --batch \
+	    $(AM_ELCFLAGS) $(ELCFLAGS) \
+	    $$am__subdir_includes -L $(builddir) -L $(srcdir) \
+	    --eval "(defun byte-compile-dest-file (f) \"$@\")" \
+	    --eval "(unless (byte-compile-file \"$<\") (kill-emacs 1))"; \
+	else :; fi
+
+
+## ------------ ##
+## Installing.  ##
+## ------------ ##
+
+if %?INSTALL%
+am__installdirs += "$(DESTDIR)$(%NDIR%dir)"
+
+?BASE?%DIR%LISP_INSTALL = $(INSTALL_DATA)
+?!BASE?%DIR%LISP_INSTALL = $(install_sh_DATA)
+
+?EXEC?.PHONY install-exec-am: install-%DIR%LISP
+?!EXEC?.PHONY install-data-am: install-%DIR%LISP
+
+install-%DIR%LISP: $(%DIR%_LISP) $(ELCFILES)
+	@$(NORMAL_INSTALL)
+## Do not install anything if EMACS was not found.
+	@if test "$(EMACS)" != no && test -n "$(%NDIR%dir)"; then \
+?!BASE?	  $(am__vpath_adj_setup) \
+## Funny invocation because Makefile variable can be empty, leading to
+## a syntax error in sh.
+	  list='$(%DIR%_LISP)'; \
+	  if test -n "$$list"; then \
+	    echo " $(MKDIR_P) '$(DESTDIR)$(%NDIR%dir)'"; \
+	    $(MKDIR_P) "$(DESTDIR)$(%NDIR%dir)" || exit 1; \
+	  fi; \
+	  for p in $$list; do \
+## A lisp file can be in the source directory or the build directory.
+	    if test -f "$$p"; then d=; else d="$(srcdir)/"; fi; \
+?BASE?	    $(am__strip_dir) \
+?!BASE?	    $(am__vpath_adj) \
+	    echo " $(%DIR%LISP_INSTALL) '$$d$$p' '$(DESTDIR)$(%NDIR%dir)/$$f'"; \
+	    $(%DIR%LISP_INSTALL) "$$d$$p" "$(DESTDIR)$(%NDIR%dir)/$$f" || exit $$?; \
+## Only install .elc file if it exists.
+	    if test -f $${p}c; then \
+	      echo " $(%DIR%LISP_INSTALL) '$${p}c' '$(DESTDIR)$(%NDIR%dir)/$${f}c'"; \
+	      $(%DIR%LISP_INSTALL) "$${p}c" "$(DESTDIR)$(%NDIR%dir)/$${f}c" || exit $$?; \
+	    else : ; fi; \
+	  done; \
+	else : ; fi
+endif %?INSTALL%
+
+
+## -------------- ##
+## Uninstalling.  ##
+## -------------- ##
+
+if %?INSTALL%
+.PHONY uninstall-am: uninstall-%DIR%LISP
+uninstall-%DIR%LISP:
+	@$(NORMAL_UNINSTALL)
+## Do not uninstall anything if EMACS was not found.
+	@test "$(EMACS)" != no && test -n "$(%NDIR%dir)" || exit 0; \
+	list='$(%DIR%_LISP)'; \
+?BASE?	files=`for p in $$list; do echo $$p; done | sed -e 's|^.*/||'`; \
+?!BASE?	$(am__nobase_strip_setup); files=`$(am__nobase_strip)`; \
+	files="$$files "`echo "$$files" | sed 's|$$|c|'`; \
+	dir='$(DESTDIR)$(%NDIR%dir)'; $(am__uninstall_files_from_dir)
+endif %?INSTALL%
+
+
+## ---------- ##
+## Cleaning.  ##
+## ---------- ##
+
+.PHONY clean-am: clean-lisp
+clean-lisp:
+	-rm -f $(ELCFILES)
+
+
+## -------------- ##
+## Distributing.  ##
+## -------------- ##
+
+if %?DIST%
+DIST_COMMON += %DISTVAR%
+endif %?DIST%
