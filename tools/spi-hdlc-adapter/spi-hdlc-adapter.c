@@ -264,6 +264,30 @@ static int do_spi_xfer(int len)
     return ret;
 }
 
+
+static void spi_header_set_accept_len(uint8_t *header, uint16_t len)
+{
+    header[1] = ((len << 0) & 0xFF);
+    header[2] = ((len << 8) & 0xFF);
+}
+
+static void spi_header_set_data_len(uint8_t *header, uint16_t len)
+{
+    header[3] = ((len << 0) & 0xFF);
+    header[4] = ((len << 8) & 0xFF);
+}
+
+static uint16_t spi_header_get_accept_len(uint8_t *header)
+{
+    return ( header[1] + (header[2] << 8) );
+}
+
+static uint16_t spi_header_get_data_len(uint8_t *header)
+{
+    return ( header[3] + (header[4] << 8) );
+}
+
+
 static int push_pull_spi()
  {
     int ret;
@@ -278,10 +302,8 @@ static int push_pull_spi()
     // so that the slave doesn't think
     // we are actually trying to transfer
     // data.
-    gSpiTxFrameBuffer[1] = 0;
-    gSpiTxFrameBuffer[2] = 0;
-    gSpiTxFrameBuffer[3] = 0;
-    gSpiTxFrameBuffer[4] = 0;
+    spi_header_set_accept_len(gSpiTxFrameBuffer, 0);
+    spi_header_set_data_len(gSpiTxFrameBuffer, 0);
     ret = do_spi_xfer(0);
     if (ret < 0)
     {
@@ -296,8 +318,8 @@ static int push_pull_spi()
         goto bail;
     }
 
-    slave_max_rx = gSpiRxFrameBuffer[2] + (gSpiRxFrameBuffer[3] << 8);
-    slave_data_len = gSpiRxFrameBuffer[4] + (gSpiRxFrameBuffer[5] << 8);
+    slave_max_rx = spi_header_get_accept_len(gSpiRxFrameBuffer);
+    slave_data_len = spi_header_get_data_len(gSpiRxFrameBuffer);
 
     if ( (slave_max_rx > MAX_FRAME_SIZE)
       || (slave_data_len > MAX_FRAME_SIZE)
@@ -318,9 +340,7 @@ static int push_pull_spi()
     )
     {
         spi_xfer_bytes = gSpiTxPayloadSize;
-        gSpiTxFrameBuffer[2] = (gSpiTxPayloadSize & 0xFF);
-        gSpiTxFrameBuffer[3] = ((gSpiTxPayloadSize >> 8) & 0xFF);
-
+        spi_header_set_data_len(gSpiTxFrameBuffer, gSpiTxPayloadSize);
     }
     else if (gSpiTxReady && (gSpiTxPayloadSize > slave_max_rx))
     {
@@ -335,9 +355,7 @@ static int push_pull_spi()
       && (gSpiRxPayloadSize == 0)
     )
     {
-        gSpiRxPayloadSize = slave_data_len;
-        gSpiTxFrameBuffer[2] = (slave_data_len & 0xFF);
-        gSpiTxFrameBuffer[3] = ((slave_data_len >> 8) & 0xFF);
+        spi_header_set_accept_len(gSpiTxFrameBuffer, slave_data_len);
         if (slave_data_len > spi_xfer_bytes)
         {
             spi_xfer_bytes = slave_data_len;
@@ -359,8 +377,23 @@ static int push_pull_spi()
         goto bail;
     }
 
-    if (gSpiTxFrameBuffer[2] + gSpiTxFrameBuffer[3] != 0)
-    {
+    slave_max_rx = spi_header_get_accept_len(gSpiRxFrameBuffer);
+    slave_data_len = spi_header_get_data_len(gSpiRxFrameBuffer);
+
+    if ( (gSpiRxPayloadSize == 0)
+      && (slave_data_len <= spi_header_get_accept_len(gSpiTxFrameBuffer))
+    ) {
+        // We have received a packet. Set gSpiRxPayloadSize so that
+        // the packet will eventually get queued up by push_hdlc().
+        gSpiRxPayloadSize = slave_data_len;
+    }
+
+    if ( (gSpiTxPayloadSize == spi_header_get_data_len(gSpiTxFrameBuffer))
+      && (spi_header_get_data_len(gSpiTxFrameBuffer) <= slave_max_rx)
+    ) {
+        // Out outbound packet has been successfully transmitted. Clear
+        // gSpiTxPayloadSize and gSpiTxReady so that pull_hdlc() can
+        // pull another packet for us to send.
         gSpiTxReady = false;
         gSpiTxPayloadSize = 0;
     }
@@ -556,6 +589,11 @@ static int push_hdlc(void)
     }
 
     escaped_frame_sent += ret;
+
+    // Reset state once we have sent the entire frame.
+    if (escaped_frame_len == escaped_frame_sent) {
+        escaped_frame_len = escaped_frame_sent = 0;
+    }
 
     ret = 0;
 
@@ -1214,8 +1252,9 @@ int main(int argc, char *argv[])
             }
         }
 
-        // Handle SPI.
-        if ((gSpiRxPayloadSize != 0) || gSpiTxReady)
+        // Service the SPI port if we can receive
+        // a packet or we have a packet to be sent.
+        if ((gSpiRxPayloadSize == 0) || gSpiTxReady)
         {
             gRet = push_pull_spi();
         }
