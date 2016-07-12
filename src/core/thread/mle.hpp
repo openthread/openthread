@@ -407,36 +407,6 @@ public:
     ThreadError SetMeshLocalPrefix(const uint8_t *aPrefix);
 
     /**
-     * This method returns the Child ID portion of an RLOC16.
-     *
-     * @param[in]  aRloc16  The RLOC16 value.
-     *
-     * @returns The Child ID portion of an RLOC16.
-     *
-     */
-    const uint8_t GetChildId(uint16_t aRloc16) const;
-
-    /**
-     * This method returns the Router ID portion of an RLOC16.
-     *
-     * @param[in]  aRloc16  The RLOC16 value.
-     *
-     * @returns The Router ID portion of an RLOC16.
-     *
-     */
-    const uint8_t GetRouterId(uint16_t aRloc16) const;
-
-    /**
-     * This method returns the RLOC16 of a given Router ID.
-     *
-     * @param[in]  aRouterId  The Router ID value..
-     *
-     * @returns The RLOC16 of the given Router ID.
-     *
-     */
-    const uint16_t GetRloc16(uint8_t aRouterId) const;
-
-    /**
      * This method returns a pointer to the link-local all Thread nodes multicast address.
      *
      * @returns A pointer to the link-local all Thread nodes multicast address.
@@ -550,6 +520,47 @@ public:
      *
      */
     ThreadError GetLeaderData(otLeaderData &aLeaderData);
+
+    /**
+     * This method returns the Child ID portion of an RLOC16.
+     *
+     * @param[in]  aRloc16  The RLOC16 value.
+     *
+     * @returns The Child ID portion of an RLOC16.
+     *
+     */
+    static uint8_t GetChildId(uint16_t aRloc16) { return aRloc16 & kMaxChildId; }
+
+    /**
+     * This method returns the Router ID portion of an RLOC16.
+     *
+     * @param[in]  aRloc16  The RLOC16 value.
+     *
+     * @returns The Router ID portion of an RLOC16.
+     *
+     */
+    static uint8_t GetRouterId(uint16_t aRloc16) { return aRloc16 >> kRouterIdOffset; }
+
+    /**
+     * This method returns the RLOC16 of a given Router ID.
+     *
+     * @param[in]  aRouterId  The Router ID value.
+     *
+     * @returns The RLOC16 of the given Router ID.
+     *
+     */
+    static uint16_t GetRloc16(uint8_t aRouterId) { return static_cast<uint16_t>(aRouterId) << kRouterIdOffset; }
+
+    /**
+     * This method indicates whether or not @p aRloc16 refers to an active router.
+     *
+     * @param[in]  aRloc16  The RLOC16 value.
+     *
+     * @retval TRUE   If @p aRloc16 refers to an active router.
+     * @retval FALSE  If @p aRloc16 does not refer to an active router.
+     *
+     */
+    static bool IsActiveRouter(uint16_t aRloc16) { return GetChildId(aRloc16) == 0; }
 
 protected:
     /**

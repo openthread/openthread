@@ -156,7 +156,7 @@ ThreadError Mle::Start(void)
     {
         BecomeChild(kMleAttachAnyPartition);
     }
-    else if (GetChildId(GetRloc16()) == 0)
+    else if (IsActiveRouter(GetRloc16()))
     {
         mMleRouter.BecomeRouter();
     }
@@ -370,21 +370,6 @@ ThreadError Mle::SetMeshLocalPrefix(const uint8_t *aMeshLocalPrefix)
     mNetif.SetStateChangedFlags(OT_IP6_ML_ADDR_CHANGED);
 
     return kThreadError_None;
-}
-
-const uint8_t Mle::GetChildId(uint16_t aRloc16) const
-{
-    return aRloc16 & kMaxChildId;
-}
-
-const uint8_t Mle::GetRouterId(uint16_t aRloc16) const
-{
-    return aRloc16 >> kRouterIdOffset;
-}
-
-const uint16_t Mle::GetRloc16(uint8_t aRouterId) const
-{
-    return static_cast<uint16_t>(aRouterId) << kRouterIdOffset;
 }
 
 const Ip6::Address *Mle::GetLinkLocalAllThreadNodesAddress(void) const
