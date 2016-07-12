@@ -609,7 +609,7 @@ ThreadError MleRouter::HandleLinkRequest(const Message &aMessage, const Ip6::Mes
             neighbor = NULL;
         }
 
-        if (GetChildId(rloc16) == 0)
+        if (IsActiveRouter(rloc16))
         {
             // source is a router
             neighbor = &mRouters[GetRouterId(rloc16)];
@@ -678,7 +678,7 @@ ThreadError MleRouter::SendLinkAccept(const Ip6::MessageInfo &aMessageInfo, Neig
     linkMargin = LinkQualityInfo::ConvertRssToLinkMargin(threadMessageInfo->mRss);
     SuccessOrExit(error = AppendLinkMargin(*message, linkMargin));
 
-    if (aNeighbor != NULL && GetChildId(aNeighbor->mValid.mRloc16) == 0)
+    if (aNeighbor != NULL && IsActiveRouter(aNeighbor->mValid.mRloc16))
     {
         SuccessOrExit(error = AppendLeaderData(*message));
     }
@@ -1152,7 +1152,7 @@ ThreadError MleRouter::HandleAdvertisement(const Message &aMessage, const Ip6::M
         ExitNow();
     }
 
-    VerifyOrExit(GetChildId(sourceAddress.GetRloc16()) == 0, ;);
+    VerifyOrExit(IsActiveRouter(sourceAddress.GetRloc16()), ;);
 
     // Route Data
     SuccessOrExit(error = Tlv::GetTlv(aMessage, Tlv::kRoute, sizeof(route), route));
@@ -2343,7 +2343,7 @@ ThreadError MleRouter::GetRouterInfo(uint16_t aRouterId, otRouterInfo &aRouterIn
 {
     ThreadError error = kThreadError_None;
 
-    if (aRouterId > kMaxRouterId && GetChildId(aRouterId) == 0)
+    if (aRouterId > kMaxRouterId && IsActiveRouter(aRouterId))
     {
         aRouterId = GetRouterId(aRouterId);
     }

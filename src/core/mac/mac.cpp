@@ -615,7 +615,7 @@ void Mac::SentFrame(bool aAcked)
 
         if ((neighbor = mMle.GetNeighbor(destination)) != NULL)
         {
-            if (neighbor->mState == Neighbor::kStateValid && mMle.GetChildId(neighbor->mValid.mRloc16) != 0)
+            if (neighbor->mState == Neighbor::kStateValid && !mMle.IsActiveRouter(neighbor->mValid.mRloc16))
             {
                 mNetif.SetStateChangedFlags(OT_THREAD_CHILD_REMOVED);
             }
