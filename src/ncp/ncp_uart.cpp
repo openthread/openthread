@@ -47,33 +47,58 @@ extern "C" void otNcpInit(void)
     sNcpUart = new(&sNcpRaw) NcpUart;
 }
 
+NcpUart::SendHdlcBuffer::SendHdlcBuffer(void)
+    : BufferWriteIterator()
+{
+    Reset();
+}
+
+void
+NcpUart::SendHdlcBuffer::Reset(void)
+{
+    mWritePointer = mBuffer;
+    mRemainingLength = sizeof(mBuffer);
+}
+
+uint16_t
+NcpUart::SendHdlcBuffer::GetLength(void) const
+{
+    return static_cast<uint16_t>(mWritePointer - mBuffer);
+}
+
+const uint8_t *
+NcpUart::SendHdlcBuffer::GetBuffer(void) const
+{
+    return mBuffer;
+}
+
+uint16_t
+NcpUart::SendHdlcBuffer::GetRemainingLength(void) const
+{
+    return mRemainingLength;
+}
+
 NcpUart::NcpUart():
     NcpBase(),
-    mFrameDecoder(mReceiveFrame, sizeof(mReceiveFrame), &HandleFrame, this)
+    mFrameDecoder(mReceiveFrame, sizeof(mReceiveFrame), &HandleFrame, this),
+    mSendFrame()
 {
 }
 
 uint16_t
 NcpUart::OutboundFrameGetRemaining(void)
 {
-    return static_cast<int16_t>(sizeof(mSendFrame) - (mSendFrameIter - mSendFrame));
+    return mSendFrame.GetRemainingLength();
 }
 
 ThreadError
 NcpUart::OutboundFrameBegin(void)
 {
     ThreadError errorCode;
-    uint16_t outLength;
 
-    mSendFrameIter = mSendFrame;
-    outLength = OutboundFrameGetRemaining();
+    mSendFrame.Reset();
 
-    errorCode = mFrameEncoder.Init(mSendFrameIter, outLength);
-
-    if (errorCode == kThreadError_None)
-    {
-        mSendFrameIter += outLength;
-    }
+    errorCode = mFrameEncoder.Init(mSendFrame);
 
     return errorCode;
 }
@@ -82,14 +107,8 @@ ThreadError
 NcpUart::OutboundFrameFeedData(const uint8_t *frame, uint16_t frameLength)
 {
     ThreadError errorCode;
-    uint16_t outLength(OutboundFrameGetRemaining());
 
-    errorCode = mFrameEncoder.Encode(frame, frameLength, mSendFrameIter, outLength);
-
-    if (errorCode == kThreadError_None)
-    {
-        mSendFrameIter += outLength;
-    }
+    errorCode = mFrameEncoder.Encode(frame, frameLength, mSendFrame);
 
     return errorCode;
 }
@@ -122,14 +141,12 @@ ThreadError
 NcpUart::OutboundFrameSend(void)
 {
     ThreadError errorCode;
-    uint16_t outLength(OutboundFrameGetRemaining());
 
-    errorCode = mFrameEncoder.Finalize(mSendFrameIter, outLength);
+    errorCode = mFrameEncoder.Finalize(mSendFrame);
 
     if (errorCode == kThreadError_None)
     {
-        mSendFrameIter += outLength;
-        errorCode = otPlatUartSend(mSendFrame, mSendFrameIter - mSendFrame);
+        errorCode = otPlatUartSend(mSendFrame.GetBuffer(), mSendFrame.GetLength());
     }
 
     if (errorCode == kThreadError_None)

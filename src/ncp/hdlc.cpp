@@ -40,7 +40,7 @@ namespace Hdlc {
  * This method updates an FCS.
  *
  * @param[in]  aFcs   The FCS to update.
- * @param[in]  aByte  The intput byte value.
+ * @param[in]  aByte  The input byte value.
  *
  * @returns The updated FCS.
  *
@@ -103,76 +103,102 @@ uint16_t UpdateFcs(uint16_t aFcs, uint8_t aByte)
     return (aFcs >> 8) ^ sFcsTable[(aFcs ^ aByte) & 0xff];
 }
 
-ThreadError Encoder::Init(uint8_t *aOutBuf, uint16_t &aOutLength)
+
+Encoder::BufferWriteIterator::BufferWriteIterator(void)
+{
+    mWritePointer = NULL;
+    mRemainingLength = 0;
+}
+
+ThreadError Encoder::BufferWriteIterator::WriteByte(uint8_t aByte)
 {
     ThreadError error = kThreadError_None;
 
-    mFcs = kInitFcs;
+    VerifyOrExit(mRemainingLength > 0, error = kThreadError_NoBufs);
 
-    VerifyOrExit(aOutLength > 0, error = kThreadError_NoBufs);
-    aOutBuf[0] = kFlagSequence;
-    aOutLength = 1;
+    *mWritePointer++ = aByte;
+    mRemainingLength--;
 
 exit:
     return error;
 }
 
-ThreadError Encoder::Encode(uint8_t aInByte, uint8_t *aOutBuf, uint16_t aOutLength)
+bool Encoder::BufferWriteIterator::CanWrite(uint16_t aWriteLength) const
+{
+   return (mRemainingLength >= aWriteLength);
+}
+
+ThreadError Encoder::Init(BufferWriteIterator &aIterator)
+{
+    mFcs = kInitFcs;
+
+    return aIterator.WriteByte(kFlagSequence);
+}
+
+ThreadError Encoder::Encode(uint8_t aInByte, BufferWriteIterator &aIterator)
 {
     ThreadError error = kThreadError_None;
-
-    mFcs = UpdateFcs(mFcs, aInByte);
 
     if (aInByte == kFlagSequence || aInByte == kEscapeSequence)
     {
-        VerifyOrExit(mOutOffset + 2 < aOutLength, error = kThreadError_NoBufs);
-        aOutBuf[mOutOffset++] = kEscapeSequence;
-        aOutBuf[mOutOffset++] = aInByte ^ 0x20;
+        VerifyOrExit(aIterator.CanWrite(2) , error = kThreadError_NoBufs);
+
+        aIterator.WriteByte(kEscapeSequence);
+        aIterator.WriteByte(aInByte ^ 0x20);
     }
     else
     {
-        VerifyOrExit(mOutOffset + 1 < aOutLength, error = kThreadError_NoBufs);
-        aOutBuf[mOutOffset++] = aInByte;
+        SuccessOrExit(error = aIterator.WriteByte(aInByte));
     }
+
+    mFcs = UpdateFcs(mFcs, aInByte);
 
 exit:
     return error;
 }
 
-ThreadError Encoder::Encode(const uint8_t *aInBuf, uint16_t aInLength, uint8_t *aOutBuf, uint16_t &aOutLength)
+ThreadError Encoder::Encode(const uint8_t *aInBuf, uint16_t aInLength, BufferWriteIterator &aIterator)
 {
     ThreadError error = kThreadError_None;
-
-    mOutOffset = 0;
+    BufferWriteIterator oldIterator(aIterator);
+    uint16_t oldFcs = mFcs;
 
     for (int i = 0; i < aInLength; i++)
     {
-        SuccessOrExit(error = Encode(aInBuf[i], aOutBuf, aOutLength));
+        SuccessOrExit(error = Encode(aInBuf[i], aIterator));
     }
 
 exit:
-    aOutLength = mOutOffset;
+    if (error != kThreadError_None)
+    {
+        aIterator = oldIterator;
+        mFcs = oldFcs;
+    }
+
     return error;
 }
 
-ThreadError Encoder::Finalize(uint8_t *aOutBuf, uint16_t &aOutLength)
+ThreadError Encoder::Finalize(BufferWriteIterator &aIterator)
 {
     ThreadError error = kThreadError_None;
+    BufferWriteIterator oldIterator(aIterator);
+    uint16_t oldFcs = mFcs;
     uint16_t fcs = mFcs;
-
-    mOutOffset = 0;
 
     fcs ^= 0xffff;
 
-    SuccessOrExit(error = Encode(fcs, aOutBuf, aOutLength));
-    SuccessOrExit(error = Encode(fcs >> 8, aOutBuf, aOutLength));
+    SuccessOrExit(error = Encode(fcs, aIterator));
+    SuccessOrExit(error = Encode(fcs >> 8, aIterator));
 
-    VerifyOrExit(mOutOffset < aOutLength, error = kThreadError_NoBufs);
-    aOutBuf[mOutOffset++] = kFlagSequence;
-
-    aOutLength = mOutOffset;
+    SuccessOrExit(error = aIterator.WriteByte(kFlagSequence));
 
 exit:
+    if (error != kThreadError_None)
+    {
+        aIterator = oldIterator;
+        mFcs = oldFcs;
+    }
+
     return error;
 }
 
