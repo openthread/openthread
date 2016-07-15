@@ -62,9 +62,22 @@ private:
     Hdlc::Encoder mFrameEncoder;
     Hdlc::Decoder mFrameDecoder;
 
-    uint8_t mSendFrame[1500];
-    uint8_t mReceiveFrame[1500];
-    uint8_t *mSendFrameIter;
+    class SendHdlcBuffer : public Hdlc::Encoder::BufferWriteIterator
+    {
+    public:
+        SendHdlcBuffer(void);
+
+        void           Reset(void);
+        uint16_t       GetLength(void) const;
+        uint16_t       GetRemainingLength(void) const;
+        const uint8_t *GetBuffer(void) const;
+
+    private:
+        uint8_t     mBuffer[1500];
+    };
+
+    SendHdlcBuffer mSendFrame;
+    uint8_t        mReceiveFrame[1500];
 };
 
 }  // namespace Thread
