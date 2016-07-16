@@ -422,14 +422,42 @@ int Lowpan::CompressUdp(Message &aMessage, uint8_t *aBuf)
 {
     Ip6::UdpHeader udpHeader;
     uint8_t *cur = aBuf;
+    uint8_t *udpCtl = cur;
+    uint16_t source;
+    uint16_t destination;
 
     aMessage.Read(aMessage.GetOffset(), sizeof(udpHeader), &udpHeader);
+    source = udpHeader.GetSourcePort();
+    destination = udpHeader.GetDestinationPort();
 
     cur[0] = kUdpDispatch;
     cur++;
 
-    memcpy(cur, &udpHeader, Ip6::UdpHeader::GetLengthOffset());
-    cur += Ip6::UdpHeader::GetLengthOffset();
+    if ((source & 0xfff0) == 0xf0b0 && (destination & 0xfff0) == 0xf0b0)
+    {
+        *udpCtl |= 3;
+        *cur++ = ((source & 0xf) << 4) | (destination & 0xf);
+    }
+    else if ((source & 0xff00) == 0xf000)
+    {
+        *udpCtl |= 2;
+        *cur++ = source;
+        *cur++ = destination >> 8;
+        *cur++ = destination;
+    }
+    else if ((destination & 0xff00) == 0xf000)
+    {
+        *udpCtl |= 1;
+        *cur++ = source >> 8;
+        *cur++ = source;
+        *cur++ = destination;
+    }
+    else
+    {
+        memcpy(cur, &udpHeader, Ip6::UdpHeader::GetLengthOffset());
+        cur += Ip6::UdpHeader::GetLengthOffset();
+    }
+
     memcpy(cur, reinterpret_cast<uint8_t *>(&udpHeader) + Ip6::UdpHeader::GetChecksumOffset(), 2);
     cur += 2;
 
@@ -794,14 +822,14 @@ int Lowpan::DecompressUdpHeader(Message &aMessage, const uint8_t *aBuf, uint16_t
 
     case 2:
         udpHeader.SetSourcePort(0xf000 | cur[0]);
-        udpHeader.SetDestinationPort((static_cast<uint16_t>(cur[2]) << 8) | cur[1]);
+        udpHeader.SetDestinationPort((static_cast<uint16_t>(cur[1]) << 8) | cur[2]);
         cur += 3;
         break;
 
     case 3:
-        udpHeader.SetSourcePort(0xf000 | cur[0]);
-        udpHeader.SetDestinationPort(0xf000 | cur[1]);
-        cur += 2;
+        udpHeader.SetSourcePort(0xf0b0 | (cur[0] >> 4));
+        udpHeader.SetDestinationPort(0xf0b0 | (cur[0] & 0xf));
+        cur += 1;
         break;
     }
 
