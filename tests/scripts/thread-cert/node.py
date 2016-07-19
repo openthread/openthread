@@ -58,7 +58,7 @@ class Node:
         else:
             cmd = './ot-cli'
         cmd += ' %d' % nodeid
-        print cmd
+        print ("%s" % cmd)
 
         self.pexpect = pexpect.spawn(cmd, timeout=2)
 
@@ -73,7 +73,7 @@ class Node:
         self.pexpect.close(force=True)
 
     def send_command(self, cmd):
-        print self.nodeid, ":", cmd
+        print ("%d: %s" % (self.nodeid, cmd))
         self.pexpect.sendline(cmd)
 
     def get_commands(self):
@@ -137,7 +137,7 @@ class Node:
         self.send_command('extaddr')
         i = self.pexpect.expect('([0-9a-fA-F]{16})')
         if i == 0:
-            addr64 = self.pexpect.match.groups()[0]
+            addr64 = self.pexpect.match.groups()[0].decode("utf-8")
         self.pexpect.expect('Done')
         return addr64
 
@@ -241,7 +241,7 @@ class Node:
         while True:
             i = self.pexpect.expect(['(\S+:\S+)\r\n', 'Done'])
             if i == 0:
-                addrs.append(self.pexpect.match.groups()[0])
+                addrs.append(self.pexpect.match.groups()[0].decode("utf-8"))
             elif i == 1:
                 break
 

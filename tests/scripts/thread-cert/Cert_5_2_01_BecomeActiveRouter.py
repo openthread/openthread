@@ -60,7 +60,7 @@ class Cert_5_2_1_BecomeActiveRouter(unittest.TestCase):
         self.nodes[REED].enable_whitelist()
 
     def tearDown(self):
-        for node in self.nodes.itervalues():
+        for node in list(self.nodes.values()):
             node.stop()
         del self.nodes
 

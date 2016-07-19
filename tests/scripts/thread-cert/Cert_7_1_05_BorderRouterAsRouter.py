@@ -68,7 +68,7 @@ class Cert_7_1_5_BorderRouterAsRouter(unittest.TestCase):
         self.nodes[SED2].set_timeout(3)
 
     def tearDown(self):
-        for node in self.nodes.itervalues():
+        for node in list(self.nodes.values()):
             node.stop()
         del self.nodes
 

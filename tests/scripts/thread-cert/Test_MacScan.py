@@ -56,7 +56,7 @@ class Test_MacScan(unittest.TestCase):
         self.nodes[ROUTER].set_network_name('OpenThread')
 
     def tearDown(self):
-        for node in self.nodes.itervalues():
+        for node in list(self.nodes.values()):
             node.stop()
         del self.nodes
 
