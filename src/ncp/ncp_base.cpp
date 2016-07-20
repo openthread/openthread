@@ -105,6 +105,7 @@ const NcpBase::GetPropertyHandlerEntry NcpBase::mGetPropertyHandlerTable[] =
     { SPINEL_PROP_THREAD_STABLE_NETWORK_DATA_VERSION, &NcpBase::GetPropertyHandler_THREAD_STABLE_NETWORK_DATA_VERSION },
     { SPINEL_PROP_THREAD_LOCAL_ROUTES, &NcpBase::NcpBase::GetPropertyHandler_THREAD_LOCAL_ROUTES },
     { SPINEL_PROP_THREAD_ASSISTING_PORTS, &NcpBase::NcpBase::GetPropertyHandler_THREAD_ASSISTING_PORTS },
+    { SPINEL_PROP_THREAD_ALLOW_LOCAL_NET_DATA_CHANGE, &NcpBase::GetPropertyHandler_THREAD_ALLOW_LOCAL_NET_DATA_CHANGE},
 
     { SPINEL_PROP_IPV6_ML_PREFIX, &NcpBase::GetPropertyHandler_IPV6_ML_PREFIX },
     { SPINEL_PROP_IPV6_ML_ADDR, &NcpBase::GetPropertyHandler_IPV6_ML_ADDR },
@@ -165,6 +166,7 @@ const NcpBase::SetPropertyHandlerEntry NcpBase::mSetPropertyHandlerTable[] =
 
     { SPINEL_PROP_THREAD_LOCAL_LEADER_WEIGHT, &NcpBase::SetPropertyHandler_THREAD_LOCAL_LEADER_WEIGHT },
     { SPINEL_PROP_THREAD_ASSISTING_PORTS, &NcpBase::SetPropertyHandler_THREAD_ASSISTING_PORTS },
+    { SPINEL_PROP_THREAD_ALLOW_LOCAL_NET_DATA_CHANGE, &NcpBase::SetPropertyHandler_THREAD_ALLOW_LOCAL_NET_DATA_CHANGE},
 
     { SPINEL_PROP_STREAM_NET_INSECURE, &NcpBase::SetPropertyHandler_STREAM_NET_INSECURE },
     { SPINEL_PROP_STREAM_NET, &NcpBase::SetPropertyHandler_STREAM_NET },
@@ -264,6 +266,7 @@ NcpBase::NcpBase():
     mScanPeriod = 200; // ms
     sNcpContext = this;
     mChangedFlags = 0;
+    mAllowLocalNetworkDataChange = false;
 
     for (unsigned i = 0; i < sizeof(mNetifAddresses) / sizeof(mNetifAddresses[0]); i++)
     {
@@ -1570,6 +1573,17 @@ NcpBase::GetPropertyHandler_THREAD_ASSISTING_PORTS(uint8_t header, spinel_prop_k
     }
 }
 
+void NcpBase::GetPropertyHandler_THREAD_ALLOW_LOCAL_NET_DATA_CHANGE(uint8_t header, spinel_prop_key_t key)
+{
+    SendPropteryUpdate(
+        header,
+        SPINEL_CMD_PROP_VALUE_IS,
+        key,
+        SPINEL_DATATYPE_BOOL_S,
+        mAllowLocalNetworkDataChange
+    );
+}
+
 void NcpBase::GetPropertyHandler_IPV6_ML_PREFIX(uint8_t header, spinel_prop_key_t key)
 {
     const uint8_t *ml_prefix = otGetMeshLocalPrefix();
@@ -2649,6 +2663,49 @@ NcpBase::SetPropertyHandler_THREAD_ASSISTING_PORTS(uint8_t header, spinel_prop_k
     }
 }
 
+void
+NcpBase::SetPropertyHandler_THREAD_ALLOW_LOCAL_NET_DATA_CHANGE(uint8_t header, spinel_prop_key_t key,
+                                                              const uint8_t *value_ptr, uint16_t value_len)
+{
+    bool value = false;
+    spinel_ssize_t parsedLength;
+    ThreadError errorCode = kThreadError_None;
+    bool should_register_with_leader = false;
+
+    parsedLength = spinel_datatype_unpack(
+                       value_ptr,
+                       value_len,
+                       SPINEL_DATATYPE_BOOL_S,
+                       &value
+                   );
+
+    if (parsedLength > 0)
+    {
+        // Register any net data changes on transition from `true` to `false`.
+        should_register_with_leader = (mAllowLocalNetworkDataChange == true) && (value == false);
+
+        mAllowLocalNetworkDataChange = value;
+    }
+    else
+    {
+        errorCode = kThreadError_Parse;
+    }
+
+    if (errorCode == kThreadError_None)
+    {
+        HandleCommandPropertyGet(header, key);
+    }
+    else
+    {
+        SendLastStatus(header, ThreadErrorToSpinelStatus(errorCode));
+    }
+
+    if (should_register_with_leader)
+    {
+        otSendServerData();
+    }
+}
+
 void NcpBase::SetPropertyHandler_CNTR_RESET(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr,
                                                 uint16_t value_len)
 {
@@ -2782,6 +2839,11 @@ void NcpBase::InsertPropertyHandler_THREAD_LOCAL_ROUTES(uint8_t header, spinel_p
     bool stable = false;
     uint8_t flags = 0;
 
+    VerifyOrExit(
+        mAllowLocalNetworkDataChange == true,
+        SendLastStatus(header, SPINEL_STATUS_INVALID_STATE)
+    );
+
     parsedLength = spinel_datatype_unpack(
                        value_ptr,
                        value_len,
@@ -2818,6 +2880,9 @@ void NcpBase::InsertPropertyHandler_THREAD_LOCAL_ROUTES(uint8_t header, spinel_p
     {
         SendLastStatus(header, SPINEL_STATUS_PARSE_ERROR);
     }
+
+exit:
+    return;
 }
 
 void NcpBase::InsertPropertyHandler_THREAD_ON_MESH_NETS(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr,
@@ -2838,6 +2903,11 @@ void NcpBase::InsertPropertyHandler_THREAD_ON_MESH_NETS(uint8_t header, spinel_p
     otIp6Address *addr_ptr;
     bool stable = false;
     uint8_t flags = 0;
+
+    VerifyOrExit(
+        mAllowLocalNetworkDataChange == true,
+        SendLastStatus(header, SPINEL_STATUS_INVALID_STATE)
+    );
 
     parsedLength = spinel_datatype_unpack(
                        value_ptr,
@@ -2881,6 +2951,9 @@ void NcpBase::InsertPropertyHandler_THREAD_ON_MESH_NETS(uint8_t header, spinel_p
     {
         SendLastStatus(header, SPINEL_STATUS_PARSE_ERROR);
     }
+
+exit:
+    return;
 }
 
 void
@@ -3001,6 +3074,11 @@ void NcpBase::RemovePropertyHandler_THREAD_LOCAL_ROUTES(uint8_t header, spinel_p
     otIp6Prefix ip6_prefix = {};
     otIp6Address *addr_ptr;
 
+    VerifyOrExit(
+        mAllowLocalNetworkDataChange == true,
+        SendLastStatus(header, SPINEL_STATUS_INVALID_STATE)
+    );
+
     parsedLength = spinel_datatype_unpack(
                        value_ptr,
                        value_len,
@@ -3033,6 +3111,9 @@ void NcpBase::RemovePropertyHandler_THREAD_LOCAL_ROUTES(uint8_t header, spinel_p
     {
         SendLastStatus(header, SPINEL_STATUS_PARSE_ERROR);
     }
+
+exit:
+    return;
 }
 
 void NcpBase::RemovePropertyHandler_THREAD_ON_MESH_NETS(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr,
@@ -3043,6 +3124,11 @@ void NcpBase::RemovePropertyHandler_THREAD_ON_MESH_NETS(uint8_t header, spinel_p
 
     otIp6Prefix ip6_prefix = {};
     otIp6Address *addr_ptr;
+
+    VerifyOrExit(
+        mAllowLocalNetworkDataChange == true,
+        SendLastStatus(header, SPINEL_STATUS_INVALID_STATE)
+    );
 
     parsedLength = spinel_datatype_unpack(
                        value_ptr,
@@ -3076,6 +3162,9 @@ void NcpBase::RemovePropertyHandler_THREAD_ON_MESH_NETS(uint8_t header, spinel_p
     {
         SendLastStatus(header, SPINEL_STATUS_PARSE_ERROR);
     }
+
+exit:
+    return;
 }
 
 void

@@ -1088,6 +1088,10 @@ spinel_prop_key_to_cstr(spinel_prop_key_t prop_key)
         ret = "PROP_THREAD_ASSISTING_PORTS";
         break;
 
+    case SPINEL_PROP_THREAD_ALLOW_LOCAL_NET_DATA_CHANGE:
+        ret = "SPINEL_PROP_THREAD_ALLOW_LOCAL_NET_DATA_CHANGE";
+        break;
+
     default:
         break;
     }
