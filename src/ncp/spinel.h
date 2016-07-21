@@ -344,6 +344,8 @@ typedef enum
     SPINEL_PROP_THREAD_ON_MESH_NETS    = SPINEL_PROP_THREAD__BEGIN + 10, ///< array(ipv6prefix,prefixlen,stable,flags) [A(T(6CbC))]
     SPINEL_PROP_THREAD_LOCAL_ROUTES    = SPINEL_PROP_THREAD__BEGIN + 11, ///< array(ipv6prefix,prefixlen,stable,flags) [A(T(6CbC))]
     SPINEL_PROP_THREAD_ASSISTING_PORTS = SPINEL_PROP_THREAD__BEGIN + 12, ///< array(portn) [A(S)]
+    SPINEL_PROP_THREAD_ALLOW_LOCAL_NET_DATA_CHANGE
+                                       = SPINEL_PROP_THREAD__BEGIN + 13, ///< [b]
     SPINEL_PROP_THREAD__END            = 0x60,
 
     SPINEL_PROP_IPV6__BEGIN          = 0x60,
