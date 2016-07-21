@@ -60,7 +60,7 @@ class Cert_6_3_1_OrphanReattach(unittest.TestCase):
         self.nodes[ED].set_timeout(10)
 
     def tearDown(self):
-        for node in self.nodes.itervalues():
+        for node in list(self.nodes.values()):
             node.stop()
         del self.nodes
 

@@ -61,7 +61,7 @@ class Cert_5_6_7_NetworkDataRequestREED(unittest.TestCase):
         self.nodes[REED].set_router_upgrade_threshold(0)
 
     def tearDown(self):
-        for node in self.nodes.itervalues():
+        for node in list(self.nodes.values()):
             node.stop()
         del self.nodes
 

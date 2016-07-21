@@ -75,7 +75,7 @@ class Cert_5_6_9_NetworkDataForwarding(unittest.TestCase):
         self.nodes[SED].set_timeout(3)
 
     def tearDown(self):
-        for node in self.nodes.itervalues():
+        for node in list(self.nodes.values()):
             node.stop()
         del self.nodes
 

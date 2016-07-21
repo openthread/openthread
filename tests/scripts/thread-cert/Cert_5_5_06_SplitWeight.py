@@ -63,7 +63,7 @@ class Cert_5_5_6_SplitWeight(unittest.TestCase):
         self.nodes[ROUTER2].set_weight(0)
 
     def tearDown(self):
-        for node in self.nodes.itervalues():
+        for node in list(self.nodes.values()):
             node.stop()
         del self.nodes
 

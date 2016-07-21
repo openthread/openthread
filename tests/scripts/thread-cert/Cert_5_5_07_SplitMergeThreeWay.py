@@ -67,7 +67,7 @@ class Cert_5_5_7_SplitMergeThreeWay(unittest.TestCase):
         self.nodes[ROUTER3].enable_whitelist()
 
     def tearDown(self):
-        for node in self.nodes.itervalues():
+        for node in list(self.nodes.values()):
             node.stop()
         del self.nodes
 

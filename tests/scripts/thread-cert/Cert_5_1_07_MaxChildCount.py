@@ -67,7 +67,7 @@ class Cert_5_1_07_MaxChildCount(unittest.TestCase):
             self.nodes[i].set_timeout(3)
 
     def tearDown(self):
-        for node in self.nodes.itervalues():
+        for node in list(self.nodes.values()):
             node.stop()
         del self.nodes
 

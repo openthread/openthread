@@ -55,7 +55,7 @@ class Cert_5_2_2_LeaderReject1Hop(unittest.TestCase):
             self.nodes[i].set_router_upgrade_threshold(33)
 
     def tearDown(self):
-        for node in self.nodes.itervalues():
+        for node in list(self.nodes.values()):
             node.stop()
         del self.nodes
 

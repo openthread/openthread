@@ -77,7 +77,7 @@ class Cert_5_5_5_SplitMergeREED(unittest.TestCase):
         self.nodes[REED2].set_router_upgrade_threshold(0)
 
     def tearDown(self):
-        for node in self.nodes.itervalues():
+        for node in list(self.nodes.values()):
             node.stop()
         del self.nodes
 
