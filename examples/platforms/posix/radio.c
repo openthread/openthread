@@ -90,11 +90,8 @@ typedef enum PhyState
 {
     kStateDisabled = 0,
     kStateSleep = 1,
-    kStateIdle = 2,
-    kStateListen = 3,
-    kStateReceive = 4,
-    kStateTransmit = 5,
-    kStateAckWait = 6,
+    kStateReceive = 3,
+    kStateTransmit = 4
 } PhyState;
 
 struct OT_TOOL_PACKED_BEGIN RadioMessage
@@ -103,24 +100,25 @@ struct OT_TOOL_PACKED_BEGIN RadioMessage
     uint8_t mPsdu[kMaxPHYPacketSize];
 } OT_TOOL_PACKED_END;
 
+static void radioTransmit(const struct RadioMessage *msg, const struct RadioPacket *pkt);
+static void radioSendMessage(void);
 static void radioSendAck(void);
 static void radioProcessFrame(void);
 
-static PhyState s_state = kStateDisabled;
-static struct RadioMessage s_receive_message;
-static struct RadioMessage s_transmit_message;
-static struct RadioMessage s_ack_message;
-static RadioPacket s_receive_frame;
-static RadioPacket s_transmit_frame;
-static RadioPacket s_ack_frame;
+static PhyState sState = kStateDisabled;
+static struct RadioMessage sReceiveMessage;
+static struct RadioMessage sTransmitMessage;
+static struct RadioMessage sAckMessage;
+static RadioPacket sReceiveFrame;
+static RadioPacket sTransmitFrame;
+static RadioPacket sAckFrame;
 
-static uint8_t s_extended_address[OT_EXT_ADDRESS_SIZE];
-static uint16_t s_short_address;
-static uint16_t s_panid;
-
-static int s_sockfd;
-
-static bool s_promiscuous = false;
+static uint8_t sExtendedAddress[OT_EXT_ADDRESS_SIZE];
+static uint16_t sShortAddress;
+static uint16_t sPanid;
+static int sSockFd;
+static bool sPromiscuous = false;
+static bool sAckWait = false;
 
 static inline bool isFrameTypeAck(const uint8_t *frame)
 {
@@ -267,26 +265,52 @@ static inline void getExtAddress(const uint8_t *frame, otExtAddress *address)
 
 ThreadError otPlatRadioSetPanId(uint16_t panid)
 {
-    s_panid = panid;
-    return kThreadError_None;
+    ThreadError error = kThreadError_Busy;
+
+    if (sState != kStateTransmit)
+    {
+        sPanid = panid;
+        error = kThreadError_None;
+    }
+
+    return error;
 }
 
 ThreadError otPlatRadioSetExtendedAddress(uint8_t *address)
 {
-    size_t i;
+    ThreadError error = kThreadError_Busy;
 
-    for (i = 0; i < sizeof(s_extended_address); i++)
+    if (sState != kStateTransmit)
     {
-        s_extended_address[i] = address[sizeof(s_extended_address) - 1 - i];
+        size_t i;
+
+        for (i = 0; i < sizeof(sExtendedAddress); i++)
+        {
+            sExtendedAddress[i] = address[sizeof(sExtendedAddress) - 1 - i];
+        }
+
+        error = kThreadError_None;
     }
 
-    return kThreadError_None;
+    return error;
 }
 
 ThreadError otPlatRadioSetShortAddress(uint16_t address)
 {
-    s_short_address = address;
-    return kThreadError_None;
+    ThreadError error = kThreadError_Busy;
+
+    if (sState != kStateTransmit)
+    {
+        sShortAddress = address;
+        error = kThreadError_None;
+    }
+
+    return error;
+}
+
+void otPlatRadioSetPromiscuous(bool aEnable)
+{
+    sPromiscuous = aEnable;
 }
 
 void posixRadioInit(void)
@@ -295,7 +319,7 @@ void posixRadioInit(void)
     memset(&sockaddr, 0, sizeof(sockaddr));
     sockaddr.sin_family = AF_INET;
 
-    if (s_promiscuous)
+    if (sPromiscuous)
     {
         sockaddr.sin_port = htons(9000 + WELLKNOWN_NODE_ID);
     }
@@ -306,96 +330,89 @@ void posixRadioInit(void)
 
     sockaddr.sin_addr.s_addr = INADDR_ANY;
 
-    s_sockfd = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
-    bind(s_sockfd, (struct sockaddr *)&sockaddr, sizeof(sockaddr));
+    sSockFd = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
+    bind(sSockFd, (struct sockaddr *)&sockaddr, sizeof(sockaddr));
 
-    s_receive_frame.mPsdu = s_receive_message.mPsdu;
-    s_transmit_frame.mPsdu = s_transmit_message.mPsdu;
-    s_ack_frame.mPsdu = s_ack_message.mPsdu;
+    sReceiveFrame.mPsdu = sReceiveMessage.mPsdu;
+    sTransmitFrame.mPsdu = sTransmitMessage.mPsdu;
+    sAckFrame.mPsdu = sAckMessage.mPsdu;
 }
 
 ThreadError otPlatRadioEnable(void)
 {
-    ThreadError error = kThreadError_None;
+    ThreadError error = kThreadError_Busy;
 
-    VerifyOrExit(s_state == kStateDisabled, error = kThreadError_Busy);
-    s_state = kStateSleep;
+    if (sState == kStateSleep || sState == kStateDisabled)
+    {
+        error = kThreadError_None;
+        sState = kStateSleep;
+    }
 
-exit:
     return error;
 }
 
 ThreadError otPlatRadioDisable(void)
 {
-    s_state = kStateDisabled;
-    return kThreadError_None;
+    ThreadError error = kThreadError_Busy;
+
+    if (sState == kStateDisabled || sState == kStateSleep)
+    {
+        error = kThreadError_None;
+        sState = kStateDisabled;
+    }
+
+    return error;
 }
 
 ThreadError otPlatRadioSleep(void)
 {
-    ThreadError error = kThreadError_None;
+    ThreadError error = kThreadError_Busy;
 
-    VerifyOrExit(s_state == kStateIdle, error = kThreadError_Busy);
-    s_state = kStateSleep;
+    if (sState == kStateSleep || sState == kStateReceive)
+    {
+        error = kThreadError_None;
+        sState = kStateSleep;
+    }
 
-exit:
+    return error;
+}
+
+ThreadError otPlatRadioTransmit(void)
+{
+    ThreadError error = kThreadError_Busy;
+
+    if ((sState == kStateTransmit && !sAckWait) || sState == kStateReceive)
+    {
+        error = kThreadError_None;
+        sState = kStateTransmit;
+    }
+
     return error;
 }
 
 ThreadError otPlatRadioIdle(void)
 {
-    ThreadError error = kThreadError_None;
-
-    switch (s_state)
-    {
-    case kStateSleep:
-        s_state = kStateIdle;
-        break;
-
-    case kStateIdle:
-        break;
-
-    case kStateListen:
-    case kStateTransmit:
-    case kStateAckWait:
-        s_state = kStateIdle;
-        break;
-
-    case kStateDisabled:
-    case kStateReceive:
-        ExitNow(error = kThreadError_Busy);
-    }
-
-exit:
-    return error;
+    return kThreadError_None;
 }
 
 ThreadError otPlatRadioReceive(uint8_t aChannel)
 {
-    ThreadError error = kThreadError_None;
+    ThreadError error = kThreadError_Busy;
 
-    VerifyOrExit(s_state != kStateTransmit, error = kThreadError_Busy);
-    s_state = kStateListen;
-    s_receive_frame.mChannel = aChannel;
+    if (sState != kStateDisabled)
+    {
+        error = kThreadError_None;
+        sState = kStateReceive;
+        sAckWait = false;
+        sReceiveFrame.mChannel = aChannel;
+    }
 
-exit:
     return error;
 }
 
 RadioPacket *otPlatRadioGetTransmitBuffer(void)
 {
-    return &s_transmit_frame;
-}
-
-ThreadError otPlatRadioTransmit(void)
-{
-    ThreadError error = kThreadError_None;
-
-    VerifyOrExit(s_state == kStateListen, error = kThreadError_Busy);
-    s_state = kStateTransmit;
-
-exit:
-    return error;
+    return &sTransmitFrame;
 }
 
 int8_t otPlatRadioGetNoiseFloor(void)
@@ -408,139 +425,76 @@ otRadioCaps otPlatRadioGetCaps(void)
     return kRadioCapsNone;
 }
 
-void otPlatRadioSetPromiscuous(bool aEnable)
-{
-    s_promiscuous = aEnable;
-}
-
 bool otPlatRadioGetPromiscuous(void)
 {
-    return s_promiscuous;
+    return sPromiscuous;
 }
 
 void radioReceive(void)
 {
-    uint8_t tx_sequence, rx_sequence;
-    int rval;
-
-    VerifyOrExit(s_state == kStateDisabled || s_state == kStateSleep || s_state == kStateListen ||
-                 s_state == kStateAckWait, ;);
-
-    rval = recvfrom(s_sockfd, &s_receive_message, sizeof(s_receive_message), 0, NULL, NULL);
+    int rval = recvfrom(sSockFd, &sReceiveMessage, sizeof(sReceiveMessage), 0, NULL, NULL);
     assert(rval >= 0);
 
-    switch (s_state)
+    sReceiveFrame.mLength = rval - 1;
+
+    if (sAckWait)
     {
-    case kStateDisabled:
-    case kStateSleep:
-    case kStateIdle:
-    case kStateTransmit:
-        break;
-
-    case kStateAckWait:
-        s_receive_frame.mLength = rval - 1;
-
-        if (!isFrameTypeAck(s_receive_frame.mPsdu))
+        if (isFrameTypeAck(sReceiveFrame.mPsdu))
         {
-            break;
+            uint8_t tx_sequence = getDsn(sTransmitFrame.mPsdu);
+            uint8_t rx_sequence = getDsn(sReceiveFrame.mPsdu);
+
+            if (tx_sequence == rx_sequence)
+            {
+                sState = kStateReceive;
+                sAckWait = false;
+                otPlatRadioTransmitDone(isFramePending(sReceiveFrame.mPsdu), kThreadError_None);
+            }
         }
-
-        tx_sequence = getDsn(s_transmit_frame.mPsdu);
-        rx_sequence = getDsn(s_receive_frame.mPsdu);
-
-        if (tx_sequence != rx_sequence)
-        {
-            break;
-        }
-
-        s_state = kStateIdle;
-        otPlatRadioTransmitDone(isFramePending(s_receive_frame.mPsdu), kThreadError_None);
-        break;
-
-    case kStateListen:
-        if (s_receive_frame.mChannel != s_receive_message.mChannel)
-        {
-            break;
-        }
-
-        s_state = kStateReceive;
-        s_receive_frame.mLength = rval - 1;
-
-        radioProcessFrame();
-        break;
-
-    case kStateReceive:
-        assert(false);
-        break;
-    }
-
-exit:
-    return;
-}
-
-int radioTransmit(void)
-{
-    struct sockaddr_in sockaddr;
-    int rval = 0;
-    uint32_t i;
-
-    memset(&sockaddr, 0, sizeof(sockaddr));
-    sockaddr.sin_family = AF_INET;
-    inet_pton(AF_INET, "127.0.0.1", &sockaddr.sin_addr);
-
-    s_transmit_message.mChannel = s_transmit_frame.mChannel;
-
-    for (i = 1; i < WELLKNOWN_NODE_ID; i++)
-    {
-        if (NODE_ID == i)
-        {
-            continue;
-        }
-
-        sockaddr.sin_port = htons(9000 + i);
-        rval = sendto(s_sockfd, &s_transmit_message, 1 + s_transmit_frame.mLength, 0, (struct sockaddr *)&sockaddr,
-                      sizeof(sockaddr));
-        assert(rval >= 0);
-    }
-
-    sockaddr.sin_port = htons(9000 + WELLKNOWN_NODE_ID);
-    rval = sendto(s_sockfd, &s_transmit_message, 1 + s_transmit_frame.mLength, 0, (struct sockaddr *)&sockaddr,
-                  sizeof(sockaddr));
-    assert(rval >= 0);
-
-    if (isAckRequested(s_transmit_frame.mPsdu))
-    {
-        s_state = kStateAckWait;
     }
     else
     {
-        s_state = kStateIdle;
+        if (sReceiveFrame.mChannel == sReceiveMessage.mChannel)
+        {
+            radioProcessFrame();
+        }
+    }
+}
+
+void radioSendMessage(void)
+{
+    sTransmitMessage.mChannel = sTransmitFrame.mChannel;
+
+    radioTransmit(&sTransmitMessage, &sTransmitFrame);
+
+    sAckWait = isAckRequested(sTransmitFrame.mPsdu);
+
+    if (!sAckWait)
+    {
+        sState = kStateReceive;
         otPlatRadioTransmitDone(false, kThreadError_None);
     }
-
-    return rval;
 }
 
 void posixRadioUpdateFdSet(fd_set *aReadFdSet, fd_set *aWriteFdSet, int *aMaxFd)
 {
-    if (aReadFdSet != NULL &&
-        (s_state == kStateDisabled || s_state == kStateSleep || s_state == kStateListen || s_state == kStateAckWait))
+    if (aReadFdSet != NULL && (sState != kStateTransmit || sAckWait))
     {
-        FD_SET(s_sockfd, aReadFdSet);
+        FD_SET(sSockFd, aReadFdSet);
 
-        if (aMaxFd != NULL && *aMaxFd < s_sockfd)
+        if (aMaxFd != NULL && *aMaxFd < sSockFd)
         {
-            *aMaxFd = s_sockfd;
+            *aMaxFd = sSockFd;
         }
     }
 
-    if (aWriteFdSet != NULL && s_state == kStateTransmit)
+    if (aWriteFdSet != NULL && sState == kStateTransmit && !sAckWait)
     {
-        FD_SET(s_sockfd, aWriteFdSet);
+        FD_SET(sSockFd, aWriteFdSet);
 
-        if (aMaxFd != NULL && *aMaxFd < s_sockfd)
+        if (aMaxFd != NULL && *aMaxFd < sSockFd)
         {
-            *aMaxFd = s_sockfd;
+            *aMaxFd = sSockFd;
         }
     }
 }
@@ -548,54 +502,63 @@ void posixRadioUpdateFdSet(fd_set *aReadFdSet, fd_set *aWriteFdSet, int *aMaxFd)
 void posixRadioProcess(void)
 {
     const int flags = POLLRDNORM | POLLERR | POLLNVAL | POLLHUP;
-    struct pollfd pollfd = { s_sockfd, flags, 0 };
+    struct pollfd pollfd = { sSockFd, flags, 0 };
 
     if (poll(&pollfd, 1, 0) > 0 && (pollfd.revents & flags) != 0)
     {
-        radioReceive();
+        if (sAckWait || sState == kStateReceive)
+        {
+            radioReceive();
+        }
     }
 
-    if (s_state == kStateTransmit)
+    if (sState == kStateTransmit && !sAckWait)
     {
-        radioTransmit();
+        radioSendMessage();
     }
 }
 
-void radioSendAck(void)
+void radioTransmit(const struct RadioMessage *msg, const struct RadioPacket *pkt)
 {
-    struct sockaddr_in sockaddr;
     uint32_t i;
-
-    s_ack_frame.mLength = IEEE802154_ACK_LENGTH;
-    s_ack_message.mPsdu[0] = IEEE802154_FRAME_TYPE_ACK;
-
-    if (isDataRequest(s_receive_frame.mPsdu))
-    {
-        s_ack_message.mPsdu[0] |= IEEE802154_FRAME_PENDING;
-    }
-
-    s_ack_message.mPsdu[1] = 0;
-    s_ack_message.mPsdu[2] = getDsn(s_receive_frame.mPsdu);
+    struct sockaddr_in sockaddr;
 
     memset(&sockaddr, 0, sizeof(sockaddr));
     sockaddr.sin_family = AF_INET;
     inet_pton(AF_INET, "127.0.0.1", &sockaddr.sin_addr);
 
-    s_ack_message.mChannel = s_receive_frame.mChannel;
-
-    for (i = 1; i < WELLKNOWN_NODE_ID; i++)
+    for (i = 1; i <= WELLKNOWN_NODE_ID; i++)
     {
+        int rval;
+
         if (NODE_ID == i)
         {
             continue;
         }
 
         sockaddr.sin_port = htons(9000 + i);
-        sendto(s_sockfd, &s_ack_message, 1 + s_ack_frame.mLength, 0, (struct sockaddr *)&sockaddr, sizeof(sockaddr));
+        rval = sendto(sSockFd, msg, 1 + pkt->mLength,
+                      0, (struct sockaddr *)&sockaddr, sizeof(sockaddr));
+        assert(rval >= 0);
+    }
+}
+
+void radioSendAck(void)
+{
+    sAckFrame.mLength = IEEE802154_ACK_LENGTH;
+    sAckMessage.mPsdu[0] = IEEE802154_FRAME_TYPE_ACK;
+
+    if (isDataRequest(sReceiveFrame.mPsdu))
+    {
+        sAckMessage.mPsdu[0] |= IEEE802154_FRAME_PENDING;
     }
 
-    sockaddr.sin_port = htons(9000 + WELLKNOWN_NODE_ID);
-    sendto(s_sockfd, &s_ack_message, 1 + s_ack_frame.mLength, 0, (struct sockaddr *)&sockaddr, sizeof(sockaddr));
+    sAckMessage.mPsdu[1] = 0;
+    sAckMessage.mPsdu[2] = getDsn(sReceiveFrame.mPsdu);
+
+    sAckMessage.mChannel = sReceiveFrame.mChannel;
+
+    radioTransmit(&sAckMessage, &sAckFrame);
 }
 
 void radioProcessFrame(void)
@@ -605,26 +568,26 @@ void radioProcessFrame(void)
     otShortAddress short_address;
     otExtAddress ext_address;
 
-    VerifyOrExit(s_promiscuous == false, error = kThreadError_None);
+    VerifyOrExit(sPromiscuous == false, error = kThreadError_None);
 
-    switch (s_receive_frame.mPsdu[1] & IEEE802154_DST_ADDR_MASK)
+    switch (sReceiveFrame.mPsdu[1] & IEEE802154_DST_ADDR_MASK)
     {
     case IEEE802154_DST_ADDR_NONE:
         break;
 
     case IEEE802154_DST_ADDR_SHORT:
-        dstpan = getDstPan(s_receive_frame.mPsdu);
-        short_address = getShortAddress(s_receive_frame.mPsdu);
-        VerifyOrExit((dstpan == IEEE802154_BROADCAST || dstpan == s_panid) &&
-                     (short_address == IEEE802154_BROADCAST || short_address == s_short_address),
+        dstpan = getDstPan(sReceiveFrame.mPsdu);
+        short_address = getShortAddress(sReceiveFrame.mPsdu);
+        VerifyOrExit((dstpan == IEEE802154_BROADCAST || dstpan == sPanid) &&
+                     (short_address == IEEE802154_BROADCAST || short_address == sShortAddress),
                      error = kThreadError_Abort);
         break;
 
     case IEEE802154_DST_ADDR_EXT:
-        dstpan = getDstPan(s_receive_frame.mPsdu);
-        getExtAddress(s_receive_frame.mPsdu, &ext_address);
-        VerifyOrExit((dstpan == IEEE802154_BROADCAST || dstpan == s_panid) &&
-                     memcmp(&ext_address, s_extended_address, sizeof(ext_address)) == 0,
+        dstpan = getDstPan(sReceiveFrame.mPsdu);
+        getExtAddress(sReceiveFrame.mPsdu, &ext_address);
+        VerifyOrExit((dstpan == IEEE802154_BROADCAST || dstpan == sPanid) &&
+                     memcmp(&ext_address, sExtendedAddress, sizeof(ext_address)) == 0,
                      error = kThreadError_Abort);
         break;
 
@@ -632,21 +595,16 @@ void radioProcessFrame(void)
         ExitNow(error = kThreadError_Abort);
     }
 
-    s_receive_frame.mPower = -20;
-    s_receive_frame.mLqi = kPhyNoLqi;
+    sReceiveFrame.mPower = -20;
+    sReceiveFrame.mLqi = kPhyNoLqi;
 
     // generate acknowledgment
-    if (isAckRequested(s_receive_frame.mPsdu))
+    if (isAckRequested(sReceiveFrame.mPsdu))
     {
         radioSendAck();
     }
 
 exit:
 
-    if (s_state != kStateDisabled)
-    {
-        s_state = kStateIdle;
-    }
-
-    otPlatRadioReceiveDone(error == kThreadError_None ? &s_receive_frame : NULL, error);
+    otPlatRadioReceiveDone(error == kThreadError_None ? &sReceiveFrame : NULL, error);
 }
