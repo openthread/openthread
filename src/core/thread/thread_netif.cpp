@@ -74,12 +74,17 @@ const char *ThreadNetif::GetName(void) const
 
 ThreadError ThreadNetif::Up(void)
 {
+    ThreadError error = kThreadError_None;
+
+    VerifyOrExit(!mIsUp, error = kThreadError_InvalidState);
+
     Netif::AddNetif();
     mMeshForwarder.Start();
-    mMleRouter.Start();
     mCoapServer.Start();
     mIsUp = true;
-    return kThreadError_None;
+
+exit:
+    return error;
 }
 
 ThreadError ThreadNetif::Down(void)

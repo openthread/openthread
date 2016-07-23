@@ -59,6 +59,7 @@ const struct Command Interpreter::sCommands[] =
     { "eidcache", &ProcessEidCache },
     { "extaddr", &ProcessExtAddress },
     { "extpanid", &ProcessExtPanId },
+    { "ifconfig", &ProcessIfconfig },
     { "ipaddr", &ProcessIpAddr },
     { "keysequence", &ProcessKeySequence },
     { "leaderdata", &ProcessLeaderData },
@@ -77,9 +78,8 @@ const struct Command Interpreter::sCommands[] =
     { "router", &ProcessRouter },
     { "routerupgradethreshold", &ProcessRouterUpgradeThreshold },
     { "scan", &ProcessScan },
-    { "start", &ProcessStart },
     { "state", &ProcessState },
-    { "stop", &ProcessStop },
+    { "thread", &ProcessThread },
     { "version", &ProcessVersion },
     { "whitelist", &ProcessWhitelist },
 };
@@ -402,6 +402,34 @@ void Interpreter::ProcessExtPanId(int argc, char *argv[])
         VerifyOrExit(Hex2Bin(argv[0], extPanId, sizeof(extPanId)) >= 0, error = kThreadError_Parse);
 
         otSetExtendedPanId(extPanId);
+    }
+
+exit:
+    AppendResult(error);
+}
+
+void Interpreter::ProcessIfconfig(int argc, char *argv[])
+{
+    ThreadError error = kThreadError_Parse;
+
+    if (argc == 0)
+    {
+        if (otIsInterfaceUp())
+        {
+            sServer->OutputFormat("up\r\n");
+        }
+        else
+        {
+            sServer->OutputFormat("down\r\n");
+        }
+    }
+    else if (strcmp(argv[0], "up") == 0)
+    {
+        SuccessOrExit(error = otInterfaceUp());
+    }
+    else if (strcmp(argv[0], "down") == 0)
+    {
+        SuccessOrExit(error = otInterfaceDown());
     }
 
 exit:
@@ -1192,16 +1220,6 @@ exit:
     return;
 }
 
-void Interpreter::ProcessStart(int argc, char *argv[])
-{
-    ThreadError error = kThreadError_None;
-
-    SuccessOrExit(error = otEnable());
-
-exit:
-    AppendResult(error);
-}
-
 void Interpreter::ProcessState(int argc, char *argv[])
 {
     ThreadError error = kThreadError_None;
@@ -1259,11 +1277,20 @@ exit:
     AppendResult(error);
 }
 
-void Interpreter::ProcessStop(int argc, char *argv[])
+void Interpreter::ProcessThread(int argc, char *argv[])
 {
-    ThreadError error = kThreadError_None;
+    ThreadError error = kThreadError_Parse;
 
-    SuccessOrExit(error = otDisable());
+    VerifyOrExit(argc > 0, error = kThreadError_Parse);
+
+    if (strcmp(argv[0], "start") == 0)
+    {
+        SuccessOrExit(error = otThreadStart());
+    }
+    else if (strcmp(argv[0], "stop") == 0)
+    {
+        SuccessOrExit(error = otThreadStop());
+    }
 
 exit:
     AppendResult(error);
