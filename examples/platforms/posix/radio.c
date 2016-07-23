@@ -374,7 +374,7 @@ ThreadError otPlatRadioReceive(uint8_t aChannel)
 {
     ThreadError error = kThreadError_None;
 
-    VerifyOrExit(s_state == kStateIdle, error = kThreadError_Busy);
+    VerifyOrExit(s_state != kStateTransmit, error = kThreadError_Busy);
     s_state = kStateListen;
     s_receive_frame.mChannel = aChannel;
 
@@ -391,7 +391,7 @@ ThreadError otPlatRadioTransmit(void)
 {
     ThreadError error = kThreadError_None;
 
-    VerifyOrExit(s_state == kStateIdle, error = kThreadError_Busy);
+    VerifyOrExit(s_state == kStateListen, error = kThreadError_Busy);
     s_state = kStateTransmit;
 
 exit:

@@ -431,7 +431,7 @@ void Mac::HandleBeginTransmit(void)
     Frame &sendFrame(*static_cast<Frame *>(otPlatRadioGetTransmitBuffer()));
     ThreadError error = kThreadError_None;
 
-    if (otPlatRadioIdle() != kThreadError_None)
+    if (otPlatRadioReceive(mChannel) != kThreadError_None)
     {
         mBeginTransmit.Post();
         ExitNow();
@@ -541,7 +541,7 @@ void Mac::HandleAckTimer(void *aContext)
 
 void Mac::HandleAckTimer(void)
 {
-    otPlatRadioIdle();
+    otPlatRadioReceive(mChannel);
 
     switch (mState)
     {
@@ -1018,7 +1018,7 @@ void Mac::SetPromiscuous(bool aPromiscuous)
 {
     otPlatRadioSetPromiscuous(aPromiscuous);
 
-    SuccessOrExit(otPlatRadioIdle());
+    SuccessOrExit(otPlatRadioReceive(mChannel));
     NextOperation();
 
 exit:
