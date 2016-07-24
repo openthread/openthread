@@ -132,8 +132,8 @@ ThreadError Mac::ActiveScan(uint32_t aScanChannels, uint16_t aScanDuration, Acti
 
     mActiveScanHandler = aHandler;
     mActiveScanContext = aContext;
-    mScanChannels = (aScanChannels == 0) ? kScanChannelsAll : aScanChannels;
-    mScanDuration = (aScanDuration == 0) ? kScanDurationDefault : aScanDuration;
+    mScanChannels = (aScanChannels == 0) ? static_cast<uint32_t>(kScanChannelsAll) : aScanChannels;
+    mScanDuration = (aScanDuration == 0) ? static_cast<uint16_t>(kScanDurationDefault) : aScanDuration;
 
     mScanChannel = kPhyMinChannel;
     mScanChannels >>= kPhyMinChannel;

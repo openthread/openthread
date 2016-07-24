@@ -834,7 +834,7 @@ NcpBase::OutboundFrameFeedVPacked(const char *pack_format, va_list args)
 
     packed_len = spinel_datatype_vpack(buf, sizeof(buf), pack_format, args);
 
-    if ((packed_len > 0) && (packed_len <= sizeof(buf)))
+    if ((packed_len > 0) && (packed_len <= static_cast<spinel_ssize_t>(sizeof(buf))))
     {
         errorCode = OutboundFrameFeedData(buf, packed_len);
     }
@@ -864,6 +864,9 @@ NcpBase::OutboundFrameFeedPacked(const char *pack_format, ...)
 void NcpBase::CommandHandler_NOOP(uint8_t header, unsigned int command, const uint8_t *arg_ptr, uint16_t arg_len)
 {
     SendLastStatus(header, SPINEL_STATUS_OK);
+    (void)command;
+    (void)arg_ptr;
+    (void)arg_len;
 }
 
 void NcpBase::CommandHandler_RESET(uint8_t header, unsigned int command, const uint8_t *arg_ptr, uint16_t arg_len)
@@ -872,6 +875,10 @@ void NcpBase::CommandHandler_RESET(uint8_t header, unsigned int command, const u
     otDisable();
     otEnable();
     SendLastStatus(SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0, SPINEL_STATUS_RESET_SOFTWARE);
+    (void)header;
+    (void)command;
+    (void)arg_ptr;
+    (void)arg_len;
 }
 
 void NcpBase::CommandHandler_PROP_VALUE_GET(uint8_t header, unsigned int command, const uint8_t *arg_ptr,
@@ -890,6 +897,7 @@ void NcpBase::CommandHandler_PROP_VALUE_GET(uint8_t header, unsigned int command
     {
         SendLastStatus(header, SPINEL_STATUS_PARSE_ERROR);
     }
+    (void)command;
 }
 
 void NcpBase::CommandHandler_PROP_VALUE_SET(uint8_t header, unsigned int command, const uint8_t *arg_ptr,
@@ -910,6 +918,7 @@ void NcpBase::CommandHandler_PROP_VALUE_SET(uint8_t header, unsigned int command
     {
         SendLastStatus(header, SPINEL_STATUS_PARSE_ERROR);
     }
+    (void)command;
 }
 
 void NcpBase::CommandHandler_PROP_VALUE_INSERT(uint8_t header, unsigned int command, const uint8_t *arg_ptr,
@@ -930,6 +939,7 @@ void NcpBase::CommandHandler_PROP_VALUE_INSERT(uint8_t header, unsigned int comm
     {
         SendLastStatus(header, SPINEL_STATUS_PARSE_ERROR);
     }
+    (void)command;
 }
 
 void NcpBase::CommandHandler_PROP_VALUE_REMOVE(uint8_t header, unsigned int command, const uint8_t *arg_ptr,
@@ -950,6 +960,7 @@ void NcpBase::CommandHandler_PROP_VALUE_REMOVE(uint8_t header, unsigned int comm
     {
         SendLastStatus(header, SPINEL_STATUS_PARSE_ERROR);
     }
+    (void)command;
 }
 
 
@@ -1081,12 +1092,14 @@ void NcpBase::GetPropertyHandler_LOCK(uint8_t header, spinel_prop_key_t key)
 {
     // TODO: Implement property lock (Needs API!)
     SendLastStatus(header, SPINEL_STATUS_UNIMPLEMENTED);
+    (void)key;
 }
 
 void NcpBase::GetPropertyHandler_PHY_ENABLED(uint8_t header, spinel_prop_key_t key)
 {
     // TODO: Implement PHY_ENBLED (Needs API!)
     SendLastStatus(header, SPINEL_STATUS_UNIMPLEMENTED);
+    (void)key;
 }
 
 void NcpBase::GetPropertyHandler_PHY_FREQ(uint8_t header, spinel_prop_key_t key)
@@ -1651,6 +1664,7 @@ void NcpBase::GetPropertyHandler_IPV6_LL_ADDR(uint8_t header, spinel_prop_key_t 
 {
     // TODO!
     SendLastStatus(header, SPINEL_STATUS_UNIMPLEMENTED);
+    (void)key;
 }
 
 void NcpBase::GetPropertyHandler_IPV6_ADDRESS_TABLE(uint8_t header, spinel_prop_key_t key)
@@ -1693,18 +1707,21 @@ void NcpBase::GetPropertyHandler_IPV6_ROUTE_TABLE(uint8_t header, spinel_prop_ke
 {
     // TODO: Implement get route table
     SendLastStatus(header, SPINEL_STATUS_UNIMPLEMENTED);
+    (void)key;
 }
 
 void NcpBase::GetPropertyHandler_THREAD_LOCAL_ROUTES(uint8_t header, spinel_prop_key_t key)
 {
     // TODO: Implement get external route table
     SendLastStatus(header, SPINEL_STATUS_UNIMPLEMENTED);
+    (void)key;
 }
 
 void NcpBase::GetPropertyHandler_STREAM_NET(uint8_t header, spinel_prop_key_t key)
 {
     // TODO: Implement explicit data poll.
     SendLastStatus(header, SPINEL_STATUS_UNIMPLEMENTED);
+    (void)key;
 }
 
 void NcpBase::GetPropertyHandler_CNTR(uint8_t header, spinel_prop_key_t key)
@@ -1847,6 +1864,9 @@ void NcpBase::SetPropertyHandler_POWER_STATE(uint8_t header, spinel_prop_key_t k
 {
     // TODO: Implement POWER_STATE
     SendLastStatus(header, SPINEL_STATUS_UNIMPLEMENTED);
+    (void)key;
+    (void)value_ptr;
+    (void)value_len;
 }
 
 void NcpBase::SetPropertyHandler_PHY_ENABLED(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr,
@@ -1894,6 +1914,9 @@ void NcpBase::SetPropertyHandler_PHY_TX_POWER(uint8_t header, spinel_prop_key_t 
 {
     // TODO: Implement PHY_TX_POWER
     SendLastStatus(header, SPINEL_STATUS_UNIMPLEMENTED);
+    (void)key;
+    (void)value_ptr;
+    (void)value_len;
 }
 
 void NcpBase::SetPropertyHandler_PHY_CHAN(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr,
@@ -2502,6 +2525,7 @@ void NcpBase::SetPropertyHandler_STREAM_NET_INSECURE(uint8_t header, spinel_prop
 
         SendLastStatus(header, ThreadErrorToSpinelStatus(errorCode));
     }
+    (void)key;
 }
 
 void NcpBase::SetPropertyHandler_STREAM_NET(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr,
@@ -2566,6 +2590,7 @@ void NcpBase::SetPropertyHandler_STREAM_NET(uint8_t header, spinel_prop_key_t ke
 
         SendLastStatus(header, ThreadErrorToSpinelStatus(errorCode));
     }
+    (void)key;
 }
 
 void NcpBase::SetPropertyHandler_IPV6_ML_PREFIX(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr,
@@ -2741,6 +2766,7 @@ void NcpBase::SetPropertyHandler_CNTR_RESET(uint8_t header, spinel_prop_key_t ke
     // There is currently no getter for PROP_CNTR_RESET, so we just
     // return SPINEL_STATUS_OK for success when the counters are reset.
     SendLastStatus(header, ThreadErrorToSpinelStatus(errorCode));
+    (void)key;
 }
 
 // ----------------------------------------------------------------------------
@@ -2835,10 +2861,12 @@ void NcpBase::InsertPropertyHandler_THREAD_LOCAL_ROUTES(uint8_t header, spinel_p
     spinel_ssize_t parsedLength;
     ThreadError errorCode = kThreadError_None;
 
-    otExternalRouteConfig ext_route_config = {};
+    otExternalRouteConfig ext_route_config;
     otIp6Address *addr_ptr;
     bool stable = false;
     uint8_t flags = 0;
+
+    memset(&ext_route_config, 0, sizeof(otExternalRouteConfig));
 
     VerifyOrExit(
         mAllowLocalNetworkDataChange == true,
@@ -2900,10 +2928,12 @@ void NcpBase::InsertPropertyHandler_THREAD_ON_MESH_NETS(uint8_t header, spinel_p
     spinel_ssize_t parsedLength;
     ThreadError errorCode = kThreadError_None;
 
-    otBorderRouterConfig border_router_config = {};
+    otBorderRouterConfig border_router_config;
     otIp6Address *addr_ptr;
     bool stable = false;
     uint8_t flags = 0;
+
+    memset(&border_router_config, 0, sizeof(otBorderRouterConfig));
 
     VerifyOrExit(
         mAllowLocalNetworkDataChange == true,
@@ -3072,7 +3102,8 @@ void NcpBase::RemovePropertyHandler_THREAD_LOCAL_ROUTES(uint8_t header, spinel_p
     spinel_ssize_t parsedLength;
     ThreadError errorCode = kThreadError_None;
 
-    otIp6Prefix ip6_prefix = {};
+    otIp6Prefix ip6_prefix;
+    memset(&ip6_prefix, 0, sizeof(otIp6Prefix));
     otIp6Address *addr_ptr;
 
     VerifyOrExit(
@@ -3123,7 +3154,8 @@ void NcpBase::RemovePropertyHandler_THREAD_ON_MESH_NETS(uint8_t header, spinel_p
     spinel_ssize_t parsedLength;
     ThreadError errorCode = kThreadError_None;
 
-    otIp6Prefix ip6_prefix = {};
+    otIp6Prefix ip6_prefix;
+    memset(&ip6_prefix, 0, sizeof(otIp6Prefix));
     otIp6Address *addr_ptr;
 
     VerifyOrExit(

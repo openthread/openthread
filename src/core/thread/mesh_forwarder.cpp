@@ -1140,6 +1140,7 @@ ThreadError MeshForwarder::CheckReachability(uint8_t *aFrame, uint8_t aFrameLeng
     error = mMle.CheckReachability(aMeshSource.mShortAddress, aMeshDest.mShortAddress, ip6Header);
 
 exit:
+    (void)aFrameLength;
     return error;
 }
 

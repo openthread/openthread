@@ -116,7 +116,7 @@ public:
      * This method returns the Length value.
      *
      */
-    uint8_t GetLength(void) const { return mLength; }
+    size_t GetLength(void) const { return mLength; }
 
     /**
      * This method sets the Length value.

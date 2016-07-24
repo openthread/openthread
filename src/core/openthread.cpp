@@ -128,8 +128,10 @@ exit:
 
 otLinkModeConfig otGetLinkMode(void)
 {
-    otLinkModeConfig config = {};
+    otLinkModeConfig config;
     uint8_t mode = sThreadNetif->GetMle().GetDeviceMode();
+
+    memset(&config, 0, sizeof(otLinkModeConfig));
 
     if (mode & Mle::ModeTlv::kModeRxOnWhenIdle)
     {
@@ -743,10 +745,12 @@ bool otActiveScanInProgress(void)
 void HandleActiveScanResult(void *aContext, Mac::Frame *aFrame)
 {
     otHandleActiveScanResult handler = reinterpret_cast<otHandleActiveScanResult>(aContext);
-    otActiveScanResult result = {};
+    otActiveScanResult result;
     Mac::Address address;
     Mac::Beacon *beacon;
     uint8_t payloadLength;
+
+    memset(&result, 0, sizeof(otActiveScanResult));
 
     if (aFrame == NULL)
     {

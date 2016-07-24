@@ -265,7 +265,7 @@ void Local::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessage
     otLogInfoNetData("Network data registration acknowledged\n");
 
 exit:
-    {}
+    (void)aMessageInfo;
 }
 
 }  // namespace NetworkData

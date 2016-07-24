@@ -224,6 +224,9 @@ exit:
 
 void AddressResolver::HandleUdpReceive(void *aContext, otMessage aMessage, const otMessageInfo *aMessageInfo)
 {
+    (void)aContext;
+    (void)aMessage;
+    (void)aMessageInfo;
 }
 
 void AddressResolver::HandleAddressNotification(void *aContext, Coap::Header &aHeader, Message &aMessage,
@@ -397,6 +400,8 @@ void AddressResolver::HandleAddressError(Coap::Header &aHeader, Message &aMessag
     uint8_t numChildren;
     Mac::ExtAddress macAddr;
     Ip6::Address destination;
+
+    (void)aMessageInfo;
 
     VerifyOrExit(aHeader.GetCode() == Coap::Header::kCodePost, error = kThreadError_Drop);
 
@@ -623,6 +628,8 @@ void AddressResolver::HandleDstUnreach(void *aContext, Message &aMessage, const 
 {
     AddressResolver *obj = reinterpret_cast<AddressResolver *>(aContext);
     obj->HandleDstUnreach(aMessage, aMessageInfo, aIcmpHeader);
+
+    (void)aMessageInfo;
 }
 
 void AddressResolver::HandleDstUnreach(Message &aMessage, const Ip6::MessageInfo &aMessageInfo,
@@ -645,7 +652,7 @@ void AddressResolver::HandleDstUnreach(Message &aMessage, const Ip6::MessageInfo
     }
 
 exit:
-    {}
+    (void)aMessageInfo;
 }
 
 }  // namespace Thread

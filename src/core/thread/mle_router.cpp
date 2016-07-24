@@ -957,6 +957,8 @@ ThreadError MleRouter::HandleLinkReject(const Message &aMessage, const Ip6::Mess
 {
     Mac::ExtAddress macAddr;
 
+    (void)aMessage;
+
     otLogInfoMle("Received link reject\n");
 
     macAddr.Set(aMessageInfo.GetPeerAddr());
@@ -2508,11 +2510,13 @@ exit:
 void MleRouter::HandleUdpReceive(void *aContext, otMessage aMessage, const otMessageInfo *aMessageInfo)
 {
     MleRouter *obj = reinterpret_cast<MleRouter *>(aContext);
+    (void)aMessageInfo;
     obj->HandleUdpReceive(*static_cast<Message *>(aMessage), *static_cast<const Ip6::MessageInfo *>(aMessageInfo));
 }
 
 void MleRouter::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
+    (void)aMessageInfo;
     HandleAddressSolicitResponse(aMessage);
 }
 
@@ -2887,7 +2891,7 @@ ThreadError MleRouter::AppendConnectivity(Message &aMessage)
         }
     }
 
-    tlv.SetLeaderCost((cost < kMaxRouteCost) ? cost : kMaxRouteCost);
+    tlv.SetLeaderCost((cost < kMaxRouteCost) ? cost : static_cast<uint8_t>(kMaxRouteCost));
     tlv.SetIdSequence(mRouterIdSequence);
 
     SuccessOrExit(error = aMessage.Append(&tlv, sizeof(tlv)));

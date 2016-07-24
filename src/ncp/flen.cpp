@@ -97,6 +97,7 @@ ThreadError Encoder::Finalize(uint8_t *aOutBuf, uint16_t &aOutLength)
     aOutLength = 0;
 
 exit:
+    (void)aOutBuf;
     return error;
 }
 
