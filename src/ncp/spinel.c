@@ -71,7 +71,7 @@
 #endif
 
 #if defined(errno) && SPINEL_PLATFORM_DOESNT_IMPLEMENT_ERRNO_VAR
-#error SPINEL_PLATFORM_DOESNT_IMPLEMENT_ERRNO_VAR is set but errno is already defined.
+#error "SPINEL_PLATFORM_DOESNT_IMPLEMENT_ERRNO_VAR is set but errno is already defined."
 #endif
 
 // Work-around for platforms that don't implement the `errno` variable.
@@ -88,6 +88,20 @@ static int spinel_errno_workaround_;
 #define assert_printf(fmt, ...) \
     fprintf(stderr, __FILE__ ":%d: " fmt "\n", __LINE__, __VA_ARGS__)
 #endif // else SPINEL_PLATFORM_DOESNT_IMPLEMENT_FPRINTF
+#endif
+
+#if !HAVE_STRNLEN
+// Provide a working strnlen if the platform doesn't have one.
+static size_t spinel_strnlen_(const char *s, size_t maxlen)
+{
+    size_t ret;
+    for (ret = 0; (ret < maxlen) && (s[ret] != 0); ret++)
+    {
+        // Empty loop.
+    }
+    return ret;
+}
+#define strnlen spinel_strnlen_
 #endif
 
 #ifndef require_action
