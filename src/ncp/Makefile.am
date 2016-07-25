@@ -56,6 +56,8 @@ libopenthread_ncp_a_CXXFLAGS        = \
 libopenthread_ncp_a_SOURCES         = \
     ncp_base.cpp                      \
     ncp_base.hpp                      \
+    ncp_buffer.cpp                    \
+    ncp_buffer.hpp                    \
     spinel.c                          \
     spinel.h                          \
     $(NULL)
