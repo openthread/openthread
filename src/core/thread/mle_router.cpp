@@ -68,8 +68,24 @@ MleRouter::MleRouter(ThreadNetif &aThreadNetif):
     mPreviousRouterId = kMaxRouterId;
     mAdvertiseInterval = kAdvertiseIntervalMin;
     mRouterIdSequenceLastUpdated = 0;
+    mRouterRoleEnabled = true;
 
     mCoapMessageId = otPlatRandomGet();
+}
+
+bool MleRouter::IsRouterRoleEnabled(void) const
+{
+    return mRouterRoleEnabled && (mDeviceMode & ModeTlv::kModeFFD);
+}
+
+void MleRouter::SetRouterRoleEnabled(bool aEnabled)
+{
+    mRouterRoleEnabled = aEnabled;
+
+    if (!mRouterRoleEnabled && (mDeviceState == kDeviceStateRouter || mDeviceState == kDeviceStateLeader))
+    {
+        BecomeDetached();
+    }
 }
 
 int MleRouter::AllocateRouterId(void)
@@ -167,7 +183,7 @@ ThreadError MleRouter::BecomeRouter(void)
 
     VerifyOrExit(mDeviceState == kDeviceStateDetached || mDeviceState == kDeviceStateChild,
                  error = kThreadError_Busy);
-    VerifyOrExit(mDeviceMode & ModeTlv::kModeFFD, ;);
+    VerifyOrExit(mRouterRoleEnabled && (mDeviceMode & ModeTlv::kModeFFD), ;);
 
     for (int i = 0; i < kMaxRouterId; i++)
     {

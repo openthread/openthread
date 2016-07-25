@@ -425,6 +425,23 @@ otPanId otGetPanId(void);
 ThreadError otSetPanId(otPanId aPanId);
 
 /**
+ * This function indicates whether or not the Router Role is enabled.
+ *
+ * @retval TRUE   If the Router Role is enabled.
+ * @retval FALSE  If the Router Role is not enabled.
+ *
+ */
+bool otIsRouterRoleEnabled(void);
+
+/**
+ * This function sets whether or not the Router Role is enabled.
+ *
+ * @param[in]  aEnabled  TRUE if the Router Role is enabled, FALSE otherwise.
+ *
+ */
+void otSetRouterRoleEnabled(bool aEnabled);
+
+/**
  * Get the IEEE 802.15.4 Short Address.
  *
  * @returns A pointer to the IEEE 802.15.4 Short Address.
