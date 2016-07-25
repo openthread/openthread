@@ -105,6 +105,31 @@ typedef struct RadioPacket
 } RadioPacket;
 
 /**
+ * This structure represents the state of a radio.
+ * Initially, a radio is in the Disabled state.
+ */
+typedef enum PhyState
+{
+    kStateDisabled = 0,
+    kStateSleep = 1,
+    kStateReceive = 2,
+    kStateTransmit = 3
+} PhyState;
+
+/**
+ * The following are valid radio state transitions:
+ *
+ *                                    (Radio ON)
+ *  +----------+  Enable()  +-------+  Receive() +---------+   Trasnmit()  +----------+
+ *  |          |----------->|       |----------->|         |-------------->|          |
+ *  | Disabled |            | Sleep |            | Receive |               | Transmit |
+ *  |          |<-----------|       |<-----------|         |<--------------|          |
+ *  +----------+  Disable() +-------+   Sleep()  +---------+   Receive()   +----------+
+ *                                    (Radio OFF)                 or
+ *                                                        signal TransmitDone
+ */
+
+/**
  * @}
  *
  */
@@ -164,7 +189,7 @@ ThreadError otPlatRadioSetShortAddress(uint16_t aShortAddress);
 /**
  * Enable the radio.
  *
- * @retval ::kThreadError_None  Successfully transitioned to Idle.
+ * @retval ::kThreadError_None  Successfully transitioned to Sleep.
  * @retval ::kThreadError_Busy  The radio was already enabled.
  */
 ThreadError otPlatRadioEnable(void);
@@ -177,33 +202,22 @@ ThreadError otPlatRadioEnable(void);
 ThreadError otPlatRadioDisable(void);
 
 /**
- * Transition the radio to Sleep.
+ * Transition the radio from Receive to Sleep.
+ * Turn off the radio.
  *
  * @retval ::kThreadError_None  Successfully transitioned to Sleep.
- * @retval ::kThreadError_Busy  The radio was not in the Idle state.
+ * @retval ::kThreadError_Busy  The radio was not in the Receive state.
  */
 ThreadError otPlatRadioSleep(void);
 
 /**
- * Transition the radio to Idle.
- *
- * @retval ::kThreadError_None  Successfully transitioned to Idle.
- * @retval ::kThreadError_Busy  The radio was busy transmitting or receiving.
- */
-ThreadError otPlatRadioIdle(void);
-
-/**
- * Begins the receive sequence on the radio.
- *
- * The receive sequence consists of:
- * 1. Transitioning the radio to Receive from Idle.
- * 2. Remain in Receive until a packet is received or reception is aborted.
- * 3. Return to Idle.
+ * Transitioning the radio from Sleep to Receive.
+ * Turn on the radio.
  *
  * @param[in]  aChannel  The channel to use for receiving.
  *
  * @retval ::kThreadError_None  Successfully transitioned to Receive.
- * @retval ::kThreadError_Busy  The radio was not in the Idle state.
+ * @retval ::kThreadError_Busy  The radio was not in the Sleep state.
  */
 ThreadError otPlatRadioReceive(uint8_t aChannel);
 
@@ -218,6 +232,7 @@ ThreadError otPlatRadioReceive(uint8_t aChannel);
 extern void otPlatRadioReceiveDone(RadioPacket *aPacket, ThreadError aError);
 
 /**
+ * The radio tranitions from Transmit to Receive.
  * This method returns a pointer to the transmit buffer.
  *
  * The caller forms the IEEE 802.15.4 frame in this buffer then calls otPlatRadioTransmit() to request transmission.
@@ -234,12 +249,11 @@ RadioPacket *otPlatRadioGetTransmitBuffer(void);
  * requesting transmission.  The channel and transmit power are also included in the RadioPacket structure.
  *
  * The transmit sequence consists of:
- * 1. Transitioning the radio to Transmit from Idle.
+ * 1. Transitioning the radio to Transmit from Receive.
  * 2. Transmits the psdu on the given channel and at the given transmit power.
- * 3. Return to Idle.
  *
  * @retval ::kThreadError_None         Successfully transitioned to Transmit.
- * @retval ::kThreadError_Busy         The radio was not in the Idle state.
+ * @retval ::kThreadError_Busy         The radio was not in the Receive state.
  */
 ThreadError otPlatRadioTransmit(void);
 

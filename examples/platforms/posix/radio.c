@@ -86,14 +86,6 @@ enum
     IEEE802154_MACCMD_DATA_REQ    = 4,
 };
 
-typedef enum PhyState
-{
-    kStateDisabled = 0,
-    kStateSleep = 1,
-    kStateReceive = 3,
-    kStateTransmit = 4
-} PhyState;
-
 struct OT_TOOL_PACKED_BEGIN RadioMessage
 {
     uint8_t mChannel;
@@ -377,24 +369,6 @@ ThreadError otPlatRadioSleep(void)
     return error;
 }
 
-ThreadError otPlatRadioTransmit(void)
-{
-    ThreadError error = kThreadError_Busy;
-
-    if ((sState == kStateTransmit && !sAckWait) || sState == kStateReceive)
-    {
-        error = kThreadError_None;
-        sState = kStateTransmit;
-    }
-
-    return error;
-}
-
-ThreadError otPlatRadioIdle(void)
-{
-    return kThreadError_None;
-}
-
 ThreadError otPlatRadioReceive(uint8_t aChannel)
 {
     ThreadError error = kThreadError_Busy;
@@ -405,6 +379,19 @@ ThreadError otPlatRadioReceive(uint8_t aChannel)
         sState = kStateReceive;
         sAckWait = false;
         sReceiveFrame.mChannel = aChannel;
+    }
+
+    return error;
+}
+
+ThreadError otPlatRadioTransmit(void)
+{
+    ThreadError error = kThreadError_Busy;
+
+    if ((sState == kStateTransmit && !sAckWait) || sState == kStateReceive)
+    {
+        error = kThreadError_None;
+        sState = kStateTransmit;
     }
 
     return error;
