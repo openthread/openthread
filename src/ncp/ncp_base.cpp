@@ -38,12 +38,15 @@
 #include <openthread-config.h>
 #include <stdarg.h>
 #include <platform/radio.h>
+#include <platform/misc.h>
 
 namespace Thread {
 
 extern ThreadNetif *sThreadNetif;
 
 static NcpBase *sNcpContext = NULL;
+
+#define NCP_PLAT_RESET_REASON        (1<<31)
 
 // ----------------------------------------------------------------------------
 // MARK: Command/Property Jump Tables
@@ -254,6 +257,42 @@ static spinel_status_t ThreadErrorToSpinelStatus(ThreadError error)
     return ret;
 }
 
+static spinel_status_t ResetReasonToSpinelStatus(otPlatResetReason reason)
+{
+    spinel_status_t ret;
+    switch (reason)
+    {
+    case kPlatResetReason_PowerOn:
+        ret = SPINEL_STATUS_RESET_POWER_ON;
+        break;
+    case kPlatResetReason_External:
+        ret = SPINEL_STATUS_RESET_EXTERNAL;
+        break;
+    case kPlatResetReason_Software:
+        ret = SPINEL_STATUS_RESET_SOFTWARE;
+        break;
+    case kPlatResetReason_Fault:
+        ret = SPINEL_STATUS_RESET_FAULT;
+        break;
+    case kPlatResetReason_Crash:
+        ret = SPINEL_STATUS_RESET_CRASH;
+        break;
+    case kPlatResetReason_Assert:
+        ret = SPINEL_STATUS_RESET_ASSERT;
+        break;
+    case kPlatResetReason_Watchdog:
+        ret = SPINEL_STATUS_RESET_WATCHDOG;
+        break;
+    case kPlatResetReason_Other:
+        ret = SPINEL_STATUS_RESET_OTHER;
+        break;
+    default:
+        ret = SPINEL_STATUS_RESET_UNKNOWN;
+        break;
+    }
+    return ret;
+}
+
 // ----------------------------------------------------------------------------
 // MARK: Class Boilerplate
 // ----------------------------------------------------------------------------
@@ -265,7 +304,7 @@ NcpBase::NcpBase():
     mChannelMask = mSupportedChannelMask;
     mScanPeriod = 200; // ms
     sNcpContext = this;
-    mChangedFlags = 0;
+    mChangedFlags = NCP_PLAT_RESET_REASON;
     mAllowLocalNetworkDataChange = false;
 
     for (unsigned i = 0; i < sizeof(mNetifAddresses) / sizeof(mNetifAddresses[0]); i++)
@@ -430,7 +469,15 @@ void NcpBase::UpdateChangedProps()
 {
     if (!mSending)
     {
-        if ((mChangedFlags & OT_IP6_ML_ADDR_CHANGED) != 0)
+        if ((mChangedFlags & NCP_PLAT_RESET_REASON) != 0)
+        {
+            mChangedFlags &= ~NCP_PLAT_RESET_REASON;
+            SendLastStatus(
+                SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0,
+                ResetReasonToSpinelStatus(otPlatGetResetReason())
+            );
+        }
+        else if ((mChangedFlags & OT_IP6_ML_ADDR_CHANGED) != 0)
         {
             mChangedFlags &= ~OT_IP6_ML_ADDR_CHANGED;
             HandleCommandPropertyGet(
@@ -868,9 +915,15 @@ void NcpBase::CommandHandler_NOOP(uint8_t header, unsigned int command, const ui
 
 void NcpBase::CommandHandler_RESET(uint8_t header, unsigned int command, const uint8_t *arg_ptr, uint16_t arg_len)
 {
-    // TODO: Figure out how to actually perform a reset.
-    otInit();
-    SendLastStatus(SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0, SPINEL_STATUS_RESET_SOFTWARE);
+    otPlatReset();
+
+    // We only get to this point if the
+    // platform doesn't support resetting.
+    // In such a case we fake it.
+
+    mChangedFlags |= NCP_PLAT_RESET_REASON;
+    otDisable();
+    mUpdateChangedPropsTask.Post();
 }
 
 void NcpBase::CommandHandler_PROP_VALUE_GET(uint8_t header, unsigned int command, const uint8_t *arg_ptr,

@@ -98,6 +98,9 @@
 #define SYS_CTRL_SYSDIV_32MHZ                 0x00000000  // Sys_div for sysclk 32MHz  
 #define SYS_CTRL_CLOCK_CTRL_AMP_DET           0x00200000
 
+#define SYS_CTRL_PWRDBG                       0x400D2074
+#define SYS_CTRL_PWRDBG_FORCE_WARM_RESET      0x00000008
+
 #define SYS_CTRL_RCGCUART                     0x400D2028
 #define SYS_CTRL_SCGCUART                     0x400D202C
 #define SYS_CTRL_DCGCUART                     0x400D2030
