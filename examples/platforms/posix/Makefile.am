@@ -38,6 +38,7 @@ libopenthread_posix_a_CPPFLAGS            = \
 
 libopenthread_posix_a_SOURCES             = \
     alarm.c                                 \
+    misc.c                                  \
     logging.c                               \
     platform.c                              \
     radio.c                                 \
