@@ -96,6 +96,7 @@ private:
     static void ProcessEidCache(int argc, char *argv[]);
     static void ProcessExtAddress(int argc, char *argv[]);
     static void ProcessExtPanId(int argc, char *argv[]);
+    static void ProcessIfconfig(int argc, char *argv[]);
     static void ProcessIpAddr(int argc, char *argv[]);
     static ThreadError ProcessIpAddrAdd(int argc, char *argv[]);
     static ThreadError ProcessIpAddrDel(int argc, char *argv[]);
@@ -120,9 +121,8 @@ private:
     static void ProcessRouterUpgradeThreshold(int argc, char *argv[]);
     static void ProcessRloc16(int argc, char *argv[]);
     static void ProcessScan(int argc, char *argv[]);
-    static void ProcessStart(int argc, char *argv[]);
     static void ProcessState(int argc, char *argv[]);
-    static void ProcessStop(int argc, char *argv[]);
+    static void ProcessThread(int argc, char *argv[]);
     static void ProcessVersion(int argc, char *argv[]);
     static void ProcessWhitelist(int argc, char *argv[]);
 

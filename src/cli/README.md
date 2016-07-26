@@ -15,6 +15,7 @@ OpenThread test scripts use the CLI to execute test cases.
 * [eidcache](#eidcache)
 * [extaddr](#extaddr)
 * [extpanid](#extpanid)
+* [ifconfig](#ifconfig)
 * [ipaddr](#ipaddr)
 * [keysequence](#keysequence)
 * [leaderweight](#leaderweight)
@@ -32,9 +33,8 @@ OpenThread test scripts use the CLI to execute test cases.
 * [router](#router)
 * [routerupgradethreshold](#routerupgradethreshold)
 * [scan](#scan)
-* [start](#start)
 * [state](#state)
-* [stop](#stop)
+* [thread](#thread)
 * [version](#version)
 * [whitelist](#whitelist)
 
@@ -205,6 +205,24 @@ Set the Thread Extended PAN ID value.
 
 ```bash
 > extpanid dead00beef00cafe
+Done
+```
+
+### ifconfig up
+
+Bring up the IPv6 interface.
+
+```bash
+> ifconfig up
+Done
+```
+
+### ifconfig down
+
+Bring down the IPv6 interface.
+
+```bash
+> ifconfig down
 Done
 ```
 
@@ -541,21 +559,21 @@ Perform an IEEE 802.15.4 Active Scan.
 Done
 ```
 
-### start
+### thread start
 
-Enable OpenThread.
+Enable Thread protocol operation and attach to a Thread network.
 
 ```bash
-> start
+> thread start
 Done
 ```
 
-### stop
+### thread stop
 
-Disable OpenThread.
+Disable Thread protocol operation and detach from a Thread network.
 
 ```bash
-> stop
+> thread stop
 Done
 ```
 

@@ -41,6 +41,9 @@ void PlatformInit(int argc, char *argv[])
     cc2538RadioInit();
     cc2538RandomInit();
     otPlatUartEnable();
+
+    (void)argc;
+    (void)argv;
 }
 
 void PlatformProcessDrivers(void)

@@ -50,6 +50,9 @@ COMMONCFLAGS                    = \
     -ffunction-sections           \
     -Os                           \
     -g                            \
+    -Wall                         \
+    -Wextra                       \
+    -Werror                       \
     $(NULL)
 
 CPPFLAGS                        = \

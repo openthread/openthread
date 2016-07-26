@@ -104,13 +104,16 @@ uint32_t KeyManager::GetCurrentKeySequence() const
 
 void KeyManager::SetCurrentKeySequence(uint32_t aKeySequence)
 {
-    mKeySequence = aKeySequence;
-    ComputeKey(mKeySequence, mKey);
+    if (aKeySequence != mKeySequence)
+    {
+        mKeySequence = aKeySequence;
+        ComputeKey(mKeySequence, mKey);
 
-    mMacFrameCounter = 0;
-    mMleFrameCounter = 0;
+        mMacFrameCounter = 0;
+        mMleFrameCounter = 0;
 
-    mNetif.SetStateChangedFlags(OT_NET_KEY_SEQUENCE);
+        mNetif.SetStateChangedFlags(OT_NET_KEY_SEQUENCE);
+    }
 }
 
 const uint8_t *KeyManager::GetCurrentMacKey() const

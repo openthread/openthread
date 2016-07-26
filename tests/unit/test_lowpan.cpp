@@ -55,6 +55,8 @@ extern "C" void otPlatUartSendDone(void)
 
 extern "C" void otPlatUartReceived(const uint8_t *aBuf, uint16_t aBufLength)
 {
+    (void)aBuf;
+    (void)aBufLength;
 }
 
 ThreadNetif sMockThreadNetif;

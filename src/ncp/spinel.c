@@ -71,7 +71,7 @@
 #endif
 
 #if defined(errno) && SPINEL_PLATFORM_DOESNT_IMPLEMENT_ERRNO_VAR
-#error SPINEL_PLATFORM_DOESNT_IMPLEMENT_ERRNO_VAR is set but errno is already defined.
+#error "SPINEL_PLATFORM_DOESNT_IMPLEMENT_ERRNO_VAR is set but errno is already defined."
 #endif
 
 // Work-around for platforms that don't implement the `errno` variable.
@@ -88,6 +88,20 @@ static int spinel_errno_workaround_;
 #define assert_printf(fmt, ...) \
     fprintf(stderr, __FILE__ ":%d: " fmt "\n", __LINE__, __VA_ARGS__)
 #endif // else SPINEL_PLATFORM_DOESNT_IMPLEMENT_FPRINTF
+#endif
+
+#if !HAVE_STRNLEN
+// Provide a working strnlen if the platform doesn't have one.
+static size_t spinel_strnlen_(const char *s, size_t maxlen)
+{
+    size_t ret;
+    for (ret = 0; (ret < maxlen) && (s[ret] != 0); ret++)
+    {
+        // Empty loop.
+    }
+    return ret;
+}
+#define strnlen spinel_strnlen_
 #endif
 
 #ifndef require_action
@@ -177,9 +191,9 @@ spinel_packed_uint_encode(uint8_t *bytes, spinel_size_t len, unsigned int value)
 {
     const spinel_ssize_t encoded_size = spinel_packed_uint_size(value);
 
-    if (len >= encoded_size)
+    if ((spinel_ssize_t)len >= encoded_size)
     {
-        spinel_size_t i;
+        spinel_ssize_t i;
 
         for (i = 0; i != encoded_size - 1; ++i)
         {
@@ -359,7 +373,7 @@ spinel_datatype_vunpack_(const uint8_t *data_ptr, spinel_size_t data_len, const 
 
             require(pui_len > 0, bail);
 
-            require(pui_len <= data_len, bail);
+            require(pui_len <= (spinel_ssize_t)data_len, bail);
 
             ret += pui_len;
             data_ptr += pui_len;
@@ -409,7 +423,7 @@ spinel_datatype_vunpack_(const uint8_t *data_ptr, spinel_size_t data_len, const 
                 pui_len = 0;
             }
 
-            require_action(data_len >= (block_len + pui_len), bail, (ret = -1, errno = EOVERFLOW));
+            require_action((spinel_ssize_t)data_len >= (block_len + pui_len), bail, (ret = -1, errno = EOVERFLOW));
 
             if (NULL != block_ptr_ptr)
             {
@@ -450,7 +464,7 @@ spinel_datatype_vunpack_(const uint8_t *data_ptr, spinel_size_t data_len, const 
                 pui_len = 0;
             }
 
-            require_action(data_len >= (block_len + pui_len), bail, (ret = -1, errno = EOVERFLOW));
+            require_action((spinel_ssize_t)data_len >= (block_len + pui_len), bail, (ret = -1, errno = EOVERFLOW));
 
             actual_len = spinel_datatype_vunpack_(block_ptr, block_len, pack_format + 2, args);
 
@@ -677,7 +691,7 @@ spinel_datatype_vpack_(uint8_t *data_ptr, spinel_size_t data_len_max, const char
             spinel_ssize_t encoded_size = spinel_packed_uint_encode(data_ptr, data_len_max, arg);
             ret += encoded_size;
 
-            if (data_len_max >= encoded_size)
+            if ((spinel_ssize_t)data_len_max >= encoded_size)
             {
                 data_ptr += encoded_size;
                 data_len_max -= encoded_size;
@@ -779,7 +793,7 @@ spinel_datatype_vpack_(uint8_t *data_ptr, spinel_size_t data_len_max, const char
 
             ret += size_len + struct_len;
 
-            if (struct_len + size_len <= data_len_max)
+            if (struct_len + size_len <= (spinel_ssize_t)data_len_max)
             {
                 data_ptr += size_len;
                 data_len_max -= size_len;
@@ -1160,7 +1174,7 @@ main(void)
 
         if (l != 0xDEADBEEF)
         {
-            printf("error: l != 0xDEADBEEF; (0x%08X)\n", l);
+            printf("error: l != 0xDEADBEEF; (0x%08X)\n", (unsigned int)l);
             goto bail;
         }
 
@@ -1220,7 +1234,7 @@ main(void)
 
         if (l != 0xDEADBEEF)
         {
-            printf("error: l != 0xDEADBEEF; (0x%08X)\n", l);
+            printf("error: l != 0xDEADBEEF; (0x%08X)\n", (unsigned int)l);
             goto bail;
         }
 

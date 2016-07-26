@@ -132,8 +132,8 @@ ThreadError Mac::ActiveScan(uint32_t aScanChannels, uint16_t aScanDuration, Acti
 
     mActiveScanHandler = aHandler;
     mActiveScanContext = aContext;
-    mScanChannels = (aScanChannels == 0) ? kScanChannelsAll : aScanChannels;
-    mScanDuration = (aScanDuration == 0) ? kScanDurationDefault : aScanDuration;
+    mScanChannels = (aScanChannels == 0) ? static_cast<uint32_t>(kScanChannelsAll) : aScanChannels;
+    mScanDuration = (aScanDuration == 0) ? static_cast<uint16_t>(kScanDurationDefault) : aScanDuration;
 
     mScanChannel = kPhyMinChannel;
     mScanChannels >>= kPhyMinChannel;
@@ -433,7 +433,7 @@ void Mac::HandleBeginTransmit(void)
     Frame &sendFrame(*static_cast<Frame *>(otPlatRadioGetTransmitBuffer()));
     ThreadError error = kThreadError_None;
 
-    if (otPlatRadioIdle() != kThreadError_None)
+    if (otPlatRadioReceive(mChannel) != kThreadError_None)
     {
         mBeginTransmit.Post();
         ExitNow();
@@ -543,7 +543,7 @@ void Mac::HandleAckTimer(void *aContext)
 
 void Mac::HandleAckTimer(void)
 {
-    otPlatRadioIdle();
+    otPlatRadioReceive(mChannel);
 
     switch (mState)
     {
@@ -765,6 +765,11 @@ ThreadError Mac::ProcessReceiveSecurity(Frame &aFrame, const Address &aSrcAddr, 
     aNeighbor->mValid.mLinkFrameCounter = frameCounter + 1;
 
     aFrame.SetSecurityValid(true);
+
+    if (keySequence > mKeyManager.GetCurrentKeySequence())
+    {
+        mKeyManager.SetCurrentKeySequence(keySequence);
+    }
 
 exit:
 
@@ -1020,7 +1025,7 @@ void Mac::SetPromiscuous(bool aPromiscuous)
 {
     otPlatRadioSetPromiscuous(aPromiscuous);
 
-    SuccessOrExit(otPlatRadioIdle());
+    SuccessOrExit(otPlatRadioReceive(mChannel));
     NextOperation();
 
 exit:

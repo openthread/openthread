@@ -51,6 +51,7 @@ namespace Thread {
 ThreadNetif *sThreadNetif;
 
 static Ip6::NetifCallback sNetifCallback;
+static bool mEnabled = false;
 
 #ifdef __cplusplus
 extern "C" {
@@ -59,13 +60,6 @@ extern "C" {
 static otDEFINE_ALIGNED_VAR(sThreadNetifRaw, sizeof(ThreadNetif), uint64_t);
 
 static void HandleActiveScanResult(void *aContext, Mac::Frame *aFrame);
-
-void otInit(void)
-{
-    otLogInfoApi("Init\n");
-    Message::Init();
-    sThreadNetif = new(&sThreadNetifRaw) ThreadNetif;
-}
 
 void otProcessNextTasklet(void)
 {
@@ -134,8 +128,10 @@ exit:
 
 otLinkModeConfig otGetLinkMode(void)
 {
-    otLinkModeConfig config = {};
+    otLinkModeConfig config;
     uint8_t mode = sThreadNetif->GetMle().GetDeviceMode();
+
+    memset(&config, 0, sizeof(otLinkModeConfig));
 
     if (mode & Mle::ModeTlv::kModeRxOnWhenIdle)
     {
@@ -254,6 +250,16 @@ otPanId otGetPanId(void)
 ThreadError otSetPanId(otPanId aPanId)
 {
     return sThreadNetif->GetMac().SetPanId(aPanId);
+}
+
+bool otIsRouterRoleEnabled(void)
+{
+    return sThreadNetif->GetMle().IsRouterRoleEnabled();
+}
+
+void otSetRouterRoleEnabled(bool aEnabled)
+{
+    sThreadNetif->GetMle().SetRouterRoleEnabled(aEnabled);
 }
 
 otShortAddress otGetShortAddress(void)
@@ -657,10 +663,12 @@ ThreadError otEnable(void)
 {
     ThreadError error = kThreadError_None;
 
-    // cannot enable the Thread stack if IEEE 802.15.4 promiscuous mode is enabled
-    VerifyOrExit(otPlatRadioGetPromiscuous() == false, error = kThreadError_Busy);
+    VerifyOrExit(!mEnabled, error = kThreadError_InvalidState);
 
-    SuccessOrExit(error = sThreadNetif->Up());
+    otLogInfoApi("otEnable\n");
+    Message::Init();
+    sThreadNetif = new(&sThreadNetifRaw) ThreadNetif;
+    mEnabled = true;
 
 exit:
     return error;
@@ -668,7 +676,69 @@ exit:
 
 ThreadError otDisable(void)
 {
-    return sThreadNetif->Down();
+    ThreadError error = kThreadError_None;
+
+    VerifyOrExit(mEnabled, error = kThreadError_InvalidState);
+
+    otThreadStop();
+    otInterfaceDown();
+    mEnabled = false;
+
+exit:
+    return error;
+}
+
+ThreadError otInterfaceUp(void)
+{
+    ThreadError error = kThreadError_None;
+
+    VerifyOrExit(mEnabled, error = kThreadError_InvalidState);
+
+    error = sThreadNetif->Up();
+
+exit:
+    return error;
+}
+
+ThreadError otInterfaceDown(void)
+{
+    ThreadError error = kThreadError_None;
+
+    VerifyOrExit(mEnabled, error = kThreadError_InvalidState);
+
+    error = sThreadNetif->Down();
+
+exit:
+    return error;
+}
+
+bool otIsInterfaceUp(void)
+{
+    return mEnabled && sThreadNetif->IsUp();
+}
+
+ThreadError otThreadStart(void)
+{
+    ThreadError error = kThreadError_None;
+
+    VerifyOrExit(mEnabled, error = kThreadError_InvalidState);
+
+    error = sThreadNetif->GetMle().Start();
+
+exit:
+    return error;
+}
+
+ThreadError otThreadStop(void)
+{
+    ThreadError error = kThreadError_None;
+
+    VerifyOrExit(mEnabled, error = kThreadError_InvalidState);
+
+    error = sThreadNetif->GetMle().Stop();
+
+exit:
+    return error;
 }
 
 ThreadError otActiveScan(uint32_t aScanChannels, uint16_t aScanDuration, otHandleActiveScanResult aCallback)
@@ -685,10 +755,12 @@ bool otActiveScanInProgress(void)
 void HandleActiveScanResult(void *aContext, Mac::Frame *aFrame)
 {
     otHandleActiveScanResult handler = reinterpret_cast<otHandleActiveScanResult>(aContext);
-    otActiveScanResult result = {};
+    otActiveScanResult result;
     Mac::Address address;
     Mac::Beacon *beacon;
     uint8_t payloadLength;
+
+    memset(&result, 0, sizeof(otActiveScanResult));
 
     if (aFrame == NULL)
     {

@@ -40,6 +40,7 @@
 #include <mac/mac_frame.hpp>
 #include <net/netif.hpp>
 #include <net/udp6.hpp>
+#include <platform/radio.h>
 #include <platform/random.h>
 #include <thread/address_resolver.hpp>
 #include <thread/key_manager.hpp>
@@ -144,6 +145,10 @@ ThreadError Mle::Start(void)
     ThreadError error = kThreadError_None;
     Ip6::SockAddr sockaddr;
 
+    // cannot bring up the interface if IEEE 802.15.4 promiscuous mode is enabled
+    VerifyOrExit(otPlatRadioGetPromiscuous() == false, error = kThreadError_Busy);
+    VerifyOrExit(mNetif.IsUp(), error = kThreadError_InvalidState);
+
     // memcpy(&sockaddr.mAddr, &mLinkLocal64.GetAddress(), sizeof(sockaddr.mAddr));
     sockaddr.mPort = kUdpPort;
     SuccessOrExit(error = mSocket.Open(&HandleUdpReceive, this));
@@ -173,18 +178,12 @@ exit:
 
 ThreadError Mle::Stop(void)
 {
-    ThreadError error = kThreadError_None;
-
-    VerifyOrExit(mDeviceState != kDeviceStateDisabled, error = kThreadError_Busy);
-
     SetStateDetached();
     mSocket.Close();
     mNetif.RemoveUnicastAddress(mLinkLocal16);
     mNetif.RemoveUnicastAddress(mMeshLocal16);
     mDeviceState = kDeviceStateDisabled;
-
-exit:
-    return error;
+    return kThreadError_None;
 }
 
 ThreadError Mle::BecomeDetached(void)
@@ -1536,6 +1535,7 @@ ThreadError Mle::HandleDataResponse(const Message &aMessage, const Ip6::MessageI
                                 networkData.GetNetworkData(), networkData.GetLength());
 
 exit:
+    (void)aMessageInfo;
     return error;
 }
 
@@ -1755,6 +1755,7 @@ ThreadError Mle::HandleChildIdResponse(const Message &aMessage, const Ip6::Messa
     }
 
 exit:
+    (void)aMessageInfo;
     return error;
 }
 
@@ -1876,12 +1877,15 @@ Neighbor *Mle::GetNeighbor(const Mac::Address &aAddress)
 
 Neighbor *Mle::GetNeighbor(const Ip6::Address &aAddress)
 {
+    (void)aAddress;
     return NULL;
 }
 
 uint16_t Mle::GetNextHop(uint16_t aDestination) const
 {
-    return (mParent.mState == Neighbor::kStateValid) ? mParent.mValid.mRloc16 : Mac::kShortAddrInvalid;
+    (void)aDestination;
+    return (mParent.mState == Neighbor::kStateValid) ? mParent.mValid.mRloc16 : static_cast<uint16_t>
+           (Mac::kShortAddrInvalid);
 }
 
 bool Mle::IsRoutingLocator(const Ip6::Address &aAddress) const

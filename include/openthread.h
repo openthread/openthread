@@ -112,11 +112,6 @@ extern "C" {
  */
 
 /**
- * Initialize the OpenThread library.
- */
-void otInit(void);
-
-/**
  * Run the next queued tasklet in OpenThread.
  */
 void otProcessNextTasklet(void);
@@ -151,18 +146,77 @@ extern void otSignalTaskletPending(void);
  */
 
 /**
- * Enable the Thread interface.
+ * This function initializes the OpenThread library.
  *
- * @retval kThreadErrorNone  Successfully enabled the Thread interface.
+ * This function initializes OpenThread and prepares it for subsequent OpenThread API calls.  This function must be
+ * called before any other calls to OpenThread.
+ *
+ * @retval kThreadError_None  Successfully enabled the Thread interface.
+ *
  */
 ThreadError otEnable(void);
 
 /**
- * Disable the Thread interface.
+ * This function disables the OpenThread library.
  *
- * @retval kThreadErrorNone  Successfully disabled the Thread interface.
+ * Call this function when OpenThread is no longer in use.  The client must call otEnable() to use OpenThread
+ * again.
+ *
+ * @retval kThreadError_None  Successfully disabled the Thread interface.
+ *
  */
 ThreadError otDisable(void);
+
+/**
+ * This function brings up the IPv6 interface.
+ *
+ * Call this function to bring up the IPv6 interface and enables IPv6 communication.
+ *
+ * @retval kThreadError_None          Successfully enabled the IPv6 interface.
+ * @retval kThreadError_InvalidState  OpenThread is not enabled or the IPv6 interface is already up.
+ *
+ */
+ThreadError otInterfaceUp(void);
+
+/**
+ * This function brings down the IPv6 interface.
+ *
+ * Call this function to bring down the IPv6 interface and disable all IPv6 communication.
+ *
+ * @retval kThreadError_None          Successfully brought the interface down.
+ * @retval kThreadError_InvalidState  The interface was not up.
+ *
+ */
+ThreadError otInterfaceDown(void);
+
+/**
+ * This function indicates whether or not the IPv6 interface is up.
+ *
+ * @retval TRUE   The IPv6 interface is up.
+ * @retval FALSE  The IPv6 interface is down.
+ *
+ */
+bool otIsInterfaceUp(void);
+
+/**
+ * This function starts Thread protocol operation.
+ *
+ * The interface must be up when calling this function.
+ *
+ * @retval kThreadError_None          Successfully started Thread protocol operation.
+ * @retval kThreadError_InvalidState  Thread protocol operation is already started or the interface is not up.
+ *
+ */
+ThreadError otThreadStart(void);
+
+/**
+ * This function stops Thread protocol operation.
+ *
+ * @retval kThreadError_None          Successfully stopped Thread protocol operation.
+ * @retval kThreadError_InvalidState  The Thread protocol operation was not started.
+ *
+ */
+ThreadError otThreadStop(void);
 
 /**
  * This function pointer is called during an IEEE 802.15.4 Active Scan when an IEEE 802.15.4 Beacon is received or
@@ -423,6 +477,23 @@ otPanId otGetPanId(void);
  * @sa otGetPanId
  */
 ThreadError otSetPanId(otPanId aPanId);
+
+/**
+ * This function indicates whether or not the Router Role is enabled.
+ *
+ * @retval TRUE   If the Router Role is enabled.
+ * @retval FALSE  If the Router Role is not enabled.
+ *
+ */
+bool otIsRouterRoleEnabled(void);
+
+/**
+ * This function sets whether or not the Router Role is enabled.
+ *
+ * @param[in]  aEnabled  TRUE if the Router Role is enabled, FALSE otherwise.
+ *
+ */
+void otSetRouterRoleEnabled(bool aEnabled);
 
 /**
  * Get the IEEE 802.15.4 Short Address.
