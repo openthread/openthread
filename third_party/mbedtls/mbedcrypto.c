@@ -35,6 +35,8 @@
  */
 #define MBED_MEMORY_BUF_SIZE  512
 
+void mbedInit(void);
+
 static bool sIsInitialized = false;
 static unsigned char sMemoryBuf[MBED_MEMORY_BUF_SIZE];
 

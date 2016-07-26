@@ -307,7 +307,7 @@ exit:
 void Ip6::ProcessReceiveCallback(Message &aMessage)
 {
     ThreadError error = kThreadError_None;
-    Message *messageCopy;
+    Message *messageCopy = NULL;
 
     VerifyOrExit(sReceiveIp6DatagramCallback != NULL, ;);
 
