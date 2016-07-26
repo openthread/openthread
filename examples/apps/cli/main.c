@@ -37,7 +37,7 @@ void otSignalTaskletPending(void)
 int main(int argc, char *argv[])
 {
     PlatformInit(argc, argv);
-    otInit();
+    otEnable();
     otCliUartInit();
 
     while (1)

@@ -869,7 +869,8 @@ void NcpBase::CommandHandler_NOOP(uint8_t header, unsigned int command, const ui
 void NcpBase::CommandHandler_RESET(uint8_t header, unsigned int command, const uint8_t *arg_ptr, uint16_t arg_len)
 {
     // TODO: Figure out how to actually perform a reset.
-    otInit();
+    otDisable();
+    otEnable();
     SendLastStatus(SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0, SPINEL_STATUS_RESET_SOFTWARE);
 }
 
@@ -1268,7 +1269,7 @@ void NcpBase::GetPropertyHandler_NET_ENABLED(uint8_t header, spinel_prop_key_t k
         SPINEL_CMD_PROP_VALUE_IS,
         key,
         SPINEL_DATATYPE_BOOL_S,
-        (otGetDeviceRole() != kDeviceRoleDisabled)
+        otIsInterfaceUp()
     );
 }
 
@@ -1276,21 +1277,25 @@ void NcpBase::GetPropertyHandler_NET_STATE(uint8_t header, spinel_prop_key_t key
 {
     spinel_net_state_t state(SPINEL_NET_STATE_OFFLINE);
 
-    switch (otGetDeviceRole())
+    if (!otInterfaceUp())
     {
-    case kDeviceRoleDisabled:
         state = SPINEL_NET_STATE_OFFLINE;
-        break;
+    }
+    else
+    {
+        switch (otGetDeviceRole())
+        {
+        case kDeviceRoleDisabled:
+        case kDeviceRoleDetached:
+            state = SPINEL_NET_STATE_DETACHED;
+            break;
 
-    case kDeviceRoleDetached:
-        state = SPINEL_NET_STATE_DETACHED;
-        break;
-
-    case kDeviceRoleChild:
-    case kDeviceRoleRouter:
-    case kDeviceRoleLeader:
-        state = SPINEL_NET_STATE_ATTACHED;
-        break;
+        case kDeviceRoleChild:
+        case kDeviceRoleRouter:
+        case kDeviceRoleLeader:
+            state = SPINEL_NET_STATE_ATTACHED;
+            break;
+        }
     }
 
     SendPropteryUpdate(
@@ -2170,40 +2175,36 @@ void NcpBase::SetPropertyHandler_NET_STATE(uint8_t header, spinel_prop_key_t key
         switch (i)
         {
         case SPINEL_NET_STATE_OFFLINE:
-            if (otGetDeviceRole() != kDeviceRoleDisabled)
+            if (otIsInterfaceUp())
             {
-                errorCode = otDisable();
+                errorCode = otInterfaceDown();
             }
 
             break;
 
         case SPINEL_NET_STATE_DETACHED:
-            if (otGetDeviceRole() == kDeviceRoleDisabled)
+            if (!otIsInterfaceUp())
             {
-                errorCode = otEnable();
-
-                if (errorCode == kThreadError_None)
-                {
-                    errorCode = otBecomeDetached();
-                }
+                errorCode = otInterfaceUp();
             }
-            else if (otGetDeviceRole() != kDeviceRoleDetached)
+
+            if ((errorCode == kThreadError_None) && (otGetDeviceRole() != kDeviceRoleDisabled))
             {
-                errorCode = otBecomeDetached();
+                errorCode = otThreadStop();
             }
 
             break;
 
         case SPINEL_NET_STATE_ATTACHING:
         case SPINEL_NET_STATE_ATTACHED:
-            if (otGetDeviceRole() == kDeviceRoleDisabled)
+            if (!otIsInterfaceUp())
             {
-                errorCode = otEnable();
+                errorCode = otInterfaceUp();
             }
 
-            if (otGetDeviceRole() == kDeviceRoleDetached)
+            if ((errorCode == kThreadError_None) && (otGetDeviceRole() == kDeviceRoleDetached))
             {
-                errorCode = otBecomeRouter();
+                errorCode = otThreadStart();
 
                 if (errorCode == kThreadError_None)
                 {
