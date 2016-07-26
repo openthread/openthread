@@ -766,6 +766,11 @@ ThreadError Mac::ProcessReceiveSecurity(Frame &aFrame, const Address &aSrcAddr, 
 
     aFrame.SetSecurityValid(true);
 
+    if (keySequence > mKeyManager.GetCurrentKeySequence())
+    {
+        mKeyManager.SetCurrentKeySequence(keySequence);
+    }
+
 exit:
 
     if (error != kThreadError_None)
