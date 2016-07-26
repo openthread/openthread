@@ -46,7 +46,8 @@ ThreadError Udp::Start(void)
 {
     ThreadError error;
 
-    otSockAddr sockaddr = {};
+    otSockAddr sockaddr;
+    memset(&sockaddr, 0, sizeof(otSockAddr));
     sockaddr.mPort = 7335;
 
     SuccessOrExit(error = otOpenUdpSocket(&mSocket, &HandleUdpReceive, this));

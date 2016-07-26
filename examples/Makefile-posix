@@ -39,6 +39,32 @@ MKDIR_P                         := mkdir -p
 LN_S                            := ln -s
 RM_F                            := rm -f
 
+COMMONCFLAGS                   := \
+    -O1                           \
+    -g                            \
+    -Wall                         \
+    -Wextra                       \
+    -Werror                       \
+    $(NULL)
+
+CPPFLAGS                        = \
+    $(COMMONCFLAGS)               \
+    $(NULL)
+
+CFLAGS                          = \
+    $(COMMONCFLAGS)               \
+    $(NULL)
+
+CXXFLAGS                        = \
+    $(COMMONCFLAGS)               \
+    -fno-exceptions               \
+    -fno-rtti                     \
+    $(NULL)
+
+LDFLAGS                         = \
+    $(COMMONCFLAGS)               \
+    $(NULL)
+
 INSTALL                         := /usr/bin/install
 INSTALLFLAGS                    := -p
 
@@ -86,6 +112,7 @@ define configure-target
 $(ECHO) "  CONFIG   $(1)..."
 (cd $(BuildPath)/$(1) && $(AbsTopSourceDir)/configure \
 INSTALL="$(INSTALL) $(INSTALLFLAGS)" \
+CPPFLAGS="$(CPPFLAGS)" CFLAGS="$(CFLAGS)" CXXFLAGS="$(CXXFLAGS)" LDFLAGS="$(LDFLAGS)" \
 --prefix=/ \
 --exec-prefix=/$(1) \
 $(configure_OPTIONS))

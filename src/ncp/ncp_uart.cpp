@@ -118,12 +118,11 @@ NcpUart::OutboundFrameFeedMessage(Message &message)
 {
     ThreadError errorCode;
     uint16_t inLength;
-    uint16_t outLength;
     uint8_t inBuf[16];
 
     for (int offset = 0; offset < message.GetLength(); offset += sizeof(inBuf))
     {
-        outLength = OutboundFrameGetRemaining();
+        (void) OutboundFrameGetRemaining();
         inLength = message.Read(offset, sizeof(inBuf), inBuf);
 
         errorCode = OutboundFrameFeedData(inBuf, inLength);
@@ -182,6 +181,7 @@ void NcpUart::ReceiveTask(const uint8_t *aBuf, uint16_t aBufLength)
 void NcpUart::HandleFrame(void *context, uint8_t *aBuf, uint16_t aBufLength)
 {
     sNcpUart->HandleFrame(aBuf, aBufLength);
+    (void)context;
 }
 
 void NcpUart::HandleFrame(uint8_t *aBuf, uint16_t aBufLength)

@@ -125,7 +125,7 @@ ThreadError Ip6::SendDatagram(Message &message, MessageInfo &messageInfo, IpProt
     header.Init();
     header.SetPayloadLength(payloadLength);
     header.SetNextHeader(ipproto);
-    header.SetHopLimit(messageInfo.mHopLimit ? messageInfo.mHopLimit : kDefaultHopLimit);
+    header.SetHopLimit(messageInfo.mHopLimit ? messageInfo.mHopLimit : static_cast<uint8_t>(kDefaultHopLimit));
 
     if (messageInfo.GetSockAddr().IsUnspecified())
     {

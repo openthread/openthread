@@ -140,6 +140,8 @@ static void signal_SIGINT(int sig)
     // this signal again we peform the system default action.
     signal(SIGINT, gPreviousHandlerForSIGINT);
     gPreviousHandlerForSIGINT = NULL;
+
+    (void)sig;
 }
 
 static void signal_SIGTERM(int sig)
@@ -151,6 +153,7 @@ static void signal_SIGTERM(int sig)
     // this signal again we peform the system default action.
     signal(SIGTERM, gPreviousHandlerForSIGTERM);
     gPreviousHandlerForSIGTERM = NULL;
+    (void) sig;
 }
 
 static void signal_SIGHUP(int sig)
@@ -161,6 +164,8 @@ static void signal_SIGHUP(int sig)
     // We don't restore the "previous handler"
     // because we always want to let the main
     // loop decide what to do for hangups.
+
+    (void) sig;
 }
 
 static void signal_critical(int sig, siginfo_t * info, void * ucontext)
@@ -176,6 +181,7 @@ static void signal_critical(int sig, siginfo_t * info, void * ucontext)
 
     // Shut up compiler warning.
     (void)uc;
+    (void)info;
 
     fprintf(stderr, " *** FATAL ERROR: Caught signal %d (%s):\n", sig, strsignal(sig));
 
@@ -797,8 +803,7 @@ bail:
 
 static bool setup_res_gpio(const char* path)
 {
-    int setup_fd;
-    int prev_errno = 0;
+    int setup_fd = -1;
     char* dir_path = NULL;
     char* value_path = NULL;
     int len;
@@ -859,12 +864,18 @@ static void trigger_reset(void)
     if (gResGpioValueFd >= 0)
     {
         lseek(gResGpioValueFd, 0, SEEK_SET);
-        write(gResGpioValueFd, "0\n", 2);
+        if (write(gResGpioValueFd, "0\n", 2) == -1)
+        {
+           // TODO: Handle error
+        }
 
         usleep(10 * USEC_PER_MSEC);
 
         lseek(gResGpioValueFd, 0, SEEK_SET);
-        write(gResGpioValueFd, "1\n", 2);
+        if (write(gResGpioValueFd, "1\n", 2) == -1)
+        {
+           // TODO: Handle error
+        }
 
         syslog(LOG_NOTICE, "Triggered hardware reset");
     }

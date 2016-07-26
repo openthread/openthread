@@ -1535,6 +1535,7 @@ ThreadError Mle::HandleDataResponse(const Message &aMessage, const Ip6::MessageI
                                 networkData.GetNetworkData(), networkData.GetLength());
 
 exit:
+    (void)aMessageInfo;
     return error;
 }
 
@@ -1754,6 +1755,7 @@ ThreadError Mle::HandleChildIdResponse(const Message &aMessage, const Ip6::Messa
     }
 
 exit:
+    (void)aMessageInfo;
     return error;
 }
 
@@ -1875,12 +1877,15 @@ Neighbor *Mle::GetNeighbor(const Mac::Address &aAddress)
 
 Neighbor *Mle::GetNeighbor(const Ip6::Address &aAddress)
 {
+    (void)aAddress;
     return NULL;
 }
 
 uint16_t Mle::GetNextHop(uint16_t aDestination) const
 {
-    return (mParent.mState == Neighbor::kStateValid) ? mParent.mValid.mRloc16 : Mac::kShortAddrInvalid;
+    (void)aDestination;
+    return (mParent.mState == Neighbor::kStateValid) ? mParent.mValid.mRloc16 : static_cast<uint16_t>
+           (Mac::kShortAddrInvalid);
 }
 
 bool Mle::IsRoutingLocator(const Ip6::Address &aAddress) const
