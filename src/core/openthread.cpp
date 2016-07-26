@@ -250,6 +250,16 @@ ThreadError otSetPanId(otPanId aPanId)
     return sThreadNetif->GetMac().SetPanId(aPanId);
 }
 
+bool otIsRouterRoleEnabled(void)
+{
+    return sThreadNetif->GetMle().IsRouterRoleEnabled();
+}
+
+void otSetRouterRoleEnabled(bool aEnabled)
+{
+    sThreadNetif->GetMle().SetRouterRoleEnabled(aEnabled);
+}
+
 otShortAddress otGetShortAddress(void)
 {
     return sThreadNetif->GetMac().GetShortAddress();
