@@ -1073,7 +1073,7 @@ ThreadError MleRouter::ProcessRouteTlv(const RouteTlv &aRoute)
     bool old;
 
     // check for newer route data
-    if (diff > 0 || mDeviceState == kDeviceStateDetached)
+    if (diff > 0 || mDeviceState == kDeviceStateDetached || mDeviceState == kDeviceStateChild)
     {
         mRouterIdSequence = aRoute.GetRouterIdSequence();
         mRouterIdSequenceLastUpdated = Timer::GetNow();
