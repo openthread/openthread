@@ -317,6 +317,17 @@ void otSetChildTimeout(uint32_t aTimeout);
 const uint8_t *otGetExtendedAddress(void);
 
 /**
+ * This function sets the IEEE 802.15.4 Extended Address.
+ *
+ * @param[in]  aExtendedAddress  A pointer to the IEEE 802.15.4 Extended Address.
+ *
+ * @retval kThreadError_None         Successfully set the IEEE 802.15.4 Extended Address.
+ * @retval kThreadError_InvalidArgs  @p aExtendedAddress was NULL.
+ *
+ */
+ThreadError otSetExtendedAddress(const otExtAddress *aExtendedAddress);
+
+/**
  * Get the IEEE 802.15.4 Extended PAN ID.
  *
  * @returns A pointer to the IEEE 802.15.4 Extended PAN ID.

@@ -342,6 +342,17 @@ exit:
     return error;
 }
 
+ThreadError Mle::UpdateLinkLocalAddress(void)
+{
+    mNetif.RemoveUnicastAddress(mLinkLocal64);
+    mLinkLocal64.GetAddress().SetIid(*mMac.GetExtAddress());
+    mNetif.AddUnicastAddress(mLinkLocal64);
+
+    mNetif.SetStateChangedFlags(OT_IP6_LL_ADDR_CHANGED);
+
+    return kThreadError_None;
+}
+
 const uint8_t *Mle::GetMeshLocalPrefix(void) const
 {
     return mMeshLocal16.GetAddress().mFields.m8;
