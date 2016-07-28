@@ -1723,9 +1723,6 @@ ThreadError Mle::HandleChildIdResponse(const Message &aMessage, const Ip6::Messa
 
     // Network Data
     SuccessOrExit(error = Tlv::GetTlv(aMessage, Tlv::kNetworkData, sizeof(networkData), networkData));
-    mNetworkData.SetNetworkData(leaderData.GetDataVersion(), leaderData.GetStableDataVersion(),
-                                (mDeviceMode & ModeTlv::kModeFullNetworkData) == 0,
-                                networkData.GetNetworkData(), networkData.GetLength());
 
     // Parent Attach Success
     mParentRequestTimer.Stop();
@@ -1744,6 +1741,10 @@ ThreadError Mle::HandleChildIdResponse(const Message &aMessage, const Ip6::Messa
 
     mParent.mValid.mRloc16 = sourceAddress.GetRloc16();
     SuccessOrExit(error = SetStateChild(shortAddress.GetRloc16()));
+
+    mNetworkData.SetNetworkData(leaderData.GetDataVersion(), leaderData.GetStableDataVersion(),
+                                (mDeviceMode & ModeTlv::kModeFullNetworkData) == 0,
+                                networkData.GetNetworkData(), networkData.GetLength());
 
     // Route
     if ((Tlv::GetTlv(aMessage, Tlv::kRoute, sizeof(route), route) == kThreadError_None) &&
