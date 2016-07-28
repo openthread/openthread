@@ -96,7 +96,12 @@ enum {
 /* ------------------------------------------------------------------------- */
 /* MARK: Global State */
 
+#if HAVE_OPENPTY
 static int gMode = MODE_PTY;
+#else
+static int gMode = MODE_STDIO;
+#endif
+
 static const char* gSpiDevPath = NULL;
 static const char* gIntGpioDevPath = NULL;
 static const char* gResGpioDevPath = NULL;
@@ -293,9 +298,29 @@ static uint16_t spi_header_get_data_len(uint8_t *header)
     return ( header[3] + (header[4] << 8) );
 }
 
+static void debug_spi_header(const char* hint)
+{
+    syslog(LOG_DEBUG, "%s: TX-HEADER: %02X %02X %02X %02X %02X\n",
+        hint,
+        gSpiTxFrameBuffer[0],
+        gSpiTxFrameBuffer[1],
+        gSpiTxFrameBuffer[2],
+        gSpiTxFrameBuffer[3],
+        gSpiTxFrameBuffer[4]
+    );
 
-static int push_pull_spi()
- {
+    syslog(LOG_DEBUG, "%s: RX-HEADER: %02X %02X %02X %02X %02X\n",
+        hint,
+        gSpiRxFrameBuffer[0],
+        gSpiRxFrameBuffer[1],
+        gSpiRxFrameBuffer[2],
+        gSpiRxFrameBuffer[3],
+        gSpiRxFrameBuffer[4]
+    );
+}
+
+static int push_pull_spi(void)
+{
     int ret;
     uint16_t slave_max_rx;
     uint16_t slave_data_len;
@@ -316,6 +341,8 @@ static int push_pull_spi()
         perror("do_spi_xfer");
         goto bail;
     }
+
+    debug_spi_header("push_pull_1");
 
     if (gSpiRxFrameBuffer[0] == 0xFF)
     {
@@ -378,6 +405,8 @@ static int push_pull_spi()
         goto bail;
     }
 
+    debug_spi_header("push_pull_2");
+
     if (gSpiRxFrameBuffer[0] == 0xFF)
     {
         // Device is off or in a bad state.
@@ -427,7 +456,8 @@ static bool check_and_clear_interrupt(void)
         gRet = EXIT_FAILURE;
     }
 
-    return 0 != atoi(value);
+    // The interrupt pin is active low.
+    return 1 != atoi(value);
 }
 
 /* ------------------------------------------------------------------------- */
