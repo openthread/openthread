@@ -419,14 +419,16 @@ bool otPlatRadioGetPromiscuous(void)
 
 void radioReceive(void)
 {
-    int rval = recvfrom(sSockFd, &sReceiveMessage, sizeof(sReceiveMessage), 0, NULL, NULL);
-    assert(rval >= 0);
-
-    sReceiveFrame.mLength = rval - 1;
-
-    if (sAckWait)
+    if (sState != kStateTransmit || sAckWait)
     {
-        if (isFrameTypeAck(sReceiveFrame.mPsdu))
+        int rval = recvfrom(sSockFd, &sReceiveMessage, sizeof(sReceiveMessage), 0, NULL, NULL);
+        assert(rval >= 0);
+
+        sReceiveFrame.mLength = rval - 1;
+
+        if (sAckWait &&
+            sTransmitFrame.mChannel == sReceiveMessage.mChannel &&
+            isFrameTypeAck(sReceiveFrame.mPsdu))
         {
             uint8_t tx_sequence = getDsn(sTransmitFrame.mPsdu);
             uint8_t rx_sequence = getDsn(sReceiveFrame.mPsdu);
@@ -438,10 +440,8 @@ void radioReceive(void)
                 otPlatRadioTransmitDone(isFramePending(sReceiveFrame.mPsdu), kThreadError_None);
             }
         }
-    }
-    else
-    {
-        if (sReceiveFrame.mChannel == sReceiveMessage.mChannel)
+        else if (sState == kStateReceive &&
+                 sReceiveFrame.mChannel == sReceiveMessage.mChannel)
         {
             radioProcessFrame();
         }
@@ -493,10 +493,7 @@ void posixRadioProcess(void)
 
     if (poll(&pollfd, 1, 0) > 0 && (pollfd.revents & flags) != 0)
     {
-        if (sAckWait || sState == kStateReceive)
-        {
-            radioReceive();
-        }
+        radioReceive();
     }
 
     if (sState == kStateTransmit && !sAckWait)
