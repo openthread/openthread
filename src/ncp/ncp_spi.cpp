@@ -49,26 +49,36 @@ extern "C" void otNcpInit(void)
     sNcpSpi = new(&sNcpRaw) NcpSpi;
 }
 
+static void spi_header_set_flag_byte(uint8_t *header, uint8_t value)
+{
+    header[1] = value;
+}
+
 static void spi_header_set_accept_len(uint8_t *header, uint16_t len)
 {
-    header[1] = ((len << 0) & 0xFF);
-    header[2] = ((len << 8) & 0xFF);
+    header[2] = ((len << 0) & 0xFF);
+    header[3] = ((len << 8) & 0xFF);
 }
 
 static void spi_header_set_data_len(uint8_t *header, uint16_t len)
 {
-    header[3] = ((len << 0) & 0xFF);
-    header[4] = ((len << 8) & 0xFF);
+    header[4] = ((len << 0) & 0xFF);
+    header[5] = ((len << 8) & 0xFF);
+}
+
+static uint8_t spi_header_get_flag_byte(uint8_t *header)
+{
+    return header[1];
 }
 
 static uint16_t spi_header_get_accept_len(uint8_t *header)
 {
-    return ( header[1] + (header[2] << 8) );
+    return ( header[2] + (header[3] << 8) );
 }
 
 static uint16_t spi_header_get_data_len(uint8_t *header)
 {
-    return ( header[3] + (header[4] << 8) );
+    return ( header[4] + (header[5] << 8) );
 }
 
 NcpSpi::NcpSpi():
@@ -79,7 +89,8 @@ NcpSpi::NcpSpi():
     memset(mEmptySendFrame, 0, sizeof(SPI_HEADER_LENGTH));
     memset(mSendFrame, 0, sizeof(SPI_HEADER_LENGTH));
 
-    mEmptySendFrame[0] = mSendFrame[0] = SPI_RESET_FLAG;
+    spi_header_set_flag_byte(mSendFrame, SPI_RESET_FLAG);
+    spi_header_set_flag_byte(mEmptySendFrame, SPI_RESET_FLAG);
     spi_header_set_accept_len(mSendFrame, sizeof(mReceiveFrame) - SPI_HEADER_LENGTH);
     otPlatSpiSlaveEnable(&SpiTransactionComplete, (void*)this);
 
@@ -169,8 +180,8 @@ NcpSpi::SpiTransactionComplete(
       && (aMISOBufLen >= 1)
     ) {
         // Clear the reset flag
-        mSendFrame[0] &= ~SPI_RESET_FLAG;
-        mEmptySendFrame[0] &= ~SPI_RESET_FLAG;
+        spi_header_set_flag_byte(mSendFrame, 0);
+        spi_header_set_flag_byte(mEmptySendFrame, 0);
     }
 
     if (mSending && !mHandlingSendDone)

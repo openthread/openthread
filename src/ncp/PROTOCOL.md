@@ -1,7 +1,7 @@
 Spinel Host Controller Interface
 ================================
 
-Updated: 2016-07-06
+Updated: 2016-07-28
 
 Written by: Robert Quattlebaum <rquattle@nestlabs.com>
 
@@ -1011,12 +1011,14 @@ individual needs of the application or product.
 
 #### A.2.1 SPI Framing Protocol ####
 
-Each SPI frame starts with a 5-byte frame header:
+Each SPI frame starts with a 6-byte frame header:
 
-Octets: |  1  |    2     |     2  
---------|-----|----------|----------  
-Fields: | HDR | RECV_LEN | DATA_LEN  
+Octets: |  1  |  1  |    2     |     2  
+--------|-----|-----|----------|----------  
+Fields: | PAD | HDR | RECV_LEN | DATA_LEN  
 
+*   `PAD`: Padding byte. Discarded. May be ommitted on platforms which
+    don't need it.
 *   `HDR`: The first byte is the header byte (defined below)
 *   `RECV_LEN`: The second and third bytes indicate the largest frame
     size that that device is ready to receive. If zero, then the other
