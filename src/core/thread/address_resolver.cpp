@@ -242,6 +242,8 @@ void AddressResolver::HandleAddressNotification(Coap::Header &aHeader, Message &
     ThreadTargetTlv targetTlv;
     ThreadMeshLocalEidTlv mlIidTlv;
     ThreadRloc16Tlv rloc16Tlv;
+    ThreadLastTransactionTimeTlv lastTransactionTimeTlv;
+    uint32_t lastTransactionTime;
 
     VerifyOrExit(aHeader.GetType() == Coap::Header::kTypeConfirmable &&
                  aHeader.GetCode() == Coap::Header::kCodePost, ;);
@@ -257,35 +259,57 @@ void AddressResolver::HandleAddressNotification(Coap::Header &aHeader, Message &
     SuccessOrExit(ThreadTlv::GetTlv(aMessage, ThreadTlv::kRloc16, sizeof(rloc16Tlv), rloc16Tlv));
     VerifyOrExit(rloc16Tlv.IsValid(), ;);
 
+    lastTransactionTime = 0;
+
+    if (ThreadTlv::GetTlv(aMessage, ThreadTlv::kLastTransactionTime, sizeof(lastTransactionTimeTlv),
+                          lastTransactionTimeTlv) == kThreadError_None)
+    {
+        VerifyOrExit(lastTransactionTimeTlv.IsValid(), ;);
+        lastTransactionTime = lastTransactionTimeTlv.GetTime();
+    }
+
     for (int i = 0; i < kCacheEntries; i++)
     {
-        if (mCache[i].mTarget == *targetTlv.GetTarget())
+        if (mCache[i].mTarget != *targetTlv.GetTarget())
         {
-            if (mCache[i].mState != Cache::kStateCached ||
-                memcmp(mCache[i].mMeshLocalIid, mlIidTlv.GetIid(), sizeof(mCache[i].mMeshLocalIid)) == 0)
-            {
-                memcpy(mCache[i].mMeshLocalIid, mlIidTlv.GetIid(), sizeof(mCache[i].mMeshLocalIid));
-                mCache[i].mRloc16 = rloc16Tlv.GetRloc16();
-                mCache[i].mRetryTimeout = 0;
-                mCache[i].mTimeout = 0;
-                mCache[i].mFailures = 0;
-                mCache[i].mState = Cache::kStateCached;
-                SendAddressNotificationResponse(aHeader, aMessageInfo);
-                mMeshForwarder.HandleResolved(*targetTlv.GetTarget(), kThreadError_None);
-            }
-            else
+            continue;
+        }
+
+        switch (mCache[i].mState)
+        {
+        case Cache::kStateInvalid:
+            break;
+
+        case Cache::kStateCached:
+            if (memcmp(mCache[i].mMeshLocalIid, mlIidTlv.GetIid(), sizeof(mCache[i].mMeshLocalIid)) != 0)
             {
                 SendAddressError(targetTlv, mlIidTlv, NULL);
+                ExitNow();
             }
 
-            ExitNow();
+            if (lastTransactionTime >= mCache[i].mLastTransactionTime)
+            {
+                ExitNow();
+            }
+
+        // fall through
+
+        case Cache::kStateQuery:
+            memcpy(mCache[i].mMeshLocalIid, mlIidTlv.GetIid(), sizeof(mCache[i].mMeshLocalIid));
+            mCache[i].mRloc16 = rloc16Tlv.GetRloc16();
+            mCache[i].mRetryTimeout = 0;
+            mCache[i].mLastTransactionTime = lastTransactionTime;
+            mCache[i].mTimeout = 0;
+            mCache[i].mFailures = 0;
+            mCache[i].mState = Cache::kStateCached;
+            SendAddressNotificationResponse(aHeader, aMessageInfo);
+            mMeshForwarder.HandleResolved(*targetTlv.GetTarget(), kThreadError_None);
+            break;
         }
     }
 
-    ExitNow();
-
 exit:
-    {}
+    return;
 }
 
 void AddressResolver::SendAddressNotificationResponse(const Coap::Header &aRequestHeader,
