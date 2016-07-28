@@ -82,6 +82,15 @@ class ExtAddress: public otExtAddress
 {
 public:
     /**
+     * This method indicates whether or not the Group bit is set.
+     *
+     * @retval TRUE   If the group bit is set.
+     * @retval FALSE  If the group bit is not set.
+     *
+     */
+    bool IsGroup(void) const { return (m8[0] & kGroupFlag) != 0; }
+
+    /**
      * This method sets the Group bit.
      *
      * @param[in]  aLocal  TRUE if group address, FALSE otherwise.
@@ -95,6 +104,15 @@ public:
             m8[0] &= ~kGroupFlag;
         }
     }
+
+    /**
+     * This method indicates whether or not the Local bit is set.
+     *
+     * @retval TRUE   If the local bit is set.
+     * @retval FALSE  If the local bit is not set.
+     *
+     */
+    bool IsLocal(void) const { return (m8[0] & kLocalFlag) != 0; }
 
     /**
      * This method sets the Local bit.

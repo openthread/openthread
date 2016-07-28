@@ -96,6 +96,19 @@ const uint8_t *otGetExtendedAddress(void)
     return reinterpret_cast<const uint8_t *>(sThreadNetif->GetMac().GetExtAddress());
 }
 
+ThreadError otSetExtendedAddress(const otExtAddress *aExtAddress)
+{
+    ThreadError error = kThreadError_None;
+
+    VerifyOrExit(aExtAddress != NULL, error = kThreadError_InvalidArgs);
+
+    SuccessOrExit(error = sThreadNetif->GetMac().SetExtAddress(*static_cast<const Mac::ExtAddress *>(aExtAddress)));
+    SuccessOrExit(error = sThreadNetif->GetMle().UpdateLinkLocalAddress());
+
+exit:
+    return error;
+}
+
 const uint8_t *otGetExtendedPanId(void)
 {
     return sThreadNetif->GetMac().GetExtendedPanId();

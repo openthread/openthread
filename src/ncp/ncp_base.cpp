@@ -477,6 +477,14 @@ void NcpBase::UpdateChangedProps()
                 ResetReasonToSpinelStatus(otPlatGetResetReason())
             );
         }
+        else if ((mChangedFlags & OT_IP6_LL_ADDR_CHANGED) != 0)
+        {
+            mChangedFlags &= ~OT_IP6_LL_ADDR_CHANGED;
+            HandleCommandPropertyGet(
+                SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0,
+                SPINEL_PROP_IPV6_LL_ADDR
+            );
+	}
         else if ((mChangedFlags & OT_IP6_ML_ADDR_CHANGED) != 0)
         {
             mChangedFlags &= ~OT_IP6_ML_ADDR_CHANGED;
