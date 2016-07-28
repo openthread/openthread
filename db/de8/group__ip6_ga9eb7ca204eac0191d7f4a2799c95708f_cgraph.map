@@ -1,0 +1,14 @@
+<map id="otSetReceiveIp6DatagramCallback" name="otSetReceiveIp6DatagramCallback">
+<area shape="rect" id="node2" href="$d3/d05/classThread_1_1Ip6_1_1Ip6.html#a628b86a744a2c4cdb44dfb3b4c915b6c" title="This function registers a callback to provide received raw IPv6 datagrams. " alt="" coords="282,159,473,197"/>
+<area shape="rect" id="node3" href="$de/df0/classThread_1_1Ip6_1_1ExtensionHeader.html#af8eaa0aec6377e9afabfcb0d0d266aea" title="This method sets the IPv6 Next Header value. " alt="" coords="521,5,720,44"/>
+<area shape="rect" id="node4" href="$de/df0/classThread_1_1Ip6_1_1ExtensionHeader.html#a234e79778e1041fe671531efb285bc62" title="This method sets the IPv6 Header Extension Length value. " alt="" coords="521,68,720,107"/>
+<area shape="rect" id="node5" href="$d8/d6e/classThread_1_1Ip6_1_1Header.html#a6cc72334ebe32da12f67b0389b9bae21" title="This method returns the IPv6 Source address. " alt="" coords="551,131,691,169"/>
+<area shape="rect" id="node6" href="$dc/d3c/classThread_1_1Message.html#a9c900e4c1ddbb44f1d9c87d10172f63a" title="This method prepends bytes to the front of the message. " alt="" coords="529,193,712,219"/>
+<area shape="rect" id="node12" href="$d8/d6e/classThread_1_1Ip6_1_1Header.html#aec92bb6790fffab9ddb424d85a1e39b3" title="This method sets the IPv6 Payload Length value. " alt="" coords="551,243,691,281"/>
+<area shape="rect" id="node13" href="$d8/d6e/classThread_1_1Ip6_1_1Header.html#afc6dbaaca33c8996ce396195cb6f8978" title="This method sets the IPv6 Next Header value. " alt="" coords="551,305,691,344"/>
+<area shape="rect" id="node7" href="$dc/d3c/classThread_1_1Message.html#acaa6ed0d0c060a524cb5da25451acc0d" title="This method sets the byte offset within the message. " alt="" coords="769,144,957,169"/>
+<area shape="rect" id="node9" href="$dc/d3c/classThread_1_1Message.html#ac8304ee00c9e0b303539687e98e192e0" title="This method returns the byte offset within the message. " alt="" coords="768,193,958,219"/>
+<area shape="rect" id="node10" href="$dc/d3c/classThread_1_1Message.html#add75c76a1fa70eb5d4eb03b68c5d1df8" title="This method writes bytes to the message. " alt="" coords="781,243,945,268"/>
+<area shape="rect" id="node8" href="$dc/d3c/classThread_1_1Message.html#a2cf440376e834030c38bb2ced4ca49e9" title="This method returns the number of bytes in the message. " alt="" coords="1007,169,1202,195"/>
+<area shape="rect" id="node11" href="$db/d50/classThread_1_1Buffer.html#a34ab22941ccd9bb222d251a6a18c95bf" title="This method returns a pointer to the next message buffer. " alt="" coords="1006,243,1204,268"/>
+</map>

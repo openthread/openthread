@@ -1,5 +1,5 @@
 <map id="Thread::NetworkData::BorderRouterEntry::SetRloc" name="Thread::NetworkData::BorderRouterEntry::SetRloc">
 <area shape="rect" id="node2" href="$d4/d80/group__core-netdata-core.html#ga91ced18d726877f3bd4a1fbcf2871b22" title="This method strips non&#45;stable Sub&#45;TLVs from a Prefix TLV. " alt="" coords="201,5,455,44"/>
-<area shape="rect" id="node3" href="$d9/d64/classThread_1_1NetworkData_1_1BorderRouterEntry.html#ae719459638bae433026c7bc43e643d96" title="This method initializes the TLV. " alt="" coords="246,68,411,107"/>
-<area shape="rect" id="node4" href="$dd/dd1/classThread_1_1NetworkData_1_1Local.html#acb2d4a7ec739450fbaec0459cf6b0bc5" title="This method adds a Border Router entry to the Thread Network Data. " alt="" coords="503,68,680,107"/>
+<area shape="rect" id="node3" href="$dd/dd1/classThread_1_1NetworkData_1_1Local.html#aca96f012e0a75890e6b3e24223b37fea" title="This method removes a Border Router entry from the Thread Network Data. " alt="" coords="223,68,434,107"/>
+<area shape="rect" id="node4" href="$dd/dd1/classThread_1_1NetworkData_1_1Local.html#abdce87272d09f0d5aa77b8bc3886c950" title="This method adds a Has Route entry to the Thread Network data. " alt="" coords="503,68,689,107"/>
 </map>

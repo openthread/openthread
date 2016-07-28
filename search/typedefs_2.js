@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['dstunreachhandler',['DstUnreachHandler',['../da/dff/classThread_1_1Ip6_1_1IcmpHandler.html#a29e4de7922e90efb1c9f2195a7e4cf3c',1,'Thread::Ip6::IcmpHandler']]]
+  ['coapmessagehandler',['CoapMessageHandler',['../d0/d63/classThread_1_1Coap_1_1Resource.html#a90c9ec7ffb90463f3b7ab0ef86b53b7c',1,'Thread::Coap::Resource']]]
 ];

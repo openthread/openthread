@@ -1,5 +1,3 @@
 <map id="Thread::TaskletScheduler::Post" name="Thread::TaskletScheduler::Post">
-<area shape="rect" id="node2" href="$d3/de8/group__atomic.html#ga5eb5de0dbc130f745e31b1085f798e4f" title="Begin critical section. " alt="" coords="241,5,371,31"/>
-<area shape="rect" id="node3" href="$d1/de3/group__execution.html#ga0d8ce270d8b69230a851ac7b9538ed56" title="OpenThread calls this function when the tasklet queue transitions from empty to non&#45;empty. " alt="" coords="226,55,386,80"/>
-<area shape="rect" id="node4" href="$d3/de8/group__atomic.html#gac1707ea0096fa1501a356013982f7b35" title="End critical section. " alt="" coords="246,104,366,129"/>
+<area shape="rect" id="node2" href="$d1/de3/group__execution.html#ga0d8ce270d8b69230a851ac7b9538ed56" title="OpenThread calls this function when the tasklet queue transitions from empty to non&#45;empty. " alt="" coords="226,12,386,37"/>
 </map>

@@ -1,0 +1,4 @@
+<map id="include/ncp/ncp.h" name="include/ncp/ncp.h">
+<area shape="rect" id="node2" href="$d0/d95/ncp__spi_8cpp.html" title="This file implements a SPI interface to the OpenThread stack. " alt="" coords="5,79,145,104"/>
+<area shape="rect" id="node3" href="$d4/dae/ncp__uart_8cpp.html" title="This file implements an HDLC interface to the Thread stack. " alt="" coords="169,79,314,104"/>
+</map>

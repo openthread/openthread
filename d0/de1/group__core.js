@@ -13,5 +13,6 @@ var group__core =
     [ "Security", "dd/dcf/group__core-security.html", "dd/dcf/group__core-security" ],
     [ "Tasklet", "d2/d20/group__core-tasklet.html", "d2/d20/group__core-tasklet" ],
     [ "Timer", "df/d90/group__core-timer.html", "df/d90/group__core-timer" ],
-    [ "UDP", "db/daa/group__core-udp.html", "db/daa/group__core-udp" ]
+    [ "UDP", "db/daa/group__core-udp.html", "db/daa/group__core-udp" ],
+    [ "Link Quality", "d3/d4b/group__core-link-quality.html", "d3/d4b/group__core-link-quality" ]
 ];

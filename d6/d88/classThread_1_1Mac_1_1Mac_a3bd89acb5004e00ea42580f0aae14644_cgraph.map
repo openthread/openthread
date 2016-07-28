@@ -1,5 +1,0 @@
-<map id="Thread::Mac::Mac::Stop" name="Thread::Mac::Mac::Stop">
-<area shape="rect" id="node2" href="$d7/d9c/group__radio-operation.html#ga7eff8e3bdab6b1a3df44cc20c4447349" title="Disable the radio. " alt="" coords="219,5,354,31"/>
-<area shape="rect" id="node3" href="$d1/d40/classThread_1_1Timer.html#a9acdec1cdf4edf947c563d40871f2bc8" title="This method stops the timer. " alt="" coords="217,55,356,80"/>
-<area shape="rect" id="node4" href="$df/d1f/classThread_1_1TimerScheduler.html#a6bcb9ef68dd35e2006c4273e8c58d48b" title="This static method removes a timer instance to the timer scheduler. " alt="" coords="404,48,569,87"/>
-</map>

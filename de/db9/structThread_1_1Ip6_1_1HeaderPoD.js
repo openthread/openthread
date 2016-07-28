@@ -8,5 +8,5 @@ var structThread_1_1Ip6_1_1HeaderPoD =
     [ "mNextHeader", "de/db9/structThread_1_1Ip6_1_1HeaderPoD.html#a4566443e9ebadf6d95dcf55923217f0a", null ],
     [ "mPayloadLength", "de/db9/structThread_1_1Ip6_1_1HeaderPoD.html#a2e1cbae14353c210374d6153b98c4c11", null ],
     [ "mSource", "de/db9/structThread_1_1Ip6_1_1HeaderPoD.html#a9264ba5fc65ca850a9a912f40783a690", null ],
-    [ "mVersionClassFlow", "de/db9/structThread_1_1Ip6_1_1HeaderPoD.html#ab02d667ab1eeef5f49b7401f2154de59", null ]
+    [ "mVersionClassFlow", "de/db9/structThread_1_1Ip6_1_1HeaderPoD.html#af81c12afd2a9353c1424815c21c1090b", null ]
 ];

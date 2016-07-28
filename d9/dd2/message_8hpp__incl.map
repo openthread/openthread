@@ -1,7 +1,9 @@
 <map id="src/core/common/message.hpp" name="src/core/common/message.hpp">
-<area shape="rect" id="node4" href="$dc/dbf/openthread-types_8h.html" title="This file defines the types and structures used in the OpenThread library API. " alt="" coords="21,225,157,251"/>
-<area shape="rect" id="node5" href="$df/dcb/openthread-core-config_8h.html" title="This file includes compile&#45;time configuration constants for OpenThread. " alt="" coords="346,79,517,104"/>
-<area shape="rect" id="node6" href="$da/d7b/code__utils_8hpp.html" title="This file includes macros for validating runtime conditions. " alt="" coords="541,79,703,104"/>
-<area shape="rect" id="node8" href="$d1/d97/mac__frame_8hpp.html" title="This file includes definitions for generating and processing IEEE 802.15.4 MAC frames. " alt="" coords="91,79,234,104"/>
-<area shape="rect" id="node10" href="$d7/d62/radio_8h.html" title="This file defines the radio interface for OpenThread. " alt="" coords="124,152,238,177"/>
+<area shape="rect" id="node4" href="$dc/dbf/openthread-types_8h.html" title="This file defines the types and structures used in the OpenThread library API. " alt="" coords="356,225,492,251"/>
+<area shape="rect" id="node7" href="$df/dcb/openthread-core-config_8h.html" title="This file includes compile&#45;time configuration constants for OpenThread. " alt="" coords="694,79,864,104"/>
+<area shape="rect" id="node8" href="$da/d7b/code__utils_8hpp.html" title="This file includes macros for validating runtime conditions. " alt="" coords="643,225,805,251"/>
+<area shape="rect" id="node9" href="$d1/d97/mac__frame_8hpp.html" title="This file includes definitions for generating and processing IEEE 802.15.4 MAC frames. " alt="" coords="250,79,393,104"/>
+<area shape="rect" id="node6" href="$d3/da9/toolchain_8h_source.html" title="platform/toolchain.h" alt="" coords="365,299,502,324"/>
+<area shape="rect" id="node11" href="$df/d57/encoding_8hpp.html" title="This file includes definitions for byte&#45;ordering encoding. " alt="" coords="33,152,189,177"/>
+<area shape="rect" id="node12" href="$d7/d62/radio_8h.html" title="This file defines the radio interface for OpenThread. " alt="" coords="265,152,378,177"/>
 </map>

@@ -1,0 +1,4 @@
+<map id="Thread::Cli::Uart::Output" name="Thread::Cli::Uart::Output">
+<area shape="rect" id="node2" href="$db/def/group__uart.html#ga2aec94bad212a6bd72bc82fe310eaca2" title="The UART driver calls this method to notify OpenThread that bytes have been received. " alt="" coords="180,5,316,31"/>
+<area shape="rect" id="node3" href="$d1/d15/classThread_1_1Cli_1_1Uart.html#a672ac9fb4707c1a1a7168d0ea9ea4ebd" title="This method delivers formatted output to the client. " alt="" coords="185,55,311,93"/>
+</map>

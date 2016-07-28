@@ -1,8 +1,0 @@
-<map id="Thread::MeshForwarder::SetPollPeriod" name="Thread::MeshForwarder::SetPollPeriod">
-<area shape="rect" id="node2" href="$d6/d88/classThread_1_1Mac_1_1Mac.html#ac3cdd1181ed6bb72161a86e04d1c69c2" title="This method indicates whether or not rx&#45;on&#45;when&#45;idle is enabled. " alt="" coords="218,5,409,44"/>
-<area shape="rect" id="node3" href="$d1/d40/classThread_1_1Timer.html#a475731e21b59be6b17b24f5b5e175f62" title="This method schedules the timer to fire a dt milliseconds from now. " alt="" coords="243,68,384,93"/>
-<area shape="rect" id="node4" href="$d1/d40/classThread_1_1Timer.html#a49ded72fbbf2588e1ddb545fa3f1f9f0" title="This method schedules the timer to fire at dt milliseconds from t0. " alt="" coords="461,43,614,68"/>
-<area shape="rect" id="node6" href="$d1/d40/classThread_1_1Timer.html#a0596072dec177b5e2b494db19800267d" title="This static method returns the current time in milliseconds. " alt="" coords="457,92,618,117"/>
-<area shape="rect" id="node5" href="$df/d1f/classThread_1_1TimerScheduler.html#ab72e28a36c92b4a87296d6d1afb2449e" title="This static method adds a timer instance to the timer scheduler. " alt="" coords="666,43,861,68"/>
-<area shape="rect" id="node7" href="$dd/db6/group__alarm.html#gaf8829e3591e03e29e136685fcdeb3300" title="Get the current current time. " alt="" coords="694,92,833,117"/>
-</map>

@@ -1,21 +1,3 @@
 <map id="Graphical Class Hierarchy" name="Graphical Class Hierarchy">
-<area shape="rect" id="node1" href="$dc/d39/classThread_1_1Mle_1_1Tlv.html" title="This class implements MLE TLV generation and parsing. " alt="" coords="5,425,123,451"/>
-<area shape="rect" id="node2" href="$db/d3a/classThread_1_1Mle_1_1Address16Tlv.html" title="This class implements Source Address TLV generation and parsing. " alt="" coords="199,5,381,31"/>
-<area shape="rect" id="node3" href="$df/dd8/classThread_1_1Mle_1_1AddressRegistrationTlv.html" title="This class implements Source Address TLV generation and parsing. " alt="" coords="171,55,409,80"/>
-<area shape="rect" id="node4" href="$da/d3f/classThread_1_1Mle_1_1ChallengeTlv.html" title="This class implements Source Address TLV generation and parsing. " alt="" coords="201,104,379,129"/>
-<area shape="rect" id="node5" href="$d2/df0/classThread_1_1Mle_1_1ConnectivityTlv.html" title="This class implements Source Address TLV generation and parsing. " alt="" coords="195,153,385,179"/>
-<area shape="rect" id="node6" href="$d5/d64/classThread_1_1Mle_1_1LeaderDataTlv.html" title="This class implements Source Address TLV generation and parsing. " alt="" coords="196,203,384,228"/>
-<area shape="rect" id="node7" href="$d4/dfb/classThread_1_1Mle_1_1LinkFrameCounterTlv.html" title="This class implements Source Address TLV generation and parsing. " alt="" coords="176,252,404,277"/>
-<area shape="rect" id="node8" href="$d0/d8b/classThread_1_1Mle_1_1LinkMarginTlv.html" title="This class implements Source Address TLV generation and parsing. " alt="" coords="198,301,381,327"/>
-<area shape="rect" id="node9" href="$d8/d7d/classThread_1_1Mle_1_1MleFrameCounterTlv.html" title="This class implements Source Address TLV generation and parsing. " alt="" coords="177,351,402,376"/>
-<area shape="rect" id="node10" href="$de/db8/classThread_1_1Mle_1_1ModeTlv.html" title="This class implements Source Address TLV generation and parsing. " alt="" coords="214,400,365,425"/>
-<area shape="rect" id="node11" href="$db/d41/classThread_1_1Mle_1_1NetworkDataTlv.html" title="This class implements Source Address TLV generation and parsing. " alt="" coords="192,449,387,475"/>
-<area shape="rect" id="node12" href="$da/da8/classThread_1_1Mle_1_1ResponseTlv.html" title="This class implements Source Address TLV generation and parsing. " alt="" coords="201,499,379,524"/>
-<area shape="rect" id="node13" href="$d6/d9e/classThread_1_1Mle_1_1RouteTlv.html" title="This class implements Source Address TLV generation and parsing. " alt="" coords="213,548,366,573"/>
-<area shape="rect" id="node14" href="$da/d3d/classThread_1_1Mle_1_1ScanMaskTlv.html" title="This class implements Source Address TLV generation and parsing. " alt="" coords="200,597,380,623"/>
-<area shape="rect" id="node15" href="$d4/ddb/classThread_1_1Mle_1_1SourceAddressTlv.html" title="This class implements Source Address TLV generation and parsing. " alt="" coords="185,647,394,672"/>
-<area shape="rect" id="node16" href="$d4/df1/classThread_1_1Mle_1_1StatusTlv.html" title="This class implements Source Address TLV generation and parsing. " alt="" coords="212,696,368,721"/>
-<area shape="rect" id="node17" href="$da/d0f/classThread_1_1Mle_1_1TimeoutTlv.html" title="This class implements Source Address TLV generation and parsing. " alt="" coords="207,745,373,771"/>
-<area shape="rect" id="node18" href="$d0/d08/classThread_1_1Mle_1_1TlvRequestTlv.html" title="This class implements Source Address TLV generation and parsing. " alt="" coords="197,795,382,820"/>
-<area shape="rect" id="node19" href="$d3/d3d/classThread_1_1Mle_1_1VersionTlv.html" title="This class implements Source Address TLV generation and parsing. " alt="" coords="209,844,371,869"/>
+<area shape="rect" id="node1" href="$dd/dcd/structThread_1_1Mac_1_1Address.html" title="This structure represents an IEEE 802.15.4 Short or Extended Address. " alt="" coords="5,5,158,31"/>
 </map>

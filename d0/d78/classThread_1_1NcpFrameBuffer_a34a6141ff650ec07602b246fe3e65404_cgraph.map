@@ -1,0 +1,7 @@
+<map id="Thread::NcpFrameBuffer::IsEmpty" name="Thread::NcpFrameBuffer::IsEmpty">
+<area shape="rect" id="node2" href="$da/d1a/classThread_1_1MessageQueue.html#ac0e8b64309aca4d66b262f0354d72e83" title="This method returns a pointer to the first message. " alt="" coords="230,5,395,44"/>
+<area shape="rect" id="node3" href="$dc/d3c/classThread_1_1Message.html#a89b66912022440cb19aa5eefef093b46" title="This method returns a pointer to the next message in the same interface list. " alt="" coords="222,68,403,93"/>
+<area shape="rect" id="node4" href="$dc/d3c/classThread_1_1Message.html#ad5cd679cc64dd84fa4609d52878c664b" title="This method reads bytes from the message. " alt="" coords="230,117,395,143"/>
+<area shape="rect" id="node5" href="$dc/d3c/classThread_1_1Message.html#a2cf440376e834030c38bb2ced4ca49e9" title="This method returns the number of bytes in the message. " alt="" coords="453,92,648,117"/>
+<area shape="rect" id="node6" href="$db/d50/classThread_1_1Buffer.html#a34ab22941ccd9bb222d251a6a18c95bf" title="This method returns a pointer to the next message buffer. " alt="" coords="451,141,649,167"/>
+</map>

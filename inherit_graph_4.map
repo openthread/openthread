@@ -1,3 +1,4 @@
 <map id="Graphical Class Hierarchy" name="Graphical Class Hierarchy">
-<area shape="rect" id="node1" href="$d6/df6/structotLinkModeConfig.html" title="This structure represents an MLE Link Mode configuration. " alt="" coords="5,5,134,31"/>
+<area shape="rect" id="node1" href="$d3/d8f/structotExtAddress.html" title="This type represents the IEEE 802.15.4 Extended Address. " alt="" coords="5,5,106,31"/>
+<area shape="rect" id="node2" href="$d9/d3c/classThread_1_1Mac_1_1ExtAddress.html" title="This structure represents an IEEE 802.15.4 Extended Address. " alt="" coords="154,5,326,31"/>
 </map>

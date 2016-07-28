@@ -1,0 +1,5 @@
+<map id="otSetChannel" name="otSetChannel">
+<area shape="rect" id="node2" href="$d9/dc8/classThread_1_1NcpBase.html#ad628aea520da8553bbb090ff4f50b09e" title="Called by the superclass to indicate when a send has been completed. " alt="" coords="155,31,393,56"/>
+<area shape="rect" id="node3" href="$d2/de4/ncp_8h.html#aef46036f17188b217a2ffcb8c325f516" title="Initialize the NCP. " alt="" coords="501,5,575,31"/>
+<area shape="rect" id="node4" href="$db/def/group__uart.html#gab2950583380bb90a3779f980c28fbaa0" title="The UART driver calls this method to notify OpenThread that the requested bytes have been sent..." alt="" coords="441,55,635,80"/>
+</map>

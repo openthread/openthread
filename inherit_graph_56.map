@@ -1,3 +1,4 @@
 <map id="Graphical Class Hierarchy" name="Graphical Class Hierarchy">
-<area shape="rect" id="node1" href="$de/dcc/structThread_1_1MessageInfo.html" title="This structure contains metdata about a Message. " alt="" coords="5,5,153,31"/>
+<area shape="rect" id="node1" href="$d7/d5f/structThread_1_1Ip6_1_1UdpHeaderPoD.html" title="Thread::Ip6::UdpHeaderPoD" alt="" coords="5,5,196,31"/>
+<area shape="rect" id="node2" href="$d7/dd3/classThread_1_1Ip6_1_1UdpHeader.html" title="This class implements UDP header generation and parsing. " alt="" coords="244,5,410,31"/>
 </map>

@@ -1,0 +1,4 @@
+<map id="Thread::Cli::Uart::OutputFormat" name="Thread::Cli::Uart::OutputFormat">
+<area shape="rect" id="node2" href="$d1/d15/classThread_1_1Cli_1_1Uart.html#a2ae3cc7868fb9cdbd0871ab66e2da8cd" title="This method delivers raw characters to the client. " alt="" coords="180,5,306,44"/>
+<area shape="rect" id="node3" href="$db/def/group__uart.html#gad58e7a5af0edc4e5d6dca23839f0235e" title="Send bytes over the UART. " alt="" coords="187,68,299,93"/>
+</map>

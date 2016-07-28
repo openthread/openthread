@@ -6,17 +6,17 @@ var group__core_ip6_icmp6 =
       [ "m8", "d4/d90/structThread_1_1Ip6_1_1IcmpHeaderPoD.html#afd8ac304182050a19c9aca80fab2d591", null ],
       [ "mChecksum", "d4/d90/structThread_1_1Ip6_1_1IcmpHeaderPoD.html#a1f9efcf2fc78902fe8dd520ae05fcea8", null ],
       [ "mCode", "d4/d90/structThread_1_1Ip6_1_1IcmpHeaderPoD.html#a9340c0b6398ee6f072f20a6dac7983ce", null ],
-      [ "mData", "d4/d90/structThread_1_1Ip6_1_1IcmpHeaderPoD.html#ad2309cc69298535fe08e8f37acb3b9ff", null ],
+      [ "mData", "d4/d90/structThread_1_1Ip6_1_1IcmpHeaderPoD.html#a1b11bdb00969b07405c5bd878734ee5a", null ],
       [ "mType", "d4/d90/structThread_1_1Ip6_1_1IcmpHeaderPoD.html#a1d3fc65dcc6b226759c2da5eb1f7422b", null ]
     ] ],
     [ "IcmpHeader", "d2/de0/classThread_1_1Ip6_1_1IcmpHeader.html", [
-      [ "Code", "d9/dbe/group__core-ip6-icmp6.html#gac2a08e3b5fc1a6cb6a1f2dead5403e02", [
-        [ "kCodeDstUnreachNoRoute", "d9/dbe/group__core-ip6-icmp6.html#ggac2a08e3b5fc1a6cb6a1f2dead5403e02a8e8fca8bc66b19a72d0a919c07153022", null ]
+      [ "Code", "d2/de0/classThread_1_1Ip6_1_1IcmpHeader.html#ac2a08e3b5fc1a6cb6a1f2dead5403e02", [
+        [ "kCodeDstUnreachNoRoute", "d2/de0/classThread_1_1Ip6_1_1IcmpHeader.html#ac2a08e3b5fc1a6cb6a1f2dead5403e02a8e8fca8bc66b19a72d0a919c07153022", null ]
       ] ],
-      [ "Type", "d9/dbe/group__core-ip6-icmp6.html#ga9939caba0638b495eb7a74bfc76120fb", [
-        [ "kTypeDstUnreach", "d9/dbe/group__core-ip6-icmp6.html#gga9939caba0638b495eb7a74bfc76120fba7a7b44dcfeec8258930d1837f5e94ee1", null ],
-        [ "kTypeEchoRequest", "d9/dbe/group__core-ip6-icmp6.html#gga9939caba0638b495eb7a74bfc76120fbae7039b73ba8a6d010b84f9f1fdecfb31", null ],
-        [ "kTypeEchoReply", "d9/dbe/group__core-ip6-icmp6.html#gga9939caba0638b495eb7a74bfc76120fba8f70e7d366dd6a8a2334d4d1d31ff83f", null ]
+      [ "Type", "d2/de0/classThread_1_1Ip6_1_1IcmpHeader.html#a9939caba0638b495eb7a74bfc76120fb", [
+        [ "kTypeDstUnreach", "d2/de0/classThread_1_1Ip6_1_1IcmpHeader.html#a9939caba0638b495eb7a74bfc76120fba7a7b44dcfeec8258930d1837f5e94ee1", null ],
+        [ "kTypeEchoRequest", "d2/de0/classThread_1_1Ip6_1_1IcmpHeader.html#a9939caba0638b495eb7a74bfc76120fbae7039b73ba8a6d010b84f9f1fdecfb31", null ],
+        [ "kTypeEchoReply", "d2/de0/classThread_1_1Ip6_1_1IcmpHeader.html#a9939caba0638b495eb7a74bfc76120fba8f70e7d366dd6a8a2334d4d1d31ff83f", null ]
       ] ],
       [ "GetChecksum", "d2/de0/classThread_1_1Ip6_1_1IcmpHeader.html#a027f2899206b74dad24b25d164163d37", null ],
       [ "GetChecksumOffset", "d2/de0/classThread_1_1Ip6_1_1IcmpHeader.html#aeda92e625e305e9021bc18ccadfba4ca", null ],
@@ -45,16 +45,10 @@ var group__core_ip6_icmp6 =
     ] ],
     [ "Icmp", "da/dd7/classThread_1_1Ip6_1_1Icmp.html", [
       [ "HandleMessage", "da/dd7/classThread_1_1Ip6_1_1Icmp.html#ad28878461d364df3eeac50588479c9c1", null ],
+      [ "IsEchoEnabled", "da/dd7/classThread_1_1Ip6_1_1Icmp.html#af4cae4712ae9ef69a40f856a1ee32116", null ],
       [ "RegisterCallbacks", "da/dd7/classThread_1_1Ip6_1_1Icmp.html#a6fa5b3b4d5b3a4a4057d88c03b5eac3d", null ],
       [ "SendError", "da/dd7/classThread_1_1Ip6_1_1Icmp.html#a1652c3864180133512f7d6499cd684f2", null ],
+      [ "SetEchoEnabled", "da/dd7/classThread_1_1Ip6_1_1Icmp.html#afc6634532527100a9a9e9e1234f49e5f", null ],
       [ "UpdateChecksum", "da/dd7/classThread_1_1Ip6_1_1Icmp.html#a872e20ca6e8737eaf91db859041e10f7", null ]
-    ] ],
-    [ "Code", "d9/dbe/group__core-ip6-icmp6.html#gac2a08e3b5fc1a6cb6a1f2dead5403e02", [
-      [ "kCodeDstUnreachNoRoute", "d9/dbe/group__core-ip6-icmp6.html#ggac2a08e3b5fc1a6cb6a1f2dead5403e02a8e8fca8bc66b19a72d0a919c07153022", null ]
-    ] ],
-    [ "Type", "d9/dbe/group__core-ip6-icmp6.html#ga9939caba0638b495eb7a74bfc76120fb", [
-      [ "kTypeDstUnreach", "d9/dbe/group__core-ip6-icmp6.html#gga9939caba0638b495eb7a74bfc76120fba7a7b44dcfeec8258930d1837f5e94ee1", null ],
-      [ "kTypeEchoRequest", "d9/dbe/group__core-ip6-icmp6.html#gga9939caba0638b495eb7a74bfc76120fbae7039b73ba8a6d010b84f9f1fdecfb31", null ],
-      [ "kTypeEchoReply", "d9/dbe/group__core-ip6-icmp6.html#gga9939caba0638b495eb7a74bfc76120fba8f70e7d366dd6a8a2334d4d1d31ff83f", null ]
     ] ]
 ];

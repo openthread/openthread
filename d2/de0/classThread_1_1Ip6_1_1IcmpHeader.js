@@ -1,12 +1,12 @@
 var classThread_1_1Ip6_1_1IcmpHeader =
 [
-    [ "Code", "d9/dbe/group__core-ip6-icmp6.html#gac2a08e3b5fc1a6cb6a1f2dead5403e02", [
-      [ "kCodeDstUnreachNoRoute", "d9/dbe/group__core-ip6-icmp6.html#ggac2a08e3b5fc1a6cb6a1f2dead5403e02a8e8fca8bc66b19a72d0a919c07153022", null ]
+    [ "Code", "d2/de0/classThread_1_1Ip6_1_1IcmpHeader.html#ac2a08e3b5fc1a6cb6a1f2dead5403e02", [
+      [ "kCodeDstUnreachNoRoute", "d2/de0/classThread_1_1Ip6_1_1IcmpHeader.html#ac2a08e3b5fc1a6cb6a1f2dead5403e02a8e8fca8bc66b19a72d0a919c07153022", null ]
     ] ],
-    [ "Type", "d9/dbe/group__core-ip6-icmp6.html#ga9939caba0638b495eb7a74bfc76120fb", [
-      [ "kTypeDstUnreach", "d9/dbe/group__core-ip6-icmp6.html#gga9939caba0638b495eb7a74bfc76120fba7a7b44dcfeec8258930d1837f5e94ee1", null ],
-      [ "kTypeEchoRequest", "d9/dbe/group__core-ip6-icmp6.html#gga9939caba0638b495eb7a74bfc76120fbae7039b73ba8a6d010b84f9f1fdecfb31", null ],
-      [ "kTypeEchoReply", "d9/dbe/group__core-ip6-icmp6.html#gga9939caba0638b495eb7a74bfc76120fba8f70e7d366dd6a8a2334d4d1d31ff83f", null ]
+    [ "Type", "d2/de0/classThread_1_1Ip6_1_1IcmpHeader.html#a9939caba0638b495eb7a74bfc76120fb", [
+      [ "kTypeDstUnreach", "d2/de0/classThread_1_1Ip6_1_1IcmpHeader.html#a9939caba0638b495eb7a74bfc76120fba7a7b44dcfeec8258930d1837f5e94ee1", null ],
+      [ "kTypeEchoRequest", "d2/de0/classThread_1_1Ip6_1_1IcmpHeader.html#a9939caba0638b495eb7a74bfc76120fbae7039b73ba8a6d010b84f9f1fdecfb31", null ],
+      [ "kTypeEchoReply", "d2/de0/classThread_1_1Ip6_1_1IcmpHeader.html#a9939caba0638b495eb7a74bfc76120fba8f70e7d366dd6a8a2334d4d1d31ff83f", null ]
     ] ],
     [ "GetChecksum", "d2/de0/classThread_1_1Ip6_1_1IcmpHeader.html#a027f2899206b74dad24b25d164163d37", null ],
     [ "GetChecksumOffset", "d2/de0/classThread_1_1Ip6_1_1IcmpHeader.html#aeda92e625e305e9021bc18ccadfba4ca", null ],

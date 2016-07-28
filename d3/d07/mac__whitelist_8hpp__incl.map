@@ -1,5 +1,7 @@
 <map id="src/core/mac/mac_whitelist.hpp" name="src/core/mac/mac_whitelist.hpp">
-<area shape="rect" id="node3" href="$dc/dbf/openthread-types_8h.html" title="This file defines the types and structures used in the OpenThread library API. " alt="" coords="94,225,230,251"/>
-<area shape="rect" id="node4" href="$d1/d97/mac__frame_8hpp.html" title="This file includes definitions for generating and processing IEEE 802.15.4 MAC frames. " alt="" coords="183,79,326,104"/>
-<area shape="rect" id="node6" href="$d7/d62/radio_8h.html" title="This file defines the radio interface for OpenThread. " alt="" coords="197,152,311,177"/>
+<area shape="rect" id="node3" href="$dc/dbf/openthread-types_8h.html" title="This file defines the types and structures used in the OpenThread library API. " alt="" coords="432,225,568,251"/>
+<area shape="rect" id="node6" href="$d1/d97/mac__frame_8hpp.html" title="This file includes definitions for generating and processing IEEE 802.15.4 MAC frames. " alt="" coords="214,79,357,104"/>
+<area shape="rect" id="node5" href="$d3/da9/toolchain_8h_source.html" title="platform/toolchain.h" alt="" coords="391,299,529,324"/>
+<area shape="rect" id="node9" href="$df/d57/encoding_8hpp.html" title="This file includes definitions for byte&#45;ordering encoding. " alt="" coords="38,152,194,177"/>
+<area shape="rect" id="node10" href="$d7/d62/radio_8h.html" title="This file defines the radio interface for OpenThread. " alt="" coords="358,152,472,177"/>
 </map>

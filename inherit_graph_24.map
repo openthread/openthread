@@ -1,4 +1,3 @@
 <map id="Graphical Class Hierarchy" name="Graphical Class Hierarchy">
-<area shape="rect" id="node1" href="$de/df0/classThread_1_1Ip6_1_1ExtensionHeader.html" title="This class implements IPv6 Extension Header generation and processing. " alt="" coords="5,5,205,31"/>
-<area shape="rect" id="node2" href="$dc/d98/classThread_1_1Ip6_1_1HopByHopHeader.html" title="This class implements IPv6 Hop&#45;by&#45;Hop Options Header generation and parsing. " alt="" coords="253,5,458,31"/>
+<area shape="rect" id="node1" href="$d2/d60/structThread_1_1BufferHeader.html" title="This structure contains a pointer to the next Message buffer. " alt="" coords="5,5,155,31"/>
 </map>

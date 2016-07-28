@@ -1,3 +1,5 @@
 <map id="Thread::Neighbor" name="Thread::Neighbor">
-<area shape="rect" id="node2" href="$d9/d3c/classThread_1_1Mac_1_1ExtAddress.html" title="This structure represents an IEEE 802.15.4 Extended Address. " alt="" coords="5,5,177,31"/>
+<area shape="rect" id="node2" href="$dd/d38/classThread_1_1LinkQualityInfo.html" title="This class encapsulates/stores all relevant information about quality of a link, including average re..." alt="" coords="5,80,165,105"/>
+<area shape="rect" id="node3" href="$d9/d3c/classThread_1_1Mac_1_1ExtAddress.html" title="This structure represents an IEEE 802.15.4 Extended Address. " alt="" coords="188,80,360,105"/>
+<area shape="rect" id="node4" href="$d3/d8f/structotExtAddress.html" title="This type represents the IEEE 802.15.4 Extended Address. " alt="" coords="224,5,325,31"/>
 </map>

@@ -5,6 +5,7 @@ var group__core_netif =
       [ "Down", "d3/d8e/classThread_1_1ThreadNetif.html#a1a24f802ede854243223bcae3b7cb5ad", null ],
       [ "GetAddressResolver", "d3/d8e/classThread_1_1ThreadNetif.html#a01e49338ac3d707a7f249320af75f8de", null ],
       [ "GetCoapServer", "d3/d8e/classThread_1_1ThreadNetif.html#a9534c584160c16086f910d192f6f2af5", null ],
+      [ "GetIp6Filter", "d3/d8e/classThread_1_1ThreadNetif.html#ac9cdcb6443cd6fd0748e3217cccff8a4", null ],
       [ "GetKeyManager", "d3/d8e/classThread_1_1ThreadNetif.html#a25b149621cbd28f9319ee1708ac1f703", null ],
       [ "GetLinkAddress", "d3/d8e/classThread_1_1ThreadNetif.html#aa16dcc842c00a0c9e70f402e51232790", null ],
       [ "GetLowpan", "d3/d8e/classThread_1_1ThreadNetif.html#a617a3663555138a75c83ebd86cc5179e", null ],
@@ -20,6 +21,8 @@ var group__core_netif =
       [ "Up", "d3/d8e/classThread_1_1ThreadNetif.html#a50d195eeba8c64bdb46767f1113a7a65", null ]
     ] ],
     [ "ThreadMessageInfo", "df/d49/structThread_1_1ThreadMessageInfo.html", [
-      [ "mLinkMargin", "df/d49/structThread_1_1ThreadMessageInfo.html#a05f93f5a803e16eca949fa398a30c5ab", null ]
+      [ "mLinkSecurity", "df/d49/structThread_1_1ThreadMessageInfo.html#ae71775a3633b312425f6c7f519f23312", null ],
+      [ "mLqi", "df/d49/structThread_1_1ThreadMessageInfo.html#a0175807caa4e204ad9b9dec34eecf634", null ],
+      [ "mRss", "df/d49/structThread_1_1ThreadMessageInfo.html#a9f45719b5259a72a9b7871330bd0ef28", null ]
     ] ]
 ];

@@ -1,16 +1,21 @@
 <map id="Thread::Mle::Mle::Mle" name="Thread::Mle::Mle::Mle">
-<area shape="rect" id="node2" href="$d9/d13/classThread_1_1Ip6_1_1NetifUnicastAddress.html#a2bb426bd29e271bd1fc09b61d1044911" title="This method returns the unicast address. " alt="" coords="208,5,376,44"/>
-<area shape="rect" id="node3" href="$d9/db1/classThread_1_1Ip6_1_1Address.html#a7e4fe6c422ffbaf30638bbf7065da6fa" title="This method sets the Interface Identifier. " alt="" coords="219,68,365,107"/>
-<area shape="rect" id="node4" href="$d6/d88/classThread_1_1Mac_1_1Mac.html#a95ec637c1529d1258cd5316e93e4b8c9" title="This method returns a pointer to the IEEE 802.15.4 Extended Address. " alt="" coords="204,131,381,169"/>
-<area shape="rect" id="node5" href="$d2/d55/classThread_1_1Ip6_1_1Netif.html#ad891ec81750a2f7c4c722d07d7dc2632" title="This method adds a unicast address to the network interface. " alt="" coords="219,193,365,232"/>
-<area shape="rect" id="node12" href="$dd/d10/group__random.html#gaa20820ca4e6e1ce8cd47ded9762b14ca" title="Get a 32&#45;bit true random value. " alt="" coords="228,256,356,281"/>
-<area shape="rect" id="node13" href="$d6/d94/classThread_1_1Ip6_1_1NetifMulticastAddress.html#a10800bf39d15ffa0735e857c13e8d489" title="This method returns the multicast address. " alt="" coords="204,305,381,344"/>
-<area shape="rect" id="node14" href="$d2/d55/classThread_1_1Ip6_1_1Netif.html#a003983e22fecc0286e000269285c2e0c" title="This method subscribes the network interface to a multicast address. " alt="" coords="222,368,362,407"/>
-<area shape="rect" id="node15" href="$d2/d55/classThread_1_1Ip6_1_1Netif.html#af6e78b9f7f9f0c2c7cdf8267756b6683" title="This method registers a network interface handler. " alt="" coords="230,431,355,469"/>
-<area shape="rect" id="node6" href="$d9/d13/classThread_1_1Ip6_1_1NetifUnicastAddress.html#ac7f38e1322075b0e6dfc7afc048f7eec" title="This method returns the next unicast address assigned to the interface. " alt="" coords="429,165,597,204"/>
-<area shape="rect" id="node7" href="$d4/d92/classThread_1_1Tasklet.html#a50a39a6f422851035b89aace87482425" title="This method puts the tasklet on the run queue. " alt="" coords="440,228,586,253"/>
-<area shape="rect" id="node8" href="$d8/de8/classThread_1_1TaskletScheduler.html#a137292acddf92acdef54cc7a33ea5fac" title="This static method enqueues a tasklet into the run queue. " alt="" coords="645,221,818,260"/>
-<area shape="rect" id="node9" href="$d3/de8/group__atomic.html#ga5eb5de0dbc130f745e31b1085f798e4f" title="Begin critical section. " alt="" coords="881,179,1011,204"/>
-<area shape="rect" id="node10" href="$d1/de3/group__execution.html#ga0d8ce270d8b69230a851ac7b9538ed56" title="OpenThread calls this function when the tasklet queue transitions from empty to non&#45;empty. " alt="" coords="866,228,1026,253"/>
-<area shape="rect" id="node11" href="$d3/de8/group__atomic.html#gac1707ea0096fa1501a356013982f7b35" title="End critical section. " alt="" coords="886,277,1006,303"/>
+<area shape="rect" id="node2" href="$d9/d13/classThread_1_1Ip6_1_1NetifUnicastAddress.html#a2bb426bd29e271bd1fc09b61d1044911" title="This method returns the unicast address. " alt="" coords="691,21,859,59"/>
+<area shape="rect" id="node3" href="$d9/db1/classThread_1_1Ip6_1_1Address.html#a7e4fe6c422ffbaf30638bbf7065da6fa" title="This method sets the Interface Identifier. " alt="" coords="238,259,384,298"/>
+<area shape="rect" id="node4" href="$d6/d88/classThread_1_1Mac_1_1Mac.html#a95ec637c1529d1258cd5316e93e4b8c9" title="This method returns a pointer to the IEEE 802.15.4 Extended Address. " alt="" coords="222,322,399,361"/>
+<area shape="rect" id="node5" href="$d2/d55/classThread_1_1Ip6_1_1Netif.html#ad891ec81750a2f7c4c722d07d7dc2632" title="This method adds a unicast address to the network interface. " alt="" coords="481,83,627,122"/>
+<area shape="rect" id="node12" href="$d6/d88/classThread_1_1Mac_1_1Mac.html#a25edea8553487b4aada417581f9576c0" title="This method returns the IEEE 802.15.4 Extended PAN ID. " alt="" coords="204,385,418,423"/>
+<area shape="rect" id="node14" href="$dd/d10/group__random.html#gaa20820ca4e6e1ce8cd47ded9762b14ca" title="Get a 32&#45;bit true random value. " alt="" coords="247,447,374,473"/>
+<area shape="rect" id="node15" href="$df/d94/group__core-mle-core.html#gae7aa1071a61d1f253c5847cf682a0980" title="This method sets the Mesh Local Prefix. " alt="" coords="220,145,401,183"/>
+<area shape="rect" id="node17" href="$d6/d94/classThread_1_1Ip6_1_1NetifMulticastAddress.html#a10800bf39d15ffa0735e857c13e8d489" title="This method returns the multicast address. " alt="" coords="466,261,643,299"/>
+<area shape="rect" id="node18" href="$d2/d55/classThread_1_1Ip6_1_1Netif.html#a003983e22fecc0286e000269285c2e0c" title="This method subscribes the network interface to a multicast address. " alt="" coords="240,497,381,535"/>
+<area shape="rect" id="node19" href="$d2/dfb/classThread_1_1Ip6_1_1NetifCallback.html#a994d81f140fa4a62245e3336d37f0aaf" title="This method sets the callback information. " alt="" coords="209,559,412,585"/>
+<area shape="rect" id="node20" href="$d2/d55/classThread_1_1Ip6_1_1Netif.html#aca4693ab30ec940aef090d8228ea4429" title="This method registers a network interface callback. " alt="" coords="246,609,375,647"/>
+<area shape="rect" id="node6" href="$d9/d13/classThread_1_1Ip6_1_1NetifUnicastAddress.html#ac7f38e1322075b0e6dfc7afc048f7eec" title="This method returns the next unicast address assigned to the interface. " alt="" coords="691,83,859,122"/>
+<area shape="rect" id="node7" href="$d9/db1/classThread_1_1Ip6_1_1Address.html#a042097e2896ce7eebc1844140c0d2aeb" title="This method indicates whether or not the IPv6 address is a RLOC address. " alt="" coords="702,146,848,185"/>
+<area shape="rect" id="node8" href="$d2/d55/classThread_1_1Ip6_1_1Netif.html#a092484addf28568306ab45941abffff4" title="This method schedules notification of aFlags. " alt="" coords="692,209,858,247"/>
+<area shape="rect" id="node9" href="$d4/d92/classThread_1_1Tasklet.html#a50a39a6f422851035b89aace87482425" title="This method puts the tasklet on the run queue. " alt="" coords="907,215,1054,241"/>
+<area shape="rect" id="node10" href="$d8/de8/classThread_1_1TaskletScheduler.html#a137292acddf92acdef54cc7a33ea5fac" title="This static method enqueues a tasklet into the run queue. " alt="" coords="1102,209,1274,247"/>
+<area shape="rect" id="node11" href="$d1/de3/group__execution.html#ga0d8ce270d8b69230a851ac7b9538ed56" title="OpenThread calls this function when the tasklet queue transitions from empty to non&#45;empty. " alt="" coords="1322,215,1482,241"/>
+<area shape="rect" id="node13" href="$dc/dbd/classThread_1_1Mac_1_1Beacon.html#aa4462abfadb71bc9837eb67268bc053c" title="This method returns a pointer to the Extended PAN ID field. " alt="" coords="480,385,628,423"/>
+<area shape="rect" id="node16" href="$d2/d55/classThread_1_1Ip6_1_1Netif.html#ad00e58b94ab00cc71a5f3a242b7ef42c" title="This method removes a unicast address from the network interface. " alt="" coords="468,146,640,185"/>
 </map>

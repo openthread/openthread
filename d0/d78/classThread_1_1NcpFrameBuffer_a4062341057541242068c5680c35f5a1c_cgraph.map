@@ -1,0 +1,4 @@
+<map id="Thread::NcpFrameBuffer::OutFrameRead" name="Thread::NcpFrameBuffer::OutFrameRead">
+<area shape="rect" id="node2" href="$d0/d78/classThread_1_1NcpFrameBuffer.html#abf94a643cd4931c947e4682c6fa21a64" title="This method checks if the current output frame (being read) has ended. " alt="" coords="222,5,390,44"/>
+<area shape="rect" id="node3" href="$d0/d78/classThread_1_1NcpFrameBuffer.html#af8004f00f97e629cf5c5b0c6d695fcdc" title="This method reads and returns the next byte from the current output frame. " alt="" coords="222,68,390,107"/>
+</map>

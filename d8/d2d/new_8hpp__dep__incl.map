@@ -1,0 +1,6 @@
+<map id="src/core/common/new.hpp" name="src/core/common/new.hpp">
+<area shape="rect" id="node2" href="$db/d13/cli__uart_8cpp.html" title="This file implements the CLI server on the UART service. " alt="" coords="5,79,133,104"/>
+<area shape="rect" id="node3" href="$da/d60/openthread_8cpp.html" title="This file implements the top&#45;level interface to the OpenThread stack. " alt="" coords="157,79,322,104"/>
+<area shape="rect" id="node4" href="$d0/d95/ncp__spi_8cpp.html" title="This file implements a SPI interface to the OpenThread stack. " alt="" coords="346,79,485,104"/>
+<area shape="rect" id="node5" href="$d4/dae/ncp__uart_8cpp.html" title="This file implements an HDLC interface to the Thread stack. " alt="" coords="510,79,655,104"/>
+</map>

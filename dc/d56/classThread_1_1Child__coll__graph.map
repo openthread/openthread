@@ -1,6 +1,8 @@
 <map id="Thread::Child" name="Thread::Child">
-<area shape="rect" id="node2" href="$da/dd9/classThread_1_1Neighbor.html" title="This class represents a Thread neighbor. " alt="" coords="29,92,154,117"/>
-<area shape="rect" id="node3" href="$d9/d3c/classThread_1_1Mac_1_1ExtAddress.html" title="This structure represents an IEEE 802.15.4 Extended Address. " alt="" coords="5,5,177,31"/>
-<area shape="rect" id="node4" href="$d9/db1/classThread_1_1Ip6_1_1Address.html" title="This class implements an IPv6 address object. " alt="" coords="178,92,324,117"/>
-<area shape="rect" id="node5" href="$d6/d55/structotIp6Address.html" title="This structure represents an IPv6 address. " alt="" coords="201,5,301,31"/>
+<area shape="rect" id="node2" href="$da/dd9/classThread_1_1Neighbor.html" title="This class represents a Thread neighbor. " alt="" coords="212,167,337,192"/>
+<area shape="rect" id="node3" href="$dd/d38/classThread_1_1LinkQualityInfo.html" title="This class encapsulates/stores all relevant information about quality of a link, including average re..." alt="" coords="5,80,165,105"/>
+<area shape="rect" id="node4" href="$d9/d3c/classThread_1_1Mac_1_1ExtAddress.html" title="This structure represents an IEEE 802.15.4 Extended Address. " alt="" coords="188,80,360,105"/>
+<area shape="rect" id="node5" href="$d3/d8f/structotExtAddress.html" title="This type represents the IEEE 802.15.4 Extended Address. " alt="" coords="224,5,325,31"/>
+<area shape="rect" id="node6" href="$d9/db1/classThread_1_1Ip6_1_1Address.html" title="This class implements an IPv6 address object. " alt="" coords="361,167,507,192"/>
+<area shape="rect" id="node7" href="$d6/d55/structotIp6Address.html" title="This structure represents an IPv6 address. " alt="" coords="384,80,484,105"/>
 </map>

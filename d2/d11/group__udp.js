@@ -27,7 +27,7 @@ var group__udp =
     [ "otUdpSocket", "d2/d11/group__udp.html#ga2d245018891da475518da5c375beeba7", null ],
     [ "otBindUdpSocket", "d2/d11/group__udp.html#gabbff7369b8794d597a5afd188e171ec0", null ],
     [ "otCloseUdpSocket", "d2/d11/group__udp.html#ga2957568d7098fc442abaadad77daabee", null ],
-    [ "otNewUdpMessage", "d2/d11/group__udp.html#ga72f15295aa34b47739d39924a640a38e", null ],
+    [ "otNewUdpMessage", "d2/d11/group__udp.html#ga004cae7040d8568e962ae6066571c037", null ],
     [ "otOpenUdpSocket", "d2/d11/group__udp.html#ga8ba772cd93b3b680d70d1e94a5dd3bc7", null ],
     [ "otSendUdp", "d2/d11/group__udp.html#gaafd3057272c0b42c69aa7d35956f5c92", null ]
 ];

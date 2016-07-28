@@ -1,7 +1,3 @@
 <map id="Thread::Mle::Mle::SetMeshLocalPrefix" name="Thread::Mle::Mle::SetMeshLocalPrefix">
-<area shape="rect" id="node2" href="$d6/d88/classThread_1_1Mac_1_1Mac.html#a7b14e0ef951c11be75ae3f271bfd5bc0" title="This method sets the IEEE 802.15.4 Extended PAN ID. " alt="" coords="235,24,447,63"/>
-<area shape="rect" id="node3" href="$d6/d88/classThread_1_1Mac_1_1Mac.html#afe65837f6f2e5f566187fc410786ef86" title="This constructor initializes the MAC object. " alt="" coords="497,5,658,31"/>
-<area shape="rect" id="node4" href="$d6/d88/classThread_1_1Mac_1_1Mac.html#a34333ba31586b2a5a6cfb5d0b71cfe63" title="This method starts the MAC. " alt="" coords="495,55,660,80"/>
-<area shape="rect" id="node5" href="$dd/d1d/classThread_1_1MeshForwarder.html#a8d509a0b25136785f88ecfc8404e6ba8" title="This method enables mesh forwarding and the IEEE 802.15.4 MAC layer. " alt="" coords="708,48,872,87"/>
-<area shape="rect" id="node6" href="$d3/d8e/classThread_1_1ThreadNetif.html#a50d195eeba8c64bdb46767f1113a7a65" title="This method enables the Thread network interface. " alt="" coords="920,55,1085,80"/>
+<area shape="rect" id="node2" href="$df/d94/group__core-mle-core.html#ga7e32ce7f27d8c98579441f446c1b399d" title="This constructor initializes the MLE object. " alt="" coords="235,12,385,37"/>
 </map>

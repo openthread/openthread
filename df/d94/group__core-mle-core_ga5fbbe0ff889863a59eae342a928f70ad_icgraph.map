@@ -1,23 +1,21 @@
 <map id="Thread::Mle::Header::IsKeyIdMode1" name="Thread::Mle::Header::IsKeyIdMode1">
-<area shape="rect" id="node2" href="$df/d94/group__core-mle-core.html#ga925735f456674a1aff117ee85e992391" title="This method returns the MLE header and Command Type length. " alt="" coords="197,68,341,107"/>
-<area shape="rect" id="node18" href="$df/d94/group__core-mle-core.html#ga05325afe6fe1ad832761ba2480a4cb31" title="This method returns the MLE header length (excluding the Command Type). " alt="" coords="197,131,341,169"/>
-<area shape="rect" id="node19" href="$df/d94/group__core-mle-core.html#gadc87b8d19fa5b80b4a8389639ccc4921" title="This method returns the Key ID value. " alt="" coords="197,256,341,295"/>
-<area shape="rect" id="node20" href="$df/d94/group__core-mle-core.html#ga8cfb8dcba608f0de7964875c8a3005f4" title="This method sets the Key ID value. " alt="" coords="197,193,341,232"/>
-<area shape="rect" id="node21" href="$df/d94/group__core-mle-core.html#ga87f3accd6951cc9377398777408f90f3" title="This method returns the Command Type value. " alt="" coords="197,319,341,357"/>
-<area shape="rect" id="node22" href="$df/d94/group__core-mle-core.html#gacfda331d1a40fd11951bbaa603d9c77a" title="This method sets the Command Type value. " alt="" coords="197,5,341,44"/>
-<area shape="rect" id="node3" href="$df/d94/group__core-mle-core.html#gadbe9c0d542453bbe67270fb5dc47db93" title="This method appends an MLE header to a message. " alt="" coords="408,68,583,107"/>
-<area shape="rect" id="node17" href="$df/d94/group__core-mle-core.html#ga0ea27201cf13a4e1b0680a9da6c54a64" title="This method submits an MLE message to the UDP socket. " alt="" coords="389,137,603,163"/>
-<area shape="rect" id="node4" href="$df/d94/group__core-mle-core.html#gac13477847483bba0aeab32fd93a7dbac" title="This method generates an MLE Data Request message. " alt="" coords="652,131,840,169"/>
-<area shape="rect" id="node5" href="$df/d94/group__core-mle-core.html#ga4a192897e2fe5f4b0ab2ed1535fd2657" title="This method generates an MLE Data Response message. " alt="" coords="652,5,840,44"/>
-<area shape="rect" id="node7" href="$df/d94/group__core-mle-core.html#ga09239c621861382d25163980ab5d983b" title="This method generates an MLE Child Update Request message. " alt="" coords="651,193,841,232"/>
-<area shape="rect" id="node16" href="$db/dec/group__core-mle-router.html#ga7126c084ace25827febebc4210928cd4" title="This method generates an MLE Link Reject. " alt="" coords="665,68,826,107"/>
-<area shape="rect" id="node6" href="$db/dec/group__core-mle-router.html#gaf13c43af2bf2f9057629cbb74fca0af0" title="This method handles MAC Data Poll messages. " alt="" coords="913,5,1087,44"/>
-<area shape="rect" id="node8" href="$df/d94/group__core-mle-core.html#ga01c7e5a022360a6f35e30d07221dbfea" title="This method starts the MLE protocol operation. " alt="" coords="922,284,1079,309"/>
-<area shape="rect" id="node10" href="$df/d94/group__core-mle-core.html#gafb51db61e6e184d664a9e7cc3833dcf4" title="This method sets the MLE Timeout value. " alt="" coords="902,123,1099,148"/>
-<area shape="rect" id="node11" href="$df/d94/group__core-mle-core.html#ga453d94c377c5825a4a5e8b66a728e591" title="This method sets the Device Mode as reported in the Mode TLV. " alt="" coords="889,172,1112,197"/>
-<area shape="rect" id="node12" href="$df/d94/group__core-mle-core.html#gaac7d42ff61704aa43e94dbb781c78c5e" title="This method notifes MLE that the Network Data has changed. " alt="" coords="915,221,1086,260"/>
-<area shape="rect" id="node9" href="$d3/d8e/classThread_1_1ThreadNetif.html#a50d195eeba8c64bdb46767f1113a7a65" title="This method enables the Thread network interface. " alt="" coords="1181,284,1346,309"/>
-<area shape="rect" id="node13" href="$d6/d9b/classThread_1_1NetworkData_1_1Leader.html#a428d60927d6f4b4ac8e878e792d2f716" title="This method is used by non&#45;Leader devices to set newly received Network Data from the Leader..." alt="" coords="1176,221,1351,260"/>
-<area shape="rect" id="node14" href="$d6/d9b/classThread_1_1NetworkData_1_1Leader.html#a5baddd109ff06b58140e2678e3c97a16" title="This method removes Network Data associated with a given RLOC16. " alt="" coords="1160,159,1367,197"/>
-<area shape="rect" id="node15" href="$db/dec/group__core-mle-router.html#ga179fad5b4b75849e76811006761d2b3e" title="This method release a given Router ID. " alt="" coords="1415,159,1577,197"/>
+<area shape="rect" id="node2" href="$df/d94/group__core-mle-core.html#ga0ea27201cf13a4e1b0680a9da6c54a64" title="This method submits an MLE message to the UDP socket. " alt="" coords="197,433,411,458"/>
+<area shape="rect" id="node3" href="$df/d94/group__core-mle-core.html#gad555ca36631eff9b978e448ecbcf8e2e" title="This method appends an Address Registration TLV to a message. " alt="" coords="466,283,640,322"/>
+<area shape="rect" id="node4" href="$df/d94/group__core-mle-core.html#ga09239c621861382d25163980ab5d983b" title="This method generates an MLE Child Update Request message. " alt="" coords="695,210,885,249"/>
+<area shape="rect" id="node10" href="$db/dec/group__core-mle-router.html#ga2f58e7783003a5d53b12a556ac4375f2" title="This method sets the ROUTER_UPGRADE_THRESHOLD value. " alt="" coords="1460,293,1659,331"/>
+<area shape="rect" id="node13" href="$db/dec/group__core-mle-router.html#ga7126c084ace25827febebc4210928cd4" title="This method generates an MLE Link Reject. " alt="" coords="1707,439,1868,478"/>
+<area shape="rect" id="node18" href="$df/d94/group__core-mle-core.html#gac13477847483bba0aeab32fd93a7dbac" title="This method generates an MLE Data Request message. " alt="" coords="459,583,647,622"/>
+<area shape="rect" id="node19" href="$df/d94/group__core-mle-core.html#ga4a192897e2fe5f4b0ab2ed1535fd2657" title="This method generates an MLE Data Response message. " alt="" coords="696,514,884,553"/>
+<area shape="rect" id="node5" href="$df/d94/group__core-mle-core.html#ga01c7e5a022360a6f35e30d07221dbfea" title="This method starts the MLE protocol operation. " alt="" coords="966,94,1123,119"/>
+<area shape="rect" id="node6" href="$df/d94/group__core-mle-core.html#gafb51db61e6e184d664a9e7cc3833dcf4" title="This method sets the MLE Timeout value. " alt="" coords="947,143,1143,169"/>
+<area shape="rect" id="node7" href="$df/d94/group__core-mle-core.html#ga453d94c377c5825a4a5e8b66a728e591" title="This method sets the Device Mode as reported in the Mode TLV. " alt="" coords="933,193,1156,218"/>
+<area shape="rect" id="node8" href="$df/d94/group__core-mle-core.html#gaac7d42ff61704aa43e94dbb781c78c5e" title="This method notifies MLE that the Network Data has changed. " alt="" coords="959,242,1130,281"/>
+<area shape="rect" id="node9" href="$d6/d9b/classThread_1_1NetworkData_1_1Leader.html#a428d60927d6f4b4ac8e878e792d2f716" title="This method is used by non&#45;Leader devices to set newly received Network Data from the Leader..." alt="" coords="1221,293,1395,331"/>
+<area shape="rect" id="node11" href="$d6/d9b/classThread_1_1NetworkData_1_1Leader.html#a5baddd109ff06b58140e2678e3c97a16" title="This method removes Network Data associated with a given RLOC16. " alt="" coords="1204,230,1412,269"/>
+<area shape="rect" id="node12" href="$db/dec/group__core-mle-router.html#ga179fad5b4b75849e76811006761d2b3e" title="This method release a given Router ID. " alt="" coords="1479,230,1640,269"/>
+<area shape="rect" id="node15" href="$db/dec/group__core-mle-router.html#gac7d2542017033898d0bc0f17a65d4656" title="This method checks if the destination is reachable. " alt="" coords="1707,234,1868,273"/>
+<area shape="rect" id="node14" href="$dd/d1d/classThread_1_1MeshForwarder.html#a969c6fac135cdee3ed9380a0859eaaa8" title="This method sets the Data Poll period. " alt="" coords="2138,295,2303,334"/>
+<area shape="rect" id="node16" href="$dd/d1d/classThread_1_1MeshForwarder.html#a361ef901f6b665b3c7feac206089a7df" title="This method submits a message to the mesh forwarder for forwarding. " alt="" coords="1921,234,2085,273"/>
+<area shape="rect" id="node17" href="$d3/d8e/classThread_1_1ThreadNetif.html#a95f2ad1f6785b0de74e660e43ac86d33" title="This method submits a message to the network interface. " alt="" coords="2150,233,2291,271"/>
+<area shape="rect" id="node20" href="$db/dec/group__core-mle-router.html#gaf13c43af2bf2f9057629cbb74fca0af0" title="This method handles MAC Data Poll messages. " alt="" coords="1916,518,2090,557"/>
 </map>

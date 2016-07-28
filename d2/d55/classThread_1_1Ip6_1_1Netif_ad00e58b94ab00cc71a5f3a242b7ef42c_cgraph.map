@@ -1,8 +1,9 @@
 <map id="Thread::Ip6::Netif::RemoveUnicastAddress" name="Thread::Ip6::Netif::RemoveUnicastAddress">
 <area shape="rect" id="node2" href="$d9/d13/classThread_1_1Ip6_1_1NetifUnicastAddress.html#ac7f38e1322075b0e6dfc7afc048f7eec" title="This method returns the next unicast address assigned to the interface. " alt="" coords="225,5,394,44"/>
-<area shape="rect" id="node3" href="$d4/d92/classThread_1_1Tasklet.html#a50a39a6f422851035b89aace87482425" title="This method puts the tasklet on the run queue. " alt="" coords="236,68,383,93"/>
-<area shape="rect" id="node4" href="$d8/de8/classThread_1_1TaskletScheduler.html#a137292acddf92acdef54cc7a33ea5fac" title="This static method enqueues a tasklet into the run queue. " alt="" coords="442,61,614,100"/>
-<area shape="rect" id="node5" href="$d3/de8/group__atomic.html#ga5eb5de0dbc130f745e31b1085f798e4f" title="Begin critical section. " alt="" coords="677,19,808,44"/>
-<area shape="rect" id="node6" href="$d1/de3/group__execution.html#ga0d8ce270d8b69230a851ac7b9538ed56" title="OpenThread calls this function when the tasklet queue transitions from empty to non&#45;empty. " alt="" coords="662,68,822,93"/>
-<area shape="rect" id="node7" href="$d3/de8/group__atomic.html#gac1707ea0096fa1501a356013982f7b35" title="End critical section. " alt="" coords="682,117,802,143"/>
+<area shape="rect" id="node3" href="$d9/d13/classThread_1_1Ip6_1_1NetifUnicastAddress.html#a2bb426bd29e271bd1fc09b61d1044911" title="This method returns the unicast address. " alt="" coords="225,68,394,107"/>
+<area shape="rect" id="node4" href="$d9/db1/classThread_1_1Ip6_1_1Address.html#a042097e2896ce7eebc1844140c0d2aeb" title="This method indicates whether or not the IPv6 address is a RLOC address. " alt="" coords="237,131,382,169"/>
+<area shape="rect" id="node5" href="$d2/d55/classThread_1_1Ip6_1_1Netif.html#a092484addf28568306ab45941abffff4" title="This method schedules notification of aFlags. " alt="" coords="226,193,393,232"/>
+<area shape="rect" id="node6" href="$d4/d92/classThread_1_1Tasklet.html#a50a39a6f422851035b89aace87482425" title="This method puts the tasklet on the run queue. " alt="" coords="442,200,588,225"/>
+<area shape="rect" id="node7" href="$d8/de8/classThread_1_1TaskletScheduler.html#a137292acddf92acdef54cc7a33ea5fac" title="This static method enqueues a tasklet into the run queue. " alt="" coords="636,193,809,232"/>
+<area shape="rect" id="node8" href="$d1/de3/group__execution.html#ga0d8ce270d8b69230a851ac7b9538ed56" title="OpenThread calls this function when the tasklet queue transitions from empty to non&#45;empty. " alt="" coords="857,200,1017,225"/>
 </map>

@@ -1,0 +1,6 @@
+<map id="Thread::Hdlc::Encoder::BufferWriteIterator::WriteByte" name="Thread::Hdlc::Encoder::BufferWriteIterator::WriteByte">
+<area shape="rect" id="node2" href="$d4/d27/classThread_1_1Hdlc_1_1Encoder.html#ab46533056028094a64768d238ad99a4c" title="This method begins an HDLC frame and puts the initial bytes into a buffer at the given aIterator..." alt="" coords="208,5,363,44"/>
+<area shape="rect" id="node3" href="$d4/d27/classThread_1_1Hdlc_1_1Encoder.html#a89f6e268087e2fa6c1303f4566c131ed" title="This method encodes a single byte into a buffer at aIterator. " alt="" coords="208,68,363,107"/>
+<area shape="rect" id="node5" href="$d4/d27/classThread_1_1Hdlc_1_1Encoder.html#a5513b8590576eb7008068fd953ad7ba7" title="This method finalizes an HDLC frame. " alt="" coords="411,125,566,164"/>
+<area shape="rect" id="node4" href="$d4/d27/classThread_1_1Hdlc_1_1Encoder.html#a1dd8633eefe3efb8f8cf4eca28e61f4a" title="This method encodes the frame into a buffer at aIterator. " alt="" coords="411,63,566,101"/>
+</map>

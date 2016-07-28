@@ -6,5 +6,6 @@ var mle_8hpp =
       [ "kDeviceStateChild", "d0/d78/mle_8hpp.html#ggabe714234641548ea1768d032cd89f2eaaa75f4fec564a007a4d40e1c085ba9cb1", null ],
       [ "kDeviceStateRouter", "d0/d78/mle_8hpp.html#ggabe714234641548ea1768d032cd89f2eaa583378afe418b287da014f00e44e148a", null ],
       [ "kDeviceStateLeader", "d0/d78/mle_8hpp.html#ggabe714234641548ea1768d032cd89f2eaab2cd9fd4044b649cc1755a711ed06fcf", null ]
-    ] ]
+    ] ],
+    [ "OT_TOOL_PACKED_END", "d0/d78/mle_8hpp.html#ga18badc15995568d9a7e362e764b1d148", null ]
 ];

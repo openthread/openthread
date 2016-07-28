@@ -1,9 +1,10 @@
 <map id="Thread::MeshForwarder::Stop" name="Thread::MeshForwarder::Stop">
-<area shape="rect" id="node2" href="$d1/d40/classThread_1_1Timer.html#a9acdec1cdf4edf947c563d40871f2bc8" title="This method stops the timer. " alt="" coords="431,71,570,96"/>
-<area shape="rect" id="node4" href="$da/d1a/classThread_1_1MessageQueue.html#ac0e8b64309aca4d66b262f0354d72e83" title="This method returns a pointer to the first message. " alt="" coords="218,34,383,72"/>
-<area shape="rect" id="node5" href="$da/d1a/classThread_1_1MessageQueue.html#a501d831849c577b2114fcbb4034d074d" title="This method removes a message from the list. " alt="" coords="218,96,383,135"/>
-<area shape="rect" id="node6" href="$dc/d3c/classThread_1_1Message.html#a3ab9d6d42d7ae9054eaf0cad0c4e44bb" title="This static method is used to free a message and return all message buffers to the buffer pool..." alt="" coords="220,159,380,184"/>
-<area shape="rect" id="node7" href="$d6/d88/classThread_1_1Mac_1_1Mac.html#a3bd89acb5004e00ea42580f0aae14644" title="This method stops the MAC. " alt="" coords="218,208,382,234"/>
-<area shape="rect" id="node3" href="$df/d1f/classThread_1_1TimerScheduler.html#a6bcb9ef68dd35e2006c4273e8c58d48b" title="This static method removes a timer instance to the timer scheduler. " alt="" coords="618,64,783,103"/>
-<area shape="rect" id="node8" href="$d7/d9c/group__radio-operation.html#ga7eff8e3bdab6b1a3df44cc20c4447349" title="Disable the radio. " alt="" coords="433,208,568,234"/>
+<area shape="rect" id="node2" href="$d1/d40/classThread_1_1Timer.html#a9acdec1cdf4edf947c563d40871f2bc8" title="This method stops the timer. " alt="" coords="243,12,383,37"/>
+<area shape="rect" id="node4" href="$da/d1a/classThread_1_1MessageQueue.html#ac0e8b64309aca4d66b262f0354d72e83" title="This method returns a pointer to the first message. " alt="" coords="230,61,395,100"/>
+<area shape="rect" id="node5" href="$da/d1a/classThread_1_1MessageQueue.html#a501d831849c577b2114fcbb4034d074d" title="This method removes a message from the list. " alt="" coords="230,124,395,163"/>
+<area shape="rect" id="node6" href="$dc/d3c/classThread_1_1Message.html#a3ab9d6d42d7ae9054eaf0cad0c4e44bb" title="This static method is used to free a message and return all message buffers to the buffer pool..." alt="" coords="233,187,393,212"/>
+<area shape="rect" id="node9" href="$d6/d88/classThread_1_1Mac_1_1Mac.html#ab74d0b0b142cadd19e6d2a24d441223f" title="This method sets the rx&#45;on&#45;when&#45;idle mode. " alt="" coords="218,236,408,275"/>
+<area shape="rect" id="node3" href="$df/d1f/classThread_1_1TimerScheduler.html#a6bcb9ef68dd35e2006c4273e8c58d48b" title="This static method removes a timer instance to the timer scheduler. " alt="" coords="473,5,637,44"/>
+<area shape="rect" id="node7" href="$db/d50/classThread_1_1Buffer.html#a34ab22941ccd9bb222d251a6a18c95bf" title="This method returns a pointer to the next message buffer. " alt="" coords="456,163,654,188"/>
+<area shape="rect" id="node8" href="$db/d50/classThread_1_1Buffer.html#a437ec9ccafa1ef6040a6e8e4fae9c3ca" title="This method sets the pointer to the next message buffer. " alt="" coords="457,212,653,237"/>
 </map>

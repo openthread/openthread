@@ -1,0 +1,11 @@
+<map id="otNewUdpMessage" name="otNewUdpMessage">
+<area shape="rect" id="node2" href="$de/ded/classThread_1_1Ip6_1_1Udp.html#afe746fb2f5c83a97c20e54fdb9c595a3" title="This static method returns a new UDP message with sufficient header space reserved. " alt="" coords="191,68,401,93"/>
+<area shape="rect" id="node3" href="$d3/d05/classThread_1_1Ip6_1_1Ip6.html#a215eeb84e75972828efbc163eedc1ec5" title="This static method allocates a new message buffer from the buffer pool. " alt="" coords="449,68,652,93"/>
+<area shape="rect" id="node4" href="$dc/d3c/classThread_1_1Message.html#a91be16485334ce1fa61f289b1eeb682a" title="This static method is used to obtain a new message. " alt="" coords="700,68,859,93"/>
+<area shape="rect" id="node5" href="$dc/d3c/classThread_1_1Message.html#a942818bf261c0af93b793017407c2b2c" title="This method sets whether or not link security is enabled for the message. " alt="" coords="916,5,1093,44"/>
+<area shape="rect" id="node6" href="$dc/d3c/classThread_1_1Message.html#acecf07ee065974c8b211c151ea5d6e14" title="This method sets the number of bytes in the message. " alt="" coords="907,68,1101,93"/>
+<area shape="rect" id="node8" href="$dc/d3c/classThread_1_1Message.html#a3ab9d6d42d7ae9054eaf0cad0c4e44bb" title="This static method is used to free a message and return all message buffers to the buffer pool..." alt="" coords="924,117,1084,143"/>
+<area shape="rect" id="node7" href="$dc/d3c/classThread_1_1Message.html#a2cf440376e834030c38bb2ced4ca49e9" title="This method returns the number of bytes in the message. " alt="" coords="1150,68,1345,93"/>
+<area shape="rect" id="node9" href="$db/d50/classThread_1_1Buffer.html#a34ab22941ccd9bb222d251a6a18c95bf" title="This method returns a pointer to the next message buffer. " alt="" coords="1149,117,1347,143"/>
+<area shape="rect" id="node10" href="$db/d50/classThread_1_1Buffer.html#a437ec9ccafa1ef6040a6e8e4fae9c3ca" title="This method sets the pointer to the next message buffer. " alt="" coords="1149,167,1346,192"/>
+</map>

@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['echoreplyhandler',['EchoReplyHandler',['../dc/ddf/classThread_1_1Ip6_1_1IcmpEcho.html#a097c28b65c6c77d4c233e752bf3ec07d',1,'Thread::Ip6::IcmpEcho']]]
+  ['dstunreachhandler',['DstUnreachHandler',['../da/dff/classThread_1_1Ip6_1_1IcmpHandler.html#a29e4de7922e90efb1c9f2195a7e4cf3c',1,'Thread::Ip6::IcmpHandler']]]
 ];

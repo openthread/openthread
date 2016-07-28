@@ -1,13 +1,13 @@
 <map id="Thread::Mle::Mle::SetRloc16" name="Thread::Mle::Mle::SetRloc16">
-<area shape="rect" id="node2" href="$d9/d13/classThread_1_1Ip6_1_1NetifUnicastAddress.html#a2bb426bd29e271bd1fc09b61d1044911" title="This method returns the unicast address. " alt="" coords="253,5,422,44"/>
-<area shape="rect" id="node3" href="$d2/d55/classThread_1_1Ip6_1_1Netif.html#ad891ec81750a2f7c4c722d07d7dc2632" title="This method adds a unicast address to the network interface. " alt="" coords="265,68,411,107"/>
-<area shape="rect" id="node10" href="$d2/d55/classThread_1_1Ip6_1_1Netif.html#ad00e58b94ab00cc71a5f3a242b7ef42c" title="This method removes a unicast address from the network interface. " alt="" coords="252,131,424,169"/>
-<area shape="rect" id="node11" href="$d6/d88/classThread_1_1Mac_1_1Mac.html#ad80edbfa825466831f487f7c57d247c2" title="This method sets the IEEE 802.15.4 Short Address. " alt="" coords="244,193,432,232"/>
-<area shape="rect" id="node4" href="$d9/d13/classThread_1_1Ip6_1_1NetifUnicastAddress.html#ac7f38e1322075b0e6dfc7afc048f7eec" title="This method returns the next unicast address assigned to the interface. " alt="" coords="491,129,660,168"/>
-<area shape="rect" id="node5" href="$d4/d92/classThread_1_1Tasklet.html#a50a39a6f422851035b89aace87482425" title="This method puts the tasklet on the run queue. " alt="" coords="502,77,649,103"/>
-<area shape="rect" id="node6" href="$d8/de8/classThread_1_1TaskletScheduler.html#a137292acddf92acdef54cc7a33ea5fac" title="This static method enqueues a tasklet into the run queue. " alt="" coords="719,71,891,109"/>
-<area shape="rect" id="node7" href="$d3/de8/group__atomic.html#ga5eb5de0dbc130f745e31b1085f798e4f" title="Begin critical section. " alt="" coords="954,28,1084,53"/>
-<area shape="rect" id="node8" href="$d1/de3/group__execution.html#ga0d8ce270d8b69230a851ac7b9538ed56" title="OpenThread calls this function when the tasklet queue transitions from empty to non&#45;empty. " alt="" coords="939,77,1099,103"/>
-<area shape="rect" id="node9" href="$d3/de8/group__atomic.html#gac1707ea0096fa1501a356013982f7b35" title="End critical section. " alt="" coords="959,127,1079,152"/>
-<area shape="rect" id="node12" href="$d1/d69/group__radio-config.html#ga275c098ae520634e7fad587e8ddca424" title="Set the Short Address for address filtering. " alt="" coords="480,200,671,225"/>
+<area shape="rect" id="node2" href="$d2/d55/classThread_1_1Ip6_1_1Netif.html#ad00e58b94ab00cc71a5f3a242b7ef42c" title="This method removes a unicast address from the network interface. " alt="" coords="252,68,424,107"/>
+<area shape="rect" id="node4" href="$d9/d13/classThread_1_1Ip6_1_1NetifUnicastAddress.html#a2bb426bd29e271bd1fc09b61d1044911" title="This method returns the unicast address. " alt="" coords="491,5,660,44"/>
+<area shape="rect" id="node10" href="$d2/d55/classThread_1_1Ip6_1_1Netif.html#ad891ec81750a2f7c4c722d07d7dc2632" title="This method adds a unicast address to the network interface. " alt="" coords="265,131,411,169"/>
+<area shape="rect" id="node11" href="$d6/d88/classThread_1_1Mac_1_1Mac.html#ad80edbfa825466831f487f7c57d247c2" title="This method sets the IEEE 802.15.4 Short Address. " alt="" coords="244,221,432,260"/>
+<area shape="rect" id="node3" href="$d9/d13/classThread_1_1Ip6_1_1NetifUnicastAddress.html#ac7f38e1322075b0e6dfc7afc048f7eec" title="This method returns the next unicast address assigned to the interface. " alt="" coords="491,68,660,107"/>
+<area shape="rect" id="node5" href="$d9/db1/classThread_1_1Ip6_1_1Address.html#a042097e2896ce7eebc1844140c0d2aeb" title="This method indicates whether or not the IPv6 address is a RLOC address. " alt="" coords="502,131,648,169"/>
+<area shape="rect" id="node6" href="$d2/d55/classThread_1_1Ip6_1_1Netif.html#a092484addf28568306ab45941abffff4" title="This method schedules notification of aFlags. " alt="" coords="492,193,659,232"/>
+<area shape="rect" id="node7" href="$d4/d92/classThread_1_1Tasklet.html#a50a39a6f422851035b89aace87482425" title="This method puts the tasklet on the run queue. " alt="" coords="719,200,865,225"/>
+<area shape="rect" id="node8" href="$d8/de8/classThread_1_1TaskletScheduler.html#a137292acddf92acdef54cc7a33ea5fac" title="This static method enqueues a tasklet into the run queue. " alt="" coords="913,193,1086,232"/>
+<area shape="rect" id="node9" href="$d1/de3/group__execution.html#ga0d8ce270d8b69230a851ac7b9538ed56" title="OpenThread calls this function when the tasklet queue transitions from empty to non&#45;empty. " alt="" coords="1134,200,1294,225"/>
+<area shape="rect" id="node12" href="$d1/d69/group__radio-config.html#ga275c098ae520634e7fad587e8ddca424" title="Set the Short Address for address filtering. " alt="" coords="480,256,671,281"/>
 </map>

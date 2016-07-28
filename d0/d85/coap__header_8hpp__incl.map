@@ -1,8 +1,10 @@
 <map id="src/core/coap/coap_header.hpp" name="src/core/coap/coap_header.hpp">
-<area shape="rect" id="node3" href="$d5/d8c/message_8hpp.html" title="This file includes definitions for the message buffer pool and message buffers. " alt="" coords="152,92,308,117"/>
-<area shape="rect" id="node5" href="$dc/dbf/openthread-types_8h.html" title="This file defines the types and structures used in the OpenThread library API. " alt="" coords="442,312,578,337"/>
-<area shape="rect" id="node6" href="$df/dcb/openthread-core-config_8h.html" title="This file includes compile&#45;time configuration constants for OpenThread. " alt="" coords="145,165,315,191"/>
-<area shape="rect" id="node7" href="$da/d7b/code__utils_8hpp.html" title="This file includes macros for validating runtime conditions. " alt="" coords="339,165,502,191"/>
-<area shape="rect" id="node9" href="$d1/d97/mac__frame_8hpp.html" title="This file includes definitions for generating and processing IEEE 802.15.4 MAC frames. " alt="" coords="525,165,668,191"/>
-<area shape="rect" id="node11" href="$d7/d62/radio_8h.html" title="This file defines the radio interface for OpenThread. " alt="" coords="540,239,654,264"/>
+<area shape="rect" id="node3" href="$d5/d8c/message_8hpp.html" title="This file includes definitions for the message buffer pool and message buffers. " alt="" coords="487,92,643,117"/>
+<area shape="rect" id="node5" href="$dc/dbf/openthread-types_8h.html" title="This file defines the types and structures used in the OpenThread library API. " alt="" coords="192,312,328,337"/>
+<area shape="rect" id="node8" href="$df/dcb/openthread-core-config_8h.html" title="This file includes compile&#45;time configuration constants for OpenThread. " alt="" coords="480,165,650,191"/>
+<area shape="rect" id="node9" href="$da/d7b/code__utils_8hpp.html" title="This file includes macros for validating runtime conditions. " alt="" coords="5,312,167,337"/>
+<area shape="rect" id="node10" href="$d1/d97/mac__frame_8hpp.html" title="This file includes definitions for generating and processing IEEE 802.15.4 MAC frames. " alt="" coords="314,165,457,191"/>
+<area shape="rect" id="node7" href="$d3/da9/toolchain_8h_source.html" title="platform/toolchain.h" alt="" coords="191,385,329,411"/>
+<area shape="rect" id="node12" href="$df/d57/encoding_8hpp.html" title="This file includes definitions for byte&#45;ordering encoding. " alt="" coords="423,239,579,264"/>
+<area shape="rect" id="node13" href="$d7/d62/radio_8h.html" title="This file defines the radio interface for OpenThread. " alt="" coords="233,239,347,264"/>
 </map>

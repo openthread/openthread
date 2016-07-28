@@ -1,6 +1,6 @@
 <map id="Thread::Mle::MleRouter::GetNextHop" name="Thread::Mle::MleRouter::GetNextHop">
 <area shape="rect" id="node2" href="$df/d94/group__core-mle-core.html#gaf0e6264b77090fb38ffc87e8b328cc7a" title="This method returns the next hop towards an RLOC16 destination. " alt="" coords="215,5,417,31"/>
-<area shape="rect" id="node3" href="$df/d94/group__core-mle-core.html#ga21748c6299e500b0d0ae939e7338197e" title="This method returns the Router ID portion of an RLOC16. " alt="" coords="215,55,416,80"/>
+<area shape="rect" id="node3" href="$df/d94/group__core-mle-core.html#gaf25c55f10892f57a41dd0fe6e495f70e" title="This method returns the Router ID portion of an RLOC16. " alt="" coords="215,55,416,80"/>
 <area shape="rect" id="node4" href="$df/d94/group__core-mle-core.html#ga4934863fd1274f1b86dc9bcee8d8682d" title="This method returns the RLOC16 assigned to the Thread interface. " alt="" coords="220,104,412,129"/>
 <area shape="rect" id="node5" href="$d6/d88/classThread_1_1Mac_1_1Mac.html#ac00b980b5fa6eca48cd29aa7b8ccebe8" title="This method returns the IEEE 802.15.4 Short Address. " alt="" coords="465,97,654,136"/>
 </map>

@@ -1,7 +1,8 @@
 <map id="src/core/common/timer.cpp" name="src/core/common/timer.cpp">
-<area shape="rect" id="node2" href="$da/d7b/code__utils_8hpp.html" title="This file includes macros for validating runtime conditions. " alt="" coords="5,79,167,104"/>
-<area shape="rect" id="node4" href="$df/d05/timer_8hpp.html" title="This file includes definitions for the multiplexed timer service. " alt="" coords="216,79,347,104"/>
-<area shape="rect" id="node9" href="$d2/d2d/alarm_8h.html" title="This file includes the platform abstraction for the alarm service. " alt="" coords="484,152,601,177"/>
-<area shape="rect" id="node7" href="$dc/dbf/openthread-types_8h.html" title="This file defines the types and structures used in the OpenThread library API. " alt="" coords="293,225,429,251"/>
-<area shape="rect" id="node8" href="$df/d84/tasklet_8hpp.html" title="This file includes definitions for tasklets and the tasklet scheduler. " alt="" coords="319,152,459,177"/>
+<area shape="rect" id="node2" href="$da/d7b/code__utils_8hpp.html" title="This file includes macros for validating runtime conditions. " alt="" coords="5,225,167,251"/>
+<area shape="rect" id="node4" href="$df/d05/timer_8hpp.html" title="This file includes definitions for the multiplexed timer service. " alt="" coords="320,79,451,104"/>
+<area shape="rect" id="node10" href="$d2/d2d/alarm_8h.html" title="This file includes the platform abstraction for the alarm service. " alt="" coords="494,152,612,177"/>
+<area shape="rect" id="node7" href="$dc/dbf/openthread-types_8h.html" title="This file defines the types and structures used in the OpenThread library API. " alt="" coords="192,225,328,251"/>
+<area shape="rect" id="node9" href="$df/d84/tasklet_8hpp.html" title="This file includes definitions for tasklets and the tasklet scheduler. " alt="" coords="185,152,326,177"/>
+<area shape="rect" id="node8" href="$d3/da9/toolchain_8h_source.html" title="platform/toolchain.h" alt="" coords="191,299,329,324"/>
 </map>

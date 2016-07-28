@@ -1,6 +1,6 @@
 var encoding_8hpp =
 [
-    [ "BitVectorBytes", "df/d57/encoding_8hpp.html#a0cad8c59b1f105428eb6183af193dc8d", null ],
+    [ "BitVectorBytes", "df/d57/encoding_8hpp.html#a0cb64877f0b26cb88621b1101fc348e6", null ],
     [ "HostSwap16", "df/d57/encoding_8hpp.html#a91ad274cf25ce41218f28714cbbeabee", null ],
     [ "HostSwap16", "df/d57/encoding_8hpp.html#a1c6c99bde9c5a06ea0ba4e0ddef56072", null ],
     [ "HostSwap32", "df/d57/encoding_8hpp.html#a0bcbbdf7f34499d23f084944a6187203", null ],

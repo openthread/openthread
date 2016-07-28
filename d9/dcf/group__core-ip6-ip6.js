@@ -9,7 +9,7 @@ var group__core_ip6_ip6 =
       [ "mNextHeader", "de/db9/structThread_1_1Ip6_1_1HeaderPoD.html#a4566443e9ebadf6d95dcf55923217f0a", null ],
       [ "mPayloadLength", "de/db9/structThread_1_1Ip6_1_1HeaderPoD.html#a2e1cbae14353c210374d6153b98c4c11", null ],
       [ "mSource", "de/db9/structThread_1_1Ip6_1_1HeaderPoD.html#a9264ba5fc65ca850a9a912f40783a690", null ],
-      [ "mVersionClassFlow", "de/db9/structThread_1_1Ip6_1_1HeaderPoD.html#ab02d667ab1eeef5f49b7401f2154de59", null ]
+      [ "mVersionClassFlow", "de/db9/structThread_1_1Ip6_1_1HeaderPoD.html#af81c12afd2a9353c1424815c21c1090b", null ]
     ] ],
     [ "Header", "d8/d6e/classThread_1_1Ip6_1_1Header.html", [
       [ "GetDestination", "d8/d6e/classThread_1_1Ip6_1_1Header.html#a24b065a50a342b00d2d8907b2fb3a66a", null ],
@@ -37,12 +37,12 @@ var group__core_ip6_ip6 =
     ] ],
     [ "HopByHopHeader", "dc/d98/classThread_1_1Ip6_1_1HopByHopHeader.html", null ],
     [ "OptionHeader", "d2/d7c/classThread_1_1Ip6_1_1OptionHeader.html", [
-      [ "Action", "d9/dcf/group__core-ip6-ip6.html#ga11a3e79ca8512121fa1bdf7a2d228339", [
-        [ "kActionSkip", "d9/dcf/group__core-ip6-ip6.html#gga11a3e79ca8512121fa1bdf7a2d228339a81e601322b14f1268228258b2740d5a7", null ],
-        [ "kActionDiscard", "d9/dcf/group__core-ip6-ip6.html#gga11a3e79ca8512121fa1bdf7a2d228339a47ec4173b32e8adbde9a86910b89b132", null ],
-        [ "kActionForceIcmp", "d9/dcf/group__core-ip6-ip6.html#gga11a3e79ca8512121fa1bdf7a2d228339a8054025b9f754513b146c6a259a7b81b", null ],
-        [ "kActionIcmp", "d9/dcf/group__core-ip6-ip6.html#gga11a3e79ca8512121fa1bdf7a2d228339ac174ee773ae826aca987554b2431e01a", null ],
-        [ "kActionMask", "d9/dcf/group__core-ip6-ip6.html#gga11a3e79ca8512121fa1bdf7a2d228339a7b864730330b4daffd5b889dfe52cdf3", null ]
+      [ "Action", "d2/d7c/classThread_1_1Ip6_1_1OptionHeader.html#a11a3e79ca8512121fa1bdf7a2d228339", [
+        [ "kActionSkip", "d2/d7c/classThread_1_1Ip6_1_1OptionHeader.html#a11a3e79ca8512121fa1bdf7a2d228339a81e601322b14f1268228258b2740d5a7", null ],
+        [ "kActionDiscard", "d2/d7c/classThread_1_1Ip6_1_1OptionHeader.html#a11a3e79ca8512121fa1bdf7a2d228339a47ec4173b32e8adbde9a86910b89b132", null ],
+        [ "kActionForceIcmp", "d2/d7c/classThread_1_1Ip6_1_1OptionHeader.html#a11a3e79ca8512121fa1bdf7a2d228339a8054025b9f754513b146c6a259a7b81b", null ],
+        [ "kActionIcmp", "d2/d7c/classThread_1_1Ip6_1_1OptionHeader.html#a11a3e79ca8512121fa1bdf7a2d228339ac174ee773ae826aca987554b2431e01a", null ],
+        [ "kActionMask", "d2/d7c/classThread_1_1Ip6_1_1OptionHeader.html#a11a3e79ca8512121fa1bdf7a2d228339a7b864730330b4daffd5b889dfe52cdf3", null ]
       ] ],
       [ "GetAction", "d2/d7c/classThread_1_1Ip6_1_1OptionHeader.html#ae5d9638cee80149e0a3f2116aba422ff", null ],
       [ "GetLength", "d2/d7c/classThread_1_1Ip6_1_1OptionHeader.html#ac284bc7a465a12b3a2ac20927ecda327", null ],
@@ -61,28 +61,27 @@ var group__core_ip6_ip6 =
       [ "SetOffset", "d6/d56/classThread_1_1Ip6_1_1FragmentHeader.html#a07820b9d9adf51cdd50fa8edb8b32f9e", null ]
     ] ],
     [ "Ip6", "d3/d05/classThread_1_1Ip6_1_1Ip6.html", [
-      [ "NcpReceivedDatagramHandler", "d3/d05/classThread_1_1Ip6_1_1Ip6.html#a53702b709aed52bd850dd6199719eb5d", null ],
-      [ "kDefaultHopLimit", "d9/dcf/group__core-ip6-ip6.html#gga23551a0b118c68c4ae55148b9b5b478aabcc4746e5794b131c481bf0f6f46160c", null ],
-      [ "kMaxDatagramLength", "d9/dcf/group__core-ip6-ip6.html#gga23551a0b118c68c4ae55148b9b5b478aaf76d9616c706ba78bf82ac0f56dcc332", null ],
+      [ "kDefaultHopLimit", "d3/d05/classThread_1_1Ip6_1_1Ip6.html#ab1684e591ffd310ddcaa6242b8fa55daabcc4746e5794b131c481bf0f6f46160c", null ],
+      [ "kMaxDatagramLength", "d3/d05/classThread_1_1Ip6_1_1Ip6.html#ab1684e591ffd310ddcaa6242b8fa55daaf76d9616c706ba78bf82ac0f56dcc332", null ],
       [ "ComputePseudoheaderChecksum", "d3/d05/classThread_1_1Ip6_1_1Ip6.html#a5f39ba98f1e62d4b618aa83ac8c047b6", null ],
       [ "HandleDatagram", "d3/d05/classThread_1_1Ip6_1_1Ip6.html#a4c138c4d117606c791172ba4788e9ebd", null ],
       [ "NewMessage", "d3/d05/classThread_1_1Ip6_1_1Ip6.html#a215eeb84e75972828efbc163eedc1ec5", null ],
       [ "SendDatagram", "d3/d05/classThread_1_1Ip6_1_1Ip6.html#a4aa215eb5c0d575403b5ca683e8427c2", null ],
-      [ "SetNcpReceivedHandler", "d3/d05/classThread_1_1Ip6_1_1Ip6.html#a0df5b6bf0b637e7e2c74be7aa1878ff0", null ],
+      [ "SetReceiveDatagramCallback", "d3/d05/classThread_1_1Ip6_1_1Ip6.html#a628b86a744a2c4cdb44dfb3b4c915b6c", null ],
       [ "UpdateChecksum", "d3/d05/classThread_1_1Ip6_1_1Ip6.html#a65af4f070c4734601f0308ab48affba8", null ],
       [ "UpdateChecksum", "d3/d05/classThread_1_1Ip6_1_1Ip6.html#a212426e8edc2d8c70a54165c9c8e7832", null ],
       [ "UpdateChecksum", "d3/d05/classThread_1_1Ip6_1_1Ip6.html#a12556380e18027c9b2af853aee6eaa79", null ]
     ] ],
     [ "Address", "d9/db1/classThread_1_1Ip6_1_1Address.html", [
-      [ "kInterfaceIdentifierSize", "d9/dcf/group__core-ip6-ip6.html#gga786f4b577f5ee3ba46cf79dc36abe8e6a4141f36de1ffc17734ac73ffce2f592b", null ],
-      [ "kNodeLocalScope", "d9/dcf/group__core-ip6-ip6.html#ggac66060f4eca4ee8cf0283660ed7a2f74adab25f2ccc7248061429fbea3c2dc630", null ],
-      [ "kInterfaceLocalScope", "d9/dcf/group__core-ip6-ip6.html#ggac66060f4eca4ee8cf0283660ed7a2f74a2a02317f59bab272e2c3572bc13ab299", null ],
-      [ "kLinkLocalScope", "d9/dcf/group__core-ip6-ip6.html#ggac66060f4eca4ee8cf0283660ed7a2f74afb770873a11bb2aabb16a574ab04b04d", null ],
-      [ "kRealmLocalScope", "d9/dcf/group__core-ip6-ip6.html#ggac66060f4eca4ee8cf0283660ed7a2f74a5ea73d3b52d8b6e4159753d696afc55a", null ],
-      [ "kAdminLocalScope", "d9/dcf/group__core-ip6-ip6.html#ggac66060f4eca4ee8cf0283660ed7a2f74a06c406f9009b61b7dbc44d6b48d1ae00", null ],
-      [ "kSiteLocalScope", "d9/dcf/group__core-ip6-ip6.html#ggac66060f4eca4ee8cf0283660ed7a2f74aec67b5d4893eb0e86e52532a30fef78e", null ],
-      [ "kOrgLocalScope", "d9/dcf/group__core-ip6-ip6.html#ggac66060f4eca4ee8cf0283660ed7a2f74a8f513bcf10c0cf9925d7d9bc9b8d3a66", null ],
-      [ "kGlobalScope", "d9/dcf/group__core-ip6-ip6.html#ggac66060f4eca4ee8cf0283660ed7a2f74a4733023881ae97df1c35ee8ad5634896", null ],
+      [ "kInterfaceIdentifierSize", "d9/db1/classThread_1_1Ip6_1_1Address.html#ac66060f4eca4ee8cf0283660ed7a2f74a4141f36de1ffc17734ac73ffce2f592b", null ],
+      [ "kNodeLocalScope", "d9/db1/classThread_1_1Ip6_1_1Address.html#a4bed758af8213d3d47bfd4a2159b1192adab25f2ccc7248061429fbea3c2dc630", null ],
+      [ "kInterfaceLocalScope", "d9/db1/classThread_1_1Ip6_1_1Address.html#a4bed758af8213d3d47bfd4a2159b1192a2a02317f59bab272e2c3572bc13ab299", null ],
+      [ "kLinkLocalScope", "d9/db1/classThread_1_1Ip6_1_1Address.html#a4bed758af8213d3d47bfd4a2159b1192afb770873a11bb2aabb16a574ab04b04d", null ],
+      [ "kRealmLocalScope", "d9/db1/classThread_1_1Ip6_1_1Address.html#a4bed758af8213d3d47bfd4a2159b1192a5ea73d3b52d8b6e4159753d696afc55a", null ],
+      [ "kAdminLocalScope", "d9/db1/classThread_1_1Ip6_1_1Address.html#a4bed758af8213d3d47bfd4a2159b1192a06c406f9009b61b7dbc44d6b48d1ae00", null ],
+      [ "kSiteLocalScope", "d9/db1/classThread_1_1Ip6_1_1Address.html#a4bed758af8213d3d47bfd4a2159b1192aec67b5d4893eb0e86e52532a30fef78e", null ],
+      [ "kOrgLocalScope", "d9/db1/classThread_1_1Ip6_1_1Address.html#a4bed758af8213d3d47bfd4a2159b1192a8f513bcf10c0cf9925d7d9bc9b8d3a66", null ],
+      [ "kGlobalScope", "d9/db1/classThread_1_1Ip6_1_1Address.html#a4bed758af8213d3d47bfd4a2159b1192a4733023881ae97df1c35ee8ad5634896", null ],
       [ "FromString", "d9/db1/classThread_1_1Ip6_1_1Address.html#a1c04d71e924b027baf699877969db09a", null ],
       [ "GetIid", "d9/db1/classThread_1_1Ip6_1_1Address.html#a5782d1de44935ab3e52a2f82bb6a66db", null ],
       [ "GetIid", "d9/db1/classThread_1_1Ip6_1_1Address.html#ab60fecac0574e8580c2713491c68265c", null ],
@@ -97,6 +96,7 @@ var group__core_ip6_ip6 =
       [ "IsRealmLocalAllNodesMulticast", "d9/db1/classThread_1_1Ip6_1_1Address.html#a93d389acbb866c3901ee565f1acaf551", null ],
       [ "IsRealmLocalAllRoutersMulticast", "d9/db1/classThread_1_1Ip6_1_1Address.html#a6cc8ec59ac4c6b8162fba7ca194e0d11", null ],
       [ "IsRealmLocalMulticast", "d9/db1/classThread_1_1Ip6_1_1Address.html#ab70000abd6ac0e216974ab012d4159d6", null ],
+      [ "IsRoutingLocator", "d9/db1/classThread_1_1Ip6_1_1Address.html#a042097e2896ce7eebc1844140c0d2aeb", null ],
       [ "IsUnspecified", "d9/db1/classThread_1_1Ip6_1_1Address.html#a51cfd76548da9f661a0d7a47a8d5e813", null ],
       [ "operator!=", "d9/db1/classThread_1_1Ip6_1_1Address.html#a096236983059900be2d9722ab754df14", null ],
       [ "operator==", "d9/db1/classThread_1_1Ip6_1_1Address.html#ae674bef975e707f415dd539440abf73e", null ],
@@ -126,23 +126,7 @@ var group__core_ip6_ip6 =
       [ "SockAddr", "d2/d7a/classThread_1_1Ip6_1_1SockAddr.html#a87f5eb3dd8b150de6cc6dcb9aa868a84", null ],
       [ "GetAddress", "d2/d7a/classThread_1_1Ip6_1_1SockAddr.html#a9f92ec4fbccf1d095aa8a43dd882dd2f", null ],
       [ "GetAddress", "d2/d7a/classThread_1_1Ip6_1_1SockAddr.html#a658e36ec5e40f250810e42bc8f12d34e", null ],
-      [ "kVersionClassFlowSize", "d9/dcf/group__core-ip6-ip6.html#gga9c8e5981abf1a1b0702486145f446392ad1d2d0978672bdd1d726aec91129404e", null ],
-      [ "kInterfaceIdentifierSize", "d9/dcf/group__core-ip6-ip6.html#gga786f4b577f5ee3ba46cf79dc36abe8e6a4141f36de1ffc17734ac73ffce2f592b", null ],
-      [ "kNodeLocalScope", "d9/dcf/group__core-ip6-ip6.html#ggac66060f4eca4ee8cf0283660ed7a2f74adab25f2ccc7248061429fbea3c2dc630", null ],
-      [ "kInterfaceLocalScope", "d9/dcf/group__core-ip6-ip6.html#ggac66060f4eca4ee8cf0283660ed7a2f74a2a02317f59bab272e2c3572bc13ab299", null ],
-      [ "kLinkLocalScope", "d9/dcf/group__core-ip6-ip6.html#ggac66060f4eca4ee8cf0283660ed7a2f74afb770873a11bb2aabb16a574ab04b04d", null ],
-      [ "kRealmLocalScope", "d9/dcf/group__core-ip6-ip6.html#ggac66060f4eca4ee8cf0283660ed7a2f74a5ea73d3b52d8b6e4159753d696afc55a", null ],
-      [ "kAdminLocalScope", "d9/dcf/group__core-ip6-ip6.html#ggac66060f4eca4ee8cf0283660ed7a2f74a06c406f9009b61b7dbc44d6b48d1ae00", null ],
-      [ "kSiteLocalScope", "d9/dcf/group__core-ip6-ip6.html#ggac66060f4eca4ee8cf0283660ed7a2f74aec67b5d4893eb0e86e52532a30fef78e", null ],
-      [ "kOrgLocalScope", "d9/dcf/group__core-ip6-ip6.html#ggac66060f4eca4ee8cf0283660ed7a2f74a8f513bcf10c0cf9925d7d9bc9b8d3a66", null ],
-      [ "kGlobalScope", "d9/dcf/group__core-ip6-ip6.html#ggac66060f4eca4ee8cf0283660ed7a2f74a4733023881ae97df1c35ee8ad5634896", null ]
-    ] ],
-    [ "Action", "d9/dcf/group__core-ip6-ip6.html#ga11a3e79ca8512121fa1bdf7a2d228339", [
-      [ "kActionSkip", "d9/dcf/group__core-ip6-ip6.html#gga11a3e79ca8512121fa1bdf7a2d228339a81e601322b14f1268228258b2740d5a7", null ],
-      [ "kActionDiscard", "d9/dcf/group__core-ip6-ip6.html#gga11a3e79ca8512121fa1bdf7a2d228339a47ec4173b32e8adbde9a86910b89b132", null ],
-      [ "kActionForceIcmp", "d9/dcf/group__core-ip6-ip6.html#gga11a3e79ca8512121fa1bdf7a2d228339a8054025b9f754513b146c6a259a7b81b", null ],
-      [ "kActionIcmp", "d9/dcf/group__core-ip6-ip6.html#gga11a3e79ca8512121fa1bdf7a2d228339ac174ee773ae826aca987554b2431e01a", null ],
-      [ "kActionMask", "d9/dcf/group__core-ip6-ip6.html#gga11a3e79ca8512121fa1bdf7a2d228339a7b864730330b4daffd5b889dfe52cdf3", null ]
+      [ "kVersionClassFlowSize", "d9/dcf/group__core-ip6-ip6.html#gga9195b49af7202b3e3038c8b393554d66ad1d2d0978672bdd1d726aec91129404e", null ]
     ] ],
     [ "IpProto", "d9/dcf/group__core-ip6-ip6.html#ga83d94b02a618038e1534f9e12001d095", [
       [ "kProtoHopOpts", "d9/dcf/group__core-ip6-ip6.html#gga83d94b02a618038e1534f9e12001d095af0cabc58472c62cd7c323ca2af1fce27", null ],

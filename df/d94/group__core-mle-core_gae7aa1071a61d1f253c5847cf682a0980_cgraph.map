@@ -1,4 +1,12 @@
 <map id="Thread::Mle::Mle::SetMeshLocalPrefix" name="Thread::Mle::Mle::SetMeshLocalPrefix">
-<area shape="rect" id="node2" href="$d9/d13/classThread_1_1Ip6_1_1NetifUnicastAddress.html#a2bb426bd29e271bd1fc09b61d1044911" title="This method returns the unicast address. " alt="" coords="239,5,408,44"/>
-<area shape="rect" id="node3" href="$d6/d94/classThread_1_1Ip6_1_1NetifMulticastAddress.html#a10800bf39d15ffa0735e857c13e8d489" title="This method returns the multicast address. " alt="" coords="235,68,412,107"/>
+<area shape="rect" id="node2" href="$d2/d55/classThread_1_1Ip6_1_1Netif.html#ad00e58b94ab00cc71a5f3a242b7ef42c" title="This method removes a unicast address from the network interface. " alt="" coords="237,131,409,169"/>
+<area shape="rect" id="node4" href="$d9/d13/classThread_1_1Ip6_1_1NetifUnicastAddress.html#a2bb426bd29e271bd1fc09b61d1044911" title="This method returns the unicast address. " alt="" coords="460,5,628,44"/>
+<area shape="rect" id="node6" href="$d2/d55/classThread_1_1Ip6_1_1Netif.html#a092484addf28568306ab45941abffff4" title="This method schedules notification of aFlags. " alt="" coords="461,193,627,232"/>
+<area shape="rect" id="node10" href="$d6/d94/classThread_1_1Ip6_1_1NetifMulticastAddress.html#a10800bf39d15ffa0735e857c13e8d489" title="This method returns the multicast address. " alt="" coords="235,245,412,284"/>
+<area shape="rect" id="node11" href="$d2/d55/classThread_1_1Ip6_1_1Netif.html#ad891ec81750a2f7c4c722d07d7dc2632" title="This method adds a unicast address to the network interface. " alt="" coords="250,68,396,107"/>
+<area shape="rect" id="node3" href="$d9/d13/classThread_1_1Ip6_1_1NetifUnicastAddress.html#ac7f38e1322075b0e6dfc7afc048f7eec" title="This method returns the next unicast address assigned to the interface. " alt="" coords="460,68,628,107"/>
+<area shape="rect" id="node5" href="$d9/db1/classThread_1_1Ip6_1_1Address.html#a042097e2896ce7eebc1844140c0d2aeb" title="This method indicates whether or not the IPv6 address is a RLOC address. " alt="" coords="471,131,617,169"/>
+<area shape="rect" id="node7" href="$d4/d92/classThread_1_1Tasklet.html#a50a39a6f422851035b89aace87482425" title="This method puts the tasklet on the run queue. " alt="" coords="676,200,823,225"/>
+<area shape="rect" id="node8" href="$d8/de8/classThread_1_1TaskletScheduler.html#a137292acddf92acdef54cc7a33ea5fac" title="This static method enqueues a tasklet into the run queue. " alt="" coords="871,193,1044,232"/>
+<area shape="rect" id="node9" href="$d1/de3/group__execution.html#ga0d8ce270d8b69230a851ac7b9538ed56" title="OpenThread calls this function when the tasklet queue transitions from empty to non&#45;empty. " alt="" coords="1092,200,1252,225"/>
 </map>

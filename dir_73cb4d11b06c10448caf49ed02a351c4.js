@@ -6,6 +6,8 @@ var dir_73cb4d11b06c10448caf49ed02a351c4 =
     [ "ip6.hpp", "d1/dd4/ip6_8hpp.html", "d1/dd4/ip6_8hpp" ],
     [ "ip6_address.cpp", "d2/db6/ip6__address_8cpp.html", null ],
     [ "ip6_address.hpp", "dc/d02/ip6__address_8hpp.html", null ],
+    [ "ip6_filter.cpp", "de/db9/ip6__filter_8cpp.html", null ],
+    [ "ip6_filter.hpp", "da/d32/ip6__filter_8hpp.html", null ],
     [ "ip6_mpl.cpp", "d3/d05/ip6__mpl_8cpp.html", null ],
     [ "ip6_mpl.hpp", "df/dab/ip6__mpl_8hpp.html", null ],
     [ "ip6_routes.cpp", "dd/daa/ip6__routes_8cpp.html", "dd/daa/ip6__routes_8cpp" ],

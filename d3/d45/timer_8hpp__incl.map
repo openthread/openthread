@@ -1,5 +1,6 @@
 <map id="src/core/common/timer.hpp" name="src/core/common/timer.hpp">
-<area shape="rect" id="node4" href="$dc/dbf/openthread-types_8h.html" title="This file defines the types and structures used in the OpenThread library API. " alt="" coords="152,152,288,177"/>
-<area shape="rect" id="node5" href="$df/d84/tasklet_8hpp.html" title="This file includes definitions for tasklets and the tasklet scheduler. " alt="" coords="200,79,341,104"/>
-<area shape="rect" id="node6" href="$d2/d2d/alarm_8h.html" title="This file includes the platform abstraction for the alarm service. " alt="" coords="317,152,435,177"/>
+<area shape="rect" id="node4" href="$dc/dbf/openthread-types_8h.html" title="This file defines the types and structures used in the OpenThread library API. " alt="" coords="290,152,427,177"/>
+<area shape="rect" id="node7" href="$df/d84/tasklet_8hpp.html" title="This file includes definitions for tasklets and the tasklet scheduler. " alt="" coords="200,79,341,104"/>
+<area shape="rect" id="node8" href="$d2/d2d/alarm_8h.html" title="This file includes the platform abstraction for the alarm service. " alt="" coords="149,152,267,177"/>
+<area shape="rect" id="node6" href="$d3/da9/toolchain_8h_source.html" title="platform/toolchain.h" alt="" coords="391,225,529,251"/>
 </map>

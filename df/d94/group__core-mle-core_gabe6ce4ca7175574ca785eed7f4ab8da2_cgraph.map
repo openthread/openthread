@@ -1,7 +1,3 @@
 <map id="Thread::Mle::Mle::BecomeChild" name="Thread::Mle::Mle::BecomeChild">
-<area shape="rect" id="node2" href="$d1/d40/classThread_1_1Timer.html#a475731e21b59be6b17b24f5b5e175f62" title="This method schedules the timer to fire a dt milliseconds from now. " alt="" coords="231,31,371,56"/>
-<area shape="rect" id="node3" href="$d1/d40/classThread_1_1Timer.html#a49ded72fbbf2588e1ddb545fa3f1f9f0" title="This method schedules the timer to fire at dt milliseconds from t0. " alt="" coords="423,5,576,31"/>
-<area shape="rect" id="node5" href="$d1/d40/classThread_1_1Timer.html#a0596072dec177b5e2b494db19800267d" title="This static method returns the current time in milliseconds. " alt="" coords="419,55,579,80"/>
-<area shape="rect" id="node4" href="$df/d1f/classThread_1_1TimerScheduler.html#ab72e28a36c92b4a87296d6d1afb2449e" title="This static method adds a timer instance to the timer scheduler. " alt="" coords="627,5,823,31"/>
-<area shape="rect" id="node6" href="$dd/db6/group__alarm.html#gaf8829e3591e03e29e136685fcdeb3300" title="Get the current current time. " alt="" coords="656,55,794,80"/>
+<area shape="rect" id="node2" href="$d1/d40/classThread_1_1Timer.html#a475731e21b59be6b17b24f5b5e175f62" title="This method schedules the timer to fire a dt milliseconds from now. " alt="" coords="231,12,371,37"/>
 </map>

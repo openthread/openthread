@@ -1,0 +1,4 @@
+<map id="Thread::NcpFrameBuffer::Clear" name="Thread::NcpFrameBuffer::Clear">
+<area shape="rect" id="node2" href="$d0/d78/classThread_1_1NcpFrameBuffer.html#ad20ceecdfd9130815f4f59a9192afeeb" title="This constructor creates an NCP frame buffer. " alt="" coords="222,5,390,44"/>
+<area shape="rect" id="node3" href="$d0/d78/classThread_1_1NcpFrameBuffer.html#ae80bc3d36fafc2a41b13270f7ffe54c2" title="This destructor clears the NCP frame buffer and clears all frames. " alt="" coords="222,68,390,107"/>
+</map>

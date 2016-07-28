@@ -1,3 +1,5 @@
 <map id="otFreeMessage" name="otFreeMessage">
-<area shape="rect" id="node2" href="$dc/d3c/classThread_1_1Message.html#a3ab9d6d42d7ae9054eaf0cad0c4e44bb" title="This static method is used to free a message and return all message buffers to the buffer pool..." alt="" coords="167,5,327,31"/>
+<area shape="rect" id="node2" href="$dc/d3c/classThread_1_1Message.html#a3ab9d6d42d7ae9054eaf0cad0c4e44bb" title="This static method is used to free a message and return all message buffers to the buffer pool..." alt="" coords="167,31,327,56"/>
+<area shape="rect" id="node3" href="$db/d50/classThread_1_1Buffer.html#a34ab22941ccd9bb222d251a6a18c95bf" title="This method returns a pointer to the next message buffer. " alt="" coords="375,5,573,31"/>
+<area shape="rect" id="node4" href="$db/d50/classThread_1_1Buffer.html#a437ec9ccafa1ef6040a6e8e4fae9c3ca" title="This method sets the pointer to the next message buffer. " alt="" coords="376,55,572,80"/>
 </map>

@@ -2,6 +2,7 @@ var namespaceThread_1_1Ip6 =
 [
     [ "Address", "d9/db1/classThread_1_1Ip6_1_1Address.html", "d9/db1/classThread_1_1Ip6_1_1Address" ],
     [ "ExtensionHeader", "de/df0/classThread_1_1Ip6_1_1ExtensionHeader.html", "de/df0/classThread_1_1Ip6_1_1ExtensionHeader" ],
+    [ "Filter", "df/db8/classThread_1_1Ip6_1_1Filter.html", "df/db8/classThread_1_1Ip6_1_1Filter" ],
     [ "FragmentHeader", "d6/d56/classThread_1_1Ip6_1_1FragmentHeader.html", "d6/d56/classThread_1_1Ip6_1_1FragmentHeader" ],
     [ "Header", "d8/d6e/classThread_1_1Ip6_1_1Header.html", "d8/d6e/classThread_1_1Ip6_1_1Header" ],
     [ "HeaderPoD", "de/db9/structThread_1_1Ip6_1_1HeaderPoD.html", "de/db9/structThread_1_1Ip6_1_1HeaderPoD" ],
@@ -16,7 +17,7 @@ var namespaceThread_1_1Ip6 =
     [ "MessageInfo", "da/d46/classThread_1_1Ip6_1_1MessageInfo.html", "da/d46/classThread_1_1Ip6_1_1MessageInfo" ],
     [ "Mpl", "dd/d60/classThread_1_1Ip6_1_1Mpl.html", "dd/d60/classThread_1_1Ip6_1_1Mpl" ],
     [ "Netif", "d2/d55/classThread_1_1Ip6_1_1Netif.html", "d2/d55/classThread_1_1Ip6_1_1Netif" ],
-    [ "NetifHandler", "d2/d8b/classThread_1_1Ip6_1_1NetifHandler.html", "d2/d8b/classThread_1_1Ip6_1_1NetifHandler" ],
+    [ "NetifCallback", "d2/dfb/classThread_1_1Ip6_1_1NetifCallback.html", "d2/dfb/classThread_1_1Ip6_1_1NetifCallback" ],
     [ "NetifMulticastAddress", "d6/d94/classThread_1_1Ip6_1_1NetifMulticastAddress.html", "d6/d94/classThread_1_1Ip6_1_1NetifMulticastAddress" ],
     [ "NetifUnicastAddress", "d9/d13/classThread_1_1Ip6_1_1NetifUnicastAddress.html", "d9/d13/classThread_1_1Ip6_1_1NetifUnicastAddress" ],
     [ "OptionHeader", "d2/d7c/classThread_1_1Ip6_1_1OptionHeader.html", "d2/d7c/classThread_1_1Ip6_1_1OptionHeader" ],

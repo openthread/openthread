@@ -1,0 +1,12 @@
+<map id="src/cli/cli_uart.hpp" name="src/cli/cli_uart.hpp">
+<area shape="rect" id="node2" href="$dc/dbf/openthread-types_8h.html" title="This file defines the types and structures used in the OpenThread library API. " alt="" coords="461,372,597,397"/>
+<area shape="rect" id="node6" href="$d8/d86/cli__server_8hpp.html" title="This file contains definitions for adding a CLI command to the CLI server. " alt="" coords="453,79,573,104"/>
+<area shape="rect" id="node15" href="$df/d84/tasklet_8hpp.html" title="This file includes definitions for tasklets and the tasklet scheduler. " alt="" coords="577,152,718,177"/>
+<area shape="rect" id="node5" href="$d3/da9/toolchain_8h_source.html" title="platform/toolchain.h" alt="" coords="460,445,598,471"/>
+<area shape="rect" id="node7" href="$d5/d8c/message_8hpp.html" title="This file includes definitions for the message buffer pool and message buffers. " alt="" coords="397,152,553,177"/>
+<area shape="rect" id="node9" href="$df/dcb/openthread-core-config_8h.html" title="This file includes compile&#45;time configuration constants for OpenThread. " alt="" coords="342,225,513,251"/>
+<area shape="rect" id="node10" href="$da/d7b/code__utils_8hpp.html" title="This file includes macros for validating runtime conditions. " alt="" coords="621,372,783,397"/>
+<area shape="rect" id="node11" href="$d1/d97/mac__frame_8hpp.html" title="This file includes definitions for generating and processing IEEE 802.15.4 MAC frames. " alt="" coords="176,225,319,251"/>
+<area shape="rect" id="node13" href="$df/d57/encoding_8hpp.html" title="This file includes definitions for byte&#45;ordering encoding. " alt="" coords="28,299,184,324"/>
+<area shape="rect" id="node14" href="$d7/d62/radio_8h.html" title="This file defines the radio interface for OpenThread. " alt="" coords="310,299,424,324"/>
+</map>

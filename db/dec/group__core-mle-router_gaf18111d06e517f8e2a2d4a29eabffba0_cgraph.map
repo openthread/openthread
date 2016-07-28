@@ -1,0 +1,14 @@
+<map id="Thread::Mle::MleRouter::GetRouterInfo" name="Thread::Mle::MleRouter::GetRouterInfo">
+<area shape="rect" id="node2" href="$df/d94/group__core-mle-core.html#ga99e523b68d245889329e59fc7f20fb64" title="This method indicates whether or not aRloc16 refers to an active router. " alt="" coords="228,5,403,44"/>
+<area shape="rect" id="node3" href="$df/d94/group__core-mle-core.html#gaf25c55f10892f57a41dd0fe6e495f70e" title="This method returns the Router ID portion of an RLOC16. " alt="" coords="215,68,416,93"/>
+<area shape="rect" id="node4" href="$df/d94/group__core-mle-core.html#ga4934863fd1274f1b86dc9bcee8d8682d" title="This method returns the RLOC16 assigned to the Thread interface. " alt="" coords="220,117,411,143"/>
+<area shape="rect" id="node6" href="$dd/d38/classThread_1_1LinkQualityInfo.html#ac9ba138f36e5f5af91c8b7a8ddae3604" title="Returns the current one&#45;way link quality value. " alt="" coords="236,167,395,205"/>
+<area shape="rect" id="node11" href="$d1/d40/classThread_1_1Timer.html#a8d56b463dc5c9f2fa82764efe3a700c7" title="This static method returns the number of seconds given milliseconds. " alt="" coords="225,229,406,255"/>
+<area shape="rect" id="node12" href="$d1/d40/classThread_1_1Timer.html#a0596072dec177b5e2b494db19800267d" title="This static method returns the current time in milliseconds. " alt="" coords="235,279,395,304"/>
+<area shape="rect" id="node5" href="$d6/d88/classThread_1_1Mac_1_1Mac.html#ac00b980b5fa6eca48cd29aa7b8ccebe8" title="This method returns the IEEE 802.15.4 Short Address. " alt="" coords="464,108,654,147"/>
+<area shape="rect" id="node7" href="$dd/d38/classThread_1_1LinkQualityInfo.html#a0b95900bcf8d92d35589c41f5d4da461" title="This method returns the link margin. " alt="" coords="479,171,638,209"/>
+<area shape="rect" id="node8" href="$dd/d38/classThread_1_1LinkQualityInfo.html#a89d22a837f94dbfacc6e8a93071867d6" title="This method converts a received signal strength value to a link margin value. " alt="" coords="702,140,879,179"/>
+<area shape="rect" id="node10" href="$dd/d38/classThread_1_1LinkQualityInfo.html#a6bb9667b219989c9825d292d6501ac66" title="This method returns the current average signal strength value. " alt="" coords="711,203,870,241"/>
+<area shape="rect" id="node9" href="$d3/d4b/group__core-link-quality.html#gaf5de6bda87e42eef536daa7d45a53475" title="This function returns the current average noise floor level (in dBm). " alt="" coords="927,147,1134,172"/>
+<area shape="rect" id="node13" href="$dd/db6/group__alarm.html#gaf8829e3591e03e29e136685fcdeb3300" title="Get the current time. " alt="" coords="490,279,628,304"/>
+</map>

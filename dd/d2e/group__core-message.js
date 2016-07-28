@@ -13,12 +13,13 @@ var group__core_message =
       [ "mNext", "d2/d60/structThread_1_1BufferHeader.html#ad46c41d9a29afb4c523d417a4ef39a83", null ]
     ] ],
     [ "MessageInfo", "de/dcc/structThread_1_1MessageInfo.html", [
-      [ "kListAll", "dd/d2e/group__core-message.html#gga73766bd0901983cf15f57210e767adb9a9ed087efe5a3d7cf6f5f45f28f37deb2", null ],
-      [ "kListInterface", "dd/d2e/group__core-message.html#gga73766bd0901983cf15f57210e767adb9a6aaf5c6edddad3bc91d596cccfff0496", null ],
+      [ "kListAll", "de/dcc/structThread_1_1MessageInfo.html#ac6a701b49101161eda6ab2e8ae83afcca9ed087efe5a3d7cf6f5f45f28f37deb2", null ],
+      [ "kListInterface", "de/dcc/structThread_1_1MessageInfo.html#ac6a701b49101161eda6ab2e8ae83afcca6aaf5c6edddad3bc91d596cccfff0496", null ],
       [ "mChildMask", "de/dcc/structThread_1_1MessageInfo.html#a487c2e0476296e5470d19711b68a9bef", null ],
       [ "mDatagramTag", "de/dcc/structThread_1_1MessageInfo.html#a004a1eff77952cd34b14d3d3996bad6d", null ],
       [ "mDirectTx", "de/dcc/structThread_1_1MessageInfo.html#a4304fa97f8cf74ea50693b2f7b21719d", null ],
       [ "mLength", "de/dcc/structThread_1_1MessageInfo.html#a5631c5ba5ba98a1a43761090bc2b44f6", null ],
+      [ "mLinkSecurity", "de/dcc/structThread_1_1MessageInfo.html#a1f15382a2e6d613a03a9190f5b4c3128", null ],
       [ "mList", "de/dcc/structThread_1_1MessageInfo.html#a7ea2c68dbcca801da35bb35aedf0f700", null ],
       [ "mOffset", "de/dcc/structThread_1_1MessageInfo.html#af700e600808a630c3a467f622644c032", null ],
       [ "mReserved", "de/dcc/structThread_1_1MessageInfo.html#a8431237636049e6587dee2d875b85221", null ],
@@ -34,9 +35,9 @@ var group__core_message =
       [ "mInfo", "db/d50/classThread_1_1Buffer.html#aa7dfd2dc6cbad3f1309a19defa60565e", null ]
     ] ],
     [ "Message", "dc/d3c/classThread_1_1Message.html", [
-      [ "kTypeIp6", "dd/d2e/group__core-message.html#gga26da1b2e0e84d6a882ed39331b9656dfac96bf4682b49e1798d726333ded9fae5", null ],
-      [ "kType6lowpan", "dd/d2e/group__core-message.html#gga26da1b2e0e84d6a882ed39331b9656dfa672fe2b3168cb6fc9b010ea8dfaf2bbb", null ],
-      [ "kTypeMacDataPoll", "dd/d2e/group__core-message.html#gga26da1b2e0e84d6a882ed39331b9656dfacc463bfa257900f59830a03104b6d13f", null ],
+      [ "kTypeIp6", "dc/d3c/classThread_1_1Message.html#a2c39ef6ef02f4ccb326a32a969efea21ac96bf4682b49e1798d726333ded9fae5", null ],
+      [ "kType6lowpan", "dc/d3c/classThread_1_1Message.html#a2c39ef6ef02f4ccb326a32a969efea21a672fe2b3168cb6fc9b010ea8dfaf2bbb", null ],
+      [ "kTypeMacDataPoll", "dc/d3c/classThread_1_1Message.html#a2c39ef6ef02f4ccb326a32a969efea21acc463bfa257900f59830a03104b6d13f", null ],
       [ "Append", "dc/d3c/classThread_1_1Message.html#a3c3d1c48e940f2553586d16e1618277d", null ],
       [ "ClearChildMask", "dc/d3c/classThread_1_1Message.html#a83c952b13dc03db254c352e08cdc22d0", null ],
       [ "ClearDirectTransmission", "dc/d3c/classThread_1_1Message.html#a183da0e2f6fb8dce996342aefd2512a6", null ],
@@ -52,6 +53,7 @@ var group__core_message =
       [ "GetType", "dc/d3c/classThread_1_1Message.html#a673bb6427db65e764ff9c34cb9173c55", null ],
       [ "Init", "dc/d3c/classThread_1_1Message.html#aacc2b52cbd27007968c6e525d3e28a84", null ],
       [ "IsChildPending", "dc/d3c/classThread_1_1Message.html#a99bd50e6f7decbb425d1ee86caa8706f", null ],
+      [ "IsLinkSecurityEnabled", "dc/d3c/classThread_1_1Message.html#a1ca6e4ae9889bec648ea6165a450c768", null ],
       [ "MoveOffset", "dc/d3c/classThread_1_1Message.html#a7b45edaa8ba9f31a437aea73cfca387c", null ],
       [ "New", "dc/d3c/classThread_1_1Message.html#a91be16485334ce1fa61f289b1eeb682a", null ],
       [ "Prepend", "dc/d3c/classThread_1_1Message.html#a9c900e4c1ddbb44f1d9c87d10172f63a", null ],
@@ -60,6 +62,7 @@ var group__core_message =
       [ "SetDatagramTag", "dc/d3c/classThread_1_1Message.html#a86c461e2baef8bd8c92a2b7e8a511c64", null ],
       [ "SetDirectTransmission", "dc/d3c/classThread_1_1Message.html#a566601529b2827024c7b33bd09d86ca0", null ],
       [ "SetLength", "dc/d3c/classThread_1_1Message.html#acecf07ee065974c8b211c151ea5d6e14", null ],
+      [ "SetLinkSecurityEnabled", "dc/d3c/classThread_1_1Message.html#a942818bf261c0af93b793017407c2b2c", null ],
       [ "SetOffset", "dc/d3c/classThread_1_1Message.html#acaa6ed0d0c060a524cb5da25451acc0d", null ],
       [ "SetTimeout", "dc/d3c/classThread_1_1Message.html#a73abaddda1f5d4fb6b4dd230c4b07f0a", null ],
       [ "UpdateChecksum", "dc/d3c/classThread_1_1Message.html#a97e576ca01bc7a858f2d5cd35c82b731", null ],
@@ -70,11 +73,6 @@ var group__core_message =
       [ "MessageQueue", "da/d1a/classThread_1_1MessageQueue.html#a75c2fab1de5d525eb98d0e0ada978757", null ],
       [ "Dequeue", "da/d1a/classThread_1_1MessageQueue.html#a501d831849c577b2114fcbb4034d074d", null ],
       [ "Enqueue", "da/d1a/classThread_1_1MessageQueue.html#a5e6f37c86a48e8dfbfcc7a7c14c23808", null ],
-      [ "GetHead", "da/d1a/classThread_1_1MessageQueue.html#ac0e8b64309aca4d66b262f0354d72e83", null ],
-      [ "kTypeIp6", "dd/d2e/group__core-message.html#gga26da1b2e0e84d6a882ed39331b9656dfac96bf4682b49e1798d726333ded9fae5", null ],
-      [ "kType6lowpan", "dd/d2e/group__core-message.html#gga26da1b2e0e84d6a882ed39331b9656dfa672fe2b3168cb6fc9b010ea8dfaf2bbb", null ],
-      [ "kTypeMacDataPoll", "dd/d2e/group__core-message.html#gga26da1b2e0e84d6a882ed39331b9656dfacc463bfa257900f59830a03104b6d13f", null ],
-      [ "kListAll", "dd/d2e/group__core-message.html#gga73766bd0901983cf15f57210e767adb9a9ed087efe5a3d7cf6f5f45f28f37deb2", null ],
-      [ "kListInterface", "dd/d2e/group__core-message.html#gga73766bd0901983cf15f57210e767adb9a6aaf5c6edddad3bc91d596cccfff0496", null ]
+      [ "GetHead", "da/d1a/classThread_1_1MessageQueue.html#ac0e8b64309aca4d66b262f0354d72e83", null ]
     ] ]
 ];

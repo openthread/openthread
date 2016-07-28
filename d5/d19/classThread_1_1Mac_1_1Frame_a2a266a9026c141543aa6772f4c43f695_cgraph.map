@@ -1,4 +1,0 @@
-<map id="Thread::Mac::Frame::GetHeaderLength" name="Thread::Mac::Frame::GetHeaderLength">
-<area shape="rect" id="node2" href="$d5/d19/classThread_1_1Mac_1_1Frame.html#a88ed2e5889a4f69c74e15a2bd34e718d" title="This method returns a pointer to the MAC Payload. " alt="" coords="195,5,338,44"/>
-<area shape="rect" id="node3" href="$d5/d19/classThread_1_1Mac_1_1Frame.html#aebe2c17f0f922618d8d9de522ca66ae7" title="This method returns a pointer to the PSDU. " alt="" coords="386,35,528,73"/>
-</map>

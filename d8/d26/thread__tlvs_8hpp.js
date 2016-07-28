@@ -8,5 +8,6 @@ var thread__tlvs_8hpp =
     [ "ThreadStatusTlv", "d4/df4/classThread_1_1ThreadStatusTlv.html", "d4/df4/classThread_1_1ThreadStatusTlv" ],
     [ "ThreadLastTransactionTimeTlv", "dc/dc8/classThread_1_1ThreadLastTransactionTimeTlv.html", "dc/dc8/classThread_1_1ThreadLastTransactionTimeTlv" ],
     [ "ThreadRouterMaskTlv", "dd/dd2/classThread_1_1ThreadRouterMaskTlv.html", "dd/dd2/classThread_1_1ThreadRouterMaskTlv" ],
-    [ "kCoapUdpPort", "d8/d26/thread__tlvs_8hpp.html#a889c94daf0da3914f0e3884308752de2a6082df5b5fc0d403762b4f14fcc4c447", null ]
+    [ "kCoapUdpPort", "d8/d26/thread__tlvs_8hpp.html#a400bc1e9833f1502fd2ce628fedefc88a6082df5b5fc0d403762b4f14fcc4c447", null ],
+    [ "OT_TOOL_PACKED_END", "d8/d26/thread__tlvs_8hpp.html#a664a7f1a5f6ddccf89bd31e4f03b511f", null ]
 ];

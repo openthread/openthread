@@ -1,5 +1,0 @@
-<map id="otPlatRadioDisable" name="otPlatRadioDisable">
-<area shape="rect" id="node2" href="$d6/d88/classThread_1_1Mac_1_1Mac.html#a3bd89acb5004e00ea42580f0aae14644" title="This method stops the MAC. " alt="" coords="188,12,352,37"/>
-<area shape="rect" id="node3" href="$dd/d1d/classThread_1_1MeshForwarder.html#a9a108930edeab22236a5eae4ced14ca6" title="This method disables mesh forwarding and the IEEE 802.15.4 MAC layer. " alt="" coords="400,5,564,44"/>
-<area shape="rect" id="node4" href="$d3/d8e/classThread_1_1ThreadNetif.html#a1a24f802ede854243223bcae3b7cb5ad" title="This method disables the Thread network interface. " alt="" coords="612,5,753,44"/>
-</map>

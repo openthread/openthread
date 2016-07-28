@@ -1,12 +1,12 @@
 var group__core_netdata_tlvs =
 [
     [ "NetworkDataTlv", "d5/d81/classThread_1_1NetworkData_1_1NetworkDataTlv.html", [
-      [ "Type", "da/da3/group__core-netdata-tlvs.html#ga21bf7963c4b206ccaa797c431831f9c1", [
-        [ "kTypeHasRoute", "da/da3/group__core-netdata-tlvs.html#gga21bf7963c4b206ccaa797c431831f9c1a3dc3074239a1994272346630de327b9d", null ],
-        [ "kTypePrefix", "da/da3/group__core-netdata-tlvs.html#gga21bf7963c4b206ccaa797c431831f9c1a3cd5c87eab47ce8494682b07f35e9fb2", null ],
-        [ "kTypeBorderRouter", "da/da3/group__core-netdata-tlvs.html#gga21bf7963c4b206ccaa797c431831f9c1a7fa976557b76770546d06d4577e4c9f9", null ],
-        [ "kTypeContext", "da/da3/group__core-netdata-tlvs.html#gga21bf7963c4b206ccaa797c431831f9c1aff7ce45144c62e6c62f9504e1134e7d0", null ],
-        [ "kTypeCommissioningData", "da/da3/group__core-netdata-tlvs.html#gga21bf7963c4b206ccaa797c431831f9c1a4646a91cf3b6ea2bb2c00b0d7ae29484", null ]
+      [ "Type", "d5/d81/classThread_1_1NetworkData_1_1NetworkDataTlv.html#a21bf7963c4b206ccaa797c431831f9c1", [
+        [ "kTypeHasRoute", "d5/d81/classThread_1_1NetworkData_1_1NetworkDataTlv.html#a21bf7963c4b206ccaa797c431831f9c1a3dc3074239a1994272346630de327b9d", null ],
+        [ "kTypePrefix", "d5/d81/classThread_1_1NetworkData_1_1NetworkDataTlv.html#a21bf7963c4b206ccaa797c431831f9c1a3cd5c87eab47ce8494682b07f35e9fb2", null ],
+        [ "kTypeBorderRouter", "d5/d81/classThread_1_1NetworkData_1_1NetworkDataTlv.html#a21bf7963c4b206ccaa797c431831f9c1a7fa976557b76770546d06d4577e4c9f9", null ],
+        [ "kTypeContext", "d5/d81/classThread_1_1NetworkData_1_1NetworkDataTlv.html#a21bf7963c4b206ccaa797c431831f9c1aff7ce45144c62e6c62f9504e1134e7d0", null ],
+        [ "kTypeCommissioningData", "d5/d81/classThread_1_1NetworkData_1_1NetworkDataTlv.html#a21bf7963c4b206ccaa797c431831f9c1a4646a91cf3b6ea2bb2c00b0d7ae29484", null ]
       ] ],
       [ "ClearStable", "d5/d81/classThread_1_1NetworkData_1_1NetworkDataTlv.html#aa4859aa514ee48c935c7af7bb7b2f7fa", null ],
       [ "GetLength", "d5/d81/classThread_1_1NetworkData_1_1NetworkDataTlv.html#ae8fa9bac54dd256c88ccc5df8e3b0ef8", null ],
@@ -41,13 +41,13 @@ var group__core_netdata_tlvs =
       [ "SetSubTlvsLength", "d0/d48/classThread_1_1NetworkData_1_1PrefixTlv.html#ada87986e83826285dadc2d7164d670e8", null ]
     ] ],
     [ "BorderRouterEntry", "d9/d64/classThread_1_1NetworkData_1_1BorderRouterEntry.html", [
-      [ "kPreferenceOffset", "da/da3/group__core-netdata-tlvs.html#gga62fc3d5c1082dfd4bfb60623f1be13f9a47d0c42046ded9aba718cc5329b6850e", null ],
-      [ "kPreferenceMask", "da/da3/group__core-netdata-tlvs.html#gga62fc3d5c1082dfd4bfb60623f1be13f9ab039e9dd5c75b98a942ede4cc6f1a2fc", null ],
-      [ "kPreferredFlag", "da/da3/group__core-netdata-tlvs.html#gga62fc3d5c1082dfd4bfb60623f1be13f9a649a7a7b61bf1ff654aaf5a55c1a4061", null ],
-      [ "kValidFlag", "da/da3/group__core-netdata-tlvs.html#gga62fc3d5c1082dfd4bfb60623f1be13f9ac9299de210aff56e9d5f63ad1e300388", null ],
-      [ "kDhcpFlag", "da/da3/group__core-netdata-tlvs.html#gga62fc3d5c1082dfd4bfb60623f1be13f9a19906167b92771a8e2647fec1e22d4cd", null ],
-      [ "kConfigureFlag", "da/da3/group__core-netdata-tlvs.html#gga62fc3d5c1082dfd4bfb60623f1be13f9a454899abe31b85bde0fbe1d9edf1a2b1", null ],
-      [ "kDefaultRouteFlag", "da/da3/group__core-netdata-tlvs.html#gga62fc3d5c1082dfd4bfb60623f1be13f9a814ac17790a57f0d2316221fc2db71d0", null ],
+      [ "kPreferenceOffset", "d9/d64/classThread_1_1NetworkData_1_1BorderRouterEntry.html#a3bc9fe5cdb515a320deb88ef84260407a47d0c42046ded9aba718cc5329b6850e", null ],
+      [ "kPreferenceMask", "d9/d64/classThread_1_1NetworkData_1_1BorderRouterEntry.html#a3bc9fe5cdb515a320deb88ef84260407ab039e9dd5c75b98a942ede4cc6f1a2fc", null ],
+      [ "kPreferredFlag", "d9/d64/classThread_1_1NetworkData_1_1BorderRouterEntry.html#a3bc9fe5cdb515a320deb88ef84260407a649a7a7b61bf1ff654aaf5a55c1a4061", null ],
+      [ "kValidFlag", "d9/d64/classThread_1_1NetworkData_1_1BorderRouterEntry.html#a3bc9fe5cdb515a320deb88ef84260407ac9299de210aff56e9d5f63ad1e300388", null ],
+      [ "kDhcpFlag", "d9/d64/classThread_1_1NetworkData_1_1BorderRouterEntry.html#a3bc9fe5cdb515a320deb88ef84260407a19906167b92771a8e2647fec1e22d4cd", null ],
+      [ "kConfigureFlag", "d9/d64/classThread_1_1NetworkData_1_1BorderRouterEntry.html#a3bc9fe5cdb515a320deb88ef84260407a454899abe31b85bde0fbe1d9edf1a2b1", null ],
+      [ "kDefaultRouteFlag", "d9/d64/classThread_1_1NetworkData_1_1BorderRouterEntry.html#a3bc9fe5cdb515a320deb88ef84260407a814ac17790a57f0d2316221fc2db71d0", null ],
       [ "ClearConfigure", "d9/d64/classThread_1_1NetworkData_1_1BorderRouterEntry.html#a4b5a94d51657059590f93b1154a4f2ee", null ],
       [ "ClearDefaultRoute", "d9/d64/classThread_1_1NetworkData_1_1BorderRouterEntry.html#aaf07466f2181a24282d6986f5a943fd7", null ],
       [ "ClearDhcp", "d9/d64/classThread_1_1NetworkData_1_1BorderRouterEntry.html#a6457becc9298917d6c134a3dfeedfe47", null ],
@@ -85,12 +85,5 @@ var group__core_netdata_tlvs =
       [ "SetCompress", "df/d56/classThread_1_1NetworkData_1_1ContextTlv.html#ae76fc3fc66d06499b9f36caab5f1e599", null ],
       [ "SetContextId", "df/d56/classThread_1_1NetworkData_1_1ContextTlv.html#a436bddda3ee77f005a83f97f35e71bfb", null ],
       [ "SetContextLength", "df/d56/classThread_1_1NetworkData_1_1ContextTlv.html#a4be9b8bbcde6083724a07320f00aede0", null ]
-    ] ],
-    [ "Type", "da/da3/group__core-netdata-tlvs.html#ga21bf7963c4b206ccaa797c431831f9c1", [
-      [ "kTypeHasRoute", "da/da3/group__core-netdata-tlvs.html#gga21bf7963c4b206ccaa797c431831f9c1a3dc3074239a1994272346630de327b9d", null ],
-      [ "kTypePrefix", "da/da3/group__core-netdata-tlvs.html#gga21bf7963c4b206ccaa797c431831f9c1a3cd5c87eab47ce8494682b07f35e9fb2", null ],
-      [ "kTypeBorderRouter", "da/da3/group__core-netdata-tlvs.html#gga21bf7963c4b206ccaa797c431831f9c1a7fa976557b76770546d06d4577e4c9f9", null ],
-      [ "kTypeContext", "da/da3/group__core-netdata-tlvs.html#gga21bf7963c4b206ccaa797c431831f9c1aff7ce45144c62e6c62f9504e1134e7d0", null ],
-      [ "kTypeCommissioningData", "da/da3/group__core-netdata-tlvs.html#gga21bf7963c4b206ccaa797c431831f9c1a4646a91cf3b6ea2bb2c00b0d7ae29484", null ]
     ] ]
 ];

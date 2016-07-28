@@ -1,7 +1,7 @@
 var structotLinkModeConfig =
 [
-    [ "mDeviceType", "d6/df6/structotLinkModeConfig.html#ac440be5294a20e90591d5f4eacc7266b", null ],
-    [ "mNetworkData", "d6/df6/structotLinkModeConfig.html#af0c79314129e2e6a0bb1fd8f6130d02a", null ],
-    [ "mRxOnWhenIdle", "d6/df6/structotLinkModeConfig.html#a1fd084b23d233864c5a41fb1d9de129f", null ],
-    [ "mSecureDataRequests", "d6/df6/structotLinkModeConfig.html#a7df02b402064f04e42519b8aaf1ac2ea", null ]
+    [ "mDeviceType", "d6/df6/structotLinkModeConfig.html#a1fce747b32f9a286f3bbd1ed27c0474a", null ],
+    [ "mNetworkData", "d6/df6/structotLinkModeConfig.html#a2575b92756e502ea99487ce93e41daf4", null ],
+    [ "mRxOnWhenIdle", "d6/df6/structotLinkModeConfig.html#a77d6097d168590c65f66edf507c45157", null ],
+    [ "mSecureDataRequests", "d6/df6/structotLinkModeConfig.html#a80538ca88257b8a563b5ee0aceac2bbc", null ]
 ];

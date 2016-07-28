@@ -1,0 +1,5 @@
+<map id="Thread::TimerScheduler::IsAdded" name="Thread::TimerScheduler::IsAdded">
+<area shape="rect" id="node2" href="$dd/db6/group__alarm.html#gaf8829e3591e03e29e136685fcdeb3300" title="Get the current time. " alt="" coords="218,5,356,31"/>
+<area shape="rect" id="node3" href="$dd/db6/group__alarm.html#ga2329a0a170b33c8dbd84e500e05918f4" title="Stop the alarm. " alt="" coords="228,55,346,80"/>
+<area shape="rect" id="node4" href="$dd/db6/group__alarm.html#ga1539c2bf378f1ae03ad2bc1eba70fa8e" title="Set the alarm to fire at aDt milliseconds after aT0. " alt="" coords="222,104,353,129"/>
+</map>

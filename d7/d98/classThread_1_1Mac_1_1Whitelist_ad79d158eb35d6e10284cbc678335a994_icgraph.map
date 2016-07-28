@@ -1,4 +1,5 @@
 <map id="Thread::Mac::Whitelist::Find" name="Thread::Mac::Whitelist::Find">
-<area shape="rect" id="node2" href="$d7/d98/classThread_1_1Mac_1_1Whitelist.html#a4f392b61c209adb971a1dd174185e1f5" title="This method adds an Extended Address to the whitelist filter. " alt="" coords="207,5,392,31"/>
-<area shape="rect" id="node3" href="$d7/d98/classThread_1_1Mac_1_1Whitelist.html#a738aa086a2ed98aa27b57e2ab92904aa" title="This method removes an Extended Address to the whitelist filter. " alt="" coords="223,55,377,93"/>
+<area shape="rect" id="node2" href="$d6/d88/classThread_1_1Mac_1_1Mac.html#a1b58865279aa421b1da0a665a6260e1d" title="This method is called to handle receive events. " alt="" coords="208,5,392,44"/>
+<area shape="rect" id="node3" href="$d7/d98/classThread_1_1Mac_1_1Whitelist.html#a4f392b61c209adb971a1dd174185e1f5" title="This method adds an Extended Address to the whitelist filter. " alt="" coords="207,68,392,93"/>
+<area shape="rect" id="node4" href="$d7/d98/classThread_1_1Mac_1_1Whitelist.html#a738aa086a2ed98aa27b57e2ab92904aa" title="This method removes an Extended Address to the whitelist filter. " alt="" coords="223,117,377,156"/>
 </map>

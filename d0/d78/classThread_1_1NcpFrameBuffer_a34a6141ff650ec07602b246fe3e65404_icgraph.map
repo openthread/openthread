@@ -1,0 +1,8 @@
+<map id="Thread::NcpFrameBuffer::IsEmpty" name="Thread::NcpFrameBuffer::IsEmpty">
+<area shape="rect" id="node2" href="$d0/d78/classThread_1_1NcpFrameBuffer.html#ab2380a440712abb615835172a0863bdf" title="This method clears the NCP frame buffer. " alt="" coords="222,36,390,75"/>
+<area shape="rect" id="node5" href="$d0/d78/classThread_1_1NcpFrameBuffer.html#a46d59d1e7c71eff0d4cf9ea91b821ead" title="This method finalizes/ends the current input frame being written to the buffer. " alt="" coords="222,99,390,137"/>
+<area shape="rect" id="node6" href="$d0/d78/classThread_1_1NcpFrameBuffer.html#ab8a97ac52ae66b96155e6fb72cbd7e38" title="This method removes the current/front output frame from the buffer. " alt="" coords="222,161,390,200"/>
+<area shape="rect" id="node7" href="$d0/d78/classThread_1_1NcpFrameBuffer.html#a8b7c96ec541408d307edf2c069ef208c" title="This method returns the number of bytes (length) of current/front frame in the NCP frame buffer..." alt="" coords="222,224,390,263"/>
+<area shape="rect" id="node3" href="$d0/d78/classThread_1_1NcpFrameBuffer.html#ad20ceecdfd9130815f4f59a9192afeeb" title="This constructor creates an NCP frame buffer. " alt="" coords="438,5,607,44"/>
+<area shape="rect" id="node4" href="$d0/d78/classThread_1_1NcpFrameBuffer.html#ae80bc3d36fafc2a41b13270f7ffe54c2" title="This destructor clears the NCP frame buffer and clears all frames. " alt="" coords="438,68,607,107"/>
+</map>

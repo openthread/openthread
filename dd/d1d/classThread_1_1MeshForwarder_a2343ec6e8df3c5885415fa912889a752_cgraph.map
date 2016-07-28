@@ -1,10 +1,6 @@
 <map id="Thread::MeshForwarder::SetRxOnWhenIdle" name="Thread::MeshForwarder::SetRxOnWhenIdle">
 <area shape="rect" id="node2" href="$d6/d88/classThread_1_1Mac_1_1Mac.html#ab74d0b0b142cadd19e6d2a24d441223f" title="This method sets the rx&#45;on&#45;when&#45;idle mode. " alt="" coords="218,5,408,44"/>
 <area shape="rect" id="node3" href="$d1/d40/classThread_1_1Timer.html#a9acdec1cdf4edf947c563d40871f2bc8" title="This method stops the timer. " alt="" coords="243,68,383,93"/>
-<area shape="rect" id="node5" href="$d1/d40/classThread_1_1Timer.html#a475731e21b59be6b17b24f5b5e175f62" title="This method schedules the timer to fire a dt milliseconds from now. " alt="" coords="243,120,383,145"/>
-<area shape="rect" id="node4" href="$df/d1f/classThread_1_1TimerScheduler.html#a6bcb9ef68dd35e2006c4273e8c58d48b" title="This static method removes a timer instance to the timer scheduler. " alt="" coords="456,57,621,96"/>
-<area shape="rect" id="node6" href="$d1/d40/classThread_1_1Timer.html#a49ded72fbbf2588e1ddb545fa3f1f9f0" title="This method schedules the timer to fire at dt milliseconds from t0. " alt="" coords="462,120,615,145"/>
-<area shape="rect" id="node8" href="$d1/d40/classThread_1_1Timer.html#a0596072dec177b5e2b494db19800267d" title="This static method returns the current time in milliseconds. " alt="" coords="458,169,618,195"/>
-<area shape="rect" id="node7" href="$df/d1f/classThread_1_1TimerScheduler.html#ab72e28a36c92b4a87296d6d1afb2449e" title="This static method adds a timer instance to the timer scheduler. " alt="" coords="669,120,864,145"/>
-<area shape="rect" id="node9" href="$dd/db6/group__alarm.html#gaf8829e3591e03e29e136685fcdeb3300" title="Get the current current time. " alt="" coords="697,169,836,195"/>
+<area shape="rect" id="node5" href="$d1/d40/classThread_1_1Timer.html#a475731e21b59be6b17b24f5b5e175f62" title="This method schedules the timer to fire a dt milliseconds from now. " alt="" coords="243,117,383,143"/>
+<area shape="rect" id="node4" href="$df/d1f/classThread_1_1TimerScheduler.html#a6bcb9ef68dd35e2006c4273e8c58d48b" title="This static method removes a timer instance to the timer scheduler. " alt="" coords="456,61,621,100"/>
 </map>

@@ -1,3 +1,4 @@
 <map id="otSetMessageLength" name="otSetMessageLength">
-<area shape="rect" id="node2" href="$dc/df5/classThread_1_1Cli_1_1Udp.html#a423f423b8c86c0a7baeab0e22e9624d0" title="This method delivers output to the client. " alt="" coords="201,5,367,31"/>
+<area shape="rect" id="node2" href="$dc/df5/classThread_1_1Cli_1_1Udp.html#a50e5829bd74bf2845d8313575e2dd15c" title="This method delivers raw characters to the client. " alt="" coords="201,12,367,37"/>
+<area shape="rect" id="node3" href="$dc/df5/classThread_1_1Cli_1_1Udp.html#ab8ac2489d2049ef5880c77ac1cdc639f" title="This method delivers formatted output to the client. " alt="" coords="415,5,580,44"/>
 </map>

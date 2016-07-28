@@ -1,0 +1,5 @@
+<map id="Thread::Ip6::Netif::SetStateChangedFlags" name="Thread::Ip6::Netif::SetStateChangedFlags">
+<area shape="rect" id="node2" href="$d4/d92/classThread_1_1Tasklet.html#a50a39a6f422851035b89aace87482425" title="This method puts the tasklet on the run queue. " alt="" coords="220,12,367,37"/>
+<area shape="rect" id="node3" href="$d8/de8/classThread_1_1TaskletScheduler.html#a137292acddf92acdef54cc7a33ea5fac" title="This static method enqueues a tasklet into the run queue. " alt="" coords="415,5,587,44"/>
+<area shape="rect" id="node4" href="$d1/de3/group__execution.html#ga0d8ce270d8b69230a851ac7b9538ed56" title="OpenThread calls this function when the tasklet queue transitions from empty to non&#45;empty. " alt="" coords="635,12,795,37"/>
+</map>

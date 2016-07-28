@@ -1,21 +1,22 @@
 var classThread_1_1Coap_1_1Header =
 [
-    [ "Code", "d5/de9/group__core-coap.html#ga14de12f3c0338e69a239cb4dc9afaf07", [
-      [ "kCodeGet", "d5/de9/group__core-coap.html#gga14de12f3c0338e69a239cb4dc9afaf07a1e8498ada7b11adfbea2a80da56bf790", null ],
-      [ "kCodePost", "d5/de9/group__core-coap.html#gga14de12f3c0338e69a239cb4dc9afaf07acb4a9e80ab913eadb58f694e619da0d8", null ],
-      [ "kCodePut", "d5/de9/group__core-coap.html#gga14de12f3c0338e69a239cb4dc9afaf07a225c876fcfc18ae665e6cbb3a6a79cae", null ],
-      [ "kCodeDelete", "d5/de9/group__core-coap.html#gga14de12f3c0338e69a239cb4dc9afaf07aa13f1d20502a235f7bf94c03deda5322", null ],
-      [ "kCodeChanged", "d5/de9/group__core-coap.html#gga14de12f3c0338e69a239cb4dc9afaf07acde235350d957af89cc7c974c6716989", null ],
-      [ "kCodeContent", "d5/de9/group__core-coap.html#gga14de12f3c0338e69a239cb4dc9afaf07a6aa1e220a7e0d67e373946f58c36ee64", null ]
+    [ "Option", "d1/d84/structThread_1_1Coap_1_1Header_1_1Option.html", "d1/d84/structThread_1_1Coap_1_1Header_1_1Option" ],
+    [ "Code", "d0/d7f/classThread_1_1Coap_1_1Header.html#a14de12f3c0338e69a239cb4dc9afaf07", [
+      [ "kCodeGet", "d0/d7f/classThread_1_1Coap_1_1Header.html#a14de12f3c0338e69a239cb4dc9afaf07a1e8498ada7b11adfbea2a80da56bf790", null ],
+      [ "kCodePost", "d0/d7f/classThread_1_1Coap_1_1Header.html#a14de12f3c0338e69a239cb4dc9afaf07acb4a9e80ab913eadb58f694e619da0d8", null ],
+      [ "kCodePut", "d0/d7f/classThread_1_1Coap_1_1Header.html#a14de12f3c0338e69a239cb4dc9afaf07a225c876fcfc18ae665e6cbb3a6a79cae", null ],
+      [ "kCodeDelete", "d0/d7f/classThread_1_1Coap_1_1Header.html#a14de12f3c0338e69a239cb4dc9afaf07aa13f1d20502a235f7bf94c03deda5322", null ],
+      [ "kCodeChanged", "d0/d7f/classThread_1_1Coap_1_1Header.html#a14de12f3c0338e69a239cb4dc9afaf07acde235350d957af89cc7c974c6716989", null ],
+      [ "kCodeContent", "d0/d7f/classThread_1_1Coap_1_1Header.html#a14de12f3c0338e69a239cb4dc9afaf07a6aa1e220a7e0d67e373946f58c36ee64", null ]
     ] ],
-    [ "MediaType", "d5/de9/group__core-coap.html#ga5ac8d25bb0581072ef1c3815bb380651", [
-      [ "kApplicationOctetStream", "d5/de9/group__core-coap.html#gga5ac8d25bb0581072ef1c3815bb380651a8e5ddd4d6ba5b4509392244047c83368", null ]
+    [ "MediaType", "d0/d7f/classThread_1_1Coap_1_1Header.html#a5ac8d25bb0581072ef1c3815bb380651", [
+      [ "kApplicationOctetStream", "d0/d7f/classThread_1_1Coap_1_1Header.html#a5ac8d25bb0581072ef1c3815bb380651a8e5ddd4d6ba5b4509392244047c83368", null ]
     ] ],
-    [ "Type", "d5/de9/group__core-coap.html#ga9cc263e0c3c913253501e147d7a7b401", [
-      [ "kTypeConfirmable", "d5/de9/group__core-coap.html#gga9cc263e0c3c913253501e147d7a7b401a7a96308948c23e5c1b7e987601e2e279", null ],
-      [ "kTypeNonConfirmable", "d5/de9/group__core-coap.html#gga9cc263e0c3c913253501e147d7a7b401a096caad676d32bedc333697b052f1bef", null ],
-      [ "kTypeAcknowledgment", "d5/de9/group__core-coap.html#gga9cc263e0c3c913253501e147d7a7b401accce1b05c2db09d6694b8c67ae52b091", null ],
-      [ "kTypeReset", "d5/de9/group__core-coap.html#gga9cc263e0c3c913253501e147d7a7b401a35c06a43d1df209f177c8e35fa38cd52", null ]
+    [ "Type", "d0/d7f/classThread_1_1Coap_1_1Header.html#a9cc263e0c3c913253501e147d7a7b401", [
+      [ "kTypeConfirmable", "d0/d7f/classThread_1_1Coap_1_1Header.html#a9cc263e0c3c913253501e147d7a7b401a7a96308948c23e5c1b7e987601e2e279", null ],
+      [ "kTypeNonConfirmable", "d0/d7f/classThread_1_1Coap_1_1Header.html#a9cc263e0c3c913253501e147d7a7b401a096caad676d32bedc333697b052f1bef", null ],
+      [ "kTypeAcknowledgment", "d0/d7f/classThread_1_1Coap_1_1Header.html#a9cc263e0c3c913253501e147d7a7b401accce1b05c2db09d6694b8c67ae52b091", null ],
+      [ "kTypeReset", "d0/d7f/classThread_1_1Coap_1_1Header.html#a9cc263e0c3c913253501e147d7a7b401a35c06a43d1df209f177c8e35fa38cd52", null ]
     ] ],
     [ "AppendContentFormatOption", "d0/d7f/classThread_1_1Coap_1_1Header.html#a0884aa8b02fc83496540a6cd2e9b7a73", null ],
     [ "AppendOption", "d0/d7f/classThread_1_1Coap_1_1Header.html#ac047d4a2285b8315c1f11d66c04994a4", null ],

@@ -1,0 +1,4 @@
+<map id="Thread::Ip6::ExtensionHeader::SetNextHeader" name="Thread::Ip6::ExtensionHeader::SetNextHeader">
+<area shape="rect" id="node2" href="$d3/d05/classThread_1_1Ip6_1_1Ip6.html#a628b86a744a2c4cdb44dfb3b4c915b6c" title="This function registers a callback to provide received raw IPv6 datagrams. " alt="" coords="253,5,444,44"/>
+<area shape="rect" id="node3" href="$db/de8/group__ip6.html#ga9eb7ca204eac0191d7f4a2799c95708f" title="This function registers a callback to provide received IPv6 datagrams. " alt="" coords="492,12,720,37"/>
+</map>

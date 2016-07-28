@@ -1,0 +1,6 @@
+<map id="Thread::Hdlc::Encoder::Finalize" name="Thread::Hdlc::Encoder::Finalize">
+<area shape="rect" id="node2" href="$d4/d27/classThread_1_1Hdlc_1_1Encoder.html#a89f6e268087e2fa6c1303f4566c131ed" title="This method encodes a single byte into a buffer at aIterator. " alt="" coords="208,76,363,115"/>
+<area shape="rect" id="node4" href="$db/d9c/classThread_1_1Hdlc_1_1Encoder_1_1BufferWriteIterator.html#a95fa42af34764041edf8901860560833" title="This method writes a byte to the buffer and updates the iterator (if space is available). " alt="" coords="418,131,573,183"/>
+<area shape="rect" id="node3" href="$db/d9c/classThread_1_1Hdlc_1_1Encoder_1_1BufferWriteIterator.html#a8d6d63d2b1855c2a1dd6deb536ebf702" title="This method checks if there is buffer space available to write aWriteLength bytes. " alt="" coords="418,5,573,57"/>
+<area shape="rect" id="node5" href="$d5/d0a/namespaceThread_1_1Hdlc.html#ad640cd8dadb4e659e0c8e7b4f43cf96f" title="This method updates an FCS. " alt="" coords="411,81,580,107"/>
+</map>

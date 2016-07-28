@@ -1,7 +1,0 @@
-<map id="Thread::Mac::Mac::ActiveScan" name="Thread::Mac::Mac::ActiveScan">
-<area shape="rect" id="node2" href="$d4/d92/classThread_1_1Tasklet.html#a50a39a6f422851035b89aace87482425" title="This method puts the tasklet on the run queue. " alt="" coords="256,55,403,80"/>
-<area shape="rect" id="node3" href="$d8/de8/classThread_1_1TaskletScheduler.html#a137292acddf92acdef54cc7a33ea5fac" title="This static method enqueues a tasklet into the run queue. " alt="" coords="451,48,623,87"/>
-<area shape="rect" id="node4" href="$d3/de8/group__atomic.html#ga5eb5de0dbc130f745e31b1085f798e4f" title="Begin critical section. " alt="" coords="686,5,816,31"/>
-<area shape="rect" id="node5" href="$d1/de3/group__execution.html#ga0d8ce270d8b69230a851ac7b9538ed56" title="OpenThread calls this function when the tasklet queue transitions from empty to non&#45;empty. " alt="" coords="671,55,831,80"/>
-<area shape="rect" id="node6" href="$d3/de8/group__atomic.html#gac1707ea0096fa1501a356013982f7b35" title="End critical section. " alt="" coords="691,104,811,129"/>
-</map>

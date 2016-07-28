@@ -1,8 +1,8 @@
 var classThread_1_1Message =
 [
-    [ "kTypeIp6", "dd/d2e/group__core-message.html#gga26da1b2e0e84d6a882ed39331b9656dfac96bf4682b49e1798d726333ded9fae5", null ],
-    [ "kType6lowpan", "dd/d2e/group__core-message.html#gga26da1b2e0e84d6a882ed39331b9656dfa672fe2b3168cb6fc9b010ea8dfaf2bbb", null ],
-    [ "kTypeMacDataPoll", "dd/d2e/group__core-message.html#gga26da1b2e0e84d6a882ed39331b9656dfacc463bfa257900f59830a03104b6d13f", null ],
+    [ "kTypeIp6", "dc/d3c/classThread_1_1Message.html#a2c39ef6ef02f4ccb326a32a969efea21ac96bf4682b49e1798d726333ded9fae5", null ],
+    [ "kType6lowpan", "dc/d3c/classThread_1_1Message.html#a2c39ef6ef02f4ccb326a32a969efea21a672fe2b3168cb6fc9b010ea8dfaf2bbb", null ],
+    [ "kTypeMacDataPoll", "dc/d3c/classThread_1_1Message.html#a2c39ef6ef02f4ccb326a32a969efea21acc463bfa257900f59830a03104b6d13f", null ],
     [ "Append", "dc/d3c/classThread_1_1Message.html#a3c3d1c48e940f2553586d16e1618277d", null ],
     [ "ClearChildMask", "dc/d3c/classThread_1_1Message.html#a83c952b13dc03db254c352e08cdc22d0", null ],
     [ "ClearDirectTransmission", "dc/d3c/classThread_1_1Message.html#a183da0e2f6fb8dce996342aefd2512a6", null ],
@@ -18,6 +18,7 @@ var classThread_1_1Message =
     [ "GetType", "dc/d3c/classThread_1_1Message.html#a673bb6427db65e764ff9c34cb9173c55", null ],
     [ "Init", "dc/d3c/classThread_1_1Message.html#aacc2b52cbd27007968c6e525d3e28a84", null ],
     [ "IsChildPending", "dc/d3c/classThread_1_1Message.html#a99bd50e6f7decbb425d1ee86caa8706f", null ],
+    [ "IsLinkSecurityEnabled", "dc/d3c/classThread_1_1Message.html#a1ca6e4ae9889bec648ea6165a450c768", null ],
     [ "MoveOffset", "dc/d3c/classThread_1_1Message.html#a7b45edaa8ba9f31a437aea73cfca387c", null ],
     [ "New", "dc/d3c/classThread_1_1Message.html#a91be16485334ce1fa61f289b1eeb682a", null ],
     [ "Prepend", "dc/d3c/classThread_1_1Message.html#a9c900e4c1ddbb44f1d9c87d10172f63a", null ],
@@ -26,6 +27,7 @@ var classThread_1_1Message =
     [ "SetDatagramTag", "dc/d3c/classThread_1_1Message.html#a86c461e2baef8bd8c92a2b7e8a511c64", null ],
     [ "SetDirectTransmission", "dc/d3c/classThread_1_1Message.html#a566601529b2827024c7b33bd09d86ca0", null ],
     [ "SetLength", "dc/d3c/classThread_1_1Message.html#acecf07ee065974c8b211c151ea5d6e14", null ],
+    [ "SetLinkSecurityEnabled", "dc/d3c/classThread_1_1Message.html#a942818bf261c0af93b793017407c2b2c", null ],
     [ "SetOffset", "dc/d3c/classThread_1_1Message.html#acaa6ed0d0c060a524cb5da25451acc0d", null ],
     [ "SetTimeout", "dc/d3c/classThread_1_1Message.html#a73abaddda1f5d4fb6b4dd230c4b07f0a", null ],
     [ "UpdateChecksum", "dc/d3c/classThread_1_1Message.html#a97e576ca01bc7a858f2d5cd35c82b731", null ],

@@ -1,0 +1,6 @@
+<map id="otPlatRadioSetPromiscuous" name="otPlatRadioSetPromiscuous">
+<area shape="rect" id="node2" href="$d6/d88/classThread_1_1Mac_1_1Mac.html#aeacaaf9b0fb951c5d78892a9ea9b5c53" title="This function enables or disables the link layer promiscuous mode. " alt="" coords="243,5,476,31"/>
+<area shape="rect" id="node3" href="$d9/dc8/classThread_1_1NcpBase.html#ad628aea520da8553bbb090ff4f50b09e" title="Called by the superclass to indicate when a send has been completed. " alt="" coords="241,55,478,80"/>
+<area shape="rect" id="node4" href="$d2/de4/ncp_8h.html#aef46036f17188b217a2ffcb8c325f516" title="Initialize the NCP. " alt="" coords="586,29,660,55"/>
+<area shape="rect" id="node5" href="$db/def/group__uart.html#gab2950583380bb90a3779f980c28fbaa0" title="The UART driver calls this method to notify OpenThread that the requested bytes have been sent..." alt="" coords="526,79,720,104"/>
+</map>

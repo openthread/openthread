@@ -1,26 +1,49 @@
 var group__config_general =
 [
     [ "otLinkModeConfig", "d6/df6/structotLinkModeConfig.html", [
-      [ "mDeviceType", "d6/df6/structotLinkModeConfig.html#ac440be5294a20e90591d5f4eacc7266b", null ],
-      [ "mNetworkData", "d6/df6/structotLinkModeConfig.html#af0c79314129e2e6a0bb1fd8f6130d02a", null ],
-      [ "mRxOnWhenIdle", "d6/df6/structotLinkModeConfig.html#a1fd084b23d233864c5a41fb1d9de129f", null ],
-      [ "mSecureDataRequests", "d6/df6/structotLinkModeConfig.html#a7df02b402064f04e42519b8aaf1ac2ea", null ]
+      [ "mDeviceType", "d6/df6/structotLinkModeConfig.html#a1fce747b32f9a286f3bbd1ed27c0474a", null ],
+      [ "mNetworkData", "d6/df6/structotLinkModeConfig.html#a2575b92756e502ea99487ce93e41daf4", null ],
+      [ "mRxOnWhenIdle", "d6/df6/structotLinkModeConfig.html#a77d6097d168590c65f66edf507c45157", null ],
+      [ "mSecureDataRequests", "d6/df6/structotLinkModeConfig.html#a80538ca88257b8a563b5ee0aceac2bbc", null ]
     ] ],
-    [ "OT_NETWORK_NAME_SIZE", "df/d4f/group__config-general.html#gad94b9c74ee8006e8b841e3fe0c419a33", null ],
     [ "otLinkModeConfig", "df/d4f/group__config-general.html#ga7ef997873f4d40618d77330c34e5766c", null ],
+    [ "otStateChangedCallback", "df/d4f/group__config-general.html#gadf6bb5823b1a9ae13645827c3953bb49", [
+      [ "OT_IP6_ADDRESS_ADDED", "df/d4f/group__config-general.html#gga2dbb833ef0dcc466dd02ee76badaf709a1798c759412bb01d6d68120cf56197c0", null ],
+      [ "OT_IP6_ADDRESS_REMOVED", "df/d4f/group__config-general.html#gga2dbb833ef0dcc466dd02ee76badaf709a8e70ea988a7273f22fec3c1f22b9b560", null ],
+      [ "OT_NET_STATE", "df/d4f/group__config-general.html#gga2dbb833ef0dcc466dd02ee76badaf709a74f844c6e5c62dbf95265850e182dd30", null ],
+      [ "OT_NET_ROLE", "df/d4f/group__config-general.html#gga2dbb833ef0dcc466dd02ee76badaf709a1fc2a7c3d8ae15725526ff60fd5495fd", null ],
+      [ "OT_NET_PARTITION_ID", "df/d4f/group__config-general.html#gga2dbb833ef0dcc466dd02ee76badaf709aa57177c35c36004128c5e920c37e9481", null ],
+      [ "OT_NET_KEY_SEQUENCE", "df/d4f/group__config-general.html#gga2dbb833ef0dcc466dd02ee76badaf709a732a08671e2786a3f73673604a666fa7", null ],
+      [ "OT_THREAD_CHILD_ADDED", "df/d4f/group__config-general.html#gga2dbb833ef0dcc466dd02ee76badaf709aad3b01e9f049c121aea895ebf6c1ad78", null ],
+      [ "OT_THREAD_CHILD_REMOVED", "df/d4f/group__config-general.html#gga2dbb833ef0dcc466dd02ee76badaf709a0659891672a34bc4345556863899c7fc", null ],
+      [ "OT_IP6_ML_ADDR_CHANGED", "df/d4f/group__config-general.html#gga2dbb833ef0dcc466dd02ee76badaf709a0faa023c03f2c5cc2f987c012d91965b", null ]
+    ] ],
+    [ "otAddUnicastAddress", "df/d4f/group__config-general.html#gabaa4e123e6fea0a1f20867b818cc1785", null ],
     [ "otGetChannel", "df/d4f/group__config-general.html#gaf01b87f2ebda6c12603a68e88158a7a6", null ],
     [ "otGetChildTimeout", "df/d4f/group__config-general.html#ga1702c018850730448ca654d7e69b3499", null ],
     [ "otGetExtendedAddress", "df/d4f/group__config-general.html#gab21432dd764cfd4e394c56e07cb6a326", null ],
     [ "otGetExtendedPanId", "df/d4f/group__config-general.html#ga1ba8e682ea054c80b44d40fb52e1fada", null ],
+    [ "otGetLeaderRloc", "df/d4f/group__config-general.html#gaf376dfa5fd74f1236b8243019a06de6f", null ],
     [ "otGetLinkMode", "df/d4f/group__config-general.html#ga90ba13edf164284447bab35157770327", null ],
     [ "otGetMasterKey", "df/d4f/group__config-general.html#gac34ead6d4d77f9d54bffbbde4d168ddc", null ],
+    [ "otGetMeshLocalEid", "df/d4f/group__config-general.html#ga04135e6ed786390914bd7add76e4ff03", null ],
+    [ "otGetMeshLocalPrefix", "df/d4f/group__config-general.html#gad136547ed945d673d8a1ad85db63dd19", null ],
+    [ "otGetNetworkDataLeader", "df/d4f/group__config-general.html#gae05ce5c328819890bd6595452d6f1582", null ],
+    [ "otGetNetworkDataLocal", "df/d4f/group__config-general.html#gae5ef02a54829f3c33019891748e0a193", null ],
     [ "otGetNetworkName", "df/d4f/group__config-general.html#gaa643b50f04ae74ac298329e57b33808d", null ],
-    [ "otGetPanId", "df/d4f/group__config-general.html#gab1c7506be3a202bc18abf353b0af52fe", null ],
+    [ "otGetPanId", "df/d4f/group__config-general.html#gac7d15f5726c0b2acafa017f9f0bb2a30", null ],
+    [ "otGetShortAddress", "df/d4f/group__config-general.html#ga6e8c6870e2153164e9b5094532b978c5", null ],
+    [ "otGetUnicastAddresses", "df/d4f/group__config-general.html#ga88711cececa3cb8002084007becf7d3f", null ],
+    [ "otIsRouterRoleEnabled", "df/d4f/group__config-general.html#ga328f6b255de071a428dc785dad1fdb18", null ],
+    [ "otRemoveUnicastAddress", "df/d4f/group__config-general.html#gab0ef9796200c11096a602714dd637717", null ],
     [ "otSetChannel", "df/d4f/group__config-general.html#ga14db30cc9a04ebb3e857cd9be04f57ae", null ],
     [ "otSetChildTimeout", "df/d4f/group__config-general.html#gad8731bb6c9f05b3cd105e625b643d3a0", null ],
     [ "otSetExtendedPanId", "df/d4f/group__config-general.html#ga3a8ecef2c527f075ff334e283c342e5b", null ],
     [ "otSetLinkMode", "df/d4f/group__config-general.html#gabd5d1bedc4b377e64e7f4c785c1895ad", null ],
     [ "otSetMasterKey", "df/d4f/group__config-general.html#gafc1eb50323ce1d4737907d20c582b83f", null ],
+    [ "otSetMeshLocalPrefix", "df/d4f/group__config-general.html#ga36bd7b17aaae10c4dadeb85369599b2a", null ],
     [ "otSetNetworkName", "df/d4f/group__config-general.html#gaf21ea38b6a5a1fe1546b85b9073692c0", null ],
-    [ "otSetPanId", "df/d4f/group__config-general.html#ga1720bac47af0da1c4bae0ed64d7ddf98", null ]
+    [ "otSetPanId", "df/d4f/group__config-general.html#ga33675ef4933d1fbe241145998d77c52e", null ],
+    [ "otSetRouterRoleEnabled", "df/d4f/group__config-general.html#ga7096d8031941485deff0da7f9682fe84", null ],
+    [ "otSetStateChangedCallback", "df/d4f/group__config-general.html#gabb7e29035c517ddd7a609353d3b31bc0", null ]
 ];
