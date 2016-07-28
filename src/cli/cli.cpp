@@ -1189,7 +1189,7 @@ exit:
 void Interpreter::ProcessScan(int argc, char *argv[])
 {
     ThreadError error = kThreadError_None;
-    uint16_t scanChannels = 0;
+    uint32_t scanChannels = 0;
     long value;
 
     if (argc > 0)
