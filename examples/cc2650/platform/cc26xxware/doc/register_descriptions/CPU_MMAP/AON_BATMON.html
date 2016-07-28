@@ -1,0 +1,1048 @@
+<HTML>
+<HEAD><META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=UTF-8">
+<link href="..//elements/mmap.css" rel="stylesheet" type="text/css">
+<TITLE>AON_BATMON</TITLE>
+</HEAD>
+<BODY class=mmapBody>
+<h2 class="mmapCellTitle">
+  <a name="Top_Tag">AON_BATMON</a>
+</h2>
+<P>Instance: AON_BATMON<BR>
+Component: AON_BATMON<BR>
+Base address: 0x40095000</P>
+<BR>
+<P>Always On (AON) Battery And Temperature MONitor (BATMON) residing in the <A class="mmap_legend_link" href="../legend.html#AON">AON</A> domain  Note: This module only supports 32 bit Read/Write access from MCU.</P>
+ <H3 class="mmapRegisterSummaryTitle"><A name="AON_BATMON"></A><A href="CPU_MMAP.html"> TOP</A>:<B>AON_BATMON</B> Register Summary</H3>
+<TABLE cellspacing="0" class="mmapRegisterSummaryTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">
+  <P>Register Name</P>
+</TD>
+<TD class="cellTopCol2">
+  <P>Type</P>
+</TD>
+<TD class="cellTopCol3">
+  <P>Register Width (Bits)</P>
+</TD>
+<TD class="cellTopCol4">
+  <P>Register Reset</P>
+</TD>
+<TD class="cellTopCol5">
+  <P>Address Offset</P>
+</TD>
+<TD class="cellTopCol5">
+  <P>Physical Address</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#CTL">CTL</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>RW</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x0000 0000</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 0000</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x4009 5000</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#MEASCFG">MEASCFG</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>RW</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x0000 0000</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 0004</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x4009 5004</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#TEMPP0">TEMPP0</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>RW</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x0000 0000</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 000C</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x4009 500C</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#TEMPP1">TEMPP1</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>RW</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x0000 0000</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 0010</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x4009 5010</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#TEMPP2">TEMPP2</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>RW</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x0000 0000</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 0014</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x4009 5014</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#BATMONP0">BATMONP0</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>RW</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x0000 0000</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 0018</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x4009 5018</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#BATMONP1">BATMONP1</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>RW</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x0000 0000</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 001C</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x4009 501C</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#IOSTRP0">IOSTRP0</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>RW</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x0000 0028</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 0020</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x4009 5020</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#FLASHPUMPP0">FLASHPUMPP0</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>RW</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x0000 0000</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 0024</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x4009 5024</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#BAT">BAT</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>RO</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x0000 0000</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 0028</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x4009 5028</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#BATUPD">BATUPD</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>RW</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x0000 0000</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 002C</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x4009 502C</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#TEMP">TEMP</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>RO</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x0000 0000</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 0030</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x4009 5030</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#TEMPUPD">TEMPUPD</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>RW</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x0000 0000</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 0034</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x4009 5034</P>
+</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterSummaryTitle"><A href="CPU_MMAP.html"> TOP</A>:AON_BATMON Register Descriptions</H3>
+<H3 class="mmapRegisterTitle"><A name="CTL"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">AON_BATMON</A>:CTL</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 0000</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0x4009 5000</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0x4009 5000</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">Internal. Only to be used through TI provided API.</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">RW</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="CTL_RESERVED2">31:2</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED2</TD>
+<TD class="cellBitfieldCol3" colspan="3">Internal. Only to be used through TI provided API.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0b00 0000 0000 0000 0000 0000 0000 0000</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="CTL_CALC_EN">1</a>
+</TD>
+<TD class="cellBitfieldCol2">CALC_EN</TD>
+<TD class="cellBitfieldCol3" colspan="3">Internal. Only to be used through TI provided API.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="CTL_MEAS_EN">0</a>
+</TD>
+<TD class="cellBitfieldCol2">MEAS_EN</TD>
+<TD class="cellBitfieldCol3" colspan="3">Internal. Only to be used through TI provided API.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="MEASCFG"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">AON_BATMON</A>:MEASCFG</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 0004</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0x4009 5004</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0x4009 5004</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">Internal. Only to be used through TI provided API.</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">RW</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="MEASCFG_RESERVED2">31:2</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED2</TD>
+<TD class="cellBitfieldCol3" colspan="3">Internal. Only to be used through TI provided API.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0b00 0000 0000 0000 0000 0000 0000 0000</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="MEASCFG_PER">1:0</a>
+</TD>
+<TD class="cellBitfieldCol2">PER</TD>
+<TD class="cellBitfieldCol3" colspan="3">Internal. Only to be used through TI provided API.<TABLE cellspacing="0" class="LprfEnum">
+<TR class="rowEnumHead">
+<TD class="cellEnumTableHeadCol1">Value</TD>
+<TD class="cellEnumTableHeadCol2">ENUM Name</TD>
+<TD class="cellEnumTableHeadCol3">Description</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x0</TD>
+<TD class="cellEnumTableCol2">CONT</TD>
+<TD class="cellEnumTableCol3">Internal. Only to be used through TI provided API.</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x1</TD>
+<TD class="cellEnumTableCol2">8CYC</TD>
+<TD class="cellEnumTableCol3">Internal. Only to be used through TI provided API.</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x2</TD>
+<TD class="cellEnumTableCol2">16CYC</TD>
+<TD class="cellEnumTableCol3">Internal. Only to be used through TI provided API.</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x3</TD>
+<TD class="cellEnumTableCol2">32CYC</TD>
+<TD class="cellEnumTableCol3">Internal. Only to be used through TI provided API.</TD>
+</TR>
+</TABLE>
+</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0b00</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="TEMPP0"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">AON_BATMON</A>:TEMPP0</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 000C</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0x4009 500C</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0x4009 500C</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">Internal. Only to be used through TI provided API.</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">RW</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="TEMPP0_RESERVED8">31:8</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED8</TD>
+<TD class="cellBitfieldCol3" colspan="3">Internal. Only to be used through TI provided API.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0x00 0000</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="TEMPP0_CFG">7:0</a>
+</TD>
+<TD class="cellBitfieldCol2">CFG</TD>
+<TD class="cellBitfieldCol3" colspan="3">Internal. Only to be used through TI provided API.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0x00</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="TEMPP1"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">AON_BATMON</A>:TEMPP1</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 0010</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0x4009 5010</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0x4009 5010</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">Internal. Only to be used through TI provided API.</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">RW</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="TEMPP1_RESERVED6">31:6</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED6</TD>
+<TD class="cellBitfieldCol3" colspan="3">Internal. Only to be used through TI provided API.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0b00 0000 0000 0000 0000 0000 0000</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="TEMPP1_CFG">5:0</a>
+</TD>
+<TD class="cellBitfieldCol2">CFG</TD>
+<TD class="cellBitfieldCol3" colspan="3">Internal. Only to be used through TI provided API.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0b00 0000</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="TEMPP2"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">AON_BATMON</A>:TEMPP2</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 0014</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0x4009 5014</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0x4009 5014</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">Internal. Only to be used through TI provided API.</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">RW</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="TEMPP2_RESERVED5">31:5</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED5</TD>
+<TD class="cellBitfieldCol3" colspan="3">Internal. Only to be used through TI provided API.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0b000 0000 0000 0000 0000 0000 0000</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="TEMPP2_CFG">4:0</a>
+</TD>
+<TD class="cellBitfieldCol2">CFG</TD>
+<TD class="cellBitfieldCol3" colspan="3">Internal. Only to be used through TI provided API.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0b0 0000</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="BATMONP0"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">AON_BATMON</A>:BATMONP0</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 0018</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0x4009 5018</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0x4009 5018</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">Internal. Only to be used through TI provided API.</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">RW</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="BATMONP0_RESERVED6">31:6</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED6</TD>
+<TD class="cellBitfieldCol3" colspan="3">Internal. Only to be used through TI provided API.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0b00 0000 0000 0000 0000 0000 0000</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="BATMONP0_CFG">5:0</a>
+</TD>
+<TD class="cellBitfieldCol2">CFG</TD>
+<TD class="cellBitfieldCol3" colspan="3">Internal. Only to be used through TI provided API.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0b00 0000</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="BATMONP1"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">AON_BATMON</A>:BATMONP1</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 001C</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0x4009 501C</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0x4009 501C</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">Internal. Only to be used through TI provided API.</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">RW</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="BATMONP1_RESERVED6">31:6</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED6</TD>
+<TD class="cellBitfieldCol3" colspan="3">Internal. Only to be used through TI provided API.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0b00 0000 0000 0000 0000 0000 0000</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="BATMONP1_CFG">5:0</a>
+</TD>
+<TD class="cellBitfieldCol2">CFG</TD>
+<TD class="cellBitfieldCol3" colspan="3">Internal. Only to be used through TI provided API.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0b00 0000</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="IOSTRP0"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">AON_BATMON</A>:IOSTRP0</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 0020</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0x4009 5020</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0x4009 5020</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">Internal. Only to be used through TI provided API.</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">RW</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="IOSTRP0_RESERVED6">31:6</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED6</TD>
+<TD class="cellBitfieldCol3" colspan="3">Internal. Only to be used through TI provided API.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0b00 0000 0000 0000 0000 0000 0000</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="IOSTRP0_CFG2">5:4</a>
+</TD>
+<TD class="cellBitfieldCol2">CFG2</TD>
+<TD class="cellBitfieldCol3" colspan="3">Internal. Only to be used through TI provided API.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0b10</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="IOSTRP0_CFG1">3:0</a>
+</TD>
+<TD class="cellBitfieldCol2">CFG1</TD>
+<TD class="cellBitfieldCol3" colspan="3">Internal. Only to be used through TI provided API.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0x8</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="FLASHPUMPP0"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">AON_BATMON</A>:FLASHPUMPP0</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 0024</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0x4009 5024</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0x4009 5024</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">Internal. Only to be used through TI provided API.</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">RW</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="FLASHPUMPP0_RESERVED9">31:9</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED9</TD>
+<TD class="cellBitfieldCol3" colspan="3">Internal. Only to be used through TI provided API.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0b000 0000 0000 0000 0000 0000</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="FLASHPUMPP0_FALLB">8</a>
+</TD>
+<TD class="cellBitfieldCol2">FALLB</TD>
+<TD class="cellBitfieldCol3" colspan="3">Internal. Only to be used through TI provided API.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="FLASHPUMPP0_HIGHLIM">7:6</a>
+</TD>
+<TD class="cellBitfieldCol2">HIGHLIM</TD>
+<TD class="cellBitfieldCol3" colspan="3">Internal. Only to be used through TI provided API.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0b00</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="FLASHPUMPP0_LOWLIM">5</a>
+</TD>
+<TD class="cellBitfieldCol2">LOWLIM</TD>
+<TD class="cellBitfieldCol3" colspan="3">Internal. Only to be used through TI provided API.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="FLASHPUMPP0_OVR">4</a>
+</TD>
+<TD class="cellBitfieldCol2">OVR</TD>
+<TD class="cellBitfieldCol3" colspan="3">Internal. Only to be used through TI provided API.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="FLASHPUMPP0_CFG">3:0</a>
+</TD>
+<TD class="cellBitfieldCol2">CFG</TD>
+<TD class="cellBitfieldCol3" colspan="3">Internal. Only to be used through TI provided API.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0x0</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="BAT"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">AON_BATMON</A>:BAT</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 0028</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0x4009 5028</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0x4009 5028</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">Last Measured Battery Voltage<BR>
+<BR>
+This register may be read while <A class="xref" href="#BATUPD_STAT">BATUPD.STAT</A> = 1</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">RO</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="BAT_RESERVED11">31:11</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED11</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0b0 0000 0000 0000 0000 0000</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="BAT_INT">10:8</a>
+</TD>
+<TD class="cellBitfieldCol2">INT</TD>
+<TD class="cellBitfieldCol3" colspan="3">Integer part:<BR>
+<BR>
+0x0: 0V + fractional part<BR>
+...<BR>
+0x3: 3V + fractional part<BR>
+0x4: 4V + fractional part</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0b000</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="BAT_FRAC">7:0</a>
+</TD>
+<TD class="cellBitfieldCol2">FRAC</TD>
+<TD class="cellBitfieldCol3" colspan="3">Fractional part, standard binary fractional encoding.<BR>
+<BR>
+0x00: .0V<BR>
+...<BR>
+0x20: 1/8 = .125V<BR>
+0x40: 1/4 = .25V<BR>
+0x80: 1/2 = .5V<BR>
+...<BR>
+0xA0: 1/2 + 1/8 = .625V<BR>
+...<BR>
+0xFF: Max</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0x00</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="BATUPD"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">AON_BATMON</A>:BATUPD</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 002C</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0x4009 502C</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0x4009 502C</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">Battery Update<BR>
+<BR>
+Indicates <A class="xref" href="#BAT">BAT</A> Updates</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">RW</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="BATUPD_RESERVED1">31:1</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED1</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0b000 0000 0000 0000 0000 0000 0000 0000</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="BATUPD_STAT">0</a>
+</TD>
+<TD class="cellBitfieldCol2">STAT</TD>
+<TD class="cellBitfieldCol3" colspan="3"><BR>
+0: No update since last clear<BR>
+1: New battery voltage is present.<BR>
+<BR>
+Write 1 to clear the status.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="TEMP"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">AON_BATMON</A>:TEMP</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 0030</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0x4009 5030</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0x4009 5030</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">Temperature<BR>
+<BR>
+Last Measured Temperature in Degrees Celsius<BR>
+<BR>
+This register may be read while <A class="xref" href="#TEMPUPD_STAT">TEMPUPD.STAT</A> = 1.</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">RO</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="TEMP_RESERVED17">31:17</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED17</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0b000 0000 0000 0000</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="TEMP_INT">16:8</a>
+</TD>
+<TD class="cellBitfieldCol2">INT</TD>
+<TD class="cellBitfieldCol3" colspan="3">Integer part (signed) of temperature value. <BR>
+Total value = INTEGER + FRACTIONAL<BR>
+2&#39;s complement encoding<BR>
+<BR>
+0x100: Min value<BR>
+0x1D8: -40C<BR>
+0x1FF: -1C<BR>
+0x00: 0C<BR>
+0x1B: 27C<BR>
+0x55: 85C<BR>
+0xFF: Max value</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0b0 0000 0000</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="TEMP_RESERVED0">7:0</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED0</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0x00</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="TEMPUPD"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">AON_BATMON</A>:TEMPUPD</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 0034</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0x4009 5034</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0x4009 5034</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">Temperature Update<BR>
+<BR>
+Indicates <A class="xref" href="#TEMP">TEMP</A> Updates</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">RW</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="TEMPUPD_RESERVED1">31:1</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED1</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0b000 0000 0000 0000 0000 0000 0000 0000</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="TEMPUPD_STAT">0</a>
+</TD>
+<TD class="cellBitfieldCol2">STAT</TD>
+<TD class="cellBitfieldCol3" colspan="3"><BR>
+0: No update since last clear<BR>
+1: New temperature is present.<BR>
+<BR>
+Write 1 to clear the status.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+</TABLE>
+<BR>
+<BR>
+<hr><table class="footer"><tr><td>&copy; 2015 - 2016. Texas Instruments | All Rights Reserved</td></tr></table>
+</BODY>
+</HTML>

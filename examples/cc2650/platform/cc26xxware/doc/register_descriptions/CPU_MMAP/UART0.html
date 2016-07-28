@@ -1,0 +1,1894 @@
+<HTML>
+<HEAD><META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=UTF-8">
+<link href="..//elements/mmap.css" rel="stylesheet" type="text/css">
+<TITLE>UART0</TITLE>
+</HEAD>
+<BODY class=mmapBody>
+<h2 class="mmapCellTitle">
+  <a name="Top_Tag">UART0</a>
+</h2>
+<P>Instance: UART0<BR>
+Component: UART<BR>
+Base address: 0x40001000</P>
+<BR>
+<P>Universal Asynchronous Receiver/Transmitter (UART) interface</P>
+ <H3 class="mmapRegisterSummaryTitle"><A name="UART0"></A><A href="CPU_MMAP.html"> TOP</A>:<B>UART0</B> Register Summary</H3>
+<TABLE cellspacing="0" class="mmapRegisterSummaryTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">
+  <P>Register Name</P>
+</TD>
+<TD class="cellTopCol2">
+  <P>Type</P>
+</TD>
+<TD class="cellTopCol3">
+  <P>Register Width (Bits)</P>
+</TD>
+<TD class="cellTopCol4">
+  <P>Register Reset</P>
+</TD>
+<TD class="cellTopCol5">
+  <P>Address Offset</P>
+</TD>
+<TD class="cellTopCol5">
+  <P>Physical Address</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#DR">DR</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>RW</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x0000 0XXX</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 0000</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x4000 1000</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#RSR">RSR</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>RO</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x0000 0000</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 0004</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x4000 1004</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#ECR">ECR</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>WO</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x0000 0000</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 0004</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x4000 1004</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#FR">FR</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>RO</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0b0000 0000 0000 0000 0000 0000 1001 000X</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 0018</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x4000 1018</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#IBRD">IBRD</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>RW</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x0000 0000</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 0024</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x4000 1024</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#FBRD">FBRD</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>RW</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x0000 0000</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 0028</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x4000 1028</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#LCRH">LCRH</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>RW</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x0000 0000</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 002C</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x4000 102C</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#CTL">CTL</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>RW</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x0000 0300</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 0030</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x4000 1030</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#IFLS">IFLS</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>RW</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x0000 0012</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 0034</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x4000 1034</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#IMSC">IMSC</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>RW</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x0000 0000</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 0038</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x4000 1038</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#RIS">RIS</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>RO</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0b0000 0000 0000 0000 0000 0000 0000 11X1</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 003C</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x4000 103C</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#MIS">MIS</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>RO</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x0000 0000</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 0040</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x4000 1040</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#ICR">ICR</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>WO</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x0000 XXXX</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 0044</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x4000 1044</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#DMACTL">DMACTL</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>RW</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x0000 0000</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 0048</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x4000 1048</P>
+</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterSummaryTitle"><A href="CPU_MMAP.html"> TOP</A>:UART0 Register Descriptions</H3>
+<H3 class="mmapRegisterTitle"><A name="DR"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">UART0</A>:DR</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 0000</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0x4000 1000</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0x4000 1000</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">Data<BR>
+For words to be transmitted:<BR>
+  - if the <A class="mmap_legend_link" href="../legend.html#FIFO">FIFO</A>s are enabled (<A class="xref" href="#LCRH_FEN">LCRH.FEN</A> = 1), data written to this location is pushed onto the transmit <A class="mmap_legend_link" href="../legend.html#FIFO">FIFO</A><BR>
+  - if the <A class="mmap_legend_link" href="../legend.html#FIFO">FIFO</A>s are not enabled (<A class="xref" href="#LCRH_FEN">LCRH.FEN</A> = 0), data is stored in the transmitter holding register (the bottom word of the transmit <A class="mmap_legend_link" href="../legend.html#FIFO">FIFO</A>).<BR>
+The write operation initiates transmission from the <A class="mmap_legend_link" href="../legend.html#UART">UART</A>. The data is prefixed with a start bit, appended with the appropriate parity bit (if parity is enabled), and a stop bit.<BR>
+The resultant word is then transmitted.<BR>
+For received words:<BR>
+  - if the <A class="mmap_legend_link" href="../legend.html#FIFO">FIFO</A>s are enabled (<A class="xref" href="#LCRH_FEN">LCRH.FEN</A> = 1), the data byte and the 4-bit status (break, frame, parity, and overrun) is pushed onto the 12-bit wide receive <A class="mmap_legend_link" href="../legend.html#FIFO">FIFO</A> <BR>
+  - if the <A class="mmap_legend_link" href="../legend.html#FIFO">FIFO</A>s are not enabled (<A class="xref" href="#LCRH_FEN">LCRH.FEN</A> = 0), the data byte and status are stored in the receiving holding register (the bottom word of the receive <A class="mmap_legend_link" href="../legend.html#FIFO">FIFO</A>).<BR>
+The received data byte is read by performing reads from this register along with the corresponding status information. The status information can also be read by a read of the <A class="xref" href="#RSR">RSR</A> register.</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">RW</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="DR_RESERVED">31:12</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0x0 0000</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="DR_OE">11</a>
+</TD>
+<TD class="cellBitfieldCol2">OE</TD>
+<TD class="cellBitfieldCol3" colspan="3">UART Overrun Error:<BR>
+This bit is set to 1 if data is received and the receive <A class="mmap_legend_link" href="../legend.html#FIFO">FIFO</A> is already full. The <A class="mmap_legend_link" href="../legend.html#FIFO">FIFO</A> contents remain valid because no more data is written when the <A class="mmap_legend_link" href="../legend.html#FIFO">FIFO</A> is full, , only the contents of the shift register are overwritten.<BR>
+This is cleared to 0 once there is an empty space in the <A class="mmap_legend_link" href="../legend.html#FIFO">FIFO</A> and a new character can be written to it.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">X</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="DR_BE">10</a>
+</TD>
+<TD class="cellBitfieldCol2">BE</TD>
+<TD class="cellBitfieldCol3" colspan="3">UART Break Error:<BR>
+This bit is set to 1 if a break condition was detected, indicating that the received data input (<A class="mmap_legend_link" href="../legend.html#UARTRXD">UARTRXD</A> input pin) was held LOW for longer than a full-word transmission time (defined as start, data, parity and stop bits).<BR>
+In <A class="mmap_legend_link" href="../legend.html#FIFO">FIFO</A> mode, this error is associated with the character at the top of the <A class="mmap_legend_link" href="../legend.html#FIFO">FIFO</A> (i.e., the oldest received data character since last read). When a break occurs, a 0 character is loaded into the <A class="mmap_legend_link" href="../legend.html#FIFO">FIFO</A>. The next character is enabled after the receive data input (<A class="mmap_legend_link" href="../legend.html#UARTRXD">UARTRXD</A> input pin) goes to a 1 (marking state), and the next valid start bit is received.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">X</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="DR_PE">9</a>
+</TD>
+<TD class="cellBitfieldCol2">PE</TD>
+<TD class="cellBitfieldCol3" colspan="3">UART Parity Error:<BR>
+When set to 1, it indicates that the parity of the received data character does not match the parity that the <A class="xref" href="#LCRH_EPS">LCRH.EPS</A> and <A class="xref" href="#LCRH_SPS">LCRH.SPS</A> select.<BR>
+In <A class="mmap_legend_link" href="../legend.html#FIFO">FIFO</A> mode, this error is associated with the character at the top of the <A class="mmap_legend_link" href="../legend.html#FIFO">FIFO</A> (i.e., the oldest received data character since last read).</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">X</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="DR_FE">8</a>
+</TD>
+<TD class="cellBitfieldCol2">FE</TD>
+<TD class="cellBitfieldCol3" colspan="3">UART Framing Error:<BR>
+When set to 1, it indicates that the received character did not have a valid stop bit (a valid stop bit is 1).<BR>
+In <A class="mmap_legend_link" href="../legend.html#FIFO">FIFO</A> mode, this error is associated with the character at the top of the <A class="mmap_legend_link" href="../legend.html#FIFO">FIFO</A> (i.e., the oldest received data character since last read).</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">X</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="DR_DATA">7:0</a>
+</TD>
+<TD class="cellBitfieldCol2">DATA</TD>
+<TD class="cellBitfieldCol3" colspan="3">Data transmitted or received:<BR>
+On writes, the transmit data character is pushed into the <A class="mmap_legend_link" href="../legend.html#FIFO">FIFO</A>.<BR>
+On reads, the oldest received data character since the last read is returned.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0xXX</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="RSR"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">UART0</A>:RSR</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 0004</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0x4000 1004</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0x4000 1004</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">Status<BR>
+This register is mapped to the same address as <A class="xref" href="#ECR">ECR</A> register.  Reads from this address are associated with <A class="xref" href="#RSR">RSR</A> register and return the receive status. Writes to this address are associated with <A class="xref" href="#ECR">ECR</A> register and clear the receive status flags (framing, parity, break, and overrun errors).<BR>
+If the status is read from this register, then the status information for break, framing and parity corresponds to the data character read from the Data Register, <A class="xref" href="#DR">DR</A> prior to reading the <A class="xref" href="#RSR">RSR</A>. The status information for overrun is set immediately when an overrun condition occurs.</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">RO</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="RSR_RESERVED">31:4</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0x000 0000</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="RSR_OE">3</a>
+</TD>
+<TD class="cellBitfieldCol2">OE</TD>
+<TD class="cellBitfieldCol3" colspan="3">UART Overrun Error:<BR>
+This bit is set to 1 if data is received and the receive <A class="mmap_legend_link" href="../legend.html#FIFO">FIFO</A> is already full. The <A class="mmap_legend_link" href="../legend.html#FIFO">FIFO</A> contents remain valid because no more data is written when the <A class="mmap_legend_link" href="../legend.html#FIFO">FIFO</A> is full, , only the contents of the shift register are overwritten.<BR>
+This is cleared to 0 once there is an empty space in the <A class="mmap_legend_link" href="../legend.html#FIFO">FIFO</A> and a new character can be written to it.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="RSR_BE">2</a>
+</TD>
+<TD class="cellBitfieldCol2">BE</TD>
+<TD class="cellBitfieldCol3" colspan="3">UART Break Error:<BR>
+This bit is set to 1 if a break condition was detected, indicating that the received data input (<A class="mmap_legend_link" href="../legend.html#UARTRXD">UARTRXD</A> input pin) was held LOW for longer than a full-word transmission time (defined as start, data, parity and stop bits).<BR>
+When a break occurs, a 0 character is loaded into the <A class="mmap_legend_link" href="../legend.html#FIFO">FIFO</A>. The next character is enabled after the receive data input (<A class="mmap_legend_link" href="../legend.html#UARTRXD">UARTRXD</A> input pin) goes to a 1 (marking state), and the next valid start bit is received.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="RSR_PE">1</a>
+</TD>
+<TD class="cellBitfieldCol2">PE</TD>
+<TD class="cellBitfieldCol3" colspan="3">UART Parity Error:<BR>
+When set to 1, it indicates that the parity of the received data character does not match the parity that the <A class="xref" href="#LCRH_EPS">LCRH.EPS</A> and <A class="xref" href="#LCRH_SPS">LCRH.SPS</A> select.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="RSR_FE">0</a>
+</TD>
+<TD class="cellBitfieldCol2">FE</TD>
+<TD class="cellBitfieldCol3" colspan="3">UART Framing Error:<BR>
+When set to 1, it indicates that the received character did not have a valid stop bit (a valid stop bit is 1).</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="ECR"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">UART0</A>:ECR</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 0004</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0x4000 1004</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0x4000 1004</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">Error Clear<BR>
+This register is mapped to the same address as <A class="xref" href="#RSR">RSR</A> register.  Reads from this address are associated with <A class="xref" href="#RSR">RSR</A> register and return the receive status. Writes to this address are associated with <A class="xref" href="#ECR">ECR</A> register and clear the receive status flags (framing, parity, break, and overrun errors).</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">WO</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="ECR_RESERVED">31:4</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior.</TD>
+<TD class="cellBitfieldCol4">WO</TD>
+<TD class="cellBitfieldCol5">0x000 0000</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="ECR_OE">3</a>
+</TD>
+<TD class="cellBitfieldCol2">OE</TD>
+<TD class="cellBitfieldCol3" colspan="3">The framing (<A class="xref" href="#ECR_FE">FE</A>), parity (<A class="xref" href="#ECR_PE">PE</A>), break (<A class="xref" href="#ECR_BE">BE</A>) and overrun (<A class="xref" href="#ECR_OE">OE</A>) errors are cleared to 0 by any write to this register.</TD>
+<TD class="cellBitfieldCol4">WO</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="ECR_BE">2</a>
+</TD>
+<TD class="cellBitfieldCol2">BE</TD>
+<TD class="cellBitfieldCol3" colspan="3">The framing (<A class="xref" href="#ECR_FE">FE</A>), parity (<A class="xref" href="#ECR_PE">PE</A>), break (<A class="xref" href="#ECR_BE">BE</A>) and overrun (<A class="xref" href="#ECR_OE">OE</A>) errors are cleared to 0 by any write to this register.</TD>
+<TD class="cellBitfieldCol4">WO</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="ECR_PE">1</a>
+</TD>
+<TD class="cellBitfieldCol2">PE</TD>
+<TD class="cellBitfieldCol3" colspan="3">The framing (<A class="xref" href="#ECR_FE">FE</A>), parity (<A class="xref" href="#ECR_PE">PE</A>), break (<A class="xref" href="#ECR_BE">BE</A>) and overrun (<A class="xref" href="#ECR_OE">OE</A>) errors are cleared to 0 by any write to this register.</TD>
+<TD class="cellBitfieldCol4">WO</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="ECR_FE">0</a>
+</TD>
+<TD class="cellBitfieldCol2">FE</TD>
+<TD class="cellBitfieldCol3" colspan="3">The framing (<A class="xref" href="#ECR_FE">FE</A>), parity (<A class="xref" href="#ECR_PE">PE</A>), break (<A class="xref" href="#ECR_BE">BE</A>) and overrun (<A class="xref" href="#ECR_OE">OE</A>) errors are cleared to 0 by any write to this register.</TD>
+<TD class="cellBitfieldCol4">WO</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="FR"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">UART0</A>:FR</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 0018</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0x4000 1018</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0x4000 1018</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">Flag<BR>
+Reads from this register return the <A class="mmap_legend_link" href="../legend.html#UART">UART</A> flags.</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">RO</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="FR_RESERVED1">31:8</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED1</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0x00 0000</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="FR_TXFE">7</a>
+</TD>
+<TD class="cellBitfieldCol2">TXFE</TD>
+<TD class="cellBitfieldCol3" colspan="3">UART Transmit <A class="mmap_legend_link" href="../legend.html#FIFO">FIFO</A> Empty:<BR>
+The meaning of this bit depends on the state of <A class="xref" href="#LCRH_FEN">LCRH.FEN</A> .<BR>
+  - If the <A class="mmap_legend_link" href="../legend.html#FIFO">FIFO</A> is disabled, this bit is set when the transmit holding register is empty.<BR>
+  - If the <A class="mmap_legend_link" href="../legend.html#FIFO">FIFO</A> is enabled, this bit is set when the transmit <A class="mmap_legend_link" href="../legend.html#FIFO">FIFO</A> is empty.<BR>
+This bit does not indicate if there is data in the transmit shift register.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">1</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="FR_RXFF">6</a>
+</TD>
+<TD class="cellBitfieldCol2">RXFF</TD>
+<TD class="cellBitfieldCol3" colspan="3">UART Receive <A class="mmap_legend_link" href="../legend.html#FIFO">FIFO</A> Full: <BR>
+The meaning of this bit depends on the state of <A class="xref" href="#LCRH_FEN">LCRH.FEN</A>.<BR>
+  - If the <A class="mmap_legend_link" href="../legend.html#FIFO">FIFO</A> is disabled, this bit is set when the receive holding register is full.<BR>
+  - If the <A class="mmap_legend_link" href="../legend.html#FIFO">FIFO</A> is enabled, this bit is set when the receive <A class="mmap_legend_link" href="../legend.html#FIFO">FIFO</A> is full.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="FR_TXFF">5</a>
+</TD>
+<TD class="cellBitfieldCol2">TXFF</TD>
+<TD class="cellBitfieldCol3" colspan="3">UART Transmit <A class="mmap_legend_link" href="../legend.html#FIFO">FIFO</A> Full:<BR>
+Transmit <A class="mmap_legend_link" href="../legend.html#FIFO">FIFO</A> full. The meaning of this bit depends on the state of <A class="xref" href="#LCRH_FEN">LCRH.FEN</A>.<BR>
+  - If the <A class="mmap_legend_link" href="../legend.html#FIFO">FIFO</A> is disabled, this bit is set when the transmit holding register is full.<BR>
+  - If the <A class="mmap_legend_link" href="../legend.html#FIFO">FIFO</A> is enabled, this bit is set when the transmit <A class="mmap_legend_link" href="../legend.html#FIFO">FIFO</A> is full.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="FR_RXFE">4</a>
+</TD>
+<TD class="cellBitfieldCol2">RXFE</TD>
+<TD class="cellBitfieldCol3" colspan="3">UART Receive <A class="mmap_legend_link" href="../legend.html#FIFO">FIFO</A> Empty:<BR>
+Receive <A class="mmap_legend_link" href="../legend.html#FIFO">FIFO</A> empty. The meaning of this bit depends on the state of <A class="xref" href="#LCRH_FEN">LCRH.FEN</A>.<BR>
+  - If the <A class="mmap_legend_link" href="../legend.html#FIFO">FIFO</A> is disabled, this bit is set when the receive holding register is empty.<BR>
+  - If the <A class="mmap_legend_link" href="../legend.html#FIFO">FIFO</A> is enabled, this bit is set when the receive <A class="mmap_legend_link" href="../legend.html#FIFO">FIFO</A> is empty.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">1</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="FR_BUSY">3</a>
+</TD>
+<TD class="cellBitfieldCol2">BUSY</TD>
+<TD class="cellBitfieldCol3" colspan="3">UART Busy: <BR>
+If this bit is set to 1, the <A class="mmap_legend_link" href="../legend.html#UART">UART</A> is busy transmitting data. This bit remains set until the complete byte, including all the stop bits, has been sent from the shift register.<BR>
+This bit is set as soon as the transmit <A class="mmap_legend_link" href="../legend.html#FIFO">FIFO</A> becomes non-empty, regardless of whether the <A class="mmap_legend_link" href="../legend.html#UART">UART</A> is enabled or not.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="FR_RESERVED0">2:1</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED0</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0b00</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="FR_CTS">0</a>
+</TD>
+<TD class="cellBitfieldCol2">CTS</TD>
+<TD class="cellBitfieldCol3" colspan="3">Clear To Send: <BR>
+This bit is the complement of the active-low <A class="mmap_legend_link" href="../legend.html#UART">UART</A> <A class="mmap_legend_link" href="../legend.html#CTS">CTS</A> input pin.<BR>
+That is, the bit is 1 when <A class="mmap_legend_link" href="../legend.html#CTS">CTS</A> input pin is LOW.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">X</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="IBRD"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">UART0</A>:IBRD</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 0024</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0x4000 1024</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0x4000 1024</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">Integer Baud-Rate Divisor<BR>
+If this register is modified while trasmission or reception is on-going, the baudrate will not be updated until transmission or reception of the current character is complete.</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">RW</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="IBRD_RESERVED">31:16</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0x0000</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="IBRD_DIVINT">15:0</a>
+</TD>
+<TD class="cellBitfieldCol2">DIVINT</TD>
+<TD class="cellBitfieldCol3" colspan="3">The integer baud rate divisor:<BR>
+The baud rate divisor is calculated using the formula below:<BR>
+Baud rate divisor = (UART reference clock frequency) / (16 * Baud rate)<BR>
+Baud rate divisor must be minimum 1 and maximum 65535. <BR>
+That is, <A class="xref" href="#IBRD_DIVINT">DIVINT</A>=0 does not give a valid baud rate. <BR>
+Similarly, if <A class="xref" href="#IBRD_DIVINT">DIVINT</A>=0xFFFF, any non-zero values in <A class="xref" href="#FBRD_DIVFRAC">FBRD.DIVFRAC</A> will be illegal.<BR>
+A valid value must be written to this field before the <A class="mmap_legend_link" href="../legend.html#UART">UART</A> can be used for <A class="mmap_legend_link" href="../legend.html#RX">RX</A> or <A class="mmap_legend_link" href="../legend.html#TX">TX</A> operations.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0x0000</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="FBRD"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">UART0</A>:FBRD</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 0028</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0x4000 1028</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0x4000 1028</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">Fractional Baud-Rate Divisor<BR>
+If this register is modified while trasmission or reception is on-going, the baudrate will not be updated until transmission or reception of the current character is complete.</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">RW</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="FBRD_RESERVED">31:6</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0b00 0000 0000 0000 0000 0000 0000</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="FBRD_DIVFRAC">5:0</a>
+</TD>
+<TD class="cellBitfieldCol2">DIVFRAC</TD>
+<TD class="cellBitfieldCol3" colspan="3">Fractional Baud-Rate Divisor:<BR>
+The baud rate divisor is calculated using the formula below:<BR>
+Baud rate divisor = (UART reference clock frequency) / (16 * Baud rate)<BR>
+Baud rate divisor must be minimum 1 and maximum 65535. <BR>
+That is, <A class="xref" href="#IBRD_DIVINT">IBRD.DIVINT</A>=0 does not give a valid baud rate. <BR>
+Similarly, if <A class="xref" href="#IBRD_DIVINT">IBRD.DIVINT</A>=0xFFFF, any non-zero values in <A class="xref" href="#FBRD_DIVFRAC">DIVFRAC</A> will be illegal.<BR>
+A valid value must be written to this field before the <A class="mmap_legend_link" href="../legend.html#UART">UART</A> can be used for <A class="mmap_legend_link" href="../legend.html#RX">RX</A> or <A class="mmap_legend_link" href="../legend.html#TX">TX</A> operations.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0b00 0000</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="LCRH"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">UART0</A>:LCRH</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 002C</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0x4000 102C</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0x4000 102C</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">Line Control</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">RW</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="LCRH_RESERVED">31:8</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0x00 0000</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="LCRH_SPS">7</a>
+</TD>
+<TD class="cellBitfieldCol2">SPS</TD>
+<TD class="cellBitfieldCol3" colspan="3">UART Stick Parity Select:<BR>
+<BR>
+0: Stick parity is disabled<BR>
+1: The parity bit is transmitted and checked as invert of <A class="xref" href="#LCRH_EPS">EPS</A> field (i.e. the parity bit is transmitted and checked as 1 when <A class="xref" href="#LCRH_EPS">EPS</A> = 0).<BR>
+<BR>
+This bit has no effect when <A class="xref" href="#LCRH_PEN">PEN</A> disables parity checking and generation.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="LCRH_WLEN">6:5</a>
+</TD>
+<TD class="cellBitfieldCol2">WLEN</TD>
+<TD class="cellBitfieldCol3" colspan="3">UART Word Length:<BR>
+These bits indicate the number of data bits transmitted or received in a frame.<TABLE cellspacing="0" class="LprfEnum">
+<TR class="rowEnumHead">
+<TD class="cellEnumTableHeadCol1">Value</TD>
+<TD class="cellEnumTableHeadCol2">ENUM Name</TD>
+<TD class="cellEnumTableHeadCol3">Description</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x0</TD>
+<TD class="cellEnumTableCol2">5</TD>
+<TD class="cellEnumTableCol3">Word Length 5 bits</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x1</TD>
+<TD class="cellEnumTableCol2">6</TD>
+<TD class="cellEnumTableCol3">Word Length 6 bits</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x2</TD>
+<TD class="cellEnumTableCol2">7</TD>
+<TD class="cellEnumTableCol3">Word Length 7 bits</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x3</TD>
+<TD class="cellEnumTableCol2">8</TD>
+<TD class="cellEnumTableCol3">Word Length 8 bits</TD>
+</TR>
+</TABLE>
+</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0b00</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="LCRH_FEN">4</a>
+</TD>
+<TD class="cellBitfieldCol2">FEN</TD>
+<TD class="cellBitfieldCol3" colspan="3">UART Enable <A class="mmap_legend_link" href="../legend.html#FIFO">FIFO</A>s<TABLE cellspacing="0" class="LprfEnum">
+<TR class="rowEnumHead">
+<TD class="cellEnumTableHeadCol1">Value</TD>
+<TD class="cellEnumTableHeadCol2">ENUM Name</TD>
+<TD class="cellEnumTableHeadCol3">Description</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x0</TD>
+<TD class="cellEnumTableCol2">DIS</TD>
+<TD class="cellEnumTableCol3"><A class="mmap_legend_link" href="../legend.html#FIFO">FIFO</A>s are disabled (character mode) that is, the <A class="mmap_legend_link" href="../legend.html#FIFO">FIFO</A>s become 1-byte-deep holding registers.</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x1</TD>
+<TD class="cellEnumTableCol2">EN</TD>
+<TD class="cellEnumTableCol3">Transmit and receive <A class="mmap_legend_link" href="../legend.html#FIFO">FIFO</A> buffers are enabled (<A class="mmap_legend_link" href="../legend.html#FIFO">FIFO</A> mode)</TD>
+</TR>
+</TABLE>
+</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="LCRH_STP2">3</a>
+</TD>
+<TD class="cellBitfieldCol2">STP2</TD>
+<TD class="cellBitfieldCol3" colspan="3">UART Two Stop Bits Select:<BR>
+If this bit is set to 1, two stop bits are transmitted at the end of the frame. The receive logic does not check for two stop bits being received.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="LCRH_EPS">2</a>
+</TD>
+<TD class="cellBitfieldCol2">EPS</TD>
+<TD class="cellBitfieldCol3" colspan="3">UART Even Parity Select<TABLE cellspacing="0" class="LprfEnum">
+<TR class="rowEnumHead">
+<TD class="cellEnumTableHeadCol1">Value</TD>
+<TD class="cellEnumTableHeadCol2">ENUM Name</TD>
+<TD class="cellEnumTableHeadCol3">Description</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x0</TD>
+<TD class="cellEnumTableCol2">ODD</TD>
+<TD class="cellEnumTableCol3">Odd parity: The <A class="mmap_legend_link" href="../legend.html#UART">UART</A> generates or checks for an odd number of 1s in the data and parity bits.</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x1</TD>
+<TD class="cellEnumTableCol2">EVEN</TD>
+<TD class="cellEnumTableCol3">Even parity: The <A class="mmap_legend_link" href="../legend.html#UART">UART</A> generates or checks for an even number of 1s in the data and parity bits.</TD>
+</TR>
+</TABLE>
+</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="LCRH_PEN">1</a>
+</TD>
+<TD class="cellBitfieldCol2">PEN</TD>
+<TD class="cellBitfieldCol3" colspan="3">UART Parity Enable<BR>
+This bit controls generation and checking of parity bit.<TABLE cellspacing="0" class="LprfEnum">
+<TR class="rowEnumHead">
+<TD class="cellEnumTableHeadCol1">Value</TD>
+<TD class="cellEnumTableHeadCol2">ENUM Name</TD>
+<TD class="cellEnumTableHeadCol3">Description</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x0</TD>
+<TD class="cellEnumTableCol2">DIS</TD>
+<TD class="cellEnumTableCol3">Parity is disabled and no parity bit is added to the data frame</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x1</TD>
+<TD class="cellEnumTableCol2">EN</TD>
+<TD class="cellEnumTableCol3">Parity checking and generation is enabled.</TD>
+</TR>
+</TABLE>
+</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="LCRH_BRK">0</a>
+</TD>
+<TD class="cellBitfieldCol2">BRK</TD>
+<TD class="cellBitfieldCol3" colspan="3">UART Send Break<BR>
+If this bit is set to 1, a low-level is continually output on the <A class="mmap_legend_link" href="../legend.html#UARTTXD">UARTTXD</A> output pin, after completing transmission of the current character. For the proper execution of the break command, the<BR>
+software must set this bit for at least two complete frames. For normal use, this bit must be cleared to 0.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="CTL"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">UART0</A>:CTL</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 0030</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0x4000 1030</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0x4000 1030</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">Control</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">RW</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="CTL_RESERVED16">31:16</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED16</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0x0000</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="CTL_CTSEN">15</a>
+</TD>
+<TD class="cellBitfieldCol2">CTSEN</TD>
+<TD class="cellBitfieldCol3" colspan="3"><A class="mmap_legend_link" href="../legend.html#CTS">CTS</A> hardware flow control enable<TABLE cellspacing="0" class="LprfEnum">
+<TR class="rowEnumHead">
+<TD class="cellEnumTableHeadCol1">Value</TD>
+<TD class="cellEnumTableHeadCol2">ENUM Name</TD>
+<TD class="cellEnumTableHeadCol3">Description</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x0</TD>
+<TD class="cellEnumTableCol2">DIS</TD>
+<TD class="cellEnumTableCol3"><A class="mmap_legend_link" href="../legend.html#CTS">CTS</A> hardware flow control disabled</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x1</TD>
+<TD class="cellEnumTableCol2">EN</TD>
+<TD class="cellEnumTableCol3"><A class="mmap_legend_link" href="../legend.html#CTS">CTS</A> hardware flow control enabled</TD>
+</TR>
+</TABLE>
+</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="CTL_RTSEN">14</a>
+</TD>
+<TD class="cellBitfieldCol2">RTSEN</TD>
+<TD class="cellBitfieldCol3" colspan="3"><A class="mmap_legend_link" href="../legend.html#RTS">RTS</A> hardware flow control enable<TABLE cellspacing="0" class="LprfEnum">
+<TR class="rowEnumHead">
+<TD class="cellEnumTableHeadCol1">Value</TD>
+<TD class="cellEnumTableHeadCol2">ENUM Name</TD>
+<TD class="cellEnumTableHeadCol3">Description</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x0</TD>
+<TD class="cellEnumTableCol2">DIS</TD>
+<TD class="cellEnumTableCol3"><A class="mmap_legend_link" href="../legend.html#RTS">RTS</A> hardware flow control disabled</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x1</TD>
+<TD class="cellEnumTableCol2">EN</TD>
+<TD class="cellEnumTableCol3"><A class="mmap_legend_link" href="../legend.html#RTS">RTS</A> hardware flow control enabled</TD>
+</TR>
+</TABLE>
+</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="CTL_RESERVED12">13:12</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED12</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0b00</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="CTL_RTS">11</a>
+</TD>
+<TD class="cellBitfieldCol2">RTS</TD>
+<TD class="cellBitfieldCol3" colspan="3">Request to Send<BR>
+This bit is the complement of the active-low <A class="mmap_legend_link" href="../legend.html#UART">UART</A> <A class="mmap_legend_link" href="../legend.html#RTS">RTS</A> output. That is, when the bit is programmed to a 1 then <A class="mmap_legend_link" href="../legend.html#RTS">RTS</A> output on the pins is LOW.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="CTL_RESERVED10">10</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED10</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="CTL_RXE">9</a>
+</TD>
+<TD class="cellBitfieldCol2">RXE</TD>
+<TD class="cellBitfieldCol3" colspan="3">UART Receive Enable<BR>
+If the <A class="mmap_legend_link" href="../legend.html#UART">UART</A> is disabled in the middle of reception, it completes the current character before stopping.<TABLE cellspacing="0" class="LprfEnum">
+<TR class="rowEnumHead">
+<TD class="cellEnumTableHeadCol1">Value</TD>
+<TD class="cellEnumTableHeadCol2">ENUM Name</TD>
+<TD class="cellEnumTableHeadCol3">Description</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x0</TD>
+<TD class="cellEnumTableCol2">DIS</TD>
+<TD class="cellEnumTableCol3">UART Receive disabled</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x1</TD>
+<TD class="cellEnumTableCol2">EN</TD>
+<TD class="cellEnumTableCol3">UART Receive enabled</TD>
+</TR>
+</TABLE>
+</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">1</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="CTL_TXE">8</a>
+</TD>
+<TD class="cellBitfieldCol2">TXE</TD>
+<TD class="cellBitfieldCol3" colspan="3">UART Transmit Enable<BR>
+If the <A class="mmap_legend_link" href="../legend.html#UART">UART</A> is disabled in the middle of transmission, it completes the current character before stopping.<TABLE cellspacing="0" class="LprfEnum">
+<TR class="rowEnumHead">
+<TD class="cellEnumTableHeadCol1">Value</TD>
+<TD class="cellEnumTableHeadCol2">ENUM Name</TD>
+<TD class="cellEnumTableHeadCol3">Description</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x0</TD>
+<TD class="cellEnumTableCol2">DIS</TD>
+<TD class="cellEnumTableCol3">UART Transmit disabled</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x1</TD>
+<TD class="cellEnumTableCol2">EN</TD>
+<TD class="cellEnumTableCol3">UART Transmit enabled</TD>
+</TR>
+</TABLE>
+</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">1</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="CTL_LBE">7</a>
+</TD>
+<TD class="cellBitfieldCol2">LBE</TD>
+<TD class="cellBitfieldCol3" colspan="3">UART Loop Back Enable:<BR>
+Enabling the loop-back mode connects the <A class="mmap_legend_link" href="../legend.html#UARTTXD">UARTTXD</A> output from the <A class="mmap_legend_link" href="../legend.html#UART">UART</A> to <A class="mmap_legend_link" href="../legend.html#UARTRXD">UARTRXD</A> input of the <A class="mmap_legend_link" href="../legend.html#UART">UART</A>.<TABLE cellspacing="0" class="LprfEnum">
+<TR class="rowEnumHead">
+<TD class="cellEnumTableHeadCol1">Value</TD>
+<TD class="cellEnumTableHeadCol2">ENUM Name</TD>
+<TD class="cellEnumTableHeadCol3">Description</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x0</TD>
+<TD class="cellEnumTableCol2">DIS</TD>
+<TD class="cellEnumTableCol3">Loop Back disabled</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x1</TD>
+<TD class="cellEnumTableCol2">EN</TD>
+<TD class="cellEnumTableCol3">Loop Back enabled</TD>
+</TR>
+</TABLE>
+</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="CTL_RESERVED1">6:1</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED1</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0b00 0000</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="CTL_UARTEN">0</a>
+</TD>
+<TD class="cellBitfieldCol2">UARTEN</TD>
+<TD class="cellBitfieldCol3" colspan="3">UART Enable<TABLE cellspacing="0" class="LprfEnum">
+<TR class="rowEnumHead">
+<TD class="cellEnumTableHeadCol1">Value</TD>
+<TD class="cellEnumTableHeadCol2">ENUM Name</TD>
+<TD class="cellEnumTableHeadCol3">Description</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x0</TD>
+<TD class="cellEnumTableCol2">DIS</TD>
+<TD class="cellEnumTableCol3">UART disabled</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x1</TD>
+<TD class="cellEnumTableCol2">EN</TD>
+<TD class="cellEnumTableCol3">UART enabled</TD>
+</TR>
+</TABLE>
+</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="IFLS"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">UART0</A>:IFLS</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 0034</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0x4000 1034</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0x4000 1034</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">Interrupt <A class="mmap_legend_link" href="../legend.html#FIFO">FIFO</A> Level Select</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">RW</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="IFLS_RESERVED">31:6</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0b00 0000 0000 0000 0000 0000 0000</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="IFLS_RXSEL">5:3</a>
+</TD>
+<TD class="cellBitfieldCol2">RXSEL</TD>
+<TD class="cellBitfieldCol3" colspan="3">Receive interrupt <A class="mmap_legend_link" href="../legend.html#FIFO">FIFO</A> level select:<BR>
+This field sets the trigger points for the receive interrupt. Values 0b101-0b111 are reserved.<TABLE cellspacing="0" class="LprfEnum">
+<TR class="rowEnumHead">
+<TD class="cellEnumTableHeadCol1">Value</TD>
+<TD class="cellEnumTableHeadCol2">ENUM Name</TD>
+<TD class="cellEnumTableHeadCol3">Description</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x0</TD>
+<TD class="cellEnumTableCol2">1_8</TD>
+<TD class="cellEnumTableCol3">Receive <A class="mmap_legend_link" href="../legend.html#FIFO">FIFO</A> becomes &#62;= 1/8 full</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x1</TD>
+<TD class="cellEnumTableCol2">2_8</TD>
+<TD class="cellEnumTableCol3">Receive <A class="mmap_legend_link" href="../legend.html#FIFO">FIFO</A> becomes &#62;= 1/4 full</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x2</TD>
+<TD class="cellEnumTableCol2">4_8</TD>
+<TD class="cellEnumTableCol3">Receive <A class="mmap_legend_link" href="../legend.html#FIFO">FIFO</A> becomes &#62;= 1/2 full</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x3</TD>
+<TD class="cellEnumTableCol2">6_8</TD>
+<TD class="cellEnumTableCol3">Receive <A class="mmap_legend_link" href="../legend.html#FIFO">FIFO</A> becomes &#62;= 3/4 full</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x4</TD>
+<TD class="cellEnumTableCol2">7_8</TD>
+<TD class="cellEnumTableCol3">Receive <A class="mmap_legend_link" href="../legend.html#FIFO">FIFO</A> becomes &#62;= 7/8 full</TD>
+</TR>
+</TABLE>
+</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0b010</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="IFLS_TXSEL">2:0</a>
+</TD>
+<TD class="cellBitfieldCol2">TXSEL</TD>
+<TD class="cellBitfieldCol3" colspan="3">Transmit interrupt <A class="mmap_legend_link" href="../legend.html#FIFO">FIFO</A> level select:<BR>
+This field sets the trigger points for the transmit interrupt. Values 0b101-0b111 are reserved.<TABLE cellspacing="0" class="LprfEnum">
+<TR class="rowEnumHead">
+<TD class="cellEnumTableHeadCol1">Value</TD>
+<TD class="cellEnumTableHeadCol2">ENUM Name</TD>
+<TD class="cellEnumTableHeadCol3">Description</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x0</TD>
+<TD class="cellEnumTableCol2">1_8</TD>
+<TD class="cellEnumTableCol3">Transmit <A class="mmap_legend_link" href="../legend.html#FIFO">FIFO</A> becomes &#60;= 1/8 full</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x1</TD>
+<TD class="cellEnumTableCol2">2_8</TD>
+<TD class="cellEnumTableCol3">Transmit <A class="mmap_legend_link" href="../legend.html#FIFO">FIFO</A> becomes &#60;= 1/4 full</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x2</TD>
+<TD class="cellEnumTableCol2">4_8</TD>
+<TD class="cellEnumTableCol3">Transmit <A class="mmap_legend_link" href="../legend.html#FIFO">FIFO</A> becomes &#60;= 1/2 full</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x3</TD>
+<TD class="cellEnumTableCol2">6_8</TD>
+<TD class="cellEnumTableCol3">Transmit <A class="mmap_legend_link" href="../legend.html#FIFO">FIFO</A> becomes &#60;= 3/4 full</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x4</TD>
+<TD class="cellEnumTableCol2">7_8</TD>
+<TD class="cellEnumTableCol3">Transmit <A class="mmap_legend_link" href="../legend.html#FIFO">FIFO</A> becomes &#60;= 7/8 full</TD>
+</TR>
+</TABLE>
+</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0b010</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="IMSC"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">UART0</A>:IMSC</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 0038</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0x4000 1038</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0x4000 1038</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">Interrupt Mask Set/Clear</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">RW</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="IMSC_RESERVED11">31:11</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED11</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0b0 0000 0000 0000 0000 0000</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="IMSC_OEIM">10</a>
+</TD>
+<TD class="cellBitfieldCol2">OEIM</TD>
+<TD class="cellBitfieldCol3" colspan="3">Overrun error interrupt mask. A read returns the current mask for <A class="mmap_legend_link" href="../legend.html#UART">UART</A>&#39;s overrun error interrupt. On a write of 1, the mask of the overrun error interrupt is set which means the interrupt state will be reflected in <A class="xref" href="#MIS_OEMIS">MIS.OEMIS</A>. A write of 0 clears the mask which means <A class="xref" href="#MIS_OEMIS">MIS.OEMIS</A> will not reflect the interrupt.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="IMSC_BEIM">9</a>
+</TD>
+<TD class="cellBitfieldCol2">BEIM</TD>
+<TD class="cellBitfieldCol3" colspan="3">Break error interrupt mask. A read returns the current mask for <A class="mmap_legend_link" href="../legend.html#UART">UART</A>&#39;s break error interrupt. On a write of 1, the mask of the overrun error interrupt is set which means the interrupt state will be reflected in <A class="xref" href="#MIS_BEMIS">MIS.BEMIS</A>. A write of 0 clears the mask which means <A class="xref" href="#MIS_BEMIS">MIS.BEMIS</A> will not reflect the interrupt.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="IMSC_PEIM">8</a>
+</TD>
+<TD class="cellBitfieldCol2">PEIM</TD>
+<TD class="cellBitfieldCol3" colspan="3">Parity error interrupt mask. A read returns the current mask for <A class="mmap_legend_link" href="../legend.html#UART">UART</A>&#39;s parity error interrupt. On a write of 1, the mask of the overrun error interrupt is set which means the interrupt state will be reflected in <A class="xref" href="#MIS_PEMIS">MIS.PEMIS</A>. A write of 0 clears the mask which means <A class="xref" href="#MIS_PEMIS">MIS.PEMIS</A> will not reflect the interrupt.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="IMSC_FEIM">7</a>
+</TD>
+<TD class="cellBitfieldCol2">FEIM</TD>
+<TD class="cellBitfieldCol3" colspan="3">Framing error interrupt mask. A read returns the current mask for <A class="mmap_legend_link" href="../legend.html#UART">UART</A>&#39;s framing error interrupt. On a write of 1, the mask of the overrun error interrupt is set which means the interrupt state will be reflected in <A class="xref" href="#MIS_FEMIS">MIS.FEMIS</A>. A write of 0 clears the mask which means <A class="xref" href="#MIS_FEMIS">MIS.FEMIS</A> will not reflect the interrupt.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="IMSC_RTIM">6</a>
+</TD>
+<TD class="cellBitfieldCol2">RTIM</TD>
+<TD class="cellBitfieldCol3" colspan="3">Receive timeout interrupt mask. A read returns the current mask for <A class="mmap_legend_link" href="../legend.html#UART">UART</A>&#39;s receive timeout interrupt. On a write of 1, the mask of the overrun error interrupt is set which means the interrupt state will be reflected in <A class="xref" href="#MIS_RTMIS">MIS.RTMIS</A>. A write of 0 clears the mask which means this bitfield will not reflect the interrupt. <BR>
+The raw interrupt for receive timeout <A class="xref" href="#RIS_RTRIS">RIS.RTRIS</A> cannot be set unless the mask is set (<A class="xref" href="#IMSC_RTIM">RTIM</A> = 1). This is because the mask acts as an enable for power saving. That is, the same status can be read from <A class="xref" href="#MIS_RTMIS">MIS.RTMIS</A> and <A class="xref" href="#RIS_RTRIS">RIS.RTRIS</A>.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="IMSC_TXIM">5</a>
+</TD>
+<TD class="cellBitfieldCol2">TXIM</TD>
+<TD class="cellBitfieldCol3" colspan="3">Transmit interrupt mask. A read returns the current mask for <A class="mmap_legend_link" href="../legend.html#UART">UART</A>&#39;s transmit interrupt. On a write of 1, the mask of the overrun error interrupt is set which means the interrupt state will be reflected in <A class="xref" href="#MIS_TXMIS">MIS.TXMIS</A>. A write of 0 clears the mask which means <A class="xref" href="#MIS_TXMIS">MIS.TXMIS</A> will not reflect the interrupt.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="IMSC_RXIM">4</a>
+</TD>
+<TD class="cellBitfieldCol2">RXIM</TD>
+<TD class="cellBitfieldCol3" colspan="3">Receive interrupt mask. A read returns the current mask for <A class="mmap_legend_link" href="../legend.html#UART">UART</A>&#39;s receive interrupt. On a write of 1, the mask of the overrun error interrupt is set which means the interrupt state will be reflected in <A class="xref" href="#MIS_RXMIS">MIS.RXMIS</A>. A write of 0 clears the mask which means <A class="xref" href="#MIS_RXMIS">MIS.RXMIS</A> will not reflect the interrupt.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="IMSC_RESERVED2">3:2</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED2</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0b00</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="IMSC_CTSMIM">1</a>
+</TD>
+<TD class="cellBitfieldCol2">CTSMIM</TD>
+<TD class="cellBitfieldCol3" colspan="3">Clear to Send (CTS) modem interrupt mask. A read returns the current mask for <A class="mmap_legend_link" href="../legend.html#UART">UART</A>&#39;s clear to send interrupt. On a write of 1, the mask of the overrun error interrupt is set which means the interrupt state will be reflected in <A class="xref" href="#MIS_CTSMMIS">MIS.CTSMMIS</A>. A write of 0 clears the mask which means <A class="xref" href="#MIS_CTSMMIS">MIS.CTSMMIS</A> will not reflect the interrupt.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="IMSC_RESERVED0">0</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED0</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="RIS"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">UART0</A>:RIS</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 003C</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0x4000 103C</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0x4000 103C</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">Raw Interrupt Status</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">RO</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="RIS_RESERVED11">31:11</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED11</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0b0 0000 0000 0000 0000 0000</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="RIS_OERIS">10</a>
+</TD>
+<TD class="cellBitfieldCol2">OERIS</TD>
+<TD class="cellBitfieldCol3" colspan="3">Overrun error interrupt status: <BR>
+This field returns the raw interrupt state of <A class="mmap_legend_link" href="../legend.html#UART">UART</A>&#39;s overrun error interrupt. Overrun error occurs if data is received and the receive <A class="mmap_legend_link" href="../legend.html#FIFO">FIFO</A> is full.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="RIS_BERIS">9</a>
+</TD>
+<TD class="cellBitfieldCol2">BERIS</TD>
+<TD class="cellBitfieldCol3" colspan="3">Break error interrupt status:<BR>
+This field returns the raw interrupt state of <A class="mmap_legend_link" href="../legend.html#UART">UART</A>&#39;s break error interrupt. Break error is set when a break condition is detected, indicating that the received data input (<A class="mmap_legend_link" href="../legend.html#UARTRXD">UARTRXD</A> input pin) was held LOW for longer than a full-word transmission time (defined as start, data, parity and stop bits).</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="RIS_PERIS">8</a>
+</TD>
+<TD class="cellBitfieldCol2">PERIS</TD>
+<TD class="cellBitfieldCol3" colspan="3">Parity error interrupt status:<BR>
+This field returns the raw interrupt state of <A class="mmap_legend_link" href="../legend.html#UART">UART</A>&#39;s parity error interrupt. Parity error is set if the parity of the received data character does not match the parity that the <A class="xref" href="#LCRH_EPS">LCRH.EPS</A> and <A class="xref" href="#LCRH_SPS">LCRH.SPS</A> select.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="RIS_FERIS">7</a>
+</TD>
+<TD class="cellBitfieldCol2">FERIS</TD>
+<TD class="cellBitfieldCol3" colspan="3">Framing error interrupt status:<BR>
+This field returns the raw interrupt state of <A class="mmap_legend_link" href="../legend.html#UART">UART</A>&#39;s framing error interrupt. Framing error is set if the received character does not have a valid stop bit (a valid stop bit is 1).</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="RIS_RTRIS">6</a>
+</TD>
+<TD class="cellBitfieldCol2">RTRIS</TD>
+<TD class="cellBitfieldCol3" colspan="3">Receive timeout interrupt status:<BR>
+This field returns the raw interrupt state of <A class="mmap_legend_link" href="../legend.html#UART">UART</A>&#39;s receive timeout interrupt. The receive timeout interrupt is asserted when the receive <A class="mmap_legend_link" href="../legend.html#FIFO">FIFO</A> is not empty, and no more data is received during a 32-bit period. The receive timeout interrupt is cleared either when the <A class="mmap_legend_link" href="../legend.html#FIFO">FIFO</A> becomes empty through reading all the data, or when a 1 is written to <A class="xref" href="#ICR_RTIC">ICR.RTIC</A>.<BR>
+The raw interrupt for receive timeout cannot be set unless the mask is set (<A class="xref" href="#IMSC_RTIM">IMSC.RTIM</A> = 1). This is because the mask acts as an enable for power saving. That is, the same status can be read from <A class="xref" href="#MIS_RTMIS">MIS.RTMIS</A> and <A class="xref" href="#RIS_RTRIS">RTRIS</A>.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="RIS_TXRIS">5</a>
+</TD>
+<TD class="cellBitfieldCol2">TXRIS</TD>
+<TD class="cellBitfieldCol3" colspan="3">Transmit interrupt status: <BR>
+This field returns the raw interrupt state of <A class="mmap_legend_link" href="../legend.html#UART">UART</A>&#39;s transmit interrupt.<BR>
+When <A class="mmap_legend_link" href="../legend.html#FIFO">FIFO</A>s are enabled (<A class="xref" href="#LCRH_FEN">LCRH.FEN</A> = 1), the transmit interrupt is asserted if the number of bytes in transmit <A class="mmap_legend_link" href="../legend.html#FIFO">FIFO</A> is equal to or lower than the programmed trigger level (<A class="xref" href="#IFLS_TXSEL">IFLS.TXSEL</A>). The transmit interrupt is cleared by writing data to the transmit <A class="mmap_legend_link" href="../legend.html#FIFO">FIFO</A> until it becomes greater than the trigger level, or by clearing the interrupt through <A class="xref" href="#ICR_TXIC">ICR.TXIC</A>.<BR>
+When <A class="mmap_legend_link" href="../legend.html#FIFO">FIFO</A>s are disabled (<A class="xref" href="#LCRH_FEN">LCRH.FEN</A> = 0), that is they have a depth of one location, the transmit interrupt is asserted if there is no data present in the transmitters single location. It is cleared by performing a single write to the transmit <A class="mmap_legend_link" href="../legend.html#FIFO">FIFO</A>, or by clearing the interrupt through <A class="xref" href="#ICR_TXIC">ICR.TXIC</A>.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="RIS_RXRIS">4</a>
+</TD>
+<TD class="cellBitfieldCol2">RXRIS</TD>
+<TD class="cellBitfieldCol3" colspan="3">Receive interrupt status:<BR>
+This field returns the raw interrupt state of <A class="mmap_legend_link" href="../legend.html#UART">UART</A>&#39;s receive interrupt. <BR>
+When <A class="mmap_legend_link" href="../legend.html#FIFO">FIFO</A>s are enabled (<A class="xref" href="#LCRH_FEN">LCRH.FEN</A> = 1), the receive interrupt is asserted if the receive <A class="mmap_legend_link" href="../legend.html#FIFO">FIFO</A> reaches the programmed trigger<BR>
+level (<A class="xref" href="#IFLS_RXSEL">IFLS.RXSEL</A>). The receive interrupt is cleared by reading data from the receive <A class="mmap_legend_link" href="../legend.html#FIFO">FIFO</A> until it becomes less than the trigger level, or by clearing the interrupt through <A class="xref" href="#ICR_RXIC">ICR.RXIC</A>.<BR>
+When <A class="mmap_legend_link" href="../legend.html#FIFO">FIFO</A>s are disabled (<A class="xref" href="#LCRH_FEN">LCRH.FEN</A> = 0), that is they have a depth of one location, the receive interrupt is asserted if data is received<BR>
+thereby filling the location. The receive interrupt is cleared by performing a single read of the receive <A class="mmap_legend_link" href="../legend.html#FIFO">FIFO</A>, or by clearing the interrupt through <A class="xref" href="#ICR_RXIC">ICR.RXIC</A>.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="RIS_RESERVED2">3:2</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED2</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0b11</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="RIS_CTSRMIS">1</a>
+</TD>
+<TD class="cellBitfieldCol2">CTSRMIS</TD>
+<TD class="cellBitfieldCol3" colspan="3">Clear to Send (CTS) modem interrupt status: <BR>
+This field returns the raw interrupt state of <A class="mmap_legend_link" href="../legend.html#UART">UART</A>&#39;s clear to send interrupt.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">X</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="RIS_RESERVED0">0</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED0</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">1</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="MIS"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">UART0</A>:MIS</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 0040</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0x4000 1040</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0x4000 1040</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">Masked Interrupt Status</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">RO</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="MIS_RESERVED11">31:11</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED11</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0b0 0000 0000 0000 0000 0000</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="MIS_OEMIS">10</a>
+</TD>
+<TD class="cellBitfieldCol2">OEMIS</TD>
+<TD class="cellBitfieldCol3" colspan="3">Overrun error masked interrupt status: <BR>
+This field returns the masked interrupt state of the overrun interrupt which is the AND product of raw interrupt state <A class="xref" href="#RIS_OERIS">RIS.OERIS</A> and the mask setting <A class="xref" href="#IMSC_OEIM">IMSC.OEIM</A>.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="MIS_BEMIS">9</a>
+</TD>
+<TD class="cellBitfieldCol2">BEMIS</TD>
+<TD class="cellBitfieldCol3" colspan="3">Break error masked interrupt status: <BR>
+This field returns the masked interrupt state of the break error interrupt which is the AND product of raw interrupt state <A class="xref" href="#RIS_BERIS">RIS.BERIS</A> and the mask setting <A class="xref" href="#IMSC_BEIM">IMSC.BEIM</A>.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="MIS_PEMIS">8</a>
+</TD>
+<TD class="cellBitfieldCol2">PEMIS</TD>
+<TD class="cellBitfieldCol3" colspan="3">Parity error masked interrupt status:<BR>
+This field returns the masked interrupt state of the parity error interrupt which is the AND product of raw interrupt state <A class="xref" href="#RIS_PERIS">RIS.PERIS</A> and the mask setting <A class="xref" href="#IMSC_PEIM">IMSC.PEIM</A>.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="MIS_FEMIS">7</a>
+</TD>
+<TD class="cellBitfieldCol2">FEMIS</TD>
+<TD class="cellBitfieldCol3" colspan="3">Framing error masked interrupt status: Returns the masked interrupt state of the framing error interrupt which is the AND product of raw interrupt state <A class="xref" href="#RIS_FERIS">RIS.FERIS</A> and the mask setting <A class="xref" href="#IMSC_FEIM">IMSC.FEIM</A>.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="MIS_RTMIS">6</a>
+</TD>
+<TD class="cellBitfieldCol2">RTMIS</TD>
+<TD class="cellBitfieldCol3" colspan="3">Receive timeout masked interrupt status: <BR>
+Returns the masked interrupt state of the receive timeout interrupt.<BR>
+The raw interrupt for receive timeout cannot be set unless the mask is set (<A class="xref" href="#IMSC_RTIM">IMSC.RTIM</A> = 1). This is because the mask acts as an enable for power saving. That is, the same status can be read from <A class="xref" href="#MIS_RTMIS">RTMIS</A> and <A class="xref" href="#RIS_RTRIS">RIS.RTRIS</A>.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="MIS_TXMIS">5</a>
+</TD>
+<TD class="cellBitfieldCol2">TXMIS</TD>
+<TD class="cellBitfieldCol3" colspan="3">Transmit masked interrupt status: <BR>
+This field returns the masked interrupt state of the transmit interrupt  which is the AND product of raw interrupt state <A class="xref" href="#RIS_TXRIS">RIS.TXRIS</A> and the mask setting <A class="xref" href="#IMSC_TXIM">IMSC.TXIM</A>.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="MIS_RXMIS">4</a>
+</TD>
+<TD class="cellBitfieldCol2">RXMIS</TD>
+<TD class="cellBitfieldCol3" colspan="3">Receive masked interrupt status:<BR>
+This field returns the masked interrupt state of the receive interrupt  which is the AND product of raw interrupt state <A class="xref" href="#RIS_RXRIS">RIS.RXRIS</A> and the mask setting <A class="xref" href="#IMSC_RXIM">IMSC.RXIM</A>.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="MIS_RESERVED2">3:2</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED2</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0b00</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="MIS_CTSMMIS">1</a>
+</TD>
+<TD class="cellBitfieldCol2">CTSMMIS</TD>
+<TD class="cellBitfieldCol3" colspan="3">Clear to Send (CTS) modem masked interrupt status:<BR>
+This field returns the masked interrupt state of the clear to send interrupt which is the AND product of raw interrupt state <A class="xref" href="#RIS_CTSRMIS">RIS.CTSRMIS</A> and the mask setting <A class="xref" href="#IMSC_CTSMIM">IMSC.CTSMIM</A>.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="MIS_RESERVED0">0</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED0</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="ICR"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">UART0</A>:ICR</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 0044</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0x4000 1044</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0x4000 1044</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">Interrupt Clear<BR>
+On a write of 1, the corresponding interrupt is cleared. A write of 0 has no effect.</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">WO</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="ICR_RESERVED11">31:11</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED11</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior.</TD>
+<TD class="cellBitfieldCol4">WO</TD>
+<TD class="cellBitfieldCol5">0b0 0000 0000 0000 000X XXXX</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="ICR_OEIC">10</a>
+</TD>
+<TD class="cellBitfieldCol2">OEIC</TD>
+<TD class="cellBitfieldCol3" colspan="3">Overrun error interrupt clear:<BR>
+Writing 1 to this field clears the overrun error interrupt (<A class="xref" href="#RIS_OERIS">RIS.OERIS</A>). Writing 0 has no effect.</TD>
+<TD class="cellBitfieldCol4">WO</TD>
+<TD class="cellBitfieldCol5">X</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="ICR_BEIC">9</a>
+</TD>
+<TD class="cellBitfieldCol2">BEIC</TD>
+<TD class="cellBitfieldCol3" colspan="3">Break error interrupt clear:<BR>
+Writing 1 to this field clears the break error interrupt (<A class="xref" href="#RIS_BERIS">RIS.BERIS</A>). Writing 0 has no effect.</TD>
+<TD class="cellBitfieldCol4">WO</TD>
+<TD class="cellBitfieldCol5">X</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="ICR_PEIC">8</a>
+</TD>
+<TD class="cellBitfieldCol2">PEIC</TD>
+<TD class="cellBitfieldCol3" colspan="3">Parity error interrupt clear:<BR>
+Writing 1 to this field clears the parity error interrupt (<A class="xref" href="#RIS_PERIS">RIS.PERIS</A>). Writing 0 has no effect.</TD>
+<TD class="cellBitfieldCol4">WO</TD>
+<TD class="cellBitfieldCol5">X</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="ICR_FEIC">7</a>
+</TD>
+<TD class="cellBitfieldCol2">FEIC</TD>
+<TD class="cellBitfieldCol3" colspan="3">Framing error interrupt clear:<BR>
+Writing 1 to this field clears the framing error interrupt (<A class="xref" href="#RIS_FERIS">RIS.FERIS</A>). Writing 0 has no effect.</TD>
+<TD class="cellBitfieldCol4">WO</TD>
+<TD class="cellBitfieldCol5">X</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="ICR_RTIC">6</a>
+</TD>
+<TD class="cellBitfieldCol2">RTIC</TD>
+<TD class="cellBitfieldCol3" colspan="3">Receive timeout interrupt clear:<BR>
+Writing 1 to this field clears the receive timeout interrupt (<A class="xref" href="#RIS_RTRIS">RIS.RTRIS</A>). Writing 0 has no effect.</TD>
+<TD class="cellBitfieldCol4">WO</TD>
+<TD class="cellBitfieldCol5">X</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="ICR_TXIC">5</a>
+</TD>
+<TD class="cellBitfieldCol2">TXIC</TD>
+<TD class="cellBitfieldCol3" colspan="3">Transmit interrupt clear:<BR>
+Writing 1 to this field clears the transmit interrupt (<A class="xref" href="#RIS_TXRIS">RIS.TXRIS</A>). Writing 0 has no effect.</TD>
+<TD class="cellBitfieldCol4">WO</TD>
+<TD class="cellBitfieldCol5">X</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="ICR_RXIC">4</a>
+</TD>
+<TD class="cellBitfieldCol2">RXIC</TD>
+<TD class="cellBitfieldCol3" colspan="3">Receive interrupt clear:<BR>
+Writing 1 to this field clears the receive interrupt (<A class="xref" href="#RIS_RXRIS">RIS.RXRIS</A>). Writing 0 has no effect.</TD>
+<TD class="cellBitfieldCol4">WO</TD>
+<TD class="cellBitfieldCol5">X</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="ICR_RESERVED2">3:2</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED2</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior. Write 0</TD>
+<TD class="cellBitfieldCol4">WO</TD>
+<TD class="cellBitfieldCol5">0xX</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="ICR_CTSMIC">1</a>
+</TD>
+<TD class="cellBitfieldCol2">CTSMIC</TD>
+<TD class="cellBitfieldCol3" colspan="3">Clear to Send (CTS) modem interrupt clear:<BR>
+Writing 1 to this field clears the clear to send interrupt (<A class="xref" href="#RIS_CTSRMIS">RIS.CTSRMIS</A>). Writing 0 has no effect.</TD>
+<TD class="cellBitfieldCol4">WO</TD>
+<TD class="cellBitfieldCol5">X</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="ICR_RESERVED0">0</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED0</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior. Write 0.</TD>
+<TD class="cellBitfieldCol4">WO</TD>
+<TD class="cellBitfieldCol5">X</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="DMACTL"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">UART0</A>:DMACTL</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 0048</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0x4000 1048</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0x4000 1048</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">DMA Control</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">RW</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="DMACTL_RESERVED">31:3</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0b0 0000 0000 0000 0000 0000 0000 0000</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="DMACTL_DMAONERR">2</a>
+</TD>
+<TD class="cellBitfieldCol2">DMAONERR</TD>
+<TD class="cellBitfieldCol3" colspan="3">DMA on error. If this bit is set to 1, the <A class="mmap_legend_link" href="../legend.html#DMA">DMA</A> receive request outputs (for  single and burst requests) are disabled when the <A class="mmap_legend_link" href="../legend.html#UART">UART</A> error interrupt is asserted (more specifically if any of the error interrupts <A class="xref" href="#RIS_PERIS">RIS.PERIS</A>, <A class="xref" href="#RIS_BERIS">RIS.BERIS</A>, <A class="xref" href="#RIS_FERIS">RIS.FERIS</A> or <A class="xref" href="#RIS_OERIS">RIS.OERIS</A> are asserted).</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="DMACTL_TXDMAE">1</a>
+</TD>
+<TD class="cellBitfieldCol2">TXDMAE</TD>
+<TD class="cellBitfieldCol3" colspan="3">Transmit <A class="mmap_legend_link" href="../legend.html#DMA">DMA</A> enable. If this bit is set to 1, <A class="mmap_legend_link" href="../legend.html#DMA">DMA</A> for the transmit <A class="mmap_legend_link" href="../legend.html#FIFO">FIFO</A> is enabled.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="DMACTL_RXDMAE">0</a>
+</TD>
+<TD class="cellBitfieldCol2">RXDMAE</TD>
+<TD class="cellBitfieldCol3" colspan="3">Receive <A class="mmap_legend_link" href="../legend.html#DMA">DMA</A> enable. If this bit is set to 1, <A class="mmap_legend_link" href="../legend.html#DMA">DMA</A> for the receive <A class="mmap_legend_link" href="../legend.html#FIFO">FIFO</A> is enabled.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+</TABLE>
+<BR>
+<BR>
+<hr><table class="footer"><tr><td>&copy; 2015 - 2016. Texas Instruments | All Rights Reserved</td></tr></table>
+</BODY>
+</HTML>

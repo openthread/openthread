@@ -1,0 +1,1094 @@
+BODY.mmapBody
+{
+    background-color: #ffffff;
+    color: #000000;
+    font-family: Arial, sans-serif;
+    font-size: 14px;
+    line-height: 16px;
+    MARGIN-LEFT: 1.5cm
+}
+BODY.mmapBody P.white
+{
+    COLOR: #FFFFFF
+}
+BODY.mmapBody P.red
+{
+    COLOR: #CC0000
+}
+BODY.mmapBody P.grey
+{
+    COLOR: #AAAAAA
+}
+BODY.mmapBody P.altColor1
+{
+    COLOR: #115566
+}
+BODY.mmapBody P.altColor2
+{
+    COLOR: #118899
+}
+BODY.mmapBody P.altColor3
+{
+    COLOR: #11BBCC
+}
+
+BODY.mmapBody A
+{
+    TEXT-DECORATION: none
+}
+
+BODY.mmapBody A:link
+{
+    COLOR: #115566
+}
+BODY.mmapBody A:visited
+{
+    COLOR: #115566
+}
+BODY.mmapBody A:hover
+{
+    COLOR: #115566
+}
+BODY.mmapBody A:link
+{
+    COLOR: #115566
+}
+
+
+BODY.mmapBody A.mmap_legend_link
+{
+    FONT-STYLE: italic;
+    COLOR: #000000
+}
+BODY.mmapBody A.mmap_legend_link:link
+{
+    FONT-STYLE: italic;
+    COLOR: #000000
+}
+BODY.mmapBody A.mmap_legend_link:active
+{
+    FONT-STYLE: italic;
+    COLOR: #AAAAAA
+}
+BODY.mmapBody A.mmap_legend_link:visited
+{
+    FONT-STYLE: italic;
+    COLOR: #000000
+}
+BODY.mmapBody A.mmap_legend_link:hover
+{
+    FONT-STYLE: italic;
+    COLOR: #AAAAAA
+}
+
+
+BODY.mmapBody A.mmapRegisterTitle
+{
+    COLOR: #FFFFFF
+}
+BODY.mmapBody A.mmapRegisterTitle:link
+{
+    COLOR: #FFFFFF
+}
+BODY.mmapBody A.mmapRegisterTitle:active
+{
+    COLOR: #FFFFFF
+}
+BODY.mmapBody A.mmapRegisterTitle:visited
+{
+    COLOR: #FFFFFF
+}
+BODY.mmapBody A.mmapRegisterTitle:hover
+{
+    COLOR: #FFFFFF
+}
+
+
+
+
+
+BODY.mmapBody A.xref
+{
+    FONT-WEIGHT: bold;
+    COLOR: #000000
+}
+BODY.mmapBody A.xref:link
+{
+    FONT-WEIGHT: bold;
+    COLOR: #000000
+}
+BODY.mmapBody A.xref:active
+{
+    FONT-WEIGHT: bold;
+    COLOR: #000000
+}
+BODY.mmapBody A.xref:visited
+{
+    FONT-WEIGHT: bold;
+    COLOR: #000000
+}
+BODY.mmapBody A.xref:hover
+{
+    FONT-WEIGHT: bold;
+    COLOR: #000000
+}
+BODY.mmapBody A.short
+{
+    FONT-STYLE: italic;
+    COLOR: #000000
+}
+BODY.mmapBody A.short:active
+{
+    FONT-STYLE: italic;
+    COLOR: #000000
+}
+
+BODY.mmapBody A.indexlink
+{
+    FONT-WEIGHT: bold;
+    font-size: 18px;
+    line-height: 22px;
+    COLOR: #115566
+}
+BODY.mmapBody A.indexlink:visited
+{
+    FONT-WEIGHT: bold;
+    COLOR: #115566
+}
+BODY.mmapBody A.indexlink:hover
+{
+    FONT-WEIGHT: bold;
+    COLOR: #118899
+}
+
+BODY.mmapBody A.short:link
+{
+    FONT-STYLE: italic;
+    COLOR: #000000
+}
+BODY.mmapBody A.short:visited
+{
+    FONT-STYLE: italic;
+    COLOR: #000000
+}
+BODY.mmapBody A.short:hover
+{
+    FONT-STYLE: italic;
+    COLOR: #000000
+}
+
+BODY.mmapBody A.signal
+{
+    FONT-STYLE: italic;
+    COLOR: #000000
+}
+BODY.mmapBody A.signal:active
+{
+    FONT-STYLE: italic;
+    COLOR: #000000
+}
+BODY.mmapBody A.signal:link
+{
+    FONT-STYLE: italic;
+    COLOR: #000000
+}
+BODY.mmapBody A.signal:visited
+{
+    FONT-STYLE: italic;
+    COLOR: #000000
+}
+BODY.mmapBody A.signal:hover
+{
+    FONT-STYLE: italic;
+    COLOR: #000000
+}
+BODY.mmapBody A.module
+{
+    FONT-STYLE: italic;
+    COLOR: #000000
+}
+BODY.mmapBody A.module:active
+{
+    FONT-STYLE: italic;
+    COLOR: #000000
+}
+BODY.mmapBody A.module:link
+{
+    FONT-STYLE: italic;
+    COLOR: #000000
+}
+BODY.mmapBody A.module:visited
+{
+    FONT-STYLE: italic;
+    COLOR: #000000
+}
+BODY.mmapBody A.module:hover
+{
+    FONT-STYLE: italic;
+    COLOR: #000000
+}
+
+
+BODY.mmapBody A.table_legend
+{
+    font-size: 14px;
+    FONT-STYLE:  italic;
+    COLOR: #000000
+}
+
+H2.mmapPageTitle
+{
+    COLOR: black
+}
+
+TABLE.table_redbar_la
+{
+    FONT-SIZE: 18px;
+    width: 100%;
+    text-align: left;
+    border-collapse:collapse   
+}
+
+TABLE.table_redbar_la TR
+{
+    BACKGROUND-COLOR: #CC0000
+}
+
+TABLE.table_redbar_la TD.header
+{
+    FONT-WEIGHT: bold;
+    COLOR: #FFFFFF
+}
+
+
+TABLE.defaultTable
+{
+    FONT-SIZE: 14px;
+    border-collapse:collapse;
+}
+
+TABLE.defaultTable TR.headerRow
+{
+    BACKGROUND-COLOR: #115566
+}
+
+TABLE.defaultTable TD.headerRowCell
+{
+    FONT-WEIGHT: bold;
+    PADDING-BOTTOM: 5px;
+    PADDING-LEFT: 5px;
+    PADDING-RIGHT: 10px;
+    PADDING-TOP: 5px;
+    border-style: solid;  
+    border-width: 1px;
+    border-color: #CCCCCC;      
+    text-align: left
+
+}
+
+TABLE.defaultTable TD.headerRowCell.P
+{
+    COLOR: #FFFFFF
+
+}
+
+TABLE.defaultTable TR.detailRow
+{
+    BACKGROUND-COLOR: #FFFFFF
+}
+
+TABLE.defaultTable TR.detailRowSectionBreak
+{
+    BACKGROUND-COLOR: #FFFFFF;
+}
+
+TABLE.defaultTable TD.detailRowCell
+{
+    PADDING-BOTTOM: 5px;
+    PADDING-LEFT: 5px;
+    PADDING-RIGHT: 10px;
+    PADDING-TOP: 5px;
+    vertical-align: top;
+    text-align: center;
+    border-style: solid;  
+    border-width: 1px;
+    border-color:#CCCCCC;     
+    min-width: 150px;
+    max-width: 500px
+
+}
+
+TABLE.defaultTable TD.detailRowCellLeftAligned
+{
+    PADDING-BOTTOM: 5px;
+    PADDING-LEFT: 5px;
+    PADDING-RIGHT: 10px;
+    PADDING-TOP: 5px;
+    vertical-align: top;
+    text-align: left;
+    border-style: solid;  
+    border-width: 1px;
+    border-color:#CCCCCC;     
+    min-width: 150px;
+    max-width: 500px
+
+}
+
+TABLE.defaultTable TD.detailRowIntroCell
+{
+    vertical-align: top;
+    border-style: solid;  
+    border-width: 1px;
+    border-color:#CCCCCC;      
+    min-width: 150px;
+    FONT-WEIGHT: bold;
+    PADDING-BOTTOM: 5px;
+    PADDING-LEFT: 5px;
+    PADDING-RIGHT: 10px;
+    PADDING-TOP: 5px
+}
+
+
+
+H1.mmapProductTitle
+{
+    COLOR: black;
+    TEXT-ALIGN: center
+    font-size: 21px;
+
+}
+
+H2.mmapInstanceSummaryTitle
+{
+    COLOR: black
+}
+H2.mmapCellTitle
+{
+    COLOR: black
+}
+H3.mmapRegisterTitle
+{
+    COLOR: white;
+    FONT-SIZE: 14px;
+    BACKGROUND: #CC0000;
+    line-height: 20px;
+    padding-left: 20px;
+    margin: 0px;
+}
+H3.mmapRegisterTitle A
+{
+    COLOR: white;
+    FONT-SIZE: 14px;
+}
+
+H3.mmapRegisterSummaryTitle
+{
+    FONT-STYLE: italic;
+    FONT-SIZE: 16px;
+    COLOR: black
+}
+TABLE.LprfEnum
+{
+    FONT-SIZE: 14px;
+    WIDTH: 100%
+}
+TABLE.LprfEnum TR.rowEnumHead
+{
+}
+TABLE.LprfEnum TR.rowEnum
+{
+}
+TABLE.LprfEnum TD.cellEnumTableHeadCol1
+{
+    COLOR: #115566;
+    FONT-SIZE: 14px;
+    FONT-WEIGHT: bold;
+    WIDTH: 50px;
+    PADDING-BOTTOM: 5px;
+    PADDING-LEFT: 5px;
+    PADDING-RIGHT: 5px;
+    PADDING-TOP: 5px
+    BORDER-BOTTOM: black 1px solid;
+    BORDER-LEFT: medium none;
+    BORDER-RIGHT: medium none;
+    BORDER-TOP: medium none;
+}
+TABLE.LprfEnum TD.cellEnumTableHeadCol2
+{
+    COLOR: #115566;
+    FONT-SIZE: 14px;
+    FONT-WEIGHT: bold;
+    WIDTH: 100px;
+    PADDING-BOTTOM: 5px;
+    PADDING-LEFT: 5px;
+    PADDING-RIGHT: 5px;
+    PADDING-TOP: 5px
+    BORDER-BOTTOM: black 1px solid;
+    BORDER-LEFT: medium none;
+    BORDER-RIGHT: medium none;
+    BORDER-TOP: medium none;
+}
+TABLE.LprfEnum TD.cellEnumTableHeadCol3
+{
+    COLOR: #115566;
+    FONT-SIZE: 14px;
+    FONT-WEIGHT: bold;
+    PADDING-BOTTOM: 5px;
+    PADDING-LEFT: 5px;
+    PADDING-RIGHT: 5px;
+    PADDING-TOP: 5px
+    BORDER-BOTTOM: black 1px dashed;
+    BORDER-LEFT: medium none;
+    BORDER-RIGHT: medium none;
+    BORDER-TOP: medium none;
+}
+TABLE.LprfEnum TD.cellEnumTableCol1
+{
+    FONT-SIZE: 14px;
+    WIDTH: 50px;
+    PADDING-LEFT: 5px;
+    PADDING-RIGHT: 5px;
+    vertical-align: top
+}
+TABLE.LprfEnum TD.cellEnumTableCol2
+{
+    FONT-SIZE: 14px;
+    WIDTH: 100px;
+    PADDING-LEFT: 5px;
+    PADDING-RIGHT: 5px;
+    vertical-align: top
+}
+TABLE.LprfEnum TD.cellEnumTableCol3
+{
+    FONT-SIZE: 14px;
+    PADDING-LEFT: 5px;
+    PADDING-RIGHT: 5px;
+    vertical-align: top
+}
+
+TABLE.mmapInstanceSummaryTable
+{
+    BORDER-BOTTOM: black 1px solid;
+    BORDER-LEFT: black 1px solid;
+    BORDER-RIGHT: black 1px solid;
+    BORDER-TOP: black 1px solid;
+    FONT-SIZE: 14px;
+    WIDTH: 100%
+}
+TABLE.mmapInstanceSummaryTable TR.row
+{
+}
+TABLE.mmapInstanceSummaryTable TR.rowHead
+{
+    BACKGROUND-COLOR: #CC0000
+}
+
+TABLE.mmapInstanceSummaryTable TD.cellTopCol1
+{
+    COLOR: white;
+    BORDER-BOTTOM: black 3px solid;
+    BORDER-LEFT: medium none;
+    BORDER-RIGHT: black 1px solid;
+    BORDER-TOP: black 2px solid;
+    FONT-WEIGHT: bold;
+    PADDING-BOTTOM: 5px;
+    PADDING-LEFT: 5px;
+    PADDING-RIGHT: 5px;
+    PADDING-TOP: 5px
+}
+TABLE.mmapInstanceSummaryTable TD.cellTopCol2
+{
+    COLOR: white;
+    BORDER-BOTTOM: black 3px solid;
+    BORDER-RIGHT: black 1px solid;
+    BORDER-TOP: black 2px solid;
+    FONT-WEIGHT: bold;
+    PADDING-BOTTOM: 5px;
+    PADDING-LEFT: 5px;
+    PADDING-RIGHT: 5px;
+    PADDING-TOP: 5px
+}
+TABLE.mmapInstanceSummaryTable TD.cellTopCol3
+{
+    COLOR: white;
+    BORDER-BOTTOM: black 3px solid;
+    BORDER-RIGHT: black 1px solid;
+    BORDER-TOP: black 2px solid;
+    FONT-WEIGHT: bold;
+    PADDING-BOTTOM: 5px;
+    PADDING-LEFT: 5px;
+    PADDING-RIGHT: 5px;
+    PADDING-TOP: 5px
+}
+TABLE.mmapInstanceSummaryTable TD.cellTopCol4
+{
+    COLOR: white;
+    BORDER-BOTTOM: black 3px solid;
+    BORDER-LEFT: medium none;
+    BORDER-RIGHT: medium none;
+    BORDER-TOP: black 2px solid;
+    FONT-WEIGHT: bold;
+    PADDING-BOTTOM: 5px;
+    PADDING-LEFT: 5px;
+    PADDING-RIGHT: 5px;
+    PADDING-TOP: 5px
+}
+TABLE.mmapInstanceSummaryTable TD.cellCol1
+{
+    BORDER-BOTTOM: black 1px solid;
+    BORDER-LEFT: medium none;
+    BORDER-RIGHT: black 1px solid;
+    BORDER-TOP: medium none;
+    PADDING-BOTTOM: 5px;
+    PADDING-LEFT: 5px;
+    PADDING-RIGHT: 5px;
+    PADDING-TOP: 5px
+}
+TABLE.mmapInstanceSummaryTable TD.cellCol2
+{
+    BORDER-BOTTOM: black 1px solid;
+    BORDER-LEFT: medium none;
+    BORDER-RIGHT: black 1px solid;
+    BORDER-TOP: medium none;
+    PADDING-BOTTOM: 5px;
+    PADDING-LEFT: 5px;
+    PADDING-RIGHT: 5px;
+    PADDING-TOP: 5px
+}
+TABLE.mmapInstanceSummaryTable TD.cellCol3
+{
+    BORDER-BOTTOM: black 1px solid;
+    BORDER-LEFT: medium none;
+    BORDER-RIGHT: black 1px solid;
+    BORDER-TOP: medium none;
+    PADDING-BOTTOM: 5px;
+    PADDING-LEFT: 5px;
+    PADDING-RIGHT: 5px;
+    PADDING-TOP: 5px
+}
+TABLE.mmapInstanceSummaryTable TD.cellCol4
+{
+    BORDER-BOTTOM: black 1px solid;
+    BORDER-LEFT: medium none;
+    BORDER-RIGHT: medium none;
+    BORDER-TOP: medium none;
+    PADDING-BOTTOM: 5px;
+    PADDING-LEFT: 5px;
+    PADDING-RIGHT: 5px;
+    PADDING-TOP: 5px
+}
+
+TABLE.mmapRegisterSummaryTable
+{
+    BORDER-BOTTOM: black 1px solid;
+    BORDER-LEFT: black 1px solid;
+    BORDER-RIGHT: black 1px solid;
+    BORDER-TOP: black 1px solid;
+    FONT-SIZE: 14px;
+    WIDTH: 100%
+}
+TABLE.mmapRegisterSummaryTable TR.rowTop
+{
+    BACKGROUND-COLOR: #CC0000;
+}
+TABLE.mmapRegisterSummaryTable TR.row
+{
+}
+TABLE.mmapRegisterSummaryTable TD.cellTopCol1
+{
+    WIDTH: 25%;
+    BORDER-BOTTOM: black 3px solid;
+    BORDER-LEFT: medium none;
+    BORDER-RIGHT: black 1px solid;
+    BORDER-TOP: black 2px solid;
+    FONT-WEIGHT: bold;
+    COLOR: white;
+    PADDING-BOTTOM: 5px;
+    PADDING-LEFT: 5px;
+    PADDING-RIGHT: 5px;
+    PADDING-TOP: 5px
+}
+TABLE.mmapRegisterSummaryTable TD.cellTopCol2
+{
+    WIDTH: 12.5%;
+    COLOR: white;
+    BORDER-BOTTOM: black 3px solid;
+    BORDER-RIGHT: black 1px solid;
+    BORDER-TOP: black 2px solid;
+    FONT-WEIGHT: bold;
+    PADDING-BOTTOM: 5px;
+    PADDING-LEFT: 5px;
+    PADDING-RIGHT: 5px;
+    PADDING-TOP: 5px
+}
+TABLE.mmapRegisterSummaryTable TD.cellTopCol3
+{
+    WIDTH: 12.5%;
+    COLOR: white;
+    BORDER-BOTTOM: black 3px solid;
+    BORDER-RIGHT: black 1px solid;
+    BORDER-TOP: black 2px solid;
+    FONT-WEIGHT: bold;
+    PADDING-BOTTOM: 5px;
+    PADDING-LEFT: 5px;
+    PADDING-RIGHT: 5px;
+    PADDING-TOP: 5px
+}
+TABLE.mmapRegisterSummaryTable TD.cellTopCol4
+{
+    WIDTH: 20%;
+    COLOR: white;
+    BORDER-BOTTOM: black 3px solid;
+    BORDER-RIGHT: black 1px solid;
+    BORDER-TOP: black 2px solid;
+    FONT-WEIGHT: bold;
+    PADDING-BOTTOM: 5px;
+    PADDING-LEFT: 5px;
+    PADDING-RIGHT: 5px;
+    PADDING-TOP: 5px
+}
+TABLE.mmapRegisterSummaryTable TD.cellTopCol5
+{
+    WIDTH: 12.5%;
+    COLOR: white;
+    BORDER-BOTTOM: black 3px solid;
+    BORDER-RIGHT: black 1px solid;
+    BORDER-TOP: black 2px solid;
+    FONT-WEIGHT: bold;
+    PADDING-BOTTOM: 5px;
+    PADDING-LEFT: 5px;
+    PADDING-RIGHT: 5px;
+    PADDING-TOP: 5px
+}
+TABLE.mmapRegisterSummaryTable TD.cellCol1
+{
+    BORDER-BOTTOM: black 1px solid;
+    BORDER-LEFT: medium none;
+    BORDER-RIGHT: black 1px solid;
+    BORDER-TOP: medium none;
+    PADDING-BOTTOM: 5px;
+    PADDING-LEFT: 5px;
+    PADDING-RIGHT: 5px;
+    PADDING-TOP: 5px
+}
+TABLE.mmapRegisterSummaryTable TD.cellCol2
+{
+    BORDER-BOTTOM: black 1px solid;
+    BORDER-LEFT: medium none;
+    BORDER-RIGHT: black 1px solid;
+    BORDER-TOP: medium none;
+    PADDING-BOTTOM: 5px;
+    PADDING-LEFT: 5px;
+    PADDING-RIGHT: 5px;
+    PADDING-TOP: 5px
+}
+TABLE.mmapRegisterSummaryTable TD.cellCol3
+{
+    BORDER-BOTTOM: black 1px solid;
+    BORDER-LEFT: medium none;
+    BORDER-RIGHT: black 1px solid;
+    BORDER-TOP: medium none;
+    PADDING-BOTTOM: 5px;
+    PADDING-LEFT: 5px;
+    PADDING-RIGHT: 5px;
+    PADDING-TOP: 5px
+}
+TABLE.mmapRegisterSummaryTable TD.cellCol4
+{
+    BORDER-BOTTOM: black 1px solid;
+    BORDER-LEFT: medium none;
+    BORDER-RIGHT: black 1px solid;
+    BORDER-TOP: medium none;
+    PADDING-BOTTOM: 5px;
+    PADDING-LEFT: 5px;
+    PADDING-RIGHT: 5px;
+    PADDING-TOP: 5px
+}
+TABLE.mmapRegisterSummaryTable TD.cellCol5
+{
+    BORDER-BOTTOM: black 1px solid;
+    BORDER-LEFT: medium none;
+    BORDER-RIGHT: black 1px solid;
+    BORDER-TOP: medium none;
+    PADDING-BOTTOM: 5px;
+    PADDING-LEFT: 5px;
+    PADDING-RIGHT: 5px;
+    PADDING-TOP: 5px
+}
+TABLE.mmapRegisterTable
+{
+    FONT-SIZE: 14px;
+    WIDTH: 100%;
+
+}
+TABLE.mmapRegisterTable TR.row
+{
+}
+TABLE.mmapRegisterTable TD.cellCol1
+{
+    WIDTH: 12%;
+    vertical-align: top;
+    FONT-WEIGHT: bold;
+    BORDER-BOTTOM: medium none;
+    BORDER-LEFT: medium none;
+    BORDER-RIGHT: medium none;
+    BORDER-TOP: medium none;
+    PADDING-BOTTOM: 5px;
+    PADDING-LEFT: 5px;
+    PADDING-RIGHT: 5px;
+    PADDING-TOP: 5px
+}
+TABLE.mmapRegisterTable TD.cellCol2
+{
+    WIDTH: 30%;
+    vertical-align: top;
+    BORDER-BOTTOM: medium none;
+    BORDER-LEFT: medium none;
+    BORDER-RIGHT: medium none;
+    BORDER-TOP: medium none;
+    PADDING-BOTTOM: 5px;
+    PADDING-LEFT: 5px;
+    PADDING-RIGHT: 5px;
+    PADDING-TOP: 5px
+}
+TABLE.mmapRegisterTable TD.headerCol
+{
+    WIDTH: 40%;
+    BACKGROUND-COLOR: blue;
+    COLOR: white;
+    BORDER-BOTTOM: black 1px solid;
+    BORDER-LEFT: black 1px solid;
+    BORDER-RIGHT: black 1px solid;
+    BORDER-TOP: black 1px solid;
+    PADDING-BOTTOM: 5px;
+    PADDING-LEFT: 5px;
+    PADDING-RIGHT: 5px;
+    PADDING-TOP: 5px
+}
+TABLE.mmapRegisterTable TD.udpCol1
+{
+    WIDTH: 40%;
+    BORDER-BOTTOM: black 1px solid;
+    BORDER-LEFT: black 1px solid;
+    BORDER-RIGHT: black 1px solid;
+    BORDER-TOP: black 1px solid;
+    PADDING-BOTTOM: 5px;
+    PADDING-LEFT: 5px;
+    PADDING-RIGHT: 5px;
+    PADDING-TOP: 5px
+}
+TABLE.mmapRegisterTable TD.cellCol3
+{
+    WIDTH: 8%;
+    vertical-align: top;
+    BORDER-BOTTOM: medium none;
+    BORDER-LEFT: medium none;
+    BORDER-RIGHT: medium none;
+    BORDER-TOP: medium none;
+    PADDING-BOTTOM: 5px;
+    PADDING-LEFT: 5px;
+    PADDING-RIGHT: 5px;
+    PADDING-TOP: 5px
+}
+TABLE.mmapRegisterTable TD.cellCol4
+{
+    vertical-align: top;
+    BORDER-BOTTOM: medium none;
+    BORDER-LEFT: medium none;
+    BORDER-RIGHT: medium none;
+    BORDER-TOP: medium none;
+    PADDING-BOTTOM: 5px;
+    PADDING-LEFT: 5px;
+    PADDING-RIGHT: 5px;
+    text-align: left;
+    PADDING-TOP: 5px
+}
+
+TABLE.mmapBitfieldTable
+{
+    FONT-SIZE: 14px;
+    WIDTH: 100%
+}
+TABLE.mmapBitfieldTable TR.rowTop
+{
+    FONT-WEIGHT: bold;
+}
+TABLE.mmapBitfieldTable TD.cellTopCol1
+{
+    WIDTH: 4%;
+    vertical-align: top;
+    BORDER-BOTTOM: medium none;
+    BORDER-LEFT: medium none;
+    BORDER-RIGHT: medium none;
+    BORDER-TOP: medium none;
+    PADDING-BOTTOM: 5px;
+    PADDING-LEFT: 5px;
+    PADDING-RIGHT: 5px;
+    PADDING-TOP: 5px
+}
+TABLE.mmapBitfieldTable TD.cellTopCol2
+{
+    WIDTH: 20%;
+    vertical-align: top;
+    BORDER-BOTTOM: medium none;
+    BORDER-LEFT: medium none;
+    BORDER-RIGHT: medium none;
+    BORDER-TOP: medium none;
+    PADDING-BOTTOM: 5px;
+    PADDING-LEFT: 5px;
+    PADDING-RIGHT: 5px;
+    PADDING-TOP: 5px
+}
+TABLE.mmapBitfieldTable TD.cellTopCol3
+{
+    WIDTH: 55%;
+    vertical-align: top;
+    BORDER-BOTTOM: medium none;
+    BORDER-LEFT: medium none;
+    BORDER-RIGHT: medium none;
+    BORDER-TOP: medium none;
+    PADDING-BOTTOM: 5px;
+    PADDING-LEFT: 5px;
+    PADDING-RIGHT: 5px;
+    PADDING-TOP: 5px
+}
+TABLE.mmapBitfieldTable TD.cellTopCol4
+{
+    vertical-align: top;
+    WIDTH: 4%;
+    BORDER-BOTTOM: medium none;
+    BORDER-LEFT: medium none;
+    BORDER-RIGHT: medium none;
+    BORDER-TOP: medium none;
+    PADDING-BOTTOM: 5px;
+    PADDING-LEFT: 5px;
+    PADDING-RIGHT: 5px;
+    PADDING-TOP: 5px
+}
+TABLE.mmapBitfieldTable TD.cellTopCol5
+{
+    WIDTH: 17%;
+    BORDER-BOTTOM: medium none;
+    BORDER-LEFT: medium none;
+    BORDER-RIGHT: medium none;
+    BORDER-TOP: medium none;
+    PADDING-BOTTOM: 5px;
+    PADDING-LEFT: 5px;
+    PADDING-RIGHT: 5px;
+    PADDING-TOP: 5px
+}
+TABLE.mmapBitfieldTable TR.rowBitfield
+{
+}
+TABLE.mmapBitfieldTable TD.cellBitfieldCol1
+{
+    vertical-align: top;
+    WIDTH: 4%;
+    BORDER-BOTTOM: medium none;
+    BORDER-LEFT: medium none;
+    BORDER-RIGHT: medium none;
+    BORDER-TOP: black 1px solid;
+    PADDING-BOTTOM: 5px;
+    PADDING-LEFT: 5px;
+    PADDING-RIGHT: 5px;
+    PADDING-TOP: 5px
+}
+TABLE.mmapBitfieldTable TD.cellBitfieldCol2
+{
+    vertical-align: top;
+    WIDTH: 20%;
+    BORDER-BOTTOM: medium none;
+    BORDER-LEFT: medium none;
+    BORDER-RIGHT: medium none;
+    BORDER-TOP: black 1px solid;
+    PADDING-BOTTOM: 5px;
+    PADDING-LEFT: 5px;
+    PADDING-RIGHT: 5px;
+    PADDING-TOP: 5px
+}
+TABLE.mmapBitfieldTable TD.cellBitfieldCol3
+{
+    vertical-align: top;
+    WIDTH: 55%;
+    BORDER-BOTTOM: medium none;
+    BORDER-LEFT: medium none;
+    BORDER-RIGHT: medium none;
+    BORDER-TOP: black 1px solid;
+    PADDING-BOTTOM: 5px;
+    PADDING-LEFT: 5px;
+    PADDING-RIGHT: 5px;
+    PADDING-TOP: 5px
+}
+TABLE.mmapBitfieldTable TD.cellBitfieldCol4
+{
+    vertical-align: top;
+    WIDTH: 4%;
+    BORDER-BOTTOM: medium none;
+    BORDER-LEFT: medium none;
+    BORDER-RIGHT: medium none;
+    BORDER-TOP: black 1px solid;
+    PADDING-BOTTOM: 5px;
+    PADDING-LEFT: 5px;
+    PADDING-RIGHT: 5px;
+    PADDING-TOP: 5px
+}
+TABLE.mmapBitfieldTable TD.cellBitfieldCol5
+{
+    vertical-align: top;
+    WIDTH: 17%;
+    BORDER-BOTTOM: medium none;
+    BORDER-LEFT: medium none;
+    BORDER-RIGHT: medium none;
+    BORDER-TOP: black 1px solid;
+    PADDING-BOTTOM: 5px;
+    PADDING-LEFT: 5px;
+    PADDING-RIGHT: 5px;
+    PADDING-TOP: 5px
+}
+TABLE.mmapBitfieldTable TD.cellBitfieldHeaderUdp
+{
+    WIDTH: 17%;
+    BACKGROUND-COLOR: blue;
+    COLOR: white;
+    BORDER-BOTTOM: black 1px solid;
+    BORDER-LEFT: black 1px solid;
+    BORDER-RIGHT: black 1px solid;
+    BORDER-TOP: black 1px solid;
+    PADDING-BOTTOM: 5px;
+    PADDING-LEFT: 5px;
+    PADDING-RIGHT: 5px;
+    PADDING-TOP: 5px
+}
+TABLE.mmapBitfieldTable TD.cellBitfieldUdp
+{
+    WIDTH: 17%;
+    BORDER-BOTTOM: black 1px solid;
+    BORDER-LEFT: black 1px solid;
+    BORDER-RIGHT: black 1px solid;
+    BORDER-TOP: black 1px solid;
+    PADDING-BOTTOM: 5px;
+    PADDING-LEFT: 5px;
+    PADDING-RIGHT: 5px;
+    PADDING-TOP: 5px
+}
+TABLE.mmapBitfieldTable TR.rowEnum
+{
+}
+TABLE.mmapBitfieldTable TD.cellEnumCol1
+{
+    BACKGROUND-COLOR: #FFFF99;
+    BORDER-BOTTOM: medium none;
+    BORDER-LEFT: medium none;
+    BORDER-RIGHT: medium none;
+    BORDER-TOP: medium none;
+    PADDING-BOTTOM: 5px;
+    PADDING-LEFT: 5px;
+    PADDING-RIGHT: 5px;
+    PADDING-TOP: 5px
+}
+TABLE.mmapBitfieldTable TD.cellEnumCol2
+{
+    BORDER-BOTTOM: medium none;
+    BORDER-LEFT: medium none;
+    BORDER-RIGHT: medium none;
+    BORDER-TOP: medium none;
+    PADDING-BOTTOM: 5px;
+    PADDING-LEFT: 5px;
+    PADDING-RIGHT: 5px;
+    PADDING-TOP: 5px
+}
+TABLE.mmapBitfieldTable TD.cellEnumCol3
+{
+    BORDER-BOTTOM: medium none;
+    BORDER-LEFT: medium none;
+    BORDER-RIGHT: medium none;
+    BORDER-TOP: medium none;
+    PADDING-BOTTOM: 5px;
+    PADDING-LEFT: 5px;
+    PADDING-RIGHT: 5px;
+    PADDING-TOP: 5px
+}
+TABLE.mmapBitfieldTable TD.cellEnumCol4
+{
+    BORDER-BOTTOM: medium none;
+    BORDER-LEFT: medium none;
+    BORDER-RIGHT: medium none;
+    BORDER-TOP: medium none;
+    PADDING-BOTTOM: 5px;
+    PADDING-LEFT: 5px;
+    PADDING-RIGHT: 5px;
+    PADDING-TOP: 5px
+}
+TABLE.mmapBitfieldTable TD.cellEnumCol5
+{
+    BORDER-BOTTOM: medium none;
+    BORDER-LEFT: medium none;
+    BORDER-RIGHT: medium none;
+    BORDER-TOP: medium none;
+    PADDING-BOTTOM: 5px;
+    PADDING-LEFT: 5px;
+    PADDING-RIGHT: 5px;
+    PADDING-TOP: 5px
+}
+TABLE.mmapBitfieldTable TD.cellEnumUdpHeader
+{
+    BACKGROUND-COLOR: blue;
+    COLOR: white;
+    BORDER-BOTTOM: black 1px solid;
+    BORDER-LEFT: black 1px solid;
+    BORDER-RIGHT: black 1px solid;
+    BORDER-TOP: black 1px solid;
+    PADDING-BOTTOM: 5px;
+    PADDING-LEFT: 5px;
+    PADDING-RIGHT: 5px;
+    PADDING-TOP: 5px
+}
+TABLE.mmapBitfieldTable TD.cellEnumUdp
+{
+    BORDER-BOTTOM: black 1px solid;
+    BORDER-LEFT: black 1px solid;
+    BORDER-RIGHT: black 1px solid;
+    BORDER-TOP: black 1px solid;
+    PADDING-BOTTOM: 5px;
+    PADDING-LEFT: 5px;
+    PADDING-RIGHT: 5px;
+    PADDING-TOP: 5px
+}
+TABLE.mmapBitfieldTable TD.cellEnumCol6
+{
+    BORDER-BOTTOM: medium none;
+    BORDER-LEFT: medium none;
+    BORDER-RIGHT: medium none;
+    BORDER-TOP: medium none;
+    PADDING-BOTTOM: 5px;
+    PADDING-LEFT: 5px;
+    PADDING-RIGHT: 5px;
+    PADDING-TOP: 5px
+}
+
+hr { 
+    display: block;
+    margin-top: 0.5em;
+    margin-bottom: 0.5em;
+    margin-left: auto;
+    margin-right: auto;
+    border-style: inset;
+    border-width: 2px;
+}
+
+table.footer
+{
+    width: 100%;
+    font-size: 10px;
+    color: #666;
+    text-align: center;
+}
+
+sup 
+{
+  font-size: 0.8em;
+  line-height: 0;
+  position: relative;
+  vertical-align: baseline;
+  top: -0.5em;
+}

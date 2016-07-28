@@ -1,0 +1,4 @@
+<map id="FlashProgram" name="FlashProgram">
+<area shape="rect" id="node2" href="$group__flash__api.html#ga47a87d4753facd8d55e0d0e542e5d518" title="Get the size of the flash. " alt="" coords="164,5,269,32"/>
+<area shape="rect" id="node3" href="$group__flash__api.html#gaa1d1b6c1345a8c66a505cd7321b8588c" title="Get size of a flash sector in number of bytes. " alt="" coords="317,5,464,32"/>
+</map>

@@ -1,0 +1,14 @@
+<map id="OSCHF_SwitchToRcOscTurnOffXosc" name="OSCHF_SwitchToRcOscTurnOffXosc">
+<area shape="rect" id="node2" href="$group__osc__api.html#ga37a02687fbd8680396550f682a7f046f" title="Configure the oscillator input to the a source clock. " alt="" coords="339,5,489,32"/>
+<area shape="rect" id="node8" href="$group__osc__api.html#ga279bd3a34548bd4c5e2fc6939f7be228" title="Get the source clock settings. " alt="" coords="338,56,490,83"/>
+<area shape="rect" id="node11" href="$group__osc__api.html#gac21e7c4532672c8fa7b90e493359ddc2" title="Switch the high frequency clock. " alt="" coords="339,107,489,133"/>
+<area shape="rect" id="node12" href="$group__aonrtc__api.html#gaab6fd87d7bbf5e8f2575504d2d5c1afa" title="Get the current value of the RTC counter in a format that matches RTC compare values. " alt="" coords="295,157,533,184"/>
+<area shape="rect" id="node13" href="$group__aonbatmon__api.html#gadc33e3e057f96ec6fc9fff57bd64de57" title="Get the current temperature measurement as a signed value in Deg Celsius. " alt="" coords="295,208,533,235"/>
+<area shape="rect" id="node3" href="$group__ddi__api.html#ga492326c095c70621a247fe02a2cb09e4" title="Write a bitfield via the DDI using 16&#45;bit maskable write. " alt="" coords="581,5,716,32"/>
+<area shape="rect" id="node4" href="$group__ddi__api.html#ga06d6b1eee2c8757b8431eb6e1ab98f68" title="Safely write to AUX ADI/DDI interfaces using a semaphore. " alt="" coords="764,5,911,32"/>
+<area shape="rect" id="node5" href="$group__cpu__api.html#ga491d851c4f7fff1f9f66aa778b0671b0" title="Disable all external interrupts. " alt="" coords="959,5,1041,32"/>
+<area shape="rect" id="node7" href="$group__cpu__api.html#ga6922d401cbc951632f495ffcf2e71dfc" title="Enable all external interrupts. " alt="" coords="959,56,1041,83"/>
+<area shape="rect" id="node6" href="$cpu_8c.html#a9d29df169acb9be94306e8b58faed3ee" title="Provide a small delay. " alt="" coords="1089,31,1153,57"/>
+<area shape="rect" id="node9" href="$group__ddi__api.html#gac86ccf0590b9dbdc88eb1a6c856c78a4" title="Read a bitfield via the DDI using 16&#45;bit read. " alt="" coords="581,56,716,83"/>
+<area shape="rect" id="node10" href="$group__ddi__api.html#ga8175a094afd96e5f440a276c4cc7fe44" title="Safely read from AUX ADI/DDI interfaces using a semaphore. " alt="" coords="764,56,911,83"/>
+</map>

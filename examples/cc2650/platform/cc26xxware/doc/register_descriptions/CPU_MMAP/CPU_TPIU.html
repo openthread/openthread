@@ -1,0 +1,946 @@
+<HTML>
+<HEAD><META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=UTF-8">
+<link href="..//elements/mmap.css" rel="stylesheet" type="text/css">
+<TITLE>CPU_TPIU</TITLE>
+</HEAD>
+<BODY class=mmapBody>
+<h2 class="mmapCellTitle">
+  <a name="Top_Tag">CPU_TPIU</a>
+</h2>
+<P>Instance: CPU_TPIU<BR>
+Component: CPU_TPIU<BR>
+Base address: 0xE0040000</P>
+<BR>
+<P>Cortex-M3&#39;s Trace Port Interface Unit (TPIU)</P>
+ <H3 class="mmapRegisterSummaryTitle"><A name="CPU_TPIU"></A><A href="CPU_MMAP.html"> TOP</A>:<B>CPU_TPIU</B> Register Summary</H3>
+<TABLE cellspacing="0" class="mmapRegisterSummaryTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">
+  <P>Register Name</P>
+</TD>
+<TD class="cellTopCol2">
+  <P>Type</P>
+</TD>
+<TD class="cellTopCol3">
+  <P>Register Width (Bits)</P>
+</TD>
+<TD class="cellTopCol4">
+  <P>Register Reset</P>
+</TD>
+<TD class="cellTopCol5">
+  <P>Address Offset</P>
+</TD>
+<TD class="cellTopCol5">
+  <P>Physical Address</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#SSPSR">SSPSR</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>RO</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x0000 000B</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 0000</P>
+</TD>
+<TD class="cellCol5">
+  <P>0xE004 0000</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#CSPSR">CSPSR</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>RW</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x0000 0001</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 0004</P>
+</TD>
+<TD class="cellCol5">
+  <P>0xE004 0004</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#ACPR">ACPR</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>RW</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x0000 0000</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 0010</P>
+</TD>
+<TD class="cellCol5">
+  <P>0xE004 0010</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#SPPR">SPPR</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>RW</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x0000 0001</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 00F0</P>
+</TD>
+<TD class="cellCol5">
+  <P>0xE004 00F0</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#FFSR">FFSR</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>RO</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x0000 0008</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 0300</P>
+</TD>
+<TD class="cellCol5">
+  <P>0xE004 0300</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#FFCR">FFCR</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>RW</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x0000 0102</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 0304</P>
+</TD>
+<TD class="cellCol5">
+  <P>0xE004 0304</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#FSCR">FSCR</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>RO</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x0000 0000</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 0308</P>
+</TD>
+<TD class="cellCol5">
+  <P>0xE004 0308</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#CLAIMMASK">CLAIMMASK</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>RO</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x0000 000F</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 0FA0</P>
+</TD>
+<TD class="cellCol5">
+  <P>0xE004 0FA0</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#CLAIMSET">CLAIMSET</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>WO</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x0000 000F</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 0FA0</P>
+</TD>
+<TD class="cellCol5">
+  <P>0xE004 0FA0</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#CLAIMTAG">CLAIMTAG</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>RO</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x0000 0000</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 0FA4</P>
+</TD>
+<TD class="cellCol5">
+  <P>0xE004 0FA4</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#CLAIMCLR">CLAIMCLR</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>WO</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x0000 0000</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 0FA4</P>
+</TD>
+<TD class="cellCol5">
+  <P>0xE004 0FA4</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#DEVID">DEVID</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>RO</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x0000 0CA0</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 0FC8</P>
+</TD>
+<TD class="cellCol5">
+  <P>0xE004 0FC8</P>
+</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterSummaryTitle"><A href="CPU_MMAP.html"> TOP</A>:CPU_TPIU Register Descriptions</H3>
+<H3 class="mmapRegisterTitle"><A name="SSPSR"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">CPU_TPIU</A>:SSPSR</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 0000</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0xE004 0000</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0xE004 0000</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">Supported Sync Port Sizes<BR>
+This register represents a single port size that is supported on the device, that is, 4, 2 or 1. This is to ensure that tools do not attempt to select a port width that an attached <A class="mmap_legend_link" href="../legend.html#TPA">TPA</A> cannot capture.</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">RO</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="SSPSR_RESERVED4">31:4</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED4</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0x000 0000</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="SSPSR_FOUR">3</a>
+</TD>
+<TD class="cellBitfieldCol2">FOUR</TD>
+<TD class="cellBitfieldCol3" colspan="3">4-bit port size support<BR>
+<BR>
+0x0: Not supported<BR>
+0x1: Supported</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">1</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="SSPSR_THREE">2</a>
+</TD>
+<TD class="cellBitfieldCol2">THREE</TD>
+<TD class="cellBitfieldCol3" colspan="3">3-bit port size support<BR>
+<BR>
+0x0: Not supported<BR>
+0x1: Supported</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="SSPSR_TWO">1</a>
+</TD>
+<TD class="cellBitfieldCol2">TWO</TD>
+<TD class="cellBitfieldCol3" colspan="3">2-bit port size support<BR>
+<BR>
+0x0: Not supported<BR>
+0x1: Supported</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">1</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="SSPSR_ONE">0</a>
+</TD>
+<TD class="cellBitfieldCol2">ONE</TD>
+<TD class="cellBitfieldCol3" colspan="3">1-bit port size support<BR>
+<BR>
+0x0: Not supported<BR>
+0x1: Supported</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">1</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="CSPSR"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">CPU_TPIU</A>:CSPSR</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 0004</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0xE004 0004</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0xE004 0004</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">Current Sync Port Size<BR>
+This register has the same format as <A class="xref" href="#SSPSR">SSPSR</A> but only one bit can be set, and all others must be zero. Writing values with more than one bit set, or setting a bit that is not indicated as supported can cause Unpredictable behavior. On reset this defaults to the smallest possible port size, 1 bit.</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">RW</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="CSPSR_RESERVED4">31:4</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED4</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0x000 0000</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="CSPSR_FOUR">3</a>
+</TD>
+<TD class="cellBitfieldCol2">FOUR</TD>
+<TD class="cellBitfieldCol3" colspan="3">4-bit port enable<BR>
+Writing values with more than one bit set in <A class="xref" href="#CSPSR">CSPSR</A>, or setting a bit that is not indicated as supported in <A class="xref" href="#SSPSR">SSPSR</A> can cause Unpredictable behavior.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="CSPSR_THREE">2</a>
+</TD>
+<TD class="cellBitfieldCol2">THREE</TD>
+<TD class="cellBitfieldCol3" colspan="3">3-bit port enable<BR>
+Writing values with more than one bit set in <A class="xref" href="#CSPSR">CSPSR</A>, or setting a bit that is not indicated as supported in <A class="xref" href="#SSPSR">SSPSR</A> can cause Unpredictable behavior.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="CSPSR_TWO">1</a>
+</TD>
+<TD class="cellBitfieldCol2">TWO</TD>
+<TD class="cellBitfieldCol3" colspan="3">2-bit port enable<BR>
+Writing values with more than one bit set in <A class="xref" href="#CSPSR">CSPSR</A>, or setting a bit that is not indicated as supported in <A class="xref" href="#SSPSR">SSPSR</A> can cause Unpredictable behavior.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="CSPSR_ONE">0</a>
+</TD>
+<TD class="cellBitfieldCol2">ONE</TD>
+<TD class="cellBitfieldCol3" colspan="3">1-bit port enable<BR>
+Writing values with more than one bit set in <A class="xref" href="#CSPSR">CSPSR</A>, or setting a bit that is not indicated as supported in <A class="xref" href="#SSPSR">SSPSR</A> can cause Unpredictable behavior.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">1</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="ACPR"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">CPU_TPIU</A>:ACPR</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 0010</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0xE004 0010</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0xE004 0010</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">Async Clock Prescaler<BR>
+This register scales the baud rate of the asynchronous output.</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">RW</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="ACPR_RESERVED13">31:13</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED13</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0b000 0000 0000 0000 0000</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="ACPR_PRESCALER">12:0</a>
+</TD>
+<TD class="cellBitfieldCol2">PRESCALER</TD>
+<TD class="cellBitfieldCol3" colspan="3">Divisor for input trace clock is (<A class="xref" href="#ACPR_PRESCALER">PRESCALER</A> + 1).</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0b0 0000 0000 0000</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="SPPR"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">CPU_TPIU</A>:SPPR</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 00F0</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0xE004 00F0</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0xE004 00F0</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">Selected Pin Protocol<BR>
+This register selects the protocol to be used for trace output. <BR>
+Note: If this register is changed while trace data is being output, data corruption occurs.</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">RW</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="SPPR_RESERVED2">31:2</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED2</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0b00 0000 0000 0000 0000 0000 0000 0000</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="SPPR_PROTOCOL">1:0</a>
+</TD>
+<TD class="cellBitfieldCol2">PROTOCOL</TD>
+<TD class="cellBitfieldCol3" colspan="3">Trace output protocol<TABLE cellspacing="0" class="LprfEnum">
+<TR class="rowEnumHead">
+<TD class="cellEnumTableHeadCol1">Value</TD>
+<TD class="cellEnumTableHeadCol2">ENUM Name</TD>
+<TD class="cellEnumTableHeadCol3">Description</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x0</TD>
+<TD class="cellEnumTableCol2">TRACEPORT</TD>
+<TD class="cellEnumTableCol3">TracePort mode</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x1</TD>
+<TD class="cellEnumTableCol2">SWO_MANCHESTER</TD>
+<TD class="cellEnumTableCol3">SerialWire Output (Manchester). This is the reset value.</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x2</TD>
+<TD class="cellEnumTableCol2">SWO_NRZ</TD>
+<TD class="cellEnumTableCol3">SerialWire Output (<A class="mmap_legend_link" href="../legend.html#NRZ">NRZ</A>)</TD>
+</TR>
+</TABLE>
+</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0b01</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="FFSR"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">CPU_TPIU</A>:FFSR</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 0300</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0xE004 0300</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0xE004 0300</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">Formatter and Flush Status</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">RO</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="FFSR_RESERVED4">31:4</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED4</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0x000 0000</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="FFSR_FTNONSTOP">3</a>
+</TD>
+<TD class="cellBitfieldCol2">FTNONSTOP</TD>
+<TD class="cellBitfieldCol3" colspan="3">0: Formatter can be stopped<BR>
+1: Formatter cannot be stopped</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">1</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="FFSR_RESERVED0">2:0</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED0</TD>
+<TD class="cellBitfieldCol3" colspan="3">This field always reads as zero</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0b000</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="FFCR"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">CPU_TPIU</A>:FFCR</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 0304</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0xE004 0304</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0xE004 0304</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">Formatter and Flush Control<BR>
+When one of the two single wire output (<A class="mmap_legend_link" href="../legend.html#SWO">SWO</A>) modes is selected, <A class="xref" href="#FFCR_ENFCONT">ENFCONT</A> enables the formatter to be bypassed. If the formatter is bypassed, only the <A class="mmap_legend_link" href="../legend.html#ITM">ITM</A>/<A class="mmap_legend_link" href="../legend.html#DWT">DWT</A> trace source (<A class="mmap_legend_link" href="../legend.html#ATDATA2">ATDATA2</A>) passes through. The <A class="mmap_legend_link" href="../legend.html#TPIU">TPIU</A> accepts and discards data that is presented on the <A class="mmap_legend_link" href="../legend.html#ETM">ETM</A> port (<A class="mmap_legend_link" href="../legend.html#ATDATA1">ATDATA1</A>). This function is intended to be used when it is necessary to connect a device containing an <A class="mmap_legend_link" href="../legend.html#ETM">ETM</A> to a trace capture device that is only able to capture Serial Wire Output (<A class="mmap_legend_link" href="../legend.html#SWO">SWO</A>) data. Enabling or disabling the formatter causes momentary data corruption. <BR>
+Note: If the selected pin protocol register (<A class="xref" href="#SPPR_PROTOCOL">SPPR.PROTOCOL</A>) is set to 0x00 (TracePort mode), this register always reads 0x102, because the formatter is automatically enabled. If one of the serial wire modes is then selected, the register reverts to its previously programmed value.</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">RW</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="FFCR_RESERVED9">31:9</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED9</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0b000 0000 0000 0000 0000 0000</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="FFCR_TRIGIN">8</a>
+</TD>
+<TD class="cellBitfieldCol2">TRIGIN</TD>
+<TD class="cellBitfieldCol3" colspan="3">Indicates that triggers are inserted when a trigger pin is asserted.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">1</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="FFCR_RESERVED2">7:2</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED2</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0b00 0000</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="FFCR_ENFCONT">1</a>
+</TD>
+<TD class="cellBitfieldCol2">ENFCONT</TD>
+<TD class="cellBitfieldCol3" colspan="3">Enable continuous formatting:<BR>
+<BR>
+0: Continuous formatting disabled<BR>
+1: Continuous formatting enabled</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">1</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="FFCR_RESERVED0">0</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED0</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="FSCR"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">CPU_TPIU</A>:FSCR</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 0308</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0xE004 0308</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0xE004 0308</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">Formatter Synchronization Counter</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">RO</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="FSCR_FSCR">31:0</a>
+</TD>
+<TD class="cellBitfieldCol2">FSCR</TD>
+<TD class="cellBitfieldCol3" colspan="3">The global synchronization trigger is generated by the Program Counter (<A class="mmap_legend_link" href="../legend.html#PC">PC</A>) Sampler block. This means that there is no synchronization counter in the <A class="mmap_legend_link" href="../legend.html#TPIU">TPIU</A>.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0x0000 0000</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="CLAIMMASK"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">CPU_TPIU</A>:CLAIMMASK</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 0FA0</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0xE004 0FA0</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0xE004 0FA0</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">Claim Tag Mask</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">RO</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="CLAIMMASK_CLAIMMASK">31:0</a>
+</TD>
+<TD class="cellBitfieldCol2">CLAIMMASK</TD>
+<TD class="cellBitfieldCol3" colspan="3">This register forms one half of the Claim Tag value. When reading this register returns the number of bits that can be set (each bit is considered separately):<BR>
+<BR>
+0: This claim tag bit is not implemented<BR>
+1: This claim tag bit is not implemented<BR>
+<BR>
+The behavior when writing to this register is described in <A class="xref" href="#CLAIMSET">CLAIMSET</A>.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0x0000 000F</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="CLAIMSET"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">CPU_TPIU</A>:CLAIMSET</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 0FA0</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0xE004 0FA0</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0xE004 0FA0</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">Claim Tag Set</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">WO</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="CLAIMSET_CLAIMSET">31:0</a>
+</TD>
+<TD class="cellBitfieldCol2">CLAIMSET</TD>
+<TD class="cellBitfieldCol3" colspan="3">This register forms one half of the Claim Tag value. Writing to this location allows individual bits to be set (each bit is considered separately):<BR>
+<BR>
+0: No effect<BR>
+1: Set this bit in the claim tag<BR>
+<BR>
+The behavior when reading from this location is described in <A class="xref" href="#CLAIMMASK">CLAIMMASK</A>.</TD>
+<TD class="cellBitfieldCol4">WO</TD>
+<TD class="cellBitfieldCol5">0x0000 000F</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="CLAIMTAG"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">CPU_TPIU</A>:CLAIMTAG</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 0FA4</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0xE004 0FA4</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0xE004 0FA4</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">Current Claim Tag</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">RO</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="CLAIMTAG_CLAIMTAG">31:0</a>
+</TD>
+<TD class="cellBitfieldCol2">CLAIMTAG</TD>
+<TD class="cellBitfieldCol3" colspan="3">This register forms one half of the Claim Tag value. Reading this register returns the current Claim Tag value. <BR>
+Reading <A class="xref" href="#CLAIMMASK">CLAIMMASK</A> determines how many bits from this register must be used.<BR>
+<BR>
+The behavior when writing to this register is described in <A class="xref" href="#CLAIMCLR">CLAIMCLR</A>.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0x0000 0000</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="CLAIMCLR"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">CPU_TPIU</A>:CLAIMCLR</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 0FA4</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0xE004 0FA4</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0xE004 0FA4</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">Claim Tag Clear</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">WO</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="CLAIMCLR_CLAIMCLR">31:0</a>
+</TD>
+<TD class="cellBitfieldCol2">CLAIMCLR</TD>
+<TD class="cellBitfieldCol3" colspan="3">This register forms one half of the Claim Tag value. Writing to this location enables individual bits to be cleared (each bit is considered separately):<BR>
+<BR>
+0: No effect<BR>
+1: Clear this bit in the claim tag.<BR>
+<BR>
+The behavior when reading from this location is described in <A class="xref" href="#CLAIMTAG">CLAIMTAG</A>.</TD>
+<TD class="cellBitfieldCol4">WO</TD>
+<TD class="cellBitfieldCol5">0x0000 0000</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="DEVID"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">CPU_TPIU</A>:DEVID</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 0FC8</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0xE004 0FC8</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0xE004 0FC8</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">Device <A class="mmap_legend_link" href="../legend.html#ID">ID</A></TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">RO</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="DEVID_DEVID">31:0</a>
+</TD>
+<TD class="cellBitfieldCol2">DEVID</TD>
+<TD class="cellBitfieldCol3" colspan="3">This field returns: 0xCA1 if there is an <A class="mmap_legend_link" href="../legend.html#ETM">ETM</A> present. 0xCA0 if there is no <A class="mmap_legend_link" href="../legend.html#ETM">ETM</A> present.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0x0000 0CA0</TD>
+</TR>
+</TABLE>
+<BR>
+<BR>
+<hr><table class="footer"><tr><td>&copy; 2015 - 2016. Texas Instruments | All Rights Reserved</td></tr></table>
+</BODY>
+</HTML>

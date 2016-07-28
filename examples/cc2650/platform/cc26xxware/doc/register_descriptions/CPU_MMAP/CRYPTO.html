@@ -1,0 +1,3867 @@
+<HTML>
+<HEAD><META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=UTF-8">
+<link href="..//elements/mmap.css" rel="stylesheet" type="text/css">
+<TITLE>CRYPTO</TITLE>
+</HEAD>
+<BODY class=mmapBody>
+<h2 class="mmapCellTitle">
+  <a name="Top_Tag">CRYPTO</a>
+</h2>
+<P>Instance: CRYPTO<BR>
+Component: CRYPTO<BR>
+Base address: 0x40024000</P>
+<BR>
+<P>Crypto core with DMA capability and local key storage</P>
+ <H3 class="mmapRegisterSummaryTitle"><A name="CRYPTO"></A><A href="CPU_MMAP.html"> TOP</A>:<B>CRYPTO</B> Register Summary</H3>
+<TABLE cellspacing="0" class="mmapRegisterSummaryTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">
+  <P>Register Name</P>
+</TD>
+<TD class="cellTopCol2">
+  <P>Type</P>
+</TD>
+<TD class="cellTopCol3">
+  <P>Register Width (Bits)</P>
+</TD>
+<TD class="cellTopCol4">
+  <P>Register Reset</P>
+</TD>
+<TD class="cellTopCol5">
+  <P>Address Offset</P>
+</TD>
+<TD class="cellTopCol5">
+  <P>Physical Address</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#DMACH0CTL">DMACH0CTL</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>RW</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x0000 0000</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 0000</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x4002 4000</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#DMACH0EXTADDR">DMACH0EXTADDR</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>RW</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x0000 0000</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 0004</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x4002 4004</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#DMACH0LEN">DMACH0LEN</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>RW</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x0000 0000</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 000C</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x4002 400C</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#DMASTAT">DMASTAT</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>RO</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x0000 0000</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 0018</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x4002 4018</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#DMASWRESET">DMASWRESET</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>WO</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x0000 0000</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 001C</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x4002 401C</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#DMACH1CTL">DMACH1CTL</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>RW</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x0000 0000</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 0020</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x4002 4020</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#DMACH1EXTADDR">DMACH1EXTADDR</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>RW</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x0000 0000</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 0024</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x4002 4024</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#DMACH1LEN">DMACH1LEN</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>RW</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x0000 0000</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 002C</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x4002 402C</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#DMABUSCFG">DMABUSCFG</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>RW</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x0000 2400</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 0078</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x4002 4078</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#DMAPORTERR">DMAPORTERR</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>RO</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x0000 0000</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 007C</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x4002 407C</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#DMAHWVER">DMAHWVER</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>RO</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x0101 2ED1</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 00FC</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x4002 40FC</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#KEYWRITEAREA">KEYWRITEAREA</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>RW</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x0000 0000</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 0400</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x4002 4400</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#KEYWRITTENAREA">KEYWRITTENAREA</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>RW</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x0000 0000</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 0404</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x4002 4404</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#KEYSIZE">KEYSIZE</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>RW</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x0000 0001</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 0408</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x4002 4408</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#KEYREADAREA">KEYREADAREA</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>RW</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x0000 0008</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 040C</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x4002 440C</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#AESKEY2__0-AESKEY2__3">AESKEY2__0-AESKEY2__3</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>WO</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x0000 0000</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 0500 - 0x0000 050C</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x4002 4500 - 0x4002 450C</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#AESKEY3__0-AESKEY3__3">AESKEY3__0-AESKEY3__3</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>WO</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x0000 0000</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 0510 - 0x0000 051C</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x4002 4510 - 0x4002 451C</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#AESIV__0-AESIV__3">AESIV__0-AESIV__3</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>RW</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x0000 0000</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 0540 - 0x0000 054C</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x4002 4540 - 0x4002 454C</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#AESCTL">AESCTL</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>RW</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x8000 0000</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 0550</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x4002 4550</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#AESDATALEN0">AESDATALEN0</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>WO</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x0000 0000</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 0554</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x4002 4554</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#AESDATALEN1">AESDATALEN1</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>WO</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x0000 0000</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 0558</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x4002 4558</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#AESAUTHLEN">AESAUTHLEN</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>WO</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x0000 0000</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 055C</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x4002 455C</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#AESDATAOUT0">AESDATAOUT0</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>RO</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x0000 0000</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 0560</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x4002 4560</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#AESDATAIN0">AESDATAIN0</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>WO</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x0000 0000</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 0560</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x4002 4560</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#AESDATAOUT1">AESDATAOUT1</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>RO</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x0000 0000</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 0564</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x4002 4564</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#AESDATAIN1">AESDATAIN1</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>WO</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x0000 0000</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 0564</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x4002 4564</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#AESDATAOUT2">AESDATAOUT2</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>RO</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x0000 0000</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 0568</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x4002 4568</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#AESDATAIN2">AESDATAIN2</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>WO</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x0000 0000</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 0568</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x4002 4568</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#AESDATAOUT3">AESDATAOUT3</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>RO</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x0000 0000</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 056C</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x4002 456C</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#AESDATAIN3">AESDATAIN3</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>WO</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x0000 0000</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 056C</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x4002 456C</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#AESTAGOUT__0-AESTAGOUT__3">AESTAGOUT__0-AESTAGOUT__3</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>RO</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x0000 0000</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 0570 - 0x0000 057C</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x4002 4570 - 0x4002 457C</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#ALGSEL">ALGSEL</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>RW</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x0000 0000</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 0700</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x4002 4700</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#DMAPROTCTL">DMAPROTCTL</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>RW</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x0000 0000</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 0704</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x4002 4704</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#SWRESET">SWRESET</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>RW</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x0000 0000</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 0740</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x4002 4740</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#IRQTYPE">IRQTYPE</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>RW</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x0000 0000</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 0780</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x4002 4780</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#IRQEN">IRQEN</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>RW</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x0000 0000</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 0784</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x4002 4784</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#IRQCLR">IRQCLR</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>WO</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x0000 0000</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 0788</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x4002 4788</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#IRQSET">IRQSET</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>WO</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x0000 0000</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 078C</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x4002 478C</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#IRQSTAT">IRQSTAT</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>RO</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x0000 0000</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 0790</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x4002 4790</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#HWVER">HWVER</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>RO</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x9111 8778</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 07FC</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x4002 47FC</P>
+</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterSummaryTitle"><A href="CPU_MMAP.html"> TOP</A>:CRYPTO Register Descriptions</H3>
+<H3 class="mmapRegisterTitle"><A name="DMACH0CTL"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">CRYPTO</A>:DMACH0CTL</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 0000</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0x4002 4000</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0x4002 4000</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">DMA Channel 0 Control</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">RW</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="DMACH0CTL_RESERVED2">31:2</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED2</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0b00 0000 0000 0000 0000 0000 0000 0000</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="DMACH0CTL_PRIO">1</a>
+</TD>
+<TD class="cellBitfieldCol2">PRIO</TD>
+<TD class="cellBitfieldCol3" colspan="3">Channel priority:<BR>
+<BR>
+A channel with high priority will be served before a channel with low priority in cases with simultaneous access requests. If both channels have the same priority access of the channels to the external port is arbitrated using a Round Robin scheme.<TABLE cellspacing="0" class="LprfEnum">
+<TR class="rowEnumHead">
+<TD class="cellEnumTableHeadCol1">Value</TD>
+<TD class="cellEnumTableHeadCol2">ENUM Name</TD>
+<TD class="cellEnumTableHeadCol3">Description</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x0</TD>
+<TD class="cellEnumTableCol2">LOW</TD>
+<TD class="cellEnumTableCol3">Priority low</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x1</TD>
+<TD class="cellEnumTableCol2">HIGH</TD>
+<TD class="cellEnumTableCol3">Priority high</TD>
+</TR>
+</TABLE>
+</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="DMACH0CTL_EN">0</a>
+</TD>
+<TD class="cellBitfieldCol2">EN</TD>
+<TD class="cellBitfieldCol3" colspan="3">DMA Channel 0 Control<TABLE cellspacing="0" class="LprfEnum">
+<TR class="rowEnumHead">
+<TD class="cellEnumTableHeadCol1">Value</TD>
+<TD class="cellEnumTableHeadCol2">ENUM Name</TD>
+<TD class="cellEnumTableHeadCol3">Description</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x0</TD>
+<TD class="cellEnumTableCol2">DIS</TD>
+<TD class="cellEnumTableCol3">Channel disabled</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x1</TD>
+<TD class="cellEnumTableCol2">EN</TD>
+<TD class="cellEnumTableCol3">Channel enabled</TD>
+</TR>
+</TABLE>
+</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="DMACH0EXTADDR"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">CRYPTO</A>:DMACH0EXTADDR</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 0004</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0x4002 4004</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0x4002 4004</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">DMA Channel 0 External Address</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">RW</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="DMACH0EXTADDR_ADDR">31:0</a>
+</TD>
+<TD class="cellBitfieldCol2">ADDR</TD>
+<TD class="cellBitfieldCol3" colspan="3">Channel external address value.<BR>
+Holds the last updated external address after being sent to the master interface.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0x0000 0000</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="DMACH0LEN"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">CRYPTO</A>:DMACH0LEN</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 000C</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0x4002 400C</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0x4002 400C</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">DMA Channel 0 Length</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">RW</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="DMACH0LEN_RESERVED16">31:16</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED16</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0x0000</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="DMACH0LEN_LEN">15:0</a>
+</TD>
+<TD class="cellBitfieldCol2">LEN</TD>
+<TD class="cellBitfieldCol3" colspan="3">DMA transfer length in bytes.<BR>
+During configuration, this register contains the DMA transfer length in bytes. During operation, it contains the last updated value of the DMA transfer length after being sent to the master interface.<BR>
+Note: Writing a non-zero value to this register field starts the transfer if the channel is enabled by setting <A class="xref" href="#DMACH0CTL_EN">DMACH0CTL.EN</A>.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0x0000</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="DMASTAT"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">CRYPTO</A>:DMASTAT</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 0018</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0x4002 4018</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0x4002 4018</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">DMA Controller Status</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">RO</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="DMASTAT_RESERVED18">31:18</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED18</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0b00 0000 0000 0000</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="DMASTAT_PORT_ERR">17</a>
+</TD>
+<TD class="cellBitfieldCol2">PORT_ERR</TD>
+<TD class="cellBitfieldCol3" colspan="3">Reflects possible transfer errors on the AHB port.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="DMASTAT_RESERVED2">16:2</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED2</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0b000 0000 0000 0000</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="DMASTAT_CH1_ACTIVE">1</a>
+</TD>
+<TD class="cellBitfieldCol2">CH1_ACTIVE</TD>
+<TD class="cellBitfieldCol3" colspan="3">This register field indicates if DMA channel 1 is active or not.<BR>
+0: Not active<BR>
+1: Active</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="DMASTAT_CH0_ACTIVE">0</a>
+</TD>
+<TD class="cellBitfieldCol2">CH0_ACTIVE</TD>
+<TD class="cellBitfieldCol3" colspan="3">This register field indicates if DMA channel 0 is active or not.<BR>
+0: Not active<BR>
+1: Active</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="DMASWRESET"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">CRYPTO</A>:DMASWRESET</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 001C</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0x4002 401C</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0x4002 401C</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">DMA Controller Software Reset</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">WO</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="DMASWRESET_RESERVED1">31:1</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED1</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior.</TD>
+<TD class="cellBitfieldCol4">WO</TD>
+<TD class="cellBitfieldCol5">0b000 0000 0000 0000 0000 0000 0000 0000</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="DMASWRESET_RESET">0</a>
+</TD>
+<TD class="cellBitfieldCol2">RESET</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software reset enable <BR>
+<BR>
+0:  Disable<BR>
+1:  Enable (self-cleared to zero).<BR>
+<BR>
+Note: Completion of the software reset must be checked in <A class="xref" href="#DMASTAT_CH0_ACTIVE">DMASTAT.CH0_ACTIVE</A> and <A class="xref" href="#DMASTAT_CH1_ACTIVE">DMASTAT.CH1_ACTIVE</A>.</TD>
+<TD class="cellBitfieldCol4">WO</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="DMACH1CTL"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">CRYPTO</A>:DMACH1CTL</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 0020</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0x4002 4020</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0x4002 4020</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">DMA Channel 1 Control</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">RW</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="DMACH1CTL_RESERVED2">31:2</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED2</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0b00 0000 0000 0000 0000 0000 0000 0000</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="DMACH1CTL_PRIO">1</a>
+</TD>
+<TD class="cellBitfieldCol2">PRIO</TD>
+<TD class="cellBitfieldCol3" colspan="3">Channel priority:<BR>
+<BR>
+A channel with high priority will be served before a channel with low priority in cases with simultaneous access requests. If both channels have the same priority access of the channels to the external port is arbitrated using a Round Robin scheme.<TABLE cellspacing="0" class="LprfEnum">
+<TR class="rowEnumHead">
+<TD class="cellEnumTableHeadCol1">Value</TD>
+<TD class="cellEnumTableHeadCol2">ENUM Name</TD>
+<TD class="cellEnumTableHeadCol3">Description</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x0</TD>
+<TD class="cellEnumTableCol2">LOW</TD>
+<TD class="cellEnumTableCol3">Priority low</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x1</TD>
+<TD class="cellEnumTableCol2">HIGH</TD>
+<TD class="cellEnumTableCol3">Priority high</TD>
+</TR>
+</TABLE>
+</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="DMACH1CTL_EN">0</a>
+</TD>
+<TD class="cellBitfieldCol2">EN</TD>
+<TD class="cellBitfieldCol3" colspan="3">Channel enable:<BR>
+<BR>
+Note: Disabling an active channel will interrupt the DMA operation. The ongoing block transfer will be completed, but no new transfers will be requested.<TABLE cellspacing="0" class="LprfEnum">
+<TR class="rowEnumHead">
+<TD class="cellEnumTableHeadCol1">Value</TD>
+<TD class="cellEnumTableHeadCol2">ENUM Name</TD>
+<TD class="cellEnumTableHeadCol3">Description</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x0</TD>
+<TD class="cellEnumTableCol2">DIS</TD>
+<TD class="cellEnumTableCol3">Channel disabled</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x1</TD>
+<TD class="cellEnumTableCol2">EN</TD>
+<TD class="cellEnumTableCol3">Channel enabled</TD>
+</TR>
+</TABLE>
+</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="DMACH1EXTADDR"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">CRYPTO</A>:DMACH1EXTADDR</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 0024</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0x4002 4024</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0x4002 4024</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">DMA Channel 1 External Address</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">RW</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="DMACH1EXTADDR_ADDR">31:0</a>
+</TD>
+<TD class="cellBitfieldCol2">ADDR</TD>
+<TD class="cellBitfieldCol3" colspan="3">Channel external address value.<BR>
+Holds the last updated external address after being sent to the master interface.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0x0000 0000</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="DMACH1LEN"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">CRYPTO</A>:DMACH1LEN</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 002C</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0x4002 402C</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0x4002 402C</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">DMA Channel 1 Length</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">RW</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="DMACH1LEN_RESERVED16">31:16</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED16</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0x0000</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="DMACH1LEN_LEN">15:0</a>
+</TD>
+<TD class="cellBitfieldCol2">LEN</TD>
+<TD class="cellBitfieldCol3" colspan="3">DMA transfer length in bytes.<BR>
+During configuration, this register contains the DMA transfer length in bytes. During operation, it contains the last updated value of the DMA transfer length after being sent to the master interface.<BR>
+Note: Writing a non-zero value to this register field starts the transfer if the channel is enabled by setting <A class="xref" href="#DMACH1CTL_EN">DMACH1CTL.EN</A>.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0x0000</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="DMABUSCFG"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">CRYPTO</A>:DMABUSCFG</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 0078</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0x4002 4078</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0x4002 4078</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">DMA Controller Master Configuration</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">RW</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="DMABUSCFG_RESERVED16">31:16</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED16</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0x0000</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="DMABUSCFG_AHB_MST1_BURST_SIZE">15:12</a>
+</TD>
+<TD class="cellBitfieldCol2">AHB_MST1_BURST_SIZE</TD>
+<TD class="cellBitfieldCol3" colspan="3">Maximum burst size that can be performed on the AHB bus<TABLE cellspacing="0" class="LprfEnum">
+<TR class="rowEnumHead">
+<TD class="cellEnumTableHeadCol1">Value</TD>
+<TD class="cellEnumTableHeadCol2">ENUM Name</TD>
+<TD class="cellEnumTableHeadCol3">Description</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x2</TD>
+<TD class="cellEnumTableCol2">4_BYTE</TD>
+<TD class="cellEnumTableCol3">4 bytes</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x3</TD>
+<TD class="cellEnumTableCol2">8_BYTE</TD>
+<TD class="cellEnumTableCol3">8 bytes</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x4</TD>
+<TD class="cellEnumTableCol2">16_BYTE</TD>
+<TD class="cellEnumTableCol3">16 bytes</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x5</TD>
+<TD class="cellEnumTableCol2">32_BYTE</TD>
+<TD class="cellEnumTableCol3">32 bytes</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x6</TD>
+<TD class="cellEnumTableCol2">64_BYTE</TD>
+<TD class="cellEnumTableCol3">64 bytes</TD>
+</TR>
+</TABLE>
+</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0x2</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="DMABUSCFG_AHB_MST1_IDLE_EN">11</a>
+</TD>
+<TD class="cellBitfieldCol2">AHB_MST1_IDLE_EN</TD>
+<TD class="cellBitfieldCol3" colspan="3">Idle transfer insertion between consecutive burst transfers on AHB<TABLE cellspacing="0" class="LprfEnum">
+<TR class="rowEnumHead">
+<TD class="cellEnumTableHeadCol1">Value</TD>
+<TD class="cellEnumTableHeadCol2">ENUM Name</TD>
+<TD class="cellEnumTableHeadCol3">Description</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x0</TD>
+<TD class="cellEnumTableCol2">NO_IDLE</TD>
+<TD class="cellEnumTableCol3">Do not insert idle transfers.</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x1</TD>
+<TD class="cellEnumTableCol2">IDLE</TD>
+<TD class="cellEnumTableCol3">Idle transfer insertion enabled</TD>
+</TR>
+</TABLE>
+</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="DMABUSCFG_AHB_MST1_INCR_EN">10</a>
+</TD>
+<TD class="cellBitfieldCol2">AHB_MST1_INCR_EN</TD>
+<TD class="cellBitfieldCol3" colspan="3">Burst length type of AHB transfer<TABLE cellspacing="0" class="LprfEnum">
+<TR class="rowEnumHead">
+<TD class="cellEnumTableHeadCol1">Value</TD>
+<TD class="cellEnumTableHeadCol2">ENUM Name</TD>
+<TD class="cellEnumTableHeadCol3">Description</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x0</TD>
+<TD class="cellEnumTableCol2">UNSPECIFIED</TD>
+<TD class="cellEnumTableCol3">Unspecified length burst transfers</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x1</TD>
+<TD class="cellEnumTableCol2">SPECIFIED</TD>
+<TD class="cellEnumTableCol3">Fixed length bursts or single transfers</TD>
+</TR>
+</TABLE>
+</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">1</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="DMABUSCFG_AHB_MST1_LOCK_EN">9</a>
+</TD>
+<TD class="cellBitfieldCol2">AHB_MST1_LOCK_EN</TD>
+<TD class="cellBitfieldCol3" colspan="3">Locked transform on AHB<TABLE cellspacing="0" class="LprfEnum">
+<TR class="rowEnumHead">
+<TD class="cellEnumTableHeadCol1">Value</TD>
+<TD class="cellEnumTableHeadCol2">ENUM Name</TD>
+<TD class="cellEnumTableHeadCol3">Description</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x0</TD>
+<TD class="cellEnumTableCol2">NOT_LOCKED</TD>
+<TD class="cellEnumTableCol3">Transfers are not locked</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x1</TD>
+<TD class="cellEnumTableCol2">LOCKED</TD>
+<TD class="cellEnumTableCol3">Transfers are locked</TD>
+</TR>
+</TABLE>
+</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="DMABUSCFG_AHB_MST1_BIGEND">8</a>
+</TD>
+<TD class="cellBitfieldCol2">AHB_MST1_BIGEND</TD>
+<TD class="cellBitfieldCol3" colspan="3">Endianess for the AHB master<TABLE cellspacing="0" class="LprfEnum">
+<TR class="rowEnumHead">
+<TD class="cellEnumTableHeadCol1">Value</TD>
+<TD class="cellEnumTableHeadCol2">ENUM Name</TD>
+<TD class="cellEnumTableHeadCol3">Description</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x0</TD>
+<TD class="cellEnumTableCol2">LITTLE_ENDIAN</TD>
+<TD class="cellEnumTableCol3">Little Endian</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x1</TD>
+<TD class="cellEnumTableCol2">BIG_ENDIAN</TD>
+<TD class="cellEnumTableCol3">Big Endian</TD>
+</TR>
+</TABLE>
+</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="DMABUSCFG_RESERVED0">7:0</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED0</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0x00</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="DMAPORTERR"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">CRYPTO</A>:DMAPORTERR</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 007C</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0x4002 407C</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0x4002 407C</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">DMA Controller Port Error</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">RO</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="DMAPORTERR_RESERVED13">31:13</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED13</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0b000 0000 0000 0000 0000</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="DMAPORTERR_AHB_ERR">12</a>
+</TD>
+<TD class="cellBitfieldCol2">AHB_ERR</TD>
+<TD class="cellBitfieldCol3" colspan="3">A 1 indicates that the Crypto peripheral has detected an AHB bus error</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="DMAPORTERR_RESERVED10">11:10</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED10</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0b00</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="DMAPORTERR_LAST_CH">9</a>
+</TD>
+<TD class="cellBitfieldCol2">LAST_CH</TD>
+<TD class="cellBitfieldCol3" colspan="3">Indicates which channel was serviced last (channel 0 or channel 1) by the AHB master port.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="DMAPORTERR_RESERVED0">8:0</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED0</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0b0 0000 0000</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="DMAHWVER"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">CRYPTO</A>:DMAHWVER</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 00FC</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0x4002 40FC</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0x4002 40FC</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">DMA Controller Version</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">RO</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="DMAHWVER_RESERVED28">31:28</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED28</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0x0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="DMAHWVER_HW_MAJOR_VER">27:24</a>
+</TD>
+<TD class="cellBitfieldCol2">HW_MAJOR_VER</TD>
+<TD class="cellBitfieldCol3" colspan="3">Major version number</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0x1</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="DMAHWVER_HW_MINOR_VER">23:20</a>
+</TD>
+<TD class="cellBitfieldCol2">HW_MINOR_VER</TD>
+<TD class="cellBitfieldCol3" colspan="3">Minor version number</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0x0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="DMAHWVER_HW_PATCH_LVL">19:16</a>
+</TD>
+<TD class="cellBitfieldCol2">HW_PATCH_LVL</TD>
+<TD class="cellBitfieldCol3" colspan="3">Patch level.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0x1</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="DMAHWVER_VER_NUM_COMPL">15:8</a>
+</TD>
+<TD class="cellBitfieldCol2">VER_NUM_COMPL</TD>
+<TD class="cellBitfieldCol3" colspan="3">Bit-by-bit complement of the <A class="xref" href="#DMAHWVER_VER_NUM">VER_NUM</A> field bits.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0x2E</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="DMAHWVER_VER_NUM">7:0</a>
+</TD>
+<TD class="cellBitfieldCol2">VER_NUM</TD>
+<TD class="cellBitfieldCol3" colspan="3">Version number of the DMA Controller (209)</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0xD1</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="KEYWRITEAREA"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">CRYPTO</A>:KEYWRITEAREA</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 0400</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0x4002 4400</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0x4002 4400</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">Key Write Area</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">RW</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="KEYWRITEAREA_RESERVED8">31:8</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED8</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0x00 0000</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="KEYWRITEAREA_RAM_AREA7">7</a>
+</TD>
+<TD class="cellBitfieldCol2">RAM_AREA7</TD>
+<TD class="cellBitfieldCol3" colspan="3">Represents an area of 128 bits.<BR>
+Select the key store RAM area(s) where the key(s) needs to be written.<BR>
+<BR>
+Writing to multiple RAM locations is only possible when the selected RAM areas are sequential.<TABLE cellspacing="0" class="LprfEnum">
+<TR class="rowEnumHead">
+<TD class="cellEnumTableHeadCol1">Value</TD>
+<TD class="cellEnumTableHeadCol2">ENUM Name</TD>
+<TD class="cellEnumTableHeadCol3">Description</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x0</TD>
+<TD class="cellEnumTableCol2">NOT_SEL</TD>
+<TD class="cellEnumTableCol3">This RAM area is not selected to be written</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x1</TD>
+<TD class="cellEnumTableCol2">SEL</TD>
+<TD class="cellEnumTableCol3">This RAM area is selected to be written</TD>
+</TR>
+</TABLE>
+</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="KEYWRITEAREA_RAM_AREA6">6</a>
+</TD>
+<TD class="cellBitfieldCol2">RAM_AREA6</TD>
+<TD class="cellBitfieldCol3" colspan="3">Represents an area of 128 bits.<BR>
+Select the key store RAM area(s) where the key(s) needs to be written.<BR>
+<BR>
+Writing to multiple RAM locations is only possible when the selected RAM areas are sequential.<TABLE cellspacing="0" class="LprfEnum">
+<TR class="rowEnumHead">
+<TD class="cellEnumTableHeadCol1">Value</TD>
+<TD class="cellEnumTableHeadCol2">ENUM Name</TD>
+<TD class="cellEnumTableHeadCol3">Description</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x0</TD>
+<TD class="cellEnumTableCol2">NOT_SEL</TD>
+<TD class="cellEnumTableCol3">This RAM area is not selected to be written</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x1</TD>
+<TD class="cellEnumTableCol2">SEL</TD>
+<TD class="cellEnumTableCol3">This RAM area is selected to be written</TD>
+</TR>
+</TABLE>
+</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="KEYWRITEAREA_RAM_AREA5">5</a>
+</TD>
+<TD class="cellBitfieldCol2">RAM_AREA5</TD>
+<TD class="cellBitfieldCol3" colspan="3">Represents an area of 128 bits.<BR>
+Select the key store RAM area(s) where the key(s) needs to be written.<BR>
+<BR>
+Writing to multiple RAM locations is only possible when the selected RAM areas are sequential.<TABLE cellspacing="0" class="LprfEnum">
+<TR class="rowEnumHead">
+<TD class="cellEnumTableHeadCol1">Value</TD>
+<TD class="cellEnumTableHeadCol2">ENUM Name</TD>
+<TD class="cellEnumTableHeadCol3">Description</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x0</TD>
+<TD class="cellEnumTableCol2">NOT_SEL</TD>
+<TD class="cellEnumTableCol3">This RAM area is not selected to be written</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x1</TD>
+<TD class="cellEnumTableCol2">SEL</TD>
+<TD class="cellEnumTableCol3">This RAM area is selected to be written</TD>
+</TR>
+</TABLE>
+</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="KEYWRITEAREA_RAM_AREA4">4</a>
+</TD>
+<TD class="cellBitfieldCol2">RAM_AREA4</TD>
+<TD class="cellBitfieldCol3" colspan="3">Represents an area of 128 bits.<BR>
+Select the key store RAM area(s) where the key(s) needs to be written.<BR>
+<BR>
+Writing to multiple RAM locations is only possible when the selected RAM areas are sequential.<TABLE cellspacing="0" class="LprfEnum">
+<TR class="rowEnumHead">
+<TD class="cellEnumTableHeadCol1">Value</TD>
+<TD class="cellEnumTableHeadCol2">ENUM Name</TD>
+<TD class="cellEnumTableHeadCol3">Description</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x0</TD>
+<TD class="cellEnumTableCol2">NOT_SEL</TD>
+<TD class="cellEnumTableCol3">This RAM area is not selected to be written</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x1</TD>
+<TD class="cellEnumTableCol2">SEL</TD>
+<TD class="cellEnumTableCol3">This RAM area is selected to be written</TD>
+</TR>
+</TABLE>
+</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="KEYWRITEAREA_RAM_AREA3">3</a>
+</TD>
+<TD class="cellBitfieldCol2">RAM_AREA3</TD>
+<TD class="cellBitfieldCol3" colspan="3">Represents an area of 128 bits.<BR>
+Select the key store RAM area(s) where the key(s) needs to be written.<BR>
+<BR>
+Writing to multiple RAM locations is only possible when the selected RAM areas are sequential.<TABLE cellspacing="0" class="LprfEnum">
+<TR class="rowEnumHead">
+<TD class="cellEnumTableHeadCol1">Value</TD>
+<TD class="cellEnumTableHeadCol2">ENUM Name</TD>
+<TD class="cellEnumTableHeadCol3">Description</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x0</TD>
+<TD class="cellEnumTableCol2">NOT_SEL</TD>
+<TD class="cellEnumTableCol3">This RAM area is not selected to be written</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x1</TD>
+<TD class="cellEnumTableCol2">SEL</TD>
+<TD class="cellEnumTableCol3">This RAM area is selected to be written</TD>
+</TR>
+</TABLE>
+</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="KEYWRITEAREA_RAM_AREA2">2</a>
+</TD>
+<TD class="cellBitfieldCol2">RAM_AREA2</TD>
+<TD class="cellBitfieldCol3" colspan="3">Represents an area of 128 bits.<BR>
+Select the key store RAM area(s) where the key(s) needs to be written.<BR>
+<BR>
+Writing to multiple RAM locations is only possible when the selected RAM areas are sequential.<TABLE cellspacing="0" class="LprfEnum">
+<TR class="rowEnumHead">
+<TD class="cellEnumTableHeadCol1">Value</TD>
+<TD class="cellEnumTableHeadCol2">ENUM Name</TD>
+<TD class="cellEnumTableHeadCol3">Description</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x0</TD>
+<TD class="cellEnumTableCol2">NOT_SEL</TD>
+<TD class="cellEnumTableCol3">This RAM area is not selected to be written</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x1</TD>
+<TD class="cellEnumTableCol2">SEL</TD>
+<TD class="cellEnumTableCol3">This RAM area is selected to be written</TD>
+</TR>
+</TABLE>
+</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="KEYWRITEAREA_RAM_AREA1">1</a>
+</TD>
+<TD class="cellBitfieldCol2">RAM_AREA1</TD>
+<TD class="cellBitfieldCol3" colspan="3">Represents an area of 128 bits.<BR>
+Select the key store RAM area(s) where the key(s) needs to be written.<BR>
+<BR>
+Writing to multiple RAM locations is only possible when the selected RAM areas are sequential.<TABLE cellspacing="0" class="LprfEnum">
+<TR class="rowEnumHead">
+<TD class="cellEnumTableHeadCol1">Value</TD>
+<TD class="cellEnumTableHeadCol2">ENUM Name</TD>
+<TD class="cellEnumTableHeadCol3">Description</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x0</TD>
+<TD class="cellEnumTableCol2">NOT_SEL</TD>
+<TD class="cellEnumTableCol3">This RAM area is not selected to be written</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x1</TD>
+<TD class="cellEnumTableCol2">SEL</TD>
+<TD class="cellEnumTableCol3">This RAM area is selected to be written</TD>
+</TR>
+</TABLE>
+</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="KEYWRITEAREA_RAM_AREA0">0</a>
+</TD>
+<TD class="cellBitfieldCol2">RAM_AREA0</TD>
+<TD class="cellBitfieldCol3" colspan="3">Represents an area of 128 bits.<BR>
+Select the key store RAM area(s) where the key(s) needs to be written.<BR>
+<BR>
+Writing to multiple RAM locations is only possible when the selected RAM areas are sequential.<TABLE cellspacing="0" class="LprfEnum">
+<TR class="rowEnumHead">
+<TD class="cellEnumTableHeadCol1">Value</TD>
+<TD class="cellEnumTableHeadCol2">ENUM Name</TD>
+<TD class="cellEnumTableHeadCol3">Description</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x0</TD>
+<TD class="cellEnumTableCol2">NOT_SEL</TD>
+<TD class="cellEnumTableCol3">This RAM area is not selected to be written</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x1</TD>
+<TD class="cellEnumTableCol2">SEL</TD>
+<TD class="cellEnumTableCol3">This RAM area is selected to be written</TD>
+</TR>
+</TABLE>
+</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="KEYWRITTENAREA"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">CRYPTO</A>:KEYWRITTENAREA</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 0404</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0x4002 4404</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0x4002 4404</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">Key Written Area Status<BR>
+This register shows which areas of the key store RAM contain valid written keys.<BR>
+When a new key needs to be written to the key store, on a location that is already occupied by a valid key, this key area must be cleared first. This can be done by writing this register before the new key is written to the key store memory.<BR>
+Attempting to write to a key area that already contains a valid key is not allowed and will result in an error.</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">RW</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="KEYWRITTENAREA_RESERVED8">31:8</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED8</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0x00 0000</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="KEYWRITTENAREA_RAM_AREA_WRITTEN7">7</a>
+</TD>
+<TD class="cellBitfieldCol2">RAM_AREA_WRITTEN7</TD>
+<TD class="cellBitfieldCol3" colspan="3">On read this bit returns the key area written status.<BR>
+<BR>
+This bit can be reset by writing a 1.<BR>
+<BR>
+Note: This register will be reset on a soft reset initiated by writing to <A class="xref" href="#DMASWRESET_RESET">DMASWRESET.RESET</A>. After a soft reset, all keys must be rewritten to the key store memory.<TABLE cellspacing="0" class="LprfEnum">
+<TR class="rowEnumHead">
+<TD class="cellEnumTableHeadCol1">Value</TD>
+<TD class="cellEnumTableHeadCol2">ENUM Name</TD>
+<TD class="cellEnumTableHeadCol3">Description</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x0</TD>
+<TD class="cellEnumTableCol2">NOT_WRITTEN</TD>
+<TD class="cellEnumTableCol3">This RAM area is not written with valid key information</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x1</TD>
+<TD class="cellEnumTableCol2">WRITTEN</TD>
+<TD class="cellEnumTableCol3">This RAM area is written with valid key information</TD>
+</TR>
+</TABLE>
+</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="KEYWRITTENAREA_RAM_AREA_WRITTEN6">6</a>
+</TD>
+<TD class="cellBitfieldCol2">RAM_AREA_WRITTEN6</TD>
+<TD class="cellBitfieldCol3" colspan="3">On read this bit returns the key area written status.<BR>
+<BR>
+This bit can be reset by writing a 1.<BR>
+<BR>
+Note: This register will be reset on a soft reset initiated by writing to <A class="xref" href="#DMASWRESET_RESET">DMASWRESET.RESET</A>. After a soft reset, all keys must be rewritten to the key store memory.<TABLE cellspacing="0" class="LprfEnum">
+<TR class="rowEnumHead">
+<TD class="cellEnumTableHeadCol1">Value</TD>
+<TD class="cellEnumTableHeadCol2">ENUM Name</TD>
+<TD class="cellEnumTableHeadCol3">Description</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x0</TD>
+<TD class="cellEnumTableCol2">NOT_WRITTEN</TD>
+<TD class="cellEnumTableCol3">This RAM area is not written with valid key information</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x1</TD>
+<TD class="cellEnumTableCol2">WRITTEN</TD>
+<TD class="cellEnumTableCol3">This RAM area is written with valid key information</TD>
+</TR>
+</TABLE>
+</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="KEYWRITTENAREA_RAM_AREA_WRITTEN5">5</a>
+</TD>
+<TD class="cellBitfieldCol2">RAM_AREA_WRITTEN5</TD>
+<TD class="cellBitfieldCol3" colspan="3">On read this bit returns the key area written status.<BR>
+<BR>
+This bit can be reset by writing a 1.<BR>
+<BR>
+Note: This register will be reset on a soft reset initiated by writing to <A class="xref" href="#DMASWRESET_RESET">DMASWRESET.RESET</A>. After a soft reset, all keys must be rewritten to the key store memory.<TABLE cellspacing="0" class="LprfEnum">
+<TR class="rowEnumHead">
+<TD class="cellEnumTableHeadCol1">Value</TD>
+<TD class="cellEnumTableHeadCol2">ENUM Name</TD>
+<TD class="cellEnumTableHeadCol3">Description</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x0</TD>
+<TD class="cellEnumTableCol2">NOT_WRITTEN</TD>
+<TD class="cellEnumTableCol3">This RAM area is not written with valid key information</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x1</TD>
+<TD class="cellEnumTableCol2">WRITTEN</TD>
+<TD class="cellEnumTableCol3">This RAM area is written with valid key information</TD>
+</TR>
+</TABLE>
+</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="KEYWRITTENAREA_RAM_AREA_WRITTEN4">4</a>
+</TD>
+<TD class="cellBitfieldCol2">RAM_AREA_WRITTEN4</TD>
+<TD class="cellBitfieldCol3" colspan="3">On read this bit returns the key area written status.<BR>
+<BR>
+This bit can be reset by writing a 1.<BR>
+<BR>
+Note: This register will be reset on a soft reset initiated by writing to <A class="xref" href="#DMASWRESET_RESET">DMASWRESET.RESET</A>. After a soft reset, all keys must be rewritten to the key store memory.<TABLE cellspacing="0" class="LprfEnum">
+<TR class="rowEnumHead">
+<TD class="cellEnumTableHeadCol1">Value</TD>
+<TD class="cellEnumTableHeadCol2">ENUM Name</TD>
+<TD class="cellEnumTableHeadCol3">Description</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x0</TD>
+<TD class="cellEnumTableCol2">NOT_WRITTEN</TD>
+<TD class="cellEnumTableCol3">This RAM area is not written with valid key information</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x1</TD>
+<TD class="cellEnumTableCol2">WRITTEN</TD>
+<TD class="cellEnumTableCol3">This RAM area is written with valid key information</TD>
+</TR>
+</TABLE>
+</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="KEYWRITTENAREA_RAM_AREA_WRITTEN3">3</a>
+</TD>
+<TD class="cellBitfieldCol2">RAM_AREA_WRITTEN3</TD>
+<TD class="cellBitfieldCol3" colspan="3">On read this bit returns the key area written status.<BR>
+<BR>
+This bit can be reset by writing a 1.<BR>
+<BR>
+Note: This register will be reset on a soft reset initiated by writing to <A class="xref" href="#DMASWRESET_RESET">DMASWRESET.RESET</A>. After a soft reset, all keys must be rewritten to the key store memory.<TABLE cellspacing="0" class="LprfEnum">
+<TR class="rowEnumHead">
+<TD class="cellEnumTableHeadCol1">Value</TD>
+<TD class="cellEnumTableHeadCol2">ENUM Name</TD>
+<TD class="cellEnumTableHeadCol3">Description</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x0</TD>
+<TD class="cellEnumTableCol2">NOT_WRITTEN</TD>
+<TD class="cellEnumTableCol3">This RAM area is not written with valid key information</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x1</TD>
+<TD class="cellEnumTableCol2">WRITTEN</TD>
+<TD class="cellEnumTableCol3">This RAM area is written with valid key information</TD>
+</TR>
+</TABLE>
+</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="KEYWRITTENAREA_RAM_AREA_WRITTEN2">2</a>
+</TD>
+<TD class="cellBitfieldCol2">RAM_AREA_WRITTEN2</TD>
+<TD class="cellBitfieldCol3" colspan="3">On read this bit returns the key area written status.<BR>
+<BR>
+This bit can be reset by writing a 1.<BR>
+<BR>
+Note: This register will be reset on a soft reset initiated by writing to <A class="xref" href="#DMASWRESET_RESET">DMASWRESET.RESET</A>. After a soft reset, all keys must be rewritten to the key store memory.<TABLE cellspacing="0" class="LprfEnum">
+<TR class="rowEnumHead">
+<TD class="cellEnumTableHeadCol1">Value</TD>
+<TD class="cellEnumTableHeadCol2">ENUM Name</TD>
+<TD class="cellEnumTableHeadCol3">Description</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x0</TD>
+<TD class="cellEnumTableCol2">NOT_WRITTEN</TD>
+<TD class="cellEnumTableCol3">This RAM area is not written with valid key information</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x1</TD>
+<TD class="cellEnumTableCol2">WRITTEN</TD>
+<TD class="cellEnumTableCol3">This RAM area is written with valid key information</TD>
+</TR>
+</TABLE>
+</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="KEYWRITTENAREA_RAM_AREA_WRITTEN1">1</a>
+</TD>
+<TD class="cellBitfieldCol2">RAM_AREA_WRITTEN1</TD>
+<TD class="cellBitfieldCol3" colspan="3">On read this bit returns the key area written status.<BR>
+<BR>
+This bit can be reset by writing a 1.<BR>
+<BR>
+Note: This register will be reset on a soft reset initiated by writing to <A class="xref" href="#DMASWRESET_RESET">DMASWRESET.RESET</A>. After a soft reset, all keys must be rewritten to the key store memory.<TABLE cellspacing="0" class="LprfEnum">
+<TR class="rowEnumHead">
+<TD class="cellEnumTableHeadCol1">Value</TD>
+<TD class="cellEnumTableHeadCol2">ENUM Name</TD>
+<TD class="cellEnumTableHeadCol3">Description</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x0</TD>
+<TD class="cellEnumTableCol2">NOT_WRITTEN</TD>
+<TD class="cellEnumTableCol3">This RAM area is not written with valid key information</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x1</TD>
+<TD class="cellEnumTableCol2">WRITTEN</TD>
+<TD class="cellEnumTableCol3">This RAM area is written with valid key information</TD>
+</TR>
+</TABLE>
+</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="KEYWRITTENAREA_RAM_AREA_WRITTEN0">0</a>
+</TD>
+<TD class="cellBitfieldCol2">RAM_AREA_WRITTEN0</TD>
+<TD class="cellBitfieldCol3" colspan="3">On read this bit returns the key area written status.<BR>
+<BR>
+<BR>
+This bit can be reset by writing a 1.<BR>
+<BR>
+Note: This register will be reset on a soft reset initiated by writing to <A class="xref" href="#DMASWRESET_RESET">DMASWRESET.RESET</A>. After a soft reset, all keys must be rewritten to the key store memory.<TABLE cellspacing="0" class="LprfEnum">
+<TR class="rowEnumHead">
+<TD class="cellEnumTableHeadCol1">Value</TD>
+<TD class="cellEnumTableHeadCol2">ENUM Name</TD>
+<TD class="cellEnumTableHeadCol3">Description</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x0</TD>
+<TD class="cellEnumTableCol2">NOT_WRITTEN</TD>
+<TD class="cellEnumTableCol3">This RAM area is not written with valid key information</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x1</TD>
+<TD class="cellEnumTableCol2">WRITTEN</TD>
+<TD class="cellEnumTableCol3">This RAM area is written with valid key information</TD>
+</TR>
+</TABLE>
+</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="KEYSIZE"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">CRYPTO</A>:KEYSIZE</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 0408</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0x4002 4408</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0x4002 4408</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">Key Size<BR>
+This register defines the size of the keys that are written with DMA.</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">RW</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="KEYSIZE_RESERVED2">31:2</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED2</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0b00 0000 0000 0000 0000 0000 0000 0000</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="KEYSIZE_SIZE">1:0</a>
+</TD>
+<TD class="cellBitfieldCol2">SIZE</TD>
+<TD class="cellBitfieldCol3" colspan="3">Key size<BR>
+<BR>
+When writing to this register, <A class="xref" href="#KEYWRITTENAREA">KEYWRITTENAREA</A> will be reset.<BR>
+<BR>
+Note: For the Crypto peripheral this field is fixed to 128 bits. For software compatibility <A class="xref" href="#KEYWRITTENAREA">KEYWRITTENAREA</A> will  be reset when writing to this register.<TABLE cellspacing="0" class="LprfEnum">
+<TR class="rowEnumHead">
+<TD class="cellEnumTableHeadCol1">Value</TD>
+<TD class="cellEnumTableHeadCol2">ENUM Name</TD>
+<TD class="cellEnumTableHeadCol3">Description</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x1</TD>
+<TD class="cellEnumTableCol2">128_BIT</TD>
+<TD class="cellEnumTableCol3">128 bits</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x2</TD>
+<TD class="cellEnumTableCol2">192_BIT</TD>
+<TD class="cellEnumTableCol3">Not supported</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x3</TD>
+<TD class="cellEnumTableCol2">256_BIT</TD>
+<TD class="cellEnumTableCol3">Not supported</TD>
+</TR>
+</TABLE>
+</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0b01</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="KEYREADAREA"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">CRYPTO</A>:KEYREADAREA</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 040C</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0x4002 440C</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0x4002 440C</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">Key Read Area</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">RW</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="KEYREADAREA_BUSY">31</a>
+</TD>
+<TD class="cellBitfieldCol2">BUSY</TD>
+<TD class="cellBitfieldCol3" colspan="3">Key store operation busy status flag (read only)<BR>
+<BR>
+0: operation is completed.<BR>
+1: operation is not completed and the key store is busy.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="KEYREADAREA_RESERVED4">30:4</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED4</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0b000 0000 0000 0000 0000 0000 0000</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="KEYREADAREA_RAM_AREA">3:0</a>
+</TD>
+<TD class="cellBitfieldCol2">RAM_AREA</TD>
+<TD class="cellBitfieldCol3" colspan="3">Selects the area of the key store RAM from where the key needs to be read that will be written to the AES engine.<BR>
+<BR>
+Only RAM areas that contain valid written keys can be selected.<TABLE cellspacing="0" class="LprfEnum">
+<TR class="rowEnumHead">
+<TD class="cellEnumTableHeadCol1">Value</TD>
+<TD class="cellEnumTableHeadCol2">ENUM Name</TD>
+<TD class="cellEnumTableHeadCol3">Description</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x0</TD>
+<TD class="cellEnumTableCol2">RAM_AREA0</TD>
+<TD class="cellEnumTableCol3">RAM Area 0</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x1</TD>
+<TD class="cellEnumTableCol2">RAM_AREA1</TD>
+<TD class="cellEnumTableCol3">RAM Area 1</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x2</TD>
+<TD class="cellEnumTableCol2">RAM_AREA2</TD>
+<TD class="cellEnumTableCol3">RAM Area 2</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x3</TD>
+<TD class="cellEnumTableCol2">RAM_AREA3</TD>
+<TD class="cellEnumTableCol3">RAM Area 3</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x4</TD>
+<TD class="cellEnumTableCol2">RAM_AREA4</TD>
+<TD class="cellEnumTableCol3">RAM Area 4</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x5</TD>
+<TD class="cellEnumTableCol2">RAM_AREA5</TD>
+<TD class="cellEnumTableCol3">RAM Area 5</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x6</TD>
+<TD class="cellEnumTableCol2">RAM_AREA6</TD>
+<TD class="cellEnumTableCol3">RAM Area 6</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x7</TD>
+<TD class="cellEnumTableCol2">RAM_AREA7</TD>
+<TD class="cellEnumTableCol3">RAM Area 7</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x8</TD>
+<TD class="cellEnumTableCol2">NO_RAM</TD>
+<TD class="cellEnumTableCol3">No RAM</TD>
+</TR>
+</TABLE>
+</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0x8</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="AESKEY2__0-AESKEY2__3"></A><A name="AESKEY2__0-AESKEY2__30"></A><A name="AESKEY2__0-AESKEY2__31"></A><A name="AESKEY2__0-AESKEY2__32"></A><A name="AESKEY2__0-AESKEY2__33"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">CRYPTO</A>:AESKEY2__0-AESKEY2__3</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 0500 - 0x0000 050C</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0x4002 4500 - 0x4002 450C</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0x4002 4500 - 0x4002 450C</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">Clear AES_KEY2/GHASH Key</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">WO</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="AESKEY2__0-AESKEY2__3_KEY2">31:0</a>
+</TD>
+<TD class="cellBitfieldCol2">KEY2</TD>
+<TD class="cellBitfieldCol3" colspan="3">AESKEY2.* bits 31+x:0+x or AES_GHASH_H.* bits 31+x:0+x, where x = 0, 32, 64, 96 ordered from the LSW entry of this 4-deep register array.<BR>
+The interpretation of this field depends on the crypto operation mode.</TD>
+<TD class="cellBitfieldCol4">WO</TD>
+<TD class="cellBitfieldCol5">0x0000 0000</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="AESKEY3__0-AESKEY3__3"></A><A name="AESKEY3__0-AESKEY3__30"></A><A name="AESKEY3__0-AESKEY3__31"></A><A name="AESKEY3__0-AESKEY3__32"></A><A name="AESKEY3__0-AESKEY3__33"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">CRYPTO</A>:AESKEY3__0-AESKEY3__3</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 0510 - 0x0000 051C</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0x4002 4510 - 0x4002 451C</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0x4002 4510 - 0x4002 451C</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">Clear AES_KEY3</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">WO</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="AESKEY3__0-AESKEY3__3_KEY3">31:0</a>
+</TD>
+<TD class="cellBitfieldCol2">KEY3</TD>
+<TD class="cellBitfieldCol3" colspan="3">AESKEY3.* bits 31+x:0+x or AESKEY2.* bits 159+x:128+x, where x = 0, 32, 64, 96 ordered from the LSW entry of this 4-deep register arrary.<BR>
+The interpretation of this field depends on the crypto operation mode.</TD>
+<TD class="cellBitfieldCol4">WO</TD>
+<TD class="cellBitfieldCol5">0x0000 0000</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="AESIV__0-AESIV__3"></A><A name="AESIV__0-AESIV__30"></A><A name="AESIV__0-AESIV__31"></A><A name="AESIV__0-AESIV__32"></A><A name="AESIV__0-AESIV__33"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">CRYPTO</A>:AESIV__0-AESIV__3</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 0540 - 0x0000 054C</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0x4002 4540 - 0x4002 454C</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0x4002 4540 - 0x4002 454C</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">AES Initialization Vector</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">RW</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="AESIV__0-AESIV__3_IV">31:0</a>
+</TD>
+<TD class="cellBitfieldCol2">IV</TD>
+<TD class="cellBitfieldCol3" colspan="3">The interpretation of this field depends on the crypto operation mode.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0x0000 0000</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="AESCTL"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">CRYPTO</A>:AESCTL</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 0550</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0x4002 4550</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0x4002 4550</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">AES Input/Output Buffer Control</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">RW</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="AESCTL_CONTEXT_RDY">31</a>
+</TD>
+<TD class="cellBitfieldCol2">CONTEXT_RDY</TD>
+<TD class="cellBitfieldCol3" colspan="3">If 1, this status bit indicates that the context data registers can be overwritten and the Host is permitted to write the next context.  Writing a context means writing either a mode, the crypto length or <A class="xref" href="#AESDATALEN1_LEN_MSW">AESDATALEN1.LEN_MSW</A>, <A class="xref" href="#AESDATALEN0_LEN_LSW">AESDATALEN0.LEN_LSW</A> length registers</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">1</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="AESCTL_SAVED_CONTEXT_RDY">30</a>
+</TD>
+<TD class="cellBitfieldCol2">SAVED_CONTEXT_RDY</TD>
+<TD class="cellBitfieldCol3" colspan="3">If read as 1, this status bit indicates that an AES authentication TAG and/or IV block(s) is/are available for the Host to retrieve. This bit is only asserted if <A class="xref" href="#AESCTL_SAVE_CONTEXT">SAVE_CONTEXT</A> is set to 1. The bit is mutually exclusive with <A class="xref" href="#AESCTL_CONTEXT_RDY">CONTEXT_RDY</A>.<BR>
+<BR>
+Writing 1 clears the bit to zero, indicating the Crypto peripheral can start its next operation. This bit is also cleared when the 4th word of the output TAG and/or IV is read.<BR>
+<BR>
+Note: All other mode bit writes will be ignored when this mode bit is written with 1.<BR>
+<BR>
+Note: This bit is controlled automatically by the Crypto peripheral for TAG read DMA operations.<BR>
+<BR>
+For typical use, this bit does NOT need to be written, but is used for status reading only. In this case, this status bit is automatically maintained by the Crypto peripheral.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="AESCTL_SAVE_CONTEXT">29</a>
+</TD>
+<TD class="cellBitfieldCol2">SAVE_CONTEXT</TD>
+<TD class="cellBitfieldCol3" colspan="3">IV must be read before the AES engine can start a new operation.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="AESCTL_RESERVED25">28:25</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED25</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0x0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="AESCTL_CCM_M">24:22</a>
+</TD>
+<TD class="cellBitfieldCol2">CCM_M</TD>
+<TD class="cellBitfieldCol3" colspan="3">Defines M that indicates the length of the authentication field for CCM operations; the authentication field length equals two times the value of CCM_M plus one.<BR>
+Note: The Crypto peripheral always returns a 128-bit authentication field, of which the M least significant bytes are valid. All values are supported.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0b000</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="AESCTL_CCM_L">21:19</a>
+</TD>
+<TD class="cellBitfieldCol2">CCM_L</TD>
+<TD class="cellBitfieldCol3" colspan="3">Defines L that indicates the width of the length field for CCM operations; the length field in bytes equals the value of CMM_L plus one. All values are supported.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0b000</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="AESCTL_CCM">18</a>
+</TD>
+<TD class="cellBitfieldCol2">CCM</TD>
+<TD class="cellBitfieldCol3" colspan="3">AES-CCM mode enable.<BR>
+AES-CCM is a combined mode, using AES for both authentication and encryption.<BR>
+Note: Selecting AES-CCM mode requires writing of <A class="xref" href="#AESDATALEN1_LEN_MSW">AESDATALEN1.LEN_MSW</A> and <A class="xref" href="#AESDATALEN0_LEN_LSW">AESDATALEN0.LEN_LSW</A>  after all other registers.<BR>
+Note: The <A class="xref" href="#AESCTL_CTR">CTR</A> mode bit in this register must also be set to 1 to enable AES-CTR; selecting other AES modes than CTR mode is invalid.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="AESCTL_RESERVED">17:16</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0b00</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="AESCTL_CBC_MAC">15</a>
+</TD>
+<TD class="cellBitfieldCol2">CBC_MAC</TD>
+<TD class="cellBitfieldCol3" colspan="3">MAC mode enable.<BR>
+The <A class="xref" href="#AESCTL_DIR">DIR</A> bit must be set to 1 for this mode.<BR>
+Selecting this mode requires writing the <A class="xref" href="#AESDATALEN1_LEN_MSW">AESDATALEN1.LEN_MSW</A> and <A class="xref" href="#AESDATALEN0_LEN_LSW">AESDATALEN0.LEN_LSW</A> registers after all other registers.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="AESCTL_RESERVED9">14:9</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED9</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0b00 0000</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="AESCTL_CTR_WIDTH">8:7</a>
+</TD>
+<TD class="cellBitfieldCol2">CTR_WIDTH</TD>
+<TD class="cellBitfieldCol3" colspan="3">Specifies the counter width for AES-CTR mode<TABLE cellspacing="0" class="LprfEnum">
+<TR class="rowEnumHead">
+<TD class="cellEnumTableHeadCol1">Value</TD>
+<TD class="cellEnumTableHeadCol2">ENUM Name</TD>
+<TD class="cellEnumTableHeadCol3">Description</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x0</TD>
+<TD class="cellEnumTableCol2">32_BIT</TD>
+<TD class="cellEnumTableCol3">32 bits</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x1</TD>
+<TD class="cellEnumTableCol2">64_BIT</TD>
+<TD class="cellEnumTableCol3">64 bits</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x2</TD>
+<TD class="cellEnumTableCol2">96_BIT</TD>
+<TD class="cellEnumTableCol3">96 bits</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x3</TD>
+<TD class="cellEnumTableCol2">128_BIT</TD>
+<TD class="cellEnumTableCol3">128 bits</TD>
+</TR>
+</TABLE>
+</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0b00</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="AESCTL_CTR">6</a>
+</TD>
+<TD class="cellBitfieldCol2">CTR</TD>
+<TD class="cellBitfieldCol3" colspan="3">AES-CTR mode enable<BR>
+This bit must also be set for CCM, when encryption/decryption is required.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="AESCTL_CBC">5</a>
+</TD>
+<TD class="cellBitfieldCol2">CBC</TD>
+<TD class="cellBitfieldCol3" colspan="3">CBC mode enable</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="AESCTL_KEY_SIZE">4:3</a>
+</TD>
+<TD class="cellBitfieldCol2">KEY_SIZE</TD>
+<TD class="cellBitfieldCol3" colspan="3">This field specifies the key size.<BR>
+The key size is automatically configured when a new key is loaded via the key store module.<BR>
+00 = N/A - reserved<BR>
+01 = 128 bits<BR>
+10 = N/A - reserved<BR>
+11 = N/A - reserved<BR>
+For the Crypto peripheral this field is fixed to 128 bits.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0b00</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="AESCTL_DIR">2</a>
+</TD>
+<TD class="cellBitfieldCol2">DIR</TD>
+<TD class="cellBitfieldCol3" colspan="3">Direction.<BR>
+0 : Decrypt operation is performed.<BR>
+1 : Encrypt operation is performed.<BR>
+<BR>
+This bit must be written with a 1 when CBC-MAC is selected.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="AESCTL_INPUT_RDY">1</a>
+</TD>
+<TD class="cellBitfieldCol2">INPUT_RDY</TD>
+<TD class="cellBitfieldCol3" colspan="3">If read as 1, this status bit indicates that the 16-byte AES input buffer is empty. The Host is permitted to write the next block of data.<BR>
+<BR>
+Writing a 0 clears the bit to zero and indicates that the AES engine can use the provided input data block.<BR>
+<BR>
+Writing a 1 to this bit will be ignored.<BR>
+<BR>
+Note: For DMA operations, this bit is automatically controlled by the Crypto peripheral.<BR>
+After reset, this bit is 0. After writing a context (note 1), this bit will become 1.<BR>
+<BR>
+For typical use, this bit does NOT need to be written, but is used for status reading only. In this case, this status bit is automatically maintained by the Crypto peripheral.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="AESCTL_OUTPUT_RDY">0</a>
+</TD>
+<TD class="cellBitfieldCol2">OUTPUT_RDY</TD>
+<TD class="cellBitfieldCol3" colspan="3">If read as 1, this status bit indicates that an AES output block is available to be retrieved by the Host.<BR>
+<BR>
+Writing a 0 clears the bit to zero and indicates that output data is read by the Host. The AES engine can provide a next output data block.<BR>
+<BR>
+Writing a 1 to this bit will be ignored.<BR>
+<BR>
+Note: For DMA operations, this bit is automatically controlled by the Crypto peripheral.<BR>
+<BR>
+For typical use, this bit does NOT need to be written, but is used for status reading only. In this case, this status bit is automatically maintained by the Crypto peripheral.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="AESDATALEN0"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">CRYPTO</A>:AESDATALEN0</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 0554</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0x4002 4554</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0x4002 4554</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">Crypto Data Length LSW</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">WO</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="AESDATALEN0_LEN_LSW">31:0</a>
+</TD>
+<TD class="cellBitfieldCol2">LEN_LSW</TD>
+<TD class="cellBitfieldCol3" colspan="3">Used to write the Length values to the Crypto peripheral.  <BR>
+<BR>
+This register contains bits [31:0] of the combined data length.</TD>
+<TD class="cellBitfieldCol4">WO</TD>
+<TD class="cellBitfieldCol5">0x0000 0000</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="AESDATALEN1"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">CRYPTO</A>:AESDATALEN1</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 0558</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0x4002 4558</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0x4002 4558</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">Crypto Data Length MSW</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">WO</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="AESDATALEN1_RESERVED">31:29</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior.</TD>
+<TD class="cellBitfieldCol4">WO</TD>
+<TD class="cellBitfieldCol5">0b000</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="AESDATALEN1_LEN_MSW">28:0</a>
+</TD>
+<TD class="cellBitfieldCol2">LEN_MSW</TD>
+<TD class="cellBitfieldCol3" colspan="3">Bits [60:32] of the combined data length.<BR>
+<BR>
+Bits [60:0] of the crypto length registers AESDATALEN1 and AESDATALEN0 store the cryptographic data length in bytes for all modes. Once processing with this context is started, this length decrements to zero. Data lengths up to (2^61 - 1) bytes are allowed.<BR>
+For GCM, any value up to 2^36 - 32 bytes can be used. This is because a 32-bit counter mode is used; the maximum number of 128-bit blocks is 2^32 - 2, resulting in a maximum number of bytes of 2^36 - 32.<BR>
+Writing to this register triggers the engine to start using this context. This is valid for all modes except GCM and CCM.<BR>
+Note: For the combined modes (GCM and CCM), this length does not include the authentication only data; the authentication length is specified in the <A class="xref" href="#AESAUTHLEN_LEN">AESAUTHLEN.LEN</A>.<BR>
+All modes must have a length &#62; 0. For the combined modes, it is allowed to have one of the lengths equal to zero.<BR>
+For the basic encryption modes (ECB/CBC/CTR) it is allowed to program zero to the length field; in that case the length is assumed infinite.<BR>
+All data must be byte (8-bit) aligned for stream cipher modes; bit aligned data streams are not supported by the Crypto peripheral. For block cipher modes, the data length must be programmed in multiples of the block cipher size, 16 bytes.</TD>
+<TD class="cellBitfieldCol4">WO</TD>
+<TD class="cellBitfieldCol5">0b0 0000 0000 0000 0000 0000 0000 0000</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="AESAUTHLEN"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">CRYPTO</A>:AESAUTHLEN</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 055C</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0x4002 455C</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0x4002 455C</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">AES Authentication Length</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">WO</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="AESAUTHLEN_LEN">31:0</a>
+</TD>
+<TD class="cellBitfieldCol2">LEN</TD>
+<TD class="cellBitfieldCol3" colspan="3">Authentication data length in bytes for combined mode, CCM only.<BR>
+Supported AAD-lengths for CCM are from 0 to (216 - 28) bytes. Once processing with this context is started, this length decrements to zero.<BR>
+Writing this register triggers the engine to start using this context for CCM.</TD>
+<TD class="cellBitfieldCol4">WO</TD>
+<TD class="cellBitfieldCol5">0x0000 0000</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="AESDATAOUT0"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">CRYPTO</A>:AESDATAOUT0</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 0560</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0x4002 4560</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0x4002 4560</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">Data Input/Output</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">RO</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="AESDATAOUT0_DATA">31:0</a>
+</TD>
+<TD class="cellBitfieldCol2">DATA</TD>
+<TD class="cellBitfieldCol3" colspan="3">Data register 0 for output block data from the Crypto peripheral.<BR>
+These bits = AES Output Data[31:0] of {127:0]<BR>
+<BR>
+For normal operations, this register is not used, since data input and output is transferred from and to the AES engine via DMA.<BR>
+<BR>
+For a Host read operation, these registers contain the 128-bit output block from the latest AES operation. Reading from a word-aligned offset within this address range will read one word (4 bytes) of data out the 4-word deep (16 bytes = 128-bits AES block) data output buffer. The words (4 words, one full block) should be read before the core will move the next block to the data output buffer. To empty the data output buffer, <A class="xref" href="#AESCTL_OUTPUT_RDY">AESCTL.OUTPUT_RDY</A> must be written.<BR>
+For the modes with authentication (CBC-MAC, GCM and CCM), the invalid (message) bytes/words can be written with any data.<BR>
+<BR>
+Note: The AAD / authentication only data is not copied to the output buffer but only used for authentication.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0x0000 0000</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="AESDATAIN0"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">CRYPTO</A>:AESDATAIN0</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 0560</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0x4002 4560</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0x4002 4560</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">AES Data Input/Output 0</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">WO</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="AESDATAIN0_DATA">31:0</a>
+</TD>
+<TD class="cellBitfieldCol2">DATA</TD>
+<TD class="cellBitfieldCol3" colspan="3">Data registers for input block data to the Crypto peripheral.<BR>
+These bits = AES Input Data[31:0]  of [127:0]<BR>
+<BR>
+For normal operations, this register is not used, since data input and output is transferred from and to the AES engine via DMA.<BR>
+<BR>
+For a Host write operation, these registers must be written with the 128-bit input block for the next AES operation. Writing at a word-aligned offset within this address range will store the word (4 bytes) of data into the corresponding position of 4-word deep (16 bytes = 128-bit AES block) data input buffer. This buffer is used for the next AES operation. If the last data block is not completely filled with valid data (see notes below), it is allowed to write only the words with valid data. Next AES operation is triggered by writing to <A class="xref" href="#AESCTL_INPUT_RDY">AESCTL.INPUT_RDY</A>.<BR>
+<BR>
+Note: AES typically operates on 128 bits block multiple input data. The CTR, GCM and CCM modes form an exception. The last block of a CTR-mode message may contain less than 128 bits (refer to [NIST 800-38A]): 0 &#60; n &#60;= 128 bits. For GCM/CCM, the last block of both AAD and message data may contain less than 128 bits (refer to [NIST 800-38D]). The Crypto peripheral automatically pads or masks misaligned ending data blocks with zeroes for GCM, CCM and CBC-MAC. For CTR mode, the remaining data in an unaligned data block is ignored.</TD>
+<TD class="cellBitfieldCol4">WO</TD>
+<TD class="cellBitfieldCol5">0x0000 0000</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="AESDATAOUT1"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">CRYPTO</A>:AESDATAOUT1</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 0564</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0x4002 4564</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0x4002 4564</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">AES Data Input/Output 3</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">RO</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="AESDATAOUT1_DATA">31:0</a>
+</TD>
+<TD class="cellBitfieldCol2">DATA</TD>
+<TD class="cellBitfieldCol3" colspan="3">Data registers for output block data from the Crypto peripheral.<BR>
+These bits = AES Output Data[63:32] of [127:0]<BR>
+<BR>
+For normal operations, this register is not used, since data input and output is transferred from and to the AES engine via DMA.<BR>
+<BR>
+For a Host read operation, these registers contain the 128-bit output block from the latest AES operation. Reading from a word-aligned offset within this address range will read one word (4 bytes) of data out the 4-word deep (16 bytes = 128-bits AES block) data output buffer. The words (4 words, one full block) should be read before the core will move the next block to the data output buffer. To empty the data output buffer, <A class="xref" href="#AESCTL_OUTPUT_RDY">AESCTL.OUTPUT_RDY</A> must be written.<BR>
+For the modes with authentication (CBC-MAC, GCM and CCM), the invalid (message) bytes/words can be written with any data.<BR>
+<BR>
+Note: The AAD / authentication only data is not copied to the output buffer but only used for authentication.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0x0000 0000</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="AESDATAIN1"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">CRYPTO</A>:AESDATAIN1</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 0564</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0x4002 4564</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0x4002 4564</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">AES Data Input/Output 1</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">WO</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="AESDATAIN1_DATA">31:0</a>
+</TD>
+<TD class="cellBitfieldCol2">DATA</TD>
+<TD class="cellBitfieldCol3" colspan="3">Data registers for input block data to the Crypto peripheral.<BR>
+These bits = AES Input Data[63:32]  of [127:0]<BR>
+<BR>
+For normal operations, this register is not used, since data input and output is transferred from and to the AES engine via DMA.<BR>
+<BR>
+For a Host write operation, these registers must be written with the 128-bit input block for the next AES operation. Writing at a word-aligned offset within this address range will store the word (4 bytes) of data into the corresponding position of 4-word deep (16 bytes = 128-bit AES block) data input buffer. This buffer is used for the next AES operation. If the last data block is not completely filled with valid data (see notes below), it is allowed to write only the words with valid data. Next AES operation is triggered by writing to <A class="xref" href="#AESCTL_INPUT_RDY">AESCTL.INPUT_RDY</A>.<BR>
+<BR>
+Note: AES typically operates on 128 bits block multiple input data. The CTR, GCM and CCM modes form an exception. The last block of a CTR-mode message may contain less than 128 bits (refer to [NIST 800-38A]): 0 &#60; n &#60;= 128 bits. For GCM/CCM, the last block of both AAD and message data may contain less than 128 bits (refer to [NIST 800-38D]). The Crypto peripheral automatically pads or masks misaligned ending data blocks with zeroes for GCM, CCM and CBC-MAC. For CTR mode, the remaining data in an unaligned data block is ignored.</TD>
+<TD class="cellBitfieldCol4">WO</TD>
+<TD class="cellBitfieldCol5">0x0000 0000</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="AESDATAOUT2"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">CRYPTO</A>:AESDATAOUT2</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 0568</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0x4002 4568</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0x4002 4568</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">AES Data Input/Output 2</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">RO</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="AESDATAOUT2_DATA">31:0</a>
+</TD>
+<TD class="cellBitfieldCol2">DATA</TD>
+<TD class="cellBitfieldCol3" colspan="3">Data registers for output block data from the Crypto peripheral.<BR>
+These bits = AES Output Data[95:64] of [127:0]<BR>
+<BR>
+For normal operations, this register is not used, since data input and output is transferred from and to the AES engine via DMA.<BR>
+<BR>
+For a Host read operation, these registers contain the 128-bit output block from the latest AES operation. Reading from a word-aligned offset within this address range will read one word (4 bytes) of data out the 4-word deep (16 bytes = 128-bits AES block) data output buffer. The words (4 words, one full block) should be read before the core will move the next block to the data output buffer. To empty the data output buffer, <A class="xref" href="#AESCTL_OUTPUT_RDY">AESCTL.OUTPUT_RDY</A> must be written.<BR>
+For the modes with authentication (CBC-MAC, GCM and CCM), the invalid (message) bytes/words can be written with any data.<BR>
+<BR>
+Note: The AAD / authentication only data is not copied to the output buffer but only used for authentication.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0x0000 0000</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="AESDATAIN2"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">CRYPTO</A>:AESDATAIN2</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 0568</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0x4002 4568</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0x4002 4568</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">AES Data Input/Output 2</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">WO</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="AESDATAIN2_DATA">31:0</a>
+</TD>
+<TD class="cellBitfieldCol2">DATA</TD>
+<TD class="cellBitfieldCol3" colspan="3">Data registers for input block data to the Crypto peripheral.<BR>
+These bits = AES Input Data[95:64]  of [127:0]<BR>
+<BR>
+For normal operations, this register is not used, since data input and output is transferred from and to the AES engine via DMA.<BR>
+<BR>
+For a Host write operation, these registers must be written with the 128-bit input block for the next AES operation. Writing at a word-aligned offset within this address range will store the word (4 bytes) of data into the corresponding position of 4-word deep (16 bytes = 128-bit AES block) data input buffer. This buffer is used for the next AES operation. If the last data block is not completely filled with valid data (see notes below), it is allowed to write only the words with valid data. Next AES operation is triggered by writing to <A class="xref" href="#AESCTL_INPUT_RDY">AESCTL.INPUT_RDY</A>.<BR>
+<BR>
+Note: AES typically operates on 128 bits block multiple input data. The CTR, GCM and CCM modes form an exception. The last block of a CTR-mode message may contain less than 128 bits (refer to [NIST 800-38A]): 0 &#60; n &#60;= 128 bits. For GCM/CCM, the last block of both AAD and message data may contain less than 128 bits (refer to [NIST 800-38D]). The Crypto peripheral automatically pads or masks misaligned ending data blocks with zeroes for GCM, CCM and CBC-MAC. For CTR mode, the remaining data in an unaligned data block is ignored.</TD>
+<TD class="cellBitfieldCol4">WO</TD>
+<TD class="cellBitfieldCol5">0x0000 0000</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="AESDATAOUT3"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">CRYPTO</A>:AESDATAOUT3</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 056C</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0x4002 456C</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0x4002 456C</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">AES Data Input/Output 3</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">RO</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="AESDATAOUT3_DATA">31:0</a>
+</TD>
+<TD class="cellBitfieldCol2">DATA</TD>
+<TD class="cellBitfieldCol3" colspan="3">Data registers for output block data from the Crypto peripheral.<BR>
+These bits = AES Output Data[127:96] of [127:0]<BR>
+<BR>
+For normal operations, this register is not used, since data input and output is transferred from and to the AES engine via DMA.<BR>
+<BR>
+For a Host read operation, these registers contain the 128-bit output block from the latest AES operation. Reading from a word-aligned offset within this address range will read one word (4 bytes) of data out the 4-word deep (16 bytes = 128-bits AES block) data output buffer. The words (4 words, one full block) should be read before the core will move the next block to the data output buffer. To empty the data output buffer, <A class="xref" href="#AESCTL_OUTPUT_RDY">AESCTL.OUTPUT_RDY</A> must be written.<BR>
+For the modes with authentication (CBC-MAC, GCM and CCM), the invalid (message) bytes/words can be written with any data.<BR>
+<BR>
+Note: The AAD / authentication only data is not copied to the output buffer but only used for authentication.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0x0000 0000</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="AESDATAIN3"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">CRYPTO</A>:AESDATAIN3</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 056C</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0x4002 456C</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0x4002 456C</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">Data Input/Output</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">WO</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="AESDATAIN3_DATA">31:0</a>
+</TD>
+<TD class="cellBitfieldCol2">DATA</TD>
+<TD class="cellBitfieldCol3" colspan="3">Data registers for input block data to the Crypto peripheral.<BR>
+These bits = AES Input Data[127:96] of [127:0]<BR>
+<BR>
+For normal operations, this register is not used, since data input and output is transferred from and to the AES engine via DMA.<BR>
+<BR>
+For a Host write operation, these registers must be written with the 128-bit input block for the next AES operation. Writing at a word-aligned offset within this address range will store the word (4 bytes) of data into the corresponding position of 4-word deep (16 bytes = 128-bit AES block) data input buffer. This buffer is used for the next AES operation. If the last data block is not completely filled with valid data (see notes below), it is allowed to write only the words with valid data. Next AES operation is triggered by writing to <A class="xref" href="#AESCTL_INPUT_RDY">AESCTL.INPUT_RDY</A>.<BR>
+<BR>
+Note: AES typically operates on 128 bits block multiple input data. The CTR, GCM and CCM modes form an exception. The last block of a CTR-mode message may contain less than 128 bits (refer to [NIST 800-38A]): 0 &#60; n &#60;= 128 bits. For GCM/CCM, the last block of both AAD and message data may contain less than 128 bits (refer to [NIST 800-38D]). The Crypto peripheral automatically pads or masks misaligned ending data blocks with zeroes for GCM, CCM and CBC-MAC. For CTR mode, the remaining data in an unaligned data block is ignored.</TD>
+<TD class="cellBitfieldCol4">WO</TD>
+<TD class="cellBitfieldCol5">0x0000 0000</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="AESTAGOUT__0-AESTAGOUT__3"></A><A name="AESTAGOUT__0-AESTAGOUT__30"></A><A name="AESTAGOUT__0-AESTAGOUT__31"></A><A name="AESTAGOUT__0-AESTAGOUT__32"></A><A name="AESTAGOUT__0-AESTAGOUT__33"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">CRYPTO</A>:AESTAGOUT__0-AESTAGOUT__3</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 0570 - 0x0000 057C</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0x4002 4570 - 0x4002 457C</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0x4002 4570 - 0x4002 457C</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">AES Tag Output</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">RO</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="AESTAGOUT__0-AESTAGOUT__3_TAG">31:0</a>
+</TD>
+<TD class="cellBitfieldCol2">TAG</TD>
+<TD class="cellBitfieldCol3" colspan="3">This register contains the authentication TAG for the combined and authentication-only modes.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0x0000 0000</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="ALGSEL"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">CRYPTO</A>:ALGSEL</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 0700</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0x4002 4700</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0x4002 4700</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">Master Algorithm Select<BR>
+This register configures the internal destination of the DMA controller.</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">RW</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="ALGSEL_TAG">31</a>
+</TD>
+<TD class="cellBitfieldCol2">TAG</TD>
+<TD class="cellBitfieldCol3" colspan="3">If this bit is cleared to 0, the DMA operation involves only data.<BR>
+If this bit is set, the DMA operation includes a TAG (Authentication Result / Digest).</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="ALGSEL_RESERVED2">30:2</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED2</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0b0 0000 0000 0000 0000 0000 0000 0000</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="ALGSEL_AES">1</a>
+</TD>
+<TD class="cellBitfieldCol2">AES</TD>
+<TD class="cellBitfieldCol3" colspan="3">If set to 1,  the AES data is loaded via DMA<BR>
+Both Read and Write maximum transfer size to DMA engine is set to 16 bytes</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="ALGSEL_KEY_STORE">0</a>
+</TD>
+<TD class="cellBitfieldCol2">KEY_STORE</TD>
+<TD class="cellBitfieldCol3" colspan="3">If set to 1, selects the Key Store to be loaded via DMA.<BR>
+The maximum transfer size to DMA engine is set to 32 bytes (however transfers of 16, 24 and 32 bytes are allowed)</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="DMAPROTCTL"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">CRYPTO</A>:DMAPROTCTL</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 0704</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0x4002 4704</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0x4002 4704</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">Master Protection Control</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">RW</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="DMAPROTCTL_RESERVED1">31:1</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED1</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0b000 0000 0000 0000 0000 0000 0000 0000</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="DMAPROTCTL_EN">0</a>
+</TD>
+<TD class="cellBitfieldCol2">EN</TD>
+<TD class="cellBitfieldCol3" colspan="3">Select AHB transfer protection control for DMA transfers using the key store area as destination.<BR>
+0 : transfers use &#39;USER&#39; type access.<BR>
+1 : transfers use &#39;PRIVILEGED&#39; type access.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="SWRESET"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">CRYPTO</A>:SWRESET</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 0740</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0x4002 4740</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0x4002 4740</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">Software Reset</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">RW</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="SWRESET_RESERVED1">31:1</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED1</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0b000 0000 0000 0000 0000 0000 0000 0000</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="SWRESET_RESET">0</a>
+</TD>
+<TD class="cellBitfieldCol2">RESET</TD>
+<TD class="cellBitfieldCol3" colspan="3">If this bit is set to 1, the following modules are reset:<BR>
+- Master control internal state is reset. That includes interrupt, error status register and result available interrupt generation FSM.<BR>
+- Key store module state is reset. That includes clearing the Written Area flags; therefore the keys must be reloaded to the key store module.<BR>
+Writing 0 has no effect.<BR>
+The bit is self cleared after executing the reset.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="IRQTYPE"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">CRYPTO</A>:IRQTYPE</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 0780</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0x4002 4780</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0x4002 4780</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">Interrupt Configuration</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">RW</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="IRQTYPE_RESERVED1">31:1</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED1</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0b000 0000 0000 0000 0000 0000 0000 0000</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="IRQTYPE_IEN">0</a>
+</TD>
+<TD class="cellBitfieldCol2">IEN</TD>
+<TD class="cellBitfieldCol3" colspan="3">Interrupt enable. This bit must be set to 1 to enable interrupts from the Crypto peripheral.<BR>
+0 : All interrupts are disabled enabled.<BR>
+1 : All interrupts are enabled.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="IRQEN"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">CRYPTO</A>:IRQEN</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 0784</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0x4002 4784</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0x4002 4784</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">Interrupt Enable</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">RW</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="IRQEN_RESERVED2">31:2</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED2</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0b00 0000 0000 0000 0000 0000 0000 0000</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="IRQEN_DMA_IN_DONE">1</a>
+</TD>
+<TD class="cellBitfieldCol2">DMA_IN_DONE</TD>
+<TD class="cellBitfieldCol3" colspan="3">This bit enables <A class="xref" href="#IRQSTAT_DMA_IN_DONE">IRQSTAT.DMA_IN_DONE</A> as source for IRQ.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="IRQEN_RESULT_AVAIL">0</a>
+</TD>
+<TD class="cellBitfieldCol2">RESULT_AVAIL</TD>
+<TD class="cellBitfieldCol3" colspan="3">This bit enables <A class="xref" href="#IRQSTAT_RESULT_AVAIL">IRQSTAT.RESULT_AVAIL</A> as source for IRQ.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="IRQCLR"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">CRYPTO</A>:IRQCLR</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 0788</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0x4002 4788</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0x4002 4788</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">Interrupt Clear</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">WO</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="IRQCLR_DMA_BUS_ERR">31</a>
+</TD>
+<TD class="cellBitfieldCol2">DMA_BUS_ERR</TD>
+<TD class="cellBitfieldCol3" colspan="3">If 1 is written to this bit, <A class="xref" href="#IRQSTAT_DMA_BUS_ERR">IRQSTAT.DMA_BUS_ERR</A> is cleared.</TD>
+<TD class="cellBitfieldCol4">WO</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="IRQCLR_KEY_ST_WR_ERR">30</a>
+</TD>
+<TD class="cellBitfieldCol2">KEY_ST_WR_ERR</TD>
+<TD class="cellBitfieldCol3" colspan="3">If 1 is written to this bit, <A class="xref" href="#IRQSTAT_KEY_ST_WR_ERR">IRQSTAT.KEY_ST_WR_ERR</A> is cleared.</TD>
+<TD class="cellBitfieldCol4">WO</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="IRQCLR_KEY_ST_RD_ERR">29</a>
+</TD>
+<TD class="cellBitfieldCol2">KEY_ST_RD_ERR</TD>
+<TD class="cellBitfieldCol3" colspan="3">If 1 is written to this bit, <A class="xref" href="#IRQSTAT_KEY_ST_RD_ERR">IRQSTAT.KEY_ST_RD_ERR</A> is cleared.</TD>
+<TD class="cellBitfieldCol4">WO</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="IRQCLR_RESERVED2">28:2</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED2</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior.</TD>
+<TD class="cellBitfieldCol4">WO</TD>
+<TD class="cellBitfieldCol5">0b000 0000 0000 0000 0000 0000 0000</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="IRQCLR_DMA_IN_DONE">1</a>
+</TD>
+<TD class="cellBitfieldCol2">DMA_IN_DONE</TD>
+<TD class="cellBitfieldCol3" colspan="3">If 1 is written to this bit, <A class="xref" href="#IRQSTAT_DMA_IN_DONE">IRQSTAT.DMA_IN_DONE</A> is cleared.</TD>
+<TD class="cellBitfieldCol4">WO</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="IRQCLR_RESULT_AVAIL">0</a>
+</TD>
+<TD class="cellBitfieldCol2">RESULT_AVAIL</TD>
+<TD class="cellBitfieldCol3" colspan="3">If 1 is written to this bit, <A class="xref" href="#IRQSTAT_RESULT_AVAIL">IRQSTAT.RESULT_AVAIL</A> is cleared.</TD>
+<TD class="cellBitfieldCol4">WO</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="IRQSET"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">CRYPTO</A>:IRQSET</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 078C</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0x4002 478C</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0x4002 478C</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">Interrupt Set</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">WO</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="IRQSET_RESERVED2">31:2</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED2</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior.</TD>
+<TD class="cellBitfieldCol4">WO</TD>
+<TD class="cellBitfieldCol5">0b00 0000 0000 0000 0000 0000 0000 0000</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="IRQSET_DMA_IN_DONE">1</a>
+</TD>
+<TD class="cellBitfieldCol2">DMA_IN_DONE</TD>
+<TD class="cellBitfieldCol3" colspan="3">If 1 is written to this bit, <A class="xref" href="#IRQSTAT_DMA_IN_DONE">IRQSTAT.DMA_IN_DONE</A> is set.<BR>
+Writing 0 has no effect.</TD>
+<TD class="cellBitfieldCol4">WO</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="IRQSET_RESULT_AVAIL">0</a>
+</TD>
+<TD class="cellBitfieldCol2">RESULT_AVAIL</TD>
+<TD class="cellBitfieldCol3" colspan="3">If 1 is written to this bit, <A class="xref" href="#IRQSTAT_RESULT_AVAIL">IRQSTAT.RESULT_AVAIL</A> is set.<BR>
+Writing 0 has no effect.</TD>
+<TD class="cellBitfieldCol4">WO</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="IRQSTAT"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">CRYPTO</A>:IRQSTAT</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 0790</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0x4002 4790</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0x4002 4790</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">Interrupt Status</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">RO</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="IRQSTAT_DMA_BUS_ERR">31</a>
+</TD>
+<TD class="cellBitfieldCol2">DMA_BUS_ERR</TD>
+<TD class="cellBitfieldCol3" colspan="3">This bit is set when a DMA bus error is detected during a DMA operation. The value of this register is held until it is cleared via <A class="xref" href="#IRQCLR_DMA_BUS_ERR">IRQCLR.DMA_BUS_ERR</A><BR>
+Note: This error is asserted if an error is detected on the AHB master interface during a DMA operation.<BR>
+Note: This is not an interrupt source.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="IRQSTAT_KEY_ST_WR_ERR">30</a>
+</TD>
+<TD class="cellBitfieldCol2">KEY_ST_WR_ERR</TD>
+<TD class="cellBitfieldCol3" colspan="3">This bit is set when a write error is detected during the DMA write operation to the key store memory. The value of this register is held until it is cleared via <A class="xref" href="#IRQCLR_KEY_ST_WR_ERR">IRQCLR.KEY_ST_WR_ERR</A><BR>
+Note: This error is asserted if a DMA operation does not cover a full key area or more areas are written than expected.<BR>
+Note: This is not an interrupt source.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="IRQSTAT_KEY_ST_RD_ERR">29</a>
+</TD>
+<TD class="cellBitfieldCol2">KEY_ST_RD_ERR</TD>
+<TD class="cellBitfieldCol3" colspan="3">This bit will be set when a read error is detected during the read of a key from the key store, while copying it to the AES engine. The value of this register is held until it is cleared via <A class="xref" href="#IRQCLR_KEY_ST_RD_ERR">IRQCLR.KEY_ST_RD_ERR</A>.<BR>
+Note: This error is asserted if a key location is selected in the key store that is not available.<BR>
+Note: This is not an interrupt source.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="IRQSTAT_RESERVED2">28:2</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED2</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0b000 0000 0000 0000 0000 0000 0000</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="IRQSTAT_DMA_IN_DONE">1</a>
+</TD>
+<TD class="cellBitfieldCol2">DMA_IN_DONE</TD>
+<TD class="cellBitfieldCol3" colspan="3">This bit returns the status of DMA data in done interrupt.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="IRQSTAT_RESULT_AVAIL">0</a>
+</TD>
+<TD class="cellBitfieldCol2">RESULT_AVAIL</TD>
+<TD class="cellBitfieldCol3" colspan="3">This bit is set high when the Crypto peripheral has a result available.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="HWVER"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">CRYPTO</A>:HWVER</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 07FC</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0x4002 47FC</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0x4002 47FC</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">CTRL Module Version</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">RO</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="HWVER_RESERVED28">31:28</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED28</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0x9</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="HWVER_HW_MAJOR_VER">27:24</a>
+</TD>
+<TD class="cellBitfieldCol2">HW_MAJOR_VER</TD>
+<TD class="cellBitfieldCol3" colspan="3">Major version number</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0x1</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="HWVER_HW_MINOR_VER">23:20</a>
+</TD>
+<TD class="cellBitfieldCol2">HW_MINOR_VER</TD>
+<TD class="cellBitfieldCol3" colspan="3">Minor version number</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0x1</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="HWVER_HW_PATCH_LVL">19:16</a>
+</TD>
+<TD class="cellBitfieldCol2">HW_PATCH_LVL</TD>
+<TD class="cellBitfieldCol3" colspan="3">Patch level, starts at 0 at first delivery of this version.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0x1</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="HWVER_VER_NUM_COMPL">15:8</a>
+</TD>
+<TD class="cellBitfieldCol2">VER_NUM_COMPL</TD>
+<TD class="cellBitfieldCol3" colspan="3">These bits simply contain the complement of <A class="xref" href="#HWVER_VER_NUM">VER_NUM</A> (0x87), used by a driver to ascertain that the Crypto peripheral register is indeed read.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0x87</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="HWVER_VER_NUM">7:0</a>
+</TD>
+<TD class="cellBitfieldCol2">VER_NUM</TD>
+<TD class="cellBitfieldCol3" colspan="3">The version number for the Crypto peripheral, this field contains the value 120 (decimal) or 0x78.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0x78</TD>
+</TR>
+</TABLE>
+<BR>
+<BR>
+<hr><table class="footer"><tr><td>&copy; 2015 - 2016. Texas Instruments | All Rights Reserved</td></tr></table>
+</BODY>
+</HTML>

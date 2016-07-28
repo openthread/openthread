@@ -1,0 +1,581 @@
+<HTML>
+<HEAD><META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=UTF-8">
+<link href="..//elements/mmap.css" rel="stylesheet" type="text/css">
+<TITLE>CPU_ROM_TABLE</TITLE>
+</HEAD>
+<BODY class=mmapBody>
+<h2 class="mmapCellTitle">
+  <a name="Top_Tag">CPU_ROM_TABLE</a>
+</h2>
+<P>Instance: CPU_ROM_TABLE<BR>
+Component: CPU_ROM_TABLE<BR>
+Base address: 0xE00FF000</P>
+<BR>
+<P>Cortex-M&#39;s <A class="mmap_legend_link" href="../legend.html#ROM">ROM</A> table</P>
+ <H3 class="mmapRegisterSummaryTitle"><A name="CPU_ROM_TABLE"></A><A href="CPU_MMAP.html"> TOP</A>:<B>CPU_ROM_TABLE</B> Register Summary</H3>
+<TABLE cellspacing="0" class="mmapRegisterSummaryTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">
+  <P>Register Name</P>
+</TD>
+<TD class="cellTopCol2">
+  <P>Type</P>
+</TD>
+<TD class="cellTopCol3">
+  <P>Register Width (Bits)</P>
+</TD>
+<TD class="cellTopCol4">
+  <P>Register Reset</P>
+</TD>
+<TD class="cellTopCol5">
+  <P>Address Offset</P>
+</TD>
+<TD class="cellTopCol5">
+  <P>Physical Address</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#SCS">SCS</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>RO</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0xFFF0 F003</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 0000</P>
+</TD>
+<TD class="cellCol5">
+  <P>0xE00F F000</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#DWT">DWT</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>RO</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0xFFF0 2003</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 0004</P>
+</TD>
+<TD class="cellCol5">
+  <P>0xE00F F004</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#FPB">FPB</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>RO</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0xFFF0 3003</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 0008</P>
+</TD>
+<TD class="cellCol5">
+  <P>0xE00F F008</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#ITM">ITM</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>RO</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0xFFF0 1003</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 000C</P>
+</TD>
+<TD class="cellCol5">
+  <P>0xE00F F00C</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#TPIU">TPIU</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>RO</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0xFFF4 1003</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 0010</P>
+</TD>
+<TD class="cellCol5">
+  <P>0xE00F F010</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#ETM">ETM</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>RO</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0xFFF4 2002</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 0014</P>
+</TD>
+<TD class="cellCol5">
+  <P>0xE00F F014</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#END">END</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>RO</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x0000 0000</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 0018</P>
+</TD>
+<TD class="cellCol5">
+  <P>0xE00F F018</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#SYSTEM_ACCESS">SYSTEM_ACCESS</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>RO</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x0000 0001</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 0FCC</P>
+</TD>
+<TD class="cellCol5">
+  <P>0xE00F FFCC</P>
+</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterSummaryTitle"><A href="CPU_MMAP.html"> TOP</A>:CPU_ROM_TABLE Register Descriptions</H3>
+<H3 class="mmapRegisterTitle"><A name="SCS"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">CPU_ROM_TABLE</A>:SCS</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 0000</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0xE00F F000</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0xE00F F000</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">System Control Space Component</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">RO</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="SCS_SCS">31:0</a>
+</TD>
+<TD class="cellBitfieldCol2">SCS</TD>
+<TD class="cellBitfieldCol3" colspan="3">Points to the <A class="mmap_legend_link" href="../legend.html#SCS">SCS</A> at 0xE000E000.<BR>
+(<A class="xref" href="#SCS_SCS">SCS</A> + Base address for ROM_TABLE) &#38; 0x0FFFFFFF0 = 0xE000E000.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0xFFF0 F003</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="DWT"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">CPU_ROM_TABLE</A>:DWT</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 0004</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0xE00F F004</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0xE00F F004</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">Data Watchpoint and Trace Component<BR>
+Points to the Data Watchpoint and Trace block at 0xE0001000. Value has bit [0] set if <A class="mmap_legend_link" href="../legend.html#DWT">DWT</A> is present.</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">RO</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="DWT_DWT">31:1</a>
+</TD>
+<TD class="cellBitfieldCol2">DWT</TD>
+<TD class="cellBitfieldCol3" colspan="3">Points to the Data Watchpoint and Trace block at 0xE0001000.<BR>
+(2*<A class="xref" href="#DWT_DWT">DWT</A> + Base address for ROM_TABLE) &#38; 0x0FFFFFFF0 = 0xE0001000.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0b111 1111 1111 1000 0001 0000 0000 0001</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="DWT_DWT_PRESENT">0</a>
+</TD>
+<TD class="cellBitfieldCol2">DWT_PRESENT</TD>
+<TD class="cellBitfieldCol3" colspan="3">0: <A class="mmap_legend_link" href="../legend.html#DWT">DWT</A> is not present<BR>
+1: <A class="mmap_legend_link" href="../legend.html#DWT">DWT</A> is present.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">1</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="FPB"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">CPU_ROM_TABLE</A>:FPB</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 0008</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0xE00F F008</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0xE00F F008</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">Flash Patch and Breakpoint Component<BR>
+Points to the Flash Patch and Breakpoint block at 0xE0002000. Value has bit [0] set to 1 if <A class="mmap_legend_link" href="../legend.html#FPB">FPB</A> is present.</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">RO</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="FPB_FPB">31:1</a>
+</TD>
+<TD class="cellBitfieldCol2">FPB</TD>
+<TD class="cellBitfieldCol3" colspan="3">Points to the Flash Patch and Breakpoint block at 0xE0002000.<BR>
+(2*<A class="xref" href="#FPB_FPB">FPB</A> + Base address for ROM_TABLE) &#38; 0x0FFFFFFF0 = 0xE0002000.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0b111 1111 1111 1000 0001 1000 0000 0001</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="FPB_FPB_PRESENT">0</a>
+</TD>
+<TD class="cellBitfieldCol2">FPB_PRESENT</TD>
+<TD class="cellBitfieldCol3" colspan="3">0: <A class="mmap_legend_link" href="../legend.html#FPB">FPB</A> is not present<BR>
+1: <A class="mmap_legend_link" href="../legend.html#FPB">FPB</A> is present.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">1</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="ITM"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">CPU_ROM_TABLE</A>:ITM</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 000C</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0xE00F F00C</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0xE00F F00C</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">Instrumentation Trace Component<BR>
+Points to the Instrumentation Trace block at 0xE0000000. Value has bit [0] set if <A class="mmap_legend_link" href="../legend.html#ITM">ITM</A> is present.</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">RO</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="ITM_ITM">31:1</a>
+</TD>
+<TD class="cellBitfieldCol2">ITM</TD>
+<TD class="cellBitfieldCol3" colspan="3">Points to the Instrumentation Trace block at 0xE0000000.<BR>
+(2*<A class="xref" href="#ITM_ITM">ITM</A> + Base address for ROM_TABLE) &#38; 0x0FFFFFFF0 = 0xE0000000.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0b111 1111 1111 1000 0000 1000 0000 0001</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="ITM_ITM_PRESENT">0</a>
+</TD>
+<TD class="cellBitfieldCol2">ITM_PRESENT</TD>
+<TD class="cellBitfieldCol3" colspan="3">0: <A class="mmap_legend_link" href="../legend.html#ITM">ITM</A> is not present<BR>
+1: <A class="mmap_legend_link" href="../legend.html#ITM">ITM</A> is present.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">1</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="TPIU"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">CPU_ROM_TABLE</A>:TPIU</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 0010</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0xE00F F010</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0xE00F F010</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">Trace Port Interface Component<BR>
+Points to the <A class="mmap_legend_link" href="../legend.html#TPIU">TPIU</A>. Value has bit [0] set to 1 if <A class="mmap_legend_link" href="../legend.html#TPIU">TPIU</A> is present. <A class="mmap_legend_link" href="../legend.html#TPIU">TPIU</A> is at 0xE0040000.</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">RO</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="TPIU_TPIU">31:1</a>
+</TD>
+<TD class="cellBitfieldCol2">TPIU</TD>
+<TD class="cellBitfieldCol3" colspan="3">Points to the <A class="mmap_legend_link" href="../legend.html#TPIU">TPIU</A>. <A class="mmap_legend_link" href="../legend.html#TPIU">TPIU</A> is at 0xE0040000.<BR>
+(2*<A class="xref" href="#TPIU_TPIU">TPIU</A> + Base address for ROM_TABLE) &#38; 0x0FFFFFFF0 = 0xE0040000.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0b111 1111 1111 1010 0000 1000 0000 0001</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="TPIU_TPIU_PRESENT">0</a>
+</TD>
+<TD class="cellBitfieldCol2">TPIU_PRESENT</TD>
+<TD class="cellBitfieldCol3" colspan="3">0: <A class="mmap_legend_link" href="../legend.html#TPIU">TPIU</A> is not present<BR>
+1: <A class="mmap_legend_link" href="../legend.html#TPIU">TPIU</A> is present.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">1</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="ETM"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">CPU_ROM_TABLE</A>:ETM</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 0014</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0xE00F F014</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0xE00F F014</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">Enhanced Trace Component<BR>
+Points to the <A class="mmap_legend_link" href="../legend.html#ETM">ETM</A>. Value has bit [0] set to 1 if <A class="mmap_legend_link" href="../legend.html#ETM">ETM</A> is present. <A class="mmap_legend_link" href="../legend.html#ETM">ETM</A> is at 0xE0041000.</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">RO</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="ETM_ETM">31:1</a>
+</TD>
+<TD class="cellBitfieldCol2">ETM</TD>
+<TD class="cellBitfieldCol3" colspan="3">Points to the <A class="mmap_legend_link" href="../legend.html#ETM">ETM</A>. <A class="mmap_legend_link" href="../legend.html#ETM">ETM</A> is at 0xE0041000.<BR>
+(2*<A class="xref" href="#ETM_ETM">ETM</A> + Base address for ROM_TABLE) &#38; 0x0FFFFFFF0 = 0xE0041000.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0b111 1111 1111 1010 0001 0000 0000 0001</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="ETM_ETM_PRESENT">0</a>
+</TD>
+<TD class="cellBitfieldCol2">ETM_PRESENT</TD>
+<TD class="cellBitfieldCol3" colspan="3">0: <A class="mmap_legend_link" href="../legend.html#ETM">ETM</A> is not present<BR>
+1: <A class="mmap_legend_link" href="../legend.html#ETM">ETM</A> is present.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="END"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">CPU_ROM_TABLE</A>:END</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 0018</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0xE00F F018</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0xE00F F018</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">End Marker<BR>
+Marks the end of the <A class="mmap_legend_link" href="../legend.html#ROM">ROM</A> table. If CoreSight components are added, they are added starting from this location and the End marker is moved to the next location after the additional components.</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">RO</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="END_END">31:0</a>
+</TD>
+<TD class="cellBitfieldCol2">END</TD>
+<TD class="cellBitfieldCol3" colspan="3">End of the <A class="mmap_legend_link" href="../legend.html#ROM">ROM</A> table</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0x0000 0000</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="SYSTEM_ACCESS"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">CPU_ROM_TABLE</A>:SYSTEM_ACCESS</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 0FCC</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0xE00F FFCC</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0xE00F FFCC</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">System Memory Map Access for <A class="mmap_legend_link" href="../legend.html#DAP">DAP</A></TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">RO</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="SYSTEM_ACCESS_RESERVED1">31:1</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED1</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0b000 0000 0000 0000 0000 0000 0000 0000</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="SYSTEM_ACCESS_SYSTEM_ACCESS">0</a>
+</TD>
+<TD class="cellBitfieldCol2">SYSTEM_ACCESS</TD>
+<TD class="cellBitfieldCol3" colspan="3">1: The system memory map is accessible using the <A class="mmap_legend_link" href="../legend.html#DAP">DAP</A><BR>
+0: Only debug resources are accessible using the <A class="mmap_legend_link" href="../legend.html#DAP">DAP</A></TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">1</TD>
+</TR>
+</TABLE>
+<BR>
+<BR>
+<hr><table class="footer"><tr><td>&copy; 2015 - 2016. Texas Instruments | All Rights Reserved</td></tr></table>
+</BODY>
+</HTML>

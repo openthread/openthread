@@ -1,0 +1,9 @@
+<map id="OSCHF_TurnOnXosc" name="OSCHF_TurnOnXosc">
+<area shape="rect" id="node2" href="$group__osc__api.html#ga37a02687fbd8680396550f682a7f046f" title="Configure the oscillator input to the a source clock. " alt="" coords="245,31,396,57"/>
+<area shape="rect" id="node8" href="$group__aonrtc__api.html#gaab6fd87d7bbf5e8f2575504d2d5c1afa" title="Get the current value of the RTC counter in a format that matches RTC compare values. " alt="" coords="201,81,440,108"/>
+<area shape="rect" id="node3" href="$group__ddi__api.html#ga492326c095c70621a247fe02a2cb09e4" title="Write a bitfield via the DDI using 16&#45;bit maskable write. " alt="" coords="488,31,623,57"/>
+<area shape="rect" id="node4" href="$group__ddi__api.html#ga06d6b1eee2c8757b8431eb6e1ab98f68" title="Safely write to AUX ADI/DDI interfaces using a semaphore. " alt="" coords="671,31,817,57"/>
+<area shape="rect" id="node5" href="$group__cpu__api.html#ga491d851c4f7fff1f9f66aa778b0671b0" title="Disable all external interrupts. " alt="" coords="865,5,948,32"/>
+<area shape="rect" id="node7" href="$group__cpu__api.html#ga6922d401cbc951632f495ffcf2e71dfc" title="Enable all external interrupts. " alt="" coords="865,56,948,83"/>
+<area shape="rect" id="node6" href="$cpu_8c.html#a9d29df169acb9be94306e8b58faed3ee" title="Provide a small delay. " alt="" coords="996,31,1060,57"/>
+</map>

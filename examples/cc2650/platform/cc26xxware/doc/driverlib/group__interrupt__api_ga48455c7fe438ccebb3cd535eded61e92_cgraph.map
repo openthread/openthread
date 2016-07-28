@@ -1,0 +1,4 @@
+<map id="IntPriorityMaskGet" name="IntPriorityMaskGet">
+<area shape="rect" id="node2" href="$group__cpu__api.html#ga31fd39ee16277d1a44ab2b0e57afa958" title="Get the interrupt priority disable level. " alt="" coords="192,5,311,32"/>
+<area shape="rect" id="node3" href="$cpu_8c.html#a9d29df169acb9be94306e8b58faed3ee" title="Provide a small delay. " alt="" coords="359,5,423,32"/>
+</map>

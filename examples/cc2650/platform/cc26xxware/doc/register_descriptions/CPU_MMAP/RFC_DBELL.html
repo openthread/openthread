@@ -1,0 +1,2570 @@
+<HTML>
+<HEAD><META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=UTF-8">
+<link href="..//elements/mmap.css" rel="stylesheet" type="text/css">
+<TITLE>RFC_DBELL</TITLE>
+</HEAD>
+<BODY class=mmapBody>
+<h2 class="mmapCellTitle">
+  <a name="Top_Tag">RFC_DBELL</a>
+</h2>
+<P>Instance: RFC_DBELL<BR>
+Component: RFC_DBELL<BR>
+Base address: 0x40041000</P>
+<BR>
+<P>RF Core Doorbell</P>
+ <H3 class="mmapRegisterSummaryTitle"><A name="RFC_DBELL"></A><A href="CPU_MMAP.html"> TOP</A>:<B>RFC_DBELL</B> Register Summary</H3>
+<TABLE cellspacing="0" class="mmapRegisterSummaryTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">
+  <P>Register Name</P>
+</TD>
+<TD class="cellTopCol2">
+  <P>Type</P>
+</TD>
+<TD class="cellTopCol3">
+  <P>Register Width (Bits)</P>
+</TD>
+<TD class="cellTopCol4">
+  <P>Register Reset</P>
+</TD>
+<TD class="cellTopCol5">
+  <P>Address Offset</P>
+</TD>
+<TD class="cellTopCol5">
+  <P>Physical Address</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#CMDR">CMDR</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>RW</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x0000 0000</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 0000</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x4004 1000</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#CMDSTA">CMDSTA</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>RO</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x0000 0000</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 0004</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x4004 1004</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#RFHWIFG">RFHWIFG</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>RW</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x0000 0000</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 0008</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x4004 1008</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#RFHWIEN">RFHWIEN</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>RW</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x0000 0000</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 000C</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x4004 100C</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#RFCPEIFG">RFCPEIFG</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>RW</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x0000 0000</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 0010</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x4004 1010</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#RFCPEIEN">RFCPEIEN</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>RW</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0xFFFF FFFF</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 0014</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x4004 1014</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#RFCPEISL">RFCPEISL</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>RW</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0xFFFF 0000</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 0018</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x4004 1018</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#RFACKIFG">RFACKIFG</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>RW</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x0000 0000</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 001C</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x4004 101C</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#SYSGPOCTL">SYSGPOCTL</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>RW</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x0000 0000</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 0020</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x4004 1020</P>
+</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterSummaryTitle"><A href="CPU_MMAP.html"> TOP</A>:RFC_DBELL Register Descriptions</H3>
+<H3 class="mmapRegisterTitle"><A name="CMDR"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">RFC_DBELL</A>:CMDR</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 0000</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0x4004 1000</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0x4004 1000</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">Doorbell Command Register</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">RW</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="CMDR_CMD">31:0</a>
+</TD>
+<TD class="cellBitfieldCol2">CMD</TD>
+<TD class="cellBitfieldCol3" colspan="3">Command register. Raises an interrupt to the Command and packet engine (CPE) upon write.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0x0000 0000</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="CMDSTA"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">RFC_DBELL</A>:CMDSTA</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 0004</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0x4004 1004</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0x4004 1004</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">Doorbell Command Status Register</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">RO</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="CMDSTA_STAT">31:0</a>
+</TD>
+<TD class="cellBitfieldCol2">STAT</TD>
+<TD class="cellBitfieldCol3" colspan="3">Status of the last command used</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0x0000 0000</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="RFHWIFG"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">RFC_DBELL</A>:RFHWIFG</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 0008</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0x4004 1008</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0x4004 1008</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">Interrupt Flags From RF Hardware Modules</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">RW</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="RFHWIFG_RESERVED20">31:20</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED20</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0x000</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="RFHWIFG_RATCH7">19</a>
+</TD>
+<TD class="cellBitfieldCol2">RATCH7</TD>
+<TD class="cellBitfieldCol3" colspan="3">Radio timer channel 7 interrupt flag. Write zero to clear flag. Write to one has no effect.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="RFHWIFG_RATCH6">18</a>
+</TD>
+<TD class="cellBitfieldCol2">RATCH6</TD>
+<TD class="cellBitfieldCol3" colspan="3">Radio timer channel 6 interrupt flag. Write zero to clear flag. Write to one has no effect.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="RFHWIFG_RATCH5">17</a>
+</TD>
+<TD class="cellBitfieldCol2">RATCH5</TD>
+<TD class="cellBitfieldCol3" colspan="3">Radio timer channel 5 interrupt flag. Write zero to clear flag. Write to one has no effect.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="RFHWIFG_RATCH4">16</a>
+</TD>
+<TD class="cellBitfieldCol2">RATCH4</TD>
+<TD class="cellBitfieldCol3" colspan="3">Radio timer channel 4 interrupt flag. Write zero to clear flag. Write to one has no effect.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="RFHWIFG_RATCH3">15</a>
+</TD>
+<TD class="cellBitfieldCol2">RATCH3</TD>
+<TD class="cellBitfieldCol3" colspan="3">Radio timer channel 3 interrupt flag. Write zero to clear flag. Write to one has no effect.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="RFHWIFG_RATCH2">14</a>
+</TD>
+<TD class="cellBitfieldCol2">RATCH2</TD>
+<TD class="cellBitfieldCol3" colspan="3">Radio timer channel 2 interrupt flag. Write zero to clear flag. Write to one has no effect.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="RFHWIFG_RATCH1">13</a>
+</TD>
+<TD class="cellBitfieldCol2">RATCH1</TD>
+<TD class="cellBitfieldCol3" colspan="3">Radio timer channel 1 interrupt flag. Write zero to clear flag. Write to one has no effect.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="RFHWIFG_RATCH0">12</a>
+</TD>
+<TD class="cellBitfieldCol2">RATCH0</TD>
+<TD class="cellBitfieldCol3" colspan="3">Radio timer channel 0 interrupt flag. Write zero to clear flag. Write to one has no effect.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="RFHWIFG_RFESOFT2">11</a>
+</TD>
+<TD class="cellBitfieldCol2">RFESOFT2</TD>
+<TD class="cellBitfieldCol3" colspan="3">RF engine software defined interrupt 2 flag. Write zero to clear flag. Write to one has no effect.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="RFHWIFG_RFESOFT1">10</a>
+</TD>
+<TD class="cellBitfieldCol2">RFESOFT1</TD>
+<TD class="cellBitfieldCol3" colspan="3">RF engine software defined interrupt 1 flag. Write zero to clear flag. Write to one has no effect.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="RFHWIFG_RFESOFT0">9</a>
+</TD>
+<TD class="cellBitfieldCol2">RFESOFT0</TD>
+<TD class="cellBitfieldCol3" colspan="3">RF engine software defined interrupt 0 flag. Write zero to clear flag. Write to one has no effect.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="RFHWIFG_RFEDONE">8</a>
+</TD>
+<TD class="cellBitfieldCol2">RFEDONE</TD>
+<TD class="cellBitfieldCol3" colspan="3">RF engine command done interrupt flag. Write zero to clear flag. Write to one has no effect.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="RFHWIFG_RESERVED7">7</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED7</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="RFHWIFG_TRCTK">6</a>
+</TD>
+<TD class="cellBitfieldCol2">TRCTK</TD>
+<TD class="cellBitfieldCol3" colspan="3">Debug tracer system tick interrupt flag. Write zero to clear flag. Write to one has no effect.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="RFHWIFG_MDMSOFT">5</a>
+</TD>
+<TD class="cellBitfieldCol2">MDMSOFT</TD>
+<TD class="cellBitfieldCol3" colspan="3">Modem synchronization word detection interrupt flag. This interrupt will be raised by modem when the synchronization word is received. The <A class="mmap_legend_link" href="../legend.html#CPE">CPE</A> may decide to reject the packet based on its header (protocol specific). Write zero to clear flag. Write to one has no effect.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="RFHWIFG_MDMOUT">4</a>
+</TD>
+<TD class="cellBitfieldCol2">MDMOUT</TD>
+<TD class="cellBitfieldCol3" colspan="3">Modem FIFO output interrupt flag. Write zero to clear flag. Write to one has no effect.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="RFHWIFG_MDMIN">3</a>
+</TD>
+<TD class="cellBitfieldCol2">MDMIN</TD>
+<TD class="cellBitfieldCol3" colspan="3">Modem FIFO input interrupt flag. Write zero to clear flag. Write to one has no effect.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="RFHWIFG_MDMDONE">2</a>
+</TD>
+<TD class="cellBitfieldCol2">MDMDONE</TD>
+<TD class="cellBitfieldCol3" colspan="3">Modem command done interrupt flag. Write zero to clear flag. Write to one has no effect.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="RFHWIFG_FSCA">1</a>
+</TD>
+<TD class="cellBitfieldCol2">FSCA</TD>
+<TD class="cellBitfieldCol3" colspan="3">Frequency synthesizer calibration accelerator interrupt flag. Write zero to clear flag. Write to one has no effect.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="RFHWIFG_RESERVED0">0</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED0</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="RFHWIEN"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">RFC_DBELL</A>:RFHWIEN</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 000C</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0x4004 100C</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0x4004 100C</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">Interrupt Enable For RF Hardware Modules</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">RW</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="RFHWIEN_RESERVED20">31:20</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED20</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0x000</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="RFHWIEN_RATCH7">19</a>
+</TD>
+<TD class="cellBitfieldCol2">RATCH7</TD>
+<TD class="cellBitfieldCol3" colspan="3">Interrupt enable for <A class="xref" href="#RFHWIFG_RATCH7">RFHWIFG.RATCH7</A>.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="RFHWIEN_RATCH6">18</a>
+</TD>
+<TD class="cellBitfieldCol2">RATCH6</TD>
+<TD class="cellBitfieldCol3" colspan="3">Interrupt enable for <A class="xref" href="#RFHWIFG_RATCH6">RFHWIFG.RATCH6</A>.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="RFHWIEN_RATCH5">17</a>
+</TD>
+<TD class="cellBitfieldCol2">RATCH5</TD>
+<TD class="cellBitfieldCol3" colspan="3">Interrupt enable for <A class="xref" href="#RFHWIFG_RATCH5">RFHWIFG.RATCH5</A>.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="RFHWIEN_RATCH4">16</a>
+</TD>
+<TD class="cellBitfieldCol2">RATCH4</TD>
+<TD class="cellBitfieldCol3" colspan="3">Interrupt enable for <A class="xref" href="#RFHWIFG_RATCH4">RFHWIFG.RATCH4</A>.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="RFHWIEN_RATCH3">15</a>
+</TD>
+<TD class="cellBitfieldCol2">RATCH3</TD>
+<TD class="cellBitfieldCol3" colspan="3">Interrupt enable for <A class="xref" href="#RFHWIFG_RATCH3">RFHWIFG.RATCH3</A>.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="RFHWIEN_RATCH2">14</a>
+</TD>
+<TD class="cellBitfieldCol2">RATCH2</TD>
+<TD class="cellBitfieldCol3" colspan="3">Interrupt enable for <A class="xref" href="#RFHWIFG_RATCH2">RFHWIFG.RATCH2</A>.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="RFHWIEN_RATCH1">13</a>
+</TD>
+<TD class="cellBitfieldCol2">RATCH1</TD>
+<TD class="cellBitfieldCol3" colspan="3">Interrupt enable for <A class="xref" href="#RFHWIFG_RATCH1">RFHWIFG.RATCH1</A>.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="RFHWIEN_RATCH0">12</a>
+</TD>
+<TD class="cellBitfieldCol2">RATCH0</TD>
+<TD class="cellBitfieldCol3" colspan="3">Interrupt enable for <A class="xref" href="#RFHWIFG_RATCH0">RFHWIFG.RATCH0</A>.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="RFHWIEN_RFESOFT2">11</a>
+</TD>
+<TD class="cellBitfieldCol2">RFESOFT2</TD>
+<TD class="cellBitfieldCol3" colspan="3">Interrupt enable for <A class="xref" href="#RFHWIFG_RFESOFT2">RFHWIFG.RFESOFT2</A>.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="RFHWIEN_RFESOFT1">10</a>
+</TD>
+<TD class="cellBitfieldCol2">RFESOFT1</TD>
+<TD class="cellBitfieldCol3" colspan="3">Interrupt enable for <A class="xref" href="#RFHWIFG_RFESOFT1">RFHWIFG.RFESOFT1</A>.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="RFHWIEN_RFESOFT0">9</a>
+</TD>
+<TD class="cellBitfieldCol2">RFESOFT0</TD>
+<TD class="cellBitfieldCol3" colspan="3">Interrupt enable for <A class="xref" href="#RFHWIFG_RFESOFT0">RFHWIFG.RFESOFT0</A>.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="RFHWIEN_RFEDONE">8</a>
+</TD>
+<TD class="cellBitfieldCol2">RFEDONE</TD>
+<TD class="cellBitfieldCol3" colspan="3">Interrupt enable for <A class="xref" href="#RFHWIFG_RFEDONE">RFHWIFG.RFEDONE</A>.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="RFHWIEN_RESERVED7">7</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED7</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="RFHWIEN_TRCTK">6</a>
+</TD>
+<TD class="cellBitfieldCol2">TRCTK</TD>
+<TD class="cellBitfieldCol3" colspan="3">Interrupt enable for <A class="xref" href="#RFHWIFG_TRCTK">RFHWIFG.TRCTK</A>.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="RFHWIEN_MDMSOFT">5</a>
+</TD>
+<TD class="cellBitfieldCol2">MDMSOFT</TD>
+<TD class="cellBitfieldCol3" colspan="3">Interrupt enable for <A class="xref" href="#RFHWIFG_MDMSOFT">RFHWIFG.MDMSOFT</A>.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="RFHWIEN_MDMOUT">4</a>
+</TD>
+<TD class="cellBitfieldCol2">MDMOUT</TD>
+<TD class="cellBitfieldCol3" colspan="3">Interrupt enable for <A class="xref" href="#RFHWIFG_MDMOUT">RFHWIFG.MDMOUT</A>.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="RFHWIEN_MDMIN">3</a>
+</TD>
+<TD class="cellBitfieldCol2">MDMIN</TD>
+<TD class="cellBitfieldCol3" colspan="3">Interrupt enable for <A class="xref" href="#RFHWIFG_MDMIN">RFHWIFG.MDMIN</A>.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="RFHWIEN_MDMDONE">2</a>
+</TD>
+<TD class="cellBitfieldCol2">MDMDONE</TD>
+<TD class="cellBitfieldCol3" colspan="3">Interrupt enable for <A class="xref" href="#RFHWIFG_MDMDONE">RFHWIFG.MDMDONE</A>.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="RFHWIEN_FSCA">1</a>
+</TD>
+<TD class="cellBitfieldCol2">FSCA</TD>
+<TD class="cellBitfieldCol3" colspan="3">Interrupt enable for <A class="xref" href="#RFHWIFG_FSCA">RFHWIFG.FSCA</A>.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="RFHWIEN_RESERVED0">0</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED0</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="RFCPEIFG"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">RFC_DBELL</A>:RFCPEIFG</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 0010</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0x4004 1010</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0x4004 1010</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">Interrupt Flags For Command and Packet Engine Generated Interrupts</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">RW</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="RFCPEIFG_INTERNAL_ERROR">31</a>
+</TD>
+<TD class="cellBitfieldCol2">INTERNAL_ERROR</TD>
+<TD class="cellBitfieldCol3" colspan="3">Interrupt flag 31. The command and packet engine (CPE) has observed an unexpected error. A reset of the CPE is needed. This can be done by switching the RF Core power domain off and on in <A class="xref" href="PRCM.html#PDCTL1RFC">PRCM:PDCTL1RFC</A>. Write zero to clear flag. Write to one has no effect.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="RFCPEIFG_BOOT_DONE">30</a>
+</TD>
+<TD class="cellBitfieldCol2">BOOT_DONE</TD>
+<TD class="cellBitfieldCol3" colspan="3">Interrupt flag 30. The command and packet engine (CPE) boot is finished. Write zero to clear flag. Write to one has no effect.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="RFCPEIFG_MODULES_UNLOCKED">29</a>
+</TD>
+<TD class="cellBitfieldCol2">MODULES_UNLOCKED</TD>
+<TD class="cellBitfieldCol3" colspan="3">Interrupt flag 29. As part of command and packet engine (CPE) boot process, it has opened access to RF Core modules and memories. Write zero to clear flag. Write to one has no effect.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="RFCPEIFG_SYNTH_NO_LOCK">28</a>
+</TD>
+<TD class="cellBitfieldCol2">SYNTH_NO_LOCK</TD>
+<TD class="cellBitfieldCol3" colspan="3">Interrupt flag 28. The phase-locked loop in frequency synthesizer has reported loss of lock. Write zero to clear flag. Write to one has no effect.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="RFCPEIFG_IRQ27">27</a>
+</TD>
+<TD class="cellBitfieldCol2">IRQ27</TD>
+<TD class="cellBitfieldCol3" colspan="3">Interrupt flag 27. Write zero to clear flag. Write to one has no effect.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="RFCPEIFG_RX_ABORTED">26</a>
+</TD>
+<TD class="cellBitfieldCol2">RX_ABORTED</TD>
+<TD class="cellBitfieldCol3" colspan="3">Interrupt flag 26. Packet reception stopped before packet was done. Write zero to clear flag. Write to one has no effect.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="RFCPEIFG_RX_N_DATA_WRITTEN">25</a>
+</TD>
+<TD class="cellBitfieldCol2">RX_N_DATA_WRITTEN</TD>
+<TD class="cellBitfieldCol3" colspan="3">Interrupt flag 25. Specified number of bytes written to partial read Rx buffer. Write zero to clear flag. Write to one has no effect.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="RFCPEIFG_RX_DATA_WRITTEN">24</a>
+</TD>
+<TD class="cellBitfieldCol2">RX_DATA_WRITTEN</TD>
+<TD class="cellBitfieldCol3" colspan="3">Interrupt flag 24. Data written to partial read Rx buffer. Write zero to clear flag. Write to one has no effect.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="RFCPEIFG_RX_ENTRY_DONE">23</a>
+</TD>
+<TD class="cellBitfieldCol2">RX_ENTRY_DONE</TD>
+<TD class="cellBitfieldCol3" colspan="3">Interrupt flag 23. Rx queue data entry changing state to finished.  Write zero to clear flag. Write to one has no effect.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="RFCPEIFG_RX_BUF_FULL">22</a>
+</TD>
+<TD class="cellBitfieldCol2">RX_BUF_FULL</TD>
+<TD class="cellBitfieldCol3" colspan="3">Interrupt flag 22. Packet received that did not fit in Rx queue. BLE mode: Packet received that did not fit in the Rx queue. IEEE 802.15.4 mode: Frame received that did not fit in the Rx queue. Write zero to clear flag. Write to one has no effect.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="RFCPEIFG_RX_CTRL_ACK">21</a>
+</TD>
+<TD class="cellBitfieldCol2">RX_CTRL_ACK</TD>
+<TD class="cellBitfieldCol3" colspan="3">Interrupt flag 21. BLE mode only: LL control packet received with CRC OK, not to be ignored, then acknowledgement sent. Write zero to clear flag. Write to one has no effect.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="RFCPEIFG_RX_CTRL">20</a>
+</TD>
+<TD class="cellBitfieldCol2">RX_CTRL</TD>
+<TD class="cellBitfieldCol3" colspan="3">Interrupt flag 20. BLE mode only: LL control packet received with CRC OK, not to be ignored. Write zero to clear flag. Write to one has no effect.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="RFCPEIFG_RX_EMPTY">19</a>
+</TD>
+<TD class="cellBitfieldCol2">RX_EMPTY</TD>
+<TD class="cellBitfieldCol3" colspan="3">Interrupt flag 19. BLE mode only: Packet received with CRC OK, not to be ignored, no payload. Write zero to clear flag. Write to one has no effect.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="RFCPEIFG_RX_IGNORED">18</a>
+</TD>
+<TD class="cellBitfieldCol2">RX_IGNORED</TD>
+<TD class="cellBitfieldCol3" colspan="3">Interrupt flag 18. Packet received, but can be ignored. BLE mode: Packet received with CRC OK, but to be ignored. IEEE 802.15.4 mode: Frame received with ignore flag set. Write zero to clear flag. Write to one has no effect.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="RFCPEIFG_RX_NOK">17</a>
+</TD>
+<TD class="cellBitfieldCol2">RX_NOK</TD>
+<TD class="cellBitfieldCol3" colspan="3">Interrupt flag 17. Packet received with CRC error. BLE mode: Packet received with CRC error. IEEE 802.15.4 mode: Frame received with CRC error. Write zero to clear flag. Write to one has no effect.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="RFCPEIFG_RX_OK">16</a>
+</TD>
+<TD class="cellBitfieldCol2">RX_OK</TD>
+<TD class="cellBitfieldCol3" colspan="3">Interrupt flag 16. Packet received correctly. BLE mode: Packet received with CRC OK, payload, and not to be ignored. IEEE 802.15.4 mode: Frame received with CRC OK. Write zero to clear flag. Write to one has no effect.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="RFCPEIFG_IRQ15">15</a>
+</TD>
+<TD class="cellBitfieldCol2">IRQ15</TD>
+<TD class="cellBitfieldCol3" colspan="3">Interrupt flag 15. Write zero to clear flag. Write to one has no effect.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="RFCPEIFG_IRQ14">14</a>
+</TD>
+<TD class="cellBitfieldCol2">IRQ14</TD>
+<TD class="cellBitfieldCol3" colspan="3">Interrupt flag 14. Write zero to clear flag. Write to one has no effect.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="RFCPEIFG_IRQ13">13</a>
+</TD>
+<TD class="cellBitfieldCol2">IRQ13</TD>
+<TD class="cellBitfieldCol3" colspan="3">Interrupt flag 13. Write zero to clear flag. Write to one has no effect.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="RFCPEIFG_IRQ12">12</a>
+</TD>
+<TD class="cellBitfieldCol2">IRQ12</TD>
+<TD class="cellBitfieldCol3" colspan="3">Interrupt flag 12. Write zero to clear flag. Write to one has no effect.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="RFCPEIFG_TX_BUFFER_CHANGED">11</a>
+</TD>
+<TD class="cellBitfieldCol2">TX_BUFFER_CHANGED</TD>
+<TD class="cellBitfieldCol3" colspan="3">Interrupt flag 11. BLE mode only: A buffer change is complete after CMD_BLE_ADV_PAYLOAD. Write zero to clear flag. Write to one has no effect.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="RFCPEIFG_TX_ENTRY_DONE">10</a>
+</TD>
+<TD class="cellBitfieldCol2">TX_ENTRY_DONE</TD>
+<TD class="cellBitfieldCol3" colspan="3">Interrupt flag 10. Tx queue data entry state changed to finished. Write zero to clear flag. Write to one has no effect.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="RFCPEIFG_TX_RETRANS">9</a>
+</TD>
+<TD class="cellBitfieldCol2">TX_RETRANS</TD>
+<TD class="cellBitfieldCol3" colspan="3">Interrupt flag 9. BLE mode only: Packet retransmitted. Write zero to clear flag. Write to one has no effect.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="RFCPEIFG_TX_CTRL_ACK_ACK">8</a>
+</TD>
+<TD class="cellBitfieldCol2">TX_CTRL_ACK_ACK</TD>
+<TD class="cellBitfieldCol3" colspan="3">Interrupt flag 8. BLE mode only: Acknowledgement received on a transmitted LL control packet, and acknowledgement transmitted for that packet. Write zero to clear flag. Write to one has no effect.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="RFCPEIFG_TX_CTRL_ACK">7</a>
+</TD>
+<TD class="cellBitfieldCol2">TX_CTRL_ACK</TD>
+<TD class="cellBitfieldCol3" colspan="3">Interrupt flag 7. BLE mode: Acknowledgement received on a transmitted LL control packet. Write zero to clear flag. Write to one has no effect.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="RFCPEIFG_TX_CTRL">6</a>
+</TD>
+<TD class="cellBitfieldCol2">TX_CTRL</TD>
+<TD class="cellBitfieldCol3" colspan="3">Interrupt flag 6. BLE mode: Transmitted LL control packet. Write zero to clear flag. Write to one has no effect.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="RFCPEIFG_TX_ACK">5</a>
+</TD>
+<TD class="cellBitfieldCol2">TX_ACK</TD>
+<TD class="cellBitfieldCol3" colspan="3">Interrupt flag 5. BLE mode: Acknowledgement received on a transmitted packet. IEEE 802.15.4 mode: Transmitted automatic ACK frame. Write zero to clear flag. Write to one has no effect.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="RFCPEIFG_TX_DONE">4</a>
+</TD>
+<TD class="cellBitfieldCol2">TX_DONE</TD>
+<TD class="cellBitfieldCol3" colspan="3">Interrupt flag 4. Packet transmitted. (BLE mode: A packet has been transmitted.) (IEEE 802.15.4 mode: A frame has been transmitted). Write zero to clear flag. Write to one has no effect.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="RFCPEIFG_LAST_FG_COMMAND_DONE">3</a>
+</TD>
+<TD class="cellBitfieldCol2">LAST_FG_COMMAND_DONE</TD>
+<TD class="cellBitfieldCol3" colspan="3">Interrupt flag 3. IEEE 802.15.4 mode only: The last foreground radio operation command in a chain of commands has finished. Write zero to clear flag. Write to one has no effect.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="RFCPEIFG_FG_COMMAND_DONE">2</a>
+</TD>
+<TD class="cellBitfieldCol2">FG_COMMAND_DONE</TD>
+<TD class="cellBitfieldCol3" colspan="3">Interrupt flag 2. IEEE 802.15.4 mode only: A foreground radio operation command has finished. Write zero to clear flag. Write to one has no effect.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="RFCPEIFG_LAST_COMMAND_DONE">1</a>
+</TD>
+<TD class="cellBitfieldCol2">LAST_COMMAND_DONE</TD>
+<TD class="cellBitfieldCol3" colspan="3">Interrupt flag 1. The last radio operation command in a chain of commands has finished. (IEEE 802.15.4 mode: The last background level radio operation command in a chain of commands has finished.) Write zero to clear flag. Write to one has no effect.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="RFCPEIFG_COMMAND_DONE">0</a>
+</TD>
+<TD class="cellBitfieldCol2">COMMAND_DONE</TD>
+<TD class="cellBitfieldCol3" colspan="3">Interrupt flag 0. A radio operation has finished. (IEEE 802.15.4 mode: A background level radio operation command has finished.) Write zero to clear flag. Write to one has no effect.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="RFCPEIEN"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">RFC_DBELL</A>:RFCPEIEN</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 0014</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0x4004 1014</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0x4004 1014</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">Interrupt Enable For Command and Packet Engine Generated Interrupts</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">RW</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="RFCPEIEN_INTERNAL_ERROR">31</a>
+</TD>
+<TD class="cellBitfieldCol2">INTERNAL_ERROR</TD>
+<TD class="cellBitfieldCol3" colspan="3">Interrupt enable for <A class="xref" href="#RFCPEIFG_INTERNAL_ERROR">RFCPEIFG.INTERNAL_ERROR</A>.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">1</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="RFCPEIEN_BOOT_DONE">30</a>
+</TD>
+<TD class="cellBitfieldCol2">BOOT_DONE</TD>
+<TD class="cellBitfieldCol3" colspan="3">Interrupt enable for <A class="xref" href="#RFCPEIFG_BOOT_DONE">RFCPEIFG.BOOT_DONE</A>.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">1</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="RFCPEIEN_MODULES_UNLOCKED">29</a>
+</TD>
+<TD class="cellBitfieldCol2">MODULES_UNLOCKED</TD>
+<TD class="cellBitfieldCol3" colspan="3">Interrupt enable for <A class="xref" href="#RFCPEIFG_MODULES_UNLOCKED">RFCPEIFG.MODULES_UNLOCKED</A>.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">1</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="RFCPEIEN_SYNTH_NO_LOCK">28</a>
+</TD>
+<TD class="cellBitfieldCol2">SYNTH_NO_LOCK</TD>
+<TD class="cellBitfieldCol3" colspan="3">Interrupt enable for <A class="xref" href="#RFCPEIFG_SYNTH_NO_LOCK">RFCPEIFG.SYNTH_NO_LOCK</A>.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">1</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="RFCPEIEN_IRQ27">27</a>
+</TD>
+<TD class="cellBitfieldCol2">IRQ27</TD>
+<TD class="cellBitfieldCol3" colspan="3">Interrupt enable for <A class="xref" href="#RFCPEIFG_IRQ27">RFCPEIFG.IRQ27</A>.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">1</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="RFCPEIEN_RX_ABORTED">26</a>
+</TD>
+<TD class="cellBitfieldCol2">RX_ABORTED</TD>
+<TD class="cellBitfieldCol3" colspan="3">Interrupt enable for <A class="xref" href="#RFCPEIFG_RX_ABORTED">RFCPEIFG.RX_ABORTED</A>.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">1</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="RFCPEIEN_RX_N_DATA_WRITTEN">25</a>
+</TD>
+<TD class="cellBitfieldCol2">RX_N_DATA_WRITTEN</TD>
+<TD class="cellBitfieldCol3" colspan="3">Interrupt enable for <A class="xref" href="#RFCPEIFG_RX_N_DATA_WRITTEN">RFCPEIFG.RX_N_DATA_WRITTEN</A>.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">1</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="RFCPEIEN_RX_DATA_WRITTEN">24</a>
+</TD>
+<TD class="cellBitfieldCol2">RX_DATA_WRITTEN</TD>
+<TD class="cellBitfieldCol3" colspan="3">Interrupt enable for <A class="xref" href="#RFCPEIFG_RX_DATA_WRITTEN">RFCPEIFG.RX_DATA_WRITTEN</A>.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">1</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="RFCPEIEN_RX_ENTRY_DONE">23</a>
+</TD>
+<TD class="cellBitfieldCol2">RX_ENTRY_DONE</TD>
+<TD class="cellBitfieldCol3" colspan="3">Interrupt enable for <A class="xref" href="#RFCPEIFG_RX_ENTRY_DONE">RFCPEIFG.RX_ENTRY_DONE</A>.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">1</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="RFCPEIEN_RX_BUF_FULL">22</a>
+</TD>
+<TD class="cellBitfieldCol2">RX_BUF_FULL</TD>
+<TD class="cellBitfieldCol3" colspan="3">Interrupt enable for <A class="xref" href="#RFCPEIFG_RX_BUF_FULL">RFCPEIFG.RX_BUF_FULL</A>.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">1</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="RFCPEIEN_RX_CTRL_ACK">21</a>
+</TD>
+<TD class="cellBitfieldCol2">RX_CTRL_ACK</TD>
+<TD class="cellBitfieldCol3" colspan="3">Interrupt enable for <A class="xref" href="#RFCPEIFG_RX_CTRL_ACK">RFCPEIFG.RX_CTRL_ACK</A>.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">1</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="RFCPEIEN_RX_CTRL">20</a>
+</TD>
+<TD class="cellBitfieldCol2">RX_CTRL</TD>
+<TD class="cellBitfieldCol3" colspan="3">Interrupt enable for <A class="xref" href="#RFCPEIFG_RX_CTRL">RFCPEIFG.RX_CTRL</A>.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">1</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="RFCPEIEN_RX_EMPTY">19</a>
+</TD>
+<TD class="cellBitfieldCol2">RX_EMPTY</TD>
+<TD class="cellBitfieldCol3" colspan="3">Interrupt enable for <A class="xref" href="#RFCPEIFG_RX_EMPTY">RFCPEIFG.RX_EMPTY</A>.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">1</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="RFCPEIEN_RX_IGNORED">18</a>
+</TD>
+<TD class="cellBitfieldCol2">RX_IGNORED</TD>
+<TD class="cellBitfieldCol3" colspan="3">Interrupt enable for <A class="xref" href="#RFCPEIFG_RX_IGNORED">RFCPEIFG.RX_IGNORED</A>.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">1</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="RFCPEIEN_RX_NOK">17</a>
+</TD>
+<TD class="cellBitfieldCol2">RX_NOK</TD>
+<TD class="cellBitfieldCol3" colspan="3">Interrupt enable for <A class="xref" href="#RFCPEIFG_RX_NOK">RFCPEIFG.RX_NOK</A>.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">1</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="RFCPEIEN_RX_OK">16</a>
+</TD>
+<TD class="cellBitfieldCol2">RX_OK</TD>
+<TD class="cellBitfieldCol3" colspan="3">Interrupt enable for <A class="xref" href="#RFCPEIFG_RX_OK">RFCPEIFG.RX_OK</A>.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">1</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="RFCPEIEN_IRQ15">15</a>
+</TD>
+<TD class="cellBitfieldCol2">IRQ15</TD>
+<TD class="cellBitfieldCol3" colspan="3">Interrupt enable for <A class="xref" href="#RFCPEIFG_IRQ15">RFCPEIFG.IRQ15</A>.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">1</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="RFCPEIEN_IRQ14">14</a>
+</TD>
+<TD class="cellBitfieldCol2">IRQ14</TD>
+<TD class="cellBitfieldCol3" colspan="3">Interrupt enable for <A class="xref" href="#RFCPEIFG_IRQ14">RFCPEIFG.IRQ14</A>.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">1</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="RFCPEIEN_IRQ13">13</a>
+</TD>
+<TD class="cellBitfieldCol2">IRQ13</TD>
+<TD class="cellBitfieldCol3" colspan="3">Interrupt enable for <A class="xref" href="#RFCPEIFG_IRQ13">RFCPEIFG.IRQ13</A>.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">1</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="RFCPEIEN_IRQ12">12</a>
+</TD>
+<TD class="cellBitfieldCol2">IRQ12</TD>
+<TD class="cellBitfieldCol3" colspan="3">Interrupt enable for <A class="xref" href="#RFCPEIFG_IRQ12">RFCPEIFG.IRQ12</A>.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">1</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="RFCPEIEN_TX_BUFFER_CHANGED">11</a>
+</TD>
+<TD class="cellBitfieldCol2">TX_BUFFER_CHANGED</TD>
+<TD class="cellBitfieldCol3" colspan="3">Interrupt enable for <A class="xref" href="#RFCPEIFG_TX_BUFFER_CHANGED">RFCPEIFG.TX_BUFFER_CHANGED</A>.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">1</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="RFCPEIEN_TX_ENTRY_DONE">10</a>
+</TD>
+<TD class="cellBitfieldCol2">TX_ENTRY_DONE</TD>
+<TD class="cellBitfieldCol3" colspan="3">Interrupt enable for <A class="xref" href="#RFCPEIFG_TX_ENTRY_DONE">RFCPEIFG.TX_ENTRY_DONE</A>.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">1</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="RFCPEIEN_TX_RETRANS">9</a>
+</TD>
+<TD class="cellBitfieldCol2">TX_RETRANS</TD>
+<TD class="cellBitfieldCol3" colspan="3">Interrupt enable for <A class="xref" href="#RFCPEIFG_TX_RETRANS">RFCPEIFG.TX_RETRANS</A>.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">1</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="RFCPEIEN_TX_CTRL_ACK_ACK">8</a>
+</TD>
+<TD class="cellBitfieldCol2">TX_CTRL_ACK_ACK</TD>
+<TD class="cellBitfieldCol3" colspan="3">Interrupt enable for <A class="xref" href="#RFCPEIFG_TX_CTRL_ACK_ACK">RFCPEIFG.TX_CTRL_ACK_ACK</A>.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">1</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="RFCPEIEN_TX_CTRL_ACK">7</a>
+</TD>
+<TD class="cellBitfieldCol2">TX_CTRL_ACK</TD>
+<TD class="cellBitfieldCol3" colspan="3">Interrupt enable for <A class="xref" href="#RFCPEIFG_TX_CTRL_ACK">RFCPEIFG.TX_CTRL_ACK</A>.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">1</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="RFCPEIEN_TX_CTRL">6</a>
+</TD>
+<TD class="cellBitfieldCol2">TX_CTRL</TD>
+<TD class="cellBitfieldCol3" colspan="3">Interrupt enable for <A class="xref" href="#RFCPEIFG_TX_CTRL">RFCPEIFG.TX_CTRL</A>.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">1</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="RFCPEIEN_TX_ACK">5</a>
+</TD>
+<TD class="cellBitfieldCol2">TX_ACK</TD>
+<TD class="cellBitfieldCol3" colspan="3">Interrupt enable for <A class="xref" href="#RFCPEIFG_TX_ACK">RFCPEIFG.TX_ACK</A>.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">1</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="RFCPEIEN_TX_DONE">4</a>
+</TD>
+<TD class="cellBitfieldCol2">TX_DONE</TD>
+<TD class="cellBitfieldCol3" colspan="3">Interrupt enable for <A class="xref" href="#RFCPEIFG_TX_DONE">RFCPEIFG.TX_DONE</A>.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">1</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="RFCPEIEN_LAST_FG_COMMAND_DONE">3</a>
+</TD>
+<TD class="cellBitfieldCol2">LAST_FG_COMMAND_DONE</TD>
+<TD class="cellBitfieldCol3" colspan="3">Interrupt enable for <A class="xref" href="#RFCPEIFG_LAST_FG_COMMAND_DONE">RFCPEIFG.LAST_FG_COMMAND_DONE</A>.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">1</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="RFCPEIEN_FG_COMMAND_DONE">2</a>
+</TD>
+<TD class="cellBitfieldCol2">FG_COMMAND_DONE</TD>
+<TD class="cellBitfieldCol3" colspan="3">Interrupt enable for <A class="xref" href="#RFCPEIFG_FG_COMMAND_DONE">RFCPEIFG.FG_COMMAND_DONE</A>.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">1</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="RFCPEIEN_LAST_COMMAND_DONE">1</a>
+</TD>
+<TD class="cellBitfieldCol2">LAST_COMMAND_DONE</TD>
+<TD class="cellBitfieldCol3" colspan="3">Interrupt enable for <A class="xref" href="#RFCPEIFG_LAST_COMMAND_DONE">RFCPEIFG.LAST_COMMAND_DONE</A>.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">1</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="RFCPEIEN_COMMAND_DONE">0</a>
+</TD>
+<TD class="cellBitfieldCol2">COMMAND_DONE</TD>
+<TD class="cellBitfieldCol3" colspan="3">Interrupt enable for <A class="xref" href="#RFCPEIFG_COMMAND_DONE">RFCPEIFG.COMMAND_DONE</A>.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">1</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="RFCPEISL"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">RFC_DBELL</A>:RFCPEISL</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 0018</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0x4004 1018</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0x4004 1018</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">Interrupt Vector Selection For Command and Packet Engine Generated Interrupts</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">RW</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="RFCPEISL_INTERNAL_ERROR">31</a>
+</TD>
+<TD class="cellBitfieldCol2">INTERNAL_ERROR</TD>
+<TD class="cellBitfieldCol3" colspan="3">Select which CPU interrupt vector the <A class="xref" href="#RFCPEIFG_INTERNAL_ERROR">RFCPEIFG.INTERNAL_ERROR</A> interrupt should use.<TABLE cellspacing="0" class="LprfEnum">
+<TR class="rowEnumHead">
+<TD class="cellEnumTableHeadCol1">Value</TD>
+<TD class="cellEnumTableHeadCol2">ENUM Name</TD>
+<TD class="cellEnumTableHeadCol3">Description</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x0</TD>
+<TD class="cellEnumTableCol2">CPE0</TD>
+<TD class="cellEnumTableCol3">Associate this interrupt line with INT_RF_CPE0 interrupt vector</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x1</TD>
+<TD class="cellEnumTableCol2">CPE1</TD>
+<TD class="cellEnumTableCol3">Associate this interrupt line with INT_RF_CPE1 interrupt vector</TD>
+</TR>
+</TABLE>
+</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">1</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="RFCPEISL_BOOT_DONE">30</a>
+</TD>
+<TD class="cellBitfieldCol2">BOOT_DONE</TD>
+<TD class="cellBitfieldCol3" colspan="3">Select which CPU interrupt vector the <A class="xref" href="#RFCPEIFG_BOOT_DONE">RFCPEIFG.BOOT_DONE</A> interrupt should use.<TABLE cellspacing="0" class="LprfEnum">
+<TR class="rowEnumHead">
+<TD class="cellEnumTableHeadCol1">Value</TD>
+<TD class="cellEnumTableHeadCol2">ENUM Name</TD>
+<TD class="cellEnumTableHeadCol3">Description</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x0</TD>
+<TD class="cellEnumTableCol2">CPE0</TD>
+<TD class="cellEnumTableCol3">Associate this interrupt line with INT_RF_CPE0 interrupt vector</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x1</TD>
+<TD class="cellEnumTableCol2">CPE1</TD>
+<TD class="cellEnumTableCol3">Associate this interrupt line with INT_RF_CPE1 interrupt vector</TD>
+</TR>
+</TABLE>
+</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">1</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="RFCPEISL_MODULES_UNLOCKED">29</a>
+</TD>
+<TD class="cellBitfieldCol2">MODULES_UNLOCKED</TD>
+<TD class="cellBitfieldCol3" colspan="3">Select which CPU interrupt vector the <A class="xref" href="#RFCPEIFG_MODULES_UNLOCKED">RFCPEIFG.MODULES_UNLOCKED</A> interrupt should use.<TABLE cellspacing="0" class="LprfEnum">
+<TR class="rowEnumHead">
+<TD class="cellEnumTableHeadCol1">Value</TD>
+<TD class="cellEnumTableHeadCol2">ENUM Name</TD>
+<TD class="cellEnumTableHeadCol3">Description</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x0</TD>
+<TD class="cellEnumTableCol2">CPE0</TD>
+<TD class="cellEnumTableCol3">Associate this interrupt line with INT_RF_CPE0 interrupt vector</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x1</TD>
+<TD class="cellEnumTableCol2">CPE1</TD>
+<TD class="cellEnumTableCol3">Associate this interrupt line with INT_RF_CPE1 interrupt vector</TD>
+</TR>
+</TABLE>
+</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">1</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="RFCPEISL_SYNTH_NO_LOCK">28</a>
+</TD>
+<TD class="cellBitfieldCol2">SYNTH_NO_LOCK</TD>
+<TD class="cellBitfieldCol3" colspan="3">Select which CPU interrupt vector the <A class="xref" href="#RFCPEIFG_SYNTH_NO_LOCK">RFCPEIFG.SYNTH_NO_LOCK</A> interrupt should use.<TABLE cellspacing="0" class="LprfEnum">
+<TR class="rowEnumHead">
+<TD class="cellEnumTableHeadCol1">Value</TD>
+<TD class="cellEnumTableHeadCol2">ENUM Name</TD>
+<TD class="cellEnumTableHeadCol3">Description</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x0</TD>
+<TD class="cellEnumTableCol2">CPE0</TD>
+<TD class="cellEnumTableCol3">Associate this interrupt line with INT_RF_CPE0 interrupt vector</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x1</TD>
+<TD class="cellEnumTableCol2">CPE1</TD>
+<TD class="cellEnumTableCol3">Associate this interrupt line with INT_RF_CPE1 interrupt vector</TD>
+</TR>
+</TABLE>
+</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">1</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="RFCPEISL_IRQ27">27</a>
+</TD>
+<TD class="cellBitfieldCol2">IRQ27</TD>
+<TD class="cellBitfieldCol3" colspan="3">Select which CPU interrupt vector the <A class="xref" href="#RFCPEIFG_IRQ27">RFCPEIFG.IRQ27</A> interrupt should use.<TABLE cellspacing="0" class="LprfEnum">
+<TR class="rowEnumHead">
+<TD class="cellEnumTableHeadCol1">Value</TD>
+<TD class="cellEnumTableHeadCol2">ENUM Name</TD>
+<TD class="cellEnumTableHeadCol3">Description</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x0</TD>
+<TD class="cellEnumTableCol2">CPE0</TD>
+<TD class="cellEnumTableCol3">Associate this interrupt line with INT_RF_CPE0 interrupt vector</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x1</TD>
+<TD class="cellEnumTableCol2">CPE1</TD>
+<TD class="cellEnumTableCol3">Associate this interrupt line with INT_RF_CPE1 interrupt vector</TD>
+</TR>
+</TABLE>
+</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">1</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="RFCPEISL_RX_ABORTED">26</a>
+</TD>
+<TD class="cellBitfieldCol2">RX_ABORTED</TD>
+<TD class="cellBitfieldCol3" colspan="3">Select which CPU interrupt vector the <A class="xref" href="#RFCPEIFG_RX_ABORTED">RFCPEIFG.RX_ABORTED</A> interrupt should use.<TABLE cellspacing="0" class="LprfEnum">
+<TR class="rowEnumHead">
+<TD class="cellEnumTableHeadCol1">Value</TD>
+<TD class="cellEnumTableHeadCol2">ENUM Name</TD>
+<TD class="cellEnumTableHeadCol3">Description</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x0</TD>
+<TD class="cellEnumTableCol2">CPE0</TD>
+<TD class="cellEnumTableCol3">Associate this interrupt line with INT_RF_CPE0 interrupt vector</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x1</TD>
+<TD class="cellEnumTableCol2">CPE1</TD>
+<TD class="cellEnumTableCol3">Associate this interrupt line with INT_RF_CPE1 interrupt vector</TD>
+</TR>
+</TABLE>
+</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">1</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="RFCPEISL_RX_N_DATA_WRITTEN">25</a>
+</TD>
+<TD class="cellBitfieldCol2">RX_N_DATA_WRITTEN</TD>
+<TD class="cellBitfieldCol3" colspan="3">Select which CPU interrupt vector the <A class="xref" href="#RFCPEIFG_RX_N_DATA_WRITTEN">RFCPEIFG.RX_N_DATA_WRITTEN</A> interrupt should use.<TABLE cellspacing="0" class="LprfEnum">
+<TR class="rowEnumHead">
+<TD class="cellEnumTableHeadCol1">Value</TD>
+<TD class="cellEnumTableHeadCol2">ENUM Name</TD>
+<TD class="cellEnumTableHeadCol3">Description</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x0</TD>
+<TD class="cellEnumTableCol2">CPE0</TD>
+<TD class="cellEnumTableCol3">Associate this interrupt line with INT_RF_CPE0 interrupt vector</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x1</TD>
+<TD class="cellEnumTableCol2">CPE1</TD>
+<TD class="cellEnumTableCol3">Associate this interrupt line with INT_RF_CPE1 interrupt vector</TD>
+</TR>
+</TABLE>
+</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">1</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="RFCPEISL_RX_DATA_WRITTEN">24</a>
+</TD>
+<TD class="cellBitfieldCol2">RX_DATA_WRITTEN</TD>
+<TD class="cellBitfieldCol3" colspan="3">Select which CPU interrupt vector the <A class="xref" href="#RFCPEIFG_RX_DATA_WRITTEN">RFCPEIFG.RX_DATA_WRITTEN</A> interrupt should use.<TABLE cellspacing="0" class="LprfEnum">
+<TR class="rowEnumHead">
+<TD class="cellEnumTableHeadCol1">Value</TD>
+<TD class="cellEnumTableHeadCol2">ENUM Name</TD>
+<TD class="cellEnumTableHeadCol3">Description</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x0</TD>
+<TD class="cellEnumTableCol2">CPE0</TD>
+<TD class="cellEnumTableCol3">Associate this interrupt line with INT_RF_CPE0 interrupt vector</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x1</TD>
+<TD class="cellEnumTableCol2">CPE1</TD>
+<TD class="cellEnumTableCol3">Associate this interrupt line with INT_RF_CPE1 interrupt vector</TD>
+</TR>
+</TABLE>
+</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">1</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="RFCPEISL_RX_ENTRY_DONE">23</a>
+</TD>
+<TD class="cellBitfieldCol2">RX_ENTRY_DONE</TD>
+<TD class="cellBitfieldCol3" colspan="3">Select which CPU interrupt vector the <A class="xref" href="#RFCPEIFG_RX_ENTRY_DONE">RFCPEIFG.RX_ENTRY_DONE</A> interrupt should use.<TABLE cellspacing="0" class="LprfEnum">
+<TR class="rowEnumHead">
+<TD class="cellEnumTableHeadCol1">Value</TD>
+<TD class="cellEnumTableHeadCol2">ENUM Name</TD>
+<TD class="cellEnumTableHeadCol3">Description</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x0</TD>
+<TD class="cellEnumTableCol2">CPE0</TD>
+<TD class="cellEnumTableCol3">Associate this interrupt line with INT_RF_CPE0 interrupt vector</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x1</TD>
+<TD class="cellEnumTableCol2">CPE1</TD>
+<TD class="cellEnumTableCol3">Associate this interrupt line with INT_RF_CPE1 interrupt vector</TD>
+</TR>
+</TABLE>
+</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">1</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="RFCPEISL_RX_BUF_FULL">22</a>
+</TD>
+<TD class="cellBitfieldCol2">RX_BUF_FULL</TD>
+<TD class="cellBitfieldCol3" colspan="3">Select which CPU interrupt vector the <A class="xref" href="#RFCPEIFG_RX_BUF_FULL">RFCPEIFG.RX_BUF_FULL</A> interrupt should use.<TABLE cellspacing="0" class="LprfEnum">
+<TR class="rowEnumHead">
+<TD class="cellEnumTableHeadCol1">Value</TD>
+<TD class="cellEnumTableHeadCol2">ENUM Name</TD>
+<TD class="cellEnumTableHeadCol3">Description</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x0</TD>
+<TD class="cellEnumTableCol2">CPE0</TD>
+<TD class="cellEnumTableCol3">Associate this interrupt line with INT_RF_CPE0 interrupt vector</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x1</TD>
+<TD class="cellEnumTableCol2">CPE1</TD>
+<TD class="cellEnumTableCol3">Associate this interrupt line with INT_RF_CPE1 interrupt vector</TD>
+</TR>
+</TABLE>
+</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">1</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="RFCPEISL_RX_CTRL_ACK">21</a>
+</TD>
+<TD class="cellBitfieldCol2">RX_CTRL_ACK</TD>
+<TD class="cellBitfieldCol3" colspan="3">Select which CPU interrupt vector the <A class="xref" href="#RFCPEIFG_RX_CTRL_ACK">RFCPEIFG.RX_CTRL_ACK</A> interrupt should use.<TABLE cellspacing="0" class="LprfEnum">
+<TR class="rowEnumHead">
+<TD class="cellEnumTableHeadCol1">Value</TD>
+<TD class="cellEnumTableHeadCol2">ENUM Name</TD>
+<TD class="cellEnumTableHeadCol3">Description</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x0</TD>
+<TD class="cellEnumTableCol2">CPE0</TD>
+<TD class="cellEnumTableCol3">Associate this interrupt line with INT_RF_CPE0 interrupt vector</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x1</TD>
+<TD class="cellEnumTableCol2">CPE1</TD>
+<TD class="cellEnumTableCol3">Associate this interrupt line with INT_RF_CPE1 interrupt vector</TD>
+</TR>
+</TABLE>
+</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">1</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="RFCPEISL_RX_CTRL">20</a>
+</TD>
+<TD class="cellBitfieldCol2">RX_CTRL</TD>
+<TD class="cellBitfieldCol3" colspan="3">Select which CPU interrupt vector the <A class="xref" href="#RFCPEIFG_RX_CTRL">RFCPEIFG.RX_CTRL</A> interrupt should use.<TABLE cellspacing="0" class="LprfEnum">
+<TR class="rowEnumHead">
+<TD class="cellEnumTableHeadCol1">Value</TD>
+<TD class="cellEnumTableHeadCol2">ENUM Name</TD>
+<TD class="cellEnumTableHeadCol3">Description</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x0</TD>
+<TD class="cellEnumTableCol2">CPE0</TD>
+<TD class="cellEnumTableCol3">Associate this interrupt line with INT_RF_CPE0 interrupt vector</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x1</TD>
+<TD class="cellEnumTableCol2">CPE1</TD>
+<TD class="cellEnumTableCol3">Associate this interrupt line with INT_RF_CPE1 interrupt vector</TD>
+</TR>
+</TABLE>
+</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">1</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="RFCPEISL_RX_EMPTY">19</a>
+</TD>
+<TD class="cellBitfieldCol2">RX_EMPTY</TD>
+<TD class="cellBitfieldCol3" colspan="3">Select which CPU interrupt vector the <A class="xref" href="#RFCPEIFG_RX_EMPTY">RFCPEIFG.RX_EMPTY</A> interrupt should use.<TABLE cellspacing="0" class="LprfEnum">
+<TR class="rowEnumHead">
+<TD class="cellEnumTableHeadCol1">Value</TD>
+<TD class="cellEnumTableHeadCol2">ENUM Name</TD>
+<TD class="cellEnumTableHeadCol3">Description</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x0</TD>
+<TD class="cellEnumTableCol2">CPE0</TD>
+<TD class="cellEnumTableCol3">Associate this interrupt line with INT_RF_CPE0 interrupt vector</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x1</TD>
+<TD class="cellEnumTableCol2">CPE1</TD>
+<TD class="cellEnumTableCol3">Associate this interrupt line with INT_RF_CPE1 interrupt vector</TD>
+</TR>
+</TABLE>
+</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">1</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="RFCPEISL_RX_IGNORED">18</a>
+</TD>
+<TD class="cellBitfieldCol2">RX_IGNORED</TD>
+<TD class="cellBitfieldCol3" colspan="3">Select which CPU interrupt vector the <A class="xref" href="#RFCPEIFG_RX_IGNORED">RFCPEIFG.RX_IGNORED</A> interrupt should use.<TABLE cellspacing="0" class="LprfEnum">
+<TR class="rowEnumHead">
+<TD class="cellEnumTableHeadCol1">Value</TD>
+<TD class="cellEnumTableHeadCol2">ENUM Name</TD>
+<TD class="cellEnumTableHeadCol3">Description</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x0</TD>
+<TD class="cellEnumTableCol2">CPE0</TD>
+<TD class="cellEnumTableCol3">Associate this interrupt line with INT_RF_CPE0 interrupt vector</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x1</TD>
+<TD class="cellEnumTableCol2">CPE1</TD>
+<TD class="cellEnumTableCol3">Associate this interrupt line with INT_RF_CPE1 interrupt vector</TD>
+</TR>
+</TABLE>
+</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">1</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="RFCPEISL_RX_NOK">17</a>
+</TD>
+<TD class="cellBitfieldCol2">RX_NOK</TD>
+<TD class="cellBitfieldCol3" colspan="3">Select which CPU interrupt vector the <A class="xref" href="#RFCPEIFG_RX_NOK">RFCPEIFG.RX_NOK</A> interrupt should use.<TABLE cellspacing="0" class="LprfEnum">
+<TR class="rowEnumHead">
+<TD class="cellEnumTableHeadCol1">Value</TD>
+<TD class="cellEnumTableHeadCol2">ENUM Name</TD>
+<TD class="cellEnumTableHeadCol3">Description</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x0</TD>
+<TD class="cellEnumTableCol2">CPE0</TD>
+<TD class="cellEnumTableCol3">Associate this interrupt line with INT_RF_CPE0 interrupt vector</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x1</TD>
+<TD class="cellEnumTableCol2">CPE1</TD>
+<TD class="cellEnumTableCol3">Associate this interrupt line with INT_RF_CPE1 interrupt vector</TD>
+</TR>
+</TABLE>
+</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">1</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="RFCPEISL_RX_OK">16</a>
+</TD>
+<TD class="cellBitfieldCol2">RX_OK</TD>
+<TD class="cellBitfieldCol3" colspan="3">Select which CPU interrupt vector the <A class="xref" href="#RFCPEIFG_RX_OK">RFCPEIFG.RX_OK</A> interrupt should use.<TABLE cellspacing="0" class="LprfEnum">
+<TR class="rowEnumHead">
+<TD class="cellEnumTableHeadCol1">Value</TD>
+<TD class="cellEnumTableHeadCol2">ENUM Name</TD>
+<TD class="cellEnumTableHeadCol3">Description</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x0</TD>
+<TD class="cellEnumTableCol2">CPE0</TD>
+<TD class="cellEnumTableCol3">Associate this interrupt line with INT_RF_CPE0 interrupt vector</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x1</TD>
+<TD class="cellEnumTableCol2">CPE1</TD>
+<TD class="cellEnumTableCol3">Associate this interrupt line with INT_RF_CPE1 interrupt vector</TD>
+</TR>
+</TABLE>
+</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">1</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="RFCPEISL_IRQ15">15</a>
+</TD>
+<TD class="cellBitfieldCol2">IRQ15</TD>
+<TD class="cellBitfieldCol3" colspan="3">Select which CPU interrupt vector the <A class="xref" href="#RFCPEIFG_IRQ15">RFCPEIFG.IRQ15</A> interrupt should use.<TABLE cellspacing="0" class="LprfEnum">
+<TR class="rowEnumHead">
+<TD class="cellEnumTableHeadCol1">Value</TD>
+<TD class="cellEnumTableHeadCol2">ENUM Name</TD>
+<TD class="cellEnumTableHeadCol3">Description</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x0</TD>
+<TD class="cellEnumTableCol2">CPE0</TD>
+<TD class="cellEnumTableCol3">Associate this interrupt line with INT_RF_CPE0 interrupt vector</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x1</TD>
+<TD class="cellEnumTableCol2">CPE1</TD>
+<TD class="cellEnumTableCol3">Associate this interrupt line with INT_RF_CPE1 interrupt vector</TD>
+</TR>
+</TABLE>
+</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="RFCPEISL_IRQ14">14</a>
+</TD>
+<TD class="cellBitfieldCol2">IRQ14</TD>
+<TD class="cellBitfieldCol3" colspan="3">Select which CPU interrupt vector the <A class="xref" href="#RFCPEIFG_IRQ14">RFCPEIFG.IRQ14</A> interrupt should use.<TABLE cellspacing="0" class="LprfEnum">
+<TR class="rowEnumHead">
+<TD class="cellEnumTableHeadCol1">Value</TD>
+<TD class="cellEnumTableHeadCol2">ENUM Name</TD>
+<TD class="cellEnumTableHeadCol3">Description</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x0</TD>
+<TD class="cellEnumTableCol2">CPE0</TD>
+<TD class="cellEnumTableCol3">Associate this interrupt line with INT_RF_CPE0 interrupt vector</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x1</TD>
+<TD class="cellEnumTableCol2">CPE1</TD>
+<TD class="cellEnumTableCol3">Associate this interrupt line with INT_RF_CPE1 interrupt vector</TD>
+</TR>
+</TABLE>
+</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="RFCPEISL_IRQ13">13</a>
+</TD>
+<TD class="cellBitfieldCol2">IRQ13</TD>
+<TD class="cellBitfieldCol3" colspan="3">Select which CPU interrupt vector the <A class="xref" href="#RFCPEIFG_IRQ13">RFCPEIFG.IRQ13</A> interrupt should use.<TABLE cellspacing="0" class="LprfEnum">
+<TR class="rowEnumHead">
+<TD class="cellEnumTableHeadCol1">Value</TD>
+<TD class="cellEnumTableHeadCol2">ENUM Name</TD>
+<TD class="cellEnumTableHeadCol3">Description</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x0</TD>
+<TD class="cellEnumTableCol2">CPE0</TD>
+<TD class="cellEnumTableCol3">Associate this interrupt line with INT_RF_CPE0 interrupt vector</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x1</TD>
+<TD class="cellEnumTableCol2">CPE1</TD>
+<TD class="cellEnumTableCol3">Associate this interrupt line with INT_RF_CPE1 interrupt vector</TD>
+</TR>
+</TABLE>
+</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="RFCPEISL_IRQ12">12</a>
+</TD>
+<TD class="cellBitfieldCol2">IRQ12</TD>
+<TD class="cellBitfieldCol3" colspan="3">Select which CPU interrupt vector the <A class="xref" href="#RFCPEIFG_IRQ12">RFCPEIFG.IRQ12</A> interrupt should use.<TABLE cellspacing="0" class="LprfEnum">
+<TR class="rowEnumHead">
+<TD class="cellEnumTableHeadCol1">Value</TD>
+<TD class="cellEnumTableHeadCol2">ENUM Name</TD>
+<TD class="cellEnumTableHeadCol3">Description</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x0</TD>
+<TD class="cellEnumTableCol2">CPE0</TD>
+<TD class="cellEnumTableCol3">Associate this interrupt line with INT_RF_CPE0 interrupt vector</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x1</TD>
+<TD class="cellEnumTableCol2">CPE1</TD>
+<TD class="cellEnumTableCol3">Associate this interrupt line with INT_RF_CPE1 interrupt vector</TD>
+</TR>
+</TABLE>
+</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="RFCPEISL_TX_BUFFER_CHANGED">11</a>
+</TD>
+<TD class="cellBitfieldCol2">TX_BUFFER_CHANGED</TD>
+<TD class="cellBitfieldCol3" colspan="3">Select which CPU interrupt vector the <A class="xref" href="#RFCPEIFG_TX_BUFFER_CHANGED">RFCPEIFG.TX_BUFFER_CHANGED</A> interrupt should use.<TABLE cellspacing="0" class="LprfEnum">
+<TR class="rowEnumHead">
+<TD class="cellEnumTableHeadCol1">Value</TD>
+<TD class="cellEnumTableHeadCol2">ENUM Name</TD>
+<TD class="cellEnumTableHeadCol3">Description</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x0</TD>
+<TD class="cellEnumTableCol2">CPE0</TD>
+<TD class="cellEnumTableCol3">Associate this interrupt line with INT_RF_CPE0 interrupt vector</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x1</TD>
+<TD class="cellEnumTableCol2">CPE1</TD>
+<TD class="cellEnumTableCol3">Associate this interrupt line with INT_RF_CPE1 interrupt vector</TD>
+</TR>
+</TABLE>
+</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="RFCPEISL_TX_ENTRY_DONE">10</a>
+</TD>
+<TD class="cellBitfieldCol2">TX_ENTRY_DONE</TD>
+<TD class="cellBitfieldCol3" colspan="3">Select which CPU interrupt vector the <A class="xref" href="#RFCPEIFG_TX_ENTRY_DONE">RFCPEIFG.TX_ENTRY_DONE</A> interrupt should use.<TABLE cellspacing="0" class="LprfEnum">
+<TR class="rowEnumHead">
+<TD class="cellEnumTableHeadCol1">Value</TD>
+<TD class="cellEnumTableHeadCol2">ENUM Name</TD>
+<TD class="cellEnumTableHeadCol3">Description</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x0</TD>
+<TD class="cellEnumTableCol2">CPE0</TD>
+<TD class="cellEnumTableCol3">Associate this interrupt line with INT_RF_CPE0 interrupt vector</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x1</TD>
+<TD class="cellEnumTableCol2">CPE1</TD>
+<TD class="cellEnumTableCol3">Associate this interrupt line with INT_RF_CPE1 interrupt vector</TD>
+</TR>
+</TABLE>
+</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="RFCPEISL_TX_RETRANS">9</a>
+</TD>
+<TD class="cellBitfieldCol2">TX_RETRANS</TD>
+<TD class="cellBitfieldCol3" colspan="3">Select which CPU interrupt vector the <A class="xref" href="#RFCPEIFG_TX_RETRANS">RFCPEIFG.TX_RETRANS</A> interrupt should use.<TABLE cellspacing="0" class="LprfEnum">
+<TR class="rowEnumHead">
+<TD class="cellEnumTableHeadCol1">Value</TD>
+<TD class="cellEnumTableHeadCol2">ENUM Name</TD>
+<TD class="cellEnumTableHeadCol3">Description</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x0</TD>
+<TD class="cellEnumTableCol2">CPE0</TD>
+<TD class="cellEnumTableCol3">Associate this interrupt line with INT_RF_CPE0 interrupt vector</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x1</TD>
+<TD class="cellEnumTableCol2">CPE1</TD>
+<TD class="cellEnumTableCol3">Associate this interrupt line with INT_RF_CPE1 interrupt vector</TD>
+</TR>
+</TABLE>
+</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="RFCPEISL_TX_CTRL_ACK_ACK">8</a>
+</TD>
+<TD class="cellBitfieldCol2">TX_CTRL_ACK_ACK</TD>
+<TD class="cellBitfieldCol3" colspan="3">Select which CPU interrupt vector the <A class="xref" href="#RFCPEIFG_TX_CTRL_ACK_ACK">RFCPEIFG.TX_CTRL_ACK_ACK</A> interrupt should use.<TABLE cellspacing="0" class="LprfEnum">
+<TR class="rowEnumHead">
+<TD class="cellEnumTableHeadCol1">Value</TD>
+<TD class="cellEnumTableHeadCol2">ENUM Name</TD>
+<TD class="cellEnumTableHeadCol3">Description</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x0</TD>
+<TD class="cellEnumTableCol2">CPE0</TD>
+<TD class="cellEnumTableCol3">Associate this interrupt line with INT_RF_CPE0 interrupt vector</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x1</TD>
+<TD class="cellEnumTableCol2">CPE1</TD>
+<TD class="cellEnumTableCol3">Associate this interrupt line with INT_RF_CPE1 interrupt vector</TD>
+</TR>
+</TABLE>
+</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="RFCPEISL_TX_CTRL_ACK">7</a>
+</TD>
+<TD class="cellBitfieldCol2">TX_CTRL_ACK</TD>
+<TD class="cellBitfieldCol3" colspan="3">Select which CPU interrupt vector the <A class="xref" href="#RFCPEIFG_TX_CTRL_ACK">RFCPEIFG.TX_CTRL_ACK</A> interrupt should use.<TABLE cellspacing="0" class="LprfEnum">
+<TR class="rowEnumHead">
+<TD class="cellEnumTableHeadCol1">Value</TD>
+<TD class="cellEnumTableHeadCol2">ENUM Name</TD>
+<TD class="cellEnumTableHeadCol3">Description</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x0</TD>
+<TD class="cellEnumTableCol2">CPE0</TD>
+<TD class="cellEnumTableCol3">Associate this interrupt line with INT_RF_CPE0 interrupt vector</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x1</TD>
+<TD class="cellEnumTableCol2">CPE1</TD>
+<TD class="cellEnumTableCol3">Associate this interrupt line with INT_RF_CPE1 interrupt vector</TD>
+</TR>
+</TABLE>
+</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="RFCPEISL_TX_CTRL">6</a>
+</TD>
+<TD class="cellBitfieldCol2">TX_CTRL</TD>
+<TD class="cellBitfieldCol3" colspan="3">Select which CPU interrupt vector the <A class="xref" href="#RFCPEIFG_TX_CTRL">RFCPEIFG.TX_CTRL</A> interrupt should use.<TABLE cellspacing="0" class="LprfEnum">
+<TR class="rowEnumHead">
+<TD class="cellEnumTableHeadCol1">Value</TD>
+<TD class="cellEnumTableHeadCol2">ENUM Name</TD>
+<TD class="cellEnumTableHeadCol3">Description</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x0</TD>
+<TD class="cellEnumTableCol2">CPE0</TD>
+<TD class="cellEnumTableCol3">Associate this interrupt line with INT_RF_CPE0 interrupt vector</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x1</TD>
+<TD class="cellEnumTableCol2">CPE1</TD>
+<TD class="cellEnumTableCol3">Associate this interrupt line with INT_RF_CPE1 interrupt vector</TD>
+</TR>
+</TABLE>
+</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="RFCPEISL_TX_ACK">5</a>
+</TD>
+<TD class="cellBitfieldCol2">TX_ACK</TD>
+<TD class="cellBitfieldCol3" colspan="3">Select which CPU interrupt vector the <A class="xref" href="#RFCPEIFG_TX_ACK">RFCPEIFG.TX_ACK</A> interrupt should use.<TABLE cellspacing="0" class="LprfEnum">
+<TR class="rowEnumHead">
+<TD class="cellEnumTableHeadCol1">Value</TD>
+<TD class="cellEnumTableHeadCol2">ENUM Name</TD>
+<TD class="cellEnumTableHeadCol3">Description</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x0</TD>
+<TD class="cellEnumTableCol2">CPE0</TD>
+<TD class="cellEnumTableCol3">Associate this interrupt line with INT_RF_CPE0 interrupt vector</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x1</TD>
+<TD class="cellEnumTableCol2">CPE1</TD>
+<TD class="cellEnumTableCol3">Associate this interrupt line with INT_RF_CPE1 interrupt vector</TD>
+</TR>
+</TABLE>
+</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="RFCPEISL_TX_DONE">4</a>
+</TD>
+<TD class="cellBitfieldCol2">TX_DONE</TD>
+<TD class="cellBitfieldCol3" colspan="3">Select which CPU interrupt vector the <A class="xref" href="#RFCPEIFG_TX_DONE">RFCPEIFG.TX_DONE</A> interrupt should use.<TABLE cellspacing="0" class="LprfEnum">
+<TR class="rowEnumHead">
+<TD class="cellEnumTableHeadCol1">Value</TD>
+<TD class="cellEnumTableHeadCol2">ENUM Name</TD>
+<TD class="cellEnumTableHeadCol3">Description</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x0</TD>
+<TD class="cellEnumTableCol2">CPE0</TD>
+<TD class="cellEnumTableCol3">Associate this interrupt line with INT_RF_CPE0 interrupt vector</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x1</TD>
+<TD class="cellEnumTableCol2">CPE1</TD>
+<TD class="cellEnumTableCol3">Associate this interrupt line with INT_RF_CPE1 interrupt vector</TD>
+</TR>
+</TABLE>
+</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="RFCPEISL_LAST_FG_COMMAND_DONE">3</a>
+</TD>
+<TD class="cellBitfieldCol2">LAST_FG_COMMAND_DONE</TD>
+<TD class="cellBitfieldCol3" colspan="3">Select which CPU interrupt vector the <A class="xref" href="#RFCPEIFG_LAST_FG_COMMAND_DONE">RFCPEIFG.LAST_FG_COMMAND_DONE</A> interrupt should use.<TABLE cellspacing="0" class="LprfEnum">
+<TR class="rowEnumHead">
+<TD class="cellEnumTableHeadCol1">Value</TD>
+<TD class="cellEnumTableHeadCol2">ENUM Name</TD>
+<TD class="cellEnumTableHeadCol3">Description</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x0</TD>
+<TD class="cellEnumTableCol2">CPE0</TD>
+<TD class="cellEnumTableCol3">Associate this interrupt line with INT_RF_CPE0 interrupt vector</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x1</TD>
+<TD class="cellEnumTableCol2">CPE1</TD>
+<TD class="cellEnumTableCol3">Associate this interrupt line with INT_RF_CPE1 interrupt vector</TD>
+</TR>
+</TABLE>
+</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="RFCPEISL_FG_COMMAND_DONE">2</a>
+</TD>
+<TD class="cellBitfieldCol2">FG_COMMAND_DONE</TD>
+<TD class="cellBitfieldCol3" colspan="3">Select which CPU interrupt vector the <A class="xref" href="#RFCPEIFG_FG_COMMAND_DONE">RFCPEIFG.FG_COMMAND_DONE</A> interrupt should use.<TABLE cellspacing="0" class="LprfEnum">
+<TR class="rowEnumHead">
+<TD class="cellEnumTableHeadCol1">Value</TD>
+<TD class="cellEnumTableHeadCol2">ENUM Name</TD>
+<TD class="cellEnumTableHeadCol3">Description</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x0</TD>
+<TD class="cellEnumTableCol2">CPE0</TD>
+<TD class="cellEnumTableCol3">Associate this interrupt line with INT_RF_CPE0 interrupt vector</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x1</TD>
+<TD class="cellEnumTableCol2">CPE1</TD>
+<TD class="cellEnumTableCol3">Associate this interrupt line with INT_RF_CPE1 interrupt vector</TD>
+</TR>
+</TABLE>
+</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="RFCPEISL_LAST_COMMAND_DONE">1</a>
+</TD>
+<TD class="cellBitfieldCol2">LAST_COMMAND_DONE</TD>
+<TD class="cellBitfieldCol3" colspan="3">Select which CPU interrupt vector the <A class="xref" href="#RFCPEIFG_LAST_COMMAND_DONE">RFCPEIFG.LAST_COMMAND_DONE</A> interrupt should use.<TABLE cellspacing="0" class="LprfEnum">
+<TR class="rowEnumHead">
+<TD class="cellEnumTableHeadCol1">Value</TD>
+<TD class="cellEnumTableHeadCol2">ENUM Name</TD>
+<TD class="cellEnumTableHeadCol3">Description</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x0</TD>
+<TD class="cellEnumTableCol2">CPE0</TD>
+<TD class="cellEnumTableCol3">Associate this interrupt line with INT_RF_CPE0 interrupt vector</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x1</TD>
+<TD class="cellEnumTableCol2">CPE1</TD>
+<TD class="cellEnumTableCol3">Associate this interrupt line with INT_RF_CPE1 interrupt vector</TD>
+</TR>
+</TABLE>
+</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="RFCPEISL_COMMAND_DONE">0</a>
+</TD>
+<TD class="cellBitfieldCol2">COMMAND_DONE</TD>
+<TD class="cellBitfieldCol3" colspan="3">Select which CPU interrupt vector the <A class="xref" href="#RFCPEIFG_COMMAND_DONE">RFCPEIFG.COMMAND_DONE</A> interrupt should use.<TABLE cellspacing="0" class="LprfEnum">
+<TR class="rowEnumHead">
+<TD class="cellEnumTableHeadCol1">Value</TD>
+<TD class="cellEnumTableHeadCol2">ENUM Name</TD>
+<TD class="cellEnumTableHeadCol3">Description</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x0</TD>
+<TD class="cellEnumTableCol2">CPE0</TD>
+<TD class="cellEnumTableCol3">Associate this interrupt line with INT_RF_CPE0 interrupt vector</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x1</TD>
+<TD class="cellEnumTableCol2">CPE1</TD>
+<TD class="cellEnumTableCol3">Associate this interrupt line with INT_RF_CPE1 interrupt vector</TD>
+</TR>
+</TABLE>
+</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="RFACKIFG"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">RFC_DBELL</A>:RFACKIFG</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 001C</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0x4004 101C</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0x4004 101C</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">Doorbell Command Acknowledgement Interrupt Flag</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">RW</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="RFACKIFG_RESERVED1">31:1</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED1</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0b000 0000 0000 0000 0000 0000 0000 0000</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="RFACKIFG_ACKFLAG">0</a>
+</TD>
+<TD class="cellBitfieldCol2">ACKFLAG</TD>
+<TD class="cellBitfieldCol3" colspan="3">Interrupt flag for Command ACK</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="SYSGPOCTL"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">RFC_DBELL</A>:SYSGPOCTL</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 0020</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0x4004 1020</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0x4004 1020</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">RF Core General Purpose Output Control</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">RW</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="SYSGPOCTL_RESERVED16">31:16</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED16</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0x0000</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="SYSGPOCTL_GPOCTL3">15:12</a>
+</TD>
+<TD class="cellBitfieldCol2">GPOCTL3</TD>
+<TD class="cellBitfieldCol3" colspan="3">RF Core GPO control bit 3. Selects which signal to output on the RF Core GPO line 3.<TABLE cellspacing="0" class="LprfEnum">
+<TR class="rowEnumHead">
+<TD class="cellEnumTableHeadCol1">Value</TD>
+<TD class="cellEnumTableHeadCol2">ENUM Name</TD>
+<TD class="cellEnumTableHeadCol3">Description</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x0</TD>
+<TD class="cellEnumTableCol2">CPEGPO0</TD>
+<TD class="cellEnumTableCol3">CPE GPO line 0</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x1</TD>
+<TD class="cellEnumTableCol2">CPEGPO1</TD>
+<TD class="cellEnumTableCol3">CPE GPO line 1</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x2</TD>
+<TD class="cellEnumTableCol2">CPEGPO2</TD>
+<TD class="cellEnumTableCol3">CPE GPO line 2</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x3</TD>
+<TD class="cellEnumTableCol2">CPEGPO3</TD>
+<TD class="cellEnumTableCol3">CPE GPO line 3</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x4</TD>
+<TD class="cellEnumTableCol2">MCEGPO0</TD>
+<TD class="cellEnumTableCol3">MCE GPO line 0</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x5</TD>
+<TD class="cellEnumTableCol2">MCEGPO1</TD>
+<TD class="cellEnumTableCol3">MCE GPO line 1</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x6</TD>
+<TD class="cellEnumTableCol2">MCEGPO2</TD>
+<TD class="cellEnumTableCol3">MCE GPO line 2</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x7</TD>
+<TD class="cellEnumTableCol2">MCEGPO3</TD>
+<TD class="cellEnumTableCol3">MCE GPO line 3</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x8</TD>
+<TD class="cellEnumTableCol2">RFEGPO0</TD>
+<TD class="cellEnumTableCol3">RFE GPO line 0</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x9</TD>
+<TD class="cellEnumTableCol2">RFEGPO1</TD>
+<TD class="cellEnumTableCol3">RFE GPO line 1</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0xA</TD>
+<TD class="cellEnumTableCol2">RFEGPO2</TD>
+<TD class="cellEnumTableCol3">RFE GPO line 2</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0xB</TD>
+<TD class="cellEnumTableCol2">RFEGPO3</TD>
+<TD class="cellEnumTableCol3">RFE GPO line 3</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0xC</TD>
+<TD class="cellEnumTableCol2">RATGPO0</TD>
+<TD class="cellEnumTableCol3">RAT GPO line 0</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0xD</TD>
+<TD class="cellEnumTableCol2">RATGPO1</TD>
+<TD class="cellEnumTableCol3">RAT GPO line 1</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0xE</TD>
+<TD class="cellEnumTableCol2">RATGPO2</TD>
+<TD class="cellEnumTableCol3">RAT GPO line 2</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0xF</TD>
+<TD class="cellEnumTableCol2">RATGPO3</TD>
+<TD class="cellEnumTableCol3">RAT GPO line 3</TD>
+</TR>
+</TABLE>
+</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0x0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="SYSGPOCTL_GPOCTL2">11:8</a>
+</TD>
+<TD class="cellBitfieldCol2">GPOCTL2</TD>
+<TD class="cellBitfieldCol3" colspan="3">RF Core GPO control bit 2. Selects which signal to output on the RF Core GPO line 2.<TABLE cellspacing="0" class="LprfEnum">
+<TR class="rowEnumHead">
+<TD class="cellEnumTableHeadCol1">Value</TD>
+<TD class="cellEnumTableHeadCol2">ENUM Name</TD>
+<TD class="cellEnumTableHeadCol3">Description</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x0</TD>
+<TD class="cellEnumTableCol2">CPEGPO0</TD>
+<TD class="cellEnumTableCol3">CPE GPO line 0</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x1</TD>
+<TD class="cellEnumTableCol2">CPEGPO1</TD>
+<TD class="cellEnumTableCol3">CPE GPO line 1</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x2</TD>
+<TD class="cellEnumTableCol2">CPEGPO2</TD>
+<TD class="cellEnumTableCol3">CPE GPO line 2</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x3</TD>
+<TD class="cellEnumTableCol2">CPEGPO3</TD>
+<TD class="cellEnumTableCol3">CPE GPO line 3</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x4</TD>
+<TD class="cellEnumTableCol2">MCEGPO0</TD>
+<TD class="cellEnumTableCol3">MCE GPO line 0</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x5</TD>
+<TD class="cellEnumTableCol2">MCEGPO1</TD>
+<TD class="cellEnumTableCol3">MCE GPO line 1</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x6</TD>
+<TD class="cellEnumTableCol2">MCEGPO2</TD>
+<TD class="cellEnumTableCol3">MCE GPO line 2</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x7</TD>
+<TD class="cellEnumTableCol2">MCEGPO3</TD>
+<TD class="cellEnumTableCol3">MCE GPO line 3</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x8</TD>
+<TD class="cellEnumTableCol2">RFEGPO0</TD>
+<TD class="cellEnumTableCol3">RFE GPO line 0</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x9</TD>
+<TD class="cellEnumTableCol2">RFEGPO1</TD>
+<TD class="cellEnumTableCol3">RFE GPO line 1</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0xA</TD>
+<TD class="cellEnumTableCol2">RFEGPO2</TD>
+<TD class="cellEnumTableCol3">RFE GPO line 2</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0xB</TD>
+<TD class="cellEnumTableCol2">RFEGPO3</TD>
+<TD class="cellEnumTableCol3">RFE GPO line 3</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0xC</TD>
+<TD class="cellEnumTableCol2">RATGPO0</TD>
+<TD class="cellEnumTableCol3">RAT GPO line 0</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0xD</TD>
+<TD class="cellEnumTableCol2">RATGPO1</TD>
+<TD class="cellEnumTableCol3">RAT GPO line 1</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0xE</TD>
+<TD class="cellEnumTableCol2">RATGPO2</TD>
+<TD class="cellEnumTableCol3">RAT GPO line 2</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0xF</TD>
+<TD class="cellEnumTableCol2">RATGPO3</TD>
+<TD class="cellEnumTableCol3">RAT GPO line 3</TD>
+</TR>
+</TABLE>
+</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0x0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="SYSGPOCTL_GPOCTL1">7:4</a>
+</TD>
+<TD class="cellBitfieldCol2">GPOCTL1</TD>
+<TD class="cellBitfieldCol3" colspan="3">RF Core GPO control bit 1. Selects which signal to output on the RF Core GPO line 1.<TABLE cellspacing="0" class="LprfEnum">
+<TR class="rowEnumHead">
+<TD class="cellEnumTableHeadCol1">Value</TD>
+<TD class="cellEnumTableHeadCol2">ENUM Name</TD>
+<TD class="cellEnumTableHeadCol3">Description</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x0</TD>
+<TD class="cellEnumTableCol2">CPEGPO0</TD>
+<TD class="cellEnumTableCol3">CPE GPO line 0</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x1</TD>
+<TD class="cellEnumTableCol2">CPEGPO1</TD>
+<TD class="cellEnumTableCol3">CPE GPO line 1</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x2</TD>
+<TD class="cellEnumTableCol2">CPEGPO2</TD>
+<TD class="cellEnumTableCol3">CPE GPO line 2</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x3</TD>
+<TD class="cellEnumTableCol2">CPEGPO3</TD>
+<TD class="cellEnumTableCol3">CPE GPO line 3</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x4</TD>
+<TD class="cellEnumTableCol2">MCEGPO0</TD>
+<TD class="cellEnumTableCol3">MCE GPO line 0</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x5</TD>
+<TD class="cellEnumTableCol2">MCEGPO1</TD>
+<TD class="cellEnumTableCol3">MCE GPO line 1</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x6</TD>
+<TD class="cellEnumTableCol2">MCEGPO2</TD>
+<TD class="cellEnumTableCol3">MCE GPO line 2</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x7</TD>
+<TD class="cellEnumTableCol2">MCEGPO3</TD>
+<TD class="cellEnumTableCol3">MCE GPO line 3</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x8</TD>
+<TD class="cellEnumTableCol2">RFEGPO0</TD>
+<TD class="cellEnumTableCol3">RFE GPO line 0</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x9</TD>
+<TD class="cellEnumTableCol2">RFEGPO1</TD>
+<TD class="cellEnumTableCol3">RFE GPO line 1</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0xA</TD>
+<TD class="cellEnumTableCol2">RFEGPO2</TD>
+<TD class="cellEnumTableCol3">RFE GPO line 2</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0xB</TD>
+<TD class="cellEnumTableCol2">RFEGPO3</TD>
+<TD class="cellEnumTableCol3">RFE GPO line 3</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0xC</TD>
+<TD class="cellEnumTableCol2">RATGPO0</TD>
+<TD class="cellEnumTableCol3">RAT GPO line 0</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0xD</TD>
+<TD class="cellEnumTableCol2">RATGPO1</TD>
+<TD class="cellEnumTableCol3">RAT GPO line 1</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0xE</TD>
+<TD class="cellEnumTableCol2">RATGPO2</TD>
+<TD class="cellEnumTableCol3">RAT GPO line 2</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0xF</TD>
+<TD class="cellEnumTableCol2">RATGPO3</TD>
+<TD class="cellEnumTableCol3">RAT GPO line 3</TD>
+</TR>
+</TABLE>
+</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0x0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="SYSGPOCTL_GPOCTL0">3:0</a>
+</TD>
+<TD class="cellBitfieldCol2">GPOCTL0</TD>
+<TD class="cellBitfieldCol3" colspan="3">RF Core GPO control bit 0. Selects which signal to output on the RF Core GPO line 0.<TABLE cellspacing="0" class="LprfEnum">
+<TR class="rowEnumHead">
+<TD class="cellEnumTableHeadCol1">Value</TD>
+<TD class="cellEnumTableHeadCol2">ENUM Name</TD>
+<TD class="cellEnumTableHeadCol3">Description</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x0</TD>
+<TD class="cellEnumTableCol2">CPEGPO0</TD>
+<TD class="cellEnumTableCol3">CPE GPO line 0</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x1</TD>
+<TD class="cellEnumTableCol2">CPEGPO1</TD>
+<TD class="cellEnumTableCol3">CPE GPO line 1</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x2</TD>
+<TD class="cellEnumTableCol2">CPEGPO2</TD>
+<TD class="cellEnumTableCol3">CPE GPO line 2</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x3</TD>
+<TD class="cellEnumTableCol2">CPEGPO3</TD>
+<TD class="cellEnumTableCol3">CPE GPO line 3</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x4</TD>
+<TD class="cellEnumTableCol2">MCEGPO0</TD>
+<TD class="cellEnumTableCol3">MCE GPO line 0</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x5</TD>
+<TD class="cellEnumTableCol2">MCEGPO1</TD>
+<TD class="cellEnumTableCol3">MCE GPO line 1</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x6</TD>
+<TD class="cellEnumTableCol2">MCEGPO2</TD>
+<TD class="cellEnumTableCol3">MCE GPO line 2</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x7</TD>
+<TD class="cellEnumTableCol2">MCEGPO3</TD>
+<TD class="cellEnumTableCol3">MCE GPO line 3</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x8</TD>
+<TD class="cellEnumTableCol2">RFEGPO0</TD>
+<TD class="cellEnumTableCol3">RFE GPO line 0</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x9</TD>
+<TD class="cellEnumTableCol2">RFEGPO1</TD>
+<TD class="cellEnumTableCol3">RFE GPO line 1</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0xA</TD>
+<TD class="cellEnumTableCol2">RFEGPO2</TD>
+<TD class="cellEnumTableCol3">RFE GPO line 2</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0xB</TD>
+<TD class="cellEnumTableCol2">RFEGPO3</TD>
+<TD class="cellEnumTableCol3">RFE GPO line 3</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0xC</TD>
+<TD class="cellEnumTableCol2">RATGPO0</TD>
+<TD class="cellEnumTableCol3">RAT GPO line 0</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0xD</TD>
+<TD class="cellEnumTableCol2">RATGPO1</TD>
+<TD class="cellEnumTableCol3">RAT GPO line 1</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0xE</TD>
+<TD class="cellEnumTableCol2">RATGPO2</TD>
+<TD class="cellEnumTableCol3">RAT GPO line 2</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0xF</TD>
+<TD class="cellEnumTableCol2">RATGPO3</TD>
+<TD class="cellEnumTableCol3">RAT GPO line 3</TD>
+</TR>
+</TABLE>
+</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0x0</TD>
+</TR>
+</TABLE>
+<BR>
+<BR>
+<hr><table class="footer"><tr><td>&copy; 2015 - 2016. Texas Instruments | All Rights Reserved</td></tr></table>
+</BODY>
+</HTML>

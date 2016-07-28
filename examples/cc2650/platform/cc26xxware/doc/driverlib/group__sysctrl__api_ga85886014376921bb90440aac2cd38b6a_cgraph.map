@@ -1,0 +1,24 @@
+<map id="SysCtrlPowerEverything" name="SysCtrlPowerEverything">
+<area shape="rect" id="node2" href="$group__aonwuc__api.html#gaf0a713d626998a6f5ad49f654421e238" title="Control the wake up procedure of the AUX domain. " alt="" coords="247,5,438,32"/>
+<area shape="rect" id="node3" href="$group__aonwuc__api.html#gaee3e5c44fddebab2d6168331c3dd47a4" title="Get the power status of the device. " alt="" coords="251,56,435,83"/>
+<area shape="rect" id="node4" href="$group__auxwuc__api.html#ga8be983bd28860e59b88ddad4c5933885" title="Enable clocks for peripherals in the AUX domain. " alt="" coords="265,107,421,133"/>
+<area shape="rect" id="node5" href="$group__auxwuc__api.html#ga511ec7aac98504fc449b788d67d438c9" title="Get the status of a clock. " alt="" coords="265,157,420,184"/>
+<area shape="rect" id="node6" href="$group__osc__api.html#ga37a02687fbd8680396550f682a7f046f" title="Configure the oscillator input to the a source clock. " alt="" coords="267,208,418,235"/>
+<area shape="rect" id="node12" href="$group__osc__api.html#ga279bd3a34548bd4c5e2fc6939f7be228" title="Get the source clock settings. " alt="" coords="267,259,419,285"/>
+<area shape="rect" id="node15" href="$group__osc__api.html#gac21e7c4532672c8fa7b90e493359ddc2" title="Switch the high frequency clock. " alt="" coords="267,309,418,336"/>
+<area shape="rect" id="node16" href="$group__prcm__api.html#gaef83a9e0f14410e50c808554539dd8a3" title="Turn power on in power domains in the MCU domain. " alt="" coords="261,360,424,387"/>
+<area shape="rect" id="node17" href="$group__prcm__api.html#gadf4297856ef8da238bbaab9722013110" title="Get the status for a specific power domain. " alt="" coords="249,411,436,437"/>
+<area shape="rect" id="node18" href="$group__prcm__api.html#ga3712e9e25e4a68f3ce0eefac5d356b6c" title="Use this function to synchronize the load settings. " alt="" coords="287,461,398,488"/>
+<area shape="rect" id="node19" href="$group__prcm__api.html#gad0e73c89152a115f7bfe71a85e757940" title="Check if any of the load sensitive register has been updated. " alt="" coords="287,512,398,539"/>
+<area shape="rect" id="node20" href="$group__prcm__api.html#ga848fb79f23229b861d6fc117f945cb7e" title="Enable clock domains in the MCU voltage domain. " alt="" coords="267,563,418,589"/>
+<area shape="rect" id="node21" href="$group__prcm__api.html#ga7cab381aae97daf9be8a2be32539363b" title="Enables a peripheral in Run mode. " alt="" coords="249,613,436,640"/>
+<area shape="rect" id="node22" href="$group__prcm__api.html#ga5e570c73b06849fb9f0d8c04303c88d1" title="Enables a peripheral in sleep mode. " alt="" coords="243,664,443,691"/>
+<area shape="rect" id="node23" href="$group__prcm__api.html#ga5fed0e10c65ca2f3819df742cba9de5d" title="Enables a peripheral in deep&#45;sleep mode. " alt="" coords="225,715,460,741"/>
+<area shape="rect" id="node7" href="$group__ddi__api.html#ga492326c095c70621a247fe02a2cb09e4" title="Write a bitfield via the DDI using 16&#45;bit maskable write. " alt="" coords="508,208,643,235"/>
+<area shape="rect" id="node8" href="$group__ddi__api.html#ga06d6b1eee2c8757b8431eb6e1ab98f68" title="Safely write to AUX ADI/DDI interfaces using a semaphore. " alt="" coords="691,208,837,235"/>
+<area shape="rect" id="node9" href="$group__cpu__api.html#ga491d851c4f7fff1f9f66aa778b0671b0" title="Disable all external interrupts. " alt="" coords="885,208,968,235"/>
+<area shape="rect" id="node11" href="$group__cpu__api.html#ga6922d401cbc951632f495ffcf2e71dfc" title="Enable all external interrupts. " alt="" coords="885,259,968,285"/>
+<area shape="rect" id="node10" href="$cpu_8c.html#a9d29df169acb9be94306e8b58faed3ee" title="Provide a small delay. " alt="" coords="1016,233,1080,260"/>
+<area shape="rect" id="node13" href="$group__ddi__api.html#gac86ccf0590b9dbdc88eb1a6c856c78a4" title="Read a bitfield via the DDI using 16&#45;bit read. " alt="" coords="508,259,643,285"/>
+<area shape="rect" id="node14" href="$group__ddi__api.html#ga8175a094afd96e5f440a276c4cc7fe44" title="Safely read from AUX ADI/DDI interfaces using a semaphore. " alt="" coords="691,259,837,285"/>
+</map>

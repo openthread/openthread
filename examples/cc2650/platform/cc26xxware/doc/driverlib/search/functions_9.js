@@ -1,0 +1,20 @@
+var searchData=
+[
+  ['osc_5fhposcrelativefrequencyoffsetget',['OSC_HPOSCRelativeFrequencyOffsetGet',['../group__osc__api.html#ga5d974140ed2a25ffbb5dd851c63cbb8d',1,'OSC_HPOSCRelativeFrequencyOffsetGet(int32_t tempDegC):&#160;osc.c'],['../group__osc__api.html#ga5d974140ed2a25ffbb5dd851c63cbb8d',1,'OSC_HPOSCRelativeFrequencyOffsetGet(int32_t tempDegC):&#160;osc.c']]],
+  ['osc_5fhposcrelativefrequencyoffsettorfcoreformatconvert',['OSC_HPOSCRelativeFrequencyOffsetToRFCoreFormatConvert',['../group__osc__api.html#ga4117910cda25374e78214e2b632102a7',1,'OSC_HPOSCRelativeFrequencyOffsetToRFCoreFormatConvert(int32_t HPOSC_RelFreqOffset):&#160;osc.c'],['../group__osc__api.html#ga4117910cda25374e78214e2b632102a7',1,'OSC_HPOSCRelativeFrequencyOffsetToRFCoreFormatConvert(int32_t HPOSC_RelFreqOffset):&#160;osc.c']]],
+  ['oscclocklosseventdisable',['OSCClockLossEventDisable',['../group__osc__api.html#ga8c7823a2f4fc61456f576bf472ed2308',1,'osc.h']]],
+  ['oscclocklosseventenable',['OSCClockLossEventEnable',['../group__osc__api.html#ga466c89b836c6b60214fec5b5e8e0719d',1,'osc.h']]],
+  ['oscclocksourceget',['OSCClockSourceGet',['../group__osc__api.html#ga279bd3a34548bd4c5e2fc6939f7be228',1,'OSCClockSourceGet(uint32_t ui32SrcClk):&#160;osc.c'],['../group__osc__api.html#ga279bd3a34548bd4c5e2fc6939f7be228',1,'OSCClockSourceGet(uint32_t ui32SrcClk):&#160;osc.c']]],
+  ['oscclocksourceset',['OSCClockSourceSet',['../group__osc__api.html#ga37a02687fbd8680396550f682a7f046f',1,'OSCClockSourceSet(uint32_t ui32SrcClk, uint32_t ui32Osc):&#160;osc.c'],['../group__osc__api.html#ga37a02687fbd8680396550f682a7f046f',1,'OSCClockSourceSet(uint32_t ui32SrcClk, uint32_t ui32Osc):&#160;osc.c']]],
+  ['oschf_5fattempttoswitchtoxosc',['OSCHF_AttemptToSwitchToXosc',['../group__osc__api.html#ga47914d2750ee826560f2107a567bb1a4',1,'OSCHF_AttemptToSwitchToXosc(void):&#160;osc.c'],['../group__osc__api.html#ga47914d2750ee826560f2107a567bb1a4',1,'OSCHF_AttemptToSwitchToXosc(void):&#160;osc.c']]],
+  ['oschf_5fdebuggetcrystalamplitude',['OSCHF_DebugGetCrystalAmplitude',['../group__osc__api.html#ga33e3c6c58c877cfa2be8221148ed1885',1,'OSCHF_DebugGetCrystalAmplitude(void):&#160;osc.c'],['../group__osc__api.html#ga33e3c6c58c877cfa2be8221148ed1885',1,'OSCHF_DebugGetCrystalAmplitude(void):&#160;osc.c']]],
+  ['oschf_5fdebuggetexpectedaveragecrystalamplitude',['OSCHF_DebugGetExpectedAverageCrystalAmplitude',['../group__osc__api.html#ga19ebf81100cd985a838276260fde3cab',1,'OSCHF_DebugGetExpectedAverageCrystalAmplitude(void):&#160;osc.c'],['../group__osc__api.html#ga19ebf81100cd985a838276260fde3cab',1,'OSCHF_DebugGetExpectedAverageCrystalAmplitude(void):&#160;osc.c']]],
+  ['oschf_5fgetstartuptime',['OSCHF_GetStartupTime',['../group__osc__api.html#ga8f7fce82e80c984531622af61963db51',1,'OSCHF_GetStartupTime(uint32_t timeUntilWakeupInMs):&#160;osc.c'],['../group__osc__api.html#ga8f7fce82e80c984531622af61963db51',1,'OSCHF_GetStartupTime(uint32_t timeUntilWakeupInMs):&#160;osc.c']]],
+  ['oschf_5fswitchtorcoscturnoffxosc',['OSCHF_SwitchToRcOscTurnOffXosc',['../group__osc__api.html#ga9eeb99e769d9c911305ff4c3c33c736c',1,'OSCHF_SwitchToRcOscTurnOffXosc(void):&#160;osc.c'],['../group__osc__api.html#ga9eeb99e769d9c911305ff4c3c33c736c',1,'OSCHF_SwitchToRcOscTurnOffXosc(void):&#160;osc.c']]],
+  ['oschf_5fturnonxosc',['OSCHF_TurnOnXosc',['../group__osc__api.html#gaee5a511c4ca70e8eb66f4a6252488506',1,'OSCHF_TurnOnXosc(void):&#160;osc.c'],['../group__osc__api.html#gaee5a511c4ca70e8eb66f4a6252488506',1,'OSCHF_TurnOnXosc(void):&#160;osc.c']]],
+  ['oschfsourceready',['OSCHfSourceReady',['../group__osc__api.html#gae135dfece97e821338b93c4b32bc6980',1,'osc.h']]],
+  ['oschfsourceswitch',['OSCHfSourceSwitch',['../group__osc__api.html#gac21e7c4532672c8fa7b90e493359ddc2',1,'osc.h']]],
+  ['oscinterfacedisable',['OSCInterfaceDisable',['../group__osc__api.html#ga16a6436817d18fdeef1fa514bb805047',1,'osc.h']]],
+  ['oscinterfaceenable',['OSCInterfaceEnable',['../group__osc__api.html#ga9c70d385757875d81e8d78b3784923d0',1,'osc.h']]],
+  ['oscxhfpowermodeset',['OSCXHfPowerModeSet',['../group__osc__api.html#ga5f00114c27141d4a48934cad95b0daa0',1,'osc.h']]]
+];

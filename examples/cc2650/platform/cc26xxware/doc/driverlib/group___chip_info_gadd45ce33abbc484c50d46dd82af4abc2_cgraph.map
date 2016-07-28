@@ -1,0 +1,6 @@
+<map id="ChipInfo_HwRevisionIs_1_0" name="ChipInfo_HwRevisionIs_1_0">
+<area shape="rect" id="node2" href="$group___chip_info.html#ga46fd835d83079e920f2ed930e5db99c3" title="Returns chip HW revision. " alt="" coords="244,23,417,49"/>
+<area shape="rect" id="node3" href="$group___chip_info.html#ga5becf5c53f75421ba924094c8e7e8411" title="Returns the internal chip HW revision code. " alt="" coords="692,23,923,49"/>
+<area shape="rect" id="node4" href="$group___chip_info.html#gad3a55ad8c671d9e3c7e65cb6c542358a" title="Returns minor hardware revision number. " alt="" coords="465,23,644,49"/>
+<area shape="rect" id="node5" href="$group___chip_info.html#gaca76b9c316d9123a5b337fa715811ccc" title="Returns chip family member. " alt="" coords="469,73,640,100"/>
+</map>

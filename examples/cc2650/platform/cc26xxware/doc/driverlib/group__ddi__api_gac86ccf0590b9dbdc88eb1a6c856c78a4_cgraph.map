@@ -1,0 +1,6 @@
+<map id="DDI16BitfieldRead" name="DDI16BitfieldRead">
+<area shape="rect" id="node2" href="$group__ddi__api.html#ga8175a094afd96e5f440a276c4cc7fe44" title="Safely read from AUX ADI/DDI interfaces using a semaphore. " alt="" coords="188,31,335,57"/>
+<area shape="rect" id="node3" href="$group__cpu__api.html#ga491d851c4f7fff1f9f66aa778b0671b0" title="Disable all external interrupts. " alt="" coords="383,5,465,32"/>
+<area shape="rect" id="node5" href="$group__cpu__api.html#ga6922d401cbc951632f495ffcf2e71dfc" title="Enable all external interrupts. " alt="" coords="383,56,465,83"/>
+<area shape="rect" id="node4" href="$cpu_8c.html#a9d29df169acb9be94306e8b58faed3ee" title="Provide a small delay. " alt="" coords="513,31,577,57"/>
+</map>

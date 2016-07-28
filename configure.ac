@@ -381,11 +381,11 @@ AM_CONDITIONAL([OPENTHREAD_ENABLE_NCP], [test "${enable_ncp}" = "yes"])
 
 AC_ARG_WITH(examples,
     [AS_HELP_STRING([--with-examples=TARGET],
-        [Specify the examples from one of: none, posix, cc2538 @<:@default=none@:>@.])],
+        [Specify the examples from one of: none, posix, cc2538, cc2650 @<:@default=none@:>@.])],
     [
         case "${with_examples}" in
 
-        none|posix|cc2538)
+        none|posix|cc2538|cc2650)
             ;;
         *)
             AC_MSG_ERROR([Invalid value ${with_examples} for --with-examples])
@@ -406,6 +406,10 @@ case ${with_examples} in
         OPENTHREAD_EXAMPLES_CC2538=1
         ;;
 
+    cc2650)
+        OPENTHREAD_EXAMPLES_CC2650=1
+        ;;
+
 esac
 
 AC_MSG_RESULT(${OPENTHREAD_EXAMPLES})
@@ -420,6 +424,10 @@ AC_DEFINE_UNQUOTED([OPENTHREAD_EXAMPLES_POSIX],[${OPENTHREAD_EXAMPLES_POSIX}],[D
 AC_SUBST(OPENTHREAD_EXAMPLES_CC2538)
 AM_CONDITIONAL([OPENTHREAD_EXAMPLES_CC2538], [test "${OPENTHREAD_EXAMPLES}" = "cc2538"])
 AC_DEFINE_UNQUOTED([OPENTHREAD_EXAMPLES_CC2538],[${OPENTHREAD_EXAMPLES_CC2538}],[Define to 1 if you want to use cc2538 examples])
+
+AC_SUBST(OPENTHREAD_EXAMPLES_CC2650)
+AM_CONDITIONAL([OPENTHREAD_EXAMPLES_CC2650], [test "${OPENTHREAD_EXAMPLES}" = "cc2650"])
+AC_DEFINE_UNQUOTED([OPENTHREAD_EXAMPLES_CC2650],[${OPENTHREAD_EXAMPLES_CC2650}],[Define to 1 if you want to use cc2650 examples])
 
 #
 # Tools
@@ -536,6 +544,11 @@ examples/cc2538/app/Makefile
 examples/cc2538/app/cli/Makefile
 examples/cc2538/app/ncp/Makefile
 examples/cc2538/platform/Makefile
+examples/cc2650/Makefile
+examples/cc2650/app/Makefile
+examples/cc2650/app/cli/Makefile
+examples/cc2650/app/ncp/Makefile
+examples/cc2650/platform/Makefile
 tests/Makefile
 tests/scripts/Makefile
 tests/unit/Makefile

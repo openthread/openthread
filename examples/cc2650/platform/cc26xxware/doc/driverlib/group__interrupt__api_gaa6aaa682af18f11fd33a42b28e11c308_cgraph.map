@@ -1,0 +1,4 @@
+<map id="IntMasterEnable" name="IntMasterEnable">
+<area shape="rect" id="node2" href="$group__cpu__api.html#ga6922d401cbc951632f495ffcf2e71dfc" title="Enable all external interrupts. " alt="" coords="179,5,261,32"/>
+<area shape="rect" id="node3" href="$cpu_8c.html#a9d29df169acb9be94306e8b58faed3ee" title="Provide a small delay. " alt="" coords="309,5,373,32"/>
+</map>
