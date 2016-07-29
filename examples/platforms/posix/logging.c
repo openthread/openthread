@@ -103,6 +103,10 @@ void otPlatLog(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aFormat
     case kLogRegionMem:
         fprintf(stderr, "MEM  ");
         break;
+
+    case kLogRegionNcp:
+        fprintf(stderr, "NCP  ");
+        break;
     }
 
     va_start(args, aFormat);

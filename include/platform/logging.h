@@ -85,6 +85,7 @@ typedef enum otLogRegion
     kLogRegionIp6      = 6,  ///< IPv6
     kLogRegionMac      = 7,  ///< IEEE 802.15.4 MAC
     kLogRegionMem      = 8,  ///< Memory
+    kLogRegionNcp      = 9,  ///< NCP
 } otLogRegion;
 
 /**
