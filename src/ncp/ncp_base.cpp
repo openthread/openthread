@@ -298,6 +298,7 @@ static spinel_status_t ResetReasonToSpinelStatus(otPlatResetReason reason)
 // ----------------------------------------------------------------------------
 
 NcpBase::NcpBase():
+    mSendDoneTask(&SendDoneTask, this),
     mUpdateChangedPropsTask(&UpdateChangedProps, this)
 {
     mSupportedChannelMask = kPhySupportedChannelMask;
@@ -569,25 +570,38 @@ void NcpBase::HandleReceive(const uint8_t *buf, uint16_t bufLength)
     }
 }
 
-void NcpBase::HandleSendDone()
+void NcpBase::SendDoneTask(void *context)
 {
-    if (mSendQueue.GetHead() != NULL)
-    {
-        Message &message(*mSendQueue.GetHead());
-        mSendQueue.Dequeue(message);
-        HandleDatagramFromStack(message);
-    }
+    NcpBase *obj = reinterpret_cast<NcpBase *>(context);
+    obj->SendDoneTask();
+}
 
-    if (mQueuedGetHeader != 0)
-    {
-        HandleCommandPropertyGet(mQueuedGetHeader, mQueuedGetKey);
-        mQueuedGetHeader = 0;
-    }
+void NcpBase::SendDoneTask(void)
+{
+    if (!mSending) {
+        if (mSendQueue.GetHead() != NULL)
+        {
+            Message &message(*mSendQueue.GetHead());
+            mSendQueue.Dequeue(message);
+            HandleDatagramFromStack(message);
+        }
 
-    if (!mSending)
-    {
-        UpdateChangedProps();
+        if (mQueuedGetHeader != 0)
+        {
+            HandleCommandPropertyGet(mQueuedGetHeader, mQueuedGetKey);
+            mQueuedGetHeader = 0;
+        }
+
+        if (!mSending)
+        {
+            UpdateChangedProps();
+        }
     }
+}
+
+void NcpBase::HandleSendDone(void)
+{
+    mSendDoneTask.Post();
 }
 
 

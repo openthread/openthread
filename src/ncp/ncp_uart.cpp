@@ -145,12 +145,17 @@ NcpUart::OutboundFrameSend(void)
 
     if (errorCode == kThreadError_None)
     {
+        // We go ahead and set this to `true` here in case
+        // `otPlatUartSend()` ends up directly calling
+        // `otPlatUartSendDone()`.
+        mSending = true;
+
         errorCode = otPlatUartSend(mSendFrame.GetBuffer(), mSendFrame.GetLength());
     }
 
-    if (errorCode == kThreadError_None)
+    if (errorCode != kThreadError_None)
     {
-        mSending = true;
+        mSending = false;
     }
 
     return errorCode;
