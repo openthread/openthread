@@ -59,10 +59,10 @@
 /* ------------------------------------------------------------------------- */
 /* MARK: Macros and Constants */
 
-#define SPI_HDLC_VERSION                "0.01"
+#define SPI_HDLC_VERSION                "0.02"
 
 #define MAX_FRAME_SIZE                  2048
-#define HEADER_LEN                      5
+#define HEADER_LEN                      6
 #define SPI_HEADER_RESET_FLAG			(1 << 7)
 
 #define EXIT_QUIT                       65535
@@ -86,7 +86,8 @@
 #define SPI_POLL_PERIOD_MSEC            (MSEC_PER_SEC/30)
 
 static const uint8_t kHDLCResetSignal[] = { 0x7E, 0x13, 0x11, 0x7E };
-static const uint16_t kHDLCCRCCheckValue = 0x2189;
+static const uint16_t kHDLCCRCCheckValue = 0xf0b8;
+static const uint16_t kHDLCCRCResetValue = 0xffff;
 
 enum {
     MODE_STDIO = 0,
@@ -102,21 +103,23 @@ static int gMode = MODE_PTY;
 static int gMode = MODE_STDIO;
 #endif
 
-static const char* gSpiDevPath = NULL;
+static const char* gSpiDevPath     = NULL;
 static const char* gIntGpioDevPath = NULL;
 static const char* gResGpioDevPath = NULL;
-static int gVerbose = LOG_WARNING;
 
-static int gSpiDevFd = -1;
-static int gResGpioValueFd = -1;
-static int gIntGpioValueFd = -1;
+static int gVerbose             = LOG_WARNING;
 
-static int gHDLCInputFd = -1;
-static int gHDLCOutputFd = -1;
+static int gSpiDevFd            = -1;
+static int gResGpioValueFd      = -1;
+static int gIntGpioValueFd      = -1;
 
-static int gSpiSpeed = 1000000;
-static uint8_t gSpiMode = 0;
-static int gSpiBeginDelay = 0;
+static int gHDLCInputFd         = -1;
+static int gHDLCOutputFd        = -1;
+
+static int gSpiSpeed            = 1000000; // in Hz
+static uint8_t gSpiMode         = 0;
+static int gSpiCsDelay       = 1 * USEC_PER_MSEC;
+static int gSpiTransactionDelay = 1 * USEC_PER_MSEC;
 
 static uint16_t gSpiRxPayloadSize;
 static uint8_t gSpiRxFrameBuffer[MAX_FRAME_SIZE];
@@ -124,7 +127,9 @@ static uint8_t gSpiRxFrameBuffer[MAX_FRAME_SIZE];
 static uint16_t gSpiTxPayloadSize;
 static bool gSpiTxReady = false;
 static bool gSpiTxFlowControl = false;
-static uint8_t gSpiTxFrameBuffer[MAX_FRAME_SIZE] = { SPI_HEADER_RESET_FLAG };
+static uint8_t gSpiTxFrameBuffer[MAX_FRAME_SIZE];
+
+static uint32_t gSpiFrameCount = 0;
 
 static bool gSlaveDidReset = false;
 
@@ -227,13 +232,45 @@ static void signal_critical(int sig, siginfo_t * info, void * ucontext)
 /* ------------------------------------------------------------------------- */
 /* MARK: SPI Transfer Functions */
 
+static void spi_header_set_flag_byte(uint8_t *header, uint8_t value)
+{
+    header[1] = value;
+}
+
+static void spi_header_set_accept_len(uint8_t *header, uint16_t len)
+{
+    header[2] = ((len << 0) & 0xFF);
+    header[3] = ((len << 8) & 0xFF);
+}
+
+static void spi_header_set_data_len(uint8_t *header, uint16_t len)
+{
+    header[4] = ((len << 0) & 0xFF);
+    header[5] = ((len << 8) & 0xFF);
+}
+
+static uint8_t spi_header_get_flag_byte(uint8_t *header)
+{
+    return header[1];
+}
+
+static uint16_t spi_header_get_accept_len(uint8_t *header)
+{
+    return ( header[2] + (header[3] << 8) );
+}
+
+static uint16_t spi_header_get_data_len(uint8_t *header)
+{
+    return ( header[4] + (header[5] << 8) );
+}
+
 static void spi_cs_delay(void)
  {
     struct spi_ioc_transfer xfer = {
         .tx_buf = (unsigned long)NULL,
         .rx_buf = (unsigned long)NULL,
         .len = 0,
-        .delay_usecs = gSpiBeginDelay,
+        .delay_usecs = gSpiCsDelay,
         .speed_hz = gSpiSpeed,
         .bits_per_word = 8,
         .cs_change = false,
@@ -257,65 +294,47 @@ static int do_spi_xfer(int len)
         .cs_change = false,
     };
 
-    if (gSpiBeginDelay > 0)
+    if (gSpiCsDelay > 0)
     {
         spi_cs_delay();
     }
 
     ret = ioctl(gSpiDevFd, SPI_IOC_MESSAGE(1), &xfer);
 
-    if (gSpiRxFrameBuffer[0] != 0xFF)
+    if (spi_header_get_flag_byte(gSpiRxFrameBuffer) != 0xFF)
     {
-        if (gSpiRxFrameBuffer[0] & SPI_HEADER_RESET_FLAG)
+        if (spi_header_get_flag_byte(gSpiRxFrameBuffer) & SPI_HEADER_RESET_FLAG)
         {
             gSlaveDidReset = true;
         }
     }
 
+    gSpiFrameCount++;
+
     return ret;
 }
 
 
-static void spi_header_set_accept_len(uint8_t *header, uint16_t len)
-{
-    header[1] = ((len << 0) & 0xFF);
-    header[2] = ((len << 8) & 0xFF);
-}
-
-static void spi_header_set_data_len(uint8_t *header, uint16_t len)
-{
-    header[3] = ((len << 0) & 0xFF);
-    header[4] = ((len << 8) & 0xFF);
-}
-
-static uint16_t spi_header_get_accept_len(uint8_t *header)
-{
-    return ( header[1] + (header[2] << 8) );
-}
-
-static uint16_t spi_header_get_data_len(uint8_t *header)
-{
-    return ( header[3] + (header[4] << 8) );
-}
-
 static void debug_spi_header(const char* hint)
 {
-    syslog(LOG_DEBUG, "%s: TX-HEADER: %02X %02X %02X %02X %02X\n",
+    syslog(LOG_DEBUG, "%s: TX-HEADER: %02X %02X %02X %02X %02X %02X\n",
         hint,
         gSpiTxFrameBuffer[0],
         gSpiTxFrameBuffer[1],
         gSpiTxFrameBuffer[2],
         gSpiTxFrameBuffer[3],
-        gSpiTxFrameBuffer[4]
+        gSpiTxFrameBuffer[4],
+        gSpiTxFrameBuffer[5]
     );
 
-    syslog(LOG_DEBUG, "%s: RX-HEADER: %02X %02X %02X %02X %02X\n",
+    syslog(LOG_DEBUG, "%s: RX-HEADER: %02X %02X %02X %02X %02X %02X\n",
         hint,
         gSpiRxFrameBuffer[0],
         gSpiRxFrameBuffer[1],
         gSpiRxFrameBuffer[2],
         gSpiRxFrameBuffer[3],
-        gSpiRxFrameBuffer[4]
+        gSpiRxFrameBuffer[4],
+        gSpiRxFrameBuffer[5]
     );
 }
 
@@ -333,6 +352,7 @@ static int push_pull_spi(void)
     // so that the slave doesn't think
     // we are actually trying to transfer
     // data.
+    spi_header_set_flag_byte(gSpiTxFrameBuffer, gSpiFrameCount ? 0 : SPI_HEADER_RESET_FLAG);
     spi_header_set_accept_len(gSpiTxFrameBuffer, 0);
     spi_header_set_data_len(gSpiTxFrameBuffer, 0);
     ret = do_spi_xfer(0);
@@ -344,7 +364,7 @@ static int push_pull_spi(void)
 
     debug_spi_header("push_pull_1");
 
-    if (gSpiRxFrameBuffer[0] == 0xFF)
+    if (spi_header_get_flag_byte(gSpiRxFrameBuffer) == 0xFF)
     {
         // Device is off or in a bad state.
         gSpiTxFlowControl = true;
@@ -397,6 +417,10 @@ static int push_pull_spi(void)
         }
     }
 
+    usleep(gSpiTransactionDelay);
+
+    spi_header_set_flag_byte(gSpiTxFrameBuffer, 0);
+
     // This is the real transfer.
     ret = do_spi_xfer(spi_xfer_bytes);
     if (ret < 0)
@@ -407,7 +431,7 @@ static int push_pull_spi(void)
 
     debug_spi_header("push_pull_2");
 
-    if (gSpiRxFrameBuffer[0] == 0xFF)
+    if (spi_header_get_flag_byte(gSpiRxFrameBuffer) == 0xFF)
     {
         // Device is off or in a bad state.
         gSpiTxFlowControl = true;
@@ -562,7 +586,7 @@ static int push_hdlc(void)
         {
             // Escape the frame.
             uint8_t c;
-            uint16_t fcs = 0x0000;
+            uint16_t fcs = kHDLCCRCResetValue;
             uint16_t i;
 
             for (i = 0; i < gSpiRxPayloadSize; i++)
@@ -666,7 +690,7 @@ static int pull_hdlc(void)
                 syslog(LOG_WARNING, "HDLC frame was too big");
                 unescape_next_byte = false;
                 gSpiTxPayloadSize = 0;
-                fcs = 0;
+                fcs = kHDLCCRCResetValue;
 
             }
             else if (byte == HDLC_BYTE_FLAG)
@@ -675,7 +699,7 @@ static int pull_hdlc(void)
                 {
                     unescape_next_byte = false;
                     gSpiTxPayloadSize = 0;
-                    fcs = 0;
+                    fcs = kHDLCCRCResetValue;
                     continue;
 
                 }
@@ -684,7 +708,7 @@ static int pull_hdlc(void)
                     syslog(LOG_WARNING, "HDLC frame with bad CRC");
                     unescape_next_byte = false;
                     gSpiTxPayloadSize = 0;
-                    fcs = 0;
+                    fcs = kHDLCCRCResetValue;
                     continue;
                 }
 
@@ -696,7 +720,7 @@ static int pull_hdlc(void)
 
                 // Clean up for the next frame
                 unescape_next_byte = false;
-                fcs = 0;
+                fcs = kHDLCCRCResetValue;
                 break;
 
             }
@@ -1045,6 +1069,7 @@ static void print_help(void)
     "                                   GPIO directory for the `R̅E̅S̅` pin.\n"
     "    --spi-mode[=mode] ............ Specify the SPI mode to use (0-3).\n"
     "    --spi-speed[=hertz] .......... Specify the SPI speed in hertz.\n"
+    "    --spi-cs-delay[=usec] ........ Specify the delay after C̅S̅ assertion, in usec\n"
     "    -v/--verbose ................. Increase debug verbosity. (Repeatable)\n"
     "    -h/-?/--help ................. Print out usage information and exit.\n"
     "\n";
@@ -1068,7 +1093,9 @@ int main(int argc, char *argv[])
     int max_fd = -1;
     enum {
         ARG_SPI_MODE = 1001,
-        ARG_SPI_SPEED = 1002
+        ARG_SPI_SPEED = 1002,
+        ARG_VERBOSE = 1003,
+        ARG_SPI_CS_DELAY = 1004,
     };
 
     static struct option options[] = {
@@ -1076,11 +1103,12 @@ int main(int argc, char *argv[])
         { "pty",        no_argument,       &gMode, MODE_PTY      },
         { "gpio-int",   required_argument, NULL,   'i'           },
         { "gpio-res",   required_argument, NULL,   'r'           },
-        { "verbose",    optional_argument, NULL,   'v'           },
+        { "verbose",    optional_argument, NULL,   ARG_VERBOSE   },
         { "version",    no_argument,       NULL,   'V'           },
         { "help",       no_argument,       NULL,   'h'           },
         { "spi-mode",   required_argument, NULL,   ARG_SPI_MODE  },
         { "spi-speed",  required_argument, NULL,   ARG_SPI_SPEED },
+        { "spi-cs-delay",required_argument,NULL,   ARG_SPI_CS_DELAY },
 
         { NULL,         0,                 NULL,   0             },
     };
@@ -1117,7 +1145,7 @@ int main(int argc, char *argv[])
 
     while (1)
     {
-        int c = getopt_long(argc, argv, "i:r:v:Vh?", options, NULL);
+        int c = getopt_long(argc, argv, "i:r:vVh?", options, NULL);
         if (c == -1)
         {
             break;
@@ -1150,6 +1178,11 @@ int main(int argc, char *argv[])
                 }
                 break;
 
+            case ARG_SPI_CS_DELAY:
+                gSpiCsDelay = atoi(optarg);
+                syslog(LOG_NOTICE, "SPI CS Delay set to %d usec", gSpiCsDelay);
+                break;
+
             case 'r':
                 if (!setup_res_gpio(optarg))
                 {
@@ -1159,6 +1192,7 @@ int main(int argc, char *argv[])
                 break;
 
             case 'v':
+            case ARG_VERBOSE:
                 if (gVerbose < LOG_DEBUG)
                 {
                     if (optarg)
@@ -1169,7 +1203,8 @@ int main(int argc, char *argv[])
                     {
                         gVerbose++;
                     }
-                    setlogmask(setlogmask(0) & LOG_UPTO(gVerbose));
+                    setlogmask(setlogmask(0) | LOG_UPTO(gVerbose));
+                    syslog(gVerbose, "Verbosity set to level %d", gVerbose);
                 }
                 break;
 
@@ -1194,7 +1229,7 @@ int main(int argc, char *argv[])
     {
         if (!setup_spi_dev(argv[0]))
         {
-            syslog(LOG_ERR, "%s: Unable to open SPI device \"%s\", %s", prog, argv[optind], strerror(errno));
+            syslog(LOG_ERR, "%s: Unable to open SPI device \"%s\", %s", prog, argv[0], strerror(errno));
             exit(EXIT_FAILURE);
         }
         argc--;

@@ -27,6 +27,8 @@ protocol document.
     sysfs-exported GPIO directory for the `R̅E̅S̅` pin.
 *   `--spi-mode[=mode]`: Specify the SPI mode to use (0-3).
 *   `--spi-speed[=hertz]`: Specify the SPI speed in hertz.
+*   `--spi-cs-delay[=usec]`: Specify the delay after C̅S̅ assertion, in
+    microseconds.
 *   `--verbose`: Increase debug verbosity.
 *   `--help`: Print out usage information to `stdout` and exit.
 
