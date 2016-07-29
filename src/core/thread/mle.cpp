@@ -1038,6 +1038,8 @@ ThreadError Mle::SendDataResponse(const Ip6::Address &aDestination, const uint8_
     VerifyOrExit((message = Ip6::Udp::NewMessage(0)) != NULL, ;);
     message->SetLinkSecurityEnabled(false);
     SuccessOrExit(error = AppendHeader(*message, Header::kCommandDataResponse));
+    SuccessOrExit(error = AppendSourceAddress(*message));
+    SuccessOrExit(error = AppendLeaderData(*message));
 
     neighbor = mMleRouter.GetNeighbor(aDestination);
 
@@ -1045,10 +1047,6 @@ ThreadError Mle::SendDataResponse(const Ip6::Address &aDestination, const uint8_
     {
         switch (aTlvs[i])
         {
-        case Tlv::kLeaderData:
-            SuccessOrExit(error = AppendLeaderData(*message));
-            break;
-
         case Tlv::kNetworkData:
             stableOnly = neighbor != NULL ? (neighbor->mMode & ModeTlv::kModeFullNetworkData) == 0 : false;
             SuccessOrExit(error = AppendNetworkData(*message, stableOnly));
@@ -1420,7 +1418,7 @@ ThreadError Mle::HandleAdvertisement(const Message &aMessage, const Ip6::Message
     Neighbor *neighbor;
     SourceAddressTlv sourceAddress;
     LeaderDataTlv leaderData;
-    uint8_t tlvs[] = {Tlv::kLeaderData, Tlv::kNetworkData};
+    uint8_t tlvs[] = {Tlv::kNetworkData};
 
     // Source Address
     SuccessOrExit(error = Tlv::GetTlv(aMessage, Tlv::kSourceAddress, sizeof(sourceAddress), sourceAddress));
@@ -1780,7 +1778,7 @@ ThreadError Mle::HandleChildUpdateResponse(const Message &aMessage, const Ip6::M
     LeaderDataTlv leaderData;
     SourceAddressTlv sourceAddress;
     TimeoutTlv timeout;
-    uint8_t tlvs[] = {Tlv::kLeaderData, Tlv::kNetworkData};
+    uint8_t tlvs[] = {Tlv::kNetworkData};
 
     otLogInfoMle("Received Child Update Response\n");
 
