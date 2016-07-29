@@ -522,6 +522,7 @@ ThreadError MleRouter::SendLinkRequest(Neighbor *aNeighbor)
 
     case kDeviceStateChild:
         SuccessOrExit(error = AppendSourceAddress(*message));
+        SuccessOrExit(error = AppendLeaderData(*message));
         break;
 
     case kDeviceStateRouter:
