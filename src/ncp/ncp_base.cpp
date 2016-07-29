@@ -1346,7 +1346,7 @@ void NcpBase::GetPropertyHandler_NET_STATE(uint8_t header, spinel_prop_key_t key
 {
     spinel_net_state_t state(SPINEL_NET_STATE_OFFLINE);
 
-    if (!otInterfaceUp())
+    if (!otIsInterfaceUp())
     {
         state = SPINEL_NET_STATE_OFFLINE;
     }
@@ -2259,6 +2259,11 @@ void NcpBase::SetPropertyHandler_NET_STATE(uint8_t header, spinel_prop_key_t key
                 errorCode = otInterfaceDown();
             }
 
+            if ((errorCode == kThreadError_None) && (otGetDeviceRole() != kDeviceRoleDisabled))
+            {
+                errorCode = otThreadStop();
+            }
+
             break;
 
         case SPINEL_NET_STATE_DETACHED:
@@ -2281,9 +2286,18 @@ void NcpBase::SetPropertyHandler_NET_STATE(uint8_t header, spinel_prop_key_t key
                 errorCode = otInterfaceUp();
             }
 
-            if ((errorCode == kThreadError_None) && (otGetDeviceRole() == kDeviceRoleDetached))
+            if ((errorCode == kThreadError_None) &&
+                ((otGetDeviceRole() == kDeviceRoleDisabled) || (otGetDeviceRole() == kDeviceRoleDetached)))
             {
-                errorCode = otThreadStart();
+                if (otGetDeviceRole() == kDeviceRoleDetached)
+                {
+                    errorCode = otThreadStop();
+                }
+
+                if (errorCode == kThreadError_None)
+                {
+                    errorCode = otThreadStart();
+                }
 
                 if (errorCode == kThreadError_None)
                 {
