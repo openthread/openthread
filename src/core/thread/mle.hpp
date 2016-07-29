@@ -979,6 +979,8 @@ private:
     ThreadError SendParentRequest(void);
     ThreadError SendChildIdRequest(void);
 
+    bool IsBetterParent(uint16_t aRloc16, uint8_t aLinkQuality, ConnectivityTlv &aConnectivityTlv) const;
+
     struct
     {
         uint8_t mChallenge[ChallengeTlv::kMaxSize];
@@ -991,7 +993,13 @@ private:
     } mParentRequest;
 
     otMleAttachFilter mParentRequestMode;
-    uint32_t mParentConnectivity;
+    uint8_t mParentLinkQuality;
+    int8_t mParentPriority;
+    uint8_t mParentLinkQuality3;
+    uint8_t mParentLinkQuality2;
+    uint8_t mParentLinkQuality1;
+    LeaderDataTlv mParentLeaderData;
+    bool mParentIsSingleton;
 
     Ip6::UdpSocket mSocket;
     uint32_t mTimeout;

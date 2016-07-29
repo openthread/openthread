@@ -345,6 +345,22 @@ public:
     void HandleMacDataRequest(const Child &aChild);
 
     /**
+     * This method indicates whether or not the given Thread partition attributes are preferred.
+     *
+     * @param[in]  aSingletonA   Whether or not the Thread Parititon A has a single router.
+     * @param[in]  aLeaderDataA  A reference to Thread Partition A's Leader Data.
+     * @param[in]  aSingletonB   Whether or not the Thread Parititon B has a single router.
+     * @param[in]  aLeaderDataB  A reference to Thread Partition B's Leader Data.
+     *
+     * @retval 1   If partition A is preferred.
+     * @retval 0   If partition A and B have equal preference.
+     * @retval -1  If partition B is preferred.
+     *
+     */
+    static int ComparePartitions(bool aSingletonA, const LeaderDataTlv &aLeaderDataA,
+                                 bool aSingletonB, const LeaderDataTlv &aleaderDataB);
+
+    /**
      * This method checks if the destination is reachable.
      *
      * @param[in]  aMeshSource  The RLOC16 of the source.
@@ -394,6 +410,7 @@ private:
                                      uint32_t aKeySequence);
     ThreadError HandleChildUpdateRequest(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
     ThreadError HandleNetworkDataUpdateRouter(void);
+    bool IsSingleton(void);
 
     ThreadError ProcessRouteTlv(const RouteTlv &aRoute);
     ThreadError ResetAdvertiseInterval(void);

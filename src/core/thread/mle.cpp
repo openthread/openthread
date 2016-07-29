@@ -67,7 +67,11 @@ Mle::Mle(ThreadNetif &aThreadNetif) :
                   ModeTlv::kModeFullNetworkData;
     mParentRequestState = kParentIdle;
     mParentRequestMode = kMleAttachAnyPartition;
-    mParentConnectivity = 0;
+    mParentLinkQuality = 0;
+    mParentPriority = 0;
+    mParentLinkQuality3 = 0;
+    mParentLinkQuality2 = 0;
+    mParentLinkQuality1 = 0;
     mRetrieveNewNetworkData = false;
     mTimeout = kMaxNeighborAge;
 
@@ -209,7 +213,6 @@ ThreadError Mle::BecomeChild(otMleAttachFilter aFilter)
 
     mParentRequestState = kParentRequestStart;
     mParentRequestMode = aFilter;
-    mParentConnectivity = 0;
     memset(&mParent, 0, sizeof(mParent));
 
     if (aFilter == kMleAttachAnyPartition)
@@ -1550,6 +1553,44 @@ exit:
     return error;
 }
 
+bool Mle::IsBetterParent(uint16_t aRloc16, uint8_t aLinkQuality, ConnectivityTlv &aConnectivityTlv) const
+{
+    bool rval = false;
+
+    if (aLinkQuality != mParentLinkQuality)
+    {
+        ExitNow(rval = (aLinkQuality > mParentLinkQuality));
+    }
+
+    if (IsActiveRouter(aRloc16) != IsActiveRouter(mParent.mValid.mRloc16))
+    {
+        ExitNow(rval = IsActiveRouter(aRloc16));
+    }
+
+    if (aConnectivityTlv.GetParentPriority() != mParentPriority)
+    {
+        ExitNow(rval = (aConnectivityTlv.GetParentPriority() > mParentPriority));
+    }
+
+    if (aConnectivityTlv.GetLinkQuality3() != mParentLinkQuality3)
+    {
+        ExitNow(rval = (aConnectivityTlv.GetLinkQuality3() > mParentLinkQuality3));
+    }
+
+    if (aConnectivityTlv.GetLinkQuality2() != mParentLinkQuality2)
+    {
+        ExitNow(rval = (aConnectivityTlv.GetLinkQuality2() > mParentLinkQuality2));
+    }
+
+    if (aConnectivityTlv.GetLinkQuality1() != mParentLinkQuality1)
+    {
+        ExitNow(rval = (aConnectivityTlv.GetLinkQuality1() > mParentLinkQuality1));
+    }
+
+exit:
+    return rval;
+}
+
 ThreadError Mle::HandleParentResponse(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo,
                                       uint32_t aKeySequence)
 {
@@ -1558,12 +1599,10 @@ ThreadError Mle::HandleParentResponse(const Message &aMessage, const Ip6::Messag
     ResponseTlv response;
     SourceAddressTlv sourceAddress;
     LeaderDataTlv leaderData;
-    uint32_t peerPartitionId;
     LinkMarginTlv linkMarginTlv;
     uint8_t linkMargin;
-    uint8_t link_quality;
+    uint8_t linkQuality;
     ConnectivityTlv connectivity;
-    uint32_t connectivity_metric;
     LinkFrameCounterTlv linkFrameCounter;
     MleFrameCounterTlv mleFrameCounter;
     ChallengeTlv challenge;
@@ -1585,43 +1624,6 @@ ThreadError Mle::HandleParentResponse(const Message &aMessage, const Ip6::Messag
     SuccessOrExit(error = Tlv::GetTlv(aMessage, Tlv::kLeaderData, sizeof(leaderData), leaderData));
     VerifyOrExit(leaderData.IsValid(), error = kThreadError_Parse);
 
-    // Weight
-    VerifyOrExit(leaderData.GetWeighting() >= mMleRouter.GetLeaderWeight(), ;);
-
-    // Partition ID
-    peerPartitionId = leaderData.GetPartitionId();
-
-    if (mDeviceState != kDeviceStateDetached)
-    {
-        switch (mParentRequestMode)
-        {
-        case kMleAttachAnyPartition:
-            break;
-
-        case kMleAttachSamePartition:
-            if (peerPartitionId != mLeaderData.GetPartitionId())
-            {
-                ExitNow();
-            }
-
-            break;
-
-        case kMleAttachBetterPartition:
-            otLogDebgMle("partition info  %d %d %d %d\n",
-                         leaderData.GetWeighting(), peerPartitionId,
-                         mLeaderData.GetWeighting(), mLeaderData.GetPartitionId());
-
-            if ((leaderData.GetWeighting() < mLeaderData.GetWeighting()) ||
-                (leaderData.GetWeighting() == mLeaderData.GetWeighting() &&
-                 peerPartitionId <= mLeaderData.GetPartitionId()))
-            {
-                ExitNow(otLogDebgMle("ignore parent response\n"));
-            }
-
-            break;
-        }
-    }
-
     // Link Quality
     SuccessOrExit(error = Tlv::GetTlv(aMessage, Tlv::kLinkMargin, sizeof(linkMarginTlv), linkMarginTlv));
     VerifyOrExit(linkMarginTlv.IsValid(), error = kThreadError_Parse);
@@ -1633,39 +1635,53 @@ ThreadError Mle::HandleParentResponse(const Message &aMessage, const Ip6::Messag
         linkMargin = linkMarginTlv.GetLinkMargin();
     }
 
-    link_quality = LinkQualityInfo::ConvertLinkMarginToLinkQuality(linkMargin);
+    linkQuality = LinkQualityInfo::ConvertLinkMarginToLinkQuality(linkMargin);
 
-    VerifyOrExit(mParentRequestState != kParentRequestRouter || link_quality == 3, ;);
+    VerifyOrExit(mParentRequestState != kParentRequestRouter || linkQuality == 3, ;);
 
     // Connectivity
     SuccessOrExit(error = Tlv::GetTlv(aMessage, Tlv::kConnectivity, sizeof(connectivity), connectivity));
     VerifyOrExit(connectivity.IsValid(), error = kThreadError_Parse);
 
-    if (peerPartitionId == mLeaderData.GetPartitionId())
+    // if already attached, Router/REED only seeks a better partition
+    if ((mDeviceMode & ModeTlv::kModeFFD) &&
+        (mDeviceState != kDeviceStateDetached) &&
+        (mParentRequestMode != kMleAttachAnyPartition))
     {
-        diff = connectivity.GetIdSequence() - mMleRouter.GetRouterIdSequence();
-        VerifyOrExit(diff > 0 || (diff == 0 && mMleRouter.GetLeaderAge() < mMleRouter.GetNetworkIdTimeout()), ;);
+        if (leaderData.GetPartitionId() == mLeaderData.GetPartitionId())
+        {
+            // looking for a larger Sequence ID
+            diff = connectivity.GetIdSequence() - mMleRouter.GetRouterIdSequence();
+            VerifyOrExit(diff > 0 || (diff == 0 && mMleRouter.GetLeaderAge() < mMleRouter.GetNetworkIdTimeout()), ;);
+        }
+        else
+        {
+            // looking for a better partition
+            VerifyOrExit(mMleRouter.ComparePartitions(connectivity.GetActiveRouters() <= 1, leaderData,
+                                                      mMleRouter.IsSingleton(), mLeaderData) > 0, ;);
+        }
     }
 
-    connectivity_metric =
-        (static_cast<uint32_t>(link_quality) << 24) |
-        (static_cast<uint32_t>(connectivity.GetLinkQuality3()) << 16) |
-        (static_cast<uint32_t>(connectivity.GetLinkQuality2()) << 8) |
-        (static_cast<uint32_t>(connectivity.GetLinkQuality1()));
-
+    // if already have a candidate parent, only seek a better parent
     if (mParent.mState == Neighbor::kStateValid)
     {
-        VerifyOrExit(connectivity_metric > mParentConnectivity, ;);
+        if (mDeviceMode & ModeTlv::kModeFFD)
+        {
+            // do not accept worse partitions
+            VerifyOrExit(mMleRouter.ComparePartitions(connectivity.GetActiveRouters() <= 1, leaderData,
+                                                      mParentIsSingleton, mParentLeaderData) >= 0, ;);
+        }
+
+        // looking for a better parent
+        VerifyOrExit(IsBetterParent(sourceAddress.GetRloc16(), linkQuality, connectivity), ;);
     }
 
     // Link Frame Counter
-    SuccessOrExit(error = Tlv::GetTlv(aMessage, Tlv::kLinkFrameCounter, sizeof(linkFrameCounter),
-                                      linkFrameCounter));
+    SuccessOrExit(error = Tlv::GetTlv(aMessage, Tlv::kLinkFrameCounter, sizeof(linkFrameCounter), linkFrameCounter));
     VerifyOrExit(linkFrameCounter.IsValid(), error = kThreadError_Parse);
 
     // Mle Frame Counter
-    if (Tlv::GetTlv(aMessage, Tlv::kMleFrameCounter, sizeof(mleFrameCounter), mleFrameCounter) ==
-        kThreadError_None)
+    if (Tlv::GetTlv(aMessage, Tlv::kMleFrameCounter, sizeof(mleFrameCounter), mleFrameCounter) == kThreadError_None)
     {
         VerifyOrExit(mleFrameCounter.IsValid(), ;);
     }
@@ -1689,7 +1705,14 @@ ThreadError Mle::HandleParentResponse(const Message &aMessage, const Ip6::Messag
     mParent.mLinkInfo.AddRss(threadMessageInfo->mRss);
     mParent.mState = Neighbor::kStateValid;
     mParent.mKeySequence = aKeySequence;
-    mParentConnectivity = connectivity_metric;
+
+    mParentLinkQuality = linkQuality;
+    mParentPriority = connectivity.GetParentPriority();
+    mParentLinkQuality3 = connectivity.GetLinkQuality3();
+    mParentLinkQuality2 = connectivity.GetLinkQuality2();
+    mParentLinkQuality1 = connectivity.GetLinkQuality1();
+    mParentLeaderData = leaderData;
+    mParentIsSingleton = connectivity.GetActiveRouters() <= 1;
 
 exit:
     return error;
