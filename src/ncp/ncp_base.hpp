@@ -94,6 +94,12 @@ private:
 
     void UpdateChangedProps(void);
 
+    /**
+     * Trampoline for SendDoneTask().
+     */
+    static void SendDoneTask(void *context);
+
+    void SendDoneTask(void);
 
     static void HandleNetifStateChanged(uint32_t flags, void *context);
 
@@ -308,6 +314,8 @@ private:
     uint16_t mScanPeriod;
 
     spinel_prop_key_t mQueuedGetKey;
+
+    Tasklet mSendDoneTask;
 
     Tasklet mUpdateChangedPropsTask;
 
