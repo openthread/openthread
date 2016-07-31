@@ -47,7 +47,7 @@ configure_OPTIONS               = \
     --with-examples=cc2538        \
     $(NULL)
 
-COMMONCFLAGS                    = \
+COMMONCFLAGS                   := \
     -fdata-sections               \
     -ffunction-sections           \
     -Os                           \
@@ -57,24 +57,24 @@ COMMONCFLAGS                    = \
     -Werror                       \
     $(NULL)
 
-CPPFLAGS                        = \
+CPPFLAGS                       += \
     $(COMMONCFLAGS)               \
     $(target_CPPFLAGS)            \
     $(NULL)
 
-CFLAGS                          = \
+CFLAGS                         += \
     $(COMMONCFLAGS)               \
     $(target_CFLAGS)              \
     $(NULL)
 
-CXXFLAGS                        = \
+CXXFLAGS                       += \
     $(COMMONCFLAGS)               \
     $(target_CXXFLAGS)            \
     -fno-exceptions               \
     -fno-rtti                     \
     $(NULL)
 
-LDFLAGS                         = \
+LDFLAGS                        += \
     $(COMMONCFLAGS)               \
     $(target_LDFLAGS)             \
     -nostartfiles                 \

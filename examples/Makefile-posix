@@ -49,21 +49,21 @@ COMMONCFLAGS                   := \
     -Werror                       \
     $(NULL)
 
-CPPFLAGS                        = \
+CPPFLAGS                       += \
     $(COMMONCFLAGS)               \
     $(NULL)
 
-CFLAGS                          = \
+CFLAGS                         += \
     $(COMMONCFLAGS)               \
     $(NULL)
 
-CXXFLAGS                        = \
+CXXFLAGS                       += \
     $(COMMONCFLAGS)               \
     -fno-exceptions               \
     -fno-rtti                     \
     $(NULL)
 
-LDFLAGS                         = \
+LDFLAGS                        += \
     $(COMMONCFLAGS)               \
     $(NULL)
 
