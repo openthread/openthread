@@ -4,7 +4,7 @@ License: GPL v2
 License File: LICENSE
 
 Description:
-Automate script that drives tests execution.
+Automake script that drives tests execution.
 
 Local Modifications:
 Change the test-driver automake script to support
