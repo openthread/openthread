@@ -7,4 +7,6 @@ Description:
 Automate script that drives tests execution.
 
 Local Modifications:
-No Modifications
+Change the test-driver automake script to support
+parallel test scripts execution, each one initiated
+with a unique number.
