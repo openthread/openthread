@@ -30,6 +30,7 @@ include $(abs_top_nlbuild_autotools_dir)/automake/pre.am
 
 EXTRA_DIST                              = \
     nlbuild-autotools                     \
+    openthread-test-driver                \
     $(NULL)
 
 # Always package (e.g. for 'make dist') these subdirectories.

@@ -1,0 +1,10 @@
+URL: http://git.savannah.gnu.org/cgit/automake.git/tree/lib/test-driver
+Version: 2016-01-11.22
+License: GPL v2
+License File: LICENSE
+
+Description:
+Automate script that drives tests execution.
+
+Local Modifications:
+No Modifications
