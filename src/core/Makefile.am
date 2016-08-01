@@ -72,6 +72,7 @@ libopenthread_a_SOURCES             = \
 
 noinst_HEADERS                      = \
     openthread-core-config.h          \
+    openthread-core-default-config.h  \
     coap/coap_header.hpp              \
     coap/coap_server.hpp              \
     common/code_utils.hpp             \
