@@ -47,7 +47,7 @@ namespace Thread {
 
 enum
 {
-    kCoapUdpPort = 19789,
+    kCoapUdpPort = 61631,
 };
 
 /**
