@@ -2132,25 +2132,35 @@ Neighbor *MleRouter::GetNeighbor(uint16_t aAddress)
         ExitNow();
     }
 
-    if (mDeviceState == kDeviceStateChild && (rval = Mle::GetNeighbor(aAddress)) != NULL)
+    switch (mDeviceState)
     {
-        ExitNow();
-    }
+    case kDeviceStateDisabled:
+        break;
 
-    for (int i = 0; i < kMaxChildren; i++)
-    {
-        if (mChildren[i].mState == Neighbor::kStateValid && mChildren[i].mValid.mRloc16 == aAddress)
-        {
-            ExitNow(rval = &mChildren[i]);
-        }
-    }
+    case kDeviceStateDetached:
+    case kDeviceStateChild:
+        rval = Mle::GetNeighbor(aAddress);
+        break;
 
-    for (int i = 0; i < kMaxRouterId; i++)
-    {
-        if (mRouters[i].mState == Neighbor::kStateValid && mRouters[i].mValid.mRloc16 == aAddress)
+    case kDeviceStateRouter:
+    case kDeviceStateLeader:
+        for (int i = 0; i < kMaxChildren; i++)
         {
-            ExitNow(rval = &mRouters[i]);
+            if (mChildren[i].mState == Neighbor::kStateValid && mChildren[i].mValid.mRloc16 == aAddress)
+            {
+                ExitNow(rval = &mChildren[i]);
+            }
         }
+
+        for (int i = 0; i < kMaxRouterId; i++)
+        {
+            if (mRouters[i].mState == Neighbor::kStateValid && mRouters[i].mValid.mRloc16 == aAddress)
+            {
+                ExitNow(rval = &mRouters[i]);
+            }
+        }
+
+        break;
     }
 
 exit:
@@ -2161,27 +2171,37 @@ Neighbor *MleRouter::GetNeighbor(const Mac::ExtAddress &aAddress)
 {
     Neighbor *rval = NULL;
 
-    if (mDeviceState == kDeviceStateChild && (rval = Mle::GetNeighbor(aAddress)) != NULL)
+    switch (mDeviceState)
     {
-        ExitNow();
-    }
+    case kDeviceStateDisabled:
+        break;
 
-    for (int i = 0; i < kMaxChildren; i++)
-    {
-        if (mChildren[i].mState == Neighbor::kStateValid &&
-            memcmp(&mChildren[i].mMacAddr, &aAddress, sizeof(mChildren[i].mMacAddr)) == 0)
-        {
-            ExitNow(rval = &mChildren[i]);
-        }
-    }
+    case kDeviceStateDetached:
+    case kDeviceStateChild:
+        rval = Mle::GetNeighbor(aAddress);
+        break;
 
-    for (int i = 0; i < kMaxRouterId; i++)
-    {
-        if (mRouters[i].mState == Neighbor::kStateValid &&
-            memcmp(&mRouters[i].mMacAddr, &aAddress, sizeof(mRouters[i].mMacAddr)) == 0)
+    case kDeviceStateRouter:
+    case kDeviceStateLeader:
+        for (int i = 0; i < kMaxChildren; i++)
         {
-            ExitNow(rval = &mRouters[i]);
+            if (mChildren[i].mState == Neighbor::kStateValid &&
+                memcmp(&mChildren[i].mMacAddr, &aAddress, sizeof(mChildren[i].mMacAddr)) == 0)
+            {
+                ExitNow(rval = &mChildren[i]);
+            }
         }
+
+        for (int i = 0; i < kMaxRouterId; i++)
+        {
+            if (mRouters[i].mState == Neighbor::kStateValid &&
+                memcmp(&mRouters[i].mMacAddr, &aAddress, sizeof(mRouters[i].mMacAddr)) == 0)
+            {
+                ExitNow(rval = &mRouters[i]);
+            }
+        }
+
+        break;
     }
 
 exit:
