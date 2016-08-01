@@ -59,10 +59,10 @@ void otPlatSettingsInit(void);
  *  The implementation of this function is optional. If not
  *  implemented, it should return kThreadError_None.
  *
- *  @retval kThreadError_None     The settings commit lock has been set.
- *  @retval kThreadError_Already  The commit lock is already set.
+ *  @retval kThreadError_None    The settings commit lock has been set.
+ *  @retval kThreadError_Already The commit lock is already set.
  *
- * @sa otPlatSettingsCommitChange(), otPlatSettingsAbandonChange()
+ *  @sa otPlatSettingsCommitChange(), otPlatSettingsAbandonChange()
  */
 ThreadError otPlatSettingsBeginChange(void);
 
@@ -71,13 +71,14 @@ ThreadError otPlatSettingsBeginChange(void);
  *  The implementation of this function is optional. If not
  *  implemented, it should return kThreadError_NotImplemented.
  *
- *  @retval kThreadError_None     The changes made since the last call
- *                                to otPlatSettingsBeginChange() have been
- *                                successfully committed.
- *  @retval kThreadError_InvalidState    otPlatSettingsBeginChange() has not
- *                                       been called.
- *  @retval kThreadError_NotImplemented  This function is not implemented
- *                                       on this platform.
+ *  @retval kThreadError_None
+ *          The changes made since the last call to
+ *          otPlatSettingsBeginChange() have been successfully
+ *          committed.
+ *  @retval kThreadError_InvalidState
+ *          otPlatSettingsBeginChange() has not been called.
+ *  @retval kThreadError_NotImplemented
+ *          This function is not implemented on this platform.
  *
  *  @sa otPlatSettingsBeginChange(), otPlatSettingsAbandonChange()
  */
@@ -92,13 +93,14 @@ ThreadError otPlatSettingsCommitChange(void);
  *  The implementation of this function is optional. If not
  *  implemented, it should return kThreadError_NotImplemented..
  *
- *  @retval kThreadError_None     The changes made since the last call
- *                                to otPlatSettingsBeginChange() have been
- *                                successfully rolled back.
- *  @retval kThreadError_InvalidState    otPlatSettingsBeginChange() has not
- *                                       been called.
- *  @retval kThreadError_NotImplemented  This function is not implemented
- *                                       on this platform.
+ *  @retval kThreadError_None
+ *          The changes made since the last call to
+ *          otPlatSettingsBeginChange() have been successfully
+ *          rolled back.
+ *  @retval kThreadError_InvalidState
+ *          otPlatSettingsBeginChange() has not been called.
+ *  @retval kThreadError_NotImplemented
+ *          This function is not implemented on this platform.
  *
  *  @sa otPlatSettingsBeginChange(), otPlatSettingsCommitChange()
  */
@@ -117,47 +119,117 @@ ThreadError otPlatSettingsAbandonChange(void);
  *  the setting without fetching it by setting only aValue
  *  to NULL.
  *
- * @param[in]     aKey         The key associated with the requested setting.
- * @param[out]    aValue       A pointer to where the value of the setting
- *                             should be written. May be set to NULL if just
- *                             testing for the presence or length of a setting.
- * @param[in/out] aValueLength A pointer to the length of the value. When called,
- *                             this pointer should point to an integer containing the
- *                             maximum value size that can be written to aValue.
- *                             At return, the actual length of the setting is written.
- *                             This may be set to NULL if performing a presence check.
+ *  Note that the underlying storage implementation is not
+ *  required to maintain the order of settings with multiple
+ *  values. The order of such values MAY change after ANY
+ *  write operation to the store.
  *
- * @retval kThreadError_None     The given setting was found and fetched successfully.
- * @retval kThreadError_NotFound The given setting was not found in the setting store.
- * @retval kThreadError_NotImplemented  This function is not implemented on this platform.
+ *  @param[in]     aKey
+ *                 The key associated with the requested setting.
+ *  @param[in]     aIndex
+ *                 The index of the specific item to get.
+ *  @param[out]    aValue
+ *                 A pointer to where the value of the setting
+ *                 should be written. May be set to NULL if just
+ *                 testing for the presence or length of a setting.
+ *  @param[in/out] aValueLength
+ *                 A pointer to the length of the value. When
+ *                 called, this pointer should point to an
+ *                 integer containing the maximum value size that
+ *                 can be written to aValue. At return, the actual
+ *                 length of the setting is written. This may be
+ *                 set to NULL if performing a presence check.
+ *
+ *  @retval kThreadError_None
+ *          The given setting was found and fetched successfully.
+ *  @retval kThreadError_NotFound
+ *          The given setting was not found in the setting store.
+ *  @retval kThreadError_NotImplemented
+ *          This function is not implemented on this platform.
  */
-ThreadError otPlatSettingsGet(uint16_t aKey, uint8_t *aValue, int *aValueLength);
+ThreadError otPlatSettingsGet(uint16_t aKey, int aIndex, uint8_t *aValue, int *aValueLength);
 
 /// Sets or replaces the value of a setting
 /** This function sets or replaces the value of a setting
- *  identified by aKey.
+ *  identified by aKey. If there was more than one
+ *  value previously associated with aKey, then they are
+ *  all deleted and replaced with this single entry.
  *
- * @param[in]     aKey         The key associated with the setting to change.
- * @param[out]    aValue       A pointer to where the new value of the setting
- *                             should be read from. MUST NOT be NULL if aValueLength
- *                             is non-zero.
- * @param[in/out] aValueLength The length of the data pointed to by aValue. May be zero.
+ *  Calling this function successfully may cause unrelated
+ *  settings with multiple values to be reordered.
  *
- * @retval kThreadError_None     The given setting was changed or staged.
- * @retval kThreadError_NotImplemented  This function is not implemented on this platform.
+ *  @param[in]  aKey
+ *              The key associated with the setting to change.
+ *  @param[out] aValue
+ *              A pointer to where the new value of the setting
+ *              should be read from. MUST NOT be NULL if aValueLength
+ *              is non-zero.
+ *  @param[in]  aValueLength
+ *              The length of the data pointed to by aValue.
+ *              May be zero.
+ *
+ *  @retval kThreadError_None
+ *          The given setting was changed or staged.
+ *  @retval kThreadError_NotImplemented
+ *          This function is not implemented on this platform.
  */
 ThreadError otPlatSettingsSet(uint16_t aKey, const uint8_t *aValue, int aValueLength);
 
-/// Removes a setting from the setting store
-/** This function deletes the the setting identified
- *  by aKey from the settings store.
+/// Adds a value to a setting
+/** This function adds the value to a setting
+ *  identified by aKey, without replacing any existing
+ *  values.
  *
- * @param[in]     aKey         The key associated with the requested setting.
+ *  Note that the underlying implementation is not required
+ *  to maintain the order of the items associated with a
+ *  specific key. The added value may be added to the end,
+ *  the beginning, or even somewhere in the middle. The order
+ *  of any pre-existing values may also change.
  *
- * @retval kThreadError_None     The given setting was found and removed successfully.
- * @retval kThreadError_NotFound The given setting was not found in the setting store.
+ *  Calling this function successfully may cause unrelated
+ *  settings with multiple values to be reordered.
+ *
+ * @param[in]     aKey
+ *                The key associated with the setting to change.
+ * @param[out]    aValue
+ *                A pointer to where the new value of the setting
+ *                should be read from. MUST NOT be NULL if aValueLength
+ *                is non-zero.
+ * @param[in/out] aValueLength
+ *                The length of the data pointed to by aValue.
+ *                May be zero.
+ *
+ * @retval kThreadError_None
+ *         The given setting was added or staged to be added.
+ * @retval kThreadError_NotImplemented
+ *         This function is not implemented on this platform.
  */
-ThreadError otPlatSettingsDelete(uint16_t aKey);
+ThreadError otPlatSettingsAdd(uint16_t aKey, const uint8_t *aValue, int aValueLength);
+
+/// Removes a setting from the setting store
+/** This function deletes a specific value from the
+ *  setting identified by aKey from the settings store.
+ *
+ *  This is the only function which mutates the settings store
+ *  that is required to maintain the relative order of the
+ *  values associated with aKey. For example, if you have three
+ *  items ordered (A, B, C) and you delete B, the resulting order
+ *  is guarateed to be (A, C).
+ *
+ *  @param[in] aKey
+ *             The key associated with the requested setting.
+ *  @param[in] aIndex
+ *             The index of the value to be removed. If set to
+ *             -1, all values for this aKey will be removed.
+ *
+ *  @retval kThreadError_None
+ *          The given key and index was found and removed successfully.
+ *  @retval kThreadError_NotFound
+ *          The given key or index  was not found in the setting store.
+ *  @retval kThreadError_NotImplemented
+ *          This function is not implemented on this platform.
+ */
+ThreadError otPlatSettingsDelete(uint16_t aKey, int index);
 
 /// Removes all settings from the setting store
 /** This function deletes all settings from the settings
