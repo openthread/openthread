@@ -33,6 +33,7 @@
 #include <assert.h>
 #include <stdlib.h>
 #include <common/code_utils.hpp>
+#include <ncp/ncp.h>
 #include <ncp/ncp_base.hpp>
 #include <openthread.h>
 #include <openthread-config.h>
@@ -319,6 +320,7 @@ NcpBase::NcpBase():
     otSetIcmpEchoEnabled(false);
 }
 
+
 // ----------------------------------------------------------------------------
 // MARK: Outbound Datagram Handling
 // ----------------------------------------------------------------------------
@@ -410,7 +412,7 @@ void NcpBase::HandleActiveScanResult(otActiveScanResult *result)
         }
 
         //chan,rssi,(laddr,saddr,panid,lqi),(proto,flags,networkid,xpanid) [icT(ESSC)T(iCUD.).]
-        NcpBase::SendPropteryUpdate(
+        NcpBase::SendPropertyUpdate(
             SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0,
             SPINEL_CMD_PROP_VALUE_INSERTED,
             SPINEL_PROP_MAC_SCAN_BEACON,
@@ -431,7 +433,7 @@ void NcpBase::HandleActiveScanResult(otActiveScanResult *result)
     {
         // We are finished with the scan, so send out
         // a property update indicating such.
-        SendPropteryUpdate(
+        SendPropertyUpdate(
             SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0,
             SPINEL_CMD_PROP_VALUE_IS,
             SPINEL_PROP_MAC_SCAN_STATE,
@@ -815,7 +817,7 @@ void NcpBase::SendLastStatus(uint8_t header, spinel_status_t lastStatus)
         mLastStatus = lastStatus;
     }
 
-    SendPropteryUpdate(
+    SendPropertyUpdate(
         header,
         SPINEL_CMD_PROP_VALUE_IS,
         SPINEL_PROP_LAST_STATUS,
@@ -824,7 +826,7 @@ void NcpBase::SendLastStatus(uint8_t header, spinel_status_t lastStatus)
     );
 }
 
-void NcpBase::SendPropteryUpdate(uint8_t header, uint8_t command, spinel_prop_key_t key, const char *pack_format, ...)
+ThreadError NcpBase::SendPropertyUpdate(uint8_t header, uint8_t command, spinel_prop_key_t key, const char *pack_format, ...)
 {
     ThreadError errorCode;
     va_list args;
@@ -847,9 +849,11 @@ void NcpBase::SendPropteryUpdate(uint8_t header, uint8_t command, spinel_prop_ke
     {
         errorCode = OutboundFrameSend();
     }
+
+    return errorCode;
 }
 
-void NcpBase::SendPropteryUpdate(uint8_t header, uint8_t command, spinel_prop_key_t key, const uint8_t *value_ptr,
+ThreadError NcpBase::SendPropertyUpdate(uint8_t header, uint8_t command, spinel_prop_key_t key, const uint8_t *value_ptr,
                                  uint16_t value_len)
 {
     ThreadError errorCode;
@@ -870,9 +874,11 @@ void NcpBase::SendPropteryUpdate(uint8_t header, uint8_t command, spinel_prop_ke
     {
         errorCode = OutboundFrameSend();
     }
+
+    return errorCode;
 }
 
-void NcpBase::SendPropteryUpdate(uint8_t header, uint8_t command, spinel_prop_key_t key, Message &message)
+ThreadError NcpBase::SendPropertyUpdate(uint8_t header, uint8_t command, spinel_prop_key_t key, Message &message)
 {
     ThreadError errorCode;
 
@@ -892,6 +898,8 @@ void NcpBase::SendPropteryUpdate(uint8_t header, uint8_t command, spinel_prop_ke
     {
         errorCode = OutboundFrameSend();
     }
+
+    return errorCode;
 }
 
 ThreadError
@@ -1049,12 +1057,12 @@ void NcpBase::CommandHandler_PROP_VALUE_REMOVE(uint8_t header, unsigned int comm
 
 void NcpBase::GetPropertyHandler_LAST_STATUS(uint8_t header, spinel_prop_key_t key)
 {
-    SendPropteryUpdate(header, SPINEL_CMD_PROP_VALUE_IS, key, SPINEL_DATATYPE_UINT_PACKED_S, mLastStatus);
+    SendPropertyUpdate(header, SPINEL_CMD_PROP_VALUE_IS, key, SPINEL_DATATYPE_UINT_PACKED_S, mLastStatus);
 }
 
 void NcpBase::GetPropertyHandler_PROTOCOL_VERSION(uint8_t header, spinel_prop_key_t key)
 {
-    SendPropteryUpdate(
+    SendPropertyUpdate(
         header,
         SPINEL_CMD_PROP_VALUE_IS,
         key,
@@ -1066,7 +1074,7 @@ void NcpBase::GetPropertyHandler_PROTOCOL_VERSION(uint8_t header, spinel_prop_ke
 
 void NcpBase::GetPropertyHandler_INTERFACE_TYPE(uint8_t header, spinel_prop_key_t key)
 {
-    SendPropteryUpdate(
+    SendPropertyUpdate(
         header,
         SPINEL_CMD_PROP_VALUE_IS,
         key,
@@ -1077,7 +1085,7 @@ void NcpBase::GetPropertyHandler_INTERFACE_TYPE(uint8_t header, spinel_prop_key_
 
 void NcpBase::GetPropertyHandler_VENDOR_ID(uint8_t header, spinel_prop_key_t key)
 {
-    SendPropteryUpdate(
+    SendPropertyUpdate(
         header,
         SPINEL_CMD_PROP_VALUE_IS,
         key,
@@ -1123,7 +1131,7 @@ void NcpBase::GetPropertyHandler_CAPS(uint8_t header, spinel_prop_key_t key)
 
 void NcpBase::GetPropertyHandler_NCP_VERSION(uint8_t header, spinel_prop_key_t key)
 {
-    SendPropteryUpdate(
+    SendPropertyUpdate(
         header,
         SPINEL_CMD_PROP_VALUE_IS,
         key,
@@ -1134,7 +1142,7 @@ void NcpBase::GetPropertyHandler_NCP_VERSION(uint8_t header, spinel_prop_key_t k
 
 void NcpBase::GetPropertyHandler_INTERFACE_COUNT(uint8_t header, spinel_prop_key_t key)
 {
-    SendPropteryUpdate(
+    SendPropertyUpdate(
         header,
         SPINEL_CMD_PROP_VALUE_IS,
         key,
@@ -1146,7 +1154,7 @@ void NcpBase::GetPropertyHandler_INTERFACE_COUNT(uint8_t header, spinel_prop_key
 void NcpBase::GetPropertyHandler_POWER_STATE(uint8_t header, spinel_prop_key_t key)
 {
     // Always online at the moment
-    SendPropteryUpdate(
+    SendPropertyUpdate(
         header,
         SPINEL_CMD_PROP_VALUE_IS,
         key,
@@ -1157,7 +1165,7 @@ void NcpBase::GetPropertyHandler_POWER_STATE(uint8_t header, spinel_prop_key_t k
 
 void NcpBase::GetPropertyHandler_HWADDR(uint8_t header, spinel_prop_key_t key)
 {
-    SendPropteryUpdate(
+    SendPropertyUpdate(
         header,
         SPINEL_CMD_PROP_VALUE_IS,
         key,
@@ -1198,7 +1206,7 @@ void NcpBase::GetPropertyHandler_PHY_FREQ(uint8_t header, spinel_prop_key_t key)
         freq_khz = 2405000 - (5000 * 11) + 5000 * (chan);
     }
 
-    SendPropteryUpdate(
+    SendPropertyUpdate(
         header,
         SPINEL_CMD_PROP_VALUE_IS,
         key,
@@ -1214,7 +1222,7 @@ void NcpBase::GetPropertyHandler_PHY_CHAN_SUPPORTED(uint8_t header, spinel_prop_
 
 void NcpBase::GetPropertyHandler_PHY_CHAN(uint8_t header, spinel_prop_key_t key)
 {
-    SendPropteryUpdate(
+    SendPropertyUpdate(
         header,
         SPINEL_CMD_PROP_VALUE_IS,
         key,
@@ -1225,7 +1233,7 @@ void NcpBase::GetPropertyHandler_PHY_CHAN(uint8_t header, spinel_prop_key_t key)
 
 void NcpBase::GetPropertyHandler_PHY_RSSI(uint8_t header, spinel_prop_key_t key)
 {
-    SendPropteryUpdate(
+    SendPropertyUpdate(
         header,
         SPINEL_CMD_PROP_VALUE_IS,
         key,
@@ -1238,7 +1246,7 @@ void NcpBase::GetPropertyHandler_MAC_SCAN_STATE(uint8_t header, spinel_prop_key_
 {
     if (otActiveScanInProgress())
     {
-        SendPropteryUpdate(
+        SendPropertyUpdate(
             header,
             SPINEL_CMD_PROP_VALUE_IS,
             key,
@@ -1248,7 +1256,7 @@ void NcpBase::GetPropertyHandler_MAC_SCAN_STATE(uint8_t header, spinel_prop_key_
     }
     else
     {
-        SendPropteryUpdate(
+        SendPropertyUpdate(
             header,
             SPINEL_CMD_PROP_VALUE_IS,
             key,
@@ -1260,7 +1268,7 @@ void NcpBase::GetPropertyHandler_MAC_SCAN_STATE(uint8_t header, spinel_prop_key_
 
 void NcpBase::GetPropertyHandler_MAC_SCAN_PERIOD(uint8_t header, spinel_prop_key_t key)
 {
-    SendPropteryUpdate(
+    SendPropertyUpdate(
         header,
         SPINEL_CMD_PROP_VALUE_IS,
         key,
@@ -1309,7 +1317,7 @@ void NcpBase::GetPropertyHandler_MAC_SCAN_MASK(uint8_t header, spinel_prop_key_t
 
 void NcpBase::GetPropertyHandler_MAC_15_4_PANID(uint8_t header, spinel_prop_key_t key)
 {
-    SendPropteryUpdate(
+    SendPropertyUpdate(
         header,
         SPINEL_CMD_PROP_VALUE_IS,
         key,
@@ -1320,7 +1328,7 @@ void NcpBase::GetPropertyHandler_MAC_15_4_PANID(uint8_t header, spinel_prop_key_
 
 void NcpBase::GetPropertyHandler_MAC_FILTER_MODE(uint8_t header, spinel_prop_key_t key)
 {
-    SendPropteryUpdate(
+    SendPropertyUpdate(
         header,
         SPINEL_CMD_PROP_VALUE_IS,
         key,
@@ -1333,7 +1341,7 @@ void NcpBase::GetPropertyHandler_MAC_FILTER_MODE(uint8_t header, spinel_prop_key
 
 void NcpBase::GetPropertyHandler_MAC_15_4_LADDR(uint8_t header, spinel_prop_key_t key)
 {
-    SendPropteryUpdate(
+    SendPropertyUpdate(
         header,
         SPINEL_CMD_PROP_VALUE_IS,
         key,
@@ -1344,7 +1352,7 @@ void NcpBase::GetPropertyHandler_MAC_15_4_LADDR(uint8_t header, spinel_prop_key_
 
 void NcpBase::GetPropertyHandler_MAC_15_4_SADDR(uint8_t header, spinel_prop_key_t key)
 {
-    SendPropteryUpdate(
+    SendPropertyUpdate(
         header,
         SPINEL_CMD_PROP_VALUE_IS,
         key,
@@ -1355,7 +1363,7 @@ void NcpBase::GetPropertyHandler_MAC_15_4_SADDR(uint8_t header, spinel_prop_key_
 
 void NcpBase::GetPropertyHandler_NET_ENABLED(uint8_t header, spinel_prop_key_t key)
 {
-    SendPropteryUpdate(
+    SendPropertyUpdate(
         header,
         SPINEL_CMD_PROP_VALUE_IS,
         key,
@@ -1389,7 +1397,7 @@ void NcpBase::GetPropertyHandler_NET_STATE(uint8_t header, spinel_prop_key_t key
         }
     }
 
-    SendPropteryUpdate(
+    SendPropertyUpdate(
         header,
         SPINEL_CMD_PROP_VALUE_IS,
         key,
@@ -1422,7 +1430,7 @@ void NcpBase::GetPropertyHandler_NET_ROLE(uint8_t header, spinel_prop_key_t key)
         break;
     }
 
-    SendPropteryUpdate(
+    SendPropertyUpdate(
         header,
         SPINEL_CMD_PROP_VALUE_IS,
         key,
@@ -1433,7 +1441,7 @@ void NcpBase::GetPropertyHandler_NET_ROLE(uint8_t header, spinel_prop_key_t key)
 
 void NcpBase::GetPropertyHandler_NET_NETWORK_NAME(uint8_t header, spinel_prop_key_t key)
 {
-    SendPropteryUpdate(
+    SendPropertyUpdate(
         header,
         SPINEL_CMD_PROP_VALUE_IS,
         key,
@@ -1444,7 +1452,7 @@ void NcpBase::GetPropertyHandler_NET_NETWORK_NAME(uint8_t header, spinel_prop_ke
 
 void NcpBase::GetPropertyHandler_NET_XPANID(uint8_t header, spinel_prop_key_t key)
 {
-    SendPropteryUpdate(
+    SendPropertyUpdate(
         header,
         SPINEL_CMD_PROP_VALUE_IS,
         key,
@@ -1461,7 +1469,7 @@ void NcpBase::GetPropertyHandler_NET_MASTER_KEY(uint8_t header, spinel_prop_key_
 
     ptr = otGetMasterKey(&len);
 
-    SendPropteryUpdate(
+    SendPropertyUpdate(
         header,
         SPINEL_CMD_PROP_VALUE_IS,
         key,
@@ -1473,7 +1481,7 @@ void NcpBase::GetPropertyHandler_NET_MASTER_KEY(uint8_t header, spinel_prop_key_
 
 void NcpBase::GetPropertyHandler_NET_KEY_SEQUENCE(uint8_t header, spinel_prop_key_t key)
 {
-    SendPropteryUpdate(
+    SendPropertyUpdate(
         header,
         SPINEL_CMD_PROP_VALUE_IS,
         key,
@@ -1484,7 +1492,7 @@ void NcpBase::GetPropertyHandler_NET_KEY_SEQUENCE(uint8_t header, spinel_prop_ke
 
 void NcpBase::GetPropertyHandler_NET_PARTITION_ID(uint8_t header, spinel_prop_key_t key)
 {
-    SendPropteryUpdate(
+    SendPropertyUpdate(
         header,
         SPINEL_CMD_PROP_VALUE_IS,
         key,
@@ -1495,7 +1503,7 @@ void NcpBase::GetPropertyHandler_NET_PARTITION_ID(uint8_t header, spinel_prop_ke
 
 void NcpBase::GetPropertyHandler_THREAD_NETWORK_DATA_VERSION(uint8_t header, spinel_prop_key_t key)
 {
-    SendPropteryUpdate(
+    SendPropertyUpdate(
         header,
         SPINEL_CMD_PROP_VALUE_IS,
         key,
@@ -1506,7 +1514,7 @@ void NcpBase::GetPropertyHandler_THREAD_NETWORK_DATA_VERSION(uint8_t header, spi
 
 void NcpBase::GetPropertyHandler_THREAD_STABLE_NETWORK_DATA_VERSION(uint8_t header, spinel_prop_key_t key)
 {
-    SendPropteryUpdate(
+    SendPropertyUpdate(
         header,
         SPINEL_CMD_PROP_VALUE_IS,
         key,
@@ -1583,7 +1591,7 @@ void NcpBase::GetPropertyHandler_THREAD_STABLE_NETWORK_DATA(uint8_t header, spin
 
 void NcpBase::GetPropertyHandler_THREAD_LEADER_RID(uint8_t header, spinel_prop_key_t key)
 {
-    SendPropteryUpdate(
+    SendPropertyUpdate(
         header,
         SPINEL_CMD_PROP_VALUE_IS,
         key,
@@ -1594,7 +1602,7 @@ void NcpBase::GetPropertyHandler_THREAD_LEADER_RID(uint8_t header, spinel_prop_k
 
 void NcpBase::GetPropertyHandler_THREAD_LOCAL_LEADER_WEIGHT(uint8_t header, spinel_prop_key_t key)
 {
-    SendPropteryUpdate(
+    SendPropertyUpdate(
         header,
         SPINEL_CMD_PROP_VALUE_IS,
         key,
@@ -1605,7 +1613,7 @@ void NcpBase::GetPropertyHandler_THREAD_LOCAL_LEADER_WEIGHT(uint8_t header, spin
 
 void NcpBase::GetPropertyHandler_THREAD_LEADER_WEIGHT(uint8_t header, spinel_prop_key_t key)
 {
-    SendPropteryUpdate(
+    SendPropertyUpdate(
         header,
         SPINEL_CMD_PROP_VALUE_IS,
         key,
@@ -1622,7 +1630,7 @@ void NcpBase::GetPropertyHandler_THREAD_LEADER_ADDR(uint8_t header, spinel_prop_
 
     if (errorCode == kThreadError_None)
     {
-        SendPropteryUpdate(
+        SendPropertyUpdate(
             header,
             SPINEL_CMD_PROP_VALUE_IS,
             key,
@@ -1671,7 +1679,7 @@ NcpBase::GetPropertyHandler_THREAD_ASSISTING_PORTS(uint8_t header, spinel_prop_k
 
 void NcpBase::GetPropertyHandler_THREAD_ALLOW_LOCAL_NET_DATA_CHANGE(uint8_t header, spinel_prop_key_t key)
 {
-    SendPropteryUpdate(
+    SendPropertyUpdate(
         header,
         SPINEL_CMD_PROP_VALUE_IS,
         key,
@@ -1693,7 +1701,7 @@ void NcpBase::GetPropertyHandler_IPV6_ML_PREFIX(uint8_t header, spinel_prop_key_
         // Zero out the last 8 bytes.
         memset(addr.mFields.m8 + 8, 0, 8);
 
-        SendPropteryUpdate(
+        SendPropertyUpdate(
             header,
             SPINEL_CMD_PROP_VALUE_IS,
             key,
@@ -1704,7 +1712,7 @@ void NcpBase::GetPropertyHandler_IPV6_ML_PREFIX(uint8_t header, spinel_prop_key_
     }
     else
     {
-        SendPropteryUpdate(
+        SendPropertyUpdate(
             header,
             SPINEL_CMD_PROP_VALUE_IS,
             key,
@@ -1719,7 +1727,7 @@ void NcpBase::GetPropertyHandler_IPV6_ML_ADDR(uint8_t header, spinel_prop_key_t 
 
     if (ml64)
     {
-        SendPropteryUpdate(
+        SendPropertyUpdate(
             header,
             SPINEL_CMD_PROP_VALUE_IS,
             key,
@@ -1729,7 +1737,7 @@ void NcpBase::GetPropertyHandler_IPV6_ML_ADDR(uint8_t header, spinel_prop_key_t 
     }
     else
     {
-        SendPropteryUpdate(
+        SendPropertyUpdate(
             header,
             SPINEL_CMD_PROP_VALUE_IS,
             key,
@@ -1919,7 +1927,7 @@ void NcpBase::GetPropertyHandler_CNTR(uint8_t header, spinel_prop_key_t key)
         break;
     }
 
-    SendPropteryUpdate(
+    SendPropertyUpdate(
         header,
         SPINEL_CMD_PROP_VALUE_IS,
         key,
@@ -2323,7 +2331,7 @@ void NcpBase::SetPropertyHandler_NET_STATE(uint8_t header, spinel_prop_key_t key
 
                 if (errorCode == kThreadError_None)
                 {
-                    SendPropteryUpdate(
+                    SendPropertyUpdate(
                         header,
                         SPINEL_CMD_PROP_VALUE_IS,
                         key,
@@ -2927,7 +2935,7 @@ void NcpBase::InsertPropertyHandler_IPV6_ADDRESS_TABLE(uint8_t header, spinel_pr
     VerifyOrExit(errorCode == kThreadError_None || errorCode == kThreadError_Busy,
         errorStatus = ThreadErrorToSpinelStatus(errorCode));
 
-    SendPropteryUpdate(
+    SendPropertyUpdate(
         header,
         SPINEL_CMD_PROP_VALUE_INSERTED,
         key,
@@ -2984,7 +2992,7 @@ void NcpBase::InsertPropertyHandler_THREAD_LOCAL_ROUTES(uint8_t header, spinel_p
 
         if (errorCode == kThreadError_None)
         {
-            SendPropteryUpdate(
+            SendPropertyUpdate(
                 header,
                 SPINEL_CMD_PROP_VALUE_INSERTED,
                 key,
@@ -3057,7 +3065,7 @@ void NcpBase::InsertPropertyHandler_THREAD_ON_MESH_NETS(uint8_t header, spinel_p
 
         if (errorCode == kThreadError_None)
         {
-            SendPropteryUpdate(
+            SendPropertyUpdate(
                 header,
                 SPINEL_CMD_PROP_VALUE_INSERTED,
                 key,
@@ -3099,7 +3107,7 @@ NcpBase::InsertPropertyHandler_THREAD_ASSISTING_PORTS(uint8_t header, spinel_pro
 
         if (errorCode == kThreadError_None)
         {
-            SendPropteryUpdate(
+            SendPropertyUpdate(
                 header,
                 SPINEL_CMD_PROP_VALUE_REMOVED,
                 key,
@@ -3164,7 +3172,7 @@ void NcpBase::RemovePropertyHandler_IPV6_ADDRESS_TABLE(uint8_t header, spinel_pr
             {
                 netif_addr->mNext = NULL;
 
-                SendPropteryUpdate(
+                SendPropertyUpdate(
                     header,
                     SPINEL_CMD_PROP_VALUE_REMOVED,
                     key,
@@ -3218,7 +3226,7 @@ void NcpBase::RemovePropertyHandler_THREAD_LOCAL_ROUTES(uint8_t header, spinel_p
 
         if (errorCode == kThreadError_None)
         {
-            SendPropteryUpdate(
+            SendPropertyUpdate(
                 header,
                 SPINEL_CMD_PROP_VALUE_REMOVED,
                 key,
@@ -3270,7 +3278,7 @@ void NcpBase::RemovePropertyHandler_THREAD_ON_MESH_NETS(uint8_t header, spinel_p
 
         if (errorCode == kThreadError_None)
         {
-            SendPropteryUpdate(
+            SendPropertyUpdate(
                 header,
                 SPINEL_CMD_PROP_VALUE_REMOVED,
                 key,
@@ -3312,7 +3320,7 @@ NcpBase::RemovePropertyHandler_THREAD_ASSISTING_PORTS(uint8_t header, spinel_pro
 
         if (errorCode == kThreadError_None)
         {
-            SendPropteryUpdate(
+            SendPropertyUpdate(
                 header,
                 SPINEL_CMD_PROP_VALUE_REMOVED,
                 key,
@@ -3331,5 +3339,25 @@ NcpBase::RemovePropertyHandler_THREAD_ASSISTING_PORTS(uint8_t header, spinel_pro
     }
 }
 
-
 }  // namespace Thread
+
+
+// ----------------------------------------------------------------------------
+// MARK: Virtual Datastream I/O (Public API)
+// ----------------------------------------------------------------------------
+
+ThreadError otNcpStreamWrite(int aStreamId, const uint8_t* aDataPtr, int aDataLen)
+{
+    if (aStreamId == 0)
+    {
+        aStreamId = SPINEL_PROP_STREAM_DEBUG;
+    }
+
+    return Thread::sNcpContext->SendPropertyUpdate(
+        SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0,
+        SPINEL_CMD_PROP_VALUE_IS,
+        static_cast<spinel_prop_key_t>(aStreamId),
+        aDataPtr,
+        aDataLen
+    );
+}
