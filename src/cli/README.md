@@ -432,16 +432,17 @@ Send an ICMPv6 Echo Request.
 
 Add a valid prefix to the Network Data.
 
-* p: Stateless IPv6 Address Autoconfiguration Preferred flag
-* v: Stateless IPv6 Address Autoconfiguration Valid flag
+* p: Preferred flag
+* a: Stateless IPv6 Address Autoconfiguration flag
 * d: DHCPv6 IPv6 Address Configuration flag
 * c: DHCPv6 Other Configuration flag
-* s: Stable flag
 * r: Default Route flag
+* o: On Mesh flag
+* s: Stable flag
 * prf: Default router preference, which may be 'high', 'med', or 'low'.
 
 ```bash
-> prefix add 2001:dead:beef:cafe::/64 pvsr 0
+> prefix add 2001:dead:beef:cafe::/64 paros med
 Done
 ```
 
@@ -479,7 +480,7 @@ Add a valid prefix to the Network Data.
 * prf: Default Router Preference, which may be: 'high', 'med', or 'low'.
 
 ```bash
-> route add 2001:dead:beef:cafe::/64 pvsr 0
+> route add 2001:dead:beef:cafe::/64 s med
 Done
 ```
 

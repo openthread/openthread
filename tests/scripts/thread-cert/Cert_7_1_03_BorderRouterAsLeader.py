@@ -89,8 +89,8 @@ class Cert_7_1_3_BorderRouterAsLeader(unittest.TestCase):
         time.sleep(3)
         self.assertEqual(self.nodes[ED1].get_state(), 'child')
 
-        self.nodes[LEADER].add_prefix('2001::/64', 'pvcrs')
-        self.nodes[LEADER].add_prefix('2002::/64', 'pvcr')
+        self.nodes[LEADER].add_prefix('2001::/64', 'paros')
+        self.nodes[LEADER].add_prefix('2002::/64', 'paro')
         self.nodes[LEADER].register_netdata()
         time.sleep(3)
 

@@ -100,12 +100,12 @@ class Cert_5_6_9_NetworkDataForwarding(unittest.TestCase):
         time.sleep(3)
         self.assertEqual(self.nodes[SED].get_state(), 'child')
 
-        self.nodes[LEADER].add_prefix('2001::/64', 'pvcrs', 'med')
+        self.nodes[LEADER].add_prefix('2001::/64', 'paros', 'med')
         self.nodes[LEADER].add_route('2002::/64', 'med')
         self.nodes[LEADER].register_netdata()
         time.sleep(10)
 
-        self.nodes[ROUTER2].add_prefix('2001::/64', 'pvcrs', 'low')
+        self.nodes[ROUTER2].add_prefix('2001::/64', 'paros', 'low')
         self.nodes[ROUTER2].add_route('2002::/64', 'high')
         self.nodes[ROUTER2].register_netdata()
         time.sleep(10)
@@ -121,7 +121,7 @@ class Cert_5_6_9_NetworkDataForwarding(unittest.TestCase):
             pass
 
         self.nodes[ROUTER2].remove_prefix('2001::/64')
-        self.nodes[ROUTER2].add_prefix('2001::/64', 'pvcrs', 'high')
+        self.nodes[ROUTER2].add_prefix('2001::/64', 'paros', 'high')
         self.nodes[ROUTER2].register_netdata()
         time.sleep(10)
 
@@ -131,7 +131,7 @@ class Cert_5_6_9_NetworkDataForwarding(unittest.TestCase):
             pass
 
         self.nodes[ROUTER2].remove_prefix('2001::/64')
-        self.nodes[ROUTER2].add_prefix('2001::/64', 'pvcrs', 'med')
+        self.nodes[ROUTER2].add_prefix('2001::/64', 'paros', 'med')
         self.nodes[ROUTER2].register_netdata()
         time.sleep(10)
 

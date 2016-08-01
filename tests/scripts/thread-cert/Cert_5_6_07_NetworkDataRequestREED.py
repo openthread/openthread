@@ -81,7 +81,7 @@ class Cert_5_6_7_NetworkDataRequestREED(unittest.TestCase):
         self.nodes[LEADER].remove_whitelist(self.nodes[REED].get_addr64())
         self.nodes[REED].remove_whitelist(self.nodes[LEADER].get_addr64())
 
-        self.nodes[ROUTER].add_prefix('2003::/64', 'pvcrs')
+        self.nodes[ROUTER].add_prefix('2003::/64', 'paros')
         self.nodes[ROUTER].register_netdata()
 
         time.sleep(2)
