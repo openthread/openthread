@@ -28,6 +28,8 @@
 
 include $(abs_top_nlbuild_autotools_dir)/automake/pre.am
 
+LOG_DRIVER=$(abs_top_srcdir)/third_party/openthread-test-driver/test-driver
+
 EXTRA_DIST                                                         = \
     thread-cert/Cert_5_1_01_RouterAttach.py                          \
     thread-cert/Cert_5_1_02_ChildAddressTimeout.py                   \
