@@ -55,6 +55,8 @@ class Node:
         if "top_builddir" in os.environ.keys():
             srcdir = os.environ['top_builddir']
             cmd = '%s/examples/apps/cli/ot-cli' % srcdir
+        elif "OT_CLI_PATH" in os.environ.keys():
+            cmd = os.environ['OT_CLI_PATH']
         else:
             cmd = './ot-cli'
         cmd += ' %d' % nodeid
