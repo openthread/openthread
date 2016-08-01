@@ -36,6 +36,7 @@ ot_platform_headers                      =\
     random.h                              \
     uart.h                                \
     spi-slave.h                           \
+    settings.h                            \
     toolchain.h                           \
     $(NULL)
 
