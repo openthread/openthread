@@ -34,179 +34,19 @@
 #ifndef OPENTHREAD_CORE_CONFIG_H_
 #define OPENTHREAD_CORE_CONFIG_H_
 
-/**
- * @def OPENTHREAD_CONFIG_NUM_MESSAGE_BUFFERS
- *
- * The number of message buffers in the buffer pool.
- *
- */
-#ifndef OPENTHREAD_CONFIG_NUM_MESSAGE_BUFFERS
-#define OPENTHREAD_CONFIG_NUM_MESSAGE_BUFFERS               64
-#endif  // OPENTHREAD_CONFIG_NUM_MESSAGE_BUFFERS
+#ifndef OPENTHREAD_CORE_HAVE_PROJECT_SPECIFIC_CONFIG
+#define OPENTHREAD_CORE_HAVE_PROJECT_SPECIFIC_CONFIG 0
+#endif
 
-/**
- * @def OPENTHREAD_CONFIG_MESSAGE_BUFFER_SIZE
- *
- * The size of a message buffer in bytes.
- *
- */
-#ifndef OPENTHREAD_CONFIG_MESSAGE_BUFFER_SIZE
-#define OPENTHREAD_CONFIG_MESSAGE_BUFFER_SIZE               128
-#endif  // OPENTHREAD_CONFIG_MESSAGE_BUFFER_SIZE
+#define OPENTHREAD_CORE_CONFIG_H_IN
 
-/**
- * @def OPENTHREAD_CONFIG_DEFAULT_CHANNEL
- *
- * The default IEEE 802.15.4 channel.
- *
- */
-#ifndef OPENTHREAD_CONFIG_DEFAULT_CHANNEL
-#define OPENTHREAD_CONFIG_DEFAULT_CHANNEL                   11
-#endif  // OPENTHREAD_CONFIG_DEFAULT_CHANNEL
+#if OPENTHREAD_CORE_HAVE_PROJECT_SPECIFIC_CONFIG
+#include <openthread-core-project-config.h>
+#endif
 
-/**
- * @def OPENTHREAD_CONFIG_ATTACH_DATA_POLL_PERIOD
- *
- * The Data Poll period during attach in milliseconds.
- *
- */
-#ifndef OPENTHREAD_CONFIG_ATTACH_DATA_POLL_PERIOD
-#define OPENTHREAD_CONFIG_ATTACH_DATA_POLL_PERIOD           100
-#endif  // OPENTHREAD_CONFIG_ATTACH_DATA_POLL_PERIOD
+#include <openthread-core-default-config.h>
 
-/**
- * @def OPENTHREAD_CONFIG_ADDRESS_CACHE_ENTRIES
- *
- * The number of EID-to-RLOC cache entries.
- *
- */
-#ifndef OPENTHREAD_CONFIG_ADDRESS_CACHE_ENTRIES
-#define OPENTHREAD_CONFIG_ADDRESS_CACHE_ENTRIES             8
-#endif  // OPENTHREAD_CONFIG_ADDRESS_CACHE_ENTRIES
-
-/**
- * @def OPENTHREAD_CONFIG_MAX_CHILDREN
- *
- * The maximum number of children.
- *
- */
-#ifndef OPENTHREAD_CONFIG_MAX_CHILDREN
-#define OPENTHREAD_CONFIG_MAX_CHILDREN                      5
-#endif  // OPENTHREAD_CONFIG_MAX_CHILDREN
-
-/**
- * @def OPENTHREAD_CONFIG_IP_ADDRS_PER_CHILD
- *
- * The minimum number of supported IPv6 address registrations per child.
- *
- */
-#ifndef OPENTHREAD_CONFIG_IP_ADDRS_PER_CHILD
-#define OPENTHREAD_CONFIG_IP_ADDRS_PER_CHILD                4
-#endif  // OPENTHREAD_CONFIG_IP_ADDRS_PER_CHILD
-
-/**
- * @def OPENTHREAD_CONFIG_6LOWPAN_REASSEMBLY_TIMEOUT
- *
- * The 6LoWPAN fragment reassembly timeout in seconds.
- *
- */
-#ifndef OPENTHREAD_CONFIG_6LOWPAN_REASSEMBLY_TIMEOUT
-#define OPENTHREAD_CONFIG_6LOWPAN_REASSEMBLY_TIMEOUT        5
-#endif  // OPENTHREAD_CONFIG_6LOWPAN_REASSEMBLY_TIMEOUT
-
-/**
- * @def OPENTHREAD_CONFIG_MPL_CACHE_ENTRIES
- *
- * The number of MPL cache entries for duplicate detection.
- *
- */
-#ifndef OPENTHREAD_CONFIG_MPL_CACHE_ENTRIES
-#define OPENTHREAD_CONFIG_MPL_CACHE_ENTRIES                 32
-#endif  // OPENTHREAD_CONFIG_MPL_CACHE_ENTRIES
-
-/**
- * @def OPENTHREAD_CONFIG_MPL_CACHE_ENTRY_LIFETIME
- *
- * The MPL cache entry lifetime in seconds.
- *
- */
-#ifndef OPENTHREAD_CONFIG_MPL_CACHE_ENTRY_LIFETIME
-#define OPENTHREAD_CONFIG_MPL_CACHE_ENTRY_LIFETIME          5
-#endif  // OPENTHREAD_CONFIG_MPL_CACHE_ENTRY_LIFETIME
-
-/**
- * @def OPENTHREAD_CONFIG_LOG_LEVEL
- *
- * The log level.
- *
- */
-#ifndef OPENTHREAD_CONFIG_LOG_LEVEL
-#define OPENTHREAD_CONFIG_LOG_LEVEL                         OPENTHREAD_LOG_LEVEL_CRIT
-#endif  // OPENTHREAD_CONFIG_LOG_LEVEL
-
-/**
- * @def OPENTHREAD_CONFIG_LOG_API
- *
- * Define to enable OpenThread API logging.
- *
- */
-#define OPENTHREAD_CONFIG_LOG_API
-
-/**
- * @def OPENTHREAD_CONFIG_LOG_MLE
- *
- * Define to enable MLE logging.
- *
- */
-#define OPENTHREAD_CONFIG_LOG_MLE
-
-/**
- * @def OPENTHREAD_CONFIG_LOG_ARP
- *
- * Define to enable EID-to-RLOC map logging.
- *
- */
-#define OPENTHREAD_CONFIG_LOG_ARP
-
-/**
- * @def OPENTHREAD_CONFIG_LOG_NETDATA
- *
- * Define to enable Network Data logging.
- *
- */
-#define OPENTHREAD_CONFIG_LOG_NETDATA
-
-/**
- * @def OPENTHREAD_CONFIG_LOG_ICMP
- *
- * Define to enable ICMPv6 logging.
- *
- */
-#define OPENTHREAD_CONFIG_LOG_ICMP
-
-/**
- * @def OPENTHREAD_CONFIG_LOG_IP6
- *
- * Define to enable IPv6 logging.
- *
- */
-#define OPENTHREAD_CONFIG_LOG_IP6
-
-/**
- * @def OPENTHREAD_CONFIG_LOG_MAC
- *
- * Define to enable IEEE 802.15.4 MAC logging.
- *
- */
-#define OPENTHREAD_CONFIG_LOG_MAC
-
-/**
- * @def OPENTHREAD_CONFIG_LOG_MEM
- *
- * Define to enable memory logging.
- *
- */
-#define OPENTHREAD_CONFIG_LOG_MEM
+#undef OPENTHREAD_CORE_CONFIG_H_IN
 
 #endif  // OPENTHREAD_CORE_CONFIG_H_
 
