@@ -167,7 +167,7 @@ ThreadError Mle::Start(void)
     }
     else if (IsActiveRouter(GetRloc16()))
     {
-        mMleRouter.BecomeRouter();
+        mMleRouter.BecomeRouter(ThreadStatusTlv::kTooFewRouters);
     }
     else
     {
@@ -1783,7 +1783,7 @@ ThreadError Mle::HandleChildIdResponse(const Message &aMessage, const Ip6::Messa
 
         if ((mDeviceMode & ModeTlv::kModeFFD) && (numRouters < mMleRouter.GetRouterUpgradeThreshold()))
         {
-            mMleRouter.BecomeRouter();
+            mMleRouter.BecomeRouter(ThreadStatusTlv::kTooFewRouters);
         }
     }
 

@@ -481,7 +481,7 @@ ThreadError otBecomeChild(otMleAttachFilter aFilter)
 
 ThreadError otBecomeRouter(void)
 {
-    return sThreadNetif->GetMle().BecomeRouter();
+    return sThreadNetif->GetMle().BecomeRouter(ThreadStatusTlv::kTooFewRouters);
 }
 
 ThreadError otBecomeLeader(void)

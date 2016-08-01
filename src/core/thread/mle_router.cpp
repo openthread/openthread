@@ -177,7 +177,7 @@ uint32_t MleRouter::GetLeaderAge(void) const
     return Timer::MsecToSec(Timer::GetNow() - mRouterIdSequenceLastUpdated);
 }
 
-ThreadError MleRouter::BecomeRouter(void)
+ThreadError MleRouter::BecomeRouter(ThreadStatusTlv::Status aStatus)
 {
     ThreadError error = kThreadError_None;
 
@@ -205,7 +205,7 @@ ThreadError MleRouter::BecomeRouter(void)
         break;
 
     case kDeviceStateChild:
-        SuccessOrExit(error = SendAddressSolicit());
+        SuccessOrExit(error = SendAddressSolicit(aStatus));
         break;
 
     default:
@@ -1173,6 +1173,21 @@ exit:
     return rval;
 }
 
+uint8_t MleRouter::GetActiveRouterCount(void) const
+{
+    uint8_t rval = 0;
+
+    for (int i = 0; i < kMaxRouterId; i++)
+    {
+        if (mRouters[i].mAllocated)
+        {
+            rval++;
+        }
+    }
+
+    return rval;
+}
+
 ThreadError MleRouter::HandleAdvertisement(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
     ThreadError error = kThreadError_None;
@@ -1269,19 +1284,9 @@ ThreadError MleRouter::HandleAdvertisement(const Message &aMessage, const Ip6::M
         ExitNow();
 
     case kDeviceStateChild:
-        routerCount = 0;
-
-        for (int i = 0; i < kMaxRouterId; i++)
+        if ((mDeviceMode & ModeTlv::kModeFFD) && (GetActiveRouterCount() < mRouterUpgradeThreshold))
         {
-            if (mRouters[i].mAllocated)
-            {
-                routerCount++;
-            }
-        }
-
-        if ((mDeviceMode & ModeTlv::kModeFFD) && (routerCount < mRouterUpgradeThreshold))
-        {
-            BecomeRouter();
+            BecomeRouter(ThreadStatusTlv::kTooFewRouters);
             ExitNow();
         }
 
@@ -1829,7 +1834,7 @@ ThreadError MleRouter::HandleChildIdRequest(const Message &aMessage, const Ip6::
         break;
 
     case kDeviceStateChild:
-        BecomeRouter();
+        BecomeRouter(ThreadStatusTlv::kHaveChildIdRequest);
         break;
 
     case kDeviceStateRouter:
@@ -2525,12 +2530,13 @@ ThreadError MleRouter::CheckReachability(uint16_t aMeshSource, uint16_t aMeshDes
     return kThreadError_Drop;
 }
 
-ThreadError MleRouter::SendAddressSolicit(void)
+ThreadError MleRouter::SendAddressSolicit(ThreadStatusTlv::Status aStatus)
 {
     ThreadError error = kThreadError_None;
     Coap::Header header;
     ThreadExtMacAddressTlv macAddr64Tlv;
     ThreadRloc16Tlv rlocTlv;
+    ThreadStatusTlv statusTlv;
     Ip6::MessageInfo messageInfo;
     Message *message;
 
@@ -2562,6 +2568,10 @@ ThreadError MleRouter::SendAddressSolicit(void)
         rlocTlv.SetRloc16(GetRloc16(mPreviousRouterId));
         SuccessOrExit(error = message->Append(&rlocTlv, sizeof(rlocTlv)));
     }
+
+    statusTlv.Init();
+    statusTlv.SetStatus(aStatus);
+    SuccessOrExit(error = message->Append(&statusTlv, sizeof(statusTlv)));
 
     memset(&messageInfo, 0, sizeof(messageInfo));
     SuccessOrExit(error = GetLeaderAddress(messageInfo.GetPeerAddr()));
@@ -2730,17 +2740,19 @@ void MleRouter::HandleAddressSolicit(Coap::Header &aHeader, Message &aMessage, c
     ThreadError error = kThreadError_None;
     ThreadExtMacAddressTlv macAddr64Tlv;
     ThreadRloc16Tlv rlocTlv;
-    int routerId;
+    ThreadStatusTlv statusTlv;
+    int routerId = -1;
 
-    VerifyOrExit(aHeader.GetType() == Coap::Header::kTypeConfirmable &&
-                 aHeader.GetCode() == Coap::Header::kCodePost, ;);
+    VerifyOrExit(aHeader.GetType() == Coap::Header::kTypeConfirmable && aHeader.GetCode() == Coap::Header::kCodePost,
+                 error = kThreadError_Parse);
 
     otLogInfoMle("Received address solicit\n");
 
     SuccessOrExit(error = ThreadTlv::GetTlv(aMessage, ThreadTlv::kExtMacAddress, sizeof(macAddr64Tlv), macAddr64Tlv));
     VerifyOrExit(macAddr64Tlv.IsValid(), error = kThreadError_Parse);
 
-    routerId = -1;
+    SuccessOrExit(error = ThreadTlv::GetTlv(aMessage, ThreadTlv::kStatus, sizeof(statusTlv), statusTlv));
+    VerifyOrExit(statusTlv.IsValid(), error = kThreadError_Parse);
 
     // see if allocation already exists
     for (int i = 0; i < kMaxRouterId; i++)
@@ -2748,9 +2760,23 @@ void MleRouter::HandleAddressSolicit(Coap::Header &aHeader, Message &aMessage, c
         if (mRouters[i].mAllocated &&
             memcmp(&mRouters[i].mMacAddr, macAddr64Tlv.GetMacAddr(), sizeof(mRouters[i].mMacAddr)) == 0)
         {
-            SendAddressSolicitResponse(aHeader, i, aMessageInfo);
-            ExitNow();
+            ExitNow(routerId = i);
         }
+    }
+
+    // check the request reason
+    switch (statusTlv.GetStatus())
+    {
+    case ThreadStatusTlv::kTooFewRouters:
+        VerifyOrExit(GetActiveRouterCount() < mRouterUpgradeThreshold, ;);
+        break;
+
+    case ThreadStatusTlv::kHaveChildIdRequest:
+        break;
+
+    default:
+        ExitNow(error = kThreadError_Parse);
+        break;
     }
 
     if (ThreadTlv::GetTlv(aMessage, ThreadTlv::kRloc16, sizeof(rlocTlv), rlocTlv) == kThreadError_None)
@@ -2801,10 +2827,12 @@ void MleRouter::HandleAddressSolicit(Coap::Header &aHeader, Message &aMessage, c
         otLogInfoMle("router address unavailable!\n");
     }
 
-    SendAddressSolicitResponse(aHeader, routerId, aMessageInfo);
-
 exit:
-    {}
+
+    if (error == kThreadError_None)
+    {
+        SendAddressSolicitResponse(aHeader, routerId, aMessageInfo);
+    }
 }
 
 void MleRouter::SendAddressSolicitResponse(const Coap::Header &aRequestHeader, int aRouterId,
