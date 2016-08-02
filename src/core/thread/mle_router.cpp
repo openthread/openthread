@@ -1228,7 +1228,7 @@ ThreadError MleRouter::HandleAdvertisement(const Message &aMessage, const Ip6::M
     if (partitionId != mLeaderData.GetPartitionId())
     {
         otLogDebgMle("different partition! %d %d %d %d\n",
-                     leaderData.GetWeighting(), peerParitionId,
+                     leaderData.GetWeighting(), partitionId,
                      mLeaderData.GetWeighting(), mLeaderData.GetPartitionId());
 
         if (GetDeviceState() == kDeviceStateChild &&
