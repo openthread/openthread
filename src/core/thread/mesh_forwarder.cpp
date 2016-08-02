@@ -458,17 +458,52 @@ ThreadError MeshForwarder::UpdateIp6Route(Message &aMessage)
 
     aMessage.Read(0, sizeof(ip6Header), &ip6Header);
 
-    if (ip6Header.GetDestination().IsLinkLocal() || ip6Header.GetDestination().IsMulticast())
+    switch (mMle.GetDeviceState())
     {
-        GetMacDestinationAddress(ip6Header.GetDestination(), mMacDest);
-        GetMacSourceAddress(ip6Header.GetSource(), mMacSource);
-    }
-    else if (mMle.GetDeviceState() != Mle::kDeviceStateDetached)
-    {
-        // non-link-local unicast
-        if (mMle.GetDeviceMode() & Mle::ModeTlv::kModeFFD)
+    case Mle::kDeviceStateDisabled:
+        break;
+
+    case Mle::kDeviceStateDetached:
+        if (ip6Header.GetDestination().IsLinkLocal() || ip6Header.GetDestination().IsLinkLocalMulticast())
         {
-            // FFD - peform full routing
+            GetMacDestinationAddress(ip6Header.GetDestination(), mMacDest);
+            GetMacSourceAddress(ip6Header.GetSource(), mMacSource);
+        }
+        else
+        {
+            ExitNow(error = kThreadError_Drop);
+        }
+
+        break;
+
+    case Mle::kDeviceStateChild:
+        if (aMessage.IsLinkSecurityEnabled())
+        {
+            mMacDest.mLength = sizeof(mMacDest.mShortAddress);
+            mMacDest.mShortAddress = mMle.GetNextHop(Mac::kShortAddrBroadcast);
+            GetMacSourceAddress(ip6Header.GetSource(), mMacSource);
+        }
+        else if (ip6Header.GetDestination().IsLinkLocal() || ip6Header.GetDestination().IsLinkLocalMulticast())
+        {
+            GetMacDestinationAddress(ip6Header.GetDestination(), mMacDest);
+            GetMacSourceAddress(ip6Header.GetSource(), mMacSource);
+        }
+        else
+        {
+            ExitNow(error = kThreadError_Drop);
+        }
+
+        break;
+
+    case Mle::kDeviceStateRouter:
+    case Mle::kDeviceStateLeader:
+        if (ip6Header.GetDestination().IsLinkLocal() || ip6Header.GetDestination().IsMulticast())
+        {
+            GetMacDestinationAddress(ip6Header.GetDestination(), mMacDest);
+            GetMacSourceAddress(ip6Header.GetSource(), mMacSource);
+        }
+        else
+        {
             if (mMle.IsRoutingLocator(ip6Header.GetDestination()))
             {
                 rloc16 = HostSwap16(ip6Header.GetDestination().mFields.m16[7]);
@@ -488,50 +523,30 @@ ThreadError MeshForwarder::UpdateIp6Route(Message &aMessage)
                 mNetworkData.RouteLookup(ip6Header.GetSource(), ip6Header.GetDestination(), NULL, &mMeshDest);
                 assert(mMeshDest != Mac::kShortAddrInvalid);
             }
-        }
-        else
-        {
-            // RFD - send to parent
-            mMeshDest = mMle.GetNextHop(Mac::kShortAddrBroadcast);
-        }
 
-        if ((mMle.GetDeviceState() == Mle::kDeviceStateChild && mMeshDest == mMle.GetParent()->mValid.mRloc16) ||
-            ((mMle.GetDeviceState() == Mle::kDeviceStateRouter || mMle.GetDeviceState() == Mle::kDeviceStateLeader) &&
-             (neighbor = mMle.GetNeighbor(mMeshDest)) != NULL))
-        {
-            // destination is neighbor
-            mMacDest.mLength = sizeof(mMacDest.mShortAddress);
-            mMacDest.mShortAddress = mMeshDest;
-
-            if (mNetif.IsUnicastAddress(ip6Header.GetSource()))
+            if (mMle.GetNeighbor(mMeshDest) != NULL)
             {
+                // destination is neighbor
+                mMacDest.mLength = sizeof(mMacDest.mShortAddress);
+                mMacDest.mShortAddress = mMeshDest;
                 GetMacSourceAddress(ip6Header.GetSource(), mMacSource);
             }
             else
             {
+                // destination is not neighbor
+                mMeshSource = mMac.GetShortAddress();
+
+                SuccessOrExit(error = mMle.CheckReachability(mMeshSource, mMeshDest, ip6Header));
+
+                mMacDest.mLength = sizeof(mMacDest.mShortAddress);
+                mMacDest.mShortAddress = mMle.GetNextHop(mMeshDest);
                 mMacSource.mLength = sizeof(mMacSource.mShortAddress);
-                mMacSource.mShortAddress = mMac.GetShortAddress();
-                assert(mMacSource.mShortAddress != Mac::kShortAddrInvalid);
+                mMacSource.mShortAddress = mMeshSource;
+                mAddMeshHeader = true;
             }
         }
-        else
-        {
-            // destination is not neighbor
-            mMeshSource = mMac.GetShortAddress();
 
-            SuccessOrExit(error = mMle.CheckReachability(mMeshSource, mMeshDest, ip6Header));
-
-            mMacDest.mLength = sizeof(mMacDest.mShortAddress);
-            mMacDest.mShortAddress = mMle.GetNextHop(mMeshDest);
-            mMacSource.mLength = sizeof(mMacSource.mShortAddress);
-            mMacSource.mShortAddress = mMeshSource;
-            mAddMeshHeader = true;
-        }
-    }
-    else
-    {
-        assert(false);
-        ExitNow(error = kThreadError_Drop);
+        break;
     }
 
 exit:
@@ -588,8 +603,6 @@ void MeshForwarder::HandlePollTimer()
 
 ThreadError MeshForwarder::GetMacSourceAddress(const Ip6::Address &aIp6Addr, Mac::Address &aMacAddr)
 {
-    assert(!aIp6Addr.IsMulticast());
-
     aMacAddr.mLength = sizeof(aMacAddr.mExtAddress);
     aMacAddr.mExtAddress.Set(aIp6Addr);
 
