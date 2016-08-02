@@ -382,15 +382,16 @@ exit:
 
 ThreadError Frame::SetSrcPanId(PanId aPanId)
 {
+    ThreadError error = kThreadError_None;
     uint8_t *buf;
 
-    buf = FindSrcPanId();
-    assert(buf != NULL);
+    VerifyOrExit((buf = FindSrcPanId()) != NULL, error = kThreadError_Parse);
 
     buf[0] = aPanId;
     buf[1] = aPanId >> 8;
 
-    return kThreadError_None;
+exit:
+    return error;
 }
 
 uint8_t *Frame::FindSrcAddr(void)

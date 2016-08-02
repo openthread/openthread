@@ -93,6 +93,7 @@ public:
         kStatus              = 17,   ///< Status TLV
         kVersion             = 18,   ///< Version TLV
         kAddressRegistration = 19,   ///< Address Registration TLV
+        kDiscovery           = 26,   ///< Thread Discovery TLV
         kInvalid             = 255,
     };
 

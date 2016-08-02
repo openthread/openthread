@@ -93,6 +93,7 @@ private:
     static void ProcessChildTimeout(int argc, char *argv[]);
     static void ProcessContextIdReuseDelay(int argc, char *argv[]);
     static void ProcessCounters(int argc, char *argv[]);
+    static void ProcessDiscover(int argc, char *argv[]);
     static void ProcessEidCache(int argc, char *argv[]);
     static void ProcessExtAddress(int argc, char *argv[]);
     static void ProcessExtPanId(int argc, char *argv[]);

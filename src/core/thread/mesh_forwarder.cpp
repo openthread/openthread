@@ -53,6 +53,7 @@ namespace Thread {
 MeshForwarder::MeshForwarder(ThreadNetif &aThreadNetif):
     mMacReceiver(&HandleReceivedFrame, this),
     mMacSender(&HandleFrameRequest, &HandleSentFrame, this),
+    mDiscoverTimer(&HandleDiscoverTimer, this),
     mPollTimer(&HandlePollTimer, this),
     mReassemblyTimer(&HandleReassemblyTimer, this),
     mScheduleTransmissionTask(ScheduleTransmissionTask, this),
@@ -461,8 +462,6 @@ ThreadError MeshForwarder::UpdateIp6Route(Message &aMessage)
     switch (mMle.GetDeviceState())
     {
     case Mle::kDeviceStateDisabled:
-        break;
-
     case Mle::kDeviceStateDetached:
         if (ip6Header.GetDestination().IsLinkLocal() || ip6Header.GetDestination().IsLinkLocalMulticast())
         {
@@ -661,6 +660,25 @@ ThreadError MeshForwarder::HandleFrameRequest(Mac::Frame &aFrame)
     switch (mSendMessage->GetType())
     {
     case Message::kTypeIp6:
+        if (mSendMessage->IsMleDiscoverRequest())
+        {
+            if (!mScanning)
+            {
+                mScanChannel = kPhyMinChannel;
+                mRestoreChannel = mMac.GetChannel();
+                mScanning = true;
+            }
+
+            while ((mScanChannels & 1) == 0)
+            {
+                mScanChannels >>= 1;
+                mScanChannel++;
+            }
+
+            mMac.SetChannel(mScanChannel);
+            aFrame.SetChannel(mScanChannel);
+        }
+
         SendFragment(*mSendMessage, aFrame);
         assert(aFrame.GetLength() != 7);
         break;
@@ -772,6 +790,7 @@ ThreadError MeshForwarder::SendFragment(Message &aMessage, Mac::Frame &aFrame)
     int payloadLength;
     int hcLength;
     uint16_t fragmentLength;
+    uint16_t dstpan;
 
     if (mAddMeshHeader)
     {
@@ -787,7 +806,7 @@ ThreadError MeshForwarder::SendFragment(Message &aMessage, Mac::Frame &aFrame)
     }
 
     // initialize MAC header
-    fcf = Mac::Frame::kFcfFrameData | Mac::Frame::kFcfPanidCompression | Mac::Frame::kFcfFrameVersion2006;
+    fcf = Mac::Frame::kFcfFrameData | Mac::Frame::kFcfFrameVersion2006;
     fcf |= (mMacDest.mLength == 2) ? Mac::Frame::kFcfDstAddrShort : Mac::Frame::kFcfDstAddrExt;
     fcf |= (mMacSource.mLength == 2) ? Mac::Frame::kFcfSrcAddrShort : Mac::Frame::kFcfSrcAddrExt;
 
@@ -802,8 +821,23 @@ ThreadError MeshForwarder::SendFragment(Message &aMessage, Mac::Frame &aFrame)
         fcf |= Mac::Frame::kFcfSecurityEnabled;
     }
 
+    if (aMessage.IsMleDiscoverRequest() || aMessage.IsMleDiscoverResponse())
+    {
+        dstpan = aMessage.GetPanId();
+    }
+    else
+    {
+        dstpan = mMac.GetPanId();
+    }
+
+    if (dstpan == mMac.GetPanId())
+    {
+        fcf |= Mac::Frame::kFcfPanidCompression;
+    }
+
     aFrame.InitMacHeader(fcf, Mac::Frame::kKeyIdMode1 | Mac::Frame::kSecEncMic32);
-    aFrame.SetDstPanId(mMac.GetPanId());
+    aFrame.SetDstPanId(dstpan);
+    aFrame.SetSrcPanId(mMac.GetPanId());
 
     if (mMacDest.mLength == 2)
     {
@@ -961,6 +995,13 @@ void MeshForwarder::HandleSentFrame(Mac::Frame &aFrame)
             mSendMessage->ClearDirectTransmission();
             mSendMessage->SetOffset(0);
         }
+
+        if (mSendMessage->IsMleDiscoverRequest())
+        {
+            mSendBusy = true;
+            mDiscoverTimer.Start(mScanDuration);
+            ExitNow();
+        }
     }
 
     if (mSendMessage->GetDirectTransmission() == false && mSendMessage->IsChildPending() == false)
@@ -973,6 +1014,44 @@ void MeshForwarder::HandleSentFrame(Mac::Frame &aFrame)
 
 exit:
     {}
+}
+
+void MeshForwarder::SetDiscoverParameters(uint32_t aScanChannels, uint16_t aScanDuration)
+{
+    mScanChannels = (aScanChannels == 0) ? static_cast<uint32_t>(Mac::kScanChannelsAll) : aScanChannels;
+    mScanDuration = (aScanDuration == 0) ? static_cast<uint16_t>(Mac::kScanDurationDefault) : aScanDuration;
+}
+
+void MeshForwarder::HandleDiscoverTimer(void *aContext)
+{
+    MeshForwarder *obj = static_cast<MeshForwarder *>(aContext);
+    obj->HandleDiscoverTimer();
+}
+
+void MeshForwarder::HandleDiscoverTimer(void)
+{
+    do
+    {
+        mScanChannels >>= 1;
+        mScanChannel++;
+
+        if (mScanChannel > kPhyMaxChannel)
+        {
+            mSendQueue.Dequeue(*mSendMessage);
+            Message::Free(*mSendMessage);
+            mMac.SetChannel(mRestoreChannel);
+            mScanning = false;
+            mMle.HandleDiscoverComplete();
+            ExitNow();
+        }
+    }
+    while ((mScanChannels & 1) == 0);
+
+    mSendMessage->SetDirectTransmission();
+
+exit:
+    mSendBusy = false;
+    mScheduleTransmissionTask.Post();
 }
 
 void MeshForwarder::HandleReceivedFrame(void *aContext, Mac::Frame &aFrame, ThreadError aError)
@@ -1028,6 +1107,8 @@ void MeshForwarder::HandleReceivedFrame(Mac::Frame &aFrame, ThreadError aError)
     }
 
     SuccessOrExit(aFrame.GetDstAddr(macDest));
+    aFrame.GetSrcPanId(messageInfo.mPanId);
+    messageInfo.mChannel = aFrame.GetChannel();
     messageInfo.mRss = aFrame.GetPower();
     messageInfo.mLqi = aFrame.GetLqi();
     messageInfo.mLinkSecurity = aFrame.GetSecurityEnabled();
@@ -1117,6 +1198,7 @@ void MeshForwarder::HandleMesh(uint8_t *aFrame, uint8_t aFrameLength, const Thre
         SuccessOrExit(error = message->SetLength(aFrameLength));
         message->Write(0, aFrameLength, aFrame);
         message->SetLinkSecurityEnabled(aMessageInfo.mLinkSecurity);
+        message->SetPanId(aMessageInfo.mPanId);
 
         SendMessage(*message);
     }
@@ -1175,6 +1257,7 @@ void MeshForwarder::HandleFragment(uint8_t *aFrame, uint8_t aFrameLength,
 
         VerifyOrExit((message = Message::New(Message::kTypeIp6, 0)) != NULL, error = kThreadError_NoBufs);
         message->SetLinkSecurityEnabled(aMessageInfo.mLinkSecurity);
+        message->SetPanId(aMessageInfo.mPanId);
         headerLength = mLowpan.Decompress(*message, aMacSource, aMacDest, aFrame, aFrameLength, datagramLength);
         VerifyOrExit(headerLength > 0, error = kThreadError_NoBufs);
 
@@ -1279,6 +1362,7 @@ void MeshForwarder::HandleLowpanHC(uint8_t *aFrame, uint8_t aFrameLength,
 
     VerifyOrExit((message = Message::New(Message::kTypeIp6, 0)) != NULL, ;);
     message->SetLinkSecurityEnabled(aMessageInfo.mLinkSecurity);
+    message->SetPanId(aMessageInfo.mPanId);
 
     headerLength = mLowpan.Decompress(*message, aMacSource, aMacDest, aFrame, aFrameLength, 0);
     VerifyOrExit(headerLength > 0, ;);

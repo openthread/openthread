@@ -160,6 +160,8 @@ typedef struct otExtAddress
  *
  */
 
+#define OT_PANID_BROADCAST   0xffff      ///< IEEE 802.15.4 Broadcast PAN ID
+
 #define OT_CHANNEL_11_MASK   (1 << 11)   ///< Channel 11
 #define OT_CHANNEL_12_MASK   (1 << 12)   ///< Channel 12
 #define OT_CHANNEL_13_MASK   (1 << 13)   ///< Channel 13

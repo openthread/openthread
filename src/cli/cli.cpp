@@ -56,6 +56,7 @@ const struct Command Interpreter::sCommands[] =
     { "childtimeout", &ProcessChildTimeout },
     { "contextreusedelay", &ProcessContextIdReuseDelay },
     { "counter", &ProcessCounters },
+    { "discover", &ProcessDiscover },
     { "eidcache", &ProcessEidCache },
     { "extaddr", &ProcessExtAddress },
     { "extpanid", &ProcessExtPanId },
@@ -351,6 +352,28 @@ void Interpreter::ProcessCounters(int argc, char *argv[])
             sServer->OutputFormat("    RxErrOther: %d\r\n", counters->mRxErrOther);
         }
     }
+}
+
+void Interpreter::ProcessDiscover(int argc, char *argv[])
+{
+    ThreadError error = kThreadError_None;
+    uint32_t scanChannels = 0;
+    long value;
+
+    if (argc > 0)
+    {
+        SuccessOrExit(error = ParseLong(argv[0], value));
+        scanChannels = 1 << value;
+    }
+
+    SuccessOrExit(error = otDiscover(scanChannels, 0, OT_PANID_BROADCAST, &HandleActiveScanResult));
+    sServer->OutputFormat("| J | Network Name     | Extended PAN     | PAN  | MAC Address      | Ch | dBm | LQI |\r\n");
+    sServer->OutputFormat("+---+------------------+------------------+------+------------------+----+-----+-----+\r\n");
+
+    return;
+
+exit:
+    AppendResult(error);
 }
 
 void Interpreter::ProcessEidCache(int argc, char *argv[])
@@ -1246,7 +1269,9 @@ void Interpreter::HandleActiveScanResult(otActiveScanResult *aResult)
 
     if (aResult->mExtPanId != NULL)
     {
+        sServer->OutputFormat("| ");
         OutputBytes(aResult->mExtPanId, OT_EXT_PAN_ID_SIZE);
+        sServer->OutputFormat(" ");
     }
     else
     {
@@ -1254,9 +1279,8 @@ void Interpreter::HandleActiveScanResult(otActiveScanResult *aResult)
     }
 
     sServer->OutputFormat("| %04x | ", aResult->mPanId);
-
     OutputBytes(aResult->mExtAddress.m8, OT_EXT_ADDRESS_SIZE);
-    sServer->OutputFormat("| %2d ", aResult->mChannel);
+    sServer->OutputFormat(" | %2d ", aResult->mChannel);
     sServer->OutputFormat("| %3d ", aResult->mRssi);
     sServer->OutputFormat("| %3d |\r\n", aResult->mLqi);
 
