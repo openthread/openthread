@@ -42,6 +42,7 @@
 #include <net/udp6.hpp>
 #include <thread/mle.hpp>
 #include <thread/mle_tlvs.hpp>
+#include <thread/thread_tlvs.hpp>
 #include <thread/topology.hpp>
 
 namespace Thread {
@@ -99,11 +100,13 @@ public:
     /**
      * This method generates an Address Solicit request for a Router ID.
      *
+     * @param[in]  aStatus  The reason for requesting a Router ID.
+     *
      * @retval kThreadError_None          Successfully generated an Address Solicit message.
      * @retval kThreadError_InvalidState  Not currently an End Device.
      *
      */
-    ThreadError BecomeRouter(void);
+    ThreadError BecomeRouter(ThreadStatusTlv::Status aStatus);
 
     /**
      * This method causes the Thread interface to become a Leader and start a new partition.
@@ -113,6 +116,14 @@ public:
      *
      */
     ThreadError BecomeLeader(void);
+
+    /**
+     * This method returns the number of active routers.
+     *
+     * @returns The number of active routers.
+     *
+     */
+    uint8_t GetActiveRouterCount(void) const;
 
     /**
      * This method returns the time in seconds since the last Router ID Sequence update.
@@ -414,7 +425,7 @@ private:
 
     ThreadError ProcessRouteTlv(const RouteTlv &aRoute);
     ThreadError ResetAdvertiseInterval(void);
-    ThreadError SendAddressSolicit(void);
+    ThreadError SendAddressSolicit(ThreadStatusTlv::Status aStatus);
     ThreadError SendAddressRelease(void);
     void SendAddressSolicitResponse(const Coap::Header &aRequest, int aRouterId, const Ip6::MessageInfo &aMessageInfo);
     void SendAddressReleaseResponse(const Coap::Header &aRequestHeader, const Ip6::MessageInfo &aMessageInfo);

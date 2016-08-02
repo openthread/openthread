@@ -44,6 +44,7 @@ class Cert_5_2_2_LeaderReject1Hop(unittest.TestCase):
         self.nodes[LEADER].set_panid(0xface)
         self.nodes[LEADER].set_mode('rsdn')
         self.nodes[LEADER].enable_whitelist()
+        self.nodes[LEADER].set_router_upgrade_threshold(32)
 
         for i in range(2,34):
             self.nodes[i] = node.Node(i)
