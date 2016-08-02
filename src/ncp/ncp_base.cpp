@@ -3020,10 +3020,11 @@ void NcpBase::InsertPropertyHandler_THREAD_ON_MESH_NETS(uint8_t header, spinel_p
     const static int kPreferenceOffset = 6;
     const static int kPreferenceMask = 3 << kPreferenceOffset;
     const static int kPreferredFlag = 1 << 5;
-    const static int kValidFlag = 1 << 4;
+    const static int kSlaacFlag = 1 << 4;
     const static int kDhcpFlag = 1 << 3;
     const static int kConfigureFlag = 1 << 2;
     const static int kDefaultRouteFlag = 1 << 1;
+    const static int kOnMeshFlag = 1 << 0;
 
     spinel_ssize_t parsedLength;
     ThreadError errorCode = kThreadError_None;
@@ -3055,11 +3056,12 @@ void NcpBase::InsertPropertyHandler_THREAD_ON_MESH_NETS(uint8_t header, spinel_p
         border_router_config.mPrefix.mPrefix = *addr_ptr;
         border_router_config.mStable = stable;
         border_router_config.mPreference = ((flags & kPreferenceMask) >> kPreferenceOffset);
-        border_router_config.mSlaacPreferred = ((flags & kPreferredFlag) == kPreferredFlag);
-        border_router_config.mSlaacValid = ((flags & kValidFlag) == kValidFlag);
+        border_router_config.mPreferred = ((flags & kPreferredFlag) == kPreferredFlag);
+        border_router_config.mSlaac = ((flags & kSlaacFlag) == kSlaacFlag);
         border_router_config.mDhcp = ((flags & kDhcpFlag) == kDhcpFlag);
         border_router_config.mConfigure = ((flags & kConfigureFlag) == kConfigureFlag);
         border_router_config.mDefaultRoute = ((flags & kDefaultRouteFlag) == kDefaultRouteFlag);
+        border_router_config.mOnMesh = ((flags & kOnMeshFlag) == kOnMeshFlag);
 
         errorCode = otAddBorderRouter(&border_router_config);
 

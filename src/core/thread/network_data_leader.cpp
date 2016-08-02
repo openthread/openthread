@@ -241,9 +241,9 @@ ThreadError Leader::ConfigureAddress(PrefixTlv &aPrefix)
         ExitNow();
     }
 
-    // check if Valid flag is set
+    // check if SLAAC flag is set
     if ((entry = borderRouter->GetEntry(0)) == NULL ||
-        entry->IsValid() == false)
+        entry->IsSlaac() == false)
     {
         ExitNow();
     }

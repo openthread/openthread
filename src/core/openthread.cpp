@@ -294,14 +294,14 @@ ThreadError otAddBorderRouter(const otBorderRouterConfig *aConfig)
 {
     uint8_t flags = 0;
 
-    if (aConfig->mSlaacPreferred)
+    if (aConfig->mPreferred)
     {
         flags |= NetworkData::BorderRouterEntry::kPreferredFlag;
     }
 
-    if (aConfig->mSlaacValid)
+    if (aConfig->mSlaac)
     {
-        flags |= NetworkData::BorderRouterEntry::kValidFlag;
+        flags |= NetworkData::BorderRouterEntry::kSlaacFlag;
     }
 
     if (aConfig->mDhcp)
@@ -317,6 +317,11 @@ ThreadError otAddBorderRouter(const otBorderRouterConfig *aConfig)
     if (aConfig->mDefaultRoute)
     {
         flags |= NetworkData::BorderRouterEntry::kDefaultRouteFlag;
+    }
+
+    if (aConfig->mOnMesh)
+    {
+        flags |= NetworkData::BorderRouterEntry::kOnMeshFlag;
     }
 
     return sThreadNetif->GetNetworkDataLocal().AddOnMeshPrefix(aConfig->mPrefix.mPrefix.mFields.m8,

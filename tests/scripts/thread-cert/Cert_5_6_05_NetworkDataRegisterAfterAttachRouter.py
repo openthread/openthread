@@ -89,8 +89,8 @@ class Cert_5_6_5_NetworkDataRegisterAfterAttachRouter(unittest.TestCase):
         time.sleep(3)
         self.assertEqual(self.nodes[SED1].get_state(), 'child')
 
-        self.nodes[ROUTER].add_prefix('2001::/64', 'pvcrs')
-        self.nodes[ROUTER].add_prefix('2002::/64', 'pvcr')
+        self.nodes[ROUTER].add_prefix('2001::/64', 'paros')
+        self.nodes[ROUTER].add_prefix('2002::/64', 'paro')
         self.nodes[ROUTER].register_netdata()
 
         time.sleep(10)
@@ -105,7 +105,7 @@ class Cert_5_6_5_NetworkDataRegisterAfterAttachRouter(unittest.TestCase):
             if addr[0:3] == '200':
                 self.nodes[LEADER].ping(addr)
 
-        self.nodes[ROUTER].add_prefix('2003::/64', 'pvcs')
+        self.nodes[ROUTER].add_prefix('2003::/64', 'pacs')
         self.nodes[ROUTER].register_netdata()
 
         time.sleep(10)

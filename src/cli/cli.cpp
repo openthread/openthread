@@ -865,43 +865,9 @@ ThreadError Interpreter::ProcessPrefixAdd(int argc, char *argv[])
         ExitNow(error = kThreadError_Parse);
     }
 
-    if (++argcur < argc)
-    {
-        for (char *arg = argv[argcur]; *arg != '\0'; arg++)
-        {
-            switch (*arg)
-            {
-            case 'p':
-                config.mSlaacPreferred = true;
-                break;
+    argcur++;
 
-            case 'v':
-                config.mSlaacValid = true;
-                break;
-
-            case 'd':
-                config.mDhcp = true;
-                break;
-
-            case 'c':
-                config.mConfigure = true;
-                break;
-
-            case 'r':
-                config.mDefaultRoute = true;
-                break;
-
-            case 's':
-                config.mStable = true;
-                break;
-
-            default:
-                ExitNow();
-            }
-        }
-    }
-
-    if (++argcur < argc)
+    for (; argcur < argc; argcur++)
     {
         if (strcmp(argv[argcur], "high") == 0)
         {
@@ -917,7 +883,42 @@ ThreadError Interpreter::ProcessPrefixAdd(int argc, char *argv[])
         }
         else
         {
-            ExitNow(error = kThreadError_Parse);
+            for (char *arg = argv[argcur]; *arg != '\0'; arg++)
+            {
+                switch (*arg)
+                {
+                case 'p':
+                    config.mPreferred = true;
+                    break;
+
+                case 'a':
+                    config.mSlaac = true;
+                    break;
+
+                case 'd':
+                    config.mDhcp = true;
+                    break;
+
+                case 'c':
+                    config.mConfigure = true;
+                    break;
+
+                case 'r':
+                    config.mDefaultRoute = true;
+                    break;
+
+                case 'o':
+                    config.mOnMesh = true;
+                    break;
+
+                case 's':
+                    config.mStable = true;
+                    break;
+
+                default:
+                    ExitNow(error = kThreadError_Parse);
+                }
+            }
         }
     }
 
@@ -1035,13 +1036,16 @@ ThreadError Interpreter::ProcessRouteAdd(int argc, char *argv[])
         ExitNow(error = kThreadError_Parse);
     }
 
-    if (++argcur < argc)
+    argcur++;
+
+    for (; argcur < argc; argcur++)
     {
         if (strcmp(argv[argcur], "s") == 0)
         {
             config.mStable = true;
         }
-        else if (strcmp(argv[argcur], "high") == 0)
+
+        if (strcmp(argv[argcur], "high") == 0)
         {
             config.mPreference = 1;
         }
