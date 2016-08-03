@@ -32,18 +32,18 @@
  *  This file defines the top-level functions for the OpenThread CLI server.
  */
 
-#ifndef CLI_SERIAL_H_
-#define CLI_SERIAL_H_
+#ifndef CLI_UART_H_
+#define CLI_UART_H_
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 /**
- * Initialize the CLI serial server.
+ * Initialize the CLI UART module.
  *
  */
-void otCliSerialInit(void);
+void otCliUartInit(void);
 
 #ifdef __cplusplus
 }  // extern "C"

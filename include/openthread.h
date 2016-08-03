@@ -176,7 +176,7 @@ typedef void (*otHandleActiveScanResult)(otActiveScanResult *aResult);
 /**
  * This function starts an IEEE 802.15.4 Active Scan
  *
- * @param[in]  aScanChannels  A bit vector indicating which channels to scan.
+ * @param[in]  aScanChannels  A bit vector indicating which channels to scan (e.g. OT_CHANNEL_11_MASK).
  * @param[in]  aScanDuration  The time in milliseconds to spend scanning each channel.
  * @param[in]  aCallback      A pointer to a function that is called when a beacon is received or the scan completes.
  *
@@ -184,7 +184,7 @@ typedef void (*otHandleActiveScanResult)(otActiveScanResult *aResult);
  * @retval kThreadError_Busy  Already performing an Active Scan.
  *
  */
-ThreadError otActiveScan(uint16_t aScanChannels, uint16_t aScanDuration, otHandleActiveScanResult aCallback);
+ThreadError otActiveScan(uint32_t aScanChannels, uint16_t aScanDuration, otHandleActiveScanResult aCallback);
 
 /**
  * This function determines if an IEEE 802.15.4 Active Scan is currently in progress.
@@ -732,6 +732,7 @@ ThreadError otReleaseRouterId(uint8_t aRouterId);
  * @sa otAddMacWhitelistRssi
  * @sa otRemoveMacWhitelist
  * @sa otClearMacWhitelist
+ * @sa otGetMacWhitelistEntry
  * @sa otDisableMacWhitelist
  * @sa otEnableMacWhitelist
  */
@@ -749,6 +750,7 @@ ThreadError otAddMacWhitelist(const uint8_t *aExtAddr);
  * @sa otAddMacWhitelistRssi
  * @sa otRemoveMacWhitelist
  * @sa otClearMacWhitelist
+ * @sa otGetMacWhitelistEntry
  * @sa otDisableMacWhitelist
  * @sa otEnableMacWhitelist
  */
@@ -762,10 +764,23 @@ ThreadError otAddMacWhitelistRssi(const uint8_t *aExtAddr, int8_t aRssi);
  * @sa otAddMacWhitelist
  * @sa otAddMacWhitelistRssi
  * @sa otClearMacWhitelist
+ * @sa otGetMacWhitelistEntry
  * @sa otDisableMacWhitelist
  * @sa otEnableMacWhitelist
  */
 void otRemoveMacWhitelist(const uint8_t *aExtAddr);
+
+/**
+ * This function gets a MAC whitelist entry.
+ *
+ * @param[in]   aIndex  An index into the MAC whitelist table.
+ * @param[out]  aEntry  A pointer to where the information is placed.
+ *
+ * @retval kThreadError_None         Successfully retrieved the MAC whitelist entry.
+ * @retval kThreadError_InvalidArgs  @p aIndex is out of bounds or @p aEntry is NULL.
+ *
+ */
+ThreadError otGetMacWhitelistEntry(uint8_t aIndex, otMacWhitelistEntry *aEntry);
 
 /**
  *  Remove all entries from the MAC whitelist.
@@ -773,6 +788,7 @@ void otRemoveMacWhitelist(const uint8_t *aExtAddr);
  * @sa otAddMacWhitelist
  * @sa otAddMacWhitelistRssi
  * @sa otRemoveMacWhitelist
+ * @sa otGetMacWhitelistEntry
  * @sa otDisableMacWhitelist
  * @sa otEnableMacWhitelist
  */
@@ -786,6 +802,7 @@ void otClearMacWhitelist(void);
  * @sa otAddMacWhitelistRssi
  * @sa otRemoveMacWhitelist
  * @sa otClearMacWhitelist
+ * @sa otGetMacWhitelistEntry
  * @sa otEnableMacWhitelist
  */
 void otDisableMacWhitelist(void);
@@ -793,13 +810,30 @@ void otDisableMacWhitelist(void);
 /**
  * Enable MAC whitelist filtering.
  *
- * @sa otAccMacWhitelist
+ * @sa otAddMacWhitelist
  * @sa otAddMacWhitelistRssi
  * @sa otRemoveMacWhitelist
  * @sa otClearMacWhitelist
+ * @sa otGetMacWhitelistEntry
  * @sa otDisableMacWhitelist
  */
 void otEnableMacWhitelist(void);
+
+/**
+ * This function indicates whether or not the MAC whitelist is enabled.
+ *
+ * @returns TRUE if the MAC whitelist is enabled, FALSE otherwise.
+ *
+ * @sa otAddMacWhitelist
+ * @sa otAddMacWhitelistRssi
+ * @sa otRemoveMacWhitelist
+ * @sa otClearMacWhitelist
+ * @sa otGetMacWhitelistEntry
+ * @sa otDisableMacWhitelist
+ * @sa otEnableMacWhitelist
+ *
+ */
+bool otIsMacWhitelistEnabled(void);
 
 /**
  * Detach from the Thread network.
@@ -855,6 +889,24 @@ ThreadError otBecomeLeader(void);
  */
 
 /**
+ * The function retains diagnostic information for an attached Child by its Child ID or RLOC16.
+ *
+ * @param[in]   aChildId    The Child ID or RLOC16 for the attached child.
+ * @param[out]  aChildInfo  A pointer to where the child information is placed.
+ *
+ */
+ThreadError otGetChildInfoById(uint16_t aChildId, otChildInfo *aChildInfo);
+
+/**
+ * The function retains diagnostic information for an attached Child by the internal table index.
+ *
+ * @param[in]   aChildIndex  The table index.
+ * @param[out]  aChildInfo   A pointer to where the child information is placed.
+ *
+ */
+ThreadError otGetChildInfoByIndex(uint8_t aChildIndex, otChildInfo *aChildInfo);
+
+/**
  * Get the device role.
  *
  * @retval ::kDeviceRoleDisabled  The Thread stack is disabled.
@@ -864,6 +916,30 @@ ThreadError otBecomeLeader(void);
  * @retval ::kDeviceRoleLeader    The device is currently operating as a Thread Leader.
  */
 otDeviceRole otGetDeviceRole(void);
+
+/**
+ * This function gets an EID cache entry.
+ *
+ * @param[in]   aIndex  An index into the EID cache table.
+ * @param[out]  aEntry  A pointer to where the EID information is placed.
+ *
+ * @retval kThreadError_None         Successfully retreieved the EID cache entry.
+ * @retval kThreadError_InvalidArgs  @p aIndex was out of bounds or @p aEntry was NULL.
+ *
+ */
+ThreadError otGetEidCacheEntry(uint8_t aIndex, otEidCacheEntry *aEntry);
+
+/**
+ * This function get the Thread Leader Data.
+ *
+ * @param[out]  aLeaderData  A pointer to where the leader data is placed.
+ *
+ * @retval kThreadError_None         Successfully retrieved the leader data.
+ * @retval kThreadError_Detached     Not currently attached.
+ * @retval kThreadError_InvalidArgs  @p aLeaderData is NULL.
+ *
+ */
+ThreadError otGetLeaderData(otLeaderData *aLeaderData);
 
 /**
  * Get the Leader's Router ID.
@@ -906,6 +982,15 @@ uint16_t otGetRloc16(void);
  * @returns The Router ID Sequence.
  */
 uint8_t otGetRouterIdSequence(void);
+
+/**
+ * The function retains diagnostic information for a given Thread Router.
+ *
+ * @param[in]   aRouterId    The router ID or RLOC16 for a given router.
+ * @param[out]  aRouterInfo  A pointer to where the router information is placed.
+ *
+ */
+ThreadError otGetRouterInfo(uint16_t aRouterId, otRouterInfo *aRouterInfo);
 
 /**
  * Get the Stable Network Data Version.

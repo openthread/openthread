@@ -44,19 +44,19 @@ matrix:
     - env: BUILD_TARGET="scan-build"
       compiler: clang
       os: linux
-    - env: BUILD_TARGET="posix"
+    - env: BUILD_TARGET="posix" DISTCHECK_CONFIGURE_FLAGS="--with-examples=posix --enable-cli --enable-ncp --with-tests=subset1"
       compiler: clang
       os: linux
-    - env: BUILD_TARGET="posix"
+    - env: BUILD_TARGET="posix" DISTCHECK_CONFIGURE_FLAGS="--with-examples=posix --enable-cli --enable-ncp --with-tests=subset2"
       compiler: clang
       os: osx
-    - env: BUILD_TARGET="posix"
+    - env: BUILD_TARGET="posix" DISTCHECK_CONFIGURE_FLAGS="--with-examples=posix --enable-cli --enable-ncp --with-tests=subset3"
       compiler: gcc
       os: linux
-    - env: BUILD_TARGET="posix"
+    - env: BUILD_TARGET="posix" DISTCHECK_CONFIGURE_FLAGS="--with-examples=posix --enable-cli --enable-ncp --with-tests=subset4"
       compiler: gcc
       os: osx
-    - env: BUILD_TARGET="posix-32-bit"
+    - env: BUILD_TARGET="posix-32-bit" DISTCHECK_CONFIGURE_FLAGS="--with-examples=posix --enable-cli --enable-ncp --with-tests=subset5"
       compiler: gcc
       os: linux
     - env: BUILD_TARGET="cc2538"

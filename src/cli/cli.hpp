@@ -85,18 +85,22 @@ private:
     };
 
     static void AppendResult(ThreadError error);
+    static void OutputBytes(const uint8_t *aBytes, uint8_t aLength);
 
     static void ProcessHelp(int argc, char *argv[]);
     static void ProcessChannel(int argc, char *argv[]);
+    static void ProcessChild(int argc, char *argv[]);
     static void ProcessChildTimeout(int argc, char *argv[]);
     static void ProcessContextIdReuseDelay(int argc, char *argv[]);
     static void ProcessCounters(int argc, char *argv[]);
+    static void ProcessEidCache(int argc, char *argv[]);
     static void ProcessExtAddress(int argc, char *argv[]);
     static void ProcessExtPanId(int argc, char *argv[]);
     static void ProcessIpAddr(int argc, char *argv[]);
     static ThreadError ProcessIpAddrAdd(int argc, char *argv[]);
     static ThreadError ProcessIpAddrDel(int argc, char *argv[]);
     static void ProcessKeySequence(int argc, char *argv[]);
+    static void ProcessLeaderData(int argc, char *argv[]);
     static void ProcessLeaderWeight(int argc, char *argv[]);
     static void ProcessMasterKey(int argc, char *argv[]);
     static void ProcessMode(int argc, char *argv[]);
@@ -110,6 +114,7 @@ private:
     static ThreadError ProcessPrefixRemove(int argc, char *argv[]);
     static void ProcessReleaseRouterId(int argc, char *argv[]);
     static void ProcessRoute(int argc, char *argv[]);
+    static void ProcessRouter(int argc, char *argv[]);
     static ThreadError ProcessRouteAdd(int argc, char *argv[]);
     static ThreadError ProcessRouteRemove(int argc, char *argv[]);
     static void ProcessRouterUpgradeThreshold(int argc, char *argv[]);
@@ -118,6 +123,7 @@ private:
     static void ProcessStart(int argc, char *argv[]);
     static void ProcessState(int argc, char *argv[]);
     static void ProcessStop(int argc, char *argv[]);
+    static void ProcessVersion(int argc, char *argv[]);
     static void ProcessWhitelist(int argc, char *argv[]);
 
     static void HandleEchoResponse(void *aContext, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);

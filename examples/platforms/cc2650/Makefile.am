@@ -92,7 +92,7 @@ libopenthread_cc2650_a_SOURCES                        = \
     platform.c                            \
     radio.c                               \
     random.c                              \
-    serial.c                              \
+    uart.c                                \
     cc26xxware/startup_files/ccfg.c       \
     cc26xxware/startup_files/startup_gcc.c \
     $(NULL)

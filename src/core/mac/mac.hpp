@@ -78,7 +78,7 @@ enum
     kDataPollTimeout      = 100,                   ///< Timeout for receiving Data Frame (milliseconds).
     kNonceSize            = 13,                    ///< Size of IEEE 802.15.4 Nonce (bytes).
 
-    kScanChannelsAll      = 0xffff,                ///< All channels.
+    kScanChannelsAll      = OT_CHANNEL_ALL,        ///< All channels.
     kScanDurationDefault  = 200,                   ///< Default interval between channels (milliseconds).
 };
 
@@ -207,7 +207,7 @@ public:
      * @param[in]  aContext       A pointer to arbitrary context information.
      *
      */
-    ThreadError ActiveScan(uint16_t aScanChannels, uint16_t aScanDuration, ActiveScanHandler aHandler, void *aContext);
+    ThreadError ActiveScan(uint32_t aScanChannels, uint16_t aScanDuration, ActiveScanHandler aHandler, void *aContext);
 
     /**
      * This method indicates whether or not rx-on-when-idle is enabled.
@@ -485,7 +485,7 @@ private:
 
     bool mActiveScanRequest;
     uint8_t mScanChannel;
-    uint16_t mScanChannels;
+    uint32_t mScanChannels;
     uint16_t mScanDuration;
     ActiveScanHandler mActiveScanHandler;
     void *mActiveScanContext;

@@ -8,9 +8,11 @@ OpenThread test scripts use the CLI to execute test cases.
 ## OpenThread Command List
 
 * [channel](#channel)
+* [child](#child)
 * [childtimeout](#childtimeout)
 * [contextreusedelay](#contextreusedelay)
 * [counter](#counter)
+* [eidcache](#eidcache)
 * [extaddr](#extaddr)
 * [extpanid](#extpanid)
 * [ipaddr](#ipaddr)
@@ -27,11 +29,13 @@ OpenThread test scripts use the CLI to execute test cases.
 * [releaserouterid](#releaserouterid)
 * [rloc16](#rloc16)
 * [route](#route)
+* [router](#router)
 * [routerupgradethreshold](#routerupgradethreshold)
 * [scan](#scan)
 * [start](#start)
 * [state](#state)
 * [stop](#stop)
+* [version](#version)
 * [whitelist](#whitelist)
 
 ## OpenThread Command Details
@@ -52,6 +56,34 @@ Set the IEEE 802.15.4 Channel value.
 
 ```bash
 > channel 11
+Done
+```
+
+### child list
+
+List attached Child IDs
+
+```bash
+> child list
+1 2 3 6 7 8
+Done
+```
+
+### child \<id\>
+
+Print diagnostic information for an attached Thread Child.  The `id` may be a Child ID or an RLOC16.
+
+```bash
+> child 1
+Child ID: 1
+Rloc: 9c01
+Ext Addr: e2b3540590b0fd87
+Mode: rsn
+Net Data: 184
+Timeout: 100
+Age: 0
+LQI: 3
+RSSI: -20
 Done
 ```
 
@@ -134,6 +166,17 @@ RxTotal: 11
     RxErrSec: 0
     RxErrFcs: 0
     RxErrOther: 0
+```
+
+### eidcache
+
+Print the EID-to-RLOC cache entries.
+
+```bash
+> eidcache
+fdde:ad00:beef:0:bb1:ebd6:ad10:f33 ac00
+fdde:ad00:beef:0:110a:e041:8399:17cd 6000
+Done
 ```
 
 ### extaddr
@@ -421,6 +464,50 @@ Invalidate a prefix in the Network Data.
 Done
 ```
 
+### router list
+
+List allocated Router IDs
+
+```bash
+> router list
+8 24 50
+Done
+```
+
+### router \<id\>
+
+Print diagnostic information for a Thread Router.  The `id` may be a Router ID or an RLOC16.
+
+```bash
+> router 50
+Alloc: 1
+Router ID: 50
+Rloc: c800
+Next Hop: c800
+Link: 1
+Ext Addr: e2b3540590b0fd87
+Cost: 0
+LQI In: 3
+LQI Out: 3
+Age: 3
+Done
+```
+
+```bash
+> router 0xc800
+Alloc: 1
+Router ID: 50
+Rloc: c800
+Next Hop: c800
+Link: 1
+Ext Addr: e2b3540590b0fd87
+Cost: 0
+LQI In: 3
+LQI Out: 3
+Age: 7
+Done
+```
+
 ### routerupgradethreshold
 
 Get the ROUTER_UPGRADE_THRESHOLD value.
@@ -469,6 +556,29 @@ Disable OpenThread.
 
 ```bash
 > stop
+Done
+```
+
+### version
+
+Print the build version information.
+
+```bash
+> version
+OPENTHREAD/gf4f2f04; Jul  1 2016 17:00:09
+Done
+```
+
+### whitelist
+
+List the whitelist entries.
+
+```bash
+> whitelist
+Enabled
+e2b3540590b0fd87
+d38d7f875888fccb
+c467a90a2060fa0e
 Done
 ```
 

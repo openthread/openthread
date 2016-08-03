@@ -28,29 +28,24 @@
 
 include $(abs_top_nlbuild_autotools_dir)/automake/pre.am
 
-lib_LIBRARIES                             = libopenthread-posix.a
+# Always package (e.g. for 'make dist') these subdirectories.
 
-libopenthread_posix_a_CPPFLAGS            = \
-    -I$(top_srcdir)/include                 \
-    -I$(top_srcdir)/src/core                \
-    -D_GNU_SOURCE                           \
+DIST_SUBDIRS                            = \
+    spi-hdlc-adapter                      \
     $(NULL)
 
-libopenthread_posix_a_SOURCES             = \
-    alarm.c                                 \
-    logging.c                               \
-    platform.c                              \
-    radio.c                                 \
-    random.c                                \
-    uart.c                                  \
+# Always build (e.g. for 'make all') these subdirectories.
+
+SUBDIRS                                 = \
     $(NULL)
 
-noinst_HEADERS                            = \
-    platform-posix.h                        \
-    $(NULL)
+if OPENTHREAD_TARGET_LINUX
+SUBDIRS                                += spi-hdlc-adapter
+endif
 
-if OPENTHREAD_BUILD_COVERAGE
-CLEANFILES                                = $(wildcard *.gcda *.gcno)
-endif # OPENTHREAD_BUILD_COVERAGE
+# Always pretty (e.g. for 'make pretty') these subdirectories.
+
+PRETTY_SUBDIRS                          = \
+    $(NULL)
 
 include $(abs_top_nlbuild_autotools_dir)/automake/post.am

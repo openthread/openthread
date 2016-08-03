@@ -110,7 +110,7 @@ Mac::Mac(ThreadNetif &aThreadNetif):
 
     SetExtendedPanId(sExtendedPanidInit);
     SetNetworkName(sNetworkNameInit);
-    SetPanId(kPanIdBroadcast);
+    SetPanId(mPanId);
     SetExtAddress(mExtAddress);
     SetShortAddress(kShortAddrInvalid);
 
@@ -122,7 +122,7 @@ Mac::Mac(ThreadNetif &aThreadNetif):
     otPlatRadioEnable();
 }
 
-ThreadError Mac::ActiveScan(uint16_t aScanChannels, uint16_t aScanDuration, ActiveScanHandler aHandler, void *aContext)
+ThreadError Mac::ActiveScan(uint32_t aScanChannels, uint16_t aScanDuration, ActiveScanHandler aHandler, void *aContext)
 {
     ThreadError error = kThreadError_None;
 
@@ -134,6 +134,7 @@ ThreadError Mac::ActiveScan(uint16_t aScanChannels, uint16_t aScanDuration, Acti
     mScanDuration = (aScanDuration == 0) ? kScanDurationDefault : aScanDuration;
 
     mScanChannel = kPhyMinChannel;
+    mScanChannels >>= kPhyMinChannel;
 
     while ((mScanChannels & 1) == 0)
     {
@@ -741,8 +742,8 @@ ThreadError Mac::ProcessReceiveSecurity(Frame &aFrame, const Address &aSrcAddr, 
         ExitNow(error = kThreadError_Security);
     }
 
-    VerifyOrExit(keySequence > aNeighbor->mKeySequence ||
-                 (keySequence == aNeighbor->mKeySequence) && (frameCounter >= aNeighbor->mValid.mLinkFrameCounter),
+    VerifyOrExit((keySequence > aNeighbor->mKeySequence) ||
+                 ((keySequence == aNeighbor->mKeySequence) && (frameCounter >= aNeighbor->mValid.mLinkFrameCounter)),
                  error = kThreadError_Security);
 
     aesCcm.SetKey(macKey, 16);
@@ -787,7 +788,7 @@ void Mac::ReceiveDoneTask(Frame *aFrame, ThreadError aError)
     Address dstaddr;
     PanId panid;
     Neighbor *neighbor;
-    Whitelist::Entry *entry;
+    otMacWhitelistEntry *entry;
     int8_t rssi;
     ThreadError error = aError;
 
@@ -834,7 +835,7 @@ void Mac::ReceiveDoneTask(Frame *aFrame, ThreadError aError)
     {
         VerifyOrExit((entry = mWhitelist.Find(srcaddr.mExtAddress)) != NULL, error = kThreadError_WhitelistFiltered);
 
-        if (mWhitelist.GetConstantRssi(*entry, rssi) == kThreadError_None)
+        if (mWhitelist.GetFixedRssi(*entry, rssi) == kThreadError_None)
         {
             aFrame->mPower = rssi;
         }

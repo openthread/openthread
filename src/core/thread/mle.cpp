@@ -374,7 +374,7 @@ ThreadError Mle::SetMeshLocalPrefix(const uint8_t *aMeshLocalPrefix)
 
 const uint8_t Mle::GetChildId(uint16_t aRloc16) const
 {
-    return aRloc16 & kChildIdMask;
+    return aRloc16 & kMaxChildId;
 }
 
 const uint8_t Mle::GetRouterId(uint16_t aRloc16) const
@@ -471,6 +471,24 @@ const LeaderDataTlv &Mle::GetLeaderDataTlv(void)
     mLeaderData.SetDataVersion(mNetworkData.GetVersion());
     mLeaderData.SetStableDataVersion(mNetworkData.GetStableVersion());
     return mLeaderData;
+}
+
+ThreadError Mle::GetLeaderData(otLeaderData &aLeaderData)
+{
+    const LeaderDataTlv &leaderData(GetLeaderDataTlv());
+    ThreadError error = kThreadError_None;
+
+    VerifyOrExit(mDeviceState != kDeviceStateDisabled && mDeviceState != kDeviceStateDetached,
+                 error = kThreadError_Detached);
+
+    aLeaderData.mPartitionId = leaderData.GetPartitionId();
+    aLeaderData.mWeighting = leaderData.GetWeighting();
+    aLeaderData.mDataVersion = leaderData.GetDataVersion();
+    aLeaderData.mStableDataVersion = leaderData.GetStableDataVersion();
+    aLeaderData.mLeaderRouterId = leaderData.GetLeaderRouterId();
+
+exit:
+    return error;
 }
 
 void Mle::GenerateNonce(const Mac::ExtAddress &aMacAddr, uint32_t aFrameCounter, uint8_t aSecurityLevel,
@@ -1419,7 +1437,7 @@ ThreadError Mle::HandleAdvertisement(const Message &aMessage, const Ip6::Message
 
     otLogInfoMle("Received advertisement from %04x\n", sourceAddress.GetRloc16());
 
-    if ((mDeviceState != kDeviceStateDetached) && (mDeviceMode & ModeTlv::kModeFFD))
+    if (mDeviceState != kDeviceStateDetached)
     {
         SuccessOrExit(error = mMleRouter.HandleAdvertisement(aMessage, aMessageInfo));
     }
@@ -1440,19 +1458,12 @@ ThreadError Mle::HandleAdvertisement(const Message &aMessage, const Ip6::Message
             break;
         }
 
-        if (mParent.mValid.mRloc16 != sourceAddress.GetRloc16())
+        if ((mParent.mValid.mRloc16 == sourceAddress.GetRloc16()) &&
+            (leaderData.GetPartitionId() != mLeaderData.GetPartitionId() ||
+             leaderData.GetLeaderRouterId() != GetLeaderId()))
         {
-            SetStateDetached();
-            ExitNow(error = kThreadError_NoRoute);
-        }
-        else
-        {
-            if (leaderData.GetPartitionId() != mLeaderData.GetPartitionId() ||
-                leaderData.GetLeaderRouterId() != GetLeaderId())
-            {
-                SetLeaderData(leaderData.GetPartitionId(), leaderData.GetWeighting(), leaderData.GetLeaderRouterId());
-                mRetrieveNewNetworkData = true;
-            }
+            SetLeaderData(leaderData.GetPartitionId(), leaderData.GetWeighting(), leaderData.GetLeaderRouterId());
+            mRetrieveNewNetworkData = true;
         }
 
         isNeighbor = true;
@@ -1696,7 +1707,7 @@ ThreadError Mle::HandleChildIdResponse(const Message &aMessage, const Ip6::Messa
     Address16Tlv shortAddress;
     NetworkDataTlv networkData;
     RouteTlv route;
-    uint8_t numRouters;
+    uint8_t numRouters = 0;
 
     otLogInfoMle("Received Child ID Response\n");
 
@@ -1720,6 +1731,21 @@ ThreadError Mle::HandleChildIdResponse(const Message &aMessage, const Ip6::Messa
                                 (mDeviceMode & ModeTlv::kModeFullNetworkData) == 0,
                                 networkData.GetNetworkData(), networkData.GetLength());
 
+    // Route
+    if ((Tlv::GetTlv(aMessage, Tlv::kRoute, sizeof(route), route) == kThreadError_None) &&
+        (mDeviceMode & ModeTlv::kModeFFD))
+    {
+        SuccessOrExit(error = mMleRouter.ProcessRouteTlv(route));
+
+        for (int i = 0; i < kMaxRouterId; i++)
+        {
+            if (route.IsRouterIdSet(i))
+            {
+                numRouters++;
+            }
+        }
+    }
+
     // Parent Attach Success
     mParentRequestTimer.Stop();
 
@@ -1738,25 +1764,9 @@ ThreadError Mle::HandleChildIdResponse(const Message &aMessage, const Ip6::Messa
     mParent.mValid.mRloc16 = sourceAddress.GetRloc16();
     SuccessOrExit(error = SetStateChild(shortAddress.GetRloc16()));
 
-    // Route
-    if ((Tlv::GetTlv(aMessage, Tlv::kRoute, sizeof(route), route) == kThreadError_None) &&
-        (mDeviceMode & ModeTlv::kModeFFD))
+    if ((mDeviceMode & ModeTlv::kModeFFD) && (numRouters < mMleRouter.GetRouterUpgradeThreshold()))
     {
-        numRouters = 0;
-        SuccessOrExit(error = mMleRouter.ProcessRouteTlv(route));
-
-        for (int i = 0; i < kMaxRouterId; i++)
-        {
-            if (route.IsRouterIdSet(i))
-            {
-                numRouters++;
-            }
-        }
-
-        if (numRouters < mMleRouter.GetRouterUpgradeThreshold())
-        {
-            mMleRouter.BecomeRouter();
-        }
+        mMleRouter.BecomeRouter();
     }
 
 exit:

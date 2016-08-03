@@ -329,9 +329,9 @@ typedef enum
     SPINEL_PROP_THREAD_PARENT          = SPINEL_PROP_THREAD__BEGIN + 1, ///< LADDR, SADDR [ES]
     SPINEL_PROP_THREAD_CHILD_TABLE     = SPINEL_PROP_THREAD__BEGIN + 2, ///< [A(T(ES))]
     SPINEL_PROP_THREAD_LEADER_RID      = SPINEL_PROP_THREAD__BEGIN + 3, ///< [C]
-    SPINEL_PROP_THREAD_LEADER_WEIGHT   = SPINEL_PROP_THREAD__BEGIN + 4, ///< [6]
+    SPINEL_PROP_THREAD_LEADER_WEIGHT   = SPINEL_PROP_THREAD__BEGIN + 4, ///< [C]
     SPINEL_PROP_THREAD_LOCAL_LEADER_WEIGHT
-                                       = SPINEL_PROP_THREAD__BEGIN + 5, ///< [6]
+                                       = SPINEL_PROP_THREAD__BEGIN + 5, ///< [C]
     SPINEL_PROP_THREAD_NETWORK_DATA    = SPINEL_PROP_THREAD__BEGIN + 6, ///< [D]
     SPINEL_PROP_THREAD_NETWORK_DATA_VERSION
                                        = SPINEL_PROP_THREAD__BEGIN + 7, ///< [S]
@@ -348,8 +348,8 @@ typedef enum
     SPINEL_PROP_IPV6_LL_ADDR         = SPINEL_PROP_IPV6__BEGIN + 0, ///< [6]
     SPINEL_PROP_IPV6_ML_ADDR         = SPINEL_PROP_IPV6__BEGIN + 1, ///< [6C]
     SPINEL_PROP_IPV6_ML_PREFIX       = SPINEL_PROP_IPV6__BEGIN + 2, ///< [6C]
-    SPINEL_PROP_IPV6_ADDRESS_TABLE   = SPINEL_PROP_IPV6__BEGIN + 3, ///< array(ipv6addr,prefixlen,flags) [A(T(6CL))]
-    SPINEL_PROP_IPV6_ROUTE_TABLE     = SPINEL_PROP_IPV6__BEGIN + 4, ///< array(ipv6prefix,prefixlen,iface,flags) [A(T(6CCL))]
+    SPINEL_PROP_IPV6_ADDRESS_TABLE   = SPINEL_PROP_IPV6__BEGIN + 3, ///< array(ipv6addr,prefixlen,valid,preferred,flags) [A(T(6CLLC))]
+    SPINEL_PROP_IPV6_ROUTE_TABLE     = SPINEL_PROP_IPV6__BEGIN + 4, ///< array(ipv6prefix,prefixlen,iface,flags) [A(T(6CCC))]
     SPINEL_PROP_IPV6__END            = 0x70,
 
     SPINEL_PROP_STREAM__BEGIN       = 0x70,
@@ -358,6 +358,22 @@ typedef enum
     SPINEL_PROP_STREAM_NET          = SPINEL_PROP_STREAM__BEGIN + 2, ///< [D]
     SPINEL_PROP_STREAM_NET_INSECURE = SPINEL_PROP_STREAM__BEGIN + 3, ///< [D]
     SPINEL_PROP_STREAM__END         = 0x80,
+
+    /// UART Bitrate
+    /** If the NCP is using a UART to communicate with the host,
+     *  this property allows the host to change the bitrate
+     *  of the serial connection. The value encoding is `L`,
+     *  which is a little-endian 32-bit unsigned integer.
+     *  The host should not assume that all possible values are
+     *  supported.
+     *
+     *  If implemented by the NCP, this property should be persistent
+     *  across software resets and forgotten upon hardware resets.
+     *
+     *  This property is only implemented when a UART is being
+     *  used for Spinel.
+     */
+    SPINEL_PROP_UART_BITRATE    = 0x100,
 
     SPINEL_PROP_15_4_PIB__BEGIN     = 1024,
     // For direct access to the 802.15.4 PID.

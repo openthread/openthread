@@ -28,29 +28,23 @@
 
 include $(abs_top_nlbuild_autotools_dir)/automake/pre.am
 
-lib_LIBRARIES                             = libopenthread-posix.a
+EXTRA_DIST = README.md .gitignore
 
-libopenthread_posix_a_CPPFLAGS            = \
-    -I$(top_srcdir)/include                 \
-    -I$(top_srcdir)/src/core                \
-    -D_GNU_SOURCE                           \
+bin_PROGRAMS                                                           = \
+    spi-hdlc-adapter                                                     \
     $(NULL)
 
-libopenthread_posix_a_SOURCES             = \
-    alarm.c                                 \
-    logging.c                               \
-    platform.c                              \
-    radio.c                                 \
-    random.c                                \
-    uart.c                                  \
+spi_hdlc_adapter_CPPFLAGS                                              = \
     $(NULL)
 
-noinst_HEADERS                            = \
-    platform-posix.h                        \
+spi_hdlc_adapter_LDADD                                                 = \
     $(NULL)
 
-if OPENTHREAD_BUILD_COVERAGE
-CLEANFILES                                = $(wildcard *.gcda *.gcno)
-endif # OPENTHREAD_BUILD_COVERAGE
+spi_hdlc_adapter_LDFLAGS                                               = \
+    $(NULL)
+
+spi_hdlc_adapter_SOURCES                                               = \
+    spi-hdlc-adapter.c                                                   \
+    $(NULL)
 
 include $(abs_top_nlbuild_autotools_dir)/automake/post.am

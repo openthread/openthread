@@ -35,7 +35,7 @@
 #include <unistd.h>
 
 #include <common/code_utils.hpp>
-#include <platform/serial.h>
+#include <platform/uart.h>
 #include "platform-posix.h"
 
 #ifdef OPENTHREAD_TARGET_LINUX
@@ -64,7 +64,7 @@ static void restore_stdout_termios(void)
     tcsetattr(s_out_fd, TCSAFLUSH, &original_stdout_termios);
 }
 
-ThreadError otPlatSerialEnable(void)
+ThreadError otPlatUartEnable(void)
 {
     ThreadError error = kThreadError_None;
     struct termios termios;
@@ -140,7 +140,7 @@ exit:
     return error;
 }
 
-ThreadError otPlatSerialDisable(void)
+ThreadError otPlatUartDisable(void)
 {
     ThreadError error = kThreadError_None;
 
@@ -150,7 +150,7 @@ ThreadError otPlatSerialDisable(void)
     return error;
 }
 
-ThreadError otPlatSerialSend(const uint8_t *aBuf, uint16_t aBufLength)
+ThreadError otPlatUartSend(const uint8_t *aBuf, uint16_t aBufLength)
 {
     ThreadError error = kThreadError_None;
 
@@ -163,7 +163,7 @@ exit:
     return error;
 }
 
-void posixSerialUpdateFdSet(fd_set *aReadFdSet, fd_set *aWriteFdSet, int *aMaxFd)
+void posixUartUpdateFdSet(fd_set *aReadFdSet, fd_set *aWriteFdSet, int *aMaxFd)
 {
     if (aReadFdSet != NULL)
     {
@@ -186,7 +186,7 @@ void posixSerialUpdateFdSet(fd_set *aReadFdSet, fd_set *aWriteFdSet, int *aMaxFd
     }
 }
 
-void posixSerialProcess(void)
+void posixUartProcess(void)
 {
     const int flags = POLLRDNORM | POLLERR | POLLNVAL | POLLHUP;
     struct pollfd pollfd = { s_in_fd, flags, 0 };
@@ -196,7 +196,7 @@ void posixSerialProcess(void)
     {
         rval = read(s_in_fd, s_receive_buffer, sizeof(s_receive_buffer));
         assert(rval >= 0);
-        otPlatSerialReceived(s_receive_buffer, rval);
+        otPlatUartReceived(s_receive_buffer, rval);
     }
 
     if (s_write_length > 0)
@@ -204,6 +204,6 @@ void posixSerialProcess(void)
         rval = write(s_out_fd, s_write_buffer, s_write_length);
         assert(rval >= 0);
         s_write_length = 0;
-        otPlatSerialSendDone();
+        otPlatUartSendDone();
     }
 }

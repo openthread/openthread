@@ -285,6 +285,11 @@ private:
                                                       uint16_t value_len);
 
 private:
+    enum
+    {
+        kNetifAddressListSize = 8,           // Size of mNetifAddresses array.
+        kUnusedNetifAddressPrefixLen = 0xff, // Prefix len value to indicate an unused/available NetifAddress element.
+    };
 
     spinel_status_t mLastStatus;
 
@@ -303,6 +308,8 @@ private:
     MessageQueue mSendQueue;
 
     uint32_t mChangedFlags;
+
+    otNetifAddress mNetifAddresses[kNetifAddressListSize];
 
 protected:
     /**

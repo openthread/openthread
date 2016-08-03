@@ -73,7 +73,7 @@ void cc2650RandomInit(void);
  * This method performs radio driver processing.
  *
  */
-void cc2650SerialProcess(void);
+void cc2650UartProcess(void);
 
 #ifdef __cplusplus
 }  // extern "C"

@@ -28,7 +28,7 @@
 
 /**
  * @file
- *   This file implements the CLI server on the serial service.
+ *   This file implements the CLI server on the UART service.
  */
 
 #include <stdarg.h>
@@ -37,13 +37,13 @@
 #include <string.h>
 
 #include <cli/cli.hpp>
-#include <cli/cli-serial.h>
-#include <cli/cli_serial.hpp>
+#include <cli/cli-uart.h>
+#include <cli/cli_uart.hpp>
 #include <common/code_utils.hpp>
 #include <common/encoding.hpp>
 #include <common/new.hpp>
 #include <common/tasklet.hpp>
-#include <platform/serial.h>
+#include <platform/uart.h>
 
 namespace Thread {
 namespace Cli {
@@ -51,16 +51,16 @@ namespace Cli {
 static const char sCommandPrompt[] = {'>', ' '};
 static const char sEraseString[] = {'\b', ' ', '\b'};
 static const char CRNL[] = {'\r', '\n'};
-static Serial *sServer;
+static Uart *sServer;
 
-static otDEFINE_ALIGNED_VAR(sCliSerialRaw, sizeof(Serial), uint64_t);
+static otDEFINE_ALIGNED_VAR(sCliUartRaw, sizeof(Uart), uint64_t);
 
-extern "C" void otCliSerialInit(void)
+extern "C" void otCliUartInit(void)
 {
-    sServer = new(&sCliSerialRaw) Serial;
+    sServer = new(&sCliUartRaw) Uart;
 }
 
-Serial::Serial(void)
+Uart::Uart(void)
 {
     mRxLength = 0;
     mTxHead = 0;
@@ -68,12 +68,12 @@ Serial::Serial(void)
     mSendLength = 0;
 }
 
-extern "C" void otPlatSerialReceived(const uint8_t *aBuf, uint16_t aBufLength)
+extern "C" void otPlatUartReceived(const uint8_t *aBuf, uint16_t aBufLength)
 {
     sServer->ReceiveTask(aBuf, aBufLength);
 }
 
-void Serial::ReceiveTask(const uint8_t *aBuf, uint16_t aBufLength)
+void Uart::ReceiveTask(const uint8_t *aBuf, uint16_t aBufLength)
 {
     const uint8_t *end;
 
@@ -115,7 +115,7 @@ void Serial::ReceiveTask(const uint8_t *aBuf, uint16_t aBufLength)
     }
 }
 
-ThreadError Serial::ProcessCommand(void)
+ThreadError Uart::ProcessCommand(void)
 {
     ThreadError error = kThreadError_None;
 
@@ -136,7 +136,7 @@ ThreadError Serial::ProcessCommand(void)
     return error;
 }
 
-int Serial::Output(const char *aBuf, uint16_t aBufLength)
+int Uart::Output(const char *aBuf, uint16_t aBufLength)
 {
     uint16_t remaining = kTxBufferSize - mTxLength;
     uint16_t tail;
@@ -158,7 +158,7 @@ int Serial::Output(const char *aBuf, uint16_t aBufLength)
     return aBufLength;
 }
 
-int Serial::OutputFormat(const char *fmt, ...)
+int Uart::OutputFormat(const char *fmt, ...)
 {
     char buf[kMaxLineLength];
     va_list ap;
@@ -170,7 +170,7 @@ int Serial::OutputFormat(const char *fmt, ...)
     return Output(buf, strlen(buf));
 }
 
-void Serial::Send(void)
+void Uart::Send(void)
 {
     VerifyOrExit(mSendLength == 0, ;);
 
@@ -185,19 +185,19 @@ void Serial::Send(void)
 
     if (mSendLength > 0)
     {
-        otPlatSerialSend(reinterpret_cast<uint8_t *>(mTxBuffer + mTxHead), mSendLength);
+        otPlatUartSend(reinterpret_cast<uint8_t *>(mTxBuffer + mTxHead), mSendLength);
     }
 
 exit:
     return;
 }
 
-extern "C" void otPlatSerialSendDone(void)
+extern "C" void otPlatUartSendDone(void)
 {
     sServer->SendDoneTask();
 }
 
-void Serial::SendDoneTask(void)
+void Uart::SendDoneTask(void)
 {
     mTxHead = (mTxHead + mSendLength) % kTxBufferSize;
     mTxLength -= mSendLength;

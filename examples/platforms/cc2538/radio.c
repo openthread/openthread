@@ -85,15 +85,20 @@ typedef enum PhyState
 } PhyState;
 
 static PhyState sState;
+static bool sIsReceiverEnabled = false;
 
 void enableReceiver(void)
 {
-    // flush rxfifo
-    HWREG(RFCORE_SFR_RFST) = CC2538_RF_CSP_OP_ISFLUSHRX;
-    HWREG(RFCORE_SFR_RFST) = CC2538_RF_CSP_OP_ISFLUSHRX;
+    if (!sIsReceiverEnabled)
+    {
+        // flush rxfifo
+        HWREG(RFCORE_SFR_RFST) = CC2538_RF_CSP_OP_ISFLUSHRX;
+        HWREG(RFCORE_SFR_RFST) = CC2538_RF_CSP_OP_ISFLUSHRX;
 
-    // enable receiver
-    HWREG(RFCORE_SFR_RFST) = CC2538_RF_CSP_OP_ISRXON;
+        // enable receiver
+        HWREG(RFCORE_SFR_RFST) = CC2538_RF_CSP_OP_ISRXON;
+        sIsReceiverEnabled = true;
+    }
 }
 
 void disableReceiver(void)
@@ -109,6 +114,8 @@ void disableReceiver(void)
         // disable receiver
         HWREG(RFCORE_SFR_RFST) = CC2538_RF_CSP_OP_ISRFOFF;
     }
+
+    sIsReceiverEnabled = false;
 }
 
 void setChannel(uint8_t channel)
@@ -358,7 +365,7 @@ void readFrame(void)
 
     // check for rxfifo overflow
     if ((HWREG(RFCORE_XREG_FSMSTAT1) & RFCORE_XREG_FSMSTAT1_FIFOP) != 0 &&
-        (HWREG(RFCORE_XREG_FSMSTAT1) & RFCORE_XREG_FSMSTAT1_FIFO) != 0)
+        (HWREG(RFCORE_XREG_FSMSTAT1) & RFCORE_XREG_FSMSTAT1_FIFO) == 0)
     {
         HWREG(RFCORE_SFR_RFST) = CC2538_RF_CSP_OP_ISFLUSHRX;
         HWREG(RFCORE_SFR_RFST) = CC2538_RF_CSP_OP_ISFLUSHRX;

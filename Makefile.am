@@ -34,7 +34,6 @@ AM_DISTCHECK_CONFIGURE_FLAGS        = \
     --enable-cli                      \
     --enable-ncp                      \
     --with-examples=posix             \
-    --enable-minimum-set-of-tests     \
     $(NULL)
 
 SUBDIRS                             = \
@@ -43,6 +42,7 @@ SUBDIRS                             = \
     third_party                       \
     examples                          \
     tests                             \
+    tools                             \
     doc                               \
     $(NULL)
 
@@ -74,6 +74,7 @@ PRETTY_SUBDIRS                      = \
     include                           \
     src                               \
     tests                             \
+    tools                             \
     $(NULL)
 
 #

@@ -404,11 +404,11 @@ ThreadError otAddMacWhitelist(const uint8_t *aExtAddr)
 ThreadError otAddMacWhitelistRssi(const uint8_t *aExtAddr, int8_t aRssi)
 {
     ThreadError error = kThreadError_None;
-    Thread::Mac::Whitelist::Entry *entry;
+    otMacWhitelistEntry *entry;
 
     entry = sThreadNetif->GetMac().GetWhitelist().Add(*reinterpret_cast<const Mac::ExtAddress *>(aExtAddr));
     VerifyOrExit(entry != NULL, error = kThreadError_NoBufs);
-    sThreadNetif->GetMac().GetWhitelist().SetConstantRssi(*entry, aRssi);
+    sThreadNetif->GetMac().GetWhitelist().SetFixedRssi(*entry, aRssi);
 
 exit:
     return error;
@@ -424,6 +424,17 @@ void otClearMacWhitelist(void)
     sThreadNetif->GetMac().GetWhitelist().Clear();
 }
 
+ThreadError otGetMacWhitelistEntry(uint8_t aIndex, otMacWhitelistEntry *aEntry)
+{
+    ThreadError error;
+
+    VerifyOrExit(aEntry != NULL, error = kThreadError_InvalidArgs);
+    error = sThreadNetif->GetMac().GetWhitelist().GetEntry(aIndex, *aEntry);
+
+exit:
+    return error;
+}
+
 void otDisableMacWhitelist(void)
 {
     sThreadNetif->GetMac().GetWhitelist().Disable();
@@ -432,6 +443,11 @@ void otDisableMacWhitelist(void)
 void otEnableMacWhitelist(void)
 {
     sThreadNetif->GetMac().GetWhitelist().Enable();
+}
+
+bool otIsMacWhitelistEnabled(void)
+{
+    return sThreadNetif->GetMac().GetWhitelist().IsEnabled();
 }
 
 ThreadError otBecomeDetached(void)
@@ -452,6 +468,30 @@ ThreadError otBecomeRouter(void)
 ThreadError otBecomeLeader(void)
 {
     return sThreadNetif->GetMle().BecomeLeader();
+}
+
+ThreadError otGetChildInfoById(uint16_t aChildId, otChildInfo *aChildInfo)
+{
+    ThreadError error = kThreadError_None;
+
+    VerifyOrExit(aChildInfo != NULL, error = kThreadError_InvalidArgs);
+
+    error = sThreadNetif->GetMle().GetChildInfoById(aChildId, *aChildInfo);
+
+exit:
+    return error;
+}
+
+ThreadError otGetChildInfoByIndex(uint8_t aChildIndex, otChildInfo *aChildInfo)
+{
+    ThreadError error = kThreadError_None;
+
+    VerifyOrExit(aChildInfo != NULL, error = kThreadError_InvalidArgs);
+
+    error = sThreadNetif->GetMle().GetChildInfoByIndex(aChildIndex, *aChildInfo);
+
+exit:
+    return error;
 }
 
 otDeviceRole otGetDeviceRole(void)
@@ -484,6 +524,29 @@ otDeviceRole otGetDeviceRole(void)
     return rval;
 }
 
+ThreadError otGetEidCacheEntry(uint8_t aIndex, otEidCacheEntry *aEntry)
+{
+    ThreadError error;
+
+    VerifyOrExit(aEntry != NULL, error = kThreadError_InvalidArgs);
+    error = sThreadNetif->GetAddressResolver().GetEntry(aIndex, *aEntry);
+
+exit:
+    return error;
+}
+
+ThreadError otGetLeaderData(otLeaderData *aLeaderData)
+{
+    ThreadError error;
+
+    VerifyOrExit(aLeaderData != NULL, error = kThreadError_InvalidArgs);
+
+    error = sThreadNetif->GetMle().GetLeaderData(*aLeaderData);
+
+exit:
+    return error;
+}
+
 uint8_t otGetLeaderRouterId(void)
 {
     return sThreadNetif->GetMle().GetLeaderDataTlv().GetLeaderRouterId();
@@ -512,6 +575,18 @@ uint16_t otGetRloc16(void)
 uint8_t otGetRouterIdSequence(void)
 {
     return sThreadNetif->GetMle().GetRouterIdSequence();
+}
+
+ThreadError otGetRouterInfo(uint16_t aRouterId, otRouterInfo *aRouterInfo)
+{
+    ThreadError error = kThreadError_None;
+
+    VerifyOrExit(aRouterInfo != NULL, error = kThreadError_InvalidArgs);
+
+    error = sThreadNetif->GetMle().GetRouterInfo(aRouterId, *aRouterInfo);
+
+exit:
+    return error;
 }
 
 uint8_t otGetStableNetworkDataVersion(void)
@@ -596,7 +671,7 @@ ThreadError otDisable(void)
     return sThreadNetif->Down();
 }
 
-ThreadError otActiveScan(uint16_t aScanChannels, uint16_t aScanDuration, otHandleActiveScanResult aCallback)
+ThreadError otActiveScan(uint32_t aScanChannels, uint16_t aScanDuration, otHandleActiveScanResult aCallback)
 {
     return sThreadNetif->GetMac().ActiveScan(aScanChannels, aScanDuration, &HandleActiveScanResult,
                                              reinterpret_cast<void *>(aCallback));

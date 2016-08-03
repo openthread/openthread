@@ -39,7 +39,7 @@
 
 #include <openthread-types.h>
 #include <common/code_utils.hpp>
-#include <platform/serial.h>
+#include <platform/uart.h>
 
 /**
  * \note this will configure the uart for 115200 baud 8-N-1, no HW flow control
@@ -58,7 +58,7 @@ static uint16_t recvTailIdx = 0;
 
 void UART0_intHandler(void);
 
-ThreadError otPlatSerialEnable(void)
+ThreadError otPlatUartEnable(void)
 {
     PRCMPowerDomainOn(PRCM_DOMAIN_SERIAL);
     while (PRCMPowerDomainStatus(PRCM_DOMAIN_SERIAL) != PRCM_DOMAIN_POWER_ON) {
@@ -81,7 +81,7 @@ ThreadError otPlatSerialEnable(void)
     return kThreadError_None;
 }
 
-ThreadError otPlatSerialDisable(void)
+ThreadError otPlatUartDisable(void)
 {
     UARTDisable(UART0_BASE);
     UARTIntUnregister(UART0_BASE);
@@ -101,7 +101,7 @@ ThreadError otPlatSerialDisable(void)
     return kThreadError_None;
 }
 
-ThreadError otPlatSerialSend(const uint8_t *aBuf, uint16_t aBufLength)
+ThreadError otPlatUartSend(const uint8_t *aBuf, uint16_t aBufLength)
 {
     if(sendBuffer != NULL)
     {
@@ -120,13 +120,13 @@ void processReceive(void)
         if(recvHeadIdx < recvTailIdx)
         {
             tailIdx = recvTailIdx;
-            otPlatSerialReceived(&(recvCircBuffer[recvHeadIdx]), tailIdx - recvHeadIdx);
+            otPlatUartReceived(&(recvCircBuffer[recvHeadIdx]), tailIdx - recvHeadIdx);
             recvHeadIdx = tailIdx;
         }
         else
         {
             tailIdx = RECV_CIRC_BUFF_SIZE;
-            otPlatSerialReceived(&(recvCircBuffer[recvHeadIdx]), tailIdx - recvHeadIdx);
+            otPlatUartReceived(&(recvCircBuffer[recvHeadIdx]), tailIdx - recvHeadIdx);
             recvHeadIdx = 0;
         }
     }
@@ -144,10 +144,10 @@ void processTransmit(void)
     }
     sendBuffer = NULL;
     sendLen = 0;
-    otPlatSerialSendDone();
+    otPlatUartSendDone();
 }
 
-void cc2650SerialProcess(void)
+void cc2650UartProcess(void)
 {
     processReceive();
     processTransmit();

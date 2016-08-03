@@ -100,19 +100,19 @@ void posixRadioProcess(void);
 void posixRandomInit(void);
 
 /**
- * This function updates the file descriptor sets with file descriptors used by the serial driver.
+ * This function updates the file descriptor sets with file descriptors used by the UART driver.
  *
  * @param[inout]  aReadFdSet   A pointer to the read file descriptors.
  * @param[inout]  aWriteFdSet  A pointer to the write file descriptors.
  * @param[inout]  aMaxFd       A pointer to the max file descriptor.
  *
  */
-void posixSerialUpdateFdSet(fd_set *aReadFdSet, fd_set *aWriteFdSet, int *aMaxFd);
+void posixUartUpdateFdSet(fd_set *aReadFdSet, fd_set *aWriteFdSet, int *aMaxFd);
 
 /**
  * This function performs radio driver processing.
  *
  */
-void posixSerialProcess(void);
+void posixUartProcess(void);
 
 #endif  // PLATFORM_POSIX_H_
