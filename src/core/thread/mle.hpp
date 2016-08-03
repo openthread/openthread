@@ -124,9 +124,10 @@ public:
      *
      */
     bool IsValid(void) const {
-        return mSecuritySuite == 0 &&
-               (mSecurityControl == (Mac::Frame::kKeyIdMode1 | Mac::Frame::kSecEncMic32) ||
-                mSecurityControl == (Mac::Frame::kKeyIdMode2 | Mac::Frame::kSecEncMic32));
+        return (mSecuritySuite == 255) ||
+               (mSecuritySuite == 0 &&
+                (mSecurityControl == (Mac::Frame::kKeyIdMode1 | Mac::Frame::kSecEncMic32) ||
+                 mSecurityControl == (Mac::Frame::kKeyIdMode2 | Mac::Frame::kSecEncMic32)));
     }
 
     /**
@@ -136,9 +137,30 @@ public:
      *
      */
     uint8_t GetLength(void) const {
-        return sizeof(mSecuritySuite) + sizeof(mSecurityControl) + sizeof(mFrameCounter) +
-               (IsKeyIdMode1() ? 1 : 5) + sizeof(mCommand);
+        uint8_t rval = sizeof(mSecuritySuite) + sizeof(mCommand);
+
+        if (mSecuritySuite == 0) {
+            rval += sizeof(mSecurityControl) + sizeof(mFrameCounter) + (IsKeyIdMode1() ? 1 : 5);
+        }
+
+        return rval;
     }
+
+    /**
+     * This method returns the Security Suite value.
+     *
+     * @returns The Security Suite value.
+     *
+     */
+    uint8_t GetSecuritySuite(void) const { return mSecuritySuite; }
+
+    /**
+     * This method sets the Security Suite value.
+     *
+     * @param[in]  aSecuritySuite  The Security Suite value.
+     *
+     */
+    void SetSecuritySuite(uint8_t aSecuritySuite) { mSecuritySuite = aSecuritySuite; }
 
     /**
      * This method returns the MLE header length (excluding the Command Type).
@@ -269,6 +291,8 @@ public:
         kCommandChildIdResponse      = 12,   ///< Child ID Response
         kCommandChildUpdateRequest   = 13,   ///< Child Update Request
         kCommandChildUpdateResponse  = 14,   ///< Child Update Response
+        kCommandDiscoveryRequest     = 16,   ///< Discovery Request
+        kCommandDiscoveryResponse    = 17,   ///< Discovery Response
     };
 
     /**
@@ -278,8 +302,13 @@ public:
      *
      */
     Command GetCommand(void) const {
-        const uint8_t *command = IsKeyIdMode1() ? mKeyIdentifier + 1 : &mCommand;
-        return static_cast<Command>(*command);
+        if (mSecuritySuite == 255) {
+            return static_cast<Command>(mSecurityControl);
+        }
+        else {
+            const uint8_t *command = IsKeyIdMode1() ? mKeyIdentifier + 1 : &mCommand;
+            return static_cast<Command>(*command);
+        }
     }
 
     /**
@@ -289,8 +318,13 @@ public:
      *
      */
     void SetCommand(Command aCommand) {
-        uint8_t *commandField = IsKeyIdMode1() ? mKeyIdentifier + 1 : &mCommand;
-        *commandField = static_cast<uint8_t>(aCommand);
+        if (mSecuritySuite == 255) {
+            mSecurityControl = static_cast<uint8_t>(aCommand);
+        }
+        else {
+            uint8_t *commandField = IsKeyIdMode1() ? mKeyIdentifier + 1 : &mCommand;
+            *commandField = static_cast<uint8_t>(aCommand);
+        }
     }
 
     /**
@@ -326,6 +360,24 @@ public:
     explicit Mle(ThreadNetif &aThreadNetif);
 
     /**
+     * This method enables MLE.
+     *
+     * @retval kThreadError_None  Successfully enabled MLE.
+     * @retval kThreadError_Busy  MLE was already enabled.
+     *
+     */
+    ThreadError Enable(void);
+
+    /**
+     * This method disables MLE.
+     *
+     * @retval kThreadError_None  Successfully disabled MLE.
+     * @retval kThreadError_Busy  MLE was already disabled.
+     *
+     */
+    ThreadError Disable(void);
+
+    /**
      * This method starts the MLE protocol operation.
      *
      * @retval kThreadError_None  Successfully started the protocol operation.
@@ -342,6 +394,37 @@ public:
      *
      */
     ThreadError Stop(void);
+
+    /**
+     * This function pointer is called on receiving an MLE Discovery Response message.
+     *
+     * @param[in]  aResult   A valid pointer to the Discovery Response information or NULL when the Discovery completes.
+     * @param[in]  aContext  A pointer to application-specific context.
+     *
+     */
+    typedef void (*DiscoverHandler)(otActiveScanResult *aResult, void *aContext);
+
+    /**
+     * This method initiates a Thread Discovery.
+     *
+     * @param[in]  aScanChannels  A bit vector indicating which channels to scan.
+     * @param[in]  aScanDuration  The time in milliseconds to spend scanning each channel.
+     * @param[in]  aPanId         The PAN ID filter (set to Broadcast PAN to disable filter).
+     * @param[in]  aHandler       A pointer to a function that is called on receiving an MLE Discovery Response.
+     * @param[in]  aContext       A pointer to arbitrary context information.
+     *
+     * @retval kThreadError_None  Successfully started a Thread Discovery.
+     * @retval kThreadError_Busy  Thread Discovery is already in progress.
+     *
+     */
+    ThreadError Discover(uint32_t aScanChannels, uint16_t aScanDuration, uint16_t aPanId,
+                         DiscoverHandler aCallback, void *aContext);
+
+    /**
+     * This method is called by the MeshForwarder to indicate that discovery is complete.
+     *
+     */
+    void HandleDiscoverComplete(void);
 
     /**
      * This method causes the Thread interface to detach from the Thread network.
@@ -775,6 +858,17 @@ protected:
     ThreadError AppendAddressRegistration(Message &aMessage);
 
     /**
+     * This method appends a Thread Discovery TLV to a message.
+     *
+     * @param[in]  aMessage  A reference to the message.
+     *
+     * @retval kThreadError_None    Successfully appended the Thread Discovery TLV.
+     * @retval kThreadError_NoBufs  Insufficient buffers available to append the Address Registration TLV.
+     *
+     */
+    ThreadError AppendDiscovery(Message &aMessage);
+
+    /**
      * This method checks if the destination is reachable.
      *
      * @param[in]  aMeshSource  The RLOC16 of the source.
@@ -975,9 +1069,12 @@ private:
     ThreadError HandleDataResponse(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
     ThreadError HandleParentResponse(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo,
                                      uint32_t aKeySequence);
+    ThreadError HandleDiscoveryRequest(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    ThreadError HandleDiscoveryResponse(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
     ThreadError SendParentRequest(void);
     ThreadError SendChildIdRequest(void);
+    ThreadError SendDiscoveryResponse(const Ip6::Address &aDestination, uint16_t aPanId);
 
     bool IsBetterParent(uint16_t aRloc16, uint8_t aLinkQuality, ConnectivityTlv &aConnectivityTlv) const;
 
@@ -1003,6 +1100,9 @@ private:
 
     Ip6::UdpSocket mSocket;
     uint32_t mTimeout;
+
+    DiscoverHandler mDiscoverHandler;
+    void *mDiscoverContext;
 
     Ip6::NetifUnicastAddress mLinkLocal16;
     Ip6::NetifUnicastAddress mLinkLocal64;

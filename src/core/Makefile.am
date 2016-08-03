@@ -100,6 +100,7 @@ noinst_HEADERS                      = \
     thread/key_manager.hpp            \
     thread/link_quality.hpp           \
     thread/lowpan.hpp                 \
+    thread/meshcop_tlvs.hpp           \
     thread/mesh_forwarder.hpp         \
     thread/mle.hpp                    \
     thread/mle_constants.hpp          \

@@ -60,6 +60,7 @@ extern "C" {
 static otDEFINE_ALIGNED_VAR(sThreadNetifRaw, sizeof(ThreadNetif), uint64_t);
 
 static void HandleActiveScanResult(void *aContext, Mac::Frame *aFrame);
+static void HandleMleDiscover(otActiveScanResult *aResult, void *aContext);
 
 void otProcessNextTasklet(void)
 {
@@ -811,6 +812,19 @@ void HandleActiveScanResult(void *aContext, Mac::Frame *aFrame)
 
 exit:
     return;
+}
+
+ThreadError otDiscover(uint32_t aScanChannels, uint16_t aScanDuration, uint16_t aPanId,
+                       otHandleActiveScanResult aCallback)
+{
+    return sThreadNetif->GetMle().Discover(aScanChannels, aScanDuration, aPanId, &HandleMleDiscover,
+                                           reinterpret_cast<void *>(aCallback));
+}
+
+void HandleMleDiscover(otActiveScanResult *aResult, void *aContext)
+{
+    otHandleActiveScanResult handler = reinterpret_cast<otHandleActiveScanResult>(aContext);
+    handler(aResult);
 }
 
 void otSetReceiveIp6DatagramCallback(otReceiveIp6DatagramCallback aCallback)
