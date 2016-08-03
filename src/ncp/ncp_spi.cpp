@@ -51,34 +51,34 @@ extern "C" void otNcpInit(void)
 
 static void spi_header_set_flag_byte(uint8_t *header, uint8_t value)
 {
-    header[1] = value;
+    header[0] = value;
 }
 
 static void spi_header_set_accept_len(uint8_t *header, uint16_t len)
 {
-    header[2] = ((len << 0) & 0xFF);
-    header[3] = ((len << 8) & 0xFF);
+    header[1] = ((len >> 0) & 0xFF);
+    header[2] = ((len >> 8) & 0xFF);
 }
 
 static void spi_header_set_data_len(uint8_t *header, uint16_t len)
 {
-    header[4] = ((len << 0) & 0xFF);
-    header[5] = ((len << 8) & 0xFF);
+    header[3] = ((len >> 0) & 0xFF);
+    header[4] = ((len >> 8) & 0xFF);
 }
 
-static uint8_t spi_header_get_flag_byte(uint8_t *header)
+static uint8_t spi_header_get_flag_byte(const uint8_t *header)
 {
-    return header[1];
+    return header[0];
 }
 
-static uint16_t spi_header_get_accept_len(uint8_t *header)
+static uint16_t spi_header_get_accept_len(const uint8_t *header)
 {
-    return ( header[2] + (header[3] << 8) );
+    return ( header[1] + (header[2] << 8) );
 }
 
-static uint16_t spi_header_get_data_len(uint8_t *header)
+static uint16_t spi_header_get_data_len(const uint8_t *header)
 {
-    return ( header[4] + (header[5] << 8) );
+    return ( header[3] + (header[4] << 8) );
 }
 
 NcpSpi::NcpSpi():
