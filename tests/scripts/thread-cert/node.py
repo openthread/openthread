@@ -29,6 +29,7 @@
 
 import os
 import sys
+import time
 import pexpect
 import unittest
 
@@ -52,17 +53,20 @@ class Node:
 
     def __init_sim(self, nodeid):
         """ Initialize a simulation node. """
-        if "top_builddir" in os.environ.keys():
+        if "OT_CLI_PATH" in os.environ.keys():
+            cmd = os.environ['OT_CLI_PATH']
+        elif "top_builddir" in os.environ.keys():
             srcdir = os.environ['top_builddir']
             cmd = '%s/examples/apps/cli/ot-cli' % srcdir
-        elif "OT_CLI_PATH" in os.environ.keys():
-            cmd = os.environ['OT_CLI_PATH']
         else:
             cmd = './ot-cli'
         cmd += ' %d' % nodeid
         print ("%s" % cmd)
 
         self.pexpect = pexpect.spawn(cmd, timeout=2)
+
+        # Add delay to ensure that the process is ready to receive commands.
+        time.sleep(0.1)
 
     def __init_soc(self, nodeid):
         """ Initialize a System-on-a-chip node connected via UART. """
