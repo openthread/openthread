@@ -185,8 +185,8 @@ ThreadError AddressResolver::SendAddressQuery(const Ip6::Address &aEid)
     SuccessOrExit(error = message->Append(&targetTlv, sizeof(targetTlv)));
 
     memset(&messageInfo, 0, sizeof(messageInfo));
-    messageInfo.GetPeerAddr().m16[0] = HostSwap16(0xff03);
-    messageInfo.GetPeerAddr().m16[7] = HostSwap16(0x0002);
+    messageInfo.GetPeerAddr().mFields.m16[0] = HostSwap16(0xff03);
+    messageInfo.GetPeerAddr().mFields.m16[7] = HostSwap16(0x0002);
     messageInfo.mPeerPort = kCoapUdpPort;
     messageInfo.mInterfaceId = mNetif.GetInterfaceId();
 
@@ -230,7 +230,7 @@ void AddressResolver::HandleAddressNotification(Coap::Header &aHeader, Message &
     VerifyOrExit(aHeader.GetType() == Coap::Header::kTypeConfirmable &&
                  aHeader.GetCode() == Coap::Header::kCodePost, ;);
 
-    otLogInfoArp("Received address notification from %04x\n", HostSwap16(aMessageInfo.GetPeerAddr().m16[7]));
+    otLogInfoArp("Received address notification from %04x\n", HostSwap16(aMessageInfo.GetPeerAddr().mFields.m16[7]));
 
     SuccessOrExit(ThreadTlv::GetTlv(aMessage, ThreadTlv::kTarget, sizeof(targetTlv), targetTlv));
     VerifyOrExit(targetTlv.IsValid(), ;);
@@ -342,8 +342,8 @@ ThreadError AddressResolver::SendAddressError(const ThreadTargetTlv &aTarget, co
 
     if (aDestination == NULL)
     {
-        messageInfo.GetPeerAddr().m16[0] = HostSwap16(0xff03);
-        messageInfo.GetPeerAddr().m16[7] = HostSwap16(0x0002);
+        messageInfo.GetPeerAddr().mFields.m16[0] = HostSwap16(0xff03);
+        messageInfo.GetPeerAddr().mFields.m16[7] = HostSwap16(0x0002);
     }
     else
     {
@@ -427,7 +427,7 @@ void AddressResolver::HandleAddressError(Coap::Header &aHeader, Message &aMessag
                 memset(&children[i].mIp6Address[j], 0, sizeof(children[i].mIp6Address[j]));
 
                 memset(&destination, 0, sizeof(destination));
-                destination.m16[0] = HostSwap16(0xfe80);
+                destination.mFields.m16[0] = HostSwap16(0xfe80);
                 destination.SetIid(children[i].mMacAddr);
 
                 SendAddressError(targetTlv, mlIidTlv, &destination);
@@ -459,7 +459,7 @@ void AddressResolver::HandleAddressQuery(Coap::Header &aHeader, Message &aMessag
     VerifyOrExit(aHeader.GetType() == Coap::Header::kTypeNonConfirmable &&
                  aHeader.GetCode() == Coap::Header::kCodePost, ;);
 
-    otLogInfoArp("Received address query from %04x\n", HostSwap16(aMessageInfo.GetPeerAddr().m16[7]));
+    otLogInfoArp("Received address query from %04x\n", HostSwap16(aMessageInfo.GetPeerAddr().mFields.m16[7]));
 
     SuccessOrExit(ThreadTlv::GetTlv(aMessage, ThreadTlv::kTarget, sizeof(targetTlv), targetTlv));
     VerifyOrExit(targetTlv.IsValid(), ;);
@@ -542,7 +542,6 @@ void AddressResolver::SendAddressQueryResponse(const ThreadTargetTlv &aTargetTlv
 
     memset(&messageInfo, 0, sizeof(messageInfo));
     memcpy(&messageInfo.GetPeerAddr(), &aDestination, sizeof(messageInfo.GetPeerAddr()));
-    messageInfo.mInterfaceId = messageInfo.mInterfaceId;
     messageInfo.mPeerPort = kCoapUdpPort;
 
     SuccessOrExit(error = mSocket.SendTo(*message, messageInfo));

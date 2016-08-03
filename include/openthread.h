@@ -95,6 +95,7 @@ extern "C" {
  * @defgroup core-tasklet Tasklet
  * @defgroup core-timer Timer
  * @defgroup core-udp UDP
+ * @defgroup core-link-quality Link Quality
  *
  * @}
  *
@@ -440,6 +441,10 @@ const otNetifAddress *otGetUnicastAddresses(void);
 /**
  * Add a Network Interface Address to the Thread interface.
  *
+ * The passed in instance @p aAddress will be added and stored by the Thread interface, so the caller should ensure
+ * that the address instance remains valid (not de-alloacted) and is not modified after a successful call to this
+ * method.
+ *
  * @param[in]  aAddress  A pointer to a Network Interface Address.
  *
  * @retval kThreadErrorNone  Successfully added the Network Interface Address.
@@ -585,6 +590,40 @@ ThreadError otRemoveExternalRoute(const otIp6Prefix *aPrefix);
  * @sa otRemoveExternalRoute
  */
 ThreadError otSendServerData(void);
+
+/**
+ * This function adds a port to the allowed unsecured port list.
+ *
+ * @param[in]  aPort  The port value.
+ *
+ * @retval kThreadError_None    The port was successfully added to the allowed unsecure port list.
+ * @retval kThreadError_NoBufs  The unsecure port list is full.
+ *
+ */
+ThreadError otAddUnsecurePort(uint16_t aPort);
+
+/**
+ * This function removes a port from the allowed unsecure port list.
+ *
+ * @param[in]  aPort  The port value.
+ *
+ * @retval kThreadError_None      The port was successfully removed from the allowed unsecure port list.
+ * @retval kThreadError_NotFound  The port was not found in the unsecure port list.
+ *
+ */
+ThreadError otRemoveUnsecurePort(uint16_t aPort);
+
+/**
+ * This function returns a pointer to the unsecure port list.
+ *
+ * @note Port value 0 is used to indicate an invalid entry.
+ *
+ * @param[out]  aNumEntries  The number of entries in the list.
+ *
+ * @returns A pointer to the unsecure port list.
+ *
+ */
+const uint16_t *otGetUnsecurePorts(uint8_t *aNumEntries);
 
 /**
  * @}
@@ -1159,6 +1198,23 @@ void otSetReceiveIp6DatagramCallback(otReceiveIp6DatagramCallback aCallback);
  *
  */
 ThreadError otSendIp6Datagram(otMessage aMessage);
+
+/**
+ * This function indicates whether or not ICMPv6 Echo processing is enabled.
+ *
+ * @retval TRUE   ICMPv6 Echo processing is enabled.
+ * @retval FALSE  ICMPv6 Echo processing is disabled.
+ *
+ */
+bool otIsIcmpEchoEnabled(void);
+
+/**
+ * This function sets whether or not ICMPv6 Echo processing is enabled.
+ *
+ * @param[in]  aEnabled  TRUE to enable ICMPv6 Echo processing, FALSE otherwise.
+ *
+ */
+void otSetIcmpEchoEnabled(bool aEnabled);
 
 /**
  * @}

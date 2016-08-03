@@ -16,40 +16,62 @@
 
 #
 #    Description:
-#      This file is the automake footer for code style checking and
-#      reformatting related targets and rules.
+#      This file is the automake footer for all coding style-related
+#      targets and rules.
 #
+#      The recursive target 'pretty', invoked against '$(PRETTY_SUBDIRS)', 
+#      is intended to reformat a collection of source files, defined by 
+#      '$(PRETTY_FILES)' using the program '$(PRETTY)' with the arguments 
+#      '$(PRETTY_ARGS)'.
+#
+#      The recursive target 'pretty-check' (and its alias 'lint'),
+#      invoked against '$(PRETTY_SUBDIRS)', is intended to only check 
+#      but NOT reformat a collection of source files, defined by
+#      '$(PRETTY_FILES)' using the program '$(PRETTY_CHECK)' with the
+#      arguments '$(PRETTY_CHECK_ARGS)'.
+#
+#      This represents the minimum integration with GNU autotools
+#      (automake inparticular) such that 'make pretty' and 'make
+#      pretty-check' may be invoked at the top of the tree and all 
+#      the prerequisites occur such that it executes successfully 
+#      with no intervening make target invocations. '$(BUILT_SOURCES)' 
+#      are the key automake-specific dependencies to ensure that happens.
+#
+
+# nl-make-pretty <TERSE OUTPUT COMMAND> <COMMAND> <COMMAND ARGUMENTS>
+#
+# This function iterates over PRETTY_FILES, invoking COMMAND with
+# COMMAND ARGUEMENTS on each file. If a non-verbose make has been
+# requested TERSE OUTPUT COMMAND is emitted to standard output.
+
+define nl-make-pretty
+$(AM_V_at)for file in $(PRETTY_FILES); do \
+    $(1) \
+    if test -f $${file}; then d=.; else d=$(srcdir); fi; \
+    $(2) $(3) $${d}/$${file} \
+    || exit 1; \
+done
+endef
+
+.PHONY: pretty pretty-recursive pretty-check pretty-check-recursive lint
 
 pretty: pretty-recursive
 
-#
-# 'pretty' target calls astyle on each file in SOURCES and HEADERS.
-# This iteratively calls astyle on each file.  astyle seems to retain
-# state from processing a previous file, which sometimes causes
-# formatting of a subsequent file to fail.
-#
-pretty:
-ifneq ($(SOURCES) $(HEADERS),)
-	$(AM_V_at) for file in $(SOURCES) $(HEADERS); do $(ASTYLE) $(ASTYLE_PRETTY_ARGS) $$file; done
-endif
+pretty pretty-check: $(BUILT_SOURCES)
 
-pretty-check: pretty-recursive
+lint: pretty-check
 
-#
-# 'pretty-check' target calls astyle on each file in SOURCES and HEADERS.
-# This iteratively calls astyle on each file.  astyle seems to retain
-# state from processing a previous file, which sometimes causes
-# formatting of a subsequent file to fail.
-#
-pretty-check:
-ifneq ($(SOURCES) $(HEADERS),)
-	$(AM_V_at)for file in $(SOURCES) $(HEADERS); do \
-		if [[ -n `$(ASTYLE) $(ASTYLE_PRETTY_CHECK_ARGS) $$file` ]]; then \
-			echo "Code style error.  Run 'make pretty' to reformat."; \
-			exit 1; \
-		fi \
-	done
-endif
+pretty-check: pretty-check-recursive
 
-pretty-recursive:
+pretty-recursive pretty-check-recursive:
 	$(call nl-make-subdirs-with-dirs,$(PRETTY_SUBDIRS))
+
+pretty:
+ifneq ($(PRETTY),)
+	$(call nl-make-pretty,$(AM_V_PRETTY),$(PRETTY),$(PRETTY_ARGS))
+endif
+
+pretty-check:
+ifneq ($(PRETTY_CHECK),)
+	$(call nl-make-pretty,$(AM_V_PRETTY_CHECK),$(PRETTY_CHECK),$(PRETTY_CHECK_ARGS))
+endif

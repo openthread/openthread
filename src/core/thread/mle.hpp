@@ -278,7 +278,7 @@ public:
      *
      */
     Command GetCommand(void) const {
-        const uint8_t *command = mKeyIdentifier + (IsKeyIdMode1() ? 1 : 5);
+        const uint8_t *command = IsKeyIdMode1() ? mKeyIdentifier + 1 : &mCommand;
         return static_cast<Command>(*command);
     }
 
@@ -289,7 +289,7 @@ public:
      *
      */
     void SetCommand(Command aCommand) {
-        uint8_t *commandField = mKeyIdentifier + (IsKeyIdMode1() ? 1 : 5);
+        uint8_t *commandField = IsKeyIdMode1() ? mKeyIdentifier + 1 : &mCommand;
         *commandField = static_cast<uint8_t>(aCommand);
     }
 
@@ -806,16 +806,6 @@ protected:
     Mac::ShortAddress GetNextHop(uint16_t aDestination) const;
 
     /**
-     * This method converts a link margin value to a link quality value.
-     *
-     * @param[in]  aLinkMargin  The Link Margin in dB.
-     *
-     * @returns The link quality value.
-     *
-     */
-    uint8_t LinkMarginToQuality(uint8_t aLinkMargin);
-
-    /**
      * This method generates an MLE Data Request message.
      *
      * @param[in]  aDestination  A reference to the IPv6 address of the destination.
@@ -907,6 +897,7 @@ protected:
     NetworkData::Leader &mNetworkData;      ///< The Network Data object.
 
     LeaderDataTlv mLeaderData;              ///< Last received Leader Data TLV.
+    bool mRetrieveNewNetworkData;           ///< Indicating new Network Data is needed if set.
 
     DeviceState mDeviceState;               ///< Current Thread interface state.
     Router mParent;                         ///< Parent information.

@@ -42,6 +42,7 @@
 #include <platform/serial.h>
 
 using Thread::Encoding::BigEndian::HostSwap16;
+using Thread::Encoding::BigEndian::HostSwap32;
 
 namespace Thread {
 namespace Cli {
@@ -83,6 +84,10 @@ Ip6::IcmpEcho Interpreter::sIcmpEcho(&HandleEchoResponse, NULL);
 Ip6::SockAddr Interpreter::sSockAddr;
 Server *Interpreter::sServer;
 uint8_t Interpreter::sEchoRequest[1500];
+uint16_t Interpreter::sLength = 8;
+uint16_t Interpreter::sCount = 1;
+uint32_t Interpreter::sInterval = 1000;
+Timer Interpreter::sPingTimer(&HandlePingTimer, NULL);
 
 int Interpreter::Hex2Bin(const char *aHex, uint8_t *aBin, uint16_t aBinLength)
 {
@@ -332,10 +337,14 @@ void Interpreter::ProcessIpAddr(int argc, char *argv[])
         for (const otNetifAddress *addr = otGetUnicastAddresses(); addr; addr = addr->mNext)
         {
             sServer->OutputFormat("%x:%x:%x:%x:%x:%x:%x:%x\r\n",
-                                  HostSwap16(addr->mAddress.m16[0]), HostSwap16(addr->mAddress.m16[1]),
-                                  HostSwap16(addr->mAddress.m16[2]), HostSwap16(addr->mAddress.m16[3]),
-                                  HostSwap16(addr->mAddress.m16[4]), HostSwap16(addr->mAddress.m16[5]),
-                                  HostSwap16(addr->mAddress.m16[6]), HostSwap16(addr->mAddress.m16[7]));
+                                  HostSwap16(addr->mAddress.mFields.m16[0]),
+                                  HostSwap16(addr->mAddress.mFields.m16[1]),
+                                  HostSwap16(addr->mAddress.mFields.m16[2]),
+                                  HostSwap16(addr->mAddress.mFields.m16[3]),
+                                  HostSwap16(addr->mAddress.mFields.m16[4]),
+                                  HostSwap16(addr->mAddress.mFields.m16[5]),
+                                  HostSwap16(addr->mAddress.mFields.m16[6]),
+                                  HostSwap16(addr->mAddress.mFields.m16[7]));
         }
     }
     else
@@ -395,10 +404,10 @@ exit:
 void Interpreter::ProcessMasterKey(int argc, char *argv[])
 {
     ThreadError error = kThreadError_None;
-    uint8_t keyLength;
 
     if (argc == 0)
     {
+        uint8_t keyLength;
         const uint8_t *key = otGetMasterKey(&keyLength);
 
         for (int i = 0; i < keyLength; i++)
@@ -410,6 +419,7 @@ void Interpreter::ProcessMasterKey(int argc, char *argv[])
     }
     else
     {
+        int8_t keyLength;
         uint8_t key[16];
 
         VerifyOrExit((keyLength = Hex2Bin(argv[0], key, sizeof(key))) >= 0, error = kThreadError_Parse);
@@ -552,40 +562,91 @@ exit:
 void Interpreter::HandleEchoResponse(void *aContext, Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
     Ip6::IcmpHeader icmp6Header;
+    uint32_t timestamp = 0;
 
     aMessage.Read(aMessage.GetOffset(), sizeof(icmp6Header), &icmp6Header);
 
     sServer->OutputFormat("%d bytes from ", aMessage.GetLength() - aMessage.GetOffset());
     sServer->OutputFormat("%x:%x:%x:%x:%x:%x:%x:%x",
-                          HostSwap16(aMessageInfo.GetPeerAddr().m16[0]), HostSwap16(aMessageInfo.GetPeerAddr().m16[1]),
-                          HostSwap16(aMessageInfo.GetPeerAddr().m16[2]), HostSwap16(aMessageInfo.GetPeerAddr().m16[3]),
-                          HostSwap16(aMessageInfo.GetPeerAddr().m16[4]), HostSwap16(aMessageInfo.GetPeerAddr().m16[5]),
-                          HostSwap16(aMessageInfo.GetPeerAddr().m16[6]), HostSwap16(aMessageInfo.GetPeerAddr().m16[7]));
-    sServer->OutputFormat(": icmp_seq=%d hlim=%d\r\n", icmp6Header.GetSequence(), aMessageInfo.mHopLimit);
+                          HostSwap16(aMessageInfo.GetPeerAddr().mFields.m16[0]),
+                          HostSwap16(aMessageInfo.GetPeerAddr().mFields.m16[1]),
+                          HostSwap16(aMessageInfo.GetPeerAddr().mFields.m16[2]),
+                          HostSwap16(aMessageInfo.GetPeerAddr().mFields.m16[3]),
+                          HostSwap16(aMessageInfo.GetPeerAddr().mFields.m16[4]),
+                          HostSwap16(aMessageInfo.GetPeerAddr().mFields.m16[5]),
+                          HostSwap16(aMessageInfo.GetPeerAddr().mFields.m16[6]),
+                          HostSwap16(aMessageInfo.GetPeerAddr().mFields.m16[7]));
+    sServer->OutputFormat(": icmp_seq=%d hlim=%d", icmp6Header.GetSequence(), aMessageInfo.mHopLimit);
+
+    if (aMessage.Read(aMessage.GetOffset() + sizeof(icmp6Header), sizeof(uint32_t), &timestamp) >= sizeof(uint32_t))
+    {
+        sServer->OutputFormat(" time=%dms", Timer::GetNow() - HostSwap32(timestamp));
+    }
+
+    sServer->OutputFormat("\r\n");
 }
 
 void Interpreter::ProcessPing(int argc, char *argv[])
 {
     ThreadError error = kThreadError_None;
-    long length = 8;
+    uint8_t index = 1;
+    long value;
 
     VerifyOrExit(argc > 0, error = kThreadError_Parse);
+    VerifyOrExit(!sPingTimer.IsRunning(), error = kThreadError_Busy);
 
     memset(&sSockAddr, 0, sizeof(sSockAddr));
     SuccessOrExit(error = sSockAddr.GetAddress().FromString(argv[0]));
     sSockAddr.mScopeId = 1;
 
-    if (argc > 1)
+    sLength = 8;
+    sCount = 1;
+    sInterval = 1000;
+
+    while (index < argc)
     {
-        SuccessOrExit(error = ParseLong(argv[1], length));
+        SuccessOrExit(error = ParseLong(argv[index], value));
+
+        switch (index)
+        {
+        case 1:
+            sLength = (uint16_t)value;
+            break;
+
+        case 2:
+            sCount = (uint16_t)value;
+            break;
+
+        case 3:
+            sInterval = (uint32_t)value;
+            sInterval = sInterval * 1000;
+            break;
+
+        default:
+            ExitNow(error = kThreadError_Parse);
+        }
+
+        index++;
     }
 
-    sIcmpEcho.SendEchoRequest(sSockAddr, sEchoRequest, length);
+    HandlePingTimer(NULL);
 
     return;
 
 exit:
     AppendResult(error);
+}
+
+void Interpreter::HandlePingTimer(void *aContext)
+{
+    *(uint32_t *)sEchoRequest = HostSwap32(Timer::GetNow());
+    sIcmpEcho.SendEchoRequest(sSockAddr, sEchoRequest, sLength);
+    sCount--;
+
+    if (sCount)
+    {
+        sPingTimer.Start(sInterval);
+    }
 }
 
 ThreadError Interpreter::ProcessPrefixAdd(int argc, char *argv[])
@@ -1078,21 +1139,29 @@ exit:
 void Interpreter::ProcessLine(char *aBuf, uint16_t aBufLength, Server &aServer)
 {
     char *argv[kMaxArgs];
+    int argc = 0;
     char *cmd;
-    int argc;
-    char *last;
 
     sServer = &aServer;
 
-    VerifyOrExit((cmd = strtok_r(aBuf, " ", &last)) != NULL, ;);
+    VerifyOrExit(aBuf != NULL, ;);
 
-    for (argc = 0; argc < kMaxArgs; argc++)
+    for (; *aBuf == ' '; aBuf++, aBufLength--);
+
+    for (cmd = aBuf + 1; (cmd < aBuf + aBufLength) && (cmd != NULL); ++cmd)
     {
-        if ((argv[argc] = strtok_r(NULL, " ", &last)) == NULL)
+        if (*cmd == ' ' || *cmd == '\r' || *cmd == '\n')
         {
-            break;
+            *cmd = '\0';
+        }
+
+        if (*(cmd - 1) == '\0' && *cmd != ' ')
+        {
+            argv[argc++] = cmd;
         }
     }
+
+    cmd = aBuf;
 
     for (unsigned int i = 0; i < sizeof(sCommands) / sizeof(sCommands[0]); i++)
     {

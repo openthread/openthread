@@ -20,20 +20,13 @@
 #      targets and rules.
 #
 #      This represents the minimum integration with GNU autotools
-#      (automake inparticular) such that 'make coverage' may be invoked
+#      (automake in particular) such that 'make coverage' may be invoked
 #      at the top of the tree and all the prerequisites occur such
 #      that it executes successfully with no intervening make target
 #      invocations. The 'check-am' and '$(BUILT_SOURCES)' are the key
 #      automake-specific dependencies to ensure that happens.
 #
 
-.PHONY: coverage coverage-recursive
+coverage-local: check-am
 
-coverage: coverage-recursive
-
-coverage: check-am
-
-coverage: $(BUILT_SOURCES)
-
-coverage-recursive:
-	$(nl-make-subdirs)
+coverage-local: $(BUILT_SOURCES)

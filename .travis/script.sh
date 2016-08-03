@@ -39,14 +39,23 @@ set -x
 [ $BUILD_TARGET != pretty-check ] || {
     export PATH=/tmp/astyle/build/gcc/bin:$PATH || die
     ./configure || die
-    make pretty || die
+    make pretty-check || die
 }
 
 [ $BUILD_TARGET != posix ] || {
-    make -f Makefile-Standalone distcheck || die
+    make -f examples/Makefile-posix distcheck || die
+}
+
+[ $BUILD_TARGET != posix-32-bit ] || {
+    CFLAGS=-m32 CXXFLAGS=-m32 LDFLAGS=-m32 make -f examples/Makefile-posix distcheck || die
 }
 
 [ $BUILD_TARGET != cc2538 ] || {
     export PATH=/tmp/gcc-arm-none-eabi-4_9-2015q3/bin:$PATH || die
-    make -f examples/cc2538/Makefile-cc2538 || die
+    make -f examples/Makefile-cc2538 || die
+}
+
+[ $BUILD_TARGET != scan-build ] || {
+    ./configure --with-examples=posix --enable-cli
+    scan-build --status-bugs -v make
 }

@@ -46,20 +46,48 @@
 #include "spinel.h"
 
 #include <assert.h>
-#include <string.h>
-#include <stdarg.h>
-#include <errno.h>
+#include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
+#include <errno.h>
 
 // ----------------------------------------------------------------------------
 // MARK: -
 
+// IAR's errno.h apparently doesn't define EOVERFLOW.
+#ifndef EOVERFLOW
+// There is no real good choice for what to set
+// errno to in this case, so we just pick the
+// value '1' somewhat arbitrarily.
+#define EOVERFLOW 1
+#endif
+
+// IAR's errno.h apparently doesn't define EINVAL.
+#ifndef EINVAL
+// There is no real good choice for what to set
+// errno to in this case, so we just pick the
+// value '1' somewhat arbitrarily.
+#define EINVAL 1
+#endif
+
+#if defined(errno) && SPINEL_PLATFORM_DOESNT_IMPLEMENT_ERRNO_VAR
+#error SPINEL_PLATFORM_DOESNT_IMPLEMENT_ERRNO_VAR is set but errno is already defined.
+#endif
+
+// Work-around for platforms that don't implement the `errno` variable.
+#if !defined(errno) && SPINEL_PLATFORM_DOESNT_IMPLEMENT_ERRNO_VAR
+static int spinel_errno_workaround_;
+#define errno spinel_errno_workaround_
+#endif // SPINEL_PLATFORM_DOESNT_IMPLEMENT_ERRNO_VAR
+
 #ifndef assert_printf
+#if SPINEL_PLATFORM_DOESNT_IMPLEMENT_FPRINTF
 #define assert_printf(fmt, ...) \
-fprintf(stderr, \
-        __FILE__ ":%d: " fmt "\n", \
-        __LINE__, \
-        __VA_ARGS__)
+    printf(__FILE__ ":%d: " fmt "\n", __LINE__, __VA_ARGS__)
+#else // if SPINEL_PLATFORM_DOESNT_IMPLEMENT_FPRINTF
+#define assert_printf(fmt, ...) \
+    fprintf(stderr, __FILE__ ":%d: " fmt "\n", __LINE__, __VA_ARGS__)
+#endif // else SPINEL_PLATFORM_DOESNT_IMPLEMENT_FPRINTF
 #endif
 
 #ifndef require_action
@@ -74,6 +102,11 @@ fprintf(stderr, \
 #ifndef require
 #define require(c, l)   require_action(c, l, {})
 #endif
+
+
+typedef struct {
+    va_list obj;
+} va_list_obj;
 
 // ----------------------------------------------------------------------------
 // MARK: -
@@ -189,21 +222,8 @@ spinel_next_packed_datatype(const char *pack_format)
     return pack_format;
 }
 
-spinel_ssize_t
-spinel_datatype_unpack(const uint8_t *data_ptr, spinel_size_t data_len, const char *pack_format, ...)
-{
-    spinel_ssize_t ret;
-    va_list args;
-    va_start(args, pack_format);
-
-    ret = spinel_datatype_vunpack(data_ptr, data_len, pack_format, args);
-
-    va_end(args);
-    return ret;
-}
-
-spinel_ssize_t
-spinel_datatype_vunpack(const uint8_t *data_ptr, spinel_size_t data_len, const char *pack_format, va_list args)
+static spinel_ssize_t
+spinel_datatype_vunpack_(const uint8_t *data_ptr, spinel_size_t data_len, const char *pack_format, va_list_obj *args)
 {
     spinel_ssize_t ret = 0;
 
@@ -219,7 +239,7 @@ spinel_datatype_vunpack(const uint8_t *data_ptr, spinel_size_t data_len, const c
         {
         case SPINEL_DATATYPE_BOOL_C:
         {
-            bool *arg_ptr = va_arg(args, bool *);
+            bool *arg_ptr = va_arg(args->obj, bool *);
             require_action(data_len >= sizeof(uint8_t), bail, (ret = -1, errno = EOVERFLOW));
 
             if (arg_ptr)
@@ -236,7 +256,7 @@ spinel_datatype_vunpack(const uint8_t *data_ptr, spinel_size_t data_len, const c
         case SPINEL_DATATYPE_INT8_C:
         case SPINEL_DATATYPE_UINT8_C:
         {
-            uint8_t *arg_ptr = va_arg(args, uint8_t *);
+            uint8_t *arg_ptr = va_arg(args->obj, uint8_t *);
             require_action(data_len >= sizeof(uint8_t), bail, (ret = -1, errno = EOVERFLOW));
 
             if (arg_ptr)
@@ -253,7 +273,7 @@ spinel_datatype_vunpack(const uint8_t *data_ptr, spinel_size_t data_len, const c
         case SPINEL_DATATYPE_INT16_C:
         case SPINEL_DATATYPE_UINT16_C:
         {
-            uint16_t *arg_ptr = va_arg(args, uint16_t *);
+            uint16_t *arg_ptr = va_arg(args->obj, uint16_t *);
             require_action(data_len >= sizeof(uint16_t), bail, (ret = -1, errno = EOVERFLOW));
 
             if (arg_ptr)
@@ -270,7 +290,7 @@ spinel_datatype_vunpack(const uint8_t *data_ptr, spinel_size_t data_len, const c
         case SPINEL_DATATYPE_INT32_C:
         case SPINEL_DATATYPE_UINT32_C:
         {
-            uint32_t *arg_ptr = va_arg(args, uint32_t *);
+            uint32_t *arg_ptr = va_arg(args->obj, uint32_t *);
             require_action(data_len >= sizeof(uint32_t), bail, (ret = -1, errno = EOVERFLOW));
 
             if (arg_ptr)
@@ -286,7 +306,7 @@ spinel_datatype_vunpack(const uint8_t *data_ptr, spinel_size_t data_len, const c
 
         case SPINEL_DATATYPE_IPv6ADDR_C:
         {
-            spinel_ipv6addr_t **arg_ptr = va_arg(args, spinel_ipv6addr_t **);
+            spinel_ipv6addr_t **arg_ptr = va_arg(args->obj, spinel_ipv6addr_t **);
             require_action(data_len >= sizeof(spinel_ipv6addr_t), bail, (ret = -1, errno = EOVERFLOW));
 
             if (arg_ptr)
@@ -302,7 +322,7 @@ spinel_datatype_vunpack(const uint8_t *data_ptr, spinel_size_t data_len, const c
 
         case SPINEL_DATATYPE_EUI64_C:
         {
-            spinel_eui64_t **arg_ptr = va_arg(args, spinel_eui64_t **);
+            spinel_eui64_t **arg_ptr = va_arg(args->obj, spinel_eui64_t **);
             require_action(data_len >= sizeof(spinel_eui64_t), bail, (ret = -1, errno = EOVERFLOW));
 
             if (arg_ptr)
@@ -318,7 +338,7 @@ spinel_datatype_vunpack(const uint8_t *data_ptr, spinel_size_t data_len, const c
 
         case SPINEL_DATATYPE_EUI48_C:
         {
-            spinel_eui48_t **arg_ptr = va_arg(args, spinel_eui48_t **);
+            spinel_eui48_t **arg_ptr = va_arg(args->obj, spinel_eui48_t **);
             require_action(data_len >= sizeof(spinel_eui48_t), bail, (ret = -1, errno = EOVERFLOW));
 
             if (arg_ptr)
@@ -334,7 +354,7 @@ spinel_datatype_vunpack(const uint8_t *data_ptr, spinel_size_t data_len, const c
 
         case SPINEL_DATATYPE_UINT_PACKED_C:
         {
-            uint32_t *arg_ptr = va_arg(args, uint32_t *);
+            unsigned int *arg_ptr = va_arg(args->obj, unsigned int *);
             spinel_ssize_t pui_len = spinel_packed_uint_decode(data_ptr, data_len, arg_ptr);
 
             require(pui_len > 0, bail);
@@ -349,8 +369,9 @@ spinel_datatype_vunpack(const uint8_t *data_ptr, spinel_size_t data_len, const c
 
         case SPINEL_DATATYPE_UTF8_C:
         {
-            const char **arg_ptr = va_arg(args, const char **);
-            ssize_t len = strnlen((const char *)data_ptr, data_len) + 1;
+            const char **arg_ptr = va_arg(args->obj, const char **);
+            size_t len = strnlen((const char *)data_ptr, data_len) + 1;
+
             require_action((len <= data_len) || (data_ptr[data_len - 1] != 0), bail, (ret = -1, errno = EOVERFLOW));
 
             if (arg_ptr)
@@ -369,8 +390,8 @@ spinel_datatype_vunpack(const uint8_t *data_ptr, spinel_size_t data_len, const c
             spinel_ssize_t pui_len = 0;
             uint16_t block_len = 0;
             const uint8_t *block_ptr = data_ptr;
-            const uint8_t **block_ptr_ptr =  va_arg(args, const uint8_t **);
-            unsigned int *block_len_ptr = va_arg(args, unsigned int *);
+            const uint8_t **block_ptr_ptr =  va_arg(args->obj, const uint8_t **);
+            unsigned int *block_len_ptr = va_arg(args->obj, unsigned int *);
             char nextformat = *spinel_next_packed_datatype(pack_format);
 
             if ((nextformat != 0) && (nextformat != ')'))
@@ -431,7 +452,7 @@ spinel_datatype_vunpack(const uint8_t *data_ptr, spinel_size_t data_len, const c
 
             require_action(data_len >= (block_len + pui_len), bail, (ret = -1, errno = EOVERFLOW));
 
-            actual_len = spinel_datatype_vunpack(block_ptr, block_len, pack_format + 2, args);
+            actual_len = spinel_datatype_vunpack_(block_ptr, block_len, pack_format + 2, args);
 
             require_action((int)actual_len > -1, bail, (ret = -1, errno = EOVERFLOW));
 
@@ -470,20 +491,33 @@ bail:
 }
 
 spinel_ssize_t
-spinel_datatype_pack(uint8_t *data_ptr, spinel_size_t data_len_max, const char *pack_format, ...)
+spinel_datatype_unpack(const uint8_t *data_ptr, spinel_size_t data_len, const char *pack_format, ...)
 {
-    int ret;
-    va_list args;
-    va_start(args, pack_format);
+    spinel_ssize_t ret;
+    va_list_obj args;
+    va_start(args.obj, pack_format);
 
-    ret = spinel_datatype_vpack(data_ptr, data_len_max, pack_format, args);
+    ret = spinel_datatype_vunpack_(data_ptr, data_len, pack_format, &args);
 
-    va_end(args);
+    va_end(args.obj);
     return ret;
 }
 
 spinel_ssize_t
-spinel_datatype_vpack(uint8_t *data_ptr, spinel_size_t data_len_max, const char *pack_format, va_list args)
+spinel_datatype_vunpack(const uint8_t *data_ptr, spinel_size_t data_len, const char *pack_format, va_list args)
+{
+    spinel_ssize_t ret;
+    va_list_obj args_obj;
+    va_copy(args_obj.obj, args);
+
+    ret = spinel_datatype_vunpack_(data_ptr, data_len, pack_format, &args_obj);
+
+    va_end(args_obj.obj);
+    return ret;
+}
+
+static spinel_ssize_t
+spinel_datatype_vpack_(uint8_t *data_ptr, spinel_size_t data_len_max, const char *pack_format, va_list_obj *args)
 {
     spinel_ssize_t ret = 0;
 
@@ -499,7 +533,7 @@ spinel_datatype_vpack(uint8_t *data_ptr, spinel_size_t data_len_max, const char 
         {
         case SPINEL_DATATYPE_BOOL_C:
         {
-            bool arg = va_arg(args, int);
+            bool arg = (bool)va_arg(args->obj, int);
             ret += sizeof(uint8_t);
 
             if (data_len_max >= sizeof(uint8_t))
@@ -519,7 +553,7 @@ spinel_datatype_vpack(uint8_t *data_ptr, spinel_size_t data_len_max, const char 
         case SPINEL_DATATYPE_INT8_C:
         case SPINEL_DATATYPE_UINT8_C:
         {
-            uint8_t arg = va_arg(args, int);
+            uint8_t arg = (uint8_t)va_arg(args->obj, int);
             ret += sizeof(uint8_t);
 
             if (data_len_max >= sizeof(uint8_t))
@@ -539,7 +573,7 @@ spinel_datatype_vpack(uint8_t *data_ptr, spinel_size_t data_len_max, const char 
         case SPINEL_DATATYPE_INT16_C:
         case SPINEL_DATATYPE_UINT16_C:
         {
-            uint16_t arg = va_arg(args, int);
+            uint16_t arg = (uint16_t)va_arg(args->obj, int);
             ret += sizeof(uint16_t);
 
             if (data_len_max >= sizeof(uint16_t))
@@ -560,7 +594,7 @@ spinel_datatype_vpack(uint8_t *data_ptr, spinel_size_t data_len_max, const char 
         case SPINEL_DATATYPE_INT32_C:
         case SPINEL_DATATYPE_UINT32_C:
         {
-            uint32_t arg = va_arg(args, int);
+            uint32_t arg = (uint32_t)va_arg(args->obj, int);
             ret += sizeof(uint32_t);
 
             if (data_len_max >= sizeof(uint32_t))
@@ -582,7 +616,7 @@ spinel_datatype_vpack(uint8_t *data_ptr, spinel_size_t data_len_max, const char 
 
         case SPINEL_DATATYPE_IPv6ADDR_C:
         {
-            spinel_ipv6addr_t *arg = va_arg(args, spinel_ipv6addr_t *);
+            spinel_ipv6addr_t *arg = va_arg(args->obj, spinel_ipv6addr_t *);
             ret += sizeof(spinel_ipv6addr_t);
 
             if (data_len_max >= sizeof(spinel_ipv6addr_t))
@@ -601,7 +635,7 @@ spinel_datatype_vpack(uint8_t *data_ptr, spinel_size_t data_len_max, const char 
 
         case SPINEL_DATATYPE_EUI48_C:
         {
-            spinel_eui48_t *arg = va_arg(args, spinel_eui48_t *);
+            spinel_eui48_t *arg = va_arg(args->obj, spinel_eui48_t *);
             ret += sizeof(spinel_eui48_t);
 
             if (data_len_max >= sizeof(spinel_eui48_t))
@@ -620,7 +654,7 @@ spinel_datatype_vpack(uint8_t *data_ptr, spinel_size_t data_len_max, const char 
 
         case SPINEL_DATATYPE_EUI64_C:
         {
-            spinel_eui64_t *arg = va_arg(args, spinel_eui64_t *);
+            spinel_eui64_t *arg = va_arg(args->obj, spinel_eui64_t *);
             ret += sizeof(spinel_eui64_t);
 
             if (data_len_max >= sizeof(spinel_eui64_t))
@@ -639,7 +673,7 @@ spinel_datatype_vpack(uint8_t *data_ptr, spinel_size_t data_len_max, const char 
 
         case SPINEL_DATATYPE_UINT_PACKED_C:
         {
-            uint32_t arg = va_arg(args, uint32_t);
+            uint32_t arg = va_arg(args->obj, uint32_t);
             spinel_ssize_t encoded_size = spinel_packed_uint_encode(data_ptr, data_len_max, arg);
             ret += encoded_size;
 
@@ -658,7 +692,7 @@ spinel_datatype_vpack(uint8_t *data_ptr, spinel_size_t data_len_max, const char 
 
         case SPINEL_DATATYPE_UTF8_C:
         {
-            const char *string_arg = va_arg(args, const char *);
+            const char *string_arg = va_arg(args->obj, const char *);
             size_t string_arg_len = 0;
 
             if (string_arg)
@@ -690,8 +724,8 @@ spinel_datatype_vpack(uint8_t *data_ptr, spinel_size_t data_len_max, const char 
 
         case SPINEL_DATATYPE_DATA_C:
         {
-            uint8_t *arg = va_arg(args, uint8_t *);
-            uint32_t data_size_arg = va_arg(args, uint32_t);
+            const uint8_t *arg = va_arg(args->obj, const uint8_t *);
+            uint32_t data_size_arg = va_arg(args->obj, uint32_t);
             spinel_ssize_t size_len = 0;
             char nextformat = *spinel_next_packed_datatype(pack_format);
 
@@ -731,10 +765,10 @@ spinel_datatype_vpack(uint8_t *data_ptr, spinel_size_t data_len_max, const char 
 
             // First we figure out the size of the struct
             {
-                va_list subargs;
-                va_copy(subargs, args);
-                struct_len = spinel_datatype_vpack(NULL, 0, pack_format + 2, subargs);
-                va_end(subargs);
+                va_list_obj subargs;
+                va_copy(subargs.obj, args->obj);
+                struct_len = spinel_datatype_vpack_(NULL, 0, pack_format + 2, &subargs);
+                va_end(subargs.obj);
             }
 
             if (nextformat != 0 && nextformat != ')')
@@ -750,7 +784,7 @@ spinel_datatype_vpack(uint8_t *data_ptr, spinel_size_t data_len_max, const char 
                 data_ptr += size_len;
                 data_len_max -= size_len;
 
-                struct_len = spinel_datatype_vpack(data_ptr, data_len_max, pack_format + 2, args);
+                struct_len = spinel_datatype_vpack_(data_ptr, data_len_max, pack_format + 2, args);
 
                 data_ptr += struct_len;
                 data_len_max -= struct_len;
@@ -779,6 +813,34 @@ spinel_datatype_vpack(uint8_t *data_ptr, spinel_size_t data_len_max, const char 
 bail:
     return ret;
 }
+
+spinel_ssize_t
+spinel_datatype_pack(uint8_t *data_ptr, spinel_size_t data_len_max, const char *pack_format, ...)
+{
+    int ret;
+    va_list_obj args;
+    va_start(args.obj, pack_format);
+
+    ret = spinel_datatype_vpack_(data_ptr, data_len_max, pack_format, &args);
+
+    va_end(args.obj);
+    return ret;
+}
+
+
+spinel_ssize_t
+spinel_datatype_vpack(uint8_t *data_ptr, spinel_size_t data_len_max, const char *pack_format, va_list args)
+{
+    int ret;
+    va_list_obj args_obj;
+    va_copy(args_obj.obj, args);
+
+    ret = spinel_datatype_vpack_(data_ptr, data_len_max, pack_format, &args_obj);
+
+    va_end(args_obj.obj);
+    return ret;
+}
+
 
 // ----------------------------------------------------------------------------
 // MARK: -

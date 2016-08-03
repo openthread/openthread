@@ -85,7 +85,7 @@ enum
     kParentRouteToLeaderTimeout = 20,   ///< PARENT_ROUTE_TO_LEADER_TIMEOUT (seconds)
     kRouterSelectionJitter      = 120,  ///< ROUTER_SELECTION_JITTER (seconds)
     kRouterDowngradeThreshold   = 23,   ///< ROUTER_DOWNGRADE_THRESHOLD (routers)
-    kRouterUpgradeThreadhold    = 16,   ///< ROUTER_UPGRADE_THRESHOLD (routers)
+    kRouterUpgradeThreshold     = 16,   ///< ROUTER_UPGRADE_THRESHOLD (routers)
     kMaxLeaderToRouterTimeout   = 90,   ///< INFINITE_COST_TIMEOUT (seconds)
     kReedAdvertiseInterval      = 570,  ///< REED_ADVERTISEMENT_INTERVAL (seconds)
     kReedAdvertiseJitter        = 60,   ///< REED_ADVERTISEMENT_JITTER (seconds)

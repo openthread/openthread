@@ -50,12 +50,14 @@ libopenthread_a_SOURCES             = \
     net/icmp6.cpp                     \
     net/ip6.cpp                       \
     net/ip6_address.cpp               \
+    net/ip6_filter.cpp                \
     net/ip6_mpl.cpp                   \
     net/ip6_routes.cpp                \
     net/netif.cpp                     \
     net/udp6.cpp                      \
     thread/address_resolver.cpp       \
     thread/key_manager.cpp            \
+    thread/link_quality.cpp           \
     thread/lowpan.cpp                 \
     thread/mesh_forwarder.cpp         \
     thread/mle.cpp                    \
@@ -87,6 +89,7 @@ noinst_HEADERS                      = \
     net/icmp6.hpp                     \
     net/ip6.hpp                       \
     net/ip6_address.hpp               \
+    net/ip6_filter.hpp                \
     net/ip6_mpl.hpp                   \
     net/ip6_routes.hpp                \
     net/netif.hpp                     \
@@ -94,6 +97,7 @@ noinst_HEADERS                      = \
     net/udp6.hpp                      \
     thread/address_resolver.hpp       \
     thread/key_manager.hpp            \
+    thread/link_quality.hpp           \
     thread/lowpan.hpp                 \
     thread/mesh_forwarder.hpp         \
     thread/mle.hpp                    \

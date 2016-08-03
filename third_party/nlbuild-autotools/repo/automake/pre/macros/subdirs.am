@@ -34,7 +34,7 @@
 #                   attempt to make in each specified subdirectory.
 #
 define nl-make-subdirs-with-dirs-and-goals
-$(AM_V_at)for subdir in $(1); do \
++$(AM_V_at)for subdir in $(1); do \
     echo "Making $(2) in $${subdir}"; \
     $(MAKE) -C "$${subdir}" $(AM_MAKEFLAGS) $(2) \
     || exit 1; \

@@ -516,6 +516,8 @@ void Mac::TransmitDoneTask(bool aRxPending, ThreadError aError)
             mReceiveTimer.Stop();
         }
 
+    // fall through
+
     case kStateActiveScan:
     case kStateTransmitBeacon:
         SentFrame(aError == kThreadError_None);
@@ -667,6 +669,8 @@ void Mac::SentFrame(bool aAcked)
             mSendTail = NULL;
         }
 
+        sender->mNext = NULL;
+
         mDataSequence++;
         sender->HandleSentFrame(sendFrame);
 
@@ -719,17 +723,12 @@ ThreadError Mac::ProcessReceiveSecurity(Frame &aFrame, const Address &aSrcAddr, 
         // same key index
         keySequence = mKeyManager.GetCurrentKeySequence();
         macKey = mKeyManager.GetCurrentMacKey();
-        VerifyOrExit(aNeighbor->mPreviousKey == true || frameCounter >= aNeighbor->mValid.mLinkFrameCounter,
-                     error = kThreadError_Security);
     }
-    else if (aNeighbor->mPreviousKey &&
-             mKeyManager.IsPreviousKeyValid() &&
-             keyid == (mKeyManager.GetPreviousKeySequence() & 0x7f))
+    else if (keyid == ((mKeyManager.GetCurrentKeySequence() - 1) & 0x7f))
     {
         // previous key index
-        keySequence = mKeyManager.GetPreviousKeySequence();
-        macKey = mKeyManager.GetPreviousMacKey();
-        VerifyOrExit(frameCounter >= aNeighbor->mValid.mLinkFrameCounter, error = kThreadError_Security);
+        keySequence = mKeyManager.GetCurrentKeySequence() - 1;
+        macKey = mKeyManager.GetTemporaryMacKey(keySequence);
     }
     else if (keyid == ((mKeyManager.GetCurrentKeySequence() + 1) & 0x7f))
     {
@@ -739,13 +738,12 @@ ThreadError Mac::ProcessReceiveSecurity(Frame &aFrame, const Address &aSrcAddr, 
     }
     else
     {
-        for (Receiver *receiver = mReceiveHead; receiver; receiver = receiver->mNext)
-        {
-            receiver->HandleReceivedFrame(aFrame, kThreadError_Security);
-        }
-
         ExitNow(error = kThreadError_Security);
     }
+
+    VerifyOrExit(keySequence > aNeighbor->mKeySequence ||
+                 (keySequence == aNeighbor->mKeySequence) && (frameCounter >= aNeighbor->mValid.mLinkFrameCounter),
+                 error = kThreadError_Security);
 
     aesCcm.SetKey(macKey, 16);
     aesCcm.Init(aFrame.GetHeaderLength(), aFrame.GetPayloadLength(), tagLength, nonce, sizeof(nonce));
@@ -755,14 +753,10 @@ ThreadError Mac::ProcessReceiveSecurity(Frame &aFrame, const Address &aSrcAddr, 
 
     VerifyOrExit(memcmp(tag, aFrame.GetFooter(), tagLength) == 0, error = kThreadError_Security);
 
-    if (keySequence > mKeyManager.GetCurrentKeySequence())
+    if (aNeighbor->mKeySequence != keySequence)
     {
-        mKeyManager.SetCurrentKeySequence(keySequence);
-    }
-
-    if (keySequence == mKeyManager.GetCurrentKeySequence())
-    {
-        aNeighbor->mPreviousKey = false;
+        aNeighbor->mKeySequence = keySequence;
+        aNeighbor->mValid.mMleFrameCounter = 0;
     }
 
     aNeighbor->mValid.mLinkFrameCounter = frameCounter + 1;
@@ -770,6 +764,15 @@ ThreadError Mac::ProcessReceiveSecurity(Frame &aFrame, const Address &aSrcAddr, 
     aFrame.SetSecurityValid(true);
 
 exit:
+
+    if (error != kThreadError_None)
+    {
+        for (Receiver *receiver = mReceiveHead; receiver; receiver = receiver->mNext)
+        {
+            receiver->HandleReceivedFrame(aFrame, kThreadError_Security);
+        }
+    }
+
     return error;
 }
 
@@ -862,6 +865,11 @@ void Mac::ReceiveDoneTask(Frame *aFrame, ThreadError aError)
 
     // Security Processing
     SuccessOrExit(error = ProcessReceiveSecurity(*aFrame, srcaddr, neighbor));
+
+    if (neighbor != NULL)
+    {
+        neighbor->mLinkInfo.AddRss(aFrame->mPower);
+    }
 
     switch (mState)
     {

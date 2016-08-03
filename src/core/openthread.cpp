@@ -39,6 +39,7 @@
 #include <common/new.hpp>
 #include <common/tasklet.hpp>
 #include <common/timer.hpp>
+#include <net/icmp6.hpp>
 #include <platform/random.h>
 #include <thread/thread_netif.hpp>
 
@@ -299,24 +300,26 @@ ThreadError otAddBorderRouter(const otBorderRouterConfig *aConfig)
         flags |= NetworkData::BorderRouterEntry::kDefaultRouteFlag;
     }
 
-    return sThreadNetif->GetNetworkDataLocal().AddOnMeshPrefix(aConfig->mPrefix.mPrefix.m8, aConfig->mPrefix.mLength,
+    return sThreadNetif->GetNetworkDataLocal().AddOnMeshPrefix(aConfig->mPrefix.mPrefix.mFields.m8,
+                                                               aConfig->mPrefix.mLength,
                                                                aConfig->mPreference, flags, aConfig->mStable);
 }
 
 ThreadError otRemoveBorderRouter(const otIp6Prefix *aPrefix)
 {
-    return sThreadNetif->GetNetworkDataLocal().RemoveOnMeshPrefix(aPrefix->mPrefix.m8, aPrefix->mLength);
+    return sThreadNetif->GetNetworkDataLocal().RemoveOnMeshPrefix(aPrefix->mPrefix.mFields.m8, aPrefix->mLength);
 }
 
 ThreadError otAddExternalRoute(const otExternalRouteConfig *aConfig)
 {
-    return sThreadNetif->GetNetworkDataLocal().AddHasRoutePrefix(aConfig->mPrefix.mPrefix.m8, aConfig->mPrefix.mLength,
+    return sThreadNetif->GetNetworkDataLocal().AddHasRoutePrefix(aConfig->mPrefix.mPrefix.mFields.m8,
+                                                                 aConfig->mPrefix.mLength,
                                                                  aConfig->mPreference, aConfig->mStable);
 }
 
 ThreadError otRemoveExternalRoute(const otIp6Prefix *aPrefix)
 {
-    return sThreadNetif->GetNetworkDataLocal().RemoveHasRoutePrefix(aPrefix->mPrefix.m8, aPrefix->mLength);
+    return sThreadNetif->GetNetworkDataLocal().RemoveHasRoutePrefix(aPrefix->mPrefix.mFields.m8, aPrefix->mLength);
 }
 
 ThreadError otSendServerData(void)
@@ -324,6 +327,21 @@ ThreadError otSendServerData(void)
     Ip6::Address destination;
     sThreadNetif->GetMle().GetLeaderAddress(destination);
     return sThreadNetif->GetNetworkDataLocal().Register(destination);
+}
+
+ThreadError otAddUnsecurePort(uint16_t aPort)
+{
+    return sThreadNetif->GetIp6Filter().AddUnsecurePort(aPort);
+}
+
+ThreadError otRemoveUnsecurePort(uint16_t aPort)
+{
+    return sThreadNetif->GetIp6Filter().RemoveUnsecurePort(aPort);
+}
+
+const uint16_t *otGetUnsecurePorts(uint8_t *aNumEntries)
+{
+    return sThreadNetif->GetIp6Filter().GetUnsecurePorts(*aNumEntries);
 }
 
 uint32_t otGetContextIdReuseDelay(void)
@@ -716,6 +734,16 @@ ThreadError otSendUdp(otUdpSocket *aSocket, otMessage aMessage, const otMessageI
     Ip6::UdpSocket *socket = reinterpret_cast<Ip6::UdpSocket *>(aSocket);
     return socket->SendTo(*reinterpret_cast<Message *>(aMessage),
                           *reinterpret_cast<const Ip6::MessageInfo *>(aMessageInfo));
+}
+
+bool otIsIcmpEchoEnabled(void)
+{
+    return Ip6::Icmp::IsEchoEnabled();
+}
+
+void otSetIcmpEchoEnabled(bool aEnabled)
+{
+    Ip6::Icmp::SetEchoEnabled(aEnabled);
 }
 
 #ifdef __cplusplus

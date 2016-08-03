@@ -1,15 +1,16 @@
 # OpenThread CLI Reference
 
 The OpenThread CLI exposes configuration and management APIs via a
-command line interface.  This CLI may be used to play with OpenThread
-and may be used along side additional application code.  The
-OpenThread test scripts use this CLI to execute test cases.
+command line interface. Use the CLI to play with OpenThread, which 
+can also be used with additional application code. The
+OpenThread test scripts use the CLI to execute test cases.
 
 ## OpenThread Command List
 
 * [channel](#channel)
 * [childtimeout](#childtimeout)
 * [contextreusedelay](#contextreusedelay)
+* [counter](#counter)
 * [extaddr](#extaddr)
 * [extpanid](#extpanid)
 * [ipaddr](#ipaddr)
@@ -90,6 +91,49 @@ Set the CONTEXT_ID_REUSE_DELAY value.
 ```bash
 > contextreusedelay 11
 Done
+```
+
+### counter
+
+Get the supported counter names.
+
+```bash
+>counter
+mac
+Done
+```
+
+### counter \<countername\>
+
+Get the counter value.
+
+```bash
+>counter mac
+TxTotal: 10
+    TxAckRequested: 4
+    TxAcked: 4
+    TxNoAckRequested: 6
+    TxData: 10
+    TxDataPoll: 0
+    TxBeacon: 0
+    TxBeaconRequest: 0
+    TxOther: 0
+    TxRetry: 0
+    TxErrCca: 0
+RxTotal: 11
+    RxData: 11
+    RxDataPoll: 0
+    RxBeacon: 0
+    RxBeaconRequest: 0
+    RxOther: 0
+    RxWhitelistFiltered: 0
+    RxDestAddrFiltered: 0
+    RxErrNoFrame: 0
+    RxErrNoUnknownNeighbor: 0
+    RxErrInvalidSrcAddr: 0
+    RxErrSec: 0
+    RxErrFcs: 0
+    RxErrOther: 0
 ```
 
 ### extaddr
@@ -214,7 +258,7 @@ Done
 Get the Thread Device Mode value.
 
 * r: rx-on-when-idle
-* s: Secure IEEE 802.15.4 Data Requests
+* s: Secure IEEE 802.15.4 data requests
 * d: Full Function Device
 * n: Full Network Data
 
@@ -229,7 +273,7 @@ Done
 Set the Thread Device Mode value.
 
 * r: rx-on-when-idle
-* s: Secure IEEE 802.15.4 Data Requests
+* s: Secure IEEE 802.15.4 data requests
 * d: Full Function Device
 * n: Full Network Data
 
@@ -304,13 +348,13 @@ Set the IEEE 802.15.4 PAN ID value.
 Done
 ```
 
-### ping \<ipaddr\> [size]
+### ping \<ipaddr\> [size] [count] [interval]
 
 Send an ICMPv6 Echo Request.
 
 ```bash
 > ping fdde:ad00:beef:0:558:f56b:d688:799
-16 bytes from fdde:ad00:beef:0:558:f56b:d688:799: icmp_seq=1 hlim=64
+16 bytes from fdde:ad00:beef:0:558:f56b:d688:799: icmp_seq=1 hlim=64 time=28ms
 ```
 
 ### prefix add \<prefix\> [pvdcsr] [prf]
@@ -323,7 +367,7 @@ Add a valid prefix to the Network Data.
 * c: DHCPv6 Other Configuration flag
 * s: Stable flag
 * r: Default Route flag
-* prf: Default router preference, which may be: 'high', 'med', or 'low'.
+* prf: Default router preference, which may be 'high', 'med', or 'low'.
 
 ```bash
 > prefix add 2001:dead:beef:cafe::/64 pvsr 0
@@ -332,7 +376,7 @@ Done
 
 ### prefix remove \<prefix\>
 
-Invalidate a prefix in the network data.
+Invalidate a prefix in the Network Data.
 
 ```bash
 > prefix remove 2001:dead:beef:cafe::/64
@@ -361,7 +405,7 @@ Done
 Add a valid prefix to the Network Data.
 
 * s: Stable flag
-* prf: Default router preference, which may be: 'high', 'med', or 'low'.
+* prf: Default Router Preference, which may be: 'high', 'med', or 'low'.
 
 ```bash
 > route add 2001:dead:beef:cafe::/64 pvsr 0
@@ -370,7 +414,7 @@ Done
 
 ### route remove \<prefix\>
 
-Invalidate a prefix in the network data.
+Invalidate a prefix in the Network Data.
 
 ```bash
 > route remove 2001:dead:beef:cafe::/64

@@ -1,11 +1,12 @@
 Spinel Host Controller Interface
 ================================
 
-Updated: 2016-05-18
+Updated: 2016-06-22
 
 Written by: Robert Quattlebaum <rquattle@nestlabs.com>
 
 THIS DOCUMENT IS A WORK IN PROGRESS AND SUBJECT TO CHANGE.
+See [`spinel.h`](./spinel.h) for additional protocol details.
 
 Copyright (c) 2016 Nest Labs, All Rights Reserved
 
@@ -45,6 +46,7 @@ following goals:
 On top of this core framework, we define the properties and commands
 to enable various features and network protocols.
 
+
 ## 3. Frame Format ##
 
 A frame is defined simply as the concatenation of
@@ -64,26 +66,23 @@ Fields: | HEADER | CMD | *[CMD_PAYLOAD]*
 
 The header byte is broken down as follows:
 
-     0 1 2 3 4 5 6 7
-    +-+-+-+-+-+-+-+-+
-    |1|R|IID|  TID  |
-    +-+-+-+-+-+-+-+-+
+      0   1   2   3   4   5   6   7
+    +---+---+---+---+---+---+---+---+
+    |  FLG  |  IID  |      TID      |
+    +---+---+---+---+---+---+---+---+
 
-#### 3.1.1. Flag Bit ####
+#### 3.1.1. Flag ####
 
-The most significant header bit is always set to 1 to allow this
-protocol to be line compatible with BTLE HCI. By setting the first
-bit, we can disambiguate between Spinel frames and HCI frames (which
-always start with either `0x01` or `0x04`) without any additional
-framing overhead.
+The two most significant header bits (`FLG`) are always set to one
+and zero respectively. Any frame received with these bits set to
+any other value else MUST NOT be considered a Spinel frame.
 
-#### 3.1.2. Reserved Bit ####
+This convention allows Spinel to be line compatible with BTLE HCI. By
+defining the first two bit in this way we can disambiguate between
+Spinel frames and HCI frames (which always start with either `0x01`
+or `0x04`) without any additional framing overhead.
 
-The reserved bit (`R`) is reserved for future use. The sender MUST
-set this bit to zero, and the receiver MUST ignore frames with this
-bit set.
-
-#### 3.1.3. Interface Identifier (IID) ####
+#### 3.1.2. Interface Identifier (IID) ####
 
 The Interface Identifier (IID) is a number between 0 and 3 which
 identifies which subinterface the frame is intended for. This allows
@@ -91,7 +90,7 @@ the protocol to support connecting to more than one network at once.
 The first subinterface (0) is considered the primary subinterface and
 MUST be supported. Support for all other subinterfaces is OPTIONAL.
 
-#### 3.1.4. Transaction Identifier (TID) ####
+#### 3.1.3. Transaction Identifier (TID) ####
 
 The least significant bits of the header represent the Transaction
 Identifier(TID). The TID is used for correlating responses to the
@@ -110,7 +109,7 @@ commands sent to the host from the NCP.
 
 The command identifier is a 21-bit unsigned integer encoded in up to
 three bytes using the packed unsigned integer format described in
-section 7.2. This encoding allows for up to 2,097,152 individual
+*section 7.2*. This encoding allows for up to 2,097,152 individual
 commands, with the first 127 commands represented as a single byte.
 Command identifiers larger than 2,097,151 are explicitly forbidden.
 
@@ -156,7 +155,7 @@ Octets: |    1   |     1
 Fields: | HEADER | CMD_NOOP
 
 No-Operation command. Induces the NCP to send a success status back to
-the host. This is primarily used for livliness checks.
+the host. This is primarily used for liveliness checks.
 
 The command payload for this command SHOULD be empty. The receiver
 MUST ignore any non-empty command payload.
@@ -194,7 +193,7 @@ Get property value command. Causes the NCP to emit a
 `CMD_PROP_VALUE_IS` command for the given property identifier.
 
 The payload for this command is the property identifier encoded in the
-packed unsigned integer format described in section 7.2.
+packed unsigned integer format described in *section 7.2*.
 
 If an error occurs, the value of `PROP_LAST_STATUS` will be emitted
 instead with the value set to the generated status code for the error.
@@ -211,7 +210,7 @@ Set property value command. Instructs the NCP to set the given
 property to the specific given value, replacing any previous value.
 
 The payload for this command is the property identifier encoded in the
-packed unsigned integer format described in section 7.2, followed by
+packed unsigned integer format described in *section 7.2*, followed by
 the property value. The exact format of the property value is defined
 by the property.
 
@@ -232,7 +231,7 @@ items in the list. The resulting order of items in the list is defined
 by the individual property being operated on.
 
 The payload for this command is the property identifier encoded in the
-packed unsigned integer format described in section 7.2, followed by
+packed unsigned integer format described in *section 7.2*, followed by
 the value to be inserted. The exact format of the value is defined by
 the property.
 
@@ -255,8 +254,8 @@ by the individual property being operated on.
 Note that this command operates *by value*, not by index!
 
 The payload for this command is the property identifier encoded in the
-packed unsigned integer format described in section 7.2, followed by
-the value to be inserted. The exact format of the value is defined by
+packed unsigned integer format described in *section 7.2*, followed by
+the value to be removed. The exact format of the value is defined by
 the property.
 
 If an error occurs, the value of `PROP_LAST_STATUS` will be emitted
@@ -275,7 +274,7 @@ by the NCP in an unsolicited fashion to notify the host of various
 state changes asynchronously.
 
 The payload for this command is the property identifier encoded in the
-packed unsigned integer format described in section 7.2, followed by
+packed unsigned integer format described in *section 7.2*, followed by
 the current value of the given property.
 
 
@@ -292,7 +291,7 @@ it can be sent by the NCP in an unsolicited fashion to notify the host
 of various state changes asynchronously.
 
 The payload for this command is the property identifier encoded in the
-packed unsigned integer format described in section 7.2, followed by
+packed unsigned integer format described in *section 7.2*, followed by
 the value that was inserted into the given property.
 
 The resulting order of items in the list is defined by the given
@@ -312,7 +311,7 @@ various state changes asynchronously.
 Note that this command operates *by value*, not by index!
 
 The payload for this command is the property identifier encoded in the
-packed unsigned integer format described in section 7.2, followed by
+packed unsigned integer format described in *section 7.2*, followed by
 the value that was removed from the given property.
 
 The resulting order of items in the list is defined by the given
@@ -356,6 +355,9 @@ Property ID Range     | Description
 15,360 - 16,383       | Vendor-specific
 16,384 - 1,999,999    | *UNALLOCATED*
 2,000,000 - 2,097,151 | Experimental use only
+
+For an explanation of the data format encoding shorthand used
+throughout this section, see section 7.1.
 
 ### 5.1. PROP 0: `PROP_LAST_STATUS`
 
@@ -447,7 +449,6 @@ Currently defined values are:
  *  1: ZigBee
  *  2: ZigBeeIP
  *  3: Thread
- *  TBD: BlueTooth Low Energy (BTLE)
 
 The host MUST enter a FAULT state if it does not recognize the
 protocol given by the NCP.
@@ -807,8 +808,8 @@ where the start and end of the data blob is: the start is 9 bytes from
 the start of the buffer, and its length is the length of the buffer
 minus 9. (9 is the number of bytes taken up by a byte and two longs)
 
-However, things are a little different with `CLDL`. Since our datablob
-is no longer the last item in the signature, the length must be
+However, things are a little different with `CLDL`. Since our data
+blob is no longer the last item in the signature, the length must be
 prepended.
 
 If you are a little confused, keep reading. This theme comes up in a a
@@ -866,12 +867,141 @@ unsigned 16-bit integer.
 
 ## A. Framing Protocol
 
-Since this NCP protocol is defined independently of framing, any
-number of framing protocols could be used successfully. However,
-in the interests of cross-compatibility, we recommend using
-HDLC-Lite for framing when using this NCP protocol with a UART.
+Since this NCP protocol is defined independently of the physical
+transport or framing, any number of transports and framing protocols
+could be used successfully. However, in the interests of compatibility,
+this document provides some recommendations.
 
-A SPI-specific framing mechanism is currently TBD.
+## A.1. UART Recommendations ##
+
+The recommended default UART settings are:
+
+* Bit rate:     115200
+* Start bits:   1
+* Data bits:    8
+* Stop bits:    1
+* Parity:       None
+* Flow Control: Hardware
+
+These values may be adjusted depending on the individual needs of
+the application or product, but some sort of flow control MUST be used.
+Hardware flow control is preferred over software flow control. In the
+absence of hardware flow control, software flow control (XON/XOFF) MUST
+be used instead.
+
+## A.1.1. HDLC-Lite ##
+
+*HDLC-Lite* is the recommended framing protocol for transmitting
+Spinel frames over a UART. HDLC-Lite consists of only the framing,
+escaping, and CRC parts of the larger HDLC protocol---all other parts
+of HDLC are omitted. This protocol was chosen because it works well
+with software flow control and is widely implemented.
+
+To transmit a frame with HDLC-lite, the 16-bit CRC must first be
+appended to the frame. The CRC function is defined to be CRC-16/CCITT,
+otherwise known as the [KERMIT CRC][].
+
+[KERMIT CRC]: http://reveng.sourceforge.net/crc-catalogue/16.htm#crc.cat.kermit
+
+Individual frames are terminated with a frame delimiter octet called
+the 'flag' octet (`0x7E`).
+
+The following octets values are considered *special* and should be
+escaped when present in data frames:
+
+Octet Value | Description  
+------------|-----------------------  
+       0x7E | Frame Delimiter (Flag)  
+       0x7D | Escape Byte  
+       0x11 | XON  
+       0x13 | XOFF  
+       0xF8 | Vendor-Specific  
+
+When present in a data frame, these octet values are escaped by
+prepending the escape octet (`0x7D`) and XORing the value with `0x20`.
+
+When receiving a frame, the CRC must be verified after the frame is
+unescaped. If the CRC value does not match what is calculated for the
+frame data, the frame MUST be discarded. The implementation MAY
+indicate the failure to higher levels to handle as they see fit, but
+MUST NOT attempt to process the deceived frame.
+
+Consecutive flag octets are entirely legal and MUST NOT be treated as
+a framing error. Consecutive flag octets MAY be used as a way to wake
+up a sleeping NCP.
+
+When first establishing a connection to the NCP, it is customary to
+send one or more flag octets to ensure that any previously received
+data is discarded.
+
+## A.2. SPI Recommendations ##
+
+We RECOMMEND the use of the following standard SPI signals:
+
+*   `C̅S̅`:   (Host-to-NCP) Chip Select
+*   `CLK`:  (Host-to-NCP) Clock
+*   `MOSI`: Master-Output/Slave-Input
+*   `MISO`: Master-Input/Slave-Output
+*   `I̅N̅T̅`:  (NCP-to-Host) Host Interrupt
+
+The `I̅N̅T̅` signal is used by the NCP to indicate to the host that
+the NCP has frames pending to send to it. When asserted, the host
+SHOULD initiate a SPI transaction in a timely manner.
+
+We RECOMMEND the following SPI properties:
+
+*   `C̅S̅` is active low.
+*   `CLK` is active high.
+*   `CLK` speed is larger than 500 kHz.
+*   Data is valid on leading edge of `CLK`.
+*   Data is sent in multiples of 8-bits (octets).
+*   Octets are sent most-significant bit first.
+
+This recommended configuration may be adjusted depending on the
+individual needs of the application or product.
+
+## A.2.1 SPI Framing Protocol ##
+
+Each SPI frame starts with a 5-byte frame header.
+
+*   `HDR`: The first byte is the header byte (defined below)
+*   `RECV_LEN`: The second and third bytes indicate the largest frame
+    size that that device is ready to receive. If zero, then the other
+    device must not send any data. (Little Endian)
+*   `DATA_LEN`: The fourth and fifth bytes indicate the size of the
+    pending data frame to be sent to the other device. If this value
+    is equal-to or less-than the number of bytes that the other device
+    is willing to receive, then the data of the frame is immediately
+    after the header. (Little Endian)
+
+The `HDR` byte is defined as:
+
+      0   1   2   3   4   5   6   7
+    +---+---+---+---+---+---+---+---+
+    |RST| 0 | 0 | 0 | 0 | 0 | 0 | 0 |
+    +---+---+---+---+---+---+---+---+
+
+*   `RST`: This bit is set when that device has been reset since the
+    last time `C̅S̅` was asserted.
+*   All other bits are reserved and MUST be cleared to zero.
+
+Prior to a sending or receiving a frame, the master SHOULD send a
+5-octet frame with zeros for both the max receive frame size and the
+the contained frame length. This will induce the slave device to
+indicate the length of the frame it wants to send (if any) and
+indicate the largest frame it is capable of receiving at the moment.
+This allows the master to calculate the size of the next transaction.
+
+This protocol can be used either unidirectionally or bidirectionally,
+determined by the behavior of the master.
+
+## A.3. I²C Recommendations ##
+
+TBD
+
+## A.4. Native USB Recommendations ##
+
+TBD
 
 ## B. Feature: Network Save
 

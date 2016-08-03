@@ -294,6 +294,7 @@ public:
     IcmpHandler(DstUnreachHandler aDstUnreachHandler, void *aContext) {
         mDstUnreachHandler = aDstUnreachHandler;
         mContext = aContext;
+        mNext = NULL;
     }
 
 private:
@@ -303,9 +304,9 @@ private:
 
     DstUnreachHandler    mDstUnreachHandler;
     void                *mContext;
-    IcmpHandler        *mNext;
+    IcmpHandler         *mNext;
 
-    static IcmpHandler *sHandlers;
+    static IcmpHandler  *sHandlers;
 };
 
 /**
@@ -366,12 +367,31 @@ public:
      */
     static ThreadError UpdateChecksum(Message &aMessage, uint16_t aPseudoHeaderChecksum);
 
+    /**
+     * This static method indicates whether or not ICMPv6 Echo processing is enabled.
+     *
+     * @retval TRUE   ICMPv6 Echo processing is enabled.
+     * @retval FALSE  ICMPv6 Echo processing is disabled.
+     *
+     */
+    static bool IsEchoEnabled(void);
+
+    /**
+     * This static method sets whether or not ICMPv6 Echo processing is enabled.
+     *
+     * @param[in]  aEnabled  TRUE to enable ICMPv6 Echo processing, FALSE otherwise.
+     *
+     */
+    static void SetEchoEnabled(bool aEnabled);
+
 private:
     static ThreadError HandleDstUnreach(Message &aMessage, const MessageInfo &aMessageInfo,
                                         const IcmpHeader &aIcmpHeader);
     static ThreadError HandleEchoRequest(Message &aMessage, const MessageInfo &aMessageInfo);
     static ThreadError HandleEchoReply(Message &aMessage, const MessageInfo &aMessageInfo,
                                        const IcmpHeader &aIcmpHeader);
+
+    static bool sIsEchoEnabled;
 };
 
 /**

@@ -223,11 +223,11 @@ AC_PROG_LN_S
 #   -Wall                        CC, CXX
 #
 
-PROSPECTIVE_CFLAGS="-Wall"
-PROSPECTIVE_CXXFLAGS=""
+PROSPECTIVE_CFLAGS="-Wall -std=c99 -pedantic-errors"
+PROSPECTIVE_CXXFLAGS="-Wall"
 
 AX_CHECK_COMPILER_OPTIONS([C],   ${PROSPECTIVE_CFLAGS})
-AX_CHECK_COMPILER_OPTIONS([C++], ${PROSPECTIVE_CFLAGS} ${PROSPECTIVE_CXXFLAGS})
+AX_CHECK_COMPILER_OPTIONS([C++], ${PROSPECTIVE_CXXFLAGS})
 
 # Check for and initialize libtool
 
@@ -268,9 +268,10 @@ AM_CONDITIONAL([OPENTHREAD_BUILD_OPTIMIZED], [test "${nl_cv_build_optimized}" = 
 # Code style
 #
 
-AC_CHECK_TOOL(ASTYLE, astyle)
-AC_SUBST(ASTYLE_PRETTY_ARGS, ["--options=\${abs_top_builddir}/.astyle-opts"])
-AC_SUBST(ASTYLE_PRETTY_CHECK_ARGS, ["--options=\${abs_top_builddir}/.astyle-opts --dry-run"])
+AC_SUBST(PRETTY, ["\${abs_top_srcdir}/.astyle/astyle-wrap.sh"])
+AC_SUBST(PRETTY_ARGS, ["astyle --options=\${abs_top_builddir}/.astyle/astyle-opts"])
+AC_SUBST(PRETTY_CHECK, ["\${abs_top_srcdir}/.astyle/astyle-wrap.sh"])
+AC_SUBST(PRETTY_CHECK_ARGS, ["astyle --options=\${abs_top_builddir}/.astyle/astyle-opts --dry-run"])
 
 #
 # Tests
@@ -415,6 +416,7 @@ esac
 AC_MSG_RESULT(${OPENTHREAD_EXAMPLES})
 
 AC_SUBST(OPENTHREAD_EXAMPLES)
+AM_CONDITIONAL([OPENTHREAD_EXAMPLES], [test ${with_examples} != "none"])
 AC_DEFINE_UNQUOTED([OPENTHREAD_EXAMPLES],[${OPENTHREAD_EXAMPLES}],[OpenThread examples])
 
 AC_SUBST(OPENTHREAD_EXAMPLES_POSIX)
@@ -534,21 +536,13 @@ src/core/Makefile
 third_party/Makefile
 third_party/mbedtls/Makefile
 examples/Makefile
-examples/posix/Makefile
-examples/posix/app/Makefile
-examples/posix/app/cli/Makefile
-examples/posix/app/ncp/Makefile
-examples/posix/platform/Makefile
-examples/cc2538/Makefile
-examples/cc2538/app/Makefile
-examples/cc2538/app/cli/Makefile
-examples/cc2538/app/ncp/Makefile
-examples/cc2538/platform/Makefile
-examples/cc2650/Makefile
-examples/cc2650/app/Makefile
-examples/cc2650/app/cli/Makefile
-examples/cc2650/app/ncp/Makefile
-examples/cc2650/platform/Makefile
+examples/apps/Makefile
+examples/apps/cli/Makefile
+examples/apps/ncp/Makefile
+examples/platforms/Makefile
+examples/platforms/cc2538/Makefile
+examples/platforms/cc2650/Makefile
+examples/platforms/posix/Makefile
 tests/Makefile
 tests/scripts/Makefile
 tests/unit/Makefile
@@ -605,9 +599,10 @@ AC_MSG_NOTICE([
   C++ Compile flags                         : ${CXXFLAGS:--}
   Link flags                                : ${LDFLAGS:--}
   Link libraries                            : ${LIBS}
-  Astyle                                    : ${ASTYLE}
-  Astyle pretty args                        : ${ASTYLE_PRETTY_ARGS}
-  Astyle pretty check args                  : ${ASTYLE_PRETTY_CHECK_ARGS}
+  Pretty                                    : ${PRETTY:--}
+  Pretty args                               : ${PRETTY_ARGS:--}
+  Pretty check                              : ${PRETTY_CHECK:--}
+  Pretty check args                         : ${PRETTY_CHECK_ARGS:--}
   OpenThread CLI support                    : ${enable_cli}
   OpenThread NCP support                    : ${enable_ncp}
   OpenThread examples                       : ${OPENTHREAD_EXAMPLES}

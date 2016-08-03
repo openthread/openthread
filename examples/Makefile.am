@@ -31,31 +31,24 @@ include $(abs_top_nlbuild_autotools_dir)/automake/pre.am
 # Always package (e.g. for 'make dist') these subdirectories.
 
 DIST_SUBDIRS                            = \
-    posix                                 \
-    cc2538                                \
-    cc2650                                \
+    platforms                             \
+    apps                                  \
     $(NULL)
 
 # Always build (e.g. for 'make all') these subdirectories.
 
-if OPENTHREAD_EXAMPLES_POSIX
-SUBDIRS                                 = posix
-endif
-
-if OPENTHREAD_EXAMPLES_CC2538
-SUBDIRS                                 = cc2538
-endif
-
-if OPENTHREAD_EXAMPLES_CC2650
-SUBDIRS                                 = cc2650
+if OPENTHREAD_EXAMPLES
+SUBDIRS                                 = \
+    platforms                             \
+    apps                                  \
+    $(NULL)
 endif
 
 # Always pretty (e.g. for 'make pretty') these subdirectories.
 
 PRETTY_SUBDIRS                          = \
-    posix                                 \
-    cc2538                                \
-    cc2650                                \
+    platforms                             \
+    apps                                  \
     $(NULL)
 
 include $(abs_top_nlbuild_autotools_dir)/automake/post.am

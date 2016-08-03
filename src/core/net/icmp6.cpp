@@ -45,6 +45,8 @@ using Thread::Encoding::BigEndian::HostSwap16;
 namespace Thread {
 namespace Ip6 {
 
+bool Icmp::sIsEchoEnabled = true;
+
 uint16_t IcmpEcho::sNextId = 1;
 IcmpEcho *IcmpEcho::sEchoClients = NULL;
 IcmpHandler *IcmpHandler::sHandlers = NULL;
@@ -205,7 +207,7 @@ ThreadError Icmp::HandleEchoRequest(Message &aRequestMessage, const MessageInfo 
     MessageInfo replyMessageInfo;
     uint16_t payloadLength;
 
-    payloadLength = aRequestMessage.GetLength() - aRequestMessage.GetOffset() - IcmpHeader::GetDataOffset();
+    VerifyOrExit(sIsEchoEnabled, ;);
 
     otLogInfoIcmp("Received Echo Request\n");
 
@@ -213,6 +215,7 @@ ThreadError Icmp::HandleEchoRequest(Message &aRequestMessage, const MessageInfo 
     icmp6Header.SetType(IcmpHeader::kTypeEchoReply);
 
     VerifyOrExit((replyMessage = Ip6::NewMessage(0)) != NULL, otLogDebgIcmp("icmp fail\n"));
+    payloadLength = aRequestMessage.GetLength() - aRequestMessage.GetOffset() - IcmpHeader::GetDataOffset();
     SuccessOrExit(replyMessage->SetLength(IcmpHeader::GetDataOffset() + payloadLength));
 
     replyMessage->Write(0, IcmpHeader::GetDataOffset(), &icmp6Header);
@@ -244,18 +247,19 @@ exit:
 }
 
 ThreadError Icmp::HandleEchoReply(Message &aMessage, const MessageInfo &aMessageInfo,
-                                  const IcmpHeader &aIcmpheader)
+                                  const IcmpHeader &aIcmpHeader)
 {
-    uint16_t id = aIcmpheader.GetId();
+    VerifyOrExit(sIsEchoEnabled, ;);
 
     for (IcmpEcho *client = IcmpEcho::sEchoClients; client; client = client->mNext)
     {
-        if (client->mId == id)
+        if (client->mId == aIcmpHeader.GetId())
         {
             client->HandleEchoReply(aMessage, aMessageInfo);
         }
     }
 
+exit:
     return kThreadError_None;
 }
 
@@ -272,6 +276,16 @@ ThreadError Icmp::UpdateChecksum(Message &aMessage, uint16_t aChecksum)
     aChecksum = HostSwap16(aChecksum);
     aMessage.Write(aMessage.GetOffset() + IcmpHeader::GetChecksumOffset(), sizeof(aChecksum), &aChecksum);
     return kThreadError_None;
+}
+
+bool Icmp::IsEchoEnabled(void)
+{
+    return sIsEchoEnabled;
+}
+
+void Icmp::SetEchoEnabled(bool aEnabled)
+{
+    sIsEchoEnabled = aEnabled;
 }
 
 }  // namespace Ip6

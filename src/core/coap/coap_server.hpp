@@ -80,6 +80,7 @@ public:
         mUriPath = aUriPath;
         mHandler = aHandler;
         mContext = aContext;
+        mNext = NULL;
     }
 
 private:
