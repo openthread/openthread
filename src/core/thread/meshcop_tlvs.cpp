@@ -28,58 +28,46 @@
 
 /**
  * @file
- *   This file implements common methods for manipulating MLE TLVs.
+ *   This file implements common MeshCoP TLV processing.
  */
 
 #include <common/code_utils.hpp>
-#include <common/message.hpp>
-#include <thread/mle_tlvs.hpp>
+#include <thread/meshcop_tlvs.hpp>
 
 namespace Thread {
-namespace Mle {
+namespace MeshCoP {
 
-ThreadError Tlv::GetTlv(const Message &aMessage, Type aType, uint16_t aMaxLength, Tlv &aTlv)
+int Timestamp::Compare(const Timestamp &aCompare) const
 {
-    ThreadError error = kThreadError_Parse;
-    uint16_t offset;
+    uint64_t thisSeconds = GetSeconds();
+    uint64_t compareSeconds = aCompare.GetSeconds();
+    uint16_t thisTicks = GetTicks();
+    uint16_t compareTicks = aCompare.GetTicks();
+    int rval;
 
-    SuccessOrExit(error = GetOffset(aMessage, aType, offset));
-    aMessage.Read(offset, sizeof(Tlv), &aTlv);
-
-    if (aMaxLength > sizeof(aTlv) + aTlv.GetLength())
+    if (compareSeconds > thisSeconds)
     {
-        aMaxLength = sizeof(aTlv) + aTlv.GetLength();
+        rval = 1;
+    }
+    else if (compareSeconds < thisSeconds)
+    {
+        rval = -1;
+    }
+    else if (compareTicks > thisTicks)
+    {
+        rval = 1;
+    }
+    else if (compareTicks < thisTicks)
+    {
+        rval = -1;
+    }
+    else
+    {
+        rval = 0;
     }
 
-    aMessage.Read(offset, aMaxLength, &aTlv);
-
-exit:
-    return error;
+    return rval;
 }
 
-ThreadError Tlv::GetOffset(const Message &aMessage, Type aType, uint16_t &aOffset)
-{
-    ThreadError error = kThreadError_Parse;
-    uint16_t offset = aMessage.GetOffset();
-    uint16_t end = aMessage.GetLength();
-    Tlv tlv;
-
-    while (offset < end)
-    {
-        aMessage.Read(offset, sizeof(Tlv), &tlv);
-
-        if (tlv.GetType() == aType && (offset + sizeof(tlv) + tlv.GetLength()) <= end)
-        {
-            aOffset = offset;
-            ExitNow(error = kThreadError_None);
-        }
-
-        offset += sizeof(tlv) + tlv.GetLength();
-    }
-
-exit:
-    return error;
-}
-
-}  // namespace Mle
+}  // namespace MeshCoP
 }  // namespace Thread

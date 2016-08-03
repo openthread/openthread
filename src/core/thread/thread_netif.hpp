@@ -40,6 +40,7 @@
 #include <net/netif.hpp>
 #include <thread/address_resolver.hpp>
 #include <thread/key_manager.hpp>
+#include <thread/meshcop_dataset_manager.hpp>
 #include <thread/mesh_forwarder.hpp>
 #include <thread/mle.hpp>
 #include <thread/mle_router.hpp>
@@ -205,9 +206,15 @@ public:
      */
     NetworkData::Leader &GetNetworkDataLeader(void) { return mNetworkDataLeader; }
 
+    MeshCoP::ActiveDataset &GetActiveDataset(void) { return mActiveDataset; }
+
+    MeshCoP::PendingDataset &GetPendingDataset(void) { return mPendingDataset; }
+
 private:
     Coap::Server mCoapServer;
     AddressResolver mAddressResolver;
+    MeshCoP::ActiveDataset mActiveDataset;
+    MeshCoP::PendingDataset mPendingDataset;
     Ip6::Filter mIp6Filter;
     KeyManager mKeyManager;
     Lowpan::Lowpan mLowpan;

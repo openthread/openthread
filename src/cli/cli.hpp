@@ -78,6 +78,9 @@ public:
      */
     static void ProcessLine(char *aBuf, uint16_t aBufLength, Server &aServer);
 
+    static ThreadError ParseLong(char *argv, long &value);
+    static int Hex2Bin(const char *aHex, uint8_t *aBin, uint16_t aBinLength);
+
 private:
     enum
     {
@@ -93,6 +96,7 @@ private:
     static void ProcessChildTimeout(int argc, char *argv[]);
     static void ProcessContextIdReuseDelay(int argc, char *argv[]);
     static void ProcessCounters(int argc, char *argv[]);
+    static void ProcessDataset(int argc, char *argv[]);
     static void ProcessDiscover(int argc, char *argv[]);
     static void ProcessEidCache(int argc, char *argv[]);
     static void ProcessExtAddress(int argc, char *argv[]);
@@ -130,8 +134,6 @@ private:
     static void HandleEchoResponse(void *aContext, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
     static void HandlePingTimer(void *aContext);
     static void HandleActiveScanResult(otActiveScanResult *aResult);
-    static int Hex2Bin(const char *aHex, uint8_t *aBin, uint16_t aBinLength);
-    static ThreadError ParseLong(char *argv, long &value);
 
     static const struct Command sCommands[];
     static otNetifAddress sAddress;

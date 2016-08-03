@@ -404,6 +404,8 @@ private:
     ThreadError AppendConnectivity(Message &aMessage);
     ThreadError AppendChildAddresses(Message &aMessage, Child &aChild);
     ThreadError AppendRoute(Message &aMessage);
+    ThreadError AppendActiveDataset(Message &aMessage);
+    ThreadError AppendPendingDataset(Message &aMessage);
     uint8_t GetLinkCost(uint8_t aRouterId);
     void GetChildInfo(Child &aChild, otChildInfo &aChildInfo);
     ThreadError HandleDetachStart(void);
@@ -420,6 +422,7 @@ private:
     ThreadError HandleChildIdRequest(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo,
                                      uint32_t aKeySequence);
     ThreadError HandleChildUpdateRequest(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    ThreadError HandleDataRequest(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
     ThreadError HandleNetworkDataUpdateRouter(void);
     bool IsSingleton(void);
 
@@ -437,6 +440,8 @@ private:
     ThreadError SendChildIdResponse(Child *aChild);
     ThreadError SendChildUpdateResponse(Child *aChild, const Ip6::MessageInfo &aMessageInfo,
                                         const uint8_t *aTlvs, uint8_t aTlvsLength,  const ChallengeTlv *challenge);
+    ThreadError SendDataResponse(const Ip6::Address &aDestination, const uint8_t *aTlvs, uint8_t aTlvsLength);
+
     ThreadError SetStateRouter(uint16_t aRloc16);
     ThreadError SetStateLeader(uint16_t aRloc16);
     ThreadError UpdateChildAddresses(const AddressRegistrationTlv &aTlv, Child &aChild);

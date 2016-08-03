@@ -86,9 +86,25 @@ uint8_t Leader::GetVersion(void) const
     return mVersion;
 }
 
+void Leader::IncrementVersion(void)
+{
+    if (mMle.GetDeviceState() == Mle::kDeviceStateLeader)
+    {
+        mVersion++;
+    }
+}
+
 uint8_t Leader::GetStableVersion(void) const
 {
     return mStableVersion;
+}
+
+void Leader::IncrementStableVersion(void)
+{
+    if (mMle.GetDeviceState() == Mle::kDeviceStateLeader)
+    {
+        mStableVersion++;
+    }
 }
 
 uint32_t Leader::GetContextIdReuseDelay(void) const
