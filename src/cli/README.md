@@ -236,6 +236,16 @@ Bring down the IPv6 interface.
 Done
 ```
 
+### ifconfig
+
+Show the status of the IPv6 interface.
+
+```bash
+> ifconfig
+down
+Done
+```
+
 ### ipaddr
 
 List all IPv6 addresses assigned to the Thread interface.
