@@ -430,7 +430,7 @@ exit:
 
 void Interpreter::ProcessIfconfig(int argc, char *argv[])
 {
-    ThreadError error = kThreadError_Parse;
+    ThreadError error = kThreadError_None;
 
     if (argc == 0)
     {
