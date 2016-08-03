@@ -923,6 +923,7 @@ void MeshForwarder::HandleSentFrame(Mac::Frame &aFrame)
 {
     Mac::Address macDest;
     Child *child;
+    Neighbor *neighbor;
 
     mSendBusy = false;
 
@@ -960,6 +961,17 @@ void MeshForwarder::HandleSentFrame(Mac::Frame &aFrame)
         {
             mSendMessage->ClearDirectTransmission();
             mSendMessage->SetOffset(0);
+        }
+    }
+
+    if (mSendMessage->GetType() == Message::kTypeMacDataPoll)
+    {
+        neighbor = mMle.GetParent();
+
+        if (neighbor->mState == Neighbor::kStateInvalid)
+        {
+            mPollTimer.Stop();
+            mMle.BecomeDetached();
         }
     }
 
