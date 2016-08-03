@@ -79,12 +79,13 @@ private:
     static void HandleSendDone(void *context);
     void HandleSendDone(void);
 
+    bool mSending;
+
     bool mHandlingRxFrame;
     Tasklet mHandleRxFrame;
 
     bool mHandlingSendDone;
     Tasklet mHandleSendDone;
-
 
     uint8_t mEmptySendFrame[SPI_HEADER_LENGTH];
     uint8_t mEmptyReceiveFrame[SPI_HEADER_LENGTH];
