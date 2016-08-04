@@ -39,6 +39,7 @@
 #include <openthread-config.h>
 
 #include "cli.hpp"
+#include "cli_dataset.hpp"
 #include <common/encoding.hpp>
 #include <platform/uart.h>
 
@@ -56,6 +57,7 @@ const struct Command Interpreter::sCommands[] =
     { "childtimeout", &ProcessChildTimeout },
     { "contextreusedelay", &ProcessContextIdReuseDelay },
     { "counter", &ProcessCounters },
+    { "dataset", &ProcessDataset },
     { "discover", &ProcessDiscover },
     { "eidcache", &ProcessEidCache },
     { "extaddr", &ProcessExtAddress },
@@ -352,6 +354,13 @@ void Interpreter::ProcessCounters(int argc, char *argv[])
             sServer->OutputFormat("    RxErrOther: %d\r\n", counters->mRxErrOther);
         }
     }
+}
+
+void Interpreter::ProcessDataset(int argc, char *argv[])
+{
+    ThreadError error;
+    error = Dataset::Process(argc, argv, *sServer);
+    AppendResult(error);
 }
 
 void Interpreter::ProcessDiscover(int argc, char *argv[])

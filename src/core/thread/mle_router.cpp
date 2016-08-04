@@ -359,6 +359,8 @@ ThreadError MleRouter::SetStateLeader(uint16_t aRloc16)
     mRouters[mRouterId].mLastHeard = Timer::GetNow();
 
     mNetworkData.Start();
+    mNetif.GetActiveDataset().ApplyLocalToNetwork();
+    mNetif.GetPendingDataset().ApplyLocalToNetwork();
     mCoapServer.AddResource(mAddressSolicit);
     mCoapServer.AddResource(mAddressRelease);
 
@@ -1734,7 +1736,10 @@ ThreadError MleRouter::HandleChildIdRequest(const Message &aMessage, const Ip6::
     TimeoutTlv timeout;
     AddressRegistrationTlv address;
     TlvRequestTlv tlvRequest;
+    ActiveTimestampTlv activeTimestamp;
+    PendingTimestampTlv pendingTimestamp;
     Child *child;
+    uint8_t numTlvs;
 
     otLogInfoMle("Received Child ID Request\n");
 
@@ -1783,7 +1788,24 @@ ThreadError MleRouter::HandleChildIdRequest(const Message &aMessage, const Ip6::
 
     // TLV Request
     SuccessOrExit(error = Tlv::GetTlv(aMessage, Tlv::kTlvRequest, sizeof(tlvRequest), tlvRequest));
-    VerifyOrExit(tlvRequest.IsValid(), error = kThreadError_Parse);
+    VerifyOrExit(tlvRequest.IsValid() && tlvRequest.GetLength() <= sizeof(child->mRequestTlvs),
+                 error = kThreadError_Parse);
+
+    // Active Timestamp
+    activeTimestamp.SetLength(0);
+
+    if (Tlv::GetTlv(aMessage, Tlv::kActiveTimestamp, sizeof(activeTimestamp), activeTimestamp) == kThreadError_None)
+    {
+        VerifyOrExit(activeTimestamp.IsValid(), error = kThreadError_Parse);
+    }
+
+    // Pending Timestamp
+    pendingTimestamp.SetLength(0);
+
+    if (Tlv::GetTlv(aMessage, Tlv::kPendingTimestamp, sizeof(pendingTimestamp), pendingTimestamp) == kThreadError_None)
+    {
+        VerifyOrExit(pendingTimestamp.IsValid(), error = kThreadError_Parse);
+    }
 
     // Remove from router table
     for (int i = 0; i < kMaxRouterId; i++)
@@ -1816,14 +1838,20 @@ ThreadError MleRouter::HandleChildIdRequest(const Message &aMessage, const Ip6::
 
     UpdateChildAddresses(address, *child);
 
-    for (uint8_t i = 0; i < tlvRequest.GetLength(); i++)
+    memset(child->mRequestTlvs, Tlv::kInvalid, sizeof(child->mRequestTlvs));
+    memcpy(child->mRequestTlvs, tlvRequest.GetTlvs(), tlvRequest.GetLength());
+    numTlvs = tlvRequest.GetLength();
+
+    if (activeTimestamp.GetLength() == 0 ||
+        mNetif.GetActiveDataset().GetNetwork().GetTimestamp().Compare(activeTimestamp) != 0)
     {
-        child->mRequestTlvs[i] = tlvRequest.GetTlvs()[i];
+        child->mRequestTlvs[numTlvs++] = Tlv::kActiveDataset;
     }
 
-    for (uint8_t i = tlvRequest.GetLength(); i < sizeof(child->mRequestTlvs); i++)
+    if (pendingTimestamp.GetLength() == 0 ||
+        mNetif.GetPendingDataset().GetNetwork().GetTimestamp().Compare(pendingTimestamp) != 0)
     {
-        child->mRequestTlvs[i] = Tlv::kInvalid;
+        child->mRequestTlvs[numTlvs++] = Tlv::kPendingDataset;
     }
 
     switch (GetDeviceState())
@@ -1929,6 +1957,54 @@ exit:
     return error;
 }
 
+ThreadError MleRouter::HandleDataRequest(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
+{
+    ThreadError error = kThreadError_None;
+    TlvRequestTlv tlvRequest;
+    ActiveTimestampTlv activeTimestamp;
+    PendingTimestampTlv pendingTimestamp;
+    uint8_t tlvs[4];
+    uint8_t numTlvs;
+
+    otLogInfoMle("Received Data Request\n");
+
+    // TLV Request
+    SuccessOrExit(error = Tlv::GetTlv(aMessage, Tlv::kTlvRequest, sizeof(tlvRequest), tlvRequest));
+    VerifyOrExit(tlvRequest.IsValid() && tlvRequest.GetLength() <= sizeof(tlvs), error = kThreadError_Parse);
+
+    // Active Timestamp
+    SuccessOrExit(error = Tlv::GetTlv(aMessage, Tlv::kActiveTimestamp, sizeof(activeTimestamp), activeTimestamp));
+    VerifyOrExit(activeTimestamp.IsValid(), error = kThreadError_Parse);
+
+    // Pending Timestamp
+    pendingTimestamp.SetLength(0);
+
+    if (Tlv::GetTlv(aMessage, Tlv::kPendingTimestamp, sizeof(pendingTimestamp), pendingTimestamp) == kThreadError_None)
+    {
+        VerifyOrExit(pendingTimestamp.IsValid(), error = kThreadError_Parse);
+    }
+
+    memset(tlvs, Tlv::kInvalid, sizeof(tlvs));
+    memcpy(tlvs, tlvRequest.GetTlvs(), tlvRequest.GetLength());
+    numTlvs = tlvRequest.GetLength();
+
+    if (mNetif.GetActiveDataset().GetNetwork().GetTimestamp().Compare(activeTimestamp) != 0)
+    {
+        tlvs[numTlvs++] = Tlv::kActiveDataset;
+    }
+
+    if (pendingTimestamp.GetLength() == 0 ||
+        mNetif.GetPendingDataset().GetNetwork().GetTimestamp().Compare(pendingTimestamp) != 0)
+    {
+        tlvs[numTlvs++] = Tlv::kPendingDataset;
+    }
+
+    SendDataResponse(aMessageInfo.GetPeerAddr(), tlvs, numTlvs);
+
+exit:
+    return error;
+}
+
 ThreadError MleRouter::HandleNetworkDataUpdateRouter(void)
 {
     static const uint8_t tlvs[] = {Tlv::kLeaderData, Tlv::kNetworkData};
@@ -1985,6 +2061,14 @@ ThreadError MleRouter::SendChildIdResponse(Child *aChild)
 
         case Tlv::kRoute:
             SuccessOrExit(error = AppendRoute(*message));
+            break;
+
+        case Tlv::kActiveDataset:
+            SuccessOrExit(error = AppendActiveDataset(*message));
+            break;
+
+        case Tlv::kPendingDataset:
+            SuccessOrExit(error = AppendPendingDataset(*message));
             break;
         }
     }
@@ -2071,6 +2155,55 @@ exit:
     }
 
     return kThreadError_None;
+}
+
+ThreadError MleRouter::SendDataResponse(const Ip6::Address &aDestination, const uint8_t *aTlvs, uint8_t aTlvsLength)
+{
+    ThreadError error = kThreadError_None;
+    Message *message;
+    Neighbor *neighbor;
+    bool stableOnly;
+
+    VerifyOrExit((message = Ip6::Udp::NewMessage(0)) != NULL, ;);
+    message->SetLinkSecurityEnabled(false);
+    SuccessOrExit(error = AppendHeader(*message, Header::kCommandDataResponse));
+    SuccessOrExit(error = AppendSourceAddress(*message));
+    SuccessOrExit(error = AppendLeaderData(*message));
+    SuccessOrExit(error = AppendActiveTimestamp(*message));
+    SuccessOrExit(error = AppendPendingTimestamp(*message));
+
+    for (int i = 0; i < aTlvsLength; i++)
+    {
+        switch (aTlvs[i])
+        {
+        case Tlv::kNetworkData:
+            neighbor = mMleRouter.GetNeighbor(aDestination);
+            stableOnly = neighbor != NULL ? (neighbor->mMode & ModeTlv::kModeFullNetworkData) == 0 : false;
+            SuccessOrExit(error = AppendNetworkData(*message, stableOnly));
+            break;
+
+        case Tlv::kActiveDataset:
+            SuccessOrExit(error = AppendActiveDataset(*message));
+            break;
+
+        case Tlv::kPendingDataset:
+            SuccessOrExit(error = AppendPendingDataset(*message));
+            break;
+        }
+    }
+
+    SuccessOrExit(error = SendMessage(*message, aDestination));
+
+    otLogInfoMle("Sent Data Response\n");
+
+exit:
+
+    if (error != kThreadError_None && message != NULL)
+    {
+        Message::Free(*message);
+    }
+
+    return error;
 }
 
 Child *MleRouter::GetChild(uint16_t aAddress)
@@ -3172,6 +3305,39 @@ ThreadError MleRouter::AppendRoute(Message &aMessage)
 
     tlv.SetRouteDataLength(routeCount);
     SuccessOrExit(error = aMessage.Append(&tlv, sizeof(Tlv) + tlv.GetLength()));
+
+exit:
+    return error;
+}
+
+ThreadError MleRouter::AppendActiveDataset(Message &aMessage)
+{
+    ThreadError error = kThreadError_None;
+    Tlv tlv;
+
+    SuccessOrExit(error = AppendActiveTimestamp(aMessage));
+
+    tlv.SetType(Tlv::kActiveDataset);
+    tlv.SetLength(mNetif.GetActiveDataset().GetNetwork().GetSize());
+    SuccessOrExit(error = aMessage.Append(&tlv, sizeof(tlv)));
+    SuccessOrExit(error = aMessage.Append(mNetif.GetActiveDataset().GetNetwork().GetBytes(), tlv.GetLength()));
+
+exit:
+    return error;
+}
+
+ThreadError MleRouter::AppendPendingDataset(Message &aMessage)
+{
+    ThreadError error = kThreadError_None;
+    Tlv tlv;
+
+    SuccessOrExit(error = AppendPendingTimestamp(aMessage));
+
+    tlv.SetType(Tlv::kPendingDataset);
+    tlv.SetLength(mNetif.GetPendingDataset().GetNetwork().GetSize());
+    SuccessOrExit(error = aMessage.Append(&tlv, sizeof(tlv)));
+    mNetif.GetPendingDataset().UpdateDelayTimer();
+    SuccessOrExit(error = aMessage.Append(mNetif.GetPendingDataset().GetNetwork().GetBytes(), tlv.GetLength()));
 
 exit:
     return error;

@@ -447,6 +447,15 @@ public:
     ThreadError BecomeChild(otMleAttachFilter aFilter);
 
     /**
+     * This method indicates whether or not the Thread device is attached to a Thread network.
+     *
+     * @retval TRUE   Attached to a Thread network.
+     * @retval FALSE  Not attached to a Thread network.
+     *
+     */
+    bool IsAttached(void) const;
+
+    /**
      * This method returns the current Thread interface state.
      *
      * @returns The current Thread interface state.
@@ -858,6 +867,28 @@ protected:
     ThreadError AppendAddressRegistration(Message &aMessage);
 
     /**
+     * This method appends a Active Timestamp TLV to a message.
+     *
+     * @param[in]  aMessage  A reference to the message.
+     *
+     * @retval kThreadError_None    Successfully appended the Active Timestamp TLV.
+     * @retval kThreadError_NoBufs  Insufficient buffers available to append the Active Timestamp TLV.
+     *
+     */
+    ThreadError AppendActiveTimestamp(Message &aMessage);
+
+    /**
+     * This method appends a Pending Timestamp TLV to a message.
+     *
+     * @param[in]  aMessage  A reference to the message.
+     *
+     * @retval kThreadError_None    Successfully appended the Pending Timestamp TLV.
+     * @retval kThreadError_NoBufs  Insufficient buffers available to append the Pending Timestamp TLV.
+     *
+     */
+    ThreadError AppendPendingTimestamp(Message &aMessage);
+
+    /**
      * This method appends a Thread Discovery TLV to a message.
      *
      * @param[in]  aMessage  A reference to the message.
@@ -943,19 +974,6 @@ protected:
      *
      */
     ThreadError SendDataRequest(const Ip6::Address &aDestination, const uint8_t *aTlvs, uint8_t aTlvsLength);
-
-    /**
-     * This method generates an MLE Data Response message.
-     *
-     * @param[in]  aDestination  A reference to the IPv6 address of the destination.
-     * @param[in]  aTlvs         A pointer to TLV types that should be included.
-     * @param[in]  aTlvsLength   The number of TLV types in @p aTlvs.
-     *
-     * @retval kThreadError_None    Successfully generated an MLE Data Response message.
-     * @retval kThreadError_NoBufs  Insufficient buffers to generate the MLE Data Response message.
-     *
-     */
-    ThreadError SendDataResponse(const Ip6::Address &aDestination, const uint8_t *aTlvs, uint8_t aTlvsLength);
 
     /**
      * This method generates an MLE Child Update Request message.
@@ -1065,7 +1083,6 @@ private:
     ThreadError HandleAdvertisement(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
     ThreadError HandleChildIdResponse(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
     ThreadError HandleChildUpdateResponse(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
-    ThreadError HandleDataRequest(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
     ThreadError HandleDataResponse(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
     ThreadError HandleParentResponse(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo,
                                      uint32_t aKeySequence);

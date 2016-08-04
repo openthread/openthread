@@ -301,6 +301,13 @@ exit:
     return error;
 }
 
+bool Mle::IsAttached(void) const
+{
+    return (mDeviceState == kDeviceStateChild ||
+            mDeviceState == kDeviceStateRouter ||
+            mDeviceState == kDeviceStateLeader);
+}
+
 DeviceState Mle::GetDeviceState(void) const
 {
     return mDeviceState;
@@ -830,6 +837,38 @@ exit:
     return error;
 }
 
+ThreadError Mle::AppendActiveTimestamp(Message &aMessage)
+{
+    ThreadError error;
+    ActiveTimestampTlv timestampTlv;
+    const MeshCoP::Timestamp &timestamp(mNetif.GetActiveDataset().GetNetwork().GetTimestamp());
+
+    VerifyOrExit(timestamp.GetSeconds() != 0, error = kThreadError_None);
+
+    timestampTlv.Init();
+    *static_cast<MeshCoP::Timestamp *>(&timestampTlv) = timestamp;
+    error = aMessage.Append(&timestampTlv, sizeof(timestampTlv));
+
+exit:
+    return error;
+}
+
+ThreadError Mle::AppendPendingTimestamp(Message &aMessage)
+{
+    ThreadError error;
+    PendingTimestampTlv timestampTlv;
+    const MeshCoP::Timestamp &timestamp(mNetif.GetPendingDataset().GetNetwork().GetTimestamp());
+
+    VerifyOrExit(timestamp.GetSeconds() != 0, error = kThreadError_None);
+
+    timestampTlv.Init();
+    *static_cast<MeshCoP::Timestamp *>(&timestampTlv) = timestamp;
+    error = aMessage.Append(&timestampTlv, sizeof(timestampTlv));
+
+exit:
+    return error;
+}
+
 void Mle::HandleNetifStateChanged(uint32_t aFlags, void *aContext)
 {
     Mle *obj = reinterpret_cast<Mle *>(aContext);
@@ -1066,6 +1105,8 @@ ThreadError Mle::SendChildIdRequest(void)
     }
 
     SuccessOrExit(error = AppendTlvRequest(*message, tlvs, sizeof(tlvs)));
+    SuccessOrExit(error = AppendActiveTimestamp(*message));
+    SuccessOrExit(error = AppendPendingTimestamp(*message));
 
     memset(&destination, 0, sizeof(destination));
     destination.mFields.m16[0] = HostSwap16(0xfe80);
@@ -1098,50 +1139,12 @@ ThreadError Mle::SendDataRequest(const Ip6::Address &aDestination, const uint8_t
     message->SetLinkSecurityEnabled(false);
     SuccessOrExit(error = AppendHeader(*message, Header::kCommandDataRequest));
     SuccessOrExit(error = AppendTlvRequest(*message, aTlvs, aTlvsLength));
+    SuccessOrExit(error = AppendActiveTimestamp(*message));
+    SuccessOrExit(error = AppendPendingTimestamp(*message));
 
     SuccessOrExit(error = SendMessage(*message, aDestination));
 
     otLogInfoMle("Sent Data Request\n");
-
-exit:
-
-    if (error != kThreadError_None && message != NULL)
-    {
-        Message::Free(*message);
-    }
-
-    return error;
-}
-
-ThreadError Mle::SendDataResponse(const Ip6::Address &aDestination, const uint8_t *aTlvs, uint8_t aTlvsLength)
-{
-    ThreadError error = kThreadError_None;
-    Message *message;
-    Neighbor *neighbor;
-    bool stableOnly;
-
-    VerifyOrExit((message = Ip6::Udp::NewMessage(0)) != NULL, ;);
-    message->SetLinkSecurityEnabled(false);
-    SuccessOrExit(error = AppendHeader(*message, Header::kCommandDataResponse));
-    SuccessOrExit(error = AppendSourceAddress(*message));
-    SuccessOrExit(error = AppendLeaderData(*message));
-
-    neighbor = mMleRouter.GetNeighbor(aDestination);
-
-    for (int i = 0; i < aTlvsLength; i++)
-    {
-        switch (aTlvs[i])
-        {
-        case Tlv::kNetworkData:
-            stableOnly = neighbor != NULL ? (neighbor->mMode & ModeTlv::kModeFullNetworkData) == 0 : false;
-            SuccessOrExit(error = AppendNetworkData(*message, stableOnly));
-            break;
-        }
-    }
-
-    SuccessOrExit(error = SendMessage(*message, aDestination));
-
-    otLogInfoMle("Sent Data Response\n");
 
 exit:
 
@@ -1486,7 +1489,7 @@ void Mle::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageIn
         break;
 
     case Header::kCommandDataRequest:
-        HandleDataRequest(aMessage, aMessageInfo);
+        mMleRouter.HandleDataRequest(aMessage, aMessageInfo);
         break;
 
     case Header::kCommandDataResponse:
@@ -1599,33 +1602,20 @@ exit:
     return error;
 }
 
-ThreadError Mle::HandleDataRequest(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
-{
-    ThreadError error = kThreadError_None;
-    TlvRequestTlv tlvRequest;
-
-    otLogInfoMle("Received Data Request\n");
-
-    // TLV Request
-    SuccessOrExit(error = Tlv::GetTlv(aMessage, Tlv::kTlvRequest, sizeof(tlvRequest), tlvRequest));
-    VerifyOrExit(tlvRequest.IsValid(), error = kThreadError_Parse);
-
-    SendDataResponse(aMessageInfo.GetPeerAddr(), tlvRequest.GetTlvs(), tlvRequest.GetLength());
-
-exit:
-    return error;
-}
-
 ThreadError Mle::HandleDataResponse(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
     ThreadError error = kThreadError_None;
     LeaderDataTlv leaderData;
     NetworkDataTlv networkData;
+    ActiveTimestampTlv activeTimestamp;
+    PendingTimestampTlv pendingTimestamp;
+    Tlv tlv;
+    uint16_t offset;
     int8_t diff;
 
     otLogInfoMle("Received Data Response\n");
 
-    SuccessOrExit(error = Tlv::GetTlv(aMessage, Tlv::kNetworkData, sizeof(networkData), networkData));
+    // Leader Data
     SuccessOrExit(error = Tlv::GetTlv(aMessage, Tlv::kLeaderData, sizeof(leaderData), leaderData));
     VerifyOrExit(leaderData.IsValid(), error = kThreadError_Parse);
 
@@ -1651,6 +1641,37 @@ ThreadError Mle::HandleDataResponse(const Message &aMessage, const Ip6::MessageI
         VerifyOrExit(diff > 0, ;);
     }
 
+    // Network Data
+    SuccessOrExit(error = Tlv::GetTlv(aMessage, Tlv::kNetworkData, sizeof(networkData), networkData));
+    VerifyOrExit(networkData.IsValid(), error = kThreadError_Parse);
+
+    // Active Timestamp
+    if (Tlv::GetTlv(aMessage, Tlv::kActiveTimestamp, sizeof(activeTimestamp), activeTimestamp) == kThreadError_None)
+    {
+        VerifyOrExit(activeTimestamp.IsValid(), error = kThreadError_Parse);
+
+        // Active Dataset
+        if (Tlv::GetOffset(aMessage, Tlv::kActiveDataset, offset) == kThreadError_None)
+        {
+            aMessage.Read(offset, sizeof(tlv), &tlv);
+            mNetif.GetActiveDataset().Set(activeTimestamp, aMessage, offset + sizeof(tlv), tlv.GetLength());
+        }
+    }
+
+    // Pending Timestamp
+    if (Tlv::GetTlv(aMessage, Tlv::kPendingTimestamp, sizeof(pendingTimestamp), pendingTimestamp) == kThreadError_None)
+    {
+        VerifyOrExit(pendingTimestamp.IsValid(), error = kThreadError_Parse);
+
+        // Pending Dataset
+        if (Tlv::GetOffset(aMessage, Tlv::kPendingDataset, offset) == kThreadError_None)
+        {
+            aMessage.Read(offset, sizeof(tlv), &tlv);
+            mNetif.GetPendingDataset().Set(activeTimestamp, aMessage, offset + sizeof(tlv), tlv.GetLength());
+        }
+    }
+
+    // Network Data
     mNetworkData.SetNetworkData(leaderData.GetDataVersion(), leaderData.GetStableDataVersion(),
                                 (mDeviceMode & ModeTlv::kModeFullNetworkData) == 0,
                                 networkData.GetNetworkData(), networkData.GetLength());
@@ -1833,6 +1854,10 @@ ThreadError Mle::HandleChildIdResponse(const Message &aMessage, const Ip6::Messa
     Address16Tlv shortAddress;
     NetworkDataTlv networkData;
     RouteTlv route;
+    ActiveTimestampTlv activeTimestamp;
+    PendingTimestampTlv pendingTimestamp;
+    Tlv tlv;
+    uint16_t offset;
     uint8_t numRouters = 0;
 
     otLogInfoMle("Received Child ID Response\n");
@@ -1853,6 +1878,32 @@ ThreadError Mle::HandleChildIdResponse(const Message &aMessage, const Ip6::Messa
 
     // Network Data
     SuccessOrExit(error = Tlv::GetTlv(aMessage, Tlv::kNetworkData, sizeof(networkData), networkData));
+
+    // Active Timestamp
+    if (Tlv::GetTlv(aMessage, Tlv::kActiveTimestamp, sizeof(activeTimestamp), activeTimestamp) == kThreadError_None)
+    {
+        VerifyOrExit(activeTimestamp.IsValid(), error = kThreadError_Parse);
+
+        // Active Dataset
+        if (Tlv::GetOffset(aMessage, Tlv::kActiveDataset, offset) == kThreadError_None)
+        {
+            aMessage.Read(offset, sizeof(tlv), &tlv);
+            mNetif.GetActiveDataset().Set(activeTimestamp, aMessage, offset + sizeof(tlv), tlv.GetLength());
+        }
+    }
+
+    // Pending Timestamp
+    if (Tlv::GetTlv(aMessage, Tlv::kPendingTimestamp, sizeof(pendingTimestamp), pendingTimestamp) == kThreadError_None)
+    {
+        VerifyOrExit(pendingTimestamp.IsValid(), error = kThreadError_Parse);
+
+        // Pending Dataset
+        if (Tlv::GetOffset(aMessage, Tlv::kPendingDataset, offset) == kThreadError_None)
+        {
+            aMessage.Read(offset, sizeof(tlv), &tlv);
+            mNetif.GetPendingDataset().Set(pendingTimestamp, aMessage, offset + sizeof(tlv), tlv.GetLength());
+        }
+    }
 
     // Parent Attach Success
     mParentRequestTimer.Stop();
@@ -1875,6 +1926,8 @@ ThreadError Mle::HandleChildIdResponse(const Message &aMessage, const Ip6::Messa
     mNetworkData.SetNetworkData(leaderData.GetDataVersion(), leaderData.GetStableDataVersion(),
                                 (mDeviceMode & ModeTlv::kModeFullNetworkData) == 0,
                                 networkData.GetNetworkData(), networkData.GetLength());
+
+    mNetif.GetActiveDataset().ApplyConfiguration();
 
     // Route
     if ((Tlv::GetTlv(aMessage, Tlv::kRoute, sizeof(route), route) == kThreadError_None) &&

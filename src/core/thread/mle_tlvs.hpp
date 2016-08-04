@@ -40,6 +40,7 @@
 #include <common/encoding.hpp>
 #include <common/message.hpp>
 #include <net/ip6_address.hpp>
+#include <thread/meshcop_tlvs.hpp>
 #include <thread/mle_constants.hpp>
 
 using Thread::Encoding::BigEndian::HostSwap16;
@@ -93,6 +94,10 @@ public:
         kStatus              = 17,   ///< Status TLV
         kVersion             = 18,   ///< Version TLV
         kAddressRegistration = 19,   ///< Address Registration TLV
+        kActiveTimestamp     = 22,   ///< Active Timestamp TLV
+        kPendingTimestamp    = 23,   ///< Pending Timestamp TLV
+        kActiveDataset       = 24,   ///< Active Operational Dataset TLV
+        kPendingDataset      = 25,   ///< Pending Operational Dataset TLV
         kDiscovery           = 26,   ///< Thread Discovery TLV
         kInvalid             = 255,
     };
@@ -140,6 +145,19 @@ public:
      *
      */
     static ThreadError GetTlv(const Message &aMessage, Type aType, uint16_t aMaxLength, Tlv &aTlv);
+
+    /**
+     * This static method obtains the offset of a TLV within @p aMessage.
+     *
+     * @param[in]   aMessage    A reference to the message.
+     * @param[in]   aType       The Type value to search for.
+     * @param[out]  aOffset     A reference to the offset of the TLV.
+     *
+     * @retval kThreadError_None      Successfully copied the TLV.
+     * @retval kThreadError_NotFound  Could not find the TLV with Type @p aType.
+     *
+     */
+    static ThreadError GetOffset(const Message &aMessage, Type aType, uint16_t &aOffset);
 
 private:
     uint8_t mType;
@@ -1427,6 +1445,54 @@ public:
 
 private:
     AddressRegistrationEntry mAddresses[4];
+} OT_TOOL_PACKED_END;
+
+/**
+ * This class implements Active Timestamp TLV generation and parsing.
+ *
+ */
+OT_TOOL_PACKED_BEGIN
+class ActiveTimestampTlv : public Tlv, public MeshCoP::Timestamp
+{
+public:
+    /**
+     * This method initializes the TLV.
+     *
+     */
+    void Init(void) { SetType(Mle::Tlv::kActiveTimestamp); SetLength(sizeof(*this) - sizeof(Tlv)); }
+
+    /**
+     * This method indicates whether or not the TLV appears to be well-formed.
+     *
+     * @retval TRUE   If the TLV appears to be well-formed.
+     * @retval FALSE  If the TLV does not appear to be well-formed.
+     *
+     */
+    bool IsValid(void) const { return GetLength() == sizeof(*this) - sizeof(Tlv); }
+} OT_TOOL_PACKED_END;
+
+/**
+ * This class implements Pending Timestamp TLV generation and parsing.
+ *
+ */
+OT_TOOL_PACKED_BEGIN
+class PendingTimestampTlv : public Tlv, public MeshCoP::Timestamp
+{
+public:
+    /**
+     * This method initializes the TLV.
+     *
+     */
+    void Init(void) { SetType(Mle::Tlv::kPendingTimestamp); SetLength(sizeof(*this) - sizeof(Tlv)); }
+
+    /**
+     * This method indicates whether or not the TLV appears to be well-formed.
+     *
+     * @retval TRUE   If the TLV appears to be well-formed.
+     * @retval FALSE  If the TLV does not appear to be well-formed.
+     *
+     */
+    bool IsValid(void) const { return GetLength() == sizeof(*this) - sizeof(Tlv); }
 } OT_TOOL_PACKED_END;
 
 /**

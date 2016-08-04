@@ -40,6 +40,7 @@
 #include <thread/mle.hpp>
 #include <thread/thread_netif.hpp>
 #include <thread/thread_tlvs.hpp>
+#include <thread/thread_uris.hpp>
 
 using Thread::Encoding::BigEndian::HostSwap16;
 
@@ -56,6 +57,8 @@ static const char name[] = "thread";
 ThreadNetif::ThreadNetif(void):
     mCoapServer(kCoapUdpPort),
     mAddressResolver(*this),
+    mActiveDataset(*this),
+    mPendingDataset(*this),
     mKeyManager(*this),
     mLowpan(*this),
     mMac(*this),
