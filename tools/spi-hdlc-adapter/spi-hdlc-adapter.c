@@ -112,7 +112,7 @@ static const char* sSpiDevPath     = NULL;
 static const char* sIntGpioDevPath = NULL;
 static const char* sResGpioDevPath = NULL;
 
-static int sVerbose             = LOG_WARNING;
+static int sVerbose             = LOG_NOTICE;
 
 static int sSpiDevFd            = -1;
 static int sResGpioValueFd      = -1;
@@ -759,7 +759,7 @@ static int pull_hdlc(void)
                 }
                 else if (fcs != kHdlcCrcCheckValue)
                 {
-                    syslog(LOG_WARNING, "HDLC frame with bad CRC");
+                    syslog(LOG_WARNING, "HDLC frame with bad CRC (LEN:%d, FCS:0x%04X)", sSpiTxPayloadSize, fcs);
                     unescape_next_byte = false;
                     sSpiTxPayloadSize = 0;
                     fcs = kHdlcCrcResetValue;
@@ -793,6 +793,7 @@ static int pull_hdlc(void)
             else if (unescape_next_byte)
             {
                 byte = byte ^ HDLC_ESCAPE_XFORM;
+                unescape_next_byte = false;
             }
 
             fcs = hdlc_crc16(fcs, byte);
