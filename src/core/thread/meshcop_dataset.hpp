@@ -86,6 +86,12 @@ public:
     const uint8_t *GetBytes(void) const { return mTlvs; }
 
     /**
+     * This method converts the TLV representation to structure representation.
+     *
+     */
+    void Get(otOperationalDataset &aDataset);
+
+    /**
      * This method returns the Dataset size in bytes.
      *
      * @returns The Dataset size in bytes.
@@ -119,6 +125,8 @@ public:
     ThreadError Set(const Tlv &aTlv);
 
     ThreadError Set(const Message &aMessage, uint16_t aOffset, uint16_t aLength);
+
+    ThreadError Set(const otOperationalDataset &aDataset, bool aActive);
 
     void Remove(Tlv::Type aType);
 

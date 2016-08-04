@@ -925,6 +925,54 @@ void otSetIcmpEchoEnabled(bool aEnabled)
     Ip6::Icmp::SetEchoEnabled(aEnabled);
 }
 
+ThreadError otGetActiveDataset(otOperationalDataset *aDataset)
+{
+    ThreadError error = kThreadError_None;
+
+    VerifyOrExit(aDataset != NULL, error = kThreadError_InvalidArgs);
+
+    sThreadNetif->GetActiveDataset().Get(*aDataset);
+
+exit:
+    return error;
+}
+
+ThreadError otSetActiveDataset(otOperationalDataset *aDataset)
+{
+    ThreadError error;
+
+    VerifyOrExit(aDataset != NULL, error = kThreadError_InvalidArgs);
+
+    error = sThreadNetif->GetActiveDataset().Set(*aDataset);
+
+exit:
+    return error;
+}
+
+ThreadError otGetPendingDataset(otOperationalDataset *aDataset)
+{
+    ThreadError error = kThreadError_None;
+
+    VerifyOrExit(aDataset != NULL, error = kThreadError_InvalidArgs);
+
+    sThreadNetif->GetPendingDataset().Get(*aDataset);
+
+exit:
+    return error;
+}
+
+ThreadError otSetPendingDataset(otOperationalDataset *aDataset)
+{
+    ThreadError error;
+
+    VerifyOrExit(aDataset != NULL, error = kThreadError_InvalidArgs);
+
+    error = sThreadNetif->GetPendingDataset().Set(*aDataset);
+
+exit:
+    return error;
+}
+
 #ifdef __cplusplus
 }  // extern "C"
 #endif

@@ -35,6 +35,8 @@
 #ifndef MESHCOP_DATASET_MANAGER_HPP_
 #define MESHCOP_DATASET_MANAGER_HPP_
 
+#include <openthread-types.h>
+
 #include <coap/coap_server.hpp>
 #include <common/timer.hpp>
 #include <net/udp6.hpp>
@@ -109,7 +111,11 @@ class ActiveDataset: public DatasetManager
 public:
     ActiveDataset(ThreadNetif &aThreadNetif);
 
+    void Get(otOperationalDataset &aDataset);
+
     ThreadError Set(const Dataset &aDataset);
+
+    ThreadError Set(const otOperationalDataset &aDataset);
 
     ThreadError Set(const Timestamp &aTimestamp, const Message &aMessage, uint16_t aOffset, uint16_t aLength);
 
@@ -121,7 +127,11 @@ class PendingDataset: public DatasetManager
 public:
     PendingDataset(ThreadNetif &aThreadNetif);
 
+    void Get(otOperationalDataset &aDataset);
+
     ThreadError Set(const Dataset &aDataset);
+
+    ThreadError Set(const otOperationalDataset &aDataset);
 
     ThreadError Set(const Timestamp &aTimestamp, const Message &aMessage, uint16_t aOffset, uint16_t aLength);
 

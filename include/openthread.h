@@ -585,6 +585,52 @@ typedef void (*otStateChangedCallback)(uint32_t aFlags, void *aContext);
 void otSetStateChangedCallback(otStateChangedCallback aCallback, void *aContext);
 
 /**
+ * This function gets the Active Operational Dataset.
+ *
+ * @param[out]  aDataset  A pointer to where the Active Operational Dataset will be placed.
+ *
+ * @retval kThreadError_None         Successfully retrieved the Active Operational Dataset.
+ * @retval kThreadError_InvalidArgs  @p aDataset was NULL.
+ *
+ */
+ThreadError otGetActiveDataset(otOperationalDataset *aDataset);
+
+/**
+ * This function sets the Active Operational Dataset.
+ *
+ * @param[in]  aDataset  A pointer to the Active Operational Dataset.
+ *
+ * @retval kThreadError_None         Successfully set the Active Operational Dataset.
+ * @retval kThreadError_NoBufs       Insufficient buffer space to set the Active Operational Datset.
+ * @retval kThreadError_InvalidArgs  @p aDataset was NULL.
+ *
+ */
+ThreadError otSetActiveDataset(otOperationalDataset *aDataset);
+
+/**
+ * This function gets the Pending Operational Dataset.
+ *
+ * @param[out]  aDataset  A pointer to where the Pending Operational Dataset will be placed.
+ *
+ * @retval kThreadError_None         Successfully retrieved the Pending Operational Dataset.
+ * @retval kThreadError_InvalidArgs  @p aDataset was NULL.
+ *
+ */
+ThreadError otGetPendingDataset(otOperationalDataset *aDataset);
+
+/**
+ * This function sets the Pending Operational Dataset.
+ *
+ * @param[in]  aDataset  A pointer to the Pending Operational Dataset.
+ *
+ * @retval kThreadError_None         Successfully set the Pending Operational Dataset.
+ * @retval kThreadError_NoBufs       Insufficient buffer space to set the Pending Operational Datset.
+ * @retval kThreadError_InvalidArgs  @p aDataset was NULL.
+ *
+ */
+ThreadError otSetPendingDataset(otOperationalDataset *aDataset);
+
+/**
  * @}
  */
 
