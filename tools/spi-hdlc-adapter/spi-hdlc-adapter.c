@@ -90,6 +90,8 @@
 
 #define SPI_RX_ALIGN_ALLOWANCE_MAX      3
 
+#define SOCKET_DEBUG_BYTES_PER_LINE     16
+
 static const uint8_t kHdlcResetSignal[] = { 0x7E, 0x13, 0x11, 0x7E };
 static const uint16_t kHdlcCrcCheckValue = 0xf0b8;
 static const uint16_t kHdlcCrcResetValue = 0xffff;
@@ -235,7 +237,28 @@ static void signal_critical(int sig, siginfo_t * info, void * ucontext)
     exit(EXIT_FAILURE);
 }
 
+static void log_debug_buffer(const char* desc, const uint8_t* buffer_ptr, int buffer_len)
+{
+    int i = 0;
 
+    if (sVerbose < LOG_DEBUG)
+    {
+        return;
+    }
+
+    while (i < buffer_len)
+    {
+        int j;
+        char dump_string[SOCKET_DEBUG_BYTES_PER_LINE*3+1];
+
+        for (j = 0; i < buffer_len && j < SOCKET_DEBUG_BYTES_PER_LINE; i++, j++)
+        {
+            sprintf(dump_string+j*3, "%02X ", buffer_ptr[i]);
+        }
+
+        syslog(LOG_DEBUG, "%s: %s%s", desc, dump_string, (i < buffer_len)?" ...":"");
+    }
+}
 
 /* ------------------------------------------------------------------------- */
 /* MARK: SPI Transfer Functions */
@@ -334,6 +357,9 @@ static int do_spi_xfer(int len)
         }
     }
 
+    log_debug_buffer("SPI-TX", sSpiTxFrameBuffer, xfer.len);
+    log_debug_buffer("SPI-RX", sSpiRxFrameBuffer, xfer.len);
+
     sSpiFrameCount++;
 
     return ret;
@@ -342,25 +368,24 @@ static int do_spi_xfer(int len)
 
 static void debug_spi_header(const char* hint)
 {
-    const uint8_t* spiRxFrameBuffer = get_real_rx_frame_start();
+    if (sVerbose >= LOG_DEBUG)
+    {
+        const uint8_t* spiRxFrameBuffer = get_real_rx_frame_start();
 
-    syslog(LOG_DEBUG, "%s: TX-HEADER: %02X %02X %02X %02X %02X\n",
-        hint,
-        sSpiTxFrameBuffer[0],
-        sSpiTxFrameBuffer[1],
-        sSpiTxFrameBuffer[2],
-        sSpiTxFrameBuffer[3],
-        sSpiTxFrameBuffer[4]
-    );
+        syslog(LOG_DEBUG, "%s-TX: H:%02X ACCEPT:%d DATA:%0d\n",
+            hint,
+            spi_header_get_flag_byte(sSpiTxFrameBuffer),
+            spi_header_get_accept_len(sSpiTxFrameBuffer),
+            spi_header_get_data_len(sSpiTxFrameBuffer)
+        );
 
-    syslog(LOG_DEBUG, "%s: RX-HEADER: %02X %02X %02X %02X %02X\n",
-        hint,
-        spiRxFrameBuffer[0],
-        spiRxFrameBuffer[1],
-        spiRxFrameBuffer[2],
-        spiRxFrameBuffer[3],
-        spiRxFrameBuffer[4]
-    );
+        syslog(LOG_DEBUG, "%s-RX: H:%02X ACCEPT:%d DATA:%0d\n",
+            hint,
+            spi_header_get_flag_byte(spiRxFrameBuffer),
+            spi_header_get_accept_len(spiRxFrameBuffer),
+            spi_header_get_data_len(spiRxFrameBuffer)
+        );
+    }
 }
 
 static int push_pull_spi(void)
@@ -1399,7 +1424,7 @@ int main(int argc, char *argv[])
 
     while (sRet == 0)
     {
-        int timeout_ms = 60 * MSEC_PER_SEC;
+        int timeout_ms = MSEC_PER_SEC * 60 * 60 * 24; // 24 hours
 
         FD_ZERO(&read_set);
         FD_ZERO(&write_set);
