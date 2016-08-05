@@ -19,7 +19,7 @@ $ make -f examples/Makefile-posix
 Spawn the process:
 
 ```bash
-$ cd openthread/examples/posix/app/cli
+$ cd <path-to-openthread>/output/<platform>/bin
 $ ./ot-cli 1
 ```
 
@@ -54,7 +54,7 @@ Done
 Spawn the process:
 
 ```bash
-$ cd openthread/examples/posix/app/cli
+$ cd <path-to-openthread>/output/<platform>/bin
 $ ./ot-cli 2
 ```
 

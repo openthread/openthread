@@ -92,6 +92,13 @@ enum
     kReedAdvertiseJitter        = 60,   ///< REED_ADVERTISEMENT_JITTER (seconds)
 };
 
+enum
+{
+    kLqi3LinkCost               = 1,    ///< Link Cost for LQI 3
+    kLqi2LinkCost               = 2,    ///< Link Cost for LQI 2
+    kLqi1LinkCost               = 4,    ///< Link Cost for LQI 1
+    kLqi0LinkCost               = 16,   ///< Link Cost for LQI 0
+};
 
 }  // namespace Mle
 

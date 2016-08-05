@@ -48,7 +48,7 @@
 #include <chipinfo.h>
 
 /* return values from the setup and teardown functions */
-#define CC2650_CRC_BIT_MASK 0x80
+#define CC2650_CRC_BIT_MASK (1<<8)
 #define CC2650_LQI_BIT_MASK 0x3f
 
 #define RF_CORE_ERROR 1
@@ -56,33 +56,11 @@
 
 #define IEEE802154_MIN_LENGTH 5
 #define IEEE802154_MAX_LENGTH 127
-#define IEEE802154_ACK_LENGTH 5
 #define IEEE802154_FRAME_TYPE_MASK 0x7
 #define IEEE802154_FRAME_TYPE_ACK 0x2
 #define IEEE802154_FRAME_PENDING (1 << 4)
 #define IEEE802154_ACK_REQUEST (1 << 5)
 #define IEEE802154_DSN_OFFSET 2
-
-
-/* used to see if we are TXing */
-#define RF_CMD_CCA_REQ_RSSI_UNKNOWN     0x80
-#define RF_CMD_CCA_REQ_CCA_STATE_IDLE      0 /* 00 */
-#define RF_CMD_CCA_REQ_CCA_STATE_BUSY      1 /* 01 */
-#define RF_CMD_CCA_REQ_CCA_STATE_INVALID   2 /* 10 */
-
-/* used to keep track of the state OpenThread wants the radio in.
- * NOTE: we may run a receive event in the background, but the ot stack assumes
- * that receiving packets must be explicitly started.
- */
-typedef enum PhyState
-{
-    kStateDisabled = 0, ///< the radio is off
-    kStateSleep,        ///< frequency synthesizer off, but the radio is powered
-    kStateIdle,         ///< the analog side of the radio is on and configured
-    kStateListen,       ///< listening for an ACK packet after a transmit
-    kStateReceive,      ///< listening for any packet
-    kStateTransmit,     ///< transmitted a packet, not looking for an ACK
-} PhyState;
 
 static PhyState sState;
 
@@ -116,38 +94,6 @@ static const output_config_t output_power[] = {
 #define OUTPUT_POWER_UNKNOWN 0xFFFF
 
 static output_config_t const *cur_output_power = &(output_power[OUTPUT_CONFIG_COUNT - 1]);
-
-/* XXX */
-/* IEEE channel lookup table - values from SmartRF Studio */
-typedef struct channel_freq {
-    int channel;
-    uint16_t frequency;
-} channel_freq_t;
-
-static const channel_freq_t channel_frequency[] = {
-    { 11, 2405u},
-    { 12, 2410u},
-    { 13, 2415u},
-    { 14, 2420u},
-    { 15, 2425u},
-    { 16, 2430u},
-    { 17, 2435u},
-    { 18, 2440u},
-    { 19, 2445u},
-    { 20, 2450u},
-    { 21, 2455u},
-    { 22, 2460u},
-    { 23, 2465u},
-    { 24, 2470u},
-    { 25, 2475u},
-    { 26, 2480u},
-};
-
-#define CHANNEL_FREQUENCY_COUNT (sizeof(channel_frequency) / sizeof(channel_freq_t))
-
-/* Max and Min IEEE Channels */
-#define CHANNEL_FREQ_MIN     (channel_frequency[0].channel)
-#define CHANNEL_FREQ_MAX     (channel_frequency[CHANNEL_FREQUENCY_COUNT - 1].channel)
 
 /* Overrides for IEEE 802.15.4, differential mode */
 static uint32_t ieee_overrides[] = {
@@ -192,8 +138,8 @@ static rfc_ieeeRxOutput_t rf_stats;
 /* Four receive buffers entries with room for 1 IEEE802.15.4 frame in each */
 static uint8_t rx_buf_0[RX_BUF_SIZE] __attribute__ ((aligned (4)));
 static uint8_t rx_buf_1[RX_BUF_SIZE] __attribute__ ((aligned (4)));
-static uint8_t rx_buf_2[RX_BUF_SIZE] __attribute__ ((aligned (4)));
-static uint8_t rx_buf_3[RX_BUF_SIZE] __attribute__ ((aligned (4)));
+// static uint8_t rx_buf_2[RX_BUF_SIZE] __attribute__ ((aligned (4)));
+// static uint8_t rx_buf_3[RX_BUF_SIZE] __attribute__ ((aligned (4)));
 
 /* The RX Data Queue */
 static dataQueue_t rx_data_queue = { 0 };
@@ -205,11 +151,17 @@ static ThreadError sTransmitError;
 static ThreadError sReceiveError;
 
 static uint8_t sTransmitPsdu[kMaxPHYPacketSize] __attribute__ ((aligned (4))) ;
+/* XXX: can we point the ot stack to one of the buffers above? */
 static uint8_t sReceivePsdu[kMaxPHYPacketSize] __attribute__ ((aligned (4))) ;
 
 static void init_buffers(void)
 {
     rfc_dataEntry_t *entry;
+
+    memset(rx_buf_0, 0, RX_BUF_SIZE);
+    memset(rx_buf_1, 0, RX_BUF_SIZE);
+    // memset(rx_buf_2, 0, RX_BUF_SIZE);
+    // memset(rx_buf_3, 0, RX_BUF_SIZE);
 
     entry = (rfc_dataEntry_t *)rx_buf_0;
     entry->pNextEntry = rx_buf_1;
@@ -217,10 +169,12 @@ static void init_buffers(void)
     entry->length = sizeof(rx_buf_0) - 8;
 
     entry = (rfc_dataEntry_t *)rx_buf_1;
-    entry->pNextEntry = rx_buf_2;
+    entry->pNextEntry = rx_buf_0;
+    // entry->pNextEntry = rx_buf_2;
     entry->config.lenSz = DATA_ENTRY_LENSZ_BYTE;
     entry->length = sizeof(rx_buf_0) - 8;
 
+    /*
     entry = (rfc_dataEntry_t *)rx_buf_2;
     entry->pNextEntry = rx_buf_3;
     entry->config.lenSz = DATA_ENTRY_LENSZ_BYTE;
@@ -230,6 +184,7 @@ static void init_buffers(void)
     entry->pNextEntry = rx_buf_0;
     entry->config.lenSz = DATA_ENTRY_LENSZ_BYTE;
     entry->length = sizeof(rx_buf_0) - 8;
+    */
 
     sTransmitFrame.mPsdu = sTransmitPsdu;
     sTransmitFrame.mLength = 0;
@@ -271,7 +226,7 @@ static void init_rf_params(void)
     cmd_ieee_rx.frameFiltOpt.bPendDataReqOnly = 0;
     cmd_ieee_rx.frameFiltOpt.bPanCoord = 0;
     cmd_ieee_rx.frameFiltOpt.maxFrameVersion = 3;
-    cmd_ieee_rx.frameFiltOpt.bStrictLenFilter = 0;
+    cmd_ieee_rx.frameFiltOpt.bStrictLenFilter = 1;
 
     /* Receive all frame types */
     cmd_ieee_rx.frameTypes.bAcceptFt0Beacon = 1;
@@ -291,7 +246,7 @@ static void init_rf_params(void)
     cmd_ieee_rx.ccaOpt.ccaSyncOp = 0;
     cmd_ieee_rx.ccaOpt.ccaCorrThr = 3;
 
-    cmd_ieee_rx.ccaRssiThr = 0xA6;
+    cmd_ieee_rx.ccaRssiThr = -90;
 
     cmd_ieee_rx.numExtEntries = 0x00;
     cmd_ieee_rx.numShortEntries = 0x00;
@@ -430,6 +385,12 @@ uint_fast8_t rf_core_cmd_abort()
     return (RFCDoorbellSendTo(CMDR_DIR_CMD(CMD_ABORT)) & 0xFF);
 }
 
+uint_fast8_t rf_core_cmd_abort_fg()
+{
+    /* direct command, we don't need to wait */
+    return (RFCDoorbellSendTo(CMDR_DIR_CMD(CMD_IEEE_ABORT_FG)) & 0xFF);
+}
+
 uint_fast8_t rf_core_cmd_ping()
 {
     /* direct command, we don't need to wait */
@@ -454,6 +415,7 @@ uint_fast8_t rf_core_cmd_clear_rx(dataQueue_t *queue)
     return (RFCDoorbellSendTo((uint32_t)&clear_rx_cmd) & 0xFF);
 }
 
+#if 0
 uint_fast16_t rf_core_cmd_fs(unsigned int channel, bool txMode)
 {
     volatile rfc_CMD_FS_t fs_cmd;
@@ -492,6 +454,7 @@ uint_fast16_t rf_core_cmd_fs(unsigned int channel, bool txMode)
     }
     return fs_cmd.status;
 }
+#endif
 
 uint_fast16_t rf_core_cmd_fs_powerdown(void)
 {
@@ -651,13 +614,13 @@ ThreadError rf_core_update_rx(bool clearQueue)
 
     if(clearQueue && rf_core_cmd_clear_rx(&rx_data_queue) != CMDSTA_Done)
     {
-        sState = kStateIdle;
+        sState = kStateSleep;
         return kThreadError_Failed;
     }
 
     if(rf_core_cmd_ieee_rx() != ACTIVE)
     {
-        sState = kStateIdle;
+        sState = kStateSleep;
         return kThreadError_Failed;
     }
     return kThreadError_None;
@@ -681,15 +644,8 @@ uint8_t rf_core_power_on(void)
 
     rf_core_set_modesel();
 
-    /* Initialise RX buffers */
-    memset(rx_buf_0, 0, RX_BUF_SIZE);
-    memset(rx_buf_1, 0, RX_BUF_SIZE);
-    memset(rx_buf_2, 0, RX_BUF_SIZE);
-    memset(rx_buf_3, 0, RX_BUF_SIZE);
-
     /* Set of RF Core data queue. Circular buffer, no last entry */
     rx_data_queue.pCurrEntry = rx_buf_0;
-
     rx_data_queue.pLastEntry = NULL;
 
     init_buffers();
@@ -747,6 +703,7 @@ uint8_t rf_core_power_off(void)
     bool interrupts_disabled;
     interrupts_disabled = IntMasterDisable();
 
+    /* clear and disable interrupts */
     HWREG(RFC_DBELL_NONBUF_BASE + RFC_DBELL_O_RFCPEIFG) = 0x0;
     HWREG(RFC_DBELL_NONBUF_BASE + RFC_DBELL_O_RFCPEIEN) = 0x0;
 
@@ -807,7 +764,6 @@ uint8_t rf_core_wakeup(void)
     {
         return RF_CORE_ERROR;
     }
-    sState = kStateIdle;
     return RF_CORE_OK;
 }
 
@@ -865,111 +821,77 @@ void RFCCPE0IntHandler(void)
 
 void cc2650RadioInit(void)
 {
-    /* Populate the RF parameters data structure with default values */
+    /* Populate the RX parameters data structure with default values */
     init_rf_params();
 
     sState = kStateDisabled;
-    if(rf_core_power_on() != RF_CORE_OK)
-    {
-        /* ERROR */
-        sState = kStateDisabled;
-        rf_core_power_off();
-        return;
-    }
-    sState = kStateSleep;
-    if(rf_core_wakeup() != RF_CORE_OK)
-    {
-        /* ERROR */
-        sState = kStateDisabled;
-        rf_core_power_off();
-        return;
-    }
-    sState = kStateIdle;
 }
 
 ThreadError otPlatRadioEnable(void)
 {
-    if(sState != kStateDisabled)
+    ThreadError error = kThreadError_Busy;
+
+    if(sState == kStateSleep)
     {
-        return kThreadError_Busy;
+        error = kThreadError_None;
     }
-    if(rf_core_power_on() != RF_CORE_OK)
+
+    if(sState == kStateDisabled)
     {
-        return kThreadError_Failed;
+        if(rf_core_power_on() == RF_CORE_OK)
+        {
+            sState = kStateSleep;
+            error = kThreadError_None;
+        }
+        else
+        {
+            sState = kStateDisabled;
+            rf_core_power_off();
+            error = kThreadError_Failed;
+        }
     }
-    sState = kStateSleep;
-    if(rf_core_wakeup() != RF_CORE_OK)
-    {
-        return kThreadError_Failed;
-    }
-    sState = kStateIdle;
-    return kThreadError_None;
+    return error;
 }
 
 ThreadError otPlatRadioDisable(void)
 {
-    if(sState != kStateIdle && sState != kStateSleep && sState != kStateDisabled)
+    ThreadError error = kThreadError_Busy;
+
+    if(sState == kStateDisabled)
     {
-        return kThreadError_InvalidState;
+        error = kThreadError_None;
     }
-    if(sState == kStateIdle)
+
+    if(sState == kStateSleep)
     {
-        if(rf_core_sleep() != RF_CORE_OK)
+        if(rf_core_power_off() == RF_CORE_OK)
         {
-            return kThreadError_Failed;
+            sState = kStateDisabled;
+            error = kThreadError_None;
         }
     }
-    if(rf_core_power_off() != RF_CORE_OK)
-    {
-        return kThreadError_Failed;
-    }
-    sState = kStateDisabled;
-    return kThreadError_None;
+    return error;
 }
 
 ThreadError otPlatRadioSleep(void)
 {
-    if(sState == kStateDisabled)
+    ThreadError error = kThreadError_Busy;
+
+    if(sState == kStateSleep)
     {
-        return kThreadError_InvalidState;
+        error = kThreadError_None;
+    }
+
+    if(sState == kStateReceive)
+    {
+        if(rf_core_sleep() != RF_CORE_OK)
+        {
+            sState = kStateSleep;
+            error = kThreadError_None;
+        }
     }
     
-    if(rf_core_sleep() != RF_CORE_OK)
-    {
-        return kThreadError_Failed;
-    }
-    sState = kStateSleep;
-    return kThreadError_None;
-}
-
-ThreadError otPlatRadioIdle(void)
-{
-    switch (sState)
-    {
-    case kStateSleep:
-        if(rf_core_wakeup() != RF_CORE_OK)
-        {
-            /* XXX: should we have an unkown state? */
-            return kThreadError_Failed;
-        }
-        sState = kStateIdle;
-        break;
-
-    case kStateIdle:
-        break;
-
-    case kStateListen:
-    case kStateReceive:
-    case kStateTransmit:
-        /* gracefully stop any running command */
-        rf_core_cmd_stop();
-        sState = kStateIdle;
-        break;
-
-    case kStateDisabled:
-        return kThreadError_Busy;
-    }
-    return kThreadError_None;
+    return error;
 }
 
 int8_t otPlatRadioGetNoiseFloor(void)
@@ -1030,32 +952,23 @@ void readFrame(void)
         (rfc_dataEntryGeneral_t *)rx_data_queue.pCurrEntry;
     rfc_dataEntryGeneral_t *curEntry = startEntry;
 
-
-    if(sState != kStateReceive && sState != kStateListen)
-    {
-        return;
-    }
-
     /* loop through receive queue */
     do
     {
         uint8_t *payload = &(curEntry->data);
-        if(curEntry->status == DATA_ENTRY_FINISHED
-                && sReceiveFrame.mLength == 0)
+        if(sReceiveFrame.mLength == 0
+            && curEntry->status == DATA_ENTRY_FINISHED)
         {
             uint8_t len = payload[0];
-            /* get the information appended to the end of the frame.
-             * This array access looks like it would be a fencepost error,
-             * but the length in the first byte is the number of bytes
-             * that follow, and payload is centered on the length byte
+            /* 
+             * get the information appended to the end of the frame.
+             * This array access looks like it is a fencepost error, but the
+             * first byte is the number of bytes that follow.
              */
             crcCorr = payload[len];
             rssi = payload[len - 1];
-            if(crcCorr & (1<<6))
-            {
-                __asm("nop");
-            }
-            else if(!(crcCorr & CC2650_CRC_BIT_MASK) && (len - 2) < kMaxPHYPacketSize) 
+            if(!(crcCorr & CC2650_CRC_BIT_MASK)
+                    && (len - 2) < kMaxPHYPacketSize) 
             {
                 sReceiveFrame.mLength = len;
                 memcpy(sReceiveFrame.mPsdu, &(payload[1]), len - 2);
@@ -1085,67 +998,32 @@ void readFrame(void)
 
 int cc2650RadioProcess(void)
 {
-    switch (sState)
+    if(sState == kStateTransmit
+            && (((sTransmitPsdu[0] & IEEE802154_ACK_REQUEST) == 0)
+                || (sTransmitError != kThreadError_None)))
     {
-    case kStateTransmit:
+        /* we are not looking for an ACK packet, or failed */
+        sState = kStateReceive;
         otPlatRadioTransmitDone(false, sTransmitError);
-
-        if(sState == kStateTransmit)
-        {
-            /* the ot stack likes to tell us to recieve right after
-             * transmitting. Rather than transitioning to idle and stopping
-             * the receive function then going right back to receive, we make
-             * this transition a bit smoother.
-             */
-            rf_core_cmd_stop();
-            sState = kStateIdle;
-        }
-        /* XXX fall through */
-
-    case kStateDisabled:
-    case kStateSleep:
-    case kStateIdle:
-        return 0;
-
-    default:
-        break;
     }
-
-    readFrame();
-
-    switch (sState)
+    else if(sState == kStateReceive || sState == kStateTransmit)
     {
-    case kStateListen:
-        if (sReceiveFrame.mLength == IEEE802154_ACK_LENGTH &&
-                (sReceiveFrame.mPsdu[0] & IEEE802154_FRAME_TYPE_MASK) == IEEE802154_FRAME_TYPE_ACK &&
-                (sReceiveFrame.mPsdu[IEEE802154_DSN_OFFSET] == sTransmitFrame.mPsdu[IEEE802154_DSN_OFFSET]))
+        readFrame();
+
+        if (sState == kStateTransmit
+                && (sReceiveFrame.mPsdu[0] & IEEE802154_FRAME_TYPE_MASK) == IEEE802154_FRAME_TYPE_ACK
+                && (sReceiveFrame.mPsdu[IEEE802154_DSN_OFFSET] == sTransmitFrame.mPsdu[IEEE802154_DSN_OFFSET]))
         {
+            /* XXX: our RX command only accepts ack packets that are 5 bytes */
             sState = kStateReceive;
             otPlatRadioTransmitDone((sReceiveFrame.mPsdu[0] & IEEE802154_FRAME_PENDING) != 0, sTransmitError);
-            break;
         }
-        /* XXX fall through */
-
-    case kStateReceive:
-        if (sReceiveFrame.mLength > 0)
+        else if (sState == kStateReceive && sReceiveFrame.mLength > 0)
         {
             otPlatRadioReceiveDone(&sReceiveFrame, sReceiveError);
-            /* we don't transition to Idle here because receiving multiple
-             * frames is common and thrashing the receive command in the CM0
-             * is time consuming. The ot stack will call otPlatRadioIdle() or
-             * otPlatRadioSleep() if it does not want to receive any more
-             * frames
-             */
         }
-
-        break;
-
-    default:
-        break;
+        sReceiveFrame.mLength = 0;
     }
-
-    sReceiveFrame.mLength = 0;
-
     return 0;
 }
 
@@ -1156,88 +1034,154 @@ RadioPacket *otPlatRadioGetTransmitBuffer(void)
 
 ThreadError otPlatRadioTransmit(void)
 {
-    /* easiest way to setup the frequency synthesizer, and if we are looking
-     * for an ack we will not have to start the receive afterwards.
-     */
-    if(otPlatRadioReceive(sTransmitFrame.mChannel) != kThreadError_None)
-    {
-        return kThreadError_Failed;
-    }
+    ThreadError error = kThreadError_Busy;
 
-    sState = kStateTransmit;
-    /* removing 2 bytes of CRC placeholder because we generate that in hardware */
-    switch(rf_core_cmd_ieee_tx(sTransmitFrame.mPsdu, sTransmitFrame.mLength - 2))
+    if(sState == kStateReceive)
     {
-        case IEEE_DONE_OK:
-            if((sTransmitFrame.mPsdu[0] & IEEE802154_ACK_REQUEST) == 0)
+        /*
+         * This is the easiest way to setup the frequency synthesizer.
+         * And we are supposed to fall into the receive state afterwards.
+         */
+        error = otPlatRadioReceive(sTransmitFrame.mChannel);
+        if(error == kThreadError_None)
+        {
+            sState = kStateTransmit;
+
+            /* removing 2 bytes of CRC placeholder because we generate that in hardware */
+            switch(rf_core_cmd_ieee_tx(sTransmitFrame.mPsdu, sTransmitFrame.mLength - 2))
             {
-                /* we are not looking for an ack packet */
-                sTransmitError = kThreadError_None;
-                return kThreadError_None;
+                case IEEE_DONE_OK:
+                    error = kThreadError_None;
+                    break;
+                case IEEE_DONE_TIMEOUT:
+                    error = kThreadError_ChannelAccessFailure;
+                    break;
+                case IEEE_ERROR_NO_SETUP:
+                case IEEE_ERROR_NO_FS:
+                case IEEE_ERROR_SYNTH_PROG:
+                    error = kThreadError_InvalidState;
+                    break;
+                case IEEE_ERROR_TXUNF:
+                    error = kThreadError_NoBufs;
+                    break;
+                default:
+                    error = kThreadError_Error;
             }
-            else
-            {
-                /* we are looking for an ack packet */
-                sState = kStateListen;
-                sTransmitError = kThreadError_None;
-                return kThreadError_None;
-            }
-        case IEEE_DONE_TIMEOUT:
-            sTransmitError = kThreadError_ChannelAccessFailure;
-            return kThreadError_Busy;
-        case IEEE_ERROR_NO_SETUP:
-        case IEEE_ERROR_NO_FS:
-        case IEEE_ERROR_SYNTH_PROG:
-            sTransmitError = kThreadError_InvalidState;
-            return kThreadError_InvalidState;
-        case IEEE_ERROR_TXUNF:
-            sTransmitError = kThreadError_NoBufs;
-            return kThreadError_NoBufs;
-        default:
-            sTransmitError = kThreadError_Error;
-            return kThreadError_Error;
+            sTransmitError = error;
+        }
     }
+    return error;
 }
 
 ThreadError otPlatRadioReceive(uint8_t aChannel)
 {
-    sState = kStateReceive;
-    if(cmd_ieee_rx.status == ACTIVE)
-    {
-        if(cmd_ieee_rx.channel == aChannel)
-        {
-            /* We are already receiving on this channel, the CM0 will populate the
-             * rx buffers on it's own
-             */
-            sReceiveError = kThreadError_None;
-            return kThreadError_None;
-        }
-        /* abort the receive command running on the wrong channel */
-        if(rf_core_cmd_abort() != CMDSTA_Done)
-        {
-            sReceiveError = kThreadError_Failed;
-            return kThreadError_Failed;
-        }
-        /* wait til the command is aborted */
-        while(cmd_ieee_rx.status != DONE_ABORT)
-        {
-            ;
-        }
-        /* any frames in the queue will be for the old channel */
-        if(rf_core_cmd_clear_rx(&rx_data_queue) != CMDSTA_Done)
-        {
-            sReceiveError = kThreadError_Failed;
-            return kThreadError_Failed;
-        }
-    }
+    ThreadError error = kThreadError_Busy;
 
-    cmd_ieee_rx.channel = aChannel;
-    if(rf_core_cmd_ieee_rx() != ACTIVE)
+    switch (sState)
     {
-        sReceiveError = kThreadError_Failed;
-        return kThreadError_Failed;
+        case kStateDisabled:
+            break;
+        case kStateSleep:
+            if(rf_core_wakeup() != RF_CORE_OK)
+            {
+                error = kThreadError_Failed;
+                break;
+            }
+            sState = kStateReceive;
+            /* XXX: fall through */
+        case kStateReceive:
+            if(cmd_ieee_rx.status == ACTIVE)
+            {
+                /* we are running a receive already */
+                if(cmd_ieee_rx.channel == aChannel)
+                {
+                    /* we are already on the right channel */
+                    error = kThreadError_None;
+                    break;
+                }
+                if(rf_core_cmd_abort() != CMDSTA_Done)
+                {
+                    error = kThreadError_Failed;
+                    break;
+                }
+                /* any frames in the queue will be for the old channel */
+                if(rf_core_cmd_clear_rx(&rx_data_queue) != CMDSTA_Done)
+                {
+                    error = kThreadError_Failed;
+                    break;
+                }
+                /* make sure that the receive command was aborted */
+                while(cmd_ieee_rx.status != IEEE_DONE_ABORT)
+                {
+                    ;
+                }
+            }
+            else
+            {
+                if(rf_core_cmd_abort() != CMDSTA_Done)
+                {
+                    error = kThreadError_Failed;
+                    break;
+                }
+            }
+            cmd_ieee_rx.channel = aChannel;
+            if(rf_core_cmd_ieee_rx() != ACTIVE)
+            {
+                error = kThreadError_Failed;
+                break;
+            }
+            error = kThreadError_None;
+            break;
+        case kStateTransmit:
+            if(cmd_ieee_rx.channel == aChannel)
+            {
+                if(cmd_ieee_rx.status == ACTIVE)
+                {
+                    /* The command is running on the right channel already */
+                    error = kThreadError_None;
+                    sState = kStateReceive;
+                    break;
+                }
+                else if(cmd_ieee_rx.status == IEEE_SUSPENDED)
+                {
+                    /*
+                     * The RX command is suspended in the background,
+                     * abort the command running in the foreground
+                     */
+                    if(rf_core_cmd_abort_fg() != CMDSTA_Done)
+                    {
+                        error = kThreadError_Failed;
+                        break;
+                    }
+                    error = kThreadError_None;
+                    sState = kStateReceive;
+                    break;
+                }
+            }
+            /* abort all commands running on the radio */
+            if(rf_core_cmd_abort() != CMDSTA_Done)
+            {
+                error = kThreadError_Failed;
+                break;
+            }
+            /* any frames in the queue will be for the old channel */
+            if(rf_core_cmd_clear_rx(&rx_data_queue) != CMDSTA_Done)
+            {
+                error = kThreadError_Failed;
+                break;
+            }
+            cmd_ieee_rx.channel = aChannel;
+            if(rf_core_cmd_ieee_rx() != ACTIVE)
+            {
+                error = kThreadError_Failed;
+                break;
+            }
+            error = kThreadError_None;
+            sState = kStateReceive;
+            break;
+        default:
+            break;
     }
-    sReceiveError = kThreadError_None;
-    return kThreadError_None;
+    return error;
 }
 

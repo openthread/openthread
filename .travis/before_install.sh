@@ -68,8 +68,8 @@ cd /tmp || die
 }
 
 [ $BUILD_TARGET != pretty-check ] || {
-    wget https://sourceforge.net/projects/astyle/files/astyle/astyle%202.05.1/astyle_2.05.1_linux.tar.gz/download -O astyle.tar.gz || die
-    tar xzvf astyle.tar.gz || die
+    wget http://ufpr.dl.sourceforge.net/project/astyle/astyle/astyle%202.05.1/astyle_2.05.1_linux.tar.gz || die
+    tar xzvf astyle_2.05.1_linux.tar.gz || die
     cd astyle/build/gcc || die
     LDFLAGS=" " make || die
     cd ../../..

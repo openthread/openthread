@@ -33,68 +33,88 @@
 #include <common/code_utils.hpp>
 #include <common/new.hpp>
 #include <ncp/ncp.h>
-#include <ncp/ncp.hpp>
+#include <ncp/ncp_uart.hpp>
 #include <platform/uart.h>
+#include <core/openthread-core-config.h>
 
 namespace Thread {
 
-static otDEFINE_ALIGNED_VAR(sNcpRaw, sizeof(Ncp), uint64_t);
-static Ncp *sNcp;
+static otDEFINE_ALIGNED_VAR(sNcpRaw, sizeof(NcpUart), uint64_t);
+static NcpUart *sNcpUart;
 
 extern "C" void otNcpInit(void)
 {
-    sNcp = new(&sNcpRaw) Ncp;
+    sNcpUart = new(&sNcpRaw) NcpUart;
 }
 
-Ncp::Ncp():
+NcpUart::SendHdlcBuffer::SendHdlcBuffer(void)
+    : BufferWriteIterator()
+{
+    Reset();
+}
+
+void
+NcpUart::SendHdlcBuffer::Reset(void)
+{
+    mWritePointer = mBuffer;
+    mRemainingLength = sizeof(mBuffer);
+}
+
+uint16_t
+NcpUart::SendHdlcBuffer::GetLength(void) const
+{
+    return static_cast<uint16_t>(mWritePointer - mBuffer);
+}
+
+const uint8_t *
+NcpUart::SendHdlcBuffer::GetBuffer(void) const
+{
+    return mBuffer;
+}
+
+uint16_t
+NcpUart::SendHdlcBuffer::GetRemainingLength(void) const
+{
+    return mRemainingLength;
+}
+
+NcpUart::NcpUart():
     NcpBase(),
-    mFrameDecoder(mReceiveFrame, sizeof(mReceiveFrame), &HandleFrame, this)
+    mFrameDecoder(mReceiveFrame, sizeof(mReceiveFrame), &HandleFrame, this),
+    mSendFrame()
 {
 }
 
 uint16_t
-Ncp::OutboundFrameGetRemaining(void)
+NcpUart::OutboundFrameGetRemaining(void)
 {
-    return static_cast<int16_t>(sizeof(mSendFrame) - (mSendFrameIter - mSendFrame));
+    return mSendFrame.GetRemainingLength();
 }
 
 ThreadError
-Ncp::OutboundFrameBegin(void)
+NcpUart::OutboundFrameBegin(void)
 {
     ThreadError errorCode;
-    uint16_t outLength;
 
-    mSendFrameIter = mSendFrame;
-    outLength = OutboundFrameGetRemaining();
+    mSendFrame.Reset();
 
-    errorCode = mFrameEncoder.Init(mSendFrameIter, outLength);
-
-    if (errorCode == kThreadError_None)
-    {
-        mSendFrameIter += outLength;
-    }
+    errorCode = mFrameEncoder.Init(mSendFrame);
 
     return errorCode;
 }
 
 ThreadError
-Ncp::OutboundFrameFeedData(const uint8_t *frame, uint16_t frameLength)
+NcpUart::OutboundFrameFeedData(const uint8_t *frame, uint16_t frameLength)
 {
     ThreadError errorCode;
-    uint16_t outLength(OutboundFrameGetRemaining());
 
-    errorCode = mFrameEncoder.Encode(frame, frameLength, mSendFrameIter, outLength);
-
-    if (errorCode == kThreadError_None)
-    {
-        mSendFrameIter += outLength;
-    }
+    errorCode = mFrameEncoder.Encode(frame, frameLength, mSendFrame);
 
     return errorCode;
 }
 
 ThreadError
-Ncp::OutboundFrameFeedMessage(Message &message)
+NcpUart::OutboundFrameFeedMessage(Message &message)
 {
     ThreadError errorCode;
     uint16_t inLength;
@@ -118,17 +138,15 @@ Ncp::OutboundFrameFeedMessage(Message &message)
 }
 
 ThreadError
-Ncp::OutboundFrameSend(void)
+NcpUart::OutboundFrameSend(void)
 {
     ThreadError errorCode;
-    uint16_t outLength(OutboundFrameGetRemaining());
 
-    errorCode = mFrameEncoder.Finalize(mSendFrameIter, outLength);
+    errorCode = mFrameEncoder.Finalize(mSendFrame);
 
     if (errorCode == kThreadError_None)
     {
-        mSendFrameIter += outLength;
-        errorCode = otPlatUartSend(mSendFrame, mSendFrameIter - mSendFrame);
+        errorCode = otPlatUartSend(mSendFrame.GetBuffer(), mSendFrame.GetLength());
     }
 
     if (errorCode == kThreadError_None)
@@ -141,10 +159,10 @@ Ncp::OutboundFrameSend(void)
 
 extern "C" void otPlatUartSendDone(void)
 {
-    sNcp->SendDoneTask();
+    sNcpUart->SendDoneTask();
 }
 
-void Ncp::SendDoneTask(void)
+void NcpUart::SendDoneTask(void)
 {
     mSending = false;
 
@@ -153,22 +171,23 @@ void Ncp::SendDoneTask(void)
 
 extern "C" void otPlatUartReceived(const uint8_t *aBuf, uint16_t aBufLength)
 {
-    sNcp->ReceiveTask(aBuf, aBufLength);
+    sNcpUart->ReceiveTask(aBuf, aBufLength);
 }
 
-void Ncp::ReceiveTask(const uint8_t *aBuf, uint16_t aBufLength)
+void NcpUart::ReceiveTask(const uint8_t *aBuf, uint16_t aBufLength)
 {
     mFrameDecoder.Decode(aBuf, aBufLength);
 }
 
-void Ncp::HandleFrame(void *context, uint8_t *aBuf, uint16_t aBufLength)
+void NcpUart::HandleFrame(void *context, uint8_t *aBuf, uint16_t aBufLength)
 {
-    sNcp->HandleFrame(aBuf, aBufLength);
+    sNcpUart->HandleFrame(aBuf, aBufLength);
 }
 
-void Ncp::HandleFrame(uint8_t *aBuf, uint16_t aBufLength)
+void NcpUart::HandleFrame(uint8_t *aBuf, uint16_t aBufLength)
 {
     super_t::HandleReceive(aBuf, aBufLength);
 }
 
 }  // namespace Thread
+

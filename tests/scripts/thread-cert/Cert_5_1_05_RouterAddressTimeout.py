@@ -53,7 +53,7 @@ class Cert_5_1_05_RouterAddressTimeout(unittest.TestCase):
         self.nodes[ROUTER1].enable_whitelist()
 
     def tearDown(self):
-        for node in self.nodes.itervalues():
+        for node in list(self.nodes.values()):
             node.stop()
         del self.nodes
 

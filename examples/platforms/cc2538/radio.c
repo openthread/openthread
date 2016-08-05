@@ -74,17 +74,7 @@ static ThreadError sReceiveError;
 static uint8_t sTransmitPsdu[IEEE802154_MAX_LENGTH];
 static uint8_t sReceivePsdu[IEEE802154_MAX_LENGTH];
 
-typedef enum PhyState
-{
-    kStateDisabled = 0,
-    kStateSleep,
-    kStateIdle,
-    kStateListen,
-    kStateReceive,
-    kStateTransmit,
-} PhyState;
-
-static PhyState sState;
+static PhyState sState = kStateDisabled;
 static bool sIsReceiverEnabled = false;
 
 void enableReceiver(void)
@@ -103,19 +93,22 @@ void enableReceiver(void)
 
 void disableReceiver(void)
 {
-    while (HWREG(RFCORE_XREG_FSMSTAT1) & RFCORE_XREG_FSMSTAT1_TX_ACTIVE);
-
-    // flush rxfifo
-    HWREG(RFCORE_SFR_RFST) = CC2538_RF_CSP_OP_ISFLUSHRX;
-    HWREG(RFCORE_SFR_RFST) = CC2538_RF_CSP_OP_ISFLUSHRX;
-
-    if (HWREG(RFCORE_XREG_RXENABLE) != 0)
+    if (sIsReceiverEnabled)
     {
-        // disable receiver
-        HWREG(RFCORE_SFR_RFST) = CC2538_RF_CSP_OP_ISRFOFF;
-    }
+        while (HWREG(RFCORE_XREG_FSMSTAT1) & RFCORE_XREG_FSMSTAT1_TX_ACTIVE);
 
-    sIsReceiverEnabled = false;
+        // flush rxfifo
+        HWREG(RFCORE_SFR_RFST) = CC2538_RF_CSP_OP_ISFLUSHRX;
+        HWREG(RFCORE_SFR_RFST) = CC2538_RF_CSP_OP_ISFLUSHRX;
+
+        if (HWREG(RFCORE_XREG_RXENABLE) != 0)
+        {
+            // disable receiver
+            HWREG(RFCORE_SFR_RFST) = CC2538_RF_CSP_OP_ISRFOFF;
+        }
+
+        sIsReceiverEnabled = false;
+    }
 }
 
 void setChannel(uint8_t channel)
@@ -125,28 +118,49 @@ void setChannel(uint8_t channel)
 
 ThreadError otPlatRadioSetPanId(uint16_t panid)
 {
-    HWREG(RFCORE_FFSM_PAN_ID0) = panid & 0xFF;
-    HWREG(RFCORE_FFSM_PAN_ID1) = panid >> 8;
-    return kThreadError_None;
+    ThreadError error = kThreadError_Busy;
+
+    if (sState != kStateTransmit)
+    {
+        HWREG(RFCORE_FFSM_PAN_ID0) = panid & 0xFF;
+        HWREG(RFCORE_FFSM_PAN_ID1) = panid >> 8;
+        error = kThreadError_None;
+    }
+
+    return error;
 }
 
 ThreadError otPlatRadioSetExtendedAddress(uint8_t *address)
 {
-    int i;
+    ThreadError error = kThreadError_Busy;
 
-    for (i = 0; i < 8; i++)
+    if (sState != kStateTransmit)
     {
-        ((volatile uint32_t *)RFCORE_FFSM_EXT_ADDR0)[i] = address[i];
+        int i;
+
+        for (i = 0; i < 8; i++)
+        {
+            ((volatile uint32_t *)RFCORE_FFSM_EXT_ADDR0)[i] = address[i];
+        }
+
+        error = kThreadError_None;
     }
 
-    return kThreadError_None;
+    return error;
 }
 
 ThreadError otPlatRadioSetShortAddress(uint16_t address)
 {
-    HWREG(RFCORE_FFSM_SHORT_ADDR0) = address & 0xFF;
-    HWREG(RFCORE_FFSM_SHORT_ADDR1) = address >> 8;
-    return kThreadError_None;
+    ThreadError error = kThreadError_Busy;
+
+    if (sState != kStateTransmit)
+    {
+        HWREG(RFCORE_FFSM_SHORT_ADDR0) = address & 0xFF;
+        HWREG(RFCORE_FFSM_SHORT_ADDR1) = address >> 8;
+        error = kThreadError_None;
+    }
+
+    return error;
 }
 
 void cc2538RadioInit(void)
@@ -178,76 +192,102 @@ void cc2538RadioInit(void)
 
 ThreadError otPlatRadioEnable(void)
 {
-    ThreadError error = kThreadError_None;
+    ThreadError error = kThreadError_Busy;
 
-    VerifyOrExit(sState == kStateDisabled, error = kThreadError_Busy);
-    sState = kStateSleep;
+    if (sState == kStateSleep || sState == kStateDisabled)
+    {
+        error = kThreadError_None;
+        sState = kStateSleep;
+    }
 
-exit:
     return error;
 }
 
 ThreadError otPlatRadioDisable(void)
 {
-    ThreadError error = kThreadError_None;
+    ThreadError error = kThreadError_Busy;
 
-    VerifyOrExit(sState == kStateIdle, error = kThreadError_Busy);
-    sState = kStateDisabled;
+    if (sState == kStateDisabled || sState == kStateSleep)
+    {
+        error = kThreadError_None;
+        sState = kStateDisabled;
+    }
 
-exit:
     return error;
 }
 
 ThreadError otPlatRadioSleep(void)
 {
-    ThreadError error = kThreadError_None;
+    ThreadError error = kThreadError_Busy;
 
-    VerifyOrExit(error = kStateIdle, error = kThreadError_Busy);
-    sState = kStateSleep;
-
-exit:
-    return error;
-}
-
-ThreadError otPlatRadioIdle(void)
-{
-    ThreadError error = kThreadError_None;
-
-    switch (sState)
+    if (sState == kStateSleep || sState == kStateReceive)
     {
-    case kStateSleep:
-        sState = kStateIdle;
-        break;
-
-    case kStateIdle:
-        break;
-
-    case kStateListen:
-    case kStateTransmit:
+        error = kThreadError_None;
+        sState = kStateSleep;
         disableReceiver();
-        sState = kStateIdle;
-        break;
-
-    case kStateReceive:
-    case kStateDisabled:
-        ExitNow(error = kThreadError_Busy);
-        break;
     }
 
-exit:
     return error;
 }
 
 ThreadError otPlatRadioReceive(uint8_t aChannel)
 {
-    ThreadError error = kThreadError_None;
+    ThreadError error = kThreadError_Busy;
 
-    VerifyOrExit(sState == kStateIdle, error = kThreadError_Busy);
-    sState = kStateListen;
+    if (sState != kStateDisabled)
+    {
+        error = kThreadError_None;
+        sState = kStateReceive;
+        setChannel(aChannel);
+        sReceiveFrame.mChannel = aChannel;
+        enableReceiver();
+    }
 
-    setChannel(aChannel);
-    sReceiveFrame.mChannel = aChannel;
-    enableReceiver();
+    return error;
+}
+
+ThreadError otPlatRadioTransmit(void)
+{
+    ThreadError error = kThreadError_Busy;
+
+    if (sState == kStateReceive)
+    {
+        int i;
+
+        error = kThreadError_None;
+        sState = kStateTransmit;
+        sTransmitError = kThreadError_None;
+
+        while (HWREG(RFCORE_XREG_FSMSTAT1) & RFCORE_XREG_FSMSTAT1_TX_ACTIVE);
+
+        // flush txfifo
+        HWREG(RFCORE_SFR_RFST) = CC2538_RF_CSP_OP_ISFLUSHTX;
+        HWREG(RFCORE_SFR_RFST) = CC2538_RF_CSP_OP_ISFLUSHTX;
+
+        // frame length
+        HWREG(RFCORE_SFR_RFDATA) = sTransmitFrame.mLength;
+
+        // frame data
+        for (i = 0; i < sTransmitFrame.mLength; i++)
+        {
+            HWREG(RFCORE_SFR_RFDATA) = sTransmitFrame.mPsdu[i];
+        }
+
+        setChannel(sTransmitFrame.mChannel);
+
+        while ((HWREG(RFCORE_XREG_FSMSTAT1) & 1) == 0);
+
+        // wait for valid rssi
+        while ((HWREG(RFCORE_XREG_RSSISTAT) & RFCORE_XREG_RSSISTAT_RSSI_VALID) == 0);
+
+        VerifyOrExit(HWREG(RFCORE_XREG_FSMSTAT1) & (RFCORE_XREG_FSMSTAT1_CCA | RFCORE_XREG_FSMSTAT1_SFD),
+                     sTransmitError = kThreadError_ChannelAccessFailure);
+
+        // begin transmit
+        HWREG(RFCORE_SFR_RFST) = CC2538_RF_CSP_OP_ISTXON;
+
+        while (HWREG(RFCORE_XREG_FSMSTAT1) & RFCORE_XREG_FSMSTAT1_TX_ACTIVE);
+    }
 
 exit:
     return error;
@@ -256,56 +296,6 @@ exit:
 RadioPacket *otPlatRadioGetTransmitBuffer(void)
 {
     return &sTransmitFrame;
-}
-
-ThreadError otPlatRadioTransmit(void)
-{
-    ThreadError error = kThreadError_None;
-    int i;
-
-    VerifyOrExit(sState == kStateIdle, error = kThreadError_Busy);
-    sState = kStateTransmit;
-    sTransmitError = kThreadError_None;
-
-    while (HWREG(RFCORE_XREG_FSMSTAT1) & RFCORE_XREG_FSMSTAT1_TX_ACTIVE);
-
-    // flush txfifo
-    HWREG(RFCORE_SFR_RFST) = CC2538_RF_CSP_OP_ISFLUSHTX;
-    HWREG(RFCORE_SFR_RFST) = CC2538_RF_CSP_OP_ISFLUSHTX;
-
-    // frame length
-    HWREG(RFCORE_SFR_RFDATA) = sTransmitFrame.mLength;
-
-    // frame data
-    for (i = 0; i < sTransmitFrame.mLength; i++)
-    {
-        HWREG(RFCORE_SFR_RFDATA) = sTransmitFrame.mPsdu[i];
-    }
-
-    setChannel(sTransmitFrame.mChannel);
-    enableReceiver();
-
-    while ((HWREG(RFCORE_XREG_FSMSTAT1) & 1) == 0);
-
-    // wait for valid rssi
-    while ((HWREG(RFCORE_XREG_RSSISTAT) & RFCORE_XREG_RSSISTAT_RSSI_VALID) == 0);
-
-    VerifyOrExit(HWREG(RFCORE_XREG_FSMSTAT1) & (RFCORE_XREG_FSMSTAT1_CCA | RFCORE_XREG_FSMSTAT1_SFD),
-                 sTransmitError = kThreadError_ChannelAccessFailure);
-
-    // begin transmit
-    HWREG(RFCORE_SFR_RFST) = CC2538_RF_CSP_OP_ISTXON;
-
-    while (HWREG(RFCORE_XREG_FSMSTAT1) & RFCORE_XREG_FSMSTAT1_TX_ACTIVE);
-
-exit:
-
-    if (sTransmitError != kThreadError_None || (sTransmitFrame.mPsdu[0] & IEEE802154_ACK_REQUEST) == 0)
-    {
-        disableReceiver();
-    }
-
-    return error;
 }
 
 int8_t otPlatRadioGetNoiseFloor(void)
@@ -341,7 +331,7 @@ void readFrame(void)
     uint8_t crcCorr;
     int i;
 
-    VerifyOrExit(sState == kStateListen || sState == kStateTransmit, ;);
+    VerifyOrExit(sState == kStateReceive || sState == kStateTransmit, ;);
     VerifyOrExit((HWREG(RFCORE_XREG_FSMSTAT1) & RFCORE_XREG_FSMSTAT1_FIFOP) != 0, ;);
 
     // read length
@@ -379,50 +369,28 @@ void cc2538RadioProcess(void)
 {
     readFrame();
 
-    switch (sState)
+    if ((sState == kStateReceive) && (sReceiveFrame.mLength > 0))
     {
-    case kStateDisabled:
-        break;
+        otPlatRadioReceiveDone(&sReceiveFrame, sReceiveError);
+    }
 
-    case kStateSleep:
-        break;
-
-    case kStateIdle:
-        break;
-
-    case kStateListen:
-    case kStateReceive:
-        if (sReceiveFrame.mLength > 0)
-        {
-            sState = kStateIdle;
-            otPlatRadioReceiveDone(&sReceiveFrame, sReceiveError);
-        }
-
-        break;
-
-    case kStateTransmit:
+    if (sState == kStateTransmit)
+    {
         if (sTransmitError != kThreadError_None || (sTransmitFrame.mPsdu[0] & IEEE802154_ACK_REQUEST) == 0)
         {
-            sState = kStateIdle;
+            sState = kStateReceive;
             otPlatRadioTransmitDone(false, sTransmitError);
         }
         else if (sReceiveFrame.mLength == IEEE802154_ACK_LENGTH &&
                  (sReceiveFrame.mPsdu[0] & IEEE802154_FRAME_TYPE_MASK) == IEEE802154_FRAME_TYPE_ACK &&
                  (sReceiveFrame.mPsdu[IEEE802154_DSN_OFFSET] == sTransmitFrame.mPsdu[IEEE802154_DSN_OFFSET]))
         {
-            sState = kStateIdle;
+            sState = kStateReceive;
             otPlatRadioTransmitDone((sReceiveFrame.mPsdu[0] & IEEE802154_FRAME_PENDING) != 0, sTransmitError);
         }
-
-        break;
     }
 
     sReceiveFrame.mLength = 0;
-
-    if (sState == kStateIdle)
-    {
-        disableReceiver();
-    }
 }
 
 void RFCoreRxTxIntHandler(void)

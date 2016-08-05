@@ -77,7 +77,7 @@ class Cert_5_3_3_AddressQuery(unittest.TestCase):
         self.nodes[ED2].enable_whitelist()
 
     def tearDown(self):
-        for node in self.nodes.itervalues():
+        for node in list(self.nodes.values()):
             node.stop()
         del self.nodes
 

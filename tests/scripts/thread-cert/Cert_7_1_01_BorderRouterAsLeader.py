@@ -68,7 +68,7 @@ class Cert_7_1_1_BorderRouterAsLeader(unittest.TestCase):
         self.nodes[ED1].enable_whitelist()
 
     def tearDown(self):
-        for node in self.nodes.itervalues():
+        for node in list(self.nodes.values()):
             node.stop()
         del self.nodes
 

@@ -81,7 +81,7 @@ class Cert_5_5_3_SplitMergeChildren(unittest.TestCase):
         self.nodes[ED3].enable_whitelist()
 
     def tearDown(self):
-        for node in self.nodes.itervalues():
+        for node in list(self.nodes.values()):
             node.stop()
         del self.nodes
 

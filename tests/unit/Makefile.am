@@ -75,6 +75,18 @@ check_PROGRAMS                                                      = \
     test-toolchain                                                    \
     $(NULL)
 
+if OPENTHREAD_ENABLE_NCP
+
+COMMON_LDADD                                                      += \
+    $(top_builddir)/src/ncp/libopenthread-ncp.a                      \
+    $(NULL)
+
+check_PROGRAMS                                                    += \
+    test-ncp-buffer                                                  \
+    $(NULL)
+
+endif # OPENTHREAD_ENABLE_NCP
+
 # Test applications and scripts that should be built and run when the
 # 'check' target is run.
 
@@ -107,6 +119,9 @@ test_mac_frame_SOURCES       = test_mac_frame.cpp
 
 test_message_LDADD           = $(COMMON_LDADD)
 test_message_SOURCES         = test_message.cpp
+
+test_ncp_buffer_LDADD        = $(COMMON_LDADD)
+test_ncp_buffer_SOURCES      = test_ncp_buffer.cpp
 
 test_timer_LDADD             = $(COMMON_LDADD)
 test_timer_SOURCES           = test_timer.cpp

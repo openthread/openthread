@@ -59,7 +59,7 @@
 /* ------------------------------------------------------------------------- */
 /* MARK: Macros and Constants */
 
-#define SPI_HDLC_VERSION                "0.0"
+#define SPI_HDLC_VERSION                "0.01"
 
 #define MAX_FRAME_SIZE                  2048
 #define HEADER_LEN                      5
@@ -103,7 +103,7 @@ static const char* gResGpioDevPath = NULL;
 static int gVerbose = LOG_WARNING;
 
 static int gSpiDevFd = -1;
-static int gResGpioDirFd = -1;
+static int gResGpioValueFd = -1;
 static int gIntGpioValueFd = -1;
 
 static int gHDLCInputFd = -1;
@@ -264,6 +264,30 @@ static int do_spi_xfer(int len)
     return ret;
 }
 
+
+static void spi_header_set_accept_len(uint8_t *header, uint16_t len)
+{
+    header[1] = ((len << 0) & 0xFF);
+    header[2] = ((len << 8) & 0xFF);
+}
+
+static void spi_header_set_data_len(uint8_t *header, uint16_t len)
+{
+    header[3] = ((len << 0) & 0xFF);
+    header[4] = ((len << 8) & 0xFF);
+}
+
+static uint16_t spi_header_get_accept_len(uint8_t *header)
+{
+    return ( header[1] + (header[2] << 8) );
+}
+
+static uint16_t spi_header_get_data_len(uint8_t *header)
+{
+    return ( header[3] + (header[4] << 8) );
+}
+
+
 static int push_pull_spi()
  {
     int ret;
@@ -278,10 +302,8 @@ static int push_pull_spi()
     // so that the slave doesn't think
     // we are actually trying to transfer
     // data.
-    gSpiTxFrameBuffer[1] = 0;
-    gSpiTxFrameBuffer[2] = 0;
-    gSpiTxFrameBuffer[3] = 0;
-    gSpiTxFrameBuffer[4] = 0;
+    spi_header_set_accept_len(gSpiTxFrameBuffer, 0);
+    spi_header_set_data_len(gSpiTxFrameBuffer, 0);
     ret = do_spi_xfer(0);
     if (ret < 0)
     {
@@ -293,11 +315,13 @@ static int push_pull_spi()
     {
         // Device is off or in a bad state.
         gSpiTxFlowControl = true;
+
+        syslog(LOG_DEBUG, "Discarded frame. (1)");
         goto bail;
     }
 
-    slave_max_rx = gSpiRxFrameBuffer[2] + (gSpiRxFrameBuffer[3] << 8);
-    slave_data_len = gSpiRxFrameBuffer[4] + (gSpiRxFrameBuffer[5] << 8);
+    slave_max_rx = spi_header_get_accept_len(gSpiRxFrameBuffer);
+    slave_data_len = spi_header_get_data_len(gSpiRxFrameBuffer);
 
     if ( (slave_max_rx > MAX_FRAME_SIZE)
       || (slave_data_len > MAX_FRAME_SIZE)
@@ -318,9 +342,7 @@ static int push_pull_spi()
     )
     {
         spi_xfer_bytes = gSpiTxPayloadSize;
-        gSpiTxFrameBuffer[2] = (gSpiTxPayloadSize & 0xFF);
-        gSpiTxFrameBuffer[3] = ((gSpiTxPayloadSize >> 8) & 0xFF);
-
+        spi_header_set_data_len(gSpiTxFrameBuffer, gSpiTxPayloadSize);
     }
     else if (gSpiTxReady && (gSpiTxPayloadSize > slave_max_rx))
     {
@@ -335,9 +357,7 @@ static int push_pull_spi()
       && (gSpiRxPayloadSize == 0)
     )
     {
-        gSpiRxPayloadSize = slave_data_len;
-        gSpiTxFrameBuffer[2] = (slave_data_len & 0xFF);
-        gSpiTxFrameBuffer[3] = ((slave_data_len >> 8) & 0xFF);
+        spi_header_set_accept_len(gSpiTxFrameBuffer, slave_data_len);
         if (slave_data_len > spi_xfer_bytes)
         {
             spi_xfer_bytes = slave_data_len;
@@ -356,11 +376,28 @@ static int push_pull_spi()
     {
         // Device is off or in a bad state.
         gSpiTxFlowControl = true;
+
+        syslog(LOG_DEBUG, "Discarded frame. (2)");
         goto bail;
     }
 
-    if (gSpiTxFrameBuffer[2] + gSpiTxFrameBuffer[3] != 0)
-    {
+    slave_max_rx = spi_header_get_accept_len(gSpiRxFrameBuffer);
+    slave_data_len = spi_header_get_data_len(gSpiRxFrameBuffer);
+
+    if ( (gSpiRxPayloadSize == 0)
+      && (slave_data_len <= spi_header_get_accept_len(gSpiTxFrameBuffer))
+    ) {
+        // We have received a packet. Set gSpiRxPayloadSize so that
+        // the packet will eventually get queued up by push_hdlc().
+        gSpiRxPayloadSize = slave_data_len;
+    }
+
+    if ( (gSpiTxPayloadSize == spi_header_get_data_len(gSpiTxFrameBuffer))
+      && (spi_header_get_data_len(gSpiTxFrameBuffer) <= slave_max_rx)
+    ) {
+        // Out outbound packet has been successfully transmitted. Clear
+        // gSpiTxPayloadSize and gSpiTxReady so that pull_hdlc() can
+        // pull another packet for us to send.
         gSpiTxReady = false;
         gSpiTxPayloadSize = 0;
     }
@@ -551,11 +588,25 @@ static int push_hdlc(void)
 
     if (ret < 0)
     {
-        perror("push_hdlc");
+        if (errno == EAGAIN)
+        {
+            ret = 0;
+        }
+        else
+        {
+            perror("push_hdlc:write");
+            syslog(LOG_ERR, "push_hdlc:write: errno=%d (%s)", errno, strerror(errno));
+        }
         goto bail;
     }
 
     escaped_frame_sent += ret;
+
+    // Reset state once we have sent the entire frame.
+    if (escaped_frame_len == escaped_frame_sent)
+    {
+        escaped_frame_len = escaped_frame_sent = 0;
+    }
 
     ret = 0;
 
@@ -572,7 +623,7 @@ static int pull_hdlc(void)
     if (!gSpiTxReady)
     {
         uint8_t byte;
-        while (read(gHDLCInputFd, &byte, 1) == 1)
+        while ((ret = read(gHDLCInputFd, &byte, 1)) == 1)
         {
             if (gSpiTxPayloadSize >= (MAX_FRAME_SIZE - HEADER_LEN))
             {
@@ -635,7 +686,22 @@ static int pull_hdlc(void)
         }
     }
 
-    return ret;
+    if (ret < 0)
+    {
+        if (errno == EAGAIN)
+        {
+            ret = 0;
+        }
+        else
+        {
+            perror("pull_hdlc:read");
+            syslog(LOG_ERR, "pull_hdlc:read: errno=%d (%s)", errno, strerror(errno));
+        }
+    }
+
+    return ret < 0
+        ? ret
+        : 0;
 }
 
 
@@ -731,45 +797,77 @@ bail:
 
 static bool setup_res_gpio(const char* path)
 {
+    int setup_fd;
     int prev_errno = 0;
     char* dir_path = NULL;
+    char* value_path = NULL;
     int len;
 
     gResGpioDevPath = path;
 
     len = asprintf(&dir_path, "%s/direction", path);
 
-    if (len > 0)
+    if (len < 0)
     {
-        gResGpioDirFd = open(dir_path, O_WRONLY);
-    }
-    else
-    {
-        gResGpioDirFd = -1;
+        perror("asprintf");
+        goto bail;
     }
 
-    prev_errno = errno;
+    len = asprintf(&value_path, "%s/value", path);
 
-    if (gResGpioDirFd >= 0)
+    if (len < 0)
     {
-        if (-1 == write(gResGpioDirFd, "high\n", 5))
+        perror("asprintf");
+        goto bail;
+    }
+
+    setup_fd = open(dir_path, O_WRONLY);
+
+    if (setup_fd >= 0)
+    {
+        if (-1 == write(setup_fd, "high\n", 5))
         {
-            prev_errno = errno;
-            close(gResGpioDirFd);
-            gResGpioDirFd = -1;
+            perror("set_res_direction");
+            goto bail;
         }
     }
 
-    if (gResGpioDirFd < 0)
+    gResGpioValueFd = open(value_path, O_WRONLY);
+
+bail:
+
+    if (setup_fd >= 0)
     {
-        errno = prev_errno;
-        perror("Unable to open RES GPIO");
+        close(setup_fd);
     }
 
-    free(dir_path);
-    errno = prev_errno;
+    if (dir_path)
+    {
+        free(dir_path);
+    }
 
-    return gResGpioDirFd >= 0;
+    if (value_path)
+    {
+        free(value_path);
+    }
+
+    return gResGpioValueFd >= 0;
+}
+
+static void trigger_reset(void)
+{
+    if (gResGpioValueFd >= 0)
+    {
+        lseek(gResGpioValueFd, 0, SEEK_SET);
+        write(gResGpioValueFd, "0\n", 2);
+
+        usleep(10 * USEC_PER_MSEC);
+
+        lseek(gResGpioValueFd, 0, SEEK_SET);
+        write(gResGpioValueFd, "1\n", 2);
+
+        syslog(LOG_NOTICE, "Triggered hardware reset");
+    }
 }
 
 static bool setup_int_gpio(const char* path)
@@ -810,36 +908,35 @@ static bool setup_int_gpio(const char* path)
 
     setup_fd = open(dir_path, O_WRONLY);
 
-    if (setup_fd < 0)
+    if (setup_fd >= 0)
     {
-        perror("open");
-        goto bail;
+        len = write(setup_fd, "in", 2);
+        if (len < 0)
+        {
+            perror("write");
+            goto bail;
+        }
+
+        close(setup_fd);
+
+        setup_fd = -1;
     }
-
-    len = write(setup_fd, "in", 2);
-
-    if (len < 0)
-    {
-        perror("write");
-        goto bail;
-    }
-
-    close(setup_fd);
 
     setup_fd = open(edge_path, O_WRONLY);
 
-    if (setup_fd < 0)
+    if (setup_fd >= 0)
     {
-        perror("open");
-        goto bail;
-    }
+        len = write(setup_fd, "falling", 7);
 
-    len = write(setup_fd, "falling", 7);
+        if (len < 0)
+        {
+            perror("write");
+            goto bail;
+        }
 
-    if (len < 0)
-    {
-        perror("write");
-        goto bail;
+        close(setup_fd);
+
+        setup_fd = -1;
     }
 
     gIntGpioValueFd = open(value_path, O_RDONLY);
@@ -921,6 +1018,7 @@ static void print_help(void)
 int main(int argc, char *argv[])
 {
     int i = 0;
+    const char* prog = argv[0];
     struct sigaction sigact;
     static fd_set read_set;
     static fd_set write_set;
@@ -972,24 +1070,16 @@ int main(int argc, char *argv[])
     // ========================================================================
     // ARGUMENT PARSING
 
-    openlog(basename(argv[0]), LOG_PERROR | LOG_PID | LOG_CONS, LOG_DAEMON);
+    openlog(basename(prog), LOG_PERROR | LOG_PID | LOG_CONS, LOG_DAEMON);
 
-    while (++i < argc)
+    setlogmask(setlogmask(0) & LOG_UPTO(gVerbose));
+
+    while (1)
     {
-        int c = getopt_long(argc, argv, "i:r:v:Vh?", options, &i);
+        int c = getopt_long(argc, argv, "i:r:v:Vh?", options, NULL);
         if (c == -1)
         {
-            if (gSpiDevPath != NULL)
-            {
-                fprintf(stderr, "%s: Unexpected argument \"%s\"\n", argv[0], optarg);
-                exit(EXIT_FAILURE);
-            }
-
-            if (!setup_spi_dev(argv[i+1]))
-            {
-                syslog(LOG_ERR, "Unable to open SPI device \"%s\", %s", argv[i+1], strerror(errno));
-                exit(EXIT_FAILURE);
-            }
+            break;
         }
         else
         {
@@ -1056,9 +1146,29 @@ int main(int argc, char *argv[])
         }
     }
 
+    argc -= optind;
+    argv += optind;
+
+    if (argc >= 1)
+    {
+        if (!setup_spi_dev(argv[0]))
+        {
+            syslog(LOG_ERR, "%s: Unable to open SPI device \"%s\", %s", prog, argv[optind], strerror(errno));
+            exit(EXIT_FAILURE);
+        }
+        argc--;
+        argv++;
+    }
+
+    if (argc >= 1)
+    {
+        fprintf(stderr, "%s: Unexpected argument \"%s\"\n", prog, argv[0]);
+        exit(EXIT_FAILURE);
+    }
+
     if (gSpiDevPath == NULL)
     {
-        fprintf(stderr, "%s: Missing SPI device path\n", argv[0]);
+        fprintf(stderr, "%s: Missing SPI device path\n", prog);
         exit(EXIT_FAILURE);
     }
 
@@ -1128,6 +1238,13 @@ int main(int argc, char *argv[])
         max_fd = gIntGpioValueFd;
     }
 
+    if (gIntGpioValueFd < 0)
+    {
+        syslog(LOG_WARNING, "Interrupt pin was not set, must poll SPI. Performance will suffer.");
+    }
+
+    trigger_reset();
+
     // ========================================================================
     // MAIN LOOP
 
@@ -1149,7 +1266,6 @@ int main(int argc, char *argv[])
             // We are being rate-limited by the NCP.
             timeout_ms = SPI_POLL_PERIOD_MSEC;
             syslog(LOG_INFO, "Rate limiting transactions");
-
         }
         else
         {
@@ -1171,6 +1287,7 @@ int main(int argc, char *argv[])
                 // set the timeout to be 0.
                 timeout_ms = 0;
 
+                syslog(LOG_DEBUG, "Interrupt.");
             }
             else
             {
@@ -1194,10 +1311,9 @@ int main(int argc, char *argv[])
         if (FD_ISSET(gHDLCInputFd, &read_set))
         {
             // Read in the data.
-            gRet = pull_hdlc();
-
-            if (gRet)
+            if (pull_hdlc() < 0)
             {
+                gRet = EXIT_FAILURE;
                 break;
             }
         }
@@ -1206,18 +1322,21 @@ int main(int argc, char *argv[])
         if (FD_ISSET(gHDLCOutputFd, &write_set))
         {
             // Write out the data.
-            gRet = push_hdlc();
-
-            if (gRet)
+            if (push_hdlc() < 0)
             {
+                gRet = EXIT_FAILURE;
                 break;
             }
         }
 
-        // Handle SPI.
-        if ((gSpiRxPayloadSize != 0) || gSpiTxReady)
+        // Service the SPI port if we can receive
+        // a packet or we have a packet to be sent.
+        if ((gSpiRxPayloadSize == 0) || gSpiTxReady)
         {
-            gRet = push_pull_spi();
+            if (push_pull_spi() < 0)
+            {
+                gRet = EXIT_FAILURE;
+            }
         }
     }
 

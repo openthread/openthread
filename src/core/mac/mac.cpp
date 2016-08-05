@@ -106,6 +106,8 @@ Mac::Mac(ThreadNetif &aThreadNetif):
         mExtAddress.m8[i] = otPlatRandomGet();
     }
 
+    mExtAddress.m8[0] &= ~1; // always remove multicast bit
+
     memset(&mCounters, 0, sizeof(otMacCounters));
 
     SetExtendedPanId(sExtendedPanidInit);
@@ -431,7 +433,7 @@ void Mac::HandleBeginTransmit(void)
     Frame &sendFrame(*static_cast<Frame *>(otPlatRadioGetTransmitBuffer()));
     ThreadError error = kThreadError_None;
 
-    if (otPlatRadioIdle() != kThreadError_None)
+    if (otPlatRadioReceive(mChannel) != kThreadError_None)
     {
         mBeginTransmit.Post();
         ExitNow();
@@ -541,7 +543,7 @@ void Mac::HandleAckTimer(void *aContext)
 
 void Mac::HandleAckTimer(void)
 {
-    otPlatRadioIdle();
+    otPlatRadioReceive(mChannel);
 
     switch (mState)
     {
@@ -615,7 +617,7 @@ void Mac::SentFrame(bool aAcked)
 
         if ((neighbor = mMle.GetNeighbor(destination)) != NULL)
         {
-            if (neighbor->mState == Neighbor::kStateValid && mMle.GetChildId(neighbor->mValid.mRloc16) != 0)
+            if (neighbor->mState == Neighbor::kStateValid && !mMle.IsActiveRouter(neighbor->mValid.mRloc16))
             {
                 mNetif.SetStateChangedFlags(OT_THREAD_CHILD_REMOVED);
             }
@@ -1018,7 +1020,7 @@ void Mac::SetPromiscuous(bool aPromiscuous)
 {
     otPlatRadioSetPromiscuous(aPromiscuous);
 
-    SuccessOrExit(otPlatRadioIdle());
+    SuccessOrExit(otPlatRadioReceive(mChannel));
     NextOperation();
 
 exit:

@@ -70,7 +70,7 @@ class Cert_6_1_6_REEDAttachLinkQuality(unittest.TestCase):
         self.nodes[ED].enable_whitelist()
 
     def tearDown(self):
-        for node in self.nodes.itervalues():
+        for node in list(self.nodes.values()):
             node.stop()
         del self.nodes
 

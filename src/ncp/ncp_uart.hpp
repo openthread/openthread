@@ -30,8 +30,8 @@
  *   This file contains definitions for an FLEN/HDLC interface to the OpenThread stack.
  */
 
-#ifndef NCP_HPP_
-#define NCP_HPP_
+#ifndef NCP_UART_HPP_
+#define NCP_UART_HPP_
 
 #include <ncp/ncp_base.hpp>
 #include <ncp/flen.hpp>
@@ -39,12 +39,12 @@
 
 namespace Thread {
 
-class Ncp : public NcpBase
+class NcpUart : public NcpBase
 {
     typedef NcpBase super_t;
 
 public:
-    Ncp();
+    NcpUart();
 
     virtual ThreadError OutboundFrameBegin(void);
     virtual uint16_t OutboundFrameGetRemaining(void);
@@ -52,21 +52,34 @@ public:
     virtual ThreadError OutboundFrameFeedMessage(Message &message);
     virtual ThreadError OutboundFrameSend(void);
 
-    static void HandleFrame(void *context, uint8_t *aBuf, uint16_t aBufLength);
     void SendDoneTask(void);
     void ReceiveTask(const uint8_t *aBuf, uint16_t aBufLength);
 
 private:
+    static void HandleFrame(void *context, uint8_t *aBuf, uint16_t aBufLength);
     void HandleFrame(uint8_t *aBuf, uint16_t aBufLength);
 
     Hdlc::Encoder mFrameEncoder;
     Hdlc::Decoder mFrameDecoder;
 
-    uint8_t mSendFrame[1500];
-    uint8_t mReceiveFrame[1500];
-    uint8_t *mSendFrameIter;
+    class SendHdlcBuffer : public Hdlc::Encoder::BufferWriteIterator
+    {
+    public:
+        SendHdlcBuffer(void);
+
+        void           Reset(void);
+        uint16_t       GetLength(void) const;
+        uint16_t       GetRemainingLength(void) const;
+        const uint8_t *GetBuffer(void) const;
+
+    private:
+        uint8_t     mBuffer[1500];
+    };
+
+    SendHdlcBuffer mSendFrame;
+    uint8_t        mReceiveFrame[1500];
 };
 
 }  // namespace Thread
 
-#endif  // NCP_HPP_
+#endif  // NCP_UART_HPP_

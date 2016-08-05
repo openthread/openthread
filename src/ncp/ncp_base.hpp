@@ -226,6 +226,8 @@ private:
     void GetPropertyHandler_THREAD_STABLE_NETWORK_DATA_VERSION(uint8_t header, spinel_prop_key_t key);
     void GetPropertyHandler_MAC_FILTER_MODE(uint8_t header, spinel_prop_key_t key);
     void GetPropertyHandler_THREAD_ASSISTING_PORTS(uint8_t header, spinel_prop_key_t key);
+    void GetPropertyHandler_THREAD_ALLOW_LOCAL_NET_DATA_CHANGE(uint8_t header, spinel_prop_key_t key);
+    void GetPropertyHandler_CNTR(uint8_t header, spinel_prop_key_t key);
 
     void SetPropertyHandler_POWER_STATE(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr,
                                         uint16_t value_len);
@@ -265,6 +267,10 @@ private:
 
     void SetPropertyHandler_THREAD_ASSISTING_PORTS(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr,
                                                    uint16_t value_len);
+    void SetPropertyHandler_THREAD_ALLOW_LOCAL_NET_DATA_CHANGE(uint8_t header, spinel_prop_key_t key,
+                                                   const uint8_t *value_ptr, uint16_t value_len);
+    void SetPropertyHandler_CNTR_RESET(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr,
+                                       uint16_t value_len);
 
     void InsertPropertyHandler_IPV6_ADDRESS_TABLE(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr,
                                                   uint16_t value_len);
@@ -310,6 +316,8 @@ private:
     uint32_t mChangedFlags;
 
     otNetifAddress mNetifAddresses[kNetifAddressListSize];
+
+    bool mAllowLocalNetworkDataChange;
 
 protected:
     /**
