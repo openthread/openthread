@@ -76,27 +76,32 @@ static uint8_t spi_header_get_flag_byte(const uint8_t *header)
 
 static uint16_t spi_header_get_accept_len(const uint8_t *header)
 {
-    return ( header[1] + (header[2] << 8) );
+    return ( header[1] + static_cast<uint16_t>(header[2] << 8) );
 }
 
 static uint16_t spi_header_get_data_len(const uint8_t *header)
 {
-    return ( header[3] + (header[4] << 8) );
+    return ( header[3] + static_cast<uint16_t>(header[4] << 8) );
 }
 
 NcpSpi::NcpSpi():
     NcpBase(),
     mHandleRxFrame(&HandleRxFrame, this),
-    mHandleSendDone(&HandleSendDone, this)
+    mHandleSendDone(&HandleSendDone, this),
+    mTxFrameBuffer(mTxBuffer, sizeof(mTxBuffer))
 {
-    memset(mEmptySendFrame, 0, sizeof(SPI_HEADER_LENGTH));
-    memset(mSendFrame, 0, sizeof(SPI_HEADER_LENGTH));
+    memset(mEmptySendFrame, 0, kSpiHeaderLength);
+    memset(mSendFrame, 0, kSpiHeaderLength);
 
     mSending = false;
+    mHandlingSendDone = false;
+    mHandlingRxFrame = false;
+
+    mTxFrameBuffer.SetCallbacks(NULL, TxFrameBufferHasData, this);
 
     spi_header_set_flag_byte(mSendFrame, SPI_RESET_FLAG|SPI_PATTERN_VALUE);
     spi_header_set_flag_byte(mEmptySendFrame, SPI_RESET_FLAG|SPI_PATTERN_VALUE);
-    spi_header_set_accept_len(mSendFrame, sizeof(mReceiveFrame) - SPI_HEADER_LENGTH);
+    spi_header_set_accept_len(mSendFrame, sizeof(mReceiveFrame) - kSpiHeaderLength);
     otPlatSpiSlaveEnable(&SpiTransactionComplete, (void*)this);
 
     // We signal an interrupt on this first transaction to
@@ -104,9 +109,9 @@ NcpSpi::NcpSpi():
     // reset flag was set.
     otPlatSpiSlavePrepareTransaction(
         mEmptySendFrame,
-        SPI_HEADER_LENGTH,
+        kSpiHeaderLength,
         mEmptyReceiveFrame,
-        SPI_HEADER_LENGTH,
+        kSpiHeaderLength,
         true
     );
 }
@@ -148,17 +153,17 @@ NcpSpi::SpiTransactionComplete(
 
     // TODO: Check `PATTERN` bits of `HDR` and ignore frame if not set.
     //       Holding off on implementing this so as to not cause immediate
-    //       compatability problems, even though it is required by the spec.
+    //       compatibility problems, even though it is required by the spec.
 
-    if (aTransactionLength >= SPI_HEADER_LENGTH)
+    if (aTransactionLength >= kSpiHeaderLength)
     {
-        if (aMISOBufLen >= SPI_HEADER_LENGTH)
+        if (aMISOBufLen >= kSpiHeaderLength)
         {
             rx_accept_len = spi_header_get_accept_len(aMISOBuf);
             tx_data_len = spi_header_get_data_len(aMISOBuf);
         }
 
-        if (aMOSIBufLen >= SPI_HEADER_LENGTH)
+        if (aMOSIBufLen >= kSpiHeaderLength)
         {
             rx_data_len = spi_header_get_data_len(aMOSIBuf);
             tx_accept_len = spi_header_get_accept_len(aMOSIBuf);
@@ -166,7 +171,7 @@ NcpSpi::SpiTransactionComplete(
 
         if ( !mHandlingRxFrame
           && (rx_data_len > 0)
-          && (rx_data_len <= (aTransactionLength - SPI_HEADER_LENGTH))
+          && (rx_data_len <= (aTransactionLength - kSpiHeaderLength))
           && (rx_data_len <= rx_accept_len)
         ) {
             mHandlingRxFrame = true;
@@ -176,7 +181,7 @@ NcpSpi::SpiTransactionComplete(
         if ( mSending
           && !mHandlingSendDone
           && (tx_data_len > 0)
-          && (tx_data_len <= (aTransactionLength - SPI_HEADER_LENGTH))
+          && (tx_data_len <= (aTransactionLength - kSpiHeaderLength))
           && (tx_data_len <= tx_accept_len)
         ) {
             // Our transmission was successful.
@@ -196,25 +201,25 @@ NcpSpi::SpiTransactionComplete(
     if (mSending && !mHandlingSendDone)
     {
         aMISOBuf = mSendFrame;
-        aMISOBufLen = OutboundFrameSize() + SPI_HEADER_LENGTH;
+        aMISOBufLen = mSendFrameLen;
     }
     else
     {
         aMISOBuf = mEmptySendFrame;
-        aMISOBufLen = SPI_HEADER_LENGTH;
+        aMISOBufLen = kSpiHeaderLength;
     }
 
     if (mHandlingRxFrame)
     {
         aMOSIBuf = mEmptyReceiveFrame;
-        aMOSIBufLen = SPI_HEADER_LENGTH;
+        aMOSIBufLen = kSpiHeaderLength;
         spi_header_set_accept_len(aMISOBuf, 0);
     }
     else
     {
         aMOSIBuf = mReceiveFrame;
         aMOSIBufLen = sizeof(mReceiveFrame);
-        spi_header_set_accept_len(aMISOBuf, sizeof(mReceiveFrame) - SPI_HEADER_LENGTH);
+        spi_header_set_accept_len(aMISOBuf, sizeof(mReceiveFrame) - kSpiHeaderLength);
     }
 
     otPlatSpiSlavePrepareTransaction(
@@ -226,92 +231,69 @@ NcpSpi::SpiTransactionComplete(
     );
 }
 
-uint16_t
-NcpSpi::OutboundFrameSize(void)
+ThreadError NcpSpi::OutboundFrameBegin(void)
 {
-    return static_cast<uint16_t>(mSendFrameIter - (mSendFrame + SPI_HEADER_LENGTH));
+    return mTxFrameBuffer.InFrameBegin();
 }
 
-uint16_t
-NcpSpi::OutboundFrameGetRemaining(void)
+ThreadError NcpSpi::OutboundFrameFeedData(const uint8_t *aDataBuffer, uint16_t aDataBufferLength)
 {
-    return static_cast<uint16_t>((sizeof(mSendFrame) - SPI_HEADER_LENGTH) - OutboundFrameSize());
+    return mTxFrameBuffer.InFrameFeedData(aDataBuffer, aDataBufferLength);
 }
 
-ThreadError
-NcpSpi::OutboundFrameBegin(void)
+ThreadError NcpSpi::OutboundFrameFeedMessage(Message &aMessage)
 {
-    ThreadError errorCode( kThreadError_None );
-
-    if (mSending)
-    {
-        errorCode = kThreadError_Busy;
-    }
-    else
-    {
-        mSendFrameIter = (mSendFrame + SPI_HEADER_LENGTH);
-    }
-
-    return errorCode;
+    return mTxFrameBuffer.InFrameFeedMessage(aMessage);
 }
 
-ThreadError
-NcpSpi::OutboundFrameFeedData(const uint8_t *frame, uint16_t frameLength)
+ThreadError NcpSpi::OutboundFrameSend(void)
 {
-    ThreadError errorCode( kThreadError_None );
-    uint16_t maxOutLength( OutboundFrameGetRemaining() );
-
-    if (frameLength > maxOutLength)
-    {
-        errorCode = kThreadError_Failed;
-    }
-    else
-    {
-        memcpy(mSendFrameIter, frame, frameLength);
-        mSendFrameIter += frameLength;
-    }
-
-    return errorCode;
+    return mTxFrameBuffer.InFrameEnd();
 }
 
-ThreadError
-NcpSpi::OutboundFrameFeedMessage(Message &message)
+void NcpSpi::TxFrameBufferHasData(void *aContext, NcpFrameBuffer *aNcpFrameBuffer)
 {
-    ThreadError errorCode( kThreadError_None );
-    uint16_t maxOutLength( OutboundFrameGetRemaining() );
-    uint16_t frameLength( message.GetLength() );
+    (void)aContext;
+    (void)aNcpFrameBuffer;
 
-    if (frameLength > maxOutLength)
-    {
-        errorCode = kThreadError_Failed;
-    }
-    else
-    {
-        message.Read(0, frameLength, mSendFrameIter);
-        mSendFrameIter += frameLength;
-    }
-
-    Message::Free(message);
-
-    return errorCode;
+    sNcpSpi->TxFrameBufferHasData();
 }
 
-ThreadError
-NcpSpi::OutboundFrameSend(void)
+void NcpSpi::TxFrameBufferHasData(void)
 {
-    ThreadError errorCode;
-    uint16_t frameLength( OutboundFrameSize() );
+    PrepareNextSpiSendFrame();
+}
+
+ThreadError NcpSpi::PrepareNextSpiSendFrame(void)
+{
+    ThreadError errorCode = kThreadError_None;
+    uint16_t frameLength;
+    uint16_t readLength;
+
+    VerifyOrExit(!mSending, errorCode = kThreadError_Busy);
+
+    VerifyOrExit(!mTxFrameBuffer.IsEmpty(), ;);
+
+    SuccessOrExit(errorCode = mTxFrameBuffer.OutFrameBegin());
+
+    frameLength = mTxFrameBuffer.OutFrameGetLength();
+    VerifyOrExit(frameLength <= sizeof(mSendFrame) - kSpiHeaderLength, errorCode = kThreadError_NoBufs);
 
     spi_header_set_data_len(mSendFrame, frameLength);
 
     // Half-duplex to avoid race condition.
     spi_header_set_accept_len(mSendFrame, 0);
 
+    readLength = mTxFrameBuffer.OutFrameRead(frameLength, mSendFrame + kSpiHeaderLength);
+    VerifyOrExit(readLength == frameLength, errorCode = kThreadError_Failed);
+
+    mSendFrameLen = frameLength + kSpiHeaderLength;
+
     mSending = true;
 
     errorCode = otPlatSpiSlavePrepareTransaction(
         mSendFrame,
-        frameLength + SPI_HEADER_LENGTH,
+        mSendFrameLen,
         mEmptyReceiveFrame,
         sizeof(mEmptyReceiveFrame),
         true
@@ -325,34 +307,43 @@ NcpSpi::OutboundFrameSend(void)
         errorCode = kThreadError_None;
     }
 
+    if (errorCode != kThreadError_None)
+    {
+        mSending = false;
+    }
+
+    // Remove the frame from tx buffer and inform the base
+    // class that space is now available for a new frame.
+    mTxFrameBuffer.OutFrameRemove();
+    super_t::HandleSpaceAvailableInTxBuffer();
+
+exit:
     return errorCode;
 }
 
-void NcpSpi::HandleSendDone(void *context)
+void NcpSpi::HandleSendDone(void *aContext)
 {
-    static_cast<NcpSpi*>(context)->HandleSendDone();
+    static_cast<NcpSpi*>(aContext)->HandleSendDone();
 }
 
 void NcpSpi::HandleSendDone(void)
 {
     mSending = false;
+    PrepareNextSpiSendFrame();
     mHandlingSendDone = false;
-
-    super_t::HandleSpaceAvailableInTxBuffer();
 }
 
-void NcpSpi::HandleRxFrame(void *context)
+void NcpSpi::HandleRxFrame(void *aContext)
 {
-    static_cast<NcpSpi*>(context)->HandleRxFrame();
+    static_cast<NcpSpi*>(aContext)->HandleRxFrame();
 }
 
 void NcpSpi::HandleRxFrame(void)
 {
     uint16_t rx_data_len( spi_header_get_data_len(mReceiveFrame) );
-    super_t::HandleReceive(mReceiveFrame + SPI_HEADER_LENGTH, rx_data_len);
+    super_t::HandleReceive(mReceiveFrame + kSpiHeaderLength, rx_data_len);
     mHandlingRxFrame = false;
 }
-
 
 }  // namespace Thread
 
