@@ -69,6 +69,12 @@ class Interpreter
 {
 public:
     /**
+     * This method initializes the CLI interpreter.
+     *
+     */
+    static void Init(void);
+
+    /**
      * This method interprets a CLI command.
      *
      * @param[in]  aBuf        A pointer to a string.
@@ -78,7 +84,27 @@ public:
      */
     static void ProcessLine(char *aBuf, uint16_t aBufLength, Server &aServer);
 
-    static ThreadError ParseLong(char *argv, long &value);
+    /**
+     * This method parses an ASCII string as a long.
+     *
+     * @param[in]   aString  A pointer to the ASCII string.
+     * @param[out]  aLong    A reference to where the parsed long is placed.
+     *
+     * @retval kThreadError_None   Successfully parsed the ASCII string.
+     * @retval kThreadError_Parse  Could not parse the ASCII string.
+     *
+     */
+    static ThreadError ParseLong(char *aString, long &aLong);
+
+    /**
+     * This method converts a hex string to binary.
+     *
+     * @param[in]   aHex        A pointer to the hex string.
+     * @param[out]  aBin        A pointer to where the binary representation is placed.
+     * @param[in]   aBinLength  Maximum length of the binary representation.
+     *
+     * @returns The number of bytes in the binary representation.
+     */
     static int Hex2Bin(const char *aHex, uint8_t *aBin, uint16_t aBinLength);
 
 private:
@@ -139,13 +165,13 @@ private:
     static otNetifAddress sAddress;
 
     static Ip6::SockAddr sSockAddr;
-    static Ip6::IcmpEcho sIcmpEcho;
+    static Ip6::IcmpEcho *sIcmpEcho;
     static Server *sServer;
     static uint8_t sEchoRequest[];
     static uint16_t sLength;
     static uint16_t sCount;
     static uint32_t sInterval;
-    static Timer sPingTimer;
+    static Timer *sPingTimer;
 };
 
 }  // namespace Cli

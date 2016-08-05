@@ -41,6 +41,7 @@
 #include "cli.hpp"
 #include "cli_dataset.hpp"
 #include <common/encoding.hpp>
+#include <common/new.hpp>
 #include <platform/uart.h>
 
 using Thread::Encoding::BigEndian::HostSwap16;
@@ -89,14 +90,27 @@ const struct Command Interpreter::sCommands[] =
 
 otNetifAddress Interpreter::sAddress;
 
-Ip6::IcmpEcho Interpreter::sIcmpEcho(&HandleEchoResponse, NULL);
+static otDEFINE_ALIGNED_VAR(sIcmpEchoBuf, sizeof(Ip6::IcmpEcho), uint64_t);
+Ip6::IcmpEcho *Interpreter::sIcmpEcho;
+
+static otDEFINE_ALIGNED_VAR(sPingTimerBuf, sizeof(Timer), uint64_t);
+Timer *Interpreter::sPingTimer;
+
 Ip6::SockAddr Interpreter::sSockAddr;
 Server *Interpreter::sServer;
 uint8_t Interpreter::sEchoRequest[1500];
-uint16_t Interpreter::sLength = 8;
-uint16_t Interpreter::sCount = 1;
-uint32_t Interpreter::sInterval = 1000;
-Timer Interpreter::sPingTimer(&HandlePingTimer, NULL);
+uint16_t Interpreter::sLength;
+uint16_t Interpreter::sCount;
+uint32_t Interpreter::sInterval;
+
+void Interpreter::Init(void)
+{
+    sIcmpEcho = new(&sIcmpEchoBuf) Ip6::IcmpEcho(&HandleEchoResponse, NULL);
+    sPingTimer = new(&sPingTimerBuf) Timer(&HandlePingTimer, NULL);
+    sLength = 8;
+    sCount = 1;
+    sInterval = 1000;
+}
 
 int Interpreter::Hex2Bin(const char *aHex, uint8_t *aBin, uint16_t aBinLength)
 {
@@ -810,7 +824,7 @@ void Interpreter::ProcessPing(int argc, char *argv[])
     long value;
 
     VerifyOrExit(argc > 0, error = kThreadError_Parse);
-    VerifyOrExit(!sPingTimer.IsRunning(), error = kThreadError_Busy);
+    VerifyOrExit(!sPingTimer->IsRunning(), error = kThreadError_Busy);
 
     memset(&sSockAddr, 0, sizeof(sSockAddr));
     SuccessOrExit(error = sSockAddr.GetAddress().FromString(argv[0]));
@@ -859,12 +873,12 @@ void Interpreter::HandlePingTimer(void *aContext)
     uint32_t timestamp = HostSwap32(Timer::GetNow());
 
     memcpy(sEchoRequest, &timestamp, sizeof(timestamp));
-    sIcmpEcho.SendEchoRequest(sSockAddr, sEchoRequest, sLength);
+    sIcmpEcho->SendEchoRequest(sSockAddr, sEchoRequest, sLength);
     sCount--;
 
     if (sCount)
     {
-        sPingTimer.Start(sInterval);
+        sPingTimer->Start(sInterval);
     }
 
     (void)aContext;
