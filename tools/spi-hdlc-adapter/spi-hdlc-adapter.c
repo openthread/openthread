@@ -101,6 +101,9 @@ enum {
     MODE_PTY = 1,
 };
 
+// Ignores return value from function 's'
+#define IGNORE_RETURN_VALUE(s)  do { if (s){} } while (0)
+
 /* ------------------------------------------------------------------------- */
 /* MARK: Global State */
 
@@ -153,8 +156,13 @@ static sig_t sPreviousHandlerForSIGTERM;
 
 static void signal_SIGINT(int sig)
 {
+    static const char message[] = "\nCaught SIGINT!\n";
+
     sRet = EXIT_QUIT;
-    syslog(LOG_NOTICE, "Caught SIGINT!");
+
+    // Can't use syslog() because it isn't async signal safe.
+    // So we write to stderr
+    IGNORE_RETURN_VALUE(write(STDERR_FILENO, message, sizeof(message)-1));
 
     // Restore the previous handler so that if we end up getting
     // this signal again we peform the system default action.
@@ -166,8 +174,13 @@ static void signal_SIGINT(int sig)
 
 static void signal_SIGTERM(int sig)
 {
+    static const char message[] = "\nCaught SIGTERM!\n";
+
     sRet = EXIT_QUIT;
-    syslog(LOG_NOTICE, "Caught SIGTERM!");
+
+    // Can't use syslog() because it isn't async signal safe.
+    // So we write to stderr
+    IGNORE_RETURN_VALUE(write(STDERR_FILENO, message, sizeof(message)-1));
 
     // Restore the previous handler so that if we end up getting
     // this signal again we peform the system default action.
@@ -178,8 +191,13 @@ static void signal_SIGTERM(int sig)
 
 static void signal_SIGHUP(int sig)
 {
+    static const char message[] = "\nCaught SIGHUP!\n";
+
     sRet = EXIT_FAILURE;
-    syslog(LOG_NOTICE, "Caught SIGHUP!");
+
+    // Can't use syslog() because it isn't async signal safe.
+    // So we write to stderr
+    IGNORE_RETURN_VALUE(write(STDERR_FILENO, message, sizeof(message)-1));
 
     // We don't restore the "previous handler"
     // because we always want to let the main
@@ -202,6 +220,16 @@ static void signal_critical(int sig, siginfo_t * info, void * ucontext)
     // Shut up compiler warning.
     (void)uc;
     (void)info;
+
+    // We call some functions here which aren't async-signal-safe,
+    // but this function isn't really useful without those calls.
+    // Since we are making a gamble (and we deadlock if we loose),
+    // we are going to set up a two-second watchdog to make sure
+    // we end up terminating like we should. The choice of a two
+    // second timeout is entirely arbitrary, and may be changed
+    // if needs warrant.
+    alarm(2);
+    signal(SIGALRM, SIG_DFL);
 
     fprintf(stderr, " *** FATAL ERROR: Caught signal %d (%s):\n", sig, strsignal(sig));
 
