@@ -123,10 +123,10 @@ static int sIntGpioValueFd      = -1;
 static int sHdlcInputFd         = -1;
 static int sHdlcOutputFd        = -1;
 
-static int sSpiSpeed            = 1000000; // in Hz
+static int sSpiSpeed            = 1000000; // in Hz (default: 1MHz)
 static uint8_t sSpiMode         = 0;
-static int sSpiCsDelay          = 1 * USEC_PER_MSEC;
-static int sSpiTransactionDelay = 1 * USEC_PER_MSEC;
+static int sSpiCsDelay          = 20;
+static int sSpiTransactionDelay = 200;
 
 static uint16_t sSpiRxPayloadSize;
 static uint8_t sSpiRxFrameBuffer[MAX_FRAME_SIZE + SPI_RX_ALIGN_ALLOWANCE_MAX];
@@ -295,22 +295,6 @@ static uint16_t spi_header_get_data_len(const uint8_t *header)
     return ( header[3] + (header[4] << 8) );
 }
 
-static void spi_cs_delay(void)
- {
-    struct spi_ioc_transfer xfer = {
-        .tx_buf = (unsigned long)NULL,
-        .rx_buf = (unsigned long)NULL,
-        .len = 0,
-        .delay_usecs = sSpiCsDelay,
-        .speed_hz = sSpiSpeed,
-        .bits_per_word = 8,
-        .cs_change = false,
-    };
-
-    // We don't care if this fails.
-    ioctl(sSpiDevFd, SPI_IOC_MESSAGE(1), &xfer);
-}
-
 static uint8_t* get_real_rx_frame_start(void)
 {
     uint8_t* ret = sSpiRxFrameBuffer;
@@ -332,39 +316,61 @@ static int do_spi_xfer(int len)
  {
     int ret;
 
-    struct spi_ioc_transfer xfer = {
-        .tx_buf = (unsigned long)sSpiTxFrameBuffer,
-        .rx_buf = (unsigned long)sSpiRxFrameBuffer,
-        .len = len + HEADER_LEN + sSpiRxAlignAllowance,
-        .delay_usecs = 0,
-        .speed_hz = sSpiSpeed,
-        .bits_per_word = 8,
-        .cs_change = false,
+    struct spi_ioc_transfer xfer[2] =
+    {
+        {   // This part is the delay between C̅S̅ being
+            // asserted and the SPI clock starting. This
+            // is not supported by all Linux SPI drivers.
+            .tx_buf = 0,
+            .rx_buf = 0,
+            .len = 0,
+            .delay_usecs = sSpiCsDelay,
+            .speed_hz = sSpiSpeed,
+            .bits_per_word = 8,
+            .cs_change = false,
+        },
+        {   // This part is the actual SPI transfer.
+            .tx_buf = (unsigned long)sSpiTxFrameBuffer,
+            .rx_buf = (unsigned long)sSpiRxFrameBuffer,
+            .len = len + HEADER_LEN + sSpiRxAlignAllowance,
+            .delay_usecs = 0,
+            .speed_hz = sSpiSpeed,
+            .bits_per_word = 8,
+            .cs_change = false,
+        }
     };
 
     if (sSpiCsDelay > 0)
     {
-        spi_cs_delay();
+        // A C̅S̅ delay has been specified. Start transactions
+        // with both parts.
+        ret = ioctl(sSpiDevFd, SPI_IOC_MESSAGE(2), &xfer[0]);
     }
-
-    ret = ioctl(sSpiDevFd, SPI_IOC_MESSAGE(1), &xfer);
-
-    if (spi_header_get_flag_byte(sSpiRxFrameBuffer) != 0xFF)
+    else
     {
-        if (spi_header_get_flag_byte(sSpiRxFrameBuffer) & SPI_HEADER_RESET_FLAG)
-        {
-            sSlaveDidReset = true;
-        }
+        // No C̅S̅ delay has been specified, so we skip the first
+        // part because it causes some SPI drivers to croak.
+        ret = ioctl(sSpiDevFd, SPI_IOC_MESSAGE(1), &xfer[1]);
     }
 
-    log_debug_buffer("SPI-TX", sSpiTxFrameBuffer, xfer.len);
-    log_debug_buffer("SPI-RX", sSpiRxFrameBuffer, xfer.len);
+    if (ret != -1)
+    {
+        log_debug_buffer("SPI-TX", sSpiTxFrameBuffer, xfer[1].len);
+        log_debug_buffer("SPI-RX", sSpiRxFrameBuffer, xfer[1].len);
 
-    sSpiFrameCount++;
+        if (spi_header_get_flag_byte(sSpiRxFrameBuffer) != 0xFF)
+        {
+            if (spi_header_get_flag_byte(sSpiRxFrameBuffer) & SPI_HEADER_RESET_FLAG)
+            {
+                sSlaveDidReset = true;
+            }
+        }
+
+        sSpiFrameCount++;
+    }
 
     return ret;
 }
-
 
 static void debug_spi_header(const char* hint)
 {
