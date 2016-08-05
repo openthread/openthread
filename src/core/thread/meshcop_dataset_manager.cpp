@@ -302,6 +302,14 @@ ActiveDataset::ActiveDataset(ThreadNetif &aThreadNetif):
 {
 }
 
+void ActiveDataset::Get(otOperationalDataset &aDataset)
+{
+    memset(&aDataset, 0, sizeof(aDataset));
+    mLocal.Get(aDataset);
+    aDataset.mActiveTimestamp = mLocal.GetTimestamp().GetSeconds();
+    aDataset.mIsActiveTimestampSet = true;
+}
+
 ThreadError ActiveDataset::Set(const Dataset &aDataset)
 {
     ThreadError error = kThreadError_None;
@@ -309,6 +317,18 @@ ThreadError ActiveDataset::Set(const Dataset &aDataset)
 
     SuccessOrExit(error = DatasetManager::Set(aDataset, flags));
     ApplyConfiguration();
+
+exit:
+    return error;
+}
+
+ThreadError ActiveDataset::Set(const otOperationalDataset &aDataset)
+{
+    ThreadError error = kThreadError_None;
+    Dataset dataset;
+
+    SuccessOrExit(error = dataset.Set(aDataset, true));
+    SuccessOrExit(error = Set(dataset));
 
 exit:
     return error;
@@ -403,6 +423,14 @@ PendingDataset::PendingDataset(ThreadNetif &aThreadNetif):
 {
 }
 
+void PendingDataset::Get(otOperationalDataset &aDataset)
+{
+    memset(&aDataset, 0, sizeof(aDataset));
+    mLocal.Get(aDataset);
+    aDataset.mPendingTimestamp = mLocal.GetTimestamp().GetSeconds();
+    aDataset.mIsPendingTimestampSet = true;
+}
+
 ThreadError PendingDataset::Set(const Dataset &aDataset)
 {
     ThreadError error = kThreadError_None;
@@ -410,6 +438,18 @@ ThreadError PendingDataset::Set(const Dataset &aDataset)
 
     SuccessOrExit(error = DatasetManager::Set(aDataset, flags));
     ResetDelayTimer(flags);
+
+exit:
+    return error;
+}
+
+ThreadError PendingDataset::Set(const otOperationalDataset &aDataset)
+{
+    ThreadError error = kThreadError_None;
+    Dataset dataset;
+
+    SuccessOrExit(error = dataset.Set(aDataset, false));
+    SuccessOrExit(error = Set(dataset));
 
 exit:
     return error;
