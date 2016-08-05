@@ -293,6 +293,16 @@ void otSetLocalLeaderWeight(uint8_t aWeight)
     sThreadNetif->GetMle().SetLeaderWeight(aWeight);
 }
 
+uint32_t otGetLocalLeaderPartitionId(void)
+{
+	return sThreadNetif->GetMle().GetLeaderPartitionId();
+}
+
+void otSetLocalLeaderPartitionId(uint32_t aPartitionId)
+{
+	return sThreadNetif->GetMle().SetLeaderPartitionId(aPartitionId);
+}
+
 ThreadError otAddBorderRouter(const otBorderRouterConfig *aConfig)
 {
     uint8_t flags = 0;

@@ -655,7 +655,7 @@ ThreadError otSetPendingDataset(otOperationalDataset *aDataset);
 /**
  * Get the Thread Leader Weight used when operating in the Leader role.
  *
- * @returns The Thread Child Timeout value.
+ * @returns The Thread Leader Weight value.
  *
  * @sa otSetLeaderWeight
  */
@@ -669,6 +669,22 @@ uint8_t otGetLocalLeaderWeight(void);
  * @sa otGetLeaderWeight
  */
 void otSetLocalLeaderWeight(uint8_t aWeight);
+
+/**
+ * Get the Thread Leader Partition Id used when operating in the Leader role.
+ *
+ * @returns The Thread Leader Partition Id value.
+ *
+ */
+uint32_t otGetLocalLeaderPartitionId(void);
+
+/**
+ * Set the Thread Leader Partition Id used when operating in the Leader role.
+ *
+ * @param[in]  aPartitionId  The Thread Leader Partition Id value.
+ *
+ */
+void otSetLocalLeaderPartitionId(uint32_t aPartitionId);
 
 /**
  * @}

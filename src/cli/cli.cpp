@@ -67,6 +67,7 @@ const struct Command Interpreter::sCommands[] =
     { "ipaddr", &ProcessIpAddr },
     { "keysequence", &ProcessKeySequence },
     { "leaderdata", &ProcessLeaderData },
+    { "leaderpartitionid", &ProcessLeaderPartitionId },
     { "leaderweight", &ProcessLeaderWeight },
     { "masterkey", &ProcessMasterKey },
     { "mode", &ProcessMode },
@@ -603,6 +604,25 @@ void Interpreter::ProcessLeaderData(int argc, char *argv[])
 exit:
     (void)argc;
     (void)argv;
+    AppendResult(error);
+}
+
+void Interpreter::ProcessLeaderPartitionId(int argc, char *argv[])
+{
+    ThreadError error = kThreadError_None;
+    long value;
+
+    if (argc == 0)
+    {
+        sServer->OutputFormat("%d\r\n", otGetLocalLeaderPartitionId());
+    }
+    else
+    {
+        SuccessOrExit(error = ParseLong(argv[0], value));
+        otSetLocalLeaderPartitionId(value);
+    }
+
+exit:
     AppendResult(error);
 }
 

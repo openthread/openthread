@@ -64,6 +64,7 @@ MleRouter::MleRouter(ThreadNetif &aThreadNetif):
     mNetworkIdTimeout = kNetworkIdTimeout;
     mRouterUpgradeThreshold = kRouterUpgradeThreshold;
     mLeaderWeight = 0;
+    mLeaderPartitionId = 0;
     mRouterId = kMaxRouterId;
     mPreviousRouterId = kMaxRouterId;
     mAdvertiseInterval = kAdvertiseIntervalMin;
@@ -246,7 +247,14 @@ ThreadError MleRouter::BecomeLeader(void)
 
     memcpy(&mRouters[mRouterId].mMacAddr, mMac.GetExtAddress(), sizeof(mRouters[mRouterId].mMacAddr));
 
-    SetLeaderData(otPlatRandomGet(), mLeaderWeight, mRouterId);
+	if (mLeaderPartitionId != 0)
+	{
+    	SetLeaderData(mLeaderPartitionId, mLeaderWeight, mRouterId);
+	}
+	else
+	{
+    	SetLeaderData(otPlatRandomGet(), mLeaderWeight, mRouterId);
+	}
     mRouterIdSequence = static_cast<uint8_t>(otPlatRandomGet());
 
     mNetworkData.Reset();
@@ -2502,6 +2510,16 @@ uint8_t MleRouter::GetLeaderWeight(void) const
 void MleRouter::SetLeaderWeight(uint8_t aWeight)
 {
     mLeaderWeight = aWeight;
+}
+
+uint32_t MleRouter::GetLeaderPartitionId(void) const
+{
+	return mLeaderPartitionId;
+}
+
+void MleRouter::SetLeaderPartitionId(uint32_t aPartitionId)
+{
+	mLeaderPartitionId = aPartitionId;
 }
 
 void MleRouter::HandleMacDataRequest(const Child &aChild)

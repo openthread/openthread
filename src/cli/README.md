@@ -20,6 +20,7 @@ OpenThread test scripts use the CLI to execute test cases.
 * [ipaddr](#ipaddr)
 * [keysequence](#keysequence)
 * [leaderweight](#leaderweight)
+* [leaderpartitionid](#leaderpartitionid)
 * [masterkey](#masterkey)
 * [mode](#mode)
 * [netdataregister](#netdataregister)
@@ -327,6 +328,25 @@ Set the Thread Leader Weight.
 
 ```bash
 > leaderweight 128
+Done
+```
+
+### leaderpartitionid
+
+Get the Thread Leader Partition ID.
+
+```bash
+> leaderpartitionid
+2147483647
+Done
+```
+
+### leaderpartitionid \<partitionid>\
+
+Set the Thread Leader Partition ID.
+
+```bash
+> leaderpartitionid 0xffffffff
 Done
 ```
 

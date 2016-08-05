@@ -150,6 +150,22 @@ public:
     void SetLeaderWeight(uint8_t aWeight);
 
     /**
+     * This method returns the Partition Id for this Thread network partition.
+     *
+     * @returns The Partition Id for this Thread network partition.
+     *
+     */
+	uint32_t GetLeaderPartitionId(void) const;
+
+    /**
+     * This method sets the Partition Id for this Thread network partition.
+     *
+     * @param[in]  aPartitionId  The Leader Partition Id.
+     *
+     */
+	void SetLeaderPartitionId(uint32_t aPartitionId);
+
+    /**
      * This method returns the next hop towards an RLOC16 destination.
      *
      * @param[in]  aDestination  The RLOC16 of the destination.
@@ -490,6 +506,7 @@ private:
     uint8_t mNetworkIdTimeout;
     uint8_t mRouterUpgradeThreshold;
     uint8_t mLeaderWeight;
+    uint32_t mLeaderPartitionId;
     bool mRouterRoleEnabled;
 
     uint8_t mRouterId;
