@@ -116,7 +116,8 @@ public:
      * This method adds a message to the current input frame being written to the buffer.
      *
      * If no buffer space is available, this method will discard and clear the frame before returning an error status.
-     * The passed-in message @aMessage will be freed by the frame buffer when the frame is removed or discarded.
+     * In case of success, the passed-in message @p aMessage will be owned by the frame buffer instance and will be
+     * freed when either the the frame is removed or discarded.
      *
      * @param[in]  aMessage         A reference to the message to be added to current frame.
      *

@@ -27,7 +27,7 @@
 
 /**
  * @file
- *   This file contains definitions for an FLEN/HDLC interface to the OpenThread stack.
+ *   This file contains definitions for a UART based NCP interface to the OpenThread stack.
  */
 
 #ifndef NCP_UART_HPP_
@@ -36,6 +36,7 @@
 #include <ncp/ncp_base.hpp>
 #include <ncp/flen.hpp>
 #include <ncp/hdlc.hpp>
+#include <ncp/ncp_buffer.hpp>
 
 namespace Thread {
 
@@ -46,38 +47,114 @@ class NcpUart : public NcpBase
 public:
     NcpUart(otContext *aContext);
 
+    /**
+     * This method is called to start a new outbound frame.
+     *
+     * @retval kThreadError_None      Successfully started a new frame.
+     * @retval kThreadError_NoBufs    Insufficient buffer space available to start a new frame.
+     *
+     */
     virtual ThreadError OutboundFrameBegin(void);
-    virtual uint16_t OutboundFrameGetRemaining(void);
-    virtual ThreadError OutboundFrameFeedData(const uint8_t *frame, uint16_t frameLength);
-    virtual ThreadError OutboundFrameFeedMessage(Message &message);
+
+    /**
+     * This method adds data to the current outbound frame being written.
+     *
+     * If no buffer space is available, this method will discard and clear the frame before returning an error status.
+     *
+     * @param[in]  aDataBuffer        A pointer to data buffer.
+     * @param[in]  aDataBufferLength  The length of the data buffer.
+     *
+     * @retval kThreadError_None      Successfully added new data to the frame.
+     * @retval kThreadError_NoBufs    Insufficient buffer space available to add data.
+     *
+     */
+    virtual ThreadError OutboundFrameFeedData(const uint8_t *aDataBuffer, uint16_t aDataBufferLength);
+
+    /**
+     * This method adds a message to the current outbound frame being written.
+     *
+     * If no buffer space is available, this method will discard and clear the frame before returning an error status.
+     * In case of success, the passed-in message @aMessage will be owned by outbound buffer and will be freed
+     * when either the the frame is successfully sent and removed or if the frame is discarded.
+     *
+     * @param[in]  aMessage         A reference to the message to be added to current frame.
+     *
+     * @retval kThreadError_None    Successfully added the message to the frame.
+     * @retval kThreadError_NoBufs  Insufficient buffer space available to add message.
+     *
+     */
+    virtual ThreadError OutboundFrameFeedMessage(Message &aMessage);
+
+    /**
+     * This method finalizes and sends the current outbound frame.
+     *
+     * If no buffer space is available, this method will discard and clear the frame before returning an error status.
+     *
+     * @retval kThreadError_None    Successfully added the message to the frame.
+     * @retval kThreadError_NoBufs  Insufficient buffer space available to add message.
+     *
+     */
     virtual ThreadError OutboundFrameSend(void);
 
-    void SendDoneTask(void);
-    void ReceiveTask(const uint8_t *aBuf, uint16_t aBufLength);
+    /**
+     * This method is called when uart tx is finished. It prepares and sends the next data chunk (if any) to uart.
+     *
+     */
+    void HandleUartSendDone(void);
+
+    /**
+     * This method is called when uart received a data buffer.
+     *
+     */
+    void HandleUartReceiveDone(const uint8_t *aBuf, uint16_t aBufLength);
 
 private:
-    static void HandleFrame(void *context, uint8_t *aBuf, uint16_t aBufLength);
-    void HandleFrame(uint8_t *aBuf, uint16_t aBufLength);
 
-    Hdlc::Encoder mFrameEncoder;
-    Hdlc::Decoder mFrameDecoder;
+    enum
+    {
+        kUartTxBufferSize = 128,  // Uart tx buffer size.
+        kTxBufferSize = 512,      // Tx Buffer size (used by mTxFrameBuffer).
+        kRxBufferSize = 1500,     // Rx buffer size (should be large enough to fit one whole (decoded) received frame).
+    };
 
-    class SendHdlcBuffer : public Hdlc::Encoder::BufferWriteIterator
+    enum UartTxState
+    {
+        kStartingFrame,          // Starting a new frame.
+        kEncodingFrame,          // In middle of encoding a frame.
+        kFinalizingFrame,        // Finalizing a frame.
+    };
+
+    class UartTxBuffer : public Hdlc::Encoder::BufferWriteIterator
     {
     public:
-        SendHdlcBuffer(void);
+        UartTxBuffer(void);
 
-        void           Reset(void);
+        void           Clear(void);
+        bool           IsEmpty(void) const;
         uint16_t       GetLength(void) const;
-        uint16_t       GetRemainingLength(void) const;
         const uint8_t *GetBuffer(void) const;
 
     private:
-        uint8_t     mBuffer[1500];
+        uint8_t        mBuffer[kUartTxBufferSize];
     };
 
-    SendHdlcBuffer mSendFrame;
-    uint8_t        mReceiveFrame[1500];
+    void            EncodeAndSendToUart(void);
+    void            HandleFrame(uint8_t *aBuf, uint16_t aBufLength);
+    void            TxFrameBufferHasData(void);
+
+    static void     EncodeAndSendToUart(void *aContext);
+    static void     HandleFrame(void *context, uint8_t *aBuf, uint16_t aBufLength);
+    static void     TxFrameBufferHasData(void *aContext, NcpFrameBuffer *aNcpFrameBuffer);
+
+    Hdlc::Encoder   mFrameEncoder;
+    Hdlc::Decoder   mFrameDecoder;
+    UartTxBuffer    mUartBuffer;
+    NcpFrameBuffer  mTxFrameBuffer;
+    UartTxState     mState;
+    uint8_t         mByte;
+    uint8_t         mTxBuffer[kTxBufferSize];
+    uint8_t         mRxBuffer[kRxBufferSize];
+    Tasklet         mUartSendTask;
 };
 
 }  // namespace Thread

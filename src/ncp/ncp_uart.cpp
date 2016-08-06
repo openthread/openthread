@@ -27,7 +27,7 @@
 
 /**
  * @file
- *   This file implements an HDLC interface to the Thread stack.
+ *   This file contains definitions for a UART based NCP interface to the OpenThread stack.
  */
 
 #include <common/code_utils.hpp>
@@ -47,138 +47,158 @@ extern "C" void otNcpInit(otContext *aContext)
     sNcpUart = new(&sNcpRaw) NcpUart(aContext);
 }
 
-NcpUart::SendHdlcBuffer::SendHdlcBuffer(void)
-    : BufferWriteIterator()
+NcpUart::UartTxBuffer::UartTxBuffer(void)
+    : Hdlc::Encoder::BufferWriteIterator()
 {
-    Reset();
+    Clear();
 }
 
-void
-NcpUart::SendHdlcBuffer::Reset(void)
+void NcpUart::UartTxBuffer::Clear(void)
 {
     mWritePointer = mBuffer;
     mRemainingLength = sizeof(mBuffer);
 }
 
-uint16_t
-NcpUart::SendHdlcBuffer::GetLength(void) const
+bool NcpUart::UartTxBuffer::IsEmpty(void) const
+{
+    return mWritePointer == mBuffer;
+}
+
+uint16_t NcpUart::UartTxBuffer::GetLength(void) const
 {
     return static_cast<uint16_t>(mWritePointer - mBuffer);
 }
 
-const uint8_t *
-NcpUart::SendHdlcBuffer::GetBuffer(void) const
+const uint8_t *NcpUart::UartTxBuffer::GetBuffer(void) const
 {
     return mBuffer;
 }
 
-uint16_t
-NcpUart::SendHdlcBuffer::GetRemainingLength(void) const
-{
-    return mRemainingLength;
-}
-
 NcpUart::NcpUart(otContext *aContext):
     NcpBase(aContext),
-    mFrameDecoder(mReceiveFrame, sizeof(mReceiveFrame), &NcpUart::HandleFrame, this),
-    mSendFrame()
+    mFrameDecoder(mRxBuffer, sizeof(mRxBuffer), &NcpUart::HandleFrame, this),
+    mUartBuffer(),
+    mTxFrameBuffer(mTxBuffer, sizeof(mTxBuffer)),
+    mUartSendTask(EncodeAndSendToUart, this)
 {
+    mState = kStartingFrame;
+
+    mTxFrameBuffer.SetCallbacks(NULL, TxFrameBufferHasData, this);
 }
 
-uint16_t
-NcpUart::OutboundFrameGetRemaining(void)
+ThreadError NcpUart::OutboundFrameBegin(void)
 {
-    return mSendFrame.GetRemainingLength();
+    return mTxFrameBuffer.InFrameBegin();
 }
 
-ThreadError
-NcpUart::OutboundFrameBegin(void)
+ThreadError NcpUart::OutboundFrameFeedData(const uint8_t *aDataBuffer, uint16_t aDataBufferLength)
 {
-    ThreadError errorCode;
-
-    mSendFrame.Reset();
-
-    errorCode = mFrameEncoder.Init(mSendFrame);
-
-    return errorCode;
+    return mTxFrameBuffer.InFrameFeedData(aDataBuffer, aDataBufferLength);
 }
 
-ThreadError
-NcpUart::OutboundFrameFeedData(const uint8_t *frame, uint16_t frameLength)
+ThreadError NcpUart::OutboundFrameFeedMessage(Message &aMessage)
 {
-    ThreadError errorCode;
-
-    errorCode = mFrameEncoder.Encode(frame, frameLength, mSendFrame);
-
-    return errorCode;
+    return mTxFrameBuffer.InFrameFeedMessage(aMessage);
 }
 
-ThreadError
-NcpUart::OutboundFrameFeedMessage(Message &message)
+ThreadError NcpUart::OutboundFrameSend(void)
 {
-    ThreadError errorCode;
-    uint16_t inLength;
-    uint8_t inBuf[16];
+    return mTxFrameBuffer.InFrameEnd();
+}
 
-    for (int offset = 0; offset < message.GetLength(); offset += sizeof(inBuf))
+void NcpUart::TxFrameBufferHasData(void *aContext, NcpFrameBuffer *aNcpFrameBuffer)
+{
+    (void)aContext;
+    (void)aNcpFrameBuffer;
+
+    sNcpUart->TxFrameBufferHasData();
+}
+
+void NcpUart::TxFrameBufferHasData(void)
+{
+    if (mUartBuffer.IsEmpty())
     {
-        (void) OutboundFrameGetRemaining();
-        inLength = message.Read(offset, sizeof(inBuf), inBuf);
+        mUartSendTask.Post();
+    }
+}
 
-        errorCode = OutboundFrameFeedData(inBuf, inLength);
+void NcpUart::EncodeAndSendToUart(void *aContext)
+{
+    NcpUart *obj = reinterpret_cast<NcpUart *>(aContext);
 
-        if (errorCode != kThreadError_None)
+    obj->EncodeAndSendToUart();
+}
+
+// This method encodes a frame from the tx frame buffer (mTxFrameBuffer) into the uart buffer and sends it over uart.
+// If the uart buffer gets full, it sends the current encoded portion. This method remembers current state, so on
+// sub-sequent calls, it restarts encoding the bytes from where it left of in the frame .
+void NcpUart::EncodeAndSendToUart(void)
+{
+    uint16_t len;
+
+    while (!mTxFrameBuffer.IsEmpty())
+    {
+        switch (mState)
         {
-            break;
+        case kStartingFrame:
+
+            SuccessOrExit(mFrameEncoder.Init(mUartBuffer));
+
+            mTxFrameBuffer.OutFrameBegin();
+
+            mState = kEncodingFrame;
+
+            while (!mTxFrameBuffer.OutFrameHasEnded())
+            {
+                mByte = mTxFrameBuffer.OutFrameReadByte();
+
+            case kEncodingFrame:
+
+                SuccessOrExit(mFrameEncoder.Encode(mByte, mUartBuffer));
+            }
+
+            mTxFrameBuffer.OutFrameRemove();
+
+            // Notify the super/base class that there is space available in tx frame buffer for a new frame.
+            super_t::HandleSpaceAvailableInTxBuffer();
+
+            mState = kFinalizingFrame;
+
+        case kFinalizingFrame:
+
+            SuccessOrExit(mFrameEncoder.Finalize(mUartBuffer));
+
+            mState = kStartingFrame;
         }
     }
 
-    return errorCode;
-}
+exit:
+    len = mUartBuffer.GetLength();
 
-ThreadError
-NcpUart::OutboundFrameSend(void)
-{
-    ThreadError errorCode;
-
-    errorCode = mFrameEncoder.Finalize(mSendFrame);
-
-    if (errorCode == kThreadError_None)
+    if (len > 0)
     {
-        // We go ahead and set this to `true` here in case
-        // `otPlatUartSend()` ends up directly calling
-        // `otPlatUartSendDone()`.
-        mSending = true;
-
-        errorCode = otPlatUartSend(mSendFrame.GetBuffer(), mSendFrame.GetLength());
+        otPlatUartSend(mUartBuffer.GetBuffer(), len);
     }
-
-    if (errorCode != kThreadError_None)
-    {
-        mSending = false;
-    }
-
-    return errorCode;
 }
 
 extern "C" void otPlatUartSendDone(void)
 {
-    sNcpUart->SendDoneTask();
+    sNcpUart->HandleUartSendDone();
 }
 
-void NcpUart::SendDoneTask(void)
+void NcpUart::HandleUartSendDone(void)
 {
-    mSending = false;
+    mUartBuffer.Clear();
 
-    super_t::HandleSendDone();
+    mUartSendTask.Post();
 }
 
 extern "C" void otPlatUartReceived(const uint8_t *aBuf, uint16_t aBufLength)
 {
-    sNcpUart->ReceiveTask(aBuf, aBufLength);
+    sNcpUart->HandleUartReceiveDone(aBuf, aBufLength);
 }
 
-void NcpUart::ReceiveTask(const uint8_t *aBuf, uint16_t aBufLength)
+void NcpUart::HandleUartReceiveDone(const uint8_t *aBuf, uint16_t aBufLength)
 {
     mFrameDecoder.Decode(aBuf, aBufLength);
 }
@@ -195,4 +215,3 @@ void NcpUart::HandleFrame(uint8_t *aBuf, uint16_t aBufLength)
 }
 
 }  // namespace Thread
-

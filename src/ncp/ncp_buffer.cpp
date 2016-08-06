@@ -110,7 +110,7 @@ void NcpFrameBuffer::SetCallbacks(BufferCallback aEmptyBufferCallback, BufferCal
 uint8_t *NcpFrameBuffer::Next(uint8_t *aBufPtr) const
 {
     aBufPtr++;
-    return (aBufPtr == mBufferEnd)? mBuffer : aBufPtr;
+    return (aBufPtr == mBufferEnd) ? mBuffer : aBufPtr;
 }
 
 // Returns an advanced (moved forward) version of the given buffer pointer by the given offset.
@@ -385,6 +385,7 @@ exit:
     {
         mReadState = kReadStateDone;
     }
+
     return error;
 }
 
@@ -489,7 +490,7 @@ uint8_t NcpFrameBuffer::OutFrameReadByte(void)
         // Check if at end of current segment.
         if (mReadPointer == mReadSegmentTail)
         {
-             // Prepare any associated message with this segment.
+            // Prepare any message associated with this segment.
             error = OutFramePrepareMessage();
 
             // If there is no message, move to next segment (if any).
@@ -510,7 +511,7 @@ uint8_t NcpFrameBuffer::OutFrameReadByte(void)
         // Check if at the end of content in message buffer.
         if (mReadPointer == mReadMessageTail)
         {
-           // Fill more bytes from current message into message buffer.
+            // Fill more bytes from current message into message buffer.
             error = OutFrameFillMessageBuffer();
 
             // If no more bytes in the message, move to next segment (if any).
