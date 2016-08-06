@@ -298,9 +298,7 @@ static spinel_status_t ResetReasonToSpinelStatus(otPlatResetReason reason)
 
 NcpBase::NcpBase(otContext *aContext):
     mContext(aContext),
-    mSendDoneTask(mContext, &NcpBase::SendDoneTask, this),
-    mUpdateChangedPropsTask(mContext, &NcpBase::UpdateChangedProps, this),
-    mSendQueue(mContext)
+    mUpdateChangedPropsTask(mContext, &NcpBase::UpdateChangedProps, this)
 {
     assert(mContext != NULL);
     mSupportedChannelMask = kPhySupportedChannelMask;

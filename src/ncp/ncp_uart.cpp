@@ -78,8 +78,8 @@ NcpUart::NcpUart(otContext *aContext):
     NcpBase(aContext),
     mFrameDecoder(mRxBuffer, sizeof(mRxBuffer), &NcpUart::HandleFrame, this),
     mUartBuffer(),
-    mTxFrameBuffer(mTxBuffer, sizeof(mTxBuffer)),
-    mUartSendTask(EncodeAndSendToUart, this)
+    mTxFrameBuffer(aContext, mTxBuffer, sizeof(mTxBuffer)),
+    mUartSendTask(aContext, EncodeAndSendToUart, this)
 {
     mState = kStartingFrame;
 
