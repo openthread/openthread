@@ -31,6 +31,7 @@
 #include <openthread.h>
 #include <common/code_utils.hpp>
 #include <ncp/ncp_buffer.hpp>
+#include <openthreadcontext.h>
 
 namespace Thread {
 

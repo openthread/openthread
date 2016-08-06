@@ -31,6 +31,7 @@
 #include <common/debug.hpp>
 #include <common/message.hpp>
 #include <string.h>
+#include <openthreadcontext.h>
 
 extern"C" void otSignalTaskletPending(otContext *)
 {

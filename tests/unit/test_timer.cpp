@@ -32,6 +32,7 @@
 #include <common/timer.hpp>
 #include <platform/alarm.h>
 #include <string.h>
+#include <openthreadcontext.h>
 
 enum
 {
@@ -378,7 +379,7 @@ int TestTenTimers(void)
             // timer is ready to be triggered by examining the aDt arg passed into otPlatAlarmStartAt().  If
             // that value is 0, then otPlatAlarmFired should be fired immediately. This loop calls otPlatAlarmFired()
             // the requisite number of times based on the aDt argument.
-            otPlatAlarmFired();
+            otPlatAlarmFired(&sContext);
         }
         while (sPlatDt == 0);
 

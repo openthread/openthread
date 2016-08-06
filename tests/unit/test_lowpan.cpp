@@ -35,6 +35,7 @@
 #include <mac/mac.hpp>
 #include <thread/thread_netif.hpp>
 #include <thread/lowpan.hpp>
+#include <openthreadcontext.h>
 
 using namespace Thread;
 
@@ -148,8 +149,6 @@ void TestLowpanIphc(void)
 
 int main(void)
 {
-    Message::Init();
-
     TestLowpanIphc();
 
     printf("All tests passed\n");
