@@ -36,8 +36,7 @@
 #include <stdint.h>
 
 #include <openthread.h>
-
-#include <platform.h>
+#include <platform.h>
 #include <platform/alarm.h>
 #include "platform-cc2538.h"
 

@@ -38,10 +38,8 @@
 #include <sys/socket.h>
 #include <sys/stat.h>
 #include <unistd.h>
-
-#include <openthread.h>
-
-#include <platform.h>
+#include <openthread.h>
+#include <platform.h>
 #include <platform/radio.h>
 
 #include <common/code_utils.hpp>

@@ -31,16 +31,7 @@
 #include <stddef.h>
 #ifndef OPEN_THREAD_DRIVER
 #include <stdint.h>
-#else
-typedef signed char        int8_t;
-typedef short              int16_t;
-typedef int                int32_t;
-typedef long long          int64_t;
-typedef unsigned char      uint8_t;
-typedef unsigned short     uint16_t;
-typedef unsigned int       uint32_t;
-typedef unsigned long long uint64_t;
-#endif
+#elsetypedef signed char        int8_t;typedef short              int16_t;typedef int                int32_t;typedef long long          int64_t;typedef unsigned char      uint8_t;typedef unsigned short     uint16_t;typedef unsigned int       uint32_t;typedef unsigned long long uint64_t;#endif
 
 #define MBEDTLS_ERR_PKCS5_BAD_INPUT_DATA                  -0x2f80  /**< Bad input parameters to function. */
 #define MBEDTLS_ERR_PKCS5_INVALID_FORMAT                  -0x2f00  /**< Unexpected ASN.1 data. */

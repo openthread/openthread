@@ -29,8 +29,7 @@
 #include <crypto/aes_ecb.h>
 #include <crypto/hmac_sha256.h>
 
-void mbedInit(otCryptoContext *aCryptoContext)
-{
+void mbedInit(otCryptoContext *aCryptoContext){
     if (aCryptoContext->mIsInitialized)
     {
         return;

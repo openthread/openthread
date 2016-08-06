@@ -33,9 +33,7 @@
  */
 
 #include <stdio.h>
-
-#include <common/code_utils.hpp>
-#include <common/debug.hpp>
+#include <common/code_utils.hpp>#include <common/debug.hpp>
 #include <coap/coap_header.hpp>
 #include <common/code_utils.hpp>
 #include <common/logging.hpp>
@@ -45,11 +43,7 @@
 #include <thread/meshcop_dataset_manager.hpp>
 #include <thread/thread_netif.hpp>
 #include <thread/thread_tlvs.hpp>
-#include <thread/thread_uris.hpp>
-
-#ifdef WINDOWS_LOGGING
-#include <meshcop_dataset_manager.tmh>
-#endif
+#include <thread/thread_uris.hpp>#ifdef WINDOWS_LOGGING#include <meshcop_dataset_manager.tmh>#endif
 
 namespace Thread {
 namespace MeshCoP {
