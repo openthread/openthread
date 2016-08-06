@@ -61,16 +61,16 @@ MeshForwarder::MeshForwarder(ThreadNetif &aThreadNetif):
     mDiscoverTimer(aThreadNetif.GetOpenThreadContext(), &MeshForwarder::HandleDiscoverTimer, this),
     mPollTimer(aThreadNetif.GetOpenThreadContext(), &MeshForwarder::HandlePollTimer, this),
     mReassemblyTimer(aThreadNetif.GetOpenThreadContext(), &MeshForwarder::HandleReassemblyTimer, this),
+    mSendQueue(aThreadNetif.GetOpenThreadContext()),
+    mReassemblyList(aThreadNetif.GetOpenThreadContext()),
+    mResolvingQueue(aThreadNetif.GetOpenThreadContext()),
     mScheduleTransmissionTask(aThreadNetif.GetOpenThreadContext(), ScheduleTransmissionTask, this),
     mNetif(aThreadNetif),
     mAddressResolver(aThreadNetif.GetAddressResolver()),
     mLowpan(aThreadNetif.GetLowpan()),
     mMac(aThreadNetif.GetMac()),
     mMle(aThreadNetif.GetMle()),
-    mNetworkData(aThreadNetif.GetNetworkDataLeader()),
-    mSendQueue(aThreadNetif.GetOpenThreadContext()),
-    mReassemblyList(aThreadNetif.GetOpenThreadContext()),
-    mResolvingQueue(aThreadNetif.GetOpenThreadContext())
+    mNetworkData(aThreadNetif.GetNetworkDataLeader())
 {
     mFragTag = (uint16_t)otPlatRandomGet();
     mPollPeriod = 0;
