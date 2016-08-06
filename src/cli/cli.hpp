@@ -141,6 +141,7 @@ private:
     static void ProcessNetworkIdTimeout(int argc, char *argv[]);
     static void ProcessNetworkName(int argc, char *argv[]);
     static void ProcessPanId(int argc, char *argv[]);
+    static void ProcessParent(int argc, char *argv[]);
     static void ProcessPing(int argc, char *argv[]);
     static void ProcessPrefix(int argc, char *argv[]);
     static ThreadError ProcessPrefixAdd(int argc, char *argv[]);

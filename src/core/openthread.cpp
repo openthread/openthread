@@ -626,6 +626,21 @@ exit:
     return error;
 }
 
+ThreadError otGetParentInfo(otRouterInfo *aParentInfo)
+{
+	ThreadError error = kThreadError_None;
+	Router *parent;
+
+	VerifyOrExit(aParentInfo != NULL, error = kThreadError_InvalidArgs);
+
+	parent = sThreadNetif->GetMle().GetParent();
+	memcpy(aParentInfo->mExtAddress.m8, parent->mMacAddr.m8, OT_EXT_ADDRESS_SIZE);
+	aParentInfo->mRloc16 = parent->mValid.mRloc16;
+
+exit:
+	return error;
+}
+
 uint8_t otGetStableNetworkDataVersion(void)
 {
     return sThreadNetif->GetMle().GetLeaderDataTlv().GetStableDataVersion();

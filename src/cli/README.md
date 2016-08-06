@@ -27,6 +27,7 @@ OpenThread test scripts use the CLI to execute test cases.
 * [networkidtimeout](#networkidtimeout)
 * [networkname](#networkname)
 * [panid](#panid)
+* [parent](#parent)
 * [ping](#ping)
 * [prefix](#prefix)
 * [releaserouterid](#releaserouterid)
@@ -461,6 +462,17 @@ Set the IEEE 802.15.4 PAN ID value.
 
 ```bash
 > panid 0xdead
+Done
+```
+
+### parent
+
+Get the diagnostic information for a Thread Router as parent.
+
+```bash
+> parent
+Ext Addr: be1857c6c21dce55
+Rloc: 5c00
 Done
 ```
 

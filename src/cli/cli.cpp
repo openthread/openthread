@@ -75,6 +75,7 @@ const struct Command Interpreter::sCommands[] =
     { "networkidtimeout", &ProcessNetworkIdTimeout },
     { "networkname", &ProcessNetworkName },
     { "panid", &ProcessPanId },
+    { "parent", &ProcessParent },
     { "ping", &ProcessPing },
     { "prefix", &ProcessPrefix },
     { "releaserouterid", &ProcessReleaseRouterId },
@@ -805,6 +806,29 @@ void Interpreter::ProcessPanId(int argc, char *argv[])
 
 exit:
     AppendResult(error);
+}
+
+void Interpreter::ProcessParent(int argc, char *argv[])
+{
+	ThreadError error = kThreadError_None;
+	otRouterInfo parentInfo;
+
+	SuccessOrExit(error = otGetParentInfo(&parentInfo));
+	sServer->OutputFormat("Ext Addr: ");
+
+	for (size_t i = 0; i < sizeof(parentInfo.mExtAddress); i++)
+	{
+		sServer->OutputFormat("%02x", parentInfo.mExtAddress.m8[i]);
+	}
+
+	sServer->OutputFormat("\r\n");
+
+	sServer->OutputFormat("Rloc: %x\r\n", parentInfo.mRloc16);
+
+exit:
+	(void)argc;
+	(void)argv;
+	AppendResult(error);
 }
 
 void Interpreter::HandleEchoResponse(void *aContext, Message &aMessage, const Ip6::MessageInfo &aMessageInfo)

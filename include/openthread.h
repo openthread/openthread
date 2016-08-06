@@ -1167,6 +1167,14 @@ uint8_t otGetRouterIdSequence(void);
 ThreadError otGetRouterInfo(uint16_t aRouterId, otRouterInfo *aRouterInfo);
 
 /**
+ * The function retains diagnostic information for a Thread Router as parent.
+ *
+ * @param[out]  aParentInfo  A pointer to where the parent router information is placed.
+ *
+ */
+ThreadError otGetParentInfo(otRouterInfo *aParentInfo);
+
+/**
  * Get the Stable Network Data Version.
  *
  * @returns The Stable Network Data Version.
