@@ -463,7 +463,7 @@ void otClearMacWhitelist(void)
 
 ThreadError otGetMacWhitelistEntry(uint8_t aIndex, otMacWhitelistEntry *aEntry)
 {
-    ThreadError error;
+    ThreadError error = kThreadError_None;
 
     VerifyOrExit(aEntry != NULL, error = kThreadError_InvalidArgs);
     error = sThreadNetif->GetMac().GetWhitelist().GetEntry(aIndex, *aEntry);
@@ -505,6 +505,54 @@ ThreadError otBecomeRouter(void)
 ThreadError otBecomeLeader(void)
 {
     return sThreadNetif->GetMle().BecomeLeader();
+}
+
+ThreadError otAddMacBlacklist(const uint8_t *aExtAddr)
+{
+	ThreadError error = kThreadError_None;
+
+	if (sThreadNetif->GetMac().GetBlacklist().Add(*reinterpret_cast<const Mac::ExtAddress *>(aExtAddr)) == NULL)
+	{
+		error = kThreadError_NoBufs;
+	}
+
+	return error;
+}
+
+void otRemoveMacBlacklist(const uint8_t *aExtAddr)
+{
+	sThreadNetif->GetMac().GetBlacklist().Remove(*reinterpret_cast<const Mac::ExtAddress *>(aExtAddr));
+}
+
+void otClearMacBlacklist(void)
+{
+	sThreadNetif->GetMac().GetBlacklist().Clear();
+}
+
+ThreadError otGetMacBlacklistEntry(uint8_t aIndex, otMacBlacklistEntry *aEntry)
+{
+	ThreadError error = kThreadError_None;
+
+	VerifyOrExit(aEntry != NULL, error = kThreadError_InvalidArgs);
+	error = sThreadNetif->GetMac().GetBlacklist().GetEntry(aIndex, *aEntry);
+
+exit:
+	return error;
+}
+
+void otDisableMacBlacklist(void)
+{
+	sThreadNetif->GetMac().GetBlacklist().Disable();
+}
+
+void otEnableMacBlacklist(void)
+{
+	sThreadNetif->GetMac().GetBlacklist().Enable();
+}
+
+bool otIsMacBlacklistEnabled(void)
+{
+	return sThreadNetif->GetMac().GetBlacklist().IsEnabled();
 }
 
 ThreadError otGetChildInfoById(uint16_t aChildId, otChildInfo *aChildInfo)

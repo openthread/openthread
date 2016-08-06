@@ -53,6 +53,7 @@ namespace Cli {
 const struct Command Interpreter::sCommands[] =
 {
     { "help", &ProcessHelp },
+    { "blacklist", &ProcessBlacklist },
     { "channel", &ProcessChannel },
     { "child", &ProcessChild },
     { "childtimeout", &ProcessChildTimeout },
@@ -201,6 +202,72 @@ void Interpreter::ProcessHelp(int argc, char *argv[])
 
     (void)argc;
     (void)argv;
+}
+
+void Interpreter::ProcessBlacklist(int argc, char *argv[])
+{
+	ThreadError error = kThreadError_None;
+	otMacBlacklistEntry entry;
+	int argcur = 0;
+	uint8_t extAddr[8];
+
+	if (argcur >= argc)
+	{
+		if (otIsMacBlacklistEnabled())
+		{
+			sServer->OutputFormat("Enabled\r\n");
+		}
+		else
+		{
+			sServer->OutputFormat("Disabled\r\n");
+		}
+
+		for (int i = 0; ; i++)
+		{
+			if (otGetMacBlacklistEntry(i, &entry) != kThreadError_None)
+			{
+				break;
+			}
+
+			if (entry.mValid == false)
+			{
+				continue;
+			}
+
+			OutputBytes(entry.mExtAddress.m8, OT_EXT_ADDRESS_SIZE);
+
+			sServer->OutputFormat("\r\n");
+		}
+	}
+	else if (strcmp(argv[argcur], "add") == 0)
+	{
+		VerifyOrExit(++argcur < argc, error = kThreadError_Parse);
+		VerifyOrExit(Hex2Bin(argv[argcur], extAddr, sizeof(extAddr)) == sizeof(extAddr), error = kThreadError_Parse);
+
+		otAddMacBlacklist(extAddr);
+		VerifyOrExit(otAddMacBlacklist(extAddr) == kThreadError_None, error = kThreadError_Parse);
+	}
+	else if (strcmp(argv[argcur], "clear") == 0)
+	{
+		otClearMacBlacklist();
+	}
+	else if (strcmp(argv[argcur], "disable") == 0)
+	{
+		otDisableMacBlacklist();
+	}
+	else if (strcmp(argv[argcur], "enable") == 0)
+	{
+		otEnableMacBlacklist();
+	}
+	else if (strcmp(argv[argcur], "remove") == 0)
+	{
+		VerifyOrExit(++argcur < argc, error = kThreadError_Parse);
+		VerifyOrExit(Hex2Bin(argv[argcur], extAddr, sizeof(extAddr)) == sizeof(extAddr), error = kThreadError_Parse);
+		otRemoveMacBlacklist(extAddr);
+	}
+
+exit:
+	AppendResult(error);
 }
 
 void Interpreter::ProcessChannel(int argc, char *argv[])

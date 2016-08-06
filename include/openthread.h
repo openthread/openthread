@@ -1061,6 +1061,96 @@ ThreadError otBecomeRouter(void);
 ThreadError otBecomeLeader(void);
 
 /**
+ * Add an IEEE 802.15.4 Extended Address to the MAC blacklist.
+ *
+ * @param[in]  aExtAddr  A pointer to the IEEE 802.15.4 Extended Address.
+ *
+ * @retval kThreadErrorNone    Successfully added to the MAC blacklist.
+ * @retval kThreadErrorNoBufs  No buffers available for a new MAC blacklist entry.
+ *
+ * @sa otRemoveMacBlacklist
+ * @sa otClearMacBlacklist
+ * @sa otGetMacBlacklistEntry
+ * @sa otDisableMacBlacklist
+ * @sa otEnableMacBlacklist
+ */
+ThreadError otAddMacBlacklist(const uint8_t *aExtAddr);
+
+/**
+ * Remove an IEEE 802.15.4 Extended Address from the MAC blacklist.
+ *
+ * @param[in]  aExtAddr  A pointer to the IEEE 802.15.4 Extended Address.
+ *
+ * @sa otAddMacBlacklist
+ * @sa otClearMacBlacklist
+ * @sa otGetMacBlacklistEntry
+ * @sa otDisableMacBlacklist
+ * @sa otEnableMacBlacklist
+ */
+void otRemoveMacBlacklist(const uint8_t *aExtAddr);
+
+/**
+ * This function gets a MAC Blacklist entry.
+ *
+ * @param[in]   aIndex  An index into the MAC Blacklist table.
+ * @param[out]  aEntry  A pointer to where the information is placed.
+ *
+ * @retval kThreadError_None         Successfully retrieved the MAC Blacklist entry.
+ * @retval kThreadError_InvalidArgs  @p aIndex is out of bounds or @p aEntry is NULL.
+ *
+ */
+ThreadError otGetMacBlacklistEntry(uint8_t aIndex, otMacBlacklistEntry *aEntry);
+
+/**
+ *  Remove all entries from the MAC Blacklist.
+ *
+ * @sa otAddMacBlacklist
+ * @sa otRemoveMacBlacklist
+ * @sa otGetMacBlacklistEntry
+ * @sa otDisableMacBlacklist
+ * @sa otEnableMacBlacklist
+ */
+void otClearMacBlacklist(void);
+
+/**
+ * Disable MAC blacklist filtering.
+ *
+ *
+ * @sa otAddMacBlacklist
+ * @sa otRemoveMacBlacklist
+ * @sa otClearMacBlacklist
+ * @sa otGetMacBlacklistEntry
+ * @sa otEnableMacBlacklist
+ */
+void otDisableMacBlacklist(void);
+
+/**
+ * Enable MAC Blacklist filtering.
+ *
+ * @sa otAddMacBlacklist
+ * @sa otRemoveMacBlacklist
+ * @sa otClearMacBlacklist
+ * @sa otGetMacBlacklistEntry
+ * @sa otDisableMacBlacklist
+ */
+void otEnableMacBlacklist(void);
+
+/**
+ * This function indicates whether or not the MAC Blacklist is enabled.
+ *
+ * @returns TRUE if the MAC Blacklist is enabled, FALSE otherwise.
+ *
+ * @sa otAddMacBlacklist
+ * @sa otRemoveMacBlacklist
+ * @sa otClearMacBlacklist
+ * @sa otGetMacBlacklistEntry
+ * @sa otDisableMacBlacklist
+ * @sa otEnableMacBlacklist
+ *
+ */
+bool otIsMacBlacklistEnabled(void);
+
+/**
  * @}
  *
  */

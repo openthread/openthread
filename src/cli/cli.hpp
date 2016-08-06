@@ -117,6 +117,7 @@ private:
     static void OutputBytes(const uint8_t *aBytes, uint8_t aLength);
 
     static void ProcessHelp(int argc, char *argv[]);
+    static void ProcessBlacklist(int argc, char *argv[]);
     static void ProcessChannel(int argc, char *argv[]);
     static void ProcessChild(int argc, char *argv[]);
     static void ProcessChildTimeout(int argc, char *argv[]);

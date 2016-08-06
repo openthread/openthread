@@ -8,6 +8,7 @@ OpenThread test scripts use the CLI to execute test cases.
 ## OpenThread Command List
 
 * [channel](#channel)
+* [blacklist](#blacklist)
 * [child](#child)
 * [childtimeout](#childtimeout)
 * [contextreusedelay](#contextreusedelay)
@@ -44,6 +45,62 @@ OpenThread test scripts use the CLI to execute test cases.
 
 ## OpenThread Command Details
 
+### blacklist
+
+List the blacklist entries.
+
+```bash
+> blacklist
+Enabled
+166e0a0000000002
+166e0a0000000003
+Done
+```
+
+### blacklist add \<extaddr\>
+
+Add an IEEE 802.15.4 Extended Address to the blacklist.
+
+```bash
+> blacklist add 166e0a0000000002
+Done
+```
+
+### blacklist clear
+
+Clear all entries from the blacklist.
+
+```bash
+> blacklist clear
+Done
+```
+
+### blacklist disable
+
+Disable MAC blacklist filtering.
+
+```bash
+> blacklist disable
+Done
+```
+
+### blacklist enable
+
+Enable MAC blacklist filtering.
+
+```bash
+> blacklist enable
+Done
+```
+
+### blacklist remove \<extaddr\>
+
+Remove an IEEE 802.15.4 Extended Address from the blacklist.
+
+```bash
+> blacklist remove 166e0a0000000002
+Done
+```
 ### channel
 
 Get the IEEE 802.15.4 Channel value.
