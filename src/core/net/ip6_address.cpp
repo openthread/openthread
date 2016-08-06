@@ -42,6 +42,10 @@
 using Thread::Encoding::BigEndian::HostSwap16;
 using Thread::Encoding::BigEndian::HostSwap32;
 
+#ifdef OPEN_THREAD_DRIVER
+#define snprintf sprintf_s
+#endif
+
 namespace Thread {
 namespace Ip6 {
 

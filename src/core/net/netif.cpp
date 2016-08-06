@@ -35,15 +35,14 @@
 #include <common/debug.hpp>
 #include <common/message.hpp>
 #include <net/netif.hpp>
+#include <openthreadcontext.h>
 
 namespace Thread {
 namespace Ip6 {
 
-Netif *Netif::sNetifListHead = NULL;
-int Netif::sNextInterfaceId = 1;
-
-Netif::Netif() :
-    mStateChangedTask(&HandleStateChangedTask, this)
+Netif::Netif(otContext *aContext) :
+    mContext(aContext),
+    mStateChangedTask(aContext, &Netif::HandleStateChangedTask, this)
 {
     mCallbacks = NULL;
     mUnicastAddresses = NULL;
@@ -79,13 +78,13 @@ ThreadError Netif::AddNetif()
     ThreadError error = kThreadError_None;
     Netif *netif;
 
-    if (sNetifListHead == NULL)
+    if (mContext->mNetifListHead == NULL)
     {
-        sNetifListHead = this;
+        mContext->mNetifListHead = this;
     }
     else
     {
-        netif = sNetifListHead;
+        netif = mContext->mNetifListHead;
 
         do
         {
@@ -103,7 +102,7 @@ ThreadError Netif::AddNetif()
 
     if (mInterfaceId < 0)
     {
-        mInterfaceId = sNextInterfaceId++;
+        mInterfaceId = mContext->mNextInterfaceId++;
     }
 
 exit:
@@ -114,15 +113,15 @@ ThreadError Netif::RemoveNetif()
 {
     ThreadError error = kThreadError_None;
 
-    VerifyOrExit(sNetifListHead != NULL, error = kThreadError_Busy);
+    VerifyOrExit(mContext->mNetifListHead != NULL, error = kThreadError_Busy);
 
-    if (sNetifListHead == this)
+    if (mContext->mNetifListHead == this)
     {
-        sNetifListHead = mNext;
+        mContext->mNetifListHead = mNext;
     }
     else
     {
-        for (Netif *netif = sNetifListHead; netif->mNext; netif = netif->mNext)
+        for (Netif *netif = mContext->mNetifListHead; netif->mNext; netif = netif->mNext)
         {
             if (netif->mNext != this)
             {
@@ -145,11 +144,11 @@ Netif *Netif::GetNext() const
     return mNext;
 }
 
-Netif *Netif::GetNetifById(uint8_t aInterfaceId)
+Netif *Netif::GetNetifById(otContext *aContext, uint8_t aInterfaceId)
 {
     Netif *netif;
 
-    for (netif = sNetifListHead; netif; netif = netif->mNext)
+    for (netif = aContext->mNetifListHead; netif; netif = netif->mNext)
     {
         if (netif->mInterfaceId == aInterfaceId)
         {
@@ -161,11 +160,11 @@ exit:
     return netif;
 }
 
-Netif *Netif::GetNetifByName(char *aName)
+Netif *Netif::GetNetifByName(otContext *aContext, char *aName)
 {
     Netif *netif;
 
-    for (netif = sNetifListHead; netif; netif = netif->mNext)
+    for (netif = aContext->mNetifListHead; netif; netif = netif->mNext)
     {
         if (strcmp(netif->GetName(), aName) == 0)
         {
@@ -325,16 +324,16 @@ exit:
     return error;
 }
 
-Netif *Netif::GetNetifList()
+Netif *Netif::GetNetifList(otContext *aContext)
 {
-    return sNetifListHead;
+    return aContext->mNetifListHead;
 }
 
-bool Netif::IsUnicastAddress(const Address &aAddress)
+bool Netif::IsUnicastAddress(otContext *aContext, const Address &aAddress)
 {
     bool rval = false;
 
-    for (Netif *netif = sNetifListHead; netif; netif = netif->mNext)
+    for (Netif *netif = aContext->mNetifListHead; netif; netif = netif->mNext)
     {
         for (NetifUnicastAddress *cur = netif->mUnicastAddresses; cur; cur = cur->GetNext())
         {
@@ -349,7 +348,7 @@ exit:
     return rval;
 }
 
-const NetifUnicastAddress *Netif::SelectSourceAddress(MessageInfo &aMessageInfo)
+const NetifUnicastAddress *Netif::SelectSourceAddress(otContext *aContext, MessageInfo &aMessageInfo)
 {
     Address *destination = &aMessageInfo.GetPeerAddr();
     int interfaceId = aMessageInfo.mInterfaceId;
@@ -358,9 +357,9 @@ const NetifUnicastAddress *Netif::SelectSourceAddress(MessageInfo &aMessageInfo)
     uint8_t candidateId;
     uint8_t rvalIface = 0;
 
-    for (Netif *netif = GetNetifList(); netif; netif = netif->mNext)
+    for (Netif *netif = GetNetifList(aContext); netif; netif = netif->mNext)
     {
-        candidateId = netif->GetInterfaceId();
+        candidateId = (uint8_t)netif->GetInterfaceId();
 
         for (const NetifUnicastAddress *addr = netif->GetUnicastAddresses(); addr; addr = addr->GetNext())
         {
@@ -434,11 +433,11 @@ exit:
     return rvalAddr;
 }
 
-int Netif::GetOnLinkNetif(const Address &aAddress)
+int Netif::GetOnLinkNetif(otContext *aContext, const Address &aAddress)
 {
     int rval = -1;
 
-    for (Netif *netif = sNetifListHead; netif; netif = netif->mNext)
+    for (Netif *netif = aContext->mNetifListHead; netif; netif = netif->mNext)
     {
         for (NetifUnicastAddress *cur = netif->mUnicastAddresses; cur; cur = cur->GetNext())
         {

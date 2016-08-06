@@ -45,7 +45,12 @@ class NcpBase
 {
 public:
 
-    NcpBase();
+    NcpBase(otContext *aContext);
+
+protected:
+    
+    // The pointer to the OpenThread context
+    otContext* mContext;
 
 protected:
 
@@ -76,7 +81,7 @@ private:
     /**
      * Trampoline for HandleDatagramFromStack().
      */
-    static void HandleDatagramFromStack(otMessage message);
+    static void HandleDatagramFromStack(otMessage message, void *aContext);
 
     void HandleDatagramFromStack(Message &message);
 

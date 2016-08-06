@@ -42,6 +42,11 @@
 
 #include <assert.h>
 
+#elif defined(OPEN_THREAD_DRIVER)
+
+#include <wdm.h>
+#define assert ASSERT
+
 #else
 
 #define assert(cond)                            \

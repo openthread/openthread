@@ -65,13 +65,21 @@ namespace Mac {
  */
 enum
 {
+#ifdef OPEN_THREAD_MAC_NO_MIN_BACKOFF
+    kMinBE                = 0,                     ///< macMinBE (IEEE 802.15.4-2006)
+#else
     kMinBE                = 3,                     ///< macMinBE (IEEE 802.15.4-2006)
+#endif
     kMaxBE                = 6,                     ///< macMaxBE (IEEE 802.15.4-2006)
     kMaxCSMABackoffs      = 4,                     ///< macMaxCSMABackoffs (IEEE 802.15.4-2006)
     kMaxFrameRetries      = 15,                    ///< macMaxFrameRetries (IEEE 802.15.4-2006)
     kUnitBackoffPeriod    = 20,                    ///< Number of symbols (IEEE 802.15.4-2006)
-
+    
+#ifdef OPEN_THREAD_MAC_NO_MIN_BACKOFF
+    kMinBackoff           = 0,                     ///< Minimum backoff (milliseconds).
+#else
     kMinBackoff           = 16,                    ///< Minimum backoff (milliseconds).
+#endif
     kMaxFrameAttempts     = kMaxFrameRetries + 1,  ///< Number of transmission attempts.
 
     kAckTimeout           = 16,                    ///< Timeout for waiting on an ACK (milliseconds).

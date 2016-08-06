@@ -328,7 +328,7 @@ public:
      *
      */
     void SetSubTlvsLength(int aLength) {
-        SetLength(sizeof(*this) - sizeof(NetworkDataTlv) + BitVectorBytes(mPrefixLength) + aLength);
+        SetLength((uint8_t)(sizeof(*this) - sizeof(NetworkDataTlv) + BitVectorBytes(mPrefixLength) + aLength));
     }
 
 private:

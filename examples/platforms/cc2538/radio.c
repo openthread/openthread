@@ -33,8 +33,10 @@
  */
 
 #include <openthread-types.h>
+#include <openthread.h>
 
 #include <common/code_utils.hpp>
+#include <platform.h>
 #include <platform/radio.h>
 #include "platform-cc2538.h"
 
@@ -116,7 +118,7 @@ void setChannel(uint8_t channel)
     HWREG(RFCORE_XREG_FREQCTRL) = 11 + (channel - 11) * 5;
 }
 
-ThreadError otPlatRadioSetPanId(uint16_t panid)
+ThreadError otPlatRadioSetPanId(otContext *aCtx, uint16_t panid)
 {
     ThreadError error = kThreadError_Busy;
 
@@ -130,7 +132,7 @@ ThreadError otPlatRadioSetPanId(uint16_t panid)
     return error;
 }
 
-ThreadError otPlatRadioSetExtendedAddress(uint8_t *address)
+ThreadError otPlatRadioSetExtendedAddress(otContext *aCtx, uint8_t *address)
 {
     ThreadError error = kThreadError_Busy;
 
@@ -149,7 +151,7 @@ ThreadError otPlatRadioSetExtendedAddress(uint8_t *address)
     return error;
 }
 
-ThreadError otPlatRadioSetShortAddress(uint16_t address)
+ThreadError otPlatRadioSetShortAddress(otContext *aCtx, uint16_t address)
 {
     ThreadError error = kThreadError_Busy;
 
@@ -190,7 +192,7 @@ void cc2538RadioInit(void)
     HWREG(RFCORE_XREG_SRCMATCH) = 0;
 }
 
-ThreadError otPlatRadioEnable(void)
+ThreadError otPlatRadioEnable(otContext *aCtx)
 {
     ThreadError error = kThreadError_Busy;
 
@@ -203,7 +205,7 @@ ThreadError otPlatRadioEnable(void)
     return error;
 }
 
-ThreadError otPlatRadioDisable(void)
+ThreadError otPlatRadioDisable(otContext *aCtx)
 {
     ThreadError error = kThreadError_Busy;
 
@@ -216,7 +218,7 @@ ThreadError otPlatRadioDisable(void)
     return error;
 }
 
-ThreadError otPlatRadioSleep(void)
+ThreadError otPlatRadioSleep(otContext *aCtx)
 {
     ThreadError error = kThreadError_Busy;
 
@@ -230,7 +232,7 @@ ThreadError otPlatRadioSleep(void)
     return error;
 }
 
-ThreadError otPlatRadioReceive(uint8_t aChannel)
+ThreadError otPlatRadioReceive(otContext *aCtx, uint8_t aChannel)
 {
     ThreadError error = kThreadError_Busy;
 
@@ -246,7 +248,7 @@ ThreadError otPlatRadioReceive(uint8_t aChannel)
     return error;
 }
 
-ThreadError otPlatRadioTransmit(void)
+ThreadError otPlatRadioTransmit(otContext *aCtx)
 {
     ThreadError error = kThreadError_Busy;
 
@@ -293,27 +295,27 @@ exit:
     return error;
 }
 
-RadioPacket *otPlatRadioGetTransmitBuffer(void)
+RadioPacket *otPlatRadioGetTransmitBuffer(otContext *aCtx)
 {
     return &sTransmitFrame;
 }
 
-int8_t otPlatRadioGetNoiseFloor(void)
+int8_t otPlatRadioGetNoiseFloor(otContext *aCtx)
 {
     return 0;
 }
 
-otRadioCaps otPlatRadioGetCaps(void)
+otRadioCaps otPlatRadioGetCaps(otContext *aCtx)
 {
     return kRadioCapsNone;
 }
 
-bool otPlatRadioGetPromiscuous(void)
+bool otPlatRadioGetPromiscuous(otContext *aCtx)
 {
     return (HWREG(RFCORE_XREG_FRMFILT0) & RFCORE_XREG_FRMFILT0_FRAME_FILTER_EN) == 0;
 }
 
-void otPlatRadioSetPromiscuous(bool aEnable)
+void otPlatRadioSetPromiscuous(otContext *aCtx, bool aEnable)
 {
     if (aEnable)
     {
@@ -371,7 +373,7 @@ void cc2538RadioProcess(void)
 
     if ((sState == kStateReceive) && (sReceiveFrame.mLength > 0))
     {
-        otPlatRadioReceiveDone(&sReceiveFrame, sReceiveError);
+        otPlatRadioReceiveDone(sContext, &sReceiveFrame, sReceiveError);
     }
 
     if (sState == kStateTransmit)
@@ -379,14 +381,14 @@ void cc2538RadioProcess(void)
         if (sTransmitError != kThreadError_None || (sTransmitFrame.mPsdu[0] & IEEE802154_ACK_REQUEST) == 0)
         {
             sState = kStateReceive;
-            otPlatRadioTransmitDone(false, sTransmitError);
+            otPlatRadioTransmitDone(sContext, false, sTransmitError);
         }
         else if (sReceiveFrame.mLength == IEEE802154_ACK_LENGTH &&
                  (sReceiveFrame.mPsdu[0] & IEEE802154_FRAME_TYPE_MASK) == IEEE802154_FRAME_TYPE_ACK &&
                  (sReceiveFrame.mPsdu[IEEE802154_DSN_OFFSET] == sTransmitFrame.mPsdu[IEEE802154_DSN_OFFSET]))
         {
             sState = kStateReceive;
-            otPlatRadioTransmitDone((sReceiveFrame.mPsdu[0] & IEEE802154_FRAME_PENDING) != 0, sTransmitError);
+            otPlatRadioTransmitDone(sContext, (sReceiveFrame.mPsdu[0] & IEEE802154_FRAME_PENDING) != 0, sTransmitError);
         }
     }
 

@@ -51,6 +51,8 @@ namespace Thread {
  */
 namespace Cli {
 
+class Interpreter;
+
 /**
  * This structure represents a CLI command.
  *
@@ -58,7 +60,7 @@ namespace Cli {
 struct Command
 {
     const char *mName;                         ///< A pointer to the command string.
-    void (*mCommand)(int argc, char *argv[]);  ///< A function pointer to process the command.
+    void (Interpreter::*mCommand)(int argc, char *argv[]);  ///< A function pointer to process the command.
 };
 
 /**
@@ -68,11 +70,11 @@ struct Command
 class Interpreter
 {
 public:
+
     /**
-     * This method initializes the CLI interpreter.
-     *
+     * Constructor
      */
-    static void Init(void);
+    Interpreter(otContext *aContext);
 
     /**
      * This method interprets a CLI command.
@@ -82,7 +84,7 @@ public:
      * @param[in]  aServer     A reference to the CLI server.
      *
      */
-    static void ProcessLine(char *aBuf, uint16_t aBufLength, Server &aServer);
+    void ProcessLine(char *aBuf, uint16_t aBufLength, Server &aServer);
 
     /**
      * This method parses an ASCII string as a long.
@@ -113,65 +115,71 @@ private:
         kMaxArgs = 8,
     };
 
-    static void AppendResult(ThreadError error);
-    static void OutputBytes(const uint8_t *aBytes, uint8_t aLength);
+    void AppendResult(ThreadError error);
+    void OutputBytes(const uint8_t *aBytes, uint8_t aLength);
 
-    static void ProcessHelp(int argc, char *argv[]);
-    static void ProcessChannel(int argc, char *argv[]);
-    static void ProcessChild(int argc, char *argv[]);
-    static void ProcessChildTimeout(int argc, char *argv[]);
-    static void ProcessContextIdReuseDelay(int argc, char *argv[]);
-    static void ProcessCounters(int argc, char *argv[]);
-    static void ProcessDataset(int argc, char *argv[]);
-    static void ProcessDiscover(int argc, char *argv[]);
-    static void ProcessEidCache(int argc, char *argv[]);
-    static void ProcessExtAddress(int argc, char *argv[]);
-    static void ProcessExtPanId(int argc, char *argv[]);
-    static void ProcessIfconfig(int argc, char *argv[]);
-    static void ProcessIpAddr(int argc, char *argv[]);
-    static ThreadError ProcessIpAddrAdd(int argc, char *argv[]);
-    static ThreadError ProcessIpAddrDel(int argc, char *argv[]);
-    static void ProcessKeySequence(int argc, char *argv[]);
-    static void ProcessLeaderData(int argc, char *argv[]);
-    static void ProcessLeaderWeight(int argc, char *argv[]);
-    static void ProcessMasterKey(int argc, char *argv[]);
-    static void ProcessMode(int argc, char *argv[]);
-    static void ProcessNetworkDataRegister(int argc, char *argv[]);
-    static void ProcessNetworkIdTimeout(int argc, char *argv[]);
-    static void ProcessNetworkName(int argc, char *argv[]);
-    static void ProcessPanId(int argc, char *argv[]);
-    static void ProcessPing(int argc, char *argv[]);
-    static void ProcessPrefix(int argc, char *argv[]);
-    static ThreadError ProcessPrefixAdd(int argc, char *argv[]);
-    static ThreadError ProcessPrefixRemove(int argc, char *argv[]);
-    static void ProcessReleaseRouterId(int argc, char *argv[]);
-    static void ProcessRoute(int argc, char *argv[]);
-    static void ProcessRouter(int argc, char *argv[]);
-    static ThreadError ProcessRouteAdd(int argc, char *argv[]);
-    static ThreadError ProcessRouteRemove(int argc, char *argv[]);
-    static void ProcessRouterUpgradeThreshold(int argc, char *argv[]);
-    static void ProcessRloc16(int argc, char *argv[]);
-    static void ProcessScan(int argc, char *argv[]);
-    static void ProcessState(int argc, char *argv[]);
-    static void ProcessThread(int argc, char *argv[]);
-    static void ProcessVersion(int argc, char *argv[]);
-    static void ProcessWhitelist(int argc, char *argv[]);
+    void ProcessHelp(int argc, char *argv[]);
+    void ProcessChannel(int argc, char *argv[]);
+    void ProcessChild(int argc, char *argv[]);
+    void ProcessChildTimeout(int argc, char *argv[]);
+    void ProcessContextIdReuseDelay(int argc, char *argv[]);
+    void ProcessCounters(int argc, char *argv[]);
+    void ProcessDataset(int argc, char *argv[]);
+    void ProcessDiscover(int argc, char *argv[]);
+    void ProcessEidCache(int argc, char *argv[]);
+    void ProcessExtAddress(int argc, char *argv[]);
+    void ProcessExtPanId(int argc, char *argv[]);
+    void ProcessIfconfig(int argc, char *argv[]);
+    void ProcessIpAddr(int argc, char *argv[]);
+    ThreadError ProcessIpAddrAdd(int argc, char *argv[]);
+    ThreadError ProcessIpAddrDel(int argc, char *argv[]);
+    void ProcessKeySequence(int argc, char *argv[]);
+    void ProcessLeaderData(int argc, char *argv[]);
+    void ProcessLeaderWeight(int argc, char *argv[]);
+    void ProcessMasterKey(int argc, char *argv[]);
+    void ProcessMode(int argc, char *argv[]);
+    void ProcessNetworkDataRegister(int argc, char *argv[]);
+    void ProcessNetworkIdTimeout(int argc, char *argv[]);
+    void ProcessNetworkName(int argc, char *argv[]);
+    void ProcessPanId(int argc, char *argv[]);
+    void ProcessPing(int argc, char *argv[]);
+    void ProcessPrefix(int argc, char *argv[]);
+    ThreadError ProcessPrefixAdd(int argc, char *argv[]);
+    ThreadError ProcessPrefixRemove(int argc, char *argv[]);
+    void ProcessReleaseRouterId(int argc, char *argv[]);
+    void ProcessRoute(int argc, char *argv[]);
+    void ProcessRouter(int argc, char *argv[]);
+    ThreadError ProcessRouteAdd(int argc, char *argv[]);
+    ThreadError ProcessRouteRemove(int argc, char *argv[]);
+    void ProcessRouterUpgradeThreshold(int argc, char *argv[]);
+    void ProcessRloc16(int argc, char *argv[]);
+    void ProcessScan(int argc, char *argv[]);
+    void ProcessState(int argc, char *argv[]);
+    void ProcessThread(int argc, char *argv[]);
+    void ProcessVersion(int argc, char *argv[]);
+    void ProcessWhitelist(int argc, char *argv[]);
 
-    static void HandleEchoResponse(void *aContext, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
-    static void HandlePingTimer(void *aContext);
-    static void HandleActiveScanResult(otActiveScanResult *aResult);
+    static void s_HandleEchoResponse(void *aContext, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    static void s_HandlePingTimer(void *aContext);
+    static void s_HandleActiveScanResult(otActiveScanResult *aResult);
+
+    void HandleEchoResponse(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    void HandlePingTimer();
+    void HandleActiveScanResult(otActiveScanResult *aResult);
 
     static const struct Command sCommands[];
-    static otNetifAddress sAddress;
+    otNetifAddress sAddress;
 
-    static Ip6::SockAddr sSockAddr;
-    static Ip6::IcmpEcho *sIcmpEcho;
-    static Server *sServer;
-    static uint8_t sEchoRequest[];
-    static uint16_t sLength;
-    static uint16_t sCount;
-    static uint32_t sInterval;
-    static Timer *sPingTimer;
+    Ip6::SockAddr sSockAddr;
+    Ip6::IcmpEcho sIcmpEcho;
+    Server *sServer;
+    uint8_t sEchoRequest[1500];
+    uint16_t sLength;
+    uint16_t sCount;
+    uint32_t sInterval;
+    Timer sPingTimer;
+
+    otContext *mContext;
 };
 
 }  // namespace Cli

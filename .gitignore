@@ -4,7 +4,9 @@
 *.log
 *.o
 *.pyc
+*.suo
 *.trs
+*.user
 *~
 .deps
 .dirstamp
@@ -23,3 +25,9 @@ include/stamp-h1
 libtool
 Makefile
 Makefile.in
+/.obj
+/.bin
+/.vs
+/ipch
+/openthread.VC.db
+/openthread.VC.VC.opendb

@@ -35,6 +35,9 @@
 #include <stdbool.h>
 #include <stdint.h>
 
+#include <openthread.h>
+
+#include <platform.h>
 #include <platform/alarm.h>
 #include "platform-cc2538.h"
 
@@ -60,14 +63,14 @@ uint32_t otPlatAlarmGetNow(void)
     return sCounter;
 }
 
-void otPlatAlarmStartAt(uint32_t t0, uint32_t dt)
+void otPlatAlarmStartAt(otContext *aCtx, uint32_t t0, uint32_t dt)
 {
     sAlarmT0 = t0;
     sAlarmDt = dt;
     sIsRunning = true;
 }
 
-void otPlatAlarmStop(void)
+void otPlatAlarmStop(otContext *aCtx)
 {
     sIsRunning = false;
 }
@@ -99,7 +102,7 @@ void cc2538AlarmProcess(void)
         if (fire)
         {
             sIsRunning = false;
-            otPlatAlarmFired();
+            otPlatAlarmFired(sContext);
         }
     }
 

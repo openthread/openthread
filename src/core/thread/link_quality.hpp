@@ -90,6 +90,14 @@ public:
     int8_t GetAverageRss(void) const;
 
     /**
+     * This method returns the adjusted current average signal strength value.
+     *
+     * @returns The current average value or @c kDefaultNoiseFloor if no average is available.
+     *
+     */
+    int8_t GetAverageRssAdjusted(void) const;
+
+    /**
      * This method returns an encoded version of current average signal strength value. The encoded value is the
      * average multiplied by a precision factor (currently -8).
      *
@@ -109,7 +117,7 @@ public:
      * @retval kThreadError_NoBuf    The string representation of the average value could not fit in the given buffer.
      *
      */
-    ThreadError GetAverageRssAsString(char *aCharBuffer, size_t aBufferLen) const;
+    ThreadError GetAverageRssAsString(char *aCharBuffer, uint32_t aBufferLen) const;
 
     /**
      * This method returns the link margin. The link margin is calculated using the link's current average received
@@ -143,7 +151,27 @@ public:
      * @returns The link margin value.
      *
      */
-    static uint8_t ConvertRssToLinkMargin(int8_t anRss);
+    static uint8_t ConvertRssToLinkMargin(otContext *aContext, int8_t anRss);
+
+    /**
+     * This method converts a received signal strength value to a link margin value.
+     *
+     * @param[in]  anRss  The received signal strength value (in dBm).
+     *
+     * @returns The link margin value.
+     *
+     */
+    static uint8_t ConvertRssToLinkMarginFromNoiseFloor(int8_t anRss, int8_t aNoiseFloor);
+
+    /**
+     * This method converts a received signal strength value to a link quality value.
+     *
+     * @param[in]  anRss  The received signal strength value (in dBm).
+     *
+     * @returns The link quality value (0-3).
+     *
+     */
+    static uint8_t ConvertRssToLinkQuality(otContext *aContext, int8_t anRss);
 
     /**
      * This method converts a link margin value to a link quality value.
@@ -154,16 +182,6 @@ public:
      *
      */
     static uint8_t ConvertLinkMarginToLinkQuality(uint8_t aLinkMargin);
-
-    /**
-     * This method converts a received signal strength value to a link quality value.
-     *
-     * @param[in]  anRss  The received signal strength value (in dBm).
-     *
-     * @returns The link quality value (0-3).
-     *
-     */
-    static uint8_t ConvertRssToLinkQuality(int8_t anRss);
 
 private:
     enum
@@ -216,7 +234,7 @@ private:
  *
  * @returns The current average noise floor level (in dBm).
  */
-int8_t GetAverageNoiseFloor(void);
+int8_t GetAverageNoiseFloor(otContext *aContext);
 
 /**
  * This method adds a new noise floor value (in dBm) to the running average.
@@ -224,13 +242,13 @@ int8_t GetAverageNoiseFloor(void);
  * @param[in] aNoiseFloor    A new noise floor value (in dBm) to be added to the average.
  *
  */
-void AddNoiseFloor(int8_t aNoiseFloor);
+void AddNoiseFloor(otContext *aContext, int8_t aNoiseFloor);
 
 /**
  * This method clears the current average noise floor value.
  *
  */
-void ClearNoiseFloorAverage(void);
+void ClearNoiseFloorAverage(otContext *aContext);
 
 
 /**

@@ -213,7 +213,7 @@ int mbedtls_asn1_write_int( unsigned char **p, unsigned char *start, int val )
         return( MBEDTLS_ERR_ASN1_BUF_TOO_SMALL );
 
     len += 1;
-    *--(*p) = val;
+    *--(*p) = (unsigned char)val;
 
     if( val > 0 && **p & 0x80 )
     {

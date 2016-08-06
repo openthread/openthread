@@ -35,16 +35,15 @@
 #include <common/code_utils.hpp>
 #include <common/debug.hpp>
 #include <common/tasklet.hpp>
+#include <openthreadcontext.h>
 
 namespace Thread {
 
-Tasklet *TaskletScheduler::sHead = NULL;
-Tasklet *TaskletScheduler::sTail = NULL;
-
-Tasklet::Tasklet(Handler aHandler, void *aContext)
+Tasklet::Tasklet(otContext *aContext, Handler aHandler, void *aCallbackContext)
 {
+	mContext = aContext;
     mHandler = aHandler;
-    mContext = aContext;
+    mCallbackContext = aCallbackContext;
     mNext = NULL;
 }
 
@@ -56,36 +55,37 @@ ThreadError Tasklet::Post(void)
 ThreadError TaskletScheduler::Post(Tasklet &aTasklet)
 {
     ThreadError error = kThreadError_None;
+	otContext *aContext = aTasklet.mContext;
 
-    VerifyOrExit(sTail != &aTasklet && aTasklet.mNext == NULL, error = kThreadError_Busy);
+    VerifyOrExit(aContext->mTaskletTail != &aTasklet && aTasklet.mNext == NULL, error = kThreadError_Busy);
 
-    if (sTail == NULL)
+    if (aContext->mTaskletTail == NULL)
     {
-        sHead = &aTasklet;
-        sTail = &aTasklet;
-        otSignalTaskletPending();
+        aContext->mTaskletHead = &aTasklet;
+        aContext->mTaskletTail = &aTasklet;
+        otSignalTaskletPending(aContext);
     }
     else
     {
-        sTail->mNext = &aTasklet;
-        sTail = &aTasklet;
+        aContext->mTaskletTail->mNext = &aTasklet;
+        aContext->mTaskletTail = &aTasklet;
     }
 
 exit:
     return error;
 }
 
-Tasklet *TaskletScheduler::PopTasklet(void)
+Tasklet *TaskletScheduler::PopTasklet(otContext *aContext)
 {
-    Tasklet *task = sHead;
+    Tasklet *task = aContext->mTaskletHead;
 
     if (task != NULL)
     {
-        sHead = sHead->mNext;
+        aContext->mTaskletHead = aContext->mTaskletHead->mNext;
 
-        if (sHead == NULL)
+        if (aContext->mTaskletHead == NULL)
         {
-            sTail = NULL;
+            aContext->mTaskletTail = NULL;
         }
 
         task->mNext = NULL;
@@ -94,16 +94,16 @@ Tasklet *TaskletScheduler::PopTasklet(void)
     return task;
 }
 
-bool TaskletScheduler::AreTaskletsPending(void)
+bool TaskletScheduler::AreTaskletsPending(otContext *aContext)
 {
-    return sHead != NULL;
+    return aContext->mTaskletHead != NULL;
 }
 
-void TaskletScheduler::RunNextTasklet(void)
+void TaskletScheduler::RunNextTasklet(otContext *aContext)
 {
     Tasklet  *task;
 
-    task = PopTasklet();
+    task = PopTasklet(aContext);
 
     if (task != NULL)
     {

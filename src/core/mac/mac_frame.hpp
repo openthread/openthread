@@ -35,7 +35,12 @@
 #define MAC_FRAME_HPP_
 
 #include <limits.h>
+#ifndef OPEN_THREAD_DRIVER
 #include <stdint.h>
+#else
+#include <ntstatus.h>
+#include <ntstrsafe.h>
+#endif
 #include <string.h>
 
 #include <common/encoding.hpp>
@@ -790,7 +795,7 @@ public:
      *
      */
     void SetNetworkName(const char *aNetworkName) {
-        int length = strnlen(aNetworkName, sizeof(mNetworkName));
+        int length = (int)strnlen(aNetworkName, sizeof(mNetworkName));
         memset(mNetworkName, 0, sizeof(mNetworkName));
         memcpy(mNetworkName, aNetworkName, length);
     }

@@ -76,7 +76,7 @@ public:
      * @retval kThreadError_Busy  The route was already added.
      *
      */
-    static ThreadError Add(Route &aRoute);
+    static ThreadError Add(otContext *aContext, Route &aRoute);
 
     /**
      * This static method removes an IPv6 route.
@@ -87,7 +87,7 @@ public:
      * @retval kThreadError_InvalidArgs  The route was not added.
      *
      */
-    static ThreadError Remove(Route &aRoute);
+    static ThreadError Remove(otContext *aContext, Route &aRoute);
 
     /**
      * This static method performs source-destination route lookup.
@@ -98,7 +98,7 @@ public:
      * @returns The interface identifier for the best route or -1 if no route is available.
      *
      */
-    static int Lookup(const Address &aSource, const Address &aDestination);
+    static int Lookup(otContext *aContext, const Address &aSource, const Address &aDestination);
 };
 
 /**

@@ -34,7 +34,9 @@
 #ifndef IP6_ADDRESS_HPP_
 #define IP6_ADDRESS_HPP_
 
+#ifndef OPEN_THREAD_DRIVER
 #include <stdint.h>
+#endif
 
 #include <openthread-types.h>
 

@@ -69,7 +69,7 @@ public:
      * @retval kThreadError_Busy  The socket is already open.
      *
      */
-    ThreadError Open(otUdpReceive aHandler, void *aContext);
+    ThreadError Open(otContext *aContext, otUdpReceive aHandler, void *aCallbackContext);
 
     /**
      * This method binds the UDP socket.
@@ -88,7 +88,7 @@ public:
      * @retval kThreadErrorBusy   The socket is already closed.
      *
      */
-    ThreadError Close(void);
+    ThreadError Close(otContext *aContext);
 
     /**
      * This method sends a UDP message.
@@ -131,7 +131,7 @@ public:
      * @returns A pointer to the message or NULL if no buffers are available.
      *
      */
-    static Message *NewMessage(uint16_t aReserved);
+    static Message *NewMessage(otContext *aContext, uint16_t aReserved);
 
     /**
      * This static method handles a received UDP message.
@@ -157,14 +157,11 @@ public:
      */
     static ThreadError UpdateChecksum(Message &aMessage, uint16_t aPseudoHeaderChecksum);
 
-private:
     enum
     {
         kDynamicPortMin = 49152,  ///< Service Name and Transport Protocol Port Number Registry
         kDynamicPortMax = 65535,  ///< Service Name and Transport Protocol Port Number Registry
     };
-    static uint16_t sEphemeralPort;
-    static UdpSocket *sSockets;
 };
 
 OT_TOOL_PACKED_BEGIN

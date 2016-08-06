@@ -154,7 +154,7 @@ public:
      * @param[in]  aCode  The Code value.
      *
      */
-    void SetCode(Code aCode) { mHeader[1] = aCode; }
+    void SetCode(Code aCode) { mHeader[1] = (uint8_t)aCode; }
 
     /**
      * This method returns the Message ID value.
@@ -170,7 +170,7 @@ public:
      * @param[in]  aMessageId  The Message ID value.
      *
      */
-    void SetMessageId(uint16_t aMessageId) { mHeader[2] = aMessageId >> 8; mHeader[3] = aMessageId; }
+    void SetMessageId(uint16_t aMessageId) { mHeader[2] = aMessageId >> 8; mHeader[3] = (uint8_t)aMessageId; }
 
     /**
      * This method returns the Token length.

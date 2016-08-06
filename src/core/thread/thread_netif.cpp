@@ -54,8 +54,9 @@ static const uint8_t kThreadMasterKey[] =
 
 static const char name[] = "thread";
 
-ThreadNetif::ThreadNetif(void):
-    mCoapServer(kCoapUdpPort),
+ThreadNetif::ThreadNetif(otContext *aContext):
+    Netif(aContext),
+    mCoapServer(aContext, kCoapUdpPort),
     mAddressResolver(*this),
     mActiveDataset(*this),
     mPendingDataset(*this),

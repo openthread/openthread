@@ -35,9 +35,12 @@
 #ifndef AES_ECB_H_
 #define AES_ECB_H_
 
+#ifndef OPEN_THREAD_DRIVER
 #include <stdint.h>
+#endif
 
 #include <openthread-types.h>
+#include <cryptocontext.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -62,7 +65,7 @@ enum
  * @param[in]  aKeyLength  Length of the key in bytes.
  *
  */
-void otCryptoAesEcbSetKey(const void *aKey, uint16_t aKeyLength);
+void otCryptoAesEcbSetKey(otCryptoContext *aCryptoContext, const void *aKey, uint16_t aKeyLength);
 
 /**
  * This method encrypts data.
@@ -71,7 +74,7 @@ void otCryptoAesEcbSetKey(const void *aKey, uint16_t aKeyLength);
  * @param[out]  aOutput  A pointer to the output.
  *
  */
-void otCryptoAesEcbEncrypt(const uint8_t aInput[otAesBlockSize], uint8_t aOutput[otAesBlockSize]);
+void otCryptoAesEcbEncrypt(otCryptoContext *aCryptoContext, const uint8_t aInput[otAesBlockSize], uint8_t aOutput[otAesBlockSize]);
 
 /**
  * @}

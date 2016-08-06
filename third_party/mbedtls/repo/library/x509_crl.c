@@ -57,7 +57,10 @@
 #endif
 
 #if defined(_WIN32) && !defined(EFIX64) && !defined(EFI32)
+#if defined(OPEN_THREAD_DRIVER)
+#else
 #include <windows.h>
+#endif
 #else
 #include <time.h>
 #endif

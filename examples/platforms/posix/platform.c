@@ -41,6 +41,8 @@
 #include <sys/time.h>
 
 #include <openthread.h>
+
+#include <platform.h>
 #include <platform/alarm.h>
 #include <platform/uart.h>
 #include "platform-posix.h"
@@ -86,7 +88,7 @@ void PlatformProcessDrivers(void)
     posixRadioUpdateFdSet(&read_fds, &write_fds, &max_fd);
     posixAlarmUpdateTimeout(&timeout);
 
-    if (!otAreTaskletsPending())
+    if (!otAreTaskletsPending(sContext))
     {
         rval = select(max_fd + 1, &read_fds, &write_fds, NULL, &timeout);
         assert(rval >= 0 && errno != ETIME);

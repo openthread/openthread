@@ -43,7 +43,7 @@ extern "C" {
  * Initialize the CLI UART module.
  *
  */
-void otCliUartInit(void);
+void otCliUartInit(otContext *aContext);
 
 #ifdef __cplusplus
 }  // extern "C"

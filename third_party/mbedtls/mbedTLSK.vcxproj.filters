@@ -1,0 +1,208 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Source Files\repo">
+      <UniqueIdentifier>{0a2ce77e-dccf-408c-aea0-7a781284a936}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\repo\library">
+      <UniqueIdentifier>{87ec68b3-5bec-4c60-b764-c2daf3ffcfb2}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="mbedcrypto.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="repo\library\aes.c">
+      <Filter>Source Files\repo\library</Filter>
+    </ClCompile>
+    <ClCompile Include="repo\library\aesni.c">
+      <Filter>Source Files\repo\library</Filter>
+    </ClCompile>
+    <ClCompile Include="repo\library\arc4.c">
+      <Filter>Source Files\repo\library</Filter>
+    </ClCompile>
+    <ClCompile Include="repo\library\asn1parse.c">
+      <Filter>Source Files\repo\library</Filter>
+    </ClCompile>
+    <ClCompile Include="repo\library\asn1write.c">
+      <Filter>Source Files\repo\library</Filter>
+    </ClCompile>
+    <ClCompile Include="repo\library\base64.c">
+      <Filter>Source Files\repo\library</Filter>
+    </ClCompile>
+    <ClCompile Include="repo\library\bignum.c">
+      <Filter>Source Files\repo\library</Filter>
+    </ClCompile>
+    <ClCompile Include="repo\library\blowfish.c">
+      <Filter>Source Files\repo\library</Filter>
+    </ClCompile>
+    <ClCompile Include="repo\library\camellia.c">
+      <Filter>Source Files\repo\library</Filter>
+    </ClCompile>
+    <ClCompile Include="repo\library\ccm.c">
+      <Filter>Source Files\repo\library</Filter>
+    </ClCompile>
+    <ClCompile Include="repo\library\certs.c">
+      <Filter>Source Files\repo\library</Filter>
+    </ClCompile>
+    <ClCompile Include="repo\library\cipher.c">
+      <Filter>Source Files\repo\library</Filter>
+    </ClCompile>
+    <ClCompile Include="repo\library\cipher_wrap.c">
+      <Filter>Source Files\repo\library</Filter>
+    </ClCompile>
+    <ClCompile Include="repo\library\ctr_drbg.c">
+      <Filter>Source Files\repo\library</Filter>
+    </ClCompile>
+    <ClCompile Include="repo\library\debug.c">
+      <Filter>Source Files\repo\library</Filter>
+    </ClCompile>
+    <ClCompile Include="repo\library\des.c">
+      <Filter>Source Files\repo\library</Filter>
+    </ClCompile>
+    <ClCompile Include="repo\library\dhm.c">
+      <Filter>Source Files\repo\library</Filter>
+    </ClCompile>
+    <ClCompile Include="repo\library\ecdh.c">
+      <Filter>Source Files\repo\library</Filter>
+    </ClCompile>
+    <ClCompile Include="repo\library\ecdsa.c">
+      <Filter>Source Files\repo\library</Filter>
+    </ClCompile>
+    <ClCompile Include="repo\library\ecjpake.c">
+      <Filter>Source Files\repo\library</Filter>
+    </ClCompile>
+    <ClCompile Include="repo\library\ecp.c">
+      <Filter>Source Files\repo\library</Filter>
+    </ClCompile>
+    <ClCompile Include="repo\library\ecp_curves.c">
+      <Filter>Source Files\repo\library</Filter>
+    </ClCompile>
+    <ClCompile Include="repo\library\entropy.c">
+      <Filter>Source Files\repo\library</Filter>
+    </ClCompile>
+    <ClCompile Include="repo\library\entropy_poll.c">
+      <Filter>Source Files\repo\library</Filter>
+    </ClCompile>
+    <ClCompile Include="repo\library\error.c">
+      <Filter>Source Files\repo\library</Filter>
+    </ClCompile>
+    <ClCompile Include="repo\library\gcm.c">
+      <Filter>Source Files\repo\library</Filter>
+    </ClCompile>
+    <ClCompile Include="repo\library\havege.c">
+      <Filter>Source Files\repo\library</Filter>
+    </ClCompile>
+    <ClCompile Include="repo\library\hmac_drbg.c">
+      <Filter>Source Files\repo\library</Filter>
+    </ClCompile>
+    <ClCompile Include="repo\library\md.c">
+      <Filter>Source Files\repo\library</Filter>
+    </ClCompile>
+    <ClCompile Include="repo\library\md_wrap.c">
+      <Filter>Source Files\repo\library</Filter>
+    </ClCompile>
+    <ClCompile Include="repo\library\md2.c">
+      <Filter>Source Files\repo\library</Filter>
+    </ClCompile>
+    <ClCompile Include="repo\library\md4.c">
+      <Filter>Source Files\repo\library</Filter>
+    </ClCompile>
+    <ClCompile Include="repo\library\md5.c">
+      <Filter>Source Files\repo\library</Filter>
+    </ClCompile>
+    <ClCompile Include="repo\library\memory_buffer_alloc.c">
+      <Filter>Source Files\repo\library</Filter>
+    </ClCompile>
+    <ClCompile Include="repo\library\oid.c">
+      <Filter>Source Files\repo\library</Filter>
+    </ClCompile>
+    <ClCompile Include="repo\library\padlock.c">
+      <Filter>Source Files\repo\library</Filter>
+    </ClCompile>
+    <ClCompile Include="repo\library\pem.c">
+      <Filter>Source Files\repo\library</Filter>
+    </ClCompile>
+    <ClCompile Include="repo\library\pk.c">
+      <Filter>Source Files\repo\library</Filter>
+    </ClCompile>
+    <ClCompile Include="repo\library\pk_wrap.c">
+      <Filter>Source Files\repo\library</Filter>
+    </ClCompile>
+    <ClCompile Include="repo\library\pkcs5.c">
+      <Filter>Source Files\repo\library</Filter>
+    </ClCompile>
+    <ClCompile Include="repo\library\pkcs11.c">
+      <Filter>Source Files\repo\library</Filter>
+    </ClCompile>
+    <ClCompile Include="repo\library\pkcs12.c">
+      <Filter>Source Files\repo\library</Filter>
+    </ClCompile>
+    <ClCompile Include="repo\library\pkparse.c">
+      <Filter>Source Files\repo\library</Filter>
+    </ClCompile>
+    <ClCompile Include="repo\library\pkwrite.c">
+      <Filter>Source Files\repo\library</Filter>
+    </ClCompile>
+    <ClCompile Include="repo\library\platform.c">
+      <Filter>Source Files\repo\library</Filter>
+    </ClCompile>
+    <ClCompile Include="repo\library\ripemd160.c">
+      <Filter>Source Files\repo\library</Filter>
+    </ClCompile>
+    <ClCompile Include="repo\library\rsa.c">
+      <Filter>Source Files\repo\library</Filter>
+    </ClCompile>
+    <ClCompile Include="repo\library\sha1.c">
+      <Filter>Source Files\repo\library</Filter>
+    </ClCompile>
+    <ClCompile Include="repo\library\sha256.c">
+      <Filter>Source Files\repo\library</Filter>
+    </ClCompile>
+    <ClCompile Include="repo\library\sha512.c">
+      <Filter>Source Files\repo\library</Filter>
+    </ClCompile>
+    <ClCompile Include="repo\library\ssl_cache.c">
+      <Filter>Source Files\repo\library</Filter>
+    </ClCompile>
+    <ClCompile Include="repo\library\ssl_ciphersuites.c">
+      <Filter>Source Files\repo\library</Filter>
+    </ClCompile>
+    <ClCompile Include="repo\library\ssl_cli.c">
+      <Filter>Source Files\repo\library</Filter>
+    </ClCompile>
+    <ClCompile Include="repo\library\ssl_cookie.c">
+      <Filter>Source Files\repo\library</Filter>
+    </ClCompile>
+    <ClCompile Include="repo\library\ssl_srv.c">
+      <Filter>Source Files\repo\library</Filter>
+    </ClCompile>
+    <ClCompile Include="repo\library\ssl_ticket.c">
+      <Filter>Source Files\repo\library</Filter>
+    </ClCompile>
+    <ClCompile Include="repo\library\ssl_tls.c">
+      <Filter>Source Files\repo\library</Filter>
+    </ClCompile>
+    <ClCompile Include="repo\library\threading.c">
+      <Filter>Source Files\repo\library</Filter>
+    </ClCompile>
+    <ClCompile Include="repo\library\version.c">
+      <Filter>Source Files\repo\library</Filter>
+    </ClCompile>
+    <ClCompile Include="repo\library\version_features.c">
+      <Filter>Source Files\repo\library</Filter>
+    </ClCompile>
+    <ClCompile Include="repo\library\xtea.c">
+      <Filter>Source Files\repo\library</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="repo\library\Makefile">
+      <Filter>Source Files\repo\library</Filter>
+    </None>
+  </ItemGroup>
+</Project>

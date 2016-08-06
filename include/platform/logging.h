@@ -35,7 +35,13 @@
 #ifndef LOGGING_H_
 #define LOGGING_H_
 
+#ifndef OPEN_THREAD_DRIVER
 #include <stdint.h>
+#else
+typedef unsigned char      uint8_t;
+typedef unsigned short     uint16_t;
+typedef unsigned int       uint32_t;
+#endif
 
 #ifdef __cplusplus
 extern "C" {

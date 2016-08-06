@@ -39,6 +39,9 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
+#include <openthread.h>
+
+#include <platform.h>
 #include <platform/radio.h>
 
 #include <common/code_utils.hpp>
@@ -256,7 +259,7 @@ static inline void getExtAddress(const uint8_t *frame, otExtAddress *address)
     }
 }
 
-ThreadError otPlatRadioSetPanId(uint16_t panid)
+ThreadError otPlatRadioSetPanId(otContext *aCtx, uint16_t panid)
 {
     ThreadError error = kThreadError_Busy;
 
@@ -269,7 +272,7 @@ ThreadError otPlatRadioSetPanId(uint16_t panid)
     return error;
 }
 
-ThreadError otPlatRadioSetExtendedAddress(uint8_t *address)
+ThreadError otPlatRadioSetExtendedAddress(otContext *aCtx, uint8_t *address)
 {
     ThreadError error = kThreadError_Busy;
 
@@ -288,7 +291,7 @@ ThreadError otPlatRadioSetExtendedAddress(uint8_t *address)
     return error;
 }
 
-ThreadError otPlatRadioSetShortAddress(uint16_t address)
+ThreadError otPlatRadioSetShortAddress(otContext *aCtx, uint16_t address)
 {
     ThreadError error = kThreadError_Busy;
 
@@ -301,7 +304,7 @@ ThreadError otPlatRadioSetShortAddress(uint16_t address)
     return error;
 }
 
-void otPlatRadioSetPromiscuous(bool aEnable)
+void otPlatRadioSetPromiscuous(otContext *aCtx, bool aEnable)
 {
     sPromiscuous = aEnable;
 }
@@ -349,7 +352,7 @@ void posixRadioInit(void)
     sAckFrame.mPsdu = sAckMessage.mPsdu;
 }
 
-ThreadError otPlatRadioEnable(void)
+ThreadError otPlatRadioEnable(otContext *aCtx)
 {
     ThreadError error = kThreadError_Busy;
 
@@ -362,7 +365,7 @@ ThreadError otPlatRadioEnable(void)
     return error;
 }
 
-ThreadError otPlatRadioDisable(void)
+ThreadError otPlatRadioDisable(otContext *aCtx)
 {
     ThreadError error = kThreadError_Busy;
 
@@ -375,7 +378,7 @@ ThreadError otPlatRadioDisable(void)
     return error;
 }
 
-ThreadError otPlatRadioSleep(void)
+ThreadError otPlatRadioSleep(otContext *aCtx)
 {
     ThreadError error = kThreadError_Busy;
 
@@ -388,7 +391,7 @@ ThreadError otPlatRadioSleep(void)
     return error;
 }
 
-ThreadError otPlatRadioReceive(uint8_t aChannel)
+ThreadError otPlatRadioReceive(otContext *aCtx, uint8_t aChannel)
 {
     ThreadError error = kThreadError_Busy;
 
@@ -403,7 +406,7 @@ ThreadError otPlatRadioReceive(uint8_t aChannel)
     return error;
 }
 
-ThreadError otPlatRadioTransmit(void)
+ThreadError otPlatRadioTransmit(otContext *aCtx)
 {
     ThreadError error = kThreadError_Busy;
 
@@ -416,22 +419,22 @@ ThreadError otPlatRadioTransmit(void)
     return error;
 }
 
-RadioPacket *otPlatRadioGetTransmitBuffer(void)
+RadioPacket *otPlatRadioGetTransmitBuffer(otContext *aCtx)
 {
     return &sTransmitFrame;
 }
 
-int8_t otPlatRadioGetNoiseFloor(void)
+int8_t otPlatRadioGetNoiseFloor(otContext *aCtx)
 {
     return 0;
 }
 
-otRadioCaps otPlatRadioGetCaps(void)
+otRadioCaps otPlatRadioGetCaps(otContext *aCtx)
 {
     return kRadioCapsNone;
 }
 
-bool otPlatRadioGetPromiscuous(void)
+bool otPlatRadioGetPromiscuous(otContext *aCtx)
 {
     return sPromiscuous;
 }
@@ -456,7 +459,7 @@ void radioReceive(void)
             {
                 sState = kStateReceive;
                 sAckWait = false;
-                otPlatRadioTransmitDone(isFramePending(sReceiveFrame.mPsdu), kThreadError_None);
+                otPlatRadioTransmitDone(sContext, isFramePending(sReceiveFrame.mPsdu), kThreadError_None);
             }
         }
         else if (sState == kStateReceive &&
@@ -478,7 +481,7 @@ void radioSendMessage(void)
     if (!sAckWait)
     {
         sState = kStateReceive;
-        otPlatRadioTransmitDone(false, kThreadError_None);
+        otPlatRadioTransmitDone(sContext, false, kThreadError_None);
     }
 }
 
@@ -609,5 +612,5 @@ void radioProcessFrame(void)
 
 exit:
 
-    otPlatRadioReceiveDone(error == kThreadError_None ? &sReceiveFrame : NULL, error);
+    otPlatRadioReceiveDone(sContext, error == kThreadError_None ? &sReceiveFrame : NULL, error);
 }

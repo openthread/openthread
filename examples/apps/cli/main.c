@@ -26,23 +26,32 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <openthread-core-config.h>
 #include <openthread.h>
 #include <cli/cli-uart.h>
 #include <platform.h>
+#include <assert.h>
 
-void otSignalTaskletPending(void)
+otContext* sContext;
+uint8_t otContextBuffer[OT_CONTEXT_SIZE];
+
+void otSignalTaskletPending(otContext* aCtx)
 {
 }
 
 int main(int argc, char *argv[])
 {
     PlatformInit(argc, argv);
-    otEnable();
-    otCliUartInit();
+
+    uint64_t otContextBufferLength = sizeof(otContextBuffer);
+    sContext = otEnable(otContextBuffer, &otContextBufferLength);
+    assert(sContext);
+
+    otCliUartInit(sContext);
 
     while (1)
     {
-        otProcessNextTasklet();
+        otProcessNextTasklet(sContext);
         PlatformProcessDrivers();
     }
 

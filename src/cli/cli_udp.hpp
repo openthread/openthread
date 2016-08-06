@@ -47,6 +47,8 @@ namespace Cli {
 class Udp: public Server
 {
 public:
+    Udp(otContext *aContext, Interpreter *aInterpreter);
+
     /**
      * This method starts the CLI server.
      *
@@ -88,6 +90,8 @@ private:
 
     otUdpSocket mSocket;
     otMessageInfo mPeer;
+    otContext *mContext;
+    Interpreter *mInterpreter;
 };
 
 }  // namespace Cli

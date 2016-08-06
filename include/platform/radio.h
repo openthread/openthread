@@ -36,7 +36,9 @@
 #ifndef RADIO_H_
 #define RADIO_H_
 
+#ifndef OPEN_THREAD_DRIVER
 #include <stdint.h>
+#endif
 
 #include <openthread-types.h>
 
@@ -151,7 +153,7 @@ typedef enum PhyState
  *
  * @retval ::kThreadError_None  If the PAN ID was set properly.
  */
-ThreadError otPlatRadioSetPanId(uint16_t aPanId);
+ThreadError otPlatRadioSetPanId(otContext *aContext, uint16_t aPanId);
 
 /**
  * Set the Extended Address for address filtering.
@@ -160,7 +162,7 @@ ThreadError otPlatRadioSetPanId(uint16_t aPanId);
  *
  * @retval ::kThreadError_None  If the Extended Address was set properly.
  */
-ThreadError otPlatRadioSetExtendedAddress(uint8_t *aExtendedAddress);
+ThreadError otPlatRadioSetExtendedAddress(otContext *aContext, uint8_t *aExtendedAddress);
 
 /**
  * Set the Short Address for address filtering.
@@ -169,7 +171,7 @@ ThreadError otPlatRadioSetExtendedAddress(uint8_t *aExtendedAddress);
  *
  * @retval ::kThreadError_None  If the Short Address was set properly.
  */
-ThreadError otPlatRadioSetShortAddress(uint16_t aShortAddress);
+ThreadError otPlatRadioSetShortAddress(otContext *aContext, uint16_t aShortAddress);
 
 /**
  * @}
@@ -192,14 +194,14 @@ ThreadError otPlatRadioSetShortAddress(uint16_t aShortAddress);
  * @retval ::kThreadError_None  Successfully transitioned to Sleep.
  * @retval ::kThreadError_Busy  The radio was already enabled.
  */
-ThreadError otPlatRadioEnable(void);
+ThreadError otPlatRadioEnable(otContext *aContext);
 
 /**
  * Disable the radio.
  *
  * @retval ::kThreadError_None  Successfully transitioned to Disabled.
  */
-ThreadError otPlatRadioDisable(void);
+ThreadError otPlatRadioDisable(otContext *aContext);
 
 /**
  * Transition the radio from Receive to Sleep.
@@ -208,7 +210,7 @@ ThreadError otPlatRadioDisable(void);
  * @retval ::kThreadError_None  Successfully transitioned to Sleep.
  * @retval ::kThreadError_Busy  The radio was not in the Receive state.
  */
-ThreadError otPlatRadioSleep(void);
+ThreadError otPlatRadioSleep(otContext *aContext);
 
 /**
  * Transitioning the radio from Sleep to Receive.
@@ -219,7 +221,7 @@ ThreadError otPlatRadioSleep(void);
  * @retval ::kThreadError_None  Successfully transitioned to Receive.
  * @retval ::kThreadError_Busy  The radio was not in the Sleep state.
  */
-ThreadError otPlatRadioReceive(uint8_t aChannel);
+ThreadError otPlatRadioReceive(otContext *aContext, uint8_t aChannel);
 
 /**
  * The radio driver calls this method to notify OpenThread of a received packet.
@@ -229,7 +231,7 @@ ThreadError otPlatRadioReceive(uint8_t aChannel);
  *                      was aborted and a frame was not received.
  *
  */
-extern void otPlatRadioReceiveDone(RadioPacket *aPacket, ThreadError aError);
+extern void otPlatRadioReceiveDone(otContext *aContext, RadioPacket *aPacket, ThreadError aError);
 
 /**
  * The radio tranitions from Transmit to Receive.
@@ -240,7 +242,7 @@ extern void otPlatRadioReceiveDone(RadioPacket *aPacket, ThreadError aError);
  * @returns A pointer to the transmit buffer.
  *
  */
-RadioPacket *otPlatRadioGetTransmitBuffer(void);
+RadioPacket *otPlatRadioGetTransmitBuffer(otContext *aContext);
 
 /**
  * This method begins the transmit sequence on the radio.
@@ -255,7 +257,7 @@ RadioPacket *otPlatRadioGetTransmitBuffer(void);
  * @retval ::kThreadError_None         Successfully transitioned to Transmit.
  * @retval ::kThreadError_Busy         The radio was not in the Receive state.
  */
-ThreadError otPlatRadioTransmit(void);
+ThreadError otPlatRadioTransmit(otContext *aContext);
 
 /**
  * The radio driver calls this method to notify OpenThread that the transmission has completed.
@@ -267,21 +269,21 @@ ThreadError otPlatRadioTransmit(void);
  *                     aborted for other reasons.
  *
  */
-extern void otPlatRadioTransmitDone(bool aFramePending, ThreadError aError);
+extern void otPlatRadioTransmitDone(otContext *aContext, bool aFramePending, ThreadError aError);
 
 /**
  * Get the most recent RSSI measurement.
  *
  * @returns The noise floor value in dBm when the noise floor value is valid.  127 when noise floor value is invalid.
  */
-int8_t otPlatRadioGetNoiseFloor(void);
+int8_t otPlatRadioGetNoiseFloor(otContext *aContext);
 
 /**
  * Get the radio capabilities.
  *
  * @returns The radio capability bit vector. The stack enables or disables some functions based on this value.
  */
-otRadioCaps otPlatRadioGetCaps(void);
+otRadioCaps otPlatRadioGetCaps(otContext *aContext);
 
 /**
  * Get the status of promiscuous mode.
@@ -289,14 +291,14 @@ otRadioCaps otPlatRadioGetCaps(void);
  * @retval true   Promiscuous mode is enabled.
  * @retval false  Promiscuous mode is disabled.
  */
-bool otPlatRadioGetPromiscuous(void);
+bool otPlatRadioGetPromiscuous(otContext *aContext);
 
 /**
  * Enable or disable promiscuous mode.
  *
  * @param[in]  aEnable  A value to enable or disable promiscuous mode.
  */
-void otPlatRadioSetPromiscuous(bool aEnable);
+void otPlatRadioSetPromiscuous(otContext *aContext, bool aEnable);
 
 /**
  * @}

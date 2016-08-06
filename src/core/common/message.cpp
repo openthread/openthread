@@ -33,93 +33,102 @@
 
 #include <common/code_utils.hpp>
 #include <common/debug.hpp>
+#include <common/logging.hpp>
 #include <common/message.hpp>
 #include <net/ip6.hpp>
+#include <openthreadcontext.h>
+
+#ifdef WINDOWS_LOGGING
+#include <message.tmh>
+#endif
 
 namespace Thread {
 
-static Buffer *NewBuffer(void);
-static ThreadError FreeBuffers(Buffer *aBuffer);
-static ThreadError ReclaimBuffers(int aNumBuffers);
+static Buffer *NewBuffer(otContext *aContext);
+static ThreadError FreeBuffers(otContext *aContext, Buffer *aBuffer);
+static ThreadError ReclaimBuffers(otContext *aContext, int aNumBuffers);
 
-static int sNumFreeBuffers;
-static Buffer sBuffers[kNumBuffers];
-static Buffer *sFreeBuffers;
-static MessageList sAll;
-
-Buffer *NewBuffer(void)
+Buffer *NewBuffer(otContext *aContext)
 {
     Buffer *buffer = NULL;
 
-    VerifyOrExit(sFreeBuffers != NULL, ;);
+    if (aContext->mFreeBuffers == NULL)
+    {
+        otLogWarnMem("Ran out of buffers!");
+    }
 
-    buffer = sFreeBuffers;
-    sFreeBuffers = sFreeBuffers->GetNextBuffer();
+    VerifyOrExit(aContext->mFreeBuffers != NULL, ;);
+
+    buffer = aContext->mFreeBuffers;
+    aContext->mFreeBuffers = aContext->mFreeBuffers->GetNextBuffer();
     buffer->SetNextBuffer(NULL);
-    sNumFreeBuffers--;
+    aContext->mNumFreeBuffers--;
 
 exit:
     return buffer;
 }
 
-ThreadError FreeBuffers(Buffer *aBuffer)
+ThreadError FreeBuffers(otContext *aContext, Buffer *aBuffer)
 {
     Buffer *tmpBuffer;
 
     while (aBuffer != NULL)
     {
         tmpBuffer = aBuffer->GetNextBuffer();
-        aBuffer->SetNextBuffer(sFreeBuffers);
-        sFreeBuffers = aBuffer;
-        sNumFreeBuffers++;
+        aBuffer->SetNextBuffer(aContext->mFreeBuffers);
+        aContext->mFreeBuffers = aBuffer;
+        aContext->mNumFreeBuffers++;
         aBuffer = tmpBuffer;
     }
 
     return kThreadError_None;
 }
 
-ThreadError ReclaimBuffers(int aNumBuffers)
+ThreadError ReclaimBuffers(otContext *aContext, int aNumBuffers)
 {
-    return (aNumBuffers <= sNumFreeBuffers) ? kThreadError_None : kThreadError_NoBufs;
+    return (aNumBuffers <= aContext->mNumFreeBuffers) ? kThreadError_None : kThreadError_NoBufs;
 }
 
-ThreadError Message::Init(void)
+ThreadError Message::Init(otContext *aContext)
 {
-    sFreeBuffers = sBuffers;
+    aContext->mFreeBuffers = aContext->mBuffers;
 
     for (int i = 0; i < kNumBuffers - 1; i++)
     {
-        sBuffers[i].SetNextBuffer(&sBuffers[i + 1]);
+        aContext->mBuffers[i].SetNextBuffer(&aContext->mBuffers[i + 1]);
     }
 
-    sBuffers[kNumBuffers - 1].SetNextBuffer(NULL);
-    sNumFreeBuffers = kNumBuffers;
+    aContext->mBuffers[kNumBuffers - 1].SetNextBuffer(NULL);
+    aContext->mNumFreeBuffers = kNumBuffers;
 
     return kThreadError_None;
 }
 
-Message *Message::New(uint8_t aType, uint16_t aReserved)
+Message *Message::New(otContext *aContext, uint8_t aType, uint16_t aReserved)
 {
     Message *message = NULL;
 
-    VerifyOrExit((message = reinterpret_cast<Message *>(NewBuffer())) != NULL, ;);
+    VerifyOrExit((message = reinterpret_cast<Message *>(NewBuffer(aContext))) != NULL, ;);
 
     memset(message, 0, sizeof(*message));
+    message->mHeader.mContext = aContext;
     message->SetType(aType);
     message->SetReserved(aReserved);
     message->SetLinkSecurityEnabled(true);
 
     VerifyOrExit(message->SetLength(0) == kThreadError_None, Message::Free(*message));
+    
+    return message;
 
 exit:
-    return message;
+    return NULL;
 }
 
 ThreadError Message::Free(Message &aMessage)
 {
     assert(aMessage.GetMessageList(MessageInfo::kListAll).mList == NULL &&
            aMessage.GetMessageList(MessageInfo::kListInterface).mList == NULL);
-    return FreeBuffers(reinterpret_cast<Buffer *>(&aMessage));
+    return FreeBuffers(aMessage.mHeader.mContext, reinterpret_cast<Buffer *>(&aMessage));
 }
 
 ThreadError Message::ResizeMessage(uint16_t aLength)
@@ -133,7 +142,8 @@ ThreadError Message::ResizeMessage(uint16_t aLength)
     {
         if (curBuffer->GetNextBuffer() == NULL)
         {
-            curBuffer->SetNextBuffer(NewBuffer());
+            curBuffer->SetNextBuffer(NewBuffer(mHeader.mContext));
+            VerifyOrExit(curBuffer->GetNextBuffer() != NULL, ;);
         }
 
         curBuffer = curBuffer->GetNextBuffer();
@@ -145,9 +155,12 @@ ThreadError Message::ResizeMessage(uint16_t aLength)
     curBuffer = curBuffer->GetNextBuffer();
     lastBuffer->SetNextBuffer(NULL);
 
-    FreeBuffers(curBuffer);
+    FreeBuffers(mHeader.mContext, curBuffer);
 
     return kThreadError_None;
+
+exit:
+    return kThreadError_NoBufs;
 }
 
 Message *Message::GetNext(void) const
@@ -177,9 +190,9 @@ ThreadError Message::SetLength(uint16_t aLength)
         bufs -= (((totalLengthCurrent - kHeadBufferDataSize) - 1) / kBufferDataSize) + 1;
     }
 
-    SuccessOrExit(error = ReclaimBuffers(bufs));
+    SuccessOrExit(error = ReclaimBuffers(mHeader.mContext, bufs));
 
-    ResizeMessage(totalLengthRequest);
+    SuccessOrExit(error = ResizeMessage(totalLengthRequest));
     mInfo.mLength = aLength;
 
 exit:
@@ -198,7 +211,7 @@ ThreadError Message::MoveOffset(int aDelta)
     assert(GetOffset() + aDelta <= GetLength());
     VerifyOrExit(GetOffset() + aDelta <= GetLength(), error = kThreadError_InvalidArgs);
 
-    mInfo.mOffset += aDelta;
+    mInfo.mOffset += (uint16_t)aDelta;
     assert(mInfo.mOffset <= GetLength());
 
 exit:
@@ -616,14 +629,16 @@ void Message::SetReserved(uint16_t aReserved)
     mInfo.mReserved = aReserved;
 }
 
-MessageQueue::MessageQueue(void)
+MessageQueue::MessageQueue(otContext *aContext) :
+	mContext(aContext)
 {
     mInterface.mHead = NULL;
     mInterface.mTail = NULL;
 }
 
-ThreadError MessageQueue::AddToList(int aList, Message &aMessage)
+ThreadError MessageQueue::AddToList(int _aList, Message &aMessage)
 {
+	uint8_t aList = (uint8_t)_aList;
     MessageList *list;
 
     assert(aMessage.GetMessageList(aList).mNext == NULL &&
@@ -647,8 +662,9 @@ ThreadError MessageQueue::AddToList(int aList, Message &aMessage)
     return kThreadError_None;
 }
 
-ThreadError MessageQueue::RemoveFromList(int aList, Message &aMessage)
+ThreadError MessageQueue::RemoveFromList(int _aList, Message &aMessage)
 {
+	uint8_t aList = (uint8_t)_aList;
     MessageList *list;
 
     assert(aMessage.GetMessageList(aList).mList != NULL);
@@ -690,7 +706,7 @@ Message *MessageQueue::GetHead(void) const
 
 ThreadError MessageQueue::Enqueue(Message &aMessage)
 {
-    aMessage.GetMessageList(MessageInfo::kListAll).mList = &sAll;
+    aMessage.GetMessageList(MessageInfo::kListAll).mList = &mContext->mAll;
     aMessage.GetMessageList(MessageInfo::kListInterface).mList = &mInterface;
     AddToList(MessageInfo::kListAll, aMessage);
     AddToList(MessageInfo::kListInterface, aMessage);

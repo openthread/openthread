@@ -34,7 +34,9 @@
 #ifndef MAC_WHITELIST_HPP_
 #define MAC_WHITELIST_HPP_
 
+#ifndef OPEN_THREAD_DRIVER
 #include <stdint.h>
+#endif
 
 #include <openthread-types.h>
 #include <mac/mac_frame.hpp>

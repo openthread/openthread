@@ -99,7 +99,7 @@ public:
      * @param[in]  aSeedLength  The MPL Seed Length.
      *
      */
-    void SetSeedLength(SeedLength aSeedLength) { mControl = (mControl & ~kSeedLengthMask) | aSeedLength; }
+    void SetSeedLength(SeedLength aSeedLength) { mControl = (mControl & ~kSeedLengthMask) | (uint8_t)aSeedLength; }
 
     /**
      * This method indicates whether or not the MPL M flag is set.
@@ -108,7 +108,7 @@ public:
      * @retval FALSE  If the MPL M flag is not set.
      *
      */
-    bool IsMaxFlagSet() { return mControl & kMaxFlag; }
+    bool IsMaxFlagSet() { return (mControl & kMaxFlag) != 0; }
 
     /**
      * This method clears the MPL M flag.
@@ -174,7 +174,7 @@ public:
      * This constructor initializes the MPL object.
      *
      */
-    Mpl(void);
+    Mpl(otContext *aContext);
 
     /**
      * This method initializes the MPL option.

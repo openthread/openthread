@@ -45,16 +45,20 @@
 #include <thread/thread_tlvs.hpp>
 #include <thread/thread_uris.hpp>
 
+#ifdef WINDOWS_LOGGING
+#include <address_resolver.tmh>
+#endif
+
 using Thread::Encoding::BigEndian::HostSwap16;
 
 namespace Thread {
 
 AddressResolver::AddressResolver(ThreadNetif &aThreadNetif) :
-    mAddressError(OPENTHREAD_URI_ADDRESS_ERROR, &HandleAddressError, this),
-    mAddressQuery(OPENTHREAD_URI_ADDRESS_QUERY, &HandleAddressQuery, this),
-    mAddressNotification(OPENTHREAD_URI_ADDRESS_NOTIFY, &HandleAddressNotification, this),
-    mIcmpHandler(&HandleDstUnreach, this),
-    mTimer(&HandleTimer, this),
+    mAddressError(OPENTHREAD_URI_ADDRESS_ERROR, &AddressResolver::HandleAddressError, this),
+    mAddressQuery(OPENTHREAD_URI_ADDRESS_QUERY, &AddressResolver::HandleAddressQuery, this),
+    mAddressNotification(OPENTHREAD_URI_ADDRESS_NOTIFY, &AddressResolver::HandleAddressNotification, this),
+    mIcmpHandler(&AddressResolver::HandleDstUnreach, this),
+    mTimer(aThreadNetif.GetOpenThreadContext(), &AddressResolver::HandleTimer, this),
     mMeshForwarder(aThreadNetif.GetMeshForwarder()),
     mCoapServer(aThreadNetif.GetCoapServer()),
     mMle(aThreadNetif.GetMle()),
@@ -65,9 +69,9 @@ AddressResolver::AddressResolver(ThreadNetif &aThreadNetif) :
     mCoapServer.AddResource(mAddressError);
     mCoapServer.AddResource(mAddressQuery);
     mCoapServer.AddResource(mAddressNotification);
-    mCoapMessageId = otPlatRandomGet();
+    mCoapMessageId = (uint16_t)otPlatRandomGet();
 
-    Ip6::Icmp::RegisterCallbacks(mIcmpHandler);
+    Ip6::Icmp::RegisterCallbacks(aThreadNetif.GetOpenThreadContext(), mIcmpHandler);
 }
 
 void AddressResolver::Clear()
@@ -172,15 +176,15 @@ ThreadError AddressResolver::SendAddressQuery(const Ip6::Address &aEid)
     Ip6::MessageInfo messageInfo;
 
     sockaddr.mPort = kCoapUdpPort;
-    mSocket.Open(&HandleUdpReceive, this);
+    mSocket.Open(mNetif.GetOpenThreadContext(), &HandleUdpReceive, this);
     mSocket.Bind(sockaddr);
 
     for (size_t i = 0; i < sizeof(mCoapToken); i++)
     {
-        mCoapToken[i] = otPlatRandomGet();
+        mCoapToken[i] = (uint8_t)otPlatRandomGet();
     }
 
-    VerifyOrExit((message = Ip6::Udp::NewMessage(0)) != NULL, error = kThreadError_NoBufs);
+    VerifyOrExit((message = Ip6::Udp::NewMessage(mNetif.GetOpenThreadContext(), 0)) != NULL, error = kThreadError_NoBufs);
 
     header.Init();
     header.SetVersion(1);
@@ -201,7 +205,7 @@ ThreadError AddressResolver::SendAddressQuery(const Ip6::Address &aEid)
     messageInfo.GetPeerAddr().mFields.m16[0] = HostSwap16(0xff03);
     messageInfo.GetPeerAddr().mFields.m16[7] = HostSwap16(0x0002);
     messageInfo.mPeerPort = kCoapUdpPort;
-    messageInfo.mInterfaceId = mNetif.GetInterfaceId();
+    messageInfo.mInterfaceId = (uint8_t)mNetif.GetInterfaceId();
 
     SuccessOrExit(error = mSocket.SendTo(*message, messageInfo));
 
@@ -320,7 +324,7 @@ void AddressResolver::SendAddressNotificationResponse(const Coap::Header &aReque
     Coap::Header responseHeader;
     Ip6::MessageInfo responseInfo;
 
-    VerifyOrExit((message = Ip6::Udp::NewMessage(0)) != NULL, error = kThreadError_NoBufs);
+    VerifyOrExit((message = Ip6::Udp::NewMessage(mNetif.GetOpenThreadContext(), 0)) != NULL, error = kThreadError_NoBufs);
 
     responseHeader.Init();
     responseHeader.SetVersion(1);
@@ -355,15 +359,15 @@ ThreadError AddressResolver::SendAddressError(const ThreadTargetTlv &aTarget, co
     Ip6::SockAddr sockaddr;
 
     sockaddr.mPort = kCoapUdpPort;
-    mSocket.Open(&HandleUdpReceive, this);
+    mSocket.Open(mNetif.GetOpenThreadContext(), &HandleUdpReceive, this);
     mSocket.Bind(sockaddr);
 
     for (size_t i = 0; i < sizeof(mCoapToken); i++)
     {
-        mCoapToken[i] = otPlatRandomGet();
+        mCoapToken[i] = (uint8_t)otPlatRandomGet();
     }
 
-    VerifyOrExit((message = Ip6::Udp::NewMessage(0)) != NULL, error = kThreadError_NoBufs);
+    VerifyOrExit((message = Ip6::Udp::NewMessage(mNetif.GetOpenThreadContext(), 0)) != NULL, error = kThreadError_NoBufs);
 
     header.Init();
     header.SetVersion(1);
@@ -391,7 +395,7 @@ ThreadError AddressResolver::SendAddressError(const ThreadTargetTlv &aTarget, co
     }
 
     messageInfo.mPeerPort = kCoapUdpPort;
-    messageInfo.mInterfaceId = mNetif.GetInterfaceId();
+    messageInfo.mInterfaceId = (uint8_t)mNetif.GetInterfaceId();
 
     SuccessOrExit(error = mSocket.SendTo(*message, messageInfo));
 
@@ -510,7 +514,7 @@ void AddressResolver::HandleAddressQuery(Coap::Header &aHeader, Message &aMessag
 
     lastTransactionTimeTlv.Init();
 
-    if (mNetif.IsUnicastAddress(*targetTlv.GetTarget()))
+    if (Ip6::Netif::IsUnicastAddress(mNetif.GetOpenThreadContext(), *targetTlv.GetTarget()))
     {
         mlIidTlv.SetIid(mMle.GetMeshLocal64()->GetIid());
         SendAddressQueryResponse(targetTlv, mlIidTlv, NULL, aMessageInfo.GetPeerAddr());
@@ -557,7 +561,7 @@ void AddressResolver::SendAddressQueryResponse(const ThreadTargetTlv &aTargetTlv
     ThreadRloc16Tlv rloc16Tlv;
     Ip6::MessageInfo messageInfo;
 
-    VerifyOrExit((message = Ip6::Udp::NewMessage(0)) != NULL, error = kThreadError_NoBufs);
+    VerifyOrExit((message = Ip6::Udp::NewMessage(mNetif.GetOpenThreadContext(), 0)) != NULL, error = kThreadError_NoBufs);
 
     header.Init();
     header.SetVersion(1);

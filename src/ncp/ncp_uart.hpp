@@ -44,7 +44,7 @@ class NcpUart : public NcpBase
     typedef NcpBase super_t;
 
 public:
-    NcpUart();
+    NcpUart(otContext *aContext);
 
     virtual ThreadError OutboundFrameBegin(void);
     virtual uint16_t OutboundFrameGetRemaining(void);

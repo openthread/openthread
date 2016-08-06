@@ -28,7 +28,7 @@
 #ifndef MBEDTLS_CONFIG_H
 #define MBEDTLS_CONFIG_H
 
-#if defined(_MSC_VER) && !defined(_CRT_SECURE_NO_DEPRECATE)
+#if defined(_MSC_VER) && !defined(_CRT_SECURE_NO_DEPRECATE) && !defined(OPEN_THREAD_DRIVER)
 #define _CRT_SECURE_NO_DEPRECATE 1
 #endif
 

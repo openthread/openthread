@@ -42,9 +42,9 @@ namespace Thread {
 static otDEFINE_ALIGNED_VAR(sNcpRaw, sizeof(NcpUart), uint64_t);
 static NcpUart *sNcpUart;
 
-extern "C" void otNcpInit(void)
+extern "C" void otNcpInit(otContext *aContext)
 {
-    sNcpUart = new(&sNcpRaw) NcpUart;
+    sNcpUart = new(&sNcpRaw) NcpUart(aContext);
 }
 
 NcpUart::SendHdlcBuffer::SendHdlcBuffer(void)
@@ -78,9 +78,9 @@ NcpUart::SendHdlcBuffer::GetRemainingLength(void) const
     return mRemainingLength;
 }
 
-NcpUart::NcpUart():
-    NcpBase(),
-    mFrameDecoder(mReceiveFrame, sizeof(mReceiveFrame), &HandleFrame, this),
+NcpUart::NcpUart(otContext *aContext):
+    NcpBase(aContext),
+    mFrameDecoder(mReceiveFrame, sizeof(mReceiveFrame), &NcpUart::HandleFrame, this),
     mSendFrame()
 {
 }
