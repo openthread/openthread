@@ -121,6 +121,7 @@ void setChannel(uint8_t channel)
 ThreadError otPlatRadioSetPanId(otContext *aCtx, uint16_t panid)
 {
     ThreadError error = kThreadError_Busy;
+    (void)aCtx;
 
     if (sState != kStateTransmit)
     {
