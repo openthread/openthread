@@ -37,6 +37,7 @@ uint8_t otContextBuffer[OT_CONTEXT_SIZE];
 
 void otSignalTaskletPending(otContext* aCtx)
 {
+    (void)aCtx;
 }
 
 int main(int argc, char *argv[])

@@ -135,6 +135,7 @@ ThreadError otPlatRadioSetPanId(otContext *aCtx, uint16_t panid)
 ThreadError otPlatRadioSetExtendedAddress(otContext *aCtx, uint8_t *address)
 {
     ThreadError error = kThreadError_Busy;
+    (void)aCtx;
 
     if (sState != kStateTransmit)
     {
@@ -154,6 +155,7 @@ ThreadError otPlatRadioSetExtendedAddress(otContext *aCtx, uint8_t *address)
 ThreadError otPlatRadioSetShortAddress(otContext *aCtx, uint16_t address)
 {
     ThreadError error = kThreadError_Busy;
+    (void)aCtx;
 
     if (sState != kStateTransmit)
     {
@@ -195,6 +197,7 @@ void cc2538RadioInit(void)
 ThreadError otPlatRadioEnable(otContext *aCtx)
 {
     ThreadError error = kThreadError_Busy;
+    (void)aCtx;
 
     if (sState == kStateSleep || sState == kStateDisabled)
     {
@@ -208,6 +211,7 @@ ThreadError otPlatRadioEnable(otContext *aCtx)
 ThreadError otPlatRadioDisable(otContext *aCtx)
 {
     ThreadError error = kThreadError_Busy;
+    (void)aCtx;
 
     if (sState == kStateDisabled || sState == kStateSleep)
     {
@@ -221,6 +225,7 @@ ThreadError otPlatRadioDisable(otContext *aCtx)
 ThreadError otPlatRadioSleep(otContext *aCtx)
 {
     ThreadError error = kThreadError_Busy;
+    (void)aCtx;
 
     if (sState == kStateSleep || sState == kStateReceive)
     {
@@ -235,6 +240,7 @@ ThreadError otPlatRadioSleep(otContext *aCtx)
 ThreadError otPlatRadioReceive(otContext *aCtx, uint8_t aChannel)
 {
     ThreadError error = kThreadError_Busy;
+    (void)aCtx;
 
     if (sState != kStateDisabled)
     {
@@ -251,6 +257,7 @@ ThreadError otPlatRadioReceive(otContext *aCtx, uint8_t aChannel)
 ThreadError otPlatRadioTransmit(otContext *aCtx)
 {
     ThreadError error = kThreadError_Busy;
+    (void)aCtx;
 
     if (sState == kStateReceive)
     {
@@ -297,26 +304,31 @@ exit:
 
 RadioPacket *otPlatRadioGetTransmitBuffer(otContext *aCtx)
 {
+    (void)aCtx;
     return &sTransmitFrame;
 }
 
 int8_t otPlatRadioGetNoiseFloor(otContext *aCtx)
 {
+    (void)aCtx;
     return 0;
 }
 
 otRadioCaps otPlatRadioGetCaps(otContext *aCtx)
 {
+    (void)aCtx;
     return kRadioCapsNone;
 }
 
 bool otPlatRadioGetPromiscuous(otContext *aCtx)
 {
+    (void)aCtx;
     return (HWREG(RFCORE_XREG_FRMFILT0) & RFCORE_XREG_FRMFILT0_FRAME_FILTER_EN) == 0;
 }
 
 void otPlatRadioSetPromiscuous(otContext *aCtx, bool aEnable)
 {
+    (void)aCtx;
     if (aEnable)
     {
         HWREG(RFCORE_XREG_FRMFILT0) &= ~RFCORE_XREG_FRMFILT0_FRAME_FILTER_EN;
