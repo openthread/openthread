@@ -1113,6 +1113,131 @@ spinel_prop_key_to_cstr(spinel_prop_key_t prop_key)
     return ret;
 }
 
+const char *spinel_status_to_cstr(spinel_status_t status)
+{
+    const char *ret = "UNKNOWN";
+
+    switch (status)
+    {
+    case SPINEL_STATUS_OK:
+        ret = "STATUS_OK";
+        break;
+
+    case SPINEL_STATUS_FAILURE:
+        ret = "STATUS_FAILURE";
+        break;
+
+    case SPINEL_STATUS_UNIMPLEMENTED:
+        ret = "STATUS_UNIMPLEMENTED";
+        break;
+
+    case SPINEL_STATUS_INVALID_ARGUMENT:
+        ret = "STATUS_INVALID_ARGUMENT";
+        break;
+
+    case SPINEL_STATUS_INVALID_STATE:
+        ret = "STATUS_INVALID_STATE";
+        break;
+
+    case SPINEL_STATUS_INVALID_COMMAND:
+        ret = "STATUS_INVALID_COMMAND";
+        break;
+
+    case SPINEL_STATUS_INVALID_INTERFACE:
+        ret = "STATUS_INVALID_INTERFACE";
+        break;
+
+    case SPINEL_STATUS_INTERNAL_ERROR:
+        ret = "STATUS_INTERNAL_ERROR";
+        break;
+
+    case SPINEL_STATUS_SECURITY_ERROR:
+        ret = "STATUS_SECURITY_ERROR";
+        break;
+
+    case SPINEL_STATUS_PARSE_ERROR:
+        ret = "STATUS_PARSE_ERROR";
+        break;
+
+    case SPINEL_STATUS_IN_PROGRESS:
+        ret = "STATUS_IN_PROGRESS";
+        break;
+
+    case SPINEL_STATUS_NOMEM:
+        ret = "STATUS_NOMEM";
+        break;
+
+    case SPINEL_STATUS_BUSY:
+        ret = "STATUS_BUSY";
+        break;
+
+    case SPINEL_STATUS_PROP_NOT_FOUND:
+        ret = "STATUS_PROP_NOT_FOUND";
+        break;
+
+    case SPINEL_STATUS_DROPPED:
+        ret = "STATUS_DROPPED";
+        break;
+
+    case SPINEL_STATUS_EMPTY:
+        ret = "STATUS_EMPTY";
+        break;
+
+    case SPINEL_STATUS_CMD_TOO_BIG:
+        ret = "STATUS_CMD_TOO_BIG";
+        break;
+
+    case SPINEL_STATUS_NO_ACK:
+        ret = "STATUS_NO_ACK";
+        break;
+
+    case SPINEL_STATUS_CCA_FAILURE:
+        ret = "STATUS_CCA_FAILURE";
+        break;
+
+    case SPINEL_STATUS_RESET_POWER_ON:
+        ret = "STATUS_RESET_POWER_ON";
+        break;
+
+    case SPINEL_STATUS_RESET_EXTERNAL:
+        ret = "STATUS_RESET_EXTERNAL";
+        break;
+
+    case SPINEL_STATUS_RESET_SOFTWARE:
+        ret = "STATUS_RESET_SOFTWARE";
+        break;
+
+    case SPINEL_STATUS_RESET_FAULT:
+        ret = "STATUS_RESET_FAULT";
+        break;
+
+    case SPINEL_STATUS_RESET_CRASH:
+        ret = "STATUS_RESET_CRASH";
+        break;
+
+    case SPINEL_STATUS_RESET_ASSERT:
+        ret = "STATUS_RESET_ASSERT";
+        break;
+
+    case SPINEL_STATUS_RESET_OTHER:
+        ret = "STATUS_RESET_OTHER";
+        break;
+
+    case SPINEL_STATUS_RESET_UNKNOWN:
+        ret = "STATUS_RESET_UNKNOWN";
+        break;
+
+    case SPINEL_STATUS_RESET_WATCHDOG:
+        ret = "STATUS_RESET_WATCHDOG";
+        break;
+
+    default:
+        break;
+    }
+
+    return ret;
+}
+
 
 /* -------------------------------------------------------------------------- */
 
