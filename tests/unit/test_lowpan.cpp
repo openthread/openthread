@@ -40,11 +40,11 @@ using namespace Thread;
 
 namespace Thread {
 
-extern "C" void otSignalTaskletPending(void)
+extern "C" void otSignalTaskletPending(otContext *)
 {
 }
 
-extern "C" bool otAreTaskletsPending(void)
+extern "C" bool otAreTaskletsPending(otContext *)
 {
     return false;
 }
@@ -59,8 +59,8 @@ extern "C" void otPlatUartReceived(const uint8_t *aBuf, uint16_t aBufLength)
     (void)aBufLength;
 }
 
-ThreadNetif sMockThreadNetif;
-Lowpan::Lowpan sMockLowpan(sMockThreadNetif);
+otContext sContext;
+Lowpan::Lowpan sMockLowpan(sContext.mThreadNetif);
 
 void TestLowpanIphc(void)
 {
@@ -100,7 +100,7 @@ void TestLowpanIphc(void)
         frame.GetSrcAddr(macSource);
         frame.GetDstAddr(macDest);
 
-        VerifyOrQuit((message = Ip6::Ip6::NewMessage(0)) != NULL,
+        VerifyOrQuit((message = Ip6::Ip6::NewMessage(&sContext, 0)) != NULL,
                      "6lo: Ip6::NewMessage failed");
 
         // ===> Test Lowpan::Decompress
