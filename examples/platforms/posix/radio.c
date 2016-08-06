@@ -262,6 +262,7 @@ static inline void getExtAddress(const uint8_t *frame, otExtAddress *address)
 ThreadError otPlatRadioSetPanId(otContext *aCtx, uint16_t panid)
 {
     ThreadError error = kThreadError_Busy;
+    (void)aCtx;
 
     if (sState != kStateTransmit)
     {
@@ -275,6 +276,7 @@ ThreadError otPlatRadioSetPanId(otContext *aCtx, uint16_t panid)
 ThreadError otPlatRadioSetExtendedAddress(otContext *aCtx, uint8_t *address)
 {
     ThreadError error = kThreadError_Busy;
+    (void)aCtx;
 
     if (sState != kStateTransmit)
     {
@@ -294,6 +296,7 @@ ThreadError otPlatRadioSetExtendedAddress(otContext *aCtx, uint8_t *address)
 ThreadError otPlatRadioSetShortAddress(otContext *aCtx, uint16_t address)
 {
     ThreadError error = kThreadError_Busy;
+    (void)aCtx;
 
     if (sState != kStateTransmit)
     {
@@ -306,6 +309,7 @@ ThreadError otPlatRadioSetShortAddress(otContext *aCtx, uint16_t address)
 
 void otPlatRadioSetPromiscuous(otContext *aCtx, bool aEnable)
 {
+    (void)aCtx;
     sPromiscuous = aEnable;
 }
 
@@ -355,6 +359,7 @@ void posixRadioInit(void)
 ThreadError otPlatRadioEnable(otContext *aCtx)
 {
     ThreadError error = kThreadError_Busy;
+    (void)aCtx;
 
     if (sState == kStateSleep || sState == kStateDisabled)
     {
@@ -368,6 +373,7 @@ ThreadError otPlatRadioEnable(otContext *aCtx)
 ThreadError otPlatRadioDisable(otContext *aCtx)
 {
     ThreadError error = kThreadError_Busy;
+    (void)aCtx;
 
     if (sState == kStateDisabled || sState == kStateSleep)
     {
@@ -381,6 +387,7 @@ ThreadError otPlatRadioDisable(otContext *aCtx)
 ThreadError otPlatRadioSleep(otContext *aCtx)
 {
     ThreadError error = kThreadError_Busy;
+    (void)aCtx;
 
     if (sState == kStateSleep || sState == kStateReceive)
     {
@@ -394,6 +401,7 @@ ThreadError otPlatRadioSleep(otContext *aCtx)
 ThreadError otPlatRadioReceive(otContext *aCtx, uint8_t aChannel)
 {
     ThreadError error = kThreadError_Busy;
+    (void)aCtx;
 
     if (sState != kStateDisabled)
     {
@@ -409,6 +417,7 @@ ThreadError otPlatRadioReceive(otContext *aCtx, uint8_t aChannel)
 ThreadError otPlatRadioTransmit(otContext *aCtx)
 {
     ThreadError error = kThreadError_Busy;
+    (void)aCtx;
 
     if ((sState == kStateTransmit && !sAckWait) || sState == kStateReceive)
     {
@@ -421,21 +430,25 @@ ThreadError otPlatRadioTransmit(otContext *aCtx)
 
 RadioPacket *otPlatRadioGetTransmitBuffer(otContext *aCtx)
 {
+    (void)aCtx;
     return &sTransmitFrame;
 }
 
 int8_t otPlatRadioGetNoiseFloor(otContext *aCtx)
 {
+    (void)aCtx;
     return 0;
 }
 
 otRadioCaps otPlatRadioGetCaps(otContext *aCtx)
 {
+    (void)aCtx;
     return kRadioCapsNone;
 }
 
 bool otPlatRadioGetPromiscuous(otContext *aCtx)
 {
+    (void)aCtx;
     return sPromiscuous;
 }
 

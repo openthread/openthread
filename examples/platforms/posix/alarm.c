@@ -58,12 +58,14 @@ uint32_t otPlatAlarmGetNow(void)
 
 void otPlatAlarmStartAt(otContext *aCtx, uint32_t t0, uint32_t dt)
 {
+    (void)aCtx;
     s_alarm = t0 + dt;
     s_is_running = true;
 }
 
 void otPlatAlarmStop(otContext *aCtx)
 {
+    (void)aCtx;
     s_is_running = false;
 }
 
