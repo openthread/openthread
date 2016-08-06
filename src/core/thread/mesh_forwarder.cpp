@@ -581,6 +581,11 @@ void MeshForwarder::SetPollPeriod(uint32_t aPeriod)
     mPollPeriod = aPeriod;
 }
 
+uint32_t MeshForwarder::GetPollPeriod()
+{
+	return mPollPeriod;
+}
+
 void MeshForwarder::HandlePollTimer(void *aContext)
 {
     MeshForwarder *obj = reinterpret_cast<MeshForwarder *>(aContext);

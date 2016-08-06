@@ -143,6 +143,7 @@ private:
     static void ProcessPanId(int argc, char *argv[]);
     static void ProcessParent(int argc, char *argv[]);
     static void ProcessPing(int argc, char *argv[]);
+    static void ProcessPollPeriod(int argc, char *argv[]);
     static void ProcessPrefix(int argc, char *argv[]);
     static ThreadError ProcessPrefixAdd(int argc, char *argv[]);
     static ThreadError ProcessPrefixRemove(int argc, char *argv[]);

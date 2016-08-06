@@ -141,6 +141,14 @@ public:
     void SetPollPeriod(uint32_t aPeriod);
 
     /**
+     * This method gets the Data Poll period.
+     *
+     * @returns  The Data Poll period in milliseconds.
+     *
+     */
+	uint32_t GetPollPeriod(void);
+
+    /**
      * This method sets the scan parameters for MLE Discovery Request messages.
      *
      * @param[in]  aScanChannels  A bit vector indicating which channels to scan.

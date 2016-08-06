@@ -29,6 +29,7 @@ OpenThread test scripts use the CLI to execute test cases.
 * [panid](#panid)
 * [parent](#parent)
 * [ping](#ping)
+* [pollperiod](#pollperiod)
 * [prefix](#prefix)
 * [releaserouterid](#releaserouterid)
 * [rloc16](#rloc16)
@@ -483,6 +484,25 @@ Send an ICMPv6 Echo Request.
 ```bash
 > ping fdde:ad00:beef:0:558:f56b:d688:799
 16 bytes from fdde:ad00:beef:0:558:f56b:d688:799: icmp_seq=1 hlim=64 time=28ms
+```
+
+### pollperiod
+
+Get the data poll period of sleepy end device
+
+```bash
+> pollperiod
+240
+Done
+```
+
+### pollperiod \<pollperiod>\
+
+Set the data poll period for sleepy end device
+
+```bash
+> pollperiod 240
+Done
 ```
 
 ### prefix add \<prefix\> [pvdcsr] [prf]

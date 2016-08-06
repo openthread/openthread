@@ -715,6 +715,15 @@ const char *otGetVersionString(void)
         __DATE__ " " __TIME__;
 
     return sVersion;
+
+uint32_t otGetPollPeriod()
+{
+	return sThreadNetif->GetMeshForwarder().GetPollPeriod();
+}
+
+void otSetPollPeriod(uint32_t aPollPeriod)
+{
+	sThreadNetif->GetMeshForwarder().SetPollPeriod(aPollPeriod);
 }
 
 ThreadError otEnable(void)

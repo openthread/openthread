@@ -639,6 +639,24 @@ ThreadError otGetPendingDataset(otOperationalDataset *aDataset);
 ThreadError otSetPendingDataset(otOperationalDataset *aDataset);
 
 /**
+ * Get the data poll period of sleepy end deivce.
+ *
+ * @returns  The data poll period of sleepy end device.
+ *
+ * @sa otSetPollPeriod
+ */
+uint32_t otGetPollPeriod(void);
+
+/**
+ * Set the data poll period for sleepy end deivce.
+ *
+ * param[in]  aPollPeriod  data poll period.
+ *
+ * @sa otGetPollPeriod
+ */
+void otSetPollPeriod(uint32_t aPollPeriod);
+
+/**
  * @}
  */
 

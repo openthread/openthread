@@ -77,6 +77,7 @@ const struct Command Interpreter::sCommands[] =
     { "panid", &ProcessPanId },
     { "parent", &ProcessParent },
     { "ping", &ProcessPing },
+    { "pollperiod", &ProcessPollPeriod },
     { "prefix", &ProcessPrefix },
     { "releaserouterid", &ProcessReleaseRouterId },
     { "rloc16", &ProcessRloc16 },
@@ -926,6 +927,25 @@ void Interpreter::HandlePingTimer(void *aContext)
     }
 
     (void)aContext;
+}
+
+void Interpreter::ProcessPollPeriod(int argc, char *argv[])
+{
+	ThreadError error = kThreadError_None;
+	long value;
+
+	if (argc == 0)
+	{
+		sServer->OutputFormat("%d\r\n", otGetPollPeriod());
+	}
+	else
+	{
+		SuccessOrExit(error = ParseLong(argv[0], value));
+		otSetPollPeriod(value);
+	}
+
+exit:
+	AppendResult(error);
 }
 
 ThreadError Interpreter::ProcessPrefixAdd(int argc, char *argv[])
