@@ -41,7 +41,8 @@
 #include <sys/time.h>
 
 #include <openthread.h>
-#include <platform.h>
+
+#include <platform.h>
 #include <platform/alarm.h>
 #include <platform/uart.h>
 #include "platform-posix.h"

@@ -37,7 +37,9 @@
 #ifndef OPENTHREAD_CORE_HAVE_PROJECT_SPECIFIC_CONFIG
 #define OPENTHREAD_CORE_HAVE_PROJECT_SPECIFIC_CONFIG 0
 #endif
+
 #define OPENTHREAD_CORE_CONFIG_H_IN
+
 #if OPENTHREAD_CORE_HAVE_PROJECT_SPECIFIC_CONFIG
 #include <openthread-core-project-config.h>
 #endif
@@ -45,5 +47,6 @@
 #include <openthread-core-default-config.h>
 
 #undef OPENTHREAD_CORE_CONFIG_H_IN
+
 #endif  // OPENTHREAD_CORE_CONFIG_H_
 

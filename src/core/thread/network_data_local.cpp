@@ -39,7 +39,11 @@
 #include <thread/network_data_local.hpp>
 #include <thread/thread_netif.hpp>
 #include <thread/thread_tlvs.hpp>
-#include <thread/thread_uris.hpp>#ifdef WINDOWS_LOGGING#include <network_data_local.tmh>#endif
+#include <thread/thread_uris.hpp>
+
+#ifdef WINDOWS_LOGGING
+#include <network_data_local.tmh>
+#endif
 
 namespace Thread {
 namespace NetworkData {

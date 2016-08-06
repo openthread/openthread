@@ -25,10 +25,15 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-#include <openthread-core-config.h>
-#include <openthread.h>#include <common/debug.hpp>
+
+#include <openthread-core-config.h>
+#include <openthread.h>
+#include <common/debug.hpp>
 #include <ncp/ncp.h>
-#include <platform.h>otContext* sContext;uint8_t otContextBuffer[OT_CONTEXT_SIZE];
+#include <platform.h>
+
+otContext* sContext;
+uint8_t otContextBuffer[OT_CONTEXT_SIZE];
 
 void otSignalTaskletPending(otContext* aCtx)
 {
@@ -36,7 +41,11 @@ void otSignalTaskletPending(otContext* aCtx)
 
 int main(int argc, char *argv[])
 {
-    PlatformInit(argc, argv);    uint64_t otContextBufferLength = sizeof(otContextBuffer);    sContext = otEnable(otContextBuffer, &otContextBufferLength);    assert(sContext);
+    PlatformInit(argc, argv);
+
+    uint64_t otContextBufferLength = sizeof(otContextBuffer);
+    sContext = otEnable(otContextBuffer, &otContextBufferLength);
+    assert(sContext);
 
     otNcpInit(sContext);
 

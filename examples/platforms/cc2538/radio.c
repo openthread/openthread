@@ -35,7 +35,8 @@
 #include <openthread-types.h>
 #include <openthread.h>
 
-#include <common/code_utils.hpp>#include <platform.h>
+#include <common/code_utils.hpp>
+#include <platform.h>
 #include <platform/radio.h>
 #include "platform-cc2538.h"
 
