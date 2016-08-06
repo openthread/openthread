@@ -163,7 +163,8 @@ ThreadError Dataset::ProcessHelp(otContext *aContext, int argc, char *argv[])
     {
         sServer->OutputFormat("%s\r\n", sCommands[i].mName);
     }
-
+    
+    (void)aContext;
     (void)argc;
     (void)argv;
     return kThreadError_None;
@@ -189,6 +190,8 @@ ThreadError Dataset::ProcessActiveTimestamp(otContext *aContext, int argc, char 
     SuccessOrExit(error = Interpreter::ParseLong(argv[0], value));
     sDataset.mActiveTimestamp = value;
     sDataset.mIsActiveTimestampSet = true;
+    
+    (void)aContext;
 
 exit:
     return error;
@@ -211,6 +214,7 @@ exit:
 ThreadError Dataset::ProcessClear(otContext *aContext, int argc, char *argv[])
 {
     memset(&sDataset, 0, sizeof(sDataset));
+    (void)aContext;
     (void)argc;
     (void)argv;
     return kThreadError_None;
@@ -234,6 +238,8 @@ ThreadError Dataset::ProcessCommit(otContext *aContext, int argc, char *argv[])
     {
         ExitNow(error = kThreadError_Parse);
     }
+    
+    (void)aContext;
 
 exit:
     return error;
@@ -248,6 +254,8 @@ ThreadError Dataset::ProcessDelay(otContext *aContext, int argc, char *argv[])
     SuccessOrExit(error = Interpreter::ParseLong(argv[0], value));
     sDataset.mDelay = value;
     sDataset.mIsDelaySet = true;
+    
+    (void)aContext;
 
 exit:
     return error;
@@ -263,6 +271,8 @@ ThreadError Dataset::ProcessExtPanId(otContext *aContext, int argc, char *argv[]
 
     memcpy(sDataset.mExtendedPanId.m8, extPanId, sizeof(sDataset.mExtendedPanId));
     sDataset.mIsExtendedPanIdSet = true;
+    
+    (void)aContext;
 
 exit:
     return error;
@@ -280,6 +290,8 @@ ThreadError Dataset::ProcessMasterKey(otContext *aContext, int argc, char *argv[
 
     memcpy(sDataset.mMasterKey.m8, key, sizeof(sDataset.mMasterKey));
     sDataset.mIsMasterKeySet = true;
+    
+    (void)aContext;
 
 exit:
     return error;
@@ -295,6 +307,8 @@ ThreadError Dataset::ProcessMeshLocalPrefix(otContext *aContext, int argc, char 
 
     memcpy(sDataset.mMeshLocalPrefix.m8, prefix.mFields.m8, sizeof(sDataset.mMeshLocalPrefix.m8));
     sDataset.mIsMeshLocalPrefixSet = true;
+    
+    (void)aContext;
 
 exit:
     return error;
@@ -311,6 +325,8 @@ ThreadError Dataset::ProcessNetworkName(otContext *aContext, int argc, char *arg
     memset(&sDataset.mNetworkName, 0, sizeof(sDataset.mNetworkName));
     memcpy(sDataset.mNetworkName.m8, argv[0], length);
     sDataset.mIsNetworkNameSet = true;
+    
+    (void)aContext;
 
 exit:
     return error;
@@ -325,6 +341,8 @@ ThreadError Dataset::ProcessPanId(otContext *aContext, int argc, char *argv[])
     SuccessOrExit(error = Interpreter::ParseLong(argv[0], value));
     sDataset.mPanId = value;
     sDataset.mIsPanIdSet = true;
+    
+    (void)aContext;
 
 exit:
     return error;
@@ -350,6 +368,8 @@ ThreadError Dataset::ProcessPendingTimestamp(otContext *aContext, int argc, char
     SuccessOrExit(error = Interpreter::ParseLong(argv[0], value));
     sDataset.mPendingTimestamp = value;
     sDataset.mIsPendingTimestampSet = true;
+    
+    (void)aContext;
 
 exit:
     return error;
