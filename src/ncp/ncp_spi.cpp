@@ -89,6 +89,8 @@ NcpSpi::NcpSpi():
     memset(mEmptySendFrame, 0, sizeof(SPI_HEADER_LENGTH));
     memset(mSendFrame, 0, sizeof(SPI_HEADER_LENGTH));
 
+    mSending = false;
+
     spi_header_set_flag_byte(mSendFrame, SPI_RESET_FLAG);
     spi_header_set_flag_byte(mEmptySendFrame, SPI_RESET_FLAG);
     spi_header_set_accept_len(mSendFrame, sizeof(mReceiveFrame) - SPI_HEADER_LENGTH);
@@ -327,7 +329,7 @@ void NcpSpi::HandleSendDone(void)
     mSending = false;
     mHandlingSendDone = false;
 
-    super_t::HandleSendDone();
+    super_t::HandleSpaceAvailableInTxBuffer();
 }
 
 void NcpSpi::HandleRxFrame(void *context)
