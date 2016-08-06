@@ -206,6 +206,8 @@ ThreadError Dataset::ProcessChannel(otContext *aContext, int argc, char *argv[])
     SuccessOrExit(error = Interpreter::ParseLong(argv[0], value));
     sDataset.mChannel = value;
     sDataset.mIsChannelSet = true;
+    
+    (void)aContext;
 
 exit:
     return error;
