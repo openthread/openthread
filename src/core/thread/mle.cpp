@@ -495,8 +495,12 @@ ThreadError Mle::SetRloc16(uint16_t aRloc16)
     if (aRloc16 != Mac::kShortAddrInvalid)
     {
         // link-local 16
-        mLinkLocal16.GetAddress().mFields.m16[7] = HostSwap16(aRloc16);
-        mNetif.AddUnicastAddress(mLinkLocal16);
+		// add link-local 16 only for sleepy end device
+		if ((mDeviceMode & ModeTlv::kModeRxOnWhenIdle) == 0)
+		{
+        	mLinkLocal16.GetAddress().mFields.m16[7] = HostSwap16(aRloc16);
+        	mNetif.AddUnicastAddress(mLinkLocal16);
+		}
 
         // mesh-local 16
         mMeshLocal16.GetAddress().mFields.m16[7] = HostSwap16(aRloc16);
