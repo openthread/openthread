@@ -143,6 +143,11 @@ Mle::Mle(ThreadNetif &aThreadNetif) :
 
     mNetifCallback.Set(&HandleNetifStateChanged, this);
     mNetif.RegisterCallback(mNetifCallback);
+
+	isAssignLinkQuality = false;
+	mAssignLinkQuality = 0;
+	mAssignLinkMargin = 0;
+	memset(&mAddr64, 0, sizeof(mAddr64));
 }
 
 ThreadError Mle::Enable(void)
@@ -569,6 +574,53 @@ ThreadError Mle::GetLeaderData(otLeaderData &aLeaderData)
 
 exit:
     return error;
+}
+
+ThreadError Mle::GetAssignLinkQuality(const Mac::ExtAddress aMacAddr, uint8_t &aLinkQuality)
+{
+	ThreadError error;
+	uint8_t numChildren;
+	Child *children;
+
+	VerifyOrExit((children = mMleRouter.GetChildren(&numChildren)) != NULL, error = kThreadError_InvalidState);
+	for (int i = 0; i < numChildren; i++)
+	{
+		if (memcmp(aMacAddr.m8, children[i].mMacAddr.m8, OT_EXT_ADDRESS_SIZE) == 0)
+		{
+			aLinkQuality = mAssignLinkQuality;
+			return kThreadError_None;
+		}
+	}
+
+	// didn't find the extended address from child table
+	error = kThreadError_InvalidState;
+
+exit:
+	return error;
+}
+
+void Mle::SetAssignLinkQuality(const Mac::ExtAddress aMacAddr, uint8_t aLinkQuality)
+{
+	isAssignLinkQuality = true;
+	mAddr64 = aMacAddr;
+
+	mAssignLinkQuality = aLinkQuality;
+	switch (aLinkQuality)
+	{
+	case 3:
+		mAssignLinkMargin = 0xff; // 21 - 255
+		break;
+	case 2:
+		mAssignLinkMargin = 0x14; // 11 - 20
+		break;
+	case 1:
+		mAssignLinkMargin = 0x09; // 3 - 9
+		break;
+	case 0:
+		mAssignLinkMargin = 0x0; // 0 - 2
+	default:
+		break;
+	}
 }
 
 void Mle::GenerateNonce(const Mac::ExtAddress &aMacAddr, uint32_t aFrameCounter, uint8_t aSecurityLevel,
@@ -1762,6 +1814,15 @@ ThreadError Mle::HandleParentResponse(const Message &aMessage, const Ip6::Messag
     {
         linkMargin = linkMarginTlv.GetLinkMargin();
     }
+
+	// add for Thread Certification testing
+	if (isAssignLinkQuality)
+	{
+		linkMargin = linkMarginTlv.GetLinkMargin();
+
+		// clear flag for subsequent normal MLE message
+		isAssignLinkQuality = false;
+	}
 
     linkQuality = LinkQualityInfo::ConvertLinkMarginToLinkQuality(linkMargin);
 

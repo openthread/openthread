@@ -555,6 +555,26 @@ bool otIsMacBlacklistEnabled(void)
 	return sThreadNetif->GetMac().GetBlacklist().IsEnabled();
 }
 
+ThreadError otGetAssignLinkQuality(const uint8_t *aExtAddr, uint8_t *aLinkQuality)
+{
+	Mac::ExtAddress extAddress;
+
+	memset(&extAddress, 0, sizeof(extAddress));
+	memcpy(extAddress.m8, aExtAddr, OT_EXT_ADDRESS_SIZE);
+
+	return sThreadNetif->GetMle().GetAssignLinkQuality(extAddress, *aLinkQuality);
+}
+
+void otSetAssignLinkQuality(const uint8_t *aExtAddr, uint8_t aLinkQuality)
+{
+	Mac::ExtAddress extAddress;
+
+	memset(&extAddress, 0, sizeof(extAddress));
+	memcpy(extAddress.m8, aExtAddr, OT_EXT_ADDRESS_SIZE);
+
+	sThreadNetif->GetMle().SetAssignLinkQuality(extAddress, aLinkQuality);
+}
+
 ThreadError otGetChildInfoById(uint16_t aChildId, otChildInfo *aChildInfo)
 {
     ThreadError error = kThreadError_None;

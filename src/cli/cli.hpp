@@ -136,6 +136,7 @@ private:
     static void ProcessLeaderData(int argc, char *argv[]);
     static void ProcessLeaderPartitionId(int argc, char *argv[]);
     static void ProcessLeaderWeight(int argc, char *argv[]);
+    static void ProcessLinkQuality(int argc, char *argv[]);
     static void ProcessMasterKey(int argc, char *argv[]);
     static void ProcessMode(int argc, char *argv[]);
     static void ProcessNetworkDataRegister(int argc, char *argv[]);

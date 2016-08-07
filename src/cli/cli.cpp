@@ -70,6 +70,7 @@ const struct Command Interpreter::sCommands[] =
     { "leaderdata", &ProcessLeaderData },
     { "leaderpartitionid", &ProcessLeaderPartitionId },
     { "leaderweight", &ProcessLeaderWeight },
+    { "linkquality", &ProcessLinkQuality },
     { "masterkey", &ProcessMasterKey },
     { "mode", &ProcessMode },
     { "netdataregister", &ProcessNetworkDataRegister },
@@ -712,6 +713,31 @@ void Interpreter::ProcessLeaderWeight(int argc, char *argv[])
 
 exit:
     AppendResult(error);
+}
+
+void Interpreter::ProcessLinkQuality(int argc, char *argv[])
+{
+	ThreadError error = kThreadError_None;
+	uint8_t extAddress[8];
+	uint8_t linkQuality;
+	long value;
+
+	VerifyOrExit(Hex2Bin(argv[0], extAddress, OT_EXT_ADDRESS_SIZE) >= 0, error = kThreadError_Parse);
+
+	if (argc == 1)
+	{
+		VerifyOrExit(otGetAssignLinkQuality(extAddress, &linkQuality) == kThreadError_None,
+                     error = kThreadError_InvalidState);
+		sServer->OutputFormat("%d\r\n", linkQuality);
+	}
+	else
+	{
+		SuccessOrExit(error = ParseLong(argv[1], value));
+		otSetAssignLinkQuality(extAddress, value);
+	}
+
+exit:
+	AppendResult(error);
 }
 
 void Interpreter::ProcessMasterKey(int argc, char *argv[])

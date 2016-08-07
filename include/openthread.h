@@ -1151,6 +1151,29 @@ void otEnableMacBlacklist(void);
 bool otIsMacBlacklistEnabled(void);
 
 /**
+ * Get the assigned link quality which is on the link to a given extended address.
+ *
+ * @param[in]  aExtAddr  A pointer to the IEEE 802.15.4 Extended Address.
+ * @param[in]  aLinkQuality A pointer to the assigned link quality.
+ *
+ * @retval kThreadError_None  Successfully retrieved the link quality to aLinkQuality.
+ * @retval kThreadError_InvalidState  No attached child matches with a given extended address.
+ *
+ * @sa otSetAssignLinkQuality
+ */
+ThreadError otGetAssignLinkQuality(const uint8_t *aExtAddr, uint8_t *aLinkQuality);
+
+/**
+ * Set the link quality which is on the link to a given extended address.
+ *
+ * @param[in]  aExtAddr  A pointer to the IEEE 802.15.4 Extended Address.
+ * @param[in]  aLinkQuality  The link quality to be set on the link.
+ *
+ * @sa otGetAssignLinkQuality
+ */
+void otSetAssignLinkQuality(const uint8_t *aExtAddr, uint8_t aLinkQuality);
+
+/**
  * @}
  *
  */

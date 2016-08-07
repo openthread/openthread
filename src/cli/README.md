@@ -20,8 +20,9 @@ OpenThread test scripts use the CLI to execute test cases.
 * [ifconfig](#ifconfig)
 * [ipaddr](#ipaddr)
 * [keysequence](#keysequence)
-* [leaderweight](#leaderweight)
 * [leaderpartitionid](#leaderpartitionid)
+* [leaderweight](#leaderweight)
+* [linkquality](#linkquality)
 * [masterkey](#masterkey)
 * [mode](#mode)
 * [netdataregister](#netdataregister)
@@ -371,6 +372,25 @@ Set the Thread Key Sequence.
 Done
 ```
 
+### leaderpartitionid
+
+Get the Thread Leader Partition ID.
+
+```bash
+> leaderpartitionid
+2147483647
+Done
+```
+
+### leaderpartitionid \<partitionid>\
+
+Set the Thread Leader Partition ID.
+
+```bash
+> leaderpartitionid 0xffffffff
+Done
+```
+
 ### leaderweight
 
 Get the Thread Leader Weight.
@@ -390,22 +410,22 @@ Set the Thread Leader Weight.
 Done
 ```
 
-### leaderpartitionid
+### linkquality \<extaddr>\
 
-Get the Thread Leader Partition ID.
+Get the link quality on the link to a given extended address.
 
 ```bash
-> leaderpartitionid
-2147483647
+> linkquality 36c1dd7a4f5201ff
+3
 Done
 ```
 
-### leaderpartitionid \<partitionid>\
+### linkquality \<extaddr>\ \<linkquality>\
 
-Set the Thread Leader Partition ID.
+Set the link quality on the link to a given extended address.
 
 ```bash
-> leaderpartitionid 0xffffffff
+> linkquality 36c1dd7a4f5201ff 3
 Done
 ```
 

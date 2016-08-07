@@ -1682,7 +1682,18 @@ ThreadError MleRouter::SendParentResponse(Child *aChild, const ChallengeTlv &cha
     }
 
     SuccessOrExit(error = AppendChallenge(*message, aChild->mPending.mChallenge, sizeof(aChild->mPending.mChallenge)));
-    SuccessOrExit(error = AppendLinkMargin(*message, aChild->mLinkInfo.GetLinkMargin()));
+
+	if (isAssignLinkQuality &&
+	    (memcmp(mAddr64.m8, aChild->mMacAddr.m8, OT_EXT_ADDRESS_SIZE) == 0))
+	{
+		// use assigned one to ensure the link quality
+		SuccessOrExit(error = AppendLinkMargin(*message, mAssignLinkMargin));	
+	}
+	else
+	{
+		SuccessOrExit(error = AppendLinkMargin(*message, aChild->mLinkInfo.GetLinkMargin()));
+	}
+
     SuccessOrExit(error = AppendConnectivity(*message));
     SuccessOrExit(error = AppendVersion(*message));
 
