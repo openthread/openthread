@@ -34,6 +34,7 @@ OpenThread test scripts use the CLI to execute test cases.
 * [pollperiod](#pollperiod)
 * [prefix](#prefix)
 * [releaserouterid](#releaserouterid)
+* [reset](#reset)
 * [rloc16](#rloc16)
 * [route](#route)
 * [router](#router)
@@ -611,9 +612,17 @@ Done
 
 ### releaserouterid \<routerid\>
 Release a Router ID that has been allocated by the device in the Leader role.
+
 ```bash
 > releaserouterid 16
 Done
+```
+
+### reset
+Signal a platform reset.
+
+```bash
+> reset
 ```
 
 ### rloc16

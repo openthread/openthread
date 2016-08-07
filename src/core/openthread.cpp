@@ -43,6 +43,7 @@
 #include <net/icmp6.hpp>
 #include <net/ip6.hpp>
 #include <platform/random.h>
+#include <platform/misc.h>
 #include <thread/thread_netif.hpp>
 
 namespace Thread {
@@ -573,6 +574,11 @@ void otSetAssignLinkQuality(const uint8_t *aExtAddr, uint8_t aLinkQuality)
 	memcpy(extAddress.m8, aExtAddr, OT_EXT_ADDRESS_SIZE);
 
 	sThreadNetif->GetMle().SetAssignLinkQuality(extAddress, aLinkQuality);
+}
+
+void otPlatformReset(void)
+{
+	otPlatReset();
 }
 
 ThreadError otGetChildInfoById(uint16_t aChildId, otChildInfo *aChildInfo)

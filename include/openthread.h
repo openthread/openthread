@@ -1174,6 +1174,11 @@ ThreadError otGetAssignLinkQuality(const uint8_t *aExtAddr, uint8_t *aLinkQualit
 void otSetAssignLinkQuality(const uint8_t *aExtAddr, uint8_t aLinkQuality);
 
 /**
+ * This method triggers platform reset.
+ */
+void otPlatformReset(void);
+
+/**
  * @}
  *
  */

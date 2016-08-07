@@ -150,6 +150,7 @@ private:
     static ThreadError ProcessPrefixAdd(int argc, char *argv[]);
     static ThreadError ProcessPrefixRemove(int argc, char *argv[]);
     static void ProcessReleaseRouterId(int argc, char *argv[]);
+    static void ProcessReset(int argc, char *argv[]);
     static void ProcessRoute(int argc, char *argv[]);
     static void ProcessRouter(int argc, char *argv[]);
     static ThreadError ProcessRouteAdd(int argc, char *argv[]);

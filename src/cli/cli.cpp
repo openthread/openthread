@@ -82,6 +82,7 @@ const struct Command Interpreter::sCommands[] =
     { "pollperiod", &ProcessPollPeriod },
     { "prefix", &ProcessPrefix },
     { "releaserouterid", &ProcessReleaseRouterId },
+    { "reset", &ProcessReset },
     { "rloc16", &ProcessRloc16 },
     { "route", &ProcessRoute },
     { "router", &ProcessRouter },
@@ -1200,6 +1201,13 @@ void Interpreter::ProcessReleaseRouterId(int argc, char *argv[])
 
 exit:
     AppendResult(error);
+}
+
+void Interpreter::ProcessReset(int argc, char *argv[])
+{
+	otPlatformReset();
+	(void)argc;
+	(void)argv;
 }
 
 void Interpreter::ProcessRloc16(int argc, char *argv[])
