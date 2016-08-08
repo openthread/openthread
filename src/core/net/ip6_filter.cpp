@@ -127,6 +127,14 @@ ThreadError Filter::RemoveUnsecurePort(uint16_t aPort)
     {
         if (mUnsecurePorts[i] == aPort)
         {
+            // Shift all of the ports higher than this
+            // port down.
+            for (; i < kMaxUnsecurePorts - 1; i++)
+            {
+                mUnsecurePorts[i] = mUnsecurePorts[i + 1];
+            }
+
+            // Clear the last port entry.
             mUnsecurePorts[i] = 0;
             ExitNow();
         }
@@ -140,7 +148,15 @@ exit:
 
 const uint16_t *Filter::GetUnsecurePorts(uint8_t &aNumEntries) const
 {
-    aNumEntries = kMaxUnsecurePorts;
+    // Count the number of unsecure ports.
+    for (aNumEntries = 0; aNumEntries < kMaxUnsecurePorts; aNumEntries++)
+    {
+        if (mUnsecurePorts[aNumEntries] == 0)
+        {
+            break;
+        }
+    }
+
     return mUnsecurePorts;
 }
 
