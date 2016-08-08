@@ -71,7 +71,6 @@ check_PROGRAMS                                                      = \
     test-link-quality                                                 \
     test-mac-frame                                                    \
     test-message                                                      \
-    test-timer                                                        \
     test-toolchain                                                    \
     $(NULL)
 
@@ -122,9 +121,6 @@ test_message_SOURCES         = test_message.cpp
 
 test_ncp_buffer_LDADD        = $(COMMON_LDADD)
 test_ncp_buffer_SOURCES      = test_ncp_buffer.cpp
-
-test_timer_LDADD             = $(COMMON_LDADD)
-test_timer_SOURCES           = test_timer.cpp
 
 test_toolchain_LDADD         = $(COMMON_LDADD)
 test_toolchain_SOURCES       = test_toolchain.cpp

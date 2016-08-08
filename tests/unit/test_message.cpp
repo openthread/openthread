@@ -28,10 +28,24 @@
 
 #include "test_util.h"
 #include <openthread.h>
+#include <platform/misc.h>
 #include <common/debug.hpp>
 #include <common/message.hpp>
 #include <string.h>
 #include <openthreadcontext.h>
+
+#if _WIN32
+#define random rand
+#endif
+
+extern "C" void otPlatReset(void)
+{
+}
+
+extern "C" otPlatResetReason otPlatGetResetReason(void)
+{
+    return kPlatResetReason_PowerOn;
+}
 
 extern"C" void otSignalTaskletPending(otContext *)
 {

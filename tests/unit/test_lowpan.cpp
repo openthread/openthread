@@ -45,11 +45,6 @@ extern "C" void otSignalTaskletPending(otContext *)
 {
 }
 
-extern "C" bool otAreTaskletsPending(otContext *)
-{
-    return false;
-}
-
 extern "C" void otPlatUartSendDone(void)
 {
 }
@@ -97,7 +92,7 @@ void TestLowpanIphc(void)
 
         Mac::Frame frame;
         frame.mPsdu = iphcVector.data();
-        frame.mLength = iphcVector.size();
+        frame.mLength = (uint8_t)iphcVector.size();
         frame.GetSrcAddr(macSource);
         frame.GetDstAddr(macDest);
 

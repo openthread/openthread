@@ -36,7 +36,11 @@
 #include <ncp/ncp.h>
 #include <ncp/ncp_base.hpp>
 #include <openthread.h>
+#if _WIN32
+#include <openthread-core-config.h>
+#else
 #include <openthread-config.h>
+#endif
 #include <stdarg.h>
 #include <platform/radio.h>
 #include <platform/misc.h>

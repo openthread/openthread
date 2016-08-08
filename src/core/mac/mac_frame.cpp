@@ -307,6 +307,7 @@ ThreadError Frame::SetDstAddr(ShortAddress aShortAddress)
     uint16_t fcf = (static_cast<uint16_t>(GetPsdu()[1]) << 8) | GetPsdu()[0];
 
     assert((fcf & Frame::kFcfDstAddrMask) == Frame::kFcfDstAddrShort);
+    (void)fcf;
 
     buf = FindDstAddr();
     assert(buf != NULL);
@@ -323,6 +324,7 @@ ThreadError Frame::SetDstAddr(const ExtAddress &aExtAddress)
     uint16_t fcf = (static_cast<uint16_t>(GetPsdu()[1]) << 8) | GetPsdu()[0];
 
     assert((fcf & Frame::kFcfDstAddrMask) == Frame::kFcfDstAddrExt);
+    (void)fcf;
 
     buf = FindDstAddr();
     assert(buf != NULL);
@@ -465,6 +467,7 @@ ThreadError Frame::SetSrcAddr(ShortAddress aShortAddress)
     uint16_t fcf = (static_cast<uint16_t>(GetPsdu()[1]) << 8) | GetPsdu()[0];
 
     assert((fcf & Frame::kFcfSrcAddrMask) == Frame::kFcfSrcAddrShort);
+    (void)fcf;
 
     buf = FindSrcAddr();
     assert(buf != NULL);
@@ -481,6 +484,7 @@ ThreadError Frame::SetSrcAddr(const ExtAddress &aExtAddress)
     uint16_t fcf = (static_cast<uint16_t>(GetPsdu()[1]) << 8) | GetPsdu()[0];
 
     assert((fcf & Frame::kFcfSrcAddrMask) == Frame::kFcfSrcAddrExt);
+    (void)fcf;
 
     buf = FindSrcAddr();
     assert(buf != NULL);

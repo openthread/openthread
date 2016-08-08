@@ -173,9 +173,11 @@
       </PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="logging.cpp" />
+    <ClCompile Include="misc.cpp" />
     <ClCompile Include="platform.cpp" />
     <ClCompile Include="radio.cpp" />
     <ClCompile Include="random.cpp" />
+    <ClCompile Include="spi-stubs.cpp" />
     <ClCompile Include="uart.cpp" />
   </ItemGroup>
   <ItemGroup>

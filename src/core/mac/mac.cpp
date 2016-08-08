@@ -898,7 +898,7 @@ void Mac::ReceiveDoneTask(Frame *aFrame, ThreadError aError)
 
     if (neighbor != NULL)
     {
-        neighbor->mLinkInfo.AddRss(aFrame->mPower);
+        neighbor->mLinkInfo.AddRss(mNetif.GetOpenThreadContext(), aFrame->mPower);
     }
 
     switch (mState)

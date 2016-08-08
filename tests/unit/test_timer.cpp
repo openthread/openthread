@@ -28,6 +28,7 @@
 
 #include "test_util.h"
 #include <openthread.h>
+#include <platform/misc.h>
 #include <common/debug.hpp>
 #include <common/timer.hpp>
 #include <platform/alarm.h>
@@ -50,6 +51,19 @@ static bool     sTimerOn;
 static uint32_t sCallCount[kCallCountIndexMax];
 
 extern "C" {
+
+    void otPlatReset(void)
+    {
+    }
+
+    otPlatResetReason otPlatGetResetReason(void)
+    {
+        return kPlatResetReason_PowerOn;
+    }
+
+    void otSignalTaskletPending(otContext *)
+    {
+    }
 
     void otPlatAlarmStop(otContext *)
     {

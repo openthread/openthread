@@ -33,23 +33,44 @@
 
 void test_packed1()
 {
+#ifdef _WIN32
+    OT_TOOL_PACKED_BEGIN 
+    typedef struct
+    {
+        uint8_t  mByte;
+        uint32_t mWord;
+        uint16_t mShort;
+    } packed_t; 
+    OT_TOOL_PACKED_END
+#else
     typedef OT_TOOL_PACKED_BEGIN struct
     {
         uint8_t  mByte;
         uint32_t mWord;
         uint16_t mShort;
     } OT_TOOL_PACKED_END packed_t;
+#endif
 
     VerifyOrQuit(sizeof(packed_t) == 7, "Toolchain::OT_TOOL_PACKED failed 1\n");
 }
 
 void test_packed2()
 {
+#ifdef _WIN32
+    OT_TOOL_PACKED_BEGIN 
+    typedef struct
+    {
+        uint8_t mBytes[3];
+        uint8_t mByte;
+    } packed_t;
+    OT_TOOL_PACKED_END
+#else
     typedef OT_TOOL_PACKED_BEGIN struct
     {
         uint8_t mBytes[3];
         uint8_t mByte;
     } OT_TOOL_PACKED_END packed_t;
+#endif
 
     VerifyOrQuit(sizeof(packed_t) == 4, "Toolchain::OT_TOOL_PACKED failed 2\n");
 }
@@ -60,7 +81,20 @@ void test_packed_union()
     {
         uint16_t mField;
     } nested_t;
-
+    
+#ifdef _WIN32
+    OT_TOOL_PACKED_BEGIN 
+    typedef struct
+    {
+        uint8_t mBytes[3];
+        union
+        {
+            nested_t mNestedStruct;
+            uint8_t  mByte;
+        } OT_TOOL_PACKED_FIELD;
+    } packed_t;
+    OT_TOOL_PACKED_END
+#else
     typedef OT_TOOL_PACKED_BEGIN struct
     {
         uint8_t mBytes[3];
@@ -70,6 +104,7 @@ void test_packed_union()
             uint8_t  mByte;
         } OT_TOOL_PACKED_FIELD;
     } OT_TOOL_PACKED_END packed_t;
+#endif
 
     VerifyOrQuit(sizeof(packed_t) == 5, "Toolchain::OT_TOOL_PACKED failed 3\n");
 }

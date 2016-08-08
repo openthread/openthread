@@ -26,23 +26,48 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <windows.h>
-#include <openthread.h>
+#include <Windows.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <platform/uart.h>
+#include <platform/spi-slave.h>
 
-BOOL APIENTRY 
-DllMain( 
-    HMODULE hModule,
-    DWORD   reason,
-    LPVOID  lpReserved
-	)
+// Spi-slave stubs
+
+EXTERN_C ThreadError otPlatSpiSlaveEnable(
+    otPlatSpiSlaveTransactionCompleteCallback aCallback,
+    void *aContext
+)
 {
-	switch (reason)
-	{
-	case DLL_PROCESS_ATTACH:
-	case DLL_THREAD_ATTACH:
-	case DLL_THREAD_DETACH:
-	case DLL_PROCESS_DETACH:
-		break;
-	}
-	return TRUE;
+    fprintf(stderr, "\nNo SPI support for posix platform.");
+    exit(0);
+
+    return kThreadError_NotImplemented;
+}
+
+EXTERN_C void otPlatSpiSlaveDisable(void)
+{
+}
+
+ThreadError otPlatSpiSlavePrepareTransaction(
+    uint8_t *anOutputBuf,
+    uint16_t anOutputBufLen,
+    uint8_t *anInputBuf,
+    uint16_t anInputBufLen,
+    bool aRequestTransactionFlag
+)
+{
+    return kThreadError_NotImplemented;
+}
+
+// Uart
+
+EXTERN_C void otPlatUartSendDone(void)
+{
+}
+
+EXTERN_C void otPlatUartReceived(const uint8_t *aBuf, uint16_t aBufLength)
+{
+    (void)aBuf;
+    (void)aBufLength;
 }

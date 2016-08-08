@@ -36,7 +36,11 @@
 #include <string.h>
 
 #include <openthread.h>
+#if _WIN32
+#include <openthread-core-config.h>
+#else
 #include <openthread-config.h>
+#endif
 
 #include "cli.hpp"
 #include "cli_dataset.hpp"

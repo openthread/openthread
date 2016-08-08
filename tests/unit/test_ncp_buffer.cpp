@@ -29,11 +29,21 @@
 #include <ctype.h>
 #include "test_util.h"
 #include <openthread.h>
+#include <platform/misc.h>
 #include <common/code_utils.hpp>
 #include <ncp/ncp_buffer.hpp>
 #include <openthreadcontext.h>
 
 namespace Thread {
+
+extern "C" void otPlatReset(void)
+{
+}
+
+extern "C" otPlatResetReason otPlatGetResetReason(void)
+{
+    return kPlatResetReason_PowerOn;
+}
 
 // This module implements unit-test for NcpFrameBuffer class.
 

@@ -29,20 +29,15 @@
 #include <windows.h>
 #include <openthread.h>
 
-BOOL APIENTRY 
-DllMain( 
-    HMODULE hModule,
-    DWORD   reason,
-    LPVOID  lpReserved
-	)
+#include <platform/misc.h>
+#include "platform-windows.h"
+
+EXTERN_C void otPlatReset(void)
 {
-	switch (reason)
-	{
-	case DLL_PROCESS_ATTACH:
-	case DLL_THREAD_ATTACH:
-	case DLL_THREAD_DETACH:
-	case DLL_PROCESS_DETACH:
-		break;
-	}
-	return TRUE;
+    // This function does nothing on the Posix platform.
+}
+
+EXTERN_C otPlatResetReason otPlatGetResetReason(void)
+{
+    return kPlatResetReason_PowerOn;
 }
