@@ -77,7 +77,7 @@ void otPlatAlarmStop(otContext *aCtx)
     sIsRunning = false;
 }
 
-void cc2538AlarmProcess(void)
+void cc2538AlarmProcess(otContext *aContext)
 {
     uint32_t expires;
     bool fire = false;
@@ -104,7 +104,7 @@ void cc2538AlarmProcess(void)
         if (fire)
         {
             sIsRunning = false;
-            otPlatAlarmFired(sContext);
+            otPlatAlarmFired(aContext);
         }
     }
 

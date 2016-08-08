@@ -33,7 +33,6 @@
 
 #include <openthread.h>
 
-#include <platform.h>
 #include <platform/alarm.h>
 #include "platform-posix.h"
 
@@ -100,7 +99,7 @@ void posixAlarmUpdateTimeout(struct timeval *aTimeout)
     }
 }
 
-void posixAlarmProcess(void)
+void posixAlarmProcess(otContext *aContext)
 {
     int32_t remaining;
 
@@ -111,7 +110,7 @@ void posixAlarmProcess(void)
         if (remaining <= 0)
         {
             s_is_running = false;
-            otPlatAlarmFired(sContext);
+            otPlatAlarmFired(aContext);
         }
     }
 }

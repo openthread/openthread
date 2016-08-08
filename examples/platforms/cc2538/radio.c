@@ -380,13 +380,13 @@ exit:
     return;
 }
 
-void cc2538RadioProcess(void)
+void cc2538RadioProcess(otContext *aContext)
 {
     readFrame();
 
     if ((sState == kStateReceive) && (sReceiveFrame.mLength > 0))
     {
-        otPlatRadioReceiveDone(sContext, &sReceiveFrame, sReceiveError);
+        otPlatRadioReceiveDone(aContext, &sReceiveFrame, sReceiveError);
     }
 
     if (sState == kStateTransmit)
@@ -394,14 +394,14 @@ void cc2538RadioProcess(void)
         if (sTransmitError != kThreadError_None || (sTransmitFrame.mPsdu[0] & IEEE802154_ACK_REQUEST) == 0)
         {
             sState = kStateReceive;
-            otPlatRadioTransmitDone(sContext, false, sTransmitError);
+            otPlatRadioTransmitDone(aContext, false, sTransmitError);
         }
         else if (sReceiveFrame.mLength == IEEE802154_ACK_LENGTH &&
                  (sReceiveFrame.mPsdu[0] & IEEE802154_FRAME_TYPE_MASK) == IEEE802154_FRAME_TYPE_ACK &&
                  (sReceiveFrame.mPsdu[IEEE802154_DSN_OFFSET] == sTransmitFrame.mPsdu[IEEE802154_DSN_OFFSET]))
         {
             sState = kStateReceive;
-            otPlatRadioTransmitDone(sContext, (sReceiveFrame.mPsdu[0] & IEEE802154_FRAME_PENDING) != 0, sTransmitError);
+            otPlatRadioTransmitDone(aContext, (sReceiveFrame.mPsdu[0] & IEEE802154_FRAME_PENDING) != 0, sTransmitError);
         }
     }
 

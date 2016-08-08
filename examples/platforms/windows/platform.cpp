@@ -2,7 +2,6 @@
 #include <windows.h>
 #include <assert.h>
 #include <openthread.h>
-#include <platform.h>
 #include <platform/alarm.h>
 #include <platform/uart.h>
 #include "platform-windows.h"
@@ -25,7 +24,7 @@ EXTERN_C void PlatformInit(int argc, char *argv[])
     otPlatUartEnable();
 }
 
-EXTERN_C void PlatformProcessDrivers(void)
+EXTERN_C void PlatformProcessDrivers(otContext *aContext)
 {
     fd_set read_fds;
     fd_set write_fds;
@@ -39,13 +38,13 @@ EXTERN_C void PlatformProcessDrivers(void)
     windowsRadioUpdateFdSet(&read_fds, &write_fds, &max_fd);
     windowsAlarmUpdateTimeout(&timeout);
 
-    if (!otAreTaskletsPending(sContext))
+    if (!otAreTaskletsPending(aContext))
     {
         rval = select(max_fd + 1, &read_fds, &write_fds, NULL, &timeout);
         assert(rval >= 0 && errno != ETIME);
     }
 
-    windowsRadioProcess();
-    windowsAlarmProcess();
+    windowsRadioProcess(aContext);
+    windowsAlarmProcess(aContext);
 }
 

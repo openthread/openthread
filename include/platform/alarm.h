@@ -74,7 +74,7 @@ void otPlatAlarmStop(otContext *aContext);
  *
  * @returns The current time in milliseconds.
  */
-uint32_t otPlatAlarmGetNow();
+uint32_t otPlatAlarmGetNow(void);
 
 /**
  * Signal that the alarm has fired.

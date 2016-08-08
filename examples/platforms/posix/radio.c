@@ -41,7 +41,6 @@
 
 #include <openthread.h>
 
-#include <platform.h>
 #include <platform/radio.h>
 
 #include <common/code_utils.hpp>
@@ -96,9 +95,9 @@ struct OT_TOOL_PACKED_BEGIN RadioMessage
 } OT_TOOL_PACKED_END;
 
 static void radioTransmit(const struct RadioMessage *msg, const struct RadioPacket *pkt);
-static void radioSendMessage(void);
+static void radioSendMessage(otContext *aContext);
 static void radioSendAck(void);
-static void radioProcessFrame(void);
+static void radioProcessFrame(otContext *aContext);
 
 static PhyState sState = kStateDisabled;
 static struct RadioMessage sReceiveMessage;
@@ -452,7 +451,7 @@ bool otPlatRadioGetPromiscuous(otContext *aCtx)
     return sPromiscuous;
 }
 
-void radioReceive(void)
+void radioReceive(otContext *aCtx)
 {
     if (sState != kStateTransmit || sAckWait)
     {
@@ -472,18 +471,18 @@ void radioReceive(void)
             {
                 sState = kStateReceive;
                 sAckWait = false;
-                otPlatRadioTransmitDone(sContext, isFramePending(sReceiveFrame.mPsdu), kThreadError_None);
+                otPlatRadioTransmitDone(aCtx, isFramePending(sReceiveFrame.mPsdu), kThreadError_None);
             }
         }
         else if (sState == kStateReceive &&
                  sReceiveFrame.mChannel == sReceiveMessage.mChannel)
         {
-            radioProcessFrame();
+            radioProcessFrame(aCtx);
         }
     }
 }
 
-void radioSendMessage(void)
+void radioSendMessage(otContext *aCtx)
 {
     sTransmitMessage.mChannel = sTransmitFrame.mChannel;
 
@@ -494,7 +493,7 @@ void radioSendMessage(void)
     if (!sAckWait)
     {
         sState = kStateReceive;
-        otPlatRadioTransmitDone(sContext, false, kThreadError_None);
+        otPlatRadioTransmitDone(aCtx, false, kThreadError_None);
     }
 }
 
@@ -521,19 +520,19 @@ void posixRadioUpdateFdSet(fd_set *aReadFdSet, fd_set *aWriteFdSet, int *aMaxFd)
     }
 }
 
-void posixRadioProcess(void)
+void posixRadioProcess(otContext *aCtx)
 {
     const int flags = POLLRDNORM | POLLERR | POLLNVAL | POLLHUP;
     struct pollfd pollfd = { sSockFd, flags, 0 };
 
     if (poll(&pollfd, 1, 0) > 0 && (pollfd.revents & flags) != 0)
     {
-        radioReceive();
+        radioReceive(aCtx);
     }
 
     if (sState == kStateTransmit && !sAckWait)
     {
-        radioSendMessage();
+        radioSendMessage(aCtx);
     }
 }
 
@@ -580,7 +579,7 @@ void radioSendAck(void)
     radioTransmit(&sAckMessage, &sAckFrame);
 }
 
-void radioProcessFrame(void)
+void radioProcessFrame(otContext *aCtx)
 {
     ThreadError error = kThreadError_None;
     otPanId dstpan;
@@ -625,5 +624,5 @@ void radioProcessFrame(void)
 
 exit:
 
-    otPlatRadioReceiveDone(sContext, error == kThreadError_None ? &sReceiveFrame : NULL, error);
+    otPlatRadioReceiveDone(aCtx, error == kThreadError_None ? &sReceiveFrame : NULL, error);
 }

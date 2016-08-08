@@ -39,9 +39,6 @@
 extern "C" {
 #endif
 
-// The global context pointer for OpenThread
-extern otContext *sContext;
-
 /**
  * This function performs all platform-specific initialization.
  *
@@ -52,7 +49,7 @@ void PlatformInit(int argc, char *argv[]);
  * This function performs all platform-specific processing.
  *
  */
-void PlatformProcessDrivers(void);
+void PlatformProcessDrivers(otContext *aContext);
 
 #ifdef __cplusplus
 }  // extern "C"

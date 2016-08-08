@@ -32,9 +32,6 @@
 #include <ncp/ncp.h>
 #include <platform.h>
 
-otContext* sContext;
-uint8_t otContextBuffer[OT_CONTEXT_SIZE];
-
 void otSignalTaskletPending(otContext* aCtx)
 {
     (void)aCtx;
@@ -42,9 +39,12 @@ void otSignalTaskletPending(otContext* aCtx)
 
 int main(int argc, char *argv[])
 {
+    otContext* sContext;
+    uint8_t otContextBuffer[OT_CONTEXT_SIZE];
+    uint64_t otContextBufferLength = sizeof(otContextBuffer);
+
     PlatformInit(argc, argv);
 
-    uint64_t otContextBufferLength = sizeof(otContextBuffer);
     sContext = otEnable(otContextBuffer, &otContextBufferLength);
     assert(sContext);
 
@@ -53,7 +53,7 @@ int main(int argc, char *argv[])
     while (1)
     {
         otProcessNextTasklet(sContext);
-        PlatformProcessDrivers();
+        PlatformProcessDrivers(sContext);
     }
 
     return 0;

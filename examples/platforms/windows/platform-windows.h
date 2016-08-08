@@ -38,7 +38,7 @@ void windowsAlarmUpdateTimeout(struct timeval *tv);
  * This function performs alarm driver processing.
  *
  */
-void windowsAlarmProcess(void);
+void windowsAlarmProcess(otContext *aContext);
 
 /**
  * This function initializes the radio service used by OpenThread.
@@ -60,7 +60,7 @@ void windowsRadioUpdateFdSet(fd_set *aReadFdSet, fd_set *aWriteFdSet, int *aMaxF
  * This function performs radio driver processing.
  *
  */
-void windowsRadioProcess(void);
+void windowsRadioProcess(otContext *aContext);
 
 /**
  * This function initializes the random number service used by OpenThread.

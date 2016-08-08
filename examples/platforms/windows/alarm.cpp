@@ -2,7 +2,6 @@
 #include <windows.h>
 #include <openthread.h>
 
-#include <platform.h>
 #include <platform\alarm.h>
 #include "platform-windows.h"
 
@@ -62,7 +61,7 @@ void windowsAlarmUpdateTimeout(struct timeval *aTimeout)
     }
 }
 
-void windowsAlarmProcess(void)
+void windowsAlarmProcess(otContext *aContext)
 {
     int32_t remaining;
 
@@ -73,7 +72,7 @@ void windowsAlarmProcess(void)
         if (remaining <= 0)
         {
             s_is_running = false;
-            otPlatAlarmFired(sContext);
+            otPlatAlarmFired(aContext);
         }
     }
 }
