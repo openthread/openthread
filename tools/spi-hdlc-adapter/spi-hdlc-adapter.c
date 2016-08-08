@@ -63,7 +63,10 @@
 
 #define MAX_FRAME_SIZE                  2048
 #define HEADER_LEN                      5
-#define SPI_HEADER_RESET_FLAG			(1 << 7)
+#define SPI_HEADER_RESET_FLAG           0x80
+#define SPI_HEADER_CRC_FLAG             0x40
+#define SPI_HEADER_PATTERN_VALUE        0x02
+#define SPI_HEADER_PATTERN_MASK         0x03
 
 #define EXIT_QUIT                       65535
 
@@ -437,7 +440,14 @@ static int push_pull_spi(void)
     // so that the slave doesn't think
     // we are actually trying to transfer
     // data.
-    spi_header_set_flag_byte(sSpiTxFrameBuffer, sSpiValidFrameCount ? 0 : SPI_HEADER_RESET_FLAG);
+    if (sSpiValidFrameCount == 0)
+    {
+        spi_header_set_flag_byte(sSpiTxFrameBuffer, SPI_HEADER_RESET_FLAG|SPI_HEADER_PATTERN_VALUE);
+    }
+    else
+    {
+        spi_header_set_flag_byte(sSpiTxFrameBuffer, SPI_HEADER_PATTERN_VALUE);
+    }
     spi_header_set_accept_len(sSpiTxFrameBuffer, 0);
     spi_header_set_data_len(sSpiTxFrameBuffer, 0);
     ret = do_spi_xfer(0);
@@ -514,7 +524,7 @@ static int push_pull_spi(void)
 
     usleep(sSpiTransactionDelay);
 
-    spi_header_set_flag_byte(sSpiTxFrameBuffer, 0);
+    spi_header_set_flag_byte(sSpiTxFrameBuffer, SPI_HEADER_PATTERN_VALUE);
 
     // This is the real transfer.
     ret = do_spi_xfer(spi_xfer_bytes);

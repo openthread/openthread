@@ -1,7 +1,7 @@
 Spinel Host Controller Interface
 ================================
 
-Updated: 2016-07-28
+Updated: 2016-08-05
 
 Written by: Robert Quattlebaum <rquattle@nestlabs.com>
 
@@ -716,21 +716,29 @@ of the metadata is defined by the associated network protocol.
  *  0: `STATUS_OK`: Operation has completed successfully.
  *  1: `STATUS_FAILURE`: Operation has failed for some undefined
     reason.
- *  2: `STATUS_UNIMPLEMENTED`
- *  3: `STATUS_INVALID_ARGUMENT`
- *  4: `STATUS_INVALID_STATE`
- *  5: `STATUS_INVALID_COMMAND`
- *  6: `STATUS_INVALID_INTERFACE`
- *  7: `STATUS_INTERNAL_ERROR`
- *  8: `STATUS_SECURITY_ERROR`
- *  9: `STATUS_PARSE_ERROR`
- *  10: `STATUS_IN_PROGRESS`
- *  11: `STATUS_NOMEM`
- *  12: `STATUS_BUSY`
- *  13: `STATUS_PROPERTY_NOT_FOUND`
- *  14: `STATUS_PACKET_DROPPED`
- *  15: `STATUS_EMPTY`
- *  16-111: *RESERVED*
+ *  2: `STATUS_UNIMPLEMENTED`: The given operation has not been implemented.
+ *  3: `STATUS_INVALID_ARGUMENT`: An argument to the given operation is invalid.
+ *  4: `STATUS_INVALID_STATE` : The given operation is invalid for the current
+    state of the device.
+ *  5: `STATUS_INVALID_COMMAND`: The given command is not recognized.
+ *  6: `STATUS_INVALID_INTERFACE`: The given Spinel interface is not supported.
+ *  7: `STATUS_INTERNAL_ERROR`: An internal runtime error has occured.
+ *  8: `STATUS_SECURITY_ERROR`: A security or authentication error has occured.
+ *  9: `STATUS_PARSE_ERROR`: An error has occured while parsing the command.
+ *  10: `STATUS_IN_PROGRESS`: The operation is in progress and will be
+    completed asynchronously.
+ *  11: `STATUS_NOMEM`: The operation has been prevented due to memory
+    pressure.
+ *  12: `STATUS_BUSY`: The device is currently performing a mutually exclusive
+    operation.
+ *  13: `STATUS_PROPERTY_NOT_FOUND`: The given property is not recognized.
+ *  14: `STATUS_PACKET_DROPPED`: The packet was dropped.
+ *  15: `STATUS_EMPTY`: The result of the operation is empty.
+ *  16: `STATUS_CMD_TOO_BIG`: The command was too large to fit in the internal
+    buffer.
+ *  17: `STATUS_NO_ACK`: The packet was not acknowledged.
+ *  18: `STATUS_CCA_FAILURE`: The packet was not sent due to a CCA failure.
+ *  19-111: *RESERVED*
  *  112-127: Reset Causes
      *  112: `STATUS_RESET_POWER_ON`
      *  113: `STATUS_RESET_EXTERNAL`
@@ -739,7 +747,9 @@ of the metadata is defined by the associated network protocol.
      *  116: `STATUS_RESET_CRASH`
      *  117: `STATUS_RESET_ASSERT`
      *  118: `STATUS_RESET_OTHER`
-     *  119-127: *RESERVED-RESET-CODES*
+     *  119: `STATUS_RESET_UNKNOWN`
+     *  120: `STATUS_RESET_WATCHDOG`
+     *  121-127: *RESERVED-RESET-CODES*
  *  128 - 15,359: *UNALLOCATED*
  *  15,360 - 16,383: Vendor-specific
  *  16,384 - 1,999,999: *UNALLOCATED*
@@ -1011,14 +1021,12 @@ individual needs of the application or product.
 
 #### A.2.1 SPI Framing Protocol ####
 
-Each SPI frame starts with a 6-byte frame header:
+Each SPI frame starts with a 5-byte frame header:
 
-Octets: |  1  |  1  |    2     |     2  
---------|-----|-----|----------|----------  
-Fields: | PAD | HDR | RECV_LEN | DATA_LEN  
+Octets: |  1  |    2     |     2  
+--------|-----|----------|----------  
+Fields: | HDR | RECV_LEN | DATA_LEN  
 
-*   `PAD`: Padding byte. Discarded. May be ommitted on platforms which
-    don't need it.
 *   `HDR`: The first byte is the header byte (defined below)
 *   `RECV_LEN`: The second and third bytes indicate the largest frame
     size that that device is ready to receive. If zero, then the other
@@ -1033,12 +1041,20 @@ The `HDR` byte is defined as:
 
       0   1   2   3   4   5   6   7
     +---+---+---+---+---+---+---+---+
-    |RST| 0 | 0 | 0 | 0 | 0 | 0 | 0 |
+    |RST|CRC|    RESERVED   |PATTERN|
     +---+---+---+---+---+---+---+---+
 
 *   `RST`: This bit is set when that device has been reset since the
     last time `C̅S̅` was asserted.
-*   All other bits are reserved and MUST be cleared to zero.
+*   `CRC`: This bit is set when that device supports writing a 16-bit
+    CRC at the end of the data. This CRC is NOT included in DATA_LEN.
+*   `RESERVED`: These bits are all reserved for future used. They
+    MUST be cleared to zero and MUST be ignored if set.
+*   `PATTERN`: These bits are set to a fixed value to help distinguish
+    valid SPI frames from garbage (by explicitly making `0xFF` and `0x00`
+    invalid values). Bit 6 MUST be set to be one and bit 7 MUST be
+    cleared (0). A frame received that has any other values for these bits
+    MUST be dropped.
 
 Prior to a sending or receiving a frame, the master SHOULD send a
 5-octet frame with zeros for both the max receive frame size and the
@@ -1050,10 +1066,10 @@ This allows the master to calculate the size of the next transaction.
 This protocol can be used either unidirectionally or bidirectionally,
 determined by the behavior of the master and the slave.
 
-If the the master reads value of `0xFF` for the `HDR` byte, the master
+If the the master notices `PATTERN` is not set correctly, the master
 should consider the transaction to have failed and try again after 10
 milliseconds, retrying up to 200 times. After unsuccessfully trying
-200 times in a row, the master should take appropriate remedial action
+200 times in a row, the master MAY take appropriate remedial action
 (like a NCP hardware reset, or indicating a communication failure to a
 user interface).
 
@@ -1400,6 +1416,10 @@ Possible Values:
 * 1: `MAC_FILTER_MODE_PROMISCUOUS`: All MAC packets matching network are passed up the stack.
 * 2: `MAC_FILTER_MODE_MONITOR`: All decoded MAC packets are passed up the stack.
 
+#### D.2.10. PROP 4864: `PROP_MAC_WHITELIST`
+* Type: Read-Write
+* Packed-Encoding: `A(T(E))`
+
 
 ### D.3. NET Properties
 
@@ -1544,7 +1564,39 @@ Data per item is:
 * Type: Read-Write
 * Packed-Encoding: `A(S)`
 
+#### D.4.14. PROP 93: `PROP_THREAD_ALLOW_LOCAL_NET_DATA_CHANGE`
+* Type: Read-Write
+* Packed-Encoding: `b`
 
+Set to true before changing local net data. Set to false when finished.
+This allows changes to be aggregated into single events.
+
+#### D.4.15. PROP 94: `PROP_THREAD_MODE`
+* Type: Read-Write
+* Packed-Encoding: `C`
+
+This property contains the value of the mode
+TLV for this node. The meaning of the bits in this
+bitfield are defined by section 4.5.2 of the Thread
+specification.
+
+#### D.4.16. PROP 5376: `PROP_THREAD_CHILD_TIMEOUT`
+* Type: Read-Write
+* Packed-Encoding: `L`
+
+Used when operating in the Child role.
+
+#### D.4.17. PROP 5377: `PROP_THREAD_RLOC16`
+* Type: Read-Write
+* Packed-Encoding: `S`
+
+#### D.4.18. PROP 5378: `PROP_THREAD_ROUTER_UPGRADE_THRESHOLD`
+* Type: Read-Write
+* Packed-Encoding: `C`
+
+#### D.4.19. PROP 5379: `PROP_THREAD_CONTEXT_REUSE_DELAY`
+* Type: Read-Write
+* Packed-Encoding: `L`
 
 ### D.5. IPv6 Properties
 
