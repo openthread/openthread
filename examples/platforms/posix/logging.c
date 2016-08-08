@@ -35,87 +35,106 @@
 #include <sys/time.h>
 #include <time.h>
 
+#include <common/code_utils.hpp>
 #include <platform/logging.h>
+
+// Macro to append content to end of the log string.
+
+#define LOG_PRINTF(...)                                                                     \
+    charsWritten = snprintf(&logString[index], sizeof(logString) - index , __VA_ARGS__);    \
+    VerifyOrExit(charsWritten >= 0, logString[index] = 0);                                  \
+    index += charsWritten;                                                                  \
+    VerifyOrExit(index < sizeof(logString), logString[sizeof(logString) -1 ] = 0)
 
 void otPlatLog(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aFormat, ...)
 {
     struct timeval tv;
     char timeString[40];
+    char logString[512];
+    unsigned int index;
+    int charsWritten;
     va_list args;
+
+    index = 0;
 
     gettimeofday(&tv, NULL);
     strftime(timeString, sizeof(timeString), "%Y-%m-%d %H:%M:%S", localtime(&tv.tv_sec));
-    fprintf(stderr, "%s.%06d ", timeString, (uint32_t)tv.tv_usec);
+
+    LOG_PRINTF("%s.%06d ", timeString, (uint32_t)tv.tv_usec);
 
     switch (aLogLevel)
     {
     case kLogLevelNone:
-        fprintf(stderr, "NONE ");
+        LOG_PRINTF("NONE ");
         break;
 
     case kLogLevelCrit:
-        fprintf(stderr, "CRIT ");
+        LOG_PRINTF("CRIT ");
         break;
 
     case kLogLevelWarn:
-        fprintf(stderr, "WARN ");
+        LOG_PRINTF("WARN ");
         break;
 
     case kLogLevelInfo:
-        fprintf(stderr, "INFO ");
+        LOG_PRINTF("INFO ");
         break;
 
     case kLogLevelDebg:
-        fprintf(stderr, "DEBG ");
+        LOG_PRINTF("DEBG ");
         break;
     }
 
     switch (aLogRegion)
     {
     case kLogRegionApi:
-        fprintf(stderr, "API  ");
+        LOG_PRINTF("API  ");
         break;
 
     case kLogRegionMle:
-        fprintf(stderr, "MLE  ");
+        LOG_PRINTF("MLE  ");
         break;
 
     case kLogRegionArp:
-        fprintf(stderr, "ARP  ");
+        LOG_PRINTF("ARP  ");
         break;
 
     case kLogRegionNetData:
-        fprintf(stderr, "NETD ");
+        LOG_PRINTF("NETD ");
         break;
 
     case kLogRegionIp6:
-        fprintf(stderr, "IPV6 ");
+        LOG_PRINTF("IPV6 ");
         break;
 
     case kLogRegionIcmp:
-        fprintf(stderr, "ICMP ");
+        LOG_PRINTF("ICMP ");
         break;
 
     case kLogRegionMac:
-        fprintf(stderr, "MAC  ");
+        LOG_PRINTF("MAC  ");
         break;
 
     case kLogRegionMem:
-        fprintf(stderr, "MEM  ");
+        LOG_PRINTF("MEM  ");
         break;
 
     case kLogRegionNcp:
-        fprintf(stderr, "NCP  ");
+        LOG_PRINTF("NCP  ");
         break;
 
     case kLogRegionMeshCoP:
-        fprintf(stderr, "MCOP ");
+        LOG_PRINTF("MCOP ");
         break;
     }
 
     va_start(args, aFormat);
-    vfprintf(stderr, aFormat, args);
-    fprintf(stderr, "\r");
+    charsWritten = vsnprintf(&logString[index], sizeof(logString) - index, aFormat, args);
     va_end(args);
+
+    VerifyOrExit(charsWritten >= 0, logString[index] = 0);
+
+exit:
+    fprintf(stderr, "%s\r\n", logString);
 }
 
