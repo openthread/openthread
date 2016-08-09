@@ -39,6 +39,8 @@
 #include <sys/select.h>
 #include <sys/time.h>
 
+#include <openthread-types.h>
+
 /**
  * Unique node ID.
  *
@@ -67,9 +69,11 @@ void posixAlarmUpdateTimeout(struct timeval *tv);
 
 /**
  * This function performs alarm driver processing.
+ * 
+ * @param[in]  aContext  The OpenThread context structure.
  *
  */
-void posixAlarmProcess(void);
+void posixAlarmProcess(otContext *aContext);
 
 /**
  * This function initializes the radio service used by OpenThread.
@@ -89,9 +93,11 @@ void posixRadioUpdateFdSet(fd_set *aReadFdSet, fd_set *aWriteFdSet, int *aMaxFd)
 
 /**
  * This function performs radio driver processing.
+ * 
+ * @param[in]  aContext  The OpenThread context structure.
  *
  */
-void posixRadioProcess(void);
+void posixRadioProcess(otContext *aContext);
 
 /**
  * This function initializes the random number service used by OpenThread.

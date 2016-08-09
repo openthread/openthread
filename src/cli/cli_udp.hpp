@@ -48,6 +48,15 @@ class Udp: public Server
 {
 public:
     /**
+     * Constructor
+     *
+     * @param[in]  aContext      The OpenThread context structure.
+     * @param[in]  aInterpreter  The Interpreter structure.
+     *
+     */
+    Udp(otContext *aContext, Interpreter *aInterpreter);
+
+    /**
      * This method starts the CLI server.
      *
      * @retval kThreadError_None  Successfully started the server.
@@ -88,6 +97,8 @@ private:
 
     otUdpSocket mSocket;
     otMessageInfo mPeer;
+    otContext *mContext;
+    Interpreter *mInterpreter;
 };
 
 }  // namespace Cli

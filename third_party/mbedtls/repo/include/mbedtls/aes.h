@@ -47,6 +47,9 @@
 extern "C" {
 #endif
 
+#ifndef MBEDTLS_AES_CONTEXT
+#define MBEDTLS_AES_CONTEXT
+
 /**
  * \brief          AES context structure
  *
@@ -62,6 +65,8 @@ typedef struct
     uint32_t buf[68];           /*!<  unaligned data    */
 }
 mbedtls_aes_context;
+
+#endif // MBEDTLS_AES_CONTEXT
 
 /**
  * \brief          Initialize AES context

@@ -44,7 +44,13 @@ class NcpSpi : public NcpBase
     typedef NcpBase super_t;
 
 public:
-    NcpSpi();
+    /**
+     * Constructor
+     *
+     * @param[in]  aContext  The OpenThread context structure.
+     *
+     */
+    NcpSpi(otContext *aContext);
 
     virtual ThreadError OutboundFrameBegin(void);
     virtual uint16_t OutboundFrameGetRemaining(void);

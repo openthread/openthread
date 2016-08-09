@@ -33,29 +33,31 @@
 
 #include <common/code_utils.hpp>
 #include <common/timer.hpp>
+#include <common/debug.hpp>
+#include <common/logging.hpp>
 #include <platform/alarm.h>
+#include <openthreadcontext.h>
 
 namespace Thread {
 
-static Timer   *sHead = NULL;
-static Timer   *sTail = NULL;
-
 void TimerScheduler::Add(Timer &aTimer)
 {
-    VerifyOrExit(aTimer.mNext == NULL && sTail != &aTimer, ;);
+    otContext *aContext = aTimer.mContext;
 
-    if (sHead == NULL)
+    VerifyOrExit(aTimer.mNext == NULL && aContext->mTimerTail != &aTimer, ;);
+
+    if (aContext->mTimerHead == NULL)
     {
-        sHead = &aTimer;
-        sTail = &aTimer;
-        SetAlarm();
+        aContext->mTimerHead = &aTimer;
+        aContext->mTimerTail = &aTimer;
+        SetAlarm(aTimer.mContext);
     }
     else
     {
         Timer *prev = NULL;
         Timer *cur;
 
-        for (cur = sHead; cur; cur = cur->mNext)
+        for (cur = aContext->mTimerHead; cur; cur = cur->mNext)
         {
             if (TimerCompare(aTimer, *cur))
             {
@@ -66,9 +68,9 @@ void TimerScheduler::Add(Timer &aTimer)
                 }
                 else
                 {
-                    aTimer.mNext = sHead;
-                    sHead = &aTimer;
-                    SetAlarm();
+                    aTimer.mNext = aContext->mTimerHead;
+                    aContext->mTimerHead = &aTimer;
+                    SetAlarm(aTimer.mContext);
                 }
 
                 break;
@@ -79,8 +81,8 @@ void TimerScheduler::Add(Timer &aTimer)
 
         if (cur == NULL)
         {
-            sTail->mNext = &aTimer;
-            sTail = &aTimer;
+            aContext->mTimerTail->mNext = &aTimer;
+            aContext->mTimerTail = &aTimer;
         }
     }
 
@@ -90,30 +92,32 @@ exit:
 
 void TimerScheduler::Remove(Timer &aTimer)
 {
-    VerifyOrExit(aTimer.mNext != NULL || sTail == &aTimer, ;);
+    otContext *aContext = aTimer.mContext;
 
-    if (sHead == &aTimer)
+    VerifyOrExit(aTimer.mNext != NULL || aContext->mTimerTail == &aTimer, ;);
+
+    if (aContext->mTimerHead == &aTimer)
     {
-        sHead = aTimer.mNext;
+        aContext->mTimerHead = aTimer.mNext;
 
-        if (sTail == &aTimer)
+        if (aContext->mTimerTail == &aTimer)
         {
-            sTail = NULL;
+            aContext->mTimerTail = NULL;
         }
 
-        SetAlarm();
+        SetAlarm(aTimer.mContext);
     }
     else
     {
-        for (Timer *cur = sHead; cur; cur = cur->mNext)
+        for (Timer *cur = aContext->mTimerHead; cur; cur = cur->mNext)
         {
             if (cur->mNext == &aTimer)
             {
                 cur->mNext = aTimer.mNext;
 
-                if (sTail == &aTimer)
+                if (aContext->mTimerTail == &aTimer)
                 {
-                    sTail = cur;
+                    aContext->mTimerTail = cur;
                 }
 
                 break;
@@ -131,7 +135,7 @@ bool TimerScheduler::IsAdded(const Timer &aTimer)
 {
     bool rval = false;
 
-    for (Timer *cur = sHead; cur; cur = cur->mNext)
+    for (Timer *cur = aTimer.mContext->mTimerHead; cur; cur = cur->mNext)
     {
         if (cur == &aTimer)
         {
@@ -143,36 +147,36 @@ exit:
     return rval;
 }
 
-void TimerScheduler::SetAlarm(void)
+void TimerScheduler::SetAlarm(otContext *aContext)
 {
     uint32_t now = otPlatAlarmGetNow();
     uint32_t elapsed;
     uint32_t remaining;
-    Timer *timer = sHead;
+    Timer *timer = aContext->mTimerHead;
 
     if (timer == NULL)
     {
-        otPlatAlarmStop();
+        otPlatAlarmStop(aContext);
     }
     else
     {
         elapsed = now - timer->mT0;
         remaining = (timer->mDt > elapsed) ? timer->mDt - elapsed : 0;
 
-        otPlatAlarmStartAt(now, remaining);
+        otPlatAlarmStartAt(aContext, now, remaining);
     }
 }
 
-extern "C" void otPlatAlarmFired(void)
+extern "C" void otPlatAlarmFired(otContext *aContext)
 {
-    TimerScheduler::FireTimers();
+    TimerScheduler::FireTimers(aContext);
 }
 
-void TimerScheduler::FireTimers(void)
+void TimerScheduler::FireTimers(otContext *aContext)
 {
     uint32_t now = otPlatAlarmGetNow();
     uint32_t elapsed;
-    Timer *timer = sHead;
+    Timer *timer = aContext->mTimerHead;
 
     if (timer)
     {
@@ -185,12 +189,12 @@ void TimerScheduler::FireTimers(void)
         }
         else
         {
-            SetAlarm();
+            SetAlarm(aContext);
         }
     }
     else
     {
-        SetAlarm();
+        SetAlarm(aContext);
     }
 }
 

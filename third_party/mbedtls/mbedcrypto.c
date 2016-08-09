@@ -27,63 +27,47 @@
 #include <crypto/aes_ecb.h>
 #include <crypto/hmac_sha256.h>
 
-/**
- * @def MBED_MEMORY_BUF_SIZE
- *
- * The size of the memory buffer used by mbedtls.
- *
- */
-#define MBED_MEMORY_BUF_SIZE  512
-
-void mbedInit(void);
-
-static bool sIsInitialized = false;
-static unsigned char sMemoryBuf[MBED_MEMORY_BUF_SIZE];
-
-static mbedtls_aes_context sAesContext;
-static mbedtls_md_context_t sSha256Context;
-
-void mbedInit(void)
+void mbedInit(otCryptoContext *aCryptoContext)
 {
-    if (sIsInitialized)
+    if (aCryptoContext->mIsInitialized)
     {
         return;
     }
 
-    mbedtls_memory_buffer_alloc_init(sMemoryBuf, sizeof(sMemoryBuf));
-    sIsInitialized = true;
+    mbedtls_memory_buffer_alloc_init(aCryptoContext->mMemoryBuf, sizeof(aCryptoContext->mMemoryBuf));
+    aCryptoContext->mIsInitialized = true;
 }
 
-void otCryptoHmacSha256Start(const void *aKey, uint16_t aKeyLength)
+void otCryptoHmacSha256Start(otCryptoContext *aCryptoContext, const void *aKey, uint16_t aKeyLength)
 {
     const mbedtls_md_info_t *mdInfo = NULL;
 
-    mbedInit();
+    mbedInit(aCryptoContext);
 
-    mbedtls_md_init(&sSha256Context);
+    mbedtls_md_init(&aCryptoContext->mSha256Context);
     mdInfo = mbedtls_md_info_from_type(MBEDTLS_MD_SHA256);
-    mbedtls_md_setup(&sSha256Context, mdInfo, 1);
-    mbedtls_md_hmac_starts(&sSha256Context, aKey, aKeyLength);
+    mbedtls_md_setup(&aCryptoContext->mSha256Context, mdInfo, 1);
+    mbedtls_md_hmac_starts(&aCryptoContext->mSha256Context, aKey, aKeyLength);
 }
 
-void otCryptoHmacSha256Update(const void *aBuf, uint16_t aBufLength)
+void otCryptoHmacSha256Update(otCryptoContext *aCryptoContext, const void *aBuf, uint16_t aBufLength)
 {
-    mbedtls_md_hmac_update(&sSha256Context, aBuf, aBufLength);
+    mbedtls_md_hmac_update(&aCryptoContext->mSha256Context, aBuf, aBufLength);
 }
 
-void otCryptoHmacSha256Finish(uint8_t aHash[otCryptoSha256Size])
+void otCryptoHmacSha256Finish(otCryptoContext *aCryptoContext, uint8_t aHash[otCryptoSha256Size])
 {
-    mbedtls_md_hmac_finish(&sSha256Context, aHash);
-    mbedtls_md_free(&sSha256Context);
+    mbedtls_md_hmac_finish(&aCryptoContext->mSha256Context, aHash);
+    mbedtls_md_free(&aCryptoContext->mSha256Context);
 }
 
-void otCryptoAesEcbSetKey(const void *aKey, uint16_t aKeyLength)
+void otCryptoAesEcbSetKey(otCryptoContext *aCryptoContext, const void *aKey, uint16_t aKeyLength)
 {
-    mbedtls_aes_init(&sAesContext);
-    mbedtls_aes_setkey_enc(&sAesContext, aKey, aKeyLength);
+    mbedtls_aes_init(&aCryptoContext->mAesContext);
+    mbedtls_aes_setkey_enc(&aCryptoContext->mAesContext, aKey, aKeyLength);
 }
 
-void otCryptoAesEcbEncrypt(const uint8_t aInput[otAesBlockSize], uint8_t aOutput[otAesBlockSize])
+void otCryptoAesEcbEncrypt(otCryptoContext *aCryptoContext, const uint8_t aInput[otAesBlockSize], uint8_t aOutput[otAesBlockSize])
 {
-    mbedtls_aes_crypt_ecb(&sAesContext, MBEDTLS_AES_ENCRYPT, aInput, aOutput);
+    mbedtls_aes_crypt_ecb(&aCryptoContext->mAesContext, MBEDTLS_AES_ENCRYPT, aInput, aOutput);
 }

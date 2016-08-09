@@ -44,12 +44,19 @@ namespace Thread {
 class NcpBase
 {
 public:
-
+    
     /**
      * This constructor creates and initializes an NcpBase instance.
      *
+     * @param[in]  aContext  The OpenThread context structure.
+     *
      */
-    NcpBase(void);
+    NcpBase(otContext *aContext);
+
+protected:
+    
+    // The pointer to the OpenThread context
+    otContext* mContext;
 
 protected:
 

@@ -47,6 +47,7 @@
 #include <thread/key_manager.hpp>
 #include <thread/mle_router.hpp>
 #include <thread/thread_netif.hpp>
+#include <openthreadcontext.h>
 
 using Thread::Encoding::BigEndian::HostSwap16;
 
@@ -61,7 +62,7 @@ Mle::Mle(ThreadNetif &aThreadNetif) :
     mMesh(aThreadNetif.GetMeshForwarder()),
     mMleRouter(aThreadNetif.GetMle()),
     mNetworkData(aThreadNetif.GetNetworkDataLeader()),
-    mParentRequestTimer(&HandleParentRequestTimer, this)
+    mParentRequestTimer(aThreadNetif.GetOpenThreadContext(), &Mle::HandleParentRequestTimer, this)
 {
     mDeviceState = kDeviceStateDisabled;
     mDeviceMode = ModeTlv::kModeRxOnWhenIdle | ModeTlv::kModeSecureDataRequest | ModeTlv::kModeFFD |
@@ -141,7 +142,7 @@ Mle::Mle(ThreadNetif &aThreadNetif) :
     mRealmLocalAllThreadNodes.GetAddress().mFields.m16[7] = HostSwap16(0x0001);
     mNetif.SubscribeMulticast(mRealmLocalAllThreadNodes);
 
-    mNetifCallback.Set(&HandleNetifStateChanged, this);
+    mNetifCallback.Set(&Mle::HandleNetifStateChanged, this);
     mNetif.RegisterCallback(mNetifCallback);
 }
 
@@ -152,7 +153,7 @@ ThreadError Mle::Enable(void)
 
     // memcpy(&sockaddr.mAddr, &mLinkLocal64.GetAddress(), sizeof(sockaddr.mAddr));
     sockaddr.mPort = kUdpPort;
-    SuccessOrExit(error = mSocket.Open(&HandleUdpReceive, this));
+    SuccessOrExit(error = mSocket.Open(mNetif.GetOpenThreadContext(), &Mle::HandleUdpReceive, this));
     SuccessOrExit(error = mSocket.Bind(sockaddr));
 
 exit:
@@ -164,7 +165,7 @@ ThreadError Mle::Disable(void)
     ThreadError error = kThreadError_None;
 
     SuccessOrExit(error = Stop());
-    SuccessOrExit(error = mSocket.Close());
+    SuccessOrExit(error = mSocket.Close(mNetif.GetOpenThreadContext()));
 
 exit:
     return error;
@@ -175,7 +176,7 @@ ThreadError Mle::Start(void)
     ThreadError error = kThreadError_None;
 
     // cannot bring up the interface if IEEE 802.15.4 promiscuous mode is enabled
-    VerifyOrExit(otPlatRadioGetPromiscuous() == false, error = kThreadError_Busy);
+    VerifyOrExit(otPlatRadioGetPromiscuous(mNetif.GetOpenThreadContext()) == false, error = kThreadError_Busy);
     VerifyOrExit(mNetif.IsUp(), error = kThreadError_InvalidState);
 
     mDeviceState = kDeviceStateDetached;
@@ -223,7 +224,7 @@ ThreadError Mle::Discover(uint32_t aScanChannels, uint16_t aScanDuration, uint16
     mDiscoverContext = aContext;
     mMesh.SetDiscoverParameters(aScanChannels, aScanDuration);
 
-    VerifyOrExit((message = Ip6::Udp::NewMessage(0)) != NULL, ;);
+    VerifyOrExit((message = Ip6::Udp::NewMessage(mNetif.GetOpenThreadContext(), 0)) != NULL, ;);
     message->SetLinkSecurityEnabled(false);
     message->SetMleDiscoverRequest(true);
     message->SetPanId(aPanId);
@@ -240,7 +241,7 @@ ThreadError Mle::Discover(uint32_t aScanChannels, uint16_t aScanDuration, uint16
     discoveryRequest.SetVersion(kVersion);
     SuccessOrExit(error = message->Append(&discoveryRequest, sizeof(discoveryRequest)));
 
-    tlv.SetLength(message->GetLength() - startOffset);
+    tlv.SetLength((message->GetLength() - startOffset));
     message->Write(startOffset - sizeof(tlv), sizeof(tlv), &tlv);
 
     memset(&destination, 0, sizeof(destination));
@@ -306,6 +307,11 @@ bool Mle::IsAttached(void) const
     return (mDeviceState == kDeviceStateChild ||
             mDeviceState == kDeviceStateRouter ||
             mDeviceState == kDeviceStateLeader);
+}
+
+otContext *Mle::GetOpenThreadContext(void)
+{
+    return mNetif.GetOpenThreadContext();
 }
 
 DeviceState Mle::GetDeviceState(void) const
@@ -879,7 +885,7 @@ void Mle::HandleNetifStateChanged(uint32_t aFlags)
 {
     VerifyOrExit((aFlags & (OT_IP6_ADDRESS_ADDED | OT_IP6_ADDRESS_REMOVED)) != 0, ;);
 
-    if (!mNetif.IsUnicastAddress(mMeshLocal64.GetAddress()))
+    if (!mNetif.IsUnicastAddress(GetOpenThreadContext(), mMeshLocal64.GetAddress()))
     {
         // Mesh Local EID was removed, choose a new one and add it back
         for (int i = 8; i < 16; i++)
@@ -1022,7 +1028,7 @@ ThreadError Mle::SendParentRequest(void)
         mParentRequest.mChallenge[i] = otPlatRandomGet();
     }
 
-    VerifyOrExit((message = Ip6::Udp::NewMessage(0)) != NULL, ;);
+    VerifyOrExit((message = Ip6::Udp::NewMessage(mNetif.GetOpenThreadContext(), 0)) != NULL, ;);
     message->SetLinkSecurityEnabled(false);
     SuccessOrExit(error = AppendHeader(*message, Header::kCommandParentRequest));
     SuccessOrExit(error = AppendMode(*message, mDeviceMode));
@@ -1089,7 +1095,7 @@ ThreadError Mle::SendChildIdRequest(void)
     Message *message;
     Ip6::Address destination;
 
-    VerifyOrExit((message = Ip6::Udp::NewMessage(0)) != NULL, ;);
+    VerifyOrExit((message = Ip6::Udp::NewMessage(mNetif.GetOpenThreadContext(), 0)) != NULL, ;);
     message->SetLinkSecurityEnabled(false);
     SuccessOrExit(error = AppendHeader(*message, Header::kCommandChildIdRequest));
     SuccessOrExit(error = AppendResponse(*message, mChildIdRequest.mChallenge, mChildIdRequest.mChallengeLength));
@@ -1135,7 +1141,7 @@ ThreadError Mle::SendDataRequest(const Ip6::Address &aDestination, const uint8_t
     ThreadError error = kThreadError_None;
     Message *message;
 
-    VerifyOrExit((message = Ip6::Udp::NewMessage(0)) != NULL, ;);
+    VerifyOrExit((message = Ip6::Udp::NewMessage(mNetif.GetOpenThreadContext(), 0)) != NULL, ;);
     message->SetLinkSecurityEnabled(false);
     SuccessOrExit(error = AppendHeader(*message, Header::kCommandDataRequest));
     SuccessOrExit(error = AppendTlvRequest(*message, aTlvs, aTlvsLength));
@@ -1162,7 +1168,7 @@ ThreadError Mle::SendChildUpdateRequest(void)
     Ip6::Address destination;
     Message *message;
 
-    VerifyOrExit((message = Ip6::Udp::NewMessage(0)) != NULL, ;);
+    VerifyOrExit((message = Ip6::Udp::NewMessage(mNetif.GetOpenThreadContext(), 0)) != NULL, ;);
     message->SetLinkSecurityEnabled(false);
     SuccessOrExit(error = AppendHeader(*message, Header::kCommandChildUpdateRequest));
     SuccessOrExit(error = AppendMode(*message, mDeviceMode));
@@ -1228,7 +1234,7 @@ ThreadError Mle::SendMessage(Message &aMessage, const Ip6::Address &aDestination
     uint8_t nonce[13];
     uint8_t tag[4];
     uint8_t tagLength;
-    Crypto::AesCcm aesCcm;
+    Crypto::AesCcm aesCcm(&GetOpenThreadContext()->mCryptoContext);
     uint8_t buf[64];
     int length;
     Ip6::MessageInfo messageInfo;
@@ -1301,7 +1307,7 @@ void Mle::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageIn
     uint8_t messageTagLength;
     uint8_t nonce[13];
     Mac::ExtAddress macAddr;
-    Crypto::AesCcm aesCcm;
+    Crypto::AesCcm aesCcm(&GetOpenThreadContext()->mCryptoContext);
     uint16_t mleOffset;
     uint8_t buf[64];
     int length;
@@ -1756,7 +1762,7 @@ ThreadError Mle::HandleParentResponse(const Message &aMessage, const Ip6::Messag
     SuccessOrExit(error = Tlv::GetTlv(aMessage, Tlv::kLinkMargin, sizeof(linkMarginTlv), linkMarginTlv));
     VerifyOrExit(linkMarginTlv.IsValid(), error = kThreadError_Parse);
 
-    linkMargin = LinkQualityInfo::ConvertRssToLinkMargin(threadMessageInfo->mRss);
+    linkMargin = LinkQualityInfo::ConvertRssToLinkMargin(GetOpenThreadContext(), threadMessageInfo->mRss);
 
     if (linkMargin > linkMarginTlv.GetLinkMargin())
     {
@@ -1830,7 +1836,7 @@ ThreadError Mle::HandleParentResponse(const Message &aMessage, const Ip6::Messag
     mParent.mValid.mMleFrameCounter = mleFrameCounter.GetFrameCounter();
     mParent.mMode = ModeTlv::kModeFFD | ModeTlv::kModeRxOnWhenIdle | ModeTlv::kModeFullNetworkData;
     mParent.mLinkInfo.Clear();
-    mParent.mLinkInfo.AddRss(threadMessageInfo->mRss);
+    mParent.mLinkInfo.AddRss(GetOpenThreadContext(), threadMessageInfo->mRss);
     mParent.mState = Neighbor::kStateValid;
     mParent.mKeySequence = aKeySequence;
 
@@ -2118,7 +2124,7 @@ ThreadError Mle::SendDiscoveryResponse(const Ip6::Address &aDestination, uint16_
     MeshCoP::ExtendedPanIdTlv extPanId;
     MeshCoP::NetworkNameTlv networkName;
 
-    VerifyOrExit((message = Ip6::Udp::NewMessage(0)) != NULL, ;);
+    VerifyOrExit((message = Ip6::Udp::NewMessage(mNetif.GetOpenThreadContext(), 0)) != NULL, ;);
     message->SetLinkSecurityEnabled(false);
     message->SetMleDiscoverResponse(true);
     message->SetPanId(aPanId);
@@ -2310,14 +2316,15 @@ ThreadError Mle::CheckReachability(uint16_t aMeshSource, uint16_t aMeshDest, Ip6
         ExitNow(error = kThreadError_None);
     }
 
-    if (mNetif.IsUnicastAddress(aIp6Header.GetDestination()))
+    if (mNetif.IsUnicastAddress(GetOpenThreadContext(), aIp6Header.GetDestination()))
     {
         ExitNow(error = kThreadError_None);
     }
 
     memcpy(&dst, GetMeshLocal16(), kRlocPrefixLength);
     dst.mFields.m16[7] = HostSwap16(aMeshSource);
-    Ip6::Icmp::SendError(dst, Ip6::IcmpHeader::kTypeDstUnreach, Ip6::IcmpHeader::kCodeDstUnreachNoRoute, aIp6Header);
+    Ip6::Icmp::SendError(mNetif.GetOpenThreadContext(), dst, Ip6::IcmpHeader::kTypeDstUnreach,
+                         Ip6::IcmpHeader::kCodeDstUnreachNoRoute, aIp6Header);
 
 exit:
     return error;

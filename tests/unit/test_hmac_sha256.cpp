@@ -33,10 +33,6 @@
 
 #include <crypto/hmac_sha256.h>
 
-extern"C" void otSignalTaskletPending(void)
-{
-}
-
 void TestHmacSha256(void)
 {
     static const struct
@@ -63,13 +59,14 @@ void TestHmacSha256(void)
         },
     };
 
+    otCryptoContext cryptoContext = { false };
     uint8_t hash[otCryptoSha256Size];
 
     for (int i = 0; tests[i].key != NULL; i++)
     {
-        otCryptoHmacSha256Start(tests[i].key, strlen(tests[i].key));
-        otCryptoHmacSha256Update(tests[i].data, strlen(tests[i].data));
-        otCryptoHmacSha256Finish(hash);
+        otCryptoHmacSha256Start(&cryptoContext, tests[i].key, strlen(tests[i].key));
+        otCryptoHmacSha256Update(&cryptoContext, tests[i].data, strlen(tests[i].data));
+        otCryptoHmacSha256Finish(&cryptoContext, hash);
 
         VerifyOrQuit(memcmp(hash, tests[i].hash, sizeof(tests[i].hash)) == 0,
                      "HMAC-SHA-256 failed\n");

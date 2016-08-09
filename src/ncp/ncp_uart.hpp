@@ -45,7 +45,13 @@ class NcpUart : public NcpBase
     typedef NcpBase super_t;
 
 public:
-    NcpUart();
+    /**
+     * Constructor
+     *
+     * @param[in]  aContext  The OpenThread context structure.
+     *
+     */
+    NcpUart(otContext *aContext);
 
     /**
      * This method is called to start a new outbound frame.

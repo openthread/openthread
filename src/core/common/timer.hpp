@@ -92,13 +92,13 @@ public:
     /**
      * This static method processes all running timers.
      *
-     * @param[in]  aContext  A pointer to arbitrary context information.
+     * @param[in]  aContext  The OpenThread context structure.
      *
      */
-    static void FireTimers(void);
+    static void FireTimers(otContext *aContext);
 
 private:
-    static void SetAlarm(void);
+    static void SetAlarm(otContext *aContext);
 
     /**
      * This static method compares two timers and returns a value to indicate
@@ -132,13 +132,15 @@ public:
     /**
      * This constructor creates a timer instance.
      *
-     * @param[in]  aHandler  A pointer to a function that is called when the timer expires.
-     * @param[in]  aContext  A pointer to arbitrary context information.
+     * @param[in]  aContext          The OpenThread context structure.
+     * @param[in]  aHandler          A pointer to a function that is called when the timer expires.
+     * @param[in]  aCallbackContext  A pointer to arbitrary context information.
      *
      */
-    Timer(Handler aHandler, void *aContext) {
-        mHandler = aHandler;
+    Timer(otContext *aContext, Handler aHandler, void *aCallbackContext) {
         mContext = aContext;
+        mHandler = aHandler;
+        mCallbackContext = aCallbackContext;
         mT0 = 0;
         mDt = 0;
         mNext = NULL;
@@ -214,13 +216,14 @@ public:
     static uint32_t MsecToSec(uint32_t aMilliseconds) { return aMilliseconds / 1000u; }
 
 private:
-    void Fired(void) { mHandler(mContext); }
+    void Fired(void) { mHandler(mCallbackContext); }
 
-    Handler   mHandler;   ///< A pointer to the function that is called when the timer expires.
-    void     *mContext;   ///< A pointer to arbitrary context information.
-    uint32_t  mT0;        ///< The start time of the timer in milliseconds.
-    uint32_t  mDt;        ///< The time delay from the start time in milliseconds.
-    Timer    *mNext;      ///< The next timer in the scheduler list.
+    otContext *mContext;  ///< A pointer to the OpenThread context.
+    Handler    mHandler;  ///< A pointer to the function that is called when the timer expires.
+    void      *mCallbackContext;  ///< A pointer to arbitrary context information.
+    uint32_t   mT0;       ///< The start time of the timer in milliseconds.
+    uint32_t   mDt;       ///< The time delay from the start time in milliseconds.
+    Timer     *mNext;     ///< The next timer in the scheduler list.
 };
 
 /**

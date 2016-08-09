@@ -173,8 +173,10 @@ public:
     /**
      * This constructor initializes the MPL object.
      *
+     * @param[in]  aContext  The OpenThread context structure.
+     *
      */
-    Mpl(void);
+    Mpl(otContext *aContext);
 
     /**
      * This method initializes the MPL option.

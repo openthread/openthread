@@ -62,14 +62,15 @@ public:
     /**
      * This method opens the UDP socket.
      *
-     * @param[in]  aHandler  A pointer to a function that is called when receiving UDP messages.
-     * @param[in]  aContext  A pointer to arbitrary context information.
+     * @param[in]  aContext          The OpenThread context structure.
+     * @param[in]  aHandler          A pointer to a function that is called when receiving UDP messages.
+     * @param[in]  aCallbackContext  A pointer to arbitrary context information.
      *
      * @retval kThreadError_None  Successfully opened the socket.
      * @retval kThreadError_Busy  The socket is already open.
      *
      */
-    ThreadError Open(otUdpReceive aHandler, void *aContext);
+    ThreadError Open(otContext *aContext, otUdpReceive aHandler, void *aCallbackContext);
 
     /**
      * This method binds the UDP socket.
@@ -84,11 +85,13 @@ public:
     /**
      * This method closes the UDP socket.
      *
+     * @param[in]  aContext  The OpenThread context structure.
+     *
      * @retval kThreadError_None  Successfully closed the UDP socket.
      * @retval kThreadErrorBusy   The socket is already closed.
      *
      */
-    ThreadError Close(void);
+    ThreadError Close(otContext *aContext);
 
     /**
      * This method sends a UDP message.
@@ -126,12 +129,13 @@ public:
     /**
      * This static method returns a new UDP message with sufficient header space reserved.
      *
+     * @param[in]  aContext   The OpenThread context structure.
      * @param[in]  aReserved  The number of header bytes to reserve after the UDP header.
      *
      * @returns A pointer to the message or NULL if no buffers are available.
      *
      */
-    static Message *NewMessage(uint16_t aReserved);
+    static Message *NewMessage(otContext *aContext, uint16_t aReserved);
 
     /**
      * This static method handles a received UDP message.
@@ -157,14 +161,11 @@ public:
      */
     static ThreadError UpdateChecksum(Message &aMessage, uint16_t aPseudoHeaderChecksum);
 
-private:
     enum
     {
         kDynamicPortMin = 49152,  ///< Service Name and Transport Protocol Port Number Registry
         kDynamicPortMax = 65535,  ///< Service Name and Transport Protocol Port Number Registry
     };
-    static uint16_t sEphemeralPort;
-    static UdpSocket *sSockets;
 };
 
 OT_TOOL_PACKED_BEGIN

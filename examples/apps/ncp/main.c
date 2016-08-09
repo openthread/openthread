@@ -26,24 +26,34 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <openthread-core-config.h>
 #include <openthread.h>
+#include <common/debug.hpp>
 #include <ncp/ncp.h>
 #include <platform.h>
 
-void otSignalTaskletPending(void)
+void otSignalTaskletPending(otContext *aCtx)
 {
+    (void)aCtx;
 }
 
 int main(int argc, char *argv[])
 {
+    otContext *sContext;
+    uint8_t otContextBuffer[OT_CONTEXT_SIZE];
+    uint64_t otContextBufferLength = sizeof(otContextBuffer);
+
     PlatformInit(argc, argv);
-    otEnable();
-    otNcpInit();
+
+    sContext = otEnable(otContextBuffer, &otContextBufferLength);
+    assert(sContext);
+
+    otNcpInit(sContext);
 
     while (1)
     {
-        otProcessNextTasklet();
-        PlatformProcessDrivers();
+        otProcessNextTasklet(sContext);
+        PlatformProcessDrivers(sContext);
     }
 
     return 0;

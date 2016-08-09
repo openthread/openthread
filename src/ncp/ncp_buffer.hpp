@@ -54,11 +54,13 @@ public:
     /**
      * This constructor creates an NCP frame buffer.
      *
+     *
+     * @param[in]  aContext       The OpenThread context structure.
      * @param[in]  aBuffer        A pointer to a buffer which will be used by NCP frame buffer.
      * @param[in]  aBufferLength  The buffer size (in bytes).
      *
      */
-    NcpFrameBuffer(uint8_t *aBuffer, uint16_t aBufferLength);
+    NcpFrameBuffer(otContext *aContext, uint8_t *aBuffer, uint16_t aBufferLength);
 
     /**
      * This destructor clears the NCP frame buffer and clears all frames..

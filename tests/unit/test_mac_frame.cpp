@@ -34,9 +34,22 @@
 
 namespace Thread {
 
-extern"C" void otSignalTaskletPending(void)
-{
-}
+extern "C" {
+
+    void otPlatAlarmStop(otContext *)
+    {
+    }
+
+    void otPlatAlarmStartAt(otContext *, uint32_t, uint32_t)
+    {
+    }
+
+    uint32_t otPlatAlarmGetNow(void)
+    {
+        return 0;
+    }
+
+} // extern "C"
 
 void TestMacHeader(void)
 {

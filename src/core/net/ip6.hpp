@@ -483,12 +483,13 @@ public:
     /**
      * This static method allocates a new message buffer from the buffer pool.
      *
+     * @param[in]  aContext   The OpenThread context structure.
      * @param[in]  aReserved  The number of header bytes to reserve following the IPv6 header.
      *
      * @returns A pointer to the message or NULL if insufficient message buffers are available.
      *
      */
-    static Message *NewMessage(uint16_t aReserved);
+    static Message *NewMessage(otContext *aContext, uint16_t aReserved);
 
     /**
      * This static method sends an IPv6 datagram.
@@ -570,11 +571,12 @@ public:
     /**
      * This function registers a callback to provide received raw IPv6 datagrams.
      *
+     * @param[in]  aContext   The OpenThread context structure.
      * @param[in]  aCallback  A pointer to a function that is called when an IPv6 datagram is received or NULL to
      *                        disable the callback.
      *
      */
-    static void SetReceiveDatagramCallback(otReceiveIp6DatagramCallback aCallback);
+    static void SetReceiveDatagramCallback(otContext *aContext, otReceiveIp6DatagramCallback aCallback);
 
 private:
     static void ProcessReceiveCallback(Message &aMessage);

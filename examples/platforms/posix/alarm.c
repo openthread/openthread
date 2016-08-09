@@ -31,6 +31,8 @@
 #include <string.h>
 #include <sys/time.h>
 
+#include <openthread.h>
+
 #include <platform/alarm.h>
 #include "platform-posix.h"
 
@@ -53,14 +55,16 @@ uint32_t otPlatAlarmGetNow(void)
     return (tv.tv_sec * 1000) + (tv.tv_usec / 1000);
 }
 
-void otPlatAlarmStartAt(uint32_t t0, uint32_t dt)
+void otPlatAlarmStartAt(otContext *aCtx, uint32_t t0, uint32_t dt)
 {
+    (void)aCtx;
     s_alarm = t0 + dt;
     s_is_running = true;
 }
 
-void otPlatAlarmStop(void)
+void otPlatAlarmStop(otContext *aCtx)
 {
+    (void)aCtx;
     s_is_running = false;
 }
 
@@ -95,7 +99,7 @@ void posixAlarmUpdateTimeout(struct timeval *aTimeout)
     }
 }
 
-void posixAlarmProcess(void)
+void posixAlarmProcess(otContext *aContext)
 {
     int32_t remaining;
 
@@ -106,7 +110,7 @@ void posixAlarmProcess(void)
         if (remaining <= 0)
         {
             s_is_running = false;
-            otPlatAlarmFired();
+            otPlatAlarmFired(aContext);
         }
     }
 }

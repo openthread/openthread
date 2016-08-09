@@ -34,6 +34,8 @@
 
 #include <stdio.h>
 
+#include <common/code_utils.hpp>
+#include <common/debug.hpp>
 #include <coap/coap_header.hpp>
 #include <common/code_utils.hpp>
 #include <common/logging.hpp>
@@ -52,8 +54,8 @@ DatasetManager::DatasetManager(ThreadNetif &aThreadNetif, const char *aUri):
     mMle(aThreadNetif.GetMle()),
     mNetif(aThreadNetif),
     mNetworkDataLeader(aThreadNetif.GetNetworkDataLeader()),
-    mResource(aUri, &HandleSet, this),
-    mTimer(&HandleTimer, this),
+    mResource(aUri, &DatasetManager::HandleSet, this),
+    mTimer(aThreadNetif.GetOpenThreadContext(), &DatasetManager::HandleTimer, this),
     mUri(aUri),
     mCoapServer(aThreadNetif.GetCoapServer())
 {
@@ -155,7 +157,7 @@ ThreadError DatasetManager::Register(void)
     Ip6::MessageInfo messageInfo;
     ActiveTimestampTlv timestamp;
 
-    mSocket.Open(&HandleUdpReceive, this);
+    mSocket.Open(mNetif.GetOpenThreadContext(), &DatasetManager::HandleUdpReceive, this);
 
     for (size_t i = 0; i < sizeof(mCoapToken); i++)
     {
@@ -172,7 +174,7 @@ ThreadError DatasetManager::Register(void)
     header.AppendContentFormatOption(Coap::Header::kApplicationOctetStream);
     header.Finalize();
 
-    VerifyOrExit((message = Ip6::Udp::NewMessage(0)) != NULL, error = kThreadError_NoBufs);
+    VerifyOrExit((message = Ip6::Udp::NewMessage(mNetif.GetOpenThreadContext(), 0)) != NULL, error = kThreadError_NoBufs);
     SuccessOrExit(error = message->Append(header.GetBytes(), header.GetLength()));
 
     timestamp.Init();
@@ -274,7 +276,7 @@ void DatasetManager::SendSetResponse(const Coap::Header &aRequestHeader, const I
     Coap::Header responseHeader;
     Message *message;
 
-    VerifyOrExit((message = Ip6::Udp::NewMessage(0)) != NULL, error = kThreadError_NoBufs);
+    VerifyOrExit((message = Ip6::Udp::NewMessage(mNetif.GetOpenThreadContext(), 0)) != NULL, error = kThreadError_NoBufs);
     responseHeader.Init();
     responseHeader.SetVersion(1);
     responseHeader.SetType(Coap::Header::kTypeAcknowledgment);
@@ -419,7 +421,7 @@ ThreadError ActiveDataset::ApplyConfiguration(void)
 
 PendingDataset::PendingDataset(ThreadNetif &aThreadNetif):
     DatasetManager(aThreadNetif, OPENTHREAD_URI_PENDING_SET),
-    mTimer(HandleTimer, this)
+    mTimer(aThreadNetif.GetOpenThreadContext(), PendingDataset::HandleTimer, this)
 {
 }
 

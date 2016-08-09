@@ -71,7 +71,7 @@ void PlatformInit(int argc, char *argv[])
     otPlatUartEnable();
 }
 
-void PlatformProcessDrivers(void)
+void PlatformProcessDrivers(otContext *aContext)
 {
     fd_set read_fds;
     fd_set write_fds;
@@ -86,14 +86,14 @@ void PlatformProcessDrivers(void)
     posixRadioUpdateFdSet(&read_fds, &write_fds, &max_fd);
     posixAlarmUpdateTimeout(&timeout);
 
-    if (!otAreTaskletsPending())
+    if (!otAreTaskletsPending(aContext))
     {
         rval = select(max_fd + 1, &read_fds, &write_fds, NULL, &timeout);
         assert(rval >= 0 && errno != ETIME);
     }
 
     posixUartProcess();
-    posixRadioProcess();
-    posixAlarmProcess();
+    posixRadioProcess(aContext);
+    posixAlarmProcess(aContext);
 }
 

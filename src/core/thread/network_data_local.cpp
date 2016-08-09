@@ -207,7 +207,7 @@ ThreadError Local::Register(const Ip6::Address &aDestination)
     Ip6::MessageInfo messageInfo;
 
     UpdateRloc();
-    mSocket.Open(&HandleUdpReceive, this);
+    mSocket.Open(mMle.GetOpenThreadContext(), &Local::HandleUdpReceive, this);
 
     for (size_t i = 0; i < sizeof(mCoapToken); i++)
     {
@@ -224,7 +224,7 @@ ThreadError Local::Register(const Ip6::Address &aDestination)
     header.AppendContentFormatOption(Coap::Header::kApplicationOctetStream);
     header.Finalize();
 
-    VerifyOrExit((message = Ip6::Udp::NewMessage(0)) != NULL, error = kThreadError_NoBufs);
+    VerifyOrExit((message = Ip6::Udp::NewMessage(mMle.GetOpenThreadContext(), 0)) != NULL, error = kThreadError_NoBufs);
     SuccessOrExit(error = message->Append(header.GetBytes(), header.GetLength()));
     SuccessOrExit(error = message->Append(mTlvs, mLength));
 
