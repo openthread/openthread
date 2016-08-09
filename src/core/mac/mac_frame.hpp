@@ -37,9 +37,6 @@
 #include <limits.h>
 #ifndef OPEN_THREAD_DRIVER
 #include <stdint.h>
-#else
-#include <ntstatus.h>
-#include <ntstrsafe.h>
 #endif
 #include <string.h>
 
