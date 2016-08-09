@@ -296,7 +296,7 @@ public:
      * @returns The IPv6 Header Extension Length value.
      *
      */
-    uint16_t GetLength() const { return mLength; }
+    uint8_t GetLength() const { return mLength; }
 
     /**
      * This method sets the IPv6 Header Extension Length value.
@@ -304,7 +304,7 @@ public:
      * @param[in]  aLength  The IPv6 Header Extension Length value.
      *
      */
-    void SetLength(uint16_t aLength) { mLength = aLength; }
+    void SetLength(uint8_t aLength) { mLength = aLength; }
 
 private:
     uint8_t mNextHeader;
@@ -430,7 +430,9 @@ public:
      * @param[in]  aOffset  The Fragment Offset value.
      */
     void SetOffset(uint16_t aOffset) {
-        mOffsetMore = HostSwap16((HostSwap16(mOffsetMore) & kOffsetMask) | (aOffset << kOffsetOffset));
+        uint16_t tmp = HostSwap16(mOffsetMore);
+        tmp = (tmp & ~kOffsetMask) | ((aOffset << kOffsetOffset) & kOffsetMask);
+        mOffsetMore = HostSwap16(tmp);
     }
 
     /**
@@ -521,7 +523,7 @@ public:
      * @retval kThreadError_Drop   Message processing failed and the message should be dropped.
      *
      */
-    static ThreadError HandleDatagram(Message &aMessage, Netif *aNetif, uint8_t aInterfaceId,
+    static ThreadError HandleDatagram(Message &aMessage, Netif *aNetif, int8_t aInterfaceId,
                                       const void *aLinkMessageInfo, bool aFromNcpHost);
 
     /**

@@ -70,7 +70,7 @@ protected:
 
     ThreadError Set(const Dataset &aDataset, uint8_t &aFlags);
 
-    ThreadError Set(const Timestamp &aTimestamp, const Message &aMessage, uint16_t aOffset, uint16_t aLength,
+    ThreadError Set(const Timestamp &aTimestamp, const Message &aMessage, uint16_t aOffset, uint8_t aLength,
                     uint8_t &aFlags);
 
     Dataset mLocal;
@@ -117,7 +117,7 @@ public:
 
     ThreadError Set(const otOperationalDataset &aDataset);
 
-    ThreadError Set(const Timestamp &aTimestamp, const Message &aMessage, uint16_t aOffset, uint16_t aLength);
+    ThreadError Set(const Timestamp &aTimestamp, const Message &aMessage, uint16_t aOffset, uint8_t aLength);
 
     ThreadError ApplyConfiguration(void);
 };
@@ -133,7 +133,7 @@ public:
 
     ThreadError Set(const otOperationalDataset &aDataset);
 
-    ThreadError Set(const Timestamp &aTimestamp, const Message &aMessage, uint16_t aOffset, uint16_t aLength);
+    ThreadError Set(const Timestamp &aTimestamp, const Message &aMessage, uint16_t aOffset, uint8_t aLength);
 
     void ApplyLocalToNetwork(void);
 

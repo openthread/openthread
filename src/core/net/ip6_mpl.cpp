@@ -73,7 +73,7 @@ ThreadError Mpl::ProcessOption(const Message &aMessage)
         else if (mEntries[i].mSeed == option.GetSeed())
         {
             entry = &mEntries[i];
-            diff = option.GetSequence() - entry->mSequence;
+            diff = static_cast<int8_t>(option.GetSequence() - entry->mSequence);
 
             if (diff <= 0)
             {

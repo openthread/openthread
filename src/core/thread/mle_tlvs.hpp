@@ -122,7 +122,7 @@ public:
      * This method returns the Length value.
      *
      */
-    size_t GetLength(void) const { return mLength; }
+    uint8_t GetLength(void) const { return mLength; }
 
     /**
      * This method sets the Length value.
@@ -515,9 +515,7 @@ public:
      * @returns The Route Data Length value.
      *
      */
-    uint8_t GetRouteDataLength(void) const {
-        return GetLength() - sizeof(mRouterIdSequence) - sizeof(mRouterIdMask);
-    }
+    uint8_t GetRouteDataLength(void) const { return GetLength() - sizeof(mRouterIdSequence) - sizeof(mRouterIdMask); }
 
     /**
      * This method sets the Route Data Length value.
@@ -569,7 +567,8 @@ public:
      */
     void SetLinkQualityIn(uint8_t aRouterId, uint8_t aLinkQuality) {
         mRouteData[aRouterId] =
-            (mRouteData[aRouterId] & ~kLinkQualityInMask) | (aLinkQuality << kLinkQualityInOffset);
+            (mRouteData[aRouterId] & ~kLinkQualityInMask) |
+            ((aLinkQuality << kLinkQualityInOffset) & kLinkQualityInMask);
     }
 
     /**
@@ -591,7 +590,8 @@ public:
      */
     void SetLinkQualityOut(uint8_t aRouterId, uint8_t aLinkQuality) {
         mRouteData[aRouterId] =
-            (mRouteData[aRouterId] & ~kLinkQualityOutMask) | (aLinkQuality << kLinkQualityOutOffset);
+            (mRouteData[aRouterId] & ~kLinkQualityOutMask) |
+            ((aLinkQuality << kLinkQualityOutOffset) & kLinkQualityInMask);
     }
 
 private:
@@ -827,7 +827,7 @@ public:
      * @retval FALSE  If the TLV does not appear to be well-formed.
      *
      */
-    bool IsValid(void) const { return GetLength() <= sizeof(*this) - sizeof(Tlv); }
+    bool IsValid(void) const { return GetLength() < sizeof(*this) - sizeof(Tlv); }
 
     /**
      * This method returns a pointer to the Network Data.
@@ -1006,7 +1006,7 @@ public:
      * @returns The Parent Priority value.
      *
      */
-    int8_t GetParentPriority(void) const { return mParentPriority >> kParentPriorityOffset; }
+    int8_t GetParentPriority(void) const { return (mParentPriority & kParentPriorityOffset) >> kParentPriorityOffset; }
 
     /**
      * This method sets the Parent Priority value.
@@ -1014,7 +1014,9 @@ public:
      * @param[in] aParentPriority  The Parent Priority value.
      *
      */
-    void SetParentPriority(int8_t aParentPriority) { mParentPriority = aParentPriority << kParentPriorityOffset; }
+    void SetParentPriority(int8_t aParentPriority) {
+        mParentPriority = (aParentPriority << kParentPriorityOffset) & kParentPriorityMask;
+    }
 
     /**
      * This method returns the Link Quality 3 value.
@@ -1148,9 +1150,10 @@ private:
     enum
     {
         kParentPriorityOffset = 6,
+        kParentPriorityMask = 3 << kParentPriorityOffset,
     };
 
-    int8_t   mParentPriority;
+    uint8_t  mParentPriority;
     uint8_t  mLinkQuality3;
     uint8_t  mLinkQuality2;
     uint8_t  mLinkQuality1;

@@ -103,7 +103,7 @@ Mac::Mac(ThreadNetif &aThreadNetif):
 
     for (size_t i = 0; i < sizeof(mExtAddress); i++)
     {
-        mExtAddress.m8[i] = otPlatRandomGet();
+        mExtAddress.m8[i] = static_cast<uint8_t>(otPlatRandomGet());
     }
 
     mExtAddress.SetGroup(false);
@@ -117,8 +117,8 @@ Mac::Mac(ThreadNetif &aThreadNetif):
     SetExtAddress(mExtAddress);
     SetShortAddress(kShortAddrInvalid);
 
-    mBeaconSequence = otPlatRandomGet();
-    mDataSequence = otPlatRandomGet();
+    mBeaconSequence = static_cast<uint8_t>(otPlatRandomGet());
+    mDataSequence = static_cast<uint8_t>(otPlatRandomGet());
 
     mPcapCallback = NULL;
 
@@ -356,10 +356,10 @@ void Mac::GenerateNonce(const ExtAddress &aAddress, uint32_t aFrameCounter, uint
     aNonce += 8;
 
     // frame counter
-    aNonce[0] = aFrameCounter >> 24;
-    aNonce[1] = aFrameCounter >> 16;
-    aNonce[2] = aFrameCounter >> 8;
-    aNonce[3] = aFrameCounter >> 0;
+    aNonce[0] = (aFrameCounter >> 24) & 0xff;
+    aNonce[1] = (aFrameCounter >> 16) & 0xff;
+    aNonce[2] = (aFrameCounter >> 8) & 0xff;
+    aNonce[3] = (aFrameCounter >> 0) & 0xff;
     aNonce += 4;
 
     // security level

@@ -43,7 +43,7 @@
 #define LOG_PRINTF(...)                                                                     \
     charsWritten = snprintf(&logString[index], sizeof(logString) - index , __VA_ARGS__);    \
     VerifyOrExit(charsWritten >= 0, logString[index] = 0);                                  \
-    index += charsWritten;                                                                  \
+    index += (unsigned int)charsWritten;                                    \
     VerifyOrExit(index < sizeof(logString), logString[sizeof(logString) -1 ] = 0)
 
 void otPlatLog(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aFormat, ...)

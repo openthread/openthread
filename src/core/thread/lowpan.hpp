@@ -406,7 +406,7 @@ public:
         }
         else {
             mDispatchOffsetSize |= kOffset;
-            mOffset = aOffset / 8;
+            mOffset = (aOffset >> 3) & kOffsetMask;
         }
     }
 
@@ -417,6 +417,7 @@ private:
         kDispatchMask = 3 << 6,
         kOffset       = 1 << 5,
         kSizeMask     = 0x7ff,
+        kOffsetMask   = 0xff,
     };
 
     union

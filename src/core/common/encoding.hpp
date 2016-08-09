@@ -43,8 +43,8 @@ namespace Encoding {
 inline uint16_t Swap16(uint16_t v)
 {
     return
-        ((v & static_cast<uint16_t>(0x00ffU)) << 8) |
-        ((v & static_cast<uint16_t>(0xff00U)) >> 8);
+        (((v & 0x00ffU) << 8) & 0xff00) |
+        (((v & 0xff00U) >> 8) & 0x00ff);
 }
 
 inline uint32_t Swap32(uint32_t v)

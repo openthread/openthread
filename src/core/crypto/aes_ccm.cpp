@@ -108,7 +108,7 @@ void AesCcm::Init(uint32_t aHeaderLength, uint32_t aPlainTextLength, uint8_t aTa
 
     for (i = sizeof(mBlock) - 1; i > aNonceLength; i--)
     {
-        mBlock[i] = len;
+        mBlock[i] = len & 0xff;
         len >>= 8;
     }
 

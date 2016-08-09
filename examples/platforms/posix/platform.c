@@ -57,7 +57,7 @@ void PlatformInit(int argc, char *argv[])
         exit(1);
     }
 
-    NODE_ID = strtol(argv[1], &endptr, 0);
+    NODE_ID = (uint32_t)strtol(argv[1], &endptr, 0);
 
     if (*endptr != '\0')
     {

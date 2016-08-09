@@ -23,6 +23,10 @@ EXTRA_DIST                                    = \
 
 lib_LIBRARIES                                 = libmbedcrypto.a
 
+# Do not enable -Wconversion for mbedtls
+CPPFLAGS                                     := $(filter-out -Wconversion,$(CPPFLAGS))
+CFLAGS                                       := $(filter-out -Wconversion,$(CFLAGS))
+
 MBEDTLS_SRCDIR                                = $(top_srcdir)/third_party/mbedtls/repo
 
 libmbedcrypto_a_CPPFLAGS                      = \
