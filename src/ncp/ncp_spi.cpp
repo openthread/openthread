@@ -38,6 +38,9 @@
 #include <core/openthread-core-config.h>
 
 #define SPI_RESET_FLAG          0x80
+#define SPI_CRC_FLAG            0x40
+#define SPI_PATTERN_VALUE       0x02
+#define SPI_PATTERN_MASK        0x03
 
 namespace Thread {
 
@@ -91,8 +94,8 @@ NcpSpi::NcpSpi(otContext *aContext):
 
     mSending = false;
 
-    spi_header_set_flag_byte(mSendFrame, SPI_RESET_FLAG);
-    spi_header_set_flag_byte(mEmptySendFrame, SPI_RESET_FLAG);
+    spi_header_set_flag_byte(mSendFrame, SPI_RESET_FLAG|SPI_PATTERN_VALUE);
+    spi_header_set_flag_byte(mEmptySendFrame, SPI_RESET_FLAG|SPI_PATTERN_VALUE);
     spi_header_set_accept_len(mSendFrame, sizeof(mReceiveFrame) - SPI_HEADER_LENGTH);
     otPlatSpiSlaveEnable(&NcpSpi::SpiTransactionComplete, (void*)this);
 
@@ -143,6 +146,10 @@ NcpSpi::SpiTransactionComplete(
     uint16_t tx_data_len(0);
     uint16_t tx_accept_len(0);
 
+    // TODO: Check `PATTERN` bits of `HDR` and ignore frame if not set.
+    //       Holding off on implementing this so as to not cause immediate
+    //       compatability problems, even though it is required by the spec.
+
     if (aTransactionLength >= SPI_HEADER_LENGTH)
     {
         if (aMISOBufLen >= SPI_HEADER_LENGTH)
@@ -181,9 +188,9 @@ NcpSpi::SpiTransactionComplete(
     if ( (aTransactionLength >= 1)
       && (aMISOBufLen >= 1)
     ) {
-        // Clear the reset flag
-        spi_header_set_flag_byte(mSendFrame, 0);
-        spi_header_set_flag_byte(mEmptySendFrame, 0);
+        // Clear the reset flag.
+        spi_header_set_flag_byte(mSendFrame, SPI_PATTERN_VALUE);
+        spi_header_set_flag_byte(mEmptySendFrame, SPI_PATTERN_VALUE);
     }
 
     if (mSending && !mHandlingSendDone)

@@ -1588,7 +1588,7 @@ ThreadError NcpBase::GetPropertyHandler_THREAD_ASSISTING_PORTS(uint8_t header, s
 
     for (; num_entries != 0; ports++, num_entries--)
     {
-        SuccessOrExit(errorCode = OutboundFrameFeedPacked("S", ports));
+        SuccessOrExit(errorCode = OutboundFrameFeedPacked("S", *ports));
     }
 
     SuccessOrExit(errorCode = OutboundFrameSend());
@@ -2701,7 +2701,7 @@ ThreadError NcpBase::SetPropertyHandler_THREAD_ASSISTING_PORTS(uint8_t header, s
     ThreadError errorCode = kThreadError_None;
     uint8_t num_entries = 0;
     const uint16_t *ports = otGetUnsecurePorts(mContext, &num_entries);
-    spinel_ssize_t parsedLength = 0;
+    spinel_ssize_t parsedLength = 1;
     int ports_changed = 0;
 
     // First, we need to remove all of the current assisting ports.
@@ -2744,6 +2744,9 @@ ThreadError NcpBase::SetPropertyHandler_THREAD_ASSISTING_PORTS(uint8_t header, s
         {
             break;
         }
+
+        value_ptr += parsedLength;
+        value_len -= parsedLength;
 
         ports_changed++;
     }
