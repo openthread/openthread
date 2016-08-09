@@ -59,12 +59,12 @@ typedef int bool;
 #ifdef __cplusplus
 extern "C" {
 #endif
-    
+
 /**
  * This type represents the OpenThread Context structure.
  */
 typedef struct otContext otContext;
-    
+
 // Size of the OpenThread context structure (bytes)
 #define OT_CONTEXT_SIZE   (9500 + OPENTHREAD_CONFIG_NUM_MESSAGE_BUFFERS * OPENTHREAD_CONFIG_MESSAGE_BUFFER_SIZE)
 

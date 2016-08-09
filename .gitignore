@@ -3,6 +3,7 @@
 *.gcno
 *.log
 *.o
+*.orig
 *.pyc
 *.suo
 *.trs

@@ -242,7 +242,8 @@ ThreadError MleRouter::BecomeLeader(void)
     mStateUpdateTimer.Start(kStateUpdatePeriod);
     mAddressResolver.Clear();
 
-    mRouterId = (mPreviousRouterId != kMaxRouterId) ? (uint8_t)AllocateRouterId(mPreviousRouterId) : (uint8_t)AllocateRouterId();
+    mRouterId = (mPreviousRouterId != kMaxRouterId) ? (uint8_t)AllocateRouterId(mPreviousRouterId) :
+                (uint8_t)AllocateRouterId();
     VerifyOrExit(mRouterId >= 0, error = kThreadError_NoBufs);
     mPreviousRouterId = mRouterId;
 
@@ -1225,7 +1226,7 @@ ThreadError MleRouter::HandleAdvertisement(const Message &aMessage, const Ip6::M
     SuccessOrExit(error = Tlv::GetTlv(aMessage, Tlv::kLeaderData, sizeof(leaderData), leaderData));
     VerifyOrExit(leaderData.IsValid(), error = kThreadError_Parse);
 
-     // Route Data
+    // Route Data
     SuccessOrExit(error = Tlv::GetTlv(aMessage, Tlv::kRoute, sizeof(route), route));
     VerifyOrExit(route.IsValid(), error = kThreadError_Parse);
 
@@ -1273,7 +1274,7 @@ ThreadError MleRouter::HandleAdvertisement(const Message &aMessage, const Ip6::M
     }
 
     VerifyOrExit(IsActiveRouter(sourceAddress.GetRloc16()), ;);
-    
+
     if (mDeviceMode & ModeTlv::kModeFFD)
     {
         SuccessOrExit(error = ProcessRouteTlv(route));
@@ -1793,7 +1794,7 @@ ThreadError MleRouter::HandleChildIdRequest(const Message &aMessage, const Ip6::
     // TLV Request
     SuccessOrExit(error = Tlv::GetTlv(aMessage, Tlv::kTlvRequest, sizeof(tlvRequest), tlvRequest));
     VerifyOrExit(tlvRequest.IsValid() && tlvRequest.GetLength() <= sizeof(child->mRequestTlvs),
-                  error = kThreadError_Parse);
+                 error = kThreadError_Parse);
 
     // Active Timestamp
     activeTimestamp.SetLength(0);
@@ -1841,7 +1842,7 @@ ThreadError MleRouter::HandleChildIdRequest(const Message &aMessage, const Ip6::
     }
 
     UpdateChildAddresses(address, *child);
-    
+
     memset(child->mRequestTlvs, Tlv::kInvalid, sizeof(child->mRequestTlvs));
     memcpy(child->mRequestTlvs, tlvRequest.GetTlvs(), tlvRequest.GetLength());
     numTlvs = (uint8_t)tlvRequest.GetLength();
@@ -1851,7 +1852,7 @@ ThreadError MleRouter::HandleChildIdRequest(const Message &aMessage, const Ip6::
     {
         child->mRequestTlvs[numTlvs++] = Tlv::kActiveDataset;
     }
-    
+
     if (pendingTimestamp.GetLength() == 0 ||
         mNetif.GetPendingDataset().GetNetwork().GetTimestamp().Compare(pendingTimestamp) != 0)
     {
@@ -2314,7 +2315,7 @@ Neighbor *MleRouter::GetNeighbor(const Mac::ExtAddress &aAddress)
 {
     Neighbor *rval = NULL;
 
-     switch (mDeviceState)
+    switch (mDeviceState)
     {
     case kDeviceStateDisabled:
         break;
@@ -2661,7 +2662,8 @@ ThreadError MleRouter::CheckReachability(uint16_t aMeshSource, uint16_t aMeshDes
 
     memcpy(&destination, GetMeshLocal16(), 14);
     destination.mFields.m16[7] = HostSwap16(aMeshSource);
-    Ip6::Icmp::SendError(GetOpenThreadContext(), destination, Ip6::IcmpHeader::kTypeDstUnreach, Ip6::IcmpHeader::kCodeDstUnreachNoRoute,
+    Ip6::Icmp::SendError(GetOpenThreadContext(), destination, Ip6::IcmpHeader::kTypeDstUnreach,
+                         Ip6::IcmpHeader::kCodeDstUnreachNoRoute,
                          aIp6Header);
 
     return kThreadError_Drop;

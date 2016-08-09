@@ -44,7 +44,7 @@ ThreadError AesCcm::SetKey(const uint8_t *aKey, uint16_t aKeyLength)
     return kThreadError_None;
 }
 
-void AesCcm::Init(uint32_t aHeaderLength, uint32_t aPlainTextLength, uint8_t aTagLength, 
+void AesCcm::Init(uint32_t aHeaderLength, uint32_t aPlainTextLength, uint8_t aTagLength,
                   const void *aNonce, uint8_t aNonceLength)
 {
     const uint8_t *nonceBytes = reinterpret_cast<const uint8_t *>(aNonce);

@@ -129,7 +129,8 @@ ThreadError otSetExtendedAddress(otContext *aContext, const otExtAddress *aExtAd
 
     VerifyOrExit(aExtAddress != NULL, error = kThreadError_InvalidArgs);
 
-    SuccessOrExit(error = aContext->mThreadNetif.GetMac().SetExtAddress(*static_cast<const Mac::ExtAddress *>(aExtAddress)));
+    SuccessOrExit(error = aContext->mThreadNetif.GetMac().SetExtAddress(*static_cast<const Mac::ExtAddress *>
+                                                                        (aExtAddress)));
     SuccessOrExit(error = aContext->mThreadNetif.GetMle().UpdateLinkLocalAddress());
 
 exit:
@@ -352,8 +353,8 @@ ThreadError otAddBorderRouter(otContext *aContext, const otBorderRouterConfig *a
     }
 
     return aContext->mThreadNetif.GetNetworkDataLocal().AddOnMeshPrefix(aConfig->mPrefix.mPrefix.mFields.m8,
-                                                               aConfig->mPrefix.mLength,
-                                                               aConfig->mPreference, flags, aConfig->mStable);
+                                                                        aConfig->mPrefix.mLength,
+                                                                        aConfig->mPreference, flags, aConfig->mStable);
 }
 
 ThreadError otRemoveBorderRouter(otContext *aContext, const otIp6Prefix *aPrefix)
@@ -364,8 +365,8 @@ ThreadError otRemoveBorderRouter(otContext *aContext, const otIp6Prefix *aPrefix
 ThreadError otAddExternalRoute(otContext *aContext, const otExternalRouteConfig *aConfig)
 {
     return aContext->mThreadNetif.GetNetworkDataLocal().AddHasRoutePrefix(aConfig->mPrefix.mPrefix.mFields.m8,
-                                                                 aConfig->mPrefix.mLength,
-                                                                 aConfig->mPreference, aConfig->mStable);
+                                                                          aConfig->mPrefix.mLength,
+                                                                          aConfig->mPreference, aConfig->mStable);
 }
 
 ThreadError otRemoveExternalRoute(otContext *aContext, const otIp6Prefix *aPrefix)
@@ -704,14 +705,14 @@ void otSetStateChangedCallback(otContext *aContext, otStateChangedCallback aCall
     aContext->mThreadNetif.RegisterCallback(aContext->mNetifCallback);
 }
 
-otContext* otEnable(void *aContextBuffer, uint64_t *aContextBufferSize)
-{    
-    otContext* aContext = NULL;
+otContext *otEnable(void *aContextBuffer, uint64_t *aContextBufferSize)
+{
+    otContext *aContext = NULL;
 
     otLogFuncEntry();
 
     otLogInfoApi("otEnable\n");
-    
+
     VerifyOrExit(aContextBufferSize != NULL, ;);
 
     // Make sure the input buffer is big enough
@@ -720,7 +721,7 @@ otContext* otEnable(void *aContextBuffer, uint64_t *aContextBufferSize)
     aContext = new(aContextBuffer)otContext();
 
 exit:
-    
+
     otLogFuncExit();
 
     return aContext;
@@ -739,7 +740,7 @@ ThreadError otDisable(otContext *aContext)
     aContext->mEnabled = false;
 
 exit:
-    
+
     otLogFuncExitErr(error);
     return error;
 }
@@ -755,7 +756,7 @@ ThreadError otInterfaceUp(otContext *aContext)
     error = aContext->mThreadNetif.Up();
 
 exit:
-    
+
     otLogFuncExitErr(error);
     return error;
 }
@@ -771,7 +772,7 @@ ThreadError otInterfaceDown(otContext *aContext)
     error = aContext->mThreadNetif.Down();
 
 exit:
-    
+
     otLogFuncExitErr(error);
     return error;
 }
@@ -792,7 +793,7 @@ ThreadError otThreadStart(otContext *aContext)
     error = aContext->mThreadNetif.GetMle().Start();
 
 exit:
-    
+
     otLogFuncExitErr(error);
     return error;
 }
@@ -808,15 +809,16 @@ ThreadError otThreadStop(otContext *aContext)
     error = aContext->mThreadNetif.GetMle().Stop();
 
 exit:
-    
+
     otLogFuncExitErr(error);
     return error;
 }
 
-ThreadError otActiveScan(otContext *aContext, uint32_t aScanChannels, uint16_t aScanDuration, otHandleActiveScanResult aCallback)
+ThreadError otActiveScan(otContext *aContext, uint32_t aScanChannels, uint16_t aScanDuration,
+                         otHandleActiveScanResult aCallback)
 {
     return aContext->mThreadNetif.GetMac().ActiveScan(aScanChannels, aScanDuration, &HandleActiveScanResult,
-                                             reinterpret_cast<void *>(aCallback));
+                                                      reinterpret_cast<void *>(aCallback));
 }
 
 bool otActiveScanInProgress(otContext *aContext)
@@ -871,7 +873,7 @@ ThreadError otDiscover(otContext *aContext, uint32_t aScanChannels, uint16_t aSc
                        otHandleActiveScanResult aCallback)
 {
     return aContext->mThreadNetif.GetMle().Discover(aScanChannels, aScanDuration, aPanId, &HandleMleDiscover,
-                                           reinterpret_cast<void *>(aCallback));
+                                                    reinterpret_cast<void *>(aCallback));
 }
 
 void HandleMleDiscover(otActiveScanResult *aResult, void *aContext)
@@ -880,7 +882,8 @@ void HandleMleDiscover(otActiveScanResult *aResult, void *aContext)
     handler(aResult);
 }
 
-void otSetReceiveIp6DatagramCallback(otContext *aContext, otReceiveIp6DatagramCallback aCallback, void *aCallbackContext)
+void otSetReceiveIp6DatagramCallback(otContext *aContext, otReceiveIp6DatagramCallback aCallback,
+                                     void *aCallbackContext)
 {
     Ip6::Ip6::SetReceiveDatagramCallback(aContext, aCallback, aCallbackContext);
 }
@@ -888,14 +891,14 @@ void otSetReceiveIp6DatagramCallback(otContext *aContext, otReceiveIp6DatagramCa
 ThreadError otSendIp6Datagram(otContext *aContext, otMessage aMessage)
 {
     otLogFuncEntry();
-    ThreadError error = 
+    ThreadError error =
         Ip6::Ip6::HandleDatagram(
-            *static_cast<Message *>(aMessage), 
-            NULL, 
+            *static_cast<Message *>(aMessage),
+            NULL,
             (uint8_t)aContext->mThreadNetif.GetInterfaceId(),
-            NULL, 
+            NULL,
             true
-            );
+        );
     otLogFuncExitErr(error);
     return error;
 }

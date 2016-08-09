@@ -77,7 +77,8 @@ typedef struct mbedtls_md_info_t mbedtls_md_info_t;
 /**
  * Generic message digest context.
  */
-typedef struct {
+typedef struct
+{
     /** Information about the associated message digest */
     const mbedtls_md_info_t *md_info;
 
@@ -96,7 +97,7 @@ typedef struct {
  * @{
  *
  */
-    
+
 /**
  * @def MBED_MEMORY_BUF_SIZE
  *
@@ -113,7 +114,7 @@ typedef struct otCryptoContext
     //
     // Variables
     //
-    
+
     bool mIsInitialized;
     unsigned char mMemoryBuf[MBED_MEMORY_BUF_SIZE];
 

@@ -41,7 +41,7 @@ namespace Thread {
 
 Tasklet::Tasklet(otContext *aContext, Handler aHandler, void *aCallbackContext)
 {
-	mContext = aContext;
+    mContext = aContext;
     mHandler = aHandler;
     mCallbackContext = aCallbackContext;
     mNext = NULL;
@@ -55,7 +55,7 @@ ThreadError Tasklet::Post(void)
 ThreadError TaskletScheduler::Post(Tasklet &aTasklet)
 {
     ThreadError error = kThreadError_None;
-	otContext *aContext = aTasklet.mContext;
+    otContext *aContext = aTasklet.mContext;
 
     VerifyOrExit(aContext->mTaskletTail != &aTasklet && aTasklet.mNext == NULL, error = kThreadError_Busy);
 

@@ -117,7 +117,7 @@ Message *Message::New(otContext *aContext, uint8_t aType, uint16_t aReserved)
     message->SetLinkSecurityEnabled(true);
 
     VerifyOrExit(message->SetLength(0) == kThreadError_None, Message::Free(*message));
-    
+
     return message;
 
 exit:
@@ -630,7 +630,7 @@ void Message::SetReserved(uint16_t aReserved)
 }
 
 MessageQueue::MessageQueue(otContext *aContext) :
-	mContext(aContext)
+    mContext(aContext)
 {
     mInterface.mHead = NULL;
     mInterface.mTail = NULL;
@@ -638,7 +638,7 @@ MessageQueue::MessageQueue(otContext *aContext) :
 
 ThreadError MessageQueue::AddToList(int _aList, Message &aMessage)
 {
-	uint8_t aList = (uint8_t)_aList;
+    uint8_t aList = (uint8_t)_aList;
     MessageList *list;
 
     assert(aMessage.GetMessageList(aList).mNext == NULL &&
@@ -664,7 +664,7 @@ ThreadError MessageQueue::AddToList(int _aList, Message &aMessage)
 
 ThreadError MessageQueue::RemoveFromList(int _aList, Message &aMessage)
 {
-	uint8_t aList = (uint8_t)_aList;
+    uint8_t aList = (uint8_t)_aList;
     MessageList *list;
 
     assert(aMessage.GetMessageList(aList).mList != NULL);

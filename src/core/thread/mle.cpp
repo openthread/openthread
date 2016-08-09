@@ -307,15 +307,15 @@ exit:
 }
 
 bool Mle::IsAttached(void) const
-{ 
+{
     return (mDeviceState == kDeviceStateChild ||
             mDeviceState == kDeviceStateRouter ||
             mDeviceState == kDeviceStateLeader);
 }
 
-otContext *Mle::GetOpenThreadContext(void) 
-{ 
-    return mNetif.GetOpenThreadContext(); 
+otContext *Mle::GetOpenThreadContext(void)
+{
+    return mNetif.GetOpenThreadContext();
 }
 
 DeviceState Mle::GetDeviceState(void) const
@@ -605,7 +605,7 @@ ThreadError Mle::AppendHeader(Message &aMessage, Header::Command aCommand)
     Header header;
 
     header.Init();
-    
+
     switch (aCommand)
     {
     case Header::kCommandDiscoveryRequest:
@@ -1277,7 +1277,7 @@ ThreadError Mle::SendMessage(Message &aMessage, const Ip6::Address &aDestination
         tagLength = sizeof(tag);
         aesCcm.Finalize(tag, &tagLength);
         SuccessOrExit(aMessage.Append(tag, tagLength));
-    
+
         mKeyManager.IncrementMleFrameCounter();
     }
 
@@ -1324,7 +1324,7 @@ void Mle::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageIn
 
     aMessage.Read(aMessage.GetOffset(), sizeof(header), &header);
     VerifyOrExit(header.IsValid(),);
-    
+
     if (header.GetSecuritySuite() == 255)
     {
         aMessage.MoveOffset(header.GetLength());
@@ -1467,6 +1467,7 @@ void Mle::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageIn
                 otLogDebgMle("mle frame reject 2\n");
                 goto exit;
             }
+
             neighbor->mKeySequence = keySequence;
             neighbor->mValid.mLinkFrameCounter = 0;
         }
@@ -1638,7 +1639,7 @@ ThreadError Mle::HandleDataResponse(const Message &aMessage, const Ip6::MessageI
     int8_t diff;
 
     otLogInfoMle("Received Data Response\n");
-    
+
     // Leader Data
     SuccessOrExit(error = Tlv::GetTlv(aMessage, Tlv::kLeaderData, sizeof(leaderData), leaderData));
     VerifyOrExit(leaderData.IsValid(), error = kThreadError_Parse);
@@ -1902,7 +1903,7 @@ ThreadError Mle::HandleChildIdResponse(const Message &aMessage, const Ip6::Messa
 
     // Network Data
     SuccessOrExit(error = Tlv::GetTlv(aMessage, Tlv::kNetworkData, sizeof(networkData), networkData));
-    
+
     // Active Timestamp
     if (Tlv::GetTlv(aMessage, Tlv::kActiveTimestamp, sizeof(activeTimestamp), activeTimestamp) == kThreadError_None)
     {
@@ -2341,7 +2342,8 @@ ThreadError Mle::CheckReachability(uint16_t aMeshSource, uint16_t aMeshDest, Ip6
 
     memcpy(&dst, GetMeshLocal16(), kRlocPrefixLength);
     dst.mFields.m16[7] = HostSwap16(aMeshSource);
-    Ip6::Icmp::SendError(mNetif.GetOpenThreadContext(), dst, Ip6::IcmpHeader::kTypeDstUnreach, Ip6::IcmpHeader::kCodeDstUnreachNoRoute, aIp6Header);
+    Ip6::Icmp::SendError(mNetif.GetOpenThreadContext(), dst, Ip6::IcmpHeader::kTypeDstUnreach,
+                         Ip6::IcmpHeader::kCodeDstUnreachNoRoute, aIp6Header);
 
 exit:
     return error;

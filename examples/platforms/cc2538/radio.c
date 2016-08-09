@@ -330,6 +330,7 @@ bool otPlatRadioGetPromiscuous(otContext *aCtx)
 void otPlatRadioSetPromiscuous(otContext *aCtx, bool aEnable)
 {
     (void)aCtx;
+
     if (aEnable)
     {
         HWREG(RFCORE_XREG_FRMFILT0) &= ~RFCORE_XREG_FRMFILT0_FRAME_FILTER_EN;

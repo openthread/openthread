@@ -186,7 +186,7 @@ private:
 
     static void HandleSentFrame(void *aContext, Mac::Frame &aFrame);
     void HandleSentFrame(Mac::Frame &aFrame);
-    
+
     static void HandleDiscoverTimer(void *aContext);
     void HandleDiscoverTimer(void);
     static void HandleReassemblyTimer(void *aContext);
@@ -197,7 +197,7 @@ private:
     static void ScheduleTransmissionTask(void *aContext);
     void ScheduleTransmissionTask(void);
 
-    otContext* mContext;
+    otContext *mContext;
 
     Mac::Receiver mMacReceiver;
     Mac::Sender mMacSender;

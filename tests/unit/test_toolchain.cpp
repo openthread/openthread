@@ -34,13 +34,13 @@
 void test_packed1()
 {
 #ifdef _WIN32
-    OT_TOOL_PACKED_BEGIN 
+    OT_TOOL_PACKED_BEGIN
     typedef struct
     {
         uint8_t  mByte;
         uint32_t mWord;
         uint16_t mShort;
-    } packed_t; 
+    } packed_t;
     OT_TOOL_PACKED_END
 #else
     typedef OT_TOOL_PACKED_BEGIN struct
@@ -57,7 +57,7 @@ void test_packed1()
 void test_packed2()
 {
 #ifdef _WIN32
-    OT_TOOL_PACKED_BEGIN 
+    OT_TOOL_PACKED_BEGIN
     typedef struct
     {
         uint8_t mBytes[3];
@@ -81,9 +81,9 @@ void test_packed_union()
     {
         uint16_t mField;
     } nested_t;
-    
+
 #ifdef _WIN32
-    OT_TOOL_PACKED_BEGIN 
+    OT_TOOL_PACKED_BEGIN
     typedef struct
     {
         uint8_t mBytes[3];

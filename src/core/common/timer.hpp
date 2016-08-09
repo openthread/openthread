@@ -219,7 +219,7 @@ public:
 
 private:
     void Fired(void) { mHandler(mCallbackContext); }
-    
+
     otContext *mContext;  ///< A pointer to the OpenThread context.
     Handler    mHandler;  ///< A pointer to the function that is called when the timer expires.
     void      *mCallbackContext;  ///< A pointer to arbitrary context information.

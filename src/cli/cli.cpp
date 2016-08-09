@@ -381,7 +381,8 @@ void Interpreter::ProcessDiscover(int argc, char *argv[])
         scanChannels = 1 << value;
     }
 
-    SuccessOrExit(error = otDiscover(mContext, scanChannels, 0, OT_PANID_BROADCAST, &Interpreter::s_HandleActiveScanResult));
+    SuccessOrExit(error = otDiscover(mContext, scanChannels, 0, OT_PANID_BROADCAST,
+                                     &Interpreter::s_HandleActiveScanResult));
     sServer->OutputFormat("| J | Network Name     | Extended PAN     | PAN  | MAC Address      | Ch | dBm | LQI |\r\n");
     sServer->OutputFormat("+---+------------------+------------------+------+------------------+----+-----+-----+\r\n");
 
@@ -781,7 +782,7 @@ exit:
 
 void Interpreter::s_HandleEchoResponse(void *aContext, Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
-    Interpreter *pThis = (Interpreter*)aContext;
+    Interpreter *pThis = (Interpreter *)aContext;
 
     pThis->HandleEchoResponse(aMessage, aMessageInfo);
 }
@@ -867,7 +868,7 @@ exit:
 
 void Interpreter::s_HandlePingTimer(void *aContext)
 {
-    Interpreter *pThis = (Interpreter*)aContext;
+    Interpreter *pThis = (Interpreter *)aContext;
 
     pThis->HandlePingTimer();
 }
@@ -912,7 +913,7 @@ ThreadError Interpreter::ProcessPrefixAdd(int argc, char *argv[])
     {
         ExitNow(error = kThreadError_Parse);
     }
-    
+
     argcur++;
 
     for (; argcur < argc; argcur++)
@@ -1083,7 +1084,7 @@ ThreadError Interpreter::ProcessRouteAdd(int argc, char *argv[])
     {
         ExitNow(error = kThreadError_Parse);
     }
-    
+
     argcur++;
 
     for (; argcur < argc; argcur++)
@@ -1092,7 +1093,7 @@ ThreadError Interpreter::ProcessRouteAdd(int argc, char *argv[])
         {
             config.mStable = true;
         }
-        
+
         if (strcmp(argv[argcur], "high") == 0)
         {
             config.mPreference = 1;

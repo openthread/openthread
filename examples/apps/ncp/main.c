@@ -32,14 +32,14 @@
 #include <ncp/ncp.h>
 #include <platform.h>
 
-void otSignalTaskletPending(otContext* aCtx)
+void otSignalTaskletPending(otContext *aCtx)
 {
     (void)aCtx;
 }
 
 int main(int argc, char *argv[])
 {
-    otContext* sContext;
+    otContext *sContext;
     uint8_t otContextBuffer[OT_CONTEXT_SIZE];
     uint64_t otContextBufferLength = sizeof(otContextBuffer);
 

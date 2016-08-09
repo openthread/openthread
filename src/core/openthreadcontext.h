@@ -48,7 +48,7 @@
 #ifndef C_ASSERT
 #define C_ASSERT(e) typedef char __C_ASSERT__[(e)?1:-1]
 #endif
-    
+
 /**
  * This type represents all the static / global variables used by OpenThread allocated in one place.
  */
@@ -59,12 +59,12 @@ typedef struct otContext
     //
     Thread::Ip6::NetifCallback mNetifCallback;
     otReceiveIp6DatagramCallback mReceiveIp6DatagramCallback;
-    void* mReceiveIp6DatagramCallbackContext;
+    void *mReceiveIp6DatagramCallbackContext;
 
     //
     // Variables
     //
-    
+
     uint16_t mEphemeralPort;
 
     Thread::Ip6::IcmpHandler *mIcmpHandlers;
@@ -93,7 +93,7 @@ typedef struct otContext
     Thread::Ip6::UdpSocket *mUdpSockets;
 
     otCryptoContext mCryptoContext;
-    
+
     Thread::LinkQualityInfo mNoiseFloorAverage;  // Store the noise floor average.
 
     bool mEnabled;

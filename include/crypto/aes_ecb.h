@@ -74,7 +74,8 @@ void otCryptoAesEcbSetKey(otCryptoContext *aCryptoContext, const void *aKey, uin
  * @param[out]  aOutput  A pointer to the output.
  *
  */
-void otCryptoAesEcbEncrypt(otCryptoContext *aCryptoContext, const uint8_t aInput[otAesBlockSize], uint8_t aOutput[otAesBlockSize]);
+void otCryptoAesEcbEncrypt(otCryptoContext *aCryptoContext, const uint8_t aInput[otAesBlockSize],
+                           uint8_t aOutput[otAesBlockSize]);
 
 /**
  * @}

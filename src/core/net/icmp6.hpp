@@ -246,7 +246,8 @@ public:
      * @retval kThreadError_NoBufs  Insufficient buffers available to generate an ICMPv6 Echo Request message.
      *
      */
-    ThreadError SendEchoRequest(otContext *aContext, const SockAddr &aDestination, const void *aPayload, uint16_t aPayloadLength);
+    ThreadError SendEchoRequest(otContext *aContext, const SockAddr &aDestination, const void *aPayload,
+                                uint16_t aPayloadLength);
 
 private:
     void HandleEchoReply(Message &message, const MessageInfo &messageInfo) {
@@ -381,8 +382,8 @@ public:
     static void SetEchoEnabled(otContext *aContext, bool aEnabled);
 
 private:
-    static ThreadError HandleDstUnreach(Message &aMessage, const MessageInfo &aMessageInfo, 
-                                       const IcmpHeader &aIcmpHeader);
+    static ThreadError HandleDstUnreach(Message &aMessage, const MessageInfo &aMessageInfo,
+                                        const IcmpHeader &aIcmpHeader);
     static ThreadError HandleEchoRequest(Message &aMessage, const MessageInfo &aMessageInfo);
     static ThreadError HandleEchoReply(Message &aMessage, const MessageInfo &aMessageInfo,
                                        const IcmpHeader &aIcmpHeader);

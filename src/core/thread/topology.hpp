@@ -80,7 +80,7 @@ public:
         kStateLinkRequest,               ///< Sent a MLE Link Request message
         kStateValid,                     ///< Link is valid
     };
-    
+
 #if _WIN32
     uint8_t         mState : 3;          ///< The link state
 #else

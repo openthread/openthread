@@ -94,7 +94,7 @@ struct MessageListEntry
 struct BufferHeader
 {
     class Buffer *mNext;  ///< A pointer to the next Message buffer.
-    otContext* mContext;  ///< A pointer to the OpenThread context.
+    otContext *mContext;  ///< A pointer to the OpenThread context.
 };
 
 /**
@@ -188,7 +188,7 @@ private:
         kBufferDataSize = kBufferSize - sizeof(struct BufferHeader),
         kHeadBufferDataSize = kBufferDataSize - sizeof(struct MessageInfo),
     };
-    
+
     struct BufferHeader mHeader;
     union
     {
@@ -672,8 +672,8 @@ private:
      *
      */
     static ThreadError RemoveFromList(int aListId, Message &aMessage);
-    
-    otContext* mContext;      ///< A pointer to the OpenThread context.
+
+    otContext *mContext;      ///< A pointer to the OpenThread context.
     MessageList mInterface;   ///< The instance-specific message list.
 };
 

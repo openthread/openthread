@@ -87,8 +87,8 @@ private:
      *
      */
     void RunTask(void) { mHandler(mCallbackContext); }
-	
-	otContext *mContext;          ///< A pointer to the OpenThread context.
+
+    otContext *mContext;          ///< A pointer to the OpenThread context.
     Handler    mHandler;          ///< A pointer to a function that is called when the tasklet is run.
     void      *mCallbackContext;  ///< A pointer to arbitrary context information.
     Tasklet   *mNext;             ///< A pointer to the next tasklet in the run queue.

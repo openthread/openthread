@@ -126,8 +126,8 @@ public:
     bool IsValid(void) const {
         return (mSecuritySuite == 255) ||
                (mSecuritySuite == 0 &&
-               (mSecurityControl == (Mac::Frame::kKeyIdMode1 | Mac::Frame::kSecEncMic32) ||
-                mSecurityControl == (Mac::Frame::kKeyIdMode2 | Mac::Frame::kSecEncMic32)));
+                (mSecurityControl == (Mac::Frame::kKeyIdMode1 | Mac::Frame::kSecEncMic32) ||
+                 mSecurityControl == (Mac::Frame::kKeyIdMode2 | Mac::Frame::kSecEncMic32)));
     }
 
     /**
@@ -142,7 +142,7 @@ public:
         if (mSecuritySuite == 0) {
             rval += sizeof(mSecurityControl) + sizeof(mFrameCounter) + (IsKeyIdMode1() ? 1 : 5);
         }
-        
+
         return rval;
     }
 
@@ -663,7 +663,7 @@ public:
      *
      */
     static bool IsActiveRouter(uint16_t aRloc16) { return GetChildId(aRloc16) == 0; }
-    
+
     /**
      * This method returns a pointer to the OpenThread context.
      *
@@ -1125,7 +1125,7 @@ private:
 
     Ip6::UdpSocket mSocket;
     uint32_t mTimeout;
-    
+
     DiscoverHandler mDiscoverHandler;
     void *mDiscoverContext;
 

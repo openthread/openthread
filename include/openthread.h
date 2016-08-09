@@ -156,7 +156,7 @@ extern void otSignalTaskletPending(otContext *aContext);
  * @retval kThreadError_None  Successfully enabled the Thread interface.
  *
  */
-otContext* otEnable(void *aContextBuffer, uint64_t *aContextBufferSize);
+otContext *otEnable(void *aContextBuffer, uint64_t *aContextBufferSize);
 
 /**
  * This function disables the OpenThread library.
@@ -240,7 +240,8 @@ typedef void (*otHandleActiveScanResult)(otActiveScanResult *aResult);
  * @retval kThreadError_Busy  Already performing an Active Scan.
  *
  */
-ThreadError otActiveScan(otContext *aContext, uint32_t aScanChannels, uint16_t aScanDuration, otHandleActiveScanResult aCallback);
+ThreadError otActiveScan(otContext *aContext, uint32_t aScanChannels, uint16_t aScanDuration,
+                         otHandleActiveScanResult aCallback);
 
 /**
  * This function determines if an IEEE 802.15.4 Active Scan is currently in progress.
@@ -1426,7 +1427,8 @@ typedef void (*otReceiveIp6DatagramCallback)(otMessage aMessage, void *aContext)
  *                        the callback.
  *
  */
-void otSetReceiveIp6DatagramCallback(otContext *aContext, otReceiveIp6DatagramCallback aCallback, void *aCallbackContext);
+void otSetReceiveIp6DatagramCallback(otContext *aContext, otReceiveIp6DatagramCallback aCallback,
+                                     void *aCallbackContext);
 
 /**
  * Allocate a new message buffer for sending an IPv6 message.

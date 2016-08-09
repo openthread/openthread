@@ -120,7 +120,7 @@ extern "C" {
 #else
 #define otLogDebg(aRegion, aFormat, ...)
 #endif
-    
+
 #ifndef WINDOWS_LOGGING
 
 /**

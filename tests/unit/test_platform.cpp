@@ -54,115 +54,114 @@ uint32_t sPlatDt;
 bool     sTimerOn;
 uint32_t sCallCount[kCallCountIndexMax];
 
-extern "C" 
-{
-    
-void otSignalTaskletPending(otContext *)
-{
-}
+extern "C" {
 
-//
-// Alarm
-//
+    void otSignalTaskletPending(otContext *)
+    {
+    }
 
-void otPlatAlarmStop(otContext *)
-{
-    sTimerOn = false;
-    sCallCount[kCallCountIndexAlarmStop]++;
-}
+    //
+    // Alarm
+    //
 
-void otPlatAlarmStartAt(otContext *, uint32_t aT0, uint32_t aDt)
-{
-    sTimerOn = true;
-    sCallCount[kCallCountIndexAlarmStart]++;
-    sPlatT0 = aT0;
-    sPlatDt = aDt;
-}
+    void otPlatAlarmStop(otContext *)
+    {
+        sTimerOn = false;
+        sCallCount[kCallCountIndexAlarmStop]++;
+    }
 
-uint32_t otPlatAlarmGetNow(void)
-{
-    return sNow;
-}
+    void otPlatAlarmStartAt(otContext *, uint32_t aT0, uint32_t aDt)
+    {
+        sTimerOn = true;
+        sCallCount[kCallCountIndexAlarmStart]++;
+        sPlatT0 = aT0;
+        sPlatDt = aDt;
+    }
 
-//
-// Radio
-//
+    uint32_t otPlatAlarmGetNow(void)
+    {
+        return sNow;
+    }
 
-ThreadError otPlatRadioSetPanId(otContext *, uint16_t)
-{
-    return kThreadError_None;
-}
+    //
+    // Radio
+    //
 
-ThreadError otPlatRadioSetExtendedAddress(otContext *, uint8_t *)
-{
-    return kThreadError_None;
-}
+    ThreadError otPlatRadioSetPanId(otContext *, uint16_t)
+    {
+        return kThreadError_None;
+    }
 
-ThreadError otPlatRadioSetShortAddress(otContext *, uint16_t)
-{
-    return kThreadError_None;
-}
+    ThreadError otPlatRadioSetExtendedAddress(otContext *, uint8_t *)
+    {
+        return kThreadError_None;
+    }
 
-void otPlatRadioSetPromiscuous(otContext *, bool)
-{
-}
+    ThreadError otPlatRadioSetShortAddress(otContext *, uint16_t)
+    {
+        return kThreadError_None;
+    }
 
-ThreadError otPlatRadioEnable(otContext *)
-{
-    return kThreadError_None;
-}
+    void otPlatRadioSetPromiscuous(otContext *, bool)
+    {
+    }
 
-ThreadError otPlatRadioDisable(otContext *)
-{
-    return kThreadError_None;
-}
+    ThreadError otPlatRadioEnable(otContext *)
+    {
+        return kThreadError_None;
+    }
 
-ThreadError otPlatRadioSleep(otContext *)
-{
-    return kThreadError_None;
-}
+    ThreadError otPlatRadioDisable(otContext *)
+    {
+        return kThreadError_None;
+    }
 
-ThreadError otPlatRadioReceive(otContext *, uint8_t)
-{
-    return kThreadError_None;
-}
+    ThreadError otPlatRadioSleep(otContext *)
+    {
+        return kThreadError_None;
+    }
 
-ThreadError otPlatRadioTransmit(otContext *)
-{
-    return kThreadError_None;
-}
+    ThreadError otPlatRadioReceive(otContext *, uint8_t)
+    {
+        return kThreadError_None;
+    }
 
-RadioPacket *otPlatRadioGetTransmitBuffer(otContext *)
-{
-    return (RadioPacket*)0;
-}
+    ThreadError otPlatRadioTransmit(otContext *)
+    {
+        return kThreadError_None;
+    }
 
-int8_t otPlatRadioGetNoiseFloor(otContext *)
-{
-    return 0;
-}
+    RadioPacket *otPlatRadioGetTransmitBuffer(otContext *)
+    {
+        return (RadioPacket *)0;
+    }
 
-otRadioCaps otPlatRadioGetCaps(otContext *)
-{
-    return kRadioCapsNone;
-}
+    int8_t otPlatRadioGetNoiseFloor(otContext *)
+    {
+        return 0;
+    }
 
-bool otPlatRadioGetPromiscuous(otContext *)
-{
-    return false;
-}
+    otRadioCaps otPlatRadioGetCaps(otContext *)
+    {
+        return kRadioCapsNone;
+    }
 
-//
-// Random
-//
+    bool otPlatRadioGetPromiscuous(otContext *)
+    {
+        return false;
+    }
 
-uint32_t otPlatRandomGet(void)
-{
+    //
+    // Random
+    //
+
+    uint32_t otPlatRandomGet(void)
+    {
 #if _WIN32
-    return (uint32_t)rand();
+        return (uint32_t)rand();
 #else
-    return (uint32_t)random();
+        return (uint32_t)random();
 #endif
-}
+    }
 
 } // extern "C"

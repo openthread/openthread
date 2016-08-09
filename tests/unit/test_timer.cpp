@@ -303,7 +303,7 @@ int TestTenTimers(void)
         11,
         11
     };
-    
+
     otContext sContext;
 
     uint32_t timerContextHandleCounter[kNumTimers] = {0};

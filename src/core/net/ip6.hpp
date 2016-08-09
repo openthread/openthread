@@ -587,7 +587,8 @@ public:
      *                        disable the callback.
      *
      */
-    static void SetReceiveDatagramCallback(otContext *aContext, otReceiveIp6DatagramCallback aCallback, void *aCallbackContext);
+    static void SetReceiveDatagramCallback(otContext *aContext, otReceiveIp6DatagramCallback aCallback,
+                                           void *aCallbackContext);
 
 private:
     static void ProcessReceiveCallback(Message &aMessage);

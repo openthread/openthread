@@ -74,7 +74,7 @@ enum
     kMaxCSMABackoffs      = 4,                     ///< macMaxCSMABackoffs (IEEE 802.15.4-2006)
     kMaxFrameRetries      = 15,                    ///< macMaxFrameRetries (IEEE 802.15.4-2006)
     kUnitBackoffPeriod    = 20,                    ///< Number of symbols (IEEE 802.15.4-2006)
-    
+
 #ifdef OPEN_THREAD_MAC_NO_MIN_BACKOFF
     kMinBackoff           = 0,                     ///< Minimum backoff (milliseconds).
 #else

@@ -83,7 +83,7 @@ exit:
 ThreadError KeyManager::ComputeKey(uint32_t aKeySequence, uint8_t *aKey)
 {
     uint8_t keySequenceBytes[4];
-    otCryptoContext* aCryptoContext = &mNetif.GetOpenThreadContext()->mCryptoContext;
+    otCryptoContext *aCryptoContext = &mNetif.GetOpenThreadContext()->mCryptoContext;
 
     otCryptoHmacSha256Start(aCryptoContext, mMasterKey, mMasterKeyLength);
 

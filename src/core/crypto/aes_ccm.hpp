@@ -58,7 +58,7 @@ namespace Crypto {
 class AesCcm
 {
 public:
-    
+
     /**
      * Constructor.
      *

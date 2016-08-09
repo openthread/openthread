@@ -96,7 +96,8 @@ uint16_t Ip6::ComputePseudoheaderChecksum(const Address &src, const Address &dst
     return checksum;
 }
 
-void Ip6::SetReceiveDatagramCallback(otContext *aContext, otReceiveIp6DatagramCallback aCallback, void *aCallbackContext)
+void Ip6::SetReceiveDatagramCallback(otContext *aContext, otReceiveIp6DatagramCallback aCallback,
+                                     void *aCallbackContext)
 {
     aContext->mReceiveIp6DatagramCallback = aCallback;
     aContext->mReceiveIp6DatagramCallbackContext = aCallbackContext;
@@ -134,7 +135,8 @@ ThreadError Ip6::SendDatagram(Message &message, MessageInfo &messageInfo, IpProt
 
     if (messageInfo.GetSockAddr().IsUnspecified())
     {
-        VerifyOrExit((source = Netif::SelectSourceAddress(message.GetOpenThreadContext(), messageInfo)) != NULL, error = kThreadError_Error);
+        VerifyOrExit((source = Netif::SelectSourceAddress(message.GetOpenThreadContext(), messageInfo)) != NULL,
+                     error = kThreadError_Error);
         header.SetSource(source->GetAddress());
     }
     else
@@ -472,7 +474,8 @@ ThreadError ForwardMessage(Message &message, MessageInfo &messageInfo)
         // on-link global address
         ;
     }
-    else if ((interfaceId = Routes::Lookup(message.GetOpenThreadContext(), messageInfo.GetPeerAddr(), messageInfo.GetSockAddr())) > 0)
+    else if ((interfaceId = Routes::Lookup(message.GetOpenThreadContext(), messageInfo.GetPeerAddr(),
+                                           messageInfo.GetSockAddr())) > 0)
     {
         // route
         ;
@@ -484,7 +487,8 @@ ThreadError ForwardMessage(Message &message, MessageInfo &messageInfo)
     }
 
     // submit message to interface
-    VerifyOrExit((netif = Netif::GetNetifById(message.GetOpenThreadContext(), (uint8_t)interfaceId)) != NULL, error = kThreadError_NoRoute);
+    VerifyOrExit((netif = Netif::GetNetifById(message.GetOpenThreadContext(), (uint8_t)interfaceId)) != NULL,
+                 error = kThreadError_NoRoute);
     SuccessOrExit(error = netif->SendMessage(message));
 
 exit:

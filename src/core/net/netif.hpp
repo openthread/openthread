@@ -223,7 +223,7 @@ public:
      * @returns A pointer to the next network interface.
      */
     Netif *GetNext(void) const;
-    
+
     /**
      * This method returns a pointer to the OpenThread context.
      *

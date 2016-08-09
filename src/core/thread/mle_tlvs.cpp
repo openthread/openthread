@@ -37,7 +37,7 @@
 
 namespace Thread {
 namespace Mle {
-    
+
 ThreadError Tlv::GetTlv(const Message &aMessage, Type aType, uint16_t aMaxLength, Tlv &aTlv)
 {
     ThreadError error = kThreadError_Parse;
