@@ -135,6 +135,6 @@ void otPlatLog(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aFormat
     VerifyOrExit(charsWritten >= 0, logString[index] = 0);
 
 exit:
-    fprintf(stderr, "%s\r\n", logString);
+    fprintf(stderr, "%s\r", logString);
 }
 
