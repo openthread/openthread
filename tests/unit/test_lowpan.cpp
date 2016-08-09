@@ -41,20 +41,6 @@ using namespace Thread;
 
 namespace Thread {
 
-extern "C" void otSignalTaskletPending(otContext *)
-{
-}
-
-extern "C" void otPlatUartSendDone(void)
-{
-}
-
-extern "C" void otPlatUartReceived(const uint8_t *aBuf, uint16_t aBufLength)
-{
-    (void)aBuf;
-    (void)aBufLength;
-}
-
 otContext sContext;
 Lowpan::Lowpan sMockLowpan(sContext.mThreadNetif);
 

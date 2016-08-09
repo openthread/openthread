@@ -112,8 +112,9 @@
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>$(SolutionDir).bin\$(Platform)\$(Configuration)\lib\core.lib;$(SolutionDir).bin\$(Platform)\$(Configuration)\lib\mbedtls.lib;$(SolutionDir).bin\$(Platform)\$(Configuration)\lib\platform-windows.lib;$(SolutionDir).bin\$(Platform)\$(Configuration)\lib\ncp_uart.lib;ws2_32.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <ForceFileOutput>MultiplyDefinedSymbolOnly</ForceFileOutput>
+      <AdditionalDependencies>$(SolutionDir).bin\$(Platform)\$(Configuration)\lib\core.lib;$(SolutionDir).bin\$(Platform)\$(Configuration)\lib\mbedtls.lib;$(SolutionDir).bin\$(Platform)\$(Configuration)\lib\ncp_uart.lib;ws2_32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <ForceFileOutput>
+      </ForceFileOutput>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -151,13 +152,13 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>$(SolutionDir).bin\$(Platform)\$(Configuration)\lib\core.lib;$(SolutionDir).bin\$(Platform)\$(Configuration)\lib\mbedtls.lib;$(SolutionDir).bin\$(Platform)\$(Configuration)\lib\platform-windows.lib;$(SolutionDir).bin\$(Platform)\$(Configuration)\lib\ncp_uart.lib;ws2_32.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <ForceFileOutput>MultiplyDefinedSymbolOnly</ForceFileOutput>
+      <AdditionalDependencies>$(SolutionDir).bin\$(Platform)\$(Configuration)\lib\core.lib;$(SolutionDir).bin\$(Platform)\$(Configuration)\lib\mbedtls.lib;$(SolutionDir).bin\$(Platform)\$(Configuration)\lib\ncp_uart.lib;ws2_32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <ForceFileOutput>
+      </ForceFileOutput>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="test_toolchain.cpp" />
-    <ClCompile Include="test_util.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

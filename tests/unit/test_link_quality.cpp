@@ -36,19 +36,6 @@
 
 namespace Thread {
 
-extern "C" void otPlatReset(void)
-{
-}
-
-extern "C" otPlatResetReason otPlatGetResetReason(void)
-{
-    return kPlatResetReason_PowerOn;
-}
-
-extern"C" void otSignalTaskletPending(otContext *)
-{
-}
-
 enum
 {
     kMaxRssValue        = 0,

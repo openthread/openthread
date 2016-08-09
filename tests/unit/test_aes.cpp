@@ -33,19 +33,6 @@
 #include <crypto/aes_ccm.hpp>
 #include <string.h>
 
-extern "C" void otPlatReset(void)
-{
-}
-
-extern "C" otPlatResetReason otPlatGetResetReason(void)
-{
-    return kPlatResetReason_PowerOn;
-}
-
-extern"C" void otSignalTaskletPending(otContext *)
-{
-}
-
 /**
  * Verifies test vectors from IEEE 802.15.4-2006 Annex C Section C.2.1
  */

@@ -34,19 +34,6 @@
 
 #include <crypto/hmac_sha256.h>
 
-extern "C" void otPlatReset(void)
-{
-}
-
-extern "C" otPlatResetReason otPlatGetResetReason(void)
-{
-    return kPlatResetReason_PowerOn;
-}
-
-extern"C" void otSignalTaskletPending(otContext *)
-{
-}
-
 void TestHmacSha256(void)
 {
     static const struct

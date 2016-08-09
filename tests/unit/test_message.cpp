@@ -38,19 +38,6 @@
 #define random rand
 #endif
 
-extern "C" void otPlatReset(void)
-{
-}
-
-extern "C" otPlatResetReason otPlatGetResetReason(void)
-{
-    return kPlatResetReason_PowerOn;
-}
-
-extern"C" void otSignalTaskletPending(otContext *)
-{
-}
-
 void TestMessage(void)
 {
     otContext sContext;

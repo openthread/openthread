@@ -36,21 +36,6 @@
 
 namespace Thread {
 
-extern "C" void otPlatReset(void)
-{
-}
-
-extern "C" otPlatResetReason otPlatGetResetReason(void)
-{
-    return kPlatResetReason_PowerOn;
-}
-
-// This module implements unit-test for NcpFrameBuffer class.
-
-extern"C" void otSignalTaskletPending(otContext *)
-{
-}
-
 enum
 {
     kTestBufferSize = 101,         // Size of backed buffer for NcpFrameBuffer.
