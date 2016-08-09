@@ -200,6 +200,7 @@ ThreadError AddressResolver::SendAddressQuery(const Ip6::Address &aEid)
     memset(&messageInfo, 0, sizeof(messageInfo));
     messageInfo.GetPeerAddr().mFields.m16[0] = HostSwap16(0xff03);
     messageInfo.GetPeerAddr().mFields.m16[7] = HostSwap16(0x0002);
+    messageInfo.GetSockAddr() = *mMle.GetMeshLocal16();
     messageInfo.mPeerPort = kCoapUdpPort;
     messageInfo.mInterfaceId = mNetif.GetInterfaceId();
 
@@ -584,6 +585,7 @@ void AddressResolver::SendAddressQueryResponse(const ThreadTargetTlv &aTargetTlv
 
     memset(&messageInfo, 0, sizeof(messageInfo));
     memcpy(&messageInfo.GetPeerAddr(), &aDestination, sizeof(messageInfo.GetPeerAddr()));
+    messageInfo.GetSockAddr() = *mMle.GetMeshLocal16();
     messageInfo.mPeerPort = kCoapUdpPort;
 
     SuccessOrExit(error = mSocket.SendTo(*message, messageInfo));
