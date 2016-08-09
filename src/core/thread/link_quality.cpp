@@ -37,6 +37,11 @@
 #include <openthread-types.h>
 #include <common/code_utils.hpp>
 #include <thread/link_quality.hpp>
+#include <openthreadcontext.h>
+
+#ifdef OPEN_THREAD_DRIVER
+#define snprintf sprintf_s
+#endif
 
 namespace Thread {
 
@@ -54,8 +59,6 @@ static const char *const kLinkQualityDecimalDigitsString[8] =
 
 const char LinkQualityInfo::kUnknownRssString[] = "Unknown RSS";
 
-static LinkQualityInfo sNoiseFloorAverage;  // Store the noise floor average.
-
 //-------------------------------------------------------------------------------
 
 LinkQualityInfo::LinkQualityInfo(void)
@@ -70,7 +73,7 @@ void LinkQualityInfo::Clear(void)
     mLinkQuality = 0;
 }
 
-void LinkQualityInfo::AddRss(int8_t anRss)
+void LinkQualityInfo::AddRss(otContext *aContext, int8_t anRss)
 {
     uint16_t    newValue;
     uint16_t    oldAverage;
@@ -114,7 +117,7 @@ void LinkQualityInfo::AddRss(int8_t anRss)
         mCount++;
     }
 
-    UpdateLinkQuality();
+    UpdateLinkQuality(aContext);
 }
 
 int8_t LinkQualityInfo::GetAverageRss(void) const
@@ -123,7 +126,7 @@ int8_t LinkQualityInfo::GetAverageRss(void) const
 
     if (mCount != 0)
     {
-        average = -(static_cast<int16_t>(mRssAverage >> kRssAveragePrecisionMultipleBitShift));
+        average = -(static_cast<uint8_t>(mRssAverage >> kRssAveragePrecisionMultipleBitShift));
 
         // Check for round up (e.g. average of -71.5 --> -72)
 
@@ -141,7 +144,7 @@ uint16_t LinkQualityInfo::GetAverageRssAsEncodedWord(void) const
     return mRssAverage;
 }
 
-ThreadError LinkQualityInfo::GetAverageRssAsString(char *aCharBuffer, size_t aBufferLen) const
+ThreadError LinkQualityInfo::GetAverageRssAsString(char *aCharBuffer, uint32_t aBufferLen) const
 {
     ThreadError error = kThreadError_None;
     int charsWritten = 0;
@@ -150,7 +153,11 @@ ThreadError LinkQualityInfo::GetAverageRssAsString(char *aCharBuffer, size_t aBu
     {
         VerifyOrExit(aBufferLen >= sizeof(kUnknownRssString), error = kThreadError_NoBufs);
 
+#if defined(_WIN32)
+        strncpy_s(aCharBuffer, aBufferLen, kUnknownRssString, aBufferLen);
+#else
         strncpy(aCharBuffer, kUnknownRssString, aBufferLen);
+#endif
     }
     else
     {
@@ -167,33 +174,33 @@ exit:
     return error;
 }
 
-uint8_t LinkQualityInfo::GetLinkMargin(void) const
+uint8_t LinkQualityInfo::GetLinkMargin(otContext *aContext) const
 {
-    return ConvertRssToLinkMargin(GetAverageRss());
+    return ConvertRssToLinkMargin(aContext, GetAverageRss());
 }
 
-uint8_t LinkQualityInfo::GetLinkQuality(void)
+uint8_t LinkQualityInfo::GetLinkQuality(otContext *aContext)
 {
-    UpdateLinkQuality();
+    UpdateLinkQuality(aContext);
 
     return mLinkQuality;
 }
 
-void LinkQualityInfo::UpdateLinkQuality(void)
+void LinkQualityInfo::UpdateLinkQuality(otContext *aContext)
 {
     if (mCount != 0)
     {
-        mLinkQuality = CalculateLinkQuality(GetLinkMargin(), mLinkQuality);
+        mLinkQuality = CalculateLinkQuality(GetLinkMargin(aContext), mLinkQuality);
     }
     else
     {
-        mLinkQuality = CalculateLinkQuality(GetLinkMargin(), kNoLastLinkQualityValue);
+        mLinkQuality = CalculateLinkQuality(GetLinkMargin(aContext), kNoLastLinkQualityValue);
     }
 }
 
-uint8_t LinkQualityInfo::ConvertRssToLinkMargin(int8_t anRss)
+uint8_t LinkQualityInfo::ConvertRssToLinkMargin(otContext *aContext, int8_t anRss)
 {
-    int8_t linkMargin = anRss - GetAverageNoiseFloor();
+    int8_t linkMargin = anRss - GetAverageNoiseFloor(aContext);
 
     if (linkMargin < 0 || anRss == kUnknownRss)
     {
@@ -208,9 +215,9 @@ uint8_t LinkQualityInfo::ConvertLinkMarginToLinkQuality(uint8_t aLinkMargin)
     return CalculateLinkQuality(aLinkMargin, kNoLastLinkQualityValue);
 }
 
-uint8_t LinkQualityInfo::ConvertRssToLinkQuality(int8_t anRss)
+uint8_t LinkQualityInfo::ConvertRssToLinkQuality(otContext *aContext, int8_t anRss)
 {
-    return ConvertLinkMarginToLinkQuality(ConvertRssToLinkMargin(anRss));
+    return ConvertLinkMarginToLinkQuality(ConvertRssToLinkMargin(aContext, anRss));
 }
 
 uint8_t LinkQualityInfo::CalculateLinkQuality(uint8_t aLinkMargin, uint8_t aLastLinkQuality)
@@ -261,9 +268,9 @@ uint8_t LinkQualityInfo::CalculateLinkQuality(uint8_t aLinkMargin, uint8_t aLast
     return linkQuality;
 }
 
-int8_t GetAverageNoiseFloor(void)
+int8_t GetAverageNoiseFloor(otContext *aContext)
 {
-    int8_t averageNoiseFloor = sNoiseFloorAverage.GetAverageRss();
+    int8_t averageNoiseFloor = aContext->mNoiseFloorAverage.GetAverageRss();
 
     if (averageNoiseFloor == LinkQualityInfo::kUnknownRss)
     {
@@ -273,14 +280,14 @@ int8_t GetAverageNoiseFloor(void)
     return averageNoiseFloor;
 }
 
-void AddNoiseFloor(int8_t aNoiseFloor)
+void AddNoiseFloor(otContext *aContext, int8_t aNoiseFloor)
 {
-    sNoiseFloorAverage.AddRss(aNoiseFloor);
+    aContext->mNoiseFloorAverage.AddRss(aContext, aNoiseFloor);
 }
 
-void ClearNoiseFloorAverage(void)
+void ClearNoiseFloorAverage(otContext *aContext)
 {
-    sNoiseFloorAverage.Clear();
+    aContext->mNoiseFloorAverage.Clear();
 }
 
 }  // namespace Thread

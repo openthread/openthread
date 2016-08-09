@@ -34,7 +34,9 @@
 #ifndef NETWORK_DATA_LEADER_HPP_
 #define NETWORK_DATA_LEADER_HPP_
 
+#ifndef OPEN_THREAD_DRIVER
 #include <stdint.h>
+#endif
 
 #include <coap/coap_server.hpp>
 #include <common/timer.hpp>

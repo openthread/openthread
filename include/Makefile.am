@@ -56,6 +56,7 @@ PRETTY_SUBDIRS                          = \
     $(NULL)
 
 include_HEADERS                         = \
+    cryptocontext.h                       \
     openthread.h                          \
     openthread-types.h                    \
     $(NULL)

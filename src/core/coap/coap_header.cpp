@@ -147,8 +147,8 @@ ThreadError Header::FromMessage(const Message &aMessage)
 
         VerifyOrExit(optionLength <= length, error = kThreadError_Parse);
         aMessage.Read(offset, optionLength, mHeader + mHeaderLength);
-        mHeaderLength += optionLength;
-        offset += optionLength;
+        mHeaderLength += (uint8_t)optionLength;
+        offset += (uint8_t)optionLength;
         length -= optionLength;
     }
 
@@ -165,42 +165,42 @@ ThreadError Header::AppendOption(const Option &aOption)
 
     if (optionDelta < kOption1ByteExtensionOffset)
     {
-        *buf = optionDelta << Option::kOptionDeltaOffset;
+        *buf = (uint8_t)(optionDelta << Option::kOptionDeltaOffset);
     }
     else if (optionDelta < kOption2ByteExtensionOffset)
     {
-        *buf |= kOption1ByteExtension << Option::kOptionDeltaOffset;
-        *cur++ = optionDelta - kOption1ByteExtensionOffset;
+        *buf |= (uint8_t)(kOption1ByteExtension << Option::kOptionDeltaOffset);
+        *cur++ = (uint8_t)(optionDelta - kOption1ByteExtensionOffset);
     }
     else
     {
-        *buf |= kOption2ByteExtension << Option::kOptionDeltaOffset;
+        *buf |= (uint8_t)(kOption2ByteExtension << Option::kOptionDeltaOffset);
         optionDelta -= kOption2ByteExtensionOffset;
-        *cur++ = optionDelta >> 8;
-        *cur++ = optionDelta;
+        *cur++ = (uint8_t)(optionDelta >> 8);
+        *cur++ = (uint8_t)optionDelta;
     }
 
     if (aOption.mLength < kOption1ByteExtensionOffset)
     {
-        *buf |= aOption.mLength;
+        *buf |= (uint8_t)aOption.mLength;
     }
     else if (aOption.mLength < kOption2ByteExtensionOffset)
     {
         *buf |= kOption1ByteExtension;
-        *cur++ = aOption.mLength - kOption1ByteExtensionOffset;
+        *cur++ = (uint8_t)(aOption.mLength - kOption1ByteExtensionOffset);
     }
     else
     {
         *buf |= kOption2ByteExtension;
         optionLength = aOption.mLength - kOption2ByteExtensionOffset;
-        *cur++ = optionLength >> 8;
-        *cur++ = optionLength;
+        *cur++ = (uint8_t)(optionLength >> 8);
+        *cur++ = (uint8_t)optionLength;
     }
 
     memcpy(cur, aOption.mValue, aOption.mLength);
     cur += aOption.mLength;
 
-    mHeaderLength += cur - buf;
+    mHeaderLength += (uint8_t)(cur - buf);
     mOptionLast = aOption.mNumber;
 
     return kThreadError_None;
@@ -216,13 +216,13 @@ ThreadError Header::AppendUriPathOptions(const char *aUriPath)
 
     while ((end = strchr(cur, '/')) != NULL)
     {
-        coapOption.mLength = end - cur;
+        coapOption.mLength = (uint8_t)(end - cur);
         coapOption.mValue = reinterpret_cast<const uint8_t *>(cur);
         AppendOption(coapOption);
         cur = end + 1;
     }
 
-    coapOption.mLength = strlen(cur);
+    coapOption.mLength = (uint16_t)strlen(cur);
     coapOption.mValue = reinterpret_cast<const uint8_t *>(cur);
     AppendOption(coapOption);
 
@@ -232,7 +232,7 @@ ThreadError Header::AppendUriPathOptions(const char *aUriPath)
 ThreadError Header::AppendContentFormatOption(MediaType aType)
 {
     Option coapOption;
-    uint8_t type = aType;
+    uint8_t type = (uint8_t)aType;
 
     coapOption.mNumber = Option::kOptionContentFormat;
     coapOption.mLength = 1;

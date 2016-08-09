@@ -1,7 +1,8 @@
 --style=allman
 --max-code-length=120
 --max-instatement-indent=100
---attach-namespaces --attach-inlines
+--attach-namespaces
+--attach-inlines
 --attach-extern-c
 --min-conditional-indent=0
 --break-blocks

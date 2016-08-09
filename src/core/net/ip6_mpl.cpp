@@ -38,8 +38,8 @@
 namespace Thread {
 namespace Ip6 {
 
-Mpl::Mpl():
-    mTimer(&HandleTimer, this)
+Mpl::Mpl(otContext *aContext):
+    mTimer(aContext, &Mpl::HandleTimer, this)
 {
     memset(mEntries, 0, sizeof(mEntries));
     mSequence = 0;

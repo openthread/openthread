@@ -34,7 +34,9 @@
 #ifndef AES_CCM_HPP_
 #define AES_CCM_HPP_
 
+#ifndef OPEN_THREAD_DRIVER
 #include <stdint.h>
+#endif
 
 #include <openthread-types.h>
 #include <crypto/aes_ecb.h>
@@ -56,6 +58,15 @@ namespace Crypto {
 class AesCcm
 {
 public:
+
+    /**
+     * Constructor.
+     *
+     * @param[in]  aCryptoContext  The crypto context used.
+     *
+     */
+    AesCcm(otCryptoContext *aCryptoContext) : mCryptoContext(aCryptoContext) { }
+
     /**
      * This method sets the key.
      *
@@ -108,6 +119,7 @@ public:
     void Finalize(void *aTag, uint8_t *aTagLength);
 
 private:
+    otCryptoContext *mCryptoContext;
     uint8_t mBlock[otAesBlockSize];
     uint8_t mCtr[otAesBlockSize];
     uint8_t mCtrPad[otAesBlockSize];

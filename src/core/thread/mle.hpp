@@ -242,11 +242,11 @@ public:
             mKeyIdentifier[0] = (aKeySequence & 0x7f) + 1;
         }
         else {
-            mKeyIdentifier[4] = (aKeySequence & 0x7f) + 1;
-            mKeyIdentifier[3] = aKeySequence >> 0;
-            mKeyIdentifier[2] = aKeySequence >> 8;
-            mKeyIdentifier[1] = aKeySequence >> 16;
-            mKeyIdentifier[0] = aKeySequence >> 24;
+            mKeyIdentifier[4] = (uint8_t)(aKeySequence & 0x7f) + 1;
+            mKeyIdentifier[3] = (uint8_t)(aKeySequence >> 0);
+            mKeyIdentifier[2] = (uint8_t)(aKeySequence >> 8);
+            mKeyIdentifier[1] = (uint8_t)(aKeySequence >> 16);
+            mKeyIdentifier[0] = (uint8_t)(aKeySequence >> 24);
         }
     }
 
@@ -631,7 +631,7 @@ public:
      * @returns The Child ID portion of an RLOC16.
      *
      */
-    static uint8_t GetChildId(uint16_t aRloc16) { return aRloc16 & kMaxChildId; }
+    static uint8_t GetChildId(uint16_t aRloc16) { return (uint8_t)(aRloc16 & kMaxChildId); }
 
     /**
      * This method returns the Router ID portion of an RLOC16.
@@ -663,6 +663,14 @@ public:
      *
      */
     static bool IsActiveRouter(uint16_t aRloc16) { return GetChildId(aRloc16) == 0; }
+
+    /**
+     * This method returns a pointer to the OpenThread context.
+     *
+     * @returns A pointer to the OpenThread context.
+     *
+     */
+    otContext *GetOpenThreadContext(void);
 
 protected:
     /**

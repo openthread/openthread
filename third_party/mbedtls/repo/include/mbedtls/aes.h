@@ -30,7 +30,18 @@
 #endif
 
 #include <stddef.h>
+#ifndef OPEN_THREAD_DRIVER
 #include <stdint.h>
+#else
+typedef signed char        int8_t;
+typedef short              int16_t;
+typedef int                int32_t;
+typedef long long          int64_t;
+typedef unsigned char      uint8_t;
+typedef unsigned short     uint16_t;
+typedef unsigned int       uint32_t;
+typedef unsigned long long uint64_t;
+#endif
 
 /* padlock.c and aesni.c rely on these values! */
 #define MBEDTLS_AES_ENCRYPT     1
@@ -47,6 +58,9 @@
 extern "C" {
 #endif
 
+#ifndef MBEDTLS_AES_CONTEXT
+#define MBEDTLS_AES_CONTEXT
+
 /**
  * \brief          AES context structure
  *
@@ -62,6 +76,8 @@ typedef struct
     uint32_t buf[68];           /*!<  unaligned data    */
 }
 mbedtls_aes_context;
+
+#endif // MBEDTLS_AES_CONTEXT
 
 /**
  * \brief          Initialize AES context

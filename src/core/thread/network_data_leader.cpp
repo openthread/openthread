@@ -46,14 +46,18 @@
 #include <thread/thread_tlvs.hpp>
 #include <thread/thread_uris.hpp>
 
+#ifdef WINDOWS_LOGGING
+#include <network_data_leader.tmh>
+#endif
+
 using Thread::Encoding::BigEndian::HostSwap16;
 
 namespace Thread {
 namespace NetworkData {
 
 Leader::Leader(ThreadNetif &aThreadNetif):
-    mTimer(&HandleTimer, this),
-    mServerData(OPENTHREAD_URI_SERVER_DATA, &HandleServerData, this),
+    mTimer(aThreadNetif.GetOpenThreadContext(), &Leader::HandleTimer, this),
+    mServerData(OPENTHREAD_URI_SERVER_DATA, &Leader::HandleServerData, this),
     mCoapServer(aThreadNetif.GetCoapServer()),
     mNetif(aThreadNetif),
     mMle(aThreadNetif.GetMle())
@@ -65,8 +69,8 @@ void Leader::Reset(void)
 {
     memset(mAddresses, 0, sizeof(mAddresses));
     memset(mContextLastUsed, 0, sizeof(mContextLastUsed));
-    mVersion = otPlatRandomGet();
-    mStableVersion = otPlatRandomGet();
+    mVersion = (uint8_t)otPlatRandomGet();
+    mStableVersion = (uint8_t)otPlatRandomGet();
     mLength = 0;
     mContextUsed = 0;
     mContextIdReuseDelay = kContextIdReuseDelay;
@@ -289,7 +293,7 @@ ThreadError Leader::ConfigureAddress(PrefixTlv &aPrefix)
 
         for (size_t j = 8; j < sizeof(mAddresses[i].mAddress); j++)
         {
-            mAddresses[i].mAddress.mFields.m8[j] = otPlatRandomGet();
+            mAddresses[i].mAddress.mFields.m8[j] = (uint8_t)otPlatRandomGet();
         }
 
         mAddresses[i].mPrefixLength = aPrefix.GetPrefixLength();
@@ -569,7 +573,7 @@ void Leader::HandleServerData(Coap::Header &aHeader, Message &aMessage,
 
     otLogInfoNetData("Received network data registration\n");
 
-    tlvsLength = aMessage.GetLength() - aMessage.GetOffset();
+    tlvsLength = (uint8_t)(aMessage.GetLength() - aMessage.GetOffset());
 
     aMessage.Read(aMessage.GetOffset(), tlvsLength, tlvs);
     rloc16 = HostSwap16(aMessageInfo.mPeerAddr.mFields.m16[7]);
@@ -585,7 +589,7 @@ void Leader::SendServerDataResponse(const Coap::Header &aRequestHeader, const Ip
     Coap::Header responseHeader;
     Message *message;
 
-    VerifyOrExit((message = Ip6::Udp::NewMessage(0)) != NULL, error = kThreadError_NoBufs);
+    VerifyOrExit((message = Ip6::Udp::NewMessage(mNetif.GetOpenThreadContext(), 0)) != NULL, error = kThreadError_NoBufs);
     responseHeader.Init();
     responseHeader.SetVersion(1);
     responseHeader.SetType(Coap::Header::kTypeAcknowledgment);
@@ -916,7 +920,7 @@ ThreadError Leader::AddBorderRouter(PrefixTlv &aPrefix, BorderRouterTlv &aBorder
             dstContext->Init();
             dstContext->SetStable();
             dstContext->SetCompress();
-            dstContext->SetContextId(contextId);
+            dstContext->SetContextId((uint8_t)contextId);
             dstContext->SetContextLength(aPrefix.GetPrefixLength());
         }
         else
@@ -1269,7 +1273,7 @@ void Leader::HandleTimer(void)
 
         if ((Timer::GetNow() - mContextLastUsed[i]) >= Timer::SecToMsec(mContextIdReuseDelay))
         {
-            FreeContext(kMinContextId + i);
+            FreeContext((uint8_t)(kMinContextId + i));
         }
         else
         {

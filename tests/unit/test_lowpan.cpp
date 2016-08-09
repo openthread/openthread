@@ -35,32 +35,14 @@
 #include <mac/mac.hpp>
 #include <thread/thread_netif.hpp>
 #include <thread/lowpan.hpp>
+#include <openthreadcontext.h>
 
 using namespace Thread;
 
 namespace Thread {
 
-extern "C" void otSignalTaskletPending(void)
-{
-}
-
-extern "C" bool otAreTaskletsPending(void)
-{
-    return false;
-}
-
-extern "C" void otPlatUartSendDone(void)
-{
-}
-
-extern "C" void otPlatUartReceived(const uint8_t *aBuf, uint16_t aBufLength)
-{
-    (void)aBuf;
-    (void)aBufLength;
-}
-
-ThreadNetif sMockThreadNetif;
-Lowpan::Lowpan sMockLowpan(sMockThreadNetif);
+otContext sContext;
+Lowpan::Lowpan sMockLowpan(sContext.mThreadNetif);
 
 void TestLowpanIphc(void)
 {
@@ -96,11 +78,11 @@ void TestLowpanIphc(void)
 
         Mac::Frame frame;
         frame.mPsdu = iphcVector.data();
-        frame.mLength = iphcVector.size();
+        frame.mLength = (uint8_t)iphcVector.size();
         frame.GetSrcAddr(macSource);
         frame.GetDstAddr(macDest);
 
-        VerifyOrQuit((message = Ip6::Ip6::NewMessage(0)) != NULL,
+        VerifyOrQuit((message = Ip6::Ip6::NewMessage(&sContext, 0)) != NULL,
                      "6lo: Ip6::NewMessage failed");
 
         // ===> Test Lowpan::Decompress
@@ -148,8 +130,6 @@ void TestLowpanIphc(void)
 
 int main(void)
 {
-    Message::Init();
-
     TestLowpanIphc();
 
     printf("All tests passed\n");

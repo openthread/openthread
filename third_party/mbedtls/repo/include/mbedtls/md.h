@@ -55,6 +55,9 @@ typedef enum {
 #define MBEDTLS_MD_MAX_SIZE         32  /* longest known is SHA256 or less */
 #endif
 
+#ifndef MBEDTLS_MD_CONTEXT
+#define MBEDTLS_MD_CONTEXT
+
 /**
  * Opaque struct defined in md_internal.h
  */
@@ -73,6 +76,8 @@ typedef struct {
     /** HMAC part of the context */
     void *hmac_ctx;
 } mbedtls_md_context_t;
+
+#endif // MBEDTLS_MD_CONTEXT
 
 /**
  * \brief Returns the list of digests supported by the generic digest module.

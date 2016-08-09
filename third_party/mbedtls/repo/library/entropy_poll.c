@@ -50,6 +50,10 @@
 #if !defined(_WIN32_WINNT)
 #define _WIN32_WINNT 0x0400
 #endif
+
+#if defined(OPEN_THREAD_DRIVER)
+#else
+
 #include <windows.h>
 #include <wincrypt.h>
 
@@ -74,6 +78,9 @@ int mbedtls_platform_entropy_poll( void *data, unsigned char *output, size_t len
 
     return( 0 );
 }
+
+#endif /* !OPEN_THREAD_DRIVER */
+
 #else /* _WIN32 && !EFIX64 && !EFI32 */
 
 /*

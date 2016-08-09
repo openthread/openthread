@@ -46,11 +46,11 @@ void PlatformInit(int argc, char *argv[])
     (void)argv;
 }
 
-void PlatformProcessDrivers(void)
+void PlatformProcessDrivers(otContext *aContext)
 {
     // should sleep and wait for interrupts here
 
     cc2538UartProcess();
-    cc2538RadioProcess();
-    cc2538AlarmProcess();
+    cc2538RadioProcess(aContext);
+    cc2538AlarmProcess(aContext);
 }

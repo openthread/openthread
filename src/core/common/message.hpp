@@ -34,7 +34,11 @@
 #ifndef MESSAGE_HPP_
 #define MESSAGE_HPP_
 
+#ifndef OPEN_THREAD_DRIVER
 #include <stdint.h>
+#else
+#pragma warning(disable:4201)  //nonstandard extension used : nameless struct/union
+#endif
 #include <string.h>
 
 #include <openthread-types.h>
@@ -90,6 +94,7 @@ struct MessageListEntry
 struct BufferHeader
 {
     class Buffer *mNext;  ///< A pointer to the next Message buffer.
+    otContext *mContext;  ///< A pointer to the OpenThread context.
 };
 
 /**
@@ -142,6 +147,8 @@ public:
      *
      */
     void SetNextBuffer(class Buffer *buf) { mHeader.mNext = buf; }
+
+    otContext *GetOpenThreadContext() { return mHeader.mContext; }
 
 private:
     /**
@@ -209,6 +216,8 @@ public:
         kType6lowpan     = 1,   ///< A 6lowpan frame
         kTypeMacDataPoll = 2,   ///< A MAC data poll message
     };
+
+    otContext *GetOpenThreadContext() { return Buffer::GetOpenThreadContext(); }
 
     /**
      * This method returns a pointer to the next message in the same interface list.
@@ -511,19 +520,22 @@ public:
     /**
      * This static method is used to initialize the message buffer pool.
      *
+     * @param[in]  aContext  The OpenThread context structure.
+     *
      */
-    static ThreadError Init(void);
+    static ThreadError Init(otContext *aContext);
 
     /**
      * This static method is used to obtain a new message.
      *
+     * @param[in]  aContext        The OpenThread context structure.
      * @param[in]  aType           The message type.
      * @param[in]  aReserveHeader  The number of header bytes to reserve.
      *
      * @returns A pointer to the message or NULL if no message buffers are available.
      *
      */
-    static Message *New(uint8_t aType, uint16_t aReserveHeader);
+    static Message *New(otContext *aContext, uint8_t aType, uint16_t aReserveHeader);
 
     /**
      * This static method is used to free a message and return all message buffers to the buffer pool.
@@ -604,7 +616,7 @@ public:
      * This constructor initializes the message queue.
      *
      */
-    MessageQueue(void);
+    MessageQueue(otContext *aContext);
 
     /**
      * This method returns a pointer to the first message.
@@ -661,6 +673,7 @@ private:
      */
     static ThreadError RemoveFromList(int aListId, Message &aMessage);
 
+    otContext *mContext;      ///< A pointer to the OpenThread context.
     MessageList mInterface;   ///< The instance-specific message list.
 };
 

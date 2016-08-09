@@ -36,6 +36,7 @@
 #define PLATFORM_CC2538_H_
 
 #include <stdint.h>
+#include <openthread-types.h>
 
 #include "cc2538-reg.h"
 
@@ -49,7 +50,7 @@ void cc2538AlarmInit(void);
  * This function performs alarm driver processing.
  *
  */
-void cc2538AlarmProcess(void);
+void cc2538AlarmProcess(otContext *aContext);
 
 /**
  * This function initializes the radio service used by OpenThread.
@@ -61,7 +62,7 @@ void cc2538RadioInit(void);
  * This function performs radio driver processing.
  *
  */
-void cc2538RadioProcess(void);
+void cc2538RadioProcess(otContext *aContext);
 
 /**
  * This function initializes the random number service used by OpenThread.

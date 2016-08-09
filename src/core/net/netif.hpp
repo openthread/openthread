@@ -197,7 +197,7 @@ public:
      * This constructor initializes the network interface.
      *
      */
-    Netif(void);
+    Netif(otContext *aContext);
 
     /**
      * This method enables the network interface.
@@ -223,6 +223,14 @@ public:
      * @returns A pointer to the next network interface.
      */
     Netif *GetNext(void) const;
+
+    /**
+     * This method returns a pointer to the OpenThread context.
+     *
+     * @returns A pointer to the OpenThread context.
+     *
+     */
+    otContext *GetOpenThreadContext(void) { return mContext; }
 
     /**
      * This method returns the network interface identifier.
@@ -375,7 +383,7 @@ public:
      * @returns A pointer to the network interface list.
      *
      */
-    static Netif *GetNetifList(void);
+    static Netif *GetNetifList(otContext *aContext);
 
     /**
      * This static method returns the network interface identified by @p aInterfaceId.
@@ -385,7 +393,7 @@ public:
      * @returns A pointer to the network interface or NULL if none is found.
      *
      */
-    static Netif *GetNetifById(uint8_t aInterfaceId);
+    static Netif *GetNetifById(otContext *aContext, uint8_t aInterfaceId);
 
     /**
      * This static method returns the network interface identified by @p aName.
@@ -395,7 +403,7 @@ public:
      * @returns A pointer to the network interface or NULL if none is found.
      *
      */
-    static Netif *GetNetifByName(char *aName);
+    static Netif *GetNetifByName(otContext *aContext, char *aName);
 
     /**
      * This static method indicates whether or not @p aAddress is assigned to a network interface.
@@ -406,7 +414,7 @@ public:
      * @retval FALSE  If the IPv6 address is not assigned to any network interface.
      *
      */
-    static bool IsUnicastAddress(const Address &aAddress);
+    static bool IsUnicastAddress(otContext *aContext, const Address &aAddress);
 
     /**
      * This static method perform default source address selection.
@@ -416,7 +424,7 @@ public:
      * @returns A pointer to the selected IPv6 source address or NULL if no source address was found.
      *
      */
-    static const NetifUnicastAddress *SelectSourceAddress(MessageInfo &aMessageInfo);
+    static const NetifUnicastAddress *SelectSourceAddress(otContext *aContext, MessageInfo &aMessageInfo);
 
     /**
      * This static method determines which network interface @p aAddress is on-link, if any.
@@ -426,12 +434,13 @@ public:
      * @returns The network interface identifier for the on-link interface or -1 if none is found.
      *
      */
-    static int GetOnLinkNetif(const Address &aAddress);
+    static int GetOnLinkNetif(otContext *aContext, const Address &aAddress);
 
 private:
     static void HandleStateChangedTask(void *aContext);
     void HandleStateChangedTask(void);
 
+    otContext *mContext;
     NetifCallback *mCallbacks;
     NetifUnicastAddress *mUnicastAddresses;
     NetifMulticastAddress *mMulticastAddresses;
@@ -441,9 +450,6 @@ private:
     Netif *mNext;
 
     uint32_t mStateChangedFlags;
-
-    static Netif *sNetifListHead;
-    static int sNextInterfaceId;
 };
 
 /**

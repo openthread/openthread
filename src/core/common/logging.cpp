@@ -37,6 +37,10 @@
 
 #include <platform/logging.h>
 
+#ifdef OPEN_THREAD_DRIVER
+#define snprintf sprintf_s
+#endif
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -102,7 +106,7 @@ static void DumpLine(otLogLevel aLogLevel, otLogRegion aLogRegion, const void *a
 
 void otDump(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aId, const void *aBuf, const int aLength)
 {
-    int idlen = strlen(aId);
+    int idlen = (int)strlen(aId);
     const int width = 72;
     char buf[80];
     char *cur = buf;

@@ -28,10 +28,12 @@
 
 #include "test_util.h"
 #include <openthread.h>
+#include <platform/misc.h>
 #include <common/debug.hpp>
 #include <common/timer.hpp>
 #include <platform/alarm.h>
 #include <string.h>
+#include <openthreadcontext.h>
 
 enum
 {
@@ -42,34 +44,11 @@ enum
     kCallCountIndexMax
 };
 
-static uint32_t sNow;
-static uint32_t sPlatT0;
-static uint32_t sPlatDt;
-static bool     sTimerOn;
-static uint32_t sCallCount[kCallCountIndexMax];
-
-extern "C" {
-
-    void otPlatAlarmStop(void)
-    {
-        sTimerOn = false;
-        sCallCount[kCallCountIndexAlarmStop]++;
-    }
-
-    void otPlatAlarmStartAt(uint32_t aT0, uint32_t aDt)
-    {
-        sTimerOn = true;
-        sCallCount[kCallCountIndexAlarmStart]++;
-        sPlatT0 = aT0;
-        sPlatDt = aDt;
-    }
-
-    uint32_t otPlatAlarmGetNow(void)
-    {
-        return sNow;
-    }
-
-} // extern "C"
+extern uint32_t sNow;
+extern uint32_t sPlatT0;
+extern uint32_t sPlatDt;
+extern bool     sTimerOn;
+extern uint32_t sCallCount[kCallCountIndexMax];
 
 void InitCounters(void)
 {
@@ -93,7 +72,8 @@ int TestOneTimer(void)
 {
     const uint32_t kTimeT0 = 1000;
     const uint32_t kTimerInterval = 10;
-    Thread::Timer timer(TestTimerHandler, NULL);
+    otContext sContext;
+    Thread::Timer timer(&sContext, TestTimerHandler, NULL);
 
     // Test one Timer basic operation.
 
@@ -111,7 +91,7 @@ int TestOneTimer(void)
 
     sNow += kTimerInterval;
 
-    otPlatAlarmFired();
+    otPlatAlarmFired(&sContext);
 
     VerifyOrQuit(sCallCount[kCallCountIndexAlarmStart]    == 1, "TestOneTimer: Start CallCount Failed.\n");
     VerifyOrQuit(sCallCount[kCallCountIndexAlarmStop]     == 1, "TestOneTimer: Stop CallCount Failed.\n");
@@ -135,7 +115,7 @@ int TestOneTimer(void)
 
     sNow += kTimerInterval;
 
-    otPlatAlarmFired();
+    otPlatAlarmFired(&sContext);
 
     VerifyOrQuit(sCallCount[kCallCountIndexAlarmStart]    == 1, "TestOneTimer: Start CallCount Failed.\n");
     VerifyOrQuit(sCallCount[kCallCountIndexAlarmStop]     == 1, "TestOneTimer: Stop CallCount Failed.\n");
@@ -159,7 +139,7 @@ int TestOneTimer(void)
 
     sNow += kTimerInterval + 5;
 
-    otPlatAlarmFired();
+    otPlatAlarmFired(&sContext);
 
     VerifyOrQuit(sCallCount[kCallCountIndexAlarmStart]    == 1, "TestOneTimer: Start CallCount Failed.\n");
     VerifyOrQuit(sCallCount[kCallCountIndexAlarmStop]     == 1, "TestOneTimer: Stop CallCount Failed.\n");
@@ -183,7 +163,7 @@ int TestOneTimer(void)
 
     sNow += kTimerInterval - 2;
 
-    otPlatAlarmFired();
+    otPlatAlarmFired(&sContext);
 
     VerifyOrQuit(sCallCount[kCallCountIndexAlarmStart]    == 2, "TestOneTimer: Start CallCount Failed.\n");
     VerifyOrQuit(sCallCount[kCallCountIndexAlarmStop]     == 0, "TestOneTimer: Stop CallCount Failed.\n");
@@ -193,7 +173,7 @@ int TestOneTimer(void)
 
     sNow += kTimerInterval;
 
-    otPlatAlarmFired();
+    otPlatAlarmFired(&sContext);
 
     VerifyOrQuit(sCallCount[kCallCountIndexAlarmStart]    == 2, "TestOneTimer: Start CallCount Failed.\n");
     VerifyOrQuit(sCallCount[kCallCountIndexAlarmStop]     == 1, "TestOneTimer: Stop CallCount Failed.\n");
@@ -324,17 +304,19 @@ int TestTenTimers(void)
         11
     };
 
+    otContext sContext;
+
     uint32_t timerContextHandleCounter[kNumTimers] = {0};
-    Thread::Timer timer0(TestTimerHandler, &timerContextHandleCounter[0]);
-    Thread::Timer timer1(TestTimerHandler, &timerContextHandleCounter[1]);
-    Thread::Timer timer2(TestTimerHandler, &timerContextHandleCounter[2]);
-    Thread::Timer timer3(TestTimerHandler, &timerContextHandleCounter[3]);
-    Thread::Timer timer4(TestTimerHandler, &timerContextHandleCounter[4]);
-    Thread::Timer timer5(TestTimerHandler, &timerContextHandleCounter[5]);
-    Thread::Timer timer6(TestTimerHandler, &timerContextHandleCounter[6]);
-    Thread::Timer timer7(TestTimerHandler, &timerContextHandleCounter[7]);
-    Thread::Timer timer8(TestTimerHandler, &timerContextHandleCounter[8]);
-    Thread::Timer timer9(TestTimerHandler, &timerContextHandleCounter[9]);
+    Thread::Timer timer0(&sContext, TestTimerHandler, &timerContextHandleCounter[0]);
+    Thread::Timer timer1(&sContext, TestTimerHandler, &timerContextHandleCounter[1]);
+    Thread::Timer timer2(&sContext, TestTimerHandler, &timerContextHandleCounter[2]);
+    Thread::Timer timer3(&sContext, TestTimerHandler, &timerContextHandleCounter[3]);
+    Thread::Timer timer4(&sContext, TestTimerHandler, &timerContextHandleCounter[4]);
+    Thread::Timer timer5(&sContext, TestTimerHandler, &timerContextHandleCounter[5]);
+    Thread::Timer timer6(&sContext, TestTimerHandler, &timerContextHandleCounter[6]);
+    Thread::Timer timer7(&sContext, TestTimerHandler, &timerContextHandleCounter[7]);
+    Thread::Timer timer8(&sContext, TestTimerHandler, &timerContextHandleCounter[8]);
+    Thread::Timer timer9(&sContext, TestTimerHandler, &timerContextHandleCounter[9]);
     Thread::Timer *timers[kNumTimers] = {&timer0, &timer1, &timer2, &timer3, &timer4, &timer5, &timer6, &timer7, &timer8, &timer9};
     size_t i;
 
@@ -375,7 +357,7 @@ int TestTenTimers(void)
             // timer is ready to be triggered by examining the aDt arg passed into otPlatAlarmStartAt().  If
             // that value is 0, then otPlatAlarmFired should be fired immediately. This loop calls otPlatAlarmFired()
             // the requisite number of times based on the aDt argument.
-            otPlatAlarmFired();
+            otPlatAlarmFired(&sContext);
         }
         while (sPlatDt == 0);
 

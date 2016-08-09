@@ -35,7 +35,11 @@
 #ifndef ALARM_H_
 #define ALARM_H_
 
+#ifndef OPEN_THREAD_DRIVER
 #include <stdint.h>
+#else
+typedef unsigned int       uint32_t;
+#endif
 
 #ifdef __cplusplus
 extern "C" {
@@ -58,12 +62,12 @@ extern "C" {
  * @param[in] aT0  The reference time.
  * @param[in] aDt  The time delay in milliseconds from @p aT0.
  */
-void otPlatAlarmStartAt(uint32_t aT0, uint32_t aDt);
+void otPlatAlarmStartAt(otContext *aContext, uint32_t aT0, uint32_t aDt);
 
 /**
  * Stop the alarm.
  */
-void otPlatAlarmStop(void);
+void otPlatAlarmStop(otContext *aContext);
 
 /**
  * Get the current time.
@@ -75,7 +79,7 @@ uint32_t otPlatAlarmGetNow(void);
 /**
  * Signal that the alarm has fired.
  */
-extern void otPlatAlarmFired(void);
+extern void otPlatAlarmFired(otContext *aContext);
 
 /**
  * @}

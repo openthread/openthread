@@ -35,7 +35,13 @@
 #define ENCODING_HPP_
 
 #include <limits.h>
+#ifndef OPEN_THREAD_DRIVER
 #include <stdint.h>
+#else
+typedef unsigned short     uint16_t;
+typedef unsigned int       uint32_t;
+typedef unsigned long long uint64_t;
+#endif
 
 namespace Thread {
 namespace Encoding {

@@ -35,13 +35,38 @@
 #ifndef OPENTHREAD_TYPES_H_
 #define OPENTHREAD_TYPES_H_
 
+#ifndef OPEN_THREAD_DRIVER
 #include <stdint.h>
 #include <stdbool.h>
+#else
+typedef signed char        int8_t;
+typedef short              int16_t;
+typedef int                int32_t;
+typedef long long          int64_t;
+typedef unsigned char      uint8_t;
+typedef unsigned short     uint16_t;
+typedef unsigned int       uint32_t;
+typedef unsigned long long uint64_t;
+#ifndef __cplusplus
+typedef int bool;
+#define false 0
+#define true 1
+#endif
+#endif
+
 #include <platform/toolchain.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+/**
+ * This type represents the OpenThread Context structure.
+ */
+typedef struct otContext otContext;
+
+// Size of the OpenThread context structure (bytes)
+#define OT_CONTEXT_SIZE   (9500 + OPENTHREAD_CONFIG_NUM_MESSAGE_BUFFERS * OPENTHREAD_CONFIG_MESSAGE_BUFFER_SIZE)
 
 /**
  * This enumeration represents error codes used throughout OpenThread.
@@ -199,6 +224,19 @@ typedef struct otExtAddress
 /**
  * This structure represents an IPv6 address.
  */
+#ifdef _WIN32
+OT_TOOL_PACKED_BEGIN
+typedef struct otIp6Address
+{
+    union
+    {
+        uint8_t  m8[OT_IP6_ADDRESS_SIZE];                      ///< 8-bit fields
+        uint16_t m16[OT_IP6_ADDRESS_SIZE / sizeof(uint16_t)];  ///< 16-bit fields
+        uint32_t m32[OT_IP6_ADDRESS_SIZE / sizeof(uint32_t)];  ///< 32-bit fields
+    } mFields;                                                 ///< IPv6 accessor fields
+} otIp6Address;
+OT_TOOL_PACKED_END
+#else
 typedef OT_TOOL_PACKED_BEGIN struct otIp6Address
 {
     union
@@ -208,6 +246,7 @@ typedef OT_TOOL_PACKED_BEGIN struct otIp6Address
         uint32_t m32[OT_IP6_ADDRESS_SIZE / sizeof(uint32_t)];  ///< 32-bit fields
     } mFields;                                                 ///< IPv6 accessor fields
 } OT_TOOL_PACKED_END otIp6Address;
+#endif
 
 /**
  * @addtogroup commands  Commands
@@ -698,7 +737,7 @@ typedef struct otUdpSocket
     otSockAddr           mPeerName;  ///< The peer IPv6 socket address.
     otUdpReceive         mHandler;   ///< A function pointer to the application callback.
     void                *mContext;   ///< A pointer to application-specific context.
-    struct otUdpSocket *mNext;       ///< A pointer to the next UDP socket.
+    struct otUdpSocket  *mNext;      ///< A pointer to the next UDP socket.
 } otUdpSocket;
 
 /**

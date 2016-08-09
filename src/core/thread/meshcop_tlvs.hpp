@@ -319,7 +319,7 @@ public:
      *
      */
     void SetNetworkName(const char *aNetworkName) {
-        int length = strnlen(aNetworkName, sizeof(mNetworkName));
+        int length = (int)strnlen(aNetworkName, sizeof(mNetworkName));
         memcpy(mNetworkName, aNetworkName, length);
     }
 
@@ -581,7 +581,7 @@ public:
      */
     void SetSeconds(uint64_t aSeconds) {
         for (size_t i = 0; i < sizeof(mSeconds); i++, aSeconds >>= 8) {
-            mSeconds[sizeof(mSeconds) - 1 - i] = aSeconds;
+            mSeconds[sizeof(mSeconds) - 1 - i] = (uint8_t)aSeconds;
         }
     }
 
@@ -709,7 +709,7 @@ public:
      * @returns The Delay Timer value.
      *
      */
-    uint16_t GetDelayTimer(void) const { return HostSwap32(mDelayTimer); }
+    uint16_t GetDelayTimer(void) const { return (uint16_t)HostSwap32(mDelayTimer); }
 
     /**
      * This method sets the Delay Timer value.
@@ -793,7 +793,7 @@ public:
      */
     bool IsChannelSet(uint8_t aChannel) const {
         const uint8_t *mask = reinterpret_cast<const uint8_t *>(this) + sizeof(*this);
-        return (aChannel < (mMaskLength * 8)) ? mask[aChannel / 8] & (1 << (aChannel % 8)) : false;
+        return (aChannel < (mMaskLength * 8)) ? (mask[aChannel / 8] & (1 << (aChannel % 8))) != 0 : false;
     }
 
 private:
@@ -871,7 +871,7 @@ public:
      * @retval FALSE  If the Joiner flag is not set.
      *
      */
-    bool IsJoiner(void) { return mFlags & kJoinerMask; }
+    bool IsJoiner(void) { return (mFlags & kJoinerMask) != 0; }
 
     /**
      * This method sets the Joiner flag.
@@ -946,7 +946,7 @@ public:
      * @retval FALSE  If the Native Commissioner flag is not set.
      *
      */
-    bool IsNativeCommissioner(void) { return mFlags & kNativeMask; }
+    bool IsNativeCommissioner(void) { return (mFlags & kNativeMask) != 0; }
 
     /**
      * This method sets the Native Commissioner flag.

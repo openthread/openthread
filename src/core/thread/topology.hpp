@@ -81,7 +81,11 @@ public:
         kStateValid,                     ///< Link is valid
     };
 
+#if _WIN32
+    uint8_t         mState : 3;          ///< The link state
+#else
     State           mState : 3;          ///< The link state
+#endif
     uint8_t         mMode : 4;           ///< The MLE device mode
     bool            mDataRequest : 1;    ///< Indicates whether or not a Data Poll was received
     LinkQualityInfo mLinkInfo;           ///< Link quality info (contains average RSS, link margin and link quality)

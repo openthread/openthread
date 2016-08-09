@@ -232,11 +232,12 @@ public:
      * @param[in]  aContext  A pointer to arbitrary context information.
      *
      */
-    IcmpEcho(EchoReplyHandler aHandler, void *aContext);
+    IcmpEcho(otContext *aContext, EchoReplyHandler aHandler, void *aCallbackContext);
 
     /**
      * This method sends an ICMPv6 Echo Request message.
      *
+     * @param[in]  aContext        The OpenThread context structure.
      * @param[in]  aDestination    The socket address of the destination.
      * @param[in]  aPayload        A pointer to the data payload to send.
      * @param[in]  aPayloadLength  The number of data payload bytes.
@@ -245,7 +246,8 @@ public:
      * @retval kThreadError_NoBufs  Insufficient buffers available to generate an ICMPv6 Echo Request message.
      *
      */
-    ThreadError SendEchoRequest(const SockAddr &aDestination, const void *aPayload, uint16_t aPayloadLength);
+    ThreadError SendEchoRequest(otContext *aContext, const SockAddr &aDestination, const void *aPayload,
+                                uint16_t aPayloadLength);
 
 private:
     void HandleEchoReply(Message &message, const MessageInfo &messageInfo) {
@@ -256,10 +258,7 @@ private:
     void             *mContext;
     uint16_t          mId;
     uint16_t          mSeq;
-    IcmpEcho        *mNext;
-
-    static uint16_t   sNextId;
-    static IcmpEcho *sEchoClients;
+    IcmpEcho         *mNext;
 };
 
 /**
@@ -305,8 +304,6 @@ private:
     DstUnreachHandler    mDstUnreachHandler;
     void                *mContext;
     IcmpHandler         *mNext;
-
-    static IcmpHandler  *sHandlers;
 };
 
 /**
@@ -325,7 +322,7 @@ public:
      * @retval kThreadError_Busy  The ICMPv6 handler is already registered.
      *
      */
-    static ThreadError RegisterCallbacks(IcmpHandler &aHandler);
+    static ThreadError RegisterCallbacks(otContext *aContext, IcmpHandler &aHandler);
 
     /**
      * This static method sends an ICMPv6 error message.
@@ -339,8 +336,8 @@ public:
      * @retval kThreadError_NoBufs  Insufficient buffers available.
      *
      */
-    static ThreadError SendError(const Address &aDestination, IcmpHeader::Type aType, IcmpHeader::Code aCode,
-                                 const Header &aHeader);
+    static ThreadError SendError(otContext *aContext, const Address &aDestination, IcmpHeader::Type aType,
+                                 IcmpHeader::Code aCode, const Header &aHeader);
 
     /**
      * This static method handles an ICMPv6 message.
@@ -374,7 +371,7 @@ public:
      * @retval FALSE  ICMPv6 Echo processing is disabled.
      *
      */
-    static bool IsEchoEnabled(void);
+    static bool IsEchoEnabled(otContext *aContext);
 
     /**
      * This static method sets whether or not ICMPv6 Echo processing is enabled.
@@ -382,7 +379,7 @@ public:
      * @param[in]  aEnabled  TRUE to enable ICMPv6 Echo processing, FALSE otherwise.
      *
      */
-    static void SetEchoEnabled(bool aEnabled);
+    static void SetEchoEnabled(otContext *aContext, bool aEnabled);
 
 private:
     static ThreadError HandleDstUnreach(Message &aMessage, const MessageInfo &aMessageInfo,
@@ -390,8 +387,6 @@ private:
     static ThreadError HandleEchoRequest(Message &aMessage, const MessageInfo &aMessageInfo);
     static ThreadError HandleEchoReply(Message &aMessage, const MessageInfo &aMessageInfo,
                                        const IcmpHeader &aIcmpHeader);
-
-    static bool sIsEchoEnabled;
 };
 
 /**

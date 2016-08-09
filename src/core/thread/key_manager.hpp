@@ -34,7 +34,12 @@
 #ifndef KEY_MANAGER_HPP_
 #define KEY_MANAGER_HPP_
 
+#ifndef OPEN_THREAD_DRIVER
 #include <stdint.h>
+#else
+typedef unsigned short     uint16_t;
+typedef unsigned int       uint32_t;
+#endif
 
 #include <openthread-types.h>
 #include <crypto/hmac_sha256.h>

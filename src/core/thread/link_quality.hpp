@@ -79,7 +79,7 @@ public:
      * @param[in] anRss   A new received signal strength value (in dBm) to be added to the average.
      *
      */
-    void AddRss(int8_t anRss);
+    void AddRss(otContext *aContext, int8_t anRss);
 
     /**
      * This method returns the current average signal strength value.
@@ -109,7 +109,7 @@ public:
      * @retval kThreadError_NoBuf    The string representation of the average value could not fit in the given buffer.
      *
      */
-    ThreadError GetAverageRssAsString(char *aCharBuffer, size_t aBufferLen) const;
+    ThreadError GetAverageRssAsString(char *aCharBuffer, uint32_t aBufferLen) const;
 
     /**
      * This method returns the link margin. The link margin is calculated using the link's current average received
@@ -118,7 +118,7 @@ public:
      * @returns Link margin derived from average received signal strength and average noise floor.
      *
      */
-    uint8_t GetLinkMargin(void) const;
+    uint8_t GetLinkMargin(otContext *aContext) const;
 
     /**
      * Returns the current one-way link quality value. The link quality value is a number 0-3.
@@ -133,7 +133,7 @@ public:
      *
      * @returns The current link quality value (value 0-3 as per Thread specification).
      */
-    uint8_t GetLinkQuality(void);
+    uint8_t GetLinkQuality(otContext *aContext);
 
     /**
      * This method converts a received signal strength value to a link margin value.
@@ -143,7 +143,7 @@ public:
      * @returns The link margin value.
      *
      */
-    static uint8_t ConvertRssToLinkMargin(int8_t anRss);
+    static uint8_t ConvertRssToLinkMargin(otContext *aContext, int8_t anRss);
 
     /**
      * This method converts a link margin value to a link quality value.
@@ -163,7 +163,7 @@ public:
      * @returns The link quality value (0-3).
      *
      */
-    static uint8_t ConvertRssToLinkQuality(int8_t anRss);
+    static uint8_t ConvertRssToLinkQuality(otContext *aContext, int8_t anRss);
 
 private:
     enum
@@ -193,7 +193,7 @@ private:
     /* Private method to update the mLinkQuality value. This is called when a new RSS value is added to average
      * or when GetLinkQuality() is invoked.
      */
-    void UpdateLinkQuality(void);
+    void UpdateLinkQuality(otContext *aContext);
 
     /* Static private method to calculate the link quality from a given link margin while taking into account the last
      * link quality value and adding the hysteresis value to the thresholds. If there is no previous value for link
@@ -216,7 +216,7 @@ private:
  *
  * @returns The current average noise floor level (in dBm).
  */
-int8_t GetAverageNoiseFloor(void);
+int8_t GetAverageNoiseFloor(otContext *aContext);
 
 /**
  * This method adds a new noise floor value (in dBm) to the running average.
@@ -224,13 +224,13 @@ int8_t GetAverageNoiseFloor(void);
  * @param[in] aNoiseFloor    A new noise floor value (in dBm) to be added to the average.
  *
  */
-void AddNoiseFloor(int8_t aNoiseFloor);
+void AddNoiseFloor(otContext *aContext, int8_t aNoiseFloor);
 
 /**
  * This method clears the current average noise floor value.
  *
  */
-void ClearNoiseFloorAverage(void);
+void ClearNoiseFloorAverage(otContext *aContext);
 
 
 /**

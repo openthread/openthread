@@ -48,7 +48,7 @@ ThreadError Tlv::GetTlv(const Message &aMessage, Type aType, uint16_t aMaxLength
 
     if (aMaxLength > sizeof(aTlv) + aTlv.GetLength())
     {
-        aMaxLength = sizeof(aTlv) + aTlv.GetLength();
+        aMaxLength = sizeof(aTlv) + (uint16_t)aTlv.GetLength();
     }
 
     aMessage.Read(offset, aMaxLength, &aTlv);
@@ -74,7 +74,7 @@ ThreadError Tlv::GetOffset(const Message &aMessage, Type aType, uint16_t &aOffse
             ExitNow(error = kThreadError_None);
         }
 
-        offset += sizeof(tlv) + tlv.GetLength();
+        offset += (uint16_t)(sizeof(tlv) + tlv.GetLength());
     }
 
 exit:

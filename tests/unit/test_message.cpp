@@ -28,28 +28,29 @@
 
 #include "test_util.h"
 #include <openthread.h>
+#include <platform/misc.h>
 #include <common/debug.hpp>
 #include <common/message.hpp>
 #include <string.h>
+#include <openthreadcontext.h>
 
-extern"C" void otSignalTaskletPending(void)
-{
-}
+#if _WIN32
+#define random rand
+#endif
 
 void TestMessage(void)
 {
+    otContext sContext;
     Thread::Message *message;
     uint8_t writeBuffer[1024];
     uint8_t readBuffer[1024];
-
-    Thread::Message::Init();
 
     for (unsigned i = 0; i < sizeof(writeBuffer); i++)
     {
         writeBuffer[i] = random();
     }
 
-    VerifyOrQuit((message = Thread::Message::New(Thread::Message::kTypeIp6, 0)) != NULL,
+    VerifyOrQuit((message = Thread::Message::New(&sContext, Thread::Message::kTypeIp6, 0)) != NULL,
                  "Message::New failed\n");
     SuccessOrQuit(message->SetLength(sizeof(writeBuffer)),
                   "Message::SetLength failed\n");

@@ -34,6 +34,8 @@
 
 #include <stdio.h>
 
+#include <common/code_utils.hpp>
+#include <common/debug.hpp>
 #include <coap/coap_header.hpp>
 #include <common/code_utils.hpp>
 #include <common/logging.hpp>
@@ -45,6 +47,10 @@
 #include <thread/thread_tlvs.hpp>
 #include <thread/thread_uris.hpp>
 
+#ifdef WINDOWS_LOGGING
+#include <meshcop_dataset_manager.tmh>
+#endif
+
 namespace Thread {
 namespace MeshCoP {
 
@@ -52,8 +58,8 @@ DatasetManager::DatasetManager(ThreadNetif &aThreadNetif, const char *aUri):
     mMle(aThreadNetif.GetMle()),
     mNetif(aThreadNetif),
     mNetworkDataLeader(aThreadNetif.GetNetworkDataLeader()),
-    mResource(aUri, &HandleSet, this),
-    mTimer(&HandleTimer, this),
+    mResource(aUri, &DatasetManager::HandleSet, this),
+    mTimer(aThreadNetif.GetOpenThreadContext(), &DatasetManager::HandleTimer, this),
     mUri(aUri),
     mCoapServer(aThreadNetif.GetCoapServer())
 {
@@ -155,11 +161,11 @@ ThreadError DatasetManager::Register(void)
     Ip6::MessageInfo messageInfo;
     ActiveTimestampTlv timestamp;
 
-    mSocket.Open(&HandleUdpReceive, this);
+    mSocket.Open(mNetif.GetOpenThreadContext(), &DatasetManager::HandleUdpReceive, this);
 
     for (size_t i = 0; i < sizeof(mCoapToken); i++)
     {
-        mCoapToken[i] = otPlatRandomGet();
+        mCoapToken[i] = (uint8_t)otPlatRandomGet();
     }
 
     header.Init();
@@ -172,7 +178,7 @@ ThreadError DatasetManager::Register(void)
     header.AppendContentFormatOption(Coap::Header::kApplicationOctetStream);
     header.Finalize();
 
-    VerifyOrExit((message = Ip6::Udp::NewMessage(0)) != NULL, error = kThreadError_NoBufs);
+    VerifyOrExit((message = Ip6::Udp::NewMessage(mNetif.GetOpenThreadContext(), 0)) != NULL, error = kThreadError_NoBufs);
     SuccessOrExit(error = message->Append(header.GetBytes(), header.GetLength()));
 
     timestamp.Init();
@@ -239,7 +245,7 @@ void DatasetManager::HandleSet(Coap::Header &aHeader, Message &aMessage, const I
 
     VerifyOrExit(mMle.GetDeviceState() == Mle::kDeviceStateLeader, ;);
 
-    type = strcmp(mUri, OPENTHREAD_URI_ACTIVE_SET) == 0 ? Tlv::kActiveTimestamp : Tlv::kPendingTimestamp;
+    type = strcmp(mUri, OPENTHREAD_URI_ACTIVE_SET) == 0 ? (uint8_t)Tlv::kActiveTimestamp : (uint8_t)Tlv::kPendingTimestamp;
 
     while (offset < aMessage.GetLength())
     {
@@ -274,7 +280,7 @@ void DatasetManager::SendSetResponse(const Coap::Header &aRequestHeader, const I
     Coap::Header responseHeader;
     Message *message;
 
-    VerifyOrExit((message = Ip6::Udp::NewMessage(0)) != NULL, error = kThreadError_NoBufs);
+    VerifyOrExit((message = Ip6::Udp::NewMessage(mNetif.GetOpenThreadContext(), 0)) != NULL, error = kThreadError_NoBufs);
     responseHeader.Init();
     responseHeader.SetVersion(1);
     responseHeader.SetType(Coap::Header::kTypeAcknowledgment);
@@ -366,7 +372,7 @@ ThreadError ActiveDataset::ApplyConfiguration(void)
         case Tlv::kChannel:
         {
             const ChannelTlv *channel = static_cast<const ChannelTlv *>(cur);
-            mNetif.GetMac().SetChannel(channel->GetChannel());
+            mNetif.GetMac().SetChannel((uint8_t)channel->GetChannel());
             break;
         }
 
@@ -419,7 +425,7 @@ ThreadError ActiveDataset::ApplyConfiguration(void)
 
 PendingDataset::PendingDataset(ThreadNetif &aThreadNetif):
     DatasetManager(aThreadNetif, OPENTHREAD_URI_PENDING_SET),
-    mTimer(HandleTimer, this)
+    mTimer(aThreadNetif.GetOpenThreadContext(), PendingDataset::HandleTimer, this)
 {
 }
 

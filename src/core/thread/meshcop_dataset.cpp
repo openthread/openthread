@@ -116,7 +116,7 @@ void Dataset::Get(otOperationalDataset &aDataset)
         case Tlv::kChannel:
         {
             const ChannelTlv *tlv = static_cast<const ChannelTlv *>(cur);
-            aDataset.mChannel = tlv->GetChannel();
+            aDataset.mChannel = (uint8_t)tlv->GetChannel();
             aDataset.mIsChannelSet = true;
             break;
         }

@@ -213,7 +213,12 @@ int mbedtls_platform_set_exit( void (*exit_func)( int status ) );
 #if defined(MBEDTLS_PLATFORM_EXIT_MACRO)
 #define mbedtls_exit   MBEDTLS_PLATFORM_EXIT_MACRO
 #else
+#if defined(OPEN_THREAD_DRIVER)
+#include <wdm.h>
+#define mbedtls_exit(code)   DbgRaiseAssertionFailure(FALSE)
+#else
 #define mbedtls_exit   exit
+#endif
 #endif /* MBEDTLS_PLATFORM_EXIT_MACRO */
 #endif /* MBEDTLS_PLATFORM_EXIT_ALT */
 

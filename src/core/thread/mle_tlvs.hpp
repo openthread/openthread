@@ -516,7 +516,7 @@ public:
      *
      */
     uint8_t GetRouteDataLength(void) const {
-        return GetLength() - sizeof(mRouterIdSequence) - sizeof(mRouterIdMask);
+        return (uint8_t)(GetLength() - sizeof(mRouterIdSequence) - sizeof(mRouterIdMask));
     }
 
     /**
@@ -1322,7 +1322,7 @@ public:
      * @retval FALSE  If the Compressed flag is not set.
      *
      */
-    bool IsCompressed(void) const { return mControl & kCompressed; }
+    bool IsCompressed(void) const { return (mControl & kCompressed) != 0; }
 
     /**
      * This method sets the Uncompressed flag.

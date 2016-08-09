@@ -68,11 +68,12 @@ public:
     /**
      * This constructor creates a tasklet instance.
      *
-     * @param[in]  aHandler  A pointer to a function that is called when the tasklet is run.
-     * @param[in]  aContext  A pointer to arbitrary context information.
+     * @param[in]  aContext          The OpenThread context structure.
+     * @param[in]  aHandler          A pointer to a function that is called when the tasklet is run.
+     * @param[in]  aCallbackContext  A pointer to arbitrary context information.
      *
      */
-    Tasklet(Handler aHandler, void *aContext);
+    Tasklet(otContext *aContext, Handler aHandler, void *aCallbackContext);
 
     /**
      * This method puts the tasklet on the run queue.
@@ -85,11 +86,12 @@ private:
      * This method is called when the tasklet is run.
      *
      */
-    void RunTask(void) { mHandler(mContext); }
+    void RunTask(void) { mHandler(mCallbackContext); }
 
-    Handler  mHandler;  ///< A pointer to a function that is called when the tasklet is run.
-    void    *mContext;  ///< A pointer to arbitrary context information.
-    Tasklet *mNext;     ///< A pointer to the next tasklet in the run queue.
+    otContext *mContext;          ///< A pointer to the OpenThread context.
+    Handler    mHandler;          ///< A pointer to a function that is called when the tasklet is run.
+    void      *mCallbackContext;  ///< A pointer to arbitrary context information.
+    Tasklet   *mNext;             ///< A pointer to the next tasklet in the run queue.
 };
 
 /**
@@ -116,18 +118,16 @@ public:
      * @retval FALSE  If there are no tasklets pending.
      *
      */
-    static bool AreTaskletsPending(void);
+    static bool AreTaskletsPending(otContext *aContext);
 
     /**
      * This static method runs the next tasklet.
      *
      */
-    static void RunNextTasklet(void);
+    static void RunNextTasklet(otContext *aContext);
 
 private:
-    static Tasklet *PopTasklet(void);
-    static Tasklet *sHead;
-    static Tasklet *sTail;
+    static Tasklet *PopTasklet(otContext *aContext);
 };
 
 /**

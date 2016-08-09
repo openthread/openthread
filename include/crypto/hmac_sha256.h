@@ -35,7 +35,16 @@
 #ifndef HMAC_SHA256_H_
 #define HMAC_SHA256_H_
 
+#ifndef OPEN_THREAD_DRIVER
 #include <stdint.h>
+#else
+typedef unsigned char      uint8_t;
+typedef unsigned short     uint16_t;
+typedef unsigned int       uint32_t;
+typedef unsigned long long uint64_t;
+#endif
+
+#include <cryptocontext.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -60,7 +69,7 @@ enum
  * @param[in]  aKeyLength  The key length in bytes.
  *
  */
-void otCryptoHmacSha256Start(const void *aKey, uint16_t aKeyLength);
+void otCryptoHmacSha256Start(otCryptoContext *aCryptoContext, const void *aKey, uint16_t aKeyLength);
 
 /**
  * This method inputs bytes into the HMAC computation.
@@ -69,7 +78,7 @@ void otCryptoHmacSha256Start(const void *aKey, uint16_t aKeyLength);
  * @param[in]  aBufLength  The length of @p aBuf in bytes.
  *
  */
-void otCryptoHmacSha256Update(const void *aBuf, uint16_t aBufLength);
+void otCryptoHmacSha256Update(otCryptoContext *aCryptoContext, const void *aBuf, uint16_t aBufLength);
 
 /**
  * This method finalizes the hash computation.
@@ -77,7 +86,7 @@ void otCryptoHmacSha256Update(const void *aBuf, uint16_t aBufLength);
  * @param[out]  aHash  A pointer to the output buffer.
  *
  */
-void otCryptoHmacSha256Finish(uint8_t aHash[otCryptoSha256Size]);
+void otCryptoHmacSha256Finish(otCryptoContext *aCryptoContext, uint8_t aHash[otCryptoSha256Size]);
 
 /**
  * @}

@@ -45,7 +45,7 @@ class NcpUart : public NcpBase
     typedef NcpBase super_t;
 
 public:
-    NcpUart();
+    NcpUart(otContext *aContext);
 
     /**
      * This method is called to start a new outbound frame.

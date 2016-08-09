@@ -40,7 +40,7 @@ namespace Crypto {
 
 ThreadError AesCcm::SetKey(const uint8_t *aKey, uint16_t aKeyLength)
 {
-    otCryptoAesEcbSetKey(aKey, 8 * aKeyLength);
+    otCryptoAesEcbSetKey(mCryptoContext, aKey, 8 * aKeyLength);
     return kThreadError_None;
 }
 
@@ -108,12 +108,12 @@ void AesCcm::Init(uint32_t aHeaderLength, uint32_t aPlainTextLength, uint8_t aTa
 
     for (i = sizeof(mBlock) - 1; i > aNonceLength; i--)
     {
-        mBlock[i] = len;
+        mBlock[i] = (uint8_t)len;
         len >>= 8;
     }
 
     // encrypt initial block
-    otCryptoAesEcbEncrypt(mBlock, mBlock);
+    otCryptoAesEcbEncrypt(mCryptoContext, mBlock, mBlock);
 
     // process header
     if (aHeaderLength > 0)
@@ -169,7 +169,7 @@ void AesCcm::Header(const void *aHeader, uint32_t aHeaderLength)
     {
         if (mBlockLength == sizeof(mBlock))
         {
-            otCryptoAesEcbEncrypt(mBlock, mBlock);
+            otCryptoAesEcbEncrypt(mCryptoContext, mBlock, mBlock);
             mBlockLength = 0;
         }
 
@@ -183,7 +183,7 @@ void AesCcm::Header(const void *aHeader, uint32_t aHeaderLength)
         // process remainder
         if (mBlockLength != 0)
         {
-            otCryptoAesEcbEncrypt(mBlock, mBlock);
+            otCryptoAesEcbEncrypt(mCryptoContext, mBlock, mBlock);
         }
 
         mBlockLength = 0;
@@ -210,7 +210,7 @@ void AesCcm::Payload(void *plaintext, void *ciphertext, uint32_t len, bool aEncr
                 }
             }
 
-            otCryptoAesEcbEncrypt(mCtr, mCtrPad);
+            otCryptoAesEcbEncrypt(mCryptoContext, mCtr, mCtrPad);
             mCtrLength = 0;
         }
 
@@ -227,7 +227,7 @@ void AesCcm::Payload(void *plaintext, void *ciphertext, uint32_t len, bool aEncr
 
         if (mBlockLength == sizeof(mBlock))
         {
-            otCryptoAesEcbEncrypt(mBlock, mBlock);
+            otCryptoAesEcbEncrypt(mCryptoContext, mBlock, mBlock);
             mBlockLength = 0;
         }
 
@@ -240,7 +240,7 @@ void AesCcm::Payload(void *plaintext, void *ciphertext, uint32_t len, bool aEncr
     {
         if (mBlockLength != 0)
         {
-            otCryptoAesEcbEncrypt(mBlock, mBlock);
+            otCryptoAesEcbEncrypt(mCryptoContext, mBlock, mBlock);
         }
 
         // reset counter
@@ -259,7 +259,7 @@ void AesCcm::Finalize(void *tag, uint8_t *aTagLength)
 
     if (mTagLength > 0)
     {
-        otCryptoAesEcbEncrypt(mCtr, mCtrPad);
+        otCryptoAesEcbEncrypt(mCryptoContext, mCtr, mCtrPad);
 
         for (int i = 0; i < mTagLength; i++)
         {

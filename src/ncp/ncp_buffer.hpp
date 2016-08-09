@@ -58,7 +58,7 @@ public:
      * @param[in]  aBufferLength  The buffer size (in bytes).
      *
      */
-    NcpFrameBuffer(uint8_t *aBuffer, uint16_t aBufferLength);
+    NcpFrameBuffer(otContext *aContext, uint8_t *aBuffer, uint16_t aBufferLength);
 
     /**
      * This destructor clears the NCP frame buffer and clears all frames..

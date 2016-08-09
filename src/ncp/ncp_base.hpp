@@ -45,11 +45,12 @@ class NcpBase
 {
 public:
 
-    /**
-     * This constructor creates and initializes an NcpBase instance.
-     *
-     */
-    NcpBase(void);
+    NcpBase(otContext *aContext);
+
+protected:
+    
+    // The pointer to the OpenThread context
+    otContext* mContext;
 
 protected:
 
@@ -119,7 +120,7 @@ private:
     /**
      * Trampoline for HandleDatagramFromStack().
      */
-    static void HandleDatagramFromStack(otMessage aMessage);
+    static void HandleDatagramFromStack(otMessage message, void *aContext);
 
     void HandleDatagramFromStack(Message &aMessage);
 

@@ -35,37 +35,36 @@
 #include <net/netif.hpp>
 #include <common/code_utils.hpp>
 #include <common/message.hpp>
+#include <openthreadcontext.h>
 
 namespace Thread {
 namespace Ip6 {
 
-static Route *sRoutes = NULL;
-
-ThreadError Routes::Add(Route &aRoute)
+ThreadError Routes::Add(otContext *aContext, Route &aRoute)
 {
     ThreadError error = kThreadError_None;
 
-    for (Route *cur = sRoutes; cur; cur = cur->mNext)
+    for (Route *cur = aContext->mRoutes; cur; cur = cur->mNext)
     {
         VerifyOrExit(cur != &aRoute, error = kThreadError_Busy);
     }
 
-    aRoute.mNext = sRoutes;
-    sRoutes = &aRoute;
+    aRoute.mNext = aContext->mRoutes;
+    aContext->mRoutes = &aRoute;
 
 exit:
     return error;
 }
 
-ThreadError Routes::Remove(Route &aRoute)
+ThreadError Routes::Remove(otContext *aContext, Route &aRoute)
 {
-    if (&aRoute == sRoutes)
+    if (&aRoute == aContext->mRoutes)
     {
-        sRoutes = aRoute.mNext;
+        aContext->mRoutes = aRoute.mNext;
     }
     else
     {
-        for (Route *cur = sRoutes; cur; cur = cur->mNext)
+        for (Route *cur = aContext->mRoutes; cur; cur = cur->mNext)
         {
             if (cur->mNext == &aRoute)
             {
@@ -80,13 +79,13 @@ ThreadError Routes::Remove(Route &aRoute)
     return kThreadError_None;
 }
 
-int Routes::Lookup(const Address &aSource, const Address &aDestination)
+int Routes::Lookup(otContext *aContext, const Address &aSource, const Address &aDestination)
 {
     int maxPrefixMatch = -1;
     uint8_t prefixMatch;
     int rval = -1;
 
-    for (Route *cur = sRoutes; cur; cur = cur->mNext)
+    for (Route *cur = aContext->mRoutes; cur; cur = cur->mNext)
     {
         prefixMatch = cur->mPrefix.PrefixMatch(aDestination);
 
@@ -109,7 +108,7 @@ int Routes::Lookup(const Address &aSource, const Address &aDestination)
         rval = cur->mInterfaceId;
     }
 
-    for (Netif *netif = Netif::GetNetifList(); netif; netif = netif->GetNext())
+    for (Netif *netif = Netif::GetNetifList(aContext); netif; netif = netif->GetNext())
     {
         if (netif->RouteLookup(aSource, aDestination, &prefixMatch) == kThreadError_None &&
             prefixMatch > maxPrefixMatch)

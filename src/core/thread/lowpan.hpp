@@ -406,7 +406,7 @@ public:
         }
         else {
             mDispatchOffsetSize |= kOffset;
-            mOffset = aOffset / 8;
+            mOffset = (uint8_t)(aOffset / 8);
         }
     }
 
