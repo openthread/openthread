@@ -36,6 +36,7 @@
 #define PLATFORM_POSIX_H_
 
 #include <stdint.h>
+#include <stdbool.h>
 #include <sys/select.h>
 #include <sys/time.h>
 
@@ -50,6 +51,12 @@ extern uint32_t NODE_ID;
  *
  */
 extern uint32_t WELLKNOWN_NODE_ID;
+
+/**
+ * diagnostics mode flag.
+ *
+ */
+extern bool mDiagEnabled;
 
 /**
  * This function initializes the alarm service used by OpenThread.

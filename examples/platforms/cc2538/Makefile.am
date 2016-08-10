@@ -44,6 +44,7 @@ libopenthread_cc2538_a_SOURCES            = \
     random.c                                \
     uart.c                                  \
     startup-gcc.c                           \
+    diag.c                                  \
     $(NULL)
 
 noinst_HEADERS                            = \

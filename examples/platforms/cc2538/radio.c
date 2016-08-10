@@ -371,7 +371,14 @@ void cc2538RadioProcess(void)
 
     if ((sState == kStateReceive) && (sReceiveFrame.mLength > 0))
     {
-        otPlatRadioReceiveDone(&sReceiveFrame, sReceiveError);
+        if (mDiagEnabled)
+        {
+            otPlatDiagRadioReceiveDone(&sReceiveFrame, sReceiveError);
+        }
+        else
+        {
+            otPlatRadioReceiveDone(&sReceiveFrame, sReceiveError);
+        }
     }
 
     if (sState == kStateTransmit)
@@ -379,14 +386,30 @@ void cc2538RadioProcess(void)
         if (sTransmitError != kThreadError_None || (sTransmitFrame.mPsdu[0] & IEEE802154_ACK_REQUEST) == 0)
         {
             sState = kStateReceive;
-            otPlatRadioTransmitDone(false, sTransmitError);
+
+            if (mDiagEnabled)
+            {
+                otPlatDiagRadioTransmitDone(false, sTransmitError);
+            }
+            else
+            {
+                otPlatRadioTransmitDone(false, sTransmitError);
+            }
         }
         else if (sReceiveFrame.mLength == IEEE802154_ACK_LENGTH &&
                  (sReceiveFrame.mPsdu[0] & IEEE802154_FRAME_TYPE_MASK) == IEEE802154_FRAME_TYPE_ACK &&
                  (sReceiveFrame.mPsdu[IEEE802154_DSN_OFFSET] == sTransmitFrame.mPsdu[IEEE802154_DSN_OFFSET]))
         {
             sState = kStateReceive;
-            otPlatRadioTransmitDone((sReceiveFrame.mPsdu[0] & IEEE802154_FRAME_PENDING) != 0, sTransmitError);
+
+            if (mDiagEnabled)
+            {
+                otPlatDiagRadioTransmitDone((sReceiveFrame.mPsdu[0] & IEEE802154_FRAME_PENDING) != 0, sTransmitError);
+            }
+            else
+            {
+                otPlatRadioTransmitDone((sReceiveFrame.mPsdu[0] & IEEE802154_FRAME_PENDING) != 0, sTransmitError);
+            }
         }
     }
 

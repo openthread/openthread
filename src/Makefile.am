@@ -34,12 +34,14 @@ DIST_SUBDIRS                            = \
     cli                                   \
     core                                  \
     ncp                                   \
+    diag                                  \
     $(NULL)
 
 # Always build (e.g. for 'make all') these subdirectories.
 
 SUBDIRS                                 = \
     core                                  \
+    diag                                  \
     $(NULL)
 
 if OPENTHREAD_ENABLE_CLI

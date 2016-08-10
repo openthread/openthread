@@ -456,7 +456,15 @@ void radioReceive(void)
             {
                 sState = kStateReceive;
                 sAckWait = false;
-                otPlatRadioTransmitDone(isFramePending(sReceiveFrame.mPsdu), kThreadError_None);
+
+                if (mDiagEnabled)
+                {
+                    otPlatDiagRadioTransmitDone(isFramePending(sReceiveFrame.mPsdu), kThreadError_None);
+                }
+                else
+                {
+                    otPlatRadioTransmitDone(isFramePending(sReceiveFrame.mPsdu), kThreadError_None);
+                }
             }
         }
         else if (sState == kStateReceive &&
@@ -478,7 +486,15 @@ void radioSendMessage(void)
     if (!sAckWait)
     {
         sState = kStateReceive;
-        otPlatRadioTransmitDone(false, kThreadError_None);
+
+        if (mDiagEnabled)
+        {
+            otPlatDiagRadioTransmitDone(false, kThreadError_None);
+        }
+        else
+        {
+            otPlatRadioTransmitDone(false, kThreadError_None);
+        }
     }
 }
 
@@ -609,5 +625,13 @@ void radioProcessFrame(void)
 
 exit:
 
-    otPlatRadioReceiveDone(error == kThreadError_None ? &sReceiveFrame : NULL, error);
+    if (mDiagEnabled)
+    {
+        otPlatDiagRadioReceiveDone(error == kThreadError_None ? &sReceiveFrame : NULL, error);
+    }
+    else
+    {
+        otPlatRadioReceiveDone(error == kThreadError_None ? &sReceiveFrame : NULL, error);
+    }
 }
+

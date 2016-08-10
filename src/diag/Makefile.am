@@ -28,44 +28,26 @@
 
 include $(abs_top_nlbuild_autotools_dir)/automake/pre.am
 
-bin_PROGRAMS                                                           = \
-    ot-cli                                                               \
+lib_LIBRARIES                       = libopenthread-diag.a
+
+libopenthread_diag_a_CPPFLAGS =        \
+    -I$(top_srcdir)/include           \
+    -I$(top_srcdir)/src               \
+    -I$(top_srcdir)/src/core          \
+    $(OPENTHREAD_TARGET_DEFINES)      \
     $(NULL)
 
-ot_cli_CPPFLAGS                                                        = \
-    -I$(top_srcdir)/include                                              \
-    -I$(top_srcdir)/examples/platforms                                   \
+libopenthread_diag_a_SOURCES         = \
+    openthread-diag.cpp                \
+    diag_process.cpp                   \
     $(NULL)
 
-ot_cli_LDADD                                                           = \
-    $(top_builddir)/src/core/libopenthread.a                             \
-    $(top_builddir)/src/diag/libopenthread-diag.a                        \
-    $(top_builddir)/src/cli/libopenthread-cli.a                          \
-    $(top_builddir)/third_party/mbedtls/libmbedcrypto.a                  \
+noinst_HEADERS                      = \
+    diag_process.hpp                  \
     $(NULL)
 
-ot_cli_LDFLAGS                                                         = \
-    $(NULL)
-
-if OPENTHREAD_EXAMPLES_POSIX
-ot_cli_LDADD                                                          += \
-    $(top_builddir)/examples/platforms/posix/libopenthread-posix.a       \
-    -lstdc++                                                             \
-    $(NULL)
-endif
-
-if OPENTHREAD_EXAMPLES_CC2538
-ot_cli_LDADD                                                          += \
-    $(top_builddir)/examples/platforms/cc2538/libopenthread-cc2538.a     \
-    $(NULL)
-
-ot_cli_LDFLAGS                                                        += \
-    -T $(top_srcdir)/examples/platforms/cc2538/cc2538.ld                 \
-    $(NULL)
-endif
-
-ot_cli_SOURCES                                                         = \
-    main.c                                                               \
-    $(NULL)
+if OPENTHREAD_BUILD_COVERAGE
+CLEANFILES                          = $(wildcard *.gcda *.gcno)
+endif # OPENTHREAD_BUILD_COVERAGE
 
 include $(abs_top_nlbuild_autotools_dir)/automake/post.am

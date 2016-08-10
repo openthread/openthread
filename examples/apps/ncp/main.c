@@ -27,6 +27,7 @@
  */
 
 #include <openthread.h>
+#include <openthread-diag.h>
 #include <ncp/ncp.h>
 #include <platform.h>
 
@@ -39,6 +40,7 @@ int main(int argc, char *argv[])
     PlatformInit(argc, argv);
     otEnable();
     otNcpInit();
+    diagInit();
 
     while (1)
     {

@@ -36,8 +36,15 @@
 #define PLATFORM_CC2538_H_
 
 #include <stdint.h>
+#include <stdbool.h>
 
 #include "cc2538-reg.h"
+
+/**
+ * diagnostics mode flag.
+ *
+ */
+extern bool mDiagEnabled;
 
 /**
  * This function initializes the alarm service used by OpenThread.

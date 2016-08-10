@@ -27,6 +27,7 @@
  */
 
 #include <openthread.h>
+#include <openthread-diag.h>
 #include <cli/cli-uart.h>
 #include <platform.h>
 
@@ -39,6 +40,7 @@ int main(int argc, char *argv[])
     PlatformInit(argc, argv);
     otEnable();
     otCliUartInit();
+    diagInit();
 
     while (1)
     {

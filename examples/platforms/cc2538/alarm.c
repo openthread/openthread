@@ -99,7 +99,15 @@ void cc2538AlarmProcess(void)
         if (fire)
         {
             sIsRunning = false;
-            otPlatAlarmFired();
+
+            if (mDiagEnabled)
+            {
+                otPlatDiagAlarmFired();
+            }
+            else
+            {
+                otPlatAlarmFired();
+            }
         }
     }
 

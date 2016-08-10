@@ -26,69 +26,30 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-/**
- * @file
- * @brief
- *   This file includes the platform abstraction for the alarm service.
- */
+#include <stdbool.h>
+#include <stdio.h>
+#include <string.h>
+#include <sys/time.h>
 
-#ifndef ALARM_H_
-#define ALARM_H_
+#include <platform/alarm.h>
+#include "platform-cc2538.h"
 
-#include <stdint.h>
+bool mDiagEnabled = false;
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+void otPlatDiagProcess(int argc, char *argv[], char *aOutput)
+{
+    // add more plarform specific diagnostics features here
 
-/**
- * @defgroup alarm Alarm
- * @ingroup platform
- *
- * @brief
- *   This module includes the platform abstraction for the alarm service.
- *
- * @{
- *
- */
+    sprintf(aOutput, "diag feature '%s' is not supported\r\n", argv[0]);
+    (void)argc;
+}
 
-/**
- * Set the alarm to fire at @p aDt milliseconds after @p aT0.
- *
- * @param[in] aT0  The reference time.
- * @param[in] aDt  The time delay in milliseconds from @p aT0.
- */
-void otPlatAlarmStartAt(uint32_t aT0, uint32_t aDt);
+void otPlatDiagModeSet(bool aMode)
+{
+    mDiagEnabled = aMode;
+}
 
-/**
- * Stop the alarm.
- */
-void otPlatAlarmStop(void);
-
-/**
- * Get the current time.
- *
- * @returns The current time in milliseconds.
- */
-uint32_t otPlatAlarmGetNow(void);
-
-/**
- * Signal that the alarm has fired.
- */
-extern void otPlatAlarmFired(void);
-
-/**
- * Signal diagnostics module that the alarm has fired.
- */
-extern void otPlatDiagAlarmFired(void);
-
-/**
- * @}
- *
- */
-
-#ifdef __cplusplus
-}  // extern "C"
-#endif
-
-#endif  // ALARM_H_
+bool otPlatDiagModeGet()
+{
+    return mDiagEnabled;
+}

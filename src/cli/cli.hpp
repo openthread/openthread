@@ -156,6 +156,7 @@ private:
     static void ProcessThread(int argc, char *argv[]);
     static void ProcessVersion(int argc, char *argv[]);
     static void ProcessWhitelist(int argc, char *argv[]);
+    static void ProcessDiag(int argc, char *argv[]);
 
     static void HandleEchoResponse(void *aContext, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
     static void HandlePingTimer(void *aContext);

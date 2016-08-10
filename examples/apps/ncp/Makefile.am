@@ -39,6 +39,7 @@ ot_ncp_CPPFLAGS                                                        = \
 
 ot_ncp_LDADD                                                           = \
     $(top_builddir)/src/core/libopenthread.a                             \
+    $(top_builddir)/src/diag/libopenthread-diag.a                        \
     $(top_builddir)/src/ncp/libopenthread-ncp.a                          \
     $(top_builddir)/third_party/mbedtls/libmbedcrypto.a                  \
     $(NULL)

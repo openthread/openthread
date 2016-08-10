@@ -29,66 +29,24 @@
 /**
  * @file
  * @brief
- *   This file includes the platform abstraction for the alarm service.
+ *  This file defines the top-level functions for the OpenThread diagnostics library.
  */
 
-#ifndef ALARM_H_
-#define ALARM_H_
-
-#include <stdint.h>
+#ifndef OPENTHREAD_DIAG_H_
+#define OPENTHREAD_DIAG_H_
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-/**
- * @defgroup alarm Alarm
- * @ingroup platform
- *
- * @brief
- *   This module includes the platform abstraction for the alarm service.
- *
- * @{
- *
- */
+void diagInit();
 
-/**
- * Set the alarm to fire at @p aDt milliseconds after @p aT0.
- *
- * @param[in] aT0  The reference time.
- * @param[in] aDt  The time delay in milliseconds from @p aT0.
- */
-void otPlatAlarmStartAt(uint32_t aT0, uint32_t aDt);
+char *diagProcessCmd(int argc, char *argv[]);
 
-/**
- * Stop the alarm.
- */
-void otPlatAlarmStop(void);
-
-/**
- * Get the current time.
- *
- * @returns The current time in milliseconds.
- */
-uint32_t otPlatAlarmGetNow(void);
-
-/**
- * Signal that the alarm has fired.
- */
-extern void otPlatAlarmFired(void);
-
-/**
- * Signal diagnostics module that the alarm has fired.
- */
-extern void otPlatDiagAlarmFired(void);
-
-/**
- * @}
- *
- */
+bool isDiagEnabled();
 
 #ifdef __cplusplus
 }  // extern "C"
 #endif
 
-#endif  // ALARM_H_
+#endif  // OPENTHREAD_DIAG_H_

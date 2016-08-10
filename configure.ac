@@ -596,6 +596,7 @@ src/Makefile
 src/cli/Makefile
 src/ncp/Makefile
 src/core/Makefile
+src/diag/Makefile
 third_party/Makefile
 third_party/mbedtls/Makefile
 examples/Makefile

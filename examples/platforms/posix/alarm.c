@@ -106,7 +106,15 @@ void posixAlarmProcess(void)
         if (remaining <= 0)
         {
             s_is_running = false;
-            otPlatAlarmFired();
+
+            if (mDiagEnabled)
+            {
+                otPlatDiagAlarmFired();
+            }
+            else
+            {
+                otPlatAlarmFired();
+            }
         }
     }
 }
