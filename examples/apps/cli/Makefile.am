@@ -46,6 +46,10 @@ ot_cli_LDADD                                                           = \
 ot_cli_LDFLAGS                                                         = \
     $(NULL)
 
+ot_cli_SOURCES                                                         = \
+    main.c                                                               \
+    $(NULL)
+
 if OPENTHREAD_EXAMPLES_POSIX
 ot_cli_LDADD                                                          += \
     $(top_builddir)/examples/platforms/posix/libopenthread-posix.a       \
@@ -64,6 +68,12 @@ ot_cli_LDFLAGS                                                        += \
 endif
 
 if OPENTHREAD_EXAMPLES_CC2650
+ot_cli_CPPFLAGS                                                       += \
+    -I$(top_srcdir)/examples/platforms/cc2650/cc26xxware                 \
+    -I$(top_srcdir)/examples/platforms/cc2650/cc26xxware/inc             \
+    -I$(top_srcdir)/examples/platforms/cc2650/cc26xxware/driverlib       \
+    $(NULL)
+
 ot_cli_LDADD                                                          += \
     $(top_builddir)/examples/platforms/cc2650/libopenthread-cc2650.a     \
     $(NULL)
@@ -71,10 +81,11 @@ ot_cli_LDADD                                                          += \
 ot_cli_LDFLAGS                                                        += \
     -T $(top_srcdir)/examples/platforms/cc2650/cc26xxware/linker_files/cc26x0f128.lds \
     $(NULL)
-endif
 
-ot_cli_SOURCES                                                         = \
-    main.c                                                               \
+ot_cli_SOURCES                                                        += \
+    ../../platforms/cc2650/cc26xxware/startup_files/ccfg.c               \
+    ../../platforms/cc2650/cc26xxware/startup_files/startup_gcc.c        \
     $(NULL)
+endif
 
 include $(abs_top_nlbuild_autotools_dir)/automake/post.am

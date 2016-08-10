@@ -111,6 +111,7 @@ SECTIONS
 
     .ccfg :
     {
+        KEEP(*(.ccfg))
     } > FLASH_CCFG
 
     /* User_heap_stack section, used to check that there is enough SRAM left */
