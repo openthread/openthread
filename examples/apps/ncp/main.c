@@ -29,7 +29,7 @@
 #include <openthread.h>
 #include <openthread-diag.h>
 #include <ncp/ncp.h>
-#include <platform.h>
+#include <platform/platform.h>
 
 void otSignalTaskletPending(void)
 {

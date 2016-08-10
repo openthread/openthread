@@ -66,6 +66,7 @@ COMMON_LDADD                                                        = \
 
 check_PROGRAMS                                                      = \
     test-aes                                                          \
+    test-diag                                                         \
     test-hmac-sha256                                                  \
     test-lowpan                                                       \
     test-link-quality                                                 \
@@ -128,6 +129,11 @@ test_timer_SOURCES           = test_timer.cpp
 
 test_toolchain_LDADD         = $(COMMON_LDADD)
 test_toolchain_SOURCES       = test_toolchain.cpp
+
+test_diag_LDADD              = $(top_builddir)/src/diag/libopenthread-diag.a                  \
+                               $(top_builddir)/examples/platforms/posix/libopenthread-posix.a \
+                               $(NULL)
+test_diag_SOURCES            = test_diag.cpp
 
 endif # OPENTHREAD_BUILD_TESTS
 

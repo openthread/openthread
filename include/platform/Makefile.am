@@ -33,6 +33,7 @@ ot_platform_headers                      =\
     diag.h                                \
     misc.h                                \
     logging.h                             \
+    platform.h                            \
     radio.h                               \
     random.h                              \
     uart.h                                \

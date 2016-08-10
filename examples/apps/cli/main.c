@@ -29,7 +29,7 @@
 #include <openthread.h>
 #include <openthread-diag.h>
 #include <cli/cli-uart.h>
-#include <platform.h>
+#include <platform/platform.h>
 
 void otSignalTaskletPending(void)
 {

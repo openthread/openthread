@@ -45,10 +45,6 @@ if OPENTHREAD_EXAMPLES_CC2538
 SUBDIRS                                 = cc2538
 endif
 
-noinst_HEADERS                          = \
-    platform.h                            \
-    $(NULL)
-
 # Always pretty (e.g. for 'make pretty') these subdirectories.
 
 PRETTY_SUBDIRS                          = \
