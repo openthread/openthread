@@ -205,6 +205,7 @@ ThreadError Local::Register(const Ip6::Address &aDestination)
     Coap::Header header;
     Message *message;
     Ip6::MessageInfo messageInfo;
+    ThreadNetworkDataTlv threadNetworkDataTlv;
 
     UpdateRloc();
     mSocket.Open(&HandleUdpReceive, this);
@@ -226,6 +227,9 @@ ThreadError Local::Register(const Ip6::Address &aDestination)
 
     VerifyOrExit((message = Ip6::Udp::NewMessage(0)) != NULL, error = kThreadError_NoBufs);
     SuccessOrExit(error = message->Append(header.GetBytes(), header.GetLength()));
+    threadNetworkDataTlv.Init();
+    threadNetworkDataTlv.SetLength(mLength);
+    SuccessOrExit(error = message->Append(&threadNetworkDataTlv, sizeof(threadNetworkDataTlv)));
     SuccessOrExit(error = message->Append(mTlvs, mLength));
 
     memset(&messageInfo, 0, sizeof(messageInfo));

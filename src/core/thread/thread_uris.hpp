@@ -96,7 +96,7 @@ namespace Thread {
  * The URI Path for Server Data Registration.
  *
  */
-#define OPENTHREAD_URI_SERVER_DATA      "n/sd"
+#define OPENTHREAD_URI_SERVER_DATA      "a/sd"
 
 }  // namespace Thread
 
