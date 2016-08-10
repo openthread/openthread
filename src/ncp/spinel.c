@@ -1106,6 +1106,30 @@ spinel_prop_key_to_cstr(spinel_prop_key_t prop_key)
         ret = "SPINEL_PROP_THREAD_ALLOW_LOCAL_NET_DATA_CHANGE";
         break;
 
+    case SPINEL_PROP_MAC_WHITELIST:
+        ret = "PROP_MAC_WHITELIST";
+        break;
+
+    case SPINEL_PROP_MAC_WHITELIST_ENABLED:
+        ret = "PROP_MAC_WHITELIST_ENABLED";
+        break;
+
+    case SPINEL_PROP_THREAD_MODE:
+        ret = "PROP_THREAD_MODE";
+        break;
+
+    case SPINEL_PROP_THREAD_CHILD_TIMEOUT:
+        ret = "PROP_THREAD_CHILD_TIMEOUT";
+        break;
+
+    case SPINEL_PROP_THREAD_ROUTER_UPGRADE_THRESHOLD:
+        ret = "PROP_THREAD_ROUTER_UPGRADE_THRESHOLD";
+        break;
+
+    case SPINEL_PROP_THREAD_CONTEXT_REUSE_DELAY:
+        ret = "PROP_THREAD_CONTEXT_REUSE_DELAY";
+        break;
+
     default:
         break;
     }
@@ -1193,6 +1217,14 @@ const char *spinel_status_to_cstr(spinel_status_t status)
 
     case SPINEL_STATUS_CCA_FAILURE:
         ret = "STATUS_CCA_FAILURE";
+        break;
+
+    case SPINEL_STATUS_ALREADY:
+        ret = "STATUS_ALREADY";
+        break;
+
+    case SPINEL_STATUS_ITEM_NOT_FOUND:
+        ret = "STATUS_ITEM_NOT_FOUND";
         break;
 
     case SPINEL_STATUS_RESET_POWER_ON:

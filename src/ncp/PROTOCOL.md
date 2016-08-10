@@ -1,7 +1,7 @@
 Spinel Host Controller Interface
 ================================
 
-Updated: 2016-08-05
+Updated: 2016-08-10
 
 Written by: Robert Quattlebaum <rquattle@nestlabs.com>
 
@@ -1418,8 +1418,20 @@ Possible Values:
 
 #### D.2.10. PROP 4864: `PROP_MAC_WHITELIST`
 * Type: Read-Write
-* Packed-Encoding: `A(T(E))`
+* Packed-Encoding: `A(T(Ec))`
 
+Structure Parameters:
+
+* `E`: EUI64 address of node
+* `c`: Optional RSSI-override value. The value 127 indicates
+       that the RSSI-override feature is not enabled for this
+       address. If this value is ommitted when setting or
+       inserting, it is assumed to be 127. This parameter is
+       ignored when removing.
+
+#### D.2.11. PROP 4865: `PROP_MAC_WHITELIST_ENABLED`
+* Type: Read-Write
+* Packed-Encoding: `b`
 
 ### D.3. NET Properties
 
