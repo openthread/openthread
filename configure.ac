@@ -568,6 +568,7 @@ examples/platforms/Makefile
 examples/platforms/cc2538/Makefile
 examples/platforms/posix/Makefile
 tools/Makefile
+tools/harness-automation/Makefile
 tools/spi-hdlc-adapter/Makefile
 tests/Makefile
 tests/scripts/Makefile
