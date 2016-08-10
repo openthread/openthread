@@ -146,7 +146,7 @@ typedef enum PhyState
 
 /**
  * Set the PAN ID for address filtering.
- * 
+ *
  * @param[in] aContext  The OpenThread context structure.
  * @param[in] aPanId    The IEEE 802.15.4 PAN ID.
  *
@@ -157,7 +157,7 @@ ThreadError otPlatRadioSetPanId(otContext *aContext, uint16_t aPanId);
 /**
  * Set the Extended Address for address filtering.
  *
- * 
+ *
  * @param[in] aContext          The OpenThread context structure.
  * @param[in] aExtendedAddress  A pointer to the IEEE 802.15.4 Extended Address.
  *
@@ -168,7 +168,7 @@ ThreadError otPlatRadioSetExtendedAddress(otContext *aContext, uint8_t *aExtende
 /**
  * Set the Short Address for address filtering.
  *
- * 
+ *
  * @param[in] aContext       The OpenThread context structure.
  * @param[in] aShortAddress  The IEEE 802.15.4 Short Address.
  *
@@ -193,7 +193,7 @@ ThreadError otPlatRadioSetShortAddress(otContext *aContext, uint16_t aShortAddre
 
 /**
  * Enable the radio.
- * 
+ *
  * @param[in] aContext  The OpenThread context structure.
  *
  * @retval ::kThreadError_None  Successfully transitioned to Sleep.
@@ -203,7 +203,7 @@ ThreadError otPlatRadioEnable(otContext *aContext);
 
 /**
  * Disable the radio.
- * 
+ *
  * @param[in] aContext  The OpenThread context structure.
  *
  * @retval ::kThreadError_None  Successfully transitioned to Disabled.
@@ -213,7 +213,7 @@ ThreadError otPlatRadioDisable(otContext *aContext);
 /**
  * Transition the radio from Receive to Sleep.
  * Turn off the radio.
- * 
+ *
  * @param[in] aContext  The OpenThread context structure.
  *
  * @retval ::kThreadError_None  Successfully transitioned to Sleep.
@@ -236,7 +236,7 @@ ThreadError otPlatRadioReceive(otContext *aContext, uint8_t aChannel);
 /**
  * The radio driver calls this method to notify OpenThread of a received packet.
  *
- * 
+ *
  * @param[in]  aContext The OpenThread context structure.
  * @param[in]  aPacket  A pointer to the received packet or NULL if the receive operation was aborted.
  * @param[in]  aError   ::kThreadError_None when successfully received a frame, ::kThreadError_Abort when reception
@@ -250,7 +250,7 @@ extern void otPlatRadioReceiveDone(otContext *aContext, RadioPacket *aPacket, Th
  * This method returns a pointer to the transmit buffer.
  *
  * The caller forms the IEEE 802.15.4 frame in this buffer then calls otPlatRadioTransmit() to request transmission.
- * 
+ *
  * @param[in] aContext  The OpenThread context structure.
  *
  * @returns A pointer to the transmit buffer.
@@ -267,7 +267,7 @@ RadioPacket *otPlatRadioGetTransmitBuffer(otContext *aContext);
  * The transmit sequence consists of:
  * 1. Transitioning the radio to Transmit from Receive.
  * 2. Transmits the psdu on the given channel and at the given transmit power.
- * 
+ *
  * @param[in] aContext  The OpenThread context structure.
  *
  * @retval ::kThreadError_None         Successfully transitioned to Transmit.
@@ -277,7 +277,7 @@ ThreadError otPlatRadioTransmit(otContext *aContext);
 
 /**
  * The radio driver calls this method to notify OpenThread that the transmission has completed.
- * 
+ *
  * @param[in]  aContext       The OpenThread context structure.
  * @param[in]  aFramePending  TRUE if an ACK frame was received and the Frame Pending bit was set.
  * @param[in]  aError  ::kThreadError_None when the frame was transmitted, ::kThreadError_NoAck when the frame was
@@ -290,7 +290,7 @@ extern void otPlatRadioTransmitDone(otContext *aContext, bool aFramePending, Thr
 
 /**
  * Get the most recent RSSI measurement.
- * 
+ *
  * @param[in] aContext  The OpenThread context structure.
  *
  * @returns The noise floor value in dBm when the noise floor value is valid.  127 when noise floor value is invalid.
@@ -299,7 +299,7 @@ int8_t otPlatRadioGetNoiseFloor(otContext *aContext);
 
 /**
  * Get the radio capabilities.
- * 
+ *
  * @param[in] aContext  The OpenThread context structure.
  *
  * @returns The radio capability bit vector. The stack enables or disables some functions based on this value.
@@ -308,7 +308,7 @@ otRadioCaps otPlatRadioGetCaps(otContext *aContext);
 
 /**
  * Get the status of promiscuous mode.
- * 
+ *
  * @param[in] aContext  The OpenThread context structure.
  *
  * @retval true   Promiscuous mode is enabled.
@@ -318,7 +318,7 @@ bool otPlatRadioGetPromiscuous(otContext *aContext);
 
 /**
  * Enable or disable promiscuous mode.
- * 
+ *
  * @param[in]  aContext The OpenThread context structure.
  * @param[in]  aEnable  A value to enable or disable promiscuous mode.
  */

@@ -47,7 +47,7 @@ void PlatformInit(int argc, char *argv[]);
 
 /**
  * This function performs all platform-specific processing.
- * 
+ *
  * @param[in]  aContext  The OpenThread context structure.
  *
  */

@@ -143,7 +143,7 @@ public:
      *
      */
     void SetNextBuffer(class Buffer *buf) { mHeader.mNext = buf; }
-    
+
     /**
      * This method returns the OpenThread Context pointer.
      *
@@ -216,7 +216,7 @@ public:
         kType6lowpan     = 1,   ///< A 6lowpan frame
         kTypeMacDataPoll = 2,   ///< A MAC data poll message
     };
-    
+
     /**
      * This method returns the OpenThread Context pointer.
      *
@@ -618,7 +618,7 @@ class MessageQueue
 public:
     /**
      * This constructor initializes the message queue.
-     
+
      * @param[in]  aContext  The OpenThread context structure.
      *
      */

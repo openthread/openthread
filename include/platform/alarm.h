@@ -63,7 +63,7 @@ void otPlatAlarmStartAt(otContext *aContext, uint32_t aT0, uint32_t aDt);
 
 /**
  * Stop the alarm.
- * 
+ *
  * @param[in] aContext  The OpenThread context structure.
  */
 void otPlatAlarmStop(otContext *aContext);
@@ -77,7 +77,7 @@ uint32_t otPlatAlarmGetNow(void);
 
 /**
  * Signal that the alarm has fired.
- * 
+ *
  * @param[in] aContext  The OpenThread context structure.
  */
 extern void otPlatAlarmFired(otContext *aContext);

@@ -69,7 +69,7 @@ void posixAlarmUpdateTimeout(struct timeval *tv);
 
 /**
  * This function performs alarm driver processing.
- * 
+ *
  * @param[in]  aContext  The OpenThread context structure.
  *
  */
@@ -93,7 +93,7 @@ void posixRadioUpdateFdSet(fd_set *aReadFdSet, fd_set *aWriteFdSet, int *aMaxFd)
 
 /**
  * This function performs radio driver processing.
- * 
+ *
  * @param[in]  aContext  The OpenThread context structure.
  *
  */

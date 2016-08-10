@@ -48,7 +48,7 @@ void cc2538AlarmInit(void);
 
 /**
  * This function performs alarm driver processing.
- * 
+ *
  * @param[in]  aContext  The OpenThread context structure.
  *
  */
@@ -62,7 +62,7 @@ void cc2538RadioInit(void);
 
 /**
  * This function performs radio driver processing.
- * 
+ *
  * @param[in]  aContext  The OpenThread context structure.
  *
  */
