@@ -494,11 +494,6 @@ public:
     static Message *NewMessage(otContext *aContext, uint16_t aReserved);
 
     /**
-     * This static method for initialization.
-     */
-    static void Init(void);
-
-    /**
      * This static method sends an IPv6 datagram.
      *
      * @param[in]  aMessage      A reference to the message.

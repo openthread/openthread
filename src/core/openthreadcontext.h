@@ -72,7 +72,7 @@ typedef struct otContext
     Thread::Ip6::Route *mRoutes;
 
     Thread::Ip6::Netif *mNetifListHead;
-    int mNextInterfaceId;
+    int8_t mNextInterfaceId;
 
     Thread::Mac::Mac *mMac;
 
