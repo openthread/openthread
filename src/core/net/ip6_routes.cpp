@@ -79,11 +79,11 @@ ThreadError Routes::Remove(otContext *aContext, Route &aRoute)
     return kThreadError_None;
 }
 
-int Routes::Lookup(otContext *aContext, const Address &aSource, const Address &aDestination)
+int8_t Routes::Lookup(otContext *aContext, const Address &aSource, const Address &aDestination)
 {
-    int maxPrefixMatch = -1;
+    uint8_t maxPrefixMatch = 0;
     uint8_t prefixMatch;
-    int rval = -1;
+    int8_t rval = -1;
 
     for (Route *cur = aContext->mRoutes; cur; cur = cur->mNext)
     {

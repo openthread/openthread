@@ -45,7 +45,7 @@ namespace Thread {
 
 static NcpBase *sNcpContext = NULL;
 
-#define NCP_PLAT_RESET_REASON        (1<<31)
+#define NCP_PLAT_RESET_REASON        (1U<<31)
 
 // ----------------------------------------------------------------------------
 // MARK: Command/Property Jump Tables
@@ -388,7 +388,7 @@ void NcpBase::HandleActiveScanResult(otActiveScanResult *result)
 {
     if (result)
     {
-        uint8_t flags = (result->mVersion << SPINEL_BEACON_THREAD_FLAG_VERSION_SHIFT);
+        uint8_t flags = static_cast<uint8_t>(result->mVersion << SPINEL_BEACON_THREAD_FLAG_VERSION_SHIFT);
 
         if (result->mIsJoinable)
         {
@@ -457,7 +457,7 @@ void NcpBase::UpdateChangedProps(void)
     {
         if ((mChangedFlags & NCP_PLAT_RESET_REASON) != 0)
         {
-            mChangedFlags &= ~NCP_PLAT_RESET_REASON;
+            mChangedFlags &= ~static_cast<uint32_t>(NCP_PLAT_RESET_REASON);
             SendLastStatus(
                 SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0,
                 ResetReasonToSpinelStatus(otPlatGetResetReason())
@@ -465,7 +465,7 @@ void NcpBase::UpdateChangedProps(void)
         }
         else if ((mChangedFlags & OT_IP6_LL_ADDR_CHANGED) != 0)
         {
-            mChangedFlags &= ~OT_IP6_LL_ADDR_CHANGED;
+            mChangedFlags &= ~static_cast<uint32_t>(OT_IP6_LL_ADDR_CHANGED);
             HandleCommandPropertyGet(
                 SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0,
                 SPINEL_PROP_IPV6_LL_ADDR
@@ -477,7 +477,7 @@ void NcpBase::UpdateChangedProps(void)
                               SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0,
                               SPINEL_PROP_IPV6_ML_ADDR
                           ));
-            mChangedFlags &= ~OT_IP6_ML_ADDR_CHANGED;
+            mChangedFlags &= ~static_cast<uint32_t>(OT_IP6_ML_ADDR_CHANGED);
         }
         else if ((mChangedFlags & OT_NET_STATE) != 0)
         {
@@ -485,7 +485,7 @@ void NcpBase::UpdateChangedProps(void)
                               SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0,
                               SPINEL_PROP_NET_STATE
                           ));
-            mChangedFlags &= ~OT_NET_STATE;
+            mChangedFlags &= ~static_cast<uint32_t>(OT_NET_STATE);
         }
         else if ((mChangedFlags & OT_NET_ROLE) != 0)
         {
@@ -493,7 +493,7 @@ void NcpBase::UpdateChangedProps(void)
                               SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0,
                               SPINEL_PROP_NET_ROLE
                           ));
-            mChangedFlags &= ~OT_NET_ROLE;
+            mChangedFlags &= ~static_cast<uint32_t>(OT_NET_ROLE);
 
         }
         else if ((mChangedFlags & OT_NET_PARTITION_ID) != 0)
@@ -502,7 +502,7 @@ void NcpBase::UpdateChangedProps(void)
                               SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0,
                               SPINEL_PROP_NET_PARTITION_ID
                           ));
-            mChangedFlags &= ~OT_NET_PARTITION_ID;
+            mChangedFlags &= ~static_cast<uint32_t>(OT_NET_PARTITION_ID);
         }
         else if ((mChangedFlags & OT_NET_KEY_SEQUENCE) != 0)
         {
@@ -510,7 +510,7 @@ void NcpBase::UpdateChangedProps(void)
                               SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0,
                               SPINEL_PROP_NET_KEY_SEQUENCE
                           ));
-            mChangedFlags &= ~OT_NET_KEY_SEQUENCE;
+            mChangedFlags &= ~static_cast<uint32_t>(OT_NET_KEY_SEQUENCE);
         }
         else if ((mChangedFlags & (OT_IP6_ADDRESS_ADDED | OT_IP6_ADDRESS_REMOVED)) != 0)
         {
@@ -518,7 +518,7 @@ void NcpBase::UpdateChangedProps(void)
                               SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0,
                               SPINEL_PROP_IPV6_ADDRESS_TABLE
                           ));
-            mChangedFlags &= ~(OT_IP6_ADDRESS_ADDED | OT_IP6_ADDRESS_REMOVED);
+            mChangedFlags &= ~static_cast<uint32_t>(OT_IP6_ADDRESS_ADDED | OT_IP6_ADDRESS_REMOVED);
         }
         else if ((mChangedFlags & (OT_THREAD_CHILD_ADDED | OT_THREAD_CHILD_REMOVED)) != 0)
         {
@@ -527,7 +527,7 @@ void NcpBase::UpdateChangedProps(void)
             //    SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0,
             //    SPINEL_PROP_THREAD_CHILD_TABLE
             //));
-            mChangedFlags &= ~(OT_THREAD_CHILD_ADDED | OT_THREAD_CHILD_REMOVED);
+            mChangedFlags &= ~static_cast<uint32_t>(OT_THREAD_CHILD_ADDED | OT_THREAD_CHILD_REMOVED);
         }
     }
 
@@ -852,7 +852,7 @@ ThreadError NcpBase::OutboundFrameFeedVPacked(const char *pack_format, va_list a
 
     if ((packed_len > 0) && (packed_len <= static_cast<spinel_ssize_t>(sizeof(buf))))
     {
-        errorCode = OutboundFrameFeedData(buf, packed_len);
+        errorCode = OutboundFrameFeedData(buf, static_cast<uint16_t>(packed_len));
     }
 
     return errorCode;
@@ -943,7 +943,8 @@ ThreadError NcpBase::CommandHandler_PROP_VALUE_SET(uint8_t header, unsigned int 
 
     if (parsedLength == arg_len)
     {
-        errorCode = HandleCommandPropertySet(header, static_cast<spinel_prop_key_t>(propKey), value_ptr, value_len);
+        errorCode = HandleCommandPropertySet(header, static_cast<spinel_prop_key_t>(propKey), value_ptr,
+					     static_cast<uint16_t>(value_len));
     }
     else
     {
@@ -968,7 +969,8 @@ ThreadError NcpBase::CommandHandler_PROP_VALUE_INSERT(uint8_t header, unsigned i
 
     if (parsedLength == arg_len)
     {
-        errorCode = HandleCommandPropertyInsert(header, static_cast<spinel_prop_key_t>(propKey), value_ptr, value_len);
+        errorCode = HandleCommandPropertyInsert(header, static_cast<spinel_prop_key_t>(propKey), value_ptr,
+						static_cast<uint16_t>(value_len));
     }
     else
     {
@@ -993,7 +995,8 @@ ThreadError NcpBase::CommandHandler_PROP_VALUE_REMOVE(uint8_t header, unsigned i
 
     if (parsedLength == arg_len)
     {
-        errorCode = HandleCommandPropertyRemove(header, static_cast<spinel_prop_key_t>(propKey), value_ptr, value_len);
+        errorCode = HandleCommandPropertyRemove(header, static_cast<spinel_prop_key_t>(propKey), value_ptr,
+						static_cast<uint16_t>(value_len));
     }
     else
     {
@@ -2564,7 +2567,7 @@ ThreadError NcpBase::SetPropertyHandler_STREAM_NET_INSECURE(uint8_t header, spin
         (void)meta_len;
         (void)parsedLength;
 
-        errorCode = message->Append(frame_ptr, frame_len);
+        errorCode = message->Append(frame_ptr, static_cast<uint16_t>(frame_len));
     }
 
     if (errorCode == kThreadError_None)
@@ -2632,7 +2635,7 @@ ThreadError NcpBase::SetPropertyHandler_STREAM_NET(uint8_t header, spinel_prop_k
         (void)meta_len;
         (void)parsedLength;
 
-        errorCode = message->Append(frame_ptr, frame_len);
+        errorCode = message->Append(frame_ptr, static_cast<uint16_t>(frame_len));
     }
 
     if (errorCode == kThreadError_None)
@@ -3351,6 +3354,6 @@ ThreadError otNcpStreamWrite(int aStreamId, const uint8_t* aDataPtr, int aDataLe
         SPINEL_CMD_PROP_VALUE_IS,
         static_cast<spinel_prop_key_t>(aStreamId),
         aDataPtr,
-        aDataLen
+        static_cast<uint16_t>(aDataLen)
     );
 }

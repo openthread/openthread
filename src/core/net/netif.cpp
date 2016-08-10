@@ -144,7 +144,7 @@ Netif *Netif::GetNext() const
     return mNext;
 }
 
-Netif *Netif::GetNetifById(otContext *aContext, uint8_t aInterfaceId)
+Netif *Netif::GetNetifById(otContext *aContext, int8_t aInterfaceId)
 {
     Netif *netif;
 
@@ -176,7 +176,7 @@ exit:
     return netif;
 }
 
-int Netif::GetInterfaceId() const
+int8_t Netif::GetInterfaceId() const
 {
     return mInterfaceId;
 }
@@ -354,8 +354,8 @@ const NetifUnicastAddress *Netif::SelectSourceAddress(otContext *aContext, Messa
     int interfaceId = aMessageInfo.mInterfaceId;
     const NetifUnicastAddress *rvalAddr = NULL;
     const Address *candidateAddr;
-    uint8_t candidateId;
-    uint8_t rvalIface = 0;
+    int8_t candidateId;
+    int8_t rvalIface = 0;
 
     for (Netif *netif = GetNetifList(aContext); netif; netif = netif->mNext)
     {
@@ -433,9 +433,9 @@ exit:
     return rvalAddr;
 }
 
-int Netif::GetOnLinkNetif(otContext *aContext, const Address &aAddress)
+int8_t Netif::GetOnLinkNetif(otContext *aContext, const Address &aAddress)
 {
-    int rval = -1;
+    int8_t rval = -1;
 
     for (Netif *netif = aContext->mNetifListHead; netif; netif = netif->mNext)
     {

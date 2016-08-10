@@ -243,10 +243,10 @@ public:
         }
         else {
             mKeyIdentifier[4] = (aKeySequence & 0x7f) + 1;
-            mKeyIdentifier[3] = aKeySequence >> 0;
-            mKeyIdentifier[2] = aKeySequence >> 8;
-            mKeyIdentifier[1] = aKeySequence >> 16;
-            mKeyIdentifier[0] = aKeySequence >> 24;
+            mKeyIdentifier[3] = (aKeySequence >> 0) & 0xff;
+            mKeyIdentifier[2] = (aKeySequence >> 8) & 0xff;
+            mKeyIdentifier[1] = (aKeySequence >> 16) & 0xff;
+            mKeyIdentifier[0] = (aKeySequence >> 24) & 0xff;
         }
     }
 
@@ -631,7 +631,7 @@ public:
      * @returns The Child ID portion of an RLOC16.
      *
      */
-    static uint8_t GetChildId(uint16_t aRloc16) { return aRloc16 & kMaxChildId; }
+    static uint16_t GetChildId(uint16_t aRloc16) { return aRloc16 & kMaxChildId; }
 
     /**
      * This method returns the Router ID portion of an RLOC16.
@@ -651,7 +651,7 @@ public:
      * @returns The RLOC16 of the given Router ID.
      *
      */
-    static uint16_t GetRloc16(uint8_t aRouterId) { return static_cast<uint16_t>(aRouterId) << kRouterIdOffset; }
+    static uint16_t GetRloc16(uint8_t aRouterId) { return static_cast<uint16_t>(aRouterId << kRouterIdOffset); }
 
     /**
      * This method indicates whether or not @p aRloc16 refers to an active router.

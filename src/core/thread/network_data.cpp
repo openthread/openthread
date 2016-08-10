@@ -87,7 +87,7 @@ void NetworkData::RemoveTemporaryData(uint8_t *aData, uint8_t &aDataLength)
                 length = sizeof(NetworkDataTlv) + cur->GetLength();
                 dst = reinterpret_cast<uint8_t *>(cur);
                 src = reinterpret_cast<uint8_t *>(cur->GetNext());
-                memmove(dst, src, aDataLength - (src - aData));
+                memmove(dst, src, aDataLength - static_cast<size_t>(src - aData));
                 aDataLength -= length;
                 continue;
             }
@@ -104,7 +104,7 @@ void NetworkData::RemoveTemporaryData(uint8_t *aData, uint8_t &aDataLength)
                 length = sizeof(NetworkDataTlv) + cur->GetLength();
                 dst = reinterpret_cast<uint8_t *>(cur);
                 src = reinterpret_cast<uint8_t *>(cur->GetNext());
-                memmove(dst, src, aDataLength - (src - aData));
+                memmove(dst, src, aDataLength - static_cast<size_t>(src - aData));
                 aDataLength -= length;
                 continue;
             }
@@ -158,7 +158,7 @@ void NetworkData::RemoveTemporaryData(uint8_t *aData, uint8_t &aDataLength, Pref
                 contextId = context->GetContextId();
 
                 // replace p_border_router_16
-                for (int i = 0; i < borderRouter->GetNumEntries(); i++)
+                for (uint8_t i = 0; i < borderRouter->GetNumEntries(); i++)
                 {
                     borderRouterEntry = borderRouter->GetEntry(i);
 
@@ -180,7 +180,7 @@ void NetworkData::RemoveTemporaryData(uint8_t *aData, uint8_t &aDataLength, Pref
                 hasRoute = FindHasRoute(aPrefix);
 
                 // replace r_border_router_16
-                for (int j = 0; j < hasRoute->GetNumEntries(); j++)
+                for (uint8_t j = 0; j < hasRoute->GetNumEntries(); j++)
                 {
                     hasRouteEntry = hasRoute->GetEntry(j);
                     hasRouteEntry->SetRloc(0xfffe);
@@ -204,7 +204,7 @@ void NetworkData::RemoveTemporaryData(uint8_t *aData, uint8_t &aDataLength, Pref
             length = sizeof(NetworkDataTlv) + cur->GetLength();
             dst = reinterpret_cast<uint8_t *>(cur);
             src = reinterpret_cast<uint8_t *>(cur->GetNext());
-            memmove(dst, src, aDataLength - (src - aData));
+            memmove(dst, src, aDataLength - static_cast<size_t>(src - aData));
             aPrefix.SetSubTlvsLength(aPrefix.GetSubTlvsLength() - length);
             aDataLength -= length;
         }
@@ -345,7 +345,7 @@ PrefixTlv *NetworkData::FindPrefix(const uint8_t *aPrefix, uint8_t aPrefixLength
 
 int8_t NetworkData::PrefixMatch(const uint8_t *a, const uint8_t *b, uint8_t aLength)
 {
-    uint8_t rval = 0;
+    int8_t rval = 0;
     uint8_t bytes = BitVectorBytes(aLength);
     uint8_t diff;
 
@@ -377,7 +377,7 @@ ThreadError NetworkData::Insert(uint8_t *aStart, uint8_t aLength)
     assert(aLength + mLength <= sizeof(mTlvs) &&
            mTlvs <= aStart &&
            aStart <= mTlvs + mLength);
-    memmove(aStart + aLength, aStart, mLength - (aStart - mTlvs));
+    memmove(aStart + aLength, aStart, mLength - static_cast<size_t>(aStart - mTlvs));
     mLength += aLength;
     return kThreadError_None;
 }
@@ -387,7 +387,7 @@ ThreadError NetworkData::Remove(uint8_t *aStart, uint8_t aLength)
     assert(aLength <= mLength &&
            mTlvs <= aStart &&
            (aStart - mTlvs) + aLength <= mLength);
-    memmove(aStart, aStart + aLength, mLength - ((aStart - mTlvs) + aLength));
+    memmove(aStart, aStart + aLength, mLength - (static_cast<size_t>(aStart - mTlvs) + aLength));
     mLength -= aLength;
     return kThreadError_None;
 }

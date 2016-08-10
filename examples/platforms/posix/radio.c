@@ -240,12 +240,12 @@ static inline uint8_t getDsn(const uint8_t *frame)
 
 static inline otPanId getDstPan(const uint8_t *frame)
 {
-    return (((otPanId)frame[IEEE802154_DSTPAN_OFFSET + 1]) << 8) | frame[IEEE802154_DSTPAN_OFFSET];
+    return (otPanId)((frame[IEEE802154_DSTPAN_OFFSET + 1] << 8) | frame[IEEE802154_DSTPAN_OFFSET]);
 }
 
 static inline otShortAddress getShortAddress(const uint8_t *frame)
 {
-    return (((otShortAddress)frame[IEEE802154_DSTADDR_OFFSET + 1]) << 8) | frame[IEEE802154_DSTADDR_OFFSET];
+    return (otShortAddress)((frame[IEEE802154_DSTADDR_OFFSET + 1] << 8) | frame[IEEE802154_DSTADDR_OFFSET]);
 }
 
 static inline void getExtAddress(const uint8_t *frame, otExtAddress *address)
@@ -325,7 +325,7 @@ void posixRadioInit(void)
     {
         char *endptr;
 
-        sPortOffset = strtol(offset, &endptr, 0);
+        sPortOffset = (uint16_t)strtol(offset, &endptr, 0);
 
         if (*endptr != '\0')
         {
@@ -455,10 +455,10 @@ void radioReceive(otContext *aCtx)
 {
     if (sState != kStateTransmit || sAckWait)
     {
-        int rval = recvfrom(sSockFd, &sReceiveMessage, sizeof(sReceiveMessage), 0, NULL, NULL);
+        ssize_t rval = recvfrom(sSockFd, &sReceiveMessage, sizeof(sReceiveMessage), 0, NULL, NULL);
         assert(rval >= 0);
 
-        sReceiveFrame.mLength = rval - 1;
+        sReceiveFrame.mLength = (uint8_t)(rval - 1);
 
         if (sAckWait &&
             sTransmitFrame.mChannel == sReceiveMessage.mChannel &&
@@ -547,7 +547,7 @@ void radioTransmit(const struct RadioMessage *msg, const struct RadioPacket *pkt
 
     for (i = 1; i <= WELLKNOWN_NODE_ID; i++)
     {
-        int rval;
+        ssize_t rval;
 
         if (NODE_ID == i)
         {

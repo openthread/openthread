@@ -188,7 +188,7 @@ ThreadError Dataset::ProcessActiveTimestamp(otContext *aContext, int argc, char 
     VerifyOrExit(argc > 0, ;);
 
     SuccessOrExit(error = Interpreter::ParseLong(argv[0], value));
-    sDataset.mActiveTimestamp = value;
+    sDataset.mActiveTimestamp = static_cast<uint64_t>(value);
     sDataset.mIsActiveTimestampSet = true;
 
     (void)aContext;
@@ -204,7 +204,7 @@ ThreadError Dataset::ProcessChannel(otContext *aContext, int argc, char *argv[])
 
     VerifyOrExit(argc > 0, error = kThreadError_Parse);
     SuccessOrExit(error = Interpreter::ParseLong(argv[0], value));
-    sDataset.mChannel = value;
+    sDataset.mChannel = static_cast<uint16_t>(value);
     sDataset.mIsChannelSet = true;
 
     (void)aContext;
@@ -254,7 +254,7 @@ ThreadError Dataset::ProcessDelay(otContext *aContext, int argc, char *argv[])
 
     VerifyOrExit(argc > 0, error = kThreadError_Parse);
     SuccessOrExit(error = Interpreter::ParseLong(argv[0], value));
-    sDataset.mDelay = value;
+    sDataset.mDelay = static_cast<uint32_t>(value);
     sDataset.mIsDelaySet = true;
 
     (void)aContext;
@@ -283,7 +283,7 @@ exit:
 ThreadError Dataset::ProcessMasterKey(otContext *aContext, int argc, char *argv[])
 {
     ThreadError error = kThreadError_None;
-    int8_t keyLength;
+    int keyLength;
     uint8_t key[OT_MASTER_KEY_SIZE];
 
     VerifyOrExit(argc > 0, error = kThreadError_Parse);
@@ -319,7 +319,7 @@ exit:
 ThreadError Dataset::ProcessNetworkName(otContext *aContext, int argc, char *argv[])
 {
     ThreadError error = kThreadError_None;
-    int length;
+    size_t length;
 
     VerifyOrExit(argc > 0, error = kThreadError_Parse);
     VerifyOrExit((length = strlen(argv[0])) <= OT_NETWORK_NAME_SIZE, error = kThreadError_Parse);
@@ -341,7 +341,7 @@ ThreadError Dataset::ProcessPanId(otContext *aContext, int argc, char *argv[])
 
     VerifyOrExit(argc > 0, error = kThreadError_Parse);
     SuccessOrExit(error = Interpreter::ParseLong(argv[0], value));
-    sDataset.mPanId = value;
+    sDataset.mPanId = static_cast<otPanId>(value);
     sDataset.mIsPanIdSet = true;
 
     (void)aContext;
@@ -368,7 +368,7 @@ ThreadError Dataset::ProcessPendingTimestamp(otContext *aContext, int argc, char
     VerifyOrExit(argc > 0, error = kThreadError_Parse);
 
     SuccessOrExit(error = Interpreter::ParseLong(argv[0], value));
-    sDataset.mPendingTimestamp = value;
+    sDataset.mPendingTimestamp = static_cast<uint64_t>(value);
     sDataset.mIsPendingTimestampSet = true;
 
     (void)aContext;

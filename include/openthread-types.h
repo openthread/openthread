@@ -303,7 +303,7 @@ typedef struct otOperationalDataset
     otMeshLocalPrefix mMeshLocalPrefix;            ///< Mesh Local Prefix
     uint32_t          mDelay;                      ///< Delay Timer
     otPanId           mPanId;                      ///< PAN ID
-    uint8_t           mChannel;                    ///< Channel
+    uint16_t          mChannel;                    ///< Channel
 
     bool              mIsActiveTimestampSet : 1;   ///< TRUE if Active Timestamp is set, FALSE otherwise.
     bool              mIsPendingTimestampSet : 1;  ///< TRUE if Pending Timestamp is set, FALSE otherwise.
@@ -535,10 +535,10 @@ typedef struct
 {
     otExtAddress   mExtAddress;            ///< IEEE 802.15.4 Extended Address
     uint32_t       mTimeout;               ///< Timeout
+    uint32_t       mAge;                   ///< Time last heard
     uint16_t       mRloc16;                ///< RLOC16
-    uint8_t        mChildId;               ///< Router ID
+    uint16_t       mChildId;               ///< Child ID
     uint8_t        mNetworkDataVersion;    ///< Network Data Version
-    uint8_t        mAge;                   ///< Time last heard
     uint8_t        mLinkQualityIn;         ///< Link Quality In
     int8_t         mAverageRssi;           ///< Average RSSI
     bool           mRxOnWhenIdle : 1;      ///< rx-on-when-idle
@@ -676,7 +676,7 @@ typedef struct otSockAddr
 {
     otIp6Address mAddress;  ///< An IPv6 address.
     uint16_t     mPort;     ///< A transport-layer port.
-    uint8_t      mScopeId;  ///< An IPv6 scope identifier.
+    int8_t       mScopeId;  ///< An IPv6 scope identifier.
 } otSockAddr;
 
 /**
@@ -688,7 +688,7 @@ typedef struct otMessageInfo
     otIp6Address mPeerAddr;     ///< The peer IPv6 address.
     uint16_t     mSockPort;     ///< The local transport-layer port.
     uint16_t     mPeerPort;     ///< The peer transport-layer port.
-    uint8_t      mInterfaceId;  ///< An IPv6 interface identifier.
+    int8_t       mInterfaceId;  ///< An IPv6 interface identifier.
     uint8_t      mHopLimit;     ///< The IPv6 Hop Limit.
     const void  *mLinkInfo;     ///< A pointer to link-specific information.
 } otMessageInfo;

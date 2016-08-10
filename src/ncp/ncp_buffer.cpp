@@ -133,12 +133,12 @@ uint16_t NcpFrameBuffer::GetDistance(uint8_t *aStartPtr, uint8_t *aEndPtr) const
 
     if (aEndPtr >= aStartPtr)
     {
-        distance =  aEndPtr - aStartPtr;
+        distance = static_cast<size_t>(aEndPtr - aStartPtr);
     }
     else
     {
-        distance  = mBufferEnd - aStartPtr;
-        distance +=  aEndPtr - mBuffer;
+        distance  = static_cast<size_t>(mBufferEnd - aStartPtr);
+        distance += static_cast<size_t>(aEndPtr - mBuffer);
     }
 
     return static_cast<uint16_t>(distance);
@@ -156,7 +156,7 @@ uint16_t NcpFrameBuffer::ReadUint16At(uint8_t *aBufPtr)
 {
     uint16_t value;
 
-    value = (*aBufPtr) << 8;
+    value = static_cast<uint16_t>((*aBufPtr) << 8);
     value += *Next(aBufPtr);
 
     return value;
@@ -357,7 +357,8 @@ ThreadError NcpFrameBuffer::OutFramePrepareSegment(void)
         }
 
         // Find tail/end of current segment.
-        mReadSegmentTail = Advance(mReadSegmentHead, kSegmentHeaderSize + (header & kSegmentHeaderLengthMask));
+        mReadSegmentTail = Advance(mReadSegmentHead,
+				   kSegmentHeaderSize + static_cast<uint8_t>(header & kSegmentHeaderLengthMask));
 
         // Update the current read pointer to skip the segment header.
         mReadPointer = Advance(mReadSegmentHead, kSegmentHeaderSize);
@@ -578,7 +579,7 @@ ThreadError NcpFrameBuffer::OutFrameRemove(void)
         }
 
         // Move the pointer to next segment.
-        bufPtr = Advance(bufPtr, kSegmentHeaderSize + (header & kSegmentHeaderLengthMask));
+        bufPtr = Advance(bufPtr, kSegmentHeaderSize + static_cast<uint8_t>(header & kSegmentHeaderLengthMask));
     }
 
     mReadFrameStart = bufPtr;
@@ -646,7 +647,7 @@ uint16_t NcpFrameBuffer::OutFrameGetLength(void)
         frameLength += (header & kSegmentHeaderLengthMask);
 
         // Move the pointer to next segment.
-        bufPtr = Advance(bufPtr, kSegmentHeaderSize + (header & kSegmentHeaderLengthMask));
+        bufPtr = Advance(bufPtr, kSegmentHeaderSize + static_cast<uint8_t>(header & kSegmentHeaderLengthMask));
     }
 
     // Remember the calculated frame length for current frame.

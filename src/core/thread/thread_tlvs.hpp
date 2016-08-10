@@ -71,6 +71,9 @@ public:
         kStatus              = 4,  ///< Status TLV
         kLastTransactionTime = 6,  ///< Time Since Last Transaction TLV
         kRouterMask          = 7,  ///< Router Mask TLV
+        kNDOption            = 8,  ///< ND Option TLV
+        kNDData              = 9,  ///< ND Data TLV
+        kThreadNetworkData   = 10, ///< Thread Network Data TLV
     };
 
     /**
@@ -461,6 +464,30 @@ private:
     uint8_t mIdSequence;
     uint8_t mAssignedRouterIdMask[BitVectorBytes(Mle::kMaxRouterId)];
 };
+
+/**
+ * This class implements Thread Network Data TLV generation and parsing.
+ *
+ */
+OT_TOOL_PACKED_BEGIN
+class ThreadNetworkDataTlv: public ThreadTlv
+{
+public:
+    /**
+     * This method initializes the TLV.
+     *
+     */
+    void Init() { SetType(kThreadNetworkData); SetLength(0); }
+
+    /**
+     * This method overrides same method of the base class
+     *
+     * @retval TRUE  the TLV appears to be well-formed.
+     *
+     */
+    bool IsValid() const { return true; }
+
+} OT_TOOL_PACKED_END;
 
 }  // namespace Thread
 

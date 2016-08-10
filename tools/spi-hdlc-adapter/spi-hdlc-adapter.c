@@ -318,12 +318,12 @@ static uint8_t spi_header_get_flag_byte(const uint8_t *header)
 
 static uint16_t spi_header_get_accept_len(const uint8_t *header)
 {
-    return ( header[1] + (header[2] << 8) );
+    return ( header[1] + (uint16_t)(header[2] << 8) );
 }
 
 static uint16_t spi_header_get_data_len(const uint8_t *header)
 {
-    return ( header[3] + (header[4] << 8) );
+    return ( header[3] + (uint16_t)(header[4] << 8) );
 }
 
 static uint8_t* get_real_rx_frame_start(void)
@@ -355,17 +355,17 @@ static int do_spi_xfer(int len)
             .tx_buf = 0,
             .rx_buf = 0,
             .len = 0,
-            .delay_usecs = sSpiCsDelay,
-            .speed_hz = sSpiSpeed,
+            .delay_usecs = (uint16_t)sSpiCsDelay,
+            .speed_hz = (uint32_t)sSpiSpeed,
             .bits_per_word = 8,
             .cs_change = false,
         },
         {   // This part is the actual SPI transfer.
             .tx_buf = (unsigned long)sSpiTxFrameBuffer,
             .rx_buf = (unsigned long)sSpiRxFrameBuffer,
-            .len = len + HEADER_LEN + sSpiRxAlignAllowance,
+            .len = (uint32_t)(len + HEADER_LEN + sSpiRxAlignAllowance),
             .delay_usecs = 0,
-            .speed_hz = sSpiSpeed,
+            .speed_hz = (uint32_t)sSpiSpeed,
             .bits_per_word = 8,
             .cs_change = false,
         }
@@ -386,8 +386,8 @@ static int do_spi_xfer(int len)
 
     if (ret != -1)
     {
-        log_debug_buffer("SPI-TX", sSpiTxFrameBuffer, xfer[1].len);
-        log_debug_buffer("SPI-RX", sSpiRxFrameBuffer, xfer[1].len);
+        log_debug_buffer("SPI-TX", sSpiTxFrameBuffer, (int)xfer[1].len);
+        log_debug_buffer("SPI-RX", sSpiRxFrameBuffer, (int)xfer[1].len);
 
         if (spi_header_get_flag_byte(sSpiRxFrameBuffer) != 0xFF)
         {
@@ -522,7 +522,7 @@ static int push_pull_spi(void)
         }
     }
 
-    usleep(sSpiTransactionDelay);
+    usleep((unsigned int)sSpiTransactionDelay);
 
     spi_header_set_flag_byte(sSpiTxFrameBuffer, SPI_HEADER_PATTERN_VALUE);
 
@@ -591,7 +591,7 @@ bail:
 static bool check_and_clear_interrupt(void)
 {
     char value[5] = "";
-    int len;
+    ssize_t len;
 
     lseek(sIntGpioValueFd, 0, SEEK_SET);
 
@@ -763,7 +763,7 @@ static int push_hdlc(void)
         }
     }
 
-    ret = write(
+    ret = (int)write(
         sHdlcOutputFd,
         escaped_frame_buffer + escaped_frame_sent,
         escaped_frame_len    - escaped_frame_sent
@@ -806,7 +806,7 @@ static int pull_hdlc(void)
     if (!sSpiTxIsReady)
     {
         uint8_t byte;
-        while ((ret = read(sHdlcInputFd, &byte, 1)) == 1)
+        while ((ret = (int)read(sHdlcInputFd, &byte, 1)) == 1)
         {
             if (sSpiTxPayloadSize >= (MAX_FRAME_SIZE - HEADER_LEN))
             {
@@ -1069,7 +1069,7 @@ static bool setup_int_gpio(const char* path)
     char* edge_path = NULL;
     char* dir_path = NULL;
     char* value_path = NULL;
-    int len;
+    ssize_t len;
     int setup_fd = -1;
 
     sIntGpioValueFd = -1;

@@ -40,6 +40,7 @@
 #include <common/tasklet.hpp>
 #include <common/timer.hpp>
 #include <net/icmp6.hpp>
+#include <net/ip6.hpp>
 #include <platform/random.h>
 #include <thread/thread_netif.hpp>
 #include <openthreadcontext.h>
@@ -412,7 +413,7 @@ uint32_t otGetNetworkIdTimeout(otContext *aContext)
     return aContext->mThreadNetif.GetMle().GetNetworkIdTimeout();
 }
 
-void otSetNetworkIdTimeout(otContext *aContext, uint32_t aTimeout)
+void otSetNetworkIdTimeout(otContext *aContext, uint8_t aTimeout)
 {
     aContext->mThreadNetif.GetMle().SetNetworkIdTimeout((uint8_t)aTimeout);
 }

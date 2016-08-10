@@ -261,7 +261,7 @@ exit:
     return error;
 }
 
-int Message::Read(uint16_t aOffset, uint16_t aLength, void *aBuf) const
+uint16_t Message::Read(uint16_t aOffset, uint16_t aLength, void *aBuf) const
 {
     Buffer *curBuffer;
     uint16_t bytesCopied = 0;
@@ -628,7 +628,7 @@ MessageQueue::MessageQueue(otContext *aContext) :
     mInterface.mTail = NULL;
 }
 
-ThreadError MessageQueue::AddToList(int aList, Message &aMessage)
+ThreadError MessageQueue::AddToList(uint8_t aList, Message &aMessage)
 {
     MessageList *list;
 
@@ -653,7 +653,7 @@ ThreadError MessageQueue::AddToList(int aList, Message &aMessage)
     return kThreadError_None;
 }
 
-ThreadError MessageQueue::RemoveFromList(int aList, Message &aMessage)
+ThreadError MessageQueue::RemoveFromList(uint8_t aList, Message &aMessage)
 {
     MessageList *list;
 

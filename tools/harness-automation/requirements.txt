@@ -1,0 +1,4 @@
+pyserial
+pexpect
+pexpect_serial
+selenium

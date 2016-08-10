@@ -65,8 +65,8 @@ void Leader::Reset(void)
 {
     memset(mAddresses, 0, sizeof(mAddresses));
     memset(mContextLastUsed, 0, sizeof(mContextLastUsed));
-    mVersion = otPlatRandomGet();
-    mStableVersion = otPlatRandomGet();
+    mVersion = static_cast<uint8_t>(otPlatRandomGet());
+    mStableVersion = static_cast<uint8_t>(otPlatRandomGet());
     mLength = 0;
     mContextUsed = 0;
     mContextIdReuseDelay = kContextIdReuseDelay;
@@ -289,7 +289,7 @@ ThreadError Leader::ConfigureAddress(PrefixTlv &aPrefix)
 
         for (size_t j = 8; j < sizeof(mAddresses[i].mAddress); j++)
         {
-            mAddresses[i].mAddress.mFields.m8[j] = otPlatRandomGet();
+            mAddresses[i].mAddress.mFields.m8[j] = static_cast<uint8_t>(otPlatRandomGet());
         }
 
         mAddresses[i].mPrefixLength = aPrefix.GetPrefixLength();
@@ -389,7 +389,7 @@ ThreadError Leader::ExternalRouteLookup(uint8_t aDomainId, const Ip6::Address &a
     HasRouteTlv *hasRoute;
     HasRouteEntry *entry;
     HasRouteEntry *rvalRoute = NULL;
-    int8_t rval_plen = 0;
+    uint8_t rval_plen = 0;
     int8_t plen;
     NetworkDataTlv *cur;
     NetworkDataTlv *subCur;
@@ -426,7 +426,7 @@ ThreadError Leader::ExternalRouteLookup(uint8_t aDomainId, const Ip6::Address &a
 
                 hasRoute = reinterpret_cast<HasRouteTlv *>(subCur);
 
-                for (int i = 0; i < hasRoute->GetNumEntries(); i++)
+                for (uint8_t i = 0; i < hasRoute->GetNumEntries(); i++)
                 {
                     entry = hasRoute->GetEntry(i);
 
@@ -436,7 +436,7 @@ ThreadError Leader::ExternalRouteLookup(uint8_t aDomainId, const Ip6::Address &a
                          mMle.GetRouteCost(entry->GetRloc()) < mMle.GetRouteCost(rvalRoute->GetRloc())))
                     {
                         rvalRoute = entry;
-                        rval_plen = plen;
+                        rval_plen = static_cast<uint8_t>(plen);
                     }
                 }
 
@@ -480,7 +480,7 @@ ThreadError Leader::DefaultRouteLookup(PrefixTlv &aPrefix, uint16_t *aRloc16)
 
         borderRouter = reinterpret_cast<BorderRouterTlv *>(cur);
 
-        for (int i = 0; i < borderRouter->GetNumEntries(); i++)
+        for (uint8_t i = 0; i < borderRouter->GetNumEntries(); i++)
         {
             entry = borderRouter->GetEntry(i);
 
@@ -563,18 +563,20 @@ void Leader::HandleServerData(void *aContext, Coap::Header &aHeader, Message &aM
 void Leader::HandleServerData(Coap::Header &aHeader, Message &aMessage,
                               const Ip6::MessageInfo &aMessageInfo)
 {
+    ThreadNetworkDataTlv threadNetworkDataTlv;
     uint8_t tlvsLength;
     uint8_t tlvs[kMaxSize];
     uint16_t rloc16;
 
     otLogInfoNetData("Received network data registration\n");
 
-    tlvsLength = aMessage.GetLength() - aMessage.GetOffset();
+    aMessage.Read(aMessage.GetOffset(), sizeof(threadNetworkDataTlv), &threadNetworkDataTlv);
+    tlvsLength = threadNetworkDataTlv.GetLength();
 
-    aMessage.Read(aMessage.GetOffset(), tlvsLength, tlvs);
+    aMessage.Read(aMessage.GetOffset() + sizeof(threadNetworkDataTlv), tlvsLength, tlvs);
     rloc16 = HostSwap16(aMessageInfo.mPeerAddr.mFields.m16[7]);
 
-    SendServerDataResponse(aHeader, aMessageInfo, tlvs, tlvsLength);
+    SendServerDataResponse(aHeader, aMessageInfo, NULL, 0);
     RegisterNetworkData(rloc16, tlvs, tlvsLength);
 }
 
@@ -636,7 +638,7 @@ void Leader::RlocLookup(uint16_t aRloc16, bool &aIn, bool &aStable, uint8_t *aTl
                 case NetworkDataTlv::kTypeBorderRouter:
                     borderRouter = FindBorderRouter(*prefix);
 
-                    for (int i = 0; i < borderRouter->GetNumEntries(); i++)
+                    for (uint8_t i = 0; i < borderRouter->GetNumEntries(); i++)
                     {
                         borderRouterEntry = borderRouter->GetEntry(i);
 
@@ -656,7 +658,7 @@ void Leader::RlocLookup(uint16_t aRloc16, bool &aIn, bool &aStable, uint8_t *aTl
                 case NetworkDataTlv::kTypeHasRoute:
                     hasRoute = FindHasRoute(*prefix);
 
-                    for (int i = 0; i < hasRoute->GetNumEntries(); i++)
+                    for (uint8_t i = 0; i < hasRoute->GetNumEntries(); i++)
                     {
                         hasRouteEntry = hasRoute->GetEntry(i);
 
@@ -916,7 +918,7 @@ ThreadError Leader::AddBorderRouter(PrefixTlv &aPrefix, BorderRouterTlv &aBorder
             dstContext->Init();
             dstContext->SetStable();
             dstContext->SetCompress();
-            dstContext->SetContextId(contextId);
+            dstContext->SetContextId(static_cast<uint8_t>(contextId));
             dstContext->SetContextLength(aPrefix.GetPrefixLength());
         }
         else
@@ -1110,7 +1112,7 @@ ThreadError Leader::RemoveRloc(PrefixTlv &aPrefix, HasRouteTlv &aHasRoute, uint1
     HasRouteEntry *entry;
 
     // remove rloc from has route tlv
-    for (int i = 0; i < aHasRoute.GetNumEntries(); i++)
+    for (uint8_t i = 0; i < aHasRoute.GetNumEntries(); i++)
     {
         entry = aHasRoute.GetEntry(i);
 
@@ -1133,7 +1135,7 @@ ThreadError Leader::RemoveRloc(PrefixTlv &aPrefix, BorderRouterTlv &aBorderRoute
     BorderRouterEntry *entry;
 
     // remove rloc from border router tlv
-    for (int i = 0; i < aBorderRouter.GetNumEntries(); i++)
+    for (uint8_t i = 0; i < aBorderRouter.GetNumEntries(); i++)
     {
         entry = aBorderRouter.GetEntry(i);
 
@@ -1260,7 +1262,7 @@ void Leader::HandleTimer(void)
 {
     bool contextsWaiting = false;
 
-    for (int i = 0; i < kNumContextIds; i++)
+    for (uint8_t i = 0; i < kNumContextIds; i++)
     {
         if (mContextLastUsed[i] == 0)
         {

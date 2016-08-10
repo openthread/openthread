@@ -114,7 +114,7 @@ Mle::Mle(ThreadNetif &aThreadNetif) :
     // mesh-local 64
     for (int i = 8; i < 16; i++)
     {
-        mMeshLocal64.GetAddress().mFields.m8[i] = otPlatRandomGet();
+        mMeshLocal64.GetAddress().mFields.m8[i] = static_cast<uint8_t>(otPlatRandomGet());
     }
 
     mMeshLocal64.mPrefixLength = 64;
@@ -241,7 +241,7 @@ ThreadError Mle::Discover(uint32_t aScanChannels, uint16_t aScanDuration, uint16
     discoveryRequest.SetVersion(kVersion);
     SuccessOrExit(error = message->Append(&discoveryRequest, sizeof(discoveryRequest)));
 
-    tlv.SetLength((message->GetLength() - startOffset));
+    tlv.SetLength(static_cast<uint8_t>(message->GetLength() - startOffset));
     message->Write(startOffset - sizeof(tlv), sizeof(tlv), &tlv);
 
     memset(&destination, 0, sizeof(destination));
@@ -585,10 +585,10 @@ void Mle::GenerateNonce(const Mac::ExtAddress &aMacAddr, uint32_t aFrameCounter,
     aNonce += sizeof(aMacAddr);
 
     // frame counter
-    aNonce[0] = aFrameCounter >> 24;
-    aNonce[1] = aFrameCounter >> 16;
-    aNonce[2] = aFrameCounter >> 8;
-    aNonce[3] = aFrameCounter >> 0;
+    aNonce[0] = (aFrameCounter >> 24) & 0xff;
+    aNonce[1] = (aFrameCounter >> 16) & 0xff;
+    aNonce[2] = (aFrameCounter >> 8) & 0xff;
+    aNonce[3] = aFrameCounter & 0xff;
     aNonce += 4;
 
     // security level
@@ -806,7 +806,7 @@ ThreadError Mle::AppendAddressRegistration(Message &aMessage)
     AddressRegistrationEntry entry;
     Lowpan::Context context;
     uint8_t length = 0;
-    uint8_t startOffset = aMessage.GetLength();
+    uint16_t startOffset = aMessage.GetLength();
 
     tlv.SetType(Tlv::kAddressRegistration);
     SuccessOrExit(error = aMessage.Append(&tlv, sizeof(tlv)));
@@ -890,7 +890,7 @@ void Mle::HandleNetifStateChanged(uint32_t aFlags)
         // Mesh Local EID was removed, choose a new one and add it back
         for (int i = 8; i < 16; i++)
         {
-            mMeshLocal64.GetAddress().mFields.m8[i] = otPlatRandomGet();
+            mMeshLocal64.GetAddress().mFields.m8[i] = static_cast<uint8_t>(otPlatRandomGet());
         }
 
         mNetif.AddUnicastAddress(mMeshLocal64);
@@ -1025,7 +1025,7 @@ ThreadError Mle::SendParentRequest(void)
 
     for (uint8_t i = 0; i < sizeof(mParentRequest.mChallenge); i++)
     {
-        mParentRequest.mChallenge[i] = otPlatRandomGet();
+        mParentRequest.mChallenge[i] = static_cast<uint8_t>(otPlatRandomGet());
     }
 
     VerifyOrExit((message = Ip6::Udp::NewMessage(mNetif.GetOpenThreadContext(), 0)) != NULL, ;);
@@ -1183,7 +1183,7 @@ ThreadError Mle::SendChildUpdateRequest(void)
     case kDeviceStateDetached:
         for (uint8_t i = 0; i < sizeof(mParentRequest.mChallenge); i++)
         {
-            mParentRequest.mChallenge[i] = otPlatRandomGet();
+            mParentRequest.mChallenge[i] = static_cast<uint8_t>(otPlatRandomGet());
         }
 
         SuccessOrExit(error = AppendChallenge(*message, mParentRequest.mChallenge,
@@ -1236,7 +1236,7 @@ ThreadError Mle::SendMessage(Message &aMessage, const Ip6::Address &aDestination
     uint8_t tagLength;
     Crypto::AesCcm aesCcm(&GetOpenThreadContext()->mCryptoContext);
     uint8_t buf[64];
-    int length;
+    uint16_t length;
     Ip6::MessageInfo messageInfo;
 
     aMessage.Read(0, sizeof(header), &header);
@@ -1304,13 +1304,13 @@ void Mle::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageIn
     uint8_t keyid;
     uint32_t frameCounter;
     uint8_t messageTag[4];
-    uint8_t messageTagLength;
+    uint16_t messageTagLength;
     uint8_t nonce[13];
     Mac::ExtAddress macAddr;
     Crypto::AesCcm aesCcm(&GetOpenThreadContext()->mCryptoContext);
     uint16_t mleOffset;
     uint8_t buf[64];
-    int length;
+    uint16_t length;
     uint8_t tag[4];
     uint8_t tagLength;
     uint8_t command;
@@ -1344,7 +1344,7 @@ void Mle::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageIn
 
     if (header.IsKeyIdMode1())
     {
-        keyid = header.GetKeyId();
+        keyid = static_cast<uint8_t>(header.GetKeyId());
 
         if (keyid == (mKeyManager.GetCurrentKeySequence() & 0x7f))
         {
@@ -1353,7 +1353,7 @@ void Mle::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageIn
         }
         else
         {
-            keySequence = (mKeyManager.GetCurrentKeySequence() & ~0x7f) | keyid;
+            keySequence = (mKeyManager.GetCurrentKeySequence() & ~static_cast<uint32_t>(0x7f)) | keyid;
 
             if (keySequence < mKeyManager.GetCurrentKeySequence())
             {
@@ -1643,7 +1643,7 @@ ThreadError Mle::HandleDataResponse(const Message &aMessage, const Ip6::MessageI
     }
     else
     {
-        diff = leaderData.GetDataVersion() - mNetworkData.GetVersion();
+        diff = static_cast<int8_t>(leaderData.GetDataVersion() - mNetworkData.GetVersion());
         VerifyOrExit(diff > 0, ;);
     }
 
@@ -1785,7 +1785,7 @@ ThreadError Mle::HandleParentResponse(const Message &aMessage, const Ip6::Messag
         if (leaderData.GetPartitionId() == mLeaderData.GetPartitionId())
         {
             // looking for a larger Sequence ID
-            diff = connectivity.GetIdSequence() - mMleRouter.GetRouterIdSequence();
+            diff = static_cast<int8_t>(connectivity.GetIdSequence() - mMleRouter.GetRouterIdSequence());
             VerifyOrExit(diff > 0 || (diff == 0 && mMleRouter.GetLeaderAge() < mMleRouter.GetNetworkIdTimeout()), ;);
         }
         else
@@ -1941,7 +1941,7 @@ ThreadError Mle::HandleChildIdResponse(const Message &aMessage, const Ip6::Messa
     {
         SuccessOrExit(error = mMleRouter.ProcessRouteTlv(route));
 
-        for (int i = 0; i < kMaxRouterId; i++)
+        for (uint8_t i = 0; i < kMaxRouterId; i++)
         {
             if (route.IsRouterIdSet(i))
             {
@@ -2151,7 +2151,7 @@ ThreadError Mle::SendDiscoveryResponse(const Ip6::Address &aDestination, uint16_
     networkName.SetNetworkName(mMac.GetNetworkName());
     SuccessOrExit(error = message->Append(&networkName, sizeof(tlv) + networkName.GetLength()));
 
-    tlv.SetLength(message->GetLength() - startOffset);
+    tlv.SetLength(static_cast<uint8_t>(message->GetLength() - startOffset));
     message->Write(startOffset - sizeof(tlv), sizeof(tlv), &tlv);
 
     SuccessOrExit(error = SendMessage(*message, aDestination));
