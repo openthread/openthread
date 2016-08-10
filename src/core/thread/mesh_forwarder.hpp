@@ -146,7 +146,7 @@ public:
      * @returns  The Data Poll period in milliseconds.
      *
      */
-	uint32_t GetPollPeriod(void);
+    uint32_t GetPollPeriod(void);
 
     /**
      * This method sets the scan parameters for MLE Discovery Request messages.
@@ -217,6 +217,7 @@ private:
     uint16_t mFragTag;
     uint16_t mMessageNextOffset;
     uint32_t mPollPeriod;
+    bool mPollPeriodAssigned;
     Message *mSendMessage;
 
     Mac::Address mMacSource;

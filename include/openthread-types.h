@@ -124,7 +124,7 @@ typedef enum ThreadError
     /**
      * Received a frame filtered by the blacklist.
      */
-	kThreadError_BlacklistFiltered = 27,
+    kThreadError_BlacklistFiltered = 27,
 
     kThreadError_Error = 255,
 } ThreadError;

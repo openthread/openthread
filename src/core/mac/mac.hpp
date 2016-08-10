@@ -502,7 +502,7 @@ private:
     otLinkPcapCallback mPcapCallback;
 
     Whitelist mWhitelist;
-	Blacklist mBlacklist;
+    Blacklist mBlacklist;
 
     otMacCounters mCounters;
 };

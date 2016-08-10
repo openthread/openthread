@@ -97,6 +97,18 @@ public:
     static ThreadError ParseLong(char *aString, long &aLong);
 
     /**
+     * This method parses an ASCII string as an unsigned long.
+     *
+     * @param[in]   aString          A pointer to the ASCII string.
+     * @param[out]  aUnsignedLong    A reference to where the parsed unsigned long is placed.
+     *
+     * @retval kThreadError_None   Successfully parsed the ASCII string.
+     * @retval kThreadError_Parse  Could not parse the ASCII string.
+     *
+     */
+    static ThreadError ParseUnsignedLong(char *aString, unsigned long &aUnsignedLong);
+
+    /**
      * This method converts a hex string to binary.
      *
      * @param[in]   aHex        A pointer to the hex string.

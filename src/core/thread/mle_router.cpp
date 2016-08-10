@@ -1683,16 +1683,16 @@ ThreadError MleRouter::SendParentResponse(Child *aChild, const ChallengeTlv &cha
 
     SuccessOrExit(error = AppendChallenge(*message, aChild->mPending.mChallenge, sizeof(aChild->mPending.mChallenge)));
 
-	if (isAssignLinkQuality &&
-	    (memcmp(mAddr64.m8, aChild->mMacAddr.m8, OT_EXT_ADDRESS_SIZE) == 0))
-	{
-		// use assigned one to ensure the link quality
-		SuccessOrExit(error = AppendLinkMargin(*message, mAssignLinkMargin));	
-	}
-	else
-	{
-		SuccessOrExit(error = AppendLinkMargin(*message, aChild->mLinkInfo.GetLinkMargin()));
-	}
+    if (isAssignLinkQuality &&
+        (memcmp(mAddr64.m8, aChild->mMacAddr.m8, OT_EXT_ADDRESS_SIZE) == 0))
+    {
+        // use assigned one to ensure the link quality
+        SuccessOrExit(error = AppendLinkMargin(*message, mAssignLinkMargin));
+    }
+    else
+    {
+        SuccessOrExit(error = AppendLinkMargin(*message, aChild->mLinkInfo.GetLinkMargin()));
+    }
 
     SuccessOrExit(error = AppendConnectivity(*message));
     SuccessOrExit(error = AppendVersion(*message));
@@ -2525,12 +2525,12 @@ void MleRouter::SetLeaderWeight(uint8_t aWeight)
 
 uint32_t MleRouter::GetLeaderPartitionId(void) const
 {
-	return mLeaderPartitionId;
+    return mLeaderPartitionId;
 }
 
 void MleRouter::SetLeaderPartitionId(uint32_t aPartitionId)
 {
-	mLeaderPartitionId = aPartitionId;
+    mLeaderPartitionId = aPartitionId;
 }
 
 void MleRouter::HandleMacDataRequest(const Child &aChild)

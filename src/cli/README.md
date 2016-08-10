@@ -379,7 +379,7 @@ Get the Thread Leader Partition ID.
 
 ```bash
 > leaderpartitionid
-2147483647
+4294967295
 Done
 ```
 

@@ -155,7 +155,7 @@ public:
      * @returns The Partition Id for this Thread network partition.
      *
      */
-	uint32_t GetLeaderPartitionId(void) const;
+    uint32_t GetLeaderPartitionId(void) const;
 
     /**
      * This method sets the Partition Id for this Thread network partition.
@@ -163,7 +163,7 @@ public:
      * @param[in]  aPartitionId  The Leader Partition Id.
      *
      */
-	void SetLeaderPartitionId(uint32_t aPartitionId);
+    void SetLeaderPartitionId(uint32_t aPartitionId);
 
     /**
      * This method returns the next hop towards an RLOC16 destination.
