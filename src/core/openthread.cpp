@@ -40,6 +40,7 @@
 #include <common/tasklet.hpp>
 #include <common/timer.hpp>
 #include <net/icmp6.hpp>
+#include <net/ip6.hpp>
 #include <platform/random.h>
 #include <thread/thread_netif.hpp>
 
@@ -687,6 +688,7 @@ ThreadError otEnable(void)
     otLogInfoApi("otEnable\n");
     Message::Init();
     sThreadNetif = new(&sThreadNetifRaw) ThreadNetif;
+    Ip6::Ip6::Init();
     mEnabled = true;
 
 exit:
