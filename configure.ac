@@ -226,6 +226,25 @@ AC_PROG_LN_S
 PROSPECTIVE_CFLAGS="-Wall -std=c99 -pedantic-errors"
 PROSPECTIVE_CXXFLAGS="-Wall"
 
+AC_CACHE_CHECK([whether $CC is Clang],
+    [nl_cv_clang],
+    [nl_cv_clang=no
+    if test "x${GCC}" = "xyes"; then
+        AC_EGREP_CPP([NL_CC_IS_CLANG],
+            [/* Note: Clang 2.7 lacks __clang_[a-z]+__ */
+#            if defined(__clang__) && defined(__llvm__)
+             NL_CC_IS_CLANG
+#            endif
+            ],
+            [nl_cv_clang=yes])
+    fi
+    ])
+
+if test "${nl_cv_clang}" = "yes"; then
+    PROSPECTIVE_CFLAGS="${PROSPECTIVE_CFLAGS} -Wconversion"
+    PROSPECTIVE_CXXFLAGS="${PROSPECTIVE_CXXFLAGS} -Wconversion"
+fi
+
 AX_CHECK_COMPILER_OPTIONS([C],   ${PROSPECTIVE_CFLAGS})
 AX_CHECK_COMPILER_OPTIONS([C++], ${PROSPECTIVE_CXXFLAGS})
 

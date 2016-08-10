@@ -56,7 +56,7 @@ struct Route
 {
     Address       mPrefix;        ///< The IPv6 prefix.
     uint8_t       mPrefixLength;  ///< The IPv6 prefix length.
-    uint8_t       mInterfaceId;   ///< The interface identifier.
+    int8_t        mInterfaceId;   ///< The interface identifier.
     struct Route *mNext;          ///< A pointer to the next IPv6 route.
 };
 
@@ -98,7 +98,7 @@ public:
      * @returns The interface identifier for the best route or -1 if no route is available.
      *
      */
-    static int Lookup(const Address &aSource, const Address &aDestination);
+    static int8_t Lookup(const Address &aSource, const Address &aDestination);
 };
 
 /**

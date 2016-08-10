@@ -85,10 +85,10 @@ ThreadError KeyManager::ComputeKey(uint32_t aKeySequence, uint8_t *aKey)
 
     otCryptoHmacSha256Start(mMasterKey, mMasterKeyLength);
 
-    keySequenceBytes[0] = aKeySequence >> 24;
-    keySequenceBytes[1] = aKeySequence >> 16;
-    keySequenceBytes[2] = aKeySequence >> 8;
-    keySequenceBytes[3] = aKeySequence >> 0;
+    keySequenceBytes[0] = (aKeySequence >> 24) & 0xff;
+    keySequenceBytes[1] = (aKeySequence >> 16) & 0xff;
+    keySequenceBytes[2] = (aKeySequence >> 8) & 0xff;
+    keySequenceBytes[3] = aKeySequence & 0xff;
     otCryptoHmacSha256Update(keySequenceBytes, sizeof(keySequenceBytes));
     otCryptoHmacSha256Update(kThreadString, sizeof(kThreadString));
 

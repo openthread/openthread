@@ -395,7 +395,7 @@ uint32_t otGetNetworkIdTimeout(void)
     return sThreadNetif->GetMle().GetNetworkIdTimeout();
 }
 
-void otSetNetworkIdTimeout(uint32_t aTimeout)
+void otSetNetworkIdTimeout(uint8_t aTimeout)
 {
     sThreadNetif->GetMle().SetNetworkIdTimeout(aTimeout);
 }

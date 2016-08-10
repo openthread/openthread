@@ -191,7 +191,7 @@ ThreadError Address::FromString(const char *aBuf)
     uint16_t val = 0;
     uint8_t count = 0;
     bool first = true;
-    uint8_t ch;
+    char ch;
     uint8_t d;
 
     memset(mFields.m8, 0, 16);
@@ -237,7 +237,7 @@ ThreadError Address::FromString(const char *aBuf)
         }
 
         first = false;
-        val = (val << 4) | d;
+        val = static_cast<uint16_t>((val << 4) | d);
         VerifyOrExit(++count <= 4, error = kThreadError_Parse);
     }
 

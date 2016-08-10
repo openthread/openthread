@@ -65,7 +65,7 @@ AddressResolver::AddressResolver(ThreadNetif &aThreadNetif) :
     mCoapServer.AddResource(mAddressError);
     mCoapServer.AddResource(mAddressQuery);
     mCoapServer.AddResource(mAddressNotification);
-    mCoapMessageId = otPlatRandomGet();
+    mCoapMessageId = static_cast<uint8_t>(otPlatRandomGet());
 
     Ip6::Icmp::RegisterCallbacks(mIcmpHandler);
 }
@@ -177,7 +177,7 @@ ThreadError AddressResolver::SendAddressQuery(const Ip6::Address &aEid)
 
     for (size_t i = 0; i < sizeof(mCoapToken); i++)
     {
-        mCoapToken[i] = otPlatRandomGet();
+        mCoapToken[i] = static_cast<uint8_t>(otPlatRandomGet());
     }
 
     VerifyOrExit((message = Ip6::Udp::NewMessage(0)) != NULL, error = kThreadError_NoBufs);
@@ -361,7 +361,7 @@ ThreadError AddressResolver::SendAddressError(const ThreadTargetTlv &aTarget, co
 
     for (size_t i = 0; i < sizeof(mCoapToken); i++)
     {
-        mCoapToken[i] = otPlatRandomGet();
+        mCoapToken[i] = static_cast<uint8_t>(otPlatRandomGet());
     }
 
     VerifyOrExit((message = Ip6::Udp::NewMessage(0)) != NULL, error = kThreadError_NoBufs);
@@ -626,7 +626,8 @@ void AddressResolver::HandleTimer()
             if (mCache[i].mTimeout == 0)
             {
                 mCache[i].mFailures++;
-                mCache[i].mRetryTimeout = kAddressQueryInitialRetryDelay * (1 << mCache[i].mFailures);
+                mCache[i].mRetryTimeout =
+                    static_cast<uint16_t>(kAddressQueryInitialRetryDelay * (1 << mCache[i].mFailures));
 
                 if (mCache[i].mRetryTimeout > kAddressQueryMaxRetryDelay)
                 {

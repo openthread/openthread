@@ -50,7 +50,7 @@ uint32_t otPlatAlarmGetNow(void)
     gettimeofday(&tv, NULL);
     timersub(&tv, &s_start, &tv);
 
-    return (tv.tv_sec * 1000) + (tv.tv_usec / 1000);
+    return (uint32_t)((tv.tv_sec * 1000) + (tv.tv_usec / 1000));
 }
 
 void otPlatAlarmStartAt(uint32_t t0, uint32_t dt)
@@ -75,7 +75,7 @@ void posixAlarmUpdateTimeout(struct timeval *aTimeout)
 
     if (s_is_running)
     {
-        remaining = s_alarm - otPlatAlarmGetNow();
+        remaining = (int32_t)(s_alarm - otPlatAlarmGetNow());
 
         if (remaining > 0)
         {
@@ -101,7 +101,7 @@ void posixAlarmProcess(void)
 
     if (s_is_running)
     {
-        remaining = s_alarm - otPlatAlarmGetNow();
+        remaining = (int32_t)(s_alarm - otPlatAlarmGetNow());
 
         if (remaining <= 0)
         {

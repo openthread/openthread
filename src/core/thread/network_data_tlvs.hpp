@@ -95,7 +95,9 @@ public:
      * @param[in]  aType  The Type value.
      *
      */
-    void SetType(Type aType) { mType = (mType & ~kTypeMask) | (static_cast<uint8_t>(aType) << kTypeOffset); }
+    void SetType(Type aType) {
+        mType = (mType & ~kTypeMask) | ((aType << kTypeOffset) & kTypeMask);
+    }
 
     /**
      * This method returns the Length value.
@@ -206,7 +208,9 @@ public:
      * @param[in]  aPrf  The Preference value.
      *
      */
-    void SetPreference(int8_t aPrf) { mFlags = (mFlags & ~kPreferenceMask) | (aPrf << kPreferenceOffset); }
+    void SetPreference(int8_t aPrf) {
+        mFlags = (mFlags & ~kPreferenceMask) | ((aPrf << kPreferenceOffset) & kPreferenceMask);
+    }
 
 private:
     enum
@@ -249,7 +253,7 @@ public:
      * @returns A pointer to the i'th HasRoute entry.
      *
      */
-    HasRouteEntry *GetEntry(int i) {
+    HasRouteEntry *GetEntry(uint8_t i) {
         return reinterpret_cast<HasRouteEntry *>(GetValue() + (i * sizeof(HasRouteEntry)));
     }
 } OT_TOOL_PACKED_END;
@@ -327,7 +331,7 @@ public:
      * @param[in]  aLength  The Sub-TLVs length in bytes.
      *
      */
-    void SetSubTlvsLength(int aLength) {
+    void SetSubTlvsLength(uint8_t aLength) {
         SetLength(sizeof(*this) - sizeof(NetworkDataTlv) + BitVectorBytes(mPrefixLength) + aLength);
     }
 
@@ -407,7 +411,9 @@ public:
      * @param[in]  aPrf  The Preference value.
      *
      */
-    void SetPreference(int8_t aPrf) { mFlags = (mFlags & ~kPreferenceMask) | (aPrf << kPreferenceOffset); }
+    void SetPreference(int8_t aPrf) {
+        mFlags = (mFlags & ~kPreferenceMask) | ((aPrf << kPreferenceOffset) & kPreferenceMask);
+    }
 
     /**
      * This method indicates whether or not the Preferred flag is set.
@@ -571,7 +577,7 @@ public:
      * @returns A pointer to the i'th Border Router entry.
      *
      */
-    BorderRouterEntry *GetEntry(int i) {
+    BorderRouterEntry *GetEntry(uint8_t i) {
         return reinterpret_cast<BorderRouterEntry *>(GetValue() + (i * sizeof(BorderRouterEntry)));
     }
 } OT_TOOL_PACKED_END;
@@ -625,7 +631,9 @@ public:
      * @param[in]  aContextId  The Context ID value.
      *
      */
-    void SetContextId(uint8_t aContextId) { mFlags = (mFlags & ~kContextIdMask) | (aContextId << kContextIdOffset); }
+    void SetContextId(uint8_t aContextId) {
+        mFlags = (mFlags & ~kContextIdMask) | ((aContextId << kContextIdOffset) & kContextIdMask);
+    }
 
     /**
      * This method returns the Context Length value.

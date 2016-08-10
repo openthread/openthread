@@ -311,16 +311,11 @@ exit:
     return error;
 }
 
-ThreadError Dataset::Set(const Message &aMessage, uint16_t aOffset, uint16_t aLength)
+ThreadError Dataset::Set(const Message &aMessage, uint16_t aOffset, uint8_t aLength)
 {
-    ThreadError error = kThreadError_None;
-
-    VerifyOrExit(aLength <= kMaxSize, error = kThreadError_InvalidArgs);
     aMessage.Read(aOffset, aLength, mTlvs);
     mLength = aLength;
-
-exit:
-    return error;
+    return kThreadError_None;
 }
 
 void Dataset::Remove(Tlv::Type aType)
@@ -336,7 +331,7 @@ exit:
 
 void Dataset::Remove(uint8_t *aStart, uint8_t aLength)
 {
-    memmove(aStart, aStart + aLength, mLength - ((aStart - mTlvs) + aLength));
+    memmove(aStart, aStart + aLength, mLength - (static_cast<uint8_t>(aStart - mTlvs) + aLength));
     mLength -= aLength;
 }
 

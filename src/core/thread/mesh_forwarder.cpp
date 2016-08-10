@@ -64,7 +64,7 @@ MeshForwarder::MeshForwarder(ThreadNetif &aThreadNetif):
     mMle(aThreadNetif.GetMle()),
     mNetworkData(aThreadNetif.GetNetworkDataLeader())
 {
-    mFragTag = otPlatRandomGet();
+    mFragTag = static_cast<uint16_t>(otPlatRandomGet());
     mPollPeriod = 0;
     mSendMessage = NULL;
     mSendBusy = false;
@@ -221,7 +221,7 @@ ThreadError MeshForwarder::SendMessage(Message &aMessage)
             // destined for all sleepy children
             children = mMle.GetChildren(&numChildren);
 
-            for (int i = 0; i < numChildren; i++)
+            for (uint8_t i = 0; i < numChildren; i++)
             {
                 if (children[i].mState == Neighbor::kStateValid && (children[i].mMode & Mle::ModeTlv::kModeRxOnWhenIdle) == 0)
                 {
@@ -355,7 +355,7 @@ exit:
 Message *MeshForwarder::GetIndirectTransmission(const Child &aChild)
 {
     Message *message = NULL;
-    int childIndex = mMle.GetChildIndex(aChild);
+    uint8_t childIndex = mMle.GetChildIndex(aChild);
     Ip6::Header ip6Header;
     Lowpan::MeshHeader meshHeader;
 
@@ -772,7 +772,7 @@ ThreadError MeshForwarder::SendMesh(Message &aMessage, Mac::Frame &aFrame)
     // write payload
     assert(aMessage.GetLength() <= aFrame.GetMaxPayloadLength());
     aMessage.Read(0, aMessage.GetLength(), aFrame.GetPayload());
-    aFrame.SetPayloadLength(aMessage.GetLength());
+    aFrame.SetPayloadLength(static_cast<uint8_t>(aMessage.GetLength()));
 
     mMessageNextOffset = aMessage.GetLength();
 
@@ -786,8 +786,8 @@ ThreadError MeshForwarder::SendFragment(Message &aMessage, Mac::Frame &aFrame)
     Lowpan::FragmentHeader *fragmentHeader;
     Lowpan::MeshHeader *meshHeader;
     uint8_t *payload;
-    int headerLength;
-    int payloadLength;
+    uint8_t headerLength;
+    uint16_t payloadLength;
     int hcLength;
     uint16_t fragmentLength;
     uint16_t dstpan;
@@ -906,7 +906,7 @@ ThreadError MeshForwarder::SendFragment(Message &aMessage, Mac::Frame &aFrame)
 
         // copy IPv6 Payload
         aMessage.Read(aMessage.GetOffset(), payloadLength, payload);
-        aFrame.SetPayloadLength(headerLength + payloadLength);
+        aFrame.SetPayloadLength(static_cast<uint8_t>(headerLength + payloadLength));
 
         mMessageNextOffset = aMessage.GetOffset() + payloadLength;
         aMessage.SetOffset(0);
@@ -934,7 +934,7 @@ ThreadError MeshForwarder::SendFragment(Message &aMessage, Mac::Frame &aFrame)
 
         // copy IPv6 Payload
         aMessage.Read(aMessage.GetOffset(), payloadLength, payload);
-        aFrame.SetPayloadLength(headerLength + payloadLength);
+        aFrame.SetPayloadLength(static_cast<uint8_t>(headerLength + payloadLength));
 
         mMessageNextOffset = aMessage.GetOffset() + payloadLength;
     }
@@ -1415,7 +1415,7 @@ void MeshForwarder::UpdateFramePending()
 void MeshForwarder::HandleDataRequest(const Mac::Address &aMacSource, const ThreadMessageInfo &aMessageInfo)
 {
     Neighbor *neighbor;
-    int childIndex;
+    uint8_t childIndex;
 
     // Security Check: only process secure Data Poll frames.
     VerifyOrExit(aMessageInfo.mLinkSecurity, ;);
