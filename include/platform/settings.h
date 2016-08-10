@@ -75,6 +75,8 @@ ThreadError otPlatSettingsBeginChange(void);
  *          The changes made since the last call to
  *          otPlatSettingsBeginChange() have been successfully
  *          committed.
+ *  @retval kThreadError_NoBufs
+ *          There is no enough space to commit all changes.
  *  @retval kThreadError_InvalidState
  *          otPlatSettingsBeginChange() has not been called.
  *  @retval kThreadError_NotImplemented
@@ -229,7 +231,7 @@ ThreadError otPlatSettingsAdd(uint16_t aKey, const uint8_t *aValue, int aValueLe
  *  @retval kThreadError_NotImplemented
  *          This function is not implemented on this platform.
  */
-ThreadError otPlatSettingsDelete(uint16_t aKey, int index);
+ThreadError otPlatSettingsDelete(uint16_t aKey, int aIndex);
 
 /// Removes all settings from the setting store
 /** This function deletes all settings from the settings
