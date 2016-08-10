@@ -563,18 +563,20 @@ void Leader::HandleServerData(void *aContext, Coap::Header &aHeader, Message &aM
 void Leader::HandleServerData(Coap::Header &aHeader, Message &aMessage,
                               const Ip6::MessageInfo &aMessageInfo)
 {
+    ThreadNetworkDataTlv threadNetworkDataTlv;
     uint8_t tlvsLength;
     uint8_t tlvs[kMaxSize];
     uint16_t rloc16;
 
     otLogInfoNetData("Received network data registration\n");
 
-    tlvsLength = aMessage.GetLength() - aMessage.GetOffset();
+    aMessage.Read(aMessage.GetOffset(), sizeof(threadNetworkDataTlv), &threadNetworkDataTlv);
+    tlvsLength = threadNetworkDataTlv.GetLength();
 
-    aMessage.Read(aMessage.GetOffset(), tlvsLength, tlvs);
+    aMessage.Read(aMessage.GetOffset() + sizeof(threadNetworkDataTlv), tlvsLength, tlvs);
     rloc16 = HostSwap16(aMessageInfo.mPeerAddr.mFields.m16[7]);
 
-    SendServerDataResponse(aHeader, aMessageInfo, tlvs, tlvsLength);
+    SendServerDataResponse(aHeader, aMessageInfo, NULL, 0);
     RegisterNetworkData(rloc16, tlvs, tlvsLength);
 }
 
