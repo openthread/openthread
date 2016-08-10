@@ -3,7 +3,6 @@
 *.gcno
 *.log
 *.o
-*.orig
 *.pyc
 *.trs
 *~
@@ -13,7 +12,6 @@
 .local-version
 aclocal.m4
 autom4te.cache
-build
 configure
 config.log
 config.status
