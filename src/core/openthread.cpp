@@ -789,6 +789,7 @@ const char *otGetVersionString(void)
         __DATE__ " " __TIME__;
 
     return sVersion;
+}
 
 uint32_t otGetPollPeriod()
 {

@@ -150,7 +150,7 @@ public:
     void SetLeaderWeight(uint8_t aWeight);
 
     /**
-     * This method returns the Partition Id for this Thread network partition.
+     * This method returns the fixed Partition Id of Thread network partition for certification testing.
      *
      * @returns The Partition Id for this Thread network partition.
      *
@@ -158,7 +158,7 @@ public:
     uint32_t GetLeaderPartitionId(void) const;
 
     /**
-     * This method sets the Partition Id for this Thread network partition.
+     * This method sets the fixed Partition Id for Thread network partition for certification testing.
      *
      * @param[in]  aPartitionId  The Leader Partition Id.
      *
@@ -506,7 +506,7 @@ private:
     uint8_t mNetworkIdTimeout;
     uint8_t mRouterUpgradeThreshold;
     uint8_t mLeaderWeight;
-    uint32_t mLeaderPartitionId;
+    uint32_t mFixedLeaderPartitionId;  ///< only for certification testing
     bool mRouterRoleEnabled;
 
     uint8_t mRouterId;
