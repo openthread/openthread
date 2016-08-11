@@ -391,7 +391,7 @@ void otSetKeySequenceCounter(uint32_t aKeySequenceCounter)
     sThreadNetif->GetKeyManager().SetCurrentKeySequence(aKeySequenceCounter);
 }
 
-uint32_t otGetNetworkIdTimeout(void)
+uint8_t otGetNetworkIdTimeout(void)
 {
     return sThreadNetif->GetMle().GetNetworkIdTimeout();
 }
