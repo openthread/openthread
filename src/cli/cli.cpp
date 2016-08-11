@@ -1391,7 +1391,7 @@ exit:
 
 void Interpreter::ProcessVersion(int argc, char *argv[])
 {
-    sServer->OutputFormat("%s\r\n", PACKAGE_NAME "/" PACKAGE_VERSION "; " __DATE__ " " __TIME__);
+    sServer->OutputFormat("%s\r\n", otGetVersionString());
     AppendResult(kThreadError_None);
     (void)argc;
     (void)argv;

@@ -32,6 +32,7 @@
  */
 
 #include <openthread.h>
+#include <openthread-config.h>
 #include <common/code_utils.hpp>
 #include <common/debug.hpp>
 #include <common/logging.hpp>
@@ -677,6 +678,18 @@ void otSetStateChangedCallback(otStateChangedCallback aCallback, void *aContext)
 {
     sNetifCallback.Set(aCallback, aContext);
     sThreadNetif->RegisterCallback(sNetifCallback);
+}
+
+const char *otGetVersionString(void)
+{
+    static const char sVersion[] =
+        PACKAGE_NAME "/" PACKAGE_VERSION "; "
+#ifdef  PLATFORM_INFO
+        PLATFORM_INFO "; "
+#endif
+        __DATE__ " " __TIME__;
+
+    return sVersion;
 }
 
 ThreadError otEnable(void)

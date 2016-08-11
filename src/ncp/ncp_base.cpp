@@ -1133,7 +1133,7 @@ ThreadError NcpBase::GetPropertyHandler_NCP_VERSION(uint8_t header, spinel_prop_
                SPINEL_CMD_PROP_VALUE_IS,
                key,
                SPINEL_DATATYPE_UTF8_S,
-               PACKAGE_NAME "/" PACKAGE_VERSION "; " __DATE__ " " __TIME__
+               otGetVersionString()
            );
 }
 
