@@ -152,6 +152,14 @@ extern void otSignalTaskletPending(otContext *aContext);
  */
 
 /**
+ * Get the OpenThread version string.
+ *
+ * @returns A pointer to the OpenThread version.
+ *
+ */
+const char *otGetVersionString(void);
+
+/**
  * This function initializes the OpenThread library.
  *
  * This function initializes OpenThread and prepares it for subsequent OpenThread API calls.  This function must be

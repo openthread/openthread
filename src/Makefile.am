@@ -34,6 +34,7 @@ DIST_SUBDIRS                            = \
     cli                                   \
     core                                  \
     ncp                                   \
+    diag                                  \
     $(NULL)
 
 # Always build (e.g. for 'make all') these subdirectories.
@@ -48,6 +49,10 @@ endif
 
 if OPENTHREAD_ENABLE_NCP
 SUBDIRS                                += ncp
+endif
+
+if OPENTHREAD_ENABLE_DIAG
+SUBDIRS                                += diag
 endif
 
 # Always pretty (e.g. for 'make pretty') these subdirectories.

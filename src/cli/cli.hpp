@@ -39,6 +39,7 @@
 #include <cli/cli_server.hpp>
 #include <net/icmp6.hpp>
 #include <common/timer.hpp>
+#include <openthread-config.h>
 
 namespace Thread {
 
@@ -158,6 +159,10 @@ private:
     void ProcessThread(int argc, char *argv[]);
     void ProcessVersion(int argc, char *argv[]);
     void ProcessWhitelist(int argc, char *argv[]);
+
+#if OPENTHREAD_ENABLE_DIAG
+    void ProcessDiag(int argc, char *argv[]);
+#endif
 
     static void s_HandleEchoResponse(void *aContext, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
     static void s_HandlePingTimer(void *aContext);

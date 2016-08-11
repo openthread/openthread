@@ -1,12 +1,23 @@
 #!/bin/sh
 
-# Test various options that are not covered by compat.sh
+# ssl-opt.sh
 #
-# Here the goal is not to cover every ciphersuite/version, but
-# rather specific options (max fragment length, truncated hmac, etc)
-# or procedures (session resumption from cache or ticket, renego, etc).
+# This file is part of mbed TLS (https://tls.mbed.org)
 #
-# Assumes a build with default options.
+# Copyright (c) 2016, ARM Limited, All Rights Reserved
+#
+# Purpose
+#
+# Executes tests to prove various TLS/SSL options and extensions.
+#
+# The goal is not to cover every ciphersuite/version, but instead to cover
+# specific options (max fragment length, truncated hmac, etc) or procedures
+# (session resumption from cache or ticket, renego, etc).
+#
+# The tests assume a build with default options, with exceptions expressed
+# with a dependency.  The tests focus on functionality and do not consider
+# performance.
+#
 
 set -u
 
@@ -33,12 +44,20 @@ MEMCHECK=0
 FILTER='.*'
 EXCLUDE='^$'
 
+SHOW_TEST_NUMBER=0
+RUN_TEST_NUMBER=''
+
+PRESERVE_LOGS=0
+
 print_usage() {
     echo "Usage: $0 [options]"
     printf "  -h|--help\tPrint this help.\n"
     printf "  -m|--memcheck\tCheck memory leaks and errors.\n"
     printf "  -f|--filter\tOnly matching tests are executed (default: '$FILTER')\n"
     printf "  -e|--exclude\tMatching tests are excluded (default: '$EXCLUDE')\n"
+    printf "  -n|--number\tExecute only numbered test (comma-separated, e.g. '245,256')\n"
+    printf "  -s|--show-numbers\tShow test numbers in front of test names\n"
+    printf "  -p|--preserve-logs\tPreserve logs of successful tests as well\n"
 }
 
 get_options() {
@@ -52,6 +71,15 @@ get_options() {
                 ;;
             -m|--memcheck)
                 MEMCHECK=1
+                ;;
+            -n|--number)
+                shift; RUN_TEST_NUMBER=$1
+                ;;
+            -s|--show-numbers)
+                SHOW_TEST_NUMBER=1
+                ;;
+            -p|--preserve-logs)
+                PRESERVE_LOGS=1
                 ;;
             -h|--help)
                 print_usage
@@ -130,6 +158,13 @@ not_with_valgrind() {
     fi
 }
 
+# skip the next test if valgrind is NOT in use
+only_with_valgrind() {
+    if [ "$MEMCHECK" -eq 0 ]; then
+        SKIP_NEXT="YES"
+    fi
+}
+
 # multiply the client timeout delay by the given factor for the next test
 needs_more_time() {
     CLI_DELAY_FACTOR=$1
@@ -137,12 +172,19 @@ needs_more_time() {
 
 # print_name <name>
 print_name() {
-    printf "$1 "
-    LEN=$(( 72 - `echo "$1" | wc -c` ))
+    TESTS=$(( $TESTS + 1 ))
+    LINE=""
+
+    if [ "$SHOW_TEST_NUMBER" -gt 0 ]; then
+        LINE="$TESTS "
+    fi
+
+    LINE="$LINE$1"
+    printf "$LINE "
+    LEN=$(( 72 - `echo "$LINE" | wc -c` ))
     for i in `seq 1 $LEN`; do printf '.'; done
     printf ' '
 
-    TESTS=$(( $TESTS + 1 ))
 }
 
 # fail <message>
@@ -293,6 +335,13 @@ run_test() {
 
     print_name "$NAME"
 
+    # Do we only run numbered tests?
+    if [ "X$RUN_TEST_NUMBER" = "X" ]; then :
+    elif echo ",$RUN_TEST_NUMBER," | grep ",$TESTS," >/dev/null; then :
+    else
+        SKIP_NEXT="YES"
+    fi
+
     # should we skip?
     if [ "X$SKIP_NEXT" = "XYES" ]; then
         SKIP_NEXT="NO"
@@ -408,32 +457,33 @@ run_test() {
 
     # check other assertions
     # lines beginning with == are added by valgrind, ignore them
+    # lines with 'Serious error when reading debug info', are valgrind issues as well
     while [ $# -gt 0 ]
     do
         case $1 in
             "-s")
-                if grep -v '^==' $SRV_OUT | grep "$2" >/dev/null; then :; else
+                if grep -v '^==' $SRV_OUT | grep -v 'Serious error when reading debug info' | grep "$2" >/dev/null; then :; else
                     fail "-s $2"
                     return
                 fi
                 ;;
 
             "-c")
-                if grep -v '^==' $CLI_OUT | grep "$2" >/dev/null; then :; else
+                if grep -v '^==' $CLI_OUT | grep -v 'Serious error when reading debug info' | grep "$2" >/dev/null; then :; else
                     fail "-c $2"
                     return
                 fi
                 ;;
 
             "-S")
-                if grep -v '^==' $SRV_OUT | grep "$2" >/dev/null; then
+                if grep -v '^==' $SRV_OUT | grep -v 'Serious error when reading debug info' | grep "$2" >/dev/null; then
                     fail "-S $2"
                     return
                 fi
                 ;;
 
             "-C")
-                if grep -v '^==' $CLI_OUT | grep "$2" >/dev/null; then
+                if grep -v '^==' $CLI_OUT | grep -v 'Serious error when reading debug info' | grep "$2" >/dev/null; then
                     fail "-C $2"
                     return
                 fi
@@ -460,6 +510,11 @@ run_test() {
 
     # if we're here, everything is ok
     echo "PASS"
+    if [ "$PRESERVE_LOGS" -gt 0 ]; then
+        mv $SRV_OUT o-srv-${TESTS}.log
+        mv $CLI_OUT o-cli-${TESTS}.log
+    fi
+
     rm -f $SRV_OUT $CLI_OUT $PXY_OUT
 }
 
@@ -495,6 +550,12 @@ fi
 if [ ! -x "$P_PXY" ]; then
     echo "Command '$P_PXY' is not an executable file"
     exit 1
+fi
+if [ "$MEMCHECK" -gt 0 ]; then
+    if which valgrind >/dev/null 2>&1; then :; else
+        echo "Memcheck not possible. Valgrind not found"
+        exit 1
+    fi
 fi
 if which $OPENSSL_CMD >/dev/null 2>&1; then :; else
     echo "Command '$OPENSSL_CMD' not found"
@@ -567,12 +628,14 @@ run_test    "Default, DTLS" \
 
 # Tests for rc4 option
 
+requires_config_enabled MBEDTLS_REMOVE_ARC4_CIPHERSUITES
 run_test    "RC4: server disabled, client enabled" \
             "$P_SRV" \
             "$P_CLI force_ciphersuite=TLS-RSA-WITH-RC4-128-SHA" \
             1 \
             -s "SSL - The server has no ciphersuites in common"
 
+requires_config_enabled MBEDTLS_REMOVE_ARC4_CIPHERSUITES
 run_test    "RC4: server half, client enabled" \
             "$P_SRV arc4=1" \
             "$P_CLI force_ciphersuite=TLS-RSA-WITH-RC4-128-SHA" \
@@ -715,7 +778,7 @@ run_test    "Encrypt then MAC: client enabled, server SSLv3" \
             "$P_CLI debug_level=3 min_version=ssl3" \
             0 \
             -c "client hello, adding encrypt_then_mac extension" \
-            -s "found encrypt then mac extension" \
+            -S "found encrypt then mac extension" \
             -S "server hello, adding encrypt then mac extension" \
             -C "found encrypt_then_mac extension" \
             -C "using encrypt then mac" \
@@ -774,7 +837,7 @@ run_test    "Extended Master Secret: client enabled, server SSLv3" \
             "$P_CLI debug_level=3 min_version=ssl3" \
             0 \
             -c "client hello, adding extended_master_secret extension" \
-            -s "found extended master secret extension" \
+            -S "found extended master secret extension" \
             -S "server hello, adding extended master secret extension" \
             -C "found extended_master_secret extension" \
             -C "using extended master secret" \
@@ -2848,6 +2911,16 @@ run_test    "Small packet TLS 1.2 AEAD shorter tag" \
             0 \
             -s "Read from client: 1 bytes read"
 
+# A test for extensions in SSLv3
+
+requires_config_enabled MBEDTLS_SSL_PROTO_SSL3
+run_test    "SSLv3 with extensions, server side" \
+            "$P_SRV min_version=ssl3 debug_level=3" \
+            "$P_CLI force_version=ssl3 tickets=1 max_frag_len=4096 alpn=abc,1234" \
+            0 \
+            -S "dumping 'client hello extensions'" \
+            -S "server hello, total extension length:"
+
 # Test for large packets
 
 requires_config_enabled MBEDTLS_SSL_PROTO_SSL3
@@ -3048,9 +3121,18 @@ run_test    "DTLS client reconnect from same port: reconnect" \
             -S "The operation timed out" \
             -s "Client initiated reconnection from same port"
 
-run_test    "DTLS client reconnect from same port: reconnect, nbio" \
+not_with_valgrind # server/client too slow to respond in time (next test has higher timeouts)
+run_test    "DTLS client reconnect from same port: reconnect, nbio, no valgrind" \
             "$P_SRV dtls=1 exchanges=2 read_timeout=1000 nbio=2" \
             "$P_CLI dtls=1 exchanges=2 debug_level=2 hs_timeout=500-1000 reconnect_hard=1" \
+            0 \
+            -S "The operation timed out" \
+            -s "Client initiated reconnection from same port"
+
+only_with_valgrind # Only with valgrind, do previous test but with higher read_timeout and hs_timeout
+run_test    "DTLS client reconnect from same port: reconnect, nbio, valgrind" \
+            "$P_SRV dtls=1 exchanges=2 read_timeout=2000 nbio=2 hs_timeout=1500-6000" \
+            "$P_CLI dtls=1 exchanges=2 debug_level=2 hs_timeout=1500-3000 reconnect_hard=1" \
             0 \
             -S "The operation timed out" \
             -s "Client initiated reconnection from same port"

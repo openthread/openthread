@@ -29,7 +29,7 @@
 /**
  * @file
  * @brief
- *   This file includes the posix platform-specific initializers.
+ *   This file defines the platform-specific initializers.
  */
 
 #ifndef PLATFORM_H_
@@ -38,6 +38,7 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+
 
 /**
  * This function performs all platform-specific initialization.
@@ -48,13 +49,11 @@ void PlatformInit(int argc, char *argv[]);
 /**
  * This function performs all platform-specific processing.
  *
- * @param[in]  aContext  The OpenThread context structure.
- *
  */
-void PlatformProcessDrivers(otContext *aContext);
+void PlatformProcessDrivers(void);
 
 #ifdef __cplusplus
-}  // extern "C"
+}  // end of extern "C"
 #endif
 
 #endif  // PLATFORM_H_

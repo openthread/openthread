@@ -37,6 +37,10 @@
 #define random rand
 #endif
 
+extern "C" void otPlatDiagAlarmFired()
+{
+}
+
 void TestMessage(void)
 {
     otContext sContext;

@@ -40,8 +40,10 @@
 #include <unistd.h>
 
 #include <openthread.h>
+#include <openthread-config.h>
 
 #include <platform/radio.h>
+#include <platform/diag.h>
 
 #include <common/code_utils.hpp>
 #include "platform-posix.h"
@@ -471,7 +473,18 @@ void radioReceive(otContext *aCtx)
             {
                 sState = kStateReceive;
                 sAckWait = false;
-                otPlatRadioTransmitDone(aCtx, isFramePending(sReceiveFrame.mPsdu), kThreadError_None);
+
+#if OPENTHREAD_ENABLE_DIAG
+
+                if (otPlatDiagModeGet())
+                {
+                    otPlatDiagRadioTransmitDone(isFramePending(sReceiveFrame.mPsdu), kThreadError_None);
+                }
+                else
+#endif
+                {
+                    otPlatRadioTransmitDone(aCtx, isFramePending(sReceiveFrame.mPsdu), kThreadError_None);
+                }
             }
         }
         else if (sState == kStateReceive &&
@@ -493,7 +506,18 @@ void radioSendMessage(otContext *aCtx)
     if (!sAckWait)
     {
         sState = kStateReceive;
-        otPlatRadioTransmitDone(aCtx, false, kThreadError_None);
+
+#if OPENTHREAD_ENABLE_DIAG
+
+        if (otPlatDiagModeGet())
+        {
+            otPlatDiagRadioTransmitDone(false, kThreadError_None);
+        }
+        else
+#endif
+        {
+            otPlatRadioTransmitDone(aCtx, false, kThreadError_None);
+        }
     }
 }
 
@@ -624,5 +648,16 @@ void radioProcessFrame(otContext *aCtx)
 
 exit:
 
-    otPlatRadioReceiveDone(aCtx, error == kThreadError_None ? &sReceiveFrame : NULL, error);
+#if OPENTHREAD_ENABLE_DIAG
+
+    if (otPlatDiagModeGet())
+    {
+        otPlatDiagRadioReceiveDone(error == kThreadError_None ? &sReceiveFrame : NULL, error);
+    }
+    else
+#endif
+    {
+        otPlatRadioReceiveDone(aCtx, error == kThreadError_None ? &sReceiveFrame : NULL, error);
+    }
 }
+

@@ -83,6 +83,11 @@ uint32_t otPlatAlarmGetNow(void);
 extern void otPlatAlarmFired(otContext *aContext);
 
 /**
+ * Signal diagnostics module that the alarm has fired.
+ */
+extern void otPlatDiagAlarmFired(void);
+
+/**
  * @}
  *
  */

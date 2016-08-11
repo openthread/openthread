@@ -86,7 +86,13 @@ TargetTuple                     = $(shell ${AbsTopSourceDir}/third_party/nlbuild
 # If the user has asserted COVERAGE, alter the configuration options
 # accordingly.
 
-configure_OPTIONS               = --with-examples=posix --enable-cli --enable-ncp
+configure_OPTIONS               = \
+    --enable-cli                  \
+    --enable-ncp                  \
+    --enable-diag                 \
+    --with-examples=posix         \
+    --with-platform-info=POSIX    \
+    $(NULL)
 
 ifeq ($(COVERAGE),1)
 configure_OPTIONS              += --enable-coverage

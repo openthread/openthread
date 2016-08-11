@@ -47,6 +47,12 @@ ot_cli_LDADD                                                           = \
 ot_cli_LDFLAGS                                                         = \
     $(NULL)
 
+if OPENTHREAD_ENABLE_DIAG
+ot_cli_LDADD                                                          += \
+    $(top_builddir)/src/diag/libopenthread-diag.a                        \
+    $(NULL)
+endif
+
 if OPENTHREAD_EXAMPLES_POSIX
 ot_cli_LDADD                                                          += \
     $(top_builddir)/examples/platforms/posix/libopenthread-posix.a       \

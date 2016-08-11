@@ -38,6 +38,7 @@
 #include <openthread.h>
 #include <openthreadcontext.h>
 #include <openthread-config.h>
+#include <openthread-diag.h>
 
 #include "cli.hpp"
 #include "cli_dataset.hpp"
@@ -88,6 +89,9 @@ const struct Command Interpreter::sCommands[] =
     { "thread", &Interpreter::ProcessThread },
     { "version", &Interpreter::ProcessVersion },
     { "whitelist", &Interpreter::ProcessWhitelist },
+#if OPENTHREAD_ENABLE_DIAG
+    { "diag", &Interpreter::ProcessDiag },
+#endif
 };
 
 Interpreter::Interpreter(otContext *aContext):
@@ -1395,7 +1399,7 @@ exit:
 
 void Interpreter::ProcessVersion(int argc, char *argv[])
 {
-    sServer->OutputFormat("%s\r\n", PACKAGE_NAME "/" PACKAGE_VERSION "; " __DATE__ " " __TIME__);
+    sServer->OutputFormat("%s\r\n", otGetVersionString());
     AppendResult(kThreadError_None);
     (void)argc;
     (void)argv;
@@ -1481,6 +1485,14 @@ exit:
     AppendResult(error);
 }
 
+#if OPENTHREAD_ENABLE_DIAG
+void Interpreter::ProcessDiag(int argc, char *argv[])
+{
+    // all diagnostics related features are processed within diagnostics module
+    sServer->OutputFormat("%s\r\n", diagProcessCmd(argc, argv));
+}
+#endif
+
 void Interpreter::ProcessLine(char *aBuf, uint16_t aBufLength, Server &aServer)
 {
     char *argv[kMaxArgs];
@@ -1507,6 +1519,11 @@ void Interpreter::ProcessLine(char *aBuf, uint16_t aBufLength, Server &aServer)
     }
 
     cmd = aBuf;
+
+#if OPENTHREAD_ENABLE_DIAG
+    VerifyOrExit((!isDiagEnabled() || (strcmp(cmd, "diag") == 0)),
+                 sServer->OutputFormat("under diagnostics mode, execute 'diag stop' before running any other commands.\r\n"));
+#endif
 
     for (unsigned int i = 0; i < sizeof(sCommands) / sizeof(sCommands[0]); i++)
     {

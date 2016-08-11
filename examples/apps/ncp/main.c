@@ -28,9 +28,11 @@
 
 #include <openthread-core-config.h>
 #include <openthread.h>
+#include <openthread-config.h>
+#include <openthread-diag.h>
 #include <common/debug.hpp>
 #include <ncp/ncp.h>
-#include <platform.h>
+#include <platform/platform.h>
 
 void otSignalTaskletPending(otContext *aCtx)
 {
@@ -49,6 +51,10 @@ int main(int argc, char *argv[])
     assert(sContext);
 
     otNcpInit(sContext);
+
+#if OPENTHREAD_ENABLE_DIAG
+    diagInit();
+#endif
 
     while (1)
     {
