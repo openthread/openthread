@@ -31,7 +31,9 @@
 #include <string.h>
 #include <sys/time.h>
 
+#include <openthread-config.h>
 #include <platform/alarm.h>
+#include <platform/diag.h>
 #include "platform-posix.h"
 
 static bool s_is_running = false;
@@ -107,11 +109,14 @@ void posixAlarmProcess(void)
         {
             s_is_running = false;
 
-            if (mDiagEnabled)
+#if OPENTHREAD_ENABLE_DIAG
+
+            if (otPlatDiagModeGet())
             {
                 otPlatDiagAlarmFired();
             }
             else
+#endif
             {
                 otPlatAlarmFired();
             }

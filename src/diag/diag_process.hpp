@@ -53,10 +53,10 @@ struct Command
 
 struct DiagStats
 {
-    unsigned int received_packets;
-    unsigned int sent_packets;
-    int first_rssi;
-    int first_lqi;
+    uint32_t received_packets;
+    uint32_t sent_packets;
+    int8_t first_rssi;
+    uint8_t first_lqi;
 };
 
 class Diag
@@ -81,16 +81,16 @@ private:
     static void ProcessChannel(int argc, char *argv[], char *aOutput);
     static void ProcessPower(int argc, char *argv[], char *aOutput);
     static void TxPacket();
-
-    static const struct Command sCommands[];
-    static struct DiagStats sStats;
-    static int sTxPower;
-    static unsigned int sChannel;
-    static unsigned int sTxPeriod;
-    static unsigned int sTxLen;
-    static unsigned int sTxPackets;
+    static ThreadError ParseLong(char *aString, long &aLong);
 
     static char sDiagOutput[];
+    static const struct Command sCommands[];
+    static struct DiagStats sStats;
+    static int8_t sTxPower;
+    static uint8_t sChannel;
+    static uint8_t sTxLen;
+    static uint32_t sTxPeriod;
+    static uint32_t sTxPackets;
 };
 
 }  // namespace Diagnostics

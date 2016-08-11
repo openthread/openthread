@@ -39,7 +39,9 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
+#include <openthread-config.h>
 #include <platform/radio.h>
+#include <platform/diag.h>
 
 #include <common/code_utils.hpp>
 #include "platform-posix.h"
@@ -457,11 +459,14 @@ void radioReceive(void)
                 sState = kStateReceive;
                 sAckWait = false;
 
-                if (mDiagEnabled)
+#if OPENTHREAD_ENABLE_DIAG
+
+                if (otPlatDiagModeGet())
                 {
                     otPlatDiagRadioTransmitDone(isFramePending(sReceiveFrame.mPsdu), kThreadError_None);
                 }
                 else
+#endif
                 {
                     otPlatRadioTransmitDone(isFramePending(sReceiveFrame.mPsdu), kThreadError_None);
                 }
@@ -487,11 +492,14 @@ void radioSendMessage(void)
     {
         sState = kStateReceive;
 
-        if (mDiagEnabled)
+#if OPENTHREAD_ENABLE_DIAG
+
+        if (otPlatDiagModeGet())
         {
             otPlatDiagRadioTransmitDone(false, kThreadError_None);
         }
         else
+#endif
         {
             otPlatRadioTransmitDone(false, kThreadError_None);
         }
@@ -625,11 +633,14 @@ void radioProcessFrame(void)
 
 exit:
 
-    if (mDiagEnabled)
+#if OPENTHREAD_ENABLE_DIAG
+
+    if (otPlatDiagModeGet())
     {
         otPlatDiagRadioReceiveDone(error == kThreadError_None ? &sReceiveFrame : NULL, error);
     }
     else
+#endif
     {
         otPlatRadioReceiveDone(error == kThreadError_None ? &sReceiveFrame : NULL, error);
     }

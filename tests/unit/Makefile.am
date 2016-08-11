@@ -66,7 +66,6 @@ COMMON_LDADD                                                        = \
 
 check_PROGRAMS                                                      = \
     test-aes                                                          \
-    test-diag                                                         \
     test-hmac-sha256                                                  \
     test-lowpan                                                       \
     test-link-quality                                                 \
@@ -75,6 +74,12 @@ check_PROGRAMS                                                      = \
     test-timer                                                        \
     test-toolchain                                                    \
     $(NULL)
+
+if OPENTHREAD_ENABLE_DIAG
+check_PROGRAMS                                                    += \
+    test-diag                                                        \
+    $(NULL)
+endif
 
 if OPENTHREAD_ENABLE_NCP
 
@@ -130,10 +135,12 @@ test_timer_SOURCES           = test_timer.cpp
 test_toolchain_LDADD         = $(COMMON_LDADD)
 test_toolchain_SOURCES       = test_toolchain.cpp
 
+if OPENTHREAD_ENABLE_DIAG
 test_diag_LDADD              = $(top_builddir)/src/diag/libopenthread-diag.a                  \
                                $(top_builddir)/examples/platforms/posix/libopenthread-posix.a \
                                $(NULL)
 test_diag_SOURCES            = test_diag.cpp
+endif
 
 endif # OPENTHREAD_BUILD_TESTS
 

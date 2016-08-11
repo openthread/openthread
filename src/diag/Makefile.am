@@ -31,10 +31,10 @@ include $(abs_top_nlbuild_autotools_dir)/automake/pre.am
 lib_LIBRARIES                       = libopenthread-diag.a
 
 libopenthread_diag_a_CPPFLAGS =        \
-    -I$(top_srcdir)/include           \
-    -I$(top_srcdir)/src               \
-    -I$(top_srcdir)/src/core          \
-    $(OPENTHREAD_TARGET_DEFINES)      \
+    -I$(top_srcdir)/include            \
+    -I$(top_srcdir)/src                \
+    -I$(top_srcdir)/src/core           \
+    $(OPENTHREAD_TARGET_DEFINES)       \
     $(NULL)
 
 libopenthread_diag_a_SOURCES         = \
@@ -42,8 +42,8 @@ libopenthread_diag_a_SOURCES         = \
     diag_process.cpp                   \
     $(NULL)
 
-noinst_HEADERS                      = \
-    diag_process.hpp                  \
+noinst_HEADERS                       = \
+    diag_process.hpp                   \
     $(NULL)
 
 if OPENTHREAD_BUILD_COVERAGE

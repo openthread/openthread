@@ -41,7 +41,6 @@ DIST_SUBDIRS                            = \
 
 SUBDIRS                                 = \
     core                                  \
-    diag                                  \
     $(NULL)
 
 if OPENTHREAD_ENABLE_CLI
@@ -50,6 +49,10 @@ endif
 
 if OPENTHREAD_ENABLE_NCP
 SUBDIRS                                += ncp
+endif
+
+if OPENTHREAD_ENABLE_DIAG
+SUBDIRS                                += diag
 endif
 
 # Always pretty (e.g. for 'make pretty') these subdirectories.

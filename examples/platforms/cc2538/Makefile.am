@@ -44,8 +44,13 @@ libopenthread_cc2538_a_SOURCES            = \
     random.c                                \
     uart.c                                  \
     startup-gcc.c                           \
+    $(NULL)
+
+if OPENTHREAD_ENABLE_DIAG
+libopenthread_cc2538_a_SOURCES           += \
     diag.c                                  \
     $(NULL)
+endif
 
 noinst_HEADERS                            = \
     cc2538-reg.h                            \

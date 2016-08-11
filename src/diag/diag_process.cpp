@@ -56,11 +56,11 @@ const struct Command Diag::sCommands[] =
 char Diag::sDiagOutput[MAX_DIAG_OUTPUT];
 struct DiagStats Diag::sStats;
 
-int Diag::sTxPower;
-unsigned int Diag::sChannel;
-unsigned int Diag::sTxPeriod;
-unsigned int Diag::sTxLen;
-unsigned int Diag::sTxPackets;
+int8_t Diag::sTxPower;
+uint8_t Diag::sChannel;
+uint8_t Diag::sTxLen;
+uint32_t Diag::sTxPeriod;
+uint32_t Diag::sTxPackets;
 
 void Diag::Init()
 {
@@ -154,12 +154,20 @@ void Diag::ProcessStop(int argc, char *argv[], char *aOutput)
     otPlatRadioSetPromiscuous(false);
 
     sprintf(aOutput, "received packets: %d\r\nsent packets: %d\r\nfirst received packet: rssi=%d, lqi=%d\r\n\nstop diagnostics mode\r\nstatus 0x%02x\r\n",
-            sStats.received_packets, sStats.sent_packets, sStats.first_rssi, sStats.first_lqi, error);
+            static_cast<int>(sStats.received_packets), static_cast<int>(sStats.sent_packets), static_cast<int>(sStats.first_rssi),
+            static_cast<int>(sStats.first_lqi), error);
 
 exit:
     (void)argc;
     (void)argv;
     AppendErrorResult(error, aOutput);
+}
+
+ThreadError Diag::ParseLong(char *argv, long &value)
+{
+    char *endptr;
+    value = strtol(argv, &endptr, 0);
+    return (*endptr == '\0') ? kThreadError_None : kThreadError_Parse;
 }
 
 void Diag::TxPacket()
@@ -175,7 +183,7 @@ void Diag::TxPacket()
     packet->mChannel = sChannel;
     packet->mPower = sTxPower;
 
-    for (unsigned int i = 0; i < sTxLen; i++)
+    for (uint8_t i = 0; i < sTxLen; i++)
     {
         packet->mPsdu[i] = i;
     }
@@ -195,8 +203,11 @@ void Diag::ProcessChannel(int argc, char *argv[], char *aOutput)
     }
     else
     {
-        VerifyOrExit(atoi(argv[0]) >= kPhyMinChannel && atoi(argv[0]) <= kPhyMaxChannel, error = kThreadError_InvalidArgs);
-        sChannel = atoi(argv[0]);
+        long value;
+
+        SuccessOrExit(error = ParseLong(argv[0], value));
+        VerifyOrExit(value >= kPhyMinChannel && value <= kPhyMaxChannel, error = kThreadError_InvalidArgs);
+        sChannel = static_cast<uint8_t>(value);
 
         // listen on the set channel immediately
         otPlatRadioReceive(sChannel);
@@ -219,7 +230,10 @@ void Diag::ProcessPower(int argc, char *argv[], char *aOutput)
     }
     else
     {
-        sTxPower = atoi(argv[0]);
+        long value;
+
+        SuccessOrExit(error = ParseLong(argv[0], value));
+        sTxPower = static_cast<int8_t>(value);
         sprintf(aOutput, "set tx power to %d dBm\r\nstatus 0x%02x\r\n", sTxPower, error);
     }
 
@@ -230,15 +244,19 @@ exit:
 void Diag::ProcessSend(int argc, char *argv[], char *aOutput)
 {
     ThreadError error = kThreadError_None;
+    long value;
 
     VerifyOrExit(otPlatDiagModeGet(), error = kThreadError_InvalidState);
     VerifyOrExit(argc == 2, error = kThreadError_InvalidArgs);
-    VerifyOrExit(atoi(argv[1]) <= kMaxPHYPacketSize, error = kThreadError_InvalidArgs);
 
-    sTxPackets = atoi(argv[0]);
-    sTxLen = atoi(argv[1]);
+    SuccessOrExit(error = ParseLong(argv[0], value));
+    sTxPackets = static_cast<uint32_t>(value);
 
-    sprintf(aOutput, "sending %#x packet(s), length %#x\r\nstatus 0x%02x\r\n", sTxPackets, sTxLen, error);
+    SuccessOrExit(error = ParseLong(argv[1], value));
+    VerifyOrExit(value <= kMaxPHYPacketSize, error = kThreadError_InvalidArgs);
+    sTxLen = static_cast<uint8_t>(value);
+
+    sprintf(aOutput, "sending %#x packet(s), length %#x\r\nstatus 0x%02x\r\n", static_cast<int>(sTxPackets), static_cast<int>(sTxLen), error);
     TxPacket();
 
 exit:
@@ -259,14 +277,20 @@ void Diag::ProcessRepeat(int argc, char *argv[], char *aOutput)
     }
     else
     {
-        VerifyOrExit(argc == 2 && atoi(argv[1]) <= kMaxPHYPacketSize, error = kThreadError_InvalidArgs);
+        long value;
 
-        sTxPeriod = atoi(argv[0]);
-        sTxLen = atoi(argv[1]);
+        VerifyOrExit(argc == 2, error = kThreadError_InvalidArgs);
+
+        SuccessOrExit(error = ParseLong(argv[0], value));
+        sTxPeriod = static_cast<uint32_t>(value);
+
+        SuccessOrExit(error = ParseLong(argv[1], value));
+        VerifyOrExit(value <= kMaxPHYPacketSize, error = kThreadError_InvalidArgs);
+        sTxLen = static_cast<uint8_t>(value);
 
         uint32_t now = otPlatAlarmGetNow();
         otPlatAlarmStartAt(now, sTxPeriod);
-        sprintf(aOutput, "sending packets of length %#x at the delay of %#x ms\r\nstatus 0x%02x\r\n", sTxLen, sTxPeriod, error);
+        sprintf(aOutput, "sending packets of length %#x at the delay of %#x ms\r\nstatus 0x%02x\r\n", static_cast<int>(sTxLen), static_cast<int>(sTxPeriod), error);
     }
 
 exit:
@@ -294,8 +318,9 @@ void Diag::ProcessStats(int argc, char *argv[], char *aOutput)
 
     VerifyOrExit(otPlatDiagModeGet(), error = kThreadError_InvalidState);
 
-   sprintf(aOutput, "received packets: %d\r\nsent packets: %d\r\nfirst received packet: rssi=%d, lqi=%d\r\n",
-            sStats.received_packets, sStats.sent_packets, sStats.first_rssi, sStats.first_lqi);
+    sprintf(aOutput, "received packets: %d\r\nsent packets: %d\r\nfirst received packet: rssi=%d, lqi=%d\r\n",
+            static_cast<int>(sStats.received_packets), static_cast<int>(sStats.sent_packets),
+            static_cast<int>(sStats.first_rssi), static_cast<int>(sStats.first_lqi));
 
 exit:
     (void)argc;

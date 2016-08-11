@@ -34,7 +34,11 @@
 #include <platform/alarm.h>
 #include "platform-cc2538.h"
 
-bool mDiagEnabled = false;
+/**
+ * diagnostics mode flag.
+ *
+ */
+static bool sDiagMode = false;
 
 void otPlatDiagProcess(int argc, char *argv[], char *aOutput)
 {
@@ -46,10 +50,10 @@ void otPlatDiagProcess(int argc, char *argv[], char *aOutput)
 
 void otPlatDiagModeSet(bool aMode)
 {
-    mDiagEnabled = aMode;
+    sDiagMode = aMode;
 }
 
 bool otPlatDiagModeGet()
 {
-    return mDiagEnabled;
+    return sDiagMode;
 }

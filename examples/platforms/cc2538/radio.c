@@ -33,9 +33,11 @@
  */
 
 #include <openthread-types.h>
+#include <openthread-config.h>
 
 #include <common/code_utils.hpp>
 #include <platform/radio.h>
+#include <platform/diag.h>
 #include "platform-cc2538.h"
 
 enum
@@ -371,11 +373,14 @@ void cc2538RadioProcess(void)
 
     if ((sState == kStateReceive) && (sReceiveFrame.mLength > 0))
     {
-        if (mDiagEnabled)
+#if OPENTHREAD_ENABLE_DIAG
+
+        if (otPlatDiagModeGet())
         {
             otPlatDiagRadioReceiveDone(&sReceiveFrame, sReceiveError);
         }
         else
+#endif
         {
             otPlatRadioReceiveDone(&sReceiveFrame, sReceiveError);
         }
@@ -387,11 +392,14 @@ void cc2538RadioProcess(void)
         {
             sState = kStateReceive;
 
-            if (mDiagEnabled)
+#if OPENTHREAD_ENABLE_DIAG
+
+            if (otPlatDiagModeGet())
             {
                 otPlatDiagRadioTransmitDone(false, sTransmitError);
             }
             else
+#endif
             {
                 otPlatRadioTransmitDone(false, sTransmitError);
             }
@@ -402,11 +410,14 @@ void cc2538RadioProcess(void)
         {
             sState = kStateReceive;
 
-            if (mDiagEnabled)
+#if OPENTHREAD_ENABLE_DIAG
+
+            if (otPlatDiagModeGet())
             {
                 otPlatDiagRadioTransmitDone((sReceiveFrame.mPsdu[0] & IEEE802154_FRAME_PENDING) != 0, sTransmitError);
             }
             else
+#endif
             {
                 otPlatRadioTransmitDone((sReceiveFrame.mPsdu[0] & IEEE802154_FRAME_PENDING) != 0, sTransmitError);
             }

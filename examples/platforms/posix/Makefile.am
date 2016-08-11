@@ -44,8 +44,13 @@ libopenthread_posix_a_SOURCES             = \
     radio.c                                 \
     random.c                                \
     uart.c                                  \
+    $(NULL)
+
+if OPENTHREAD_ENABLE_DIAG
+libopenthread_posix_a_SOURCES            += \
     diag.c                                  \
     $(NULL)
+endif
 
 if OPENTHREAD_ENABLE_NCP_SPI
 libopenthread_posix_a_SOURCES           += \

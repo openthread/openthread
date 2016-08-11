@@ -39,13 +39,18 @@ ot_cli_CPPFLAGS                                                        = \
 
 ot_cli_LDADD                                                           = \
     $(top_builddir)/src/core/libopenthread.a                             \
-    $(top_builddir)/src/diag/libopenthread-diag.a                        \
     $(top_builddir)/src/cli/libopenthread-cli.a                          \
     $(top_builddir)/third_party/mbedtls/libmbedcrypto.a                  \
     $(NULL)
 
 ot_cli_LDFLAGS                                                         = \
     $(NULL)
+
+if OPENTHREAD_ENABLE_DIAG
+ot_cli_LDADD                                                          += \
+    $(top_builddir)/src/diag/libopenthread-diag.a                        \
+    $(NULL)
+endif
 
 if OPENTHREAD_EXAMPLES_POSIX
 ot_cli_LDADD                                                          += \
