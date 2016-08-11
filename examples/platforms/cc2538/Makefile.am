@@ -46,6 +46,12 @@ libopenthread_cc2538_a_SOURCES            = \
     startup-gcc.c                           \
     $(NULL)
 
+if OPENTHREAD_ENABLE_DIAG
+libopenthread_cc2538_a_SOURCES           += \
+    diag.c                                  \
+    $(NULL)
+endif
+
 noinst_HEADERS                            = \
     cc2538-reg.h                            \
     platform-cc2538.h                       \

@@ -89,6 +89,7 @@ TargetTuple                     = $(shell ${AbsTopSourceDir}/third_party/nlbuild
 configure_OPTIONS               = \
     --enable-cli                  \
     --enable-ncp                  \
+    --enable-diag                 \
     --with-examples=posix         \
     --with-platform-info=POSIX    \
     $(NULL)

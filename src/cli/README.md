@@ -38,6 +38,7 @@ OpenThread test scripts use the CLI to execute test cases.
 * [thread](#thread)
 * [version](#version)
 * [whitelist](#whitelist)
+* [diag](#diag)
 
 ## OpenThread Command Details
 
@@ -680,3 +681,11 @@ Remove an IEEE 802.15.4 Extended Address from the whitelist.
 > whitelist remove dead00beef00cafe
 Done
 ```
+
+### diag
+
+Diagnostics module is enabled only when building OpenThread with --enable-diag option.
+Go [diagnostics module][1] for more information.
+
+[1]:../diag/README.md
+

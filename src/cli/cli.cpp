@@ -36,7 +36,7 @@
 #include <string.h>
 
 #include <openthread.h>
-#include <openthread-config.h>
+#include <openthread-diag.h>
 
 #include "cli.hpp"
 #include "cli_dataset.hpp"
@@ -86,6 +86,9 @@ const struct Command Interpreter::sCommands[] =
     { "thread", &ProcessThread },
     { "version", &ProcessVersion },
     { "whitelist", &ProcessWhitelist },
+#if OPENTHREAD_ENABLE_DIAG
+    { "diag", &ProcessDiag },
+#endif
 };
 
 otNetifAddress Interpreter::sAddress;
@@ -1477,6 +1480,14 @@ exit:
     AppendResult(error);
 }
 
+#if OPENTHREAD_ENABLE_DIAG
+void Interpreter::ProcessDiag(int argc, char *argv[])
+{
+    // all diagnostics related features are processed within diagnostics module
+    sServer->OutputFormat("%s\r\n", diagProcessCmd(argc, argv));
+}
+#endif
+
 void Interpreter::ProcessLine(char *aBuf, uint16_t aBufLength, Server &aServer)
 {
     char *argv[kMaxArgs];
@@ -1503,6 +1514,11 @@ void Interpreter::ProcessLine(char *aBuf, uint16_t aBufLength, Server &aServer)
     }
 
     cmd = aBuf;
+
+#if OPENTHREAD_ENABLE_DIAG
+    VerifyOrExit((!isDiagEnabled() || (strcmp(cmd, "diag") == 0)),
+                 sServer->OutputFormat("under diagnostics mode, execute 'diag stop' before running any other commands.\r\n"));
+#endif
 
     for (unsigned int i = 0; i < sizeof(sCommands) / sizeof(sCommands[0]); i++)
     {

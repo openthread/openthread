@@ -29,11 +29,12 @@
 /**
  * @file
  * @brief
- *   This file includes the platform abstraction for the alarm service.
+ *   This file defines the platform diag interface.
+ *
  */
 
-#ifndef ALARM_H_
-#define ALARM_H_
+#ifndef DIAG_H_
+#define DIAG_H_
 
 #include <stdint.h>
 
@@ -42,53 +43,37 @@ extern "C" {
 #endif
 
 /**
- * @defgroup alarm Alarm
+ * @defgroup diag Diag
  * @ingroup platform
  *
  * @brief
- *   This module includes the platform abstraction for the alarm service.
+ *   This module includes the platform abstraction for diagnostics features.
  *
  * @{
  *
  */
 
 /**
- * Set the alarm to fire at @p aDt milliseconds after @p aT0.
+ * Process the platform specific diagnostics features.
  *
- * @param[in] aT0  The reference time.
- * @param[in] aDt  The time delay in milliseconds from @p aT0.
+ * @param[in] argc  The argument counter of diagnostics command line.
+ * @param[in] argv  The argument vector of diagnostics command line.
+ * @param[out] aOutput  The diagnostics execution result.
  */
-void otPlatAlarmStartAt(uint32_t aT0, uint32_t aDt);
+void otPlatDiagProcess(int argc, char *argv[], char *aOutput);
 
 /**
- * Stop the alarm.
+ *  Set diagnostics mode.
  */
-void otPlatAlarmStop(void);
+void otPlatDiagModeSet(bool aMode);
 
 /**
- * Get the current time.
- *
- * @returns The current time in milliseconds.
+ * Get diagnostics mode.
  */
-uint32_t otPlatAlarmGetNow(void);
-
-/**
- * Signal that the alarm has fired.
- */
-extern void otPlatAlarmFired(void);
-
-/**
- * Signal diagnostics module that the alarm has fired.
- */
-extern void otPlatDiagAlarmFired(void);
-
-/**
- * @}
- *
- */
+bool otPlatDiagModeGet(void);
 
 #ifdef __cplusplus
-}  // extern "C"
+}  // end of extern "C"
 #endif
 
-#endif  // ALARM_H_
+#endif
