@@ -841,7 +841,7 @@ void otSetKeySequenceCounter(uint32_t aKeySequenceCounter);
  *
  * @sa otSetNetworkIdTimeout
  */
-uint32_t otGetNetworkIdTimeout(void);
+uint8_t otGetNetworkIdTimeout(void);
 
 /**
  * Set the NETWORK_ID_TIMEOUT parameter used in the Leader role.
