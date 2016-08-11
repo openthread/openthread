@@ -231,7 +231,7 @@ void Interpreter::ProcessBlacklist(int argc, char *argv[])
             sServer->OutputFormat("Disabled\r\n");
         }
 
-        for (int i = 0; ; i++)
+        for (uint8_t i = 0; ; i++)
         {
             if (otGetMacBlacklistEntry(i, &entry) != kThreadError_None)
             {
@@ -697,7 +697,7 @@ void Interpreter::ProcessLeaderPartitionId(int argc, char *argv[])
     else
     {
         SuccessOrExit(error = ParseUnsignedLong(argv[0], value));
-        otSetLocalLeaderPartitionId(value);
+        otSetLocalLeaderPartitionId(static_cast<uint32_t>(value));
     }
 
 exit:
@@ -741,7 +741,7 @@ void Interpreter::ProcessLinkQuality(int argc, char *argv[])
     else
     {
         SuccessOrExit(error = ParseLong(argv[1], value));
-        otSetAssignLinkQuality(extAddress, value);
+        otSetAssignLinkQuality(extAddress, static_cast<uint8_t>(value));
     }
 
 exit:
@@ -1042,7 +1042,7 @@ void Interpreter::ProcessPollPeriod(int argc, char *argv[])
     else
     {
         SuccessOrExit(error = ParseLong(argv[0], value));
-        otSetPollPeriod(value);
+        otSetPollPeriod(static_cast<uint32_t>(value));
     }
 
 exit:
