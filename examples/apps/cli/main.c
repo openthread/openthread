@@ -45,7 +45,7 @@ int main(int argc, char *argv[])
 
     PlatformInit(argc, argv);
 
-    sContext = otEnable(otContextBuffer, &otContextBufferLength);
+    sContext = otInit(otContextBuffer, &otContextBufferLength);
     assert(sContext);
 
     otCliUartInit(sContext);
@@ -55,6 +55,8 @@ int main(int argc, char *argv[])
         otProcessNextTasklet(sContext);
         PlatformProcessDrivers(sContext);
     }
+
+    // otFreeContext(sContext);
 
     return 0;
 }

@@ -1,4 +1,4 @@
-*.h eol=lf
-*.hpp eol=lf
-*.c eol=lf
-*.cpp eol=lf
+* text=auto
+*.vcxproj eol=crlf
+*.vcxproj.filters eol=crlf
+*.sln eol=crlf

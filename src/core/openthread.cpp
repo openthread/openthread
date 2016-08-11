@@ -77,6 +77,33 @@ namespace Thread {
 extern "C" {
 #endif
 
+otContext *otInit(void *aContextBuffer, uint64_t *aContextBufferSize)
+{
+    otContext *aContext = NULL;
+
+    otLogInfoApi("otInit\n");
+
+    VerifyOrExit(aContextBufferSize != NULL, ;);
+
+    // Make sure the input buffer is big enough
+    VerifyOrExit(cAlignedContextSize <= *aContextBufferSize, *aContextBufferSize = cAlignedContextSize);
+
+    // Construct the context
+    aContext = new(aContextBuffer)otContext();
+
+exit:
+
+    return aContext;
+}
+
+void otFreeContext(otContext *aContext)
+{
+    // Ensure we are disabled
+    (void)otDisable(aContext);
+
+    // Nothing to actually free, since the caller supplied the buffer
+}
+
 static void HandleActiveScanResult(void *aContext, Mac::Frame *aFrame);
 static void HandleMleDiscover(otActiveScanResult *aResult, void *aContext);
 
@@ -697,23 +724,20 @@ void otSetStateChangedCallback(otContext *aContext, otStateChangedCallback aCall
     aContext->mThreadNetif.RegisterCallback(aContext->mNetifCallback);
 }
 
-otContext *otEnable(void *aContextBuffer, uint64_t *aContextBufferSize)
+ThreadError otEnable(otContext *aContext)
 {
-    otContext *aContext = NULL;
+    ThreadError error = kThreadError_None;
 
+    VerifyOrExit(!aContext->mEnabled, error = kThreadError_InvalidState);
 
     otLogInfoApi("otEnable\n");
-
-    VerifyOrExit(aContextBufferSize != NULL, ;);
-
-    // Make sure the input buffer is big enough
-    VerifyOrExit(cAlignedContextSize <= *aContextBufferSize, *aContextBufferSize = cAlignedContextSize);
-
-    aContext = new(aContextBuffer)otContext();
+    
+    otInterfaceUp(aContext);
+    otThreadStart(aContext);
+    aContext->mEnabled = true;
 
 exit:
-
-    return aContext;
+    return error;
 }
 
 ThreadError otDisable(otContext *aContext)
@@ -722,9 +746,11 @@ ThreadError otDisable(otContext *aContext)
 
     VerifyOrExit(aContext->mEnabled, error = kThreadError_InvalidState);
 
+    otLogInfoApi("otDisable\n");
+
+    aContext->mEnabled = false;
     otThreadStop(aContext);
     otInterfaceDown(aContext);
-    aContext->mEnabled = false;
 
 exit:
     return error;

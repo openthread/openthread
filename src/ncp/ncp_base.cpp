@@ -2186,14 +2186,7 @@ ThreadError NcpBase::SetPropertyHandler_NET_ENABLED(uint8_t header, spinel_prop_
         }
         else
         {
-            /*
-            otContextBufferLength = sizeof(otContextBuffer);
-            mContext = otEnable(otContextBuffer, &otContextBufferLength);
-            */
-
-            // Need to rethink this design, as this would reinitiallize ALL variables, including
-            // our member variables that currently have local pointers to the old stuff.
-            errorCode = kThreadError_NotImplemented;
+            errorCode = otEnable(mContext);
         }
     }
     else
