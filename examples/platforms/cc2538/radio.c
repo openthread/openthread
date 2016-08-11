@@ -37,7 +37,7 @@
 #include <openthread-config.h>
 
 #include <common/code_utils.hpp>
-#include <platform.h>
+#include <platform/platform.h>
 #include <platform/radio.h>
 #include <platform/diag.h>
 #include "platform-cc2538.h"
@@ -393,7 +393,7 @@ void cc2538RadioProcess(otContext *aContext)
 
         if (otPlatDiagModeGet())
         {
-            otPlatDiagRadioReceiveDone(&sReceiveFrame, sReceiveError);
+            otPlatDiagRadioReceiveDone(aContext, &sReceiveFrame, sReceiveError);
         }
         else
 #endif
@@ -412,7 +412,7 @@ void cc2538RadioProcess(otContext *aContext)
 
             if (otPlatDiagModeGet())
             {
-                otPlatDiagRadioTransmitDone(false, sTransmitError);
+                otPlatDiagRadioTransmitDone(aContext, false, sTransmitError);
             }
             else
 #endif
@@ -430,7 +430,7 @@ void cc2538RadioProcess(otContext *aContext)
 
             if (otPlatDiagModeGet())
             {
-                otPlatDiagRadioTransmitDone((sReceiveFrame.mPsdu[0] & IEEE802154_FRAME_PENDING) != 0, sTransmitError);
+                otPlatDiagRadioTransmitDone(aContext, (sReceiveFrame.mPsdu[0] & IEEE802154_FRAME_PENDING) != 0, sTransmitError);
             }
             else
 #endif

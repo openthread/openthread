@@ -117,7 +117,7 @@ void posixAlarmProcess(otContext *aContext)
 
             if (otPlatDiagModeGet())
             {
-                otPlatDiagAlarmFired();
+                otPlatDiagAlarmFired(aContext);
             }
             else
 #endif

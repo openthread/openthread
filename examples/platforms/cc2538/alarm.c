@@ -38,7 +38,7 @@
 #include <openthread-config.h>
 #include <openthread.h>
 
-#include <platform.h>
+#include <platform/platform.h>
 #include <platform/alarm.h>
 #include <platform/diag.h>
 #include "platform-cc2538.h"
@@ -111,7 +111,7 @@ void cc2538AlarmProcess(otContext *aContext)
 
             if (otPlatDiagModeGet())
             {
-                otPlatDiagAlarmFired();
+                otPlatDiagAlarmFired(aContext);
             }
             else
 #endif

@@ -31,14 +31,10 @@
 #include <openthread-diag.h>
 #include <platform/platform.h>
 #include <platform/radio.h>
+#include <openthreadcontext.h>
 
-extern "C" void otSignalTaskletPending(void)
+extern "C" void otSignalTaskletPending(otContext *)
 {
-}
-
-extern "C" bool otAreTaskletsPending(void)
-{
-    return false;
 }
 
 extern "C" void otPlatUartSendDone(void)
@@ -50,23 +46,6 @@ extern "C" void otPlatUartReceived(const uint8_t *aBuf, uint16_t aBufLength)
     (void)aBuf;
     (void)aBufLength;
 }
-
-extern "C" void otPlatAlarmFired()
-{
-}
-
-extern "C" void otPlatRadioTransmitDone(bool aRxPending, ThreadError aError)
-{
-    (void)aRxPending;
-    (void)aError;
-}
-
-extern "C" void otPlatRadioReceiveDone(RadioPacket *aFrame, ThreadError aError)
-{
-    (void)aFrame;
-    (void)aError;
-}
-
 
 /**
  *  diagnostics module tests
@@ -140,6 +119,7 @@ void TestDiag()
             "diagnostics mode is disabled\r\n",
         },
     };
+    otContext sContext;
 
     // initialize platform layer
     int argc = 2;
@@ -147,7 +127,7 @@ void TestDiag()
     PlatformInit(argc, argv);
 
     // initialize diagnostics module
-    diagInit();
+    diagInit(&sContext);
 
     // test diagnostics commands
     VerifyOrQuit(!isDiagEnabled(), "diagnostics mode shoud be disabled as default\n");

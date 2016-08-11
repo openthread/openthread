@@ -54,6 +54,8 @@ uint32_t sPlatDt;
 bool     sTimerOn;
 uint32_t sCallCount[kCallCountIndexMax];
 
+bool sDiagMode = false;
+
 extern "C" {
 
     void otSignalTaskletPending(otContext *)
@@ -162,6 +164,27 @@ extern "C" {
 #else
         return (uint32_t)random();
 #endif
+    }
+
+    //
+    // Diag
+    //
+
+    void otPlatDiagProcess(int argc, char *argv[], char *aOutput)
+    {
+        // no more diagnostics features for Posix platform
+        sprintf(aOutput, "diag feature '%s' is not supported\r\n", argv[0]);
+        (void)argc;
+    }
+
+    void otPlatDiagModeSet(bool aMode)
+    {
+        sDiagMode = aMode;
+    }
+
+    bool otPlatDiagModeGet()
+    {
+        return sDiagMode;
     }
 
 } // extern "C"

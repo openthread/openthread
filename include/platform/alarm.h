@@ -84,8 +84,10 @@ extern void otPlatAlarmFired(otContext *aContext);
 
 /**
  * Signal diagnostics module that the alarm has fired.
+ *
+ * @param[in] aContext  The OpenThread context structure.
  */
-extern void otPlatDiagAlarmFired(void);
+extern void otPlatDiagAlarmFired(otContext *aContext);
 
 /**
  * @}

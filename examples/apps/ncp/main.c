@@ -53,7 +53,7 @@ int main(int argc, char *argv[])
     otNcpInit(sContext);
 
 #if OPENTHREAD_ENABLE_DIAG
-    diagInit();
+    diagInit(sContext);
 #endif
 
     while (1)

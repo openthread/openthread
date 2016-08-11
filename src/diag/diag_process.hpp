@@ -35,6 +35,7 @@
 #define DIAG_PROCESS_HPP_
 
 #include <stdarg.h>
+#include <openthread-types.h>
 #include <platform/radio.h>
 #include <platform/alarm.h>
 #include <platform/diag.h>
@@ -62,13 +63,13 @@ struct DiagStats
 class Diag
 {
 public:
-    static void Init();
+    static void Init(otContext *aContext);
     static char *ProcessCmd(int argc, char *argv[]);
     static bool isEnabled();
 
-    static void DiagTransmitDone(bool aRxPending, ThreadError aError);
-    static void DiagReceiveDone(RadioPacket *aFrame, ThreadError aError);
-    static void AlarmFired();
+    static void DiagTransmitDone(otContext *aContext, bool aRxPending, ThreadError aError);
+    static void DiagReceiveDone(otContext *aContext, RadioPacket *aFrame, ThreadError aError);
+    static void AlarmFired(otContext *aContext);
 
 private:
     static void AppendErrorResult(ThreadError error, char *aOutput);
@@ -91,6 +92,7 @@ private:
     static uint8_t sTxLen;
     static uint32_t sTxPeriod;
     static uint32_t sTxPackets;
+    static otContext *sContext;
 };
 
 }  // namespace Diagnostics

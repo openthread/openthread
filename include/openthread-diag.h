@@ -35,11 +35,13 @@
 #ifndef OPENTHREAD_DIAG_H_
 #define OPENTHREAD_DIAG_H_
 
+#include <openthread-types.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-void diagInit();
+void diagInit(otContext *aContext);
 
 char *diagProcessCmd(int argc, char *argv[]);
 

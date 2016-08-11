@@ -478,7 +478,7 @@ void radioReceive(otContext *aCtx)
 
                 if (otPlatDiagModeGet())
                 {
-                    otPlatDiagRadioTransmitDone(isFramePending(sReceiveFrame.mPsdu), kThreadError_None);
+                    otPlatDiagRadioTransmitDone(aCtx, isFramePending(sReceiveFrame.mPsdu), kThreadError_None);
                 }
                 else
 #endif
@@ -511,7 +511,7 @@ void radioSendMessage(otContext *aCtx)
 
         if (otPlatDiagModeGet())
         {
-            otPlatDiagRadioTransmitDone(false, kThreadError_None);
+            otPlatDiagRadioTransmitDone(aCtx, false, kThreadError_None);
         }
         else
 #endif
@@ -652,7 +652,7 @@ exit:
 
     if (otPlatDiagModeGet())
     {
-        otPlatDiagRadioReceiveDone(error == kThreadError_None ? &sReceiveFrame : NULL, error);
+        otPlatDiagRadioReceiveDone(aCtx, error == kThreadError_None ? &sReceiveFrame : NULL, error);
     }
     else
 #endif

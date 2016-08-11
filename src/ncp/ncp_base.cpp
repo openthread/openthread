@@ -1915,7 +1915,7 @@ ThreadError NcpBase::GetPropertyHandler_MAC_WHITELIST(uint8_t header, spinel_pro
 
     for (uint8_t i = 0; (i != 255) && (errorCode == kThreadError_None); i++)
     {
-        errorCode = otGetMacWhitelistEntry(i, &entry);
+        errorCode = otGetMacWhitelistEntry(mContext, i, &entry);
 
         if (errorCode != kThreadError_None)
         {
@@ -1938,14 +1938,14 @@ ThreadError NcpBase::GetPropertyHandler_MAC_WHITELIST_ENABLED(uint8_t header, sp
                SPINEL_CMD_PROP_VALUE_IS,
                key,
                SPINEL_DATATYPE_BOOL_S,
-               otIsMacWhitelistEnabled()
+               otIsMacWhitelistEnabled(mContext)
            );
 }
 
 ThreadError NcpBase::GetPropertyHandler_THREAD_MODE(uint8_t header, spinel_prop_key_t key)
 {
     uint8_t numeric_mode(0);
-    otLinkModeConfig mode_config(otGetLinkMode());
+    otLinkModeConfig mode_config(otGetLinkMode(mContext));
 
     if (mode_config.mRxOnWhenIdle)
     {
@@ -1983,7 +1983,7 @@ ThreadError NcpBase::GetPropertyHandler_THREAD_CHILD_TIMEOUT(uint8_t header, spi
                SPINEL_CMD_PROP_VALUE_IS,
                key,
                SPINEL_DATATYPE_UINT32_S,
-               otGetChildTimeout()
+               otGetChildTimeout(mContext)
            );
 }
 
@@ -1994,7 +1994,7 @@ ThreadError NcpBase::GetPropertyHandler_THREAD_RLOC16(uint8_t header, spinel_pro
                SPINEL_CMD_PROP_VALUE_IS,
                key,
                SPINEL_DATATYPE_UINT16_S,
-               otGetRloc16()
+               otGetRloc16(mContext)
            );
 }
 
@@ -2005,7 +2005,7 @@ ThreadError NcpBase::GetPropertyHandler_THREAD_ROUTER_UPGRADE_THRESHOLD(uint8_t 
                SPINEL_CMD_PROP_VALUE_IS,
                key,
                SPINEL_DATATYPE_UINT8_S,
-               otGetRouterUpgradeThreshold()
+               otGetRouterUpgradeThreshold(mContext)
            );
 }
 
@@ -2016,7 +2016,7 @@ ThreadError NcpBase::GetPropertyHandler_THREAD_CONTEXT_REUSE_DELAY(uint8_t heade
                SPINEL_CMD_PROP_VALUE_IS,
                key,
                SPINEL_DATATYPE_UINT32_S,
-               otGetContextIdReuseDelay()
+               otGetContextIdReuseDelay(mContext)
            );
 }
 
@@ -3012,7 +3012,7 @@ ThreadError NcpBase::SetPropertyHandler_MAC_WHITELIST(uint8_t header, spinel_pro
     spinel_ssize_t parsedLength = 1;
 
     // First, clear the whitelist.
-    otClearMacWhitelist();
+    otClearMacWhitelist(mContext);
 
     while ((errorCode == kThreadError_None)
            && (parsedLength > 0)
@@ -3049,11 +3049,11 @@ ThreadError NcpBase::SetPropertyHandler_MAC_WHITELIST(uint8_t header, spinel_pro
 
         if (rssi == RSSI_OVERRIDE_DISABLED)
         {
-            errorCode = otAddMacWhitelist(ext_addr.m8);
+            errorCode = otAddMacWhitelist(mContext, ext_addr.m8);
         }
         else
         {
-            errorCode = otAddMacWhitelistRssi(ext_addr.m8, rssi);
+            errorCode = otAddMacWhitelistRssi(mContext, ext_addr.m8, rssi);
         }
 
         value_ptr += parsedLength;
@@ -3095,11 +3095,11 @@ ThreadError NcpBase::SetPropertyHandler_MAC_WHITELIST_ENABLED(uint8_t header, sp
     {
         if (isEnabled)
         {
-            otEnableMacWhitelist();
+            otEnableMacWhitelist(mContext);
         }
         else
         {
-            otDisableMacWhitelist();
+            otDisableMacWhitelist(mContext);
         }
 
         errorCode = HandleCommandPropertyGet(header, key);
@@ -3133,7 +3133,7 @@ ThreadError NcpBase::SetPropertyHandler_THREAD_MODE(uint8_t header, spinel_prop_
         mode_config.mDeviceType = ((numeric_mode & kThreadModeTLV_DeviceType) == kThreadModeTLV_DeviceType);
         mode_config.mNetworkData = ((numeric_mode & kThreadModeTLV_NetworkData) == kThreadModeTLV_NetworkData);
 
-        errorCode = otSetLinkMode(mode_config);
+        errorCode = otSetLinkMode(mContext, mode_config);
 
         if (errorCode == kThreadError_None)
         {
@@ -3167,7 +3167,7 @@ ThreadError NcpBase::SetPropertyHandler_THREAD_CHILD_TIMEOUT(uint8_t header, spi
 
     if (parsedLength > 0)
     {
-        otSetChildTimeout(i);
+        otSetChildTimeout(mContext, i);
 
         errorCode = HandleCommandPropertyGet(header, key);
     }
@@ -3194,7 +3194,7 @@ ThreadError NcpBase::SetPropertyHandler_THREAD_ROUTER_UPGRADE_THRESHOLD(uint8_t 
 
     if (parsedLength > 0)
     {
-        otSetRouterUpgradeThreshold(i);
+        otSetRouterUpgradeThreshold(mContext, i);
 
         errorCode = HandleCommandPropertyGet(header, key);
     }
@@ -3221,7 +3221,7 @@ ThreadError NcpBase::SetPropertyHandler_THREAD_CONTEXT_REUSE_DELAY(uint8_t heade
 
     if (parsedLength > 0)
     {
-        otSetContextIdReuseDelay(i);
+        otSetContextIdReuseDelay(mContext, i);
 
         errorCode = HandleCommandPropertyGet(header, key);
     }
@@ -3528,11 +3528,11 @@ ThreadError NcpBase::InsertPropertyHandler_MAC_WHITELIST(uint8_t header, spinel_
     {
         if (rssi == RSSI_OVERRIDE_DISABLED)
         {
-            errorCode = otAddMacWhitelist(ext_addr.m8);
+            errorCode = otAddMacWhitelist(mContext, ext_addr.m8);
         }
         else
         {
-            errorCode = otAddMacWhitelistRssi(ext_addr.m8, rssi);
+            errorCode = otAddMacWhitelistRssi(mContext, ext_addr.m8, rssi);
         }
 
         if (errorCode == kThreadError_None)
@@ -3789,7 +3789,7 @@ ThreadError NcpBase::RemovePropertyHandler_MAC_WHITELIST(uint8_t header, spinel_
 
     if (parsedLength > 0)
     {
-        otRemoveMacWhitelist(ext_addr.m8);
+        otRemoveMacWhitelist(mContext, ext_addr.m8);
 
         errorCode = SendPropertyUpdate(
                         header,
