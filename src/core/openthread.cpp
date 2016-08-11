@@ -731,7 +731,7 @@ ThreadError otEnable(otContext *aContext)
     VerifyOrExit(!aContext->mEnabled, error = kThreadError_InvalidState);
 
     otLogInfoApi("otEnable\n");
-    
+
     otInterfaceUp(aContext);
     otThreadStart(aContext);
     aContext->mEnabled = true;

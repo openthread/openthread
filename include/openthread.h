@@ -169,7 +169,7 @@ otContext *otInit(void *aContextBuffer, uint64_t *aContextBufferSize);
 /**
  * This function disables the OpenThread library.
  *
- * Call this function when OpenThread is no longer in use. 
+ * Call this function when OpenThread is no longer in use.
  *
  * @param[in] aContext  The OpenThread context structure.
  *
