@@ -981,6 +981,7 @@ uDMAIntRegister(uint32_t ui32Base, uint32_t ui32IntChannel,
     // Check the arguments.
     //
     ASSERT(uDMABaseValid(ui32Base));
+    (void)ui32Base;
     ASSERT(pfnHandler);
     ASSERT((ui32IntChannel == INT_DMA_DONE_COMB) || (ui32IntChannel == INT_DMA_ERR));
 
@@ -1022,6 +1023,7 @@ uDMAIntUnregister(uint32_t ui32Base, uint32_t ui32IntChannel)
     // Check the arguments.
     //
     ASSERT(uDMABaseValid(ui32Base));
+    (void)ui32Base;
     ASSERT((ui32IntChannel == INT_DMA_DONE_COMB) || (ui32IntChannel == INT_DMA_ERR));
 
     //

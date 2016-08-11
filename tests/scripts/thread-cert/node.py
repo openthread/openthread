@@ -94,11 +94,15 @@ class Node:
         self.pexpect.expect('Done')
 
     def start(self):
-        self.send_command('start')
+        self.send_command('ifconfig up')
+        self.pexpect.expect('Done')
+        self.send_command('thread start')
         self.pexpect.expect('Done')
 
     def stop(self):
-        self.send_command('stop')
+        self.send_command('thread stop')
+        self.pexpect.expect('Done')
+        self.send_command('ifconfig down')
         self.pexpect.expect('Done')
 
     def clear_whitelist(self):

@@ -555,6 +555,7 @@ IOCPinTypeUart(uint32_t ui32Base, uint32_t ui32Rx, uint32_t ui32Tx,
     // Check the arguments.
     //
     ASSERT(ui32Base == UART0_BASE);
+    (void)ui32Base;
     ASSERT((ui32Rx <= IOID_31) || (ui32Rx == IOID_UNUSED));
     ASSERT((ui32Tx <= IOID_31) || (ui32Tx == IOID_UNUSED));
     ASSERT((ui32Cts <= IOID_31) || (ui32Cts == IOID_UNUSED));
@@ -714,6 +715,7 @@ void
 IOCPinTypeI2c(uint32_t ui32Base, uint32_t ui32Data, uint32_t ui32Clk)
 {
     uint32_t ui32IOConfig;
+    (void)ui32Base;
 
     //
     // Check the arguments.

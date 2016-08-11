@@ -93,6 +93,7 @@ libopenthread_cc2650_a_SOURCES                        = \
     radio.c                               \
     random.c                              \
     uart.c                                \
+    misc.c                                \
     $(NULL)
 
 include_HEADERS                                       = \

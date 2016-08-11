@@ -30,13 +30,32 @@
  *
  ******************************************************************************/
 
-#include <platform/logging.h>
+#include <platform/misc.h>
+#include <sys_ctrl.h>
 
-void otPlatLog(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aFormat, ...)
+void otPlatReset(void)
 {
-    (void)aLogLevel;
-    (void)aLogRegion;
-    (void)aFormat;
-    /* TODO */
+    SysCtrlSystemReset();
 }
 
+otPlatResetReason otPlatGetResetReason(void)
+{
+    switch(SysCtrlResetSourceGet())
+    {
+        case RSTSRC_PWR_ON:
+            return kPlatResetReason_PowerOn;
+        case RSTSRC_PIN_RESET:
+            return kPlatResetReason_External;
+        case RSTSRC_VDDS_LOSS:
+        case RSTSRC_VDD_LOSS:
+        case RSTSRC_VDDR_LOSS:
+        case RSTSRC_CLK_LOSS:
+            return kPlatResetReason_Crash;
+        case RSTSRC_WARMRESET:
+        case RSTSRC_SYSRESET:
+        case RSTSRC_WAKEUP_FROM_SHUTDOWN:
+            return kPlatResetReason_Software;
+        default:
+            return kPlatResetReason_Unknown;
+    }
+}

@@ -55,5 +55,7 @@ __error__(char *pcFilename, uint32_t ui32Line)
     // Error catching.
     // User can implement custom error handling for failing ASSERTs.
     // Setting breakpoint here allows tracing of the failing ASSERT.
+    (void)pcFilename;
+    (void)ui32Line;
     while( true );
 }

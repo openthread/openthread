@@ -791,6 +791,7 @@ int Lowpan::DecompressExtensionHeader(Message &aMessage, const uint8_t *aBuf, ui
     rval = cur - aBuf;
 
 exit:
+    (void)aBufLength;
     return rval;
 }
 

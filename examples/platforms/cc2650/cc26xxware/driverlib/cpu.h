@@ -328,8 +328,12 @@ CPUbasepriSet(uint32_t ui32NewBasepri)
    //
    // Set the BASEPRI register.
    //
-   __asm("    msr     BASEPRI, r0\n"
-         "    bx      lr\n");
+   __asm("    msr     BASEPRI, %0\n"
+         "    bx      lr\n"
+         :
+         : "r" (ui32NewBasepri)
+         :
+         );
 }
 #pragma GCC diagnostic pop
 #endif

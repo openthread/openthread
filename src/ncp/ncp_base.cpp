@@ -38,12 +38,15 @@
 #include <openthread-config.h>
 #include <stdarg.h>
 #include <platform/radio.h>
+#include <platform/misc.h>
 
 namespace Thread {
 
 extern ThreadNetif *sThreadNetif;
 
 static NcpBase *sNcpContext = NULL;
+
+#define NCP_PLAT_RESET_REASON        (1<<31)
 
 // ----------------------------------------------------------------------------
 // MARK: Command/Property Jump Tables
@@ -254,6 +257,42 @@ static spinel_status_t ThreadErrorToSpinelStatus(ThreadError error)
     return ret;
 }
 
+static spinel_status_t ResetReasonToSpinelStatus(otPlatResetReason reason)
+{
+    spinel_status_t ret;
+    switch (reason)
+    {
+    case kPlatResetReason_PowerOn:
+        ret = SPINEL_STATUS_RESET_POWER_ON;
+        break;
+    case kPlatResetReason_External:
+        ret = SPINEL_STATUS_RESET_EXTERNAL;
+        break;
+    case kPlatResetReason_Software:
+        ret = SPINEL_STATUS_RESET_SOFTWARE;
+        break;
+    case kPlatResetReason_Fault:
+        ret = SPINEL_STATUS_RESET_FAULT;
+        break;
+    case kPlatResetReason_Crash:
+        ret = SPINEL_STATUS_RESET_CRASH;
+        break;
+    case kPlatResetReason_Assert:
+        ret = SPINEL_STATUS_RESET_ASSERT;
+        break;
+    case kPlatResetReason_Watchdog:
+        ret = SPINEL_STATUS_RESET_WATCHDOG;
+        break;
+    case kPlatResetReason_Other:
+        ret = SPINEL_STATUS_RESET_OTHER;
+        break;
+    default:
+        ret = SPINEL_STATUS_RESET_UNKNOWN;
+        break;
+    }
+    return ret;
+}
+
 // ----------------------------------------------------------------------------
 // MARK: Class Boilerplate
 // ----------------------------------------------------------------------------
@@ -265,7 +304,7 @@ NcpBase::NcpBase():
     mChannelMask = mSupportedChannelMask;
     mScanPeriod = 200; // ms
     sNcpContext = this;
-    mChangedFlags = 0;
+    mChangedFlags = NCP_PLAT_RESET_REASON;
     mAllowLocalNetworkDataChange = false;
 
     for (unsigned i = 0; i < sizeof(mNetifAddresses) / sizeof(mNetifAddresses[0]); i++)
@@ -430,7 +469,15 @@ void NcpBase::UpdateChangedProps()
 {
     if (!mSending)
     {
-        if ((mChangedFlags & OT_IP6_ML_ADDR_CHANGED) != 0)
+        if ((mChangedFlags & NCP_PLAT_RESET_REASON) != 0)
+        {
+            mChangedFlags &= ~NCP_PLAT_RESET_REASON;
+            SendLastStatus(
+                SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0,
+                ResetReasonToSpinelStatus(otPlatGetResetReason())
+            );
+        }
+        else if ((mChangedFlags & OT_IP6_ML_ADDR_CHANGED) != 0)
         {
             mChangedFlags &= ~OT_IP6_ML_ADDR_CHANGED;
             HandleCommandPropertyGet(
@@ -834,7 +881,7 @@ NcpBase::OutboundFrameFeedVPacked(const char *pack_format, va_list args)
 
     packed_len = spinel_datatype_vpack(buf, sizeof(buf), pack_format, args);
 
-    if ((packed_len > 0) && (packed_len <= sizeof(buf)))
+    if ((packed_len > 0) && (packed_len <= static_cast<spinel_ssize_t>(sizeof(buf))))
     {
         errorCode = OutboundFrameFeedData(buf, packed_len);
     }
@@ -864,13 +911,30 @@ NcpBase::OutboundFrameFeedPacked(const char *pack_format, ...)
 void NcpBase::CommandHandler_NOOP(uint8_t header, unsigned int command, const uint8_t *arg_ptr, uint16_t arg_len)
 {
     SendLastStatus(header, SPINEL_STATUS_OK);
+    (void)command;
+    (void)arg_ptr;
+    (void)arg_len;
 }
 
 void NcpBase::CommandHandler_RESET(uint8_t header, unsigned int command, const uint8_t *arg_ptr, uint16_t arg_len)
 {
-    // TODO: Figure out how to actually perform a reset.
-    otInit();
-    SendLastStatus(SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0, SPINEL_STATUS_RESET_SOFTWARE);
+	// We aren't using any of the arguments to this function.
+    (void)header;
+    (void)command;
+    (void)arg_ptr;
+    (void)arg_len;
+
+    // Signal a platform reset. If implemented, this function
+    // shouldn't return.
+    otPlatReset();
+
+    // We only get to this point if the
+    // platform doesn't support resetting.
+    // In such a case we fake it.
+
+    mChangedFlags |= NCP_PLAT_RESET_REASON;
+    otDisable();
+    mUpdateChangedPropsTask.Post();
 }
 
 void NcpBase::CommandHandler_PROP_VALUE_GET(uint8_t header, unsigned int command, const uint8_t *arg_ptr,
@@ -889,6 +953,7 @@ void NcpBase::CommandHandler_PROP_VALUE_GET(uint8_t header, unsigned int command
     {
         SendLastStatus(header, SPINEL_STATUS_PARSE_ERROR);
     }
+    (void)command;
 }
 
 void NcpBase::CommandHandler_PROP_VALUE_SET(uint8_t header, unsigned int command, const uint8_t *arg_ptr,
@@ -909,6 +974,7 @@ void NcpBase::CommandHandler_PROP_VALUE_SET(uint8_t header, unsigned int command
     {
         SendLastStatus(header, SPINEL_STATUS_PARSE_ERROR);
     }
+    (void)command;
 }
 
 void NcpBase::CommandHandler_PROP_VALUE_INSERT(uint8_t header, unsigned int command, const uint8_t *arg_ptr,
@@ -929,6 +995,7 @@ void NcpBase::CommandHandler_PROP_VALUE_INSERT(uint8_t header, unsigned int comm
     {
         SendLastStatus(header, SPINEL_STATUS_PARSE_ERROR);
     }
+    (void)command;
 }
 
 void NcpBase::CommandHandler_PROP_VALUE_REMOVE(uint8_t header, unsigned int command, const uint8_t *arg_ptr,
@@ -949,6 +1016,7 @@ void NcpBase::CommandHandler_PROP_VALUE_REMOVE(uint8_t header, unsigned int comm
     {
         SendLastStatus(header, SPINEL_STATUS_PARSE_ERROR);
     }
+    (void)command;
 }
 
 
@@ -1080,12 +1148,14 @@ void NcpBase::GetPropertyHandler_LOCK(uint8_t header, spinel_prop_key_t key)
 {
     // TODO: Implement property lock (Needs API!)
     SendLastStatus(header, SPINEL_STATUS_UNIMPLEMENTED);
+    (void)key;
 }
 
 void NcpBase::GetPropertyHandler_PHY_ENABLED(uint8_t header, spinel_prop_key_t key)
 {
     // TODO: Implement PHY_ENBLED (Needs API!)
     SendLastStatus(header, SPINEL_STATUS_UNIMPLEMENTED);
+    (void)key;
 }
 
 void NcpBase::GetPropertyHandler_PHY_FREQ(uint8_t header, spinel_prop_key_t key)
@@ -1268,7 +1338,7 @@ void NcpBase::GetPropertyHandler_NET_ENABLED(uint8_t header, spinel_prop_key_t k
         SPINEL_CMD_PROP_VALUE_IS,
         key,
         SPINEL_DATATYPE_BOOL_S,
-        (otGetDeviceRole() != kDeviceRoleDisabled)
+        otIsInterfaceUp()
     );
 }
 
@@ -1276,21 +1346,25 @@ void NcpBase::GetPropertyHandler_NET_STATE(uint8_t header, spinel_prop_key_t key
 {
     spinel_net_state_t state(SPINEL_NET_STATE_OFFLINE);
 
-    switch (otGetDeviceRole())
+    if (!otInterfaceUp())
     {
-    case kDeviceRoleDisabled:
         state = SPINEL_NET_STATE_OFFLINE;
-        break;
+    }
+    else
+    {
+        switch (otGetDeviceRole())
+        {
+        case kDeviceRoleDisabled:
+        case kDeviceRoleDetached:
+            state = SPINEL_NET_STATE_DETACHED;
+            break;
 
-    case kDeviceRoleDetached:
-        state = SPINEL_NET_STATE_DETACHED;
-        break;
-
-    case kDeviceRoleChild:
-    case kDeviceRoleRouter:
-    case kDeviceRoleLeader:
-        state = SPINEL_NET_STATE_ATTACHED;
-        break;
+        case kDeviceRoleChild:
+        case kDeviceRoleRouter:
+        case kDeviceRoleLeader:
+            state = SPINEL_NET_STATE_ATTACHED;
+            break;
+        }
     }
 
     SendPropteryUpdate(
@@ -1646,6 +1720,7 @@ void NcpBase::GetPropertyHandler_IPV6_LL_ADDR(uint8_t header, spinel_prop_key_t 
 {
     // TODO!
     SendLastStatus(header, SPINEL_STATUS_UNIMPLEMENTED);
+    (void)key;
 }
 
 void NcpBase::GetPropertyHandler_IPV6_ADDRESS_TABLE(uint8_t header, spinel_prop_key_t key)
@@ -1688,18 +1763,21 @@ void NcpBase::GetPropertyHandler_IPV6_ROUTE_TABLE(uint8_t header, spinel_prop_ke
 {
     // TODO: Implement get route table
     SendLastStatus(header, SPINEL_STATUS_UNIMPLEMENTED);
+    (void)key;
 }
 
 void NcpBase::GetPropertyHandler_THREAD_LOCAL_ROUTES(uint8_t header, spinel_prop_key_t key)
 {
     // TODO: Implement get external route table
     SendLastStatus(header, SPINEL_STATUS_UNIMPLEMENTED);
+    (void)key;
 }
 
 void NcpBase::GetPropertyHandler_STREAM_NET(uint8_t header, spinel_prop_key_t key)
 {
     // TODO: Implement explicit data poll.
     SendLastStatus(header, SPINEL_STATUS_UNIMPLEMENTED);
+    (void)key;
 }
 
 void NcpBase::GetPropertyHandler_CNTR(uint8_t header, spinel_prop_key_t key)
@@ -1842,6 +1920,9 @@ void NcpBase::SetPropertyHandler_POWER_STATE(uint8_t header, spinel_prop_key_t k
 {
     // TODO: Implement POWER_STATE
     SendLastStatus(header, SPINEL_STATUS_UNIMPLEMENTED);
+    (void)key;
+    (void)value_ptr;
+    (void)value_len;
 }
 
 void NcpBase::SetPropertyHandler_PHY_ENABLED(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr,
@@ -1889,6 +1970,9 @@ void NcpBase::SetPropertyHandler_PHY_TX_POWER(uint8_t header, spinel_prop_key_t 
 {
     // TODO: Implement PHY_TX_POWER
     SendLastStatus(header, SPINEL_STATUS_UNIMPLEMENTED);
+    (void)key;
+    (void)value_ptr;
+    (void)value_len;
 }
 
 void NcpBase::SetPropertyHandler_PHY_CHAN(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr,
@@ -2170,40 +2254,36 @@ void NcpBase::SetPropertyHandler_NET_STATE(uint8_t header, spinel_prop_key_t key
         switch (i)
         {
         case SPINEL_NET_STATE_OFFLINE:
-            if (otGetDeviceRole() != kDeviceRoleDisabled)
+            if (otIsInterfaceUp())
             {
-                errorCode = otDisable();
+                errorCode = otInterfaceDown();
             }
 
             break;
 
         case SPINEL_NET_STATE_DETACHED:
-            if (otGetDeviceRole() == kDeviceRoleDisabled)
+            if (!otIsInterfaceUp())
             {
-                errorCode = otEnable();
-
-                if (errorCode == kThreadError_None)
-                {
-                    errorCode = otBecomeDetached();
-                }
+                errorCode = otInterfaceUp();
             }
-            else if (otGetDeviceRole() != kDeviceRoleDetached)
+
+            if ((errorCode == kThreadError_None) && (otGetDeviceRole() != kDeviceRoleDisabled))
             {
-                errorCode = otBecomeDetached();
+                errorCode = otThreadStop();
             }
 
             break;
 
         case SPINEL_NET_STATE_ATTACHING:
         case SPINEL_NET_STATE_ATTACHED:
-            if (otGetDeviceRole() == kDeviceRoleDisabled)
+            if (!otIsInterfaceUp())
             {
-                errorCode = otEnable();
+                errorCode = otInterfaceUp();
             }
 
-            if (otGetDeviceRole() == kDeviceRoleDetached)
+            if ((errorCode == kThreadError_None) && (otGetDeviceRole() == kDeviceRoleDetached))
             {
-                errorCode = otBecomeRouter();
+                errorCode = otThreadStart();
 
                 if (errorCode == kThreadError_None)
                 {
@@ -2501,6 +2581,7 @@ void NcpBase::SetPropertyHandler_STREAM_NET_INSECURE(uint8_t header, spinel_prop
 
         SendLastStatus(header, ThreadErrorToSpinelStatus(errorCode));
     }
+    (void)key;
 }
 
 void NcpBase::SetPropertyHandler_STREAM_NET(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr,
@@ -2565,6 +2646,7 @@ void NcpBase::SetPropertyHandler_STREAM_NET(uint8_t header, spinel_prop_key_t ke
 
         SendLastStatus(header, ThreadErrorToSpinelStatus(errorCode));
     }
+    (void)key;
 }
 
 void NcpBase::SetPropertyHandler_IPV6_ML_PREFIX(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr,
@@ -2740,6 +2822,7 @@ void NcpBase::SetPropertyHandler_CNTR_RESET(uint8_t header, spinel_prop_key_t ke
     // There is currently no getter for PROP_CNTR_RESET, so we just
     // return SPINEL_STATUS_OK for success when the counters are reset.
     SendLastStatus(header, ThreadErrorToSpinelStatus(errorCode));
+    (void)key;
 }
 
 // ----------------------------------------------------------------------------
@@ -2834,10 +2917,12 @@ void NcpBase::InsertPropertyHandler_THREAD_LOCAL_ROUTES(uint8_t header, spinel_p
     spinel_ssize_t parsedLength;
     ThreadError errorCode = kThreadError_None;
 
-    otExternalRouteConfig ext_route_config = {};
+    otExternalRouteConfig ext_route_config;
     otIp6Address *addr_ptr;
     bool stable = false;
     uint8_t flags = 0;
+
+    memset(&ext_route_config, 0, sizeof(otExternalRouteConfig));
 
     VerifyOrExit(
         mAllowLocalNetworkDataChange == true,
@@ -2899,10 +2984,12 @@ void NcpBase::InsertPropertyHandler_THREAD_ON_MESH_NETS(uint8_t header, spinel_p
     spinel_ssize_t parsedLength;
     ThreadError errorCode = kThreadError_None;
 
-    otBorderRouterConfig border_router_config = {};
+    otBorderRouterConfig border_router_config;
     otIp6Address *addr_ptr;
     bool stable = false;
     uint8_t flags = 0;
+
+    memset(&border_router_config, 0, sizeof(otBorderRouterConfig));
 
     VerifyOrExit(
         mAllowLocalNetworkDataChange == true,
@@ -3071,7 +3158,8 @@ void NcpBase::RemovePropertyHandler_THREAD_LOCAL_ROUTES(uint8_t header, spinel_p
     spinel_ssize_t parsedLength;
     ThreadError errorCode = kThreadError_None;
 
-    otIp6Prefix ip6_prefix = {};
+    otIp6Prefix ip6_prefix;
+    memset(&ip6_prefix, 0, sizeof(otIp6Prefix));
     otIp6Address *addr_ptr;
 
     VerifyOrExit(
@@ -3122,7 +3210,8 @@ void NcpBase::RemovePropertyHandler_THREAD_ON_MESH_NETS(uint8_t header, spinel_p
     spinel_ssize_t parsedLength;
     ThreadError errorCode = kThreadError_None;
 
-    otIp6Prefix ip6_prefix = {};
+    otIp6Prefix ip6_prefix;
+    memset(&ip6_prefix, 0, sizeof(otIp6Prefix));
     otIp6Address *addr_ptr;
 
     VerifyOrExit(

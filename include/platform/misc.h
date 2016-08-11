@@ -29,28 +29,53 @@
 /**
  * @file
  * @brief
- *   This file includes the platform-specific initializers.
+ *   This file includes platform abstractions for miscelaneous behaviors.
  */
 
-#include <platform/uart.h>
-#include "platform-cc2538.h"
+#ifndef OT_PLATFORM_MISC_H
+#define OT_PLATFORM_MISC_H 1
 
-void PlatformInit(int argc, char *argv[])
+#include <stdint.h>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+/**
+ * This function performs a software reset on the platform, if supported.
+ *
+ */
+void otPlatReset(void);
+
+/**
+ * Enumeration of possible reset reason codes.
+ *
+ * These are in the same order as the Spinel reset reason codes.
+ *
+ */
+typedef enum
 {
-    cc2538AlarmInit();
-    cc2538RadioInit();
-    cc2538RandomInit();
-    otPlatUartEnable();
+    kPlatResetReason_PowerOn        = 0,
+    kPlatResetReason_External       = 1,
+    kPlatResetReason_Software       = 2,
+    kPlatResetReason_Fault          = 3,
+    kPlatResetReason_Crash          = 4,
+    kPlatResetReason_Assert         = 5,
+    kPlatResetReason_Other          = 6,
+    kPlatResetReason_Unknown        = 7,
+    kPlatResetReason_Watchdog       = 8,
 
-    (void)argc;
-    (void)argv;
-}
+    kPlatResetReason_Count,
+} otPlatResetReason;
 
-void PlatformProcessDrivers(void)
-{
-    // should sleep and wait for interrupts here
+/**
+ * This function returns the reason for the last platform reset.
+ *
+ */
+otPlatResetReason otPlatGetResetReason(void);
 
-    cc2538UartProcess();
-    cc2538RadioProcess();
-    cc2538AlarmProcess();
-}
+#ifdef __cplusplus
+}  // extern "C"
+#endif
+
+#endif  // OT_PLATFORM_MISC_H

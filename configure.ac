@@ -409,11 +409,6 @@ AM_CONDITIONAL([OPENTHREAD_ENABLE_NCP],      [test "${enable_ncp}" != "no"])
 AM_CONDITIONAL([OPENTHREAD_ENABLE_NCP_SPI],  [test "${enable_ncp}"  = "spi"])
 AM_CONDITIONAL([OPENTHREAD_ENABLE_NCP_UART], [test "${enable_ncp}"  = "uart"])
 
-if test "${enable_ncp}" != "no"
-then
-    AC_CHECK_FUNCS([strnlen])
-fi
-
 #
 # Examples
 #

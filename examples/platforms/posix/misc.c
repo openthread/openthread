@@ -26,31 +26,15 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-/**
- * @file
- * @brief
- *   This file includes the platform-specific initializers.
- */
+#include <platform/misc.h>
+#include "platform-posix.h"
 
-#include <platform/uart.h>
-#include "platform-cc2538.h"
-
-void PlatformInit(int argc, char *argv[])
+void otPlatReset(void)
 {
-    cc2538AlarmInit();
-    cc2538RadioInit();
-    cc2538RandomInit();
-    otPlatUartEnable();
-
-    (void)argc;
-    (void)argv;
+    // This function does nothing on the Posix platform.
 }
 
-void PlatformProcessDrivers(void)
+otPlatResetReason otPlatGetResetReason(void)
 {
-    // should sleep and wait for interrupts here
-
-    cc2538UartProcess();
-    cc2538RadioProcess();
-    cc2538AlarmProcess();
+    return kPlatResetReason_PowerOn;
 }

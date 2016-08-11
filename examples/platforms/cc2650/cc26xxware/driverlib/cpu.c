@@ -416,8 +416,12 @@ CPUdelay(uint32_t ui32Count)
     //
     // Delay the specified number of times (3 cycles pr. loop)
     //
-    __asm("    subs    r0, #1\n"
+    __asm("    subs    %0, #1\n"
           "    bne     NOROM_CPUdelay\n"
-          "    bx      lr");
+          "    bx      lr"
+          : "+r" (ui32Count)
+          :
+          :
+          );
 }
 #endif

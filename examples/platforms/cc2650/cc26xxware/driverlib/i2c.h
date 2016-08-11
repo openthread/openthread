@@ -227,6 +227,7 @@ I2CMasterControl(uint32_t ui32Base, uint32_t ui32Cmd)
     // Check the arguments.
     //
     ASSERT(I2CBaseValid(ui32Base));
+    (void)ui32Base;
     ASSERT((ui32Cmd == I2C_MASTER_CMD_SINGLE_SEND) ||
     //     (ui32Cmd == I2C_MASTER_CMD_SINGLE_RECEIVE) || -> Equal to SINGLE_SEND
            (ui32Cmd == I2C_MASTER_CMD_BURST_SEND_START) ||
@@ -277,6 +278,7 @@ I2CMasterSlaveAddrSet(uint32_t ui32Base, uint8_t ui8SlaveAddr,
     // Check the arguments.
     //
     ASSERT(I2CBaseValid(ui32Base));
+    (void)ui32Base;
     ASSERT(!(ui8SlaveAddr & 0x80));
 
     //
@@ -301,6 +303,7 @@ I2CMasterEnable(uint32_t ui32Base)
 {
     // Check the arguments.
     ASSERT(I2CBaseValid(ui32Base));
+    (void)ui32Base;
 
     // Enable the clock for the master.
     HWREGBITW(I2C0_BASE + I2C_O_MCR, I2C_MCR_MFE_BITN) = 1;
@@ -325,6 +328,7 @@ I2CMasterDisable(uint32_t ui32Base)
 {
     // Check the arguments.
     ASSERT(I2CBaseValid(ui32Base));
+    (void)ui32Base;
 
     // Disable the master block.
     HWREG(I2C0_BASE + I2C_O_MCTRL) = 0;
@@ -354,6 +358,7 @@ I2CMasterBusy(uint32_t ui32Base)
     // Check the arguments.
     //
     ASSERT(I2CBaseValid(ui32Base));
+    (void)ui32Base;
 
     //
     // Return the busy status.
@@ -390,6 +395,7 @@ I2CMasterBusBusy(uint32_t ui32Base)
     // Check the arguments.
     //
     ASSERT(I2CBaseValid(ui32Base));
+    (void)ui32Base;
 
     //
     // Return the bus busy status.
@@ -423,6 +429,7 @@ I2CMasterDataGet(uint32_t ui32Base)
     // Check the arguments.
     //
     ASSERT(I2CBaseValid(ui32Base));
+    (void)ui32Base;
 
     //
     // Read a byte.
@@ -449,6 +456,7 @@ I2CMasterDataPut(uint32_t ui32Base, uint8_t ui8Data)
     // Check the arguments.
     //
     ASSERT(I2CBaseValid(ui32Base));
+    (void)ui32Base;
 
     //
     // Write the byte.
@@ -492,6 +500,7 @@ I2CMasterIntEnable(uint32_t ui32Base)
     // Check the arguments.
     //
     ASSERT(I2CBaseValid(ui32Base));
+    (void)ui32Base;
 
     //
     // Enable the master interrupt.
@@ -517,6 +526,7 @@ I2CMasterIntDisable(uint32_t ui32Base)
     // Check the arguments.
     //
     ASSERT(I2CBaseValid(ui32Base));
+    (void)ui32Base;
 
     //
     // Disable the master interrupt.
@@ -559,6 +569,7 @@ I2CMasterIntClear(uint32_t ui32Base)
     // Check the arguments.
     //
     ASSERT(I2CBaseValid(ui32Base));
+    (void)ui32Base;
 
     //
     // Clear the I2C master interrupt source.
@@ -591,6 +602,7 @@ I2CMasterIntStatus(uint32_t ui32Base, bool bMasked)
     // Check the arguments.
     //
     ASSERT(I2CBaseValid(ui32Base));
+    (void)ui32Base;
 
     //
     // Return either the interrupt status or the raw interrupt status as
@@ -622,6 +634,7 @@ I2CSlaveEnable(uint32_t ui32Base)
 {
     // Check the arguments.
     ASSERT(I2CBaseValid(ui32Base));
+    (void)ui32Base;
 
     // Enable the clock to the slave block.
     HWREGBITW(I2C0_BASE + I2C_O_MCR, I2C_MCR_SFE_BITN) = 1;
@@ -654,6 +667,7 @@ I2CSlaveInit(uint32_t ui32Base, uint8_t ui8SlaveAddr)
     // Check the arguments.
     //
     ASSERT(I2CBaseValid(ui32Base));
+    (void)ui32Base;
     ASSERT(!(ui8SlaveAddr & 0x80));
 
     //
@@ -686,6 +700,7 @@ I2CSlaveAddressSet(uint32_t ui32Base, uint8_t ui8SlaveAddr)
     // Check the arguments.
     //
     ASSERT(I2CBaseValid(ui32Base));
+    (void)ui32Base;
     ASSERT(!(ui8SlaveAddr & 0x80));
 
     //
@@ -710,6 +725,7 @@ I2CSlaveDisable(uint32_t ui32Base)
 {
     // Check the arguments.
     ASSERT(I2CBaseValid(ui32Base));
+    (void)ui32Base;
 
     // Disable the slave.
     HWREG(I2C0_BASE + I2C_O_SCTL) = 0x0;
@@ -741,6 +757,7 @@ I2CSlaveStatus(uint32_t ui32Base)
     // Check the arguments.
     //
     ASSERT(I2CBaseValid(ui32Base));
+    (void)ui32Base;
 
     //
     // Return the slave status.
@@ -767,6 +784,7 @@ I2CSlaveDataGet(uint32_t ui32Base)
     // Check the arguments.
     //
     ASSERT(I2CBaseValid(ui32Base));
+    (void)ui32Base;
 
     //
     // Read a byte.
@@ -793,6 +811,7 @@ I2CSlaveDataPut(uint32_t ui32Base, uint8_t ui8Data)
     // Check the arguments.
     //
     ASSERT(I2CBaseValid(ui32Base));
+    (void)ui32Base;
 
     //
     // Write the byte.
@@ -827,6 +846,7 @@ I2CSlaveIntEnable(uint32_t ui32Base, uint32_t ui32IntFlags)
     // Check the arguments.
     //
     ASSERT(I2CBaseValid(ui32Base));
+    (void)ui32Base;
     ASSERT(ui32IntFlags & (I2C_SLAVE_INT_STOP | I2C_SLAVE_INT_START |
                            I2C_SLAVE_INT_DATA));
 
@@ -865,6 +885,7 @@ I2CSlaveIntDisable(uint32_t ui32Base, uint32_t ui32IntFlags)
     // Check the arguments.
     //
     ASSERT(I2CBaseValid(ui32Base));
+    (void)ui32Base;
     ASSERT(ui32IntFlags & (I2C_SLAVE_INT_STOP | I2C_SLAVE_INT_START |
                            I2C_SLAVE_INT_DATA));
 
@@ -916,6 +937,7 @@ I2CSlaveIntClear(uint32_t ui32Base, uint32_t ui32IntFlags)
     // Check the arguments.
     //
     ASSERT(I2CBaseValid(ui32Base));
+    (void)ui32Base;
 
     //
     // Clear the I2C slave interrupt source.
@@ -950,6 +972,7 @@ I2CSlaveIntStatus(uint32_t ui32Base, bool bMasked)
     // Check the arguments.
     //
     ASSERT(I2CBaseValid(ui32Base));
+    (void)ui32Base;
 
     //
     // Return either the interrupt status or the raw interrupt status as

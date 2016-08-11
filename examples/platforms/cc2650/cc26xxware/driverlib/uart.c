@@ -331,6 +331,7 @@ UARTIntRegister(uint32_t ui32Base, void (*pfnHandler)(void))
     // Check the arguments.
     //
     ASSERT(UARTBaseValid(ui32Base));
+    (void)ui32Base;
 
     //
     // Register the interrupt handler.
@@ -355,6 +356,7 @@ UARTIntUnregister(uint32_t ui32Base)
     // Check the arguments.
     //
     ASSERT(UARTBaseValid(ui32Base));
+    (void)ui32Base;
 
     //
     // Disable the interrupt.

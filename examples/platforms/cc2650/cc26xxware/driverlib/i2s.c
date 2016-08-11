@@ -82,6 +82,7 @@ I2SEnable(uint32_t ui32Base)
     // Check the arguments.
     //
     ASSERT(I2SBaseValid(ui32Base));
+    (void)ui32Base;
 
     //
     // Make sure the control table pointer is setup to a memory location.
@@ -118,6 +119,7 @@ I2SAudioFormatConfigure(uint32_t ui32Base, uint32_t ui32FmtCfg,
     // Check the arguments.
     //
     ASSERT(I2SBaseValid(ui32Base));
+    (void)ui32Base;
     ASSERT(ui32BitClkDelay <= 255);
 
     //
@@ -148,6 +150,7 @@ I2SChannelConfigure(uint32_t ui32Base, uint32_t ui32Chan0Cfg,
     // Check the arguments.
     //
     ASSERT(I2SBaseValid(ui32Base));
+    (void)ui32Base;
     ASSERT(ui32Chan0Cfg & (I2S_CHAN_CFG_MASK | I2S_LINE_MASK))
     ASSERT(ui32Chan1Cfg & (I2S_CHAN_CFG_MASK | I2S_LINE_MASK))
     ASSERT(ui32Chan2Cfg & (I2S_CHAN_CFG_MASK | I2S_LINE_MASK))
@@ -284,6 +287,7 @@ I2SBufferConfig(uint32_t ui32Base, uint32_t ui32InBufBase,
     // Check the arguments.
     //
     ASSERT(I2SBaseValid(ui32Base));
+    (void)ui32Base;
     ASSERT(ui16DMABufSize > 0);
 
     //
@@ -307,6 +311,7 @@ I2SPointerSet(uint32_t ui32Base, bool bInput, void * pNextPointer)
     // Check the arguments.
     //
     ASSERT(I2SBaseValid(ui32Base));
+    (void)ui32Base;
 
     //
     // Update the next input/output pointer with the correct address.
@@ -335,6 +340,7 @@ I2SPointerUpdate(uint32_t ui32Base, bool bInput)
     // Check the arguments.
     //
     ASSERT(I2SBaseValid(ui32Base));
+    (void)ui32Base;
 
     //
     // Update the next input/output pointer with the correct address.
@@ -378,6 +384,7 @@ I2SSampleStampConfigure(uint32_t ui32Base, bool bInput, bool bOutput)
     // Check the arguments.
     //
     ASSERT(I2SBaseValid(ui32Base));
+    (void)ui32Base;
 
     ui32Trigger = HWREG(I2S0_BASE + I2S_O_STMPWCNT);
     ui32Trigger = (ui32Trigger + 2) % g_pControlTable->ui16ChBufSize;
@@ -412,6 +419,8 @@ I2SSampleStampGet(uint32_t ui32Base, uint32_t ui32Channel)
     uint32_t ui32SysClkCnt;
     uint32_t ui32PeriodSysClkCnt;
     uint32_t ui32SampleStamp;
+    (void)ui32Base;
+    (void)ui32Channel;
 
     //
     // Get the number of Frame clock counts since last stamp.

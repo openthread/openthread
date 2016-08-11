@@ -184,7 +184,7 @@ CRYPTOAesLoadKey(uint32_t *pui32AesKey,
         //
         // Check status, if error return error code.
         //
-        if(HWREG(CRYPTO_BASE + CRYPTO_O_KEYWRITTENAREA) != (0x00000001 << ui32KeyLocation))
+        if(HWREG(CRYPTO_BASE + CRYPTO_O_KEYWRITTENAREA) != (1u << ui32KeyLocation))
         {
             g_ui32CurrentAesOp = CRYPTO_AES_NONE;
             return (AES_KEYSTORE_READ_ERROR);

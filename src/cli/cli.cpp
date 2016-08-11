@@ -59,6 +59,7 @@ const struct Command Interpreter::sCommands[] =
     { "eidcache", &ProcessEidCache },
     { "extaddr", &ProcessExtAddress },
     { "extpanid", &ProcessExtPanId },
+    { "ifconfig", &ProcessIfconfig },
     { "ipaddr", &ProcessIpAddr },
     { "keysequence", &ProcessKeySequence },
     { "leaderdata", &ProcessLeaderData },
@@ -77,9 +78,8 @@ const struct Command Interpreter::sCommands[] =
     { "router", &ProcessRouter },
     { "routerupgradethreshold", &ProcessRouterUpgradeThreshold },
     { "scan", &ProcessScan },
-    { "start", &ProcessStart },
     { "state", &ProcessState },
-    { "stop", &ProcessStop },
+    { "thread", &ProcessThread },
     { "version", &ProcessVersion },
     { "whitelist", &ProcessWhitelist },
 };
@@ -178,6 +178,9 @@ void Interpreter::ProcessHelp(int argc, char *argv[])
     {
         sServer->OutputFormat("%s\r\n", sCommands[i].mName);
     }
+
+    (void)argc;
+    (void)argv;
 }
 
 void Interpreter::ProcessChannel(int argc, char *argv[])
@@ -376,6 +379,8 @@ void Interpreter::ProcessEidCache(int argc, char *argv[])
     }
 
 exit:
+    (void)argc;
+    (void)argv;
     AppendResult(kThreadError_None);
 }
 
@@ -384,6 +389,8 @@ void Interpreter::ProcessExtAddress(int argc, char *argv[])
     OutputBytes(otGetExtendedAddress(), OT_EXT_ADDRESS_SIZE);
     sServer->OutputFormat("\r\n");
     AppendResult(kThreadError_None);
+    (void)argc;
+    (void)argv;
 }
 
 void Interpreter::ProcessExtPanId(int argc, char *argv[])
@@ -402,6 +409,34 @@ void Interpreter::ProcessExtPanId(int argc, char *argv[])
         VerifyOrExit(Hex2Bin(argv[0], extPanId, sizeof(extPanId)) >= 0, error = kThreadError_Parse);
 
         otSetExtendedPanId(extPanId);
+    }
+
+exit:
+    AppendResult(error);
+}
+
+void Interpreter::ProcessIfconfig(int argc, char *argv[])
+{
+    ThreadError error = kThreadError_Parse;
+
+    if (argc == 0)
+    {
+        if (otIsInterfaceUp())
+        {
+            sServer->OutputFormat("up\r\n");
+        }
+        else
+        {
+            sServer->OutputFormat("down\r\n");
+        }
+    }
+    else if (strcmp(argv[0], "up") == 0)
+    {
+        SuccessOrExit(error = otInterfaceUp());
+    }
+    else if (strcmp(argv[0], "down") == 0)
+    {
+        SuccessOrExit(error = otInterfaceDown());
     }
 
 exit:
@@ -507,6 +542,8 @@ void Interpreter::ProcessLeaderData(int argc, char *argv[])
     sServer->OutputFormat("Leader Router ID: %d\r\n", leaderData.mLeaderRouterId);
 
 exit:
+    (void)argc;
+    (void)argv;
     AppendResult(error);
 }
 
@@ -561,7 +598,9 @@ exit:
 void Interpreter::ProcessMode(int argc, char *argv[])
 {
     ThreadError error = kThreadError_None;
-    otLinkModeConfig linkMode = {};
+    otLinkModeConfig linkMode;
+
+    memset(&linkMode, 0, sizeof(otLinkModeConfig));
 
     if (argc == 0)
     {
@@ -629,6 +668,8 @@ void Interpreter::ProcessNetworkDataRegister(int argc, char *argv[])
     SuccessOrExit(error = otSendServerData());
 
 exit:
+    (void)argc;
+    (void)argv;
     AppendResult(error);
 }
 
@@ -713,6 +754,8 @@ void Interpreter::HandleEchoResponse(void *aContext, Message &aMessage, const Ip
     }
 
     sServer->OutputFormat("\r\n");
+
+    (void)aContext;
 }
 
 void Interpreter::ProcessPing(int argc, char *argv[])
@@ -778,13 +821,17 @@ void Interpreter::HandlePingTimer(void *aContext)
     {
         sPingTimer.Start(sInterval);
     }
+
+    (void)aContext;
 }
 
 ThreadError Interpreter::ProcessPrefixAdd(int argc, char *argv[])
 {
     ThreadError error = kThreadError_None;
-    otBorderRouterConfig config = {};
+    otBorderRouterConfig config;
     int argcur = 0;
+
+    memset(&config, 0, sizeof(otBorderRouterConfig));
 
     char *prefixLengthStr;
     char *endptr;
@@ -870,8 +917,10 @@ exit:
 ThreadError Interpreter::ProcessPrefixRemove(int argc, char *argv[])
 {
     ThreadError error = kThreadError_None;
-    struct otIp6Prefix prefix = {};
+    struct otIp6Prefix prefix;
     int argcur = 0;
+
+    memset(&prefix, 0, sizeof(otIp6Prefix));
 
     char *prefixLengthStr;
     char *endptr;
@@ -895,6 +944,7 @@ ThreadError Interpreter::ProcessPrefixRemove(int argc, char *argv[])
     error = otRemoveBorderRouter(&prefix);
 
 exit:
+    (void)argc;
     return error;
 }
 
@@ -939,13 +989,17 @@ void Interpreter::ProcessRloc16(int argc, char *argv[])
 {
     sServer->OutputFormat("%04x\r\n", otGetRloc16());
     sServer->OutputFormat("Done\r\n");
+    (void)argc;
+    (void)argv;
 }
 
 ThreadError Interpreter::ProcessRouteAdd(int argc, char *argv[])
 {
     ThreadError error = kThreadError_None;
-    otExternalRouteConfig config = {};
+    otExternalRouteConfig config;
     int argcur = 0;
+
+    memset(&config, 0, sizeof(otExternalRouteConfig));
 
     char *prefixLengthStr;
     char *endptr;
@@ -1001,9 +1055,10 @@ exit:
 ThreadError Interpreter::ProcessRouteRemove(int argc, char *argv[])
 {
     ThreadError error = kThreadError_None;
-    struct otIp6Prefix prefix = {};
+    struct otIp6Prefix prefix;
     int argcur = 0;
 
+    memset(&prefix, 0, sizeof(struct otIp6Prefix));
     char *prefixLengthStr;
     char *endptr;
 
@@ -1192,16 +1247,6 @@ exit:
     return;
 }
 
-void Interpreter::ProcessStart(int argc, char *argv[])
-{
-    ThreadError error = kThreadError_None;
-
-    SuccessOrExit(error = otEnable());
-
-exit:
-    AppendResult(error);
-}
-
 void Interpreter::ProcessState(int argc, char *argv[])
 {
     ThreadError error = kThreadError_None;
@@ -1259,13 +1304,24 @@ exit:
     AppendResult(error);
 }
 
-void Interpreter::ProcessStop(int argc, char *argv[])
+void Interpreter::ProcessThread(int argc, char *argv[])
 {
-    ThreadError error = kThreadError_None;
+    ThreadError error = kThreadError_Parse;
 
-    SuccessOrExit(error = otDisable());
+    VerifyOrExit(argc > 0, error = kThreadError_Parse);
+
+    if (strcmp(argv[0], "start") == 0)
+    {
+        SuccessOrExit(error = otThreadStart());
+    }
+    else if (strcmp(argv[0], "stop") == 0)
+    {
+        SuccessOrExit(error = otThreadStop());
+    }
 
 exit:
+    (void)argc;
+    (void)argv;
     AppendResult(error);
 }
 
@@ -1273,6 +1329,8 @@ void Interpreter::ProcessVersion(int argc, char *argv[])
 {
     sServer->OutputFormat("%s\r\n", PACKAGE_NAME "/" PACKAGE_VERSION "; " __DATE__ " " __TIME__);
     AppendResult(kThreadError_None);
+    (void)argc;
+    (void)argv;
 }
 
 void Interpreter::ProcessWhitelist(int argc, char *argv[])

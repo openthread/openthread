@@ -295,6 +295,7 @@ I2SDisable(uint32_t ui32Base)
     // Check the arguments.
     //
     ASSERT(I2SBaseValid(ui32Base));
+    (void)ui32Base;
 
     //
     // Disable the I2S module.
@@ -419,6 +420,7 @@ I2SClockConfigure(uint32_t ui32Base, uint32_t ui32ClkConfig)
     // Check the arguments.
     //
     ASSERT(I2SBaseValid(ui32Base));
+    (void)ui32Base;
 
     //
     // Setup register WCLK Source.
@@ -531,6 +533,7 @@ I2SIntRegister(uint32_t ui32Base, void (*pfnHandler)(void))
     // Check the arguments.
     //
     ASSERT(I2SBaseValid(ui32Base));
+    (void)ui32Base;
 
     //
     // Register the interrupt handler.
@@ -567,6 +570,7 @@ I2SIntUnregister(uint32_t ui32Base)
     // Check the arguments.
     //
     ASSERT(I2SBaseValid(ui32Base));
+    (void)ui32Base;
 
     //
     // Disable the interrupt.
@@ -608,6 +612,7 @@ I2SIntEnable(uint32_t ui32Base, uint32_t ui32IntFlags)
     // Check the arguments.
     //
     ASSERT(I2SBaseValid(ui32Base));
+    (void)ui32Base;
 
     //
     // Enable the specified interrupts.
@@ -644,6 +649,7 @@ I2SIntDisable(uint32_t ui32Base, uint32_t ui32IntFlags)
     // Check the arguments.
     //
     ASSERT(I2SBaseValid(ui32Base));
+    (void)ui32Base;
 
     //
     // Disable the specified interrupts.
@@ -682,6 +688,7 @@ I2SIntStatus(uint32_t ui32Base, bool bMasked)
     // Check the arguments.
     //
     ASSERT(I2SBaseValid(ui32Base));
+    (void)ui32Base;
 
     //
     // Return either the interrupt status or the raw interrupt status as
@@ -742,6 +749,7 @@ I2SIntClear(uint32_t ui32Base, uint32_t ui32IntFlags)
     // Check the arguments.
     //
     ASSERT(I2SBaseValid(ui32Base));
+    (void)ui32Base;
 
     //
     // Clear the requested interrupt sources.
@@ -769,6 +777,7 @@ I2SSampleStampEnable(uint32_t ui32Base)
     //
     // Set the enable bit.
     //
+    (void)ui32Base;
     HWREG(I2S0_BASE + I2S_O_STMPCTL) = I2S_STMPCTL_STMP_EN;
 }
 
@@ -788,6 +797,7 @@ I2SSampleStampDisable(uint32_t ui32Base)
     //
     // Clear the enable bit.
     //
+    (void)ui32Base;
     HWREG(I2S0_BASE + I2S_O_STMPCTL) = 0;
 
 }

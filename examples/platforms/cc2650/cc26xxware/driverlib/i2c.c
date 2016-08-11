@@ -71,6 +71,7 @@ I2CMasterInitExpClk(uint32_t ui32Base, uint32_t ui32I2CClk,
     // Check the arguments.
     //
     ASSERT(I2CBaseValid(ui32Base));
+    (void)ui32Base;
 
     //
     // Must enable the device before doing anything else.
@@ -113,6 +114,7 @@ I2CMasterErr(uint32_t ui32Base)
     // Check the arguments.
     //
     ASSERT(I2CBaseValid(ui32Base));
+    (void)ui32Base;
 
     //
     // Get the raw error state.
@@ -155,6 +157,7 @@ I2CIntRegister(uint32_t ui32Base, void (*pfnHandler)(void))
     // Check the arguments.
     //
     ASSERT(I2CBaseValid(ui32Base));
+    (void)ui32Base;
 
     //
     // Get the interrupt number.
@@ -186,6 +189,7 @@ I2CIntUnregister(uint32_t ui32Base)
     // Check the arguments.
     //
     ASSERT(I2CBaseValid(ui32Base));
+    (void)ui32Base;
 
     //
     // Get the interrupt number.

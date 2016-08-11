@@ -162,6 +162,7 @@ RFCSynthPowerDown()
 //*****************************************************************************
 void RFCRfTrimRead(rfc_radioOp_t *pOpSetup, rfTrim_t* pRfTrim)
 {
+    (void)pOpSetup;
     // Read trim from FCFG1
     pRfTrim->configIfAdc = HWREG(FCFG1_BASE + FCFG1_O_CONFIG_IF_ADC);
     pRfTrim->configRfFrontend = HWREG(FCFG1_BASE + FCFG1_O_CONFIG_RF_FRONTEND);
@@ -179,7 +180,8 @@ void RFCRfTrimRead(rfc_radioOp_t *pOpSetup, rfTrim_t* pRfTrim)
 //*****************************************************************************
 void RFCRTrim(rfc_radioOp_t *pOpSetup)
 {
- // Function is left blank for compatibility with CC13xx.
+    (void)pOpSetup;
+    // Function is left blank for compatibility with CC13xx.
 }
 
 
@@ -206,7 +208,7 @@ void RFCCPEPatchReset(void)
 
     memset(pPatchTab, 0xFF, _IRQPATCH_OFFSET - _PARSER_PATCH_TAB_OFFSET);
 
-	int i;
+	unsigned int i;
     for (i = 0; i < sizeof(rfc_defaultIrqAddr)/sizeof(rfc_defaultIrqAddr[0]); i++)
     {
         pIrqPatch[i * 2 + 1] = rfc_defaultIrqAddr[i];
@@ -221,7 +223,8 @@ void RFCCPEPatchReset(void)
 //*****************************************************************************
 void RFCAdi3VcoLdoVoltageMode(bool bEnable)
 {
- // Function is left blank for compatibility with CC13xx.
+    (void)bEnable;
+    // Function is left blank for compatibility with CC13xx.
 }
 
 

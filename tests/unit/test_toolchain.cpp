@@ -74,20 +74,11 @@ void test_packed_union()
     VerifyOrQuit(sizeof(packed_t) == 5, "Toolchain::OT_TOOL_PACKED failed 3\n");
 }
 
-int test_deprecated() OT_TOOL_DEPRECATED(test_deprecated);
-
-int test_deprecated()
-{
-    return 0;
-}
-
 void TestToolchain(void)
 {
     test_packed1();
     test_packed2();
     test_packed_union();
-
-    SuccessOrQuit(test_deprecated(), "Toolchain::OT_TOOL_DEPRECATED failed\n");
 }
 
 int main(void)

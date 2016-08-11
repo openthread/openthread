@@ -77,6 +77,26 @@ public:
     explicit MleRouter(ThreadNetif &aThreadNetif);
 
     /**
+     * This method indicates whether or not the Router Role is enabled.
+     *
+     * @retval true   If the Router Role is enabled.
+     * @retval false  If the Router Role is not enabled.
+     *
+     */
+    bool IsRouterRoleEnabled(void) const;
+
+    /**
+     * This method sets whether or not the Router Role is enabled.
+     *
+     * If @p aEnable is false and the device is currently operating as a router, this call will cause the device to
+     * detach and attempt to reattach as a child.
+     *
+     * @param[in]  aEnabled  TRUE to enable the Router Role, FALSE otherwise.
+     *
+     */
+    void SetRouterRoleEnabled(bool aEnabled);
+
+    /**
      * This method generates an Address Solicit request for a Router ID.
      *
      * @retval kThreadError_None          Successfully generated an Address Solicit message.
@@ -436,6 +456,7 @@ private:
     uint8_t mNetworkIdTimeout;
     uint8_t mRouterUpgradeThreshold;
     uint8_t mLeaderWeight;
+    bool mRouterRoleEnabled;
 
     int8_t mRouterId;
     int8_t mPreviousRouterId;
