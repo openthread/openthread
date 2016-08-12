@@ -928,8 +928,8 @@ void HandleActiveScanResult(void *aContext, Mac::Frame *aFrame)
         result.mVersion = beacon->GetProtocolVersion();
         result.mIsJoinable = beacon->IsJoiningPermitted();
         result.mIsNative = beacon->IsNative();
-        result.mNetworkName = beacon->GetNetworkName();
-        result.mExtPanId = beacon->GetExtendedPanId();
+        memcpy(&result.mNetworkName, beacon->GetNetworkName(), sizeof(result.mNetworkName));
+        memcpy(&result.mExtendedPanId, beacon->GetExtendedPanId(), sizeof(result.mExtendedPanId));
     }
 
     handler(&result);

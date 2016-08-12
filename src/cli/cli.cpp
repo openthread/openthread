@@ -883,7 +883,7 @@ void Interpreter::ProcessNetworkName(int argc, char *argv[])
 
     if (argc == 0)
     {
-        sServer->OutputFormat("%.*s\r\n", OT_NETWORK_NAME_SIZE, otGetNetworkName());
+        sServer->OutputFormat("%.*s\r\n", OT_NETWORK_NAME_MAX_SIZE, otGetNetworkName());
     }
     else
     {
@@ -1456,25 +1456,11 @@ void Interpreter::HandleActiveScanResult(otActiveScanResult *aResult)
 
     sServer->OutputFormat("| %d ", aResult->mIsJoinable);
 
-    if (aResult->mNetworkName != NULL)
-    {
-        sServer->OutputFormat("| %-16s ", aResult->mNetworkName);
-    }
-    else
-    {
-        sServer->OutputFormat("| ---------------- ");
-    }
+    sServer->OutputFormat("| %-16s ", aResult->mNetworkName.m8);
 
-    if (aResult->mExtPanId != NULL)
-    {
-        sServer->OutputFormat("| ");
-        OutputBytes(aResult->mExtPanId, OT_EXT_PAN_ID_SIZE);
-        sServer->OutputFormat(" ");
-    }
-    else
-    {
-        sServer->OutputFormat("| ---------------- ");
-    }
+    sServer->OutputFormat("| ");
+    OutputBytes(aResult->mExtendedPanId.m8, OT_EXT_PAN_ID_SIZE);
+    sServer->OutputFormat(" ");
 
     sServer->OutputFormat("| %04x | ", aResult->mPanId);
     OutputBytes(aResult->mExtAddress.m8, OT_EXT_ADDRESS_SIZE);
