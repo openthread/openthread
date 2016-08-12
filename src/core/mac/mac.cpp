@@ -63,7 +63,7 @@ void Mac::StartCsmaBackoff(void)
 
     backoff = kMinBackoff + (kUnitBackoffPeriod * kPhyUsPerSymbol * (1 << backoffExponent)) / 1000;
     backoff = (otPlatRandomGet() % backoff);
-    
+
     mBackoffTimer.Start(backoff);
 }
 
