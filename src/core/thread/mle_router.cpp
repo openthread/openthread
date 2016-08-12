@@ -324,11 +324,6 @@ ThreadError MleRouter::HandleChildStart(otMleAttachFilter aFilter)
 
 ThreadError MleRouter::SetStateRouter(uint16_t aRloc16)
 {
-    if (mDeviceState == kDeviceStateDetached)
-    {
-        mNetif.SetStateChangedFlags(OT_NET_STATE);
-    }
-
     if (mDeviceState != kDeviceStateRouter)
     {
         mNetif.SetStateChangedFlags(OT_NET_ROLE);
@@ -350,11 +345,6 @@ ThreadError MleRouter::SetStateRouter(uint16_t aRloc16)
 
 ThreadError MleRouter::SetStateLeader(uint16_t aRloc16)
 {
-    if (mDeviceState == kDeviceStateDetached)
-    {
-        mNetif.SetStateChangedFlags(OT_NET_STATE);
-    }
-
     if (mDeviceState != kDeviceStateLeader)
     {
         mNetif.SetStateChangedFlags(OT_NET_ROLE);

@@ -322,7 +322,7 @@ ThreadError Mle::SetStateDetached(void)
 {
     if (mDeviceState != kDeviceStateDetached)
     {
-        mNetif.SetStateChangedFlags(OT_NET_STATE | OT_NET_ROLE);
+        mNetif.SetStateChangedFlags(OT_NET_ROLE);
     }
 
     mAddressResolver.Clear();
@@ -337,11 +337,6 @@ ThreadError Mle::SetStateDetached(void)
 
 ThreadError Mle::SetStateChild(uint16_t aRloc16)
 {
-    if (mDeviceState == kDeviceStateDetached)
-    {
-        mNetif.SetStateChangedFlags(OT_NET_STATE);
-    }
-
     if (mDeviceState != kDeviceStateChild)
     {
         mNetif.SetStateChangedFlags(OT_NET_ROLE);
