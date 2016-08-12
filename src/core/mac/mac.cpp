@@ -381,6 +381,7 @@ void Mac::SendBeaconRequest(Frame &aFrame)
 
 void Mac::SendBeacon(Frame &aFrame)
 {
+    uint8_t numUnsecurePorts;
     uint16_t fcf;
 
     // initialize MAC header
@@ -388,6 +389,18 @@ void Mac::SendBeacon(Frame &aFrame)
     aFrame.InitMacHeader(fcf, Frame::kSecNone);
     aFrame.SetSrcPanId(mPanId);
     aFrame.SetSrcAddr(mExtAddress);
+
+    // set the Joining Permitted flag
+    mNetif.GetIp6Filter().GetUnsecurePorts(numUnsecurePorts);
+
+    if (numUnsecurePorts)
+    {
+        mBeacon.SetJoiningPermitted();
+    }
+    else
+    {
+        mBeacon.ClearJoiningPermitted();
+    }
 
     // write payload
     memcpy(aFrame.GetPayload(), &mBeacon, sizeof(mBeacon));
