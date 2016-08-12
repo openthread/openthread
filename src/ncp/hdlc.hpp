@@ -166,6 +166,17 @@ public:
     typedef void (*FrameHandler)(void *aContext, uint8_t *aFrame, uint16_t aFrameLength);
 
     /**
+     * This function pointer is called when an error has occured.
+     *
+     * @param[in]  aContext      A pointer to arbitrary context information.
+     * @param[in]  aError        An error code describing the error.
+     * @param[in]  aFrame        A pointer to the frame.
+     * @param[in]  aFrameLength  The frame length in bytes.
+     *
+     */
+    typedef void (*ErrorHandler)(void *aContext, ThreadError aError, uint8_t *aFrame, uint16_t aFrameLength);
+
+    /**
      * This constructor initializes the decoder.
      *
      * @param[in]  aOutBuf        A pointer to the output buffer.
@@ -174,7 +185,7 @@ public:
      * @param[in]  aContext       A pointer to arbitrary context information.
      *
      */
-    Decoder(uint8_t *aOutBuf, uint16_t aOutLength, FrameHandler aFrameHandler, void *aContext);
+    Decoder(uint8_t *aOutBuf, uint16_t aOutLength, FrameHandler aFrameHandler, ErrorHandler aErrorHandler, void *aContext);
 
     /**
      * This method streams bytes into the decoder.
@@ -195,6 +206,7 @@ private:
     State mState;
 
     FrameHandler mFrameHandler;
+    ErrorHandler mErrorHandler;
     void *mContext;
 
     uint8_t *mOutBuf;

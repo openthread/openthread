@@ -102,6 +102,12 @@ protected:
      */
     virtual ThreadError OutboundFrameSend(void) = 0;
 
+    /**
+     * This method is called by the framer whenever a framing error
+     * is detected.
+     */
+    void IncrementFrameErrorCounter(void);
+
 protected:
 
     /**
@@ -398,6 +404,8 @@ private:
     otNetifAddress mNetifAddresses[kNetifAddressListSize];
 
     bool mAllowLocalNetworkDataChange;
+
+    uint32_t mFramingErrorCounter;
 };
 
 }  // namespace Thread
