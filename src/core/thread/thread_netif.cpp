@@ -66,7 +66,8 @@ ThreadNetif::ThreadNetif(otContext *aContext):
     mMeshForwarder(*this),
     mMleRouter(*this),
     mNetworkDataLocal(*this),
-    mNetworkDataLeader(*this)
+    mNetworkDataLeader(*this),
+    mIsUp(false)
 {
     mKeyManager.SetMasterKey(kThreadMasterKey, sizeof(kThreadMasterKey));
 }

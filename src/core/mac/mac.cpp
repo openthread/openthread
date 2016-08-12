@@ -62,16 +62,9 @@ void Mac::StartCsmaBackoff(void)
     }
 
     backoff = kMinBackoff + (kUnitBackoffPeriod * kPhyUsPerSymbol * (1 << backoffExponent)) / 1000;
-
-    // If backoff is non-zero, start the timer. Otherwise fire off immediately.
-    if (backoff != 0 && (backoff = (otPlatRandomGet() % backoff)) != 0)
-    {
-        mBackoffTimer.Start(backoff);
-    }
-    else
-    {
-        HandleBeginTransmit();
-    }
+    backoff = (otPlatRandomGet() % backoff);
+    
+    mBackoffTimer.Start(backoff);
 }
 
 Mac::Mac(ThreadNetif &aThreadNetif):

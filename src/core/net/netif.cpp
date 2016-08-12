@@ -33,6 +33,7 @@
 
 #include <common/code_utils.hpp>
 #include <common/debug.hpp>
+#include <common/logging.hpp>
 #include <common/message.hpp>
 #include <net/netif.hpp>
 #include <openthreadcontext.h>
@@ -104,6 +105,7 @@ ThreadError Netif::AddNetif()
     {
         mInterfaceId = mContext->mNextInterfaceId++;
     }
+    otLogDebgIp6("  new interface id=%d\n", mInterfaceId);
 
 exit:
     return error;
