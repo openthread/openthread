@@ -902,32 +902,24 @@ ThreadError Leader::AddBorderRouter(PrefixTlv &aPrefix, BorderRouterTlv &aBorder
         dstPrefix->Init(aPrefix.GetDomainId(), aPrefix.GetPrefixLength(), aPrefix.GetPrefix());
     }
 
-    if (aBorderRouter.IsStable())
+    if ((dstContext = FindContext(*dstPrefix)) != NULL)
     {
-        dstPrefix->SetStable();
-
-        if ((dstContext = FindContext(*dstPrefix)) != NULL)
-        {
-            dstContext->SetCompress();
-        }
-        else if ((contextId = AllocateContext()) >= 0)
-        {
-            dstContext = reinterpret_cast<ContextTlv *>(dstPrefix->GetNext());
-            Insert(reinterpret_cast<uint8_t *>(dstContext), sizeof(ContextTlv));
-            dstPrefix->SetLength(dstPrefix->GetLength() + sizeof(ContextTlv));
-            dstContext->Init();
-            dstContext->SetStable();
-            dstContext->SetCompress();
-            dstContext->SetContextId(static_cast<uint8_t>(contextId));
-            dstContext->SetContextLength(aPrefix.GetPrefixLength());
-        }
-        else
-        {
-            ExitNow(error = kThreadError_NoBufs);
-        }
-
-        mContextLastUsed[dstContext->GetContextId() - kMinContextId] = 0;
+        dstContext->SetCompress();
     }
+    else if ((contextId = AllocateContext()) >= 0)
+    {
+        dstContext = reinterpret_cast<ContextTlv *>(dstPrefix->GetNext());
+        Insert(reinterpret_cast<uint8_t *>(dstContext), sizeof(ContextTlv));
+        dstPrefix->SetLength(dstPrefix->GetLength() + sizeof(ContextTlv));
+        dstContext->Init();
+        dstContext->SetCompress();
+        dstContext->SetContextId(static_cast<uint8_t>(contextId));
+        dstContext->SetContextLength(aPrefix.GetPrefixLength());
+    }
+
+    VerifyOrExit(dstContext != NULL, error = kThreadError_NoBufs);
+    mContextLastUsed[dstContext->GetContextId() - kMinContextId] = 0;
+
 
     if ((dstBorderRouter = FindBorderRouter(*dstPrefix, aBorderRouter.IsStable())) == NULL)
     {
@@ -935,11 +927,6 @@ ThreadError Leader::AddBorderRouter(PrefixTlv &aPrefix, BorderRouterTlv &aBorder
         Insert(reinterpret_cast<uint8_t *>(dstBorderRouter), sizeof(BorderRouterTlv));
         dstPrefix->SetLength(dstPrefix->GetLength() + sizeof(BorderRouterTlv));
         dstBorderRouter->Init();
-
-        if (aBorderRouter.IsStable())
-        {
-            dstBorderRouter->SetStable();
-        }
     }
 
     Insert(reinterpret_cast<uint8_t *>(dstBorderRouter->GetNext()), sizeof(BorderRouterEntry));
@@ -947,6 +934,13 @@ ThreadError Leader::AddBorderRouter(PrefixTlv &aPrefix, BorderRouterTlv &aBorder
     dstPrefix->SetLength(dstPrefix->GetLength() + sizeof(BorderRouterEntry));
     memcpy(dstBorderRouter->GetEntry(dstBorderRouter->GetNumEntries() - 1), aBorderRouter.GetEntry(0),
            sizeof(BorderRouterEntry));
+
+    if (aBorderRouter.IsStable())
+    {
+        dstPrefix->SetStable();
+        dstContext->SetStable();
+        dstBorderRouter->SetStable();
+    }
 
 exit:
     return error;
