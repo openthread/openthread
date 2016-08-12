@@ -471,7 +471,8 @@ private:
     PanId mPanId;
     uint8_t mChannel;
 
-    Beacon mBeacon;
+    otNetworkName mNetworkName;
+    otExtendedPanId mExtendedPanId;
 
     Sender *mSendHead, *mSendTail;
     Receiver *mReceiveHead, *mReceiveTail;

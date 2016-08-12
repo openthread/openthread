@@ -455,8 +455,8 @@ void NcpBase::HandleActiveScanResult(otActiveScanResult *result)
             result->mLqi,
             SPINEL_PROTOCOL_TYPE_THREAD,
             flags,
-            result->mNetworkName,
-            result->mExtPanId, OT_EXT_PAN_ID_SIZE
+            result->mNetworkName.m8,
+            result->mExtendedPanId.m8, OT_EXT_PAN_ID_SIZE
         );
     }
     else

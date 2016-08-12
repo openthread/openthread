@@ -142,7 +142,7 @@ typedef struct otMasterKey
     uint8_t m8[OT_MASTER_KEY_SIZE];
 } otMasterKey;
 
-#define OT_NETWORK_NAME_SIZE       16  ///< Size of the Thread Network Name field (bytes)
+#define OT_NETWORK_NAME_MAX_SIZE   16  ///< Maximum size of the Thread Network Name field (bytes)
 
 /**
  * This structure represents a Network Name.
@@ -150,7 +150,7 @@ typedef struct otMasterKey
  */
 typedef struct otNetworkName
 {
-    char m8[OT_NETWORK_NAME_SIZE];
+    char m8[OT_NETWORK_NAME_MAX_SIZE + 1];
 } otNetworkName;
 
 #define OT_EXT_PAN_ID_SIZE         8   ///< Size of a Thread PAN ID (bytes)
@@ -247,16 +247,16 @@ typedef OT_TOOL_PACKED_BEGIN struct otIp6Address
  */
 typedef struct otActiveScanResult
 {
-    otExtAddress   mExtAddress;      ///< IEEE 802.15.4 Extended Address
-    const char    *mNetworkName;     ///< Thread Network Name
-    const uint8_t *mExtPanId;        ///< Thread Extended PAN ID
-    uint16_t       mPanId;           ///< IEEE 802.15.4 PAN ID
-    uint8_t        mChannel;         ///< IEEE 802.15.4 Channel
-    int8_t         mRssi;            ///< RSSI (dBm)
-    uint8_t        mLqi;             ///< LQI
-    unsigned int   mVersion : 4;     ///< Version
-    bool           mIsNative : 1;    ///< Native Commissioner flag
-    bool           mIsJoinable : 1;  ///< Joining Permitted flag
+    otExtAddress    mExtAddress;      ///< IEEE 802.15.4 Extended Address
+    otNetworkName   mNetworkName;     ///< Thread Network Name
+    otExtendedPanId mExtendedPanId;   ///< Thread Extended PAN ID
+    uint16_t        mPanId;           ///< IEEE 802.15.4 PAN ID
+    uint8_t         mChannel;         ///< IEEE 802.15.4 Channel
+    int8_t          mRssi;            ///< RSSI (dBm)
+    uint8_t         mLqi;             ///< LQI
+    unsigned int    mVersion : 4;     ///< Version
+    bool            mIsNative : 1;    ///< Native Commissioner flag
+    bool            mIsJoinable : 1;  ///< Joining Permitted flag
 } otActiveScanResult;
 
 /**

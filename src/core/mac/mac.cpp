@@ -85,7 +85,6 @@ Mac::Mac(ThreadNetif &aThreadNetif):
     mCsmaAttempts = 0;
     mTransmitAttempts = 0;
     mTransmitBeacon = false;
-    mBeacon.Init();
 
     mActiveScanRequest = false;
     mScanChannel = kPhyMinChannel;
@@ -241,13 +240,20 @@ ThreadError Mac::SetChannel(uint8_t aChannel)
 
 const char *Mac::GetNetworkName(void) const
 {
-    return mBeacon.GetNetworkName();
+    return mNetworkName.m8;
 }
 
 ThreadError Mac::SetNetworkName(const char *aNetworkName)
 {
-    mBeacon.SetNetworkName(aNetworkName);
-    return kThreadError_None;
+    ThreadError error = kThreadError_None;
+
+    VerifyOrExit(strlen(aNetworkName) <= OT_NETWORK_NAME_MAX_SIZE, error = kThreadError_InvalidArgs);
+
+    memset(&mNetworkName, 0, sizeof(mNetworkName));
+    strncpy(mNetworkName.m8, aNetworkName, sizeof(mNetworkName));
+
+exit:
+    return error;
 }
 
 PanId Mac::GetPanId(void) const
@@ -263,12 +269,12 @@ ThreadError Mac::SetPanId(PanId aPanId)
 
 const uint8_t *Mac::GetExtendedPanId(void) const
 {
-    return mBeacon.GetExtendedPanId();
+    return mExtendedPanId.m8;
 }
 
 ThreadError Mac::SetExtendedPanId(const uint8_t *aExtPanId)
 {
-    mBeacon.SetExtendedPanId(aExtPanId);
+    memcpy(mExtendedPanId.m8, aExtPanId, sizeof(mExtendedPanId));
     return kThreadError_None;
 }
 
@@ -382,6 +388,7 @@ void Mac::SendBeaconRequest(Frame &aFrame)
 void Mac::SendBeacon(Frame &aFrame)
 {
     uint8_t numUnsecurePorts;
+    Beacon *beacon;
     uint16_t fcf;
 
     // initialize MAC header
@@ -390,21 +397,26 @@ void Mac::SendBeacon(Frame &aFrame)
     aFrame.SetSrcPanId(mPanId);
     aFrame.SetSrcAddr(mExtAddress);
 
+    // write payload
+    beacon = reinterpret_cast<Beacon *>(aFrame.GetPayload());
+    beacon->Init();
+
     // set the Joining Permitted flag
     mNetif.GetIp6Filter().GetUnsecurePorts(numUnsecurePorts);
 
     if (numUnsecurePorts)
     {
-        mBeacon.SetJoiningPermitted();
+        beacon->SetJoiningPermitted();
     }
     else
     {
-        mBeacon.ClearJoiningPermitted();
+        beacon->ClearJoiningPermitted();
     }
 
-    // write payload
-    memcpy(aFrame.GetPayload(), &mBeacon, sizeof(mBeacon));
-    aFrame.SetPayloadLength(sizeof(mBeacon));
+    beacon->SetNetworkName(mNetworkName.m8);
+    beacon->SetExtendedPanId(mExtendedPanId.m8);
+
+    aFrame.SetPayloadLength(sizeof(*beacon));
 
     otLogInfoMac("Sent Beacon\n");
 }

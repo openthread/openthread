@@ -2235,7 +2235,6 @@ ThreadError Mle::HandleDiscoveryResponse(const Message &aMessage, const Ip6::Mes
     otActiveScanResult result;
     uint16_t offset;
     uint16_t end;
-    char networkNameBuf[OT_NETWORK_NAME_SIZE];
 
     otLogInfoMle("Handle discovery response\n");
 
@@ -2284,15 +2283,13 @@ ThreadError Mle::HandleDiscoveryResponse(const Message &aMessage, const Ip6::Mes
         case MeshCoP::Tlv::kExtendedPanId:
             aMessage.Read(offset, sizeof(extPanId), &extPanId);
             VerifyOrExit(extPanId.IsValid(), error = kThreadError_Parse);
-            result.mExtPanId = extPanId.GetExtendedPanId();
+            memcpy(&result.mExtendedPanId, extPanId.GetExtendedPanId(), sizeof(result.mExtendedPanId));
             break;
 
         case MeshCoP::Tlv::kNetworkName:
             aMessage.Read(offset, sizeof(networkName), &networkName);
             VerifyOrExit(networkName.IsValid(), error = kThreadError_Parse);
-            memcpy(networkNameBuf, networkName.GetNetworkName(), networkName.GetLength());
-            memset(networkNameBuf + networkName.GetLength(), 0, sizeof(networkNameBuf) - networkName.GetLength());
-            result.mNetworkName = networkNameBuf;
+            memcpy(&result.mNetworkName, networkName.GetNetworkName(), networkName.GetLength());
             break;
 
         default:

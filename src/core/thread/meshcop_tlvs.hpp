@@ -321,10 +321,11 @@ public:
     void SetNetworkName(const char *aNetworkName) {
         size_t length = strnlen(aNetworkName, sizeof(mNetworkName));
         memcpy(mNetworkName, aNetworkName, length);
+        SetLength(static_cast<uint8_t>(length));
     }
 
 private:
-    char mNetworkName[OT_NETWORK_NAME_SIZE];
+    char mNetworkName[OT_NETWORK_NAME_MAX_SIZE];
 } OT_TOOL_PACKED_END;
 
 /**

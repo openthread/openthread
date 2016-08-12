@@ -306,7 +306,7 @@ ThreadError Dataset::ProcessNetworkName(int argc, char *argv[])
     size_t length;
 
     VerifyOrExit(argc > 0, error = kThreadError_Parse);
-    VerifyOrExit((length = strlen(argv[0])) <= OT_NETWORK_NAME_SIZE, error = kThreadError_Parse);
+    VerifyOrExit((length = strlen(argv[0])) <= OT_NETWORK_NAME_MAX_SIZE, error = kThreadError_Parse);
 
     memset(&sDataset.mNetworkName, 0, sizeof(sDataset.mNetworkName));
     memcpy(sDataset.mNetworkName.m8, argv[0], length);
