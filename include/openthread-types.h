@@ -116,11 +116,15 @@ typedef enum ThreadError
      */
     kThreadError_NotFound = 25,
 
-
     /**
      * The operation is already in progress.
      */
     kThreadError_Already = 26,
+
+    /**
+     * Received a frame filtered by the blacklist.
+     */
+    kThreadError_BlacklistFiltered = 27,
 
     kThreadError_Error = 255,
 } ThreadError;
@@ -485,6 +489,16 @@ typedef struct otMacWhitelistEntry
     bool         mValid : 1;        ///< Indicates whether or not the whitelist entry is vaild
     bool         mFixedRssi : 1;    ///< Indicates whether or not the RSSI value is fixed.
 } otMacWhitelistEntry;
+
+/**
+ * This structure represents a blacklist entry.
+ *
+ */
+typedef struct otMacBlacklistEntry
+{
+    otExtAddress mExtAddress;       ///< IEEE 802.15.4 Extended Address
+    bool         mValid;            ///< Indicates whether or not the blacklist entry is vaild
+} otMacBlacklistEntry;
 
 /**
  * @}

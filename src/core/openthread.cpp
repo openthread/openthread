@@ -43,6 +43,7 @@
 #include <net/icmp6.hpp>
 #include <net/ip6.hpp>
 #include <platform/random.h>
+#include <platform/misc.h>
 #include <thread/thread_netif.hpp>
 
 namespace Thread {
@@ -293,6 +294,16 @@ void otSetLocalLeaderWeight(uint8_t aWeight)
     sThreadNetif->GetMle().SetLeaderWeight(aWeight);
 }
 
+uint32_t otGetLocalLeaderPartitionId(void)
+{
+    return sThreadNetif->GetMle().GetLeaderPartitionId();
+}
+
+void otSetLocalLeaderPartitionId(uint32_t aPartitionId)
+{
+    return sThreadNetif->GetMle().SetLeaderPartitionId(aPartitionId);
+}
+
 ThreadError otAddBorderRouter(const otBorderRouterConfig *aConfig)
 {
     uint8_t flags = 0;
@@ -453,7 +464,7 @@ void otClearMacWhitelist(void)
 
 ThreadError otGetMacWhitelistEntry(uint8_t aIndex, otMacWhitelistEntry *aEntry)
 {
-    ThreadError error;
+    ThreadError error = kThreadError_None;
 
     VerifyOrExit(aEntry != NULL, error = kThreadError_InvalidArgs);
     error = sThreadNetif->GetMac().GetWhitelist().GetEntry(aIndex, *aEntry);
@@ -495,6 +506,79 @@ ThreadError otBecomeRouter(void)
 ThreadError otBecomeLeader(void)
 {
     return sThreadNetif->GetMle().BecomeLeader();
+}
+
+ThreadError otAddMacBlacklist(const uint8_t *aExtAddr)
+{
+    ThreadError error = kThreadError_None;
+
+    if (sThreadNetif->GetMac().GetBlacklist().Add(*reinterpret_cast<const Mac::ExtAddress *>(aExtAddr)) == NULL)
+    {
+        error = kThreadError_NoBufs;
+    }
+
+    return error;
+}
+
+void otRemoveMacBlacklist(const uint8_t *aExtAddr)
+{
+    sThreadNetif->GetMac().GetBlacklist().Remove(*reinterpret_cast<const Mac::ExtAddress *>(aExtAddr));
+}
+
+void otClearMacBlacklist(void)
+{
+    sThreadNetif->GetMac().GetBlacklist().Clear();
+}
+
+ThreadError otGetMacBlacklistEntry(uint8_t aIndex, otMacBlacklistEntry *aEntry)
+{
+    ThreadError error = kThreadError_None;
+
+    VerifyOrExit(aEntry != NULL, error = kThreadError_InvalidArgs);
+    error = sThreadNetif->GetMac().GetBlacklist().GetEntry(aIndex, *aEntry);
+
+exit:
+    return error;
+}
+
+void otDisableMacBlacklist(void)
+{
+    sThreadNetif->GetMac().GetBlacklist().Disable();
+}
+
+void otEnableMacBlacklist(void)
+{
+    sThreadNetif->GetMac().GetBlacklist().Enable();
+}
+
+bool otIsMacBlacklistEnabled(void)
+{
+    return sThreadNetif->GetMac().GetBlacklist().IsEnabled();
+}
+
+ThreadError otGetAssignLinkQuality(const uint8_t *aExtAddr, uint8_t *aLinkQuality)
+{
+    Mac::ExtAddress extAddress;
+
+    memset(&extAddress, 0, sizeof(extAddress));
+    memcpy(extAddress.m8, aExtAddr, OT_EXT_ADDRESS_SIZE);
+
+    return sThreadNetif->GetMle().GetAssignLinkQuality(extAddress, *aLinkQuality);
+}
+
+void otSetAssignLinkQuality(const uint8_t *aExtAddr, uint8_t aLinkQuality)
+{
+    Mac::ExtAddress extAddress;
+
+    memset(&extAddress, 0, sizeof(extAddress));
+    memcpy(extAddress.m8, aExtAddr, OT_EXT_ADDRESS_SIZE);
+
+    sThreadNetif->GetMle().SetAssignLinkQuality(extAddress, aLinkQuality);
+}
+
+void otPlatformReset(void)
+{
+    otPlatReset();
 }
 
 ThreadError otGetChildInfoById(uint16_t aChildId, otChildInfo *aChildInfo)
@@ -616,6 +700,21 @@ exit:
     return error;
 }
 
+ThreadError otGetParentInfo(otRouterInfo *aParentInfo)
+{
+    ThreadError error = kThreadError_None;
+    Router *parent;
+
+    VerifyOrExit(aParentInfo != NULL, error = kThreadError_InvalidArgs);
+
+    parent = sThreadNetif->GetMle().GetParent();
+    memcpy(aParentInfo->mExtAddress.m8, parent->mMacAddr.m8, OT_EXT_ADDRESS_SIZE);
+    aParentInfo->mRloc16 = parent->mValid.mRloc16;
+
+exit:
+    return error;
+}
+
 uint8_t otGetStableNetworkDataVersion(void)
 {
     return sThreadNetif->GetMle().GetLeaderDataTlv().GetStableDataVersion();
@@ -690,6 +789,16 @@ const char *otGetVersionString(void)
         __DATE__ " " __TIME__;
 
     return sVersion;
+}
+
+uint32_t otGetPollPeriod()
+{
+    return sThreadNetif->GetMeshForwarder().GetPollPeriod();
+}
+
+void otSetPollPeriod(uint32_t aPollPeriod)
+{
+    sThreadNetif->GetMeshForwarder().SetPollPeriod(aPollPeriod);
 }
 
 ThreadError otEnable(void)

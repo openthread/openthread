@@ -74,7 +74,8 @@ Mac::Mac(ThreadNetif &aThreadNetif):
     mKeyManager(aThreadNetif.GetKeyManager()),
     mMle(aThreadNetif.GetMle()),
     mNetif(aThreadNetif),
-    mWhitelist()
+    mWhitelist(),
+    mBlacklist()
 {
     sMac = this;
 
@@ -802,7 +803,8 @@ void Mac::ReceiveDoneTask(Frame *aFrame, ThreadError aError)
     Address dstaddr;
     PanId panid;
     Neighbor *neighbor;
-    otMacWhitelistEntry *entry;
+    otMacWhitelistEntry *whitelistEntry;
+    otMacBlacklistEntry *blacklistEntry;
     int8_t rssi;
     ThreadError error = aError;
 
@@ -847,12 +849,18 @@ void Mac::ReceiveDoneTask(Frame *aFrame, ThreadError aError)
     // Source Whitelist Processing
     if (srcaddr.mLength != 0 && mWhitelist.IsEnabled())
     {
-        VerifyOrExit((entry = mWhitelist.Find(srcaddr.mExtAddress)) != NULL, error = kThreadError_WhitelistFiltered);
+        VerifyOrExit((whitelistEntry = mWhitelist.Find(srcaddr.mExtAddress)) != NULL, error = kThreadError_WhitelistFiltered);
 
-        if (mWhitelist.GetFixedRssi(*entry, rssi) == kThreadError_None)
+        if (mWhitelist.GetFixedRssi(*whitelistEntry, rssi) == kThreadError_None)
         {
             aFrame->mPower = rssi;
         }
+    }
+
+    // Source Blacklist Processing
+    if (srcaddr.mLength != 0 && mBlacklist.IsEnabled())
+    {
+        VerifyOrExit((blacklistEntry = mBlacklist.Find(srcaddr.mExtAddress)) == NULL, error = kThreadError_BlacklistFiltered);
     }
 
     // Destination Address Filtering
@@ -1042,6 +1050,11 @@ exit:
 Whitelist &Mac::GetWhitelist(void)
 {
     return mWhitelist;
+}
+
+Blacklist &Mac::GetBlacklist(void)
+{
+    return mBlacklist;
 }
 
 otMacCounters &Mac::GetCounters(void)

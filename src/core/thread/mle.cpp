@@ -143,6 +143,11 @@ Mle::Mle(ThreadNetif &aThreadNetif) :
 
     mNetifCallback.Set(&HandleNetifStateChanged, this);
     mNetif.RegisterCallback(mNetifCallback);
+
+    isAssignLinkQuality = false;
+    mAssignLinkQuality = 0;
+    mAssignLinkMargin = 0;
+    memset(&mAddr64, 0, sizeof(mAddr64));
 }
 
 ThreadError Mle::Enable(void)
@@ -490,8 +495,12 @@ ThreadError Mle::SetRloc16(uint16_t aRloc16)
     if (aRloc16 != Mac::kShortAddrInvalid)
     {
         // link-local 16
-        mLinkLocal16.GetAddress().mFields.m16[7] = HostSwap16(aRloc16);
-        mNetif.AddUnicastAddress(mLinkLocal16);
+        // add link-local 16 only for sleepy end device
+        if ((mDeviceMode & ModeTlv::kModeRxOnWhenIdle) == 0)
+        {
+            mLinkLocal16.GetAddress().mFields.m16[7] = HostSwap16(aRloc16);
+            mNetif.AddUnicastAddress(mLinkLocal16);
+        }
 
         // mesh-local 16
         mMeshLocal16.GetAddress().mFields.m16[7] = HostSwap16(aRloc16);
@@ -569,6 +578,49 @@ ThreadError Mle::GetLeaderData(otLeaderData &aLeaderData)
 
 exit:
     return error;
+}
+
+ThreadError Mle::GetAssignLinkQuality(const Mac::ExtAddress aMacAddr, uint8_t &aLinkQuality)
+{
+    ThreadError error;
+
+    VerifyOrExit((memcmp(aMacAddr.m8, mAddr64.m8, OT_EXT_ADDRESS_SIZE)) == 0, error = kThreadError_InvalidArgs);
+
+    aLinkQuality = mAssignLinkQuality;
+
+    return kThreadError_None;
+
+exit:
+    return error;
+}
+
+void Mle::SetAssignLinkQuality(const Mac::ExtAddress aMacAddr, uint8_t aLinkQuality)
+{
+    isAssignLinkQuality = true;
+    mAddr64 = aMacAddr;
+
+    mAssignLinkQuality = aLinkQuality;
+
+    switch (aLinkQuality)
+    {
+    case 3:
+        mAssignLinkMargin = 0xff; // 21 - 255
+        break;
+
+    case 2:
+        mAssignLinkMargin = 0x14; // 11 - 20
+        break;
+
+    case 1:
+        mAssignLinkMargin = 0x09; // 3 - 9
+        break;
+
+    case 0:
+        mAssignLinkMargin = 0x0; // 0 - 2
+
+    default:
+        break;
+    }
 }
 
 void Mle::GenerateNonce(const Mac::ExtAddress &aMacAddr, uint32_t aFrameCounter, uint8_t aSecurityLevel,
@@ -1761,6 +1813,15 @@ ThreadError Mle::HandleParentResponse(const Message &aMessage, const Ip6::Messag
     if (linkMargin > linkMarginTlv.GetLinkMargin())
     {
         linkMargin = linkMarginTlv.GetLinkMargin();
+    }
+
+    // add for Thread Certification testing
+    if (isAssignLinkQuality)
+    {
+        linkMargin = linkMarginTlv.GetLinkMargin();
+
+        // clear flag for subsequent normal MLE message
+        isAssignLinkQuality = false;
     }
 
     linkQuality = LinkQualityInfo::ConvertLinkMarginToLinkQuality(linkMargin);

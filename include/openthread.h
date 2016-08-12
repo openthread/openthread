@@ -639,6 +639,24 @@ ThreadError otGetPendingDataset(otOperationalDataset *aDataset);
 ThreadError otSetPendingDataset(otOperationalDataset *aDataset);
 
 /**
+ * Get the data poll period of sleepy end deivce.
+ *
+ * @returns  The data poll period of sleepy end device.
+ *
+ * @sa otSetPollPeriod
+ */
+uint32_t otGetPollPeriod(void);
+
+/**
+ * Set the data poll period for sleepy end deivce.
+ *
+ * param[in]  aPollPeriod  data poll period.
+ *
+ * @sa otGetPollPeriod
+ */
+void otSetPollPeriod(uint32_t aPollPeriod);
+
+/**
  * @}
  */
 
@@ -655,7 +673,7 @@ ThreadError otSetPendingDataset(otOperationalDataset *aDataset);
 /**
  * Get the Thread Leader Weight used when operating in the Leader role.
  *
- * @returns The Thread Child Timeout value.
+ * @returns The Thread Leader Weight value.
  *
  * @sa otSetLeaderWeight
  */
@@ -669,6 +687,22 @@ uint8_t otGetLocalLeaderWeight(void);
  * @sa otGetLeaderWeight
  */
 void otSetLocalLeaderWeight(uint8_t aWeight);
+
+/**
+ * Get the Thread Leader Partition Id used when operating in the Leader role.
+ *
+ * @returns The Thread Leader Partition Id value.
+ *
+ */
+uint32_t otGetLocalLeaderPartitionId(void);
+
+/**
+ * Set the Thread Leader Partition Id used when operating in the Leader role.
+ *
+ * @param[in]  aPartitionId  The Thread Leader Partition Id value.
+ *
+ */
+void otSetLocalLeaderPartitionId(uint32_t aPartitionId);
 
 /**
  * @}
@@ -1027,6 +1061,124 @@ ThreadError otBecomeRouter(void);
 ThreadError otBecomeLeader(void);
 
 /**
+ * Add an IEEE 802.15.4 Extended Address to the MAC blacklist.
+ *
+ * @param[in]  aExtAddr  A pointer to the IEEE 802.15.4 Extended Address.
+ *
+ * @retval kThreadErrorNone    Successfully added to the MAC blacklist.
+ * @retval kThreadErrorNoBufs  No buffers available for a new MAC blacklist entry.
+ *
+ * @sa otRemoveMacBlacklist
+ * @sa otClearMacBlacklist
+ * @sa otGetMacBlacklistEntry
+ * @sa otDisableMacBlacklist
+ * @sa otEnableMacBlacklist
+ */
+ThreadError otAddMacBlacklist(const uint8_t *aExtAddr);
+
+/**
+ * Remove an IEEE 802.15.4 Extended Address from the MAC blacklist.
+ *
+ * @param[in]  aExtAddr  A pointer to the IEEE 802.15.4 Extended Address.
+ *
+ * @sa otAddMacBlacklist
+ * @sa otClearMacBlacklist
+ * @sa otGetMacBlacklistEntry
+ * @sa otDisableMacBlacklist
+ * @sa otEnableMacBlacklist
+ */
+void otRemoveMacBlacklist(const uint8_t *aExtAddr);
+
+/**
+ * This function gets a MAC Blacklist entry.
+ *
+ * @param[in]   aIndex  An index into the MAC Blacklist table.
+ * @param[out]  aEntry  A pointer to where the information is placed.
+ *
+ * @retval kThreadError_None         Successfully retrieved the MAC Blacklist entry.
+ * @retval kThreadError_InvalidArgs  @p aIndex is out of bounds or @p aEntry is NULL.
+ *
+ */
+ThreadError otGetMacBlacklistEntry(uint8_t aIndex, otMacBlacklistEntry *aEntry);
+
+/**
+ *  Remove all entries from the MAC Blacklist.
+ *
+ * @sa otAddMacBlacklist
+ * @sa otRemoveMacBlacklist
+ * @sa otGetMacBlacklistEntry
+ * @sa otDisableMacBlacklist
+ * @sa otEnableMacBlacklist
+ */
+void otClearMacBlacklist(void);
+
+/**
+ * Disable MAC blacklist filtering.
+ *
+ *
+ * @sa otAddMacBlacklist
+ * @sa otRemoveMacBlacklist
+ * @sa otClearMacBlacklist
+ * @sa otGetMacBlacklistEntry
+ * @sa otEnableMacBlacklist
+ */
+void otDisableMacBlacklist(void);
+
+/**
+ * Enable MAC Blacklist filtering.
+ *
+ * @sa otAddMacBlacklist
+ * @sa otRemoveMacBlacklist
+ * @sa otClearMacBlacklist
+ * @sa otGetMacBlacklistEntry
+ * @sa otDisableMacBlacklist
+ */
+void otEnableMacBlacklist(void);
+
+/**
+ * This function indicates whether or not the MAC Blacklist is enabled.
+ *
+ * @returns TRUE if the MAC Blacklist is enabled, FALSE otherwise.
+ *
+ * @sa otAddMacBlacklist
+ * @sa otRemoveMacBlacklist
+ * @sa otClearMacBlacklist
+ * @sa otGetMacBlacklistEntry
+ * @sa otDisableMacBlacklist
+ * @sa otEnableMacBlacklist
+ *
+ */
+bool otIsMacBlacklistEnabled(void);
+
+/**
+ * Get the assigned link quality which is on the link to a given extended address.
+ *
+ * @param[in]  aExtAddr  A pointer to the IEEE 802.15.4 Extended Address.
+ * @param[in]  aLinkQuality A pointer to the assigned link quality.
+ *
+ * @retval kThreadError_None  Successfully retrieved the link quality to aLinkQuality.
+ * @retval kThreadError_InvalidState  No attached child matches with a given extended address.
+ *
+ * @sa otSetAssignLinkQuality
+ */
+ThreadError otGetAssignLinkQuality(const uint8_t *aExtAddr, uint8_t *aLinkQuality);
+
+/**
+ * Set the link quality which is on the link to a given extended address.
+ *
+ * @param[in]  aExtAddr  A pointer to the IEEE 802.15.4 Extended Address.
+ * @param[in]  aLinkQuality  The link quality to be set on the link.
+ *
+ * @sa otGetAssignLinkQuality
+ */
+void otSetAssignLinkQuality(const uint8_t *aExtAddr, uint8_t aLinkQuality);
+
+/**
+ * This method triggers platform reset.
+ */
+void otPlatformReset(void);
+
+/**
  * @}
  *
  */
@@ -1149,6 +1301,14 @@ uint8_t otGetRouterIdSequence(void);
  *
  */
 ThreadError otGetRouterInfo(uint16_t aRouterId, otRouterInfo *aRouterInfo);
+
+/**
+ * The function retains diagnostic information for a Thread Router as parent.
+ *
+ * @param[out]  aParentInfo  A pointer to where the parent router information is placed.
+ *
+ */
+ThreadError otGetParentInfo(otRouterInfo *aParentInfo);
 
 /**
  * Get the Stable Network Data Version.
