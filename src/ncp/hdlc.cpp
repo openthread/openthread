@@ -241,20 +241,22 @@ void Decoder::Decode(const uint8_t *aInBuf, uint16_t aInLength)
                 break;
 
             case kFlagSequence:
-                if (mOutOffset > 2)
+                // We ignore frames which are smaller
+                // than the size of the CRC check.
+                if (mOutOffset > sizeof(uint16_t))
                 {
                     if (mFcs == kGoodFcs)
                     {
-                        mFrameHandler(mContext, mOutBuf, mOutOffset - 2);
+                        mFrameHandler(mContext, mOutBuf, mOutOffset - sizeof(uint16_t));
                     }
                     else if (mErrorHandler != NULL)
                     {
                         mErrorHandler(mContext, kThreadError_Parse, mOutBuf, mOutOffset);
                     }
-
-                    mOutOffset = 0;
-                    mFcs = kInitFcs;
                 }
+
+                mOutOffset = 0;
+                mFcs = kInitFcs;
 
                 break;
 
