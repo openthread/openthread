@@ -347,6 +347,7 @@ NcpBase::NcpBase():
     sNcpContext = this;
     mChangedFlags = NCP_PLAT_RESET_REASON;
     mAllowLocalNetworkDataChange = false;
+    mFramingErrorCounter = 0;
 
     for (unsigned i = 0; i < sizeof(mNetifAddresses) / sizeof(mNetifAddresses[0]); i++)
     {
@@ -660,6 +661,11 @@ void NcpBase::HandleSpaceAvailableInTxBuffer(void)
 
 exit:
     return;
+}
+
+void NcpBase::IncrementFrameErrorCounter(void)
+{
+    mFramingErrorCounter++;
 }
 
 // ----------------------------------------------------------------------------

@@ -202,10 +202,11 @@ exit:
     return error;
 }
 
-Decoder::Decoder(uint8_t *aOutBuf, uint16_t aOutLength, FrameHandler aFrameHandler, void *aContext)
+Decoder::Decoder(uint8_t *aOutBuf, uint16_t aOutLength, FrameHandler aFrameHandler, ErrorHandler aErrorHandler, void *aContext)
 {
     mState = kStateNoSync;
     mFrameHandler = aFrameHandler;
+    mErrorHandler = aErrorHandler;
     mContext = aContext;
     mOutBuf = aOutBuf;
     mOutOffset = 0;
@@ -240,11 +241,15 @@ void Decoder::Decode(const uint8_t *aInBuf, uint16_t aInLength)
                 break;
 
             case kFlagSequence:
-                if (mOutOffset > 0)
+                if (mOutOffset > 2)
                 {
                     if (mFcs == kGoodFcs)
                     {
                         mFrameHandler(mContext, mOutBuf, mOutOffset - 2);
+                    }
+                    else if (mErrorHandler != NULL)
+                    {
+                        mErrorHandler(mContext, kThreadError_Parse, mOutBuf, mOutOffset);
                     }
 
                     mOutOffset = 0;
@@ -261,6 +266,10 @@ void Decoder::Decode(const uint8_t *aInBuf, uint16_t aInLength)
                 }
                 else
                 {
+                    if (mErrorHandler != NULL)
+                    {
+                        mErrorHandler(mContext, kThreadError_NoBufs, mOutBuf, mOutOffset);
+                    }
                     mState = kStateNoSync;
                 }
 
@@ -279,6 +288,10 @@ void Decoder::Decode(const uint8_t *aInBuf, uint16_t aInLength)
             }
             else
             {
+                if (mErrorHandler != NULL)
+                {
+                    mErrorHandler(mContext, kThreadError_NoBufs, mOutBuf, mOutOffset);
+                }
                 mState = kStateNoSync;
             }
 

@@ -30,6 +30,8 @@
  *   This file contains definitions for a UART based NCP interface to the OpenThread stack.
  */
 
+#include <stdio.h>
+#include <ncp/ncp.h>
 #include <common/code_utils.hpp>
 #include <common/new.hpp>
 #include <ncp/ncp.h>
@@ -76,7 +78,7 @@ const uint8_t *NcpUart::UartTxBuffer::GetBuffer(void) const
 
 NcpUart::NcpUart():
     NcpBase(),
-    mFrameDecoder(mRxBuffer, sizeof(mRxBuffer), &HandleFrame, this),
+    mFrameDecoder(mRxBuffer, sizeof(mRxBuffer), &HandleFrame, &HandleError, this),
     mUartBuffer(),
     mTxFrameBuffer(mTxBuffer, sizeof(mTxBuffer)),
     mUartSendTask(EncodeAndSendToUart, this)
@@ -212,6 +214,31 @@ void NcpUart::HandleFrame(void *context, uint8_t *aBuf, uint16_t aBufLength)
 void NcpUart::HandleFrame(uint8_t *aBuf, uint16_t aBufLength)
 {
     super_t::HandleReceive(aBuf, aBufLength);
+}
+
+void NcpUart::HandleError(void *context, ThreadError aError, uint8_t *aBuf, uint16_t aBufLength)
+{
+    sNcpUart->HandleError(aError, aBuf, aBufLength);
+    (void)context;
+}
+
+void NcpUart::HandleError(ThreadError aError, uint8_t *aBuf, uint16_t aBufLength)
+{
+    char hexbuf[128];
+    uint16_t i = 0;
+
+    super_t::IncrementFrameErrorCounter();
+
+    sprintf(hexbuf, "Framing error %d: [", aError);
+
+    otNcpStreamWrite(0, reinterpret_cast<uint8_t*>(hexbuf), static_cast<int>(strlen(hexbuf)));
+
+    for (i = 0; (i < aBufLength) && (i < 128/3); i++)
+    {
+        sprintf(&hexbuf[i*3], " %02X]\n", static_cast<uint8_t>(aBuf[i]));
+    }
+
+    otNcpStreamWrite(0, reinterpret_cast<uint8_t*>(hexbuf+1), static_cast<int>(strlen(hexbuf)-1));
 }
 
 }  // namespace Thread
