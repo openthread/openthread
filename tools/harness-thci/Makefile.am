@@ -28,26 +28,9 @@
 
 include $(abs_top_nlbuild_autotools_dir)/automake/pre.am
 
-# Always package (e.g. for 'make dist') these subdirectories.
-
-DIST_SUBDIRS                            = \
-    harness-automation                    \
-    harness-thci                          \
-    spi-hdlc-adapter                      \
-    $(NULL)
-
-# Always build (e.g. for 'make all') these subdirectories.
-
-SUBDIRS                                 = \
-    $(NULL)
-
-if OPENTHREAD_TARGET_LINUX
-SUBDIRS                                += spi-hdlc-adapter
-endif
-
-# Always pretty (e.g. for 'make pretty') these subdirectories.
-
-PRETTY_SUBDIRS                          = \
+EXTRA_DIST              = \
+    ARM.py                \
+    README.md             \
     $(NULL)
 
 include $(abs_top_nlbuild_autotools_dir)/automake/post.am
