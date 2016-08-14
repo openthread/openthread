@@ -74,7 +74,7 @@ Mle::Mle(ThreadNetif &aThreadNetif) :
     mParentLinkQuality2 = 0;
     mParentLinkQuality1 = 0;
     mRetrieveNewNetworkData = false;
-    mTimeout = kMaxNeighborAge;
+    mTimeout = kMleEndDeviceTimeout;
 
     memset(&mLeaderData, 0, sizeof(mLeaderData));
     memset(&mParent, 0, sizeof(mParent));
@@ -348,7 +348,7 @@ ThreadError Mle::SetStateChild(uint16_t aRloc16)
 
     if ((mDeviceMode & ModeTlv::kModeRxOnWhenIdle) != 0)
     {
-        mParentRequestTimer.Start(Timer::SecToMsec(mTimeout / 2));
+        mParentRequestTimer.Start(Timer::SecToMsec(mTimeout / kMaxChildKeepAliveAttempts));
     }
 
     if ((mDeviceMode & ModeTlv::kModeFFD) != 0)
@@ -367,9 +367,9 @@ uint32_t Mle::GetTimeout(void) const
 
 ThreadError Mle::SetTimeout(uint32_t aTimeout)
 {
-    if (aTimeout < 2)
+    if (aTimeout < 4)
     {
-        aTimeout = 2;
+        aTimeout = 4;
     }
 
     mTimeout = aTimeout;
@@ -380,7 +380,7 @@ ThreadError Mle::SetTimeout(uint32_t aTimeout)
 
         if ((mDeviceMode & ModeTlv::kModeRxOnWhenIdle) != 0)
         {
-            mParentRequestTimer.Start(Timer::SecToMsec(mTimeout / 2));
+            mParentRequestTimer.Start(Timer::SecToMsec(mTimeout / kMaxChildKeepAliveAttempts));
         }
     }
 
@@ -968,7 +968,7 @@ void Mle::HandleParentRequestTimer(void)
             if (mDeviceMode & ModeTlv::kModeRxOnWhenIdle)
             {
                 SendChildUpdateRequest();
-                mParentRequestTimer.Start(Timer::SecToMsec(mTimeout / 2));
+                mParentRequestTimer.Start(Timer::SecToMsec(mTimeout / kMaxChildKeepAliveAttempts));
             }
         }
         else
@@ -1968,7 +1968,7 @@ ThreadError Mle::HandleChildIdResponse(const Message &aMessage, const Ip6::Messa
 
     if ((mDeviceMode & ModeTlv::kModeRxOnWhenIdle) == 0)
     {
-        mMesh.SetPollPeriod(Timer::SecToMsec(mTimeout / 2));
+        mMesh.SetPollPeriod(Timer::SecToMsec(mTimeout / kMaxChildKeepAliveAttempts));
         mMesh.SetRxOnWhenIdle(false);
     }
     else
@@ -2078,7 +2078,7 @@ ThreadError Mle::HandleChildUpdateResponse(const Message &aMessage, const Ip6::M
 
         if ((mode.GetMode() & ModeTlv::kModeRxOnWhenIdle) == 0)
         {
-            mMesh.SetPollPeriod(Timer::SecToMsec(mTimeout / 2));
+            mMesh.SetPollPeriod(Timer::SecToMsec(mTimeout / kMaxChildKeepAliveAttempts));
             mMesh.SetRxOnWhenIdle(false);
         }
         else
