@@ -45,6 +45,7 @@ namespace Mle {
 enum
 {
     kMaxChildren                = OPENTHREAD_CONFIG_MAX_CHILDREN,
+    kMaxChildKeepAliveAttempts  = 4,    ///< Maximum keep alive attempts before attempting to reattach to a new Parent
 };
 
 /**
@@ -90,6 +91,7 @@ enum
     kMaxLeaderToRouterTimeout   = 90,   ///< INFINITE_COST_TIMEOUT (seconds)
     kReedAdvertiseInterval      = 570,  ///< REED_ADVERTISEMENT_INTERVAL (seconds)
     kReedAdvertiseJitter        = 60,   ///< REED_ADVERTISEMENT_JITTER (seconds)
+    kMleEndDeviceTimeout        = 240,  ///< MLE_END_DEVICE_TIMEOUT (secondes)
 };
 
 enum
