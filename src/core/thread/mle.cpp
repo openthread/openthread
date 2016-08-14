@@ -2382,16 +2382,6 @@ void Mle::HandleNetworkDataUpdate(void)
     {
         mMleRouter.HandleNetworkDataUpdateRouter();
     }
-
-    switch (mDeviceState)
-    {
-    case kDeviceStateChild:
-        SendChildUpdateRequest();
-        break;
-
-    default:
-        break;
-    }
 }
 
 }  // namespace Mle
