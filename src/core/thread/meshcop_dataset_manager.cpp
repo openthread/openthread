@@ -28,7 +28,7 @@
 
 /**
  * @file
- *   This file implements common methods for manipulating MeshCoP Datasets.
+ *   This file implements MeshCoP Datasets manager to process commands.
  *
  */
 
@@ -236,8 +236,9 @@ void DatasetManager::HandleSet(Coap::Header &aHeader, Message &aMessage, const I
     Timestamp timestamp;
     uint16_t offset = aMessage.GetOffset();
     uint8_t type;
+    uint8_t state = StateTlv::kAccept;
 
-    VerifyOrExit(mMle.GetDeviceState() == Mle::kDeviceStateLeader, ;);
+    VerifyOrExit(mMle.GetDeviceState() == Mle::kDeviceStateLeader, state = StateTlv::kReject);
 
     type = strcmp(mUri, OPENTHREAD_URI_ACTIVE_SET) == 0 ? Tlv::kActiveTimestamp : Tlv::kPendingTimestamp;
 
@@ -255,24 +256,29 @@ void DatasetManager::HandleSet(Coap::Header &aHeader, Message &aMessage, const I
     }
 
     // verify the request includes a timestamp that is ahead of the locally stored value
-    VerifyOrExit(offset < aMessage.GetLength() && mLocal.GetTimestamp().Compare(timestamp) > 0, ;);
+    VerifyOrExit(offset < aMessage.GetLength() && mLocal.GetTimestamp().Compare(timestamp) > 0, state = StateTlv::kReject);
 
     mLocal.Set(aMessage, aMessage.GetOffset(), static_cast<uint8_t>(aMessage.GetLength() - aMessage.GetOffset()));
     mNetwork = mLocal;
     mNetworkDataLeader.IncrementVersion();
     mNetworkDataLeader.IncrementStableVersion();
 
-    SendSetResponse(aHeader, aMessageInfo);
-
 exit:
+
+    if (mMle.GetDeviceState() == Mle::kDeviceStateLeader)
+    {
+        SendSetResponse(aHeader, aMessageInfo, state);
+    }
+
     return;
 }
 
-void DatasetManager::SendSetResponse(const Coap::Header &aRequestHeader, const Ip6::MessageInfo &aMessageInfo)
+void DatasetManager::SendSetResponse(const Coap::Header &aRequestHeader, const Ip6::MessageInfo &aMessageInfo, uint8_t aState)
 {
     ThreadError error = kThreadError_None;
     Coap::Header responseHeader;
     Message *message;
+    StateTlv state;
 
     VerifyOrExit((message = Ip6::Udp::NewMessage(0)) != NULL, error = kThreadError_NoBufs);
     responseHeader.Init();
@@ -284,6 +290,9 @@ void DatasetManager::SendSetResponse(const Coap::Header &aRequestHeader, const I
     responseHeader.AppendContentFormatOption(Coap::Header::kApplicationOctetStream);
     responseHeader.Finalize();
     SuccessOrExit(error = message->Append(responseHeader.GetBytes(), responseHeader.GetLength()));
+
+    state.SetState(aState);
+    SuccessOrExit(error = message->Append(&state, sizeof(state)));
 
     SuccessOrExit(error = mCoapServer.SendMessage(*message, aMessageInfo));
 
