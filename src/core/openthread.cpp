@@ -793,12 +793,12 @@ const char *otGetVersionString(void)
 
 uint32_t otGetPollPeriod()
 {
-    return sThreadNetif->GetMeshForwarder().GetPollPeriod();
+    return sThreadNetif->GetMeshForwarder().GetAssignPollPeriod();
 }
 
 void otSetPollPeriod(uint32_t aPollPeriod)
 {
-    sThreadNetif->GetMeshForwarder().SetPollPeriod(aPollPeriod);
+    sThreadNetif->GetMeshForwarder().SetAssignPollPeriod(aPollPeriod);
 }
 
 ThreadError otEnable(void)

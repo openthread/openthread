@@ -567,20 +567,20 @@ Send an ICMPv6 Echo Request.
 
 ### pollperiod
 
-Get the data poll period of sleepy end device
+Get the customized data poll period of sleepy end device (seconds). Only for certification test
 
 ```bash
 > pollperiod
-240
+0
 Done
 ```
 
 ### pollperiod \<pollperiod>\
 
-Set the data poll period for sleepy end device
+Set the customized data poll period for sleepy end device (seconds). Only for certification test
 
 ```bash
-> pollperiod 240
+> pollperiod 10
 Done
 ```
 
