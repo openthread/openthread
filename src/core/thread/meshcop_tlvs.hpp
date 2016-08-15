@@ -68,6 +68,7 @@ public:
         kNetworkMasterKey  = 5,   ///< Network Master Key TLV
         kMeshLocalPrefix   = 7,   ///< Mesh Local Prefix TLV
         kSecurityPolicy    = 12,  ///< Security Policy TLV
+        kGet               = 13,  ///< Get TLV
         kActiveTimestamp   = 14,  ///< Active Timestamp TLV
         kState             = 16,  ///< State TLV
         kPendingTimestamp  = 51,  ///< Pending Timestamp TLV

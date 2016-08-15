@@ -66,7 +66,7 @@ protected:
         kFlagNetworkUpdated = 1 << 1,
     };
 
-    DatasetManager(ThreadNetif &aThreadNetif, const char *aUri);
+    DatasetManager(ThreadNetif &aThreadNetif, const char *aUriSet, const char *aUriGet);
 
     ThreadError Set(const Dataset &aDataset, uint8_t &aFlags);
 
@@ -88,20 +88,27 @@ private:
                           const Ip6::MessageInfo &aMessageInfo);
     void HandleSet(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
+    static void HandleGet(void *aContext, Coap::Header &aHeader, Message &aMessage,
+                          const Ip6::MessageInfo &aMessageInfo);
+    void HandleGet(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+
     static void HandleTimer(void *aContext);
     void HandleTimer(void);
 
     ThreadError Register(void);
     void SendSetResponse(const Coap::Header &aRequestHeader, const Ip6::MessageInfo &aMessageInfo, StateTlv::State aState);
+    void SendGetResponse(const Coap::Header &aRequestHeader, const Ip6::MessageInfo &aMessageInfo,
+                         uint8_t *aTlvs, uint8_t aLength);
 
-    Coap::Resource mResource;
+    Coap::Resource mResourceSet;
+    Coap::Resource mResourceGet;
     Timer mTimer;
 
     Ip6::UdpSocket mSocket;
     uint8_t        mCoapToken[2];
     uint16_t       mCoapMessageId;
 
-    const char *mUri;
+    const char *mUriSet;
 
     Coap::Server &mCoapServer;
 };
