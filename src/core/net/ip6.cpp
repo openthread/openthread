@@ -43,6 +43,7 @@
 #include <net/ip6_routes.hpp>
 #include <net/netif.hpp>
 #include <net/udp6.hpp>
+#include <openthread.h>
 
 namespace Thread {
 namespace Ip6 {
@@ -426,6 +427,11 @@ ThreadError Ip6::HandleDatagram(Message &message, Netif *netif, int8_t interface
     {
         if (netif != NULL)
         {
+            if (otGetDeviceRole() == kDeviceRoleChild)
+            {
+                ExitNow(error = kThreadError_Drop);
+            }
+
             header.SetHopLimit(header.GetHopLimit() - 1);
         }
 
