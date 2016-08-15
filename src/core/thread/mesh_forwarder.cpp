@@ -521,8 +521,9 @@ ThreadError MeshForwarder::UpdateIp6Route(Message &aMessage)
             else
             {
                 mNetworkData.RouteLookup(ip6Header.GetSource(), ip6Header.GetDestination(), NULL, &mMeshDest);
-                assert(mMeshDest != Mac::kShortAddrInvalid);
             }
+
+            VerifyOrExit(mMeshDest != Mac::kShortAddrInvalid, error = kThreadError_Drop);
 
             if (mMle.GetNeighbor(mMeshDest) != NULL)
             {
