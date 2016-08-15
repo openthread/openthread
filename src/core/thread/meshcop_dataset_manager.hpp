@@ -92,7 +92,7 @@ private:
     void HandleTimer(void);
 
     ThreadError Register(void);
-    void SendSetResponse(const Coap::Header &aRequestHeader, const Ip6::MessageInfo &aMessageInfo, uint8_t aState);
+    void SendSetResponse(const Coap::Header &aRequestHeader, const Ip6::MessageInfo &aMessageInfo, StateTlv::State aState);
 
     Coap::Resource mResource;
     Timer mTimer;

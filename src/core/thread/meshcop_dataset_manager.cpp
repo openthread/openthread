@@ -236,7 +236,7 @@ void DatasetManager::HandleSet(Coap::Header &aHeader, Message &aMessage, const I
     Timestamp timestamp;
     uint16_t offset = aMessage.GetOffset();
     uint8_t type;
-    uint8_t state = StateTlv::kAccept;
+    StateTlv::State state = StateTlv::kAccept;
 
     VerifyOrExit(mMle.GetDeviceState() == Mle::kDeviceStateLeader, state = StateTlv::kReject);
 
@@ -273,7 +273,8 @@ exit:
     return;
 }
 
-void DatasetManager::SendSetResponse(const Coap::Header &aRequestHeader, const Ip6::MessageInfo &aMessageInfo, uint8_t aState)
+void DatasetManager::SendSetResponse(const Coap::Header &aRequestHeader, const Ip6::MessageInfo &aMessageInfo,
+                                     StateTlv::State aState)
 {
     ThreadError error = kThreadError_None;
     Coap::Header responseHeader;

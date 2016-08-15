@@ -698,7 +698,7 @@ public:
      * @returns The State value.
      *
      */
-    uint8_t GetState(void) const { return mState; }
+    int8_t GetState(void) const { return mState; }
 
     /**
      * This method sets the State value.
@@ -706,10 +706,10 @@ public:
      * @param[in]  aState  The State value.
      *
      */
-    void SetState(uint8_t aState) { mState = aState; }
+    void SetState(int8_t aState) { mState = aState; }
 
 private:
-    uint8_t mState;
+    int8_t mState;
 } OT_TOOL_PACKED_END;
 
 /**
