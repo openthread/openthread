@@ -66,6 +66,16 @@
 #endif  // OPENTHREAD_CONFIG_DEFAULT_CHANNEL
 
 /**
+ * @def OPENTHREAD_CONFIG_DEFAULT_MAX_TRANSMIT_POWER
+ *
+ * The default IEEE 802.15.4 maximum transmit power (dBm)
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_DEFAULT_MAX_TRANSMIT_POWER
+#define OPENTHREAD_CONFIG_DEFAULT_MAX_TRANSMIT_POWER        0
+#endif  // OPENTHREAD_CONFIG_DEFAULT_MAX_TRANSMIT_POWER
+
+/**
  * @def OPENTHREAD_CONFIG_ATTACH_DATA_POLL_PERIOD
  *
  * The Data Poll period during attach in milliseconds.

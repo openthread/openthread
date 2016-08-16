@@ -433,6 +433,22 @@ const uint8_t *otGetMasterKey(uint8_t *aKeyLength);
 ThreadError otSetMasterKey(const uint8_t *aKey, uint8_t aKeyLength);
 
 /**
+ * This function returns the maximum transmit power setting in dBm.
+ *
+ * @returns  The maximum transmit power setting.
+ *
+ */
+int8_t otGetMaxTransmitPower(void);
+
+/**
+ * This function sets the maximum transmit power in dBm.
+ *
+ * @param[in]  aPower  The maximum transmit power in dBm.
+ *
+ */
+void otSetMaxTransmitPower(int8_t aPower);
+
+/**
  * This function returns a pointer to the Mesh Local EID.
  *
  * @returns A pointer to the Mesh Local EID.
