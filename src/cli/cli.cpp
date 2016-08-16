@@ -1176,13 +1176,83 @@ exit:
     return error;
 }
 
+ThreadError Interpreter::ProcessPrefixList(void)
+{
+    otNetworkDataIterator iterator = OT_NETWORK_DATA_ITERATOR_INIT;
+    otBorderRouterConfig config;
+
+    while (otGetNextOnMeshPrefix(true, &iterator, &config) == kThreadError_None)
+    {
+        sServer->OutputFormat("%x:%x:%x:%x::/%d ",
+                              HostSwap16(config.mPrefix.mPrefix.mFields.m16[0]),
+                              HostSwap16(config.mPrefix.mPrefix.mFields.m16[1]),
+                              HostSwap16(config.mPrefix.mPrefix.mFields.m16[2]),
+                              HostSwap16(config.mPrefix.mPrefix.mFields.m16[3]),
+                              config.mPrefix.mLength);
+
+        if (config.mPreferred)
+        {
+            sServer->OutputFormat("p");
+        }
+
+        if (config.mSlaac)
+        {
+            sServer->OutputFormat("a");
+        }
+
+        if (config.mDhcp)
+        {
+            sServer->OutputFormat("d");
+        }
+
+        if (config.mConfigure)
+        {
+            sServer->OutputFormat("c");
+        }
+
+        if (config.mDefaultRoute)
+        {
+            sServer->OutputFormat("r");
+        }
+
+        if (config.mOnMesh)
+        {
+            sServer->OutputFormat("o");
+        }
+
+        if (config.mStable)
+        {
+            sServer->OutputFormat("s");
+        }
+
+        switch (config.mPreference)
+        {
+        case -1:
+            sServer->OutputFormat(" low\r\n");
+            break;
+
+        case 0:
+            sServer->OutputFormat(" med\r\n");
+            break;
+
+        case 1:
+            sServer->OutputFormat(" high\r\n");
+            break;
+        }
+    }
+
+    return kThreadError_None;
+}
+
 void Interpreter::ProcessPrefix(int argc, char *argv[])
 {
     ThreadError error = kThreadError_None;
 
-    VerifyOrExit(argc > 0, error = kThreadError_Parse);
-
-    if (strcmp(argv[0], "add") == 0)
+    if (argc == 0)
+    {
+        SuccessOrExit(error = ProcessPrefixList());
+    }
+    else if (strcmp(argv[0], "add") == 0)
     {
         SuccessOrExit(error = ProcessPrefixAdd(argc - 1, argv + 1));
     }

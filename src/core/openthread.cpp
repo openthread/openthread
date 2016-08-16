@@ -348,6 +348,25 @@ ThreadError otRemoveBorderRouter(const otIp6Prefix *aPrefix)
     return sThreadNetif->GetNetworkDataLocal().RemoveOnMeshPrefix(aPrefix->mPrefix.mFields.m8, aPrefix->mLength);
 }
 
+ThreadError otGetNextOnMeshPrefix(bool aLocal, otNetworkDataIterator *aIterator, otBorderRouterConfig *aConfig)
+{
+    ThreadError error = kThreadError_None;
+
+    VerifyOrExit(aIterator && aConfig, error = kThreadError_InvalidArgs);
+
+    if (aLocal)
+    {
+        error = sThreadNetif->GetNetworkDataLocal().GetNextOnMeshPrefix(aIterator, aConfig);
+    }
+    else
+    {
+        error = sThreadNetif->GetNetworkDataLeader().GetNextOnMeshPrefix(aIterator, aConfig);
+    }
+
+exit:
+    return error;
+}
+
 ThreadError otAddExternalRoute(const otExternalRouteConfig *aConfig)
 {
     return sThreadNetif->GetNetworkDataLocal().AddHasRoutePrefix(aConfig->mPrefix.mPrefix.mFields.m8,
