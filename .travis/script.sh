@@ -42,12 +42,16 @@ set -x
     make pretty-check || die
 }
 
-[ $BUILD_TARGET != posix ] || {
+[ $BUILD_TARGET != posix-distcheck ] || {
     make -f examples/Makefile-posix distcheck || die
 }
 
+[ $BUILD_TARGET != posix ] || {
+    make -f examples/Makefile-posix || die
+}
+
 [ $BUILD_TARGET != posix-32-bit ] || {
-    CFLAGS=-m32 CXXFLAGS=-m32 LDFLAGS=-m32 make -f examples/Makefile-posix distcheck || die
+    CFLAGS=-m32 CXXFLAGS=-m32 LDFLAGS=-m32 make -f examples/Makefile-posix || die
 }
 
 [ $BUILD_TARGET != cc2538 ] || {

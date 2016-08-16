@@ -30,14 +30,16 @@
 
 .NOTPARALLEL:
 
-COVERAGE                        ?= 0
-DEBUG                           ?= 0
+COVERAGE                       ?= 0
+DEBUG                          ?= 0
 
-ECHO                            := @echo
-MAKE                            := make
-MKDIR_P                         := mkdir -p
-LN_S                            := ln -s
-RM_F                            := rm -f
+ECHO                           := @echo
+MAKE                           := make
+MKDIR_P                        := mkdir -p
+LN_S                           := ln -s
+RM_F                           := rm -f
+
+BuildJobs                      ?= 99
 
 COMMONCFLAGS                   := \
     -O1                           \
@@ -47,21 +49,21 @@ COMMONCFLAGS                   := \
     -Werror                       \
     $(NULL)
 
-CPPFLAGS                        = \
+CPPFLAGS                       += \
     $(COMMONCFLAGS)               \
     $(NULL)
 
-CFLAGS                          = \
+CFLAGS                         += \
     $(COMMONCFLAGS)               \
     $(NULL)
 
-CXXFLAGS                        = \
+CXXFLAGS                       += \
     $(COMMONCFLAGS)               \
     -fno-exceptions               \
     -fno-rtti                     \
     $(NULL)
 
-LDFLAGS                         = \
+LDFLAGS                        += \
     $(COMMONCFLAGS)               \
     $(NULL)
 
@@ -101,6 +103,11 @@ else
 configure_OPTIONS              += 
 endif
 
+ifndef BuildJobs
+BuildJobs := $(shell getconf _NPROCESSORS_ONLN)
+endif
+JOBSFLAG := -j$(BuildJobs)
+
 #
 # configure-arch <target>
 #
@@ -128,7 +135,7 @@ endef # configure-target
 #
 define build-target
 $(ECHO) "  BUILD    $(1)"
-$(MAKE) -C $(BuildPath)/$(1) --no-print-directory \
+$(MAKE) $(JOBSFLAG) -C $(BuildPath)/$(1) --no-print-directory \
 all
 endef # build-target
 
@@ -141,7 +148,7 @@ endef # build-target
 #
 define check-target
 $(ECHO) "  CHECK    $(1)"
-$(MAKE) -C $(BuildPath)/$(1) --no-print-directory \
+$(MAKE) $(JOBSFLAG) -C $(BuildPath)/$(1) --no-print-directory \
 check
 endef # check-target
 
@@ -154,7 +161,7 @@ endef # check-target
 #
 define distcheck-target
 $(ECHO) "  DISTCHECK    $(1)"
-$(MAKE) -C $(BuildPath)/$(1) --no-print-directory \
+$(MAKE) $(JOBSFLAG) -C $(BuildPath)/$(1) --no-print-directory \
 distcheck
 endef # distcheck-target
 
@@ -168,7 +175,7 @@ endef # distcheck-target
 #
 define coverage-target
 $(ECHO) "  COVERAGE $(1)"
-$(MAKE) -C $(BuildPath)/$(1) --no-print-directory \
+$(MAKE) $(JOBSFLAG) -C $(BuildPath)/$(1) --no-print-directory \
 coverage
 endef # coverage-target
 
@@ -182,7 +189,7 @@ endef # coverage-target
 #
 define stage-target
 $(ECHO) "  STAGE    $(1)"
-$(MAKE) -C $(BuildPath)/$(1) --no-print-directory \
+$(MAKE) $(JOBSFLAG) -C $(BuildPath)/$(1) --no-print-directory \
 DESTDIR=$(AbsTopResultDir) \
 install
 endef # stage-target
@@ -213,22 +220,22 @@ $(BuildPath)/$(1)/config.status: | $(BuildPath)/$(1)
 do-build-$(1): configure-$(1)
 
 do-build-$(1):
-	$$(call build-target,$(1))
+	+$$(call build-target,$(1))
 
 check-$(1): do-build-$(1)
 
 check-$(1):
-	$$(call check-target,$(1))
+	+$$(call check-target,$(1))
 
 distcheck-$(1): do-build-$(1)
 
 distcheck-$(1):
-	$$(call distcheck-target,$(1))
+	+$$(call distcheck-target,$(1))
 
 coverage-$(1): do-build-$(1)
 
 coverage-$(1):
-	$$(call coverage-target,$(1))
+	+$$(call coverage-target,$(1))
 
 stage-$(1): do-build-$(1)
 

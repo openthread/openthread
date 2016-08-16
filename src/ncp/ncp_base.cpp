@@ -298,6 +298,7 @@ static spinel_status_t ResetReasonToSpinelStatus(otPlatResetReason reason)
 // ----------------------------------------------------------------------------
 
 NcpBase::NcpBase():
+    mSendDoneTask(&SendDoneTask, this),
     mUpdateChangedPropsTask(&UpdateChangedProps, this)
 {
     mSupportedChannelMask = kPhySupportedChannelMask;
@@ -477,6 +478,14 @@ void NcpBase::UpdateChangedProps()
                 ResetReasonToSpinelStatus(otPlatGetResetReason())
             );
         }
+        else if ((mChangedFlags & OT_IP6_LL_ADDR_CHANGED) != 0)
+        {
+            mChangedFlags &= ~OT_IP6_LL_ADDR_CHANGED;
+            HandleCommandPropertyGet(
+                SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0,
+                SPINEL_PROP_IPV6_LL_ADDR
+            );
+	}
         else if ((mChangedFlags & OT_IP6_ML_ADDR_CHANGED) != 0)
         {
             mChangedFlags &= ~OT_IP6_ML_ADDR_CHANGED;
@@ -561,25 +570,38 @@ void NcpBase::HandleReceive(const uint8_t *buf, uint16_t bufLength)
     }
 }
 
-void NcpBase::HandleSendDone()
+void NcpBase::SendDoneTask(void *context)
 {
-    if (mSendQueue.GetHead() != NULL)
-    {
-        Message &message(*mSendQueue.GetHead());
-        mSendQueue.Dequeue(message);
-        HandleDatagramFromStack(message);
-    }
+    NcpBase *obj = reinterpret_cast<NcpBase *>(context);
+    obj->SendDoneTask();
+}
 
-    if (mQueuedGetHeader != 0)
-    {
-        HandleCommandPropertyGet(mQueuedGetHeader, mQueuedGetKey);
-        mQueuedGetHeader = 0;
-    }
+void NcpBase::SendDoneTask(void)
+{
+    if (!mSending) {
+        if (mSendQueue.GetHead() != NULL)
+        {
+            Message &message(*mSendQueue.GetHead());
+            mSendQueue.Dequeue(message);
+            HandleDatagramFromStack(message);
+        }
 
-    if (!mSending)
-    {
-        UpdateChangedProps();
+        if (mQueuedGetHeader != 0)
+        {
+            HandleCommandPropertyGet(mQueuedGetHeader, mQueuedGetKey);
+            mQueuedGetHeader = 0;
+        }
+
+        if (!mSending)
+        {
+            UpdateChangedProps();
+        }
     }
+}
+
+void NcpBase::HandleSendDone(void)
+{
+    mSendDoneTask.Post();
 }
 
 
@@ -1346,7 +1368,7 @@ void NcpBase::GetPropertyHandler_NET_STATE(uint8_t header, spinel_prop_key_t key
 {
     spinel_net_state_t state(SPINEL_NET_STATE_OFFLINE);
 
-    if (!otInterfaceUp())
+    if (!otIsInterfaceUp())
     {
         state = SPINEL_NET_STATE_OFFLINE;
     }
@@ -2259,6 +2281,11 @@ void NcpBase::SetPropertyHandler_NET_STATE(uint8_t header, spinel_prop_key_t key
                 errorCode = otInterfaceDown();
             }
 
+            if ((errorCode == kThreadError_None) && (otGetDeviceRole() != kDeviceRoleDisabled))
+            {
+                errorCode = otThreadStop();
+            }
+
             break;
 
         case SPINEL_NET_STATE_DETACHED:
@@ -2281,9 +2308,18 @@ void NcpBase::SetPropertyHandler_NET_STATE(uint8_t header, spinel_prop_key_t key
                 errorCode = otInterfaceUp();
             }
 
-            if ((errorCode == kThreadError_None) && (otGetDeviceRole() == kDeviceRoleDetached))
+            if ((errorCode == kThreadError_None) &&
+                ((otGetDeviceRole() == kDeviceRoleDisabled) || (otGetDeviceRole() == kDeviceRoleDetached)))
             {
-                errorCode = otThreadStart();
+                if (otGetDeviceRole() == kDeviceRoleDetached)
+                {
+                    errorCode = otThreadStop();
+                }
+
+                if (errorCode == kThreadError_None)
+                {
+                    errorCode = otThreadStart();
+                }
 
                 if (errorCode == kThreadError_None)
                 {

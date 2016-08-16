@@ -82,12 +82,67 @@ class ExtAddress: public otExtAddress
 {
 public:
     /**
+     * This method indicates whether or not the Group bit is set.
+     *
+     * @retval TRUE   If the group bit is set.
+     * @retval FALSE  If the group bit is not set.
+     *
+     */
+    bool IsGroup(void) const { return (m8[0] & kGroupFlag) != 0; }
+
+    /**
+     * This method sets the Group bit.
+     *
+     * @param[in]  aLocal  TRUE if group address, FALSE otherwise.
+     *
+     */
+    void SetGroup(bool aGroup) {
+        if (aGroup) {
+            m8[0] |= kGroupFlag;
+        }
+        else {
+            m8[0] &= ~kGroupFlag;
+        }
+    }
+
+    /**
+     * This method indicates whether or not the Local bit is set.
+     *
+     * @retval TRUE   If the local bit is set.
+     * @retval FALSE  If the local bit is not set.
+     *
+     */
+    bool IsLocal(void) const { return (m8[0] & kLocalFlag) != 0; }
+
+    /**
+     * This method sets the Local bit.
+     *
+     * @param[in]  aLocal  TRUE if locally administered, FALSE otherwise.
+     *
+     */
+    void SetLocal(bool aLocal) {
+        if (aLocal) {
+            m8[0] |= kLocalFlag;
+        }
+        else {
+            m8[0] &= ~kLocalFlag;
+        }
+    }
+
+    /**
      * This method converts an IPv6 Interface Identifier to an IEEE 802.15.4 Extended Address.
      *
      * @param[in]  aIpAddress  A reference to the IPv6 address.
      *
      */
     void Set(const Ip6::Address &aIpAddress);
+
+private:
+    enum
+    {
+        kGroupFlag = 1 << 0,
+        kLocalFlag = 1 << 1,
+    };
 };
 
 /**

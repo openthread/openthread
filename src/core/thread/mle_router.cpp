@@ -264,11 +264,6 @@ ThreadError MleRouter::HandleDetachStart(void)
         mRouters[i].mState = Neighbor::kStateInvalid;
     }
 
-    for (int i = 0; i < kMaxChildren; i++)
-    {
-        mChildren[i].mState = Neighbor::kStateInvalid;
-    }
-
     mAdvertiseTimer.Stop();
     mStateUpdateTimer.Stop();
     mNetworkData.Stop();
@@ -1078,7 +1073,7 @@ ThreadError MleRouter::ProcessRouteTlv(const RouteTlv &aRoute)
     bool old;
 
     // check for newer route data
-    if (diff > 0 || mDeviceState == kDeviceStateDetached)
+    if (diff > 0 || mDeviceState == kDeviceStateDetached || mDeviceState == kDeviceStateChild)
     {
         mRouterIdSequence = aRoute.GetRouterIdSequence();
         mRouterIdSequenceLastUpdated = Timer::GetNow();
@@ -2593,9 +2588,27 @@ void MleRouter::HandleAddressSolicitResponse(Message &aMessage)
     // send child id responses
     for (int i = 0; i < kMaxChildren; i++)
     {
-        if (mChildren[i].mState == Neighbor::kStateChildIdRequest)
+        switch (mChildren[i].mState)
         {
+        case Neighbor::kStateInvalid:
+        case Neighbor::kStateParentRequest:
+            break;
+
+        case Neighbor::kStateChildIdRequest:
             SendChildIdResponse(&mChildren[i]);
+            break;
+
+        case Neighbor::kStateLinkRequest:
+            assert(false);
+            break;
+
+        case Neighbor::kStateValid:
+            if (GetRouterId(mChildren[i].mValid.mRloc16) != mRouterId)
+            {
+                mChildren[i].mState = Neighbor::kStateInvalid;
+            }
+
+            break;
         }
     }
 

@@ -132,6 +132,7 @@ private:
     {
         Ip6::Address      mTarget;
         uint8_t           mMeshLocalIid[Ip6::Address::kInterfaceIdentifierSize];
+        uint32_t          mLastTransactionTime;
         Mac::ShortAddress mRloc16;
         uint16_t          mRetryTimeout;
         uint8_t           mTimeout;

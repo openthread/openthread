@@ -407,6 +407,16 @@ public:
     ThreadError SetMeshLocalPrefix(const uint8_t *aPrefix);
 
     /**
+     * This method updates the link local address.
+     *
+     * Call this method when the IEEE 802.15.4 Extended Address has changed.
+     *
+     * @retval kThreadError_None  Successfully updated the link local address.
+     *
+     */
+    ThreadError UpdateLinkLocalAddress(void);
+
+    /**
      * This method returns a pointer to the link-local all Thread nodes multicast address.
      *
      * @returns A pointer to the link-local all Thread nodes multicast address.

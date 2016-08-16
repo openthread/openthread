@@ -36,6 +36,7 @@
 #include <errno.h>
 #include <stddef.h>
 #include <stdint.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <sys/time.h>
 
@@ -49,12 +50,20 @@ uint32_t WELLKNOWN_NODE_ID = 34;
 
 void PlatformInit(int argc, char *argv[])
 {
+    char *endptr;
+
     if (argc != 2)
     {
         exit(1);
     }
 
-    NODE_ID = atoi(argv[1]);
+    NODE_ID = strtol(argv[1], &endptr, 0);
+
+    if (*endptr != '\0')
+    {
+        fprintf(stderr, "Invalid NODE_ID: %s\n", argv[1]);
+        exit(1);
+    }
 
     posixAlarmInit();
     posixRadioInit();

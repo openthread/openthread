@@ -342,6 +342,17 @@ exit:
     return error;
 }
 
+ThreadError Mle::UpdateLinkLocalAddress(void)
+{
+    mNetif.RemoveUnicastAddress(mLinkLocal64);
+    mLinkLocal64.GetAddress().SetIid(*mMac.GetExtAddress());
+    mNetif.AddUnicastAddress(mLinkLocal64);
+
+    mNetif.SetStateChangedFlags(OT_IP6_LL_ADDR_CHANGED);
+
+    return kThreadError_None;
+}
+
 const uint8_t *Mle::GetMeshLocalPrefix(void) const
 {
     return mMeshLocal16.GetAddress().mFields.m8;
@@ -1712,24 +1723,6 @@ ThreadError Mle::HandleChildIdResponse(const Message &aMessage, const Ip6::Messa
 
     // Network Data
     SuccessOrExit(error = Tlv::GetTlv(aMessage, Tlv::kNetworkData, sizeof(networkData), networkData));
-    mNetworkData.SetNetworkData(leaderData.GetDataVersion(), leaderData.GetStableDataVersion(),
-                                (mDeviceMode & ModeTlv::kModeFullNetworkData) == 0,
-                                networkData.GetNetworkData(), networkData.GetLength());
-
-    // Route
-    if ((Tlv::GetTlv(aMessage, Tlv::kRoute, sizeof(route), route) == kThreadError_None) &&
-        (mDeviceMode & ModeTlv::kModeFFD))
-    {
-        SuccessOrExit(error = mMleRouter.ProcessRouteTlv(route));
-
-        for (int i = 0; i < kMaxRouterId; i++)
-        {
-            if (route.IsRouterIdSet(i))
-            {
-                numRouters++;
-            }
-        }
-    }
 
     // Parent Attach Success
     mParentRequestTimer.Stop();
@@ -1749,9 +1742,28 @@ ThreadError Mle::HandleChildIdResponse(const Message &aMessage, const Ip6::Messa
     mParent.mValid.mRloc16 = sourceAddress.GetRloc16();
     SuccessOrExit(error = SetStateChild(shortAddress.GetRloc16()));
 
-    if ((mDeviceMode & ModeTlv::kModeFFD) && (numRouters < mMleRouter.GetRouterUpgradeThreshold()))
+    mNetworkData.SetNetworkData(leaderData.GetDataVersion(), leaderData.GetStableDataVersion(),
+                                (mDeviceMode & ModeTlv::kModeFullNetworkData) == 0,
+                                networkData.GetNetworkData(), networkData.GetLength());
+
+    // Route
+    if ((Tlv::GetTlv(aMessage, Tlv::kRoute, sizeof(route), route) == kThreadError_None) &&
+        (mDeviceMode & ModeTlv::kModeFFD))
     {
-        mMleRouter.BecomeRouter();
+        SuccessOrExit(error = mMleRouter.ProcessRouteTlv(route));
+
+        for (int i = 0; i < kMaxRouterId; i++)
+        {
+            if (route.IsRouterIdSet(i))
+            {
+                numRouters++;
+            }
+        }
+
+        if ((mDeviceMode & ModeTlv::kModeFFD) && (numRouters < mMleRouter.GetRouterUpgradeThreshold()))
+        {
+            mMleRouter.BecomeRouter();
+        }
     }
 
 exit:

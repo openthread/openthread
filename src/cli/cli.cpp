@@ -386,11 +386,24 @@ exit:
 
 void Interpreter::ProcessExtAddress(int argc, char *argv[])
 {
-    OutputBytes(otGetExtendedAddress(), OT_EXT_ADDRESS_SIZE);
-    sServer->OutputFormat("\r\n");
-    AppendResult(kThreadError_None);
-    (void)argc;
-    (void)argv;
+    ThreadError error = kThreadError_None;
+
+    if (argc == 0)
+    {
+        OutputBytes(otGetExtendedAddress(), OT_EXT_ADDRESS_SIZE);
+        sServer->OutputFormat("\r\n");
+    }
+    else
+    {
+        otExtAddress extAddress;
+
+        VerifyOrExit(Hex2Bin(argv[0], extAddress.m8, sizeof(otExtAddress)) >= 0, error = kThreadError_Parse);
+
+        otSetExtendedAddress(&extAddress);
+    }
+
+exit:
+    AppendResult(error);
 }
 
 void Interpreter::ProcessExtPanId(int argc, char *argv[])
@@ -1189,7 +1202,7 @@ exit:
 void Interpreter::ProcessScan(int argc, char *argv[])
 {
     ThreadError error = kThreadError_None;
-    uint16_t scanChannels = 0;
+    uint32_t scanChannels = 0;
     long value;
 
     if (argc > 0)

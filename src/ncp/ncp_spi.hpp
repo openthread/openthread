@@ -35,7 +35,7 @@
 
 #include <ncp/ncp_base.hpp>
 
-#define SPI_HEADER_LENGTH       5
+#define SPI_HEADER_LENGTH       6
 
 namespace Thread {
 

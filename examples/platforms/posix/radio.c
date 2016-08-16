@@ -111,6 +111,7 @@ static uint16_t sPanid;
 static int sSockFd;
 static bool sPromiscuous = false;
 static bool sAckWait = false;
+static uint16_t sPortOffset = 0;
 
 static inline bool isFrameTypeAck(const uint8_t *frame)
 {
@@ -308,16 +309,34 @@ void otPlatRadioSetPromiscuous(bool aEnable)
 void posixRadioInit(void)
 {
     struct sockaddr_in sockaddr;
+    char *offset;
     memset(&sockaddr, 0, sizeof(sockaddr));
     sockaddr.sin_family = AF_INET;
 
+    offset = getenv("PORT_OFFSET");
+
+    if (offset)
+    {
+        char *endptr;
+
+        sPortOffset = strtol(offset, &endptr, 0);
+
+        if (*endptr != '\0')
+        {
+            fprintf(stderr, "Invalid PORT_OFFSET: %s\n", offset);
+            exit(1);
+        }
+
+        sPortOffset *= WELLKNOWN_NODE_ID;
+    }
+
     if (sPromiscuous)
     {
-        sockaddr.sin_port = htons(9000 + WELLKNOWN_NODE_ID);
+        sockaddr.sin_port = htons(9000 + sPortOffset + WELLKNOWN_NODE_ID);
     }
     else
     {
-        sockaddr.sin_port = htons(9000 + NODE_ID);
+        sockaddr.sin_port = htons(9000 + sPortOffset + NODE_ID);
     }
 
     sockaddr.sin_addr.s_addr = INADDR_ANY;
@@ -419,14 +438,16 @@ bool otPlatRadioGetPromiscuous(void)
 
 void radioReceive(void)
 {
-    int rval = recvfrom(sSockFd, &sReceiveMessage, sizeof(sReceiveMessage), 0, NULL, NULL);
-    assert(rval >= 0);
-
-    sReceiveFrame.mLength = rval - 1;
-
-    if (sAckWait)
+    if (sState != kStateTransmit || sAckWait)
     {
-        if (isFrameTypeAck(sReceiveFrame.mPsdu))
+        int rval = recvfrom(sSockFd, &sReceiveMessage, sizeof(sReceiveMessage), 0, NULL, NULL);
+        assert(rval >= 0);
+
+        sReceiveFrame.mLength = rval - 1;
+
+        if (sAckWait &&
+            sTransmitFrame.mChannel == sReceiveMessage.mChannel &&
+            isFrameTypeAck(sReceiveFrame.mPsdu))
         {
             uint8_t tx_sequence = getDsn(sTransmitFrame.mPsdu);
             uint8_t rx_sequence = getDsn(sReceiveFrame.mPsdu);
@@ -438,10 +459,8 @@ void radioReceive(void)
                 otPlatRadioTransmitDone(isFramePending(sReceiveFrame.mPsdu), kThreadError_None);
             }
         }
-    }
-    else
-    {
-        if (sReceiveFrame.mChannel == sReceiveMessage.mChannel)
+        else if (sState == kStateReceive &&
+                 sReceiveFrame.mChannel == sReceiveMessage.mChannel)
         {
             radioProcessFrame();
         }
@@ -493,10 +512,7 @@ void posixRadioProcess(void)
 
     if (poll(&pollfd, 1, 0) > 0 && (pollfd.revents & flags) != 0)
     {
-        if (sAckWait || sState == kStateReceive)
-        {
-            radioReceive();
-        }
+        radioReceive();
     }
 
     if (sState == kStateTransmit && !sAckWait)
@@ -523,7 +539,7 @@ void radioTransmit(const struct RadioMessage *msg, const struct RadioPacket *pkt
             continue;
         }
 
-        sockaddr.sin_port = htons(9000 + i);
+        sockaddr.sin_port = htons(9000 + sPortOffset + i);
         rval = sendto(sSockFd, msg, 1 + pkt->mLength,
                       0, (struct sockaddr *)&sockaddr, sizeof(sockaddr));
         assert(rval >= 0);

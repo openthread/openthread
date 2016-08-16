@@ -185,7 +185,17 @@ Get the IEEE 802.15.4 Extended Address.
 
 ```bash
 > extaddr
-0xdead00beef00cafe
+dead00beef00cafe
+Done
+```
+
+### extaddr \<extaddr\>
+
+Set the IEEE 802.15.4 Extended Address.
+
+```bash
+> extaddr dead00beef00cafe
+dead00beef00cafe
 Done
 ```
 
@@ -195,7 +205,7 @@ Get the Thread Extended PAN ID value.
 
 ```bash
 > extpanid
-0xdead00beef00cafe
+dead00beef00cafe
 Done
 ```
 

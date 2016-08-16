@@ -106,7 +106,8 @@ Mac::Mac(ThreadNetif &aThreadNetif):
         mExtAddress.m8[i] = otPlatRandomGet();
     }
 
-    mExtAddress.m8[0] &= ~1; // always remove multicast bit
+    mExtAddress.SetGroup(false);
+    mExtAddress.SetLocal(true);
 
     memset(&mCounters, 0, sizeof(otMacCounters));
 
@@ -198,15 +199,21 @@ const ExtAddress *Mac::GetExtAddress(void) const
 
 ThreadError Mac::SetExtAddress(const ExtAddress &aExtAddress)
 {
+    ThreadError error;
     uint8_t buf[8];
+
+    VerifyOrExit(!aExtAddress.IsGroup(), error = kThreadError_InvalidArgs);
 
     for (size_t i = 0; i < sizeof(buf); i++)
     {
         buf[i] = mExtAddress.m8[7 - i];
     }
 
+    SuccessOrExit(error = otPlatRadioSetExtendedAddress(buf));
     mExtAddress = aExtAddress;
-    return otPlatRadioSetExtendedAddress(buf);
+
+exit:
+    return error;
 }
 
 ShortAddress Mac::GetShortAddress(void) const
