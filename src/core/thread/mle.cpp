@@ -331,6 +331,8 @@ ThreadError Mle::SetStateDetached(void)
     mParentRequestTimer.Stop();
     mMesh.SetRxOnWhenIdle(true);
     mMleRouter.HandleDetachStart();
+    Ip6::Ip6::SetForwardingEnabled(false);
+
     otLogInfoMle("Mode -> Detached\n");
     return kThreadError_None;
 }
@@ -355,6 +357,8 @@ ThreadError Mle::SetStateChild(uint16_t aRloc16)
     {
         mMleRouter.HandleChildStart(mParentRequestMode);
     }
+
+    Ip6::Ip6::SetForwardingEnabled(false);
 
     otLogInfoMle("Mode -> Child\n");
     return kThreadError_None;

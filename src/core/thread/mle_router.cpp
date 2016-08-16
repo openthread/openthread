@@ -338,6 +338,7 @@ ThreadError MleRouter::SetStateRouter(uint16_t aRloc16)
     mRouters[mRouterId].mNextHop = mRouterId;
     mNetworkData.Stop();
     mStateUpdateTimer.Start(kStateUpdatePeriod);
+    Ip6::Ip6::SetForwardingEnabled(true);
 
     otLogInfoMle("Mode -> Router\n");
     return kThreadError_None;
@@ -364,6 +365,7 @@ ThreadError MleRouter::SetStateLeader(uint16_t aRloc16)
     mNetif.GetPendingDataset().ApplyLocalToNetwork();
     mCoapServer.AddResource(mAddressSolicit);
     mCoapServer.AddResource(mAddressRelease);
+    Ip6::Ip6::SetForwardingEnabled(true);
 
     otLogInfoMle("Mode -> Leader %d\n", mLeaderData.GetPartitionId());
     return kThreadError_None;
