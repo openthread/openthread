@@ -323,7 +323,7 @@ typedef enum
      * Structure Parameters:
      *
      * * `E`: EUI64 address of node
-     * * `c`: Optional fixed RSSI. -127 means not set.
+     * * `c`: Optional fixed RSSI. 127 means not set.
      */
     SPINEL_PROP_MAC_WHITELIST          = SPINEL_PROP_MAC_EXT__BEGIN + 0,
 

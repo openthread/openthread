@@ -596,7 +596,7 @@ void NcpBase::HandleReceive(const uint8_t *buf, uint16_t bufLength)
         errorCode = SendLastStatus(header, SPINEL_STATUS_PARSE_ERROR);
     }
 
-   if (errorCode == kThreadError_NoBufs)
+    if (errorCode == kThreadError_NoBufs)
     {
         // If we cannot send a response due to buffer space not being
         // available, we remember the TID of command so to send an
@@ -1898,7 +1898,15 @@ ThreadError NcpBase::GetPropertyHandler_MAC_WHITELIST(uint8_t header, spinel_pro
             break;
         }
 
-        SuccessOrExit(errorCode = OutboundFrameFeedPacked("T(Ecb).", &entry.mExtAddress, entry.mRssi, entry.mValid));
+        if (entry.mValid)
+        {
+            if (!entry.mFixedRssi)
+            {
+                entry.mRssi = RSSI_OVERRIDE_DISABLED;
+            }
+
+            SuccessOrExit(errorCode = OutboundFrameFeedPacked("T(Ec).", entry.mExtAddress.m8, entry.mRssi));
+        }
     }
 
     SuccessOrExit(errorCode = OutboundFrameSend());
@@ -2941,15 +2949,27 @@ ThreadError NcpBase::SetPropertyHandler_MAC_WHITELIST(uint8_t header, spinel_pro
            && (value_len > 0)
           )
     {
-        otExtAddress ext_addr;
+        otExtAddress *ext_addr = NULL;
         int8_t rssi = RSSI_OVERRIDE_DISABLED;
 
         parsedLength = spinel_datatype_unpack(
                            value_ptr,
                            value_len,
-                           "T(E).",
-                           &ext_addr
+                           "T(Ec).",
+                           &ext_addr,
+                           &rssi
                        );
+
+        if (parsedLength <= 0)
+        {
+            rssi = RSSI_OVERRIDE_DISABLED;
+            parsedLength = spinel_datatype_unpack(
+                               value_ptr,
+                               value_len,
+                               "T(E).",
+                               &ext_addr
+                           );
+        }
 
         if (parsedLength <= 0)
         {
@@ -2957,25 +2977,13 @@ ThreadError NcpBase::SetPropertyHandler_MAC_WHITELIST(uint8_t header, spinel_pro
             break;
         }
 
-        // Check for an RSSI
-        if (parsedLength > static_cast<spinel_ssize_t>(sizeof(ext_addr)))
-        {
-            spinel_datatype_unpack(
-                value_ptr,
-                value_len,
-                "T(Ec).",
-                NULL,
-                &rssi
-            );
-        }
-
         if (rssi == RSSI_OVERRIDE_DISABLED)
         {
-            errorCode = otAddMacWhitelist(ext_addr.m8);
+            errorCode = otAddMacWhitelist(ext_addr->m8);
         }
         else
         {
-            errorCode = otAddMacWhitelistRssi(ext_addr.m8, rssi);
+            errorCode = otAddMacWhitelistRssi(ext_addr->m8, rssi);
         }
 
         value_ptr += parsedLength;
@@ -3424,25 +3432,27 @@ ThreadError NcpBase::InsertPropertyHandler_MAC_WHITELIST(uint8_t header, spinel_
 {
     ThreadError errorCode = kThreadError_None;
     spinel_ssize_t parsedLength;
-    otExtAddress ext_addr;
+    otExtAddress *ext_addr = NULL;
     int8_t rssi = RSSI_OVERRIDE_DISABLED;
 
-    parsedLength = spinel_datatype_unpack(
-                       value_ptr,
-                       value_len,
-                       "E",
-                       &ext_addr
-                   );
 
-    // Check for an RSSI
-    if (parsedLength > static_cast<spinel_ssize_t>(sizeof(ext_addr)))
+    if (value_len > static_cast<spinel_ssize_t>(sizeof(ext_addr)))
     {
-        spinel_datatype_unpack(
+        parsedLength = spinel_datatype_unpack(
             value_ptr,
             value_len,
             "Ec",
-            NULL,
+            &ext_addr,
             &rssi
+        );
+    }
+    else
+    {
+        parsedLength = spinel_datatype_unpack(
+            value_ptr,
+            value_len,
+            "E",
+            &ext_addr
         );
     }
 
@@ -3450,11 +3460,11 @@ ThreadError NcpBase::InsertPropertyHandler_MAC_WHITELIST(uint8_t header, spinel_
     {
         if (rssi == RSSI_OVERRIDE_DISABLED)
         {
-            errorCode = otAddMacWhitelist(ext_addr.m8);
+            errorCode = otAddMacWhitelist(ext_addr->m8);
         }
         else
         {
-            errorCode = otAddMacWhitelistRssi(ext_addr.m8, rssi);
+            errorCode = otAddMacWhitelistRssi(ext_addr->m8, rssi);
         }
 
         if (errorCode == kThreadError_None)
