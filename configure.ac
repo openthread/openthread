@@ -226,6 +226,25 @@ AC_PROG_LN_S
 PROSPECTIVE_CFLAGS="-Wall -std=c99 -pedantic-errors"
 PROSPECTIVE_CXXFLAGS="-Wall"
 
+AC_CACHE_CHECK([whether $CC is Clang],
+    [nl_cv_clang],
+    [nl_cv_clang=no
+    if test "x${GCC}" = "xyes"; then
+        AC_EGREP_CPP([NL_CC_IS_CLANG],
+            [/* Note: Clang 2.7 lacks __clang_[a-z]+__ */
+#            if defined(__clang__) && defined(__llvm__)
+             NL_CC_IS_CLANG
+#            endif
+            ],
+            [nl_cv_clang=yes])
+    fi
+    ])
+
+if test "${nl_cv_clang}" = "yes"; then
+    PROSPECTIVE_CFLAGS="${PROSPECTIVE_CFLAGS} -Wconversion"
+    PROSPECTIVE_CXXFLAGS="${PROSPECTIVE_CXXFLAGS} -Wconversion"
+fi
+
 AX_CHECK_COMPILER_OPTIONS([C],   ${PROSPECTIVE_CFLAGS})
 AX_CHECK_COMPILER_OPTIONS([C++], ${PROSPECTIVE_CXXFLAGS})
 
@@ -465,6 +484,25 @@ AM_CONDITIONAL([OPENTHREAD_EXAMPLES_CC2650], [test "${OPENTHREAD_EXAMPLES}" = "c
 AC_DEFINE_UNQUOTED([OPENTHREAD_EXAMPLES_CC2650],[${OPENTHREAD_EXAMPLES_CC2650}],[Define to 1 if you want to use cc2650 examples])
 
 #
+# Platform Information
+#
+
+AC_ARG_WITH(platform-info,
+    [AS_HELP_STRING([--with-platform-info=PLATFORM],
+        [Specify the platform information @<:@default=none@:>@.])],
+    [],
+    [with_platform_info=none])
+
+PLATFORM_INFO=${with_platform_info}
+
+AC_MSG_RESULT(${PLATFORM_INFO})
+
+if test "$PLATFORM_INFO" != "none"; then
+    AC_SUBST(PLATFORM_INFO)
+    AC_DEFINE_UNQUOTED([PLATFORM_INFO],["${PLATFORM_INFO}"],[OpenThread platform information])
+fi
+
+#
 # Tools
 #
 
@@ -577,6 +615,7 @@ examples/platforms/cc2538/Makefile
 examples/platforms/cc2650/Makefile
 examples/platforms/posix/Makefile
 tools/Makefile
+tools/harness-automation/Makefile
 tools/spi-hdlc-adapter/Makefile
 tests/Makefile
 tests/scripts/Makefile
@@ -641,5 +680,6 @@ AC_MSG_NOTICE([
   OpenThread CLI support                    : ${enable_cli}
   OpenThread NCP support                    : ${enable_ncp}
   OpenThread examples                       : ${OPENTHREAD_EXAMPLES}
+  OpenThread platform information           : ${PLATFORM_INFO}
 
 ])

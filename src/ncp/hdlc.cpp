@@ -187,7 +187,7 @@ ThreadError Encoder::Finalize(BufferWriteIterator &aIterator)
 
     fcs ^= 0xffff;
 
-    SuccessOrExit(error = Encode(fcs, aIterator));
+    SuccessOrExit(error = Encode(fcs & 0xff, aIterator));
     SuccessOrExit(error = Encode(fcs >> 8, aIterator));
 
     SuccessOrExit(error = aIterator.WriteByte(kFlagSequence));

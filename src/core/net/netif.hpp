@@ -230,7 +230,7 @@ public:
      * @returns The network interface identifier.
      *
      */
-    int GetInterfaceId(void) const;
+    int8_t GetInterfaceId(void) const;
 
     /**
      * This method returns a pointer to the list of unicast addresses.
@@ -385,7 +385,7 @@ public:
      * @returns A pointer to the network interface or NULL if none is found.
      *
      */
-    static Netif *GetNetifById(uint8_t aInterfaceId);
+    static Netif *GetNetifById(int8_t aInterfaceId);
 
     /**
      * This static method returns the network interface identified by @p aName.
@@ -426,7 +426,7 @@ public:
      * @returns The network interface identifier for the on-link interface or -1 if none is found.
      *
      */
-    static int GetOnLinkNetif(const Address &aAddress);
+    static int8_t GetOnLinkNetif(const Address &aAddress);
 
 private:
     static void HandleStateChangedTask(void *aContext);
@@ -435,7 +435,7 @@ private:
     NetifCallback *mCallbacks;
     NetifUnicastAddress *mUnicastAddresses;
     NetifMulticastAddress *mMulticastAddresses;
-    int mInterfaceId;
+    int8_t mInterfaceId;
     bool mAllRoutersSubscribed;
     Tasklet mStateChangedTask;
     Netif *mNext;
@@ -443,7 +443,7 @@ private:
     uint32_t mStateChangedFlags;
 
     static Netif *sNetifListHead;
-    static int sNextInterfaceId;
+    static int8_t sNextInterfaceId;
 };
 
 /**

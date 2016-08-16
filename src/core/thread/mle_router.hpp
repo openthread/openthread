@@ -255,10 +255,10 @@ public:
      *
      * @param[in]  aChild  A reference to the Child object.
      *
-     * @returns A pointer to the Child corresponding to @p aAddress, NULL otherwise.
+     * @returns The index for the Child corresponding to @p aChild.
      *
      */
-    int GetChildIndex(const Child &aChild);
+    uint8_t GetChildIndex(const Child &aChild);
 
     /**
      * This method returns a pointer to a Child array.
@@ -430,7 +430,8 @@ private:
     ThreadError ResetAdvertiseInterval(void);
     ThreadError SendAddressSolicit(ThreadStatusTlv::Status aStatus);
     ThreadError SendAddressRelease(void);
-    void SendAddressSolicitResponse(const Coap::Header &aRequest, int aRouterId, const Ip6::MessageInfo &aMessageInfo);
+    void SendAddressSolicitResponse(const Coap::Header &aRequest, uint8_t aRouterId,
+                                    const Ip6::MessageInfo &aMessageInfo);
     void SendAddressReleaseResponse(const Coap::Header &aRequestHeader, const Ip6::MessageInfo &aMessageInfo);
     ThreadError SendAdvertisement(void);
     ThreadError SendLinkRequest(Neighbor *aNeighbor);
@@ -463,8 +464,8 @@ private:
     Child *FindChild(uint16_t aChildId);
     Child *FindChild(const Mac::ExtAddress &aMacAddr);
 
-    int AllocateRouterId(void);
-    int AllocateRouterId(uint8_t aRouterId);
+    uint8_t AllocateRouterId(void);
+    uint8_t AllocateRouterId(uint8_t aRouterId);
     bool InRouterIdMask(uint8_t aRouterId);
 
     static void HandleAdvertiseTimer(void *aContext);
@@ -491,8 +492,8 @@ private:
     uint8_t mLeaderWeight;
     bool mRouterRoleEnabled;
 
-    int8_t mRouterId;
-    int8_t mPreviousRouterId;
+    uint8_t mRouterId;
+    uint8_t mPreviousRouterId;
     uint32_t mAdvertiseInterval;
 
     Coap::Server &mCoapServer;

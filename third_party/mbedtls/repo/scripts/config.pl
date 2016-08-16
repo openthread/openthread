@@ -7,17 +7,19 @@
 # Purpose
 #
 # Comments and uncomments #define lines in the given header file and optionally
-# sets their value. This is to provide scripting control of what preprocessor
-# symbols, and therefore what build time configuration flags are set in the
-# 'config.h' file.
+# sets their value or can get the value. This is to provide scripting control of
+# what preprocessor symbols, and therefore what build time configuration flags
+# are set in the 'config.h' file.
 #
 # Usage: config.pl [-f <file> | --file <file>] [-o | --force]
-#                   [set <symbol> <value> | unset <symbol> | full | realfull]
+#                   [set <symbol> <value> | unset <symbol> | get <symbol> |
+#                       full | realfull]
 #
 # Full usage description provided below.
 #
 # Things that shouldn't be enabled with "full".
 #
+#   MBEDTLS_TEST_NULL_ENTROPY
 #   MBEDTLS_DEPRECATED_REMOVED
 #   MBEDTLS_HAVE_SSE2
 #   MBEDTLS_PLATFORM_NO_STD_FUNCTIONS
@@ -42,18 +44,23 @@ use strict;
 my $config_file = "include/mbedtls/config.h";
 my $usage = <<EOU;
 $0 [-f <file> | --file <file>] [-o | --force]
-                   [set <symbol> <value> | unset <symbol> | full | realfull]
+                   [set <symbol> <value> | unset <symbol> | get <symbol> |
+                        full | realfull]
 
 Commands
-    set <symbol> [<value]   - Uncomments or adds a #define for the <symnol> to
+    set <symbol> [<value>]  - Uncomments or adds a #define for the <symbol> to
                               the configuration file, and optionally making it
                               of <value>.
                               If the symbol isn't present in the file an error
                               is returned.
-    unset <symbol>          - Comments out any #define present in the
-                              configuration file.
+    unset <symbol>          - Comments out the #define for the given symbol if
+                              present in the configuration file.
+    get <symbol>            - Finds the #define for the given symbol, returning
+                              an exitcode of 0 if the symbol is found, and -1 if
+                              not. The value of the symbol is output if one is
+                              specified in the configuration file.
     full                    - Uncomments all #define's in the configuration file
-                              excluding some reserved symbols, until the 
+                              excluding some reserved symbols, until the
                               'Module configuration options' section
     realfull                - Uncomments all #define's with no exclusions
 
@@ -69,6 +76,7 @@ Options
 EOU
 
 my @excluded = qw(
+MBEDTLS_TEST_NULL_ENTROPY
 MBEDTLS_DEPRECATED_REMOVED
 MBEDTLS_HAVE_SSE2
 MBEDTLS_PLATFORM_NO_STD_FUNCTIONS
@@ -120,7 +128,7 @@ while ($arg = shift) {
             die $usage if @ARGV;
 
         }
-        elsif ($action eq "unset") {
+        elsif ($action eq "unset" || $action eq "get") {
             die $usage unless @ARGV;
             $name = shift;
 
@@ -136,6 +144,9 @@ while ($arg = shift) {
         }
     }
 }
+
+# If no command was specified, exit...
+if ( not defined($action) ){ die $usage; }
 
 # Check the config file is present
 if (! -f $config_file)  {
@@ -193,6 +204,11 @@ for my $line (@config_lines) {
             $line .= "\n";
             $done = 1;
         }
+    } elsif (!$done && $action eq "get") {
+        if ($line =~ /^\s*#define\s*$name\s*(.*)\s*\b/) {
+            $value = $1;
+            $done = 1;
+        }
     }
 
     print $config_write $line;
@@ -211,6 +227,18 @@ if ($action eq "set"&& $force_option && !$done) {
 }
 
 close $config_write;
+
+if ($action eq "get") {
+    if($done) {
+        if ($value ne '') {
+            print $value;
+        }
+        exit 0;
+    } else {
+        # If the symbol was not found, return an error
+        exit -1;
+    }
+}
 
 if ($action eq "full" && !$done) {
     die "Configuration section was not found in $config_file\n";

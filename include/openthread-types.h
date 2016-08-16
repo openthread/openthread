@@ -125,12 +125,51 @@ typedef enum ThreadError
     kThreadError_Error = 255,
 } ThreadError;
 
+#define OT_IP6_IID_SIZE            8   ///< Size of an IPv6 Interface Identifier (bytes)
 
-#define OT_EXT_ADDRESS_SIZE   8   ///< Size of an IEEE 802.15.4 Extended Address (bytes)
-#define OT_EXT_PAN_ID_SIZE    8   ///< Size of a Thread PAN ID (bytes)
-#define OT_NETWORK_NAME_SIZE  16  ///< Size of the Thread Network Name field (bytes)
-#define OT_IP6_ADDRESS_SIZE   16  ///< Size of an IPv6 address (bytes)
-#define OT_IP6_IID_SIZE       8   ///< Size of an IPv6 Interface Identifier (bytes)
+#define OT_MASTER_KEY_SIZE         16  ///< Size of the Thread Master Key (bytes)
+
+/**
+ * This structure represents a Thread Master Key.
+ *
+ */
+typedef struct otMasterKey
+{
+    uint8_t m8[OT_MASTER_KEY_SIZE];
+} otMasterKey;
+
+#define OT_NETWORK_NAME_SIZE       16  ///< Size of the Thread Network Name field (bytes)
+
+/**
+ * This structure represents a Network Name.
+ *
+ */
+typedef struct otNetworkName
+{
+    char m8[OT_NETWORK_NAME_SIZE];
+} otNetworkName;
+
+#define OT_EXT_PAN_ID_SIZE         8   ///< Size of a Thread PAN ID (bytes)
+
+/**
+ * This structure represents an Extended PAN ID.
+ *
+ */
+typedef struct otExtendedPanId
+{
+    uint8_t m8[OT_EXT_PAN_ID_SIZE];
+} otExtendedPanId;
+
+#define OT_MESH_LOCAL_PREFIX_SIZE  8  ///< Size of the Mesh Local Prefix (bytes)
+
+/**
+ * This structure represents a Mesh Local Prefix.
+ *
+ */
+typedef struct otMeshLocalPrefix
+{
+    uint8_t m8[OT_MESH_LOCAL_PREFIX_SIZE];
+} otMeshLocalPrefix;
 
 /**
  * This type represents the IEEE 802.15.4 PAN ID.
@@ -144,6 +183,8 @@ typedef uint16_t otPanId;
  */
 typedef uint16_t otShortAddress;
 
+#define OT_EXT_ADDRESS_SIZE        8   ///< Size of an IEEE 802.15.4 Extended Address (bytes)
+
 /**
  * This type represents the IEEE 802.15.4 Extended Address.
  *
@@ -152,6 +193,21 @@ typedef struct otExtAddress
 {
     uint8_t m8[OT_EXT_ADDRESS_SIZE];  ///< IEEE 802.15.4 Extended Address bytes
 } otExtAddress;
+
+#define OT_IP6_ADDRESS_SIZE        16  ///< Size of an IPv6 address (bytes)
+
+/**
+ * This structure represents an IPv6 address.
+ */
+typedef OT_TOOL_PACKED_BEGIN struct otIp6Address
+{
+    union
+    {
+        uint8_t  m8[OT_IP6_ADDRESS_SIZE];                      ///< 8-bit fields
+        uint16_t m16[OT_IP6_ADDRESS_SIZE / sizeof(uint16_t)];  ///< 16-bit fields
+        uint32_t m32[OT_IP6_ADDRESS_SIZE / sizeof(uint32_t)];  ///< 32-bit fields
+    } mFields;                                                 ///< IPv6 accessor fields
+} OT_TOOL_PACKED_END otIp6Address;
 
 /**
  * @addtogroup commands  Commands
@@ -225,6 +281,33 @@ typedef struct otActiveScanResult
  */
 
 /**
+ * This structure represents an Active or Pending Operational Dataset.
+ *
+ */
+typedef struct otOperationalDataset
+{
+    uint64_t          mActiveTimestamp;            ///< Active Timestamp
+    uint64_t          mPendingTimestamp;           ///< Pending Timestamp
+    otMasterKey       mMasterKey;                  ///< Network Master Key
+    otNetworkName     mNetworkName;                ///< Network Name
+    otExtendedPanId   mExtendedPanId;              ///< Extended PAN ID
+    otMeshLocalPrefix mMeshLocalPrefix;            ///< Mesh Local Prefix
+    uint32_t          mDelay;                      ///< Delay Timer
+    otPanId           mPanId;                      ///< PAN ID
+    uint16_t          mChannel;                    ///< Channel
+
+    bool              mIsActiveTimestampSet : 1;   ///< TRUE if Active Timestamp is set, FALSE otherwise.
+    bool              mIsPendingTimestampSet : 1;  ///< TRUE if Pending Timestamp is set, FALSE otherwise.
+    bool              mIsMasterKeySet : 1;         ///< TRUE if Network Master Key is set, FALSE otherwise.
+    bool              mIsNetworkNameSet : 1;       ///< TRUE if Network Name is set, FALSE otherwise.
+    bool              mIsExtendedPanIdSet : 1;     ///< TRUE if Extended PAN ID is set, FALSE otherwise.
+    bool              mIsMeshLocalPrefixSet : 1;   ///< TRUE if Mesh Local Prefix is set, FALSE otherwise.
+    bool              mIsDelaySet : 1;             ///< TRUE if Delay Timer is set, FALSE otherwise.
+    bool              mIsPanIdSet : 1;             ///< TRUE if PAN ID is set, FALSE otherwise.
+    bool              mIsChannelSet : 1;           ///< TRUE if Channel is set, FALSE otherwise.
+} otOperationalDataset;
+
+/**
  * This structure represents an MLE Link Mode configuration.
  */
 typedef struct otLinkModeConfig
@@ -284,19 +367,6 @@ enum
  * @{
  *
  */
-
-/**
- * This structure represents an IPv6 address.
- */
-typedef OT_TOOL_PACKED_BEGIN struct otIp6Address
-{
-    union
-    {
-        uint8_t  m8[OT_IP6_ADDRESS_SIZE];                      ///< 8-bit fields
-        uint16_t m16[OT_IP6_ADDRESS_SIZE / sizeof(uint16_t)];  ///< 16-bit fields
-        uint32_t m32[OT_IP6_ADDRESS_SIZE / sizeof(uint32_t)];  ///< 32-bit fields
-    } mFields;                                                 ///< IPv6 accessor fields
-} OT_TOOL_PACKED_END otIp6Address;
 
 /**
  * This structure represents an IPv6 prefix.
@@ -456,10 +526,10 @@ typedef struct
 {
     otExtAddress   mExtAddress;            ///< IEEE 802.15.4 Extended Address
     uint32_t       mTimeout;               ///< Timeout
+    uint32_t       mAge;                   ///< Time last heard
     uint16_t       mRloc16;                ///< RLOC16
-    uint8_t        mChildId;               ///< Router ID
+    uint16_t       mChildId;               ///< Child ID
     uint8_t        mNetworkDataVersion;    ///< Network Data Version
-    uint8_t        mAge;                   ///< Time last heard
     uint8_t        mLinkQualityIn;         ///< Link Quality In
     int8_t         mAverageRssi;           ///< Average RSSI
     bool           mRxOnWhenIdle : 1;      ///< rx-on-when-idle
@@ -597,7 +667,7 @@ typedef struct otSockAddr
 {
     otIp6Address mAddress;  ///< An IPv6 address.
     uint16_t     mPort;     ///< A transport-layer port.
-    uint8_t      mScopeId;  ///< An IPv6 scope identifier.
+    int8_t       mScopeId;  ///< An IPv6 scope identifier.
 } otSockAddr;
 
 /**
@@ -609,7 +679,7 @@ typedef struct otMessageInfo
     otIp6Address mPeerAddr;     ///< The peer IPv6 address.
     uint16_t     mSockPort;     ///< The local transport-layer port.
     uint16_t     mPeerPort;     ///< The peer transport-layer port.
-    uint8_t      mInterfaceId;  ///< An IPv6 interface identifier.
+    int8_t       mInterfaceId;  ///< An IPv6 interface identifier.
     uint8_t      mHopLimit;     ///< The IPv6 Hop Limit.
     const void  *mLinkInfo;     ///< A pointer to link-specific information.
 } otMessageInfo;

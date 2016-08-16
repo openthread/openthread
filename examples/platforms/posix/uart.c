@@ -91,13 +91,13 @@ ThreadError otPlatUartEnable(void)
         VerifyOrExit(tcgetattr(s_in_fd, &termios) == 0, perror("tcgetattr"); error = kThreadError_Error);
 
         // turn off input processing
-        termios.c_iflag &= ~(IGNBRK | BRKINT | ICRNL | INLCR | PARMRK | INPCK | ISTRIP | IXON);
+        termios.c_iflag &= ~(unsigned long)(IGNBRK | BRKINT | ICRNL | INLCR | PARMRK | INPCK | ISTRIP | IXON);
 
         // turn off line processing
-        termios.c_lflag &= ~(ECHO | ECHONL | ICANON | IEXTEN);
+        termios.c_lflag &= ~(unsigned long)(ECHO | ECHONL | ICANON | IEXTEN);
 
         // turn off character processing
-        termios.c_cflag &= ~(CSIZE | PARENB);
+        termios.c_cflag &= ~(unsigned long)(CSIZE | PARENB);
         termios.c_cflag |= CS8 | HUPCL | CREAD | CLOCAL;
 
         // return 1 byte at a time
@@ -122,7 +122,7 @@ ThreadError otPlatUartEnable(void)
         termios.c_oflag = 0;
 
         // turn off character processing
-        termios.c_cflag &= ~(CSIZE | PARENB);
+        termios.c_cflag &= ~(unsigned long)(CSIZE | PARENB);
         termios.c_cflag |= CS8 | HUPCL | CREAD | CLOCAL;
 
         // configure baud rate
@@ -190,13 +190,13 @@ void posixUartProcess(void)
 {
     const int flags = POLLRDNORM | POLLERR | POLLNVAL | POLLHUP;
     struct pollfd pollfd = { s_in_fd, flags, 0 };
-    int rval;
+    ssize_t rval;
 
     if (poll(&pollfd, 1, 0) > 0 && (pollfd.revents & flags) != 0)
     {
         rval = read(s_in_fd, s_receive_buffer, sizeof(s_receive_buffer));
         assert(rval >= 0);
-        otPlatUartReceived(s_receive_buffer, rval);
+        otPlatUartReceived(s_receive_buffer, (uint16_t)rval);
     }
 
     if (s_write_length > 0)

@@ -141,7 +141,7 @@ spinel_packed_uint_decode(const uint8_t *bytes, spinel_size_t len, unsigned int 
             break;
         }
 
-        value |= ((bytes[0] & 0x7F) << i);
+        value |= (unsigned int)((bytes[0] & 0x7F) << i);
         i += 7;
         ret += sizeof(uint8_t);
         bytes += sizeof(uint8_t);
@@ -160,7 +160,7 @@ spinel_packed_uint_decode(const uint8_t *bytes, spinel_size_t len, unsigned int 
 spinel_ssize_t
 spinel_packed_uint_size(unsigned int value)
 {
-    spinel_size_t ret;
+    spinel_ssize_t ret;
 
     if (value < (1 << 7))
     {
@@ -292,7 +292,7 @@ spinel_datatype_vunpack_(const uint8_t *data_ptr, spinel_size_t data_len, const 
 
             if (arg_ptr)
             {
-                *arg_ptr = ((data_ptr[1] << 8) | data_ptr[0]);
+                *arg_ptr = (uint16_t)((data_ptr[1] << 8) | data_ptr[0]);
             }
 
             ret += sizeof(uint16_t);
@@ -309,7 +309,7 @@ spinel_datatype_vunpack_(const uint8_t *data_ptr, spinel_size_t data_len, const 
 
             if (arg_ptr)
             {
-                *arg_ptr = ((data_ptr[3] << 24) | (data_ptr[2] << 16) | (data_ptr[1] << 8) | data_ptr[0]);
+                *arg_ptr = (uint32_t)((data_ptr[3] << 24) | (data_ptr[2] << 16) | (data_ptr[1] << 8) | data_ptr[0]);
             }
 
             ret += sizeof(uint32_t);
@@ -377,7 +377,7 @@ spinel_datatype_vunpack_(const uint8_t *data_ptr, spinel_size_t data_len, const 
 
             ret += pui_len;
             data_ptr += pui_len;
-            data_len -= pui_len;
+            data_len -= (spinel_size_t)pui_len;
             break;
         }
 
@@ -419,7 +419,7 @@ spinel_datatype_vunpack_(const uint8_t *data_ptr, spinel_size_t data_len, const 
             }
             else
             {
-                block_len = data_len;
+                block_len = (uint16_t)data_len;
                 pui_len = 0;
             }
 
@@ -446,7 +446,7 @@ spinel_datatype_vunpack_(const uint8_t *data_ptr, spinel_size_t data_len, const 
         {
             spinel_ssize_t pui_len = 0;
             uint16_t block_len = 0;
-            unsigned int actual_len = 0;
+            spinel_ssize_t actual_len = 0;
             const uint8_t *block_ptr = data_ptr;
             char nextformat = *spinel_next_packed_datatype(pack_format);
 
@@ -460,7 +460,7 @@ spinel_datatype_vunpack_(const uint8_t *data_ptr, spinel_size_t data_len, const 
             }
             else
             {
-                block_len = data_len;
+                block_len = (uint16_t)data_len;
                 pui_len = 0;
             }
 
@@ -468,7 +468,7 @@ spinel_datatype_vunpack_(const uint8_t *data_ptr, spinel_size_t data_len, const 
 
             actual_len = spinel_datatype_vunpack_(block_ptr, block_len, pack_format + 2, args);
 
-            require_action((int)actual_len > -1, bail, (ret = -1, errno = EOVERFLOW));
+            require_action(actual_len > -1, bail, (ret = -1, errno = EOVERFLOW));
 
             if (pui_len)
             {
@@ -476,7 +476,7 @@ spinel_datatype_vunpack_(const uint8_t *data_ptr, spinel_size_t data_len, const 
             }
             else
             {
-                block_len = actual_len;
+                block_len = (uint16_t)actual_len;
             }
 
             ret += block_len;
@@ -592,8 +592,8 @@ spinel_datatype_vpack_(uint8_t *data_ptr, spinel_size_t data_len_max, const char
 
             if (data_len_max >= sizeof(uint16_t))
             {
-                data_ptr[1] = (arg >> 8);
-                data_ptr[0] = (arg >> 0);
+                data_ptr[1] = (arg >> 8) & 0xff;
+                data_ptr[0] = (arg >> 0) & 0xff;
                 data_ptr += sizeof(uint16_t);
                 data_len_max -= sizeof(uint16_t);
             }
@@ -613,10 +613,10 @@ spinel_datatype_vpack_(uint8_t *data_ptr, spinel_size_t data_len_max, const char
 
             if (data_len_max >= sizeof(uint32_t))
             {
-                data_ptr[3] = (arg >> 24);
-                data_ptr[2] = (arg >> 16);
-                data_ptr[1] = (arg >> 8);
-                data_ptr[0] = (arg >> 0);
+                data_ptr[3] = (arg >> 24) & 0xff;
+                data_ptr[2] = (arg >> 16) & 0xff;
+                data_ptr[1] = (arg >> 8) & 0xff;
+                data_ptr[0] = (arg >> 0) & 0xff;
                 data_ptr += sizeof(uint32_t);
                 data_len_max -= sizeof(uint32_t);
             }
@@ -694,7 +694,7 @@ spinel_datatype_vpack_(uint8_t *data_ptr, spinel_size_t data_len_max, const char
             if ((spinel_ssize_t)data_len_max >= encoded_size)
             {
                 data_ptr += encoded_size;
-                data_len_max -= encoded_size;
+                data_len_max -= (spinel_size_t)encoded_size;
             }
             else
             {
@@ -749,12 +749,12 @@ spinel_datatype_vpack_(uint8_t *data_ptr, spinel_size_t data_len_max, const char
                 require_action(size_len > 0, bail, {ret = -1; errno = EINVAL;});
             }
 
-            ret += size_len + data_size_arg;
+            ret += (spinel_size_t)size_len + data_size_arg;
 
-            if (data_len_max >= size_len + data_size_arg)
+            if (data_len_max >= (spinel_size_t)size_len + data_size_arg)
             {
                 data_ptr += size_len;
-                data_len_max -= size_len;
+                data_len_max -= (spinel_size_t)size_len;
 
                 memcpy(data_ptr, arg, data_size_arg);
 
@@ -796,12 +796,12 @@ spinel_datatype_vpack_(uint8_t *data_ptr, spinel_size_t data_len_max, const char
             if (struct_len + size_len <= (spinel_ssize_t)data_len_max)
             {
                 data_ptr += size_len;
-                data_len_max -= size_len;
+                data_len_max -= (spinel_size_t)size_len;
 
                 struct_len = spinel_datatype_vpack_(data_ptr, data_len_max, pack_format + 2, args);
 
                 data_ptr += struct_len;
-                data_len_max -= struct_len;
+                data_len_max -= (spinel_size_t)struct_len;
             }
             else
             {
@@ -1104,6 +1104,163 @@ spinel_prop_key_to_cstr(spinel_prop_key_t prop_key)
 
     case SPINEL_PROP_THREAD_ALLOW_LOCAL_NET_DATA_CHANGE:
         ret = "SPINEL_PROP_THREAD_ALLOW_LOCAL_NET_DATA_CHANGE";
+        break;
+
+    case SPINEL_PROP_MAC_WHITELIST:
+        ret = "PROP_MAC_WHITELIST";
+        break;
+
+    case SPINEL_PROP_MAC_WHITELIST_ENABLED:
+        ret = "PROP_MAC_WHITELIST_ENABLED";
+        break;
+
+    case SPINEL_PROP_THREAD_MODE:
+        ret = "PROP_THREAD_MODE";
+        break;
+
+    case SPINEL_PROP_THREAD_CHILD_TIMEOUT:
+        ret = "PROP_THREAD_CHILD_TIMEOUT";
+        break;
+
+    case SPINEL_PROP_THREAD_ROUTER_UPGRADE_THRESHOLD:
+        ret = "PROP_THREAD_ROUTER_UPGRADE_THRESHOLD";
+        break;
+
+    case SPINEL_PROP_THREAD_CONTEXT_REUSE_DELAY:
+        ret = "PROP_THREAD_CONTEXT_REUSE_DELAY";
+        break;
+
+    default:
+        break;
+    }
+
+    return ret;
+}
+
+const char *spinel_status_to_cstr(spinel_status_t status)
+{
+    const char *ret = "UNKNOWN";
+
+    switch (status)
+    {
+    case SPINEL_STATUS_OK:
+        ret = "STATUS_OK";
+        break;
+
+    case SPINEL_STATUS_FAILURE:
+        ret = "STATUS_FAILURE";
+        break;
+
+    case SPINEL_STATUS_UNIMPLEMENTED:
+        ret = "STATUS_UNIMPLEMENTED";
+        break;
+
+    case SPINEL_STATUS_INVALID_ARGUMENT:
+        ret = "STATUS_INVALID_ARGUMENT";
+        break;
+
+    case SPINEL_STATUS_INVALID_STATE:
+        ret = "STATUS_INVALID_STATE";
+        break;
+
+    case SPINEL_STATUS_INVALID_COMMAND:
+        ret = "STATUS_INVALID_COMMAND";
+        break;
+
+    case SPINEL_STATUS_INVALID_INTERFACE:
+        ret = "STATUS_INVALID_INTERFACE";
+        break;
+
+    case SPINEL_STATUS_INTERNAL_ERROR:
+        ret = "STATUS_INTERNAL_ERROR";
+        break;
+
+    case SPINEL_STATUS_SECURITY_ERROR:
+        ret = "STATUS_SECURITY_ERROR";
+        break;
+
+    case SPINEL_STATUS_PARSE_ERROR:
+        ret = "STATUS_PARSE_ERROR";
+        break;
+
+    case SPINEL_STATUS_IN_PROGRESS:
+        ret = "STATUS_IN_PROGRESS";
+        break;
+
+    case SPINEL_STATUS_NOMEM:
+        ret = "STATUS_NOMEM";
+        break;
+
+    case SPINEL_STATUS_BUSY:
+        ret = "STATUS_BUSY";
+        break;
+
+    case SPINEL_STATUS_PROP_NOT_FOUND:
+        ret = "STATUS_PROP_NOT_FOUND";
+        break;
+
+    case SPINEL_STATUS_DROPPED:
+        ret = "STATUS_DROPPED";
+        break;
+
+    case SPINEL_STATUS_EMPTY:
+        ret = "STATUS_EMPTY";
+        break;
+
+    case SPINEL_STATUS_CMD_TOO_BIG:
+        ret = "STATUS_CMD_TOO_BIG";
+        break;
+
+    case SPINEL_STATUS_NO_ACK:
+        ret = "STATUS_NO_ACK";
+        break;
+
+    case SPINEL_STATUS_CCA_FAILURE:
+        ret = "STATUS_CCA_FAILURE";
+        break;
+
+    case SPINEL_STATUS_ALREADY:
+        ret = "STATUS_ALREADY";
+        break;
+
+    case SPINEL_STATUS_ITEM_NOT_FOUND:
+        ret = "STATUS_ITEM_NOT_FOUND";
+        break;
+
+    case SPINEL_STATUS_RESET_POWER_ON:
+        ret = "STATUS_RESET_POWER_ON";
+        break;
+
+    case SPINEL_STATUS_RESET_EXTERNAL:
+        ret = "STATUS_RESET_EXTERNAL";
+        break;
+
+    case SPINEL_STATUS_RESET_SOFTWARE:
+        ret = "STATUS_RESET_SOFTWARE";
+        break;
+
+    case SPINEL_STATUS_RESET_FAULT:
+        ret = "STATUS_RESET_FAULT";
+        break;
+
+    case SPINEL_STATUS_RESET_CRASH:
+        ret = "STATUS_RESET_CRASH";
+        break;
+
+    case SPINEL_STATUS_RESET_ASSERT:
+        ret = "STATUS_RESET_ASSERT";
+        break;
+
+    case SPINEL_STATUS_RESET_OTHER:
+        ret = "STATUS_RESET_OTHER";
+        break;
+
+    case SPINEL_STATUS_RESET_UNKNOWN:
+        ret = "STATUS_RESET_UNKNOWN";
+        break;
+
+    case SPINEL_STATUS_RESET_WATCHDOG:
+        ret = "STATUS_RESET_WATCHDOG";
         break;
 
     default:

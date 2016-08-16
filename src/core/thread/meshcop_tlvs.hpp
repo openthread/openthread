@@ -319,7 +319,7 @@ public:
      *
      */
     void SetNetworkName(const char *aNetworkName) {
-        int length = strnlen(aNetworkName, sizeof(mNetworkName));
+        size_t length = strnlen(aNetworkName, sizeof(mNetworkName));
         memcpy(mNetworkName, aNetworkName, length);
     }
 
@@ -581,7 +581,7 @@ public:
      */
     void SetSeconds(uint64_t aSeconds) {
         for (size_t i = 0; i < sizeof(mSeconds); i++, aSeconds >>= 8) {
-            mSeconds[sizeof(mSeconds) - 1 - i] = aSeconds;
+            mSeconds[sizeof(mSeconds) - 1 - i] = aSeconds & 0xff;
         }
     }
 
@@ -599,7 +599,9 @@ public:
      * @param[in]  aTicks  The Ticks value.
      *
      */
-    void SetTicks(uint16_t aTicks) { mTicks = (mTicks & ~kTicksMask) | (aTicks << kTicksOffset); }
+    void SetTicks(uint16_t aTicks) {
+        mTicks = (mTicks & ~kTicksMask) | ((aTicks << kTicksOffset) & kTicksMask);
+    }
 
     /**
      * This method returns the Authoritative value.
@@ -616,7 +618,7 @@ public:
      *
      */
     void SetAuthoritative(bool aAuthoritative) {
-        mTicks = (mTicks & kTicksMask) | (aAuthoritative << kAuthoritativeOffset);
+        mTicks = (mTicks & kTicksMask) | ((aAuthoritative << kAuthoritativeOffset) & kAuthoritativeMask);
     }
 
 private:
@@ -709,7 +711,7 @@ public:
      * @returns The Delay Timer value.
      *
      */
-    uint16_t GetDelayTimer(void) const { return HostSwap32(mDelayTimer); }
+    uint32_t GetDelayTimer(void) const { return HostSwap32(mDelayTimer); }
 
     /**
      * This method sets the Delay Timer value.
@@ -862,7 +864,9 @@ public:
      * @param[in]  aVersion  The Version value.
      *
      */
-    void SetVersion(uint8_t aVersion) { mFlags = (mFlags & ~kVersionMask) | (aVersion << kVersionOffset); }
+    void SetVersion(uint8_t aVersion) {
+        mFlags = (mFlags & ~kVersionMask) | ((aVersion << kVersionOffset) & kVersionMask);
+    }
 
     /**
      * This method indicates whether or not the Joiner flag is set.
@@ -937,7 +941,9 @@ public:
      * @param[in]  aVersion  The Version value.
      *
      */
-    void SetVersion(uint8_t aVersion) { mFlags = (mFlags & ~kVersionMask) | (aVersion << kVersionOffset); }
+    void SetVersion(uint8_t aVersion) {
+        mFlags = (mFlags & ~kVersionMask) | ((aVersion << kVersionOffset) & kVersionMask);
+    }
 
     /**
      * This method indicates whether or not the Native Commissioner flag is set.

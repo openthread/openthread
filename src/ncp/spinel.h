@@ -92,13 +92,15 @@ typedef enum
     SPINEL_STATUS_PARSE_ERROR       = 9, ///< A error has occured while parsing the command.
     SPINEL_STATUS_IN_PROGRESS       = 10, ///< This operation is in progress.
     SPINEL_STATUS_NOMEM             = 11, ///< Operation prevented due to memory pressure.
-    SPINEL_STATUS_BUSY              = 12, ///< The device is currently performing an mutually exclusive operation
-    SPINEL_STATUS_PROP_NOT_FOUND    = 12, ///< The given property is not recognized.
+    SPINEL_STATUS_BUSY              = 12, ///< The device is currently performing a mutually exclusive operation
+    SPINEL_STATUS_PROP_NOT_FOUND    = 13, ///< The given property is not recognized.
     SPINEL_STATUS_DROPPED           = 14, ///< A/The packet was dropped.
     SPINEL_STATUS_EMPTY             = 15, ///< The result of the operation is empty.
     SPINEL_STATUS_CMD_TOO_BIG       = 16, ///< The command was too large to fit in the internal buffer.
     SPINEL_STATUS_NO_ACK            = 17, ///< The packet was not acknowledged.
     SPINEL_STATUS_CCA_FAILURE       = 18, ///< The packet was not sent due to a CCA failure.
+    SPINEL_STATUS_ALREADY           = 19, ///< The operation is already in progress.
+    SPINEL_STATUS_ITEM_NOT_FOUND    = 20, ///< The given item could not be found.
 
     SPINEL_STATUS_RESET__BEGIN      = 112,
     SPINEL_STATUS_RESET_POWER_ON    = SPINEL_STATUS_RESET__BEGIN + 0,
@@ -112,9 +114,11 @@ typedef enum
     SPINEL_STATUS_RESET_WATCHDOG    = SPINEL_STATUS_RESET__BEGIN + 8,
     SPINEL_STATUS_RESET__END        = 128,
 
-
     SPINEL_STATUS_VENDOR__BEGIN     = 15360,
     SPINEL_STATUS_VENDOR__END       = 16384,
+
+    SPINEL_STATUS_STACK_NATIVE__BEGIN = 16384,
+    SPINEL_STATUS_STACK_NATIVE__END   = 81920,
 
     SPINEL_STATUS_EXPERIMENTAL__BEGIN = 2000000,
     SPINEL_STATUS_EXPERIMENTAL__END   = 2097152,
@@ -266,6 +270,10 @@ enum
     SPINEL_CAP_NET_THREAD_1_0        = (SPINEL_CAP_NET__BEGIN + 0),
     SPINEL_CAP_NET__END              = 64,
 
+    SPINEL_CAP_OPENTHREAD__BEGIN     = 512,
+    SPINEL_CAP_MAC_WHITELIST         = (SPINEL_CAP_OPENTHREAD__BEGIN + 0),
+    SPINEL_CAP_OPENTHREAD__END       = 640,
+
     SPINEL_CAP_NEST__BEGIN           = 15296,
     SPINEL_CAP_NEST_LEGACY_INTERFACE = (SPINEL_CAP_NEST__BEGIN + 0),
     SPINEL_CAP_NEST_LEGACY_NET_WAKE  = (SPINEL_CAP_NEST__BEGIN + 1),
@@ -316,6 +324,23 @@ typedef enum
     SPINEL_PROP_MAC_FILTER_MODE        = SPINEL_PROP_MAC__BEGIN + 8, ///< [C]
     SPINEL_PROP_MAC__END               = 0x40,
 
+    SPINEL_PROP_MAC_EXT__BEGIN         = 0x1300,
+    /// MAC Whitelist
+    /** Format: `A(T(Ec))`
+     *
+     * Structure Parameters:
+     *
+     * * `E`: EUI64 address of node
+     * * `c`: Optional fixed RSSI. -127 means not set.
+     */
+    SPINEL_PROP_MAC_WHITELIST          = SPINEL_PROP_MAC_EXT__BEGIN + 0,
+
+    /// MAC Whitelist Enabled Flag
+    /** Format: `b`
+     */
+    SPINEL_PROP_MAC_WHITELIST_ENABLED  = SPINEL_PROP_MAC_EXT__BEGIN + 1,
+    SPINEL_PROP_MAC_EXT__END           = 0x1400,
+
     SPINEL_PROP_NET__BEGIN           = 0x40,
     SPINEL_PROP_NET_SAVED            = SPINEL_PROP_NET__BEGIN + 0, ///< [b]
     SPINEL_PROP_NET_ENABLED          = SPINEL_PROP_NET__BEGIN + 1, ///< [b]
@@ -348,7 +373,44 @@ typedef enum
     SPINEL_PROP_THREAD_ASSISTING_PORTS = SPINEL_PROP_THREAD__BEGIN + 12, ///< array(portn) [A(S)]
     SPINEL_PROP_THREAD_ALLOW_LOCAL_NET_DATA_CHANGE
                                        = SPINEL_PROP_THREAD__BEGIN + 13, ///< [b]
+
+    /// Thread Mode
+    /** Format: `C`
+     *
+     *  This property contains the value of the mode
+     *  TLV for this node. The meaning of the bits in this
+     *  bitfield are defined by section 4.5.2 of the Thread
+     *  specification.
+     */
+    SPINEL_PROP_THREAD_MODE            = SPINEL_PROP_THREAD__BEGIN + 14,
     SPINEL_PROP_THREAD__END            = 0x60,
+
+    SPINEL_PROP_THREAD_EXT__BEGIN      = 0x1500,
+
+    /// Thread Child Timeout
+    /** Format: `L`
+     *
+     *  Used when operating in the Child role.
+     */
+    SPINEL_PROP_THREAD_CHILD_TIMEOUT   = SPINEL_PROP_THREAD_EXT__BEGIN + 0,
+
+    /// Thread RLOC16
+    /** Format: `S`
+     */
+    SPINEL_PROP_THREAD_RLOC16          = SPINEL_PROP_THREAD_EXT__BEGIN + 1,
+
+    /// Thread Router Upgrade Threshold
+    /** Format: `C`
+     */
+    SPINEL_PROP_THREAD_ROUTER_UPGRADE_THRESHOLD
+                                       = SPINEL_PROP_THREAD_EXT__BEGIN + 2,
+
+    /// Thread Context Reuse Delay
+    /** Format: `L`
+     */
+    SPINEL_PROP_THREAD_CONTEXT_REUSE_DELAY
+                                       = SPINEL_PROP_THREAD_EXT__BEGIN + 3,
+    SPINEL_PROP_THREAD_EXT__END        = 0x1600,
 
     SPINEL_PROP_IPV6__BEGIN          = 0x60,
     SPINEL_PROP_IPV6_LL_ADDR         = SPINEL_PROP_IPV6__BEGIN + 0, ///< [6]
@@ -364,6 +426,7 @@ typedef enum
     SPINEL_PROP_STREAM_NET          = SPINEL_PROP_STREAM__BEGIN + 2, ///< [D]
     SPINEL_PROP_STREAM_NET_INSECURE = SPINEL_PROP_STREAM__BEGIN + 3, ///< [D]
     SPINEL_PROP_STREAM__END         = 0x80,
+
 
     /// UART Bitrate
     /** Format: `L`

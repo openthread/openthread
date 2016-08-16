@@ -146,6 +146,14 @@ extern void otSignalTaskletPending(void);
  */
 
 /**
+ * Get the OpenThread version string.
+ *
+ * @returns A pointer to the OpenThread version.
+ *
+ */
+const char *otGetVersionString(void);
+
+/**
  * This function initializes the OpenThread library.
  *
  * This function initializes OpenThread and prepares it for subsequent OpenThread API calls.  This function must be
@@ -585,6 +593,52 @@ typedef void (*otStateChangedCallback)(uint32_t aFlags, void *aContext);
 void otSetStateChangedCallback(otStateChangedCallback aCallback, void *aContext);
 
 /**
+ * This function gets the Active Operational Dataset.
+ *
+ * @param[out]  aDataset  A pointer to where the Active Operational Dataset will be placed.
+ *
+ * @retval kThreadError_None         Successfully retrieved the Active Operational Dataset.
+ * @retval kThreadError_InvalidArgs  @p aDataset was NULL.
+ *
+ */
+ThreadError otGetActiveDataset(otOperationalDataset *aDataset);
+
+/**
+ * This function sets the Active Operational Dataset.
+ *
+ * @param[in]  aDataset  A pointer to the Active Operational Dataset.
+ *
+ * @retval kThreadError_None         Successfully set the Active Operational Dataset.
+ * @retval kThreadError_NoBufs       Insufficient buffer space to set the Active Operational Datset.
+ * @retval kThreadError_InvalidArgs  @p aDataset was NULL.
+ *
+ */
+ThreadError otSetActiveDataset(otOperationalDataset *aDataset);
+
+/**
+ * This function gets the Pending Operational Dataset.
+ *
+ * @param[out]  aDataset  A pointer to where the Pending Operational Dataset will be placed.
+ *
+ * @retval kThreadError_None         Successfully retrieved the Pending Operational Dataset.
+ * @retval kThreadError_InvalidArgs  @p aDataset was NULL.
+ *
+ */
+ThreadError otGetPendingDataset(otOperationalDataset *aDataset);
+
+/**
+ * This function sets the Pending Operational Dataset.
+ *
+ * @param[in]  aDataset  A pointer to the Pending Operational Dataset.
+ *
+ * @retval kThreadError_None         Successfully set the Pending Operational Dataset.
+ * @retval kThreadError_NoBufs       Insufficient buffer space to set the Pending Operational Datset.
+ * @retval kThreadError_InvalidArgs  @p aDataset was NULL.
+ *
+ */
+ThreadError otSetPendingDataset(otOperationalDataset *aDataset);
+
+/**
  * @}
  */
 
@@ -796,7 +850,7 @@ uint32_t otGetNetworkIdTimeout(void);
  *
  * @sa otGetNetworkIdTimeout
  */
-void otSetNetworkIdTimeout(uint32_t aTimeout);
+void otSetNetworkIdTimeout(uint8_t aTimeout);
 
 /**
  * Get the ROUTER_UPGRADE_THRESHOLD parameter used in the REED role.

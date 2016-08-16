@@ -94,7 +94,7 @@ exit:
 }
 
 ThreadError DatasetManager::Set(const Timestamp &aTimestamp, const Message &aMessage,
-                                uint16_t aOffset, uint16_t aLength, uint8_t &aFlags)
+                                uint16_t aOffset, uint8_t aLength, uint8_t &aFlags)
 {
     ThreadError error = kThreadError_None;
     int compare;
@@ -159,7 +159,7 @@ ThreadError DatasetManager::Register(void)
 
     for (size_t i = 0; i < sizeof(mCoapToken); i++)
     {
-        mCoapToken[i] = otPlatRandomGet();
+        mCoapToken[i] = static_cast<uint8_t>(otPlatRandomGet());
     }
 
     header.Init();
@@ -257,7 +257,7 @@ void DatasetManager::HandleSet(Coap::Header &aHeader, Message &aMessage, const I
     // verify the request includes a timestamp that is ahead of the locally stored value
     VerifyOrExit(offset < aMessage.GetLength() && mLocal.GetTimestamp().Compare(timestamp) > 0, ;);
 
-    mLocal.Set(aMessage, aMessage.GetOffset(), aMessage.GetLength() - aMessage.GetOffset());
+    mLocal.Set(aMessage, aMessage.GetOffset(), static_cast<uint8_t>(aMessage.GetLength() - aMessage.GetOffset()));
     mNetwork = mLocal;
     mNetworkDataLeader.IncrementVersion();
     mNetworkDataLeader.IncrementStableVersion();
@@ -302,6 +302,14 @@ ActiveDataset::ActiveDataset(ThreadNetif &aThreadNetif):
 {
 }
 
+void ActiveDataset::Get(otOperationalDataset &aDataset)
+{
+    memset(&aDataset, 0, sizeof(aDataset));
+    mLocal.Get(aDataset);
+    aDataset.mActiveTimestamp = mLocal.GetTimestamp().GetSeconds();
+    aDataset.mIsActiveTimestampSet = true;
+}
+
 ThreadError ActiveDataset::Set(const Dataset &aDataset)
 {
     ThreadError error = kThreadError_None;
@@ -314,8 +322,20 @@ exit:
     return error;
 }
 
+ThreadError ActiveDataset::Set(const otOperationalDataset &aDataset)
+{
+    ThreadError error = kThreadError_None;
+    Dataset dataset;
+
+    SuccessOrExit(error = dataset.Set(aDataset, true));
+    SuccessOrExit(error = Set(dataset));
+
+exit:
+    return error;
+}
+
 ThreadError ActiveDataset::Set(const Timestamp &aTimestamp, const Message &aMessage,
-                               uint16_t aOffset, uint16_t aLength)
+                               uint16_t aOffset, uint8_t aLength)
 {
     ThreadError error = kThreadError_None;
     uint8_t flags;
@@ -346,7 +366,7 @@ ThreadError ActiveDataset::ApplyConfiguration(void)
         case Tlv::kChannel:
         {
             const ChannelTlv *channel = static_cast<const ChannelTlv *>(cur);
-            mNetif.GetMac().SetChannel(channel->GetChannel());
+            mNetif.GetMac().SetChannel(static_cast<uint8_t>(channel->GetChannel()));
             break;
         }
 
@@ -403,6 +423,14 @@ PendingDataset::PendingDataset(ThreadNetif &aThreadNetif):
 {
 }
 
+void PendingDataset::Get(otOperationalDataset &aDataset)
+{
+    memset(&aDataset, 0, sizeof(aDataset));
+    mLocal.Get(aDataset);
+    aDataset.mPendingTimestamp = mLocal.GetTimestamp().GetSeconds();
+    aDataset.mIsPendingTimestampSet = true;
+}
+
 ThreadError PendingDataset::Set(const Dataset &aDataset)
 {
     ThreadError error = kThreadError_None;
@@ -415,8 +443,20 @@ exit:
     return error;
 }
 
+ThreadError PendingDataset::Set(const otOperationalDataset &aDataset)
+{
+    ThreadError error = kThreadError_None;
+    Dataset dataset;
+
+    SuccessOrExit(error = dataset.Set(aDataset, false));
+    SuccessOrExit(error = Set(dataset));
+
+exit:
+    return error;
+}
+
 ThreadError PendingDataset::Set(const Timestamp &aTimestamp, const Message &aMessage,
-                                uint16_t aOffset, uint16_t aLength)
+                                uint16_t aOffset, uint8_t aLength)
 {
     ThreadError error = kThreadError_None;
     uint8_t flags;

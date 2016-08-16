@@ -84,7 +84,7 @@ void LinkQualityInfo::AddRss(int8_t anRss)
 
     // Multiply the the RSS value by a precision multiple (currently -8).
 
-    newValue = -anRss;
+    newValue = static_cast<uint16_t>(-anRss);
     newValue <<= kRssAveragePrecisionMultipleBitShift;
 
     oldAverage = mRssAverage;
@@ -92,12 +92,12 @@ void LinkQualityInfo::AddRss(int8_t anRss)
     if (mCount >= kRssCountForWeightCoefficientOneEighth)
     {
         // New average = old average * 7/8 + new value * 1/8
-        mRssAverage = ((oldAverage << 3) - oldAverage + newValue) >> 3;
+        mRssAverage = static_cast<uint16_t>(((oldAverage << 3) - oldAverage + newValue) >> 3);
     }
     else if (mCount >= kRssCountForWeightCoefficientOneFourth)
     {
         // New average = old average * 3/4 + new value * 1/4
-        mRssAverage = ((oldAverage << 2) - oldAverage + newValue) >> 2;
+        mRssAverage = static_cast<uint16_t>(((oldAverage << 2) - oldAverage + newValue) >> 2);
     }
     else if (mCount >= kRssCountForWeightCoefficientOneHalf)
     {
@@ -123,7 +123,7 @@ int8_t LinkQualityInfo::GetAverageRss(void) const
 
     if (mCount != 0)
     {
-        average = -(static_cast<int16_t>(mRssAverage >> kRssAveragePrecisionMultipleBitShift));
+        average = -static_cast<int8_t>(mRssAverage >> kRssAveragePrecisionMultipleBitShift);
 
         // Check for round up (e.g. average of -71.5 --> -72)
 

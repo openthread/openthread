@@ -58,6 +58,7 @@ static otDEFINE_ALIGNED_VAR(sCliUartRaw, sizeof(Uart), uint64_t);
 extern "C" void otCliUartInit(void)
 {
     sServer = new(&sCliUartRaw) Uart;
+    Interpreter::Init();
 }
 
 Uart::Uart(void)
@@ -109,7 +110,7 @@ void Uart::ReceiveTask(const uint8_t *aBuf, uint16_t aBufLength)
 
         default:
             Output(reinterpret_cast<const char *>(aBuf), 1);
-            mRxBuffer[mRxLength++] = *aBuf;
+            mRxBuffer[mRxLength++] = static_cast<char>(*aBuf);
             break;
         }
     }
@@ -167,7 +168,7 @@ int Uart::OutputFormat(const char *fmt, ...)
     vsnprintf(buf, sizeof(buf), fmt, ap);
     va_end(ap);
 
-    return Output(buf, strlen(buf));
+    return Output(buf, static_cast<uint16_t>(strlen(buf)));
 }
 
 void Uart::Send(void)

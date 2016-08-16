@@ -48,6 +48,7 @@ configure_OPTIONS               = \
     --enable-cli                  \
     --enable-ncp                  \
     --with-examples=cc2650        \
+    --with-platform-info=cc2650   \
     $(NULL)
 
 COMMONCFLAGS                   := \

@@ -40,17 +40,8 @@
 
 #include "cli.hpp"
 #include "cli_dataset.hpp"
-#include <common/encoding.hpp>
-#include <thread/meshcop_dataset.hpp>
-#include <thread/thread_netif.hpp>
-
-using Thread::Encoding::BigEndian::HostSwap16;
-using Thread::Encoding::BigEndian::HostSwap32;
 
 namespace Thread {
-
-extern ThreadNetif *sThreadNetif;
-
 namespace Cli {
 
 const DatasetCommand Dataset::sCommands[] =
@@ -68,11 +59,11 @@ const DatasetCommand Dataset::sCommands[] =
     { "networkname", &ProcessNetworkName },
     { "panid", &ProcessPanId },
     { "pending", &ProcessPending },
-    { "timestamp", &ProcessTimestamp },
+    { "pendingtimestamp", &ProcessPendingTimestamp },
 };
 
 Server *Dataset::sServer;
-MeshCoP::Dataset sDataset;
+otOperationalDataset Dataset::sDataset;
 
 void Dataset::OutputBytes(const uint8_t *aBytes, uint8_t aLength)
 {
@@ -82,42 +73,38 @@ void Dataset::OutputBytes(const uint8_t *aBytes, uint8_t aLength)
     }
 }
 
-ThreadError Dataset::Print(MeshCoP::Dataset &aDataset)
+ThreadError Dataset::Print(otOperationalDataset &aDataset)
 {
-    MeshCoP::Tlv *tlv;
-
-    sServer->OutputFormat("Timestamp: %d\r\n", aDataset.GetTimestamp().GetSeconds());
-
-    if ((tlv = aDataset.Get(MeshCoP::Tlv::kActiveTimestamp)) != NULL)
+    if (aDataset.mIsPendingTimestampSet)
     {
-        MeshCoP::ActiveTimestampTlv *tmp = static_cast<MeshCoP::ActiveTimestampTlv *>(tlv);
-        sServer->OutputFormat("Active Timestamp: %d\r\n", tmp->GetSeconds());
+        sServer->OutputFormat("Pending Timestamp: %d\r\n", aDataset.mPendingTimestamp);
     }
 
-    if ((tlv = aDataset.Get(MeshCoP::Tlv::kChannel)) != NULL)
+    if (aDataset.mIsActiveTimestampSet)
     {
-        MeshCoP::ChannelTlv *tmp = static_cast<MeshCoP::ChannelTlv *>(tlv);
-        sServer->OutputFormat("Channel: %d\r\n", tmp->GetChannel());
+        sServer->OutputFormat("Active Timestamp: %d\r\n", aDataset.mActiveTimestamp);
     }
 
-    if ((tlv = aDataset.Get(MeshCoP::Tlv::kDelayTimer)) != NULL)
+    if (aDataset.mIsChannelSet)
     {
-        MeshCoP::DelayTimerTlv *tmp = static_cast<MeshCoP::DelayTimerTlv *>(tlv);
-        sServer->OutputFormat("Delay: %d\r\n", tmp->GetDelayTimer());
+        sServer->OutputFormat("Channel: %d\r\n", aDataset.mChannel);
     }
 
-    if ((tlv = aDataset.Get(MeshCoP::Tlv::kExtendedPanId)) != NULL)
+    if (aDataset.mIsDelaySet)
     {
-        MeshCoP::ExtendedPanIdTlv *tmp = static_cast<MeshCoP::ExtendedPanIdTlv *>(tlv);
+        sServer->OutputFormat("Delay: %d\r\n", aDataset.mDelay);
+    }
+
+    if (aDataset.mIsExtendedPanIdSet)
+    {
         sServer->OutputFormat("Ext PAN ID: ");
-        OutputBytes(tmp->GetExtendedPanId(), OT_EXT_PAN_ID_SIZE);
+        OutputBytes(aDataset.mExtendedPanId.m8, sizeof(aDataset.mExtendedPanId));
         sServer->OutputFormat("\r\n");
     }
 
-    if ((tlv = aDataset.Get(MeshCoP::Tlv::kMeshLocalPrefix)) != NULL)
+    if (aDataset.mIsMeshLocalPrefixSet)
     {
-        MeshCoP::MeshLocalPrefixTlv *tmp = static_cast<MeshCoP::MeshLocalPrefixTlv *>(tlv);
-        const uint8_t *prefix = tmp->GetMeshLocalPrefix();
+        const uint8_t *prefix = aDataset.mMeshLocalPrefix.m8;
         sServer->OutputFormat("Mesh Local Prefix: %x:%x:%x:%x/64\r\n",
                               (static_cast<uint16_t>(prefix[0]) << 16) | prefix[1],
                               (static_cast<uint16_t>(prefix[2]) << 16) | prefix[3],
@@ -125,25 +112,22 @@ ThreadError Dataset::Print(MeshCoP::Dataset &aDataset)
                               (static_cast<uint16_t>(prefix[6]) << 16) | prefix[7]);
     }
 
-    if ((tlv = aDataset.Get(MeshCoP::Tlv::kNetworkMasterKey)) != NULL)
+    if (aDataset.mIsMasterKeySet)
     {
-        MeshCoP::NetworkMasterKeyTlv *tmp = static_cast<MeshCoP::NetworkMasterKeyTlv *>(tlv);
         sServer->OutputFormat("Master Key: ");
-        OutputBytes(tmp->GetNetworkMasterKey(), tmp->GetLength());
+        OutputBytes(aDataset.mMasterKey.m8, sizeof(aDataset.mMasterKey));
         sServer->OutputFormat("\r\n");
     }
 
-    if ((tlv = aDataset.Get(MeshCoP::Tlv::kNetworkName)) != NULL)
+    if (aDataset.mIsNetworkNameSet)
     {
-        MeshCoP::NetworkNameTlv *tmp = static_cast<MeshCoP::NetworkNameTlv *>(tlv);
         sServer->OutputFormat("Network Name: ");
-        sServer->OutputFormat("%.*s\r\n", OT_NETWORK_NAME_SIZE, tmp->GetNetworkName());
+        sServer->OutputFormat("%.*s\r\n", sizeof(aDataset.mNetworkName), aDataset.mNetworkName.m8);
     }
 
-    if ((tlv = aDataset.Get(MeshCoP::Tlv::kPanId)) != NULL)
+    if (aDataset.mIsPanIdSet)
     {
-        MeshCoP::PanIdTlv *tmp = static_cast<MeshCoP::PanIdTlv *>(tlv);
-        sServer->OutputFormat("PAN ID: 0x%04x\r\n", tmp->GetPanId());
+        sServer->OutputFormat("PAN ID: 0x%04x\r\n", aDataset.mPanId);
     }
 
     return kThreadError_None;
@@ -187,25 +171,24 @@ ThreadError Dataset::ProcessHelp(int argc, char *argv[])
 
 ThreadError Dataset::ProcessActive(int argc, char *argv[])
 {
+    otOperationalDataset dataset;
+    otGetActiveDataset(&dataset);
+
     (void)argc;
     (void)argv;
-    return Print(sThreadNetif->GetActiveDataset().GetLocal());
+    return Print(dataset);
 }
 
 ThreadError Dataset::ProcessActiveTimestamp(int argc, char *argv[])
 {
     ThreadError error = kThreadError_None;
-    MeshCoP::ActiveTimestampTlv tlv;
     long value;
 
     VerifyOrExit(argc > 0, ;);
 
     SuccessOrExit(error = Interpreter::ParseLong(argv[0], value));
-    tlv.Init();
-    tlv.SetSeconds(value);
-    tlv.SetTicks(0);
-    tlv.SetAuthoritative(false);
-    error = sDataset.Set(tlv);
+    sDataset.mActiveTimestamp = static_cast<uint64_t>(value);
+    sDataset.mIsActiveTimestampSet = true;
 
 exit:
     return error;
@@ -214,15 +197,12 @@ exit:
 ThreadError Dataset::ProcessChannel(int argc, char *argv[])
 {
     ThreadError error = kThreadError_None;
-    MeshCoP::ChannelTlv tlv;
     long value;
 
     VerifyOrExit(argc > 0, error = kThreadError_Parse);
     SuccessOrExit(error = Interpreter::ParseLong(argv[0], value));
-    tlv.Init();
-    tlv.SetChannelPage(0);
-    tlv.SetChannel(value);
-    error = sDataset.Set(tlv);
+    sDataset.mChannel = static_cast<uint16_t>(value);
+    sDataset.mIsChannelSet = true;
 
 exit:
     return error;
@@ -230,7 +210,7 @@ exit:
 
 ThreadError Dataset::ProcessClear(int argc, char *argv[])
 {
-    sDataset.Clear();
+    memset(&sDataset, 0, sizeof(sDataset));
     (void)argc;
     (void)argv;
     return kThreadError_None;
@@ -244,19 +224,16 @@ ThreadError Dataset::ProcessCommit(int argc, char *argv[])
 
     if (strcmp(argv[0], "active") == 0)
     {
-        sThreadNetif->GetActiveDataset().Set(sDataset);
+        SuccessOrExit(error = otSetActiveDataset(&sDataset));
     }
     else if (strcmp(argv[0], "pending") == 0)
     {
-        sThreadNetif->GetPendingDataset().Set(sDataset);
+        SuccessOrExit(error = otSetPendingDataset(&sDataset));
     }
     else
     {
         ExitNow(error = kThreadError_Parse);
     }
-
-    sThreadNetif->GetNetworkDataLeader().IncrementVersion();
-    sThreadNetif->GetNetworkDataLeader().IncrementStableVersion();
 
 exit:
     return error;
@@ -265,14 +242,12 @@ exit:
 ThreadError Dataset::ProcessDelay(int argc, char *argv[])
 {
     ThreadError error = kThreadError_None;
-    MeshCoP::DelayTimerTlv tlv;
     long value;
 
     VerifyOrExit(argc > 0, error = kThreadError_Parse);
     SuccessOrExit(error = Interpreter::ParseLong(argv[0], value));
-    tlv.Init();
-    tlv.SetDelayTimer(value);
-    error = sDataset.Set(tlv);
+    sDataset.mDelay = static_cast<uint32_t>(value);
+    sDataset.mIsDelaySet = true;
 
 exit:
     return error;
@@ -281,15 +256,13 @@ exit:
 ThreadError Dataset::ProcessExtPanId(int argc, char *argv[])
 {
     ThreadError error = kThreadError_None;
-    MeshCoP::ExtendedPanIdTlv tlv;
-    uint8_t extPanId[8];
+    uint8_t extPanId[OT_EXT_PAN_ID_SIZE];
 
     VerifyOrExit(argc > 0, error = kThreadError_Parse);
     VerifyOrExit(Interpreter::Hex2Bin(argv[0], extPanId, sizeof(extPanId)) >= 0, error = kThreadError_Parse);
 
-    tlv.Init();
-    tlv.SetExtendedPanId(extPanId);
-    error = sDataset.Set(tlv);
+    memcpy(sDataset.mExtendedPanId.m8, extPanId, sizeof(sDataset.mExtendedPanId));
+    sDataset.mIsExtendedPanIdSet = true;
 
 exit:
     return error;
@@ -298,15 +271,15 @@ exit:
 ThreadError Dataset::ProcessMasterKey(int argc, char *argv[])
 {
     ThreadError error = kThreadError_None;
-    MeshCoP::NetworkMasterKeyTlv tlv;
-    int8_t keyLength;
-    uint8_t key[16];
+    int keyLength;
+    uint8_t key[OT_MASTER_KEY_SIZE];
 
     VerifyOrExit(argc > 0, error = kThreadError_Parse);
-    VerifyOrExit((keyLength = Interpreter::Hex2Bin(argv[0], key, sizeof(key))) == 16, error = kThreadError_Parse);
-    tlv.Init();
-    tlv.SetNetworkMasterKey(key);
-    error = sDataset.Set(tlv);
+    VerifyOrExit((keyLength = Interpreter::Hex2Bin(argv[0], key, sizeof(key))) == OT_MASTER_KEY_SIZE,
+                 error = kThreadError_Parse);
+
+    memcpy(sDataset.mMasterKey.m8, key, sizeof(sDataset.mMasterKey));
+    sDataset.mIsMasterKeySet = true;
 
 exit:
     return error;
@@ -315,14 +288,13 @@ exit:
 ThreadError Dataset::ProcessMeshLocalPrefix(int argc, char *argv[])
 {
     ThreadError error = kThreadError_None;
-    MeshCoP::MeshLocalPrefixTlv tlv;
-    struct otIp6Address prefix;
+    otIp6Address prefix;
 
     VerifyOrExit(argc > 0, error = kThreadError_Parse);
     SuccessOrExit(error = otIp6AddressFromString(argv[0], &prefix));
-    tlv.Init();
-    tlv.SetMeshLocalPrefix(prefix.mFields.m8);
-    error = sDataset.Set(tlv);
+
+    memcpy(sDataset.mMeshLocalPrefix.m8, prefix.mFields.m8, sizeof(sDataset.mMeshLocalPrefix.m8));
+    sDataset.mIsMeshLocalPrefixSet = true;
 
 exit:
     return error;
@@ -331,12 +303,14 @@ exit:
 ThreadError Dataset::ProcessNetworkName(int argc, char *argv[])
 {
     ThreadError error = kThreadError_None;
-    MeshCoP::NetworkNameTlv tlv;
+    size_t length;
 
     VerifyOrExit(argc > 0, error = kThreadError_Parse);
-    tlv.Init();
-    tlv.SetNetworkName(argv[0]);
-    error = sDataset.Set(tlv);
+    VerifyOrExit((length = strlen(argv[0])) <= OT_NETWORK_NAME_SIZE, error = kThreadError_Parse);
+
+    memset(&sDataset.mNetworkName, 0, sizeof(sDataset.mNetworkName));
+    memcpy(sDataset.mNetworkName.m8, argv[0], length);
+    sDataset.mIsNetworkNameSet = true;
 
 exit:
     return error;
@@ -345,14 +319,12 @@ exit:
 ThreadError Dataset::ProcessPanId(int argc, char *argv[])
 {
     ThreadError error = kThreadError_None;
-    MeshCoP::PanIdTlv tlv;
     long value;
 
     VerifyOrExit(argc > 0, error = kThreadError_Parse);
     SuccessOrExit(error = Interpreter::ParseLong(argv[0], value));
-    tlv.Init();
-    tlv.SetPanId(value);
-    error = sDataset.Set(tlv);
+    sDataset.mPanId = static_cast<otPanId>(value);
+    sDataset.mIsPanIdSet = true;
 
 exit:
     return error;
@@ -360,23 +332,24 @@ exit:
 
 ThreadError Dataset::ProcessPending(int argc, char *argv[])
 {
+    otOperationalDataset dataset;
+    otGetPendingDataset(&dataset);
+
     (void)argc;
     (void)argv;
-    return Print(sThreadNetif->GetPendingDataset().GetLocal());
+    return Print(dataset);
 }
 
-ThreadError Dataset::ProcessTimestamp(int argc, char *argv[])
+ThreadError Dataset::ProcessPendingTimestamp(int argc, char *argv[])
 {
     ThreadError error = kThreadError_None;
-    MeshCoP::Timestamp timestamp;
     long value;
 
     VerifyOrExit(argc > 0, error = kThreadError_Parse);
 
     SuccessOrExit(error = Interpreter::ParseLong(argv[0], value));
-    timestamp.Init();
-    timestamp.SetSeconds(value);
-    sDataset.SetTimestamp(timestamp);
+    sDataset.mPendingTimestamp = static_cast<uint64_t>(value);
+    sDataset.mIsPendingTimestampSet = true;
 
 exit:
     return error;

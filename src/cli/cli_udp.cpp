@@ -119,7 +119,7 @@ int Udp::OutputFormat(const char *fmt, ...)
     vsnprintf(buf, sizeof(buf), fmt, ap);
     va_end(ap);
 
-    return Output(buf, strlen(buf));
+    return Output(buf, static_cast<uint16_t>(strlen(buf)));
 }
 
 }  // namespace Cli

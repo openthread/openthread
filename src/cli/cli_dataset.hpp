@@ -70,7 +70,7 @@ public:
 
 private:
     static void OutputBytes(const uint8_t *aBytes, uint8_t aLength);
-    static ThreadError Print(MeshCoP::Dataset &aDataset);
+    static ThreadError Print(otOperationalDataset &aDataset);
 
     static ThreadError ProcessHelp(int argc, char *argv[]);
     static ThreadError ProcessActive(int argc, char *argv[]);
@@ -85,9 +85,10 @@ private:
     static ThreadError ProcessNetworkName(int argc, char *argv[]);
     static ThreadError ProcessPanId(int argc, char *argv[]);
     static ThreadError ProcessPending(int argc, char *argv[]);
-    static ThreadError ProcessTimestamp(int argc, char *argv[]);
+    static ThreadError ProcessPendingTimestamp(int argc, char *argv[]);
 
     static const DatasetCommand sCommands[];
+    static otOperationalDataset sDataset;
     static Server *sServer;
 };
 

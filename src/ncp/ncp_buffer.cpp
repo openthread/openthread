@@ -108,7 +108,7 @@ void NcpFrameBuffer::SetCallbacks(BufferCallback aEmptyBufferCallback, BufferCal
 uint8_t *NcpFrameBuffer::Next(uint8_t *aBufPtr) const
 {
     aBufPtr++;
-    return (aBufPtr == mBufferEnd)? mBuffer : aBufPtr;
+    return (aBufPtr == mBufferEnd) ? mBuffer : aBufPtr;
 }
 
 // Returns an advanced (moved forward) version of the given buffer pointer by the given offset.
@@ -131,12 +131,12 @@ uint16_t NcpFrameBuffer::GetDistance(uint8_t *aStartPtr, uint8_t *aEndPtr) const
 
     if (aEndPtr >= aStartPtr)
     {
-        distance =  aEndPtr - aStartPtr;
+        distance = static_cast<size_t>(aEndPtr - aStartPtr);
     }
     else
     {
-        distance  = mBufferEnd - aStartPtr;
-        distance +=  aEndPtr - mBuffer;
+        distance  = static_cast<size_t>(mBufferEnd - aStartPtr);
+        distance += static_cast<size_t>(aEndPtr - mBuffer);
     }
 
     return static_cast<uint16_t>(distance);
@@ -154,7 +154,7 @@ uint16_t NcpFrameBuffer::ReadUint16At(uint8_t *aBufPtr)
 {
     uint16_t value;
 
-    value = (*aBufPtr) << 8;
+    value = static_cast<uint16_t>((*aBufPtr) << 8);
     value += *Next(aBufPtr);
 
     return value;
@@ -355,7 +355,8 @@ ThreadError NcpFrameBuffer::OutFramePrepareSegment(void)
         }
 
         // Find tail/end of current segment.
-        mReadSegmentTail = Advance(mReadSegmentHead, kSegmentHeaderSize + (header & kSegmentHeaderLengthMask));
+        mReadSegmentTail = Advance(mReadSegmentHead,
+				   kSegmentHeaderSize + static_cast<uint8_t>(header & kSegmentHeaderLengthMask));
 
         // Update the current read pointer to skip the segment header.
         mReadPointer = Advance(mReadSegmentHead, kSegmentHeaderSize);
@@ -383,6 +384,7 @@ exit:
     {
         mReadState = kReadStateDone;
     }
+
     return error;
 }
 
@@ -487,7 +489,7 @@ uint8_t NcpFrameBuffer::OutFrameReadByte(void)
         // Check if at end of current segment.
         if (mReadPointer == mReadSegmentTail)
         {
-             // Prepare any associated message with this segment.
+            // Prepare any message associated with this segment.
             error = OutFramePrepareMessage();
 
             // If there is no message, move to next segment (if any).
@@ -508,7 +510,7 @@ uint8_t NcpFrameBuffer::OutFrameReadByte(void)
         // Check if at the end of content in message buffer.
         if (mReadPointer == mReadMessageTail)
         {
-           // Fill more bytes from current message into message buffer.
+            // Fill more bytes from current message into message buffer.
             error = OutFrameFillMessageBuffer();
 
             // If no more bytes in the message, move to next segment (if any).
@@ -575,7 +577,7 @@ ThreadError NcpFrameBuffer::OutFrameRemove(void)
         }
 
         // Move the pointer to next segment.
-        bufPtr = Advance(bufPtr, kSegmentHeaderSize + (header & kSegmentHeaderLengthMask));
+        bufPtr = Advance(bufPtr, kSegmentHeaderSize + static_cast<uint8_t>(header & kSegmentHeaderLengthMask));
     }
 
     mReadFrameStart = bufPtr;
@@ -643,7 +645,7 @@ uint16_t NcpFrameBuffer::OutFrameGetLength(void)
         frameLength += (header & kSegmentHeaderLengthMask);
 
         // Move the pointer to next segment.
-        bufPtr = Advance(bufPtr, kSegmentHeaderSize + (header & kSegmentHeaderLengthMask));
+        bufPtr = Advance(bufPtr, kSegmentHeaderSize + static_cast<uint8_t>(header & kSegmentHeaderLengthMask));
     }
 
     // Remember the calculated frame length for current frame.

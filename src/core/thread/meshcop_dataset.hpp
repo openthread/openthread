@@ -86,12 +86,18 @@ public:
     const uint8_t *GetBytes(void) const { return mTlvs; }
 
     /**
+     * This method converts the TLV representation to structure representation.
+     *
+     */
+    void Get(otOperationalDataset &aDataset);
+
+    /**
      * This method returns the Dataset size in bytes.
      *
      * @returns The Dataset size in bytes.
      *
      */
-    uint16_t GetSize(void) const { return mLength; }
+    uint8_t GetSize(void) const { return mLength; }
 
     /**
      * This method returns a reference to the Timestamp.
@@ -118,7 +124,9 @@ public:
      */
     ThreadError Set(const Tlv &aTlv);
 
-    ThreadError Set(const Message &aMessage, uint16_t aOffset, uint16_t aLength);
+    ThreadError Set(const Message &aMessage, uint16_t aOffset, uint8_t aLength);
+
+    ThreadError Set(const otOperationalDataset &aDataset, bool aActive);
 
     void Remove(Tlv::Type aType);
 
@@ -127,7 +135,7 @@ private:
 
     Timestamp mTimestamp;       ///< Active or Pending Timestamp
     uint8_t   mTlvs[kMaxSize];  ///< The Dataset buffer
-    uint16_t  mLength;          ///< The number of valid bytes in @var mTlvs
+    uint8_t   mLength;          ///< The number of valid bytes in @var mTlvs
 };
 
 }  // namespace MeshCoP

@@ -32,6 +32,7 @@
  */
 
 #include <openthread.h>
+#include <openthread-config.h>
 #include <common/code_utils.hpp>
 #include <common/debug.hpp>
 #include <common/logging.hpp>
@@ -40,6 +41,7 @@
 #include <common/tasklet.hpp>
 #include <common/timer.hpp>
 #include <net/icmp6.hpp>
+#include <net/ip6.hpp>
 #include <platform/random.h>
 #include <thread/thread_netif.hpp>
 
@@ -394,7 +396,7 @@ uint32_t otGetNetworkIdTimeout(void)
     return sThreadNetif->GetMle().GetNetworkIdTimeout();
 }
 
-void otSetNetworkIdTimeout(uint32_t aTimeout)
+void otSetNetworkIdTimeout(uint8_t aTimeout)
 {
     sThreadNetif->GetMle().SetNetworkIdTimeout(aTimeout);
 }
@@ -678,6 +680,18 @@ void otSetStateChangedCallback(otStateChangedCallback aCallback, void *aContext)
     sThreadNetif->RegisterCallback(sNetifCallback);
 }
 
+const char *otGetVersionString(void)
+{
+    static const char sVersion[] =
+        PACKAGE_NAME "/" PACKAGE_VERSION "; "
+#ifdef  PLATFORM_INFO
+        PLATFORM_INFO "; "
+#endif
+        __DATE__ " " __TIME__;
+
+    return sVersion;
+}
+
 ThreadError otEnable(void)
 {
     ThreadError error = kThreadError_None;
@@ -687,6 +701,7 @@ ThreadError otEnable(void)
     otLogInfoApi("otEnable\n");
     Message::Init();
     sThreadNetif = new(&sThreadNetifRaw) ThreadNetif;
+    Ip6::Ip6::Init();
     mEnabled = true;
 
 exit:
@@ -923,6 +938,54 @@ bool otIsIcmpEchoEnabled(void)
 void otSetIcmpEchoEnabled(bool aEnabled)
 {
     Ip6::Icmp::SetEchoEnabled(aEnabled);
+}
+
+ThreadError otGetActiveDataset(otOperationalDataset *aDataset)
+{
+    ThreadError error = kThreadError_None;
+
+    VerifyOrExit(aDataset != NULL, error = kThreadError_InvalidArgs);
+
+    sThreadNetif->GetActiveDataset().Get(*aDataset);
+
+exit:
+    return error;
+}
+
+ThreadError otSetActiveDataset(otOperationalDataset *aDataset)
+{
+    ThreadError error;
+
+    VerifyOrExit(aDataset != NULL, error = kThreadError_InvalidArgs);
+
+    error = sThreadNetif->GetActiveDataset().Set(*aDataset);
+
+exit:
+    return error;
+}
+
+ThreadError otGetPendingDataset(otOperationalDataset *aDataset)
+{
+    ThreadError error = kThreadError_None;
+
+    VerifyOrExit(aDataset != NULL, error = kThreadError_InvalidArgs);
+
+    sThreadNetif->GetPendingDataset().Get(*aDataset);
+
+exit:
+    return error;
+}
+
+ThreadError otSetPendingDataset(otOperationalDataset *aDataset)
+{
+    ThreadError error;
+
+    VerifyOrExit(aDataset != NULL, error = kThreadError_InvalidArgs);
+
+    error = sThreadNetif->GetPendingDataset().Set(*aDataset);
+
+exit:
+    return error;
 }
 
 #ifdef __cplusplus

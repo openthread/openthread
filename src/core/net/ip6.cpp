@@ -35,6 +35,7 @@
 #include <common/debug.hpp>
 #include <common/logging.hpp>
 #include <common/message.hpp>
+#include <common/new.hpp>
 #include <net/icmp6.hpp>
 #include <net/ip6.hpp>
 #include <net/ip6_address.hpp>
@@ -46,7 +47,9 @@
 namespace Thread {
 namespace Ip6 {
 
-static Mpl sMpl;
+static otDEFINE_ALIGNED_VAR(sMplBuf, sizeof(Mpl), uint64_t);
+static Mpl *sMpl;
+
 static otReceiveIp6DatagramCallback sReceiveIp6DatagramCallback = NULL;
 
 static ThreadError ForwardMessage(Message &message, MessageInfo &messageInfo);
@@ -55,6 +58,11 @@ Message *Ip6::NewMessage(uint16_t reserved)
 {
     return Message::New(Message::kTypeIp6,
                         sizeof(Header) + sizeof(HopByHopHeader) + sizeof(OptionMpl) + reserved);
+}
+
+void Ip6::Init(void)
+{
+    sMpl = new(&sMplBuf) Mpl;
 }
 
 uint16_t Ip6::UpdateChecksum(uint16_t checksum, uint16_t val)
@@ -69,7 +77,7 @@ uint16_t Ip6::UpdateChecksum(uint16_t checksum, const void *buf, uint16_t len)
 
     for (int i = 0; i < len; i++)
     {
-        checksum = Ip6::UpdateChecksum(checksum, (i & 1) ? bytes[i] : (static_cast<uint16_t>(bytes[i])) << 8);
+        checksum = Ip6::UpdateChecksum(checksum, (i & 1) ? bytes[i] : static_cast<uint16_t>(bytes[i] << 8));
     }
 
     return checksum;
@@ -105,7 +113,7 @@ ThreadError AddMplOption(Message &message, Header &header, IpProto nextHeader, u
 
     hbhHeader.SetNextHeader(nextHeader);
     hbhHeader.SetLength(0);
-    sMpl.InitOption(mplOption, HostSwap16(header.GetSource().mFields.m16[7]));
+    sMpl->InitOption(mplOption, HostSwap16(header.GetSource().mFields.m16[7]));
     SuccessOrExit(error = message.Prepend(&mplOption, sizeof(mplOption)));
     SuccessOrExit(error = message.Prepend(&hbhHeader, sizeof(hbhHeader)));
     header.SetPayloadLength(sizeof(hbhHeader) + sizeof(mplOption) + payloadLength);
@@ -198,7 +206,7 @@ ThreadError HandleOptions(Message &message)
         switch (optionHeader.GetType())
         {
         case OptionMpl::kType:
-            SuccessOrExit(error = sMpl.ProcessOption(message));
+            SuccessOrExit(error = sMpl->ProcessOption(message));
             break;
 
         default:
@@ -327,7 +335,7 @@ exit:
     }
 }
 
-ThreadError Ip6::HandleDatagram(Message &message, Netif *netif, uint8_t interfaceId, const void *linkMessageInfo,
+ThreadError Ip6::HandleDatagram(Message &message, Netif *netif, int8_t interfaceId, const void *linkMessageInfo,
                                 bool fromLocalHost)
 {
     ThreadError error = kThreadError_Drop;
@@ -447,7 +455,7 @@ exit:
 ThreadError ForwardMessage(Message &message, MessageInfo &messageInfo)
 {
     ThreadError error = kThreadError_None;
-    int interfaceId;
+    int8_t interfaceId;
     Netif *netif;
 
     if (messageInfo.GetSockAddr().IsMulticast())
