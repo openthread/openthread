@@ -66,7 +66,7 @@ MeshForwarder::MeshForwarder(ThreadNetif &aThreadNetif):
 {
     mFragTag = static_cast<uint16_t>(otPlatRandomGet());
     mPollPeriod = 0;
-    mPollPeriodAssigned = false;
+    mAssignPollPeriod = 0;
     mSendMessage = NULL;
     mSendBusy = false;
     mEnabled = false;
@@ -573,29 +573,29 @@ void MeshForwarder::SetRxOnWhenIdle(bool aRxOnWhenIdle)
     }
 }
 
+void MeshForwarder::SetAssignPollPeriod(uint32_t aPeriod)
+{
+    mAssignPollPeriod = aPeriod;
+}
+
+uint32_t MeshForwarder::GetAssignPollPeriod()
+{
+    return mAssignPollPeriod;
+}
+
 void MeshForwarder::SetPollPeriod(uint32_t aPeriod)
 {
-    if (!mNetif.IsUp())
+    if (mPollPeriod != aPeriod)
     {
-        mPollPeriodAssigned = true;
-        mPollPeriod = aPeriod;
-        ExitNow();
+        if (mAssignPollPeriod != 0 && aPeriod != (OPENTHREAD_CONFIG_ATTACH_DATA_POLL_PERIOD))
+        {
+            mPollPeriod = mAssignPollPeriod;
+        }
+        else
+        {
+            mPollPeriod = aPeriod;
+        }
     }
-
-    if (mPollPeriodAssigned && mMac.GetRxOnWhenIdle() == false)
-    {
-        mPollTimer.Start(mPollPeriod);
-        ExitNow();
-    }
-    else if (mMac.GetRxOnWhenIdle() == false && mPollPeriod != aPeriod)
-    {
-        mPollTimer.Start(aPeriod);
-    }
-
-    mPollPeriod = aPeriod;
-
-exit:
-    return;
 }
 
 uint32_t MeshForwarder::GetPollPeriod()

@@ -1040,12 +1040,12 @@ void Interpreter::ProcessPollPeriod(int argc, char *argv[])
 
     if (argc == 0)
     {
-        sServer->OutputFormat("%d\r\n", otGetPollPeriod());
+        sServer->OutputFormat("%d\r\n", (otGetPollPeriod() / 1000));  // ms->s
     }
     else
     {
         SuccessOrExit(error = ParseLong(argv[0], value));
-        otSetPollPeriod(static_cast<uint32_t>(value));
+        otSetPollPeriod(static_cast<uint32_t>(value * 1000));  // s->ms
     }
 
 exit:
