@@ -514,7 +514,7 @@ void NcpBase::UpdateChangedProps(void)
                 SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0,
                 SPINEL_PROP_IPV6_LL_ADDR
             );
-	}
+        }
         else if ((mChangedFlags & OT_IP6_ML_ADDR_CHANGED) != 0)
         {
             SuccessOrExit(HandleCommandPropertyGet(
@@ -927,7 +927,7 @@ ThreadError NcpBase::CommandHandler_NOOP(uint8_t header, unsigned int command, c
 ThreadError NcpBase::CommandHandler_RESET(uint8_t header, unsigned int command, const uint8_t *arg_ptr,
                                           uint16_t arg_len)
 {
-	// We aren't using any of the arguments to this function.
+    // We aren't using any of the arguments to this function.
     (void)header;
     (void)command;
     (void)arg_ptr;
@@ -985,7 +985,7 @@ ThreadError NcpBase::CommandHandler_PROP_VALUE_SET(uint8_t header, unsigned int 
     if (parsedLength == arg_len)
     {
         errorCode = HandleCommandPropertySet(header, static_cast<spinel_prop_key_t>(propKey), value_ptr,
-					     static_cast<uint16_t>(value_len));
+                                             static_cast<uint16_t>(value_len));
     }
     else
     {
@@ -1011,7 +1011,7 @@ ThreadError NcpBase::CommandHandler_PROP_VALUE_INSERT(uint8_t header, unsigned i
     if (parsedLength == arg_len)
     {
         errorCode = HandleCommandPropertyInsert(header, static_cast<spinel_prop_key_t>(propKey), value_ptr,
-						static_cast<uint16_t>(value_len));
+                                                static_cast<uint16_t>(value_len));
     }
     else
     {
@@ -1037,7 +1037,7 @@ ThreadError NcpBase::CommandHandler_PROP_VALUE_REMOVE(uint8_t header, unsigned i
     if (parsedLength == arg_len)
     {
         errorCode = HandleCommandPropertyRemove(header, static_cast<spinel_prop_key_t>(propKey), value_ptr,
-						static_cast<uint16_t>(value_len));
+                                                static_cast<uint16_t>(value_len));
     }
     else
     {
@@ -2656,6 +2656,10 @@ ThreadError NcpBase::SetPropertyHandler_STREAM_NET_INSECURE(uint8_t header, spin
     {
         errorCode = otSendIp6Datagram(message);
     }
+    else if (message)
+    {
+        Message::Free(*message);
+    }
 
     if (errorCode == kThreadError_None)
     {
@@ -2668,11 +2672,6 @@ ThreadError NcpBase::SetPropertyHandler_STREAM_NET_INSECURE(uint8_t header, spin
     }
     else
     {
-        if (message)
-        {
-            Message::Free(*message);
-        }
-
         errorCode = SendLastStatus(header, ThreadErrorToSpinelStatus(errorCode));
     }
 
@@ -2724,6 +2723,10 @@ ThreadError NcpBase::SetPropertyHandler_STREAM_NET(uint8_t header, spinel_prop_k
     {
         errorCode = otSendIp6Datagram(message);
     }
+    else if (message)
+    {
+        Message::Free(*message);
+    }
 
     if (errorCode == kThreadError_None)
     {
@@ -2736,11 +2739,6 @@ ThreadError NcpBase::SetPropertyHandler_STREAM_NET(uint8_t header, spinel_prop_k
     }
     else
     {
-        if (message)
-        {
-            Message::Free(*message);
-        }
-
         errorCode = SendLastStatus(header, ThreadErrorToSpinelStatus(errorCode));
     }
 
