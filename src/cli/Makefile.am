@@ -39,12 +39,14 @@ libopenthread_cli_a_CPPFLAGS =        \
 
 libopenthread_cli_a_SOURCES         = \
     cli.cpp                           \
+    cli_dataset.cpp                   \
     cli_uart.cpp                      \
     cli_udp.cpp                       \
     $(NULL)
 
 noinst_HEADERS                      = \
     cli.hpp                           \
+    cli_dataset.hpp                   \
     cli_uart.hpp                      \
     cli_server.hpp                    \
     cli_udp.hpp                       \

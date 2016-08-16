@@ -86,6 +86,7 @@ typedef enum otLogRegion
     kLogRegionMac      = 7,  ///< IEEE 802.15.4 MAC
     kLogRegionMem      = 8,  ///< Memory
     kLogRegionNcp      = 9,  ///< NCP
+    kLogRegionMeshCoP  = 10, ///< Mesh Commissioning Protocol
 } otLogRegion;
 
 /**

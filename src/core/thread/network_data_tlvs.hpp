@@ -349,10 +349,11 @@ public:
         kPreferenceOffset = 6,
         kPreferenceMask = 3 << kPreferenceOffset,
         kPreferredFlag = 1 << 5,
-        kValidFlag = 1 << 4,
+        kSlaacFlag = 1 << 4,
         kDhcpFlag = 1 << 3,
         kConfigureFlag = 1 << 2,
         kDefaultRouteFlag = 1 << 1,
+        kOnMeshFlag = 1 << 0,
     };
 
     /**
@@ -430,25 +431,25 @@ public:
     void SetPreferred() { mFlags |= kPreferredFlag; }
 
     /**
-     * This method indicates whether or not the Valid flag is set.
+     * This method indicates whether or not the SLAAC flag is set.
      *
-     * @retval TRUE   If the Valid flag is set.
-     * @retval FALSE  If the Valid flag is not set.
+     * @retval TRUE   If the SLAAC flag is set.
+     * @retval FALSE  If the SLAAC flag is not set.
      *
      */
-    bool IsValid() const { return (mFlags & kValidFlag) != 0; }
+    bool IsSlaac() const { return (mFlags & kSlaacFlag) != 0; }
 
     /**
-     * This method clears the Valid flag.
+     * This method clears the SLAAC flag.
      *
      */
-    void ClearValid() { mFlags &= ~kValidFlag; }
+    void ClearSlaac() { mFlags &= ~kSlaacFlag; }
 
     /**
-     * This method sets the Valid flag.
+     * This method sets the SLAAC flag.
      *
      */
-    void SetValid() { mFlags |= kValidFlag; }
+    void SetSlaac() { mFlags |= kSlaacFlag; }
 
     /**
      * This method indicates whether or not the DHCP flag is set.
@@ -512,6 +513,27 @@ public:
      *
      */
     void SetDefaultRoute() { mFlags |= kDefaultRouteFlag; }
+
+    /**
+     * This method indicates whether or not the On-Mesh flag is set.
+     *
+     * @retval TRUE   If the On-Mesh flag is set.
+     * @retval FALSE  If the On-Mesh flag is not set.
+     *
+     */
+    bool IsOnMesh() const { return (mFlags & kOnMeshFlag) != 0; }
+
+    /**
+     * This method clears the On-Mesh flag.
+     *
+     */
+    void ClearOnMesh() { mFlags &= ~kOnMeshFlag; }
+
+    /**
+     * This method sets the On-Mesh flag.
+     *
+     */
+    void SetOnMesh() { mFlags |= kOnMeshFlag; }
 
 private:
     uint16_t mRloc;

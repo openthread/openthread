@@ -81,8 +81,8 @@ class Cert_5_6_2_NetworkDataRouterAsBr(unittest.TestCase):
         time.sleep(3)
         self.assertEqual(self.nodes[ROUTER].get_state(), 'router')
 
-        self.nodes[ROUTER].add_prefix('2001::/64', 'pvcrs')
-        self.nodes[ROUTER].add_prefix('2002::/64', 'pvcr')
+        self.nodes[ROUTER].add_prefix('2001::/64', 'paros')
+        self.nodes[ROUTER].add_prefix('2002::/64', 'paro')
         self.nodes[ROUTER].register_netdata()
 
         self.nodes[ED1].start()

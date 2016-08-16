@@ -232,7 +232,7 @@ typedef void (*otHandleActiveScanResult)(otActiveScanResult *aResult);
  *
  * @param[in]  aScanChannels  A bit vector indicating which channels to scan (e.g. OT_CHANNEL_11_MASK).
  * @param[in]  aScanDuration  The time in milliseconds to spend scanning each channel.
- * @param[in]  aCallback      A pointer to a function that is called when a beacon is received or the scan completes.
+ * @param[in]  aCallback      A pointer to a function called on receiving a beacon or scan completes.
  *
  * @retval kThreadError_None  Accepted the Active Scan request.
  * @retval kThreadError_Busy  Already performing an Active Scan.
@@ -246,6 +246,28 @@ ThreadError otActiveScan(uint32_t aScanChannels, uint16_t aScanDuration, otHandl
  * @returns true if an active scan is in progress.
  */
 bool otActiveScanInProgress(void);
+
+/**
+ * This function starts a Thread Discovery scan.
+ *
+ * @param[in]  aScanChannels  A bit vector indicating which channels to scan (e.g. OT_CHANNEL_11_MASK).
+ * @param[in]  aScanDuration  The time in milliseconds to spend scanning each channel.
+ * @param[in]  aPanId         The PAN ID filter (set to Broadcast PAN to disable filter).
+ * @param[in]  aCallback      A pointer to a function called on receiving an MLE Discovery Response or scan completes.
+ *
+ * @retval kThreadError_None  Accepted the Thread Discovery request.
+ * @retval kThreadError_Busy  Already performing an Thread Discovery.
+ *
+ */
+ThreadError otDiscover(uint32_t aScanChannels, uint16_t aScanDuration, uint16_t aPanid,
+                       otHandleActiveScanResult aCallback);
+
+/**
+ * This function determines if an MLE Thread Discovery is currently in progress.
+ *
+ * @returns true if an active scan is in progress.
+ */
+bool otDiscoverInProgress(void);
 
 /**
  * @}

@@ -161,6 +161,57 @@ extern "C" {
 #endif
 
 /**
+ * @def otLogCritMeshCoP
+ *
+ * This method generates a log with level critical for the MLE region.
+ *
+ * @param[in]  aFormat  A pointer to the format string.
+ * @param[in]  ...      Arguments for the format specification.
+ *
+ */
+
+/**
+ * @def otLogWarnMeshCoP
+ *
+ * This method generates a log with level warning for the MLE region.
+ *
+ * @param[in]  aFormat  A pointer to the format string.
+ * @param[in]  ...      Arguments for the format specification.
+ *
+ */
+
+/**
+ * @def otLogInfoMeshCoP
+ *
+ * This method generates a log with level info for the MLE region.
+ *
+ * @param[in]  aFormat  A pointer to the format string.
+ * @param[in]  ...      Arguments for the format specification.
+ *
+ */
+
+/**
+ * @def otLogDebgMeshCoP
+ *
+ * This method generates a log with level debug for the MLE region.
+ *
+ * @param[in]  aFormat  A pointer to the format string.
+ * @param[in]  ...      Arguments for the format specification.
+ *
+ */
+#ifdef OPENTHREAD_CONFIG_LOG_MLE
+#define otLogCritMeshCoP(aFormat, ...) otLogCrit(kLogRegionMeshCoP, aFormat, ## __VA_ARGS__)
+#define otLogWarnMeshCoP(aFormat, ...) otLogWarn(kLogRegionMeshCoP, aFormat, ## __VA_ARGS__)
+#define otLogInfoMeshCoP(aFormat, ...) otLogInfo(kLogRegionMeshCoP, aFormat, ## __VA_ARGS__)
+#define otLogDebgMeshCoP(aFormat, ...) otLogDebg(kLogRegionMeshCoP, aFormat, ## __VA_ARGS__)
+#else
+#define otLogCritMeshCoP(aFormat, ...)
+#define otLogWarnMeshCoP(aFormat, ...)
+#define otLogInfoMeshCoP(aFormat, ...)
+#define otLogDebgMeshCoP(aFormat, ...)
+#endif
+
+/**
  * @def otLogCritMle
  *
  * This method generates a log with level critical for the MLE region.

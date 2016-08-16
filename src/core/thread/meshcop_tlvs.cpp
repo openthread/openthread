@@ -28,51 +28,46 @@
 
 /**
  * @file
- * @brief
- *  This file defines the top-level functions for the OpenThread NCP module.
+ *   This file implements common MeshCoP TLV processing.
  */
 
-#ifndef NCP_H_
-#define NCP_H_
+#include <common/code_utils.hpp>
+#include <thread/meshcop_tlvs.hpp>
 
-#include "../openthread-types.h"
+namespace Thread {
+namespace MeshCoP {
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+int Timestamp::Compare(const Timestamp &aCompare) const
+{
+    uint64_t thisSeconds = GetSeconds();
+    uint64_t compareSeconds = aCompare.GetSeconds();
+    uint16_t thisTicks = GetTicks();
+    uint16_t compareTicks = aCompare.GetTicks();
+    int rval;
 
-/**
- * Initialize the NCP.
- *
- */
-void otNcpInit(void);
+    if (compareSeconds > thisSeconds)
+    {
+        rval = 1;
+    }
+    else if (compareSeconds < thisSeconds)
+    {
+        rval = -1;
+    }
+    else if (compareTicks > thisTicks)
+    {
+        rval = 1;
+    }
+    else if (compareTicks < thisTicks)
+    {
+        rval = -1;
+    }
+    else
+    {
+        rval = 0;
+    }
 
-/**
- * @brief Send data to the host via a specific stream.
- *
- * This function attempts to send the given data to the host
- * using the given aStreamId. This is useful for reporting
- * error messages, implementing debug/diagnostic consoles,
- * and potentially other types of datastreams.
- *
- * The write either is accepted in its entirety or rejected.
- * Partial writes are not attempted.
- *
- * @param[in]  aStreamId  A numeric identifier for the stream to write to.
- *                        If set to '0', will default to the debug stream.
- * @param[in]  aDataPtr   A pointer to the data to send on the stream.
- *                        If aDataLen is non-zero, this param MUST NOT be NULL.
- * @param[in]  aDataLen   The number of bytes of data from aDataPtr to send.
- *
- * @retval kThreadError_None  The data was queued for delivery to the host.
- * @retval kThreadError_Busy  There are not enough resources to complete this
- *                            request. This is usually a temporary condition.
- * @retval kThreadError_InvalidArgs The given aStreamId was invalid.
-*/
-ThreadError otNcpStreamWrite(int aStreamId, const uint8_t *aDataPtr, int aDataLen);
+    return rval;
+}
 
-#ifdef __cplusplus
-}  // extern "C"
-#endif
-
-#endif
+}  // namespace MeshCoP
+}  // namespace Thread

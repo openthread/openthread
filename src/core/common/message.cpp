@@ -440,16 +440,6 @@ void Message::SetDatagramTag(uint16_t aTag)
     mInfo.mDatagramTag = aTag;
 }
 
-uint8_t Message::GetTimeout(void) const
-{
-    return mInfo.mTimeout;
-}
-
-void Message::SetTimeout(uint8_t aTimeout)
-{
-    mInfo.mTimeout = aTimeout;
-}
-
 bool Message::GetChildMask(uint8_t aChildIndex) const
 {
     assert(aChildIndex < sizeof(mInfo.mChildMask) * 8);
@@ -484,6 +474,26 @@ exit:
     return rval;
 }
 
+uint16_t Message::GetPanId(void) const
+{
+    return mInfo.mPanId;
+}
+
+void Message::SetPanId(uint16_t aPanId)
+{
+    mInfo.mPanId = aPanId;
+}
+
+uint8_t Message::GetTimeout(void) const
+{
+    return mInfo.mTimeout;
+}
+
+void Message::SetTimeout(uint8_t aTimeout)
+{
+    mInfo.mTimeout = aTimeout;
+}
+
 bool Message::GetDirectTransmission(void) const
 {
     return mInfo.mDirectTx;
@@ -507,6 +517,26 @@ bool Message::IsLinkSecurityEnabled(void) const
 void Message::SetLinkSecurityEnabled(bool aLinkSecurityEnabled)
 {
     mInfo.mLinkSecurity = aLinkSecurityEnabled;
+}
+
+bool Message::IsMleDiscoverRequest(void) const
+{
+    return mInfo.mMleDiscoverRequest;
+}
+
+void Message::SetMleDiscoverRequest(bool aMleDiscoverRequest)
+{
+    mInfo.mMleDiscoverRequest = aMleDiscoverRequest;
+}
+
+bool Message::IsMleDiscoverResponse(void) const
+{
+    return mInfo.mMleDiscoverResponse;
+}
+
+void Message::SetMleDiscoverResponse(bool aMleDiscoverResponse)
+{
+    mInfo.mMleDiscoverResponse = aMleDiscoverResponse;
 }
 
 uint16_t Message::UpdateChecksum(uint16_t aChecksum, uint16_t aOffset, uint16_t aLength) const

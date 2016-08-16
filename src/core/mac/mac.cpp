@@ -206,7 +206,7 @@ ThreadError Mac::SetExtAddress(const ExtAddress &aExtAddress)
 
     for (size_t i = 0; i < sizeof(buf); i++)
     {
-        buf[i] = mExtAddress.m8[7 - i];
+        buf[i] = aExtAddress.m8[7 - i];
     }
 
     SuccessOrExit(error = otPlatRadioSetExtendedAddress(buf));

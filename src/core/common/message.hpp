@@ -108,13 +108,16 @@ struct MessageInfo
     uint16_t         mLength;            ///< Number of bytes within the message.
     uint16_t         mOffset;            ///< A byte offset within the message.
     uint16_t         mDatagramTag;       ///< The datagram tag used for 6LoWPAN fragmentation.
-    uint8_t          mTimeout;           ///< Seconds remaining before dropping the message.
 
-    uint8_t          mChildMask[8];      ///< A bit-vector to indicate which sleepy children need to receive this message.
+    uint8_t          mChildMask[8];      ///< A bit-vector to indicate which sleepy children need to receive this.
+    uint16_t         mPanId;             ///< The Destination PAN ID.
+    uint8_t          mTimeout;           ///< Seconds remaining before dropping the message.
 
     uint8_t          mType : 2;          ///< Identifies the type of message.
     bool             mDirectTx : 1;      ///< Used to indicate whether a direct transmission is required.
     bool             mLinkSecurity : 1;  ///< Indicates whether or not link security is enabled.
+    bool             mMleDiscoverRequest : 1;   ///< Identifies MLE Discover Request.
+    bool             mMleDiscoverResponse : 1;  ///< Identifies MLE Discover Response.
 };
 
 /**
@@ -354,20 +357,6 @@ public:
     void SetDatagramTag(uint16_t aTag);
 
     /**
-     * This method returns the timeout used for 6LoWPAN reassembly.
-     *
-     * @returns The time remaining in seconds.
-     *
-     */
-    uint8_t GetTimeout(void) const;
-
-    /**
-     * This method sets the timeout used for 6LoWPAN reassembly.
-     *
-     */
-    void SetTimeout(uint8_t aTimeout);
-
-    /**
      * This method returns whether or not the message forwarding is scheduled for the child.
      *
      * @param[in]  aChildIndex  The index into the child table.
@@ -402,6 +391,38 @@ public:
      *
      */
     bool IsChildPending(void) const;
+
+    /**
+     * This method returns the IEEE 802.15.4 Destination PAN ID.
+     *
+     * @returns The IEEE 802.15.4 Destination PAN ID.
+     *
+     */
+    uint16_t GetPanId(void) const;
+
+    /**
+     * This method sets the IEEE 802.15.4 Destination PAN ID.
+     *
+     * @param[in]  aPanId  The IEEE 802.15.4 Destination PAN ID.
+     *
+     */
+    void SetPanId(uint16_t aPanId);
+
+    /**
+     * This method returns the timeout used for 6LoWPAN reassembly.
+     *
+     * @returns The time remaining in seconds.
+     *
+     */
+    uint8_t GetTimeout(void) const;
+
+    /**
+     * This method sets the timeout used for 6LoWPAN reassembly.
+     *
+     * @param[in]  aTimeout  The timeout value.
+     *
+     */
+    void SetTimeout(uint8_t aTimeout);
 
     /**
      * This method returns whether or not message forwarding is scheduled for direct transmission.
@@ -440,6 +461,40 @@ public:
      *
      */
     void SetLinkSecurityEnabled(bool aLinkSecurityEnabled);
+
+    /**
+     * This method indicates whether or not this message is an MLE Discovery Request.
+     *
+     * @retval TRUE   If this message is an MLE Discovery Request.
+     * @retval FALSE  If this message is not an MLE Discovery Request.
+     *
+     */
+    bool IsMleDiscoverRequest(void) const;
+
+    /**
+     * This method sets whether or not this message is an MLE Discovery Request.
+     *
+     * @param[in]  aLinkSecurityEnabled  TRUE if this message is an MLE Discovery Request, FALSE otherwise.
+     *
+     */
+    void SetMleDiscoverRequest(bool aMleDiscoverRequest);
+
+    /**
+     * This method indicates whether or not this message is an MLE Discovery Response.
+     *
+     * @retval TRUE   If this message is an MLE Discovery Response.
+     * @retval FALSE  If this message is not an MLE Discovery Response.
+     *
+     */
+    bool IsMleDiscoverResponse(void) const;
+
+    /**
+     * This method sets whether or not this message is an MLE Discovery Response.
+     *
+     * @param[in]  aLinkSecurityEnabled  TRUE if this message is an MLE Discovery Response, FALSE otherwise.
+     *
+     */
+    void SetMleDiscoverResponse(bool aMleDiscoverResponse);
 
     /**
      * This method is used to update a checksum value.

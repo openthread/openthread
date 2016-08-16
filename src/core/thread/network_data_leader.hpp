@@ -100,12 +100,24 @@ public:
     uint8_t GetVersion(void) const;
 
     /**
+     * This method increments the Thread Network Data version.
+     *
+     */
+    void IncrementVersion(void);
+
+    /**
      * This method returns the Thread Network Data stable version.
      *
      * @returns The Thread Network Data stable version.
      *
      */
     uint8_t GetStableVersion(void) const;
+
+    /**
+     * This method increments the Thread Network Data stable version.
+     *
+     */
+    void IncrementStableVersion(void);
 
     /**
      * This method returns CONTEXT_ID_RESUSE_DELAY value.
@@ -258,7 +270,7 @@ private:
     uint8_t         mVersion;
 
     Coap::Server   &mCoapServer;
-    Ip6::Netif     &mNetif;
+    ThreadNetif    &mNetif;
     Mle::MleRouter &mMle;
 };
 

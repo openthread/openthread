@@ -212,7 +212,7 @@ all: stage
 #
 
 cortex-m3_target_ABI                  = cortex-m3
-cortex-m3_target_CPPFLAGS             = -mcpu=cortex-m3 -mfloat-abi=soft -mthumb
+cortex-m3_target_CPPFLAGS             = -mcpu=cortex-m3 -mfloat-abi=soft -mthumb -DOPENTHREAD_CONFIG_NUM_MESSAGE_BUFFERS=32
 cortex-m3_target_CFLAGS               = -mcpu=cortex-m3 -mfloat-abi=soft -mthumb
 cortex-m3_target_CXXFLAGS             = -mcpu=cortex-m3 -mfloat-abi=soft -mthumb
 cortex-m3_target_LDFLAGS              = -mcpu=cortex-m3 -mfloat-abi=soft -mthumb

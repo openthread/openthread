@@ -86,9 +86,25 @@ uint8_t Leader::GetVersion(void) const
     return mVersion;
 }
 
+void Leader::IncrementVersion(void)
+{
+    if (mMle.GetDeviceState() == Mle::kDeviceStateLeader)
+    {
+        mVersion++;
+    }
+}
+
 uint8_t Leader::GetStableVersion(void) const
 {
     return mStableVersion;
+}
+
+void Leader::IncrementStableVersion(void)
+{
+    if (mMle.GetDeviceState() == Mle::kDeviceStateLeader)
+    {
+        mStableVersion++;
+    }
 }
 
 uint32_t Leader::GetContextIdReuseDelay(void) const
@@ -241,9 +257,9 @@ ThreadError Leader::ConfigureAddress(PrefixTlv &aPrefix)
         ExitNow();
     }
 
-    // check if Valid flag is set
+    // check if SLAAC flag is set
     if ((entry = borderRouter->GetEntry(0)) == NULL ||
-        entry->IsValid() == false)
+        entry->IsSlaac() == false)
     {
         ExitNow();
     }

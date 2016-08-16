@@ -12,6 +12,7 @@ OpenThread test scripts use the CLI to execute test cases.
 * [childtimeout](#childtimeout)
 * [contextreusedelay](#contextreusedelay)
 * [counter](#counter)
+* [discover](#discover)
 * [eidcache](#eidcache)
 * [extaddr](#extaddr)
 * [extpanid](#extpanid)
@@ -168,6 +169,20 @@ RxTotal: 11
     RxErrOther: 0
 ```
 
+### discover \[channel\]
+
+Perform an MLE Discovery operation.
+
+* channel: The channel to discover on.  If no channel is provided, the discovery will cover all valid channels.
+
+```bash
+> discover
+| J | Network Name     | Extended PAN     | PAN  | MAC Address      | Ch | dBm | LQI |
++---+------------------+------------------+------+------------------+----+-----+-----+
+| 0 | OpenThread       | dead00beef00cafe | ffff | f1d92a82c8d8fe43 | 11 | -20 |   0 |
+Done
+```
+
 ### eidcache
 
 Print the EID-to-RLOC cache entries.
@@ -233,6 +248,16 @@ Bring down the IPv6 interface.
 
 ```bash
 > ifconfig down
+Done
+```
+
+### ifconfig
+
+Show the status of the IPv6 interface.
+
+```bash
+> ifconfig
+down
 Done
 ```
 
@@ -432,16 +457,17 @@ Send an ICMPv6 Echo Request.
 
 Add a valid prefix to the Network Data.
 
-* p: Stateless IPv6 Address Autoconfiguration Preferred flag
-* v: Stateless IPv6 Address Autoconfiguration Valid flag
+* p: Preferred flag
+* a: Stateless IPv6 Address Autoconfiguration flag
 * d: DHCPv6 IPv6 Address Configuration flag
 * c: DHCPv6 Other Configuration flag
-* s: Stable flag
 * r: Default Route flag
+* o: On Mesh flag
+* s: Stable flag
 * prf: Default router preference, which may be 'high', 'med', or 'low'.
 
 ```bash
-> prefix add 2001:dead:beef:cafe::/64 pvsr 0
+> prefix add 2001:dead:beef:cafe::/64 paros med
 Done
 ```
 
@@ -479,7 +505,7 @@ Add a valid prefix to the Network Data.
 * prf: Default Router Preference, which may be: 'high', 'med', or 'low'.
 
 ```bash
-> route add 2001:dead:beef:cafe::/64 pvsr 0
+> route add 2001:dead:beef:cafe::/64 s med
 Done
 ```
 
@@ -563,9 +589,9 @@ Perform an IEEE 802.15.4 Active Scan.
 
 ```bash
 > scan
-| J | Network Name     | Extended PAN     | PAN  | MAC Address      | Ch | dBm |
-+---+------------------+------------------+------+------------------+----+-----+
-| 0 | OpenThread       | dead00beef00cafe | ffff | f1d92a82c8d8fe43 | 11 | -20 |
+| J | Network Name     | Extended PAN     | PAN  | MAC Address      | Ch | dBm | LQI |
++---+------------------+------------------+------+------------------+----+-----+-----+
+| 0 | OpenThread       | dead00beef00cafe | ffff | f1d92a82c8d8fe43 | 11 | -20 |   0 |
 Done
 ```
 

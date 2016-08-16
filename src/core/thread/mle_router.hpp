@@ -42,6 +42,7 @@
 #include <net/udp6.hpp>
 #include <thread/mle.hpp>
 #include <thread/mle_tlvs.hpp>
+#include <thread/thread_tlvs.hpp>
 #include <thread/topology.hpp>
 
 namespace Thread {
@@ -99,11 +100,13 @@ public:
     /**
      * This method generates an Address Solicit request for a Router ID.
      *
+     * @param[in]  aStatus  The reason for requesting a Router ID.
+     *
      * @retval kThreadError_None          Successfully generated an Address Solicit message.
      * @retval kThreadError_InvalidState  Not currently an End Device.
      *
      */
-    ThreadError BecomeRouter(void);
+    ThreadError BecomeRouter(ThreadStatusTlv::Status aStatus);
 
     /**
      * This method causes the Thread interface to become a Leader and start a new partition.
@@ -113,6 +116,14 @@ public:
      *
      */
     ThreadError BecomeLeader(void);
+
+    /**
+     * This method returns the number of active routers.
+     *
+     * @returns The number of active routers.
+     *
+     */
+    uint8_t GetActiveRouterCount(void) const;
 
     /**
      * This method returns the time in seconds since the last Router ID Sequence update.
@@ -345,6 +356,22 @@ public:
     void HandleMacDataRequest(const Child &aChild);
 
     /**
+     * This method indicates whether or not the given Thread partition attributes are preferred.
+     *
+     * @param[in]  aSingletonA   Whether or not the Thread Parititon A has a single router.
+     * @param[in]  aLeaderDataA  A reference to Thread Partition A's Leader Data.
+     * @param[in]  aSingletonB   Whether or not the Thread Parititon B has a single router.
+     * @param[in]  aLeaderDataB  A reference to Thread Partition B's Leader Data.
+     *
+     * @retval 1   If partition A is preferred.
+     * @retval 0   If partition A and B have equal preference.
+     * @retval -1  If partition B is preferred.
+     *
+     */
+    static int ComparePartitions(bool aSingletonA, const LeaderDataTlv &aLeaderDataA,
+                                 bool aSingletonB, const LeaderDataTlv &aleaderDataB);
+
+    /**
      * This method checks if the destination is reachable.
      *
      * @param[in]  aMeshSource  The RLOC16 of the source.
@@ -377,6 +404,8 @@ private:
     ThreadError AppendConnectivity(Message &aMessage);
     ThreadError AppendChildAddresses(Message &aMessage, Child &aChild);
     ThreadError AppendRoute(Message &aMessage);
+    ThreadError AppendActiveDataset(Message &aMessage);
+    ThreadError AppendPendingDataset(Message &aMessage);
     uint8_t GetLinkCost(uint8_t aRouterId);
     void GetChildInfo(Child &aChild, otChildInfo &aChildInfo);
     ThreadError HandleDetachStart(void);
@@ -393,11 +422,13 @@ private:
     ThreadError HandleChildIdRequest(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo,
                                      uint32_t aKeySequence);
     ThreadError HandleChildUpdateRequest(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    ThreadError HandleDataRequest(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
     ThreadError HandleNetworkDataUpdateRouter(void);
+    bool IsSingleton(void);
 
     ThreadError ProcessRouteTlv(const RouteTlv &aRoute);
     ThreadError ResetAdvertiseInterval(void);
-    ThreadError SendAddressSolicit(void);
+    ThreadError SendAddressSolicit(ThreadStatusTlv::Status aStatus);
     ThreadError SendAddressRelease(void);
     void SendAddressSolicitResponse(const Coap::Header &aRequest, int aRouterId, const Ip6::MessageInfo &aMessageInfo);
     void SendAddressReleaseResponse(const Coap::Header &aRequestHeader, const Ip6::MessageInfo &aMessageInfo);
@@ -409,6 +440,8 @@ private:
     ThreadError SendChildIdResponse(Child *aChild);
     ThreadError SendChildUpdateResponse(Child *aChild, const Ip6::MessageInfo &aMessageInfo,
                                         const uint8_t *aTlvs, uint8_t aTlvsLength,  const ChallengeTlv *challenge);
+    ThreadError SendDataResponse(const Ip6::Address &aDestination, const uint8_t *aTlvs, uint8_t aTlvsLength);
+
     ThreadError SetStateRouter(uint16_t aRloc16);
     ThreadError SetStateLeader(uint16_t aRloc16);
     ThreadError UpdateChildAddresses(const AddressRegistrationTlv &aTlv, Child &aChild);

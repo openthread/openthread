@@ -59,6 +59,9 @@ libopenthread_a_SOURCES             = \
     thread/key_manager.cpp            \
     thread/link_quality.cpp           \
     thread/lowpan.cpp                 \
+    thread/meshcop_dataset.cpp        \
+    thread/meshcop_dataset_manager.cpp \
+    thread/meshcop_tlvs.cpp           \
     thread/mesh_forwarder.cpp         \
     thread/mle.cpp                    \
     thread/mle_router.cpp             \
@@ -72,6 +75,7 @@ libopenthread_a_SOURCES             = \
 
 noinst_HEADERS                      = \
     openthread-core-config.h          \
+    openthread-core-default-config.h  \
     coap/coap_header.hpp              \
     coap/coap_server.hpp              \
     common/code_utils.hpp             \
@@ -99,7 +103,11 @@ noinst_HEADERS                      = \
     thread/key_manager.hpp            \
     thread/link_quality.hpp           \
     thread/lowpan.hpp                 \
+    thread/meshcop_tlvs.hpp           \
     thread/mesh_forwarder.hpp         \
+    thread/meshcop_dataset.hpp        \
+    thread/meshcop_dataset_manager.hpp \
+    thread/meshcop_tlvs.hpp           \
     thread/mle.hpp                    \
     thread/mle_constants.hpp          \
     thread/mle_router.hpp             \

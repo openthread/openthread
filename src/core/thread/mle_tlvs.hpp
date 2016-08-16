@@ -40,6 +40,7 @@
 #include <common/encoding.hpp>
 #include <common/message.hpp>
 #include <net/ip6_address.hpp>
+#include <thread/meshcop_tlvs.hpp>
 #include <thread/mle_constants.hpp>
 
 using Thread::Encoding::BigEndian::HostSwap16;
@@ -93,6 +94,11 @@ public:
         kStatus              = 17,   ///< Status TLV
         kVersion             = 18,   ///< Version TLV
         kAddressRegistration = 19,   ///< Address Registration TLV
+        kActiveTimestamp     = 22,   ///< Active Timestamp TLV
+        kPendingTimestamp    = 23,   ///< Pending Timestamp TLV
+        kActiveDataset       = 24,   ///< Active Operational Dataset TLV
+        kPendingDataset      = 25,   ///< Pending Operational Dataset TLV
+        kDiscovery           = 26,   ///< Thread Discovery TLV
         kInvalid             = 255,
     };
 
@@ -139,6 +145,19 @@ public:
      *
      */
     static ThreadError GetTlv(const Message &aMessage, Type aType, uint16_t aMaxLength, Tlv &aTlv);
+
+    /**
+     * This static method obtains the offset of a TLV within @p aMessage.
+     *
+     * @param[in]   aMessage    A reference to the message.
+     * @param[in]   aType       The Type value to search for.
+     * @param[out]  aOffset     A reference to the offset of the TLV.
+     *
+     * @retval kThreadError_None      Successfully copied the TLV.
+     * @retval kThreadError_NotFound  Could not find the TLV with Type @p aType.
+     *
+     */
+    static ThreadError GetOffset(const Message &aMessage, Type aType, uint16_t &aOffset);
 
 private:
     uint8_t mType;
@@ -982,36 +1001,20 @@ public:
     bool IsValid(void) const { return GetLength() == sizeof(*this) - sizeof(Tlv); }
 
     /**
-     * This method returns the Max Child Count value.
+     * This method returns the Parent Priority value.
      *
-     * @returns The Max Child Count value.
+     * @returns The Parent Priority value.
      *
      */
-    uint8_t GetMaxChildCount(void) const { return mMaxChildCount; }
+    int8_t GetParentPriority(void) const { return mParentPriority >> kParentPriorityOffset; }
 
     /**
-     * This method sets the Max Child Count value.
+     * This method sets the Parent Priority value.
      *
-     * @param[in]  aCount  The Max Child Count value.
-     *
-     */
-    void SetMaxChildCount(uint8_t aCount) { mMaxChildCount = aCount; }
-
-    /**
-     * This method returns the Child Count value.
-     *
-     * @returns The Child Count value.
+     * @param[in] aParentPriority  The Parent Priority value.
      *
      */
-    uint8_t GetChildCount(void) const { return mChildCount; }
-
-    /**
-     * This method sets the Child Count value.
-     *
-     * @param[in]  aCount  The Child Count value.
-     *
-     */
-    void SetChildCount(uint8_t aCount) { mChildCount = aCount; }
+    void SetParentPriority(int8_t aParentPriority) { mParentPriority = aParentPriority << kParentPriorityOffset; }
 
     /**
      * This method returns the Link Quality 3 value.
@@ -1062,6 +1065,22 @@ public:
     void SetLinkQuality1(uint8_t aLinkQuality) { mLinkQuality1 = aLinkQuality; }
 
     /**
+     * This method sets the Active Routers value.
+     *
+     * @returns The Active Routers value.
+     *
+     */
+    uint8_t GetActiveRouters(void) const { return mActiveRouters; }
+
+    /**
+     * This method sets the Active Routers value.
+     *
+     * @param[in]  aActiveRouters  The Active Routers value.
+     *
+     */
+    void SetActiveRouters(uint8_t aActiveRouters) { mActiveRouters = aActiveRouters; }
+
+    /**
      * This method returns the Leader Cost value.
      *
      * @returns The Leader Cost value.
@@ -1093,14 +1112,53 @@ public:
      */
     void SetIdSequence(uint8_t aSequence) { mIdSequence = aSequence; }
 
+    /**
+     * This method returns the SED Buffer Size value.
+     *
+     * @returns The SED Buffer Size value.
+     *
+     */
+    uint16_t GetSedBufferSize(void) const { return HostSwap16(mSedBufferSize); }
+
+    /**
+     * This method sets the SED Buffer Size value.
+     *
+     * @param[in]  aSedBufferSize  The SED Buffer Size value.
+     *
+     */
+    void SetSedBufferSize(uint16_t aSedBufferSize) { mSedBufferSize = HostSwap16(aSedBufferSize); }
+
+    /**
+     * This method returns the SED Datagram Count value.
+     *
+     * @returns The SED Datagram Count value.
+     *
+     */
+    uint8_t GetSedDatagramCount(void) const { return mSedDatagramCount; }
+
+    /**
+     * This method sets the SED Datagram Count value.
+     *
+     * @param[in]  aSedDatagramCount  The SED Datagram Count value.
+     *
+     */
+    void SetSedDatagramCount(uint8_t aSedDatagramCount) { mSedDatagramCount = aSedDatagramCount; }
+
 private:
-    uint8_t mMaxChildCount;
-    uint8_t mChildCount;
-    uint8_t mLinkQuality3;
-    uint8_t mLinkQuality2;
-    uint8_t mLinkQuality1;
-    uint8_t mLeaderCost;
-    uint8_t mIdSequence;
+    enum
+    {
+        kParentPriorityOffset = 6,
+    };
+
+    int8_t   mParentPriority;
+    uint8_t  mLinkQuality3;
+    uint8_t  mLinkQuality2;
+    uint8_t  mLinkQuality1;
+    uint8_t  mLeaderCost;
+    uint8_t  mIdSequence;
+    uint8_t  mActiveRouters;
+    uint16_t mSedBufferSize;
+    uint8_t  mSedDatagramCount;
 }  OT_TOOL_PACKED_END;
 
 /**
@@ -1387,6 +1445,54 @@ public:
 
 private:
     AddressRegistrationEntry mAddresses[4];
+} OT_TOOL_PACKED_END;
+
+/**
+ * This class implements Active Timestamp TLV generation and parsing.
+ *
+ */
+OT_TOOL_PACKED_BEGIN
+class ActiveTimestampTlv : public Tlv, public MeshCoP::Timestamp
+{
+public:
+    /**
+     * This method initializes the TLV.
+     *
+     */
+    void Init(void) { SetType(Mle::Tlv::kActiveTimestamp); SetLength(sizeof(*this) - sizeof(Tlv)); }
+
+    /**
+     * This method indicates whether or not the TLV appears to be well-formed.
+     *
+     * @retval TRUE   If the TLV appears to be well-formed.
+     * @retval FALSE  If the TLV does not appear to be well-formed.
+     *
+     */
+    bool IsValid(void) const { return GetLength() == sizeof(*this) - sizeof(Tlv); }
+} OT_TOOL_PACKED_END;
+
+/**
+ * This class implements Pending Timestamp TLV generation and parsing.
+ *
+ */
+OT_TOOL_PACKED_BEGIN
+class PendingTimestampTlv : public Tlv, public MeshCoP::Timestamp
+{
+public:
+    /**
+     * This method initializes the TLV.
+     *
+     */
+    void Init(void) { SetType(Mle::Tlv::kPendingTimestamp); SetLength(sizeof(*this) - sizeof(Tlv)); }
+
+    /**
+     * This method indicates whether or not the TLV appears to be well-formed.
+     *
+     * @retval TRUE   If the TLV appears to be well-formed.
+     * @retval FALSE  If the TLV does not appear to be well-formed.
+     *
+     */
+    bool IsValid(void) const { return GetLength() == sizeof(*this) - sizeof(Tlv); }
 } OT_TOOL_PACKED_END;
 
 /**

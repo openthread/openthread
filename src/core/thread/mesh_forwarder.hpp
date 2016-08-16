@@ -140,6 +140,15 @@ public:
      */
     void SetPollPeriod(uint32_t aPeriod);
 
+    /**
+     * This method sets the scan parameters for MLE Discovery Request messages.
+     *
+     * @param[in]  aScanChannels  A bit vector indicating which channels to scan.
+     * @param[in]  aScanDuration  The time in milliseconds to spend scanning each channel.
+     *
+     */
+    void SetDiscoverParameters(uint32_t aScanChannels, uint16_t aScanDuration);
+
 private:
     enum
     {
@@ -178,6 +187,8 @@ private:
     static void HandleSentFrame(void *aContext, Mac::Frame &aFrame);
     void HandleSentFrame(Mac::Frame &aFrame);
 
+    static void HandleDiscoverTimer(void *aContext);
+    void HandleDiscoverTimer(void);
     static void HandleReassemblyTimer(void *aContext);
     void HandleReassemblyTimer(void);
     static void HandlePollTimer(void *aContext);
@@ -188,6 +199,7 @@ private:
 
     Mac::Receiver mMacReceiver;
     Mac::Sender mMacSender;
+    Timer mDiscoverTimer;
     Timer mPollTimer;
     Timer mReassemblyTimer;
 
@@ -209,6 +221,12 @@ private:
 
     Tasklet mScheduleTransmissionTask;
     bool mEnabled;
+
+    uint32_t mScanChannels;
+    uint16_t mScanDuration;
+    uint8_t mScanChannel;
+    uint8_t mRestoreChannel;
+    bool mScanning;
 
     ThreadNetif &mNetif;
     AddressResolver &mAddressResolver;
