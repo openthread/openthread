@@ -291,6 +291,8 @@ NcpSpi::OutboundFrameFeedMessage(Message &message)
         mSendFrameIter += frameLength;
     }
 
+    Message::Free(message);
+
     return errorCode;
 }
 
