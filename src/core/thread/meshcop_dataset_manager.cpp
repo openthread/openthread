@@ -362,15 +362,13 @@ void DatasetManager::SendGetResponse(const Coap::Header &aRequestHeader, const I
 
     if (aLength == 0)
     {
-        SuccessOrExit(error = message->Append(mLocal.GetBytes(), mLocal.GetSize()));
+        SuccessOrExit(error = message->Append(mNetwork.GetBytes(), mNetwork.GetSize()));
     }
     else
     {
         for (index = 0; index < aLength; index++)
         {
-            tlv = NULL;
-
-            if ((tlv = mLocal.Get((Tlv::Type)aTlvs[index])) != NULL)
+            if ((tlv = mNetwork.Get((Tlv::Type)aTlvs[index])) != NULL)
             {
                 SuccessOrExit(error = message->Append(tlv, sizeof(Tlv) + tlv->GetLength()));
             }
