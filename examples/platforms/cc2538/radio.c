@@ -33,9 +33,11 @@
  */
 
 #include <openthread-types.h>
+#include <openthread-config.h>
 
 #include <common/code_utils.hpp>
 #include <platform/radio.h>
+#include <platform/diag.h>
 #include "platform-cc2538.h"
 
 enum
@@ -371,7 +373,17 @@ void cc2538RadioProcess(void)
 
     if ((sState == kStateReceive) && (sReceiveFrame.mLength > 0))
     {
-        otPlatRadioReceiveDone(&sReceiveFrame, sReceiveError);
+#if OPENTHREAD_ENABLE_DIAG
+
+        if (otPlatDiagModeGet())
+        {
+            otPlatDiagRadioReceiveDone(&sReceiveFrame, sReceiveError);
+        }
+        else
+#endif
+        {
+            otPlatRadioReceiveDone(&sReceiveFrame, sReceiveError);
+        }
     }
 
     if (sState == kStateTransmit)
@@ -379,14 +391,36 @@ void cc2538RadioProcess(void)
         if (sTransmitError != kThreadError_None || (sTransmitFrame.mPsdu[0] & IEEE802154_ACK_REQUEST) == 0)
         {
             sState = kStateReceive;
-            otPlatRadioTransmitDone(false, sTransmitError);
+
+#if OPENTHREAD_ENABLE_DIAG
+
+            if (otPlatDiagModeGet())
+            {
+                otPlatDiagRadioTransmitDone(false, sTransmitError);
+            }
+            else
+#endif
+            {
+                otPlatRadioTransmitDone(false, sTransmitError);
+            }
         }
         else if (sReceiveFrame.mLength == IEEE802154_ACK_LENGTH &&
                  (sReceiveFrame.mPsdu[0] & IEEE802154_FRAME_TYPE_MASK) == IEEE802154_FRAME_TYPE_ACK &&
                  (sReceiveFrame.mPsdu[IEEE802154_DSN_OFFSET] == sTransmitFrame.mPsdu[IEEE802154_DSN_OFFSET]))
         {
             sState = kStateReceive;
-            otPlatRadioTransmitDone((sReceiveFrame.mPsdu[0] & IEEE802154_FRAME_PENDING) != 0, sTransmitError);
+
+#if OPENTHREAD_ENABLE_DIAG
+
+            if (otPlatDiagModeGet())
+            {
+                otPlatDiagRadioTransmitDone((sReceiveFrame.mPsdu[0] & IEEE802154_FRAME_PENDING) != 0, sTransmitError);
+            }
+            else
+#endif
+            {
+                otPlatRadioTransmitDone((sReceiveFrame.mPsdu[0] & IEEE802154_FRAME_PENDING) != 0, sTransmitError);
+            }
         }
     }
 

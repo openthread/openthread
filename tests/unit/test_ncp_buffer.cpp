@@ -40,6 +40,10 @@ extern"C" void otSignalTaskletPending(void)
 {
 }
 
+extern "C" void otPlatDiagAlarmFired()
+{
+}
+
 enum
 {
     kTestBufferSize = 101,         // Size of backed buffer for NcpFrameBuffer.

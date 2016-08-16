@@ -44,6 +44,7 @@ BuildJobs                      ?= 99
 configure_OPTIONS               = \
     --enable-cli                  \
     --enable-ncp                  \
+    --enable-diag                 \
     --with-examples=cc2538        \
     --with-platform-info=CC2538   \
     $(NULL)

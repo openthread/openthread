@@ -32,7 +32,6 @@
 
 #include <platform/uart.h>
 #include "platform-cc2650.h"
-#include "platform.h"
 
 void PlatformInit(int argc, char *argv[])
 {

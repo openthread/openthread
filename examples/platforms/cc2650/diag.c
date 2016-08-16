@@ -32,76 +32,29 @@
 
 #include <stdbool.h>
 #include <stdint.h>
-#include <aon_rtc.h>
-
-#include <platform/alarm.h>
+#include <stdio.h>
 #include <platform/diag.h>
 
 /**
- * /NOTE: we could use systick, but that would sacrifice atleast a few ops
- * every ms, and not run when the processor is sleeping.
+ * diagnostics mode flag.
+ *
  */
+static bool sDiagMode = false;
 
-uint32_t time0 = 0;
-uint32_t alarmTime = 0;
-bool isRunning = false;
-
-void cc2650AlarmInit(void)
+void otPlatDiagProcess(int argc, char *argv[], char *aOutput)
 {
-    /*
-     * NOTE: this will not enable the individual rtc alarm channels
-     */
-    AONRTCEnable();
-    isRunning = true;
+    // add more plarform specific diagnostics features here
+
+    sprintf(aOutput, "diag feature '%s' is not supported\r\n", argv[0]);
+    (void)argc;
 }
 
-uint32_t otPlatAlarmGetNow(void)
+void otPlatDiagModeSet(bool aMode)
 {
-    /*
-     * This is current value of RTC as it appears in the register.
-     * With seconds as the upper 32 bytes and fractions of a second as the
-     * lower 32 bytes <32.32>.
-     */
-    uint64_t rtcVal = AONRTCCurrent64BitValueGet();
-    return ((rtcVal * 1000) >> 32);
+    sDiagMode = aMode;
 }
 
-void otPlatAlarmStartAt(uint32_t t0, uint32_t dt)
+bool otPlatDiagModeGet()
 {
-    time0 = t0;
-    alarmTime = dt;
-    isRunning = true;
+    return sDiagMode;
 }
-
-void otPlatAlarmStop(void)
-{
-    isRunning = false;
-}
-
-void cc2650AlarmProcess(void)
-{
-    uint32_t offsetTime;
-
-    if(isRunning)
-    {
-        /* unsinged subtraction will result in the absolute offset */
-        offsetTime = otPlatAlarmGetNow() - time0;
-
-        if(alarmTime <= offsetTime)
-        {
-            isRunning = false;
-#if OPENTHREAD_ENABLE_DIAG
-
-            if (otPlatDiagModeGet())
-            {
-                otPlatDiagAlarmFired();
-            }
-            else
-#endif /* OPENTHREAD_ENABLE_DIAG */
-            {
-                otPlatAlarmFired();
-            }
-        }
-    }
-}
-

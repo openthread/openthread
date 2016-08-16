@@ -46,6 +46,12 @@ libopenthread_posix_a_SOURCES             = \
     uart.c                                  \
     $(NULL)
 
+if OPENTHREAD_ENABLE_DIAG
+libopenthread_posix_a_SOURCES            += \
+    diag.c                                  \
+    $(NULL)
+endif
+
 if OPENTHREAD_ENABLE_NCP_SPI
 libopenthread_posix_a_SOURCES           += \
     spi-stubs.c                            \

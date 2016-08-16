@@ -96,6 +96,12 @@ libopenthread_cc2650_a_SOURCES                        = \
     misc.c                                \
     $(NULL)
 
+if OPENTHREAD_ENABLE_DIAG
+libopenthread_cc2650_a_SOURCES           += \
+    diag.c                                  \
+    $(NULL)
+endif
+
 include_HEADERS                                       = \
     cc26xxware/driverlib/adi.h            \
     cc26xxware/driverlib/aon_batmon.h     \

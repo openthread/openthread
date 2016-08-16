@@ -27,8 +27,10 @@
  */
 
 #include <openthread.h>
+#include <openthread-config.h>
+#include <openthread-diag.h>
 #include <cli/cli-uart.h>
-#include <platform.h>
+#include <platform/platform.h>
 
 void otSignalTaskletPending(void)
 {
@@ -39,6 +41,10 @@ int main(int argc, char *argv[])
     PlatformInit(argc, argv);
     otEnable();
     otCliUartInit();
+
+#if OPENTHREAD_ENABLE_DIAG
+    diagInit();
+#endif
 
     while (1)
     {

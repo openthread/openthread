@@ -299,6 +299,28 @@ bool otPlatRadioGetPromiscuous(void);
 void otPlatRadioSetPromiscuous(bool aEnable);
 
 /**
+ * The radio driver calls this method to notify OpenThread diagnostics module that the transmission has completed.
+ *
+ * @param[in]  aFramePending  TRUE if an ACK frame was received and the Frame Pending bit was set.
+ * @param[in]  aError  ::kThreadError_None when the frame was transmitted, ::kThreadError_NoAck when the frame was
+ *                     transmitted but no ACK was received, ::kThreadError_ChannelAccessFailure when the transmission
+ *                     could not take place due to activity on the channel, ::kThreadError_Abort when transmission was
+ *                     aborted for other reasons.
+ *
+ */
+extern void otPlatDiagRadioTransmitDone(bool aFramePending, ThreadError aError);
+
+/**
+ * The radio driver calls this method to notify OpenThread diagnostics module of a received packet.
+ *
+ * @param[in]  aPacket  A pointer to the received packet or NULL if the receive operation was aborted.
+ * @param[in]  aError   ::kThreadError_None when successfully received a frame, ::kThreadError_Abort when reception
+ *                      was aborted and a frame was not received.
+ *
+ */
+extern void otPlatDiagRadioReceiveDone(RadioPacket *aPacket, ThreadError aError);
+
+/**
  * @}
  *
  */

@@ -1004,7 +1004,17 @@ int cc2650RadioProcess(void)
     {
         /* we are not looking for an ACK packet, or failed */
         sState = kStateReceive;
-        otPlatRadioTransmitDone(false, sTransmitError);
+#if OPENTHREAD_ENABLE_DIAG
+
+        if (otPlatDiagModeGet())
+        {
+            otPlatDiagRadioTransmitDone(false, sTransmitError);
+        }
+        else
+#endif /* OPENTHREAD_ENABLE_DIAG */
+        {
+            otPlatRadioTransmitDone(false, sTransmitError);
+        }
     }
     else if(sState == kStateReceive || sState == kStateTransmit)
     {
@@ -1017,10 +1027,31 @@ int cc2650RadioProcess(void)
             /* XXX: our RX command only accepts ack packets that are 5 bytes */
             sState = kStateReceive;
             otPlatRadioTransmitDone((sReceiveFrame.mPsdu[0] & IEEE802154_FRAME_PENDING) != 0, sTransmitError);
+#if OPENTHREAD_ENABLE_DIAG
+
+            if (otPlatDiagModeGet())
+            {
+                otPlatDiagRadioTransmitDone((sReceiveFrame.mPsdu[0] & IEEE802154_FRAME_PENDING) != 0, sTransmitError);
+            }
+            else
+#endif /* OPENTHREAD_ENABLE_DIAG */
+            {
+                otPlatRadioTransmitDone((sReceiveFrame.mPsdu[0] & IEEE802154_FRAME_PENDING) != 0, sTransmitError);
+            }
         }
         else if (sState == kStateReceive && sReceiveFrame.mLength > 0)
         {
-            otPlatRadioReceiveDone(&sReceiveFrame, sReceiveError);
+#if OPENTHREAD_ENABLE_DIAG
+
+            if (otPlatDiagModeGet())
+            {
+                otPlatDiagRadioReceiveDone(&sReceiveFrame, sReceiveError);
+            }
+            else
+#endif /* OPENTHREAD_ENABLE_DIAG */
+            {
+                otPlatRadioReceiveDone(&sReceiveFrame, sReceiveError);
+            }
         }
         sReceiveFrame.mLength = 0;
     }

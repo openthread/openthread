@@ -28,67 +28,42 @@
 
 /**
  * @file
- * @brief
- *   This file includes the platform abstraction for the alarm service.
+ *   This file implements the top-level interface to diagnostics module.
  */
 
-#ifndef ALARM_H_
-#define ALARM_H_
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
-#include <stdint.h>
+#include <openthread-diag.h>
+#include <diag_process.hpp>
+
+namespace Thread {
+
+namespace Diagnostics {
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-/**
- * @defgroup alarm Alarm
- * @ingroup platform
- *
- * @brief
- *   This module includes the platform abstraction for the alarm service.
- *
- * @{
- *
- */
+void diagInit()
+{
+    Diag::Init();
+}
 
-/**
- * Set the alarm to fire at @p aDt milliseconds after @p aT0.
- *
- * @param[in] aT0  The reference time.
- * @param[in] aDt  The time delay in milliseconds from @p aT0.
- */
-void otPlatAlarmStartAt(uint32_t aT0, uint32_t aDt);
+char *diagProcessCmd(int argc, char *argv[])
+{
+    return Diag::ProcessCmd(argc, argv);
+}
 
-/**
- * Stop the alarm.
- */
-void otPlatAlarmStop(void);
-
-/**
- * Get the current time.
- *
- * @returns The current time in milliseconds.
- */
-uint32_t otPlatAlarmGetNow(void);
-
-/**
- * Signal that the alarm has fired.
- */
-extern void otPlatAlarmFired(void);
-
-/**
- * Signal diagnostics module that the alarm has fired.
- */
-extern void otPlatDiagAlarmFired(void);
-
-/**
- * @}
- *
- */
+bool isDiagEnabled()
+{
+    return Diag::isEnabled();
+}
 
 #ifdef __cplusplus
 }  // extern "C"
 #endif
 
-#endif  // ALARM_H_
+}  // namespace Diagnostics
+}  // namespace Thread

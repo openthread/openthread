@@ -33,6 +33,7 @@ AM_MAKEFLAGS                        = --no-print-directory
 AM_DISTCHECK_CONFIGURE_FLAGS        = \
     --enable-cli                      \
     --enable-ncp                      \
+    --enable-diag                     \
     --with-examples=posix             \
     $(NULL)
 

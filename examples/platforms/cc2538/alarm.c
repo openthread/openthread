@@ -35,7 +35,9 @@
 #include <stdbool.h>
 #include <stdint.h>
 
+#include <openthread-config.h>
 #include <platform/alarm.h>
+#include <platform/diag.h>
 #include "platform-cc2538.h"
 
 enum
@@ -99,7 +101,18 @@ void cc2538AlarmProcess(void)
         if (fire)
         {
             sIsRunning = false;
-            otPlatAlarmFired();
+
+#if OPENTHREAD_ENABLE_DIAG
+
+            if (otPlatDiagModeGet())
+            {
+                otPlatDiagAlarmFired();
+            }
+            else
+#endif
+            {
+                otPlatAlarmFired();
+            }
         }
     }
 

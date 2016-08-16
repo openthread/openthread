@@ -28,38 +28,26 @@
 
 include $(abs_top_nlbuild_autotools_dir)/automake/pre.am
 
-# Always package (e.g. for 'make dist') these subdirectories.
+lib_LIBRARIES                       = libopenthread-diag.a
 
-DIST_SUBDIRS                            = \
-    cli                                   \
-    core                                  \
-    ncp                                   \
-    diag                                  \
+libopenthread_diag_a_CPPFLAGS =        \
+    -I$(top_srcdir)/include            \
+    -I$(top_srcdir)/src                \
+    -I$(top_srcdir)/src/core           \
+    $(OPENTHREAD_TARGET_DEFINES)       \
     $(NULL)
 
-# Always build (e.g. for 'make all') these subdirectories.
-
-SUBDIRS                                 = \
-    core                                  \
+libopenthread_diag_a_SOURCES         = \
+    openthread-diag.cpp                \
+    diag_process.cpp                   \
     $(NULL)
 
-if OPENTHREAD_ENABLE_CLI
-SUBDIRS                                += cli
-endif
-
-if OPENTHREAD_ENABLE_NCP
-SUBDIRS                                += ncp
-endif
-
-if OPENTHREAD_ENABLE_DIAG
-SUBDIRS                                += diag
-endif
-
-# Always pretty (e.g. for 'make pretty') these subdirectories.
-
-PRETTY_SUBDIRS                          = \
-    cli                                   \
-    core                                  \
+noinst_HEADERS                       = \
+    diag_process.hpp                   \
     $(NULL)
+
+if OPENTHREAD_BUILD_COVERAGE
+CLEANFILES                          = $(wildcard *.gcda *.gcno)
+endif # OPENTHREAD_BUILD_COVERAGE
 
 include $(abs_top_nlbuild_autotools_dir)/automake/post.am

@@ -59,6 +59,22 @@ extern "C" void otPlatUartReceived(const uint8_t *aBuf, uint16_t aBufLength)
     (void)aBufLength;
 }
 
+extern "C" void otPlatDiagAlarmFired()
+{
+}
+
+extern "C" void otPlatDiagRadioTransmitDone(bool aRxPending, ThreadError aError)
+{
+    (void)aRxPending;
+    (void)aError;
+}
+
+extern "C" void otPlatDiagRadioReceiveDone(RadioPacket *aFrame, ThreadError aError)
+{
+    (void)aFrame;
+    (void)aError;
+}
+
 ThreadNetif sMockThreadNetif;
 Lowpan::Lowpan sMockLowpan(sMockThreadNetif);
 
