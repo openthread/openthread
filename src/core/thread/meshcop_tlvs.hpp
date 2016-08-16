@@ -672,9 +672,9 @@ public:
       */
     enum State
     {
-        kAccept = 1,
-        kPending = 0,
-        kReject = -1,
+        kReject  = -1,   ///< Reject
+        kPending = 0,    ///< Pending
+        kAccept  = 1,    ///< Accept
     };
 
     /**
@@ -698,7 +698,7 @@ public:
      * @returns The State value.
      *
      */
-    int8_t GetState(void) const { return mState; }
+    State GetState(void) const { return static_cast<State>(mState); }
 
     /**
      * This method sets the State value.
@@ -706,10 +706,10 @@ public:
      * @param[in]  aState  The State value.
      *
      */
-    void SetState(int8_t aState) { mState = aState; }
+    void SetState(State aState) { mState = static_cast<uint8_t>(aState); }
 
 private:
-    int8_t mState;
+    uint8_t mState;
 } OT_TOOL_PACKED_END;
 
 /**
