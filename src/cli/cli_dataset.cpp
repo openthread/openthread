@@ -54,12 +54,14 @@ const DatasetCommand Dataset::sCommands[] =
     { "commit", &ProcessCommit },
     { "delay", &ProcessDelay },
     { "extpanid", &ProcessExtPanId },
+    { "getcmd", &ProcessGetCommand },
     { "masterkey", &ProcessMasterKey },
     { "meshlocalprefix", &ProcessMeshLocalPrefix },
     { "networkname", &ProcessNetworkName },
     { "panid", &ProcessPanId },
     { "pending", &ProcessPending },
     { "pendingtimestamp", &ProcessPendingTimestamp },
+    { "setcmd", &ProcessSetCommand },
 };
 
 Server *Dataset::sServer;
@@ -350,6 +352,69 @@ ThreadError Dataset::ProcessPendingTimestamp(int argc, char *argv[])
     SuccessOrExit(error = Interpreter::ParseLong(argv[0], value));
     sDataset.mPendingTimestamp = static_cast<uint64_t>(value);
     sDataset.mIsPendingTimestampSet = true;
+
+exit:
+    return error;
+}
+
+ThreadError Dataset::ProcessSetCommand(int argc, char *argv[])
+{
+    ThreadError error = kThreadError_None;
+    uint8_t tlvs[256];
+    long size;
+
+    VerifyOrExit(argc > 2, ;);
+
+    SuccessOrExit(error = Interpreter::ParseLong(argv[1], size));
+    VerifyOrExit(Interpreter::Hex2Bin(argv[2], tlvs, sizeof(tlvs)) >= 0, error = kThreadError_Parse);
+
+    if (strcmp(argv[0], "active") == 0)
+    {
+        otSendDatasetCommand("c/as", tlvs, static_cast<uint8_t>(size));
+    }
+    else if (strcmp(argv[0], "pending") == 0)
+    {
+        otSendDatasetCommand("c/ps", tlvs, static_cast<uint8_t>(size));
+    }
+    else
+    {
+        ExitNow(error = kThreadError_Parse);
+    }
+
+exit:
+    return error;
+}
+
+ThreadError Dataset::ProcessGetCommand(int argc, char *argv[])
+{
+    ThreadError error = kThreadError_None;
+    uint8_t tlvs[256];
+    long size;
+
+    VerifyOrExit(argc > 0, ;);
+
+    if (argc <= 2)
+    {
+        size = 0;
+    }
+    else
+    {
+        SuccessOrExit(error = Interpreter::ParseLong(argv[1], size));
+        VerifyOrExit(Interpreter::Hex2Bin(argv[2], tlvs, sizeof(tlvs)) >= 0, error = kThreadError_Parse);
+    }
+
+    if (strcmp(argv[0], "active") == 0)
+    {
+        otSendDatasetCommand("c/ag", tlvs, static_cast<uint8_t>(size));
+    }
+    else if (strcmp(argv[0], "pending") == 0)
+    {
+        otSendDatasetCommand("c/pg", tlvs, static_cast<uint8_t>(size));
+    }
+    else
+    {
+        ExitNow(error = kThreadError_Parse);
+    }
 
 exit:
     return error;

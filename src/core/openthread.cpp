@@ -45,6 +45,7 @@
 #include <platform/random.h>
 #include <platform/misc.h>
 #include <thread/thread_netif.hpp>
+#include <thread/thread_uris.hpp>
 
 namespace Thread {
 
@@ -1094,6 +1095,34 @@ ThreadError otSetPendingDataset(otOperationalDataset *aDataset)
     error = sThreadNetif->GetPendingDataset().Set(*aDataset);
 
 exit:
+    return error;
+}
+
+ThreadError otSendDatasetCommand(const char *aUri, const uint8_t *aTlvs, const uint8_t aSize)
+{
+    ThreadError error = kThreadError_None;
+
+    if (strcmp(aUri, OPENTHREAD_URI_ACTIVE_GET) == 0)
+    {
+        error = sThreadNetif->GetActiveDataset().SendGetRequest(aTlvs, aSize);
+    }
+    else if (strcmp(aUri, OPENTHREAD_URI_ACTIVE_SET) == 0)
+    {
+        error = sThreadNetif->GetActiveDataset().SendSetRequest(aTlvs, aSize);
+    }
+    else if (strcmp(aUri, OPENTHREAD_URI_PENDING_GET) == 0)
+    {
+        error = sThreadNetif->GetPendingDataset().SendGetRequest(aTlvs, aSize);
+    }
+    else if (strcmp(aUri, OPENTHREAD_URI_PENDING_SET) == 0)
+    {
+        error = sThreadNetif->GetPendingDataset().SendSetRequest(aTlvs, aSize);
+    }
+    else
+    {
+        error = kThreadError_InvalidArgs;
+    }
+
     return error;
 }
 

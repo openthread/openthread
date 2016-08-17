@@ -56,6 +56,7 @@ DatasetManager::DatasetManager(ThreadNetif &aThreadNetif, const char *aUriSet, c
     mResourceGet(aUriGet, &HandleGet, this),
     mTimer(&HandleTimer, this),
     mUriSet(aUriSet),
+    mUriGet(aUriGet),
     mCoapServer(aThreadNetif.GetCoapServer())
 {
     mCoapServer.AddResource(mResourceSet);
@@ -304,6 +305,110 @@ void DatasetManager::HandleGet(Coap::Header &aHeader, Message &aMessage, const I
     }
 
     SendGetResponse(aHeader, aMessageInfo, tlvs, length);
+}
+
+ThreadError DatasetManager::SendSetRequest(const uint8_t *aTlvs, const uint8_t aSize)
+{
+    ThreadError error = kThreadError_None;
+    Coap::Header header;
+    Message *message;
+    Ip6::Address leader;
+    Ip6::MessageInfo messageInfo;
+
+    mSocket.Open(&HandleUdpReceive, this);
+
+    for (size_t i = 0; i < sizeof(mCoapToken); i++)
+    {
+        mCoapToken[i] = static_cast<uint8_t>(otPlatRandomGet());
+    }
+
+    header.Init();
+    header.SetVersion(1);
+    header.SetType(Coap::Header::kTypeConfirmable);
+    header.SetCode(Coap::Header::kCodePost);
+    header.SetMessageId(++mCoapMessageId);
+    header.SetToken(mCoapToken, sizeof(mCoapToken));
+    header.AppendUriPathOptions(mUriSet);
+    header.AppendContentFormatOption(Coap::Header::kApplicationOctetStream);
+    header.Finalize();
+
+    VerifyOrExit((message = Ip6::Udp::NewMessage(0)) != NULL, error = kThreadError_NoBufs);
+    SuccessOrExit(error = message->Append(header.GetBytes(), header.GetLength()));
+    SuccessOrExit(error = message->Append(aTlvs, aSize));
+
+    mMle.GetLeaderAddress(leader);
+
+    memset(&messageInfo, 0, sizeof(messageInfo));
+    memcpy(&messageInfo.mPeerAddr, &leader, sizeof(messageInfo.mPeerAddr));
+    messageInfo.mPeerPort = kCoapUdpPort;
+    SuccessOrExit(error = mSocket.SendTo(*message, messageInfo));
+
+    otLogInfoMeshCoP("sent dataset set request to leader\n");
+
+exit:
+
+    if (error != kThreadError_None && message != NULL)
+    {
+        Message::Free(*message);
+    }
+
+    return error;
+}
+
+ThreadError DatasetManager::SendGetRequest(const uint8_t *aTlvs, const uint8_t aSize)
+{
+    ThreadError error = kThreadError_None;
+    Coap::Header header;
+    Message *message;
+    Ip6::Address leader;
+    Ip6::MessageInfo messageInfo;
+    Tlv tlv;
+
+    mSocket.Open(&HandleUdpReceive, this);
+
+    for (size_t i = 0; i < sizeof(mCoapToken); i++)
+    {
+        mCoapToken[i] = static_cast<uint8_t>(otPlatRandomGet());
+    }
+
+    header.Init();
+    header.SetVersion(1);
+    header.SetType(Coap::Header::kTypeConfirmable);
+    header.SetCode(Coap::Header::kCodePost);
+    header.SetMessageId(++mCoapMessageId);
+    header.SetToken(mCoapToken, sizeof(mCoapToken));
+    header.AppendUriPathOptions(mUriGet);
+    header.AppendContentFormatOption(Coap::Header::kApplicationOctetStream);
+    header.Finalize();
+
+    VerifyOrExit((message = Ip6::Udp::NewMessage(0)) != NULL, error = kThreadError_NoBufs);
+    SuccessOrExit(error = message->Append(header.GetBytes(), header.GetLength()));
+
+    if (aSize > 0)
+    {
+        tlv.SetType(Tlv::kGet);
+        tlv.SetLength(aSize);
+        SuccessOrExit(error = message->Append(&tlv, sizeof(tlv)));
+        SuccessOrExit(error = message->Append(aTlvs, aSize));
+    }
+
+    mMle.GetLeaderAddress(leader);
+
+    memset(&messageInfo, 0, sizeof(messageInfo));
+    memcpy(&messageInfo.mPeerAddr, &leader, sizeof(messageInfo.mPeerAddr));
+    messageInfo.mPeerPort = kCoapUdpPort;
+    SuccessOrExit(error = mSocket.SendTo(*message, messageInfo));
+
+    otLogInfoMeshCoP("sent dataset get request to leader\n");
+
+exit:
+
+    if (error != kThreadError_None && message != NULL)
+    {
+        Message::Free(*message);
+    }
+
+    return error;
 }
 
 void DatasetManager::SendSetResponse(const Coap::Header &aRequestHeader, const Ip6::MessageInfo &aMessageInfo,

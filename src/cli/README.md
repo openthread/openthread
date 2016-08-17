@@ -13,6 +13,7 @@ OpenThread test scripts use the CLI to execute test cases.
 * [childtimeout](#childtimeout)
 * [contextreusedelay](#contextreusedelay)
 * [counter](#counter)
+* [dataset](#dataset)
 * [discover](#discover)
 * [eidcache](#eidcache)
 * [extaddr](#extaddr)
@@ -230,6 +231,159 @@ RxTotal: 11
     RxErrSec: 0
     RxErrFcs: 0
     RxErrOther: 0
+```
+
+### dataset help
+
+Print meshcop dataset help menu.
+
+```bash
+> dataset help
+help
+active
+activetimestamp
+channel
+clear
+commit
+delay
+extpanid
+getcmd
+masterkey
+meshlocalprefix
+networkname
+panid
+pending
+pendingtimestamp
+setcmd
+Done
+```
+
+### dataset active
+
+Print meshcop active operational dataset.
+
+```bash
+> dataset active
+Active Timestamp: 0
+Done
+```
+
+### dataset activetimestamp \[activetimestamp\]
+
+Set activetimestamp
+
+```bash
+> dataset activestamp 123456789
+Done
+```
+
+### dataset channel \[channel\]
+
+Set channel
+
+```bash
+> dataset channel 12
+Done
+```
+
+### dataset clear
+
+Reset operational dataset buffer
+
+```bash
+> dataset clear
+Done
+```
+
+### dataset commit \[commit\]
+
+Commit operational dataset buffer to active/pending operational dataset
+
+```bash
+> dataset commit active
+Done
+```
+
+### dataset delay \[delay\]
+
+Set delay timer value
+
+```bash
+> dataset delay 1000
+Done
+```
+
+### dataset extpanid \[extpanid\]
+
+Set extended panid
+
+```bash
+> dataset extpanid 000db80123456789
+Done
+```
+
+### dataset getcmd \[getcmd\] \[size\] \[tlvtypes\]
+
+Send MGMT_ACTIVE/PENDING/COMMISSIONER_GET.req command
+
+```bash
+> dataset getcmd pending 3 010203
+Done
+```
+
+### dataset masterkey \[masterkey\]
+
+Set master key
+
+```bash
+> dataset master 1234567890123456
+```
+### dataset meshlocalprefix fd00:db8::
+Done
+```
+
+### dataset networkname \[networkname\]
+
+Set network name
+
+```bash
+> dataset networkname openthread
+Done
+```
+### dataset panid \[panid\]
+
+Set panid
+
+```bash
+> dataset panid 0x1234
+Done
+```
+
+### dataset pending
+
+Print meshcop pending operational dataset.
+
+```bash
+> dataset pending
+Done
+```
+
+### dataset pendingtimestamp \[pendingtimestamp\]
+
+Set pending timestamp
+
+```bash
+> dataset pendingtimestamp 123456789
+Done
+```
+
+### dataset setcmd \[setcmd\] \[size\] \[tlvs\]
+
+Send MGMT_ACTIVE/PENDING/COMMISSIONER_SET.req command
+
+```bash
+> dataset setcmd active 18 0e0801020304050607080003000a01021234
+Done
 ```
 
 ### discover \[channel\]
