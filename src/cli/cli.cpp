@@ -1336,8 +1336,7 @@ ThreadError Interpreter::ProcessRouteAdd(int argc, char *argv[])
         {
             config.mStable = true;
         }
-
-        if (strcmp(argv[argcur], "high") == 0)
+        else if (strcmp(argv[argcur], "high") == 0)
         {
             config.mPreference = 1;
         }
