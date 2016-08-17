@@ -270,7 +270,7 @@ Done
 
 ### dataset activetimestamp \[activetimestamp\]
 
-Set activetimestamp
+Set active timestamp.
 
 ```bash
 > dataset activestamp 123456789
@@ -279,7 +279,7 @@ Done
 
 ### dataset channel \[channel\]
 
-Set channel
+Set channel.
 
 ```bash
 > dataset channel 12
@@ -288,7 +288,7 @@ Done
 
 ### dataset clear
 
-Reset operational dataset buffer
+Reset operational dataset buffer.
 
 ```bash
 > dataset clear
@@ -297,7 +297,7 @@ Done
 
 ### dataset commit \[commit\]
 
-Commit operational dataset buffer to active/pending operational dataset
+Commit operational dataset buffer to active/pending operational dataset.
 
 ```bash
 > dataset commit active
@@ -306,7 +306,7 @@ Done
 
 ### dataset delay \[delay\]
 
-Set delay timer value
+Set delay timer value.
 
 ```bash
 > dataset delay 1000
@@ -315,7 +315,7 @@ Done
 
 ### dataset extpanid \[extpanid\]
 
-Set extended panid
+Set extended panid.
 
 ```bash
 > dataset extpanid 000db80123456789
@@ -324,7 +324,7 @@ Done
 
 ### dataset getcmd \[getcmd\] \[size\] \[tlvtypes\]
 
-Send MGMT_ACTIVE/PENDING/COMMISSIONER_GET.req command
+Send MGMT_ACTIVE/PENDING/COMMISSIONER_GET.req command.
 
 ```bash
 > dataset getcmd pending 3 010203
@@ -333,18 +333,23 @@ Done
 
 ### dataset masterkey \[masterkey\]
 
-Set master key
+Set master key.
 
 ```bash
 > dataset master 1234567890123456
 ```
 ### dataset meshlocalprefix fd00:db8::
+
+Set mesh local prefix.
+
+```bash
+> dataset meshlocalprefix fd00:db8::
 Done
 ```
 
 ### dataset networkname \[networkname\]
 
-Set network name
+Set network name.
 
 ```bash
 > dataset networkname openthread
@@ -352,7 +357,7 @@ Done
 ```
 ### dataset panid \[panid\]
 
-Set panid
+Set panid.
 
 ```bash
 > dataset panid 0x1234
@@ -370,7 +375,7 @@ Done
 
 ### dataset pendingtimestamp \[pendingtimestamp\]
 
-Set pending timestamp
+Set pending timestamp.
 
 ```bash
 > dataset pendingtimestamp 123456789
@@ -379,7 +384,7 @@ Done
 
 ### dataset setcmd \[setcmd\] \[size\] \[tlvs\]
 
-Send MGMT_ACTIVE/PENDING/COMMISSIONER_SET.req command
+Send MGMT_ACTIVE/PENDING/COMMISSIONER_SET.req command.
 
 ```bash
 > dataset setcmd active 18 0e0801020304050607080003000a01021234
