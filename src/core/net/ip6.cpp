@@ -49,6 +49,7 @@ namespace Ip6 {
 
 static otDEFINE_ALIGNED_VAR(sMplBuf, sizeof(Mpl), uint64_t);
 static Mpl *sMpl;
+static bool sForwardingEnabled;
 
 static otReceiveIp6DatagramCallback sReceiveIp6DatagramCallback = NULL;
 
@@ -63,6 +64,12 @@ Message *Ip6::NewMessage(uint16_t reserved)
 void Ip6::Init(void)
 {
     sMpl = new(&sMplBuf) Mpl;
+    sForwardingEnabled = false;
+}
+
+void Ip6::SetForwardingEnabled(bool aEnable)
+{
+    sForwardingEnabled = aEnable;
 }
 
 uint16_t Ip6::UpdateChecksum(uint16_t checksum, uint16_t val)
@@ -403,6 +410,11 @@ ThreadError Ip6::HandleDatagram(Message &message, Netif *netif, int8_t interface
         {
             forward = true;
         }
+    }
+
+    if (!sForwardingEnabled && netif != NULL)
+    {
+        forward = false;
     }
 
     message.SetOffset(sizeof(header));

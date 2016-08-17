@@ -583,6 +583,14 @@ public:
      */
     static void SetReceiveDatagramCallback(otReceiveIp6DatagramCallback aCallback);
 
+    /**
+     * This static method enables/disables IPv6 forwarding.
+     *
+     * @param[in]  aEnable  TRUE to enable IPv6 forwarding, FALSE otherwise.
+     *
+     */
+    static void SetForwardingEnabled(bool aEnable);
+
 private:
     static void ProcessReceiveCallback(Message &aMessage);
 };
