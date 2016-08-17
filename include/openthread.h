@@ -227,6 +227,15 @@ ThreadError otThreadStart(void);
 ThreadError otThreadStop(void);
 
 /**
+ * This function indicates whether a node is the only router on the network.
+ *
+ * @retval TRUE   It is the only router in the network.
+ * @retval FALSE  It is a child or is not a single router in the network.
+ *
+ */
+bool otIsSingleton(void);
+
+/**
  * This function pointer is called during an IEEE 802.15.4 Active Scan when an IEEE 802.15.4 Beacon is received or
  * the scan completes.
  *

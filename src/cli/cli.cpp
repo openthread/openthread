@@ -88,6 +88,7 @@ const struct Command Interpreter::sCommands[] =
     { "router", &ProcessRouter },
     { "routerupgradethreshold", &ProcessRouterUpgradeThreshold },
     { "scan", &ProcessScan },
+    { "singleton", &ProcessSingleton },
     { "state", &ProcessState },
     { "thread", &ProcessThread },
     { "version", &ProcessVersion },
@@ -1470,6 +1471,25 @@ void Interpreter::HandleActiveScanResult(otActiveScanResult *aResult)
 
 exit:
     return;
+}
+
+void Interpreter::ProcessSingleton(int argc, char *argv[])
+{
+    ThreadError error = kThreadError_None;
+
+    if (otIsSingleton())
+    {
+        sServer->OutputFormat("true\r\n");
+    }
+    else
+    {
+        sServer->OutputFormat("false\r\n");
+    }
+
+    (void)argc;
+    (void)argv;
+
+    AppendResult(error);
 }
 
 void Interpreter::ProcessState(int argc, char *argv[])

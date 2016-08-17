@@ -98,6 +98,15 @@ public:
     void SetRouterRoleEnabled(bool aEnabled);
 
     /**
+     * This method indicates whether a node is the only router on the network.
+     *
+     * @retval TRUE   It is the only router in the network.
+     * @retval FALSE  It is a child or is not a single router in the network.
+     *
+     */
+    bool IsSingleton(void);
+
+    /**
      * This method generates an Address Solicit request for a Router ID.
      *
      * @param[in]  aStatus  The reason for requesting a Router ID.
@@ -440,7 +449,6 @@ private:
     ThreadError HandleChildUpdateRequest(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
     ThreadError HandleDataRequest(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
     ThreadError HandleNetworkDataUpdateRouter(void);
-    bool IsSingleton(void);
 
     ThreadError ProcessRouteTlv(const RouteTlv &aRoute);
     ThreadError ResetAdvertiseInterval(void);

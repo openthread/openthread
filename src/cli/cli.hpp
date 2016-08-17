@@ -171,6 +171,7 @@ private:
     static void ProcessRouterUpgradeThreshold(int argc, char *argv[]);
     static void ProcessRloc16(int argc, char *argv[]);
     static void ProcessScan(int argc, char *argv[]);
+    static void ProcessSingleton(int argc, char *argv[]);
     static void ProcessState(int argc, char *argv[]);
     static void ProcessThread(int argc, char *argv[]);
     static void ProcessVersion(int argc, char *argv[]);
