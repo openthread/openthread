@@ -39,6 +39,7 @@
 #include <common/timer.hpp>
 #include <mac/mac_frame.hpp>
 #include <mac/mac_whitelist.hpp>
+#include <mac/mac_blacklist.hpp>
 #include <platform/radio.h>
 #include <thread/key_manager.hpp>
 #include <thread/topology.hpp>
@@ -364,6 +365,14 @@ public:
     Whitelist &GetWhitelist(void);
 
     /**
+     * This method returns the MAC blacklist filter.
+     *
+     * @returns A reference to the MAC blacklist filter.
+     *
+     */
+    Blacklist &GetBlacklist(void);
+
+    /**
      * This method is called to handle receive events.
      *
      * @param[in]  aFrame  A pointer to the received frame, or NULL if the receive operation aborted.
@@ -462,7 +471,8 @@ private:
     PanId mPanId;
     uint8_t mChannel;
 
-    Beacon mBeacon;
+    otNetworkName mNetworkName;
+    otExtendedPanId mExtendedPanId;
 
     Sender *mSendHead, *mSendTail;
     Receiver *mReceiveHead, *mReceiveTail;
@@ -493,6 +503,7 @@ private:
     otLinkPcapCallback mPcapCallback;
 
     Whitelist mWhitelist;
+    Blacklist mBlacklist;
 
     otMacCounters mCounters;
 };

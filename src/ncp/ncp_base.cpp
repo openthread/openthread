@@ -60,6 +60,8 @@ enum
 
 #define RSSI_OVERRIDE_DISABLED        127 // Used for PROP_MAC_WHITELIST
 
+#define IGNORE_RETURN_VALUE(s)        do { if (s){} } while (0)
+
 // ----------------------------------------------------------------------------
 // MARK: Command/Property Jump Tables
 // ----------------------------------------------------------------------------
@@ -101,8 +103,8 @@ const NcpBase::GetPropertyHandlerEntry NcpBase::mGetPropertyHandlerTable[] =
     { SPINEL_PROP_MAC_15_4_SADDR, &NcpBase::GetPropertyHandler_MAC_15_4_SADDR },
     { SPINEL_PROP_MAC_FILTER_MODE, &NcpBase::GetPropertyHandler_MAC_FILTER_MODE },
 
-    { SPINEL_PROP_NET_ENABLED, &NcpBase::GetPropertyHandler_NET_ENABLED },
-    { SPINEL_PROP_NET_STATE, &NcpBase::GetPropertyHandler_NET_STATE },
+    { SPINEL_PROP_NET_IF_UP, &NcpBase::GetPropertyHandler_NET_IF_UP },
+    { SPINEL_PROP_NET_STACK_UP, &NcpBase::GetPropertyHandler_NET_STACK_UP },
     { SPINEL_PROP_NET_ROLE, &NcpBase::GetPropertyHandler_NET_ROLE },
     { SPINEL_PROP_NET_NETWORK_NAME, &NcpBase::GetPropertyHandler_NET_NETWORK_NAME },
     { SPINEL_PROP_NET_XPANID, &NcpBase::GetPropertyHandler_NET_XPANID },
@@ -179,8 +181,8 @@ const NcpBase::SetPropertyHandlerEntry NcpBase::mSetPropertyHandlerTable[] =
     { SPINEL_PROP_MAC_SCAN_PERIOD, &NcpBase::SetPropertyHandler_MAC_SCAN_PERIOD },
     { SPINEL_PROP_MAC_15_4_PANID, &NcpBase::SetPropertyHandler_MAC_15_4_PANID },
 
-    { SPINEL_PROP_NET_ENABLED, &NcpBase::SetPropertyHandler_NET_ENABLED },
-    { SPINEL_PROP_NET_STATE, &NcpBase::SetPropertyHandler_NET_STATE },
+    { SPINEL_PROP_NET_IF_UP, &NcpBase::SetPropertyHandler_NET_IF_UP },
+    { SPINEL_PROP_NET_STACK_UP, &NcpBase::SetPropertyHandler_NET_STACK_UP },
     { SPINEL_PROP_NET_ROLE, &NcpBase::SetPropertyHandler_NET_ROLE },
     { SPINEL_PROP_NET_NETWORK_NAME, &NcpBase::SetPropertyHandler_NET_NETWORK_NAME },
     { SPINEL_PROP_NET_XPANID, &NcpBase::SetPropertyHandler_NET_XPANID },
@@ -347,6 +349,7 @@ NcpBase::NcpBase():
     sNcpContext = this;
     mChangedFlags = NCP_PLAT_RESET_REASON;
     mAllowLocalNetworkDataChange = false;
+    mFramingErrorCounter = 0;
 
     for (unsigned i = 0; i < sizeof(mNetifAddresses) / sizeof(mNetifAddresses[0]); i++)
     {
@@ -455,8 +458,8 @@ void NcpBase::HandleActiveScanResult(otActiveScanResult *result)
             result->mLqi,
             SPINEL_PROTOCOL_TYPE_THREAD,
             flags,
-            result->mNetworkName,
-            result->mExtPanId, OT_EXT_PAN_ID_SIZE
+            result->mNetworkName.m8,
+            result->mExtendedPanId.m8, OT_EXT_PAN_ID_SIZE
         );
     }
     else
@@ -519,14 +522,6 @@ void NcpBase::UpdateChangedProps(void)
                               SPINEL_PROP_IPV6_ML_ADDR
                           ));
             mChangedFlags &= ~static_cast<uint32_t>(OT_IP6_ML_ADDR_CHANGED);
-        }
-        else if ((mChangedFlags & OT_NET_STATE) != 0)
-        {
-            SuccessOrExit(HandleCommandPropertyGet(
-                              SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0,
-                              SPINEL_PROP_NET_STATE
-                          ));
-            mChangedFlags &= ~static_cast<uint32_t>(OT_NET_STATE);
         }
         else if ((mChangedFlags & OT_NET_ROLE) != 0)
         {
@@ -601,7 +596,7 @@ void NcpBase::HandleReceive(const uint8_t *buf, uint16_t bufLength)
         errorCode = SendLastStatus(header, SPINEL_STATUS_PARSE_ERROR);
     }
 
-   if (errorCode == kThreadError_NoBufs)
+    if (errorCode == kThreadError_NoBufs)
     {
         // If we cannot send a response due to buffer space not being
         // available, we remember the TID of command so to send an
@@ -660,6 +655,11 @@ void NcpBase::HandleSpaceAvailableInTxBuffer(void)
 
 exit:
     return;
+}
+
+void NcpBase::IncrementFrameErrorCounter(void)
+{
+    mFramingErrorCounter++;
 }
 
 // ----------------------------------------------------------------------------
@@ -1353,60 +1353,37 @@ ThreadError NcpBase::GetPropertyHandler_MAC_15_4_SADDR(uint8_t header, spinel_pr
            );
 }
 
-ThreadError NcpBase::GetPropertyHandler_NET_ENABLED(uint8_t header, spinel_prop_key_t key)
+ThreadError NcpBase::GetPropertyHandler_NET_IF_UP(uint8_t header, spinel_prop_key_t key)
 {
     return SendPropertyUpdate(
                header,
                SPINEL_CMD_PROP_VALUE_IS,
                key,
                SPINEL_DATATYPE_BOOL_S,
-               (otGetDeviceRole() != kDeviceRoleDisabled)
+               otIsInterfaceUp()
            );
 }
 
-ThreadError NcpBase::GetPropertyHandler_NET_STATE(uint8_t header, spinel_prop_key_t key)
+ThreadError NcpBase::GetPropertyHandler_NET_STACK_UP(uint8_t header, spinel_prop_key_t key)
 {
-    spinel_net_state_t state(SPINEL_NET_STATE_OFFLINE);
-
-    if (!otIsInterfaceUp())
-    {
-        state = SPINEL_NET_STATE_OFFLINE;
-    }
-    else
-    {
-        switch (otGetDeviceRole())
-        {
-        case kDeviceRoleDisabled:
-        case kDeviceRoleDetached:
-            state = SPINEL_NET_STATE_DETACHED;
-            break;
-
-        case kDeviceRoleChild:
-        case kDeviceRoleRouter:
-        case kDeviceRoleLeader:
-            state = SPINEL_NET_STATE_ATTACHED;
-            break;
-        }
-    }
-
     return SendPropertyUpdate(
                header,
                SPINEL_CMD_PROP_VALUE_IS,
                key,
-               SPINEL_DATATYPE_UINT8_S,
-               state
+               SPINEL_DATATYPE_BOOL_S,
+               otGetDeviceRole() != kDeviceRoleDisabled
            );
 }
 
 ThreadError NcpBase::GetPropertyHandler_NET_ROLE(uint8_t header, spinel_prop_key_t key)
 {
-    spinel_net_role_t role(SPINEL_NET_ROLE_NONE);
+    spinel_net_role_t role(SPINEL_NET_ROLE_DETACHED);
 
     switch (otGetDeviceRole())
     {
     case kDeviceRoleDisabled:
     case kDeviceRoleDetached:
-        role = SPINEL_NET_ROLE_NONE;
+        role = SPINEL_NET_ROLE_DETACHED;
         break;
 
     case kDeviceRoleChild:
@@ -1921,7 +1898,15 @@ ThreadError NcpBase::GetPropertyHandler_MAC_WHITELIST(uint8_t header, spinel_pro
             break;
         }
 
-        SuccessOrExit(errorCode = OutboundFrameFeedPacked("T(Ecb).", &entry.mExtAddress, entry.mRssi, entry.mValid));
+        if (entry.mValid)
+        {
+            if (!entry.mFixedRssi)
+            {
+                entry.mRssi = RSSI_OVERRIDE_DISABLED;
+            }
+
+            SuccessOrExit(errorCode = OutboundFrameFeedPacked("T(Ec).", entry.mExtAddress.m8, entry.mRssi));
+        }
     }
 
     SuccessOrExit(errorCode = OutboundFrameSend());
@@ -2321,7 +2306,7 @@ ThreadError NcpBase::SetPropertyHandler_MAC_15_4_PANID(uint8_t header, spinel_pr
     return errorCode;
 }
 
-ThreadError NcpBase::SetPropertyHandler_NET_ENABLED(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr,
+ThreadError NcpBase::SetPropertyHandler_NET_IF_UP(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr,
                                                     uint16_t value_len)
 {
     bool value = false;
@@ -2339,11 +2324,11 @@ ThreadError NcpBase::SetPropertyHandler_NET_ENABLED(uint8_t header, spinel_prop_
     {
         if (value == false)
         {
-            errorCode = otDisable();
+            errorCode = otInterfaceDown();
         }
         else
         {
-            errorCode = otEnable();
+            errorCode = otInterfaceUp();
         }
     }
     else
@@ -2363,102 +2348,49 @@ ThreadError NcpBase::SetPropertyHandler_NET_ENABLED(uint8_t header, spinel_prop_
     return errorCode;
 }
 
-ThreadError NcpBase::SetPropertyHandler_NET_STATE(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr,
+ThreadError NcpBase::SetPropertyHandler_NET_STACK_UP(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr,
                                                   uint16_t value_len)
 {
-    unsigned int i(0);
+    bool value = false;
     spinel_ssize_t parsedLength;
     ThreadError errorCode = kThreadError_None;
 
     parsedLength = spinel_datatype_unpack(
                        value_ptr,
                        value_len,
-                       SPINEL_DATATYPE_UINT_PACKED_S,
-                       &i
+                       SPINEL_DATATYPE_BOOL_S,
+                       &value
                    );
 
     if (parsedLength > 0)
     {
-        switch (i)
+        // If the value has changed...
+        if ((value != false) != (otGetDeviceRole() != kDeviceRoleDisabled))
         {
-        case SPINEL_NET_STATE_OFFLINE:
-            if (otIsInterfaceUp())
+            if (value != false)
             {
-                errorCode = otInterfaceDown();
+                errorCode = otThreadStart();
             }
-
-            if ((errorCode == kThreadError_None) && (otGetDeviceRole() != kDeviceRoleDisabled))
+            else
             {
                 errorCode = otThreadStop();
             }
-
-            break;
-
-        case SPINEL_NET_STATE_DETACHED:
-            if (!otIsInterfaceUp())
-            {
-                errorCode = otInterfaceUp();
-            }
-
-            if ((errorCode == kThreadError_None) && (otGetDeviceRole() != kDeviceRoleDisabled))
-            {
-                errorCode = otThreadStop();
-            }
-
-            break;
-
-        case SPINEL_NET_STATE_ATTACHING:
-        case SPINEL_NET_STATE_ATTACHED:
-            if (!otIsInterfaceUp())
-            {
-                errorCode = otInterfaceUp();
-            }
-
-            if ((errorCode == kThreadError_None) &&
-                ((otGetDeviceRole() == kDeviceRoleDisabled) || (otGetDeviceRole() == kDeviceRoleDetached)))
-            {
-                if (otGetDeviceRole() == kDeviceRoleDetached)
-                {
-                    errorCode = otThreadStop();
-                }
-
-                if (errorCode == kThreadError_None)
-                {
-                    errorCode = otThreadStart();
-                }
-
-                if (errorCode == kThreadError_None)
-                {
-                    errorCode = SendPropertyUpdate(
-                                    header,
-                                    SPINEL_CMD_PROP_VALUE_IS,
-                                    key,
-                                    SPINEL_DATATYPE_UINT8_S,
-                                    SPINEL_NET_STATE_ATTACHING
-                                );
-
-                    ExitNow();
-                }
-            }
-
-            break;
-        }
-
-        if (errorCode == kThreadError_None)
-        {
-            errorCode = HandleCommandPropertyGet(header, key);
-        }
-        else
-        {
-            errorCode = SendLastStatus(header, ThreadErrorToSpinelStatus(errorCode));
         }
     }
     else
     {
-        errorCode = SendLastStatus(header, SPINEL_STATUS_PARSE_ERROR);
+        errorCode = kThreadError_Parse;
     }
 
-exit:
+    if (errorCode == kThreadError_None)
+    {
+        errorCode = HandleCommandPropertyGet(header, key);
+    }
+    else
+    {
+        errorCode = SendLastStatus(header, ThreadErrorToSpinelStatus(errorCode));
+    }
+
     return errorCode;
 }
 
@@ -2480,7 +2412,7 @@ ThreadError NcpBase::SetPropertyHandler_NET_ROLE(uint8_t header, spinel_prop_key
     {
         switch (i)
         {
-        case SPINEL_NET_ROLE_NONE:
+        case SPINEL_NET_ROLE_DETACHED:
             errorCode = kThreadError_InvalidArgs;
             break;
 
@@ -3017,15 +2949,27 @@ ThreadError NcpBase::SetPropertyHandler_MAC_WHITELIST(uint8_t header, spinel_pro
            && (value_len > 0)
           )
     {
-        otExtAddress ext_addr;
+        otExtAddress *ext_addr = NULL;
         int8_t rssi = RSSI_OVERRIDE_DISABLED;
 
         parsedLength = spinel_datatype_unpack(
                            value_ptr,
                            value_len,
-                           "T(E).",
-                           &ext_addr
+                           "T(Ec).",
+                           &ext_addr,
+                           &rssi
                        );
+
+        if (parsedLength <= 0)
+        {
+            rssi = RSSI_OVERRIDE_DISABLED;
+            parsedLength = spinel_datatype_unpack(
+                               value_ptr,
+                               value_len,
+                               "T(E).",
+                               &ext_addr
+                           );
+        }
 
         if (parsedLength <= 0)
         {
@@ -3033,25 +2977,13 @@ ThreadError NcpBase::SetPropertyHandler_MAC_WHITELIST(uint8_t header, spinel_pro
             break;
         }
 
-        // Check for an RSSI
-        if (parsedLength > static_cast<spinel_ssize_t>(sizeof(ext_addr)))
-        {
-            spinel_datatype_unpack(
-                value_ptr,
-                value_len,
-                "T(Ec).",
-                NULL,
-                &rssi
-            );
-        }
-
         if (rssi == RSSI_OVERRIDE_DISABLED)
         {
-            errorCode = otAddMacWhitelist(ext_addr.m8);
+            errorCode = otAddMacWhitelist(ext_addr->m8);
         }
         else
         {
-            errorCode = otAddMacWhitelistRssi(ext_addr.m8, rssi);
+            errorCode = otAddMacWhitelistRssi(ext_addr->m8, rssi);
         }
 
         value_ptr += parsedLength;
@@ -3500,25 +3432,27 @@ ThreadError NcpBase::InsertPropertyHandler_MAC_WHITELIST(uint8_t header, spinel_
 {
     ThreadError errorCode = kThreadError_None;
     spinel_ssize_t parsedLength;
-    otExtAddress ext_addr;
+    otExtAddress *ext_addr = NULL;
     int8_t rssi = RSSI_OVERRIDE_DISABLED;
 
-    parsedLength = spinel_datatype_unpack(
-                       value_ptr,
-                       value_len,
-                       "E",
-                       &ext_addr
-                   );
 
-    // Check for an RSSI
-    if (parsedLength > static_cast<spinel_ssize_t>(sizeof(ext_addr)))
+    if (value_len > static_cast<spinel_ssize_t>(sizeof(ext_addr)))
     {
-        spinel_datatype_unpack(
+        parsedLength = spinel_datatype_unpack(
             value_ptr,
             value_len,
             "Ec",
-            NULL,
+            &ext_addr,
             &rssi
+        );
+    }
+    else
+    {
+        parsedLength = spinel_datatype_unpack(
+            value_ptr,
+            value_len,
+            "E",
+            &ext_addr
         );
     }
 
@@ -3526,11 +3460,11 @@ ThreadError NcpBase::InsertPropertyHandler_MAC_WHITELIST(uint8_t header, spinel_
     {
         if (rssi == RSSI_OVERRIDE_DISABLED)
         {
-            errorCode = otAddMacWhitelist(ext_addr.m8);
+            errorCode = otAddMacWhitelist(ext_addr->m8);
         }
         else
         {
-            errorCode = otAddMacWhitelistRssi(ext_addr.m8, rssi);
+            errorCode = otAddMacWhitelistRssi(ext_addr->m8, rssi);
         }
 
         if (errorCode == kThreadError_None)

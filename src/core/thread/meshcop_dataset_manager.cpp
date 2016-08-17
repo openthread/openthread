@@ -28,7 +28,7 @@
 
 /**
  * @file
- *   This file implements common methods for manipulating MeshCoP Datasets.
+ *   This file implements MeshCoP Datasets manager to process commands.
  *
  */
 
@@ -48,16 +48,18 @@
 namespace Thread {
 namespace MeshCoP {
 
-DatasetManager::DatasetManager(ThreadNetif &aThreadNetif, const char *aUri):
+DatasetManager::DatasetManager(ThreadNetif &aThreadNetif, const char *aUriSet, const char *aUriGet):
     mMle(aThreadNetif.GetMle()),
     mNetif(aThreadNetif),
     mNetworkDataLeader(aThreadNetif.GetNetworkDataLeader()),
-    mResource(aUri, &HandleSet, this),
+    mResourceSet(aUriSet, &HandleSet, this),
+    mResourceGet(aUriGet, &HandleGet, this),
     mTimer(&HandleTimer, this),
-    mUri(aUri),
+    mUriSet(aUriSet),
     mCoapServer(aThreadNetif.GetCoapServer())
 {
-    mCoapServer.AddResource(mResource);
+    mCoapServer.AddResource(mResourceSet);
+    mCoapServer.AddResource(mResourceGet);
 }
 
 ThreadError DatasetManager::Set(const Dataset &aDataset, uint8_t &aFlags)
@@ -168,7 +170,7 @@ ThreadError DatasetManager::Register(void)
     header.SetCode(Coap::Header::kCodePost);
     header.SetMessageId(++mCoapMessageId);
     header.SetToken(mCoapToken, sizeof(mCoapToken));
-    header.AppendUriPathOptions(mUri);
+    header.AppendUriPathOptions(mUriSet);
     header.AppendContentFormatOption(Coap::Header::kApplicationOctetStream);
     header.Finalize();
 
@@ -236,10 +238,11 @@ void DatasetManager::HandleSet(Coap::Header &aHeader, Message &aMessage, const I
     Timestamp timestamp;
     uint16_t offset = aMessage.GetOffset();
     uint8_t type;
+    StateTlv::State state = StateTlv::kAccept;
 
-    VerifyOrExit(mMle.GetDeviceState() == Mle::kDeviceStateLeader, ;);
+    VerifyOrExit(mMle.GetDeviceState() == Mle::kDeviceStateLeader, state = StateTlv::kReject);
 
-    type = strcmp(mUri, OPENTHREAD_URI_ACTIVE_SET) == 0 ? Tlv::kActiveTimestamp : Tlv::kPendingTimestamp;
+    type = strcmp(mUriSet, OPENTHREAD_URI_ACTIVE_SET) == 0 ? Tlv::kActiveTimestamp : Tlv::kPendingTimestamp;
 
     while (offset < aMessage.GetLength())
     {
@@ -255,24 +258,61 @@ void DatasetManager::HandleSet(Coap::Header &aHeader, Message &aMessage, const I
     }
 
     // verify the request includes a timestamp that is ahead of the locally stored value
-    VerifyOrExit(offset < aMessage.GetLength() && mLocal.GetTimestamp().Compare(timestamp) > 0, ;);
+    VerifyOrExit(offset < aMessage.GetLength() && mLocal.GetTimestamp().Compare(timestamp) > 0, state = StateTlv::kReject);
 
     mLocal.Set(aMessage, aMessage.GetOffset(), static_cast<uint8_t>(aMessage.GetLength() - aMessage.GetOffset()));
     mNetwork = mLocal;
     mNetworkDataLeader.IncrementVersion();
     mNetworkDataLeader.IncrementStableVersion();
 
-    SendSetResponse(aHeader, aMessageInfo);
-
 exit:
+
+    if (mMle.GetDeviceState() == Mle::kDeviceStateLeader)
+    {
+        SendSetResponse(aHeader, aMessageInfo, state);
+    }
+
     return;
 }
 
-void DatasetManager::SendSetResponse(const Coap::Header &aRequestHeader, const Ip6::MessageInfo &aMessageInfo)
+void DatasetManager::HandleGet(void *aContext, Coap::Header &aHeader, Message &aMessage,
+                               const Ip6::MessageInfo &aMessageInfo)
+{
+    DatasetManager *obj = static_cast<DatasetManager *>(aContext);
+    obj->HandleGet(aHeader, aMessage, aMessageInfo);
+}
+
+void DatasetManager::HandleGet(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
+{
+    Tlv tlv;
+    uint16_t offset = aMessage.GetOffset();
+    uint8_t tlvs[Dataset::kMaxSize];
+    uint8_t length = 0;
+
+    while (offset < aMessage.GetLength())
+    {
+        aMessage.Read(offset, sizeof(tlv), &tlv);
+
+        if (tlv.GetType() == Tlv::kGet)
+        {
+            length = tlv.GetLength();
+            aMessage.Read(offset + sizeof(Tlv), length, tlvs);
+            break;
+        }
+
+        offset += sizeof(tlv) + tlv.GetLength();
+    }
+
+    SendGetResponse(aHeader, aMessageInfo, tlvs, length);
+}
+
+void DatasetManager::SendSetResponse(const Coap::Header &aRequestHeader, const Ip6::MessageInfo &aMessageInfo,
+                                     StateTlv::State aState)
 {
     ThreadError error = kThreadError_None;
     Coap::Header responseHeader;
     Message *message;
+    StateTlv state;
 
     VerifyOrExit((message = Ip6::Udp::NewMessage(0)) != NULL, error = kThreadError_NoBufs);
     responseHeader.Init();
@@ -285,9 +325,59 @@ void DatasetManager::SendSetResponse(const Coap::Header &aRequestHeader, const I
     responseHeader.Finalize();
     SuccessOrExit(error = message->Append(responseHeader.GetBytes(), responseHeader.GetLength()));
 
+    state.SetState(aState);
+    SuccessOrExit(error = message->Append(&state, sizeof(state)));
+
     SuccessOrExit(error = mCoapServer.SendMessage(*message, aMessageInfo));
 
-    otLogInfoMeshCoP("sent dataset response\n");
+    otLogInfoMeshCoP("sent dataset set response\n");
+
+exit:
+
+    if (error != kThreadError_None && message != NULL)
+    {
+        Message::Free(*message);
+    }
+}
+
+void DatasetManager::SendGetResponse(const Coap::Header &aRequestHeader, const Ip6::MessageInfo &aMessageInfo,
+                                     uint8_t *aTlvs, uint8_t aLength)
+{
+    Tlv *tlv;
+    ThreadError error = kThreadError_None;
+    Coap::Header responseHeader;
+    Message *message;
+    uint8_t index;
+
+    VerifyOrExit((message = Ip6::Udp::NewMessage(0)) != NULL, error = kThreadError_NoBufs);
+    responseHeader.Init();
+    responseHeader.SetVersion(1);
+    responseHeader.SetType(Coap::Header::kTypeAcknowledgment);
+    responseHeader.SetCode(Coap::Header::kCodeChanged);
+    responseHeader.SetMessageId(aRequestHeader.GetMessageId());
+    responseHeader.SetToken(aRequestHeader.GetToken(), aRequestHeader.GetTokenLength());
+    responseHeader.AppendContentFormatOption(Coap::Header::kApplicationOctetStream);
+    responseHeader.Finalize();
+    SuccessOrExit(error = message->Append(responseHeader.GetBytes(), responseHeader.GetLength()));
+
+    if (aLength == 0)
+    {
+        SuccessOrExit(error = message->Append(mNetwork.GetBytes(), mNetwork.GetSize()));
+    }
+    else
+    {
+        for (index = 0; index < aLength; index++)
+        {
+            if ((tlv = mNetwork.Get((Tlv::Type)aTlvs[index])) != NULL)
+            {
+                SuccessOrExit(error = message->Append(tlv, sizeof(Tlv) + tlv->GetLength()));
+            }
+        }
+    }
+
+    SuccessOrExit(error = mCoapServer.SendMessage(*message, aMessageInfo));
+
+    otLogInfoMeshCoP("sent dataset get response\n");
 
 exit:
 
@@ -298,7 +388,7 @@ exit:
 }
 
 ActiveDataset::ActiveDataset(ThreadNetif &aThreadNetif):
-    DatasetManager(aThreadNetif, OPENTHREAD_URI_ACTIVE_SET)
+    DatasetManager(aThreadNetif, OPENTHREAD_URI_ACTIVE_SET, OPENTHREAD_URI_ACTIVE_GET)
 {
 }
 
@@ -418,7 +508,7 @@ ThreadError ActiveDataset::ApplyConfiguration(void)
 }
 
 PendingDataset::PendingDataset(ThreadNetif &aThreadNetif):
-    DatasetManager(aThreadNetif, OPENTHREAD_URI_PENDING_SET),
+    DatasetManager(aThreadNetif, OPENTHREAD_URI_PENDING_SET, OPENTHREAD_URI_PENDING_GET),
     mTimer(HandleTimer, this)
 {
 }

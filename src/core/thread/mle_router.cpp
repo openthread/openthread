@@ -64,6 +64,7 @@ MleRouter::MleRouter(ThreadNetif &aThreadNetif):
     mNetworkIdTimeout = kNetworkIdTimeout;
     mRouterUpgradeThreshold = kRouterUpgradeThreshold;
     mLeaderWeight = 0;
+    mFixedLeaderPartitionId = 0;
     mRouterId = kMaxRouterId;
     mPreviousRouterId = kMaxRouterId;
     mAdvertiseInterval = kAdvertiseIntervalMin;
@@ -246,7 +247,15 @@ ThreadError MleRouter::BecomeLeader(void)
 
     memcpy(&mRouters[mRouterId].mMacAddr, mMac.GetExtAddress(), sizeof(mRouters[mRouterId].mMacAddr));
 
-    SetLeaderData(otPlatRandomGet(), mLeaderWeight, mRouterId);
+    if (mFixedLeaderPartitionId != 0)
+    {
+        SetLeaderData(mFixedLeaderPartitionId, mLeaderWeight, mRouterId);
+    }
+    else
+    {
+        SetLeaderData(otPlatRandomGet(), mLeaderWeight, mRouterId);
+    }
+
     mRouterIdSequence = static_cast<uint8_t>(otPlatRandomGet());
 
     mNetworkData.Reset();
@@ -315,11 +324,6 @@ ThreadError MleRouter::HandleChildStart(otMleAttachFilter aFilter)
 
 ThreadError MleRouter::SetStateRouter(uint16_t aRloc16)
 {
-    if (mDeviceState == kDeviceStateDetached)
-    {
-        mNetif.SetStateChangedFlags(OT_NET_STATE);
-    }
-
     if (mDeviceState != kDeviceStateRouter)
     {
         mNetif.SetStateChangedFlags(OT_NET_ROLE);
@@ -341,11 +345,6 @@ ThreadError MleRouter::SetStateRouter(uint16_t aRloc16)
 
 ThreadError MleRouter::SetStateLeader(uint16_t aRloc16)
 {
-    if (mDeviceState == kDeviceStateDetached)
-    {
-        mNetif.SetStateChangedFlags(OT_NET_STATE);
-    }
-
     if (mDeviceState != kDeviceStateLeader)
     {
         mNetif.SetStateChangedFlags(OT_NET_ROLE);
@@ -1674,7 +1673,18 @@ ThreadError MleRouter::SendParentResponse(Child *aChild, const ChallengeTlv &cha
     }
 
     SuccessOrExit(error = AppendChallenge(*message, aChild->mPending.mChallenge, sizeof(aChild->mPending.mChallenge)));
-    SuccessOrExit(error = AppendLinkMargin(*message, aChild->mLinkInfo.GetLinkMargin()));
+
+    if (isAssignLinkQuality &&
+        (memcmp(mAddr64.m8, aChild->mMacAddr.m8, OT_EXT_ADDRESS_SIZE) == 0))
+    {
+        // use assigned one to ensure the link quality
+        SuccessOrExit(error = AppendLinkMargin(*message, mAssignLinkMargin));
+    }
+    else
+    {
+        SuccessOrExit(error = AppendLinkMargin(*message, aChild->mLinkInfo.GetLinkMargin()));
+    }
+
     SuccessOrExit(error = AppendConnectivity(*message));
     SuccessOrExit(error = AppendVersion(*message));
 
@@ -2502,6 +2512,16 @@ uint8_t MleRouter::GetLeaderWeight(void) const
 void MleRouter::SetLeaderWeight(uint8_t aWeight)
 {
     mLeaderWeight = aWeight;
+}
+
+uint32_t MleRouter::GetLeaderPartitionId(void) const
+{
+    return mFixedLeaderPartitionId;
+}
+
+void MleRouter::SetLeaderPartitionId(uint32_t aPartitionId)
+{
+    mFixedLeaderPartitionId = aPartitionId;
 }
 
 void MleRouter::HandleMacDataRequest(const Child &aChild)

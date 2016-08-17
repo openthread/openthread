@@ -624,6 +624,27 @@ public:
     ThreadError GetLeaderData(otLeaderData &aLeaderData);
 
     /**
+     * This method returns the link quality on the link to a given extended address.
+     *
+     * @param[in]  aMacAddr  The IEEE 802.15.4 Extended Mac Address.
+     * @param[in]  aLinkQuality A reference to the assigned link quality.
+     *
+     * @retval kThreadError_None         Successfully retrieve the link quality to aLinkQuality.
+     * @retval kThreadError_InvalidArgs  No match found with a given extended address.
+     *
+     */
+    ThreadError GetAssignLinkQuality(const Mac::ExtAddress aMacAddr, uint8_t &aLinkQuality);
+
+    /**
+     * This method sets the link quality on the link to a given extended address.
+     *
+     * @param[in]  aMacAddr  The IEEE 802.15.4 Extended Mac Address.
+     * @param[in]  aLinkQaulity The link quality to be set on the link.
+     *
+     */
+    void SetAssignLinkQuality(const Mac::ExtAddress aMacAddr, uint8_t aLinkQuality);
+
+    /**
      * This method returns the Child ID portion of an RLOC16.
      *
      * @param[in]  aRloc16  The RLOC16 value.
@@ -1046,6 +1067,11 @@ protected:
     DeviceState mDeviceState;               ///< Current Thread interface state.
     Router mParent;                         ///< Parent information.
     uint8_t mDeviceMode;                    ///< Device mode setting.
+
+    bool isAssignLinkQuality;    ///< Indicating an assigned link quality is used on the link
+    uint8_t mAssignLinkQuality;  ///< The assigned link quality value
+    uint8_t mAssignLinkMargin;   ///< The maximum link margin corresponding to mAssignLinkQuality
+    Mac::ExtAddress mAddr64;     ///< A given IEEE 802.15.4 Extended Address
 
     /**
      * States when searching for a parent.

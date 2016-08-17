@@ -998,12 +998,12 @@ spinel_prop_key_to_cstr(spinel_prop_key_t prop_key)
         ret = "PROP_NET_SAVED";
         break;
 
-    case SPINEL_PROP_NET_ENABLED:
-        ret = "PROP_NET_ENABLED";
+    case SPINEL_PROP_NET_IF_UP:
+        ret = "PROP_NET_IF_UP";
         break;
 
-    case SPINEL_PROP_NET_STATE:
-        ret = "PROP_NET_STATE";
+    case SPINEL_PROP_NET_STACK_UP:
+        ret = "PROP_NET_STACK_UP";
         break;
 
     case SPINEL_PROP_NET_ROLE:

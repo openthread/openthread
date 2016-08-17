@@ -30,6 +30,8 @@
  *   This file contains definitions for a UART based NCP interface to the OpenThread stack.
  */
 
+#include <stdio.h>
+#include <ncp/ncp.h>
 #include <common/code_utils.hpp>
 #include <common/new.hpp>
 #include <ncp/ncp.h>
@@ -76,7 +78,7 @@ const uint8_t *NcpUart::UartTxBuffer::GetBuffer(void) const
 
 NcpUart::NcpUart():
     NcpBase(),
-    mFrameDecoder(mRxBuffer, sizeof(mRxBuffer), &HandleFrame, this),
+    mFrameDecoder(mRxBuffer, sizeof(mRxBuffer), &HandleFrame, &HandleError, this),
     mUartBuffer(),
     mTxFrameBuffer(mTxBuffer, sizeof(mTxBuffer)),
     mUartSendTask(EncodeAndSendToUart, this)
@@ -212,6 +214,45 @@ void NcpUart::HandleFrame(void *context, uint8_t *aBuf, uint16_t aBufLength)
 void NcpUart::HandleFrame(uint8_t *aBuf, uint16_t aBufLength)
 {
     super_t::HandleReceive(aBuf, aBufLength);
+}
+
+void NcpUart::HandleError(void *context, ThreadError aError, uint8_t *aBuf, uint16_t aBufLength)
+{
+    sNcpUart->HandleError(aError, aBuf, aBufLength);
+    (void)context;
+}
+
+void NcpUart::HandleError(ThreadError aError, uint8_t *aBuf, uint16_t aBufLength)
+{
+    char hexbuf[128];
+    uint16_t i = 0;
+
+    super_t::IncrementFrameErrorCounter();
+
+    // We can get away with sprintf because we know
+    // `hexbuf` is large enough.
+    sprintf(hexbuf, "Framing error %d: [", aError);
+
+    // Write out the first part of our log message.
+    otNcpStreamWrite(0, reinterpret_cast<uint8_t*>(hexbuf), static_cast<int>(strlen(hexbuf)));
+
+    // The first '3' comes from the trailing "]\n\000" at the end o the string.
+    // The second '3' comes from the length of two hex digits and a space.
+    for (i = 0; (i < aBufLength) && (i < (sizeof(hexbuf) - 3) / 3); i++)
+    {
+        // We can get away with sprintf because we know
+        // `hexbuf` is large enough, based on our calculations
+        // above.
+        sprintf(&hexbuf[i*3], " %02X", static_cast<uint8_t>(aBuf[i]));
+    }
+
+    // Append a final closing bracket and newline character
+    // so our log line looks nice.
+    sprintf(&hexbuf[i*3], "]\n");
+
+    // Write out the second part of our log message.
+    // We skip the first byte since it has a space in it.
+    otNcpStreamWrite(0, reinterpret_cast<uint8_t*>(hexbuf + 1), static_cast<int>(strlen(hexbuf) - 1));
 }
 
 }  // namespace Thread

@@ -102,6 +102,12 @@ protected:
      */
     virtual ThreadError OutboundFrameSend(void) = 0;
 
+    /**
+     * This method is called by the framer whenever a framing error
+     * is detected.
+     */
+    void IncrementFrameErrorCounter(void);
+
 protected:
 
     /**
@@ -256,8 +262,8 @@ private:
     ThreadError GetPropertyHandler_MAC_15_4_PANID(uint8_t header, spinel_prop_key_t key);
     ThreadError GetPropertyHandler_MAC_15_4_LADDR(uint8_t header, spinel_prop_key_t key);
     ThreadError GetPropertyHandler_MAC_15_4_SADDR(uint8_t header, spinel_prop_key_t key);
-    ThreadError GetPropertyHandler_NET_ENABLED(uint8_t header, spinel_prop_key_t key);
-    ThreadError GetPropertyHandler_NET_STATE(uint8_t header, spinel_prop_key_t key);
+    ThreadError GetPropertyHandler_NET_IF_UP(uint8_t header, spinel_prop_key_t key);
+    ThreadError GetPropertyHandler_NET_STACK_UP(uint8_t header, spinel_prop_key_t key);
     ThreadError GetPropertyHandler_NET_ROLE(uint8_t header, spinel_prop_key_t key);
     ThreadError GetPropertyHandler_NET_NETWORK_NAME(uint8_t header, spinel_prop_key_t key);
     ThreadError GetPropertyHandler_NET_XPANID(uint8_t header, spinel_prop_key_t key);
@@ -306,9 +312,9 @@ private:
                                                   uint16_t value_len);
     ThreadError SetPropertyHandler_MAC_15_4_PANID(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr,
                                                   uint16_t value_len);
-    ThreadError SetPropertyHandler_NET_ENABLED(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr,
+    ThreadError SetPropertyHandler_NET_IF_UP(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr,
                                                uint16_t value_len);
-    ThreadError SetPropertyHandler_NET_STATE(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr,
+    ThreadError SetPropertyHandler_NET_STACK_UP(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr,
                                              uint16_t value_len);
     ThreadError SetPropertyHandler_NET_ROLE(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr,
                                             uint16_t value_len);
@@ -398,6 +404,8 @@ private:
     otNetifAddress mNetifAddresses[kNetifAddressListSize];
 
     bool mAllowLocalNetworkDataChange;
+
+    uint32_t mFramingErrorCounter;
 };
 
 }  // namespace Thread

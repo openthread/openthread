@@ -8,6 +8,7 @@ OpenThread test scripts use the CLI to execute test cases.
 ## OpenThread Command List
 
 * [channel](#channel)
+* [blacklist](#blacklist)
 * [child](#child)
 * [childtimeout](#childtimeout)
 * [contextreusedelay](#contextreusedelay)
@@ -19,16 +20,21 @@ OpenThread test scripts use the CLI to execute test cases.
 * [ifconfig](#ifconfig)
 * [ipaddr](#ipaddr)
 * [keysequence](#keysequence)
+* [leaderpartitionid](#leaderpartitionid)
 * [leaderweight](#leaderweight)
+* [linkquality](#linkquality)
 * [masterkey](#masterkey)
 * [mode](#mode)
 * [netdataregister](#netdataregister)
 * [networkidtimeout](#networkidtimeout)
 * [networkname](#networkname)
 * [panid](#panid)
+* [parent](#parent)
 * [ping](#ping)
+* [pollperiod](#pollperiod)
 * [prefix](#prefix)
 * [releaserouterid](#releaserouterid)
+* [reset](#reset)
 * [rloc16](#rloc16)
 * [route](#route)
 * [router](#router)
@@ -42,6 +48,62 @@ OpenThread test scripts use the CLI to execute test cases.
 
 ## OpenThread Command Details
 
+### blacklist
+
+List the blacklist entries.
+
+```bash
+> blacklist
+Enabled
+166e0a0000000002
+166e0a0000000003
+Done
+```
+
+### blacklist add \<extaddr\>
+
+Add an IEEE 802.15.4 Extended Address to the blacklist.
+
+```bash
+> blacklist add 166e0a0000000002
+Done
+```
+
+### blacklist clear
+
+Clear all entries from the blacklist.
+
+```bash
+> blacklist clear
+Done
+```
+
+### blacklist disable
+
+Disable MAC blacklist filtering.
+
+```bash
+> blacklist disable
+Done
+```
+
+### blacklist enable
+
+Enable MAC blacklist filtering.
+
+```bash
+> blacklist enable
+Done
+```
+
+### blacklist remove \<extaddr\>
+
+Remove an IEEE 802.15.4 Extended Address from the blacklist.
+
+```bash
+> blacklist remove 166e0a0000000002
+Done
+```
 ### channel
 
 Get the IEEE 802.15.4 Channel value.
@@ -312,6 +374,25 @@ Set the Thread Key Sequence.
 Done
 ```
 
+### leaderpartitionid
+
+Get the Thread Leader Partition ID.
+
+```bash
+> leaderpartitionid
+4294967295
+Done
+```
+
+### leaderpartitionid \<partitionid>\
+
+Set the Thread Leader Partition ID.
+
+```bash
+> leaderpartitionid 0xffffffff
+Done
+```
+
 ### leaderweight
 
 Get the Thread Leader Weight.
@@ -328,6 +409,25 @@ Set the Thread Leader Weight.
 
 ```bash
 > leaderweight 128
+Done
+```
+
+### linkquality \<extaddr>\
+
+Get the link quality on the link to a given extended address.
+
+```bash
+> linkquality 36c1dd7a4f5201ff
+3
+Done
+```
+
+### linkquality \<extaddr>\ \<linkquality>\
+
+Set the link quality on the link to a given extended address.
+
+```bash
+> linkquality 36c1dd7a4f5201ff 3
 Done
 ```
 
@@ -445,6 +545,17 @@ Set the IEEE 802.15.4 PAN ID value.
 Done
 ```
 
+### parent
+
+Get the diagnostic information for a Thread Router as parent.
+
+```bash
+> parent
+Ext Addr: be1857c6c21dce55
+Rloc: 5c00
+Done
+```
+
 ### ping \<ipaddr\> [size] [count] [interval]
 
 Send an ICMPv6 Echo Request.
@@ -452,6 +563,25 @@ Send an ICMPv6 Echo Request.
 ```bash
 > ping fdde:ad00:beef:0:558:f56b:d688:799
 16 bytes from fdde:ad00:beef:0:558:f56b:d688:799: icmp_seq=1 hlim=64 time=28ms
+```
+
+### pollperiod
+
+Get the customized data poll period of sleepy end device (seconds). Only for certification test
+
+```bash
+> pollperiod
+0
+Done
+```
+
+### pollperiod \<pollperiod>\
+
+Set the customized data poll period for sleepy end device (seconds). Only for certification test
+
+```bash
+> pollperiod 10
+Done
 ```
 
 ### prefix add \<prefix\> [pvdcsr] [prf]
@@ -483,9 +613,17 @@ Done
 
 ### releaserouterid \<routerid\>
 Release a Router ID that has been allocated by the device in the Leader role.
+
 ```bash
 > releaserouterid 16
 Done
+```
+
+### reset
+Signal a platform reset.
+
+```bash
+> reset
 ```
 
 ### rloc16

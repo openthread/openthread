@@ -75,12 +75,28 @@ namespace Thread {
 #define OPENTHREAD_URI_ADDRESS_SOLICIT  "a/as"
 
 /**
+ * @def OPENTHREAD_URI_ACTIVE_GET
+ *
+ * The URI Path for MGMT_ACTIVE_GET
+ *
+ */
+#define OPENTHREAD_URI_ACTIVE_GET       "c/ag"
+
+/**
  * @def OPENTHREAD_URI_ACTIVE_SET
  *
  * The URI Path for MGMT_ACTIVE_SET
  *
  */
 #define OPENTHREAD_URI_ACTIVE_SET       "c/as"
+
+/**
+ * @def OPENTHREAD_URI_PENDING_GET
+ *
+ * The URI Path for MGMT_PENDING_GET
+ *
+ */
+#define OPENTHREAD_URI_PENDING_GET       "c/pg"
 
 /**
  * @def OPENTHREAD_URI_PENDING_SET

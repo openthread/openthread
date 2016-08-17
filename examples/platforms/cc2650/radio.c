@@ -1026,7 +1026,6 @@ int cc2650RadioProcess(void)
         {
             /* XXX: our RX command only accepts ack packets that are 5 bytes */
             sState = kStateReceive;
-            otPlatRadioTransmitDone((sReceiveFrame.mPsdu[0] & IEEE802154_FRAME_PENDING) != 0, sTransmitError);
 #if OPENTHREAD_ENABLE_DIAG
 
             if (otPlatDiagModeGet())
@@ -1077,6 +1076,7 @@ ThreadError otPlatRadioTransmit(void)
         if(error == kThreadError_None)
         {
             sState = kStateTransmit;
+            sTransmitError = kThreadError_None;
 
             /* removing 2 bytes of CRC placeholder because we generate that in hardware */
             switch(rf_core_cmd_ieee_tx(sTransmitFrame.mPsdu, sTransmitFrame.mLength - 2))

@@ -74,7 +74,7 @@ Mle::Mle(ThreadNetif &aThreadNetif) :
     mParentLinkQuality2 = 0;
     mParentLinkQuality1 = 0;
     mRetrieveNewNetworkData = false;
-    mTimeout = kMaxNeighborAge;
+    mTimeout = kMleEndDeviceTimeout;
 
     memset(&mLeaderData, 0, sizeof(mLeaderData));
     memset(&mParent, 0, sizeof(mParent));
@@ -143,6 +143,11 @@ Mle::Mle(ThreadNetif &aThreadNetif) :
 
     mNetifCallback.Set(&HandleNetifStateChanged, this);
     mNetif.RegisterCallback(mNetifCallback);
+
+    isAssignLinkQuality = false;
+    mAssignLinkQuality = 0;
+    mAssignLinkMargin = 0;
+    memset(&mAddr64, 0, sizeof(mAddr64));
 }
 
 ThreadError Mle::Enable(void)
@@ -317,7 +322,7 @@ ThreadError Mle::SetStateDetached(void)
 {
     if (mDeviceState != kDeviceStateDetached)
     {
-        mNetif.SetStateChangedFlags(OT_NET_STATE | OT_NET_ROLE);
+        mNetif.SetStateChangedFlags(OT_NET_ROLE);
     }
 
     mAddressResolver.Clear();
@@ -332,11 +337,6 @@ ThreadError Mle::SetStateDetached(void)
 
 ThreadError Mle::SetStateChild(uint16_t aRloc16)
 {
-    if (mDeviceState == kDeviceStateDetached)
-    {
-        mNetif.SetStateChangedFlags(OT_NET_STATE);
-    }
-
     if (mDeviceState != kDeviceStateChild)
     {
         mNetif.SetStateChangedFlags(OT_NET_ROLE);
@@ -348,7 +348,7 @@ ThreadError Mle::SetStateChild(uint16_t aRloc16)
 
     if ((mDeviceMode & ModeTlv::kModeRxOnWhenIdle) != 0)
     {
-        mParentRequestTimer.Start(Timer::SecToMsec(mTimeout / 2));
+        mParentRequestTimer.Start(Timer::SecToMsec(mTimeout / kMaxChildKeepAliveAttempts));
     }
 
     if ((mDeviceMode & ModeTlv::kModeFFD) != 0)
@@ -367,9 +367,9 @@ uint32_t Mle::GetTimeout(void) const
 
 ThreadError Mle::SetTimeout(uint32_t aTimeout)
 {
-    if (aTimeout < 2)
+    if (aTimeout < 4)
     {
-        aTimeout = 2;
+        aTimeout = 4;
     }
 
     mTimeout = aTimeout;
@@ -380,7 +380,7 @@ ThreadError Mle::SetTimeout(uint32_t aTimeout)
 
         if ((mDeviceMode & ModeTlv::kModeRxOnWhenIdle) != 0)
         {
-            mParentRequestTimer.Start(Timer::SecToMsec(mTimeout / 2));
+            mParentRequestTimer.Start(Timer::SecToMsec(mTimeout / kMaxChildKeepAliveAttempts));
         }
     }
 
@@ -490,8 +490,12 @@ ThreadError Mle::SetRloc16(uint16_t aRloc16)
     if (aRloc16 != Mac::kShortAddrInvalid)
     {
         // link-local 16
-        mLinkLocal16.GetAddress().mFields.m16[7] = HostSwap16(aRloc16);
-        mNetif.AddUnicastAddress(mLinkLocal16);
+        // add link-local 16 only for sleepy end device
+        if ((mDeviceMode & ModeTlv::kModeRxOnWhenIdle) == 0)
+        {
+            mLinkLocal16.GetAddress().mFields.m16[7] = HostSwap16(aRloc16);
+            mNetif.AddUnicastAddress(mLinkLocal16);
+        }
 
         // mesh-local 16
         mMeshLocal16.GetAddress().mFields.m16[7] = HostSwap16(aRloc16);
@@ -569,6 +573,49 @@ ThreadError Mle::GetLeaderData(otLeaderData &aLeaderData)
 
 exit:
     return error;
+}
+
+ThreadError Mle::GetAssignLinkQuality(const Mac::ExtAddress aMacAddr, uint8_t &aLinkQuality)
+{
+    ThreadError error;
+
+    VerifyOrExit((memcmp(aMacAddr.m8, mAddr64.m8, OT_EXT_ADDRESS_SIZE)) == 0, error = kThreadError_InvalidArgs);
+
+    aLinkQuality = mAssignLinkQuality;
+
+    return kThreadError_None;
+
+exit:
+    return error;
+}
+
+void Mle::SetAssignLinkQuality(const Mac::ExtAddress aMacAddr, uint8_t aLinkQuality)
+{
+    isAssignLinkQuality = true;
+    mAddr64 = aMacAddr;
+
+    mAssignLinkQuality = aLinkQuality;
+
+    switch (aLinkQuality)
+    {
+    case 3:
+        mAssignLinkMargin = 0xff; // 21 - 255
+        break;
+
+    case 2:
+        mAssignLinkMargin = 0x14; // 11 - 20
+        break;
+
+    case 1:
+        mAssignLinkMargin = 0x09; // 3 - 9
+        break;
+
+    case 0:
+        mAssignLinkMargin = 0x0; // 0 - 2
+
+    default:
+        break;
+    }
 }
 
 void Mle::GenerateNonce(const Mac::ExtAddress &aMacAddr, uint32_t aFrameCounter, uint8_t aSecurityLevel,
@@ -921,7 +968,7 @@ void Mle::HandleParentRequestTimer(void)
             if (mDeviceMode & ModeTlv::kModeRxOnWhenIdle)
             {
                 SendChildUpdateRequest();
-                mParentRequestTimer.Start(Timer::SecToMsec(mTimeout / 2));
+                mParentRequestTimer.Start(Timer::SecToMsec(mTimeout / kMaxChildKeepAliveAttempts));
             }
         }
         else
@@ -1763,6 +1810,15 @@ ThreadError Mle::HandleParentResponse(const Message &aMessage, const Ip6::Messag
         linkMargin = linkMarginTlv.GetLinkMargin();
     }
 
+    // add for Thread Certification testing
+    if (isAssignLinkQuality)
+    {
+        linkMargin = linkMarginTlv.GetLinkMargin();
+
+        // clear flag for subsequent normal MLE message
+        isAssignLinkQuality = false;
+    }
+
     linkQuality = LinkQualityInfo::ConvertLinkMarginToLinkQuality(linkMargin);
 
     VerifyOrExit(mParentRequestState != kParentRequestRouter || linkQuality == 3, ;);
@@ -1912,7 +1968,7 @@ ThreadError Mle::HandleChildIdResponse(const Message &aMessage, const Ip6::Messa
 
     if ((mDeviceMode & ModeTlv::kModeRxOnWhenIdle) == 0)
     {
-        mMesh.SetPollPeriod(Timer::SecToMsec(mTimeout / 2));
+        mMesh.SetPollPeriod(Timer::SecToMsec(mTimeout / kMaxChildKeepAliveAttempts));
         mMesh.SetRxOnWhenIdle(false);
     }
     else
@@ -2022,7 +2078,7 @@ ThreadError Mle::HandleChildUpdateResponse(const Message &aMessage, const Ip6::M
 
         if ((mode.GetMode() & ModeTlv::kModeRxOnWhenIdle) == 0)
         {
-            mMesh.SetPollPeriod(Timer::SecToMsec(mTimeout / 2));
+            mMesh.SetPollPeriod(Timer::SecToMsec(mTimeout / kMaxChildKeepAliveAttempts));
             mMesh.SetRxOnWhenIdle(false);
         }
         else
@@ -2174,7 +2230,6 @@ ThreadError Mle::HandleDiscoveryResponse(const Message &aMessage, const Ip6::Mes
     otActiveScanResult result;
     uint16_t offset;
     uint16_t end;
-    char networkNameBuf[OT_NETWORK_NAME_SIZE];
 
     otLogInfoMle("Handle discovery response\n");
 
@@ -2223,15 +2278,13 @@ ThreadError Mle::HandleDiscoveryResponse(const Message &aMessage, const Ip6::Mes
         case MeshCoP::Tlv::kExtendedPanId:
             aMessage.Read(offset, sizeof(extPanId), &extPanId);
             VerifyOrExit(extPanId.IsValid(), error = kThreadError_Parse);
-            result.mExtPanId = extPanId.GetExtendedPanId();
+            memcpy(&result.mExtendedPanId, extPanId.GetExtendedPanId(), sizeof(result.mExtendedPanId));
             break;
 
         case MeshCoP::Tlv::kNetworkName:
             aMessage.Read(offset, sizeof(networkName), &networkName);
             VerifyOrExit(networkName.IsValid(), error = kThreadError_Parse);
-            memcpy(networkNameBuf, networkName.GetNetworkName(), networkName.GetLength());
-            memset(networkNameBuf + networkName.GetLength(), 0, sizeof(networkNameBuf) - networkName.GetLength());
-            result.mNetworkName = networkNameBuf;
+            memcpy(&result.mNetworkName, networkName.GetNetworkName(), networkName.GetLength());
             break;
 
         default:
@@ -2328,16 +2381,6 @@ void Mle::HandleNetworkDataUpdate(void)
     if (mDeviceMode & ModeTlv::kModeFFD)
     {
         mMleRouter.HandleNetworkDataUpdateRouter();
-    }
-
-    switch (mDeviceState)
-    {
-    case kDeviceStateChild:
-        SendChildUpdateRequest();
-        break;
-
-    default:
-        break;
     }
 }
 

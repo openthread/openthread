@@ -47,6 +47,7 @@ libopenthread_a_SOURCES             = \
     mac/mac.cpp                       \
     mac/mac_frame.cpp                 \
     mac/mac_whitelist.cpp             \
+    mac/mac_blacklist.cpp             \
     net/icmp6.cpp                     \
     net/ip6.cpp                       \
     net/ip6_address.cpp               \
@@ -90,6 +91,7 @@ noinst_HEADERS                      = \
     mac/mac.hpp                       \
     mac/mac_frame.hpp                 \
     mac/mac_whitelist.hpp             \
+    mac/mac_blacklist.hpp             \
     net/icmp6.hpp                     \
     net/ip6.hpp                       \
     net/ip6_address.hpp               \

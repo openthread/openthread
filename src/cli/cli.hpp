@@ -98,6 +98,18 @@ public:
     static ThreadError ParseLong(char *aString, long &aLong);
 
     /**
+     * This method parses an ASCII string as an unsigned long.
+     *
+     * @param[in]   aString          A pointer to the ASCII string.
+     * @param[out]  aUnsignedLong    A reference to where the parsed unsigned long is placed.
+     *
+     * @retval kThreadError_None   Successfully parsed the ASCII string.
+     * @retval kThreadError_Parse  Could not parse the ASCII string.
+     *
+     */
+    static ThreadError ParseUnsignedLong(char *aString, unsigned long &aUnsignedLong);
+
+    /**
      * This method converts a hex string to binary.
      *
      * @param[in]   aHex        A pointer to the hex string.
@@ -118,6 +130,7 @@ private:
     static void OutputBytes(const uint8_t *aBytes, uint8_t aLength);
 
     static void ProcessHelp(int argc, char *argv[]);
+    static void ProcessBlacklist(int argc, char *argv[]);
     static void ProcessChannel(int argc, char *argv[]);
     static void ProcessChild(int argc, char *argv[]);
     static void ProcessChildTimeout(int argc, char *argv[]);
@@ -134,18 +147,23 @@ private:
     static ThreadError ProcessIpAddrDel(int argc, char *argv[]);
     static void ProcessKeySequence(int argc, char *argv[]);
     static void ProcessLeaderData(int argc, char *argv[]);
+    static void ProcessLeaderPartitionId(int argc, char *argv[]);
     static void ProcessLeaderWeight(int argc, char *argv[]);
+    static void ProcessLinkQuality(int argc, char *argv[]);
     static void ProcessMasterKey(int argc, char *argv[]);
     static void ProcessMode(int argc, char *argv[]);
     static void ProcessNetworkDataRegister(int argc, char *argv[]);
     static void ProcessNetworkIdTimeout(int argc, char *argv[]);
     static void ProcessNetworkName(int argc, char *argv[]);
     static void ProcessPanId(int argc, char *argv[]);
+    static void ProcessParent(int argc, char *argv[]);
     static void ProcessPing(int argc, char *argv[]);
+    static void ProcessPollPeriod(int argc, char *argv[]);
     static void ProcessPrefix(int argc, char *argv[]);
     static ThreadError ProcessPrefixAdd(int argc, char *argv[]);
     static ThreadError ProcessPrefixRemove(int argc, char *argv[]);
     static void ProcessReleaseRouterId(int argc, char *argv[]);
+    static void ProcessReset(int argc, char *argv[]);
     static void ProcessRoute(int argc, char *argv[]);
     static void ProcessRouter(int argc, char *argv[]);
     static ThreadError ProcessRouteAdd(int argc, char *argv[]);

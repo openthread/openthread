@@ -66,6 +66,7 @@ MeshForwarder::MeshForwarder(ThreadNetif &aThreadNetif):
 {
     mFragTag = static_cast<uint16_t>(otPlatRandomGet());
     mPollPeriod = 0;
+    mAssignPollPeriod = 0;
     mSendMessage = NULL;
     mSendBusy = false;
     mEnabled = false;
@@ -520,8 +521,9 @@ ThreadError MeshForwarder::UpdateIp6Route(Message &aMessage)
             else
             {
                 mNetworkData.RouteLookup(ip6Header.GetSource(), ip6Header.GetDestination(), NULL, &mMeshDest);
-                assert(mMeshDest != Mac::kShortAddrInvalid);
             }
+
+            VerifyOrExit(mMeshDest != Mac::kShortAddrInvalid, error = kThreadError_Drop);
 
             if (mMle.GetNeighbor(mMeshDest) != NULL)
             {
@@ -571,14 +573,34 @@ void MeshForwarder::SetRxOnWhenIdle(bool aRxOnWhenIdle)
     }
 }
 
+void MeshForwarder::SetAssignPollPeriod(uint32_t aPeriod)
+{
+    mAssignPollPeriod = aPeriod;
+}
+
+uint32_t MeshForwarder::GetAssignPollPeriod()
+{
+    return mAssignPollPeriod;
+}
+
 void MeshForwarder::SetPollPeriod(uint32_t aPeriod)
 {
-    if (mMac.GetRxOnWhenIdle() == false && mPollPeriod != aPeriod)
+    if (mPollPeriod != aPeriod)
     {
-        mPollTimer.Start(aPeriod);
+        if (mAssignPollPeriod != 0 && aPeriod != (OPENTHREAD_CONFIG_ATTACH_DATA_POLL_PERIOD))
+        {
+            mPollPeriod = mAssignPollPeriod;
+        }
+        else
+        {
+            mPollPeriod = aPeriod;
+        }
     }
+}
 
-    mPollPeriod = aPeriod;
+uint32_t MeshForwarder::GetPollPeriod()
+{
+    return mPollPeriod;
 }
 
 void MeshForwarder::HandlePollTimer(void *aContext)

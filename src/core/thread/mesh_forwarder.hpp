@@ -133,12 +133,36 @@ public:
     void SetRxOnWhenIdle(bool aRxOnWhenIdle);
 
     /**
+     * This method sets customized Data Poll period. Only for certification test
+     *
+     * @param[in]  aPeriod  The Data Poll period in milliseconds.
+     *
+     */
+    void SetAssignPollPeriod(uint32_t aPeriod);
+
+    /**
+     * This method gets the customized Data Poll period. Only for certification test
+     *
+     * @returns  The Data Poll period in milliseconds.
+     *
+     */
+    uint32_t GetAssignPollPeriod(void);
+
+    /**
      * This method sets the Data Poll period.
      *
      * @param[in]  aPeriod  The Data Poll period in milliseconds.
      *
      */
     void SetPollPeriod(uint32_t aPeriod);
+
+    /**
+     * This method gets the Data Poll period.
+     *
+     * @returns  The Data Poll period in milliseconds.
+     *
+     */
+    uint32_t GetPollPeriod(void);
 
     /**
      * This method sets the scan parameters for MLE Discovery Request messages.
@@ -209,6 +233,7 @@ private:
     uint16_t mFragTag;
     uint16_t mMessageNextOffset;
     uint32_t mPollPeriod;
+    uint32_t mAssignPollPeriod;  ///< only for certification test
     Message *mSendMessage;
 
     Mac::Address mMacSource;

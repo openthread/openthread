@@ -69,7 +69,7 @@
 // ----------------------------------------------------------------------------
 
 #define SPINEL_PROTOCOL_VERSION_THREAD_MAJOR    4
-#define SPINEL_PROTOCOL_VERSION_THREAD_MINOR    0
+#define SPINEL_PROTOCOL_VERSION_THREAD_MINOR    1
 
 #define SPINEL_FRAME_MAX_SIZE                   1300
 
@@ -126,15 +126,7 @@ typedef enum
 
 typedef enum
 {
-    SPINEL_NET_STATE_OFFLINE   = 0,
-    SPINEL_NET_STATE_DETACHED  = 1,
-    SPINEL_NET_STATE_ATTACHING = 2,
-    SPINEL_NET_STATE_ATTACHED  = 3,
-} spinel_net_state_t;
-
-typedef enum
-{
-    SPINEL_NET_ROLE_NONE       = 0,
+    SPINEL_NET_ROLE_DETACHED   = 0,
     SPINEL_NET_ROLE_CHILD      = 1,
     SPINEL_NET_ROLE_ROUTER     = 2,
     SPINEL_NET_ROLE_LEADER     = 3,
@@ -331,7 +323,7 @@ typedef enum
      * Structure Parameters:
      *
      * * `E`: EUI64 address of node
-     * * `c`: Optional fixed RSSI. -127 means not set.
+     * * `c`: Optional fixed RSSI. 127 means not set.
      */
     SPINEL_PROP_MAC_WHITELIST          = SPINEL_PROP_MAC_EXT__BEGIN + 0,
 
@@ -343,8 +335,8 @@ typedef enum
 
     SPINEL_PROP_NET__BEGIN           = 0x40,
     SPINEL_PROP_NET_SAVED            = SPINEL_PROP_NET__BEGIN + 0, ///< [b]
-    SPINEL_PROP_NET_ENABLED          = SPINEL_PROP_NET__BEGIN + 1, ///< [b]
-    SPINEL_PROP_NET_STATE            = SPINEL_PROP_NET__BEGIN + 2, ///< [C]
+    SPINEL_PROP_NET_IF_UP            = SPINEL_PROP_NET__BEGIN + 1, ///< [b]
+    SPINEL_PROP_NET_STACK_UP         = SPINEL_PROP_NET__BEGIN + 2, ///< [C]
     SPINEL_PROP_NET_ROLE             = SPINEL_PROP_NET__BEGIN + 3, ///< [C]
     SPINEL_PROP_NET_NETWORK_NAME     = SPINEL_PROP_NET__BEGIN + 4, ///< [U]
     SPINEL_PROP_NET_XPANID           = SPINEL_PROP_NET__BEGIN + 5, ///< [D]
@@ -686,6 +678,8 @@ SPINEL_API_EXTERN const char *spinel_next_packed_datatype(const char *pack_forma
 // ----------------------------------------------------------------------------
 
 SPINEL_API_EXTERN const char *spinel_prop_key_to_cstr(spinel_prop_key_t prop_key);
+
+SPINEL_API_EXTERN const char *spinel_status_to_cstr(spinel_status_t status);
 
 // ----------------------------------------------------------------------------
 
