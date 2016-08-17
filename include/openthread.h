@@ -1658,6 +1658,17 @@ bool otIsIcmpEchoEnabled(void);
 void otSetIcmpEchoEnabled(bool aEnabled);
 
 /**
+ * This function returns the prefix match length (bits) for two IPv6 addresses.
+ *
+ * @param[in]  aFirst   A pointer to the first IPv6 address.
+ * @param[in]  aSecond  A pointer to the second IPv6 address.
+ *
+ * @returns  The prefix match length in bits.
+ *
+ */
+uint8_t otIp6PrefixMatch(const otIp6Address *aFirst, const otIp6Address *aSecond);
+
+/**
  * @}
  *
  */
