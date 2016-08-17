@@ -1,7 +1,7 @@
 Spinel Host Controller Interface
 ================================
 
-Updated: 2016-08-10
+Updated: 2016-08-17
 
 Written by: Robert Quattlebaum <rquattle@nestlabs.com>
 
@@ -1608,6 +1608,13 @@ Used when operating in the Child role.
 #### D.4.19. PROP 5379: `PROP_THREAD_CONTEXT_REUSE_DELAY`
 * Type: Read-Write
 * Packed-Encoding: `L`
+
+#### D.4.20. PROP 5380: `PROP_THREAD_NETWORK_ID_TIMEOUT`
+* Type: Read-Write
+* Packed-Encoding: `C`
+
+Allows you to get or set the Thread `NETWORK_ID_TIMEOUT` constant, as
+defined by the Thread specification.
 
 ### D.5. IPv6 Properties
 
