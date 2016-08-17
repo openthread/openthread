@@ -1987,8 +1987,12 @@ ThreadError MleRouter::HandleDataRequest(const Message &aMessage, const Ip6::Mes
     VerifyOrExit(tlvRequest.IsValid() && tlvRequest.GetLength() <= sizeof(tlvs), error = kThreadError_Parse);
 
     // Active Timestamp
-    SuccessOrExit(error = Tlv::GetTlv(aMessage, Tlv::kActiveTimestamp, sizeof(activeTimestamp), activeTimestamp));
-    VerifyOrExit(activeTimestamp.IsValid(), error = kThreadError_Parse);
+    activeTimestamp.SetLength(0);
+
+    if (Tlv::GetTlv(aMessage, Tlv::kActiveTimestamp, sizeof(activeTimestamp), activeTimestamp) == kThreadError_None)
+    {
+        VerifyOrExit(activeTimestamp.IsValid(), error = kThreadError_Parse);
+    }
 
     // Pending Timestamp
     pendingTimestamp.SetLength(0);
@@ -2002,7 +2006,8 @@ ThreadError MleRouter::HandleDataRequest(const Message &aMessage, const Ip6::Mes
     memcpy(tlvs, tlvRequest.GetTlvs(), tlvRequest.GetLength());
     numTlvs = tlvRequest.GetLength();
 
-    if (mNetif.GetActiveDataset().GetNetwork().GetTimestamp().Compare(activeTimestamp) != 0)
+    if (activeTimestamp.GetLength() == 0 ||
+        mNetif.GetActiveDataset().GetNetwork().GetTimestamp().Compare(activeTimestamp) != 0)
     {
         tlvs[numTlvs++] = Tlv::kActiveDataset;
     }
