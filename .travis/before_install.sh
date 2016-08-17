@@ -54,10 +54,6 @@ cd /tmp || die
     [ $BUILD_TARGET != posix-32-bit ] || {
         sudo apt-get install g++-multilib || die
     }
-
-    [ $BUILD_TARGET != posix-distcheck ] || {
-        sudo apt-get install procmail || die
-    }
 }
 
 [ $TRAVIS_OS_NAME != osx ] || {
