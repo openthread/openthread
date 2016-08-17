@@ -210,6 +210,16 @@ ThreadError otSetMasterKey(const uint8_t *aKey, uint8_t aKeyLength)
     return sThreadNetif->GetKeyManager().SetMasterKey(aKey, aKeyLength);
 }
 
+int8_t otGetMaxTransmitPower(void)
+{
+    return sThreadNetif->GetMac().GetMaxTransmitPower();
+}
+
+void otSetMaxTransmitPower(int8_t aPower)
+{
+    sThreadNetif->GetMac().SetMaxTransmitPower(aPower);
+}
+
 const otIp6Address *otGetMeshLocalEid(void)
 {
     return sThreadNetif->GetMle().GetMeshLocal64();

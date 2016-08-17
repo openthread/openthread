@@ -303,6 +303,22 @@ public:
     ThreadError SetChannel(uint8_t aChannel);
 
     /**
+     * This method returns the maximum transmit power in dBm.
+     *
+     * @returns  The maximum transmit power in dBm.
+     *
+     */
+    int8_t GetMaxTransmitPower(void) const;
+
+    /**
+     * This method sets the maximum transmit power in dBm.
+     *
+     * @param[in]  aPower  The maximum transmit power in dBm.
+     *
+     */
+    void SetMaxTransmitPower(int8_t aPower);
+
+    /**
      * This method returns the IEEE 802.15.4 Network Name.
      *
      * @returns A pointer to the IEEE 802.15.4 Network Name.
@@ -470,6 +486,7 @@ private:
     ShortAddress mShortAddress;
     PanId mPanId;
     uint8_t mChannel;
+    int8_t mMaxTransmitPower;
 
     otNetworkName mNetworkName;
     otExtendedPanId mExtendedPanId;
