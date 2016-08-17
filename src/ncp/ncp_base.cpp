@@ -346,6 +346,7 @@ NcpBase::NcpBase():
     mSupportedChannelMask = kPhySupportedChannelMask;
     mChannelMask = mSupportedChannelMask;
     mScanPeriod = 200; // ms
+    mShouldSignalEndOfScan = false;
     sNcpContext = this;
     mChangedFlags = NCP_PLAT_RESET_REASON;
     mAllowLocalNetworkDataChange = false;
@@ -430,6 +431,8 @@ void NcpBase::HandleActiveScanResult_Jump(otActiveScanResult *result)
 
 void NcpBase::HandleActiveScanResult(otActiveScanResult *result)
 {
+    ThreadError errorCode;
+
     if (result)
     {
         uint8_t flags = static_cast<uint8_t>(result->mVersion << SPINEL_BEACON_THREAD_FLAG_VERSION_SHIFT);
@@ -466,13 +469,21 @@ void NcpBase::HandleActiveScanResult(otActiveScanResult *result)
     {
         // We are finished with the scan, so send out
         // a property update indicating such.
-        SendPropertyUpdate(
+        errorCode = SendPropertyUpdate(
             SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0,
             SPINEL_CMD_PROP_VALUE_IS,
             SPINEL_PROP_MAC_SCAN_STATE,
             SPINEL_DATATYPE_UINT8_S,
             SPINEL_SCAN_STATE_IDLE
         );
+
+        // If we could not send the end of scan inidciator message now (no
+        // buffer space), we set `mShouldSignalEndOfScan` to true to send
+        // it out when buffer space becomes available.
+        if (errorCode != kThreadError_None)
+        {
+            mShouldSignalEndOfScan = true;
+        }
     }
 }
 
@@ -649,6 +660,20 @@ void NcpBase::HandleSpaceAvailableInTxBuffer(void)
             mDroppedReplyTid = SPINEL_GET_NEXT_TID(mDroppedReplyTid);
         }
         while ((mDroppedReplyTidBitSet & (1 << mDroppedReplyTid)) == 0);
+    }
+
+    if (mShouldSignalEndOfScan)
+    {
+        SuccessOrExit(
+            SendPropertyUpdate(
+                SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0,
+                SPINEL_CMD_PROP_VALUE_IS,
+                SPINEL_PROP_MAC_SCAN_STATE,
+                SPINEL_DATATYPE_UINT8_S,
+                SPINEL_SCAN_STATE_IDLE
+        ));
+
+        mShouldSignalEndOfScan = false;
     }
 
     UpdateChangedProps();
@@ -2238,6 +2263,7 @@ ThreadError NcpBase::SetPropertyHandler_MAC_SCAN_STATE(uint8_t header, spinel_pr
 
         case SPINEL_SCAN_STATE_BEACON:
             gActiveScanContextHack = this;
+            mShouldSignalEndOfScan = false;
             errorCode = otActiveScan(
                             mChannelMask,
                             mScanPeriod,

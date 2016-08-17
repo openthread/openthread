@@ -397,6 +397,8 @@ private:
 
     uint32_t mChangedFlags;
 
+    bool mShouldSignalEndOfScan;
+
     spinel_tid_t mDroppedReplyTid;
 
     uint16_t mDroppedReplyTidBitSet;
