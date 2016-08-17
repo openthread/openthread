@@ -136,7 +136,7 @@ ThreadError Message::ResizeMessage(uint16_t aLength)
         if (curBuffer->GetNextBuffer() == NULL)
         {
             curBuffer->SetNextBuffer(NewBuffer());
-            VerifyOrExit(curBuffer->GetNextBuffer() != NULL, error = kThreadError_NoBufs;);
+            VerifyOrExit(curBuffer->GetNextBuffer() != NULL, error = kThreadError_NoBufs);
         }
 
         curBuffer = curBuffer->GetNextBuffer();
