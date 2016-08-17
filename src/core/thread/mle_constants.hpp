@@ -92,6 +92,7 @@ enum
     kReedAdvertiseInterval      = 570,  ///< REED_ADVERTISEMENT_INTERVAL (seconds)
     kReedAdvertiseJitter        = 60,   ///< REED_ADVERTISEMENT_JITTER (seconds)
     kMleEndDeviceTimeout        = 240,  ///< MLE_END_DEVICE_TIMEOUT (secondes)
+    kLeaderWeight               = 64,   ///< Default leaderweight for the Thread Network Partition
 };
 
 enum

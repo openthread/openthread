@@ -63,7 +63,7 @@ MleRouter::MleRouter(ThreadNetif &aThreadNetif):
 
     mNetworkIdTimeout = kNetworkIdTimeout;
     mRouterUpgradeThreshold = kRouterUpgradeThreshold;
-    mLeaderWeight = 0;
+    mLeaderWeight = kLeaderWeight;
     mFixedLeaderPartitionId = 0;
     mRouterId = kMaxRouterId;
     mPreviousRouterId = kMaxRouterId;
