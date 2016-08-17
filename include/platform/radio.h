@@ -272,9 +272,9 @@ extern void otPlatRadioTransmitDone(bool aFramePending, ThreadError aError);
 /**
  * Get the most recent RSSI measurement.
  *
- * @returns The noise floor value in dBm when the noise floor value is valid.  127 when noise floor value is invalid.
+ * @returns The RSSI in dBm when it is valid.  127 when RSSI is invalid.
  */
-int8_t otPlatRadioGetNoiseFloor(void);
+int8_t otPlatRadioGetRssi(void);
 
 /**
  * Get the radio capabilities.
