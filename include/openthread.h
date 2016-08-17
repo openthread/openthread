@@ -499,6 +499,19 @@ const char *otGetNetworkName(void);
 ThreadError otSetNetworkName(const char *aNetworkName);
 
 /**
+ * This function gets the next On Mesh Prefix in the Network Data.
+ *
+ * @param[in]     aLocal     TRUE to retrieve from the local Network Data, FALSE for partition's Network Data
+ * @param[inout]  aIterator  A pointer to the Network Data iterator context.
+ * @param[out]    aConfig    A pointer to where the On Mesh Prefix information will be placed.
+ *
+ * @retval kThreadError_None      Successfully found the next On Mesh prefix.
+ * @retval kThreadError_NotFound  No subsequent On Mesh prefix exists in the Thread Network Data.
+ *
+ */
+ThreadError otGetNextOnMeshPrefix(bool aLocal, otNetworkDataIterator *aIterator, otBorderRouterConfig *aConfig);
+
+/**
  * Get the IEEE 802.15.4 PAN ID.
  *
  * @returns The IEEE 802.15.4 PAN ID.
