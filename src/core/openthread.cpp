@@ -903,6 +903,11 @@ exit:
     return error;
 }
 
+bool otIsSingleton(void)
+{
+    return mEnabled && sThreadNetif->GetMle().IsSingleton();
+}
+
 ThreadError otActiveScan(uint32_t aScanChannels, uint16_t aScanDuration, otHandleActiveScanResult aCallback)
 {
     return sThreadNetif->GetMac().ActiveScan(aScanChannels, aScanDuration, &HandleActiveScanResult,
