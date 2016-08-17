@@ -40,6 +40,7 @@ OpenThread test scripts use the CLI to execute test cases.
 * [router](#router)
 * [routerupgradethreshold](#routerupgradethreshold)
 * [scan](#scan)
+* [singleton](#singleton)
 * [state](#state)
 * [thread](#thread)
 * [version](#version)
@@ -731,6 +732,15 @@ Perform an IEEE 802.15.4 Active Scan.
 | J | Network Name     | Extended PAN     | PAN  | MAC Address      | Ch | dBm | LQI |
 +---+------------------+------------------+------+------------------+----+-----+-----+
 | 0 | OpenThread       | dead00beef00cafe | ffff | f1d92a82c8d8fe43 | 11 | -20 |   0 |
+Done
+```
+
+### singleton
+Return true when there are no other nodes in the network, otherwise return false.
+
+```bash
+> singleton
+true or false
 Done
 ```
 
