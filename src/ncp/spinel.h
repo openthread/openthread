@@ -402,6 +402,13 @@ typedef enum
      */
     SPINEL_PROP_THREAD_CONTEXT_REUSE_DELAY
                                        = SPINEL_PROP_THREAD_EXT__BEGIN + 3,
+
+    /// Thread Network ID Timeout
+    /** Format: `C`
+     */
+    SPINEL_PROP_THREAD_NETWORK_ID_TIMEOUT
+                                       = SPINEL_PROP_THREAD_EXT__BEGIN + 4,
+
     SPINEL_PROP_THREAD_EXT__END        = 0x1600,
 
     SPINEL_PROP_IPV6__BEGIN          = 0x60,
