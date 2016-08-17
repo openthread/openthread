@@ -1073,6 +1073,18 @@ void otSetIcmpEchoEnabled(bool aEnabled)
     Ip6::Icmp::SetEchoEnabled(aEnabled);
 }
 
+uint8_t otIp6PrefixMatch(const otIp6Address *aFirst, const otIp6Address *aSecond)
+{
+    uint8_t rval;
+
+    VerifyOrExit(aFirst != NULL && aSecond != NULL, rval = 0);
+
+    rval = static_cast<const Ip6::Address *>(aFirst)->PrefixMatch(*static_cast<const Ip6::Address *>(aSecond));
+
+exit:
+    return rval;
+}
+
 ThreadError otGetActiveDataset(otOperationalDataset *aDataset)
 {
     ThreadError error = kThreadError_None;
