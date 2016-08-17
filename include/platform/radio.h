@@ -274,7 +274,7 @@ extern void otPlatRadioTransmitDone(bool aFramePending, ThreadError aError);
  *
  * @returns The noise floor value in dBm when the noise floor value is valid.  127 when noise floor value is invalid.
  */
-int8_t otPlatRadioGetNoiseFloor(void);
+int8_t otPlatRadioGetRssi(void);
 
 /**
  * Get the radio capabilities.

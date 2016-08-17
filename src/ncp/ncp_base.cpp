@@ -1237,7 +1237,7 @@ ThreadError NcpBase::GetPropertyHandler_PHY_RSSI(uint8_t header, spinel_prop_key
                SPINEL_CMD_PROP_VALUE_IS,
                key,
                SPINEL_DATATYPE_INT8_S,
-               otPlatRadioGetNoiseFloor()
+               otPlatRadioGetRssi()
            );
 }
 
