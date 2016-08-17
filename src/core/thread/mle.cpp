@@ -942,14 +942,9 @@ void Mle::HandleNetifStateChanged(uint32_t aFlags)
         mNetif.SetStateChangedFlags(OT_IP6_ML_ADDR_CHANGED);
     }
 
-    switch (mDeviceState)
+    if (mDeviceState == kDeviceStateChild && (mDeviceMode & ModeTlv::kModeFFD) == 0)
     {
-    case kDeviceStateChild:
         SendChildUpdateRequest();
-        break;
-
-    default:
-        break;
     }
 
 exit:
@@ -2385,6 +2380,10 @@ void Mle::HandleNetworkDataUpdate(void)
     if (mDeviceMode & ModeTlv::kModeFFD)
     {
         mMleRouter.HandleNetworkDataUpdateRouter();
+    }
+    else
+    {
+        SendChildUpdateRequest();
     }
 }
 
