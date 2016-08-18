@@ -38,7 +38,7 @@ Mesh Routing.
 
 Nest, along with ARM, Atmel, a subsidiary of Microchip Technology,
 Dialog Semiconductor, Qualcomm Technologies, Inc. (a subsidiary of
-Qualcomm Incorporated and Texas Instruments Incorporated) are
+Qualcomm Incorporated), and Texas Instruments Incorporated are
 contributing to the ongoing development of OpenThread.
 
 
