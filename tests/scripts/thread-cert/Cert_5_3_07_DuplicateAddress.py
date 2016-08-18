@@ -117,7 +117,13 @@ class Cert_5_3_7_DuplicateAddress(unittest.TestCase):
         self.nodes[ED2].add_ipaddr('2001::1')
         time.sleep(3)
 
-        self.nodes[ED3].ping('2001::1')
+
+        # Final ping doesn't need a response;
+        # used to trigger an ADDR_ERR.ntf
+        try:
+            self.nodes[ED3].ping('2001::1')
+        except pexpect.TIMEOUT:
+            pass
 
 if __name__ == '__main__':
     unittest.main()
