@@ -1317,7 +1317,7 @@ ThreadError NcpBase::GetPropertyHandler_MAC_SCAN_STATE(uint8_t header, spinel_pr
 {
     ThreadError errorCode = kThreadError_None;
 
-    if (otActiveScanInProgress())
+    if (otIsActiveScanInProgress())
     {
         errorCode = SendPropertyUpdate(
                         header,

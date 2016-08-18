@@ -258,11 +258,12 @@ typedef void (*otHandleActiveScanResult)(otActiveScanResult *aResult);
 ThreadError otActiveScan(uint32_t aScanChannels, uint16_t aScanDuration, otHandleActiveScanResult aCallback);
 
 /**
- * This function determines if an IEEE 802.15.4 Active Scan is currently in progress.
+ * This function indicates whether or not an IEEE 802.15.4 Active Scan is currently in progress.
  *
- * @returns true if an active scan is in progress.
+ * @returns true if an IEEE 802.15.4 Active Scan is in progress, false otherwise.
+ *
  */
-bool otActiveScanInProgress(void);
+bool otIsActiveScanInProgress(void);
 
 /**
  * This function starts a Thread Discovery scan.
@@ -280,11 +281,12 @@ ThreadError otDiscover(uint32_t aScanChannels, uint16_t aScanDuration, uint16_t 
                        otHandleActiveScanResult aCallback);
 
 /**
- * This function determines if an MLE Thread Discovery is currently in progress.
+ * This function indicates whether or not an MLE Thread Discovery is currently in progress.
  *
- * @returns true if an active scan is in progress.
+ * @returns true if an MLE Thread Discovery is in progress, false otherwise.
+ *
  */
-bool otDiscoverInProgress(void);
+bool otIsDiscoverInProgress(void);
 
 /**
  * @}

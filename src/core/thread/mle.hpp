@@ -421,6 +421,14 @@ public:
                          DiscoverHandler aCallback, void *aContext);
 
     /**
+     * This method indicates whether or not an MLE Thread Discovery is currently in progress.
+     *
+     * @returns true if an MLE Thread Discovery is in progress, false otherwise.
+     *
+     */
+    bool IsDiscoverInProgress(void);
+
+    /**
      * This method is called by the MeshForwarder to indicate that discovery is complete.
      *
      */
@@ -1146,6 +1154,7 @@ private:
 
     DiscoverHandler mDiscoverHandler;
     void *mDiscoverContext;
+    bool mIsDiscoverInProgress;
 
     Ip6::NetifUnicastAddress mLinkLocal16;
     Ip6::NetifUnicastAddress mLinkLocal64;
