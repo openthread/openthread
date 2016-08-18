@@ -44,9 +44,6 @@ BuildJobs                      ?= 99
 COMMONCFLAGS                   := \
     -O1                           \
     -g                            \
-    -Wall                         \
-    -Wextra                       \
-    -Werror                       \
     $(NULL)
 
 CPPFLAGS                       += \
