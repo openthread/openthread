@@ -399,10 +399,12 @@ public:
      * This function pointer is called on receiving an MLE Discovery Response message.
      *
      * @param[in]  aResult   A valid pointer to the Discovery Response information or NULL when the Discovery completes.
-     * @param[in]  aContext  A pointer to application-specific context.
+     * @param[in]  aClientHandler A pointer to the client's scan handler.
+     * @param[in]  aClientContext A pointer to the client's scan handler.
      *
      */
-    typedef void (*DiscoverHandler)(otActiveScanResult *aResult, void *aContext);
+    typedef void (*DiscoverHandler)(otActiveScanResult *aResult, otHandleActiveScanResult aClientHandler,
+                                    void *aClientContext);
 
     /**
      * This method initiates a Thread Discovery.
@@ -411,14 +413,15 @@ public:
      * @param[in]  aScanDuration  The time in milliseconds to spend scanning each channel.
      * @param[in]  aPanId         The PAN ID filter (set to Broadcast PAN to disable filter).
      * @param[in]  aHandler       A pointer to a function that is called on receiving an MLE Discovery Response.
-     * @param[in]  aContext       A pointer to arbitrary context information.
+     * @param[in]  aClientHandler A pointer to the client's scan handler.
+     * @param[in]  aClientContext A pointer to client's context information.
      *
      * @retval kThreadError_None  Successfully started a Thread Discovery.
      * @retval kThreadError_Busy  Thread Discovery is already in progress.
      *
      */
     ThreadError Discover(uint32_t aScanChannels, uint16_t aScanDuration, uint16_t aPanId,
-                         DiscoverHandler aCallback, void *aContext);
+                         DiscoverHandler aCallback, otHandleActiveScanResult aClientHandler, void *aClientContext);
 
     /**
      * This method indicates whether or not an MLE Thread Discovery is currently in progress.
@@ -1153,7 +1156,8 @@ private:
     uint32_t mTimeout;
 
     DiscoverHandler mDiscoverHandler;
-    void *mDiscoverContext;
+    otHandleActiveScanResult mClientActiveScanHandler;
+    void *mClientActiveScanContext;
     bool mIsDiscoverInProgress;
 
     Ip6::NetifUnicastAddress mLinkLocal16;

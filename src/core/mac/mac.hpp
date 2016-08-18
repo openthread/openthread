@@ -193,11 +193,12 @@ public:
     /**
      * This function pointer is called on receiving an IEEE 802.15.4 Beacon during an Active Scan.
      *
-     * @param[in]  aContext       A pointer to arbitrary context information.
+     * @param[in]  aClientHandler A pointer to the client's scan handler.
+     * @param[in]  aClientContext A pointer to the client's scan handler.
      * @param[in]  aBeaconFrame   A pointer to the Beacon frame.
      *
      */
-    typedef void (*ActiveScanHandler)(void *aContext, Frame *aBeaconFrame);
+    typedef void (*ActiveScanHandler)(otHandleActiveScanResult aClientHandler, void *aClientContext, Frame *aBeaconFrame);
 
     /**
      * This method starts an IEEE 802.15.4 Active Scan.
@@ -205,10 +206,12 @@ public:
      * @param[in]  aScanChannels  A bit vector indicating which channels to scan.
      * @param[in]  aScanDuration  The time in milliseconds to spend scanning each channel.
      * @param[in]  aHandler       A pointer to a function that is called on receiving an IEEE 802.15.4 Beacon.
-     * @param[in]  aContext       A pointer to arbitrary context information.
+     * @param[in]  aClientHandler A pointer to the client's scan handler.
+     * @param[in]  aClientContext A pointer to client's context information.
      *
      */
-    ThreadError ActiveScan(uint32_t aScanChannels, uint16_t aScanDuration, ActiveScanHandler aHandler, void *aContext);
+    ThreadError ActiveScan(uint32_t aScanChannels, uint16_t aScanDuration, ActiveScanHandler aHandler,
+                           otHandleActiveScanResult aClientHandler, void *aClientContext);
 
     /**
      * This method indicates whether or not rx-on-when-idle is enabled.
@@ -419,11 +422,12 @@ public:
     /**
      * This function registers a callback to provide received raw IEEE 802.15.4 frames.
      *
-     * @param[in]  aPcapCallback  A pointer to a function that is called when receiving an IEEE 802.15.4 link frame or
-     *                            NULL to disable the callback.
+     * @param[in]  aPcapCallback    A pointer to a function that is called when receiving an IEEE 802.15.4 link frame or
+     *                              NULL to disable the callback.
+     * @param[in]  aContextContext  A pointer to application-specific context.
      *
      */
-    void SetPcapCallback(otLinkPcapCallback aPcapCallback);
+    void SetPcapCallback(otLinkPcapCallback aPcapCallback, void *aCallbackContext);
 
     /**
      * This function indicates whether or not promiscuous mode is enabled at the link layer.
@@ -515,9 +519,11 @@ private:
     uint32_t mScanChannels;
     uint16_t mScanDuration;
     ActiveScanHandler mActiveScanHandler;
-    void *mActiveScanContext;
+    otHandleActiveScanResult mClientActiveScanHandler;
+    void *mClientActiveScanContext;
 
     otLinkPcapCallback mPcapCallback;
+    void *mPcapCallbackContext;
 
     Whitelist mWhitelist;
     Blacklist mBlacklist;
