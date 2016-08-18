@@ -1130,6 +1130,10 @@ spinel_prop_key_to_cstr(spinel_prop_key_t prop_key)
         ret = "PROP_THREAD_CONTEXT_REUSE_DELAY";
         break;
 
+    case SPINEL_PROP_NEST_STREAM_MFG:
+        ret = "SPINEL_PROP_NEST_STREAM_MFG";
+        break;
+
     default:
         break;
     }

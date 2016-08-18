@@ -36,7 +36,7 @@
 #include <ncp/ncp.h>
 #include <ncp/ncp_base.hpp>
 #include <openthread.h>
-#include <openthread-config.h>
+#include <openthread-diag.h>
 #include <stdarg.h>
 #include <platform/radio.h>
 #include <platform/misc.h>
@@ -217,6 +217,9 @@ const NcpBase::SetPropertyHandlerEntry NcpBase::mSetPropertyHandlerTable[] =
     { SPINEL_PROP_THREAD_ROUTER_UPGRADE_THRESHOLD, &NcpBase::SetPropertyHandler_THREAD_ROUTER_UPGRADE_THRESHOLD },
     { SPINEL_PROP_THREAD_CONTEXT_REUSE_DELAY, &NcpBase::SetPropertyHandler_THREAD_CONTEXT_REUSE_DELAY },
 
+#if OPENTHREAD_ENABLE_DIAG
+    { SPINEL_PROP_NEST_STREAM_MFG, &NcpBase::SetPropertyHandler_NEST_STREAM_MFG },
+#endif
 };
 
 const NcpBase::InsertPropertyHandlerEntry NcpBase::mInsertPropertyHandlerTable[] =
@@ -3342,6 +3345,42 @@ ThreadError NcpBase::SetPropertyHandler_THREAD_NETWORK_ID_TIMEOUT(uint8_t header
     return errorCode;
 }
 
+#if OPENTHREAD_ENABLE_DIAG
+ThreadError NcpBase::SetPropertyHandler_NEST_STREAM_MFG(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr, uint16_t value_len)
+{
+    char *string(NULL);
+    char *output(NULL);
+    spinel_ssize_t parsedLength;
+    ThreadError errorCode = kThreadError_None;
+
+    parsedLength = spinel_datatype_unpack(
+                       value_ptr,
+                       value_len,
+                       SPINEL_DATATYPE_UTF8_S,
+                       &string
+                   );
+
+    if ((parsedLength > 0) && (string != NULL))
+    {
+        // all diagnostics related features are processed within diagnostics module
+        output = diagProcessCmdLine(string);
+
+        errorCode = SendPropertyUpdate(
+                        header,
+                        SPINEL_CMD_PROP_VALUE_IS,
+                        key,
+                        reinterpret_cast<uint8_t *>(output),
+                        static_cast<uint16_t>(strlen(output) + 1)
+                    );
+    }
+    else
+    {
+        errorCode = SendLastStatus(header, SPINEL_STATUS_PARSE_ERROR);
+    }
+
+    return errorCode;
+}
+#endif
 
 // ----------------------------------------------------------------------------
 // MARK: Individual Property Inserters
