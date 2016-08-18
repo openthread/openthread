@@ -32,6 +32,7 @@ include $(abs_top_nlbuild_autotools_dir)/automake/pre.am
 
 DIST_SUBDIRS                            = \
     harness-automation                    \
+    harness-thci                          \
     spi-hdlc-adapter                      \
     $(NULL)
 

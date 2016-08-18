@@ -293,9 +293,9 @@ extern void otPlatRadioTransmitDone(otContext *aContext, bool aFramePending, Thr
  *
  * @param[in] aContext  The OpenThread context structure.
  *
- * @returns The noise floor value in dBm when the noise floor value is valid.  127 when noise floor value is invalid.
+ * @returns The RSSI in dBm when it is valid.  127 when RSSI is invalid.
  */
-int8_t otPlatRadioGetNoiseFloor(otContext *aContext);
+int8_t otPlatRadioGetRssi(otContext *aContext);
 
 /**
  * Get the radio capabilities.

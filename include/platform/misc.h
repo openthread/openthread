@@ -45,12 +45,14 @@ extern "C" {
  * This function performs a software reset on the platform, if supported.
  *
  */
-void otPlatReset(void);
+void otPlatReset(otContext *aContext);
 
 /**
  * Enumeration of possible reset reason codes.
  *
  * These are in the same order as the Spinel reset reason codes.
+ *
+ * @param[in] aContext  The OpenThread context structure.
  *
  */
 typedef enum
@@ -71,8 +73,10 @@ typedef enum
 /**
  * This function returns the reason for the last platform reset.
  *
+ * @param[in] aContext  The OpenThread context structure.
+ *
  */
-otPlatResetReason otPlatGetResetReason(void);
+otPlatResetReason otPlatGetResetReason(otContext *aContext);
 
 #ifdef __cplusplus
 }  // extern "C"

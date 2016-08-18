@@ -23,6 +23,12 @@ $ cd <path-to-openthread>/output/<platform>/bin
 $ ./ot-cli 1
 ```
 
+Set the PAN ID:
+
+```bash
+> panid 0x1234
+```
+
 Bring up the IPv6 interface:
 
 ```bash
@@ -63,6 +69,12 @@ Spawn the process:
 ```bash
 $ cd <path-to-openthread>/output/<platform>/bin
 $ ./ot-cli 2
+```
+
+Set the PAN ID:
+
+```bash
+> panid 0x1234
 ```
 
 Bring up the IPv6 interface:

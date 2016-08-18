@@ -1,4 +1,3 @@
-#!/bin/sh
 #
 #  Copyright (c) 2016, Nest Labs, Inc.
 #  All rights reserved.
@@ -27,52 +26,11 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-die() {
-	echo " *** ERROR: " $*
-	exit 1
-}
+include $(abs_top_nlbuild_autotools_dir)/automake/pre.am
 
-set -x
+EXTRA_DIST              = \
+    ARM.py                \
+    README.md             \
+    $(NULL)
 
-cd /tmp || die
-
-[ $TRAVIS_OS_NAME != linux ] || {    
-    sudo apt-get install python-pexpect || die
-
-    [ $BUILD_TARGET != cc2538 ] || {
-        sudo apt-get install lib32z1 || die
-        wget https://launchpad.net/gcc-arm-embedded/4.9/4.9-2015-q3-update/+download/gcc-arm-none-eabi-4_9-2015q3-20150921-linux.tar.bz2 || die
-        tar xjf gcc-arm-none-eabi-4_9-2015q3-20150921-linux.tar.bz2 || die
-        export PATH=/tmp/gcc-arm-none-eabi-4_9-2015q3/bin:$PATH || die
-        arm-none-eabi-gcc --version || die
-    }
-
-    [ $BUILD_TARGET != scan-build ] || {
-        sudo apt-get install clang || die
-    }
-
-    [ $BUILD_TARGET != posix-32-bit ] || {
-        sudo apt-get install g++-multilib || die
-    }
-}
-
-[ $TRAVIS_OS_NAME != osx ] || {
-    sudo easy_install pexpect || die
-
-    [ $BUILD_TARGET != cc2538 ] || {
-        wget https://launchpad.net/gcc-arm-embedded/4.9/4.9-2015-q3-update/+download/gcc-arm-none-eabi-4_9-2015q3-20150921-mac.tar.bz2 || die
-        tar xjf gcc-arm-none-eabi-4_9-2015q3-20150921-mac.tar.bz2 || die
-        export PATH=/tmp/gcc-arm-none-eabi-4_9-2015q3/bin:$PATH || die
-        arm-none-eabi-gcc --version || die
-    }
-}
-
-[ $BUILD_TARGET != pretty-check ] || {
-    wget http://ufpr.dl.sourceforge.net/project/astyle/astyle/astyle%202.05.1/astyle_2.05.1_linux.tar.gz || die
-    tar xzvf astyle_2.05.1_linux.tar.gz || die
-    cd astyle/build/gcc || die
-    LDFLAGS=" " make || die
-    cd ../../..
-    export PATH=/tmp/astyle/build/gcc/bin:$PATH || die
-    astyle --version || die
-}
+include $(abs_top_nlbuild_autotools_dir)/automake/post.am

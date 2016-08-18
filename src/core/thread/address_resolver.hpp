@@ -153,7 +153,8 @@ private:
     void SendAddressQueryResponse(const ThreadTargetTlv &aTargetTlv, const ThreadMeshLocalEidTlv &aMlEidTlv,
                                   const ThreadLastTransactionTimeTlv *aLastTransactionTimeTlv,
                                   const Ip6::Address &aDestination);
-    void SendAddressNotificationResponse(const Coap::Header &aRequestHeader, const Ip6::MessageInfo &aMessageInfo);
+    void SendAddressErrorResponse(const Coap::Header &aRequestHeader, const Ip6::MessageInfo &aRequestInfo);
+    void SendAddressNotificationResponse(const Coap::Header &aRequestHeader, const Ip6::MessageInfo &aRequestInfo);
 
     static void HandleUdpReceive(void *aContext, otMessage aMessage, const otMessageInfo *aMessageInfo);
 
@@ -181,7 +182,6 @@ private:
     Coap::Resource mAddressNotification;
     Cache mCache[kCacheEntries];
     uint16_t mCoapMessageId;
-    uint8_t mCoapToken[2];
     Ip6::IcmpHandler mIcmpHandler;
     Ip6::UdpSocket mSocket;
     Timer mTimer;

@@ -125,11 +125,15 @@ typedef enum ThreadError
      */
     kThreadError_NotFound = 25,
 
-
     /**
      * The operation is already in progress.
      */
     kThreadError_Already = 26,
+
+    /**
+     * Received a frame filtered by the blacklist.
+     */
+    kThreadError_BlacklistFiltered = 27,
 
     kThreadError_Error = 255,
 } ThreadError;
@@ -147,7 +151,7 @@ typedef struct otMasterKey
     uint8_t m8[OT_MASTER_KEY_SIZE];
 } otMasterKey;
 
-#define OT_NETWORK_NAME_SIZE       16  ///< Size of the Thread Network Name field (bytes)
+#define OT_NETWORK_NAME_MAX_SIZE   16  ///< Maximum size of the Thread Network Name field (bytes)
 
 /**
  * This structure represents a Network Name.
@@ -155,7 +159,7 @@ typedef struct otMasterKey
  */
 typedef struct otNetworkName
 {
-    char m8[OT_NETWORK_NAME_SIZE];
+    char m8[OT_NETWORK_NAME_MAX_SIZE + 1];
 } otNetworkName;
 
 #define OT_EXT_PAN_ID_SIZE         8   ///< Size of a Thread PAN ID (bytes)
@@ -252,16 +256,16 @@ typedef OT_TOOL_PACKED_BEGIN struct otIp6Address
  */
 typedef struct otActiveScanResult
 {
-    otExtAddress   mExtAddress;      ///< IEEE 802.15.4 Extended Address
-    const char    *mNetworkName;     ///< Thread Network Name
-    const uint8_t *mExtPanId;        ///< Thread Extended PAN ID
-    uint16_t       mPanId;           ///< IEEE 802.15.4 PAN ID
-    uint8_t        mChannel;         ///< IEEE 802.15.4 Channel
-    int8_t         mRssi;            ///< RSSI (dBm)
-    uint8_t        mLqi;             ///< LQI
-    unsigned int   mVersion : 4;     ///< Version
-    bool           mIsNative : 1;    ///< Native Commissioner flag
-    bool           mIsJoinable : 1;  ///< Joining Permitted flag
+    otExtAddress    mExtAddress;      ///< IEEE 802.15.4 Extended Address
+    otNetworkName   mNetworkName;     ///< Thread Network Name
+    otExtendedPanId mExtendedPanId;   ///< Thread Extended PAN ID
+    uint16_t        mPanId;           ///< IEEE 802.15.4 PAN ID
+    uint8_t         mChannel;         ///< IEEE 802.15.4 Channel
+    int8_t          mRssi;            ///< RSSI (dBm)
+    uint8_t         mLqi;             ///< LQI
+    unsigned int    mVersion : 4;     ///< Version
+    bool            mIsNative : 1;    ///< Native Commissioner flag
+    bool            mIsJoinable : 1;  ///< Joining Permitted flag
 } otActiveScanResult;
 
 /**
@@ -348,19 +352,19 @@ typedef struct otLinkModeConfig
  */
 enum
 {
-    OT_IP6_ADDRESS_ADDED    = 1 << 0,  ///< IPv6 address was added
-    OT_IP6_ADDRESS_REMOVED  = 1 << 1,  ///< IPv6 address was removed
+    OT_IP6_ADDRESS_ADDED      = 1 << 0,  ///< IPv6 address was added
+    OT_IP6_ADDRESS_REMOVED    = 1 << 1,  ///< IPv6 address was removed
 
-    OT_NET_STATE            = 1 << 2,  ///< Device state (offline, detached, attached) changed
-    OT_NET_ROLE             = 1 << 3,  ///< Device role (disabled, detached, child, router, leader) changed
-    OT_NET_PARTITION_ID     = 1 << 4,  ///< Partition ID changed
-    OT_NET_KEY_SEQUENCE     = 1 << 5,  ///< Thread Key Sequence changed
+    OT_NET_ROLE               = 1 << 3,  ///< Device role (disabled, detached, child, router, leader) changed
+    OT_NET_PARTITION_ID       = 1 << 4,  ///< Partition ID changed
+    OT_NET_KEY_SEQUENCE       = 1 << 5,  ///< Thread Key Sequence changed
 
-    OT_THREAD_CHILD_ADDED   = 1 << 6,  ///< Child was added
-    OT_THREAD_CHILD_REMOVED = 1 << 7,  ///< Child was removed
+    OT_THREAD_CHILD_ADDED     = 1 << 6,  ///< Child was added
+    OT_THREAD_CHILD_REMOVED   = 1 << 7,  ///< Child was removed
+    OT_THREAD_NETDATA_UPDATED = 1 << 8,  ///< Thread Network Data updated
 
-    OT_IP6_LL_ADDR_CHANGED  = 1 << 8,  ///< The link-local address has changed
-    OT_IP6_ML_ADDR_CHANGED  = 1 << 9,  ///< The mesh-local address has changed
+    OT_IP6_LL_ADDR_CHANGED    = 1 << 9,  ///< The link-local address has changed
+    OT_IP6_ML_ADDR_CHANGED    = 1 << 10, ///< The mesh-local address has changed
 };
 
 /**
@@ -385,6 +389,10 @@ typedef struct otIp6Prefix
     otIp6Address  mPrefix;  ///< The IPv6 prefix.
     uint8_t       mLength;  ///< The IPv6 prefix length.
 } otIp6Prefix;
+
+#define OT_NETWORK_DATA_ITERATOR_INIT  0  ///< Initializeer for otNetworkDataIterator.
+
+typedef uint8_t otNetworkDataIterator;  ///< Used to iterate through Network Data information.
 
 /**
  * This structure represents a Border Router configuration.
@@ -494,6 +502,16 @@ typedef struct otMacWhitelistEntry
     bool         mValid : 1;        ///< Indicates whether or not the whitelist entry is vaild
     bool         mFixedRssi : 1;    ///< Indicates whether or not the RSSI value is fixed.
 } otMacWhitelistEntry;
+
+/**
+ * This structure represents a blacklist entry.
+ *
+ */
+typedef struct otMacBlacklistEntry
+{
+    otExtAddress mExtAddress;       ///< IEEE 802.15.4 Extended Address
+    bool         mValid;            ///< Indicates whether or not the blacklist entry is vaild
+} otMacBlacklistEntry;
 
 /**
  * @}

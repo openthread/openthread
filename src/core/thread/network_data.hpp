@@ -103,6 +103,18 @@ public:
      */
     void GetNetworkData(bool aStable, uint8_t *aData, uint8_t &aDataLength);
 
+    /**
+     * This method provides the next On Mesh prefix in the Thread Network Data.
+     *
+     * @param[out]  aIterator  A pointer to the Network Data iterator context.
+     * @param[out]  aConfig    A pointer to where the On Mesh Prefix information will be placed.
+     *
+     * @retval kThreadError_None      Successfully found the next On Mesh prefix.
+     * @retval kThreadError_NotFound  No subsequent On Mesh prefix exists in the Thread Network Data.
+     *
+     */
+    ThreadError GetNextOnMeshPrefix(otNetworkDataIterator *aIterator, otBorderRouterConfig *aConfig);
+
 protected:
     /**
      * This method returns a pointer to the Border Router TLV within a given Prefix TLV.

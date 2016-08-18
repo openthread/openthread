@@ -146,10 +146,12 @@ private:
 
     void            EncodeAndSendToUart(void);
     void            HandleFrame(uint8_t *aBuf, uint16_t aBufLength);
+    void            HandleError(ThreadError aError, uint8_t *aBuf, uint16_t aBufLength);
     void            TxFrameBufferHasData(void);
 
     static void     EncodeAndSendToUart(void *aContext);
     static void     HandleFrame(void *context, uint8_t *aBuf, uint16_t aBufLength);
+    static void     HandleError(void *context, ThreadError aError, uint8_t *aBuf, uint16_t aBufLength);
     static void     TxFrameBufferHasData(void *aContext, NcpFrameBuffer *aNcpFrameBuffer);
 
     Hdlc::Encoder   mFrameEncoder;

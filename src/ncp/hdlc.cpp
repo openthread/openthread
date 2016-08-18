@@ -202,10 +202,11 @@ exit:
     return error;
 }
 
-Decoder::Decoder(uint8_t *aOutBuf, uint16_t aOutLength, FrameHandler aFrameHandler, void *aContext)
+Decoder::Decoder(uint8_t *aOutBuf, uint16_t aOutLength, FrameHandler aFrameHandler, ErrorHandler aErrorHandler, void *aContext)
 {
     mState = kStateNoSync;
     mFrameHandler = aFrameHandler;
+    mErrorHandler = aErrorHandler;
     mContext = aContext;
     mOutBuf = aOutBuf;
     mOutOffset = 0;
@@ -240,16 +241,22 @@ void Decoder::Decode(const uint8_t *aInBuf, uint16_t aInLength)
                 break;
 
             case kFlagSequence:
-                if (mOutOffset > 0)
+                // We ignore frames which are smaller
+                // than the size of the CRC check.
+                if (mOutOffset > sizeof(uint16_t))
                 {
                     if (mFcs == kGoodFcs)
                     {
-                        mFrameHandler(mContext, mOutBuf, mOutOffset - 2);
+                        mFrameHandler(mContext, mOutBuf, mOutOffset - sizeof(uint16_t));
                     }
-
-                    mOutOffset = 0;
-                    mFcs = kInitFcs;
+                    else if (mErrorHandler != NULL)
+                    {
+                        mErrorHandler(mContext, kThreadError_Parse, mOutBuf, mOutOffset);
+                    }
                 }
+
+                mOutOffset = 0;
+                mFcs = kInitFcs;
 
                 break;
 
@@ -261,6 +268,10 @@ void Decoder::Decode(const uint8_t *aInBuf, uint16_t aInLength)
                 }
                 else
                 {
+                    if (mErrorHandler != NULL)
+                    {
+                        mErrorHandler(mContext, kThreadError_NoBufs, mOutBuf, mOutOffset);
+                    }
                     mState = kStateNoSync;
                 }
 
@@ -279,6 +290,10 @@ void Decoder::Decode(const uint8_t *aInBuf, uint16_t aInLength)
             }
             else
             {
+                if (mErrorHandler != NULL)
+                {
+                    mErrorHandler(mContext, kThreadError_NoBufs, mOutBuf, mOutOffset);
+                }
                 mState = kStateNoSync;
             }
 

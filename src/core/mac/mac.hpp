@@ -39,6 +39,7 @@
 #include <common/timer.hpp>
 #include <mac/mac_frame.hpp>
 #include <mac/mac_whitelist.hpp>
+#include <mac/mac_blacklist.hpp>
 #include <platform/radio.h>
 #include <thread/key_manager.hpp>
 #include <thread/topology.hpp>
@@ -302,6 +303,22 @@ public:
     ThreadError SetChannel(uint8_t aChannel);
 
     /**
+     * This method returns the maximum transmit power in dBm.
+     *
+     * @returns  The maximum transmit power in dBm.
+     *
+     */
+    int8_t GetMaxTransmitPower(void) const;
+
+    /**
+     * This method sets the maximum transmit power in dBm.
+     *
+     * @param[in]  aPower  The maximum transmit power in dBm.
+     *
+     */
+    void SetMaxTransmitPower(int8_t aPower);
+
+    /**
      * This method returns the IEEE 802.15.4 Network Name.
      *
      * @returns A pointer to the IEEE 802.15.4 Network Name.
@@ -362,6 +379,14 @@ public:
      *
      */
     Whitelist &GetWhitelist(void);
+
+    /**
+     * This method returns the MAC blacklist filter.
+     *
+     * @returns A reference to the MAC blacklist filter.
+     *
+     */
+    Blacklist &GetBlacklist(void);
 
     /**
      * This method is called to handle receive events.
@@ -461,8 +486,10 @@ private:
     ShortAddress mShortAddress;
     PanId mPanId;
     uint8_t mChannel;
+    int8_t mMaxTransmitPower;
 
-    Beacon mBeacon;
+    otNetworkName mNetworkName;
+    otExtendedPanId mExtendedPanId;
 
     Sender *mSendHead, *mSendTail;
     Receiver *mReceiveHead, *mReceiveTail;
@@ -493,6 +520,7 @@ private:
     otLinkPcapCallback mPcapCallback;
 
     Whitelist mWhitelist;
+    Blacklist mBlacklist;
 
     otMacCounters mCounters;
 };

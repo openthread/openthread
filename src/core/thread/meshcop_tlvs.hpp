@@ -68,7 +68,9 @@ public:
         kNetworkMasterKey  = 5,   ///< Network Master Key TLV
         kMeshLocalPrefix   = 7,   ///< Mesh Local Prefix TLV
         kSecurityPolicy    = 12,  ///< Security Policy TLV
+        kGet               = 13,  ///< Get TLV
         kActiveTimestamp   = 14,  ///< Active Timestamp TLV
+        kState             = 16,  ///< State TLV
         kPendingTimestamp  = 51,  ///< Pending Timestamp TLV
         kDelayTimer        = 52,  ///< Delay Timer TLV
         kChannelMask       = 53,  ///< Channel Mask TLV
@@ -321,10 +323,11 @@ public:
     void SetNetworkName(const char *aNetworkName) {
         size_t length = strnlen(aNetworkName, sizeof(mNetworkName));
         memcpy(mNetworkName, aNetworkName, length);
+        SetLength(static_cast<uint8_t>(length));
     }
 
 private:
-    char mNetworkName[OT_NETWORK_NAME_SIZE];
+    char mNetworkName[OT_NETWORK_NAME_MAX_SIZE];
 } OT_TOOL_PACKED_END;
 
 /**
@@ -656,6 +659,59 @@ public:
      *
      */
     bool IsValid(void) const { return GetLength() == sizeof(*this) - sizeof(Tlv); }
+} OT_TOOL_PACKED_END;
+
+/**
+ * This class implements State TLV generation and parsing.
+ *
+ */
+OT_TOOL_PACKED_BEGIN
+class StateTlv: public Tlv
+{
+public:
+    /**
+      * State TLV values.
+      */
+    enum State
+    {
+        kReject  = -1,   ///< Reject
+        kPending = 0,    ///< Pending
+        kAccept  = 1,    ///< Accept
+    };
+
+    /**
+     * This method initializes the TLV.
+     *
+     */
+    void Init(void) { SetType(kState); SetLength(sizeof(*this) - sizeof(Tlv)); }
+
+    /**
+     * This method indicates whether or not the TLV appears to be well-formed.
+     *
+     * @retval TRUE   If the TLV appears to be well-formed.
+     * @retval FALSE  If the TLV does not appear to be well-formed.
+     *
+     */
+    bool IsValid(void) const { return GetLength() == sizeof(*this) - sizeof(Tlv); }
+
+    /**
+     * This method returns the State value.
+     *
+     * @returns The State value.
+     *
+     */
+    State GetState(void) const { return static_cast<State>(mState); }
+
+    /**
+     * This method sets the State value.
+     *
+     * @param[in]  aState  The State value.
+     *
+     */
+    void SetState(State aState) { mState = static_cast<uint8_t>(aState); }
+
+private:
+    uint8_t mState;
 } OT_TOOL_PACKED_END;
 
 /**

@@ -580,6 +580,14 @@ public:
      */
     static void SetReceiveDatagramCallback(otContext *aContext, otReceiveIp6DatagramCallback aCallback);
 
+    /**
+     * This static method enables/disables IPv6 forwarding.
+     *
+     * @param[in]  aEnable  TRUE to enable IPv6 forwarding, FALSE otherwise.
+     *
+     */
+    static void SetForwardingEnabled(otContext *aContext, bool aEnable);
+
 private:
     static void ProcessReceiveCallback(Message &aMessage);
 };

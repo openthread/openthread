@@ -1,7 +1,7 @@
 Spinel Host Controller Interface
 ================================
 
-Updated: 2016-08-10
+Updated: 2016-08-17
 
 Written by: Robert Quattlebaum <rquattle@nestlabs.com>
 
@@ -1442,21 +1442,20 @@ Structure Parameters:
 Returns true if there is a network state stored that can be
 restored with a call to `CMD_NET_RECALL`.
 
-#### D.3.2. PROP 65: `PROP_NET_ENABLED`
-* Type: Read-Only
+#### D.3.2. PROP 65: `PROP_NET_IF_UP`
+* Type: Read-Write
 * Packed-Encoding: `b`
 
-#### D.3.3. PROP 66: `PROP_NET_STATE`
+Network interface up/down status. Non-zero (set to 1) indicates up,
+zero indicates down.
+
+#### D.3.3. PROP 66: `PROP_NET_STACK_UP`
 * Type: Read-Write
-* Packed-Encoding: `C`
+* Packed-Encoding: `b`
 * Unit: Enumeration
 
-Values:
-
-* 0: `NET_STATE_OFFLINE`
-* 1: `NET_STATE_DETACHED`
-* 2: `NET_STATE_ATTACHING`
-* 3: `NET_STATE_ATTACHED`
+Thread stack operational status. Non-zero (set to 1) indicates up,
+zero indicates down.
 
 #### D.3.4. PROP 67: `PROP_NET_ROLE`
 * Type: Read-Write
@@ -1465,7 +1464,7 @@ Values:
 
 Values:
 
-* 0: `NET_ROLE_NONE`
+* 0: `NET_ROLE_DETACHED`
 * 1: `NET_ROLE_CHILD`
 * 2: `NET_ROLE_ROUTER`
 * 3: `NET_ROLE_LEADER`
@@ -1609,6 +1608,13 @@ Used when operating in the Child role.
 #### D.4.19. PROP 5379: `PROP_THREAD_CONTEXT_REUSE_DELAY`
 * Type: Read-Write
 * Packed-Encoding: `L`
+
+#### D.4.20. PROP 5380: `PROP_THREAD_NETWORK_ID_TIMEOUT`
+* Type: Read-Write
+* Packed-Encoding: `C`
+
+Allows you to get or set the Thread `NETWORK_ID_TIMEOUT` constant, as
+defined by the Thread specification.
 
 ### D.5. IPv6 Properties
 

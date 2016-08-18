@@ -100,6 +100,18 @@ public:
     static ThreadError ParseLong(char *aString, long &aLong);
 
     /**
+     * This method parses an ASCII string as an unsigned long.
+     *
+     * @param[in]   aString          A pointer to the ASCII string.
+     * @param[out]  aUnsignedLong    A reference to where the parsed unsigned long is placed.
+     *
+     * @retval kThreadError_None   Successfully parsed the ASCII string.
+     * @retval kThreadError_Parse  Could not parse the ASCII string.
+     *
+     */
+    static ThreadError ParseUnsignedLong(char *aString, unsigned long &aUnsignedLong);
+
+    /**
      * This method converts a hex string to binary.
      *
      * @param[in]   aHex        A pointer to the hex string.
@@ -120,6 +132,7 @@ private:
     void OutputBytes(const uint8_t *aBytes, uint8_t aLength);
 
     void ProcessHelp(int argc, char *argv[]);
+    void ProcessBlacklist(int argc, char *argv[]);
     void ProcessChannel(int argc, char *argv[]);
     void ProcessChild(int argc, char *argv[]);
     void ProcessChildTimeout(int argc, char *argv[]);
@@ -136,18 +149,24 @@ private:
     ThreadError ProcessIpAddrDel(int argc, char *argv[]);
     void ProcessKeySequence(int argc, char *argv[]);
     void ProcessLeaderData(int argc, char *argv[]);
+    void ProcessLeaderPartitionId(int argc, char *argv[]);
     void ProcessLeaderWeight(int argc, char *argv[]);
+    void ProcessLinkQuality(int argc, char *argv[]);
     void ProcessMasterKey(int argc, char *argv[]);
     void ProcessMode(int argc, char *argv[]);
     void ProcessNetworkDataRegister(int argc, char *argv[]);
     void ProcessNetworkIdTimeout(int argc, char *argv[]);
     void ProcessNetworkName(int argc, char *argv[]);
     void ProcessPanId(int argc, char *argv[]);
+    void ProcessParent(int argc, char *argv[]);
     void ProcessPing(int argc, char *argv[]);
+    void ProcessPollPeriod(int argc, char *argv[]);
     void ProcessPrefix(int argc, char *argv[]);
     ThreadError ProcessPrefixAdd(int argc, char *argv[]);
     ThreadError ProcessPrefixRemove(int argc, char *argv[]);
+    ThreadError ProcessPrefixList(void);
     void ProcessReleaseRouterId(int argc, char *argv[]);
+    void ProcessReset(int argc, char *argv[]);
     void ProcessRoute(int argc, char *argv[]);
     void ProcessRouter(int argc, char *argv[]);
     ThreadError ProcessRouteAdd(int argc, char *argv[]);
@@ -155,6 +174,7 @@ private:
     void ProcessRouterUpgradeThreshold(int argc, char *argv[]);
     void ProcessRloc16(int argc, char *argv[]);
     void ProcessScan(int argc, char *argv[]);
+    void ProcessSingleton(int argc, char *argv[]);
     void ProcessState(int argc, char *argv[]);
     void ProcessThread(int argc, char *argv[]);
     void ProcessVersion(int argc, char *argv[]);
@@ -167,10 +187,12 @@ private:
     static void s_HandleEchoResponse(void *aContext, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
     static void s_HandlePingTimer(void *aContext);
     static void s_HandleActiveScanResult(otActiveScanResult *aResult);
+    static void s_HandleNetifStateChanged(uint32_t aFlags, void *aContext);
 
     void HandleEchoResponse(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
     void HandlePingTimer();
     void HandleActiveScanResult(otActiveScanResult *aResult);
+    void HandleNetifStateChanged(uint32_t aFlags);
 
     static const struct Command sCommands[];
     otNetifAddress sAddress;

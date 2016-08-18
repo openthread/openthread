@@ -26,15 +26,18 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <openthread-types.h>
 #include <platform/misc.h>
 #include "platform-posix.h"
 
-void otPlatReset(void)
+void otPlatReset(otContext *aContext)
 {
     // This function does nothing on the Posix platform.
+    (void)aContext;
 }
 
-otPlatResetReason otPlatGetResetReason(void)
+otPlatResetReason otPlatGetResetReason(otContext *aContext)
 {
+    (void)aContext;
     return kPlatResetReason_PowerOn;
 }

@@ -88,6 +88,7 @@ typedef struct otContext
     Thread::Tasklet *mTaskletTail;
 
     Thread::Ip6::UdpSocket *mUdpSockets;
+    bool mForwardingEnabled;
 
     otCryptoContext mCryptoContext;
 

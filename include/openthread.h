@@ -271,6 +271,17 @@ ThreadError otThreadStart(otContext *aContext);
 ThreadError otThreadStop(otContext *aContext);
 
 /**
+ * This function indicates whether a node is the only router on the network.
+ *
+ * @param[in] aContext  The OpenThread context structure.
+ *
+ * @retval TRUE   It is the only router in the network.
+ * @retval FALSE  It is a child or is not a single router in the network.
+ *
+ */
+bool otIsSingleton(otContext *aContext);
+
+/**
  * This function pointer is called during an IEEE 802.15.4 Active Scan when an IEEE 802.15.4 Beacon is received or
  * the scan completes.
  *
@@ -503,6 +514,25 @@ const uint8_t *otGetMasterKey(otContext *aContext, uint8_t *aKeyLength);
 ThreadError otSetMasterKey(otContext *aContext, const uint8_t *aKey, uint8_t aKeyLength);
 
 /**
+ * This function returns the maximum transmit power setting in dBm.
+ *
+ * @param[in]  aContext    The OpenThread context structure.
+ *
+ * @returns  The maximum transmit power setting.
+ *
+ */
+int8_t otGetMaxTransmitPower(otContext *aContext);
+
+/**
+ * This function sets the maximum transmit power in dBm.
+ *
+ * @param[in]  aContext  The OpenThread context structure.
+ * @param[in]  aPower    The maximum transmit power in dBm.
+ *
+ */
+void otSetMaxTransmitPower(otContext *aContext, int8_t aPower);
+
+/**
  * This function returns a pointer to the Mesh Local EID.
  *
  * @param[in]  aContext  The OpenThread context structure.
@@ -577,6 +607,21 @@ const char *otGetNetworkName(otContext *aContext);
  * @sa otGetNetworkName
  */
 ThreadError otSetNetworkName(otContext *aContext, const char *aNetworkName);
+
+/**
+ * This function gets the next On Mesh Prefix in the Network Data.
+ *
+ * @param[in]     aContext   The OpenThread context structure.
+ * @param[in]     aLocal     TRUE to retrieve from the local Network Data, FALSE for partition's Network Data
+ * @param[inout]  aIterator  A pointer to the Network Data iterator context.
+ * @param[out]    aConfig    A pointer to where the On Mesh Prefix information will be placed.
+ *
+ * @retval kThreadError_None      Successfully found the next On Mesh prefix.
+ * @retval kThreadError_NotFound  No subsequent On Mesh prefix exists in the Thread Network Data.
+ *
+ */
+ThreadError otGetNextOnMeshPrefix(otContext *aContext, bool aLocal, otNetworkDataIterator *aIterator,
+                                  otBorderRouterConfig *aConfig);
 
 /**
  * Get the IEEE 802.15.4 PAN ID.
@@ -736,6 +781,27 @@ ThreadError otGetPendingDataset(otContext *aContext, otOperationalDataset *aData
 ThreadError otSetPendingDataset(otContext *aContext, otOperationalDataset *aDataset);
 
 /**
+ * Get the data poll period of sleepy end deivce.
+ *
+ * @param[in]  aContext  The OpenThread context structure.
+ *
+ * @returns  The data poll period of sleepy end device.
+ *
+ * @sa otSetPollPeriod
+ */
+uint32_t otGetPollPeriod(otContext *aContext);
+
+/**
+ * Set the data poll period for sleepy end deivce.
+ *
+ * @param[in]  aContext     The OpenThread context structure.
+ * @param[in]  aPollPeriod  data poll period.
+ *
+ * @sa otGetPollPeriod
+ */
+void otSetPollPeriod(otContext *aContext, uint32_t aPollPeriod);
+
+/**
  * @}
  */
 
@@ -754,7 +820,7 @@ ThreadError otSetPendingDataset(otContext *aContext, otOperationalDataset *aData
  *
  * @param[in]  aContext  The OpenThread context structure.
  *
- * @returns The Thread Child Timeout value.
+ * @returns The Thread Leader Weight value.
  *
  * @sa otSetLeaderWeight
  */
@@ -769,6 +835,25 @@ uint8_t otGetLocalLeaderWeight(otContext *aContext);
  * @sa otGetLeaderWeight
  */
 void otSetLocalLeaderWeight(otContext *aContext, uint8_t aWeight);
+
+/**
+ * Get the Thread Leader Partition Id used when operating in the Leader role.
+ *
+ * @param[in]  aContext  The OpenThread context structure.
+ *
+ * @returns The Thread Leader Partition Id value.
+ *
+ */
+uint32_t otGetLocalLeaderPartitionId(otContext *aContext);
+
+/**
+ * Set the Thread Leader Partition Id used when operating in the Leader role.
+ *
+ * @param[in]  aContext      The OpenThread context structure.
+ * @param[in]  aPartitionId  The Thread Leader Partition Id value.
+ *
+ */
+void otSetLocalLeaderPartitionId(otContext *aContext, uint32_t aPartitionId);
 
 /**
  * @}
@@ -1166,6 +1251,139 @@ ThreadError otBecomeRouter(otContext *aContext);
 ThreadError otBecomeLeader(otContext *aContext);
 
 /**
+ * Add an IEEE 802.15.4 Extended Address to the MAC blacklist.
+ *
+ * @param[in]  aContext  The OpenThread context structure.
+ * @param[in]  aExtAddr  A pointer to the IEEE 802.15.4 Extended Address.
+ *
+ * @retval kThreadErrorNone    Successfully added to the MAC blacklist.
+ * @retval kThreadErrorNoBufs  No buffers available for a new MAC blacklist entry.
+ *
+ * @sa otRemoveMacBlacklist
+ * @sa otClearMacBlacklist
+ * @sa otGetMacBlacklistEntry
+ * @sa otDisableMacBlacklist
+ * @sa otEnableMacBlacklist
+ */
+ThreadError otAddMacBlacklist(otContext *aContext, const uint8_t *aExtAddr);
+
+/**
+ * Remove an IEEE 802.15.4 Extended Address from the MAC blacklist.
+ *
+ * @param[in]  aContext  The OpenThread context structure.
+ * @param[in]  aExtAddr  A pointer to the IEEE 802.15.4 Extended Address.
+ *
+ * @sa otAddMacBlacklist
+ * @sa otClearMacBlacklist
+ * @sa otGetMacBlacklistEntry
+ * @sa otDisableMacBlacklist
+ * @sa otEnableMacBlacklist
+ */
+void otRemoveMacBlacklist(otContext *aContext, const uint8_t *aExtAddr);
+
+/**
+ * This function gets a MAC Blacklist entry.
+ *
+ * @param[in]   aContext  The OpenThread context structure.
+ * @param[in]   aIndex    An index into the MAC Blacklist table.
+ * @param[out]  aEntry    A pointer to where the information is placed.
+ *
+ * @retval kThreadError_None         Successfully retrieved the MAC Blacklist entry.
+ * @retval kThreadError_InvalidArgs  @p aIndex is out of bounds or @p aEntry is NULL.
+ *
+ */
+ThreadError otGetMacBlacklistEntry(otContext *aContext, uint8_t aIndex, otMacBlacklistEntry *aEntry);
+
+/**
+ *  Remove all entries from the MAC Blacklist.
+ *
+ * @param[in]  aContext  The OpenThread context structure.
+ *
+ * @sa otAddMacBlacklist
+ * @sa otRemoveMacBlacklist
+ * @sa otGetMacBlacklistEntry
+ * @sa otDisableMacBlacklist
+ * @sa otEnableMacBlacklist
+ */
+void otClearMacBlacklist(otContext *aContext);
+
+/**
+ * Disable MAC blacklist filtering.
+ *
+ * @param[in]  aContext  The OpenThread context structure.
+ *
+ *
+ * @sa otAddMacBlacklist
+ * @sa otRemoveMacBlacklist
+ * @sa otClearMacBlacklist
+ * @sa otGetMacBlacklistEntry
+ * @sa otEnableMacBlacklist
+ */
+void otDisableMacBlacklist(otContext *aContext);
+
+/**
+ * Enable MAC Blacklist filtering.
+ *
+ * @param[in]  aContext  The OpenThread context structure.
+ *
+ * @sa otAddMacBlacklist
+ * @sa otRemoveMacBlacklist
+ * @sa otClearMacBlacklist
+ * @sa otGetMacBlacklistEntry
+ * @sa otDisableMacBlacklist
+ */
+void otEnableMacBlacklist(otContext *aContext);
+
+/**
+ * This function indicates whether or not the MAC Blacklist is enabled.
+ *
+ * @param[in]  aContext  The OpenThread context structure.
+ *
+ * @returns TRUE if the MAC Blacklist is enabled, FALSE otherwise.
+ *
+ * @sa otAddMacBlacklist
+ * @sa otRemoveMacBlacklist
+ * @sa otClearMacBlacklist
+ * @sa otGetMacBlacklistEntry
+ * @sa otDisableMacBlacklist
+ * @sa otEnableMacBlacklist
+ *
+ */
+bool otIsMacBlacklistEnabled(otContext *aContext);
+
+/**
+ * Get the assigned link quality which is on the link to a given extended address.
+ *
+ * @param[in]  aContext  The OpenThread context structure.
+ * @param[in]  aExtAddr  A pointer to the IEEE 802.15.4 Extended Address.
+ * @param[in]  aLinkQuality A pointer to the assigned link quality.
+ *
+ * @retval kThreadError_None  Successfully retrieved the link quality to aLinkQuality.
+ * @retval kThreadError_InvalidState  No attached child matches with a given extended address.
+ *
+ * @sa otSetAssignLinkQuality
+ */
+ThreadError otGetAssignLinkQuality(otContext *aContext, const uint8_t *aExtAddr, uint8_t *aLinkQuality);
+
+/**
+ * Set the link quality which is on the link to a given extended address.
+ *
+ * @param[in]  aContext  The OpenThread context structure.
+ * @param[in]  aExtAddr  A pointer to the IEEE 802.15.4 Extended Address.
+ * @param[in]  aLinkQuality  The link quality to be set on the link.
+ *
+ * @sa otGetAssignLinkQuality
+ */
+void otSetAssignLinkQuality(otContext *aContext, const uint8_t *aExtAddr, uint8_t aLinkQuality);
+
+/**
+ * This method triggers platform reset.
+ *
+ * @param[in]  aContext  The OpenThread context structure.
+ */
+void otPlatformReset(otContext *aContext);
+
+/**
  * @}
  *
  */
@@ -1307,6 +1525,15 @@ uint8_t otGetRouterIdSequence(otContext *aContext);
  *
  */
 ThreadError otGetRouterInfo(otContext *aContext, uint16_t aRouterId, otRouterInfo *aRouterInfo);
+
+/**
+ * The function retains diagnostic information for a Thread Router as parent.
+ *
+ * @param[in]   aContext     The OpenThread context structure.
+ * @param[out]  aParentInfo  A pointer to where the parent router information is placed.
+ *
+ */
+ThreadError otGetParentInfo(otContext *aContext, otRouterInfo *aParentInfo);
 
 /**
  * Get the Stable Network Data Version.
@@ -1629,6 +1856,17 @@ bool otIsIcmpEchoEnabled(otContext *aContext);
  *
  */
 void otSetIcmpEchoEnabled(otContext *aContext, bool aEnabled);
+
+/**
+ * This function returns the prefix match length (bits) for two IPv6 addresses.
+ *
+ * @param[in]  aFirst   A pointer to the first IPv6 address.
+ * @param[in]  aSecond  A pointer to the second IPv6 address.
+ *
+ * @returns  The prefix match length in bits.
+ *
+ */
+uint8_t otIp6PrefixMatch(const otIp6Address *aFirst, const otIp6Address *aSecond);
 
 /**
  * @}

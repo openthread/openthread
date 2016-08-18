@@ -63,7 +63,8 @@ MleRouter::MleRouter(ThreadNetif &aThreadNetif):
 
     mNetworkIdTimeout = kNetworkIdTimeout;
     mRouterUpgradeThreshold = kRouterUpgradeThreshold;
-    mLeaderWeight = 0;
+    mLeaderWeight = kLeaderWeight;
+    mFixedLeaderPartitionId = 0;
     mRouterId = kMaxRouterId;
     mPreviousRouterId = kMaxRouterId;
     mAdvertiseInterval = kAdvertiseIntervalMin;
@@ -246,7 +247,15 @@ ThreadError MleRouter::BecomeLeader(void)
 
     memcpy(&mRouters[mRouterId].mMacAddr, mMac.GetExtAddress(), sizeof(mRouters[mRouterId].mMacAddr));
 
-    SetLeaderData(otPlatRandomGet(), mLeaderWeight, mRouterId);
+    if (mFixedLeaderPartitionId != 0)
+    {
+        SetLeaderData(mFixedLeaderPartitionId, mLeaderWeight, mRouterId);
+    }
+    else
+    {
+        SetLeaderData(otPlatRandomGet(), mLeaderWeight, mRouterId);
+    }
+
     mRouterIdSequence = static_cast<uint8_t>(otPlatRandomGet());
 
     mNetworkData.Reset();
@@ -315,11 +324,6 @@ ThreadError MleRouter::HandleChildStart(otMleAttachFilter aFilter)
 
 ThreadError MleRouter::SetStateRouter(uint16_t aRloc16)
 {
-    if (mDeviceState == kDeviceStateDetached)
-    {
-        mNetif.SetStateChangedFlags(OT_NET_STATE);
-    }
-
     if (mDeviceState != kDeviceStateRouter)
     {
         mNetif.SetStateChangedFlags(OT_NET_ROLE);
@@ -334,6 +338,7 @@ ThreadError MleRouter::SetStateRouter(uint16_t aRloc16)
     mRouters[mRouterId].mNextHop = mRouterId;
     mNetworkData.Stop();
     mStateUpdateTimer.Start(kStateUpdatePeriod);
+    Ip6::Ip6::SetForwardingEnabled(GetOpenThreadContext(), true);
 
     otLogInfoMle("Mode -> Router\n");
     return kThreadError_None;
@@ -341,11 +346,6 @@ ThreadError MleRouter::SetStateRouter(uint16_t aRloc16)
 
 ThreadError MleRouter::SetStateLeader(uint16_t aRloc16)
 {
-    if (mDeviceState == kDeviceStateDetached)
-    {
-        mNetif.SetStateChangedFlags(OT_NET_STATE);
-    }
-
     if (mDeviceState != kDeviceStateLeader)
     {
         mNetif.SetStateChangedFlags(OT_NET_ROLE);
@@ -365,6 +365,7 @@ ThreadError MleRouter::SetStateLeader(uint16_t aRloc16)
     mNetif.GetPendingDataset().ApplyLocalToNetwork();
     mCoapServer.AddResource(mAddressSolicit);
     mCoapServer.AddResource(mAddressRelease);
+    Ip6::Ip6::SetForwardingEnabled(GetOpenThreadContext(), true);
 
     otLogInfoMle("Mode -> Leader %d\n", mLeaderData.GetPartitionId());
     return kThreadError_None;
@@ -1674,7 +1675,18 @@ ThreadError MleRouter::SendParentResponse(Child *aChild, const ChallengeTlv &cha
     }
 
     SuccessOrExit(error = AppendChallenge(*message, aChild->mPending.mChallenge, sizeof(aChild->mPending.mChallenge)));
-    SuccessOrExit(error = AppendLinkMargin(*message, aChild->mLinkInfo.GetLinkMargin(GetOpenThreadContext())));
+
+    if (isAssignLinkQuality &&
+        (memcmp(mAddr64.m8, aChild->mMacAddr.m8, OT_EXT_ADDRESS_SIZE) == 0))
+    {
+        // use assigned one to ensure the link quality
+        SuccessOrExit(error = AppendLinkMargin(*message, mAssignLinkMargin));
+    }
+    else
+    {
+        SuccessOrExit(error = AppendLinkMargin(*message, aChild->mLinkInfo.GetLinkMargin(GetOpenThreadContext())));
+    }
+
     SuccessOrExit(error = AppendConnectivity(*message));
     SuccessOrExit(error = AppendVersion(*message));
 
@@ -1975,8 +1987,12 @@ ThreadError MleRouter::HandleDataRequest(const Message &aMessage, const Ip6::Mes
     VerifyOrExit(tlvRequest.IsValid() && tlvRequest.GetLength() <= sizeof(tlvs), error = kThreadError_Parse);
 
     // Active Timestamp
-    SuccessOrExit(error = Tlv::GetTlv(aMessage, Tlv::kActiveTimestamp, sizeof(activeTimestamp), activeTimestamp));
-    VerifyOrExit(activeTimestamp.IsValid(), error = kThreadError_Parse);
+    activeTimestamp.SetLength(0);
+
+    if (Tlv::GetTlv(aMessage, Tlv::kActiveTimestamp, sizeof(activeTimestamp), activeTimestamp) == kThreadError_None)
+    {
+        VerifyOrExit(activeTimestamp.IsValid(), error = kThreadError_Parse);
+    }
 
     // Pending Timestamp
     pendingTimestamp.SetLength(0);
@@ -1990,7 +2006,8 @@ ThreadError MleRouter::HandleDataRequest(const Message &aMessage, const Ip6::Mes
     memcpy(tlvs, tlvRequest.GetTlvs(), tlvRequest.GetLength());
     numTlvs = tlvRequest.GetLength();
 
-    if (mNetif.GetActiveDataset().GetNetwork().GetTimestamp().Compare(activeTimestamp) != 0)
+    if (activeTimestamp.GetLength() == 0 ||
+        mNetif.GetActiveDataset().GetNetwork().GetTimestamp().Compare(activeTimestamp) != 0)
     {
         tlvs[numTlvs++] = Tlv::kActiveDataset;
     }
@@ -2502,6 +2519,16 @@ uint8_t MleRouter::GetLeaderWeight(void) const
 void MleRouter::SetLeaderWeight(uint8_t aWeight)
 {
     mLeaderWeight = aWeight;
+}
+
+uint32_t MleRouter::GetLeaderPartitionId(void) const
+{
+    return mFixedLeaderPartitionId;
+}
+
+void MleRouter::SetLeaderPartitionId(uint32_t aPartitionId)
+{
+    mFixedLeaderPartitionId = aPartitionId;
 }
 
 void MleRouter::HandleMacDataRequest(const Child &aChild)

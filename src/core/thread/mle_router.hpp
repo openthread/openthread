@@ -98,6 +98,15 @@ public:
     void SetRouterRoleEnabled(bool aEnabled);
 
     /**
+     * This method indicates whether a node is the only router on the network.
+     *
+     * @retval TRUE   It is the only router in the network.
+     * @retval FALSE  It is a child or is not a single router in the network.
+     *
+     */
+    bool IsSingleton(void);
+
+    /**
      * This method generates an Address Solicit request for a Router ID.
      *
      * @param[in]  aStatus  The reason for requesting a Router ID.
@@ -148,6 +157,22 @@ public:
      *
      */
     void SetLeaderWeight(uint8_t aWeight);
+
+    /**
+     * This method returns the fixed Partition Id of Thread network partition for certification testing.
+     *
+     * @returns The Partition Id for this Thread network partition.
+     *
+     */
+    uint32_t GetLeaderPartitionId(void) const;
+
+    /**
+     * This method sets the fixed Partition Id for Thread network partition for certification testing.
+     *
+     * @param[in]  aPartitionId  The Leader Partition Id.
+     *
+     */
+    void SetLeaderPartitionId(uint32_t aPartitionId);
 
     /**
      * This method returns the next hop towards an RLOC16 destination.
@@ -424,7 +449,6 @@ private:
     ThreadError HandleChildUpdateRequest(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
     ThreadError HandleDataRequest(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
     ThreadError HandleNetworkDataUpdateRouter(void);
-    bool IsSingleton(void);
 
     ThreadError ProcessRouteTlv(const RouteTlv &aRoute);
     ThreadError ResetAdvertiseInterval(void);
@@ -490,6 +514,7 @@ private:
     uint8_t mNetworkIdTimeout;
     uint8_t mRouterUpgradeThreshold;
     uint8_t mLeaderWeight;
+    uint32_t mFixedLeaderPartitionId;  ///< only for certification testing
     bool mRouterRoleEnabled;
 
     uint8_t mRouterId;

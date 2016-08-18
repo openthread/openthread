@@ -26,16 +26,19 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <openthread-types.h>
 #include <platform/misc.h>
 #include "platform-cc2538.h"
 
-void otPlatReset(void)
+void otPlatReset(otContext *aContext)
 {
+    (void)aContext;
     HWREG(SYS_CTRL_PWRDBG) = SYS_CTRL_PWRDBG_FORCE_WARM_RESET;
 }
 
-otPlatResetReason otPlatGetResetReason(void)
+otPlatResetReason otPlatGetResetReason(otContext *aContext)
 {
+    (void)aContext;
     // TODO: Write me!
     return kPlatResetReason_PowerOn;
 }
