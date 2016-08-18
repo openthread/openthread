@@ -33,6 +33,7 @@
 #include <openthread.h>
 
 #include <platform/alarm.h>
+#include <platform/misc.h>
 #include <platform/radio.h>
 #include <platform/random.h>
 
@@ -185,6 +186,21 @@ extern "C" {
     bool otPlatDiagModeGet()
     {
         return sDiagMode;
+    }
+
+    //
+    // Misc
+    //
+
+    void otPlatReset(otContext *aContext)
+    {
+        (void)aContext;
+    }
+
+    otPlatResetReason otPlatGetResetReason(otContext *aContext)
+    {
+        (void)aContext;
+        return kPlatResetReason_PowerOn;
     }
 
 } // extern "C"
