@@ -586,6 +586,42 @@ typedef enum
     /** Format: `L` (Read-only) */
     SPINEL_PROP_CNTR_RX_ERR_OTHER      = SPINEL_PROP_CNTR__BEGIN + 113,
 
+    /// The total number of secure transmitted IP messages.
+    /** Format: `L` (Read-only) */
+    SPINEL_PROP_CNTR_TX_IP_SEC_TOTAL   = SPINEL_PROP_CNTR__BEGIN + 200,
+
+    /// The total number of insecure transmitted IP messages.
+    /** Format: `L` (Read-only) */
+    SPINEL_PROP_CNTR_TX_IP_INSEC_TOTAL = SPINEL_PROP_CNTR__BEGIN + 201,
+
+    /// The number of dropped (not transmitted) IP messages.
+    /** Format: `L` (Read-only) */
+    SPINEL_PROP_CNTR_TX_IP_DROPPED     = SPINEL_PROP_CNTR__BEGIN + 202,
+
+    /// The total number of secure received IP message.
+    /** Format: `L` (Read-only) */
+    SPINEL_PROP_CNTR_RX_IP_SEC_TOTAL   = SPINEL_PROP_CNTR__BEGIN + 203,
+
+    /// The total number of insecure received IP message.
+    /** Format: `L` (Read-only) */
+    SPINEL_PROP_CNTR_RX_IP_INSEC_TOTAL = SPINEL_PROP_CNTR__BEGIN + 204,
+
+    /// The number of dropped received IP messages.
+    /** Format: `L` (Read-only) */
+    SPINEL_PROP_CNTR_RX_IP_DROPPED     = SPINEL_PROP_CNTR__BEGIN + 205,
+
+    /// The number of transmitted spinel frames.
+    /** Format: `L` (Read-only) */
+    SPINEL_PROP_CNTR_TX_SPINEL_TOTAL   = SPINEL_PROP_CNTR__BEGIN + 300,
+
+    /// The number of received spinel frames.
+    /** Format: `L` (Read-only) */
+    SPINEL_PROP_CNTR_RX_SPINEL_TOTAL   = SPINEL_PROP_CNTR__BEGIN + 301,
+
+    /// The number of received spinel frames with error.
+    /** Format: `L` (Read-only) */
+    SPINEL_PROP_CNTR_RX_SPINEL_ERR     = SPINEL_PROP_CNTR__BEGIN + 302,
+
     SPINEL_PROP_CNTR__END       = 2048,
 
     SPINEL_PROP_NEST__BEGIN         = 15296,
