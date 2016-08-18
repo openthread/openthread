@@ -246,7 +246,7 @@ ThreadError NcpSpi::OutboundFrameFeedMessage(Message &aMessage)
     return mTxFrameBuffer.InFrameFeedMessage(aMessage);
 }
 
-ThreadError NcpSpi::OutboundFrameSend(void)
+ThreadError NcpSpi::OutboundFrameEnd(void)
 {
     return mTxFrameBuffer.InFrameEnd();
 }

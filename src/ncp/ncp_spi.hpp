@@ -54,7 +54,7 @@ public:
     virtual ThreadError OutboundFrameBegin(void);
     virtual ThreadError OutboundFrameFeedData(const uint8_t *frame, uint16_t frameLength);
     virtual ThreadError OutboundFrameFeedMessage(Message &message);
-    virtual ThreadError OutboundFrameSend(void);
+    virtual ThreadError OutboundFrameEnd(void);
 
     void ReceiveTask(const uint8_t *aBuf, uint16_t aBufLength);
 

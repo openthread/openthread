@@ -985,7 +985,7 @@ ThreadError otActiveScan(otContext *aContext, uint32_t aScanChannels, uint16_t a
                                                       reinterpret_cast<void *>(aCallback));
 }
 
-bool otActiveScanInProgress(otContext *aContext)
+bool otIsActiveScanInProgress(otContext *aContext)
 {
     return aContext->mThreadNetif.GetMac().IsActiveScanInProgress();
 }
@@ -1038,6 +1038,11 @@ ThreadError otDiscover(otContext *aContext, uint32_t aScanChannels, uint16_t aSc
 {
     return aContext->mThreadNetif.GetMle().Discover(aScanChannels, aScanDuration, aPanId, &HandleMleDiscover,
                                                     reinterpret_cast<void *>(aCallback));
+}
+
+bool otIsDiscoverInProgress(otContext *aContext)
+{
+    return aContext->mThreadNetif.GetMle().IsDiscoverInProgress();
 }
 
 void HandleMleDiscover(otActiveScanResult *aResult, void *aContext)

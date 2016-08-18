@@ -103,7 +103,7 @@ ThreadError NcpUart::OutboundFrameFeedMessage(Message &aMessage)
     return mTxFrameBuffer.InFrameFeedMessage(aMessage);
 }
 
-ThreadError NcpUart::OutboundFrameSend(void)
+ThreadError NcpUart::OutboundFrameEnd(void)
 {
     return mTxFrameBuffer.InFrameEnd();
 }

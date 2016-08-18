@@ -111,12 +111,12 @@ void TestLowpanIphc(void)
                      "6lo: Lowpan::Decompress failed");
 
         // ===> Test Lowpan::Compress
-        int resultLength = sMockLowpan.Compress(*message, macSource, macDest,
-                                                result);
+        int compressBytes = sMockLowpan.Compress(*message, macSource, macDest,
+                                                 result);
         printf("Compressed OpenThread:\n");
-        otTestPrintHex(result, resultLength);
+        otTestPrintHex(result, compressBytes);
 
-        VerifyOrQuit(memcmp(frame.GetPayload(), result, resultLength) == 0,
+        VerifyOrQuit(memcmp(frame.GetPayload(), result, compressBytes) == 0,
                      "6lo: Lowpan::Compress failed");
 
         SuccessOrQuit(Message::Free(*message), "6lo: Message:Free failed");

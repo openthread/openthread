@@ -41,21 +41,21 @@
 // Macro to append content to end of the log string.
 
 #define LOG_PRINTF(...)                                                                     \
-    charsWritten = snprintf(&logString[index], sizeof(logString) - index , __VA_ARGS__);    \
-    VerifyOrExit(charsWritten >= 0, logString[index] = 0);                                  \
-    index += (unsigned int)charsWritten;                                    \
-    VerifyOrExit(index < sizeof(logString), logString[sizeof(logString) -1 ] = 0)
+    charsWritten = snprintf(&logString[offset], sizeof(logString) - offset , __VA_ARGS__);    \
+    VerifyOrExit(charsWritten >= 0, logString[offset] = 0);                                  \
+    offset += (unsigned int)charsWritten;                                    \
+    VerifyOrExit(offset < sizeof(logString), logString[sizeof(logString) -1 ] = 0)
 
 void otPlatLog(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aFormat, ...)
 {
     struct timeval tv;
     char timeString[40];
     char logString[512];
-    unsigned int index;
+    unsigned int offset;
     int charsWritten;
     va_list args;
 
-    index = 0;
+    offset = 0;
 
     gettimeofday(&tv, NULL);
     strftime(timeString, sizeof(timeString), "%Y-%m-%d %H:%M:%S", localtime(&tv.tv_sec));
@@ -129,10 +129,10 @@ void otPlatLog(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aFormat
     }
 
     va_start(args, aFormat);
-    charsWritten = vsnprintf(&logString[index], sizeof(logString) - index, aFormat, args);
+    charsWritten = vsnprintf(&logString[offset], sizeof(logString) - offset, aFormat, args);
     va_end(args);
 
-    VerifyOrExit(charsWritten >= 0, logString[index] = 0);
+    VerifyOrExit(charsWritten >= 0, logString[offset] = 0);
 
 exit:
     fprintf(stderr, "%s\r", logString);

@@ -100,7 +100,7 @@ public:
      * @retval kThreadError_NoBufs  Insufficient buffer space available to add message.
      *
      */
-    virtual ThreadError OutboundFrameSend(void);
+    virtual ThreadError OutboundFrameEnd(void);
 
     /**
      * This method is called when uart tx is finished. It prepares and sends the next data chunk (if any) to uart.

@@ -306,13 +306,13 @@ ThreadError otActiveScan(otContext *aContext, uint32_t aScanChannels, uint16_t a
                          otHandleActiveScanResult aCallback);
 
 /**
- * This function determines if an IEEE 802.15.4 Active Scan is currently in progress.
+ * This function indicates whether or not an IEEE 802.15.4 Active Scan is currently in progress.
  *
  * @param[in] aContext  The OpenThread context structure.
  *
- * @returns true if an active scan is in progress.
+ * @returns true if an IEEE 802.15.4 Active Scan is in progress, false otherwise.
  */
-bool otActiveScanInProgress(otContext *aContext);
+bool otIsActiveScanInProgress(otContext *aContext);
 
 /**
  * This function starts a Thread Discovery scan.
@@ -335,9 +335,8 @@ ThreadError otDiscover(otContext *aContext, uint32_t aScanChannels, uint16_t aSc
  *
  * @param[in] aContext  The OpenThread context structure.
  *
- * @returns true if an active scan is in progress.
  */
-bool otDiscoverInProgress(otContext *aContext);
+bool otIsDiscoverInProgress(otContext *aContext);
 
 /**
  * @}

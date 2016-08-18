@@ -123,7 +123,7 @@ void TestDiag()
 
     // initialize platform layer
     int argc = 2;
-    char *argv[2] = {(char *)"test_diag", (char *)"1"};
+    char *argv[8] = {(char *)"test_diag", (char *)"1"};
     PlatformInit(argc, argv);
 
     // initialize diagnostics module
@@ -136,11 +136,10 @@ void TestDiag()
     {
         char string[50];
         int length = strlen(tests[i].command);
-
         char *cmd;
-        char *argv[8];
-        int argc = 0;
         char *output = NULL;
+
+	argc = 0;
 
         memcpy(string, tests[i].command, length + 1);
 
