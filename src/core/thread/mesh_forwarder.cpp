@@ -103,6 +103,13 @@ ThreadError MeshForwarder::Stop()
     mPollTimer.Stop();
     mReassemblyTimer.Stop();
 
+    if (mScanning)
+    {
+        mMac.SetChannel(mRestoreChannel);
+        mScanning = false;
+        mMle.HandleDiscoverComplete();
+    }
+
     while ((message = mSendQueue.GetHead()) != NULL)
     {
         mSendQueue.Dequeue(*message);
