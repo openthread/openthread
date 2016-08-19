@@ -704,7 +704,6 @@ void otPlatSettingsWipe(void)
 }
 
 // test functions
-#define ENABLE_SETTINGS_API_TEST 2
 #if ENABLE_SETTINGS_API_TEST
 int testSettingsApi(void)
 {
