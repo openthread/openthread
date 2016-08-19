@@ -52,6 +52,7 @@ static Mpl *sMpl;
 static bool sForwardingEnabled;
 
 static otReceiveIp6DatagramCallback sReceiveIp6DatagramCallback = NULL;
+static void *sReceiveIp6DatagramCallbackContext = NULL;
 
 static ThreadError ForwardMessage(Message &message, MessageInfo &messageInfo);
 
@@ -107,9 +108,10 @@ uint16_t Ip6::ComputePseudoheaderChecksum(const Address &src, const Address &dst
     return checksum;
 }
 
-void Ip6::SetReceiveDatagramCallback(otReceiveIp6DatagramCallback aCallback)
+void Ip6::SetReceiveDatagramCallback(otReceiveIp6DatagramCallback aCallback, void *aCallbackContext)
 {
     sReceiveIp6DatagramCallback = aCallback;
+    sReceiveIp6DatagramCallbackContext = aCallbackContext;
 }
 
 ThreadError AddMplOption(Message &message, Header &header, IpProto nextHeader, uint16_t payloadLength)
@@ -331,7 +333,7 @@ void Ip6::ProcessReceiveCallback(Message &aMessage)
     SuccessOrExit(error = messageCopy->SetLength(aMessage.GetLength()));
     aMessage.CopyTo(0, 0, aMessage.GetLength(), *messageCopy);
 
-    sReceiveIp6DatagramCallback(messageCopy);
+    sReceiveIp6DatagramCallback(messageCopy, sReceiveIp6DatagramCallbackContext);
 
 exit:
 

@@ -184,7 +184,7 @@ private:
 
     static void HandleEchoResponse(void *aContext, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
     static void HandlePingTimer(void *aContext);
-    static void HandleActiveScanResult(otActiveScanResult *aResult);
+    static void HandleActiveScanResult(otActiveScanResult *aResult, void *aContext);
     static void HandleNetifStateChanged(uint32_t aFlags, void *aContext);
 
     static const struct Command sCommands[];

@@ -128,14 +128,14 @@ private:
     /**
      * Trampoline for HandleDatagramFromStack().
      */
-    static void HandleDatagramFromStack(otMessage aMessage);
+    static void HandleDatagramFromStack(otMessage aMessage, void *aContext);
 
     void HandleDatagramFromStack(Message &aMessage);
 
     /**
      * Trampoline for HandleActiveScanResult().
      */
-    static void HandleActiveScanResult_Jump(otActiveScanResult *result);
+    static void HandleActiveScanResult_Jump(otActiveScanResult *result, void *aContext);
 
     void HandleActiveScanResult(otActiveScanResult *result);
 

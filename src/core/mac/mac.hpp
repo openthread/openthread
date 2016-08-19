@@ -419,11 +419,12 @@ public:
     /**
      * This function registers a callback to provide received raw IEEE 802.15.4 frames.
      *
-     * @param[in]  aPcapCallback  A pointer to a function that is called when receiving an IEEE 802.15.4 link frame or
-     *                            NULL to disable the callback.
+     * @param[in]  aPcapCallback     A pointer to a function that is called when receiving an IEEE 802.15.4 link frame or
+     *                               NULL to disable the callback.
+     * @param[in]  aCallbackContext  A pointer to application-specific context.
      *
      */
-    void SetPcapCallback(otLinkPcapCallback aPcapCallback);
+    void SetPcapCallback(otLinkPcapCallback aPcapCallback, void *aCallbackContext);
 
     /**
      * This function indicates whether or not promiscuous mode is enabled at the link layer.
@@ -518,6 +519,7 @@ private:
     void *mActiveScanContext;
 
     otLinkPcapCallback mPcapCallback;
+    void *mPcapCallbackContext;
 
     Whitelist mWhitelist;
     Blacklist mBlacklist;

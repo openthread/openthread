@@ -383,7 +383,7 @@ NcpBase::NcpBase():
 
     assert(sThreadNetif != NULL);
     otSetStateChangedCallback(&HandleNetifStateChanged, this);
-    otSetReceiveIp6DatagramCallback(&HandleDatagramFromStack);
+    otSetReceiveIp6DatagramCallback(&HandleDatagramFromStack, this);
     otSetIcmpEchoEnabled(false);
 }
 
@@ -391,9 +391,9 @@ NcpBase::NcpBase():
 // MARK: Outbound Datagram Handling
 // ----------------------------------------------------------------------------
 
-void NcpBase::HandleDatagramFromStack(otMessage aMessage)
+void NcpBase::HandleDatagramFromStack(otMessage aMessage, void *aContext)
 {
-    sNcpContext->HandleDatagramFromStack(*static_cast<Message *>(aMessage));
+    reinterpret_cast<NcpBase*>(aContext)->HandleDatagramFromStack(*static_cast<Message *>(aMessage));
 }
 
 void NcpBase::HandleDatagramFromStack(Message &aMessage)
@@ -455,14 +455,9 @@ exit:
 // MARK: Scan Results Glue
 // ----------------------------------------------------------------------------
 
-static NcpBase *gActiveScanContextHack = NULL;
-
-void NcpBase::HandleActiveScanResult_Jump(otActiveScanResult *result)
+void NcpBase::HandleActiveScanResult_Jump(otActiveScanResult *result, void *aContext)
 {
-    if (gActiveScanContextHack)
-    {
-        gActiveScanContextHack->HandleActiveScanResult(result);
-    }
+    reinterpret_cast<NcpBase*>(aContext)->HandleActiveScanResult(result);
 }
 
 void NcpBase::HandleActiveScanResult(otActiveScanResult *result)
@@ -2390,12 +2385,12 @@ ThreadError NcpBase::SetPropertyHandler_MAC_SCAN_STATE(uint8_t header, spinel_pr
             break;
 
         case SPINEL_SCAN_STATE_BEACON:
-            gActiveScanContextHack = this;
             mShouldSignalEndOfScan = false;
             errorCode = otActiveScan(
                             mChannelMask,
                             mScanPeriod,
-                            &HandleActiveScanResult_Jump
+                            &HandleActiveScanResult_Jump,
+                            this
                         );
             break;
 

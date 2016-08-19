@@ -476,7 +476,7 @@ void Interpreter::ProcessDiscover(int argc, char *argv[])
         scanChannels = 1 << value;
     }
 
-    SuccessOrExit(error = otDiscover(scanChannels, 0, OT_PANID_BROADCAST, &HandleActiveScanResult));
+    SuccessOrExit(error = otDiscover(scanChannels, 0, OT_PANID_BROADCAST, &HandleActiveScanResult, NULL));
     sServer->OutputFormat("| J | Network Name     | Extended PAN     | PAN  | MAC Address      | Ch | dBm | LQI |\r\n");
     sServer->OutputFormat("+---+------------------+------------------+------+------------------+----+-----+-----+\r\n");
 
@@ -1510,7 +1510,7 @@ void Interpreter::ProcessScan(int argc, char *argv[])
         scanChannels = 1 << value;
     }
 
-    SuccessOrExit(error = otActiveScan(scanChannels, 0, &HandleActiveScanResult));
+    SuccessOrExit(error = otActiveScan(scanChannels, 0, &HandleActiveScanResult, NULL));
     sServer->OutputFormat("| J | Network Name     | Extended PAN     | PAN  | MAC Address      | Ch | dBm | LQI |\r\n");
     sServer->OutputFormat("+---+------------------+------------------+------+------------------+----+-----+-----+\r\n");
 
@@ -1520,7 +1520,7 @@ exit:
     AppendResult(error);
 }
 
-void Interpreter::HandleActiveScanResult(otActiveScanResult *aResult)
+void Interpreter::HandleActiveScanResult(otActiveScanResult *aResult, void *aContext)
 {
     if (aResult == NULL)
     {
@@ -1543,6 +1543,7 @@ void Interpreter::HandleActiveScanResult(otActiveScanResult *aResult)
     sServer->OutputFormat("| %3d |\r\n", aResult->mLqi);
 
 exit:
+    (void)aContext;
     return;
 }
 
