@@ -167,4 +167,8 @@
 #define UART_IM_RXIM                          0x00000010  // UART receive interrupt mask
 #define UART_IM_RTIM                          0x00000040  // UART receive time-out interrupt 
 
+#define FLASH_BASE                            0x00200000
+#define FLASH_CTRL_FCTL                       0x400D3008  // Flash control
+#define FLASH_CTRL_DIECFG0                    0x400D3014  // Flash information
+
 #endif
