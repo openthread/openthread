@@ -354,6 +354,8 @@ void Diag::DiagReceiveDone(RadioPacket *aFrame, ThreadError aError)
 
         sStats.received_packets++;
     }
+
+    otPlatRadioReceive(sChannel);
 }
 
 void Diag::AlarmFired()
