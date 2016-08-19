@@ -43,6 +43,7 @@
 #include <net/ip6_routes.hpp>
 #include <net/netif.hpp>
 #include <net/udp6.hpp>
+#include <thread/mle.hpp>
 
 namespace Thread {
 namespace Ip6 {
@@ -53,6 +54,7 @@ static bool sForwardingEnabled;
 
 static otReceiveIp6DatagramCallback sReceiveIp6DatagramCallback = NULL;
 static void *sReceiveIp6DatagramCallbackContext = NULL;
+static bool sIsReceiveIp6FilterEnabled;
 
 static ThreadError ForwardMessage(Message &message, MessageInfo &messageInfo);
 
@@ -66,6 +68,7 @@ void Ip6::Init(void)
 {
     sMpl = new(&sMplBuf) Mpl;
     sForwardingEnabled = false;
+    sIsReceiveIp6FilterEnabled = true;
 }
 
 void Ip6::SetForwardingEnabled(bool aEnable)
@@ -112,6 +115,16 @@ void Ip6::SetReceiveDatagramCallback(otReceiveIp6DatagramCallback aCallback, voi
 {
     sReceiveIp6DatagramCallback = aCallback;
     sReceiveIp6DatagramCallbackContext = aCallbackContext;
+}
+
+bool Ip6::IsReceiveIp6FilterEnabled(void)
+{
+    return sIsReceiveIp6FilterEnabled;
+}
+
+void Ip6::SetReceiveIp6FilterEnabled(bool aEnabled)
+{
+    sIsReceiveIp6FilterEnabled = aEnabled;
 }
 
 ThreadError AddMplOption(Message &message, Header &header, IpProto nextHeader, uint16_t payloadLength)
@@ -327,6 +340,24 @@ void Ip6::ProcessReceiveCallback(Message &aMessage)
     Message *messageCopy = NULL;
 
     VerifyOrExit(sReceiveIp6DatagramCallback != NULL, ;);
+
+    if (sIsReceiveIp6FilterEnabled)
+    {
+        Header ip6;
+        aMessage.Read(0, sizeof(ip6), &ip6);
+
+        // do not pass messages sent to/from an RLOC
+        VerifyOrExit(!ip6.GetSource().IsRoutingLocator() && !ip6.GetDestination().IsRoutingLocator(), ;);
+
+        if (ip6.GetSource().IsLinkLocal() && ip6.GetNextHeader() == kProtoUdp)
+        {
+            UdpHeader udp;
+            aMessage.Read(sizeof(ip6), sizeof(udp), &udp);
+
+            // do not pass MLE messages
+            VerifyOrExit(udp.GetDestinationPort() != Mle::kUdpPort, ;);
+        }
+    }
 
     // make a copy of the datagram to pass to host
     VerifyOrExit((messageCopy = NewMessage(0)) != NULL, error = kThreadError_NoBufs);

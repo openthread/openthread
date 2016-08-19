@@ -1015,6 +1015,16 @@ void otSetReceiveIp6DatagramCallback(otReceiveIp6DatagramCallback aCallback, voi
     Ip6::Ip6::SetReceiveDatagramCallback(aCallback, aCallbackContext);
 }
 
+bool otGetReceiveIp6DatagramFilterEnabled(void)
+{
+    return Ip6::Ip6::IsReceiveIp6FilterEnabled();
+}
+
+void otSetReceiveIp6DatagramFilterEnabled(bool aEnabled)
+{
+    Ip6::Ip6::SetReceiveIp6FilterEnabled(aEnabled);
+}
+
 ThreadError otSendIp6Datagram(otMessage aMessage)
 {
     return Ip6::Ip6::HandleDatagram(*static_cast<Message *>(aMessage), NULL, sThreadNetif->GetInterfaceId(),

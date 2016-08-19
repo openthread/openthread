@@ -1635,12 +1635,43 @@ typedef void (*otReceiveIp6DatagramCallback)(otMessage aMessage, void *aContext)
 /**
  * This function registers a callback to provide received IPv6 datagrams.
  *
- * @param[in]  aCallback         A pointer to a function that is called when an IPv6 datagram is received or
- *                               NULL to disable the callback.
+ * By default, this callback does not pass Thread control traffic.  See otSetReceiveIp6FilterEnabled() to change
+ * the Thread control traffic filter setting.
+ *
+ * @param[in]  aCallback         A pointer to a function that is called when an IPv6 datagram is received
+ *                               or NULL to disable the callback.
  * @param[in]  aCallbackContext  A pointer to application-specific context.
+ *
+ * @sa otIsReceiveIp6FilterEnabled
+ * @sa otSetReceiveIp6FilterEnabled
  *
  */
 void otSetReceiveIp6DatagramCallback(otReceiveIp6DatagramCallback aCallback, void *aCallbackContext);
+
+
+/**
+ * This function indicates whether or not Thread control traffic is filtered out when delivering IPv6 datagrams
+ * via the callback specified in otSetReceiveIp6DatagramCallback().
+ *
+ * @returns  TRUE if Thread control traffic is filtered out, FALSE otherwise.
+ *
+ * @sa otSetReceiveDatagramCallback
+ * @sa otSetReceiveIp6FilterEnabled
+ *
+ */
+bool otIsReceiveIp6DatagramFilterEnabled(void);
+
+/**
+ * This function sets whether or not Thread control traffic is filtered out when delivering IPv6 datagrams
+ * via the callback specified in otSetReceiveIp6DatagramCallback().
+ *
+ * @param[in]  aEnabled  TRUE if Thread control traffic is filtered out, FALSE otherwise.
+ *
+ * @sa otSetReceiveDatagramCallback
+ * @sa otIsReceiveIp6FilterEnabled
+ *
+ */
+void otSetReceiveIp6DatagramFilterEnabled(bool aEnabled);
 
 /**
  * This function sends an IPv6 datagram via the Thread interface.
