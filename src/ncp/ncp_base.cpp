@@ -612,6 +612,12 @@ void NcpBase::UpdateChangedProps(void)
             //));
             mChangedFlags &= ~static_cast<uint32_t>(OT_THREAD_CHILD_ADDED | OT_THREAD_CHILD_REMOVED);
         }
+        else if ((mChangedFlags & OT_THREAD_NETDATA_UPDATED) != 0)
+        {
+            // TODO: Handle the netdata changed event.
+
+            mChangedFlags &= ~static_cast<uint32_t>(OT_THREAD_NETDATA_UPDATED);
+        }
     }
 
 exit:
