@@ -3944,7 +3944,7 @@ ThreadError NcpBase::RemovePropertyHandler_THREAD_ACTIVE_ROUTER_IDS(uint8_t head
 
     if (parsedLength > 0)
     {
-        errorCode = otReleaseRouterId(router_id);
+        errorCode = otReleaseRouterId(mContext, router_id);
 
         if (errorCode == kThreadError_None)
         {
