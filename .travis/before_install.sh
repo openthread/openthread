@@ -37,6 +37,7 @@ set -x
 cd /tmp || die
 
 [ $TRAVIS_OS_NAME != linux ] || {    
+    sudo apt-get update
     sudo apt-get install python-pexpect || die
 
     [ $BUILD_TARGET != cc2538 ] || {
@@ -68,7 +69,7 @@ cd /tmp || die
 }
 
 [ $BUILD_TARGET != pretty-check ] || {
-    wget http://ufpr.dl.sourceforge.net/project/astyle/astyle/astyle%202.05.1/astyle_2.05.1_linux.tar.gz || die
+    wget http://jaist.dl.sourceforge.net/project/astyle/astyle/astyle%202.05.1/astyle_2.05.1_linux.tar.gz || die
     tar xzvf astyle_2.05.1_linux.tar.gz || die
     cd astyle/build/gcc || die
     LDFLAGS=" " make || die

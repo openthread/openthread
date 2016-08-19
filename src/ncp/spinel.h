@@ -148,6 +148,13 @@ typedef enum
     SPINEL_POWER_STATE_ONLINE     = 4,
 } spinel_power_state_t;
 
+enum {
+    SPINEL_NET_FLAG_CONFIGURE       = 0x04,
+    SPINEL_NET_FLAG_DHCP            = 0x08,
+    SPINEL_NET_FLAG_SLAAC_VALID     = 0x10,
+    SPINEL_NET_FLAG_SLAAC_PREFERRED = 0x20,
+};
+
 enum
 {
     SPINEL_PROTOCOL_TYPE_ZIGBEE    = 1,
@@ -331,6 +338,13 @@ typedef enum
     /** Format: `b`
      */
     SPINEL_PROP_MAC_WHITELIST_ENABLED  = SPINEL_PROP_MAC_EXT__BEGIN + 1,
+
+    /// MAC Extended Address
+    /** Format: `E`
+     *
+     *  Specified by Thread. Randomly-chosen, but non-volatile EUI-64.
+     */
+    SPINEL_PROP_MAC_EXTENDED_ADDR      = SPINEL_PROP_MAC_EXT__BEGIN + 2,
     SPINEL_PROP_MAC_EXT__END           = 0x1400,
 
     SPINEL_PROP_NET__BEGIN           = 0x40,
@@ -625,6 +639,7 @@ typedef enum
     SPINEL_PROP_CNTR__END       = 2048,
 
     SPINEL_PROP_NEST__BEGIN         = 15296,
+    SPINEL_PROP_NEST_STREAM_MFG     = SPINEL_PROP_NEST__BEGIN + 0,
     SPINEL_PROP_NEST__END           = 15360,
 
     SPINEL_PROP_VENDOR__BEGIN       = 15360,

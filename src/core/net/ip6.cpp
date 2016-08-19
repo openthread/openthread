@@ -96,9 +96,11 @@ uint16_t Ip6::ComputePseudoheaderChecksum(const Address &src, const Address &dst
     return checksum;
 }
 
-void Ip6::SetReceiveDatagramCallback(otContext *aContext, otReceiveIp6DatagramCallback aCallback)
+void Ip6::SetReceiveDatagramCallback(otContext *aContext, otReceiveIp6DatagramCallback aCallback,
+                                     void *aCallbackContext)
 {
     aContext->mReceiveIp6DatagramCallback = aCallback;
+    aContext->mReceiveIp6DatagramCallbackContext = aCallbackContext;
 }
 
 ThreadError AddMplOption(Message &message, Header &header, IpProto nextHeader, uint16_t payloadLength)
@@ -321,7 +323,8 @@ void Ip6::ProcessReceiveCallback(Message &aMessage)
     SuccessOrExit(error = messageCopy->SetLength(aMessage.GetLength()));
     aMessage.CopyTo(0, 0, aMessage.GetLength(), *messageCopy);
 
-    aMessage.GetOpenThreadContext()->mReceiveIp6DatagramCallback(messageCopy);
+    aMessage.GetOpenThreadContext()->mReceiveIp6DatagramCallback(
+        messageCopy, aMessage.GetOpenThreadContext()->mReceiveIp6DatagramCallbackContext);
 
 exit:
 

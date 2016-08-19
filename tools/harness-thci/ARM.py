@@ -324,7 +324,7 @@ class ARM(IThci):
         print 'call isOpenThreadRunning'
         return self.__sendCommand('state')[0] == 'disabled'
 
-    # rloc16 might be hex, need to return actual allocated router id
+    # rloc16 might be hex string or integer, need to return actual allocated router id
     def __convertRlocToRouterId(self, xRloc16):
         """mapping Rloc16 to router id
 
@@ -337,11 +337,11 @@ class ARM(IThci):
         routerList = []
         routerList = self.__sendCommand('router list')[0].split()
         print routerList
+        print xRloc16
 
         for index in routerList:
             router = []
             cmd = 'router %s' % index
-            print cmd
             router = self.__sendCommand(cmd)
 
             for line in router:
@@ -351,11 +351,20 @@ class ARM(IThci):
                     routerid = line.split()[2]
                 elif 'Rloc' in line:
                     rloc16 = line.split()[1]
-                    rloc16 = '0x' + rloc16
-                    if rloc16 == str(xRloc16):
-                        return routerid
                 else:
                     pass
+
+            # process input rloc16
+            if isinstance(xRloc16, str):
+                rloc16 = '0x' + rloc16
+                if rloc16 == xRloc16:
+                    return routerid
+            elif isinstance(xRloc16, int):
+                if int(rloc16, 16) == xRloc16:
+                    return routerid
+            else:
+                pass
+
         return None
 
     def __convertIp6PrefixStringToIp6Address(self, strIp6Prefix):
@@ -699,9 +708,9 @@ class ARM(IThci):
         Returns:
             True: ready to set Thread Network parameter for joining desired Network
         """
-        role = ''
         print '%s call joinNetwork' % self.port
         print eRoleId
+        role = ''
         try:
             if ModuleHelper.LeaderDutChannelFound:
                 self.channel = ModuleHelper.Default_Channel
@@ -717,6 +726,8 @@ class ARM(IThci):
             elif eRoleId == Thread_Device_Role.SED:
                 print 'join as sleepy end device'
                 role = 's'
+                # set data polling rate to 10s for SED
+                self.setPollingRate(10)
             elif eRoleId == Thread_Device_Role.EndDevice:
                 print 'join as end device'
                 role = 'rsn'
@@ -725,6 +736,15 @@ class ARM(IThci):
                 role = 'rsdn'
                 # set ROUTER_UPGRADE_THRESHOLD
                 self.__setRouterUpgradeThreshold(0)
+            elif eRoleId == Thread_Device_Role.EndDevice_FED:
+                # always remain an ED, never request to be a router
+                print 'join as FED'
+                role = 'rsdn'
+                # set ROUTER_UPGRADE_THRESHOLD
+                self.__setRouterUpgradeThreshold(0)
+            elif eRoleId == Thread_Device_Role.EndDevice_MED:
+                print 'join as MED'
+                role = 'rsn'
             else:
                 pass
 
@@ -825,11 +845,14 @@ class ARM(IThci):
             length: the size of ICMPv6 echo request payload
         """
         print '%s call ping' % self.port
-        print destination
+        print 'destination: %s' %destination
         try:
             cmd = 'ping %s %s' % (destination, str(length))
             print cmd
             self.serial.sendline(cmd)
+            self.serial.expect(cmd + self.serial.linesep)
+            # wait echo reply
+            time.sleep(1)
         except Exception, e:
             ModuleHelper.WriteIntoDebugLogger("ping() Error: " + str(e))
 
@@ -842,11 +865,14 @@ class ARM(IThci):
             length: the size of ICMPv6 echo request payload
         """
         print '%s call multicast_Ping' % self.port
-        print destination
+        print 'destination: %s' % destination
         try:
             cmd = 'ping %s %s' % (destination, str(length))
             print cmd
             self.serial.sendline(cmd)
+            self.serial.expect(cmd + self.serial.linesep)
+            # wait echo reply
+            time.sleep(1)
         except Exception, e:
             ModuleHelper.WriteIntoDebugLogger("multicast_ping() Error: " + str(e))
 
@@ -1327,7 +1353,6 @@ class ARM(IThci):
                 return None
 
             for index in childrenList:
-                print index
                 cmd = 'child %s' % index
                 child = []
                 child = self.__sendCommand(cmd)
@@ -1411,7 +1436,7 @@ class ARM(IThci):
             for entry in childNeighbours:
                 neighbourList.append(entry)
 
-        # get neighbouring routers
+        # get neighbouring routers info
         routerNeighbours = self.getNeighbouringRouters()
         if routerNeighbours != None and len(routerNeighbours) > 0:
             for entry in routerNeighbours:
@@ -1435,7 +1460,7 @@ class ARM(IThci):
 
         cmd = 'leaderpartitionid %s' %(str(hex(partationId)).rstrip('L'))
         print cmd
-        return self.__sendCommand(cmd) == 'Done'
+        return self.__sendCommand(cmd)[0] == 'Done'
 
     def getGUA(self, filterByPrefix=None):
         """get expected global unicast IPv6 address of Thread device
@@ -1489,22 +1514,33 @@ class ARM(IThci):
         pass
 
     def forceSetSlaac(self, slaacAddress):
+        """force to set a slaac IPv6 address to Thread interface
+
+        Args:
+            slaacAddress: a slaac IPv6 address to be set
+
+        Returns:
+            True: successful to set slaac address to Thread interface
+            False: fail to set slaac address to Thread interface
+        """
         print '%s call forceSetSlaac' % self.port
         print slaacAddress
+        try:
+            cmd = 'ipaddr add %s' % str(slaacAddress)
+            print cmd
+            return self.__sendCommand(cmd)[0] == 'Done'
+        except Exception, e:
+            ModuleHelper.WriteIntoDebugLogger("forceSetSlaac() Error: " + str(e))
 
     def setSleepyNodePollTime(self):
         pass
 
-
-# diagnostic THCI
     def diagnosticGet(self, strDestinationAddr, TLV_ids=0):
         pass
 
     def diagnosticReset(self, strDestinationAddr, iTLV_id):
         pass
 
-
-# commissioning THCI
     def startNativeCommissioner(self, strPSKc='GRLpassWord'):
         pass
 

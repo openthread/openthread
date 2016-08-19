@@ -466,7 +466,7 @@ void Interpreter::ProcessDiscover(int argc, char *argv[])
     }
 
     SuccessOrExit(error = otDiscover(mContext, scanChannels, 0, OT_PANID_BROADCAST,
-                                     &Interpreter::s_HandleActiveScanResult));
+                                     &Interpreter::s_HandleActiveScanResult, NULL));
     sServer->OutputFormat("| J | Network Name     | Extended PAN     | PAN  | MAC Address      | Ch | dBm | LQI |\r\n");
     sServer->OutputFormat("+---+------------------+------------------+------+------------------+----+-----+-----+\r\n");
 
@@ -1510,7 +1510,7 @@ void Interpreter::ProcessScan(int argc, char *argv[])
         scanChannels = 1 << value;
     }
 
-    SuccessOrExit(error = otActiveScan(mContext, scanChannels, 0, &Interpreter::s_HandleActiveScanResult));
+    SuccessOrExit(error = otActiveScan(mContext, scanChannels, 0, &Interpreter::s_HandleActiveScanResult, NULL));
     sServer->OutputFormat("| J | Network Name     | Extended PAN     | PAN  | MAC Address      | Ch | dBm | LQI |\r\n");
     sServer->OutputFormat("+---+------------------+------------------+------+------------------+----+-----+-----+\r\n");
 
@@ -1520,9 +1520,9 @@ exit:
     AppendResult(error);
 }
 
-void Interpreter::s_HandleActiveScanResult(otActiveScanResult *aResult)
+void Interpreter::s_HandleActiveScanResult(otActiveScanResult *aResult, void *aContext)
 {
-    Uart::sUartServer->mInterpreter.HandleActiveScanResult(aResult); // BUGBUG - Callbacks must provide a context
+    reinterpret_cast<Interpreter *>(aContext)->mInterpreter.HandleActiveScanResult(aResult);
 }
 
 void Interpreter::HandleActiveScanResult(otActiveScanResult *aResult)

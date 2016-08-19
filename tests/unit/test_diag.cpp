@@ -135,28 +135,11 @@ void TestDiag()
     for (unsigned int i = 0; i < sizeof(tests) / sizeof(tests[0]);  i++)
     {
         char string[50];
-        int length = strlen(tests[i].command);
-        char *cmd;
         char *output = NULL;
 
-	argc = 0;
+        memcpy(string, tests[i].command, strlen(tests[i].command) + 1);
 
-        memcpy(string, tests[i].command, length + 1);
-
-        for (cmd = string + 1; (cmd < string + length) && (cmd != NULL); ++cmd)
-        {
-            if (*cmd == ' ' || *cmd == '\r' || *cmd == '\n')
-            {
-                *cmd = '\0';
-            }
-
-            if (*(cmd - 1) == '\0' && *cmd != ' ')
-            {
-                argv[argc++] = cmd;
-            }
-        }
-
-        output = diagProcessCmd(argc, argv);
+        output = diagProcessCmdLine(string);
         VerifyOrQuit(memcmp(output, tests[i].output, strlen(tests[i].output)) == 0,
                      "Test Diagnostics module failed\r\n");
     }

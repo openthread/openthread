@@ -445,19 +445,21 @@ void Leader::RemoveBorderRouter(uint16_t aRloc16)
     bool rlocStable = false;
     RlocLookup(aRloc16, rlocIn, rlocStable, mTlvs, mLength);
 
-    if (rlocIn)
-    {
-        RemoveRloc(aRloc16);
-        mVersion++;
+    VerifyOrExit(rlocIn, ;);
 
-        if (rlocStable)
-        {
-            mStableVersion++;
-        }
+    RemoveRloc(aRloc16);
+    mVersion++;
+
+    if (rlocStable)
+    {
+        mStableVersion++;
     }
 
     mMle.HandleNetworkDataUpdate();
     mNetif.SetStateChangedFlags(OT_THREAD_NETDATA_UPDATED);
+
+exit:
+    return;
 }
 
 void Leader::HandleServerData(void *aContext, Coap::Header &aHeader, Message &aMessage,

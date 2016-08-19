@@ -45,6 +45,8 @@ void diagInit(otContext *aContext);
 
 char *diagProcessCmd(int argc, char *argv[]);
 
+char *diagProcessCmdLine(char *string);
+
 bool isDiagEnabled();
 
 #ifdef __cplusplus
