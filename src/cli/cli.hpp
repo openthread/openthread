@@ -167,6 +167,7 @@ private:
     static void ProcessReset(int argc, char *argv[]);
     static void ProcessRoute(int argc, char *argv[]);
     static void ProcessRouter(int argc, char *argv[]);
+    static void ProcessRouterRole(int argc, char *argv[]);
     static ThreadError ProcessRouteAdd(int argc, char *argv[]);
     static ThreadError ProcessRouteRemove(int argc, char *argv[]);
     static void ProcessRouterUpgradeThreshold(int argc, char *argv[]);
