@@ -91,8 +91,7 @@ Mac::Mac(ThreadNetif &aThreadNetif):
     mScanChannels = 0xff;
     mScanDuration = 0;
     mActiveScanHandler = NULL;
-    mClientActiveScanHandler = NULL;
-    mClientActiveScanContext = NULL;
+    mActiveScanContext = NULL;
 
     mSendHead = NULL;
     mSendTail = NULL;
@@ -128,16 +127,14 @@ Mac::Mac(ThreadNetif &aThreadNetif):
     otPlatRadioEnable();
 }
 
-ThreadError Mac::ActiveScan(uint32_t aScanChannels, uint16_t aScanDuration, ActiveScanHandler aHandler,
-                            void *aClientHandler, void *aClientContext)
+ThreadError Mac::ActiveScan(uint32_t aScanChannels, uint16_t aScanDuration, ActiveScanHandler aHandler, void *aContext)
 {
     ThreadError error = kThreadError_None;
 
     VerifyOrExit(mState != kStateActiveScan && mActiveScanRequest == false, error = kThreadError_Busy);
 
     mActiveScanHandler = aHandler;
-    mClientActiveScanHandler = aClientHandler;
-    mClientActiveScanContext = aClientContext;
+    mActiveScanContext = aContext;
     mScanChannels = (aScanChannels == 0) ? static_cast<uint32_t>(kScanChannelsAll) : aScanChannels;
     mScanDuration = (aScanDuration == 0) ? static_cast<uint16_t>(kScanDurationDefault) : aScanDuration;
 
@@ -610,7 +607,7 @@ void Mac::HandleAckTimer(void)
 
             if (mScanChannels == 0 || mScanChannel > kPhyMaxChannel)
             {
-                mActiveScanHandler(mClientActiveScanHandler, mClientActiveScanContext, NULL);
+                mActiveScanHandler(mActiveScanContext, NULL);
                 ScheduleNextTransmission();
                 ExitNow();
             }
@@ -947,7 +944,7 @@ void Mac::ReceiveDoneTask(Frame *aFrame, ThreadError aError)
         if (aFrame->GetType() == Frame::kFcfFrameBeacon)
         {
             mCounters.mRxBeacon++;
-            mActiveScanHandler(mClientActiveScanHandler, mClientActiveScanContext, aFrame);
+            mActiveScanHandler(mActiveScanContext, aFrame);
         }
         else
         {

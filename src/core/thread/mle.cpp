@@ -217,7 +217,7 @@ ThreadError Mle::Stop(void)
 }
 
 ThreadError Mle::Discover(uint32_t aScanChannels, uint16_t aScanDuration, uint16_t aPanId,
-                          DiscoverHandler aCallback, void *aClientHandler, void *aClientContext)
+                          DiscoverHandler aCallback, void *aContext)
 {
     ThreadError error = kThreadError_None;
     Message *message = NULL;
@@ -229,8 +229,7 @@ ThreadError Mle::Discover(uint32_t aScanChannels, uint16_t aScanDuration, uint16
     VerifyOrExit(!mIsDiscoverInProgress, error = kThreadError_Busy);
 
     mDiscoverHandler = aCallback;
-    mClientActiveScanHandler = aClientHandler;
-    mClientActiveScanContext = aClientContext;
+    mDiscoverContext = aContext;
     mMesh.SetDiscoverParameters(aScanChannels, aScanDuration);
 
     VerifyOrExit((message = Ip6::Udp::NewMessage(0)) != NULL, ;);
@@ -280,7 +279,7 @@ bool Mle::IsDiscoverInProgress(void)
 void Mle::HandleDiscoverComplete(void)
 {
     mIsDiscoverInProgress = false;
-    mDiscoverHandler(NULL, mClientActiveScanHandler, mClientActiveScanContext);
+    mDiscoverHandler(NULL, mDiscoverContext);
 }
 
 ThreadError Mle::BecomeDetached(void)
@@ -2309,7 +2308,7 @@ ThreadError Mle::HandleDiscoveryResponse(const Message &aMessage, const Ip6::Mes
     }
 
     // signal callback
-    mDiscoverHandler(&result, mClientActiveScanHandler, mClientActiveScanContext);
+    mDiscoverHandler(&result, mDiscoverContext);
 
 exit:
     return error;

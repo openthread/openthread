@@ -62,8 +62,14 @@ extern "C" {
 
 static otDEFINE_ALIGNED_VAR(sThreadNetifRaw, sizeof(ThreadNetif), uint64_t);
 
-static void HandleActiveScanResult(void *aClientHandler, void *aClientContext, Mac::Frame *aFrame);
-static void HandleMleDiscover(otActiveScanResult *aResult, void *aClientHandler, void *aClientContext);
+static void HandleActiveScanResult(void *aContext, Mac::Frame *aFrame);
+static void HandleMleDiscover(otActiveScanResult *aResult, void *aContext);
+
+static otHandleActiveScanResult sActiveScanCallback = NULL;
+static void *sActiveScanCallbackContext = NULL;
+
+static otHandleActiveScanResult sDiscoverCallback = NULL;
+static void *sDiscoverCallbackContext = NULL;
 
 void otProcessNextTasklet(void)
 {
@@ -932,9 +938,9 @@ bool otIsSingleton(void)
 ThreadError otActiveScan(uint32_t aScanChannels, uint16_t aScanDuration, otHandleActiveScanResult aCallback,
                          void *aCallbackContext)
 {
-    return sThreadNetif->GetMac().ActiveScan(aScanChannels, aScanDuration, &HandleActiveScanResult,
-                                             reinterpret_cast<void *>(aCallback),
-                                             aCallbackContext);
+    sActiveScanCallback = aCallback;
+    sActiveScanCallbackContext = aCallbackContext;
+    return sThreadNetif->GetMac().ActiveScan(aScanChannels, aScanDuration, &HandleActiveScanResult, NULL);
 }
 
 bool otIsActiveScanInProgress(void)
@@ -942,9 +948,8 @@ bool otIsActiveScanInProgress(void)
     return sThreadNetif->GetMac().IsActiveScanInProgress();
 }
 
-void HandleActiveScanResult(void *aClientHandler, void *aClientContext, Mac::Frame *aFrame)
+void HandleActiveScanResult(void *aContext, Mac::Frame *aFrame)
 {
-    otHandleActiveScanResult handler = reinterpret_cast<otHandleActiveScanResult>(aClientHandler);
     otActiveScanResult result;
     Mac::Address address;
     Mac::Beacon *beacon;
@@ -954,7 +959,7 @@ void HandleActiveScanResult(void *aClientHandler, void *aClientContext, Mac::Fra
 
     if (aFrame == NULL)
     {
-        handler(NULL, aClientContext);
+        sActiveScanCallback(NULL, sActiveScanCallbackContext);
         ExitNow();
     }
 
@@ -979,17 +984,19 @@ void HandleActiveScanResult(void *aClientHandler, void *aClientContext, Mac::Fra
         memcpy(&result.mExtendedPanId, beacon->GetExtendedPanId(), sizeof(result.mExtendedPanId));
     }
 
-    handler(&result, aClientContext);
+    sActiveScanCallback(&result, sActiveScanCallbackContext);
 
 exit:
+    (void)aContext;
     return;
 }
 
 ThreadError otDiscover(uint32_t aScanChannels, uint16_t aScanDuration, uint16_t aPanId,
                        otHandleActiveScanResult aCallback, void *aCallbackContext)
 {
-    return sThreadNetif->GetMle().Discover(aScanChannels, aScanDuration, aPanId, &HandleMleDiscover,
-                                           reinterpret_cast<void *>(aCallback), aCallbackContext);
+    sDiscoverCallback = aCallback;
+    sDiscoverCallbackContext = aCallbackContext;
+    return sThreadNetif->GetMle().Discover(aScanChannels, aScanDuration, aPanId, &HandleMleDiscover, NULL);
 }
 
 bool otIsDiscoverInProgress(void)
@@ -997,10 +1004,10 @@ bool otIsDiscoverInProgress(void)
     return sThreadNetif->GetMle().IsDiscoverInProgress();
 }
 
-void HandleMleDiscover(otActiveScanResult *aResult, void *aClientHandler, void *aClientContext)
+void HandleMleDiscover(otActiveScanResult *aResult, void *aContext)
 {
-    otHandleActiveScanResult handler = reinterpret_cast<otHandleActiveScanResult>(aClientHandler);
-    handler(aResult, aClientContext);
+    (void)aContext;
+    sDiscoverCallback(aResult, sDiscoverCallbackContext);
 }
 
 void otSetReceiveIp6DatagramCallback(otReceiveIp6DatagramCallback aCallback, void *aCallbackContext)

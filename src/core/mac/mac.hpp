@@ -193,12 +193,11 @@ public:
     /**
      * This function pointer is called on receiving an IEEE 802.15.4 Beacon during an Active Scan.
      *
-     * @param[in]  aClientHandler A pointer to the client's scan handler.
-     * @param[in]  aClientContext A pointer to client's context information.
+     * @param[in]  aContext       A pointer to arbitrary context information.
      * @param[in]  aBeaconFrame   A pointer to the Beacon frame.
      *
      */
-    typedef void (*ActiveScanHandler)(void *aClientHandler, void *aClientContext, Frame *aBeaconFrame);
+    typedef void (*ActiveScanHandler)(void *aContext, Frame *aBeaconFrame);
 
     /**
      * This method starts an IEEE 802.15.4 Active Scan.
@@ -206,12 +205,10 @@ public:
      * @param[in]  aScanChannels  A bit vector indicating which channels to scan.
      * @param[in]  aScanDuration  The time in milliseconds to spend scanning each channel.
      * @param[in]  aHandler       A pointer to a function that is called on receiving an IEEE 802.15.4 Beacon.
-     * @param[in]  aClientHandler A pointer to the client's scan handler.
-     * @param[in]  aClientContext A pointer to client's context information.
+     * @param[in]  aContext       A pointer to arbitrary context information.
      *
      */
-    ThreadError ActiveScan(uint32_t aScanChannels, uint16_t aScanDuration, ActiveScanHandler aHandler,
-                           void *aClientHandler, void *aClientContext);
+    ThreadError ActiveScan(uint32_t aScanChannels, uint16_t aScanDuration, ActiveScanHandler aHandler, void *aContext);
 
     /**
      * This method indicates whether or not rx-on-when-idle is enabled.
@@ -519,8 +516,7 @@ private:
     uint32_t mScanChannels;
     uint16_t mScanDuration;
     ActiveScanHandler mActiveScanHandler;
-    void *mClientActiveScanHandler;
-    void *mClientActiveScanContext;
+    void *mActiveScanContext;
 
     otLinkPcapCallback mPcapCallback;
     void *mPcapCallbackContext;

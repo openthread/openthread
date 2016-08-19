@@ -399,11 +399,10 @@ public:
      * This function pointer is called on receiving an MLE Discovery Response message.
      *
      * @param[in]  aResult   A valid pointer to the Discovery Response information or NULL when the Discovery completes.
-     * @param[in]  aClientHandler A pointer to the client's scan handler.
-     * @param[in]  aClientContext A pointer to client's context information.
+     * @param[in]  aContext  A pointer to application-specific context.
      *
      */
-    typedef void (*DiscoverHandler)(otActiveScanResult *aResult, void *aClientHandler, void *aClientContext);
+    typedef void (*DiscoverHandler)(otActiveScanResult *aResult, void *aContext);
 
     /**
      * This method initiates a Thread Discovery.
@@ -412,15 +411,14 @@ public:
      * @param[in]  aScanDuration  The time in milliseconds to spend scanning each channel.
      * @param[in]  aPanId         The PAN ID filter (set to Broadcast PAN to disable filter).
      * @param[in]  aHandler       A pointer to a function that is called on receiving an MLE Discovery Response.
-     * @param[in]  aClientHandler A pointer to the client's scan handler.
-     * @param[in]  aClientContext A pointer to client's context information.
+     * @param[in]  aContext       A pointer to arbitrary context information.
      *
      * @retval kThreadError_None  Successfully started a Thread Discovery.
      * @retval kThreadError_Busy  Thread Discovery is already in progress.
      *
      */
     ThreadError Discover(uint32_t aScanChannels, uint16_t aScanDuration, uint16_t aPanId,
-                         DiscoverHandler aCallback, void *aClientHandler, void *aClientContext);
+                         DiscoverHandler aCallback, void *aContext);
 
     /**
      * This method indicates whether or not an MLE Thread Discovery is currently in progress.
@@ -1155,8 +1153,7 @@ private:
     uint32_t mTimeout;
 
     DiscoverHandler mDiscoverHandler;
-    void *mClientActiveScanHandler;
-    void *mClientActiveScanContext;
+    void *mDiscoverContext;
     bool mIsDiscoverInProgress;
 
     Ip6::NetifUnicastAddress mLinkLocal16;
