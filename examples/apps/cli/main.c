@@ -39,15 +39,16 @@ void otSignalTaskletPending(otContext *aCtx)
     (void)aCtx;
 }
 
+static uint8_t otContextBuffer[OT_CONTEXT_SIZE];
+
 int main(int argc, char *argv[])
 {
     otContext *sContext;
-    uint8_t otContextBuffer[OT_CONTEXT_SIZE];
     uint64_t otContextBufferLength = sizeof(otContextBuffer);
 
     PlatformInit(argc, argv);
 
-    sContext = otInit(otContextBuffer, &otContextBufferLength);
+    sContext = otContextInit(otContextBuffer, &otContextBufferLength);
     assert(sContext);
 
     otCliUartInit(sContext);
@@ -62,7 +63,7 @@ int main(int argc, char *argv[])
         PlatformProcessDrivers(sContext);
     }
 
-    // otFreeContext(sContext);
+    // otContextFinalize(sContext);
 
     return 0;
 }

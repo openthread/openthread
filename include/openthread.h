@@ -172,7 +172,7 @@ const char *otGetVersionString(void);
  * @retval otContext*  The new OpenThread context structure.
  *
  */
-otContext *otInit(void *aContextBuffer, uint64_t *aContextBufferSize);
+otContext *otContextInit(void *aContextBuffer, uint64_t *aContextBufferSize);
 
 /**
  * This function disables the OpenThread library.
@@ -182,7 +182,7 @@ otContext *otInit(void *aContextBuffer, uint64_t *aContextBufferSize);
  * @param[in] aContext  The OpenThread context structure.
  *
  */
-void otFreeContext(otContext *aContext);
+void otContextFinalize(otContext *aContext);
 
 /**
  * This function initializes the OpenThread library.

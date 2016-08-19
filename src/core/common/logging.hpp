@@ -41,10 +41,6 @@
 #include <openthread-core-config.h>
 #include <platform/logging.h>
 
-#ifdef WINDOWS_LOGGING
-#include <platform/logging-windows.h>
-#endif
-
 #ifdef __cplusplus
 extern "C" {
 #endif

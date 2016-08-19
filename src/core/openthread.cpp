@@ -80,11 +80,11 @@ namespace Thread {
 extern "C" {
 #endif
 
-otContext *otInit(void *aContextBuffer, uint64_t *aContextBufferSize)
+otContext *otContextInit(void *aContextBuffer, uint64_t *aContextBufferSize)
 {
     otContext *aContext = NULL;
 
-    otLogInfoApi("otInit\n");
+    otLogInfoApi("otContextInit\n");
 
     VerifyOrExit(aContextBufferSize != NULL, ;);
 
@@ -99,7 +99,7 @@ exit:
     return aContext;
 }
 
-void otFreeContext(otContext *aContext)
+void otContextFinalize(otContext *aContext)
 {
     // Ensure we are disabled
     (void)otDisable(aContext);
@@ -895,8 +895,6 @@ ThreadError otEnable(otContext *aContext)
 
     otLogInfoApi("otEnable\n");
 
-    otInterfaceUp(aContext);
-    otThreadStart(aContext);
     aContext->mEnabled = true;
 
 exit:
