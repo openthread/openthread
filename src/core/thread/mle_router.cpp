@@ -184,7 +184,7 @@ ThreadError MleRouter::BecomeRouter(ThreadStatusTlv::Status aStatus)
 
     VerifyOrExit(mDeviceState == kDeviceStateDetached || mDeviceState == kDeviceStateChild,
                  error = kThreadError_Busy);
-    VerifyOrExit(mRouterRoleEnabled && (mDeviceMode & ModeTlv::kModeFFD), ;);
+    VerifyOrExit(mRouterRoleEnabled && (mDeviceMode & ModeTlv::kModeFFD), error = kThreadError_InvalidState);
 
     for (int i = 0; i < kMaxRouterId; i++)
     {
@@ -225,6 +225,7 @@ ThreadError MleRouter::BecomeLeader(void)
 
     VerifyOrExit(mDeviceState != kDeviceStateDisabled && mDeviceState != kDeviceStateLeader,
                  error = kThreadError_Busy);
+    VerifyOrExit(mRouterRoleEnabled && (mDeviceMode & ModeTlv::kModeFFD), error = kThreadError_InvalidState);
 
     for (int i = 0; i < kMaxRouterId; i++)
     {
@@ -1466,7 +1467,7 @@ void MleRouter::UpdateRoutes(const RouteTlv &aRoute, uint8_t aRouterId)
 
 #if 1
 
-    for (int i = 0; i < kMaxRouterId; i++)
+    for (uint8_t i = 0; i < kMaxRouterId; i++)
     {
         if (mRouters[i].mAllocated == false || mRouters[i].mNextHop == kMaxRouterId)
         {

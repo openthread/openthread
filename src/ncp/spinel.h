@@ -423,6 +423,16 @@ typedef enum
     SPINEL_PROP_THREAD_NETWORK_ID_TIMEOUT
                                        = SPINEL_PROP_THREAD_EXT__BEGIN + 4,
 
+    /// List of active thread router ids
+    /** Format: `A(C)`
+     *
+     * Note that some implementations may not support CMD_GET_VALUE
+     * routerids, but may support CMD_REMOVE_VALUE when the node is
+     * a leader.
+     */
+    SPINEL_PROP_THREAD_ACTIVE_ROUTER_IDS
+                                       = SPINEL_PROP_THREAD_EXT__BEGIN + 5,
+
     SPINEL_PROP_THREAD_EXT__END        = 0x1600,
 
     SPINEL_PROP_IPV6__BEGIN          = 0x60,

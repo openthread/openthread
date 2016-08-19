@@ -90,6 +90,7 @@ const struct Command Interpreter::sCommands[] =
     { "rloc16", &Interpreter::ProcessRloc16 },
     { "route", &Interpreter::ProcessRoute },
     { "router", &Interpreter::ProcessRouter },
+    { "routerrole", &Interpreter::ProcessRouterRole },
     { "routerupgradethreshold", &Interpreter::ProcessRouterUpgradeThreshold },
     { "scan", &Interpreter::ProcessScan },
     { "singleton", &Interpreter::ProcessSingleton },
@@ -1473,6 +1474,38 @@ void Interpreter::ProcessRouter(int argc, char *argv[])
             sServer->OutputFormat("LQI Out: %d\r\n", routerInfo.mLinkQualityOut);
             sServer->OutputFormat("Age: %d\r\n", routerInfo.mAge);
         }
+    }
+
+exit:
+    AppendResult(error);
+}
+
+void Interpreter::ProcessRouterRole(int argc, char *argv[])
+{
+    ThreadError error = kThreadError_None;
+
+    if (argc == 0)
+    {
+        if (otIsRouterRoleEnabled())
+        {
+            sServer->OutputFormat("Enabled\r\n");
+        }
+        else
+        {
+            sServer->OutputFormat("Disabled\r\n");
+        }
+    }
+    else if (strcmp(argv[0], "enable") == 0)
+    {
+        otSetRouterRoleEnabled(true);
+    }
+    else if (strcmp(argv[0], "disable") == 0)
+    {
+        otSetRouterRoleEnabled(false);
+    }
+    else
+    {
+        ExitNow(error = kThreadError_Parse);
     }
 
 exit:
