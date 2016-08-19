@@ -70,7 +70,7 @@ void TestMacBeaconFrame(void)
         0xB5, 0x53
     };
 
-    otCryptoContext cryptoContext = { false };
+    otCryptoContext cryptoContext;
     Thread::Crypto::AesCcm aesCcm(&cryptoContext);
     uint32_t headerLength = sizeof(test) - 8;
     uint32_t payloadLength = 0;
@@ -133,7 +133,7 @@ void TestMacDataFrame()
         0x00, 0x00, 0x61, 0x62, 0x63, 0x64
     };
 
-    otCryptoContext cryptoContext = { false };
+    otCryptoContext cryptoContext;
     Thread::Crypto::AesCcm aesCcm(&cryptoContext);
     uint32_t headerLength = sizeof(test) - 4;
     uint32_t payloadLength = 4;
@@ -210,7 +210,7 @@ void TestMacCommandFrame()
         0x00, 0x00, 0x00, 0x05, 0x06,
     };
 
-    otCryptoContext cryptoContext = { false };
+    otCryptoContext cryptoContext;
     Thread::Crypto::AesCcm aesCcm(&cryptoContext);
     aesCcm.SetKey(key, sizeof(key));
     aesCcm.Init(headerLength, payloadLength, tagLength, nonce, sizeof(nonce));
