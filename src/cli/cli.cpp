@@ -1486,7 +1486,7 @@ void Interpreter::ProcessRouterRole(int argc, char *argv[])
 
     if (argc == 0)
     {
-        if (otIsRouterRoleEnabled())
+        if (otIsRouterRoleEnabled(mContext))
         {
             sServer->OutputFormat("Enabled\r\n");
         }
@@ -1497,11 +1497,11 @@ void Interpreter::ProcessRouterRole(int argc, char *argv[])
     }
     else if (strcmp(argv[0], "enable") == 0)
     {
-        otSetRouterRoleEnabled(true);
+        otSetRouterRoleEnabled(mContext, true);
     }
     else if (strcmp(argv[0], "disable") == 0)
     {
-        otSetRouterRoleEnabled(false);
+        otSetRouterRoleEnabled(mContext, false);
     }
     else
     {
