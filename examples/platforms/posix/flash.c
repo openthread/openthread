@@ -71,7 +71,7 @@ ThreadError otPlatFlashInit(void)
     ThreadError error = kThreadError_None;
 
     sFlashFd = open("OT_Flash", O_RDWR | O_CREAT, 0666);
-    ftruncate(sFlashFd, 0);
+    VerifyOrExit(ftruncate(sFlashFd, 0) == 0, error = kThreadError_Failed);
     lseek(sFlashFd, 0, SEEK_SET);
 
     VerifyOrExit(sFlashFd >= 0, error = kThreadError_Failed);
