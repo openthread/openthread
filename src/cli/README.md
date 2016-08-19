@@ -38,6 +38,7 @@ OpenThread test scripts use the CLI to execute test cases.
 * [rloc16](#rloc16)
 * [route](#route)
 * [router](#router)
+* [routerrole](#routerrole)
 * [routerupgradethreshold](#routerupgradethreshold)
 * [scan](#scan)
 * [singleton](#singleton)
@@ -699,6 +700,34 @@ Cost: 0
 LQI In: 3
 LQI Out: 3
 Age: 7
+Done
+```
+
+### routerrole
+
+Indicates whether the router role is enabled or disabled.
+
+```bash
+> routerrole
+Enabled
+Done
+```
+
+### routerrole enable
+
+Enable the router role.
+
+```bash
+> routerrole enable
+Done
+```
+
+### routerrole disable
+
+Disable the router role.
+
+```bash
+> routerrole disable
 Done
 ```
 
