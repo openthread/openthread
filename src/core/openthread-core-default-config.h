@@ -156,6 +156,36 @@
 #endif  // OPENTHREAD_CONFIG_LOG_LEVEL
 
 /**
+ * @def OPENTHREAD_CONFIG_SETTINGS_BASE_ADDRESS
+ *
+ * The base address of settings.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_SETTINGS_BASE_ADDRESS
+#define OPENTHREAD_CONFIG_SETTINGS_BASE_ADDRESS             0x19000
+#endif  // OPENTHREAD_CONFIG_SETTINGS_BASE_ADDRESS
+
+/**
+ * @def OPENTHREAD_CONFIG_SETTINGS_PAGE_SIZE
+ *
+ * The page size of settings.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_SETTINGS_PAGE_SIZE
+#define OPENTHREAD_CONFIG_SETTINGS_PAGE_SIZE                0x800
+#endif  // OPENTHREAD_CONFIG_SETTINGS_PAGE_SIZE
+
+/**
+ * @def OPENTHREAD_CONFIG_SETTINGS_SIZE
+ *
+ * The size of settings.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_SETTINGS_SIZE
+#define OPENTHREAD_CONFIG_SETTINGS_SIZE                     0x2800
+#endif  // OPENTHREAD_CONFIG_SETTINGS_SIZE
+
+/**
  * @def OPENTHREAD_CONFIG_LOG_API
  *
  * Define to enable OpenThread API logging.
