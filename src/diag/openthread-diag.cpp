@@ -56,6 +56,31 @@ char *diagProcessCmd(int argc, char *argv[])
     return Diag::ProcessCmd(argc, argv);
 }
 
+char *diagProcessCmdLine(char *string)
+{
+    char *argv[8];
+    int argc = 0;
+    int length = static_cast<int>(strlen(string));
+    char *cmd;
+
+    for (; *string == ' '; string++, length--);
+
+    for (cmd = string + 1; (cmd < string + length) && (cmd != NULL); ++cmd)
+    {
+        if (*cmd == ' ' || *cmd == '\r' || *cmd == '\n')
+        {
+            *cmd = '\0';
+        }
+
+        if (*(cmd - 1) == '\0' && *cmd != ' ')
+        {
+            argv[argc++] = cmd;
+        }
+    }
+
+    return Diag::ProcessCmd(argc, argv);
+}
+
 bool isDiagEnabled()
 {
     return Diag::isEnabled();

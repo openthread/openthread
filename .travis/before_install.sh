@@ -37,6 +37,7 @@ set -x
 cd /tmp || die
 
 [ $TRAVIS_OS_NAME != linux ] || {    
+    sudo apt-get update
     sudo apt-get install python-pexpect || die
 
     [ $BUILD_TARGET != cc2538 ] || {
