@@ -359,7 +359,7 @@ void Diag::DiagReceiveDone(otContext *aContext, RadioPacket *aFrame, ThreadError
         sStats.received_packets++;
     }
 
-    otPlatRadioReceive(sChannel);
+    otPlatRadioReceive(aContext, sChannel);
 }
 
 void Diag::AlarmFired(otContext *aContext)

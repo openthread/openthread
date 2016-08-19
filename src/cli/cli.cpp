@@ -1522,7 +1522,7 @@ exit:
 
 void Interpreter::s_HandleActiveScanResult(otActiveScanResult *aResult, void *aContext)
 {
-    reinterpret_cast<Interpreter *>(aContext)->mInterpreter.HandleActiveScanResult(aResult);
+    reinterpret_cast<Interpreter *>(aContext)->HandleActiveScanResult(aResult);
 }
 
 void Interpreter::HandleActiveScanResult(otActiveScanResult *aResult)
