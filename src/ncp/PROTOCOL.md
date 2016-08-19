@@ -1616,6 +1616,14 @@ Used when operating in the Child role.
 Allows you to get or set the Thread `NETWORK_ID_TIMEOUT` constant, as
 defined by the Thread specification.
 
+#### D.4.21. PROP 5381: `PROP_THREAD_ACTIVE_ROUTER_IDS`
+* Type: Read-Write/Write-Only
+* Packed-Encoding: `A(C)` (List of active thread router ids)
+
+Note that some implementations may not support `CMD_GET_VALUE`
+routerids, but may support `CMD_REMOVE_VALUE` when the node is
+a leader.
+
 ### D.5. IPv6 Properties
 
 #### D.5.1. PROP 96: `PROP_IPV6_LL_ADDR`
