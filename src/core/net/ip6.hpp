@@ -577,9 +577,9 @@ public:
     /**
      * This function registers a callback to provide received raw IPv6 datagrams.
      *
-     * @param[in]  aCallback        A pointer to a function that is called when an IPv6 datagram is received
-     *                              or NULL to disable the callback.
-     * @param[in]  aContextContext  A pointer to application-specific context.
+     * @param[in]  aCallback         A pointer to a function that is called when an IPv6 datagram is received
+     *                               or NULL to disable the callback.
+     * @param[in]  aCallbackContext  A pointer to application-specific context.
      *
      */
     static void SetReceiveDatagramCallback(otReceiveIp6DatagramCallback aCallback, void *aCallbackContext);

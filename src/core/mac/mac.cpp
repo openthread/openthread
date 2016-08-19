@@ -129,7 +129,7 @@ Mac::Mac(ThreadNetif &aThreadNetif):
 }
 
 ThreadError Mac::ActiveScan(uint32_t aScanChannels, uint16_t aScanDuration, ActiveScanHandler aHandler,
-                            otHandleActiveScanResult aClientHandler, void *aClientContext)
+                            void *aClientHandler, void *aClientContext)
 {
     ThreadError error = kThreadError_None;
 

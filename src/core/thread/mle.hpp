@@ -400,11 +400,10 @@ public:
      *
      * @param[in]  aResult   A valid pointer to the Discovery Response information or NULL when the Discovery completes.
      * @param[in]  aClientHandler A pointer to the client's scan handler.
-     * @param[in]  aClientContext A pointer to the client's scan handler.
+     * @param[in]  aClientContext A pointer to client's context information.
      *
      */
-    typedef void (*DiscoverHandler)(otActiveScanResult *aResult, otHandleActiveScanResult aClientHandler,
-                                    void *aClientContext);
+    typedef void (*DiscoverHandler)(otActiveScanResult *aResult, void *aClientHandler, void *aClientContext);
 
     /**
      * This method initiates a Thread Discovery.
@@ -421,7 +420,7 @@ public:
      *
      */
     ThreadError Discover(uint32_t aScanChannels, uint16_t aScanDuration, uint16_t aPanId,
-                         DiscoverHandler aCallback, otHandleActiveScanResult aClientHandler, void *aClientContext);
+                         DiscoverHandler aCallback, void *aClientHandler, void *aClientContext);
 
     /**
      * This method indicates whether or not an MLE Thread Discovery is currently in progress.
@@ -1156,7 +1155,7 @@ private:
     uint32_t mTimeout;
 
     DiscoverHandler mDiscoverHandler;
-    otHandleActiveScanResult mClientActiveScanHandler;
+    void *mClientActiveScanHandler;
     void *mClientActiveScanContext;
     bool mIsDiscoverInProgress;
 

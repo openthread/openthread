@@ -194,11 +194,11 @@ public:
      * This function pointer is called on receiving an IEEE 802.15.4 Beacon during an Active Scan.
      *
      * @param[in]  aClientHandler A pointer to the client's scan handler.
-     * @param[in]  aClientContext A pointer to the client's scan handler.
+     * @param[in]  aClientContext A pointer to client's context information.
      * @param[in]  aBeaconFrame   A pointer to the Beacon frame.
      *
      */
-    typedef void (*ActiveScanHandler)(otHandleActiveScanResult aClientHandler, void *aClientContext, Frame *aBeaconFrame);
+    typedef void (*ActiveScanHandler)(void *aClientHandler, void *aClientContext, Frame *aBeaconFrame);
 
     /**
      * This method starts an IEEE 802.15.4 Active Scan.
@@ -211,7 +211,7 @@ public:
      *
      */
     ThreadError ActiveScan(uint32_t aScanChannels, uint16_t aScanDuration, ActiveScanHandler aHandler,
-                           otHandleActiveScanResult aClientHandler, void *aClientContext);
+                           void *aClientHandler, void *aClientContext);
 
     /**
      * This method indicates whether or not rx-on-when-idle is enabled.
@@ -422,9 +422,9 @@ public:
     /**
      * This function registers a callback to provide received raw IEEE 802.15.4 frames.
      *
-     * @param[in]  aPcapCallback    A pointer to a function that is called when receiving an IEEE 802.15.4 link frame or
-     *                              NULL to disable the callback.
-     * @param[in]  aContextContext  A pointer to application-specific context.
+     * @param[in]  aPcapCallback     A pointer to a function that is called when receiving an IEEE 802.15.4 link frame or
+     *                               NULL to disable the callback.
+     * @param[in]  aCallbackContext  A pointer to application-specific context.
      *
      */
     void SetPcapCallback(otLinkPcapCallback aPcapCallback, void *aCallbackContext);
@@ -519,7 +519,7 @@ private:
     uint32_t mScanChannels;
     uint16_t mScanDuration;
     ActiveScanHandler mActiveScanHandler;
-    otHandleActiveScanResult mClientActiveScanHandler;
+    void *mClientActiveScanHandler;
     void *mClientActiveScanContext;
 
     otLinkPcapCallback mPcapCallback;

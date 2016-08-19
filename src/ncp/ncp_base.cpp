@@ -390,7 +390,7 @@ NcpBase::NcpBase():
 
 void NcpBase::HandleDatagramFromStack(otMessage aMessage, void *aContext)
 {
-    ((NcpBase*)aContext)->HandleDatagramFromStack(*static_cast<Message *>(aMessage));
+    reinterpret_cast<NcpBase*>(aContext)->HandleDatagramFromStack(*static_cast<Message *>(aMessage));
 }
 
 void NcpBase::HandleDatagramFromStack(Message &aMessage)
@@ -454,7 +454,7 @@ exit:
 
 void NcpBase::HandleActiveScanResult_Jump(otActiveScanResult *result, void *aContext)
 {
-    ((NcpBase*)aContext)->HandleActiveScanResult(result);
+    reinterpret_cast<NcpBase*>(aContext)->HandleActiveScanResult(result);
 }
 
 void NcpBase::HandleActiveScanResult(otActiveScanResult *result)

@@ -217,7 +217,7 @@ ThreadError Mle::Stop(void)
 }
 
 ThreadError Mle::Discover(uint32_t aScanChannels, uint16_t aScanDuration, uint16_t aPanId,
-                          DiscoverHandler aCallback, otHandleActiveScanResult aClientHandler, void *aClientContext)
+                          DiscoverHandler aCallback, void *aClientHandler, void *aClientContext)
 {
     ThreadError error = kThreadError_None;
     Message *message = NULL;
