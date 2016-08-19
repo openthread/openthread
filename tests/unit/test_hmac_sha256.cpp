@@ -62,6 +62,8 @@ void TestHmacSha256(void)
     otCryptoContext cryptoContext;
     uint8_t hash[otCryptoSha256Size];
 
+    memset(&cryptoContext, 0, sizeof(cryptoContext));
+
     for (int i = 0; tests[i].key != NULL; i++)
     {
         otCryptoHmacSha256Start(&cryptoContext, tests[i].key, strlen(tests[i].key));
