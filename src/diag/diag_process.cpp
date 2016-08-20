@@ -78,7 +78,7 @@ char *Diag::ProcessCmd(int argc, char *argv[])
 
     if (argc == 0)
     {
-        sprintf(sDiagOutput, "diagnostics mode is %s\r\n", otPlatDiagModeGet() ? "enabled" : "disabled");
+        snprintf(sDiagOutput, sizeof(sDiagOutput), "diagnostics mode is %s\r\n", otPlatDiagModeGet() ? "enabled" : "disabled");
     }
     else
     {
@@ -86,7 +86,7 @@ char *Diag::ProcessCmd(int argc, char *argv[])
         {
             if (strcmp(argv[0], sCommands[i].mName) == 0)
             {
-                sCommands[i].mCommand(argc - 1, &argv[1], sDiagOutput);
+                sCommands[i].mCommand(argc - 1, argc > 1 ? &argv[1] : NULL, sDiagOutput, sizeof(sDiagOutput));
                 break;
             }
         }
@@ -94,7 +94,7 @@ char *Diag::ProcessCmd(int argc, char *argv[])
         // more platform specific features will be processed under platform layer
         if (i == sizeof(sCommands) / sizeof(sCommands[0]))
         {
-            otPlatDiagProcess(argc, argv, sDiagOutput);
+            otPlatDiagProcess(argc, argv, sDiagOutput, sizeof(sDiagOutput));
         }
     }
 
@@ -106,15 +106,15 @@ bool Diag::isEnabled()
     return otPlatDiagModeGet();
 }
 
-void Diag::AppendErrorResult(ThreadError aError, char *aOutput)
+void Diag::AppendErrorResult(ThreadError aError, char *aOutput, size_t aOutputMaxLen)
 {
     if (aError != kThreadError_None)
     {
-        sprintf(aOutput, "failed\r\nstatus %#x\r\n", aError);
+        snprintf(aOutput, aOutputMaxLen, "failed\r\nstatus %#x\r\n", aError);
     }
 }
 
-void Diag::ProcessStart(int argc, char *argv[], char *aOutput)
+void Diag::ProcessStart(int argc, char *argv[], char *aOutput, size_t aOutputMaxLen)
 {
     ThreadError error = kThreadError_None;
 
@@ -135,15 +135,15 @@ void Diag::ProcessStart(int argc, char *argv[], char *aOutput)
 
     memset(&sStats, 0, sizeof(struct DiagStats));
 
-    sprintf(aOutput, "start diagnostics mode\r\nstatus 0x%02x\r\n", error);
+    snprintf(aOutput, aOutputMaxLen, "start diagnostics mode\r\nstatus 0x%02x\r\n", error);
 
 exit:
     (void)argc;
     (void)argv;
-    AppendErrorResult(error, aOutput);
+    AppendErrorResult(error, aOutput, aOutputMaxLen);
 }
 
-void Diag::ProcessStop(int argc, char *argv[], char *aOutput)
+void Diag::ProcessStop(int argc, char *argv[], char *aOutput, size_t aOutputMaxLen)
 {
     ThreadError error = kThreadError_None;
 
@@ -153,14 +153,14 @@ void Diag::ProcessStop(int argc, char *argv[], char *aOutput)
     otPlatDiagModeSet(false);
     otPlatRadioSetPromiscuous(false);
 
-    sprintf(aOutput, "received packets: %d\r\nsent packets: %d\r\nfirst received packet: rssi=%d, lqi=%d\r\n\nstop diagnostics mode\r\nstatus 0x%02x\r\n",
+    snprintf(aOutput, aOutputMaxLen, "received packets: %d\r\nsent packets: %d\r\nfirst received packet: rssi=%d, lqi=%d\r\n\nstop diagnostics mode\r\nstatus 0x%02x\r\n",
             static_cast<int>(sStats.received_packets), static_cast<int>(sStats.sent_packets), static_cast<int>(sStats.first_rssi),
             static_cast<int>(sStats.first_lqi), error);
 
 exit:
     (void)argc;
     (void)argv;
-    AppendErrorResult(error, aOutput);
+    AppendErrorResult(error, aOutput, aOutputMaxLen);
 }
 
 ThreadError Diag::ParseLong(char *argv, long &value)
@@ -191,7 +191,7 @@ void Diag::TxPacket()
     otPlatRadioTransmit();
 }
 
-void Diag::ProcessChannel(int argc, char *argv[], char *aOutput)
+void Diag::ProcessChannel(int argc, char *argv[], char *aOutput, size_t aOutputMaxLen)
 {
     ThreadError error = kThreadError_None;
 
@@ -199,7 +199,7 @@ void Diag::ProcessChannel(int argc, char *argv[], char *aOutput)
 
     if (argc == 0)
     {
-        sprintf(aOutput, "channel: %d\r\n", sChannel);
+        snprintf(aOutput, aOutputMaxLen, "channel: %d\r\n", sChannel);
     }
     else
     {
@@ -211,14 +211,14 @@ void Diag::ProcessChannel(int argc, char *argv[], char *aOutput)
 
         // listen on the set channel immediately
         otPlatRadioReceive(sChannel);
-        sprintf(aOutput, "set channel to %d\r\nstatus 0x%02x\r\n", sChannel, error);
+        snprintf(aOutput, aOutputMaxLen, "set channel to %d\r\nstatus 0x%02x\r\n", sChannel, error);
     }
 
 exit:
-    AppendErrorResult(error, aOutput);
+    AppendErrorResult(error, aOutput, aOutputMaxLen);
 }
 
-void Diag::ProcessPower(int argc, char *argv[], char *aOutput)
+void Diag::ProcessPower(int argc, char *argv[], char *aOutput, size_t aOutputMaxLen)
 {
     ThreadError error = kThreadError_None;
 
@@ -226,7 +226,7 @@ void Diag::ProcessPower(int argc, char *argv[], char *aOutput)
 
     if (argc == 0)
     {
-        sprintf(aOutput, "tx power: %d dBm\r\n", sTxPower);
+        snprintf(aOutput, aOutputMaxLen, "tx power: %d dBm\r\n", sTxPower);
     }
     else
     {
@@ -234,14 +234,14 @@ void Diag::ProcessPower(int argc, char *argv[], char *aOutput)
 
         SuccessOrExit(error = ParseLong(argv[0], value));
         sTxPower = static_cast<int8_t>(value);
-        sprintf(aOutput, "set tx power to %d dBm\r\nstatus 0x%02x\r\n", sTxPower, error);
+        snprintf(aOutput, aOutputMaxLen, "set tx power to %d dBm\r\nstatus 0x%02x\r\n", sTxPower, error);
     }
 
 exit:
-    AppendErrorResult(error, aOutput);
+    AppendErrorResult(error, aOutput, aOutputMaxLen);
 }
 
-void Diag::ProcessSend(int argc, char *argv[], char *aOutput)
+void Diag::ProcessSend(int argc, char *argv[], char *aOutput, size_t aOutputMaxLen)
 {
     ThreadError error = kThreadError_None;
     long value;
@@ -256,14 +256,14 @@ void Diag::ProcessSend(int argc, char *argv[], char *aOutput)
     VerifyOrExit(value <= kMaxPHYPacketSize, error = kThreadError_InvalidArgs);
     sTxLen = static_cast<uint8_t>(value);
 
-    sprintf(aOutput, "sending %#x packet(s), length %#x\r\nstatus 0x%02x\r\n", static_cast<int>(sTxPackets), static_cast<int>(sTxLen), error);
+    snprintf(aOutput, aOutputMaxLen, "sending %#x packet(s), length %#x\r\nstatus 0x%02x\r\n", static_cast<int>(sTxPackets), static_cast<int>(sTxLen), error);
     TxPacket();
 
 exit:
-    AppendErrorResult(error, aOutput);
+    AppendErrorResult(error, aOutput, aOutputMaxLen);
 }
 
-void Diag::ProcessRepeat(int argc, char *argv[], char *aOutput)
+void Diag::ProcessRepeat(int argc, char *argv[], char *aOutput, size_t aOutputMaxLen)
 {
     ThreadError error = kThreadError_None;
 
@@ -273,7 +273,7 @@ void Diag::ProcessRepeat(int argc, char *argv[], char *aOutput)
     if (strcmp(argv[0], "stop") == 0)
     {
         otPlatAlarmStop();
-        sprintf(aOutput, "repeated packet transmission is stopped\r\nstatus 0x%02x\r\n", error);
+        snprintf(aOutput, aOutputMaxLen, "repeated packet transmission is stopped\r\nstatus 0x%02x\r\n", error);
     }
     else
     {
@@ -290,42 +290,42 @@ void Diag::ProcessRepeat(int argc, char *argv[], char *aOutput)
 
         uint32_t now = otPlatAlarmGetNow();
         otPlatAlarmStartAt(now, sTxPeriod);
-        sprintf(aOutput, "sending packets of length %#x at the delay of %#x ms\r\nstatus 0x%02x\r\n", static_cast<int>(sTxLen), static_cast<int>(sTxPeriod), error);
+        snprintf(aOutput, aOutputMaxLen, "sending packets of length %#x at the delay of %#x ms\r\nstatus 0x%02x\r\n", static_cast<int>(sTxLen), static_cast<int>(sTxPeriod), error);
     }
 
 exit:
-    AppendErrorResult(error, aOutput);
+    AppendErrorResult(error, aOutput, aOutputMaxLen);
 }
 
-void Diag::ProcessSleep(int argc, char *argv[], char *aOutput)
+void Diag::ProcessSleep(int argc, char *argv[], char *aOutput, size_t aOutputMaxLen)
 {
     ThreadError error = kThreadError_None;
 
     VerifyOrExit(otPlatDiagModeGet(), error = kThreadError_InvalidState);
 
     otPlatRadioSleep();
-    sprintf(aOutput, "sleeping now...\r\n");
+    snprintf(aOutput, aOutputMaxLen, "sleeping now...\r\n");
 
 exit:
     (void)argc;
     (void)argv;
-    AppendErrorResult(error, aOutput);
+    AppendErrorResult(error, aOutput, aOutputMaxLen);
 }
 
-void Diag::ProcessStats(int argc, char *argv[], char *aOutput)
+void Diag::ProcessStats(int argc, char *argv[], char *aOutput, size_t aOutputMaxLen)
 {
     ThreadError error = kThreadError_None;
 
     VerifyOrExit(otPlatDiagModeGet(), error = kThreadError_InvalidState);
 
-    sprintf(aOutput, "received packets: %d\r\nsent packets: %d\r\nfirst received packet: rssi=%d, lqi=%d\r\n",
+    snprintf(aOutput, aOutputMaxLen, "received packets: %d\r\nsent packets: %d\r\nfirst received packet: rssi=%d, lqi=%d\r\n",
             static_cast<int>(sStats.received_packets), static_cast<int>(sStats.sent_packets),
             static_cast<int>(sStats.first_rssi), static_cast<int>(sStats.first_lqi));
 
 exit:
     (void)argc;
     (void)argv;
-    AppendErrorResult(error, aOutput);
+    AppendErrorResult(error, aOutput, aOutputMaxLen);
 }
 
 void Diag::DiagTransmitDone(bool aRxPending, ThreadError aError)
