@@ -57,6 +57,8 @@ set -x
 [ $BUILD_TARGET != cc2538 ] || {
     export PATH=/tmp/gcc-arm-none-eabi-4_9-2015q3/bin:$PATH || die
     make -f examples/Makefile-cc2538 || die
+    arm-none-eabi-size  output/bin/arm-none-eabi-ot-cli || die
+    arm-none-eabi-size  output/bin/arm-none-eabi-ot-ncp || die
 }
 
 [ $BUILD_TARGET != scan-build ] || {

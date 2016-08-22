@@ -263,8 +263,6 @@ private:
     uint32_t mContextIdReuseDelay;
     Timer mTimer;
 
-    Ip6::NetifUnicastAddress mAddresses[4];
-
     Coap::Resource  mServerData;
     uint8_t         mStableVersion;
     uint8_t         mVersion;

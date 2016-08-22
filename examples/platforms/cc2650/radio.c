@@ -894,7 +894,7 @@ ThreadError otPlatRadioSleep(void)
     return error;
 }
 
-int8_t otPlatRadioGetNoiseFloor(void)
+int8_t otPlatRadioGetRssi(void)
 {
     /* TODO: is this meant to be the largest observed RSSI? */
     return 0;

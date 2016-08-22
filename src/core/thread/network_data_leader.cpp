@@ -63,7 +63,6 @@ Leader::Leader(ThreadNetif &aThreadNetif):
 
 void Leader::Reset(void)
 {
-    memset(mAddresses, 0, sizeof(mAddresses));
     memset(mContextLastUsed, 0, sizeof(mContextLastUsed));
     mVersion = static_cast<uint8_t>(otPlatRandomGet());
     mStableVersion = static_cast<uint8_t>(otPlatRandomGet());
@@ -210,97 +209,6 @@ ThreadError Leader::GetContext(uint8_t aContextId, Lowpan::Context &aContext)
 
 exit:
     return error;
-}
-
-ThreadError Leader::ConfigureAddresses(void)
-{
-    PrefixTlv *prefix;
-
-    // clear out addresses that are not on-mesh
-    for (size_t i = 0; i < sizeof(mAddresses) / sizeof(mAddresses[0]); i++)
-    {
-        if (mAddresses[i].mValidLifetime == 0 ||
-            IsOnMesh(mAddresses[i].GetAddress()))
-        {
-            continue;
-        }
-
-        mNetif.RemoveUnicastAddress(mAddresses[i]);
-        mAddresses[i].mValidLifetime = 0;
-    }
-
-    // configure on-mesh addresses
-    for (NetworkDataTlv *cur = reinterpret_cast<NetworkDataTlv *>(mTlvs);
-         cur < reinterpret_cast<NetworkDataTlv *>(mTlvs + mLength);
-         cur = cur->GetNext())
-    {
-        if (cur->GetType() != NetworkDataTlv::kTypePrefix)
-        {
-            continue;
-        }
-
-        prefix = reinterpret_cast<PrefixTlv *>(cur);
-        ConfigureAddress(*prefix);
-    }
-
-    return kThreadError_None;
-}
-
-ThreadError Leader::ConfigureAddress(PrefixTlv &aPrefix)
-{
-    BorderRouterTlv *borderRouter;
-    BorderRouterEntry *entry;
-
-    // look for Border Router TLV
-    if ((borderRouter = FindBorderRouter(aPrefix)) == NULL)
-    {
-        ExitNow();
-    }
-
-    // check if SLAAC flag is set
-    if ((entry = borderRouter->GetEntry(0)) == NULL ||
-        entry->IsSlaac() == false)
-    {
-        ExitNow();
-    }
-
-    // check if address is already added for this prefix
-    for (size_t i = 0; i < sizeof(mAddresses) / sizeof(mAddresses[0]); i++)
-    {
-        if (mAddresses[i].mValidLifetime != 0 &&
-            mAddresses[i].mPrefixLength == aPrefix.GetPrefixLength() &&
-            PrefixMatch(mAddresses[i].mAddress.mFields.m8, aPrefix.GetPrefix(), aPrefix.GetPrefixLength()) >= 0)
-        {
-            mAddresses[i].mPreferredLifetime = entry->IsPreferred() ? 0xffffffff : 0;
-            ExitNow();
-        }
-    }
-
-    // configure address for this prefix
-    for (size_t i = 0; i < sizeof(mAddresses) / sizeof(mAddresses[0]); i++)
-    {
-        if (mAddresses[i].mValidLifetime != 0)
-        {
-            continue;
-        }
-
-        memset(&mAddresses[i], 0, sizeof(mAddresses[i]));
-        memcpy(mAddresses[i].mAddress.mFields.m8, aPrefix.GetPrefix(), BitVectorBytes(aPrefix.GetPrefixLength()));
-
-        for (size_t j = 8; j < sizeof(mAddresses[i].mAddress); j++)
-        {
-            mAddresses[i].mAddress.mFields.m8[j] = static_cast<uint8_t>(otPlatRandomGet());
-        }
-
-        mAddresses[i].mPrefixLength = aPrefix.GetPrefixLength();
-        mAddresses[i].mPreferredLifetime = entry->IsPreferred() ? 0xffffffff : 0;
-        mAddresses[i].mValidLifetime = 0xffffffff;
-        mNetif.AddUnicastAddress(mAddresses[i]);
-        break;
-    }
-
-exit:
-    return kThreadError_None;
 }
 
 bool Leader::IsOnMesh(const Ip6::Address &aAddress)
@@ -527,8 +435,8 @@ void Leader::SetNetworkData(uint8_t aVersion, uint8_t aStableVersion, bool aStab
 
     otDumpDebgNetData("set network data", mTlvs, mLength);
 
-    ConfigureAddresses();
     mMle.HandleNetworkDataUpdate();
+    mNetif.SetStateChangedFlags(OT_THREAD_NETDATA_UPDATED);
 }
 
 void Leader::RemoveBorderRouter(uint16_t aRloc16)
@@ -537,20 +445,21 @@ void Leader::RemoveBorderRouter(uint16_t aRloc16)
     bool rlocStable = false;
     RlocLookup(aRloc16, rlocIn, rlocStable, mTlvs, mLength);
 
-    if (rlocIn)
+    VerifyOrExit(rlocIn, ;);
+
+    RemoveRloc(aRloc16);
+    mVersion++;
+
+    if (rlocStable)
     {
-        RemoveRloc(aRloc16);
-        mVersion++;
-
-        if (rlocStable)
-        {
-            mStableVersion++;
-        }
-
-        ConfigureAddresses();
+        mStableVersion++;
     }
 
     mMle.HandleNetworkDataUpdate();
+    mNetif.SetStateChangedFlags(OT_THREAD_NETDATA_UPDATED);
+
+exit:
+    return;
 }
 
 void Leader::HandleServerData(void *aContext, Coap::Header &aHeader, Message &aMessage,
@@ -785,8 +694,8 @@ ThreadError Leader::RegisterNetworkData(uint16_t aRloc16, uint8_t *aTlvs, uint8_
         }
     }
 
-    ConfigureAddresses();
     mMle.HandleNetworkDataUpdate();
+    mNetif.SetStateChangedFlags(OT_THREAD_NETDATA_UPDATED);
 
 exit:
     return error;

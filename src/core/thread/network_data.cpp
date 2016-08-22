@@ -57,6 +57,52 @@ void NetworkData::GetNetworkData(bool aStable, uint8_t *aData, uint8_t &aDataLen
     }
 }
 
+ThreadError NetworkData::GetNextOnMeshPrefix(otNetworkDataIterator *aIterator, otBorderRouterConfig *aConfig)
+{
+    ThreadError error = kThreadError_NotFound;
+    NetworkDataTlv *cur = reinterpret_cast<NetworkDataTlv *>(mTlvs + *aIterator);
+    NetworkDataTlv *end = reinterpret_cast<NetworkDataTlv *>(mTlvs + mLength);
+
+    for (; cur < end; cur = cur->GetNext())
+    {
+        PrefixTlv *prefix;
+        BorderRouterTlv *borderRouter;
+        BorderRouterEntry *borderRouterEntry;
+
+        if (cur->GetType() != NetworkDataTlv::kTypePrefix)
+        {
+            continue;
+        }
+
+        prefix = static_cast<PrefixTlv *>(cur);
+
+        if ((borderRouter = FindBorderRouter(*prefix)) == NULL)
+        {
+            continue;
+        }
+
+        borderRouterEntry = borderRouter->GetEntry(0);
+
+        memcpy(&aConfig->mPrefix.mPrefix, prefix->GetPrefix(), sizeof(aConfig->mPrefix.mPrefix));
+        aConfig->mPrefix.mLength = prefix->GetPrefixLength();
+        aConfig->mPreference = borderRouterEntry->GetPreference();
+        aConfig->mPreferred = borderRouterEntry->IsPreferred();
+        aConfig->mSlaac = borderRouterEntry->IsSlaac();
+        aConfig->mDhcp = borderRouterEntry->IsDhcp();
+        aConfig->mConfigure = borderRouterEntry->IsConfigure();
+        aConfig->mDefaultRoute = borderRouterEntry->IsDefaultRoute();
+        aConfig->mOnMesh = borderRouterEntry->IsOnMesh();
+        aConfig->mStable = cur->IsStable();
+
+        *aIterator = static_cast<otNetworkDataIterator>(reinterpret_cast<uint8_t *>(cur->GetNext()) - mTlvs);
+
+        ExitNow(error = kThreadError_None);
+    }
+
+exit:
+    return error;
+}
+
 void NetworkData::RemoveTemporaryData(uint8_t *aData, uint8_t &aDataLength)
 {
     NetworkDataTlv *cur = reinterpret_cast<NetworkDataTlv *>(aData);

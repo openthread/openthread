@@ -65,6 +65,12 @@ static otDEFINE_ALIGNED_VAR(sThreadNetifRaw, sizeof(ThreadNetif), uint64_t);
 static void HandleActiveScanResult(void *aContext, Mac::Frame *aFrame);
 static void HandleMleDiscover(otActiveScanResult *aResult, void *aContext);
 
+static otHandleActiveScanResult sActiveScanCallback = NULL;
+static void *sActiveScanCallbackContext = NULL;
+
+static otHandleActiveScanResult sDiscoverCallback = NULL;
+static void *sDiscoverCallbackContext = NULL;
+
 void otProcessNextTasklet(void)
 {
     TaskletScheduler::RunNextTasklet();
@@ -210,6 +216,16 @@ ThreadError otSetMasterKey(const uint8_t *aKey, uint8_t aKeyLength)
     return sThreadNetif->GetKeyManager().SetMasterKey(aKey, aKeyLength);
 }
 
+int8_t otGetMaxTransmitPower(void)
+{
+    return sThreadNetif->GetMac().GetMaxTransmitPower();
+}
+
+void otSetMaxTransmitPower(int8_t aPower)
+{
+    sThreadNetif->GetMac().SetMaxTransmitPower(aPower);
+}
+
 const otIp6Address *otGetMeshLocalEid(void)
 {
     return sThreadNetif->GetMle().GetMeshLocal64();
@@ -266,7 +282,17 @@ otPanId otGetPanId(void)
 
 ThreadError otSetPanId(otPanId aPanId)
 {
-    return sThreadNetif->GetMac().SetPanId(aPanId);
+    ThreadError error = kThreadError_None;
+
+    // do not allow setting PAN ID to broadcast if Thread is running
+    VerifyOrExit(aPanId != Mac::kPanIdBroadcast ||
+                 sThreadNetif->GetMle().GetDeviceState() != Mle::kDeviceStateDisabled,
+                 error = kThreadError_InvalidState);
+
+    error = sThreadNetif->GetMac().SetPanId(aPanId);
+
+exit:
+    return error;
 }
 
 bool otIsRouterRoleEnabled(void)
@@ -346,6 +372,25 @@ ThreadError otAddBorderRouter(const otBorderRouterConfig *aConfig)
 ThreadError otRemoveBorderRouter(const otIp6Prefix *aPrefix)
 {
     return sThreadNetif->GetNetworkDataLocal().RemoveOnMeshPrefix(aPrefix->mPrefix.mFields.m8, aPrefix->mLength);
+}
+
+ThreadError otGetNextOnMeshPrefix(bool aLocal, otNetworkDataIterator *aIterator, otBorderRouterConfig *aConfig)
+{
+    ThreadError error = kThreadError_None;
+
+    VerifyOrExit(aIterator && aConfig, error = kThreadError_InvalidArgs);
+
+    if (aLocal)
+    {
+        error = sThreadNetif->GetNetworkDataLocal().GetNextOnMeshPrefix(aIterator, aConfig);
+    }
+    else
+    {
+        error = sThreadNetif->GetNetworkDataLeader().GetNextOnMeshPrefix(aIterator, aConfig);
+    }
+
+exit:
+    return error;
 }
 
 ThreadError otAddExternalRoute(const otExternalRouteConfig *aConfig)
@@ -720,9 +765,9 @@ uint8_t otGetStableNetworkDataVersion(void)
     return sThreadNetif->GetMle().GetLeaderDataTlv().GetStableDataVersion();
 }
 
-void otSetLinkPcapCallback(otLinkPcapCallback aPcapCallback)
+void otSetLinkPcapCallback(otLinkPcapCallback aPcapCallback, void *aCallbackContext)
 {
-    sThreadNetif->GetMac().SetPcapCallback(aPcapCallback);
+    sThreadNetif->GetMac().SetPcapCallback(aPcapCallback, aCallbackContext);
 }
 
 bool otIsLinkPromiscuous(void)
@@ -865,6 +910,7 @@ ThreadError otThreadStart(void)
     ThreadError error = kThreadError_None;
 
     VerifyOrExit(mEnabled, error = kThreadError_InvalidState);
+    VerifyOrExit(sThreadNetif->GetMac().GetPanId() != Mac::kPanIdBroadcast, error = kThreadError_InvalidState);
 
     error = sThreadNetif->GetMle().Start();
 
@@ -884,20 +930,26 @@ exit:
     return error;
 }
 
-ThreadError otActiveScan(uint32_t aScanChannels, uint16_t aScanDuration, otHandleActiveScanResult aCallback)
+bool otIsSingleton(void)
 {
-    return sThreadNetif->GetMac().ActiveScan(aScanChannels, aScanDuration, &HandleActiveScanResult,
-                                             reinterpret_cast<void *>(aCallback));
+    return mEnabled && sThreadNetif->GetMle().IsSingleton();
 }
 
-bool otActiveScanInProgress(void)
+ThreadError otActiveScan(uint32_t aScanChannels, uint16_t aScanDuration, otHandleActiveScanResult aCallback,
+                         void *aCallbackContext)
+{
+    sActiveScanCallback = aCallback;
+    sActiveScanCallbackContext = aCallbackContext;
+    return sThreadNetif->GetMac().ActiveScan(aScanChannels, aScanDuration, &HandleActiveScanResult, NULL);
+}
+
+bool otIsActiveScanInProgress(void)
 {
     return sThreadNetif->GetMac().IsActiveScanInProgress();
 }
 
 void HandleActiveScanResult(void *aContext, Mac::Frame *aFrame)
 {
-    otHandleActiveScanResult handler = reinterpret_cast<otHandleActiveScanResult>(aContext);
     otActiveScanResult result;
     Mac::Address address;
     Mac::Beacon *beacon;
@@ -907,7 +959,7 @@ void HandleActiveScanResult(void *aContext, Mac::Frame *aFrame)
 
     if (aFrame == NULL)
     {
-        handler(NULL);
+        sActiveScanCallback(NULL, sActiveScanCallbackContext);
         ExitNow();
     }
 
@@ -932,28 +984,45 @@ void HandleActiveScanResult(void *aContext, Mac::Frame *aFrame)
         memcpy(&result.mExtendedPanId, beacon->GetExtendedPanId(), sizeof(result.mExtendedPanId));
     }
 
-    handler(&result);
+    sActiveScanCallback(&result, sActiveScanCallbackContext);
 
 exit:
+    (void)aContext;
     return;
 }
 
 ThreadError otDiscover(uint32_t aScanChannels, uint16_t aScanDuration, uint16_t aPanId,
-                       otHandleActiveScanResult aCallback)
+                       otHandleActiveScanResult aCallback, void *aCallbackContext)
 {
-    return sThreadNetif->GetMle().Discover(aScanChannels, aScanDuration, aPanId, &HandleMleDiscover,
-                                           reinterpret_cast<void *>(aCallback));
+    sDiscoverCallback = aCallback;
+    sDiscoverCallbackContext = aCallbackContext;
+    return sThreadNetif->GetMle().Discover(aScanChannels, aScanDuration, aPanId, &HandleMleDiscover, NULL);
+}
+
+bool otIsDiscoverInProgress(void)
+{
+    return sThreadNetif->GetMle().IsDiscoverInProgress();
 }
 
 void HandleMleDiscover(otActiveScanResult *aResult, void *aContext)
 {
-    otHandleActiveScanResult handler = reinterpret_cast<otHandleActiveScanResult>(aContext);
-    handler(aResult);
+    (void)aContext;
+    sDiscoverCallback(aResult, sDiscoverCallbackContext);
 }
 
-void otSetReceiveIp6DatagramCallback(otReceiveIp6DatagramCallback aCallback)
+void otSetReceiveIp6DatagramCallback(otReceiveIp6DatagramCallback aCallback, void *aCallbackContext)
 {
-    Ip6::Ip6::SetReceiveDatagramCallback(aCallback);
+    Ip6::Ip6::SetReceiveDatagramCallback(aCallback, aCallbackContext);
+}
+
+bool otGetReceiveIp6DatagramFilterEnabled(void)
+{
+    return Ip6::Ip6::IsReceiveIp6FilterEnabled();
+}
+
+void otSetReceiveIp6DatagramFilterEnabled(bool aEnabled)
+{
+    Ip6::Ip6::SetReceiveIp6FilterEnabled(aEnabled);
 }
 
 ThreadError otSendIp6Datagram(otMessage aMessage)
@@ -1047,6 +1116,18 @@ bool otIsIcmpEchoEnabled(void)
 void otSetIcmpEchoEnabled(bool aEnabled)
 {
     Ip6::Icmp::SetEchoEnabled(aEnabled);
+}
+
+uint8_t otIp6PrefixMatch(const otIp6Address *aFirst, const otIp6Address *aSecond)
+{
+    uint8_t rval;
+
+    VerifyOrExit(aFirst != NULL && aSecond != NULL, rval = 0);
+
+    rval = static_cast<const Ip6::Address *>(aFirst)->PrefixMatch(*static_cast<const Ip6::Address *>(aSecond));
+
+exit:
+    return rval;
 }
 
 ThreadError otGetActiveDataset(otOperationalDataset *aDataset)

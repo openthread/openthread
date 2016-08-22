@@ -686,7 +686,7 @@ public:
 
     enum
     {
-        kProtocolVersion  = 1,                      ///< Thread Protocol version.
+        kProtocolVersion  = 2,                      ///< Thread Protocol version.
         kVersionOffset    = 4,                      ///< Version field bit offset.
         kVersionMask      = 0xf << kVersionOffset,  ///< Version field mask.
         kNativeFlag       = 1 << 3,                 ///< Native Commissioner flag.

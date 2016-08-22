@@ -98,6 +98,7 @@ Mac::Mac(ThreadNetif &aThreadNetif):
     mReceiveHead = NULL;
     mReceiveTail = NULL;
     mChannel = OPENTHREAD_CONFIG_DEFAULT_CHANNEL;
+    mMaxTransmitPower = OPENTHREAD_CONFIG_DEFAULT_MAX_TRANSMIT_POWER;
     mPanId = kPanIdBroadcast;
     mShortAddress = kShortAddrInvalid;
 
@@ -121,6 +122,7 @@ Mac::Mac(ThreadNetif &aThreadNetif):
     mDataSequence = static_cast<uint8_t>(otPlatRandomGet());
 
     mPcapCallback = NULL;
+    mPcapCallbackContext = NULL;
 
     otPlatRadioEnable();
 }
@@ -236,6 +238,16 @@ ThreadError Mac::SetChannel(uint8_t aChannel)
 {
     mChannel = aChannel;
     return kThreadError_None;
+}
+
+int8_t Mac::GetMaxTransmitPower(void) const
+{
+    return mMaxTransmitPower;
+}
+
+void Mac::SetMaxTransmitPower(int8_t aPower)
+{
+    mMaxTransmitPower = aPower;
 }
 
 const char *Mac::GetNetworkName(void) const
@@ -472,6 +484,8 @@ void Mac::HandleBeginTransmit(void)
         ExitNow();
     }
 
+    sendFrame.SetPower(mMaxTransmitPower);
+
     switch (mState)
     {
     case kStateActiveScan:
@@ -499,6 +513,11 @@ void Mac::HandleBeginTransmit(void)
 
     // Security Processing
     ProcessTransmitSecurity(sendFrame);
+
+    if (sendFrame.GetPower() > mMaxTransmitPower)
+    {
+        sendFrame.SetPower(mMaxTransmitPower);
+    }
 
     SuccessOrExit(error = otPlatRadioTransmit());
 
@@ -842,7 +861,7 @@ void Mac::ReceiveDoneTask(Frame *aFrame, ThreadError aError)
 
     if (mPcapCallback)
     {
-        mPcapCallback(aFrame);
+        mPcapCallback(aFrame, mPcapCallbackContext);
     }
 
     aFrame->GetSrcAddr(srcaddr);
@@ -1051,9 +1070,10 @@ exit:
     return error;
 }
 
-void Mac::SetPcapCallback(otLinkPcapCallback aPcapCallback)
+void Mac::SetPcapCallback(otLinkPcapCallback aPcapCallback, void *aCallbackContext)
 {
     mPcapCallback = aPcapCallback;
+    mPcapCallbackContext = aCallbackContext;
 }
 
 bool Mac::IsPromiscuous(void)

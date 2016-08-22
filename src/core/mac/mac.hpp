@@ -303,6 +303,22 @@ public:
     ThreadError SetChannel(uint8_t aChannel);
 
     /**
+     * This method returns the maximum transmit power in dBm.
+     *
+     * @returns  The maximum transmit power in dBm.
+     *
+     */
+    int8_t GetMaxTransmitPower(void) const;
+
+    /**
+     * This method sets the maximum transmit power in dBm.
+     *
+     * @param[in]  aPower  The maximum transmit power in dBm.
+     *
+     */
+    void SetMaxTransmitPower(int8_t aPower);
+
+    /**
      * This method returns the IEEE 802.15.4 Network Name.
      *
      * @returns A pointer to the IEEE 802.15.4 Network Name.
@@ -403,11 +419,12 @@ public:
     /**
      * This function registers a callback to provide received raw IEEE 802.15.4 frames.
      *
-     * @param[in]  aPcapCallback  A pointer to a function that is called when receiving an IEEE 802.15.4 link frame or
-     *                            NULL to disable the callback.
+     * @param[in]  aPcapCallback     A pointer to a function that is called when receiving an IEEE 802.15.4 link frame or
+     *                               NULL to disable the callback.
+     * @param[in]  aCallbackContext  A pointer to application-specific context.
      *
      */
-    void SetPcapCallback(otLinkPcapCallback aPcapCallback);
+    void SetPcapCallback(otLinkPcapCallback aPcapCallback, void *aCallbackContext);
 
     /**
      * This function indicates whether or not promiscuous mode is enabled at the link layer.
@@ -470,6 +487,7 @@ private:
     ShortAddress mShortAddress;
     PanId mPanId;
     uint8_t mChannel;
+    int8_t mMaxTransmitPower;
 
     otNetworkName mNetworkName;
     otExtendedPanId mExtendedPanId;
@@ -501,6 +519,7 @@ private:
     void *mActiveScanContext;
 
     otLinkPcapCallback mPcapCallback;
+    void *mPcapCallbackContext;
 
     Whitelist mWhitelist;
     Blacklist mBlacklist;

@@ -57,11 +57,12 @@ In the repo you'll find the following directories and files:
 File/Folder   | Provides
 --------------|----------------------------------------------------------------
 `doc`         | Doxygen docs
-`examples`    | Sample applications demonstrating various parts of OpenThread
-`include`     | Includes header files for OpenThread API
-`src`         | The core implementation of the Thread standard
+`examples`    | Sample applications demonstrating OpenThread
+`include`     | Public API header files
+`src`         | Core implementation of the Thread standard and related add-ons
 `tests`       | Unit and Thread conformance tests
 `third_party` | Third-party code used by OpenThread
+`tools`       | Helpful utilities related to the OpenThread project
 
 
 ## Documentation ##

@@ -63,7 +63,7 @@ MleRouter::MleRouter(ThreadNetif &aThreadNetif):
 
     mNetworkIdTimeout = kNetworkIdTimeout;
     mRouterUpgradeThreshold = kRouterUpgradeThreshold;
-    mLeaderWeight = 0;
+    mLeaderWeight = kLeaderWeight;
     mFixedLeaderPartitionId = 0;
     mRouterId = kMaxRouterId;
     mPreviousRouterId = kMaxRouterId;
@@ -184,7 +184,7 @@ ThreadError MleRouter::BecomeRouter(ThreadStatusTlv::Status aStatus)
 
     VerifyOrExit(mDeviceState == kDeviceStateDetached || mDeviceState == kDeviceStateChild,
                  error = kThreadError_Busy);
-    VerifyOrExit(mRouterRoleEnabled && (mDeviceMode & ModeTlv::kModeFFD), ;);
+    VerifyOrExit(mRouterRoleEnabled && (mDeviceMode & ModeTlv::kModeFFD), error = kThreadError_InvalidState);
 
     for (int i = 0; i < kMaxRouterId; i++)
     {
@@ -225,6 +225,7 @@ ThreadError MleRouter::BecomeLeader(void)
 
     VerifyOrExit(mDeviceState != kDeviceStateDisabled && mDeviceState != kDeviceStateLeader,
                  error = kThreadError_Busy);
+    VerifyOrExit(mRouterRoleEnabled && (mDeviceMode & ModeTlv::kModeFFD), error = kThreadError_InvalidState);
 
     for (int i = 0; i < kMaxRouterId; i++)
     {
@@ -338,6 +339,7 @@ ThreadError MleRouter::SetStateRouter(uint16_t aRloc16)
     mRouters[mRouterId].mNextHop = mRouterId;
     mNetworkData.Stop();
     mStateUpdateTimer.Start(kStateUpdatePeriod);
+    Ip6::Ip6::SetForwardingEnabled(true);
 
     otLogInfoMle("Mode -> Router\n");
     return kThreadError_None;
@@ -364,6 +366,7 @@ ThreadError MleRouter::SetStateLeader(uint16_t aRloc16)
     mNetif.GetPendingDataset().ApplyLocalToNetwork();
     mCoapServer.AddResource(mAddressSolicit);
     mCoapServer.AddResource(mAddressRelease);
+    Ip6::Ip6::SetForwardingEnabled(true);
 
     otLogInfoMle("Mode -> Leader %d\n", mLeaderData.GetPartitionId());
     return kThreadError_None;
@@ -1464,7 +1467,7 @@ void MleRouter::UpdateRoutes(const RouteTlv &aRoute, uint8_t aRouterId)
 
 #if 1
 
-    for (int i = 0; i < kMaxRouterId; i++)
+    for (uint8_t i = 0; i < kMaxRouterId; i++)
     {
         if (mRouters[i].mAllocated == false || mRouters[i].mNextHop == kMaxRouterId)
         {
@@ -1985,8 +1988,12 @@ ThreadError MleRouter::HandleDataRequest(const Message &aMessage, const Ip6::Mes
     VerifyOrExit(tlvRequest.IsValid() && tlvRequest.GetLength() <= sizeof(tlvs), error = kThreadError_Parse);
 
     // Active Timestamp
-    SuccessOrExit(error = Tlv::GetTlv(aMessage, Tlv::kActiveTimestamp, sizeof(activeTimestamp), activeTimestamp));
-    VerifyOrExit(activeTimestamp.IsValid(), error = kThreadError_Parse);
+    activeTimestamp.SetLength(0);
+
+    if (Tlv::GetTlv(aMessage, Tlv::kActiveTimestamp, sizeof(activeTimestamp), activeTimestamp) == kThreadError_None)
+    {
+        VerifyOrExit(activeTimestamp.IsValid(), error = kThreadError_Parse);
+    }
 
     // Pending Timestamp
     pendingTimestamp.SetLength(0);
@@ -2000,7 +2007,8 @@ ThreadError MleRouter::HandleDataRequest(const Message &aMessage, const Ip6::Mes
     memcpy(tlvs, tlvRequest.GetTlvs(), tlvRequest.GetLength());
     numTlvs = tlvRequest.GetLength();
 
-    if (mNetif.GetActiveDataset().GetNetwork().GetTimestamp().Compare(activeTimestamp) != 0)
+    if (activeTimestamp.GetLength() == 0 ||
+        mNetif.GetActiveDataset().GetNetwork().GetTimestamp().Compare(activeTimestamp) != 0)
     {
         tlvs[numTlvs++] = Tlv::kActiveDataset;
     }

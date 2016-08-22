@@ -148,6 +148,8 @@ Mle::Mle(ThreadNetif &aThreadNetif) :
     mAssignLinkQuality = 0;
     mAssignLinkMargin = 0;
     memset(&mAddr64, 0, sizeof(mAddr64));
+
+    mIsDiscoverInProgress = false;
 }
 
 ThreadError Mle::Enable(void)
@@ -218,11 +220,13 @@ ThreadError Mle::Discover(uint32_t aScanChannels, uint16_t aScanDuration, uint16
                           DiscoverHandler aCallback, void *aContext)
 {
     ThreadError error = kThreadError_None;
-    Message *message;
+    Message *message = NULL;
     Ip6::Address destination;
     Tlv tlv;
     MeshCoP::DiscoveryRequestTlv discoveryRequest;
     uint16_t startOffset;
+
+    VerifyOrExit(!mIsDiscoverInProgress, error = kThreadError_Busy);
 
     mDiscoverHandler = aCallback;
     mDiscoverContext = aContext;
@@ -253,6 +257,8 @@ ThreadError Mle::Discover(uint32_t aScanChannels, uint16_t aScanDuration, uint16
     destination.mFields.m16[7] = HostSwap16(0x0002);
     SuccessOrExit(error = SendMessage(*message, destination));
 
+    mIsDiscoverInProgress = true;
+
     otLogInfoMle("Sent discovery request\n");
 
 exit:
@@ -265,8 +271,14 @@ exit:
     return error;
 }
 
+bool Mle::IsDiscoverInProgress(void)
+{
+    return mIsDiscoverInProgress;
+}
+
 void Mle::HandleDiscoverComplete(void)
 {
+    mIsDiscoverInProgress = false;
     mDiscoverHandler(NULL, mDiscoverContext);
 }
 
@@ -331,6 +343,8 @@ ThreadError Mle::SetStateDetached(void)
     mParentRequestTimer.Stop();
     mMesh.SetRxOnWhenIdle(true);
     mMleRouter.HandleDetachStart();
+    Ip6::Ip6::SetForwardingEnabled(false);
+
     otLogInfoMle("Mode -> Detached\n");
     return kThreadError_None;
 }
@@ -355,6 +369,8 @@ ThreadError Mle::SetStateChild(uint16_t aRloc16)
     {
         mMleRouter.HandleChildStart(mParentRequestMode);
     }
+
+    Ip6::Ip6::SetForwardingEnabled(false);
 
     otLogInfoMle("Mode -> Child\n");
     return kThreadError_None;
@@ -938,14 +954,9 @@ void Mle::HandleNetifStateChanged(uint32_t aFlags)
         mNetif.SetStateChangedFlags(OT_IP6_ML_ADDR_CHANGED);
     }
 
-    switch (mDeviceState)
+    if (mDeviceState == kDeviceStateChild && (mDeviceMode & ModeTlv::kModeFFD) == 0)
     {
-    case kDeviceStateChild:
         SendChildUpdateRequest();
-        break;
-
-    default:
-        break;
     }
 
 exit:
@@ -1020,11 +1031,7 @@ void Mle::HandleParentRequestTimer(void)
             switch (mParentRequestMode)
             {
             case kMleAttachAnyPartition:
-                if (mDeviceMode & ModeTlv::kModeFFD)
-                {
-                    mMleRouter.BecomeLeader();
-                }
-                else
+                if (mMleRouter.BecomeLeader() != kThreadError_None)
                 {
                     mParentRequestState = kParentIdle;
                     BecomeDetached();
@@ -2233,6 +2240,8 @@ ThreadError Mle::HandleDiscoveryResponse(const Message &aMessage, const Ip6::Mes
 
     otLogInfoMle("Handle discovery response\n");
 
+    VerifyOrExit(mIsDiscoverInProgress, error = kThreadError_Drop);
+
     offset = aMessage.GetOffset();
     end = aMessage.GetLength();
 
@@ -2381,6 +2390,10 @@ void Mle::HandleNetworkDataUpdate(void)
     if (mDeviceMode & ModeTlv::kModeFFD)
     {
         mMleRouter.HandleNetworkDataUpdateRouter();
+    }
+    else
+    {
+        SendChildUpdateRequest();
     }
 }
 

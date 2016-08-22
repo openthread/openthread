@@ -34,8 +34,7 @@
 #define NCP_SPI_HPP_
 
 #include <ncp/ncp_base.hpp>
-
-#define SPI_HEADER_LENGTH       5
+#include <ncp/ncp_buffer.hpp>
 
 namespace Thread {
 
@@ -47,14 +46,20 @@ public:
     NcpSpi();
 
     virtual ThreadError OutboundFrameBegin(void);
-    virtual uint16_t OutboundFrameGetRemaining(void);
     virtual ThreadError OutboundFrameFeedData(const uint8_t *frame, uint16_t frameLength);
     virtual ThreadError OutboundFrameFeedMessage(Message &message);
-    virtual ThreadError OutboundFrameSend(void);
+    virtual ThreadError OutboundFrameEnd(void);
 
     void ReceiveTask(const uint8_t *aBuf, uint16_t aBufLength);
 
 private:
+    enum
+    {
+        kSpiBufferSize   = 1500, // Spi buffer size (should be large enough to fit a max length frame + spi header).
+        kTxBufferSize    = 512,  // Tx Buffer size (used by mTxFrameBuffer).
+        kSpiHeaderLength = 5,    // Size of spi header.
+    };
+
     uint16_t OutboundFrameSize(void);
 
     static void SpiTransactionComplete(
@@ -79,6 +84,11 @@ private:
     static void HandleSendDone(void *context);
     void HandleSendDone(void);
 
+    static void TxFrameBufferHasData(void *aContext, NcpFrameBuffer *aNcpFrameBuffer);
+    void TxFrameBufferHasData(void);
+
+    ThreadError PrepareNextSpiSendFrame(void);
+
     bool mSending;
 
     bool mHandlingRxFrame;
@@ -87,11 +97,15 @@ private:
     bool mHandlingSendDone;
     Tasklet mHandleSendDone;
 
-    uint8_t mEmptySendFrame[SPI_HEADER_LENGTH];
-    uint8_t mEmptyReceiveFrame[SPI_HEADER_LENGTH];
-    uint8_t mSendFrame[1500];
-    uint8_t mReceiveFrame[1500];
-    uint8_t *mSendFrameIter;
+    uint8_t mSendFrame[kSpiBufferSize];
+    uint16_t mSendFrameLen;
+    uint8_t mReceiveFrame[kSpiBufferSize];
+
+    uint8_t mEmptySendFrame[kSpiHeaderLength];
+    uint8_t mEmptyReceiveFrame[kSpiHeaderLength];
+
+    uint8_t mTxBuffer[kTxBufferSize];
+    NcpFrameBuffer  mTxFrameBuffer;
 };
 
 }  // namespace Thread

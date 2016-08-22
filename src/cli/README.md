@@ -38,8 +38,10 @@ OpenThread test scripts use the CLI to execute test cases.
 * [rloc16](#rloc16)
 * [route](#route)
 * [router](#router)
+* [routerrole](#routerrole)
 * [routerupgradethreshold](#routerupgradethreshold)
 * [scan](#scan)
+* [singleton](#singleton)
 * [state](#state)
 * [thread](#thread)
 * [version](#version)
@@ -701,6 +703,34 @@ Age: 7
 Done
 ```
 
+### routerrole
+
+Indicates whether the router role is enabled or disabled.
+
+```bash
+> routerrole
+Enabled
+Done
+```
+
+### routerrole enable
+
+Enable the router role.
+
+```bash
+> routerrole enable
+Done
+```
+
+### routerrole disable
+
+Disable the router role.
+
+```bash
+> routerrole disable
+Done
+```
+
 ### routerupgradethreshold
 
 Get the ROUTER_UPGRADE_THRESHOLD value.
@@ -731,6 +761,15 @@ Perform an IEEE 802.15.4 Active Scan.
 | J | Network Name     | Extended PAN     | PAN  | MAC Address      | Ch | dBm | LQI |
 +---+------------------+------------------+------+------------------+----+-----+-----+
 | 0 | OpenThread       | dead00beef00cafe | ffff | f1d92a82c8d8fe43 | 11 | -20 |   0 |
+Done
+```
+
+### singleton
+Return true when there are no other nodes in the network, otherwise return false.
+
+```bash
+> singleton
+true or false
 Done
 ```
 

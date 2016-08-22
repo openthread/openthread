@@ -124,6 +124,8 @@ ThreadError Message::Free(Message &aMessage)
 
 ThreadError Message::ResizeMessage(uint16_t aLength)
 {
+    ThreadError error = kThreadError_None;
+
     // add buffers
     Buffer *curBuffer = this;
     Buffer *lastBuffer;
@@ -134,6 +136,7 @@ ThreadError Message::ResizeMessage(uint16_t aLength)
         if (curBuffer->GetNextBuffer() == NULL)
         {
             curBuffer->SetNextBuffer(NewBuffer());
+            VerifyOrExit(curBuffer->GetNextBuffer() != NULL, error = kThreadError_NoBufs);
         }
 
         curBuffer = curBuffer->GetNextBuffer();
@@ -147,7 +150,8 @@ ThreadError Message::ResizeMessage(uint16_t aLength)
 
     FreeBuffers(curBuffer);
 
-    return kThreadError_None;
+exit:
+    return error;
 }
 
 Message *Message::GetNext(void) const
@@ -179,7 +183,7 @@ ThreadError Message::SetLength(uint16_t aLength)
 
     SuccessOrExit(error = ReclaimBuffers(bufs));
 
-    ResizeMessage(totalLengthRequest);
+    SuccessOrExit(error = ResizeMessage(totalLengthRequest));
     mInfo.mLength = aLength;
 
 exit:
