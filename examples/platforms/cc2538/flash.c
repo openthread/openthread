@@ -149,7 +149,7 @@ uint32_t otPlatFlashWrite(uint32_t aAddress, uint8_t *aData, uint32_t aSize)
     ThreadError error = kThreadError_None;
     int32_t status;
     uint32_t busy = 1;
-    uint32_t * data;
+    uint32_t *data;
     uint32_t size = 0;
 
     VerifyOrExit(aAddress >= FLASH_BASE, error = kThreadError_InvalidArgs);

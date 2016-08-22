@@ -336,8 +336,8 @@ ThreadError otPlatSettingsCommitChange(void)
                 otPlatFlashRead(address, (uint8_t *)&block, sizeof(block));
 
                 if (!(block.flag & BLOCK_ADD_FLAG) && (block.flag & BLOCK_DELETE_FLAG) &&
-                     (block.key == stageDeleteBlock->key) &&
-                     (block.index == static_cast<uint8_t>(stageDeleteBlock->index) || stageDeleteBlock->index == -1))
+                    (block.key == stageDeleteBlock->key) &&
+                    (block.index == static_cast<uint8_t>(stageDeleteBlock->index) || stageDeleteBlock->index == -1))
                 {
                     block.flag &= (~BLOCK_DELETE_FLAG);
                     otPlatFlashWrite(address, (uint8_t *)&block, sizeof(block));
@@ -431,7 +431,7 @@ ThreadError otPlatSettingsSet(uint16_t aKey, const uint8_t *aValue, int aValueLe
     uint32_t address = sBaseAddress + sizeof(sSettingsBlockFlag);
     uint32_t endAddress = sBaseAddress + OPENTHREAD_CONFIG_SETTINGS_SIZE - 1;
     struct settingsBlock block;
-    
+
     while (address < endAddress)
     {
         otPlatFlashRead(address, (uint8_t *)&block, sizeof(block));
@@ -553,7 +553,7 @@ ThreadError otPlatSettingsDelete(uint16_t aKey, int aIndex)
         if (sCommitLock == false)
         {
             if (!(block.flag & BLOCK_ADD_FLAG) && (block.flag & BLOCK_DELETE_FLAG) &&
-                 (block.key == aKey) && (block.index == aIndex || aIndex == -1))
+                (block.key == aKey) && (block.index == aIndex || aIndex == -1))
             {
                 error = kThreadError_None;
 
@@ -570,7 +570,7 @@ ThreadError otPlatSettingsDelete(uint16_t aKey, int aIndex)
             stageBlock = &sStageDeleteSettingsBlock[sStageDeleteSettingsNum];
             stageBlock->key = aKey;
             stageBlock->index = aIndex;
-            sStageActionSeq &= ~(1 <<(sStageAddSettingsNum + sStageDeleteSettingsNum));
+            sStageActionSeq &= ~(1 << (sStageAddSettingsNum + sStageDeleteSettingsNum));
             sStageDeleteSettingsNum++;
             break;
         }
