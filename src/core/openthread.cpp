@@ -68,6 +68,9 @@ static void HandleMleDiscover(otActiveScanResult *aResult, void *aContext);
 static otHandleActiveScanResult sActiveScanCallback = NULL;
 static void *sActiveScanCallbackContext = NULL;
 
+static otHandleEnergyScanResult sEnergyScanCallback = NULL;
+static void *sEnergyScanCallbackContext = NULL;
+
 static otHandleActiveScanResult sDiscoverCallback = NULL;
 static void *sDiscoverCallbackContext = NULL;
 
@@ -989,6 +992,25 @@ void HandleActiveScanResult(void *aContext, Mac::Frame *aFrame)
 exit:
     (void)aContext;
     return;
+}
+
+ThreadError otEnergyScan(uint32_t aScanChannels, uint16_t aScanDuration, otHandleEnergyScanResult aCallback,
+                         void *aCallbackContext)
+{
+    sEnergyScanCallback = aCallback;
+    sEnergyScanCallbackContext = aCallbackContext;
+
+    (void)aScanChannels;
+    (void)aScanDuration;
+
+    // TODO: Implement the energy scan at mac layer.
+
+    return kThreadError_NotImplemented;
+}
+
+bool otIsEnegyScanInProgress(void)
+{
+    return false;
 }
 
 ThreadError otDiscover(uint32_t aScanChannels, uint16_t aScanDuration, uint16_t aPanId,
