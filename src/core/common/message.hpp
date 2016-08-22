@@ -338,7 +338,7 @@ public:
      * @returns The number of bytes copied.
      *
      */
-    int CopyTo(uint16_t aSourceOffset, uint16_t aDestinationOffset, uint16_t aLength, Message &aMessage);
+    int CopyTo(uint16_t aSourceOffset, uint16_t aDestinationOffset, uint16_t aLength, Message &aMessage) const;
 
     /**
      * This method returns the datagram tag used for 6LoWPAN fragmentation.
