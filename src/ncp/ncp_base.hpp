@@ -279,6 +279,7 @@ private:
     ThreadError GetPropertyHandler_IPV6_LL_ADDR(uint8_t header, spinel_prop_key_t key);
     ThreadError GetPropertyHandler_IPV6_ADDRESS_TABLE(uint8_t header, spinel_prop_key_t key);
     ThreadError GetPropertyHandler_IPV6_ROUTE_TABLE(uint8_t header, spinel_prop_key_t key);
+    ThreadError GetPropertyHandler_IPV6_ICMP_PING_OFFLOAD(uint8_t header, spinel_prop_key_t key);
     ThreadError GetPropertyHandler_THREAD_LOCAL_ROUTES(uint8_t header, spinel_prop_key_t key);
     ThreadError GetPropertyHandler_STREAM_NET(uint8_t header, spinel_prop_key_t key);
     ThreadError GetPropertyHandler_MAC_SCAN_MASK(uint8_t header, spinel_prop_key_t key);
@@ -336,6 +337,8 @@ private:
     ThreadError SetPropertyHandler_STREAM_NET(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr,
                                               uint16_t value_len);
     ThreadError SetPropertyHandler_IPV6_ML_PREFIX(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr,
+                                                  uint16_t value_len);
+    ThreadError SetPropertyHandler_IPV6_ICMP_PING_OFFLOAD(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr,
                                                   uint16_t value_len);
     ThreadError SetPropertyHandler_PHY_ENABLED(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr,
                                                uint16_t value_len);

@@ -1,7 +1,7 @@
 Spinel Host Controller Interface
 ================================
 
-Updated: 2016-08-17
+Updated: 2016-08-22
 
 Written by: Robert Quattlebaum <rquattle@nestlabs.com>
 
@@ -1667,3 +1667,11 @@ Array of structures containing:
 * `C`: Interface ID
 * `C`: Flags
 
+#### D.5.6. PROP 101: `PROP_IPv6_ICMP_PING_OFFLOAD`
+* Type: Read-Write
+* Packed-Encoding: `b`
+
+Allow the NCP to directly respond to ICMP ping requests. If this is
+turned on, ping request ICMP packets will not be passed to the host.
+
+Default value is `false`.
