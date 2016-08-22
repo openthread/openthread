@@ -79,7 +79,7 @@ private:
     enum
     {
         kRxBufferSize = 128,
-        kTxBufferSize = 512,
+        kTxBufferSize = 1024,
         kMaxLineLength = 128,
     };
 

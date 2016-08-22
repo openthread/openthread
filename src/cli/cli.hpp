@@ -163,6 +163,7 @@ private:
     static ThreadError ProcessPrefixAdd(int argc, char *argv[]);
     static ThreadError ProcessPrefixRemove(int argc, char *argv[]);
     static ThreadError ProcessPrefixList(void);
+    static void ProcessPromiscuous(int argc, char *argv[]);
     static void ProcessReleaseRouterId(int argc, char *argv[]);
     static void ProcessReset(int argc, char *argv[]);
     static void ProcessRoute(int argc, char *argv[]);
@@ -187,6 +188,7 @@ private:
     static void HandlePingTimer(void *aContext);
     static void HandleActiveScanResult(otActiveScanResult *aResult, void *aContext);
     static void HandleNetifStateChanged(uint32_t aFlags, void *aContext);
+    static void HandleLinkPcapReceive(const RadioPacket *aFrame, void *aContext);
 
     static const struct Command sCommands[];
     static otNetifAddress sAddress;
