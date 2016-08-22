@@ -229,7 +229,7 @@ ThreadError otPlatSettingsAdd(uint16_t aKey, const uint8_t *aValue, int aValueLe
  *  @retval kThreadError_NotImplemented
  *          This function is not implemented on this platform.
  */
-ThreadError otPlatSettingsDelete(uint16_t aKey, int index);
+ThreadError otPlatSettingsDelete(uint16_t aKey, int aIndex);
 
 /// Removes all settings from the setting store
 /** This function deletes all settings from the settings

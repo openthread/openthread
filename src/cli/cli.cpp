@@ -45,6 +45,8 @@
 #include <platform/random.h>
 #include <platform/uart.h>
 
+#include <platform/settings.h>
+
 using Thread::Encoding::BigEndian::HostSwap16;
 using Thread::Encoding::BigEndian::HostSwap32;
 
@@ -459,9 +461,19 @@ void Interpreter::ProcessCounters(int argc, char *argv[])
 
 void Interpreter::ProcessDataset(int argc, char *argv[])
 {
+#if 0
     ThreadError error;
     error = Dataset::Process(argc, argv, *sServer);
     AppendResult(error);
+#endif
+
+    int error;
+
+    (void)argc;
+    (void)argv;
+
+    error = testSettingsApi();
+    sServer->OutputFormat("error %d\r\n", error);
 }
 
 void Interpreter::ProcessDiscover(int argc, char *argv[])
