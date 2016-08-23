@@ -246,6 +246,27 @@ public:
     ThreadError ReleaseRouterId(uint8_t aRouterId);
 
     /**
+     * This method removes a link to a neighbor.
+     *
+     * @param[in]  aAddress  The link address of the neighbor.
+     *
+     * @retval kThreadError_None      Successfully removed the neighbor.
+     * @retval kThreadError_NotFound  Could not find the neighbor.
+     *
+     */
+    ThreadError RemoveNeighbor(const Mac::Address &aAddress);
+
+    /**
+     * This method removes a link to a neighbor.
+     *
+     * @param[in]  aNeighbor  A reference to the neighbor object.
+     *
+     * @retval kThreadError_None      Successfully removed the neighbor.
+     *
+     */
+    ThreadError RemoveNeighbor(Neighbor &aNeighbor);
+
+    /**
      * This method returns a pointer to a Child object.
      *
      * @param[in]  aAddress  The address of the Child.
