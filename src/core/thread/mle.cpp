@@ -940,27 +940,44 @@ void Mle::HandleNetifStateChanged(uint32_t aFlags, void *aContext)
 
 void Mle::HandleNetifStateChanged(uint32_t aFlags)
 {
-    VerifyOrExit((aFlags & (OT_IP6_ADDRESS_ADDED | OT_IP6_ADDRESS_REMOVED)) != 0, ;);
+    bool sendChildUpdateRequest = false;
 
-    if (!mNetif.IsUnicastAddress(mMeshLocal64.GetAddress()))
+    if ((aFlags & (OT_IP6_ADDRESS_ADDED | OT_IP6_ADDRESS_REMOVED)) != 0)
     {
-        // Mesh Local EID was removed, choose a new one and add it back
-        for (int i = 8; i < 16; i++)
+        if (!mNetif.IsUnicastAddress(mMeshLocal64.GetAddress()))
         {
-            mMeshLocal64.GetAddress().mFields.m8[i] = static_cast<uint8_t>(otPlatRandomGet());
+            // Mesh Local EID was removed, choose a new one and add it back
+            for (int i = 8; i < 16; i++)
+            {
+                mMeshLocal64.GetAddress().mFields.m8[i] = static_cast<uint8_t>(otPlatRandomGet());
+            }
+
+            mNetif.AddUnicastAddress(mMeshLocal64);
+            mNetif.SetStateChangedFlags(OT_IP6_ML_ADDR_CHANGED);
         }
 
-        mNetif.AddUnicastAddress(mMeshLocal64);
-        mNetif.SetStateChangedFlags(OT_IP6_ML_ADDR_CHANGED);
+        if (mDeviceState == kDeviceStateChild && (mDeviceMode & ModeTlv::kModeFFD) == 0)
+        {
+            sendChildUpdateRequest = true;
+        }
     }
 
-    if (mDeviceState == kDeviceStateChild && (mDeviceMode & ModeTlv::kModeFFD) == 0)
+    if ((aFlags & OT_THREAD_NETDATA_UPDATED) != 0)
+    {
+        if (mDeviceMode & ModeTlv::kModeFFD)
+        {
+            mMleRouter.HandleNetworkDataUpdateRouter();
+        }
+        else
+        {
+            sendChildUpdateRequest = true;
+        }
+    }
+
+    if (sendChildUpdateRequest)
     {
         SendChildUpdateRequest();
     }
-
-exit:
-    return;
 }
 
 void Mle::HandleParentRequestTimer(void *aContext)
@@ -2383,18 +2400,6 @@ ThreadError Mle::CheckReachability(uint16_t aMeshSource, uint16_t aMeshDest, Ip6
 
 exit:
     return error;
-}
-
-void Mle::HandleNetworkDataUpdate(void)
-{
-    if (mDeviceMode & ModeTlv::kModeFFD)
-    {
-        mMleRouter.HandleNetworkDataUpdateRouter();
-    }
-    else
-    {
-        SendChildUpdateRequest();
-    }
 }
 
 }  // namespace Mle

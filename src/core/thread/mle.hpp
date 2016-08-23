@@ -588,12 +588,6 @@ public:
     const Ip6::Address *GetMeshLocal64(void) const;
 
     /**
-     * This method notifies MLE that the Network Data has changed.
-     *
-     */
-    void HandleNetworkDataUpdate(void);
-
-    /**
      * This method returns the Router ID of the Leader.
      *
      * @returns The Router ID of the Leader.
