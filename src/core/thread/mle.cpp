@@ -659,24 +659,14 @@ ThreadError Mle::AppendHeader(Message &aMessage, Header::Command aCommand)
 
     header.Init();
 
-    switch (aCommand)
+    if (aCommand == Header::kCommandDiscoveryRequest ||
+        aCommand == Header::kCommandDiscoveryResponse)
     {
-    case Header::kCommandDiscoveryRequest:
-    case Header::kCommandDiscoveryResponse:
-        header.SetSecuritySuite(255);
-        break;
-
-    case Header::kCommandAdvertisement:
-    case Header::kCommandChildIdRequest:
-    case Header::kCommandLinkReject:
-    case Header::kCommandParentRequest:
-    case Header::kCommandParentResponse:
+        header.SetSecuritySuite(Header::kNoSecurity);
+    }
+    else
+    {
         header.SetKeyIdMode2();
-        break;
-
-    default:
-        header.SetKeyIdMode1();
-        break;
     }
 
     header.SetCommand(aCommand);
@@ -1306,7 +1296,7 @@ ThreadError Mle::SendMessage(Message &aMessage, const Ip6::Address &aDestination
 
     aMessage.Read(0, sizeof(header), &header);
 
-    if (header.GetSecuritySuite() == 0)
+    if (header.GetSecuritySuite() == Header::k154Security)
     {
         header.SetFrameCounter(mKeyManager.GetMleFrameCounter());
 
@@ -1366,7 +1356,6 @@ void Mle::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageIn
     Header header;
     uint32_t keySequence;
     const uint8_t *mleKey;
-    uint8_t keyid;
     uint32_t frameCounter;
     uint8_t messageTag[4];
     uint16_t messageTagLength;
@@ -1384,7 +1373,7 @@ void Mle::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageIn
     aMessage.Read(aMessage.GetOffset(), sizeof(header), &header);
     VerifyOrExit(header.IsValid(),);
 
-    if (header.GetSecuritySuite() == 255)
+    if (header.GetSecuritySuite() == Header::kNoSecurity)
     {
         aMessage.MoveOffset(header.GetLength());
 
@@ -1405,41 +1394,17 @@ void Mle::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageIn
         ExitNow();
     }
 
-    VerifyOrExit(mDeviceState != kDeviceStateDisabled && header.GetSecuritySuite() == 0, ;);
+    VerifyOrExit(mDeviceState != kDeviceStateDisabled && header.GetSecuritySuite() == Header::k154Security, ;);
 
-    if (header.IsKeyIdMode1())
+    keySequence = header.GetKeyId();
+
+    if (keySequence == mKeyManager.GetCurrentKeySequence())
     {
-        keyid = static_cast<uint8_t>(header.GetKeyId());
-
-        if (keyid == (mKeyManager.GetCurrentKeySequence() & 0x7f))
-        {
-            keySequence = mKeyManager.GetCurrentKeySequence();
-            mleKey = mKeyManager.GetCurrentMleKey();
-        }
-        else
-        {
-            keySequence = (mKeyManager.GetCurrentKeySequence() & ~static_cast<uint32_t>(0x7f)) | keyid;
-
-            if (keySequence < mKeyManager.GetCurrentKeySequence())
-            {
-                keySequence += 128;
-            }
-
-            mleKey = mKeyManager.GetTemporaryMleKey(keySequence);
-        }
+        mleKey = mKeyManager.GetCurrentMleKey();
     }
     else
     {
-        keySequence = header.GetKeyId();
-
-        if (keySequence == mKeyManager.GetCurrentKeySequence())
-        {
-            mleKey = mKeyManager.GetCurrentMleKey();
-        }
-        else
-        {
-            mleKey = mKeyManager.GetTemporaryMleKey(keySequence);
-        }
+        mleKey = mKeyManager.GetTemporaryMleKey(keySequence);
     }
 
     aMessage.MoveOffset(header.GetLength() - 1);
