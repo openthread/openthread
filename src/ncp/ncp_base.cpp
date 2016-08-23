@@ -388,6 +388,8 @@ NcpBase::NcpBase():
     otSetStateChangedCallback(&HandleNetifStateChanged, this);
     otSetReceiveIp6DatagramCallback(&HandleDatagramFromStack, this);
     otSetIcmpEchoEnabled(false);
+
+    mUpdateChangedPropsTask.Post();
 }
 
 // ----------------------------------------------------------------------------
