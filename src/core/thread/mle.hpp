@@ -114,7 +114,7 @@ public:
      * This method initializes the MLE header.
      *
      */
-    void Init(void) { mSecuritySuite = 0; mSecurityControl = Mac::Frame::kSecEncMic32; }
+    void Init(void) { mSecuritySuite = k154Security; mSecurityControl = Mac::Frame::kSecEncMic32; }
 
     /**
      * This method indicates whether or not the TLV appears to be well-formed.
@@ -124,10 +124,9 @@ public:
      *
      */
     bool IsValid(void) const {
-        return (mSecuritySuite == 255) ||
-               (mSecuritySuite == 0 &&
-                (mSecurityControl == (Mac::Frame::kKeyIdMode1 | Mac::Frame::kSecEncMic32) ||
-                 mSecurityControl == (Mac::Frame::kKeyIdMode2 | Mac::Frame::kSecEncMic32)));
+        return (mSecuritySuite == kNoSecurity) ||
+               (mSecuritySuite == k154Security &&
+                mSecurityControl == (Mac::Frame::kKeyIdMode2 | Mac::Frame::kSecEncMic32));
     }
 
     /**
@@ -139,12 +138,18 @@ public:
     uint8_t GetLength(void) const {
         uint8_t rval = sizeof(mSecuritySuite) + sizeof(mCommand);
 
-        if (mSecuritySuite == 0) {
-            rval += sizeof(mSecurityControl) + sizeof(mFrameCounter) + (IsKeyIdMode1() ? 1 : 5);
+        if (mSecuritySuite == k154Security) {
+            rval += sizeof(mSecurityControl) + sizeof(mFrameCounter) + sizeof(mKeySource) + sizeof(mKeyIndex);
         }
 
         return rval;
     }
+
+    enum SecuritySuite
+    {
+        k154Security = 0,    ///< IEEE 802.15.4-2006 security.
+        kNoSecurity  = 255,  ///< No security enabled.
+    };
 
     /**
      * This method returns the Security Suite value.
@@ -152,7 +157,7 @@ public:
      * @returns The Security Suite value.
      *
      */
-    uint8_t GetSecuritySuite(void) const { return mSecuritySuite; }
+    SecuritySuite GetSecuritySuite(void) const { return static_cast<SecuritySuite>(mSecuritySuite); }
 
     /**
      * This method sets the Security Suite value.
@@ -160,7 +165,7 @@ public:
      * @param[in]  aSecuritySuite  The Security Suite value.
      *
      */
-    void SetSecuritySuite(uint8_t aSecuritySuite) { mSecuritySuite = aSecuritySuite; }
+    void SetSecuritySuite(SecuritySuite aSecuritySuite) { mSecuritySuite = static_cast<uint8_t>(aSecuritySuite); }
 
     /**
      * This method returns the MLE header length (excluding the Command Type).
@@ -169,7 +174,7 @@ public:
      *
      */
     uint8_t GetHeaderLength(void) const {
-        return sizeof(mSecurityControl) + sizeof(mFrameCounter) + (IsKeyIdMode1() ? 1 : 5);
+        return sizeof(mSecurityControl) + sizeof(mFrameCounter) + sizeof(mKeySource) + sizeof(mKeyIndex);
     }
 
     /**
@@ -191,22 +196,14 @@ public:
     uint8_t GetSecurityControl(void) const { return mSecurityControl; }
 
     /**
-     * This method indicates whether or not the Key ID Mode is set to 1.
+     * This method indicates whether or not the Key ID Mode is set to 2.
      *
-     * @retval TRUE   If the Key ID Mode is set to 1.
-     * @retval FALSE  If the Key ID Mode is not set to 1.
-     *
-     */
-    bool IsKeyIdMode1(void) const {
-        return (mSecurityControl & Mac::Frame::kKeyIdModeMask) == Mac::Frame::kKeyIdMode1;
-    }
-
-    /**
-     * This method sets the Key ID Mode to 1.
+     * @retval TRUE   If the Key ID Mode is set to 2.
+     * @retval FALSE  If the Key ID Mode is not set to 2.
      *
      */
-    void SetKeyIdMode1(void) {
-        mSecurityControl = (mSecurityControl & ~Mac::Frame::kKeyIdModeMask) | Mac::Frame::kKeyIdMode1;
+    bool IsKeyIdMode2(void) const {
+        return (mSecurityControl & Mac::Frame::kKeyIdModeMask) == Mac::Frame::kKeyIdMode2;
     }
 
     /**
@@ -224,11 +221,7 @@ public:
      *
      */
     uint32_t GetKeyId(void) const {
-        return IsKeyIdMode1() ? mKeyIdentifier[0] - 1 :
-               static_cast<uint32_t>(mKeyIdentifier[3]) << 0 |
-               static_cast<uint32_t>(mKeyIdentifier[2]) << 8 |
-               static_cast<uint32_t>(mKeyIdentifier[1]) << 16 |
-               static_cast<uint32_t>(mKeyIdentifier[0]) << 24;
+        return Encoding::BigEndian::HostSwap32(mKeySource);
     }
 
     /**
@@ -238,16 +231,8 @@ public:
      *
      */
     void SetKeyId(uint32_t aKeySequence) {
-        if (IsKeyIdMode1()) {
-            mKeyIdentifier[0] = (aKeySequence & 0x7f) + 1;
-        }
-        else {
-            mKeyIdentifier[4] = (aKeySequence & 0x7f) + 1;
-            mKeyIdentifier[3] = (aKeySequence >> 0) & 0xff;
-            mKeyIdentifier[2] = (aKeySequence >> 8) & 0xff;
-            mKeyIdentifier[1] = (aKeySequence >> 16) & 0xff;
-            mKeyIdentifier[0] = (aKeySequence >> 24) & 0xff;
-        }
+        mKeySource = Encoding::BigEndian::HostSwap32(aKeySequence);
+        mKeyIndex = (aKeySequence & 0x7f) + 1;
     }
 
     /**
@@ -302,12 +287,11 @@ public:
      *
      */
     Command GetCommand(void) const {
-        if (mSecuritySuite == 255) {
+        if (mSecuritySuite == kNoSecurity) {
             return static_cast<Command>(mSecurityControl);
         }
         else {
-            const uint8_t *command = IsKeyIdMode1() ? mKeyIdentifier + 1 : &mCommand;
-            return static_cast<Command>(*command);
+            return static_cast<Command>(mCommand);
         }
     }
 
@@ -318,29 +302,20 @@ public:
      *
      */
     void SetCommand(Command aCommand) {
-        if (mSecuritySuite == 255) {
+        if (mSecuritySuite == kNoSecurity) {
             mSecurityControl = static_cast<uint8_t>(aCommand);
         }
         else {
-            uint8_t *commandField = IsKeyIdMode1() ? mKeyIdentifier + 1 : &mCommand;
-            *commandField = static_cast<uint8_t>(aCommand);
+            mCommand = static_cast<uint8_t>(aCommand);
         }
     }
-
-    /**
-     * Security suite identifiers.
-     *
-     */
-    enum SecuritySuite
-    {
-        kSecurityEnabled  = 0x00,  ///< IEEE 802.15.4-2006 security
-    };
 
 private:
     uint8_t mSecuritySuite;
     uint8_t mSecurityControl;
     uint32_t mFrameCounter;
-    uint8_t mKeyIdentifier[5];
+    uint32_t mKeySource;
+    uint8_t mKeyIndex;
     uint8_t mCommand;
 } OT_TOOL_PACKED_END;
 
