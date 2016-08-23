@@ -410,9 +410,7 @@ ThreadError otRemoveExternalRoute(const otIp6Prefix *aPrefix)
 
 ThreadError otSendServerData(void)
 {
-    Ip6::Address destination;
-    sThreadNetif->GetMle().GetLeaderAddress(destination);
-    return sThreadNetif->GetNetworkDataLocal().Register(destination);
+    return sThreadNetif->GetNetworkDataLocal().SendServerDataNotification();
 }
 
 ThreadError otAddUnsecurePort(uint16_t aPort)
