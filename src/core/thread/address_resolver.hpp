@@ -125,7 +125,7 @@ private:
     {
         kAddressQueryTimeout = 3,             ///< ADDRESS_QUERY_TIMEOUT (seconds)
         kAddressQueryInitialRetryDelay = 15,  ///< ADDRESS_QUERY_INITIAL_RETRY_DELAY (seconds)
-        kAddressQueryMaxRetryDelay = 480,     ///< ADDRESS_QUERY_MAX_RETRY_DELAY (seconds)
+        kAddressQueryMaxRetryDelay = 28800,   ///< ADDRESS_QUERY_MAX_RETRY_DELAY (seconds)
     };
 
     struct Cache
