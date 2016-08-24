@@ -1470,6 +1470,7 @@ class ARM(IThci):
 
         Returns:
             a global IPv6 address that matches with filterByPrefix
+            or None if no matched GUA
         """
         print '%s call getGUA' % self.port
         print filterByPrefix
@@ -1484,7 +1485,8 @@ class ARM(IThci):
                 for line in globalAddrs:
                     if line.startswith(filterByPrefix):
                         return line
-                return globalAddrs[0]
+                print 'no global address matched'
+                return None
         except Exception, e:
             ModuleHelper.WriteIntoDebugLogger("getGUA() Error: " + str(e))
 
@@ -1609,4 +1611,7 @@ class ARM(IThci):
         pass
 
     def setUdpJoinerPort(self, portNumber):
+        pass
+
+    def commissionerUnregister(self):
         pass
