@@ -108,7 +108,7 @@ ThreadError otSetMaxAllowedChildren(uint8_t aMaxChildren)
     ThreadError error = kThreadError_None;
 
     // Do not allow setting max children if Thread is running
-    VerifyOrExit(sThreadNetif->GetMle().GetDeviceState() != Mle::kDeviceStateDisabled,
+    VerifyOrExit(sThreadNetif->GetMle().GetDeviceState() == Mle::kDeviceStateDisabled,
                  error = kThreadError_InvalidState);
 
     error = sThreadNetif->GetMle().SetMaxAllowedChildren(aMaxChildren);
