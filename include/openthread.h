@@ -372,6 +372,26 @@ uint8_t otGetChannel(void);
 ThreadError otSetChannel(uint8_t aChannel);
 
 /**
+ * Get the maximum number of children currently allowed.
+ *
+ * @returns The maximum number of children currently allowed.
+ *
+ * @sa otSetMaxAllowedChildren
+ */
+uint8_t otGetMaxAllowedChildren(void);
+
+/**
+ * Set the maximum number of children currently allowed.
+ *
+ * @retval  kThreadErrorNone           Successfully set the max.
+ * @retval  kThreadError_InvalidArgs   If @p aMaxChildren is not in the range [1, OPENTHREAD_CONFIG_MAX_CHILDREN].
+ * @retval  kThreadError_InvalidState  If OpenThread has already been started.
+ *
+ * @sa otSetChildTimeout
+ */
+ThreadError otSetMaxAllowedChildren(uint8_t aMaxChildren);
+
+/**
  * Get the Thread Child Timeout used when operating in the Child role.
  *
  * @returns The Thread Child Timeout value.

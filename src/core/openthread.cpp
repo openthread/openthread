@@ -94,6 +94,29 @@ ThreadError otSetChannel(uint8_t aChannel)
     return sThreadNetif->GetMac().SetChannel(aChannel);
 }
 
+uint8_t otGetMaxAllowedChildren(void)
+{
+    uint8_t aNumChildren;
+
+    (void)sThreadNetif->GetMle().GetChildren(&aNumChildren);
+
+    return aNumChildren;
+}
+
+ThreadError otSetMaxAllowedChildren(uint8_t aMaxChildren)
+{
+    ThreadError error = kThreadError_None;
+
+    // Do not allow setting max children if Thread is running
+    VerifyOrExit(sThreadNetif->GetMle().GetDeviceState() != Mle::kDeviceStateDisabled,
+                 error = kThreadError_InvalidState);
+
+    error = sThreadNetif->GetMle().SetMaxAllowedChildren(aMaxChildren);
+
+exit:
+    return error;
+}
+
 uint32_t otGetChildTimeout(void)
 {
     return sThreadNetif->GetMle().GetTimeout();
