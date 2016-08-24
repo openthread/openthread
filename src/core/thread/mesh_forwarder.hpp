@@ -221,7 +221,7 @@ private:
     static void ScheduleTransmissionTask(void *aContext);
     void ScheduleTransmissionTask(void);
 
-    otContext *mContext;
+    otInstance *mInstance;
 
     Mac::Receiver mMacReceiver;
     Mac::Sender mMacSender;

@@ -52,7 +52,7 @@ namespace Thread {
 namespace NetworkData {
 
 Leader::Leader(ThreadNetif &aThreadNetif):
-    mTimer(aThreadNetif.GetOpenThreadContext(), &Leader::HandleTimer, this),
+    mTimer(aThreadNetif.GetInstance(), &Leader::HandleTimer, this),
     mServerData(OPENTHREAD_URI_SERVER_DATA, &Leader::HandleServerData, this),
     mCoapServer(aThreadNetif.GetCoapServer()),
     mNetif(aThreadNetif),
@@ -494,7 +494,7 @@ void Leader::SendServerDataResponse(const Coap::Header &aRequestHeader, const Ip
     Coap::Header responseHeader;
     Message *message;
 
-    VerifyOrExit((message = Ip6::Udp::NewMessage(mNetif.GetOpenThreadContext(), 0)) != NULL, error = kThreadError_NoBufs);
+    VerifyOrExit((message = Ip6::Udp::NewMessage(mNetif.GetInstance(), 0)) != NULL, error = kThreadError_NoBufs);
     responseHeader.Init();
     responseHeader.SetVersion(1);
     responseHeader.SetType(Coap::Header::kTypeAcknowledgment);

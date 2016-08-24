@@ -47,9 +47,9 @@ namespace Thread {
 static otDEFINE_ALIGNED_VAR(sNcpRaw, sizeof(NcpSpi), uint64_t);
 static NcpSpi *sNcpSpi;
 
-extern "C" void otNcpInit(otContext *aContext)
+extern "C" void otNcpInit(otInstance *aInstance)
 {
-    sNcpSpi = new(&sNcpRaw) NcpSpi(aContext);
+    sNcpSpi = new(&sNcpRaw) NcpSpi(aInstance);
 }
 
 static void spi_header_set_flag_byte(uint8_t *header, uint8_t value)
@@ -84,11 +84,11 @@ static uint16_t spi_header_get_data_len(const uint8_t *header)
     return ( header[3] + static_cast<uint16_t>(header[4] << 8) );
 }
 
-NcpSpi::NcpSpi(otContext *aContext):
-    NcpBase(aContext),
-    mHandleRxFrame(mContext, &NcpSpi::HandleRxFrame, this),
-    mHandleSendDone(mContext, &NcpSpi::HandleSendDone, this),
-    mTxFrameBuffer(mContext, mTxBuffer, sizeof(mTxBuffer))
+NcpSpi::NcpSpi(otInstance *aInstance):
+    NcpBase(aInstance),
+    mHandleRxFrame(mInstance, &NcpSpi::HandleRxFrame, this),
+    mHandleSendDone(mInstance, &NcpSpi::HandleSendDone, this),
+    mTxFrameBuffer(mInstance, mTxBuffer, sizeof(mTxBuffer))
 {
     memset(mEmptySendFrame, 0, kSpiHeaderLength);
     memset(mSendFrame, 0, kSpiHeaderLength);
@@ -126,7 +126,7 @@ NcpSpi::SpiTransactionComplete(
     uint16_t aTransactionLength
 )
 {
-    static_cast<NcpSpi*>(aContext)->SpiTransactionComplete(
+    static_cast<NcpSpi*>(aInstance)->SpiTransactionComplete(
         anOutputBuf,
         anOutputBufLen,
         anInputBuf,
@@ -253,7 +253,7 @@ ThreadError NcpSpi::OutboundFrameEnd(void)
 
 void NcpSpi::TxFrameBufferHasData(void *aContext, NcpFrameBuffer *aNcpFrameBuffer)
 {
-    (void)aContext;
+    (void)aInstance;
     (void)aNcpFrameBuffer;
 
     sNcpSpi->TxFrameBufferHasData();
@@ -323,7 +323,7 @@ exit:
 
 void NcpSpi::HandleSendDone(void *aContext)
 {
-    static_cast<NcpSpi*>(aContext)->HandleSendDone();
+    static_cast<NcpSpi*>(aInstance)->HandleSendDone();
 }
 
 void NcpSpi::HandleSendDone(void)
@@ -335,7 +335,7 @@ void NcpSpi::HandleSendDone(void)
 
 void NcpSpi::HandleRxFrame(void *aContext)
 {
-    static_cast<NcpSpi*>(aContext)->HandleRxFrame();
+    static_cast<NcpSpi*>(aInstance)->HandleRxFrame();
 }
 
 void NcpSpi::HandleRxFrame(void)

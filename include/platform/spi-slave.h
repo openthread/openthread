@@ -68,7 +68,7 @@ extern "C" {
  * even if otPlatSpiSlavePrepareTransaction() has not yet been called.
  * In such cases, anOutputBufLen and anInputBufLen will be zero.
  *
- * @param[in] aContext           Context pointer passed into
+ * @param[in] aInstance          Context pointer passed into
  *                               otPlatSpiSlaveEnable()
  * @param[in] anOutputBuf        Value of anOutputBuf from last call to
  *                               otPlatSpiSlavePrepareTransaction()
@@ -100,7 +100,7 @@ typedef void (*otPlatSpiSlaveTransactionCompleteCallback)(
  * will send all `0xFF` bytes and discard all received bytes.
  *
  * @param[in] aCallback Pointer to transaction complete callback
- * @param[in] aContext  Context pointer to be passed to transaction
+ * @param[in] aInstance Context pointer to be passed to transaction
  *                      complete callback
  *
  * @retval ::kThreadError_None    Successfully enabled the SPI Slave interface.

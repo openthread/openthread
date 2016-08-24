@@ -48,10 +48,10 @@ public:
     /**
      * Constructor
      *
-     * @param[in]  aContext  The OpenThread context structure.
+     * @param[in]  aInstance  The OpenThread instance structure.
      *
      */
-    NcpUart(otContext *aContext);
+    NcpUart(otInstance *aInstance);
 
     /**
      * This method is called to start a new outbound frame.

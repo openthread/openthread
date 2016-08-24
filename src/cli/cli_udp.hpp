@@ -50,11 +50,11 @@ public:
     /**
      * Constructor
      *
-     * @param[in]  aContext      The OpenThread context structure.
+     * @param[in]  aInstance     The OpenThread instance structure.
      * @param[in]  aInterpreter  The Interpreter structure.
      *
      */
-    Udp(otContext *aContext, Interpreter *aInterpreter);
+    Udp(otInstance *aInstance, Interpreter *aInterpreter);
 
     /**
      * This method starts the CLI server.
@@ -97,7 +97,7 @@ private:
 
     otUdpSocket mSocket;
     otMessageInfo mPeer;
-    otContext *mContext;
+    otInstance *mInstance;
     Interpreter *mInterpreter;
 };
 

@@ -65,21 +65,21 @@ uint32_t otPlatAlarmGetNow(void)
     return sCounter;
 }
 
-void otPlatAlarmStartAt(otContext *aCtx, uint32_t t0, uint32_t dt)
+void otPlatAlarmStartAt(otInstance *aInstance, uint32_t t0, uint32_t dt)
 {
-    (void)aCtx;
+    (void)aInstance;
     sAlarmT0 = t0;
     sAlarmDt = dt;
     sIsRunning = true;
 }
 
-void otPlatAlarmStop(otContext *aCtx)
+void otPlatAlarmStop(otInstance *aInstance)
 {
-    (void)aCtx;
+    (void)aInstance;
     sIsRunning = false;
 }
 
-void cc2538AlarmProcess(otContext *aContext)
+void cc2538AlarmProcess(otInstance *aInstance)
 {
     uint32_t expires;
     bool fire = false;
@@ -111,12 +111,12 @@ void cc2538AlarmProcess(otContext *aContext)
 
             if (otPlatDiagModeGet())
             {
-                otPlatDiagAlarmFired(aContext);
+                otPlatDiagAlarmFired(aInstance);
             }
             else
 #endif
             {
-                otPlatAlarmFired(aContext);
+                otPlatAlarmFired(aInstance);
             }
         }
     }

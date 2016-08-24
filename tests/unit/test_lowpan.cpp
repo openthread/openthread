@@ -35,13 +35,13 @@
 #include <mac/mac.hpp>
 #include <thread/thread_netif.hpp>
 #include <thread/lowpan.hpp>
-#include <openthreadcontext.h>
+#include <openthreadinstance.h>
 
 using namespace Thread;
 
 namespace Thread {
 
-otContext sContext;
+otInstance sContext;
 Lowpan::Lowpan sMockLowpan(sContext.mThreadNetif);
 
 void TestLowpanIphc(void)

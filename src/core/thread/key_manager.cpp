@@ -36,7 +36,7 @@
 #include <thread/key_manager.hpp>
 #include <thread/mle_router.hpp>
 #include <thread/thread_netif.hpp>
-#include <openthreadcontext.h>
+#include <openthreadinstance.h>
 
 namespace Thread {
 
@@ -83,7 +83,7 @@ exit:
 ThreadError KeyManager::ComputeKey(uint32_t aKeySequence, uint8_t *aKey)
 {
     uint8_t keySequenceBytes[4];
-    otCryptoContext *aCryptoContext = &mNetif.GetOpenThreadContext()->mCryptoContext;
+    otCryptoContext *aCryptoContext = &mNetif.GetInstance()->mCryptoContext;
 
     otCryptoHmacSha256Start(aCryptoContext, mMasterKey, mMasterKeyLength);
 

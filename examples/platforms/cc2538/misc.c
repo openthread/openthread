@@ -30,15 +30,15 @@
 #include <platform/misc.h>
 #include "platform-cc2538.h"
 
-void otPlatReset(otContext *aContext)
+void otPlatReset(otInstance *aInstance)
 {
-    (void)aContext;
+    (void)aInstance;
     HWREG(SYS_CTRL_PWRDBG) = SYS_CTRL_PWRDBG_FORCE_WARM_RESET;
 }
 
-otPlatResetReason otPlatGetResetReason(otContext *aContext)
+otPlatResetReason otPlatGetResetReason(otInstance *aInstance)
 {
-    (void)aContext;
+    (void)aInstance;
     // TODO: Write me!
     return kPlatResetReason_PowerOn;
 }

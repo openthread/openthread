@@ -35,36 +35,36 @@
 #include <net/netif.hpp>
 #include <common/code_utils.hpp>
 #include <common/message.hpp>
-#include <openthreadcontext.h>
+#include <openthreadinstance.h>
 
 namespace Thread {
 namespace Ip6 {
 
-ThreadError Routes::Add(otContext *aContext, Route &aRoute)
+ThreadError Routes::Add(otInstance *aInstance, Route &aRoute)
 {
     ThreadError error = kThreadError_None;
 
-    for (Route *cur = aContext->mRoutes; cur; cur = cur->mNext)
+    for (Route *cur = aInstance->mRoutes; cur; cur = cur->mNext)
     {
         VerifyOrExit(cur != &aRoute, error = kThreadError_Busy);
     }
 
-    aRoute.mNext = aContext->mRoutes;
-    aContext->mRoutes = &aRoute;
+    aRoute.mNext = aInstance->mRoutes;
+    aInstance->mRoutes = &aRoute;
 
 exit:
     return error;
 }
 
-ThreadError Routes::Remove(otContext *aContext, Route &aRoute)
+ThreadError Routes::Remove(otInstance *aInstance, Route &aRoute)
 {
-    if (&aRoute == aContext->mRoutes)
+    if (&aRoute == aInstance->mRoutes)
     {
-        aContext->mRoutes = aRoute.mNext;
+        aInstance->mRoutes = aRoute.mNext;
     }
     else
     {
-        for (Route *cur = aContext->mRoutes; cur; cur = cur->mNext)
+        for (Route *cur = aInstance->mRoutes; cur; cur = cur->mNext)
         {
             if (cur->mNext == &aRoute)
             {
@@ -79,13 +79,13 @@ ThreadError Routes::Remove(otContext *aContext, Route &aRoute)
     return kThreadError_None;
 }
 
-int8_t Routes::Lookup(otContext *aContext, const Address &aSource, const Address &aDestination)
+int8_t Routes::Lookup(otInstance *aInstance, const Address &aSource, const Address &aDestination)
 {
     int8_t maxPrefixMatch = -1;
     uint8_t prefixMatch;
     int8_t rval = -1;
 
-    for (Route *cur = aContext->mRoutes; cur; cur = cur->mNext)
+    for (Route *cur = aInstance->mRoutes; cur; cur = cur->mNext)
     {
         prefixMatch = cur->mPrefix.PrefixMatch(aDestination);
 
@@ -108,7 +108,7 @@ int8_t Routes::Lookup(otContext *aContext, const Address &aSource, const Address
         rval = cur->mInterfaceId;
     }
 
-    for (Netif *netif = Netif::GetNetifList(aContext); netif; netif = netif->GetNext())
+    for (Netif *netif = Netif::GetNetifList(aInstance); netif; netif = netif->GetNext())
     {
         if (netif->RouteLookup(aSource, aDestination, &prefixMatch) == kThreadError_None &&
             static_cast<int8_t>(prefixMatch) > maxPrefixMatch)

@@ -49,10 +49,10 @@ void cc2538AlarmInit(void);
 /**
  * This function performs alarm driver processing.
  *
- * @param[in]  aContext  The OpenThread context structure.
+ * @param[in]  aInstance  The OpenThread instance structure.
  *
  */
-void cc2538AlarmProcess(otContext *aContext);
+void cc2538AlarmProcess(otInstance *aInstance);
 
 /**
  * This function initializes the radio service used by OpenThread.
@@ -63,10 +63,10 @@ void cc2538RadioInit(void);
 /**
  * This function performs radio driver processing.
  *
- * @param[in]  aContext  The OpenThread context structure.
+ * @param[in]  aInstance  The OpenThread instance structure.
  *
  */
-void cc2538RadioProcess(otContext *aContext);
+void cc2538RadioProcess(otInstance *aInstance);
 
 /**
  * This function initializes the random number service used by OpenThread.

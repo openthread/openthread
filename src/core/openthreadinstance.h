@@ -32,8 +32,8 @@
  *  This file defines the structure of the variables required for all instances of OpenThread API.
  */
 
-#ifndef OPENTHREADCONTEXT_H_
-#define OPENTHREADCONTEXT_H_
+#ifndef OPENTHREADINSTANCE_H_
+#define OPENTHREADINSTANCE_H_
 
 #include <stdint.h>
 #include <stdbool.h>
@@ -50,7 +50,7 @@
 /**
  * This type represents all the static / global variables used by OpenThread allocated in one place.
  */
-typedef struct otContext
+typedef struct otInstance
 {
     //
     // Callbacks
@@ -111,17 +111,17 @@ typedef struct otContext
     Thread::Ip6::Mpl mMpl;
 
     // Constructor
-    otContext(void);
+    otInstance(void);
 
-} otContext;
+} otInstance;
 
-// Number of aligned bytes required for the context structure
-const size_t cAlignedContextSize = otALIGNED_VAR_SIZE(sizeof(otContext), uint64_t) * sizeof(uint64_t);
+// Number of aligned bytes required for the instance structure
+const size_t cAlignedInstanceSize = otALIGNED_VAR_SIZE(sizeof(otInstance), uint64_t) * sizeof(uint64_t);
 
-// Number of bytes indicated in the public header file for the context structure
-const size_t cPublicContextSize = OT_CONTEXT_SIZE;
+// Number of bytes indicated in the public header file for the instance structure
+const size_t cPublicInstanceSize = OT_INSTANCE_SIZE;
 
-// Ensure we are initializing the public definition of the size of the context structure correctly
-C_ASSERT(cPublicContextSize >= cAlignedContextSize);
+// Ensure we are initializing the public definition of the size of the instance structure correctly
+C_ASSERT(cPublicInstanceSize >= cAlignedInstanceSize);
 
-#endif  // OPENTHREADCONTEXT_H_
+#endif  // OPENTHREADINSTANCE_H_

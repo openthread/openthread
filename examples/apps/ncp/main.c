@@ -34,36 +34,36 @@
 #include <ncp/ncp.h>
 #include <platform/platform.h>
 
-void otSignalTaskletPending(otContext *aCtx)
+void otSignalTaskletPending(otInstance *aInstance)
 {
-    (void)aCtx;
+    (void)aInstance;
 }
 
-static uint8_t otContextBuffer[OT_CONTEXT_SIZE];
+static uint8_t otInstanceBuffer[OT_INSTANCE_SIZE];
 
 int main(int argc, char *argv[])
 {
-    otContext *sContext;
-    uint64_t otContextBufferLength = sizeof(otContextBuffer);
+    otInstance *sInstance;
+    uint64_t otInstanceBufferLength = sizeof(otInstanceBuffer);
 
     PlatformInit(argc, argv);
 
-    sContext = otContextInit(otContextBuffer, &otContextBufferLength);
-    assert(sContext);
+    sInstance = otInstanceInit(otInstanceBuffer, &otInstanceBufferLength);
+    assert(sInstance);
 
-    otNcpInit(sContext);
+    otNcpInit(sInstance);
 
 #if OPENTHREAD_ENABLE_DIAG
-    diagInit(sContext);
+    diagInit(sInstance);
 #endif
 
     while (1)
     {
-        otProcessNextTasklet(sContext);
-        PlatformProcessDrivers(sContext);
+        otProcessNextTasklet(sInstance);
+        PlatformProcessDrivers(sInstance);
     }
 
-    // otContextFinalize(sContext);
+    // otInstanceFinalize(sInstance);
 
     return 0;
 }

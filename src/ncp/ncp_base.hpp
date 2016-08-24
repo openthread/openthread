@@ -49,15 +49,15 @@ public:
     /**
      * This constructor creates and initializes an NcpBase instance.
      *
-     * @param[in]  aContext  The OpenThread context structure.
+     * @param[in]  aInstance  The OpenThread instance structure.
      *
      */
-    NcpBase(otContext *aContext);
+    NcpBase(otInstance *aInstance);
 
 protected:
     
-    // The pointer to the OpenThread context
-    otContext* mContext;
+    // The pointer to the OpenThread instance
+    otInstance* mInstance;
 
 protected:
 

@@ -28,7 +28,7 @@
 
 #include "test_util.h"
 #include <openthread.h>
-#include <openthreadcontext.h>
+#include <openthreadinstance.h>
 #include <thread/link_quality.hpp>
 
 #include <string.h>
@@ -50,7 +50,7 @@ enum
     kEncodedAverageBitMask  = (1 << kEncodedAverageBitShift) - 1,
 };
 
-otContext sContext;
+otInstance sContext;
 
 #define MIN_RSS(_rss1, _rss2)   (((_rss1) < (_rss2)) ? (_rss1) : (_rss2))
 #define MAX_RSS(_rss1, _rss2)   (((_rss1) < (_rss2)) ? (_rss2) : (_rss1))

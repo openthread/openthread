@@ -61,11 +61,11 @@ uint8_t Diag::sChannel;
 uint8_t Diag::sTxLen;
 uint32_t Diag::sTxPeriod;
 uint32_t Diag::sTxPackets;
-otContext *Diag::sContext;
+otInstance *Diag::sContext;
 
-void Diag::Init(otContext *aContext)
+void Diag::Init(otInstance *aInstance)
 {
-    sContext = aContext;
+    sContext = aInstance;
     sChannel = 20;
     sTxPower = 0;
     sTxPeriod = 0;
@@ -330,9 +330,9 @@ exit:
     AppendErrorResult(error, aOutput, aOutputMaxLen);
 }
 
-void Diag::DiagTransmitDone(otContext *aContext, bool aRxPending, ThreadError aError)
+void Diag::DiagTransmitDone(otInstance *aInstance, bool aRxPending, ThreadError aError)
 {
-    (void)aContext;
+    (void)aInstance;
     if (!aRxPending && aError == kThreadError_None)
     {
         sStats.sent_packets++;
@@ -344,9 +344,9 @@ void Diag::DiagTransmitDone(otContext *aContext, bool aRxPending, ThreadError aE
     }
 }
 
-void Diag::DiagReceiveDone(otContext *aContext, RadioPacket *aFrame, ThreadError aError)
+void Diag::DiagReceiveDone(otInstance *aInstance, RadioPacket *aFrame, ThreadError aError)
 {
-    (void)aContext;
+    (void)aInstance;
     if (aError == kThreadError_None)
     {
         // for sensitivity test, only record the rssi and lqi for the first packet
@@ -359,30 +359,30 @@ void Diag::DiagReceiveDone(otContext *aContext, RadioPacket *aFrame, ThreadError
         sStats.received_packets++;
     }
 
-    otPlatRadioReceive(aContext, sChannel);
+    otPlatRadioReceive(aInstance, sChannel);
 }
 
-void Diag::AlarmFired(otContext *aContext)
+void Diag::AlarmFired(otInstance *aInstance)
 {
     uint32_t now = otPlatAlarmGetNow();
 
     TxPacket();
-    otPlatAlarmStartAt(aContext, now, sTxPeriod);
+    otPlatAlarmStartAt(aInstance, now, sTxPeriod);
 }
 
-extern "C" void otPlatDiagAlarmFired(otContext *aContext)
+extern "C" void otPlatDiagAlarmFired(otInstance *aInstance)
 {
-    Diag::AlarmFired(aContext);
+    Diag::AlarmFired(aInstance);
 }
 
-extern "C" void otPlatDiagRadioTransmitDone(otContext *aContext, bool aRxPending, ThreadError aError)
+extern "C" void otPlatDiagRadioTransmitDone(otInstance *aInstance, bool aRxPending, ThreadError aError)
 {
-    Diag::DiagTransmitDone(aContext, aRxPending, aError);
+    Diag::DiagTransmitDone(aInstance, aRxPending, aError);
 }
 
-extern "C" void otPlatDiagRadioReceiveDone(otContext *aContext, RadioPacket *aFrame, ThreadError aError)
+extern "C" void otPlatDiagRadioReceiveDone(otInstance *aInstance, RadioPacket *aFrame, ThreadError aError)
 {
-    Diag::DiagReceiveDone(aContext, aFrame, aError);
+    Diag::DiagReceiveDone(aInstance, aFrame, aError);
 }
 
 }  // namespace Diagnostics

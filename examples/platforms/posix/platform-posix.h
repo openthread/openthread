@@ -70,10 +70,10 @@ void posixAlarmUpdateTimeout(struct timeval *tv);
 /**
  * This function performs alarm driver processing.
  *
- * @param[in]  aContext  The OpenThread context structure.
+ * @param[in]  aInstance  The OpenThread instance structure.
  *
  */
-void posixAlarmProcess(otContext *aContext);
+void posixAlarmProcess(otInstance *aInstance);
 
 /**
  * This function initializes the radio service used by OpenThread.
@@ -94,10 +94,10 @@ void posixRadioUpdateFdSet(fd_set *aReadFdSet, fd_set *aWriteFdSet, int *aMaxFd)
 /**
  * This function performs radio driver processing.
  *
- * @param[in]  aContext  The OpenThread context structure.
+ * @param[in]  aInstance  The OpenThread instance structure.
  *
  */
-void posixRadioProcess(otContext *aContext);
+void posixRadioProcess(otInstance *aInstance);
 
 /**
  * This function initializes the random number service used by OpenThread.

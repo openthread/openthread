@@ -208,7 +208,7 @@ ThreadError Local::Register(const Ip6::Address &aDestination)
     ThreadNetworkDataTlv threadNetworkDataTlv;
 
     UpdateRloc();
-    mSocket.Open(mMle.GetOpenThreadContext(), &Local::HandleUdpReceive, this);
+    mSocket.Open(mMle.GetInstance(), &Local::HandleUdpReceive, this);
 
     for (size_t i = 0; i < sizeof(mCoapToken); i++)
     {
@@ -225,7 +225,7 @@ ThreadError Local::Register(const Ip6::Address &aDestination)
     header.AppendContentFormatOption(Coap::Header::kApplicationOctetStream);
     header.Finalize();
 
-    VerifyOrExit((message = Ip6::Udp::NewMessage(mMle.GetOpenThreadContext(), 0)) != NULL, error = kThreadError_NoBufs);
+    VerifyOrExit((message = Ip6::Udp::NewMessage(mMle.GetInstance(), 0)) != NULL, error = kThreadError_NoBufs);
     SuccessOrExit(error = message->Append(header.GetBytes(), header.GetLength()));
     threadNetworkDataTlv.Init();
     threadNetworkDataTlv.SetLength(mLength);

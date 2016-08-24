@@ -55,13 +55,13 @@ Uart *Uart::sUartServer;
 
 static otDEFINE_ALIGNED_VAR(sCliUartRaw, sizeof(Uart), uint64_t);
 
-extern "C" void otCliUartInit(otContext *aContext)
+extern "C" void otCliUartInit(otInstance *aInstance)
 {
-    Uart::sUartServer = new(&sCliUartRaw) Uart(aContext);
+    Uart::sUartServer = new(&sCliUartRaw) Uart(aInstance);
 }
 
-Uart::Uart(otContext *aContext):
-    mInterpreter(aContext)
+Uart::Uart(otInstance *aInstance):
+    mInterpreter(aInstance)
 {
     mRxLength = 0;
     mTxHead = 0;

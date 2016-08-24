@@ -30,14 +30,14 @@
 #include <platform/misc.h>
 #include "platform-posix.h"
 
-void otPlatReset(otContext *aContext)
+void otPlatReset(otInstance *aInstance)
 {
     // This function does nothing on the Posix platform.
-    (void)aContext;
+    (void)aInstance;
 }
 
-otPlatResetReason otPlatGetResetReason(otContext *aContext)
+otPlatResetReason otPlatGetResetReason(otInstance *aInstance)
 {
-    (void)aContext;
+    (void)aInstance;
     return kPlatResetReason_PowerOn;
 }

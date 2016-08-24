@@ -373,8 +373,8 @@ public:
     /**
      * This function pointer is called on receiving an MLE Discovery Response message.
      *
-     * @param[in]  aResult   A valid pointer to the Discovery Response information or NULL when the Discovery completes.
-     * @param[in]  aContext  A pointer to application-specific context.
+     * @param[in]  aResult    A valid pointer to the Discovery Response information or NULL when the Discovery completes.
+     * @param[in]  aInstance  A pointer to application-specific context.
      *
      */
     typedef void (*DiscoverHandler)(otActiveScanResult *aResult, void *aContext);
@@ -386,7 +386,7 @@ public:
      * @param[in]  aScanDuration  The time in milliseconds to spend scanning each channel.
      * @param[in]  aPanId         The PAN ID filter (set to Broadcast PAN to disable filter).
      * @param[in]  aHandler       A pointer to a function that is called on receiving an MLE Discovery Response.
-     * @param[in]  aContext       A pointer to arbitrary context information.
+     * @param[in]  aInstance      A pointer to arbitrary context information.
      *
      * @retval kThreadError_None  Successfully started a Thread Discovery.
      * @retval kThreadError_Busy  Thread Discovery is already in progress.
@@ -663,12 +663,12 @@ public:
     static bool IsActiveRouter(uint16_t aRloc16) { return GetChildId(aRloc16) == 0; }
 
     /**
-     * This method returns a pointer to the OpenThread context.
+     * This method returns a pointer to the OpenThread instance.
      *
-     * @returns A pointer to the OpenThread context.
+     * @returns A pointer to the OpenThread instance.
      *
      */
-    otContext *GetOpenThreadContext(void);
+    otInstance *GetInstance(void);
 
 protected:
     /**

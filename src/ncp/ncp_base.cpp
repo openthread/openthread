@@ -356,11 +356,11 @@ static spinel_status_t ResetReasonToSpinelStatus(otPlatResetReason reason)
 // MARK: Class Boilerplate
 // ----------------------------------------------------------------------------
 
-NcpBase::NcpBase(otContext *aContext):
-    mContext(aContext),
-    mUpdateChangedPropsTask(mContext, &NcpBase::UpdateChangedProps, this)
+NcpBase::NcpBase(otInstance *aInstance):
+    mInstance(aInstance),
+    mUpdateChangedPropsTask(mInstance, &NcpBase::UpdateChangedProps, this)
 {
-    assert(mContext != NULL);
+    assert(mInstance != NULL);
     mSupportedChannelMask = kPhySupportedChannelMask;
     mChannelMask = mSupportedChannelMask;
     mScanPeriod = 200; // ms
@@ -384,9 +384,9 @@ NcpBase::NcpBase(otContext *aContext):
         mNetifAddresses[i].mPrefixLength = kUnusedNetifAddressPrefixLen;
     }
 
-    otSetStateChangedCallback(mContext, &NcpBase::HandleNetifStateChanged, this);
-    otSetReceiveIp6DatagramCallback(mContext, &NcpBase::HandleDatagramFromStack, this);
-    otSetIcmpEchoEnabled(mContext, false);
+    otSetStateChangedCallback(mInstance, &NcpBase::HandleNetifStateChanged, this);
+    otSetReceiveIp6DatagramCallback(mInstance, &NcpBase::HandleDatagramFromStack, this);
+    otSetIcmpEchoEnabled(mInstance, false);
 
     mUpdateChangedPropsTask.Post();
 }
@@ -549,7 +549,7 @@ void NcpBase::UpdateChangedProps(void)
         {
             SuccessOrExit(SendLastStatus(
                 SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0,
-                ResetReasonToSpinelStatus(otPlatGetResetReason(mContext))
+                ResetReasonToSpinelStatus(otPlatGetResetReason(mInstance))
             ));
             mChangedFlags &= ~static_cast<uint32_t>(NCP_PLAT_RESET_REASON);
         }
@@ -1015,14 +1015,14 @@ ThreadError NcpBase::CommandHandler_RESET(uint8_t header, unsigned int command, 
 
     // Signal a platform reset. If implemented, this function
     // shouldn't return.
-    otPlatReset(mContext);
+    otPlatReset(mInstance);
 
     // We only get to this point if the
     // platform doesn't support resetting.
     // In such a case we fake it.
 
     mChangedFlags |= NCP_PLAT_RESET_REASON;
-    otDisable(mContext);
+    otDisable(mInstance);
     mUpdateChangedPropsTask.Post();
 
     return SendLastStatus(SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0, SPINEL_STATUS_RESET_SOFTWARE);
@@ -1247,7 +1247,7 @@ ThreadError NcpBase::GetPropertyHandler_HWADDR(uint8_t header, spinel_prop_key_t
                 SPINEL_CMD_PROP_VALUE_IS,
                 key,
                 SPINEL_DATATYPE_EUI64_S,
-                otGetExtendedAddress(mContext)
+                otGetExtendedAddress(mInstance)
             );
 }
 
@@ -1270,7 +1270,7 @@ ThreadError NcpBase::GetPropertyHandler_PHY_ENABLED(uint8_t header, spinel_prop_
 ThreadError NcpBase::GetPropertyHandler_PHY_FREQ(uint8_t header, spinel_prop_key_t key)
 {
     uint32_t freq_khz(0);
-    const uint8_t chan(otGetChannel(mContext));
+    const uint8_t chan(otGetChannel(mInstance));
 
     if (chan == 0)
     {
@@ -1306,7 +1306,7 @@ ThreadError NcpBase::GetPropertyHandler_PHY_CHAN(uint8_t header, spinel_prop_key
                SPINEL_CMD_PROP_VALUE_IS,
                key,
                SPINEL_DATATYPE_UINT8_S,
-               otGetChannel(mContext)
+               otGetChannel(mInstance)
            );
 }
 
@@ -1317,7 +1317,7 @@ ThreadError NcpBase::GetPropertyHandler_PHY_RSSI(uint8_t header, spinel_prop_key
                SPINEL_CMD_PROP_VALUE_IS,
                key,
                SPINEL_DATATYPE_INT8_S,
-               otPlatRadioGetRssi(mContext)
+               otPlatRadioGetRssi(mInstance)
            );
 }
 
@@ -1325,7 +1325,7 @@ ThreadError NcpBase::GetPropertyHandler_MAC_SCAN_STATE(uint8_t header, spinel_pr
 {
     ThreadError errorCode = kThreadError_None;
 
-    if (otIsActiveScanInProgress(mContext))
+    if (otIsActiveScanInProgress(mInstance))
     {
         errorCode = SendPropertyUpdate(
                         header,
@@ -1394,7 +1394,7 @@ ThreadError NcpBase::GetPropertyHandler_MAC_15_4_PANID(uint8_t header, spinel_pr
                SPINEL_CMD_PROP_VALUE_IS,
                key,
                SPINEL_DATATYPE_UINT16_S,
-               otGetPanId(mContext)
+               otGetPanId(mInstance)
            );
 }
 
@@ -1405,7 +1405,7 @@ ThreadError NcpBase::GetPropertyHandler_MAC_FILTER_MODE(uint8_t header, spinel_p
                SPINEL_CMD_PROP_VALUE_IS,
                key,
                SPINEL_DATATYPE_INT8_S,
-               otPlatRadioGetPromiscuous(mContext)
+               otPlatRadioGetPromiscuous(mInstance)
                ? SPINEL_MAC_FILTER_MODE_15_4_PROMISCUOUS
                : SPINEL_MAC_FILTER_MODE_NORMAL
            );
@@ -1418,7 +1418,7 @@ ThreadError NcpBase::GetPropertyHandler_MAC_15_4_LADDR(uint8_t header, spinel_pr
                SPINEL_CMD_PROP_VALUE_IS,
                key,
                SPINEL_DATATYPE_EUI64_S,
-               otGetExtendedAddress(mContext)
+               otGetExtendedAddress(mInstance)
            );
 }
 
@@ -1429,7 +1429,7 @@ ThreadError NcpBase::GetPropertyHandler_MAC_15_4_SADDR(uint8_t header, spinel_pr
                SPINEL_CMD_PROP_VALUE_IS,
                key,
                SPINEL_DATATYPE_UINT16_S,
-               otGetShortAddress(mContext)
+               otGetShortAddress(mInstance)
            );
 }
 
@@ -1440,7 +1440,7 @@ ThreadError NcpBase::GetPropertyHandler_NET_IF_UP(uint8_t header, spinel_prop_ke
                SPINEL_CMD_PROP_VALUE_IS,
                key,
                SPINEL_DATATYPE_BOOL_S,
-               otIsInterfaceUp(mContext)
+               otIsInterfaceUp(mInstance)
            );
 }
 
@@ -1451,7 +1451,7 @@ ThreadError NcpBase::GetPropertyHandler_NET_STACK_UP(uint8_t header, spinel_prop
                SPINEL_CMD_PROP_VALUE_IS,
                key,
                SPINEL_DATATYPE_BOOL_S,
-               otGetDeviceRole(mContext) != kDeviceRoleDisabled
+               otGetDeviceRole(mInstance) != kDeviceRoleDisabled
            );
 }
 
@@ -1459,7 +1459,7 @@ ThreadError NcpBase::GetPropertyHandler_NET_ROLE(uint8_t header, spinel_prop_key
 {
     spinel_net_role_t role(SPINEL_NET_ROLE_DETACHED);
 
-    switch (otGetDeviceRole(mContext))
+    switch (otGetDeviceRole(mInstance))
     {
     case kDeviceRoleDisabled:
     case kDeviceRoleDetached:
@@ -1495,7 +1495,7 @@ ThreadError NcpBase::GetPropertyHandler_NET_NETWORK_NAME(uint8_t header, spinel_
                SPINEL_CMD_PROP_VALUE_IS,
                key,
                SPINEL_DATATYPE_UTF8_S,
-               otGetNetworkName(mContext)
+               otGetNetworkName(mInstance)
            );
 }
 
@@ -1506,7 +1506,7 @@ ThreadError NcpBase::GetPropertyHandler_NET_XPANID(uint8_t header, spinel_prop_k
                SPINEL_CMD_PROP_VALUE_IS,
                key,
                SPINEL_DATATYPE_DATA_S,
-               otGetExtendedPanId(mContext),
+               otGetExtendedPanId(mInstance),
                sizeof(spinel_net_xpanid_t)
            );
 }
@@ -1516,7 +1516,7 @@ ThreadError NcpBase::GetPropertyHandler_NET_MASTER_KEY(uint8_t header, spinel_pr
     const uint8_t *ptr(NULL);
     uint8_t len(0);
 
-    ptr = otGetMasterKey(mContext, &len);
+    ptr = otGetMasterKey(mInstance, &len);
 
     return SendPropertyUpdate(
                header,
@@ -1535,7 +1535,7 @@ ThreadError NcpBase::GetPropertyHandler_NET_KEY_SEQUENCE(uint8_t header, spinel_
                SPINEL_CMD_PROP_VALUE_IS,
                key,
                SPINEL_DATATYPE_UINT32_S,
-               otGetKeySequenceCounter(mContext)
+               otGetKeySequenceCounter(mInstance)
            );
 }
 
@@ -1546,7 +1546,7 @@ ThreadError NcpBase::GetPropertyHandler_NET_PARTITION_ID(uint8_t header, spinel_
                SPINEL_CMD_PROP_VALUE_IS,
                key,
                SPINEL_DATATYPE_UINT32_S,
-               otGetPartitionId(mContext)
+               otGetPartitionId(mInstance)
            );
 }
 
@@ -1557,7 +1557,7 @@ ThreadError NcpBase::GetPropertyHandler_THREAD_NETWORK_DATA_VERSION(uint8_t head
                SPINEL_CMD_PROP_VALUE_IS,
                key,
                SPINEL_DATATYPE_UINT8_S,
-               otGetNetworkDataVersion(mContext)
+               otGetNetworkDataVersion(mInstance)
            );
 }
 
@@ -1568,7 +1568,7 @@ ThreadError NcpBase::GetPropertyHandler_THREAD_STABLE_NETWORK_DATA_VERSION(uint8
                SPINEL_CMD_PROP_VALUE_IS,
                key,
                SPINEL_DATATYPE_UINT8_S,
-               otGetStableNetworkDataVersion(mContext)
+               otGetStableNetworkDataVersion(mInstance)
            );
 }
 
@@ -1581,7 +1581,7 @@ ThreadError NcpBase::GetPropertyHandler_THREAD_NETWORK_DATA(uint8_t header, spin
     SuccessOrExit(errorCode = OutboundFrameBegin());
     SuccessOrExit(errorCode = OutboundFrameFeedPacked("Cii", header, SPINEL_CMD_PROP_VALUE_IS, key));
     otGetNetworkDataLocal(
-        mContext,
+        mInstance,
         false, // Stable?
         network_data,
         &network_data_len
@@ -1604,7 +1604,7 @@ ThreadError NcpBase::GetPropertyHandler_THREAD_STABLE_NETWORK_DATA(uint8_t heade
 
     SuccessOrExit(errorCode = OutboundFrameFeedPacked("Cii", header, SPINEL_CMD_PROP_VALUE_IS, key));
     otGetNetworkDataLocal(
-        mContext,
+        mInstance,
         true, // Stable?
         network_data,
         &network_data_len
@@ -1624,7 +1624,7 @@ ThreadError NcpBase::GetPropertyHandler_THREAD_LEADER_RID(uint8_t header, spinel
                SPINEL_CMD_PROP_VALUE_IS,
                key,
                SPINEL_DATATYPE_UINT8_S,
-               otGetLeaderRouterId(mContext)
+               otGetLeaderRouterId(mInstance)
            );
 }
 
@@ -1635,7 +1635,7 @@ ThreadError NcpBase::GetPropertyHandler_THREAD_LOCAL_LEADER_WEIGHT(uint8_t heade
                SPINEL_CMD_PROP_VALUE_IS,
                key,
                SPINEL_DATATYPE_UINT8_S,
-               otGetLocalLeaderWeight(mContext)
+               otGetLocalLeaderWeight(mInstance)
            );
 }
 
@@ -1646,7 +1646,7 @@ ThreadError NcpBase::GetPropertyHandler_THREAD_LEADER_WEIGHT(uint8_t header, spi
                SPINEL_CMD_PROP_VALUE_IS,
                key,
                SPINEL_DATATYPE_UINT8_S,
-               otGetLeaderWeight(mContext)
+               otGetLeaderWeight(mInstance)
            );
 }
 
@@ -1655,7 +1655,7 @@ ThreadError NcpBase::GetPropertyHandler_THREAD_LEADER_ADDR(uint8_t header, spine
     ThreadError errorCode = kThreadError_None;
     otIp6Address address;
 
-    errorCode = otGetLeaderRloc(mContext, &address);
+    errorCode = otGetLeaderRloc(mInstance, &address);
 
     if (errorCode == kThreadError_None)
     {
@@ -1679,7 +1679,7 @@ ThreadError NcpBase::GetPropertyHandler_THREAD_ASSISTING_PORTS(uint8_t header, s
 {
     ThreadError errorCode = kThreadError_None;
     uint8_t num_entries = 0;
-    const uint16_t *ports = otGetUnsecurePorts(mContext, &num_entries);
+    const uint16_t *ports = otGetUnsecurePorts(mInstance, &num_entries);
 
     SuccessOrExit(errorCode = OutboundFrameBegin());
 
@@ -1712,7 +1712,7 @@ ThreadError NcpBase::GetPropertyHandler_THREAD_ALLOW_LOCAL_NET_DATA_CHANGE(uint8
 ThreadError NcpBase::GetPropertyHandler_IPV6_ML_PREFIX(uint8_t header, spinel_prop_key_t key)
 {
     ThreadError errorCode = kThreadError_None;
-    const uint8_t *ml_prefix = otGetMeshLocalPrefix(mContext);
+    const uint8_t *ml_prefix = otGetMeshLocalPrefix(mInstance);
 
     if (ml_prefix)
     {
@@ -1748,7 +1748,7 @@ ThreadError NcpBase::GetPropertyHandler_IPV6_ML_PREFIX(uint8_t header, spinel_pr
 ThreadError NcpBase::GetPropertyHandler_IPV6_ML_ADDR(uint8_t header, spinel_prop_key_t key)
 {
     ThreadError errorCode = kThreadError_None;
-    const otIp6Address *ml64 = otGetMeshLocalEid(mContext);
+    const otIp6Address *ml64 = otGetMeshLocalEid(mInstance);
 
     if (ml64)
     {
@@ -1790,7 +1790,7 @@ ThreadError NcpBase::GetPropertyHandler_IPV6_ADDRESS_TABLE(uint8_t header, spine
 
     SuccessOrExit(errorCode = OutboundFrameFeedPacked("Cii", header, SPINEL_CMD_PROP_VALUE_IS, key));
 
-    for (const otNetifAddress *address = otGetUnicastAddresses(mContext); address; address = address->mNext)
+    for (const otNetifAddress *address = otGetUnicastAddresses(mInstance); address; address = address->mNext)
     {
 
         SuccessOrExit(errorCode = OutboundFrameFeedPacked(
@@ -1823,7 +1823,7 @@ ThreadError NcpBase::GetPropertyHandler_IPV6_ICMP_PING_OFFLOAD(uint8_t header, s
                SPINEL_CMD_PROP_VALUE_IS,
                key,
                SPINEL_DATATYPE_BOOL_S,
-               otIsIcmpEchoEnabled(mContext)
+               otIsIcmpEchoEnabled(mInstance)
            );
 }
 
@@ -1849,7 +1849,7 @@ ThreadError NcpBase::GetPropertyHandler_MAC_CNTR(uint8_t header, spinel_prop_key
     const otMacCounters *macCounters;
     ThreadError errorCode = kThreadError_None;
 
-    macCounters = otGetMacCounters(mContext);
+    macCounters = otGetMacCounters(mInstance);
 
     assert(macCounters != NULL);
 
@@ -2045,7 +2045,7 @@ ThreadError NcpBase::GetPropertyHandler_MAC_WHITELIST(uint8_t header, spinel_pro
 
     for (uint8_t i = 0; (i != 255) && (errorCode == kThreadError_None); i++)
     {
-        errorCode = otGetMacWhitelistEntry(mContext, i, &entry);
+        errorCode = otGetMacWhitelistEntry(mInstance, i, &entry);
 
         if (errorCode != kThreadError_None)
         {
@@ -2076,14 +2076,14 @@ ThreadError NcpBase::GetPropertyHandler_MAC_WHITELIST_ENABLED(uint8_t header, sp
                SPINEL_CMD_PROP_VALUE_IS,
                key,
                SPINEL_DATATYPE_BOOL_S,
-               otIsMacWhitelistEnabled(mContext)
+               otIsMacWhitelistEnabled(mInstance)
            );
 }
 
 ThreadError NcpBase::GetPropertyHandler_THREAD_MODE(uint8_t header, spinel_prop_key_t key)
 {
     uint8_t numeric_mode(0);
-    otLinkModeConfig mode_config(otGetLinkMode(mContext));
+    otLinkModeConfig mode_config(otGetLinkMode(mInstance));
 
     if (mode_config.mRxOnWhenIdle)
     {
@@ -2121,7 +2121,7 @@ ThreadError NcpBase::GetPropertyHandler_THREAD_CHILD_TIMEOUT(uint8_t header, spi
                SPINEL_CMD_PROP_VALUE_IS,
                key,
                SPINEL_DATATYPE_UINT32_S,
-               otGetChildTimeout(mContext)
+               otGetChildTimeout(mInstance)
            );
 }
 
@@ -2132,7 +2132,7 @@ ThreadError NcpBase::GetPropertyHandler_THREAD_RLOC16(uint8_t header, spinel_pro
                SPINEL_CMD_PROP_VALUE_IS,
                key,
                SPINEL_DATATYPE_UINT16_S,
-               otGetRloc16(mContext)
+               otGetRloc16(mInstance)
            );
 }
 
@@ -2143,7 +2143,7 @@ ThreadError NcpBase::GetPropertyHandler_THREAD_ROUTER_UPGRADE_THRESHOLD(uint8_t 
                SPINEL_CMD_PROP_VALUE_IS,
                key,
                SPINEL_DATATYPE_UINT8_S,
-               otGetRouterUpgradeThreshold(mContext)
+               otGetRouterUpgradeThreshold(mInstance)
            );
 }
 
@@ -2154,7 +2154,7 @@ ThreadError NcpBase::GetPropertyHandler_THREAD_CONTEXT_REUSE_DELAY(uint8_t heade
                SPINEL_CMD_PROP_VALUE_IS,
                key,
                SPINEL_DATATYPE_UINT32_S,
-               otGetContextIdReuseDelay(mContext)
+               otGetContextIdReuseDelay(mInstance)
            );
 }
 
@@ -2165,7 +2165,7 @@ ThreadError NcpBase::GetPropertyHandler_THREAD_NETWORK_ID_TIMEOUT(uint8_t header
                SPINEL_CMD_PROP_VALUE_IS,
                key,
                SPINEL_DATATYPE_UINT8_S,
-               otGetNetworkIdTimeout(mContext)
+               otGetNetworkIdTimeout(mInstance)
            );
 }
 
@@ -2203,11 +2203,11 @@ ThreadError NcpBase::SetPropertyHandler_PHY_ENABLED(uint8_t header, spinel_prop_
     {
         if (value == false)
         {
-            errorCode = otPlatRadioDisable(mContext);
+            errorCode = otPlatRadioDisable(mInstance);
         }
         else
         {
-            errorCode = otPlatRadioEnable(mContext);
+            errorCode = otPlatRadioEnable(mInstance);
         }
     }
     else
@@ -2254,7 +2254,7 @@ ThreadError NcpBase::SetPropertyHandler_PHY_CHAN(uint8_t header, spinel_prop_key
 
     if (parsedLength > 0)
     {
-        errorCode = otSetChannel(mContext, static_cast<uint8_t>(i));
+        errorCode = otSetChannel(mInstance, static_cast<uint8_t>(i));
 
         if (errorCode == kThreadError_None)
         {
@@ -2292,13 +2292,13 @@ ThreadError NcpBase::SetPropertyHandler_MAC_FILTER_MODE(uint8_t header, spinel_p
         switch (i)
         {
         case SPINEL_MAC_FILTER_MODE_NORMAL:
-            otPlatRadioSetPromiscuous(mContext, false);
+            otPlatRadioSetPromiscuous(mInstance, false);
             errorCode = kThreadError_None;
             break;
 
         case SPINEL_MAC_FILTER_MODE_PROMISCUOUS:
         case SPINEL_MAC_FILTER_MODE_MONITOR:
-            otPlatRadioSetPromiscuous(mContext, true);
+            otPlatRadioSetPromiscuous(mInstance, true);
             errorCode = kThreadError_None;
             break;
         }
@@ -2404,7 +2404,7 @@ ThreadError NcpBase::SetPropertyHandler_MAC_SCAN_STATE(uint8_t header, spinel_pr
         case SPINEL_SCAN_STATE_BEACON:
             mShouldSignalEndOfScan = false;
             errorCode = otActiveScan(
-                            mContext,
+                            mInstance,
                             mChannelMask,
                             mScanPeriod,
                             &HandleActiveScanResult_Jump,
@@ -2454,7 +2454,7 @@ ThreadError NcpBase::SetPropertyHandler_MAC_15_4_PANID(uint8_t header, spinel_pr
 
     if (parsedLength > 0)
     {
-        errorCode = otSetPanId(mContext, tmp);
+        errorCode = otSetPanId(mInstance, tmp);
 
         if (errorCode == kThreadError_None)
         {
@@ -2491,11 +2491,11 @@ ThreadError NcpBase::SetPropertyHandler_NET_IF_UP(uint8_t header, spinel_prop_ke
     {
         if (value == false)
         {
-            errorCode = otInterfaceDown(mContext);
+            errorCode = otInterfaceDown(mInstance);
         }
         else
         {
-            errorCode = otInterfaceUp(mContext);
+            errorCode = otInterfaceUp(mInstance);
         }
     }
     else
@@ -2532,15 +2532,15 @@ ThreadError NcpBase::SetPropertyHandler_NET_STACK_UP(uint8_t header, spinel_prop
     if (parsedLength > 0)
     {
         // If the value has changed...
-        if ((value != false) != (otGetDeviceRole(mContext) != kDeviceRoleDisabled))
+        if ((value != false) != (otGetDeviceRole(mInstance) != kDeviceRoleDisabled))
         {
             if (value != false)
             {
-                errorCode = otThreadStart(mContext);
+                errorCode = otThreadStart(mInstance);
             }
             else
             {
-                errorCode = otThreadStop(mContext);
+                errorCode = otThreadStop(mInstance);
             }
         }
     }
@@ -2584,15 +2584,15 @@ ThreadError NcpBase::SetPropertyHandler_NET_ROLE(uint8_t header, spinel_prop_key
             break;
 
         case SPINEL_NET_ROLE_ROUTER:
-            errorCode = otBecomeRouter(mContext);
+            errorCode = otBecomeRouter(mInstance);
             break;
 
         case SPINEL_NET_ROLE_LEADER:
-            errorCode = otBecomeLeader(mContext);
+            errorCode = otBecomeLeader(mInstance);
             break;
 
         case SPINEL_NET_ROLE_CHILD:
-            errorCode = otBecomeChild(mContext, kMleAttachAnyPartition);
+            errorCode = otBecomeChild(mInstance, kMleAttachAnyPartition);
             break;
         }
 
@@ -2630,7 +2630,7 @@ ThreadError NcpBase::SetPropertyHandler_NET_NETWORK_NAME(uint8_t header, spinel_
 
     if ((parsedLength > 0) && (string != NULL))
     {
-        errorCode = otSetNetworkName(mContext, string);
+        errorCode = otSetNetworkName(mInstance, string);
 
         if (errorCode == kThreadError_None)
         {
@@ -2667,7 +2667,7 @@ ThreadError NcpBase::SetPropertyHandler_NET_XPANID(uint8_t header, spinel_prop_k
 
     if ((parsedLength > 0) && (len == sizeof(spinel_net_xpanid_t)))
     {
-        otSetExtendedPanId(mContext, ptr);
+        otSetExtendedPanId(mInstance, ptr);
         errorCode = HandleCommandPropertyGet(header, key);
     }
     else
@@ -2696,7 +2696,7 @@ ThreadError NcpBase::SetPropertyHandler_NET_MASTER_KEY(uint8_t header, spinel_pr
 
     if ((parsedLength > 0) && (len < 100))
     {
-        errorCode = otSetMasterKey(mContext, ptr, static_cast<uint8_t>(len));
+        errorCode = otSetMasterKey(mInstance, ptr, static_cast<uint8_t>(len));
 
         if (errorCode == kThreadError_None)
         {
@@ -2732,7 +2732,7 @@ ThreadError NcpBase::SetPropertyHandler_NET_KEY_SEQUENCE(uint8_t header, spinel_
 
     if (parsedLength > 0)
     {
-        otSetKeySequenceCounter(mContext, i);
+        otSetKeySequenceCounter(mInstance, i);
         errorCode = HandleCommandPropertyGet(header, key);
     }
     else
@@ -2759,7 +2759,7 @@ ThreadError NcpBase::SetPropertyHandler_THREAD_LOCAL_LEADER_WEIGHT(uint8_t heade
 
     if (parsedLength > 0)
     {
-        otSetLocalLeaderWeight(mContext, value);
+        otSetLocalLeaderWeight(mInstance, value);
     }
     else
     {
@@ -2789,7 +2789,7 @@ ThreadError NcpBase::SetPropertyHandler_STREAM_NET_INSECURE(uint8_t header, spin
     unsigned int frame_len(0);
     const uint8_t *meta_ptr(NULL);
     unsigned int meta_len(0);
-    Message *message(Ip6::Ip6::NewMessage(mContext, 0));
+    Message *message(Ip6::Ip6::NewMessage(mInstance, 0));
 
     if (message == NULL)
     {
@@ -2821,7 +2821,7 @@ ThreadError NcpBase::SetPropertyHandler_STREAM_NET_INSECURE(uint8_t header, spin
 
     if (errorCode == kThreadError_None)
     {
-        errorCode = otSendIp6Datagram(mContext, message);
+        errorCode = otSendIp6Datagram(mInstance, message);
     }
     else if (message)
     {
@@ -2860,7 +2860,7 @@ ThreadError NcpBase::SetPropertyHandler_STREAM_NET(uint8_t header, spinel_prop_k
     unsigned int frame_len(0);
     const uint8_t *meta_ptr(NULL);
     unsigned int meta_len(0);
-    Message *message(Ip6::Ip6::NewMessage(mContext, 0));
+    Message *message(Ip6::Ip6::NewMessage(mInstance, 0));
 
     if (message == NULL)
     {
@@ -2892,7 +2892,7 @@ ThreadError NcpBase::SetPropertyHandler_STREAM_NET(uint8_t header, spinel_prop_k
 
     if (errorCode == kThreadError_None)
     {
-        errorCode = otSendIp6Datagram(mContext, message);
+        errorCode = otSendIp6Datagram(mInstance, message);
     }
     else if (message)
     {
@@ -2930,7 +2930,7 @@ ThreadError NcpBase::SetPropertyHandler_IPV6_ML_PREFIX(uint8_t header, spinel_pr
 
     if (value_len >= 8)
     {
-        errorCode = otSetMeshLocalPrefix(mContext, value_ptr);
+        errorCode = otSetMeshLocalPrefix(mInstance, value_ptr);
         HandleCommandPropertyGet(header, key);
     }
     else
@@ -2965,7 +2965,7 @@ ThreadError NcpBase::SetPropertyHandler_IPV6_ICMP_PING_OFFLOAD(uint8_t header, s
 
     if (parsedLength > 0)
     {
-        otSetIcmpEchoEnabled(mContext, isEnabled);
+        otSetIcmpEchoEnabled(mInstance, isEnabled);
 
         errorCode = HandleCommandPropertyGet(header, key);
     }
@@ -2982,14 +2982,14 @@ ThreadError NcpBase::SetPropertyHandler_THREAD_ASSISTING_PORTS(uint8_t header, s
 {
     ThreadError errorCode = kThreadError_None;
     uint8_t num_entries = 0;
-    const uint16_t *ports = otGetUnsecurePorts(mContext, &num_entries);
+    const uint16_t *ports = otGetUnsecurePorts(mInstance, &num_entries);
     spinel_ssize_t parsedLength = 1;
     int ports_changed = 0;
 
     // First, we need to remove all of the current assisting ports.
     for (; num_entries != 0; ports++, num_entries--)
     {
-        errorCode = otRemoveUnsecurePort(mContext, *ports);
+        errorCode = otRemoveUnsecurePort(mInstance, *ports);
 
         if (errorCode != kThreadError_None)
         {
@@ -3015,7 +3015,7 @@ ThreadError NcpBase::SetPropertyHandler_THREAD_ASSISTING_PORTS(uint8_t header, s
 
         if (parsedLength > 0)
         {
-            errorCode = otAddUnsecurePort(mContext, port);
+            errorCode = otAddUnsecurePort(mInstance, port);
         }
         else
         {
@@ -3092,7 +3092,7 @@ ThreadError NcpBase::SetPropertyHandler_THREAD_ALLOW_LOCAL_NET_DATA_CHANGE(uint8
 
     if (should_register_with_leader)
     {
-        otSendServerData(mContext);
+        otSendServerData(mInstance);
     }
 
     return errorCode;
@@ -3143,7 +3143,7 @@ ThreadError NcpBase::SetPropertyHandler_MAC_WHITELIST(uint8_t header, spinel_pro
     spinel_ssize_t parsedLength = 1;
 
     // First, clear the whitelist.
-    otClearMacWhitelist(mContext);
+    otClearMacWhitelist(mInstance);
 
     while ((errorCode == kThreadError_None)
            && (parsedLength > 0)
@@ -3180,11 +3180,11 @@ ThreadError NcpBase::SetPropertyHandler_MAC_WHITELIST(uint8_t header, spinel_pro
 
         if (rssi == RSSI_OVERRIDE_DISABLED)
         {
-            errorCode = otAddMacWhitelist(mContext, ext_addr->m8);
+            errorCode = otAddMacWhitelist(mInstance, ext_addr->m8);
         }
         else
         {
-            errorCode = otAddMacWhitelistRssi(mContext, ext_addr->m8, rssi);
+            errorCode = otAddMacWhitelistRssi(mInstance, ext_addr->m8, rssi);
         }
 
         value_ptr += parsedLength;
@@ -3226,11 +3226,11 @@ ThreadError NcpBase::SetPropertyHandler_MAC_WHITELIST_ENABLED(uint8_t header, sp
     {
         if (isEnabled)
         {
-            otEnableMacWhitelist(mContext);
+            otEnableMacWhitelist(mInstance);
         }
         else
         {
-            otDisableMacWhitelist(mContext);
+            otDisableMacWhitelist(mInstance);
         }
 
         errorCode = HandleCommandPropertyGet(header, key);
@@ -3264,7 +3264,7 @@ ThreadError NcpBase::SetPropertyHandler_THREAD_MODE(uint8_t header, spinel_prop_
         mode_config.mDeviceType = ((numeric_mode & kThreadModeTLV_DeviceType) == kThreadModeTLV_DeviceType);
         mode_config.mNetworkData = ((numeric_mode & kThreadModeTLV_NetworkData) == kThreadModeTLV_NetworkData);
 
-        errorCode = otSetLinkMode(mContext, mode_config);
+        errorCode = otSetLinkMode(mInstance, mode_config);
 
         if (errorCode == kThreadError_None)
         {
@@ -3298,7 +3298,7 @@ ThreadError NcpBase::SetPropertyHandler_THREAD_CHILD_TIMEOUT(uint8_t header, spi
 
     if (parsedLength > 0)
     {
-        otSetChildTimeout(mContext, i);
+        otSetChildTimeout(mInstance, i);
 
         errorCode = HandleCommandPropertyGet(header, key);
     }
@@ -3325,7 +3325,7 @@ ThreadError NcpBase::SetPropertyHandler_THREAD_ROUTER_UPGRADE_THRESHOLD(uint8_t 
 
     if (parsedLength > 0)
     {
-        otSetRouterUpgradeThreshold(mContext, i);
+        otSetRouterUpgradeThreshold(mInstance, i);
 
         errorCode = HandleCommandPropertyGet(header, key);
     }
@@ -3352,7 +3352,7 @@ ThreadError NcpBase::SetPropertyHandler_THREAD_CONTEXT_REUSE_DELAY(uint8_t heade
 
     if (parsedLength > 0)
     {
-        otSetContextIdReuseDelay(mContext, i);
+        otSetContextIdReuseDelay(mInstance, i);
 
         errorCode = HandleCommandPropertyGet(header, key);
     }
@@ -3379,7 +3379,7 @@ ThreadError NcpBase::SetPropertyHandler_THREAD_NETWORK_ID_TIMEOUT(uint8_t header
 
     if (parsedLength > 0)
     {
-        otSetNetworkIdTimeout(mContext, i);
+        otSetNetworkIdTimeout(mInstance, i);
 
         errorCode = HandleCommandPropertyGet(header, key);
     }
@@ -3486,7 +3486,7 @@ ThreadError NcpBase::InsertPropertyHandler_IPV6_ADDRESS_TABLE(uint8_t header, sp
     netif_addr->mPreferredLifetime = preferred_lifetime;
     netif_addr->mValidLifetime = valid_lifetime;
 
-    errorCode = otAddUnicastAddress(mContext, netif_addr);
+    errorCode = otAddUnicastAddress(mInstance, netif_addr);
 
     // `kThreadError_Busy` indicates that the address was already on the list. In this case the lifetimes and prefix len
     // are updated, and the add/insert operation is considered a success.
@@ -3550,7 +3550,7 @@ ThreadError NcpBase::InsertPropertyHandler_THREAD_LOCAL_ROUTES(uint8_t header, s
         ext_route_config.mPrefix.mPrefix = *addr_ptr;
         ext_route_config.mStable = stable;
         ext_route_config.mPreference = ((flags & kPreferenceMask) >> kPreferenceOffset);
-        errorCode = otAddExternalRoute(mContext, &ext_route_config);
+        errorCode = otAddExternalRoute(mInstance, &ext_route_config);
 
         if (errorCode == kThreadError_None)
         {
@@ -3625,7 +3625,7 @@ ThreadError NcpBase::InsertPropertyHandler_THREAD_ON_MESH_NETS(uint8_t header, s
         border_router_config.mDefaultRoute = ((flags & kDefaultRouteFlag) == kDefaultRouteFlag);
         border_router_config.mOnMesh = ((flags & kOnMeshFlag) == kOnMeshFlag);
 
-        errorCode = otAddBorderRouter(mContext, &border_router_config);
+        errorCode = otAddBorderRouter(mInstance, &border_router_config);
 
         if (errorCode == kThreadError_None)
         {
@@ -3667,7 +3667,7 @@ ThreadError NcpBase::InsertPropertyHandler_THREAD_ASSISTING_PORTS(uint8_t header
 
     if (parsedLength > 0)
     {
-        errorCode = otAddUnsecurePort(mContext, port);
+        errorCode = otAddUnsecurePort(mInstance, port);
 
         if (errorCode == kThreadError_None)
         {
@@ -3724,11 +3724,11 @@ ThreadError NcpBase::InsertPropertyHandler_MAC_WHITELIST(uint8_t header, spinel_
     {
         if (rssi == RSSI_OVERRIDE_DISABLED)
         {
-            errorCode = otAddMacWhitelist(mContext, ext_addr->m8);
+            errorCode = otAddMacWhitelist(mInstance, ext_addr->m8);
         }
         else
         {
-            errorCode = otAddMacWhitelistRssi(mContext, ext_addr->m8, rssi);
+            errorCode = otAddMacWhitelistRssi(mInstance, ext_addr->m8, rssi);
         }
 
         if (errorCode == kThreadError_None)
@@ -3793,7 +3793,7 @@ ThreadError NcpBase::RemovePropertyHandler_IPV6_ADDRESS_TABLE(uint8_t header, sp
 
         if (netif_addr != NULL)
         {
-            errorCode = otRemoveUnicastAddress(mContext, netif_addr);
+            errorCode = otRemoveUnicastAddress(mInstance, netif_addr);
 
             if (errorCode == kThreadError_None)
             {
@@ -3851,7 +3851,7 @@ ThreadError NcpBase::RemovePropertyHandler_THREAD_LOCAL_ROUTES(uint8_t header, s
     if (parsedLength > 0)
     {
         ip6_prefix.mPrefix = *addr_ptr;
-        errorCode = otRemoveExternalRoute(mContext, &ip6_prefix);
+        errorCode = otRemoveExternalRoute(mInstance, &ip6_prefix);
 
         if (errorCode == kThreadError_None)
         {
@@ -3903,7 +3903,7 @@ ThreadError NcpBase::RemovePropertyHandler_THREAD_ON_MESH_NETS(uint8_t header, s
     if (parsedLength > 0)
     {
         ip6_prefix.mPrefix = *addr_ptr;
-        errorCode = otRemoveBorderRouter(mContext, &ip6_prefix);
+        errorCode = otRemoveBorderRouter(mInstance, &ip6_prefix);
 
         if (errorCode == kThreadError_None)
         {
@@ -3945,7 +3945,7 @@ ThreadError NcpBase::RemovePropertyHandler_THREAD_ASSISTING_PORTS(uint8_t header
 
     if (parsedLength > 0)
     {
-        errorCode = otRemoveUnsecurePort(mContext, port);
+        errorCode = otRemoveUnsecurePort(mInstance, port);
 
         if (errorCode == kThreadError_None)
         {
@@ -3986,7 +3986,7 @@ ThreadError NcpBase::RemovePropertyHandler_THREAD_ACTIVE_ROUTER_IDS(uint8_t head
 
     if (parsedLength > 0)
     {
-        errorCode = otReleaseRouterId(mContext, router_id);
+        errorCode = otReleaseRouterId(mInstance, router_id);
 
         if (errorCode == kThreadError_None)
         {
@@ -4026,7 +4026,7 @@ ThreadError NcpBase::RemovePropertyHandler_MAC_WHITELIST(uint8_t header, spinel_
 
     if (parsedLength > 0)
     {
-        otRemoveMacWhitelist(mContext, ext_addr.m8);
+        otRemoveMacWhitelist(mInstance, ext_addr.m8);
 
         errorCode = SendPropertyUpdate(
                         header,

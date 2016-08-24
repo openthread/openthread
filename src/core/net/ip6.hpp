@@ -485,13 +485,13 @@ public:
     /**
      * This static method allocates a new message buffer from the buffer pool.
      *
-     * @param[in]  aContext   The OpenThread context structure.
+     * @param[in]  aInstance  The OpenThread instance structure.
      * @param[in]  aReserved  The number of header bytes to reserve following the IPv6 header.
      *
      * @returns A pointer to the message or NULL if insufficient message buffers are available.
      *
      */
-    static Message *NewMessage(otContext *aContext, uint16_t aReserved);
+    static Message *NewMessage(otInstance *aInstance, uint16_t aReserved);
 
     /**
      * This static method sends an IPv6 datagram.
@@ -576,7 +576,7 @@ public:
      * By default, this callback does not pass Thread control traffic.  See SetReceiveIp6FilterEnabled() to change
      * the Thread control traffic filter setting.
      *
-     * @param[in]  aContext          The OpenThread context structure.
+     * @param[in]  aInstance         The OpenThread instance structure.
      * @param[in]  aCallback         A pointer to a function that is called when an IPv6 datagram is received
      *                               or NULL to disable the callback.
      * @param[in]  aCallbackContext  A pointer to application-specific context.
@@ -585,14 +585,14 @@ public:
      * @sa SetReceiveIp6FilterEnabled
      *
      */
-    static void SetReceiveDatagramCallback(otContext *aContext, otReceiveIp6DatagramCallback aCallback,
+    static void SetReceiveDatagramCallback(otInstance *aInstance, otReceiveIp6DatagramCallback aCallback,
                                            void *aCallbackContext);
 
     /**
      * This method indicates whether or not Thread control traffic is filtered out when delivering IPv6 datagrams
      * via the callback specified in SetReceiveIp6DatagramCallback().
      *
-     * @param[in]  aContext  The OpenThread context structure.
+     * @param[in]  aInstance  The OpenThread instance structure.
      *
      * @returns  TRUE if Thread control traffic is filtered out, FALSE otherwise.
      *
@@ -600,20 +600,20 @@ public:
      * @sa SetReceiveIp6FilterEnabled
      *
      */
-    static bool IsReceiveIp6FilterEnabled(otContext *aContext);
+    static bool IsReceiveIp6FilterEnabled(otInstance *aInstance);
 
     /**
      * This method sets whether or not Thread control traffic is filtered out when delivering IPv6 datagrams
      * via the callback specified in SetReceiveIp6DatagramCallback().
      *
-     * @param[in]  aContext  The OpenThread context structure.
-     * @param[in]  aEnabled  TRUE if Thread control traffic is filtered out, FALSE otherwise.
+     * @param[in]  aInstance  The OpenThread instance structure.
+     * @param[in]  aEnabled   TRUE if Thread control traffic is filtered out, FALSE otherwise.
      *
      * @sa SetReceiveDatagramCallback
      * @sa IsReceiveIp6FilterEnabled
      *
      */
-    static void SetReceiveIp6FilterEnabled(otContext *aContext, bool aEnabled);
+    static void SetReceiveIp6FilterEnabled(otInstance *aInstance, bool aEnabled);
 
     /**
      * This static method enables/disables IPv6 forwarding.
@@ -621,7 +621,7 @@ public:
      * @param[in]  aEnable  TRUE to enable IPv6 forwarding, FALSE otherwise.
      *
      */
-    static void SetForwardingEnabled(otContext *aContext, bool aEnable);
+    static void SetForwardingEnabled(otInstance *aInstance, bool aEnable);
 
 private:
     static void ProcessReceiveCallback(const Message &aMessage, const MessageInfo &aMessageInfo, uint8_t aIpProto);

@@ -37,8 +37,8 @@
 namespace Thread {
 namespace Coap {
 
-Server::Server(otContext *aContext, uint16_t aPort):
-    mContext(aContext)
+Server::Server(otInstance *aInstance, uint16_t aPort):
+    mInstance(aInstance)
 {
     mPort = aPort;
     mResources = NULL;
@@ -50,7 +50,7 @@ ThreadError Server::Start()
     Ip6::SockAddr sockaddr;
     sockaddr.mPort = mPort;
 
-    SuccessOrExit(error = mSocket.Open(mContext, &Server::HandleUdpReceive, this));
+    SuccessOrExit(error = mSocket.Open(mInstance, &Server::HandleUdpReceive, this));
     SuccessOrExit(error = mSocket.Bind(sockaddr));
 
 exit:
@@ -59,7 +59,7 @@ exit:
 
 ThreadError Server::Stop()
 {
-    return mSocket.Close(mContext);
+    return mSocket.Close(mInstance);
 }
 
 ThreadError Server::AddResource(Resource &aResource)

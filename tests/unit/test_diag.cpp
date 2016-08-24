@@ -31,9 +31,9 @@
 #include <openthread-diag.h>
 #include <platform/platform.h>
 #include <platform/radio.h>
-#include <openthreadcontext.h>
+#include <openthreadinstance.h>
 
-extern "C" void otSignalTaskletPending(otContext *)
+extern "C" void otSignalTaskletPending(otInstance *)
 {
 }
 
@@ -119,7 +119,7 @@ void TestDiag()
             "diagnostics mode is disabled\r\n",
         },
     };
-    otContext sContext;
+    otInstance sContext;
 
     // initialize platform layer
     int argc = 2;

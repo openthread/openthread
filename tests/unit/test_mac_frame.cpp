@@ -36,11 +36,11 @@ namespace Thread {
 
 extern "C" {
 
-    void otPlatAlarmStop(otContext *)
+    void otPlatAlarmStop(otInstance *)
     {
     }
 
-    void otPlatAlarmStartAt(otContext *, uint32_t, uint32_t)
+    void otPlatAlarmStartAt(otInstance *, uint32_t, uint32_t)
     {
     }
 

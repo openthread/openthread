@@ -63,10 +63,10 @@ public:
     /**
      * This constructor initializes the Thread network interface.
      *
-     * @param[in]  aContext  The OpenThread context structure.
+     * @param[in]  aInstance  The OpenThread instance structure.
      *
      */
-    ThreadNetif(otContext *aContext);
+    ThreadNetif(otInstance *aInstance);
 
     /**
      * This method enables the Thread network interface.

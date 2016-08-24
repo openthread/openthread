@@ -60,7 +60,7 @@ public:
     /**
      * This function pointer is called when the tasklet is run.
      *
-     * @param[in]  aContext  A pointer to arbitrary context information.
+     * @param[in]  aInstance  A pointer to arbitrary context information.
      *
      */
     typedef void (*Handler)(void *aContext);
@@ -68,12 +68,12 @@ public:
     /**
      * This constructor creates a tasklet instance.
      *
-     * @param[in]  aContext          The OpenThread context structure.
+     * @param[in]  aInstance         The OpenThread instance structure.
      * @param[in]  aHandler          A pointer to a function that is called when the tasklet is run.
      * @param[in]  aCallbackContext  A pointer to arbitrary context information.
      *
      */
-    Tasklet(otContext *aContext, Handler aHandler, void *aCallbackContext);
+    Tasklet(otInstance *aInstance, Handler aHandler, void *aCallbackContext);
 
     /**
      * This method puts the tasklet on the run queue.
@@ -88,7 +88,7 @@ private:
      */
     void RunTask(void) { mHandler(mCallbackContext); }
 
-    otContext *mContext;          ///< A pointer to the OpenThread context.
+    otInstance *mInstance;        ///< A pointer to the OpenThread instance.
     Handler    mHandler;          ///< A pointer to a function that is called when the tasklet is run.
     void      *mCallbackContext;  ///< A pointer to arbitrary context information.
     Tasklet   *mNext;             ///< A pointer to the next tasklet in the run queue.
@@ -114,24 +114,24 @@ public:
     /**
      * This static method indicates whether or not there are tasklets pending.
      *
-     * @param[in]  aContext  The OpenThread context structure.
+     * @param[in]  aInstance  The OpenThread instance structure.
      *
      * @retval TRUE   If there are tasklets pending.
      * @retval FALSE  If there are no tasklets pending.
      *
      */
-    static bool AreTaskletsPending(otContext *aContext);
+    static bool AreTaskletsPending(otInstance *aInstance);
 
     /**
      * This static method runs the next tasklet.
      *
-     * @param[in]  aContext  The OpenThread context structure.
+     * @param[in]  aInstance  The OpenThread instance structure.
      *
      */
-    static void RunNextTasklet(otContext *aContext);
+    static void RunNextTasklet(otInstance *aInstance);
 
 private:
-    static Tasklet *PopTasklet(otContext *aContext);
+    static Tasklet *PopTasklet(otInstance *aInstance);
 };
 
 /**

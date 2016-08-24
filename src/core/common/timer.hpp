@@ -92,13 +92,13 @@ public:
     /**
      * This static method processes all running timers.
      *
-     * @param[in]  aContext  The OpenThread context structure.
+     * @param[in]  aInstance  The OpenThread instance structure.
      *
      */
-    static void FireTimers(otContext *aContext);
+    static void FireTimers(otInstance *aInstance);
 
 private:
-    static void SetAlarm(otContext *aContext);
+    static void SetAlarm(otInstance *aInstance);
 
     /**
      * This static method compares two timers and returns a value to indicate
@@ -125,20 +125,20 @@ public:
     /**
      * This function pointer is called when the timer expires.
      *
-     * @param[in]  aContext  A pointer to arbitrary context information.
+     * @param[in]  aInstance  A pointer to arbitrary context information.
      */
     typedef void (*Handler)(void *aContext);
 
     /**
      * This constructor creates a timer instance.
      *
-     * @param[in]  aContext          The OpenThread context structure.
+     * @param[in]  aInstance         The OpenThread instance structure.
      * @param[in]  aHandler          A pointer to a function that is called when the timer expires.
      * @param[in]  aCallbackContext  A pointer to arbitrary context information.
      *
      */
-    Timer(otContext *aContext, Handler aHandler, void *aCallbackContext) {
-        mContext = aContext;
+    Timer(otInstance *aInstance, Handler aHandler, void *aCallbackContext) {
+        mInstance = aInstance;
         mHandler = aHandler;
         mCallbackContext = aCallbackContext;
         mT0 = 0;
@@ -218,7 +218,7 @@ public:
 private:
     void Fired(void) { mHandler(mCallbackContext); }
 
-    otContext *mContext;  ///< A pointer to the OpenThread context.
+    otInstance *mInstance;  ///< A pointer to the OpenThread instance.
     Handler    mHandler;  ///< A pointer to the function that is called when the timer expires.
     void      *mCallbackContext;  ///< A pointer to arbitrary context information.
     uint32_t   mT0;       ///< The start time of the timer in milliseconds.

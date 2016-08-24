@@ -31,7 +31,7 @@
 #include <common/debug.hpp>
 #include <common/message.hpp>
 #include <string.h>
-#include <openthreadcontext.h>
+#include <openthreadinstance.h>
 
 #if _WIN32
 #define random rand
@@ -39,7 +39,7 @@
 
 void TestMessage(void)
 {
-    otContext sContext;
+    otInstance sContext;
     Thread::Message *message;
     uint8_t writeBuffer[1024];
     uint8_t readBuffer[1024];

@@ -44,9 +44,9 @@ namespace Thread {
 static otDEFINE_ALIGNED_VAR(sNcpRaw, sizeof(NcpUart), uint64_t);
 static NcpUart *sNcpUart;
 
-extern "C" void otNcpInit(otContext *aContext)
+extern "C" void otNcpInit(otInstance *aInstance)
 {
-    sNcpUart = new(&sNcpRaw) NcpUart(aContext);
+    sNcpUart = new(&sNcpRaw) NcpUart(aInstance);
 }
 
 NcpUart::UartTxBuffer::UartTxBuffer(void)
@@ -76,12 +76,12 @@ const uint8_t *NcpUart::UartTxBuffer::GetBuffer(void) const
     return mBuffer;
 }
 
-NcpUart::NcpUart(otContext *aContext):
-    NcpBase(aContext),
+NcpUart::NcpUart(otInstance *aInstance):
+    NcpBase(aInstance),
     mFrameDecoder(mRxBuffer, sizeof(mRxBuffer), &NcpUart::HandleFrame, &NcpUart::HandleError, this),
     mUartBuffer(),
-    mTxFrameBuffer(aContext, mTxBuffer, sizeof(mTxBuffer)),
-    mUartSendTask(aContext, EncodeAndSendToUart, this)
+    mTxFrameBuffer(aInstance, mTxBuffer, sizeof(mTxBuffer)),
+    mUartSendTask(aInstance, EncodeAndSendToUart, this)
 {
     mState = kStartingFrame;
 

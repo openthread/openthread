@@ -62,7 +62,7 @@ public:
     /**
      * This method opens the UDP socket.
      *
-     * @param[in]  aContext          The OpenThread context structure.
+     * @param[in]  aInstance         The OpenThread instance structure.
      * @param[in]  aHandler          A pointer to a function that is called when receiving UDP messages.
      * @param[in]  aCallbackContext  A pointer to arbitrary context information.
      *
@@ -70,7 +70,7 @@ public:
      * @retval kThreadError_Busy  The socket is already open.
      *
      */
-    ThreadError Open(otContext *aContext, otUdpReceive aHandler, void *aCallbackContext);
+    ThreadError Open(otInstance *aInstance, otUdpReceive aHandler, void *aCallbackContext);
 
     /**
      * This method binds the UDP socket.
@@ -85,13 +85,13 @@ public:
     /**
      * This method closes the UDP socket.
      *
-     * @param[in]  aContext  The OpenThread context structure.
+     * @param[in]  aInstance  The OpenThread instance structure.
      *
      * @retval kThreadError_None  Successfully closed the UDP socket.
      * @retval kThreadErrorBusy   The socket is already closed.
      *
      */
-    ThreadError Close(otContext *aContext);
+    ThreadError Close(otInstance *aInstance);
 
     /**
      * This method sends a UDP message.
@@ -129,13 +129,13 @@ public:
     /**
      * This static method returns a new UDP message with sufficient header space reserved.
      *
-     * @param[in]  aContext   The OpenThread context structure.
+     * @param[in]  aInstance  The OpenThread instance structure.
      * @param[in]  aReserved  The number of header bytes to reserve after the UDP header.
      *
      * @returns A pointer to the message or NULL if no buffers are available.
      *
      */
-    static Message *NewMessage(otContext *aContext, uint16_t aReserved);
+    static Message *NewMessage(otInstance *aInstance, uint16_t aReserved);
 
     /**
      * This static method handles a received UDP message.

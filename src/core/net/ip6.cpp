@@ -44,22 +44,22 @@
 #include <net/netif.hpp>
 #include <net/udp6.hpp>
 #include <thread/mle.hpp>
-#include <openthreadcontext.h>
+#include <openthreadinstance.h>
 
 namespace Thread {
 namespace Ip6 {
 
 static ThreadError ForwardMessage(Message &message, MessageInfo &messageInfo);
 
-Message *Ip6::NewMessage(otContext *aContext, uint16_t reserved)
+Message *Ip6::NewMessage(otInstance *aInstance, uint16_t reserved)
 {
-    return Message::New(aContext, Message::kTypeIp6,
+    return Message::New(aInstance, Message::kTypeIp6,
                         sizeof(Header) + sizeof(HopByHopHeader) + sizeof(OptionMpl) + reserved);
 }
 
-void Ip6::SetForwardingEnabled(otContext *aContext, bool aEnable)
+void Ip6::SetForwardingEnabled(otInstance *aInstance, bool aEnable)
 {
-    aContext->mForwardingEnabled = aEnable;
+    aInstance->mForwardingEnabled = aEnable;
 }
 
 uint16_t Ip6::UpdateChecksum(uint16_t checksum, uint16_t val)
@@ -97,21 +97,21 @@ uint16_t Ip6::ComputePseudoheaderChecksum(const Address &src, const Address &dst
     return checksum;
 }
 
-void Ip6::SetReceiveDatagramCallback(otContext *aContext, otReceiveIp6DatagramCallback aCallback,
+void Ip6::SetReceiveDatagramCallback(otInstance *aInstance, otReceiveIp6DatagramCallback aCallback,
                                      void *aCallbackContext)
 {
-    aContext->mReceiveIp6DatagramCallback = aCallback;
-    aContext->mReceiveIp6DatagramCallbackContext = aCallbackContext;
+    aInstance->mReceiveIp6DatagramCallback = aCallback;
+    aInstance->mReceiveIp6DatagramCallbackContext = aCallbackContext;
 }
 
-bool Ip6::IsReceiveIp6FilterEnabled(otContext *aContext)
+bool Ip6::IsReceiveIp6FilterEnabled(otInstance *aInstance)
 {
-    return aContext->mIsReceiveIp6FilterEnabled;
+    return aInstance->mIsReceiveIp6FilterEnabled;
 }
 
-void Ip6::SetReceiveIp6FilterEnabled(otContext *aContext, bool aEnabled)
+void Ip6::SetReceiveIp6FilterEnabled(otInstance *aInstance, bool aEnabled)
 {
-    aContext->mIsReceiveIp6FilterEnabled = aEnabled;
+    aInstance->mIsReceiveIp6FilterEnabled = aEnabled;
 }
 
 ThreadError AddMplOption(Message &message, Header &header, IpProto nextHeader, uint16_t payloadLength)
@@ -122,7 +122,7 @@ ThreadError AddMplOption(Message &message, Header &header, IpProto nextHeader, u
 
     hbhHeader.SetNextHeader(nextHeader);
     hbhHeader.SetLength(0);
-    message.GetOpenThreadContext()->mMpl.InitOption(mplOption, HostSwap16(header.GetSource().mFields.m16[7]));
+    message.GetInstance()->mMpl.InitOption(mplOption, HostSwap16(header.GetSource().mFields.m16[7]));
     SuccessOrExit(error = message.Prepend(&mplOption, sizeof(mplOption)));
     SuccessOrExit(error = message.Prepend(&hbhHeader, sizeof(hbhHeader)));
     header.SetPayloadLength(sizeof(hbhHeader) + sizeof(mplOption) + payloadLength);
@@ -146,7 +146,7 @@ ThreadError Ip6::SendDatagram(Message &message, MessageInfo &messageInfo, IpProt
 
     if (messageInfo.GetSockAddr().IsUnspecified())
     {
-        VerifyOrExit((source = Netif::SelectSourceAddress(message.GetOpenThreadContext(), messageInfo)) != NULL,
+        VerifyOrExit((source = Netif::SelectSourceAddress(message.GetInstance(), messageInfo)) != NULL,
                      error = kThreadError_Error);
         header.SetSource(source->GetAddress());
     }
@@ -216,7 +216,7 @@ ThreadError HandleOptions(Message &message)
         switch (optionHeader.GetType())
         {
         case OptionMpl::kType:
-            SuccessOrExit(error = message.GetOpenThreadContext()->mMpl.ProcessOption(message));
+            SuccessOrExit(error = message.GetInstance()->mMpl.ProcessOption(message));
             break;
 
         default:
@@ -327,9 +327,9 @@ void Ip6::ProcessReceiveCallback(const Message &aMessage, const MessageInfo &mes
     ThreadError error = kThreadError_None;
     Message *messageCopy = NULL;
 
-    VerifyOrExit(aMessage.GetOpenThreadContext()->mReceiveIp6DatagramCallback != NULL, ;);
+    VerifyOrExit(aMessage.GetInstance()->mReceiveIp6DatagramCallback != NULL, ;);
 
-    if (aMessage.GetOpenThreadContext()->mIsReceiveIp6FilterEnabled)
+    if (aMessage.GetInstance()->mIsReceiveIp6FilterEnabled)
     {
         // do not pass messages sent to/from an RLOC
         VerifyOrExit(!messageInfo.GetSockAddr().IsRoutingLocator() &&
@@ -338,7 +338,7 @@ void Ip6::ProcessReceiveCallback(const Message &aMessage, const MessageInfo &mes
         switch (aIpProto)
         {
         case kProtoIcmp6:
-            if (Icmp::IsEchoEnabled(aMessage.GetOpenThreadContext()))
+            if (Icmp::IsEchoEnabled(aMessage.GetInstance()))
             {
                 IcmpHeader icmp;
                 aMessage.Read(aMessage.GetOffset(), sizeof(icmp), &icmp);
@@ -367,12 +367,12 @@ void Ip6::ProcessReceiveCallback(const Message &aMessage, const MessageInfo &mes
     }
 
     // make a copy of the datagram to pass to host
-    VerifyOrExit((messageCopy = NewMessage(aMessage.GetOpenThreadContext(), 0)) != NULL, error = kThreadError_NoBufs);
+    VerifyOrExit((messageCopy = NewMessage(aMessage.GetInstance(), 0)) != NULL, error = kThreadError_NoBufs);
     SuccessOrExit(error = messageCopy->SetLength(aMessage.GetLength()));
     aMessage.CopyTo(0, 0, aMessage.GetLength(), *messageCopy);
 
-    aMessage.GetOpenThreadContext()->mReceiveIp6DatagramCallback(
-        messageCopy, aMessage.GetOpenThreadContext()->mReceiveIp6DatagramCallbackContext);
+    aMessage.GetInstance()->mReceiveIp6DatagramCallback(
+        messageCopy, aMessage.GetInstance()->mReceiveIp6DatagramCallbackContext);
 
 exit:
 
@@ -438,7 +438,7 @@ ThreadError Ip6::HandleDatagram(Message &message, Netif *netif, int8_t interface
     }
     else
     {
-        if (Netif::IsUnicastAddress(message.GetOpenThreadContext(), header.GetDestination()))
+        if (Netif::IsUnicastAddress(message.GetInstance(), header.GetDestination()))
         {
             receive = true;
         }
@@ -452,7 +452,7 @@ ThreadError Ip6::HandleDatagram(Message &message, Netif *netif, int8_t interface
         }
     }
 
-    if (!message.GetOpenThreadContext()->mForwardingEnabled && netif != NULL)
+    if (!message.GetInstance()->mForwardingEnabled && netif != NULL)
     {
         forward = false;
     }
@@ -520,12 +520,12 @@ ThreadError ForwardMessage(Message &message, MessageInfo &messageInfo)
         // on-link link-local address
         interfaceId = messageInfo.mInterfaceId;
     }
-    else if ((interfaceId = Netif::GetOnLinkNetif(message.GetOpenThreadContext(), messageInfo.GetSockAddr())) > 0)
+    else if ((interfaceId = Netif::GetOnLinkNetif(message.GetInstance(), messageInfo.GetSockAddr())) > 0)
     {
         // on-link global address
         ;
     }
-    else if ((interfaceId = Routes::Lookup(message.GetOpenThreadContext(), messageInfo.GetPeerAddr(),
+    else if ((interfaceId = Routes::Lookup(message.GetInstance(), messageInfo.GetPeerAddr(),
                                            messageInfo.GetSockAddr())) > 0)
     {
         // route
@@ -538,7 +538,7 @@ ThreadError ForwardMessage(Message &message, MessageInfo &messageInfo)
     }
 
     // submit message to interface
-    VerifyOrExit((netif = Netif::GetNetifById(message.GetOpenThreadContext(), interfaceId)) != NULL,
+    VerifyOrExit((netif = Netif::GetNetifById(message.GetInstance(), interfaceId)) != NULL,
                  error = kThreadError_NoRoute);
     SuccessOrExit(error = netif->SendMessage(message));
 

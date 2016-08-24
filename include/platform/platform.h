@@ -48,10 +48,10 @@ void PlatformInit(int argc, char *argv[]);
 /**
  * This function performs all platform-specific processing.
  *
- * @param[in]  aContext  The OpenThread context structure.
+ * @param[in]  aInstance  The OpenThread instance structure.
  *
  */
-void PlatformProcessDrivers(otContext *aContext);
+void PlatformProcessDrivers(otInstance *aInstance);
 
 #ifdef __cplusplus
 }  // end of extern "C"

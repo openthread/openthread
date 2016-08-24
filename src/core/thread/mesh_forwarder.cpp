@@ -51,16 +51,16 @@ using Thread::Encoding::BigEndian::HostSwap16;
 namespace Thread {
 
 MeshForwarder::MeshForwarder(ThreadNetif &aThreadNetif):
-    mContext(aThreadNetif.GetOpenThreadContext()),
+    mInstance(aThreadNetif.GetInstance()),
     mMacReceiver(&MeshForwarder::HandleReceivedFrame, this),
     mMacSender(&MeshForwarder::HandleFrameRequest, &MeshForwarder::HandleSentFrame, this),
-    mDiscoverTimer(aThreadNetif.GetOpenThreadContext(), &MeshForwarder::HandleDiscoverTimer, this),
-    mPollTimer(aThreadNetif.GetOpenThreadContext(), &MeshForwarder::HandlePollTimer, this),
-    mReassemblyTimer(aThreadNetif.GetOpenThreadContext(), &MeshForwarder::HandleReassemblyTimer, this),
-    mSendQueue(aThreadNetif.GetOpenThreadContext()),
-    mReassemblyList(aThreadNetif.GetOpenThreadContext()),
-    mResolvingQueue(aThreadNetif.GetOpenThreadContext()),
-    mScheduleTransmissionTask(aThreadNetif.GetOpenThreadContext(), ScheduleTransmissionTask, this),
+    mDiscoverTimer(aThreadNetif.GetInstance(), &MeshForwarder::HandleDiscoverTimer, this),
+    mPollTimer(aThreadNetif.GetInstance(), &MeshForwarder::HandlePollTimer, this),
+    mReassemblyTimer(aThreadNetif.GetInstance(), &MeshForwarder::HandleReassemblyTimer, this),
+    mSendQueue(aThreadNetif.GetInstance()),
+    mReassemblyList(aThreadNetif.GetInstance()),
+    mResolvingQueue(aThreadNetif.GetInstance()),
+    mScheduleTransmissionTask(aThreadNetif.GetInstance(), ScheduleTransmissionTask, this),
     mNetif(aThreadNetif),
     mAddressResolver(aThreadNetif.GetAddressResolver()),
     mLowpan(aThreadNetif.GetLowpan()),
@@ -624,7 +624,7 @@ void MeshForwarder::HandlePollTimer()
 {
     Message *message;
 
-    if ((message = Message::New(mContext, Message::kTypeMacDataPoll, 0)) != NULL)
+    if ((message = Message::New(mInstance, Message::kTypeMacDataPoll, 0)) != NULL)
     {
         SendMessage(*message);
         otLogInfoMac("Sent poll\n");
@@ -1239,7 +1239,7 @@ void MeshForwarder::HandleMesh(uint8_t *aFrame, uint8_t aFrameLength, const Thre
 
         meshHeader->SetHopsLeft(meshHeader->GetHopsLeft() - 1);
 
-        VerifyOrExit((message = Message::New(mContext, Message::kType6lowpan, 0)) != NULL, error = kThreadError_Drop);
+        VerifyOrExit((message = Message::New(mInstance, Message::kType6lowpan, 0)) != NULL, error = kThreadError_Drop);
         SuccessOrExit(error = message->SetLength(aFrameLength));
         message->Write(0, aFrameLength, aFrame);
         message->SetLinkSecurityEnabled(aMessageInfo.mLinkSecurity);
@@ -1300,7 +1300,7 @@ void MeshForwarder::HandleFragment(uint8_t *aFrame, uint8_t aFrameLength,
         aFrame += fragmentHeader->GetHeaderLength();
         aFrameLength -= fragmentHeader->GetHeaderLength();
 
-        VerifyOrExit((message = Message::New(mContext, Message::kTypeIp6, 0)) != NULL, error = kThreadError_NoBufs);
+        VerifyOrExit((message = Message::New(mInstance, Message::kTypeIp6, 0)) != NULL, error = kThreadError_NoBufs);
         message->SetLinkSecurityEnabled(aMessageInfo.mLinkSecurity);
         message->SetPanId(aMessageInfo.mPanId);
         headerLength = mLowpan.Decompress(*message, aMacSource, aMacDest, aFrame, aFrameLength, datagramLength);
@@ -1409,7 +1409,7 @@ void MeshForwarder::HandleLowpanHC(uint8_t *aFrame, uint8_t aFrameLength,
     int headerLength;
     uint16_t ip6PayloadLength;
 
-    VerifyOrExit((message = Message::New(mContext, Message::kTypeIp6, 0)) != NULL, error = kThreadError_NoBufs);
+    VerifyOrExit((message = Message::New(mInstance, Message::kTypeIp6, 0)) != NULL, error = kThreadError_NoBufs);
     message->SetLinkSecurityEnabled(aMessageInfo.mLinkSecurity);
     message->SetPanId(aMessageInfo.mPanId);
 

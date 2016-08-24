@@ -196,10 +196,10 @@ public:
     /**
      * This constructor initializes the network interface.
      *
-     * @param[in]  aContext  The OpenThread context structure.
+     * @param[in]  aInstance  The OpenThread instance structure.
      *
      */
-    Netif(otContext *aContext);
+    Netif(otInstance *aInstance);
 
     /**
      * This method enables the network interface.
@@ -227,12 +227,12 @@ public:
     Netif *GetNext(void) const;
 
     /**
-     * This method returns a pointer to the OpenThread context.
+     * This method returns a pointer to the OpenThread instance.
      *
-     * @returns A pointer to the OpenThread context.
+     * @returns A pointer to the OpenThread instance.
      *
      */
-    otContext *GetOpenThreadContext(void) { return mContext; }
+    otInstance *GetInstance(void) { return mInstance; }
 
     /**
      * This method returns the network interface identifier.
@@ -382,74 +382,74 @@ public:
     /**
      * This static method returns the network interface list.
      *
-     * @param[in]  aContext  The OpenThread context structure.
+     * @param[in]  aInstance  The OpenThread instance structure.
      *
      * @returns A pointer to the network interface list.
      *
      */
-    static Netif *GetNetifList(otContext *aContext);
+    static Netif *GetNetifList(otInstance *aInstance);
 
     /**
      * This static method returns the network interface identified by @p aInterfaceId.
      *
-     * @param[in]  aContext      The OpenThread context structure.
+     * @param[in]  aInstance     The OpenThread instance structure.
      * @param[in]  aInterfaceId  The network interface ID.
      *
      * @returns A pointer to the network interface or NULL if none is found.
      *
      */
-    static Netif *GetNetifById(otContext *aContext, int8_t aInterfaceId);
+    static Netif *GetNetifById(otInstance *aInstance, int8_t aInterfaceId);
 
     /**
      * This static method returns the network interface identified by @p aName.
      *
-     * @param[in]  aContext  The OpenThread context structure.
-     * @param[in]  aName     A pointer to a NULL-terminated string.
+     * @param[in]  aInstance  The OpenThread instance structure.
+     * @param[in]  aName      A pointer to a NULL-terminated string.
      *
      * @returns A pointer to the network interface or NULL if none is found.
      *
      */
-    static Netif *GetNetifByName(otContext *aContext, char *aName);
+    static Netif *GetNetifByName(otInstance *aInstance, char *aName);
 
     /**
      * This static method indicates whether or not @p aAddress is assigned to a network interface.
      *
-     * @param[in]  aContext  The OpenThread context structure.
-     * @param[in]  aAddress  A reference to the IPv6 address.
+     * @param[in]  aInstance  The OpenThread instance structure.
+     * @param[in]  aAddress   A reference to the IPv6 address.
      *
      * @retval TRUE   If the IPv6 address is assigned to a network interface.
      * @retval FALSE  If the IPv6 address is not assigned to any network interface.
      *
      */
-    static bool IsUnicastAddress(otContext *aContext, const Address &aAddress);
+    static bool IsUnicastAddress(otInstance *aInstance, const Address &aAddress);
 
     /**
      * This static method perform default source address selection.
      *
-     * @param[in]  aContext      The OpenThread context structure.
+     * @param[in]  aInstance     The OpenThread instance structure.
      * @param[in]  aMessageInfo  A reference to the message information.
      *
      * @returns A pointer to the selected IPv6 source address or NULL if no source address was found.
      *
      */
-    static const NetifUnicastAddress *SelectSourceAddress(otContext *aContext, MessageInfo &aMessageInfo);
+    static const NetifUnicastAddress *SelectSourceAddress(otInstance *aInstance, MessageInfo &aMessageInfo);
 
     /**
      * This static method determines which network interface @p aAddress is on-link, if any.
      *
-     * @param[in]  aContext  The OpenThread context structure.
-     * @param[in]  aAddress  A reference to the IPv6 address.
+     * @param[in]  aInstance  The OpenThread instance structure.
+     * @param[in]  aAddress   A reference to the IPv6 address.
      *
      * @returns The network interface identifier for the on-link interface or -1 if none is found.
      *
      */
-    static int8_t GetOnLinkNetif(otContext *aContext, const Address &aAddress);
+    static int8_t GetOnLinkNetif(otInstance *aInstance, const Address &aAddress);
 
 private:
     static void HandleStateChangedTask(void *aContext);
     void HandleStateChangedTask(void);
 
-    otContext *mContext;
+    otInstance *mInstance;
     NetifCallback *mCallbacks;
     NetifUnicastAddress *mUnicastAddresses;
     NetifMulticastAddress *mMulticastAddresses;

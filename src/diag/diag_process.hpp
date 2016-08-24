@@ -63,13 +63,13 @@ struct DiagStats
 class Diag
 {
 public:
-    static void Init(otContext *aContext);
+    static void Init(otInstance *aInstance);
     static char *ProcessCmd(int argc, char *argv[]);
     static bool isEnabled();
 
-    static void DiagTransmitDone(otContext *aContext, bool aRxPending, ThreadError aError);
-    static void DiagReceiveDone(otContext *aContext, RadioPacket *aFrame, ThreadError aError);
-    static void AlarmFired(otContext *aContext);
+    static void DiagTransmitDone(otInstance *aInstance, bool aRxPending, ThreadError aError);
+    static void DiagReceiveDone(otInstance *aInstance, RadioPacket *aFrame, ThreadError aError);
+    static void AlarmFired(otInstance *aInstance);
 
 private:
     static void AppendErrorResult(ThreadError error, char *aOutput, size_t aOutputMaxLen);
@@ -92,7 +92,7 @@ private:
     static uint8_t sTxLen;
     static uint32_t sTxPeriod;
     static uint32_t sTxPackets;
-    static otContext *sContext;
+    static otInstance *sContext;
 };
 
 }  // namespace Diagnostics

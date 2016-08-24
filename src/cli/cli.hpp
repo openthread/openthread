@@ -75,7 +75,7 @@ public:
     /**
      * Constructor
      */
-    Interpreter(otContext *aContext);
+    Interpreter(otInstance *aInstance);
 
     /**
      * This method interprets a CLI command.
@@ -210,7 +210,7 @@ private:
     uint32_t sInterval;
     Timer sPingTimer;
 
-    otContext *mContext;
+    otInstance *mInstance;
 };
 
 }  // namespace Cli

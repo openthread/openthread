@@ -31,7 +31,7 @@
 #include <openthread.h>
 #include <common/code_utils.hpp>
 #include <ncp/ncp_buffer.hpp>
-#include <openthreadcontext.h>
+#include <openthreadinstance.h>
 
 namespace Thread {
 
@@ -54,7 +54,7 @@ struct CallbackContext
     uint16_t mNonEmptyCount;        // Number of times BufferNonEmptyCallback is invoked.
 };
 
-otContext sContext;
+otInstance sContext;
 
 void BufferDidGetEmptyCallback(void *aContext, NcpFrameBuffer *aNcpBuffer)
 {

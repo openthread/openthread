@@ -45,7 +45,7 @@ public:
      * Defines a function pointer callback which is invoked to inform state transition of buffer, going from empty
      * to non-empty or becoming empty.
      *
-     * @param[in]  aContext         A pointer to arbitrary context information.
+     * @param[in]  aInstance        A pointer to arbitrary context information.
      * @param[in]  aNcpFrameBuffer  A pointer to the NcpFrameBuffer.
      *
      */
@@ -55,12 +55,12 @@ public:
      * This constructor creates an NCP frame buffer.
      *
      *
-     * @param[in]  aContext       The OpenThread context structure.
+     * @param[in]  aInstance      The OpenThread instance structure.
      * @param[in]  aBuffer        A pointer to a buffer which will be used by NCP frame buffer.
      * @param[in]  aBufferLength  The buffer size (in bytes).
      *
      */
-    NcpFrameBuffer(otContext *aContext, uint8_t *aBuffer, uint16_t aBufferLength);
+    NcpFrameBuffer(otInstance *aInstance, uint8_t *aBuffer, uint16_t aBufferLength);
 
     /**
      * This destructor clears the NCP frame buffer and clears all frames..

@@ -42,10 +42,10 @@ extern "C" {
 /**
  * Initialize the CLI UART module.
  *
- * @param[in]  aContext  The OpenThread context structure.
+ * @param[in]  aInstance  The OpenThread instance structure.
  *
  */
-void otCliUartInit(otContext *aContext);
+void otCliUartInit(otInstance *aInstance);
 
 #ifdef __cplusplus
 }  // extern "C"

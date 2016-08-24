@@ -37,18 +37,18 @@
 #include <common/encoding.hpp>
 #include <net/ip6.hpp>
 #include <net/udp6.hpp>
-#include <openthreadcontext.h>
+#include <openthreadinstance.h>
 
 using Thread::Encoding::BigEndian::HostSwap16;
 
 namespace Thread {
 namespace Ip6 {
 
-ThreadError UdpSocket::Open(otContext *aContext, otUdpReceive aHandler, void *aCallbackContext)
+ThreadError UdpSocket::Open(otInstance *aInstance, otUdpReceive aHandler, void *aCallbackContext)
 {
     ThreadError error = kThreadError_None;
 
-    for (UdpSocket *cur = aContext->mUdpSockets; cur; cur = cur->GetNext())
+    for (UdpSocket *cur = aInstance->mUdpSockets; cur; cur = cur->GetNext())
     {
         if (cur == this)
         {
@@ -61,8 +61,8 @@ ThreadError UdpSocket::Open(otContext *aContext, otUdpReceive aHandler, void *aC
     mHandler = aHandler;
     mContext = aCallbackContext;
 
-    SetNext(aContext->mUdpSockets);
-    aContext->mUdpSockets = this;
+    SetNext(aInstance->mUdpSockets);
+    aInstance->mUdpSockets = this;
 
 exit:
     return error;
@@ -74,15 +74,15 @@ ThreadError UdpSocket::Bind(const SockAddr &aSockAddr)
     return kThreadError_None;
 }
 
-ThreadError UdpSocket::Close(otContext *aContext)
+ThreadError UdpSocket::Close(otInstance *aInstance)
 {
-    if (aContext->mUdpSockets == this)
+    if (aInstance->mUdpSockets == this)
     {
-        aContext->mUdpSockets = aContext->mUdpSockets->GetNext();
+        aInstance->mUdpSockets = aInstance->mUdpSockets->GetNext();
     }
     else
     {
-        for (UdpSocket *socket = aContext->mUdpSockets; socket; socket = socket->GetNext())
+        for (UdpSocket *socket = aInstance->mUdpSockets; socket; socket = socket->GetNext())
         {
             if (socket->GetNext() == this)
             {
@@ -114,15 +114,15 @@ ThreadError UdpSocket::SendTo(Message &aMessage, const MessageInfo &aMessageInfo
 
     if (GetSockName().mPort == 0)
     {
-        GetSockName().mPort = aMessage.GetOpenThreadContext()->mEphemeralPort;
+        GetSockName().mPort = aMessage.GetInstance()->mEphemeralPort;
 
-        if (aMessage.GetOpenThreadContext()->mEphemeralPort < Udp::kDynamicPortMax)
+        if (aMessage.GetInstance()->mEphemeralPort < Udp::kDynamicPortMax)
         {
-            aMessage.GetOpenThreadContext()->mEphemeralPort++;
+            aMessage.GetInstance()->mEphemeralPort++;
         }
         else
         {
-            aMessage.GetOpenThreadContext()->mEphemeralPort = Udp::kDynamicPortMin;
+            aMessage.GetInstance()->mEphemeralPort = Udp::kDynamicPortMin;
         }
     }
 
@@ -139,9 +139,9 @@ exit:
     return error;
 }
 
-Message *Udp::NewMessage(otContext *aContext, uint16_t aReserved)
+Message *Udp::NewMessage(otInstance *aInstance, uint16_t aReserved)
 {
-    return Ip6::NewMessage(aContext, sizeof(UdpHeader) + aReserved);
+    return Ip6::NewMessage(aInstance, sizeof(UdpHeader) + aReserved);
 }
 
 ThreadError Udp::HandleMessage(Message &aMessage, MessageInfo &aMessageInfo)
@@ -168,7 +168,7 @@ ThreadError Udp::HandleMessage(Message &aMessage, MessageInfo &aMessageInfo)
     aMessageInfo.mSockPort = udpHeader.GetDestinationPort();
 
     // find socket
-    for (UdpSocket *socket = aMessage.GetOpenThreadContext()->mUdpSockets; socket; socket = socket->GetNext())
+    for (UdpSocket *socket = aMessage.GetInstance()->mUdpSockets; socket; socket = socket->GetNext())
     {
         if (socket->GetSockName().mPort != udpHeader.GetDestinationPort())
         {

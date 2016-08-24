@@ -44,10 +44,10 @@ extern "C" {
 /**
  * Initialize the NCP.
  *
- * @param[in]  aContext  The OpenThread context structure.
+ * @param[in]  aInstance  The OpenThread instance structure.
  *
  */
-void otNcpInit(otContext *aContext);
+void otNcpInit(otInstance *aInstance);
 
 /**
  * @brief Send data to the host via a specific stream.

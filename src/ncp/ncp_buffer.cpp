@@ -35,12 +35,12 @@
 
 namespace Thread {
 
-NcpFrameBuffer::NcpFrameBuffer(otContext *aContext, uint8_t *aBuffer, uint16_t aBufferLen) :
+NcpFrameBuffer::NcpFrameBuffer(otInstance *aInstance, uint8_t *aBuffer, uint16_t aBufferLen) :
     mBuffer(aBuffer),
     mBufferEnd(aBuffer + aBufferLen),
     mBufferLength(aBufferLen),
-    mMessageQueue(aContext),
-    mWriteFrameMessageQueue(aContext)
+    mMessageQueue(aInstance),
+    mWriteFrameMessageQueue(aInstance)
 {
     SetCallbacks(NULL, NULL, NULL);
     Clear();

@@ -59,7 +59,7 @@ bool sDiagMode = false;
 
 extern "C" {
 
-    void otSignalTaskletPending(otContext *)
+    void otSignalTaskletPending(otInstance *)
     {
     }
 
@@ -67,13 +67,13 @@ extern "C" {
     // Alarm
     //
 
-    void otPlatAlarmStop(otContext *)
+    void otPlatAlarmStop(otInstance *)
     {
         sTimerOn = false;
         sCallCount[kCallCountIndexAlarmStop]++;
     }
 
-    void otPlatAlarmStartAt(otContext *, uint32_t aT0, uint32_t aDt)
+    void otPlatAlarmStartAt(otInstance *, uint32_t aT0, uint32_t aDt)
     {
         sTimerOn = true;
         sCallCount[kCallCountIndexAlarmStart]++;
@@ -90,66 +90,66 @@ extern "C" {
     // Radio
     //
 
-    ThreadError otPlatRadioSetPanId(otContext *, uint16_t)
+    ThreadError otPlatRadioSetPanId(otInstance *, uint16_t)
     {
         return kThreadError_None;
     }
 
-    ThreadError otPlatRadioSetExtendedAddress(otContext *, uint8_t *)
+    ThreadError otPlatRadioSetExtendedAddress(otInstance *, uint8_t *)
     {
         return kThreadError_None;
     }
 
-    ThreadError otPlatRadioSetShortAddress(otContext *, uint16_t)
+    ThreadError otPlatRadioSetShortAddress(otInstance *, uint16_t)
     {
         return kThreadError_None;
     }
 
-    void otPlatRadioSetPromiscuous(otContext *, bool)
+    void otPlatRadioSetPromiscuous(otInstance *, bool)
     {
     }
 
-    ThreadError otPlatRadioEnable(otContext *)
-    {
-        return kThreadError_None;
-    }
-
-    ThreadError otPlatRadioDisable(otContext *)
+    ThreadError otPlatRadioEnable(otInstance *)
     {
         return kThreadError_None;
     }
 
-    ThreadError otPlatRadioSleep(otContext *)
+    ThreadError otPlatRadioDisable(otInstance *)
     {
         return kThreadError_None;
     }
 
-    ThreadError otPlatRadioReceive(otContext *, uint8_t)
+    ThreadError otPlatRadioSleep(otInstance *)
     {
         return kThreadError_None;
     }
 
-    ThreadError otPlatRadioTransmit(otContext *)
+    ThreadError otPlatRadioReceive(otInstance *, uint8_t)
     {
         return kThreadError_None;
     }
 
-    RadioPacket *otPlatRadioGetTransmitBuffer(otContext *)
+    ThreadError otPlatRadioTransmit(otInstance *)
+    {
+        return kThreadError_None;
+    }
+
+    RadioPacket *otPlatRadioGetTransmitBuffer(otInstance *)
     {
         return (RadioPacket *)0;
     }
 
-    int8_t otPlatRadioGetNoiseFloor(otContext *)
+    int8_t otPlatRadioGetNoiseFloor(otInstance *)
     {
         return 0;
     }
 
-    otRadioCaps otPlatRadioGetCaps(otContext *)
+    otRadioCaps otPlatRadioGetCaps(otInstance *)
     {
         return kRadioCapsNone;
     }
 
-    bool otPlatRadioGetPromiscuous(otContext *)
+    bool otPlatRadioGetPromiscuous(otInstance *)
     {
         return false;
     }
@@ -192,14 +192,14 @@ extern "C" {
     // Misc
     //
 
-    void otPlatReset(otContext *aContext)
+    void otPlatReset(otInstance *aInstance)
     {
-        (void)aContext;
+        (void)aInstance;
     }
 
-    otPlatResetReason otPlatGetResetReason(otContext *aContext)
+    otPlatResetReason otPlatGetResetReason(otInstance *aInstance)
     {
-        (void)aContext;
+        (void)aInstance;
         return kPlatResetReason_PowerOn;
     }
 

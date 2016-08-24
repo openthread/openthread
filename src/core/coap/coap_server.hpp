@@ -105,7 +105,7 @@ public:
      * This constructor initializes the object.
      *
      */
-    explicit Server(otContext *aContext, uint16_t aPort);
+    explicit Server(otInstance *aInstance, uint16_t aPort);
 
     /**
      * This method starts the CoAP server.
@@ -155,7 +155,7 @@ private:
     static void HandleUdpReceive(void *aContext, otMessage aMessage, const otMessageInfo *aMessageInfo);
     void HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
-    otContext *mContext;
+    otInstance *mInstance;
     Ip6::UdpSocket mSocket;
     uint16_t mPort;
     Resource *mResources;

@@ -46,10 +46,10 @@ public:
     /**
      * Constructor
      *
-     * @param[in]  aContext  The OpenThread context structure.
+     * @param[in]  aInstance  The OpenThread instance structure.
      *
      */
-    NcpSpi(otContext *aContext);
+    NcpSpi(otInstance *aInstance);
 
     virtual ThreadError OutboundFrameBegin(void);
     virtual ThreadError OutboundFrameFeedData(const uint8_t *frame, uint16_t frameLength);

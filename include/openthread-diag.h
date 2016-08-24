@@ -41,7 +41,7 @@
 extern "C" {
 #endif
 
-void diagInit(otContext *aContext);
+void diagInit(otInstance *aInstance);
 
 char *diagProcessCmd(int argc, char *argv[]);
 

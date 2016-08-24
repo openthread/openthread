@@ -45,12 +45,12 @@ extern "C" {
 #endif
 
 /**
- * This type represents the OpenThread Context structure.
+ * This type represents the OpenThread instance structure.
  */
-typedef struct otContext otContext;
+typedef struct otInstance otInstance;
 
-// Size of the OpenThread context structure (bytes)
-#define OT_CONTEXT_SIZE   (9500 + OPENTHREAD_CONFIG_NUM_MESSAGE_BUFFERS * OPENTHREAD_CONFIG_MESSAGE_BUFFER_SIZE)
+// Size of the OpenThread instance structure (bytes)
+#define OT_INSTANCE_SIZE   (9500 + OPENTHREAD_CONFIG_NUM_MESSAGE_BUFFERS * OPENTHREAD_CONFIG_MESSAGE_BUFFER_SIZE)
 
 /**
  * This enumeration represents error codes used throughout OpenThread.

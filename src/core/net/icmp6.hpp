@@ -218,7 +218,7 @@ public:
     /**
      * This function pointer is called when receiving an ICMPv6 Echo Reply in response to an Echo Request.
      *
-     * @param[in]  aContext      A pointer to arbitrary context information.
+     * @param[in]  aInstance     A pointer to arbitrary context information.
      * @param[in]  aMessage      A reference to the received message.
      * @param[in]  aMessageInfo  A reference to message information associated with @p aMessage.
      *
@@ -228,17 +228,17 @@ public:
     /**
      * This constructor creates an ICMPv6 echo client.
      *
-     * @param[in]  aContext          The OpenThread context structure.
+     * @param[in]  aInstance         The OpenThread instance structure.
      * @param[in]  aHandler          A pointer to a function that is called when receiving an ICMPv6 Echo Reply.
      * @param[in]  aCallbackContext  A pointer to arbitrary context information.
      *
      */
-    IcmpEcho(otContext *aContext, EchoReplyHandler aHandler, void *aCallbackContext);
+    IcmpEcho(otInstance *aInstance, EchoReplyHandler aHandler, void *aCallbackContext);
 
     /**
      * This method sends an ICMPv6 Echo Request message.
      *
-     * @param[in]  aContext        The OpenThread context structure.
+     * @param[in]  aInstance       The OpenThread instance structure.
      * @param[in]  aDestination    The socket address of the destination.
      * @param[in]  aPayload        A pointer to the data payload to send.
      * @param[in]  aPayloadLength  The number of data payload bytes.
@@ -247,7 +247,7 @@ public:
      * @retval kThreadError_NoBufs  Insufficient buffers available to generate an ICMPv6 Echo Request message.
      *
      */
-    ThreadError SendEchoRequest(otContext *aContext, const SockAddr &aDestination, const void *aPayload,
+    ThreadError SendEchoRequest(otInstance *aInstance, const SockAddr &aDestination, const void *aPayload,
                                 uint16_t aPayloadLength);
 
 private:
@@ -317,19 +317,19 @@ public:
     /**
      * This static method registers ICMPv6 handlers.
      *
-     * @param[in]  aContext  The OpenThread context structure.
+     * @param[in]  aInstance The OpenThread instance structure.
      * @param[in]  aHandler  A reference to the ICMPv6 handler.
      *
      * @retval kThreadError_None  Successfully registered the ICMPv6 handler.
      * @retval kThreadError_Busy  The ICMPv6 handler is already registered.
      *
      */
-    static ThreadError RegisterCallbacks(otContext *aContext, IcmpHandler &aHandler);
+    static ThreadError RegisterCallbacks(otInstance *aInstance, IcmpHandler &aHandler);
 
     /**
      * This static method sends an ICMPv6 error message.
      *
-     * @param[in]  aContext      The OpenThread context structure.
+     * @param[in]  aInstance     The OpenThread instance structure.
      * @param[in]  aDestination  The IPv6 destination address.
      * @param[in]  aType         The ICMPv6 message type.
      * @param[in]  aCode         The ICMPv6 message code.
@@ -339,7 +339,7 @@ public:
      * @retval kThreadError_NoBufs  Insufficient buffers available.
      *
      */
-    static ThreadError SendError(otContext *aContext, const Address &aDestination, IcmpHeader::Type aType,
+    static ThreadError SendError(otInstance *aInstance, const Address &aDestination, IcmpHeader::Type aType,
                                  IcmpHeader::Code aCode, const Header &aHeader);
 
     /**
@@ -370,22 +370,22 @@ public:
     /**
      * This static method indicates whether or not ICMPv6 Echo processing is enabled.
      *
-     * @param[in]  aContext  The OpenThread context structure.
+     * @param[in]  aInstance  The OpenThread instance structure.
      *
      * @retval TRUE   ICMPv6 Echo processing is enabled.
      * @retval FALSE  ICMPv6 Echo processing is disabled.
      *
      */
-    static bool IsEchoEnabled(otContext *aContext);
+    static bool IsEchoEnabled(otInstance *aInstance);
 
     /**
      * This static method sets whether or not ICMPv6 Echo processing is enabled.
      *
-     * @param[in]  aContext  The OpenThread context structure.
+     * @param[in]  aInstance The OpenThread instance structure.
      * @param[in]  aEnabled  TRUE to enable ICMPv6 Echo processing, FALSE otherwise.
      *
      */
-    static void SetEchoEnabled(otContext *aContext, bool aEnabled);
+    static void SetEchoEnabled(otInstance *aInstance, bool aEnabled);
 
 private:
     static ThreadError HandleDstUnreach(Message &aMessage, const MessageInfo &aMessageInfo,

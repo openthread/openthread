@@ -32,7 +32,7 @@
 #include <common/timer.hpp>
 #include <platform/alarm.h>
 #include <string.h>
-#include <openthreadcontext.h>
+#include <openthreadinstance.h>
 
 enum
 {
@@ -71,7 +71,7 @@ int TestOneTimer(void)
 {
     const uint32_t kTimeT0 = 1000;
     const uint32_t kTimerInterval = 10;
-    otContext sContext;
+    otInstance sContext;
     Thread::Timer timer(&sContext, TestTimerHandler, NULL);
 
     // Test one Timer basic operation.
@@ -303,7 +303,7 @@ int TestTenTimers(void)
         11
     };
 
-    otContext sContext;
+    otInstance sContext;
 
     uint32_t timerContextHandleCounter[kNumTimers] = {0};
     Thread::Timer timer0(&sContext, TestTimerHandler, &timerContextHandleCounter[0]);

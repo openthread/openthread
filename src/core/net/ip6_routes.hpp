@@ -70,38 +70,38 @@ public:
     /**
      * This static method adds an IPv6 route.
      *
-     * @param[in]  aContext  The OpenThread context structure.
-     * @param[in]  aRoute    A reference to the IPv6 route.
+     * @param[in]  aInstance  The OpenThread instance structure.
+     * @param[in]  aRoute     A reference to the IPv6 route.
      *
      * @retval kThreadError_None  Successfully added the route.
      * @retval kThreadError_Busy  The route was already added.
      *
      */
-    static ThreadError Add(otContext *aContext, Route &aRoute);
+    static ThreadError Add(otInstance *aInstance, Route &aRoute);
 
     /**
      * This static method removes an IPv6 route.
      *
-     * @param[in]  aContext  The OpenThread context structure.
-     * @param[in]  aRoute    A reference to the IPv6 route.
+     * @param[in]  aInstance  The OpenThread instance structure.
+     * @param[in]  aRoute     A reference to the IPv6 route.
      *
      * @retval kThreadError_None         Successfully removed the route.
      * @retval kThreadError_InvalidArgs  The route was not added.
      *
      */
-    static ThreadError Remove(otContext *aContext, Route &aRoute);
+    static ThreadError Remove(otInstance *aInstance, Route &aRoute);
 
     /**
      * This static method performs source-destination route lookup.
      *
-     * @param[in]  aContext      The OpenThread context structure.
+     * @param[in]  aInstance     The OpenThread instance structure.
      * @param[in]  aSource       The IPv6 source address.
      * @param[in]  aDestination  The IPv6 destination address.
      *
      * @returns The interface identifier for the best route or -1 if no route is available.
      *
      */
-    static int8_t Lookup(otContext *aContext, const Address &aSource, const Address &aDestination);
+    static int8_t Lookup(otInstance *aInstance, const Address &aSource, const Address &aDestination);
 };
 
 /**
