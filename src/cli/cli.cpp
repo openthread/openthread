@@ -393,7 +393,7 @@ void Interpreter::ProcessChildMax(int argc, char *argv[])
     else
     {
         SuccessOrExit(error = ParseLong(argv[0], value));
-        otSetMaxAllowedChildren(static_cast<uint8_t>(value));
+        SuccessOrExit(error = otSetMaxAllowedChildren(static_cast<uint8_t>(value)));
     }
 
 exit:
