@@ -84,6 +84,7 @@ const struct Command Interpreter::sCommands[] =
     { "parent", &Interpreter::ProcessParent },
     { "ping", &Interpreter::ProcessPing },
     { "pollperiod", &Interpreter::ProcessPollPeriod },
+    { "promiscuous", &Interpreter::ProcessPromiscuous },
     { "prefix", &Interpreter::ProcessPrefix },
     { "releaserouterid", &Interpreter::ProcessReleaseRouterId },
     { "reset", &Interpreter::ProcessReset },
@@ -1056,6 +1057,110 @@ void Interpreter::ProcessPollPeriod(int argc, char *argv[])
 
 exit:
     AppendResult(error);
+}
+
+void Interpreter::ProcessPromiscuous(int argc, char *argv[])
+{
+    ThreadError error = kThreadError_None;
+
+    if (argc == 0)
+    {
+        if (otIsLinkPromiscuous(mContext) && otPlatRadioGetPromiscuous(mContext))
+        {
+            sServer->OutputFormat("Enabled\r\n");
+        }
+        else
+        {
+            sServer->OutputFormat("Disabled\r\n");
+        }
+    }
+    else
+    {
+        if (strcmp(argv[0], "enable") == 0)
+        {
+            otSetLinkPcapCallback(mContext, &s_HandleLinkPcapReceive, this);
+            SuccessOrExit(error = otSetLinkPromiscuous(mContext, true));
+        }
+        else if (strcmp(argv[0], "disable") == 0)
+        {
+            otSetLinkPcapCallback(mContext, NULL, NULL);
+            SuccessOrExit(error = otSetLinkPromiscuous(mContext, false));
+        }
+    }
+
+exit:
+    AppendResult(error);
+}
+
+void Interpreter::s_HandleLinkPcapReceive(const RadioPacket *aFrame, void *aContext)
+{
+    reinterpret_cast<Interpreter *>(aContext)->HandleLinkPcapReceive(aFrame);
+}
+
+void Interpreter::HandleLinkPcapReceive(const RadioPacket *aFrame)
+{
+    sServer->OutputFormat("\r\n");
+
+    for (size_t i = 0; i < 44; i++)
+    {
+        sServer->OutputFormat("=");
+    }
+
+    sServer->OutputFormat("[len = %3u]", aFrame->mLength);
+
+    for (size_t i = 0; i < 28; i++)
+    {
+        sServer->OutputFormat("=");
+    }
+
+    sServer->OutputFormat("\r\n");
+
+    for (size_t i = 0; i < aFrame->mLength; i += 16)
+    {
+        sServer->OutputFormat("|");
+
+        for (size_t j = 0; j < 16; j++)
+        {
+            if (i + j < aFrame->mLength)
+            {
+                sServer->OutputFormat(" %02X", aFrame->mPsdu[i + j]);
+            }
+            else
+            {
+                sServer->OutputFormat(" ..");
+            }
+        }
+
+        sServer->OutputFormat("|");
+
+        for (size_t j = 0; j < 16; j++)
+        {
+            if (i + j < aFrame->mLength)
+            {
+                if (31 < aFrame->mPsdu[i + j] && aFrame->mPsdu[i + j] < 127)
+                {
+                    sServer->OutputFormat(" %c", aFrame->mPsdu[i + j]);
+                }
+                else
+                {
+                    sServer->OutputFormat(" ?");
+                }
+            }
+            else
+            {
+                sServer->OutputFormat(" .");
+            }
+        }
+
+        sServer->OutputFormat("|\r\n");
+    }
+
+    for (size_t i = 0; i < 83; i++)
+    {
+        sServer->OutputFormat("-");
+    }
+
+    sServer->OutputFormat("\r\n");
 }
 
 ThreadError Interpreter::ProcessPrefixAdd(int argc, char *argv[])

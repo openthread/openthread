@@ -49,7 +49,7 @@ namespace Diagnostics {
 struct Command
 {
     const char *mName;                         ///< A pointer to the command string.
-    void (*mCommand)(int argc, char *argv[], char *aOutput);  ///< A function pointer to process the command.
+    void (*mCommand)(int argc, char *argv[], char *aOutput, size_t aOutputMaxLen);  ///< A function pointer to process the command.
 };
 
 struct DiagStats
@@ -72,15 +72,15 @@ public:
     static void AlarmFired(otContext *aContext);
 
 private:
-    static void AppendErrorResult(ThreadError error, char *aOutput);
-    static void ProcessSleep(int argc, char *argv[], char *aOutput);
-    static void ProcessStart(int argc, char *argv[], char *aOutput);
-    static void ProcessStop(int argc, char *argv[], char *aOutput);
-    static void ProcessSend(int argc, char *argv[], char *aOutput);
-    static void ProcessRepeat(int argc, char *argv[], char *aOutput);
-    static void ProcessStats(int argc, char *argv[], char *aOutput);
-    static void ProcessChannel(int argc, char *argv[], char *aOutput);
-    static void ProcessPower(int argc, char *argv[], char *aOutput);
+    static void AppendErrorResult(ThreadError error, char *aOutput, size_t aOutputMaxLen);
+    static void ProcessSleep(int argc, char *argv[], char *aOutput, size_t aOutputMaxLen);
+    static void ProcessStart(int argc, char *argv[], char *aOutput, size_t aOutputMaxLen);
+    static void ProcessStop(int argc, char *argv[], char *aOutput, size_t aOutputMaxLen);
+    static void ProcessSend(int argc, char *argv[], char *aOutput, size_t aOutputMaxLen);
+    static void ProcessRepeat(int argc, char *argv[], char *aOutput, size_t aOutputMaxLen);
+    static void ProcessStats(int argc, char *argv[], char *aOutput, size_t aOutputMaxLen);
+    static void ProcessChannel(int argc, char *argv[], char *aOutput, size_t aOutputMaxLen);
+    static void ProcessPower(int argc, char *argv[], char *aOutput, size_t aOutputMaxLen);
     static void TxPacket();
     static ThreadError ParseLong(char *aString, long &aLong);
 

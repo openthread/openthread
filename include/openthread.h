@@ -317,6 +317,42 @@ ThreadError otActiveScan(otContext *aContext, uint32_t aScanChannels, uint16_t a
 bool otIsActiveScanInProgress(otContext *aContext);
 
 /**
+ * This function pointer is called during an IEEE 802.15.4 Energy Scan when the result for a channel is ready or the
+ * scan completes.
+ *
+ * @param[in]  aResult   A valid pointer to the energy scan result information or NULL when the energy scan completes.
+ * @param[in]  aContext  A pointer to application-specific context.
+ *
+ */
+typedef void (*otHandleEnergyScanResult)(otEnergyScanResult *aResult, void *aContext);
+
+/**
+ * This function starts an IEEE 802.15.4 Energy Scan
+ *
+ * @param[in]  aContext          The OpenThread context structure.
+ * @param[in]  aScanChannels     A bit vector indicating on which channels to perform energy scan.
+ * @param[in]  aScanDuration     The time in milliseconds to spend scanning each channel.
+ * @param[in]  aCallback         A pointer to a function called to pass on scan result on indicate scan completion.
+ * @param[in]  aCallbackContext  A pointer to application-specific context.
+ *
+ * @retval kThreadError_None  Accepted the Energy Scan request.
+ * @retval kThreadError_Busy  Already performing an Active Scan.
+ *
+ */
+ThreadError otEnergyScan(otContext *aContext, uint32_t aScanChannels, uint16_t aScanDuration,
+                         otHandleEnergyScanResult aCallback, void *aCallbackContext);
+
+/**
+ * This function indicates whether or not an IEEE 802.15.4 Energy Scan is currently in progress.
+ *
+ * @param[in] aContext  The OpenThread context structure.
+ *
+ * @returns true if an IEEE 802.15.4 Energy Scan is in progress, false otherwise.
+ *
+ */
+bool otIsEnergyScanInProgress(otContext *aContext);
+
+/**
  * This function starts a Thread Discovery scan.
  *
  * @param[in]  aContext          The OpenThread context structure.
@@ -1826,14 +1862,48 @@ typedef void (*otReceiveIp6DatagramCallback)(otMessage aMessage, void *aContext)
 /**
  * This function registers a callback to provide received IPv6 datagrams.
  *
+ * By default, this callback does not pass Thread control traffic.  See otSetReceiveIp6FilterEnabled() to change
+ * the Thread control traffic filter setting.
+ *
  * @param[in]  aContext          The OpenThread context structure.
  * @param[in]  aCallback         A pointer to a function that is called when an IPv6 datagram is received or
  *                               NULL to disable the callback.
  * @param[in]  aCallbackContext  A pointer to application-specific context.
  *
+ * @sa otIsReceiveIp6FilterEnabled
+ * @sa otSetReceiveIp6FilterEnabled
+ *
  */
 void otSetReceiveIp6DatagramCallback(otContext *aContext, otReceiveIp6DatagramCallback aCallback,
                                      void *aCallbackContext);
+
+
+/**
+ * This function indicates whether or not Thread control traffic is filtered out when delivering IPv6 datagrams
+ * via the callback specified in otSetReceiveIp6DatagramCallback().
+ *
+ * @param[in]  aContext  The OpenThread context structure.
+ *
+ * @returns  TRUE if Thread control traffic is filtered out, FALSE otherwise.
+ *
+ * @sa otSetReceiveDatagramCallback
+ * @sa otSetReceiveIp6FilterEnabled
+ *
+ */
+bool otIsReceiveIp6DatagramFilterEnabled(otContext *aContext);
+
+/**
+ * This function sets whether or not Thread control traffic is filtered out when delivering IPv6 datagrams
+ * via the callback specified in otSetReceiveIp6DatagramCallback().
+ *
+ * @param[in]  aContext  The OpenThread context structure.
+ * @param[in]  aEnabled  TRUE if Thread control traffic is filtered out, FALSE otherwise.
+ *
+ * @sa otSetReceiveDatagramCallback
+ * @sa otIsReceiveIp6FilterEnabled
+ *
+ */
+void otSetReceiveIp6DatagramFilterEnabled(otContext *aContext, bool aEnabled);
 
 /**
  * This function sends an IPv6 datagram via the Thread interface.

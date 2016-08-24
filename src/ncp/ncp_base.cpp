@@ -136,6 +136,7 @@ const NcpBase::GetPropertyHandlerEntry NcpBase::mGetPropertyHandlerTable[] =
     { SPINEL_PROP_IPV6_LL_ADDR, &NcpBase::GetPropertyHandler_IPV6_LL_ADDR },
     { SPINEL_PROP_IPV6_ADDRESS_TABLE, &NcpBase::GetPropertyHandler_IPV6_ADDRESS_TABLE },
     { SPINEL_PROP_IPV6_ROUTE_TABLE, &NcpBase::GetPropertyHandler_IPV6_ROUTE_TABLE },
+    { SPINEL_PROP_IPV6_ICMP_PING_OFFLOAD, &NcpBase::GetPropertyHandler_IPV6_ICMP_PING_OFFLOAD },
 
     { SPINEL_PROP_STREAM_NET, &NcpBase::GetPropertyHandler_STREAM_NET },
 
@@ -207,6 +208,7 @@ const NcpBase::SetPropertyHandlerEntry NcpBase::mSetPropertyHandlerTable[] =
     { SPINEL_PROP_STREAM_NET, &NcpBase::SetPropertyHandler_STREAM_NET },
 
     { SPINEL_PROP_IPV6_ML_PREFIX, &NcpBase::SetPropertyHandler_IPV6_ML_PREFIX },
+    { SPINEL_PROP_IPV6_ICMP_PING_OFFLOAD, &NcpBase::SetPropertyHandler_IPV6_ICMP_PING_OFFLOAD },
 
     { SPINEL_PROP_MAC_WHITELIST, &NcpBase::SetPropertyHandler_MAC_WHITELIST },
     { SPINEL_PROP_MAC_WHITELIST_ENABLED, &NcpBase::SetPropertyHandler_MAC_WHITELIST_ENABLED },
@@ -385,6 +387,8 @@ NcpBase::NcpBase(otContext *aContext):
     otSetStateChangedCallback(mContext, &NcpBase::HandleNetifStateChanged, this);
     otSetReceiveIp6DatagramCallback(mContext, &NcpBase::HandleDatagramFromStack, this);
     otSetIcmpEchoEnabled(mContext, false);
+
+    mUpdateChangedPropsTask.Post();
 }
 
 // ----------------------------------------------------------------------------
@@ -1812,6 +1816,17 @@ ThreadError NcpBase::GetPropertyHandler_IPV6_ROUTE_TABLE(uint8_t header, spinel_
     return SendLastStatus(header, SPINEL_STATUS_UNIMPLEMENTED);
 }
 
+ThreadError NcpBase::GetPropertyHandler_IPV6_ICMP_PING_OFFLOAD(uint8_t header, spinel_prop_key_t key)
+{
+    return SendPropertyUpdate(
+               header,
+               SPINEL_CMD_PROP_VALUE_IS,
+               key,
+               SPINEL_DATATYPE_BOOL_S,
+               otIsIcmpEchoEnabled(mContext)
+           );
+}
+
 ThreadError NcpBase::GetPropertyHandler_THREAD_LOCAL_ROUTES(uint8_t header, spinel_prop_key_t key)
 {
     // TODO: Implement get external route table
@@ -2930,6 +2945,33 @@ ThreadError NcpBase::SetPropertyHandler_IPV6_ML_PREFIX(uint8_t header, spinel_pr
     else
     {
         errorCode = SendLastStatus(header, ThreadErrorToSpinelStatus(errorCode));
+    }
+
+    return errorCode;
+}
+
+ThreadError NcpBase::SetPropertyHandler_IPV6_ICMP_PING_OFFLOAD(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr, uint16_t value_len)
+{
+    bool isEnabled(false);
+    spinel_ssize_t parsedLength;
+    ThreadError errorCode = kThreadError_None;
+
+    parsedLength = spinel_datatype_unpack(
+                       value_ptr,
+                       value_len,
+                       SPINEL_DATATYPE_BOOL_S,
+                       &isEnabled
+                   );
+
+    if (parsedLength > 0)
+    {
+        otSetIcmpEchoEnabled(mContext, isEnabled);
+
+        errorCode = HandleCommandPropertyGet(header, key);
+    }
+    else
+    {
+        errorCode = SendLastStatus(header, SPINEL_STATUS_PARSE_ERROR);
     }
 
     return errorCode;

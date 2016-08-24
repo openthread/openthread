@@ -435,7 +435,6 @@ void Leader::SetNetworkData(uint8_t aVersion, uint8_t aStableVersion, bool aStab
 
     otDumpDebgNetData("set network data", mTlvs, mLength);
 
-    mMle.HandleNetworkDataUpdate();
     mNetif.SetStateChangedFlags(OT_THREAD_NETDATA_UPDATED);
 }
 
@@ -455,7 +454,6 @@ void Leader::RemoveBorderRouter(uint16_t aRloc16)
         mStableVersion++;
     }
 
-    mMle.HandleNetworkDataUpdate();
     mNetif.SetStateChangedFlags(OT_THREAD_NETDATA_UPDATED);
 
 exit:
@@ -694,7 +692,6 @@ ThreadError Leader::RegisterNetworkData(uint16_t aRloc16, uint8_t *aTlvs, uint8_
         }
     }
 
-    mMle.HandleNetworkDataUpdate();
     mNetif.SetStateChangedFlags(OT_THREAD_NETDATA_UPDATED);
 
 exit:
@@ -881,7 +878,7 @@ ThreadError Leader::FreeContext(uint8_t aContextId)
     mContextUsed &= ~(1 << aContextId);
     mVersion++;
     mStableVersion++;
-    mMle.HandleNetworkDataUpdate();
+    mNetif.SetStateChangedFlags(OT_THREAD_NETDATA_UPDATED);
     return kThreadError_None;
 }
 

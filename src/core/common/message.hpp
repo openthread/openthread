@@ -148,7 +148,7 @@ public:
      * This method returns the OpenThread Context pointer.
      *
      */
-    otContext *GetOpenThreadContext() { return mHeader.mContext; }
+    otContext *GetOpenThreadContext() const { return mHeader.mContext; }
 
 private:
     /**
@@ -221,7 +221,7 @@ public:
      * This method returns the OpenThread Context pointer.
      *
      */
-    otContext *GetOpenThreadContext() { return Buffer::GetOpenThreadContext(); }
+    otContext *GetOpenThreadContext() const { return Buffer::GetOpenThreadContext(); }
 
     /**
      * This method returns a pointer to the next message in the same interface list.
@@ -351,7 +351,7 @@ public:
      * @returns The number of bytes copied.
      *
      */
-    int CopyTo(uint16_t aSourceOffset, uint16_t aDestinationOffset, uint16_t aLength, Message &aMessage);
+    int CopyTo(uint16_t aSourceOffset, uint16_t aDestinationOffset, uint16_t aLength, Message &aMessage) const;
 
     /**
      * This method returns the datagram tag used for 6LoWPAN fragmentation.

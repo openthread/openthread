@@ -58,9 +58,13 @@ typedef struct otContext
     Thread::Ip6::NetifCallback mNetifCallback;
     otReceiveIp6DatagramCallback mReceiveIp6DatagramCallback;
     void *mReceiveIp6DatagramCallbackContext;
+    bool mIsReceiveIp6FilterEnabled;
 
     otHandleActiveScanResult mActiveScanCallback;
     void *mActiveScanCallbackContext;
+
+    otHandleEnergyScanResult mEnergyScanCallback;
+    void *mEnergyScanCallbackContext;
 
     otHandleActiveScanResult mDiscoverCallback;
     void *mDiscoverCallbackContext;

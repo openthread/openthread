@@ -165,6 +165,7 @@ private:
     ThreadError ProcessPrefixAdd(int argc, char *argv[]);
     ThreadError ProcessPrefixRemove(int argc, char *argv[]);
     ThreadError ProcessPrefixList(void);
+    void ProcessPromiscuous(int argc, char *argv[]);
     void ProcessReleaseRouterId(int argc, char *argv[]);
     void ProcessReset(int argc, char *argv[]);
     void ProcessRoute(int argc, char *argv[]);
@@ -189,11 +190,13 @@ private:
     static void s_HandlePingTimer(void *aContext);
     static void s_HandleActiveScanResult(otActiveScanResult *aResult, void *aContext);
     static void s_HandleNetifStateChanged(uint32_t aFlags, void *aContext);
+    static void s_HandleLinkPcapReceive(const RadioPacket *aFrame, void *aContext);
 
     void HandleEchoResponse(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
     void HandlePingTimer();
     void HandleActiveScanResult(otActiveScanResult *aResult);
     void HandleNetifStateChanged(uint32_t aFlags);
+    void HandleLinkPcapReceive(const RadioPacket *aFrame);
 
     static const struct Command sCommands[];
     otNetifAddress sAddress;

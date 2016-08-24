@@ -43,6 +43,7 @@
 #include <net/ip6_routes.hpp>
 #include <net/netif.hpp>
 #include <net/udp6.hpp>
+#include <thread/mle.hpp>
 #include <openthreadcontext.h>
 
 namespace Thread {
@@ -101,6 +102,16 @@ void Ip6::SetReceiveDatagramCallback(otContext *aContext, otReceiveIp6DatagramCa
 {
     aContext->mReceiveIp6DatagramCallback = aCallback;
     aContext->mReceiveIp6DatagramCallbackContext = aCallbackContext;
+}
+
+bool Ip6::IsReceiveIp6FilterEnabled(otContext *aContext)
+{
+    return aContext->mIsReceiveIp6FilterEnabled;
+}
+
+void Ip6::SetReceiveIp6FilterEnabled(otContext *aContext, bool aEnabled)
+{
+    aContext->mIsReceiveIp6FilterEnabled = aEnabled;
 }
 
 ThreadError AddMplOption(Message &message, Header &header, IpProto nextHeader, uint16_t payloadLength)
@@ -311,12 +322,49 @@ exit:
     return error;
 }
 
-void Ip6::ProcessReceiveCallback(Message &aMessage)
+void Ip6::ProcessReceiveCallback(const Message &aMessage, const MessageInfo &messageInfo, uint8_t aIpProto)
 {
     ThreadError error = kThreadError_None;
     Message *messageCopy = NULL;
 
     VerifyOrExit(aMessage.GetOpenThreadContext()->mReceiveIp6DatagramCallback != NULL, ;);
+
+    if (aMessage.GetOpenThreadContext()->mIsReceiveIp6FilterEnabled)
+    {
+        // do not pass messages sent to/from an RLOC
+        VerifyOrExit(!messageInfo.GetSockAddr().IsRoutingLocator() &&
+                     !messageInfo.GetPeerAddr().IsRoutingLocator(), ;);
+
+        switch (aIpProto)
+        {
+        case kProtoIcmp6:
+            if (Icmp::IsEchoEnabled(aMessage.GetOpenThreadContext()))
+            {
+                IcmpHeader icmp;
+                aMessage.Read(aMessage.GetOffset(), sizeof(icmp), &icmp);
+
+                // do not pass ICMP Echo Request messages
+                VerifyOrExit(icmp.GetType() != IcmpHeader::kTypeEchoRequest, ;);
+            }
+
+            break;
+
+        case kProtoUdp:
+            if (messageInfo.GetSockAddr().IsLinkLocal())
+            {
+                UdpHeader udp;
+                aMessage.Read(aMessage.GetOffset(), sizeof(udp), &udp);
+
+                // do not pass MLE messages
+                VerifyOrExit(udp.GetDestinationPort() != Mle::kUdpPort, ;);
+            }
+
+            break;
+
+        default:
+            break;
+        }
+    }
 
     // make a copy of the datagram to pass to host
     VerifyOrExit((messageCopy = NewMessage(aMessage.GetOpenThreadContext(), 0)) != NULL, error = kThreadError_NoBufs);
@@ -420,7 +468,7 @@ ThreadError Ip6::HandleDatagram(Message &message, Netif *netif, int8_t interface
     {
         if (fromLocalHost == false)
         {
-            ProcessReceiveCallback(message);
+            ProcessReceiveCallback(message, messageInfo, nextHeader);
         }
 
         SuccessOrExit(error = HandlePayload(message, messageInfo, nextHeader));

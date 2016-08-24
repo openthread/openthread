@@ -441,6 +441,18 @@ typedef enum
     SPINEL_PROP_IPV6_ML_PREFIX       = SPINEL_PROP_IPV6__BEGIN + 2, ///< [6C]
     SPINEL_PROP_IPV6_ADDRESS_TABLE   = SPINEL_PROP_IPV6__BEGIN + 3, ///< array(ipv6addr,prefixlen,valid,preferred,flags) [A(T(6CLLC))]
     SPINEL_PROP_IPV6_ROUTE_TABLE     = SPINEL_PROP_IPV6__BEGIN + 4, ///< array(ipv6prefix,prefixlen,iface,flags) [A(T(6CCC))]
+
+
+    /// IPv6 ICMP Ping Offload
+    /** Format: `b`
+     *
+     * Allow the NCP to directly respond to ICMP ping requests. If this is
+     * turned on, ping request ICMP packets will not be passed to the host.
+     *
+     * Default value is `false`.
+     */
+    SPINEL_PROP_IPV6_ICMP_PING_OFFLOAD = SPINEL_PROP_IPV6__BEGIN + 5,
+
     SPINEL_PROP_IPV6__END            = 0x70,
 
     SPINEL_PROP_STREAM__BEGIN       = 0x70,

@@ -571,16 +571,49 @@ public:
                                                 uint16_t aLength, IpProto aProto);
 
     /**
-     * This function registers a callback to provide received raw IPv6 datagrams.
+     * This method registers a callback to provide received raw IPv6 datagrams.
+     *
+     * By default, this callback does not pass Thread control traffic.  See SetReceiveIp6FilterEnabled() to change
+     * the Thread control traffic filter setting.
      *
      * @param[in]  aContext          The OpenThread context structure.
      * @param[in]  aCallback         A pointer to a function that is called when an IPv6 datagram is received
      *                               or NULL to disable the callback.
      * @param[in]  aCallbackContext  A pointer to application-specific context.
      *
+     * @sa IsReceiveIp6FilterEnabled
+     * @sa SetReceiveIp6FilterEnabled
+     *
      */
     static void SetReceiveDatagramCallback(otContext *aContext, otReceiveIp6DatagramCallback aCallback,
                                            void *aCallbackContext);
+
+    /**
+     * This method indicates whether or not Thread control traffic is filtered out when delivering IPv6 datagrams
+     * via the callback specified in SetReceiveIp6DatagramCallback().
+     *
+     * @param[in]  aContext  The OpenThread context structure.
+     *
+     * @returns  TRUE if Thread control traffic is filtered out, FALSE otherwise.
+     *
+     * @sa SetReceiveDatagramCallback
+     * @sa SetReceiveIp6FilterEnabled
+     *
+     */
+    static bool IsReceiveIp6FilterEnabled(otContext *aContext);
+
+    /**
+     * This method sets whether or not Thread control traffic is filtered out when delivering IPv6 datagrams
+     * via the callback specified in SetReceiveIp6DatagramCallback().
+     *
+     * @param[in]  aContext  The OpenThread context structure.
+     * @param[in]  aEnabled  TRUE if Thread control traffic is filtered out, FALSE otherwise.
+     *
+     * @sa SetReceiveDatagramCallback
+     * @sa IsReceiveIp6FilterEnabled
+     *
+     */
+    static void SetReceiveIp6FilterEnabled(otContext *aContext, bool aEnabled);
 
     /**
      * This static method enables/disables IPv6 forwarding.
@@ -591,7 +624,7 @@ public:
     static void SetForwardingEnabled(otContext *aContext, bool aEnable);
 
 private:
-    static void ProcessReceiveCallback(Message &aMessage);
+    static void ProcessReceiveCallback(const Message &aMessage, const MessageInfo &aMessageInfo, uint8_t aIpProto);
 };
 
 /**
