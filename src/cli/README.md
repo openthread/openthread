@@ -247,14 +247,17 @@ clear
 commit
 delay
 extpanid
-getcmd
+getactivecmd
+getpendingcmd
 masterkey
 meshlocalprefix
 networkname
 panid
 pending
 pendingtimestamp
-setcmd
+setactivecmd
+setpendingcmd
+userdata
 Done
 ```
 
@@ -268,12 +271,30 @@ Active Timestamp: 0
 Done
 ```
 
+### dataset activetimestamp
+
+Set getting active timestamp flag.
+
+```bash
+> dataset activestamp
+Done
+```
+
 ### dataset activetimestamp \[activetimestamp\]
 
 Set active timestamp.
 
 ```bash
 > dataset activestamp 123456789
+Done
+```
+
+### dataset channel
+
+Set getting channel flag.
+
+```bash
+> dataset channel
 Done
 ```
 
@@ -304,12 +325,30 @@ Commit operational dataset buffer to active/pending operational dataset.
 Done
 ```
 
+### dataset delay
+
+Set getting delay timer value flag.
+
+```bash
+> dataset delay
+Done
+```
+
 ### dataset delay \[delay\]
 
 Set delay timer value.
 
 ```bash
 > dataset delay 1000
+Done
+```
+
+### dataset extpanid
+
+Set getting extended panid flag.
+
+```bash
+> dataset extpanid
 Done
 ```
 
@@ -322,12 +361,30 @@ Set extended panid.
 Done
 ```
 
-### dataset getcmd \[getcmd\] \[size\] \[tlvtypes\]
+### dataset getactivecmd
 
-Send MGMT_ACTIVE/PENDING/COMMISSIONER_GET.req command.
+Send MGMT_ACTIVE_GET command.
 
 ```bash
-> dataset getcmd pending 3 010203
+> dataset getactivecmd
+Done
+```
+
+### dataset getpendingcmd
+
+Send MGMT_PENDING_GET command.
+
+```bash
+> dataset getpendingcmd
+Done
+```
+
+### dataset masterkey
+
+Set getting master key flag.
+
+```bash
+> dataset masterkey
 Done
 ```
 
@@ -337,13 +394,33 @@ Set master key.
 
 ```bash
 > dataset master 1234567890123456
+Done
 ```
+
+### dataset meshlocalprefix
+
+Set getting mesh local prefix flag.
+
+```bash
+> dataset meshlocalprefix
+Done
+```
+
 ### dataset meshlocalprefix fd00:db8::
 
 Set mesh local prefix.
 
 ```bash
 > dataset meshlocalprefix fd00:db8::
+Done
+```
+
+### dataset networkname
+
+Set getting network name flag.
+
+```bash
+> dataset networkname
 Done
 ```
 
@@ -355,6 +432,16 @@ Set network name.
 > dataset networkname openthread
 Done
 ```
+
+### dataset panid
+
+Set getting panid flag.
+
+```bash
+> dataset panid
+Done
+```
+
 ### dataset panid \[panid\]
 
 Set panid.
@@ -373,6 +460,15 @@ Print meshcop pending operational dataset.
 Done
 ```
 
+### dataset pendingtimestamp
+
+Set getting pending timestamp flag.
+
+```bash
+> dataset pendingtimestamp
+Done
+```
+
 ### dataset pendingtimestamp \[pendingtimestamp\]
 
 Set pending timestamp.
@@ -382,12 +478,30 @@ Set pending timestamp.
 Done
 ```
 
-### dataset setcmd \[setcmd\] \[size\] \[tlvs\]
+### dataset setactivecmd
 
-Send MGMT_ACTIVE/PENDING/COMMISSIONER_SET.req command.
+Send MGMT_ACTIVE_SET command.
 
 ```bash
-> dataset setcmd active 18 0e0801020304050607080003000a01021234
+> dataset setactivecmd
+Done
+```
+
+### dataset setpendingcmd
+
+Send MGMT_PENDING_SET command.
+
+```bash
+> dataset setpendingcmd
+Done
+```
+
+### dataset userdata \[size\] \[data\]
+
+Set user specific data for the command.
+
+```bash
+> dataset userdata 3 820155
 Done
 ```
 

@@ -301,14 +301,23 @@ typedef struct otOperationalDataset
     uint16_t          mChannel;                    ///< Channel
 
     bool              mIsActiveTimestampSet : 1;   ///< TRUE if Active Timestamp is set, FALSE otherwise.
+    bool              mIsActiveTimestampGet : 1;   ///< TRUE if Active Timestamp is to get, FALSE otherwise.
     bool              mIsPendingTimestampSet : 1;  ///< TRUE if Pending Timestamp is set, FALSE otherwise.
+    bool              mIsPendingTimestampGet : 1;  ///< TRUE if Pending Timestamp is to get, FALSE otherwise.
     bool              mIsMasterKeySet : 1;         ///< TRUE if Network Master Key is set, FALSE otherwise.
+    bool              mIsMasterKeyGet : 1;         ///< TRUE if Network Master Key is to get, FALSE otherwise.
     bool              mIsNetworkNameSet : 1;       ///< TRUE if Network Name is set, FALSE otherwise.
+    bool              mIsNetworkNameGet : 1;       ///< TRUE if Network Name is to get, FALSE otherwise.
     bool              mIsExtendedPanIdSet : 1;     ///< TRUE if Extended PAN ID is set, FALSE otherwise.
+    bool              mIsExtendedPanIdGet : 1;     ///< TRUE if Extended PAN ID is to get, FALSE otherwise.
     bool              mIsMeshLocalPrefixSet : 1;   ///< TRUE if Mesh Local Prefix is set, FALSE otherwise.
+    bool              mIsMeshLocalPrefixGet : 1;   ///< TRUE if Mesh Local Prefix is to get, FALSE otherwise.
     bool              mIsDelaySet : 1;             ///< TRUE if Delay Timer is set, FALSE otherwise.
+    bool              mIsDelayGet : 1;             ///< TRUE if Delay Timer is to get, FALSE otherwise.
     bool              mIsPanIdSet : 1;             ///< TRUE if PAN ID is set, FALSE otherwise.
+    bool              mIsPanIdGet : 1;             ///< TRUE if PAN ID is to get, FALSE otherwise.
     bool              mIsChannelSet : 1;           ///< TRUE if Channel is set, FALSE otherwise.
+    bool              mIsChannelGet : 1;           ///< TRUE if Channel is to get, FALSE otherwise.
 } otOperationalDataset;
 
 /**

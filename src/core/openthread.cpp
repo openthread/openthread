@@ -1098,25 +1098,25 @@ exit:
     return error;
 }
 
-ThreadError otSendDatasetCommand(const char *aUri, const uint8_t *aTlvs, const uint8_t aSize)
+ThreadError otSendDatasetCommand(const char *aPath, otOperationalDataset *aDataset, uint8_t *aTlvs, uint8_t aSize)
 {
     ThreadError error = kThreadError_None;
 
-    if (strcmp(aUri, OPENTHREAD_URI_ACTIVE_GET) == 0)
+    if (strcmp(aPath, OPENTHREAD_URI_ACTIVE_SET) == 0)
     {
-        error = sThreadNetif->GetActiveDataset().SendGetRequest(aTlvs, aSize);
+        error = sThreadNetif->GetActiveDataset().SendSetRequest(aDataset, aTlvs, aSize);
     }
-    else if (strcmp(aUri, OPENTHREAD_URI_ACTIVE_SET) == 0)
+    else if (strcmp(aPath, OPENTHREAD_URI_ACTIVE_GET) == 0)
     {
-        error = sThreadNetif->GetActiveDataset().SendSetRequest(aTlvs, aSize);
+        error = sThreadNetif->GetActiveDataset().SendGetRequest(aDataset, aTlvs, aSize);
     }
-    else if (strcmp(aUri, OPENTHREAD_URI_PENDING_GET) == 0)
+    else if (strcmp(aPath, OPENTHREAD_URI_PENDING_SET) == 0)
     {
-        error = sThreadNetif->GetPendingDataset().SendGetRequest(aTlvs, aSize);
+        error = sThreadNetif->GetPendingDataset().SendSetRequest(aDataset, aTlvs, aSize);
     }
-    else if (strcmp(aUri, OPENTHREAD_URI_PENDING_SET) == 0)
+    else if (strcmp(aPath, OPENTHREAD_URI_PENDING_GET) == 0)
     {
-        error = sThreadNetif->GetPendingDataset().SendSetRequest(aTlvs, aSize);
+        error = sThreadNetif->GetPendingDataset().SendGetRequest(aDataset, aTlvs, aSize);
     }
     else
     {

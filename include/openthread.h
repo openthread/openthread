@@ -639,18 +639,19 @@ ThreadError otGetPendingDataset(otOperationalDataset *aDataset);
 ThreadError otSetPendingDataset(otOperationalDataset *aDataset);
 
 /**
- * This function sends the meshcop dataset commands.
+ * This function sends meshcop dataset command.
  *
- * @param[in]  aUri  A pointer to the URI.
- * @param[in]  aTlvs A pointer to the tlvs.
- * @param[in]  aSize The size of tlvs.
+ * @param[in]  aPath      A pointer to the path of the resource.
+ * @param[in]  aDataset   A pointer to the operational dataset.
+ * @param[in]  aTlvs      A pointer to the user specific TLVs.
+ * @param[in]  aSize      The size of user specific TLVs.
  *
  * @retval kThreadError_None         Successfully send the meshcop dataset command.
  * @retval kThreadError_Fail         Fail to send the meshcop dataset command.
- * @retval kThreadError_InvalidArgs  @p aUri was not supported.
+ * @retval kThreadError_InvalidArgs  @p aPath is not supported.
  *
  */
-ThreadError otSendDatasetCommand(const char *aUri, const uint8_t *aTlvs, const uint8_t aSize);
+ThreadError otSendDatasetCommand(const char *aPath, otOperationalDataset *aDataset, uint8_t *aTlvs, uint8_t aSize);
 
 /**
  * Get the data poll period of sleepy end deivce.

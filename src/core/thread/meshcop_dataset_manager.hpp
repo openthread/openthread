@@ -59,8 +59,8 @@ public:
 
     Dataset &GetNetwork(void) { return mNetwork; }
 
-    ThreadError SendSetRequest(const uint8_t *aTlvs, const uint8_t aSize);
-    ThreadError SendGetRequest(const uint8_t *aTlvs, const uint8_t aSize);
+    ThreadError SendSetRequest(otOperationalDataset *aDataset, const uint8_t *aTlvs, const uint8_t aSize);
+    ThreadError SendGetRequest(otOperationalDataset *aDataset, const uint8_t *aTlvTypes, const uint8_t aSize);
 
 protected:
     enum

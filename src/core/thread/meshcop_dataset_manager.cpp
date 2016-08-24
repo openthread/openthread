@@ -307,55 +307,7 @@ void DatasetManager::HandleGet(Coap::Header &aHeader, Message &aMessage, const I
     SendGetResponse(aHeader, aMessageInfo, tlvs, length);
 }
 
-ThreadError DatasetManager::SendSetRequest(const uint8_t *aTlvs, const uint8_t aSize)
-{
-    ThreadError error = kThreadError_None;
-    Coap::Header header;
-    Message *message;
-    Ip6::Address leader;
-    Ip6::MessageInfo messageInfo;
-
-    mSocket.Open(&HandleUdpReceive, this);
-
-    for (size_t i = 0; i < sizeof(mCoapToken); i++)
-    {
-        mCoapToken[i] = static_cast<uint8_t>(otPlatRandomGet());
-    }
-
-    header.Init();
-    header.SetVersion(1);
-    header.SetType(Coap::Header::kTypeConfirmable);
-    header.SetCode(Coap::Header::kCodePost);
-    header.SetMessageId(++mCoapMessageId);
-    header.SetToken(mCoapToken, sizeof(mCoapToken));
-    header.AppendUriPathOptions(mUriSet);
-    header.AppendContentFormatOption(Coap::Header::kApplicationOctetStream);
-    header.Finalize();
-
-    VerifyOrExit((message = Ip6::Udp::NewMessage(0)) != NULL, error = kThreadError_NoBufs);
-    SuccessOrExit(error = message->Append(header.GetBytes(), header.GetLength()));
-    SuccessOrExit(error = message->Append(aTlvs, aSize));
-
-    mMle.GetLeaderAddress(leader);
-
-    memset(&messageInfo, 0, sizeof(messageInfo));
-    memcpy(&messageInfo.mPeerAddr, &leader, sizeof(messageInfo.mPeerAddr));
-    messageInfo.mPeerPort = kCoapUdpPort;
-    SuccessOrExit(error = mSocket.SendTo(*message, messageInfo));
-
-    otLogInfoMeshCoP("sent dataset set request to leader\n");
-
-exit:
-
-    if (error != kThreadError_None && message != NULL)
-    {
-        Message::Free(*message);
-    }
-
-    return error;
-}
-
-ThreadError DatasetManager::SendGetRequest(const uint8_t *aTlvs, const uint8_t aSize)
+ThreadError DatasetManager::SendSetRequest(otOperationalDataset *aDataset, const uint8_t *aTlvs, const uint8_t aSize)
 {
     ThreadError error = kThreadError_None;
     Coap::Header header;
@@ -377,6 +329,133 @@ ThreadError DatasetManager::SendGetRequest(const uint8_t *aTlvs, const uint8_t a
     header.SetCode(Coap::Header::kCodePost);
     header.SetMessageId(++mCoapMessageId);
     header.SetToken(mCoapToken, sizeof(mCoapToken));
+    header.AppendUriPathOptions(mUriSet);
+    header.AppendContentFormatOption(Coap::Header::kApplicationOctetStream);
+    header.Finalize();
+
+    VerifyOrExit((message = Ip6::Udp::NewMessage(0)) != NULL, error = kThreadError_NoBufs);
+    SuccessOrExit(error = message->Append(header.GetBytes(), header.GetLength()));
+
+    if (aDataset->mIsActiveTimestampSet)
+    {
+        tlv.SetType(Tlv::kActiveTimestamp);
+        tlv.SetLength(sizeof(aDataset->mActiveTimestamp));
+        SuccessOrExit(error = message->Append(&tlv, sizeof(tlv)));
+        SuccessOrExit(error = message->Append(&aDataset->mActiveTimestamp, sizeof(aDataset->mActiveTimestamp)));
+    }
+
+    if (aDataset->mIsPendingTimestampSet)
+    {
+        tlv.SetType(Tlv::kPendingTimestamp);
+        tlv.SetLength(sizeof(aDataset->mPendingTimestamp));
+        SuccessOrExit(error = message->Append(&tlv, sizeof(tlv)));
+        SuccessOrExit(error = message->Append(&aDataset->mPendingTimestamp, sizeof(aDataset->mPendingTimestamp)));
+    }
+
+    if (aDataset->mIsMasterKeySet)
+    {
+        tlv.SetType(Tlv::kNetworkMasterKey);
+        tlv.SetLength(sizeof(aDataset->mMasterKey));
+        SuccessOrExit(error = message->Append(&tlv, sizeof(tlv)));
+        SuccessOrExit(error = message->Append(&aDataset->mMasterKey, sizeof(aDataset->mMasterKey)));
+    }
+
+    if (aDataset->mIsNetworkNameSet)
+    {
+        tlv.SetType(Tlv::kNetworkName);
+        tlv.SetLength(strlen(aDataset->mNetworkName.m8));
+        SuccessOrExit(error = message->Append(&tlv, sizeof(tlv)));
+        SuccessOrExit(error = message->Append(&aDataset->mNetworkName, strlen(aDataset->mNetworkName.m8)));
+    }
+
+    if (aDataset->mIsExtendedPanIdSet)
+    {
+        tlv.SetType(Tlv::kExtendedPanId);
+        tlv.SetLength(sizeof(aDataset->mExtendedPanId));
+        SuccessOrExit(error = message->Append(&tlv, sizeof(tlv)));
+        SuccessOrExit(error = message->Append(aDataset->mExtendedPanId.m8, sizeof(aDataset->mExtendedPanId)));
+    }
+
+    if (aDataset->mIsMeshLocalPrefixSet)
+    {
+        tlv.SetType(Tlv::kMeshLocalPrefix);
+        tlv.SetLength(sizeof(aDataset->mMeshLocalPrefix));
+        SuccessOrExit(error = message->Append(&tlv, sizeof(tlv)));
+        SuccessOrExit(error = message->Append(aDataset->mMeshLocalPrefix.m8, sizeof(aDataset->mMeshLocalPrefix)));
+    }
+
+    if (aDataset->mIsDelaySet)
+    {
+        tlv.SetType(Tlv::kDelayTimer);
+        tlv.SetLength(sizeof(aDataset->mDelay));
+        SuccessOrExit(error = message->Append(&tlv, sizeof(tlv)));
+        SuccessOrExit(error = message->Append(&aDataset->mDelay, sizeof(aDataset->mDelay)));
+    }
+
+    if (aDataset->mIsPanIdSet)
+    {
+        tlv.SetType(Tlv::kPanId);
+        tlv.SetLength(sizeof(aDataset->mPanId));
+        SuccessOrExit(error = message->Append(&tlv, sizeof(tlv)));
+        SuccessOrExit(error = message->Append(&aDataset->mPanId, sizeof(aDataset->mPanId)));
+    }
+
+    if (aDataset->mIsChannelSet)
+    {
+        tlv.SetType(Tlv::kChannel);
+        tlv.SetLength(sizeof(aDataset->mChannel));
+        SuccessOrExit(error = message->Append(&tlv, sizeof(tlv)));
+        SuccessOrExit(error = message->Append(&aDataset->mChannel, sizeof(aDataset->mChannel)));
+    }
+
+    if (aSize > 0)
+    {
+        SuccessOrExit(error = message->Append(aTlvs, aSize));
+    }
+
+    mMle.GetLeaderAddress(leader);
+
+    memset(&messageInfo, 0, sizeof(messageInfo));
+    memcpy(&messageInfo.mPeerAddr, &leader, sizeof(messageInfo.mPeerAddr));
+    messageInfo.mPeerPort = kCoapUdpPort;
+    SuccessOrExit(error = mSocket.SendTo(*message, messageInfo));
+
+    otLogInfoMeshCoP("sent dataset set request to leader\n");
+
+exit:
+
+    if (error != kThreadError_None && message != NULL)
+    {
+        Message::Free(*message);
+    }
+
+    return error;
+}
+
+ThreadError DatasetManager::SendGetRequest(otOperationalDataset *aDataset, const uint8_t *aTlvTypes, const uint8_t aSize)
+{
+    ThreadError error = kThreadError_None;
+    Coap::Header header;
+    Message *message;
+    Ip6::Address leader;
+    Ip6::MessageInfo messageInfo;
+    Tlv tlv;
+    uint8_t tlvTypes[32];
+    uint8_t size = 0;
+
+    mSocket.Open(&HandleUdpReceive, this);
+
+    for (size_t i = 0; i < sizeof(mCoapToken); i++)
+    {
+        mCoapToken[i] = static_cast<uint8_t>(otPlatRandomGet());
+    }
+
+    header.Init();
+    header.SetVersion(1);
+    header.SetType(Coap::Header::kTypeConfirmable);
+    header.SetCode(Coap::Header::kCodePost);
+    header.SetMessageId(++mCoapMessageId);
+    header.SetToken(mCoapToken, sizeof(mCoapToken));
     header.AppendUriPathOptions(mUriGet);
     header.AppendContentFormatOption(Coap::Header::kApplicationOctetStream);
     header.Finalize();
@@ -384,12 +463,66 @@ ThreadError DatasetManager::SendGetRequest(const uint8_t *aTlvs, const uint8_t a
     VerifyOrExit((message = Ip6::Udp::NewMessage(0)) != NULL, error = kThreadError_NoBufs);
     SuccessOrExit(error = message->Append(header.GetBytes(), header.GetLength()));
 
-    if (aSize > 0)
+    if (aDataset->mIsActiveTimestampGet)
+    {
+        tlvTypes[size++] = Tlv::kActiveTimestamp;
+    }
+
+    if (aDataset->mIsPendingTimestampGet)
+    {
+        tlvTypes[size++] = Tlv::kPendingTimestamp;
+    }
+
+    if (aDataset->mIsMasterKeyGet)
+    {
+        tlvTypes[size++] = Tlv::kNetworkMasterKey;
+    }
+
+    if (aDataset->mIsNetworkNameGet)
+    {
+        tlvTypes[size++] = Tlv::kNetworkName;
+    }
+
+    if (aDataset->mIsExtendedPanIdGet)
+    {
+        tlvTypes[size++] = Tlv::kExtendedPanId;
+    }
+
+    if (aDataset->mIsMeshLocalPrefixGet)
+    {
+        tlvTypes[size++] = Tlv::kMeshLocalPrefix;
+    }
+
+    if (aDataset->mIsDelayGet)
+    {
+        tlvTypes[size++] = Tlv::kDelayTimer;
+    }
+
+    if (aDataset->mIsPanIdGet)
+    {
+        tlvTypes[size++] = Tlv::kPanId;
+    }
+
+    if (aDataset->mIsChannelGet)
+    {
+        tlvTypes[size++] = Tlv::kChannel;
+    }
+
+    if (aSize > 0 || size > 0)
     {
         tlv.SetType(Tlv::kGet);
-        tlv.SetLength(aSize);
+        tlv.SetLength(aSize + size);
         SuccessOrExit(error = message->Append(&tlv, sizeof(tlv)));
-        SuccessOrExit(error = message->Append(aTlvs, aSize));
+
+        if (aSize > 0)
+        {
+            SuccessOrExit(error = message->Append(aTlvTypes, aSize));
+        }
+
+        if (size > 0)
+        {
+            SuccessOrExit(error = message->Append(tlvTypes, size));
+        }
     }
 
     mMle.GetLeaderAddress(leader);
