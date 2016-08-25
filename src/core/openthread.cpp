@@ -869,6 +869,8 @@ otInstance *otInstanceInit(void *aInstanceBuffer, uint64_t *aInstanceBufferSize)
     sThreadNetif = new(&sThreadNetifRaw) ThreadNetif;
     Ip6::Ip6::Init();
 
+    mEnabled = true;
+
 exit:
 
     return aInstance;
