@@ -34,16 +34,22 @@
 
 #include <stdio.h>
 
+#include <openthread-types.h>
 #include <coap/coap_header.hpp>
 #include <common/code_utils.hpp>
 #include <common/logging.hpp>
 #include <common/timer.hpp>
+#include <common/encoding.hpp>
 #include <platform/random.h>
 #include <thread/meshcop_dataset.hpp>
 #include <thread/meshcop_dataset_manager.hpp>
 #include <thread/thread_netif.hpp>
 #include <thread/thread_tlvs.hpp>
 #include <thread/thread_uris.hpp>
+
+using Thread::Encoding::BigEndian::HostSwap16;
+using Thread::Encoding::BigEndian::HostSwap32;
+using Thread::Encoding::BigEndian::HostSwap64;
 
 namespace Thread {
 namespace MeshCoP {
@@ -140,7 +146,7 @@ void DatasetManager::HandleTimer(void *aContext)
 void DatasetManager::HandleTimer(void)
 {
     VerifyOrExit(mMle.IsAttached() && mNetwork.GetTimestamp().Compare(mLocal.GetTimestamp()) > 0, ;);
-    VerifyOrExit(mLocal.Get(Tlv::kDelayTimer) != NULL, ;);
+    VerifyOrExit(mLocal.Get(OT_MESHCOP_TLV_DELAYTIMER) != NULL, ;);
 
     Register();
     mTimer.Start(1000);
@@ -243,7 +249,8 @@ void DatasetManager::HandleSet(Coap::Header &aHeader, Message &aMessage, const I
 
     VerifyOrExit(mMle.GetDeviceState() == Mle::kDeviceStateLeader, state = StateTlv::kReject);
 
-    type = strcmp(mUriSet, OPENTHREAD_URI_ACTIVE_SET) == 0 ? Tlv::kActiveTimestamp : Tlv::kPendingTimestamp;
+    type = strcmp(mUriSet, OPENTHREAD_URI_ACTIVE_SET) == 0 ? OT_MESHCOP_TLV_ACTIVETIMESTAMP :
+           OT_MESHCOP_TLV_PENDINGTIMESTAMP;
 
     while (offset < aMessage.GetLength())
     {
@@ -294,7 +301,7 @@ void DatasetManager::HandleGet(Coap::Header &aHeader, Message &aMessage, const I
     {
         aMessage.Read(offset, sizeof(tlv), &tlv);
 
-        if (tlv.GetType() == Tlv::kGet)
+        if (tlv.GetType() == OT_MESHCOP_TLV_GET)
         {
             length = tlv.GetLength();
             aMessage.Read(offset + sizeof(Tlv), length, tlvs);
@@ -307,7 +314,7 @@ void DatasetManager::HandleGet(Coap::Header &aHeader, Message &aMessage, const I
     SendGetResponse(aHeader, aMessageInfo, tlvs, length);
 }
 
-ThreadError DatasetManager::SendSetRequest(otOperationalDataset *aDataset, const uint8_t *aTlvs, const uint8_t aSize)
+ThreadError DatasetManager::SendSetRequest(otOperationalDataset &aDataset, const uint8_t *aTlvs, uint8_t aSize)
 {
     ThreadError error = kThreadError_None;
     Coap::Header header;
@@ -315,6 +322,9 @@ ThreadError DatasetManager::SendSetRequest(otOperationalDataset *aDataset, const
     Ip6::Address leader;
     Ip6::MessageInfo messageInfo;
     Tlv tlv;
+    uint16_t data16;
+    uint32_t data32;
+    uint64_t data64;
 
     mSocket.Open(&HandleUdpReceive, this);
 
@@ -336,76 +346,81 @@ ThreadError DatasetManager::SendSetRequest(otOperationalDataset *aDataset, const
     VerifyOrExit((message = Ip6::Udp::NewMessage(0)) != NULL, error = kThreadError_NoBufs);
     SuccessOrExit(error = message->Append(header.GetBytes(), header.GetLength()));
 
-    if (aDataset->mIsActiveTimestampSet)
+    if (aDataset.mIsActiveTimestampSet)
     {
-        tlv.SetType(Tlv::kActiveTimestamp);
-        tlv.SetLength(sizeof(aDataset->mActiveTimestamp));
+        tlv.SetType(OT_MESHCOP_TLV_ACTIVETIMESTAMP);
+        tlv.SetLength(sizeof(aDataset.mActiveTimestamp));
         SuccessOrExit(error = message->Append(&tlv, sizeof(tlv)));
-        SuccessOrExit(error = message->Append(&aDataset->mActiveTimestamp, sizeof(aDataset->mActiveTimestamp)));
+        data64 = HostSwap64(aDataset.mActiveTimestamp);
+        SuccessOrExit(error = message->Append(&data64, sizeof(aDataset.mActiveTimestamp)));
     }
 
-    if (aDataset->mIsPendingTimestampSet)
+    if (aDataset.mIsPendingTimestampSet)
     {
-        tlv.SetType(Tlv::kPendingTimestamp);
-        tlv.SetLength(sizeof(aDataset->mPendingTimestamp));
+        tlv.SetType(OT_MESHCOP_TLV_PENDINGTIMESTAMP);
+        tlv.SetLength(sizeof(aDataset.mPendingTimestamp));
         SuccessOrExit(error = message->Append(&tlv, sizeof(tlv)));
-        SuccessOrExit(error = message->Append(&aDataset->mPendingTimestamp, sizeof(aDataset->mPendingTimestamp)));
+        data64 = HostSwap64(aDataset.mPendingTimestamp);
+        SuccessOrExit(error = message->Append(&data64, sizeof(aDataset.mPendingTimestamp)));
     }
 
-    if (aDataset->mIsMasterKeySet)
+    if (aDataset.mIsMasterKeySet)
     {
-        tlv.SetType(Tlv::kNetworkMasterKey);
-        tlv.SetLength(sizeof(aDataset->mMasterKey));
+        tlv.SetType(OT_MESHCOP_TLV_MASTERKEY);
+        tlv.SetLength(sizeof(aDataset.mMasterKey));
         SuccessOrExit(error = message->Append(&tlv, sizeof(tlv)));
-        SuccessOrExit(error = message->Append(&aDataset->mMasterKey, sizeof(aDataset->mMasterKey)));
+        SuccessOrExit(error = message->Append(aDataset.mMasterKey.m8, sizeof(aDataset.mMasterKey.m8)));
     }
 
-    if (aDataset->mIsNetworkNameSet)
+    if (aDataset.mIsNetworkNameSet)
     {
-        tlv.SetType(Tlv::kNetworkName);
-        tlv.SetLength(strlen(aDataset->mNetworkName.m8));
+        tlv.SetType(OT_MESHCOP_TLV_NETWORKNAME);
+        tlv.SetLength(strlen(aDataset.mNetworkName.m8));
         SuccessOrExit(error = message->Append(&tlv, sizeof(tlv)));
-        SuccessOrExit(error = message->Append(&aDataset->mNetworkName, strlen(aDataset->mNetworkName.m8)));
+        SuccessOrExit(error = message->Append(aDataset.mNetworkName.m8, strlen(aDataset.mNetworkName.m8)));
     }
 
-    if (aDataset->mIsExtendedPanIdSet)
+    if (aDataset.mIsExtendedPanIdSet)
     {
-        tlv.SetType(Tlv::kExtendedPanId);
-        tlv.SetLength(sizeof(aDataset->mExtendedPanId));
+        tlv.SetType(OT_MESHCOP_TLV_EXTPANID);
+        tlv.SetLength(sizeof(aDataset.mExtendedPanId));
         SuccessOrExit(error = message->Append(&tlv, sizeof(tlv)));
-        SuccessOrExit(error = message->Append(aDataset->mExtendedPanId.m8, sizeof(aDataset->mExtendedPanId)));
+        SuccessOrExit(error = message->Append(aDataset.mExtendedPanId.m8, sizeof(aDataset.mExtendedPanId.m8)));
     }
 
-    if (aDataset->mIsMeshLocalPrefixSet)
+    if (aDataset.mIsMeshLocalPrefixSet)
     {
-        tlv.SetType(Tlv::kMeshLocalPrefix);
-        tlv.SetLength(sizeof(aDataset->mMeshLocalPrefix));
+        tlv.SetType(OT_MESHCOP_TLV_LOCALPREFIX);
+        tlv.SetLength(sizeof(aDataset.mMeshLocalPrefix));
         SuccessOrExit(error = message->Append(&tlv, sizeof(tlv)));
-        SuccessOrExit(error = message->Append(aDataset->mMeshLocalPrefix.m8, sizeof(aDataset->mMeshLocalPrefix)));
+        SuccessOrExit(error = message->Append(aDataset.mMeshLocalPrefix.m8, sizeof(aDataset.mMeshLocalPrefix.m8)));
     }
 
-    if (aDataset->mIsDelaySet)
+    if (aDataset.mIsDelaySet)
     {
-        tlv.SetType(Tlv::kDelayTimer);
-        tlv.SetLength(sizeof(aDataset->mDelay));
+        tlv.SetType(OT_MESHCOP_TLV_DELAYTIMER);
+        tlv.SetLength(sizeof(aDataset.mDelay));
         SuccessOrExit(error = message->Append(&tlv, sizeof(tlv)));
-        SuccessOrExit(error = message->Append(&aDataset->mDelay, sizeof(aDataset->mDelay)));
+        data32 = HostSwap32(aDataset.mDelay);
+        SuccessOrExit(error = message->Append(&data32, sizeof(aDataset.mDelay)));
     }
 
-    if (aDataset->mIsPanIdSet)
+    if (aDataset.mIsPanIdSet)
     {
-        tlv.SetType(Tlv::kPanId);
-        tlv.SetLength(sizeof(aDataset->mPanId));
+        tlv.SetType(OT_MESHCOP_TLV_PANID);
+        tlv.SetLength(sizeof(aDataset.mPanId));
         SuccessOrExit(error = message->Append(&tlv, sizeof(tlv)));
-        SuccessOrExit(error = message->Append(&aDataset->mPanId, sizeof(aDataset->mPanId)));
+        data16 = HostSwap16(static_cast<uint16_t>(aDataset.mPanId));
+        SuccessOrExit(error = message->Append(&data16, sizeof(aDataset.mPanId)));
     }
 
-    if (aDataset->mIsChannelSet)
+    if (aDataset.mIsChannelSet)
     {
-        tlv.SetType(Tlv::kChannel);
-        tlv.SetLength(sizeof(aDataset->mChannel));
+        tlv.SetType(OT_MESHCOP_TLV_CHANNEL);
+        tlv.SetLength(sizeof(aDataset.mChannel));
         SuccessOrExit(error = message->Append(&tlv, sizeof(tlv)));
-        SuccessOrExit(error = message->Append(&aDataset->mChannel, sizeof(aDataset->mChannel)));
+        data16 = HostSwap16(aDataset.mChannel);
+        SuccessOrExit(error = message->Append(&data16, sizeof(aDataset.mChannel)));
     }
 
     if (aSize > 0)
@@ -432,7 +447,7 @@ exit:
     return error;
 }
 
-ThreadError DatasetManager::SendGetRequest(otOperationalDataset *aDataset, const uint8_t *aTlvTypes, const uint8_t aSize)
+ThreadError DatasetManager::SendGetRequest(const uint8_t *aTlvTypes, const uint8_t aSize)
 {
     ThreadError error = kThreadError_None;
     Coap::Header header;
@@ -440,8 +455,6 @@ ThreadError DatasetManager::SendGetRequest(otOperationalDataset *aDataset, const
     Ip6::Address leader;
     Ip6::MessageInfo messageInfo;
     Tlv tlv;
-    uint8_t tlvTypes[32];
-    uint8_t size = 0;
 
     mSocket.Open(&HandleUdpReceive, this);
 
@@ -463,66 +476,12 @@ ThreadError DatasetManager::SendGetRequest(otOperationalDataset *aDataset, const
     VerifyOrExit((message = Ip6::Udp::NewMessage(0)) != NULL, error = kThreadError_NoBufs);
     SuccessOrExit(error = message->Append(header.GetBytes(), header.GetLength()));
 
-    if (aDataset->mIsActiveTimestampGet)
+    if (aSize > 0)
     {
-        tlvTypes[size++] = Tlv::kActiveTimestamp;
-    }
-
-    if (aDataset->mIsPendingTimestampGet)
-    {
-        tlvTypes[size++] = Tlv::kPendingTimestamp;
-    }
-
-    if (aDataset->mIsMasterKeyGet)
-    {
-        tlvTypes[size++] = Tlv::kNetworkMasterKey;
-    }
-
-    if (aDataset->mIsNetworkNameGet)
-    {
-        tlvTypes[size++] = Tlv::kNetworkName;
-    }
-
-    if (aDataset->mIsExtendedPanIdGet)
-    {
-        tlvTypes[size++] = Tlv::kExtendedPanId;
-    }
-
-    if (aDataset->mIsMeshLocalPrefixGet)
-    {
-        tlvTypes[size++] = Tlv::kMeshLocalPrefix;
-    }
-
-    if (aDataset->mIsDelayGet)
-    {
-        tlvTypes[size++] = Tlv::kDelayTimer;
-    }
-
-    if (aDataset->mIsPanIdGet)
-    {
-        tlvTypes[size++] = Tlv::kPanId;
-    }
-
-    if (aDataset->mIsChannelGet)
-    {
-        tlvTypes[size++] = Tlv::kChannel;
-    }
-
-    if (aSize > 0 || size > 0)
-    {
-        tlv.SetType(Tlv::kGet);
-        tlv.SetLength(aSize + size);
+        tlv.SetType(OT_MESHCOP_TLV_GET);
+        tlv.SetLength(aSize);
         SuccessOrExit(error = message->Append(&tlv, sizeof(tlv)));
-
-        if (aSize > 0)
-        {
-            SuccessOrExit(error = message->Append(aTlvTypes, aSize));
-        }
-
-        if (size > 0)
-        {
-            SuccessOrExit(error = message->Append(tlvTypes, size));
-        }
+        SuccessOrExit(error = message->Append(aTlvTypes, aSize));
     }
 
     mMle.GetLeaderAddress(leader);
@@ -606,7 +565,7 @@ void DatasetManager::SendGetResponse(const Coap::Header &aRequestHeader, const I
     {
         for (index = 0; index < aLength; index++)
         {
-            if ((tlv = mNetwork.Get((Tlv::Type)aTlvs[index])) != NULL)
+            if ((tlv = mNetwork.Get((otMeshcopTlvType)aTlvs[index])) != NULL)
             {
                 SuccessOrExit(error = message->Append(tlv, sizeof(Tlv) + tlv->GetLength()));
             }
@@ -691,42 +650,42 @@ ThreadError ActiveDataset::ApplyConfiguration(void)
     {
         switch (cur->GetType())
         {
-        case Tlv::kChannel:
+        case OT_MESHCOP_TLV_CHANNEL:
         {
             const ChannelTlv *channel = static_cast<const ChannelTlv *>(cur);
             mNetif.GetMac().SetChannel(static_cast<uint8_t>(channel->GetChannel()));
             break;
         }
 
-        case Tlv::kPanId:
+        case OT_MESHCOP_TLV_PANID:
         {
             const PanIdTlv *panid = static_cast<const PanIdTlv *>(cur);
             mNetif.GetMac().SetPanId(panid->GetPanId());
             break;
         }
 
-        case Tlv::kExtendedPanId:
+        case OT_MESHCOP_TLV_EXTPANID:
         {
             const ExtendedPanIdTlv *extpanid = static_cast<const ExtendedPanIdTlv *>(cur);
             mNetif.GetMac().SetExtendedPanId(extpanid->GetExtendedPanId());
             break;
         }
 
-        case Tlv::kNetworkName:
+        case OT_MESHCOP_TLV_NETWORKNAME:
         {
             const NetworkNameTlv *extpanid = static_cast<const NetworkNameTlv *>(cur);
             mNetif.GetMac().SetNetworkName(extpanid->GetNetworkName());
             break;
         }
 
-        case Tlv::kNetworkMasterKey:
+        case OT_MESHCOP_TLV_MASTERKEY:
         {
             const NetworkMasterKeyTlv *key = static_cast<const NetworkMasterKeyTlv *>(cur);
             mNetif.GetKeyManager().SetMasterKey(key->GetNetworkMasterKey(), key->GetLength());
             break;
         }
 
-        case Tlv::kMeshLocalPrefix:
+        case OT_MESHCOP_TLV_LOCALPREFIX:
         {
             const MeshLocalPrefixTlv *prefix = static_cast<const MeshLocalPrefixTlv *>(cur);
             mMle.SetMeshLocalPrefix(prefix->GetMeshLocalPrefix());
@@ -812,7 +771,7 @@ void PendingDataset::ResetDelayTimer(uint8_t aFlags)
 
         mTimer.Stop();
 
-        if ((delayTimer = static_cast<DelayTimerTlv *>(mLocal.Get(Tlv::kDelayTimer))) != NULL)
+        if ((delayTimer = static_cast<DelayTimerTlv *>(mLocal.Get(OT_MESHCOP_TLV_DELAYTIMER))) != NULL)
         {
             mTimer.Start(delayTimer->GetDelayTimer());
             otLogInfoMeshCoP("delay timer started\n");
@@ -825,7 +784,7 @@ void PendingDataset::ResetDelayTimer(uint8_t aFlags)
 
         // if partition is up to date and delay timer already expired
         if ((mNetwork.GetTimestamp().Compare(mLocal.GetTimestamp()) == 0) &&
-            (delayTimer = static_cast<DelayTimerTlv *>(mLocal.Get(Tlv::kDelayTimer))) != NULL &&
+            (delayTimer = static_cast<DelayTimerTlv *>(mLocal.Get(OT_MESHCOP_TLV_DELAYTIMER))) != NULL &&
             (delayTimer->GetDelayTimer() == 0))
         {
             HandleTimer();
@@ -846,7 +805,7 @@ void PendingDataset::UpdateDelayTimer(Dataset &aDataset, uint32_t &aStartTime)
     uint32_t elapsed;
     uint32_t delay;
 
-    VerifyOrExit((delayTimer = static_cast<DelayTimerTlv *>(aDataset.Get(Tlv::kDelayTimer))) != NULL, ;);
+    VerifyOrExit((delayTimer = static_cast<DelayTimerTlv *>(aDataset.Get(OT_MESHCOP_TLV_DELAYTIMER))) != NULL, ;);
 
     elapsed = now - aStartTime;
 
@@ -888,13 +847,14 @@ void PendingDataset::HandleTimer(void)
     // 2) partition's pending dataset is up to date
     VerifyOrExit(!mMle.IsAttached() || mNetwork.GetTimestamp().Compare(mLocal.GetTimestamp()) == 0, ;);
 
-    mLocal.Remove(Tlv::kDelayTimer);
+    mLocal.Remove(OT_MESHCOP_TLV_DELAYTIMER);
 
-    VerifyOrExit((activeTimestamp = static_cast<ActiveTimestampTlv *>(mLocal.Get(Tlv::kActiveTimestamp))) != NULL, ;);
+    VerifyOrExit((activeTimestamp = static_cast<ActiveTimestampTlv *>(mLocal.Get(OT_MESHCOP_TLV_ACTIVETIMESTAMP))) != NULL,
+                 ;);
 
     mNetif.GetActiveDataset().GetLocal() = mLocal;
     mNetif.GetActiveDataset().GetLocal().SetTimestamp(*activeTimestamp);
-    mNetif.GetActiveDataset().GetLocal().Remove(Tlv::kActiveTimestamp);
+    mNetif.GetActiveDataset().GetLocal().Remove(OT_MESHCOP_TLV_ACTIVETIMESTAMP);
     mNetif.GetActiveDataset().GetNetwork() = mNetif.GetActiveDataset().GetLocal();
     mNetif.GetActiveDataset().ApplyConfiguration();
     mNetworkDataLeader.IncrementVersion();

@@ -260,6 +260,16 @@ typedef struct otActiveScanResult
 } otActiveScanResult;
 
 /**
+ * This struct represents an energy scan result.
+ *
+ */
+typedef struct otEnergyScanResult
+{
+    uint8_t mChannel;                ///< IEEE 802.15.4 Channel
+    int8_t  mMaxRssi;                ///< The max RSSI (dBm)
+} otEnergyScanResult;
+
+/**
  * @}
  *
  */
@@ -301,24 +311,39 @@ typedef struct otOperationalDataset
     uint16_t          mChannel;                    ///< Channel
 
     bool              mIsActiveTimestampSet : 1;   ///< TRUE if Active Timestamp is set, FALSE otherwise.
-    bool              mIsActiveTimestampGet : 1;   ///< TRUE if Active Timestamp is to get, FALSE otherwise.
     bool              mIsPendingTimestampSet : 1;  ///< TRUE if Pending Timestamp is set, FALSE otherwise.
-    bool              mIsPendingTimestampGet : 1;  ///< TRUE if Pending Timestamp is to get, FALSE otherwise.
     bool              mIsMasterKeySet : 1;         ///< TRUE if Network Master Key is set, FALSE otherwise.
-    bool              mIsMasterKeyGet : 1;         ///< TRUE if Network Master Key is to get, FALSE otherwise.
     bool              mIsNetworkNameSet : 1;       ///< TRUE if Network Name is set, FALSE otherwise.
-    bool              mIsNetworkNameGet : 1;       ///< TRUE if Network Name is to get, FALSE otherwise.
     bool              mIsExtendedPanIdSet : 1;     ///< TRUE if Extended PAN ID is set, FALSE otherwise.
-    bool              mIsExtendedPanIdGet : 1;     ///< TRUE if Extended PAN ID is to get, FALSE otherwise.
     bool              mIsMeshLocalPrefixSet : 1;   ///< TRUE if Mesh Local Prefix is set, FALSE otherwise.
-    bool              mIsMeshLocalPrefixGet : 1;   ///< TRUE if Mesh Local Prefix is to get, FALSE otherwise.
     bool              mIsDelaySet : 1;             ///< TRUE if Delay Timer is set, FALSE otherwise.
-    bool              mIsDelayGet : 1;             ///< TRUE if Delay Timer is to get, FALSE otherwise.
     bool              mIsPanIdSet : 1;             ///< TRUE if PAN ID is set, FALSE otherwise.
-    bool              mIsPanIdGet : 1;             ///< TRUE if PAN ID is to get, FALSE otherwise.
     bool              mIsChannelSet : 1;           ///< TRUE if Channel is set, FALSE otherwise.
-    bool              mIsChannelGet : 1;           ///< TRUE if Channel is to get, FALSE otherwise.
 } otOperationalDataset;
+
+/**
+ * This enumeration represents meshcop TLV types.
+ *
+ */
+typedef enum otMeshcopTlvType
+{
+    OT_MESHCOP_TLV_CHANNEL            = 0,    ///< meshcop Channel TLV
+    OT_MESHCOP_TLV_PANID              = 1,    ///< meshcop Pan Id TLV
+    OT_MESHCOP_TLV_EXTPANID           = 2,    ///< meshcop Extended Pan Id TLV
+    OT_MESHCOP_TLV_NETWORKNAME        = 3,    ///< meshcop Network Name TLV
+    OT_MESHCOP_TLV_PSKC               = 4,    ///< meshcop PSKc TLV
+    OT_MESHCOP_TLV_MASTERKEY          = 5,    ///< meshcop Network Master Key TLV
+    OT_MESHCOP_TLV_LOCALPREFIX        = 7,    ///< meshcop Mesh Local Prefix TLV
+    OT_MESHCOP_TLV_SECURITYPOLICY     = 12,   ///< meshcop Security Policy TLV
+    OT_MESHCOP_TLV_GET                = 13,   ///< meshcop Get TLV
+    OT_MESHCOP_TLV_ACTIVETIMESTAMP    = 14,   ///< meshcop Active Timestamp TLV
+    OT_MESHCOP_TLV_STATE              = 16,   ///< meshcop State TLV
+    OT_MESHCOP_TLV_PENDINGTIMESTAMP   = 51,   ///< meshcop Pending Timestamp TLV
+    OT_MESHCOP_TLV_DELAYTIMER         = 52,   ///< meshcop Delay Timer TLV
+    OT_MESHCOP_TLV_CHANNELMASK        = 53,   ///< meshcop Channel Mask TLV
+    OT_MESHCOP_TLV_DISCOVERYREQUEST   = 128,  ///< meshcop Discovery Request TLV
+    OT_MESHCOP_TLV_DISCOVERYRESPONSE  = 129,  ///< meshcop Discovery Response TLV
+} otMeshcopTlvType;
 
 /**
  * This structure represents an MLE Link Mode configuration.
@@ -352,18 +377,19 @@ typedef struct otLinkModeConfig
  */
 enum
 {
-    OT_IP6_ADDRESS_ADDED    = 1 << 0,  ///< IPv6 address was added
-    OT_IP6_ADDRESS_REMOVED  = 1 << 1,  ///< IPv6 address was removed
+    OT_IP6_ADDRESS_ADDED      = 1 << 0,  ///< IPv6 address was added
+    OT_IP6_ADDRESS_REMOVED    = 1 << 1,  ///< IPv6 address was removed
 
-    OT_NET_ROLE             = 1 << 3,  ///< Device role (disabled, detached, child, router, leader) changed
-    OT_NET_PARTITION_ID     = 1 << 4,  ///< Partition ID changed
-    OT_NET_KEY_SEQUENCE     = 1 << 5,  ///< Thread Key Sequence changed
+    OT_NET_ROLE               = 1 << 3,  ///< Device role (disabled, detached, child, router, leader) changed
+    OT_NET_PARTITION_ID       = 1 << 4,  ///< Partition ID changed
+    OT_NET_KEY_SEQUENCE       = 1 << 5,  ///< Thread Key Sequence changed
 
-    OT_THREAD_CHILD_ADDED   = 1 << 6,  ///< Child was added
-    OT_THREAD_CHILD_REMOVED = 1 << 7,  ///< Child was removed
+    OT_THREAD_CHILD_ADDED     = 1 << 6,  ///< Child was added
+    OT_THREAD_CHILD_REMOVED   = 1 << 7,  ///< Child was removed
+    OT_THREAD_NETDATA_UPDATED = 1 << 8,  ///< Thread Network Data updated
 
-    OT_IP6_LL_ADDR_CHANGED  = 1 << 8,  ///< The link-local address has changed
-    OT_IP6_ML_ADDR_CHANGED  = 1 << 9,  ///< The mesh-local address has changed
+    OT_IP6_LL_ADDR_CHANGED    = 1 << 9,  ///< The link-local address has changed
+    OT_IP6_ML_ADDR_CHANGED    = 1 << 10, ///< The mesh-local address has changed
 };
 
 /**
@@ -388,6 +414,10 @@ typedef struct otIp6Prefix
     otIp6Address  mPrefix;  ///< The IPv6 prefix.
     uint8_t       mLength;  ///< The IPv6 prefix length.
 } otIp6Prefix;
+
+#define OT_NETWORK_DATA_ITERATOR_INIT  0  ///< Initializeer for otNetworkDataIterator.
+
+typedef uint8_t otNetworkDataIterator;  ///< Used to iterate through Network Data information.
 
 /**
  * This structure represents a Border Router configuration.

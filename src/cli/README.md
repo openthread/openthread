@@ -247,16 +247,13 @@ clear
 commit
 delay
 extpanid
-getactivecmd
-getpendingcmd
 masterkey
 meshlocalprefix
+mgmtcommand
 networkname
 panid
 pending
 pendingtimestamp
-setactivecmd
-setpendingcmd
 userdata
 Done
 ```
@@ -361,24 +358,6 @@ Set extended panid.
 Done
 ```
 
-### dataset getactivecmd
-
-Send MGMT_ACTIVE_GET command.
-
-```bash
-> dataset getactivecmd
-Done
-```
-
-### dataset getpendingcmd
-
-Send MGMT_PENDING_GET command.
-
-```bash
-> dataset getpendingcmd
-Done
-```
-
 ### dataset masterkey
 
 Set getting master key flag.
@@ -412,6 +391,42 @@ Set mesh local prefix.
 
 ```bash
 > dataset meshlocalprefix fd00:db8::
+Done
+```
+
+### dataset mgmtcommand set active \[TLVs list\] \[binary\]
+
+Send MGMT_ACTIVE_SET.
+
+```bash
+> dataset mgmtcommand set active activetimestamp 123 binary 3 820155
+Done
+```
+
+### dataset mgmtcommand get active \[TLV Types list\] \[binary\]
+
+Send MGMT_ACTIVE_GET.
+
+```bash
+> dataset mgmtcommand get active activetimestamp binary 2 0001
+Done
+```
+
+### dataset mgmtcommand set pending \[TLVs list\] \[binary\]
+
+Send MGMT_PENDING_GET.
+
+```bash
+> dataset mgmtcommand get pending activetimestamp binary 2 0001
+Done
+```
+
+### dataset mgmtcommand get pending \[TLV Types list\] \[binary\]
+
+Send MGMT_PENDING_GET.
+
+```bash
+> dataset mgmtcommand get pending activetimestamp binary 2 0001
 Done
 ```
 
@@ -475,24 +490,6 @@ Set pending timestamp.
 
 ```bash
 > dataset pendingtimestamp 123456789
-Done
-```
-
-### dataset setactivecmd
-
-Send MGMT_ACTIVE_SET command.
-
-```bash
-> dataset setactivecmd
-Done
-```
-
-### dataset setpendingcmd
-
-Send MGMT_PENDING_SET command.
-
-```bash
-> dataset setpendingcmd
 Done
 ```
 

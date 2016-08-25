@@ -639,19 +639,54 @@ ThreadError otGetPendingDataset(otOperationalDataset *aDataset);
 ThreadError otSetPendingDataset(otOperationalDataset *aDataset);
 
 /**
- * This function sends meshcop dataset command.
+ * This function sends MGMT_ACTIVE_GET.
  *
- * @param[in]  aPath      A pointer to the path of the resource.
- * @param[in]  aDataset   A pointer to the operational dataset.
- * @param[in]  aTlvs      A pointer to the user specific TLVs.
- * @param[in]  aSize      The size of user specific TLVs.
+ * @param[in]  aTlvTypes  A pointer to the TLV Types.
+ * @param[in]  aSize      The size of TLV Types.
  *
  * @retval kThreadError_None         Successfully send the meshcop dataset command.
  * @retval kThreadError_Fail         Fail to send the meshcop dataset command.
- * @retval kThreadError_InvalidArgs  @p aPath is not supported.
  *
  */
-ThreadError otSendDatasetCommand(const char *aPath, otOperationalDataset *aDataset, uint8_t *aTlvs, uint8_t aSize);
+ThreadError otSendActiveGet(const uint8_t *aTlvTypes, uint8_t aSize);
+
+/**
+ * This function sends MGMT_ACTIVE_SET.
+ *
+ * @param[in]  aDataset   A pointer to operational dataset.
+ * @param[in]  aTlvs      A pointer to TLVs.
+ * @param[in]  aSize      The size of TLVs.
+ *
+ * @retval kThreadError_None         Successfully send the meshcop dataset command.
+ * @retval kThreadError_Fail         Fail to send the meshcop dataset command.
+ *
+ */
+ThreadError otSendActiveSet(otOperationalDataset *aDataset, const uint8_t *aTlvs, uint8_t aSize);
+
+/**
+ * This function sends MGMT_PENDING_GET.
+ *
+ * @param[in]  aTlvTypes  A pointer to the TLV Types.
+ * @param[in]  aSize      The size of TLV Types.
+ *
+ * @retval kThreadError_None         Successfully send the meshcop dataset command.
+ * @retval kThreadError_Fail         Fail to send the meshcop dataset command.
+ *
+ */
+ThreadError otSendPendingGet(const uint8_t *aTlvTypes, uint8_t aSize);
+
+/**
+ * This function sends MGMT_PENDING_SET.
+ *
+ * @param[in]  aDataset   A pointer to operational dataset.
+ * @param[in]  aTlvs      A pointer to TLVs.
+ * @param[in]  aSize      The size of TLVs.
+ *
+ * @retval kThreadError_None         Successfully send the meshcop dataset command.
+ * @retval kThreadError_Fail         Fail to send the meshcop dataset command.
+ *
+ */
+ThreadError otSendPendingSet(otOperationalDataset *aDataset, const uint8_t *aTlvs, uint8_t aSize);
 
 /**
  * Get the data poll period of sleepy end deivce.

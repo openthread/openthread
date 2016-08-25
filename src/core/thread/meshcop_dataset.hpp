@@ -67,7 +67,7 @@ public:
      * @returns A pointer to the TLV or NULL if none is found.
      *
      */
-    Tlv *Get(Tlv::Type aType);
+    Tlv *Get(otMeshcopTlvType aType);
 
     /**
      * This method returns a pointer to the TLV.
@@ -75,7 +75,7 @@ public:
      * @returns A pointer to the TLV or NULL if none is found.
      *
      */
-    const Tlv *Get(Tlv::Type aType) const;
+    const Tlv *Get(otMeshcopTlvType aType) const;
 
     /**
      * This method returns a pointer to the byte representation of the Dataset.
@@ -128,7 +128,7 @@ public:
 
     ThreadError Set(const otOperationalDataset &aDataset, bool aActive);
 
-    void Remove(Tlv::Type aType);
+    void Remove(otMeshcopTlvType aType);
 
 private:
     void Remove(uint8_t *aStart, uint8_t aLength);
