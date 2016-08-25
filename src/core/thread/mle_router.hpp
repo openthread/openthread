@@ -323,6 +323,7 @@ public:
      *
      * @retval  kThreadErrorNone           Successfully set the max.
      * @retval  kThreadError_InvalidArgs   If @p aMaxChildren is not in the range [1, kMaxChildren].
+     * @retval  kThreadError_InvalidState  If OpenThread has already been started.
      *
      */
     ThreadError SetMaxAllowedChildren(uint8_t aMaxChildren);

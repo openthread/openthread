@@ -2289,6 +2289,9 @@ ThreadError MleRouter::SetMaxAllowedChildren(uint8_t aMaxChildren)
     // Ensure the value is between 1 and kMaxChildren
     VerifyOrExit(aMaxChildren > 0 && aMaxChildren <= kMaxChildren, error = kThreadError_InvalidArgs);
 
+    // Do not allow setting max children if Thread is running
+    VerifyOrExit(GetDeviceState() == Mle::kDeviceStateDisabled, error = kThreadError_InvalidState);
+
     // Save the value
     mMaxChildrenAllowed = aMaxChildren;
 
