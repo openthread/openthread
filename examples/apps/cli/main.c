@@ -26,31 +26,44 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <openthread-core-config.h>
 #include <openthread.h>
 #include <openthread-config.h>
 #include <openthread-diag.h>
 #include <cli/cli-uart.h>
 #include <platform/platform.h>
+#include <assert.h>
 
-void otSignalTaskletPending(void)
+void otSignalTaskletPending(otInstance *aInstance)
 {
+    (void)aInstance;
 }
+
+static uint8_t otInstanceBuffer[OT_INSTANCE_SIZE];
 
 int main(int argc, char *argv[])
 {
+    otInstance *sInstance;
+    uint64_t otInstanceBufferLength = sizeof(otInstanceBuffer);
+
     PlatformInit(argc, argv);
-    otEnable();
-    otCliUartInit();
+
+    sInstance = otInstanceInit(otInstanceBuffer, &otInstanceBufferLength);
+    assert(sInstance);
+
+    otCliUartInit(sInstance);
 
 #if OPENTHREAD_ENABLE_DIAG
-    diagInit();
+    diagInit(sInstance);
 #endif
 
     while (1)
     {
-        otProcessNextTasklet();
-        PlatformProcessDrivers();
+        otProcessNextTasklet(sInstance);
+        PlatformProcessDrivers(sInstance);
     }
+
+    // otInstanceFinalize(sInstance);
 
     return 0;
 }

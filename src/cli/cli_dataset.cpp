@@ -133,7 +133,7 @@ ThreadError Dataset::Print(otOperationalDataset &aDataset)
     return kThreadError_None;
 }
 
-ThreadError Dataset::Process(int argc, char *argv[], Server &aServer)
+ThreadError Dataset::Process(otInstance *aInstance, int argc, char *argv[], Server &aServer)
 {
     ThreadError error = kThreadError_None;
 
@@ -148,7 +148,7 @@ ThreadError Dataset::Process(int argc, char *argv[], Server &aServer)
     {
         if (strcmp(argv[0], sCommands[i].mName) == 0)
         {
-            error = sCommands[i].mCommand(argc - 1, argv + 1);
+            error = sCommands[i].mCommand(aInstance, argc - 1, argv + 1);
             break;
         }
     }
@@ -157,29 +157,30 @@ exit:
     return error;
 }
 
-ThreadError Dataset::ProcessHelp(int argc, char *argv[])
+ThreadError Dataset::ProcessHelp(otInstance *aInstance, int argc, char *argv[])
 {
     for (unsigned int i = 0; i < sizeof(sCommands) / sizeof(sCommands[0]); i++)
     {
         sServer->OutputFormat("%s\r\n", sCommands[i].mName);
     }
 
+    (void)aInstance;
     (void)argc;
     (void)argv;
     return kThreadError_None;
 }
 
-ThreadError Dataset::ProcessActive(int argc, char *argv[])
+ThreadError Dataset::ProcessActive(otInstance *aInstance, int argc, char *argv[])
 {
     otOperationalDataset dataset;
-    otGetActiveDataset(&dataset);
+    otGetActiveDataset(aInstance, &dataset);
 
     (void)argc;
     (void)argv;
     return Print(dataset);
 }
 
-ThreadError Dataset::ProcessActiveTimestamp(int argc, char *argv[])
+ThreadError Dataset::ProcessActiveTimestamp(otInstance *aInstance, int argc, char *argv[])
 {
     ThreadError error = kThreadError_None;
     long value;
@@ -190,11 +191,13 @@ ThreadError Dataset::ProcessActiveTimestamp(int argc, char *argv[])
     sDataset.mActiveTimestamp = static_cast<uint64_t>(value);
     sDataset.mIsActiveTimestampSet = true;
 
+    (void)aInstance;
+
 exit:
     return error;
 }
 
-ThreadError Dataset::ProcessChannel(int argc, char *argv[])
+ThreadError Dataset::ProcessChannel(otInstance *aInstance, int argc, char *argv[])
 {
     ThreadError error = kThreadError_None;
     long value;
@@ -204,19 +207,22 @@ ThreadError Dataset::ProcessChannel(int argc, char *argv[])
     sDataset.mChannel = static_cast<uint16_t>(value);
     sDataset.mIsChannelSet = true;
 
+    (void)aInstance;
+
 exit:
     return error;
 }
 
-ThreadError Dataset::ProcessClear(int argc, char *argv[])
+ThreadError Dataset::ProcessClear(otInstance *aInstance, int argc, char *argv[])
 {
     memset(&sDataset, 0, sizeof(sDataset));
+    (void)aInstance;
     (void)argc;
     (void)argv;
     return kThreadError_None;
 }
 
-ThreadError Dataset::ProcessCommit(int argc, char *argv[])
+ThreadError Dataset::ProcessCommit(otInstance *aInstance, int argc, char *argv[])
 {
     ThreadError error = kThreadError_None;
 
@@ -224,22 +230,24 @@ ThreadError Dataset::ProcessCommit(int argc, char *argv[])
 
     if (strcmp(argv[0], "active") == 0)
     {
-        SuccessOrExit(error = otSetActiveDataset(&sDataset));
+        SuccessOrExit(error = otSetActiveDataset(aInstance, &sDataset));
     }
     else if (strcmp(argv[0], "pending") == 0)
     {
-        SuccessOrExit(error = otSetPendingDataset(&sDataset));
+        SuccessOrExit(error = otSetPendingDataset(aInstance, &sDataset));
     }
     else
     {
         ExitNow(error = kThreadError_Parse);
     }
 
+    (void)aInstance;
+
 exit:
     return error;
 }
 
-ThreadError Dataset::ProcessDelay(int argc, char *argv[])
+ThreadError Dataset::ProcessDelay(otInstance *aInstance, int argc, char *argv[])
 {
     ThreadError error = kThreadError_None;
     long value;
@@ -249,11 +257,13 @@ ThreadError Dataset::ProcessDelay(int argc, char *argv[])
     sDataset.mDelay = static_cast<uint32_t>(value);
     sDataset.mIsDelaySet = true;
 
+    (void)aInstance;
+
 exit:
     return error;
 }
 
-ThreadError Dataset::ProcessExtPanId(int argc, char *argv[])
+ThreadError Dataset::ProcessExtPanId(otInstance *aInstance, int argc, char *argv[])
 {
     ThreadError error = kThreadError_None;
     uint8_t extPanId[OT_EXT_PAN_ID_SIZE];
@@ -264,11 +274,13 @@ ThreadError Dataset::ProcessExtPanId(int argc, char *argv[])
     memcpy(sDataset.mExtendedPanId.m8, extPanId, sizeof(sDataset.mExtendedPanId));
     sDataset.mIsExtendedPanIdSet = true;
 
+    (void)aInstance;
+
 exit:
     return error;
 }
 
-ThreadError Dataset::ProcessMasterKey(int argc, char *argv[])
+ThreadError Dataset::ProcessMasterKey(otInstance *aInstance, int argc, char *argv[])
 {
     ThreadError error = kThreadError_None;
     int keyLength;
@@ -281,11 +293,13 @@ ThreadError Dataset::ProcessMasterKey(int argc, char *argv[])
     memcpy(sDataset.mMasterKey.m8, key, sizeof(sDataset.mMasterKey));
     sDataset.mIsMasterKeySet = true;
 
+    (void)aInstance;
+
 exit:
     return error;
 }
 
-ThreadError Dataset::ProcessMeshLocalPrefix(int argc, char *argv[])
+ThreadError Dataset::ProcessMeshLocalPrefix(otInstance *aInstance, int argc, char *argv[])
 {
     ThreadError error = kThreadError_None;
     otIp6Address prefix;
@@ -296,11 +310,13 @@ ThreadError Dataset::ProcessMeshLocalPrefix(int argc, char *argv[])
     memcpy(sDataset.mMeshLocalPrefix.m8, prefix.mFields.m8, sizeof(sDataset.mMeshLocalPrefix.m8));
     sDataset.mIsMeshLocalPrefixSet = true;
 
+    (void)aInstance;
+
 exit:
     return error;
 }
 
-ThreadError Dataset::ProcessNetworkName(int argc, char *argv[])
+ThreadError Dataset::ProcessNetworkName(otInstance *aInstance, int argc, char *argv[])
 {
     ThreadError error = kThreadError_None;
     size_t length;
@@ -312,11 +328,13 @@ ThreadError Dataset::ProcessNetworkName(int argc, char *argv[])
     memcpy(sDataset.mNetworkName.m8, argv[0], length);
     sDataset.mIsNetworkNameSet = true;
 
+    (void)aInstance;
+
 exit:
     return error;
 }
 
-ThreadError Dataset::ProcessPanId(int argc, char *argv[])
+ThreadError Dataset::ProcessPanId(otInstance *aInstance, int argc, char *argv[])
 {
     ThreadError error = kThreadError_None;
     long value;
@@ -326,21 +344,23 @@ ThreadError Dataset::ProcessPanId(int argc, char *argv[])
     sDataset.mPanId = static_cast<otPanId>(value);
     sDataset.mIsPanIdSet = true;
 
+    (void)aInstance;
+
 exit:
     return error;
 }
 
-ThreadError Dataset::ProcessPending(int argc, char *argv[])
+ThreadError Dataset::ProcessPending(otInstance *aInstance, int argc, char *argv[])
 {
     otOperationalDataset dataset;
-    otGetPendingDataset(&dataset);
+    otGetPendingDataset(aInstance, &dataset);
 
     (void)argc;
     (void)argv;
     return Print(dataset);
 }
 
-ThreadError Dataset::ProcessPendingTimestamp(int argc, char *argv[])
+ThreadError Dataset::ProcessPendingTimestamp(otInstance *aInstance, int argc, char *argv[])
 {
     ThreadError error = kThreadError_None;
     long value;
@@ -350,6 +370,8 @@ ThreadError Dataset::ProcessPendingTimestamp(int argc, char *argv[])
     SuccessOrExit(error = Interpreter::ParseLong(argv[0], value));
     sDataset.mPendingTimestamp = static_cast<uint64_t>(value);
     sDataset.mIsPendingTimestampSet = true;
+
+    (void)aInstance;
 
 exit:
     return error;

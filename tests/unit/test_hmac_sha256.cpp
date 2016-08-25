@@ -33,7 +33,7 @@
 
 #include <crypto/hmac_sha256.h>
 
-extern"C" void otSignalTaskletPending(void)
+extern"C" void otSignalTaskletPending(otInstance *)
 {
 }
 

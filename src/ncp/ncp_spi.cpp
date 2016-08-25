@@ -47,9 +47,9 @@ namespace Thread {
 static otDEFINE_ALIGNED_VAR(sNcpRaw, sizeof(NcpSpi), uint64_t);
 static NcpSpi *sNcpSpi;
 
-extern "C" void otNcpInit(void)
+extern "C" void otNcpInit(otInstance *aInstance)
 {
-    sNcpSpi = new(&sNcpRaw) NcpSpi;
+    sNcpSpi = new(&sNcpRaw) NcpSpi(aInstance);
 }
 
 static void spi_header_set_flag_byte(uint8_t *header, uint8_t value)
@@ -84,11 +84,11 @@ static uint16_t spi_header_get_data_len(const uint8_t *header)
     return ( header[3] + static_cast<uint16_t>(header[4] << 8) );
 }
 
-NcpSpi::NcpSpi():
-    NcpBase(),
-    mHandleRxFrame(&HandleRxFrame, this),
-    mHandleSendDone(&HandleSendDone, this),
-    mTxFrameBuffer(mTxBuffer, sizeof(mTxBuffer))
+NcpSpi::NcpSpi(otInstance *aInstance):
+    NcpBase(aInstance),
+    mHandleRxFrame(&NcpSpi::HandleRxFrame, this),
+    mHandleSendDone(&NcpSpi::HandleSendDone, this),
+    mTxFrameBuffer(aInstance, mTxBuffer, sizeof(mTxBuffer))
 {
     memset(mEmptySendFrame, 0, kSpiHeaderLength);
     memset(mSendFrame, 0, kSpiHeaderLength);
@@ -102,7 +102,7 @@ NcpSpi::NcpSpi():
     spi_header_set_flag_byte(mSendFrame, SPI_RESET_FLAG|SPI_PATTERN_VALUE);
     spi_header_set_flag_byte(mEmptySendFrame, SPI_RESET_FLAG|SPI_PATTERN_VALUE);
     spi_header_set_accept_len(mSendFrame, sizeof(mReceiveFrame) - kSpiHeaderLength);
-    otPlatSpiSlaveEnable(&SpiTransactionComplete, (void*)this);
+    otPlatSpiSlaveEnable(&NcpSpi::SpiTransactionComplete, (void*)this);
 
     // We signal an interrupt on this first transaction to
     // make sure that the host processor knows that our

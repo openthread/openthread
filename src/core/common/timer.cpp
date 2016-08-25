@@ -152,18 +152,18 @@ void TimerScheduler::SetAlarm(void)
 
     if (timer == NULL)
     {
-        otPlatAlarmStop();
+        otPlatAlarmStop(NULL);
     }
     else
     {
         elapsed = now - timer->mT0;
         remaining = (timer->mDt > elapsed) ? timer->mDt - elapsed : 0;
 
-        otPlatAlarmStartAt(now, remaining);
+        otPlatAlarmStartAt(NULL, now, remaining);
     }
 }
 
-extern "C" void otPlatAlarmFired(void)
+extern "C" void otPlatAlarmFired(otInstance *)
 {
     TimerScheduler::FireTimers();
 }

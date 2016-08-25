@@ -63,7 +63,7 @@ ThreadError TaskletScheduler::Post(Tasklet &aTasklet)
     {
         sHead = &aTasklet;
         sTail = &aTasklet;
-        otSignalTaskletPending();
+        otSignalTaskletPending(NULL);
     }
     else
     {

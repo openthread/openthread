@@ -55,15 +55,18 @@ extern "C" {
 /**
  * Set the alarm to fire at @p aDt milliseconds after @p aT0.
  *
- * @param[in] aT0  The reference time.
- * @param[in] aDt  The time delay in milliseconds from @p aT0.
+ * @param[in] aInstance  The OpenThread instance structure.
+ * @param[in] aT0        The reference time.
+ * @param[in] aDt        The time delay in milliseconds from @p aT0.
  */
-void otPlatAlarmStartAt(uint32_t aT0, uint32_t aDt);
+void otPlatAlarmStartAt(otInstance *aInstance, uint32_t aT0, uint32_t aDt);
 
 /**
  * Stop the alarm.
+ *
+ * @param[in] aInstance  The OpenThread instance structure.
  */
-void otPlatAlarmStop(void);
+void otPlatAlarmStop(otInstance *aInstance);
 
 /**
  * Get the current time.
@@ -74,13 +77,17 @@ uint32_t otPlatAlarmGetNow(void);
 
 /**
  * Signal that the alarm has fired.
+ *
+ * @param[in] aInstance  The OpenThread instance structure.
  */
-extern void otPlatAlarmFired(void);
+extern void otPlatAlarmFired(otInstance *aInstance);
 
 /**
  * Signal diagnostics module that the alarm has fired.
+ *
+ * @param[in] aInstance  The OpenThread instance structure.
  */
-extern void otPlatDiagAlarmFired(void);
+extern void otPlatDiagAlarmFired(otInstance *aInstance);
 
 /**
  * @}

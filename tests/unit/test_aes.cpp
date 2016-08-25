@@ -32,7 +32,7 @@
 #include <crypto/aes_ccm.hpp>
 #include <string.h>
 
-extern"C" void otSignalTaskletPending(void)
+extern"C" void otSignalTaskletPending(otInstance *)
 {
 }
 

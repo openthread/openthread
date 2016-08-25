@@ -40,11 +40,11 @@ using namespace Thread;
 
 namespace Thread {
 
-extern "C" void otSignalTaskletPending(void)
+extern "C" void otSignalTaskletPending(otInstance *)
 {
 }
 
-extern "C" bool otAreTaskletsPending(void)
+extern "C" bool otAreTaskletsPending(otInstance *)
 {
     return false;
 }
@@ -59,17 +59,17 @@ extern "C" void otPlatUartReceived(const uint8_t *aBuf, uint16_t aBufLength)
     (void)aBufLength;
 }
 
-extern "C" void otPlatDiagAlarmFired()
+extern "C" void otPlatDiagAlarmFired(otInstance *)
 {
 }
 
-extern "C" void otPlatDiagRadioTransmitDone(bool aRxPending, ThreadError aError)
+extern "C" void otPlatDiagRadioTransmitDone(otInstance *, bool aRxPending, ThreadError aError)
 {
     (void)aRxPending;
     (void)aError;
 }
 
-extern "C" void otPlatDiagRadioReceiveDone(RadioPacket *aFrame, ThreadError aError)
+extern "C" void otPlatDiagRadioReceiveDone(otInstance *, RadioPacket *aFrame, ThreadError aError)
 {
     (void)aFrame;
     (void)aError;

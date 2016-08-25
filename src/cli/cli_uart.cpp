@@ -51,17 +51,17 @@ namespace Cli {
 static const char sCommandPrompt[] = {'>', ' '};
 static const char sEraseString[] = {'\b', ' ', '\b'};
 static const char CRNL[] = {'\r', '\n'};
-static Uart *sServer;
+Uart *Uart::sUartServer;
 
 static otDEFINE_ALIGNED_VAR(sCliUartRaw, sizeof(Uart), uint64_t);
 
-extern "C" void otCliUartInit(void)
+extern "C" void otCliUartInit(otInstance *aInstance)
 {
-    sServer = new(&sCliUartRaw) Uart;
-    Interpreter::Init();
+    Uart::sUartServer = new(&sCliUartRaw) Uart(aInstance);
 }
 
-Uart::Uart(void)
+Uart::Uart(otInstance *aInstance):
+    mInterpreter(aInstance)
 {
     mRxLength = 0;
     mTxHead = 0;
@@ -71,7 +71,7 @@ Uart::Uart(void)
 
 extern "C" void otPlatUartReceived(const uint8_t *aBuf, uint16_t aBufLength)
 {
-    sServer->ReceiveTask(aBuf, aBufLength);
+    Uart::sUartServer->ReceiveTask(aBuf, aBufLength);
 }
 
 void Uart::ReceiveTask(const uint8_t *aBuf, uint16_t aBufLength)
@@ -130,7 +130,7 @@ ThreadError Uart::ProcessCommand(void)
         mRxBuffer[--mRxLength] = '\0';
     }
 
-    Interpreter::ProcessLine(mRxBuffer, mRxLength, *this);
+    mInterpreter.ProcessLine(mRxBuffer, mRxLength, *this);
 
     mRxLength = 0;
 
@@ -195,7 +195,7 @@ exit:
 
 extern "C" void otPlatUartSendDone(void)
 {
-    sServer->SendDoneTask();
+    Uart::sUartServer->SendDoneTask();
 }
 
 void Uart::SendDoneTask(void)

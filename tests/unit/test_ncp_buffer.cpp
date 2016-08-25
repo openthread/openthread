@@ -36,11 +36,11 @@ namespace Thread {
 
 // This module implements unit-test for NcpFrameBuffer class.
 
-extern"C" void otSignalTaskletPending(void)
+extern"C" void otSignalTaskletPending(otInstance *)
 {
 }
 
-extern "C" void otPlatDiagAlarmFired()
+extern "C" void otPlatDiagAlarmFired(otInstance *)
 {
 }
 
@@ -249,7 +249,7 @@ void TestNcpFrameBuffer(void)
 {
     unsigned i, j;
     uint8_t buffer[kTestBufferSize];
-    NcpFrameBuffer ncpBuffer(buffer, kTestBufferSize);
+    NcpFrameBuffer ncpBuffer(NULL, buffer, kTestBufferSize);
 
     Message *message;
     CallbackContext context;

@@ -45,12 +45,19 @@ namespace Thread {
 class NcpBase
 {
 public:
-
+    
     /**
      * This constructor creates and initializes an NcpBase instance.
      *
+     * @param[in]  aInstance  The OpenThread instance structure.
+     *
      */
-    NcpBase(void);
+    NcpBase(otInstance *aInstance);
+
+protected:
+    
+    // The pointer to the OpenThread instance
+    otInstance* mInstance;
 
 protected:
 

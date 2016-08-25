@@ -37,11 +37,20 @@
 
 #include <stdint.h>
 #include <stdbool.h>
+
 #include <platform/toolchain.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+/**
+ * This type represents the OpenThread instance structure.
+ */
+typedef struct otInstance otInstance;
+
+// Size of the OpenThread instance structure (bytes)
+#define OT_INSTANCE_SIZE   (9500 + OPENTHREAD_CONFIG_NUM_MESSAGE_BUFFERS * OPENTHREAD_CONFIG_MESSAGE_BUFFER_SIZE)
 
 /**
  * This enumeration represents error codes used throughout OpenThread.
@@ -726,7 +735,7 @@ typedef struct otUdpSocket
     otSockAddr           mPeerName;  ///< The peer IPv6 socket address.
     otUdpReceive         mHandler;   ///< A function pointer to the application callback.
     void                *mContext;   ///< A pointer to application-specific context.
-    struct otUdpSocket *mNext;       ///< A pointer to the next UDP socket.
+    struct otUdpSocket  *mNext;      ///< A pointer to the next UDP socket.
 } otUdpSocket;
 
 /**
