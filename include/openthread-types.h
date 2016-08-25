@@ -50,7 +50,8 @@ extern "C" {
 typedef struct otInstance otInstance;
 
 // Size of the OpenThread instance structure (bytes)
-#define OT_INSTANCE_SIZE   (9500 + OPENTHREAD_CONFIG_NUM_MESSAGE_BUFFERS * OPENTHREAD_CONFIG_MESSAGE_BUFFER_SIZE)
+#define OT_INSTANCE_SIZE   1
+//#define OT_INSTANCE_SIZE   (9500 + OPENTHREAD_CONFIG_NUM_MESSAGE_BUFFERS * OPENTHREAD_CONFIG_MESSAGE_BUFFER_SIZE)
 
 /**
  * This enumeration represents error codes used throughout OpenThread.
