@@ -172,7 +172,7 @@ const char *otGetVersionString(void);
  * @retval otInstance*  The new OpenThread instance structure.
  *
  */
-otInstance *otInstanceInit(void *aContextBuffer, uint64_t *aInstanceBufferSize);
+otInstance *otInstanceInit(void *aInstanceBuffer, uint64_t *aInstanceBufferSize);
 
 /**
  * This function disables the OpenThread library.

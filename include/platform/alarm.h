@@ -56,8 +56,8 @@ extern "C" {
  * Set the alarm to fire at @p aDt milliseconds after @p aT0.
  *
  * @param[in] aInstance  The OpenThread instance structure.
- * @param[in] aT0       The reference time.
- * @param[in] aDt       The time delay in milliseconds from @p aT0.
+ * @param[in] aT0        The reference time.
+ * @param[in] aDt        The time delay in milliseconds from @p aT0.
  */
 void otPlatAlarmStartAt(otInstance *aInstance, uint32_t aT0, uint32_t aDt);
 
