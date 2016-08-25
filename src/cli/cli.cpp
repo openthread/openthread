@@ -1898,6 +1898,9 @@ void Interpreter::ProcessLine(char *aBuf, uint16_t aBufLength, Server &aServer)
         {
             argv[argc++] = cmd;
         }
+
+        VerifyOrExit(argc < kMaxArgs,
+                     sServer->OutputFormat("Error %d, Max %d\r\n", kThreadError_TooManyArgs, kMaxArgs));
     }
 
     cmd = aBuf;

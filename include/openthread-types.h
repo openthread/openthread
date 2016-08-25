@@ -126,6 +126,11 @@ typedef enum ThreadError
      */
     kThreadError_BlacklistFiltered = 27,
 
+    /**
+     * Too many arguments.
+     */
+    kThreadError_TooManyArgs = 28,
+
     kThreadError_Error = 255,
 } ThreadError;
 
