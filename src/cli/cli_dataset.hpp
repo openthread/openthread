@@ -49,7 +49,8 @@ namespace Cli {
 struct DatasetCommand
 {
     const char *mName;                                                      ///< A pointer to the command string.
-    ThreadError(*mCommand)(otInstance *aInstance, int argc, char *argv[]);    ///< A function pointer to process the command.
+    ThreadError(*mCommand)(otInstance *aInstance, int argc,
+                           char *argv[]);    ///< A function pointer to process the command.
 };
 
 /**

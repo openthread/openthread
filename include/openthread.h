@@ -1987,7 +1987,8 @@ otMessage otNewUdpMessage(otInstance *aInstance);
  * @sa otBindUdpSocket
  * @sa otSendUdp
  */
-ThreadError otOpenUdpSocket(otInstance *aInstance, otUdpSocket *aSocket, otUdpReceive aCallback, void *aCallbackContext);
+ThreadError otOpenUdpSocket(otInstance *aInstance, otUdpSocket *aSocket, otUdpReceive aCallback,
+                            void *aCallbackContext);
 
 /**
  * Close a UDP/IPv6 socket.

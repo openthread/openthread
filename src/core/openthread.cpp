@@ -157,7 +157,7 @@ ThreadError otSetExtendedAddress(otInstance *aInstance, const otExtAddress *aExt
     VerifyOrExit(aExtAddress != NULL, error = kThreadError_InvalidArgs);
 
     SuccessOrExit(error = aInstance->mThreadNetif.GetMac().SetExtAddress(*static_cast<const Mac::ExtAddress *>
-                                                                        (aExtAddress)));
+                                                                         (aExtAddress)));
     SuccessOrExit(error = aInstance->mThreadNetif.GetMle().UpdateLinkLocalAddress());
 
 exit:
@@ -410,8 +410,8 @@ ThreadError otAddBorderRouter(otInstance *aInstance, const otBorderRouterConfig 
     }
 
     return aInstance->mThreadNetif.GetNetworkDataLocal().AddOnMeshPrefix(aConfig->mPrefix.mPrefix.mFields.m8,
-                                                                        aConfig->mPrefix.mLength,
-                                                                        aConfig->mPreference, flags, aConfig->mStable);
+                                                                         aConfig->mPrefix.mLength,
+                                                                         aConfig->mPreference, flags, aConfig->mStable);
 }
 
 ThreadError otRemoveBorderRouter(otInstance *aInstance, const otIp6Prefix *aPrefix)
@@ -442,13 +442,14 @@ exit:
 ThreadError otAddExternalRoute(otInstance *aInstance, const otExternalRouteConfig *aConfig)
 {
     return aInstance->mThreadNetif.GetNetworkDataLocal().AddHasRoutePrefix(aConfig->mPrefix.mPrefix.mFields.m8,
-                                                                          aConfig->mPrefix.mLength,
-                                                                          aConfig->mPreference, aConfig->mStable);
+                                                                           aConfig->mPrefix.mLength,
+                                                                           aConfig->mPreference, aConfig->mStable);
 }
 
 ThreadError otRemoveExternalRoute(otInstance *aInstance, const otIp6Prefix *aPrefix)
 {
-    return aInstance->mThreadNetif.GetNetworkDataLocal().RemoveHasRoutePrefix(aPrefix->mPrefix.mFields.m8, aPrefix->mLength);
+    return aInstance->mThreadNetif.GetNetworkDataLocal().RemoveHasRoutePrefix(aPrefix->mPrefix.mFields.m8,
+                                                                              aPrefix->mLength);
 }
 
 ThreadError otSendServerData(otInstance *aInstance)
