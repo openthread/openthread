@@ -232,8 +232,8 @@ public:
 
     enum
     {
+        kModeSecureDataRequest = 1 << 6,
         kModeRxOnWhenIdle      = 1 << 3,
-        kModeSecureDataRequest = 1 << 2,
         kModeFFD               = 1 << 1,
         kModeFullNetworkData   = 1 << 0,
     };
