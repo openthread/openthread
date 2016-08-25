@@ -260,16 +260,6 @@ typedef struct otActiveScanResult
 } otActiveScanResult;
 
 /**
- * This struct represents an energy scan result.
- *
- */
-typedef struct otEnergyScanResult
-{
-    uint8_t mChannel;                ///< IEEE 802.15.4 Channel
-    int8_t  mMaxRssi;                ///< The max RSSI (dBm)
-} otEnergyScanResult;
-
-/**
  * @}
  *
  */
@@ -377,19 +367,18 @@ typedef struct otLinkModeConfig
  */
 enum
 {
-    OT_IP6_ADDRESS_ADDED      = 1 << 0,  ///< IPv6 address was added
-    OT_IP6_ADDRESS_REMOVED    = 1 << 1,  ///< IPv6 address was removed
+    OT_IP6_ADDRESS_ADDED     = 1 << 0,  ///< IPv6 address was added
+    OT_IP6_ADDRESS_REMOVED   = 1 << 1,  ///< IPv6 address was removed
 
-    OT_NET_ROLE               = 1 << 3,  ///< Device role (disabled, detached, child, router, leader) changed
-    OT_NET_PARTITION_ID       = 1 << 4,  ///< Partition ID changed
-    OT_NET_KEY_SEQUENCE       = 1 << 5,  ///< Thread Key Sequence changed
+    OT_NET_ROLE              = 1 << 3,  ///< Device role (disabled, detached, child, router, leader) changed
+    OT_NET_PARTITION_ID      = 1 << 4,  ///< Partition ID changed
+    OT_NET_KEY_SEQUENCE      = 1 << 5,  ///< Thread Key Sequence changed
 
-    OT_THREAD_CHILD_ADDED     = 1 << 6,  ///< Child was added
-    OT_THREAD_CHILD_REMOVED   = 1 << 7,  ///< Child was removed
-    OT_THREAD_NETDATA_UPDATED = 1 << 8,  ///< Thread Network Data updated
+    OT_THREAD_CHILD_ADDED    = 1 << 6,  ///< Child was added
+    OT_THREAD_CHILD_REMOVED  = 1 << 7,  ///< Child was removed
 
-    OT_IP6_LL_ADDR_CHANGED    = 1 << 9,  ///< The link-local address has changed
-    OT_IP6_ML_ADDR_CHANGED    = 1 << 10, ///< The mesh-local address has changed
+    OT_IP6_LL_ADDR_CHANGED   = 1 << 9,  ///< The link-local address has changed
+    OT_IP6_ML_ADDR_CHANGED   = 1 << 10, ///< The mesh-local address has changed
 };
 
 /**
@@ -414,10 +403,6 @@ typedef struct otIp6Prefix
     otIp6Address  mPrefix;  ///< The IPv6 prefix.
     uint8_t       mLength;  ///< The IPv6 prefix length.
 } otIp6Prefix;
-
-#define OT_NETWORK_DATA_ITERATOR_INIT  0  ///< Initializeer for otNetworkDataIterator.
-
-typedef uint8_t otNetworkDataIterator;  ///< Used to iterate through Network Data information.
 
 /**
  * This structure represents a Border Router configuration.
