@@ -53,12 +53,17 @@ extern "C" {
  */
 
 /**
- * Get a 32-bit true random value.
+ * Get random values.
  *
- * @returns A 32-bit true random value.
+ * @param[in]  aInputLength    The expected size of random values.
+ * @param[in]  aOutput         A pointer to the buffer for the generated random values.
+ * @param[in]  aOutputLength   The generated size of random values.
+ *
+ * @retval kThreadError_None   Generate random successfully.
+ * @retval kThreadError_Fail   Generate random fail.
  *
  */
-uint32_t otPlatRandomGet(void);
+ThreadError otPlatRandomGet(uint16_t aInputLength, uint8_t *aOutput, uint16_t *aOutputLength);
 
 /**
  * @}

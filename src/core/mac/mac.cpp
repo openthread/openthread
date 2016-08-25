@@ -54,6 +54,7 @@ void Mac::StartCsmaBackoff(void)
 {
     uint32_t backoffExponent = kMinBE + mTransmitAttempts + mCsmaAttempts;
     uint32_t backoff;
+    uint32_t random;
 
     if (backoffExponent > kMaxBE)
     {
@@ -61,7 +62,8 @@ void Mac::StartCsmaBackoff(void)
     }
 
     backoff = kMinBackoff + (kUnitBackoffPeriod * kPhyUsPerSymbol * (1 << backoffExponent)) / 1000;
-    backoff = (otPlatRandomGet() % backoff);
+    otPlatRandomGet(sizeof(random), reinterpret_cast<uint8_t *>(&random), NULL);
+    backoff = (random % backoff);
 
     mBackoffTimer.Start(backoff);
 }
@@ -104,7 +106,7 @@ Mac::Mac(ThreadNetif &aThreadNetif):
 
     for (size_t i = 0; i < sizeof(mExtAddress); i++)
     {
-        mExtAddress.m8[i] = static_cast<uint8_t>(otPlatRandomGet());
+        otPlatRandomGet(1, &mExtAddress.m8[i], NULL);
     }
 
     mExtAddress.SetGroup(false);
@@ -118,8 +120,8 @@ Mac::Mac(ThreadNetif &aThreadNetif):
     SetExtAddress(mExtAddress);
     SetShortAddress(kShortAddrInvalid);
 
-    mBeaconSequence = static_cast<uint8_t>(otPlatRandomGet());
-    mDataSequence = static_cast<uint8_t>(otPlatRandomGet());
+    otPlatRandomGet(sizeof(mBeaconSequence), &mBeaconSequence, NULL);
+    otPlatRandomGet(sizeof(mDataSequence), &mDataSequence, NULL);
 
     mPcapCallback = NULL;
     mPcapCallbackContext = NULL;
