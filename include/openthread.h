@@ -385,9 +385,9 @@ uint8_t otGetMaxAllowedChildren(void);
  *
  * @retval  kThreadErrorNone           Successfully set the max.
  * @retval  kThreadError_InvalidArgs   If @p aMaxChildren is not in the range [1, OPENTHREAD_CONFIG_MAX_CHILDREN].
- * @retval  kThreadError_InvalidState  If OpenThread has already been started.
+ * @retval  kThreadError_InvalidState  If Thread has already been started.
  *
- * @sa otSetChildTimeout
+ * @sa otGetMaxAllowedChildren
  */
 ThreadError otSetMaxAllowedChildren(uint8_t aMaxChildren);
 
