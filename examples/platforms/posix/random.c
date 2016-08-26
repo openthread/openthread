@@ -72,11 +72,10 @@ uint32_t otPlatRandomGet(void)
 ThreadError otPlatSecureRandomGet(uint16_t aInputLength, uint8_t *aOutput, uint16_t *aOutputLength)
 {
     ThreadError error = kThreadError_None;
-    uint16_t length = 0;
 
     VerifyOrExit(aOutput && aOutputLength, error = kThreadError_InvalidArgs);
 
-    for (length = 0; length < aInputLength; length++)
+    for (uint16_t length = 0; length < aInputLength; length++)
     {
         aOutput[length] = (uint8_t)otPlatRandomGet();
     }
