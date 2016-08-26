@@ -1889,6 +1889,9 @@ void Interpreter::ProcessLine(char *aBuf, uint16_t aBufLength, Server &aServer)
 
     for (cmd = aBuf + 1; (cmd < aBuf + aBufLength) && (cmd != NULL); ++cmd)
     {
+        VerifyOrExit(argc < kMaxArgs,
+                     sServer->OutputFormat("Error: too many args (max %d)\r\n", kMaxArgs));
+
         if (*cmd == ' ' || *cmd == '\r' || *cmd == '\n')
         {
             *cmd = '\0';
@@ -1898,9 +1901,6 @@ void Interpreter::ProcessLine(char *aBuf, uint16_t aBufLength, Server &aServer)
         {
             argv[argc++] = cmd;
         }
-
-        VerifyOrExit(argc <= kMaxArgs,
-                     sServer->OutputFormat("Error: too many args (max %d)\r\n", kMaxArgs));
     }
 
     cmd = aBuf;
