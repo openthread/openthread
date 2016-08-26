@@ -67,7 +67,7 @@ AddressResolver::AddressResolver(ThreadNetif &aThreadNetif) :
     mCoapServer.AddResource(mAddressNotification);
     mCoapMessageId = static_cast<uint8_t>(otPlatRandomGet());
 
-    Ip6::Icmp::RegisterCallbacks(mIcmpHandler);
+    mNetif.GetIp6().mIcmp.RegisterCallbacks(mIcmpHandler);
 }
 
 void AddressResolver::Clear()

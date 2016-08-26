@@ -2798,8 +2798,8 @@ ThreadError MleRouter::CheckReachability(uint16_t aMeshSource, uint16_t aMeshDes
 
     memcpy(&destination, GetMeshLocal16(), 14);
     destination.mFields.m16[7] = HostSwap16(aMeshSource);
-    Ip6::Icmp::SendError(destination, Ip6::IcmpHeader::kTypeDstUnreach, Ip6::IcmpHeader::kCodeDstUnreachNoRoute,
-                         aIp6Header);
+    mNetif.GetIp6().mIcmp.SendError(destination, Ip6::IcmpHeader::kTypeDstUnreach,
+                                    Ip6::IcmpHeader::kCodeDstUnreachNoRoute, aIp6Header);
 
     return kThreadError_Drop;
 }

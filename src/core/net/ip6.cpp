@@ -48,6 +48,7 @@ namespace Thread {
 namespace Ip6 {
 
 Ip6::Ip6(void):
+    mIcmp(*this),
     mForwardingEnabled(false),
     mReceiveIp6DatagramCallback(NULL),
     mReceiveIp6DatagramCallbackContext(NULL),
@@ -181,7 +182,7 @@ ThreadError Ip6::SendDatagram(Message &message, MessageInfo &messageInfo, IpProt
         break;
 
     case kProtoIcmp6:
-        SuccessOrExit(error = Icmp::UpdateChecksum(message, checksum));
+        SuccessOrExit(error = mIcmp.UpdateChecksum(message, checksum));
         break;
 
     default:
@@ -306,7 +307,7 @@ exit:
     return error;
 }
 
-ThreadError HandlePayload(Message &message, MessageInfo &messageInfo, uint8_t ipproto)
+ThreadError Ip6::HandlePayload(Message &message, MessageInfo &messageInfo, uint8_t ipproto)
 {
     ThreadError error = kThreadError_None;
 
@@ -316,7 +317,7 @@ ThreadError HandlePayload(Message &message, MessageInfo &messageInfo, uint8_t ip
         ExitNow(error = Udp::HandleMessage(message, messageInfo));
 
     case kProtoIcmp6:
-        ExitNow(error = Icmp::HandleMessage(message, messageInfo));
+        ExitNow(error = mIcmp.HandleMessage(message, messageInfo));
     }
 
 exit:
@@ -339,7 +340,7 @@ void Ip6::ProcessReceiveCallback(const Message &aMessage, const MessageInfo &mes
         switch (aIpProto)
         {
         case kProtoIcmp6:
-            if (Icmp::IsEchoEnabled())
+            if (mIcmp.IsEchoEnabled())
             {
                 IcmpHeader icmp;
                 aMessage.Read(aMessage.GetOffset(), sizeof(icmp), &icmp);

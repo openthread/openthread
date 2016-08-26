@@ -2374,7 +2374,8 @@ ThreadError Mle::CheckReachability(uint16_t aMeshSource, uint16_t aMeshDest, Ip6
 
     memcpy(&dst, GetMeshLocal16(), kRlocPrefixLength);
     dst.mFields.m16[7] = HostSwap16(aMeshSource);
-    Ip6::Icmp::SendError(dst, Ip6::IcmpHeader::kTypeDstUnreach, Ip6::IcmpHeader::kCodeDstUnreachNoRoute, aIp6Header);
+    mNetif.GetIp6().mIcmp.SendError(dst, Ip6::IcmpHeader::kTypeDstUnreach, Ip6::IcmpHeader::kCodeDstUnreachNoRoute,
+                                    aIp6Header);
 
 exit:
     return error;

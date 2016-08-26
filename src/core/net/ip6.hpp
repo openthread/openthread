@@ -39,6 +39,7 @@
 #include <openthread-types.h>
 #include <common/encoding.hpp>
 #include <common/message.hpp>
+#include <net/icmp6.hpp>
 #include <net/ip6_address.hpp>
 #include <net/ip6_headers.hpp>
 #include <net/ip6_mpl.hpp>
@@ -239,12 +240,15 @@ public:
      */
     void SetForwardingEnabled(bool aEnable);
 
+    Icmp mIcmp;
+
 private:
     void ProcessReceiveCallback(const Message &aMessage, const MessageInfo &aMessageInfo, uint8_t aIpProto);
     ThreadError HandleExtensionHeaders(Message &message, uint8_t &nextHeader, bool receive);
     ThreadError HandleFragment(Message &message);
     ThreadError AddMplOption(Message &message, Header &header, IpProto nextHeader, uint16_t payloadLength);
     ThreadError HandleOptions(Message &message);
+    ThreadError HandlePayload(Message &message, MessageInfo &messageInfo, uint8_t ipproto);
     ThreadError ForwardMessage(Message &message, MessageInfo &messageInfo);
 
     Mpl mMpl;

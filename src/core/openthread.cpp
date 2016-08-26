@@ -1147,12 +1147,12 @@ ThreadError otSendUdp(otUdpSocket *aSocket, otMessage aMessage, const otMessageI
 
 bool otIsIcmpEchoEnabled(void)
 {
-    return Ip6::Icmp::IsEchoEnabled();
+    return sIp6->mIcmp.IsEchoEnabled();
 }
 
 void otSetIcmpEchoEnabled(bool aEnabled)
 {
-    Ip6::Icmp::SetEchoEnabled(aEnabled);
+    sIp6->mIcmp.SetEchoEnabled(aEnabled);
 }
 
 uint8_t otIp6PrefixMatch(const otIp6Address *aFirst, const otIp6Address *aSecond)
