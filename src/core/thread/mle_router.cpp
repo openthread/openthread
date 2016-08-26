@@ -694,6 +694,14 @@ ThreadError MleRouter::SendLinkAccept(const Ip6::MessageInfo &aMessageInfo, Neig
 
     // always append a link margin, regardless of whether or not it was requested
     linkMargin = LinkQualityInfo::ConvertRssToLinkMargin(threadMessageInfo->mRss);
+
+    // add for certification testing
+    if (isAssignLinkQuality &&
+        (memcmp(aNeighbor->mMacAddr.m8, mAddr64.m8, OT_EXT_ADDRESS_SIZE) == 0))
+    {
+        linkMargin = mAssignLinkMargin;
+    }
+
     SuccessOrExit(error = AppendLinkMargin(*message, linkMargin));
 
     if (aNeighbor != NULL && IsActiveRouter(aNeighbor->mValid.mRloc16))
@@ -1065,6 +1073,13 @@ uint8_t MleRouter::GetLinkCost(uint8_t aRouterId)
     if (rval > mRouters[aRouterId].mLinkQualityOut)
     {
         rval = mRouters[aRouterId].mLinkQualityOut;
+    }
+
+    // add for certification testing
+    if (isAssignLinkQuality &&
+        (memcmp(mRouters[aRouterId].mMacAddr.m8, mAddr64.m8, OT_EXT_ADDRESS_SIZE) == 0))
+    {
+        rval = mAssignLinkQuality;
     }
 
     rval = LqiToCost(rval);
@@ -3373,8 +3388,17 @@ ThreadError MleRouter::AppendRoute(Message &aMessage)
             }
 
             tlv.SetRouteCost(routeCount, cost);
-            tlv.SetLinkQualityIn(routeCount, mRouters[i].mLinkInfo.GetLinkQuality());
             tlv.SetLinkQualityOut(routeCount, mRouters[i].mLinkQualityOut);
+
+            if (isAssignLinkQuality &&
+                (memcmp(mRouters[i].mMacAddr.m8, mAddr64.m8, OT_EXT_ADDRESS_SIZE) == 0))
+            {
+                tlv.SetLinkQualityIn(routeCount, mAssignLinkQuality);
+            }
+            else
+            {
+                tlv.SetLinkQualityIn(routeCount, mRouters[i].mLinkInfo.GetLinkQuality());
+            }
         }
 
         routeCount++;
