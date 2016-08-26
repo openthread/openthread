@@ -86,6 +86,7 @@ private:
     static ThreadError ProcessPanId(int argc, char *argv[]);
     static ThreadError ProcessPending(int argc, char *argv[]);
     static ThreadError ProcessPendingTimestamp(int argc, char *argv[]);
+    static ThreadError ProcessMgmtCommand(int argc, char *argv[]);
 
     static const DatasetCommand sCommands[];
     static otOperationalDataset sDataset;

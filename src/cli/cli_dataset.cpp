@@ -56,6 +56,7 @@ const DatasetCommand Dataset::sCommands[] =
     { "extpanid", &ProcessExtPanId },
     { "masterkey", &ProcessMasterKey },
     { "meshlocalprefix", &ProcessMeshLocalPrefix },
+    { "mgmtcommand", &ProcessMgmtCommand },
     { "networkname", &ProcessNetworkName },
     { "panid", &ProcessPanId },
     { "pending", &ProcessPending },
@@ -346,10 +347,209 @@ ThreadError Dataset::ProcessPendingTimestamp(int argc, char *argv[])
     long value;
 
     VerifyOrExit(argc > 0, error = kThreadError_Parse);
-
     SuccessOrExit(error = Interpreter::ParseLong(argv[0], value));
     sDataset.mPendingTimestamp = static_cast<uint64_t>(value);
     sDataset.mIsPendingTimestampSet = true;
+
+exit:
+    return error;
+}
+
+ThreadError Dataset::ProcessMgmtCommand(int argc, char *argv[])
+{
+    ThreadError error = kThreadError_None;
+    otOperationalDataset dataset;
+    uint8_t tlvs[32];
+    uint8_t size = 0;
+    uint8_t index;
+    long value;
+    int length;
+    otIp6Address prefix;
+
+    VerifyOrExit(argc > 0, error = kThreadError_Parse);
+
+    index = 2;
+
+    if (strcmp(argv[0], "get") == 0)
+    {
+        while (index < argc)
+        {
+            if (strcmp(argv[index], "activetimestamp") == 0)
+            {
+                tlvs[size++] = OT_MESHCOP_TLV_ACTIVETIMESTAMP;
+            }
+
+            if (strcmp(argv[index], "pendingtimestamp") == 0)
+            {
+                tlvs[size++] = OT_MESHCOP_TLV_PENDINGTIMESTAMP;
+            }
+
+            if (strcmp(argv[index], "masterkey") == 0)
+            {
+                tlvs[size++] = OT_MESHCOP_TLV_MASTERKEY;
+            }
+
+            if (strcmp(argv[index], "networkname") == 0)
+            {
+                tlvs[size++] = OT_MESHCOP_TLV_NETWORKNAME;
+            }
+
+            if (strcmp(argv[index], "extpanid") == 0)
+            {
+                tlvs[size++] = OT_MESHCOP_TLV_EXTPANID;
+            }
+
+            if (strcmp(argv[index], "localprefix") == 0)
+            {
+                tlvs[size++] = OT_MESHCOP_TLV_LOCALPREFIX;
+            }
+
+            if (strcmp(argv[index], "delaytimer") == 0)
+            {
+                tlvs[size++] = OT_MESHCOP_TLV_DELAYTIMER;
+            }
+
+            if (strcmp(argv[index], "panid") == 0)
+            {
+                tlvs[size++] = OT_MESHCOP_TLV_PANID;
+            }
+
+            if (strcmp(argv[index], "channel") == 0)
+            {
+                tlvs[size++] = OT_MESHCOP_TLV_CHANNEL;
+            }
+
+            if (strcmp(argv[index], "binary") == 0)
+            {
+                VerifyOrExit((index + 1) < argc, error = kThreadError_Parse);
+                SuccessOrExit(error = Interpreter::ParseLong(argv[++index], value));
+                VerifyOrExit(Interpreter::Hex2Bin(argv[index + 1], tlvs + size, value) >= 0, error = kThreadError_Parse);
+                size += value;
+            }
+
+            index++;
+        }
+
+        if (strcmp(argv[1], "active") == 0)
+        {
+            otSendActiveGet(tlvs, size);
+        }
+        else if (strcmp(argv[1], "pending") == 0)
+        {
+            otSendPendingGet(tlvs, size);
+        }
+        else
+        {
+            ExitNow(error = kThreadError_Parse);
+        }
+    }
+    else if (strcmp(argv[0], "set") == 0)
+    {
+        memset(&dataset, 0, sizeof(dataset));
+
+        while (index < argc)
+        {
+            if (strcmp(argv[index], "activetimestamp") == 0)
+            {
+                VerifyOrExit(index < argc, error = kThreadError_Parse);
+                dataset.mIsActiveTimestampSet = true;
+                SuccessOrExit(error = Interpreter::ParseLong(argv[++index], value));
+                dataset.mActiveTimestamp = static_cast<uint64_t>(value);
+            }
+
+            if (strcmp(argv[index], "pendingtimestamp") == 0)
+            {
+                VerifyOrExit(index < argc, error = kThreadError_Parse);
+                dataset.mIsPendingTimestampSet = true;
+                SuccessOrExit(error = Interpreter::ParseLong(argv[++index], value));
+                dataset.mPendingTimestamp = static_cast<uint64_t>(value);
+            }
+
+            if (strcmp(argv[index], "masterkey") == 0)
+            {
+                VerifyOrExit(index < argc, error = kThreadError_Parse);
+                dataset.mIsMasterKeySet = true;
+                VerifyOrExit((length = Interpreter::Hex2Bin(argv[++index], dataset.mMasterKey.m8,
+                                                            sizeof(dataset.mMasterKey.m8))) == OT_MASTER_KEY_SIZE, error = kThreadError_Parse);
+            }
+
+            if (strcmp(argv[index], "networkname") == 0)
+            {
+                VerifyOrExit(index < argc, error = kThreadError_Parse);
+                dataset.mIsNetworkNameSet = true;
+                VerifyOrExit((length = strlen(argv[++index])) <= OT_NETWORK_NAME_MAX_SIZE, error = kThreadError_Parse);
+                memset(&dataset.mNetworkName, 0, sizeof(sDataset.mNetworkName));
+                memcpy(dataset.mNetworkName.m8, argv[0], length);
+            }
+
+            if (strcmp(argv[index], "extpanid") == 0)
+            {
+                VerifyOrExit(index < argc, error = kThreadError_Parse);
+                dataset.mIsExtendedPanIdSet = true;
+                VerifyOrExit(Interpreter::Hex2Bin(argv[++index], dataset.mExtendedPanId.m8,
+                                                  sizeof(dataset.mExtendedPanId.m8)) >= 0, error = kThreadError_Parse);
+            }
+
+            if (strcmp(argv[index], "localprefix") == 0)
+            {
+                VerifyOrExit(index < argc, error = kThreadError_Parse);
+                dataset.mIsMeshLocalPrefixSet = true;
+                SuccessOrExit(error = otIp6AddressFromString(argv[++index], &prefix));
+                memcpy(dataset.mMeshLocalPrefix.m8, prefix.mFields.m8, sizeof(dataset.mMeshLocalPrefix.m8));
+            }
+
+            if (strcmp(argv[index], "delaytimer") == 0)
+            {
+                VerifyOrExit(index < argc, error = kThreadError_Parse);
+                dataset.mIsDelaySet = true;
+                SuccessOrExit(error = Interpreter::ParseLong(argv[++index], value));
+                dataset.mDelay = static_cast<uint32_t>(value);
+            }
+
+            if (strcmp(argv[index], "panid") == 0)
+            {
+                VerifyOrExit(index < argc, error = kThreadError_Parse);
+                dataset.mIsPanIdSet = true;
+                SuccessOrExit(error = Interpreter::ParseLong(argv[++index], value));
+                dataset.mPanId = static_cast<otPanId>(value);
+            }
+
+            if (strcmp(argv[index], "channel") == 0)
+            {
+                VerifyOrExit(index < argc, error = kThreadError_Parse);
+                dataset.mIsChannelSet = true;
+                SuccessOrExit(error = Interpreter::ParseLong(argv[++index], value));
+                dataset.mChannel = static_cast<uint16_t>(value);
+            }
+
+            if (strcmp(argv[index], "binary") == 0)
+            {
+                VerifyOrExit((index + 1) < argc, error = kThreadError_Parse);
+                SuccessOrExit(error = Interpreter::ParseLong(argv[++index], value));
+                VerifyOrExit(Interpreter::Hex2Bin(argv[++index], tlvs + size, value) >= 0, error = kThreadError_Parse);
+                size += value;
+            }
+
+            index++;
+        }
+
+        if (strcmp(argv[1], "active") == 0)
+        {
+            otSendActiveSet(&dataset, tlvs, size);
+        }
+        else if (strcmp(argv[1], "pending") == 0)
+        {
+            otSendPendingSet(&dataset, tlvs, size);
+        }
+        else
+        {
+            ExitNow(error = kThreadError_Parse);
+        }
+    }
+    else
+    {
+        error = kThreadError_Parse;
+    }
 
 exit:
     return error;

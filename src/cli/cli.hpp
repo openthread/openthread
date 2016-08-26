@@ -123,7 +123,7 @@ public:
 private:
     enum
     {
-        kMaxArgs = 8,
+        kMaxArgs = 32,
     };
 
     static void AppendResult(ThreadError error);
