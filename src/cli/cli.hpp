@@ -194,8 +194,7 @@ private:
     static const struct Command sCommands[];
     static otNetifAddress sAddress;
 
-    static Ip6::SockAddr sSockAddr;
-    static Ip6::IcmpEcho *sIcmpEcho;
+    static Ip6::MessageInfo sMessageInfo;
     static Server *sServer;
     static uint8_t sEchoRequest[];
     static uint16_t sLength;

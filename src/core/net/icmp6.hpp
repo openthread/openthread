@@ -207,62 +207,6 @@ public:
 } OT_TOOL_PACKED_END;
 
 /**
- * This class implements an ICMPv6 echo client.
- *
- */
-class IcmpEcho
-{
-    friend class Icmp;
-
-public:
-    /**
-     * This function pointer is called when receiving an ICMPv6 Echo Reply in response to an Echo Request.
-     *
-     * @param[in]  aContext      A pointer to arbitrary context information.
-     * @param[in]  aMessage      A reference to the received message.
-     * @param[in]  aMessageInfo  A reference to message information associated with @p aMessage.
-     *
-     */
-    typedef void (*EchoReplyHandler)(void *aContext, Message &aMessage, const MessageInfo &aMessageInfo);
-
-    /**
-     * This constructor creates an ICMPv6 echo client.
-     *
-     * @param[in]  aHandler  A pointer to a function that is called when receiving an ICMPv6 Echo Reply.
-     * @param[in]  aContext  A pointer to arbitrary context information.
-     *
-     */
-    IcmpEcho(EchoReplyHandler aHandler, void *aContext);
-
-    /**
-     * This method sends an ICMPv6 Echo Request message.
-     *
-     * @param[in]  aDestination    The socket address of the destination.
-     * @param[in]  aPayload        A pointer to the data payload to send.
-     * @param[in]  aPayloadLength  The number of data payload bytes.
-     *
-     * @retval kThreadError_None    An ICMPv6 Echo Request message was enqueued.
-     * @retval kThreadError_NoBufs  Insufficient buffers available to generate an ICMPv6 Echo Request message.
-     *
-     */
-    ThreadError SendEchoRequest(const SockAddr &aDestination, const void *aPayload, uint16_t aPayloadLength);
-
-private:
-    void HandleEchoReply(Message &message, const MessageInfo &messageInfo) {
-        mHandler(mContext, message, messageInfo);
-    }
-
-    EchoReplyHandler  mHandler;
-    void             *mContext;
-    uint16_t          mId;
-    uint16_t          mSeq;
-    IcmpEcho        *mNext;
-
-    static uint16_t   sNextId;
-    static IcmpEcho *sEchoClients;
-};
-
-/**
  * This class implements ICMPv6 message handlers.
  *
  */
@@ -317,6 +261,16 @@ class Icmp
 {
 public:
     /**
+     * This static method returns a new ICMP message with sufficient header space reserved.
+     *
+     * @param[in]  aReserved  The number of header bytes to reserve after the ICMP header.
+     *
+     * @returns A pointer to the message or NULL if no buffers are available.
+     *
+     */
+    static Message *NewMessage(uint16_t aReserved);
+
+    /**
      * This static method registers ICMPv6 handlers.
      *
      * @param[in]  aHandler  A reference to the ICMPv6 handler.
@@ -326,6 +280,37 @@ public:
      *
      */
     static ThreadError RegisterCallbacks(IcmpHandler &aHandler);
+
+    /**
+     * This function pointer is called when receiving an ICMPv6 Echo Reply in response to an Echo Request.
+     *
+     * @param[in]  aContext      A pointer to arbitrary context information.
+     * @param[in]  aMessage      A reference to the received message.
+     * @param[in]  aMessageInfo  A reference to message information associated with @p aMessage.
+     *
+     */
+    typedef void (*EchoReplyHandler)(void *aContext, Message &aMessage, const MessageInfo &aMessageInfo);
+
+    /**
+     * This static method sets the Echo Reply handler.
+     *
+     * @param[in]  aHandler  A pointer to a function that is called when receiving an ICMPv6 Echo Reply.
+     * @param[in]  aContext  A pointer to arbitrary context information.
+     *
+     */
+    static void SetEchoReplyHandler(EchoReplyHandler aHandler, void *aContext);
+
+    /**
+     * This static method sends an ICMPv6 Echo Request message.
+     *
+     * @param[in]  aMessage      A reference to the Echo Request payload.
+     * @param[in]  aMessageInfo  A reference to the message info associated with @p aMessage.
+     *
+     * @retval kThreadError_None    Successfully enqueued the ICMPv6 Echo Request message.
+     * @retval kThreadError_NoBufs  Insufficient buffers available to generate an ICMPv6 Echo Request message.
+     *
+     */
+    static ThreadError SendEchoRequest(Message &aMessage, const MessageInfo &aMessageInfo);
 
     /**
      * This static method sends an ICMPv6 error message.
@@ -388,9 +373,11 @@ private:
     static ThreadError HandleDstUnreach(Message &aMessage, const MessageInfo &aMessageInfo,
                                         const IcmpHeader &aIcmpHeader);
     static ThreadError HandleEchoRequest(Message &aMessage, const MessageInfo &aMessageInfo);
-    static ThreadError HandleEchoReply(Message &aMessage, const MessageInfo &aMessageInfo,
-                                       const IcmpHeader &aIcmpHeader);
+    static ThreadError HandleEchoReply(Message &aMessage, const MessageInfo &aMessageInfo);
 
+    static uint16_t sEchoSequence;
+    static EchoReplyHandler sEchoReplyHandler;
+    static void *sEchoReplyContext;
     static bool sIsEchoEnabled;
 };
 
