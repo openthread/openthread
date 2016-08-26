@@ -10,6 +10,7 @@ OpenThread test scripts use the CLI to execute test cases.
 * [channel](#channel)
 * [blacklist](#blacklist)
 * [child](#child)
+* [childmax](#childmax)
 * [childtimeout](#childtimeout)
 * [contextreusedelay](#contextreusedelay)
 * [counter](#counter)
@@ -151,6 +152,25 @@ Timeout: 100
 Age: 0
 LQI: 3
 RSSI: -20
+Done
+```
+
+### childmax
+
+Get the Thread maximum number of allowed children.
+
+```bash
+> childmax
+5
+Done
+```
+
+### childmax \<count\>
+
+Set the Thread maximum number of allowed children.
+
+```bash
+> childmax 2
 Done
 ```
 

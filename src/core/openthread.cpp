@@ -94,6 +94,20 @@ ThreadError otSetChannel(uint8_t aChannel)
     return sThreadNetif->GetMac().SetChannel(aChannel);
 }
 
+uint8_t otGetMaxAllowedChildren(void)
+{
+    uint8_t aNumChildren;
+
+    (void)sThreadNetif->GetMle().GetChildren(&aNumChildren);
+
+    return aNumChildren;
+}
+
+ThreadError otSetMaxAllowedChildren(uint8_t aMaxChildren)
+{
+    return sThreadNetif->GetMle().SetMaxAllowedChildren(aMaxChildren);
+}
+
 uint32_t otGetChildTimeout(void)
 {
     return sThreadNetif->GetMle().GetTimeout();
