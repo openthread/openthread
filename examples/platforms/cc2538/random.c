@@ -34,6 +34,9 @@
  *   This implementation is not a true random number generator and does @em satisfy the Thread requirements.
  */
 
+#include <openthread-types.h>
+
+#include <common/code_utils.hpp>
 #include <platform/random.h>
 #include "platform-cc2538.h"
 
@@ -65,4 +68,21 @@ uint32_t otPlatRandomGet(void)
     s_state = mlcg;
 
     return mlcg;
+}
+
+ThreadError otPlatSecureRandomGet(uint16_t aInputLength, uint8_t *aOutput, uint16_t *aOutputLength)
+{
+    ThreadError error = kThreadError_None;
+
+    VerifyOrExit(aOutput && aOutputLength, error = kThreadError_InvalidArgs);
+
+    for (uint16_t length = 0; length < aInputLength; length++)
+    {
+        aOutput[length] = (uint8_t)otPlatRandomGet();
+    }
+
+    *aOutputLength = aInputLength;
+
+exit:
+    return error;
 }
