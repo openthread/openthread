@@ -992,9 +992,9 @@ bool otIsActiveScanInProgress(otInstance *aInstance)
     return aInstance->mThreadNetif.GetMac().IsActiveScanInProgress();
 }
 
-void HandleActiveScanResult(void *aCallbackContext, Mac::Frame *aFrame)
+void HandleActiveScanResult(void *aContext, Mac::Frame *aFrame)
 {
-    otInstance *aInstance = reinterpret_cast<otInstance *>(aCallbackContext);
+    otInstance *aInstance = reinterpret_cast<otInstance *>(aContext);
     otActiveScanResult result;
     Mac::Address address;
     Mac::Beacon *beacon;
@@ -1068,9 +1068,9 @@ bool otIsDiscoverInProgress(otInstance *aInstance)
     return aInstance->mThreadNetif.GetMle().IsDiscoverInProgress();
 }
 
-void HandleMleDiscover(otActiveScanResult *aResult, void *aCallbackContext)
+void HandleMleDiscover(otActiveScanResult *aResult, void *aContext)
 {
-    otInstance *aInstance = reinterpret_cast<otInstance *>(aCallbackContext);
+    otInstance *aInstance = reinterpret_cast<otInstance *>(aContext);
     aInstance->mDiscoverCallback(aResult, aInstance->mDiscoverCallbackContext);
 }
 

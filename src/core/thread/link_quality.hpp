@@ -77,7 +77,7 @@ public:
      * This method adds a new received signal strength (RSS) value to the average.
      *
      * @param[in]  aInstance  The OpenThread instance structure.
-     * @param[in] anRss       A new received signal strength value (in dBm) to be added to the average.
+     * @param[in]  anRss      A new received signal strength value (in dBm) to be added to the average.
      *
      */
     void AddRss(otInstance *aInstance, int8_t anRss);

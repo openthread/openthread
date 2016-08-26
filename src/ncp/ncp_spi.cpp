@@ -126,7 +126,7 @@ NcpSpi::SpiTransactionComplete(
     uint16_t aTransactionLength
 )
 {
-    static_cast<NcpSpi*>(aInstance)->SpiTransactionComplete(
+    static_cast<NcpSpi*>(aContext)->SpiTransactionComplete(
         anOutputBuf,
         anOutputBufLen,
         anInputBuf,
@@ -254,7 +254,7 @@ ThreadError NcpSpi::OutboundFrameEnd(void)
 
 void NcpSpi::TxFrameBufferHasData(void *aContext, NcpFrameBuffer *aNcpFrameBuffer)
 {
-    (void)aInstance;
+    (void)aContext;
     (void)aNcpFrameBuffer;
 
     sNcpSpi->TxFrameBufferHasData();
@@ -341,7 +341,7 @@ void NcpSpi::PrepareTxFrame(void)
 
 void NcpSpi::HandleRxFrame(void *aContext)
 {
-    static_cast<NcpSpi*>(aInstance)->HandleRxFrame();
+    static_cast<NcpSpi*>(aContext)->HandleRxFrame();
 }
 
 void NcpSpi::HandleRxFrame(void)

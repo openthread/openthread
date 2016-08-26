@@ -39,11 +39,11 @@
 
 namespace Thread {
 
-Tasklet::Tasklet(otInstance *aInstance, Handler aHandler, void *aCallbackContext)
+Tasklet::Tasklet(otInstance *aInstance, Handler aHandler, void *aContext)
 {
     mInstance = aInstance;
     mHandler = aHandler;
-    mCallbackContext = aCallbackContext;
+    mContext = aContext;
     mNext = NULL;
 }
 

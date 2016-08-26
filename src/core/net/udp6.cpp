@@ -44,7 +44,7 @@ using Thread::Encoding::BigEndian::HostSwap16;
 namespace Thread {
 namespace Ip6 {
 
-ThreadError UdpSocket::Open(otInstance *aInstance, otUdpReceive aHandler, void *aCallbackContext)
+ThreadError UdpSocket::Open(otInstance *aInstance, otUdpReceive aHandler, void *aContext)
 {
     ThreadError error = kThreadError_None;
 
@@ -59,7 +59,7 @@ ThreadError UdpSocket::Open(otInstance *aInstance, otUdpReceive aHandler, void *
     memset(&mSockName, 0, sizeof(mSockName));
     memset(&mPeerName, 0, sizeof(mPeerName));
     mHandler = aHandler;
-    mContext = aCallbackContext;
+    mContext = aContext;
 
     SetNext(aInstance->mUdpSockets);
     aInstance->mUdpSockets = this;

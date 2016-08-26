@@ -125,22 +125,22 @@ public:
     /**
      * This function pointer is called when the timer expires.
      *
-     * @param[in]  aInstance  A pointer to arbitrary context information.
+     * @param[in]  aContext  A pointer to arbitrary context information.
      */
     typedef void (*Handler)(void *aContext);
 
     /**
      * This constructor creates a timer instance.
      *
-     * @param[in]  aInstance         The OpenThread instance structure.
-     * @param[in]  aHandler          A pointer to a function that is called when the timer expires.
-     * @param[in]  aCallbackContext  A pointer to arbitrary context information.
+     * @param[in]  aInstance  The OpenThread instance structure.
+     * @param[in]  aHandler   A pointer to a function that is called when the timer expires.
+     * @param[in]  aContext   A pointer to arbitrary context information.
      *
      */
-    Timer(otInstance *aInstance, Handler aHandler, void *aCallbackContext) {
+    Timer(otInstance *aInstance, Handler aHandler, void *aContext) {
         mInstance = aInstance;
         mHandler = aHandler;
-        mCallbackContext = aCallbackContext;
+        mContext = aContext;
         mT0 = 0;
         mDt = 0;
         mNext = NULL;
@@ -216,14 +216,14 @@ public:
     static uint32_t MsecToSec(uint32_t aMilliseconds) { return aMilliseconds / 1000u; }
 
 private:
-    void Fired(void) { mHandler(mCallbackContext); }
+    void Fired(void) { mHandler(mContext); }
 
     otInstance *mInstance;  ///< A pointer to the OpenThread instance.
-    Handler    mHandler;  ///< A pointer to the function that is called when the timer expires.
-    void      *mCallbackContext;  ///< A pointer to arbitrary context information.
-    uint32_t   mT0;       ///< The start time of the timer in milliseconds.
-    uint32_t   mDt;       ///< The time delay from the start time in milliseconds.
-    Timer     *mNext;     ///< The next timer in the scheduler list.
+    Handler     mHandler;   ///< A pointer to the function that is called when the timer expires.
+    void       *mContext;   ///< A pointer to arbitrary context information.
+    uint32_t    mT0;        ///< The start time of the timer in milliseconds.
+    uint32_t    mDt;        ///< The time delay from the start time in milliseconds.
+    Timer      *mNext;      ///< The next timer in the scheduler list.
 };
 
 /**

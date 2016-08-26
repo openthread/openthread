@@ -45,7 +45,7 @@ public:
      * Defines a function pointer callback which is invoked to inform state transition of buffer, going from empty
      * to non-empty or becoming empty.
      *
-     * @param[in]  aInstance        A pointer to arbitrary context information.
+     * @param[in]  aContext         A pointer to arbitrary context information.
      * @param[in]  aNcpFrameBuffer  A pointer to the NcpFrameBuffer.
      *
      */

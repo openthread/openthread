@@ -218,7 +218,7 @@ public:
     /**
      * This function pointer is called when receiving an ICMPv6 Echo Reply in response to an Echo Request.
      *
-     * @param[in]  aInstance     A pointer to arbitrary context information.
+     * @param[in]  aContext      A pointer to arbitrary context information.
      * @param[in]  aMessage      A reference to the received message.
      * @param[in]  aMessageInfo  A reference to message information associated with @p aMessage.
      *
@@ -228,12 +228,12 @@ public:
     /**
      * This constructor creates an ICMPv6 echo client.
      *
-     * @param[in]  aInstance         The OpenThread instance structure.
-     * @param[in]  aHandler          A pointer to a function that is called when receiving an ICMPv6 Echo Reply.
-     * @param[in]  aCallbackContext  A pointer to arbitrary context information.
+     * @param[in]  aInstance  The OpenThread instance structure.
+     * @param[in]  aHandler   A pointer to a function that is called when receiving an ICMPv6 Echo Reply.
+     * @param[in]  aContext   A pointer to arbitrary context information.
      *
      */
-    IcmpEcho(otInstance *aInstance, EchoReplyHandler aHandler, void *aCallbackContext);
+    IcmpEcho(otInstance *aInstance, EchoReplyHandler aHandler, void *aContext);
 
     /**
      * This method sends an ICMPv6 Echo Request message.

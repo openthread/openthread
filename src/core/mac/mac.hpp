@@ -135,7 +135,7 @@ public:
     /**
      * This function pointer is called when the MAC is about to transmit the frame.
      *
-     * @param[in]  aInstance  A pointer to arbitrary context information.
+     * @param[in]  aContext  A pointer to arbitrary context information.
      * @param[in]  aFrame    A reference to the MAC frame buffer.
      *
      */
@@ -144,7 +144,7 @@ public:
     /**
      * This function pointer is called when the MAC is done sending the frame.
      *
-     * @param[in]  aInstance A pointer to arbitrary context information.
+     * @param[in]  aContext  A pointer to arbitrary context information.
      * @param[in]  aFrame    A reference to the MAC frame buffer that was sent.
      *
      */
@@ -155,7 +155,7 @@ public:
      *
      * @param[in]  aFrameRequestHandler  A pointer to a function that is called when about to send a MAC frame.
      * @param[in]  aSentFrameHandler     A pointer to a function that is called when done sending the frame.
-     * @param[in]  aInstance             A pointer to arbitrary context information.
+     * @param[in]  aContext              A pointer to arbitrary context information.
      *
      */
     Sender(FrameRequestHandler aFrameRequestHandler, SentFrameHandler aSentFrameHandler, void *aContext) {
@@ -193,7 +193,7 @@ public:
     /**
      * This function pointer is called on receiving an IEEE 802.15.4 Beacon during an Active Scan.
      *
-     * @param[in]  aInstance      A pointer to arbitrary context information.
+     * @param[in]  aContext       A pointer to arbitrary context information.
      * @param[in]  aBeaconFrame   A pointer to the Beacon frame.
      *
      */
@@ -205,7 +205,7 @@ public:
      * @param[in]  aScanChannels  A bit vector indicating which channels to scan.
      * @param[in]  aScanDuration  The time in milliseconds to spend scanning each channel.
      * @param[in]  aHandler       A pointer to a function that is called on receiving an IEEE 802.15.4 Beacon.
-     * @param[in]  aInstance      A pointer to arbitrary context information.
+     * @param[in]  aContext       A pointer to arbitrary context information.
      *
      */
     ThreadError ActiveScan(uint32_t aScanChannels, uint16_t aScanDuration, ActiveScanHandler aHandler, void *aContext);

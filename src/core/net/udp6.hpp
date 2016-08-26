@@ -62,15 +62,15 @@ public:
     /**
      * This method opens the UDP socket.
      *
-     * @param[in]  aInstance         The OpenThread instance structure.
-     * @param[in]  aHandler          A pointer to a function that is called when receiving UDP messages.
-     * @param[in]  aCallbackContext  A pointer to arbitrary context information.
+     * @param[in]  aInstance  The OpenThread instance structure.
+     * @param[in]  aHandler   A pointer to a function that is called when receiving UDP messages.
+     * @param[in]  aContext   A pointer to arbitrary context information.
      *
      * @retval kThreadError_None  Successfully opened the socket.
      * @retval kThreadError_Busy  The socket is already open.
      *
      */
-    ThreadError Open(otInstance *aInstance, otUdpReceive aHandler, void *aCallbackContext);
+    ThreadError Open(otInstance *aInstance, otUdpReceive aHandler, void *aContext);
 
     /**
      * This method binds the UDP socket.

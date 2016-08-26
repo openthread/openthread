@@ -46,10 +46,10 @@ using Thread::Encoding::BigEndian::HostSwap16;
 namespace Thread {
 namespace Ip6 {
 
-IcmpEcho::IcmpEcho(otInstance *aInstance, EchoReplyHandler aHandler, void *aCallbackContext)
+IcmpEcho::IcmpEcho(otInstance *aInstance, EchoReplyHandler aHandler, void *aContext)
 {
     mHandler = aHandler;
-    mContext = aCallbackContext;
+    mContext = aContext;
     mId = aInstance->mNextId++;
     mSeq = 0;
     mNext = aInstance->mEchoClients;

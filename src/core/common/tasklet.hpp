@@ -60,7 +60,7 @@ public:
     /**
      * This function pointer is called when the tasklet is run.
      *
-     * @param[in]  aInstance  A pointer to arbitrary context information.
+     * @param[in]  aContext  A pointer to arbitrary context information.
      *
      */
     typedef void (*Handler)(void *aContext);
@@ -68,12 +68,12 @@ public:
     /**
      * This constructor creates a tasklet instance.
      *
-     * @param[in]  aInstance         The OpenThread instance structure.
-     * @param[in]  aHandler          A pointer to a function that is called when the tasklet is run.
-     * @param[in]  aCallbackContext  A pointer to arbitrary context information.
+     * @param[in]  aInstance  The OpenThread instance structure.
+     * @param[in]  aHandler   A pointer to a function that is called when the tasklet is run.
+     * @param[in]  aContext   A pointer to arbitrary context information.
      *
      */
-    Tasklet(otInstance *aInstance, Handler aHandler, void *aCallbackContext);
+    Tasklet(otInstance *aInstance, Handler aHandler, void *aContext);
 
     /**
      * This method puts the tasklet on the run queue.
@@ -86,12 +86,12 @@ private:
      * This method is called when the tasklet is run.
      *
      */
-    void RunTask(void) { mHandler(mCallbackContext); }
+    void RunTask(void) { mHandler(mContext); }
 
-    otInstance *mInstance;        ///< A pointer to the OpenThread instance.
-    Handler    mHandler;          ///< A pointer to a function that is called when the tasklet is run.
-    void      *mCallbackContext;  ///< A pointer to arbitrary context information.
-    Tasklet   *mNext;             ///< A pointer to the next tasklet in the run queue.
+    otInstance *mInstance;  ///< A pointer to the OpenThread instance.
+    Handler     mHandler;   ///< A pointer to a function that is called when the tasklet is run.
+    void       *mContext;   ///< A pointer to arbitrary context information.
+    Tasklet    *mNext;      ///< A pointer to the next tasklet in the run queue.
 };
 
 /**
