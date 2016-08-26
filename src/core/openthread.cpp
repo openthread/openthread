@@ -111,14 +111,14 @@ uint8_t otGetMaxAllowedChildren(otInstance *aInstance)
 {
     uint8_t aNumChildren;
 
-    (void)aInstance->mThreadNetif->GetMle().GetChildren(&aNumChildren);
+    (void)aInstance->mThreadNetif.GetMle().GetChildren(&aNumChildren);
 
     return aNumChildren;
 }
 
 ThreadError otSetMaxAllowedChildren(otInstance *aInstance, uint8_t aMaxChildren)
 {
-    return aInstance->mThreadNetif->GetMle().SetMaxAllowedChildren(aMaxChildren);
+    return aInstance->mThreadNetif.GetMle().SetMaxAllowedChildren(aMaxChildren);
 }
 
 uint32_t otGetChildTimeout(otInstance *aInstance)
