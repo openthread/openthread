@@ -318,6 +318,14 @@ public:
     ThreadError RegisterCallback(NetifCallback &aCallback);
 
     /**
+     * This method indicates whether or not a state changed callback is pending.
+     *
+     * @retval TRUE if a state changed callback is pending, FALSE otherwise.
+     *
+     */
+    bool IsStateChangedCallbackPending(void);
+
+    /**
      * This method schedules notification of @p aFlags.
      *
      * The @p aFlags are combined (bitwise-or) with other flags that have not been provided in a callback yet.
