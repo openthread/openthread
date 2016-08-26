@@ -35,6 +35,8 @@
  */
 
 #include <openthread-types.h>
+
+#include <common/code_utils.hpp>
 #include <platform/random.h>
 #include "platform-cc2538.h"
 
@@ -75,12 +77,13 @@ ThreadError otPlatSecureRandomGet(uint16_t aInputLength, uint8_t *aOutput, uint1
 
     VerifyOrExit(aOutput && aOutputLength, error = kThreadError_InvalidArgs);
 
-    while (length < aInputLength)
+    for (length = 0; length < aInputLength; length++)
     {
-        aOutput[length++] = (uint8_t)otPlatRandomGet();
+        aOutput[length] = (uint8_t)otPlatRandomGet();
     }
 
     *aOutputLength = aInputLength;
 
+exit:
     return error;
 }
