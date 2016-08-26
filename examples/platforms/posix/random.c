@@ -34,8 +34,6 @@
  *   This implementation is not a true random number generator and does @em satisfy the Thread requirements.
  */
 
-#include <string.h>
-
 #include <openthread-types.h>
 #include <platform/random.h>
 #include "platform-posix.h"
