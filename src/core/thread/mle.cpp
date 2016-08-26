@@ -1816,37 +1816,43 @@ ThreadError Mle::HandleParentResponse(const Message &aMessage, const Ip6::Messag
     SuccessOrExit(error = Tlv::GetTlv(aMessage, Tlv::kConnectivity, sizeof(connectivity), connectivity));
     VerifyOrExit(connectivity.IsValid(), error = kThreadError_Parse);
 
-    // if already attached, Router/REED only seeks a better partition
-    if ((mDeviceMode & ModeTlv::kModeFFD) &&
-        (mDeviceState != kDeviceStateDetached) &&
-        (mParentRequestMode != kMleAttachAnyPartition))
+    if ((mDeviceMode & ModeTlv::kModeFFD) && (mDeviceState != kDeviceStateDetached))
     {
-        if (leaderData.GetPartitionId() == mLeaderData.GetPartitionId())
+        switch (mParentRequestMode)
         {
-            // looking for a larger Sequence ID
+        case kMleAttachAnyPartition:
+            break;
+
+        case kMleAttachSamePartition:
+            VerifyOrExit(leaderData.GetPartitionId() == mLeaderData.GetPartitionId(), ;);
             diff = static_cast<int8_t>(connectivity.GetIdSequence() - mMleRouter.GetRouterIdSequence());
             VerifyOrExit(diff > 0 || (diff == 0 && mMleRouter.GetLeaderAge() < mMleRouter.GetNetworkIdTimeout()), ;);
-        }
-        else
-        {
-            // looking for a better partition
+            break;
+
+        case kMleAttachBetterPartition:
+            VerifyOrExit(leaderData.GetPartitionId() != mLeaderData.GetPartitionId(), ;);
             VerifyOrExit(mMleRouter.ComparePartitions(connectivity.GetActiveRouters() <= 1, leaderData,
                                                       mMleRouter.IsSingleton(), mLeaderData) > 0, ;);
+            break;
         }
     }
 
     // if already have a candidate parent, only seek a better parent
     if (mParent.mState == Neighbor::kStateValid)
     {
+        int compare = 0;
+
         if (mDeviceMode & ModeTlv::kModeFFD)
         {
-            // do not accept worse partitions
-            VerifyOrExit(mMleRouter.ComparePartitions(connectivity.GetActiveRouters() <= 1, leaderData,
-                                                      mParentIsSingleton, mParentLeaderData) >= 0, ;);
+            compare = mMleRouter.ComparePartitions(connectivity.GetActiveRouters() <= 1, leaderData,
+                                                   mParentIsSingleton, mParentLeaderData);
         }
 
-        // looking for a better parent
-        VerifyOrExit(IsBetterParent(sourceAddress.GetRloc16(), linkQuality, connectivity), ;);
+        // only consider partitions that are the same or better
+        VerifyOrExit(compare >= 0, ;);
+
+        // only consider better parents if the partitions are the same
+        VerifyOrExit(compare != 0 || IsBetterParent(sourceAddress.GetRloc16(), linkQuality, connectivity), ;);
     }
 
     // Link Frame Counter
