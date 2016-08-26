@@ -161,7 +161,7 @@ ThreadError DatasetManager::Register(void)
 
     for (size_t i = 0; i < sizeof(mCoapToken); i++)
     {
-        otPlatRandomGet(1, &mCoapToken[i], NULL);
+        mCoapToken[i] = static_cast<uint8_t>(otPlatRandomGet());
     }
 
     header.Init();

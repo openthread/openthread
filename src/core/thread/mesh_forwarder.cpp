@@ -64,7 +64,7 @@ MeshForwarder::MeshForwarder(ThreadNetif &aThreadNetif):
     mMle(aThreadNetif.GetMle()),
     mNetworkData(aThreadNetif.GetNetworkDataLeader())
 {
-    otPlatRandomGet(sizeof(mFragTag), reinterpret_cast<uint8_t *>(&mFragTag), NULL);
+    mFragTag = static_cast<uint16_t>(otPlatRandomGet());
     mPollPeriod = 0;
     mAssignPollPeriod = 0;
     mSendMessage = NULL;

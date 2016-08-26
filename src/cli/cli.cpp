@@ -2007,7 +2007,7 @@ void Interpreter::HandleNetifStateChanged(uint32_t aFlags, void *aContext)
 
                 for (size_t j = 8; j < sizeof(address->mAddress); j++)
                 {
-                    otPlatRandomGet(1, &address->mAddress.mFields.m8[j], NULL);
+                    address->mAddress.mFields.m8[j] = (uint8_t)otPlatRandomGet();
                 }
 
                 address->mPrefixLength = config.mPrefix.mLength;

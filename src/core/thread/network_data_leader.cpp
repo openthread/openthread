@@ -64,8 +64,8 @@ Leader::Leader(ThreadNetif &aThreadNetif):
 void Leader::Reset(void)
 {
     memset(mContextLastUsed, 0, sizeof(mContextLastUsed));
-    otPlatRandomGet(sizeof(mVersion), &mVersion, NULL);
-    otPlatRandomGet(sizeof(mStableVersion), &mStableVersion, NULL);
+    mVersion = static_cast<uint8_t>(otPlatRandomGet());
+    mStableVersion = static_cast<uint8_t>(otPlatRandomGet());
     mLength = 0;
     mContextUsed = 0;
     mContextIdReuseDelay = kContextIdReuseDelay;

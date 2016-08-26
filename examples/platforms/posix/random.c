@@ -47,36 +47,45 @@ void posixRandomInit(void)
     s_state = NODE_ID;
 }
 
-ThreadError otPlatRandomGet(uint16_t aInputLength, uint8_t *aOutput, uint16_t *aOutputLength)
+uint32_t otPlatRandomGet(void)
 {
     uint32_t mlcg, p, q;
     uint64_t tmpstate;
+
+    tmpstate = (uint64_t)33614 * (uint64_t)s_state;
+    q = tmpstate & 0xffffffff;
+    q = q >> 1;
+    p = tmpstate >> 32;
+    mlcg = p + q;
+
+    if (mlcg & 0x80000000)
+    {
+        mlcg &= 0x7fffffff;
+        mlcg++;
+    }
+
+    s_state = mlcg;
+
+    return mlcg;
+}
+
+ThreadError otPlatSecureRandomGet(uint16_t aInputLength, uint8_t *aOutput, uint16_t *aOutputLength)
+{
     uint16_t length = 0;
+    uint32_t random;
 
     while (length < aInputLength)
     {
-        tmpstate = (uint64_t)33614 * (uint64_t)s_state;
-        q = tmpstate & 0xffffffff;
-        q = q >> 1;
-        p = tmpstate >> 32;
-        mlcg = p + q;
+        random = otPlatRandomGet();
 
-        if (mlcg & 0x80000000)
+        if (aInputLength > (sizeof(random) + length))
         {
-            mlcg &= 0x7fffffff;
-            mlcg++;
-        }
-
-        s_state = mlcg;
-
-        if (aInputLength > (sizeof(mlcg) + length))
-        {
-            memcpy(aOutput, (uint8_t *)&mlcg, sizeof(mlcg));
-            length += sizeof(mlcg);
+            memcpy(aOutput, (uint8_t *)&random, sizeof(random));
+            length += sizeof(random);
         }
         else
         {
-            memcpy(aOutput, (uint8_t *)&mlcg, (aInputLength - length));
+            memcpy(aOutput, (uint8_t *)&random, (aInputLength - length));
             length += (aInputLength - length);
         }
     }
