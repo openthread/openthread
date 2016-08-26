@@ -63,8 +63,10 @@ public:
     /**
      * This constructor initializes the Thread network interface.
      *
+     * @param[in]  aIp6  A reference to the IPv6 network object.
+     *
      */
-    ThreadNetif(void);
+    ThreadNetif(Ip6::Ip6 &aIp6);
 
     /**
      * This method enables the Thread network interface.

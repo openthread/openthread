@@ -1441,7 +1441,7 @@ exit:
 
 ThreadError MeshForwarder::HandleDatagram(Message &aMessage, const ThreadMessageInfo &aMessageInfo)
 {
-    return Ip6::Ip6::HandleDatagram(aMessage, &mNetif, mNetif.GetInterfaceId(), &aMessageInfo, false);
+    return mNetif.GetIp6().HandleDatagram(aMessage, &mNetif, mNetif.GetInterfaceId(), &aMessageInfo, false);
 }
 
 void MeshForwarder::UpdateFramePending()

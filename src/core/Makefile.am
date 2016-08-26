@@ -95,6 +95,7 @@ noinst_HEADERS                      = \
     net/icmp6.hpp                     \
     net/ip6.hpp                       \
     net/ip6_address.hpp               \
+    net/ip6_headers.hpp               \
     net/ip6_filter.hpp                \
     net/ip6_mpl.hpp                   \
     net/ip6_routes.hpp                \

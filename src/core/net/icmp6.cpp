@@ -43,6 +43,9 @@
 using Thread::Encoding::BigEndian::HostSwap16;
 
 namespace Thread {
+
+extern Ip6::Ip6 *sIp6;
+
 namespace Ip6 {
 
 bool Icmp::sIsEchoEnabled = true;
@@ -54,7 +57,7 @@ void *Icmp::sEchoReplyContext = NULL;
 
 Message *Icmp::NewMessage(uint16_t aReserved)
 {
-    return Ip6::NewMessage(sizeof(IcmpHeader) + aReserved);
+    return sIp6->NewMessage(sizeof(IcmpHeader) + aReserved);
 }
 
 ThreadError Icmp::RegisterCallbacks(IcmpHandler &aHandler)
@@ -97,7 +100,7 @@ ThreadError Icmp::SendEchoRequest(Message &aMessage, const MessageInfo &aMessage
 
     SuccessOrExit(error = aMessage.Prepend(&icmpHeader, sizeof(icmpHeader)));
     aMessage.SetOffset(0);
-    SuccessOrExit(error = Ip6::SendDatagram(aMessage, messageInfoLocal, kProtoIcmp6));
+    SuccessOrExit(error = sIp6->SendDatagram(aMessage, messageInfoLocal, kProtoIcmp6));
 
     otLogInfoIcmp("Sent echo request\n");
 
@@ -113,7 +116,7 @@ ThreadError Icmp::SendError(const Address &aDestination, IcmpHeader::Type aType,
     Message *message = NULL;
     IcmpHeader icmp6Header;
 
-    VerifyOrExit((message = Ip6::NewMessage(0)) != NULL, error = kThreadError_NoBufs);
+    VerifyOrExit((message = sIp6->NewMessage(0)) != NULL, error = kThreadError_NoBufs);
     SuccessOrExit(error = message->SetLength(sizeof(icmp6Header) + sizeof(aHeader)));
 
     message->Write(sizeof(icmp6Header), sizeof(aHeader), &aHeader);
@@ -126,7 +129,7 @@ ThreadError Icmp::SendError(const Address &aDestination, IcmpHeader::Type aType,
     memset(&messageInfo, 0, sizeof(messageInfo));
     messageInfo.mPeerAddr = aDestination;
 
-    SuccessOrExit(error = Ip6::SendDatagram(*message, messageInfo, kProtoIcmp6));
+    SuccessOrExit(error = sIp6->SendDatagram(*message, messageInfo, kProtoIcmp6));
 
     otLogInfoIcmp("Sent ICMPv6 Error\n");
 
@@ -203,7 +206,7 @@ ThreadError Icmp::HandleEchoRequest(Message &aRequestMessage, const MessageInfo 
     icmp6Header.Init();
     icmp6Header.SetType(IcmpHeader::kTypeEchoReply);
 
-    VerifyOrExit((replyMessage = Ip6::NewMessage(0)) != NULL, otLogDebgIcmp("icmp fail\n"));
+    VerifyOrExit((replyMessage = sIp6->NewMessage(0)) != NULL, otLogDebgIcmp("icmp fail\n"));
     payloadLength = aRequestMessage.GetLength() - aRequestMessage.GetOffset() - IcmpHeader::GetDataOffset();
     SuccessOrExit(replyMessage->SetLength(IcmpHeader::GetDataOffset() + payloadLength));
 
@@ -221,7 +224,7 @@ ThreadError Icmp::HandleEchoRequest(Message &aRequestMessage, const MessageInfo 
 
     replyMessageInfo.mInterfaceId = aMessageInfo.mInterfaceId;
 
-    SuccessOrExit(error = Ip6::SendDatagram(*replyMessage, replyMessageInfo, kProtoIcmp6));
+    SuccessOrExit(error = sIp6->SendDatagram(*replyMessage, replyMessageInfo, kProtoIcmp6));
 
     otLogInfoIcmp("Sent Echo Reply\n");
 

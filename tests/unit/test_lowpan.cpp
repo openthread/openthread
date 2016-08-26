@@ -75,7 +75,8 @@ extern "C" void otPlatDiagRadioReceiveDone(RadioPacket *aFrame, ThreadError aErr
     (void)aError;
 }
 
-ThreadNetif sMockThreadNetif;
+Ip6::Ip6 sIp6;
+ThreadNetif sMockThreadNetif(sIp6);
 Lowpan::Lowpan sMockLowpan(sMockThreadNetif);
 
 void TestLowpanIphc(void)
@@ -116,7 +117,7 @@ void TestLowpanIphc(void)
         frame.GetSrcAddr(macSource);
         frame.GetDstAddr(macDest);
 
-        VerifyOrQuit((message = Ip6::Ip6::NewMessage(0)) != NULL,
+        VerifyOrQuit((message = sIp6.NewMessage(0)) != NULL,
                      "6lo: Ip6::NewMessage failed");
 
         // ===> Test Lowpan::Decompress

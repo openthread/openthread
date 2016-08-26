@@ -37,7 +37,7 @@
 #include <openthread-types.h>
 #include <common/message.hpp>
 #include <common/timer.hpp>
-#include <net/ip6.hpp>
+#include <net/ip6_headers.hpp>
 
 namespace Thread {
 namespace Ip6 {

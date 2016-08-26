@@ -57,6 +57,9 @@ ThreadNetif *sThreadNetif;
 static Ip6::NetifCallback sNetifCallback;
 static bool mEnabled = false;
 
+static otDEFINE_ALIGNED_VAR(sIp6Raw, sizeof(Ip6::Ip6), uint64_t);
+Ip6::Ip6 *sIp6;
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -870,8 +873,8 @@ ThreadError otEnable(void)
 
     otLogInfoApi("otEnable\n");
     Message::Init();
-    sThreadNetif = new(&sThreadNetifRaw) ThreadNetif;
-    Ip6::Ip6::Init();
+    sIp6 = new(&sIp6Raw) Ip6::Ip6;
+    sThreadNetif = new(&sThreadNetifRaw) ThreadNetif(*sIp6);
     mEnabled = true;
 
 exit:
@@ -1047,23 +1050,22 @@ void HandleMleDiscover(otActiveScanResult *aResult, void *aContext)
 
 void otSetReceiveIp6DatagramCallback(otReceiveIp6DatagramCallback aCallback, void *aCallbackContext)
 {
-    Ip6::Ip6::SetReceiveDatagramCallback(aCallback, aCallbackContext);
+    sIp6->SetReceiveDatagramCallback(aCallback, aCallbackContext);
 }
 
 bool otIsReceiveIp6DatagramFilterEnabled(void)
 {
-    return Ip6::Ip6::IsReceiveIp6FilterEnabled();
+    return sIp6->IsReceiveIp6FilterEnabled();
 }
 
 void otSetReceiveIp6DatagramFilterEnabled(bool aEnabled)
 {
-    Ip6::Ip6::SetReceiveIp6FilterEnabled(aEnabled);
+    sIp6->SetReceiveIp6FilterEnabled(aEnabled);
 }
 
 ThreadError otSendIp6Datagram(otMessage aMessage)
 {
-    return Ip6::Ip6::HandleDatagram(*static_cast<Message *>(aMessage), NULL, sThreadNetif->GetInterfaceId(),
-                                    NULL, true);
+    return sIp6->HandleDatagram(*static_cast<Message *>(aMessage), NULL, sThreadNetif->GetInterfaceId(), NULL, true);
 }
 
 otMessage otNewUdpMessage(void)

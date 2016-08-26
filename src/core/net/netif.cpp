@@ -42,8 +42,9 @@ namespace Ip6 {
 Netif *Netif::sNetifListHead = NULL;
 int8_t Netif::sNextInterfaceId = 1;
 
-Netif::Netif() :
-    mStateChangedTask(&HandleStateChangedTask, this)
+Netif::Netif(Ip6 &aIp6):
+    mStateChangedTask(&HandleStateChangedTask, this),
+    mIp6(aIp6)
 {
     mCallbacks = NULL;
     mUnicastAddresses = NULL;
@@ -144,6 +145,11 @@ exit:
 Netif *Netif::GetNext() const
 {
     return mNext;
+}
+
+Ip6 &Netif::GetIp6(void)
+{
+    return mIp6;
 }
 
 Netif *Netif::GetNetifById(int8_t aInterfaceId)

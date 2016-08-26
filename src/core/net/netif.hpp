@@ -43,6 +43,8 @@
 namespace Thread {
 namespace Ip6 {
 
+class Ip6;
+
 /**
  * @addtogroup core-ip6-netif
  *
@@ -196,8 +198,10 @@ public:
     /**
      * This constructor initializes the network interface.
      *
+     * @param[in]  aIp6  A reference to the IPv6 network object.
+     *
      */
-    Netif(void);
+    Netif(Ip6 &aIp6);
 
     /**
      * This method enables the network interface.
@@ -216,6 +220,14 @@ public:
      *
      */
     ThreadError RemoveNetif(void);
+
+    /**
+     * This method returns a reference to the IPv6 network object.
+     *
+     * @returns A reference to the IPv6 network object.
+     *
+     */
+    Ip6 &GetIp6(void);
 
     /**
      * This method returns the next network interface in the list.
@@ -471,6 +483,8 @@ private:
     bool mAllRoutersSubscribed;
     Tasklet mStateChangedTask;
     Netif *mNext;
+
+    Ip6 &mIp6;
 
     uint32_t mStateChangedFlags;
 

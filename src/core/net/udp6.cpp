@@ -41,6 +41,9 @@
 using Thread::Encoding::BigEndian::HostSwap16;
 
 namespace Thread {
+
+extern Ip6::Ip6 *sIp6;
+
 namespace Ip6 {
 
 UdpSocket *Udp::sSockets = NULL;
@@ -135,7 +138,7 @@ ThreadError UdpSocket::SendTo(Message &aMessage, const MessageInfo &aMessageInfo
 
     SuccessOrExit(error = aMessage.Prepend(&udpHeader, sizeof(udpHeader)));
     aMessage.SetOffset(0);
-    SuccessOrExit(error = Ip6::SendDatagram(aMessage, messageInfoLocal, kProtoUdp));
+    SuccessOrExit(error = sIp6->SendDatagram(aMessage, messageInfoLocal, kProtoUdp));
 
 exit:
     return error;
@@ -143,7 +146,7 @@ exit:
 
 Message *Udp::NewMessage(uint16_t aReserved)
 {
-    return Ip6::NewMessage(sizeof(UdpHeader) + aReserved);
+    return sIp6->NewMessage(sizeof(UdpHeader) + aReserved);
 }
 
 ThreadError Udp::HandleMessage(Message &aMessage, MessageInfo &aMessageInfo)
