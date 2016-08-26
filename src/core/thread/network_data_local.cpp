@@ -43,7 +43,8 @@ namespace NetworkData {
 
 Local::Local(ThreadNetif &aThreadNetif):
     NetworkData(aThreadNetif),
-    mOldRloc(Mac::kShortAddrInvalid)
+    mOldRloc(Mac::kShortAddrInvalid),
+    mLeader(aThreadNetif.GetNetworkDataLeader())
 {
 }
 
@@ -195,12 +196,32 @@ ThreadError Local::UpdateRloc(BorderRouterTlv &aBorderRouter)
     return kThreadError_None;
 }
 
+bool Local::IsOnMeshPrefixConsistent(void)
+{
+    return (mLeader.ContainsOnMeshPrefixes(*this, mMle.GetRloc16()) &&
+            ContainsOnMeshPrefixes(mLeader, mMle.GetRloc16()));
+}
+
+bool Local::IsExternalRouteConsistent(void)
+{
+    return (mLeader.ContainsExternalRoutes(*this, mMle.GetRloc16()) &&
+            ContainsExternalRoutes(mLeader, mMle.GetRloc16()));
+}
+
 ThreadError Local::SendServerDataNotification(void)
 {
     ThreadError error = kThreadError_None;
     uint16_t rloc = mMle.GetRloc16();
 
+    VerifyOrExit((mMle.GetDeviceMode() & Mle::ModeTlv::kModeFFD) == 0 ||
+                 (mMle.IsRouterRoleEnabled() == false) ||
+                 (mMle.GetDeviceState() >= Mle::kDeviceStateRouter) ||
+                 (mMle.GetActiveRouterCount() >= mMle.GetRouterUpgradeThreshold()),
+                 error = kThreadError_InvalidState);
+
     UpdateRloc();
+
+    VerifyOrExit(!IsOnMeshPrefixConsistent() || !IsExternalRouteConsistent(), error = kThreadError_None);
 
     if (mOldRloc == rloc)
     {
