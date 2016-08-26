@@ -478,7 +478,8 @@ ThreadError Dataset::ProcessMgmtCommand(int argc, char *argv[])
             {
                 VerifyOrExit(index < argc, error = kThreadError_Parse);
                 dataset.mIsNetworkNameSet = true;
-                VerifyOrExit((length = static_cast<int>(strlen(argv[++index]))) <= OT_NETWORK_NAME_MAX_SIZE, error = kThreadError_Parse);
+                VerifyOrExit((length = static_cast<int>(strlen(argv[++index]))) <= OT_NETWORK_NAME_MAX_SIZE,
+                             error = kThreadError_Parse);
                 memset(&dataset.mNetworkName, 0, sizeof(sDataset.mNetworkName));
                 memcpy(dataset.mNetworkName.m8, argv[0], static_cast<size_t>(length));
             }
@@ -527,7 +528,8 @@ ThreadError Dataset::ProcessMgmtCommand(int argc, char *argv[])
             {
                 VerifyOrExit((index + 1) < argc, error = kThreadError_Parse);
                 SuccessOrExit(error = Interpreter::ParseLong(argv[++index], value));
-                VerifyOrExit(Interpreter::Hex2Bin(argv[++index], tlvs + size, static_cast<uint16_t>(value)) >= 0, error = kThreadError_Parse);
+                VerifyOrExit(Interpreter::Hex2Bin(argv[++index], tlvs + size, static_cast<uint16_t>(value)) >= 0,
+                             error = kThreadError_Parse);
                 size += value;
             }
 

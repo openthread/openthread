@@ -377,7 +377,8 @@ ThreadError DatasetManager::SendSetRequest(otOperationalDataset &aDataset, const
         tlv.SetType(OT_MESHCOP_TLV_NETWORKNAME);
         tlv.SetLength(static_cast<uint8_t>(strlen(aDataset.mNetworkName.m8)));
         SuccessOrExit(error = message->Append(&tlv, sizeof(tlv)));
-        SuccessOrExit(error = message->Append(aDataset.mNetworkName.m8, static_cast<uint8_t>(strlen(aDataset.mNetworkName.m8))));
+        SuccessOrExit(error = message->Append(aDataset.mNetworkName.m8,
+                                              static_cast<uint8_t>(strlen(aDataset.mNetworkName.m8))));
     }
 
     if (aDataset.mIsExtendedPanIdSet)
