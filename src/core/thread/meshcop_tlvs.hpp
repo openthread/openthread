@@ -55,44 +55,20 @@ class Tlv
 {
 public:
     /**
-     * MeshCoP TLV Types.
-     *
-     */
-    enum Type
-    {
-        kChannel           = 0,   ///< Channel TLV
-        kPanId             = 1,   ///< PAN ID TLV
-        kExtendedPanId     = 2,   ///< Extended PAN ID TLV
-        kNetworkName       = 3,   ///< Newtork Name TLV
-        kPSKc              = 4,   ///< PSKc TLV
-        kNetworkMasterKey  = 5,   ///< Network Master Key TLV
-        kMeshLocalPrefix   = 7,   ///< Mesh Local Prefix TLV
-        kSecurityPolicy    = 12,  ///< Security Policy TLV
-        kGet               = 13,  ///< Get TLV
-        kActiveTimestamp   = 14,  ///< Active Timestamp TLV
-        kState             = 16,  ///< State TLV
-        kPendingTimestamp  = 51,  ///< Pending Timestamp TLV
-        kDelayTimer        = 52,  ///< Delay Timer TLV
-        kChannelMask       = 53,  ///< Channel Mask TLV
-        kDiscoveryRequest  = 128,  ///< Discovery Request TLV
-        kDiscoveryResponse = 129,  ///< Discovery Response TLV
-    };
-
-    /**
      * This method returns the Type value.
      *
-     * @returns The Type value.
+     * @returns The otMeshcopTlvType value.
      *
      */
-    Type GetType(void) const { return static_cast<Type>(mType); }
+    otMeshcopTlvType GetType(void) const { return static_cast<otMeshcopTlvType>(mType); }
 
     /**
-     * This method sets the Type value.
+     * This method sets the otMeshcopTlvType value.
      *
-     * @param[in]  aType  The Type value.
+     * @param[in]  aType  The otMeshcopTlvType value.
      *
      */
-    void SetType(Type aType) { mType = static_cast<uint8_t>(aType); }
+    void SetType(otMeshcopTlvType aType) { mType = static_cast<uint8_t>(aType); }
 
     /**
      * This method returns the Length value.
@@ -147,7 +123,7 @@ public:
      * This method initializes the TLV.
      *
      */
-    void Init(void) { SetType(kChannel); SetLength(sizeof(*this) - sizeof(Tlv)); }
+    void Init(void) { SetType(OT_MESHCOP_TLV_CHANNEL); SetLength(sizeof(*this) - sizeof(Tlv)); }
 
     /**
      * This method indicates whether or not the TLV appears to be well-formed.
@@ -207,7 +183,7 @@ public:
      * This method initializes the TLV.
      *
      */
-    void Init(void) { SetType(kPanId); SetLength(sizeof(*this) - sizeof(Tlv)); }
+    void Init(void) { SetType(OT_MESHCOP_TLV_PANID); SetLength(sizeof(*this) - sizeof(Tlv)); }
 
     /**
      * This method indicates whether or not the TLV appears to be well-formed.
@@ -250,7 +226,7 @@ public:
      * This method initializes the TLV.
      *
      */
-    void Init(void) { SetType(kExtendedPanId); SetLength(sizeof(*this) - sizeof(Tlv)); }
+    void Init(void) { SetType(OT_MESHCOP_TLV_EXTPANID); SetLength(sizeof(*this) - sizeof(Tlv)); }
 
     /**
      * This method indicates whether or not the TLV appears to be well-formed.
@@ -295,7 +271,7 @@ public:
      * This method initializes the TLV.
      *
      */
-    void Init(void) { SetType(kNetworkName); SetLength(sizeof(*this) - sizeof(Tlv)); }
+    void Init(void) { SetType(OT_MESHCOP_TLV_NETWORKNAME); SetLength(sizeof(*this) - sizeof(Tlv)); }
 
     /**
      * This method indicates whether or not the TLV appears to be well-formed.
@@ -342,7 +318,7 @@ public:
      * This method initializes the TLV.
      *
      */
-    void Init(void) { SetType(kPSKc); SetLength(sizeof(*this) - sizeof(Tlv)); }
+    void Init(void) { SetType(OT_MESHCOP_TLV_PSKC); SetLength(sizeof(*this) - sizeof(Tlv)); }
 
     /**
      * This method indicates whether or not the TLV appears to be well-formed.
@@ -387,7 +363,7 @@ public:
      * This method initializes the TLV.
      *
      */
-    void Init(void) { SetType(kNetworkMasterKey); SetLength(sizeof(*this) - sizeof(Tlv)); }
+    void Init(void) { SetType(OT_MESHCOP_TLV_MASTERKEY); SetLength(sizeof(*this) - sizeof(Tlv)); }
 
     /**
      * This method indicates whether or not the TLV appears to be well-formed.
@@ -432,7 +408,7 @@ public:
      * This method initializes the TLV.
      *
      */
-    void Init(void) { SetType(kMeshLocalPrefix); SetLength(sizeof(*this) - sizeof(Tlv)); }
+    void Init(void) { SetType(OT_MESHCOP_TLV_LOCALPREFIX); SetLength(sizeof(*this) - sizeof(Tlv)); }
 
     /**
      * This method indicates whether or not the TLV appears to be well-formed.
@@ -477,7 +453,7 @@ public:
      * This method initializes the TLV.
      *
      */
-    void Init(void) { SetType(kSecurityPolicy); SetLength(sizeof(*this) - sizeof(Tlv)); }
+    void Init(void) { SetType(OT_MESHCOP_TLV_SECURITYPOLICY); SetLength(sizeof(*this) - sizeof(Tlv)); }
 
     /**
      * This method indicates whether or not the TLV appears to be well-formed.
@@ -649,7 +625,7 @@ public:
      * This method initializes the TLV.
      *
      */
-    void Init(void) { SetType(kActiveTimestamp); SetLength(sizeof(*this) - sizeof(Tlv)); }
+    void Init(void) { SetType(OT_MESHCOP_TLV_ACTIVETIMESTAMP); SetLength(sizeof(*this) - sizeof(Tlv)); }
 
     /**
      * This method indicates whether or not the TLV appears to be well-formed.
@@ -683,7 +659,7 @@ public:
      * This method initializes the TLV.
      *
      */
-    void Init(void) { SetType(kState); SetLength(sizeof(*this) - sizeof(Tlv)); }
+    void Init(void) { SetType(OT_MESHCOP_TLV_STATE); SetLength(sizeof(*this) - sizeof(Tlv)); }
 
     /**
      * This method indicates whether or not the TLV appears to be well-formed.
@@ -726,7 +702,7 @@ public:
      * This method initializes the TLV.
      *
      */
-    void Init(void) { SetType(kPendingTimestamp); SetLength(sizeof(*this) - sizeof(Tlv)); }
+    void Init(void) { SetType(OT_MESHCOP_TLV_PENDINGTIMESTAMP); SetLength(sizeof(*this) - sizeof(Tlv)); }
 
     /**
      * This method indicates whether or not the TLV appears to be well-formed.
@@ -750,7 +726,7 @@ public:
      * This method initializes the TLV.
      *
      */
-    void Init(void) { SetType(kDelayTimer); SetLength(sizeof(*this) - sizeof(Tlv)); }
+    void Init(void) { SetType(OT_MESHCOP_TLV_DELAYTIMER); SetLength(sizeof(*this) - sizeof(Tlv)); }
 
     /**
      * This method indicates whether or not the TLV appears to be well-formed.
@@ -871,7 +847,7 @@ public:
      * This method initializes the TLV.
      *
      */
-    void Init(void) { SetType(kChannelMask); SetLength(sizeof(*this) - sizeof(Tlv)); }
+    void Init(void) { SetType(OT_MESHCOP_TLV_CHANNELMASK); SetLength(sizeof(*this) - sizeof(Tlv)); }
 
     /**
      * This method indicates whether or not the TLV appears to be well-formed.
@@ -895,7 +871,7 @@ public:
      * This method initializes the TLV.
      *
      */
-    void Init(void) { SetType(kDiscoveryRequest); SetLength(sizeof(*this) - sizeof(Tlv)); mReserved = 0; }
+    void Init(void) { SetType(OT_MESHCOP_TLV_DISCOVERYREQUEST); SetLength(sizeof(*this) - sizeof(Tlv)); mReserved = 0; }
 
     /**
      * This method indicates whether or not the TLV appears to be well-formed.
@@ -972,7 +948,7 @@ public:
      * This method initializes the TLV.
      *
      */
-    void Init(void) { SetType(kDiscoveryResponse); SetLength(sizeof(*this) - sizeof(Tlv)); mReserved = 0; }
+    void Init(void) { SetType(OT_MESHCOP_TLV_DISCOVERYRESPONSE); SetLength(sizeof(*this) - sizeof(Tlv)); mReserved = 0; }
 
     /**
      * This method indicates whether or not the TLV appears to be well-formed.

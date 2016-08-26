@@ -45,6 +45,7 @@
 #include <platform/random.h>
 #include <platform/misc.h>
 #include <thread/thread_netif.hpp>
+#include <thread/thread_uris.hpp>
 
 namespace Thread {
 
@@ -1197,6 +1198,42 @@ ThreadError otSetPendingDataset(otOperationalDataset *aDataset)
     error = sThreadNetif->GetPendingDataset().Set(*aDataset);
 
 exit:
+    return error;
+}
+
+ThreadError otSendActiveGet(const uint8_t *aTlvTypes, uint8_t aSize)
+{
+    ThreadError error = kThreadError_None;
+
+    error = sThreadNetif->GetActiveDataset().SendGetRequest(aTlvTypes, aSize);
+
+    return error;
+}
+
+ThreadError otSendActiveSet(otOperationalDataset *aDataset, const uint8_t *aTlvs, uint8_t aSize)
+{
+    ThreadError error = kThreadError_None;
+
+    error = sThreadNetif->GetActiveDataset().SendSetRequest(*aDataset, aTlvs, aSize);
+
+    return error;
+}
+
+ThreadError otSendPendingGet(const uint8_t *aTlvTypes, uint8_t aSize)
+{
+    ThreadError error = kThreadError_None;
+
+    error = sThreadNetif->GetPendingDataset().SendGetRequest(aTlvTypes, aSize);
+
+    return error;
+}
+
+ThreadError otSendPendingSet(otOperationalDataset *aDataset, const uint8_t *aTlvs, uint8_t aSize)
+{
+    ThreadError error = kThreadError_None;
+
+    error = sThreadNetif->GetPendingDataset().SendSetRequest(*aDataset, aTlvs, aSize);
+
     return error;
 }
 
