@@ -61,7 +61,8 @@ Mle::Mle(ThreadNetif &aThreadNetif) :
     mMesh(aThreadNetif.GetMeshForwarder()),
     mMleRouter(aThreadNetif.GetMle()),
     mNetworkData(aThreadNetif.GetNetworkDataLeader()),
-    mParentRequestTimer(&HandleParentRequestTimer, this)
+    mParentRequestTimer(&HandleParentRequestTimer, this),
+    mSendChildUpdateRequest(&HandleSendChildUpdateRequest, this)
 {
     mDeviceState = kDeviceStateDisabled;
     mDeviceMode = ModeTlv::kModeRxOnWhenIdle | ModeTlv::kModeSecureDataRequest | ModeTlv::kModeFFD |
@@ -930,8 +931,6 @@ void Mle::HandleNetifStateChanged(uint32_t aFlags, void *aContext)
 
 void Mle::HandleNetifStateChanged(uint32_t aFlags)
 {
-    bool sendChildUpdateRequest = false;
-
     if ((aFlags & (OT_IP6_ADDRESS_ADDED | OT_IP6_ADDRESS_REMOVED)) != 0)
     {
         if (!mNetif.IsUnicastAddress(mMeshLocal64.GetAddress()))
@@ -948,7 +947,7 @@ void Mle::HandleNetifStateChanged(uint32_t aFlags)
 
         if (mDeviceState == kDeviceStateChild && (mDeviceMode & ModeTlv::kModeFFD) == 0)
         {
-            sendChildUpdateRequest = true;
+            mSendChildUpdateRequest.Post();
         }
     }
 
@@ -960,13 +959,8 @@ void Mle::HandleNetifStateChanged(uint32_t aFlags)
         }
         else
         {
-            sendChildUpdateRequest = true;
+            mSendChildUpdateRequest.Post();
         }
-    }
-
-    if (sendChildUpdateRequest)
-    {
-        SendChildUpdateRequest();
     }
 }
 
@@ -1215,6 +1209,25 @@ exit:
     }
 
     return error;
+}
+
+void Mle::HandleSendChildUpdateRequest(void *aContext)
+{
+    static_cast<Mle *>(aContext)->SendChildUpdateRequest();
+}
+
+void Mle::HandleSendChildUpdateRequest(void)
+{
+    // a Network Data udpate can cause a change to the IPv6 address configuration
+    // only send a Child Update Request after we know there are no more pending changes
+    if (mNetif.IsStateChangedCallbackPending())
+    {
+        mSendChildUpdateRequest.Post();
+    }
+    else
+    {
+        SendChildUpdateRequest();
+    }
 }
 
 ThreadError Mle::SendChildUpdateRequest(void)
