@@ -55,9 +55,9 @@ extern "C" {
 /**
  * Get random stream.
  *
- * @param[in]  aInputLength      The expected size of random values.
- * @param[in]  aOutput           A pointer to the buffer for the generated random stream.
- * @param[in]  aOutputLength     A pointer to the generated size of random stream.
+ * @param[in]   aInputLength      The expected size of random values.
+ * @param[out]  aOutput           A pointer to the buffer for the generated random stream. The pointer should never be NULL.
+ * @param[out]  aOutputLength     A pointer to the generated size of random stream. The pointer should never be NULL.
  *
  * @retval kThreadError_None     Generate random successfully.
  * @retval kThreadError_Fail     Generate random fail.
