@@ -1008,6 +1008,8 @@ ThreadError NcpBase::CommandHandler_NOOP(uint8_t header, unsigned int command, c
 ThreadError NcpBase::CommandHandler_RESET(uint8_t header, unsigned int command, const uint8_t *arg_ptr,
                                           uint16_t arg_len)
 {
+    ThreadError errorCode = kThreadError_None;
+
     // We aren't using any of the arguments to this function.
     (void)header;
     (void)command;
@@ -1022,11 +1024,17 @@ ThreadError NcpBase::CommandHandler_RESET(uint8_t header, unsigned int command, 
     // platform doesn't support resetting.
     // In such a case we fake it.
 
-    mChangedFlags |= NCP_PLAT_RESET_REASON;
     otDisable();
-    mUpdateChangedPropsTask.Post();
 
-    return SendLastStatus(SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0, SPINEL_STATUS_RESET_SOFTWARE);
+    errorCode = SendLastStatus(SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0, SPINEL_STATUS_RESET_SOFTWARE);
+
+    if (errorCode != kThreadError_None)
+    {
+        mChangedFlags |= NCP_PLAT_RESET_REASON;
+        mUpdateChangedPropsTask.Post();
+    }
+
+    return errorCode;
 }
 
 ThreadError NcpBase::CommandHandler_PROP_VALUE_GET(uint8_t header, unsigned int command, const uint8_t *arg_ptr,
