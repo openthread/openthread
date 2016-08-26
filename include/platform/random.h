@@ -72,7 +72,6 @@ ThreadError otPlatSecureRandomGet(uint16_t aInputLength, uint8_t *aOutput, uint1
  */
 uint32_t otPlatRandomGet(void);
 
-
 /**
  * @}
  *
