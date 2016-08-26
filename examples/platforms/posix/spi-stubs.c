@@ -39,6 +39,9 @@ ThreadError otPlatSpiSlaveEnable(
     void *aContext
 )
 {
+    (void)aCallback;
+    (void)aContext;
+
     fprintf(stderr, "\nNo SPI support for posix platform.");
     exit(0);
 
@@ -57,6 +60,12 @@ ThreadError otPlatSpiSlavePrepareTransaction(
     bool aRequestTransactionFlag
 )
 {
+    (void)anOutputBuf;
+    (void)anOutputBufLen;
+    (void)anInputBuf;
+    (void)anInputBufLen;
+    (void)aRequestTransactionFlag;
+
     return kThreadError_NotImplemented;
 }
 

@@ -591,7 +591,7 @@ public:
     void SetLinkQualityOut(uint8_t aRouterId, uint8_t aLinkQuality) {
         mRouteData[aRouterId] =
             (mRouteData[aRouterId] & ~kLinkQualityOutMask) |
-            ((aLinkQuality << kLinkQualityOutOffset) & kLinkQualityInMask);
+            ((aLinkQuality << kLinkQualityOutOffset) & kLinkQualityOutMask);
     }
 
 private:

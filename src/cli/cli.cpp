@@ -322,7 +322,7 @@ void Interpreter::ProcessChild(int argc, char *argv[])
     }
 
     SuccessOrExit(error = ParseLong(argv[0], value));
-    SuccessOrExit(error = otGetChildInfoById(mInstance, static_cast<uint8_t>(value), &childInfo));
+    SuccessOrExit(error = otGetChildInfoById(mInstance, static_cast<uint16_t>(value), &childInfo));
 
     sServer->OutputFormat("Child ID: %d\r\n", childInfo.mChildId);
     sServer->OutputFormat("Rloc: %04x\r\n", childInfo.mRloc16);
@@ -1548,7 +1548,7 @@ void Interpreter::ProcessRouter(int argc, char *argv[])
     }
 
     SuccessOrExit(error = ParseLong(argv[0], value));
-    SuccessOrExit(error = otGetRouterInfo(mInstance, static_cast<uint8_t>(value), &routerInfo));
+    SuccessOrExit(error = otGetRouterInfo(mInstance, static_cast<uint16_t>(value), &routerInfo));
 
     sServer->OutputFormat("Alloc: %d\r\n", routerInfo.mAllocated);
 
@@ -1891,6 +1891,9 @@ void Interpreter::ProcessLine(char *aBuf, uint16_t aBufLength, Server &aServer)
 
     for (cmd = aBuf + 1; (cmd < aBuf + aBufLength) && (cmd != NULL); ++cmd)
     {
+        VerifyOrExit(argc < kMaxArgs,
+                     sServer->OutputFormat("Error: too many args (max %d)\r\n", kMaxArgs));
+
         if (*cmd == ' ' || *cmd == '\r' || *cmd == '\n')
         {
             *cmd = '\0';

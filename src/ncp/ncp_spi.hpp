@@ -87,8 +87,8 @@ private:
     static void HandleRxFrame(void *context);
     void HandleRxFrame(void);
 
-    static void HandleSendDone(void *context);
-    void HandleSendDone(void);
+    static void PrepareTxFrame(void *context);
+    void PrepareTxFrame(void);
 
     static void TxFrameBufferHasData(void *aContext, NcpFrameBuffer *aNcpFrameBuffer);
     void TxFrameBufferHasData(void);
@@ -96,12 +96,11 @@ private:
     ThreadError PrepareNextSpiSendFrame(void);
 
     bool mSending;
-
     bool mHandlingRxFrame;
-    Tasklet mHandleRxFrame;
-
     bool mHandlingSendDone;
-    Tasklet mHandleSendDone;
+
+    Tasklet mHandleRxFrameTask;
+    Tasklet mPrepareTxFrameTask;
 
     uint8_t mSendFrame[kSpiBufferSize];
     uint16_t mSendFrameLen;

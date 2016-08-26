@@ -34,8 +34,6 @@
 #ifndef NETWORK_DATA_LOCAL_HPP_
 #define NETWORK_DATA_LOCAL_HPP_
 
-#include <net/udp6.hpp>
-#include <thread/mle_router.hpp>
 #include <thread/network_data.hpp>
 
 namespace Thread {
@@ -123,30 +121,21 @@ public:
     ThreadError RemoveHasRoutePrefix(const uint8_t *aPrefix, uint8_t aPrefixLength);
 
     /**
-     * This method sends a Server Data Registration message to the Leader.
+     * This method sends a Server Data Notification message to the Leader.
      *
-     * @param[in]  aDestination  The IPv6 destination.
-     *
-     * @retval kThreadError_None    Successfully enqueued the registration message.
-     * @retval kThreadError_NoBufs  Insufficient message buffers to generate the registration message.
+     * @retval kThreadError_None    Successfully enqueued the notification message.
+     * @retval kThreadError_NoBufs  Insufficient message buffers to generate the notification message.
      *
      */
-    ThreadError Register(const Ip6::Address &aDestination);
+    ThreadError SendServerDataNotification(void);
 
 private:
-    static void HandleUdpReceive(void *aContext, otMessage aMessage, const otMessageInfo *aMessageInfo);
-    void HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
-
     ThreadError UpdateRloc(void);
     ThreadError UpdateRloc(PrefixTlv &aPrefix);
     ThreadError UpdateRloc(HasRouteTlv &aHasRoute);
     ThreadError UpdateRloc(BorderRouterTlv &aBorderRouter);
 
-    Ip6::UdpSocket  mSocket;
-    uint8_t         mCoapToken[2];
-    uint16_t        mCoapMessageId;
-
-    Mle::MleRouter &mMle;
+    uint16_t mOldRloc;
 };
 
 }  // namespace NetworkData
