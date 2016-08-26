@@ -45,6 +45,7 @@
 #include <net/ip6_mpl.hpp>
 #include <net/netif.hpp>
 #include <net/socket.hpp>
+#include <net/udp6.hpp>
 
 using Thread::Encoding::BigEndian::HostSwap16;
 using Thread::Encoding::BigEndian::HostSwap32;
@@ -241,6 +242,7 @@ public:
     void SetForwardingEnabled(bool aEnable);
 
     Icmp mIcmp;
+    Udp mUdp;
 
 private:
     void ProcessReceiveCallback(const Message &aMessage, const MessageInfo &aMessageInfo, uint8_t aIpProto);

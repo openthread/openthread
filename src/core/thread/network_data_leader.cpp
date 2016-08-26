@@ -497,7 +497,7 @@ void Leader::SendServerDataResponse(const Coap::Header &aRequestHeader, const Ip
     Coap::Header responseHeader;
     Message *message;
 
-    VerifyOrExit((message = Ip6::Udp::NewMessage(0)) != NULL, error = kThreadError_NoBufs);
+    VerifyOrExit((message = mCoapServer.NewMessage(0)) != NULL, error = kThreadError_NoBufs);
     responseHeader.Init();
     responseHeader.SetVersion(1);
     responseHeader.SetType(Coap::Header::kTypeAcknowledgment);

@@ -62,6 +62,7 @@ Mle::Mle(ThreadNetif &aThreadNetif) :
     mMleRouter(aThreadNetif.GetMle()),
     mNetworkData(aThreadNetif.GetNetworkDataLeader()),
     mParentRequestTimer(&HandleParentRequestTimer, this),
+    mSocket(aThreadNetif.GetIp6().mUdp),
     mSendChildUpdateRequest(&HandleSendChildUpdateRequest, this)
 {
     mDeviceState = kDeviceStateDisabled;
@@ -233,7 +234,7 @@ ThreadError Mle::Discover(uint32_t aScanChannels, uint16_t aScanDuration, uint16
     mDiscoverContext = aContext;
     mMesh.SetDiscoverParameters(aScanChannels, aScanDuration);
 
-    VerifyOrExit((message = Ip6::Udp::NewMessage(0)) != NULL, ;);
+    VerifyOrExit((message = mSocket.NewMessage(0)) != NULL, ;);
     message->SetLinkSecurityEnabled(false);
     message->SetMleDiscoverRequest(true);
     message->SetPanId(aPanId);
@@ -1079,7 +1080,7 @@ ThreadError Mle::SendParentRequest(void)
         mParentRequest.mChallenge[i] = static_cast<uint8_t>(otPlatRandomGet());
     }
 
-    VerifyOrExit((message = Ip6::Udp::NewMessage(0)) != NULL, ;);
+    VerifyOrExit((message = mSocket.NewMessage(0)) != NULL, ;);
     message->SetLinkSecurityEnabled(false);
     SuccessOrExit(error = AppendHeader(*message, Header::kCommandParentRequest));
     SuccessOrExit(error = AppendMode(*message, mDeviceMode));
@@ -1146,7 +1147,7 @@ ThreadError Mle::SendChildIdRequest(void)
     Message *message;
     Ip6::Address destination;
 
-    VerifyOrExit((message = Ip6::Udp::NewMessage(0)) != NULL, ;);
+    VerifyOrExit((message = mSocket.NewMessage(0)) != NULL, ;);
     message->SetLinkSecurityEnabled(false);
     SuccessOrExit(error = AppendHeader(*message, Header::kCommandChildIdRequest));
     SuccessOrExit(error = AppendResponse(*message, mChildIdRequest.mChallenge, mChildIdRequest.mChallengeLength));
@@ -1192,7 +1193,7 @@ ThreadError Mle::SendDataRequest(const Ip6::Address &aDestination, const uint8_t
     ThreadError error = kThreadError_None;
     Message *message;
 
-    VerifyOrExit((message = Ip6::Udp::NewMessage(0)) != NULL, ;);
+    VerifyOrExit((message = mSocket.NewMessage(0)) != NULL, ;);
     message->SetLinkSecurityEnabled(false);
     SuccessOrExit(error = AppendHeader(*message, Header::kCommandDataRequest));
     SuccessOrExit(error = AppendTlvRequest(*message, aTlvs, aTlvsLength));
@@ -1239,7 +1240,7 @@ ThreadError Mle::SendChildUpdateRequest(void)
     Ip6::Address destination;
     Message *message;
 
-    VerifyOrExit((message = Ip6::Udp::NewMessage(0)) != NULL, ;);
+    VerifyOrExit((message = mSocket.NewMessage(0)) != NULL, ;);
     message->SetLinkSecurityEnabled(false);
     SuccessOrExit(error = AppendHeader(*message, Header::kCommandChildUpdateRequest));
     SuccessOrExit(error = AppendMode(*message, mDeviceMode));
@@ -2176,7 +2177,7 @@ ThreadError Mle::SendDiscoveryResponse(const Ip6::Address &aDestination, uint16_
     MeshCoP::ExtendedPanIdTlv extPanId;
     MeshCoP::NetworkNameTlv networkName;
 
-    VerifyOrExit((message = Ip6::Udp::NewMessage(0)) != NULL, ;);
+    VerifyOrExit((message = mSocket.NewMessage(0)) != NULL, ;);
     message->SetLinkSecurityEnabled(false);
     message->SetMleDiscoverResponse(true);
     message->SetPanId(aPanId);

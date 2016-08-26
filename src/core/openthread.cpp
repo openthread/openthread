@@ -1070,7 +1070,7 @@ ThreadError otSendIp6Datagram(otMessage aMessage)
 
 otMessage otNewUdpMessage(void)
 {
-    return Ip6::Udp::NewMessage(0);
+    return sIp6->mUdp.NewMessage(0);
 }
 
 ThreadError otFreeMessage(otMessage aMessage)

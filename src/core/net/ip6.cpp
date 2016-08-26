@@ -49,6 +49,7 @@ namespace Ip6 {
 
 Ip6::Ip6(void):
     mIcmp(*this),
+    mUdp(*this),
     mForwardingEnabled(false),
     mReceiveIp6DatagramCallback(NULL),
     mReceiveIp6DatagramCallbackContext(NULL),
@@ -178,7 +179,7 @@ ThreadError Ip6::SendDatagram(Message &message, MessageInfo &messageInfo, IpProt
     switch (ipproto)
     {
     case kProtoUdp:
-        SuccessOrExit(error = Udp::UpdateChecksum(message, checksum));
+        SuccessOrExit(error = mUdp.UpdateChecksum(message, checksum));
         break;
 
     case kProtoIcmp6:
@@ -314,7 +315,7 @@ ThreadError Ip6::HandlePayload(Message &message, MessageInfo &messageInfo, uint8
     switch (ipproto)
     {
     case kProtoUdp:
-        ExitNow(error = Udp::HandleMessage(message, messageInfo));
+        ExitNow(error = mUdp.HandleMessage(message, messageInfo));
 
     case kProtoIcmp6:
         ExitNow(error = mIcmp.HandleMessage(message, messageInfo));

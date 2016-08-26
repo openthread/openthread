@@ -52,6 +52,7 @@ MleRouter::MleRouter(ThreadNetif &aThreadNetif):
     Mle(aThreadNetif),
     mAdvertiseTimer(&HandleAdvertiseTimer, this),
     mStateUpdateTimer(&HandleStateUpdateTimer, this),
+    mSocket(aThreadNetif.GetIp6().mUdp),
     mAddressSolicit(OPENTHREAD_URI_ADDRESS_SOLICIT, &HandleAddressSolicit, this),
     mAddressRelease(OPENTHREAD_URI_ADDRESS_RELEASE, &HandleAddressRelease, this),
     mCoapServer(aThreadNetif.GetCoapServer())
@@ -463,7 +464,7 @@ ThreadError MleRouter::SendAdvertisement(void)
     Ip6::Address destination;
     Message *message;
 
-    VerifyOrExit((message = Ip6::Udp::NewMessage(0)) != NULL, ;);
+    VerifyOrExit((message = mSocket.NewMessage(0)) != NULL, ;);
     message->SetLinkSecurityEnabled(false);
     SuccessOrExit(error = AppendHeader(*message, Header::kCommandAdvertisement));
     SuccessOrExit(error = AppendSourceAddress(*message));
@@ -512,7 +513,7 @@ ThreadError MleRouter::SendLinkRequest(Neighbor *aNeighbor)
 
     memset(&destination, 0, sizeof(destination));
 
-    VerifyOrExit((message = Ip6::Udp::NewMessage(0)) != NULL, ;);
+    VerifyOrExit((message = mSocket.NewMessage(0)) != NULL, ;);
     message->SetLinkSecurityEnabled(false);
     SuccessOrExit(error = AppendHeader(*message, Header::kCommandLinkRequest));
     SuccessOrExit(error = AppendVersion(*message));
@@ -684,7 +685,7 @@ ThreadError MleRouter::SendLinkAccept(const Ip6::MessageInfo &aMessageInfo, Neig
     command = (aNeighbor == NULL || aNeighbor->mState == Neighbor::kStateValid) ?
               Header::kCommandLinkAccept : Header::kCommandLinkAcceptAndRequest;
 
-    VerifyOrExit((message = Ip6::Udp::NewMessage(0)) != NULL, ;);
+    VerifyOrExit((message = mSocket.NewMessage(0)) != NULL, ;);
     message->SetLinkSecurityEnabled(false);
     SuccessOrExit(error = AppendHeader(*message, command));
     SuccessOrExit(error = AppendVersion(*message));
@@ -961,7 +962,7 @@ ThreadError MleRouter::SendLinkReject(const Ip6::Address &aDestination)
     ThreadError error = kThreadError_None;
     Message *message;
 
-    VerifyOrExit((message = Ip6::Udp::NewMessage(0)) != NULL, ;);
+    VerifyOrExit((message = mSocket.NewMessage(0)) != NULL, ;);
     message->SetLinkSecurityEnabled(false);
     SuccessOrExit(error = AppendHeader(*message, Header::kCommandLinkReject));
     SuccessOrExit(error = AppendStatus(*message, StatusTlv::kError));
@@ -1706,7 +1707,7 @@ ThreadError MleRouter::SendParentResponse(Child *aChild, const ChallengeTlv &cha
     Ip6::Address destination;
     Message *message;
 
-    VerifyOrExit((message = Ip6::Udp::NewMessage(0)) != NULL, ;);
+    VerifyOrExit((message = mSocket.NewMessage(0)) != NULL, ;);
     message->SetLinkSecurityEnabled(false);
     SuccessOrExit(error = AppendHeader(*message, Header::kCommandParentResponse));
     SuccessOrExit(error = AppendSourceAddress(*message));
@@ -2093,7 +2094,7 @@ ThreadError MleRouter::SendChildIdResponse(Child *aChild)
     Ip6::Address destination;
     Message *message;
 
-    VerifyOrExit((message = Ip6::Udp::NewMessage(0)) != NULL, ;);
+    VerifyOrExit((message = mSocket.NewMessage(0)) != NULL, ;);
     message->SetLinkSecurityEnabled(false);
     SuccessOrExit(error = AppendHeader(*message, Header::kCommandChildIdResponse));
     SuccessOrExit(error = AppendSourceAddress(*message));
@@ -2170,7 +2171,7 @@ ThreadError MleRouter::SendChildUpdateResponse(Child *aChild, const Ip6::Message
     ThreadError error = kThreadError_None;
     Message *message;
 
-    VerifyOrExit((message = Ip6::Udp::NewMessage(0)) != NULL, ;);
+    VerifyOrExit((message = mSocket.NewMessage(0)) != NULL, ;);
     message->SetLinkSecurityEnabled(false);
     SuccessOrExit(error = AppendHeader(*message, Header::kCommandChildUpdateResponse));
 
@@ -2229,7 +2230,7 @@ ThreadError MleRouter::SendDataResponse(const Ip6::Address &aDestination, const 
     Neighbor *neighbor;
     bool stableOnly;
 
-    VerifyOrExit((message = Ip6::Udp::NewMessage(0)) != NULL, ;);
+    VerifyOrExit((message = mSocket.NewMessage(0)) != NULL, ;);
     message->SetLinkSecurityEnabled(false);
     SuccessOrExit(error = AppendHeader(*message, Header::kCommandDataResponse));
     SuccessOrExit(error = AppendSourceAddress(*message));
@@ -2829,7 +2830,7 @@ ThreadError MleRouter::SendAddressSolicit(ThreadStatusTlv::Status aStatus)
     header.AppendContentFormatOption(Coap::Header::kApplicationOctetStream);
     header.Finalize();
 
-    VerifyOrExit((message = Ip6::Udp::NewMessage(0)) != NULL, error = kThreadError_NoBufs);
+    VerifyOrExit((message = mSocket.NewMessage(0)) != NULL, error = kThreadError_NoBufs);
     SuccessOrExit(error = message->Append(header.GetBytes(), header.GetLength()));
 
     macAddr64Tlv.Init();
@@ -2882,7 +2883,7 @@ ThreadError MleRouter::SendAddressRelease(void)
     header.AppendContentFormatOption(Coap::Header::kApplicationOctetStream);
     header.Finalize();
 
-    VerifyOrExit((message = Ip6::Udp::NewMessage(0)) != NULL, error = kThreadError_NoBufs);
+    VerifyOrExit((message = mSocket.NewMessage(0)) != NULL, error = kThreadError_NoBufs);
     SuccessOrExit(error = message->Append(header.GetBytes(), header.GetLength()));
 
     rlocTlv.Init();
@@ -3119,7 +3120,7 @@ void MleRouter::SendAddressSolicitResponse(const Coap::Header &aRequestHeader, u
     ThreadRloc16Tlv rlocTlv;
     Message *message;
 
-    VerifyOrExit((message = Ip6::Udp::NewMessage(0)) != NULL, error = kThreadError_NoBufs);
+    VerifyOrExit((message = mCoapServer.NewMessage(0)) != NULL, error = kThreadError_NoBufs);
     responseHeader.Init();
     responseHeader.SetVersion(1);
     responseHeader.SetType(Coap::Header::kTypeAcknowledgment);
@@ -3212,7 +3213,7 @@ void MleRouter::SendAddressReleaseResponse(const Coap::Header &aRequestHeader, c
     Coap::Header responseHeader;
     Message *message;
 
-    VerifyOrExit((message = Ip6::Udp::NewMessage(0)) != NULL, error = kThreadError_NoBufs);
+    VerifyOrExit((message = mCoapServer.NewMessage(0)) != NULL, error = kThreadError_NoBufs);
     responseHeader.Init();
     responseHeader.SetVersion(1);
     responseHeader.SetType(Coap::Header::kTypeAcknowledgment);
