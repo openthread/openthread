@@ -1899,7 +1899,7 @@ void Interpreter::ProcessLine(char *aBuf, uint16_t aBufLength, Server &aServer)
             argv[argc++] = cmd;
         }
 
-        VerifyOrExit(argc < kMaxArgs,
+        VerifyOrExit(argc <= kMaxArgs,
                      sServer->OutputFormat("Error: too many args (max %d)\r\n", kMaxArgs));
     }
 
