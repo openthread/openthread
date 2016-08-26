@@ -481,7 +481,7 @@ void AddressResolver::HandleAddressError(Coap::Header &aHeader, Message &aMessag
     memcpy(&macAddr, mlIidTlv.GetIid(), sizeof(macAddr));
     macAddr.m8[0] ^= 0x2;
 
-    for (int i = 0; i < Mle::kMaxChildren; i++)
+    for (int i = 0; i < numChildren; i++)
     {
         if (children[i].mState != Neighbor::kStateValid || (children[i].mMode & Mle::ModeTlv::kModeFFD) != 0)
         {
@@ -547,7 +547,7 @@ void AddressResolver::HandleAddressQuery(Coap::Header &aHeader, Message &aMessag
 
     children = mMle.GetChildren(&numChildren);
 
-    for (int i = 0; i < Mle::kMaxChildren; i++)
+    for (int i = 0; i < numChildren; i++)
     {
         if (children[i].mState != Neighbor::kStateValid || (children[i].mMode & Mle::ModeTlv::kModeFFD) != 0)
         {

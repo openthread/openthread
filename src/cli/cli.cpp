@@ -60,6 +60,7 @@ const struct Command Interpreter::sCommands[] =
     { "blacklist", &Interpreter::ProcessBlacklist },
     { "channel", &Interpreter::ProcessChannel },
     { "child", &Interpreter::ProcessChild },
+    { "childmax", &Interpreter::ProcessChildMax },
     { "childtimeout", &Interpreter::ProcessChildTimeout },
     { "contextreusedelay", &Interpreter::ProcessContextIdReuseDelay },
     { "counter", &Interpreter::ProcessCounters },
@@ -364,6 +365,25 @@ void Interpreter::ProcessChild(int argc, char *argv[])
     sServer->OutputFormat("Age: %d\r\n", childInfo.mAge);
     sServer->OutputFormat("LQI: %d\r\n", childInfo.mLinkQualityIn);
     sServer->OutputFormat("RSSI: %d\r\n", childInfo.mAverageRssi);
+
+exit:
+    AppendResult(error);
+}
+
+void Interpreter::ProcessChildMax(int argc, char *argv[])
+{
+    ThreadError error = kThreadError_None;
+    long value;
+
+    if (argc == 0)
+    {
+        sServer->OutputFormat("%d\r\n", otGetMaxAllowedChildren(mInstance));
+    }
+    else
+    {
+        SuccessOrExit(error = ParseLong(argv[0], value));
+        SuccessOrExit(error = otSetMaxAllowedChildren(mInstance, static_cast<uint8_t>(value)));
+    }
 
 exit:
     AppendResult(error);

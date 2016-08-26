@@ -622,19 +622,19 @@ void Mle::SetAssignLinkQuality(const Mac::ExtAddress aMacAddr, uint8_t aLinkQual
     switch (aLinkQuality)
     {
     case 3:
-        mAssignLinkMargin = 0xff; // 21 - 255
+        mAssignLinkMargin = kMinAssignedLinkMargin3;
         break;
 
     case 2:
-        mAssignLinkMargin = 0x14; // 11 - 20
+        mAssignLinkMargin = kMinAssignedLinkMargin2;
         break;
 
     case 1:
-        mAssignLinkMargin = 0x09; // 3 - 9
+        mAssignLinkMargin = kMinAssignedLinkMargin1;
         break;
 
     case 0:
-        mAssignLinkMargin = 0x0; // 0 - 2
+        mAssignLinkMargin = kMinAssignedLinkMargin0;
 
     default:
         break;
@@ -1816,15 +1816,6 @@ ThreadError Mle::HandleParentResponse(const Message &aMessage, const Ip6::Messag
     if (linkMargin > linkMarginTlv.GetLinkMargin())
     {
         linkMargin = linkMarginTlv.GetLinkMargin();
-    }
-
-    // add for Thread Certification testing
-    if (isAssignLinkQuality)
-    {
-        linkMargin = linkMarginTlv.GetLinkMargin();
-
-        // clear flag for subsequent normal MLE message
-        isAssignLinkQuality = false;
     }
 
     linkQuality = LinkQualityInfo::ConvertLinkMarginToLinkQuality(linkMargin);

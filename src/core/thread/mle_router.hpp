@@ -317,6 +317,18 @@ public:
     Child *GetChildren(uint8_t *aNumChildren);
 
     /**
+     * This method sets the max children allowed value for this Thread interface.
+     *
+     * @param[in]  aMaxChildren  The max children allowed value.
+     *
+     * @retval  kThreadErrorNone           Successfully set the max.
+     * @retval  kThreadError_InvalidArgs   If @p aMaxChildren is not in the range [1, kMaxChildren].
+     * @retval  kThreadError_InvalidState  If MLE has already been started.
+     *
+     */
+    ThreadError SetMaxAllowedChildren(uint8_t aMaxChildren);
+
+    /**
      * This method returns a pointer to a Neighbor object.
      *
      * @param[in]  aAddress  The address of the Neighbor.
@@ -528,6 +540,7 @@ private:
     uint8_t mRouterIdSequence;
     uint32_t mRouterIdSequenceLastUpdated;
     Router mRouters[kMaxRouterId];
+    uint8_t mMaxChildrenAllowed;
     Child mChildren[kMaxChildren];
 
     uint8_t mChallenge[8];
