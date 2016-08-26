@@ -136,6 +136,7 @@ private:
     void ProcessChannel(int argc, char *argv[]);
     void ProcessChild(int argc, char *argv[]);
     void ProcessChildTimeout(int argc, char *argv[]);
+    void ProcessChildMax(int argc, char *argv[]);
     void ProcessContextIdReuseDelay(int argc, char *argv[]);
     void ProcessCounters(int argc, char *argv[]);
     void ProcessDataset(int argc, char *argv[]);
