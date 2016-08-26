@@ -1900,7 +1900,7 @@ void Interpreter::ProcessLine(char *aBuf, uint16_t aBufLength, Server &aServer)
         }
 
         VerifyOrExit(argc < kMaxArgs,
-                     sServer->OutputFormat("Error %d, Max %d\r\n", kThreadError_TooManyArgs, kMaxArgs));
+                     sServer->OutputFormat("Error: too many args (max %d)\r\n", kMaxArgs));
     }
 
     cmd = aBuf;
