@@ -44,7 +44,7 @@ matrix:
     - env: BUILD_TARGET="scan-build"
       compiler: clang
       os: linux
-    - env: BUILD_TARGET="posix-distcheck" DISTCHECK_CONFIGURE_FLAGS="--with-examples=posix --enable-cli --enable-ncp --with-tests=all"
+    - env: BUILD_TARGET="posix-distcheck" DISTCHECK_CONFIGURE_FLAGS="--with-examples=posix --enable-cli --enable-ncp --with-tests=all" VERBOSE=1
       compiler: gcc
       os: linux
     - env: BUILD_TARGET="posix"

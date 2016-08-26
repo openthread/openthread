@@ -455,6 +455,11 @@ exit:
     return rval;
 }
 
+bool Netif::IsStateChangedCallbackPending(void)
+{
+    return mStateChangedFlags != 0;
+}
+
 void Netif::SetStateChangedFlags(uint32_t aFlags)
 {
     mStateChangedFlags |= aFlags;

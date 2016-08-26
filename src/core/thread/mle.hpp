@@ -1090,6 +1090,8 @@ private:
     void HandleParentRequestTimer(void);
     static void HandleUdpReceive(void *aContext, otMessage aMessage, const otMessageInfo *aMessageInfo);
     void HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    static void HandleSendChildUpdateRequest(void *aContext);
+    void HandleSendChildUpdateRequest(void);
 
     ThreadError HandleAdvertisement(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
     ThreadError HandleChildIdResponse(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
@@ -1128,6 +1130,8 @@ private:
 
     Ip6::UdpSocket mSocket;
     uint32_t mTimeout;
+
+    Tasklet mSendChildUpdateRequest;
 
     DiscoverHandler mDiscoverHandler;
     void *mDiscoverContext;

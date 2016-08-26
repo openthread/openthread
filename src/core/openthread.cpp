@@ -47,7 +47,6 @@
 #include <thread/thread_netif.hpp>
 #include <openthreadinstance.h>
 
-
 otInstance::otInstance(void) :
     mReceiveIp6DatagramCallback(NULL),
     mReceiveIp6DatagramCallbackContext(NULL),
@@ -84,33 +83,6 @@ namespace Thread {
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-otInstance *otInstanceInit(void *aInstanceBuffer, uint64_t *aInstanceBufferSize)
-{
-    otInstance *aInstance = NULL;
-
-    otLogInfoApi("otInstanceInit\n");
-
-    VerifyOrExit(aInstanceBufferSize != NULL, ;);
-
-    // Make sure the input buffer is big enough
-    VerifyOrExit(cAlignedInstanceSize <= *aInstanceBufferSize, *aInstanceBufferSize = cAlignedInstanceSize);
-
-    // Construct the context
-    aInstance = new(aInstanceBuffer)otInstance();
-
-exit:
-
-    return aInstance;
-}
-
-void otInstanceFinalize(otInstance *aInstance)
-{
-    // Ensure we are disabled
-    (void)otDisable(aInstance);
-
-    // Nothing to actually free, since the caller supplied the buffer
-}
 
 static void HandleActiveScanResult(void *aContext, Mac::Frame *aFrame);
 static void HandleMleDiscover(otActiveScanResult *aResult, void *aContext);
@@ -454,9 +426,7 @@ ThreadError otRemoveExternalRoute(otInstance *aInstance, const otIp6Prefix *aPre
 
 ThreadError otSendServerData(otInstance *aInstance)
 {
-    Ip6::Address destination;
-    aInstance->mThreadNetif.GetMle().GetLeaderAddress(destination);
-    return aInstance->mThreadNetif.GetNetworkDataLocal().Register(destination);
+    return aInstance->mThreadNetif.GetNetworkDataLocal().SendServerDataNotification();
 }
 
 ThreadError otAddUnsecurePort(otInstance *aInstance, uint16_t aPort)
@@ -893,6 +863,33 @@ void otSetPollPeriod(otInstance *aInstance, uint32_t aPollPeriod)
     aInstance->mThreadNetif.GetMeshForwarder().SetAssignPollPeriod(aPollPeriod);
 }
 
+otInstance *otInstanceInit(void *aInstanceBuffer, uint64_t *aInstanceBufferSize)
+{
+    otInstance *aInstance = NULL;
+
+    otLogInfoApi("otInstanceInit\n");
+
+    VerifyOrExit(aInstanceBuffer != NULL, ;);
+
+    // Make sure the input buffer is big enough
+    VerifyOrExit(cAlignedInstanceSize <= *aInstanceBufferSize, *aInstanceBufferSize = cAlignedInstanceSize);
+
+    // Construct the context
+    aInstance = new(aInstanceBuffer)otInstance();
+
+exit:
+
+    return aInstance;
+}
+
+void otInstanceFinalize(otInstance *aInstance)
+{
+    // Ensure we are disabled
+    (void)otDisable(aInstance);
+
+    // Nothing to actually free, since the caller supplied the buffer
+}
+
 ThreadError otEnable(otInstance *aInstance)
 {
     ThreadError error = kThreadError_None;
@@ -915,9 +912,9 @@ ThreadError otDisable(otInstance *aInstance)
 
     otLogInfoApi("otDisable\n");
 
-    aInstance->mEnabled = false;
     otThreadStop(aInstance);
     otInterfaceDown(aInstance);
+    aInstance->mEnabled = false;
 
 exit:
     return error;

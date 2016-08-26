@@ -69,6 +69,8 @@ ThreadError KeyManager::SetMasterKey(const void *aKey, uint8_t aKeyLength)
     ThreadError error = kThreadError_None;
 
     VerifyOrExit(aKeyLength <= sizeof(mMasterKey), error = kThreadError_InvalidArgs);
+    VerifyOrExit((mMasterKeyLength != aKeyLength) || (memcmp(mMasterKey, aKey, aKeyLength) != 0), ;);
+
     memcpy(mMasterKey, aKey, aKeyLength);
     mMasterKeyLength = aKeyLength;
     mKeySequence = 0;

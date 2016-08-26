@@ -81,7 +81,7 @@ ThreadError otPlatUartEnable(void)
 
     if (isatty(s_out_fd))
     {
-        tcgetattr(s_out_fd, &original_stdin_termios);
+        tcgetattr(s_out_fd, &original_stdout_termios);
         atexit(&restore_stdout_termios);
     }
 

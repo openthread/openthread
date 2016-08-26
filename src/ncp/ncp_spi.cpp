@@ -86,9 +86,9 @@ static uint16_t spi_header_get_data_len(const uint8_t *header)
 
 NcpSpi::NcpSpi(otInstance *aInstance):
     NcpBase(aInstance),
-    mHandleRxFrame(mInstance, &NcpSpi::HandleRxFrame, this),
-    mHandleSendDone(mInstance, &NcpSpi::HandleSendDone, this),
-    mTxFrameBuffer(mInstance, mTxBuffer, sizeof(mTxBuffer))
+    mHandleRxFrame(&NcpSpi::HandleRxFrame, this),
+    mHandleSendDone(&NcpSpi::PrepareTxFrame, this),
+    mTxFrameBuffer(aInstance, mTxBuffer, sizeof(mTxBuffer))
 {
     memset(mEmptySendFrame, 0, kSpiHeaderLength);
     memset(mSendFrame, 0, kSpiHeaderLength);
@@ -161,6 +161,7 @@ NcpSpi::SpiTransactionComplete(
         {
             rx_accept_len = spi_header_get_accept_len(aMISOBuf);
             tx_data_len = spi_header_get_data_len(aMISOBuf);
+            (void)spi_header_get_flag_byte(aMISOBuf);
         }
 
         if (aMOSIBufLen >= kSpiHeaderLength)
@@ -175,7 +176,7 @@ NcpSpi::SpiTransactionComplete(
           && (rx_data_len <= rx_accept_len)
         ) {
             mHandlingRxFrame = true;
-            mHandleRxFrame.Post();
+            mHandleRxFrameTask.Post();
         }
 
         if ( mSending
@@ -186,7 +187,7 @@ NcpSpi::SpiTransactionComplete(
         ) {
             // Our transmission was successful.
             mHandlingSendDone = true;
-            mHandleSendDone.Post();
+            mPrepareTxFrameTask.Post();
         }
     }
 
@@ -261,7 +262,7 @@ void NcpSpi::TxFrameBufferHasData(void *aContext, NcpFrameBuffer *aNcpFrameBuffe
 
 void NcpSpi::TxFrameBufferHasData(void)
 {
-    PrepareNextSpiSendFrame();
+    mPrepareTxFrameTask.Post();
 }
 
 ThreadError NcpSpi::PrepareNextSpiSendFrame(void)
@@ -269,8 +270,6 @@ ThreadError NcpSpi::PrepareNextSpiSendFrame(void)
     ThreadError errorCode = kThreadError_None;
     uint16_t frameLength;
     uint16_t readLength;
-
-    VerifyOrExit(!mSending, errorCode = kThreadError_Busy);
 
     VerifyOrExit(!mTxFrameBuffer.IsEmpty(), ;);
 
@@ -321,16 +320,23 @@ exit:
     return errorCode;
 }
 
-void NcpSpi::HandleSendDone(void *aContext)
+void NcpSpi::PrepareTxFrame(void *aContext)
 {
-    static_cast<NcpSpi*>(aInstance)->HandleSendDone();
+    static_cast<NcpSpi*>(aContext)->PrepareTxFrame();
 }
 
-void NcpSpi::HandleSendDone(void)
+void NcpSpi::PrepareTxFrame(void)
 {
-    mSending = false;
-    PrepareNextSpiSendFrame();
-    mHandlingSendDone = false;
+    if (mHandlingSendDone)
+    {
+        mSending = false;
+        PrepareNextSpiSendFrame();
+        mHandlingSendDone = false;
+    }
+    else if (!mSending)
+    {
+        PrepareNextSpiSendFrame();
+    }
 }
 
 void NcpSpi::HandleRxFrame(void *aContext)

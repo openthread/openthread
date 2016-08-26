@@ -52,11 +52,11 @@ namespace Thread {
 namespace NetworkData {
 
 Leader::Leader(ThreadNetif &aThreadNetif):
+    NetworkData(aThreadNetif),
     mTimer(aThreadNetif.GetInstance(), &Leader::HandleTimer, this),
     mServerData(OPENTHREAD_URI_SERVER_DATA, &Leader::HandleServerData, this),
     mCoapServer(aThreadNetif.GetCoapServer()),
-    mNetif(aThreadNetif),
-    mMle(aThreadNetif.GetMle())
+    mNetif(aThreadNetif)
 {
     Reset();
 }
@@ -470,21 +470,24 @@ void Leader::HandleServerData(void *aContext, Coap::Header &aHeader, Message &aM
 void Leader::HandleServerData(Coap::Header &aHeader, Message &aMessage,
                               const Ip6::MessageInfo &aMessageInfo)
 {
-    ThreadNetworkDataTlv threadNetworkDataTlv;
-    uint8_t tlvsLength;
-    uint8_t tlvs[kMaxSize];
-    uint16_t rloc16;
+    ThreadNetworkDataTlv networkData;
+    ThreadRloc16Tlv rloc16;
 
     otLogInfoNetData("Received network data registration\n");
 
-    aMessage.Read(aMessage.GetOffset(), sizeof(threadNetworkDataTlv), &threadNetworkDataTlv);
-    tlvsLength = threadNetworkDataTlv.GetLength();
+    if (ThreadTlv::GetTlv(aMessage, ThreadTlv::kRloc16, sizeof(rloc16), rloc16) == kThreadError_None)
+    {
+        RemoveBorderRouter(rloc16.GetRloc16());
+    }
 
-    aMessage.Read(aMessage.GetOffset() + sizeof(threadNetworkDataTlv), tlvsLength, tlvs);
-    rloc16 = HostSwap16(aMessageInfo.mPeerAddr.mFields.m16[7]);
+    if (ThreadTlv::GetTlv(aMessage, ThreadTlv::kThreadNetworkData, sizeof(networkData), networkData) ==
+        kThreadError_None)
+    {
+        RegisterNetworkData(HostSwap16(aMessageInfo.mPeerAddr.mFields.m16[7]),
+                            networkData.GetTlvs(), networkData.GetLength());
+    }
 
     SendServerDataResponse(aHeader, aMessageInfo, NULL, 0);
-    RegisterNetworkData(rloc16, tlvs, tlvsLength);
 }
 
 void Leader::SendServerDataResponse(const Coap::Header &aRequestHeader, const Ip6::MessageInfo &aMessageInfo,
@@ -880,6 +883,22 @@ ThreadError Leader::FreeContext(uint8_t aContextId)
     mStableVersion++;
     mNetif.SetStateChangedFlags(OT_THREAD_NETDATA_UPDATED);
     return kThreadError_None;
+}
+
+ThreadError Leader::SendServerDataNotification(uint16_t aRloc16)
+{
+    ThreadError error = kThreadError_None;
+    bool rlocIn = false;
+    bool rlocStable = false;
+
+    RlocLookup(aRloc16, rlocIn, rlocStable, mTlvs, mLength);
+
+    VerifyOrExit(rlocIn, error = kThreadError_NotFound);
+
+    SuccessOrExit(error = NetworkData::SendServerDataNotification(false, aRloc16));
+
+exit:
+    return error;
 }
 
 ThreadError Leader::RemoveRloc(uint16_t aRloc16)
