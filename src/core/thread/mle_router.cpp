@@ -2314,6 +2314,7 @@ ThreadError MleRouter::RemoveNeighbor(Neighbor &aNeighbor)
         if (aNeighbor.mState == Neighbor::kStateValid && !IsActiveRouter(aNeighbor.mValid.mRloc16))
         {
             mNetif.SetStateChangedFlags(OT_THREAD_CHILD_REMOVED);
+            mNetworkData.SendServerDataNotification(aNeighbor.mValid.mRloc16);
         }
 
         break;
