@@ -208,6 +208,17 @@ public:
      */
     void RemoveBorderRouter(uint16_t aRloc16);
 
+    /**
+     * This method sends a Server Data Notification message to the Leader indicating an invalid RLOC16.
+     *
+     * @param[in]  aRloc16  The invalid RLOC16 to notify.
+     *
+     * @retval kThreadError_None    Successfully enqueued the notification message.
+     * @retval kThreadError_NoBufs  Insufficient message buffers to generate the notification message.
+     *
+     */
+    ThreadError SendServerDataNotification(uint16_t aRloc16);
+
 private:
     static void HandleServerData(void *aContext, Coap::Header &aHeader, Message &aMessage,
                                  const Ip6::MessageInfo &aMessageInfo);
@@ -269,7 +280,6 @@ private:
 
     Coap::Server   &mCoapServer;
     ThreadNetif    &mNetif;
-    Mle::MleRouter &mMle;
 };
 
 /**

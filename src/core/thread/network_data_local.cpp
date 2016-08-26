@@ -31,24 +31,20 @@
  *   This file implements the local Thread Network Data.
  */
 
-#include <coap/coap_header.hpp>
 #include <common/debug.hpp>
 #include <common/logging.hpp>
 #include <common/code_utils.hpp>
-#include <platform/random.h>
+#include <mac/mac_frame.hpp>
 #include <thread/network_data_local.hpp>
 #include <thread/thread_netif.hpp>
-#include <thread/thread_tlvs.hpp>
-#include <thread/thread_uris.hpp>
 
 namespace Thread {
 namespace NetworkData {
 
 Local::Local(ThreadNetif &aThreadNetif):
-    NetworkData(),
-    mMle(aThreadNetif.GetMle())
+    NetworkData(aThreadNetif),
+    mOldRloc(Mac::kShortAddrInvalid)
 {
-    mCoapMessageId = 0;
 }
 
 ThreadError Local::AddOnMeshPrefix(const uint8_t *aPrefix, uint8_t aPrefixLength, int8_t aPrf,
@@ -199,77 +195,23 @@ ThreadError Local::UpdateRloc(BorderRouterTlv &aBorderRouter)
     return kThreadError_None;
 }
 
-ThreadError Local::Register(const Ip6::Address &aDestination)
+ThreadError Local::SendServerDataNotification(void)
 {
     ThreadError error = kThreadError_None;
-    Coap::Header header;
-    Message *message;
-    Ip6::MessageInfo messageInfo;
-    ThreadNetworkDataTlv threadNetworkDataTlv;
+    uint16_t rloc = mMle.GetRloc16();
 
     UpdateRloc();
-    mSocket.Open(&HandleUdpReceive, this);
 
-    for (size_t i = 0; i < sizeof(mCoapToken); i++)
+    if (mOldRloc == rloc)
     {
-        mCoapToken[i] = static_cast<uint8_t>(otPlatRandomGet());
+        mOldRloc = Mac::kShortAddrInvalid;
     }
 
-    header.Init();
-    header.SetVersion(1);
-    header.SetType(Coap::Header::kTypeConfirmable);
-    header.SetCode(Coap::Header::kCodePost);
-    header.SetMessageId(++mCoapMessageId);
-    header.SetToken(mCoapToken, sizeof(mCoapToken));
-    header.AppendUriPathOptions(OPENTHREAD_URI_SERVER_DATA);
-    header.AppendContentFormatOption(Coap::Header::kApplicationOctetStream);
-    header.Finalize();
-
-    VerifyOrExit((message = Ip6::Udp::NewMessage(0)) != NULL, error = kThreadError_NoBufs);
-    SuccessOrExit(error = message->Append(header.GetBytes(), header.GetLength()));
-    threadNetworkDataTlv.Init();
-    threadNetworkDataTlv.SetLength(mLength);
-    SuccessOrExit(error = message->Append(&threadNetworkDataTlv, sizeof(threadNetworkDataTlv)));
-    SuccessOrExit(error = message->Append(mTlvs, mLength));
-
-    memset(&messageInfo, 0, sizeof(messageInfo));
-    memcpy(&messageInfo.mPeerAddr, &aDestination, sizeof(messageInfo.mPeerAddr));
-    messageInfo.mPeerPort = kCoapUdpPort;
-    SuccessOrExit(error = mSocket.SendTo(*message, messageInfo));
-
-    otLogInfoNetData("Sent network data registration\n");
+    SuccessOrExit(error = NetworkData::SendServerDataNotification(true, mOldRloc));
+    mOldRloc = rloc;
 
 exit:
-
-    if (error != kThreadError_None && message != NULL)
-    {
-        Message::Free(*message);
-    }
-
     return error;
-}
-
-void Local::HandleUdpReceive(void *aContext, otMessage aMessage, const otMessageInfo *aMessageInfo)
-{
-    Local *obj = reinterpret_cast<Local *>(aContext);
-    obj->HandleUdpReceive(*static_cast<Message *>(aMessage), *static_cast<const Ip6::MessageInfo *>(aMessageInfo));
-}
-
-void Local::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
-{
-    Coap::Header header;
-
-    SuccessOrExit(header.FromMessage(aMessage));
-    VerifyOrExit(header.GetType() == Coap::Header::kTypeAcknowledgment &&
-                 header.GetCode() == Coap::Header::kCodeChanged &&
-                 header.GetMessageId() == mCoapMessageId &&
-                 header.GetTokenLength() == sizeof(mCoapToken) &&
-                 memcmp(mCoapToken, header.GetToken(), sizeof(mCoapToken)) == 0, ;);
-
-    otLogInfoNetData("Network data registration acknowledged\n");
-
-exit:
-    (void)aMessageInfo;
 }
 
 }  // namespace NetworkData
