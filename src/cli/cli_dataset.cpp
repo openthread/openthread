@@ -446,7 +446,7 @@ ThreadError Dataset::ProcessMgmtSetCommand(int argc, char *argv[])
             VerifyOrExit(static_cast<size_t>(value) <= sizeof(tlvs), error = kThreadError_NoBufs);
             VerifyOrExit(Interpreter::Hex2Bin(argv[++index], tlvs, static_cast<uint16_t>(value)) >= 0,
                          error = kThreadError_Parse);
-            length = value;
+            length = static_cast<int>(value);
         }
         else
         {
@@ -456,11 +456,11 @@ ThreadError Dataset::ProcessMgmtSetCommand(int argc, char *argv[])
 
     if (strcmp(argv[0], "active") == 0)
     {
-        SuccessOrExit(error = otSendActiveSet(&dataset, tlvs, length));
+        SuccessOrExit(error = otSendActiveSet(&dataset, tlvs, static_cast<uint8_t>(length)));
     }
     else if (strcmp(argv[0], "pending") == 0)
     {
-        SuccessOrExit(error = otSendPendingSet(&dataset, tlvs, length));
+        SuccessOrExit(error = otSendPendingSet(&dataset, tlvs, static_cast<uint8_t>(length)));
     }
     else
     {
@@ -528,7 +528,7 @@ ThreadError Dataset::ProcessMgmtGetCommand(int argc, char *argv[])
         {
             VerifyOrExit((index + 1) < argc, error = kThreadError_Parse);
             SuccessOrExit(error = Interpreter::ParseLong(argv[++index], value));
-            VerifyOrExit(static_cast<size_t>(value) <= (sizeof(tlvs) - length), error = kThreadError_NoBufs);
+            VerifyOrExit(static_cast<size_t>(value) <= (sizeof(tlvs) - static_cast<size_t>(length)), error = kThreadError_NoBufs);
             VerifyOrExit(Interpreter::Hex2Bin(argv[++index], tlvs + length, static_cast<uint16_t>(value)) >= 0,
                          error = kThreadError_Parse);
             length += value;
@@ -541,11 +541,11 @@ ThreadError Dataset::ProcessMgmtGetCommand(int argc, char *argv[])
 
     if (strcmp(argv[0], "active") == 0)
     {
-        SuccessOrExit(error = otSendActiveGet(tlvs, length));
+        SuccessOrExit(error = otSendActiveGet(tlvs, static_cast<uint8_t>(length)));
     }
     else if (strcmp(argv[0], "pending") == 0)
     {
-        SuccessOrExit(error = otSendPendingGet(tlvs, length));
+        SuccessOrExit(error = otSendPendingGet(tlvs, static_cast<uint8_t>(length)));
     }
     else
     {
