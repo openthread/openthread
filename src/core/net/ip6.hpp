@@ -42,6 +42,7 @@
 #include <net/icmp6.hpp>
 #include <net/ip6_address.hpp>
 #include <net/ip6_headers.hpp>
+#include <net/ip6_routes.hpp>
 #include <net/ip6_mpl.hpp>
 #include <net/netif.hpp>
 #include <net/socket.hpp>
@@ -322,6 +323,7 @@ public:
      */
     int8_t GetOnLinkNetif(const Address &aAddress);
 
+    Routes mRoutes;
     Icmp mIcmp;
     Udp mUdp;
 

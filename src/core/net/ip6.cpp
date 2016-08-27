@@ -48,6 +48,7 @@ namespace Thread {
 namespace Ip6 {
 
 Ip6::Ip6(void):
+    mRoutes(*this),
     mIcmp(*this),
     mUdp(*this),
     mForwardingEnabled(false),
@@ -530,7 +531,7 @@ ThreadError Ip6::ForwardMessage(Message &message, MessageInfo &messageInfo)
         // on-link global address
         ;
     }
-    else if ((interfaceId = Routes::Lookup(messageInfo.GetPeerAddr(), messageInfo.GetSockAddr())) > 0)
+    else if ((interfaceId = mRoutes.Lookup(messageInfo.GetPeerAddr(), messageInfo.GetSockAddr())) > 0)
     {
         // route
         ;
