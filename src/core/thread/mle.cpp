@@ -2134,12 +2134,12 @@ ThreadError Mle::HandleDiscoveryRequest(const Message &aMessage, const Ip6::Mess
 
         switch (meshcopTlv.GetType())
         {
-        case OT_MESHCOP_TLV_DISCOVERYREQUEST:
+        case MeshCoP::Tlv::kDiscoveryRequest:
             aMessage.Read(offset, sizeof(discoveryRequest), &discoveryRequest);
             VerifyOrExit(discoveryRequest.IsValid(), error = kThreadError_Parse);
             break;
 
-        case OT_MESHCOP_TLV_EXTPANID:
+        case MeshCoP::Tlv::kExtendedPanId:
             aMessage.Read(offset, sizeof(extPanId), &extPanId);
             VerifyOrExit(extPanId.IsValid(), error = kThreadError_Parse);
             VerifyOrExit(memcmp(mMac.GetExtendedPanId(), extPanId.GetExtendedPanId(), OT_EXT_PAN_ID_SIZE),
@@ -2265,20 +2265,20 @@ ThreadError Mle::HandleDiscoveryResponse(const Message &aMessage, const Ip6::Mes
 
         switch (meshcopTlv.GetType())
         {
-        case OT_MESHCOP_TLV_DISCOVERYRESPONSE:
+        case MeshCoP::Tlv::kDiscoveryResponse:
             aMessage.Read(offset, sizeof(discoveryResponse), &discoveryResponse);
             VerifyOrExit(discoveryResponse.IsValid(), error = kThreadError_Parse);
             result.mVersion = discoveryResponse.GetVersion();
             result.mIsNative = discoveryResponse.IsNativeCommissioner();
             break;
 
-        case OT_MESHCOP_TLV_EXTPANID:
+        case MeshCoP::Tlv::kExtendedPanId:
             aMessage.Read(offset, sizeof(extPanId), &extPanId);
             VerifyOrExit(extPanId.IsValid(), error = kThreadError_Parse);
             memcpy(&result.mExtendedPanId, extPanId.GetExtendedPanId(), sizeof(result.mExtendedPanId));
             break;
 
-        case OT_MESHCOP_TLV_NETWORKNAME:
+        case MeshCoP::Tlv::kNetworkName:
             aMessage.Read(offset, sizeof(networkName), &networkName);
             VerifyOrExit(networkName.IsValid(), error = kThreadError_Parse);
             memcpy(&result.mNetworkName, networkName.GetNetworkName(), networkName.GetLength());
