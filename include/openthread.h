@@ -719,51 +719,55 @@ ThreadError otSetPendingDataset(otOperationalDataset *aDataset);
  * This function sends MGMT_ACTIVE_GET.
  *
  * @param[in]  aTlvTypes  A pointer to the TLV Types.
- * @param[in]  aSize      The size of TLV Types.
+ * @param[in]  aLength    The length of TLV Types.
  *
  * @retval kThreadError_None         Successfully send the meshcop dataset command.
- * @retval kThreadError_Fail         Fail to send the meshcop dataset command.
+ * @retval kThreadError_NoBufs       Insufficient buffer space to send.
+ * @retval kThreadError_Drop         No interface specified for link local destination.
  *
  */
-ThreadError otSendActiveGet(const uint8_t *aTlvTypes, uint8_t aSize);
+ThreadError otSendActiveGet(const uint8_t *aTlvTypes, uint8_t aLength);
 
 /**
  * This function sends MGMT_ACTIVE_SET.
  *
  * @param[in]  aDataset   A pointer to operational dataset.
  * @param[in]  aTlvs      A pointer to TLVs.
- * @param[in]  aSize      The size of TLVs.
+ * @param[in]  aLength    The length of TLVs.
  *
  * @retval kThreadError_None         Successfully send the meshcop dataset command.
- * @retval kThreadError_Fail         Fail to send the meshcop dataset command.
+ * @retval kThreadError_NoBufs       Insufficient buffer space to send.
+ * @retval kThreadError_Drop         No interface specified for link local destination.
  *
  */
-ThreadError otSendActiveSet(otOperationalDataset *aDataset, const uint8_t *aTlvs, uint8_t aSize);
+ThreadError otSendActiveSet(otOperationalDataset *aDataset, const uint8_t *aTlvs, uint8_t aLength);
 
 /**
  * This function sends MGMT_PENDING_GET.
  *
  * @param[in]  aTlvTypes  A pointer to the TLV Types.
- * @param[in]  aSize      The size of TLV Types.
+ * @param[in]  aLength    The length of TLV Types.
  *
  * @retval kThreadError_None         Successfully send the meshcop dataset command.
- * @retval kThreadError_Fail         Fail to send the meshcop dataset command.
+ * @retval kThreadError_NoBufs       Insufficient buffer space to send.
+ * @retval kThreadError_Drop         No interface specified for link local destination.
  *
  */
-ThreadError otSendPendingGet(const uint8_t *aTlvTypes, uint8_t aSize);
+ThreadError otSendPendingGet(const uint8_t *aTlvTypes, uint8_t aLength);
 
 /**
  * This function sends MGMT_PENDING_SET.
  *
  * @param[in]  aDataset   A pointer to operational dataset.
  * @param[in]  aTlvs      A pointer to TLVs.
- * @param[in]  aSize      The size of TLVs.
+ * @param[in]  aLength    The length of TLVs.
  *
  * @retval kThreadError_None         Successfully send the meshcop dataset command.
- * @retval kThreadError_Fail         Fail to send the meshcop dataset command.
+ * @retval kThreadError_NoBufs       Insufficient buffer space to send.
+ * @retval kThreadError_Drop         No interface specified for link local destination.
  *
  */
-ThreadError otSendPendingSet(otOperationalDataset *aDataset, const uint8_t *aTlvs, uint8_t aSize);
+ThreadError otSendPendingSet(otOperationalDataset *aDataset, const uint8_t *aTlvs, uint8_t aLength);
 
 /**
  * Get the data poll period of sleepy end deivce.

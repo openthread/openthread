@@ -1201,40 +1201,24 @@ exit:
     return error;
 }
 
-ThreadError otSendActiveGet(const uint8_t *aTlvTypes, uint8_t aSize)
+ThreadError otSendActiveGet(const uint8_t *aTlvTypes, uint8_t aLength)
 {
-    ThreadError error = kThreadError_None;
-
-    error = sThreadNetif->GetActiveDataset().SendGetRequest(aTlvTypes, aSize);
-
-    return error;
+    return sThreadNetif->GetActiveDataset().SendGetRequest(aTlvTypes, aLength);
 }
 
-ThreadError otSendActiveSet(otOperationalDataset *aDataset, const uint8_t *aTlvs, uint8_t aSize)
+ThreadError otSendActiveSet(otOperationalDataset *aDataset, const uint8_t *aTlvs, uint8_t aLength)
 {
-    ThreadError error = kThreadError_None;
-
-    error = sThreadNetif->GetActiveDataset().SendSetRequest(*aDataset, aTlvs, aSize);
-
-    return error;
+    return sThreadNetif->GetActiveDataset().SendSetRequest(*aDataset, aTlvs, aLength);
 }
 
-ThreadError otSendPendingGet(const uint8_t *aTlvTypes, uint8_t aSize)
+ThreadError otSendPendingGet(const uint8_t *aTlvTypes, uint8_t aLength)
 {
-    ThreadError error = kThreadError_None;
-
-    error = sThreadNetif->GetPendingDataset().SendGetRequest(aTlvTypes, aSize);
-
-    return error;
+    return sThreadNetif->GetPendingDataset().SendGetRequest(aTlvTypes, aLength);
 }
 
-ThreadError otSendPendingSet(otOperationalDataset *aDataset, const uint8_t *aTlvs, uint8_t aSize)
+ThreadError otSendPendingSet(otOperationalDataset *aDataset, const uint8_t *aTlvs, uint8_t aLength)
 {
-    ThreadError error = kThreadError_None;
-
-    error = sThreadNetif->GetPendingDataset().SendSetRequest(*aDataset, aTlvs, aSize);
-
-    return error;
+    return sThreadNetif->GetPendingDataset().SendSetRequest(*aDataset, aTlvs, aLength);
 }
 
 #ifdef __cplusplus
