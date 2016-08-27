@@ -31,12 +31,16 @@
  *   This file implements IPv6 route tables.
  */
 
+#include <net/ip6.hpp>
 #include <net/ip6_routes.hpp>
 #include <net/netif.hpp>
 #include <common/code_utils.hpp>
 #include <common/message.hpp>
 
 namespace Thread {
+
+extern Ip6::Ip6 *sIp6;
+
 namespace Ip6 {
 
 static Route *sRoutes = NULL;
@@ -109,7 +113,7 @@ int8_t Routes::Lookup(const Address &aSource, const Address &aDestination)
         rval = cur->mInterfaceId;
     }
 
-    for (Netif *netif = Netif::GetNetifList(); netif; netif = netif->GetNext())
+    for (Netif *netif = sIp6->GetNetifList(); netif; netif = netif->GetNext())
     {
         if (netif->RouteLookup(aSource, aDestination, &prefixMatch) == kThreadError_None &&
             static_cast<int8_t>(prefixMatch) > maxPrefixMatch)

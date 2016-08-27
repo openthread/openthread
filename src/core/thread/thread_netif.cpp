@@ -82,7 +82,7 @@ ThreadError ThreadNetif::Up(void)
 
     VerifyOrExit(!mIsUp, error = kThreadError_Already);
 
-    Netif::AddNetif();
+    mIp6.AddNetif(*this);
     mMeshForwarder.Start();
     mCoapServer.Start();
     mMleRouter.Enable();
@@ -97,7 +97,7 @@ ThreadError ThreadNetif::Down(void)
     mCoapServer.Stop();
     mMleRouter.Disable();
     mMeshForwarder.Stop();
-    Netif::RemoveNetif();
+    mIp6.RemoveNetif(*this);
     mIsUp = false;
     return kThreadError_None;
 }

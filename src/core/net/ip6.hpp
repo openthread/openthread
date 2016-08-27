@@ -241,6 +241,87 @@ public:
      */
     void SetForwardingEnabled(bool aEnable);
 
+    /**
+     * This method enables the network interface.
+     *
+     * @param  aNetif  A reference to the network interface.
+     *
+     * @retval kThreadError_None  Successfully enabled the network interface.
+     * @retval KThreadError_Busy  The network interface was already enabled.
+     *
+     */
+    ThreadError AddNetif(Netif &aNetif);
+
+    /**
+     * This method disables the network interface.
+     *
+     * @param  aNetif  A reference to the network interface.
+     *
+     * @retval kThreadError_None  Successfully disabled the network interface.
+     * @retval KThreadError_Busy  The network interface was already disabled.
+     *
+     */
+    ThreadError RemoveNetif(Netif &aNetif);
+
+    /**
+     * This method returns the network interface list.
+     *
+     * @returns A pointer to the network interface list.
+     *
+     */
+    Netif *GetNetifList(void);
+
+    /**
+     * This method returns the network interface identified by @p aInterfaceId.
+     *
+     * @param[in]  aInterfaceId  The network interface ID.
+     *
+     * @returns A pointer to the network interface or NULL if none is found.
+     *
+     */
+    Netif *GetNetifById(int8_t aInterfaceId);
+
+    /**
+     * This method returns the network interface identified by @p aName.
+     *
+     * @param[in]  aName  A pointer to a NULL-terminated string.
+     *
+     * @returns A pointer to the network interface or NULL if none is found.
+     *
+     */
+    Netif *GetNetifByName(char *aName);
+
+    /**
+     * This method indicates whether or not @p aAddress is assigned to a network interface.
+     *
+     * @param[in]  aAddress  A reference to the IPv6 address.
+     *
+     * @retval TRUE   If the IPv6 address is assigned to a network interface.
+     * @retval FALSE  If the IPv6 address is not assigned to any network interface.
+     *
+     */
+    bool IsUnicastAddress(const Address &aAddress);
+
+    /**
+     * This method perform default source address selection.
+     *
+     * @param[in]  aMessageInfo  A reference to the message information.
+     *
+     * @returns A pointer to the selected IPv6 source address or NULL if no source address was found.
+     *
+     */
+    const NetifUnicastAddress *SelectSourceAddress(MessageInfo &aMessageInfo);
+
+    /**
+     * This method determines which network interface @p aAddress is on-link, if any.
+     *
+     * @param[in]  aAddress  A reference to the IPv6 address.
+     *
+     * @returns The network interface identifier for the on-link interface or -1 if none is found.
+     *
+     */
+    int8_t GetOnLinkNetif(const Address &aAddress);
+
     Icmp mIcmp;
     Udp mUdp;
 
@@ -259,6 +340,9 @@ private:
     otReceiveIp6DatagramCallback mReceiveIp6DatagramCallback;
     void *mReceiveIp6DatagramCallbackContext;
     bool mIsReceiveIp6FilterEnabled;
+
+    Netif *mNetifListHead;
+    int8_t mNextInterfaceId;
 };
 
 /**
