@@ -54,15 +54,6 @@ enum
 
 enum
 {
-    CC2538_RF_CSP_OP_ISRXON = 0xE3,
-    CC2538_RF_CSP_OP_ISTXON = 0xE9,
-    CC2538_RF_CSP_OP_ISRFOFF = 0xEF,
-    CC2538_RF_CSP_OP_ISFLUSHRX = 0xED,
-    CC2538_RF_CSP_OP_ISFLUSHTX = 0xEE,
-};
-
-enum
-{
     CC2538_RSSI_OFFSET = 73,
     CC2538_CRC_BIT_MASK = 0x80,
     CC2538_LQI_BIT_MASK = 0x7f,
@@ -84,11 +75,11 @@ void enableReceiver(void)
     if (!sIsReceiverEnabled)
     {
         // flush rxfifo
-        HWREG(RFCORE_SFR_RFST) = CC2538_RF_CSP_OP_ISFLUSHRX;
-        HWREG(RFCORE_SFR_RFST) = CC2538_RF_CSP_OP_ISFLUSHRX;
+        HWREG(RFCORE_SFR_RFST) = RFCORE_SFR_RFST_INSTR_FLUSHRX;
+        HWREG(RFCORE_SFR_RFST) = RFCORE_SFR_RFST_INSTR_FLUSHRX;
 
         // enable receiver
-        HWREG(RFCORE_SFR_RFST) = CC2538_RF_CSP_OP_ISRXON;
+        HWREG(RFCORE_SFR_RFST) = RFCORE_SFR_RFST_INSTR_RXON;
         sIsReceiverEnabled = true;
     }
 }
@@ -100,13 +91,13 @@ void disableReceiver(void)
         while (HWREG(RFCORE_XREG_FSMSTAT1) & RFCORE_XREG_FSMSTAT1_TX_ACTIVE);
 
         // flush rxfifo
-        HWREG(RFCORE_SFR_RFST) = CC2538_RF_CSP_OP_ISFLUSHRX;
-        HWREG(RFCORE_SFR_RFST) = CC2538_RF_CSP_OP_ISFLUSHRX;
+        HWREG(RFCORE_SFR_RFST) = RFCORE_SFR_RFST_INSTR_FLUSHRX;
+        HWREG(RFCORE_SFR_RFST) = RFCORE_SFR_RFST_INSTR_FLUSHRX;
 
         if (HWREG(RFCORE_XREG_RXENABLE) != 0)
         {
             // disable receiver
-            HWREG(RFCORE_SFR_RFST) = CC2538_RF_CSP_OP_ISRFOFF;
+            HWREG(RFCORE_SFR_RFST) = RFCORE_SFR_RFST_INSTR_RFOFF;
         }
 
         sIsReceiverEnabled = false;
@@ -263,8 +254,8 @@ ThreadError otPlatRadioTransmit(void)
         while (HWREG(RFCORE_XREG_FSMSTAT1) & RFCORE_XREG_FSMSTAT1_TX_ACTIVE);
 
         // flush txfifo
-        HWREG(RFCORE_SFR_RFST) = CC2538_RF_CSP_OP_ISFLUSHTX;
-        HWREG(RFCORE_SFR_RFST) = CC2538_RF_CSP_OP_ISFLUSHTX;
+        HWREG(RFCORE_SFR_RFST) = RFCORE_SFR_RFST_INSTR_FLUSHTX;
+        HWREG(RFCORE_SFR_RFST) = RFCORE_SFR_RFST_INSTR_FLUSHTX;
 
         // frame length
         HWREG(RFCORE_SFR_RFDATA) = sTransmitFrame.mLength;
@@ -286,7 +277,7 @@ ThreadError otPlatRadioTransmit(void)
                      sTransmitError = kThreadError_ChannelAccessFailure);
 
         // begin transmit
-        HWREG(RFCORE_SFR_RFST) = CC2538_RF_CSP_OP_ISTXON;
+        HWREG(RFCORE_SFR_RFST) = RFCORE_SFR_RFST_INSTR_TXON;
 
         while (HWREG(RFCORE_XREG_FSMSTAT1) & RFCORE_XREG_FSMSTAT1_TX_ACTIVE);
     }
@@ -359,8 +350,8 @@ void readFrame(void)
     if ((HWREG(RFCORE_XREG_FSMSTAT1) & RFCORE_XREG_FSMSTAT1_FIFOP) != 0 &&
         (HWREG(RFCORE_XREG_FSMSTAT1) & RFCORE_XREG_FSMSTAT1_FIFO) == 0)
     {
-        HWREG(RFCORE_SFR_RFST) = CC2538_RF_CSP_OP_ISFLUSHRX;
-        HWREG(RFCORE_SFR_RFST) = CC2538_RF_CSP_OP_ISFLUSHRX;
+        HWREG(RFCORE_SFR_RFST) = RFCORE_SFR_RFST_INSTR_FLUSHRX;
+        HWREG(RFCORE_SFR_RFST) = RFCORE_SFR_RFST_INSTR_FLUSHRX;
     }
 
 exit:

@@ -30,8 +30,6 @@
  * @file
  *   This file implements a pseudo-random number generator.
  *
- * @warning
- *   This implementation is not a true random number generator and does @em satisfy the Thread requirements.
  */
 
 #include <openthread-types.h>
@@ -40,34 +38,48 @@
 #include <platform/random.h>
 #include "platform-cc2538.h"
 
-static uint32_t s_state = 1;
-
 void cc2538RandomInit(void)
 {
-    // use Extended Identifier portion of IEEE EUI-64 as the seed
-    s_state = HWREG(IEEE_EUI64 + 4);
+    uint16_t seed = 0;
+
+    HWREG(SOC_ADC_ADCCON1) &= ~(SOC_ADC_ADCCON1_RCTRL1 | SOC_ADC_ADCCON1_RCTRL0);
+
+    HWREG(SYS_CTRL_RCGCRFC) = SYS_CTRL_RCGCRFC_RFC0;
+    while (HWREG(SYS_CTRL_RCGCRFC) != SYS_CTRL_RCGCRFC_RFC0);
+
+    HWREG(RFCORE_XREG_FRMCTRL0) = RFCORE_XREG_FRMCTRL0_INFINITY_RX;
+    HWREG(RFCORE_SFR_RFST) = RFCORE_SFR_RFST_INSTR_RXON;
+
+    while (!HWREG(RFCORE_XREG_RSSISTAT) & RFCORE_XREG_RSSISTAT_RSSI_VALID);
+
+    while (seed == 0x0000 || seed == 0x8003)
+    {
+        for (uint8_t index = 0; index < (8 * sizeof(seed)); index++)
+        {
+            seed |= (HWREG(RFCORE_XREG_RFRND) & RFCORE_XREG_RFRND_IRND);
+            seed <<= 1;
+        }
+    }
+
+    HWREG(SOC_ADC_RNDL) = (seed >> 8) & 0xff;
+    HWREG(SOC_ADC_RNDL) = seed & 0xff;
+
+    HWREG(RFCORE_SFR_RFST) = RFCORE_SFR_RFST_INSTR_RFOFF;
+}
+
+uint16_t generateRandom(void)
+{
+    uint32_t reg;
+
+    HWREG(SOC_ADC_ADCCON1) |= SOC_ADC_ADCCON1_RCTRL0;
+    reg = HWREG(SOC_ADC_RNDL) | (HWREG(SOC_ADC_RNDH) << 8);
+
+    return (uint16_t)reg;
 }
 
 uint32_t otPlatRandomGet(void)
 {
-    uint32_t mlcg, p, q;
-    uint64_t tmpstate;
-
-    tmpstate = (uint64_t)33614 * (uint64_t)s_state;
-    q = tmpstate & 0xffffffff;
-    q = q >> 1;
-    p = tmpstate >> 32;
-    mlcg = p + q;
-
-    if (mlcg & 0x80000000)
-    {
-        mlcg &= 0x7fffffff;
-        mlcg++;
-    }
-
-    s_state = mlcg;
-
-    return mlcg;
+    return (generateRandom() | (generateRandom() << 16));
 }
 
 ThreadError otPlatSecureRandomGet(uint16_t aInputLength, uint8_t *aOutput, uint16_t *aOutputLength)
@@ -78,7 +90,7 @@ ThreadError otPlatSecureRandomGet(uint16_t aInputLength, uint8_t *aOutput, uint1
 
     for (uint16_t length = 0; length < aInputLength; length++)
     {
-        aOutput[length] = (uint8_t)otPlatRandomGet();
+        aOutput[length] = (uint8_t)generateRandom();
     }
 
     *aOutputLength = aInputLength;
