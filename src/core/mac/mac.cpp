@@ -67,7 +67,7 @@ void Mac::StartCsmaBackoff(void)
 }
 
 Mac::Mac(ThreadNetif &aThreadNetif):
-    mBeginTransmit(&HandleBeginTransmit, this),
+    mBeginTransmit(aThreadNetif.GetIp6().mTaskletScheduler, &HandleBeginTransmit, this),
     mAckTimer(&HandleAckTimer, this),
     mBackoffTimer(&HandleBeginTransmit, this),
     mReceiveTimer(&HandleReceiveTimer, this),

@@ -47,6 +47,8 @@ namespace Thread {
 static otDEFINE_ALIGNED_VAR(sNcpRaw, sizeof(NcpSpi), uint64_t);
 static NcpSpi *sNcpSpi;
 
+extern Ip6::Ip6 *sIp6;
+
 extern "C" void otNcpInit(void)
 {
     sNcpSpi = new(&sNcpRaw) NcpSpi;
@@ -86,8 +88,8 @@ static uint16_t spi_header_get_data_len(const uint8_t *header)
 
 NcpSpi::NcpSpi():
     NcpBase(),
-    mHandleRxFrameTask(&HandleRxFrame, this),
-    mPrepareTxFrameTask(&PrepareTxFrame, this),
+    mHandleRxFrameTask(sIp6->mTaskletScheduler, &HandleRxFrame, this),
+    mPrepareTxFrameTask(sIp6->mTaskletScheduler, &PrepareTxFrame, this),
     mTxFrameBuffer(mTxBuffer, sizeof(mTxBuffer))
 {
     memset(mEmptySendFrame, 0, kSpiHeaderLength);

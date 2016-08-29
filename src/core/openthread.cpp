@@ -80,12 +80,12 @@ static void *sDiscoverCallbackContext = NULL;
 
 void otProcessNextTasklet(void)
 {
-    TaskletScheduler::RunNextTasklet();
+    sIp6->mTaskletScheduler.RunNextTasklet();
 }
 
 bool otAreTaskletsPending(void)
 {
-    return TaskletScheduler::AreTaskletsPending();
+    return sIp6->mTaskletScheduler.AreTaskletsPending();
 }
 
 uint8_t otGetChannel(void)

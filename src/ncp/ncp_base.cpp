@@ -406,7 +406,7 @@ static uint8_t BorderRouterConfigToFlagByte(const otBorderRouterConfig &config)
 // ----------------------------------------------------------------------------
 
 NcpBase::NcpBase():
-    mUpdateChangedPropsTask(&UpdateChangedProps, this)
+    mUpdateChangedPropsTask(sIp6->mTaskletScheduler, &UpdateChangedProps, this)
 {
     mSupportedChannelMask = kPhySupportedChannelMask;
     mChannelMask = mSupportedChannelMask;

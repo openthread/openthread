@@ -327,6 +327,8 @@ public:
     Icmp mIcmp;
     Udp mUdp;
 
+    TaskletScheduler mTaskletScheduler;
+
 private:
     void ProcessReceiveCallback(const Message &aMessage, const MessageInfo &aMessageInfo, uint8_t aIpProto);
     ThreadError HandleExtensionHeaders(Message &message, uint8_t &nextHeader, bool receive);

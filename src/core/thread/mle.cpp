@@ -63,7 +63,7 @@ Mle::Mle(ThreadNetif &aThreadNetif) :
     mNetworkData(aThreadNetif.GetNetworkDataLeader()),
     mParentRequestTimer(&HandleParentRequestTimer, this),
     mSocket(aThreadNetif.GetIp6().mUdp),
-    mSendChildUpdateRequest(&HandleSendChildUpdateRequest, this)
+    mSendChildUpdateRequest(aThreadNetif.GetIp6().mTaskletScheduler, &HandleSendChildUpdateRequest, this)
 {
     mDeviceState = kDeviceStateDisabled;
     mDeviceMode = ModeTlv::kModeRxOnWhenIdle | ModeTlv::kModeSecureDataRequest | ModeTlv::kModeFFD |

@@ -34,6 +34,7 @@
 #include <common/code_utils.hpp>
 #include <common/debug.hpp>
 #include <common/message.hpp>
+#include <net/ip6.hpp>
 #include <net/netif.hpp>
 
 namespace Thread {
@@ -41,7 +42,7 @@ namespace Ip6 {
 
 Netif::Netif(Ip6 &aIp6):
     mIp6(aIp6),
-    mStateChangedTask(&HandleStateChangedTask, this)
+    mStateChangedTask(aIp6.mTaskletScheduler, &HandleStateChangedTask, this)
 {
     mCallbacks = NULL;
     mUnicastAddresses = NULL;

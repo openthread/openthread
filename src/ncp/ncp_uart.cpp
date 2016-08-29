@@ -44,6 +44,8 @@ namespace Thread {
 static otDEFINE_ALIGNED_VAR(sNcpRaw, sizeof(NcpUart), uint64_t);
 static NcpUart *sNcpUart;
 
+extern Ip6::Ip6 *sIp6;
+
 extern "C" void otNcpInit(void)
 {
     sNcpUart = new(&sNcpRaw) NcpUart;
@@ -81,7 +83,7 @@ NcpUart::NcpUart():
     mFrameDecoder(mRxBuffer, sizeof(mRxBuffer), &HandleFrame, &HandleError, this),
     mUartBuffer(),
     mTxFrameBuffer(mTxBuffer, sizeof(mTxBuffer)),
-    mUartSendTask(EncodeAndSendToUart, this)
+    mUartSendTask(sIp6->mTaskletScheduler, EncodeAndSendToUart, this)
 {
     mState = kStartingFrame;
 

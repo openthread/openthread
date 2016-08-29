@@ -56,7 +56,7 @@ MeshForwarder::MeshForwarder(ThreadNetif &aThreadNetif):
     mDiscoverTimer(&HandleDiscoverTimer, this),
     mPollTimer(&HandlePollTimer, this),
     mReassemblyTimer(&HandleReassemblyTimer, this),
-    mScheduleTransmissionTask(ScheduleTransmissionTask, this),
+    mScheduleTransmissionTask(aThreadNetif.GetIp6().mTaskletScheduler, ScheduleTransmissionTask, this),
     mNetif(aThreadNetif),
     mAddressResolver(aThreadNetif.GetAddressResolver()),
     mLowpan(aThreadNetif.GetLowpan()),
