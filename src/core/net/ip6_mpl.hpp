@@ -173,8 +173,10 @@ public:
     /**
      * This constructor initializes the MPL object.
      *
+     * @param[in]  aIp6  A reference to the IPv6 network object.
+     *
      */
-    Mpl(void);
+    Mpl(Ip6 &aIp6);
 
     /**
      * This method initializes the MPL option.

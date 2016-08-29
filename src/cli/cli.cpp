@@ -121,7 +121,7 @@ static otNetifAddress sAutoAddresses[8];
 void Interpreter::Init(void)
 {
     sIp6->mIcmp.SetEchoReplyHandler(&HandleEchoResponse, NULL);
-    sPingTimer = new(&sPingTimerBuf) Timer(&HandlePingTimer, NULL);
+    sPingTimer = new(&sPingTimerBuf) Timer(sIp6->mTimerScheduler, &HandlePingTimer, NULL);
     sLength = 8;
     sCount = 1;
     sInterval = 1000;

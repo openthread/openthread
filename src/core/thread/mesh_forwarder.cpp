@@ -53,9 +53,9 @@ namespace Thread {
 MeshForwarder::MeshForwarder(ThreadNetif &aThreadNetif):
     mMacReceiver(&HandleReceivedFrame, this),
     mMacSender(&HandleFrameRequest, &HandleSentFrame, this),
-    mDiscoverTimer(&HandleDiscoverTimer, this),
-    mPollTimer(&HandlePollTimer, this),
-    mReassemblyTimer(&HandleReassemblyTimer, this),
+    mDiscoverTimer(aThreadNetif.GetIp6().mTimerScheduler, &HandleDiscoverTimer, this),
+    mPollTimer(aThreadNetif.GetIp6().mTimerScheduler, &HandlePollTimer, this),
+    mReassemblyTimer(aThreadNetif.GetIp6().mTimerScheduler, &HandleReassemblyTimer, this),
     mScheduleTransmissionTask(aThreadNetif.GetIp6().mTaskletScheduler, ScheduleTransmissionTask, this),
     mNetif(aThreadNetif),
     mAddressResolver(aThreadNetif.GetAddressResolver()),

@@ -55,7 +55,7 @@ DatasetManager::DatasetManager(ThreadNetif &aThreadNetif, const char *aUriSet, c
     mNetworkDataLeader(aThreadNetif.GetNetworkDataLeader()),
     mResourceSet(aUriSet, &HandleSet, this),
     mResourceGet(aUriGet, &HandleGet, this),
-    mTimer(&HandleTimer, this),
+    mTimer(aThreadNetif.GetIp6().mTimerScheduler, &HandleTimer, this),
     mSocket(aThreadNetif.GetIp6().mUdp),
     mUriSet(aUriSet),
     mUriGet(aUriGet),
@@ -688,7 +688,7 @@ ThreadError ActiveDataset::ApplyConfiguration(void)
 
 PendingDataset::PendingDataset(ThreadNetif &aThreadNetif):
     DatasetManager(aThreadNetif, OPENTHREAD_URI_PENDING_SET, OPENTHREAD_URI_PENDING_GET),
-    mTimer(HandleTimer, this)
+    mTimer(aThreadNetif.GetIp6().mTimerScheduler, HandleTimer, this)
 {
 }
 

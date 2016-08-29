@@ -328,6 +328,7 @@ public:
     Udp mUdp;
 
     TaskletScheduler mTaskletScheduler;
+    TimerScheduler mTimerScheduler;
 
 private:
     void ProcessReceiveCallback(const Message &aMessage, const MessageInfo &aMessageInfo, uint8_t aIpProto);

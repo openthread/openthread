@@ -51,6 +51,7 @@ Ip6::Ip6(void):
     mRoutes(*this),
     mIcmp(*this),
     mUdp(*this),
+    mMpl(*this),
     mForwardingEnabled(false),
     mReceiveIp6DatagramCallback(NULL),
     mReceiveIp6DatagramCallbackContext(NULL),

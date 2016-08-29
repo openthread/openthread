@@ -53,7 +53,7 @@ namespace NetworkData {
 
 Leader::Leader(ThreadNetif &aThreadNetif):
     NetworkData(aThreadNetif),
-    mTimer(&HandleTimer, this),
+    mTimer(aThreadNetif.GetIp6().mTimerScheduler, &HandleTimer, this),
     mServerData(OPENTHREAD_URI_SERVER_DATA, &HandleServerData, this),
     mCoapServer(aThreadNetif.GetCoapServer()),
     mNetif(aThreadNetif)

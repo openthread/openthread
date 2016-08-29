@@ -61,7 +61,7 @@ Mle::Mle(ThreadNetif &aThreadNetif) :
     mMesh(aThreadNetif.GetMeshForwarder()),
     mMleRouter(aThreadNetif.GetMle()),
     mNetworkData(aThreadNetif.GetNetworkDataLeader()),
-    mParentRequestTimer(&HandleParentRequestTimer, this),
+    mParentRequestTimer(aThreadNetif.GetIp6().mTimerScheduler, &HandleParentRequestTimer, this),
     mSocket(aThreadNetif.GetIp6().mUdp),
     mSendChildUpdateRequest(aThreadNetif.GetIp6().mTaskletScheduler, &HandleSendChildUpdateRequest, this)
 {

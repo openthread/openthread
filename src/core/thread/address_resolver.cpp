@@ -55,7 +55,7 @@ AddressResolver::AddressResolver(ThreadNetif &aThreadNetif) :
     mAddressNotification(OPENTHREAD_URI_ADDRESS_NOTIFY, &HandleAddressNotification, this),
     mIcmpHandler(&HandleDstUnreach, this),
     mSocket(aThreadNetif.GetIp6().mUdp),
-    mTimer(&HandleTimer, this),
+    mTimer(aThreadNetif.GetIp6().mTimerScheduler, &HandleTimer, this),
     mMeshForwarder(aThreadNetif.GetMeshForwarder()),
     mCoapServer(aThreadNetif.GetCoapServer()),
     mMle(aThreadNetif.GetMle()),

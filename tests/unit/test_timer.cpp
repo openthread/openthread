@@ -42,6 +42,7 @@ enum
     kCallCountIndexMax
 };
 
+static Thread::TimerScheduler sTimerScheduler;
 static uint32_t sNow;
 static uint32_t sPlatT0;
 static uint32_t sPlatDt;
@@ -93,7 +94,7 @@ int TestOneTimer(void)
 {
     const uint32_t kTimeT0 = 1000;
     const uint32_t kTimerInterval = 10;
-    Thread::Timer timer(TestTimerHandler, NULL);
+    Thread::Timer timer(sTimerScheduler, TestTimerHandler, NULL);
 
     // Test one Timer basic operation.
 
@@ -325,16 +326,16 @@ int TestTenTimers(void)
     };
 
     uint32_t timerContextHandleCounter[kNumTimers] = {0};
-    Thread::Timer timer0(TestTimerHandler, &timerContextHandleCounter[0]);
-    Thread::Timer timer1(TestTimerHandler, &timerContextHandleCounter[1]);
-    Thread::Timer timer2(TestTimerHandler, &timerContextHandleCounter[2]);
-    Thread::Timer timer3(TestTimerHandler, &timerContextHandleCounter[3]);
-    Thread::Timer timer4(TestTimerHandler, &timerContextHandleCounter[4]);
-    Thread::Timer timer5(TestTimerHandler, &timerContextHandleCounter[5]);
-    Thread::Timer timer6(TestTimerHandler, &timerContextHandleCounter[6]);
-    Thread::Timer timer7(TestTimerHandler, &timerContextHandleCounter[7]);
-    Thread::Timer timer8(TestTimerHandler, &timerContextHandleCounter[8]);
-    Thread::Timer timer9(TestTimerHandler, &timerContextHandleCounter[9]);
+    Thread::Timer timer0(sTimerScheduler, TestTimerHandler, &timerContextHandleCounter[0]);
+    Thread::Timer timer1(sTimerScheduler, TestTimerHandler, &timerContextHandleCounter[1]);
+    Thread::Timer timer2(sTimerScheduler, TestTimerHandler, &timerContextHandleCounter[2]);
+    Thread::Timer timer3(sTimerScheduler, TestTimerHandler, &timerContextHandleCounter[3]);
+    Thread::Timer timer4(sTimerScheduler, TestTimerHandler, &timerContextHandleCounter[4]);
+    Thread::Timer timer5(sTimerScheduler, TestTimerHandler, &timerContextHandleCounter[5]);
+    Thread::Timer timer6(sTimerScheduler, TestTimerHandler, &timerContextHandleCounter[6]);
+    Thread::Timer timer7(sTimerScheduler, TestTimerHandler, &timerContextHandleCounter[7]);
+    Thread::Timer timer8(sTimerScheduler, TestTimerHandler, &timerContextHandleCounter[8]);
+    Thread::Timer timer9(sTimerScheduler, TestTimerHandler, &timerContextHandleCounter[9]);
     Thread::Timer *timers[kNumTimers] = {&timer0, &timer1, &timer2, &timer3, &timer4, &timer5, &timer6, &timer7, &timer8, &timer9};
     size_t i;
 
