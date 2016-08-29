@@ -67,8 +67,8 @@ void TestHmacSha256(void)
 
     for (int i = 0; tests[i].key != NULL; i++)
     {
-        otCryptoHmacSha256Start(tests[i].key, strlen(tests[i].key));
-        otCryptoHmacSha256Update(tests[i].data, strlen(tests[i].data));
+        otCryptoHmacSha256Start(tests[i].key, static_cast<uint16_t>(strlen(tests[i].key)));
+        otCryptoHmacSha256Update(tests[i].data, static_cast<uint16_t>(strlen(tests[i].data)));
         otCryptoHmacSha256Finish(hash);
 
         VerifyOrQuit(memcmp(hash, tests[i].hash, sizeof(tests[i].hash)) == 0,
