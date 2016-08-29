@@ -104,13 +104,10 @@ const struct Command Interpreter::sCommands[] =
 
 otNetifAddress Interpreter::sAddress;
 
-static otDEFINE_ALIGNED_VAR(sIcmpEchoBuf, sizeof(Ip6::IcmpEcho), uint64_t);
-Ip6::IcmpEcho *Interpreter::sIcmpEcho;
-
 static otDEFINE_ALIGNED_VAR(sPingTimerBuf, sizeof(Timer), uint64_t);
 Timer *Interpreter::sPingTimer;
 
-Ip6::SockAddr Interpreter::sSockAddr;
+Ip6::MessageInfo Interpreter::sMessageInfo;
 Server *Interpreter::sServer;
 uint8_t Interpreter::sEchoRequest[1500];
 uint16_t Interpreter::sLength;
@@ -121,7 +118,7 @@ static otNetifAddress sAutoAddresses[8];
 
 void Interpreter::Init(void)
 {
-    sIcmpEcho = new(&sIcmpEchoBuf) Ip6::IcmpEcho(&HandleEchoResponse, NULL);
+    Ip6::Icmp::SetEchoReplyHandler(&HandleEchoResponse, NULL);
     sPingTimer = new(&sPingTimerBuf) Timer(&HandlePingTimer, NULL);
     sLength = 8;
     sCount = 1;
@@ -1002,9 +999,9 @@ void Interpreter::ProcessPing(int argc, char *argv[])
     VerifyOrExit(argc > 0, error = kThreadError_Parse);
     VerifyOrExit(!sPingTimer->IsRunning(), error = kThreadError_Busy);
 
-    memset(&sSockAddr, 0, sizeof(sSockAddr));
-    SuccessOrExit(error = sSockAddr.GetAddress().FromString(argv[0]));
-    sSockAddr.mScopeId = 1;
+    memset(&sMessageInfo, 0, sizeof(sMessageInfo));
+    SuccessOrExit(error = sMessageInfo.GetPeerAddr().FromString(argv[0]));
+    sMessageInfo.mInterfaceId = 1;
 
     sLength = 8;
     sCount = 1;
@@ -1046,11 +1043,23 @@ exit:
 
 void Interpreter::HandlePingTimer(void *aContext)
 {
+    ThreadError error = kThreadError_None;
     uint32_t timestamp = HostSwap32(Timer::GetNow());
+    Message *message;
 
-    memcpy(sEchoRequest, &timestamp, sizeof(timestamp));
-    sIcmpEcho->SendEchoRequest(sSockAddr, sEchoRequest, sLength);
+    VerifyOrExit((message = Ip6::Icmp::NewMessage(0)) != NULL, error = kThreadError_NoBufs);
+    SuccessOrExit(error = message->Append(&timestamp, sizeof(timestamp)));
+    SuccessOrExit(error = message->SetLength(sLength));
+
+    SuccessOrExit(error = Ip6::Icmp::SendEchoRequest(*message, sMessageInfo));
     sCount--;
+
+exit:
+
+    if (error != kThreadError_None && message != NULL)
+    {
+        Message::Free(*message);
+    }
 
     if (sCount)
     {
