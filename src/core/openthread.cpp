@@ -1049,7 +1049,7 @@ void otSetReceiveIp6DatagramCallback(otReceiveIp6DatagramCallback aCallback, voi
     Ip6::Ip6::SetReceiveDatagramCallback(aCallback, aCallbackContext);
 }
 
-bool otGetReceiveIp6DatagramFilterEnabled(void)
+bool otIsReceiveIp6DatagramFilterEnabled(void)
 {
     return Ip6::Ip6::IsReceiveIp6FilterEnabled();
 }
