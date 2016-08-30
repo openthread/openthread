@@ -149,10 +149,15 @@ typedef enum
 } spinel_power_state_t;
 
 enum {
-    SPINEL_NET_FLAG_CONFIGURE       = 0x04,
-    SPINEL_NET_FLAG_DHCP            = 0x08,
-    SPINEL_NET_FLAG_SLAAC_VALID     = 0x10,
-    SPINEL_NET_FLAG_SLAAC_PREFERRED = 0x20,
+    SPINEL_NET_FLAG_ON_MESH           = (1 << 0),
+    SPINEL_NET_FLAG_DEFAULT_ROUTE     = (1 << 1),
+    SPINEL_NET_FLAG_CONFIGURE         = (1 << 2),
+    SPINEL_NET_FLAG_DHCP              = (1 << 3),
+    SPINEL_NET_FLAG_SLAAC             = (1 << 4),
+    SPINEL_NET_FLAG_PREFERRED         = (1 << 5),
+
+    SPINEL_NET_FLAG_PREFERENCE_OFFSET = 6,
+    SPINEL_NET_FLAG_PREFERENCE_MASK   = (3 << SPINEL_NET_FLAG_PREFERENCE_OFFSET),
 };
 
 enum
