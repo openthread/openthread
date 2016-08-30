@@ -39,7 +39,6 @@
 #include <common/code_utils.hpp>
 #include <common/logging.hpp>
 #include <common/timer.hpp>
-#include <common/encoding.hpp>
 #include <platform/random.h>
 #include <thread/meshcop_dataset.hpp>
 #include <thread/meshcop_dataset_manager.hpp>
@@ -309,7 +308,7 @@ void DatasetManager::HandleGet(Coap::Header &aHeader, Message &aMessage, const I
     SendGetResponse(aHeader, aMessageInfo, tlvs, length);
 }
 
-ThreadError DatasetManager::SendSetRequest(otOperationalDataset &aDataset, const uint8_t *aTlvs, uint8_t aLength)
+ThreadError DatasetManager::SendSetRequest(const otOperationalDataset &aDataset, const uint8_t *aTlvs, uint8_t aLength)
 {
     ThreadError error = kThreadError_None;
     Coap::Header header;

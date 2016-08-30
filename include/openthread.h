@@ -723,7 +723,6 @@ ThreadError otSetPendingDataset(otOperationalDataset *aDataset);
  *
  * @retval kThreadError_None         Successfully send the meshcop dataset command.
  * @retval kThreadError_NoBufs       Insufficient buffer space to send.
- * @retval kThreadError_Drop         No interface specified for link local destination.
  *
  */
 ThreadError otSendActiveGet(const uint8_t *aTlvTypes, uint8_t aLength);
@@ -737,10 +736,9 @@ ThreadError otSendActiveGet(const uint8_t *aTlvTypes, uint8_t aLength);
  *
  * @retval kThreadError_None         Successfully send the meshcop dataset command.
  * @retval kThreadError_NoBufs       Insufficient buffer space to send.
- * @retval kThreadError_Drop         No interface specified for link local destination.
  *
  */
-ThreadError otSendActiveSet(otOperationalDataset *aDataset, const uint8_t *aTlvs, uint8_t aLength);
+ThreadError otSendActiveSet(const otOperationalDataset *aDataset, const uint8_t *aTlvs, uint8_t aLength);
 
 /**
  * This function sends MGMT_PENDING_GET.
@@ -750,7 +748,6 @@ ThreadError otSendActiveSet(otOperationalDataset *aDataset, const uint8_t *aTlvs
  *
  * @retval kThreadError_None         Successfully send the meshcop dataset command.
  * @retval kThreadError_NoBufs       Insufficient buffer space to send.
- * @retval kThreadError_Drop         No interface specified for link local destination.
  *
  */
 ThreadError otSendPendingGet(const uint8_t *aTlvTypes, uint8_t aLength);
@@ -764,10 +761,9 @@ ThreadError otSendPendingGet(const uint8_t *aTlvTypes, uint8_t aLength);
  *
  * @retval kThreadError_None         Successfully send the meshcop dataset command.
  * @retval kThreadError_NoBufs       Insufficient buffer space to send.
- * @retval kThreadError_Drop         No interface specified for link local destination.
  *
  */
-ThreadError otSendPendingSet(otOperationalDataset *aDataset, const uint8_t *aTlvs, uint8_t aLength);
+ThreadError otSendPendingSet(const otOperationalDataset *aDataset, const uint8_t *aTlvs, uint8_t aLength);
 
 /**
  * Get the data poll period of sleepy end deivce.

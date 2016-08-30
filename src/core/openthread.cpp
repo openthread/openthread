@@ -1206,7 +1206,7 @@ ThreadError otSendActiveGet(const uint8_t *aTlvTypes, uint8_t aLength)
     return sThreadNetif->GetActiveDataset().SendGetRequest(aTlvTypes, aLength);
 }
 
-ThreadError otSendActiveSet(otOperationalDataset *aDataset, const uint8_t *aTlvs, uint8_t aLength)
+ThreadError otSendActiveSet(const otOperationalDataset *aDataset, const uint8_t *aTlvs, uint8_t aLength)
 {
     return sThreadNetif->GetActiveDataset().SendSetRequest(*aDataset, aTlvs, aLength);
 }
@@ -1216,7 +1216,7 @@ ThreadError otSendPendingGet(const uint8_t *aTlvTypes, uint8_t aLength)
     return sThreadNetif->GetPendingDataset().SendGetRequest(aTlvTypes, aLength);
 }
 
-ThreadError otSendPendingSet(otOperationalDataset *aDataset, const uint8_t *aTlvs, uint8_t aLength)
+ThreadError otSendPendingSet(const otOperationalDataset *aDataset, const uint8_t *aTlvs, uint8_t aLength)
 {
     return sThreadNetif->GetPendingDataset().SendSetRequest(*aDataset, aTlvs, aLength);
 }

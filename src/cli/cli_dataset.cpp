@@ -361,7 +361,6 @@ ThreadError Dataset::ProcessMgmtSetCommand(int argc, char *argv[])
     ThreadError error = kThreadError_None;
     otOperationalDataset dataset;
     uint8_t tlvs[32];
-    uint8_t index;
     long value;
     int length = 0;
     otIp6Address prefix;
@@ -370,7 +369,7 @@ ThreadError Dataset::ProcessMgmtSetCommand(int argc, char *argv[])
 
     memset(&dataset, 0, sizeof(dataset));
 
-    for (index = 1; index < argc; index++)
+    for (uint8_t index = 1; index < argc; index++)
     {
         if (strcmp(argv[index], "activetimestamp") == 0)
         {
@@ -476,7 +475,6 @@ ThreadError Dataset::ProcessMgmtGetCommand(int argc, char *argv[])
     ThreadError error = kThreadError_None;
     otOperationalDataset dataset;
     uint8_t tlvs[32];
-    uint8_t index;
     long value;
     int length = 0;
 
@@ -484,7 +482,7 @@ ThreadError Dataset::ProcessMgmtGetCommand(int argc, char *argv[])
 
     memset(&dataset, 0, sizeof(dataset));
 
-    for (index = 1; index < argc; index++)
+    for (uint8_t index = 1; index < argc; index++)
     {
         VerifyOrExit(static_cast<size_t>(length) < sizeof(tlvs), error = kThreadError_NoBufs);
 
