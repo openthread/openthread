@@ -140,6 +140,7 @@ const NcpBase::GetPropertyHandlerEntry NcpBase::mGetPropertyHandlerTable[] =
     { SPINEL_PROP_IPV6_ADDRESS_TABLE, &NcpBase::GetPropertyHandler_IPV6_ADDRESS_TABLE },
     { SPINEL_PROP_IPV6_ROUTE_TABLE, &NcpBase::GetPropertyHandler_IPV6_ROUTE_TABLE },
     { SPINEL_PROP_IPV6_ICMP_PING_OFFLOAD, &NcpBase::GetPropertyHandler_IPV6_ICMP_PING_OFFLOAD },
+    { SPINEL_PROP_THREAD_RLOC16_DEBUG_PASSTHRU, &NcpBase::GetPropertyHandler_THREAD_RLOC16_DEBUG_PASSTHRU },
 
     { SPINEL_PROP_STREAM_NET, &NcpBase::GetPropertyHandler_STREAM_NET },
 
@@ -212,6 +213,7 @@ const NcpBase::SetPropertyHandlerEntry NcpBase::mSetPropertyHandlerTable[] =
 
     { SPINEL_PROP_IPV6_ML_PREFIX, &NcpBase::SetPropertyHandler_IPV6_ML_PREFIX },
     { SPINEL_PROP_IPV6_ICMP_PING_OFFLOAD, &NcpBase::SetPropertyHandler_IPV6_ICMP_PING_OFFLOAD },
+    { SPINEL_PROP_THREAD_RLOC16_DEBUG_PASSTHRU, &NcpBase::SetPropertyHandler_THREAD_RLOC16_DEBUG_PASSTHRU },
 
     { SPINEL_PROP_MAC_WHITELIST, &NcpBase::SetPropertyHandler_MAC_WHITELIST },
     { SPINEL_PROP_MAC_WHITELIST_ENABLED, &NcpBase::SetPropertyHandler_MAC_WHITELIST_ENABLED },
@@ -1949,6 +1951,18 @@ ThreadError NcpBase::GetPropertyHandler_IPV6_ICMP_PING_OFFLOAD(uint8_t header, s
            );
 }
 
+ThreadError NcpBase::GetPropertyHandler_THREAD_RLOC16_DEBUG_PASSTHRU(uint8_t header, spinel_prop_key_t key)
+{
+    // Note reverse logic: passthru enabled = filter disabled 
+    return SendPropertyUpdate(
+               header,
+               SPINEL_CMD_PROP_VALUE_IS,
+               key,
+               SPINEL_DATATYPE_BOOL_S,
+	       !otIsReceiveIp6DatagramFilterEnabled()
+           );
+}
+
 ThreadError NcpBase::GetPropertyHandler_THREAD_LOCAL_ROUTES(uint8_t header, spinel_prop_key_t key)
 {
     // TODO: Implement get external route table
@@ -3087,6 +3101,34 @@ ThreadError NcpBase::SetPropertyHandler_IPV6_ICMP_PING_OFFLOAD(uint8_t header, s
     if (parsedLength > 0)
     {
         otSetIcmpEchoEnabled(isEnabled);
+
+        errorCode = HandleCommandPropertyGet(header, key);
+    }
+    else
+    {
+        errorCode = SendLastStatus(header, SPINEL_STATUS_PARSE_ERROR);
+    }
+
+    return errorCode;
+}
+
+ThreadError NcpBase::SetPropertyHandler_THREAD_RLOC16_DEBUG_PASSTHRU(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr, uint16_t value_len)
+{
+    bool isEnabled(false);
+    spinel_ssize_t parsedLength;
+    ThreadError errorCode = kThreadError_None;
+
+    parsedLength = spinel_datatype_unpack(
+                       value_ptr,
+                       value_len,
+                       SPINEL_DATATYPE_BOOL_S,
+                       &isEnabled
+                   );
+
+    if (parsedLength > 0)
+    {
+        // Note reverse logic: passthru enabled = filter disabled 
+        otSetReceiveIp6DatagramFilterEnabled(!isEnabled);
 
         errorCode = HandleCommandPropertyGet(header, key);
     }
