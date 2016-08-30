@@ -623,7 +623,7 @@ public:
     static void SetForwardingEnabled(bool aEnable);
 
 private:
-    static void ProcessReceiveCallback(Message &aMessage);
+    static void ProcessReceiveCallback(const Message &aMessage, const MessageInfo &aMessageInfo, uint8_t aIpProto);
 };
 
 /**

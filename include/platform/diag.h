@@ -37,6 +37,7 @@
 #define DIAG_H_
 
 #include <stdint.h>
+#include <stddef.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -59,8 +60,9 @@ extern "C" {
  * @param[in] argc  The argument counter of diagnostics command line.
  * @param[in] argv  The argument vector of diagnostics command line.
  * @param[out] aOutput  The diagnostics execution result.
+ * @param[in] aOutputMaxLen  The output buffer size.
  */
-void otPlatDiagProcess(int argc, char *argv[], char *aOutput);
+void otPlatDiagProcess(int argc, char *argv[], char *aOutput, size_t aOutputMaxLen);
 
 /**
  *  Set diagnostics mode.

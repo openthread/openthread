@@ -412,7 +412,7 @@ int Message::Write(uint16_t aOffset, uint16_t aLength, const void *aBuf)
     return bytesCopied;
 }
 
-int Message::CopyTo(uint16_t aSourceOffset, uint16_t aDestinationOffset, uint16_t aLength, Message &aMessage)
+int Message::CopyTo(uint16_t aSourceOffset, uint16_t aDestinationOffset, uint16_t aLength, Message &aMessage) const
 {
     uint16_t bytesCopied = 0;
     uint16_t bytesToCopy;

@@ -334,7 +334,7 @@ exit:
     return error;
 }
 
-void Ip6::ProcessReceiveCallback(Message &aMessage)
+void Ip6::ProcessReceiveCallback(const Message &aMessage, const MessageInfo &messageInfo, uint8_t aIpProto)
 {
     ThreadError error = kThreadError_None;
     Message *messageCopy = NULL;
@@ -343,19 +343,38 @@ void Ip6::ProcessReceiveCallback(Message &aMessage)
 
     if (sIsReceiveIp6FilterEnabled)
     {
-        Header ip6;
-        aMessage.Read(0, sizeof(ip6), &ip6);
-
         // do not pass messages sent to/from an RLOC
-        VerifyOrExit(!ip6.GetSource().IsRoutingLocator() && !ip6.GetDestination().IsRoutingLocator(), ;);
+        VerifyOrExit(!messageInfo.GetSockAddr().IsRoutingLocator() &&
+                     !messageInfo.GetPeerAddr().IsRoutingLocator(), ;);
 
-        if (ip6.GetSource().IsLinkLocal() && ip6.GetNextHeader() == kProtoUdp)
+        switch (aIpProto)
         {
-            UdpHeader udp;
-            aMessage.Read(sizeof(ip6), sizeof(udp), &udp);
+        case kProtoIcmp6:
+            if (Icmp::IsEchoEnabled())
+            {
+                IcmpHeader icmp;
+                aMessage.Read(aMessage.GetOffset(), sizeof(icmp), &icmp);
 
-            // do not pass MLE messages
-            VerifyOrExit(udp.GetDestinationPort() != Mle::kUdpPort, ;);
+                // do not pass ICMP Echo Request messages
+                VerifyOrExit(icmp.GetType() != IcmpHeader::kTypeEchoRequest, ;);
+            }
+
+            break;
+
+        case kProtoUdp:
+            if (messageInfo.GetSockAddr().IsLinkLocal())
+            {
+                UdpHeader udp;
+                aMessage.Read(aMessage.GetOffset(), sizeof(udp), &udp);
+
+                // do not pass MLE messages
+                VerifyOrExit(udp.GetDestinationPort() != Mle::kUdpPort, ;);
+            }
+
+            break;
+
+        default:
+            break;
         }
     }
 
@@ -460,7 +479,7 @@ ThreadError Ip6::HandleDatagram(Message &message, Netif *netif, int8_t interface
     {
         if (fromLocalHost == false)
         {
-            ProcessReceiveCallback(message);
+            ProcessReceiveCallback(message, messageInfo, nextHeader);
         }
 
         SuccessOrExit(error = HandlePayload(message, messageInfo, nextHeader));

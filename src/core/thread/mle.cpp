@@ -61,7 +61,8 @@ Mle::Mle(ThreadNetif &aThreadNetif) :
     mMesh(aThreadNetif.GetMeshForwarder()),
     mMleRouter(aThreadNetif.GetMle()),
     mNetworkData(aThreadNetif.GetNetworkDataLeader()),
-    mParentRequestTimer(&HandleParentRequestTimer, this)
+    mParentRequestTimer(&HandleParentRequestTimer, this),
+    mSendChildUpdateRequest(&HandleSendChildUpdateRequest, this)
 {
     mDeviceState = kDeviceStateDisabled;
     mDeviceMode = ModeTlv::kModeRxOnWhenIdle | ModeTlv::kModeSecureDataRequest | ModeTlv::kModeFFD |
@@ -659,24 +660,14 @@ ThreadError Mle::AppendHeader(Message &aMessage, Header::Command aCommand)
 
     header.Init();
 
-    switch (aCommand)
+    if (aCommand == Header::kCommandDiscoveryRequest ||
+        aCommand == Header::kCommandDiscoveryResponse)
     {
-    case Header::kCommandDiscoveryRequest:
-    case Header::kCommandDiscoveryResponse:
-        header.SetSecuritySuite(255);
-        break;
-
-    case Header::kCommandAdvertisement:
-    case Header::kCommandChildIdRequest:
-    case Header::kCommandLinkReject:
-    case Header::kCommandParentRequest:
-    case Header::kCommandParentResponse:
+        header.SetSecuritySuite(Header::kNoSecurity);
+    }
+    else
+    {
         header.SetKeyIdMode2();
-        break;
-
-    default:
-        header.SetKeyIdMode1();
-        break;
     }
 
     header.SetCommand(aCommand);
@@ -940,27 +931,37 @@ void Mle::HandleNetifStateChanged(uint32_t aFlags, void *aContext)
 
 void Mle::HandleNetifStateChanged(uint32_t aFlags)
 {
-    VerifyOrExit((aFlags & (OT_IP6_ADDRESS_ADDED | OT_IP6_ADDRESS_REMOVED)) != 0, ;);
-
-    if (!mNetif.IsUnicastAddress(mMeshLocal64.GetAddress()))
+    if ((aFlags & (OT_IP6_ADDRESS_ADDED | OT_IP6_ADDRESS_REMOVED)) != 0)
     {
-        // Mesh Local EID was removed, choose a new one and add it back
-        for (int i = 8; i < 16; i++)
+        if (!mNetif.IsUnicastAddress(mMeshLocal64.GetAddress()))
         {
-            mMeshLocal64.GetAddress().mFields.m8[i] = static_cast<uint8_t>(otPlatRandomGet());
+            // Mesh Local EID was removed, choose a new one and add it back
+            for (int i = 8; i < 16; i++)
+            {
+                mMeshLocal64.GetAddress().mFields.m8[i] = static_cast<uint8_t>(otPlatRandomGet());
+            }
+
+            mNetif.AddUnicastAddress(mMeshLocal64);
+            mNetif.SetStateChangedFlags(OT_IP6_ML_ADDR_CHANGED);
         }
 
-        mNetif.AddUnicastAddress(mMeshLocal64);
-        mNetif.SetStateChangedFlags(OT_IP6_ML_ADDR_CHANGED);
+        if (mDeviceState == kDeviceStateChild && (mDeviceMode & ModeTlv::kModeFFD) == 0)
+        {
+            mSendChildUpdateRequest.Post();
+        }
     }
 
-    if (mDeviceState == kDeviceStateChild && (mDeviceMode & ModeTlv::kModeFFD) == 0)
+    if ((aFlags & OT_THREAD_NETDATA_UPDATED) != 0)
     {
-        SendChildUpdateRequest();
+        if (mDeviceMode & ModeTlv::kModeFFD)
+        {
+            mMleRouter.HandleNetworkDataUpdateRouter();
+        }
+        else
+        {
+            mSendChildUpdateRequest.Post();
+        }
     }
-
-exit:
-    return;
 }
 
 void Mle::HandleParentRequestTimer(void *aContext)
@@ -1210,6 +1211,25 @@ exit:
     return error;
 }
 
+void Mle::HandleSendChildUpdateRequest(void *aContext)
+{
+    static_cast<Mle *>(aContext)->SendChildUpdateRequest();
+}
+
+void Mle::HandleSendChildUpdateRequest(void)
+{
+    // a Network Data udpate can cause a change to the IPv6 address configuration
+    // only send a Child Update Request after we know there are no more pending changes
+    if (mNetif.IsStateChangedCallbackPending())
+    {
+        mSendChildUpdateRequest.Post();
+    }
+    else
+    {
+        SendChildUpdateRequest();
+    }
+}
+
 ThreadError Mle::SendChildUpdateRequest(void)
 {
     ThreadError error = kThreadError_None;
@@ -1289,7 +1309,7 @@ ThreadError Mle::SendMessage(Message &aMessage, const Ip6::Address &aDestination
 
     aMessage.Read(0, sizeof(header), &header);
 
-    if (header.GetSecuritySuite() == 0)
+    if (header.GetSecuritySuite() == Header::k154Security)
     {
         header.SetFrameCounter(mKeyManager.GetMleFrameCounter());
 
@@ -1349,7 +1369,6 @@ void Mle::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageIn
     Header header;
     uint32_t keySequence;
     const uint8_t *mleKey;
-    uint8_t keyid;
     uint32_t frameCounter;
     uint8_t messageTag[4];
     uint16_t messageTagLength;
@@ -1367,7 +1386,7 @@ void Mle::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageIn
     aMessage.Read(aMessage.GetOffset(), sizeof(header), &header);
     VerifyOrExit(header.IsValid(),);
 
-    if (header.GetSecuritySuite() == 255)
+    if (header.GetSecuritySuite() == Header::kNoSecurity)
     {
         aMessage.MoveOffset(header.GetLength());
 
@@ -1388,41 +1407,17 @@ void Mle::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageIn
         ExitNow();
     }
 
-    VerifyOrExit(mDeviceState != kDeviceStateDisabled && header.GetSecuritySuite() == 0, ;);
+    VerifyOrExit(mDeviceState != kDeviceStateDisabled && header.GetSecuritySuite() == Header::k154Security, ;);
 
-    if (header.IsKeyIdMode1())
+    keySequence = header.GetKeyId();
+
+    if (keySequence == mKeyManager.GetCurrentKeySequence())
     {
-        keyid = static_cast<uint8_t>(header.GetKeyId());
-
-        if (keyid == (mKeyManager.GetCurrentKeySequence() & 0x7f))
-        {
-            keySequence = mKeyManager.GetCurrentKeySequence();
-            mleKey = mKeyManager.GetCurrentMleKey();
-        }
-        else
-        {
-            keySequence = (mKeyManager.GetCurrentKeySequence() & ~static_cast<uint32_t>(0x7f)) | keyid;
-
-            if (keySequence < mKeyManager.GetCurrentKeySequence())
-            {
-                keySequence += 128;
-            }
-
-            mleKey = mKeyManager.GetTemporaryMleKey(keySequence);
-        }
+        mleKey = mKeyManager.GetCurrentMleKey();
     }
     else
     {
-        keySequence = header.GetKeyId();
-
-        if (keySequence == mKeyManager.GetCurrentKeySequence())
-        {
-            mleKey = mKeyManager.GetCurrentMleKey();
-        }
-        else
-        {
-            mleKey = mKeyManager.GetTemporaryMleKey(keySequence);
-        }
+        mleKey = mKeyManager.GetTemporaryMleKey(keySequence);
     }
 
     aMessage.MoveOffset(header.GetLength() - 1);
@@ -1834,37 +1829,43 @@ ThreadError Mle::HandleParentResponse(const Message &aMessage, const Ip6::Messag
     SuccessOrExit(error = Tlv::GetTlv(aMessage, Tlv::kConnectivity, sizeof(connectivity), connectivity));
     VerifyOrExit(connectivity.IsValid(), error = kThreadError_Parse);
 
-    // if already attached, Router/REED only seeks a better partition
-    if ((mDeviceMode & ModeTlv::kModeFFD) &&
-        (mDeviceState != kDeviceStateDetached) &&
-        (mParentRequestMode != kMleAttachAnyPartition))
+    if ((mDeviceMode & ModeTlv::kModeFFD) && (mDeviceState != kDeviceStateDetached))
     {
-        if (leaderData.GetPartitionId() == mLeaderData.GetPartitionId())
+        switch (mParentRequestMode)
         {
-            // looking for a larger Sequence ID
+        case kMleAttachAnyPartition:
+            break;
+
+        case kMleAttachSamePartition:
+            VerifyOrExit(leaderData.GetPartitionId() == mLeaderData.GetPartitionId(), ;);
             diff = static_cast<int8_t>(connectivity.GetIdSequence() - mMleRouter.GetRouterIdSequence());
             VerifyOrExit(diff > 0 || (diff == 0 && mMleRouter.GetLeaderAge() < mMleRouter.GetNetworkIdTimeout()), ;);
-        }
-        else
-        {
-            // looking for a better partition
+            break;
+
+        case kMleAttachBetterPartition:
+            VerifyOrExit(leaderData.GetPartitionId() != mLeaderData.GetPartitionId(), ;);
             VerifyOrExit(mMleRouter.ComparePartitions(connectivity.GetActiveRouters() <= 1, leaderData,
                                                       mMleRouter.IsSingleton(), mLeaderData) > 0, ;);
+            break;
         }
     }
 
     // if already have a candidate parent, only seek a better parent
     if (mParent.mState == Neighbor::kStateValid)
     {
+        int compare = 0;
+
         if (mDeviceMode & ModeTlv::kModeFFD)
         {
-            // do not accept worse partitions
-            VerifyOrExit(mMleRouter.ComparePartitions(connectivity.GetActiveRouters() <= 1, leaderData,
-                                                      mParentIsSingleton, mParentLeaderData) >= 0, ;);
+            compare = mMleRouter.ComparePartitions(connectivity.GetActiveRouters() <= 1, leaderData,
+                                                   mParentIsSingleton, mParentLeaderData);
         }
 
-        // looking for a better parent
-        VerifyOrExit(IsBetterParent(sourceAddress.GetRloc16(), linkQuality, connectivity), ;);
+        // only consider partitions that are the same or better
+        VerifyOrExit(compare >= 0, ;);
+
+        // only consider better parents if the partitions are the same
+        VerifyOrExit(compare != 0 || IsBetterParent(sourceAddress.GetRloc16(), linkQuality, connectivity), ;);
     }
 
     // Link Frame Counter
@@ -2383,18 +2384,6 @@ ThreadError Mle::CheckReachability(uint16_t aMeshSource, uint16_t aMeshDest, Ip6
 
 exit:
     return error;
-}
-
-void Mle::HandleNetworkDataUpdate(void)
-{
-    if (mDeviceMode & ModeTlv::kModeFFD)
-    {
-        mMleRouter.HandleNetworkDataUpdateRouter();
-    }
-    else
-    {
-        SendChildUpdateRequest();
-    }
 }
 
 }  // namespace Mle

@@ -33,6 +33,7 @@ OpenThread test scripts use the CLI to execute test cases.
 * [ping](#ping)
 * [pollperiod](#pollperiod)
 * [prefix](#prefix)
+* [promiscuous](#promiscuous)
 * [releaserouterid](#releaserouterid)
 * [reset](#reset)
 * [rloc16](#rloc16)
@@ -610,6 +611,34 @@ Invalidate a prefix in the Network Data.
 
 ```bash
 > prefix remove 2001:dead:beef:cafe::/64
+Done
+```
+
+### promiscuous
+
+Get radio promiscuous property.
+
+```bash
+> promiscuous
+Disabled
+Done
+```
+
+### promiscuous enable
+
+Enable radio promiscuous operation and print raw packet content.
+
+```bash
+> promiscuous enable
+Done
+```
+
+### promiscuous disable
+
+Disable radio promiscuous operation.
+
+```bash
+> promiscuous disable
 Done
 ```
 

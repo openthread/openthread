@@ -260,6 +260,16 @@ typedef struct otActiveScanResult
 } otActiveScanResult;
 
 /**
+ * This struct represents an energy scan result.
+ *
+ */
+typedef struct otEnergyScanResult
+{
+    uint8_t mChannel;                ///< IEEE 802.15.4 Channel
+    int8_t  mMaxRssi;                ///< The max RSSI (dBm)
+} otEnergyScanResult;
+
+/**
  * @}
  *
  */

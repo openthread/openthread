@@ -82,7 +82,7 @@ ThreadError Routes::Remove(Route &aRoute)
 
 int8_t Routes::Lookup(const Address &aSource, const Address &aDestination)
 {
-    uint8_t maxPrefixMatch = 0;
+    int8_t maxPrefixMatch = -1;
     uint8_t prefixMatch;
     int8_t rval = -1;
 
@@ -100,21 +100,21 @@ int8_t Routes::Lookup(const Address &aSource, const Address &aDestination)
             prefixMatch = cur->mPrefixLength;
         }
 
-        if (maxPrefixMatch > prefixMatch)
+        if (maxPrefixMatch > static_cast<int8_t>(prefixMatch))
         {
             continue;
         }
 
-        maxPrefixMatch = prefixMatch;
+        maxPrefixMatch = static_cast<int8_t>(prefixMatch);
         rval = cur->mInterfaceId;
     }
 
     for (Netif *netif = Netif::GetNetifList(); netif; netif = netif->GetNext())
     {
         if (netif->RouteLookup(aSource, aDestination, &prefixMatch) == kThreadError_None &&
-            prefixMatch > maxPrefixMatch)
+            static_cast<int8_t>(prefixMatch) > maxPrefixMatch)
         {
-            maxPrefixMatch = prefixMatch;
+            maxPrefixMatch = static_cast<int8_t>(prefixMatch);
             rval = netif->GetInterfaceId();
         }
     }

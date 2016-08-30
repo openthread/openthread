@@ -269,6 +269,39 @@ ThreadError otActiveScan(uint32_t aScanChannels, uint16_t aScanDuration, otHandl
 bool otIsActiveScanInProgress(void);
 
 /**
+ * This function pointer is called during an IEEE 802.15.4 Energy Scan when the result for a channel is ready or the
+ * scan completes.
+ *
+ * @param[in]  aResult   A valid pointer to the energy scan result information or NULL when the energy scan completes.
+ * @param[in]  aContext  A pointer to application-specific context.
+ *
+ */
+typedef void (*otHandleEnergyScanResult)(otEnergyScanResult *aResult, void *aContext);
+
+/**
+ * This function starts an IEEE 802.15.4 Energy Scan
+ *
+ * @param[in]  aScanChannels     A bit vector indicating on which channels to perform energy scan.
+ * @param[in]  aScanDuration     The time in milliseconds to spend scanning each channel.
+ * @param[in]  aCallback         A pointer to a function called to pass on scan result on indicate scan completion.
+ * @param[in]  aCallbackContext  A pointer to application-specific context.
+ *
+ * @retval kThreadError_None  Accepted the Energy Scan request.
+ * @retval kThreadError_Busy  Already performing an Active Scan.
+ *
+ */
+ThreadError otEnergyScan(uint32_t aScanChannels, uint16_t aScanDuration, otHandleEnergyScanResult aCallback,
+                         void *aCallbackContext);
+
+/**
+ * This function indicates whether or not an IEEE 802.15.4 Energy Scan is currently in progress.
+ *
+ * @returns true if an IEEE 802.15.4 Energy Scan is in progress, false otherwise.
+ *
+ */
+bool otIsEnergyScanInProgress(void);
+
+/**
  * This function starts a Thread Discovery scan.
  *
  * @param[in]  aScanChannels     A bit vector indicating which channels to scan (e.g. OT_CHANNEL_11_MASK).

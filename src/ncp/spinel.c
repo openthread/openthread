@@ -1082,6 +1082,10 @@ spinel_prop_key_to_cstr(spinel_prop_key_t prop_key)
         ret = "PROP_IPV6_ROUTE_TABLE";
         break;
 
+    case SPINEL_PROP_IPV6_ICMP_PING_OFFLOAD:
+        ret = "SPINEL_PROP_IPV6_ICMP_PING_OFFLOAD";
+        break;
+
     case SPINEL_PROP_THREAD_PARENT:
         ret = "SPINEL_PROP_THREAD_PARENT";
         break;

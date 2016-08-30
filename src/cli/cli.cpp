@@ -81,6 +81,7 @@ const struct Command Interpreter::sCommands[] =
     { "parent", &ProcessParent },
     { "ping", &ProcessPing },
     { "pollperiod", &ProcessPollPeriod },
+    { "promiscuous", &ProcessPromiscuous },
     { "prefix", &ProcessPrefix },
     { "releaserouterid", &ProcessReleaseRouterId },
     { "reset", &ProcessReset },
@@ -333,7 +334,7 @@ void Interpreter::ProcessChild(int argc, char *argv[])
     }
 
     SuccessOrExit(error = ParseLong(argv[0], value));
-    SuccessOrExit(error = otGetChildInfoById(static_cast<uint8_t>(value), &childInfo));
+    SuccessOrExit(error = otGetChildInfoById(static_cast<uint16_t>(value), &childInfo));
 
     sServer->OutputFormat("Child ID: %d\r\n", childInfo.mChildId);
     sServer->OutputFormat("Rloc: %04x\r\n", childInfo.mRloc16);
@@ -1058,6 +1059,107 @@ exit:
     AppendResult(error);
 }
 
+void Interpreter::ProcessPromiscuous(int argc, char *argv[])
+{
+    ThreadError error = kThreadError_None;
+
+    if (argc == 0)
+    {
+        if (otIsLinkPromiscuous() && otPlatRadioGetPromiscuous())
+        {
+            sServer->OutputFormat("Enabled\r\n");
+        }
+        else
+        {
+            sServer->OutputFormat("Disabled\r\n");
+        }
+    }
+    else
+    {
+        if (strcmp(argv[0], "enable") == 0)
+        {
+            otSetLinkPcapCallback(&HandleLinkPcapReceive, NULL);
+            SuccessOrExit(error = otSetLinkPromiscuous(true));
+        }
+        else if (strcmp(argv[0], "disable") == 0)
+        {
+            otSetLinkPcapCallback(NULL, NULL);
+            SuccessOrExit(error = otSetLinkPromiscuous(false));
+        }
+    }
+
+exit:
+    AppendResult(error);
+}
+
+void Interpreter::HandleLinkPcapReceive(const RadioPacket *aFrame, void *aContext)
+{
+    sServer->OutputFormat("\r\n");
+
+    for (size_t i = 0; i < 44; i++)
+    {
+        sServer->OutputFormat("=");
+    }
+
+    sServer->OutputFormat("[len = %3u]", aFrame->mLength);
+
+    for (size_t i = 0; i < 28; i++)
+    {
+        sServer->OutputFormat("=");
+    }
+
+    sServer->OutputFormat("\r\n");
+
+    for (size_t i = 0; i < aFrame->mLength; i += 16)
+    {
+        sServer->OutputFormat("|");
+
+        for (size_t j = 0; j < 16; j++)
+        {
+            if (i + j < aFrame->mLength)
+            {
+                sServer->OutputFormat(" %02X", aFrame->mPsdu[i + j]);
+            }
+            else
+            {
+                sServer->OutputFormat(" ..");
+            }
+        }
+
+        sServer->OutputFormat("|");
+
+        for (size_t j = 0; j < 16; j++)
+        {
+            if (i + j < aFrame->mLength)
+            {
+                if (31 < aFrame->mPsdu[i + j] && aFrame->mPsdu[i + j] < 127)
+                {
+                    sServer->OutputFormat(" %c", aFrame->mPsdu[i + j]);
+                }
+                else
+                {
+                    sServer->OutputFormat(" ?");
+                }
+            }
+            else
+            {
+                sServer->OutputFormat(" .");
+            }
+        }
+
+        sServer->OutputFormat("|\r\n");
+    }
+
+    for (size_t i = 0; i < 83; i++)
+    {
+        sServer->OutputFormat("-");
+    }
+
+    sServer->OutputFormat("\r\n");
+
+    (void) aContext;
+}
+
 ThreadError Interpreter::ProcessPrefixAdd(int argc, char *argv[])
 {
     ThreadError error = kThreadError_None;
@@ -1448,7 +1550,7 @@ void Interpreter::ProcessRouter(int argc, char *argv[])
     }
 
     SuccessOrExit(error = ParseLong(argv[0], value));
-    SuccessOrExit(error = otGetRouterInfo(static_cast<uint8_t>(value), &routerInfo));
+    SuccessOrExit(error = otGetRouterInfo(static_cast<uint16_t>(value), &routerInfo));
 
     sServer->OutputFormat("Alloc: %d\r\n", routerInfo.mAllocated);
 
@@ -1787,6 +1889,9 @@ void Interpreter::ProcessLine(char *aBuf, uint16_t aBufLength, Server &aServer)
 
     for (cmd = aBuf + 1; (cmd < aBuf + aBufLength) && (cmd != NULL); ++cmd)
     {
+        VerifyOrExit(argc < kMaxArgs,
+                     sServer->OutputFormat("Error: too many args (max %d)\r\n", kMaxArgs));
+
         if (*cmd == ' ' || *cmd == '\r' || *cmd == '\n')
         {
             *cmd = '\0';

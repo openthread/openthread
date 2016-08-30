@@ -30,6 +30,9 @@
  *
  ******************************************************************************/
 
+#include <openthread-types.h>
+#include <common/code_utils.hpp>
+
 #include <prcm.h>
 #include <trng.h>
 
@@ -60,4 +63,41 @@ uint32_t otPlatRandomGet(void)
         ;
     }
     return TRNGNumberGet(TRNG_LOW_WORD);
+}
+
+ThreadError otPlatSecureRandomGet(uint16_t aInputLength, uint8_t *aOutput, uint16_t *aOutputLength)
+{
+    ThreadError error = kThreadError_None;
+
+    uint16_t length;
+    union {
+        uint32_t u32[2];
+        uint8_t u8[8];
+    } buffer;
+
+    VerifyOrExit(aOutput && aOutputLength, error = kThreadError_InvalidArgs);
+
+    for(length = 0; length < aInputLength; length++)
+    {
+        *aOutputLength = length;
+
+        if(length % 8 == 0)
+        {
+            /* we've run to the end of the buffer */
+            while(!(TRNGStatusGet() & TRNG_NUMBER_READY)){
+                ;
+            }
+            /* 
+             * don't use TRNGNumberGet here because it will tell the TRNG to
+             * refil the entropy pool, instad we do it ourself.
+             */
+            buffer.u32[0] = HWREG(TRNG_BASE + TRNG_O_OUT0);
+            buffer.u32[1] = HWREG(TRNG_BASE + TRNG_O_OUT1);
+            HWREG(TRNG_BASE + TRNG_O_IRQFLAGCLR) = 0x1;
+        }
+        aOutput[length] = buffer.u8[length % 8];
+    }
+
+exit:
+    return error;
 }

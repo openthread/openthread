@@ -487,6 +487,21 @@ public:
      */
     bool IsValid() const { return true; }
 
+    /**
+     * This method returns a pointer to the Network Data TLVs.
+     *
+     * @returns A pointer to the Network Data TLVs.
+     *
+     */
+    uint8_t *GetTlvs(void) { return mTlvs; }
+
+private:
+    enum
+    {
+        kMaxSize = 255,
+    };
+
+    uint8_t mTlvs[kMaxSize];
 } OT_TOOL_PACKED_END;
 
 }  // namespace Thread
