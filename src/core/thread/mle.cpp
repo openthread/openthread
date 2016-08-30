@@ -1809,7 +1809,7 @@ ThreadError Mle::HandleParentResponse(const Message &aMessage, const Ip6::Messag
     SuccessOrExit(error = Tlv::GetTlv(aMessage, Tlv::kLinkMargin, sizeof(linkMarginTlv), linkMarginTlv));
     VerifyOrExit(linkMarginTlv.IsValid(), error = kThreadError_Parse);
 
-    linkMargin = LinkQualityInfo::ConvertRssToLinkMargin(threadMessageInfo->mRss);
+    linkMargin = LinkQualityInfo::ConvertRssToLinkMargin(mMac.GetNoiseFloor(), threadMessageInfo->mRss);
 
     if (linkMargin > linkMarginTlv.GetLinkMargin())
     {
@@ -1889,7 +1889,7 @@ ThreadError Mle::HandleParentResponse(const Message &aMessage, const Ip6::Messag
     mParent.mValid.mMleFrameCounter = mleFrameCounter.GetFrameCounter();
     mParent.mMode = ModeTlv::kModeFFD | ModeTlv::kModeRxOnWhenIdle | ModeTlv::kModeFullNetworkData;
     mParent.mLinkInfo.Clear();
-    mParent.mLinkInfo.AddRss(threadMessageInfo->mRss);
+    mParent.mLinkInfo.AddRss(mMac.GetNoiseFloor(), threadMessageInfo->mRss);
     mParent.mState = Neighbor::kStateValid;
     mParent.mKeySequence = aKeySequence;
 
