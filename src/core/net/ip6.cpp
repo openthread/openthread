@@ -63,7 +63,7 @@ Ip6::Ip6(void):
 
 Message *Ip6::NewMessage(uint16_t reserved)
 {
-    return Message::New(Message::kTypeIp6, sizeof(Header) + sizeof(HopByHopHeader) + sizeof(OptionMpl) + reserved);
+    return mMessagePool.New(Message::kTypeIp6, sizeof(Header) + sizeof(HopByHopHeader) + sizeof(OptionMpl) + reserved);
 }
 
 void Ip6::SetForwardingEnabled(bool aEnable)
@@ -385,7 +385,7 @@ exit:
 
     if (error != kThreadError_None && messageCopy != NULL)
     {
-        Message::Free(*messageCopy);
+        messageCopy->Free();
     }
 }
 
@@ -505,7 +505,7 @@ exit:
 
     if (error != kThreadError_None || !forward)
     {
-        Message::Free(message);
+        message.Free();
     }
 
     return error;

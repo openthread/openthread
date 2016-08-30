@@ -137,7 +137,7 @@ exit:
 
     if (error != kThreadError_None && message != NULL)
     {
-        Message::Free(*message);
+        message->Free();
     }
 
     return error;
@@ -232,7 +232,7 @@ exit:
 
     if (error != kThreadError_None && replyMessage != NULL)
     {
-        Message::Free(*replyMessage);
+        replyMessage->Free();
     }
 
     return error;

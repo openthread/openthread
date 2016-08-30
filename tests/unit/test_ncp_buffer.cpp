@@ -56,18 +56,13 @@ static const uint8_t sHelloText[]      = "Hello there!";
 static const uint8_t sMottoText[]      = "Think good thoughts, say good words, do good deeds!";
 static const uint8_t sMysteryText[]    = "4871(\\):|(3$}{4|/4/2%14(\\)";
 
+static MessagePool sMessagePool;
 
 struct CallbackContext
 {
     uint16_t mEmptyCount;           // Number of times BufferEmptyCallback is invoked.
     uint16_t mNonEmptyCount;        // Number of times BufferNonEmptyCallback is invoked.
 };
-
-// Initialize the test
-void InitTest(void)
-{
-    Message::Init();
-}
 
 void BufferDidGetEmptyCallback(void *aContext, NcpFrameBuffer *aNcpBuffer)
 {
@@ -147,7 +142,7 @@ void WriteTestFrame1(NcpFrameBuffer &aNcpBuffer)
 {
     Message *message;
 
-    message = Message::New(Message::kTypeIp6, 0);
+    message = sMessagePool.New(Message::kTypeIp6, 0);
     VerifyOrQuit(message != NULL, "Null Message");
     SuccessOrQuit(message->SetLength(sizeof(sMottoText)), "Could not set the length of message.");
     message->Write(0, sizeof(sMottoText), sMottoText);
@@ -182,12 +177,12 @@ void WriteTestFrame2(NcpFrameBuffer &aNcpBuffer)
     Message *message1;
     Message *message2;
 
-    message1 = Message::New(Message::kTypeIp6, 0);
+    message1 = sMessagePool.New(Message::kTypeIp6, 0);
     VerifyOrQuit(message1 != NULL, "Null Message");
     SuccessOrQuit(message1->SetLength(sizeof(sMysteryText)), "Could not set the length of message.");
     message1->Write(0, sizeof(sMysteryText), sMysteryText);
 
-    message2 = Message::New(Message::kTypeIp6, 0);
+    message2 = sMessagePool.New(Message::kTypeIp6, 0);
     VerifyOrQuit(message2 != NULL, "Null Message");
     SuccessOrQuit(message2->SetLength(sizeof(sHelloText)), "Could not set the length of message.");
     message2->Write(0, sizeof(sHelloText), sHelloText);
@@ -219,7 +214,7 @@ void WriteTestFrame3(NcpFrameBuffer &aNcpBuffer)
 {
     Message *message1;
 
-    message1 = Message::New(Message::kTypeIp6, 0);
+    message1 = sMessagePool.New(Message::kTypeIp6, 0);
     VerifyOrQuit(message1 != NULL, "Null Message");
 
     // An empty message with no content.
@@ -344,7 +339,7 @@ void TestNcpFrameBuffer(void)
         ncpBuffer.InFrameBegin();
         ncpBuffer.InFrameFeedData(sHelloText, sizeof(sHelloText));
 
-        message = Message::New(Message::kTypeIp6, 0);
+        message = sMessagePool.New(Message::kTypeIp6, 0);
         VerifyOrQuit(message != NULL, "Null Message");
         SuccessOrQuit(message->SetLength(sizeof(sMysteryText)), "Could not set the length of message.");
         message->Write(0, sizeof(sMysteryText), sMysteryText);
@@ -475,7 +470,6 @@ void TestNcpFrameBuffer(void)
 
 int main(void)
 {
-    Thread::InitTest();
     Thread::TestNcpFrameBuffer();
     printf("\nAll tests passed.\n");
     return 0;

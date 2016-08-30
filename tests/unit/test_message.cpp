@@ -42,18 +42,17 @@ extern "C" void otPlatDiagAlarmFired(void)
 
 void TestMessage(void)
 {
+    Thread::MessagePool messagePool;
     Thread::Message *message;
     uint8_t writeBuffer[1024];
     uint8_t readBuffer[1024];
-
-    Thread::Message::Init();
 
     for (unsigned i = 0; i < sizeof(writeBuffer); i++)
     {
         writeBuffer[i] = static_cast<uint8_t>(random());
     }
 
-    VerifyOrQuit((message = Thread::Message::New(Thread::Message::kTypeIp6, 0)) != NULL,
+    VerifyOrQuit((message = messagePool.New(Thread::Message::kTypeIp6, 0)) != NULL,
                  "Message::New failed\n");
     SuccessOrQuit(message->SetLength(sizeof(writeBuffer)),
                   "Message::SetLength failed\n");
@@ -65,7 +64,7 @@ void TestMessage(void)
                  "Message compare failed\n");
     VerifyOrQuit(message->GetLength() == 1024,
                  "Message::GetLength failed\n");
-    SuccessOrQuit(Thread::Message::Free(*message),
+    SuccessOrQuit(message->Free(),
                   "Message::Free failed\n");
 }
 

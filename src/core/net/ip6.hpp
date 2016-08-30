@@ -327,6 +327,7 @@ public:
     Icmp mIcmp;
     Udp mUdp;
 
+    MessagePool mMessagePool;
     TaskletScheduler mTaskletScheduler;
     TimerScheduler mTimerScheduler;
 

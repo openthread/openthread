@@ -872,7 +872,6 @@ ThreadError otEnable(void)
     VerifyOrExit(!mEnabled, error = kThreadError_InvalidState);
 
     otLogInfoApi("otEnable\n");
-    Message::Init();
     sIp6 = new(&sIp6Raw) Ip6::Ip6;
     sThreadNetif = new(&sThreadNetifRaw) ThreadNetif(*sIp6);
     mEnabled = true;
@@ -1075,7 +1074,7 @@ otMessage otNewUdpMessage(void)
 
 ThreadError otFreeMessage(otMessage aMessage)
 {
-    return Message::Free(*static_cast<Message *>(aMessage));
+    return static_cast<Message *>(aMessage)->Free();
 }
 
 uint16_t otGetMessageLength(otMessage aMessage)
