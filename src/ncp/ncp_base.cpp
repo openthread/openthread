@@ -132,6 +132,7 @@ const NcpBase::GetPropertyHandlerEntry NcpBase::mGetPropertyHandlerTable[] =
     { SPINEL_PROP_THREAD_ROUTER_UPGRADE_THRESHOLD, &NcpBase::GetPropertyHandler_THREAD_ROUTER_UPGRADE_THRESHOLD },
     { SPINEL_PROP_THREAD_CONTEXT_REUSE_DELAY, &NcpBase::GetPropertyHandler_THREAD_CONTEXT_REUSE_DELAY },
     { SPINEL_PROP_THREAD_NETWORK_ID_TIMEOUT, &NcpBase::GetPropertyHandler_THREAD_NETWORK_ID_TIMEOUT },
+    { SPINEL_PROP_THREAD_ON_MESH_NETS, &NcpBase::NcpBase::GetPropertyHandler_THREAD_ON_MESH_NETS },
 
     { SPINEL_PROP_IPV6_ML_PREFIX, &NcpBase::GetPropertyHandler_IPV6_ML_PREFIX },
     { SPINEL_PROP_IPV6_ML_ADDR, &NcpBase::GetPropertyHandler_IPV6_ML_ADDR },
@@ -352,6 +353,45 @@ static spinel_status_t ResetReasonToSpinelStatus(otPlatResetReason reason)
         break;
     }
     return ret;
+}
+
+static uint8_t BorderRouterConfigToFlagByte(const otBorderRouterConfig &config)
+{
+    uint8_t flags(0);
+
+    if (config.mPreferred)
+    {
+        flags |= SPINEL_NET_FLAG_PREFERRED;
+    }
+
+    if (config.mSlaac)
+    {
+        flags |= SPINEL_NET_FLAG_SLAAC;
+    }
+
+    if (config.mDhcp)
+    {
+        flags |= SPINEL_NET_FLAG_DHCP;
+    }
+
+    if (config.mDefaultRoute)
+    {
+        flags |= SPINEL_NET_FLAG_DEFAULT_ROUTE;
+    }
+
+    if (config.mConfigure)
+    {
+        flags |= SPINEL_NET_FLAG_CONFIGURE;
+    }
+
+    if (config.mOnMesh)
+    {
+        flags |= SPINEL_NET_FLAG_ON_MESH;
+    }
+
+    flags |= (config.mPreference << SPINEL_NET_FLAG_PREFERENCE_OFFSET);
+
+    return flags;
 }
 
 // ----------------------------------------------------------------------------
@@ -614,7 +654,10 @@ void NcpBase::UpdateChangedProps(void)
         }
         else if ((mChangedFlags & OT_THREAD_NETDATA_UPDATED) != 0)
         {
-            // TODO: Handle the netdata changed event.
+            SuccessOrExit(HandleCommandPropertyGet(
+                              SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0,
+                              SPINEL_PROP_THREAD_ON_MESH_NETS
+                          ));
 
             mChangedFlags &= ~static_cast<uint32_t>(OT_THREAD_NETDATA_UPDATED);
         }
@@ -1713,6 +1756,78 @@ ThreadError NcpBase::GetPropertyHandler_THREAD_ALLOW_LOCAL_NET_DATA_CHANGE(uint8
         SPINEL_DATATYPE_BOOL_S,
         mAllowLocalNetworkDataChange
     );
+}
+
+ThreadError NcpBase::GetPropertyHandler_THREAD_ON_MESH_NETS(uint8_t header, spinel_prop_key_t key)
+{
+    ThreadError errorCode = kThreadError_None;
+    otBorderRouterConfig border_router_config;
+    uint8_t flags;
+
+    SuccessOrExit(errorCode = OutboundFrameBegin());
+
+    SuccessOrExit(errorCode = OutboundFrameFeedPacked("Cii", header, SPINEL_CMD_PROP_VALUE_IS, key));
+
+    // Fill from non-local network data first
+    for (otNetworkDataIterator iter = OT_NETWORK_DATA_ITERATOR_INIT ;;)
+    {
+        errorCode = otGetNextOnMeshPrefix(false, &iter, &border_router_config);
+
+        if (errorCode != kThreadError_None)
+        {
+            break;
+        }
+
+        flags = BorderRouterConfigToFlagByte(border_router_config);
+
+        SuccessOrExit(errorCode = OutboundFrameFeedPacked(
+            "T("
+                SPINEL_DATATYPE_IPv6ADDR_S      // IPv6 Prefix
+                SPINEL_DATATYPE_UINT8_S         // Prefix Length (in bits)
+                SPINEL_DATATYPE_BOOL_S          // isStable
+                SPINEL_DATATYPE_UINT8_S         // Flags
+                SPINEL_DATATYPE_BOOL_S          // isLocal
+            ").",
+            &border_router_config.mPrefix,
+            64,
+            border_router_config.mStable,
+            flags,
+            true
+        ));
+    }
+
+    // Fill from local network data last
+    for (otNetworkDataIterator iter = OT_NETWORK_DATA_ITERATOR_INIT ;;)
+    {
+        errorCode = otGetNextOnMeshPrefix(true, &iter, &border_router_config);
+
+        if (errorCode != kThreadError_None)
+        {
+            break;
+        }
+
+        flags = BorderRouterConfigToFlagByte(border_router_config);
+
+        SuccessOrExit(errorCode = OutboundFrameFeedPacked(
+            "T("
+                SPINEL_DATATYPE_IPv6ADDR_S      // IPv6 Prefix
+                SPINEL_DATATYPE_UINT8_S         // Prefix Length (in bits)
+                SPINEL_DATATYPE_BOOL_S          // isStable
+                SPINEL_DATATYPE_UINT8_S         // Flags
+                SPINEL_DATATYPE_BOOL_S          // isLocal
+            ").",
+            &border_router_config.mPrefix,
+            64,
+            border_router_config.mStable,
+            flags,
+            false
+        ));
+    }
+
+    SuccessOrExit(errorCode = OutboundFrameSend());
+
+exit:
+    return errorCode;
 }
 
 
