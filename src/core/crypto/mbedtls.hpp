@@ -26,63 +26,56 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "test_util.h"
-#include <openthread.h>
-#include <common/debug.hpp>
-#include <string.h>
+/**
+ * @file
+ *   This file includes definitions for using mbedTLS.
+ */
 
-#include <crypto/hmac_sha256.hpp>
-#include <crypto/mbedtls.hpp>
+#ifndef OT_MBEDTLS_HPP_
+#define OT_MBEDTLS_HPP_
 
-static Thread::Crypto::MbedTls mbedtls;
+#include <stdint.h>
 
-extern"C" void otSignalTaskletPending(void)
+#include <mbedtls/memory_buffer_alloc.h>
+
+namespace Thread {
+namespace Crypto {
+
+/**
+ * @addtogroup core-security
+ *
+ * @{
+ *
+ */
+
+/**
+ * This class implements mbedTLS memory.
+ *
+ */
+class MbedTls
 {
-}
-
-void TestHmacSha256(void)
-{
-    static const struct
+public:
+    enum
     {
-        const char *key;
-        const char *data;
-        uint8_t hash[Thread::Crypto::HmacSha256::kHashSize];
-    } tests[] =
-    {
-        {
-            "\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b",
-            "Hi There",
-            {
-                0xb0, 0x34, 0x4c, 0x61, 0xd8, 0xdb, 0x38, 0x53,
-                0x5c, 0xa8, 0xaf, 0xce, 0xaf, 0x0b, 0xf1, 0x2b,
-                0x88, 0x1d, 0xc2, 0x00, 0xc9, 0x83, 0x3d, 0xa7,
-                0x26, 0xe9, 0x37, 0x6c, 0x2e, 0x32, 0xcf, 0xf7,
-            },
-        },
-        {
-            NULL,
-            NULL,
-            {},
-        },
+        kMemorySize = 512,  ///< Size of memory buffer (bytes).
     };
 
-    Thread::Crypto::HmacSha256 hmac;
-    uint8_t hash[Thread::Crypto::HmacSha256::kHashSize];
+    /**
+     * This constructor initializes the object.
+     *
+     */
+    MbedTls(void);
 
-    for (int i = 0; tests[i].key != NULL; i++)
-    {
-        hmac.Start(reinterpret_cast<const uint8_t *>(tests[i].key), static_cast<uint16_t>(strlen(tests[i].key)));
-        hmac.Update(reinterpret_cast<const uint8_t *>(tests[i].data), static_cast<uint16_t>(strlen(tests[i].data)));
-        hmac.Finish(hash);
+private:
+    unsigned char mMemory[kMemorySize];
+};
 
-        VerifyOrQuit(memcmp(hash, tests[i].hash, sizeof(tests[i].hash)) == 0,
-                     "HMAC-SHA-256 failed\n");
-    }
-}
+/**
+ * @}
+ *
+ */
 
-int main(void)
-{
-    TestHmacSha256();
-    printf("All tests passed\n");
-    return 0;
-}
+}  // namespace Crypto
+}  // namespace Thread
+
+#endif  // OT_MBEDTLS_HPP_

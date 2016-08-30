@@ -40,6 +40,7 @@
 #include <common/new.hpp>
 #include <common/tasklet.hpp>
 #include <common/timer.hpp>
+#include <crypto/mbedtls.hpp>
 #include <net/icmp6.hpp>
 #include <net/ip6.hpp>
 #include <platform/random.h>
@@ -56,6 +57,8 @@ ThreadNetif *sThreadNetif;
 
 static Ip6::NetifCallback sNetifCallback;
 static bool mEnabled = false;
+
+static otDEFINE_ALIGNED_VAR(sMbedTlsRaw, sizeof(Crypto::MbedTls), uint64_t);
 
 static otDEFINE_ALIGNED_VAR(sIp6Raw, sizeof(Ip6::Ip6), uint64_t);
 Ip6::Ip6 *sIp6;
@@ -872,6 +875,7 @@ ThreadError otEnable(void)
     VerifyOrExit(!mEnabled, error = kThreadError_InvalidState);
 
     otLogInfoApi("otEnable\n");
+    new(&sMbedTlsRaw) Crypto::MbedTls;
     sIp6 = new(&sIp6Raw) Ip6::Ip6;
     sThreadNetif = new(&sThreadNetifRaw) ThreadNetif(*sIp6);
     mEnabled = true;

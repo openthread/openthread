@@ -38,7 +38,6 @@ libmbedcrypto_a_CPPFLAGS                      = \
     $(NULL)
 
 libmbedcrypto_a_SOURCES                       = \
-    mbedcrypto.c                                \
     repo/library/aes.c                          \
     repo/library/md.c                           \
     repo/library/md_wrap.c                      \

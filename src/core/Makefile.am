@@ -30,7 +30,7 @@ include $(abs_top_nlbuild_autotools_dir)/automake/pre.am
 
 lib_LIBRARIES                       = libopenthread.a
 
-libopenthread_a_CPPFLAGS =            \
+libopenthread_a_CPPFLAGS            = \
     -I$(top_srcdir)/include           \
     $(OPENTHREAD_TARGET_DEFINES)      \
     $(NULL)
@@ -44,6 +44,9 @@ libopenthread_a_SOURCES             = \
     common/tasklet.cpp                \
     common/timer.cpp                  \
     crypto/aes_ccm.cpp                \
+    crypto/aes_ecb.cpp                \
+    crypto/hmac_sha256.cpp            \
+    crypto/mbedtls.cpp                \
     mac/mac.cpp                       \
     mac/mac_frame.cpp                 \
     mac/mac_whitelist.cpp             \
@@ -88,6 +91,9 @@ noinst_HEADERS                      = \
     common/tasklet.hpp                \
     common/timer.hpp                  \
     crypto/aes_ccm.hpp                \
+    crypto/aes_ecb.hpp                \
+    crypto/hmac_sha256.hpp            \
+    crypto/mbedtls.hpp                \
     mac/mac.hpp                       \
     mac/mac_frame.hpp                 \
     mac/mac_whitelist.hpp             \

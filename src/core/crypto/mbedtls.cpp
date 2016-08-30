@@ -28,64 +28,18 @@
 
 /**
  * @file
- * @brief
- *   This file includes the platform abstraction for HMAC SHA-256 computations.
+ *   This file implements the use of mbedTLS.
  */
 
-#ifndef HMAC_SHA256_H_
-#define HMAC_SHA256_H_
+#include <crypto/mbedtls.hpp>
 
-#include <stdint.h>
+namespace Thread {
+namespace Crypto {
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-/**
- * @addtogroup core-security
- *
- * @{
- *
- */
-
-enum
+MbedTls::MbedTls(void)
 {
-    otCryptoSha256Size = 32,  ///< SHA-256 hash size (bytes)
-};
+    mbedtls_memory_buffer_alloc_init(mMemory, sizeof(mMemory));
+}
 
-/**
- * This method sets the key.
- *
- * @param[in]  aKey        A pointer to the key.
- * @param[in]  aKeyLength  The key length in bytes.
- *
- */
-void otCryptoHmacSha256Start(const void *aKey, uint16_t aKeyLength);
-
-/**
- * This method inputs bytes into the HMAC computation.
- *
- * @param[in]  aBuf        A pointer to the input buffer.
- * @param[in]  aBufLength  The length of @p aBuf in bytes.
- *
- */
-void otCryptoHmacSha256Update(const void *aBuf, uint16_t aBufLength);
-
-/**
- * This method finalizes the hash computation.
- *
- * @param[out]  aHash  A pointer to the output buffer.
- *
- */
-void otCryptoHmacSha256Finish(uint8_t aHash[otCryptoSha256Size]);
-
-/**
- * @}
- *
- */
-
-#ifdef __cplusplus
-}  // end of extern "C"
-#endif
-
-#endif  // HMAC_SHA256_H_
+}  // namespace Crypto
+}  // namespace Thread

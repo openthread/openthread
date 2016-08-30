@@ -26,63 +26,35 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "test_util.h"
-#include <openthread.h>
-#include <common/debug.hpp>
-#include <string.h>
+/**
+ * @file
+ *   This file implements HMAC SHA-256.
+ */
 
 #include <crypto/hmac_sha256.hpp>
-#include <crypto/mbedtls.hpp>
 
-static Thread::Crypto::MbedTls mbedtls;
+namespace Thread {
+namespace Crypto {
 
-extern"C" void otSignalTaskletPending(void)
+void HmacSha256::Start(const uint8_t *aKey, uint16_t aKeyLength)
 {
+    const mbedtls_md_info_t *mdInfo = NULL;
+    mbedtls_md_init(&mContext);
+    mdInfo = mbedtls_md_info_from_type(MBEDTLS_MD_SHA256);
+    mbedtls_md_setup(&mContext, mdInfo, 1);
+    mbedtls_md_hmac_starts(&mContext, aKey, aKeyLength);
 }
 
-void TestHmacSha256(void)
+void HmacSha256::Update(const uint8_t *aBuf, uint16_t aBufLength)
 {
-    static const struct
-    {
-        const char *key;
-        const char *data;
-        uint8_t hash[Thread::Crypto::HmacSha256::kHashSize];
-    } tests[] =
-    {
-        {
-            "\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b",
-            "Hi There",
-            {
-                0xb0, 0x34, 0x4c, 0x61, 0xd8, 0xdb, 0x38, 0x53,
-                0x5c, 0xa8, 0xaf, 0xce, 0xaf, 0x0b, 0xf1, 0x2b,
-                0x88, 0x1d, 0xc2, 0x00, 0xc9, 0x83, 0x3d, 0xa7,
-                0x26, 0xe9, 0x37, 0x6c, 0x2e, 0x32, 0xcf, 0xf7,
-            },
-        },
-        {
-            NULL,
-            NULL,
-            {},
-        },
-    };
-
-    Thread::Crypto::HmacSha256 hmac;
-    uint8_t hash[Thread::Crypto::HmacSha256::kHashSize];
-
-    for (int i = 0; tests[i].key != NULL; i++)
-    {
-        hmac.Start(reinterpret_cast<const uint8_t *>(tests[i].key), static_cast<uint16_t>(strlen(tests[i].key)));
-        hmac.Update(reinterpret_cast<const uint8_t *>(tests[i].data), static_cast<uint16_t>(strlen(tests[i].data)));
-        hmac.Finish(hash);
-
-        VerifyOrQuit(memcmp(hash, tests[i].hash, sizeof(tests[i].hash)) == 0,
-                     "HMAC-SHA-256 failed\n");
-    }
+    mbedtls_md_hmac_update(&mContext, aBuf, aBufLength);
 }
 
-int main(void)
+void HmacSha256::Finish(uint8_t aHash[kHashSize])
 {
-    TestHmacSha256();
-    printf("All tests passed\n");
-    return 0;
+    mbedtls_md_hmac_finish(&mContext, aHash);
+    mbedtls_md_free(&mContext);
 }
+
+}  // namespace Crypto
+}  // namespace Thread

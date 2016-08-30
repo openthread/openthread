@@ -26,63 +26,76 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "test_util.h"
-#include <openthread.h>
-#include <common/debug.hpp>
-#include <string.h>
+/**
+ * @file
+ *   This file includes definitions for performing HMAC SHA-256 computations.
+ */
 
-#include <crypto/hmac_sha256.hpp>
-#include <crypto/mbedtls.hpp>
+#ifndef HMAC_SHA256_HPP_
+#define HMAC_SHA256_HPP_
 
-static Thread::Crypto::MbedTls mbedtls;
+#include <stdint.h>
 
-extern"C" void otSignalTaskletPending(void)
+#include <mbedtls/md.h>
+
+namespace Thread {
+namespace Crypto {
+
+/**
+ * @addtogroup core-security
+ *
+ * @{
+ *
+ */
+
+/**
+ * This class implements HMAC SHA-256 computation.
+ *
+ */
+class HmacSha256
 {
-}
-
-void TestHmacSha256(void)
-{
-    static const struct
+public:
+    enum
     {
-        const char *key;
-        const char *data;
-        uint8_t hash[Thread::Crypto::HmacSha256::kHashSize];
-    } tests[] =
-    {
-        {
-            "\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b",
-            "Hi There",
-            {
-                0xb0, 0x34, 0x4c, 0x61, 0xd8, 0xdb, 0x38, 0x53,
-                0x5c, 0xa8, 0xaf, 0xce, 0xaf, 0x0b, 0xf1, 0x2b,
-                0x88, 0x1d, 0xc2, 0x00, 0xc9, 0x83, 0x3d, 0xa7,
-                0x26, 0xe9, 0x37, 0x6c, 0x2e, 0x32, 0xcf, 0xf7,
-            },
-        },
-        {
-            NULL,
-            NULL,
-            {},
-        },
+        kHashSize = 32,  ///< SHA-256 hash size (bytes)
     };
 
-    Thread::Crypto::HmacSha256 hmac;
-    uint8_t hash[Thread::Crypto::HmacSha256::kHashSize];
+    /**
+     * This method sets the key.
+     *
+     * @param[in]  aKey        A pointer to the key.
+     * @param[in]  aKeyLength  The key length in bytes.
+     *
+     */
+    void Start(const uint8_t *aKey, uint16_t aKeyLength);
 
-    for (int i = 0; tests[i].key != NULL; i++)
-    {
-        hmac.Start(reinterpret_cast<const uint8_t *>(tests[i].key), static_cast<uint16_t>(strlen(tests[i].key)));
-        hmac.Update(reinterpret_cast<const uint8_t *>(tests[i].data), static_cast<uint16_t>(strlen(tests[i].data)));
-        hmac.Finish(hash);
+    /**
+     * This method inputs bytes into the HMAC computation.
+     *
+     * @param[in]  aBuf        A pointer to the input buffer.
+     * @param[in]  aBufLength  The length of @p aBuf in bytes.
+     *
+     */
+    void Update(const uint8_t *aBuf, uint16_t aBufLength);
 
-        VerifyOrQuit(memcmp(hash, tests[i].hash, sizeof(tests[i].hash)) == 0,
-                     "HMAC-SHA-256 failed\n");
-    }
-}
+    /**
+     * This method finalizes the hash computation.
+     *
+     * @param[out]  aHash  A pointer to the output buffer.
+     *
+     */
+    void Finish(uint8_t aHash[kHashSize]);
 
-int main(void)
-{
-    TestHmacSha256();
-    printf("All tests passed\n");
-    return 0;
-}
+private:
+    mbedtls_md_context_t mContext;
+};
+
+/**
+ * @}
+ *
+ */
+
+}  // namespace Crypto
+}  // namespace Thread
+
+#endif  // HMAC_SHA256_HPP_
