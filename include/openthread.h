@@ -736,6 +736,56 @@ ThreadError otGetPendingDataset(otOperationalDataset *aDataset);
 ThreadError otSetPendingDataset(otOperationalDataset *aDataset);
 
 /**
+ * This function sends MGMT_ACTIVE_GET.
+ *
+ * @param[in]  aTlvTypes  A pointer to the TLV Types.
+ * @param[in]  aLength    The length of TLV Types.
+ *
+ * @retval kThreadError_None         Successfully send the meshcop dataset command.
+ * @retval kThreadError_NoBufs       Insufficient buffer space to send.
+ *
+ */
+ThreadError otSendActiveGet(const uint8_t *aTlvTypes, uint8_t aLength);
+
+/**
+ * This function sends MGMT_ACTIVE_SET.
+ *
+ * @param[in]  aDataset   A pointer to operational dataset.
+ * @param[in]  aTlvs      A pointer to TLVs.
+ * @param[in]  aLength    The length of TLVs.
+ *
+ * @retval kThreadError_None         Successfully send the meshcop dataset command.
+ * @retval kThreadError_NoBufs       Insufficient buffer space to send.
+ *
+ */
+ThreadError otSendActiveSet(const otOperationalDataset *aDataset, const uint8_t *aTlvs, uint8_t aLength);
+
+/**
+ * This function sends MGMT_PENDING_GET.
+ *
+ * @param[in]  aTlvTypes  A pointer to the TLV Types.
+ * @param[in]  aLength    The length of TLV Types.
+ *
+ * @retval kThreadError_None         Successfully send the meshcop dataset command.
+ * @retval kThreadError_NoBufs       Insufficient buffer space to send.
+ *
+ */
+ThreadError otSendPendingGet(const uint8_t *aTlvTypes, uint8_t aLength);
+
+/**
+ * This function sends MGMT_PENDING_SET.
+ *
+ * @param[in]  aDataset   A pointer to operational dataset.
+ * @param[in]  aTlvs      A pointer to TLVs.
+ * @param[in]  aLength    The length of TLVs.
+ *
+ * @retval kThreadError_None         Successfully send the meshcop dataset command.
+ * @retval kThreadError_NoBufs       Insufficient buffer space to send.
+ *
+ */
+ThreadError otSendPendingSet(const otOperationalDataset *aDataset, const uint8_t *aTlvs, uint8_t aLength);
+
+/**
  * Get the data poll period of sleepy end deivce.
  *
  * @returns  The data poll period of sleepy end device.

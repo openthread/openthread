@@ -60,22 +60,22 @@ public:
      */
     enum Type
     {
-        kChannel           = 0,   ///< Channel TLV
-        kPanId             = 1,   ///< PAN ID TLV
-        kExtendedPanId     = 2,   ///< Extended PAN ID TLV
-        kNetworkName       = 3,   ///< Newtork Name TLV
-        kPSKc              = 4,   ///< PSKc TLV
-        kNetworkMasterKey  = 5,   ///< Network Master Key TLV
-        kMeshLocalPrefix   = 7,   ///< Mesh Local Prefix TLV
-        kSecurityPolicy    = 12,  ///< Security Policy TLV
-        kGet               = 13,  ///< Get TLV
-        kActiveTimestamp   = 14,  ///< Active Timestamp TLV
-        kState             = 16,  ///< State TLV
-        kPendingTimestamp  = 51,  ///< Pending Timestamp TLV
-        kDelayTimer        = 52,  ///< Delay Timer TLV
-        kChannelMask       = 53,  ///< Channel Mask TLV
-        kDiscoveryRequest  = 128,  ///< Discovery Request TLV
-        kDiscoveryResponse = 129,  ///< Discovery Response TLV
+        kChannel           = OT_MESHCOP_TLV_CHANNEL,           ///< Channel TLV
+        kPanId             = OT_MESHCOP_TLV_PANID,             ///< PAN ID TLV
+        kExtendedPanId     = OT_MESHCOP_TLV_EXTPANID,          ///< Extended PAN ID TLV
+        kNetworkName       = OT_MESHCOP_TLV_NETWORKNAME,       ///< Newtork Name TLV
+        kPSKc              = OT_MESHCOP_TLV_PSKC,              ///< PSKc TLV
+        kNetworkMasterKey  = OT_MESHCOP_TLV_MASTERKEY,         ///< Network Master Key TLV
+        kMeshLocalPrefix   = OT_MESHCOP_TLV_LOCALPREFIX,       ///< Mesh Local Prefix TLV
+        kSecurityPolicy    = OT_MESHCOP_TLV_SECURITYPOLICY,    ///< Security Policy TLV
+        kGet               = OT_MESHCOP_TLV_GET,               ///< Get TLV
+        kActiveTimestamp   = OT_MESHCOP_TLV_ACTIVETIMESTAMP,   ///< Active Timestamp TLV
+        kState             = OT_MESHCOP_TLV_STATE,             ///< State TLV
+        kPendingTimestamp  = OT_MESHCOP_TLV_PENDINGTIMESTAMP,  ///< Pending Timestamp TLV
+        kDelayTimer        = OT_MESHCOP_TLV_DELAYTIMER,        ///< Delay Timer TLV
+        kChannelMask       = OT_MESHCOP_TLV_CHANNELMASK,       ///< Channel Mask TLV
+        kDiscoveryRequest  = OT_MESHCOP_TLV_DISCOVERYREQUEST,  ///< Discovery Request TLV
+        kDiscoveryResponse = OT_MESHCOP_TLV_DISCOVERYRESPONSE, ///< Discovery Response TLV
     };
 
     /**
