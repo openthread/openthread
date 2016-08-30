@@ -252,7 +252,8 @@ delay
 extpanid
 masterkey
 meshlocalprefix
-mgmtcommand
+mgmtgetcommand
+mgmtsetcommand
 networkname
 panid
 pending
@@ -397,39 +398,39 @@ Set mesh local prefix.
 Done
 ```
 
-### dataset mgmtcommand set active \[TLVs list\] \[binary\]
-
-Send MGMT_ACTIVE_SET.
-
-```bash
-> dataset mgmtcommand set active activetimestamp 123 binary 3 820155
-Done
-```
-
-### dataset mgmtcommand get active \[TLV Types list\] \[binary\]
+### dataset mgmtgetcommand active \[TLVs list\] \[binary\]
 
 Send MGMT_ACTIVE_GET.
 
 ```bash
-> dataset mgmtcommand get active activetimestamp binary 2 0001
+> dataset mgmtgetcommand active activetimestamp 123 binary 0001
 Done
 ```
 
-### dataset mgmtcommand set pending \[TLVs list\] \[binary\]
+### dataset mgmtsetcommand active \[TLV Types list\] \[binary\]
+
+Send MGMT_ACTIVE_SET.
+
+```bash
+> dataset mgmtsetcommand active activetimestamp binary 820155
+Done
+```
+
+### dataset mgmtgetcommand pending \[TLVs list\] \[binary\]
 
 Send MGMT_PENDING_GET.
 
 ```bash
-> dataset mgmtcommand get pending activetimestamp binary 2 0001
+> dataset mgmtgetcommand pending activetimestamp binary 0001
 Done
 ```
 
-### dataset mgmtcommand get pending \[TLV Types list\] \[binary\]
+### dataset mgmtsetcommand pending \[TLV Types list\] \[binary\]
 
-Send MGMT_PENDING_GET.
+Send MGMT_PENDING_SET.
 
 ```bash
-> dataset mgmtcommand get pending activetimestamp binary 2 0001
+> dataset mgmtsetcommand pending activetimestamp binary 820155
 Done
 ```
 

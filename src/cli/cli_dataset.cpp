@@ -441,11 +441,10 @@ ThreadError Dataset::ProcessMgmtSetCommand(int argc, char *argv[])
         else if (strcmp(argv[index], "binary") == 0)
         {
             VerifyOrExit((index + 1) < argc, error = kThreadError_Parse);
-            SuccessOrExit(error = Interpreter::ParseLong(argv[++index], value));
-            VerifyOrExit(static_cast<size_t>(value) <= sizeof(tlvs), error = kThreadError_NoBufs);
-            VerifyOrExit(Interpreter::Hex2Bin(argv[++index], tlvs, static_cast<uint16_t>(value)) >= 0,
+            length = static_cast<int>((strlen(argv[++index]) + 1) / 2);
+            VerifyOrExit(static_cast<size_t>(length) <= sizeof(tlvs), error = kThreadError_NoBufs);
+            VerifyOrExit(Interpreter::Hex2Bin(argv[index], tlvs, static_cast<uint16_t>(length)) >= 0,
                          error = kThreadError_Parse);
-            length = static_cast<int>(value);
         }
         else
         {
@@ -525,9 +524,9 @@ ThreadError Dataset::ProcessMgmtGetCommand(int argc, char *argv[])
         else if (strcmp(argv[index], "binary") == 0)
         {
             VerifyOrExit((index + 1) < argc, error = kThreadError_Parse);
-            SuccessOrExit(error = Interpreter::ParseLong(argv[++index], value));
+            value = (strlen(argv[++index]) + 1) / 2;
             VerifyOrExit(static_cast<size_t>(value) <= (sizeof(tlvs) - static_cast<size_t>(length)), error = kThreadError_NoBufs);
-            VerifyOrExit(Interpreter::Hex2Bin(argv[++index], tlvs + length, static_cast<uint16_t>(value)) >= 0,
+            VerifyOrExit(Interpreter::Hex2Bin(argv[index], tlvs + length, static_cast<uint16_t>(value)) >= 0,
                          error = kThreadError_Parse);
             length += value;
         }
