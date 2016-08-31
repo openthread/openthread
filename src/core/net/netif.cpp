@@ -51,6 +51,8 @@ Netif::Netif() :
     mInterfaceId = -1;
     mAllRoutersSubscribed = false;
     mNext = NULL;
+    mCountExtUnicastAddresses = 0;
+    mMaskExtUnicastAddresses = 0;
 
     mStateChangedFlags = 0;
 }
@@ -313,7 +315,7 @@ ThreadError Netif::RemoveUnicastAddress(const NetifUnicastAddress &aAddress)
         }
     }
 
-    ExitNow(error = kThreadError_Error);
+    ExitNow(error = kThreadError_Busy);
 
 exit:
 
@@ -321,6 +323,93 @@ exit:
     {
         SetStateChangedFlags(OT_IP6_ADDRESS_REMOVED);
     }
+
+    return error;
+}
+
+
+ThreadError Netif::AddExternalUnicastAddress(const NetifUnicastAddress &aAddress)
+{
+    ThreadError error = kThreadError_None;
+    int8_t index = 0;
+
+    for (NetifUnicastAddress *cur = mUnicastAddresses; cur; cur = cur->GetNext())
+    {
+        if (memcmp(&cur->mAddress, &aAddress.mAddress, sizeof(otIp6Address)) == 0)
+        {
+            VerifyOrExit(GetExtUnicastAddressIndex(cur) != -1, error = kThreadError_InvalidArgs);
+
+            cur->mPreferredLifetime = aAddress.mPreferredLifetime;
+            cur->mValidLifetime = aAddress.mValidLifetime;
+            cur->mPrefixLength = aAddress.mPrefixLength;
+            ExitNow(error = kThreadError_Busy);
+        }
+    }
+
+    // Make sure we haven't reached our limit already
+    VerifyOrExit(mCountExtUnicastAddresses != OPENTHREAD_CONFIG_MAX_EXT_IP_ADDRS, error = kThreadError_NoBufs);
+
+    // Get next available entry index
+    while ((mMaskExtUnicastAddresses & (1 << index)) != 0)
+    {
+        index++;
+    }
+
+    assert(index < OPENTHREAD_CONFIG_MAX_EXT_IP_ADDRS);
+
+    // Increase the count and mask the index
+    mCountExtUnicastAddresses++;
+    mMaskExtUnicastAddresses |= 1 << index;
+
+    // Copy the address to the next available dynamic address
+    mExtUnicastAddresses[index] = aAddress;
+    mExtUnicastAddresses[index].mNext = mUnicastAddresses;
+
+    mUnicastAddresses = &mExtUnicastAddresses[index];
+
+exit:
+    return error;
+}
+
+ThreadError Netif::RemoveExternalUnicastAddress(const Address &aAddress)
+{
+    ThreadError error = kThreadError_None;
+    NetifUnicastAddress *last = NULL;
+    int8_t aAddressIndexToRemove = -1;
+
+    for (NetifUnicastAddress *cur = mUnicastAddresses; cur; cur = cur->GetNext())
+    {
+        if (memcmp(&cur->mAddress, &aAddress, sizeof(otIp6Address)) == 0)
+        {
+            aAddressIndexToRemove = GetExtUnicastAddressIndex(cur);
+            VerifyOrExit(aAddressIndexToRemove != -1, error = kThreadError_InvalidArgs);
+
+            if (last)
+            {
+                last->mNext = cur->mNext;
+            }
+            else
+            {
+                mUnicastAddresses = cur->GetNext();
+            }
+
+            break;
+        }
+
+        last = cur;
+    }
+
+    if (aAddressIndexToRemove != -1)
+    {
+        mMaskExtUnicastAddresses &= ~(1 << aAddressIndexToRemove);
+        mCountExtUnicastAddresses--;
+    }
+    else
+    {
+        error = kThreadError_Busy;
+    }
+
+exit:
 
     return error;
 }
