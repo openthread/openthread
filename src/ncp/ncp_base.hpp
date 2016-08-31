@@ -316,7 +316,7 @@ private:
     ThreadError GetPropertyHandler_THREAD_CONTEXT_REUSE_DELAY(uint8_t header, spinel_prop_key_t key);
     ThreadError GetPropertyHandler_THREAD_NETWORK_ID_TIMEOUT(uint8_t header, spinel_prop_key_t key);
     ThreadError GetPropertyHandler_THREAD_ON_MESH_NETS(uint8_t header, spinel_prop_key_t key);
-
+    ThreadError GetPropertyHandler_NET_REQUIRE_JOIN_EXISTING(uint8_t header, spinel_prop_key_t key);
 
     ThreadError SetPropertyHandler_POWER_STATE(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr,
                                                uint16_t value_len);
@@ -375,6 +375,8 @@ private:
     ThreadError SetPropertyHandler_THREAD_ASSISTING_PORTS(uint8_t header, spinel_prop_key_t key,
                                                     const uint8_t *value_ptr, uint16_t value_len);
     ThreadError SetPropertyHandler_THREAD_ALLOW_LOCAL_NET_DATA_CHANGE(uint8_t header, spinel_prop_key_t key,
+                                                   const uint8_t *value_ptr, uint16_t value_len);
+    ThreadError SetPropertyHandler_NET_REQUIRE_JOIN_EXISTING(uint8_t header, spinel_prop_key_t key,
                                                    const uint8_t *value_ptr, uint16_t value_len);
     ThreadError SetPropertyHandler_CNTR_RESET(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr,
                                               uint16_t value_len);
@@ -436,6 +438,7 @@ private:
     otNetifAddress mNetifAddresses[kNetifAddressListSize];
 
     bool mAllowLocalNetworkDataChange;
+    bool mRequireJoinExistingNetwork;
 
     uint32_t mFramingErrorCounter;             // Number of inproperly formed received spinel frames.
     uint32_t mRxSpinelFrameCounter;            // Number of received (inbound) spinel frames.

@@ -1138,6 +1138,11 @@ spinel_prop_key_to_cstr(spinel_prop_key_t prop_key)
         ret = "PROP_THREAD_CONTEXT_REUSE_DELAY";
         break;
 
+    case SPINEL_PROP_NET_REQUIRE_JOIN_EXISTING:
+        ret = "PROP_NET_REQUIRE_JOIN_EXISTING";
+        break;
+
+
     case SPINEL_PROP_NEST_STREAM_MFG:
         ret = "SPINEL_PROP_NEST_STREAM_MFG";
         break;
@@ -1237,6 +1242,22 @@ const char *spinel_status_to_cstr(spinel_status_t status)
 
     case SPINEL_STATUS_ITEM_NOT_FOUND:
         ret = "STATUS_ITEM_NOT_FOUND";
+        break;
+
+    case SPINEL_STATUS_JOIN_FAILURE:
+        ret = "STATUS_JOIN_FAILURE";
+        break;
+
+    case SPINEL_STATUS_JOIN_SECURITY:
+        ret = "STATUS_JOIN_SECURITY";
+        break;
+
+    case SPINEL_STATUS_JOIN_NO_PEERS:
+        ret = "STATUS_JOIN_NO_PEERS";
+        break;
+
+    case SPINEL_STATUS_JOIN_INCOMPATIBLE:
+        ret = "STATUS_JOIN_INCOMPATIBLE";
         break;
 
     case SPINEL_STATUS_RESET_POWER_ON:
