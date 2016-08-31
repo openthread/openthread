@@ -113,6 +113,8 @@ const NcpBase::GetPropertyHandlerEntry NcpBase::mGetPropertyHandlerTable[] =
     { SPINEL_PROP_NET_PARTITION_ID, &NcpBase::GetPropertyHandler_NET_PARTITION_ID },
 
     { SPINEL_PROP_THREAD_LEADER_ADDR, &NcpBase::GetPropertyHandler_THREAD_LEADER_ADDR },
+    { SPINEL_PROP_THREAD_PARENT, &NcpBase::GetPropertyHandler_THREAD_PARENT },
+    { SPINEL_PROP_THREAD_CHILD_TABLE, &NcpBase::GetPropertyHandler_THREAD_CHILD_TABLE },
     { SPINEL_PROP_THREAD_LEADER_RID, &NcpBase::GetPropertyHandler_THREAD_LEADER_RID },
     { SPINEL_PROP_THREAD_LEADER_WEIGHT, &NcpBase::GetPropertyHandler_THREAD_LEADER_WEIGHT },
     { SPINEL_PROP_THREAD_LOCAL_LEADER_WEIGHT, &NcpBase::GetPropertyHandler_THREAD_LOCAL_LEADER_WEIGHT },
@@ -689,11 +691,10 @@ void NcpBase::UpdateChangedProps(void)
         }
         else if ((mChangedFlags & (OT_THREAD_CHILD_ADDED | OT_THREAD_CHILD_REMOVED)) != 0)
         {
-            // TODO: Uncomment this once we add support for this property.
-            //SuccessOrExit(HandleCommandPropertyGet(
-            //    SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0,
-            //    SPINEL_PROP_THREAD_CHILD_TABLE
-            //));
+            SuccessOrExit(HandleCommandPropertyGet(
+                SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0,
+                SPINEL_PROP_THREAD_CHILD_TABLE
+            ));
             mChangedFlags &= ~static_cast<uint32_t>(OT_THREAD_CHILD_ADDED | OT_THREAD_CHILD_REMOVED);
         }
         else if ((mChangedFlags & OT_THREAD_NETDATA_UPDATED) != 0)
@@ -1766,6 +1767,58 @@ ThreadError NcpBase::GetPropertyHandler_THREAD_LEADER_ADDR(uint8_t header, spine
         errorCode = SendLastStatus(header, ThreadErrorToSpinelStatus(errorCode));
     }
 
+    return errorCode;
+}
+
+ThreadError NcpBase::GetPropertyHandler_THREAD_PARENT(uint8_t header, spinel_prop_key_t key)
+{
+    ThreadError errorCode = kThreadError_None;
+    (void)key;
+
+    errorCode = SendLastStatus(header, SPINEL_STATUS_UNIMPLEMENTED);
+
+    return errorCode;
+}
+
+ThreadError NcpBase::GetPropertyHandler_THREAD_CHILD_TABLE(uint8_t header, spinel_prop_key_t key)
+{
+    ThreadError errorCode = kThreadError_None;
+    otChildInfo childInfo;
+    uint8_t index;
+
+    SuccessOrExit(errorCode = OutboundFrameBegin());
+    SuccessOrExit(errorCode = OutboundFrameFeedPacked("Cii", header, SPINEL_CMD_PROP_VALUE_IS, key));
+
+    index = 0;
+
+    while (otGetChildInfoByIndex(index, &childInfo) == kThreadError_None)
+    {
+        if (childInfo.mTimeout > 0)
+        {
+            SuccessOrExit(
+                errorCode = OutboundFrameFeedPacked(
+                    "T(ESSLLCCcbbbb)",
+                    childInfo.mExtAddress,
+                    childInfo.mChildId,
+                    childInfo.mRloc16,
+                    childInfo.mTimeout,
+                    childInfo.mAge,
+                    childInfo.mNetworkDataVersion,
+                    childInfo.mLinkQualityIn,
+                    childInfo.mAverageRssi,
+                    childInfo.mRxOnWhenIdle,
+                    childInfo.mSecureDataRequest,
+                    childInfo.mFullFunction,
+                    childInfo.mFullNetworkData
+            ));
+        }
+
+        index++;
+    }
+
+    SuccessOrExit(errorCode = OutboundFrameSend());
+
+exit:
     return errorCode;
 }
 
