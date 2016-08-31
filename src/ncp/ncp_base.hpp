@@ -140,6 +140,13 @@ private:
     void HandleActiveScanResult(otActiveScanResult *result);
 
     /**
+     * Trampoline for HandleEnergyScanResult().
+     */
+    static void HandleEnergyScanResult_Jump(otEnergyScanResult *aResult, void *aContext);
+
+    void HandleEnergyScanResult(otEnergyScanResult *result);
+
+    /**
      * Trampoline for UpdateChangedProps().
      */
     static void UpdateChangedProps(void *context);
