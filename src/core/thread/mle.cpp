@@ -1213,7 +1213,8 @@ exit:
 
 void Mle::HandleSendChildUpdateRequest(void *aContext)
 {
-    static_cast<Mle *>(aContext)->SendChildUpdateRequest();
+    Mle *obj = reinterpret_cast<Mle *>(aContext);
+    obj->HandleSendChildUpdateRequest();
 }
 
 void Mle::HandleSendChildUpdateRequest(void)
