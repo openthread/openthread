@@ -12,9 +12,9 @@ applications to run on the HOST and use the Thread network.
 
 The power of this tool is three fold:
 
-1) As a path to add testing of the NCP in simulation to continuous integration
-2) As a path to automated testing of testbeds running NCP firmware on hardware
-3) As a simple debugging tool for NCP builds of OpenThread
+1. As a path to add testing of the NCP in simulation to continuous integration
+2. As a path to automated testing of testbeds running NCP firmware on hardware
+3. As a simple debugging tool for NCP builds of OpenThread
 
 ## System Requirements
 
@@ -46,25 +46,26 @@ sudo pip install scapy
 
 ### DESCRIPTION
 
+```
     -h, --help            
     	Show this help message and exit
 
-    -u \<UART\>, --uart=\<UART\>
+    -u <UART>, --uart=<UART>
        	Open a serial connection to the OpenThread NCP device
-	where \<UART\> is a device path such as "/dev/ttyUSB0".
+	where <UART> is a device path such as "/dev/ttyUSB0".
 
-    -p \<PIPE\>, --pipe=\<PIPE\>
+    -p <PIPE>, --pipe=<PIPE>
         Open a piped process connection to the OpenThread NCP device
-        where \<PIPE\> is the command to start an emulator, such as 
+        where <PIPE> is the command to start an emulator, such as 
         "ot-ncp".  Spinel-cli will communicate with the child process
         via stdin/stdout.
 
-    -s \<SOCKET\>, --socket=\<SOCKET\>
+    -s <SOCKET>, --socket=<SOCKET>
         Open a socket connection to the OpenThread NCP device
-        where \<SOCKET\> is the port to open.
+        where <SOCKET> is the port to open.
 	This is useful for SPI configurations when used in conjunction
 	with a spinel spi-driver daemon.
-	Note: \<SOCKET\> will eventually map to hostname:port tuple.
+	Note: <SOCKET> will eventually map to hostname:port tuple.
 
     -n NODEID, --nodeid=NODEID
         The unique nodeid for the HOST and NCP instance.
@@ -74,6 +75,7 @@ sudo pip install scapy
 
     -v, --verbose
         Maximize debug and log output.
+```
 
 ## Quick Start
 
@@ -153,7 +155,7 @@ The primary intent of spinel-cli is to support the exact syntax and output
 of the OpenThread CLI command set in order to seamlessly reapply the 
 thread-cert automated test suite against NCP targets.
 
-See [cli module][1] for more information.
+See [cli module][1] for more information on these commands.
 
 [1]:../../src/cli/README.md
 
@@ -162,7 +164,7 @@ See [cli module][1] for more information.
 The Diagnostics module is enabled only when building OpenThread with 
 the --enable-diag configure option.
 
-See [diag module][2] for more information.
+See [diag module][2] for more information on these commands.
 
 [2]:../../src/diag/README.md
 
@@ -174,6 +176,7 @@ the spinel-cli tool for the purposes of debugging, access to NCP-specific
 Spinel parameters, and support of advanced configurations.
 
 * [help](#help)
+* [?](#help)
 * [v](#v)
 * [exit](#exit)
 * [quit](#quit)
@@ -234,13 +237,19 @@ version
 
 Display version of spinel-cli tool.
 
+```bash
+spinel-cli > v
+spinel-cli ver. 0.1.0
+Copyright (c) 2016 Nest Labs, Inc.
+```
+
 #### exit
 
-Exit spinel-cli.
+Exit spinel-cli.  CTRL+C is also okay.
 
 #### quit
 
-Exit spinel-cli.
+Exit spinel-cli.  CTRL+C is also okay.
 
 ### clear
 
