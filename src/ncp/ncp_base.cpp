@@ -133,6 +133,7 @@ const NcpBase::GetPropertyHandlerEntry NcpBase::mGetPropertyHandlerTable[] =
     { SPINEL_PROP_THREAD_CONTEXT_REUSE_DELAY, &NcpBase::GetPropertyHandler_THREAD_CONTEXT_REUSE_DELAY },
     { SPINEL_PROP_THREAD_NETWORK_ID_TIMEOUT, &NcpBase::GetPropertyHandler_THREAD_NETWORK_ID_TIMEOUT },
     { SPINEL_PROP_THREAD_ON_MESH_NETS, &NcpBase::NcpBase::GetPropertyHandler_THREAD_ON_MESH_NETS },
+    { SPINEL_PROP_NET_REQUIRE_JOIN_EXISTING, &NcpBase::GetPropertyHandler_NET_REQUIRE_JOIN_EXISTING },
 
     { SPINEL_PROP_IPV6_ML_PREFIX, &NcpBase::GetPropertyHandler_IPV6_ML_PREFIX },
     { SPINEL_PROP_IPV6_ML_ADDR, &NcpBase::GetPropertyHandler_IPV6_ML_ADDR },
@@ -221,6 +222,7 @@ const NcpBase::SetPropertyHandlerEntry NcpBase::mSetPropertyHandlerTable[] =
     { SPINEL_PROP_THREAD_CHILD_TIMEOUT, &NcpBase::SetPropertyHandler_THREAD_CHILD_TIMEOUT },
     { SPINEL_PROP_THREAD_ROUTER_UPGRADE_THRESHOLD, &NcpBase::SetPropertyHandler_THREAD_ROUTER_UPGRADE_THRESHOLD },
     { SPINEL_PROP_THREAD_CONTEXT_REUSE_DELAY, &NcpBase::SetPropertyHandler_THREAD_CONTEXT_REUSE_DELAY },
+    { SPINEL_PROP_NET_REQUIRE_JOIN_EXISTING, &NcpBase::SetPropertyHandler_NET_REQUIRE_JOIN_EXISTING },
 
 #if OPENTHREAD_ENABLE_DIAG
     { SPINEL_PROP_NEST_STREAM_MFG, &NcpBase::SetPropertyHandler_NEST_STREAM_MFG },
@@ -410,6 +412,7 @@ NcpBase::NcpBase():
     sNcpContext = this;
     mChangedFlags = NCP_PLAT_RESET_REASON;
     mAllowLocalNetworkDataChange = false;
+    mRequireJoinExistingNetwork = false;
 
     mFramingErrorCounter = 0;
     mRxSpinelFrameCounter = 0;
@@ -656,12 +659,43 @@ void NcpBase::UpdateChangedProps(void)
         }
         else if ((mChangedFlags & OT_NET_ROLE) != 0)
         {
+            if (mRequireJoinExistingNetwork)
+            {
+                mRequireJoinExistingNetwork = false;
+
+                if ( (otGetDeviceRole() == kDeviceRoleLeader)
+                  && otIsSingleton()
+                ) {
+                    mChangedFlags &= ~static_cast<uint32_t>(OT_NET_PARTITION_ID);
+                    otThreadStop();
+
+                    // TODO: It would be nice to be able to indicate
+                    //   something more specific than SPINEL_STATUS_JOIN_FAILURE
+                    //   here, but it isn't clear how that would work
+                    //   with the current OpenThread API.
+
+                    SuccessOrExit(SendLastStatus(
+                                      SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0,
+                                      SPINEL_STATUS_JOIN_FAILURE
+                                  ));
+
+                    SuccessOrExit(HandleCommandPropertyGet(
+                                      SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0,
+                                      SPINEL_PROP_NET_STACK_UP
+                                  ));
+                }
+
+                SuccessOrExit(HandleCommandPropertyGet(
+                                  SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0,
+                                  SPINEL_PROP_NET_REQUIRE_JOIN_EXISTING
+                              ));
+            }
+
             SuccessOrExit(HandleCommandPropertyGet(
                               SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0,
                               SPINEL_PROP_NET_ROLE
                           ));
             mChangedFlags &= ~static_cast<uint32_t>(OT_NET_ROLE);
-
         }
         else if ((mChangedFlags & OT_NET_PARTITION_ID) != 0)
         {
@@ -2347,6 +2381,17 @@ ThreadError NcpBase::GetPropertyHandler_THREAD_NETWORK_ID_TIMEOUT(uint8_t header
            );
 }
 
+ThreadError NcpBase::GetPropertyHandler_NET_REQUIRE_JOIN_EXISTING(uint8_t header, spinel_prop_key_t key)
+{
+    return SendPropertyUpdate(
+               header,
+               SPINEL_CMD_PROP_VALUE_IS,
+               key,
+               SPINEL_DATATYPE_BOOL_S,
+               mRequireJoinExistingNetwork
+           );
+}
+
 
 // ----------------------------------------------------------------------------
 // MARK: Individual Property Setters
@@ -2547,6 +2592,33 @@ ThreadError NcpBase::SetPropertyHandler_MAC_SCAN_PERIOD(uint8_t header, spinel_p
     if (parsedLength > 0)
     {
         mScanPeriod = tmp;
+        errorCode = HandleCommandPropertyGet(header, key);
+    }
+    else
+    {
+        errorCode = SendLastStatus(header, SPINEL_STATUS_PARSE_ERROR);
+    }
+
+    return errorCode;
+}
+
+ThreadError NcpBase::SetPropertyHandler_NET_REQUIRE_JOIN_EXISTING(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr,
+                                                        uint16_t value_len)
+{
+    bool tmp(mRequireJoinExistingNetwork);
+    spinel_ssize_t parsedLength;
+    ThreadError errorCode = kThreadError_None;
+
+    parsedLength = spinel_datatype_unpack(
+                       value_ptr,
+                       value_len,
+                       SPINEL_DATATYPE_BOOL_S,
+                       &tmp
+                   );
+
+    if (parsedLength > 0)
+    {
+        mRequireJoinExistingNetwork = tmp;
         errorCode = HandleCommandPropertyGet(header, key);
     }
     else

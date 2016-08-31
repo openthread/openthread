@@ -102,6 +102,41 @@ typedef enum
     SPINEL_STATUS_ALREADY           = 19, ///< The operation is already in progress.
     SPINEL_STATUS_ITEM_NOT_FOUND    = 20, ///< The given item could not be found.
 
+    SPINEL_STATUS_JOIN__BEGIN       = 104,
+
+    /// Generic failure to associate with other peers.
+    /**
+     *  This status error should not be used by implementors if
+     *  enough information is available to determine that one of the
+     *  later join failure status codes would be more accurate.
+     *
+     *  \sa SPINEL_PROP_NET_REQUIRE_JOIN_EXISTING
+     */
+    SPINEL_STATUS_JOIN_FAILURE      = SPINEL_STATUS_JOIN__BEGIN + 0,
+
+    /// The node found other peers but was unable to decode their packets.
+    /**
+     *  Typically this error code indicates that the network
+     *  key has been set incorrectly.
+     *
+     *  \sa SPINEL_PROP_NET_REQUIRE_JOIN_EXISTING
+     */
+    SPINEL_STATUS_JOIN_SECURITY     = SPINEL_STATUS_JOIN__BEGIN + 1,
+
+    /// The node was unable to find any other peers on the network.
+    /**
+     *  \sa SPINEL_PROP_NET_REQUIRE_JOIN_EXISTING
+     */
+    SPINEL_STATUS_JOIN_NO_PEERS     = SPINEL_STATUS_JOIN__BEGIN + 2,
+
+    /// The only potential peer nodes found are incompatible.
+    /**
+     *  \sa SPINEL_PROP_NET_REQUIRE_JOIN_EXISTING
+     */
+    SPINEL_STATUS_JOIN_INCOMPATIBLE = SPINEL_STATUS_JOIN__BEGIN + 3,
+
+    SPINEL_STATUS_JOIN__END         = 112,
+
     SPINEL_STATUS_RESET__BEGIN      = 112,
     SPINEL_STATUS_RESET_POWER_ON    = SPINEL_STATUS_RESET__BEGIN + 0,
     SPINEL_STATUS_RESET_EXTERNAL    = SPINEL_STATUS_RESET__BEGIN + 1,
@@ -363,6 +398,28 @@ typedef enum
     SPINEL_PROP_NET_MASTER_KEY       = SPINEL_PROP_NET__BEGIN + 6, ///< [D]
     SPINEL_PROP_NET_KEY_SEQUENCE     = SPINEL_PROP_NET__BEGIN + 7, ///< [L]
     SPINEL_PROP_NET_PARTITION_ID     = SPINEL_PROP_NET__BEGIN + 8, ///< [L]
+
+    /// Require Join Existing
+    /** Format: `b`
+     *  Default Value: `false`
+     *
+     * This flag is typically used for nodes that are associating with an
+     * existing network for the first time. If this is set to `true` before
+     * `PROP_NET_STACK_UP` is set to `true`, the
+     * creation of a new partition at association is prevented. If the node
+     * cannot associate with an existing partition, `PROP_LAST_STATUS` will
+     * emit a status that indicates why the association failed and
+     * `PROP_NET_STACK_UP` will automatically revert to `false`.
+     *
+     * Once associated with an existing partition, this flag automatically
+     * reverts to `false`.
+     *
+     * The behavior of this property being set to `true` when
+     * `PROP_NET_STACK_UP` is already set to `true` is undefined.
+     */
+    SPINEL_PROP_NET_REQUIRE_JOIN_EXISTING
+                                     = SPINEL_PROP_NET__BEGIN + 9,
+
     SPINEL_PROP_NET__END             = 0x50,
 
     SPINEL_PROP_THREAD__BEGIN          = 0x50,
