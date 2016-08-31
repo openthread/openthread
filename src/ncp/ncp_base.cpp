@@ -563,6 +563,48 @@ void NcpBase::HandleActiveScanResult(otActiveScanResult *result)
     }
 }
 
+void NcpBase::HandleEnergyScanResult_Jump(otEnergyScanResult *aResult, void *aContext)
+{
+    static_cast<NcpBase *>(aContext)->HandleEnergyScanResult(aResult);
+}
+
+void NcpBase::HandleEnergyScanResult(otEnergyScanResult *aResult)
+{
+    ThreadError errorCode;
+
+    if (aResult)
+    {
+        NcpBase::SendPropertyUpdate(
+            SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0,
+            SPINEL_CMD_PROP_VALUE_INSERTED,
+            SPINEL_PROP_MAC_ENERGY_SCAN_RESULT,
+            "Cc",
+            aResult->mChannel,
+            aResult->mMaxRssi
+        );
+    }
+    else
+    {
+        // We are finished with the scan, so send out
+        // a property update indicating such.
+        errorCode = SendPropertyUpdate(
+            SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0,
+            SPINEL_CMD_PROP_VALUE_IS,
+            SPINEL_PROP_MAC_SCAN_STATE,
+            SPINEL_DATATYPE_UINT8_S,
+            SPINEL_SCAN_STATE_IDLE
+        );
+
+        // If we could not send the end of scan inidciator message now (no
+        // buffer space), we set `mShouldSignalEndOfScan` to true to send
+        // it out when buffer space becomes available.
+        if (errorCode != kThreadError_None)
+        {
+            mShouldSignalEndOfScan = true;
+        }
+    }
+}
+
 // ----------------------------------------------------------------------------
 // MARK: Address Table Changed Glue
 // ----------------------------------------------------------------------------
@@ -2524,17 +2566,33 @@ ThreadError NcpBase::SetPropertyHandler_MAC_SCAN_STATE(uint8_t header, spinel_pr
             break;
 
         case SPINEL_SCAN_STATE_BEACON:
-            mShouldSignalEndOfScan = false;
             errorCode = otActiveScan(
                             mChannelMask,
                             mScanPeriod,
                             &HandleActiveScanResult_Jump,
                             this
                         );
+
+            if (errorCode == kThreadError_None)
+            {
+                mShouldSignalEndOfScan = false;
+            }
+
             break;
 
         case SPINEL_SCAN_STATE_ENERGY:
-            errorCode = kThreadError_NotImplemented;
+            errorCode = otEnergyScan(
+                mChannelMask,
+                mScanPeriod,
+                &HandleEnergyScanResult_Jump,
+                this
+            );
+
+            if (errorCode == kThreadError_None)
+            {
+                mShouldSignalEndOfScan = false;
+            }
+
             break;
 
         default:
