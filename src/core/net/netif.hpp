@@ -497,7 +497,7 @@ private:
             return -1;
         }
 
-        return address - &mExtUnicastAddresses[0];
+        return static_cast<int8_t>(address - &mExtUnicastAddresses[0]);
     }
 };
 
