@@ -1624,6 +1624,15 @@ Note that some implementations may not support `CMD_GET_VALUE`
 routerids, but may support `CMD_REMOVE_VALUE` when the node is
 a leader.
 
+#### D.4.22. PROP 5382: `PROP_THREAD_RLOC16_DEBUG_PASSTHRU`
+* Type: Read-Write
+* Packed-Encoding: `b`
+
+Allow the HOST to directly observe all IPv6 packets received by the NCP,
+including ones sent to the RLOC16 address.
+
+Default value is `false`.
+
 ### D.5. IPv6 Properties
 
 #### D.5.1. PROP 96: `PROP_IPV6_LL_ADDR`
@@ -1675,3 +1684,4 @@ Allow the NCP to directly respond to ICMP ping requests. If this is
 turned on, ping request ICMP packets will not be passed to the host.
 
 Default value is `false`.
+

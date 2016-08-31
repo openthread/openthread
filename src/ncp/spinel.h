@@ -438,6 +438,12 @@ typedef enum
     SPINEL_PROP_THREAD_ACTIVE_ROUTER_IDS
                                        = SPINEL_PROP_THREAD_EXT__BEGIN + 5,
 
+    /// Forward IPv6 packets that use RLOC16 addresses to HOST.
+    /** Format: `b`
+     */
+    SPINEL_PROP_THREAD_RLOC16_DEBUG_PASSTHRU
+                                       = SPINEL_PROP_THREAD_EXT__BEGIN + 6,
+
     SPINEL_PROP_THREAD_EXT__END        = 0x1600,
 
     SPINEL_PROP_IPV6__BEGIN          = 0x60,
@@ -456,7 +462,7 @@ typedef enum
      *
      * Default value is `false`.
      */
-    SPINEL_PROP_IPV6_ICMP_PING_OFFLOAD = SPINEL_PROP_IPV6__BEGIN + 5,
+    SPINEL_PROP_IPV6_ICMP_PING_OFFLOAD = SPINEL_PROP_IPV6__BEGIN + 5, ///< [b]
 
     SPINEL_PROP_IPV6__END            = 0x70,
 

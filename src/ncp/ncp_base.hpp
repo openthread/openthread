@@ -280,6 +280,7 @@ private:
     ThreadError GetPropertyHandler_IPV6_ADDRESS_TABLE(uint8_t header, spinel_prop_key_t key);
     ThreadError GetPropertyHandler_IPV6_ROUTE_TABLE(uint8_t header, spinel_prop_key_t key);
     ThreadError GetPropertyHandler_IPV6_ICMP_PING_OFFLOAD(uint8_t header, spinel_prop_key_t key);
+    ThreadError GetPropertyHandler_THREAD_RLOC16_DEBUG_PASSTHRU(uint8_t header, spinel_prop_key_t key);
     ThreadError GetPropertyHandler_THREAD_LOCAL_ROUTES(uint8_t header, spinel_prop_key_t key);
     ThreadError GetPropertyHandler_STREAM_NET(uint8_t header, spinel_prop_key_t key);
     ThreadError GetPropertyHandler_MAC_SCAN_MASK(uint8_t header, spinel_prop_key_t key);
@@ -342,6 +343,8 @@ private:
                                                   uint16_t value_len);
     ThreadError SetPropertyHandler_IPV6_ICMP_PING_OFFLOAD(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr,
                                                   uint16_t value_len);
+    ThreadError SetPropertyHandler_THREAD_RLOC16_DEBUG_PASSTHRU(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr,
+						       uint16_t value_len);
     ThreadError SetPropertyHandler_PHY_ENABLED(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr,
                                                uint16_t value_len);
     ThreadError SetPropertyHandler_MAC_FILTER_MODE(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr,

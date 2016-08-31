@@ -1110,6 +1110,10 @@ spinel_prop_key_to_cstr(spinel_prop_key_t prop_key)
         ret = "SPINEL_PROP_THREAD_ALLOW_LOCAL_NET_DATA_CHANGE";
         break;
 
+    case SPINEL_PROP_THREAD_RLOC16_DEBUG_PASSTHRU:
+        ret = "SPINEL_PROP_THREAD_RLOC16_DEBUG_PASSTHRU";
+        break;
+
     case SPINEL_PROP_MAC_WHITELIST:
         ret = "PROP_MAC_WHITELIST";
         break;
