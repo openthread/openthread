@@ -440,7 +440,7 @@ NcpBase::NcpBase():
 
 void NcpBase::HandleDatagramFromStack(otMessage aMessage, void *aContext)
 {
-    reinterpret_cast<NcpBase*>(aContext)->HandleDatagramFromStack(*static_cast<Message *>(aMessage));
+    static_cast<NcpBase *>(aContext)->HandleDatagramFromStack(*static_cast<Message *>(aMessage));
 }
 
 void NcpBase::HandleDatagramFromStack(Message &aMessage)
@@ -502,9 +502,9 @@ exit:
 // MARK: Scan Results Glue
 // ----------------------------------------------------------------------------
 
-void NcpBase::HandleActiveScanResult_Jump(otActiveScanResult *result, void *aContext)
+void NcpBase::HandleActiveScanResult_Jump(otActiveScanResult *aResult, void *aContext)
 {
-    reinterpret_cast<NcpBase*>(aContext)->HandleActiveScanResult(result);
+    static_cast<NcpBase *>(aContext)->HandleActiveScanResult(aResult);
 }
 
 void NcpBase::HandleActiveScanResult(otActiveScanResult *result)
@@ -571,7 +571,7 @@ void NcpBase::HandleActiveScanResult(otActiveScanResult *result)
 
 void NcpBase::HandleNetifStateChanged(uint32_t flags, void *context)
 {
-    NcpBase *obj = reinterpret_cast<NcpBase *>(context);
+    NcpBase *obj = static_cast<NcpBase *>(context);
 
     obj->mChangedFlags |= flags;
 
@@ -580,7 +580,7 @@ void NcpBase::HandleNetifStateChanged(uint32_t flags, void *context)
 
 void NcpBase::UpdateChangedProps(void *context)
 {
-    NcpBase *obj = reinterpret_cast<NcpBase *>(context);
+    NcpBase *obj = static_cast<NcpBase *>(context);
     obj->UpdateChangedProps();
 }
 
@@ -1953,7 +1953,7 @@ ThreadError NcpBase::GetPropertyHandler_IPV6_ICMP_PING_OFFLOAD(uint8_t header, s
 
 ThreadError NcpBase::GetPropertyHandler_THREAD_RLOC16_DEBUG_PASSTHRU(uint8_t header, spinel_prop_key_t key)
 {
-    // Note reverse logic: passthru enabled = filter disabled 
+    // Note reverse logic: passthru enabled = filter disabled
     return SendPropertyUpdate(
                header,
                SPINEL_CMD_PROP_VALUE_IS,
@@ -3127,7 +3127,7 @@ ThreadError NcpBase::SetPropertyHandler_THREAD_RLOC16_DEBUG_PASSTHRU(uint8_t hea
 
     if (parsedLength > 0)
     {
-        // Note reverse logic: passthru enabled = filter disabled 
+        // Note reverse logic: passthru enabled = filter disabled
         otSetReceiveIp6DatagramFilterEnabled(!isEnabled);
 
         errorCode = HandleCommandPropertyGet(header, key);
