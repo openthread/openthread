@@ -366,6 +366,8 @@ ThreadError Netif::AddExternalUnicastAddress(const NetifUnicastAddress &aAddress
     mExtUnicastAddresses[index].mNext = mUnicastAddresses;
 
     mUnicastAddresses = &mExtUnicastAddresses[index];
+    
+    SetStateChangedFlags(OT_IP6_ADDRESS_ADDED);
 
 exit:
     return error;
@@ -403,6 +405,8 @@ ThreadError Netif::RemoveExternalUnicastAddress(const Address &aAddress)
     {
         mMaskExtUnicastAddresses &= ~(1 << aAddressIndexToRemove);
         mCountExtUnicastAddresses--;
+    
+        SetStateChangedFlags(OT_IP6_ADDRESS_REMOVED);
     }
     else
     {
