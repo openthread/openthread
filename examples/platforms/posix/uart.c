@@ -188,7 +188,7 @@ void posixUartUpdateFdSet(fd_set *aReadFdSet, fd_set *aWriteFdSet, int *aMaxFd)
 
 void posixUartProcess(void)
 {
-    const int flags = POLLRDNORM | POLLERR | POLLNVAL | POLLHUP;
+    const int flags = POLLIN | POLLRDNORM | POLLERR | POLLNVAL | POLLHUP;
     struct pollfd pollfd = { s_in_fd, flags, 0 };
     ssize_t rval;
 
