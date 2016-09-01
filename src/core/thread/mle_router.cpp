@@ -1273,6 +1273,7 @@ ThreadError MleRouter::HandleAdvertisement(const Message &aMessage, const Ip6::M
         {
             otLogDebgMle("trying to migrate\n");
             BecomeChild(kMleAttachBetterPartition);
+            mAdvertiseTimer.Stop();
         }
 
         ExitNow(error = kThreadError_Drop);
@@ -1600,6 +1601,7 @@ void MleRouter::HandleStateUpdateTimer(void)
         if (GetLeaderAge() >= mNetworkIdTimeout)
         {
             BecomeChild(kMleAttachSamePartition);
+            mAdvertiseTimer.Stop();
         }
 
         break;
