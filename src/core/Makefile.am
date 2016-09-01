@@ -101,6 +101,7 @@ noinst_HEADERS                      = \
     net/netif.hpp                     \
     net/socket.hpp                    \
     net/udp6.hpp                      \
+    net/tcp.hpp                       \
     thread/address_resolver.hpp       \
     thread/key_manager.hpp            \
     thread/link_quality.hpp           \

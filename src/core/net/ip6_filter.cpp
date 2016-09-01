@@ -37,6 +37,7 @@
 #include <net/ip6.hpp>
 #include <net/ip6_filter.hpp>
 #include <net/udp6.hpp>
+#include <net/tcp.hpp>
 #include <thread/mle.hpp>
 
 namespace Thread {
@@ -52,6 +53,7 @@ bool Filter::Accept(Message &aMessage) const
     bool rval = false;
     Header ip6;
     UdpHeader udp;
+    TcpHeader tcp;
     uint16_t dstport;
 
     // Allow all received IPv6 datagrams with link security enabled
@@ -66,17 +68,33 @@ bool Filter::Accept(Message &aMessage) const
     // Allow only link-local unicast or multicast
     VerifyOrExit(ip6.GetDestination().IsLinkLocal() || ip6.GetDestination().IsLinkLocalMulticast(), ;);
 
-    // Allow only UDP traffic
-    VerifyOrExit(ip6.GetNextHeader() == kProtoUdp, ;);
-
-    // Read UDP header
-    VerifyOrExit(sizeof(udp) == aMessage.Read(sizeof(ip6), sizeof(udp), &udp), ;);
-    dstport = udp.GetDestinationPort();
-
-    // Check for MLE traffic
-    if (dstport == Mle::kUdpPort)
+    switch (ip6.GetNextHeader())
     {
-        ExitNow(rval = true);
+    case kProtoUdp:
+        // Read the UDP header and get the dst port
+        VerifyOrExit(sizeof(udp) == aMessage.Read(sizeof(ip6), sizeof(udp), &udp), ;);
+
+        dstport = udp.GetDestinationPort();
+
+        // Allow MLE traffic
+        if (dstport == Mle::kUdpPort)
+        {
+            ExitNow(rval = true);
+        }
+
+        break;
+
+    case kProtoTcp:
+        // Read the TCP header and get the dst port
+        VerifyOrExit(sizeof(tcp) == aMessage.Read(sizeof(ip6), sizeof(tcp), &tcp), ;);
+
+        dstport = tcp.GetDestinationPort();
+
+        break;
+
+    default:
+        // Allow UDP or TCP traffic only
+        ExitNow();
     }
 
     // Check against allowed unsecure port list
