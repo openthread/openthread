@@ -117,13 +117,10 @@ class Cert_5_3_7_DuplicateAddress(unittest.TestCase):
         self.nodes[ED2].add_ipaddr('2001::1')
         time.sleep(3)
 
-
-        # Final ping doesn't need a response;
-        # used to trigger an ADDR_ERR.ntf
-        try:
-            self.nodes[ED3].ping('2001::1')
-        except pexpect.TIMEOUT:
-            pass
+        # Harness assumes nodes will autoconfigure addresses on all prefixes,
+        # but manually configuring for now until spinel-cli does this.
+        self.nodes[ED3].add_ipaddr('2001::1')
+        self.nodes[ED3].ping('2001::1')
 
 if __name__ == '__main__':
     unittest.main()

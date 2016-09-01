@@ -906,7 +906,13 @@ class SpinelPropertyHandler(SpinelCodec):
     def THREAD_NETWORK_DATA_VERSION(self, payload):  pass
     def THREAD_STABLE_NETWORK_DATA(self, payload):   pass
     def THREAD_STABLE_NETWORK_DATA_VERSION(self, payload): pass
-    def THREAD_ON_MESH_NETS(self, payload):          pass
+
+    def THREAD_ON_MESH_NETS(self, payload):
+        # TODO: automatically ipaddr add / remove addresses for each prefix.
+        # As done by cli.cpp Interpreter::HandleNetifStateChanged
+        # Needs to pass control to Cmd thread in order to run prop_set/get_value.
+        pass
+
     def THREAD_LOCAL_ROUTES(self, payload):          pass
     def THREAD_ASSISTING_PORTS(self, payload):       pass
     def THREAD_ALLOW_LOCAL_NET_DATA_CHANGE(self, payload): 
@@ -971,7 +977,9 @@ class SpinelCommandHandler(SpinelCodec):
                 if (prop_op == SPINEL_PROP_LAST_STATUS):
                     logger.debug(SPINEL_LAST_STATUS_MAP[prop_value])
 
-                elif (prop_op == SPINEL_PROP_STREAM_NET):
+                elif ((prop_op == SPINEL_PROP_STREAM_NET) or 
+                      (prop_op == SPINEL_PROP_STREAM_NET_INSECURE)):
+                    logger.debug("PROP_VALUE_"+name+": "+prop_name)
                     pkt = IPv6(prop_value[2:])
                     pkt.show()
 
@@ -1061,7 +1069,7 @@ SPINEL_PROP_DISPATCH = {
     SPINEL_PROP_THREAD_NETWORK_DATA_VERSION: wpanPropHandler.THREAD_NETWORK_DATA_VERSION,
     SPINEL_PROP_THREAD_STABLE_NETWORK_DATA: wpanPropHandler.THREAD_STABLE_NETWORK_DATA,
     SPINEL_PROP_THREAD_STABLE_NETWORK_DATA_VERSION:wpanPropHandler.THREAD_STABLE_NETWORK_DATA_VERSION,
-    SPINEL_PROP_THREAD_ON_MESH_NETS: wpanPropHandler.THREAD_STABLE_NETWORK_DATA,
+    SPINEL_PROP_THREAD_ON_MESH_NETS: wpanPropHandler.THREAD_ON_MESH_NETS,
     SPINEL_PROP_THREAD_LOCAL_ROUTES: wpanPropHandler.THREAD_LOCAL_ROUTES,
     SPINEL_PROP_THREAD_ASSISTING_PORTS: wpanPropHandler.THREAD_ASSISTING_PORTS,
     SPINEL_PROP_THREAD_ALLOW_LOCAL_NET_DATA_CHANGE: wpanPropHandler.THREAD_ALLOW_LOCAL_NET_DATA_CHANGE,
@@ -2015,7 +2023,7 @@ class WpanDiagsCmd(Cmd, SpinelCodec):
 
         if args[0] == "":
             v = self.prop_get_value(SPINEL_PROP_IPV6_ADDRESS_TABLE)
-            # TODO: parse the list of addresses and display.
+			# TODO: clean up table parsing to be less hard-coded magic.
             sz = 0x1B
             addrs = [v[i:i+sz] for i in xrange(0, len(v), sz)]
             for addr in addrs:
@@ -2282,7 +2290,6 @@ class WpanDiagsCmd(Cmd, SpinelCodec):
             result = self.wpanApi.queue_wait_for_prop(SPINEL_PROP_STREAM_NET,
                                                       TIMEOUT_PING)
             if result:
-                # TODO: parse result and confirm it is ICMPv6EchoResponse...
                 pkt = IPv6(result.value[2:])
                 print "%d bytes from %s: icmp_seq=%d hlim=%d time=%dms" % (
                     pkt.plen, pkt.src, pkt.seq, pkt.hlim, 80)
@@ -2352,10 +2359,13 @@ class WpanDiagsCmd(Cmd, SpinelCodec):
             arr += pack('B', prefix.network.prefixlen)
             arr += pack('B', stable)
             arr += pack('B', flags)
+
+            self.prop_set_value(SPINEL_PROP_THREAD_ALLOW_LOCAL_NET_DATA_CHANGE,1)
             value = self.prop_insert_value(SPINEL_PROP_THREAD_ON_MESH_NETS, 
                                            arr, str(len(arr))+'s')
 
         elif args[0] == "remove":
+            self.prop_set_value(SPINEL_PROP_THREAD_ALLOW_LOCAL_NET_DATA_CHANGE,1)
             value = self.prop_remove_value(SPINEL_PROP_THREAD_ON_MESH_NETS, 
                                            arr, str(len(arr))+'s')
 
@@ -2423,10 +2433,13 @@ class WpanDiagsCmd(Cmd, SpinelCodec):
             arr += pack('B', prefix.network.prefixlen)
             arr += pack('B', stable)
             arr += pack('B', prf)
+
+            self.prop_set_value(SPINEL_PROP_THREAD_ALLOW_LOCAL_NET_DATA_CHANGE,1)
             value = self.prop_insert_value(SPINEL_PROP_THREAD_LOCAL_ROUTES, 
                                            arr, str(len(arr))+'s')
 
         elif args[0] == "remove":
+            self.prop_set_value(SPINEL_PROP_THREAD_ALLOW_LOCAL_NET_DATA_CHANGE,1)
             value = self.prop_remove_value(SPINEL_PROP_THREAD_LOCAL_ROUTES, 
                                            arr, str(len(arr))+'s')
 
