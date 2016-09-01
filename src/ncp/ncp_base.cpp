@@ -1832,7 +1832,7 @@ ThreadError NcpBase::GetPropertyHandler_THREAD_CHILD_TABLE(uint8_t header, spine
             SuccessOrExit(
                 errorCode = OutboundFrameFeedPacked(
                     "T(ESSLLCCcbbbb)",
-                    childInfo.mExtAddress,
+                    childInfo.mExtAddress.m8,
                     childInfo.mChildId,
                     childInfo.mRloc16,
                     childInfo.mTimeout,
