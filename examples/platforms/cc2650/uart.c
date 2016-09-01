@@ -103,12 +103,12 @@ ThreadError otPlatUartDisable(void)
 
 ThreadError otPlatUartSend(const uint8_t *aBuf, uint16_t aBufLength)
 {
-    if(sendBuffer != NULL)
-    {
-        return kThreadError_Busy;
-    }
+    VerifyOrExit(sendBuffer == NULL, error = kThreadError_Busy);
+
     sendBuffer = aBuf;
     sendLen = aBufLength;
+
+exit:
     return kThreadError_None;
 }
 
@@ -134,9 +134,8 @@ void processReceive(void)
 
 void processTransmit(void)
 {
-    if(sendBuffer == NULL){
-        return;
-    }
+    VerifyOrExit(sTransmitBuffer != NULL, ;);
+
     for(; sendLen > 0; sendLen--)
     {
         UARTCharPut(UART0_BASE,*sendBuffer);
@@ -145,6 +144,9 @@ void processTransmit(void)
     sendBuffer = NULL;
     sendLen = 0;
     otPlatUartSendDone();
+
+exit:
+    return;
 }
 
 void cc2650UartProcess(void)
