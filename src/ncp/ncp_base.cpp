@@ -1815,6 +1815,7 @@ ThreadError NcpBase::GetPropertyHandler_THREAD_CHILD_TABLE(uint8_t header, spine
     ThreadError errorCode = kThreadError_None;
     otChildInfo childInfo;
     uint8_t index;
+    uint8_t modeFlags;
 
     SuccessOrExit(errorCode = OutboundFrameBegin());
     SuccessOrExit(errorCode = OutboundFrameFeedPacked("Cii", header, SPINEL_CMD_PROP_VALUE_IS, key));
@@ -1825,21 +1826,48 @@ ThreadError NcpBase::GetPropertyHandler_THREAD_CHILD_TABLE(uint8_t header, spine
     {
         if (childInfo.mTimeout > 0)
         {
+            modeFlags = 0;
+
+            if (childInfo.mRxOnWhenIdle)
+            {
+                modeFlags |= kThreadMode_RxOnWhenIdle;
+            }
+
+            if (childInfo.mSecureDataRequest)
+            {
+                modeFlags |= kThreadMode_SecureDataRequest;
+            }
+
+            if (childInfo.mFullFunction)
+            {
+                modeFlags |= kThreadMode_FullFunctionDevice;
+            }
+
+            if (childInfo.mFullNetworkData)
+            {
+                modeFlags |= kThreadMode_FullNetworkData;
+            }
+
             SuccessOrExit(
                 errorCode = OutboundFrameFeedPacked(
-                    "T(ESSLLCCcbbbb)",
+                    "T("
+                        SPINEL_DATATYPE_EUI64_S         // EUI64 Address
+                        SPINEL_DATATYPE_UINT16_S        // Rloc16
+                        SPINEL_DATATYPE_UINT32_S        // Timeout
+                        SPINEL_DATATYPE_UINT32_S        // Age
+                        SPINEL_DATATYPE_UINT8_S         // Network Data Version
+                        SPINEL_DATATYPE_UINT8_S         // Link Quality In
+                        SPINEL_DATATYPE_INT8_S          // Average RSS
+                        SPINEL_DATATYPE_UINT8_S         // Mode (flags)
+                    ")",
                     childInfo.mExtAddress.m8,
-                    childInfo.mChildId,
                     childInfo.mRloc16,
                     childInfo.mTimeout,
                     childInfo.mAge,
                     childInfo.mNetworkDataVersion,
                     childInfo.mLinkQualityIn,
                     childInfo.mAverageRssi,
-                    childInfo.mRxOnWhenIdle,
-                    childInfo.mSecureDataRequest,
-                    childInfo.mFullFunction,
-                    childInfo.mFullNetworkData
+                    modeFlags
             ));
         }
 
