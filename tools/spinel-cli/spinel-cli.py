@@ -2011,9 +2011,10 @@ class WpanDiagsCmd(Cmd, SpinelCodec):
             Done
         """
         args = line.split(" ")
-        valid = 0
-        preferred = 0
+        valid = 1
+        preferred = 1
         flags = 0
+        prefix_len = 64  # always use /64, as prefix.network.prefixlen returns /128.
 
         num = len(args)
         if (num > 1):
@@ -2023,7 +2024,7 @@ class WpanDiagsCmd(Cmd, SpinelCodec):
 
         if args[0] == "":
             v = self.prop_get_value(SPINEL_PROP_IPV6_ADDRESS_TABLE)
-			# TODO: clean up table parsing to be less hard-coded magic.
+            # TODO: clean up table parsing to be less hard-coded magic.
             sz = 0x1B
             addrs = [v[i:i+sz] for i in xrange(0, len(v), sz)]
             for addr in addrs:
@@ -2031,7 +2032,7 @@ class WpanDiagsCmd(Cmd, SpinelCodec):
                 print str(ipaddress.IPv6Address(addr))
 
         elif args[0] == "add":
-            arr += pack('B', prefix.network.prefixlen)
+            arr += pack('B', prefix_len) 
             arr += pack('<L', valid)
             arr += pack('<L', preferred)
             arr += pack('B', flags)
@@ -2981,9 +2982,6 @@ if __name__ == "__main__":
     signal.signal(signal.SIGABRT, goodbye)
     signal.signal(signal.SIGTERM, goodbye)
     signal.signal(signal.SIGPIPE, goodbye)
-
-    #print os.system('ps aux | grep ot-ncp')
-
 
     try:
         shell.cmdloop()

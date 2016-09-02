@@ -231,6 +231,8 @@ TESTS                                                              = \
     $(check_SCRIPTS)                                                 \
     $(NULL)
 
+XFAIL_TESTS = $(if $(filter $(NODE_TYPE),ncp-sim),thread-cert/Cert_5_3_07_DuplicateAddress.py)
+
 endif # OPENTHREAD_BUILD_TESTS
 
 include $(abs_top_nlbuild_autotools_dir)/automake/post.am

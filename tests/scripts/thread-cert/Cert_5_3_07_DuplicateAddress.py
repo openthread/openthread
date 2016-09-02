@@ -119,7 +119,7 @@ class Cert_5_3_7_DuplicateAddress(unittest.TestCase):
 
         # Harness assumes nodes will autoconfigure addresses on all prefixes,
         # but manually configuring for now until spinel-cli does this.
-        self.nodes[ED3].add_ipaddr('2001::1')
+        self.nodes[ED3].add_ipaddr('2001::3')
         self.nodes[ED3].ping('2001::1')
 
 if __name__ == '__main__':
