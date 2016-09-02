@@ -114,10 +114,6 @@ logging.getLogger("scapy.runtime").setLevel(logging.ERROR)
 from scapy.all import IPv6
 from scapy.all import ICMPv6EchoRequest
 
-try:
-    import readline
-except:
-    pass
 
 MASTER_PROMPT  = "spinel-cli"
 
@@ -1406,7 +1402,7 @@ class WpanApi(SpinelCodec):
 class WpanDiagsCmd(Cmd, SpinelCodec):
     
     def __init__(self, device, *a, **kw):
-        Cmd.__init__(self, a, kw)
+        Cmd.__init__(self)
         Cmd.identchars = string.ascii_letters + string.digits + '-'
 
         if (sys.stdin.isatty()):
@@ -1419,21 +1415,22 @@ class WpanDiagsCmd(Cmd, SpinelCodec):
             
         self.historyFileName = os.path.expanduser("~/.spinel-cli-history")
 
+
+
         try:
             import readline
-            #import rlcompleter
-            if 'libedit' in readline.__doc__:
-                readline.parse_and_bind("bind '\t' rl_complete")
-            else:
-                readline.parse_and_bind("\t: complete")
-            readline.set_completer_delims(' ')
-            #readline.set_completer(self.complete)
             try:
                 readline.read_history_file(self.historyFileName)
             except IOError:
                 pass
         except ImportError:
-            pass
+            print "Module readline unavailable"
+        else:
+            import rlcompleter
+            readline.parse_and_bind("tab: complete")
+            if sys.platform == 'darwin':
+                readline.parse_and_bind("bind ^I rl_complete")
+
 
         # === Initialize Shell with some important parameters ==
         self.wpanApi = WpanApi(device)
@@ -1531,17 +1528,6 @@ class WpanDiagsCmd(Cmd, SpinelCodec):
 
     def shortCommandName(self, cmd):
         return cmd.replace('-', '')
-
-    def precmd(self, line):
-        if (not self.use_rawinput and line != 'EOF' and line != ''):
-            #logger.info('>>> ' + line)
-            self.log('>>> ' + line)
-        return line
-        
-    def postcmd(self, stop, line):
-        if (not stop and self.use_rawinput):
-            self.prompt = MASTER_PROMPT+" > "
-        return stop
     
     def postloop(self):
         try:
@@ -1983,6 +1969,10 @@ class WpanDiagsCmd(Cmd, SpinelCodec):
 
         print("Done")
 
+    def complete_ipaddr(self, text, line, begidx, endidx):
+        _SUB_COMMANDS = ('add', 'del')
+        return [i for i in _SUB_COMMANDS if i.startswith(text)]
+
     def do_ipaddr(self, line): 
         """
         ipaddr
@@ -2303,6 +2293,10 @@ class WpanDiagsCmd(Cmd, SpinelCodec):
             print "Fail"
             print traceback.format_exc()
 
+    def complete_prefix(self, text, line, begidx, endidx):
+        _SUB_COMMANDS = ('add', 'remove')
+        return [i for i in _SUB_COMMANDS if i.startswith(text)]
+
     def do_prefix(self, line): 
         """
         prefix add <prefix> [pvdcsr] [prf]
@@ -2401,6 +2395,10 @@ class WpanDiagsCmd(Cmd, SpinelCodec):
             Done
         """
         self.handle_property(line, SPINEL_PROP_THREAD_RLOC16, 'H')
+
+    def complete_route(self, text, line, begidx, endidx):
+        _SUB_COMMANDS = ('add', 'remove')
+        return [i for i in _SUB_COMMANDS if i.startswith(text)]
 
     def do_route(self, line):
         """
@@ -2624,6 +2622,10 @@ class WpanDiagsCmd(Cmd, SpinelCodec):
         """
         self.handle_property(line, SPINEL_PROP_NCP_VERSION, 'U')
 
+    def complete_whitelist(self, text, line, begidx, endidx):
+        _SUB_COMMANDS = ('add', 'remove', 'clear', 'enable', 'disable')
+        return [i for i in _SUB_COMMANDS if i.startswith(text)]
+
     def do_whitelist(self, line):
         """
         whitelist
@@ -2721,6 +2723,10 @@ class WpanDiagsCmd(Cmd, SpinelCodec):
     def do_ncpml64(self, line):
         """ Display the mesh local IPv6 address. """
         self.handle_property(line, SPINEL_PROP_IPV6_ML_ADDR, '6')
+
+    def complete_ncptun(self, text, line, begidx, endidx):
+        _SUB_COMMANDS = ('up', 'down', 'add', 'del', 'ping')
+        return [i for i in _SUB_COMMANDS if i.startswith(text)]
 
     def do_ncptun(self, line):
         """

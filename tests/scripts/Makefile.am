@@ -242,9 +242,9 @@ XFAIL_NCP_TESTS                                                        = \
         thread-cert/Cert_5_6_07_NetworkDataRequestREED.py                \
         thread-cert/Cert_5_6_08_ContextManagement.py                     \
         thread-cert/Cert_6_3_02_NetworkDataUpdate.py                     \
-        thread-cert/Cert_7_1_01_BorderRouterAsRouter.py                  \
+        thread-cert/Cert_7_1_01_BorderRouterAsLeader.py                  \
         thread-cert/Cert_7_1_02_BorderRouterAsRouter.py                  \
-        thread-cert/Cert_7_1_03_BorderRouterAsRouter.py                  \
+        thread-cert/Cert_7_1_03_BorderRouterAsLeader.py                  \
         thread-cert/Cert_7_1_04_BorderRouterAsRouter.py                  \
         thread-cert/Cert_7_1_05_BorderRouterAsRouter.py                  \
         $(NULL)
