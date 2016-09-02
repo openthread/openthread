@@ -160,7 +160,8 @@ noinst_HEADERS                      = \
     $(NULL)
 
 if OPENTHREAD_BUILD_COVERAGE
-CLEANFILES                          = $(wildcard *.gcda *.gcno)
+Dash                                = -
+CLEANFILES                          = $(shell find $(top_builddir)/src/core $(Dash)name "*.gcda" $(Dash)o $(Dash)name "*.gcno")
 endif # OPENTHREAD_BUILD_COVERAGE
 
 include $(abs_top_nlbuild_autotools_dir)/automake/post.am
