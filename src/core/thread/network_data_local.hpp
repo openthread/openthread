@@ -135,7 +135,12 @@ private:
     ThreadError UpdateRloc(HasRouteTlv &aHasRoute);
     ThreadError UpdateRloc(BorderRouterTlv &aBorderRouter);
 
+    bool IsOnMeshPrefixConsistent(void);
+    bool IsExternalRouteConsistent(void);
+
     uint16_t mOldRloc;
+
+    Leader &mLeader;
 };
 
 }  // namespace NetworkData

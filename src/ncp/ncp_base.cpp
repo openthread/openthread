@@ -113,6 +113,8 @@ const NcpBase::GetPropertyHandlerEntry NcpBase::mGetPropertyHandlerTable[] =
     { SPINEL_PROP_NET_PARTITION_ID, &NcpBase::GetPropertyHandler_NET_PARTITION_ID },
 
     { SPINEL_PROP_THREAD_LEADER_ADDR, &NcpBase::GetPropertyHandler_THREAD_LEADER_ADDR },
+    { SPINEL_PROP_THREAD_PARENT, &NcpBase::GetPropertyHandler_THREAD_PARENT },
+    { SPINEL_PROP_THREAD_CHILD_TABLE, &NcpBase::GetPropertyHandler_THREAD_CHILD_TABLE },
     { SPINEL_PROP_THREAD_LEADER_RID, &NcpBase::GetPropertyHandler_THREAD_LEADER_RID },
     { SPINEL_PROP_THREAD_LEADER_WEIGHT, &NcpBase::GetPropertyHandler_THREAD_LEADER_WEIGHT },
     { SPINEL_PROP_THREAD_LOCAL_LEADER_WEIGHT, &NcpBase::GetPropertyHandler_THREAD_LOCAL_LEADER_WEIGHT },
@@ -133,6 +135,7 @@ const NcpBase::GetPropertyHandlerEntry NcpBase::mGetPropertyHandlerTable[] =
     { SPINEL_PROP_THREAD_CONTEXT_REUSE_DELAY, &NcpBase::GetPropertyHandler_THREAD_CONTEXT_REUSE_DELAY },
     { SPINEL_PROP_THREAD_NETWORK_ID_TIMEOUT, &NcpBase::GetPropertyHandler_THREAD_NETWORK_ID_TIMEOUT },
     { SPINEL_PROP_THREAD_ON_MESH_NETS, &NcpBase::NcpBase::GetPropertyHandler_THREAD_ON_MESH_NETS },
+    { SPINEL_PROP_NET_REQUIRE_JOIN_EXISTING, &NcpBase::GetPropertyHandler_NET_REQUIRE_JOIN_EXISTING },
 
     { SPINEL_PROP_IPV6_ML_PREFIX, &NcpBase::GetPropertyHandler_IPV6_ML_PREFIX },
     { SPINEL_PROP_IPV6_ML_ADDR, &NcpBase::GetPropertyHandler_IPV6_ML_ADDR },
@@ -221,6 +224,7 @@ const NcpBase::SetPropertyHandlerEntry NcpBase::mSetPropertyHandlerTable[] =
     { SPINEL_PROP_THREAD_CHILD_TIMEOUT, &NcpBase::SetPropertyHandler_THREAD_CHILD_TIMEOUT },
     { SPINEL_PROP_THREAD_ROUTER_UPGRADE_THRESHOLD, &NcpBase::SetPropertyHandler_THREAD_ROUTER_UPGRADE_THRESHOLD },
     { SPINEL_PROP_THREAD_CONTEXT_REUSE_DELAY, &NcpBase::SetPropertyHandler_THREAD_CONTEXT_REUSE_DELAY },
+    { SPINEL_PROP_NET_REQUIRE_JOIN_EXISTING, &NcpBase::SetPropertyHandler_NET_REQUIRE_JOIN_EXISTING },
 
 #if OPENTHREAD_ENABLE_DIAG
     { SPINEL_PROP_NEST_STREAM_MFG, &NcpBase::SetPropertyHandler_NEST_STREAM_MFG },
@@ -410,6 +414,7 @@ NcpBase::NcpBase():
     sNcpContext = this;
     mChangedFlags = NCP_PLAT_RESET_REASON;
     mAllowLocalNetworkDataChange = false;
+    mRequireJoinExistingNetwork = false;
 
     mFramingErrorCounter = 0;
     mRxSpinelFrameCounter = 0;
@@ -435,7 +440,7 @@ NcpBase::NcpBase():
 
 void NcpBase::HandleDatagramFromStack(otMessage aMessage, void *aContext)
 {
-    reinterpret_cast<NcpBase*>(aContext)->HandleDatagramFromStack(*static_cast<Message *>(aMessage));
+    static_cast<NcpBase *>(aContext)->HandleDatagramFromStack(*static_cast<Message *>(aMessage));
 }
 
 void NcpBase::HandleDatagramFromStack(Message &aMessage)
@@ -497,9 +502,9 @@ exit:
 // MARK: Scan Results Glue
 // ----------------------------------------------------------------------------
 
-void NcpBase::HandleActiveScanResult_Jump(otActiveScanResult *result, void *aContext)
+void NcpBase::HandleActiveScanResult_Jump(otActiveScanResult *aResult, void *aContext)
 {
-    reinterpret_cast<NcpBase*>(aContext)->HandleActiveScanResult(result);
+    static_cast<NcpBase *>(aContext)->HandleActiveScanResult(aResult);
 }
 
 void NcpBase::HandleActiveScanResult(otActiveScanResult *result)
@@ -560,13 +565,55 @@ void NcpBase::HandleActiveScanResult(otActiveScanResult *result)
     }
 }
 
+void NcpBase::HandleEnergyScanResult_Jump(otEnergyScanResult *aResult, void *aContext)
+{
+    static_cast<NcpBase *>(aContext)->HandleEnergyScanResult(aResult);
+}
+
+void NcpBase::HandleEnergyScanResult(otEnergyScanResult *aResult)
+{
+    ThreadError errorCode;
+
+    if (aResult)
+    {
+        NcpBase::SendPropertyUpdate(
+            SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0,
+            SPINEL_CMD_PROP_VALUE_INSERTED,
+            SPINEL_PROP_MAC_ENERGY_SCAN_RESULT,
+            "Cc",
+            aResult->mChannel,
+            aResult->mMaxRssi
+        );
+    }
+    else
+    {
+        // We are finished with the scan, so send out
+        // a property update indicating such.
+        errorCode = SendPropertyUpdate(
+            SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0,
+            SPINEL_CMD_PROP_VALUE_IS,
+            SPINEL_PROP_MAC_SCAN_STATE,
+            SPINEL_DATATYPE_UINT8_S,
+            SPINEL_SCAN_STATE_IDLE
+        );
+
+        // If we could not send the end of scan inidciator message now (no
+        // buffer space), we set `mShouldSignalEndOfScan` to true to send
+        // it out when buffer space becomes available.
+        if (errorCode != kThreadError_None)
+        {
+            mShouldSignalEndOfScan = true;
+        }
+    }
+}
+
 // ----------------------------------------------------------------------------
 // MARK: Address Table Changed Glue
 // ----------------------------------------------------------------------------
 
 void NcpBase::HandleNetifStateChanged(uint32_t flags, void *context)
 {
-    NcpBase *obj = reinterpret_cast<NcpBase *>(context);
+    NcpBase *obj = static_cast<NcpBase *>(context);
 
     obj->mChangedFlags |= flags;
 
@@ -575,7 +622,7 @@ void NcpBase::HandleNetifStateChanged(uint32_t flags, void *context)
 
 void NcpBase::UpdateChangedProps(void *context)
 {
-    NcpBase *obj = reinterpret_cast<NcpBase *>(context);
+    NcpBase *obj = static_cast<NcpBase *>(context);
     obj->UpdateChangedProps();
 }
 
@@ -609,12 +656,43 @@ void NcpBase::UpdateChangedProps(void)
         }
         else if ((mChangedFlags & OT_NET_ROLE) != 0)
         {
+            if (mRequireJoinExistingNetwork)
+            {
+                mRequireJoinExistingNetwork = false;
+
+                if ( (otGetDeviceRole() == kDeviceRoleLeader)
+                  && otIsSingleton()
+                ) {
+                    mChangedFlags &= ~static_cast<uint32_t>(OT_NET_PARTITION_ID);
+                    otThreadStop();
+
+                    // TODO: It would be nice to be able to indicate
+                    //   something more specific than SPINEL_STATUS_JOIN_FAILURE
+                    //   here, but it isn't clear how that would work
+                    //   with the current OpenThread API.
+
+                    SuccessOrExit(SendLastStatus(
+                                      SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0,
+                                      SPINEL_STATUS_JOIN_FAILURE
+                                  ));
+
+                    SuccessOrExit(HandleCommandPropertyGet(
+                                      SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0,
+                                      SPINEL_PROP_NET_STACK_UP
+                                  ));
+                }
+
+                SuccessOrExit(HandleCommandPropertyGet(
+                                  SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0,
+                                  SPINEL_PROP_NET_REQUIRE_JOIN_EXISTING
+                              ));
+            }
+
             SuccessOrExit(HandleCommandPropertyGet(
                               SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0,
                               SPINEL_PROP_NET_ROLE
                           ));
             mChangedFlags &= ~static_cast<uint32_t>(OT_NET_ROLE);
-
         }
         else if ((mChangedFlags & OT_NET_PARTITION_ID) != 0)
         {
@@ -642,11 +720,10 @@ void NcpBase::UpdateChangedProps(void)
         }
         else if ((mChangedFlags & (OT_THREAD_CHILD_ADDED | OT_THREAD_CHILD_REMOVED)) != 0)
         {
-            // TODO: Uncomment this once we add support for this property.
-            //SuccessOrExit(HandleCommandPropertyGet(
-            //    SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0,
-            //    SPINEL_PROP_THREAD_CHILD_TABLE
-            //));
+            SuccessOrExit(HandleCommandPropertyGet(
+                SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0,
+                SPINEL_PROP_THREAD_CHILD_TABLE
+            ));
             mChangedFlags &= ~static_cast<uint32_t>(OT_THREAD_CHILD_ADDED | OT_THREAD_CHILD_REMOVED);
         }
         else if ((mChangedFlags & OT_THREAD_NETDATA_UPDATED) != 0)
@@ -1722,6 +1799,58 @@ ThreadError NcpBase::GetPropertyHandler_THREAD_LEADER_ADDR(uint8_t header, spine
     return errorCode;
 }
 
+ThreadError NcpBase::GetPropertyHandler_THREAD_PARENT(uint8_t header, spinel_prop_key_t key)
+{
+    ThreadError errorCode = kThreadError_None;
+    (void)key;
+
+    errorCode = SendLastStatus(header, SPINEL_STATUS_UNIMPLEMENTED);
+
+    return errorCode;
+}
+
+ThreadError NcpBase::GetPropertyHandler_THREAD_CHILD_TABLE(uint8_t header, spinel_prop_key_t key)
+{
+    ThreadError errorCode = kThreadError_None;
+    otChildInfo childInfo;
+    uint8_t index;
+
+    SuccessOrExit(errorCode = OutboundFrameBegin());
+    SuccessOrExit(errorCode = OutboundFrameFeedPacked("Cii", header, SPINEL_CMD_PROP_VALUE_IS, key));
+
+    index = 0;
+
+    while (otGetChildInfoByIndex(index, &childInfo) == kThreadError_None)
+    {
+        if (childInfo.mTimeout > 0)
+        {
+            SuccessOrExit(
+                errorCode = OutboundFrameFeedPacked(
+                    "T(ESSLLCCcbbbb)",
+                    childInfo.mExtAddress.m8,
+                    childInfo.mChildId,
+                    childInfo.mRloc16,
+                    childInfo.mTimeout,
+                    childInfo.mAge,
+                    childInfo.mNetworkDataVersion,
+                    childInfo.mLinkQualityIn,
+                    childInfo.mAverageRssi,
+                    childInfo.mRxOnWhenIdle,
+                    childInfo.mSecureDataRequest,
+                    childInfo.mFullFunction,
+                    childInfo.mFullNetworkData
+            ));
+        }
+
+        index++;
+    }
+
+    SuccessOrExit(errorCode = OutboundFrameSend());
+
+exit:
+    return errorCode;
+}
+
 ThreadError NcpBase::GetPropertyHandler_THREAD_ASSISTING_PORTS(uint8_t header, spinel_prop_key_t key)
 {
     ThreadError errorCode = kThreadError_None;
@@ -1948,7 +2077,7 @@ ThreadError NcpBase::GetPropertyHandler_IPV6_ICMP_PING_OFFLOAD(uint8_t header, s
 
 ThreadError NcpBase::GetPropertyHandler_THREAD_RLOC16_DEBUG_PASSTHRU(uint8_t header, spinel_prop_key_t key)
 {
-    // Note reverse logic: passthru enabled = filter disabled 
+    // Note reverse logic: passthru enabled = filter disabled
     return SendPropertyUpdate(
                header,
                SPINEL_CMD_PROP_VALUE_IS,
@@ -2300,6 +2429,17 @@ ThreadError NcpBase::GetPropertyHandler_THREAD_NETWORK_ID_TIMEOUT(uint8_t header
            );
 }
 
+ThreadError NcpBase::GetPropertyHandler_NET_REQUIRE_JOIN_EXISTING(uint8_t header, spinel_prop_key_t key)
+{
+    return SendPropertyUpdate(
+               header,
+               SPINEL_CMD_PROP_VALUE_IS,
+               key,
+               SPINEL_DATATYPE_BOOL_S,
+               mRequireJoinExistingNetwork
+           );
+}
+
 
 // ----------------------------------------------------------------------------
 // MARK: Individual Property Setters
@@ -2510,6 +2650,33 @@ ThreadError NcpBase::SetPropertyHandler_MAC_SCAN_PERIOD(uint8_t header, spinel_p
     return errorCode;
 }
 
+ThreadError NcpBase::SetPropertyHandler_NET_REQUIRE_JOIN_EXISTING(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr,
+                                                        uint16_t value_len)
+{
+    bool tmp(mRequireJoinExistingNetwork);
+    spinel_ssize_t parsedLength;
+    ThreadError errorCode = kThreadError_None;
+
+    parsedLength = spinel_datatype_unpack(
+                       value_ptr,
+                       value_len,
+                       SPINEL_DATATYPE_BOOL_S,
+                       &tmp
+                   );
+
+    if (parsedLength > 0)
+    {
+        mRequireJoinExistingNetwork = tmp;
+        errorCode = HandleCommandPropertyGet(header, key);
+    }
+    else
+    {
+        errorCode = SendLastStatus(header, SPINEL_STATUS_PARSE_ERROR);
+    }
+
+    return errorCode;
+}
+
 ThreadError NcpBase::SetPropertyHandler_MAC_SCAN_STATE(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr,
                                                        uint16_t value_len)
 {
@@ -2533,17 +2700,33 @@ ThreadError NcpBase::SetPropertyHandler_MAC_SCAN_STATE(uint8_t header, spinel_pr
             break;
 
         case SPINEL_SCAN_STATE_BEACON:
-            mShouldSignalEndOfScan = false;
             errorCode = otActiveScan(
                             mChannelMask,
                             mScanPeriod,
                             &HandleActiveScanResult_Jump,
                             this
                         );
+
+            if (errorCode == kThreadError_None)
+            {
+                mShouldSignalEndOfScan = false;
+            }
+
             break;
 
         case SPINEL_SCAN_STATE_ENERGY:
-            errorCode = kThreadError_NotImplemented;
+            errorCode = otEnergyScan(
+                mChannelMask,
+                mScanPeriod,
+                &HandleEnergyScanResult_Jump,
+                this
+            );
+
+            if (errorCode == kThreadError_None)
+            {
+                mShouldSignalEndOfScan = false;
+            }
+
             break;
 
         default:
@@ -3122,7 +3305,7 @@ ThreadError NcpBase::SetPropertyHandler_THREAD_RLOC16_DEBUG_PASSTHRU(uint8_t hea
 
     if (parsedLength > 0)
     {
-        // Note reverse logic: passthru enabled = filter disabled 
+        // Note reverse logic: passthru enabled = filter disabled
         otSetReceiveIp6DatagramFilterEnabled(!isEnabled);
 
         errorCode = HandleCommandPropertyGet(header, key);

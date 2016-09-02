@@ -738,7 +738,13 @@ of the metadata is defined by the associated network protocol.
     buffer.
  *  17: `STATUS_NO_ACK`: The packet was not acknowledged.
  *  18: `STATUS_CCA_FAILURE`: The packet was not sent due to a CCA failure.
- *  19-111: *RESERVED*
+ *  19-103: *RESERVED*
+ *  104-111: Join Failure Causes (See `PROP_NET_REQUIRE_JOIN_EXISTING`)
+     *  104: `SPINEL_STATUS_JOIN_FAILURE`
+     *  105: `SPINEL_STATUS_JOIN_SECURITY`
+     *  106: `SPINEL_STATUS_JOIN_NO_PEERS`
+     *  107: `SPINEL_STATUS_JOIN_INCOMPATIBLE`
+     *  108-111: *RESERVED-JOIN-FAILURE-CODES*
  *  112-127: Reset Causes
      *  112: `STATUS_RESET_POWER_ON`
      *  113: `STATUS_RESET_EXTERNAL`
@@ -1491,6 +1497,24 @@ Values:
 
 The partition ID of the partition that this node is a member of.
 
+#### D.4.23. PROP 73: `PROP_NET_REQUIRE_JOIN_EXISTING`
+* Type: Read-Write
+* Format: `b`
+* Default Value: `false`
+
+This flag is typically used for nodes that are associating with an
+existing network for the first time. If this is set to `true` before
+`PROP_NET_STACK_UP` is set to `true`, the creation of a new partition
+at association is prevented. If the node cannot associate with an
+existing partition, `PROP_LAST_STATUS` will emit a status that
+indicates why the association failed and `PROP_NET_STACK_UP` will
+automatically revert to `false`.
+
+Once associated with an existing partition, this flag automatically
+reverts to `false`.
+
+The behavior of this property being set to `true` when
+`PROP_NET_STACK_UP` is already set to `true` is undefined.
 
 
 ### D.4. THREAD Properties
@@ -1632,6 +1656,7 @@ Allow the HOST to directly observe all IPv6 packets received by the NCP,
 including ones sent to the RLOC16 address.
 
 Default value is `false`.
+
 
 ### D.5. IPv6 Properties
 

@@ -531,7 +531,7 @@ void posixRadioUpdateFdSet(fd_set *aReadFdSet, fd_set *aWriteFdSet, int *aMaxFd)
 
 void posixRadioProcess(void)
 {
-    const int flags = POLLRDNORM | POLLERR | POLLNVAL | POLLHUP;
+    const int flags = POLLIN | POLLRDNORM | POLLERR | POLLNVAL | POLLHUP;
     struct pollfd pollfd = { sSockFd, flags, 0 };
 
     if (poll(&pollfd, 1, 0) > 0 && (pollfd.revents & flags) != 0)

@@ -961,6 +961,8 @@ void Mle::HandleNetifStateChanged(uint32_t aFlags)
         {
             mSendChildUpdateRequest.Post();
         }
+
+        mNetif.GetNetworkDataLocal().SendServerDataNotification();
     }
 }
 

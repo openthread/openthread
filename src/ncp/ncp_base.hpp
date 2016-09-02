@@ -140,6 +140,13 @@ private:
     void HandleActiveScanResult(otActiveScanResult *result);
 
     /**
+     * Trampoline for HandleEnergyScanResult().
+     */
+    static void HandleEnergyScanResult_Jump(otEnergyScanResult *aResult, void *aContext);
+
+    void HandleEnergyScanResult(otEnergyScanResult *result);
+
+    /**
      * Trampoline for UpdateChangedProps().
      */
     static void UpdateChangedProps(void *context);
@@ -286,6 +293,8 @@ private:
     ThreadError GetPropertyHandler_MAC_SCAN_MASK(uint8_t header, spinel_prop_key_t key);
     ThreadError GetPropertyHandler_MAC_SCAN_PERIOD(uint8_t header, spinel_prop_key_t key);
     ThreadError GetPropertyHandler_THREAD_LEADER_ADDR(uint8_t header, spinel_prop_key_t key);
+    ThreadError GetPropertyHandler_THREAD_PARENT(uint8_t header, spinel_prop_key_t key);
+    ThreadError GetPropertyHandler_THREAD_CHILD_TABLE(uint8_t header, spinel_prop_key_t key);
     ThreadError GetPropertyHandler_THREAD_LEADER_RID(uint8_t header, spinel_prop_key_t key);
     ThreadError GetPropertyHandler_THREAD_LEADER_WEIGHT(uint8_t header, spinel_prop_key_t key);
     ThreadError GetPropertyHandler_THREAD_LOCAL_LEADER_WEIGHT(uint8_t header, spinel_prop_key_t key);
@@ -307,7 +316,7 @@ private:
     ThreadError GetPropertyHandler_THREAD_CONTEXT_REUSE_DELAY(uint8_t header, spinel_prop_key_t key);
     ThreadError GetPropertyHandler_THREAD_NETWORK_ID_TIMEOUT(uint8_t header, spinel_prop_key_t key);
     ThreadError GetPropertyHandler_THREAD_ON_MESH_NETS(uint8_t header, spinel_prop_key_t key);
-
+    ThreadError GetPropertyHandler_NET_REQUIRE_JOIN_EXISTING(uint8_t header, spinel_prop_key_t key);
 
     ThreadError SetPropertyHandler_POWER_STATE(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr,
                                                uint16_t value_len);
@@ -367,6 +376,8 @@ private:
                                                     const uint8_t *value_ptr, uint16_t value_len);
     ThreadError SetPropertyHandler_THREAD_ALLOW_LOCAL_NET_DATA_CHANGE(uint8_t header, spinel_prop_key_t key,
                                                    const uint8_t *value_ptr, uint16_t value_len);
+    ThreadError SetPropertyHandler_NET_REQUIRE_JOIN_EXISTING(uint8_t header, spinel_prop_key_t key,
+                                                   const uint8_t *value_ptr, uint16_t value_len);
     ThreadError SetPropertyHandler_CNTR_RESET(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr,
                                               uint16_t value_len);
 
@@ -420,6 +431,7 @@ private:
     uint16_t mDroppedReplyTidBitSet;
 
     bool mAllowLocalNetworkDataChange;
+    bool mRequireJoinExistingNetwork;
 
     uint32_t mFramingErrorCounter;             // Number of inproperly formed received spinel frames.
     uint32_t mRxSpinelFrameCounter;            // Number of received (inbound) spinel frames.

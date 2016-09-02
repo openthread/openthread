@@ -95,11 +95,15 @@ class Cert_7_1_4_BorderRouterAsRouter(unittest.TestCase):
         time.sleep(3)
 
         addrs = self.nodes[ED2].get_addrs()
+        self.assertTrue(any('2001' in word for word in addrs))
+        self.assertTrue(any('2002' in word for word in addrs))
         for addr in addrs:
             if addr[0:4] == '2001' or addr[0:4] == '2002':
                 self.nodes[LEADER].ping(addr)
 
         addrs = self.nodes[SED2].get_addrs()
+        self.assertTrue(any('2001' in word for word in addrs))
+        self.assertFalse(any('2002' in word for word in addrs))
         for addr in addrs:
             if addr[0:4] == '2001' or addr[0:4] == '2002':
                 self.nodes[LEADER].ping(addr)
