@@ -68,7 +68,7 @@ class Cert_7_1_2_BorderRouterAsRouter(unittest.TestCase):
         self.nodes[SED2].set_timeout(3)
 
     def tearDown(self):
-        for node in self.nodes.itervalues():
+        for node in list(self.nodes.values()):
             node.stop()
         del self.nodes
 
@@ -81,8 +81,8 @@ class Cert_7_1_2_BorderRouterAsRouter(unittest.TestCase):
         time.sleep(3)
         self.assertEqual(self.nodes[ROUTER].get_state(), 'router')
 
-        self.nodes[ROUTER].add_prefix('2001::/64', 'pvcrs')
-        self.nodes[ROUTER].add_prefix('2002::/64', 'pvcr')
+        self.nodes[ROUTER].add_prefix('2001::/64', 'paros')
+        self.nodes[ROUTER].add_prefix('2002::/64', 'paro')
         self.nodes[ROUTER].register_netdata()
 
         self.nodes[ED2].start()

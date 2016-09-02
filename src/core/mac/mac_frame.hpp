@@ -82,12 +82,67 @@ class ExtAddress: public otExtAddress
 {
 public:
     /**
+     * This method indicates whether or not the Group bit is set.
+     *
+     * @retval TRUE   If the group bit is set.
+     * @retval FALSE  If the group bit is not set.
+     *
+     */
+    bool IsGroup(void) const { return (m8[0] & kGroupFlag) != 0; }
+
+    /**
+     * This method sets the Group bit.
+     *
+     * @param[in]  aLocal  TRUE if group address, FALSE otherwise.
+     *
+     */
+    void SetGroup(bool aGroup) {
+        if (aGroup) {
+            m8[0] |= kGroupFlag;
+        }
+        else {
+            m8[0] &= ~kGroupFlag;
+        }
+    }
+
+    /**
+     * This method indicates whether or not the Local bit is set.
+     *
+     * @retval TRUE   If the local bit is set.
+     * @retval FALSE  If the local bit is not set.
+     *
+     */
+    bool IsLocal(void) const { return (m8[0] & kLocalFlag) != 0; }
+
+    /**
+     * This method sets the Local bit.
+     *
+     * @param[in]  aLocal  TRUE if locally administered, FALSE otherwise.
+     *
+     */
+    void SetLocal(bool aLocal) {
+        if (aLocal) {
+            m8[0] |= kLocalFlag;
+        }
+        else {
+            m8[0] &= ~kLocalFlag;
+        }
+    }
+
+    /**
      * This method converts an IPv6 Interface Identifier to an IEEE 802.15.4 Extended Address.
      *
      * @param[in]  aIpAddress  A reference to the IPv6 address.
      *
      */
     void Set(const Ip6::Address &aIpAddress);
+
+private:
+    enum
+    {
+        kGroupFlag = 1 << 0,
+        kLocalFlag = 1 << 1,
+    };
 };
 
 /**
@@ -522,7 +577,7 @@ public:
      * @returns The receive Link Quality Indicator.
      *
      */
-    int8_t GetLqi(void) const { return mLqi; }
+    uint8_t GetLqi(void) const { return mLqi; }
 
     /**
      * This method sets the receive Link Quality Indicator.
@@ -530,7 +585,7 @@ public:
      * @param[in]  aLqi  The receive Link Quality Indicator.
      *
      */
-    void SetLqi(int8_t aLqi) { mLqi = aLqi; }
+    void SetLqi(uint8_t aLqi) { mLqi = aLqi; }
 
     /**
      * This method indicates whether or not frame security was enabled and passed security validation.
@@ -631,7 +686,7 @@ public:
 
     enum
     {
-        kProtocolVersion  = 1,                      ///< Thread Protocol version.
+        kProtocolVersion  = 2,                      ///< Thread Protocol version.
         kVersionOffset    = 4,                      ///< Version field bit offset.
         kVersionMask      = 0xf << kVersionOffset,  ///< Version field mask.
         kNativeFlag       = 1 << 3,                 ///< Native Commissioner flag.
@@ -735,8 +790,9 @@ public:
      *
      */
     void SetNetworkName(const char *aNetworkName) {
+        size_t length = strnlen(aNetworkName, sizeof(mNetworkName));
         memset(mNetworkName, 0, sizeof(mNetworkName));
-        strncpy(mNetworkName, aNetworkName, sizeof(mNetworkName));
+        memcpy(mNetworkName, aNetworkName, length);
     }
 
     /**

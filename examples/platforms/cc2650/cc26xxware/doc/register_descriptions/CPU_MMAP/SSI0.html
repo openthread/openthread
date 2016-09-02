@@ -1,0 +1,1111 @@
+<HTML>
+<HEAD><META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=UTF-8">
+<link href="..//elements/mmap.css" rel="stylesheet" type="text/css">
+<TITLE>SSI0</TITLE>
+</HEAD>
+<BODY class=mmapBody>
+<h2 class="mmapCellTitle">
+  <a name="Top_Tag">SSI0</a>
+</h2>
+<P>Instance: SSI0<BR>
+Component: SSI<BR>
+Base address: 0x40000000</P>
+<BR>
+<P>Synchronous Serial Interface with master and slave capabilities</P>
+ <H3 class="mmapRegisterSummaryTitle"><A name="SSI0"></A><A href="CPU_MMAP.html"> TOP</A>:<B>SSI0</B> Register Summary</H3>
+<TABLE cellspacing="0" class="mmapRegisterSummaryTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">
+  <P>Register Name</P>
+</TD>
+<TD class="cellTopCol2">
+  <P>Type</P>
+</TD>
+<TD class="cellTopCol3">
+  <P>Register Width (Bits)</P>
+</TD>
+<TD class="cellTopCol4">
+  <P>Register Reset</P>
+</TD>
+<TD class="cellTopCol5">
+  <P>Address Offset</P>
+</TD>
+<TD class="cellTopCol5">
+  <P>Physical Address</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#CR0">CR0</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>RW</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x0000 0000</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 0000</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x4000 0000</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#CR1">CR1</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>RW</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x0000 0000</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 0004</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x4000 0004</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#DR">DR</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>RW</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x0000 XXXX</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 0008</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x4000 0008</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#SR">SR</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>RO</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x0000 0003</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 000C</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x4000 000C</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#CPSR">CPSR</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>RW</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x0000 0000</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 0010</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x4000 0010</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#IMSC">IMSC</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>RW</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x0000 0000</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 0014</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x4000 0014</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#RIS">RIS</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>RO</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x0000 0008</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 0018</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x4000 0018</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#MIS">MIS</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>RO</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x0000 0000</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 001C</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x4000 001C</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#ICR">ICR</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>WO</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x0000 0000</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 0020</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x4000 0020</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#DMACR">DMACR</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>RW</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x0000 0000</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 0024</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x4000 0024</P>
+</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterSummaryTitle"><A href="CPU_MMAP.html"> TOP</A>:SSI0 Register Descriptions</H3>
+<H3 class="mmapRegisterTitle"><A name="CR0"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">SSI0</A>:CR0</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 0000</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0x4000 0000</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0x4000 0000</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">Control 0</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">RW</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="CR0_RESERVED">31:16</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0x0000</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="CR0_SCR">15:8</a>
+</TD>
+<TD class="cellBitfieldCol2">SCR</TD>
+<TD class="cellBitfieldCol3" colspan="3">Serial clock rate:<BR>
+This is used to generate the transmit and receive bit rate of the <A class="mmap_legend_link" href="../legend.html#SSI">SSI</A>. The bit rate is <BR>
+(<A class="mmap_legend_link" href="../legend.html#SSI">SSI</A>&#39;s clock frequency)/((<A class="xref" href="#CR0_SCR">SCR</A>+1)*<A class="xref" href="#CPSR_CPSDVSR">CPSR.CPSDVSR</A>).<BR>
+<A class="xref" href="#CR0_SCR">SCR</A> is a value from 0-255.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0x00</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="CR0_SPH">7</a>
+</TD>
+<TD class="cellBitfieldCol2">SPH</TD>
+<TD class="cellBitfieldCol3" colspan="3"><A class="mmap_legend_link" href="../legend.html#CLKOUT">CLKOUT</A> phase (Motorola <A class="mmap_legend_link" href="../legend.html#SPI">SPI</A> frame format only)<BR>
+This bit selects the clock edge that captures data and enables it to change state. It<BR>
+has the most impact on the first bit transmitted by either permitting or not permitting a clock transition before the first data capture edge.<TABLE cellspacing="0" class="LprfEnum">
+<TR class="rowEnumHead">
+<TD class="cellEnumTableHeadCol1">Value</TD>
+<TD class="cellEnumTableHeadCol2">ENUM Name</TD>
+<TD class="cellEnumTableHeadCol3">Description</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x0</TD>
+<TD class="cellEnumTableCol2">1ST_CLK_EDGE</TD>
+<TD class="cellEnumTableCol3">Data is captured on the first clock edge transition.</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x1</TD>
+<TD class="cellEnumTableCol2">2ND_CLK_EDGE</TD>
+<TD class="cellEnumTableCol3">Data is captured on the second clock edge transition.</TD>
+</TR>
+</TABLE>
+</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="CR0_SPO">6</a>
+</TD>
+<TD class="cellBitfieldCol2">SPO</TD>
+<TD class="cellBitfieldCol3" colspan="3"><A class="mmap_legend_link" href="../legend.html#CLKOUT">CLKOUT</A> polarity (Motorola <A class="mmap_legend_link" href="../legend.html#SPI">SPI</A> frame format only)<TABLE cellspacing="0" class="LprfEnum">
+<TR class="rowEnumHead">
+<TD class="cellEnumTableHeadCol1">Value</TD>
+<TD class="cellEnumTableHeadCol2">ENUM Name</TD>
+<TD class="cellEnumTableHeadCol3">Description</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x0</TD>
+<TD class="cellEnumTableCol2">LOW</TD>
+<TD class="cellEnumTableCol3"><A class="mmap_legend_link" href="../legend.html#SSI">SSI</A> produces a steady state LOW value on the<BR>
+<A class="mmap_legend_link" href="../legend.html#CLKOUT">CLKOUT</A> pin when data is not being transferred.</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x1</TD>
+<TD class="cellEnumTableCol2">HIGH</TD>
+<TD class="cellEnumTableCol3"><A class="mmap_legend_link" href="../legend.html#SSI">SSI</A> produces a steady state HIGH value on the <A class="mmap_legend_link" href="../legend.html#CLKOUT">CLKOUT</A> pin when data is not being transferred.</TD>
+</TR>
+</TABLE>
+</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="CR0_FRF">5:4</a>
+</TD>
+<TD class="cellBitfieldCol2">FRF</TD>
+<TD class="cellBitfieldCol3" colspan="3">Frame format. <BR>
+The supported frame formats are Motorola <A class="mmap_legend_link" href="../legend.html#SPI">SPI</A>, <A class="mmap_legend_link" href="../legend.html#TI">TI</A> synchronous serial and National Microwire. <BR>
+Value 0&#39;b11 is reserved and shall not be used.<TABLE cellspacing="0" class="LprfEnum">
+<TR class="rowEnumHead">
+<TD class="cellEnumTableHeadCol1">Value</TD>
+<TD class="cellEnumTableHeadCol2">ENUM Name</TD>
+<TD class="cellEnumTableHeadCol3">Description</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x0</TD>
+<TD class="cellEnumTableCol2">MOTOROLA_SPI</TD>
+<TD class="cellEnumTableCol3">Motorola <A class="mmap_legend_link" href="../legend.html#SPI">SPI</A> frame format</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x1</TD>
+<TD class="cellEnumTableCol2">TI_SYNC_SERIAL</TD>
+<TD class="cellEnumTableCol3"><A class="mmap_legend_link" href="../legend.html#TI">TI</A> synchronous serial frame format</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x2</TD>
+<TD class="cellEnumTableCol2">NATIONAL_MICROWIRE</TD>
+<TD class="cellEnumTableCol3">National Microwire frame format</TD>
+</TR>
+</TABLE>
+</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0b00</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="CR0_DSS">3:0</a>
+</TD>
+<TD class="cellBitfieldCol2">DSS</TD>
+<TD class="cellBitfieldCol3" colspan="3">Data Size Select. <BR>
+Values 0b0000, 0b0001, 0b0010 are reserved and shall not be used.<TABLE cellspacing="0" class="LprfEnum">
+<TR class="rowEnumHead">
+<TD class="cellEnumTableHeadCol1">Value</TD>
+<TD class="cellEnumTableHeadCol2">ENUM Name</TD>
+<TD class="cellEnumTableHeadCol3">Description</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x3</TD>
+<TD class="cellEnumTableCol2">4_BIT</TD>
+<TD class="cellEnumTableCol3">4-bit data</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x4</TD>
+<TD class="cellEnumTableCol2">5_BIT</TD>
+<TD class="cellEnumTableCol3">5-bit data</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x5</TD>
+<TD class="cellEnumTableCol2">6_BIT</TD>
+<TD class="cellEnumTableCol3">6-bit data</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x6</TD>
+<TD class="cellEnumTableCol2">7_BIT</TD>
+<TD class="cellEnumTableCol3">7-bit data</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x7</TD>
+<TD class="cellEnumTableCol2">8_BIT</TD>
+<TD class="cellEnumTableCol3">8-bit data</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x8</TD>
+<TD class="cellEnumTableCol2">9_BIT</TD>
+<TD class="cellEnumTableCol3">9-bit data</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x9</TD>
+<TD class="cellEnumTableCol2">10_BIT</TD>
+<TD class="cellEnumTableCol3">10-bit data</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0xA</TD>
+<TD class="cellEnumTableCol2">11_BIT</TD>
+<TD class="cellEnumTableCol3">11-bit data</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0xB</TD>
+<TD class="cellEnumTableCol2">12_BIT</TD>
+<TD class="cellEnumTableCol3">12-bit data</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0xC</TD>
+<TD class="cellEnumTableCol2">13_BIT</TD>
+<TD class="cellEnumTableCol3">13-bit data</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0xD</TD>
+<TD class="cellEnumTableCol2">14_BIT</TD>
+<TD class="cellEnumTableCol3">14-bit data</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0xE</TD>
+<TD class="cellEnumTableCol2">15_BIT</TD>
+<TD class="cellEnumTableCol3">15-bit data</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0xF</TD>
+<TD class="cellEnumTableCol2">16_BIT</TD>
+<TD class="cellEnumTableCol3">16-bit data</TD>
+</TR>
+</TABLE>
+</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0x0</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="CR1"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">SSI0</A>:CR1</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 0004</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0x4000 0004</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0x4000 0004</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">Control 1</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">RW</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="CR1_RESERVED">31:4</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0x000 0000</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="CR1_SOD">3</a>
+</TD>
+<TD class="cellBitfieldCol2">SOD</TD>
+<TD class="cellBitfieldCol3" colspan="3">Slave-mode output disabled<BR>
+This bit is relevant only in the slave mode, <A class="xref" href="#CR1_MS">MS</A>=1. In multiple-slave systems, it is possible for an <A class="mmap_legend_link" href="../legend.html#SSI">SSI</A> master to broadcast a message to all slaves in the system while ensuring that only one slave drives data onto its serial output line. In such systems the <A class="mmap_legend_link" href="../legend.html#RXD">RXD</A> lines from multiple slaves could be tied together. To operate in such systems, this bitfield can be set if the <A class="mmap_legend_link" href="../legend.html#SSI">SSI</A> slave is not supposed to drive the <A class="mmap_legend_link" href="../legend.html#TXD">TXD</A> line:<BR>
+<BR>
+0: <A class="mmap_legend_link" href="../legend.html#SSI">SSI</A> can drive the <A class="mmap_legend_link" href="../legend.html#TXD">TXD</A> output in slave mode.<BR>
+1: <A class="mmap_legend_link" href="../legend.html#SSI">SSI</A> cannot drive the <A class="mmap_legend_link" href="../legend.html#TXD">TXD</A> output in slave mode.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="CR1_MS">2</a>
+</TD>
+<TD class="cellBitfieldCol2">MS</TD>
+<TD class="cellBitfieldCol3" colspan="3">Master or slave mode select. This bit can be modified only when <A class="mmap_legend_link" href="../legend.html#SSI">SSI</A> is disabled, <A class="xref" href="#CR1_SSE">SSE</A>=0.<TABLE cellspacing="0" class="LprfEnum">
+<TR class="rowEnumHead">
+<TD class="cellEnumTableHeadCol1">Value</TD>
+<TD class="cellEnumTableHeadCol2">ENUM Name</TD>
+<TD class="cellEnumTableHeadCol3">Description</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x0</TD>
+<TD class="cellEnumTableCol2">MASTER</TD>
+<TD class="cellEnumTableCol3">Device configured as master</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x1</TD>
+<TD class="cellEnumTableCol2">SLAVE</TD>
+<TD class="cellEnumTableCol3">Device configured as slave</TD>
+</TR>
+</TABLE>
+</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="CR1_SSE">1</a>
+</TD>
+<TD class="cellBitfieldCol2">SSE</TD>
+<TD class="cellBitfieldCol3" colspan="3">Synchronous serial interface enable.<TABLE cellspacing="0" class="LprfEnum">
+<TR class="rowEnumHead">
+<TD class="cellEnumTableHeadCol1">Value</TD>
+<TD class="cellEnumTableHeadCol2">ENUM Name</TD>
+<TD class="cellEnumTableHeadCol3">Description</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x0</TD>
+<TD class="cellEnumTableCol2">SSI_DISABLED</TD>
+<TD class="cellEnumTableCol3">Operation disabled</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x1</TD>
+<TD class="cellEnumTableCol2">SSI_ENABLED</TD>
+<TD class="cellEnumTableCol3">Operation enabled</TD>
+</TR>
+</TABLE>
+</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="CR1_LBM">0</a>
+</TD>
+<TD class="cellBitfieldCol2">LBM</TD>
+<TD class="cellBitfieldCol3" colspan="3">Loop back mode:<BR>
+<BR>
+0: Normal serial port operation enabled.<BR>
+1: Output of transmit serial shifter is connected to input of receive serial shifter internally.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="DR"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">SSI0</A>:DR</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 0008</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0x4000 0008</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0x4000 0008</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">Data<BR>
+16-bits wide data register:<BR>
+When read, the entry in the receive <A class="mmap_legend_link" href="../legend.html#FIFO">FIFO</A>, pointed to by the current <A class="mmap_legend_link" href="../legend.html#FIFO">FIFO</A> read pointer, is accessed. As data values are removed by the  receive logic from the incoming data frame, they are placed into the entry in the receive <A class="mmap_legend_link" href="../legend.html#FIFO">FIFO</A>, pointed to by the current <A class="mmap_legend_link" href="../legend.html#FIFO">FIFO</A> write pointer.<BR>
+When written, the entry in the transmit <A class="mmap_legend_link" href="../legend.html#FIFO">FIFO</A>, pointed to by the write pointer, is written to. Data values are removed from the transmit <A class="mmap_legend_link" href="../legend.html#FIFO">FIFO</A> one value at a time by the transmit logic. It is loaded into the transmit serial shifter, then serially shifted out onto the <A class="mmap_legend_link" href="../legend.html#TXD">TXD</A> output pin at the programmed bit rate.<BR>
+When a data size of less than 16 bits is selected, the user must right-justify data written to the transmit <A class="mmap_legend_link" href="../legend.html#FIFO">FIFO</A>. The transmit logic ignores the unused bits. Received data less than 16 bits is automatically right-justified in the receive buffer.</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">RW</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="DR_RESERVED">31:16</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0x0000</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="DR_DATA">15:0</a>
+</TD>
+<TD class="cellBitfieldCol2">DATA</TD>
+<TD class="cellBitfieldCol3" colspan="3">Transmit/receive data<BR>
+The values read from this field or written to this field must be right-justified when <A class="mmap_legend_link" href="../legend.html#SSI">SSI</A> is programmed for a data size that is less than 16 bits (<A class="xref" href="#CR0_DSS">CR0.DSS</A> != 0b1111). Unused bits at the top are ignored by transmit logic. The receive logic automatically right-justifies.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0xXXXX</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="SR"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">SSI0</A>:SR</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 000C</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0x4000 000C</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0x4000 000C</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">Status</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">RO</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="SR_RESERVED">31:5</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0b000 0000 0000 0000 0000 0000 0000</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="SR_BSY">4</a>
+</TD>
+<TD class="cellBitfieldCol2">BSY</TD>
+<TD class="cellBitfieldCol3" colspan="3">Serial interface busy:<BR>
+<BR>
+0: <A class="mmap_legend_link" href="../legend.html#SSI">SSI</A> is idle<BR>
+1: <A class="mmap_legend_link" href="../legend.html#SSI">SSI</A> is currently transmitting and/or receiving a frame or the transmit <A class="mmap_legend_link" href="../legend.html#FIFO">FIFO</A> is not empty.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="SR_RFF">3</a>
+</TD>
+<TD class="cellBitfieldCol2">RFF</TD>
+<TD class="cellBitfieldCol3" colspan="3">Receive <A class="mmap_legend_link" href="../legend.html#FIFO">FIFO</A> full:<BR>
+<BR>
+0: Receive <A class="mmap_legend_link" href="../legend.html#FIFO">FIFO</A> is not full.<BR>
+1: Receive <A class="mmap_legend_link" href="../legend.html#FIFO">FIFO</A> is full.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="SR_RNE">2</a>
+</TD>
+<TD class="cellBitfieldCol2">RNE</TD>
+<TD class="cellBitfieldCol3" colspan="3">Receive <A class="mmap_legend_link" href="../legend.html#FIFO">FIFO</A> not empty<BR>
+<BR>
+0: Receive <A class="mmap_legend_link" href="../legend.html#FIFO">FIFO</A> is empty.<BR>
+1: Receive <A class="mmap_legend_link" href="../legend.html#FIFO">FIFO</A> is not empty.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="SR_TNF">1</a>
+</TD>
+<TD class="cellBitfieldCol2">TNF</TD>
+<TD class="cellBitfieldCol3" colspan="3">Transmit <A class="mmap_legend_link" href="../legend.html#FIFO">FIFO</A> not full:<BR>
+<BR>
+0: Transmit <A class="mmap_legend_link" href="../legend.html#FIFO">FIFO</A> is full.<BR>
+1: Transmit <A class="mmap_legend_link" href="../legend.html#FIFO">FIFO</A> is not full.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">1</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="SR_TFE">0</a>
+</TD>
+<TD class="cellBitfieldCol2">TFE</TD>
+<TD class="cellBitfieldCol3" colspan="3">Transmit <A class="mmap_legend_link" href="../legend.html#FIFO">FIFO</A> empty:<BR>
+<BR>
+0: Transmit <A class="mmap_legend_link" href="../legend.html#FIFO">FIFO</A> is not empty.<BR>
+1: Transmit <A class="mmap_legend_link" href="../legend.html#FIFO">FIFO</A> is empty.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">1</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="CPSR"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">SSI0</A>:CPSR</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 0010</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0x4000 0010</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0x4000 0010</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">Clock Prescale</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">RW</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="CPSR_RESERVED">31:8</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0x00 0000</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="CPSR_CPSDVSR">7:0</a>
+</TD>
+<TD class="cellBitfieldCol2">CPSDVSR</TD>
+<TD class="cellBitfieldCol3" colspan="3">Clock prescale divisor:<BR>
+This field specifies the division factor by which the input system clock to <A class="mmap_legend_link" href="../legend.html#SSI">SSI</A> must be internally divided before further use.<BR>
+The value programmed into this field must be an even non-zero number (2-254). The least significant bit of the programmed number is hard-coded to zero. If an odd number is written to this register, data read back from<BR>
+this register has the least significant bit as zero.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0x00</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="IMSC"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">SSI0</A>:IMSC</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 0014</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0x4000 0014</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0x4000 0014</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">Interrupt Mask Set and Clear</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">RW</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="IMSC_RESERVED">31:4</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0x000 0000</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="IMSC_TXIM">3</a>
+</TD>
+<TD class="cellBitfieldCol2">TXIM</TD>
+<TD class="cellBitfieldCol3" colspan="3">Transmit <A class="mmap_legend_link" href="../legend.html#FIFO">FIFO</A> interrupt mask:<BR>
+A read returns the current mask for transmit <A class="mmap_legend_link" href="../legend.html#FIFO">FIFO</A> interrupt. On a write of 1, the mask for transmit <A class="mmap_legend_link" href="../legend.html#FIFO">FIFO</A> interrupt is set which means the interrupt state will be reflected in <A class="xref" href="#MIS_TXMIS">MIS.TXMIS</A>. A write of 0 clears the mask which means <A class="xref" href="#MIS_TXMIS">MIS.TXMIS</A> will not reflect the interrupt.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="IMSC_RXIM">2</a>
+</TD>
+<TD class="cellBitfieldCol2">RXIM</TD>
+<TD class="cellBitfieldCol3" colspan="3">Receive <A class="mmap_legend_link" href="../legend.html#FIFO">FIFO</A> interrupt mask:<BR>
+A read returns the current mask for receive <A class="mmap_legend_link" href="../legend.html#FIFO">FIFO</A> interrupt. On a write of 1, the mask for receive <A class="mmap_legend_link" href="../legend.html#FIFO">FIFO</A> interrupt is set which means the interrupt state will be reflected in <A class="xref" href="#MIS_RXMIS">MIS.RXMIS</A>. A write of 0 clears the mask which means <A class="xref" href="#MIS_RXMIS">MIS.RXMIS</A> will not reflect the interrupt.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="IMSC_RTIM">1</a>
+</TD>
+<TD class="cellBitfieldCol2">RTIM</TD>
+<TD class="cellBitfieldCol3" colspan="3">Receive timeout interrupt mask:<BR>
+A read returns the current mask for receive timeout interrupt. On a write of 1, the mask for receive timeout interrupt is set which means the interrupt state will be reflected in <A class="xref" href="#MIS_RTMIS">MIS.RTMIS</A>. A write of 0 clears the mask which means <A class="xref" href="#MIS_RTMIS">MIS.RTMIS</A> will not reflect the interrupt.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="IMSC_RORIM">0</a>
+</TD>
+<TD class="cellBitfieldCol2">RORIM</TD>
+<TD class="cellBitfieldCol3" colspan="3">Receive overrun interrupt mask:<BR>
+A read returns the current mask for receive overrun interrupt. On a write of 1, the mask for receive overrun interrupt is set which means the interrupt state will be reflected in <A class="xref" href="#MIS_RORMIS">MIS.RORMIS</A>. A write of 0 clears the mask which means <A class="xref" href="#MIS_RORMIS">MIS.RORMIS</A> will not reflect the interrupt.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="RIS"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">SSI0</A>:RIS</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 0018</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0x4000 0018</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0x4000 0018</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">Raw Interrupt Status</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">RO</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="RIS_RESERVED">31:4</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0x000 0000</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="RIS_TXRIS">3</a>
+</TD>
+<TD class="cellBitfieldCol2">TXRIS</TD>
+<TD class="cellBitfieldCol3" colspan="3">Raw transmit <A class="mmap_legend_link" href="../legend.html#FIFO">FIFO</A> interrupt status:<BR>
+The transmit interrupt is asserted when there are four or fewer valid entries in the transmit <A class="mmap_legend_link" href="../legend.html#FIFO">FIFO</A>. The transmit interrupt is not qualified with the <A class="mmap_legend_link" href="../legend.html#SSI">SSI</A> enable signal. Therefore one of the following ways can be used:<BR>
+ - data can be written to the transmit <A class="mmap_legend_link" href="../legend.html#FIFO">FIFO</A> prior to enabling the <A class="mmap_legend_link" href="../legend.html#SSI">SSI</A> and the<BR>
+interrupts.<BR>
+ - <A class="mmap_legend_link" href="../legend.html#SSI">SSI</A> and interrupts can be enabled so that data can be written to the transmit <A class="mmap_legend_link" href="../legend.html#FIFO">FIFO</A> by an interrupt service routine.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">1</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="RIS_RXRIS">2</a>
+</TD>
+<TD class="cellBitfieldCol2">RXRIS</TD>
+<TD class="cellBitfieldCol3" colspan="3">Raw interrupt state of receive <A class="mmap_legend_link" href="../legend.html#FIFO">FIFO</A> interrupt:<BR>
+The receive interrupt is asserted when there are four or more valid entries in the receive <A class="mmap_legend_link" href="../legend.html#FIFO">FIFO</A>.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="RIS_RTRIS">1</a>
+</TD>
+<TD class="cellBitfieldCol2">RTRIS</TD>
+<TD class="cellBitfieldCol3" colspan="3">Raw interrupt state of receive timeout interrupt:<BR>
+The receive timeout interrupt is asserted when the receive <A class="mmap_legend_link" href="../legend.html#FIFO">FIFO</A> is not empty and <A class="mmap_legend_link" href="../legend.html#SSI">SSI</A> has remained idle for a fixed 32 bit period. This mechanism can be used to notify the user that data is still present in the receive <A class="mmap_legend_link" href="../legend.html#FIFO">FIFO</A> and requires servicing. This interrupt is deasserted if the receive <A class="mmap_legend_link" href="../legend.html#FIFO">FIFO</A> becomes empty by subsequent reads, or if new data is received on <A class="mmap_legend_link" href="../legend.html#RXD">RXD</A>.<BR>
+It can also be cleared by writing to <A class="xref" href="#ICR_RTIC">ICR.RTIC</A>.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="RIS_RORRIS">0</a>
+</TD>
+<TD class="cellBitfieldCol2">RORRIS</TD>
+<TD class="cellBitfieldCol3" colspan="3">Raw interrupt state of receive overrun interrupt:<BR>
+The receive overrun interrupt is asserted when the <A class="mmap_legend_link" href="../legend.html#FIFO">FIFO</A> is already full and an additional data frame is received, causing an overrun of the <A class="mmap_legend_link" href="../legend.html#FIFO">FIFO</A>. Data is over-written in the<BR>
+receive shift register, but not the <A class="mmap_legend_link" href="../legend.html#FIFO">FIFO</A> so the <A class="mmap_legend_link" href="../legend.html#FIFO">FIFO</A> contents stay valid.<BR>
+It can also be cleared by writing to <A class="xref" href="#ICR_RORIC">ICR.RORIC</A>.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="MIS"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">SSI0</A>:MIS</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 001C</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0x4000 001C</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0x4000 001C</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">Masked Interrupt Status</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">RO</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="MIS_RESERVED">31:4</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0x000 0000</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="MIS_TXMIS">3</a>
+</TD>
+<TD class="cellBitfieldCol2">TXMIS</TD>
+<TD class="cellBitfieldCol3" colspan="3">Masked interrupt state of transmit <A class="mmap_legend_link" href="../legend.html#FIFO">FIFO</A> interrupt:<BR>
+This field returns the masked interrupt state of transmit <A class="mmap_legend_link" href="../legend.html#FIFO">FIFO</A> interrupt which is the AND product of raw interrupt state <A class="xref" href="#RIS_TXRIS">RIS.TXRIS</A> and the mask setting <A class="xref" href="#IMSC_TXIM">IMSC.TXIM</A>.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="MIS_RXMIS">2</a>
+</TD>
+<TD class="cellBitfieldCol2">RXMIS</TD>
+<TD class="cellBitfieldCol3" colspan="3">Masked interrupt state of receive <A class="mmap_legend_link" href="../legend.html#FIFO">FIFO</A> interrupt:<BR>
+This field returns the masked interrupt state of receive <A class="mmap_legend_link" href="../legend.html#FIFO">FIFO</A> interrupt which is the AND product of raw interrupt state <A class="xref" href="#RIS_RXRIS">RIS.RXRIS</A> and the mask setting <A class="xref" href="#IMSC_RXIM">IMSC.RXIM</A>.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="MIS_RTMIS">1</a>
+</TD>
+<TD class="cellBitfieldCol2">RTMIS</TD>
+<TD class="cellBitfieldCol3" colspan="3">Masked interrupt state of receive timeout interrupt:<BR>
+This field returns the masked interrupt state of receive timeout interrupt which is the AND product of raw interrupt state <A class="xref" href="#RIS_RTRIS">RIS.RTRIS</A> and the mask setting <A class="xref" href="#IMSC_RTIM">IMSC.RTIM</A>.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="MIS_RORMIS">0</a>
+</TD>
+<TD class="cellBitfieldCol2">RORMIS</TD>
+<TD class="cellBitfieldCol3" colspan="3">Masked interrupt state of receive overrun interrupt:<BR>
+This field returns the masked interrupt state of receive overrun interrupt which is the AND product of raw interrupt state <A class="xref" href="#RIS_RORRIS">RIS.RORRIS</A> and the mask setting <A class="xref" href="#IMSC_RORIM">IMSC.RORIM</A>.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="ICR"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">SSI0</A>:ICR</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 0020</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0x4000 0020</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0x4000 0020</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">Interrupt Clear<BR>
+On a write of 1, the corresponding interrupt is cleared. A write of 0 has no effect.</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">WO</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="ICR_RESERVED">31:2</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior.</TD>
+<TD class="cellBitfieldCol4">WO</TD>
+<TD class="cellBitfieldCol5">0b00 0000 0000 0000 0000 0000 0000 0000</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="ICR_RTIC">1</a>
+</TD>
+<TD class="cellBitfieldCol2">RTIC</TD>
+<TD class="cellBitfieldCol3" colspan="3">Clear the receive timeout interrupt:<BR>
+Writing 1 to this field clears the timeout interrupt (<A class="xref" href="#RIS_RTRIS">RIS.RTRIS</A>). Writing 0 has no effect.</TD>
+<TD class="cellBitfieldCol4">WO</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="ICR_RORIC">0</a>
+</TD>
+<TD class="cellBitfieldCol2">RORIC</TD>
+<TD class="cellBitfieldCol3" colspan="3">Clear the receive overrun interrupt:<BR>
+Writing 1 to this field clears the overrun error interrupt (<A class="xref" href="#RIS_RORRIS">RIS.RORRIS</A>). Writing 0 has no effect.</TD>
+<TD class="cellBitfieldCol4">WO</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="DMACR"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">SSI0</A>:DMACR</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 0024</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0x4000 0024</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0x4000 0024</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">DMA Control</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">RW</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="DMACR_RESERVED">31:2</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0b00 0000 0000 0000 0000 0000 0000 0000</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="DMACR_TXDMAE">1</a>
+</TD>
+<TD class="cellBitfieldCol2">TXDMAE</TD>
+<TD class="cellBitfieldCol3" colspan="3">Transmit <A class="mmap_legend_link" href="../legend.html#DMA">DMA</A> enable. If this bit is set to 1, <A class="mmap_legend_link" href="../legend.html#DMA">DMA</A> for the transmit <A class="mmap_legend_link" href="../legend.html#FIFO">FIFO</A> is enabled.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="DMACR_RXDMAE">0</a>
+</TD>
+<TD class="cellBitfieldCol2">RXDMAE</TD>
+<TD class="cellBitfieldCol3" colspan="3">Receive <A class="mmap_legend_link" href="../legend.html#DMA">DMA</A> enable. If this bit is set to 1, <A class="mmap_legend_link" href="../legend.html#DMA">DMA</A> for the receive <A class="mmap_legend_link" href="../legend.html#FIFO">FIFO</A> is enabled.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+</TABLE>
+<BR>
+<BR>
+<hr><table class="footer"><tr><td>&copy; 2015 - 2016. Texas Instruments | All Rights Reserved</td></tr></table>
+</BODY>
+</HTML>

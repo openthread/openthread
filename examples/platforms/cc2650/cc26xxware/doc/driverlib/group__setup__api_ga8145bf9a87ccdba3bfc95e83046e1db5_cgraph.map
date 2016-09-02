@@ -1,0 +1,15 @@
+<map id="SetupAfterColdResetWakeupFromShutDownCfg3" name="SetupAfterColdResetWakeupFromShutDownCfg3">
+<area shape="rect" id="node2" href="$group__setup__api.html#gad0930e41df4aeae3f101853d38d28eaa" title="Returns the trim value to be used as OSC_DIG:CTL1.XOSC_HF_FAST_START. " alt="" coords="256,5,455,47"/>
+<area shape="rect" id="node3" href="$group__osc__api.html#ga37a02687fbd8680396550f682a7f046f" title="Configure the oscillator input to the a source clock. " alt="" coords="280,71,431,98"/>
+<area shape="rect" id="node9" href="$group__setup__api.html#gaaee7ab99f1f8e288786f0f98b0030ac8" title="Doing the tricky stuff needed to enter new RTCSUBSECINC value. " alt="" coords="258,173,453,199"/>
+<area shape="rect" id="node10" href="$group__osc__api.html#ga279bd3a34548bd4c5e2fc6939f7be228" title="Get the source clock settings. " alt="" coords="279,122,431,149"/>
+<area shape="rect" id="node13" href="$group__ioc__api.html#gaa37e353181d0457f3b56ddd541c6eb0a" title="Set the configuration of an IO port. " alt="" coords="279,223,432,250"/>
+<area shape="rect" id="node14" href="$group__sysctrl__api.html#ga1d9c005051b674f9f254747c1705e3dc" title="Sync all accesses to the AON register interface. " alt="" coords="294,274,417,301"/>
+<area shape="rect" id="node4" href="$group__ddi__api.html#ga492326c095c70621a247fe02a2cb09e4" title="Write a bitfield via the DDI using 16&#45;bit maskable write. " alt="" coords="503,71,637,98"/>
+<area shape="rect" id="node5" href="$group__ddi__api.html#ga06d6b1eee2c8757b8431eb6e1ab98f68" title="Safely write to AUX ADI/DDI interfaces using a semaphore. " alt="" coords="685,71,832,98"/>
+<area shape="rect" id="node6" href="$group__cpu__api.html#ga491d851c4f7fff1f9f66aa778b0671b0" title="Disable all external interrupts. " alt="" coords="880,71,963,98"/>
+<area shape="rect" id="node8" href="$group__cpu__api.html#ga6922d401cbc951632f495ffcf2e71dfc" title="Enable all external interrupts. " alt="" coords="880,122,963,149"/>
+<area shape="rect" id="node7" href="$cpu_8c.html#a9d29df169acb9be94306e8b58faed3ee" title="Provide a small delay. " alt="" coords="1011,97,1075,123"/>
+<area shape="rect" id="node11" href="$group__ddi__api.html#gac86ccf0590b9dbdc88eb1a6c856c78a4" title="Read a bitfield via the DDI using 16&#45;bit read. " alt="" coords="503,122,637,149"/>
+<area shape="rect" id="node12" href="$group__ddi__api.html#ga8175a094afd96e5f440a276c4cc7fe44" title="Safely read from AUX ADI/DDI interfaces using a semaphore. " alt="" coords="685,122,832,149"/>
+</map>

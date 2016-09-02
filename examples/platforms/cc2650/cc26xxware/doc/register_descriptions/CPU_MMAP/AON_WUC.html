@@ -1,0 +1,1506 @@
+<HTML>
+<HEAD><META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=UTF-8">
+<link href="..//elements/mmap.css" rel="stylesheet" type="text/css">
+<TITLE>AON_WUC</TITLE>
+</HEAD>
+<BODY class=mmapBody>
+<h2 class="mmapCellTitle">
+  <a name="Top_Tag">AON_WUC</a>
+</h2>
+<P>Instance: AON_WUC<BR>
+Component: AON_WUC<BR>
+Base address: 0x40091000</P>
+<BR>
+<P>This component control the Wakeup controller residing in the <A class="mmap_legend_link" href="../legend.html#AON">AON</A> domain.<BR>
+<BR>
+Note: This module is only supporting 32 bit ReadWrite access from <A class="mmap_legend_link" href="../legend.html#MCU">MCU</A></P>
+ <H3 class="mmapRegisterSummaryTitle"><A name="AON_WUC"></A><A href="CPU_MMAP.html"> TOP</A>:<B>AON_WUC</B> Register Summary</H3>
+<TABLE cellspacing="0" class="mmapRegisterSummaryTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">
+  <P>Register Name</P>
+</TD>
+<TD class="cellTopCol2">
+  <P>Type</P>
+</TD>
+<TD class="cellTopCol3">
+  <P>Register Width (Bits)</P>
+</TD>
+<TD class="cellTopCol4">
+  <P>Register Reset</P>
+</TD>
+<TD class="cellTopCol5">
+  <P>Address Offset</P>
+</TD>
+<TD class="cellTopCol5">
+  <P>Physical Address</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#MCUCLK">MCUCLK</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>RW</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x0000 0000</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 0000</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x4009 1000</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#AUXCLK">AUXCLK</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>RW</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x0000 0001</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 0004</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x4009 1004</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#MCUCFG">MCUCFG</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>RW</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x0000 000F</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 0008</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x4009 1008</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#AUXCFG">AUXCFG</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>RW</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x0000 0001</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 000C</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x4009 100C</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#AUXCTL">AUXCTL</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>RW</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x0000 0000</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 0010</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x4009 1010</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#PWRSTAT">PWRSTAT</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>RW</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x0380 0000</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 0014</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x4009 1014</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#SHUTDOWN">SHUTDOWN</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>RW</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x0000 0000</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 0018</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x4009 1018</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#CTL0">CTL0</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>RW</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x0000 0000</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 0020</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x4009 1020</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#CTL1">CTL1</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>RW</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x0000 0000</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 0024</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x4009 1024</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#RECHARGECFG">RECHARGECFG</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>RW</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x0000 0000</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 0030</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x4009 1030</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#RECHARGESTAT">RECHARGESTAT</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>RW</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x0000 0000</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 0034</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x4009 1034</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#OSCCFG">OSCCFG</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>RW</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x0000 0000</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 0038</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x4009 1038</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#JTAGCFG">JTAGCFG</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>RW</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x0000 0100</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 0040</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x4009 1040</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#JTAGUSERCODE">JTAGUSERCODE</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>RW</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x0B99 A02F</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 0044</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x4009 1044</P>
+</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterSummaryTitle"><A href="CPU_MMAP.html"> TOP</A>:AON_WUC Register Descriptions</H3>
+<H3 class="mmapRegisterTitle"><A name="MCUCLK"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">AON_WUC</A>:MCUCLK</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 0000</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0x4009 1000</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0x4009 1000</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3"><A class="mmap_legend_link" href="../legend.html#MCU">MCU</A> Clock Management<BR>
+<BR>
+This register contains bitfields related to the <A class="mmap_legend_link" href="../legend.html#MCU">MCU</A> clock.</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">RW</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="MCUCLK_RESERVED3">31:3</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED3</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0b0 0000 0000 0000 0000 0000 0000 0000</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="MCUCLK_RCOSC_HF_CAL_DONE">2</a>
+</TD>
+<TD class="cellBitfieldCol2">RCOSC_HF_CAL_DONE</TD>
+<TD class="cellBitfieldCol3" colspan="3">MCU bootcode will set this bit when <A class="mmap_legend_link" href="../legend.html#RCOSC_HF">RCOSC_HF</A> is calibrated.  The <A class="mmap_legend_link" href="../legend.html#FLASH">FLASH</A> can not be used until this bit is set.<BR>
+<BR>
+1: <A class="mmap_legend_link" href="../legend.html#RCOSC_HF">RCOSC_HF</A> is calibrated to 48 MHz, allowing <A class="mmap_legend_link" href="../legend.html#FLASH">FLASH</A> to power up.<BR>
+0: <A class="mmap_legend_link" href="../legend.html#RCOSC_HF">RCOSC_HF</A> is not yet calibrated, ie <A class="mmap_legend_link" href="../legend.html#FLASH">FLASH</A> must not assume that the <A class="mmap_legend_link" href="../legend.html#SCLK_HF">SCLK_HF</A> is safe</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="MCUCLK_PWR_DWN_SRC">1:0</a>
+</TD>
+<TD class="cellBitfieldCol2">PWR_DWN_SRC</TD>
+<TD class="cellBitfieldCol3" colspan="3">Controls the clock source for the entire <A class="mmap_legend_link" href="../legend.html#MCU">MCU</A> domain while <A class="mmap_legend_link" href="../legend.html#MCU">MCU</A> is requesting powerdown.<BR>
+<BR>
+When <A class="mmap_legend_link" href="../legend.html#MCU">MCU</A> requests powerdown with <A class="mmap_legend_link" href="../legend.html#SCLK_HF">SCLK_HF</A> as source, then <A class="mmap_legend_link" href="../legend.html#WUC">WUC</A> will switch over to this clock source during powerdown, and automatically switch back to <A class="mmap_legend_link" href="../legend.html#SCLK_HF">SCLK_HF</A> when <A class="mmap_legend_link" href="../legend.html#MCU">MCU</A> is no longer requesting powerdown and system is back in active mode.<TABLE cellspacing="0" class="LprfEnum">
+<TR class="rowEnumHead">
+<TD class="cellEnumTableHeadCol1">Value</TD>
+<TD class="cellEnumTableHeadCol2">ENUM Name</TD>
+<TD class="cellEnumTableHeadCol3">Description</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x0</TD>
+<TD class="cellEnumTableCol2">NONE</TD>
+<TD class="cellEnumTableCol3">No clock in Powerdown</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x1</TD>
+<TD class="cellEnumTableCol2">SCLK_LF</TD>
+<TD class="cellEnumTableCol3">Use <A class="mmap_legend_link" href="../legend.html#SCLK_LF">SCLK_LF</A> in Powerdown</TD>
+</TR>
+</TABLE>
+</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0b00</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="AUXCLK"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">AON_WUC</A>:AUXCLK</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 0004</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0x4009 1004</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0x4009 1004</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3"><A class="mmap_legend_link" href="../legend.html#AUX">AUX</A> Clock Management<BR>
+<BR>
+This register contains bitfields that are relevant for setting up the clock to the <A class="mmap_legend_link" href="../legend.html#AUX">AUX</A> domain.</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">RW</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="AUXCLK_RESERVED13">31:13</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED13</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0b000 0000 0000 0000 0000</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="AUXCLK_PWR_DWN_SRC">12:11</a>
+</TD>
+<TD class="cellBitfieldCol2">PWR_DWN_SRC</TD>
+<TD class="cellBitfieldCol3" colspan="3">When <A class="mmap_legend_link" href="../legend.html#AUX">AUX</A> requests powerdown with <A class="mmap_legend_link" href="../legend.html#SCLK_HF">SCLK_HF</A> as source, then <A class="mmap_legend_link" href="../legend.html#WUC">WUC</A> will switch over to this clock source during powerdown, and automatically switch back to <A class="mmap_legend_link" href="../legend.html#SCLK_HF">SCLK_HF</A> when <A class="mmap_legend_link" href="../legend.html#AUX">AUX</A> system is back in active mode<TABLE cellspacing="0" class="LprfEnum">
+<TR class="rowEnumHead">
+<TD class="cellEnumTableHeadCol1">Value</TD>
+<TD class="cellEnumTableHeadCol2">ENUM Name</TD>
+<TD class="cellEnumTableHeadCol3">Description</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x0</TD>
+<TD class="cellEnumTableCol2">NONE</TD>
+<TD class="cellEnumTableCol3">No clock in Powerdown</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x1</TD>
+<TD class="cellEnumTableCol2">SCLK_LF</TD>
+<TD class="cellEnumTableCol3">Use <A class="mmap_legend_link" href="../legend.html#SCLK_LF">SCLK_LF</A> in Powerdown</TD>
+</TR>
+</TABLE>
+</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0b00</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="AUXCLK_SCLK_HF_DIV">10:8</a>
+</TD>
+<TD class="cellBitfieldCol2">SCLK_HF_DIV</TD>
+<TD class="cellBitfieldCol3" colspan="3">Select the <A class="mmap_legend_link" href="../legend.html#AUX">AUX</A> clock divider for <A class="mmap_legend_link" href="../legend.html#SCLK_HF">SCLK_HF</A><BR>
+<BR>
+NB: It is not supported to change the <A class="mmap_legend_link" href="../legend.html#AUX">AUX</A> clock divider while <A class="mmap_legend_link" href="../legend.html#SCLK_HF">SCLK_HF</A> is active source for <A class="mmap_legend_link" href="../legend.html#AUX">AUX</A><TABLE cellspacing="0" class="LprfEnum">
+<TR class="rowEnumHead">
+<TD class="cellEnumTableHeadCol1">Value</TD>
+<TD class="cellEnumTableHeadCol2">ENUM Name</TD>
+<TD class="cellEnumTableHeadCol3">Description</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x0</TD>
+<TD class="cellEnumTableCol2">DIV2</TD>
+<TD class="cellEnumTableCol3">Divide by 2</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x1</TD>
+<TD class="cellEnumTableCol2">DIV4</TD>
+<TD class="cellEnumTableCol3">Divide by 4</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x2</TD>
+<TD class="cellEnumTableCol2">DIV8</TD>
+<TD class="cellEnumTableCol3">Divide by 8</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x3</TD>
+<TD class="cellEnumTableCol2">DIV16</TD>
+<TD class="cellEnumTableCol3">Divide by 16</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x4</TD>
+<TD class="cellEnumTableCol2">DIV32</TD>
+<TD class="cellEnumTableCol3">Divide by 32</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x5</TD>
+<TD class="cellEnumTableCol2">DIV64</TD>
+<TD class="cellEnumTableCol3">Divide by 64</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x6</TD>
+<TD class="cellEnumTableCol2">DIV128</TD>
+<TD class="cellEnumTableCol3">Divide by 128</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x7</TD>
+<TD class="cellEnumTableCol2">DIV256</TD>
+<TD class="cellEnumTableCol3">Divide by 256</TD>
+</TR>
+</TABLE>
+</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0b000</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="AUXCLK_RESERVED3">7:3</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED3</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0b0 0000</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="AUXCLK_SRC">2:0</a>
+</TD>
+<TD class="cellBitfieldCol2">SRC</TD>
+<TD class="cellBitfieldCol3" colspan="3">Selects the clock source for AUX:<BR>
+<BR>
+NB: Switching the clock source is guaranteed to be glitchless<TABLE cellspacing="0" class="LprfEnum">
+<TR class="rowEnumHead">
+<TD class="cellEnumTableHeadCol1">Value</TD>
+<TD class="cellEnumTableHeadCol2">ENUM Name</TD>
+<TD class="cellEnumTableHeadCol3">Description</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x1</TD>
+<TD class="cellEnumTableCol2">SCLK_HF</TD>
+<TD class="cellEnumTableCol3">HF Clock (<A class="mmap_legend_link" href="../legend.html#SCLK_HF">SCLK_HF</A>)</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x4</TD>
+<TD class="cellEnumTableCol2">SCLK_LF</TD>
+<TD class="cellEnumTableCol3">LF Clock (<A class="mmap_legend_link" href="../legend.html#SCLK_LF">SCLK_LF</A>)</TD>
+</TR>
+</TABLE>
+</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0b001</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="MCUCFG"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">AON_WUC</A>:MCUCFG</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 0008</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0x4009 1008</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0x4009 1008</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">MCU Configuration<BR>
+<BR>
+This register contains power management related bitfields for the <A class="mmap_legend_link" href="../legend.html#MCU">MCU</A> domain.</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">RW</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="MCUCFG_RESERVED18">31:18</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED18</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0b00 0000 0000 0000</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="MCUCFG_VIRT_OFF">17</a>
+</TD>
+<TD class="cellBitfieldCol2">VIRT_OFF</TD>
+<TD class="cellBitfieldCol3" colspan="3">Internal. Only to be used through TI provided API.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="MCUCFG_FIXED_WU_EN">16</a>
+</TD>
+<TD class="cellBitfieldCol2">FIXED_WU_EN</TD>
+<TD class="cellBitfieldCol3" colspan="3">Internal. Only to be used through TI provided API.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="MCUCFG_RESERVED4">15:4</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED4</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0x000</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="MCUCFG_SRAM_RET_EN">3:0</a>
+</TD>
+<TD class="cellBitfieldCol2">SRAM_RET_EN</TD>
+<TD class="cellBitfieldCol3" colspan="3"><A class="mmap_legend_link" href="../legend.html#MCU">MCU</A> <A class="mmap_legend_link" href="../legend.html#SRAM">SRAM</A> is partitioned into 4 banks . This register controls which of the banks that has retention during <A class="mmap_legend_link" href="../legend.html#MCU">MCU</A> power off<TABLE cellspacing="0" class="LprfEnum">
+<TR class="rowEnumHead">
+<TD class="cellEnumTableHeadCol1">Value</TD>
+<TD class="cellEnumTableHeadCol2">ENUM Name</TD>
+<TD class="cellEnumTableHeadCol3">Description</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x0</TD>
+<TD class="cellEnumTableCol2">RET_NONE</TD>
+<TD class="cellEnumTableCol3">Retention is disabled</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x1</TD>
+<TD class="cellEnumTableCol2">RET_LEVEL1</TD>
+<TD class="cellEnumTableCol3">Retention on for <A class="xref" href="SRAM.html#BANK0">SRAM:BANK0</A></TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x3</TD>
+<TD class="cellEnumTableCol2">RET_LEVEL2</TD>
+<TD class="cellEnumTableCol3">Retention on for <A class="xref" href="SRAM.html#BANK0">SRAM:BANK0</A> and <A class="xref" href="SRAM.html#BANK1">SRAM:BANK1</A></TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x7</TD>
+<TD class="cellEnumTableCol2">RET_LEVEL3</TD>
+<TD class="cellEnumTableCol3">Retention on for <A class="xref" href="SRAM.html#BANK0">SRAM:BANK0</A>, <A class="xref" href="SRAM.html#BANK1">SRAM:BANK1</A> and <A class="xref" href="SRAM.html#BANK2">SRAM:BANK2</A></TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0xF</TD>
+<TD class="cellEnumTableCol2">RET_FULL</TD>
+<TD class="cellEnumTableCol3">Retention on for all banks (<A class="xref" href="SRAM.html#BANK0">SRAM:BANK0</A>, <A class="xref" href="SRAM.html#BANK1">SRAM:BANK1</A> ,<A class="xref" href="SRAM.html#BANK2">SRAM:BANK2</A> and <A class="xref" href="SRAM.html#BANK3">SRAM:BANK3</A>)</TD>
+</TR>
+</TABLE>
+</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0xF</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="AUXCFG"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">AON_WUC</A>:AUXCFG</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 000C</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0x4009 100C</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0x4009 100C</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3"><A class="mmap_legend_link" href="../legend.html#AUX">AUX</A> Configuration<BR>
+<BR>
+This register contains power management related signals for the <A class="mmap_legend_link" href="../legend.html#AUX">AUX</A> domain.</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">RW</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="AUXCFG_RESERVED1">31:1</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED1</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0b000 0000 0000 0000 0000 0000 0000 0000</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="AUXCFG_RAM_RET_EN">0</a>
+</TD>
+<TD class="cellBitfieldCol2">RAM_RET_EN</TD>
+<TD class="cellBitfieldCol3" colspan="3">This bit controls retention mode for the <A class="xref" href="AUX_RAM.html#BANK0">AUX_RAM:BANK0</A>:<BR>
+<BR>
+0: Retention is disabled<BR>
+1: Retention is enabled<BR>
+<BR>
+NB: If retention is disabled, the AUX_RAM will be powered off when it would otherwise be put in retention mode</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">1</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="AUXCTL"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">AON_WUC</A>:AUXCTL</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 0010</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0x4009 1010</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0x4009 1010</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3"><A class="mmap_legend_link" href="../legend.html#AUX">AUX</A> Control<BR>
+<BR>
+This register contains events and control signals for the <A class="mmap_legend_link" href="../legend.html#AUX">AUX</A> domain.</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">RW</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="AUXCTL_RESET_REQ">31</a>
+</TD>
+<TD class="cellBitfieldCol2">RESET_REQ</TD>
+<TD class="cellBitfieldCol3" colspan="3">Reset request for AUX. Writing 1 to this register will assert reset to AUX. The reset will be held until the bit is cleared again.<BR>
+<BR>
+0: <A class="mmap_legend_link" href="../legend.html#AUX">AUX</A> reset pin will be deasserted<BR>
+1: <A class="mmap_legend_link" href="../legend.html#AUX">AUX</A> reset pin will be asserted</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="AUXCTL_RESERVED3">30:3</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED3</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0x000 0000</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="AUXCTL_SCE_RUN_EN">2</a>
+</TD>
+<TD class="cellBitfieldCol2">SCE_RUN_EN</TD>
+<TD class="cellBitfieldCol3" colspan="3">Enables (1) or disables (0) <A class="mmap_legend_link" href="../legend.html#AUX_SCE">AUX_SCE</A> execution. <A class="mmap_legend_link" href="../legend.html#AUX_SCE">AUX_SCE</A> execution will begin when <A class="mmap_legend_link" href="../legend.html#AUX">AUX</A> Domain is powered and either this or <A class="xref" href="AUX_SCE.html#CTL_CLK_EN">AUX_SCE:CTL.CLK_EN</A> is set. <BR>
+<BR>
+Setting this bit will assure that <A class="mmap_legend_link" href="../legend.html#AUX_SCE">AUX_SCE</A> execution starts as soon as <A class="mmap_legend_link" href="../legend.html#AUX">AUX</A> power domain is woken up. (  <A class="xref" href="AUX_SCE.html#CTL_CLK_EN">AUX_SCE:CTL.CLK_EN</A> will be reset to 0 if <A class="mmap_legend_link" href="../legend.html#AUX">AUX</A> power domain has been off)<BR>
+<BR>
+0: <A class="mmap_legend_link" href="../legend.html#AUX_SCE">AUX_SCE</A> execution will be disabled if <A class="xref" href="AUX_SCE.html#CTL_CLK_EN">AUX_SCE:CTL.CLK_EN</A> is 0<BR>
+1: <A class="mmap_legend_link" href="../legend.html#AUX_SCE">AUX_SCE</A> execution is enabled.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="AUXCTL_SWEV">1</a>
+</TD>
+<TD class="cellBitfieldCol2">SWEV</TD>
+<TD class="cellBitfieldCol3" colspan="3">Writing 1 sets the software event to the <A class="mmap_legend_link" href="../legend.html#AUX">AUX</A> domain, which can be read through <A class="xref" href="AUX_WUC.html#WUEVFLAGS_AON_SW">AUX_WUC:WUEVFLAGS.AON_SW</A>.<BR>
+<BR>
+This event is normally cleared by <A class="mmap_legend_link" href="../legend.html#AUX_SCE">AUX_SCE</A> through the <A class="xref" href="AUX_WUC.html#WUEVCLR_AON_SW">AUX_WUC:WUEVCLR.AON_SW</A>. It can also be cleared by writing 0 to this register.<BR>
+<BR>
+Reading 0 means that there is no outstanding software event for AUX. <BR>
+<BR>
+Note that it can take up to 1,5 <A class="mmap_legend_link" href="../legend.html#SCLK_LF">SCLK_LF</A> clock cycles to clear the event from AUX.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="AUXCTL_AUX_FORCE_ON">0</a>
+</TD>
+<TD class="cellBitfieldCol2">AUX_FORCE_ON</TD>
+<TD class="cellBitfieldCol3" colspan="3">Forces the <A class="mmap_legend_link" href="../legend.html#AUX">AUX</A> domain into active mode, overriding the requests from <A class="xref" href="AUX_WUC.html#PWROFFREQ">AUX_WUC:PWROFFREQ</A>, <A class="xref" href="AUX_WUC.html#PWRDWNREQ">AUX_WUC:PWRDWNREQ</A> and <A class="xref" href="AUX_WUC.html#MCUBUSCTL">AUX_WUC:MCUBUSCTL</A>. <BR>
+Note that an ongoing <A class="xref" href="AUX_WUC.html#PWROFFREQ">AUX_WUC:PWROFFREQ</A> will complete before this bit will set the <A class="mmap_legend_link" href="../legend.html#AUX">AUX</A> domain into active mode.<BR>
+<BR>
+<A class="mmap_legend_link" href="../legend.html#MCU">MCU</A> must set this bit in order to access the <A class="mmap_legend_link" href="../legend.html#AUX">AUX</A> peripherals. <BR>
+The <A class="mmap_legend_link" href="../legend.html#AUX">AUX</A> domain status can be read from <A class="xref" href="#PWRSTAT_AUX_PD_ON">PWRSTAT.AUX_PD_ON</A> <BR>
+<BR>
+0: <A class="mmap_legend_link" href="../legend.html#AUX">AUX</A> is allowed to Power Off, Power Down or Disconnect.<BR>
+1: <A class="mmap_legend_link" href="../legend.html#AUX">AUX</A>  Power OFF, Power Down or Disconnect requests will be overruled</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="PWRSTAT"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">AON_WUC</A>:PWRSTAT</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 0014</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0x4009 1014</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0x4009 1014</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">Power Status<BR>
+<BR>
+This register is used to monitor various power management related signals in <A class="mmap_legend_link" href="../legend.html#AON">AON</A>.  Most signals are for test, calibration and debug purpose only, and others can be used to detect that <A class="mmap_legend_link" href="../legend.html#AUX">AUX</A> or <A class="mmap_legend_link" href="../legend.html#JTAG">JTAG</A> domains are powered up.</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">RW</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="PWRSTAT_RESERVED10">31:10</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED10</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0b00 0000 1110 0000 0000 0000</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="PWRSTAT_AUX_PWR_DWN">9</a>
+</TD>
+<TD class="cellBitfieldCol2">AUX_PWR_DWN</TD>
+<TD class="cellBitfieldCol3" colspan="3">Indicates the <A class="mmap_legend_link" href="../legend.html#AUX">AUX</A> powerdown state when <A class="mmap_legend_link" href="../legend.html#AUX">AUX</A> domain is powered up.<BR>
+<BR>
+0: Active mode<BR>
+1: <A class="mmap_legend_link" href="../legend.html#AUX">AUX</A> Powerdown request has been granted</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="PWRSTAT_RESERVED7">8:7</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED7</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0b00</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="PWRSTAT_JTAG_PD_ON">6</a>
+</TD>
+<TD class="cellBitfieldCol2">JTAG_PD_ON</TD>
+<TD class="cellBitfieldCol3" colspan="3">Indicates <A class="mmap_legend_link" href="../legend.html#JTAG">JTAG</A> power state:<BR>
+<BR>
+0: <A class="mmap_legend_link" href="../legend.html#JTAG">JTAG</A> is powered off<BR>
+1: <A class="mmap_legend_link" href="../legend.html#JTAG">JTAG</A> is powered on</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="PWRSTAT_AUX_PD_ON">5</a>
+</TD>
+<TD class="cellBitfieldCol2">AUX_PD_ON</TD>
+<TD class="cellBitfieldCol3" colspan="3">Indicates <A class="mmap_legend_link" href="../legend.html#AUX">AUX</A> power state:<BR>
+<BR>
+0: <A class="mmap_legend_link" href="../legend.html#AUX">AUX</A> is not ready for use ( may be powered off or in power state transition )<BR>
+1: <A class="mmap_legend_link" href="../legend.html#AUX">AUX</A> is powered on, connected to bus and ready for use,</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="PWRSTAT_MCU_PD_ON">4</a>
+</TD>
+<TD class="cellBitfieldCol2">MCU_PD_ON</TD>
+<TD class="cellBitfieldCol3" colspan="3">Indicates <A class="mmap_legend_link" href="../legend.html#MCU">MCU</A> power state:<BR>
+<BR>
+0: <A class="mmap_legend_link" href="../legend.html#MCU">MCU</A> Power sequencing is not yet finalized and <A class="mmap_legend_link" href="../legend.html#MCU_AONIF">MCU_AONIF</A> registers may not be reliable<BR>
+1: <A class="mmap_legend_link" href="../legend.html#MCU">MCU</A> Power sequencing is finalized and all <A class="mmap_legend_link" href="../legend.html#MCU_AONIF">MCU_AONIF</A> registers are reliable</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="PWRSTAT_RESERVED3">3</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED3</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="PWRSTAT_AUX_BUS_CONNECTED">2</a>
+</TD>
+<TD class="cellBitfieldCol2">AUX_BUS_CONNECTED</TD>
+<TD class="cellBitfieldCol3" colspan="3">Indicates that <A class="mmap_legend_link" href="../legend.html#AUX">AUX</A> Bus is connected:<BR>
+<BR>
+0: <A class="mmap_legend_link" href="../legend.html#AUX">AUX</A> bus is not connected<BR>
+1: <A class="mmap_legend_link" href="../legend.html#AUX">AUX</A> bus is connected ( idle_ack = 0 )</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="PWRSTAT_AUX_RESET_DONE">1</a>
+</TD>
+<TD class="cellBitfieldCol2">AUX_RESET_DONE</TD>
+<TD class="cellBitfieldCol3" colspan="3">Indicates Reset Done from AUX:<BR>
+<BR>
+0: <A class="mmap_legend_link" href="../legend.html#AUX">AUX</A> is being reset<BR>
+1: <A class="mmap_legend_link" href="../legend.html#AUX">AUX</A> reset is released</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="PWRSTAT_RESERVED0">0</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED0</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="SHUTDOWN"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">AON_WUC</A>:SHUTDOWN</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 0018</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0x4009 1018</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0x4009 1018</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">Shutdown Control<BR>
+<BR>
+This register contains bitfields required for entering shutdown mode</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">RW</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="SHUTDOWN_RESERVED1">31:1</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED1</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0b000 0000 0000 0000 0000 0000 0000 0000</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="SHUTDOWN_EN">0</a>
+</TD>
+<TD class="cellBitfieldCol2">EN</TD>
+<TD class="cellBitfieldCol3" colspan="3">Writing a 1 to this bit forces a shutdown request to be registered and all I/O values to be latched - in the PAD ring, possibly enabling I/O wakeup. Writing 0 will cancel a registered shutdown request and open th I/O latches residing in the PAD ring.<BR>
+<BR>
+A registered shutdown request takes effect the next time power down conditions exists. At this time, the will not enter Powerdown mode, but instead it will turn off all internal powersupplies, effectively putting the device into Shutdown mode.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="CTL0"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">AON_WUC</A>:CTL0</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 0020</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0x4009 1020</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0x4009 1020</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">Control 0<BR>
+<BR>
+This register contains various chip level control and debug bitfields.</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">RW</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="CTL0_RESERVED9">31:9</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED9</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0b000 0000 0000 0000 0000 0000</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="CTL0_PWR_DWN_DIS">8</a>
+</TD>
+<TD class="cellBitfieldCol2">PWR_DWN_DIS</TD>
+<TD class="cellBitfieldCol3" colspan="3">Controls whether <A class="mmap_legend_link" href="../legend.html#MCU">MCU</A> and <A class="mmap_legend_link" href="../legend.html#AUX">AUX</A> requesting to be powered off will enable a transition to powerdown:<BR>
+<BR>
+0: Enabled<BR>
+1: Disabled</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="CTL0_RESERVED4">7:4</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED4</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0x0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="CTL0_AUX_SRAM_ERASE">3</a>
+</TD>
+<TD class="cellBitfieldCol2">AUX_SRAM_ERASE</TD>
+<TD class="cellBitfieldCol3" colspan="3">Internal. Only to be used through TI provided API.</TD>
+<TD class="cellBitfieldCol4">WO</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="CTL0_MCU_SRAM_ERASE">2</a>
+</TD>
+<TD class="cellBitfieldCol2">MCU_SRAM_ERASE</TD>
+<TD class="cellBitfieldCol3" colspan="3">Internal. Only to be used through TI provided API.</TD>
+<TD class="cellBitfieldCol4">WO</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="CTL0_RESERVED0">1:0</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED0</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0b00</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="CTL1"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">AON_WUC</A>:CTL1</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 0024</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0x4009 1024</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0x4009 1024</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">Control 1<BR>
+<BR>
+This register contains various chip level control and debug bitfields.</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">RW</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="CTL1_RESERVED2">31:2</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED2</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0b00 0000 0000 0000 0000 0000 0000 0000</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="CTL1_MCU_RESET_SRC">1</a>
+</TD>
+<TD class="cellBitfieldCol2">MCU_RESET_SRC</TD>
+<TD class="cellBitfieldCol3" colspan="3">Indicates source of last <A class="mmap_legend_link" href="../legend.html#MCU">MCU</A> Voltage Domain warm reset request:<BR>
+<BR>
+0: <A class="mmap_legend_link" href="../legend.html#MCU">MCU</A> SW reset<BR>
+1: <A class="mmap_legend_link" href="../legend.html#JTAG">JTAG</A> reset<BR>
+<BR>
+This bit can only be cleared by writing a 1 to it</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="CTL1_MCU_WARM_RESET">0</a>
+</TD>
+<TD class="cellBitfieldCol2">MCU_WARM_RESET</TD>
+<TD class="cellBitfieldCol3" colspan="3">Indicates type of last <A class="mmap_legend_link" href="../legend.html#MCU">MCU</A> Voltage Domain reset:<BR>
+<BR>
+0: Last <A class="mmap_legend_link" href="../legend.html#MCU">MCU</A> reset was not a warm reset<BR>
+1: Last <A class="mmap_legend_link" href="../legend.html#MCU">MCU</A> reset was a warm reset (requested from <A class="mmap_legend_link" href="../legend.html#MCU">MCU</A> or <A class="mmap_legend_link" href="../legend.html#JTAG">JTAG</A> as indicated in <A class="xref" href="#CTL1_MCU_RESET_SRC">MCU_RESET_SRC</A>)<BR>
+<BR>
+This bit can only be cleared by writing a 1 to it</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="RECHARGECFG"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">AON_WUC</A>:RECHARGECFG</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 0030</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0x4009 1030</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0x4009 1030</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">Recharge Controller Configuration<BR>
+<BR>
+This register sets all relevant patameters for controlling the recharge algorithm.</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">RW</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="RECHARGECFG_ADAPTIVE_EN">31</a>
+</TD>
+<TD class="cellBitfieldCol2">ADAPTIVE_EN</TD>
+<TD class="cellBitfieldCol3" colspan="3">Enable adaptive recharge<BR>
+<BR>
+Note: Recharge can be turned completely of by setting <A class="xref" href="#RECHARGECFG_MAX_PER_E">MAX_PER_E</A>=7 and <A class="xref" href="#RECHARGECFG_MAX_PER_M">MAX_PER_M</A>=31 and this bitfield to 0</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="RECHARGECFG_RESERVED24">30:24</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED24</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0b000 0000</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="RECHARGECFG_C2">23:20</a>
+</TD>
+<TD class="cellBitfieldCol2">C2</TD>
+<TD class="cellBitfieldCol3" colspan="3">Gain factor for adaptive recharge algorithm<BR>
+<BR>
+period_new=period * ( 1+/-(2^-<A class="xref" href="#RECHARGECFG_C1">C1</A>+2^-<A class="xref" href="#RECHARGECFG_C2">C2</A>) )<BR>
+Valid values for <A class="xref" href="#RECHARGECFG_C2">C2</A> is 2 to 10<BR>
+<BR>
+Note: Rounding may cause adaptive recharge not to start for very small values of both Gain and Initial period. Criteria for algorithm to start is MAX(PERIOD*2^-<A class="xref" href="#RECHARGECFG_C1">C1</A>,PERIOD*2^-<A class="xref" href="#RECHARGECFG_C2">C2</A>) &#62;= 1</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0x0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="RECHARGECFG_C1">19:16</a>
+</TD>
+<TD class="cellBitfieldCol2">C1</TD>
+<TD class="cellBitfieldCol3" colspan="3">Gain factor for adaptive recharge algorithm<BR>
+<BR>
+period_new=period * ( 1+/-(2^-<A class="xref" href="#RECHARGECFG_C1">C1</A>+2^-<A class="xref" href="#RECHARGECFG_C2">C2</A>) )<BR>
+Valid values for <A class="xref" href="#RECHARGECFG_C1">C1</A> is 1 to 10<BR>
+<BR>
+Note: Rounding may cause adaptive recharge not to start for very small values of both Gain and Initial period. Criteria for algorithm to start is MAX(PERIOD*2^-<A class="xref" href="#RECHARGECFG_C1">C1</A>,PERIOD*2^-<A class="xref" href="#RECHARGECFG_C2">C2</A>) &#62;= 1</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0x0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="RECHARGECFG_MAX_PER_M">15:11</a>
+</TD>
+<TD class="cellBitfieldCol2">MAX_PER_M</TD>
+<TD class="cellBitfieldCol3" colspan="3">This register defines the maximum period that the recharge algorithm can take, i.e. it defines  the maximum number of cycles between 2 recharges.<BR>
+The maximum number of cycles is specified with a 5 bit mantissa and 3 bit exponent:<BR>
+MAXCYCLES=(<A class="xref" href="#RECHARGECFG_MAX_PER_M">MAX_PER_M</A>*16+15)*2^<A class="xref" href="#RECHARGECFG_MAX_PER_E">MAX_PER_E</A><BR>
+This field sets the mantissa of MAXCYCLES</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0b0 0000</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="RECHARGECFG_MAX_PER_E">10:8</a>
+</TD>
+<TD class="cellBitfieldCol2">MAX_PER_E</TD>
+<TD class="cellBitfieldCol3" colspan="3">This register defines the maximum period that the recharge algorithm can take, i.e. it defines  the maximum number of cycles between 2 recharges.<BR>
+The maximum number of cycles is specified with a 5 bit mantissa and 3 bit exponent:<BR>
+MAXCYCLES=(<A class="xref" href="#RECHARGECFG_MAX_PER_M">MAX_PER_M</A>*16+15)*2^<A class="xref" href="#RECHARGECFG_MAX_PER_E">MAX_PER_E</A><BR>
+This field sets the exponent MAXCYCLES</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0b000</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="RECHARGECFG_PER_M">7:3</a>
+</TD>
+<TD class="cellBitfieldCol2">PER_M</TD>
+<TD class="cellBitfieldCol3" colspan="3">Number of 32 KHz clocks between activation of recharge controller<BR>
+For recharge algorithm, PERIOD is the initial period when entering powerdown mode. The adaptive recharge algorithm will not change this register<BR>
+PERIOD will effectively be a 16 bit value coded in a 5 bit mantissa and 3 bit exponent:<BR>
+This field sets the Mantissa of the Period.<BR>
+PERIOD=(<A class="xref" href="#RECHARGECFG_PER_M">PER_M</A>*16+15)*2^<A class="xref" href="#RECHARGECFG_PER_E">PER_E</A></TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0b0 0000</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="RECHARGECFG_PER_E">2:0</a>
+</TD>
+<TD class="cellBitfieldCol2">PER_E</TD>
+<TD class="cellBitfieldCol3" colspan="3">Number of 32 KHz clocks between activation of recharge controller<BR>
+For recharge algorithm, PERIOD is the initial period when entering powerdown mode. The adaptive recharge algorithm will not change this register<BR>
+PERIOD will effectively be a 16 bit value coded in a 5 bit mantissa and 3 bit exponent:<BR>
+This field sets the Exponent of the Period.  <BR>
+PERIOD=(<A class="xref" href="#RECHARGECFG_PER_M">PER_M</A>*16+15)*2^<A class="xref" href="#RECHARGECFG_PER_E">PER_E</A></TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0b000</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="RECHARGESTAT"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">AON_WUC</A>:RECHARGESTAT</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 0034</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0x4009 1034</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0x4009 1034</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">Recharge Controller Status<BR>
+<BR>
+This register controls various status registers which are updated during recharge.  The register is mostly intended for test and debug.</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">RW</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="RECHARGESTAT_RESERVED20">31:20</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED20</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0x000</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="RECHARGESTAT_VDDR_SMPLS">19:16</a>
+</TD>
+<TD class="cellBitfieldCol2">VDDR_SMPLS</TD>
+<TD class="cellBitfieldCol3" colspan="3">The last 4 <A class="mmap_legend_link" href="../legend.html#VDDR">VDDR</A> samples, bit 0 being the newest.<BR>
+<BR>
+The register is being updated in every recharge period with a shift left, and bit 0 is updated with the last <A class="mmap_legend_link" href="../legend.html#VDDR">VDDR</A> sample, ie a 1 is shiftet in in case <A class="mmap_legend_link" href="../legend.html#VDDR">VDDR</A> &#62; VDDR_threshold just before recharge starts. Otherwise a 0 will be shifted in.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0x0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="RECHARGESTAT_MAX_USED_PER">15:0</a>
+</TD>
+<TD class="cellBitfieldCol2">MAX_USED_PER</TD>
+<TD class="cellBitfieldCol3" colspan="3">The maximum value of recharge period seen with VDDR&#62;threshold.<BR>
+<BR>
+The <A class="mmap_legend_link" href="../legend.html#VDDR">VDDR</A> voltage is compared against the threshold voltage at  just before  each recharge. If <A class="mmap_legend_link" href="../legend.html#VDDR">VDDR</A> is above threshold, <A class="xref" href="#RECHARGESTAT_MAX_USED_PER">MAX_USED_PER</A> is updated with max ( current recharge peride; <A class="xref" href="#RECHARGESTAT_MAX_USED_PER">MAX_USED_PER</A> )  This way <A class="xref" href="#RECHARGESTAT_MAX_USED_PER">MAX_USED_PER</A> can track the recharge period where <A class="mmap_legend_link" href="../legend.html#VDDR">VDDR</A> is decharged to the threshold value. We can therefore use the value as an indication of the leakage current during recharge.<BR>
+<BR>
+This bitfield is cleared to 0 when writing this register.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0x0000</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="OSCCFG"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">AON_WUC</A>:OSCCFG</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 0038</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0x4009 1038</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0x4009 1038</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">Oscillator Configuration<BR>
+<BR>
+This register sets the period for Amplitude compensation requests sent to the oscillator control system. The amplitude compensations is only applicable when <A class="mmap_legend_link" href="../legend.html#XOSC_HF">XOSC_HF</A> is running in low power mode.</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">RW</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="OSCCFG_RESERVED8">31:8</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED8</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0x00 0000</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="OSCCFG_PER_M">7:3</a>
+</TD>
+<TD class="cellBitfieldCol2">PER_M</TD>
+<TD class="cellBitfieldCol3" colspan="3">Number of 32 KHz clocks between oscillator amplitude calibrations.<BR>
+When this counter expires, an oscillator amplitude compensation is triggered immediately in Active mode. When this counter expires in Powerdown mode an internal flag is set such that the amplitude compensation is postponed until the next recharge occurs.<BR>
+<BR>
+The Period will effectively be a 16 bit value coded in a 5 bit mantissa and 3 bit exponent<BR>
+PERIOD=(<A class="xref" href="#OSCCFG_PER_M">PER_M</A>*16+15)*2^<A class="xref" href="#OSCCFG_PER_E">PER_E</A><BR>
+This field sets the mantissa<BR>
+Note: Oscillator amplitude calibration is turned of when both this bitfield and <A class="xref" href="#OSCCFG_PER_E">PER_E</A> are set to 0</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0b0 0000</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="OSCCFG_PER_E">2:0</a>
+</TD>
+<TD class="cellBitfieldCol2">PER_E</TD>
+<TD class="cellBitfieldCol3" colspan="3">Number of 32 KHz clocks between oscillator amplitude calibrations.<BR>
+When this counter expires, an oscillator amplitude compensation is triggered immediately in Active mode. When this counter expires in Powerdown mode an internal flag is set such that the amplitude compensation is postponed until the next recharge occurs.<BR>
+The Period will effectively be a 16 bit value coded in a 5 bit mantissa and 3 bit exponent<BR>
+PERIOD=(<A class="xref" href="#OSCCFG_PER_M">PER_M</A>*16+15)*2^<A class="xref" href="#OSCCFG_PER_E">PER_E</A><BR>
+This field sets the exponent<BR>
+Note: Oscillator amplitude calibration is turned of when both  <A class="xref" href="#OSCCFG_PER_M">PER_M</A> and this bitfield are set to 0</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0b000</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="JTAGCFG"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">AON_WUC</A>:JTAGCFG</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 0040</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0x4009 1040</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0x4009 1040</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3"><A class="mmap_legend_link" href="../legend.html#JTAG">JTAG</A> Configuration<BR>
+<BR>
+This register contains control for configuration of the <A class="mmap_legend_link" href="../legend.html#JTAG">JTAG</A> domain,- hereunder access permissions for each <A class="mmap_legend_link" href="../legend.html#TAP">TAP</A>.</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">RW</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="JTAGCFG_RESERVED9">31:9</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED9</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0b000 0000 0000 0000 0000 0000</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="JTAGCFG_JTAG_PD_FORCE_ON">8</a>
+</TD>
+<TD class="cellBitfieldCol2">JTAG_PD_FORCE_ON</TD>
+<TD class="cellBitfieldCol3" colspan="3">Controls <A class="mmap_legend_link" href="../legend.html#JTAG">JTAG</A> PowerDomain power state:<BR>
+<BR>
+0: Controlled exclusively by debug subsystem. (JTAG Powerdomain will be powered off unless a debugger is attached)<BR>
+1: <A class="mmap_legend_link" href="../legend.html#JTAG">JTAG</A> Power Domain is forced on, independent of debug subsystem.<BR>
+<BR>
+NB: The reset value causes <A class="mmap_legend_link" href="../legend.html#JTAG">JTAG</A> Power Domain to be powered on by default. Software must clear this bit to turn off the <A class="mmap_legend_link" href="../legend.html#JTAG">JTAG</A> Power Domain</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">1</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="JTAGCFG_RESERVED0">7:0</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED0</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0x00</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="JTAGUSERCODE"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">AON_WUC</A>:JTAGUSERCODE</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 0044</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0x4009 1044</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0x4009 1044</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3"><A class="mmap_legend_link" href="../legend.html#JTAG">JTAG</A> USERCODE<BR>
+<BR>
+Boot code copies the <A class="mmap_legend_link" href="../legend.html#JTAG">JTAG</A> USERCODE to this register from where it is forwarded to the debug subsystem.</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">RW</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="JTAGUSERCODE_USER_CODE">31:0</a>
+</TD>
+<TD class="cellBitfieldCol2">USER_CODE</TD>
+<TD class="cellBitfieldCol3" colspan="3">32-bit <A class="mmap_legend_link" href="../legend.html#JTAG">JTAG</A> USERCODE register feeding main <A class="mmap_legend_link" href="../legend.html#JTAG">JTAG</A> <A class="mmap_legend_link" href="../legend.html#TAP">TAP</A><BR>
+NB: This field can be locked</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0x0B99 A02F</TD>
+</TR>
+</TABLE>
+<BR>
+<BR>
+<hr><table class="footer"><tr><td>&copy; 2015 - 2016. Texas Instruments | All Rights Reserved</td></tr></table>
+</BODY>
+</HTML>

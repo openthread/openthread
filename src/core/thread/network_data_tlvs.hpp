@@ -95,7 +95,9 @@ public:
      * @param[in]  aType  The Type value.
      *
      */
-    void SetType(Type aType) { mType = (mType & ~kTypeMask) | (static_cast<uint8_t>(aType) << kTypeOffset); }
+    void SetType(Type aType) {
+        mType = (mType & ~kTypeMask) | ((aType << kTypeOffset) & kTypeMask);
+    }
 
     /**
      * This method returns the Length value.
@@ -206,7 +208,9 @@ public:
      * @param[in]  aPrf  The Preference value.
      *
      */
-    void SetPreference(int8_t aPrf) { mFlags = (mFlags & ~kPreferenceMask) | (aPrf << kPreferenceOffset); }
+    void SetPreference(int8_t aPrf) {
+        mFlags = (mFlags & ~kPreferenceMask) | ((aPrf << kPreferenceOffset) & kPreferenceMask);
+    }
 
 private:
     enum
@@ -249,7 +253,7 @@ public:
      * @returns A pointer to the i'th HasRoute entry.
      *
      */
-    HasRouteEntry *GetEntry(int i) {
+    HasRouteEntry *GetEntry(uint8_t i) {
         return reinterpret_cast<HasRouteEntry *>(GetValue() + (i * sizeof(HasRouteEntry)));
     }
 } OT_TOOL_PACKED_END;
@@ -327,7 +331,7 @@ public:
      * @param[in]  aLength  The Sub-TLVs length in bytes.
      *
      */
-    void SetSubTlvsLength(int aLength) {
+    void SetSubTlvsLength(uint8_t aLength) {
         SetLength(sizeof(*this) - sizeof(NetworkDataTlv) + BitVectorBytes(mPrefixLength) + aLength);
     }
 
@@ -349,10 +353,11 @@ public:
         kPreferenceOffset = 6,
         kPreferenceMask = 3 << kPreferenceOffset,
         kPreferredFlag = 1 << 5,
-        kValidFlag = 1 << 4,
+        kSlaacFlag = 1 << 4,
         kDhcpFlag = 1 << 3,
         kConfigureFlag = 1 << 2,
         kDefaultRouteFlag = 1 << 1,
+        kOnMeshFlag = 1 << 0,
     };
 
     /**
@@ -406,7 +411,9 @@ public:
      * @param[in]  aPrf  The Preference value.
      *
      */
-    void SetPreference(int8_t aPrf) { mFlags = (mFlags & ~kPreferenceMask) | (aPrf << kPreferenceOffset); }
+    void SetPreference(int8_t aPrf) {
+        mFlags = (mFlags & ~kPreferenceMask) | ((aPrf << kPreferenceOffset) & kPreferenceMask);
+    }
 
     /**
      * This method indicates whether or not the Preferred flag is set.
@@ -430,25 +437,25 @@ public:
     void SetPreferred() { mFlags |= kPreferredFlag; }
 
     /**
-     * This method indicates whether or not the Valid flag is set.
+     * This method indicates whether or not the SLAAC flag is set.
      *
-     * @retval TRUE   If the Valid flag is set.
-     * @retval FALSE  If the Valid flag is not set.
+     * @retval TRUE   If the SLAAC flag is set.
+     * @retval FALSE  If the SLAAC flag is not set.
      *
      */
-    bool IsValid() const { return (mFlags & kValidFlag) != 0; }
+    bool IsSlaac() const { return (mFlags & kSlaacFlag) != 0; }
 
     /**
-     * This method clears the Valid flag.
+     * This method clears the SLAAC flag.
      *
      */
-    void ClearValid() { mFlags &= ~kValidFlag; }
+    void ClearSlaac() { mFlags &= ~kSlaacFlag; }
 
     /**
-     * This method sets the Valid flag.
+     * This method sets the SLAAC flag.
      *
      */
-    void SetValid() { mFlags |= kValidFlag; }
+    void SetSlaac() { mFlags |= kSlaacFlag; }
 
     /**
      * This method indicates whether or not the DHCP flag is set.
@@ -513,6 +520,27 @@ public:
      */
     void SetDefaultRoute() { mFlags |= kDefaultRouteFlag; }
 
+    /**
+     * This method indicates whether or not the On-Mesh flag is set.
+     *
+     * @retval TRUE   If the On-Mesh flag is set.
+     * @retval FALSE  If the On-Mesh flag is not set.
+     *
+     */
+    bool IsOnMesh() const { return (mFlags & kOnMeshFlag) != 0; }
+
+    /**
+     * This method clears the On-Mesh flag.
+     *
+     */
+    void ClearOnMesh() { mFlags &= ~kOnMeshFlag; }
+
+    /**
+     * This method sets the On-Mesh flag.
+     *
+     */
+    void SetOnMesh() { mFlags |= kOnMeshFlag; }
+
 private:
     uint16_t mRloc;
     uint8_t mFlags;
@@ -549,7 +577,7 @@ public:
      * @returns A pointer to the i'th Border Router entry.
      *
      */
-    BorderRouterEntry *GetEntry(int i) {
+    BorderRouterEntry *GetEntry(uint8_t i) {
         return reinterpret_cast<BorderRouterEntry *>(GetValue() + (i * sizeof(BorderRouterEntry)));
     }
 } OT_TOOL_PACKED_END;
@@ -603,7 +631,9 @@ public:
      * @param[in]  aContextId  The Context ID value.
      *
      */
-    void SetContextId(uint8_t aContextId) { mFlags = (mFlags & ~kContextIdMask) | (aContextId << kContextIdOffset); }
+    void SetContextId(uint8_t aContextId) {
+        mFlags = (mFlags & ~kContextIdMask) | ((aContextId << kContextIdOffset) & kContextIdMask);
+    }
 
     /**
      * This method returns the Context Length value.

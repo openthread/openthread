@@ -1,15 +1,16 @@
 Spinel Host Controller Interface
 ================================
 
-Updated: 2016-05-18
+Updated: 2016-08-22
 
 Written by: Robert Quattlebaum <rquattle@nestlabs.com>
 
 THIS DOCUMENT IS A WORK IN PROGRESS AND SUBJECT TO CHANGE.
+See [`spinel.h`](./spinel.h) for additional protocol details.
 
 Copyright (c) 2016 Nest Labs, All Rights Reserved
 
-## 0. Abstract ##
+## Abstract ##
 
 This document describes a general management protocol for enabling a host
 device to communicate with and manage a network co-processor(NCP).
@@ -17,6 +18,47 @@ device to communicate with and manage a network co-processor(NCP).
 While initially designed to support Thread-based NCPs, the NCP protocol
 has been designed with a layered approach that allows it to be easily
 adapted to other network protocols.
+
+## 0. Table of Contents ##
+
+*   [Abstract](#abstract)
+*   [0. Table of Contents](#0-table-of-contents)
+*   [1. Definitions](#1-definitions)
+*   [2. Introduction](#2-introduction)
+*   [3. Frame Format](#3-frame-format)
+    *   [3.1. Header Format](#31-header-format)
+        *   [3.1.1. Flag](#311-flag)
+        *   [3.1.2. Interface Identifier (IID)](#312-interface-identifier-iid)
+        *   [3.1.3. Transaction Identifier (TID)](#313-transaction-identifier-tid)
+        *   [3.2. Command Identifier (CMD)](#32-command-identifier-cmd)
+        *   [3.3. Command Payload (Optional)](#33-command-payload-optional)
+*   [4. Commands](#4-commands)
+*   [5. General Properties](#5-general-properties)
+*   [6. Status Codes](#6-status-codes)
+*   [7. Data Packing](#7-data-packing)
+    *   [7.1 Primitive Types](#71-primitive-types)
+    *   [7.2 Packed Unsigned Integer](#72-packed-unsigned-integer)
+    *   [7.3 Data Blobs](#73-data-blobs)
+    *   [7.4 Structured Data](#74-structured-data)
+    *   [7.5 Arrays](#75-arrays)
+*   [A. Framing Protocol](#a-framing-protocol)
+    *   [A.1. UART Recommendations](#a1-uart-recommendations)
+        *   [A.1.1. HDLC-Lite](#a11-hdlc-lite)
+    *   [A.2. SPI Recommendations](#a2-spi-recommendations)
+        *   [A.2.1 SPI Framing Protocol](#a21-spi-framing-protocol)
+    *   [A.3. I²C Recommendations](#a3-ic-recommendations)
+    *   [A.4. Native USB Recommendations](#a4-native-usb-recommendations)
+*   [B. Feature: Network Save](#b-feature-network-save)
+    *   [B.1. Commands](#b1-commands)
+*   [C. Feature: Host Buffer Offload](#c-feature-host-buffer-offload)
+    *   [C.1. Commands](#c1-commands)
+    *   [C.2. Properties](#c2-properties)
+*   [D. Protocol: Thread](#d-protocol-thread)
+    *   [D.1. PHY Properties](#d1-phy-properties)
+    *   [D.2. MAC Properties](#d2-mac-properties)
+    *   [D.3. NET Properties](#d3-net-properties)
+    *   [D.4. THREAD Properties](#d4-thread-properties)
+    *   [D.5. IPv6 Properties](#d5-ipv6-properties)
 
 ## 1. Definitions ##
 
@@ -45,12 +87,13 @@ following goals:
 On top of this core framework, we define the properties and commands
 to enable various features and network protocols.
 
+
 ## 3. Frame Format ##
 
 A frame is defined simply as the concatenation of
 
  *  A header byte
- *  A command (up to three bytes)
+ *  A command (up to three bytes, see *section 7.2* for format)
  *  An optional command payload
 
     FRAME = HEADER CMD [CMD_PAYLOAD]
@@ -64,26 +107,23 @@ Fields: | HEADER | CMD | *[CMD_PAYLOAD]*
 
 The header byte is broken down as follows:
 
-     0 1 2 3 4 5 6 7
-    +-+-+-+-+-+-+-+-+
-    |1|R|IID|  TID  |
-    +-+-+-+-+-+-+-+-+
+      0   1   2   3   4   5   6   7
+    +---+---+---+---+---+---+---+---+
+    |  FLG  |  IID  |      TID      |
+    +---+---+---+---+---+---+---+---+
 
-#### 3.1.1. Flag Bit ####
+#### 3.1.1. Flag ####
 
-The most significant header bit is always set to 1 to allow this
-protocol to be line compatible with BTLE HCI. By setting the first
-bit, we can disambiguate between Spinel frames and HCI frames (which
-always start with either `0x01` or `0x04`) without any additional
-framing overhead.
+The flag field of the header byte (`FLG`) is always set to the value
+two (or `10` in binary). Any frame received with these bits set to
+any other value else MUST NOT be considered a Spinel frame.
 
-#### 3.1.2. Reserved Bit ####
+This convention allows Spinel to be line compatible with BTLE HCI. By
+defining the first two bit in this way we can disambiguate between
+Spinel frames and HCI frames (which always start with either `0x01`
+or `0x04`) without any additional framing overhead.
 
-The reserved bit (`R`) is reserved for future use. The sender MUST
-set this bit to zero, and the receiver MUST ignore frames with this
-bit set.
-
-#### 3.1.3. Interface Identifier (IID) ####
+#### 3.1.2. Interface Identifier (IID) ####
 
 The Interface Identifier (IID) is a number between 0 and 3 which
 identifies which subinterface the frame is intended for. This allows
@@ -91,7 +131,7 @@ the protocol to support connecting to more than one network at once.
 The first subinterface (0) is considered the primary subinterface and
 MUST be supported. Support for all other subinterfaces is OPTIONAL.
 
-#### 3.1.4. Transaction Identifier (TID) ####
+#### 3.1.3. Transaction Identifier (TID) ####
 
 The least significant bits of the header represent the Transaction
 Identifier(TID). The TID is used for correlating responses to the
@@ -110,7 +150,7 @@ commands sent to the host from the NCP.
 
 The command identifier is a 21-bit unsigned integer encoded in up to
 three bytes using the packed unsigned integer format described in
-section 7.2. This encoding allows for up to 2,097,152 individual
+*section 7.2*. This encoding allows for up to 2,097,152 individual
 commands, with the first 127 commands represented as a single byte.
 Command identifiers larger than 2,097,151 are explicitly forbidden.
 
@@ -156,7 +196,7 @@ Octets: |    1   |     1
 Fields: | HEADER | CMD_NOOP
 
 No-Operation command. Induces the NCP to send a success status back to
-the host. This is primarily used for livliness checks.
+the host. This is primarily used for liveliness checks.
 
 The command payload for this command SHOULD be empty. The receiver
 MUST ignore any non-empty command payload.
@@ -194,7 +234,7 @@ Get property value command. Causes the NCP to emit a
 `CMD_PROP_VALUE_IS` command for the given property identifier.
 
 The payload for this command is the property identifier encoded in the
-packed unsigned integer format described in section 7.2.
+packed unsigned integer format described in *section 7.2*.
 
 If an error occurs, the value of `PROP_LAST_STATUS` will be emitted
 instead with the value set to the generated status code for the error.
@@ -211,7 +251,7 @@ Set property value command. Instructs the NCP to set the given
 property to the specific given value, replacing any previous value.
 
 The payload for this command is the property identifier encoded in the
-packed unsigned integer format described in section 7.2, followed by
+packed unsigned integer format described in *section 7.2*, followed by
 the property value. The exact format of the property value is defined
 by the property.
 
@@ -232,7 +272,7 @@ items in the list. The resulting order of items in the list is defined
 by the individual property being operated on.
 
 The payload for this command is the property identifier encoded in the
-packed unsigned integer format described in section 7.2, followed by
+packed unsigned integer format described in *section 7.2*, followed by
 the value to be inserted. The exact format of the value is defined by
 the property.
 
@@ -255,8 +295,8 @@ by the individual property being operated on.
 Note that this command operates *by value*, not by index!
 
 The payload for this command is the property identifier encoded in the
-packed unsigned integer format described in section 7.2, followed by
-the value to be inserted. The exact format of the value is defined by
+packed unsigned integer format described in *section 7.2*, followed by
+the value to be removed. The exact format of the value is defined by
 the property.
 
 If an error occurs, the value of `PROP_LAST_STATUS` will be emitted
@@ -275,7 +315,7 @@ by the NCP in an unsolicited fashion to notify the host of various
 state changes asynchronously.
 
 The payload for this command is the property identifier encoded in the
-packed unsigned integer format described in section 7.2, followed by
+packed unsigned integer format described in *section 7.2*, followed by
 the current value of the given property.
 
 
@@ -292,7 +332,7 @@ it can be sent by the NCP in an unsolicited fashion to notify the host
 of various state changes asynchronously.
 
 The payload for this command is the property identifier encoded in the
-packed unsigned integer format described in section 7.2, followed by
+packed unsigned integer format described in *section 7.2*, followed by
 the value that was inserted into the given property.
 
 The resulting order of items in the list is defined by the given
@@ -312,7 +352,7 @@ various state changes asynchronously.
 Note that this command operates *by value*, not by index!
 
 The payload for this command is the property identifier encoded in the
-packed unsigned integer format described in section 7.2, followed by
+packed unsigned integer format described in *section 7.2*, followed by
 the value that was removed from the given property.
 
 The resulting order of items in the list is defined by the given
@@ -356,6 +396,9 @@ Property ID Range     | Description
 15,360 - 16,383       | Vendor-specific
 16,384 - 1,999,999    | *UNALLOCATED*
 2,000,000 - 2,097,151 | Experimental use only
+
+For an explanation of the data format encoding shorthand used
+throughout this section, see section 7.1.
 
 ### 5.1. PROP 0: `PROP_LAST_STATUS`
 
@@ -447,7 +490,6 @@ Currently defined values are:
  *  1: ZigBee
  *  2: ZigBeeIP
  *  3: Thread
- *  TBD: BlueTooth Low Energy (BTLE)
 
 The host MUST enter a FAULT state if it does not recognize the
 protocol given by the NCP.
@@ -674,21 +716,29 @@ of the metadata is defined by the associated network protocol.
  *  0: `STATUS_OK`: Operation has completed successfully.
  *  1: `STATUS_FAILURE`: Operation has failed for some undefined
     reason.
- *  2: `STATUS_UNIMPLEMENTED`
- *  3: `STATUS_INVALID_ARGUMENT`
- *  4: `STATUS_INVALID_STATE`
- *  5: `STATUS_INVALID_COMMAND`
- *  6: `STATUS_INVALID_INTERFACE`
- *  7: `STATUS_INTERNAL_ERROR`
- *  8: `STATUS_SECURITY_ERROR`
- *  9: `STATUS_PARSE_ERROR`
- *  10: `STATUS_IN_PROGRESS`
- *  11: `STATUS_NOMEM`
- *  12: `STATUS_BUSY`
- *  13: `STATUS_PROPERTY_NOT_FOUND`
- *  14: `STATUS_PACKET_DROPPED`
- *  15: `STATUS_EMPTY`
- *  16-111: *RESERVED*
+ *  2: `STATUS_UNIMPLEMENTED`: The given operation has not been implemented.
+ *  3: `STATUS_INVALID_ARGUMENT`: An argument to the given operation is invalid.
+ *  4: `STATUS_INVALID_STATE` : The given operation is invalid for the current
+    state of the device.
+ *  5: `STATUS_INVALID_COMMAND`: The given command is not recognized.
+ *  6: `STATUS_INVALID_INTERFACE`: The given Spinel interface is not supported.
+ *  7: `STATUS_INTERNAL_ERROR`: An internal runtime error has occured.
+ *  8: `STATUS_SECURITY_ERROR`: A security or authentication error has occured.
+ *  9: `STATUS_PARSE_ERROR`: An error has occured while parsing the command.
+ *  10: `STATUS_IN_PROGRESS`: The operation is in progress and will be
+    completed asynchronously.
+ *  11: `STATUS_NOMEM`: The operation has been prevented due to memory
+    pressure.
+ *  12: `STATUS_BUSY`: The device is currently performing a mutually exclusive
+    operation.
+ *  13: `STATUS_PROPERTY_NOT_FOUND`: The given property is not recognized.
+ *  14: `STATUS_PACKET_DROPPED`: The packet was dropped.
+ *  15: `STATUS_EMPTY`: The result of the operation is empty.
+ *  16: `STATUS_CMD_TOO_BIG`: The command was too large to fit in the internal
+    buffer.
+ *  17: `STATUS_NO_ACK`: The packet was not acknowledged.
+ *  18: `STATUS_CCA_FAILURE`: The packet was not sent due to a CCA failure.
+ *  19-111: *RESERVED*
  *  112-127: Reset Causes
      *  112: `STATUS_RESET_POWER_ON`
      *  113: `STATUS_RESET_EXTERNAL`
@@ -697,7 +747,9 @@ of the metadata is defined by the associated network protocol.
      *  116: `STATUS_RESET_CRASH`
      *  117: `STATUS_RESET_ASSERT`
      *  118: `STATUS_RESET_OTHER`
-     *  119-127: *RESERVED-RESET-CODES*
+     *  119: `STATUS_RESET_UNKNOWN`
+     *  120: `STATUS_RESET_WATCHDOG`
+     *  121-127: *RESERVED-RESET-CODES*
  *  128 - 15,359: *UNALLOCATED*
  *  15,360 - 16,383: Vendor-specific
  *  16,384 - 1,999,999: *UNALLOCATED*
@@ -807,8 +859,8 @@ where the start and end of the data blob is: the start is 9 bytes from
 the start of the buffer, and its length is the length of the buffer
 minus 9. (9 is the number of bytes taken up by a byte and two longs)
 
-However, things are a little different with `CLDL`. Since our datablob
-is no longer the last item in the signature, the length must be
+However, things are a little different with `CLDL`. Since our data
+blob is no longer the last item in the signature, the length must be
 prepended.
 
 If you are a little confused, keep reading. This theme comes up in a a
@@ -866,12 +918,168 @@ unsigned 16-bit integer.
 
 ## A. Framing Protocol
 
-Since this NCP protocol is defined independently of framing, any
-number of framing protocols could be used successfully. However,
-in the interests of cross-compatibility, we recommend using
-HDLC-Lite for framing when using this NCP protocol with a UART.
+Since this NCP protocol is defined independently of the physical
+transport or framing, any number of transports and framing protocols
+could be used successfully. However, in the interests of compatibility,
+this document provides some recommendations.
 
-A SPI-specific framing mechanism is currently TBD.
+### A.1. UART Recommendations ###
+
+The recommended default UART settings are:
+
+* Bit rate:     115200
+* Start bits:   1
+* Data bits:    8
+* Stop bits:    1
+* Parity:       None
+* Flow Control: Hardware
+
+These values may be adjusted depending on the individual needs of
+the application or product, but some sort of flow control MUST be used.
+Hardware flow control is preferred over software flow control. In the
+absence of hardware flow control, software flow control (XON/XOFF) MUST
+be used instead.
+
+We also recommend an arduino-style hardware reset, where the DTR
+signal is coupled to the `R̅E̅S̅` pin through a 0.01µF capacitor. This
+causes the NCP to automatically reset whenever the serial port is
+opened. At the very least we recommend dedicating one of your host
+pins to controlling the `R̅E̅S̅` pin on the NCP, so that you can
+easily perform a hardware reset if necessary.
+
+#### A.1.1. HDLC-Lite ####
+
+*HDLC-Lite* is the recommended framing protocol for transmitting
+Spinel frames over a UART. HDLC-Lite consists of only the framing,
+escaping, and CRC parts of the larger HDLC protocol---all other parts
+of HDLC are omitted. This protocol was chosen because it works well
+with software flow control and is widely implemented.
+
+To transmit a frame with HDLC-lite, the 16-bit CRC must first be
+appended to the frame. The CRC function is defined to be CRC-16/CCITT,
+otherwise known as the [KERMIT CRC][].
+
+[KERMIT CRC]: http://reveng.sourceforge.net/crc-catalogue/16.htm#crc.cat.kermit
+
+Individual frames are terminated with a frame delimiter octet called
+the 'flag' octet (`0x7E`).
+
+The following octets values are considered *special* and should be
+escaped when present in data frames:
+
+Octet Value | Description  
+------------|-----------------------  
+       0x7E | Frame Delimiter (Flag)  
+       0x7D | Escape Byte  
+       0x11 | XON  
+       0x13 | XOFF  
+       0xF8 | Vendor-Specific  
+
+When present in a data frame, these octet values are escaped by
+prepending the escape octet (`0x7D`) and XORing the value with `0x20`.
+
+When receiving a frame, the CRC must be verified after the frame is
+unescaped. If the CRC value does not match what is calculated for the
+frame data, the frame MUST be discarded. The implementation MAY
+indicate the failure to higher levels to handle as they see fit, but
+MUST NOT attempt to process the deceived frame.
+
+Consecutive flag octets are entirely legal and MUST NOT be treated as
+a framing error. Consecutive flag octets MAY be used as a way to wake
+up a sleeping NCP.
+
+When first establishing a connection to the NCP, it is customary to
+send one or more flag octets to ensure that any previously received
+data is discarded.
+
+### A.2. SPI Recommendations ###
+
+We RECOMMEND the use of the following standard SPI signals:
+
+*   `C̅S̅`:   (Host-to-NCP) Chip Select
+*   `CLK`:  (Host-to-NCP) Clock
+*   `MOSI`: Master-Output/Slave-Input
+*   `MISO`: Master-Input/Slave-Output
+*   `I̅N̅T̅`:  (NCP-to-Host) Host Interrupt
+*   `R̅E̅S̅`:  (Host-to-NCP) NCP Hardware Reset
+
+The `I̅N̅T̅` signal is used by the NCP to indicate to the host that
+the NCP has frames pending to send to it. When asserted, the host
+SHOULD initiate a SPI transaction in a timely manner.
+
+We RECOMMEND the following SPI properties:
+
+*   `C̅S̅` is active low.
+*   `CLK` is active high.
+*   `CLK` speed is larger than 500 kHz.
+*   Data is valid on leading edge of `CLK`.
+*   Data is sent in multiples of 8-bits (octets).
+*   Octets are sent most-significant bit first.
+
+This recommended configuration may be adjusted depending on the
+individual needs of the application or product.
+
+#### A.2.1 SPI Framing Protocol ####
+
+Each SPI frame starts with a 5-byte frame header:
+
+Octets: |  1  |    2     |     2  
+--------|-----|----------|----------  
+Fields: | HDR | RECV_LEN | DATA_LEN  
+
+*   `HDR`: The first byte is the header byte (defined below)
+*   `RECV_LEN`: The second and third bytes indicate the largest frame
+    size that that device is ready to receive. If zero, then the other
+    device must not send any data. (Little endian)
+*   `DATA_LEN`: The fourth and fifth bytes indicate the size of the
+    pending data frame to be sent to the other device. If this value
+    is equal-to or less-than the number of bytes that the other device
+    is willing to receive, then the data of the frame is immediately
+    after the header. (Little Endian)
+
+The `HDR` byte is defined as:
+
+      0   1   2   3   4   5   6   7
+    +---+---+---+---+---+---+---+---+
+    |RST|CRC|    RESERVED   |PATTERN|
+    +---+---+---+---+---+---+---+---+
+
+*   `RST`: This bit is set when that device has been reset since the
+    last time `C̅S̅` was asserted.
+*   `CRC`: This bit is set when that device supports writing a 16-bit
+    CRC at the end of the data. This CRC is NOT included in DATA_LEN.
+*   `RESERVED`: These bits are all reserved for future used. They
+    MUST be cleared to zero and MUST be ignored if set.
+*   `PATTERN`: These bits are set to a fixed value to help distinguish
+    valid SPI frames from garbage (by explicitly making `0xFF` and `0x00`
+    invalid values). Bit 6 MUST be set to be one and bit 7 MUST be
+    cleared (0). A frame received that has any other values for these bits
+    MUST be dropped.
+
+Prior to a sending or receiving a frame, the master SHOULD send a
+5-octet frame with zeros for both the max receive frame size and the
+the contained frame length. This will induce the slave device to
+indicate the length of the frame it wants to send (if any) and
+indicate the largest frame it is capable of receiving at the moment.
+This allows the master to calculate the size of the next transaction.
+
+This protocol can be used either unidirectionally or bidirectionally,
+determined by the behavior of the master and the slave.
+
+If the the master notices `PATTERN` is not set correctly, the master
+should consider the transaction to have failed and try again after 10
+milliseconds, retrying up to 200 times. After unsuccessfully trying
+200 times in a row, the master MAY take appropriate remedial action
+(like a NCP hardware reset, or indicating a communication failure to a
+user interface).
+
+### A.3. I²C Recommendations ###
+
+TBD
+
+### A.4. Native USB Recommendations ###
+
+TBD
 
 ## B. Feature: Network Save
 
@@ -1048,46 +1256,72 @@ This section describes all of the properties and semantics required
 for managing a thread NCP.
 
 ### D.1. PHY Properties
-#### D.1.1. PROP x: `PROP_PHY_ENABLED`
-* Type: Read-Only
+#### D.1.1. PROP 32: `PROP_PHY_ENABLED`
+* Type: Read-Write
 * Packed-Encoding: `b`
 
-#### D.1.4. PROP x: `PROP_PHY_CHAN`
+Set to `1` if the PHY is enabled, set to `0` otherwise.
+May be directly enabled to bypass higher-level packet processing
+in order to implement things like packet sniffers.
+
+#### D.1.4. PROP 33: `PROP_PHY_CHAN`
 * Type: Read-Write
 * Packed-Encoding: `C`
 
-#### D.1.5. PROP x: `PROP_PHY_CHAN_SUPPORTED`
+Value is the current channel. Must be set to one of the
+values contained in `PROP_PHY_CHAN_SUPPORTED`.
+
+#### D.1.5. PROP 34: `PROP_PHY_CHAN_SUPPORTED`
 * Type: Read-Only
 * Packed-Encoding: `A(C)`
 * Unit: List of channels
 
-#### D.1.3. PROP x: `PROP_PHY_FREQ`
+Value is a list of channel values that are supported by the
+hardware.
+
+#### D.1.3. PROP 35: `PROP_PHY_FREQ`
 * Type: Read-Only
 * Packed-Encoding: `L`
 * Unit: Kilohertz
 
-#### D.1.6. PROP x: `PROP_PHY_CCA_THRESHOLD`
+Value is the radio frequency (in kilohertz) of the
+current channel.
+
+#### D.1.6. PROP 36: `PROP_PHY_CCA_THRESHOLD`
 * Type: Read-Write
 * Packed-Encoding: `c`
 * Unit: dBm
 
-#### D.1.7. PROP x: `PROP_PHY_TX_POWER`
+Value is the CCA (clear-channel assessment) threshold. Set to
+-128 to disable.
+
+When setting, the value will be rounded down to a value
+that is supported by the underlying radio hardware.
+
+#### D.1.7. PROP 37: `PROP_PHY_TX_POWER`
 * Type: Read-Write
 * Packed-Encoding: `c`
 * Unit: dBm
 
-#### D.1.6. PROP x: `PROP_PHY_RSSI`
+Value is the transmit power of the radio.
+
+When setting, the value will be rounded down to a value
+that is supported by the underlying radio hardware.
+
+#### D.1.6. PROP 38: `PROP_PHY_RSSI`
 * Type: Read-Only
 * Packed-Encoding: `c`
 * Unit: dBm
 
-
+Value is the current RSSI (Received signal strength indication)
+from the radio. This value can be used in energy scans and for
+determining the ambient noise floor for the operating environment.
 
 
 ### D.2. MAC Properties
 
 
-#### D.2.1. PROP x: `PROP_MAC_SCAN_STATE`
+#### D.2.1. PROP 48: `PROP_MAC_SCAN_STATE`
 * Type: Read-Write
 * Packed-Encoding: `C`
 * Unit: Enumeration
@@ -1107,38 +1341,72 @@ of `PROP_PHY_CHAN` and `PROP_PHY_RSSI`.
 
 Values switches to `SCAN_STATE_IDLE` when scan is complete.
 
-#### D.2.2. PROP x: `PROP_MAC_SCAN_MASK`
+#### D.2.2. PROP 49: `PROP_MAC_SCAN_MASK`
 * Type: Read-Write
 * Packed-Encoding: `A(C)`
 * Unit: List of channels to scan
 
-#### D.2.3. PROP x: `PROP_MAC_SCAN_BEACON`
+
+#### D.2.3. PROP 50: `PROP_MAC_SCAN_PERIOD`
+* Type: Read-Write
+* Packed-Encoding: `A(C)`
+* Unit: List of channels to scan
+
+#### D.2.4. PROP 51: `PROP_MAC_SCAN_BEACON`
 * Type: Read-Only-Stream
-* Packed-Encoding: `CcT(ESSC)T(i).`
+* Packed-Encoding: `CcDD.` (or `CcT(ESSc.)T(iCUD.).`)
 
-chan,rssi,(laddr,saddr,panid,lqi),(proto,xtra)
+Octets: |  1   |   1  |      2       |   *n*    |       2      |   *n*  
+--------|------|------|--------------|----------|--------------|----------  
+Fields: | CHAN | RSSI | MAC_DATA_LEN | MAC_DATA | NET_DATA_LEN | NET_DATA  
 
-chan,rssi,(laddr,saddr,panid,lqi),(proto,flags,networkid,xpanid) [CcT(ESSC)T(iCUD.).]
+Scan beacons have two embedded structures which contain
+information about the MAC layer and the NET layer. Their
+format depends on the MAC and NET layer currently in use.
+The format below is for an 802.15.4 MAC with Thread:
 
-#### D.2.4. PROP x: `PROP_MAC_15_4_LADDR`
+* `C`: Channel
+* `c`: RSSI of the beacon
+* `T`: MAC layer properties
+  * `E`: Long address
+  * `S`: Short address
+  * `S`: PAN-ID
+  * `c`: LQI
+* `T`: NET layer properties
+  * `i`: Protocol Number
+  * `C`: Flags
+  * `U`: Network Name
+  * `D`: XPANID
+
+Extra parameters may be added to each of the structures
+in the future, so care should be taken to read the length
+that prepends each structure.
+
+#### D.2.5. PROP 52: `PROP_MAC_15_4_LADDR`
 * Type: Read-Write
 * Packed-Encoding: `E`
 
-#### D.2.5. PROP x: `PROP_MAC_15_4_SADDR`
+The 802.15.4 long address of this node.
+
+#### D.2.6. PROP 53: `PROP_MAC_15_4_SADDR`
 * Type: Read-Write
 * Packed-Encoding: `S`
 
-#### D.2.6. PROP x: `PROP_MAC_15_4_PANID`
+The 802.15.4 short address of this node.
+
+#### D.2.7. PROP 54: `PROP_MAC_15_4_PANID`
 * Type: Read-Write
 * Packed-Encoding: `S`
 
-#### D.2.7. PROP x: `PROP_MAC_RAW_STREAM_ENABLED`
+The 802.15.4 PANID this node is associated with.
+
+#### D.2.8. PROP 55: `PROP_MAC_RAW_STREAM_ENABLED`
 * Type: Read-Write
 * Packed-Encoding: `b`
 
 Set to true to enable raw MAC frames to be emitted from `PROP_STREAM_RAW`.
 
-#### D.2.8. PROP x: `PROP_MAC_FILTER_MODE`
+#### D.2.9. PROP 56: `PROP_MAC_FILTER_MODE`
 * Type: Read-Write
 * Packed-Encoding: `C`
 
@@ -1148,103 +1416,235 @@ Possible Values:
 * 1: `MAC_FILTER_MODE_PROMISCUOUS`: All MAC packets matching network are passed up the stack.
 * 2: `MAC_FILTER_MODE_MONITOR`: All decoded MAC packets are passed up the stack.
 
+#### D.2.10. PROP 4864: `PROP_MAC_WHITELIST`
+* Type: Read-Write
+* Packed-Encoding: `A(T(Ec))`
+
+Structure Parameters:
+
+* `E`: EUI64 address of node
+* `c`: Optional RSSI-override value. The value 127 indicates
+       that the RSSI-override feature is not enabled for this
+       address. If this value is ommitted when setting or
+       inserting, it is assumed to be 127. This parameter is
+       ignored when removing.
+
+#### D.2.11. PROP 4865: `PROP_MAC_WHITELIST_ENABLED`
+* Type: Read-Write
+* Packed-Encoding: `b`
+
 ### D.3. NET Properties
 
-#### D.3.1. PROP x: `PROP_NET_SAVED`
+#### D.3.1. PROP 64: `PROP_NET_SAVED`
 * Type: Read-Only
 * Packed-Encoding: `b`
 
-#### D.3.2. PROP x: `PROP_NET_ENABLED`
-* Type: Read-Only
+Returns true if there is a network state stored that can be
+restored with a call to `CMD_NET_RECALL`.
+
+#### D.3.2. PROP 65: `PROP_NET_IF_UP`
+* Type: Read-Write
 * Packed-Encoding: `b`
 
-#### D.3.3. PROP x: `PROP_NET_STATE`
+Network interface up/down status. Non-zero (set to 1) indicates up,
+zero indicates down.
+
+#### D.3.3. PROP 66: `PROP_NET_STACK_UP`
+* Type: Read-Write
+* Packed-Encoding: `b`
+* Unit: Enumeration
+
+Thread stack operational status. Non-zero (set to 1) indicates up,
+zero indicates down.
+
+#### D.3.4. PROP 67: `PROP_NET_ROLE`
 * Type: Read-Write
 * Packed-Encoding: `C`
 * Unit: Enumeration
 
 Values:
 
-* 0: `NET_STATE_OFFLINE`
-* 1: `NET_STATE_DETACHED`
-* 2: `NET_STATE_ATTACHING`
-* 3: `NET_STATE_ATTACHED`
-
-#### D.3.4. PROP x: `PROP_NET_ROLE`
-* Type: Read-Write
-* Packed-Encoding: `C`
-* Unit: Enumeration
-
-Values:
-
-* 0: `NET_ROLE_NONE`
+* 0: `NET_ROLE_DETACHED`
 * 1: `NET_ROLE_CHILD`
 * 2: `NET_ROLE_ROUTER`
 * 3: `NET_ROLE_LEADER`
 
-#### D.3.5. PROP x: `PROP_NET_NETWORK_NAME`
+#### D.3.5. PROP 68: `PROP_NET_NETWORK_NAME`
 * Type: Read-Write
 * Packed-Encoding: `U`
 
-#### D.3.6. PROP x: `PROP_NET_XPANID`
+#### D.3.6. PROP 69: `PROP_NET_XPANID`
 * Type: Read-Write
 * Packed-Encoding: `D`
 
-#### D.3.7. PROP x: `PROP_NET_MASTER_KEY`
+#### D.3.7. PROP 70: `PROP_NET_MASTER_KEY`
 * Type: Read-Write
 * Packed-Encoding: `D`
 
-#### D.3.8. PROP x: `PROP_NET_KEY_SEQUENCE`
+#### D.3.8. PROP 71: `PROP_NET_KEY_SEQUENCE`
 * Type: Read-Write
 * Packed-Encoding: `L`
 
-#### D.3.9. PROP x: `PROP_NET_PARTITION_ID`
+#### D.3.9. PROP 72: `PROP_NET_PARTITION_ID`
 * Type: Read-Write
 * Packed-Encoding: `L`
 
+The partition ID of the partition that this node is a member of.
 
 
-#### D.4. THREAD Properties
 
+### D.4. THREAD Properties
 
-#### D.4.1. PROP x: `PROP_THREAD_LEADER`
-* Type: Read-Write
+#### D.4.1. PROP 80: `PROP_THREAD_LEADER_ADDR`
+* Type: Read-Only
 * Packed-Encoding: `6`
 
-#### D.4.2. PROP x: `PROP_THREAD_PARENT`
-* Type: Read-Write
+The IPv6 address of the leader. (Note: May change to long and short address of leader)
+
+#### D.4.2. PROP 81: `PROP_THREAD_PARENT`
+* Type: Read-Only
 * Packed-Encoding: `ES`
 * LADDR, SADDR
 
-#### D.4.3. PROP x: `PROP_THREAD_CHILD_TABLE`
-* Type: Read-Write
+The long address and short address of the parent of this node.
+
+#### D.4.3. PROP 82: `PROP_THREAD_CHILD_TABLE`
+* Type: Read-Only
 * Packed-Encoding: `A(T(ES))`
-* LADDR, SADDR
 
+Table containing the long and short addresses of all
+the children of this node.
 
+#### D.4.4. PROP 83: `PROP_THREAD_LEADER_RID`
+* Type: Read-Only
+* Packed-Encoding: `C`
+
+The router-id of the current leader.
+
+#### D.4.5. PROP 84: `PROP_THREAD_LEADER_WEIGHT`
+* Type: Read-Only
+* Packed-Encoding: `C`
+
+The leader weight of the current leader.
+
+#### D.4.6. PROP 85: `PROP_THREAD_LOCAL_LEADER_WEIGHT`
+* Type: Read-Write
+* Packed-Encoding: `C`
+
+The leader weight for this node.
+
+#### D.4.7. PROP 86: `PROP_THREAD_NETWORK_DATA`
+* Type: Read-Only
+* Packed-Encoding: `D`
+
+#### D.4.8. PROP 87: `PROP_THREAD_NETWORK_DATA_VERSION`
+* Type: Read-Only
+* Packed-Encoding: `S`
+
+#### D.4.9. PROP 88: `PROP_THREAD_STABLE_NETWORK_DATA`
+* Type: Read-Only
+* Packed-Encoding: `D`
+
+#### D.4.10. PROP 89: `PROP_THREAD_STABLE_NETWORK_DATA_VERSION`
+* Type: Read-Only
+* Packed-Encoding: `S`
+
+#### D.4.11. PROP 90: `PROP_THREAD_ON_MESH_NETS`
+* Type: Read-Write
+* Packed-Encoding: `A(T(6CbC))`
+
+Data per item is:
+
+* `6`: IPv6 Prefix
+* `C`: Prefix length, in bits
+* `b`: Stable flag
+* `C`: Other flags
+
+#### D.4.12. PROP 91: `PROP_THREAD_LOCAL_ROUTES`
+* Type: Read-Write
+* Packed-Encoding: `A(T(6CbC))`
+
+Data per item is:
+
+* `6`: IPv6 Prefix
+* `C`: Prefix length, in bits
+* `b`: Stable flag
+* `C`: Other flags
+
+#### D.4.13. PROP 92: `PROP_THREAD_ASSISTING_PORTS`
+* Type: Read-Write
+* Packed-Encoding: `A(S)`
+
+#### D.4.14. PROP 93: `PROP_THREAD_ALLOW_LOCAL_NET_DATA_CHANGE`
+* Type: Read-Write
+* Packed-Encoding: `b`
+
+Set to true before changing local net data. Set to false when finished.
+This allows changes to be aggregated into single events.
+
+#### D.4.15. PROP 94: `PROP_THREAD_MODE`
+* Type: Read-Write
+* Packed-Encoding: `C`
+
+This property contains the value of the mode
+TLV for this node. The meaning of the bits in this
+bitfield are defined by section 4.5.2 of the Thread
+specification.
+
+#### D.4.16. PROP 5376: `PROP_THREAD_CHILD_TIMEOUT`
+* Type: Read-Write
+* Packed-Encoding: `L`
+
+Used when operating in the Child role.
+
+#### D.4.17. PROP 5377: `PROP_THREAD_RLOC16`
+* Type: Read-Write
+* Packed-Encoding: `S`
+
+#### D.4.18. PROP 5378: `PROP_THREAD_ROUTER_UPGRADE_THRESHOLD`
+* Type: Read-Write
+* Packed-Encoding: `C`
+
+#### D.4.19. PROP 5379: `PROP_THREAD_CONTEXT_REUSE_DELAY`
+* Type: Read-Write
+* Packed-Encoding: `L`
+
+#### D.4.20. PROP 5380: `PROP_THREAD_NETWORK_ID_TIMEOUT`
+* Type: Read-Write
+* Packed-Encoding: `C`
+
+Allows you to get or set the Thread `NETWORK_ID_TIMEOUT` constant, as
+defined by the Thread specification.
+
+#### D.4.21. PROP 5381: `PROP_THREAD_ACTIVE_ROUTER_IDS`
+* Type: Read-Write/Write-Only
+* Packed-Encoding: `A(C)` (List of active thread router ids)
+
+Note that some implementations may not support `CMD_GET_VALUE`
+routerids, but may support `CMD_REMOVE_VALUE` when the node is
+a leader.
 
 ### D.5. IPv6 Properties
 
-#### D.5.1. PROP x: `PROP_IPV6_LL_ADDR`
+#### D.5.1. PROP 96: `PROP_IPV6_LL_ADDR`
 * Type: Read-Only
 * Packed-Encoding: `6`
 
 IPv6 Address
 
-#### D.5.2. PROP x: `PROP_IPV6_ML_ADDR`
+#### D.5.2. PROP 97: `PROP_IPV6_ML_ADDR`
 * Type: Read-Only
 * Packed-Encoding: `6`
 
 IPv6 Address + Prefix Length
 
-#### D.5.2. PROP x: `PROP_IPV6_ML_PREFIX`
+#### D.5.3. PROP 98: `PROP_IPV6_ML_PREFIX`
 * Type: Read-Write
 * Packed-Encoding: `6C`
 
 IPv6 Prefix + Prefix Length
 
-#### D.5.3. PROP x: `PROP_IPV6_ADDRESS_TABLE`
-
+#### D.5.4. PROP 99: `PROP_IPV6_ADDRESS_TABLE`
 * Type: Read-Write
 * Packed-Encoding: `A(T(6CLLC))`
 
@@ -1256,12 +1656,22 @@ Array of structures containing:
 * `L`: Preferred Lifetime
 * `C`: Flags
 
-#### D.4.3. PROP x: `PROP_IPv6_ROUTE_TABLE`
+#### D.5.5. PROP 100: `PROP_IPv6_ROUTE_TABLE`
 * Type: Read-Write
 * Packed-Encoding: `A(T(6C6))`
 
 Array of structures containing:
 
-* `6`: IPv6 Address
+* `6`: IPv6 Prefix
 * `C`: Network Prefix Length
-* `6`: Next Hop
+* `C`: Interface ID
+* `C`: Flags
+
+#### D.5.6. PROP 101: `PROP_IPv6_ICMP_PING_OFFLOAD`
+* Type: Read-Write
+* Packed-Encoding: `b`
+
+Allow the NCP to directly respond to ICMP ping requests. If this is
+turned on, ping request ICMP packets will not be passed to the host.
+
+Default value is `false`.

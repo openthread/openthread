@@ -1,0 +1,7 @@
+URL: https://github.com/ARMmbed/mbedtls/tree/85c2a928ed352845793db000e78e2b42c8dcf055
+Version: 2.3.1
+License: Apache 2.0
+License File: LICENSE
+
+Description:
+An open source, portable, easy to use, readable and flexible SSL library https://tls.mbed.org.

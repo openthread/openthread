@@ -30,10 +30,15 @@ include $(abs_top_nlbuild_autotools_dir)/automake/pre.am
 
 ot_platform_headers                      =\
     alarm.h                               \
+    diag.h                                \
+    misc.h                                \
     logging.h                             \
+    platform.h                            \
     radio.h                               \
     random.h                              \
-    serial.h                              \
+    uart.h                                \
+    spi-slave.h                           \
+    settings.h                            \
     toolchain.h                           \
     $(NULL)
 

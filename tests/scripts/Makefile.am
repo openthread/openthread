@@ -28,6 +28,8 @@
 
 include $(abs_top_nlbuild_autotools_dir)/automake/pre.am
 
+LOG_DRIVER=$(abs_top_srcdir)/third_party/openthread-test-driver/test-driver
+
 EXTRA_DIST                                                         = \
     thread-cert/Cert_5_1_01_RouterAttach.py                          \
     thread-cert/Cert_5_1_02_ChildAddressTimeout.py                   \
@@ -54,6 +56,7 @@ EXTRA_DIST                                                         = \
     thread-cert/Cert_5_3_04_AddressMapCache.py                       \
     thread-cert/Cert_5_3_05_RoutingLinkQuality.py                    \
     thread-cert/Cert_5_3_06_RouterIdMask.py                          \
+    thread-cert/Cert_5_3_06b_RouterIdMask.py                         \
     thread-cert/Cert_5_3_07_DuplicateAddress.py                      \
     thread-cert/Cert_5_3_08_ChildAddressSet.py                       \
     thread-cert/Cert_5_3_10_AddressQuery.py                          \
@@ -109,25 +112,78 @@ if OPENTHREAD_BUILD_TESTS
 check_PROGRAMS =
 
 check_SCRIPTS                                                      = \
+    $(NULL)
+
+if OPENTHREAD_TESTS_SUBSET1
+
+check_SCRIPTS                                                     += \
     thread-cert/Cert_5_1_01_RouterAttach.py                          \
     thread-cert/Cert_5_1_02_ChildAddressTimeout.py                   \
     thread-cert/Cert_5_1_03_RouterAddressReallocation.py             \
+    thread-cert/Cert_5_1_04_RouterAddressReallocation.py             \
+    thread-cert/Cert_5_1_05_RouterAddressTimeout.py                  \
     thread-cert/Cert_5_1_06_RemoveRouterId.py                        \
+    thread-cert/Cert_5_1_07_MaxChildCount.py                         \
     thread-cert/Cert_5_1_08_RouterAttachConnectivity.py              \
     thread-cert/Cert_5_1_09_REEDAttachConnectivity.py                \
+    $(NULL)
+
+endif # OPENTHREAD_TESTS_SUBSET1
+
+if OPENTHREAD_TESTS_SUBSET2
+
+check_SCRIPTS                                                     += \
     thread-cert/Cert_5_1_10_RouterAttachLinkQuality.py               \
     thread-cert/Cert_5_1_11_REEDAttachLinkQuality.py                 \
     thread-cert/Cert_5_1_12_NewRouterNeighborSync.py                 \
     thread-cert/Cert_5_1_13_RouterReset.py                           \
     thread-cert/Cert_5_2_01_BecomeActiveRouter.py                    \
+    thread-cert/Cert_5_2_02_LeaderReject1Hop.py                      \
+    thread-cert/Cert_5_2_03_LeaderReject2Hops.py                     \
+    thread-cert/Cert_5_2_04_REEDUpgrade.py                           \
     thread-cert/Cert_5_2_05_AddressQuery.py                          \
     thread-cert/Cert_5_2_07_REEDSynchronization.py                   \
     thread-cert/Cert_5_3_01_LinkLocal.py                             \
+    thread-cert/Cert_5_3_02_RealmLocal.py                            \
+    thread-cert/Cert_5_3_03_AddressQuery.py                          \
+    thread-cert/Cert_5_3_04_AddressMapCache.py                       \
+    thread-cert/Cert_5_3_05_RoutingLinkQuality.py                    \
+    $(NULL)
+
+endif # OPENTHREAD_TESTS_SUBSET2
+
+if OPENTHREAD_TESTS_SUBSET3
+
+check_SCRIPTS                                                     += \
+    thread-cert/Cert_5_3_06_RouterIdMask.py                          \
+    thread-cert/Cert_5_3_06b_RouterIdMask.py                         \
     thread-cert/Cert_5_3_07_DuplicateAddress.py                      \
     thread-cert/Cert_5_3_08_ChildAddressSet.py                       \
+    thread-cert/Cert_5_3_10_AddressQuery.py                          \
     thread-cert/Cert_5_5_01_LeaderReset.py                           \
+    thread-cert/Cert_5_5_02_LeaderReboot.py                          \
+    $(NULL)
+
+endif # OPENTHREAD_TESTS_SUBSET3
+
+if OPENTHREAD_TESTS_SUBSET4
+
+check_SCRIPTS                                                     += \
+    thread-cert/Cert_5_5_03_SplitMergeChildren.py                    \
+    thread-cert/Cert_5_5_04_SplitMergeRouters.py                     \
+    thread-cert/Cert_5_5_05_SplitMergeREED.py                        \
+    thread-cert/Cert_5_5_06_SplitWeight.py                           \
+    thread-cert/Cert_5_5_07_SplitMergeThreeWay.py                    \
+    thread-cert/Cert_5_5_08_SplitRoutersLostLeader.py                \
     thread-cert/Cert_5_6_01_NetworkDataRegisterBeforeAttachLeader.py \
     thread-cert/Cert_5_6_02_NetworkDataRegisterBeforeAttachRouter.py \
+    $(NULL)
+
+endif # OPENTHREAD_TESTS_SUBSET4
+
+if OPENTHREAD_TESTS_SUBSET5
+
+check_SCRIPTS                                                     += \
     thread-cert/Cert_5_6_03_NetworkDataRegisterAfterAttachLeader.py  \
     thread-cert/Cert_5_6_04_NetworkDataRegisterAfterAttachRouter.py  \
     thread-cert/Cert_5_6_05_NetworkDataRegisterAfterAttachRouter.py  \
@@ -145,6 +201,8 @@ check_SCRIPTS                                                      = \
     thread-cert/Cert_6_1_05_RouterAttachLinkQuality.py               \
     thread-cert/Cert_6_1_06_REEDAttachLinkQuality.py                 \
     thread-cert/Cert_6_1_07_EDSynchronization.py                     \
+    thread-cert/Cert_6_2_01_NewPartition.py                          \
+    thread-cert/Cert_6_2_02_NewPartition.py                          \
     thread-cert/Cert_6_3_01_OrphanReattach.py                        \
     thread-cert/Cert_6_3_02_NetworkDataUpdate.py                     \
     thread-cert/Cert_6_4_01_LinkLocal.py                             \
@@ -160,35 +218,7 @@ check_SCRIPTS                                                      = \
     thread-cert/Cert_7_1_05_BorderRouterAsRouter.py                  \
     $(NULL)
 
-# List all other non-essential program and script tests that MAY be run.
-
-if !OPENTHREAD_WITH_MINIMUM_SET_OF_TESTS
-
-check_SCRIPTS                                                     += \
-    thread-cert/Cert_5_1_04_RouterAddressReallocation.py             \
-    thread-cert/Cert_5_1_05_RouterAddressTimeout.py                  \
-    thread-cert/Cert_5_1_07_MaxChildCount.py                         \
-    thread-cert/Cert_5_2_02_LeaderReject1Hop.py                      \
-    thread-cert/Cert_5_2_03_LeaderReject2Hops.py                     \
-    thread-cert/Cert_5_2_04_REEDUpgrade.py                           \
-    thread-cert/Cert_5_3_02_RealmLocal.py                            \
-    thread-cert/Cert_5_3_03_AddressQuery.py                          \
-    thread-cert/Cert_5_3_04_AddressMapCache.py                       \
-    thread-cert/Cert_5_3_05_RoutingLinkQuality.py                    \
-    thread-cert/Cert_5_3_06_RouterIdMask.py                          \
-    thread-cert/Cert_5_3_10_AddressQuery.py                          \
-    thread-cert/Cert_5_5_02_LeaderReboot.py                          \
-    thread-cert/Cert_5_5_03_SplitMergeChildren.py                    \
-    thread-cert/Cert_5_5_04_SplitMergeRouters.py                     \
-    thread-cert/Cert_5_5_05_SplitMergeREED.py                        \
-    thread-cert/Cert_5_5_06_SplitWeight.py                           \
-    thread-cert/Cert_5_5_07_SplitMergeThreeWay.py                    \
-    thread-cert/Cert_5_5_08_SplitRoutersLostLeader.py                \
-    thread-cert/Cert_6_2_01_NewPartition.py                          \
-    thread-cert/Cert_6_2_02_NewPartition.py                          \
-    $(NULL)
-
-endif # OPENTHREAD_WITH_ESSENTIAL_TESTS_ONLY
+endif # OPENTHREAD_TESTS_SUBSET5
 
 TESTS_ENVIRONMENT                                                  = \
     export                                                           \

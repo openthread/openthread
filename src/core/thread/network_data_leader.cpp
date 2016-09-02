@@ -52,21 +52,20 @@ namespace Thread {
 namespace NetworkData {
 
 Leader::Leader(ThreadNetif &aThreadNetif):
+    NetworkData(aThreadNetif),
     mTimer(&HandleTimer, this),
     mServerData(OPENTHREAD_URI_SERVER_DATA, &HandleServerData, this),
     mCoapServer(aThreadNetif.GetCoapServer()),
-    mNetif(aThreadNetif),
-    mMle(aThreadNetif.GetMle())
+    mNetif(aThreadNetif)
 {
     Reset();
 }
 
 void Leader::Reset(void)
 {
-    memset(mAddresses, 0, sizeof(mAddresses));
     memset(mContextLastUsed, 0, sizeof(mContextLastUsed));
-    mVersion = otPlatRandomGet();
-    mStableVersion = otPlatRandomGet();
+    mVersion = static_cast<uint8_t>(otPlatRandomGet());
+    mStableVersion = static_cast<uint8_t>(otPlatRandomGet());
     mLength = 0;
     mContextUsed = 0;
     mContextIdReuseDelay = kContextIdReuseDelay;
@@ -86,9 +85,25 @@ uint8_t Leader::GetVersion(void) const
     return mVersion;
 }
 
+void Leader::IncrementVersion(void)
+{
+    if (mMle.GetDeviceState() == Mle::kDeviceStateLeader)
+    {
+        mVersion++;
+    }
+}
+
 uint8_t Leader::GetStableVersion(void) const
 {
     return mStableVersion;
+}
+
+void Leader::IncrementStableVersion(void)
+{
+    if (mMle.GetDeviceState() == Mle::kDeviceStateLeader)
+    {
+        mStableVersion++;
+    }
 }
 
 uint32_t Leader::GetContextIdReuseDelay(void) const
@@ -109,7 +124,7 @@ ThreadError Leader::GetContext(const Ip6::Address &aAddress, Lowpan::Context &aC
 
     aContext.mPrefixLength = 0;
 
-    if (PrefixMatch(mMle.GetMeshLocalPrefix(), aAddress.m8, 64) >= 0)
+    if (PrefixMatch(mMle.GetMeshLocalPrefix(), aAddress.mFields.m8, 64) >= 0)
     {
         aContext.mPrefix = mMle.GetMeshLocalPrefix();
         aContext.mPrefixLength = 64;
@@ -127,7 +142,7 @@ ThreadError Leader::GetContext(const Ip6::Address &aAddress, Lowpan::Context &aC
 
         prefix = reinterpret_cast<PrefixTlv *>(cur);
 
-        if (PrefixMatch(prefix->GetPrefix(), aAddress.m8, prefix->GetPrefixLength()) < 0)
+        if (PrefixMatch(prefix->GetPrefix(), aAddress.mFields.m8, prefix->GetPrefixLength()) < 0)
         {
             continue;
         }
@@ -196,103 +211,12 @@ exit:
     return error;
 }
 
-ThreadError Leader::ConfigureAddresses(void)
-{
-    PrefixTlv *prefix;
-
-    // clear out addresses that are not on-mesh
-    for (size_t i = 0; i < sizeof(mAddresses) / sizeof(mAddresses[0]); i++)
-    {
-        if (mAddresses[i].mValidLifetime == 0 ||
-            IsOnMesh(mAddresses[i].GetAddress()))
-        {
-            continue;
-        }
-
-        mNetif.RemoveUnicastAddress(mAddresses[i]);
-        mAddresses[i].mValidLifetime = 0;
-    }
-
-    // configure on-mesh addresses
-    for (NetworkDataTlv *cur = reinterpret_cast<NetworkDataTlv *>(mTlvs);
-         cur < reinterpret_cast<NetworkDataTlv *>(mTlvs + mLength);
-         cur = cur->GetNext())
-    {
-        if (cur->GetType() != NetworkDataTlv::kTypePrefix)
-        {
-            continue;
-        }
-
-        prefix = reinterpret_cast<PrefixTlv *>(cur);
-        ConfigureAddress(*prefix);
-    }
-
-    return kThreadError_None;
-}
-
-ThreadError Leader::ConfigureAddress(PrefixTlv &aPrefix)
-{
-    BorderRouterTlv *borderRouter;
-    BorderRouterEntry *entry;
-
-    // look for Border Router TLV
-    if ((borderRouter = FindBorderRouter(aPrefix)) == NULL)
-    {
-        ExitNow();
-    }
-
-    // check if Valid flag is set
-    if ((entry = borderRouter->GetEntry(0)) == NULL ||
-        entry->IsValid() == false)
-    {
-        ExitNow();
-    }
-
-    // check if address is already added for this prefix
-    for (size_t i = 0; i < sizeof(mAddresses) / sizeof(mAddresses[0]); i++)
-    {
-        if (mAddresses[i].mValidLifetime != 0 &&
-            mAddresses[i].mPrefixLength == aPrefix.GetPrefixLength() &&
-            PrefixMatch(mAddresses[i].mAddress.m8, aPrefix.GetPrefix(), aPrefix.GetPrefixLength()) >= 0)
-        {
-            mAddresses[i].mPreferredLifetime = entry->IsPreferred() ? 0xffffffff : 0;
-            ExitNow();
-        }
-    }
-
-    // configure address for this prefix
-    for (size_t i = 0; i < sizeof(mAddresses) / sizeof(mAddresses[0]); i++)
-    {
-        if (mAddresses[i].mValidLifetime != 0)
-        {
-            continue;
-        }
-
-        memset(&mAddresses[i], 0, sizeof(mAddresses[i]));
-        memcpy(mAddresses[i].mAddress.m8, aPrefix.GetPrefix(), BitVectorBytes(aPrefix.GetPrefixLength()));
-
-        for (size_t j = 8; j < sizeof(mAddresses[i].mAddress); j++)
-        {
-            mAddresses[i].mAddress.m8[j] = otPlatRandomGet();
-        }
-
-        mAddresses[i].mPrefixLength = aPrefix.GetPrefixLength();
-        mAddresses[i].mPreferredLifetime = entry->IsPreferred() ? 0xffffffff : 0;
-        mAddresses[i].mValidLifetime = 0xffffffff;
-        mNetif.AddUnicastAddress(mAddresses[i]);
-        break;
-    }
-
-exit:
-    return kThreadError_None;
-}
-
 bool Leader::IsOnMesh(const Ip6::Address &aAddress)
 {
     PrefixTlv *prefix;
     bool rval = false;
 
-    if (memcmp(aAddress.m8, mMle.GetMeshLocalPrefix(), 8) == 0)
+    if (memcmp(aAddress.mFields.m8, mMle.GetMeshLocalPrefix(), 8) == 0)
     {
         ExitNow(rval = true);
     }
@@ -308,7 +232,7 @@ bool Leader::IsOnMesh(const Ip6::Address &aAddress)
 
         prefix = reinterpret_cast<PrefixTlv *>(cur);
 
-        if (PrefixMatch(prefix->GetPrefix(), aAddress.m8, prefix->GetPrefixLength()) < 0)
+        if (PrefixMatch(prefix->GetPrefix(), aAddress.mFields.m8, prefix->GetPrefixLength()) < 0)
         {
             continue;
         }
@@ -342,7 +266,7 @@ ThreadError Leader::RouteLookup(const Ip6::Address &aSource, const Ip6::Address 
 
         prefix = reinterpret_cast<PrefixTlv *>(cur);
 
-        if (PrefixMatch(prefix->GetPrefix(), aSource.m8, prefix->GetPrefixLength()) >= 0)
+        if (PrefixMatch(prefix->GetPrefix(), aSource.mFields.m8, prefix->GetPrefixLength()) >= 0)
         {
             if (ExternalRouteLookup(prefix->GetDomainId(), aDestination, aPrefixMatch, aRloc16) == kThreadError_None)
             {
@@ -373,9 +297,10 @@ ThreadError Leader::ExternalRouteLookup(uint8_t aDomainId, const Ip6::Address &a
     HasRouteTlv *hasRoute;
     HasRouteEntry *entry;
     HasRouteEntry *rvalRoute = NULL;
-    int8_t rval_plen = 0;
+    uint8_t rval_plen = 0;
     int8_t plen;
     NetworkDataTlv *cur;
+    NetworkDataTlv *subCur;
 
     for (cur = reinterpret_cast<NetworkDataTlv *>(mTlvs);
          cur < reinterpret_cast<NetworkDataTlv *>(mTlvs + mLength);
@@ -393,23 +318,23 @@ ThreadError Leader::ExternalRouteLookup(uint8_t aDomainId, const Ip6::Address &a
             continue;
         }
 
-        plen = PrefixMatch(prefix->GetPrefix(), aDestination.m8, prefix->GetPrefixLength());
+        plen = PrefixMatch(prefix->GetPrefix(), aDestination.mFields.m8, prefix->GetPrefixLength());
 
         if (plen > rval_plen)
         {
             // select border router
-            for (cur = reinterpret_cast<NetworkDataTlv *>(prefix->GetSubTlvs());
-                 cur < reinterpret_cast<NetworkDataTlv *>(prefix->GetSubTlvs() + prefix->GetSubTlvsLength());
-                 cur = cur->GetNext())
+            for (subCur = reinterpret_cast<NetworkDataTlv *>(prefix->GetSubTlvs());
+                 subCur < reinterpret_cast<NetworkDataTlv *>(prefix->GetSubTlvs() + prefix->GetSubTlvsLength());
+                 subCur = subCur->GetNext())
             {
-                if (cur->GetType() != NetworkDataTlv::kTypeHasRoute)
+                if (subCur->GetType() != NetworkDataTlv::kTypeHasRoute)
                 {
                     continue;
                 }
 
-                hasRoute = reinterpret_cast<HasRouteTlv *>(cur);
+                hasRoute = reinterpret_cast<HasRouteTlv *>(subCur);
 
-                for (int i = 0; i < hasRoute->GetNumEntries(); i++)
+                for (uint8_t i = 0; i < hasRoute->GetNumEntries(); i++)
                 {
                     entry = hasRoute->GetEntry(i);
 
@@ -419,7 +344,7 @@ ThreadError Leader::ExternalRouteLookup(uint8_t aDomainId, const Ip6::Address &a
                          mMle.GetRouteCost(entry->GetRloc()) < mMle.GetRouteCost(rvalRoute->GetRloc())))
                     {
                         rvalRoute = entry;
-                        rval_plen = plen;
+                        rval_plen = static_cast<uint8_t>(plen);
                     }
                 }
 
@@ -463,7 +388,7 @@ ThreadError Leader::DefaultRouteLookup(PrefixTlv &aPrefix, uint16_t *aRloc16)
 
         borderRouter = reinterpret_cast<BorderRouterTlv *>(cur);
 
-        for (int i = 0; i < borderRouter->GetNumEntries(); i++)
+        for (uint8_t i = 0; i < borderRouter->GetNumEntries(); i++)
         {
             entry = borderRouter->GetEntry(i);
 
@@ -510,8 +435,7 @@ void Leader::SetNetworkData(uint8_t aVersion, uint8_t aStableVersion, bool aStab
 
     otDumpDebgNetData("set network data", mTlvs, mLength);
 
-    ConfigureAddresses();
-    mMle.HandleNetworkDataUpdate();
+    mNetif.SetStateChangedFlags(OT_THREAD_NETDATA_UPDATED);
 }
 
 void Leader::RemoveBorderRouter(uint16_t aRloc16)
@@ -520,20 +444,20 @@ void Leader::RemoveBorderRouter(uint16_t aRloc16)
     bool rlocStable = false;
     RlocLookup(aRloc16, rlocIn, rlocStable, mTlvs, mLength);
 
-    if (rlocIn)
+    VerifyOrExit(rlocIn, ;);
+
+    RemoveRloc(aRloc16);
+    mVersion++;
+
+    if (rlocStable)
     {
-        RemoveRloc(aRloc16);
-        mVersion++;
-
-        if (rlocStable)
-        {
-            mStableVersion++;
-        }
-
-        ConfigureAddresses();
+        mStableVersion++;
     }
 
-    mMle.HandleNetworkDataUpdate();
+    mNetif.SetStateChangedFlags(OT_THREAD_NETDATA_UPDATED);
+
+exit:
+    return;
 }
 
 void Leader::HandleServerData(void *aContext, Coap::Header &aHeader, Message &aMessage,
@@ -546,19 +470,24 @@ void Leader::HandleServerData(void *aContext, Coap::Header &aHeader, Message &aM
 void Leader::HandleServerData(Coap::Header &aHeader, Message &aMessage,
                               const Ip6::MessageInfo &aMessageInfo)
 {
-    uint8_t tlvsLength;
-    uint8_t tlvs[kMaxSize];
-    uint16_t rloc16;
+    ThreadNetworkDataTlv networkData;
+    ThreadRloc16Tlv rloc16;
 
     otLogInfoNetData("Received network data registration\n");
 
-    tlvsLength = aMessage.GetLength() - aMessage.GetOffset();
+    if (ThreadTlv::GetTlv(aMessage, ThreadTlv::kRloc16, sizeof(rloc16), rloc16) == kThreadError_None)
+    {
+        RemoveBorderRouter(rloc16.GetRloc16());
+    }
 
-    aMessage.Read(aMessage.GetOffset(), tlvsLength, tlvs);
-    rloc16 = HostSwap16(aMessageInfo.mPeerAddr.m16[7]);
+    if (ThreadTlv::GetTlv(aMessage, ThreadTlv::kThreadNetworkData, sizeof(networkData), networkData) ==
+        kThreadError_None)
+    {
+        RegisterNetworkData(HostSwap16(aMessageInfo.mPeerAddr.mFields.m16[7]),
+                            networkData.GetTlvs(), networkData.GetLength());
+    }
 
-    SendServerDataResponse(aHeader, aMessageInfo, tlvs, tlvsLength);
-    RegisterNetworkData(rloc16, tlvs, tlvsLength);
+    SendServerDataResponse(aHeader, aMessageInfo, NULL, 0);
 }
 
 void Leader::SendServerDataResponse(const Coap::Header &aRequestHeader, const Ip6::MessageInfo &aMessageInfo,
@@ -619,7 +548,7 @@ void Leader::RlocLookup(uint16_t aRloc16, bool &aIn, bool &aStable, uint8_t *aTl
                 case NetworkDataTlv::kTypeBorderRouter:
                     borderRouter = FindBorderRouter(*prefix);
 
-                    for (int i = 0; i < borderRouter->GetNumEntries(); i++)
+                    for (uint8_t i = 0; i < borderRouter->GetNumEntries(); i++)
                     {
                         borderRouterEntry = borderRouter->GetEntry(i);
 
@@ -639,7 +568,7 @@ void Leader::RlocLookup(uint16_t aRloc16, bool &aIn, bool &aStable, uint8_t *aTl
                 case NetworkDataTlv::kTypeHasRoute:
                     hasRoute = FindHasRoute(*prefix);
 
-                    for (int i = 0; i < hasRoute->GetNumEntries(); i++)
+                    for (uint8_t i = 0; i < hasRoute->GetNumEntries(); i++)
                     {
                         hasRouteEntry = hasRoute->GetEntry(i);
 
@@ -722,6 +651,7 @@ bool Leader::IsStableUpdated(uint16_t aRloc16, uint8_t *aTlvs, uint8_t aTlvsLeng
     }
 
 exit:
+    (void)aRloc16;
     return rval;
 }
 
@@ -765,8 +695,7 @@ ThreadError Leader::RegisterNetworkData(uint16_t aRloc16, uint8_t *aTlvs, uint8_
         }
     }
 
-    ConfigureAddresses();
-    mMle.HandleNetworkDataUpdate();
+    mNetif.SetStateChangedFlags(OT_THREAD_NETDATA_UPDATED);
 
 exit:
     return error;
@@ -873,7 +802,7 @@ ThreadError Leader::AddBorderRouter(PrefixTlv &aPrefix, BorderRouterTlv &aBorder
     PrefixTlv *dstPrefix;
     ContextTlv *dstContext;
     BorderRouterTlv *dstBorderRouter;
-    uint8_t aContextId;
+    int contextId;
 
     if ((dstPrefix = FindPrefix(aPrefix.GetPrefix(), aPrefix.GetPrefixLength())) == NULL)
     {
@@ -882,32 +811,24 @@ ThreadError Leader::AddBorderRouter(PrefixTlv &aPrefix, BorderRouterTlv &aBorder
         dstPrefix->Init(aPrefix.GetDomainId(), aPrefix.GetPrefixLength(), aPrefix.GetPrefix());
     }
 
-    if (aBorderRouter.IsStable())
+    if ((dstContext = FindContext(*dstPrefix)) != NULL)
     {
-        dstPrefix->SetStable();
-
-        if ((dstContext = FindContext(*dstPrefix)) != NULL)
-        {
-            dstContext->SetCompress();
-        }
-        else if ((aContextId = AllocateContext()) >= 0)
-        {
-            dstContext = reinterpret_cast<ContextTlv *>(dstPrefix->GetNext());
-            Insert(reinterpret_cast<uint8_t *>(dstContext), sizeof(ContextTlv));
-            dstPrefix->SetLength(dstPrefix->GetLength() + sizeof(ContextTlv));
-            dstContext->Init();
-            dstContext->SetStable();
-            dstContext->SetCompress();
-            dstContext->SetContextId(aContextId);
-            dstContext->SetContextLength(aPrefix.GetPrefixLength());
-        }
-        else
-        {
-            ExitNow(error = kThreadError_NoBufs);
-        }
-
-        mContextLastUsed[dstContext->GetContextId() - kMinContextId] = 0;
+        dstContext->SetCompress();
     }
+    else if ((contextId = AllocateContext()) >= 0)
+    {
+        dstContext = reinterpret_cast<ContextTlv *>(dstPrefix->GetNext());
+        Insert(reinterpret_cast<uint8_t *>(dstContext), sizeof(ContextTlv));
+        dstPrefix->SetLength(dstPrefix->GetLength() + sizeof(ContextTlv));
+        dstContext->Init();
+        dstContext->SetCompress();
+        dstContext->SetContextId(static_cast<uint8_t>(contextId));
+        dstContext->SetContextLength(aPrefix.GetPrefixLength());
+    }
+
+    VerifyOrExit(dstContext != NULL, error = kThreadError_NoBufs);
+    mContextLastUsed[dstContext->GetContextId() - kMinContextId] = 0;
+
 
     if ((dstBorderRouter = FindBorderRouter(*dstPrefix, aBorderRouter.IsStable())) == NULL)
     {
@@ -915,11 +836,6 @@ ThreadError Leader::AddBorderRouter(PrefixTlv &aPrefix, BorderRouterTlv &aBorder
         Insert(reinterpret_cast<uint8_t *>(dstBorderRouter), sizeof(BorderRouterTlv));
         dstPrefix->SetLength(dstPrefix->GetLength() + sizeof(BorderRouterTlv));
         dstBorderRouter->Init();
-
-        if (aBorderRouter.IsStable())
-        {
-            dstBorderRouter->SetStable();
-        }
     }
 
     Insert(reinterpret_cast<uint8_t *>(dstBorderRouter->GetNext()), sizeof(BorderRouterEntry));
@@ -927,6 +843,13 @@ ThreadError Leader::AddBorderRouter(PrefixTlv &aPrefix, BorderRouterTlv &aBorder
     dstPrefix->SetLength(dstPrefix->GetLength() + sizeof(BorderRouterEntry));
     memcpy(dstBorderRouter->GetEntry(dstBorderRouter->GetNumEntries() - 1), aBorderRouter.GetEntry(0),
            sizeof(BorderRouterEntry));
+
+    if (aBorderRouter.IsStable())
+    {
+        dstPrefix->SetStable();
+        dstContext->SetStable();
+        dstBorderRouter->SetStable();
+    }
 
 exit:
     return error;
@@ -958,8 +881,24 @@ ThreadError Leader::FreeContext(uint8_t aContextId)
     mContextUsed &= ~(1 << aContextId);
     mVersion++;
     mStableVersion++;
-    mMle.HandleNetworkDataUpdate();
+    mNetif.SetStateChangedFlags(OT_THREAD_NETDATA_UPDATED);
     return kThreadError_None;
+}
+
+ThreadError Leader::SendServerDataNotification(uint16_t aRloc16)
+{
+    ThreadError error = kThreadError_None;
+    bool rlocIn = false;
+    bool rlocStable = false;
+
+    RlocLookup(aRloc16, rlocIn, rlocStable, mTlvs, mLength);
+
+    VerifyOrExit(rlocIn, error = kThreadError_NotFound);
+
+    SuccessOrExit(error = NetworkData::SendServerDataNotification(false, aRloc16));
+
+exit:
+    return error;
 }
 
 ThreadError Leader::RemoveRloc(uint16_t aRloc16)
@@ -1092,7 +1031,7 @@ ThreadError Leader::RemoveRloc(PrefixTlv &aPrefix, HasRouteTlv &aHasRoute, uint1
     HasRouteEntry *entry;
 
     // remove rloc from has route tlv
-    for (int i = 0; i < aHasRoute.GetNumEntries(); i++)
+    for (uint8_t i = 0; i < aHasRoute.GetNumEntries(); i++)
     {
         entry = aHasRoute.GetEntry(i);
 
@@ -1115,7 +1054,7 @@ ThreadError Leader::RemoveRloc(PrefixTlv &aPrefix, BorderRouterTlv &aBorderRoute
     BorderRouterEntry *entry;
 
     // remove rloc from border router tlv
-    for (int i = 0; i < aBorderRouter.GetNumEntries(); i++)
+    for (uint8_t i = 0; i < aBorderRouter.GetNumEntries(); i++)
     {
         entry = aBorderRouter.GetEntry(i);
 
@@ -1242,7 +1181,7 @@ void Leader::HandleTimer(void)
 {
     bool contextsWaiting = false;
 
-    for (int i = 0; i < kNumContextIds; i++)
+    for (uint8_t i = 0; i < kNumContextIds; i++)
     {
         if (mContextLastUsed[i] == 0)
         {

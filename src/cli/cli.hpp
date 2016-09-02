@@ -38,6 +38,8 @@
 
 #include <cli/cli_server.hpp>
 #include <net/icmp6.hpp>
+#include <common/timer.hpp>
+#include <openthread-config.h>
 
 namespace Thread {
 
@@ -68,6 +70,12 @@ class Interpreter
 {
 public:
     /**
+     * This method initializes the CLI interpreter.
+     *
+     */
+    static void Init(void);
+
+    /**
      * This method interprets a CLI command.
      *
      * @param[in]  aBuf        A pointer to a string.
@@ -77,6 +85,41 @@ public:
      */
     static void ProcessLine(char *aBuf, uint16_t aBufLength, Server &aServer);
 
+    /**
+     * This method parses an ASCII string as a long.
+     *
+     * @param[in]   aString  A pointer to the ASCII string.
+     * @param[out]  aLong    A reference to where the parsed long is placed.
+     *
+     * @retval kThreadError_None   Successfully parsed the ASCII string.
+     * @retval kThreadError_Parse  Could not parse the ASCII string.
+     *
+     */
+    static ThreadError ParseLong(char *aString, long &aLong);
+
+    /**
+     * This method parses an ASCII string as an unsigned long.
+     *
+     * @param[in]   aString          A pointer to the ASCII string.
+     * @param[out]  aUnsignedLong    A reference to where the parsed unsigned long is placed.
+     *
+     * @retval kThreadError_None   Successfully parsed the ASCII string.
+     * @retval kThreadError_Parse  Could not parse the ASCII string.
+     *
+     */
+    static ThreadError ParseUnsignedLong(char *aString, unsigned long &aUnsignedLong);
+
+    /**
+     * This method converts a hex string to binary.
+     *
+     * @param[in]   aHex        A pointer to the hex string.
+     * @param[out]  aBin        A pointer to where the binary representation is placed.
+     * @param[in]   aBinLength  Maximum length of the binary representation.
+     *
+     * @returns The number of bytes in the binary representation.
+     */
+    static int Hex2Bin(const char *aHex, uint8_t *aBin, uint16_t aBinLength);
+
 private:
     enum
     {
@@ -84,53 +127,80 @@ private:
     };
 
     static void AppendResult(ThreadError error);
+    static void OutputBytes(const uint8_t *aBytes, uint8_t aLength);
 
     static void ProcessHelp(int argc, char *argv[]);
+    static void ProcessBlacklist(int argc, char *argv[]);
     static void ProcessChannel(int argc, char *argv[]);
+    static void ProcessChild(int argc, char *argv[]);
     static void ProcessChildTimeout(int argc, char *argv[]);
     static void ProcessContextIdReuseDelay(int argc, char *argv[]);
     static void ProcessCounters(int argc, char *argv[]);
+    static void ProcessDataset(int argc, char *argv[]);
+    static void ProcessDiscover(int argc, char *argv[]);
+    static void ProcessEidCache(int argc, char *argv[]);
     static void ProcessExtAddress(int argc, char *argv[]);
     static void ProcessExtPanId(int argc, char *argv[]);
+    static void ProcessIfconfig(int argc, char *argv[]);
     static void ProcessIpAddr(int argc, char *argv[]);
     static ThreadError ProcessIpAddrAdd(int argc, char *argv[]);
     static ThreadError ProcessIpAddrDel(int argc, char *argv[]);
     static void ProcessKeySequence(int argc, char *argv[]);
+    static void ProcessLeaderData(int argc, char *argv[]);
+    static void ProcessLeaderPartitionId(int argc, char *argv[]);
     static void ProcessLeaderWeight(int argc, char *argv[]);
+    static void ProcessLinkQuality(int argc, char *argv[]);
     static void ProcessMasterKey(int argc, char *argv[]);
     static void ProcessMode(int argc, char *argv[]);
     static void ProcessNetworkDataRegister(int argc, char *argv[]);
     static void ProcessNetworkIdTimeout(int argc, char *argv[]);
     static void ProcessNetworkName(int argc, char *argv[]);
     static void ProcessPanId(int argc, char *argv[]);
+    static void ProcessParent(int argc, char *argv[]);
     static void ProcessPing(int argc, char *argv[]);
+    static void ProcessPollPeriod(int argc, char *argv[]);
     static void ProcessPrefix(int argc, char *argv[]);
     static ThreadError ProcessPrefixAdd(int argc, char *argv[]);
     static ThreadError ProcessPrefixRemove(int argc, char *argv[]);
+    static ThreadError ProcessPrefixList(void);
+    static void ProcessPromiscuous(int argc, char *argv[]);
     static void ProcessReleaseRouterId(int argc, char *argv[]);
+    static void ProcessReset(int argc, char *argv[]);
     static void ProcessRoute(int argc, char *argv[]);
+    static void ProcessRouter(int argc, char *argv[]);
+    static void ProcessRouterRole(int argc, char *argv[]);
     static ThreadError ProcessRouteAdd(int argc, char *argv[]);
     static ThreadError ProcessRouteRemove(int argc, char *argv[]);
     static void ProcessRouterUpgradeThreshold(int argc, char *argv[]);
     static void ProcessRloc16(int argc, char *argv[]);
     static void ProcessScan(int argc, char *argv[]);
-    static void ProcessStart(int argc, char *argv[]);
+    static void ProcessSingleton(int argc, char *argv[]);
     static void ProcessState(int argc, char *argv[]);
-    static void ProcessStop(int argc, char *argv[]);
+    static void ProcessThread(int argc, char *argv[]);
+    static void ProcessVersion(int argc, char *argv[]);
     static void ProcessWhitelist(int argc, char *argv[]);
 
+#if OPENTHREAD_ENABLE_DIAG
+    static void ProcessDiag(int argc, char *argv[]);
+#endif
+
     static void HandleEchoResponse(void *aContext, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
-    static void HandleActiveScanResult(otActiveScanResult *aResult);
-    static int Hex2Bin(const char *aHex, uint8_t *aBin, uint16_t aBinLength);
-    static ThreadError ParseLong(char *argv, long &value);
+    static void HandlePingTimer(void *aContext);
+    static void HandleActiveScanResult(otActiveScanResult *aResult, void *aContext);
+    static void HandleNetifStateChanged(uint32_t aFlags, void *aContext);
+    static void HandleLinkPcapReceive(const RadioPacket *aFrame, void *aContext);
 
     static const struct Command sCommands[];
     static otNetifAddress sAddress;
 
     static Ip6::SockAddr sSockAddr;
-    static Ip6::IcmpEcho sIcmpEcho;
+    static Ip6::IcmpEcho *sIcmpEcho;
     static Server *sServer;
     static uint8_t sEchoRequest[];
+    static uint16_t sLength;
+    static uint16_t sCount;
+    static uint32_t sInterval;
+    static Timer *sPingTimer;
 };
 
 }  // namespace Cli

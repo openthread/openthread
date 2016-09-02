@@ -68,7 +68,7 @@ class Cert_5_6_1_NetworkDataLeaderAsBr(unittest.TestCase):
         self.nodes[SED1].set_timeout(3)
 
     def tearDown(self):
-        for node in self.nodes.itervalues():
+        for node in list(self.nodes.values()):
             node.stop()
         del self.nodes
 
@@ -77,8 +77,8 @@ class Cert_5_6_1_NetworkDataLeaderAsBr(unittest.TestCase):
         self.nodes[LEADER].set_state('leader')
         self.assertEqual(self.nodes[LEADER].get_state(), 'leader')
 
-        self.nodes[LEADER].add_prefix('2001::/64', 'pvcrs')
-        self.nodes[LEADER].add_prefix('2002::/64', 'pvcr')
+        self.nodes[LEADER].add_prefix('2001::/64', 'paros')
+        self.nodes[LEADER].add_prefix('2002::/64', 'paro')
         self.nodes[LEADER].register_netdata()
 
         self.nodes[ROUTER].start()

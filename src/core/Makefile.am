@@ -47,16 +47,22 @@ libopenthread_a_SOURCES             = \
     mac/mac.cpp                       \
     mac/mac_frame.cpp                 \
     mac/mac_whitelist.cpp             \
+    mac/mac_blacklist.cpp             \
     net/icmp6.cpp                     \
     net/ip6.cpp                       \
     net/ip6_address.cpp               \
+    net/ip6_filter.cpp                \
     net/ip6_mpl.cpp                   \
     net/ip6_routes.cpp                \
     net/netif.cpp                     \
     net/udp6.cpp                      \
     thread/address_resolver.cpp       \
     thread/key_manager.cpp            \
+    thread/link_quality.cpp           \
     thread/lowpan.cpp                 \
+    thread/meshcop_dataset.cpp        \
+    thread/meshcop_dataset_manager.cpp \
+    thread/meshcop_tlvs.cpp           \
     thread/mesh_forwarder.cpp         \
     thread/mle.cpp                    \
     thread/mle_router.cpp             \
@@ -70,6 +76,7 @@ libopenthread_a_SOURCES             = \
 
 noinst_HEADERS                      = \
     openthread-core-config.h          \
+    openthread-core-default-config.h  \
     coap/coap_header.hpp              \
     coap/coap_server.hpp              \
     common/code_utils.hpp             \
@@ -84,9 +91,11 @@ noinst_HEADERS                      = \
     mac/mac.hpp                       \
     mac/mac_frame.hpp                 \
     mac/mac_whitelist.hpp             \
+    mac/mac_blacklist.hpp             \
     net/icmp6.hpp                     \
     net/ip6.hpp                       \
     net/ip6_address.hpp               \
+    net/ip6_filter.hpp                \
     net/ip6_mpl.hpp                   \
     net/ip6_routes.hpp                \
     net/netif.hpp                     \
@@ -94,8 +103,13 @@ noinst_HEADERS                      = \
     net/udp6.hpp                      \
     thread/address_resolver.hpp       \
     thread/key_manager.hpp            \
+    thread/link_quality.hpp           \
     thread/lowpan.hpp                 \
+    thread/meshcop_tlvs.hpp           \
     thread/mesh_forwarder.hpp         \
+    thread/meshcop_dataset.hpp        \
+    thread/meshcop_dataset_manager.hpp \
+    thread/meshcop_tlvs.hpp           \
     thread/mle.hpp                    \
     thread/mle_constants.hpp          \
     thread/mle_router.hpp             \

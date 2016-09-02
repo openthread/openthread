@@ -29,21 +29,47 @@
 /**
  * @file
  * @brief
- *  This file defines the top-level functions for the OpenThread CLI server.
+ *  This file defines the top-level functions for the OpenThread NCP module.
  */
 
 #ifndef NCP_H_
 #define NCP_H_
+
+#include "../openthread-types.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 /**
- * Initialize the CLI serial server.
+ * Initialize the NCP.
  *
  */
 void otNcpInit(void);
+
+/**
+ * @brief Send data to the host via a specific stream.
+ *
+ * This function attempts to send the given data to the host
+ * using the given aStreamId. This is useful for reporting
+ * error messages, implementing debug/diagnostic consoles,
+ * and potentially other types of datastreams.
+ *
+ * The write either is accepted in its entirety or rejected.
+ * Partial writes are not attempted.
+ *
+ * @param[in]  aStreamId  A numeric identifier for the stream to write to.
+ *                        If set to '0', will default to the debug stream.
+ * @param[in]  aDataPtr   A pointer to the data to send on the stream.
+ *                        If aDataLen is non-zero, this param MUST NOT be NULL.
+ * @param[in]  aDataLen   The number of bytes of data from aDataPtr to send.
+ *
+ * @retval kThreadError_None  The data was queued for delivery to the host.
+ * @retval kThreadError_Busy  There are not enough resources to complete this
+ *                            request. This is usually a temporary condition.
+ * @retval kThreadError_InvalidArgs The given aStreamId was invalid.
+*/
+ThreadError otNcpStreamWrite(int aStreamId, const uint8_t *aDataPtr, int aDataLen);
 
 #ifdef __cplusplus
 }  // extern "C"

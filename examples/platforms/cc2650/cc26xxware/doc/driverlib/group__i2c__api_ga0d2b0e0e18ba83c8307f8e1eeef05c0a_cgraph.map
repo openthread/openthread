@@ -1,0 +1,4 @@
+<map id="I2CIntRegister" name="I2CIntRegister">
+<area shape="rect" id="node2" href="$group__interrupt__api.html#ga0a32aafea7f4904d2a64ee18b45f96c9" title="Registers a function to be called when an interrupt occurs. " alt="" coords="163,5,252,32"/>
+<area shape="rect" id="node3" href="$group__interrupt__api.html#ga49fc9c3d1a0f8c42a20249f8c5d360ce" title="Enables an interrupt. " alt="" coords="167,56,248,83"/>
+</map>

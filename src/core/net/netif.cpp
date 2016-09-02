@@ -40,7 +40,7 @@ namespace Thread {
 namespace Ip6 {
 
 Netif *Netif::sNetifListHead = NULL;
-int Netif::sNextInterfaceId = 1;
+int8_t Netif::sNextInterfaceId = 1;
 
 Netif::Netif() :
     mStateChangedTask(&HandleStateChangedTask, this)
@@ -145,7 +145,7 @@ Netif *Netif::GetNext() const
     return mNext;
 }
 
-Netif *Netif::GetNetifById(uint8_t aInterfaceId)
+Netif *Netif::GetNetifById(int8_t aInterfaceId)
 {
     Netif *netif;
 
@@ -177,7 +177,7 @@ exit:
     return netif;
 }
 
-int Netif::GetInterfaceId() const
+int8_t Netif::GetInterfaceId() const
 {
     return mInterfaceId;
 }
@@ -355,8 +355,8 @@ const NetifUnicastAddress *Netif::SelectSourceAddress(MessageInfo &aMessageInfo)
     int interfaceId = aMessageInfo.mInterfaceId;
     const NetifUnicastAddress *rvalAddr = NULL;
     const Address *candidateAddr;
-    uint8_t candidateId;
-    uint8_t rvalIface = 0;
+    int8_t candidateId;
+    int8_t rvalIface = 0;
 
     for (Netif *netif = GetNetifList(); netif; netif = netif->mNext)
     {
@@ -434,9 +434,9 @@ exit:
     return rvalAddr;
 }
 
-int Netif::GetOnLinkNetif(const Address &aAddress)
+int8_t Netif::GetOnLinkNetif(const Address &aAddress)
 {
-    int rval = -1;
+    int8_t rval = -1;
 
     for (Netif *netif = sNetifListHead; netif; netif = netif->mNext)
     {
@@ -451,6 +451,11 @@ int Netif::GetOnLinkNetif(const Address &aAddress)
 
 exit:
     return rval;
+}
+
+bool Netif::IsStateChangedCallbackPending(void)
+{
+    return mStateChangedFlags != 0;
 }
 
 void Netif::SetStateChangedFlags(uint32_t aFlags)

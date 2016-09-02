@@ -50,49 +50,49 @@ extern "C" {
  * @param[in]  aLength     Number of bytes in the buffer.
  *
  */
-static void DumpLine(otLogLevel aLogLevel, otLogRegion aLogRegion, const void *aBuf, const int aLength)
+static void DumpLine(otLogLevel aLogLevel, otLogRegion aLogRegion, const void *aBuf, const size_t aLength)
 {
     char buf[80];
     char *cur = buf;
 
-    snprintf(cur, sizeof(buf) - (cur - buf), "|");
+    snprintf(cur, sizeof(buf) - static_cast<size_t>(cur - buf), "|");
     cur += strlen(cur);
 
-    for (int i = 0; i < 16; i++)
+    for (size_t i = 0; i < 16; i++)
     {
         if (i < aLength)
         {
-            snprintf(cur, sizeof(buf) - (cur - buf), " %02X", ((uint8_t *)(aBuf))[i]);
+            snprintf(cur, sizeof(buf) - static_cast<size_t>(cur - buf), " %02X", ((uint8_t *)(aBuf))[i]);
             cur += strlen(cur);
         }
         else
         {
-            snprintf(cur, sizeof(buf) - (cur - buf), " ..");
+            snprintf(cur, sizeof(buf) - static_cast<size_t>(cur - buf), " ..");
             cur += strlen(cur);
         }
 
         if (!((i + 1) % 8))
         {
-            snprintf(cur, sizeof(buf) - (cur - buf), " |");
+            snprintf(cur, sizeof(buf) - static_cast<size_t>(cur - buf), " |");
             cur += strlen(cur);
         }
     }
 
-    snprintf(cur, sizeof(buf) - (cur - buf), " ");
+    snprintf(cur, sizeof(buf) - static_cast<size_t>(cur - buf), " ");
     cur += strlen(cur);
 
-    for (int i = 0; i < 16; i++)
+    for (size_t i = 0; i < 16; i++)
     {
         char c = 0x7f & ((char *)(aBuf))[i];
 
         if (i < aLength && isprint(c))
         {
-            snprintf(cur, sizeof(buf) - (cur - buf), "%c", c);
+            snprintf(cur, sizeof(buf) - static_cast<size_t>(cur - buf), "%c", c);
             cur += strlen(cur);
         }
         else
         {
-            snprintf(cur, sizeof(buf) - (cur - buf), ".");
+            snprintf(cur, sizeof(buf) - static_cast<size_t>(cur - buf), ".");
             cur += strlen(cur);
         }
     }
@@ -100,42 +100,42 @@ static void DumpLine(otLogLevel aLogLevel, otLogRegion aLogRegion, const void *a
     otPlatLog(aLogLevel, aLogRegion, "%s\n", buf);
 }
 
-void otDump(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aId, const void *aBuf, const int aLength)
+void otDump(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aId, const void *aBuf, const size_t aLength)
 {
-    int idlen = strlen(aId);
-    const int width = 72;
+    size_t idlen = strlen(aId);
+    const size_t width = 72;
     char buf[80];
     char *cur = buf;
 
     otPlatLog(aLogLevel, aLogRegion, "\n");
 
-    for (int i = 0; i < (width - idlen) / 2 - 5; i++)
+    for (size_t i = 0; i < (width - idlen) / 2 - 5; i++)
     {
-        snprintf(cur, sizeof(buf) - (cur - buf), "=");
+        snprintf(cur, sizeof(buf) - static_cast<size_t>(cur - buf), "=");
         cur += strlen(cur);
     }
 
-    snprintf(cur, sizeof(buf) - (cur - buf), "[%s len=%03d]", aId, aLength);
+    snprintf(cur, sizeof(buf) - static_cast<size_t>(cur - buf), "[%s len=%03zu]", aId, aLength);
     cur += strlen(cur);
 
-    for (int i = 0; i < (width - idlen) / 2 - 4; i++)
+    for (size_t i = 0; i < (width - idlen) / 2 - 4; i++)
     {
-        snprintf(cur, sizeof(buf) - (cur - buf), "=");
+        snprintf(cur, sizeof(buf) - static_cast<size_t>(cur - buf), "=");
         cur += strlen(cur);
     }
 
     otPlatLog(aLogLevel, aLogRegion, "%s\n", buf);
 
-    for (int i = 0; i < aLength; i += 16)
+    for (size_t i = 0; i < aLength; i += 16)
     {
         DumpLine(aLogLevel, aLogRegion, (uint8_t *)(aBuf) + i, (aLength - i) < 16 ? (aLength - i) : 16);
     }
 
     cur = buf;
 
-    for (int i = 0; i < width; i++)
+    for (size_t i = 0; i < width; i++)
     {
-        snprintf(cur, sizeof(buf) - (cur - buf), "-");
+        snprintf(cur, sizeof(buf) - static_cast<size_t>(cur - buf), "-");
         cur += strlen(cur);
     }
 

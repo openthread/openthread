@@ -1,0 +1,338 @@
+<HTML>
+<HEAD><META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=UTF-8">
+<link href="..//elements/mmap.css" rel="stylesheet" type="text/css">
+<TITLE>VIMS</TITLE>
+</HEAD>
+<BODY class=mmapBody>
+<h2 class="mmapCellTitle">
+  <a name="Top_Tag">VIMS</a>
+</h2>
+<P>Instance: VIMS<BR>
+Component: VIMS<BR>
+Base address: 0x40034000</P>
+<BR>
+<P>Versatile Instruction Memory System<BR>
+Controls memory access to the Flash and encapsulates the following instruction memories:<BR>
+- Boot ROM<BR>
+- Cache / GPRAM</P>
+ <H3 class="mmapRegisterSummaryTitle"><A name="VIMS"></A><A href="CPU_MMAP.html"> TOP</A>:<B>VIMS</B> Register Summary</H3>
+<TABLE cellspacing="0" class="mmapRegisterSummaryTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">
+  <P>Register Name</P>
+</TD>
+<TD class="cellTopCol2">
+  <P>Type</P>
+</TD>
+<TD class="cellTopCol3">
+  <P>Register Width (Bits)</P>
+</TD>
+<TD class="cellTopCol4">
+  <P>Register Reset</P>
+</TD>
+<TD class="cellTopCol5">
+  <P>Address Offset</P>
+</TD>
+<TD class="cellTopCol5">
+  <P>Physical Address</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#STAT">STAT</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>RO</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x0000 0000</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 0000</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x4003 4000</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#CTL">CTL</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>RW</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x0000 0000</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 0004</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x4003 4004</P>
+</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterSummaryTitle"><A href="CPU_MMAP.html"> TOP</A>:VIMS Register Descriptions</H3>
+<H3 class="mmapRegisterTitle"><A name="STAT"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">VIMS</A>:STAT</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 0000</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0x4003 4000</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0x4003 4000</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">Status<BR>
+Displays current VIMS mode and line buffer status</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">RO</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="STAT_RESERVED6">31:6</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED6</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0b00 0000 0000 0000 0000 0000 0000</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="STAT_IDCODE_LB_DIS">5</a>
+</TD>
+<TD class="cellBitfieldCol2">IDCODE_LB_DIS</TD>
+<TD class="cellBitfieldCol3" colspan="3">Icode/Dcode flash line buffer status<BR>
+<BR>
+0: Enabled or in transition to disabled<BR>
+1: Disabled and flushed</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="STAT_SYSBUS_LB_DIS">4</a>
+</TD>
+<TD class="cellBitfieldCol2">SYSBUS_LB_DIS</TD>
+<TD class="cellBitfieldCol3" colspan="3">Sysbus flash line buffer control<BR>
+<BR>
+0: Enabled or in transition to disabled<BR>
+1: Disabled and flushed</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="STAT_MODE_CHANGING">3</a>
+</TD>
+<TD class="cellBitfieldCol2">MODE_CHANGING</TD>
+<TD class="cellBitfieldCol3" colspan="3">VIMS mode change status<BR>
+<BR>
+0: VIMS is in the mode defined by <A class="xref" href="#STAT_MODE">MODE</A><BR>
+1: VIMS is in the process of changing to the mode given in <A class="xref" href="#CTL_MODE">CTL.MODE</A></TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="STAT_INV">2</a>
+</TD>
+<TD class="cellBitfieldCol2">INV</TD>
+<TD class="cellBitfieldCol3" colspan="3">This bit is set when invalidation of the cache memory is active / ongoing</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="STAT_MODE">1:0</a>
+</TD>
+<TD class="cellBitfieldCol2">MODE</TD>
+<TD class="cellBitfieldCol3" colspan="3">Current VIMS mode<TABLE cellspacing="0" class="LprfEnum">
+<TR class="rowEnumHead">
+<TD class="cellEnumTableHeadCol1">Value</TD>
+<TD class="cellEnumTableHeadCol2">ENUM Name</TD>
+<TD class="cellEnumTableHeadCol3">Description</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x0</TD>
+<TD class="cellEnumTableCol2">GPRAM</TD>
+<TD class="cellEnumTableCol3">VIMS GPRAM mode</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x1</TD>
+<TD class="cellEnumTableCol2">CACHE</TD>
+<TD class="cellEnumTableCol3">VIMS Cache mode</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x3</TD>
+<TD class="cellEnumTableCol2">OFF</TD>
+<TD class="cellEnumTableCol3">VIMS Off mode</TD>
+</TR>
+</TABLE>
+</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0b00</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="CTL"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">VIMS</A>:CTL</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 0004</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0x4003 4004</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0x4003 4004</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">Control<BR>
+Configure VIMS mode and line buffer settings</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">RW</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="CTL_STATS_CLR">31</a>
+</TD>
+<TD class="cellBitfieldCol2">STATS_CLR</TD>
+<TD class="cellBitfieldCol3" colspan="3">Set this bit to clear statistic counters.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="CTL_STATS_EN">30</a>
+</TD>
+<TD class="cellBitfieldCol2">STATS_EN</TD>
+<TD class="cellBitfieldCol3" colspan="3">Set this bit to enable statistic counters.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="CTL_DYN_CG_EN">29</a>
+</TD>
+<TD class="cellBitfieldCol2">DYN_CG_EN</TD>
+<TD class="cellBitfieldCol3" colspan="3">0: The in-built clock gate functionality is bypassed.<BR>
+1: The in-built clock gate functionality is enabled, automatically gating the clock when not needed.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="CTL_RESERVED6">28:6</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED6</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0b000 0000 0000 0000 0000 0000</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="CTL_IDCODE_LB_DIS">5</a>
+</TD>
+<TD class="cellBitfieldCol2">IDCODE_LB_DIS</TD>
+<TD class="cellBitfieldCol3" colspan="3">Icode/Dcode flash line buffer control<BR>
+<BR>
+0: Enable<BR>
+1: Disable</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="CTL_SYSBUS_LB_DIS">4</a>
+</TD>
+<TD class="cellBitfieldCol2">SYSBUS_LB_DIS</TD>
+<TD class="cellBitfieldCol3" colspan="3">Sysbus flash line buffer control<BR>
+<BR>
+0: Enable<BR>
+1: Disable</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="CTL_ARB_CFG">3</a>
+</TD>
+<TD class="cellBitfieldCol2">ARB_CFG</TD>
+<TD class="cellBitfieldCol3" colspan="3">Icode/Dcode and sysbus arbitation scheme<BR>
+<BR>
+0: Static arbitration  (icode/docde &#62; sysbus)<BR>
+1: Round-robin arbitration</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="CTL_PREF_EN">2</a>
+</TD>
+<TD class="cellBitfieldCol2">PREF_EN</TD>
+<TD class="cellBitfieldCol3" colspan="3">Tag prefetch control<BR>
+<BR>
+0: Disabled<BR>
+1: Enabled</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="CTL_MODE">1:0</a>
+</TD>
+<TD class="cellBitfieldCol2">MODE</TD>
+<TD class="cellBitfieldCol3" colspan="3">VIMS mode request.<BR>
+Write accesses to this field will be blocked while <A class="xref" href="#STAT_MODE_CHANGING">STAT.MODE_CHANGING</A> is set to 1.<BR>
+Note: Transaction from CACHE mode to GPRAM mode should be done through OFF mode to minimize flash block delay.<TABLE cellspacing="0" class="LprfEnum">
+<TR class="rowEnumHead">
+<TD class="cellEnumTableHeadCol1">Value</TD>
+<TD class="cellEnumTableHeadCol2">ENUM Name</TD>
+<TD class="cellEnumTableHeadCol3">Description</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x0</TD>
+<TD class="cellEnumTableCol2">GPRAM</TD>
+<TD class="cellEnumTableCol3">VIMS GPRAM mode</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x1</TD>
+<TD class="cellEnumTableCol2">CACHE</TD>
+<TD class="cellEnumTableCol3">VIMS Cache mode</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x3</TD>
+<TD class="cellEnumTableCol2">OFF</TD>
+<TD class="cellEnumTableCol3">VIMS Off mode</TD>
+</TR>
+</TABLE>
+</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0b00</TD>
+</TR>
+</TABLE>
+<BR>
+<BR>
+<hr><table class="footer"><tr><td>&copy; 2015 - 2016. Texas Instruments | All Rights Reserved</td></tr></table>
+</BODY>
+</HTML>

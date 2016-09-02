@@ -60,7 +60,7 @@ class Cert_5_3_6_RouterIdMask(unittest.TestCase):
         self.nodes[ROUTER2].enable_whitelist()
 
     def tearDown(self):
-        for node in self.nodes.itervalues():
+        for node in list(self.nodes.values()):
             node.stop()
         del self.nodes
 
@@ -84,10 +84,6 @@ class Cert_5_3_6_RouterIdMask(unittest.TestCase):
         self.nodes[ROUTER2].start()
         time.sleep(5)
         self.assertEqual(self.nodes[ROUTER2].get_state(), 'router')
-
-        self.nodes[ROUTER1].stop()
-
-        time.sleep(300)
 
 if __name__ == '__main__':
     unittest.main()

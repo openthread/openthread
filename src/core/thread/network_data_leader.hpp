@@ -100,12 +100,24 @@ public:
     uint8_t GetVersion(void) const;
 
     /**
+     * This method increments the Thread Network Data version.
+     *
+     */
+    void IncrementVersion(void);
+
+    /**
      * This method returns the Thread Network Data stable version.
      *
      * @returns The Thread Network Data stable version.
      *
      */
     uint8_t GetStableVersion(void) const;
+
+    /**
+     * This method increments the Thread Network Data stable version.
+     *
+     */
+    void IncrementStableVersion(void);
 
     /**
      * This method returns CONTEXT_ID_RESUSE_DELAY value.
@@ -196,6 +208,17 @@ public:
      */
     void RemoveBorderRouter(uint16_t aRloc16);
 
+    /**
+     * This method sends a Server Data Notification message to the Leader indicating an invalid RLOC16.
+     *
+     * @param[in]  aRloc16  The invalid RLOC16 to notify.
+     *
+     * @retval kThreadError_None    Successfully enqueued the notification message.
+     * @retval kThreadError_NoBufs  Insufficient message buffers to generate the notification message.
+     *
+     */
+    ThreadError SendServerDataNotification(uint16_t aRloc16);
+
 private:
     static void HandleServerData(void *aContext, Coap::Header &aHeader, Message &aMessage,
                                  const Ip6::MessageInfo &aMessageInfo);
@@ -251,15 +274,12 @@ private:
     uint32_t mContextIdReuseDelay;
     Timer mTimer;
 
-    Ip6::NetifUnicastAddress mAddresses[4];
-
     Coap::Resource  mServerData;
     uint8_t         mStableVersion;
     uint8_t         mVersion;
 
     Coap::Server   &mCoapServer;
-    Ip6::Netif     &mNetif;
-    Mle::MleRouter &mMle;
+    ThreadNetif    &mNetif;
 };
 
 /**

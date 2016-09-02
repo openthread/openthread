@@ -1,0 +1,1702 @@
+<HTML>
+<HEAD><META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=UTF-8">
+<link href="..//elements/mmap.css" rel="stylesheet" type="text/css">
+<TITLE>TRNG</TITLE>
+</HEAD>
+<BODY class=mmapBody>
+<h2 class="mmapCellTitle">
+  <a name="Top_Tag">TRNG</a>
+</h2>
+<P>Instance: TRNG<BR>
+Component: TRNG<BR>
+Base address: 0x40028000</P>
+<BR>
+<P>True Random Number Generator</P>
+ <H3 class="mmapRegisterSummaryTitle"><A name="TRNG"></A><A href="CPU_MMAP.html"> TOP</A>:<B>TRNG</B> Register Summary</H3>
+<TABLE cellspacing="0" class="mmapRegisterSummaryTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">
+  <P>Register Name</P>
+</TD>
+<TD class="cellTopCol2">
+  <P>Type</P>
+</TD>
+<TD class="cellTopCol3">
+  <P>Register Width (Bits)</P>
+</TD>
+<TD class="cellTopCol4">
+  <P>Register Reset</P>
+</TD>
+<TD class="cellTopCol5">
+  <P>Address Offset</P>
+</TD>
+<TD class="cellTopCol5">
+  <P>Physical Address</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#OUT0">OUT0</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>RO</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x0000 0000</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 0000</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x4002 8000</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#OUT1">OUT1</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>RO</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x0000 0000</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 0004</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x4002 8004</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#IRQFLAGSTAT">IRQFLAGSTAT</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>RO</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x0000 0000</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 0008</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x4002 8008</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#IRQFLAGMASK">IRQFLAGMASK</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>RW</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x0000 0000</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 000C</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x4002 800C</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#IRQFLAGCLR">IRQFLAGCLR</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>WO</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x0000 0000</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 0010</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x4002 8010</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#CTL">CTL</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>RW</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x0000 0000</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 0014</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x4002 8014</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#CFG0">CFG0</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>RW</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x0000 0000</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 0018</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x4002 8018</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#ALARMCNT">ALARMCNT</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>RW</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x0000 00FF</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 001C</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x4002 801C</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#FROEN">FROEN</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>RW</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x00FF FFFF</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 0020</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x4002 8020</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#FRODETUNE">FRODETUNE</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>RW</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x0000 0000</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 0024</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x4002 8024</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#ALARMMASK">ALARMMASK</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>RW</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x0000 0000</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 0028</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x4002 8028</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#ALARMSTOP">ALARMSTOP</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>RW</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x0000 0000</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 002C</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x4002 802C</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#LFSR0">LFSR0</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>RW</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x0000 0000</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 0030</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x4002 8030</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#LFSR1">LFSR1</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>RW</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x0000 0000</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 0034</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x4002 8034</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#LFSR2">LFSR2</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>RW</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x0000 0000</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 0038</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x4002 8038</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#HWOPT">HWOPT</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>RO</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x0000 0600</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 0078</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x4002 8078</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#HWVER0">HWVER0</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>RO</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x0200 B44B</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 007C</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x4002 807C</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#IRQSTATMASK">IRQSTATMASK</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>RO</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x0000 0000</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 1FD8</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x4002 9FD8</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#HWVER1">HWVER1</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>RO</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x0000 0020</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 1FE0</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x4002 9FE0</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#IRQSET">IRQSET</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>RW</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x0000 0000</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 1FEC</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x4002 9FEC</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#SWRESET">SWRESET</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>RW</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x0000 0000</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 1FF0</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x4002 9FF0</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#IRQSTAT">IRQSTAT</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>RO</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x0000 0000</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 1FF8</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x4002 9FF8</P>
+</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterSummaryTitle"><A href="CPU_MMAP.html"> TOP</A>:TRNG Register Descriptions</H3>
+<H3 class="mmapRegisterTitle"><A name="OUT0"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">TRNG</A>:OUT0</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 0000</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0x4002 8000</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0x4002 8000</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">Random Number Lower Word Readout Value</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">RO</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="OUT0_VALUE_31_0">31:0</a>
+</TD>
+<TD class="cellBitfieldCol2">VALUE_31_0</TD>
+<TD class="cellBitfieldCol3" colspan="3"><A class="mmap_legend_link" href="../legend.html#LSW">LSW</A> of 64- bit random value. New value ready when <A class="xref" href="#IRQFLAGSTAT_RDY">IRQFLAGSTAT.RDY</A> = 1.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0x0000 0000</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="OUT1"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">TRNG</A>:OUT1</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 0004</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0x4002 8004</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0x4002 8004</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">Random Number Upper Word Readout Value</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">RO</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="OUT1_VALUE_63_32">31:0</a>
+</TD>
+<TD class="cellBitfieldCol2">VALUE_63_32</TD>
+<TD class="cellBitfieldCol3" colspan="3"><A class="mmap_legend_link" href="../legend.html#MSW">MSW</A> of 64-bit random value. New value ready when <A class="xref" href="#IRQFLAGSTAT_RDY">IRQFLAGSTAT.RDY</A> = 1.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0x0000 0000</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="IRQFLAGSTAT"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">TRNG</A>:IRQFLAGSTAT</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 0008</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0x4002 8008</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0x4002 8008</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">Interrupt Status</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">RO</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="IRQFLAGSTAT_NEED_CLOCK">31</a>
+</TD>
+<TD class="cellBitfieldCol2">NEED_CLOCK</TD>
+<TD class="cellBitfieldCol3" colspan="3">1: Indicates that the <A class="mmap_legend_link" href="../legend.html#TRNG">TRNG</A> is busy generating entropy or is in one of its test modes - clocks may not be turned off and the power supply voltage must be kept stable. <BR>
+0: <A class="mmap_legend_link" href="../legend.html#TRNG">TRNG</A> is idle and can be shut down</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="IRQFLAGSTAT_RESERVED2">30:2</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED2</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0b0 0000 0000 0000 0000 0000 0000 0000</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="IRQFLAGSTAT_SHUTDOWN_OVF">1</a>
+</TD>
+<TD class="cellBitfieldCol2">SHUTDOWN_OVF</TD>
+<TD class="cellBitfieldCol3" colspan="3">1: The number of <A class="mmap_legend_link" href="../legend.html#FRO">FRO</A>s shut down (i.e. the number of &#39;1&#39; bits in the <A class="xref" href="#ALARMSTOP">ALARMSTOP</A> register) has exceeded the threshold set by <A class="xref" href="#ALARMCNT_SHUTDOWN_THR">ALARMCNT.SHUTDOWN_THR</A> <BR>
+<BR>
+Writing &#39;1&#39; to <A class="xref" href="#IRQFLAGCLR_SHUTDOWN_OVF">IRQFLAGCLR.SHUTDOWN_OVF</A> clears this bit to &#39;0&#39; again.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="IRQFLAGSTAT_RDY">0</a>
+</TD>
+<TD class="cellBitfieldCol2">RDY</TD>
+<TD class="cellBitfieldCol3" colspan="3">1: Data are available in <A class="xref" href="#OUT0">OUT0</A> and <A class="xref" href="#OUT1">OUT1</A>.<BR>
+<BR>
+Acknowledging this state by writing &#39;1&#39; to <A class="xref" href="#IRQFLAGCLR_RDY">IRQFLAGCLR.RDY</A> clears this bit to &#39;0&#39;. <BR>
+If a new number is already available in the internal register of the TRNG, the number is directly clocked into the result register. In this case the status bit is asserted again, after one clock cycle.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="IRQFLAGMASK"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">TRNG</A>:IRQFLAGMASK</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 000C</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0x4002 800C</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0x4002 800C</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">Interrupt Mask</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">RW</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="IRQFLAGMASK_RESERVED2">31:2</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED2</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0b00 0000 0000 0000 0000 0000 0000 0000</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="IRQFLAGMASK_SHUTDOWN_OVF">1</a>
+</TD>
+<TD class="cellBitfieldCol2">SHUTDOWN_OVF</TD>
+<TD class="cellBitfieldCol3" colspan="3">1: Allow <A class="xref" href="#IRQFLAGSTAT_SHUTDOWN_OVF">IRQFLAGSTAT.SHUTDOWN_OVF</A> to activate the interrupt from this module.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="IRQFLAGMASK_RDY">0</a>
+</TD>
+<TD class="cellBitfieldCol2">RDY</TD>
+<TD class="cellBitfieldCol3" colspan="3">1: Allow <A class="xref" href="#IRQFLAGSTAT_RDY">IRQFLAGSTAT.RDY</A> to activate the interrupt from this module.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="IRQFLAGCLR"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">TRNG</A>:IRQFLAGCLR</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 0010</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0x4002 8010</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0x4002 8010</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">Interrupt Flag Clear</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">WO</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="IRQFLAGCLR_RESERVED2">31:2</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED2</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior.</TD>
+<TD class="cellBitfieldCol4">WO</TD>
+<TD class="cellBitfieldCol5">0b00 0000 0000 0000 0000 0000 0000 0000</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="IRQFLAGCLR_SHUTDOWN_OVF">1</a>
+</TD>
+<TD class="cellBitfieldCol2">SHUTDOWN_OVF</TD>
+<TD class="cellBitfieldCol3" colspan="3">1: Clear <A class="xref" href="#IRQFLAGSTAT_SHUTDOWN_OVF">IRQFLAGSTAT.SHUTDOWN_OVF</A>.</TD>
+<TD class="cellBitfieldCol4">WO</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="IRQFLAGCLR_RDY">0</a>
+</TD>
+<TD class="cellBitfieldCol2">RDY</TD>
+<TD class="cellBitfieldCol3" colspan="3">1: Clear <A class="xref" href="#IRQFLAGSTAT_RDY">IRQFLAGSTAT.RDY</A>.</TD>
+<TD class="cellBitfieldCol4">WO</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="CTL"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">TRNG</A>:CTL</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 0014</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0x4002 8014</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0x4002 8014</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">Control</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">RW</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="CTL_STARTUP_CYCLES">31:16</a>
+</TD>
+<TD class="cellBitfieldCol2">STARTUP_CYCLES</TD>
+<TD class="cellBitfieldCol3" colspan="3">This field determines the number of samples (between 2^8 and 2^24) taken to gather entropy from the FROs during startup. If the written value of this field is zero, the number of samples is 2^24, otherwise the number of samples equals the written value times 2^8.<BR>
+<BR>
+0x0000: 2^24 samples<BR>
+0x0001: 1*2^8 samples<BR>
+0x0002: 2*2^8 samples<BR>
+0x0003: 3*2^8 samples<BR>
+...<BR>
+0x8000: 32768*2^8 samples<BR>
+0xC000: 49152*2^8 samples<BR>
+...<BR>
+0xFFFF: 65535*2^8 samples<BR>
+<BR>
+This field can only be modified while <A class="xref" href="#CTL_TRNG_EN">TRNG_EN</A> is 0. If 1 an update will be ignored.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0x0000</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="CTL_RESERVED11">15:11</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED11</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0b0 0000</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="CTL_TRNG_EN">10</a>
+</TD>
+<TD class="cellBitfieldCol2">TRNG_EN</TD>
+<TD class="cellBitfieldCol3" colspan="3">0: Forces all <A class="mmap_legend_link" href="../legend.html#TRNG">TRNG</A> logic back into the idle state immediately.<BR>
+1: Starts <A class="mmap_legend_link" href="../legend.html#TRNG">TRNG</A>, gathering entropy from the FROs for the number of samples determined by <A class="xref" href="#CTL_STARTUP_CYCLES">STARTUP_CYCLES</A>.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="CTL_RESERVED3">9:3</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED3</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0b000 0000</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="CTL_NO_LFSR_FB">2</a>
+</TD>
+<TD class="cellBitfieldCol2">NO_LFSR_FB</TD>
+<TD class="cellBitfieldCol3" colspan="3">1: Remove XNOR feedback from the main <A class="mmap_legend_link" href="../legend.html#LFSR">LFSR</A>, converting it into a normal shift register for the XOR-ed outputs of the <A class="mmap_legend_link" href="../legend.html#FRO">FRO</A>s (shifting data in on the <A class="mmap_legend_link" href="../legend.html#LSB">LSB</A> side). A &#39;1&#39; also forces the <A class="mmap_legend_link" href="../legend.html#LFSR">LFSR</A> to sample continuously. <BR>
+<BR>
+This bit can only be set to &#39;1&#39; when <A class="xref" href="#CTL_TEST_MODE">TEST_MODE</A> is also set to &#39;1&#39; and should not be used for other than test purposes</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="CTL_TEST_MODE">1</a>
+</TD>
+<TD class="cellBitfieldCol2">TEST_MODE</TD>
+<TD class="cellBitfieldCol3" colspan="3">1: Enables access to the <A class="xref" href="#TESTCNT">TESTCNT</A> and <A class="xref" href="#LFSR0">LFSR0</A>/<A class="xref" href="#LFSR1">LFSR1</A>/<A class="xref" href="#LFSR2">LFSR2</A> registers (the latter are automatically cleared before enabling access)  and keeps <A class="xref" href="#IRQFLAGSTAT_NEED_CLOCK">IRQFLAGSTAT.NEED_CLOCK</A> at &#39;1&#39;. <BR>
+<BR>
+This bit shall not be used unless you need to change the <A class="mmap_legend_link" href="../legend.html#LFSR">LFSR</A> seed prior to creating a new random value. All other testing is done external to register control.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="CTL_RESERVED0">0</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED0</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="CFG0"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">TRNG</A>:CFG0</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 0018</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0x4002 8018</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0x4002 8018</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">Configuration 0</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">RW</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="CFG0_MAX_REFILL_CYCLES">31:16</a>
+</TD>
+<TD class="cellBitfieldCol2">MAX_REFILL_CYCLES</TD>
+<TD class="cellBitfieldCol3" colspan="3">This field determines the maximum number of samples (between 2^8 and 2^24) taken to re-generate entropy from the <A class="mmap_legend_link" href="../legend.html#FRO">FRO</A>s after reading out a 64 bits random number. If the written value of this field is zero, the number of samples is 2^24, otherwise the number of samples equals the written value times 2^8.<BR>
+<BR>
+0x0000: 2^24 samples<BR>
+0x0001: 1*2^8 samples<BR>
+0x0002: 2*2^8 samples<BR>
+0x0003: 3*2^8 samples<BR>
+...<BR>
+0x8000: 32768*2^8 samples<BR>
+0xC000: 49152*2^8 samples<BR>
+...<BR>
+0xFFFF: 65535*2^8 samples<BR>
+<BR>
+This field can only be modified while <A class="xref" href="#CTL_TRNG_EN">CTL.TRNG_EN</A> is 0.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0x0000</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="CFG0_RESERVED12">15:12</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED12</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0x0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="CFG0_SMPL_DIV">11:8</a>
+</TD>
+<TD class="cellBitfieldCol2">SMPL_DIV</TD>
+<TD class="cellBitfieldCol3" colspan="3">This field directly controls the number of clock cycles between samples taken from the <A class="mmap_legend_link" href="../legend.html#FRO">FRO</A>s. Default value 0 indicates that samples are taken every clock cycle,<BR>
+maximum value 0xF takes one sample every 16 clock cycles.<BR>
+This field must be set to a value such that the slowest <A class="mmap_legend_link" href="../legend.html#FRO">FRO</A> (even under worst-case<BR>
+conditions) has a cycle time less than twice the sample period.<BR>
+<BR>
+This field can only be modified while <A class="xref" href="#CTL_TRNG_EN">CTL.TRNG_EN</A> is &#39;0&#39;.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0x0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="CFG0_MIN_REFILL_CYCLES">7:0</a>
+</TD>
+<TD class="cellBitfieldCol2">MIN_REFILL_CYCLES</TD>
+<TD class="cellBitfieldCol3" colspan="3">This field determines the minimum number of samples (between 2^6 and 2^14) taken to re-generate entropy from the <A class="mmap_legend_link" href="../legend.html#FRO">FRO</A>s after reading out a 64 bits random number. If the value of this field is zero, the number of samples is fixed to the value determined by the <A class="xref" href="#CFG0_MAX_REFILL_CYCLES">MAX_REFILL_CYCLES</A> field, otherwise the minimum number of samples equals the written value times 64 (which can be up to 2^14). To ensure same entropy in all generated random numbers the value 0 should be used. Then <A class="xref" href="#CFG0_MAX_REFILL_CYCLES">MAX_REFILL_CYCLES</A> controls the minimum refill interval. The number of samples defined here cannot be higher than the number defined by the &#39;max_refill_cycles&#39; field (i.e. that field takes precedence). No random value will be created if min refill &#62; max refill.<BR>
+<BR>
+This field can only be modified while <A class="xref" href="#CTL_TRNG_EN">CTL.TRNG_EN</A> = 0.<BR>
+<BR>
+0x00: Minimum samples = <A class="xref" href="#CFG0_MAX_REFILL_CYCLES">MAX_REFILL_CYCLES</A> (all numbers have same entropy)<BR>
+0x01: 1*2^6 samples<BR>
+0x02: 2*2^6 samples<BR>
+...<BR>
+0xFF: 255*2^6 samples</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0x00</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="ALARMCNT"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">TRNG</A>:ALARMCNT</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 001C</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0x4002 801C</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0x4002 801C</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">Alarm Control</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">RW</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="ALARMCNT_RESERVED30">31:30</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED30</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0b00</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="ALARMCNT_SHUTDOWN_CNT">29:24</a>
+</TD>
+<TD class="cellBitfieldCol2">SHUTDOWN_CNT</TD>
+<TD class="cellBitfieldCol3" colspan="3">Read-only, indicates the number of &#39;1&#39; bits in <A class="xref" href="#ALARMSTOP">ALARMSTOP</A> register.<BR>
+The maximum value equals the number of <A class="mmap_legend_link" href="../legend.html#FRO">FRO</A>s.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0b00 0000</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="ALARMCNT_RESERVED21">23:21</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED21</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0b000</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="ALARMCNT_SHUTDOWN_THR">20:16</a>
+</TD>
+<TD class="cellBitfieldCol2">SHUTDOWN_THR</TD>
+<TD class="cellBitfieldCol3" colspan="3">Threshold setting for generating <A class="xref" href="#IRQFLAGSTAT_SHUTDOWN_OVF">IRQFLAGSTAT.SHUTDOWN_OVF</A> interrupt. The interrupt is triggered when <A class="xref" href="#ALARMCNT_SHUTDOWN_CNT">SHUTDOWN_CNT</A> value exceeds this bit field.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0b0 0000</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="ALARMCNT_RESERVED8">15:8</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED8</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0x00</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="ALARMCNT_ALARM_THR">7:0</a>
+</TD>
+<TD class="cellBitfieldCol2">ALARM_THR</TD>
+<TD class="cellBitfieldCol3" colspan="3">Alarm detection threshold for the repeating pattern detectors on each <A class="mmap_legend_link" href="../legend.html#FRO">FRO</A>. An <A class="mmap_legend_link" href="../legend.html#FRO">FRO</A> &#39;alarm event&#39; is declared when a repeating pattern (of up to four samples length) is detected continuously for the number of samples defined by this field&#39;s value. Reset value 0xFF should keep the number of &#39;alarm events&#39; to a manageable level.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0xFF</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="FROEN"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">TRNG</A>:FROEN</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 0020</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0x4002 8020</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0x4002 8020</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3"><A class="mmap_legend_link" href="../legend.html#FRO">FRO</A> Enable</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">RW</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="FROEN_RESERVED24">31:24</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED24</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0x00</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="FROEN_FRO_MASK">23:0</a>
+</TD>
+<TD class="cellBitfieldCol2">FRO_MASK</TD>
+<TD class="cellBitfieldCol3" colspan="3">Enable bits for the individual <A class="mmap_legend_link" href="../legend.html#FRO">FRO</A>s. A &#39;1&#39; in bit [n] enables <A class="mmap_legend_link" href="../legend.html#FRO">FRO</A> &#39;n&#39;. Default state is all &#39;1&#39;s to enable all <A class="mmap_legend_link" href="../legend.html#FRO">FRO</A>s after power-up. Note that they are not actually started up before the <A class="xref" href="#CTL_TRNG_EN">CTL.TRNG_EN</A> bit  is set to &#39;1&#39;.<BR>
+<BR>
+Bits are automatically forced to &#39;0&#39; here (and cannot be written to &#39;1&#39;) while the corresponding bit in  <A class="xref" href="#ALARMSTOP_FRO_FLAGS">ALARMSTOP.FRO_FLAGS</A> has value &#39;1&#39;.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0xFF FFFF</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="FRODETUNE"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">TRNG</A>:FRODETUNE</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 0024</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0x4002 8024</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0x4002 8024</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">FRO De-tune Bit</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">RW</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="FRODETUNE_RESERVED24">31:24</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED24</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0x00</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="FRODETUNE_FRO_MASK">23:0</a>
+</TD>
+<TD class="cellBitfieldCol2">FRO_MASK</TD>
+<TD class="cellBitfieldCol3" colspan="3">De-tune bits for the individual <A class="mmap_legend_link" href="../legend.html#FRO">FRO</A>s. A &#39;1&#39; in bit [n] lets <A class="mmap_legend_link" href="../legend.html#FRO">FRO</A> &#39;n&#39; run approximately 5% faster. The value of one of these bits may only be changed while the corresponding <A class="mmap_legend_link" href="../legend.html#FRO">FRO</A> is turned off (by temporarily writing a &#39;0&#39; in the corresponding<BR>
+bit of the <A class="xref" href="#FROEN_FRO_MASK">FROEN.FRO_MASK</A> register).</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0x00 0000</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="ALARMMASK"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">TRNG</A>:ALARMMASK</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 0028</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0x4002 8028</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0x4002 8028</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">Alarm Event</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">RW</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="ALARMMASK_RESERVED24">31:24</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED24</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0x00</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="ALARMMASK_FRO_MASK">23:0</a>
+</TD>
+<TD class="cellBitfieldCol2">FRO_MASK</TD>
+<TD class="cellBitfieldCol3" colspan="3">Logging bits for the &#39;alarm events&#39; of individual <A class="mmap_legend_link" href="../legend.html#FRO">FRO</A>s. A &#39;1&#39; in bit [n] indicates <A class="mmap_legend_link" href="../legend.html#FRO">FRO</A> &#39;n&#39; experienced an &#39;alarm event&#39;.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0x00 0000</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="ALARMSTOP"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">TRNG</A>:ALARMSTOP</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 002C</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0x4002 802C</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0x4002 802C</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">Alarm Shutdown</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">RW</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="ALARMSTOP_RESERVED24">31:24</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED24</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0x00</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="ALARMSTOP_FRO_FLAGS">23:0</a>
+</TD>
+<TD class="cellBitfieldCol2">FRO_FLAGS</TD>
+<TD class="cellBitfieldCol3" colspan="3">Logging bits for the &#39;alarm events&#39; of individual <A class="mmap_legend_link" href="../legend.html#FRO">FRO</A>s. A &#39;1&#39; in bit [n] indicates <A class="mmap_legend_link" href="../legend.html#FRO">FRO</A> &#39;n&#39; experienced more than one &#39;alarm event&#39; in quick succession and has been turned off. A &#39;1&#39; in this field forces the corresponding bit in <A class="xref" href="#FROEN_FRO_MASK">FROEN.FRO_MASK</A> to &#39;0&#39;.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0x00 0000</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="LFSR0"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">TRNG</A>:LFSR0</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 0030</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0x4002 8030</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0x4002 8030</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3"><A class="mmap_legend_link" href="../legend.html#LFSR">LFSR</A> Readout Value</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">RW</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="LFSR0_LFSR_31_0">31:0</a>
+</TD>
+<TD class="cellBitfieldCol2">LFSR_31_0</TD>
+<TD class="cellBitfieldCol3" colspan="3">Bits [31:0] of the main entropy accumulation <A class="mmap_legend_link" href="../legend.html#LFSR">LFSR</A>. Register can only be accessed when <A class="xref" href="#CTL_TEST_MODE">CTL.TEST_MODE</A>  = 1.<BR>
+Register contents will be cleared to zero before access is enabled.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0x0000 0000</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="LFSR1"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">TRNG</A>:LFSR1</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 0034</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0x4002 8034</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0x4002 8034</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3"><A class="mmap_legend_link" href="../legend.html#LFSR">LFSR</A> Readout Value</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">RW</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="LFSR1_LFSR_63_32">31:0</a>
+</TD>
+<TD class="cellBitfieldCol2">LFSR_63_32</TD>
+<TD class="cellBitfieldCol3" colspan="3">Bits [63:32] of the main entropy accumulation <A class="mmap_legend_link" href="../legend.html#LFSR">LFSR</A>. Register can only be accessed when <A class="xref" href="#CTL_TEST_MODE">CTL.TEST_MODE</A> = 1. <BR>
+Register contents will be cleared to zero before access is enabled.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0x0000 0000</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="LFSR2"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">TRNG</A>:LFSR2</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 0038</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0x4002 8038</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0x4002 8038</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3"><A class="mmap_legend_link" href="../legend.html#LFSR">LFSR</A> Readout Value</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">RW</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="LFSR2_RESERVED17">31:17</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED17</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0b000 0000 0000 0000</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="LFSR2_LFSR_80_64">16:0</a>
+</TD>
+<TD class="cellBitfieldCol2">LFSR_80_64</TD>
+<TD class="cellBitfieldCol3" colspan="3">Bits [80:64] of the main entropy accumulation <A class="mmap_legend_link" href="../legend.html#LFSR">LFSR</A>. Register can only be accessed when <A class="xref" href="#CTL_TEST_MODE">CTL.TEST_MODE</A> = 1. <BR>
+Register contents will be cleared to zero before access is enabled.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0b0 0000 0000 0000 0000</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="HWOPT"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">TRNG</A>:HWOPT</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 0078</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0x4002 8078</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0x4002 8078</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3"><A class="mmap_legend_link" href="../legend.html#TRNG">TRNG</A> Engine Options Information</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">RO</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="HWOPT_RESERVED12">31:12</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED12</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0x0 0000</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="HWOPT_NR_OF_FROS">11:6</a>
+</TD>
+<TD class="cellBitfieldCol2">NR_OF_FROS</TD>
+<TD class="cellBitfieldCol3" colspan="3">Number of <A class="mmap_legend_link" href="../legend.html#FRO">FRO</A>s implemented in this <A class="mmap_legend_link" href="../legend.html#TRNG">TRNG</A>, value 24 (decimal).</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0b01 1000</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="HWOPT_RESERVED0">5:0</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED0</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0b00 0000</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="HWVER0"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">TRNG</A>:HWVER0</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 007C</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0x4002 807C</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0x4002 807C</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">HW Version 0<BR>
+EIP Number And Core Revision</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">RO</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="HWVER0_RESERVED28">31:28</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED28</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0x0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="HWVER0_HW_MAJOR_VER">27:24</a>
+</TD>
+<TD class="cellBitfieldCol2">HW_MAJOR_VER</TD>
+<TD class="cellBitfieldCol3" colspan="3">4 bits binary encoding of the major hardware revision number.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0x2</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="HWVER0_HW_MINOR_VER">23:20</a>
+</TD>
+<TD class="cellBitfieldCol2">HW_MINOR_VER</TD>
+<TD class="cellBitfieldCol3" colspan="3">4 bits binary encoding of the minor hardware revision number.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0x0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="HWVER0_HW_PATCH_LVL">19:16</a>
+</TD>
+<TD class="cellBitfieldCol2">HW_PATCH_LVL</TD>
+<TD class="cellBitfieldCol3" colspan="3">4 bits binary encoding of the hardware patch level, initial release will carry value zero.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0x0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="HWVER0_EIP_NUM_COMPL">15:8</a>
+</TD>
+<TD class="cellBitfieldCol2">EIP_NUM_COMPL</TD>
+<TD class="cellBitfieldCol3" colspan="3">Bit-by-bit logic complement of bits [7:0]. This <A class="mmap_legend_link" href="../legend.html#TRNG">TRNG</A> gives 0xB4.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0xB4</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="HWVER0_EIP_NUM">7:0</a>
+</TD>
+<TD class="cellBitfieldCol2">EIP_NUM</TD>
+<TD class="cellBitfieldCol3" colspan="3">8 bits binary encoding of the module number. This <A class="mmap_legend_link" href="../legend.html#TRNG">TRNG</A> gives 0x4B.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0x4B</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="IRQSTATMASK"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">TRNG</A>:IRQSTATMASK</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 1FD8</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0x4002 9FD8</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0x4002 9FD8</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">Interrupt Status After Masking</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">RO</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="IRQSTATMASK_RESERVED2">31:2</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED2</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0b00 0000 0000 0000 0000 0000 0000 0000</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="IRQSTATMASK_SHUTDOWN_OVF">1</a>
+</TD>
+<TD class="cellBitfieldCol2">SHUTDOWN_OVF</TD>
+<TD class="cellBitfieldCol3" colspan="3">Shutdown Overflow (result of <A class="xref" href="#IRQFLAGSTAT_SHUTDOWN_OVF">IRQFLAGSTAT.SHUTDOWN_OVF</A> AND&#39;ed with <A class="xref" href="#IRQFLAGMASK_SHUTDOWN_OVF">IRQFLAGMASK.SHUTDOWN_OVF</A>)</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="IRQSTATMASK_RDY">0</a>
+</TD>
+<TD class="cellBitfieldCol2">RDY</TD>
+<TD class="cellBitfieldCol3" colspan="3">New random value available (result of <A class="xref" href="#IRQFLAGSTAT_RDY">IRQFLAGSTAT.RDY</A> AND&#39;ed with <A class="xref" href="#IRQFLAGMASK_RDY">IRQFLAGMASK.RDY</A>)</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="HWVER1"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">TRNG</A>:HWVER1</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 1FE0</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0x4002 9FE0</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0x4002 9FE0</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">HW Version 1<BR>
+<A class="mmap_legend_link" href="../legend.html#TRNG">TRNG</A> Revision Number</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">RO</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="HWVER1_RESERVED8">31:8</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED8</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0x00 0000</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="HWVER1_REV">7:0</a>
+</TD>
+<TD class="cellBitfieldCol2">REV</TD>
+<TD class="cellBitfieldCol3" colspan="3">The revision number of this module is Rev 2.0.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0x20</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="IRQSET"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">TRNG</A>:IRQSET</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 1FEC</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0x4002 9FEC</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0x4002 9FEC</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">Interrupt Set</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">RW</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="IRQSET_RDY">31:0</a>
+</TD>
+<TD class="cellBitfieldCol2">RDY</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0x0000 0000</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="SWRESET"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">TRNG</A>:SWRESET</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 1FF0</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0x4002 9FF0</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0x4002 9FF0</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">SW Reset Control</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">RW</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="SWRESET_RESERVED1">31:1</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED1</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0b000 0000 0000 0000 0000 0000 0000 0000</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="SWRESET_RESET">0</a>
+</TD>
+<TD class="cellBitfieldCol2">RESET</TD>
+<TD class="cellBitfieldCol3" colspan="3">Write &#39;1&#39; to soft reset , reset will be low for 4-5 clock cycles. Poll to 0 for reset to be completed.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="IRQSTAT"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">TRNG</A>:IRQSTAT</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 1FF8</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0x4002 9FF8</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0x4002 9FF8</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">Interrupt Status</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">RO</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="IRQSTAT_RESERVED1">31:1</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED1</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0b000 0000 0000 0000 0000 0000 0000 0000</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="IRQSTAT_STAT">0</a>
+</TD>
+<TD class="cellBitfieldCol2">STAT</TD>
+<TD class="cellBitfieldCol3" colspan="3"><A class="mmap_legend_link" href="../legend.html#TRNG">TRNG</A> Interrupt status. OR&#39;ed version of <A class="xref" href="#IRQFLAGSTAT_SHUTDOWN_OVF">IRQFLAGSTAT.SHUTDOWN_OVF</A> and <A class="xref" href="#IRQFLAGSTAT_RDY">IRQFLAGSTAT.RDY</A></TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+</TABLE>
+<BR>
+<BR>
+<hr><table class="footer"><tr><td>&copy; 2015 - 2016. Texas Instruments | All Rights Reserved</td></tr></table>
+</BODY>
+</HTML>

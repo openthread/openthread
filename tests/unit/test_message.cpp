@@ -36,6 +36,10 @@ extern"C" void otSignalTaskletPending(void)
 {
 }
 
+extern "C" void otPlatDiagAlarmFired()
+{
+}
+
 void TestMessage(void)
 {
     Thread::Message *message;

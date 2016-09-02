@@ -46,7 +46,8 @@ ThreadError Udp::Start(void)
 {
     ThreadError error;
 
-    otSockAddr sockaddr = {};
+    otSockAddr sockaddr;
+    memset(&sockaddr, 0, sizeof(otSockAddr));
     sockaddr.mPort = 7335;
 
     SuccessOrExit(error = otOpenUdpSocket(&mSocket, &HandleUdpReceive, this));
@@ -118,7 +119,7 @@ int Udp::OutputFormat(const char *fmt, ...)
     vsnprintf(buf, sizeof(buf), fmt, ap);
     va_end(ap);
 
-    return Output(buf, strlen(buf));
+    return Output(buf, static_cast<uint16_t>(strlen(buf)));
 }
 
 }  // namespace Cli

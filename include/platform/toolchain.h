@@ -85,16 +85,6 @@ extern "C" {
  *
  */
 
-/**
- * @def OT_TOOL_DEPRECATED
- *
- * Indicate to the compiler to warn upon use that a field or function
- * has been deprecated.
- *
- * @param[in]  symbol      The name of the field or function to deprecate.
- *
- */
-
 // =========== TOOLCHAIN SELECTION : START ===========
 
 #if defined(__GNUC__) || defined(__clang__) || defined(__CC_ARM)
@@ -105,7 +95,6 @@ extern "C" {
 #define OT_TOOL_PACKED_BEGIN
 #define OT_TOOL_PACKED_FIELD                __attribute__((packed))
 #define OT_TOOL_PACKED_END                  __attribute__((packed))
-#define OT_TOOL_DEPRECATED(symbol)          __attribute__((deprecated))
 
 #elif defined(__ICCARM__) || defined(__ICC8051__)
 
@@ -116,14 +105,12 @@ extern "C" {
 #define OT_TOOL_PACKED_BEGIN                __packed
 #define OT_TOOL_PACKED_FIELD
 #define OT_TOOL_PACKED_END
-#define OT_TOOL_DEPRECATED(symbol)
 
 #elif defined(_MSC_VER)
 
 #define OT_TOOL_PACKED_BEGIN                __pragma(pack(push,1))
 #define OT_TOOL_PACKED_FIELD
 #define OT_TOOL_PACKED_END                  __pragma(pack(pop))
-#define OT_TOOL_DEPRECATED(symbol)          __pragma(deprecated(symbol))
 
 #elif defined(__SDCC)
 
@@ -132,7 +119,6 @@ extern "C" {
 #define OT_TOOL_PACKED_BEGIN
 #define OT_TOOL_PACKED_FIELD
 #define OT_TOOL_PACKED_END
-#define OT_TOOL_DEPRECATED(symbol)
 
 #else
 
@@ -143,7 +129,6 @@ extern "C" {
 #define OT_TOOL_PACKED_BEGIN
 #define OT_TOOL_PACKED_FIELD
 #define OT_TOOL_PACKED_END
-#define OT_TOOL_DEPRECATED(symbol)
 
 #endif
 

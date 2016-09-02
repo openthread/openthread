@@ -1,0 +1,2304 @@
+<HTML>
+<HEAD><META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=UTF-8">
+<link href="..//elements/mmap.css" rel="stylesheet" type="text/css">
+<TITLE>DDI_0_OSC</TITLE>
+</HEAD>
+<BODY class=mmapBody>
+<h2 class="mmapCellTitle">
+  <a name="Top_Tag">DDI_0_OSC</a>
+</h2>
+<P>Instance: DDI_0_OSC<BR>
+Component: DDI_0_OSC<BR>
+Base address: 0x400CA000</P>
+<BR>
+<P>This is the DDI for the digital block that controls all the analog clock oscillators  (<A class="mmap_legend_link" href="../legend.html#OSC_DIG">OSC_DIG</A>) and performs qualification of the clocks generated.</P>
+ <H3 class="mmapRegisterSummaryTitle"><A name="DDI_0_OSC"></A><A href="ANATOP_MMAP.html"> TOP</A>:<B>DDI_0_OSC</B> Register Summary</H3>
+<TABLE cellspacing="0" class="mmapRegisterSummaryTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">
+  <P>Register Name</P>
+</TD>
+<TD class="cellTopCol2">
+  <P>Type</P>
+</TD>
+<TD class="cellTopCol3">
+  <P>Register Width (Bits)</P>
+</TD>
+<TD class="cellTopCol4">
+  <P>Register Reset</P>
+</TD>
+<TD class="cellTopCol5">
+  <P>Address Offset</P>
+</TD>
+<TD class="cellTopCol5">
+  <P>Physical Address</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#CTL0">CTL0</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>RW</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x0000 0000</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 0000</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x400C A000</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#CTL1">CTL1</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>RW</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x0000 0000</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 0004</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x400C A004</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#RADCEXTCFG">RADCEXTCFG</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>RW</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x0000 0000</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 0008</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x400C A008</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#AMPCOMPCTL">AMPCOMPCTL</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>RW</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x0000 0000</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 000C</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x400C A00C</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#AMPCOMPTH1">AMPCOMPTH1</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>RW</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x0000 0000</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 0010</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x400C A010</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#AMPCOMPTH2">AMPCOMPTH2</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>RW</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x0000 0000</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 0014</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x400C A014</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#ANABYPASSVAL1">ANABYPASSVAL1</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>RW</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x0000 0000</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 0018</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x400C A018</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#ANABYPASSVAL2">ANABYPASSVAL2</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>RW</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x0000 0000</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 001C</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x400C A01C</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#ATESTCTL">ATESTCTL</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>RW</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x0000 0000</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 0020</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x400C A020</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#ADCDOUBLERNANOAMPCTL">ADCDOUBLERNANOAMPCTL</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>RW</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x0000 0000</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 0024</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x400C A024</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#XOSCHFCTL">XOSCHFCTL</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>RW</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x0000 0000</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 0028</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x400C A028</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#LFOSCCTL">LFOSCCTL</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>RW</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x0000 0000</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 002C</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x400C A02C</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#RCOSCHFCTL">RCOSCHFCTL</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>RW</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x0000 0000</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 0030</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x400C A030</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#STAT0">STAT0</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>RO</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x0000 0000</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 0034</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x400C A034</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#STAT1">STAT1</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>RO</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x0000 0000</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 0038</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x400C A038</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#STAT2">STAT2</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>RO</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x0000 0000</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 003C</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x400C A03C</P>
+</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterSummaryTitle"><A href="ANATOP_MMAP.html"> TOP</A>:DDI_0_OSC Register Descriptions</H3>
+<H3 class="mmapRegisterTitle"><A name="CTL0"></A><A class="mmapRegisterTitle" href="ANATOP_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">DDI_0_OSC</A>:CTL0</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 0000</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0x400C A000</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0x400C A000</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">Control 0<BR>
+Controls various clock source selects</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">RW</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="CTL0_XTAL_IS_24M">31</a>
+</TD>
+<TD class="cellBitfieldCol2">XTAL_IS_24M</TD>
+<TD class="cellBitfieldCol3" colspan="3">Set based on the accurate high frequency <A class="mmap_legend_link" href="../legend.html#XTAL">XTAL</A>.<TABLE cellspacing="0" class="LprfEnum">
+<TR class="rowEnumHead">
+<TD class="cellEnumTableHeadCol1">Value</TD>
+<TD class="cellEnumTableHeadCol2">ENUM Name</TD>
+<TD class="cellEnumTableHeadCol3">Description</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x0</TD>
+<TD class="cellEnumTableCol2">48M</TD>
+<TD class="cellEnumTableCol3">Internal. Only to be used through TI provided API.</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x1</TD>
+<TD class="cellEnumTableCol2">24M</TD>
+<TD class="cellEnumTableCol3">Internal. Only to be used through TI provided API.</TD>
+</TR>
+</TABLE>
+</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="CTL0_RESERVED30">30</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED30</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="CTL0_BYPASS_XOSC_LF_CLK_QUAL">29</a>
+</TD>
+<TD class="cellBitfieldCol2">BYPASS_XOSC_LF_CLK_QUAL</TD>
+<TD class="cellBitfieldCol3" colspan="3">Internal. Only to be used through TI provided API.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="CTL0_BYPASS_RCOSC_LF_CLK_QUAL">28</a>
+</TD>
+<TD class="cellBitfieldCol2">BYPASS_RCOSC_LF_CLK_QUAL</TD>
+<TD class="cellBitfieldCol3" colspan="3">Internal. Only to be used through TI provided API.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="CTL0_DOUBLER_START_DURATION">27:26</a>
+</TD>
+<TD class="cellBitfieldCol2">DOUBLER_START_DURATION</TD>
+<TD class="cellBitfieldCol3" colspan="3">Internal. Only to be used through TI provided API.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0b00</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="CTL0_DOUBLER_RESET_DURATION">25</a>
+</TD>
+<TD class="cellBitfieldCol2">DOUBLER_RESET_DURATION</TD>
+<TD class="cellBitfieldCol3" colspan="3">Internal. Only to be used through TI provided API.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="CTL0_RESERVED23">24:23</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED23</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0b00</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="CTL0_FORCE_KICKSTART_EN">22</a>
+</TD>
+<TD class="cellBitfieldCol2">FORCE_KICKSTART_EN</TD>
+<TD class="cellBitfieldCol3" colspan="3">Internal. Only to be used through TI provided API.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="CTL0_RESERVED17">21:17</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED17</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0b0 0000</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="CTL0_ALLOW_SCLK_HF_SWITCHING">16</a>
+</TD>
+<TD class="cellBitfieldCol2">ALLOW_SCLK_HF_SWITCHING</TD>
+<TD class="cellBitfieldCol3" colspan="3">0: Default - Switching of <A class="mmap_legend_link" href="../legend.html#HF">HF</A> clock source is disabled .  <BR>
+1: Allows swtiching of <A class="mmap_legend_link" href="../legend.html#sclk_hf">sclk_hf</A> source.   <BR>
+<BR>
+Provided to prevent switching of the <A class="mmap_legend_link" href="../legend.html#SCLK_HF">SCLK_HF</A> source when running from flash (a long period during switching could corrupt flash). When <A class="mmap_legend_link" href="../legend.html#sclk_hf">sclk_hf</A>  switching is disabled, a new source can be started when <A class="xref" href="#CTL0_SCLK_HF_SRC_SEL">SCLK_HF_SRC_SEL</A> is changed, but the switch will not occur until this bit is set.  This bit should be set to enable clock switching after <A class="xref" href="#STAT0_PENDINGSCLKHFSWITCHING">STAT0.PENDINGSCLKHFSWITCHING</A> indicates  the new <A class="mmap_legend_link" href="../legend.html#HF">HF</A> clock is ready. When switching completes (also indicated by <A class="xref" href="#STAT0_PENDINGSCLKHFSWITCHING">STAT0.PENDINGSCLKHFSWITCHING</A>)  <A class="mmap_legend_link" href="../legend.html#sclk_hf">sclk_hf</A> switching should be disabled to prevent flash corruption.  Switching should not be enabled when running from flash.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="CTL0_RESERVED15">15</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED15</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="CTL0_HPOSC_MODE_EN">14</a>
+</TD>
+<TD class="cellBitfieldCol2">HPOSC_MODE_EN</TD>
+<TD class="cellBitfieldCol3" colspan="3">Internal. Only to be used through TI provided API.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="CTL0_RESERVED13">13</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED13</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="CTL0_RCOSC_LF_TRIMMED">12</a>
+</TD>
+<TD class="cellBitfieldCol2">RCOSC_LF_TRIMMED</TD>
+<TD class="cellBitfieldCol3" colspan="3">Internal. Only to be used through TI provided API.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="CTL0_XOSC_HF_POWER_MODE">11</a>
+</TD>
+<TD class="cellBitfieldCol2">XOSC_HF_POWER_MODE</TD>
+<TD class="cellBitfieldCol3" colspan="3">Internal. Only to be used through TI provided API.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="CTL0_XOSC_LF_DIG_BYPASS">10</a>
+</TD>
+<TD class="cellBitfieldCol2">XOSC_LF_DIG_BYPASS</TD>
+<TD class="cellBitfieldCol3" colspan="3">Bypass <A class="mmap_legend_link" href="../legend.html#XOSC_LF">XOSC_LF</A> and use the digital input clock from <A class="mmap_legend_link" href="../legend.html#AON">AON</A> for the <A class="mmap_legend_link" href="../legend.html#xosc_lf">xosc_lf</A> clock..<BR>
+<BR>
+0: Use 32kHz <A class="mmap_legend_link" href="../legend.html#XOSC">XOSC</A> as <A class="mmap_legend_link" href="../legend.html#xosc_lf">xosc_lf</A> clock source<BR>
+1: Use digital input (from AON) as <A class="mmap_legend_link" href="../legend.html#xosc_lf">xosc_lf</A> clock source.  <BR>
+<BR>
+This bit will only have effect when <A class="xref" href="#CTL0_SCLK_LF_SRC_SEL">SCLK_LF_SRC_SEL</A> is selecting the <A class="mmap_legend_link" href="../legend.html#xosc_lf">xosc_lf</A> as the <A class="mmap_legend_link" href="../legend.html#sclk_lf">sclk_lf</A> source. The muxing performed by this bit is not glitch free. The following procedure should be followed when changing this field to avoid glitches on <A class="mmap_legend_link" href="../legend.html#sclk_lf">sclk_lf</A>..<BR>
+<BR>
+1) Set <A class="xref" href="#CTL0_SCLK_LF_SRC_SEL">SCLK_LF_SRC_SEL</A> to select any source other than the <A class="mmap_legend_link" href="../legend.html#xosc_lf">xosc_lf</A> clock source.<BR>
+2) Set or clear this bit to bypass or not bypass the <A class="mmap_legend_link" href="../legend.html#xosc_lf">xosc_lf</A>.<BR>
+3) Set <A class="xref" href="#CTL0_SCLK_LF_SRC_SEL">SCLK_LF_SRC_SEL</A> to use <A class="mmap_legend_link" href="../legend.html#xosc_lf">xosc_lf</A>.<BR>
+<BR>
+It is recommended that either the <A class="mmap_legend_link" href="../legend.html#rcosc_hf">rcosc_hf</A> or <A class="mmap_legend_link" href="../legend.html#xosc_hf">xosc_hf</A> (whichever is currently active) be selected as the source in step 1 above. This provides a faster clock change.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="CTL0_CLK_LOSS_EN">9</a>
+</TD>
+<TD class="cellBitfieldCol2">CLK_LOSS_EN</TD>
+<TD class="cellBitfieldCol3" colspan="3">Enable clock loss circuit and hence the indicators to system controller.  Checks both <A class="mmap_legend_link" href="../legend.html#SCLK_HF">SCLK_HF</A> and <A class="mmap_legend_link" href="../legend.html#SCLK_LF">SCLK_LF</A> clock loss indicators. <BR>
+<BR>
+0: Disable<BR>
+1: Enable<BR>
+<BR>
+Clock loss detection should be disabled when changing the <A class="mmap_legend_link" href="../legend.html#sclk_lf">sclk_lf</A> source.  <A class="xref" href="#STAT0_SCLK_LF_SRC">STAT0.SCLK_LF_SRC</A> can be polled to determine when a change to a new <A class="mmap_legend_link" href="../legend.html#sclk_lf">sclk_lf</A> source has completed.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="CTL0_ACLK_TDC_SRC_SEL">8:7</a>
+</TD>
+<TD class="cellBitfieldCol2">ACLK_TDC_SRC_SEL</TD>
+<TD class="cellBitfieldCol3" colspan="3">Source select for aclk_tdc. <BR>
+<BR>
+00: <A class="mmap_legend_link" href="../legend.html#RCOSC_HF">RCOSC_HF</A> (48MHz)<BR>
+01: <A class="mmap_legend_link" href="../legend.html#RCOSC_HF">RCOSC_HF</A> (24MHz)<BR>
+10: <A class="mmap_legend_link" href="../legend.html#XOSC_HF">XOSC_HF</A> (24MHz)<BR>
+11: Not used</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0b00</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="CTL0_ACLK_REF_SRC_SEL">6:5</a>
+</TD>
+<TD class="cellBitfieldCol2">ACLK_REF_SRC_SEL</TD>
+<TD class="cellBitfieldCol3" colspan="3">Source select for <A class="mmap_legend_link" href="../legend.html#aclk_ref">aclk_ref</A><BR>
+<BR>
+00: <A class="mmap_legend_link" href="../legend.html#RCOSC_HF">RCOSC_HF</A> desirved (31.25kHz)<BR>
+01: <A class="mmap_legend_link" href="../legend.html#XOSC_HF">XOSC_HF</A> derived (31.25kHz)<BR>
+10: <A class="mmap_legend_link" href="../legend.html#RCOSC_LF">RCOSC_LF</A> (32kHz)<BR>
+11: <A class="mmap_legend_link" href="../legend.html#XOSC_LF">XOSC_LF</A> (32.768kHz)</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0b00</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="CTL0_SPARE4">4</a>
+</TD>
+<TD class="cellBitfieldCol2">SPARE4</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="CTL0_SCLK_LF_SRC_SEL">3:2</a>
+</TD>
+<TD class="cellBitfieldCol2">SCLK_LF_SRC_SEL</TD>
+<TD class="cellBitfieldCol3" colspan="3">Source select for <A class="mmap_legend_link" href="../legend.html#sclk_lf">sclk_lf</A><TABLE cellspacing="0" class="LprfEnum">
+<TR class="rowEnumHead">
+<TD class="cellEnumTableHeadCol1">Value</TD>
+<TD class="cellEnumTableHeadCol2">ENUM Name</TD>
+<TD class="cellEnumTableHeadCol3">Description</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x0</TD>
+<TD class="cellEnumTableCol2">RCOSCHFDLF</TD>
+<TD class="cellEnumTableCol3">Low frequency clock derived from High Frequency <A class="mmap_legend_link" href="../legend.html#RCOSC">RCOSC</A></TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x1</TD>
+<TD class="cellEnumTableCol2">XOSCHFDLF</TD>
+<TD class="cellEnumTableCol3">Low frequency clock derived from High Frequency <A class="mmap_legend_link" href="../legend.html#XOSC">XOSC</A></TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x2</TD>
+<TD class="cellEnumTableCol2">RCOSCLF</TD>
+<TD class="cellEnumTableCol3">Low frequency <A class="mmap_legend_link" href="../legend.html#RCOSC">RCOSC</A></TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x3</TD>
+<TD class="cellEnumTableCol2">XOSCLF</TD>
+<TD class="cellEnumTableCol3">Low frequency <A class="mmap_legend_link" href="../legend.html#XOSC">XOSC</A></TD>
+</TR>
+</TABLE>
+</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0b00</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="CTL0_SCLK_MF_SRC_SEL">1</a>
+</TD>
+<TD class="cellBitfieldCol2">SCLK_MF_SRC_SEL</TD>
+<TD class="cellBitfieldCol3" colspan="3">Internal. Only to be used through TI provided API.<TABLE cellspacing="0" class="LprfEnum">
+<TR class="rowEnumHead">
+<TD class="cellEnumTableHeadCol1">Value</TD>
+<TD class="cellEnumTableHeadCol2">ENUM Name</TD>
+<TD class="cellEnumTableHeadCol3">Description</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x0</TD>
+<TD class="cellEnumTableCol2">RCOSCHFDMF</TD>
+<TD class="cellEnumTableCol3">Internal. Only to be used through TI provided API.</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x1</TD>
+<TD class="cellEnumTableCol2">XCOSCHFDMF</TD>
+<TD class="cellEnumTableCol3">Medium frequency clock derived from high frequency <A class="mmap_legend_link" href="../legend.html#XOSC">XOSC</A>.</TD>
+</TR>
+</TABLE>
+</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="CTL0_SCLK_HF_SRC_SEL">0</a>
+</TD>
+<TD class="cellBitfieldCol2">SCLK_HF_SRC_SEL</TD>
+<TD class="cellBitfieldCol3" colspan="3">Source select for <A class="mmap_legend_link" href="../legend.html#sclk_hf">sclk_hf</A><TABLE cellspacing="0" class="LprfEnum">
+<TR class="rowEnumHead">
+<TD class="cellEnumTableHeadCol1">Value</TD>
+<TD class="cellEnumTableHeadCol2">ENUM Name</TD>
+<TD class="cellEnumTableHeadCol3">Description</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x0</TD>
+<TD class="cellEnumTableCol2">RCOSC</TD>
+<TD class="cellEnumTableCol3">High frequency <A class="mmap_legend_link" href="../legend.html#RCOSC">RCOSC</A> clk</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x1</TD>
+<TD class="cellEnumTableCol2">XOSC</TD>
+<TD class="cellEnumTableCol3">High frequency <A class="mmap_legend_link" href="../legend.html#XOSC">XOSC</A> clk</TD>
+</TR>
+</TABLE>
+</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="CTL1"></A><A class="mmapRegisterTitle" href="ANATOP_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">DDI_0_OSC</A>:CTL1</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 0004</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0x400C A004</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0x400C A004</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">Control 1<BR>
+This register contains various <A class="mmap_legend_link" href="../legend.html#OSC_DIG">OSC_DIG</A> configuration</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">RW</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="CTL1_RESERVED23">31:23</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED23</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0b0 0000 0000</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="CTL1_RCOSCHFCTRIMFRACT">22:18</a>
+</TD>
+<TD class="cellBitfieldCol2">RCOSCHFCTRIMFRACT</TD>
+<TD class="cellBitfieldCol3" colspan="3">Internal. Only to be used through TI provided API.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0b0 0000</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="CTL1_RCOSCHFCTRIMFRACT_EN">17</a>
+</TD>
+<TD class="cellBitfieldCol2">RCOSCHFCTRIMFRACT_EN</TD>
+<TD class="cellBitfieldCol3" colspan="3">Internal. Only to be used through TI provided API.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="CTL1_SPARE2">16:2</a>
+</TD>
+<TD class="cellBitfieldCol2">SPARE2</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0b000 0000 0000 0000</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="CTL1_XOSC_HF_FAST_START">1:0</a>
+</TD>
+<TD class="cellBitfieldCol2">XOSC_HF_FAST_START</TD>
+<TD class="cellBitfieldCol3" colspan="3">Internal. Only to be used through TI provided API.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0b00</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="RADCEXTCFG"></A><A class="mmapRegisterTitle" href="ANATOP_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">DDI_0_OSC</A>:RADCEXTCFG</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 0008</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0x400C A008</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0x400C A008</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3"><A class="mmap_legend_link" href="../legend.html#RADC">RADC</A> External Configuration</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">RW</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="RADCEXTCFG_HPM_IBIAS_WAIT_CNT">31:22</a>
+</TD>
+<TD class="cellBitfieldCol2">HPM_IBIAS_WAIT_CNT</TD>
+<TD class="cellBitfieldCol3" colspan="3">Internal. Only to be used through TI provided API.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0b00 0000 0000</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="RADCEXTCFG_LPM_IBIAS_WAIT_CNT">21:16</a>
+</TD>
+<TD class="cellBitfieldCol2">LPM_IBIAS_WAIT_CNT</TD>
+<TD class="cellBitfieldCol3" colspan="3">Internal. Only to be used through TI provided API.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0b00 0000</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="RADCEXTCFG_IDAC_STEP">15:12</a>
+</TD>
+<TD class="cellBitfieldCol2">IDAC_STEP</TD>
+<TD class="cellBitfieldCol3" colspan="3">Internal. Only to be used through TI provided API.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0x0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="RADCEXTCFG_RADC_DAC_TH">11:6</a>
+</TD>
+<TD class="cellBitfieldCol2">RADC_DAC_TH</TD>
+<TD class="cellBitfieldCol3" colspan="3">Internal. Only to be used through TI provided API.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0b00 0000</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="RADCEXTCFG_RADC_MODE_IS_SAR">5</a>
+</TD>
+<TD class="cellBitfieldCol2">RADC_MODE_IS_SAR</TD>
+<TD class="cellBitfieldCol3" colspan="3">Internal. Only to be used through TI provided API.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="RADCEXTCFG_RESERVED0">4:0</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED0</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0b0 0000</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="AMPCOMPCTL"></A><A class="mmapRegisterTitle" href="ANATOP_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">DDI_0_OSC</A>:AMPCOMPCTL</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 000C</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0x400C A00C</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0x400C A00C</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">Amplitude Compensation Control</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">RW</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="AMPCOMPCTL_SPARE31">31</a>
+</TD>
+<TD class="cellBitfieldCol2">SPARE31</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="AMPCOMPCTL_AMPCOMP_REQ_MODE">30</a>
+</TD>
+<TD class="cellBitfieldCol2">AMPCOMP_REQ_MODE</TD>
+<TD class="cellBitfieldCol3" colspan="3">Internal. Only to be used through TI provided API.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="AMPCOMPCTL_AMPCOMP_FSM_UPDATE_RATE">29:28</a>
+</TD>
+<TD class="cellBitfieldCol2">AMPCOMP_FSM_UPDATE_RATE</TD>
+<TD class="cellBitfieldCol3" colspan="3">Internal. Only to be used through TI provided API.<TABLE cellspacing="0" class="LprfEnum">
+<TR class="rowEnumHead">
+<TD class="cellEnumTableHeadCol1">Value</TD>
+<TD class="cellEnumTableHeadCol2">ENUM Name</TD>
+<TD class="cellEnumTableHeadCol3">Description</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x0</TD>
+<TD class="cellEnumTableCol2">2MHZ</TD>
+<TD class="cellEnumTableCol3">Internal. Only to be used through TI provided API.</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x1</TD>
+<TD class="cellEnumTableCol2">1MHZ</TD>
+<TD class="cellEnumTableCol3">Internal. Only to be used through TI provided API.</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x2</TD>
+<TD class="cellEnumTableCol2">500KHZ</TD>
+<TD class="cellEnumTableCol3">Internal. Only to be used through TI provided API.</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x3</TD>
+<TD class="cellEnumTableCol2">250KHZ</TD>
+<TD class="cellEnumTableCol3">Internal. Only to be used through TI provided API.</TD>
+</TR>
+</TABLE>
+</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0b00</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="AMPCOMPCTL_AMPCOMP_SW_CTRL">27</a>
+</TD>
+<TD class="cellBitfieldCol2">AMPCOMP_SW_CTRL</TD>
+<TD class="cellBitfieldCol3" colspan="3">Internal. Only to be used through TI provided API.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="AMPCOMPCTL_AMPCOMP_SW_EN">26</a>
+</TD>
+<TD class="cellBitfieldCol2">AMPCOMP_SW_EN</TD>
+<TD class="cellBitfieldCol3" colspan="3">Internal. Only to be used through TI provided API.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="AMPCOMPCTL_RESERVED24">25:24</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED24</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0b00</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="AMPCOMPCTL_IBIAS_OFFSET">23:20</a>
+</TD>
+<TD class="cellBitfieldCol2">IBIAS_OFFSET</TD>
+<TD class="cellBitfieldCol3" colspan="3">Internal. Only to be used through TI provided API.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0x0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="AMPCOMPCTL_IBIAS_INIT">19:16</a>
+</TD>
+<TD class="cellBitfieldCol2">IBIAS_INIT</TD>
+<TD class="cellBitfieldCol3" colspan="3">Internal. Only to be used through TI provided API.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0x0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="AMPCOMPCTL_LPM_IBIAS_WAIT_CNT_FINAL">15:8</a>
+</TD>
+<TD class="cellBitfieldCol2">LPM_IBIAS_WAIT_CNT_FINAL</TD>
+<TD class="cellBitfieldCol3" colspan="3">Internal. Only to be used through TI provided API.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0x00</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="AMPCOMPCTL_CAP_STEP">7:4</a>
+</TD>
+<TD class="cellBitfieldCol2">CAP_STEP</TD>
+<TD class="cellBitfieldCol3" colspan="3">Internal. Only to be used through TI provided API.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0x0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="AMPCOMPCTL_IBIASCAP_HPTOLP_OL_CNT">3:0</a>
+</TD>
+<TD class="cellBitfieldCol2">IBIASCAP_HPTOLP_OL_CNT</TD>
+<TD class="cellBitfieldCol3" colspan="3">Internal. Only to be used through TI provided API.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0x0</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="AMPCOMPTH1"></A><A class="mmapRegisterTitle" href="ANATOP_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">DDI_0_OSC</A>:AMPCOMPTH1</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 0010</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0x400C A010</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0x400C A010</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">Amplitude Compensation Threashold 1<BR>
+This register contains various threshhold values for amplitude compensation algorithm</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">RW</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="AMPCOMPTH1_SPARE24">31:24</a>
+</TD>
+<TD class="cellBitfieldCol2">SPARE24</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0x00</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="AMPCOMPTH1_HPMRAMP3_LTH">23:18</a>
+</TD>
+<TD class="cellBitfieldCol2">HPMRAMP3_LTH</TD>
+<TD class="cellBitfieldCol3" colspan="3">Internal. Only to be used through TI provided API.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0b00 0000</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="AMPCOMPTH1_SPARE16">17:16</a>
+</TD>
+<TD class="cellBitfieldCol2">SPARE16</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0b00</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="AMPCOMPTH1_HPMRAMP3_HTH">15:10</a>
+</TD>
+<TD class="cellBitfieldCol2">HPMRAMP3_HTH</TD>
+<TD class="cellBitfieldCol3" colspan="3">Internal. Only to be used through TI provided API.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0b00 0000</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="AMPCOMPTH1_IBIASCAP_LPTOHP_OL_CNT">9:6</a>
+</TD>
+<TD class="cellBitfieldCol2">IBIASCAP_LPTOHP_OL_CNT</TD>
+<TD class="cellBitfieldCol3" colspan="3">Internal. Only to be used through TI provided API.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0x0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="AMPCOMPTH1_HPMRAMP1_TH">5:0</a>
+</TD>
+<TD class="cellBitfieldCol2">HPMRAMP1_TH</TD>
+<TD class="cellBitfieldCol3" colspan="3">Internal. Only to be used through TI provided API.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0b00 0000</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="AMPCOMPTH2"></A><A class="mmapRegisterTitle" href="ANATOP_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">DDI_0_OSC</A>:AMPCOMPTH2</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 0014</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0x400C A014</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0x400C A014</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">Amplitude Compensation Threashold 2<BR>
+This register contains various threshhold values for amplitude compensation algorithm.</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">RW</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="AMPCOMPTH2_LPMUPDATE_LTH">31:26</a>
+</TD>
+<TD class="cellBitfieldCol2">LPMUPDATE_LTH</TD>
+<TD class="cellBitfieldCol3" colspan="3">Internal. Only to be used through TI provided API.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0b00 0000</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="AMPCOMPTH2_SPARE24">25:24</a>
+</TD>
+<TD class="cellBitfieldCol2">SPARE24</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0b00</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="AMPCOMPTH2_LPMUPDATE_HTH">23:18</a>
+</TD>
+<TD class="cellBitfieldCol2">LPMUPDATE_HTH</TD>
+<TD class="cellBitfieldCol3" colspan="3">Internal. Only to be used through TI provided API.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0b00 0000</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="AMPCOMPTH2_SPARE16">17:16</a>
+</TD>
+<TD class="cellBitfieldCol2">SPARE16</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0b00</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="AMPCOMPTH2_ADC_COMP_AMPTH_LPM">15:10</a>
+</TD>
+<TD class="cellBitfieldCol2">ADC_COMP_AMPTH_LPM</TD>
+<TD class="cellBitfieldCol3" colspan="3">Internal. Only to be used through TI provided API.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0b00 0000</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="AMPCOMPTH2_SPARE8">9:8</a>
+</TD>
+<TD class="cellBitfieldCol2">SPARE8</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0b00</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="AMPCOMPTH2_ADC_COMP_AMPTH_HPM">7:2</a>
+</TD>
+<TD class="cellBitfieldCol2">ADC_COMP_AMPTH_HPM</TD>
+<TD class="cellBitfieldCol3" colspan="3">Internal. Only to be used through TI provided API.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0b00 0000</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="AMPCOMPTH2_SPARE0">1:0</a>
+</TD>
+<TD class="cellBitfieldCol2">SPARE0</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0b00</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="ANABYPASSVAL1"></A><A class="mmapRegisterTitle" href="ANATOP_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">DDI_0_OSC</A>:ANABYPASSVAL1</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 0018</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0x400C A018</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0x400C A018</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">Analog Bypass Values 1</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">RW</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="ANABYPASSVAL1_RESERVED20">31:20</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED20</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0x000</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="ANABYPASSVAL1_XOSC_HF_ROW_Q12">19:16</a>
+</TD>
+<TD class="cellBitfieldCol2">XOSC_HF_ROW_Q12</TD>
+<TD class="cellBitfieldCol3" colspan="3">Internal. Only to be used through TI provided API.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0x0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="ANABYPASSVAL1_XOSC_HF_COLUMN_Q12">15:0</a>
+</TD>
+<TD class="cellBitfieldCol2">XOSC_HF_COLUMN_Q12</TD>
+<TD class="cellBitfieldCol3" colspan="3">Internal. Only to be used through TI provided API.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0x0000</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="ANABYPASSVAL2"></A><A class="mmapRegisterTitle" href="ANATOP_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">DDI_0_OSC</A>:ANABYPASSVAL2</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 001C</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0x400C A01C</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0x400C A01C</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">Internal. Only to be used through TI provided API.</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">RW</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="ANABYPASSVAL2_RESERVED14">31:14</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED14</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0b00 0000 0000 0000 0000</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="ANABYPASSVAL2_XOSC_HF_IBIASTHERM">13:0</a>
+</TD>
+<TD class="cellBitfieldCol2">XOSC_HF_IBIASTHERM</TD>
+<TD class="cellBitfieldCol3" colspan="3">Internal. Only to be used through TI provided API.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0b00 0000 0000 0000</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="ATESTCTL"></A><A class="mmapRegisterTitle" href="ANATOP_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">DDI_0_OSC</A>:ATESTCTL</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 0020</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0x400C A020</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0x400C A020</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">Analog Test Control</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">RW</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="ATESTCTL_SPARE30">31:30</a>
+</TD>
+<TD class="cellBitfieldCol2">SPARE30</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0b00</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="ATESTCTL_SCLK_LF_AUX_EN">29</a>
+</TD>
+<TD class="cellBitfieldCol2">SCLK_LF_AUX_EN</TD>
+<TD class="cellBitfieldCol3" colspan="3">Enable 32 kHz clock to <A class="mmap_legend_link" href="../legend.html#AUX_COMPB">AUX_COMPB</A>.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="ATESTCTL_RESERVED0">28:0</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED0</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0b0 0000 0000 0000 0000 0000 0000 0000</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="ADCDOUBLERNANOAMPCTL"></A><A class="mmapRegisterTitle" href="ANATOP_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">DDI_0_OSC</A>:ADCDOUBLERNANOAMPCTL</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 0024</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0x400C A024</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0x400C A024</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3"><A class="mmap_legend_link" href="../legend.html#ADC">ADC</A> Doubler Nanoamp Control</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">RW</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="ADCDOUBLERNANOAMPCTL_RESERVED25">31:25</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED25</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0b000 0000</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="ADCDOUBLERNANOAMPCTL_NANOAMP_BIAS_ENABLE">24</a>
+</TD>
+<TD class="cellBitfieldCol2">NANOAMP_BIAS_ENABLE</TD>
+<TD class="cellBitfieldCol3" colspan="3">Internal. Only to be used through TI provided API.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="ADCDOUBLERNANOAMPCTL_SPARE23">23</a>
+</TD>
+<TD class="cellBitfieldCol2">SPARE23</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="ADCDOUBLERNANOAMPCTL_RESERVED6">22:6</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED6</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0b0 0000 0000 0000 0000</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="ADCDOUBLERNANOAMPCTL_ADC_SH_MODE_EN">5</a>
+</TD>
+<TD class="cellBitfieldCol2">ADC_SH_MODE_EN</TD>
+<TD class="cellBitfieldCol3" colspan="3">Internal. Only to be used through TI provided API.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="ADCDOUBLERNANOAMPCTL_ADC_SH_VBUF_EN">4</a>
+</TD>
+<TD class="cellBitfieldCol2">ADC_SH_VBUF_EN</TD>
+<TD class="cellBitfieldCol3" colspan="3">Internal. Only to be used through TI provided API.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="ADCDOUBLERNANOAMPCTL_RESERVED2">3:2</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED2</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0b00</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="ADCDOUBLERNANOAMPCTL_ADC_IREF_CTRL">1:0</a>
+</TD>
+<TD class="cellBitfieldCol2">ADC_IREF_CTRL</TD>
+<TD class="cellBitfieldCol3" colspan="3">Internal. Only to be used through TI provided API.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0b00</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="XOSCHFCTL"></A><A class="mmapRegisterTitle" href="ANATOP_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">DDI_0_OSC</A>:XOSCHFCTL</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 0028</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0x400C A028</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0x400C A028</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3"><A class="mmap_legend_link" href="../legend.html#XOSCHF">XOSCHF</A> Control</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">RW</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="XOSCHFCTL_RESERVED10">31:10</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED10</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0b00 0000 0000 0000 0000 0000</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="XOSCHFCTL_PEAK_DET_ITRIM">9:8</a>
+</TD>
+<TD class="cellBitfieldCol2">PEAK_DET_ITRIM</TD>
+<TD class="cellBitfieldCol3" colspan="3">Internal. Only to be used through TI provided API.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0b00</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="XOSCHFCTL_RESERVED7">7</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED7</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="XOSCHFCTL_BYPASS">6</a>
+</TD>
+<TD class="cellBitfieldCol2">BYPASS</TD>
+<TD class="cellBitfieldCol3" colspan="3">Internal. Only to be used through TI provided API.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="XOSCHFCTL_RESERVED5">5</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED5</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="XOSCHFCTL_HP_BUF_ITRIM">4:2</a>
+</TD>
+<TD class="cellBitfieldCol2">HP_BUF_ITRIM</TD>
+<TD class="cellBitfieldCol3" colspan="3">Internal. Only to be used through TI provided API.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0b000</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="XOSCHFCTL_LP_BUF_ITRIM">1:0</a>
+</TD>
+<TD class="cellBitfieldCol2">LP_BUF_ITRIM</TD>
+<TD class="cellBitfieldCol3" colspan="3">Internal. Only to be used through TI provided API.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0b00</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="LFOSCCTL"></A><A class="mmapRegisterTitle" href="ANATOP_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">DDI_0_OSC</A>:LFOSCCTL</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 002C</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0x400C A02C</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0x400C A02C</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">Low Frequency Oscillator Control</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">RW</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="LFOSCCTL_RESERVED24">31:24</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED24</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0x00</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="LFOSCCTL_XOSCLF_REGULATOR_TRIM">23:22</a>
+</TD>
+<TD class="cellBitfieldCol2">XOSCLF_REGULATOR_TRIM</TD>
+<TD class="cellBitfieldCol3" colspan="3">Internal. Only to be used through TI provided API.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0b00</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="LFOSCCTL_XOSCLF_CMIRRWR_RATIO">21:18</a>
+</TD>
+<TD class="cellBitfieldCol2">XOSCLF_CMIRRWR_RATIO</TD>
+<TD class="cellBitfieldCol3" colspan="3">Internal. Only to be used through TI provided API.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0x0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="LFOSCCTL_RESERVED10">17:10</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED10</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0x00</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="LFOSCCTL_RCOSCLF_RTUNE_TRIM">9:8</a>
+</TD>
+<TD class="cellBitfieldCol2">RCOSCLF_RTUNE_TRIM</TD>
+<TD class="cellBitfieldCol3" colspan="3">Internal. Only to be used through TI provided API.<TABLE cellspacing="0" class="LprfEnum">
+<TR class="rowEnumHead">
+<TD class="cellEnumTableHeadCol1">Value</TD>
+<TD class="cellEnumTableHeadCol2">ENUM Name</TD>
+<TD class="cellEnumTableHeadCol3">Description</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x0</TD>
+<TD class="cellEnumTableCol2">7P5MEG</TD>
+<TD class="cellEnumTableCol3">Internal. Only to be used through TI provided API.</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x1</TD>
+<TD class="cellEnumTableCol2">7P0MEG</TD>
+<TD class="cellEnumTableCol3">Internal. Only to be used through TI provided API.</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x2</TD>
+<TD class="cellEnumTableCol2">6P5MEG</TD>
+<TD class="cellEnumTableCol3">Internal. Only to be used through TI provided API.</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x3</TD>
+<TD class="cellEnumTableCol2">6P0MEG</TD>
+<TD class="cellEnumTableCol3">Internal. Only to be used through TI provided API.</TD>
+</TR>
+</TABLE>
+</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0b00</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="LFOSCCTL_RCOSCLF_CTUNE_TRIM">7:0</a>
+</TD>
+<TD class="cellBitfieldCol2">RCOSCLF_CTUNE_TRIM</TD>
+<TD class="cellBitfieldCol3" colspan="3">Internal. Only to be used through TI provided API.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0x00</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="RCOSCHFCTL"></A><A class="mmapRegisterTitle" href="ANATOP_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">DDI_0_OSC</A>:RCOSCHFCTL</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 0030</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0x400C A030</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0x400C A030</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3"><A class="mmap_legend_link" href="../legend.html#RCOSCHF">RCOSCHF</A> Control</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">RW</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="RCOSCHFCTL_RESERVED16">31:16</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED16</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0x0000</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="RCOSCHFCTL_RCOSCHF_CTRIM">15:8</a>
+</TD>
+<TD class="cellBitfieldCol2">RCOSCHF_CTRIM</TD>
+<TD class="cellBitfieldCol3" colspan="3">Internal. Only to be used through TI provided API.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0x00</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="RCOSCHFCTL_RESERVED0">7:0</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED0</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0x00</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="STAT0"></A><A class="mmapRegisterTitle" href="ANATOP_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">DDI_0_OSC</A>:STAT0</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 0034</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0x400C A034</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0x400C A034</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">Status 0<BR>
+This register contains status signals from <A class="mmap_legend_link" href="../legend.html#OSC_DIG">OSC_DIG</A></TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">RO</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="STAT0_SPARE31">31</a>
+</TD>
+<TD class="cellBitfieldCol2">SPARE31</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="STAT0_SCLK_LF_SRC">30:29</a>
+</TD>
+<TD class="cellBitfieldCol2">SCLK_LF_SRC</TD>
+<TD class="cellBitfieldCol3" colspan="3">Indicates source for the <A class="mmap_legend_link" href="../legend.html#sclk_lf">sclk_lf</A><TABLE cellspacing="0" class="LprfEnum">
+<TR class="rowEnumHead">
+<TD class="cellEnumTableHeadCol1">Value</TD>
+<TD class="cellEnumTableHeadCol2">ENUM Name</TD>
+<TD class="cellEnumTableHeadCol3">Description</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x0</TD>
+<TD class="cellEnumTableCol2">RCOSCHFDLF</TD>
+<TD class="cellEnumTableCol3">Low frequency clock derived from High Frequency <A class="mmap_legend_link" href="../legend.html#RCOSC">RCOSC</A></TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x1</TD>
+<TD class="cellEnumTableCol2">XOSCHFDLF</TD>
+<TD class="cellEnumTableCol3">Low frequency clock derived from High Frequency <A class="mmap_legend_link" href="../legend.html#XOSC">XOSC</A></TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x2</TD>
+<TD class="cellEnumTableCol2">RCOSCLF</TD>
+<TD class="cellEnumTableCol3">Low frequency <A class="mmap_legend_link" href="../legend.html#RCOSC">RCOSC</A></TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x3</TD>
+<TD class="cellEnumTableCol2">XOSCLF</TD>
+<TD class="cellEnumTableCol3">Low frequency <A class="mmap_legend_link" href="../legend.html#XOSC">XOSC</A></TD>
+</TR>
+</TABLE>
+</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0b00</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="STAT0_SCLK_HF_SRC">28</a>
+</TD>
+<TD class="cellBitfieldCol2">SCLK_HF_SRC</TD>
+<TD class="cellBitfieldCol3" colspan="3">Indicates source for the <A class="mmap_legend_link" href="../legend.html#sclk_hf">sclk_hf</A><TABLE cellspacing="0" class="LprfEnum">
+<TR class="rowEnumHead">
+<TD class="cellEnumTableHeadCol1">Value</TD>
+<TD class="cellEnumTableHeadCol2">ENUM Name</TD>
+<TD class="cellEnumTableHeadCol3">Description</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x0</TD>
+<TD class="cellEnumTableCol2">RCOSC</TD>
+<TD class="cellEnumTableCol3">High frequency <A class="mmap_legend_link" href="../legend.html#RCOSC">RCOSC</A> clk</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x1</TD>
+<TD class="cellEnumTableCol2">XOSC</TD>
+<TD class="cellEnumTableCol3">High frequency <A class="mmap_legend_link" href="../legend.html#XOSC">XOSC</A></TD>
+</TR>
+</TABLE>
+</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="STAT0_RESERVED23">27:23</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED23</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0b0 0000</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="STAT0_RCOSC_HF_EN">22</a>
+</TD>
+<TD class="cellBitfieldCol2">RCOSC_HF_EN</TD>
+<TD class="cellBitfieldCol3" colspan="3">RCOSC_HF_EN</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="STAT0_RCOSC_LF_EN">21</a>
+</TD>
+<TD class="cellBitfieldCol2">RCOSC_LF_EN</TD>
+<TD class="cellBitfieldCol3" colspan="3">RCOSC_LF_EN</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="STAT0_XOSC_LF_EN">20</a>
+</TD>
+<TD class="cellBitfieldCol2">XOSC_LF_EN</TD>
+<TD class="cellBitfieldCol3" colspan="3">XOSC_LF_EN</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="STAT0_CLK_DCDC_RDY">19</a>
+</TD>
+<TD class="cellBitfieldCol2">CLK_DCDC_RDY</TD>
+<TD class="cellBitfieldCol3" colspan="3">CLK_DCDC_RDY</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="STAT0_CLK_DCDC_RDY_ACK">18</a>
+</TD>
+<TD class="cellBitfieldCol2">CLK_DCDC_RDY_ACK</TD>
+<TD class="cellBitfieldCol3" colspan="3">CLK_DCDC_RDY_ACK</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="STAT0_SCLK_HF_LOSS">17</a>
+</TD>
+<TD class="cellBitfieldCol2">SCLK_HF_LOSS</TD>
+<TD class="cellBitfieldCol3" colspan="3">Indicates <A class="mmap_legend_link" href="../legend.html#sclk_hf">sclk_hf</A> is lost</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="STAT0_SCLK_LF_LOSS">16</a>
+</TD>
+<TD class="cellBitfieldCol2">SCLK_LF_LOSS</TD>
+<TD class="cellBitfieldCol3" colspan="3">Indicates <A class="mmap_legend_link" href="../legend.html#sclk_lf">sclk_lf</A> is lost</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="STAT0_XOSC_HF_EN">15</a>
+</TD>
+<TD class="cellBitfieldCol2">XOSC_HF_EN</TD>
+<TD class="cellBitfieldCol3" colspan="3">Indicates that <A class="mmap_legend_link" href="../legend.html#XOSC_HF">XOSC_HF</A> is enabled.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="STAT0_RESERVED14">14</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED14</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="STAT0_XB_48M_CLK_EN">13</a>
+</TD>
+<TD class="cellBitfieldCol2">XB_48M_CLK_EN</TD>
+<TD class="cellBitfieldCol3" colspan="3">Indicates that the 48MHz clock from the  <A class="mmap_legend_link" href="../legend.html#DOUBLER">DOUBLER</A> is enabled. <BR>
+<BR>
+It will be enabled if 24 or 48 MHz chrystal is used (enabled in doulbler bypass for the 48MHz chrystal).</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="STAT0_RESERVED12">12</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED12</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="STAT0_XOSC_HF_LP_BUF_EN">11</a>
+</TD>
+<TD class="cellBitfieldCol2">XOSC_HF_LP_BUF_EN</TD>
+<TD class="cellBitfieldCol3" colspan="3">XOSC_HF_LP_BUF_EN</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="STAT0_XOSC_HF_HP_BUF_EN">10</a>
+</TD>
+<TD class="cellBitfieldCol2">XOSC_HF_HP_BUF_EN</TD>
+<TD class="cellBitfieldCol3" colspan="3">XOSC_HF_HP_BUF_EN</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="STAT0_RESERVED9">9</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED9</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="STAT0_ADC_THMET">8</a>
+</TD>
+<TD class="cellBitfieldCol2">ADC_THMET</TD>
+<TD class="cellBitfieldCol3" colspan="3">ADC_THMET</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="STAT0_ADC_DATA_READY">7</a>
+</TD>
+<TD class="cellBitfieldCol2">ADC_DATA_READY</TD>
+<TD class="cellBitfieldCol3" colspan="3">indicates when <A class="mmap_legend_link" href="../legend.html#adc_data">adc_data</A> is ready.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="STAT0_ADC_DATA">6:1</a>
+</TD>
+<TD class="cellBitfieldCol2">ADC_DATA</TD>
+<TD class="cellBitfieldCol3" colspan="3">adc_data</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0b00 0000</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="STAT0_PENDINGSCLKHFSWITCHING">0</a>
+</TD>
+<TD class="cellBitfieldCol2">PENDINGSCLKHFSWITCHING</TD>
+<TD class="cellBitfieldCol3" colspan="3">Indicates when <A class="mmap_legend_link" href="../legend.html#sclk_hf">sclk_hf</A> is ready to be swtiched</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="STAT1"></A><A class="mmapRegisterTitle" href="ANATOP_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">DDI_0_OSC</A>:STAT1</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 0038</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0x400C A038</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0x400C A038</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">Status 1<BR>
+This register contains status signals from <A class="mmap_legend_link" href="../legend.html#OSC_DIG">OSC_DIG</A></TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">RO</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="STAT1_RAMPSTATE">31:28</a>
+</TD>
+<TD class="cellBitfieldCol2">RAMPSTATE</TD>
+<TD class="cellBitfieldCol3" colspan="3"><A class="mmap_legend_link" href="../legend.html#AMPCOMP">AMPCOMP</A> <A class="mmap_legend_link" href="../legend.html#FSM">FSM</A> State<TABLE cellspacing="0" class="LprfEnum">
+<TR class="rowEnumHead">
+<TD class="cellEnumTableHeadCol1">Value</TD>
+<TD class="cellEnumTableHeadCol2">ENUM Name</TD>
+<TD class="cellEnumTableHeadCol3">Description</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x0</TD>
+<TD class="cellEnumTableCol2">RESET</TD>
+<TD class="cellEnumTableCol3">RESET</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x1</TD>
+<TD class="cellEnumTableCol2">INITIALIZATION</TD>
+<TD class="cellEnumTableCol3">INITIALIZATION</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x2</TD>
+<TD class="cellEnumTableCol2">HPM_RAMP1</TD>
+<TD class="cellEnumTableCol3">HPM_RAMP1</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x3</TD>
+<TD class="cellEnumTableCol2">HPM_RAMP2</TD>
+<TD class="cellEnumTableCol3">HPM_RAMP2</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x4</TD>
+<TD class="cellEnumTableCol2">HPM_RAMP3</TD>
+<TD class="cellEnumTableCol3">HPM_RAMP3</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x5</TD>
+<TD class="cellEnumTableCol2">HPM_UPDATE</TD>
+<TD class="cellEnumTableCol3">HPM_UPDATE</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x6</TD>
+<TD class="cellEnumTableCol2">IDAC_INCREMENT</TD>
+<TD class="cellEnumTableCol3">IDAC_INCREMENT</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x7</TD>
+<TD class="cellEnumTableCol2">IBIAS_CAP_UPDATE</TD>
+<TD class="cellEnumTableCol3">IBIAS_CAP_UPDATE</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x8</TD>
+<TD class="cellEnumTableCol2">IBIAS_DEC_W_MEASURE</TD>
+<TD class="cellEnumTableCol3">IBIAS_DECREMENT_WITH_MEASURE</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x9</TD>
+<TD class="cellEnumTableCol2">LPM_UPDATE</TD>
+<TD class="cellEnumTableCol3">LPM_UPDATE</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0xA</TD>
+<TD class="cellEnumTableCol2">IBIAS_INC</TD>
+<TD class="cellEnumTableCol3">IBIAS_INCREMENT</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0xB</TD>
+<TD class="cellEnumTableCol2">IDAC_DEC_W_MEASURE</TD>
+<TD class="cellEnumTableCol3">IDAC_DECREMENT_WITH_MEASURE</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0xC</TD>
+<TD class="cellEnumTableCol2">DUMMY_TO_INIT_1</TD>
+<TD class="cellEnumTableCol3">DUMMY_TO_INIT_1</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0xD</TD>
+<TD class="cellEnumTableCol2">FAST_START</TD>
+<TD class="cellEnumTableCol3">FAST_START</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0xE</TD>
+<TD class="cellEnumTableCol2">FAST_START_SETTLE</TD>
+<TD class="cellEnumTableCol3">FAST_START_SETTLE</TD>
+</TR>
+</TABLE>
+</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0x0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="STAT1_HPM_UPDATE_AMP">27:22</a>
+</TD>
+<TD class="cellBitfieldCol2">HPM_UPDATE_AMP</TD>
+<TD class="cellBitfieldCol3" colspan="3"><A class="mmap_legend_link" href="../legend.html#OSC">OSC</A> amplitude during <A class="mmap_legend_link" href="../legend.html#HPM_UPDATE">HPM_UPDATE</A> state.<BR>
+When amplitude compensation of XOSC_HF is enabled in high performance mode, this value is the amplitude of the crystal oscillations measured by the on-chip oscillator ADC, divided by 15 mV.  For example, a value of 0x20 would indicate that the crystal&#39;s amplitude is approximately 480 mV.  To enable amplitude compensation, AON_WUC OSCCFG must be set to a non-zero value.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0b00 0000</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="STAT1_LPM_UPDATE_AMP">21:16</a>
+</TD>
+<TD class="cellBitfieldCol2">LPM_UPDATE_AMP</TD>
+<TD class="cellBitfieldCol3" colspan="3"><A class="mmap_legend_link" href="../legend.html#OSC">OSC</A> amplitude during <A class="mmap_legend_link" href="../legend.html#LPM_UPDATE">LPM_UPDATE</A> state<BR>
+When amplitude compensation of XOSC_HF is enabled in low power  mode, this value is the amplitude of the crystal oscillations measured by the on-chip oscillator ADC, divided by 15 mV.  For example, a value of 0x20 would indicate that the crystal&#39;s amplitude is approximately 480 mV.  To enable amplitude compensation, AON_WUC OSCCFG must be set to a non-zero value.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0b00 0000</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="STAT1_FORCE_RCOSC_HF">15</a>
+</TD>
+<TD class="cellBitfieldCol2">FORCE_RCOSC_HF</TD>
+<TD class="cellBitfieldCol3" colspan="3">force_rcosc_hf</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="STAT1_SCLK_HF_EN">14</a>
+</TD>
+<TD class="cellBitfieldCol2">SCLK_HF_EN</TD>
+<TD class="cellBitfieldCol3" colspan="3">SCLK_HF_EN</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="STAT1_SCLK_MF_EN">13</a>
+</TD>
+<TD class="cellBitfieldCol2">SCLK_MF_EN</TD>
+<TD class="cellBitfieldCol3" colspan="3">SCLK_MF_EN</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="STAT1_ACLK_ADC_EN">12</a>
+</TD>
+<TD class="cellBitfieldCol2">ACLK_ADC_EN</TD>
+<TD class="cellBitfieldCol3" colspan="3">ACLK_ADC_EN</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="STAT1_ACLK_TDC_EN">11</a>
+</TD>
+<TD class="cellBitfieldCol2">ACLK_TDC_EN</TD>
+<TD class="cellBitfieldCol3" colspan="3">ACLK_TDC_EN</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="STAT1_ACLK_REF_EN">10</a>
+</TD>
+<TD class="cellBitfieldCol2">ACLK_REF_EN</TD>
+<TD class="cellBitfieldCol3" colspan="3">ACLK_REF_EN</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="STAT1_CLK_CHP_EN">9</a>
+</TD>
+<TD class="cellBitfieldCol2">CLK_CHP_EN</TD>
+<TD class="cellBitfieldCol3" colspan="3">CLK_CHP_EN</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="STAT1_CLK_DCDC_EN">8</a>
+</TD>
+<TD class="cellBitfieldCol2">CLK_DCDC_EN</TD>
+<TD class="cellBitfieldCol3" colspan="3">CLK_DCDC_EN</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="STAT1_SCLK_HF_GOOD">7</a>
+</TD>
+<TD class="cellBitfieldCol2">SCLK_HF_GOOD</TD>
+<TD class="cellBitfieldCol3" colspan="3">SCLK_HF_GOOD</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="STAT1_SCLK_MF_GOOD">6</a>
+</TD>
+<TD class="cellBitfieldCol2">SCLK_MF_GOOD</TD>
+<TD class="cellBitfieldCol3" colspan="3">SCLK_MF_GOOD</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="STAT1_SCLK_LF_GOOD">5</a>
+</TD>
+<TD class="cellBitfieldCol2">SCLK_LF_GOOD</TD>
+<TD class="cellBitfieldCol3" colspan="3">SCLK_LF_GOOD</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="STAT1_ACLK_ADC_GOOD">4</a>
+</TD>
+<TD class="cellBitfieldCol2">ACLK_ADC_GOOD</TD>
+<TD class="cellBitfieldCol3" colspan="3">ACLK_ADC_GOOD</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="STAT1_ACLK_TDC_GOOD">3</a>
+</TD>
+<TD class="cellBitfieldCol2">ACLK_TDC_GOOD</TD>
+<TD class="cellBitfieldCol3" colspan="3">ACLK_TDC_GOOD</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="STAT1_ACLK_REF_GOOD">2</a>
+</TD>
+<TD class="cellBitfieldCol2">ACLK_REF_GOOD</TD>
+<TD class="cellBitfieldCol3" colspan="3">ACLK_REF_GOOD</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="STAT1_CLK_CHP_GOOD">1</a>
+</TD>
+<TD class="cellBitfieldCol2">CLK_CHP_GOOD</TD>
+<TD class="cellBitfieldCol3" colspan="3">CLK_CHP_GOOD</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="STAT1_CLK_DCDC_GOOD">0</a>
+</TD>
+<TD class="cellBitfieldCol2">CLK_DCDC_GOOD</TD>
+<TD class="cellBitfieldCol3" colspan="3">CLK_DCDC_GOOD</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="STAT2"></A><A class="mmapRegisterTitle" href="ANATOP_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">DDI_0_OSC</A>:STAT2</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 003C</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0x400C A03C</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0x400C A03C</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">Status 2<BR>
+This register contains status signals from <A class="mmap_legend_link" href="../legend.html#AMPCOMP">AMPCOMP</A> <A class="mmap_legend_link" href="../legend.html#FSM">FSM</A></TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">RO</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="STAT2_ADC_DCBIAS">31:26</a>
+</TD>
+<TD class="cellBitfieldCol2">ADC_DCBIAS</TD>
+<TD class="cellBitfieldCol3" colspan="3">DC Bias read by <A class="mmap_legend_link" href="../legend.html#RADC">RADC</A> during <A class="mmap_legend_link" href="../legend.html#SAR">SAR</A> mode<BR>
+The vaue is an unsigned interger. It is used for debug only.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0b00 0000</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="STAT2_HPM_RAMP1_THMET">25</a>
+</TD>
+<TD class="cellBitfieldCol2">HPM_RAMP1_THMET</TD>
+<TD class="cellBitfieldCol3" colspan="3">Indication of threshhold is met for hpm_ramp1</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="STAT2_HPM_RAMP2_THMET">24</a>
+</TD>
+<TD class="cellBitfieldCol2">HPM_RAMP2_THMET</TD>
+<TD class="cellBitfieldCol3" colspan="3">Indication of threshhold is met for hpm_ramp2</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="STAT2_HPM_RAMP3_THMET">23</a>
+</TD>
+<TD class="cellBitfieldCol2">HPM_RAMP3_THMET</TD>
+<TD class="cellBitfieldCol3" colspan="3">Indication of threshhold is met for hpm_ramp3</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="STAT2_RESERVED16">22:16</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED16</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0b000 0000</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="STAT2_RAMPSTATE">15:12</a>
+</TD>
+<TD class="cellBitfieldCol2">RAMPSTATE</TD>
+<TD class="cellBitfieldCol3" colspan="3"><A class="mmap_legend_link" href="../legend.html#xosc_hf">xosc_hf</A> amplitude compensation <A class="mmap_legend_link" href="../legend.html#FSM">FSM</A> <BR>
+<BR>
+This is identical to <A class="xref" href="#STAT1_RAMPSTATE">STAT1.RAMPSTATE</A>. See that description for encoding.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0x0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="STAT2_RESERVED4">11:4</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED4</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0x00</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="STAT2_AMPCOMP_REQ">3</a>
+</TD>
+<TD class="cellBitfieldCol2">AMPCOMP_REQ</TD>
+<TD class="cellBitfieldCol3" colspan="3">ampcomp_req</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="STAT2_XOSC_HF_AMPGOOD">2</a>
+</TD>
+<TD class="cellBitfieldCol2">XOSC_HF_AMPGOOD</TD>
+<TD class="cellBitfieldCol3" colspan="3">amplitude of <A class="mmap_legend_link" href="../legend.html#xosc_hf">xosc_hf</A> is within the required threshold (set by DDI). Not used for anything just for debug/status</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="STAT2_XOSC_HF_FREQGOOD">1</a>
+</TD>
+<TD class="cellBitfieldCol2">XOSC_HF_FREQGOOD</TD>
+<TD class="cellBitfieldCol3" colspan="3">frequency of <A class="mmap_legend_link" href="../legend.html#xosc_hf">xosc_hf</A> is good to use for the digital clocks</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="STAT2_XOSC_HF_RF_FREQGOOD">0</a>
+</TD>
+<TD class="cellBitfieldCol2">XOSC_HF_RF_FREQGOOD</TD>
+<TD class="cellBitfieldCol3" colspan="3">frequency of <A class="mmap_legend_link" href="../legend.html#xosc_hf">xosc_hf</A> is within +/- 20 <A class="mmap_legend_link" href="../legend.html#ppm">ppm</A> and <A class="mmap_legend_link" href="../legend.html#xosc_hf">xosc_hf</A> is good for radio operations. Used for <A class="mmap_legend_link" href="../legend.html#SW">SW</A> to start synthesizer.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+</TABLE>
+<BR>
+<BR>
+<hr><table class="footer"><tr><td>&copy; 2015 - 2016. Texas Instruments | All Rights Reserved</td></tr></table>
+</BODY>
+</HTML>

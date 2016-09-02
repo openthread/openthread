@@ -36,12 +36,17 @@
 #include <string.h>
 
 #include <openthread.h>
+#include <openthread-diag.h>
 
 #include "cli.hpp"
+#include "cli_dataset.hpp"
 #include <common/encoding.hpp>
-#include <platform/serial.h>
+#include <common/new.hpp>
+#include <platform/random.h>
+#include <platform/uart.h>
 
 using Thread::Encoding::BigEndian::HostSwap16;
+using Thread::Encoding::BigEndian::HostSwap32;
 
 namespace Thread {
 namespace Cli {
@@ -49,44 +54,83 @@ namespace Cli {
 const struct Command Interpreter::sCommands[] =
 {
     { "help", &ProcessHelp },
+    { "blacklist", &ProcessBlacklist },
     { "channel", &ProcessChannel },
+    { "child", &ProcessChild },
     { "childtimeout", &ProcessChildTimeout },
     { "contextreusedelay", &ProcessContextIdReuseDelay },
     { "counter", &ProcessCounters },
+    { "dataset", &ProcessDataset },
+    { "discover", &ProcessDiscover },
+    { "eidcache", &ProcessEidCache },
     { "extaddr", &ProcessExtAddress },
     { "extpanid", &ProcessExtPanId },
+    { "ifconfig", &ProcessIfconfig },
     { "ipaddr", &ProcessIpAddr },
     { "keysequence", &ProcessKeySequence },
+    { "leaderdata", &ProcessLeaderData },
+    { "leaderpartitionid", &ProcessLeaderPartitionId },
     { "leaderweight", &ProcessLeaderWeight },
+    { "linkquality", &ProcessLinkQuality },
     { "masterkey", &ProcessMasterKey },
     { "mode", &ProcessMode },
     { "netdataregister", &ProcessNetworkDataRegister },
     { "networkidtimeout", &ProcessNetworkIdTimeout },
     { "networkname", &ProcessNetworkName },
     { "panid", &ProcessPanId },
+    { "parent", &ProcessParent },
     { "ping", &ProcessPing },
+    { "pollperiod", &ProcessPollPeriod },
+    { "promiscuous", &ProcessPromiscuous },
     { "prefix", &ProcessPrefix },
     { "releaserouterid", &ProcessReleaseRouterId },
+    { "reset", &ProcessReset },
     { "rloc16", &ProcessRloc16 },
     { "route", &ProcessRoute },
+    { "router", &ProcessRouter },
+    { "routerrole", &ProcessRouterRole },
     { "routerupgradethreshold", &ProcessRouterUpgradeThreshold },
     { "scan", &ProcessScan },
-    { "start", &ProcessStart },
+    { "singleton", &ProcessSingleton },
     { "state", &ProcessState },
-    { "stop", &ProcessStop },
+    { "thread", &ProcessThread },
+    { "version", &ProcessVersion },
     { "whitelist", &ProcessWhitelist },
+#if OPENTHREAD_ENABLE_DIAG
+    { "diag", &ProcessDiag },
+#endif
 };
 
 otNetifAddress Interpreter::sAddress;
 
-Ip6::IcmpEcho Interpreter::sIcmpEcho(&HandleEchoResponse, NULL);
+static otDEFINE_ALIGNED_VAR(sIcmpEchoBuf, sizeof(Ip6::IcmpEcho), uint64_t);
+Ip6::IcmpEcho *Interpreter::sIcmpEcho;
+
+static otDEFINE_ALIGNED_VAR(sPingTimerBuf, sizeof(Timer), uint64_t);
+Timer *Interpreter::sPingTimer;
+
 Ip6::SockAddr Interpreter::sSockAddr;
 Server *Interpreter::sServer;
 uint8_t Interpreter::sEchoRequest[1500];
+uint16_t Interpreter::sLength;
+uint16_t Interpreter::sCount;
+uint32_t Interpreter::sInterval;
+
+static otNetifAddress sAutoAddresses[8];
+
+void Interpreter::Init(void)
+{
+    sIcmpEcho = new(&sIcmpEchoBuf) Ip6::IcmpEcho(&HandleEchoResponse, NULL);
+    sPingTimer = new(&sPingTimerBuf) Timer(&HandlePingTimer, NULL);
+    sLength = 8;
+    sCount = 1;
+    sInterval = 1000;
+    otSetStateChangedCallback(&HandleNetifStateChanged, NULL);
+}
 
 int Interpreter::Hex2Bin(const char *aHex, uint8_t *aBin, uint16_t aBinLength)
 {
-    uint16_t hexLength = strlen(aHex);
+    size_t hexLength = strlen(aHex);
     const char *hexEnd = aHex + hexLength;
     uint8_t *cur = aBin;
     uint8_t numChars = hexLength & 1;
@@ -131,7 +175,7 @@ int Interpreter::Hex2Bin(const char *aHex, uint8_t *aBin, uint16_t aBinLength)
         }
     }
 
-    return cur - aBin;
+    return static_cast<int>(cur - aBin);
 }
 
 void Interpreter::AppendResult(ThreadError error)
@@ -146,10 +190,25 @@ void Interpreter::AppendResult(ThreadError error)
     }
 }
 
+void Interpreter::OutputBytes(const uint8_t *aBytes, uint8_t aLength)
+{
+    for (int i = 0; i < aLength; i++)
+    {
+        sServer->OutputFormat("%02x", aBytes[i]);
+    }
+}
+
 ThreadError Interpreter::ParseLong(char *argv, long &value)
 {
     char *endptr;
     value = strtol(argv, &endptr, 0);
+    return (*endptr == '\0') ? kThreadError_None : kThreadError_Parse;
+}
+
+ThreadError Interpreter::ParseUnsignedLong(char *argv, unsigned long &value)
+{
+    char *endptr;
+    value = strtoul(argv, &endptr, 0);
     return (*endptr == '\0') ? kThreadError_None : kThreadError_Parse;
 }
 
@@ -159,6 +218,75 @@ void Interpreter::ProcessHelp(int argc, char *argv[])
     {
         sServer->OutputFormat("%s\r\n", sCommands[i].mName);
     }
+
+    (void)argc;
+    (void)argv;
+}
+
+void Interpreter::ProcessBlacklist(int argc, char *argv[])
+{
+    ThreadError error = kThreadError_None;
+    otMacBlacklistEntry entry;
+    int argcur = 0;
+    uint8_t extAddr[8];
+
+    if (argcur >= argc)
+    {
+        if (otIsMacBlacklistEnabled())
+        {
+            sServer->OutputFormat("Enabled\r\n");
+        }
+        else
+        {
+            sServer->OutputFormat("Disabled\r\n");
+        }
+
+        for (uint8_t i = 0; ; i++)
+        {
+            if (otGetMacBlacklistEntry(i, &entry) != kThreadError_None)
+            {
+                break;
+            }
+
+            if (entry.mValid == false)
+            {
+                continue;
+            }
+
+            OutputBytes(entry.mExtAddress.m8, OT_EXT_ADDRESS_SIZE);
+
+            sServer->OutputFormat("\r\n");
+        }
+    }
+    else if (strcmp(argv[argcur], "add") == 0)
+    {
+        VerifyOrExit(++argcur < argc, error = kThreadError_Parse);
+        VerifyOrExit(Hex2Bin(argv[argcur], extAddr, sizeof(extAddr)) == sizeof(extAddr), error = kThreadError_Parse);
+
+        otAddMacBlacklist(extAddr);
+        VerifyOrExit(otAddMacBlacklist(extAddr) == kThreadError_None, error = kThreadError_Parse);
+    }
+    else if (strcmp(argv[argcur], "clear") == 0)
+    {
+        otClearMacBlacklist();
+    }
+    else if (strcmp(argv[argcur], "disable") == 0)
+    {
+        otDisableMacBlacklist();
+    }
+    else if (strcmp(argv[argcur], "enable") == 0)
+    {
+        otEnableMacBlacklist();
+    }
+    else if (strcmp(argv[argcur], "remove") == 0)
+    {
+        VerifyOrExit(++argcur < argc, error = kThreadError_Parse);
+        VerifyOrExit(Hex2Bin(argv[argcur], extAddr, sizeof(extAddr)) == sizeof(extAddr), error = kThreadError_Parse);
+        otRemoveMacBlacklist(extAddr);
+    }
+
+exit:
+    AppendResult(error);
 }
 
 void Interpreter::ProcessChannel(int argc, char *argv[])
@@ -173,8 +301,80 @@ void Interpreter::ProcessChannel(int argc, char *argv[])
     else
     {
         SuccessOrExit(error = ParseLong(argv[0], value));
-        otSetChannel(value);
+        otSetChannel(static_cast<uint8_t>(value));
     }
+
+exit:
+    AppendResult(error);
+}
+
+void Interpreter::ProcessChild(int argc, char *argv[])
+{
+    ThreadError error = kThreadError_None;
+    otChildInfo childInfo;
+    long value;
+
+    VerifyOrExit(argc > 0, error = kThreadError_Parse);
+
+    if (strcmp(argv[0], "list") == 0)
+    {
+        for (uint8_t i = 0; ; i++)
+        {
+            if (otGetChildInfoByIndex(i, &childInfo) != kThreadError_None)
+            {
+                sServer->OutputFormat("\r\n");
+                ExitNow();
+            }
+
+            if (childInfo.mTimeout > 0)
+            {
+                sServer->OutputFormat("%d ", childInfo.mChildId);
+            }
+        }
+    }
+
+    SuccessOrExit(error = ParseLong(argv[0], value));
+    SuccessOrExit(error = otGetChildInfoById(static_cast<uint16_t>(value), &childInfo));
+
+    sServer->OutputFormat("Child ID: %d\r\n", childInfo.mChildId);
+    sServer->OutputFormat("Rloc: %04x\r\n", childInfo.mRloc16);
+    sServer->OutputFormat("Ext Addr: ");
+
+    for (size_t j = 0; j < sizeof(childInfo.mExtAddress); j++)
+    {
+        sServer->OutputFormat("%02x", childInfo.mExtAddress.m8[j]);
+    }
+
+    sServer->OutputFormat("\r\n");
+    sServer->OutputFormat("Mode: ");
+
+    if (childInfo.mRxOnWhenIdle)
+    {
+        sServer->OutputFormat("r");
+    }
+
+    if (childInfo.mSecureDataRequest)
+    {
+        sServer->OutputFormat("s");
+    }
+
+    if (childInfo.mFullFunction)
+    {
+        sServer->OutputFormat("d");
+    }
+
+    if (childInfo.mFullNetworkData)
+    {
+        sServer->OutputFormat("n");
+    }
+
+    sServer->OutputFormat("\r\n");
+
+    sServer->OutputFormat("Net Data: %d\r\n", childInfo.mNetworkDataVersion);
+    sServer->OutputFormat("Timeout: %d\r\n", childInfo.mTimeout);
+    sServer->OutputFormat("Age: %d\r\n", childInfo.mAge);
+    sServer->OutputFormat("LQI: %d\r\n", childInfo.mLinkQualityIn);
+    sServer->OutputFormat("RSSI: %d\r\n", childInfo.mAverageRssi);
 
 exit:
     AppendResult(error);
@@ -192,7 +392,7 @@ void Interpreter::ProcessChildTimeout(int argc, char *argv[])
     else
     {
         SuccessOrExit(error = ParseLong(argv[0], value));
-        otSetChildTimeout(value);
+        otSetChildTimeout(static_cast<uint32_t>(value));
     }
 
 exit:
@@ -211,7 +411,7 @@ void Interpreter::ProcessContextIdReuseDelay(int argc, char *argv[])
     else
     {
         SuccessOrExit(ParseLong(argv[0], value));
-        otSetContextIdReuseDelay(value);
+        otSetContextIdReuseDelay(static_cast<uint32_t>(value));
     }
 
 exit:
@@ -259,13 +459,86 @@ void Interpreter::ProcessCounters(int argc, char *argv[])
     }
 }
 
+void Interpreter::ProcessDataset(int argc, char *argv[])
+{
+    ThreadError error;
+    error = Dataset::Process(argc, argv, *sServer);
+    AppendResult(error);
+}
+
+void Interpreter::ProcessDiscover(int argc, char *argv[])
+{
+    ThreadError error = kThreadError_None;
+    uint32_t scanChannels = 0;
+    long value;
+
+    if (argc > 0)
+    {
+        SuccessOrExit(error = ParseLong(argv[0], value));
+        scanChannels = 1 << value;
+    }
+
+    SuccessOrExit(error = otDiscover(scanChannels, 0, OT_PANID_BROADCAST, &HandleActiveScanResult, NULL));
+    sServer->OutputFormat("| J | Network Name     | Extended PAN     | PAN  | MAC Address      | Ch | dBm | LQI |\r\n");
+    sServer->OutputFormat("+---+------------------+------------------+------+------------------+----+-----+-----+\r\n");
+
+    return;
+
+exit:
+    AppendResult(error);
+}
+
+void Interpreter::ProcessEidCache(int argc, char *argv[])
+{
+    otEidCacheEntry entry;
+
+    for (uint8_t i = 0; ; i++)
+    {
+        SuccessOrExit(otGetEidCacheEntry(i, &entry));
+
+        if (entry.mValid == false)
+        {
+            continue;
+        }
+
+        sServer->OutputFormat("%x:%x:%x:%x:%x:%x:%x:%x %04x\r\n",
+                              HostSwap16(entry.mTarget.mFields.m16[0]),
+                              HostSwap16(entry.mTarget.mFields.m16[1]),
+                              HostSwap16(entry.mTarget.mFields.m16[2]),
+                              HostSwap16(entry.mTarget.mFields.m16[3]),
+                              HostSwap16(entry.mTarget.mFields.m16[4]),
+                              HostSwap16(entry.mTarget.mFields.m16[5]),
+                              HostSwap16(entry.mTarget.mFields.m16[6]),
+                              HostSwap16(entry.mTarget.mFields.m16[7]),
+                              entry.mRloc16);
+    }
+
+exit:
+    (void)argc;
+    (void)argv;
+    AppendResult(kThreadError_None);
+}
+
 void Interpreter::ProcessExtAddress(int argc, char *argv[])
 {
-    const uint8_t *extAddress = otGetExtendedAddress();
-    sServer->OutputFormat("%02x%02x%02x%02x%02x%02x%02x%02x\r\n",
-                          extAddress[0], extAddress[1], extAddress[2], extAddress[3],
-                          extAddress[4], extAddress[5], extAddress[6], extAddress[7]);
-    AppendResult(kThreadError_None);
+    ThreadError error = kThreadError_None;
+
+    if (argc == 0)
+    {
+        OutputBytes(otGetExtendedAddress(), OT_EXT_ADDRESS_SIZE);
+        sServer->OutputFormat("\r\n");
+    }
+    else
+    {
+        otExtAddress extAddress;
+
+        VerifyOrExit(Hex2Bin(argv[0], extAddress.m8, sizeof(otExtAddress)) >= 0, error = kThreadError_Parse);
+
+        otSetExtendedAddress(&extAddress);
+    }
+
+exit:
+    AppendResult(error);
 }
 
 void Interpreter::ProcessExtPanId(int argc, char *argv[])
@@ -274,10 +547,8 @@ void Interpreter::ProcessExtPanId(int argc, char *argv[])
 
     if (argc == 0)
     {
-        const uint8_t *extPanId = otGetExtendedPanId();
-        sServer->OutputFormat("%02x%02x%02x%02x%02x%02x%02x%02x\r\n",
-                              extPanId[0], extPanId[1], extPanId[2], extPanId[3],
-                              extPanId[4], extPanId[5], extPanId[6], extPanId[7]);
+        OutputBytes(otGetExtendedPanId(), OT_EXT_PAN_ID_SIZE);
+        sServer->OutputFormat("\r\n");
     }
     else
     {
@@ -286,6 +557,34 @@ void Interpreter::ProcessExtPanId(int argc, char *argv[])
         VerifyOrExit(Hex2Bin(argv[0], extPanId, sizeof(extPanId)) >= 0, error = kThreadError_Parse);
 
         otSetExtendedPanId(extPanId);
+    }
+
+exit:
+    AppendResult(error);
+}
+
+void Interpreter::ProcessIfconfig(int argc, char *argv[])
+{
+    ThreadError error = kThreadError_None;
+
+    if (argc == 0)
+    {
+        if (otIsInterfaceUp())
+        {
+            sServer->OutputFormat("up\r\n");
+        }
+        else
+        {
+            sServer->OutputFormat("down\r\n");
+        }
+    }
+    else if (strcmp(argv[0], "up") == 0)
+    {
+        SuccessOrExit(error = otInterfaceUp());
+    }
+    else if (strcmp(argv[0], "down") == 0)
+    {
+        SuccessOrExit(error = otInterfaceDown());
     }
 
 exit:
@@ -332,10 +631,14 @@ void Interpreter::ProcessIpAddr(int argc, char *argv[])
         for (const otNetifAddress *addr = otGetUnicastAddresses(); addr; addr = addr->mNext)
         {
             sServer->OutputFormat("%x:%x:%x:%x:%x:%x:%x:%x\r\n",
-                                  HostSwap16(addr->mAddress.m16[0]), HostSwap16(addr->mAddress.m16[1]),
-                                  HostSwap16(addr->mAddress.m16[2]), HostSwap16(addr->mAddress.m16[3]),
-                                  HostSwap16(addr->mAddress.m16[4]), HostSwap16(addr->mAddress.m16[5]),
-                                  HostSwap16(addr->mAddress.m16[6]), HostSwap16(addr->mAddress.m16[7]));
+                                  HostSwap16(addr->mAddress.mFields.m16[0]),
+                                  HostSwap16(addr->mAddress.mFields.m16[1]),
+                                  HostSwap16(addr->mAddress.mFields.m16[2]),
+                                  HostSwap16(addr->mAddress.mFields.m16[3]),
+                                  HostSwap16(addr->mAddress.mFields.m16[4]),
+                                  HostSwap16(addr->mAddress.mFields.m16[5]),
+                                  HostSwap16(addr->mAddress.mFields.m16[6]),
+                                  HostSwap16(addr->mAddress.mFields.m16[7]));
         }
     }
     else
@@ -366,7 +669,45 @@ void Interpreter::ProcessKeySequence(int argc, char *argv[])
     else
     {
         SuccessOrExit(error = ParseLong(argv[0], value));
-        otSetKeySequenceCounter(value);
+        otSetKeySequenceCounter(static_cast<uint32_t>(value));
+    }
+
+exit:
+    AppendResult(error);
+}
+
+void Interpreter::ProcessLeaderData(int argc, char *argv[])
+{
+    ThreadError error;
+    otLeaderData leaderData;
+
+    SuccessOrExit(error = otGetLeaderData(&leaderData));
+
+    sServer->OutputFormat("Partition ID: %u\r\n", leaderData.mPartitionId);
+    sServer->OutputFormat("Weighting: %d\r\n", leaderData.mWeighting);
+    sServer->OutputFormat("Data Version: %d\r\n", leaderData.mDataVersion);
+    sServer->OutputFormat("Stable Data Version: %d\r\n", leaderData.mStableDataVersion);
+    sServer->OutputFormat("Leader Router ID: %d\r\n", leaderData.mLeaderRouterId);
+
+exit:
+    (void)argc;
+    (void)argv;
+    AppendResult(error);
+}
+
+void Interpreter::ProcessLeaderPartitionId(int argc, char *argv[])
+{
+    ThreadError error = kThreadError_None;
+    unsigned long value;
+
+    if (argc == 0)
+    {
+        sServer->OutputFormat("%u\r\n", otGetLocalLeaderPartitionId());
+    }
+    else
+    {
+        SuccessOrExit(error = ParseUnsignedLong(argv[0], value));
+        otSetLocalLeaderPartitionId(static_cast<uint32_t>(value));
     }
 
 exit:
@@ -385,7 +726,32 @@ void Interpreter::ProcessLeaderWeight(int argc, char *argv[])
     else
     {
         SuccessOrExit(error = ParseLong(argv[0], value));
-        otSetLocalLeaderWeight(value);
+        otSetLocalLeaderWeight(static_cast<uint8_t>(value));
+    }
+
+exit:
+    AppendResult(error);
+}
+
+void Interpreter::ProcessLinkQuality(int argc, char *argv[])
+{
+    ThreadError error = kThreadError_None;
+    uint8_t extAddress[8];
+    uint8_t linkQuality;
+    long value;
+
+    VerifyOrExit(Hex2Bin(argv[0], extAddress, OT_EXT_ADDRESS_SIZE) >= 0, error = kThreadError_Parse);
+
+    if (argc == 1)
+    {
+        VerifyOrExit(otGetAssignLinkQuality(extAddress, &linkQuality) == kThreadError_None,
+                     error = kThreadError_InvalidArgs);
+        sServer->OutputFormat("%d\r\n", linkQuality);
+    }
+    else
+    {
+        SuccessOrExit(error = ParseLong(argv[1], value));
+        otSetAssignLinkQuality(extAddress, static_cast<uint8_t>(value));
     }
 
 exit:
@@ -395,10 +761,10 @@ exit:
 void Interpreter::ProcessMasterKey(int argc, char *argv[])
 {
     ThreadError error = kThreadError_None;
-    uint8_t keyLength;
 
     if (argc == 0)
     {
+        uint8_t keyLength;
         const uint8_t *key = otGetMasterKey(&keyLength);
 
         for (int i = 0; i < keyLength; i++)
@@ -410,10 +776,11 @@ void Interpreter::ProcessMasterKey(int argc, char *argv[])
     }
     else
     {
+        int keyLength;
         uint8_t key[16];
 
         VerifyOrExit((keyLength = Hex2Bin(argv[0], key, sizeof(key))) >= 0, error = kThreadError_Parse);
-        SuccessOrExit(error = otSetMasterKey(key, keyLength));
+        SuccessOrExit(error = otSetMasterKey(key, static_cast<uint8_t>(keyLength)));
     }
 
 exit:
@@ -423,7 +790,9 @@ exit:
 void Interpreter::ProcessMode(int argc, char *argv[])
 {
     ThreadError error = kThreadError_None;
-    otLinkModeConfig linkMode = {};
+    otLinkModeConfig linkMode;
+
+    memset(&linkMode, 0, sizeof(otLinkModeConfig));
 
     if (argc == 0)
     {
@@ -491,6 +860,8 @@ void Interpreter::ProcessNetworkDataRegister(int argc, char *argv[])
     SuccessOrExit(error = otSendServerData());
 
 exit:
+    (void)argc;
+    (void)argv;
     AppendResult(error);
 }
 
@@ -506,7 +877,7 @@ void Interpreter::ProcessNetworkIdTimeout(int argc, char *argv[])
     else
     {
         SuccessOrExit(error = ParseLong(argv[0], value));
-        otSetNetworkIdTimeout(value);
+        otSetNetworkIdTimeout(static_cast<uint8_t>(value));
     }
 
 exit:
@@ -519,7 +890,7 @@ void Interpreter::ProcessNetworkName(int argc, char *argv[])
 
     if (argc == 0)
     {
-        sServer->OutputFormat("%.*s\r\n", OT_NETWORK_NAME_SIZE, otGetNetworkName());
+        sServer->OutputFormat("%.*s\r\n", OT_NETWORK_NAME_MAX_SIZE, otGetNetworkName());
     }
     else
     {
@@ -542,45 +913,110 @@ void Interpreter::ProcessPanId(int argc, char *argv[])
     else
     {
         SuccessOrExit(error = ParseLong(argv[0], value));
-        otSetPanId(value);
+        otSetPanId(static_cast<otPanId>(value));
     }
 
 exit:
     AppendResult(error);
 }
 
+void Interpreter::ProcessParent(int argc, char *argv[])
+{
+    ThreadError error = kThreadError_None;
+    otRouterInfo parentInfo;
+
+    SuccessOrExit(error = otGetParentInfo(&parentInfo));
+    sServer->OutputFormat("Ext Addr: ");
+
+    for (size_t i = 0; i < sizeof(parentInfo.mExtAddress); i++)
+    {
+        sServer->OutputFormat("%02x", parentInfo.mExtAddress.m8[i]);
+    }
+
+    sServer->OutputFormat("\r\n");
+
+    sServer->OutputFormat("Rloc: %x\r\n", parentInfo.mRloc16);
+
+exit:
+    (void)argc;
+    (void)argv;
+    AppendResult(error);
+}
+
 void Interpreter::HandleEchoResponse(void *aContext, Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
     Ip6::IcmpHeader icmp6Header;
+    uint32_t timestamp = 0;
 
     aMessage.Read(aMessage.GetOffset(), sizeof(icmp6Header), &icmp6Header);
 
     sServer->OutputFormat("%d bytes from ", aMessage.GetLength() - aMessage.GetOffset());
     sServer->OutputFormat("%x:%x:%x:%x:%x:%x:%x:%x",
-                          HostSwap16(aMessageInfo.GetPeerAddr().m16[0]), HostSwap16(aMessageInfo.GetPeerAddr().m16[1]),
-                          HostSwap16(aMessageInfo.GetPeerAddr().m16[2]), HostSwap16(aMessageInfo.GetPeerAddr().m16[3]),
-                          HostSwap16(aMessageInfo.GetPeerAddr().m16[4]), HostSwap16(aMessageInfo.GetPeerAddr().m16[5]),
-                          HostSwap16(aMessageInfo.GetPeerAddr().m16[6]), HostSwap16(aMessageInfo.GetPeerAddr().m16[7]));
-    sServer->OutputFormat(": icmp_seq=%d hlim=%d\r\n", icmp6Header.GetSequence(), aMessageInfo.mHopLimit);
+                          HostSwap16(aMessageInfo.GetPeerAddr().mFields.m16[0]),
+                          HostSwap16(aMessageInfo.GetPeerAddr().mFields.m16[1]),
+                          HostSwap16(aMessageInfo.GetPeerAddr().mFields.m16[2]),
+                          HostSwap16(aMessageInfo.GetPeerAddr().mFields.m16[3]),
+                          HostSwap16(aMessageInfo.GetPeerAddr().mFields.m16[4]),
+                          HostSwap16(aMessageInfo.GetPeerAddr().mFields.m16[5]),
+                          HostSwap16(aMessageInfo.GetPeerAddr().mFields.m16[6]),
+                          HostSwap16(aMessageInfo.GetPeerAddr().mFields.m16[7]));
+    sServer->OutputFormat(": icmp_seq=%d hlim=%d", icmp6Header.GetSequence(), aMessageInfo.mHopLimit);
+
+    if (aMessage.Read(aMessage.GetOffset() + sizeof(icmp6Header), sizeof(uint32_t), &timestamp) >=
+        static_cast<int>(sizeof(uint32_t)))
+    {
+        sServer->OutputFormat(" time=%dms", Timer::GetNow() - HostSwap32(timestamp));
+    }
+
+    sServer->OutputFormat("\r\n");
+
+    (void)aContext;
 }
 
 void Interpreter::ProcessPing(int argc, char *argv[])
 {
     ThreadError error = kThreadError_None;
-    long length = 8;
+    uint8_t index = 1;
+    long value;
 
     VerifyOrExit(argc > 0, error = kThreadError_Parse);
+    VerifyOrExit(!sPingTimer->IsRunning(), error = kThreadError_Busy);
 
     memset(&sSockAddr, 0, sizeof(sSockAddr));
     SuccessOrExit(error = sSockAddr.GetAddress().FromString(argv[0]));
     sSockAddr.mScopeId = 1;
 
-    if (argc > 1)
+    sLength = 8;
+    sCount = 1;
+    sInterval = 1000;
+
+    while (index < argc)
     {
-        SuccessOrExit(error = ParseLong(argv[1], length));
+        SuccessOrExit(error = ParseLong(argv[index], value));
+
+        switch (index)
+        {
+        case 1:
+            sLength = (uint16_t)value;
+            break;
+
+        case 2:
+            sCount = (uint16_t)value;
+            break;
+
+        case 3:
+            sInterval = (uint32_t)value;
+            sInterval = sInterval * 1000;
+            break;
+
+        default:
+            ExitNow(error = kThreadError_Parse);
+        }
+
+        index++;
     }
 
-    sIcmpEcho.SendEchoRequest(sSockAddr, sEchoRequest, length);
+    HandlePingTimer(NULL);
 
     return;
 
@@ -588,11 +1024,149 @@ exit:
     AppendResult(error);
 }
 
+void Interpreter::HandlePingTimer(void *aContext)
+{
+    uint32_t timestamp = HostSwap32(Timer::GetNow());
+
+    memcpy(sEchoRequest, &timestamp, sizeof(timestamp));
+    sIcmpEcho->SendEchoRequest(sSockAddr, sEchoRequest, sLength);
+    sCount--;
+
+    if (sCount)
+    {
+        sPingTimer->Start(sInterval);
+    }
+
+    (void)aContext;
+}
+
+void Interpreter::ProcessPollPeriod(int argc, char *argv[])
+{
+    ThreadError error = kThreadError_None;
+    long value;
+
+    if (argc == 0)
+    {
+        sServer->OutputFormat("%d\r\n", (otGetPollPeriod() / 1000));  // ms->s
+    }
+    else
+    {
+        SuccessOrExit(error = ParseLong(argv[0], value));
+        otSetPollPeriod(static_cast<uint32_t>(value * 1000));  // s->ms
+    }
+
+exit:
+    AppendResult(error);
+}
+
+void Interpreter::ProcessPromiscuous(int argc, char *argv[])
+{
+    ThreadError error = kThreadError_None;
+
+    if (argc == 0)
+    {
+        if (otIsLinkPromiscuous() && otPlatRadioGetPromiscuous())
+        {
+            sServer->OutputFormat("Enabled\r\n");
+        }
+        else
+        {
+            sServer->OutputFormat("Disabled\r\n");
+        }
+    }
+    else
+    {
+        if (strcmp(argv[0], "enable") == 0)
+        {
+            otSetLinkPcapCallback(&HandleLinkPcapReceive, NULL);
+            SuccessOrExit(error = otSetLinkPromiscuous(true));
+        }
+        else if (strcmp(argv[0], "disable") == 0)
+        {
+            otSetLinkPcapCallback(NULL, NULL);
+            SuccessOrExit(error = otSetLinkPromiscuous(false));
+        }
+    }
+
+exit:
+    AppendResult(error);
+}
+
+void Interpreter::HandleLinkPcapReceive(const RadioPacket *aFrame, void *aContext)
+{
+    sServer->OutputFormat("\r\n");
+
+    for (size_t i = 0; i < 44; i++)
+    {
+        sServer->OutputFormat("=");
+    }
+
+    sServer->OutputFormat("[len = %3u]", aFrame->mLength);
+
+    for (size_t i = 0; i < 28; i++)
+    {
+        sServer->OutputFormat("=");
+    }
+
+    sServer->OutputFormat("\r\n");
+
+    for (size_t i = 0; i < aFrame->mLength; i += 16)
+    {
+        sServer->OutputFormat("|");
+
+        for (size_t j = 0; j < 16; j++)
+        {
+            if (i + j < aFrame->mLength)
+            {
+                sServer->OutputFormat(" %02X", aFrame->mPsdu[i + j]);
+            }
+            else
+            {
+                sServer->OutputFormat(" ..");
+            }
+        }
+
+        sServer->OutputFormat("|");
+
+        for (size_t j = 0; j < 16; j++)
+        {
+            if (i + j < aFrame->mLength)
+            {
+                if (31 < aFrame->mPsdu[i + j] && aFrame->mPsdu[i + j] < 127)
+                {
+                    sServer->OutputFormat(" %c", aFrame->mPsdu[i + j]);
+                }
+                else
+                {
+                    sServer->OutputFormat(" ?");
+                }
+            }
+            else
+            {
+                sServer->OutputFormat(" .");
+            }
+        }
+
+        sServer->OutputFormat("|\r\n");
+    }
+
+    for (size_t i = 0; i < 83; i++)
+    {
+        sServer->OutputFormat("-");
+    }
+
+    sServer->OutputFormat("\r\n");
+
+    (void) aContext;
+}
+
 ThreadError Interpreter::ProcessPrefixAdd(int argc, char *argv[])
 {
     ThreadError error = kThreadError_None;
-    otBorderRouterConfig config = {};
+    otBorderRouterConfig config;
     int argcur = 0;
+
+    memset(&config, 0, sizeof(otBorderRouterConfig));
 
     char *prefixLengthStr;
     char *endptr;
@@ -606,50 +1180,16 @@ ThreadError Interpreter::ProcessPrefixAdd(int argc, char *argv[])
 
     SuccessOrExit(error = otIp6AddressFromString(argv[argcur], &config.mPrefix.mPrefix));
 
-    config.mPrefix.mLength = strtol(prefixLengthStr, &endptr, 0);
+    config.mPrefix.mLength = static_cast<uint8_t>(strtol(prefixLengthStr, &endptr, 0));
 
     if (*endptr != '\0')
     {
         ExitNow(error = kThreadError_Parse);
     }
 
-    if (++argcur < argc)
-    {
-        for (char *arg = argv[argcur]; *arg != '\0'; arg++)
-        {
-            switch (*arg)
-            {
-            case 'p':
-                config.mSlaacPreferred = true;
-                break;
+    argcur++;
 
-            case 'v':
-                config.mSlaacValid = true;
-                break;
-
-            case 'd':
-                config.mDhcp = true;
-                break;
-
-            case 'c':
-                config.mConfigure = true;
-                break;
-
-            case 'r':
-                config.mDefaultRoute = true;
-                break;
-
-            case 's':
-                config.mStable = true;
-                break;
-
-            default:
-                ExitNow();
-            }
-        }
-    }
-
-    if (++argcur < argc)
+    for (; argcur < argc; argcur++)
     {
         if (strcmp(argv[argcur], "high") == 0)
         {
@@ -665,7 +1205,42 @@ ThreadError Interpreter::ProcessPrefixAdd(int argc, char *argv[])
         }
         else
         {
-            ExitNow(error = kThreadError_Parse);
+            for (char *arg = argv[argcur]; *arg != '\0'; arg++)
+            {
+                switch (*arg)
+                {
+                case 'p':
+                    config.mPreferred = true;
+                    break;
+
+                case 'a':
+                    config.mSlaac = true;
+                    break;
+
+                case 'd':
+                    config.mDhcp = true;
+                    break;
+
+                case 'c':
+                    config.mConfigure = true;
+                    break;
+
+                case 'r':
+                    config.mDefaultRoute = true;
+                    break;
+
+                case 'o':
+                    config.mOnMesh = true;
+                    break;
+
+                case 's':
+                    config.mStable = true;
+                    break;
+
+                default:
+                    ExitNow(error = kThreadError_Parse);
+                }
+            }
         }
     }
 
@@ -678,8 +1253,10 @@ exit:
 ThreadError Interpreter::ProcessPrefixRemove(int argc, char *argv[])
 {
     ThreadError error = kThreadError_None;
-    struct otIp6Prefix prefix = {};
+    struct otIp6Prefix prefix;
     int argcur = 0;
+
+    memset(&prefix, 0, sizeof(otIp6Prefix));
 
     char *prefixLengthStr;
     char *endptr;
@@ -693,7 +1270,7 @@ ThreadError Interpreter::ProcessPrefixRemove(int argc, char *argv[])
 
     SuccessOrExit(error = otIp6AddressFromString(argv[argcur], &prefix.mPrefix));
 
-    prefix.mLength = strtol(prefixLengthStr, &endptr, 0);
+    prefix.mLength = static_cast<uint8_t>(strtol(prefixLengthStr, &endptr, 0));
 
     if (*endptr != '\0')
     {
@@ -703,16 +1280,87 @@ ThreadError Interpreter::ProcessPrefixRemove(int argc, char *argv[])
     error = otRemoveBorderRouter(&prefix);
 
 exit:
+    (void)argc;
     return error;
+}
+
+ThreadError Interpreter::ProcessPrefixList(void)
+{
+    otNetworkDataIterator iterator = OT_NETWORK_DATA_ITERATOR_INIT;
+    otBorderRouterConfig config;
+
+    while (otGetNextOnMeshPrefix(true, &iterator, &config) == kThreadError_None)
+    {
+        sServer->OutputFormat("%x:%x:%x:%x::/%d ",
+                              HostSwap16(config.mPrefix.mPrefix.mFields.m16[0]),
+                              HostSwap16(config.mPrefix.mPrefix.mFields.m16[1]),
+                              HostSwap16(config.mPrefix.mPrefix.mFields.m16[2]),
+                              HostSwap16(config.mPrefix.mPrefix.mFields.m16[3]),
+                              config.mPrefix.mLength);
+
+        if (config.mPreferred)
+        {
+            sServer->OutputFormat("p");
+        }
+
+        if (config.mSlaac)
+        {
+            sServer->OutputFormat("a");
+        }
+
+        if (config.mDhcp)
+        {
+            sServer->OutputFormat("d");
+        }
+
+        if (config.mConfigure)
+        {
+            sServer->OutputFormat("c");
+        }
+
+        if (config.mDefaultRoute)
+        {
+            sServer->OutputFormat("r");
+        }
+
+        if (config.mOnMesh)
+        {
+            sServer->OutputFormat("o");
+        }
+
+        if (config.mStable)
+        {
+            sServer->OutputFormat("s");
+        }
+
+        switch (config.mPreference)
+        {
+        case -1:
+            sServer->OutputFormat(" low\r\n");
+            break;
+
+        case 0:
+            sServer->OutputFormat(" med\r\n");
+            break;
+
+        case 1:
+            sServer->OutputFormat(" high\r\n");
+            break;
+        }
+    }
+
+    return kThreadError_None;
 }
 
 void Interpreter::ProcessPrefix(int argc, char *argv[])
 {
     ThreadError error = kThreadError_None;
 
-    VerifyOrExit(argc > 0, error = kThreadError_Parse);
-
-    if (strcmp(argv[0], "add") == 0)
+    if (argc == 0)
+    {
+        SuccessOrExit(error = ProcessPrefixList());
+    }
+    else if (strcmp(argv[0], "add") == 0)
     {
         SuccessOrExit(error = ProcessPrefixAdd(argc - 1, argv + 1));
     }
@@ -737,23 +1385,34 @@ void Interpreter::ProcessReleaseRouterId(int argc, char *argv[])
     VerifyOrExit(argc > 0, error = kThreadError_Parse);
 
     SuccessOrExit(error = ParseLong(argv[0], value));
-    SuccessOrExit(error = otReleaseRouterId(value));
+    SuccessOrExit(error = otReleaseRouterId(static_cast<uint8_t>(value)));
 
 exit:
     AppendResult(error);
+}
+
+void Interpreter::ProcessReset(int argc, char *argv[])
+{
+    otPlatformReset();
+    (void)argc;
+    (void)argv;
 }
 
 void Interpreter::ProcessRloc16(int argc, char *argv[])
 {
     sServer->OutputFormat("%04x\r\n", otGetRloc16());
     sServer->OutputFormat("Done\r\n");
+    (void)argc;
+    (void)argv;
 }
 
 ThreadError Interpreter::ProcessRouteAdd(int argc, char *argv[])
 {
     ThreadError error = kThreadError_None;
-    otExternalRouteConfig config = {};
+    otExternalRouteConfig config;
     int argcur = 0;
+
+    memset(&config, 0, sizeof(otExternalRouteConfig));
 
     char *prefixLengthStr;
     char *endptr;
@@ -769,14 +1428,16 @@ ThreadError Interpreter::ProcessRouteAdd(int argc, char *argv[])
 
     SuccessOrExit(error = otIp6AddressFromString(argv[argcur], &config.mPrefix.mPrefix));
 
-    config.mPrefix.mLength = strtol(prefixLengthStr, &endptr, 0);
+    config.mPrefix.mLength = static_cast<uint8_t>(strtol(prefixLengthStr, &endptr, 0));
 
     if (*endptr != '\0')
     {
         ExitNow(error = kThreadError_Parse);
     }
 
-    if (++argcur < argc)
+    argcur++;
+
+    for (; argcur < argc; argcur++)
     {
         if (strcmp(argv[argcur], "s") == 0)
         {
@@ -809,9 +1470,10 @@ exit:
 ThreadError Interpreter::ProcessRouteRemove(int argc, char *argv[])
 {
     ThreadError error = kThreadError_None;
-    struct otIp6Prefix prefix = {};
+    struct otIp6Prefix prefix;
     int argcur = 0;
 
+    memset(&prefix, 0, sizeof(struct otIp6Prefix));
     char *prefixLengthStr;
     char *endptr;
 
@@ -826,7 +1488,7 @@ ThreadError Interpreter::ProcessRouteRemove(int argc, char *argv[])
 
     SuccessOrExit(error = otIp6AddressFromString(argv[argcur], &prefix.mPrefix));
 
-    prefix.mLength = strtol(prefixLengthStr, &endptr, 0);
+    prefix.mLength = static_cast<uint8_t>(strtol(prefixLengthStr, &endptr, 0));
 
     if (*endptr != '\0')
     {
@@ -862,6 +1524,96 @@ exit:
     AppendResult(error);
 }
 
+void Interpreter::ProcessRouter(int argc, char *argv[])
+{
+    ThreadError error = kThreadError_None;
+    otRouterInfo routerInfo;
+    long value;
+
+    VerifyOrExit(argc > 0, error = kThreadError_Parse);
+
+    if (strcmp(argv[0], "list") == 0)
+    {
+        for (uint8_t i = 0; ; i++)
+        {
+            if (otGetRouterInfo(i, &routerInfo) != kThreadError_None)
+            {
+                sServer->OutputFormat("\r\n");
+                ExitNow();
+            }
+
+            if (routerInfo.mAllocated)
+            {
+                sServer->OutputFormat("%d ", i);
+            }
+        }
+    }
+
+    SuccessOrExit(error = ParseLong(argv[0], value));
+    SuccessOrExit(error = otGetRouterInfo(static_cast<uint16_t>(value), &routerInfo));
+
+    sServer->OutputFormat("Alloc: %d\r\n", routerInfo.mAllocated);
+
+    if (routerInfo.mAllocated)
+    {
+        sServer->OutputFormat("Router ID: %d\r\n", routerInfo.mRouterId);
+        sServer->OutputFormat("Rloc: %04x\r\n", routerInfo.mRloc16);
+        sServer->OutputFormat("Next Hop: %04x\r\n", static_cast<uint16_t>(routerInfo.mNextHop) << 10);
+        sServer->OutputFormat("Link: %d\r\n", routerInfo.mLinkEstablished);
+
+        if (routerInfo.mLinkEstablished)
+        {
+            sServer->OutputFormat("Ext Addr: ");
+
+            for (size_t j = 0; j < sizeof(routerInfo.mExtAddress); j++)
+            {
+                sServer->OutputFormat("%02x", routerInfo.mExtAddress.m8[j]);
+            }
+
+            sServer->OutputFormat("\r\n");
+            sServer->OutputFormat("Cost: %d\r\n", routerInfo.mPathCost);
+            sServer->OutputFormat("LQI In: %d\r\n", routerInfo.mLinkQualityIn);
+            sServer->OutputFormat("LQI Out: %d\r\n", routerInfo.mLinkQualityOut);
+            sServer->OutputFormat("Age: %d\r\n", routerInfo.mAge);
+        }
+    }
+
+exit:
+    AppendResult(error);
+}
+
+void Interpreter::ProcessRouterRole(int argc, char *argv[])
+{
+    ThreadError error = kThreadError_None;
+
+    if (argc == 0)
+    {
+        if (otIsRouterRoleEnabled())
+        {
+            sServer->OutputFormat("Enabled\r\n");
+        }
+        else
+        {
+            sServer->OutputFormat("Disabled\r\n");
+        }
+    }
+    else if (strcmp(argv[0], "enable") == 0)
+    {
+        otSetRouterRoleEnabled(true);
+    }
+    else if (strcmp(argv[0], "disable") == 0)
+    {
+        otSetRouterRoleEnabled(false);
+    }
+    else
+    {
+        ExitNow(error = kThreadError_Parse);
+    }
+
+exit:
+    AppendResult(error);
+}
+
 void Interpreter::ProcessRouterUpgradeThreshold(int argc, char *argv[])
 {
     ThreadError error = kThreadError_None;
@@ -874,7 +1626,7 @@ void Interpreter::ProcessRouterUpgradeThreshold(int argc, char *argv[])
     else
     {
         SuccessOrExit(error = ParseLong(argv[0], value));
-        otSetRouterUpgradeThreshold(value);
+        otSetRouterUpgradeThreshold(static_cast<uint8_t>(value));
     }
 
 exit:
@@ -884,16 +1636,16 @@ exit:
 void Interpreter::ProcessScan(int argc, char *argv[])
 {
     ThreadError error = kThreadError_None;
-    uint16_t scanChannels = 0;
+    uint32_t scanChannels = 0;
     long value;
 
     if (argc > 0)
     {
         SuccessOrExit(error = ParseLong(argv[0], value));
-        scanChannels = 1 << (value - kPhyMinChannel);
+        scanChannels = 1 << value;
     }
 
-    SuccessOrExit(error = otActiveScan(scanChannels, 0, &HandleActiveScanResult));
+    SuccessOrExit(error = otActiveScan(scanChannels, 0, &HandleActiveScanResult, NULL));
     sServer->OutputFormat("| J | Network Name     | Extended PAN     | PAN  | MAC Address      | Ch | dBm | LQI |\r\n");
     sServer->OutputFormat("+---+------------------+------------------+------+------------------+----+-----+-----+\r\n");
 
@@ -903,10 +1655,8 @@ exit:
     AppendResult(error);
 }
 
-void Interpreter::HandleActiveScanResult(otActiveScanResult *aResult)
+void Interpreter::HandleActiveScanResult(otActiveScanResult *aResult, void *aContext)
 {
-    const uint8_t *bytes;
-
     if (aResult == NULL)
     {
         sServer->OutputFormat("Done\r\n");
@@ -915,46 +1665,39 @@ void Interpreter::HandleActiveScanResult(otActiveScanResult *aResult)
 
     sServer->OutputFormat("| %d ", aResult->mIsJoinable);
 
-    if (aResult->mNetworkName != NULL)
-    {
-        sServer->OutputFormat("| %-16s ", aResult->mNetworkName);
-    }
-    else
-    {
-        sServer->OutputFormat("| ---------------- ");
-    }
+    sServer->OutputFormat("| %-16s ", aResult->mNetworkName.m8);
 
-    if (aResult->mExtPanId != NULL)
-    {
-        bytes = aResult->mExtPanId;
-        sServer->OutputFormat("| %02x%02x%02x%02x%02x%02x%02x%02x ",
-                              bytes[0], bytes[1], bytes[2], bytes[3], bytes[4], bytes[5], bytes[6], bytes[7]);
-    }
-    else
-    {
-        sServer->OutputFormat("| ---------------- ");
-    }
+    sServer->OutputFormat("| ");
+    OutputBytes(aResult->mExtendedPanId.m8, OT_EXT_PAN_ID_SIZE);
+    sServer->OutputFormat(" ");
 
-    sServer->OutputFormat("| %04x ", aResult->mPanId);
-
-    bytes = aResult->mExtAddress.m8;
-    sServer->OutputFormat("| %02x%02x%02x%02x%02x%02x%02x%02x ",
-                          bytes[0], bytes[1], bytes[2], bytes[3], bytes[4], bytes[5], bytes[6], bytes[7]);
-    sServer->OutputFormat("| %2d ", aResult->mChannel);
+    sServer->OutputFormat("| %04x | ", aResult->mPanId);
+    OutputBytes(aResult->mExtAddress.m8, OT_EXT_ADDRESS_SIZE);
+    sServer->OutputFormat(" | %2d ", aResult->mChannel);
     sServer->OutputFormat("| %3d ", aResult->mRssi);
     sServer->OutputFormat("| %3d |\r\n", aResult->mLqi);
 
 exit:
+    (void)aContext;
     return;
 }
 
-void Interpreter::ProcessStart(int argc, char *argv[])
+void Interpreter::ProcessSingleton(int argc, char *argv[])
 {
     ThreadError error = kThreadError_None;
 
-    SuccessOrExit(error = otEnable());
+    if (otIsSingleton())
+    {
+        sServer->OutputFormat("true\r\n");
+    }
+    else
+    {
+        sServer->OutputFormat("false\r\n");
+    }
 
-exit:
+    (void)argc;
+    (void)argv;
+
     AppendResult(error);
 }
 
@@ -1015,26 +1758,75 @@ exit:
     AppendResult(error);
 }
 
-void Interpreter::ProcessStop(int argc, char *argv[])
+void Interpreter::ProcessThread(int argc, char *argv[])
 {
-    ThreadError error = kThreadError_None;
+    ThreadError error = kThreadError_Parse;
 
-    SuccessOrExit(error = otDisable());
+    VerifyOrExit(argc > 0, error = kThreadError_Parse);
+
+    if (strcmp(argv[0], "start") == 0)
+    {
+        SuccessOrExit(error = otThreadStart());
+    }
+    else if (strcmp(argv[0], "stop") == 0)
+    {
+        SuccessOrExit(error = otThreadStop());
+    }
 
 exit:
+    (void)argc;
+    (void)argv;
     AppendResult(error);
+}
+
+void Interpreter::ProcessVersion(int argc, char *argv[])
+{
+    sServer->OutputFormat("%s\r\n", otGetVersionString());
+    AppendResult(kThreadError_None);
+    (void)argc;
+    (void)argv;
 }
 
 void Interpreter::ProcessWhitelist(int argc, char *argv[])
 {
     ThreadError error = kThreadError_None;
+    otMacWhitelistEntry entry;
     int argcur = 0;
     uint8_t extAddr[8];
     int8_t rssi;
 
     if (argcur >= argc)
     {
-        ExitNow(error = kThreadError_Parse);
+        if (otIsMacWhitelistEnabled())
+        {
+            sServer->OutputFormat("Enabled\r\n");
+        }
+        else
+        {
+            sServer->OutputFormat("Disabled\r\n");
+        }
+
+        for (uint8_t i = 0; ; i++)
+        {
+            if (otGetMacWhitelistEntry(i, &entry) != kThreadError_None)
+            {
+                break;
+            }
+
+            if (entry.mValid == false)
+            {
+                continue;
+            }
+
+            OutputBytes(entry.mExtAddress.m8, OT_EXT_ADDRESS_SIZE);
+
+            if (entry.mFixedRssi)
+            {
+                sServer->OutputFormat(" %d", entry.mRssi);
+            }
+
+            sServer->OutputFormat("\r\n");
+        }
     }
     else if (strcmp(argv[argcur], "add") == 0)
     {
@@ -1043,7 +1835,7 @@ void Interpreter::ProcessWhitelist(int argc, char *argv[])
 
         if (++argcur < argc)
         {
-            rssi = strtol(argv[argcur], NULL, 0);
+            rssi = static_cast<int8_t>(strtol(argv[argcur], NULL, 0));
             VerifyOrExit(otAddMacWhitelistRssi(extAddr, rssi) == kThreadError_None, error = kThreadError_Parse);
         }
         else
@@ -1075,24 +1867,48 @@ exit:
     AppendResult(error);
 }
 
+#if OPENTHREAD_ENABLE_DIAG
+void Interpreter::ProcessDiag(int argc, char *argv[])
+{
+    // all diagnostics related features are processed within diagnostics module
+    sServer->OutputFormat("%s\r\n", diagProcessCmd(argc, argv));
+}
+#endif
+
 void Interpreter::ProcessLine(char *aBuf, uint16_t aBufLength, Server &aServer)
 {
     char *argv[kMaxArgs];
+    int argc = 0;
     char *cmd;
-    int argc;
-    char *last;
 
     sServer = &aServer;
 
-    VerifyOrExit((cmd = strtok_r(aBuf, " ", &last)) != NULL, ;);
+    VerifyOrExit(aBuf != NULL, ;);
 
-    for (argc = 0; argc < kMaxArgs; argc++)
+    for (; *aBuf == ' '; aBuf++, aBufLength--);
+
+    for (cmd = aBuf + 1; (cmd < aBuf + aBufLength) && (cmd != NULL); ++cmd)
     {
-        if ((argv[argc] = strtok_r(NULL, " ", &last)) == NULL)
+        VerifyOrExit(argc < kMaxArgs,
+                     sServer->OutputFormat("Error: too many args (max %d)\r\n", kMaxArgs));
+
+        if (*cmd == ' ' || *cmd == '\r' || *cmd == '\n')
         {
-            break;
+            *cmd = '\0';
+        }
+
+        if (*(cmd - 1) == '\0' && *cmd != ' ')
+        {
+            argv[argc++] = cmd;
         }
     }
+
+    cmd = aBuf;
+
+#if OPENTHREAD_ENABLE_DIAG
+    VerifyOrExit((!isDiagEnabled() || (strcmp(cmd, "diag") == 0)),
+                 sServer->OutputFormat("under diagnostics mode, execute 'diag stop' before running any other commands.\r\n"));
+#endif
 
     for (unsigned int i = 0; i < sizeof(sCommands) / sizeof(sCommands[0]); i++)
     {
@@ -1104,6 +1920,110 @@ void Interpreter::ProcessLine(char *aBuf, uint16_t aBufLength, Server &aServer)
     }
 
 exit:
+    return;
+}
+
+void Interpreter::HandleNetifStateChanged(uint32_t aFlags, void *aContext)
+{
+    otNetworkDataIterator iterator;
+    otBorderRouterConfig config;
+
+    VerifyOrExit((aFlags & OT_THREAD_NETDATA_UPDATED) != 0, ;);
+
+    // remove addresses
+    for (size_t i = 0; i < sizeof(sAutoAddresses) / sizeof(sAutoAddresses[0]); i++)
+    {
+        otNetifAddress *address = &sAutoAddresses[i];
+        bool found = false;
+
+        if (address->mValidLifetime == 0)
+        {
+            continue;
+        }
+
+        iterator = OT_NETWORK_DATA_ITERATOR_INIT;
+
+        while (otGetNextOnMeshPrefix(false, &iterator, &config) == kThreadError_None)
+        {
+            if (config.mSlaac == false)
+            {
+                continue;
+            }
+
+            if (otIp6PrefixMatch(&config.mPrefix.mPrefix, &address->mAddress) >= config.mPrefix.mLength &&
+                config.mPrefix.mLength == address->mPrefixLength)
+            {
+                found = true;
+                break;
+            }
+        }
+
+        if (!found)
+        {
+            otRemoveUnicastAddress(address);
+            address->mValidLifetime = 0;
+        }
+    }
+
+    // add addresses
+    iterator = OT_NETWORK_DATA_ITERATOR_INIT;
+
+    while (otGetNextOnMeshPrefix(false, &iterator, &config) == kThreadError_None)
+    {
+        bool found = false;
+
+        if (config.mSlaac == false)
+        {
+            continue;
+        }
+
+        for (size_t i = 0; i < sizeof(sAutoAddresses) / sizeof(sAutoAddresses[0]); i++)
+        {
+            otNetifAddress *address = &sAutoAddresses[i];
+
+            if (address->mValidLifetime == 0)
+            {
+                continue;
+            }
+
+            if (otIp6PrefixMatch(&config.mPrefix.mPrefix, &address->mAddress) >= config.mPrefix.mLength &&
+                config.mPrefix.mLength == address->mPrefixLength)
+            {
+                found = true;
+                break;
+            }
+        }
+
+        if (!found)
+        {
+            for (size_t i = 0; i < sizeof(sAutoAddresses) / sizeof(sAutoAddresses[0]); i++)
+            {
+                otNetifAddress *address = &sAutoAddresses[i];
+
+                if (address->mValidLifetime != 0)
+                {
+                    continue;
+                }
+
+                memset(address, 0, sizeof(*address));
+                memcpy(&address->mAddress, &config.mPrefix.mPrefix, 8);
+
+                for (size_t j = 8; j < sizeof(address->mAddress); j++)
+                {
+                    address->mAddress.mFields.m8[j] = (uint8_t)otPlatRandomGet();
+                }
+
+                address->mPrefixLength = config.mPrefix.mLength;
+                address->mPreferredLifetime = config.mPreferred ? 0xffffffff : 0;
+                address->mValidLifetime = 0xffffffff;
+                otAddUnicastAddress(address);
+                break;
+            }
+        }
+    }
+
+exit:
+    (void)aContext;
     return;
 }
 

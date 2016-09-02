@@ -1,0 +1,6 @@
+<map id="ADI16RegWrite" name="ADI16RegWrite">
+<area shape="rect" id="node2" href="$group__ddi__api.html#ga06d6b1eee2c8757b8431eb6e1ab98f68" title="Safely write to AUX ADI/DDI interfaces using a semaphore. " alt="" coords="168,31,315,57"/>
+<area shape="rect" id="node3" href="$group__cpu__api.html#ga491d851c4f7fff1f9f66aa778b0671b0" title="Disable all external interrupts. " alt="" coords="363,5,445,32"/>
+<area shape="rect" id="node5" href="$group__cpu__api.html#ga6922d401cbc951632f495ffcf2e71dfc" title="Enable all external interrupts. " alt="" coords="363,56,445,83"/>
+<area shape="rect" id="node4" href="$cpu_8c.html#a9d29df169acb9be94306e8b58faed3ee" title="Provide a small delay. " alt="" coords="493,31,557,57"/>
+</map>

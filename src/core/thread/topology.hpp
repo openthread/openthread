@@ -38,6 +38,7 @@
 #include <mac/mac_frame.hpp>
 #include <net/ip6.hpp>
 #include <thread/mle_tlvs.hpp>
+#include <thread/link_quality.hpp>
 
 namespace Thread {
 
@@ -65,6 +66,8 @@ public:
         } mPending;
     };
 
+    uint32_t mKeySequence;               ///< Current key sequence
+
     /**
      * Neighbor link states.
      *
@@ -77,11 +80,11 @@ public:
         kStateLinkRequest,               ///< Sent a MLE Link Request message
         kStateValid,                     ///< Link is valid
     };
-    State   mState : 3;                  ///< The link state
-    uint8_t mMode : 4;                   ///< The MLE device mode
-    bool    mPreviousKey : 1;            ///< Indicates whether or not the neighbor is still using a previous key
-    bool    mDataRequest : 1;            ///< Indicates whether or not a Data Poll was received
-    int8_t  mRssi;                       ///< Received Signal Strength Indicator
+
+    State           mState : 3;          ///< The link state
+    uint8_t         mMode : 4;           ///< The MLE device mode
+    bool            mDataRequest : 1;    ///< Indicates whether or not a Data Poll was received
+    LinkQualityInfo mLinkInfo;           ///< Link quality info (contains average RSS, link margin and link quality)
 };
 
 /**
@@ -98,7 +101,7 @@ public:
     Ip6::Address mIp6Address[kMaxIp6AddressPerChild];  ///< Registered IPv6 addresses
     uint32_t     mTimeout;                             ///< Child timeout
     uint16_t     mFragmentOffset;                      ///< 6LoWPAN fragment offset
-    uint8_t      mRequestTlvs[4];                      ///< Requested MLE TLVs
+    uint8_t      mRequestTlvs[5];                      ///< Requested MLE TLVs
     uint8_t      mNetworkDataVersion;                  ///< Current Network Data version
 };
 
@@ -111,7 +114,6 @@ class Router : public Neighbor
 public:
     uint8_t mNextHop;             ///< The next hop towards this router
     uint8_t mLinkQualityOut : 2;  ///< The link quality out for this router
-    uint8_t mLinkQualityIn : 2;   ///< The link quality in for this router
     uint8_t mCost : 4;            ///< The cost to this router
     bool    mAllocated : 1;       ///< Indicates whether or not this entry is allocated
     bool    mReclaimDelay : 1;    ///< Indicates whether or not this entry is waiting to be reclaimed

@@ -78,6 +78,11 @@ uint32_t otPlatAlarmGetNow(void);
 extern void otPlatAlarmFired(void);
 
 /**
+ * Signal diagnostics module that the alarm has fired.
+ */
+extern void otPlatDiagAlarmFired(void);
+
+/**
  * @}
  *
  */

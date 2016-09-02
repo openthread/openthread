@@ -36,7 +36,10 @@
 
 #include <string.h>
 
+#include <common/encoding.hpp>
 #include <common/message.hpp>
+
+using Thread::Encoding::BigEndian::HostSwap16;
 
 namespace Thread {
 
@@ -146,7 +149,7 @@ public:
      * @returns The Code value.
      *
      */
-    Code GetCode(void) const { return static_cast<Header::Code>(mHeader[1]); }
+    Code GetCode(void) const { return static_cast<Code>(mCode); }
 
     /**
      * This method sets the Code value.
@@ -154,7 +157,7 @@ public:
      * @param[in]  aCode  The Code value.
      *
      */
-    void SetCode(Code aCode) { mHeader[1] = aCode; }
+    void SetCode(Code aCode) { mCode = aCode; }
 
     /**
      * This method returns the Message ID value.
@@ -162,7 +165,7 @@ public:
      * @returns The Message ID value.
      *
      */
-    uint16_t GetMessageId(void) const { return (static_cast<uint16_t>(mHeader[2]) << 8) | mHeader[3]; }
+    uint16_t GetMessageId(void) const { return HostSwap16(mMessageId); }
 
     /**
      * This method sets the Message ID value.
@@ -170,7 +173,7 @@ public:
      * @param[in]  aMessageId  The Message ID value.
      *
      */
-    void SetMessageId(uint16_t aMessageId) { mHeader[2] = aMessageId >> 8; mHeader[3] = aMessageId; }
+    void SetMessageId(uint16_t aMessageId) { mMessageId = HostSwap16(aMessageId); }
 
     /**
      * This method returns the Token length.
@@ -196,7 +199,7 @@ public:
      *
      */
     void SetToken(const uint8_t *aToken, uint8_t aTokenLength) {
-        mHeader[0] = (mHeader[0] & ~kTokenLengthMask) | (aTokenLength << kTokenLengthOffset);
+        mHeader[0] = (mHeader[0] & ~kTokenLengthMask) | ((aTokenLength << kTokenLengthOffset) & kTokenLengthMask);
         memcpy(mHeader + kTokenOffset, aToken, aTokenLength);
         mHeaderLength += aTokenLength;
     }
@@ -213,7 +216,8 @@ public:
          */
         enum
         {
-            kOptionDeltaOffset   = 4,    ///< Delta
+            kOptionDeltaOffset   = 4,                          ///< Delta Offset
+            kOptionDeltaMask     = 0xf << kOptionDeltaOffset,  ///< Delta Mask
         };
 
         /**
@@ -338,7 +342,16 @@ private:
         kMinHeaderLength = 4,
         kMaxHeaderLength = 128,
     };
-    uint8_t mHeader[kMaxHeaderLength];
+    union
+    {
+        struct
+        {
+            uint8_t mVersionTypeToken;
+            uint8_t mCode;
+            uint16_t mMessageId;
+        };
+        uint8_t mHeader[kMaxHeaderLength];
+    };
     uint8_t mHeaderLength;
     uint16_t mOptionLast;
     uint16_t mNextOptionOffset;

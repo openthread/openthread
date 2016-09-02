@@ -41,18 +41,24 @@ matrix:
     - env: BUILD_TARGET="pretty-check"
       compiler: clang
       os: linux
+    - env: BUILD_TARGET="scan-build"
+      compiler: clang
+      os: linux
+    - env: BUILD_TARGET="posix-distcheck" DISTCHECK_CONFIGURE_FLAGS="--with-examples=posix --enable-cli --enable-ncp --with-tests=all" VERBOSE=1
+      compiler: gcc
+      os: linux
+    - env: BUILD_TARGET="posix"
+      compiler: gcc
+      os: osx
     - env: BUILD_TARGET="posix"
       compiler: clang
       os: linux
     - env: BUILD_TARGET="posix"
       compiler: clang
       os: osx
-    - env: BUILD_TARGET="posix"
+    - env: BUILD_TARGET="posix-32-bit"
       compiler: gcc
       os: linux
-    - env: BUILD_TARGET="posix"
-      compiler: gcc
-      os: osx
     - env: BUILD_TARGET="cc2538"
       compiler: gcc
       os: linux

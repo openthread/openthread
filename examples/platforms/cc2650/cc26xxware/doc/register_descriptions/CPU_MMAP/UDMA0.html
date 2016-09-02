@@ -1,0 +1,1421 @@
+<HTML>
+<HEAD><META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=UTF-8">
+<link href="..//elements/mmap.css" rel="stylesheet" type="text/css">
+<TITLE>UDMA0</TITLE>
+</HEAD>
+<BODY class=mmapBody>
+<h2 class="mmapCellTitle">
+  <a name="Top_Tag">UDMA0</a>
+</h2>
+<P>Instance: UDMA0<BR>
+Component: UDMA<BR>
+Base address: 0x40020000</P>
+<BR>
+<P><A class="mmap_legend_link" href="../legend.html#ARM">ARM</A> Micro Direct Memory Access Controller</P>
+ <H3 class="mmapRegisterSummaryTitle"><A name="UDMA0"></A><A href="CPU_MMAP.html"> TOP</A>:<B>UDMA0</B> Register Summary</H3>
+<TABLE cellspacing="0" class="mmapRegisterSummaryTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">
+  <P>Register Name</P>
+</TD>
+<TD class="cellTopCol2">
+  <P>Type</P>
+</TD>
+<TD class="cellTopCol3">
+  <P>Register Width (Bits)</P>
+</TD>
+<TD class="cellTopCol4">
+  <P>Register Reset</P>
+</TD>
+<TD class="cellTopCol5">
+  <P>Address Offset</P>
+</TD>
+<TD class="cellTopCol5">
+  <P>Physical Address</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#STATUS">STATUS</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>RO</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x001F 0000</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 0000</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x4002 0000</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#CFG">CFG</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>WO</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x0000 0000</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 0004</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x4002 0004</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#CTRL">CTRL</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>RW</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x0000 0000</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 0008</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x4002 0008</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#ALTCTRL">ALTCTRL</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>RO</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x0000 0200</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 000C</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x4002 000C</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#WAITONREQ">WAITONREQ</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>RO</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0xFFFF 1EFF</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 0010</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x4002 0010</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#SOFTREQ">SOFTREQ</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>WO</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x0000 0000</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 0014</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x4002 0014</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#SETBURST">SETBURST</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>RW</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x0000 0000</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 0018</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x4002 0018</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#CLEARBURST">CLEARBURST</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>WO</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x0000 0000</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 001C</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x4002 001C</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#SETREQMASK">SETREQMASK</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>RW</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x0000 0000</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 0020</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x4002 0020</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#CLEARREQMASK">CLEARREQMASK</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>WO</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x0000 0000</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 0024</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x4002 0024</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#SETCHANNELEN">SETCHANNELEN</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>RW</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x0000 0000</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 0028</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x4002 0028</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#CLEARCHANNELEN">CLEARCHANNELEN</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>WO</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x0000 0000</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 002C</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x4002 002C</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#SETCHNLPRIALT">SETCHNLPRIALT</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>RW</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x0000 0000</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 0030</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x4002 0030</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#CLEARCHNLPRIALT">CLEARCHNLPRIALT</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>WO</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x0000 0000</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 0034</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x4002 0034</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#SETCHNLPRIORITY">SETCHNLPRIORITY</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>RW</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x0000 0000</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 0038</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x4002 0038</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#CLEARCHNLPRIORITY">CLEARCHNLPRIORITY</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>WO</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x0000 0000</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 003C</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x4002 003C</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#ERROR">ERROR</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>RW</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x0000 0000</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 004C</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x4002 004C</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#REQDONE">REQDONE</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>RW</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x0000 0000</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 0504</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x4002 0504</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#DONEMASK">DONEMASK</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>RW</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x0000 0000</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 0520</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x4002 0520</P>
+</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterSummaryTitle"><A href="CPU_MMAP.html"> TOP</A>:UDMA0 Register Descriptions</H3>
+<H3 class="mmapRegisterTitle"><A name="STATUS"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">UDMA0</A>:STATUS</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 0000</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0x4002 0000</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0x4002 0000</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">Status</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">RO</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="STATUS_TEST">31:28</a>
+</TD>
+<TD class="cellBitfieldCol2">TEST</TD>
+<TD class="cellBitfieldCol3" colspan="3"><BR>
+0x0: Controller does not include the integration test logic<BR>
+0x1: Controller includes the integration test logic<BR>
+0x2: Undefined<BR>
+...<BR>
+0xF: Undefined</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0x0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="STATUS_RESERVED21">27:21</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED21</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0b000 0000</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="STATUS_TOTALCHANNELS">20:16</a>
+</TD>
+<TD class="cellBitfieldCol2">TOTALCHANNELS</TD>
+<TD class="cellBitfieldCol3" colspan="3">Register value returns number of available <A class="mmap_legend_link" href="../legend.html#uDMA">uDMA</A> channels minus one. For example a read out value of:<BR>
+<BR>
+0x00: Show that the controller is configured to use 1 <A class="mmap_legend_link" href="../legend.html#uDMA">uDMA</A> channel<BR>
+0x01: Shows that the controller is configured to use 2 <A class="mmap_legend_link" href="../legend.html#uDMA">uDMA</A> channels<BR>
+...<BR>
+0x1F: Shows that the controller is configured to use 32 <A class="mmap_legend_link" href="../legend.html#uDMA">uDMA</A> channels (32-1=31=0x1F)</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0b1 1111</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="STATUS_RESERVED8">15:8</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED8</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0x00</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="STATUS_STATE">7:4</a>
+</TD>
+<TD class="cellBitfieldCol2">STATE</TD>
+<TD class="cellBitfieldCol3" colspan="3">Current state of the control state machine. State can be one of the following:<BR>
+<BR>
+0x0: Idle<BR>
+0x1: Reading channel controller data<BR>
+0x2: Reading source data end pointer<BR>
+0x3: Reading destination data end pointer<BR>
+0x4: Reading source data<BR>
+0x5: Writing destination data<BR>
+0x6: Waiting for <A class="mmap_legend_link" href="../legend.html#uDMA">uDMA</A> request to clear<BR>
+0x7: Writing channel controller data<BR>
+0x8: Stalled<BR>
+0x9: Done<BR>
+0xA: Peripheral scatter-gather transition<BR>
+0xB: Undefined<BR>
+...<BR>
+0xF: Undefined.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0x0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="STATUS_RESERVED1">3:1</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED1</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0b000</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="STATUS_MASTERENABLE">0</a>
+</TD>
+<TD class="cellBitfieldCol2">MASTERENABLE</TD>
+<TD class="cellBitfieldCol3" colspan="3">Shows the enable status of the controller as configured by <A class="xref" href="#CFG_MASTERENABLE">CFG.MASTERENABLE</A>:<BR>
+<BR>
+0: Controller is disabled<BR>
+1: Controller is enabled</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="CFG"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">UDMA0</A>:CFG</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 0004</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0x4002 0004</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0x4002 0004</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">Configuration</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">WO</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="CFG_RESERVED8">31:8</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED8</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior.</TD>
+<TD class="cellBitfieldCol4">WO</TD>
+<TD class="cellBitfieldCol5">0x00 0000</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="CFG_PRTOCTRL">7:5</a>
+</TD>
+<TD class="cellBitfieldCol2">PRTOCTRL</TD>
+<TD class="cellBitfieldCol3" colspan="3">Sets the AHB-Lite bus protocol protection state by controlling the <A class="mmap_legend_link" href="../legend.html#AHB">AHB</A> signal HProt[3:1] as follows:<BR>
+<BR>
+Bit [7] Controls HProt[3] to indicate if a cacheable access is occurring.<BR>
+Bit [6] Controls HProt[2] to indicate if a bufferable access is occurring.<BR>
+Bit [5] Controls HProt[1] to indicate if a privileged access is occurring.<BR>
+<BR>
+When bit [n] = 1 then the corresponding HProt bit is high.<BR>
+When bit [n] = 0 then the corresponding HProt bit is low.<BR>
+<BR>
+This field controls HProt[3:1] signal for all transactions initiated by <A class="mmap_legend_link" href="../legend.html#uDMA">uDMA</A> except two transactions below:<BR>
+- the read from the address indicated by source address pointer<BR>
+- the write to the address indicated by destination address pointer<BR>
+HProt[3:1] for these two exceptions can be controlled by dedicated fields in the channel configutation descriptor.</TD>
+<TD class="cellBitfieldCol4">WO</TD>
+<TD class="cellBitfieldCol5">0b000</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="CFG_RESERVED1">4:1</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED1</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior.</TD>
+<TD class="cellBitfieldCol4">WO</TD>
+<TD class="cellBitfieldCol5">0x0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="CFG_MASTERENABLE">0</a>
+</TD>
+<TD class="cellBitfieldCol2">MASTERENABLE</TD>
+<TD class="cellBitfieldCol3" colspan="3">Enables the controller:<BR>
+<BR>
+0: Disables the controller<BR>
+1: Enables the controller</TD>
+<TD class="cellBitfieldCol4">WO</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="CTRL"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">UDMA0</A>:CTRL</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 0008</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0x4002 0008</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0x4002 0008</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">Channel Control Data Base Pointer</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">RW</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="CTRL_BASEPTR">31:10</a>
+</TD>
+<TD class="cellBitfieldCol2">BASEPTR</TD>
+<TD class="cellBitfieldCol3" colspan="3">This register point to the base address for the primary data structures of each <A class="mmap_legend_link" href="../legend.html#DMA">DMA</A> channel. This is not stored in module, but in system memory, thus space must be allocated for this usage when <A class="mmap_legend_link" href="../legend.html#DMA">DMA</A> is in usage</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0b00 0000 0000 0000 0000 0000</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="CTRL_RESERVED0">9:0</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED0</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0b00 0000 0000</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="ALTCTRL"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">UDMA0</A>:ALTCTRL</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 000C</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0x4002 000C</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0x4002 000C</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">Channel Alternate Control Data Base Pointer</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">RO</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="ALTCTRL_BASEPTR">31:0</a>
+</TD>
+<TD class="cellBitfieldCol2">BASEPTR</TD>
+<TD class="cellBitfieldCol3" colspan="3">This register shows the base address for the alternate data structures and is calculated by module, thus read only</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0x0000 0200</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="WAITONREQ"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">UDMA0</A>:WAITONREQ</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 0010</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0x4002 0010</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0x4002 0010</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">Channel Wait On Request Status</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">RO</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="WAITONREQ_CHNLSTATUS">31:0</a>
+</TD>
+<TD class="cellBitfieldCol2">CHNLSTATUS</TD>
+<TD class="cellBitfieldCol3" colspan="3">Channel wait on request status:<BR>
+<BR>
+Bit [Ch] = 0: Once <A class="mmap_legend_link" href="../legend.html#uDMA">uDMA</A> receives a single or burst request on channel Ch, this channel may come out of active state even if request is still present.<BR>
+Bit [Ch] = 1: Once <A class="mmap_legend_link" href="../legend.html#uDMA">uDMA</A> receives a single or burst request on channel Ch, it keeps channel Ch in active state until the requests are deasserted. This handshake is necessary for channels where the requester is in an asynchronous domain or can run at slower clock speed than <A class="mmap_legend_link" href="../legend.html#uDMA">uDMA</A></TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0xFFFF 1EFF</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="SOFTREQ"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">UDMA0</A>:SOFTREQ</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 0014</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0x4002 0014</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0x4002 0014</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">Channel Software Request</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">WO</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="SOFTREQ_CHNLS">31:0</a>
+</TD>
+<TD class="cellBitfieldCol2">CHNLS</TD>
+<TD class="cellBitfieldCol3" colspan="3">Set the appropriate bit to generate a software <A class="mmap_legend_link" href="../legend.html#uDMA">uDMA</A> request on the corresponding <A class="mmap_legend_link" href="../legend.html#uDMA">uDMA</A> channel<BR>
+<BR>
+Bit [Ch] = 0: Does not create a <A class="mmap_legend_link" href="../legend.html#uDMA">uDMA</A> request for channel Ch<BR>
+Bit [Ch] = 1: Creates a <A class="mmap_legend_link" href="../legend.html#uDMA">uDMA</A> request for channel Ch<BR>
+<BR>
+Writing to a bit where a <A class="mmap_legend_link" href="../legend.html#uDMA">uDMA</A> channel is not implemented does not create a <A class="mmap_legend_link" href="../legend.html#uDMA">uDMA</A> request for that channel</TD>
+<TD class="cellBitfieldCol4">WO</TD>
+<TD class="cellBitfieldCol5">0x0000 0000</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="SETBURST"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">UDMA0</A>:SETBURST</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 0018</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0x4002 0018</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0x4002 0018</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">Channel Set UseBurst</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">RW</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="SETBURST_CHNLS">31:0</a>
+</TD>
+<TD class="cellBitfieldCol2">CHNLS</TD>
+<TD class="cellBitfieldCol3" colspan="3">Returns the useburst status, or disables individual channels from generating single <A class="mmap_legend_link" href="../legend.html#uDMA">uDMA</A> requests. The value R is the arbitration rate and stored in the controller data structure. <BR>
+<BR>
+Read as:<BR>
+<BR>
+Bit [Ch] = 0: <A class="mmap_legend_link" href="../legend.html#uDMA">uDMA</A> channel Ch responds to both burst and single requests on channel C. The controller performs 2^R, or single, bus transfers.<BR>
+<BR>
+Bit [Ch] = 1: <A class="mmap_legend_link" href="../legend.html#uDMA">uDMA</A> channel Ch does not respond to single transfer requests. The controller only responds to burst transfer requests and performs 2^R transfers.<BR>
+<BR>
+Write as:<BR>
+Bit [Ch] = 0: No effect. Use the <A class="xref" href="#CLEARBURST_CHNLS">CLEARBURST.CHNLS</A> to set bit [Ch] to 0.<BR>
+Bit [Ch] = 1: Disables single transfer requests on channel Ch. The controller performs 2^R transfers for burst requests.<BR>
+<BR>
+Writing to a bit where a <A class="mmap_legend_link" href="../legend.html#uDMA">uDMA</A> channel is not implemented has no effect</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0x0000 0000</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="CLEARBURST"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">UDMA0</A>:CLEARBURST</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 001C</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0x4002 001C</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0x4002 001C</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">Channel Clear UseBurst</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">WO</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="CLEARBURST_CHNLS">31:0</a>
+</TD>
+<TD class="cellBitfieldCol2">CHNLS</TD>
+<TD class="cellBitfieldCol3" colspan="3">Set the appropriate bit to enable single transfer requests. <BR>
+<BR>
+Write as:<BR>
+<BR>
+Bit [Ch] = 0: No effect. Use the <A class="xref" href="#SETBURST_CHNLS">SETBURST.CHNLS</A> to disable single transfer requests.<BR>
+<BR>
+Bit [Ch] = 1: Enables single transfer requests on channel Ch.<BR>
+<BR>
+Writing to a bit where a <A class="mmap_legend_link" href="../legend.html#DMA">DMA</A> channel is not implemented has no effect.</TD>
+<TD class="cellBitfieldCol4">WO</TD>
+<TD class="cellBitfieldCol5">0x0000 0000</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="SETREQMASK"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">UDMA0</A>:SETREQMASK</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 0020</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0x4002 0020</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0x4002 0020</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">Channel Set Request Mask</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">RW</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="SETREQMASK_CHNLS">31:0</a>
+</TD>
+<TD class="cellBitfieldCol2">CHNLS</TD>
+<TD class="cellBitfieldCol3" colspan="3">Returns the burst and single request mask status, or disables the corresponding channel from generating <A class="mmap_legend_link" href="../legend.html#uDMA">uDMA</A> requests. <BR>
+<BR>
+Read as:<BR>
+Bit [Ch] = 0: External requests are enabled for channel Ch.<BR>
+Bit [Ch] = 1: External requests are disabled for channel Ch.<BR>
+<BR>
+Write as:<BR>
+Bit [Ch] = 0: No effect. Use the <A class="xref" href="#CLEARREQMASK_CHNLS">CLEARREQMASK.CHNLS</A> to enable <A class="mmap_legend_link" href="../legend.html#uDMA">uDMA</A> requests.<BR>
+Bit [Ch] = 1: Disables <A class="mmap_legend_link" href="../legend.html#uDMA">uDMA</A> burst request channel [C] and <A class="mmap_legend_link" href="../legend.html#uDMA">uDMA</A> single request channel [C] input from generating <A class="mmap_legend_link" href="../legend.html#uDMA">uDMA</A> requests.<BR>
+<BR>
+Writing to a bit where a <A class="mmap_legend_link" href="../legend.html#uDMA">uDMA</A> channel is not implemented has no effect</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0x0000 0000</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="CLEARREQMASK"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">UDMA0</A>:CLEARREQMASK</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 0024</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0x4002 0024</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0x4002 0024</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">Clear Channel Request Mask</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">WO</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="CLEARREQMASK_CHNLS">31:0</a>
+</TD>
+<TD class="cellBitfieldCol2">CHNLS</TD>
+<TD class="cellBitfieldCol3" colspan="3">Set the appropriate bit to enable <A class="mmap_legend_link" href="../legend.html#DMA">DMA</A> request for the channel. <BR>
+<BR>
+Write as:<BR>
+Bit [Ch] = 0: No effect. Use the <A class="xref" href="#SETREQMASK_CHNLS">SETREQMASK.CHNLS</A> to disable channel C from generating requests.<BR>
+Bit [Ch] = 1: Enables channel [C] to generate <A class="mmap_legend_link" href="../legend.html#DMA">DMA</A> requests.<BR>
+<BR>
+Writing to a bit where a <A class="mmap_legend_link" href="../legend.html#DMA">DMA</A> channel is not implemented has no effect.</TD>
+<TD class="cellBitfieldCol4">WO</TD>
+<TD class="cellBitfieldCol5">0x0000 0000</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="SETCHANNELEN"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">UDMA0</A>:SETCHANNELEN</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 0028</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0x4002 0028</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0x4002 0028</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">Set Channel Enable</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">RW</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="SETCHANNELEN_CHNLS">31:0</a>
+</TD>
+<TD class="cellBitfieldCol2">CHNLS</TD>
+<TD class="cellBitfieldCol3" colspan="3">Returns the enable status of the channels, or enables the corresponding channels. <BR>
+<BR>
+Read as:<BR>
+Bit [Ch] = 0: Channel Ch is disabled.<BR>
+Bit [Ch] = 1: Channel Ch is enabled.<BR>
+<BR>
+Write as:<BR>
+Bit [Ch] = 0: No effect. Use the <A class="xref" href="#CLEARCHANNELEN_CHNLS">CLEARCHANNELEN.CHNLS</A> to disable a channel<BR>
+Bit [Ch] = 1: Enables channel Ch<BR>
+<BR>
+Writing to a bit where a <A class="mmap_legend_link" href="../legend.html#DMA">DMA</A> channel is not implemented has no effect</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0x0000 0000</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="CLEARCHANNELEN"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">UDMA0</A>:CLEARCHANNELEN</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 002C</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0x4002 002C</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0x4002 002C</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">Clear Channel Enable</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">WO</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="CLEARCHANNELEN_CHNLS">31:0</a>
+</TD>
+<TD class="cellBitfieldCol2">CHNLS</TD>
+<TD class="cellBitfieldCol3" colspan="3">Set the appropriate bit to disable the corresponding <A class="mmap_legend_link" href="../legend.html#uDMA">uDMA</A> channel. <BR>
+<BR>
+Write as:<BR>
+Bit [Ch] = 0: No effect. Use the <A class="xref" href="#SETCHANNELEN_CHNLS">SETCHANNELEN.CHNLS</A> to enable <A class="mmap_legend_link" href="../legend.html#uDMA">uDMA</A> channels.<BR>
+Bit [Ch] = 1: Disables channel Ch<BR>
+<BR>
+Writing to a bit where a <A class="mmap_legend_link" href="../legend.html#uDMA">uDMA</A> channel is not implemented has no effect</TD>
+<TD class="cellBitfieldCol4">WO</TD>
+<TD class="cellBitfieldCol5">0x0000 0000</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="SETCHNLPRIALT"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">UDMA0</A>:SETCHNLPRIALT</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 0030</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0x4002 0030</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0x4002 0030</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">Channel Set Primary-Alternate</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">RW</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="SETCHNLPRIALT_CHNLS">31:0</a>
+</TD>
+<TD class="cellBitfieldCol2">CHNLS</TD>
+<TD class="cellBitfieldCol3" colspan="3">Returns the channel control data structure status, or selects the alternate data structure for the corresponding <A class="mmap_legend_link" href="../legend.html#uDMA">uDMA</A> channel. <BR>
+<BR>
+Read as:<BR>
+Bit [Ch] = 0: <A class="mmap_legend_link" href="../legend.html#uDMA">uDMA</A> channel Ch is using the primary data structure.<BR>
+Bit [Ch] = 1: <A class="mmap_legend_link" href="../legend.html#uDMA">uDMA</A> channel Ch is using the alternate data structure.<BR>
+<BR>
+Write as:<BR>
+Bit [Ch] = 0: No effect. Use the <A class="xref" href="#CLEARCHNLPRIALT_CHNLS">CLEARCHNLPRIALT.CHNLS</A> to disable a channel<BR>
+Bit [Ch] = 1: Selects the alternate data structure for channel Ch<BR>
+<BR>
+Writing to a bit where a <A class="mmap_legend_link" href="../legend.html#uDMA">uDMA</A> channel is not implemented has no effect</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0x0000 0000</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="CLEARCHNLPRIALT"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">UDMA0</A>:CLEARCHNLPRIALT</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 0034</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0x4002 0034</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0x4002 0034</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">Channel Clear Primary-Alternate</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">WO</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="CLEARCHNLPRIALT_CHNLS">31:0</a>
+</TD>
+<TD class="cellBitfieldCol2">CHNLS</TD>
+<TD class="cellBitfieldCol3" colspan="3">Clears the appropriate bit to select the primary data structure for the corresponding <A class="mmap_legend_link" href="../legend.html#uDMA">uDMA</A> channel.<BR>
+<BR>
+Write as:<BR>
+Bit [Ch] = 0: No effect. Use the <A class="xref" href="#SETCHNLPRIALT_CHNLS">SETCHNLPRIALT.CHNLS</A> to select the alternate data structure.<BR>
+Bit [Ch] = 1: Selects the primary data structure for channel Ch.<BR>
+<BR>
+Writing to a bit where a <A class="mmap_legend_link" href="../legend.html#uDMA">uDMA</A> channel is not implemented has no effect</TD>
+<TD class="cellBitfieldCol4">WO</TD>
+<TD class="cellBitfieldCol5">0x0000 0000</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="SETCHNLPRIORITY"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">UDMA0</A>:SETCHNLPRIORITY</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 0038</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0x4002 0038</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0x4002 0038</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">Set Channel Priority</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">RW</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="SETCHNLPRIORITY_CHNLS">31:0</a>
+</TD>
+<TD class="cellBitfieldCol2">CHNLS</TD>
+<TD class="cellBitfieldCol3" colspan="3">Returns the channel priority mask status, or sets the channel priority to high. <BR>
+<BR>
+Read as:<BR>
+Bit [Ch] = 0: <A class="mmap_legend_link" href="../legend.html#uDMA">uDMA</A> channel Ch is using the default priority level.<BR>
+Bit [Ch] = 1: <A class="mmap_legend_link" href="../legend.html#uDMA">uDMA</A> channel Ch is using a high priority level.<BR>
+<BR>
+Write as:<BR>
+Bit [Ch] = 0: No effect. Use the <A class="xref" href="#CLEARCHNLPRIORITY_CHNLS">CLEARCHNLPRIORITY.CHNLS</A> to set channel Ch to the default priority level.<BR>
+Bit [Ch] = 1: Channel Ch uses the high priority level.<BR>
+<BR>
+Writing to a bit where a <A class="mmap_legend_link" href="../legend.html#uDMA">uDMA</A> channel is not implemented has no effect</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0x0000 0000</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="CLEARCHNLPRIORITY"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">UDMA0</A>:CLEARCHNLPRIORITY</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 003C</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0x4002 003C</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0x4002 003C</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">Clear Channel Priority</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">WO</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="CLEARCHNLPRIORITY_CHNLS">31:0</a>
+</TD>
+<TD class="cellBitfieldCol2">CHNLS</TD>
+<TD class="cellBitfieldCol3" colspan="3">Clear the appropriate bit to select the default priority level for the specified <A class="mmap_legend_link" href="../legend.html#uDMA">uDMA</A> channel.<BR>
+<BR>
+Write as:<BR>
+Bit [Ch] = 0: No effect. Use the <A class="xref" href="#SETCHNLPRIORITY_CHNLS">SETCHNLPRIORITY.CHNLS</A> to set channel Ch to the high priority level.<BR>
+Bit [Ch] = 1: Channel Ch uses the default priority level.<BR>
+<BR>
+Writing to a bit where a <A class="mmap_legend_link" href="../legend.html#uDMA">uDMA</A> channel is not implemented has no effect</TD>
+<TD class="cellBitfieldCol4">WO</TD>
+<TD class="cellBitfieldCol5">0x0000 0000</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="ERROR"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">UDMA0</A>:ERROR</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 004C</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0x4002 004C</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0x4002 004C</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">Error Status and Clear</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">RW</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="ERROR_RESERVED">31:1</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior.</TD>
+<TD class="cellBitfieldCol4">WO</TD>
+<TD class="cellBitfieldCol5">0b000 0000 0000 0000 0000 0000 0000 0000</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="ERROR_STATUS">0</a>
+</TD>
+<TD class="cellBitfieldCol2">STATUS</TD>
+<TD class="cellBitfieldCol3" colspan="3">Returns the status of bus error flag in <A class="mmap_legend_link" href="../legend.html#uDMA">uDMA</A>, or clears this bit <BR>
+<BR>
+Read as:<BR>
+<BR>
+0: No bus error detected<BR>
+1: Bus error detected<BR>
+<BR>
+Write as:<BR>
+<BR>
+0: No effect, status of bus error flag is unchanged.<BR>
+1: Clears the bus error flag.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="REQDONE"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">UDMA0</A>:REQDONE</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 0504</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0x4002 0504</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0x4002 0504</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">Channel Request Done</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">RW</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="REQDONE_CHNLS">31:0</a>
+</TD>
+<TD class="cellBitfieldCol2">CHNLS</TD>
+<TD class="cellBitfieldCol3" colspan="3">Reflects the <A class="mmap_legend_link" href="../legend.html#uDMA">uDMA</A> done status for the given channel, channel [Ch]. It&#39;s a sticky done bit. Unless cleared by writing a 1, it holds the value of 1.<BR>
+<BR>
+Read as:<BR>
+Bit [Ch] = 0: Request has not completed for channel Ch<BR>
+Bit [Ch] = 1: Request has completed for the channel Ch<BR>
+<BR>
+Writing a 1 to individual bits would clear the corresponding bit. <BR>
+<BR>
+Write as:<BR>
+Bit [Ch] = 0: No effect.<BR>
+Bit [Ch] = 1: The corresponding [Ch] bit is cleared  and is set to 0</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0x0000 0000</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="DONEMASK"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">UDMA0</A>:DONEMASK</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 0520</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0x4002 0520</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0x4002 0520</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">Channel Request Done Mask</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">RW</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="DONEMASK_CHNLS">31:0</a>
+</TD>
+<TD class="cellBitfieldCol2">CHNLS</TD>
+<TD class="cellBitfieldCol3" colspan="3">Controls the propagation of the <A class="mmap_legend_link" href="../legend.html#uDMA">uDMA</A> done and active state to the assigned peripheral. Specifically used for software channels.<BR>
+<BR>
+Read as:<BR>
+Bit [Ch] = 0: <A class="mmap_legend_link" href="../legend.html#uDMA">uDMA</A> done and active state for channel Ch is not blocked from reaching to the peripherals. <BR>
+Note that the <A class="mmap_legend_link" href="../legend.html#uDMA">uDMA</A> done state for channel [Ch] is blocked from contributing to generation of combined <A class="mmap_legend_link" href="../legend.html#uDMA">uDMA</A> done signal<BR>
+<BR>
+Bit [Ch] = 1: <A class="mmap_legend_link" href="../legend.html#uDMA">uDMA</A> done and active state for channel Ch is blocked from reaching to the peripherals. <BR>
+Note that the <A class="mmap_legend_link" href="../legend.html#uDMA">uDMA</A> done state for channel [Ch] is not blocked from contributing to generation of combined <A class="mmap_legend_link" href="../legend.html#uDMA">uDMA</A> done signal <BR>
+<BR>
+Write as:<BR>
+Bit [Ch] = 0: Allows <A class="mmap_legend_link" href="../legend.html#uDMA">uDMA</A> done and active stat to propagate to the peripherals. <BR>
+Note that this disables <A class="mmap_legend_link" href="../legend.html#uDMA">uDMA</A> done state for channel [Ch] from contributing to generation of combined <A class="mmap_legend_link" href="../legend.html#uDMA">uDMA</A> done signal<BR>
+<BR>
+Bit [Ch] = 1: Blocks <A class="mmap_legend_link" href="../legend.html#uDMA">uDMA</A> done and active state to propagate to the peripherals. <BR>
+Note that this enables <A class="mmap_legend_link" href="../legend.html#uDMA">uDMA</A> done for  channel [Ch] to contribute to generation of combined <A class="mmap_legend_link" href="../legend.html#uDMA">uDMA</A> done signal.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0x0000 0000</TD>
+</TR>
+</TABLE>
+<BR>
+<BR>
+<hr><table class="footer"><tr><td>&copy; 2015 - 2016. Texas Instruments | All Rights Reserved</td></tr></table>
+</BODY>
+</HTML>

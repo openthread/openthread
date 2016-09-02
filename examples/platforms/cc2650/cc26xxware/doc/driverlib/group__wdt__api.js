@@ -1,0 +1,27 @@
+var group__wdt__api =
+[
+    [ "WatchdogEnable", "group__wdt__api.html#gae113a7becdc1b7c1f8a239dc57afce9b", null ],
+    [ "WatchdogIntClear", "group__wdt__api.html#ga971293bbb2ffa8b51fd64f1bbed864e5", null ],
+    [ "WatchdogIntEnable", "group__wdt__api.html#gaa6636b448859a27bcf8b84e1e1e09c4a", null ],
+    [ "WatchdogIntRegister", "group__wdt__api.html#ga94a331b34cb83fe539cd93538e950661", null ],
+    [ "WatchdogIntStatus", "group__wdt__api.html#gada67e02a5140a857bc0088e26ffb25db", null ],
+    [ "WatchdogIntTypeSet", "group__wdt__api.html#ga5c841429061882df0a8b9de8d298c9a8", null ],
+    [ "WatchdogIntUnregister", "group__wdt__api.html#ga26dc5e04fcf1376393acef5961a1d7e1", null ],
+    [ "WatchdogLock", "group__wdt__api.html#gab8153c665ef1fb3a622825528c60b2b7", null ],
+    [ "WatchdogLockState", "group__wdt__api.html#ga72961b84223770d2161a1434fec17560", null ],
+    [ "WatchdogReloadGet", "group__wdt__api.html#ga8ec4c237e56e52cb9bf1115fd94d26ba", null ],
+    [ "WatchdogReloadSet", "group__wdt__api.html#ga1719b5a42aba3f6d807123f4412fe1e9", null ],
+    [ "WatchdogResetDisable", "group__wdt__api.html#gac7ecda4c70ffc9b890ee8268d1e90ec8", null ],
+    [ "WatchdogResetEnable", "group__wdt__api.html#ga729ea3a239c2faffa1c36942b6b2268c", null ],
+    [ "WatchdogRunning", "group__wdt__api.html#ga51a4239068b89e6b021da569b3455693", null ],
+    [ "WatchdogStallDisable", "group__wdt__api.html#gaf8a97e9decce39170520c0dd8b50b48c", null ],
+    [ "WatchdogStallEnable", "group__wdt__api.html#ga65b18624b8cdd4469186f1aac8c3c774", null ],
+    [ "WatchdogUnlock", "group__wdt__api.html#ga20d576de81cce7956e83ca65a0f40a57", null ],
+    [ "WatchdogValueGet", "group__wdt__api.html#ga1949b7df005f1b9c76072b4b193e7948", null ],
+    [ "WATCHDOG_INT_TIMEOUT", "group__wdt__api.html#ga8f6b668a4dde2916a35b0480d798bd7a", null ],
+    [ "WATCHDOG_INT_TYPE_INT", "group__wdt__api.html#gae7e215eb72aa2eada7b3ceb7287aa863", null ],
+    [ "WATCHDOG_INT_TYPE_NMI", "group__wdt__api.html#gae54e5b952a55d60aa9fd5136e67592e7", null ],
+    [ "WATCHDOG_LOCK_LOCKED", "group__wdt__api.html#gaa6e34603838ce68ff7545e9e38dc951f", null ],
+    [ "WATCHDOG_LOCK_UNLOCK", "group__wdt__api.html#ga6de644e74c77e188f8d3f2606a8abd87", null ],
+    [ "WATCHDOG_LOCK_UNLOCKED", "group__wdt__api.html#ga55e264c808b3989740273d044358bf3a", null ]
+];

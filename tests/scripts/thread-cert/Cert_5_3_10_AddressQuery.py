@@ -76,7 +76,7 @@ class Cert_5_3_9_AddressQuery(unittest.TestCase):
         self.nodes[SED2].enable_whitelist()
 
     def tearDown(self):
-        for node in self.nodes.itervalues():
+        for node in list(self.nodes.values()):
             node.stop()
         del self.nodes
 
@@ -89,8 +89,8 @@ class Cert_5_3_9_AddressQuery(unittest.TestCase):
         time.sleep(3)
         self.assertEqual(self.nodes[BR].get_state(), 'router')
 
-        self.nodes[BR].add_prefix('2003::/64', 'pvcrs')
-        self.nodes[BR].add_prefix('2004::/64', 'pvcrs')
+        self.nodes[BR].add_prefix('2003::/64', 'paros')
+        self.nodes[BR].add_prefix('2004::/64', 'paros')
         self.nodes[BR].register_netdata()
 
         self.nodes[ROUTER2].start()

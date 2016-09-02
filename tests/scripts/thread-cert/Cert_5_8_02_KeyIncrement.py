@@ -52,7 +52,7 @@ class Cert_5_8_2_KeyIncrement(unittest.TestCase):
         self.nodes[ROUTER].enable_whitelist()
 
     def tearDown(self):
-        for node in self.nodes.itervalues():
+        for node in list(self.nodes.values()):
             node.stop()
         del self.nodes
 

@@ -33,8 +33,8 @@ AM_MAKEFLAGS                        = --no-print-directory
 AM_DISTCHECK_CONFIGURE_FLAGS        = \
     --enable-cli                      \
     --enable-ncp                      \
+    --enable-diag                     \
     --with-examples=posix             \
-    --enable-minimum-set-of-tests     \
     $(NULL)
 
 SUBDIRS                             = \
@@ -43,11 +43,13 @@ SUBDIRS                             = \
     third_party                       \
     examples                          \
     tests                             \
+    tools                             \
     doc                               \
     $(NULL)
 
 EXTRA_DIST                          = \
-    .astyle-opts                      \
+    .astyle/astyle-opts               \
+    .astyle/astyle-wrap.sh            \
     .default-version                  \
     bootstrap                         \
     bootstrap-configure               \
@@ -73,6 +75,7 @@ PRETTY_SUBDIRS                      = \
     include                           \
     src                               \
     tests                             \
+    tools                             \
     $(NULL)
 
 #

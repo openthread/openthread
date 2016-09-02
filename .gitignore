@@ -3,6 +3,7 @@
 *.gcno
 *.log
 *.o
+*.orig
 *.pyc
 *.trs
 *~
@@ -12,6 +13,7 @@
 .local-version
 aclocal.m4
 autom4te.cache
+build
 configure
 config.log
 config.status
@@ -23,3 +25,4 @@ include/stamp-h1
 libtool
 Makefile
 Makefile.in
+output

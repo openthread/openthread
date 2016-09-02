@@ -35,7 +35,9 @@
 #define NETWORK_DATA_HPP_
 
 #include <openthread-types.h>
+#include <net/udp6.hpp>
 #include <thread/lowpan.hpp>
+#include <thread/mle_router.hpp>
 #include <thread/network_data_tlvs.hpp>
 
 namespace Thread {
@@ -91,7 +93,7 @@ public:
      * This constructor initializes the object.
      *
      */
-    NetworkData(void);
+    NetworkData(ThreadNetif &aThreadNetif);
 
     /**
      * This method provides a full or stable copy of the Thread Network Data.
@@ -102,6 +104,18 @@ public:
      *                             On exit, number of copied bytes.
      */
     void GetNetworkData(bool aStable, uint8_t *aData, uint8_t &aDataLength);
+
+    /**
+     * This method provides the next On Mesh prefix in the Thread Network Data.
+     *
+     * @param[out]  aIterator  A pointer to the Network Data iterator context.
+     * @param[out]  aConfig    A pointer to where the On Mesh Prefix information will be placed.
+     *
+     * @retval kThreadError_None      Successfully found the next On Mesh prefix.
+     * @retval kThreadError_NotFound  No subsequent On Mesh prefix exists in the Thread Network Data.
+     *
+     */
+    ThreadError GetNextOnMeshPrefix(otNetworkDataIterator *aIterator, otBorderRouterConfig *aConfig);
 
 protected:
     /**
@@ -236,8 +250,30 @@ protected:
      */
     int8_t PrefixMatch(const uint8_t *a, const uint8_t *b, uint8_t aLength);
 
+    /**
+     * This method sends a Server Data Notification message to the Leader.
+     *
+     * @param[in]  aLocal   TRUE if notifying Leader of local network data, FALSE otherwise.
+     * @param[in]  aRloc16  The old RLOC16 value that was previously registered.
+     *
+     * @retval kThreadError_None    Successfully enqueued the notification message.
+     * @retval kThreadError_NoBufs  Insufficient message buffers to generate the notification message.
+     *
+     */
+    ThreadError SendServerDataNotification(bool aLocal, uint16_t aRloc16);
+
     uint8_t mTlvs[kMaxSize];  ///< The Network Data buffer.
     uint8_t mLength;          ///< The number of valid bytes in @var mTlvs.
+
+    Mle::MleRouter &mMle;
+
+private:
+    static void HandleUdpReceive(void *aContext, otMessage aMessage, const otMessageInfo *aMessageInfo);
+    void HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+
+    Ip6::UdpSocket  mSocket;
+    uint8_t         mCoapToken[2];
+    uint16_t        mCoapMessageId;
 };
 
 }  // namespace NetworkData

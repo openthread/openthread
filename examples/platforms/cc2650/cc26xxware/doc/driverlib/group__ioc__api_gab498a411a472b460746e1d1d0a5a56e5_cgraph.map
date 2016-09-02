@@ -1,0 +1,4 @@
+<map id="IOCPinTypeGpioOutput" name="IOCPinTypeGpioOutput">
+<area shape="rect" id="node2" href="$group__ioc__api.html#gaa37e353181d0457f3b56ddd541c6eb0a" title="Set the configuration of an IO port. " alt="" coords="235,5,388,32"/>
+<area shape="rect" id="node3" href="$group__gpio__api.html#gae401f752bc685e43c28dda4b1982351c" title="Sets output enable of a specific DIO. " alt="" coords="217,56,405,83"/>
+</map>

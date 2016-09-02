@@ -69,9 +69,19 @@ int Whitelist::GetMaxEntries(void) const
     return kMaxEntries;
 }
 
-const Whitelist::Entry *Whitelist::GetEntries(void) const
+ThreadError Whitelist::GetEntry(uint8_t aIndex, Entry &aEntry) const
 {
-    return mWhitelist;
+    ThreadError error = kThreadError_None;
+
+    VerifyOrExit(aIndex < kMaxEntries, error = kThreadError_InvalidArgs);
+
+    memcpy(&aEntry.mExtAddress, &mWhitelist[aIndex].mExtAddress, sizeof(aEntry.mExtAddress));
+    aEntry.mRssi = mWhitelist[aIndex].mRssi;
+    aEntry.mValid = mWhitelist[aIndex].mValid;
+    aEntry.mFixedRssi = mWhitelist[aIndex].mFixedRssi;
+
+exit:
+    return error;
 }
 
 Whitelist::Entry *Whitelist::Add(const ExtAddress &address)
@@ -87,9 +97,9 @@ Whitelist::Entry *Whitelist::Add(const ExtAddress &address)
             continue;
         }
 
-        memcpy(&mWhitelist[i], &address, sizeof(mWhitelist[i]));
+        memcpy(&mWhitelist[i].mExtAddress, &address, sizeof(mWhitelist[i].mExtAddress));
         mWhitelist[i].mValid = true;
-        mWhitelist[i].mConstantRssi = false;
+        mWhitelist[i].mFixedRssi = false;
         ExitNow(rval = &mWhitelist[i]);
     }
 
@@ -137,25 +147,25 @@ exit:
     return rval;
 }
 
-void Whitelist::ClearConstantRssi(Entry &aEntry)
+void Whitelist::ClearFixedRssi(Entry &aEntry)
 {
-    aEntry.mConstantRssi = false;
+    aEntry.mFixedRssi = false;
 }
 
-ThreadError Whitelist::GetConstantRssi(Entry &aEntry, int8_t &rssi) const
+ThreadError Whitelist::GetFixedRssi(Entry &aEntry, int8_t &rssi) const
 {
     ThreadError error = kThreadError_None;
 
-    VerifyOrExit(aEntry.mValid && aEntry.mConstantRssi, error = kThreadError_Error);
+    VerifyOrExit(aEntry.mValid && aEntry.mFixedRssi, error = kThreadError_Error);
     rssi = aEntry.mRssi;
 
 exit:
     return error;
 }
 
-void Whitelist::SetConstantRssi(Entry &aEntry, int8_t aRssi)
+void Whitelist::SetFixedRssi(Entry &aEntry, int8_t aRssi)
 {
-    aEntry.mConstantRssi = true;
+    aEntry.mFixedRssi = true;
     aEntry.mRssi = aRssi;
 }
 

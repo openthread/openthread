@@ -97,6 +97,7 @@ ThreadError Encoder::Finalize(uint8_t *aOutBuf, uint16_t &aOutLength)
     aOutLength = 0;
 
 exit:
+    (void)aOutBuf;
     return error;
 }
 
@@ -131,7 +132,7 @@ void Decoder::Decode(const uint8_t *aInBuf, uint16_t aInLength)
             break;
 
         case kStateNeedLenH:
-            mReadLength = (byte << 8);
+            mReadLength = static_cast<uint16_t>(byte << 8);
             mState = kStateNeedLenL;
             break;
 

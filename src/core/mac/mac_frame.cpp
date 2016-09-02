@@ -51,7 +51,7 @@ ThreadError Frame::InitMacHeader(uint16_t aFcf, uint8_t aSecurityControl)
     uint8_t length = 0;
 
     // Frame Control Field
-    bytes[0] = aFcf;
+    bytes[0] = aFcf & 0xff;
     bytes[1] = aFcf >> 8;
     length += kFcfSize;
 
@@ -214,7 +214,7 @@ void Frame::SetSequence(uint8_t aSequence)
 uint8_t *Frame::FindDstPanId(void)
 {
     uint8_t *cur = GetPsdu();
-    uint16_t fcf = (static_cast<uint16_t>(GetPsdu()[1]) << 8) | GetPsdu()[0];
+    uint16_t fcf = static_cast<uint16_t>((GetPsdu()[1] << 8) | GetPsdu()[0]);
 
     VerifyOrExit((fcf & Frame::kFcfDstAddrMask) != Frame::kFcfDstAddrNone, cur = NULL);
 
@@ -234,7 +234,7 @@ ThreadError Frame::GetDstPanId(PanId &aPanId)
 
     VerifyOrExit((buf = FindDstPanId()) != NULL, error = kThreadError_Parse);
 
-    aPanId = (static_cast<uint16_t>(buf[1]) << 8) | buf[0];
+    aPanId = static_cast<uint16_t>((buf[1] << 8) | buf[0]);
 
 exit:
     return error;
@@ -247,7 +247,7 @@ ThreadError Frame::SetDstPanId(PanId aPanId)
     buf = FindDstPanId();
     assert(buf != NULL);
 
-    buf[0] = aPanId;
+    buf[0] = aPanId & 0xff;
     buf[1] = aPanId >> 8;
 
     return kThreadError_None;
@@ -271,7 +271,7 @@ ThreadError Frame::GetDstAddr(Address &aAddress)
 {
     ThreadError error = kThreadError_None;
     uint8_t *buf;
-    uint16_t fcf = (static_cast<uint16_t>(GetPsdu()[1]) << 8) | GetPsdu()[0];
+    uint16_t fcf = static_cast<uint16_t>((GetPsdu()[1] << 8) | GetPsdu()[0]);
 
     VerifyOrExit(buf = FindDstAddr(), error = kThreadError_Parse);
 
@@ -279,7 +279,7 @@ ThreadError Frame::GetDstAddr(Address &aAddress)
     {
     case Frame::kFcfDstAddrShort:
         aAddress.mLength = sizeof(ShortAddress);
-        aAddress.mShortAddress = (static_cast<uint16_t>(buf[1]) << 8) | buf[0];
+        aAddress.mShortAddress = static_cast<uint16_t>((buf[1] << 8) | buf[0]);
         break;
 
     case Frame::kFcfDstAddrExt:
@@ -304,14 +304,14 @@ exit:
 ThreadError Frame::SetDstAddr(ShortAddress aShortAddress)
 {
     uint8_t *buf;
-    uint16_t fcf = (static_cast<uint16_t>(GetPsdu()[1]) << 8) | GetPsdu()[0];
+    uint16_t fcf = static_cast<uint16_t>((GetPsdu()[1] << 8) | GetPsdu()[0]);
 
     assert((fcf & Frame::kFcfDstAddrMask) == Frame::kFcfDstAddrShort);
 
     buf = FindDstAddr();
     assert(buf != NULL);
 
-    buf[0] = aShortAddress;
+    buf[0] = aShortAddress & 0xff;
     buf[1] = aShortAddress >> 8;
 
     return kThreadError_None;
@@ -320,7 +320,7 @@ ThreadError Frame::SetDstAddr(ShortAddress aShortAddress)
 ThreadError Frame::SetDstAddr(const ExtAddress &aExtAddress)
 {
     uint8_t *buf;
-    uint16_t fcf = (static_cast<uint16_t>(GetPsdu()[1]) << 8) | GetPsdu()[0];
+    uint16_t fcf = static_cast<uint16_t>((GetPsdu()[1] << 8) | GetPsdu()[0]);
 
     assert((fcf & Frame::kFcfDstAddrMask) == Frame::kFcfDstAddrExt);
 
@@ -338,7 +338,7 @@ ThreadError Frame::SetDstAddr(const ExtAddress &aExtAddress)
 uint8_t *Frame::FindSrcPanId(void)
 {
     uint8_t *cur = GetPsdu();
-    uint16_t fcf = (static_cast<uint16_t>(GetPsdu()[1]) << 8) | GetPsdu()[0];
+    uint16_t fcf = static_cast<uint16_t>((GetPsdu()[1] << 8) | GetPsdu()[0]);
 
     VerifyOrExit((fcf & Frame::kFcfDstAddrMask) != Frame::kFcfDstAddrNone ||
                  (fcf & Frame::kFcfSrcAddrMask) != Frame::kFcfSrcAddrNone, cur = NULL);
@@ -374,7 +374,7 @@ ThreadError Frame::GetSrcPanId(PanId &aPanId)
 
     VerifyOrExit((buf = FindSrcPanId()) != NULL, error = kThreadError_Parse);
 
-    aPanId = (static_cast<uint16_t>(buf[1]) << 8) | buf[0];
+    aPanId = static_cast<uint16_t>((buf[1] << 8) | buf[0]);
 
 exit:
     return error;
@@ -382,21 +382,22 @@ exit:
 
 ThreadError Frame::SetSrcPanId(PanId aPanId)
 {
+    ThreadError error = kThreadError_None;
     uint8_t *buf;
 
-    buf = FindSrcPanId();
-    assert(buf != NULL);
+    VerifyOrExit((buf = FindSrcPanId()) != NULL, error = kThreadError_Parse);
 
-    buf[0] = aPanId;
+    buf[0] = aPanId & 0xff;
     buf[1] = aPanId >> 8;
 
-    return kThreadError_None;
+exit:
+    return error;
 }
 
 uint8_t *Frame::FindSrcAddr(void)
 {
     uint8_t *cur = GetPsdu();
-    uint16_t fcf = (static_cast<uint16_t>(GetPsdu()[1]) << 8) | GetPsdu()[0];
+    uint16_t fcf = static_cast<uint16_t>((GetPsdu()[1] << 8) | GetPsdu()[0]);
 
     // Frame Control Field
     cur += kFcfSize;
@@ -428,7 +429,7 @@ ThreadError Frame::GetSrcAddr(Address &address)
 {
     ThreadError error = kThreadError_None;
     uint8_t *buf;
-    uint16_t fcf = (static_cast<uint16_t>(GetPsdu()[1]) << 8) | GetPsdu()[0];
+    uint16_t fcf = static_cast<uint16_t>((GetPsdu()[1] << 8) | GetPsdu()[0]);
 
     VerifyOrExit((buf = FindSrcAddr()) != NULL, error = kThreadError_Parse);
 
@@ -436,7 +437,7 @@ ThreadError Frame::GetSrcAddr(Address &address)
     {
     case Frame::kFcfSrcAddrShort:
         address.mLength = sizeof(ShortAddress);
-        address.mShortAddress = (static_cast<uint16_t>(buf[1]) << 8) | buf[0];;
+        address.mShortAddress = static_cast<uint16_t>((buf[1] << 8) | buf[0]);
         break;
 
     case Frame::kFcfSrcAddrExt:
@@ -461,14 +462,14 @@ exit:
 ThreadError Frame::SetSrcAddr(ShortAddress aShortAddress)
 {
     uint8_t *buf;
-    uint16_t fcf = (static_cast<uint16_t>(GetPsdu()[1]) << 8) | GetPsdu()[0];
+    uint16_t fcf = static_cast<uint16_t>((GetPsdu()[1] << 8) | GetPsdu()[0]);
 
     assert((fcf & Frame::kFcfSrcAddrMask) == Frame::kFcfSrcAddrShort);
 
     buf = FindSrcAddr();
     assert(buf != NULL);
 
-    buf[0] = aShortAddress;
+    buf[0] = aShortAddress & 0xff;
     buf[1] = aShortAddress >> 8;
 
     return kThreadError_None;
@@ -477,7 +478,7 @@ ThreadError Frame::SetSrcAddr(ShortAddress aShortAddress)
 ThreadError Frame::SetSrcAddr(const ExtAddress &aExtAddress)
 {
     uint8_t *buf;
-    uint16_t fcf = (static_cast<uint16_t>(GetPsdu()[1]) << 8) | GetPsdu()[0];
+    uint16_t fcf = static_cast<uint16_t>((GetPsdu()[1] << 8) | GetPsdu()[0]);
 
     assert((fcf & Frame::kFcfSrcAddrMask) == Frame::kFcfSrcAddrExt);
 
@@ -495,7 +496,7 @@ ThreadError Frame::SetSrcAddr(const ExtAddress &aExtAddress)
 uint8_t *Frame::FindSecurityHeader(void)
 {
     uint8_t *cur = GetPsdu();
-    uint16_t fcf = (static_cast<uint16_t>(GetPsdu()[1]) << 8) | GetPsdu()[0];
+    uint16_t fcf = static_cast<uint16_t>((GetPsdu()[1] << 8) | GetPsdu()[0]);
 
     VerifyOrExit((fcf & Frame::kFcfSecurityEnabled) != 0, cur = NULL);
 
@@ -584,10 +585,10 @@ ThreadError Frame::SetFrameCounter(uint32_t aFrameCounter)
     // Security Control
     buf += kSecurityControlSize;
 
-    buf[0] = aFrameCounter;
-    buf[1] = aFrameCounter >> 8;
-    buf[2] = aFrameCounter >> 16;
-    buf[3] = aFrameCounter >> 24;
+    buf[0] = aFrameCounter & 0xff;
+    buf[1] = (aFrameCounter >> 8) & 0xff;
+    buf[2] = (aFrameCounter >> 16) & 0xff;
+    buf[3] = (aFrameCounter >> 24) & 0xff;
 
     return kThreadError_None;
 }
@@ -660,7 +661,7 @@ ThreadError Frame::SetLength(uint8_t aLength)
 
 uint8_t Frame::GetHeaderLength(void)
 {
-    return GetPayload() - GetPsdu();
+    return static_cast<uint8_t>(GetPayload() - GetPsdu());
 }
 
 uint8_t Frame::GetFooterLength(void)
@@ -724,7 +725,7 @@ uint8_t *Frame::GetHeader(void)
 uint8_t *Frame::GetPayload(void)
 {
     uint8_t *cur = GetPsdu();
-    uint16_t fcf = (static_cast<uint16_t>(GetPsdu()[1]) << 8) | GetPsdu()[0];
+    uint16_t fcf = static_cast<uint16_t>((GetPsdu()[1] << 8) | GetPsdu()[0]);
     uint8_t securityControl;
 
     // Frame Control

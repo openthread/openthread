@@ -39,6 +39,7 @@
 #include <common/timer.hpp>
 #include <mac/mac_frame.hpp>
 #include <mac/mac_whitelist.hpp>
+#include <mac/mac_blacklist.hpp>
 #include <platform/radio.h>
 #include <thread/key_manager.hpp>
 #include <thread/topology.hpp>
@@ -78,7 +79,7 @@ enum
     kDataPollTimeout      = 100,                   ///< Timeout for receiving Data Frame (milliseconds).
     kNonceSize            = 13,                    ///< Size of IEEE 802.15.4 Nonce (bytes).
 
-    kScanChannelsAll      = 0xffff,                ///< All channels.
+    kScanChannelsAll      = OT_CHANNEL_ALL,        ///< All channels.
     kScanDurationDefault  = 200,                   ///< Default interval between channels (milliseconds).
 };
 
@@ -207,7 +208,7 @@ public:
      * @param[in]  aContext       A pointer to arbitrary context information.
      *
      */
-    ThreadError ActiveScan(uint16_t aScanChannels, uint16_t aScanDuration, ActiveScanHandler aHandler, void *aContext);
+    ThreadError ActiveScan(uint32_t aScanChannels, uint16_t aScanDuration, ActiveScanHandler aHandler, void *aContext);
 
     /**
      * This method indicates whether or not rx-on-when-idle is enabled.
@@ -302,6 +303,22 @@ public:
     ThreadError SetChannel(uint8_t aChannel);
 
     /**
+     * This method returns the maximum transmit power in dBm.
+     *
+     * @returns  The maximum transmit power in dBm.
+     *
+     */
+    int8_t GetMaxTransmitPower(void) const;
+
+    /**
+     * This method sets the maximum transmit power in dBm.
+     *
+     * @param[in]  aPower  The maximum transmit power in dBm.
+     *
+     */
+    void SetMaxTransmitPower(int8_t aPower);
+
+    /**
      * This method returns the IEEE 802.15.4 Network Name.
      *
      * @returns A pointer to the IEEE 802.15.4 Network Name.
@@ -364,6 +381,14 @@ public:
     Whitelist &GetWhitelist(void);
 
     /**
+     * This method returns the MAC blacklist filter.
+     *
+     * @returns A reference to the MAC blacklist filter.
+     *
+     */
+    Blacklist &GetBlacklist(void);
+
+    /**
      * This method is called to handle receive events.
      *
      * @param[in]  aFrame  A pointer to the received frame, or NULL if the receive operation aborted.
@@ -394,11 +419,12 @@ public:
     /**
      * This function registers a callback to provide received raw IEEE 802.15.4 frames.
      *
-     * @param[in]  aPcapCallback  A pointer to a function that is called when receiving an IEEE 802.15.4 link frame or
-     *                            NULL to disable the callback.
+     * @param[in]  aPcapCallback     A pointer to a function that is called when receiving an IEEE 802.15.4 link frame or
+     *                               NULL to disable the callback.
+     * @param[in]  aCallbackContext  A pointer to application-specific context.
      *
      */
-    void SetPcapCallback(otLinkPcapCallback aPcapCallback);
+    void SetPcapCallback(otLinkPcapCallback aPcapCallback, void *aCallbackContext);
 
     /**
      * This function indicates whether or not promiscuous mode is enabled at the link layer.
@@ -461,8 +487,10 @@ private:
     ShortAddress mShortAddress;
     PanId mPanId;
     uint8_t mChannel;
+    int8_t mMaxTransmitPower;
 
-    Beacon mBeacon;
+    otNetworkName mNetworkName;
+    otExtendedPanId mExtendedPanId;
 
     Sender *mSendHead, *mSendTail;
     Receiver *mReceiveHead, *mReceiveTail;
@@ -485,14 +513,16 @@ private:
 
     bool mActiveScanRequest;
     uint8_t mScanChannel;
-    uint16_t mScanChannels;
+    uint32_t mScanChannels;
     uint16_t mScanDuration;
     ActiveScanHandler mActiveScanHandler;
     void *mActiveScanContext;
 
     otLinkPcapCallback mPcapCallback;
+    void *mPcapCallbackContext;
 
     Whitelist mWhitelist;
+    Blacklist mBlacklist;
 
     otMacCounters mCounters;
 };

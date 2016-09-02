@@ -1,0 +1,5 @@
+<map id="SafeHapiAuxAdiSelect" name="SafeHapiAuxAdiSelect">
+<area shape="rect" id="node2" href="$group__cpu__api.html#ga491d851c4f7fff1f9f66aa778b0671b0" title="Disable all external interrupts. " alt="" coords="217,5,300,32"/>
+<area shape="rect" id="node4" href="$group__cpu__api.html#ga6922d401cbc951632f495ffcf2e71dfc" title="Enable all external interrupts. " alt="" coords="217,56,300,83"/>
+<area shape="rect" id="node3" href="$cpu_8c.html#a9d29df169acb9be94306e8b58faed3ee" title="Provide a small delay. " alt="" coords="348,31,412,57"/>
+</map>

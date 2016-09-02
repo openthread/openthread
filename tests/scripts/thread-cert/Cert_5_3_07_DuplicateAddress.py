@@ -81,7 +81,7 @@ class Cert_5_3_7_DuplicateAddress(unittest.TestCase):
         self.nodes[ED3].enable_whitelist()
 
     def tearDown(self):
-        for node in self.nodes.itervalues():
+        for node in list(self.nodes.values()):
             node.stop()
         del self.nodes
 
@@ -110,7 +110,7 @@ class Cert_5_3_7_DuplicateAddress(unittest.TestCase):
         time.sleep(3)
         self.assertEqual(self.nodes[ED3].get_state(), 'child')
 
-        self.nodes[ROUTER2].add_prefix('2001::/64', 'pvcrs')
+        self.nodes[ROUTER2].add_prefix('2001::/64', 'paros')
         self.nodes[ROUTER2].register_netdata()
 
         self.nodes[ED1].add_ipaddr('2001::1')

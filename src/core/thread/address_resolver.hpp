@@ -79,6 +79,18 @@ public:
     void Clear(void);
 
     /**
+     * This method gets an EID cache entry.
+     *
+     * @param[in]   aIndex  An index into the EID cache table.
+     * @param[out]  aEntry  A pointer to where the EID information is placed.
+     *
+     * @retval kThreadError_None         Successfully retreieved the EID cache entry.
+     * @retval kThreadError_InvalidArgs  @p aIndex was out of bounds or @p aEntry was NULL.
+     *
+     */
+    ThreadError GetEntry(uint8_t aIndex, otEidCacheEntry &aEntry) const;
+
+    /**
      * This method removes a Router ID from the EID-to-RLOC cache.
      *
      * @param[in]  aRouterId  The Router ID.
@@ -113,13 +125,14 @@ private:
     {
         kAddressQueryTimeout = 3,             ///< ADDRESS_QUERY_TIMEOUT (seconds)
         kAddressQueryInitialRetryDelay = 15,  ///< ADDRESS_QUERY_INITIAL_RETRY_DELAY (seconds)
-        kAddressQueryMaxRetryDelay = 480,     ///< ADDRESS_QUERY_MAX_RETRY_DELAY (seconds)
+        kAddressQueryMaxRetryDelay = 28800,   ///< ADDRESS_QUERY_MAX_RETRY_DELAY (seconds)
     };
 
     struct Cache
     {
         Ip6::Address      mTarget;
         uint8_t           mMeshLocalIid[Ip6::Address::kInterfaceIdentifierSize];
+        uint32_t          mLastTransactionTime;
         Mac::ShortAddress mRloc16;
         uint16_t          mRetryTimeout;
         uint8_t           mTimeout;
@@ -140,7 +153,8 @@ private:
     void SendAddressQueryResponse(const ThreadTargetTlv &aTargetTlv, const ThreadMeshLocalEidTlv &aMlEidTlv,
                                   const ThreadLastTransactionTimeTlv *aLastTransactionTimeTlv,
                                   const Ip6::Address &aDestination);
-    void SendAddressNotificationResponse(const Coap::Header &aRequestHeader, const Ip6::MessageInfo &aMessageInfo);
+    void SendAddressErrorResponse(const Coap::Header &aRequestHeader, const Ip6::MessageInfo &aRequestInfo);
+    void SendAddressNotificationResponse(const Coap::Header &aRequestHeader, const Ip6::MessageInfo &aRequestInfo);
 
     static void HandleUdpReceive(void *aContext, otMessage aMessage, const otMessageInfo *aMessageInfo);
 
@@ -168,7 +182,6 @@ private:
     Coap::Resource mAddressNotification;
     Cache mCache[kCacheEntries];
     uint16_t mCoapMessageId;
-    uint8_t mCoapToken[2];
     Ip6::IcmpHandler mIcmpHandler;
     Ip6::UdpSocket mSocket;
     Timer mTimer;

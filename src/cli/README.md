@@ -1,40 +1,112 @@
 # OpenThread CLI Reference
 
 The OpenThread CLI exposes configuration and management APIs via a
-command line interface.  This CLI may be used to play with OpenThread
-and may be used along side additional application code.  The
-OpenThread test scripts use this CLI to execute test cases.
+command line interface. Use the CLI to play with OpenThread, which 
+can also be used with additional application code. The
+OpenThread test scripts use the CLI to execute test cases.
 
 ## OpenThread Command List
 
 * [channel](#channel)
+* [blacklist](#blacklist)
+* [child](#child)
 * [childtimeout](#childtimeout)
 * [contextreusedelay](#contextreusedelay)
+* [counter](#counter)
+* [discover](#discover)
+* [eidcache](#eidcache)
 * [extaddr](#extaddr)
 * [extpanid](#extpanid)
+* [ifconfig](#ifconfig)
 * [ipaddr](#ipaddr)
 * [keysequence](#keysequence)
+* [leaderpartitionid](#leaderpartitionid)
 * [leaderweight](#leaderweight)
+* [linkquality](#linkquality)
 * [masterkey](#masterkey)
 * [mode](#mode)
 * [netdataregister](#netdataregister)
 * [networkidtimeout](#networkidtimeout)
 * [networkname](#networkname)
 * [panid](#panid)
+* [parent](#parent)
 * [ping](#ping)
+* [pollperiod](#pollperiod)
 * [prefix](#prefix)
+* [promiscuous](#promiscuous)
 * [releaserouterid](#releaserouterid)
+* [reset](#reset)
 * [rloc16](#rloc16)
 * [route](#route)
+* [router](#router)
+* [routerrole](#routerrole)
 * [routerupgradethreshold](#routerupgradethreshold)
 * [scan](#scan)
-* [start](#start)
+* [singleton](#singleton)
 * [state](#state)
-* [stop](#stop)
+* [thread](#thread)
+* [version](#version)
 * [whitelist](#whitelist)
+* [diag](#diag)
 
 ## OpenThread Command Details
 
+### blacklist
+
+List the blacklist entries.
+
+```bash
+> blacklist
+Enabled
+166e0a0000000002
+166e0a0000000003
+Done
+```
+
+### blacklist add \<extaddr\>
+
+Add an IEEE 802.15.4 Extended Address to the blacklist.
+
+```bash
+> blacklist add 166e0a0000000002
+Done
+```
+
+### blacklist clear
+
+Clear all entries from the blacklist.
+
+```bash
+> blacklist clear
+Done
+```
+
+### blacklist disable
+
+Disable MAC blacklist filtering.
+
+```bash
+> blacklist disable
+Done
+```
+
+### blacklist enable
+
+Enable MAC blacklist filtering.
+
+```bash
+> blacklist enable
+Done
+```
+
+### blacklist remove \<extaddr\>
+
+Remove an IEEE 802.15.4 Extended Address from the blacklist.
+
+```bash
+> blacklist remove 166e0a0000000002
+Done
+```
 ### channel
 
 Get the IEEE 802.15.4 Channel value.
@@ -51,6 +123,34 @@ Set the IEEE 802.15.4 Channel value.
 
 ```bash
 > channel 11
+Done
+```
+
+### child list
+
+List attached Child IDs
+
+```bash
+> child list
+1 2 3 6 7 8
+Done
+```
+
+### child \<id\>
+
+Print diagnostic information for an attached Thread Child.  The `id` may be a Child ID or an RLOC16.
+
+```bash
+> child 1
+Child ID: 1
+Rloc: 9c01
+Ext Addr: e2b3540590b0fd87
+Mode: rsn
+Net Data: 184
+Timeout: 100
+Age: 0
+LQI: 3
+RSSI: -20
 Done
 ```
 
@@ -92,13 +192,91 @@ Set the CONTEXT_ID_REUSE_DELAY value.
 Done
 ```
 
+### counter
+
+Get the supported counter names.
+
+```bash
+>counter
+mac
+Done
+```
+
+### counter \<countername\>
+
+Get the counter value.
+
+```bash
+>counter mac
+TxTotal: 10
+    TxAckRequested: 4
+    TxAcked: 4
+    TxNoAckRequested: 6
+    TxData: 10
+    TxDataPoll: 0
+    TxBeacon: 0
+    TxBeaconRequest: 0
+    TxOther: 0
+    TxRetry: 0
+    TxErrCca: 0
+RxTotal: 11
+    RxData: 11
+    RxDataPoll: 0
+    RxBeacon: 0
+    RxBeaconRequest: 0
+    RxOther: 0
+    RxWhitelistFiltered: 0
+    RxDestAddrFiltered: 0
+    RxErrNoFrame: 0
+    RxErrNoUnknownNeighbor: 0
+    RxErrInvalidSrcAddr: 0
+    RxErrSec: 0
+    RxErrFcs: 0
+    RxErrOther: 0
+```
+
+### discover \[channel\]
+
+Perform an MLE Discovery operation.
+
+* channel: The channel to discover on.  If no channel is provided, the discovery will cover all valid channels.
+
+```bash
+> discover
+| J | Network Name     | Extended PAN     | PAN  | MAC Address      | Ch | dBm | LQI |
++---+------------------+------------------+------+------------------+----+-----+-----+
+| 0 | OpenThread       | dead00beef00cafe | ffff | f1d92a82c8d8fe43 | 11 | -20 |   0 |
+Done
+```
+
+### eidcache
+
+Print the EID-to-RLOC cache entries.
+
+```bash
+> eidcache
+fdde:ad00:beef:0:bb1:ebd6:ad10:f33 ac00
+fdde:ad00:beef:0:110a:e041:8399:17cd 6000
+Done
+```
+
 ### extaddr
 
 Get the IEEE 802.15.4 Extended Address.
 
 ```bash
 > extaddr
-0xdead00beef00cafe
+dead00beef00cafe
+Done
+```
+
+### extaddr \<extaddr\>
+
+Set the IEEE 802.15.4 Extended Address.
+
+```bash
+> extaddr dead00beef00cafe
+dead00beef00cafe
 Done
 ```
 
@@ -108,7 +286,7 @@ Get the Thread Extended PAN ID value.
 
 ```bash
 > extpanid
-0xdead00beef00cafe
+dead00beef00cafe
 Done
 ```
 
@@ -118,6 +296,34 @@ Set the Thread Extended PAN ID value.
 
 ```bash
 > extpanid dead00beef00cafe
+Done
+```
+
+### ifconfig up
+
+Bring up the IPv6 interface.
+
+```bash
+> ifconfig up
+Done
+```
+
+### ifconfig down
+
+Bring down the IPv6 interface.
+
+```bash
+> ifconfig down
+Done
+```
+
+### ifconfig
+
+Show the status of the IPv6 interface.
+
+```bash
+> ifconfig
+down
 Done
 ```
 
@@ -171,6 +377,25 @@ Set the Thread Key Sequence.
 Done
 ```
 
+### leaderpartitionid
+
+Get the Thread Leader Partition ID.
+
+```bash
+> leaderpartitionid
+4294967295
+Done
+```
+
+### leaderpartitionid \<partitionid>\
+
+Set the Thread Leader Partition ID.
+
+```bash
+> leaderpartitionid 0xffffffff
+Done
+```
+
 ### leaderweight
 
 Get the Thread Leader Weight.
@@ -187,6 +412,25 @@ Set the Thread Leader Weight.
 
 ```bash
 > leaderweight 128
+Done
+```
+
+### linkquality \<extaddr>\
+
+Get the link quality on the link to a given extended address.
+
+```bash
+> linkquality 36c1dd7a4f5201ff
+3
+Done
+```
+
+### linkquality \<extaddr>\ \<linkquality>\
+
+Set the link quality on the link to a given extended address.
+
+```bash
+> linkquality 36c1dd7a4f5201ff 3
 Done
 ```
 
@@ -214,7 +458,7 @@ Done
 Get the Thread Device Mode value.
 
 * r: rx-on-when-idle
-* s: Secure IEEE 802.15.4 Data Requests
+* s: Secure IEEE 802.15.4 data requests
 * d: Full Function Device
 * n: Full Network Data
 
@@ -229,7 +473,7 @@ Done
 Set the Thread Device Mode value.
 
 * r: rx-on-when-idle
-* s: Secure IEEE 802.15.4 Data Requests
+* s: Secure IEEE 802.15.4 data requests
 * d: Full Function Device
 * n: Full Network Data
 
@@ -304,46 +548,113 @@ Set the IEEE 802.15.4 PAN ID value.
 Done
 ```
 
-### ping \<ipaddr\> [size]
+### parent
+
+Get the diagnostic information for a Thread Router as parent.
+
+```bash
+> parent
+Ext Addr: be1857c6c21dce55
+Rloc: 5c00
+Done
+```
+
+### ping \<ipaddr\> [size] [count] [interval]
 
 Send an ICMPv6 Echo Request.
 
 ```bash
 > ping fdde:ad00:beef:0:558:f56b:d688:799
-16 bytes from fdde:ad00:beef:0:558:f56b:d688:799: icmp_seq=1 hlim=64
+16 bytes from fdde:ad00:beef:0:558:f56b:d688:799: icmp_seq=1 hlim=64 time=28ms
+```
+
+### pollperiod
+
+Get the customized data poll period of sleepy end device (seconds). Only for certification test
+
+```bash
+> pollperiod
+0
+Done
+```
+
+### pollperiod \<pollperiod>\
+
+Set the customized data poll period for sleepy end device (seconds). Only for certification test
+
+```bash
+> pollperiod 10
+Done
 ```
 
 ### prefix add \<prefix\> [pvdcsr] [prf]
 
 Add a valid prefix to the Network Data.
 
-* p: Stateless IPv6 Address Autoconfiguration Preferred flag
-* v: Stateless IPv6 Address Autoconfiguration Valid flag
+* p: Preferred flag
+* a: Stateless IPv6 Address Autoconfiguration flag
 * d: DHCPv6 IPv6 Address Configuration flag
 * c: DHCPv6 Other Configuration flag
-* s: Stable flag
 * r: Default Route flag
-* prf: Default router preference, which may be: 'high', 'med', or 'low'.
+* o: On Mesh flag
+* s: Stable flag
+* prf: Default router preference, which may be 'high', 'med', or 'low'.
 
 ```bash
-> prefix add 2001:dead:beef:cafe::/64 pvsr 0
+> prefix add 2001:dead:beef:cafe::/64 paros med
 Done
 ```
 
 ### prefix remove \<prefix\>
 
-Invalidate a prefix in the network data.
+Invalidate a prefix in the Network Data.
 
 ```bash
 > prefix remove 2001:dead:beef:cafe::/64
 Done
 ```
 
+### promiscuous
+
+Get radio promiscuous property.
+
+```bash
+> promiscuous
+Disabled
+Done
+```
+
+### promiscuous enable
+
+Enable radio promiscuous operation and print raw packet content.
+
+```bash
+> promiscuous enable
+Done
+```
+
+### promiscuous disable
+
+Disable radio promiscuous operation.
+
+```bash
+> promiscuous disable
+Done
+```
+
 ### releaserouterid \<routerid\>
 Release a Router ID that has been allocated by the device in the Leader role.
+
 ```bash
 > releaserouterid 16
 Done
+```
+
+### reset
+Signal a platform reset.
+
+```bash
+> reset
 ```
 
 ### rloc16
@@ -361,19 +672,91 @@ Done
 Add a valid prefix to the Network Data.
 
 * s: Stable flag
-* prf: Default router preference, which may be: 'high', 'med', or 'low'.
+* prf: Default Router Preference, which may be: 'high', 'med', or 'low'.
 
 ```bash
-> route add 2001:dead:beef:cafe::/64 pvsr 0
+> route add 2001:dead:beef:cafe::/64 s med
 Done
 ```
 
 ### route remove \<prefix\>
 
-Invalidate a prefix in the network data.
+Invalidate a prefix in the Network Data.
 
 ```bash
 > route remove 2001:dead:beef:cafe::/64
+Done
+```
+
+### router list
+
+List allocated Router IDs
+
+```bash
+> router list
+8 24 50
+Done
+```
+
+### router \<id\>
+
+Print diagnostic information for a Thread Router.  The `id` may be a Router ID or an RLOC16.
+
+```bash
+> router 50
+Alloc: 1
+Router ID: 50
+Rloc: c800
+Next Hop: c800
+Link: 1
+Ext Addr: e2b3540590b0fd87
+Cost: 0
+LQI In: 3
+LQI Out: 3
+Age: 3
+Done
+```
+
+```bash
+> router 0xc800
+Alloc: 1
+Router ID: 50
+Rloc: c800
+Next Hop: c800
+Link: 1
+Ext Addr: e2b3540590b0fd87
+Cost: 0
+LQI In: 3
+LQI Out: 3
+Age: 7
+Done
+```
+
+### routerrole
+
+Indicates whether the router role is enabled or disabled.
+
+```bash
+> routerrole
+Enabled
+Done
+```
+
+### routerrole enable
+
+Enable the router role.
+
+```bash
+> routerrole enable
+Done
+```
+
+### routerrole disable
+
+Disable the router role.
+
+```bash
+> routerrole disable
 Done
 ```
 
@@ -404,27 +787,59 @@ Perform an IEEE 802.15.4 Active Scan.
 
 ```bash
 > scan
-| J | Network Name     | Extended PAN     | PAN  | MAC Address      | Ch | dBm |
-+---+------------------+------------------+------+------------------+----+-----+
-| 0 | OpenThread       | dead00beef00cafe | ffff | f1d92a82c8d8fe43 | 11 | -20 |
+| J | Network Name     | Extended PAN     | PAN  | MAC Address      | Ch | dBm | LQI |
++---+------------------+------------------+------+------------------+----+-----+-----+
+| 0 | OpenThread       | dead00beef00cafe | ffff | f1d92a82c8d8fe43 | 11 | -20 |   0 |
 Done
 ```
 
-### start
-
-Enable OpenThread.
+### singleton
+Return true when there are no other nodes in the network, otherwise return false.
 
 ```bash
-> start
+> singleton
+true or false
 Done
 ```
 
-### stop
+### thread start
 
-Disable OpenThread.
+Enable Thread protocol operation and attach to a Thread network.
 
 ```bash
-> stop
+> thread start
+Done
+```
+
+### thread stop
+
+Disable Thread protocol operation and detach from a Thread network.
+
+```bash
+> thread stop
+Done
+```
+
+### version
+
+Print the build version information.
+
+```bash
+> version
+OPENTHREAD/gf4f2f04; Jul  1 2016 17:00:09
+Done
+```
+
+### whitelist
+
+List the whitelist entries.
+
+```bash
+> whitelist
+Enabled
+e2b3540590b0fd87
+d38d7f875888fccb
+c467a90a2060fa0e
 Done
 ```
 
@@ -472,3 +887,11 @@ Remove an IEEE 802.15.4 Extended Address from the whitelist.
 > whitelist remove dead00beef00cafe
 Done
 ```
+
+### diag
+
+Diagnostics module is enabled only when building OpenThread with --enable-diag option.
+Go [diagnostics module][1] for more information.
+
+[1]:../diag/README.md
+

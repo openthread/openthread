@@ -34,6 +34,10 @@
 
 #include <openthread-types.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #define SuccessOrQuit(ERR, MSG)                 \
   do { \
     if ((ERR) != kThreadError_None)     \
@@ -53,5 +57,9 @@
       exit(-1); \
     } \
   } while (0)
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

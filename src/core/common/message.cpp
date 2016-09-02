@@ -124,6 +124,8 @@ ThreadError Message::Free(Message &aMessage)
 
 ThreadError Message::ResizeMessage(uint16_t aLength)
 {
+    ThreadError error = kThreadError_None;
+
     // add buffers
     Buffer *curBuffer = this;
     Buffer *lastBuffer;
@@ -134,6 +136,7 @@ ThreadError Message::ResizeMessage(uint16_t aLength)
         if (curBuffer->GetNextBuffer() == NULL)
         {
             curBuffer->SetNextBuffer(NewBuffer());
+            VerifyOrExit(curBuffer->GetNextBuffer() != NULL, error = kThreadError_NoBufs);
         }
 
         curBuffer = curBuffer->GetNextBuffer();
@@ -147,7 +150,8 @@ ThreadError Message::ResizeMessage(uint16_t aLength)
 
     FreeBuffers(curBuffer);
 
-    return kThreadError_None;
+exit:
+    return error;
 }
 
 Message *Message::GetNext(void) const
@@ -179,7 +183,7 @@ ThreadError Message::SetLength(uint16_t aLength)
 
     SuccessOrExit(error = ReclaimBuffers(bufs));
 
-    ResizeMessage(totalLengthRequest);
+    SuccessOrExit(error = ResizeMessage(totalLengthRequest));
     mInfo.mLength = aLength;
 
 exit:
@@ -256,7 +260,7 @@ exit:
     return error;
 }
 
-int Message::Read(uint16_t aOffset, uint16_t aLength, void *aBuf) const
+uint16_t Message::Read(uint16_t aOffset, uint16_t aLength, void *aBuf) const
 {
     Buffer *curBuffer;
     uint16_t bytesCopied = 0;
@@ -408,7 +412,7 @@ int Message::Write(uint16_t aOffset, uint16_t aLength, const void *aBuf)
     return bytesCopied;
 }
 
-int Message::CopyTo(uint16_t aSourceOffset, uint16_t aDestinationOffset, uint16_t aLength, Message &aMessage)
+int Message::CopyTo(uint16_t aSourceOffset, uint16_t aDestinationOffset, uint16_t aLength, Message &aMessage) const
 {
     uint16_t bytesCopied = 0;
     uint16_t bytesToCopy;
@@ -438,16 +442,6 @@ uint16_t Message::GetDatagramTag(void) const
 void Message::SetDatagramTag(uint16_t aTag)
 {
     mInfo.mDatagramTag = aTag;
-}
-
-uint8_t Message::GetTimeout(void) const
-{
-    return mInfo.mTimeout;
-}
-
-void Message::SetTimeout(uint8_t aTimeout)
-{
-    mInfo.mTimeout = aTimeout;
 }
 
 bool Message::GetChildMask(uint8_t aChildIndex) const
@@ -484,6 +478,26 @@ exit:
     return rval;
 }
 
+uint16_t Message::GetPanId(void) const
+{
+    return mInfo.mPanId;
+}
+
+void Message::SetPanId(uint16_t aPanId)
+{
+    mInfo.mPanId = aPanId;
+}
+
+uint8_t Message::GetTimeout(void) const
+{
+    return mInfo.mTimeout;
+}
+
+void Message::SetTimeout(uint8_t aTimeout)
+{
+    mInfo.mTimeout = aTimeout;
+}
+
 bool Message::GetDirectTransmission(void) const
 {
     return mInfo.mDirectTx;
@@ -507,6 +521,26 @@ bool Message::IsLinkSecurityEnabled(void) const
 void Message::SetLinkSecurityEnabled(bool aLinkSecurityEnabled)
 {
     mInfo.mLinkSecurity = aLinkSecurityEnabled;
+}
+
+bool Message::IsMleDiscoverRequest(void) const
+{
+    return mInfo.mMleDiscoverRequest;
+}
+
+void Message::SetMleDiscoverRequest(bool aMleDiscoverRequest)
+{
+    mInfo.mMleDiscoverRequest = aMleDiscoverRequest;
+}
+
+bool Message::IsMleDiscoverResponse(void) const
+{
+    return mInfo.mMleDiscoverResponse;
+}
+
+void Message::SetMleDiscoverResponse(bool aMleDiscoverResponse)
+{
+    mInfo.mMleDiscoverResponse = aMleDiscoverResponse;
 }
 
 uint16_t Message::UpdateChecksum(uint16_t aChecksum, uint16_t aOffset, uint16_t aLength) const
@@ -592,7 +626,7 @@ MessageQueue::MessageQueue(void)
     mInterface.mTail = NULL;
 }
 
-ThreadError MessageQueue::AddToList(int aList, Message &aMessage)
+ThreadError MessageQueue::AddToList(uint8_t aList, Message &aMessage)
 {
     MessageList *list;
 
@@ -617,7 +651,7 @@ ThreadError MessageQueue::AddToList(int aList, Message &aMessage)
     return kThreadError_None;
 }
 
-ThreadError MessageQueue::RemoveFromList(int aList, Message &aMessage)
+ThreadError MessageQueue::RemoveFromList(uint8_t aList, Message &aMessage)
 {
     MessageList *list;
 

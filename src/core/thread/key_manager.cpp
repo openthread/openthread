@@ -47,7 +47,8 @@ static const uint8_t kThreadString[] =
 KeyManager::KeyManager(ThreadNetif &aThreadNetif):
     mNetif(aThreadNetif)
 {
-    mPreviousKeyValid = false;
+    mMasterKeyLength = 0;
+    mKeySequence = 0;
     mMacFrameCounter = 0;
     mMleFrameCounter = 0;
 }
@@ -67,10 +68,12 @@ ThreadError KeyManager::SetMasterKey(const void *aKey, uint8_t aKeyLength)
     ThreadError error = kThreadError_None;
 
     VerifyOrExit(aKeyLength <= sizeof(mMasterKey), error = kThreadError_InvalidArgs);
+    VerifyOrExit((mMasterKeyLength != aKeyLength) || (memcmp(mMasterKey, aKey, aKeyLength) != 0), ;);
+
     memcpy(mMasterKey, aKey, aKeyLength);
     mMasterKeyLength = aKeyLength;
-    mCurrentKeySequence = 0;
-    ComputeKey(mCurrentKeySequence, mCurrentKey);
+    mKeySequence = 0;
+    ComputeKey(mKeySequence, mKey);
 
     mNetif.SetStateChangedFlags(OT_NET_KEY_SEQUENCE);
 
@@ -84,10 +87,10 @@ ThreadError KeyManager::ComputeKey(uint32_t aKeySequence, uint8_t *aKey)
 
     otCryptoHmacSha256Start(mMasterKey, mMasterKeyLength);
 
-    keySequenceBytes[0] = aKeySequence >> 24;
-    keySequenceBytes[1] = aKeySequence >> 16;
-    keySequenceBytes[2] = aKeySequence >> 8;
-    keySequenceBytes[3] = aKeySequence >> 0;
+    keySequenceBytes[0] = (aKeySequence >> 24) & 0xff;
+    keySequenceBytes[1] = (aKeySequence >> 16) & 0xff;
+    keySequenceBytes[2] = (aKeySequence >> 8) & 0xff;
+    keySequenceBytes[3] = aKeySequence & 0xff;
     otCryptoHmacSha256Update(keySequenceBytes, sizeof(keySequenceBytes));
     otCryptoHmacSha256Update(kThreadString, sizeof(kThreadString));
 
@@ -98,78 +101,31 @@ ThreadError KeyManager::ComputeKey(uint32_t aKeySequence, uint8_t *aKey)
 
 uint32_t KeyManager::GetCurrentKeySequence() const
 {
-    return mCurrentKeySequence;
-}
-
-void KeyManager::UpdateNeighbors()
-{
-    uint8_t numNeighbors;
-    Router *routers;
-    Child *children;
-
-    routers = mNetif.GetMle().GetParent();
-    routers->mPreviousKey = true;
-
-    routers = mNetif.GetMle().GetRouters(&numNeighbors);
-
-    for (int i = 0; i < numNeighbors; i++)
-    {
-        routers[i].mPreviousKey = true;
-    }
-
-    children = mNetif.GetMle().GetChildren(&numNeighbors);
-
-    for (int i = 0; i < numNeighbors; i++)
-    {
-        children[i].mPreviousKey = true;
-    }
+    return mKeySequence;
 }
 
 void KeyManager::SetCurrentKeySequence(uint32_t aKeySequence)
 {
-    mPreviousKeyValid = true;
-    mPreviousKeySequence = mCurrentKeySequence;
-    memcpy(mPreviousKey, mCurrentKey, sizeof(mPreviousKey));
+    if (aKeySequence != mKeySequence)
+    {
+        mKeySequence = aKeySequence;
+        ComputeKey(mKeySequence, mKey);
 
-    mCurrentKeySequence = aKeySequence;
-    ComputeKey(mCurrentKeySequence, mCurrentKey);
+        mMacFrameCounter = 0;
+        mMleFrameCounter = 0;
 
-    mMacFrameCounter = 0;
-    mMleFrameCounter = 0;
-
-    UpdateNeighbors();
-
-    mNetif.SetStateChangedFlags(OT_NET_KEY_SEQUENCE);
+        mNetif.SetStateChangedFlags(OT_NET_KEY_SEQUENCE);
+    }
 }
 
 const uint8_t *KeyManager::GetCurrentMacKey() const
 {
-    return mCurrentKey + 16;
+    return mKey + 16;
 }
 
 const uint8_t *KeyManager::GetCurrentMleKey() const
 {
-    return mCurrentKey;
-}
-
-bool KeyManager::IsPreviousKeyValid() const
-{
-    return mPreviousKeyValid;
-}
-
-uint32_t KeyManager::GetPreviousKeySequence() const
-{
-    return mPreviousKeySequence;
-}
-
-const uint8_t *KeyManager::GetPreviousMacKey() const
-{
-    return mPreviousKey + 16;
-}
-
-const uint8_t *KeyManager::GetPreviousMleKey() const
-{
-    return mPreviousKey;
+    return mKey;
 }
 
 const uint8_t *KeyManager::GetTemporaryMacKey(uint32_t aKeySequence)

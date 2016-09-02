@@ -45,6 +45,7 @@ class Cert_5_2_3_LeaderReject2Hops(unittest.TestCase):
         self.nodes[LEADER].set_panid(0xface)
         self.nodes[LEADER].set_mode('rsdn')
         self.nodes[LEADER].enable_whitelist()
+        self.nodes[LEADER].set_router_upgrade_threshold(32)
 
         for i in range(2,33):
             self.nodes[i] = node.Node(i)
@@ -64,7 +65,7 @@ class Cert_5_2_3_LeaderReject2Hops(unittest.TestCase):
         self.nodes[DUT].set_router_upgrade_threshold(33)
 
     def tearDown(self):
-        for node in self.nodes.itervalues():
+        for node in list(self.nodes.values()):
             node.stop()
         del self.nodes
 

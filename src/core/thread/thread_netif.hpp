@@ -36,9 +36,11 @@
 
 #include <openthread-types.h>
 #include <mac/mac.hpp>
+#include <net/ip6_filter.hpp>
 #include <net/netif.hpp>
 #include <thread/address_resolver.hpp>
 #include <thread/key_manager.hpp>
+#include <thread/meshcop_dataset_manager.hpp>
 #include <thread/mesh_forwarder.hpp>
 #include <thread/mle.hpp>
 #include <thread/mle_router.hpp>
@@ -141,6 +143,14 @@ public:
     Coap::Server &GetCoapServer(void) { return mCoapServer; }
 
     /**
+     * This method returns a reference to the IPv6 filter object.
+     *
+     * @returns A reference to the IPv6 filter object.
+     *
+     */
+    Ip6::Filter &GetIp6Filter(void) { return mIp6Filter; }
+
+    /**
      * This method returns a pointer to the key manager object.
      *
      * @returns A pointer to the key manager object.
@@ -196,9 +206,16 @@ public:
      */
     NetworkData::Leader &GetNetworkDataLeader(void) { return mNetworkDataLeader; }
 
+    MeshCoP::ActiveDataset &GetActiveDataset(void) { return mActiveDataset; }
+
+    MeshCoP::PendingDataset &GetPendingDataset(void) { return mPendingDataset; }
+
 private:
     Coap::Server mCoapServer;
     AddressResolver mAddressResolver;
+    MeshCoP::ActiveDataset mActiveDataset;
+    MeshCoP::PendingDataset mPendingDataset;
+    Ip6::Filter mIp6Filter;
     KeyManager mKeyManager;
     Lowpan::Lowpan mLowpan;
     Mac::Mac mMac;
@@ -215,9 +232,11 @@ private:
  */
 struct ThreadMessageInfo
 {
-    uint8_t mLinkMargin;    ///< The Link Margin for a received message in dB.
-    uint8_t mLqi;           ///< The Link Quality Indicator for a received message.
-    bool    mLinkSecurity;  ///< Indicates whether or not link security is enabled.
+    uint16_t mPanId;         ///< Source PAN ID
+    uint8_t  mChannel;       ///< 802.15.4 Channel
+    int8_t   mRss;           ///< Received Signal Strength in dBm.
+    uint8_t  mLqi;           ///< Link Quality Indicator for a received message.
+    bool     mLinkSecurity;  ///< Indicates whether or not link security is enabled.
 };
 
 /**

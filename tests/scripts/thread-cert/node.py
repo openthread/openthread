@@ -29,6 +29,7 @@
 
 import os
 import sys
+import time
 import pexpect
 import unittest
 
@@ -52,15 +53,20 @@ class Node:
 
     def __init_sim(self, nodeid):
         """ Initialize a simulation node. """
-        if "top_builddir" in os.environ.keys():
+        if "OT_CLI_PATH" in os.environ.keys():
+            cmd = os.environ['OT_CLI_PATH']
+        elif "top_builddir" in os.environ.keys():
             srcdir = os.environ['top_builddir']
-            cmd = '%s/examples/posix/app/cli/soc' % srcdir
+            cmd = '%s/examples/apps/cli/ot-cli' % srcdir
         else:
-            cmd = './soc'
+            cmd = './ot-cli'
         cmd += ' %d' % nodeid
-        print cmd
+        print ("%s" % cmd)
 
         self.pexpect = pexpect.spawn(cmd, timeout=2)
+
+        # Add delay to ensure that the process is ready to receive commands.
+        time.sleep(0.1)
 
     def __init_soc(self, nodeid):
         """ Initialize a System-on-a-chip node connected via UART. """
@@ -73,7 +79,7 @@ class Node:
         self.pexpect.close(force=True)
 
     def send_command(self, cmd):
-        print self.nodeid, ":", cmd
+        print ("%d: %s" % (self.nodeid, cmd))
         self.pexpect.sendline(cmd)
 
     def get_commands(self):
@@ -94,11 +100,15 @@ class Node:
         self.pexpect.expect('Done')
 
     def start(self):
-        self.send_command('start')
+        self.send_command('ifconfig up')
+        self.pexpect.expect('Done')
+        self.send_command('thread start')
         self.pexpect.expect('Done')
 
     def stop(self):
-        self.send_command('stop')
+        self.send_command('thread stop')
+        self.pexpect.expect('Done')
+        self.send_command('ifconfig down')
         self.pexpect.expect('Done')
 
     def clear_whitelist(self):
@@ -137,7 +147,7 @@ class Node:
         self.send_command('extaddr')
         i = self.pexpect.expect('([0-9a-fA-F]{16})')
         if i == 0:
-            addr64 = self.pexpect.match.groups()[0]
+            addr64 = self.pexpect.match.groups()[0].decode("utf-8")
         self.pexpect.expect('Done')
         return addr64
 
@@ -241,7 +251,7 @@ class Node:
         while True:
             i = self.pexpect.expect(['(\S+:\S+)\r\n', 'Done'])
             if i == 0:
-                addrs.append(self.pexpect.match.groups()[0])
+                addrs.append(self.pexpect.match.groups()[0].decode("utf-8"))
             elif i == 1:
                 break
 

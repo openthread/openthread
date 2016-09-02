@@ -35,6 +35,7 @@
 #include <common/debug.hpp>
 #include <common/logging.hpp>
 #include <common/message.hpp>
+#include <common/new.hpp>
 #include <net/icmp6.hpp>
 #include <net/ip6.hpp>
 #include <net/ip6_address.hpp>
@@ -42,12 +43,18 @@
 #include <net/ip6_routes.hpp>
 #include <net/netif.hpp>
 #include <net/udp6.hpp>
+#include <thread/mle.hpp>
 
 namespace Thread {
 namespace Ip6 {
 
-static Mpl sMpl;
+static otDEFINE_ALIGNED_VAR(sMplBuf, sizeof(Mpl), uint64_t);
+static Mpl *sMpl;
+static bool sForwardingEnabled;
+
 static otReceiveIp6DatagramCallback sReceiveIp6DatagramCallback = NULL;
+static void *sReceiveIp6DatagramCallbackContext = NULL;
+static bool sIsReceiveIp6FilterEnabled;
 
 static ThreadError ForwardMessage(Message &message, MessageInfo &messageInfo);
 
@@ -55,6 +62,18 @@ Message *Ip6::NewMessage(uint16_t reserved)
 {
     return Message::New(Message::kTypeIp6,
                         sizeof(Header) + sizeof(HopByHopHeader) + sizeof(OptionMpl) + reserved);
+}
+
+void Ip6::Init(void)
+{
+    sMpl = new(&sMplBuf) Mpl;
+    sForwardingEnabled = false;
+    sIsReceiveIp6FilterEnabled = true;
+}
+
+void Ip6::SetForwardingEnabled(bool aEnable)
+{
+    sForwardingEnabled = aEnable;
 }
 
 uint16_t Ip6::UpdateChecksum(uint16_t checksum, uint16_t val)
@@ -69,7 +88,7 @@ uint16_t Ip6::UpdateChecksum(uint16_t checksum, const void *buf, uint16_t len)
 
     for (int i = 0; i < len; i++)
     {
-        checksum = Ip6::UpdateChecksum(checksum, (i & 1) ? bytes[i] : (static_cast<uint16_t>(bytes[i])) << 8);
+        checksum = Ip6::UpdateChecksum(checksum, (i & 1) ? bytes[i] : static_cast<uint16_t>(bytes[i] << 8));
     }
 
     return checksum;
@@ -77,7 +96,7 @@ uint16_t Ip6::UpdateChecksum(uint16_t checksum, const void *buf, uint16_t len)
 
 uint16_t Ip6::UpdateChecksum(uint16_t checksum, const Address &address)
 {
-    return Ip6::UpdateChecksum(checksum, address.m8, sizeof(address));
+    return Ip6::UpdateChecksum(checksum, address.mFields.m8, sizeof(address));
 }
 
 uint16_t Ip6::ComputePseudoheaderChecksum(const Address &src, const Address &dst, uint16_t length, IpProto proto)
@@ -92,9 +111,20 @@ uint16_t Ip6::ComputePseudoheaderChecksum(const Address &src, const Address &dst
     return checksum;
 }
 
-void Ip6::SetReceiveDatagramCallback(otReceiveIp6DatagramCallback aCallback)
+void Ip6::SetReceiveDatagramCallback(otReceiveIp6DatagramCallback aCallback, void *aCallbackContext)
 {
     sReceiveIp6DatagramCallback = aCallback;
+    sReceiveIp6DatagramCallbackContext = aCallbackContext;
+}
+
+bool Ip6::IsReceiveIp6FilterEnabled(void)
+{
+    return sIsReceiveIp6FilterEnabled;
+}
+
+void Ip6::SetReceiveIp6FilterEnabled(bool aEnabled)
+{
+    sIsReceiveIp6FilterEnabled = aEnabled;
 }
 
 ThreadError AddMplOption(Message &message, Header &header, IpProto nextHeader, uint16_t payloadLength)
@@ -105,7 +135,7 @@ ThreadError AddMplOption(Message &message, Header &header, IpProto nextHeader, u
 
     hbhHeader.SetNextHeader(nextHeader);
     hbhHeader.SetLength(0);
-    sMpl.InitOption(mplOption, HostSwap16(header.GetSource().m16[7]));
+    sMpl->InitOption(mplOption, HostSwap16(header.GetSource().mFields.m16[7]));
     SuccessOrExit(error = message.Prepend(&mplOption, sizeof(mplOption)));
     SuccessOrExit(error = message.Prepend(&hbhHeader, sizeof(hbhHeader)));
     header.SetPayloadLength(sizeof(hbhHeader) + sizeof(mplOption) + payloadLength);
@@ -125,7 +155,7 @@ ThreadError Ip6::SendDatagram(Message &message, MessageInfo &messageInfo, IpProt
     header.Init();
     header.SetPayloadLength(payloadLength);
     header.SetNextHeader(ipproto);
-    header.SetHopLimit(messageInfo.mHopLimit ? messageInfo.mHopLimit : kDefaultHopLimit);
+    header.SetHopLimit(messageInfo.mHopLimit ? messageInfo.mHopLimit : static_cast<uint8_t>(kDefaultHopLimit));
 
     if (messageInfo.GetSockAddr().IsUnspecified())
     {
@@ -173,7 +203,7 @@ exit:
 
     if (error == kThreadError_None)
     {
-        error = HandleDatagram(message, NULL, messageInfo.mInterfaceId, NULL, false);
+        HandleDatagram(message, NULL, messageInfo.mInterfaceId, NULL, false);
     }
 
     return error;
@@ -198,7 +228,7 @@ ThreadError HandleOptions(Message &message)
         switch (optionHeader.GetType())
         {
         case OptionMpl::kType:
-            SuccessOrExit(error = sMpl.ProcessOption(message));
+            SuccessOrExit(error = sMpl->ProcessOption(message));
             break;
 
         default:
@@ -304,10 +334,69 @@ exit:
     return error;
 }
 
-ThreadError Ip6::HandleDatagram(Message &message, Netif *netif, uint8_t interfaceId, const void *linkMessageInfo,
+void Ip6::ProcessReceiveCallback(const Message &aMessage, const MessageInfo &messageInfo, uint8_t aIpProto)
+{
+    ThreadError error = kThreadError_None;
+    Message *messageCopy = NULL;
+
+    VerifyOrExit(sReceiveIp6DatagramCallback != NULL, ;);
+
+    if (sIsReceiveIp6FilterEnabled)
+    {
+        // do not pass messages sent to/from an RLOC
+        VerifyOrExit(!messageInfo.GetSockAddr().IsRoutingLocator() &&
+                     !messageInfo.GetPeerAddr().IsRoutingLocator(), ;);
+
+        switch (aIpProto)
+        {
+        case kProtoIcmp6:
+            if (Icmp::IsEchoEnabled())
+            {
+                IcmpHeader icmp;
+                aMessage.Read(aMessage.GetOffset(), sizeof(icmp), &icmp);
+
+                // do not pass ICMP Echo Request messages
+                VerifyOrExit(icmp.GetType() != IcmpHeader::kTypeEchoRequest, ;);
+            }
+
+            break;
+
+        case kProtoUdp:
+            if (messageInfo.GetSockAddr().IsLinkLocal())
+            {
+                UdpHeader udp;
+                aMessage.Read(aMessage.GetOffset(), sizeof(udp), &udp);
+
+                // do not pass MLE messages
+                VerifyOrExit(udp.GetDestinationPort() != Mle::kUdpPort, ;);
+            }
+
+            break;
+
+        default:
+            break;
+        }
+    }
+
+    // make a copy of the datagram to pass to host
+    VerifyOrExit((messageCopy = NewMessage(0)) != NULL, error = kThreadError_NoBufs);
+    SuccessOrExit(error = messageCopy->SetLength(aMessage.GetLength()));
+    aMessage.CopyTo(0, 0, aMessage.GetLength(), *messageCopy);
+
+    sReceiveIp6DatagramCallback(messageCopy, sReceiveIp6DatagramCallbackContext);
+
+exit:
+
+    if (error != kThreadError_None && messageCopy != NULL)
+    {
+        Message::Free(*messageCopy);
+    }
+}
+
+ThreadError Ip6::HandleDatagram(Message &message, Netif *netif, int8_t interfaceId, const void *linkMessageInfo,
                                 bool fromLocalHost)
 {
-    ThreadError error = kThreadError_Drop;
+    ThreadError error = kThreadError_None;
     MessageInfo messageInfo;
     Header header;
     uint16_t payloadLength;
@@ -323,16 +412,16 @@ ThreadError Ip6::HandleDatagram(Message &message, Netif *netif, uint8_t interfac
 #endif
 
     // check message length
-    VerifyOrExit(message.GetLength() >= sizeof(header), ;);
+    VerifyOrExit(message.GetLength() >= sizeof(header), error = kThreadError_Drop);
     message.Read(0, sizeof(header), &header);
     payloadLength = header.GetPayloadLength();
 
     // check Version
-    VerifyOrExit(header.IsVersion6(), ;);
+    VerifyOrExit(header.IsVersion6(), error = kThreadError_Drop);
 
     // check Payload Length
     VerifyOrExit(sizeof(header) + payloadLength == message.GetLength() &&
-                 sizeof(header) + payloadLength <= Ip6::kMaxDatagramLength, ;);
+                 sizeof(header) + payloadLength <= Ip6::kMaxDatagramLength, error = kThreadError_Drop);
 
     memset(&messageInfo, 0, sizeof(messageInfo));
     messageInfo.GetPeerAddr() = header.GetSource();
@@ -374,22 +463,26 @@ ThreadError Ip6::HandleDatagram(Message &message, Netif *netif, uint8_t interfac
         }
     }
 
+    if (!sForwardingEnabled && netif != NULL)
+    {
+        forward = false;
+    }
+
     message.SetOffset(sizeof(header));
 
     // process IPv6 Extension Headers
     nextHeader = header.GetNextHeader();
-    SuccessOrExit(HandleExtensionHeaders(message, nextHeader, receive));
+    SuccessOrExit(error = HandleExtensionHeaders(message, nextHeader, receive));
 
     // process IPv6 Payload
     if (receive)
     {
-        SuccessOrExit(HandlePayload(message, messageInfo, nextHeader));
-
-        if (sReceiveIp6DatagramCallback != NULL && fromLocalHost == false)
+        if (fromLocalHost == false)
         {
-            sReceiveIp6DatagramCallback(&message);
-            ExitNow(error = kThreadError_None);
+            ProcessReceiveCallback(message, messageInfo, nextHeader);
         }
+
+        SuccessOrExit(error = HandlePayload(message, messageInfo, nextHeader));
     }
 
     if (forward)
@@ -402,30 +495,30 @@ ThreadError Ip6::HandleDatagram(Message &message, Netif *netif, uint8_t interfac
         if (header.GetHopLimit() == 0)
         {
             // send time exceeded
+            ExitNow(error = kThreadError_Drop);
         }
         else
         {
             hopLimit = header.GetHopLimit();
             message.Write(Header::GetHopLimitOffset(), Header::GetHopLimitSize(), &hopLimit);
-            SuccessOrExit(ForwardMessage(message, messageInfo));
-            ExitNow(error = kThreadError_None);
+            SuccessOrExit(error = ForwardMessage(message, messageInfo));
         }
     }
 
 exit:
 
-    if (error == kThreadError_Drop)
+    if (error != kThreadError_None || !forward)
     {
         Message::Free(message);
     }
 
-    return kThreadError_None;
+    return error;
 }
 
 ThreadError ForwardMessage(Message &message, MessageInfo &messageInfo)
 {
     ThreadError error = kThreadError_None;
-    int interfaceId;
+    int8_t interfaceId;
     Netif *netif;
 
     if (messageInfo.GetSockAddr().IsMulticast())

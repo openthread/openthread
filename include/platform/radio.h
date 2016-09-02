@@ -67,11 +67,12 @@ extern "C" {
 
 enum
 {
-    kMaxPHYPacketSize   = 127,     ///< aMaxPHYPacketSize (IEEE 802.15.4-2006)
-    kPhyMinChannel      = 11,      ///< 2.4 GHz IEEE 802.15.4-2006
-    kPhyMaxChannel      = 26,      ///< 2.4 GHz IEEE 802.15.4-2006
-    kPhySymbolsPerOctet = 2,       ///< 2.4 GHz IEEE 802.15.4-2006
-    kPhyBitRate         = 250000,  ///< 2.4 GHz IEEE 802.15.4 (kilobits per second)
+    kMaxPHYPacketSize        = 127,                       ///< aMaxPHYPacketSize (IEEE 802.15.4-2006)
+    kPhyMinChannel           = 11,                        ///< 2.4 GHz IEEE 802.15.4-2006
+    kPhyMaxChannel           = 26,                        ///< 2.4 GHz IEEE 802.15.4-2006
+    kPhySupportedChannelMask = 0xffff << kPhyMinChannel,  ///< 2.4 GHz IEEE 802.15.4-2006
+    kPhySymbolsPerOctet      = 2,                         ///< 2.4 GHz IEEE 802.15.4-2006
+    kPhyBitRate              = 250000,                    ///< 2.4 GHz IEEE 802.15.4 (kilobits per second)
 
     kPhyBitsPerOctet    = 8,
     kPhyUsPerSymbol     = ((kPhyBitsPerOctet / kPhySymbolsPerOctet) * 1000000) / kPhyBitRate,
@@ -102,6 +103,31 @@ typedef struct RadioPacket
     uint8_t mLqi;            ///< Link Quality Indicator for received frames.
     bool    mSecurityValid;  ///< Security Enabled flag is set and frame passes security checks.
 } RadioPacket;
+
+/**
+ * This structure represents the state of a radio.
+ * Initially, a radio is in the Disabled state.
+ */
+typedef enum PhyState
+{
+    kStateDisabled = 0,
+    kStateSleep = 1,
+    kStateReceive = 2,
+    kStateTransmit = 3
+} PhyState;
+
+/**
+ * The following are valid radio state transitions:
+ *
+ *                                    (Radio ON)
+ *  +----------+  Enable()  +-------+  Receive() +---------+   Trasnmit()  +----------+
+ *  |          |----------->|       |----------->|         |-------------->|          |
+ *  | Disabled |            | Sleep |            | Receive |               | Transmit |
+ *  |          |<-----------|       |<-----------|         |<--------------|          |
+ *  +----------+  Disable() +-------+   Sleep()  +---------+   Receive()   +----------+
+ *                                    (Radio OFF)                 or
+ *                                                        signal TransmitDone
+ */
 
 /**
  * @}
@@ -163,7 +189,7 @@ ThreadError otPlatRadioSetShortAddress(uint16_t aShortAddress);
 /**
  * Enable the radio.
  *
- * @retval ::kThreadError_None  Successfully transitioned to Idle.
+ * @retval ::kThreadError_None  Successfully transitioned to Sleep.
  * @retval ::kThreadError_Busy  The radio was already enabled.
  */
 ThreadError otPlatRadioEnable(void);
@@ -176,33 +202,22 @@ ThreadError otPlatRadioEnable(void);
 ThreadError otPlatRadioDisable(void);
 
 /**
- * Transition the radio to Sleep.
+ * Transition the radio from Receive to Sleep.
+ * Turn off the radio.
  *
  * @retval ::kThreadError_None  Successfully transitioned to Sleep.
- * @retval ::kThreadError_Busy  The radio was not in the Idle state.
+ * @retval ::kThreadError_Busy  The radio was not in the Receive state.
  */
 ThreadError otPlatRadioSleep(void);
 
 /**
- * Transition the radio to Idle.
- *
- * @retval ::kThreadError_None  Successfully transitioned to Idle.
- * @retval ::kThreadError_Busy  The radio was busy transmitting or receiving.
- */
-ThreadError otPlatRadioIdle(void);
-
-/**
- * Begins the receive sequence on the radio.
- *
- * The receive sequence consists of:
- * 1. Transitioning the radio to Receive from Idle.
- * 2. Remain in Receive until a packet is received or reception is aborted.
- * 3. Return to Idle.
+ * Transitioning the radio from Sleep to Receive.
+ * Turn on the radio.
  *
  * @param[in]  aChannel  The channel to use for receiving.
  *
  * @retval ::kThreadError_None  Successfully transitioned to Receive.
- * @retval ::kThreadError_Busy  The radio was not in the Idle state.
+ * @retval ::kThreadError_Busy  The radio was not in the Sleep state.
  */
 ThreadError otPlatRadioReceive(uint8_t aChannel);
 
@@ -217,6 +232,7 @@ ThreadError otPlatRadioReceive(uint8_t aChannel);
 extern void otPlatRadioReceiveDone(RadioPacket *aPacket, ThreadError aError);
 
 /**
+ * The radio tranitions from Transmit to Receive.
  * This method returns a pointer to the transmit buffer.
  *
  * The caller forms the IEEE 802.15.4 frame in this buffer then calls otPlatRadioTransmit() to request transmission.
@@ -233,12 +249,11 @@ RadioPacket *otPlatRadioGetTransmitBuffer(void);
  * requesting transmission.  The channel and transmit power are also included in the RadioPacket structure.
  *
  * The transmit sequence consists of:
- * 1. Transitioning the radio to Transmit from Idle.
+ * 1. Transitioning the radio to Transmit from Receive.
  * 2. Transmits the psdu on the given channel and at the given transmit power.
- * 3. Return to Idle.
  *
  * @retval ::kThreadError_None         Successfully transitioned to Transmit.
- * @retval ::kThreadError_Busy         The radio was not in the Idle state.
+ * @retval ::kThreadError_Busy         The radio was not in the Receive state.
  */
 ThreadError otPlatRadioTransmit(void);
 
@@ -257,9 +272,9 @@ extern void otPlatRadioTransmitDone(bool aFramePending, ThreadError aError);
 /**
  * Get the most recent RSSI measurement.
  *
- * @returns The noise floor value in dBm when the noise floor value is valid.  127 when noise floor value is invalid.
+ * @returns The RSSI in dBm when it is valid.  127 when RSSI is invalid.
  */
-int8_t otPlatRadioGetNoiseFloor(void);
+int8_t otPlatRadioGetRssi(void);
 
 /**
  * Get the radio capabilities.
@@ -282,6 +297,28 @@ bool otPlatRadioGetPromiscuous(void);
  * @param[in]  aEnable  A value to enable or disable promiscuous mode.
  */
 void otPlatRadioSetPromiscuous(bool aEnable);
+
+/**
+ * The radio driver calls this method to notify OpenThread diagnostics module that the transmission has completed.
+ *
+ * @param[in]  aFramePending  TRUE if an ACK frame was received and the Frame Pending bit was set.
+ * @param[in]  aError  ::kThreadError_None when the frame was transmitted, ::kThreadError_NoAck when the frame was
+ *                     transmitted but no ACK was received, ::kThreadError_ChannelAccessFailure when the transmission
+ *                     could not take place due to activity on the channel, ::kThreadError_Abort when transmission was
+ *                     aborted for other reasons.
+ *
+ */
+extern void otPlatDiagRadioTransmitDone(bool aFramePending, ThreadError aError);
+
+/**
+ * The radio driver calls this method to notify OpenThread diagnostics module of a received packet.
+ *
+ * @param[in]  aPacket  A pointer to the received packet or NULL if the receive operation was aborted.
+ * @param[in]  aError   ::kThreadError_None when successfully received a frame, ::kThreadError_Abort when reception
+ *                      was aborted and a frame was not received.
+ *
+ */
+extern void otPlatDiagRadioReceiveDone(RadioPacket *aPacket, ThreadError aError);
 
 /**
  * @}

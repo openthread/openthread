@@ -22,6 +22,7 @@
 
 include $(abs_top_nlbuild_autotools_dir)/automake/pre/macros/constants.am
 include $(abs_top_nlbuild_autotools_dir)/automake/pre/macros/paths.am
+include $(abs_top_nlbuild_autotools_dir)/automake/pre/macros/pretty.am
 include $(abs_top_nlbuild_autotools_dir)/automake/pre/macros/verbosity.am
 include $(abs_top_nlbuild_autotools_dir)/automake/pre/macros/coverage.am
 include $(abs_top_nlbuild_autotools_dir)/automake/pre/macros/subdirs.am

@@ -56,21 +56,11 @@ namespace Mac {
 class Whitelist
 {
 public:
+    typedef otMacWhitelistEntry Entry;
+
     enum
     {
         kMaxEntries = 32,
-    };
-
-    /**
-     * This structure represents a whitelist entry.
-     *
-     */
-    struct Entry
-    {
-        ExtAddress mExtAddress;        ///< The IEEE 802.15.4 Extended Address.
-        int8_t     mRssi;              ///< The constant RSSI value.
-        bool       mValid : 1;         ///< TRUE if the entry is valid, FALSE otherwise.
-        bool       mConstantRssi : 1;  ///< TRUE if the constant RSSI value is used, FALSE otherwise.
     };
 
     /**
@@ -109,12 +99,16 @@ public:
     int GetMaxEntries(void) const;
 
     /**
-     * This method returns the whitelist entries.
+     * This method gets a whitelist entry.
      *
-     * @returns The whitelist entries.
+     * @param[in]   aIndex  An index into the MAC whitelist table.
+     * @param[out]  aEntry  A reference to where the information is placed.
+     *
+     * @retval kThreadError_None         Successfully retrieved the MAC whitelist entry.
+     * @retval kThreadError_InvalidArgs  @p aIndex is out of bounds or @p aEntry is NULL.
      *
      */
-    const Entry *GetEntries(void) const;
+    ThreadError GetEntry(uint8_t aIndex, Entry &aEntry) const;
 
     /**
      * This method adds an Extended Address to the whitelist filter.
@@ -151,33 +145,33 @@ public:
     Entry *Find(const ExtAddress &aAddress);
 
     /**
-     * This method clears the constant RSSI value and uses the measured value provided by the radio instead.
+     * This method clears the fixed RSSI value and uses the measured value provided by the radio instead.
      *
      * @param[in]  aEntry  A reference to the whitelist entry.
      *
      */
-    void ClearConstantRssi(Entry &aEntry);
+    void ClearFixedRssi(Entry &aEntry);
 
     /**
-     * This method indicates whether or not the constant RSSI is set.
+     * This method indicates whether or not the fixed RSSI is set.
      *
      * @param[in]   aEntry  A reference to the whitelist entry.
      * @param[out]  aRssi   A reference to the RSSI variable.
      *
-     * @retval kThreadError_None        A constant RSSI is set and written to @p aRssi.
-     * @retval kThreadError_InvalidArg  A constant RSSI was not set.
+     * @retval kThreadError_None        A fixed RSSI is set and written to @p aRssi.
+     * @retval kThreadError_InvalidArg  A fixed RSSI was not set.
      *
      */
-    ThreadError GetConstantRssi(Entry &aEntry, int8_t &aRssi) const;
+    ThreadError GetFixedRssi(Entry &aEntry, int8_t &aRssi) const;
 
     /**
-     * This method sets a constant RSSI value for all received messages matching @p aEntry.
+     * This method sets a fixed RSSI value for all received messages matching @p aEntry.
      *
      * @param[in]  aEntry  A reference to the whitelist entry.
      * @param[in]  aRssi   An RSSI value in dBm.
      *
      */
-    void SetConstantRssi(Entry &aEntry, int8_t aRssi);
+    void SetFixedRssi(Entry &aEntry, int8_t aRssi);
 
 private:
     Entry mWhitelist[kMaxEntries];

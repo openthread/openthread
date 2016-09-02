@@ -223,11 +223,30 @@ AC_PROG_LN_S
 #   -Wall                        CC, CXX
 #
 
-PROSPECTIVE_CFLAGS="-Wall"
-PROSPECTIVE_CXXFLAGS=""
+PROSPECTIVE_CFLAGS="-Wall -Wextra -Wshadow -Werror -std=c99 -pedantic-errors"
+PROSPECTIVE_CXXFLAGS="-Wall -Wextra -Wshadow -Werror"
+
+AC_CACHE_CHECK([whether $CC is Clang],
+    [nl_cv_clang],
+    [nl_cv_clang=no
+    if test "x${GCC}" = "xyes"; then
+        AC_EGREP_CPP([NL_CC_IS_CLANG],
+            [/* Note: Clang 2.7 lacks __clang_[a-z]+__ */
+#            if defined(__clang__) && defined(__llvm__)
+             NL_CC_IS_CLANG
+#            endif
+            ],
+            [nl_cv_clang=yes])
+    fi
+    ])
+
+if test "${nl_cv_clang}" = "yes"; then
+    PROSPECTIVE_CFLAGS="${PROSPECTIVE_CFLAGS} -Wconversion"
+    PROSPECTIVE_CXXFLAGS="${PROSPECTIVE_CXXFLAGS} -Wconversion"
+fi
 
 AX_CHECK_COMPILER_OPTIONS([C],   ${PROSPECTIVE_CFLAGS})
-AX_CHECK_COMPILER_OPTIONS([C++], ${PROSPECTIVE_CFLAGS} ${PROSPECTIVE_CXXFLAGS})
+AX_CHECK_COMPILER_OPTIONS([C++], ${PROSPECTIVE_CXXFLAGS})
 
 # Check for and initialize libtool
 
@@ -268,9 +287,10 @@ AM_CONDITIONAL([OPENTHREAD_BUILD_OPTIMIZED], [test "${nl_cv_build_optimized}" = 
 # Code style
 #
 
-AC_CHECK_TOOL(ASTYLE, astyle)
-AC_SUBST(ASTYLE_PRETTY_ARGS, ["--options=\${abs_top_builddir}/.astyle-opts"])
-AC_SUBST(ASTYLE_PRETTY_CHECK_ARGS, ["--options=\${abs_top_builddir}/.astyle-opts --dry-run"])
+AC_SUBST(PRETTY, ["\${abs_top_srcdir}/.astyle/astyle-wrap.sh"])
+AC_SUBST(PRETTY_ARGS, ["astyle --options=\${abs_top_builddir}/.astyle/astyle-opts"])
+AC_SUBST(PRETTY_CHECK, ["\${abs_top_srcdir}/.astyle/astyle-wrap.sh"])
+AC_SUBST(PRETTY_CHECK_ARGS, ["astyle --options=\${abs_top_builddir}/.astyle/astyle-opts --dry-run"])
 
 #
 # Tests
@@ -285,32 +305,59 @@ AM_CONDITIONAL([OPENTHREAD_BUILD_TESTS], [test "${nl_cv_build_tests}" = "yes"])
 
 # Check whether to run only the minimum set of tests.
 
-AC_MSG_CHECKING([whether to run only the minimum set of tests.])
-AC_ARG_ENABLE(minimum-set-of-tests,
-    [AS_HELP_STRING([--enable-minimum-set-of-tests],[Run only the most essential tests. @<:@default=no@:>@.])],
+AC_ARG_WITH(tests,
+    [AS_HELP_STRING([--with-tests=TESTS],
+        [Specify the tests from one of: all, subset1, subset2, subset3, subset4, subset5 @<:@default=all@:>@.])],
     [
-        case "${enableval}" in
+        case "${with_tests}" in
 
-        no|yes)
-            enable_minimum_set_of_tests=${enableval}
+        all|subset1|subset2|subset3|subset4|subset5)
             ;;
-
         *)
-            AC_MSG_ERROR([Invalid value ${enableval} for --enable-minimum-set-of-tests])
+            AC_MSG_ERROR([Invalid value ${with_tests} for --with-tests])
             ;;
-
         esac
     ],
-    [enable_minimum_set_of_tests=no])
-AC_MSG_RESULT(${enable_minimum_set_of_tests})
+    [with_tests=all])
 
-AM_CONDITIONAL([OPENTHREAD_WITH_MINIMUM_SET_OF_TESTS], [test "${enable_minimum_set_of_tests}" = "yes"])
+case ${with_tests} in
 
-if test "${enable_minimum_set_of_tests}" = "yes"; then
-    if test "${nl_cv_build_coverage}" = "yes"; then
-        AC_MSG_ERROR(["Do not run code coverage only with the minimum set of tests."])
-    fi
-fi
+    all)
+        OPENTHREAD_TESTS_SUBSET1=yes
+        OPENTHREAD_TESTS_SUBSET2=yes
+        OPENTHREAD_TESTS_SUBSET3=yes
+        OPENTHREAD_TESTS_SUBSET4=yes
+        OPENTHREAD_TESTS_SUBSET5=yes
+        ;;
+
+    subset1)
+        OPENTHREAD_TESTS_SUBSET1=yes
+        ;;
+
+    subset2)
+        OPENTHREAD_TESTS_SUBSET2=yes
+        ;;
+
+    subset3)
+        OPENTHREAD_TESTS_SUBSET3=yes
+        ;;
+
+    subset4)
+        OPENTHREAD_TESTS_SUBSET4=yes
+        ;;
+
+    subset5)
+        OPENTHREAD_TESTS_SUBSET5=yes
+        ;;
+
+esac
+
+AC_SUBST(OPENTHREAD_TESTS_SUBSET1)
+AM_CONDITIONAL([OPENTHREAD_TESTS_SUBSET1], [test "${OPENTHREAD_TESTS_SUBSET1}" = "yes"])
+AM_CONDITIONAL([OPENTHREAD_TESTS_SUBSET2], [test "${OPENTHREAD_TESTS_SUBSET2}" = "yes"])
+AM_CONDITIONAL([OPENTHREAD_TESTS_SUBSET3], [test "${OPENTHREAD_TESTS_SUBSET3}" = "yes"])
+AM_CONDITIONAL([OPENTHREAD_TESTS_SUBSET4], [test "${OPENTHREAD_TESTS_SUBSET4}" = "yes"])
+AM_CONDITIONAL([OPENTHREAD_TESTS_SUBSET5], [test "${OPENTHREAD_TESTS_SUBSET5}" = "yes"])
 
 # Check for Python and Python libraries used in the tests
 if test "${nl_cv_build_tests}" = "yes"; then
@@ -358,12 +405,16 @@ AM_CONDITIONAL([OPENTHREAD_ENABLE_CLI], [test "${enable_cli}" = "yes"])
 #
 
 AC_ARG_ENABLE(ncp,
-    [AS_HELP_STRING([--enable-ncp],[Enable NCP suport @<:@default=no@:>@.])],
+    [AS_HELP_STRING([--enable-ncp[[=spi|uart]]],[Enable NCP suport @<:@default=no@:>@.])],
     [
         case "${enableval}" in
 
-        no|yes)
+        no|spi|uart)
             enable_ncp=${enableval}
+            ;;
+
+        yes)
+            enable_ncp=uart
             ;;
 
         *)
@@ -373,7 +424,40 @@ AC_ARG_ENABLE(ncp,
     ],
     [enable_ncp=no])
 AC_MSG_RESULT(${enable_ncp})
-AM_CONDITIONAL([OPENTHREAD_ENABLE_NCP], [test "${enable_ncp}" = "yes"])
+AM_CONDITIONAL([OPENTHREAD_ENABLE_NCP],      [test "${enable_ncp}" != "no"])
+AM_CONDITIONAL([OPENTHREAD_ENABLE_NCP_SPI],  [test "${enable_ncp}"  = "spi"])
+AM_CONDITIONAL([OPENTHREAD_ENABLE_NCP_UART], [test "${enable_ncp}"  = "uart"])
+
+#
+# Diagnostics Library
+#
+
+AC_ARG_ENABLE(diag,
+    [AS_HELP_STRING([--enable-diag],[Enable diagnostics suport @<:@default=no@:>@.])],
+    [
+        case "${enableval}" in
+
+        no|yes)
+            enable_diag=${enableval}
+            ;;
+
+        *)
+            AC_MSG_ERROR([Invalid value ${enable_diag} for --enable-diag])
+            ;;
+        esac
+    ],
+    [enable_diag=no])
+
+if test "$enable_diag" = "yes"; then
+    OPENTHREAD_ENABLE_DIAG=1
+else
+    OPENTHREAD_ENABLE_DIAG=0
+fi
+
+AC_MSG_RESULT(${enable_diag})
+AC_SUBST(OPENTHREAD_ENABLE_DIAG)
+AM_CONDITIONAL([OPENTHREAD_ENABLE_DIAG], [test "${enable_diag}" = "yes"])
+AC_DEFINE_UNQUOTED([OPENTHREAD_ENABLE_DIAG],[${OPENTHREAD_ENABLE_DIAG}],[Define to 1 if you want to use diagnostics module])
 
 #
 # Examples
@@ -381,11 +465,11 @@ AM_CONDITIONAL([OPENTHREAD_ENABLE_NCP], [test "${enable_ncp}" = "yes"])
 
 AC_ARG_WITH(examples,
     [AS_HELP_STRING([--with-examples=TARGET],
-        [Specify the examples from one of: none, posix, cc2538 @<:@default=none@:>@.])],
+        [Specify the examples from one of: none, posix, cc2538, cc2650 @<:@default=none@:>@.])],
     [
         case "${with_examples}" in
 
-        none|posix|cc2538)
+        none|posix|cc2538|cc2650)
             ;;
         *)
             AC_MSG_ERROR([Invalid value ${with_examples} for --with-examples])
@@ -406,11 +490,16 @@ case ${with_examples} in
         OPENTHREAD_EXAMPLES_CC2538=1
         ;;
 
+    cc2650)
+        OPENTHREAD_EXAMPLES_CC2650=1
+        ;;
+
 esac
 
 AC_MSG_RESULT(${OPENTHREAD_EXAMPLES})
 
 AC_SUBST(OPENTHREAD_EXAMPLES)
+AM_CONDITIONAL([OPENTHREAD_EXAMPLES], [test ${with_examples} != "none"])
 AC_DEFINE_UNQUOTED([OPENTHREAD_EXAMPLES],[${OPENTHREAD_EXAMPLES}],[OpenThread examples])
 
 AC_SUBST(OPENTHREAD_EXAMPLES_POSIX)
@@ -420,6 +509,29 @@ AC_DEFINE_UNQUOTED([OPENTHREAD_EXAMPLES_POSIX],[${OPENTHREAD_EXAMPLES_POSIX}],[D
 AC_SUBST(OPENTHREAD_EXAMPLES_CC2538)
 AM_CONDITIONAL([OPENTHREAD_EXAMPLES_CC2538], [test "${OPENTHREAD_EXAMPLES}" = "cc2538"])
 AC_DEFINE_UNQUOTED([OPENTHREAD_EXAMPLES_CC2538],[${OPENTHREAD_EXAMPLES_CC2538}],[Define to 1 if you want to use cc2538 examples])
+
+AC_SUBST(OPENTHREAD_EXAMPLES_CC2650)
+AM_CONDITIONAL([OPENTHREAD_EXAMPLES_CC2650], [test "${OPENTHREAD_EXAMPLES}" = "cc2650"])
+AC_DEFINE_UNQUOTED([OPENTHREAD_EXAMPLES_CC2650],[${OPENTHREAD_EXAMPLES_CC2650}],[Define to 1 if you want to use cc2650 examples])
+
+#
+# Platform Information
+#
+
+AC_ARG_WITH(platform-info,
+    [AS_HELP_STRING([--with-platform-info=PLATFORM],
+        [Specify the platform information @<:@default=none@:>@.])],
+    [],
+    [with_platform_info=none])
+
+PLATFORM_INFO=${with_platform_info}
+
+AC_MSG_RESULT(${PLATFORM_INFO})
+
+if test "$PLATFORM_INFO" != "none"; then
+    AC_SUBST(PLATFORM_INFO)
+    AC_DEFINE_UNQUOTED([PLATFORM_INFO],["${PLATFORM_INFO}"],[OpenThread platform information])
+fi
 
 #
 # Tools
@@ -523,19 +635,21 @@ src/Makefile
 src/cli/Makefile
 src/ncp/Makefile
 src/core/Makefile
+src/diag/Makefile
 third_party/Makefile
 third_party/mbedtls/Makefile
 examples/Makefile
-examples/posix/Makefile
-examples/posix/app/Makefile
-examples/posix/app/cli/Makefile
-examples/posix/app/ncp/Makefile
-examples/posix/platform/Makefile
-examples/cc2538/Makefile
-examples/cc2538/app/Makefile
-examples/cc2538/app/cli/Makefile
-examples/cc2538/app/ncp/Makefile
-examples/cc2538/platform/Makefile
+examples/apps/Makefile
+examples/apps/cli/Makefile
+examples/apps/ncp/Makefile
+examples/platforms/Makefile
+examples/platforms/cc2538/Makefile
+examples/platforms/cc2650/Makefile
+examples/platforms/posix/Makefile
+tools/Makefile
+tools/harness-automation/Makefile
+tools/harness-thci/Makefile
+tools/spi-hdlc-adapter/Makefile
 tests/Makefile
 tests/scripts/Makefile
 tests/unit/Makefile
@@ -574,7 +688,7 @@ AC_MSG_NOTICE([
   Genhtml                                   : ${GENHTML:--}
   Build tests                               : ${nl_cv_build_tests}
   Build tools                               : ${build_tools}
-  Minimum set of tests                      : ${enable_minimum_set_of_tests}
+  OpenThread tests                          : ${with_tests}
   Prefix                                    : ${prefix}
   Documentation support                     : ${nl_cv_build_docs}
   Doxygen                                   : ${DOXYGEN:--}
@@ -592,11 +706,14 @@ AC_MSG_NOTICE([
   C++ Compile flags                         : ${CXXFLAGS:--}
   Link flags                                : ${LDFLAGS:--}
   Link libraries                            : ${LIBS}
-  Astyle                                    : ${ASTYLE}
-  Astyle pretty args                        : ${ASTYLE_PRETTY_ARGS}
-  Astyle pretty check args                  : ${ASTYLE_PRETTY_CHECK_ARGS}
+  Pretty                                    : ${PRETTY:--}
+  Pretty args                               : ${PRETTY_ARGS:--}
+  Pretty check                              : ${PRETTY_CHECK:--}
+  Pretty check args                         : ${PRETTY_CHECK_ARGS:--}
   OpenThread CLI support                    : ${enable_cli}
   OpenThread NCP support                    : ${enable_ncp}
+  OpenThread Diagnostics support            : ${enable_diag}
   OpenThread examples                       : ${OPENTHREAD_EXAMPLES}
+  OpenThread platform information           : ${PLATFORM_INFO}
 
 ])

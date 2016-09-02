@@ -27,7 +27,7 @@
 
 /**
  * @file
- *   This file includes definitions for an HDLC-lite encoder and decoer.
+ *   This file includes definitions for an HDLC-lite encoder and decoder.
  */
 
 #ifndef HDLC_HPP_
@@ -54,48 +54,97 @@ namespace Hdlc {
 class Encoder
 {
 public:
+
     /**
-     * This method begins an HDLC frame and puts the initial bytes into @p aOutBuf.
+     * This class defines a write iterator into a buffer used by Encoder.
      *
-     * @param[in]     aOutBuf     A pointer to the output buffer.
-     * @param[inout]  aOutLength  On entry, the output buffer size; On exit, the output length.
+     * Hdlc users should sub-class this to add the actual buffer space.
+     */
+    class BufferWriteIterator
+    {
+    public:
+
+        /**
+         * This method writes a byte to the buffer and updates the iterator (if space is available).
+         *
+         * @retval kThreadError_None    Successfully wrote the byte and updates the iterator.
+         * @retval kThreadError_NoBufs  Insufficient buffer space.
+         *
+         */
+        ThreadError WriteByte(uint8_t aByte);
+
+        /**
+         * This method checks if there is buffer space available to write @p aWriteLength bytes.
+         *
+         * param[in] aWriteLength       Number of bytes to write.
+         *
+         * @retval true                 Enough buffer space available to write the requested number of bytes.
+         * @retval false                Insufficient buffer space to write the requested number of bytes.
+         *
+         */
+        bool CanWrite(uint16_t aWriteLength) const;
+
+    protected:
+
+        BufferWriteIterator(void);   ///< Protected constructor to ensure no direct instantiation.
+
+        uint8_t  *mWritePointer;     ///< A pointer to current write position in the buffer.
+        uint16_t  mRemainingLength;  ///< Number of remaining bytes available to write.
+    };
+
+    /**
+     * This method begins an HDLC frame and puts the initial bytes into a buffer at the given @p aIterator.
+     *
+     * @param[inout] aIterator      A reference to a buffer write iterator. On successful exit, the iterator is updated.
      *
      * @retval kThreadError_None    Successfully started the HDLC frame.
      * @retval kThreadError_NoBufs  Insufficient buffer space available to start the HDLC frame.
      *
      */
-    ThreadError Init(uint8_t *aOutBuf, uint16_t &aOutLength);
+    ThreadError Init(BufferWriteIterator &aIterator);
 
     /**
-     * This method encodes the frame.
+     * This method encodes a single byte into a buffer at @p aIterator.
      *
-     * @param[in]   aInBuf      A pointer to the input buffer.
-     * @param[in]   aInLength   The number of bytes in @p aInBuf to encode.
-     * @param[out]  aOutBuf     A pointer to the output buffer.
-     * @param[out]  aOutLength  On exit, the number of bytes placed in @p aOutBuf.
+     * If there is no space to add the byte, the write iterator remains the same.
+     *
+     * @param[in]    aInByte        A byte to encode and add.
+     * @param[inout] aIterator      A reference to a write buffer iterator. On successful exit, the iterator is updated.
+     *
+     * @retval kThreadError_None    Successfully encoded and added the byte.
+     * @retval kThreadError_NoBufs  Insufficient buffer space available to encode and add the byte.
+     *
+     */
+    ThreadError Encode(uint8_t aInByte, BufferWriteIterator &aIterator);
+
+    /**
+     * This method encodes the frame into a buffer at @p aIterator.
+     *
+     * This method returns success only if there is space in buffer to encode the entire frame. If there is no space
+     * to encode the entire frame, the write iterator remains the same.
+     *
+     * @param[in]    aInBuf         A pointer to the input buffer.
+     * @param[in]    aInLength      The number of bytes in @p aInBuf to encode.
+     * @param[inout] aIterator      A reference to a write buffer iterator. On successful exit, the iterator is updated.
      *
      * @retval kThreadError_None    Successfully encoded the HDLC frame.
      * @retval kThreadError_NoBufs  Insufficient buffer space available to encode the HDLC frame.
      *
      */
-    ThreadError Encode(const uint8_t *aInBuf, uint16_t aInLength, uint8_t *aOutBuf, uint16_t &aOutLength);
+    ThreadError Encode(const uint8_t *aInBuf, uint16_t aInLength, BufferWriteIterator &aIterator);
 
     /**
-     * This method ends an HDLC frame and puts the initial bytes into @p aOutBuf.
+     * This method finalizes an HDLC frame.
      *
-     * @param[in]     aOutBuf     A pointer to the output buffer.
-     * @param[inout]  aOutLength  On entry, the output buffer size; On exit, the output length.
+     * @param[inout] aIterator      A reference to a write buffer iterator. On successful exit, the iterator is updated.
      *
      * @retval kThreadError_None    Successfully ended the HDLC frame.
      * @retval kThreadError_NoBufs  Insufficient buffer space available to end the HDLC frame.
      *
      */
-    ThreadError Finalize(uint8_t *aOutBuf, uint16_t &aOutLength);
+    ThreadError Finalize(BufferWriteIterator &aIterator);
 
 private:
-    ThreadError Encode(uint8_t aInByte, uint8_t *aOutBuf, uint16_t aOutLength);
-
-    uint16_t mOutOffset;
     uint16_t mFcs;
 };
 
@@ -117,6 +166,17 @@ public:
     typedef void (*FrameHandler)(void *aContext, uint8_t *aFrame, uint16_t aFrameLength);
 
     /**
+     * This function pointer is called when an error has occured.
+     *
+     * @param[in]  aContext      A pointer to arbitrary context information.
+     * @param[in]  aError        An error code describing the error.
+     * @param[in]  aFrame        A pointer to the frame.
+     * @param[in]  aFrameLength  The frame length in bytes.
+     *
+     */
+    typedef void (*ErrorHandler)(void *aContext, ThreadError aError, uint8_t *aFrame, uint16_t aFrameLength);
+
+    /**
      * This constructor initializes the decoder.
      *
      * @param[in]  aOutBuf        A pointer to the output buffer.
@@ -125,7 +185,7 @@ public:
      * @param[in]  aContext       A pointer to arbitrary context information.
      *
      */
-    Decoder(uint8_t *aOutBuf, uint16_t aOutLength, FrameHandler aFrameHandler, void *aContext);
+    Decoder(uint8_t *aOutBuf, uint16_t aOutLength, FrameHandler aFrameHandler, ErrorHandler aErrorHandler, void *aContext);
 
     /**
      * This method streams bytes into the decoder.
@@ -146,6 +206,7 @@ private:
     State mState;
 
     FrameHandler mFrameHandler;
+    ErrorHandler mErrorHandler;
     void *mContext;
 
     uint8_t *mOutBuf;

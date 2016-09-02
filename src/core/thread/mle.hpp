@@ -114,7 +114,7 @@ public:
      * This method initializes the MLE header.
      *
      */
-    void Init(void) { mSecuritySuite = 0; mSecurityControl = Mac::Frame::kSecEncMic32; }
+    void Init(void) { mSecuritySuite = k154Security; mSecurityControl = Mac::Frame::kSecEncMic32; }
 
     /**
      * This method indicates whether or not the TLV appears to be well-formed.
@@ -124,8 +124,8 @@ public:
      *
      */
     bool IsValid(void) const {
-        return mSecuritySuite == 0 &&
-               (mSecurityControl == (Mac::Frame::kKeyIdMode1 | Mac::Frame::kSecEncMic32) ||
+        return (mSecuritySuite == kNoSecurity) ||
+               (mSecuritySuite == k154Security &&
                 mSecurityControl == (Mac::Frame::kKeyIdMode2 | Mac::Frame::kSecEncMic32));
     }
 
@@ -136,9 +136,36 @@ public:
      *
      */
     uint8_t GetLength(void) const {
-        return sizeof(mSecuritySuite) + sizeof(mSecurityControl) + sizeof(mFrameCounter) +
-               (IsKeyIdMode1() ? 1 : 5) + sizeof(mCommand);
+        uint8_t rval = sizeof(mSecuritySuite) + sizeof(mCommand);
+
+        if (mSecuritySuite == k154Security) {
+            rval += sizeof(mSecurityControl) + sizeof(mFrameCounter) + sizeof(mKeySource) + sizeof(mKeyIndex);
+        }
+
+        return rval;
     }
+
+    enum SecuritySuite
+    {
+        k154Security = 0,    ///< IEEE 802.15.4-2006 security.
+        kNoSecurity  = 255,  ///< No security enabled.
+    };
+
+    /**
+     * This method returns the Security Suite value.
+     *
+     * @returns The Security Suite value.
+     *
+     */
+    SecuritySuite GetSecuritySuite(void) const { return static_cast<SecuritySuite>(mSecuritySuite); }
+
+    /**
+     * This method sets the Security Suite value.
+     *
+     * @param[in]  aSecuritySuite  The Security Suite value.
+     *
+     */
+    void SetSecuritySuite(SecuritySuite aSecuritySuite) { mSecuritySuite = static_cast<uint8_t>(aSecuritySuite); }
 
     /**
      * This method returns the MLE header length (excluding the Command Type).
@@ -147,7 +174,7 @@ public:
      *
      */
     uint8_t GetHeaderLength(void) const {
-        return sizeof(mSecurityControl) + sizeof(mFrameCounter) + (IsKeyIdMode1() ? 1 : 5);
+        return sizeof(mSecurityControl) + sizeof(mFrameCounter) + sizeof(mKeySource) + sizeof(mKeyIndex);
     }
 
     /**
@@ -169,22 +196,14 @@ public:
     uint8_t GetSecurityControl(void) const { return mSecurityControl; }
 
     /**
-     * This method indicates whether or not the Key ID Mode is set to 1.
+     * This method indicates whether or not the Key ID Mode is set to 2.
      *
-     * @retval TRUE   If the Key ID Mode is set to 1.
-     * @retval FALSE  If the Key ID Mode is not set to 1.
-     *
-     */
-    bool IsKeyIdMode1(void) const {
-        return (mSecurityControl & Mac::Frame::kKeyIdModeMask) == Mac::Frame::kKeyIdMode1;
-    }
-
-    /**
-     * This method sets the Key ID Mode to 1.
+     * @retval TRUE   If the Key ID Mode is set to 2.
+     * @retval FALSE  If the Key ID Mode is not set to 2.
      *
      */
-    void SetKeyIdMode1(void) {
-        mSecurityControl = (mSecurityControl & ~Mac::Frame::kKeyIdModeMask) | Mac::Frame::kKeyIdMode1;
+    bool IsKeyIdMode2(void) const {
+        return (mSecurityControl & Mac::Frame::kKeyIdModeMask) == Mac::Frame::kKeyIdMode2;
     }
 
     /**
@@ -202,11 +221,7 @@ public:
      *
      */
     uint32_t GetKeyId(void) const {
-        return IsKeyIdMode1() ? mKeyIdentifier[0] - 1 :
-               static_cast<uint32_t>(mKeyIdentifier[3]) << 0 |
-               static_cast<uint32_t>(mKeyIdentifier[2]) << 8 |
-               static_cast<uint32_t>(mKeyIdentifier[1]) << 16 |
-               static_cast<uint32_t>(mKeyIdentifier[0]) << 24;
+        return Encoding::BigEndian::HostSwap32(mKeySource);
     }
 
     /**
@@ -216,16 +231,8 @@ public:
      *
      */
     void SetKeyId(uint32_t aKeySequence) {
-        if (IsKeyIdMode1()) {
-            mKeyIdentifier[0] = (aKeySequence & 0x7f) + 1;
-        }
-        else {
-            mKeyIdentifier[4] = (aKeySequence & 0x7f) + 1;
-            mKeyIdentifier[3] = aKeySequence >> 0;
-            mKeyIdentifier[2] = aKeySequence >> 8;
-            mKeyIdentifier[1] = aKeySequence >> 16;
-            mKeyIdentifier[0] = aKeySequence >> 24;
-        }
+        mKeySource = Encoding::BigEndian::HostSwap32(aKeySequence);
+        mKeyIndex = (aKeySequence & 0x7f) + 1;
     }
 
     /**
@@ -269,6 +276,8 @@ public:
         kCommandChildIdResponse      = 12,   ///< Child ID Response
         kCommandChildUpdateRequest   = 13,   ///< Child Update Request
         kCommandChildUpdateResponse  = 14,   ///< Child Update Response
+        kCommandDiscoveryRequest     = 16,   ///< Discovery Request
+        kCommandDiscoveryResponse    = 17,   ///< Discovery Response
     };
 
     /**
@@ -278,8 +287,12 @@ public:
      *
      */
     Command GetCommand(void) const {
-        const uint8_t *command = mKeyIdentifier + (IsKeyIdMode1() ? 1 : 5);
-        return static_cast<Command>(*command);
+        if (mSecuritySuite == kNoSecurity) {
+            return static_cast<Command>(mSecurityControl);
+        }
+        else {
+            return static_cast<Command>(mCommand);
+        }
     }
 
     /**
@@ -289,24 +302,20 @@ public:
      *
      */
     void SetCommand(Command aCommand) {
-        uint8_t *commandField = mKeyIdentifier + (IsKeyIdMode1() ? 1 : 5);
-        *commandField = static_cast<uint8_t>(aCommand);
+        if (mSecuritySuite == kNoSecurity) {
+            mSecurityControl = static_cast<uint8_t>(aCommand);
+        }
+        else {
+            mCommand = static_cast<uint8_t>(aCommand);
+        }
     }
-
-    /**
-     * Security suite identifiers.
-     *
-     */
-    enum SecuritySuite
-    {
-        kSecurityEnabled  = 0x00,  ///< IEEE 802.15.4-2006 security
-    };
 
 private:
     uint8_t mSecuritySuite;
     uint8_t mSecurityControl;
     uint32_t mFrameCounter;
-    uint8_t mKeyIdentifier[5];
+    uint32_t mKeySource;
+    uint8_t mKeyIndex;
     uint8_t mCommand;
 } OT_TOOL_PACKED_END;
 
@@ -324,6 +333,24 @@ public:
      *
      */
     explicit Mle(ThreadNetif &aThreadNetif);
+
+    /**
+     * This method enables MLE.
+     *
+     * @retval kThreadError_None  Successfully enabled MLE.
+     * @retval kThreadError_Busy  MLE was already enabled.
+     *
+     */
+    ThreadError Enable(void);
+
+    /**
+     * This method disables MLE.
+     *
+     * @retval kThreadError_None  Successfully disabled MLE.
+     * @retval kThreadError_Busy  MLE was already disabled.
+     *
+     */
+    ThreadError Disable(void);
 
     /**
      * This method starts the MLE protocol operation.
@@ -344,6 +371,45 @@ public:
     ThreadError Stop(void);
 
     /**
+     * This function pointer is called on receiving an MLE Discovery Response message.
+     *
+     * @param[in]  aResult   A valid pointer to the Discovery Response information or NULL when the Discovery completes.
+     * @param[in]  aContext  A pointer to application-specific context.
+     *
+     */
+    typedef void (*DiscoverHandler)(otActiveScanResult *aResult, void *aContext);
+
+    /**
+     * This method initiates a Thread Discovery.
+     *
+     * @param[in]  aScanChannels  A bit vector indicating which channels to scan.
+     * @param[in]  aScanDuration  The time in milliseconds to spend scanning each channel.
+     * @param[in]  aPanId         The PAN ID filter (set to Broadcast PAN to disable filter).
+     * @param[in]  aHandler       A pointer to a function that is called on receiving an MLE Discovery Response.
+     * @param[in]  aContext       A pointer to arbitrary context information.
+     *
+     * @retval kThreadError_None  Successfully started a Thread Discovery.
+     * @retval kThreadError_Busy  Thread Discovery is already in progress.
+     *
+     */
+    ThreadError Discover(uint32_t aScanChannels, uint16_t aScanDuration, uint16_t aPanId,
+                         DiscoverHandler aCallback, void *aContext);
+
+    /**
+     * This method indicates whether or not an MLE Thread Discovery is currently in progress.
+     *
+     * @returns true if an MLE Thread Discovery is in progress, false otherwise.
+     *
+     */
+    bool IsDiscoverInProgress(void);
+
+    /**
+     * This method is called by the MeshForwarder to indicate that discovery is complete.
+     *
+     */
+    void HandleDiscoverComplete(void);
+
+    /**
      * This method causes the Thread interface to detach from the Thread network.
      *
      * @retval kThreadError_None  Successfully detached from the Thread network.
@@ -362,6 +428,15 @@ public:
      *
      */
     ThreadError BecomeChild(otMleAttachFilter aFilter);
+
+    /**
+     * This method indicates whether or not the Thread device is attached to a Thread network.
+     *
+     * @retval TRUE   Attached to a Thread network.
+     * @retval FALSE  Not attached to a Thread network.
+     *
+     */
+    bool IsAttached(void) const;
 
     /**
      * This method returns the current Thread interface state.
@@ -407,34 +482,14 @@ public:
     ThreadError SetMeshLocalPrefix(const uint8_t *aPrefix);
 
     /**
-     * This method returns the Child ID portion of an RLOC16.
+     * This method updates the link local address.
      *
-     * @param[in]  aRloc16  The RLOC16 value.
+     * Call this method when the IEEE 802.15.4 Extended Address has changed.
      *
-     * @returns The Child ID portion of an RLOC16.
-     *
-     */
-    const uint8_t GetChildId(uint16_t aRloc16) const;
-
-    /**
-     * This method returns the Router ID portion of an RLOC16.
-     *
-     * @param[in]  aRloc16  The RLOC16 value.
-     *
-     * @returns The Router ID portion of an RLOC16.
+     * @retval kThreadError_None  Successfully updated the link local address.
      *
      */
-    const uint8_t GetRouterId(uint16_t aRloc16) const;
-
-    /**
-     * This method returns the RLOC16 of a given Router ID.
-     *
-     * @param[in]  aRouterId  The Router ID value..
-     *
-     * @returns The RLOC16 of the given Router ID.
-     *
-     */
-    const uint16_t GetRloc16(uint8_t aRouterId) const;
+    ThreadError UpdateLinkLocalAddress(void);
 
     /**
      * This method returns a pointer to the link-local all Thread nodes multicast address.
@@ -508,12 +563,6 @@ public:
     const Ip6::Address *GetMeshLocal64(void) const;
 
     /**
-     * This method notifies MLE that the Network Data has changed.
-     *
-     */
-    void HandleNetworkDataUpdate(void);
-
-    /**
      * This method returns the Router ID of the Leader.
      *
      * @returns The Router ID of the Leader.
@@ -539,6 +588,79 @@ public:
      *
      */
     const LeaderDataTlv &GetLeaderDataTlv(void);
+
+    /**
+     * This method gets the Leader Data.
+     *
+     * @param[out]  aLeaderData  A reference to where the leader data is placed.
+     *
+     * @retval kThreadError_None         Successfully retrieved the leader data.
+     * @retval kThreadError_Detached     Not currently attached.
+     *
+     */
+    ThreadError GetLeaderData(otLeaderData &aLeaderData);
+
+    /**
+     * This method returns the link quality on the link to a given extended address.
+     *
+     * @param[in]  aMacAddr  The IEEE 802.15.4 Extended Mac Address.
+     * @param[in]  aLinkQuality A reference to the assigned link quality.
+     *
+     * @retval kThreadError_None         Successfully retrieve the link quality to aLinkQuality.
+     * @retval kThreadError_InvalidArgs  No match found with a given extended address.
+     *
+     */
+    ThreadError GetAssignLinkQuality(const Mac::ExtAddress aMacAddr, uint8_t &aLinkQuality);
+
+    /**
+     * This method sets the link quality on the link to a given extended address.
+     *
+     * @param[in]  aMacAddr  The IEEE 802.15.4 Extended Mac Address.
+     * @param[in]  aLinkQaulity The link quality to be set on the link.
+     *
+     */
+    void SetAssignLinkQuality(const Mac::ExtAddress aMacAddr, uint8_t aLinkQuality);
+
+    /**
+     * This method returns the Child ID portion of an RLOC16.
+     *
+     * @param[in]  aRloc16  The RLOC16 value.
+     *
+     * @returns The Child ID portion of an RLOC16.
+     *
+     */
+    static uint16_t GetChildId(uint16_t aRloc16) { return aRloc16 & kMaxChildId; }
+
+    /**
+     * This method returns the Router ID portion of an RLOC16.
+     *
+     * @param[in]  aRloc16  The RLOC16 value.
+     *
+     * @returns The Router ID portion of an RLOC16.
+     *
+     */
+    static uint8_t GetRouterId(uint16_t aRloc16) { return aRloc16 >> kRouterIdOffset; }
+
+    /**
+     * This method returns the RLOC16 of a given Router ID.
+     *
+     * @param[in]  aRouterId  The Router ID value.
+     *
+     * @returns The RLOC16 of the given Router ID.
+     *
+     */
+    static uint16_t GetRloc16(uint8_t aRouterId) { return static_cast<uint16_t>(aRouterId << kRouterIdOffset); }
+
+    /**
+     * This method indicates whether or not @p aRloc16 refers to an active router.
+     *
+     * @param[in]  aRloc16  The RLOC16 value.
+     *
+     * @retval TRUE   If @p aRloc16 refers to an active router.
+     * @retval FALSE  If @p aRloc16 does not refer to an active router.
+     *
+     */
+    static bool IsActiveRouter(uint16_t aRloc16) { return GetChildId(aRloc16) == 0; }
 
 protected:
     /**
@@ -743,6 +865,39 @@ protected:
     ThreadError AppendAddressRegistration(Message &aMessage);
 
     /**
+     * This method appends a Active Timestamp TLV to a message.
+     *
+     * @param[in]  aMessage  A reference to the message.
+     *
+     * @retval kThreadError_None    Successfully appended the Active Timestamp TLV.
+     * @retval kThreadError_NoBufs  Insufficient buffers available to append the Active Timestamp TLV.
+     *
+     */
+    ThreadError AppendActiveTimestamp(Message &aMessage);
+
+    /**
+     * This method appends a Pending Timestamp TLV to a message.
+     *
+     * @param[in]  aMessage  A reference to the message.
+     *
+     * @retval kThreadError_None    Successfully appended the Pending Timestamp TLV.
+     * @retval kThreadError_NoBufs  Insufficient buffers available to append the Pending Timestamp TLV.
+     *
+     */
+    ThreadError AppendPendingTimestamp(Message &aMessage);
+
+    /**
+     * This method appends a Thread Discovery TLV to a message.
+     *
+     * @param[in]  aMessage  A reference to the message.
+     *
+     * @retval kThreadError_None    Successfully appended the Thread Discovery TLV.
+     * @retval kThreadError_NoBufs  Insufficient buffers available to append the Address Registration TLV.
+     *
+     */
+    ThreadError AppendDiscovery(Message &aMessage);
+
+    /**
      * This method checks if the destination is reachable.
      *
      * @param[in]  aMeshSource  The RLOC16 of the source.
@@ -806,16 +961,6 @@ protected:
     Mac::ShortAddress GetNextHop(uint16_t aDestination) const;
 
     /**
-     * This method converts a link margin value to a link quality value.
-     *
-     * @param[in]  aLinkMargin  The Link Margin in dB.
-     *
-     * @returns The link quality value.
-     *
-     */
-    uint8_t LinkMarginToQuality(uint8_t aLinkMargin);
-
-    /**
      * This method generates an MLE Data Request message.
      *
      * @param[in]  aDestination  A reference to the IPv6 address of the destination.
@@ -827,19 +972,6 @@ protected:
      *
      */
     ThreadError SendDataRequest(const Ip6::Address &aDestination, const uint8_t *aTlvs, uint8_t aTlvsLength);
-
-    /**
-     * This method generates an MLE Data Response message.
-     *
-     * @param[in]  aDestination  A reference to the IPv6 address of the destination.
-     * @param[in]  aTlvs         A pointer to TLV types that should be included.
-     * @param[in]  aTlvsLength   The number of TLV types in @p aTlvs.
-     *
-     * @retval kThreadError_None    Successfully generated an MLE Data Response message.
-     * @retval kThreadError_NoBufs  Insufficient buffers to generate the MLE Data Response message.
-     *
-     */
-    ThreadError SendDataResponse(const Ip6::Address &aDestination, const uint8_t *aTlvs, uint8_t aTlvsLength);
 
     /**
      * This method generates an MLE Child Update Request message.
@@ -907,10 +1039,16 @@ protected:
     NetworkData::Leader &mNetworkData;      ///< The Network Data object.
 
     LeaderDataTlv mLeaderData;              ///< Last received Leader Data TLV.
+    bool mRetrieveNewNetworkData;           ///< Indicating new Network Data is needed if set.
 
     DeviceState mDeviceState;               ///< Current Thread interface state.
     Router mParent;                         ///< Parent information.
     uint8_t mDeviceMode;                    ///< Device mode setting.
+
+    bool isAssignLinkQuality;    ///< Indicating an assigned link quality is used on the link
+    uint8_t mAssignLinkQuality;  ///< The assigned link quality value
+    uint8_t mAssignLinkMargin;   ///< The maximum link margin corresponding to mAssignLinkQuality
+    Mac::ExtAddress mAddr64;     ///< A given IEEE 802.15.4 Extended Address
 
     /**
      * States when searching for a parent.
@@ -944,17 +1082,23 @@ private:
     void HandleParentRequestTimer(void);
     static void HandleUdpReceive(void *aContext, otMessage aMessage, const otMessageInfo *aMessageInfo);
     void HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    static void HandleSendChildUpdateRequest(void *aContext);
+    void HandleSendChildUpdateRequest(void);
 
     ThreadError HandleAdvertisement(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
     ThreadError HandleChildIdResponse(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
     ThreadError HandleChildUpdateResponse(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
-    ThreadError HandleDataRequest(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
     ThreadError HandleDataResponse(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
     ThreadError HandleParentResponse(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo,
                                      uint32_t aKeySequence);
+    ThreadError HandleDiscoveryRequest(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    ThreadError HandleDiscoveryResponse(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
     ThreadError SendParentRequest(void);
     ThreadError SendChildIdRequest(void);
+    ThreadError SendDiscoveryResponse(const Ip6::Address &aDestination, uint16_t aPanId);
+
+    bool IsBetterParent(uint16_t aRloc16, uint8_t aLinkQuality, ConnectivityTlv &aConnectivityTlv) const;
 
     struct
     {
@@ -968,10 +1112,22 @@ private:
     } mParentRequest;
 
     otMleAttachFilter mParentRequestMode;
-    uint32_t mParentConnectivity;
+    uint8_t mParentLinkQuality;
+    int8_t mParentPriority;
+    uint8_t mParentLinkQuality3;
+    uint8_t mParentLinkQuality2;
+    uint8_t mParentLinkQuality1;
+    LeaderDataTlv mParentLeaderData;
+    bool mParentIsSingleton;
 
     Ip6::UdpSocket mSocket;
     uint32_t mTimeout;
+
+    Tasklet mSendChildUpdateRequest;
+
+    DiscoverHandler mDiscoverHandler;
+    void *mDiscoverContext;
+    bool mIsDiscoverInProgress;
 
     Ip6::NetifUnicastAddress mLinkLocal16;
     Ip6::NetifUnicastAddress mLinkLocal64;

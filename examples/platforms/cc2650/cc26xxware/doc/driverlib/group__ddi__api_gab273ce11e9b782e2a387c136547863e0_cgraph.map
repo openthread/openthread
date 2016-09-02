@@ -1,0 +1,6 @@
+<map id="DDI8SetValBit" name="DDI8SetValBit">
+<area shape="rect" id="node2" href="$group__ddi__api.html#ga06d6b1eee2c8757b8431eb6e1ab98f68" title="Safely write to AUX ADI/DDI interfaces using a semaphore. " alt="" coords="164,31,311,57"/>
+<area shape="rect" id="node3" href="$group__cpu__api.html#ga491d851c4f7fff1f9f66aa778b0671b0" title="Disable all external interrupts. " alt="" coords="359,5,441,32"/>
+<area shape="rect" id="node5" href="$group__cpu__api.html#ga6922d401cbc951632f495ffcf2e71dfc" title="Enable all external interrupts. " alt="" coords="359,56,441,83"/>
+<area shape="rect" id="node4" href="$cpu_8c.html#a9d29df169acb9be94306e8b58faed3ee" title="Provide a small delay. " alt="" coords="489,31,553,57"/>
+</map>

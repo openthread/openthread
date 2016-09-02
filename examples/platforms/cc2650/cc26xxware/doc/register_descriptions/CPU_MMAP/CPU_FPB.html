@@ -1,0 +1,1029 @@
+<HTML>
+<HEAD><META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=UTF-8">
+<link href="..//elements/mmap.css" rel="stylesheet" type="text/css">
+<TITLE>CPU_FPB</TITLE>
+</HEAD>
+<BODY class=mmapBody>
+<h2 class="mmapCellTitle">
+  <a name="Top_Tag">CPU_FPB</a>
+</h2>
+<P>Instance: CPU_FPB<BR>
+Component: CPU_FPB<BR>
+Base address: 0xE0002000</P>
+<BR>
+<P>Cortex-M&#39;s Flash Patch and Breakpoint (FPB)</P>
+ <H3 class="mmapRegisterSummaryTitle"><A name="CPU_FPB"></A><A href="CPU_MMAP.html"> TOP</A>:<B>CPU_FPB</B> Register Summary</H3>
+<TABLE cellspacing="0" class="mmapRegisterSummaryTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">
+  <P>Register Name</P>
+</TD>
+<TD class="cellTopCol2">
+  <P>Type</P>
+</TD>
+<TD class="cellTopCol3">
+  <P>Register Width (Bits)</P>
+</TD>
+<TD class="cellTopCol4">
+  <P>Register Reset</P>
+</TD>
+<TD class="cellTopCol5">
+  <P>Address Offset</P>
+</TD>
+<TD class="cellTopCol5">
+  <P>Physical Address</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#CTRL">CTRL</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>RW</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x0000 0260</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 0000</P>
+</TD>
+<TD class="cellCol5">
+  <P>0xE000 2000</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#REMAP">REMAP</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>RW</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0b001X XXXX XXXX XXXX XXXX XXXX XXX0 0000</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 0004</P>
+</TD>
+<TD class="cellCol5">
+  <P>0xE000 2004</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#COMP0">COMP0</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>RW</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x0000 0000</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 0008</P>
+</TD>
+<TD class="cellCol5">
+  <P>0xE000 2008</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#COMP1">COMP1</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>RW</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x0000 0000</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 000C</P>
+</TD>
+<TD class="cellCol5">
+  <P>0xE000 200C</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#COMP2">COMP2</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>RW</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x0000 0000</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 0010</P>
+</TD>
+<TD class="cellCol5">
+  <P>0xE000 2010</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#COMP3">COMP3</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>RW</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x0000 0000</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 0014</P>
+</TD>
+<TD class="cellCol5">
+  <P>0xE000 2014</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#COMP4">COMP4</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>RW</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x0000 0000</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 0018</P>
+</TD>
+<TD class="cellCol5">
+  <P>0xE000 2018</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#COMP5">COMP5</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>RW</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x0000 0000</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 001C</P>
+</TD>
+<TD class="cellCol5">
+  <P>0xE000 201C</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#COMP6">COMP6</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>RW</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x0000 0000</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 0020</P>
+</TD>
+<TD class="cellCol5">
+  <P>0xE000 2020</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#COMP7">COMP7</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>RW</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x0000 0000</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 0024</P>
+</TD>
+<TD class="cellCol5">
+  <P>0xE000 2024</P>
+</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterSummaryTitle"><A href="CPU_MMAP.html"> TOP</A>:CPU_FPB Register Descriptions</H3>
+<H3 class="mmapRegisterTitle"><A name="CTRL"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">CPU_FPB</A>:CTRL</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 0000</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0xE000 2000</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0xE000 2000</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">Control<BR>
+This register is used to enable the flash patch block.</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">RW</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="CTRL_RESERVED14">31:14</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED14</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0b00 0000 0000 0000 0000</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="CTRL_NUM_CODE2">13:12</a>
+</TD>
+<TD class="cellBitfieldCol2">NUM_CODE2</TD>
+<TD class="cellBitfieldCol3" colspan="3">Number of full banks of code comparators, sixteen comparators per bank. Where less than sixteen code comparators are provided, the bank count is zero, and the number present indicated by <A class="xref" href="#CTRL_NUM_CODE1">NUM_CODE1</A>. This read only field contains 3&#39;b000 to indicate 0 banks for Cortex-M processor.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0b00</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="CTRL_NUM_LIT">11:8</a>
+</TD>
+<TD class="cellBitfieldCol2">NUM_LIT</TD>
+<TD class="cellBitfieldCol3" colspan="3">Number of literal slots field.<BR>
+<BR>
+0x0: No literal slots<BR>
+0x2: Two literal slots</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0x2</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="CTRL_NUM_CODE1">7:4</a>
+</TD>
+<TD class="cellBitfieldCol2">NUM_CODE1</TD>
+<TD class="cellBitfieldCol3" colspan="3">Number of code slots field.<BR>
+<BR>
+0x0: No code slots<BR>
+0x2: Two code slots<BR>
+0x6: Six code slots</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0x6</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="CTRL_RESERVED2">3:2</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED2</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0b00</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="CTRL_KEY">1</a>
+</TD>
+<TD class="cellBitfieldCol2">KEY</TD>
+<TD class="cellBitfieldCol3" colspan="3">Key field. In order to write to this register, this bit-field must be written to &#39;1&#39;. This bit always reads 0.</TD>
+<TD class="cellBitfieldCol4">WO</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="CTRL_ENABLE">0</a>
+</TD>
+<TD class="cellBitfieldCol2">ENABLE</TD>
+<TD class="cellBitfieldCol3" colspan="3">Flash patch unit enable bit<BR>
+<BR>
+0x0: Flash patch unit disabled<BR>
+0x1: Flash patch unit enabled</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="REMAP"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">CPU_FPB</A>:REMAP</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 0004</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0xE000 2004</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0xE000 2004</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">Remap<BR>
+This register provides the remap base address location where a matched addresses are remapped. The three most significant bits and the five least significant bits of the remap base address are hard-coded to 3&#39;b001 and 5&#39;b00000 respectively. The remap base address must be in system space and is it required to be 8-word aligned, with one word allocated to each of the eight <A class="mmap_legend_link" href="../legend.html#FPB">FPB</A> comparators.</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">RW</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="REMAP_RESERVED29">31:29</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED29</TD>
+<TD class="cellBitfieldCol3" colspan="3">This field always reads 3&#39;b001. Writing to this field is ignored.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0b001</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="REMAP_REMAP">28:5</a>
+</TD>
+<TD class="cellBitfieldCol2">REMAP</TD>
+<TD class="cellBitfieldCol3" colspan="3">Remap base address field.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0xXX XXXX</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="REMAP_RESERVED0">4:0</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED0</TD>
+<TD class="cellBitfieldCol3" colspan="3">This field always reads 0. Writing to this field is ignored.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0b0 0000</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="COMP0"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">CPU_FPB</A>:COMP0</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 0008</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0xE000 2008</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0xE000 2008</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">Comparator 0</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">RW</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="COMP0_REPLACE">31:30</a>
+</TD>
+<TD class="cellBitfieldCol2">REPLACE</TD>
+<TD class="cellBitfieldCol3" colspan="3">This selects what happens when the <A class="xref" href="#COMP0_COMP">COMP</A> address is matched. Address remapping only takes place for the 0x0 setting.<BR>
+<BR>
+0x0: Remap to remap address. See <A class="xref" href="#REMAP_REMAP">REMAP.REMAP</A><BR>
+0x1: Set <A class="mmap_legend_link" href="../legend.html#BKPT">BKPT</A> on lower halfword, upper is unaffected<BR>
+0x2: Set <A class="mmap_legend_link" href="../legend.html#BKPT">BKPT</A> on upper halfword, lower is unaffected<BR>
+0x3: Set <A class="mmap_legend_link" href="../legend.html#BKPT">BKPT</A> on both lower and upper halfwords.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0b00</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="COMP0_RESERVED29">29</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED29</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="COMP0_COMP">28:2</a>
+</TD>
+<TD class="cellBitfieldCol2">COMP</TD>
+<TD class="cellBitfieldCol3" colspan="3">Comparison address.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0b000 0000 0000 0000 0000 0000 0000</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="COMP0_RESERVED1">1</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED1</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="COMP0_ENABLE">0</a>
+</TD>
+<TD class="cellBitfieldCol2">ENABLE</TD>
+<TD class="cellBitfieldCol3" colspan="3">Compare and remap enable comparator 0. <A class="xref" href="#CTRL_ENABLE">CTRL.ENABLE</A> must also be set to enable comparisons.<BR>
+<BR>
+0x0: Compare and remap for comparator 0 disabled<BR>
+0x1: Compare and remap for comparator 0 enabled</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="COMP1"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">CPU_FPB</A>:COMP1</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 000C</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0xE000 200C</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0xE000 200C</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">Comparator 1</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">RW</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="COMP1_REPLACE">31:30</a>
+</TD>
+<TD class="cellBitfieldCol2">REPLACE</TD>
+<TD class="cellBitfieldCol3" colspan="3">This selects what happens when the <A class="xref" href="#COMP1_COMP">COMP</A> address is matched. Address remapping only takes place for the 0x0 setting.<BR>
+<BR>
+0x0: Remap to remap address. See <A class="xref" href="#REMAP_REMAP">REMAP.REMAP</A><BR>
+0x1: Set <A class="mmap_legend_link" href="../legend.html#BKPT">BKPT</A> on lower halfword, upper is unaffected<BR>
+0x2: Set <A class="mmap_legend_link" href="../legend.html#BKPT">BKPT</A> on upper halfword, lower is unaffected<BR>
+0x3: Set <A class="mmap_legend_link" href="../legend.html#BKPT">BKPT</A> on both lower and upper halfwords.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0b00</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="COMP1_RESERVED29">29</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED29</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="COMP1_COMP">28:2</a>
+</TD>
+<TD class="cellBitfieldCol2">COMP</TD>
+<TD class="cellBitfieldCol3" colspan="3">Comparison address.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0b000 0000 0000 0000 0000 0000 0000</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="COMP1_RESERVED1">1</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED1</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="COMP1_ENABLE">0</a>
+</TD>
+<TD class="cellBitfieldCol2">ENABLE</TD>
+<TD class="cellBitfieldCol3" colspan="3">Compare and remap enable comparator 1. <A class="xref" href="#CTRL_ENABLE">CTRL.ENABLE</A> must also be set to enable comparisons.<BR>
+<BR>
+0x0: Compare and remap for comparator 1 disabled<BR>
+0x1: Compare and remap for comparator 1 enabled</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="COMP2"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">CPU_FPB</A>:COMP2</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 0010</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0xE000 2010</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0xE000 2010</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">Comparator 2</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">RW</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="COMP2_REPLACE">31:30</a>
+</TD>
+<TD class="cellBitfieldCol2">REPLACE</TD>
+<TD class="cellBitfieldCol3" colspan="3">This selects what happens when the <A class="xref" href="#COMP2_COMP">COMP</A> address is matched. Address remapping only takes place for the 0x0 setting.<BR>
+<BR>
+0x0: Remap to remap address. See <A class="xref" href="#REMAP_REMAP">REMAP.REMAP</A><BR>
+0x1: Set <A class="mmap_legend_link" href="../legend.html#BKPT">BKPT</A> on lower halfword, upper is unaffected<BR>
+0x2: Set <A class="mmap_legend_link" href="../legend.html#BKPT">BKPT</A> on upper halfword, lower is unaffected<BR>
+0x3: Set <A class="mmap_legend_link" href="../legend.html#BKPT">BKPT</A> on both lower and upper halfwords.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0b00</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="COMP2_RESERVED29">29</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED29</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="COMP2_COMP">28:2</a>
+</TD>
+<TD class="cellBitfieldCol2">COMP</TD>
+<TD class="cellBitfieldCol3" colspan="3">Comparison address.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0b000 0000 0000 0000 0000 0000 0000</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="COMP2_RESERVED1">1</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED1</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="COMP2_ENABLE">0</a>
+</TD>
+<TD class="cellBitfieldCol2">ENABLE</TD>
+<TD class="cellBitfieldCol3" colspan="3">Compare and remap enable comparator 2. <A class="xref" href="#CTRL_ENABLE">CTRL.ENABLE</A> must also be set to enable comparisons.<BR>
+<BR>
+0x0: Compare and remap for comparator 2 disabled<BR>
+0x1: Compare and remap for comparator 2 enabled</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="COMP3"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">CPU_FPB</A>:COMP3</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 0014</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0xE000 2014</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0xE000 2014</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">Comparator 3</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">RW</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="COMP3_REPLACE">31:30</a>
+</TD>
+<TD class="cellBitfieldCol2">REPLACE</TD>
+<TD class="cellBitfieldCol3" colspan="3">This selects what happens when the <A class="xref" href="#COMP3_COMP">COMP</A> address is matched. Address remapping only takes place for the 0x0 setting.<BR>
+<BR>
+0x0: Remap to remap address. See <A class="xref" href="#REMAP_REMAP">REMAP.REMAP</A><BR>
+0x1: Set <A class="mmap_legend_link" href="../legend.html#BKPT">BKPT</A> on lower halfword, upper is unaffected<BR>
+0x2: Set <A class="mmap_legend_link" href="../legend.html#BKPT">BKPT</A> on upper halfword, lower is unaffected<BR>
+0x3: Set <A class="mmap_legend_link" href="../legend.html#BKPT">BKPT</A> on both lower and upper halfwords.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0b00</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="COMP3_RESERVED29">29</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED29</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="COMP3_COMP">28:2</a>
+</TD>
+<TD class="cellBitfieldCol2">COMP</TD>
+<TD class="cellBitfieldCol3" colspan="3">Comparison address.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0b000 0000 0000 0000 0000 0000 0000</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="COMP3_RESERVED1">1</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED1</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="COMP3_ENABLE">0</a>
+</TD>
+<TD class="cellBitfieldCol2">ENABLE</TD>
+<TD class="cellBitfieldCol3" colspan="3">Compare and remap enable comparator 3. <A class="xref" href="#CTRL_ENABLE">CTRL.ENABLE</A> must also be set to enable comparisons.<BR>
+<BR>
+0x0: Compare and remap for comparator 3 disabled<BR>
+0x1: Compare and remap for comparator 3 enabled</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="COMP4"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">CPU_FPB</A>:COMP4</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 0018</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0xE000 2018</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0xE000 2018</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">Comparator 4</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">RW</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="COMP4_REPLACE">31:30</a>
+</TD>
+<TD class="cellBitfieldCol2">REPLACE</TD>
+<TD class="cellBitfieldCol3" colspan="3">This selects what happens when the <A class="xref" href="#COMP4_COMP">COMP</A> address is matched. Address remapping only takes place for the 0x0 setting.<BR>
+<BR>
+0x0: Remap to remap address. See <A class="xref" href="#REMAP_REMAP">REMAP.REMAP</A><BR>
+0x1: Set <A class="mmap_legend_link" href="../legend.html#BKPT">BKPT</A> on lower halfword, upper is unaffected<BR>
+0x2: Set <A class="mmap_legend_link" href="../legend.html#BKPT">BKPT</A> on upper halfword, lower is unaffected<BR>
+0x3: Set <A class="mmap_legend_link" href="../legend.html#BKPT">BKPT</A> on both lower and upper halfwords.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0b00</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="COMP4_RESERVED29">29</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED29</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="COMP4_COMP">28:2</a>
+</TD>
+<TD class="cellBitfieldCol2">COMP</TD>
+<TD class="cellBitfieldCol3" colspan="3">Comparison address.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0b000 0000 0000 0000 0000 0000 0000</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="COMP4_RESERVED1">1</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED1</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="COMP4_ENABLE">0</a>
+</TD>
+<TD class="cellBitfieldCol2">ENABLE</TD>
+<TD class="cellBitfieldCol3" colspan="3">Compare and remap enable comparator 4. <A class="xref" href="#CTRL_ENABLE">CTRL.ENABLE</A> must also be set to enable comparisons.<BR>
+<BR>
+0x0: Compare and remap for comparator 4 disabled<BR>
+0x1: Compare and remap for comparator 4 enabled</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="COMP5"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">CPU_FPB</A>:COMP5</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 001C</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0xE000 201C</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0xE000 201C</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">Comparator 5</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">RW</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="COMP5_REPLACE">31:30</a>
+</TD>
+<TD class="cellBitfieldCol2">REPLACE</TD>
+<TD class="cellBitfieldCol3" colspan="3">This selects what happens when the <A class="xref" href="#COMP5_COMP">COMP</A> address is matched. Address remapping only takes place for the 0x0 setting.<BR>
+<BR>
+0x0: Remap to remap address. See <A class="xref" href="#REMAP_REMAP">REMAP.REMAP</A><BR>
+0x1: Set <A class="mmap_legend_link" href="../legend.html#BKPT">BKPT</A> on lower halfword, upper is unaffected<BR>
+0x2: Set <A class="mmap_legend_link" href="../legend.html#BKPT">BKPT</A> on upper halfword, lower is unaffected<BR>
+0x3: Set <A class="mmap_legend_link" href="../legend.html#BKPT">BKPT</A> on both lower and upper halfwords.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0b00</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="COMP5_RESERVED29">29</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED29</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="COMP5_COMP">28:2</a>
+</TD>
+<TD class="cellBitfieldCol2">COMP</TD>
+<TD class="cellBitfieldCol3" colspan="3">Comparison address.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0b000 0000 0000 0000 0000 0000 0000</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="COMP5_RESERVED1">1</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED1</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="COMP5_ENABLE">0</a>
+</TD>
+<TD class="cellBitfieldCol2">ENABLE</TD>
+<TD class="cellBitfieldCol3" colspan="3">Compare and remap enable comparator 5. <A class="xref" href="#CTRL_ENABLE">CTRL.ENABLE</A> must also be set to enable comparisons.<BR>
+<BR>
+0x0: Compare and remap for comparator 5 disabled<BR>
+0x1: Compare and remap for comparator 5 enabled</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="COMP6"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">CPU_FPB</A>:COMP6</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 0020</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0xE000 2020</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0xE000 2020</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">Comparator 6</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">RW</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="COMP6_REPLACE">31:30</a>
+</TD>
+<TD class="cellBitfieldCol2">REPLACE</TD>
+<TD class="cellBitfieldCol3" colspan="3">This selects what happens when the <A class="xref" href="#COMP6_COMP">COMP</A> address is matched. Comparator 6 is a literal comparator and the only supported setting is 0x0. Other settings will be ignored.<BR>
+<BR>
+0x0: Remap to remap address. See <A class="xref" href="#REMAP_REMAP">REMAP.REMAP</A><BR>
+0x1: Set <A class="mmap_legend_link" href="../legend.html#BKPT">BKPT</A> on lower halfword, upper is unaffected<BR>
+0x2: Set <A class="mmap_legend_link" href="../legend.html#BKPT">BKPT</A> on upper halfword, lower is unaffected<BR>
+0x3: Set <A class="mmap_legend_link" href="../legend.html#BKPT">BKPT</A> on both lower and upper halfwords.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0b00</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="COMP6_RESERVED29">29</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED29</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="COMP6_COMP">28:2</a>
+</TD>
+<TD class="cellBitfieldCol2">COMP</TD>
+<TD class="cellBitfieldCol3" colspan="3">Comparison address.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0b000 0000 0000 0000 0000 0000 0000</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="COMP6_RESERVED1">1</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED1</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="COMP6_ENABLE">0</a>
+</TD>
+<TD class="cellBitfieldCol2">ENABLE</TD>
+<TD class="cellBitfieldCol3" colspan="3">Compare and remap enable comparator 6. <A class="xref" href="#CTRL_ENABLE">CTRL.ENABLE</A> must also be set to enable comparisons.<BR>
+<BR>
+0x0: Compare and remap for comparator 6 disabled<BR>
+0x1: Compare and remap for comparator 6 enabled</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="COMP7"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">CPU_FPB</A>:COMP7</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 0024</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0xE000 2024</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0xE000 2024</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">Comparator 7</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">RW</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="COMP7_REPLACE">31:30</a>
+</TD>
+<TD class="cellBitfieldCol2">REPLACE</TD>
+<TD class="cellBitfieldCol3" colspan="3">This selects what happens when the <A class="xref" href="#COMP7_COMP">COMP</A> address is matched. Comparator 7 is a literal comparator and the only supported setting is 0x0. Other settings will be ignored.<BR>
+<BR>
+0x0: Remap to remap address. See <A class="xref" href="#REMAP_REMAP">REMAP.REMAP</A><BR>
+0x1: Set <A class="mmap_legend_link" href="../legend.html#BKPT">BKPT</A> on lower halfword, upper is unaffected<BR>
+0x2: Set <A class="mmap_legend_link" href="../legend.html#BKPT">BKPT</A> on upper halfword, lower is unaffected<BR>
+0x3: Set <A class="mmap_legend_link" href="../legend.html#BKPT">BKPT</A> on both lower and upper halfwords.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0b00</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="COMP7_RESERVED29">29</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED29</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="COMP7_COMP">28:2</a>
+</TD>
+<TD class="cellBitfieldCol2">COMP</TD>
+<TD class="cellBitfieldCol3" colspan="3">Comparison address.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0b000 0000 0000 0000 0000 0000 0000</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="COMP7_RESERVED1">1</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED1</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="COMP7_ENABLE">0</a>
+</TD>
+<TD class="cellBitfieldCol2">ENABLE</TD>
+<TD class="cellBitfieldCol3" colspan="3">Compare and remap enable comparator 7. <A class="xref" href="#CTRL_ENABLE">CTRL.ENABLE</A> must also be set to enable comparisons.<BR>
+<BR>
+0x0: Compare and remap for comparator 7 disabled<BR>
+0x1: Compare and remap for comparator 7 enabled</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+</TABLE>
+<BR>
+<BR>
+<hr><table class="footer"><tr><td>&copy; 2015 - 2016. Texas Instruments | All Rights Reserved</td></tr></table>
+</BODY>
+</HTML>

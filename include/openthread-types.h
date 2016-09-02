@@ -111,13 +111,69 @@ typedef enum ThreadError
      */
     kThreadError_DestinationAddressFiltered = 24,
 
+    /**
+     * The requested item could not be found.
+     */
+    kThreadError_NotFound = 25,
+
+    /**
+     * The operation is already in progress.
+     */
+    kThreadError_Already = 26,
+
+    /**
+     * Received a frame filtered by the blacklist.
+     */
+    kThreadError_BlacklistFiltered = 27,
+
     kThreadError_Error = 255,
 } ThreadError;
 
+#define OT_IP6_IID_SIZE            8   ///< Size of an IPv6 Interface Identifier (bytes)
 
-#define OT_EXT_ADDRESS_SIZE   8   ///< Size of an IEEE 802.15.4 Extended Address (bytes)
-#define OT_EXT_PAN_ID_SIZE    8   ///< Size of a Thread PAN ID (bytes)
-#define OT_NETWORK_NAME_SIZE  16  ///< Size of the Thread Network Name field (bytes)
+#define OT_MASTER_KEY_SIZE         16  ///< Size of the Thread Master Key (bytes)
+
+/**
+ * This structure represents a Thread Master Key.
+ *
+ */
+typedef struct otMasterKey
+{
+    uint8_t m8[OT_MASTER_KEY_SIZE];
+} otMasterKey;
+
+#define OT_NETWORK_NAME_MAX_SIZE   16  ///< Maximum size of the Thread Network Name field (bytes)
+
+/**
+ * This structure represents a Network Name.
+ *
+ */
+typedef struct otNetworkName
+{
+    char m8[OT_NETWORK_NAME_MAX_SIZE + 1];
+} otNetworkName;
+
+#define OT_EXT_PAN_ID_SIZE         8   ///< Size of a Thread PAN ID (bytes)
+
+/**
+ * This structure represents an Extended PAN ID.
+ *
+ */
+typedef struct otExtendedPanId
+{
+    uint8_t m8[OT_EXT_PAN_ID_SIZE];
+} otExtendedPanId;
+
+#define OT_MESH_LOCAL_PREFIX_SIZE  8  ///< Size of the Mesh Local Prefix (bytes)
+
+/**
+ * This structure represents a Mesh Local Prefix.
+ *
+ */
+typedef struct otMeshLocalPrefix
+{
+    uint8_t m8[OT_MESH_LOCAL_PREFIX_SIZE];
+} otMeshLocalPrefix;
 
 /**
  * This type represents the IEEE 802.15.4 PAN ID.
@@ -131,6 +187,8 @@ typedef uint16_t otPanId;
  */
 typedef uint16_t otShortAddress;
 
+#define OT_EXT_ADDRESS_SIZE        8   ///< Size of an IEEE 802.15.4 Extended Address (bytes)
+
 /**
  * This type represents the IEEE 802.15.4 Extended Address.
  *
@@ -140,23 +198,81 @@ typedef struct otExtAddress
     uint8_t m8[OT_EXT_ADDRESS_SIZE];  ///< IEEE 802.15.4 Extended Address bytes
 } otExtAddress;
 
+#define OT_IP6_ADDRESS_SIZE        16  ///< Size of an IPv6 address (bytes)
+
+/**
+ * This structure represents an IPv6 address.
+ */
+typedef OT_TOOL_PACKED_BEGIN struct otIp6Address
+{
+    union
+    {
+        uint8_t  m8[OT_IP6_ADDRESS_SIZE];                      ///< 8-bit fields
+        uint16_t m16[OT_IP6_ADDRESS_SIZE / sizeof(uint16_t)];  ///< 16-bit fields
+        uint32_t m32[OT_IP6_ADDRESS_SIZE / sizeof(uint32_t)];  ///< 32-bit fields
+    } mFields;                                                 ///< IPv6 accessor fields
+} OT_TOOL_PACKED_END otIp6Address;
+
+/**
+ * @addtogroup commands  Commands
+ *
+ * @{
+ *
+ */
+
+#define OT_PANID_BROADCAST   0xffff      ///< IEEE 802.15.4 Broadcast PAN ID
+
+#define OT_CHANNEL_11_MASK   (1 << 11)   ///< Channel 11
+#define OT_CHANNEL_12_MASK   (1 << 12)   ///< Channel 12
+#define OT_CHANNEL_13_MASK   (1 << 13)   ///< Channel 13
+#define OT_CHANNEL_14_MASK   (1 << 14)   ///< Channel 14
+#define OT_CHANNEL_15_MASK   (1 << 15)   ///< Channel 15
+#define OT_CHANNEL_16_MASK   (1 << 16)   ///< Channel 16
+#define OT_CHANNEL_17_MASK   (1 << 17)   ///< Channel 17
+#define OT_CHANNEL_18_MASK   (1 << 18)   ///< Channel 18
+#define OT_CHANNEL_19_MASK   (1 << 19)   ///< Channel 19
+#define OT_CHANNEL_20_MASK   (1 << 20)   ///< Channel 20
+#define OT_CHANNEL_21_MASK   (1 << 21)   ///< Channel 21
+#define OT_CHANNEL_22_MASK   (1 << 22)   ///< Channel 22
+#define OT_CHANNEL_23_MASK   (1 << 23)   ///< Channel 23
+#define OT_CHANNEL_24_MASK   (1 << 24)   ///< Channel 24
+#define OT_CHANNEL_25_MASK   (1 << 25)   ///< Channel 25
+#define OT_CHANNEL_26_MASK   (1 << 26)   ///< Channel 26
+
+#define OT_CHANNEL_ALL       0xffffffff  ///< All channels
+
 /**
  * This struct represents a received IEEE 802.15.4 Beacon.
  *
  */
 typedef struct otActiveScanResult
 {
-    otExtAddress   mExtAddress;      ///< IEEE 802.15.4 Extended Address
-    const char    *mNetworkName;     ///< Thread Network Name
-    const uint8_t *mExtPanId;        ///< Thread Extended PAN ID
-    uint16_t       mPanId;           ///< IEEE 802.15.4 PAN ID
-    uint8_t        mChannel;         ///< IEEE 802.15.4 Channel
-    int8_t         mRssi;            ///< RSSI (dBm)
-    uint8_t        mLqi;             ///< LQI
-    uint8_t        mVersion : 4;     ///< Version
-    bool           mIsNative : 1;    ///< Native Commissioner flag
-    bool           mIsJoinable : 1;  ///< Joining Permitted flag
+    otExtAddress    mExtAddress;      ///< IEEE 802.15.4 Extended Address
+    otNetworkName   mNetworkName;     ///< Thread Network Name
+    otExtendedPanId mExtendedPanId;   ///< Thread Extended PAN ID
+    uint16_t        mPanId;           ///< IEEE 802.15.4 PAN ID
+    uint8_t         mChannel;         ///< IEEE 802.15.4 Channel
+    int8_t          mRssi;            ///< RSSI (dBm)
+    uint8_t         mLqi;             ///< LQI
+    unsigned int    mVersion : 4;     ///< Version
+    bool            mIsNative : 1;    ///< Native Commissioner flag
+    bool            mIsJoinable : 1;  ///< Joining Permitted flag
 } otActiveScanResult;
+
+/**
+ * This struct represents an energy scan result.
+ *
+ */
+typedef struct otEnergyScanResult
+{
+    uint8_t mChannel;                ///< IEEE 802.15.4 Channel
+    int8_t  mMaxRssi;                ///< The max RSSI (dBm)
+} otEnergyScanResult;
+
+/**
+ * @}
+ *
+ */
 
 /**
  * @addtogroup config  Configuration
@@ -178,7 +294,32 @@ typedef struct otActiveScanResult
  *
  */
 
-#define OT_NETWORK_NAME_SIZE  16  ///< Network name size (bytes).
+/**
+ * This structure represents an Active or Pending Operational Dataset.
+ *
+ */
+typedef struct otOperationalDataset
+{
+    uint64_t          mActiveTimestamp;            ///< Active Timestamp
+    uint64_t          mPendingTimestamp;           ///< Pending Timestamp
+    otMasterKey       mMasterKey;                  ///< Network Master Key
+    otNetworkName     mNetworkName;                ///< Network Name
+    otExtendedPanId   mExtendedPanId;              ///< Extended PAN ID
+    otMeshLocalPrefix mMeshLocalPrefix;            ///< Mesh Local Prefix
+    uint32_t          mDelay;                      ///< Delay Timer
+    otPanId           mPanId;                      ///< PAN ID
+    uint16_t          mChannel;                    ///< Channel
+
+    bool              mIsActiveTimestampSet : 1;   ///< TRUE if Active Timestamp is set, FALSE otherwise.
+    bool              mIsPendingTimestampSet : 1;  ///< TRUE if Pending Timestamp is set, FALSE otherwise.
+    bool              mIsMasterKeySet : 1;         ///< TRUE if Network Master Key is set, FALSE otherwise.
+    bool              mIsNetworkNameSet : 1;       ///< TRUE if Network Name is set, FALSE otherwise.
+    bool              mIsExtendedPanIdSet : 1;     ///< TRUE if Extended PAN ID is set, FALSE otherwise.
+    bool              mIsMeshLocalPrefixSet : 1;   ///< TRUE if Mesh Local Prefix is set, FALSE otherwise.
+    bool              mIsDelaySet : 1;             ///< TRUE if Delay Timer is set, FALSE otherwise.
+    bool              mIsPanIdSet : 1;             ///< TRUE if PAN ID is set, FALSE otherwise.
+    bool              mIsChannelSet : 1;           ///< TRUE if Channel is set, FALSE otherwise.
+} otOperationalDataset;
 
 /**
  * This structure represents an MLE Link Mode configuration.
@@ -188,22 +329,22 @@ typedef struct otLinkModeConfig
     /**
      * 1, if the sender has its receiver on when not transmitting.  0, otherwise.
      */
-    uint8_t mRxOnWhenIdle : 1;
+    bool mRxOnWhenIdle : 1;
 
     /**
      * 1, if the sender will use IEEE 802.15.4 to secure all data requests.  0, otherwise.
      */
-    uint8_t mSecureDataRequests : 1;
+    bool mSecureDataRequests : 1;
 
     /**
      * 1, if the sender is an FFD.  0, otherwise.
      */
-    uint8_t mDeviceType : 1;
+    bool mDeviceType : 1;
 
     /**
      * 1, if the sender requires the full Network Data.  0, otherwise.
      */
-    uint8_t mNetworkData : 1;
+    bool mNetworkData : 1;
 } otLinkModeConfig;
 
 /**
@@ -212,16 +353,19 @@ typedef struct otLinkModeConfig
  */
 enum
 {
-    OT_IP6_ADDRESS_ADDED    = 1 << 0,  ///< IPv6 address was added
-    OT_IP6_ADDRESS_REMOVED  = 1 << 1,  ///< IPv6 address was removed
+    OT_IP6_ADDRESS_ADDED      = 1 << 0,  ///< IPv6 address was added
+    OT_IP6_ADDRESS_REMOVED    = 1 << 1,  ///< IPv6 address was removed
 
-    OT_NET_STATE            = 1 << 2,  ///< Device state (offline, detached, attached) changed
-    OT_NET_ROLE             = 1 << 3,  ///< Device role (disabled, detached, child, router, leader) changed
-    OT_NET_PARTITION_ID     = 1 << 4,  ///< Partition ID changed
-    OT_NET_KEY_SEQUENCE     = 1 << 5,  ///< Thread Key Sequence changed
+    OT_NET_ROLE               = 1 << 3,  ///< Device role (disabled, detached, child, router, leader) changed
+    OT_NET_PARTITION_ID       = 1 << 4,  ///< Partition ID changed
+    OT_NET_KEY_SEQUENCE       = 1 << 5,  ///< Thread Key Sequence changed
 
-    OT_THREAD_CHILD_ADDED   = 1 << 6,  ///< Child was added
-    OT_THREAD_CHILD_REMOVED = 1 << 7   ///< Child was removed
+    OT_THREAD_CHILD_ADDED     = 1 << 6,  ///< Child was added
+    OT_THREAD_CHILD_REMOVED   = 1 << 7,  ///< Child was removed
+    OT_THREAD_NETDATA_UPDATED = 1 << 8,  ///< Thread Network Data updated
+
+    OT_IP6_LL_ADDR_CHANGED    = 1 << 9,  ///< The link-local address has changed
+    OT_IP6_ML_ADDR_CHANGED    = 1 << 10, ///< The mesh-local address has changed
 };
 
 /**
@@ -238,24 +382,6 @@ enum
  *
  */
 
-enum
-{
-    kIp6AddressSize = 16,
-};
-
-/**
- * This structure represents an IPv6 address.
- */
-typedef OT_TOOL_PACKED_BEGIN struct otIp6Address
-{
-    union
-    {
-        uint8_t  m8[kIp6AddressSize];
-        uint16_t m16[kIp6AddressSize / sizeof(uint16_t)];
-        uint32_t m32[kIp6AddressSize / sizeof(uint32_t)];
-    };
-} OT_TOOL_PACKED_END otIp6Address;
-
 /**
  * This structure represents an IPv6 prefix.
  */
@@ -265,50 +391,59 @@ typedef struct otIp6Prefix
     uint8_t       mLength;  ///< The IPv6 prefix length.
 } otIp6Prefix;
 
+#define OT_NETWORK_DATA_ITERATOR_INIT  0  ///< Initializeer for otNetworkDataIterator.
+
+typedef uint8_t otNetworkDataIterator;  ///< Used to iterate through Network Data information.
+
 /**
  * This structure represents a Border Router configuration.
  */
 typedef struct otBorderRouterConfig
 {
     /**
-     * TRUE, if this border router is a DHCPv6 Agent that supplies other configuration data.  FALSE, otherwise.
+     * The IPv6 prefix.
      */
     otIp6Prefix mPrefix;
 
     /**
      * A 2-bit signed integer indicating router preference as defined in RFC 4291.
      */
-    int8_t      mPreference : 2;
+    int mPreference : 2;
 
     /**
-     * TRUE, if @p mPrefix is preferred and should e used for address autoconfiguration.  FALSE, otherwise.
+     * TRUE, if @p mPrefix is preferred.  FALSE, otherwise.
      */
-    uint8_t     mSlaacPreferred : 1;
+    bool mPreferred : 1;
 
     /**
-     * TRUE, if @p mPrefix is valid and should be used for address autoconfiguration.  FALSE, otherwise.
+     * TRUE, if @p mPrefix should be used for address autoconfiguration.  FALSE, otherwise.
      */
-    uint8_t     mSlaacValid : 1;
+    bool mSlaac : 1;
 
     /**
      * TRUE, if this border router is a DHCPv6 Agent that supplies IPv6 address configuration.  FALSE, otherwise.
      */
-    uint8_t     mDhcp : 1;
+    bool mDhcp : 1;
 
     /**
      * TRUE, if this border router is a DHCPv6 Agent that supplies other configuration data.  FALSE, otherwise.
      */
-    uint8_t     mConfigure : 1;
+    bool mConfigure : 1;
 
     /**
      * TRUE, if this border router is a default route for @p mPrefix.  FALSE, otherwise.
      */
-    uint8_t     mDefaultRoute : 1;
+    bool mDefaultRoute : 1;
+
+    /**
+     * TRUE, if this prefix is considered on-mesh.  FALSE, otherwise.
+     */
+    bool mOnMesh : 1;
 
     /**
      * TRUE, if this configuration is considered Stable Network Data.  FALSE, otherwise.
      */
-    uint8_t     mStable : 1;
+    bool mStable : 1;
 } otBorderRouterConfig;
 
 /**
@@ -324,12 +459,12 @@ typedef struct otExternalRouteConfig
     /**
      * A 2-bit signed integer indicating router preference as defined in RFC 4291.
      */
-    int8_t      mPreference : 2;
+    int mPreference : 2;
 
     /**
      * TRUE, if this configuration is considered Stable Network Data.  FALSE, otherwise.
      */
-    uint8_t     mStable : 1;
+    bool mStable : 1;
 } otExternalRouteConfig;
 
 /**
@@ -356,6 +491,28 @@ typedef enum otMleAttachFilter
     kMleAttachSamePartition   = 1,  ///< Attach to the same Thread partition.
     kMleAttachBetterPartition = 2,  ///< Attach to a better (i.e. higher weight/partition id) Thread partition.
 } otMleAttachFilter;
+
+/**
+ * This structure represents a whitelist entry.
+ *
+ */
+typedef struct otMacWhitelistEntry
+{
+    otExtAddress mExtAddress;       ///< IEEE 802.15.4 Extended Address
+    int8_t       mRssi;             ///< RSSI value
+    bool         mValid : 1;        ///< Indicates whether or not the whitelist entry is vaild
+    bool         mFixedRssi : 1;    ///< Indicates whether or not the RSSI value is fixed.
+} otMacWhitelistEntry;
+
+/**
+ * This structure represents a blacklist entry.
+ *
+ */
+typedef struct otMacBlacklistEntry
+{
+    otExtAddress mExtAddress;       ///< IEEE 802.15.4 Extended Address
+    bool         mValid;            ///< Indicates whether or not the blacklist entry is vaild
+} otMacBlacklistEntry;
 
 /**
  * @}
@@ -388,6 +545,68 @@ typedef enum
     kDeviceRoleRouter,    ///< The Thread Router role.
     kDeviceRoleLeader,    ///< The Thread Leader role.
 } otDeviceRole;
+
+/**
+ * This structure holds diagnostic information for a Thread Child
+ *
+ */
+typedef struct
+{
+    otExtAddress   mExtAddress;            ///< IEEE 802.15.4 Extended Address
+    uint32_t       mTimeout;               ///< Timeout
+    uint32_t       mAge;                   ///< Time last heard
+    uint16_t       mRloc16;                ///< RLOC16
+    uint16_t       mChildId;               ///< Child ID
+    uint8_t        mNetworkDataVersion;    ///< Network Data Version
+    uint8_t        mLinkQualityIn;         ///< Link Quality In
+    int8_t         mAverageRssi;           ///< Average RSSI
+    bool           mRxOnWhenIdle : 1;      ///< rx-on-when-idle
+    bool           mSecureDataRequest : 1; ///< Secure Data Requests
+    bool           mFullFunction : 1;      ///< Full Function Device
+    bool           mFullNetworkData : 1;   ///< Full Network Data
+} otChildInfo;
+
+/**
+ * This structure holds diagnostic information for a Thread Router
+ *
+ */
+typedef struct
+{
+    otExtAddress   mExtAddress;            ///< IEEE 802.15.4 Extended Address
+    uint16_t       mRloc16;                ///< RLOC16
+    uint8_t        mRouterId;              ///< Router ID
+    uint8_t        mNextHop;               ///< Next hop to router
+    uint8_t        mPathCost;              ///< Path cost to router
+    uint8_t        mLinkQualityIn;         ///< Link Quality In
+    uint8_t        mLinkQualityOut;        ///< Link Quality Out
+    uint8_t        mAge;                   ///< Time last heard
+    bool           mAllocated : 1;         ///< Router ID allocated or not
+    bool           mLinkEstablished : 1;   ///< Link established with Router ID or not
+} otRouterInfo;
+
+/**
+ * This structure represents an EID cache entry.
+ *
+ */
+typedef struct otEidCacheEntry
+{
+    otIp6Address    mTarget;          ///< Target
+    otShortAddress  mRloc16;          ///< RLOC16
+    bool            mValid : 1;       ///< Indicates whether or not the cache entry is valid
+} otEidCacheEntry;
+
+/**
+ * This structure represents the Thread Leader Data.
+ *
+ */
+typedef struct otLeaderData
+{
+    uint32_t mPartitionId;            ///< Partition ID
+    uint8_t mWeighting;               ///< Leader Weight
+    uint8_t mDataVersion;             ///< Full Network Data Version
+    uint8_t mStableDataVersion;       ///< Stable Network Data Version
+    uint8_t mLeaderRouterId;          ///< Leader Router ID
+} otLeaderData;
 
 /**
  * This structure represents the MAC layer counters.
@@ -476,7 +695,7 @@ typedef struct otSockAddr
 {
     otIp6Address mAddress;  ///< An IPv6 address.
     uint16_t     mPort;     ///< A transport-layer port.
-    uint8_t      mScopeId;  ///< An IPv6 scope identifier.
+    int8_t       mScopeId;  ///< An IPv6 scope identifier.
 } otSockAddr;
 
 /**
@@ -488,7 +707,7 @@ typedef struct otMessageInfo
     otIp6Address mPeerAddr;     ///< The peer IPv6 address.
     uint16_t     mSockPort;     ///< The local transport-layer port.
     uint16_t     mPeerPort;     ///< The peer transport-layer port.
-    uint8_t      mInterfaceId;  ///< An IPv6 interface identifier.
+    int8_t       mInterfaceId;  ///< An IPv6 interface identifier.
     uint8_t      mHopLimit;     ///< The IPv6 Hop Limit.
     const void  *mLinkInfo;     ///< A pointer to link-specific information.
 } otMessageInfo;

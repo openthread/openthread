@@ -40,7 +40,7 @@ class Cert_Cli(unittest.TestCase):
         self.nodes[LEADER] = node.Node(LEADER)
 
     def tearDown(self):
-        for node in self.nodes.itervalues():
+        for node in list(self.nodes.values()):
             node.stop()
         del self.nodes
 

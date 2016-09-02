@@ -31,17 +31,25 @@
  *   This file implements common methods for manipulating Thread Network Data.
  */
 
+#include <coap/coap_header.hpp>
 #include <common/code_utils.hpp>
 #include <common/debug.hpp>
 #include <common/logging.hpp>
+#include <mac/mac_frame.hpp>
+#include <platform/random.h>
 #include <thread/network_data.hpp>
+#include <thread/thread_netif.hpp>
+#include <thread/thread_tlvs.hpp>
+#include <thread/thread_uris.hpp>
 
 namespace Thread {
 namespace NetworkData {
 
-NetworkData::NetworkData(void)
+NetworkData::NetworkData(ThreadNetif &aThreadNetif):
+    mMle(aThreadNetif.GetMle())
 {
     mLength = 0;
+    mCoapMessageId = 0;
 }
 
 void NetworkData::GetNetworkData(bool aStable, uint8_t *aData, uint8_t &aDataLength)
@@ -55,6 +63,52 @@ void NetworkData::GetNetworkData(bool aStable, uint8_t *aData, uint8_t &aDataLen
     {
         RemoveTemporaryData(aData, aDataLength);
     }
+}
+
+ThreadError NetworkData::GetNextOnMeshPrefix(otNetworkDataIterator *aIterator, otBorderRouterConfig *aConfig)
+{
+    ThreadError error = kThreadError_NotFound;
+    NetworkDataTlv *cur = reinterpret_cast<NetworkDataTlv *>(mTlvs + *aIterator);
+    NetworkDataTlv *end = reinterpret_cast<NetworkDataTlv *>(mTlvs + mLength);
+
+    for (; cur < end; cur = cur->GetNext())
+    {
+        PrefixTlv *prefix;
+        BorderRouterTlv *borderRouter;
+        BorderRouterEntry *borderRouterEntry;
+
+        if (cur->GetType() != NetworkDataTlv::kTypePrefix)
+        {
+            continue;
+        }
+
+        prefix = static_cast<PrefixTlv *>(cur);
+
+        if ((borderRouter = FindBorderRouter(*prefix)) == NULL)
+        {
+            continue;
+        }
+
+        borderRouterEntry = borderRouter->GetEntry(0);
+
+        memcpy(&aConfig->mPrefix.mPrefix, prefix->GetPrefix(), sizeof(aConfig->mPrefix.mPrefix));
+        aConfig->mPrefix.mLength = prefix->GetPrefixLength();
+        aConfig->mPreference = borderRouterEntry->GetPreference();
+        aConfig->mPreferred = borderRouterEntry->IsPreferred();
+        aConfig->mSlaac = borderRouterEntry->IsSlaac();
+        aConfig->mDhcp = borderRouterEntry->IsDhcp();
+        aConfig->mConfigure = borderRouterEntry->IsConfigure();
+        aConfig->mDefaultRoute = borderRouterEntry->IsDefaultRoute();
+        aConfig->mOnMesh = borderRouterEntry->IsOnMesh();
+        aConfig->mStable = cur->IsStable();
+
+        *aIterator = static_cast<otNetworkDataIterator>(reinterpret_cast<uint8_t *>(cur->GetNext()) - mTlvs);
+
+        ExitNow(error = kThreadError_None);
+    }
+
+exit:
+    return error;
 }
 
 void NetworkData::RemoveTemporaryData(uint8_t *aData, uint8_t &aDataLength)
@@ -87,7 +141,7 @@ void NetworkData::RemoveTemporaryData(uint8_t *aData, uint8_t &aDataLength)
                 length = sizeof(NetworkDataTlv) + cur->GetLength();
                 dst = reinterpret_cast<uint8_t *>(cur);
                 src = reinterpret_cast<uint8_t *>(cur->GetNext());
-                memmove(dst, src, aDataLength - (src - aData));
+                memmove(dst, src, aDataLength - static_cast<size_t>(src - aData));
                 aDataLength -= length;
                 continue;
             }
@@ -104,7 +158,7 @@ void NetworkData::RemoveTemporaryData(uint8_t *aData, uint8_t &aDataLength)
                 length = sizeof(NetworkDataTlv) + cur->GetLength();
                 dst = reinterpret_cast<uint8_t *>(cur);
                 src = reinterpret_cast<uint8_t *>(cur->GetNext());
-                memmove(dst, src, aDataLength - (src - aData));
+                memmove(dst, src, aDataLength - static_cast<size_t>(src - aData));
                 aDataLength -= length;
                 continue;
             }
@@ -149,11 +203,16 @@ void NetworkData::RemoveTemporaryData(uint8_t *aData, uint8_t &aDataLength, Pref
             case NetworkDataTlv::kTypeBorderRouter:
             {
                 borderRouter = FindBorderRouter(aPrefix);
-                context = FindContext(aPrefix);
+
+                if ((context = FindContext(aPrefix)) == NULL)
+                {
+                    break;
+                }
+
                 contextId = context->GetContextId();
 
                 // replace p_border_router_16
-                for (int i = 0; i < borderRouter->GetNumEntries(); i++)
+                for (uint8_t i = 0; i < borderRouter->GetNumEntries(); i++)
                 {
                     borderRouterEntry = borderRouter->GetEntry(i);
 
@@ -175,7 +234,7 @@ void NetworkData::RemoveTemporaryData(uint8_t *aData, uint8_t &aDataLength, Pref
                 hasRoute = FindHasRoute(aPrefix);
 
                 // replace r_border_router_16
-                for (int j = 0; j < hasRoute->GetNumEntries(); j++)
+                for (uint8_t j = 0; j < hasRoute->GetNumEntries(); j++)
                 {
                     hasRouteEntry = hasRoute->GetEntry(j);
                     hasRouteEntry->SetRloc(0xfffe);
@@ -199,7 +258,7 @@ void NetworkData::RemoveTemporaryData(uint8_t *aData, uint8_t &aDataLength, Pref
             length = sizeof(NetworkDataTlv) + cur->GetLength();
             dst = reinterpret_cast<uint8_t *>(cur);
             src = reinterpret_cast<uint8_t *>(cur->GetNext());
-            memmove(dst, src, aDataLength - (src - aData));
+            memmove(dst, src, aDataLength - static_cast<size_t>(src - aData));
             aPrefix.SetSubTlvsLength(aPrefix.GetSubTlvsLength() - length);
             aDataLength -= length;
         }
@@ -340,7 +399,7 @@ PrefixTlv *NetworkData::FindPrefix(const uint8_t *aPrefix, uint8_t aPrefixLength
 
 int8_t NetworkData::PrefixMatch(const uint8_t *a, const uint8_t *b, uint8_t aLength)
 {
-    uint8_t rval = 0;
+    int8_t rval = 0;
     uint8_t bytes = BitVectorBytes(aLength);
     uint8_t diff;
 
@@ -372,7 +431,7 @@ ThreadError NetworkData::Insert(uint8_t *aStart, uint8_t aLength)
     assert(aLength + mLength <= sizeof(mTlvs) &&
            mTlvs <= aStart &&
            aStart <= mTlvs + mLength);
-    memmove(aStart + aLength, aStart, mLength - (aStart - mTlvs));
+    memmove(aStart + aLength, aStart, mLength - static_cast<size_t>(aStart - mTlvs));
     mLength += aLength;
     return kThreadError_None;
 }
@@ -382,9 +441,93 @@ ThreadError NetworkData::Remove(uint8_t *aStart, uint8_t aLength)
     assert(aLength <= mLength &&
            mTlvs <= aStart &&
            (aStart - mTlvs) + aLength <= mLength);
-    memmove(aStart, aStart + aLength, mLength - ((aStart - mTlvs) + aLength));
+    memmove(aStart, aStart + aLength, mLength - (static_cast<size_t>(aStart - mTlvs) + aLength));
     mLength -= aLength;
     return kThreadError_None;
+}
+
+ThreadError NetworkData::SendServerDataNotification(bool aLocal, uint16_t aRloc16)
+{
+    ThreadError error = kThreadError_None;
+    Coap::Header header;
+    Message *message;
+    Ip6::MessageInfo messageInfo;
+
+    mSocket.Open(&HandleUdpReceive, this);
+
+    for (size_t i = 0; i < sizeof(mCoapToken); i++)
+    {
+        mCoapToken[i] = static_cast<uint8_t>(otPlatRandomGet());
+    }
+
+    header.Init();
+    header.SetVersion(1);
+    header.SetType(Coap::Header::kTypeConfirmable);
+    header.SetCode(Coap::Header::kCodePost);
+    header.SetMessageId(++mCoapMessageId);
+    header.SetToken(mCoapToken, sizeof(mCoapToken));
+    header.AppendUriPathOptions(OPENTHREAD_URI_SERVER_DATA);
+    header.AppendContentFormatOption(Coap::Header::kApplicationOctetStream);
+    header.Finalize();
+
+    VerifyOrExit((message = Ip6::Udp::NewMessage(0)) != NULL, error = kThreadError_NoBufs);
+    SuccessOrExit(error = message->Append(header.GetBytes(), header.GetLength()));
+
+    if (aLocal)
+    {
+        ThreadTlv tlv;
+        tlv.SetType(ThreadTlv::kThreadNetworkData);
+        tlv.SetLength(mLength);
+        SuccessOrExit(error = message->Append(&tlv, sizeof(tlv)));
+        SuccessOrExit(error = message->Append(mTlvs, mLength));
+    }
+
+    if (aRloc16 != Mac::kShortAddrInvalid)
+    {
+        ThreadRloc16Tlv rloc16Tlv;
+        rloc16Tlv.Init();
+        rloc16Tlv.SetRloc16(aRloc16);
+        SuccessOrExit(error = message->Append(&rloc16Tlv, sizeof(rloc16Tlv)));
+    }
+
+    memset(&messageInfo, 0, sizeof(messageInfo));
+    mMle.GetLeaderAddress(messageInfo.GetPeerAddr());
+    messageInfo.mPeerPort = kCoapUdpPort;
+    SuccessOrExit(error = mSocket.SendTo(*message, messageInfo));
+
+    otLogInfoNetData("Sent server data notification\n");
+
+exit:
+
+    if (error != kThreadError_None && message != NULL)
+    {
+        Message::Free(*message);
+    }
+
+    return error;
+}
+
+void NetworkData::HandleUdpReceive(void *aContext, otMessage aMessage, const otMessageInfo *aMessageInfo)
+{
+    Local *obj = static_cast<Local *>(aContext);
+    obj->HandleUdpReceive(*static_cast<Message *>(aMessage), *static_cast<const Ip6::MessageInfo *>(aMessageInfo));
+}
+
+void NetworkData::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
+{
+    Coap::Header header;
+
+    SuccessOrExit(header.FromMessage(aMessage));
+    VerifyOrExit(header.GetType() == Coap::Header::kTypeAcknowledgment &&
+                 header.GetCode() == Coap::Header::kCodeChanged &&
+                 header.GetMessageId() == mCoapMessageId &&
+                 header.GetTokenLength() == sizeof(mCoapToken) &&
+                 memcmp(mCoapToken, header.GetToken(), sizeof(mCoapToken)) == 0, ;);
+
+    otLogInfoNetData("Server data notification acknowledged\n");
+
+exit:
+    (void)aMessageInfo;
 }
 
 }  // namespace NetworkData

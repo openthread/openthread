@@ -1,0 +1,3839 @@
+<HTML>
+<HEAD><META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=UTF-8">
+<link href="..//elements/mmap.css" rel="stylesheet" type="text/css">
+<TITLE>GPT2</TITLE>
+</HEAD>
+<BODY class=mmapBody>
+<h2 class="mmapCellTitle">
+  <a name="Top_Tag">GPT2</a>
+</h2>
+<P>Instance: GPT2<BR>
+Component: GPT<BR>
+Base address: 0x40012000</P>
+<BR>
+<P>General Purpose Timer.</P>
+ <H3 class="mmapRegisterSummaryTitle"><A name="GPT2"></A><A href="CPU_MMAP.html"> TOP</A>:<B>GPT2</B> Register Summary</H3>
+<TABLE cellspacing="0" class="mmapRegisterSummaryTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">
+  <P>Register Name</P>
+</TD>
+<TD class="cellTopCol2">
+  <P>Type</P>
+</TD>
+<TD class="cellTopCol3">
+  <P>Register Width (Bits)</P>
+</TD>
+<TD class="cellTopCol4">
+  <P>Register Reset</P>
+</TD>
+<TD class="cellTopCol5">
+  <P>Address Offset</P>
+</TD>
+<TD class="cellTopCol5">
+  <P>Physical Address</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#CFG">CFG</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>RW</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x0000 0000</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 0000</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x4001 2000</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#TAMR">TAMR</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>RW</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x0000 0000</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 0004</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x4001 2004</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#TBMR">TBMR</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>RW</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x0000 0000</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 0008</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x4001 2008</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#CTL">CTL</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>RW</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x0000 0000</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 000C</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x4001 200C</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#SYNC">SYNC</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>RW</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x0000 0000</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 0010</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x4001 2010</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#IMR">IMR</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>RW</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x0000 0000</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 0018</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x4001 2018</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#RIS">RIS</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>RO</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x0000 0000</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 001C</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x4001 201C</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#MIS">MIS</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>RO</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x0000 0000</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 0020</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x4001 2020</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#ICLR">ICLR</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>RW</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x0000 0000</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 0024</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x4001 2024</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#TAILR">TAILR</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>RW</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0xFFFF FFFF</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 0028</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x4001 2028</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#TBILR">TBILR</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>RW</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x0000 FFFF</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 002C</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x4001 202C</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#TAMATCHR">TAMATCHR</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>RW</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0xFFFF FFFF</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 0030</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x4001 2030</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#TBMATCHR">TBMATCHR</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>RW</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x0000 FFFF</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 0034</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x4001 2034</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#TAPR">TAPR</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>RW</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x0000 0000</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 0038</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x4001 2038</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#TBPR">TBPR</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>RW</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x0000 0000</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 003C</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x4001 203C</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#TAPMR">TAPMR</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>RW</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x0000 0000</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 0040</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x4001 2040</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#TBPMR">TBPMR</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>RW</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x0000 0000</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 0044</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x4001 2044</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#TAR">TAR</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>RO</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0xFFFF FFFF</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 0048</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x4001 2048</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#TBR">TBR</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>RO</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x0000 FFFF</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 004C</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x4001 204C</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#TAV">TAV</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>RW</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0xFFFF FFFF</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 0050</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x4001 2050</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#TBV">TBV</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>RW</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x0000 FFFF</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 0054</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x4001 2054</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#TAPS">TAPS</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>RO</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x0000 0000</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 005C</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x4001 205C</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#TBPS">TBPS</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>RO</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x0000 0000</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 0060</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x4001 2060</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#TAPV">TAPV</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>RO</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x0000 0000</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 0064</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x4001 2064</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#TBPV">TBPV</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>RO</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x0000 0000</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 0068</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x4001 2068</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#DMAEV">DMAEV</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>RW</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x0000 0000</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 006C</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x4001 206C</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#VERSION">VERSION</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>RO</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x0000 0400</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 0FB0</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x4001 2FB0</P>
+</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">
+  <P>
+    <A href="#ANDCCP">ANDCCP</A>
+  </P>
+</TD>
+<TD class="cellCol2">
+  <P>RW</P>
+</TD>
+<TD class="cellCol3">
+  <P>32</P>
+</TD>
+<TD class="cellCol4">
+  <P>0x0000 0000</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x0000 0FB4</P>
+</TD>
+<TD class="cellCol5">
+  <P>0x4001 2FB4</P>
+</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterSummaryTitle"><A href="CPU_MMAP.html"> TOP</A>:GPT2 Register Descriptions</H3>
+<H3 class="mmapRegisterTitle"><A name="CFG"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">GPT2</A>:CFG</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 0000</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0x4001 2000</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0x4001 2000</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">Configuration</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">RW</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="CFG_RESERVED3">31:3</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED3</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0b0 0000 0000 0000 0000 0000 0000 0000</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="CFG_CFG">2:0</a>
+</TD>
+<TD class="cellBitfieldCol2">CFG</TD>
+<TD class="cellBitfieldCol3" colspan="3"><A class="mmap_legend_link" href="../legend.html#GPT">GPT</A> Configuration<BR>
+0x2- 0x3 - Reserved<BR>
+0x5- 0x7 - Reserved<TABLE cellspacing="0" class="LprfEnum">
+<TR class="rowEnumHead">
+<TD class="cellEnumTableHeadCol1">Value</TD>
+<TD class="cellEnumTableHeadCol2">ENUM Name</TD>
+<TD class="cellEnumTableHeadCol3">Description</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x0</TD>
+<TD class="cellEnumTableCol2">32BIT_TIMER</TD>
+<TD class="cellEnumTableCol3">32-bit timer configuration</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x4</TD>
+<TD class="cellEnumTableCol2">16BIT_TIMER</TD>
+<TD class="cellEnumTableCol3">16-bit timer configuration.  <BR>
+Configure for two 16-bit timers.<BR>
+Also see <A class="xref" href="#TAMR_TAMR">TAMR.TAMR</A> and <A class="xref" href="#TBMR_TBMR">TBMR.TBMR</A>.</TD>
+</TR>
+</TABLE>
+</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0b000</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="TAMR"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">GPT2</A>:TAMR</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 0004</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0x4001 2004</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0x4001 2004</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">Timer A Mode</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">RW</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="TAMR_RESERVED16">31:16</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED16</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0x0000</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="TAMR_TCACT">15:13</a>
+</TD>
+<TD class="cellBitfieldCol2">TCACT</TD>
+<TD class="cellBitfieldCol3" colspan="3">Timer Compare Action Select<TABLE cellspacing="0" class="LprfEnum">
+<TR class="rowEnumHead">
+<TD class="cellEnumTableHeadCol1">Value</TD>
+<TD class="cellEnumTableHeadCol2">ENUM Name</TD>
+<TD class="cellEnumTableHeadCol3">Description</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x0</TD>
+<TD class="cellEnumTableCol2">DIS_CMP</TD>
+<TD class="cellEnumTableCol3">Disable compare operations</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x1</TD>
+<TD class="cellEnumTableCol2">TOG_ON_TO</TD>
+<TD class="cellEnumTableCol3">Toggle State on Time-Out</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x2</TD>
+<TD class="cellEnumTableCol2">CLR_ON_TO</TD>
+<TD class="cellEnumTableCol3">Clear <A class="mmap_legend_link" href="../legend.html#CCP">CCP</A> output pin on Time-Out</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x3</TD>
+<TD class="cellEnumTableCol2">SET_ON_TO</TD>
+<TD class="cellEnumTableCol3">Set <A class="mmap_legend_link" href="../legend.html#CCP">CCP</A> output pin on Time-Out</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x4</TD>
+<TD class="cellEnumTableCol2">SETTOG_ON_TO</TD>
+<TD class="cellEnumTableCol3">Set <A class="mmap_legend_link" href="../legend.html#CCP">CCP</A> output pin immediately and toggle on Time-Out</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x5</TD>
+<TD class="cellEnumTableCol2">CLRTOG_ON_TO</TD>
+<TD class="cellEnumTableCol3">Clear <A class="mmap_legend_link" href="../legend.html#CCP">CCP</A> output pin immediately and toggle on Time-Out</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x6</TD>
+<TD class="cellEnumTableCol2">SETCLR_ON_TO</TD>
+<TD class="cellEnumTableCol3">Set <A class="mmap_legend_link" href="../legend.html#CCP">CCP</A> output pin immediately and clear on Time-Out</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x7</TD>
+<TD class="cellEnumTableCol2">CLRSET_ON_TO</TD>
+<TD class="cellEnumTableCol3">Clear <A class="mmap_legend_link" href="../legend.html#CCP">CCP</A> output pin immediately and set on Time-Out</TD>
+</TR>
+</TABLE>
+</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0b000</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="TAMR_TACINTD">12</a>
+</TD>
+<TD class="cellBitfieldCol2">TACINTD</TD>
+<TD class="cellBitfieldCol3" colspan="3">One-Shot/Periodic Interrupt Disable<TABLE cellspacing="0" class="LprfEnum">
+<TR class="rowEnumHead">
+<TD class="cellEnumTableHeadCol1">Value</TD>
+<TD class="cellEnumTableHeadCol2">ENUM Name</TD>
+<TD class="cellEnumTableHeadCol3">Description</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x0</TD>
+<TD class="cellEnumTableCol2">EN_TO_INTR</TD>
+<TD class="cellEnumTableCol3">Time-out interrupt function as normal</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x1</TD>
+<TD class="cellEnumTableCol2">DIS_TO_INTR</TD>
+<TD class="cellEnumTableCol3">Time-out interrupt are disabled</TD>
+</TR>
+</TABLE>
+</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="TAMR_TAPLO">11</a>
+</TD>
+<TD class="cellBitfieldCol2">TAPLO</TD>
+<TD class="cellBitfieldCol3" colspan="3">GPTM Timer A PWM Legacy Operation<BR>
+<BR>
+0  Legacy operation with CCP pin driven Low when the <A class="xref" href="#TAILR">TAILR</A> <BR>
+register is reloaded after the timer reaches 0.<BR>
+<BR>
+1 CCP is driven High when the <A class="xref" href="#TAILR">TAILR</A>  register is reloaded after the timer reaches 0.<BR>
+<BR>
+This bit is only valid in PWM mode.<TABLE cellspacing="0" class="LprfEnum">
+<TR class="rowEnumHead">
+<TD class="cellEnumTableHeadCol1">Value</TD>
+<TD class="cellEnumTableHeadCol2">ENUM Name</TD>
+<TD class="cellEnumTableHeadCol3">Description</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x0</TD>
+<TD class="cellEnumTableCol2">LEGACY</TD>
+<TD class="cellEnumTableCol3">Legacy operation</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x1</TD>
+<TD class="cellEnumTableCol2">CCP_ON_TO</TD>
+<TD class="cellEnumTableCol3"><A class="mmap_legend_link" href="../legend.html#CCP">CCP</A> output pin is set to 1 on time-out</TD>
+</TR>
+</TABLE>
+</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="TAMR_TAMRSU">10</a>
+</TD>
+<TD class="cellBitfieldCol2">TAMRSU</TD>
+<TD class="cellBitfieldCol3" colspan="3">Timer A Match Register Update mode<BR>
+ <BR>
+This bit defines when the <A class="xref" href="#TAMATCHR">TAMATCHR</A> and <A class="xref" href="#TAPR">TAPR</A> registers are updated.<BR>
+<BR>
+If the timer is disabled (<A class="xref" href="#CTL_TAEN">CTL.TAEN</A> = 0) when this bit is set, <A class="xref" href="#TAMATCHR">TAMATCHR</A> and <A class="xref" href="#TAPR">TAPR</A> are updated when the timer is enabled.<BR>
+If the timer is stalled (<A class="xref" href="#CTL_TASTALL">CTL.TASTALL</A> = 1) when this bit is set, <A class="xref" href="#TAMATCHR">TAMATCHR</A> and <A class="xref" href="#TAPR">TAPR</A> are updated according to the configuration of this bit.<TABLE cellspacing="0" class="LprfEnum">
+<TR class="rowEnumHead">
+<TD class="cellEnumTableHeadCol1">Value</TD>
+<TD class="cellEnumTableHeadCol2">ENUM Name</TD>
+<TD class="cellEnumTableHeadCol3">Description</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x0</TD>
+<TD class="cellEnumTableCol2">CYCLEUPDATE</TD>
+<TD class="cellEnumTableCol3">Update <A class="xref" href="#TAMATCHR">TAMATCHR</A> and <A class="xref" href="#TAPR">TAPR</A>, if used, on the next cycle.</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x1</TD>
+<TD class="cellEnumTableCol2">TOUPDATE</TD>
+<TD class="cellEnumTableCol3">Update <A class="xref" href="#TAMATCHR">TAMATCHR</A> and <A class="xref" href="#TAPR">TAPR</A>, if used, on the next time-out.</TD>
+</TR>
+</TABLE>
+</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="TAMR_TAPWMIE">9</a>
+</TD>
+<TD class="cellBitfieldCol2">TAPWMIE</TD>
+<TD class="cellBitfieldCol3" colspan="3">GPTM Timer A PWM Interrupt Enable<BR>
+This bit enables interrupts in PWM mode on rising, falling, or both edges of the CCP output, as defined by the <A class="xref" href="#CTL_TAEVENT">CTL.TAEVENT</A><BR>
+In addition, when this bit is set and a capture event occurs, Timer A<BR>
+automatically generates triggers to the <A class="mmap_legend_link" href="../legend.html#DMA">DMA</A> if the trigger capability is enabled by setting the <A class="xref" href="#CTL_TAOTE">CTL.TAOTE</A> bit and the <A class="xref" href="#DMAEV_CAEDMAEN">DMAEV.CAEDMAEN</A> bit respectively.<BR>
+<BR>
+0 Capture event interrupt is disabled.<BR>
+1 Capture event interrupt is enabled.<BR>
+This bit is only valid in PWM mode.<TABLE cellspacing="0" class="LprfEnum">
+<TR class="rowEnumHead">
+<TD class="cellEnumTableHeadCol1">Value</TD>
+<TD class="cellEnumTableHeadCol2">ENUM Name</TD>
+<TD class="cellEnumTableHeadCol3">Description</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x0</TD>
+<TD class="cellEnumTableCol2">DIS</TD>
+<TD class="cellEnumTableCol3">Interrupt is disabled.</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x1</TD>
+<TD class="cellEnumTableCol2">EN</TD>
+<TD class="cellEnumTableCol3">Interrupt is enabled.  This bit is only valid in <A class="mmap_legend_link" href="../legend.html#PWM">PWM</A> mode.</TD>
+</TR>
+</TABLE>
+</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="TAMR_TAILD">8</a>
+</TD>
+<TD class="cellBitfieldCol2">TAILD</TD>
+<TD class="cellBitfieldCol3" colspan="3">GPT Timer A <A class="mmap_legend_link" href="../legend.html#PWM">PWM</A> Interval Load Write<TABLE cellspacing="0" class="LprfEnum">
+<TR class="rowEnumHead">
+<TD class="cellEnumTableHeadCol1">Value</TD>
+<TD class="cellEnumTableHeadCol2">ENUM Name</TD>
+<TD class="cellEnumTableHeadCol3">Description</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x0</TD>
+<TD class="cellEnumTableCol2">CYCLEUPDATE</TD>
+<TD class="cellEnumTableCol3">Update the <A class="xref" href="#TAR">TAR</A> register with the value in the <A class="xref" href="#TAILR">TAILR</A> register on the next clock cycle. If the pre-scaler is used, update the <A class="xref" href="#TAPS">TAPS</A> register with the value in the <A class="xref" href="#TAPR">TAPR</A> register on the next clock cycle.</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x1</TD>
+<TD class="cellEnumTableCol2">TOUPDATE</TD>
+<TD class="cellEnumTableCol3">Update the <A class="xref" href="#TAR">TAR</A> register with the value in the <A class="xref" href="#TAILR">TAILR</A> register on the next timeout. If the prescaler is used, update the <A class="xref" href="#TAPS">TAPS</A> register with the value in the <A class="xref" href="#TAPR">TAPR</A> register on the next timeout.</TD>
+</TR>
+</TABLE>
+</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="TAMR_TASNAPS">7</a>
+</TD>
+<TD class="cellBitfieldCol2">TASNAPS</TD>
+<TD class="cellBitfieldCol3" colspan="3">GPT Timer A Snap-Shot Mode<TABLE cellspacing="0" class="LprfEnum">
+<TR class="rowEnumHead">
+<TD class="cellEnumTableHeadCol1">Value</TD>
+<TD class="cellEnumTableHeadCol2">ENUM Name</TD>
+<TD class="cellEnumTableHeadCol3">Description</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x0</TD>
+<TD class="cellEnumTableCol2">DIS</TD>
+<TD class="cellEnumTableCol3">Snap-shot mode is disabled.</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x1</TD>
+<TD class="cellEnumTableCol2">EN</TD>
+<TD class="cellEnumTableCol3">If Timer A is configured in the periodic mode, the actual free-running value of Timer A is loaded at the time-out event into the <A class="mmap_legend_link" href="../legend.html#GPT">GPT</A> Timer A (<A class="xref" href="#TAR">TAR</A>) register.</TD>
+</TR>
+</TABLE>
+</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="TAMR_TAWOT">6</a>
+</TD>
+<TD class="cellBitfieldCol2">TAWOT</TD>
+<TD class="cellBitfieldCol3" colspan="3"><A class="mmap_legend_link" href="../legend.html#GPT">GPT</A> Timer A Wait-On-Trigger<TABLE cellspacing="0" class="LprfEnum">
+<TR class="rowEnumHead">
+<TD class="cellEnumTableHeadCol1">Value</TD>
+<TD class="cellEnumTableHeadCol2">ENUM Name</TD>
+<TD class="cellEnumTableHeadCol3">Description</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x0</TD>
+<TD class="cellEnumTableCol2">NOWAIT</TD>
+<TD class="cellEnumTableCol3">Timer A begins counting as soon as it is enabled.</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x1</TD>
+<TD class="cellEnumTableCol2">WAIT</TD>
+<TD class="cellEnumTableCol3">If Timer A is enabled (<A class="xref" href="#CTL_TAEN">CTL.TAEN</A> = 1), Timer A does not begin counting until it receives a trigger from the timer in the previous position in the daisy chain. This bit must be clear for <A class="mmap_legend_link" href="../legend.html#GPT">GPT</A> Module 0, Timer A. This function is valid for one-shot, periodic, and PWM modes</TD>
+</TR>
+</TABLE>
+</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="TAMR_TAMIE">5</a>
+</TD>
+<TD class="cellBitfieldCol2">TAMIE</TD>
+<TD class="cellBitfieldCol3" colspan="3"><A class="mmap_legend_link" href="../legend.html#GPT">GPT</A> Timer A Match Interrupt Enable<TABLE cellspacing="0" class="LprfEnum">
+<TR class="rowEnumHead">
+<TD class="cellEnumTableHeadCol1">Value</TD>
+<TD class="cellEnumTableHeadCol2">ENUM Name</TD>
+<TD class="cellEnumTableHeadCol3">Description</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x0</TD>
+<TD class="cellEnumTableCol2">DIS</TD>
+<TD class="cellEnumTableCol3">The match interrupt is disabled for match events. Additionally, output triggers on match events are prevented.</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x1</TD>
+<TD class="cellEnumTableCol2">EN</TD>
+<TD class="cellEnumTableCol3">An interrupt is generated when the match value in <A class="xref" href="#TAMATCHR">TAMATCHR</A> is reached in the one-shot and periodic modes.</TD>
+</TR>
+</TABLE>
+</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="TAMR_TACDIR">4</a>
+</TD>
+<TD class="cellBitfieldCol2">TACDIR</TD>
+<TD class="cellBitfieldCol3" colspan="3"><A class="mmap_legend_link" href="../legend.html#GPT">GPT</A> Timer A Count Direction<TABLE cellspacing="0" class="LprfEnum">
+<TR class="rowEnumHead">
+<TD class="cellEnumTableHeadCol1">Value</TD>
+<TD class="cellEnumTableHeadCol2">ENUM Name</TD>
+<TD class="cellEnumTableHeadCol3">Description</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x0</TD>
+<TD class="cellEnumTableCol2">DOWN</TD>
+<TD class="cellEnumTableCol3">The timer counts down.</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x1</TD>
+<TD class="cellEnumTableCol2">UP</TD>
+<TD class="cellEnumTableCol3">The timer counts up. When counting up, the timer starts from a value of 0x0.</TD>
+</TR>
+</TABLE>
+</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="TAMR_TAAMS">3</a>
+</TD>
+<TD class="cellBitfieldCol2">TAAMS</TD>
+<TD class="cellBitfieldCol3" colspan="3"><A class="mmap_legend_link" href="../legend.html#GPT">GPT</A> Timer A Alternate Mode <BR>
+<BR>
+Note: To enable <A class="mmap_legend_link" href="../legend.html#PWM">PWM</A> mode, you must also clear <A class="xref" href="#TAMR_TACM">TACM</A> and then configure <A class="xref" href="#TAMR_TAMR">TAMR</A> field to 0x2.<TABLE cellspacing="0" class="LprfEnum">
+<TR class="rowEnumHead">
+<TD class="cellEnumTableHeadCol1">Value</TD>
+<TD class="cellEnumTableHeadCol2">ENUM Name</TD>
+<TD class="cellEnumTableHeadCol3">Description</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x0</TD>
+<TD class="cellEnumTableCol2">CAP_COMP</TD>
+<TD class="cellEnumTableCol3">Capture/Compare mode is enabled.</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x1</TD>
+<TD class="cellEnumTableCol2">PWM</TD>
+<TD class="cellEnumTableCol3"><A class="mmap_legend_link" href="../legend.html#PWM">PWM</A> mode is enabled</TD>
+</TR>
+</TABLE>
+</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="TAMR_TACM">2</a>
+</TD>
+<TD class="cellBitfieldCol2">TACM</TD>
+<TD class="cellBitfieldCol3" colspan="3"><A class="mmap_legend_link" href="../legend.html#GPT">GPT</A> Timer A Capture Mode<TABLE cellspacing="0" class="LprfEnum">
+<TR class="rowEnumHead">
+<TD class="cellEnumTableHeadCol1">Value</TD>
+<TD class="cellEnumTableHeadCol2">ENUM Name</TD>
+<TD class="cellEnumTableHeadCol3">Description</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x0</TD>
+<TD class="cellEnumTableCol2">EDGCNT</TD>
+<TD class="cellEnumTableCol3">Edge-Count mode</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x1</TD>
+<TD class="cellEnumTableCol2">EDGTIME</TD>
+<TD class="cellEnumTableCol3">Edge-Time mode</TD>
+</TR>
+</TABLE>
+</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="TAMR_TAMR">1:0</a>
+</TD>
+<TD class="cellBitfieldCol2">TAMR</TD>
+<TD class="cellBitfieldCol3" colspan="3"><A class="mmap_legend_link" href="../legend.html#GPT">GPT</A> Timer A Mode<BR>
+<BR>
+0x0 Reserved<BR>
+0x1 One-Shot Timer mode<BR>
+0x2 Periodic Timer mode<BR>
+0x3 Capture mode<BR>
+The Timer mode is based on the timer configuration defined by bits 2:0 in the <A class="xref" href="#CFG">CFG</A> register<TABLE cellspacing="0" class="LprfEnum">
+<TR class="rowEnumHead">
+<TD class="cellEnumTableHeadCol1">Value</TD>
+<TD class="cellEnumTableHeadCol2">ENUM Name</TD>
+<TD class="cellEnumTableHeadCol3">Description</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x1</TD>
+<TD class="cellEnumTableCol2">ONE_SHOT</TD>
+<TD class="cellEnumTableCol3">One-Shot Timer mode</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x2</TD>
+<TD class="cellEnumTableCol2">PERIODIC</TD>
+<TD class="cellEnumTableCol3">Periodic Timer mode</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x3</TD>
+<TD class="cellEnumTableCol2">CAPTURE</TD>
+<TD class="cellEnumTableCol3">Capture mode</TD>
+</TR>
+</TABLE>
+</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0b00</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="TBMR"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">GPT2</A>:TBMR</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 0008</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0x4001 2008</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0x4001 2008</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">Timer B Mode</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">RW</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="TBMR_RESERVED16">31:16</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED16</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0x0000</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="TBMR_TCACT">15:13</a>
+</TD>
+<TD class="cellBitfieldCol2">TCACT</TD>
+<TD class="cellBitfieldCol3" colspan="3">Timer Compare Action Select<TABLE cellspacing="0" class="LprfEnum">
+<TR class="rowEnumHead">
+<TD class="cellEnumTableHeadCol1">Value</TD>
+<TD class="cellEnumTableHeadCol2">ENUM Name</TD>
+<TD class="cellEnumTableHeadCol3">Description</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x0</TD>
+<TD class="cellEnumTableCol2">DIS_CMP</TD>
+<TD class="cellEnumTableCol3">Disable compare operations</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x1</TD>
+<TD class="cellEnumTableCol2">TOG_ON_TO</TD>
+<TD class="cellEnumTableCol3">Toggle State on Time-Out</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x2</TD>
+<TD class="cellEnumTableCol2">CLR_ON_TO</TD>
+<TD class="cellEnumTableCol3">Clear <A class="mmap_legend_link" href="../legend.html#CCP">CCP</A> output pin on Time-Out</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x3</TD>
+<TD class="cellEnumTableCol2">SET_ON_TO</TD>
+<TD class="cellEnumTableCol3">Set <A class="mmap_legend_link" href="../legend.html#CCP">CCP</A> output pin on Time-Out</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x4</TD>
+<TD class="cellEnumTableCol2">SETTOG_ON_TO</TD>
+<TD class="cellEnumTableCol3">Set <A class="mmap_legend_link" href="../legend.html#CCP">CCP</A> output pin immediately and toggle on Time-Out</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x5</TD>
+<TD class="cellEnumTableCol2">CLRTOG_ON_TO</TD>
+<TD class="cellEnumTableCol3">Clear <A class="mmap_legend_link" href="../legend.html#CCP">CCP</A> output pin immediately and toggle on Time-Out</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x6</TD>
+<TD class="cellEnumTableCol2">SETCLR_ON_TO</TD>
+<TD class="cellEnumTableCol3">Set <A class="mmap_legend_link" href="../legend.html#CCP">CCP</A> output pin immediately and clear on Time-Out</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x7</TD>
+<TD class="cellEnumTableCol2">CLRSET_ON_TO</TD>
+<TD class="cellEnumTableCol3">Clear <A class="mmap_legend_link" href="../legend.html#CCP">CCP</A> output pin immediately and set on Time-Out</TD>
+</TR>
+</TABLE>
+</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0b000</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="TBMR_TBCINTD">12</a>
+</TD>
+<TD class="cellBitfieldCol2">TBCINTD</TD>
+<TD class="cellBitfieldCol3" colspan="3">One-Shot/Periodic Interrupt Mode<TABLE cellspacing="0" class="LprfEnum">
+<TR class="rowEnumHead">
+<TD class="cellEnumTableHeadCol1">Value</TD>
+<TD class="cellEnumTableHeadCol2">ENUM Name</TD>
+<TD class="cellEnumTableHeadCol3">Description</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x0</TD>
+<TD class="cellEnumTableCol2">EN_TO_INTR</TD>
+<TD class="cellEnumTableCol3">Normal Time-Out Interrupt</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x1</TD>
+<TD class="cellEnumTableCol2">DIS_TO_INTR</TD>
+<TD class="cellEnumTableCol3">Mask Time-Out Interrupt</TD>
+</TR>
+</TABLE>
+</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="TBMR_TBPLO">11</a>
+</TD>
+<TD class="cellBitfieldCol2">TBPLO</TD>
+<TD class="cellBitfieldCol3" colspan="3">GPTM Timer B PWM Legacy Operation<BR>
+<BR>
+0  Legacy operation with CCP pin driven Low when the <A class="xref" href="#TBILR">TBILR</A> <BR>
+register is reloaded after the timer reaches 0.<BR>
+<BR>
+1 CCP is driven High when the <A class="xref" href="#TBILR">TBILR</A>  register is reloaded after the timer reaches 0.<BR>
+<BR>
+This bit is only valid in PWM mode.<TABLE cellspacing="0" class="LprfEnum">
+<TR class="rowEnumHead">
+<TD class="cellEnumTableHeadCol1">Value</TD>
+<TD class="cellEnumTableHeadCol2">ENUM Name</TD>
+<TD class="cellEnumTableHeadCol3">Description</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x0</TD>
+<TD class="cellEnumTableCol2">LEGACY</TD>
+<TD class="cellEnumTableCol3">Legacy operation</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x1</TD>
+<TD class="cellEnumTableCol2">CCP_ON_TO</TD>
+<TD class="cellEnumTableCol3"><A class="mmap_legend_link" href="../legend.html#CCP">CCP</A> output pin is set to 1 on time-out</TD>
+</TR>
+</TABLE>
+</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="TBMR_TBMRSU">10</a>
+</TD>
+<TD class="cellBitfieldCol2">TBMRSU</TD>
+<TD class="cellBitfieldCol3" colspan="3">Timer B Match Register Update mode<BR>
+ <BR>
+This bit defines when the <A class="xref" href="#TBMATCHR">TBMATCHR</A> and <A class="xref" href="#TBPR">TBPR</A> registers are updated<BR>
+<BR>
+If the timer is disabled (<A class="xref" href="#CTL_TBEN">CTL.TBEN</A> is clear) when this bit is set, <A class="xref" href="#TBMATCHR">TBMATCHR</A> and <A class="xref" href="#TBPR">TBPR</A> are updated when the timer is enabled.<BR>
+If the timer is stalled (<A class="xref" href="#CTL_TBSTALL">CTL.TBSTALL</A> is set) when this bit is set, <A class="xref" href="#TBMATCHR">TBMATCHR</A> and <A class="xref" href="#TBPR">TBPR</A> are updated according to the configuration of this bit.<TABLE cellspacing="0" class="LprfEnum">
+<TR class="rowEnumHead">
+<TD class="cellEnumTableHeadCol1">Value</TD>
+<TD class="cellEnumTableHeadCol2">ENUM Name</TD>
+<TD class="cellEnumTableHeadCol3">Description</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x0</TD>
+<TD class="cellEnumTableCol2">CYCLEUPDATE</TD>
+<TD class="cellEnumTableCol3">Update <A class="xref" href="#TBMATCHR">TBMATCHR</A> and <A class="xref" href="#TBPR">TBPR</A>, if used on the next cycle.</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x1</TD>
+<TD class="cellEnumTableCol2">TOUPDATE</TD>
+<TD class="cellEnumTableCol3">Update the <A class="xref" href="#TBMATCHR">TBMATCHR</A> and the <A class="xref" href="#TBPR">TBPR</A>, if used on the next time-out.</TD>
+</TR>
+</TABLE>
+</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="TBMR_TBPWMIE">9</a>
+</TD>
+<TD class="cellBitfieldCol2">TBPWMIE</TD>
+<TD class="cellBitfieldCol3" colspan="3">GPTM Timer B PWM Interrupt Enable<BR>
+This bit enables interrupts in PWM mode on rising, falling, or both edges of the CCP output, as defined by the <A class="xref" href="#CTL_TBEVENT">CTL.TBEVENT</A><BR>
+In addition, when this bit is set and a capture event occurs, Timer A<BR>
+automatically generates triggers to the <A class="mmap_legend_link" href="../legend.html#DMA">DMA</A> if the trigger capability is enabled by setting the <A class="xref" href="#CTL_TBOTE">CTL.TBOTE</A> bit and the <A class="xref" href="#DMAEV_CBEDMAEN">DMAEV.CBEDMAEN</A> bit respectively.<BR>
+<BR>
+0 Capture event interrupt is disabled.<BR>
+1 Capture event interrupt is enabled.<BR>
+This bit is only valid in PWM mode.<TABLE cellspacing="0" class="LprfEnum">
+<TR class="rowEnumHead">
+<TD class="cellEnumTableHeadCol1">Value</TD>
+<TD class="cellEnumTableHeadCol2">ENUM Name</TD>
+<TD class="cellEnumTableHeadCol3">Description</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x0</TD>
+<TD class="cellEnumTableCol2">DIS</TD>
+<TD class="cellEnumTableCol3">Interrupt is disabled.</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x1</TD>
+<TD class="cellEnumTableCol2">EN</TD>
+<TD class="cellEnumTableCol3">Interrupt is enabled.  This bit is only valid in <A class="mmap_legend_link" href="../legend.html#PWM">PWM</A> mode.</TD>
+</TR>
+</TABLE>
+</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="TBMR_TBILD">8</a>
+</TD>
+<TD class="cellBitfieldCol2">TBILD</TD>
+<TD class="cellBitfieldCol3" colspan="3"><A class="mmap_legend_link" href="../legend.html#GPT">GPT</A> Timer B <A class="mmap_legend_link" href="../legend.html#PWM">PWM</A> Interval Load Write<TABLE cellspacing="0" class="LprfEnum">
+<TR class="rowEnumHead">
+<TD class="cellEnumTableHeadCol1">Value</TD>
+<TD class="cellEnumTableHeadCol2">ENUM Name</TD>
+<TD class="cellEnumTableHeadCol3">Description</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x0</TD>
+<TD class="cellEnumTableCol2">CYCLEUPDATE</TD>
+<TD class="cellEnumTableCol3">Update the <A class="xref" href="#TBR">TBR</A> register with the value in the <A class="xref" href="#TBILR">TBILR</A> register on the next clock cycle. If the prescaler is used, update the <A class="xref" href="#TBPS">TBPS</A> register with the value in the <A class="xref" href="#TBPR">TBPR</A> register on the next timeout.</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x1</TD>
+<TD class="cellEnumTableCol2">TOUPDATE</TD>
+<TD class="cellEnumTableCol3">Update the <A class="xref" href="#TBR">TBR</A> register with the value in the <A class="xref" href="#TBILR">TBILR</A> register on the next timeout. If the prescaler is used, update the <A class="xref" href="#TBPS">TBPS</A> register with the value in the <A class="xref" href="#TBPR">TBPR</A> register on the next timeout.</TD>
+</TR>
+</TABLE>
+</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="TBMR_TBSNAPS">7</a>
+</TD>
+<TD class="cellBitfieldCol2">TBSNAPS</TD>
+<TD class="cellBitfieldCol3" colspan="3"><A class="mmap_legend_link" href="../legend.html#GPT">GPT</A> Timer B Snap-Shot Mode<TABLE cellspacing="0" class="LprfEnum">
+<TR class="rowEnumHead">
+<TD class="cellEnumTableHeadCol1">Value</TD>
+<TD class="cellEnumTableHeadCol2">ENUM Name</TD>
+<TD class="cellEnumTableHeadCol3">Description</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x0</TD>
+<TD class="cellEnumTableCol2">DIS</TD>
+<TD class="cellEnumTableCol3">Snap-shot mode is disabled.</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x1</TD>
+<TD class="cellEnumTableCol2">EN</TD>
+<TD class="cellEnumTableCol3">If Timer B is configured in the periodic mode</TD>
+</TR>
+</TABLE>
+</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="TBMR_TBWOT">6</a>
+</TD>
+<TD class="cellBitfieldCol2">TBWOT</TD>
+<TD class="cellBitfieldCol3" colspan="3"><A class="mmap_legend_link" href="../legend.html#GPT">GPT</A> Timer B Wait-On-Trigger<TABLE cellspacing="0" class="LprfEnum">
+<TR class="rowEnumHead">
+<TD class="cellEnumTableHeadCol1">Value</TD>
+<TD class="cellEnumTableHeadCol2">ENUM Name</TD>
+<TD class="cellEnumTableHeadCol3">Description</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x0</TD>
+<TD class="cellEnumTableCol2">NOWAIT</TD>
+<TD class="cellEnumTableCol3">Timer B begins counting as soon as it is enabled.</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x1</TD>
+<TD class="cellEnumTableCol2">WAIT</TD>
+<TD class="cellEnumTableCol3">If Timer B is enabled (<A class="xref" href="#CTL_TBEN">CTL.TBEN</A> is set), Timer B does not begin counting until it receives a trigger from the timer in the previous position in the daisy chain. This function is valid for one-shot, periodic, and PWM modes</TD>
+</TR>
+</TABLE>
+</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="TBMR_TBMIE">5</a>
+</TD>
+<TD class="cellBitfieldCol2">TBMIE</TD>
+<TD class="cellBitfieldCol3" colspan="3"><A class="mmap_legend_link" href="../legend.html#GPT">GPT</A> Timer B Match Interrupt Enable.<TABLE cellspacing="0" class="LprfEnum">
+<TR class="rowEnumHead">
+<TD class="cellEnumTableHeadCol1">Value</TD>
+<TD class="cellEnumTableHeadCol2">ENUM Name</TD>
+<TD class="cellEnumTableHeadCol3">Description</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x0</TD>
+<TD class="cellEnumTableCol2">DIS</TD>
+<TD class="cellEnumTableCol3">The match interrupt is disabled for match events. Additionally, output triggers on match events are prevented.</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x1</TD>
+<TD class="cellEnumTableCol2">EN</TD>
+<TD class="cellEnumTableCol3">An interrupt is generated when the match value in the <A class="xref" href="#TBMATCHR">TBMATCHR</A> register is reached in the one-shot and periodic modes.</TD>
+</TR>
+</TABLE>
+</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="TBMR_TBCDIR">4</a>
+</TD>
+<TD class="cellBitfieldCol2">TBCDIR</TD>
+<TD class="cellBitfieldCol3" colspan="3">grep<TABLE cellspacing="0" class="LprfEnum">
+<TR class="rowEnumHead">
+<TD class="cellEnumTableHeadCol1">Value</TD>
+<TD class="cellEnumTableHeadCol2">ENUM Name</TD>
+<TD class="cellEnumTableHeadCol3">Description</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x0</TD>
+<TD class="cellEnumTableCol2">DOWN</TD>
+<TD class="cellEnumTableCol3">The timer counts down.</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x1</TD>
+<TD class="cellEnumTableCol2">UP</TD>
+<TD class="cellEnumTableCol3">The timer counts up. When counting up, the timer starts from a value of 0x0.</TD>
+</TR>
+</TABLE>
+</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="TBMR_TBAMS">3</a>
+</TD>
+<TD class="cellBitfieldCol2">TBAMS</TD>
+<TD class="cellBitfieldCol3" colspan="3"><A class="mmap_legend_link" href="../legend.html#GPT">GPT</A> Timer B Alternate Mode <BR>
+<BR>
+Note: To enable <A class="mmap_legend_link" href="../legend.html#PWM">PWM</A> mode, you must also clear <A class="xref" href="#TBMR_TBCM">TBCM</A> bit and configure <A class="xref" href="#TBMR_TBMR">TBMR</A> field to 0x2.<TABLE cellspacing="0" class="LprfEnum">
+<TR class="rowEnumHead">
+<TD class="cellEnumTableHeadCol1">Value</TD>
+<TD class="cellEnumTableHeadCol2">ENUM Name</TD>
+<TD class="cellEnumTableHeadCol3">Description</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x0</TD>
+<TD class="cellEnumTableCol2">CAP_COMP</TD>
+<TD class="cellEnumTableCol3">Capture/Compare mode is enabled.</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x1</TD>
+<TD class="cellEnumTableCol2">PWM</TD>
+<TD class="cellEnumTableCol3"><A class="mmap_legend_link" href="../legend.html#PWM">PWM</A> mode is enabled</TD>
+</TR>
+</TABLE>
+</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="TBMR_TBCM">2</a>
+</TD>
+<TD class="cellBitfieldCol2">TBCM</TD>
+<TD class="cellBitfieldCol3" colspan="3"><A class="mmap_legend_link" href="../legend.html#GPT">GPT</A> Timer B Capture Mode<TABLE cellspacing="0" class="LprfEnum">
+<TR class="rowEnumHead">
+<TD class="cellEnumTableHeadCol1">Value</TD>
+<TD class="cellEnumTableHeadCol2">ENUM Name</TD>
+<TD class="cellEnumTableHeadCol3">Description</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x0</TD>
+<TD class="cellEnumTableCol2">EDGCNT</TD>
+<TD class="cellEnumTableCol3">Edge-Count mode</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x1</TD>
+<TD class="cellEnumTableCol2">EDGTIME</TD>
+<TD class="cellEnumTableCol3">Edge-Time mode</TD>
+</TR>
+</TABLE>
+</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="TBMR_TBMR">1:0</a>
+</TD>
+<TD class="cellBitfieldCol2">TBMR</TD>
+<TD class="cellBitfieldCol3" colspan="3"><A class="mmap_legend_link" href="../legend.html#GPT">GPT</A> Timer B Mode<BR>
+<BR>
+0x0 Reserved<BR>
+0x1 One-Shot Timer mode<BR>
+0x2 Periodic Timer mode<BR>
+0x3 Capture mode<BR>
+The Timer mode is based on the timer configuration defined by bits 2:0 in the <A class="xref" href="#CFG">CFG</A> register<TABLE cellspacing="0" class="LprfEnum">
+<TR class="rowEnumHead">
+<TD class="cellEnumTableHeadCol1">Value</TD>
+<TD class="cellEnumTableHeadCol2">ENUM Name</TD>
+<TD class="cellEnumTableHeadCol3">Description</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x1</TD>
+<TD class="cellEnumTableCol2">ONE_SHOT</TD>
+<TD class="cellEnumTableCol3">One-Shot Timer mode</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x2</TD>
+<TD class="cellEnumTableCol2">PERIODIC</TD>
+<TD class="cellEnumTableCol3">Periodic Timer mode</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x3</TD>
+<TD class="cellEnumTableCol2">CAPTURE</TD>
+<TD class="cellEnumTableCol3">Capture mode</TD>
+</TR>
+</TABLE>
+</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0b00</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="CTL"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">GPT2</A>:CTL</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 000C</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0x4001 200C</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0x4001 200C</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">Control</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">RW</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="CTL_RESERVED15">31:15</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED15</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0b0 0000 0000 0000 0000</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="CTL_TBPWML">14</a>
+</TD>
+<TD class="cellBitfieldCol2">TBPWML</TD>
+<TD class="cellBitfieldCol3" colspan="3"><A class="mmap_legend_link" href="../legend.html#GPT">GPT</A> Timer B <A class="mmap_legend_link" href="../legend.html#PWM">PWM</A> Output Level<BR>
+<BR>
+0: Output is unaffected. <BR>
+1: Output is inverted.<TABLE cellspacing="0" class="LprfEnum">
+<TR class="rowEnumHead">
+<TD class="cellEnumTableHeadCol1">Value</TD>
+<TD class="cellEnumTableHeadCol2">ENUM Name</TD>
+<TD class="cellEnumTableHeadCol3">Description</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x0</TD>
+<TD class="cellEnumTableCol2">NORMAL</TD>
+<TD class="cellEnumTableCol3">Not inverted</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x1</TD>
+<TD class="cellEnumTableCol2">INVERTED</TD>
+<TD class="cellEnumTableCol3">Inverted</TD>
+</TR>
+</TABLE>
+</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="CTL_RESERVED12">13:12</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED12</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0b00</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="CTL_TBEVENT">11:10</a>
+</TD>
+<TD class="cellBitfieldCol2">TBEVENT</TD>
+<TD class="cellBitfieldCol3" colspan="3"><A class="mmap_legend_link" href="../legend.html#GPT">GPT</A> Timer B Event Mode<BR>
+<BR>
+The values in this register are defined as follows:<BR>
+Value Description<BR>
+0x0 Positive edge<BR>
+0x1 Negative edge<BR>
+0x2 Reserved<BR>
+0x3 Both edges<BR>
+Note: If PWM output inversion is enabled, edge detection interrupt<BR>
+behavior is reversed. Thus, if a positive-edge interrupt trigger<BR>
+has been set and the PWM inversion generates a postive<BR>
+edge, no event-trigger interrupt asserts. Instead, the interrupt<BR>
+is generated on the negative edge of the PWM signal.<TABLE cellspacing="0" class="LprfEnum">
+<TR class="rowEnumHead">
+<TD class="cellEnumTableHeadCol1">Value</TD>
+<TD class="cellEnumTableHeadCol2">ENUM Name</TD>
+<TD class="cellEnumTableHeadCol3">Description</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x0</TD>
+<TD class="cellEnumTableCol2">POS</TD>
+<TD class="cellEnumTableCol3">Positive edge</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x1</TD>
+<TD class="cellEnumTableCol2">NEG</TD>
+<TD class="cellEnumTableCol3">Negative edge</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x3</TD>
+<TD class="cellEnumTableCol2">BOTH</TD>
+<TD class="cellEnumTableCol3">Both edges</TD>
+</TR>
+</TABLE>
+</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0b00</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="CTL_TBSTALL">9</a>
+</TD>
+<TD class="cellBitfieldCol2">TBSTALL</TD>
+<TD class="cellBitfieldCol3" colspan="3"><A class="mmap_legend_link" href="../legend.html#GPT">GPT</A> Timer B Stall Enable<TABLE cellspacing="0" class="LprfEnum">
+<TR class="rowEnumHead">
+<TD class="cellEnumTableHeadCol1">Value</TD>
+<TD class="cellEnumTableHeadCol2">ENUM Name</TD>
+<TD class="cellEnumTableHeadCol3">Description</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x0</TD>
+<TD class="cellEnumTableCol2">DIS</TD>
+<TD class="cellEnumTableCol3">Timer B continues counting while the processor is halted by the debugger.</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x1</TD>
+<TD class="cellEnumTableCol2">EN</TD>
+<TD class="cellEnumTableCol3">Timer B freezes counting while the processor is halted by the debugger.</TD>
+</TR>
+</TABLE>
+</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="CTL_TBEN">8</a>
+</TD>
+<TD class="cellBitfieldCol2">TBEN</TD>
+<TD class="cellBitfieldCol3" colspan="3"><A class="mmap_legend_link" href="../legend.html#GPT">GPT</A> Timer B Enable<TABLE cellspacing="0" class="LprfEnum">
+<TR class="rowEnumHead">
+<TD class="cellEnumTableHeadCol1">Value</TD>
+<TD class="cellEnumTableHeadCol2">ENUM Name</TD>
+<TD class="cellEnumTableHeadCol3">Description</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x0</TD>
+<TD class="cellEnumTableCol2">DIS</TD>
+<TD class="cellEnumTableCol3">Timer B is disabled.</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x1</TD>
+<TD class="cellEnumTableCol2">EN</TD>
+<TD class="cellEnumTableCol3">Timer B is enabled and begins counting or the capture logic is enabled based on <A class="xref" href="#CFG">CFG</A> register.</TD>
+</TR>
+</TABLE>
+</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="CTL_RESERVED7">7</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED7</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="CTL_TAPWML">6</a>
+</TD>
+<TD class="cellBitfieldCol2">TAPWML</TD>
+<TD class="cellBitfieldCol3" colspan="3"><A class="mmap_legend_link" href="../legend.html#GPT">GPT</A> Timer A <A class="mmap_legend_link" href="../legend.html#PWM">PWM</A> Output Level<TABLE cellspacing="0" class="LprfEnum">
+<TR class="rowEnumHead">
+<TD class="cellEnumTableHeadCol1">Value</TD>
+<TD class="cellEnumTableHeadCol2">ENUM Name</TD>
+<TD class="cellEnumTableHeadCol3">Description</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x0</TD>
+<TD class="cellEnumTableCol2">NORMAL</TD>
+<TD class="cellEnumTableCol3">Not inverted</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x1</TD>
+<TD class="cellEnumTableCol2">INVERTED</TD>
+<TD class="cellEnumTableCol3">Inverted</TD>
+</TR>
+</TABLE>
+</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="CTL_RESERVED4">5:4</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED4</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0b00</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="CTL_TAEVENT">3:2</a>
+</TD>
+<TD class="cellBitfieldCol2">TAEVENT</TD>
+<TD class="cellBitfieldCol3" colspan="3"><A class="mmap_legend_link" href="../legend.html#GPT">GPT</A> Timer A Event Mode<BR>
+<BR>
+The values in this register are defined as follows:<BR>
+Value Description<BR>
+0x0 Positive edge<BR>
+0x1 Negative edge<BR>
+0x2 Reserved<BR>
+0x3 Both edges<BR>
+Note: If PWM output inversion is enabled, edge detection interrupt<BR>
+behavior is reversed. Thus, if a positive-edge interrupt trigger<BR>
+has been set and the PWM inversion generates a postive<BR>
+edge, no event-trigger interrupt asserts. Instead, the interrupt<BR>
+is generated on the negative edge of the PWM signal.<TABLE cellspacing="0" class="LprfEnum">
+<TR class="rowEnumHead">
+<TD class="cellEnumTableHeadCol1">Value</TD>
+<TD class="cellEnumTableHeadCol2">ENUM Name</TD>
+<TD class="cellEnumTableHeadCol3">Description</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x0</TD>
+<TD class="cellEnumTableCol2">POS</TD>
+<TD class="cellEnumTableCol3">Positive edge</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x1</TD>
+<TD class="cellEnumTableCol2">NEG</TD>
+<TD class="cellEnumTableCol3">Negative edge</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x3</TD>
+<TD class="cellEnumTableCol2">BOTH</TD>
+<TD class="cellEnumTableCol3">Both edges</TD>
+</TR>
+</TABLE>
+</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0b00</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="CTL_TASTALL">1</a>
+</TD>
+<TD class="cellBitfieldCol2">TASTALL</TD>
+<TD class="cellBitfieldCol3" colspan="3"><A class="mmap_legend_link" href="../legend.html#GPT">GPT</A> Timer A Stall Enable<TABLE cellspacing="0" class="LprfEnum">
+<TR class="rowEnumHead">
+<TD class="cellEnumTableHeadCol1">Value</TD>
+<TD class="cellEnumTableHeadCol2">ENUM Name</TD>
+<TD class="cellEnumTableHeadCol3">Description</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x0</TD>
+<TD class="cellEnumTableCol2">DIS</TD>
+<TD class="cellEnumTableCol3">Timer A continues counting while the processor is halted by the debugger.</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x1</TD>
+<TD class="cellEnumTableCol2">EN</TD>
+<TD class="cellEnumTableCol3">Timer A freezes counting while the processor is halted by the debugger.</TD>
+</TR>
+</TABLE>
+</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="CTL_TAEN">0</a>
+</TD>
+<TD class="cellBitfieldCol2">TAEN</TD>
+<TD class="cellBitfieldCol3" colspan="3"><A class="mmap_legend_link" href="../legend.html#GPT">GPT</A> Timer A Enable<TABLE cellspacing="0" class="LprfEnum">
+<TR class="rowEnumHead">
+<TD class="cellEnumTableHeadCol1">Value</TD>
+<TD class="cellEnumTableHeadCol2">ENUM Name</TD>
+<TD class="cellEnumTableHeadCol3">Description</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x0</TD>
+<TD class="cellEnumTableCol2">DIS</TD>
+<TD class="cellEnumTableCol3">Timer A is disabled.</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x1</TD>
+<TD class="cellEnumTableCol2">EN</TD>
+<TD class="cellEnumTableCol3">Timer A is enabled and begins counting or the capture logic is enabled based on the <A class="xref" href="#CFG">CFG</A> register.</TD>
+</TR>
+</TABLE>
+</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="SYNC"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">GPT2</A>:SYNC</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 0010</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0x4001 2010</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0x4001 2010</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">Synch Register</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">RW</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="SYNC_RESERVED8">31:8</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED8</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0x00 0000</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="SYNC_SYNC3">7:6</a>
+</TD>
+<TD class="cellBitfieldCol2">SYNC3</TD>
+<TD class="cellBitfieldCol3" colspan="3">Synchronize <A class="mmap_legend_link" href="../legend.html#GPT">GPT</A> Timer 3.<TABLE cellspacing="0" class="LprfEnum">
+<TR class="rowEnumHead">
+<TD class="cellEnumTableHeadCol1">Value</TD>
+<TD class="cellEnumTableHeadCol2">ENUM Name</TD>
+<TD class="cellEnumTableHeadCol3">Description</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x0</TD>
+<TD class="cellEnumTableCol2">NOSYNC</TD>
+<TD class="cellEnumTableCol3">No Sync. <A class="mmap_legend_link" href="../legend.html#GPT3">GPT3</A> is not affected.</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x1</TD>
+<TD class="cellEnumTableCol2">TIMERA</TD>
+<TD class="cellEnumTableCol3">A timeout event for Timer A of <A class="mmap_legend_link" href="../legend.html#GPT3">GPT3</A> is triggered</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x2</TD>
+<TD class="cellEnumTableCol2">TIMERB</TD>
+<TD class="cellEnumTableCol3">A timeout event for Timer B of <A class="mmap_legend_link" href="../legend.html#GPT3">GPT3</A> is triggered</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x3</TD>
+<TD class="cellEnumTableCol2">BOTH</TD>
+<TD class="cellEnumTableCol3">A timeout event for both Timer A and Timer B of <A class="mmap_legend_link" href="../legend.html#GPT3">GPT3</A> is triggered</TD>
+</TR>
+</TABLE>
+</TD>
+<TD class="cellBitfieldCol4">WO</TD>
+<TD class="cellBitfieldCol5">0b00</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="SYNC_SYNC2">5:4</a>
+</TD>
+<TD class="cellBitfieldCol2">SYNC2</TD>
+<TD class="cellBitfieldCol3" colspan="3">Synchronize <A class="mmap_legend_link" href="../legend.html#GPT">GPT</A> Timer 2.<TABLE cellspacing="0" class="LprfEnum">
+<TR class="rowEnumHead">
+<TD class="cellEnumTableHeadCol1">Value</TD>
+<TD class="cellEnumTableHeadCol2">ENUM Name</TD>
+<TD class="cellEnumTableHeadCol3">Description</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x0</TD>
+<TD class="cellEnumTableCol2">NOSYNC</TD>
+<TD class="cellEnumTableCol3">No Sync. <A class="mmap_legend_link" href="../legend.html#GPT2">GPT2</A> is not affected.</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x1</TD>
+<TD class="cellEnumTableCol2">TIMERA</TD>
+<TD class="cellEnumTableCol3">A timeout event for Timer A of <A class="mmap_legend_link" href="../legend.html#GPT2">GPT2</A> is triggered</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x2</TD>
+<TD class="cellEnumTableCol2">TIMERB</TD>
+<TD class="cellEnumTableCol3">A timeout event for Timer B of <A class="mmap_legend_link" href="../legend.html#GPT2">GPT2</A> is triggered</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x3</TD>
+<TD class="cellEnumTableCol2">BOTH</TD>
+<TD class="cellEnumTableCol3">A timeout event for both Timer A and Timer B of <A class="mmap_legend_link" href="../legend.html#GPT2">GPT2</A> is triggered</TD>
+</TR>
+</TABLE>
+</TD>
+<TD class="cellBitfieldCol4">WO</TD>
+<TD class="cellBitfieldCol5">0b00</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="SYNC_SYNC1">3:2</a>
+</TD>
+<TD class="cellBitfieldCol2">SYNC1</TD>
+<TD class="cellBitfieldCol3" colspan="3">Synchronize <A class="mmap_legend_link" href="../legend.html#GPT">GPT</A> Timer 1<TABLE cellspacing="0" class="LprfEnum">
+<TR class="rowEnumHead">
+<TD class="cellEnumTableHeadCol1">Value</TD>
+<TD class="cellEnumTableHeadCol2">ENUM Name</TD>
+<TD class="cellEnumTableHeadCol3">Description</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x0</TD>
+<TD class="cellEnumTableCol2">NOSYNC</TD>
+<TD class="cellEnumTableCol3">No Sync. <A class="mmap_legend_link" href="../legend.html#GPT1">GPT1</A> is not affected.</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x1</TD>
+<TD class="cellEnumTableCol2">TIMERA</TD>
+<TD class="cellEnumTableCol3">A timeout event for Timer A of <A class="mmap_legend_link" href="../legend.html#GPT1">GPT1</A> is triggered</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x2</TD>
+<TD class="cellEnumTableCol2">TIMERB</TD>
+<TD class="cellEnumTableCol3">A timeout event for Timer B of <A class="mmap_legend_link" href="../legend.html#GPT1">GPT1</A> is triggered</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x3</TD>
+<TD class="cellEnumTableCol2">BOTH</TD>
+<TD class="cellEnumTableCol3">A timeout event for both Timer A and Timer B of <A class="mmap_legend_link" href="../legend.html#GPT1">GPT1</A> is triggered</TD>
+</TR>
+</TABLE>
+</TD>
+<TD class="cellBitfieldCol4">WO</TD>
+<TD class="cellBitfieldCol5">0b00</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="SYNC_SYNC0">1:0</a>
+</TD>
+<TD class="cellBitfieldCol2">SYNC0</TD>
+<TD class="cellBitfieldCol3" colspan="3">Synchronize <A class="mmap_legend_link" href="../legend.html#GPT">GPT</A> Timer 0<TABLE cellspacing="0" class="LprfEnum">
+<TR class="rowEnumHead">
+<TD class="cellEnumTableHeadCol1">Value</TD>
+<TD class="cellEnumTableHeadCol2">ENUM Name</TD>
+<TD class="cellEnumTableHeadCol3">Description</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x0</TD>
+<TD class="cellEnumTableCol2">NOSYNC</TD>
+<TD class="cellEnumTableCol3">No Sync. <A class="mmap_legend_link" href="../legend.html#GPT0">GPT0</A> is not affected.</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x1</TD>
+<TD class="cellEnumTableCol2">TIMERA</TD>
+<TD class="cellEnumTableCol3">A timeout event for Timer A of <A class="mmap_legend_link" href="../legend.html#GPT0">GPT0</A> is triggered</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x2</TD>
+<TD class="cellEnumTableCol2">TIMERB</TD>
+<TD class="cellEnumTableCol3">A timeout event for Timer B of <A class="mmap_legend_link" href="../legend.html#GPT0">GPT0</A> is triggered</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x3</TD>
+<TD class="cellEnumTableCol2">BOTH</TD>
+<TD class="cellEnumTableCol3">A timeout event for both Timer A and Timer B of <A class="mmap_legend_link" href="../legend.html#GPT0">GPT0</A> is triggered</TD>
+</TR>
+</TABLE>
+</TD>
+<TD class="cellBitfieldCol4">WO</TD>
+<TD class="cellBitfieldCol5">0b00</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="IMR"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">GPT2</A>:IMR</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 0018</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0x4001 2018</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0x4001 2018</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">Interrupt Mask<BR>
+This register is used to enable the interrupts.<BR>
+Associated registers:<BR>
+<A class="xref" href="#RIS">RIS</A>, <A class="xref" href="#MIS">MIS</A>, <A class="xref" href="#ICLR">ICLR</A></TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">RW</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="IMR_RESERVED14">31:14</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED14</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0b00 0000 0000 0000 0000</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="IMR_DMABIM">13</a>
+</TD>
+<TD class="cellBitfieldCol2">DMABIM</TD>
+<TD class="cellBitfieldCol3" colspan="3">Enabling this bit will make the <A class="xref" href="#RIS_DMABRIS">RIS.DMABRIS</A> interrupt propagate to <A class="xref" href="#MIS_DMABMIS">MIS.DMABMIS</A><TABLE cellspacing="0" class="LprfEnum">
+<TR class="rowEnumHead">
+<TD class="cellEnumTableHeadCol1">Value</TD>
+<TD class="cellEnumTableHeadCol2">ENUM Name</TD>
+<TD class="cellEnumTableHeadCol3">Description</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x0</TD>
+<TD class="cellEnumTableCol2">DIS</TD>
+<TD class="cellEnumTableCol3">Disable Interrupt</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x1</TD>
+<TD class="cellEnumTableCol2">EN</TD>
+<TD class="cellEnumTableCol3">Enable Interrupt</TD>
+</TR>
+</TABLE>
+</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="IMR_RESERVED12">12</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED12</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="IMR_TBMIM">11</a>
+</TD>
+<TD class="cellBitfieldCol2">TBMIM</TD>
+<TD class="cellBitfieldCol3" colspan="3">Enabling this bit will make the <A class="xref" href="#RIS_TBMRIS">RIS.TBMRIS</A> interrupt propagate to <A class="xref" href="#MIS_TBMMIS">MIS.TBMMIS</A><TABLE cellspacing="0" class="LprfEnum">
+<TR class="rowEnumHead">
+<TD class="cellEnumTableHeadCol1">Value</TD>
+<TD class="cellEnumTableHeadCol2">ENUM Name</TD>
+<TD class="cellEnumTableHeadCol3">Description</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x0</TD>
+<TD class="cellEnumTableCol2">DIS</TD>
+<TD class="cellEnumTableCol3">Disable Interrupt</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x1</TD>
+<TD class="cellEnumTableCol2">EN</TD>
+<TD class="cellEnumTableCol3">Enable Interrupt</TD>
+</TR>
+</TABLE>
+</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="IMR_CBEIM">10</a>
+</TD>
+<TD class="cellBitfieldCol2">CBEIM</TD>
+<TD class="cellBitfieldCol3" colspan="3">Enabling this bit will make the <A class="xref" href="#RIS_CBERIS">RIS.CBERIS</A> interrupt propagate to <A class="xref" href="#MIS_CBEMIS">MIS.CBEMIS</A><TABLE cellspacing="0" class="LprfEnum">
+<TR class="rowEnumHead">
+<TD class="cellEnumTableHeadCol1">Value</TD>
+<TD class="cellEnumTableHeadCol2">ENUM Name</TD>
+<TD class="cellEnumTableHeadCol3">Description</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x0</TD>
+<TD class="cellEnumTableCol2">DIS</TD>
+<TD class="cellEnumTableCol3">Disable Interrupt</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x1</TD>
+<TD class="cellEnumTableCol2">EN</TD>
+<TD class="cellEnumTableCol3">Enable Interrupt</TD>
+</TR>
+</TABLE>
+</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="IMR_CBMIM">9</a>
+</TD>
+<TD class="cellBitfieldCol2">CBMIM</TD>
+<TD class="cellBitfieldCol3" colspan="3">Enabling this bit will make the <A class="xref" href="#RIS_CBMRIS">RIS.CBMRIS</A> interrupt propagate to <A class="xref" href="#MIS_CBMMIS">MIS.CBMMIS</A><TABLE cellspacing="0" class="LprfEnum">
+<TR class="rowEnumHead">
+<TD class="cellEnumTableHeadCol1">Value</TD>
+<TD class="cellEnumTableHeadCol2">ENUM Name</TD>
+<TD class="cellEnumTableHeadCol3">Description</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x0</TD>
+<TD class="cellEnumTableCol2">DIS</TD>
+<TD class="cellEnumTableCol3">Disable Interrupt</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x1</TD>
+<TD class="cellEnumTableCol2">EN</TD>
+<TD class="cellEnumTableCol3">Enable Interrupt</TD>
+</TR>
+</TABLE>
+</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="IMR_TBTOIM">8</a>
+</TD>
+<TD class="cellBitfieldCol2">TBTOIM</TD>
+<TD class="cellBitfieldCol3" colspan="3">Enabling this bit will make the <A class="xref" href="#RIS_TBTORIS">RIS.TBTORIS</A> interrupt propagate to <A class="xref" href="#MIS_TBTOMIS">MIS.TBTOMIS</A><TABLE cellspacing="0" class="LprfEnum">
+<TR class="rowEnumHead">
+<TD class="cellEnumTableHeadCol1">Value</TD>
+<TD class="cellEnumTableHeadCol2">ENUM Name</TD>
+<TD class="cellEnumTableHeadCol3">Description</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x0</TD>
+<TD class="cellEnumTableCol2">DIS</TD>
+<TD class="cellEnumTableCol3">Disable Interrupt</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x1</TD>
+<TD class="cellEnumTableCol2">EN</TD>
+<TD class="cellEnumTableCol3">Enable Interrupt</TD>
+</TR>
+</TABLE>
+</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="IMR_RESERVED6">7:6</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED6</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0b00</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="IMR_DMAAIM">5</a>
+</TD>
+<TD class="cellBitfieldCol2">DMAAIM</TD>
+<TD class="cellBitfieldCol3" colspan="3">Enabling this bit will make the <A class="xref" href="#RIS_DMAARIS">RIS.DMAARIS</A> interrupt propagate to <A class="xref" href="#MIS_DMAAMIS">MIS.DMAAMIS</A><TABLE cellspacing="0" class="LprfEnum">
+<TR class="rowEnumHead">
+<TD class="cellEnumTableHeadCol1">Value</TD>
+<TD class="cellEnumTableHeadCol2">ENUM Name</TD>
+<TD class="cellEnumTableHeadCol3">Description</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x0</TD>
+<TD class="cellEnumTableCol2">DIS</TD>
+<TD class="cellEnumTableCol3">Disable Interrupt</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x1</TD>
+<TD class="cellEnumTableCol2">EN</TD>
+<TD class="cellEnumTableCol3">Enable Interrupt</TD>
+</TR>
+</TABLE>
+</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="IMR_TAMIM">4</a>
+</TD>
+<TD class="cellBitfieldCol2">TAMIM</TD>
+<TD class="cellBitfieldCol3" colspan="3">Enabling this bit will make the <A class="xref" href="#RIS_TAMRIS">RIS.TAMRIS</A> interrupt propagate to <A class="xref" href="#MIS_TAMMIS">MIS.TAMMIS</A><TABLE cellspacing="0" class="LprfEnum">
+<TR class="rowEnumHead">
+<TD class="cellEnumTableHeadCol1">Value</TD>
+<TD class="cellEnumTableHeadCol2">ENUM Name</TD>
+<TD class="cellEnumTableHeadCol3">Description</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x0</TD>
+<TD class="cellEnumTableCol2">DIS</TD>
+<TD class="cellEnumTableCol3">Disable Interrupt</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x1</TD>
+<TD class="cellEnumTableCol2">EN</TD>
+<TD class="cellEnumTableCol3">Enable Interrupt</TD>
+</TR>
+</TABLE>
+</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="IMR_RESERVED3">3</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED3</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="IMR_CAEIM">2</a>
+</TD>
+<TD class="cellBitfieldCol2">CAEIM</TD>
+<TD class="cellBitfieldCol3" colspan="3">Enabling this bit will make the <A class="xref" href="#RIS_CAERIS">RIS.CAERIS</A> interrupt propagate to <A class="xref" href="#MIS_CAEMIS">MIS.CAEMIS</A><TABLE cellspacing="0" class="LprfEnum">
+<TR class="rowEnumHead">
+<TD class="cellEnumTableHeadCol1">Value</TD>
+<TD class="cellEnumTableHeadCol2">ENUM Name</TD>
+<TD class="cellEnumTableHeadCol3">Description</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x0</TD>
+<TD class="cellEnumTableCol2">DIS</TD>
+<TD class="cellEnumTableCol3">Disable Interrupt</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x1</TD>
+<TD class="cellEnumTableCol2">EN</TD>
+<TD class="cellEnumTableCol3">Enable Interrupt</TD>
+</TR>
+</TABLE>
+</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="IMR_CAMIM">1</a>
+</TD>
+<TD class="cellBitfieldCol2">CAMIM</TD>
+<TD class="cellBitfieldCol3" colspan="3">Enabling this bit will make the <A class="xref" href="#RIS_CAMRIS">RIS.CAMRIS</A> interrupt propagate to <A class="xref" href="#MIS_CAMMIS">MIS.CAMMIS</A><TABLE cellspacing="0" class="LprfEnum">
+<TR class="rowEnumHead">
+<TD class="cellEnumTableHeadCol1">Value</TD>
+<TD class="cellEnumTableHeadCol2">ENUM Name</TD>
+<TD class="cellEnumTableHeadCol3">Description</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x0</TD>
+<TD class="cellEnumTableCol2">DIS</TD>
+<TD class="cellEnumTableCol3">Disable Interrupt</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x1</TD>
+<TD class="cellEnumTableCol2">EN</TD>
+<TD class="cellEnumTableCol3">Enable Interrupt</TD>
+</TR>
+</TABLE>
+</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="IMR_TATOIM">0</a>
+</TD>
+<TD class="cellBitfieldCol2">TATOIM</TD>
+<TD class="cellBitfieldCol3" colspan="3">Enabling this bit will make the <A class="xref" href="#RIS_TATORIS">RIS.TATORIS</A> interrupt propagate to <A class="xref" href="#MIS_TATOMIS">MIS.TATOMIS</A><TABLE cellspacing="0" class="LprfEnum">
+<TR class="rowEnumHead">
+<TD class="cellEnumTableHeadCol1">Value</TD>
+<TD class="cellEnumTableHeadCol2">ENUM Name</TD>
+<TD class="cellEnumTableHeadCol3">Description</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x0</TD>
+<TD class="cellEnumTableCol2">DIS</TD>
+<TD class="cellEnumTableCol3">Disable Interrupt</TD>
+</TR>
+<TR class="rowEnum">
+<TD class="cellEnumTableCol1">0x1</TD>
+<TD class="cellEnumTableCol2">EN</TD>
+<TD class="cellEnumTableCol3">Enable Interrupt</TD>
+</TR>
+</TABLE>
+</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="RIS"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">GPT2</A>:RIS</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 001C</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0x4001 201C</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0x4001 201C</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">Raw Interrupt Status<BR>
+Associated registers:<BR>
+<A class="xref" href="#IMR">IMR</A>, <A class="xref" href="#MIS">MIS</A>, <A class="xref" href="#ICLR">ICLR</A></TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">RO</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="RIS_RESERVED14">31:14</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED14</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0b00 0000 0000 0000 0000</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="RIS_DMABRIS">13</a>
+</TD>
+<TD class="cellBitfieldCol2">DMABRIS</TD>
+<TD class="cellBitfieldCol3" colspan="3"><A class="mmap_legend_link" href="../legend.html#GPT">GPT</A> Timer B <A class="mmap_legend_link" href="../legend.html#DMA">DMA</A> Done Raw Interrupt Status<BR>
+<BR>
+0: Transfer has not completed<BR>
+1: Transfer has completed</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="RIS_RESERVED12">12</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED12</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="RIS_TBMRIS">11</a>
+</TD>
+<TD class="cellBitfieldCol2">TBMRIS</TD>
+<TD class="cellBitfieldCol3" colspan="3"><A class="mmap_legend_link" href="../legend.html#GPT">GPT</A> Timer B Match Raw  Interrupt<BR>
+<BR>
+0:  The match value has not been reached<BR>
+1:  The match value is reached.<BR>
+<BR>
+<A class="xref" href="#TBMR_TBMIE">TBMR.TBMIE</A> is set, and the match values in <A class="xref" href="#TBMATCHR">TBMATCHR</A> and optionally <A class="xref" href="#TBPMR">TBPMR</A> have been reached when configured in one-shot or periodic mode.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="RIS_CBERIS">10</a>
+</TD>
+<TD class="cellBitfieldCol2">CBERIS</TD>
+<TD class="cellBitfieldCol3" colspan="3"><A class="mmap_legend_link" href="../legend.html#GPT">GPT</A> Timer B Capture Mode Event Raw Interrupt<BR>
+<BR>
+0:  The event has not occured.<BR>
+1:  The event has occured.<BR>
+<BR>
+This interrupt asserts when the subtimer is configured in Input Edge-Time mode</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="RIS_CBMRIS">9</a>
+</TD>
+<TD class="cellBitfieldCol2">CBMRIS</TD>
+<TD class="cellBitfieldCol3" colspan="3"><A class="mmap_legend_link" href="../legend.html#GPT">GPT</A> Timer B Capture Mode Match Raw Interrupt<BR>
+<BR>
+0:  The capture mode match for Timer B has not occurred.<BR>
+1:  A capture mode match has occurred for Timer B. This interrupt<BR>
+asserts when the values in the <A class="xref" href="#TBR">TBR</A> and <A class="xref" href="#TBPR">TBPR</A><BR>
+match the values in the <A class="xref" href="#TBMATCHR">TBMATCHR</A> and <A class="xref" href="#TBPMR">TBPMR</A><BR>
+when configured in Input Edge-Time mode.<BR>
+<BR>
+This bit is cleared by writing a 1 to the <A class="xref" href="#ICLR_CBMCINT">ICLR.CBMCINT</A> bit.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="RIS_TBTORIS">8</a>
+</TD>
+<TD class="cellBitfieldCol2">TBTORIS</TD>
+<TD class="cellBitfieldCol3" colspan="3"><A class="mmap_legend_link" href="../legend.html#GPT">GPT</A> Timer B Time-out Raw Interrupt<BR>
+<BR>
+0:  Timer B has not timed out<BR>
+1:  Timer B has timed out. <BR>
+<BR>
+This interrupt is asserted when a one-shot or periodic mode timer reaches its count limit. The count limit is 0 or the value loaded into <A class="xref" href="#TBILR">TBILR</A>, depending on the count direction.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="RIS_RESERVED6">7:6</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED6</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0b00</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="RIS_DMAARIS">5</a>
+</TD>
+<TD class="cellBitfieldCol2">DMAARIS</TD>
+<TD class="cellBitfieldCol3" colspan="3"><A class="mmap_legend_link" href="../legend.html#GPT">GPT</A> Timer A <A class="mmap_legend_link" href="../legend.html#DMA">DMA</A> Done Raw Interrupt Status<BR>
+<BR>
+0: Transfer has not completed<BR>
+1: Transfer has completed</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="RIS_TAMRIS">4</a>
+</TD>
+<TD class="cellBitfieldCol2">TAMRIS</TD>
+<TD class="cellBitfieldCol3" colspan="3"><A class="mmap_legend_link" href="../legend.html#GPT">GPT</A> Timer A Match Raw  Interrupt<BR>
+<BR>
+0:  The match value has not been reached<BR>
+1:  The match value is reached.<BR>
+<BR>
+<A class="xref" href="#TAMR_TAMIE">TAMR.TAMIE</A> is set, and the match values in <A class="xref" href="#TAMATCHR">TAMATCHR</A> and optionally <A class="xref" href="#TAPMR">TAPMR</A> have been reached when configured in one-shot or periodic mode.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="RIS_RESERVED3">3</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED3</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="RIS_CAERIS">2</a>
+</TD>
+<TD class="cellBitfieldCol2">CAERIS</TD>
+<TD class="cellBitfieldCol3" colspan="3"><A class="mmap_legend_link" href="../legend.html#GPT">GPT</A> Timer A Capture Mode Event Raw Interrupt<BR>
+<BR>
+0:  The event has not occured.<BR>
+1:  The event has occured.<BR>
+<BR>
+This interrupt asserts when the subtimer is configured in Input Edge-Time mode</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="RIS_CAMRIS">1</a>
+</TD>
+<TD class="cellBitfieldCol2">CAMRIS</TD>
+<TD class="cellBitfieldCol3" colspan="3"><A class="mmap_legend_link" href="../legend.html#GPT">GPT</A> Timer A Capture Mode Match Raw Interrupt<BR>
+<BR>
+0:  The capture mode match for Timer A has not occurred.<BR>
+1:  A capture mode match has occurred for Timer A. This interrupt<BR>
+asserts when the values in the <A class="xref" href="#TAR">TAR</A> and <A class="xref" href="#TAPR">TAPR</A><BR>
+match the values in the <A class="xref" href="#TAMATCHR">TAMATCHR</A> and <A class="xref" href="#TAPMR">TAPMR</A><BR>
+when configured in Input Edge-Time mode.<BR>
+<BR>
+This bit is cleared by writing a 1 to the <A class="xref" href="#ICLR_CAMCINT">ICLR.CAMCINT</A> bit.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="RIS_TATORIS">0</a>
+</TD>
+<TD class="cellBitfieldCol2">TATORIS</TD>
+<TD class="cellBitfieldCol3" colspan="3"><A class="mmap_legend_link" href="../legend.html#GPT">GPT</A> Timer A Time-out Raw Interrupt<BR>
+<BR>
+0:  Timer A has not timed out<BR>
+1:  Timer A has timed out. <BR>
+<BR>
+This interrupt is asserted when a one-shot or periodic mode timer reaches its count limit. The count limit is 0 or the value loaded into <A class="xref" href="#TAILR">TAILR</A>, depending on the count direction.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="MIS"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">GPT2</A>:MIS</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 0020</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0x4001 2020</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0x4001 2020</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">Masked Interrupt Status<BR>
+Values are result of bitwise AND operation between <A class="xref" href="#RIS">RIS</A> and <A class="xref" href="#IMR">IMR</A><BR>
+Assosciated clear register: <A class="xref" href="#ICLR">ICLR</A></TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">RO</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="MIS_RESERVED14">31:14</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED14</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0b00 0000 0000 0000 0000</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="MIS_DMABMIS">13</a>
+</TD>
+<TD class="cellBitfieldCol2">DMABMIS</TD>
+<TD class="cellBitfieldCol3" colspan="3">0: No interrupt or interrupt not enabled<BR>
+1: <A class="xref" href="#RIS_DMABRIS">RIS.DMABRIS</A> = 1 &#38;&#38; <A class="xref" href="#IMR_DMABIM">IMR.DMABIM</A> = 1</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="MIS_RESERVED12">12</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED12</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="MIS_TBMMIS">11</a>
+</TD>
+<TD class="cellBitfieldCol2">TBMMIS</TD>
+<TD class="cellBitfieldCol3" colspan="3">0: No interrupt or interrupt not enabled<BR>
+1: <A class="xref" href="#RIS_TBMRIS">RIS.TBMRIS</A> = 1 &#38;&#38; <A class="xref" href="#IMR_TBMIM">IMR.TBMIM</A> = 1</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="MIS_CBEMIS">10</a>
+</TD>
+<TD class="cellBitfieldCol2">CBEMIS</TD>
+<TD class="cellBitfieldCol3" colspan="3">0: No interrupt or interrupt not enabled<BR>
+1: <A class="xref" href="#RIS_CBERIS">RIS.CBERIS</A> = 1 &#38;&#38; <A class="xref" href="#IMR_CBEIM">IMR.CBEIM</A> = 1</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="MIS_CBMMIS">9</a>
+</TD>
+<TD class="cellBitfieldCol2">CBMMIS</TD>
+<TD class="cellBitfieldCol3" colspan="3">0: No interrupt or interrupt not enabled<BR>
+1: <A class="xref" href="#RIS_CBMRIS">RIS.CBMRIS</A> = 1 &#38;&#38; <A class="xref" href="#IMR_CBMIM">IMR.CBMIM</A> = 1</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="MIS_TBTOMIS">8</a>
+</TD>
+<TD class="cellBitfieldCol2">TBTOMIS</TD>
+<TD class="cellBitfieldCol3" colspan="3">0: No interrupt or interrupt not enabled<BR>
+1: <A class="xref" href="#RIS_TBTORIS">RIS.TBTORIS</A> = 1 &#38;&#38; <A class="xref" href="#IMR_TBTOIM">IMR.TBTOIM</A> = 1</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="MIS_RESERVED6">7:6</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED6</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0b00</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="MIS_DMAAMIS">5</a>
+</TD>
+<TD class="cellBitfieldCol2">DMAAMIS</TD>
+<TD class="cellBitfieldCol3" colspan="3">0: No interrupt or interrupt not enabled<BR>
+1: <A class="xref" href="#RIS_DMAARIS">RIS.DMAARIS</A> = 1 &#38;&#38; <A class="xref" href="#IMR_DMAAIM">IMR.DMAAIM</A> = 1</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="MIS_TAMMIS">4</a>
+</TD>
+<TD class="cellBitfieldCol2">TAMMIS</TD>
+<TD class="cellBitfieldCol3" colspan="3">0: No interrupt or interrupt not enabled<BR>
+1: <A class="xref" href="#RIS_TAMRIS">RIS.TAMRIS</A> = 1 &#38;&#38; <A class="xref" href="#IMR_TAMIM">IMR.TAMIM</A> = 1</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="MIS_RESERVED3">3</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED3</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="MIS_CAEMIS">2</a>
+</TD>
+<TD class="cellBitfieldCol2">CAEMIS</TD>
+<TD class="cellBitfieldCol3" colspan="3">0: No interrupt or interrupt not enabled<BR>
+1: <A class="xref" href="#RIS_CAERIS">RIS.CAERIS</A> = 1 &#38;&#38; <A class="xref" href="#IMR_CAEIM">IMR.CAEIM</A> = 1</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="MIS_CAMMIS">1</a>
+</TD>
+<TD class="cellBitfieldCol2">CAMMIS</TD>
+<TD class="cellBitfieldCol3" colspan="3">0: No interrupt or interrupt not enabled<BR>
+1: <A class="xref" href="#RIS_CAMRIS">RIS.CAMRIS</A> = 1 &#38;&#38; <A class="xref" href="#IMR_CAMIM">IMR.CAMIM</A> = 1</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="MIS_TATOMIS">0</a>
+</TD>
+<TD class="cellBitfieldCol2">TATOMIS</TD>
+<TD class="cellBitfieldCol3" colspan="3">0: No interrupt or interrupt not enabled<BR>
+1: <A class="xref" href="#RIS_TATORIS">RIS.TATORIS</A> = 1 &#38;&#38; <A class="xref" href="#IMR_TATOIM">IMR.TATOIM</A> = 1</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="ICLR"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">GPT2</A>:ICLR</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 0024</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0x4001 2024</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0x4001 2024</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">Interrupt Clear<BR>
+This register is used to clear status bits in the <A class="xref" href="#RIS">RIS</A> and <A class="xref" href="#MIS">MIS</A> registers</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">RW</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="ICLR_RESERVED14">31:14</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED14</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0b00 0000 0000 0000 0000</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="ICLR_DMABINT">13</a>
+</TD>
+<TD class="cellBitfieldCol2">DMABINT</TD>
+<TD class="cellBitfieldCol3" colspan="3">0: Do nothing.<BR>
+1: Clear <A class="xref" href="#RIS_DMABRIS">RIS.DMABRIS</A> and <A class="xref" href="#MIS_DMABMIS">MIS.DMABMIS</A></TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="ICLR_RESERVED12">12</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED12</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="ICLR_TBMCINT">11</a>
+</TD>
+<TD class="cellBitfieldCol2">TBMCINT</TD>
+<TD class="cellBitfieldCol3" colspan="3">0: Do nothing.<BR>
+1: Clear <A class="xref" href="#RIS_TBMRIS">RIS.TBMRIS</A> and <A class="xref" href="#MIS_TBMMIS">MIS.TBMMIS</A></TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="ICLR_CBECINT">10</a>
+</TD>
+<TD class="cellBitfieldCol2">CBECINT</TD>
+<TD class="cellBitfieldCol3" colspan="3">0: Do nothing.<BR>
+1: Clear <A class="xref" href="#RIS_CBERIS">RIS.CBERIS</A> and <A class="xref" href="#MIS_CBEMIS">MIS.CBEMIS</A></TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="ICLR_CBMCINT">9</a>
+</TD>
+<TD class="cellBitfieldCol2">CBMCINT</TD>
+<TD class="cellBitfieldCol3" colspan="3">0: Do nothing.<BR>
+1: Clear <A class="xref" href="#RIS_CBMRIS">RIS.CBMRIS</A> and <A class="xref" href="#MIS_CBMMIS">MIS.CBMMIS</A></TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="ICLR_TBTOCINT">8</a>
+</TD>
+<TD class="cellBitfieldCol2">TBTOCINT</TD>
+<TD class="cellBitfieldCol3" colspan="3">0: Do nothing.<BR>
+1: Clear <A class="xref" href="#RIS_TBTORIS">RIS.TBTORIS</A> and <A class="xref" href="#MIS_TBTOMIS">MIS.TBTOMIS</A></TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="ICLR_RESERVED6">7:6</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED6</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0b00</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="ICLR_DMAAINT">5</a>
+</TD>
+<TD class="cellBitfieldCol2">DMAAINT</TD>
+<TD class="cellBitfieldCol3" colspan="3">0: Do nothing.<BR>
+1: Clear <A class="xref" href="#RIS_DMAARIS">RIS.DMAARIS</A> and <A class="xref" href="#MIS_DMAAMIS">MIS.DMAAMIS</A></TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="ICLR_TAMCINT">4</a>
+</TD>
+<TD class="cellBitfieldCol2">TAMCINT</TD>
+<TD class="cellBitfieldCol3" colspan="3">0: Do nothing.<BR>
+1: Clear <A class="xref" href="#RIS_TAMRIS">RIS.TAMRIS</A> and <A class="xref" href="#MIS_TAMMIS">MIS.TAMMIS</A></TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="ICLR_RESERVED3">3</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED3</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="ICLR_CAECINT">2</a>
+</TD>
+<TD class="cellBitfieldCol2">CAECINT</TD>
+<TD class="cellBitfieldCol3" colspan="3">0: Do nothing.<BR>
+1: Clear <A class="xref" href="#RIS_CAERIS">RIS.CAERIS</A> and <A class="xref" href="#MIS_CAEMIS">MIS.CAEMIS</A></TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="ICLR_CAMCINT">1</a>
+</TD>
+<TD class="cellBitfieldCol2">CAMCINT</TD>
+<TD class="cellBitfieldCol3" colspan="3">0: Do nothing.<BR>
+1: Clear <A class="xref" href="#RIS_CAMRIS">RIS.CAMRIS</A> and <A class="xref" href="#MIS_CAMMIS">MIS.CAMMIS</A></TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="ICLR_TATOCINT">0</a>
+</TD>
+<TD class="cellBitfieldCol2">TATOCINT</TD>
+<TD class="cellBitfieldCol3" colspan="3">0: Do nothing.<BR>
+1: Clear <A class="xref" href="#RIS_TATORIS">RIS.TATORIS</A> and <A class="xref" href="#MIS_TATOMIS">MIS.TATOMIS</A></TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="TAILR"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">GPT2</A>:TAILR</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 0028</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0x4001 2028</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0x4001 2028</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">Timer A Interval Load  Register</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">RW</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="TAILR_TAILR">31:0</a>
+</TD>
+<TD class="cellBitfieldCol2">TAILR</TD>
+<TD class="cellBitfieldCol3" colspan="3"><A class="mmap_legend_link" href="../legend.html#GPT">GPT</A> Timer A Interval Load  Register<BR>
+<BR>
+Writing this field loads the counter for Timer A. A read returns the current value of <A class="xref" href="#TAILR">TAILR</A>.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0xFFFF FFFF</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="TBILR"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">GPT2</A>:TBILR</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 002C</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0x4001 202C</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0x4001 202C</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">Timer B Interval Load  Register</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">RW</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="TBILR_TBILR">31:0</a>
+</TD>
+<TD class="cellBitfieldCol2">TBILR</TD>
+<TD class="cellBitfieldCol3" colspan="3"><A class="mmap_legend_link" href="../legend.html#GPT">GPT</A> Timer B Interval Load  Register<BR>
+<BR>
+Writing this field loads the counter for Timer B. A read returns the current value of <A class="xref" href="#TBILR">TBILR</A>.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0x0000 FFFF</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="TAMATCHR"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">GPT2</A>:TAMATCHR</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 0030</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0x4001 2030</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0x4001 2030</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">Timer A Match Register<BR>
+<BR>
+Interrupts can be generated when the timer value is equal to the value in this register in one-shot or periodic mode.<BR>
+<BR>
+In Edge-Count mode, this register along with <A class="xref" href="#TAILR">TAILR</A>, determines how many edge events are counted.<BR>
+The total number of edge events counted is equal to the value in <A class="xref" href="#TAILR">TAILR</A> minus this value.<BR>
+<BR>
+Note that in edge-count mode, when executing an up-count, the value of <A class="xref" href="#TAPR">TAPR</A> and <A class="xref" href="#TAILR">TAILR</A> must be greater than the value of <A class="xref" href="#TAPMR">TAPMR</A> and this register.<BR>
+<BR>
+In <A class="mmap_legend_link" href="../legend.html#PWM">PWM</A> mode, this value along with <A class="xref" href="#TAILR">TAILR</A>, determines the duty cycle of the output <A class="mmap_legend_link" href="../legend.html#PWM">PWM</A> signal.<BR>
+<BR>
+When a 16/32-bit <A class="mmap_legend_link" href="../legend.html#GPT">GPT</A> is configured to one of the 32-bit modes, <A class="xref" href="#TAMATCHR">TAMATCHR</A> appears as a 32-bit register. (The upper 16-bits correspond to the contents <A class="xref" href="#TBMATCHR">TBMATCHR</A>).<BR>
+<BR>
+In a 16-bit mode, the upper 16 bits of this register read as 0s and have no effect on the state of <A class="xref" href="#TBMATCHR">TBMATCHR</A>.<BR>
+<BR>
+Note : This register is updated internally (takes effect) based on <A class="xref" href="#TAMR_TAMRSU">TAMR.TAMRSU</A></TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">RW</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="TAMATCHR_TAMATCHR">31:0</a>
+</TD>
+<TD class="cellBitfieldCol2">TAMATCHR</TD>
+<TD class="cellBitfieldCol3" colspan="3"><A class="mmap_legend_link" href="../legend.html#GPT">GPT</A> Timer A Match Register</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0xFFFF FFFF</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="TBMATCHR"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">GPT2</A>:TBMATCHR</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 0034</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0x4001 2034</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0x4001 2034</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">Timer B Match Register<BR>
+<BR>
+ When a <A class="mmap_legend_link" href="../legend.html#GPT">GPT</A> is configured to one of the 32-bit modes, the contents of bits 15:0 in this register are loaded into the upper 16 bits of  <A class="xref" href="#TAMATCHR">TAMATCHR</A>.<BR>
+Reads from this register return the current match value of Timer B and writes are ignored.<BR>
+In a 16-bit mode, bits 15:0 are used for the match value. Bits 31:16 are reserved in both cases.<BR>
+<BR>
+Note : This register is updated internally (takes effect) based on <A class="xref" href="#TBMR_TBMRSU">TBMR.TBMRSU</A></TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">RW</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="TBMATCHR_RESERVED16">31:16</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED16</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0x0000</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="TBMATCHR_TBMATCHR">15:0</a>
+</TD>
+<TD class="cellBitfieldCol2">TBMATCHR</TD>
+<TD class="cellBitfieldCol3" colspan="3"><A class="mmap_legend_link" href="../legend.html#GPT">GPT</A> Timer B Match Register</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0xFFFF</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="TAPR"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">GPT2</A>:TAPR</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 0038</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0x4001 2038</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0x4001 2038</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">Timer A Pre-scale<BR>
+This register allows software to extend the range of the timers when they are used individually.<BR>
+When in one-shot or periodic down count modes, this register acts as a true prescaler for the timer counter.<BR>
+When acting as a true prescaler, the prescaler counts down to 0 before the value in <A class="xref" href="#TAR">TAR</A> and <A class="xref" href="#TAV">TAV</A> registers are incremented.<BR>
+In all other individual/split modes, this register is a linear extension of the upper range of the timer counter, holding bits 23:16 in the 16-bit modes of the 16/32-bit <A class="mmap_legend_link" href="../legend.html#GPT">GPT</A>.</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">RW</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="TAPR_RESERVED8">31:8</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED8</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0x00 0000</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="TAPR_TAPSR">7:0</a>
+</TD>
+<TD class="cellBitfieldCol2">TAPSR</TD>
+<TD class="cellBitfieldCol3" colspan="3">Timer A Pre-scale.<BR>
+<BR>
+Prescaler ratio in one-shot and periodic count mode is <A class="xref" href="#TAPR_TAPSR">TAPSR</A> + 1, that is:<BR>
+<BR>
+0: Prescaler ratio = 1<BR>
+1: Prescaler ratio = 2<BR>
+2: Prescaler ratio = 3<BR>
+...<BR>
+255: Prescaler ratio = 256</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0x00</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="TBPR"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">GPT2</A>:TBPR</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 003C</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0x4001 203C</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0x4001 203C</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">Timer B Pre-scale<BR>
+This register allows software to extend the range of the timers when they are used individually.<BR>
+When in one-shot or periodic down count modes, this register acts as a true prescaler for the timer counter.<BR>
+When acting as a true prescaler, the prescaler counts down to 0 before the value in <A class="xref" href="#TBR">TBR</A> and <A class="xref" href="#TBV">TBV</A> registers are incremented.<BR>
+In all other individual/split modes, this register is a linear extension of the upper range of the timer counter, holding bits 23:16 in the 16-bit modes of the 16/32-bit <A class="mmap_legend_link" href="../legend.html#GPT">GPT</A>.</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">RW</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="TBPR_RESERVED8">31:8</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED8</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0x00 0000</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="TBPR_TBPSR">7:0</a>
+</TD>
+<TD class="cellBitfieldCol2">TBPSR</TD>
+<TD class="cellBitfieldCol3" colspan="3">Timer B Pre-scale.<BR>
+<BR>
+Prescale ratio in one-shot and periodic count mode is <A class="xref" href="#TBPR_TBPSR">TBPSR</A> + 1, that is:<BR>
+<BR>
+0: Prescaler ratio = 1<BR>
+1: Prescaler ratio = 2<BR>
+2: Prescaler ratio = 3<BR>
+...<BR>
+255: Prescaler ratio = 256</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0x00</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="TAPMR"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">GPT2</A>:TAPMR</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 0040</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0x4001 2040</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0x4001 2040</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">Timer A Pre-scale Match<BR>
+This register allows software to extend the range of the <A class="xref" href="#TAMATCHR">TAMATCHR</A> when used individually.</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">RW</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="TAPMR_RESERVED8">31:8</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED8</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0x00 0000</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="TAPMR_TAPSMR">7:0</a>
+</TD>
+<TD class="cellBitfieldCol2">TAPSMR</TD>
+<TD class="cellBitfieldCol3" colspan="3"><A class="mmap_legend_link" href="../legend.html#GPT">GPT</A> Timer A Pre-scale Match.  In 16 bit mode this field holds bits 23 to 16.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0x00</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="TBPMR"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">GPT2</A>:TBPMR</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 0044</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0x4001 2044</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0x4001 2044</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">Timer B Pre-scale Match<BR>
+This register allows software to extend the range of the <A class="xref" href="#TBMATCHR">TBMATCHR</A> when used individually.</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">RW</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="TBPMR_RESERVED8">31:8</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED8</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0x00 0000</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="TBPMR_TBPSMR">7:0</a>
+</TD>
+<TD class="cellBitfieldCol2">TBPSMR</TD>
+<TD class="cellBitfieldCol3" colspan="3"><A class="mmap_legend_link" href="../legend.html#GPT">GPT</A> Timer B Pre-scale Match Register.  In 16 bit mode this field holds bits 23 to 16.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0x00</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="TAR"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">GPT2</A>:TAR</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 0048</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0x4001 2048</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0x4001 2048</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">Timer A Register<BR>
+This register shows the current value of the Timer A counter in all cases except for Input Edge Count and Time modes. In the Input Edge Count mode, this register contains the number of edges that<BR>
+have occurred. In the Input Edge Time mode, this register contains the time at which the last edge event took place.<BR>
+<BR>
+When a GPT is configured to one of the 32-bit modes, this register appears as a 32-bit register (the upper 16-bits correspond to the contents of the Timer B (<A class="xref" href="#TBR">TBR</A>) register). In<BR>
+the16-bit Input Edge Count, Input Edge Time, and PWM modes, bits 15:0 contain the value of the counter and bits 23:16 contain the value of the prescaler, which is the upper 8 bits of the count. Bits<BR>
+31:24 always read as 0. To read the value of the prescaler in 16-bit One-Shot and Periodic modes, read bits [23:16] in the <A class="xref" href="#TAV">TAV</A> register. To read the value of the prescalar in periodic snapshot<BR>
+mode, read the Timer A Prescale Snapshot (<A class="xref" href="#TAPS">TAPS</A>) register.</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">RO</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="TAR_TAR">31:0</a>
+</TD>
+<TD class="cellBitfieldCol2">TAR</TD>
+<TD class="cellBitfieldCol3" colspan="3"><A class="mmap_legend_link" href="../legend.html#GPT">GPT</A> Timer A Register    <BR>
+<BR>
+Based on the value in the register field <A class="xref" href="#TAMR_TAILD">TAMR.TAILD</A>, this register is updated with the value from <A class="xref" href="#TAILR">TAILR</A> register either on the next cycle or on the next timeout.<BR>
+<BR>
+A read returns the current value of the Timer A Count Register, in all cases except for Input Edge count and Timer modes. <BR>
+In the Input Edge Count Mode, this register contains the number of edges that have occurred. In the Input Edge Time mode, this register contains the time at which the last edge event took place.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0xFFFF FFFF</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="TBR"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">GPT2</A>:TBR</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 004C</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0x4001 204C</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0x4001 204C</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">Timer B Register<BR>
+This register shows the current value of the Timer B counter in all cases except for Input Edge Count and Time modes. In the Input Edge Count mode, this register contains the number of edges that<BR>
+have occurred. In the Input Edge Time mode, this register contains the time at which the last edge event took place.<BR>
+<BR>
+When a GPTM is configured to one of the 32-bit modes, the contents of bits 15:0 in this register are loaded into the upper 16 bits of the <A class="xref" href="#TAR">TAR</A> register. Reads from this register return the current<BR>
+value of Timer B. In a 16-bit mode, bits 15:0 contain the value of the counter and bits 23:16 contain the value of the prescaler in Input Edge Count, Input Edge Time, and PWM modes, which is the<BR>
+upper 8 bits of the count. Bits 31:24 always read as 0. To read the value of the prescaler in 16-bit One-Shot and Periodic modes, read bits [23:16] in the <A class="xref" href="#TBV">TBV</A> register. To read the value of the<BR>
+prescalar in periodic snapshot mode, read the Timer B Prescale Snapshot (<A class="xref" href="#TBPS">TBPS</A>) register.</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">RO</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="TBR_TBR">31:0</a>
+</TD>
+<TD class="cellBitfieldCol2">TBR</TD>
+<TD class="cellBitfieldCol3" colspan="3"><A class="mmap_legend_link" href="../legend.html#GPT">GPT</A> Timer B Register<BR>
+<BR>
+Based on the value in the register field <A class="xref" href="#TBMR_TBILD">TBMR.TBILD</A>, this register is updated with the value from <A class="xref" href="#TBILR">TBILR</A> register either on the next cycle or on the next timeout.<BR>
+<BR>
+A read returns the current value of the Timer B Count Register, in all cases except for Input Edge count and Timer modes. <BR>
+In the Input Edge Count Mode, this register contains the number of edges that have occurred. In the Input Edge Time mode, this register contains the time at which the last edge event took place.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0x0000 FFFF</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="TAV"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">GPT2</A>:TAV</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 0050</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0x4001 2050</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0x4001 2050</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">Timer A Value <BR>
+When read, this register shows the current, free-running value of Timer A in all modes. Softwarecan use this value to determine the time elapsed between an interrupt and the ISR entry when using<BR>
+the snapshot feature with the periodic operating mode. When written, the value written into this register is loaded into the <A class="xref" href="#TAR">TAR</A> register on the next clock cycle.<BR>
+<BR>
+When a 16/32-bit GPTM is configured to one of the 32-bit modes, this register appears as a 32-bit register (the upper 16-bits correspond to the contents of the GPTM Timer B Value (<A class="xref" href="#TBV">TBV</A>) register). In a 16-bit mode, bits 15:0 contain the value of the counter and bits 23:16 contain the current, free-running value of the prescaler, which is the upper 8 bits of the count in Input Edge Count, Input Edge Time, PWM and one-shot or periodic up count modes. In one-shot or periodic<BR>
+down count modes, the prescaler stored in 23:16 is a true prescaler, meaning bits 23:16 count down before decrementing the value in bits 15:0. The prescaler in bits 31:24 always reads as 0.</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">RW</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="TAV_TAV">31:0</a>
+</TD>
+<TD class="cellBitfieldCol2">TAV</TD>
+<TD class="cellBitfieldCol3" colspan="3"><A class="mmap_legend_link" href="../legend.html#GPT">GPT</A> Timer A Register<BR>
+A read returns the current, free-running value of Timer A in all modes.<BR>
+When written, the value written into this register is loaded into the<BR>
+<A class="xref" href="#TAR">TAR</A> register on the next clock cycle.<BR>
+Note: In 16-bit mode, only the lower 16-bits of this<BR>
+register can be written with a new value. Writes to the prescaler bits have no effect</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0xFFFF FFFF</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="TBV"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">GPT2</A>:TBV</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 0054</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0x4001 2054</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0x4001 2054</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">Timer B Value <BR>
+When read, this register shows the current, free-running value of Timer B in all modes. Software can use this value to determine the time elapsed between an interrupt and the ISR entry. When<BR>
+written, the value written into this register is loaded into the <A class="xref" href="#TBR">TBR</A> register on the next clock cycle.<BR>
+<BR>
+When a 16/32-bit GPTM is configured to one of the 32-bit modes, the contents of bits 15:0 in this register are loaded into the upper 16 bits of the <A class="xref" href="#TAV">TAV</A> register. Reads from this register return<BR>
+the current free-running value of Timer B. In a 16-bit mode, bits 15:0 contain the value of the counter and bits 23:16 contain the current, free-running value of the prescaler, which is the upper 8 bits of<BR>
+the count in Input Edge Count, Input Edge Time, PWM and one-shot or periodic up count modes.<BR>
+In one-shot or periodic down count modes, the prescaler stored in 23:16 is a true prescaler, meaning bits 23:16 count down before decrementing the value in bits 15:0. The prescaler in bits 31:24 always reads as 0.</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">RW</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="TBV_TBV">31:0</a>
+</TD>
+<TD class="cellBitfieldCol2">TBV</TD>
+<TD class="cellBitfieldCol3" colspan="3"><A class="mmap_legend_link" href="../legend.html#GPT">GPT</A> Timer B Register<BR>
+A read returns the current, free-running value of Timer B in all modes.<BR>
+When written, the value written into this register is loaded into the<BR>
+<A class="xref" href="#TBR">TBR</A> register on the next clock cycle.<BR>
+Note: In 16-bit mode, only the lower 16-bits of this<BR>
+register can be written with a new value. Writes to the prescaler bits have no effect</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0x0000 FFFF</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="TAPS"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">GPT2</A>:TAPS</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 005C</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0x4001 205C</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0x4001 205C</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">Timer A Pre-scale Snap-shot <BR>
+<BR>
+Based on the value in the register field <A class="xref" href="#TAMR_TAILD">TAMR.TAILD</A>, this register is updated with the value from <A class="xref" href="#TAPR">TAPR</A> register either on the next cycle or on the next timeout.<BR>
+<BR>
+<BR>
+This register shows the current value of the Timer A pre-scaler in the 16-bit mode.</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">RO</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="TAPS_RESERVED8">31:8</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED8</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0x00 0000</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="TAPS_PSS">7:0</a>
+</TD>
+<TD class="cellBitfieldCol2">PSS</TD>
+<TD class="cellBitfieldCol3" colspan="3"><A class="mmap_legend_link" href="../legend.html#GPT">GPT</A> Timer A Pre-scaler</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0x00</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="TBPS"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">GPT2</A>:TBPS</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 0060</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0x4001 2060</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0x4001 2060</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">Timer B Pre-scale Snap-shot <BR>
+<BR>
+Based on the value in the register field <A class="xref" href="#TBMR_TBILD">TBMR.TBILD</A>, this register is updated with the value from <A class="xref" href="#TBPR">TBPR</A> register either on the next cycle or on the next timeout.<BR>
+<BR>
+This register shows the current value of the Timer B pre-scaler in the 16-bit mode.</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">RO</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="TBPS_RESERVED8">31:8</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED8</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0x00 0000</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="TBPS_PSS">7:0</a>
+</TD>
+<TD class="cellBitfieldCol2">PSS</TD>
+<TD class="cellBitfieldCol3" colspan="3"><A class="mmap_legend_link" href="../legend.html#GPT">GPT</A> Timer B Pre-scaler</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0x00</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="TAPV"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">GPT2</A>:TAPV</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 0064</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0x4001 2064</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0x4001 2064</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">Timer A Pre-scale Value <BR>
+This register shows the current value of the Timer A free running pre-scaler in the 16-bit mode.</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">RO</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="TAPV_RESERVED8">31:8</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED8</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0x00 0000</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="TAPV_PSV">7:0</a>
+</TD>
+<TD class="cellBitfieldCol2">PSV</TD>
+<TD class="cellBitfieldCol3" colspan="3"><A class="mmap_legend_link" href="../legend.html#GPT">GPT</A> Timer A Pre-scaler Value</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0x00</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="TBPV"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">GPT2</A>:TBPV</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 0068</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0x4001 2068</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0x4001 2068</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">Timer B Pre-scale Value <BR>
+This register shows the current value of the Timer B free running pre-scaler in the 16-bit mode.</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">RO</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="TBPV_RESERVED8">31:8</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED8</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0x00 0000</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="TBPV_PSV">7:0</a>
+</TD>
+<TD class="cellBitfieldCol2">PSV</TD>
+<TD class="cellBitfieldCol3" colspan="3"><A class="mmap_legend_link" href="../legend.html#GPT">GPT</A> Timer B Pre-scaler Value</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0x00</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="DMAEV"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">GPT2</A>:DMAEV</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 006C</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0x4001 206C</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0x4001 206C</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3"><A class="mmap_legend_link" href="../legend.html#DMA">DMA</A> Event <BR>
+This register allows software to enable/disable <A class="mmap_legend_link" href="../legend.html#GPT">GPT</A> <A class="mmap_legend_link" href="../legend.html#DMA">DMA</A> trigger events.</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">RW</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="DMAEV_RESERVED12">31:12</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED12</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved field.  Writing any other value may result in undefined behavior.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0x0 0000</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="DMAEV_TBMDMAEN">11</a>
+</TD>
+<TD class="cellBitfieldCol2">TBMDMAEN</TD>
+<TD class="cellBitfieldCol3" colspan="3"><A class="mmap_legend_link" href="../legend.html#GPT">GPT</A> Timer B Match <A class="mmap_legend_link" href="../legend.html#DMA">DMA</A> Trigger Enable</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="DMAEV_CBEDMAEN">10</a>
+</TD>
+<TD class="cellBitfieldCol2">CBEDMAEN</TD>
+<TD class="cellBitfieldCol3" colspan="3"><A class="mmap_legend_link" href="../legend.html#GPT">GPT</A> Timer B Capture Event <A class="mmap_legend_link" href="../legend.html#DMA">DMA</A> Trigger Enable</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="DMAEV_CBMDMAEN">9</a>
+</TD>
+<TD class="cellBitfieldCol2">CBMDMAEN</TD>
+<TD class="cellBitfieldCol3" colspan="3"><A class="mmap_legend_link" href="../legend.html#GPT">GPT</A> Timer B Capture Match <A class="mmap_legend_link" href="../legend.html#DMA">DMA</A> Trigger Enable</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="DMAEV_TBTODMAEN">8</a>
+</TD>
+<TD class="cellBitfieldCol2">TBTODMAEN</TD>
+<TD class="cellBitfieldCol3" colspan="3"><A class="mmap_legend_link" href="../legend.html#GPT">GPT</A> Timer B Time-Out <A class="mmap_legend_link" href="../legend.html#DMA">DMA</A> Trigger Enable</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="DMAEV_RESERVED5">7:5</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED5</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved field.  Writing any other value may result in undefined behavior.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0b000</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="DMAEV_TAMDMAEN">4</a>
+</TD>
+<TD class="cellBitfieldCol2">TAMDMAEN</TD>
+<TD class="cellBitfieldCol3" colspan="3"><A class="mmap_legend_link" href="../legend.html#GPT">GPT</A> Timer A Match <A class="mmap_legend_link" href="../legend.html#DMA">DMA</A> Trigger Enable</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="DMAEV_RESERVED3">3</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED3</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="DMAEV_CAEDMAEN">2</a>
+</TD>
+<TD class="cellBitfieldCol2">CAEDMAEN</TD>
+<TD class="cellBitfieldCol3" colspan="3"><A class="mmap_legend_link" href="../legend.html#GPT">GPT</A> Timer A Capture Event <A class="mmap_legend_link" href="../legend.html#DMA">DMA</A> Trigger Enable</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="DMAEV_CAMDMAEN">1</a>
+</TD>
+<TD class="cellBitfieldCol2">CAMDMAEN</TD>
+<TD class="cellBitfieldCol3" colspan="3"><A class="mmap_legend_link" href="../legend.html#GPT">GPT</A> Timer A Capture Match <A class="mmap_legend_link" href="../legend.html#DMA">DMA</A> Trigger Enable</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="DMAEV_TATODMAEN">0</a>
+</TD>
+<TD class="cellBitfieldCol2">TATODMAEN</TD>
+<TD class="cellBitfieldCol3" colspan="3"><A class="mmap_legend_link" href="../legend.html#GPT">GPT</A> Timer A Time-Out <A class="mmap_legend_link" href="../legend.html#DMA">DMA</A> Trigger Enable</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="VERSION"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">GPT2</A>:VERSION</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 0FB0</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0x4001 2FB0</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0x4001 2FB0</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">Peripheral Version<BR>
+This register provides information regarding the <A class="mmap_legend_link" href="../legend.html#GPT">GPT</A> version</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">RO</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="VERSION_VERSION">31:0</a>
+</TD>
+<TD class="cellBitfieldCol2">VERSION</TD>
+<TD class="cellBitfieldCol3" colspan="3">Timer Revision.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0x0000 0400</TD>
+</TR>
+</TABLE>
+<H3 class="mmapRegisterTitle"><A name="ANDCCP"></A><A class="mmapRegisterTitle" href="CPU_MMAP.html">TOP</A>:<A class="mmapRegisterTitle" href="#Top_Tag">GPT2</A>:ANDCCP</H3><TABLE cellspacing="0" class="mmapRegisterTable">
+<TR class="row">
+<TD class="cellCol1"><B>Address Offset</B></TD>
+<TD class="cellCol2" colspan="3">0x0000 0FB4</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Physical Address</TD>
+<TD class="cellCol2">0x4001 2FB4</TD>
+<TD class="cellCol3">Instance</TD>
+<TD class="cellCol4">0x4001 2FB4</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Description</TD>
+<TD class="cellCol2" colspan="3">Combined <A class="mmap_legend_link" href="../legend.html#CCP">CCP</A> Output<BR>
+This register is used to logically AND <A class="mmap_legend_link" href="../legend.html#CCP">CCP</A> output pairs for each timer</TD>
+</TR>
+<TR class="row">
+<TD class="cellCol1">Type</TD>
+<TD class="cellCol2" colspan="3">RW</TD>
+</TR>
+</TABLE>
+<TABLE cellspacing="0" class="mmapBitfieldTable">
+<TR class="rowTop">
+<TD class="cellTopCol1">Bits</TD>
+<TD class="cellTopCol2">Field Name</TD>
+<TD class="cellTopCol3" colspan="3">Description</TD>
+<TD class="cellTopCol4">Type</TD>
+<TD class="cellTopCol5">Reset</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="ANDCCP_RESERVED1">31:1</a>
+</TD>
+<TD class="cellBitfieldCol2">RESERVED1</TD>
+<TD class="cellBitfieldCol3" colspan="3">Software should not rely on the value of a reserved. Writing any other value than the reset value may result in undefined behavior.</TD>
+<TD class="cellBitfieldCol4">RO</TD>
+<TD class="cellBitfieldCol5">0b000 0000 0000 0000 0000 0000 0000 0000</TD>
+</TR>
+<TR class="rowBitfield">
+<TD class="cellBitfieldCol1"><a name="ANDCCP_CCP_AND_EN">0</a>
+</TD>
+<TD class="cellBitfieldCol2">CCP_AND_EN</TD>
+<TD class="cellBitfieldCol3" colspan="3">Enables AND operation of the <A class="mmap_legend_link" href="../legend.html#CCP">CCP</A> outputs for timers A and B.<BR>
+<BR>
+0 : <A class="mmap_legend_link" href="../legend.html#PWM">PWM</A> outputs of Timer A and Timer B are the internal generated <A class="mmap_legend_link" href="../legend.html#PWM">PWM</A> signals of the respective timers.<BR>
+1 : <A class="mmap_legend_link" href="../legend.html#PWM">PWM</A> output of Timer A is ANDed version of Timer A and Timer B <A class="mmap_legend_link" href="../legend.html#PWM">PWM</A> signals and Timer B <A class="mmap_legend_link" href="../legend.html#PWM">PWM</A> ouput is Timer B <A class="mmap_legend_link" href="../legend.html#PWM">PWM</A> signal only.</TD>
+<TD class="cellBitfieldCol4">RW</TD>
+<TD class="cellBitfieldCol5">0</TD>
+</TR>
+</TABLE>
+<BR>
+<BR>
+<hr><table class="footer"><tr><td>&copy; 2015 - 2016. Texas Instruments | All Rights Reserved</td></tr></table>
+</BODY>
+</HTML>

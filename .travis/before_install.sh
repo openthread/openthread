@@ -37,6 +37,7 @@ set -x
 cd /tmp || die
 
 [ $TRAVIS_OS_NAME != linux ] || {    
+    sudo apt-get update
     sudo apt-get install python-pexpect || die
 
     [ $BUILD_TARGET != cc2538 ] || {
@@ -45,6 +46,14 @@ cd /tmp || die
         tar xjf gcc-arm-none-eabi-4_9-2015q3-20150921-linux.tar.bz2 || die
         export PATH=/tmp/gcc-arm-none-eabi-4_9-2015q3/bin:$PATH || die
         arm-none-eabi-gcc --version || die
+    }
+
+    [ $BUILD_TARGET != scan-build ] || {
+        sudo apt-get install clang || die
+    }
+
+    [ $BUILD_TARGET != posix-32-bit ] || {
+        sudo apt-get install g++-multilib || die
     }
 }
 
@@ -60,8 +69,8 @@ cd /tmp || die
 }
 
 [ $BUILD_TARGET != pretty-check ] || {
-    wget https://sourceforge.net/projects/astyle/files/astyle/astyle%202.05.1/astyle_2.05.1_linux.tar.gz/download -O astyle.tar.gz || die
-    tar xzvf astyle.tar.gz || die
+    wget http://jaist.dl.sourceforge.net/project/astyle/astyle/astyle%202.05.1/astyle_2.05.1_linux.tar.gz || die
+    tar xzvf astyle_2.05.1_linux.tar.gz || die
     cd astyle/build/gcc || die
     LDFLAGS=" " make || die
     cd ../../..

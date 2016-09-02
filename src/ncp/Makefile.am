@@ -41,6 +41,7 @@ libopenthread_ncp_a_CPPFLAGS        = \
     -I$(top_srcdir)/src               \
     -I$(top_srcdir)/src/core          \
     -I$(top_srcdir)/third_party       \
+    -D_GNU_SOURCE                     \
     $(OPENTHREAD_TARGET_DEFINES)      \
     $(NULL)
 
@@ -53,23 +54,40 @@ libopenthread_ncp_a_CXXFLAGS        = \
     $(NULL)
 
 libopenthread_ncp_a_SOURCES         = \
+    ncp_base.cpp                      \
+    ncp_base.hpp                      \
+    ncp_buffer.cpp                    \
+    ncp_buffer.hpp                    \
+    spinel.c                          \
+    spinel.h                          \
+    $(NULL)
+
+if OPENTHREAD_ENABLE_NCP_SPI
+libopenthread_ncp_a_SOURCES        += \
+    ncp_spi.cpp                       \
+    ncp_spi.hpp                       \
+    $(NULL)
+endif
+
+if OPENTHREAD_ENABLE_NCP_UART
+libopenthread_ncp_a_SOURCES        += \
     hdlc.cpp                          \
     hdlc.hpp                          \
     flen.cpp                          \
     flen.hpp                          \
-    ncp.cpp                           \
-    ncp.hpp                           \
-    ncp_base.cpp                      \
-    ncp_base.hpp                      \
-    spinel.c spinel.h                 \
+    ncp_uart.cpp                      \
+    ncp_uart.hpp                      \
     $(NULL)
+endif
 
 include_HEADERS                     = \
     $(NULL)
 
+if OPENTHREAD_BUILD_TESTS
+
 noinst_PROGRAMS                     = spinel-test
 spinel_test_SOURCES                 = spinel.c
-spinel_test_CFLAGS                  = -DSPINEL_SELF_TEST=1
+spinel_test_CFLAGS                  = -DSPINEL_SELF_TEST=1 -D_GNU_SOURCE
 
 TESTS = spinel-test
 
@@ -78,5 +96,6 @@ install-headers: install-includeHEADERS
 if OPENTHREAD_BUILD_COVERAGE
 CLEANFILES                          = $(wildcard *.gcda *.gcno)
 endif # OPENTHREAD_BUILD_COVERAGE
+endif # OPENTHREAD_BUILD_TESTS
 
 include $(abs_top_nlbuild_autotools_dir)/automake/post.am

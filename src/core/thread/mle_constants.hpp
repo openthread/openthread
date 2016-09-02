@@ -45,6 +45,7 @@ namespace Mle {
 enum
 {
     kMaxChildren                = OPENTHREAD_CONFIG_MAX_CHILDREN,
+    kMaxChildKeepAliveAttempts  = 4,    ///< Maximum keep alive attempts before attempting to reattach to a new Parent
 };
 
 /**
@@ -53,7 +54,7 @@ enum
  */
 enum
 {
-    kVersion                    = 1,     ///< MLE Version
+    kVersion                    = 2,     ///< MLE Version
     kUdpPort                    = 19788, ///< MLE UDP Port
     kParentRequestRouterTimeout = 1000,  ///< Router Request timeout
     kParentRequestChildTimeout  = 2000,  ///< End Device Request timeout
@@ -61,9 +62,10 @@ enum
 
 enum
 {
-    kChildIdMask                = 0x1ff,
-    kRouterIdOffset             = 10,
-    kRlocPrefixLength           = 14,   ///< Prefix length of RLOC in bytes
+    kMinChildId                 = 1,     ///< Minimum Child ID
+    kMaxChildId                 = 511,   ///< Maximum Child ID
+    kRouterIdOffset             = 10,    ///< Bit offset of Router ID in RLOC16
+    kRlocPrefixLength           = 14,    ///< Prefix length of RLOC in bytes
 };
 
 /**
@@ -85,12 +87,21 @@ enum
     kParentRouteToLeaderTimeout = 20,   ///< PARENT_ROUTE_TO_LEADER_TIMEOUT (seconds)
     kRouterSelectionJitter      = 120,  ///< ROUTER_SELECTION_JITTER (seconds)
     kRouterDowngradeThreshold   = 23,   ///< ROUTER_DOWNGRADE_THRESHOLD (routers)
-    kRouterUpgradeThreadhold    = 16,   ///< ROUTER_UPGRADE_THRESHOLD (routers)
+    kRouterUpgradeThreshold     = 16,   ///< ROUTER_UPGRADE_THRESHOLD (routers)
     kMaxLeaderToRouterTimeout   = 90,   ///< INFINITE_COST_TIMEOUT (seconds)
     kReedAdvertiseInterval      = 570,  ///< REED_ADVERTISEMENT_INTERVAL (seconds)
     kReedAdvertiseJitter        = 60,   ///< REED_ADVERTISEMENT_JITTER (seconds)
+    kMleEndDeviceTimeout        = 240,  ///< MLE_END_DEVICE_TIMEOUT (secondes)
+    kLeaderWeight               = 64,   ///< Default leaderweight for the Thread Network Partition
 };
 
+enum
+{
+    kLqi3LinkCost               = 1,    ///< Link Cost for LQI 3
+    kLqi2LinkCost               = 2,    ///< Link Cost for LQI 2
+    kLqi1LinkCost               = 4,    ///< Link Cost for LQI 1
+    kLqi0LinkCost               = 16,   ///< Link Cost for LQI 0
+};
 
 }  // namespace Mle
 

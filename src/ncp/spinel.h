@@ -29,21 +29,29 @@
 #define SPINEL_HEADER_INCLUDED 1
 
 #include <stdarg.h>
-#include <stdio.h>
 #include <stdbool.h>
 #include <stdint.h>
-#include <sys/types.h>
-
-__BEGIN_DECLS
 
 // ----------------------------------------------------------------------------
 
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
-# if defined(__GNUC__) && !SPINEL_EMBEDDED
+
+# if defined(__GNUC__)
 #  define SPINEL_API_EXTERN              extern __attribute__ ((visibility ("default")))
 #  define SPINEL_API_NONNULL_ALL         __attribute__((nonnull))
 #  define SPINEL_API_WARN_UNUSED_RESULT  __attribute__((warn_unused_result))
 # endif // ifdef __GNUC__
+
+# if !defined(__BEGIN_DECLS) || !defined(__END_DECLS)
+#  if defined(__cplusplus)
+#   define __BEGIN_DECLS   extern "C" {
+#   define __END_DECLS     }
+#  else // if defined(__cplusplus)
+#   define __BEGIN_DECLS
+#   define __END_DECLS
+#  endif // else defined(__cplusplus)
+# endif // if !defined(__BEGIN_DECLS) || !defined(__END_DECLS)
+
 #endif // ifndef DOXYGEN_SHOULD_SKIP_THIS
 
 #ifndef SPINEL_API_EXTERN
@@ -61,11 +69,13 @@ __BEGIN_DECLS
 // ----------------------------------------------------------------------------
 
 #define SPINEL_PROTOCOL_VERSION_THREAD_MAJOR    4
-#define SPINEL_PROTOCOL_VERSION_THREAD_MINOR    0
+#define SPINEL_PROTOCOL_VERSION_THREAD_MINOR    1
 
 #define SPINEL_FRAME_MAX_SIZE                   1300
 
 // ----------------------------------------------------------------------------
+
+__BEGIN_DECLS
 
 typedef enum
 {
@@ -82,13 +92,15 @@ typedef enum
     SPINEL_STATUS_PARSE_ERROR       = 9, ///< A error has occured while parsing the command.
     SPINEL_STATUS_IN_PROGRESS       = 10, ///< This operation is in progress.
     SPINEL_STATUS_NOMEM             = 11, ///< Operation prevented due to memory pressure.
-    SPINEL_STATUS_BUSY              = 12, ///< The device is currently performing an mutually exclusive operation
-    SPINEL_STATUS_PROP_NOT_FOUND    = 12, ///< The given property is not recognized.
+    SPINEL_STATUS_BUSY              = 12, ///< The device is currently performing a mutually exclusive operation
+    SPINEL_STATUS_PROP_NOT_FOUND    = 13, ///< The given property is not recognized.
     SPINEL_STATUS_DROPPED           = 14, ///< A/The packet was dropped.
     SPINEL_STATUS_EMPTY             = 15, ///< The result of the operation is empty.
     SPINEL_STATUS_CMD_TOO_BIG       = 16, ///< The command was too large to fit in the internal buffer.
     SPINEL_STATUS_NO_ACK            = 17, ///< The packet was not acknowledged.
     SPINEL_STATUS_CCA_FAILURE       = 18, ///< The packet was not sent due to a CCA failure.
+    SPINEL_STATUS_ALREADY           = 19, ///< The operation is already in progress.
+    SPINEL_STATUS_ITEM_NOT_FOUND    = 20, ///< The given item could not be found.
 
     SPINEL_STATUS_RESET__BEGIN      = 112,
     SPINEL_STATUS_RESET_POWER_ON    = SPINEL_STATUS_RESET__BEGIN + 0,
@@ -98,11 +110,15 @@ typedef enum
     SPINEL_STATUS_RESET_CRASH       = SPINEL_STATUS_RESET__BEGIN + 4,
     SPINEL_STATUS_RESET_ASSERT      = SPINEL_STATUS_RESET__BEGIN + 5,
     SPINEL_STATUS_RESET_OTHER       = SPINEL_STATUS_RESET__BEGIN + 6,
+    SPINEL_STATUS_RESET_UNKNOWN     = SPINEL_STATUS_RESET__BEGIN + 7,
+    SPINEL_STATUS_RESET_WATCHDOG    = SPINEL_STATUS_RESET__BEGIN + 8,
     SPINEL_STATUS_RESET__END        = 128,
-
 
     SPINEL_STATUS_VENDOR__BEGIN     = 15360,
     SPINEL_STATUS_VENDOR__END       = 16384,
+
+    SPINEL_STATUS_STACK_NATIVE__BEGIN = 16384,
+    SPINEL_STATUS_STACK_NATIVE__END   = 81920,
 
     SPINEL_STATUS_EXPERIMENTAL__BEGIN = 2000000,
     SPINEL_STATUS_EXPERIMENTAL__END   = 2097152,
@@ -110,15 +126,7 @@ typedef enum
 
 typedef enum
 {
-    SPINEL_NET_STATE_OFFLINE   = 0,
-    SPINEL_NET_STATE_DETACHED  = 1,
-    SPINEL_NET_STATE_ATTACHING = 2,
-    SPINEL_NET_STATE_ATTACHED  = 3,
-} spinel_net_state_t;
-
-typedef enum
-{
-    SPINEL_NET_ROLE_NONE       = 0,
+    SPINEL_NET_ROLE_DETACHED   = 0,
     SPINEL_NET_ROLE_CHILD      = 1,
     SPINEL_NET_ROLE_ROUTER     = 2,
     SPINEL_NET_ROLE_LEADER     = 3,
@@ -139,6 +147,13 @@ typedef enum
     SPINEL_POWER_STATE_LOW_POWER  = 3,
     SPINEL_POWER_STATE_ONLINE     = 4,
 } spinel_power_state_t;
+
+enum {
+    SPINEL_NET_FLAG_CONFIGURE       = 0x04,
+    SPINEL_NET_FLAG_DHCP            = 0x08,
+    SPINEL_NET_FLAG_SLAAC_VALID     = 0x10,
+    SPINEL_NET_FLAG_SLAAC_PREFERRED = 0x20,
+};
 
 enum
 {
@@ -229,6 +244,8 @@ enum
     SPINEL_CAP_HBO                   = 3,
     SPINEL_CAP_POWER_SAVE            = 4,
 
+    SPINEL_CAP_COUNTERS              = 5,
+
     SPINEL_CAP_802_15_4__BEGIN        = 16,
     SPINEL_CAP_802_15_4_2003          = (SPINEL_CAP_802_15_4__BEGIN + 0),
     SPINEL_CAP_802_15_4_2006          = (SPINEL_CAP_802_15_4__BEGIN + 1),
@@ -251,6 +268,10 @@ enum
     SPINEL_CAP_NET__BEGIN            = 52,
     SPINEL_CAP_NET_THREAD_1_0        = (SPINEL_CAP_NET__BEGIN + 0),
     SPINEL_CAP_NET__END              = 64,
+
+    SPINEL_CAP_OPENTHREAD__BEGIN     = 512,
+    SPINEL_CAP_MAC_WHITELIST         = (SPINEL_CAP_OPENTHREAD__BEGIN + 0),
+    SPINEL_CAP_OPENTHREAD__END       = 640,
 
     SPINEL_CAP_NEST__BEGIN           = 15296,
     SPINEL_CAP_NEST_LEGACY_INTERFACE = (SPINEL_CAP_NEST__BEGIN + 0),
@@ -302,10 +323,34 @@ typedef enum
     SPINEL_PROP_MAC_FILTER_MODE        = SPINEL_PROP_MAC__BEGIN + 8, ///< [C]
     SPINEL_PROP_MAC__END               = 0x40,
 
+    SPINEL_PROP_MAC_EXT__BEGIN         = 0x1300,
+    /// MAC Whitelist
+    /** Format: `A(T(Ec))`
+     *
+     * Structure Parameters:
+     *
+     * * `E`: EUI64 address of node
+     * * `c`: Optional fixed RSSI. 127 means not set.
+     */
+    SPINEL_PROP_MAC_WHITELIST          = SPINEL_PROP_MAC_EXT__BEGIN + 0,
+
+    /// MAC Whitelist Enabled Flag
+    /** Format: `b`
+     */
+    SPINEL_PROP_MAC_WHITELIST_ENABLED  = SPINEL_PROP_MAC_EXT__BEGIN + 1,
+
+    /// MAC Extended Address
+    /** Format: `E`
+     *
+     *  Specified by Thread. Randomly-chosen, but non-volatile EUI-64.
+     */
+    SPINEL_PROP_MAC_EXTENDED_ADDR      = SPINEL_PROP_MAC_EXT__BEGIN + 2,
+    SPINEL_PROP_MAC_EXT__END           = 0x1400,
+
     SPINEL_PROP_NET__BEGIN           = 0x40,
     SPINEL_PROP_NET_SAVED            = SPINEL_PROP_NET__BEGIN + 0, ///< [b]
-    SPINEL_PROP_NET_ENABLED          = SPINEL_PROP_NET__BEGIN + 1, ///< [b]
-    SPINEL_PROP_NET_STATE            = SPINEL_PROP_NET__BEGIN + 2, ///< [C]
+    SPINEL_PROP_NET_IF_UP            = SPINEL_PROP_NET__BEGIN + 1, ///< [b]
+    SPINEL_PROP_NET_STACK_UP         = SPINEL_PROP_NET__BEGIN + 2, ///< [C]
     SPINEL_PROP_NET_ROLE             = SPINEL_PROP_NET__BEGIN + 3, ///< [C]
     SPINEL_PROP_NET_NETWORK_NAME     = SPINEL_PROP_NET__BEGIN + 4, ///< [U]
     SPINEL_PROP_NET_XPANID           = SPINEL_PROP_NET__BEGIN + 5, ///< [D]
@@ -319,9 +364,9 @@ typedef enum
     SPINEL_PROP_THREAD_PARENT          = SPINEL_PROP_THREAD__BEGIN + 1, ///< LADDR, SADDR [ES]
     SPINEL_PROP_THREAD_CHILD_TABLE     = SPINEL_PROP_THREAD__BEGIN + 2, ///< [A(T(ES))]
     SPINEL_PROP_THREAD_LEADER_RID      = SPINEL_PROP_THREAD__BEGIN + 3, ///< [C]
-    SPINEL_PROP_THREAD_LEADER_WEIGHT   = SPINEL_PROP_THREAD__BEGIN + 4, ///< [6]
+    SPINEL_PROP_THREAD_LEADER_WEIGHT   = SPINEL_PROP_THREAD__BEGIN + 4, ///< [C]
     SPINEL_PROP_THREAD_LOCAL_LEADER_WEIGHT
-                                       = SPINEL_PROP_THREAD__BEGIN + 5, ///< [6]
+                                       = SPINEL_PROP_THREAD__BEGIN + 5, ///< [C]
     SPINEL_PROP_THREAD_NETWORK_DATA    = SPINEL_PROP_THREAD__BEGIN + 6, ///< [D]
     SPINEL_PROP_THREAD_NETWORK_DATA_VERSION
                                        = SPINEL_PROP_THREAD__BEGIN + 7, ///< [S]
@@ -332,14 +377,82 @@ typedef enum
     SPINEL_PROP_THREAD_ON_MESH_NETS    = SPINEL_PROP_THREAD__BEGIN + 10, ///< array(ipv6prefix,prefixlen,stable,flags) [A(T(6CbC))]
     SPINEL_PROP_THREAD_LOCAL_ROUTES    = SPINEL_PROP_THREAD__BEGIN + 11, ///< array(ipv6prefix,prefixlen,stable,flags) [A(T(6CbC))]
     SPINEL_PROP_THREAD_ASSISTING_PORTS = SPINEL_PROP_THREAD__BEGIN + 12, ///< array(portn) [A(S)]
+    SPINEL_PROP_THREAD_ALLOW_LOCAL_NET_DATA_CHANGE
+                                       = SPINEL_PROP_THREAD__BEGIN + 13, ///< [b]
+
+    /// Thread Mode
+    /** Format: `C`
+     *
+     *  This property contains the value of the mode
+     *  TLV for this node. The meaning of the bits in this
+     *  bitfield are defined by section 4.5.2 of the Thread
+     *  specification.
+     */
+    SPINEL_PROP_THREAD_MODE            = SPINEL_PROP_THREAD__BEGIN + 14,
     SPINEL_PROP_THREAD__END            = 0x60,
+
+    SPINEL_PROP_THREAD_EXT__BEGIN      = 0x1500,
+
+    /// Thread Child Timeout
+    /** Format: `L`
+     *
+     *  Used when operating in the Child role.
+     */
+    SPINEL_PROP_THREAD_CHILD_TIMEOUT   = SPINEL_PROP_THREAD_EXT__BEGIN + 0,
+
+    /// Thread RLOC16
+    /** Format: `S`
+     */
+    SPINEL_PROP_THREAD_RLOC16          = SPINEL_PROP_THREAD_EXT__BEGIN + 1,
+
+    /// Thread Router Upgrade Threshold
+    /** Format: `C`
+     */
+    SPINEL_PROP_THREAD_ROUTER_UPGRADE_THRESHOLD
+                                       = SPINEL_PROP_THREAD_EXT__BEGIN + 2,
+
+    /// Thread Context Reuse Delay
+    /** Format: `L`
+     */
+    SPINEL_PROP_THREAD_CONTEXT_REUSE_DELAY
+                                       = SPINEL_PROP_THREAD_EXT__BEGIN + 3,
+
+    /// Thread Network ID Timeout
+    /** Format: `C`
+     */
+    SPINEL_PROP_THREAD_NETWORK_ID_TIMEOUT
+                                       = SPINEL_PROP_THREAD_EXT__BEGIN + 4,
+
+    /// List of active thread router ids
+    /** Format: `A(C)`
+     *
+     * Note that some implementations may not support CMD_GET_VALUE
+     * routerids, but may support CMD_REMOVE_VALUE when the node is
+     * a leader.
+     */
+    SPINEL_PROP_THREAD_ACTIVE_ROUTER_IDS
+                                       = SPINEL_PROP_THREAD_EXT__BEGIN + 5,
+
+    SPINEL_PROP_THREAD_EXT__END        = 0x1600,
 
     SPINEL_PROP_IPV6__BEGIN          = 0x60,
     SPINEL_PROP_IPV6_LL_ADDR         = SPINEL_PROP_IPV6__BEGIN + 0, ///< [6]
     SPINEL_PROP_IPV6_ML_ADDR         = SPINEL_PROP_IPV6__BEGIN + 1, ///< [6C]
     SPINEL_PROP_IPV6_ML_PREFIX       = SPINEL_PROP_IPV6__BEGIN + 2, ///< [6C]
-    SPINEL_PROP_IPV6_ADDRESS_TABLE   = SPINEL_PROP_IPV6__BEGIN + 3, ///< array(ipv6addr,prefixlen,flags) [A(T(6CL))]
-    SPINEL_PROP_IPV6_ROUTE_TABLE     = SPINEL_PROP_IPV6__BEGIN + 4, ///< array(ipv6prefix,prefixlen,iface,flags) [A(T(6CCL))]
+    SPINEL_PROP_IPV6_ADDRESS_TABLE   = SPINEL_PROP_IPV6__BEGIN + 3, ///< array(ipv6addr,prefixlen,valid,preferred,flags) [A(T(6CLLC))]
+    SPINEL_PROP_IPV6_ROUTE_TABLE     = SPINEL_PROP_IPV6__BEGIN + 4, ///< array(ipv6prefix,prefixlen,iface,flags) [A(T(6CCC))]
+
+
+    /// IPv6 ICMP Ping Offload
+    /** Format: `b`
+     *
+     * Allow the NCP to directly respond to ICMP ping requests. If this is
+     * turned on, ping request ICMP packets will not be passed to the host.
+     *
+     * Default value is `false`.
+     */
+    SPINEL_PROP_IPV6_ICMP_PING_OFFLOAD = SPINEL_PROP_IPV6__BEGIN + 5,
+
     SPINEL_PROP_IPV6__END            = 0x70,
 
     SPINEL_PROP_STREAM__BEGIN       = 0x70,
@@ -348,6 +461,44 @@ typedef enum
     SPINEL_PROP_STREAM_NET          = SPINEL_PROP_STREAM__BEGIN + 2, ///< [D]
     SPINEL_PROP_STREAM_NET_INSECURE = SPINEL_PROP_STREAM__BEGIN + 3, ///< [D]
     SPINEL_PROP_STREAM__END         = 0x80,
+
+
+    /// UART Bitrate
+    /** Format: `L`
+     *
+     *  If the NCP is using a UART to communicate with the host,
+     *  this property allows the host to change the bitrate
+     *  of the serial connection. The value encoding is `L`,
+     *  which is a little-endian 32-bit unsigned integer.
+     *  The host should not assume that all possible numeric values
+     *  are supported.
+     *
+     *  If implemented by the NCP, this property should be persistent
+     *  across software resets and forgotten upon hardware resets.
+     *
+     *  This property is only implemented when a UART is being
+     *  used for Spinel. This property is optional.
+     *
+     *  When changing the bitrate, all frames will be received
+     *  at the previous bitrate until the response frame to this command
+     *  is received. Once a successful response frame is received by
+     *  the host, all further frames will be transmitted at the new
+     *  bitrate.
+     */
+    SPINEL_PROP_UART_BITRATE    = 0x100,
+
+    /// UART Software Flow Control
+    /** Format: `b`
+     *
+     *  If the NCP is using a UART to communicate with the host,
+     *  this property allows the host to determine if software flow
+     *  control (XON/XOFF style) should be used and (optionally) to
+     *  turn it on or off.
+     *
+     *  This property is only implemented when a UART is being
+     *  used for Spinel. This property is optional.
+     */
+    SPINEL_PROP_UART_XON_XOFF   = 0x101,
 
     SPINEL_PROP_15_4_PIB__BEGIN     = 1024,
     // For direct access to the 802.15.4 PID.
@@ -363,7 +514,154 @@ typedef enum
     SPINEL_PROP_15_4_PIB_MAC_SECURITY_ENABLED   = SPINEL_PROP_15_4_PIB__BEGIN + 0x5d, ///< [b]
     SPINEL_PROP_15_4_PIB__END       = 1280,
 
+    SPINEL_PROP_CNTR__BEGIN        = 1280,
+
+    /// Counter reset behavior
+    /** Format: `C`
+     *  Writing a '1' to this property will reset
+     *  all of the counters to zero. */
+    SPINEL_PROP_CNTR_RESET             = SPINEL_PROP_CNTR__BEGIN + 0,
+
+    /// The total number of transmissions.
+    /** Format: `L` (Read-only) */
+    SPINEL_PROP_CNTR_TX_PKT_TOTAL      = SPINEL_PROP_CNTR__BEGIN + 1,
+
+    /// The number of transmissions with ack request.
+    /** Format: `L` (Read-only) */
+    SPINEL_PROP_CNTR_TX_PKT_ACK_REQ    = SPINEL_PROP_CNTR__BEGIN + 2,
+
+    /// The number of transmissions that were acked.
+    /** Format: `L` (Read-only) */
+    SPINEL_PROP_CNTR_TX_PKT_ACKED      = SPINEL_PROP_CNTR__BEGIN + 3,
+
+    /// The number of transmissions without ack request.
+    /** Format: `L` (Read-only) */
+    SPINEL_PROP_CNTR_TX_PKT_NO_ACK_REQ = SPINEL_PROP_CNTR__BEGIN + 4,
+
+    /// The number of transmitted data.
+    /** Format: `L` (Read-only) */
+    SPINEL_PROP_CNTR_TX_PKT_DATA       = SPINEL_PROP_CNTR__BEGIN + 5,
+
+    /// The number of transmitted data poll.
+    /** Format: `L` (Read-only) */
+    SPINEL_PROP_CNTR_TX_PKT_DATA_POLL  = SPINEL_PROP_CNTR__BEGIN + 6,
+
+    /// The number of transmitted beacon.
+    /** Format: `L` (Read-only) */
+    SPINEL_PROP_CNTR_TX_PKT_BEACON     = SPINEL_PROP_CNTR__BEGIN + 7,
+
+    /// The number of transmitted beacon request.
+    /** Format: `L` (Read-only) */
+    SPINEL_PROP_CNTR_TX_PKT_BEACON_REQ = SPINEL_PROP_CNTR__BEGIN + 8,
+
+    /// The number of transmitted other types of frames.
+    /** Format: `L` (Read-only) */
+    SPINEL_PROP_CNTR_TX_PKT_OTHER      = SPINEL_PROP_CNTR__BEGIN + 9,
+
+    /// The number of retransmission times.
+    /** Format: `L` (Read-only) */
+    SPINEL_PROP_CNTR_TX_PKT_RETRY      = SPINEL_PROP_CNTR__BEGIN + 10,
+
+    /// The number of CCA failure times.
+    /** Format: `L` (Read-only) */
+    SPINEL_PROP_CNTR_TX_ERR_CCA        = SPINEL_PROP_CNTR__BEGIN + 11,
+
+    /// The total number of received packets.
+    /** Format: `L` (Read-only) */
+    SPINEL_PROP_CNTR_RX_PKT_TOTAL      = SPINEL_PROP_CNTR__BEGIN + 100,
+
+    /// The number of received data.
+    /** Format: `L` (Read-only) */
+    SPINEL_PROP_CNTR_RX_PKT_DATA       = SPINEL_PROP_CNTR__BEGIN + 101,
+
+    /// The number of received data poll.
+    /** Format: `L` (Read-only) */
+    SPINEL_PROP_CNTR_RX_PKT_DATA_POLL  = SPINEL_PROP_CNTR__BEGIN + 102,
+
+    /// The number of received beacon.
+    /** Format: `L` (Read-only) */
+    SPINEL_PROP_CNTR_RX_PKT_BEACON     = SPINEL_PROP_CNTR__BEGIN + 103,
+
+    /// The number of received beacon request.
+    /** Format: `L` (Read-only) */
+    SPINEL_PROP_CNTR_RX_PKT_BEACON_REQ = SPINEL_PROP_CNTR__BEGIN + 104,
+
+    /// The number of received other types of frames.
+    /** Format: `L` (Read-only) */
+    SPINEL_PROP_CNTR_RX_PKT_OTHER      = SPINEL_PROP_CNTR__BEGIN + 105,
+
+    /// The number of received packets filtered by whitelist.
+    /** Format: `L` (Read-only) */
+    SPINEL_PROP_CNTR_RX_PKT_FILT_WL    = SPINEL_PROP_CNTR__BEGIN + 106,
+
+    /// The number of received packets filtered by destination check.
+    /** Format: `L` (Read-only) */
+    SPINEL_PROP_CNTR_RX_PKT_FILT_DA    = SPINEL_PROP_CNTR__BEGIN + 107,
+
+    /// The number of received packets that are empty.
+    /** Format: `L` (Read-only) */
+    SPINEL_PROP_CNTR_RX_ERR_EMPTY      = SPINEL_PROP_CNTR__BEGIN + 108,
+
+    /// The number of received packets from an unknown neighbor.
+    /** Format: `L` (Read-only) */
+    SPINEL_PROP_CNTR_RX_ERR_UKWN_NBR   = SPINEL_PROP_CNTR__BEGIN + 109,
+
+    /// The number of received packets whose source address is invalid.
+    /** Format: `L` (Read-only) */
+    SPINEL_PROP_CNTR_RX_ERR_NVLD_SADDR = SPINEL_PROP_CNTR__BEGIN + 110,
+
+    /// The number of received packets with a security error.
+    /** Format: `L` (Read-only) */
+    SPINEL_PROP_CNTR_RX_ERR_SECURITY   = SPINEL_PROP_CNTR__BEGIN + 111,
+
+    /// The number of received packets with a checksum error.
+    /** Format: `L` (Read-only) */
+    SPINEL_PROP_CNTR_RX_ERR_BAD_FCS    = SPINEL_PROP_CNTR__BEGIN + 112,
+
+    /// The number of received packets with other errors.
+    /** Format: `L` (Read-only) */
+    SPINEL_PROP_CNTR_RX_ERR_OTHER      = SPINEL_PROP_CNTR__BEGIN + 113,
+
+    /// The total number of secure transmitted IP messages.
+    /** Format: `L` (Read-only) */
+    SPINEL_PROP_CNTR_TX_IP_SEC_TOTAL   = SPINEL_PROP_CNTR__BEGIN + 200,
+
+    /// The total number of insecure transmitted IP messages.
+    /** Format: `L` (Read-only) */
+    SPINEL_PROP_CNTR_TX_IP_INSEC_TOTAL = SPINEL_PROP_CNTR__BEGIN + 201,
+
+    /// The number of dropped (not transmitted) IP messages.
+    /** Format: `L` (Read-only) */
+    SPINEL_PROP_CNTR_TX_IP_DROPPED     = SPINEL_PROP_CNTR__BEGIN + 202,
+
+    /// The total number of secure received IP message.
+    /** Format: `L` (Read-only) */
+    SPINEL_PROP_CNTR_RX_IP_SEC_TOTAL   = SPINEL_PROP_CNTR__BEGIN + 203,
+
+    /// The total number of insecure received IP message.
+    /** Format: `L` (Read-only) */
+    SPINEL_PROP_CNTR_RX_IP_INSEC_TOTAL = SPINEL_PROP_CNTR__BEGIN + 204,
+
+    /// The number of dropped received IP messages.
+    /** Format: `L` (Read-only) */
+    SPINEL_PROP_CNTR_RX_IP_DROPPED     = SPINEL_PROP_CNTR__BEGIN + 205,
+
+    /// The number of transmitted spinel frames.
+    /** Format: `L` (Read-only) */
+    SPINEL_PROP_CNTR_TX_SPINEL_TOTAL   = SPINEL_PROP_CNTR__BEGIN + 300,
+
+    /// The number of received spinel frames.
+    /** Format: `L` (Read-only) */
+    SPINEL_PROP_CNTR_RX_SPINEL_TOTAL   = SPINEL_PROP_CNTR__BEGIN + 301,
+
+    /// The number of received spinel frames with error.
+    /** Format: `L` (Read-only) */
+    SPINEL_PROP_CNTR_RX_SPINEL_ERR     = SPINEL_PROP_CNTR__BEGIN + 302,
+
+    SPINEL_PROP_CNTR__END       = 2048,
+
     SPINEL_PROP_NEST__BEGIN         = 15296,
+    SPINEL_PROP_NEST_STREAM_MFG     = SPINEL_PROP_NEST__BEGIN + 0,
     SPINEL_PROP_NEST__END           = 15360,
 
     SPINEL_PROP_VENDOR__BEGIN       = 15360,
@@ -460,6 +758,8 @@ SPINEL_API_EXTERN const char *spinel_next_packed_datatype(const char *pack_forma
 // ----------------------------------------------------------------------------
 
 SPINEL_API_EXTERN const char *spinel_prop_key_to_cstr(spinel_prop_key_t prop_key);
+
+SPINEL_API_EXTERN const char *spinel_status_to_cstr(spinel_status_t status);
 
 // ----------------------------------------------------------------------------
 
