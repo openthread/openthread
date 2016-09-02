@@ -824,14 +824,14 @@ const otNetifAddress *otGetUnicastAddresses(void)
     return sThreadNetif->GetUnicastAddresses();
 }
 
-ThreadError otAddUnicastAddress(otNetifAddress *address)
+ThreadError otAddUnicastAddress(const otNetifAddress *address)
 {
-    return sThreadNetif->AddUnicastAddress(*static_cast<Ip6::NetifUnicastAddress *>(address));
+    return sThreadNetif->AddExternalUnicastAddress(*static_cast<const Ip6::NetifUnicastAddress *>(address));
 }
 
-ThreadError otRemoveUnicastAddress(otNetifAddress *address)
+ThreadError otRemoveUnicastAddress(const otIp6Address *address)
 {
-    return sThreadNetif->RemoveUnicastAddress(*static_cast<Ip6::NetifUnicastAddress *>(address));
+    return sThreadNetif->RemoveExternalUnicastAddress(*static_cast<const Ip6::Address *>(address));
 }
 
 void otSetStateChangedCallback(otStateChangedCallback aCallback, void *aContext)

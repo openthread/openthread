@@ -411,11 +411,6 @@ private:
                                               uint16_t value_len);
 
 private:
-    enum
-    {
-        kNetifAddressListSize = 8,           // Size of mNetifAddresses array.
-        kUnusedNetifAddressPrefixLen = 0xff, // Prefix len value to indicate an unused/available NetifAddress element.
-    };
 
     spinel_status_t mLastStatus;
 
@@ -434,8 +429,6 @@ private:
     spinel_tid_t mDroppedReplyTid;
 
     uint16_t mDroppedReplyTidBitSet;
-
-    otNetifAddress mNetifAddresses[kNetifAddressListSize];
 
     bool mAllowLocalNetworkDataChange;
     bool mRequireJoinExistingNetwork;

@@ -192,7 +192,6 @@ private:
     static void HandleLinkPcapReceive(const RadioPacket *aFrame, void *aContext);
 
     static const struct Command sCommands[];
-    static otNetifAddress sAddress;
 
     static Ip6::MessageInfo sMessageInfo;
     static Server *sServer;

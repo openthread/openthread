@@ -116,6 +116,16 @@
 #endif  // OPENTHREAD_CONFIG_IP_ADDRS_PER_CHILD
 
 /**
+ * @def OPENTHREAD_CONFIG_MAX_EXT_IP_ADDRS
+ *
+ * The maximum number of supported IPv6 addresses allows to be externally added.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_MAX_EXT_IP_ADDRS
+#define OPENTHREAD_CONFIG_MAX_EXT_IP_ADDRS                  4
+#endif  // OPENTHREAD_CONFIG_MAX_EXT_IP_ADDRS
+
+/**
  * @def OPENTHREAD_CONFIG_6LOWPAN_REASSEMBLY_TIMEOUT
  *
  * The 6LoWPAN fragment reassembly timeout in seconds.

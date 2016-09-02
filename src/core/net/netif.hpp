@@ -256,11 +256,35 @@ public:
      *
      * @param[in]  aAddress  A reference to the unicast address.
      *
-     * @retval kThreadError_None  Successfully removed the unicast address.
-     * @retval kThreadError_Busy  The unicast address was already removed.
+     * @retval kThreadError_None      Successfully removed the unicast address.
+     * @retval kThreadError_NotFound  The unicast address wasn't found to be removed.
      *
      */
     ThreadError RemoveUnicastAddress(const NetifUnicastAddress &aAddress);
+
+    /**
+     * This method adds an external (to OpenThread) unicast address to the network interface.
+     *
+     * @param[in]  aAddress  A reference to the unicast address.
+     *
+     * @retval kThreadError_None         Successfully added (or updated) the unicast address.
+     * @retval kThreadError_InvalidArgs  The address indicated by @p aAddress is an internal address.
+     * @retval kThreadError_NoBufs       The maximum number of allowed external addresses are already added.
+     *
+     */
+    ThreadError AddExternalUnicastAddress(const NetifUnicastAddress &aAddress);
+
+    /**
+     * This method removes a external (to OpenThread) unicast address from the network interface.
+     *
+     * @param[in]  aAddress  A reference to the unicast address.
+     *
+     * @retval kThreadError_None         Successfully removed the unicast address.
+     * @retval kThreadError_InvalidArgs  The address indicated by @p aAddress is an internal address.
+     * @retval kThreadError_NotFound     The unicast address was not found.
+     *
+     */
+    ThreadError RemoveExternalUnicastAddress(const Address &aAddress);
 
     /**
      * This method indicates whether or not the network interface is subscribed to a multicast address.
@@ -450,8 +474,29 @@ private:
 
     uint32_t mStateChangedFlags;
 
+    NetifUnicastAddress mExtUnicastAddresses[OPENTHREAD_CONFIG_MAX_EXT_IP_ADDRS];
+    uint8_t mMaskExtUnicastAddresses; // Must have enough bits to hold OPENTHREAD_CONFIG_MAX_EXT_IP_ADDRS
+
     static Netif *sNetifListHead;
     static int8_t sNextInterfaceId;
+
+    /**
+     * This method determines if an address is one of the external unicast addresses, and if so returns
+     * the index in the mExtUnicastAddresses array.
+     *
+     * @param[in]  aAddress  A pointer to the Network Interface address.
+     *
+     * @returns The index in the mExtUnicastAddresses array or -1 if not part of the array.
+     *
+     */
+    int8_t GetExtUnicastAddressIndex(const NetifUnicastAddress *address) {
+        if (address < &mExtUnicastAddresses[0] ||
+            address >= &mExtUnicastAddresses[0] + OPENTHREAD_CONFIG_MAX_EXT_IP_ADDRS) {
+            return -1;
+        }
+
+        return static_cast<int8_t>(address - &mExtUnicastAddresses[0]);
+    }
 };
 
 /**
