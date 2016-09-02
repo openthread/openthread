@@ -703,7 +703,7 @@ exit:
 
 uint8_t Frame::GetMaxPayloadLength(void)
 {
-    return kMTU - (GetHeaderLength() + GetFooterLength());
+    return kMTU - (GetHeaderLength() + GetFooterLength() + 2);
 }
 
 uint8_t Frame::GetPayloadLength(void)

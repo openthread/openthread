@@ -89,6 +89,7 @@ typedef enum otRadioCaps
 {
     kRadioCapsNone          = 0,  ///< None
     kRadioCapsAckTimeout    = 1,  ///< Radio supports AckTime event
+    kRadioCapsAutoCrc       = 2,  ///< Radio supports AutoCRC
 } otRadioCaps;
 
 /**

@@ -307,7 +307,7 @@ int8_t otPlatRadioGetRssi(void)
 
 otRadioCaps otPlatRadioGetCaps(void)
 {
-    return kRadioCapsNone;
+    return kRadioCapsAutoCrc;
 }
 
 bool otPlatRadioGetPromiscuous(void)
