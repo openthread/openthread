@@ -55,6 +55,13 @@ cd /tmp || die
     [ $BUILD_TARGET != posix-32-bit ] || {
         sudo apt-get install g++-multilib || die
     }
+
+    [ $NODE_TYPE != ncp-sim ] || {
+        sudo easy_install pip || die
+        sudo pip install blessed || die
+        sudo pip install ipaddress || die
+        sudo pip install scapy || die
+    }
 }
 
 [ $TRAVIS_OS_NAME != osx ] || {

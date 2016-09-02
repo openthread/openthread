@@ -47,6 +47,9 @@ matrix:
     - env: BUILD_TARGET="posix-distcheck" DISTCHECK_CONFIGURE_FLAGS="--with-examples=posix --enable-cli --enable-ncp --with-tests=all" VERBOSE=1
       compiler: gcc
       os: linux
+    - env: NODE_TYPE=ncp-sim BUILD_TARGET="posix-distcheck" DISTCHECK_CONFIGURE_FLAGS="--with-examples=posix --enable-cli --enable-ncp=uart --with-tests=all" VERBOSE=1 BuildJobs=10
+      compiler: gcc
+      os: linux
     - env: BUILD_TARGET="posix"
       compiler: gcc
       os: osx
