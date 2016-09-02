@@ -2366,6 +2366,9 @@ class WpanDiagsCmd(Cmd, SpinelCodec):
                                            arr, str(len(arr))+'s')
 
         elif args[0] == "remove":
+            arr += pack('B', prefix.network.prefixlen)
+            arr += pack('B', stable)
+            arr += pack('B', flags)
             self.prop_set_value(SPINEL_PROP_THREAD_ALLOW_LOCAL_NET_DATA_CHANGE,1)
             value = self.prop_remove_value(SPINEL_PROP_THREAD_ON_MESH_NETS, 
                                            arr, str(len(arr))+'s')
