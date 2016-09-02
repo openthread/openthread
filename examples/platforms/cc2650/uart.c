@@ -103,13 +103,14 @@ ThreadError otPlatUartDisable(void)
 
 ThreadError otPlatUartSend(const uint8_t *aBuf, uint16_t aBufLength)
 {
+    ThreadError error = kThreadError_None;
     VerifyOrExit(sendBuffer == NULL, error = kThreadError_Busy);
 
     sendBuffer = aBuf;
     sendLen = aBufLength;
 
 exit:
-    return kThreadError_None;
+    return error;
 }
 
 void processReceive(void)
@@ -134,7 +135,7 @@ void processReceive(void)
 
 void processTransmit(void)
 {
-    VerifyOrExit(sTransmitBuffer != NULL, ;);
+    VerifyOrExit(sendBuffer != NULL, ;);
 
     for(; sendLen > 0; sendLen--)
     {
