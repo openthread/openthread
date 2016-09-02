@@ -3622,10 +3622,7 @@ ThreadError NcpBase::InsertPropertyHandler_IPV6_ADDRESS_TABLE(uint8_t header, sp
 
     errorCode = otAddUnicastAddress(&netif_addr);
 
-    // `kThreadError_Busy` indicates that the address was already on the list. In this case the lifetimes and prefix len
-    // are updated, and the add/insert operation is considered a success.
-
-    VerifyOrExit(errorCode == kThreadError_None || errorCode == kThreadError_Busy,
+    VerifyOrExit(errorCode == kThreadError_None,
                  errorStatus = ThreadErrorToSpinelStatus(errorCode));
 
     errorCode = SendPropertyUpdate(

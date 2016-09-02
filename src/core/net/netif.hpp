@@ -256,8 +256,8 @@ public:
      *
      * @param[in]  aAddress  A reference to the unicast address.
      *
-     * @retval kThreadError_None  Successfully removed the unicast address.
-     * @retval kThreadError_Busy  The unicast address was already removed.
+     * @retval kThreadError_None      Successfully removed the unicast address.
+     * @retval kThreadError_NotFound  The unicast address wasn't found to be removed.
      *
      */
     ThreadError RemoveUnicastAddress(const NetifUnicastAddress &aAddress);
@@ -267,10 +267,9 @@ public:
      *
      * @param[in]  aAddress  A reference to the unicast address.
      *
-     * @retval kThreadError_None         Successfully added the unicast address.
+     * @retval kThreadError_None         Successfully added (or updated) the unicast address.
      * @retval kThreadError_InvalidArgs  The address indicated by @p aAddress is an internal address.
      * @retval kThreadError_NoBufs       The maximum number of allowed external addresses are already added.
-     * @retval kThreadError_Busy         The unicast address was already added.
      *
      */
     ThreadError AddExternalUnicastAddress(const NetifUnicastAddress &aAddress);
@@ -282,7 +281,7 @@ public:
      *
      * @retval kThreadError_None         Successfully removed the unicast address.
      * @retval kThreadError_InvalidArgs  The address indicated by @p aAddress is an internal address.
-     * @retval kThreadError_Busy         The unicast address was not found.
+     * @retval kThreadError_NotFound     The unicast address was not found.
      *
      */
     ThreadError RemoveExternalUnicastAddress(const Address &aAddress);
@@ -476,7 +475,6 @@ private:
     uint32_t mStateChangedFlags;
 
     NetifUnicastAddress mExtUnicastAddresses[OPENTHREAD_CONFIG_MAX_EXT_IP_ADDRS];
-    uint8_t mCountExtUnicastAddresses;
     uint8_t mMaskExtUnicastAddresses; // Must have enough bits to hold OPENTHREAD_CONFIG_MAX_EXT_IP_ADDRS
 
     static Netif *sNetifListHead;

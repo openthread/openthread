@@ -655,10 +655,9 @@ const otNetifAddress *otGetUnicastAddresses(void);
  *
  * @param[in]  aAddress  A pointer to a Network Interface Address.
  *
- * @retval kThreadErrorNone          Successfully added the Network Interface Address.
+ * @retval kThreadErrorNone          Successfully added (or updated) the Network Interface Address.
  * @retval kThreadError_InvalidArgs  The IP Address indicated by @p aAddress is an internal address.
  * @retval kThreadError_NoBufs       The Network Interface is already storing the maximum allowed external addresses.
- * @retval kThreadErrorBusy          The Network Interface Address indicated by @p aAddress is already added.
  */
 ThreadError otAddUnicastAddress(const otNetifAddress *aAddress);
 
@@ -669,7 +668,7 @@ ThreadError otAddUnicastAddress(const otNetifAddress *aAddress);
  *
  * @retval kThreadErrorNone          Successfully removed the Network Interface Address.
  * @retval kThreadError_InvalidArgs  The IP Address indicated by @p aAddress is an internal address.
- * @retval kThreadErrorBusy          The IP Address indicated by @p aAddress was not found.
+ * @retval kThreadError_NotFound     The IP Address indicated by @p aAddress was not found.
  */
 ThreadError otRemoveUnicastAddress(const otIp6Address *aAddress);
 

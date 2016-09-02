@@ -51,7 +51,6 @@ Netif::Netif() :
     mInterfaceId = -1;
     mAllRoutersSubscribed = false;
     mNext = NULL;
-    mCountExtUnicastAddresses = 0;
     mMaskExtUnicastAddresses = 0;
 
     mStateChangedFlags = 0;
@@ -315,7 +314,7 @@ ThreadError Netif::RemoveUnicastAddress(const NetifUnicastAddress &aAddress)
         }
     }
 
-    ExitNow(error = kThreadError_Busy);
+    ExitNow(error = kThreadError_NotFound);
 
 exit:
 
@@ -342,12 +341,13 @@ ThreadError Netif::AddExternalUnicastAddress(const NetifUnicastAddress &aAddress
             cur->mPreferredLifetime = aAddress.mPreferredLifetime;
             cur->mValidLifetime = aAddress.mValidLifetime;
             cur->mPrefixLength = aAddress.mPrefixLength;
-            ExitNow(error = kThreadError_Busy);
+            ExitNow();
         }
     }
 
-    // Make sure we haven't reached our limit already
-    VerifyOrExit(mCountExtUnicastAddresses != OPENTHREAD_CONFIG_MAX_EXT_IP_ADDRS, error = kThreadError_NoBufs);
+    // Make sure we haven't set all the bits in the mask already
+    VerifyOrExit(mMaskExtUnicastAddresses != ((1 << OPENTHREAD_CONFIG_MAX_EXT_IP_ADDRS) - 1),
+                 error = kThreadError_NoBufs);
 
     // Get next available entry index
     while ((mMaskExtUnicastAddresses & (1 << index)) != 0)
@@ -358,7 +358,6 @@ ThreadError Netif::AddExternalUnicastAddress(const NetifUnicastAddress &aAddress
     assert(index < OPENTHREAD_CONFIG_MAX_EXT_IP_ADDRS);
 
     // Increase the count and mask the index
-    mCountExtUnicastAddresses++;
     mMaskExtUnicastAddresses |= 1 << index;
 
     // Copy the address to the next available dynamic address
@@ -404,13 +403,12 @@ ThreadError Netif::RemoveExternalUnicastAddress(const Address &aAddress)
     if (aAddressIndexToRemove != -1)
     {
         mMaskExtUnicastAddresses &= ~(1 << aAddressIndexToRemove);
-        mCountExtUnicastAddresses--;
 
         SetStateChangedFlags(OT_IP6_ADDRESS_REMOVED);
     }
     else
     {
-        error = kThreadError_Busy;
+        error = kThreadError_NotFound;
     }
 
 exit:
