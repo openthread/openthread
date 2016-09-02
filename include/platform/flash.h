@@ -40,35 +40,55 @@ extern "C" {
 #endif
 
 /**
- * Init flash driver.
+ * Perform any initialization for flash driver.
  *
- * @retval ::kThreadError_None    Init flash driver success.
- * @retval ::kThreadError_Failed  Init flash driver fail.
+ * @retval ::kThreadError_None    Initialize flash driver success.
+ * @retval ::kThreadError_Failed  Initialize flash driver fail.
  */
 ThreadError otPlatFlashInit(void);
 
 /**
- * Get the size of flash.
+ * Get the size of flash that can be read/write by the caller.
+ * The usable flash size is always the multiple of flash page size.
  *
  * @returns The size of the flash.
  */
 uint32_t otPlatFlashGetSize(void);
 
 /**
- * Erase flash pages.
+ * Erase one flash page that include the input address.
+ * This is a non-blocking function. It can work with otPlatFlashStatusWait to check when erase is done.
+ *
+ * The flash address starts from 0, and this function maps the input address to the physical address of flash for erasing.
+ * 0 is always mapped to the beginning of one flash page.
+ * The input address should never be mapped to the firmware space or any other protected flash space.
  *
  * @param[in]  aAddress  The start address of the flash to erase.
- * @param[in]  aSize     The size of the flash to erase.
  *
- * @retval kThreadError_None           Erase flash success.
- * @retval kThreadError_Failed         Erase flash fail.
- * @retval kThreadError_InvalidArgs    aAddress is out of range or not aligend.
- *                                     Or aSize is too large.
+ * @retval kThreadError_None           Erase flash operation is started.
+ * @retval kThreadError_Failed         Erase flash operation is not started.
+ * @retval kThreadError_InvalidArgs    aAddress is out of range of flash or not aligend.
  */
-ThreadError otPlatFlashErasePage(uint32_t aAddress, uint32_t aSize);
+ThreadError otPlatFlashErasePage(uint32_t aAddress);
 
 /**
- * Write flash.
+  * Check whether flash is ready or busy.
+  *
+  * @param[in]  aTimeout  The interval waiting for the flash operation to be done and become ready again.
+  *                       zero indicates that it is a polling function, and returns current status of flash immediately.
+  *                       non-zero indicates that it is blocking there until the operation is done and become ready, or timeout expires.
+  *
+  * @retval kThreadError_None           Flash is ready for any operation.
+  * @retval kThreadError_Busy           Flash is busy.
+  */
+ThreadError otPlatFlashStatusWait(uint32_t aTimeout);
+
+/**
+ * Write flash. The write operation only clears bits, but never set bits.
+ *
+ * The flash address starts from 0, and this function maps the input address to the physical address of flash for writing.
+ * 0 is always mapped to the beginning of one flash page.
+ * The input address should never be mapped to the firmware space or any other protected flash space.
  *
  * @param[in]  aAddress  The start address of the flash to write.
  * @param[in]  aData     The pointer of the data to write.
@@ -82,6 +102,10 @@ uint32_t otPlatFlashWrite(uint32_t aAddress, uint8_t *aData, uint32_t aSize);
 
 /**
  * Read flash.
+ *
+ * The flash address starts from 0, and this function maps the input address to the physical address of flash for reading.
+ * 0 is always mapped to the beginning of one flash page.
+ * The input address should never be mapped to the firmware space or any other protected flash space.
  *
  * @param[in]   aAddress  The start address of the flash to read.
  * @param[Out]  aData     The pointer of buffer for reading.
