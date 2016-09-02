@@ -1302,9 +1302,6 @@ void MeshForwarder::HandleFragment(uint8_t *aFrame, uint8_t aFrameLength,
         headerLength = mLowpan.Decompress(*message, aMacSource, aMacDest, aFrame, aFrameLength, datagramLength);
         VerifyOrExit(headerLength > 0, error = kThreadError_NoBufs);
 
-        // Security Check
-        VerifyOrExit(mNetif.GetIp6Filter().Accept(*message), error = kThreadError_Drop);
-
         aFrame += headerLength;
         aFrameLength -= headerLength;
 
@@ -1313,6 +1310,13 @@ void MeshForwarder::HandleFragment(uint8_t *aFrame, uint8_t aFrameLength,
         message->Write(Ip6::Header::GetPayloadLengthOffset(), sizeof(datagramLength), &datagramLength);
         message->SetDatagramTag(datagramTag);
         message->SetTimeout(kReassemblyTimeout);
+
+        // copy Fragment
+        message->Write(message->GetOffset(), aFrameLength, aFrame);
+        message->MoveOffset(aFrameLength);
+
+        // Security Check
+        VerifyOrExit(mNetif.GetIp6Filter().Accept(*message), error = kThreadError_Drop);
 
         mReassemblyList.Enqueue(*message);
 
@@ -1339,13 +1343,11 @@ void MeshForwarder::HandleFragment(uint8_t *aFrame, uint8_t aFrameLength,
         }
 
         VerifyOrExit(message != NULL, error = kThreadError_Drop);
+
+        // copy Fragment
+        message->Write(message->GetOffset(), aFrameLength, aFrame);
+        message->MoveOffset(aFrameLength);
     }
-
-    assert(message != NULL);
-
-    // copy Fragment
-    message->Write(message->GetOffset(), aFrameLength, aFrame);
-    message->MoveOffset(aFrameLength);
 
 exit:
 
@@ -1412,9 +1414,6 @@ void MeshForwarder::HandleLowpanHC(uint8_t *aFrame, uint8_t aFrameLength,
     headerLength = mLowpan.Decompress(*message, aMacSource, aMacDest, aFrame, aFrameLength, 0);
     VerifyOrExit(headerLength > 0, error = kThreadError_Drop);
 
-    // Security Check
-    VerifyOrExit(mNetif.GetIp6Filter().Accept(*message), error = kThreadError_Drop);
-
     aFrame += headerLength;
     aFrameLength -= headerLength;
 
@@ -1424,6 +1423,9 @@ void MeshForwarder::HandleLowpanHC(uint8_t *aFrame, uint8_t aFrameLength,
     message->Write(Ip6::Header::GetPayloadLengthOffset(), sizeof(ip6PayloadLength), &ip6PayloadLength);
 
     message->Write(message->GetOffset(), aFrameLength, aFrame);
+
+    // Security Check
+    VerifyOrExit(mNetif.GetIp6Filter().Accept(*message), error = kThreadError_Drop);
 
 exit:
 
