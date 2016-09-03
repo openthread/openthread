@@ -203,7 +203,6 @@ private:
 
     Ip6::MessageInfo sMessageInfo;
     Server *sServer;
-    uint8_t sEchoRequest[1500];
     uint16_t sLength;
     uint16_t sCount;
     uint32_t sInterval;
