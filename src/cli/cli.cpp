@@ -107,13 +107,13 @@ const struct Command Interpreter::sCommands[] =
 static otNetifAddress sAutoAddresses[8];
 
 Interpreter::Interpreter(otInstance *aInstance):
-    sIcmpEcho(&Interpreter::s_HandleEchoResponse, this),
     sLength(8),
     sCount(1),
     sInterval(1000),
     sPingTimer(&Interpreter::s_HandlePingTimer, this),
     mInstance(aInstance)
 {
+    Ip6::Icmp::SetEchoReplyHandler(&s_HandleEchoResponse, this);
     otSetStateChangedCallback(mInstance, &Interpreter::s_HandleNetifStateChanged, this);
 }
 
@@ -603,14 +603,15 @@ exit:
 ThreadError Interpreter::ProcessIpAddrAdd(int argc, char *argv[])
 {
     ThreadError error;
+    otNetifAddress aAddress;
 
     VerifyOrExit(argc > 0, error = kThreadError_Parse);
 
-    SuccessOrExit(error = otIp6AddressFromString(argv[0], &sAddress.mAddress));
-    sAddress.mPrefixLength = 64;
-    sAddress.mPreferredLifetime = 0xffffffff;
-    sAddress.mValidLifetime = 0xffffffff;
-    error = otAddUnicastAddress(mInstance, &sAddress);
+    SuccessOrExit(error = otIp6AddressFromString(argv[0], &aAddress.mAddress));
+    aAddress.mPrefixLength = 64;
+    aAddress.mPreferredLifetime = 0xffffffff;
+    aAddress.mValidLifetime = 0xffffffff;
+    error = otAddUnicastAddress(mInstance, &aAddress);
 
 exit:
     return error;
@@ -624,8 +625,7 @@ ThreadError Interpreter::ProcessIpAddrDel(int argc, char *argv[])
     VerifyOrExit(argc > 0, error = kThreadError_Parse);
 
     SuccessOrExit(error = otIp6AddressFromString(argv[0], &address));
-    VerifyOrExit(otIsIp6AddressEqual(&address, &sAddress.mAddress), error = kThreadError_Parse);
-    error = otRemoveUnicastAddress(mInstance, &sAddress);
+    error = otRemoveUnicastAddress(mInstance, &address);
 
 exit:
     return error;
@@ -994,9 +994,9 @@ void Interpreter::ProcessPing(int argc, char *argv[])
     VerifyOrExit(argc > 0, error = kThreadError_Parse);
     VerifyOrExit(!sPingTimer.IsRunning(), error = kThreadError_Busy);
 
-    memset(&sSockAddr, 0, sizeof(sSockAddr));
-    SuccessOrExit(error = sSockAddr.GetAddress().FromString(argv[0]));
-    sSockAddr.mScopeId = 1;
+    memset(&sMessageInfo, 0, sizeof(sMessageInfo));
+    SuccessOrExit(error = sMessageInfo.GetPeerAddr().FromString(argv[0]));
+    sMessageInfo.mInterfaceId = 1;
 
     sLength = 8;
     sCount = 1;
@@ -1043,11 +1043,23 @@ void Interpreter::s_HandlePingTimer(void *aContext)
 
 void Interpreter::HandlePingTimer()
 {
+    ThreadError error = kThreadError_None;
     uint32_t timestamp = HostSwap32(Timer::GetNow());
+    Message *message;
 
-    memcpy(sEchoRequest, &timestamp, sizeof(timestamp));
-    sIcmpEcho.SendEchoRequest(sSockAddr, sEchoRequest, sLength);
+    VerifyOrExit((message = Ip6::Icmp::NewMessage(0)) != NULL, error = kThreadError_NoBufs);
+    SuccessOrExit(error = message->Append(&timestamp, sizeof(timestamp)));
+    SuccessOrExit(error = message->SetLength(sLength));
+
+    SuccessOrExit(error = Ip6::Icmp::SendEchoRequest(*message, sMessageInfo));
     sCount--;
+
+exit:
+
+    if (error != kThreadError_None && message != NULL)
+    {
+        Message::Free(*message);
+    }
 
     if (sCount)
     {
@@ -1987,7 +1999,7 @@ void Interpreter::HandleNetifStateChanged(uint32_t aFlags)
 
         if (!found)
         {
-            otRemoveUnicastAddress(mInstance, address);
+            otRemoveUnicastAddress(mInstance, &address->mAddress);
             address->mValidLifetime = 0;
         }
     }

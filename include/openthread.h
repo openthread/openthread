@@ -95,6 +95,7 @@ extern "C" {
  * @defgroup core-tasklet Tasklet
  * @defgroup core-timer Timer
  * @defgroup core-udp UDP
+ * @defgroup core-tcp TCP
  * @defgroup core-link-quality Link Quality
  *
  * @}
@@ -751,28 +752,29 @@ const otNetifAddress *otGetUnicastAddresses(otInstance *aInstance);
 /**
  * Add a Network Interface Address to the Thread interface.
  *
- * The passed in instance @p aAddress will be added and stored by the Thread interface, so the caller should ensure
- * that the address instance remains valid (not de-alloacted) and is not modified after a successful call to this
- * method.
+ * The passed in instance @p aAddress will be copied by the Thread interface. The Thread interface only
+ * supports a fixed number of externally added unicast addresses. See OPENTHREAD_CONFIG_MAX_EXT_IP_ADDRS.
  *
  * @param[in]  aInstance A pointer to an OpenThread instance.
  * @param[in]  aAddress  A pointer to a Network Interface Address.
  *
- * @retval kThreadErrorNone  Successfully added the Network Interface Address.
- * @retval kThreadErrorBusy  The Network Interface Address pointed to by @p aAddress is already added.
+ * @retval kThreadErrorNone          Successfully added (or updated) the Network Interface Address.
+ * @retval kThreadError_InvalidArgs  The IP Address indicated by @p aAddress is an internal address.
+ * @retval kThreadError_NoBufs       The Network Interface is already storing the maximum allowed external addresses.
  */
-ThreadError otAddUnicastAddress(otInstance *aInstance, otNetifAddress *aAddress);
+ThreadError otAddUnicastAddress(otInstance *aInstance, const otNetifAddress *aAddress);
 
 /**
  * Remove a Network Interface Address from the Thread interface.
  *
  * @param[in]  aInstance A pointer to an OpenThread instance.
- * @param[in]  aAddress  A pointer to a Network Interface Address.
+ * @param[in]  aAddress  A pointer to an IP Address.
  *
- * @retval kThreadErrorNone      Successfully removed the Network Interface Address.
- * @retval kThreadErrorNotFound  The Network Interface Address point to by @p aAddress was not added.
+ * @retval kThreadErrorNone          Successfully removed the Network Interface Address.
+ * @retval kThreadError_InvalidArgs  The IP Address indicated by @p aAddress is an internal address.
+ * @retval kThreadError_NotFound     The IP Address indicated by @p aAddress was not found.
  */
-ThreadError otRemoveUnicastAddress(otInstance *aInstance, otNetifAddress *aAddress);
+ThreadError otRemoveUnicastAddress(otInstance *aInstance, const otIp6Address *aAddress);
 
 /**
  * This function pointer is called to notify certain configuration or state changes within OpenThread.
@@ -842,6 +844,56 @@ ThreadError otGetPendingDataset(otInstance *aInstance, otOperationalDataset *aDa
  *
  */
 ThreadError otSetPendingDataset(otInstance *aInstance, otOperationalDataset *aDataset);
+
+/**
+ * This function sends MGMT_ACTIVE_GET.
+ *
+ * @param[in]  aTlvTypes  A pointer to the TLV Types.
+ * @param[in]  aLength    The length of TLV Types.
+ *
+ * @retval kThreadError_None         Successfully send the meshcop dataset command.
+ * @retval kThreadError_NoBufs       Insufficient buffer space to send.
+ *
+ */
+ThreadError otSendActiveGet(const uint8_t *aTlvTypes, uint8_t aLength);
+
+/**
+ * This function sends MGMT_ACTIVE_SET.
+ *
+ * @param[in]  aDataset   A pointer to operational dataset.
+ * @param[in]  aTlvs      A pointer to TLVs.
+ * @param[in]  aLength    The length of TLVs.
+ *
+ * @retval kThreadError_None         Successfully send the meshcop dataset command.
+ * @retval kThreadError_NoBufs       Insufficient buffer space to send.
+ *
+ */
+ThreadError otSendActiveSet(const otOperationalDataset *aDataset, const uint8_t *aTlvs, uint8_t aLength);
+
+/**
+ * This function sends MGMT_PENDING_GET.
+ *
+ * @param[in]  aTlvTypes  A pointer to the TLV Types.
+ * @param[in]  aLength    The length of TLV Types.
+ *
+ * @retval kThreadError_None         Successfully send the meshcop dataset command.
+ * @retval kThreadError_NoBufs       Insufficient buffer space to send.
+ *
+ */
+ThreadError otSendPendingGet(const uint8_t *aTlvTypes, uint8_t aLength);
+
+/**
+ * This function sends MGMT_PENDING_SET.
+ *
+ * @param[in]  aDataset   A pointer to operational dataset.
+ * @param[in]  aTlvs      A pointer to TLVs.
+ * @param[in]  aLength    The length of TLVs.
+ *
+ * @retval kThreadError_None         Successfully send the meshcop dataset command.
+ * @retval kThreadError_NoBufs       Insufficient buffer space to send.
+ *
+ */
+ThreadError otSendPendingSet(const otOperationalDataset *aDataset, const uint8_t *aTlvs, uint8_t aLength);
 
 /**
  * Get the data poll period of sleepy end deivce.

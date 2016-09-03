@@ -125,7 +125,7 @@ public:
 private:
     enum
     {
-        kMaxArgs = 8,
+        kMaxArgs = 32,
     };
 
     void AppendResult(ThreadError error);
@@ -200,10 +200,8 @@ private:
     void HandleLinkPcapReceive(const RadioPacket *aFrame);
 
     static const struct Command sCommands[];
-    otNetifAddress sAddress;
 
-    Ip6::SockAddr sSockAddr;
-    Ip6::IcmpEcho sIcmpEcho;
+    Ip6::MessageInfo sMessageInfo;
     Server *sServer;
     uint8_t sEchoRequest[1500];
     uint16_t sLength;

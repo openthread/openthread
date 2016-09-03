@@ -126,7 +126,7 @@ void NcpUart::TxFrameBufferHasData(void)
 
 void NcpUart::EncodeAndSendToUart(void *aContext)
 {
-    NcpUart *obj = reinterpret_cast<NcpUart *>(aContext);
+    NcpUart *obj = static_cast<NcpUart *>(aContext);
 
     obj->EncodeAndSendToUart();
 }

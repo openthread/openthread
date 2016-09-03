@@ -42,7 +42,7 @@ static Timer   *sTail = NULL;
 
 void TimerScheduler::Add(Timer &aTimer)
 {
-    VerifyOrExit(aTimer.mNext == NULL && sTail != &aTimer, ;);
+    Remove(aTimer);
 
     if (sHead == NULL)
     {
@@ -83,9 +83,6 @@ void TimerScheduler::Add(Timer &aTimer)
             sTail = &aTimer;
         }
     }
-
-exit:
-    return;
 }
 
 void TimerScheduler::Remove(Timer &aTimer)

@@ -45,6 +45,7 @@
 #include <platform/random.h>
 #include <platform/misc.h>
 #include <thread/thread_netif.hpp>
+#include <thread/thread_uris.hpp>
 
 namespace Thread {
 
@@ -824,14 +825,14 @@ const otNetifAddress *otGetUnicastAddresses(otInstance *)
     return sThreadNetif->GetUnicastAddresses();
 }
 
-ThreadError otAddUnicastAddress(otInstance *, otNetifAddress *address)
+ThreadError otAddUnicastAddress(otInstance *, const otNetifAddress *address)
 {
-    return sThreadNetif->AddUnicastAddress(*static_cast<Ip6::NetifUnicastAddress *>(address));
+    return sThreadNetif->AddExternalUnicastAddress(*static_cast<const Ip6::NetifUnicastAddress *>(address));
 }
 
-ThreadError otRemoveUnicastAddress(otInstance *, otNetifAddress *address)
+ThreadError otRemoveUnicastAddress(otInstance *, const otIp6Address *address)
 {
-    return sThreadNetif->RemoveUnicastAddress(*static_cast<Ip6::NetifUnicastAddress *>(address));
+    return sThreadNetif->RemoveExternalUnicastAddress(*static_cast<const Ip6::Address *>(address));
 }
 
 void otSetStateChangedCallback(otInstance *, otStateChangedCallback aCallback, void *aCallbackContext)
@@ -1089,7 +1090,7 @@ void otSetReceiveIp6DatagramCallback(otInstance *, otReceiveIp6DatagramCallback 
     Ip6::Ip6::SetReceiveDatagramCallback(aCallback, aCallbackContext);
 }
 
-bool otGetReceiveIp6DatagramFilterEnabled(otInstance *)
+bool otIsReceiveIp6DatagramFilterEnabled(otInstance *)
 {
     return Ip6::Ip6::IsReceiveIp6FilterEnabled();
 }
@@ -1250,6 +1251,26 @@ ThreadError otSetPendingDataset(otInstance *, otOperationalDataset *aDataset)
 
 exit:
     return error;
+}
+
+ThreadError otSendActiveGet(const uint8_t *aTlvTypes, uint8_t aLength)
+{
+    return sThreadNetif->GetActiveDataset().SendGetRequest(aTlvTypes, aLength);
+}
+
+ThreadError otSendActiveSet(const otOperationalDataset *aDataset, const uint8_t *aTlvs, uint8_t aLength)
+{
+    return sThreadNetif->GetActiveDataset().SendSetRequest(*aDataset, aTlvs, aLength);
+}
+
+ThreadError otSendPendingGet(const uint8_t *aTlvTypes, uint8_t aLength)
+{
+    return sThreadNetif->GetPendingDataset().SendGetRequest(aTlvTypes, aLength);
+}
+
+ThreadError otSendPendingSet(const otOperationalDataset *aDataset, const uint8_t *aTlvs, uint8_t aLength)
+{
+    return sThreadNetif->GetPendingDataset().SendSetRequest(*aDataset, aTlvs, aLength);
 }
 
 #ifdef __cplusplus

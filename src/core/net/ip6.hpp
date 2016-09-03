@@ -44,6 +44,7 @@
 #include <net/socket.hpp>
 
 using Thread::Encoding::BigEndian::HostSwap16;
+using Thread::Encoding::BigEndian::HostSwap32;
 
 namespace Thread {
 
@@ -89,6 +90,7 @@ namespace Ip6 {
 enum IpProto
 {
     kProtoHopOpts  = 0,   ///< IPv6 Hop-by-Hop Option
+    kProtoTcp      = 6,   ///< Transmission Control Protocol
     kProtoUdp      = 17,  ///< User Datagram
     kProtoIp6      = 41,  ///< IPv6 encapsulation
     kProtoRouting  = 43,  ///< Routing Header for IPv6
