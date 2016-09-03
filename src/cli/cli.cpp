@@ -104,8 +104,6 @@ const struct Command Interpreter::sCommands[] =
 #endif
 };
 
-static otNetifAddress sAutoAddresses[8];
-
 Interpreter::Interpreter(otInstance *aInstance):
     sLength(8),
     sCount(1),
@@ -487,7 +485,7 @@ void Interpreter::ProcessDiscover(int argc, char *argv[])
     }
 
     SuccessOrExit(error = otDiscover(mInstance, scanChannels, 0, OT_PANID_BROADCAST,
-                                     &Interpreter::s_HandleActiveScanResult, NULL));
+                                     &Interpreter::s_HandleActiveScanResult, this));
     sServer->OutputFormat("| J | Network Name     | Extended PAN     | PAN  | MAC Address      | Ch | dBm | LQI |\r\n");
     sServer->OutputFormat("+---+------------------+------------------+------+------------------+----+-----+-----+\r\n");
 
@@ -954,7 +952,7 @@ exit:
 
 void Interpreter::s_HandleEchoResponse(void *aContext, Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
-    reinterpret_cast<Interpreter *>(aContext)->HandleEchoResponse(aMessage, aMessageInfo);
+    static_cast<Interpreter *>(aContext)->HandleEchoResponse(aMessage, aMessageInfo);
 }
 
 void Interpreter::HandleEchoResponse(Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
@@ -1038,7 +1036,7 @@ exit:
 
 void Interpreter::s_HandlePingTimer(void *aContext)
 {
-    reinterpret_cast<Interpreter *>(aContext)->HandlePingTimer();
+    static_cast<Interpreter *>(aContext)->HandlePingTimer();
 }
 
 void Interpreter::HandlePingTimer()
@@ -1121,7 +1119,7 @@ exit:
 
 void Interpreter::s_HandleLinkPcapReceive(const RadioPacket *aFrame, void *aContext)
 {
-    reinterpret_cast<Interpreter *>(aContext)->HandleLinkPcapReceive(aFrame);
+    static_cast<Interpreter *>(aContext)->HandleLinkPcapReceive(aFrame);
 }
 
 void Interpreter::HandleLinkPcapReceive(const RadioPacket *aFrame)
@@ -1675,7 +1673,7 @@ void Interpreter::ProcessScan(int argc, char *argv[])
         scanChannels = 1 << value;
     }
 
-    SuccessOrExit(error = otActiveScan(mInstance, scanChannels, 0, &Interpreter::s_HandleActiveScanResult, NULL));
+    SuccessOrExit(error = otActiveScan(mInstance, scanChannels, 0, &Interpreter::s_HandleActiveScanResult, this));
     sServer->OutputFormat("| J | Network Name     | Extended PAN     | PAN  | MAC Address      | Ch | dBm | LQI |\r\n");
     sServer->OutputFormat("+---+------------------+------------------+------+------------------+----+-----+-----+\r\n");
 
@@ -1687,7 +1685,7 @@ exit:
 
 void Interpreter::s_HandleActiveScanResult(otActiveScanResult *aResult, void *aContext)
 {
-    reinterpret_cast<Interpreter *>(aContext)->HandleActiveScanResult(aResult);
+    static_cast<Interpreter *>(aContext)->HandleActiveScanResult(aResult);
 }
 
 void Interpreter::HandleActiveScanResult(otActiveScanResult *aResult)
@@ -1959,7 +1957,7 @@ exit:
 
 void Interpreter::s_HandleNetifStateChanged(uint32_t aFlags, void *aContext)
 {
-    reinterpret_cast<Interpreter *>(aContext)->HandleNetifStateChanged(aFlags);
+    static_cast<Interpreter *>(aContext)->HandleNetifStateChanged(aFlags);
 }
 
 void Interpreter::HandleNetifStateChanged(uint32_t aFlags)

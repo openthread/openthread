@@ -208,6 +208,8 @@ private:
     uint32_t sInterval;
     Timer sPingTimer;
 
+    otNetifAddress sAutoAddresses[8];
+
     otInstance *mInstance;
 };
 

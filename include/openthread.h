@@ -780,7 +780,7 @@ ThreadError otRemoveUnicastAddress(otInstance *aInstance, const otIp6Address *aA
  * This function pointer is called to notify certain configuration or state changes within OpenThread.
  *
  * @param[in]  aFlags    A bit-field indicating specific state that has changed.
- * @param[in]  aInstance A pointer to application-specific context.
+ * @param[in]  aContext  A pointer to application-specific context.
  *
  */
 typedef void (*otStateChangedCallback)(uint32_t aFlags, void *aContext);
@@ -788,12 +788,12 @@ typedef void (*otStateChangedCallback)(uint32_t aFlags, void *aContext);
 /**
  * This function registers a callback to indicate when certain configuration or state changes within OpenThread.
  *
- * @param[in]  aInstance        A pointer to an OpenThread instance.
- * @param[in]  aCallback        A pointer to a function that is called with certain configuration or state changes.
- * @param[in]  aInstanceContext  A pointer to application-specific context.
+ * @param[in]  aInstance  A pointer to an OpenThread instance.
+ * @param[in]  aCallback  A pointer to a function that is called with certain configuration or state changes.
+ * @param[in]  aContext   A pointer to application-specific context.
  *
  */
-void otSetStateChangedCallback(otInstance *aInstance, otStateChangedCallback aCallback, void *aCallbackContext);
+void otSetStateChangedCallback(otInstance *aInstance, otStateChangedCallback aCallback, void *aContext);
 
 /**
  * This function gets the Active Operational Dataset.
@@ -1668,7 +1668,7 @@ uint8_t otGetStableNetworkDataVersion(otInstance *aInstance);
  * always be false.
  *
  * @param[in]  aFrame    A pointer to the received IEEE 802.15.4 frame.
- * @param[in]  aInstance A pointer to application-specific context.
+ * @param[in]  aContext  A pointer to application-specific context.
  *
  */
 typedef void (*otLinkPcapCallback)(const RadioPacket *aFrame, void *aContext);
@@ -1931,7 +1931,7 @@ int otWriteMessage(otMessage aMessage, uint16_t aOffset, const void *aBuf, uint1
  * This function pointer is called when an IPv6 datagram is received.
  *
  * @param[in]  aMessage  A pointer to the message buffer containing the received IPv6 datagram.
- * @param[in]  aInstance A pointer to application-specific context.
+ * @param[in]  aContext  A pointer to application-specific context.
  *
  */
 typedef void (*otReceiveIp6DatagramCallback)(otMessage aMessage, void *aContext);
@@ -2051,10 +2051,10 @@ otMessage otNewUdpMessage(otInstance *aInstance);
 /**
  * Open a UDP/IPv6 socket.
  *
- * @param[in]  aInstance        A pointer to an OpenThread instance.
- * @param[in]  aSocket           A pointer to a UDP socket structure.
- * @param[in]  aCallback         A pointer to the application callback function.
- * @param[in]  aCallbackContext  A pointer to application-specific context.
+ * @param[in]  aInstance  A pointer to an OpenThread instance.
+ * @param[in]  aSocket    A pointer to a UDP socket structure.
+ * @param[in]  aCallback  A pointer to the application callback function.
+ * @param[in]  aContext   A pointer to application-specific context.
  *
  * @retval kThreadErrorNone  Successfully opened the socket.
  * @retval kThreadErrorBusy  Socket is already opened.
@@ -2064,8 +2064,7 @@ otMessage otNewUdpMessage(otInstance *aInstance);
  * @sa otBindUdpSocket
  * @sa otSendUdp
  */
-ThreadError otOpenUdpSocket(otInstance *aInstance, otUdpSocket *aSocket, otUdpReceive aCallback,
-                            void *aCallbackContext);
+ThreadError otOpenUdpSocket(otInstance *aInstance, otUdpSocket *aSocket, otUdpReceive aCallback, void *aContext);
 
 /**
  * Close a UDP/IPv6 socket.
