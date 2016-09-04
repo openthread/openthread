@@ -232,6 +232,7 @@ TESTS                                                              = \
     $(NULL)
 
 XFAIL_NCP_TESTS                                                        = \
+        thread-cert/Cert_5_1_07_MaxChildCount.py                         \
         thread-cert/Cert_5_3_07_DuplicateAddress.py                      \
         thread-cert/Cert_5_6_01_NetworkDataRegisterBeforeAttachLeader.py \
         thread-cert/Cert_5_6_02_NetworkDataRegisterBeforeAttachRouter.py \
