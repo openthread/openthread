@@ -36,6 +36,9 @@ class Router_5_3_3(HarnessCase):
     case = '5 3 3'
     golden_devices_required = 4
     def on_dialog(self, dialog, title):
-        pass
+        if title.startswith('Start DUT'):
+            self.dut.enable_blacklist()
+            self.dut.add_blacklist('166e0a000000005')
+
 if __name__ == '__main__':
     unittest.main()
