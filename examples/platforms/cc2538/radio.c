@@ -209,6 +209,11 @@ ThreadError otPlatRadioDisable(void)
     return error;
 }
 
+bool otPlatRadioIsEnabled(void)
+{
+    return (sState != kStateDisabled) ? true : false;
+}
+
 ThreadError otPlatRadioSleep(void)
 {
     ThreadError error = kThreadError_Busy;

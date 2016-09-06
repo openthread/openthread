@@ -35,15 +35,28 @@
 #include <openthread-types.h>
 
 #include <common/code_utils.hpp>
+#include <platform/radio.h>
 #include <platform/random.h>
 #include "platform-cc2538.h"
 
 void cc2538RandomInit(void)
 {
+}
+
+uint16_t generateRandom(void)
+{
+    uint32_t reg;
     uint16_t seed = 0;
+    uint8_t channel = 0;
+
+    if (otPlatRadioIsEnabled())
+    {
+        channel = 11 + (HWREG(RFCORE_XREG_FREQCTRL) - 11) / 5;
+        otPlatRadioSleep();
+        otPlatRadioDisable();
+    }
 
     HWREG(SOC_ADC_ADCCON1) &= ~(SOC_ADC_ADCCON1_RCTRL1 | SOC_ADC_ADCCON1_RCTRL0);
-
     HWREG(SYS_CTRL_RCGCRFC) = SYS_CTRL_RCGCRFC_RFC0;
 
     while (HWREG(SYS_CTRL_RCGCRFC) != SYS_CTRL_RCGCRFC_RFC0);
@@ -66,14 +79,16 @@ void cc2538RandomInit(void)
     HWREG(SOC_ADC_RNDL) = seed & 0xff;
 
     HWREG(RFCORE_SFR_RFST) = RFCORE_SFR_RFST_INSTR_RFOFF;
-}
-
-uint16_t generateRandom(void)
-{
-    uint32_t reg;
 
     HWREG(SOC_ADC_ADCCON1) |= SOC_ADC_ADCCON1_RCTRL0;
     reg = HWREG(SOC_ADC_RNDL) | (HWREG(SOC_ADC_RNDH) << 8);
+
+    if (channel)
+    {
+        cc2538RadioInit();
+        otPlatRadioEnable();
+        otPlatRadioReceive(channel);
+    }
 
     return (uint16_t)reg;
 }
