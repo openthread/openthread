@@ -792,9 +792,9 @@ void Interpreter::ProcessMasterKey(int argc, char *argv[])
     else
     {
         int keyLength;
-        uint8_t key[16];
+        uint8_t key[OT_MASTER_KEY_SIZE];
 
-        VerifyOrExit((keyLength = Hex2Bin(argv[0], key, sizeof(key))) >= 0, error = kThreadError_Parse);
+        VerifyOrExit((keyLength = Hex2Bin(argv[0], key, sizeof(key))) == OT_MASTER_KEY_SIZE, error = kThreadError_Parse);
         SuccessOrExit(error = otSetMasterKey(key, static_cast<uint8_t>(keyLength)));
     }
 
