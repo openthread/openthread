@@ -65,3 +65,5 @@ matrix:
     - env: BUILD_TARGET="cc2538"
       compiler: gcc
       os: linux
+  allow_failures:
+    - env: NODE_TYPE=ncp-sim BUILD_TARGET="posix-distcheck" DISTCHECK_CONFIGURE_FLAGS="--with-examples=posix --enable-cli --enable-ncp=uart --with-tests=all" VERBOSE=1 BuildJobs=10
