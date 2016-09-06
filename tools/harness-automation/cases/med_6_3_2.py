@@ -28,34 +28,16 @@
 #
 
 
-import json
-import logging
+import unittest
 
+from autothreadharness.harness_case import HarnessCase
 
-class HistoryHelper(object):
-    logger = logging.getLogger(__name__)
+class ED_6_3_2(HarnessCase):
+    suite = 1024
+    case = '6 3 2'
+    golden_devices_required = 1
+    def on_dialog(self, dialog, title):
+        pass
 
-    def __init__(self, filename='./history.json'):
-        self.filename = filename
-        try:
-            self.data = json.load(open(filename, 'r'))
-        except Exception:
-            self.logger.exception('file may not exists')
-            self.data = {
-                'golden_device_black_list': []
-            }
-            self.save()
-
-    def save(self):
-        json.dump(self.data, open(self.filename, 'w'), indent=2)
-
-    def mark_bad_golden_device(self, port):
-        self.logger.warning('mark serial port[%s] as bad', port)
-        self.data['golden_device_black_list'].append(port)
-        self.save()
-
-    def is_bad_golden_device(self, port):
-        return port in self.data['golden_device_black_list']
-
-    def __str__(self):
-        return json.dumps(self.data, indent=2)
+if __name__ == '__main__':
+    unittest.main()

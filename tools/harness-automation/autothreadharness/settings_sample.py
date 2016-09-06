@@ -28,8 +28,14 @@
 #
 
 
+AUTO_DUT = False
+"""bool: Whether use the auto DUT feature of thread harness."""
+
 DUT_DEVICE = 'COM16'
-"""str: Serial port of the DUT"""
+"""str: Serial port of the DUT, must be set if AUTO_DUT=False."""
+
+DUT_VERSION = 'g12345'
+"""str: Version of DUT, must be set if AUTO_DUT=False."""
 
 DUT_MANUFACTURER = 'Open Thread'
 """str: Manufacturer of the DUT"""
@@ -53,7 +59,7 @@ THREAD_SED_POLLING_INTERVAL = 100
 """int: SED polling interval in seconds"""
 
 HARNESS_HOME = 'C:\\GRL\\Thread1.1'
-"""str: Harness installation path"""
+"""str: Harness installation path, e.g. ``C:\GRL\Thread1.1``"""
 
 HARNESS_URL = 'http://127.0.0.1:8000'
 """str: Harness front-end url"""
@@ -65,7 +71,7 @@ Keep this None if no APC PDU available.
 """
 
 APC_OUTLET = 1
-"""int: PDU outlet"""
+"""int: PDU outlet, only needed when APC_HOST is not None."""
 
 TESTER_NAME = 'Thread Open'
 """str: Who are you"""
@@ -73,14 +79,13 @@ TESTER_NAME = 'Thread Open'
 TESTER_REMARKS = 'OpenThread is great'
 """str: Any comments in the final PDF"""
 
-GOLDEN_DEVICE_TYPE = 'ARM'
-"""str: Golden device type"""
+GOLDEN_DEVICE_TYPE = 'OpenThread'
+"""str: Golden device type. Possible values are: `OpenThread`, `ARM`, `SiLabs` and `Freescale`."""
 
 GOLDEN_DEVICES = []
 """[str]: Golden devices list.
 
-It should be something like ['COM1', 'COM2'] on Windows
-"""
+It should be something like ['COM1', 'COM2'] on Windows and can be found on Windows Device Manager."""
 
 OUTPUT_PATH = '.\\output'
-"""str: Path to store results and logs"""
+"""str: Path to store results and logs, MUST be writable."""

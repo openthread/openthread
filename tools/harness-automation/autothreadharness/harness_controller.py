@@ -65,6 +65,7 @@ class HarnessController(object):
                                                 stdout=fout,
                                                 stderr=fout,
                                                 env=env)
+            time.sleep(2)
 
         if self.miniweb:
             logger.warning('Miniweb already started')
