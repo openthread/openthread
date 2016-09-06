@@ -32,7 +32,7 @@
 
 #include <stdbool.h>
 #include <stdint.h>
-#include <aon_rtc.h>
+#include <driverlib/aon_rtc.h>
 
 #include <platform/alarm.h>
 #include <platform/diag.h>

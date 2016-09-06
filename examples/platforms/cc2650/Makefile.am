@@ -39,10 +39,9 @@ libopenthread_cc2650_a_CPPFLAGS                       = \
     -I$(top_srcdir)/src/core                            \
     -I$(top_srcdir)/examples/platforms                  \
     -I$(top_srcdir)/examples/platforms/cc2650           \
-    -I$(top_srcdir)/examples/platforms/cc2650/cc26xxware \
-    -I$(top_srcdir)/examples/platforms/cc2650/cc26xxware/inc \
-    -I$(top_srcdir)/examples/platforms/cc2650/cc26xxware/driverlib \
-    -std=c99                                            \
+    -I$(top_srcdir)/third_party/cc26xxware              \
+    -I$(top_srcdir)/third_party/cc26xxware/inc          \
+    -I$(top_srcdir)/third_party/cc26xxware/driverlib    \
     $(NULL)
 
 libopenthread_cc2650_a_SOURCES                        = \
@@ -56,7 +55,7 @@ libopenthread_cc2650_a_SOURCES                        = \
     $(NULL)
 
 libopenthread_cc2650_a_DEPENDENCIES = \
-    $(top_srcdir)/examples/platforms/cc2650/cc26xxware/driverlib/bin/gcc/driverlib.a \
+    $(top_srcdir)/third_party/cc26xxware/driverlib/bin/gcc/driverlib.a \
     $(NULL)
     
 

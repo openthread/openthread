@@ -75,23 +75,23 @@ endif
 
 if OPENTHREAD_EXAMPLES_CC2650
 ot_cli_CPPFLAGS                                                       += \
-    -I$(top_srcdir)/examples/platforms/cc2650/cc26xxware                 \
-    -I$(top_srcdir)/examples/platforms/cc2650/cc26xxware/inc             \
-    -I$(top_srcdir)/examples/platforms/cc2650/cc26xxware/driverlib       \
+    -I$(top_srcdir)/third_party/cc26xxware                               \
+    -I$(top_srcdir)/third_party/cc26xxware/inc                           \
+    -I$(top_srcdir)/third_party/cc26xxware/driverlib                     \
     $(NULL)
 
 ot_cli_LDADD                                                          += \
     $(top_builddir)/examples/platforms/cc2650/libopenthread-cc2650.a     \
-    $(top_srcdir)/examples/platforms/cc2650/cc26xxware/driverlib/bin/gcc/driverlib.a \
+    $(top_srcdir)/third_party/cc26xxware/driverlib/bin/gcc/driverlib.a   \
     $(NULL)
 
 ot_cli_LDFLAGS                                                        += \
-    -T $(top_srcdir)/examples/platforms/cc2650/cc26xxware/linker_files/cc26x0f128.lds \
+    -T $(top_srcdir)/third_party/cc26xxware/linker_files/cc26x0f128.lds  \
     $(NULL)
 
 ot_cli_SOURCES                                                        += \
-    ../../platforms/cc2650/cc26xxware/startup_files/ccfg.c               \
-    ../../platforms/cc2650/cc26xxware/startup_files/startup_gcc.c        \
+    ../../../third_party/cc26xxware/startup_files/ccfg.c                 \
+    ../../../third_party/cc26xxware/startup_files/startup_gcc.c          \
     $(NULL)
 endif
 

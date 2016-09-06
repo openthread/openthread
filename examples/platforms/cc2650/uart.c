@@ -32,7 +32,7 @@
 
 #include <stddef.h>
 
-#include <uart.h>
+#include <driverlib/uart.h>
 #include <prcm.h>
 #include <ioc.h>
 #include <sys_ctrl.h>
