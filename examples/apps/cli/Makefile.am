@@ -82,6 +82,7 @@ ot_cli_CPPFLAGS                                                       += \
 
 ot_cli_LDADD                                                          += \
     $(top_builddir)/examples/platforms/cc2650/libopenthread-cc2650.a     \
+    $(top_srcdir)/examples/platforms/cc2650/cc26xxware/driverlib/bin/gcc/driverlib.a \
     $(NULL)
 
 ot_cli_LDFLAGS                                                        += \
