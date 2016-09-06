@@ -35,17 +35,16 @@
 #include <common/code_utils.hpp>
 #include <platform/radio.h>
 
-#include <prcm.h>
-#include <hw_prcm.h>
-#include <rfc.h>
-#include <osc.h>
-#include <rf_data_entry.h>
-#include <rf_mailbox.h>
-#include <rf_common_cmd.h>
-#include <rf_ieee_mailbox.h>
-#include <rf_ieee_cmd.h>
-#include <hw_ints.h>
-#include <chipinfo.h>
+#include <driverlib/prcm.h>
+#include <inc/hw_prcm.h>
+#include <driverlib/rfc.h>
+#include <driverlib/osc.h>
+#include <driverlib/rf_data_entry.h>
+#include <driverlib/rf_mailbox.h>
+#include <driverlib/rf_common_cmd.h>
+#include <driverlib/rf_ieee_mailbox.h>
+#include <driverlib/rf_ieee_cmd.h>
+#include <driverlib/chipinfo.h>
 
 /* return values from the setup and teardown functions */
 #define CC2650_CRC_BIT_MASK (1<<8)

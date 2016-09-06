@@ -33,9 +33,9 @@
 #include <stddef.h>
 
 #include <driverlib/uart.h>
-#include <prcm.h>
-#include <ioc.h>
-#include <sys_ctrl.h>
+#include <driverlib/prcm.h>
+#include <driverlib/ioc.h>
+#include <driverlib/sys_ctrl.h>
 
 #include <openthread-types.h>
 #include <common/code_utils.hpp>

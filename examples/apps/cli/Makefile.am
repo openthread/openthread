@@ -76,8 +76,6 @@ endif
 if OPENTHREAD_EXAMPLES_CC2650
 ot_cli_CPPFLAGS                                                       += \
     -I$(top_srcdir)/third_party/cc26xxware                               \
-    -I$(top_srcdir)/third_party/cc26xxware/inc                           \
-    -I$(top_srcdir)/third_party/cc26xxware/driverlib                     \
     $(NULL)
 
 ot_cli_LDADD                                                          += \
