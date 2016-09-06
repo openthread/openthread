@@ -45,6 +45,7 @@
 #include <platform/random.h>
 #include <platform/misc.h>
 #include <thread/thread_netif.hpp>
+#include <thread/thread_uris.hpp>
 #include <openthreadinstance.h>
 
 otInstance::otInstance(void) :
@@ -56,9 +57,10 @@ otInstance::otInstance(void) :
     mDiscoverCallbackContext(NULL),
     mEphemeralPort(Thread::Ip6::Udp::kDynamicPortMin),
     mIcmpHandlers(NULL),
+    mEchoSequence(1),
+    mEchoReplyHandler(NULL),
+    mEchoReplyContext(NULL),
     mIsEchoEnabled(true),
-    mNextId(1),
-    mEchoClients(NULL),
     mRoutes(NULL),
     mNetifListHead(NULL),
     mNextInterfaceId(1),
@@ -839,14 +841,14 @@ const otNetifAddress *otGetUnicastAddresses(otInstance *aInstance)
     return aInstance->mThreadNetif.GetUnicastAddresses();
 }
 
-ThreadError otAddUnicastAddress(otInstance *aInstance, otNetifAddress *address)
+ThreadError otAddUnicastAddress(otInstance *aInstance, const otNetifAddress *address)
 {
-    return aInstance->mThreadNetif.AddUnicastAddress(*static_cast<Ip6::NetifUnicastAddress *>(address));
+    return aInstance->mThreadNetif.AddExternalUnicastAddress(*static_cast<const Ip6::NetifUnicastAddress *>(address));
 }
 
-ThreadError otRemoveUnicastAddress(otInstance *aInstance, otNetifAddress *address)
+ThreadError otRemoveUnicastAddress(otInstance *aInstance, const otIp6Address *address)
 {
-    return aInstance->mThreadNetif.RemoveUnicastAddress(*static_cast<Ip6::NetifUnicastAddress *>(address));
+    return aInstance->mThreadNetif.RemoveExternalUnicastAddress(*static_cast<const Ip6::Address *>(address));
 }
 
 void otSetStateChangedCallback(otInstance *aInstance, otStateChangedCallback aCallback, void *aCallbackContext)
@@ -1094,7 +1096,7 @@ void otSetReceiveIp6DatagramCallback(otInstance *aInstance, otReceiveIp6Datagram
     Ip6::Ip6::SetReceiveDatagramCallback(aInstance, aCallback, aCallbackContext);
 }
 
-bool otGetReceiveIp6DatagramFilterEnabled(otInstance *aInstance)
+bool otIsReceiveIp6DatagramFilterEnabled(otInstance *aInstance)
 {
     return Ip6::Ip6::IsReceiveIp6FilterEnabled(aInstance);
 }
@@ -1255,6 +1257,28 @@ ThreadError otSetPendingDataset(otInstance *aInstance, otOperationalDataset *aDa
 
 exit:
     return error;
+}
+
+ThreadError otSendActiveGet(otInstance *aInstance, const uint8_t *aTlvTypes, uint8_t aLength)
+{
+    return aInstance->mThreadNetif.GetActiveDataset().SendGetRequest(aTlvTypes, aLength);
+}
+
+ThreadError otSendActiveSet(otInstance *aInstance, const otOperationalDataset *aDataset, const uint8_t *aTlvs,
+                            uint8_t aLength)
+{
+    return aInstance->mThreadNetif.GetActiveDataset().SendSetRequest(*aDataset, aTlvs, aLength);
+}
+
+ThreadError otSendPendingGet(otInstance *aInstance, const uint8_t *aTlvTypes, uint8_t aLength)
+{
+    return aInstance->mThreadNetif.GetPendingDataset().SendGetRequest(aTlvTypes, aLength);
+}
+
+ThreadError otSendPendingSet(otInstance *aInstance, const otOperationalDataset *aDataset, const uint8_t *aTlvs,
+                             uint8_t aLength)
+{
+    return aInstance->mThreadNetif.GetPendingDataset().SendSetRequest(*aDataset, aTlvs, aLength);
 }
 
 #ifdef __cplusplus

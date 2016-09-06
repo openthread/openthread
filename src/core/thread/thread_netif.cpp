@@ -81,7 +81,7 @@ ThreadError ThreadNetif::Up(void)
 {
     ThreadError error = kThreadError_None;
 
-    VerifyOrExit(!mIsUp, error = kThreadError_InvalidState);
+    VerifyOrExit(!mIsUp, error = kThreadError_Already);
 
     Netif::AddNetif();
     mMeshForwarder.Start();

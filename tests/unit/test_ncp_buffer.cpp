@@ -97,7 +97,7 @@ void DumpBuffer(const char *aTextMessage, uint8_t *aBuffer, uint16_t aBufferLeng
     {
         byte = *aBuffer++;
         printf("%02X ", byte);
-        charBuff[counter] = isprint(byte) ? byte : '.';
+        charBuff[counter] = isprint(byte) ? static_cast<char>(byte) : '.';
         counter++;
 
         if (counter == kBytesPerLine)

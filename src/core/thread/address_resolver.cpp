@@ -652,14 +652,16 @@ void AddressResolver::HandleTimer()
 
             if (mCache[i].mTimeout == 0)
             {
-                mCache[i].mFailures++;
                 mCache[i].mRetryTimeout =
                     static_cast<uint16_t>(kAddressQueryInitialRetryDelay * (1 << mCache[i].mFailures));
 
-                if (mCache[i].mRetryTimeout > kAddressQueryMaxRetryDelay)
+                if (mCache[i].mRetryTimeout < kAddressQueryMaxRetryDelay)
+                {
+                    mCache[i].mFailures++;
+                }
+                else
                 {
                     mCache[i].mRetryTimeout = kAddressQueryMaxRetryDelay;
-                    mCache[i].mFailures--;
                 }
 
                 mMeshForwarder.HandleResolved(mCache[i].mTarget, kThreadError_Drop);

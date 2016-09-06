@@ -59,6 +59,9 @@ public:
 
     Dataset &GetNetwork(void) { return mNetwork; }
 
+    ThreadError SendSetRequest(const otOperationalDataset &aDataset, const uint8_t *aTlvs, uint8_t aLength);
+    ThreadError SendGetRequest(const uint8_t *aTlvTypes, uint8_t aLength);
+
 protected:
     enum
     {
@@ -109,6 +112,7 @@ private:
     uint16_t       mCoapMessageId;
 
     const char *mUriSet;
+    const char *mUriGet;
 
     Coap::Server &mCoapServer;
 };

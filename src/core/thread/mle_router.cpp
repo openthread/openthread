@@ -1369,6 +1369,8 @@ ThreadError MleRouter::HandleAdvertisement(const Message &aMessage, const Ip6::M
 
     UpdateRoutes(route, routerId);
 
+    mNetif.GetNetworkDataLocal().SendServerDataNotification();
+
 exit:
     return error;
 }

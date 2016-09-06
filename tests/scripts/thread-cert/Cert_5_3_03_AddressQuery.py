@@ -138,7 +138,7 @@ class Cert_5_3_3_AddressQuery(unittest.TestCase):
             if addr[0:4] != 'fe80':
                 try:
                     self.nodes[ED2].ping(addr)
-                    self.assertFalse()
+                    self.fail()
                 except pexpect.TIMEOUT:
                     pass
 
@@ -149,7 +149,7 @@ class Cert_5_3_3_AddressQuery(unittest.TestCase):
             if addr[0:4] != 'fe80':
                 try:
                     self.nodes[BR].ping(addr)        
-                    self.assertFalse()
+                    self.fail()
                 except pexpect.TIMEOUT:
                     pass
 

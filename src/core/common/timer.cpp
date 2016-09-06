@@ -44,7 +44,7 @@ void TimerScheduler::Add(Timer &aTimer)
 {
     otInstance *aInstance = aTimer.mInstance;
 
-    VerifyOrExit(aTimer.mNext == NULL && aInstance->mTimerTail != &aTimer, ;);
+    Remove(aTimer);
 
     if (aInstance->mTimerHead == NULL)
     {
@@ -85,9 +85,6 @@ void TimerScheduler::Add(Timer &aTimer)
             aInstance->mTimerTail = &aTimer;
         }
     }
-
-exit:
-    return;
 }
 
 void TimerScheduler::Remove(Timer &aTimer)

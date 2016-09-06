@@ -105,16 +105,14 @@ const struct Command Interpreter::sCommands[] =
 #endif
 };
 
-static otNetifAddress sAutoAddresses[8];
-
 Interpreter::Interpreter(otInstance *aInstance):
-    sIcmpEcho(aInstance, &Interpreter::s_HandleEchoResponse, this),
     sLength(8),
     sCount(1),
     sInterval(1000),
     sPingTimer(aInstance, &Interpreter::s_HandlePingTimer, this),
     mInstance(aInstance)
 {
+    Ip6::Icmp::SetEchoReplyHandler(mInstance, &Interpreter::s_HandleEchoResponse, this);
     otSetStateChangedCallback(mInstance, &Interpreter::s_HandleNetifStateChanged, this);
 }
 
@@ -488,7 +486,7 @@ void Interpreter::ProcessDiscover(int argc, char *argv[])
     }
 
     SuccessOrExit(error = otDiscover(mInstance, scanChannels, 0, OT_PANID_BROADCAST,
-                                     &Interpreter::s_HandleActiveScanResult, NULL));
+                                     &Interpreter::s_HandleActiveScanResult, this));
     sServer->OutputFormat("| J | Network Name     | Extended PAN     | PAN  | MAC Address      | Ch | dBm | LQI |\r\n");
     sServer->OutputFormat("+---+------------------+------------------+------+------------------+----+-----+-----+\r\n");
 
@@ -604,14 +602,15 @@ exit:
 ThreadError Interpreter::ProcessIpAddrAdd(int argc, char *argv[])
 {
     ThreadError error;
+    otNetifAddress aAddress;
 
     VerifyOrExit(argc > 0, error = kThreadError_Parse);
 
-    SuccessOrExit(error = otIp6AddressFromString(argv[0], &sAddress.mAddress));
-    sAddress.mPrefixLength = 64;
-    sAddress.mPreferredLifetime = 0xffffffff;
-    sAddress.mValidLifetime = 0xffffffff;
-    error = otAddUnicastAddress(mInstance, &sAddress);
+    SuccessOrExit(error = otIp6AddressFromString(argv[0], &aAddress.mAddress));
+    aAddress.mPrefixLength = 64;
+    aAddress.mPreferredLifetime = 0xffffffff;
+    aAddress.mValidLifetime = 0xffffffff;
+    error = otAddUnicastAddress(mInstance, &aAddress);
 
 exit:
     return error;
@@ -625,8 +624,7 @@ ThreadError Interpreter::ProcessIpAddrDel(int argc, char *argv[])
     VerifyOrExit(argc > 0, error = kThreadError_Parse);
 
     SuccessOrExit(error = otIp6AddressFromString(argv[0], &address));
-    VerifyOrExit(otIsIp6AddressEqual(&address, &sAddress.mAddress), error = kThreadError_Parse);
-    error = otRemoveUnicastAddress(mInstance, &sAddress);
+    error = otRemoveUnicastAddress(mInstance, &address);
 
 exit:
     return error;
@@ -955,7 +953,7 @@ exit:
 
 void Interpreter::s_HandleEchoResponse(void *aContext, Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
-    reinterpret_cast<Interpreter *>(aContext)->HandleEchoResponse(aMessage, aMessageInfo);
+    static_cast<Interpreter *>(aContext)->HandleEchoResponse(aMessage, aMessageInfo);
 }
 
 void Interpreter::HandleEchoResponse(Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
@@ -995,9 +993,9 @@ void Interpreter::ProcessPing(int argc, char *argv[])
     VerifyOrExit(argc > 0, error = kThreadError_Parse);
     VerifyOrExit(!sPingTimer.IsRunning(), error = kThreadError_Busy);
 
-    memset(&sSockAddr, 0, sizeof(sSockAddr));
-    SuccessOrExit(error = sSockAddr.GetAddress().FromString(argv[0]));
-    sSockAddr.mScopeId = 1;
+    memset(&sMessageInfo, 0, sizeof(sMessageInfo));
+    SuccessOrExit(error = sMessageInfo.GetPeerAddr().FromString(argv[0]));
+    sMessageInfo.mInterfaceId = 1;
 
     sLength = 8;
     sCount = 1;
@@ -1039,16 +1037,28 @@ exit:
 
 void Interpreter::s_HandlePingTimer(void *aContext)
 {
-    reinterpret_cast<Interpreter *>(aContext)->HandlePingTimer();
+    static_cast<Interpreter *>(aContext)->HandlePingTimer();
 }
 
 void Interpreter::HandlePingTimer()
 {
+    ThreadError error = kThreadError_None;
     uint32_t timestamp = HostSwap32(Timer::GetNow());
+    Message *message;
 
-    memcpy(sEchoRequest, &timestamp, sizeof(timestamp));
-    sIcmpEcho.SendEchoRequest(mInstance, sSockAddr, sEchoRequest, sLength);
+    VerifyOrExit((message = Ip6::Icmp::NewMessage(mInstance, 0)) != NULL, error = kThreadError_NoBufs);
+    SuccessOrExit(error = message->Append(&timestamp, sizeof(timestamp)));
+    SuccessOrExit(error = message->SetLength(sLength));
+
+    SuccessOrExit(error = Ip6::Icmp::SendEchoRequest(*message, sMessageInfo));
     sCount--;
+
+exit:
+
+    if (error != kThreadError_None && message != NULL)
+    {
+        Message::Free(*message);
+    }
 
     if (sCount)
     {
@@ -1110,7 +1120,7 @@ exit:
 
 void Interpreter::s_HandleLinkPcapReceive(const RadioPacket *aFrame, void *aContext)
 {
-    reinterpret_cast<Interpreter *>(aContext)->HandleLinkPcapReceive(aFrame);
+    static_cast<Interpreter *>(aContext)->HandleLinkPcapReceive(aFrame);
 }
 
 void Interpreter::HandleLinkPcapReceive(const RadioPacket *aFrame)
@@ -1664,7 +1674,7 @@ void Interpreter::ProcessScan(int argc, char *argv[])
         scanChannels = 1 << value;
     }
 
-    SuccessOrExit(error = otActiveScan(mInstance, scanChannels, 0, &Interpreter::s_HandleActiveScanResult, NULL));
+    SuccessOrExit(error = otActiveScan(mInstance, scanChannels, 0, &Interpreter::s_HandleActiveScanResult, this));
     sServer->OutputFormat("| J | Network Name     | Extended PAN     | PAN  | MAC Address      | Ch | dBm | LQI |\r\n");
     sServer->OutputFormat("+---+------------------+------------------+------+------------------+----+-----+-----+\r\n");
 
@@ -1676,7 +1686,7 @@ exit:
 
 void Interpreter::s_HandleActiveScanResult(otActiveScanResult *aResult, void *aContext)
 {
-    reinterpret_cast<Interpreter *>(aContext)->HandleActiveScanResult(aResult);
+    static_cast<Interpreter *>(aContext)->HandleActiveScanResult(aResult);
 }
 
 void Interpreter::HandleActiveScanResult(otActiveScanResult *aResult)
@@ -1948,7 +1958,7 @@ exit:
 
 void Interpreter::s_HandleNetifStateChanged(uint32_t aFlags, void *aContext)
 {
-    reinterpret_cast<Interpreter *>(aContext)->HandleNetifStateChanged(aFlags);
+    static_cast<Interpreter *>(aContext)->HandleNetifStateChanged(aFlags);
 }
 
 void Interpreter::HandleNetifStateChanged(uint32_t aFlags)
@@ -1988,7 +1998,7 @@ void Interpreter::HandleNetifStateChanged(uint32_t aFlags)
 
         if (!found)
         {
-            otRemoveUnicastAddress(mInstance, address);
+            otRemoveUnicastAddress(mInstance, &address->mAddress);
             address->mValidLifetime = 0;
         }
     }

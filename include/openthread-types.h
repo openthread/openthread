@@ -50,7 +50,7 @@ extern "C" {
 typedef struct otInstance otInstance;
 
 // Size of the OpenThread instance structure (bytes)
-#define OT_INSTANCE_SIZE   (9600 + OPENTHREAD_CONFIG_NUM_MESSAGE_BUFFERS * OPENTHREAD_CONFIG_MESSAGE_BUFFER_SIZE)
+#define OT_INSTANCE_SIZE   (9800 + OPENTHREAD_CONFIG_NUM_MESSAGE_BUFFERS * OPENTHREAD_CONFIG_MESSAGE_BUFFER_SIZE)
 
 /**
  * This enumeration represents error codes used throughout OpenThread.
@@ -329,6 +329,30 @@ typedef struct otOperationalDataset
     bool              mIsPanIdSet : 1;             ///< TRUE if PAN ID is set, FALSE otherwise.
     bool              mIsChannelSet : 1;           ///< TRUE if Channel is set, FALSE otherwise.
 } otOperationalDataset;
+
+/**
+ * This enumeration represents meshcop TLV types.
+ *
+ */
+typedef enum otMeshcopTlvType
+{
+    OT_MESHCOP_TLV_CHANNEL            = 0,    ///< meshcop Channel TLV
+    OT_MESHCOP_TLV_PANID              = 1,    ///< meshcop Pan Id TLV
+    OT_MESHCOP_TLV_EXTPANID           = 2,    ///< meshcop Extended Pan Id TLV
+    OT_MESHCOP_TLV_NETWORKNAME        = 3,    ///< meshcop Network Name TLV
+    OT_MESHCOP_TLV_PSKC               = 4,    ///< meshcop PSKc TLV
+    OT_MESHCOP_TLV_MASTERKEY          = 5,    ///< meshcop Network Master Key TLV
+    OT_MESHCOP_TLV_LOCALPREFIX        = 7,    ///< meshcop Mesh Local Prefix TLV
+    OT_MESHCOP_TLV_SECURITYPOLICY     = 12,   ///< meshcop Security Policy TLV
+    OT_MESHCOP_TLV_GET                = 13,   ///< meshcop Get TLV
+    OT_MESHCOP_TLV_ACTIVETIMESTAMP    = 14,   ///< meshcop Active Timestamp TLV
+    OT_MESHCOP_TLV_STATE              = 16,   ///< meshcop State TLV
+    OT_MESHCOP_TLV_PENDINGTIMESTAMP   = 51,   ///< meshcop Pending Timestamp TLV
+    OT_MESHCOP_TLV_DELAYTIMER         = 52,   ///< meshcop Delay Timer TLV
+    OT_MESHCOP_TLV_CHANNELMASK        = 53,   ///< meshcop Channel Mask TLV
+    OT_MESHCOP_TLV_DISCOVERYREQUEST   = 128,  ///< meshcop Discovery Request TLV
+    OT_MESHCOP_TLV_DISCOVERYRESPONSE  = 129,  ///< meshcop Discovery Response TLV
+} otMeshcopTlvType;
 
 /**
  * This structure represents an MLE Link Mode configuration.

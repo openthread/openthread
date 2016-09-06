@@ -370,6 +370,7 @@ void Ip6::ProcessReceiveCallback(const Message &aMessage, const MessageInfo &mes
     VerifyOrExit((messageCopy = NewMessage(aMessage.GetInstance(), 0)) != NULL, error = kThreadError_NoBufs);
     SuccessOrExit(error = messageCopy->SetLength(aMessage.GetLength()));
     aMessage.CopyTo(0, 0, aMessage.GetLength(), *messageCopy);
+    messageCopy->SetLinkSecurityEnabled(aMessage.IsLinkSecurityEnabled());
 
     aMessage.GetInstance()->mReceiveIp6DatagramCallback(
         messageCopy, aMessage.GetInstance()->mReceiveIp6DatagramCallbackContext);

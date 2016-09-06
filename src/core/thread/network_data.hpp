@@ -108,14 +108,79 @@ public:
     /**
      * This method provides the next On Mesh prefix in the Thread Network Data.
      *
-     * @param[out]  aIterator  A pointer to the Network Data iterator context.
-     * @param[out]  aConfig    A pointer to where the On Mesh Prefix information will be placed.
+     * @param[inout]  aIterator  A pointer to the Network Data iterator context.
+     * @param[out]    aConfig    A pointer to where the On Mesh Prefix information will be placed.
      *
      * @retval kThreadError_None      Successfully found the next On Mesh prefix.
      * @retval kThreadError_NotFound  No subsequent On Mesh prefix exists in the Thread Network Data.
      *
      */
     ThreadError GetNextOnMeshPrefix(otNetworkDataIterator *aIterator, otBorderRouterConfig *aConfig);
+
+    /**
+     * This method provides the next On Mesh prefix in the Thread Network Data for a given RLOC16.
+     *
+     * @param[inout]  aIterator  A pointer to the Network Data iterator context.
+     * @param[in]     aRloc16    The RLOC16 value.
+     * @param[out]    aConfig    A pointer to where the On Mesh Prefix information will be placed.
+     *
+     * @retval kThreadError_None      Successfully found the next On Mesh prefix.
+     * @retval kThreadError_NotFound  No subsequent On Mesh prefix exists in the Thread Network Data.
+     *
+     */
+    ThreadError GetNextOnMeshPrefix(otNetworkDataIterator *aIterator, uint16_t aRloc16, otBorderRouterConfig *aConfig);
+
+    /**
+     * This method provides the next external route in the Thread Network Data.
+     *
+     * @param[inout]  aIterator  A pointer to the Network Data iterator context.
+     * @param[out]    aConfig    A pointer to where the external route information will be placed.
+     *
+     * @retval kThreadError_None      Successfully found the next external route.
+     * @retval kThreadError_NotFound  No subsequent external route exists in the Thread Network Data.
+     *
+     */
+    ThreadError GetNextExternalRoute(otNetworkDataIterator *aIterator, otExternalRouteConfig *aConfig);
+
+    /**
+     * This method provides the next external route in the Thread Network Data for a given RLOC16.
+     *
+     * @param[inout]  aIterator  A pointer to the Network Data iterator context.
+     * @param[in]     aRloc16    The RLOC16 value.
+     * @param[out]    aConfig    A pointer to where the external route information will be placed.
+     *
+     * @retval kThreadError_None      Successfully found the next external route.
+     * @retval kThreadError_NotFound  No subsequent external route exists in the Thread Network Data.
+     *
+     */
+    ThreadError GetNextExternalRoute(otNetworkDataIterator *aIterator, uint16_t aRloc16,
+                                     otExternalRouteConfig *aConfig);
+
+    /**
+     * This method indicates whether or not the Thread Network Data contains all of the on mesh prefix information
+     * in @p aCompare associated with @p aRloc16.
+     *
+     * @param[in]  aCompare  The Network Data to use for the query.
+     * @param[in]  aRloc16   The RLOC16 to consider.
+     *
+     * @returns TRUE if this object contains all on mesh prefix information in @p aCompare associated with @p aRloc16,
+     *          FALSE otherwise.
+     *
+     */
+    bool ContainsOnMeshPrefixes(NetworkData &aCompare, uint16_t aRloc16);
+
+    /**
+     * This method indicates whether or not the Thread Network Data contains all of the external route information
+     * in @p aCompare associated with @p aRloc16.
+     *
+     * @param[in]  aCompare  The Network Data to use for the query.
+     * @param[in]  aRloc16   The RLOC16 to consider.
+     *
+     * @returns TRUE if this object contains all external route information in @p aCompare associated with @p aRloc16,
+     *          FALSE otherwise.
+     *
+     */
+    bool ContainsExternalRoutes(NetworkData &aCompare, uint16_t aRloc16);
 
 protected:
     /**

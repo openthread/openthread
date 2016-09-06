@@ -56,6 +56,8 @@ const DatasetCommand Dataset::sCommands[] =
     { "extpanid", &ProcessExtPanId },
     { "masterkey", &ProcessMasterKey },
     { "meshlocalprefix", &ProcessMeshLocalPrefix },
+    { "mgmtgetcommand", &ProcessMgmtGetCommand },
+    { "mgmtsetcommand", &ProcessMgmtSetCommand },
     { "networkname", &ProcessNetworkName },
     { "panid", &ProcessPanId },
     { "pending", &ProcessPending },
@@ -366,10 +368,210 @@ ThreadError Dataset::ProcessPendingTimestamp(otInstance *aInstance, int argc, ch
     long value;
 
     VerifyOrExit(argc > 0, error = kThreadError_Parse);
-
     SuccessOrExit(error = Interpreter::ParseLong(argv[0], value));
     sDataset.mPendingTimestamp = static_cast<uint64_t>(value);
     sDataset.mIsPendingTimestampSet = true;
+
+    (void)aInstance;
+
+exit:
+    return error;
+}
+
+ThreadError Dataset::ProcessMgmtSetCommand(otInstance *aInstance, int argc, char *argv[])
+{
+    ThreadError error = kThreadError_None;
+    otOperationalDataset dataset;
+    uint8_t tlvs[32];
+    long value;
+    int length = 0;
+    otIp6Address prefix;
+
+    VerifyOrExit(argc > 0, error = kThreadError_Parse);
+
+    memset(&dataset, 0, sizeof(dataset));
+
+    for (uint8_t index = 1; index < argc; index++)
+    {
+        if (strcmp(argv[index], "activetimestamp") == 0)
+        {
+            VerifyOrExit(index < argc, error = kThreadError_Parse);
+            dataset.mIsActiveTimestampSet = true;
+            SuccessOrExit(error = Interpreter::ParseLong(argv[++index], value));
+            dataset.mActiveTimestamp = static_cast<uint64_t>(value);
+        }
+        else if (strcmp(argv[index], "pendingtimestamp") == 0)
+        {
+            VerifyOrExit(index < argc, error = kThreadError_Parse);
+            dataset.mIsPendingTimestampSet = true;
+            SuccessOrExit(error = Interpreter::ParseLong(argv[++index], value));
+            dataset.mPendingTimestamp = static_cast<uint64_t>(value);
+        }
+        else if (strcmp(argv[index], "masterkey") == 0)
+        {
+            VerifyOrExit(index < argc, error = kThreadError_Parse);
+            dataset.mIsMasterKeySet = true;
+            VerifyOrExit((length = Interpreter::Hex2Bin(argv[++index], dataset.mMasterKey.m8,
+                                                        sizeof(dataset.mMasterKey.m8))) == OT_MASTER_KEY_SIZE, error = kThreadError_Parse);
+            length = 0;
+        }
+        else if (strcmp(argv[index], "networkname") == 0)
+        {
+            VerifyOrExit(index < argc, error = kThreadError_Parse);
+            dataset.mIsNetworkNameSet = true;
+            VerifyOrExit((length = static_cast<int>(strlen(argv[++index]))) <= OT_NETWORK_NAME_MAX_SIZE,
+                         error = kThreadError_Parse);
+            memset(&dataset.mNetworkName, 0, sizeof(sDataset.mNetworkName));
+            memcpy(dataset.mNetworkName.m8, argv[0], static_cast<size_t>(length));
+            length = 0;
+        }
+        else if (strcmp(argv[index], "extpanid") == 0)
+        {
+            VerifyOrExit(index < argc, error = kThreadError_Parse);
+            dataset.mIsExtendedPanIdSet = true;
+            VerifyOrExit(Interpreter::Hex2Bin(argv[++index], dataset.mExtendedPanId.m8,
+                                              sizeof(dataset.mExtendedPanId.m8)) >= 0, error = kThreadError_Parse);
+        }
+        else if (strcmp(argv[index], "localprefix") == 0)
+        {
+            VerifyOrExit(index < argc, error = kThreadError_Parse);
+            dataset.mIsMeshLocalPrefixSet = true;
+            SuccessOrExit(error = otIp6AddressFromString(argv[++index], &prefix));
+            memcpy(dataset.mMeshLocalPrefix.m8, prefix.mFields.m8, sizeof(dataset.mMeshLocalPrefix.m8));
+        }
+        else if (strcmp(argv[index], "delaytimer") == 0)
+        {
+            VerifyOrExit(index < argc, error = kThreadError_Parse);
+            dataset.mIsDelaySet = true;
+            SuccessOrExit(error = Interpreter::ParseLong(argv[++index], value));
+            dataset.mDelay = static_cast<uint32_t>(value);
+        }
+        else if (strcmp(argv[index], "panid") == 0)
+        {
+            VerifyOrExit(index < argc, error = kThreadError_Parse);
+            dataset.mIsPanIdSet = true;
+            SuccessOrExit(error = Interpreter::ParseLong(argv[++index], value));
+            dataset.mPanId = static_cast<otPanId>(value);
+        }
+        else if (strcmp(argv[index], "channel") == 0)
+        {
+            VerifyOrExit(index < argc, error = kThreadError_Parse);
+            dataset.mIsChannelSet = true;
+            SuccessOrExit(error = Interpreter::ParseLong(argv[++index], value));
+            dataset.mChannel = static_cast<uint16_t>(value);
+        }
+        else if (strcmp(argv[index], "binary") == 0)
+        {
+            VerifyOrExit((index + 1) < argc, error = kThreadError_Parse);
+            length = static_cast<int>((strlen(argv[++index]) + 1) / 2);
+            VerifyOrExit(static_cast<size_t>(length) <= sizeof(tlvs), error = kThreadError_NoBufs);
+            VerifyOrExit(Interpreter::Hex2Bin(argv[index], tlvs, static_cast<uint16_t>(length)) >= 0,
+                         error = kThreadError_Parse);
+        }
+        else
+        {
+            ExitNow(error = kThreadError_Parse);
+        }
+    }
+
+    if (strcmp(argv[0], "active") == 0)
+    {
+        SuccessOrExit(error = otSendActiveSet(aInstance, &dataset, tlvs, static_cast<uint8_t>(length)));
+    }
+    else if (strcmp(argv[0], "pending") == 0)
+    {
+        SuccessOrExit(error = otSendPendingSet(aInstance, &dataset, tlvs, static_cast<uint8_t>(length)));
+    }
+    else
+    {
+        ExitNow(error = kThreadError_Parse);
+    }
+
+    (void)aInstance;
+
+exit:
+    return error;
+}
+
+ThreadError Dataset::ProcessMgmtGetCommand(otInstance *aInstance, int argc, char *argv[])
+{
+    ThreadError error = kThreadError_None;
+    otOperationalDataset dataset;
+    uint8_t tlvs[32];
+    long value;
+    int length = 0;
+
+    VerifyOrExit(argc > 0, error = kThreadError_Parse);
+
+    memset(&dataset, 0, sizeof(dataset));
+
+    for (uint8_t index = 1; index < argc; index++)
+    {
+        VerifyOrExit(static_cast<size_t>(length) < sizeof(tlvs), error = kThreadError_NoBufs);
+
+        if (strcmp(argv[index], "activetimestamp") == 0)
+        {
+            tlvs[length++] = OT_MESHCOP_TLV_ACTIVETIMESTAMP;
+        }
+        else if (strcmp(argv[index], "pendingtimestamp") == 0)
+        {
+            tlvs[length++] = OT_MESHCOP_TLV_PENDINGTIMESTAMP;
+        }
+        else if (strcmp(argv[index], "masterkey") == 0)
+        {
+            tlvs[length++] = OT_MESHCOP_TLV_MASTERKEY;
+        }
+        else if (strcmp(argv[index], "networkname") == 0)
+        {
+            tlvs[length++] = OT_MESHCOP_TLV_NETWORKNAME;
+        }
+        else if (strcmp(argv[index], "extpanid") == 0)
+        {
+            tlvs[length++] = OT_MESHCOP_TLV_EXTPANID;
+        }
+        else if (strcmp(argv[index], "localprefix") == 0)
+        {
+            tlvs[length++] = OT_MESHCOP_TLV_LOCALPREFIX;
+        }
+        else if (strcmp(argv[index], "delaytimer") == 0)
+        {
+            tlvs[length++] = OT_MESHCOP_TLV_DELAYTIMER;
+        }
+        else if (strcmp(argv[index], "panid") == 0)
+        {
+            tlvs[length++] = OT_MESHCOP_TLV_PANID;
+        }
+        else if (strcmp(argv[index], "channel") == 0)
+        {
+            tlvs[length++] = OT_MESHCOP_TLV_CHANNEL;
+        }
+        else if (strcmp(argv[index], "binary") == 0)
+        {
+            VerifyOrExit((index + 1) < argc, error = kThreadError_Parse);
+            value = (strlen(argv[++index]) + 1) / 2;
+            VerifyOrExit(static_cast<size_t>(value) <= (sizeof(tlvs) - static_cast<size_t>(length)), error = kThreadError_NoBufs);
+            VerifyOrExit(Interpreter::Hex2Bin(argv[index], tlvs + length, static_cast<uint16_t>(value)) >= 0,
+                         error = kThreadError_Parse);
+            length += value;
+        }
+        else
+        {
+            ExitNow(error = kThreadError_Parse);
+        }
+    }
+
+    if (strcmp(argv[0], "active") == 0)
+    {
+        SuccessOrExit(error = otSendActiveGet(aInstance, tlvs, static_cast<uint8_t>(length)));
+    }
+    else if (strcmp(argv[0], "pending") == 0)
+    {
+        SuccessOrExit(error = otSendPendingGet(aInstance, tlvs, static_cast<uint8_t>(length)));
+    }
+    else
+    {
+        ExitNow(error = kThreadError_Parse);
+    }
 
     (void)aInstance;
 

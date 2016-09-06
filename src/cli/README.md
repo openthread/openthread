@@ -14,6 +14,7 @@ OpenThread test scripts use the CLI to execute test cases.
 * [childtimeout](#childtimeout)
 * [contextreusedelay](#contextreusedelay)
 * [counter](#counter)
+* [dataset](#dataset)
 * [discover](#discover)
 * [eidcache](#eidcache)
 * [extaddr](#extaddr)
@@ -253,6 +254,276 @@ RxTotal: 11
     RxErrSec: 0
     RxErrFcs: 0
     RxErrOther: 0
+```
+
+### dataset help
+
+Print meshcop dataset help menu.
+
+```bash
+> dataset help
+help
+active
+activetimestamp
+channel
+clear
+commit
+delay
+extpanid
+masterkey
+meshlocalprefix
+mgmtgetcommand
+mgmtsetcommand
+networkname
+panid
+pending
+pendingtimestamp
+userdata
+Done
+```
+
+### dataset active
+
+Print meshcop active operational dataset.
+
+```bash
+> dataset active
+Active Timestamp: 0
+Done
+```
+
+### dataset activetimestamp
+
+Set getting active timestamp flag.
+
+```bash
+> dataset activestamp
+Done
+```
+
+### dataset activetimestamp \[activetimestamp\]
+
+Set active timestamp.
+
+```bash
+> dataset activestamp 123456789
+Done
+```
+
+### dataset channel
+
+Set getting channel flag.
+
+```bash
+> dataset channel
+Done
+```
+
+### dataset channel \[channel\]
+
+Set channel.
+
+```bash
+> dataset channel 12
+Done
+```
+
+### dataset clear
+
+Reset operational dataset buffer.
+
+```bash
+> dataset clear
+Done
+```
+
+### dataset commit \[commit\]
+
+Commit operational dataset buffer to active/pending operational dataset.
+
+```bash
+> dataset commit active
+Done
+```
+
+### dataset delay
+
+Set getting delay timer value flag.
+
+```bash
+> dataset delay
+Done
+```
+
+### dataset delay \[delay\]
+
+Set delay timer value.
+
+```bash
+> dataset delay 1000
+Done
+```
+
+### dataset extpanid
+
+Set getting extended panid flag.
+
+```bash
+> dataset extpanid
+Done
+```
+
+### dataset extpanid \[extpanid\]
+
+Set extended panid.
+
+```bash
+> dataset extpanid 000db80123456789
+Done
+```
+
+### dataset masterkey
+
+Set getting master key flag.
+
+```bash
+> dataset masterkey
+Done
+```
+
+### dataset masterkey \[masterkey\]
+
+Set master key.
+
+```bash
+> dataset master 1234567890123456
+Done
+```
+
+### dataset meshlocalprefix
+
+Set getting mesh local prefix flag.
+
+```bash
+> dataset meshlocalprefix
+Done
+```
+
+### dataset meshlocalprefix fd00:db8::
+
+Set mesh local prefix.
+
+```bash
+> dataset meshlocalprefix fd00:db8::
+Done
+```
+
+### dataset mgmtgetcommand active \[TLVs list\] \[binary\]
+
+Send MGMT_ACTIVE_GET.
+
+```bash
+> dataset mgmtgetcommand active activetimestamp 123 binary 0001
+Done
+```
+
+### dataset mgmtsetcommand active \[TLV Types list\] \[binary\]
+
+Send MGMT_ACTIVE_SET.
+
+```bash
+> dataset mgmtsetcommand active activetimestamp binary 820155
+Done
+```
+
+### dataset mgmtgetcommand pending \[TLVs list\] \[binary\]
+
+Send MGMT_PENDING_GET.
+
+```bash
+> dataset mgmtgetcommand pending activetimestamp binary 0001
+Done
+```
+
+### dataset mgmtsetcommand pending \[TLV Types list\] \[binary\]
+
+Send MGMT_PENDING_SET.
+
+```bash
+> dataset mgmtsetcommand pending activetimestamp binary 820155
+Done
+```
+
+### dataset networkname
+
+Set getting network name flag.
+
+```bash
+> dataset networkname
+Done
+```
+
+### dataset networkname \[networkname\]
+
+Set network name.
+
+```bash
+> dataset networkname openthread
+Done
+```
+
+### dataset panid
+
+Set getting panid flag.
+
+```bash
+> dataset panid
+Done
+```
+
+### dataset panid \[panid\]
+
+Set panid.
+
+```bash
+> dataset panid 0x1234
+Done
+```
+
+### dataset pending
+
+Print meshcop pending operational dataset.
+
+```bash
+> dataset pending
+Done
+```
+
+### dataset pendingtimestamp
+
+Set getting pending timestamp flag.
+
+```bash
+> dataset pendingtimestamp
+Done
+```
+
+### dataset pendingtimestamp \[pendingtimestamp\]
+
+Set pending timestamp.
+
+```bash
+> dataset pendingtimestamp 123456789
+Done
+```
+
+### dataset userdata \[size\] \[data\]
+
+Set user specific data for the command.
+
+```bash
+> dataset userdata 3 820155
+Done
 ```
 
 ### discover \[channel\]

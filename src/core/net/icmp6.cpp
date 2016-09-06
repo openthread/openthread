@@ -46,50 +46,9 @@ using Thread::Encoding::BigEndian::HostSwap16;
 namespace Thread {
 namespace Ip6 {
 
-IcmpEcho::IcmpEcho(otInstance *aInstance, EchoReplyHandler aHandler, void *aContext)
+Message *Icmp::NewMessage(otInstance *aInstance, uint16_t aReserved)
 {
-    mHandler = aHandler;
-    mContext = aContext;
-    mId = aInstance->mNextId++;
-    mSeq = 0;
-    mNext = aInstance->mEchoClients;
-    aInstance->mEchoClients = this;
-}
-
-ThreadError IcmpEcho::SendEchoRequest(otInstance *aInstance, const SockAddr &aDestination,
-                                      const void *aPayload, uint16_t aPayloadLength)
-{
-    ThreadError error = kThreadError_None;
-    MessageInfo messageInfo;
-    Message *message = NULL;
-    IcmpHeader icmp6Header;
-
-    VerifyOrExit((message = Ip6::NewMessage(aInstance, 0)) != NULL, error = kThreadError_NoBufs);
-    SuccessOrExit(error = message->SetLength(sizeof(icmp6Header) + aPayloadLength));
-
-    message->Write(sizeof(icmp6Header), aPayloadLength, aPayload);
-
-    icmp6Header.Init();
-    icmp6Header.SetType(IcmpHeader::kTypeEchoRequest);
-    icmp6Header.SetId(mId);
-    icmp6Header.SetSequence(mSeq++);
-    message->Write(0, sizeof(icmp6Header), &icmp6Header);
-
-    memset(&messageInfo, 0, sizeof(messageInfo));
-    messageInfo.GetPeerAddr() = aDestination.GetAddress();
-    messageInfo.mInterfaceId = aDestination.mScopeId;
-
-    SuccessOrExit(error = Ip6::SendDatagram(*message, messageInfo, kProtoIcmp6));
-    otLogInfoIcmp("Sent echo request\n");
-
-exit:
-
-    if (error != kThreadError_None && message != NULL)
-    {
-        Message::Free(*message);
-    }
-
-    return error;
+    return Ip6::NewMessage(aInstance, sizeof(IcmpHeader) + aReserved);
 }
 
 ThreadError Icmp::RegisterCallbacks(otInstance *aInstance, IcmpHandler &aHandler)
@@ -106,6 +65,37 @@ ThreadError Icmp::RegisterCallbacks(otInstance *aInstance, IcmpHandler &aHandler
 
     aHandler.mNext = aInstance->mIcmpHandlers;
     aInstance->mIcmpHandlers = &aHandler;
+
+exit:
+    return error;
+}
+
+void Icmp::SetEchoReplyHandler(otInstance *aInstance, EchoReplyHandler aHandler, void *aContext)
+{
+    aInstance->mEchoReplyHandler = aHandler;
+    aInstance->mEchoReplyContext = aContext;
+}
+
+ThreadError Icmp::SendEchoRequest(Message &aMessage, const MessageInfo &aMessageInfo)
+{
+    ThreadError error = kThreadError_None;
+    MessageInfo messageInfoLocal;
+    IcmpHeader icmpHeader;
+
+    otInstance *aInstance = aMessage.GetInstance();
+
+    messageInfoLocal = aMessageInfo;
+
+    icmpHeader.Init();
+    icmpHeader.SetType(IcmpHeader::kTypeEchoRequest);
+    icmpHeader.SetId(1);
+    icmpHeader.SetSequence(aInstance->mEchoSequence++);
+
+    SuccessOrExit(error = aMessage.Prepend(&icmpHeader, sizeof(icmpHeader)));
+    aMessage.SetOffset(0);
+    SuccessOrExit(error = Ip6::SendDatagram(aMessage, messageInfoLocal, kProtoIcmp6));
+
+    otLogInfoIcmp("Sent echo request\n");
 
 exit:
     return error;
@@ -171,7 +161,7 @@ ThreadError Icmp::HandleMessage(Message &aMessage, MessageInfo &aMessageInfo)
         return HandleEchoRequest(aMessage, aMessageInfo);
 
     case IcmpHeader::kTypeEchoReply:
-        return HandleEchoReply(aMessage, aMessageInfo, icmp6Header);
+        return HandleEchoReply(aMessage, aMessageInfo);
 
     case IcmpHeader::kTypeDstUnreach:
         return HandleDstUnreach(aMessage, aMessageInfo, icmp6Header);
@@ -246,20 +236,13 @@ exit:
     return error;
 }
 
-ThreadError Icmp::HandleEchoReply(Message &aMessage, const MessageInfo &aMessageInfo,
-                                  const IcmpHeader &aIcmpHeader)
+ThreadError Icmp::HandleEchoReply(Message &aMessage, const MessageInfo &aMessageInfo)
 {
     otInstance *aInstance = aMessage.GetInstance();
 
-    VerifyOrExit(aInstance->mIsEchoEnabled, ;);
+    VerifyOrExit(aInstance->mIsEchoEnabled && aInstance->mEchoReplyHandler, ;);
 
-    for (IcmpEcho *client = aInstance->mEchoClients; client; client = client->mNext)
-    {
-        if (client->mId == aIcmpHeader.GetId())
-        {
-            client->HandleEchoReply(aMessage, aMessageInfo);
-        }
-    }
+    aInstance->mEchoReplyHandler(aInstance->mEchoReplyContext, aMessage, aMessageInfo);
 
 exit:
     return kThreadError_None;

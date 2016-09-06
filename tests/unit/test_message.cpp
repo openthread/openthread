@@ -46,7 +46,7 @@ void TestMessage(void)
 
     for (unsigned i = 0; i < sizeof(writeBuffer); i++)
     {
-        writeBuffer[i] = random();
+        writeBuffer[i] = static_cast<uint8_t>(random());
     }
 
     VerifyOrQuit((message = Thread::Message::New(&sContext, Thread::Message::kTypeIp6, 0)) != NULL,

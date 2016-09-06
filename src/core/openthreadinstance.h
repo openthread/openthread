@@ -75,10 +75,12 @@ typedef struct otInstance
 
     uint16_t mEphemeralPort;
 
-    Thread::Ip6::IcmpHandler *mIcmpHandlers;
+    Thread::Ip6::IcmpHandler  *mIcmpHandlers;
+
+    uint16_t mEchoSequence;
+    Thread::Ip6::Icmp::EchoReplyHandler mEchoReplyHandler;
+    void *mEchoReplyContext;
     bool mIsEchoEnabled;
-    uint16_t mNextId;
-    Thread::Ip6::IcmpEcho *mEchoClients;
 
     Thread::Ip6::Route *mRoutes;
 
