@@ -100,7 +100,7 @@ ThreadError KeyManager::ComputeKey(uint32_t aKeySequence, uint8_t *aKey)
     return kThreadError_None;
 }
 
-uint32_t KeyManager::GetCurrentKeySequence() const
+uint32_t KeyManager::GetCurrentKeySequence(void) const
 {
     return mKeySequence;
 }
@@ -119,12 +119,12 @@ void KeyManager::SetCurrentKeySequence(uint32_t aKeySequence)
     }
 }
 
-const uint8_t *KeyManager::GetCurrentMacKey() const
+const uint8_t *KeyManager::GetCurrentMacKey(void) const
 {
     return mKey + 16;
 }
 
-const uint8_t *KeyManager::GetCurrentMleKey() const
+const uint8_t *KeyManager::GetCurrentMleKey(void) const
 {
     return mKey;
 }
@@ -141,22 +141,22 @@ const uint8_t *KeyManager::GetTemporaryMleKey(uint32_t aKeySequence)
     return mTemporaryKey;
 }
 
-uint32_t KeyManager::GetMacFrameCounter() const
+uint32_t KeyManager::GetMacFrameCounter(void) const
 {
     return mMacFrameCounter;
 }
 
-void KeyManager::IncrementMacFrameCounter()
+void KeyManager::IncrementMacFrameCounter(void)
 {
     mMacFrameCounter++;
 }
 
-uint32_t KeyManager::GetMleFrameCounter() const
+uint32_t KeyManager::GetMleFrameCounter(void) const
 {
     return mMleFrameCounter;
 }
 
-void KeyManager::IncrementMleFrameCounter()
+void KeyManager::IncrementMleFrameCounter(void)
 {
     mMleFrameCounter++;
 }
