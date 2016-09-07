@@ -312,6 +312,8 @@ ThreadError MleRouter::HandleChildStart(otMleAttachFilter aFilter)
 
     if (mDeviceMode & ModeTlv::kModeFFD)
     {
+        SendAdvertisement();
+
         advertiseDelay = Timer::SecToMsec(kReedAdvertiseInterval +
                                           (otPlatRandomGet() % kReedAdvertiseJitter));
         mAdvertiseTimer.Start(advertiseDelay);
