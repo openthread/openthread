@@ -28,60 +28,96 @@
 
 /**
  * @file
- *   This file implements a pseudo-random number generator.
+ *   This file implements a random number generator.
  *
- * @warning
- *   This implementation is not a true random number generator and does @em satisfy the Thread requirements.
  */
 
 #include <openthread-types.h>
 
 #include <common/code_utils.hpp>
+#include <platform/radio.h>
 #include <platform/random.h>
 #include "platform-cc2538.h"
 
-static uint32_t s_state = 1;
+static void generateRandom(uint16_t aInputLength, uint8_t *aOutput, uint16_t *aOutputLength)
+{
+    HWREG(SOC_ADC_ADCCON1) &= ~(SOC_ADC_ADCCON1_RCTRL1 | SOC_ADC_ADCCON1_RCTRL0);
+    HWREG(SYS_CTRL_RCGCRFC) = SYS_CTRL_RCGCRFC_RFC0;
+
+    while (HWREG(SYS_CTRL_RCGCRFC) != SYS_CTRL_RCGCRFC_RFC0);
+
+    HWREG(RFCORE_XREG_FRMCTRL0) = RFCORE_XREG_FRMCTRL0_INFINITY_RX;
+    HWREG(RFCORE_SFR_RFST) = RFCORE_SFR_RFST_INSTR_RXON;
+
+    while (!HWREG(RFCORE_XREG_RSSISTAT) & RFCORE_XREG_RSSISTAT_RSSI_VALID);
+
+    for (uint16_t index = 0; index < aInputLength; index++)
+    {
+        aOutput[index] = 0;
+
+        for (uint8_t offset = 0; offset < 8 * sizeof(uint8_t); offset++)
+        {
+            aOutput[index] <<= 1;
+            aOutput[index] |= (HWREG(RFCORE_XREG_RFRND) & RFCORE_XREG_RFRND_IRND);
+        }
+    }
+
+    HWREG(RFCORE_SFR_RFST) = RFCORE_SFR_RFST_INSTR_RFOFF;
+
+    if (aOutputLength)
+    {
+        *aOutputLength = aInputLength;
+    }
+}
 
 void cc2538RandomInit(void)
 {
-    // use Extended Identifier portion of IEEE EUI-64 as the seed
-    s_state = HWREG(IEEE_EUI64 + 4);
+    uint16_t seed = 0;
+
+    while (seed == 0x0000 || seed == 0x8003)
+    {
+        generateRandom(sizeof(seed), (uint8_t *)&seed, 0);
+    }
+
+    HWREG(SOC_ADC_RNDL) = (seed >> 8) & 0xff;
+    HWREG(SOC_ADC_RNDL) = seed & 0xff;
 }
 
 uint32_t otPlatRandomGet(void)
 {
-    uint32_t mlcg, p, q;
-    uint64_t tmpstate;
+    uint32_t random = 0;
 
-    tmpstate = (uint64_t)33614 * (uint64_t)s_state;
-    q = tmpstate & 0xffffffff;
-    q = q >> 1;
-    p = tmpstate >> 32;
-    mlcg = p + q;
+    HWREG(SOC_ADC_ADCCON1) |= SOC_ADC_ADCCON1_RCTRL0;
+    random = HWREG(SOC_ADC_RNDL) | (HWREG(SOC_ADC_RNDH) << 8);
 
-    if (mlcg & 0x80000000)
-    {
-        mlcg &= 0x7fffffff;
-        mlcg++;
-    }
+    HWREG(SOC_ADC_ADCCON1) |= SOC_ADC_ADCCON1_RCTRL0;
+    random |= ((HWREG(SOC_ADC_RNDL) | (HWREG(SOC_ADC_RNDH) << 8)) << 16);
 
-    s_state = mlcg;
-
-    return mlcg;
+    return random;
 }
 
-ThreadError otPlatSecureRandomGet(uint16_t aInputLength, uint8_t *aOutput, uint16_t *aOutputLength)
+ThreadError otPlatRandomSecureGet(uint16_t aInputLength, uint8_t *aOutput, uint16_t *aOutputLength)
 {
     ThreadError error = kThreadError_None;
+    uint8_t channel = 0;
 
     VerifyOrExit(aOutput && aOutputLength, error = kThreadError_InvalidArgs);
 
-    for (uint16_t length = 0; length < aInputLength; length++)
+    if (otPlatRadioIsEnabled())
     {
-        aOutput[length] = (uint8_t)otPlatRandomGet();
+        channel = 11 + (HWREG(RFCORE_XREG_FREQCTRL) - 11) / 5;
+        otPlatRadioSleep();
+        otPlatRadioDisable();
     }
 
-    *aOutputLength = aInputLength;
+    generateRandom(aInputLength, aOutput, aOutputLength);
+
+    if (channel)
+    {
+        cc2538RadioInit();
+        otPlatRadioEnable();
+        otPlatRadioReceive(channel);
+    }
 
 exit:
     return error;

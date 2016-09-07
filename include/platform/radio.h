@@ -202,6 +202,14 @@ ThreadError otPlatRadioEnable(void);
 ThreadError otPlatRadioDisable(void);
 
 /**
+ * Check whether radio is enabled or not.
+ *
+ * @retval ::true   radio is enabled.
+ * @retval ::false  radio is disabled.
+ */
+bool otPlatRadioIsEnabled(void);
+
+/**
  * Transition the radio from Receive to Sleep.
  * Turn off the radio.
  *
