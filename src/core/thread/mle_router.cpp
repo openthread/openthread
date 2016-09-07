@@ -1345,6 +1345,7 @@ ThreadError MleRouter::HandleAdvertisement(const Message &aMessage, const Ip6::M
                     {
                         mRouters[GetLeaderId()].mNextHop = kMaxRouterId;
                     }
+
                     break;
                 }
             }
