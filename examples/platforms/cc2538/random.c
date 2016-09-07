@@ -55,13 +55,11 @@ static void generateRandom(uint16_t aInputLength, uint8_t *aOutput, uint16_t *aO
     {
         aOutput[index] = 0;
 
-        for (uint8_t offset = 0; offset < 7; offset++)
+        for (uint8_t offset = 0; offset < 8 * sizeof(uint8_t); offset++)
         {
-            aOutput[index] |= (HWREG(RFCORE_XREG_RFRND) & RFCORE_XREG_RFRND_IRND);
             aOutput[index] <<= 1;
+            aOutput[index] |= (HWREG(RFCORE_XREG_RFRND) & RFCORE_XREG_RFRND_IRND);
         }
-
-        aOutput[index] |= (HWREG(RFCORE_XREG_RFRND) & RFCORE_XREG_RFRND_IRND);
     }
 
     HWREG(RFCORE_SFR_RFST) = RFCORE_SFR_RFST_INSTR_RFOFF;
