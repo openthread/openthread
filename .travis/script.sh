@@ -42,16 +42,9 @@ set -x
     make pretty-check || die
 }
 
-[ $BUILD_TARGET != posix-distcheck ] || {
-    make -f examples/Makefile-posix distcheck || die
-}
-
-[ $BUILD_TARGET != posix ] || {
-    make -f examples/Makefile-posix || die
-}
-
-[ $BUILD_TARGET != posix-32-bit ] || {
-    CFLAGS=-m32 CXXFLAGS=-m32 LDFLAGS=-m32 make -f examples/Makefile-posix || die
+[ $BUILD_TARGET != scan-build ] || {
+    ./configure --with-examples=posix --enable-cli
+    scan-build --status-bugs -v make
 }
 
 [ $BUILD_TARGET != cc2538 ] || {
@@ -61,7 +54,18 @@ set -x
     arm-none-eabi-size  output/bin/arm-none-eabi-ot-ncp || die
 }
 
-[ $BUILD_TARGET != scan-build ] || {
-    ./configure --with-examples=posix --enable-cli
-    scan-build --status-bugs -v make
+[ $BUILD_TARGET != posix ] || {
+    make -f examples/Makefile-posix || die
+}
+
+[ $BUILD_TARGET != posix-distcheck ] || {
+    BuildJobs=10 make -f examples/Makefile-posix distcheck || die
+}
+
+[ $BUILD_TARGET != posix-32-bit ] || {
+    CFLAGS=-m32 CXXFLAGS=-m32 LDFLAGS=-m32 BuildJobs=10 make -f examples/Makefile-posix check || die
+}
+
+[ $BUILD_TARGET != posix-ncp ] || {
+    NODE_TYPE=ncp-sim BuildJobs=10 make -f examples/Makefile-posix check || die
 }
