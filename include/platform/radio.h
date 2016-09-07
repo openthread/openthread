@@ -120,7 +120,7 @@ typedef enum PhyState
  * The following are valid radio state transitions:
  *
  *                                    (Radio ON)
- *  +----------+  Enable()  +-------+  Receive() +---------+   Trasnmit()  +----------+
+ *  +----------+  Enable()  +-------+  Receive() +---------+   Transmit()  +----------+
  *  |          |----------->|       |----------->|         |-------------->|          |
  *  | Disabled |            | Sleep |            | Receive |               | Transmit |
  *  |          |<-----------|       |<-----------|         |<--------------|          |
@@ -240,7 +240,7 @@ ThreadError otPlatRadioReceive(uint8_t aChannel);
 extern void otPlatRadioReceiveDone(RadioPacket *aPacket, ThreadError aError);
 
 /**
- * The radio tranitions from Transmit to Receive.
+ * The radio transitions from Transmit to Receive.
  * This method returns a pointer to the transmit buffer.
  *
  * The caller forms the IEEE 802.15.4 frame in this buffer then calls otPlatRadioTransmit() to request transmission.

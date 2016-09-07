@@ -29,7 +29,7 @@
 /**
  * @file
  * @brief
- *   This file includes platform abstractions for miscelaneous behaviors.
+ *   This file includes platform abstractions for miscellaneous behaviors.
  */
 
 #ifndef OT_PLATFORM_MISC_H

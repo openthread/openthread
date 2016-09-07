@@ -415,7 +415,7 @@ typedef struct otIp6Prefix
     uint8_t       mLength;  ///< The IPv6 prefix length.
 } otIp6Prefix;
 
-#define OT_NETWORK_DATA_ITERATOR_INIT  0  ///< Initializeer for otNetworkDataIterator.
+#define OT_NETWORK_DATA_ITERATOR_INIT  0  ///< Initializer for otNetworkDataIterator.
 
 typedef uint8_t otNetworkDataIterator;  ///< Used to iterate through Network Data information.
 
@@ -524,7 +524,7 @@ typedef struct otMacWhitelistEntry
 {
     otExtAddress mExtAddress;       ///< IEEE 802.15.4 Extended Address
     int8_t       mRssi;             ///< RSSI value
-    bool         mValid : 1;        ///< Indicates whether or not the whitelist entry is vaild
+    bool         mValid : 1;        ///< Indicates whether or not the whitelist entry is valid
     bool         mFixedRssi : 1;    ///< Indicates whether or not the RSSI value is fixed.
 } otMacWhitelistEntry;
 
@@ -535,7 +535,7 @@ typedef struct otMacWhitelistEntry
 typedef struct otMacBlacklistEntry
 {
     otExtAddress mExtAddress;       ///< IEEE 802.15.4 Extended Address
-    bool         mValid;            ///< Indicates whether or not the blacklist entry is vaild
+    bool         mValid;            ///< Indicates whether or not the blacklist entry is valid
 } otMacBlacklistEntry;
 
 /**

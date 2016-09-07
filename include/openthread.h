@@ -788,7 +788,7 @@ ThreadError otSendPendingGet(const uint8_t *aTlvTypes, uint8_t aLength);
 ThreadError otSendPendingSet(const otOperationalDataset *aDataset, const uint8_t *aTlvs, uint8_t aLength);
 
 /**
- * Get the data poll period of sleepy end deivce.
+ * Get the data poll period of sleepy end device.
  *
  * @returns  The data poll period of sleepy end device.
  *
@@ -797,7 +797,7 @@ ThreadError otSendPendingSet(const otOperationalDataset *aDataset, const uint8_t
 uint32_t otGetPollPeriod(void);
 
 /**
- * Set the data poll period for sleepy end deivce.
+ * Set the data poll period for sleepy end device.
  *
  * param[in]  aPollPeriod  data poll period.
  *
@@ -1382,7 +1382,7 @@ otDeviceRole otGetDeviceRole(void);
  * @param[in]   aIndex  An index into the EID cache table.
  * @param[out]  aEntry  A pointer to where the EID information is placed.
  *
- * @retval kThreadError_None         Successfully retreieved the EID cache entry.
+ * @retval kThreadError_None         Successfully retrieved the EID cache entry.
  * @retval kThreadError_InvalidArgs  @p aIndex was out of bounds or @p aEntry was NULL.
  *
  */

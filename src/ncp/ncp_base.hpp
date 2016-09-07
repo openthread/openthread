@@ -433,7 +433,7 @@ private:
     bool mAllowLocalNetworkDataChange;
     bool mRequireJoinExistingNetwork;
 
-    uint32_t mFramingErrorCounter;             // Number of inproperly formed received spinel frames.
+    uint32_t mFramingErrorCounter;             // Number of improperly formed received spinel frames.
     uint32_t mRxSpinelFrameCounter;            // Number of received (inbound) spinel frames.
     uint32_t mTxSpinelFrameCounter;            // Number of sent (outbound) spinel frames.
     uint32_t mInboundSecureIpFrameCounter;     // Number of secure inbound data/IP frames.

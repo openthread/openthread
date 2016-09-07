@@ -369,7 +369,7 @@ public:
     Neighbor *GetNeighbor(const Ip6::Address &aAddress);
 
     /**
-     * This method retains diagnotsic information for an attached child by Child ID or RLOC16.
+     * This method retains diagnostic information for an attached child by Child ID or RLOC16.
      *
      * @param[in]   aChildId    The Child ID or RLOC16 for an attached child.
      * @param[out]  aChildInfo  The child information.
@@ -378,7 +378,7 @@ public:
     ThreadError GetChildInfoById(uint16_t aChildId, otChildInfo &aChildInfo);
 
     /**
-     * This method retains diagnotsic information for an attached child by the internal table index.
+     * This method retains diagnostic information for an attached child by the internal table index.
      *
      * @param[in]   aChildIndex  The table index.
      * @param[out]  aChildInfo   The child information.
@@ -397,7 +397,7 @@ public:
     Router *GetRouters(uint8_t *aNumRouters);
 
     /**
-     * This method retains diagnotsic information for a given router.
+     * This method retains diagnostic information for a given router.
      *
      * @param[in]   aRouterId    The router ID or RLOC16 for a given router.
      * @param[out]  aRouterInfo  The router information.
@@ -416,9 +416,9 @@ public:
     /**
      * This method indicates whether or not the given Thread partition attributes are preferred.
      *
-     * @param[in]  aSingletonA   Whether or not the Thread Parititon A has a single router.
+     * @param[in]  aSingletonA   Whether or not the Thread Partition A has a single router.
      * @param[in]  aLeaderDataA  A reference to Thread Partition A's Leader Data.
-     * @param[in]  aSingletonB   Whether or not the Thread Parititon B has a single router.
+     * @param[in]  aSingletonB   Whether or not the Thread Partition B has a single router.
      * @param[in]  aLeaderDataB  A reference to Thread Partition B's Leader Data.
      *
      * @retval 1   If partition A is preferred.

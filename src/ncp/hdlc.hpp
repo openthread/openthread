@@ -166,7 +166,7 @@ public:
     typedef void (*FrameHandler)(void *aContext, uint8_t *aFrame, uint16_t aFrameLength);
 
     /**
-     * This function pointer is called when an error has occured.
+     * This function pointer is called when an error has occurred.
      *
      * @param[in]  aContext      A pointer to arbitrary context information.
      * @param[in]  aError        An error code describing the error.
