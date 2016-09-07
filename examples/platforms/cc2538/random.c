@@ -41,8 +41,6 @@
 
 static void generateRandom(uint16_t aInputLength, uint8_t *aOutput, uint16_t *aOutputLength)
 {
-    uint16_t seed = 0;
-
     HWREG(SOC_ADC_ADCCON1) &= ~(SOC_ADC_ADCCON1_RCTRL1 | SOC_ADC_ADCCON1_RCTRL0);
     HWREG(SYS_CTRL_RCGCRFC) = SYS_CTRL_RCGCRFC_RFC0;
 
@@ -55,22 +53,13 @@ static void generateRandom(uint16_t aInputLength, uint8_t *aOutput, uint16_t *aO
 
     for (uint16_t index = 0; index < aInputLength; index++)
     {
-        if (!(index % 2))
-        {
-            seed = 0;
+        aOutput[index] = 0;
 
-            for (uint8_t offset = 0; offset < (8 * sizeof(seed)); offset++)
-            {
-                seed |= (HWREG(RFCORE_XREG_RFRND) & RFCORE_XREG_RFRND_IRND);
-                seed <<= 1;
-            }
-        }
-        else
+        for (uint8_t offset = 0; offset < 8; offset++)
         {
-            seed >>= 8;
+            aOutput[index] |= (HWREG(RFCORE_XREG_RFRND) & RFCORE_XREG_RFRND_IRND);
+            aOutput[index] <<= 1;
         }
-
-        aOutput[index] = (seed & 0xff);
     }
 
     HWREG(RFCORE_SFR_RFST) = RFCORE_SFR_RFST_INSTR_RFOFF;
