@@ -240,7 +240,31 @@ ThreadError otPlatRadioReceive(uint8_t aChannel);
 extern void otPlatRadioReceiveDone(RadioPacket *aPacket, ThreadError aError);
 
 /**
- * The radio tranitions from Transmit to Receive.
+ * The radio driver calls this method to check if there is a pending frame for the node/neighbor identified by the
+ * given short address. This is used by radio driver for preparation of mac level ack frame.
+ *
+ * @param[in]  aShortAddress   Short address of neighbor.
+ *
+ * @retval  true    There is a pending frame for the neighboring node.
+ * @retval  false   No pending frame for the neighboring node.
+ *
+ */
+bool otPlatRadioHasPendingFrameForShortAddress(uint16_t aShortAddress);
+
+/**
+ * The radio driver calls this method to check if there is a pending frame for the node/neighbor identified by the
+ * extended (long) address. This is used by radio driver for preparation of mac level ack frame.
+ *
+ * @param[in]  aExtendedAddress  Extended (long) address of the destination.
+ *
+ * @retval  true    There is a pending frame for the neighboring node.
+ * @retval  false   No pending frame for the neighboring node.
+ *
+ */
+bool otPlatRadioHasPendingFrameForExtendedAddress(uint8_t *aExtendedAddress);
+
+/**
+ * The radio transitions from Transmit to Receive.
  * This method returns a pointer to the transmit buffer.
  *
  * The caller forms the IEEE 802.15.4 frame in this buffer then calls otPlatRadioTransmit() to request transmission.
