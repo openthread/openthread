@@ -50,10 +50,12 @@ static Console *sServer;
 
 static otDEFINE_ALIGNED_VAR(sCliConsoleRaw, sizeof(Console), uint64_t);
 
-extern "C" void otCliConsoleInit(otCliConsoleOutputCallback aCallback)
+extern "C" void otCliConsoleInit(otCliConsoleOutputCallback aCallback,
+                                 void *aContext)
 {
     sServer = new(&sCliConsoleRaw) Console;
     sServer->SetOutputCallback(aCallback);
+    sServer->SetContext(aContext);
     Interpreter::Init();
 }
 
@@ -68,6 +70,10 @@ Console::Console(void)
 
 }
 
+void Console::SetContext(void *aContext)
+{
+    mContext = aContext;
+}
 
 void Console::SetOutputCallback(otCliConsoleOutputCallback aCallback)
 {
@@ -81,7 +87,7 @@ void Console::ReceiveTask(char *aBuf, uint16_t aBufLength)
 
 int Console::Output(const char *aBuf, uint16_t aBufLength)
 {
-    return mCallback(aBuf, aBufLength);
+    return mCallback(aBuf, aBufLength, mContext);
 }
 
 int Console::OutputFormat(const char *fmt, ...)

@@ -81,6 +81,14 @@ public:
      */
     void SetOutputCallback(otCliConsoleOutputCallback aCallback);
 
+    /**
+     * This method sets a context that is returned with the callback.
+     *
+     * @param[in]  aContext   A pointer to a user context.
+     *
+     */
+    void SetContext(void *aContext);
+
     void ReceiveTask(char *aBuf, uint16_t aBufLength);
 
 private:
@@ -90,6 +98,7 @@ private:
     };
 
     otCliConsoleOutputCallback mCallback;
+    void *mContext;
 
 };
 

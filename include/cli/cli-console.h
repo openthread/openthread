@@ -46,19 +46,22 @@ extern "C" {
  *
  * @param[in]  aBuf        A pointer to a buffer with an output.
  * @param[in]  aBufLength  A length of the output data stored in the buffer.
+ * @param[out] aContext    A user context pointer.
  *
  * @returns                Number of bytes processed by the callback.
  *
  */
-typedef int (*otCliConsoleOutputCallback)(const char *aBuf, uint16_t aBufLength);
+typedef int (*otCliConsoleOutputCallback)(const char *aBuf,
+                                          uint16_t aBufLength, void *aContext);
 
 /**
  * Initialize the CLI CONSOLE module.
  *
  * @param[in]  aCallback   A callback method called to process console output.
+ * @param[in]  aContext    A user context pointer.
  *
  */
-void otCliConsoleInit(otCliConsoleOutputCallback aCallback);
+void otCliConsoleInit(otCliConsoleOutputCallback aCallback, void *aContext);
 
 /**
  * This method is called to feed in a console input line.
