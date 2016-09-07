@@ -497,6 +497,16 @@ void Message::SetTimeout(uint8_t aTimeout)
     mInfo.mTimeout = aTimeout;
 }
 
+int8_t Message::GetInterfaceId(void) const
+{
+    return mInfo.mInterfaceId;
+}
+
+void Message::SetInterfaceId(int8_t aInterfaceId)
+{
+    mInfo.mInterfaceId = aInterfaceId;
+}
+
 bool Message::GetDirectTransmission(void) const
 {
     return mInfo.mDirectTx;
