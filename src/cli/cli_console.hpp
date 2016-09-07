@@ -37,7 +37,6 @@
 #include <openthread-types.h>
 #include <cli/cli_server.hpp>
 #include <cli/cli-console.h>
-#include <common/tasklet.hpp>
 
 namespace Thread {
 namespace Cli {

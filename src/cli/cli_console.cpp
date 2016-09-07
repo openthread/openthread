@@ -38,10 +38,7 @@
 
 #include <cli/cli.hpp>
 #include <cli/cli_console.hpp>
-#include <common/code_utils.hpp>
-#include <common/encoding.hpp>
 #include <common/new.hpp>
-#include <common/tasklet.hpp>
 
 namespace Thread {
 namespace Cli {
