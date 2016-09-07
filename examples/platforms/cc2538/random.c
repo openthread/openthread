@@ -59,13 +59,10 @@ static void generateRandom(uint16_t aInputLength, uint8_t *aOutput, uint16_t *aO
         {
             seed = 0;
 
-            while (seed == 0x0000 || seed == 0x8003)
+            for (uint8_t offset = 0; offset < (8 * sizeof(seed)); offset++)
             {
-                for (uint8_t offset = 0; offset < (8 * sizeof(seed)); offset++)
-                {
-                    seed |= (HWREG(RFCORE_XREG_RFRND) & RFCORE_XREG_RFRND_IRND);
-                    seed <<= 1;
-                }
+                seed |= (HWREG(RFCORE_XREG_RFRND) & RFCORE_XREG_RFRND_IRND);
+                seed <<= 1;
             }
         }
         else
@@ -88,7 +85,11 @@ void cc2538RandomInit(void)
 {
     uint16_t seed = 0;
 
-    generateRandom(sizeof(seed), (uint8_t *)&seed, 0);
+    while (seed == 0x0000 || seed == 0x8003)
+    {
+        generateRandom(sizeof(seed), (uint8_t *)&seed, 0);
+    }
+
     HWREG(SOC_ADC_RNDL) = (seed >> 8) & 0xff;
     HWREG(SOC_ADC_RNDL) = seed & 0xff;
 }
