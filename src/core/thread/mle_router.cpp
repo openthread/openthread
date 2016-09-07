@@ -1321,6 +1321,33 @@ ThreadError MleRouter::HandleAdvertisement(const Message &aMessage, const Ip6::M
                 SetStateDetached();
                 ExitNow(error = kThreadError_NoRoute);
             }
+
+            if ((mDeviceMode & ModeTlv::kModeFFD))
+            {
+                for (uint8_t i = 0, routeCount = 0; i < kMaxRouterId; i++)
+                {
+                    if (route.IsRouterIdSet(i) == false)
+                    {
+                        continue;
+                    }
+
+                    if (i != GetLeaderId())
+                    {
+                        routeCount++;
+                        continue;
+                    }
+
+                    if (route.GetRouteCost(routeCount) > 0)
+                    {
+                        mRouters[GetLeaderId()].mNextHop = routerId;
+                    }
+                    else
+                    {
+                        mRouters[GetLeaderId()].mNextHop = kMaxRouterId;
+                    }
+                    break;
+                }
+            }
         }
         else
         {
