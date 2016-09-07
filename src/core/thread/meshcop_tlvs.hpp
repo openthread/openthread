@@ -972,7 +972,7 @@ public:
      * This method initializes the TLV.
      *
      */
-    void Init(void) { SetType(kDiscoveryResponse); SetLength(sizeof(*this) - sizeof(Tlv)); mReserved = 0; }
+    void Init(void) { SetType(kDiscoveryResponse); SetLength(sizeof(*this) - sizeof(Tlv)); mFlags = 0; mReserved = 0; }
 
     /**
      * This method indicates whether or not the TLV appears to be well-formed.
