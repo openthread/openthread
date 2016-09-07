@@ -113,7 +113,7 @@ ThreadError otPlatSettingsAbandonChange(void);
  *  aValueLength. The initial value of aValueLength is the
  *  maximum number of bytes to be written to aValue.
  *
- *  This function can be used to check for the existance of
+ *  This function can be used to check for the existence of
  *  a key without fetching the value by setting aValue and
  *  aValueLength to NULL. You can also check the length of
  *  the setting without fetching it by setting only aValue
@@ -214,7 +214,7 @@ ThreadError otPlatSettingsAdd(uint16_t aKey, const uint8_t *aValue, int aValueLe
  *  that is required to maintain the relative order of the
  *  values associated with aKey. For example, if you have three
  *  items ordered (A, B, C) and you delete B, the resulting order
- *  is guarateed to be (A, C).
+ *  is guaranteed to be (A, C).
  *
  *  @param[in] aKey
  *             The key associated with the requested setting.
