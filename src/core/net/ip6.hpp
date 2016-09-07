@@ -39,9 +39,14 @@
 #include <openthread-types.h>
 #include <common/encoding.hpp>
 #include <common/message.hpp>
+#include <net/icmp6.hpp>
 #include <net/ip6_address.hpp>
+#include <net/ip6_headers.hpp>
+#include <net/ip6_routes.hpp>
+#include <net/ip6_mpl.hpp>
 #include <net/netif.hpp>
 #include <net/socket.hpp>
+#include <net/udp6.hpp>
 
 using Thread::Encoding::BigEndian::HostSwap16;
 using Thread::Encoding::BigEndian::HostSwap32;
@@ -85,393 +90,6 @@ namespace Ip6 {
  */
 
 /**
- * Internet Protocol Numbers
- */
-enum IpProto
-{
-    kProtoHopOpts  = 0,   ///< IPv6 Hop-by-Hop Option
-    kProtoTcp      = 6,   ///< Transmission Control Protocol
-    kProtoUdp      = 17,  ///< User Datagram
-    kProtoIp6      = 41,  ///< IPv6 encapsulation
-    kProtoRouting  = 43,  ///< Routing Header for IPv6
-    kProtoFragment = 44,  ///< Fragment Header for IPv6
-    kProtoIcmp6    = 58,  ///< ICMP for IPv6
-    kProtoNone     = 59,  ///< No Next Header for IPv6
-    kProtoDstOpts  = 60,  ///< Destination Options for IPv6
-};
-
-enum
-{
-    kVersionClassFlowSize = 4,  ///< Combined size of Version, Class, Flow Label in bytes.
-};
-
-/**
- * This structure represents an IPv6 header.
- *
- */
-OT_TOOL_PACKED_BEGIN
-struct HeaderPoD
-{
-    union
-    {
-        uint8_t   m8[kVersionClassFlowSize / sizeof(uint8_t)];
-        uint16_t  m16[kVersionClassFlowSize / sizeof(uint16_t)];
-        uint32_t  m32[kVersionClassFlowSize / sizeof(uint32_t)];
-    } mVersionClassFlow;           ///< Version, Class, Flow Label
-    uint16_t      mPayloadLength;  ///< Payload Length
-    uint8_t       mNextHeader;     ///< Next Header
-    uint8_t       mHopLimit;       ///< Hop Limit
-    otIp6Address  mSource;         ///< Source
-    otIp6Address  mDestination;    ///< Destination
-} OT_TOOL_PACKED_END;
-
-/**
- * This class implements IPv6 header generation and parsing.
- *
- */
-OT_TOOL_PACKED_BEGIN
-class Header: private HeaderPoD
-{
-public:
-    /**
-     * This method initializes the IPv6 header.
-     *
-     */
-    void Init() { mVersionClassFlow.m32[0] = 0; mVersionClassFlow.m8[0] = kVersion6; }
-
-    /**
-     * This method indicates whether or not the IPv6 Version is set to 6.
-     *
-     * @retval TRUE   If the IPv6 Version is set to 6.
-     * @retval FALSE  If the IPv6 Version is not set to 6.
-     *
-     */
-    bool IsVersion6() const { return (mVersionClassFlow.m8[0] & kVersionMask) == kVersion6; }
-
-    /**
-     * This method returns the IPv6 Payload Length value.
-     *
-     * @returns The IPv6 Payload Length value.
-     *
-     */
-    uint16_t GetPayloadLength() { return HostSwap16(mPayloadLength); }
-
-    /**
-     * This method sets the IPv6 Payload Length value.
-     *
-     * @param[in]  aLength  The IPv6 Payload Length value.
-     *
-     */
-    void SetPayloadLength(uint16_t aLength) { mPayloadLength = HostSwap16(aLength); }
-
-    /**
-     * This method returns the IPv6 Next Header value.
-     *
-     * @returns The IPv6 Next Header value.
-     *
-     */
-    IpProto GetNextHeader() const { return static_cast<IpProto>(mNextHeader); }
-
-    /**
-     * This method sets the IPv6 Next Header value.
-     *
-     * @param[in]  aNextHeader  The IPv6 Next Header value.
-     *
-     */
-    void SetNextHeader(IpProto aNextHeader) { mNextHeader = static_cast<uint8_t>(aNextHeader); }
-
-    /**
-     * This method returns the IPv6 Hop Limit value.
-     *
-     * @returns The IPv6 Hop Limit value.
-     *
-     */
-    uint8_t GetHopLimit() const { return mHopLimit; }
-
-    /**
-     * This method sets the IPv6 Hop Limit value.
-     *
-     * @param[in]  aHopLimit  The IPv6 Hop Limit value.
-     *
-     */
-    void SetHopLimit(uint8_t aHopLimit) { mHopLimit = aHopLimit; }
-
-    /**
-     * This method returns the IPv6 Source address.
-     *
-     * @returns A reference to the IPv6 Source address.
-     *
-     */
-    Address &GetSource() { return static_cast<Address &>(mSource); }
-
-    /**
-     * This method sets the IPv6 Source address.
-     *
-     * @param[in]  aSource  A reference to the IPv6 Source address.
-     *
-     */
-    void SetSource(const Address &aSource) { mSource = aSource; }
-
-    /**
-     * This method returns the IPv6 Destination address.
-     *
-     * @returns A reference to the IPv6 Destination address.
-     *
-     */
-    Address &GetDestination() { return static_cast<Address &>(mDestination); }
-
-    /**
-     * This method sets the IPv6 Destination address.
-     *
-     * @param[in]  aDestination  A reference to the IPv6 Destination address.
-     *
-     */
-    void SetDestination(const Address &aDestination) { mDestination = aDestination; }
-
-    /**
-     * This static method returns the byte offset of the IPv6 Payload Length field.
-     *
-     * @returns The byte offset of the IPv6 Payload Length field.
-     *
-     */
-    static uint8_t GetPayloadLengthOffset() { return offsetof(HeaderPoD, mPayloadLength); }
-
-    /**
-     * This static method returns the byte offset of the IPv6 Hop Limit field.
-     *
-     * @returns The byte offset of the IPv6 Hop Limit field.
-     *
-     */
-    static uint8_t GetHopLimitOffset() { return offsetof(HeaderPoD, mHopLimit); }
-
-    /**
-     * This static method returns the size of the IPv6 Hop Limit field.
-     *
-     * @returns The size of the IPv6 Hop Limit field.
-     *
-     */
-    static uint8_t GetHopLimitSize() { return sizeof(uint8_t); }
-
-    /**
-     * This static method returns the byte offset of the IPv6 Destination field.
-     *
-     * @returns The byte offset of the IPv6 Destination field.
-     *
-     */
-    static uint8_t GetDestinationOffset() { return offsetof(HeaderPoD, mDestination); }
-
-private:
-    enum
-    {
-        kVersion6 = 0x60,
-        kVersionMask = 0xf0,
-    };
-} OT_TOOL_PACKED_END;
-
-/**
- * This class implements IPv6 Extension Header generation and processing.
- *
- */
-OT_TOOL_PACKED_BEGIN
-class ExtensionHeader
-{
-public:
-    /**
-     * This method returns the IPv6 Next Header value.
-     *
-     * @returns The IPv6 Next Header value.
-     *
-     */
-    IpProto GetNextHeader() const { return static_cast<IpProto>(mNextHeader); }
-
-    /**
-     * This method sets the IPv6 Next Header value.
-     *
-     * @param[in]  aNextHeader  The IPv6 Next Header value.
-     *
-     */
-    void SetNextHeader(IpProto aNextHeader) { mNextHeader = static_cast<uint8_t>(aNextHeader); }
-
-    /**
-     * This method returns the IPv6 Header Extension Length value.
-     *
-     * @returns The IPv6 Header Extension Length value.
-     *
-     */
-    uint8_t GetLength() const { return mLength; }
-
-    /**
-     * This method sets the IPv6 Header Extension Length value.
-     *
-     * @param[in]  aLength  The IPv6 Header Extension Length value.
-     *
-     */
-    void SetLength(uint8_t aLength) { mLength = aLength; }
-
-private:
-    uint8_t mNextHeader;
-    uint8_t mLength;
-} OT_TOOL_PACKED_END;
-
-/**
- * This class implements IPv6 Hop-by-Hop Options Header generation and parsing.
- *
- */
-OT_TOOL_PACKED_BEGIN
-class HopByHopHeader: public ExtensionHeader
-{
-} OT_TOOL_PACKED_END;
-
-/**
- * This class implements IPv6 Options generation and parsing.
- *
- */
-OT_TOOL_PACKED_BEGIN
-class OptionHeader
-{
-public:
-    /**
-     * This method returns the IPv6 Option Type value.
-     *
-     * @returns The IPv6 Option Type value.
-     *
-     */
-    uint8_t GetType() const { return mType; }
-
-    /**
-     * This method sets the IPv6 Option Type value.
-     *
-     * @param[in]  aType  The IPv6 Option Type value.
-     *
-     */
-    void SetType(uint8_t aType) { mType = aType; }
-
-    /**
-     * IPv6 Option Type actions for unrecognized IPv6 Options.
-     *
-     */
-    enum Action
-    {
-        kActionSkip      = 0x00,  ///< skip over this option and continue processing the header
-        kActionDiscard   = 0x40,  ///< discard the packet
-        kActionForceIcmp = 0x80,  ///< discard the packet and forcibly send an ICMP Parameter Problem
-        kActionIcmp      = 0xc0,  ///< discard packet and conditionally send an ICMP Parameter Problem
-        kActionMask      = 0xc0,  ///< mask for action bits
-    };
-
-    /**
-     * This method returns the IPv6 Option action for unrecognized IPv6 Options.
-     *
-     * @returns The IPv6 Option action for unrecognized IPv6 Options.
-     *
-     */
-    Action GetAction() const { return static_cast<Action>(mType & kActionMask); }
-
-    /**
-     * This method returns the IPv6 Option Length value.
-     *
-     * @returns The IPv6 Option Length value.
-     *
-     */
-    uint8_t GetLength() const { return mLength; }
-
-    /**
-     * This method sets the IPv6 Option Length value.
-     *
-     * @param[in]  aLength  The IPv6 Option Length value.
-     *
-     */
-    void SetLength(uint8_t aLength) { mLength = aLength; }
-
-private:
-    uint8_t mType;
-    uint8_t mLength;
-} OT_TOOL_PACKED_END;
-
-/**
- * This class implements IPv6 Fragment Header generation and parsing.
- *
- */
-OT_TOOL_PACKED_BEGIN
-class FragmentHeader
-{
-public:
-    /**
-     * This method initializes the IPv6 Fragment header.
-     *
-     */
-    void Init() { mReserved = 0; mIdentification = 0; }
-
-    /**
-     * This method returns the IPv6 Next Header value.
-     *
-     * @returns The IPv6 Next Header value.
-     *
-     */
-    IpProto GetNextHeader() const { return static_cast<IpProto>(mNextHeader); }
-
-    /**
-     * This method sets the IPv6 Next Header value.
-     *
-     * @param[in]  aNextHeader  The IPv6 Next Header value.
-     *
-     */
-    void SetNextHeader(IpProto aNextHeader) { mNextHeader = static_cast<uint8_t>(aNextHeader); }
-
-    /**
-     * This method returns the Fragment Offset value.
-     *
-     * @returns The Fragment Offset value.
-     *
-     */
-    uint16_t GetOffset() { return (HostSwap16(mOffsetMore) & kOffsetMask) >> kOffsetOffset; }
-
-    /**
-     * This method sets the Fragment Offset value.
-     *
-     * @param[in]  aOffset  The Fragment Offset value.
-     */
-    void SetOffset(uint16_t aOffset) {
-        uint16_t tmp = HostSwap16(mOffsetMore);
-        tmp = (tmp & ~kOffsetMask) | ((aOffset << kOffsetOffset) & kOffsetMask);
-        mOffsetMore = HostSwap16(tmp);
-    }
-
-    /**
-     * This method returns the M flag value.
-     *
-     * @returns The M flag value.
-     *
-     */
-    bool IsMoreFlagSet() { return HostSwap16(mOffsetMore) & kMoreFlag; }
-
-    /**
-     * This method clears the M flag value.
-     *
-     */
-    void ClearMoreFlag() { mOffsetMore = HostSwap16(HostSwap16(mOffsetMore) & ~kMoreFlag); }
-
-    /**
-     * This method sets the M flag value.
-     *
-     */
-    void SetMoreFlag() { mOffsetMore = HostSwap16(HostSwap16(mOffsetMore) | kMoreFlag); }
-
-private:
-    uint8_t mNextHeader;
-    uint8_t mReserved;
-
-    enum
-    {
-        kOffsetOffset = 3,
-        kOffsetMask = 0xfff8,
-        kMoreFlag = 1,
-    };
-    uint16_t mOffsetMore;
-    uint32_t mIdentification;
-} OT_TOOL_PACKED_END;
-
-/**
  * This class implements the core IPv6 message processing.
  *
  */
@@ -485,22 +103,22 @@ public:
     };
 
     /**
-     * This static method allocates a new message buffer from the buffer pool.
+     * This method allocates a new message buffer from the buffer pool.
      *
      * @param[in]  aReserved  The number of header bytes to reserve following the IPv6 header.
      *
      * @returns A pointer to the message or NULL if insufficient message buffers are available.
      *
      */
-    static Message *NewMessage(uint16_t aReserved);
+    Message *NewMessage(uint16_t aReserved);
 
     /**
-     * This static method for initialization.
+     * This constructor initializes the object.
      */
-    static void Init(void);
+    Ip6(void);
 
     /**
-     * This static method sends an IPv6 datagram.
+     * This method sends an IPv6 datagram.
      *
      * @param[in]  aMessage      A reference to the message.
      * @param[in]  aMessageInfo  A reference to the message info associated with @p aMessage.
@@ -510,10 +128,10 @@ public:
      * @retval kThreadError_NoBufs  Insufficient available buffer to add the IPv6 headers.
      *
      */
-    static ThreadError SendDatagram(Message &aMessage, MessageInfo &aMessageInfo, IpProto aIpProto);
+    ThreadError SendDatagram(Message &aMessage, MessageInfo &aMessageInfo, IpProto aIpProto);
 
     /**
-     * This static method processes a received IPv6 datagram.
+     * This method processes a received IPv6 datagram.
      *
      * @param[in]  aMessage          A reference to the message.
      * @param[in]  aNetif            A pointer to the network interface that received the message.
@@ -525,8 +143,8 @@ public:
      * @retval kThreadError_Drop   Message processing failed and the message should be dropped.
      *
      */
-    static ThreadError HandleDatagram(Message &aMessage, Netif *aNetif, int8_t aInterfaceId,
-                                      const void *aLinkMessageInfo, bool aFromNcpHost);
+    ThreadError HandleDatagram(Message &aMessage, Netif *aNetif, int8_t aInterfaceId,
+                               const void *aLinkMessageInfo, bool aFromNcpHost);
 
     /**
      * This static method updates a checksum.
@@ -590,7 +208,7 @@ public:
      * @sa SetReceiveIp6FilterEnabled
      *
      */
-    static void SetReceiveDatagramCallback(otReceiveIp6DatagramCallback aCallback, void *aCallbackContext);
+    void SetReceiveDatagramCallback(otReceiveIp6DatagramCallback aCallback, void *aCallbackContext);
 
     /**
      * This method indicates whether or not Thread control traffic is filtered out when delivering IPv6 datagrams
@@ -602,7 +220,7 @@ public:
      * @sa SetReceiveIp6FilterEnabled
      *
      */
-    static bool IsReceiveIp6FilterEnabled(void);
+    bool IsReceiveIp6FilterEnabled(void);
 
     /**
      * This method sets whether or not Thread control traffic is filtered out when delivering IPv6 datagrams
@@ -614,18 +232,123 @@ public:
      * @sa IsReceiveIp6FilterEnabled
      *
      */
-    static void SetReceiveIp6FilterEnabled(bool aEnabled);
+    void SetReceiveIp6FilterEnabled(bool aEnabled);
 
     /**
-     * This static method enables/disables IPv6 forwarding.
+     * This method enables/disables IPv6 forwarding.
      *
      * @param[in]  aEnable  TRUE to enable IPv6 forwarding, FALSE otherwise.
      *
      */
-    static void SetForwardingEnabled(bool aEnable);
+    void SetForwardingEnabled(bool aEnable);
+
+    /**
+     * This method enables the network interface.
+     *
+     * @param  aNetif  A reference to the network interface.
+     *
+     * @retval kThreadError_None  Successfully enabled the network interface.
+     * @retval KThreadError_Busy  The network interface was already enabled.
+     *
+     */
+    ThreadError AddNetif(Netif &aNetif);
+
+    /**
+     * This method disables the network interface.
+     *
+     * @param  aNetif  A reference to the network interface.
+     *
+     * @retval kThreadError_None  Successfully disabled the network interface.
+     * @retval KThreadError_Busy  The network interface was already disabled.
+     *
+     */
+    ThreadError RemoveNetif(Netif &aNetif);
+
+    /**
+     * This method returns the network interface list.
+     *
+     * @returns A pointer to the network interface list.
+     *
+     */
+    Netif *GetNetifList(void);
+
+    /**
+     * This method returns the network interface identified by @p aInterfaceId.
+     *
+     * @param[in]  aInterfaceId  The network interface ID.
+     *
+     * @returns A pointer to the network interface or NULL if none is found.
+     *
+     */
+    Netif *GetNetifById(int8_t aInterfaceId);
+
+    /**
+     * This method returns the network interface identified by @p aName.
+     *
+     * @param[in]  aName  A pointer to a NULL-terminated string.
+     *
+     * @returns A pointer to the network interface or NULL if none is found.
+     *
+     */
+    Netif *GetNetifByName(char *aName);
+
+    /**
+     * This method indicates whether or not @p aAddress is assigned to a network interface.
+     *
+     * @param[in]  aAddress  A reference to the IPv6 address.
+     *
+     * @retval TRUE   If the IPv6 address is assigned to a network interface.
+     * @retval FALSE  If the IPv6 address is not assigned to any network interface.
+     *
+     */
+    bool IsUnicastAddress(const Address &aAddress);
+
+    /**
+     * This method perform default source address selection.
+     *
+     * @param[in]  aMessageInfo  A reference to the message information.
+     *
+     * @returns A pointer to the selected IPv6 source address or NULL if no source address was found.
+     *
+     */
+    const NetifUnicastAddress *SelectSourceAddress(MessageInfo &aMessageInfo);
+
+    /**
+     * This method determines which network interface @p aAddress is on-link, if any.
+     *
+     * @param[in]  aAddress  A reference to the IPv6 address.
+     *
+     * @returns The network interface identifier for the on-link interface or -1 if none is found.
+     *
+     */
+    int8_t GetOnLinkNetif(const Address &aAddress);
+
+    Routes mRoutes;
+    Icmp mIcmp;
+    Udp mUdp;
+
+    MessagePool mMessagePool;
+    TaskletScheduler mTaskletScheduler;
+    TimerScheduler mTimerScheduler;
 
 private:
-    static void ProcessReceiveCallback(const Message &aMessage, const MessageInfo &aMessageInfo, uint8_t aIpProto);
+    void ProcessReceiveCallback(const Message &aMessage, const MessageInfo &aMessageInfo, uint8_t aIpProto);
+    ThreadError HandleExtensionHeaders(Message &message, uint8_t &nextHeader, bool receive);
+    ThreadError HandleFragment(Message &message);
+    ThreadError AddMplOption(Message &message, Header &header, IpProto nextHeader, uint16_t payloadLength);
+    ThreadError HandleOptions(Message &message);
+    ThreadError HandlePayload(Message &message, MessageInfo &messageInfo, uint8_t ipproto);
+    ThreadError ForwardMessage(Message &message, MessageInfo &messageInfo);
+
+    Mpl mMpl;
+    bool mForwardingEnabled;
+
+    otReceiveIp6DatagramCallback mReceiveIp6DatagramCallback;
+    void *mReceiveIp6DatagramCallbackContext;
+    bool mIsReceiveIp6FilterEnabled;
+
+    Netif *mNetifListHead;
+    int8_t mNextInterfaceId;
 };
 
 /**

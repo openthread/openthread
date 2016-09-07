@@ -28,20 +28,16 @@
 
 /**
  * @file
- * @brief
- *   This file includes the platform abstraction for AES ECB computations.
+ *   This file includes definitions for performing AES-ECB computations.
  */
 
-#ifndef AES_ECB_H_
-#define AES_ECB_H_
+#ifndef AES_ECB_HPP_
+#define AES_ECB_HPP_
 
-#include <stdint.h>
+#include <mbedtls/aes.h>
 
-#include <openthread-types.h>
-
-#ifdef __cplusplus
-extern "C" {
-#endif
+namespace Thread {
+namespace Crypto {
 
 /**
  * @addtogroup core-security
@@ -50,36 +46,46 @@ extern "C" {
  *
  */
 
-enum
+/**
+ * This class implements AES ECB computation.
+ *
+ */
+class AesEcb
 {
-    otAesBlockSize = 16,  ///< AES-128 block size.
+public:
+    enum
+    {
+        kBlockSize = 16,  ///< AES-128 block size (bytes).
+    };
+
+    /**
+     * This method sets the key.
+     *
+     * @param[in]  aKey        A pointer to the key.
+     * @param[in]  aKeyLength  The key length in bytes.
+     *
+     */
+    void SetKey(const uint8_t *aKey, uint16_t aKeyLength);
+
+    /**
+     * This method encrypts data.
+     *
+     * @param[in]   aInput   A pointer to the input buffer.
+     * @param[out]  aOutput  A pointer to the output buffer.
+     *
+     */
+    void Encrypt(const uint8_t aInput[kBlockSize], uint8_t aOutput[kBlockSize]);
+
+private:
+    mbedtls_aes_context mContext;
 };
-
-/**
- * This method sets the key.
- *
- * @param[in]  aKey        A pointer to the key.
- * @param[in]  aKeyLength  Length of the key in bytes.
- *
- */
-void otCryptoAesEcbSetKey(const void *aKey, uint16_t aKeyLength);
-
-/**
- * This method encrypts data.
- *
- * @param[in]   aInput   A pointer to the input.
- * @param[out]  aOutput  A pointer to the output.
- *
- */
-void otCryptoAesEcbEncrypt(const uint8_t aInput[otAesBlockSize], uint8_t aOutput[otAesBlockSize]);
 
 /**
  * @}
  *
  */
 
-#ifdef __cplusplus
-}  // end of extern "C"
-#endif
+}  // namespace Crypto
+}  // namespace Thread
 
-#endif  // AES_ECB_H_
+#endif  // AES_ECB_HPP_

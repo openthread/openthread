@@ -42,6 +42,7 @@
 #include "cli_dataset.hpp"
 #include <common/encoding.hpp>
 #include <common/new.hpp>
+#include <net/ip6.hpp>
 #include <platform/random.h>
 #include <platform/uart.h>
 
@@ -49,6 +50,9 @@ using Thread::Encoding::BigEndian::HostSwap16;
 using Thread::Encoding::BigEndian::HostSwap32;
 
 namespace Thread {
+
+extern Ip6::Ip6 *sIp6;
+
 namespace Cli {
 
 const struct Command Interpreter::sCommands[] =
@@ -116,8 +120,8 @@ static otNetifAddress sAutoAddresses[8];
 
 void Interpreter::Init(void)
 {
-    Ip6::Icmp::SetEchoReplyHandler(&HandleEchoResponse, NULL);
-    sPingTimer = new(&sPingTimerBuf) Timer(&HandlePingTimer, NULL);
+    sIp6->mIcmp.SetEchoReplyHandler(&HandleEchoResponse, NULL);
+    sPingTimer = new(&sPingTimerBuf) Timer(sIp6->mTimerScheduler, &HandlePingTimer, NULL);
     sLength = 8;
     sCount = 1;
     sInterval = 1000;
@@ -1045,18 +1049,18 @@ void Interpreter::HandlePingTimer(void *aContext)
     uint32_t timestamp = HostSwap32(Timer::GetNow());
     Message *message;
 
-    VerifyOrExit((message = Ip6::Icmp::NewMessage(0)) != NULL, error = kThreadError_NoBufs);
+    VerifyOrExit((message = sIp6->mIcmp.NewMessage(0)) != NULL, error = kThreadError_NoBufs);
     SuccessOrExit(error = message->Append(&timestamp, sizeof(timestamp)));
     SuccessOrExit(error = message->SetLength(sLength));
 
-    SuccessOrExit(error = Ip6::Icmp::SendEchoRequest(*message, sMessageInfo));
+    SuccessOrExit(error = sIp6->mIcmp.SendEchoRequest(*message, sMessageInfo));
     sCount--;
 
 exit:
 
     if (error != kThreadError_None && message != NULL)
     {
-        Message::Free(*message);
+        message->Free();
     }
 
     if (sCount)

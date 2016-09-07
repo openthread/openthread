@@ -61,6 +61,7 @@ enum
 };
 
 class Message;
+class MessagePool;
 
 /**
  * This structure contains pointers to the head and tail of a Message list.
@@ -98,6 +99,7 @@ struct BufferHeader
  */
 struct MessageInfo
 {
+    MessagePool     *mMessagePool;       ///< Identifies the message pool for this message.
     enum
     {
         kListAll = 0,                    ///< Identifies the all messages list.
@@ -200,6 +202,7 @@ private:
  */
 class Message: private Buffer
 {
+    friend class MessagePool;
     friend class MessageQueue;
 
 public:
@@ -209,6 +212,12 @@ public:
         kType6lowpan     = 1,   ///< A 6lowpan frame
         kTypeMacDataPoll = 2,   ///< A MAC data poll message
     };
+
+    /**
+     * This method frees this message buffer.
+     *
+     */
+    ThreadError Free(void);
 
     /**
      * This method returns a pointer to the next message in the same interface list.
@@ -508,35 +517,11 @@ public:
      */
     uint16_t UpdateChecksum(uint16_t aChecksum, uint16_t aOffset, uint16_t aLength) const;
 
-    /**
-     * This static method is used to initialize the message buffer pool.
-     *
-     */
-    static ThreadError Init(void);
-
-    /**
-     * This static method is used to obtain a new message.
-     *
-     * @param[in]  aType           The message type.
-     * @param[in]  aReserveHeader  The number of header bytes to reserve.
-     *
-     * @returns A pointer to the message or NULL if no message buffers are available.
-     *
-     */
-    static Message *New(uint8_t aType, uint16_t aReserveHeader);
-
-    /**
-     * This static method is used to free a message and return all message buffers to the buffer pool.
-     *
-     * @param[in]  aMessage  The message to free.
-     *
-     * @retval kThreadError_None         Successfully freed the message.
-     * @retval kThreadError_InvalidArgs  The message is already freed.
-     *
-     */
-    static ThreadError Free(Message &aMessage);
-
 private:
+    MessagePool *GetMessagePool(void) { return mInfo.mMessagePool; }
+
+    void SetMessagePool(MessagePool *aMessagePool) { mInfo.mMessagePool = aMessagePool; }
+
     /**
      * This method returns a reference to a message list.
      *
@@ -662,6 +647,51 @@ private:
     static ThreadError RemoveFromList(uint8_t aListId, Message &aMessage);
 
     MessageList mInterface;   ///< The instance-specific message list.
+};
+
+class MessagePool
+{
+    friend class Message;
+    friend class MessageQueue;
+
+public:
+    /**
+     * This constructor initializes the object.
+     *
+     */
+    MessagePool(void);
+
+    /**
+     * This method is used to obtain a new message.
+     *
+     * @param[in]  aType           The message type.
+     * @param[in]  aReserveHeader  The number of header bytes to reserve.
+     *
+     * @returns A pointer to the message or NULL if no message buffers are available.
+     *
+     */
+    Message *New(uint8_t aType, uint16_t aReserveHeader);
+
+    /**
+     * This method is used to free a message and return all message buffers to the buffer pool.
+     *
+     * @param[in]  aMessage  The message to free.
+     *
+     * @retval kThreadError_None         Successfully freed the message.
+     * @retval kThreadError_InvalidArgs  The message is already freed.
+     *
+     */
+    ThreadError Free(Message *aMessage);
+
+private:
+    Buffer *NewBuffer(void);
+    ThreadError FreeBuffers(Buffer *aBuffer);
+    ThreadError ReclaimBuffers(int aNumBuffers);
+
+    int mNumFreeBuffers;
+    Buffer mBuffers[kNumBuffers];
+    Buffer *mFreeBuffers;
+    MessageList mAll;
 };
 
 /**

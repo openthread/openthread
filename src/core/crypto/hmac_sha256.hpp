@@ -26,91 +26,68 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef IP6_ROUTES_HPP_
-#define IP6_ROUTES_HPP_
-
 /**
  * @file
- *   This file includes definitions for manipulating IPv6 routing tables.
+ *   This file includes definitions for performing HMAC SHA-256 computations.
  */
 
-#include <openthread-types.h>
-#include <common/message.hpp>
-#include <net/ip6_address.hpp>
+#ifndef HMAC_SHA256_HPP_
+#define HMAC_SHA256_HPP_
+
+#include <stdint.h>
+
+#include <mbedtls/md.h>
 
 namespace Thread {
-namespace Ip6 {
+namespace Crypto {
 
 /**
- * @addtogroup core-ip6-ip6
+ * @addtogroup core-security
  *
  * @{
  *
  */
 
 /**
- * This structure represents an IPv6 route.
+ * This class implements HMAC SHA-256 computation.
  *
  */
-struct Route
-{
-    Address       mPrefix;        ///< The IPv6 prefix.
-    uint8_t       mPrefixLength;  ///< The IPv6 prefix length.
-    int8_t        mInterfaceId;   ///< The interface identifier.
-    struct Route *mNext;          ///< A pointer to the next IPv6 route.
-};
-
-/**
- * This class implements IPv6 route management.
- *
- */
-class Routes
+class HmacSha256
 {
 public:
-    /**
-     * This constructor initializes the object.
-     *
-     * @param[in]  aIp6  A reference to the IPv6 network object.
-     *
-     */
-    Routes(Ip6 &aIp6);
+    enum
+    {
+        kHashSize = 32,  ///< SHA-256 hash size (bytes)
+    };
 
     /**
-     * This method adds an IPv6 route.
+     * This method sets the key.
      *
-     * @param[in]  aRoute  A reference to the IPv6 route.
-     *
-     * @retval kThreadError_None  Successfully added the route.
-     * @retval kThreadError_Busy  The route was already added.
+     * @param[in]  aKey        A pointer to the key.
+     * @param[in]  aKeyLength  The key length in bytes.
      *
      */
-    ThreadError Add(Route &aRoute);
+    void Start(const uint8_t *aKey, uint16_t aKeyLength);
 
     /**
-     * This method removes an IPv6 route.
+     * This method inputs bytes into the HMAC computation.
      *
-     * @param[in]  aRoute  A reference to the IPv6 route.
-     *
-     * @retval kThreadError_None         Successfully removed the route.
-     * @retval kThreadError_InvalidArgs  The route was not added.
+     * @param[in]  aBuf        A pointer to the input buffer.
+     * @param[in]  aBufLength  The length of @p aBuf in bytes.
      *
      */
-    ThreadError Remove(Route &aRoute);
+    void Update(const uint8_t *aBuf, uint16_t aBufLength);
 
     /**
-     * This method performs source-destination route lookup.
+     * This method finalizes the hash computation.
      *
-     * @param[in]  aSource       The IPv6 source address.
-     * @param[in]  aDestination  The IPv6 destination address.
-     *
-     * @returns The interface identifier for the best route or -1 if no route is available.
+     * @param[out]  aHash  A pointer to the output buffer.
      *
      */
-    int8_t Lookup(const Address &aSource, const Address &aDestination);
+    void Finish(uint8_t aHash[kHashSize]);
 
 private:
-    Route *mRoutes;
-    Ip6 &mIp6;
+    mbedtls_md_context_t mContext;
 };
 
 /**
@@ -118,7 +95,7 @@ private:
  *
  */
 
-}  // namespace Ip6
+}  // namespace Crypto
 }  // namespace Thread
 
-#endif  // NET_IP6_ROUTES_HPP_
+#endif  // HMAC_SHA256_HPP_

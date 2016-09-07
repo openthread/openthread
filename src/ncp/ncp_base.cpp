@@ -45,6 +45,7 @@ namespace Thread
 {
 
 extern ThreadNetif *sThreadNetif;
+extern Ip6::Ip6 *sIp6;
 
 static NcpBase *sNcpContext = NULL;
 
@@ -405,7 +406,7 @@ static uint8_t BorderRouterConfigToFlagByte(const otBorderRouterConfig &config)
 // ----------------------------------------------------------------------------
 
 NcpBase::NcpBase():
-    mUpdateChangedPropsTask(&UpdateChangedProps, this)
+    mUpdateChangedPropsTask(sIp6->mTaskletScheduler, &UpdateChangedProps, this)
 {
     mSupportedChannelMask = kPhySupportedChannelMask;
     mChannelMask = mSupportedChannelMask;
@@ -477,7 +478,7 @@ exit:
 
     if (message != NULL)
     {
-        Message::Free(*message);
+        message->Free();
     }
 
     if (errorCode != kThreadError_None)
@@ -1075,7 +1076,7 @@ exit:
 
     if (message != NULL)
     {
-        Message::Free(*message);
+        message->Free();
     }
 
     return errorCode;
@@ -3102,7 +3103,7 @@ ThreadError NcpBase::SetPropertyHandler_STREAM_NET_INSECURE(uint8_t header, spin
     unsigned int frame_len(0);
     const uint8_t *meta_ptr(NULL);
     unsigned int meta_len(0);
-    Message *message(Ip6::Ip6::NewMessage(0));
+    Message *message(sIp6->mMessagePool.New(Message::kTypeIp6, 0));
 
     if (message == NULL)
     {
@@ -3138,7 +3139,7 @@ ThreadError NcpBase::SetPropertyHandler_STREAM_NET_INSECURE(uint8_t header, spin
     }
     else if (message)
     {
-        Message::Free(*message);
+        message->Free();
     }
 
     if (errorCode == kThreadError_None)
@@ -3173,7 +3174,7 @@ ThreadError NcpBase::SetPropertyHandler_STREAM_NET(uint8_t header, spinel_prop_k
     unsigned int frame_len(0);
     const uint8_t *meta_ptr(NULL);
     unsigned int meta_len(0);
-    Message *message(Ip6::Ip6::NewMessage(0));
+    Message *message(sIp6->mMessagePool.New(Message::kTypeIp6, 0));
 
     if (message == NULL)
     {
@@ -3209,7 +3210,7 @@ ThreadError NcpBase::SetPropertyHandler_STREAM_NET(uint8_t header, spinel_prop_k
     }
     else if (message)
     {
-        Message::Free(*message);
+        message->Free();
     }
 
     if (errorCode == kThreadError_None)

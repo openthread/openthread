@@ -37,7 +37,7 @@
 #include <stdint.h>
 
 #include <openthread-types.h>
-#include <crypto/aes_ecb.h>
+#include <crypto/aes_ecb.hpp>
 
 namespace Thread {
 namespace Crypto {
@@ -108,9 +108,10 @@ public:
     void Finalize(void *aTag, uint8_t *aTagLength);
 
 private:
-    uint8_t mBlock[otAesBlockSize];
-    uint8_t mCtr[otAesBlockSize];
-    uint8_t mCtrPad[otAesBlockSize];
+    AesEcb mEcb;
+    uint8_t mBlock[AesEcb::kBlockSize];
+    uint8_t mCtr[AesEcb::kBlockSize];
+    uint8_t mCtrPad[AesEcb::kBlockSize];
     uint8_t mNonceLength;
     uint32_t mHeaderLength;
     uint32_t mHeaderCur;

@@ -30,7 +30,10 @@
 #include <openthread.h>
 #include <common/debug.hpp>
 #include <crypto/aes_ccm.hpp>
+#include <crypto/mbedtls.hpp>
 #include <string.h>
+
+static Thread::Crypto::MbedTls mbedtls;
 
 extern"C" void otSignalTaskletPending(void)
 {

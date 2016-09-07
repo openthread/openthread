@@ -428,6 +428,11 @@ AM_CONDITIONAL([OPENTHREAD_ENABLE_NCP],      [test "${enable_ncp}" != "no"])
 AM_CONDITIONAL([OPENTHREAD_ENABLE_NCP_SPI],  [test "${enable_ncp}"  = "spi"])
 AM_CONDITIONAL([OPENTHREAD_ENABLE_NCP_UART], [test "${enable_ncp}"  = "uart"])
 
+MBEDTLS_CPPFLAGS="-I\${abs_top_srcdir}/third_party/mbedtls"
+MBEDTLS_CPPFLAGS="${MBEDTLS_CPPFLAGS} -I\${abs_top_srcdir}/third_party/mbedtls/repo/include"
+MBEDTLS_CPPFLAGS="${MBEDTLS_CPPFLAGS} -I\${abs_top_srcdir}/third_party/mbedtls/repo/include/mbedtls"
+MBEDTLS_CPPFLAGS="${MBEDTLS_CPPFLAGS} -DMBEDTLS_CONFIG_FILE=\\\"mbedtls-config.h\\\""
+
 #
 # Diagnostics Library
 #
@@ -602,6 +607,10 @@ if test "${ac_no_link}" != "yes"; then
     AC_CHECK_FUNCS([memcpy])
 fi
 
+# Add any mbedtls CPPFLAGS
+
+CPPFLAGS="${CPPFLAGS} ${MBEDTLS_CPPFLAGS}"
+
 # Add any code coverage CPPFLAGS and LDFLAGS
 
 CPPFLAGS="${CPPFLAGS} ${NL_COVERAGE_CPPFLAGS}"
@@ -620,7 +629,6 @@ AC_CONFIG_FILES([
 Makefile
 include/Makefile
 include/cli/Makefile
-include/crypto/Makefile
 include/ncp/Makefile
 include/platform/Makefile
 src/Makefile

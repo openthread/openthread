@@ -40,6 +40,7 @@
 #include <common/new.hpp>
 #include <common/tasklet.hpp>
 #include <common/timer.hpp>
+#include <crypto/mbedtls.hpp>
 #include <net/icmp6.hpp>
 #include <net/ip6.hpp>
 #include <platform/random.h>
@@ -56,6 +57,11 @@ ThreadNetif *sThreadNetif;
 
 static Ip6::NetifCallback sNetifCallback;
 static bool mEnabled = false;
+
+static otDEFINE_ALIGNED_VAR(sMbedTlsRaw, sizeof(Crypto::MbedTls), uint64_t);
+
+static otDEFINE_ALIGNED_VAR(sIp6Raw, sizeof(Ip6::Ip6), uint64_t);
+Ip6::Ip6 *sIp6;
 
 #ifdef __cplusplus
 extern "C" {
@@ -77,12 +83,12 @@ static void *sDiscoverCallbackContext = NULL;
 
 void otProcessNextTasklet(void)
 {
-    TaskletScheduler::RunNextTasklet();
+    sIp6->mTaskletScheduler.RunNextTasklet();
 }
 
 bool otAreTaskletsPending(void)
 {
-    return TaskletScheduler::AreTaskletsPending();
+    return sIp6->mTaskletScheduler.AreTaskletsPending();
 }
 
 uint8_t otGetChannel(void)
@@ -869,9 +875,9 @@ ThreadError otEnable(void)
     VerifyOrExit(!mEnabled, error = kThreadError_InvalidState);
 
     otLogInfoApi("otEnable\n");
-    Message::Init();
-    sThreadNetif = new(&sThreadNetifRaw) ThreadNetif;
-    Ip6::Ip6::Init();
+    new(&sMbedTlsRaw) Crypto::MbedTls;
+    sIp6 = new(&sIp6Raw) Ip6::Ip6;
+    sThreadNetif = new(&sThreadNetifRaw) ThreadNetif(*sIp6);
     mEnabled = true;
 
 exit:
@@ -1047,33 +1053,32 @@ void HandleMleDiscover(otActiveScanResult *aResult, void *aContext)
 
 void otSetReceiveIp6DatagramCallback(otReceiveIp6DatagramCallback aCallback, void *aCallbackContext)
 {
-    Ip6::Ip6::SetReceiveDatagramCallback(aCallback, aCallbackContext);
+    sIp6->SetReceiveDatagramCallback(aCallback, aCallbackContext);
 }
 
 bool otIsReceiveIp6DatagramFilterEnabled(void)
 {
-    return Ip6::Ip6::IsReceiveIp6FilterEnabled();
+    return sIp6->IsReceiveIp6FilterEnabled();
 }
 
 void otSetReceiveIp6DatagramFilterEnabled(bool aEnabled)
 {
-    Ip6::Ip6::SetReceiveIp6FilterEnabled(aEnabled);
+    sIp6->SetReceiveIp6FilterEnabled(aEnabled);
 }
 
 ThreadError otSendIp6Datagram(otMessage aMessage)
 {
-    return Ip6::Ip6::HandleDatagram(*static_cast<Message *>(aMessage), NULL, sThreadNetif->GetInterfaceId(),
-                                    NULL, true);
+    return sIp6->HandleDatagram(*static_cast<Message *>(aMessage), NULL, sThreadNetif->GetInterfaceId(), NULL, true);
 }
 
 otMessage otNewUdpMessage(void)
 {
-    return Ip6::Udp::NewMessage(0);
+    return sIp6->mUdp.NewMessage(0);
 }
 
 ThreadError otFreeMessage(otMessage aMessage)
 {
-    return Message::Free(*static_cast<Message *>(aMessage));
+    return static_cast<Message *>(aMessage)->Free();
 }
 
 uint16_t otGetMessageLength(otMessage aMessage)
@@ -1145,12 +1150,12 @@ ThreadError otSendUdp(otUdpSocket *aSocket, otMessage aMessage, const otMessageI
 
 bool otIsIcmpEchoEnabled(void)
 {
-    return Ip6::Icmp::IsEchoEnabled();
+    return sIp6->mIcmp.IsEchoEnabled();
 }
 
 void otSetIcmpEchoEnabled(bool aEnabled)
 {
-    Ip6::Icmp::SetEchoEnabled(aEnabled);
+    sIp6->mIcmp.SetEchoEnabled(aEnabled);
 }
 
 uint8_t otIp6PrefixMatch(const otIp6Address *aFirst, const otIp6Address *aSecond)

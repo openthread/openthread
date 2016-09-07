@@ -39,7 +39,6 @@
 #include <net/icmp6.hpp>
 #include <net/ip6.hpp>
 #include <net/ip6_address.hpp>
-#include <net/ip6_mpl.hpp>
 #include <net/ip6_routes.hpp>
 #include <net/netif.hpp>
 #include <net/udp6.hpp>
@@ -48,32 +47,28 @@
 namespace Thread {
 namespace Ip6 {
 
-static otDEFINE_ALIGNED_VAR(sMplBuf, sizeof(Mpl), uint64_t);
-static Mpl *sMpl;
-static bool sForwardingEnabled;
-
-static otReceiveIp6DatagramCallback sReceiveIp6DatagramCallback = NULL;
-static void *sReceiveIp6DatagramCallbackContext = NULL;
-static bool sIsReceiveIp6FilterEnabled;
-
-static ThreadError ForwardMessage(Message &message, MessageInfo &messageInfo);
+Ip6::Ip6(void):
+    mRoutes(*this),
+    mIcmp(*this),
+    mUdp(*this),
+    mMpl(*this),
+    mForwardingEnabled(false),
+    mReceiveIp6DatagramCallback(NULL),
+    mReceiveIp6DatagramCallbackContext(NULL),
+    mIsReceiveIp6FilterEnabled(false),
+    mNetifListHead(NULL),
+    mNextInterfaceId(1)
+{
+}
 
 Message *Ip6::NewMessage(uint16_t reserved)
 {
-    return Message::New(Message::kTypeIp6,
-                        sizeof(Header) + sizeof(HopByHopHeader) + sizeof(OptionMpl) + reserved);
-}
-
-void Ip6::Init(void)
-{
-    sMpl = new(&sMplBuf) Mpl;
-    sForwardingEnabled = false;
-    sIsReceiveIp6FilterEnabled = true;
+    return mMessagePool.New(Message::kTypeIp6, sizeof(Header) + sizeof(HopByHopHeader) + sizeof(OptionMpl) + reserved);
 }
 
 void Ip6::SetForwardingEnabled(bool aEnable)
 {
-    sForwardingEnabled = aEnable;
+    mForwardingEnabled = aEnable;
 }
 
 uint16_t Ip6::UpdateChecksum(uint16_t checksum, uint16_t val)
@@ -113,21 +108,21 @@ uint16_t Ip6::ComputePseudoheaderChecksum(const Address &src, const Address &dst
 
 void Ip6::SetReceiveDatagramCallback(otReceiveIp6DatagramCallback aCallback, void *aCallbackContext)
 {
-    sReceiveIp6DatagramCallback = aCallback;
-    sReceiveIp6DatagramCallbackContext = aCallbackContext;
+    mReceiveIp6DatagramCallback = aCallback;
+    mReceiveIp6DatagramCallbackContext = aCallbackContext;
 }
 
 bool Ip6::IsReceiveIp6FilterEnabled(void)
 {
-    return sIsReceiveIp6FilterEnabled;
+    return mIsReceiveIp6FilterEnabled;
 }
 
 void Ip6::SetReceiveIp6FilterEnabled(bool aEnabled)
 {
-    sIsReceiveIp6FilterEnabled = aEnabled;
+    mIsReceiveIp6FilterEnabled = aEnabled;
 }
 
-ThreadError AddMplOption(Message &message, Header &header, IpProto nextHeader, uint16_t payloadLength)
+ThreadError Ip6::AddMplOption(Message &message, Header &header, IpProto nextHeader, uint16_t payloadLength)
 {
     ThreadError error = kThreadError_None;
     HopByHopHeader hbhHeader;
@@ -135,7 +130,7 @@ ThreadError AddMplOption(Message &message, Header &header, IpProto nextHeader, u
 
     hbhHeader.SetNextHeader(nextHeader);
     hbhHeader.SetLength(0);
-    sMpl->InitOption(mplOption, HostSwap16(header.GetSource().mFields.m16[7]));
+    mMpl.InitOption(mplOption, HostSwap16(header.GetSource().mFields.m16[7]));
     SuccessOrExit(error = message.Prepend(&mplOption, sizeof(mplOption)));
     SuccessOrExit(error = message.Prepend(&hbhHeader, sizeof(hbhHeader)));
     header.SetPayloadLength(sizeof(hbhHeader) + sizeof(mplOption) + payloadLength);
@@ -159,7 +154,7 @@ ThreadError Ip6::SendDatagram(Message &message, MessageInfo &messageInfo, IpProt
 
     if (messageInfo.GetSockAddr().IsUnspecified())
     {
-        VerifyOrExit((source = Netif::SelectSourceAddress(messageInfo)) != NULL, error = kThreadError_Error);
+        VerifyOrExit((source = SelectSourceAddress(messageInfo)) != NULL, error = kThreadError_Error);
         header.SetSource(source->GetAddress());
     }
     else
@@ -188,11 +183,11 @@ ThreadError Ip6::SendDatagram(Message &message, MessageInfo &messageInfo, IpProt
     switch (ipproto)
     {
     case kProtoUdp:
-        SuccessOrExit(error = Udp::UpdateChecksum(message, checksum));
+        SuccessOrExit(error = mUdp.UpdateChecksum(message, checksum));
         break;
 
     case kProtoIcmp6:
-        SuccessOrExit(error = Icmp::UpdateChecksum(message, checksum));
+        SuccessOrExit(error = mIcmp.UpdateChecksum(message, checksum));
         break;
 
     default:
@@ -209,7 +204,7 @@ exit:
     return error;
 }
 
-ThreadError HandleOptions(Message &message)
+ThreadError Ip6::HandleOptions(Message &message)
 {
     ThreadError error = kThreadError_None;
     HopByHopHeader hbhHeader;
@@ -228,7 +223,7 @@ ThreadError HandleOptions(Message &message)
         switch (optionHeader.GetType())
         {
         case OptionMpl::kType:
-            SuccessOrExit(error = sMpl->ProcessOption(message));
+            SuccessOrExit(error = mMpl.ProcessOption(message));
             break;
 
         default:
@@ -260,7 +255,7 @@ exit:
     return error;
 }
 
-ThreadError HandleFragment(Message &message)
+ThreadError Ip6::HandleFragment(Message &message)
 {
     ThreadError error = kThreadError_None;
     FragmentHeader fragmentHeader;
@@ -276,7 +271,7 @@ exit:
     return error;
 }
 
-ThreadError HandleExtensionHeaders(Message &message, uint8_t &nextHeader, bool receive)
+ThreadError Ip6::HandleExtensionHeaders(Message &message, uint8_t &nextHeader, bool receive)
 {
     ThreadError error = kThreadError_None;
     ExtensionHeader extensionHeader;
@@ -317,17 +312,17 @@ exit:
     return error;
 }
 
-ThreadError HandlePayload(Message &message, MessageInfo &messageInfo, uint8_t ipproto)
+ThreadError Ip6::HandlePayload(Message &message, MessageInfo &messageInfo, uint8_t ipproto)
 {
     ThreadError error = kThreadError_None;
 
     switch (ipproto)
     {
     case kProtoUdp:
-        ExitNow(error = Udp::HandleMessage(message, messageInfo));
+        ExitNow(error = mUdp.HandleMessage(message, messageInfo));
 
     case kProtoIcmp6:
-        ExitNow(error = Icmp::HandleMessage(message, messageInfo));
+        ExitNow(error = mIcmp.HandleMessage(message, messageInfo));
     }
 
 exit:
@@ -339,9 +334,9 @@ void Ip6::ProcessReceiveCallback(const Message &aMessage, const MessageInfo &mes
     ThreadError error = kThreadError_None;
     Message *messageCopy = NULL;
 
-    VerifyOrExit(sReceiveIp6DatagramCallback != NULL, ;);
+    VerifyOrExit(mReceiveIp6DatagramCallback != NULL, ;);
 
-    if (sIsReceiveIp6FilterEnabled)
+    if (mIsReceiveIp6FilterEnabled)
     {
         // do not pass messages sent to/from an RLOC
         VerifyOrExit(!messageInfo.GetSockAddr().IsRoutingLocator() &&
@@ -350,7 +345,7 @@ void Ip6::ProcessReceiveCallback(const Message &aMessage, const MessageInfo &mes
         switch (aIpProto)
         {
         case kProtoIcmp6:
-            if (Icmp::IsEchoEnabled())
+            if (mIcmp.IsEchoEnabled())
             {
                 IcmpHeader icmp;
                 aMessage.Read(aMessage.GetOffset(), sizeof(icmp), &icmp);
@@ -384,13 +379,13 @@ void Ip6::ProcessReceiveCallback(const Message &aMessage, const MessageInfo &mes
     aMessage.CopyTo(0, 0, aMessage.GetLength(), *messageCopy);
     messageCopy->SetLinkSecurityEnabled(aMessage.IsLinkSecurityEnabled());
 
-    sReceiveIp6DatagramCallback(messageCopy, sReceiveIp6DatagramCallbackContext);
+    mReceiveIp6DatagramCallback(messageCopy, mReceiveIp6DatagramCallbackContext);
 
 exit:
 
     if (error != kThreadError_None && messageCopy != NULL)
     {
-        Message::Free(*messageCopy);
+        messageCopy->Free();
     }
 }
 
@@ -450,7 +445,7 @@ ThreadError Ip6::HandleDatagram(Message &message, Netif *netif, int8_t interface
     }
     else
     {
-        if (Netif::IsUnicastAddress(header.GetDestination()))
+        if (IsUnicastAddress(header.GetDestination()))
         {
             receive = true;
         }
@@ -464,7 +459,7 @@ ThreadError Ip6::HandleDatagram(Message &message, Netif *netif, int8_t interface
         }
     }
 
-    if (!sForwardingEnabled && netif != NULL)
+    if (!mForwardingEnabled && netif != NULL)
     {
         forward = false;
     }
@@ -510,13 +505,13 @@ exit:
 
     if (error != kThreadError_None || !forward)
     {
-        Message::Free(message);
+        message.Free();
     }
 
     return error;
 }
 
-ThreadError ForwardMessage(Message &message, MessageInfo &messageInfo)
+ThreadError Ip6::ForwardMessage(Message &message, MessageInfo &messageInfo)
 {
     ThreadError error = kThreadError_None;
     int8_t interfaceId;
@@ -532,12 +527,12 @@ ThreadError ForwardMessage(Message &message, MessageInfo &messageInfo)
         // on-link link-local address
         interfaceId = messageInfo.mInterfaceId;
     }
-    else if ((interfaceId = Netif::GetOnLinkNetif(messageInfo.GetSockAddr())) > 0)
+    else if ((interfaceId = GetOnLinkNetif(messageInfo.GetSockAddr())) > 0)
     {
         // on-link global address
         ;
     }
-    else if ((interfaceId = Routes::Lookup(messageInfo.GetPeerAddr(), messageInfo.GetSockAddr())) > 0)
+    else if ((interfaceId = mRoutes.Lookup(messageInfo.GetPeerAddr(), messageInfo.GetSockAddr())) > 0)
     {
         // route
         ;
@@ -549,11 +544,236 @@ ThreadError ForwardMessage(Message &message, MessageInfo &messageInfo)
     }
 
     // submit message to interface
-    VerifyOrExit((netif = Netif::GetNetifById(interfaceId)) != NULL, error = kThreadError_NoRoute);
+    VerifyOrExit((netif = GetNetifById(interfaceId)) != NULL, error = kThreadError_NoRoute);
     SuccessOrExit(error = netif->SendMessage(message));
 
 exit:
     return error;
+}
+
+ThreadError Ip6::AddNetif(Netif &aNetif)
+{
+    ThreadError error = kThreadError_None;
+    Netif *netif;
+
+    if (mNetifListHead == NULL)
+    {
+        mNetifListHead = &aNetif;
+    }
+    else
+    {
+        netif = mNetifListHead;
+
+        do
+        {
+            if (netif == &aNetif)
+            {
+                ExitNow(error = kThreadError_Busy);
+            }
+        }
+        while (netif->mNext);
+
+        netif->mNext = &aNetif;
+    }
+
+    aNetif.mNext = NULL;
+
+    if (aNetif.mInterfaceId < 0)
+    {
+        aNetif.mInterfaceId = mNextInterfaceId++;
+    }
+
+exit:
+    return error;
+}
+
+ThreadError Ip6::RemoveNetif(Netif &aNetif)
+{
+    ThreadError error = kThreadError_None;
+
+    VerifyOrExit(mNetifListHead != NULL, error = kThreadError_Busy);
+
+    if (mNetifListHead == &aNetif)
+    {
+        mNetifListHead = aNetif.mNext;
+    }
+    else
+    {
+        for (Netif *netif = mNetifListHead; netif->mNext; netif = netif->mNext)
+        {
+            if (netif->mNext != &aNetif)
+            {
+                continue;
+            }
+
+            netif->mNext = aNetif.mNext;
+            break;
+        }
+    }
+
+    aNetif.mNext = NULL;
+
+exit:
+    return error;
+}
+
+Netif *Ip6::GetNetifList()
+{
+    return mNetifListHead;
+}
+
+Netif *Ip6::GetNetifById(int8_t aInterfaceId)
+{
+    Netif *netif;
+
+    for (netif = mNetifListHead; netif; netif = netif->mNext)
+    {
+        if (netif->GetInterfaceId() == aInterfaceId)
+        {
+            ExitNow();
+        }
+    }
+
+exit:
+    return netif;
+}
+
+Netif *Ip6::GetNetifByName(char *aName)
+{
+    Netif *netif;
+
+    for (netif = mNetifListHead; netif; netif = netif->mNext)
+    {
+        if (strcmp(netif->GetName(), aName) == 0)
+        {
+            ExitNow();
+        }
+    }
+
+exit:
+    return netif;
+}
+
+bool Ip6::IsUnicastAddress(const Address &aAddress)
+{
+    bool rval = false;
+
+    for (Netif *netif = mNetifListHead; netif; netif = netif->mNext)
+    {
+        rval = netif->IsUnicastAddress(aAddress);
+
+        if (rval)
+        {
+            ExitNow();
+        }
+    }
+
+exit:
+    return rval;
+}
+
+const NetifUnicastAddress *Ip6::SelectSourceAddress(MessageInfo &aMessageInfo)
+{
+    Address *destination = &aMessageInfo.GetPeerAddr();
+    int interfaceId = aMessageInfo.mInterfaceId;
+    const NetifUnicastAddress *rvalAddr = NULL;
+    const Address *candidateAddr;
+    int8_t candidateId;
+    int8_t rvalIface = 0;
+
+    for (Netif *netif = GetNetifList(); netif; netif = netif->mNext)
+    {
+        candidateId = netif->GetInterfaceId();
+
+        for (const NetifUnicastAddress *addr = netif->mUnicastAddresses; addr; addr = addr->GetNext())
+        {
+            candidateAddr = &addr->GetAddress();
+
+            if (destination->IsLinkLocal() || destination->IsMulticast())
+            {
+                if (interfaceId != candidateId)
+                {
+                    continue;
+                }
+            }
+
+            if (rvalAddr == NULL)
+            {
+                // Rule 0: Prefer any address
+                rvalAddr = addr;
+                rvalIface = candidateId;
+            }
+            else if (*candidateAddr == *destination)
+            {
+                // Rule 1: Prefer same address
+                rvalAddr = addr;
+                rvalIface = candidateId;
+                goto exit;
+            }
+            else if (candidateAddr->GetScope() < rvalAddr->GetAddress().GetScope())
+            {
+                // Rule 2: Prefer appropriate scope
+                if (candidateAddr->GetScope() >= destination->GetScope())
+                {
+                    rvalAddr = addr;
+                    rvalIface = candidateId;
+                }
+            }
+            else if (candidateAddr->GetScope() > rvalAddr->GetAddress().GetScope())
+            {
+                if (rvalAddr->GetAddress().GetScope() < destination->GetScope())
+                {
+                    rvalAddr = addr;
+                    rvalIface = candidateId;
+                }
+            }
+            else if (addr->mPreferredLifetime != 0 && rvalAddr->mPreferredLifetime == 0)
+            {
+                // Rule 3: Avoid deprecated addresses
+                rvalAddr = addr;
+                rvalIface = candidateId;
+            }
+            else if (aMessageInfo.mInterfaceId != 0 && aMessageInfo.mInterfaceId == candidateId &&
+                     rvalIface != candidateId)
+            {
+                // Rule 4: Prefer home address
+                // Rule 5: Prefer outgoing interface
+                rvalAddr = addr;
+                rvalIface = candidateId;
+            }
+            else if (destination->PrefixMatch(*candidateAddr) > destination->PrefixMatch(rvalAddr->GetAddress()))
+            {
+                // Rule 6: Prefer matching label
+                // Rule 7: Prefer public address
+                // Rule 8: Use longest prefix matching
+                rvalAddr = addr;
+                rvalIface = candidateId;
+            }
+        }
+    }
+
+exit:
+    aMessageInfo.mInterfaceId = rvalIface;
+    return rvalAddr;
+}
+
+int8_t Ip6::GetOnLinkNetif(const Address &aAddress)
+{
+    int8_t rval = -1;
+
+    for (Netif *netif = mNetifListHead; netif; netif = netif->mNext)
+    {
+        for (const NetifUnicastAddress *cur = netif->mUnicastAddresses; cur; cur = cur->GetNext())
+        {
+            if (cur->GetAddress().PrefixMatch(aAddress) >= cur->mPrefixLength)
+            {
+                ExitNow(rval = netif->GetInterfaceId());
+            }
+        }
+    }
+
+exit:
+    return rval;
 }
 
 }  // namespace Ip6

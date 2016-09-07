@@ -32,7 +32,7 @@
  */
 
 #include <common/code_utils.hpp>
-#include <crypto/hmac_sha256.h>
+#include <crypto/hmac_sha256.hpp>
 #include <thread/key_manager.hpp>
 #include <thread/mle_router.hpp>
 #include <thread/thread_netif.hpp>
@@ -83,18 +83,19 @@ exit:
 
 ThreadError KeyManager::ComputeKey(uint32_t aKeySequence, uint8_t *aKey)
 {
+    Crypto::HmacSha256 hmac;
     uint8_t keySequenceBytes[4];
 
-    otCryptoHmacSha256Start(mMasterKey, mMasterKeyLength);
+    hmac.Start(mMasterKey, mMasterKeyLength);
 
     keySequenceBytes[0] = (aKeySequence >> 24) & 0xff;
     keySequenceBytes[1] = (aKeySequence >> 16) & 0xff;
     keySequenceBytes[2] = (aKeySequence >> 8) & 0xff;
     keySequenceBytes[3] = aKeySequence & 0xff;
-    otCryptoHmacSha256Update(keySequenceBytes, sizeof(keySequenceBytes));
-    otCryptoHmacSha256Update(kThreadString, sizeof(kThreadString));
+    hmac.Update(keySequenceBytes, sizeof(keySequenceBytes));
+    hmac.Update(kThreadString, sizeof(kThreadString));
 
-    otCryptoHmacSha256Finish(aKey);
+    hmac.Finish(aKey);
 
     return kThreadError_None;
 }

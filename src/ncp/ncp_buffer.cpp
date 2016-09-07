@@ -78,13 +78,13 @@ void NcpFrameBuffer::Clear(void)
     while ((message = mWriteFrameMessageQueue.GetHead()) != NULL)
     {
         mWriteFrameMessageQueue.Dequeue(*message);
-        Message::Free(*message);
+        message->Free();
     }
 
     while ((message = mMessageQueue.GetHead()) != NULL)
     {
         mMessageQueue.Dequeue(*message);
-        Message::Free(*message);
+        message->Free();
     }
 
     if (!wasEmpty)
@@ -249,7 +249,7 @@ void NcpFrameBuffer::InFrameDiscard(void)
     while ((message = mWriteFrameMessageQueue.GetHead()) != NULL)
     {
         mWriteFrameMessageQueue.Dequeue(*message);
-        Message::Free(*message);
+        message->Free();
     }
 }
 
@@ -572,7 +572,7 @@ ThreadError NcpFrameBuffer::OutFrameRemove(void)
             if ((message = mMessageQueue.GetHead()) != NULL)
             {
                 mMessageQueue.Dequeue(*message);
-                Message::Free(*message);
+                message->Free();
             }
         }
 

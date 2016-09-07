@@ -33,21 +33,27 @@
 
 #include <common/code_utils.hpp>
 #include <common/timer.hpp>
+#include <net/ip6.hpp>
 #include <platform/alarm.h>
 
 namespace Thread {
 
-static Timer   *sHead = NULL;
-static Timer   *sTail = NULL;
+// FIXME: the otPlatAlarm callback should provide the context
+static TimerScheduler *sTimerScheduler;
+
+TimerScheduler::TimerScheduler(void):
+    mHead(NULL)
+{
+    sTimerScheduler = this;
+}
 
 void TimerScheduler::Add(Timer &aTimer)
 {
     Remove(aTimer);
 
-    if (sHead == NULL)
+    if (mHead == NULL)
     {
-        sHead = &aTimer;
-        sTail = &aTimer;
+        mHead = &aTimer;
         SetAlarm();
     }
     else
@@ -55,7 +61,7 @@ void TimerScheduler::Add(Timer &aTimer)
         Timer *prev = NULL;
         Timer *cur;
 
-        for (cur = sHead; cur; cur = cur->mNext)
+        for (cur = mHead; cur; cur = cur->mNext)
         {
             if (TimerCompare(aTimer, *cur))
             {
@@ -66,8 +72,8 @@ void TimerScheduler::Add(Timer &aTimer)
                 }
                 else
                 {
-                    aTimer.mNext = sHead;
-                    sHead = &aTimer;
+                    aTimer.mNext = mHead;
+                    mHead = &aTimer;
                     SetAlarm();
                 }
 
@@ -79,56 +85,38 @@ void TimerScheduler::Add(Timer &aTimer)
 
         if (cur == NULL)
         {
-            sTail->mNext = &aTimer;
-            sTail = &aTimer;
+            prev->mNext = &aTimer;
         }
     }
 }
 
 void TimerScheduler::Remove(Timer &aTimer)
 {
-    VerifyOrExit(aTimer.mNext != NULL || sTail == &aTimer, ;);
-
-    if (sHead == &aTimer)
+    if (mHead == &aTimer)
     {
-        sHead = aTimer.mNext;
-
-        if (sTail == &aTimer)
-        {
-            sTail = NULL;
-        }
-
+        mHead = aTimer.mNext;
+        aTimer.mNext = NULL;
         SetAlarm();
     }
     else
     {
-        for (Timer *cur = sHead; cur; cur = cur->mNext)
+        for (Timer *cur = mHead; cur; cur = cur->mNext)
         {
             if (cur->mNext == &aTimer)
             {
                 cur->mNext = aTimer.mNext;
-
-                if (sTail == &aTimer)
-                {
-                    sTail = cur;
-                }
-
+                aTimer.mNext = NULL;
                 break;
             }
         }
     }
-
-    aTimer.mNext = NULL;
-
-exit:
-    return;
 }
 
 bool TimerScheduler::IsAdded(const Timer &aTimer)
 {
     bool rval = false;
 
-    for (Timer *cur = sHead; cur; cur = cur->mNext)
+    for (Timer *cur = mHead; cur; cur = cur->mNext)
     {
         if (cur == &aTimer)
         {
@@ -145,16 +133,15 @@ void TimerScheduler::SetAlarm(void)
     uint32_t now = otPlatAlarmGetNow();
     uint32_t elapsed;
     uint32_t remaining;
-    Timer *timer = sHead;
 
-    if (timer == NULL)
+    if (mHead == NULL)
     {
         otPlatAlarmStop();
     }
     else
     {
-        elapsed = now - timer->mT0;
-        remaining = (timer->mDt > elapsed) ? timer->mDt - elapsed : 0;
+        elapsed = now - mHead->mT0;
+        remaining = (mHead->mDt > elapsed) ? mHead->mDt - elapsed : 0;
 
         otPlatAlarmStartAt(now, remaining);
     }
@@ -162,14 +149,14 @@ void TimerScheduler::SetAlarm(void)
 
 extern "C" void otPlatAlarmFired(void)
 {
-    TimerScheduler::FireTimers();
+    sTimerScheduler->FireTimers();
 }
 
 void TimerScheduler::FireTimers(void)
 {
     uint32_t now = otPlatAlarmGetNow();
     uint32_t elapsed;
-    Timer *timer = sHead;
+    Timer *timer = mHead;
 
     if (timer)
     {
