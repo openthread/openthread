@@ -37,8 +37,27 @@ set -x
 cd /tmp || die
 
 [ $TRAVIS_OS_NAME != linux ] || {    
-    sudo apt-get update
-    sudo apt-get install python-pexpect || die
+    sudo apt-get update || die
+
+    sudo -H pip install --upgrade pip || die
+    pip install --upgrade pip || die
+
+    sudo -H pip install pexpect || die
+    pip install pexpect || die
+
+    [ $BUILD_TARGET != pretty-check ] || {
+        wget http://jaist.dl.sourceforge.net/project/astyle/astyle/astyle%202.05.1/astyle_2.05.1_linux.tar.gz || die
+        tar xzvf astyle_2.05.1_linux.tar.gz || die
+        cd astyle/build/gcc || die
+        LDFLAGS=" " make || die
+        cd ../../..
+        export PATH=/tmp/astyle/build/gcc/bin:$PATH || die
+        astyle --version || die
+    }
+
+    [ $BUILD_TARGET != scan-build ] || {
+        sudo apt-get install clang || die
+    }
 
     [ $BUILD_TARGET != cc2538 ] || {
         sudo apt-get install lib32z1 || die
@@ -48,19 +67,15 @@ cd /tmp || die
         arm-none-eabi-gcc --version || die
     }
 
-    [ $BUILD_TARGET != scan-build ] || {
-        sudo apt-get install clang || die
-    }
-
     [ $BUILD_TARGET != posix-32-bit ] || {
         sudo apt-get install g++-multilib || die
     }
 
-    [ $NODE_TYPE != ncp-sim ] || {
-        sudo easy_install pip || die
-        sudo pip install blessed || die
-        sudo pip install ipaddress || die
-        sudo pip install scapy || die
+    [ $BUILD_TARGET != posix-ncp ] || {
+        pip install blessed || die
+        pip install ipaddress || die
+        pip install scapy || die
+        pip install pyserial || die
     }
 }
 
@@ -73,14 +88,4 @@ cd /tmp || die
         export PATH=/tmp/gcc-arm-none-eabi-4_9-2015q3/bin:$PATH || die
         arm-none-eabi-gcc --version || die
     }
-}
-
-[ $BUILD_TARGET != pretty-check ] || {
-    wget http://jaist.dl.sourceforge.net/project/astyle/astyle/astyle%202.05.1/astyle_2.05.1_linux.tar.gz || die
-    tar xzvf astyle_2.05.1_linux.tar.gz || die
-    cd astyle/build/gcc || die
-    LDFLAGS=" " make || die
-    cd ../../..
-    export PATH=/tmp/astyle/build/gcc/bin:$PATH || die
-    astyle --version || die
 }
