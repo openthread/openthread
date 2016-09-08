@@ -272,7 +272,7 @@ int Dtls::HandleMbedtlsExportKeys(void *aContext, const unsigned char *aMasterSe
                                   size_t aMacLength, size_t aKeyLength, size_t aIvLength)
 {
     return static_cast<Dtls *>(aContext)->HandleMbedtlsExportKeys(aMasterSecret, aKeyBlock,
-								  aMacLength, aKeyLength, aIvLength);
+                                                                  aMacLength, aKeyLength, aIvLength);
 }
 
 int Dtls::HandleMbedtlsExportKeys(const unsigned char *aMasterSecret, const unsigned char *aKeyBlock,

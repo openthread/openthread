@@ -72,19 +72,19 @@ void Joiner::HandleDiscoverResult(otActiveScanResult *aResult)
 {
     if (aResult != NULL)
     {
-	memcpy(&mJoinerRouter, &aResult->mExtAddress, sizeof(mJoinerRouter));
+        memcpy(&mJoinerRouter, &aResult->mExtAddress, sizeof(mJoinerRouter));
     }
     else
     {
-	// open UDP port
-	Ip6::SockAddr sockaddr;
-	sockaddr.mPort = 1000;
-	mSocket.Open(&HandleUdpReceive, this);
-	mSocket.Bind(sockaddr);
+        // open UDP port
+        Ip6::SockAddr sockaddr;
+        sockaddr.mPort = 1000;
+        mSocket.Open(&HandleUdpReceive, this);
+        mSocket.Bind(sockaddr);
 
-	mNetif.GetIp6Filter().AddUnsecurePort(sockaddr.mPort);
+        mNetif.GetIp6Filter().AddUnsecurePort(sockaddr.mPort);
 
-	mNetif.GetDtls().Start(true, HandleDtlsReceive, HandleDtlsSend, this);
+        mNetif.GetDtls().Start(true, HandleDtlsReceive, HandleDtlsSend, this);
     }
 }
 
@@ -138,7 +138,7 @@ void Joiner::HandleUdpReceive(void *aContext, otMessage aMessage, const otMessag
 {
     otLogInfoMeshCoP("Joiner::HandleUdpReceive\r\n");
     static_cast<Joiner *>(aContext)->HandleUdpReceive(*static_cast<Message *>(aMessage),
-						      *static_cast<const Ip6::MessageInfo *>(aMessageInfo));
+                                                      *static_cast<const Ip6::MessageInfo *>(aMessageInfo));
 }
 
 void Joiner::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
@@ -154,7 +154,7 @@ void Joiner::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessag
 }
 
 void Joiner::HandleUdpTransmit(void *aContext)
-{ 
+{
     otLogInfoMeshCoP("Joiner::HandleUdpTransmit\r\n");
     static_cast<Joiner *>(aContext)->HandleUdpTransmit();
 }
