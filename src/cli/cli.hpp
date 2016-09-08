@@ -147,6 +147,9 @@ private:
 #endif  // OPENTHREAD_ENABLE_DIAG
     static void ProcessDiscover(int argc, char *argv[]);
     static void ProcessEidCache(int argc, char *argv[]);
+#ifdef OPENTHREAD_EXAMPLES_POSIX
+    static void ProcessExit(int argc, char *argv[]);
+#endif
     static void ProcessExtAddress(int argc, char *argv[]);
     static void ProcessExtPanId(int argc, char *argv[]);
     static void ProcessIfconfig(int argc, char *argv[]);

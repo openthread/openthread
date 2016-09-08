@@ -76,6 +76,9 @@ const struct Command Interpreter::sCommands[] =
 #endif
     { "discover", &ProcessDiscover },
     { "eidcache", &ProcessEidCache },
+#ifdef OPENTHREAD_EXAMPLES_POSIX
+    { "exit", &ProcessExit },
+#endif
     { "extaddr", &ProcessExtAddress },
     { "extpanid", &ProcessExtPanId },
     { "ifconfig", &ProcessIfconfig },
@@ -567,6 +570,15 @@ void Interpreter::ProcessExtAddress(int argc, char *argv[])
 exit:
     AppendResult(error);
 }
+
+#ifdef OPENTHREAD_EXAMPLES_POSIX
+void Interpreter::ProcessExit(int argc, char *argv[])
+{
+    exit(0);
+    (void)argc;
+    (void)argv;
+}
+#endif
 
 void Interpreter::ProcessExtPanId(int argc, char *argv[])
 {

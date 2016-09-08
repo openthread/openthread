@@ -63,7 +63,7 @@ set -x
 }
 
 [ $BUILD_TARGET != posix-32-bit ] || {
-    CFLAGS=-m32 CXXFLAGS=-m32 LDFLAGS=-m32 BuildJobs=10 make -f examples/Makefile-posix check || die
+    COVERAGE=1 CFLAGS=-m32 CXXFLAGS=-m32 LDFLAGS=-m32 BuildJobs=10 make -f examples/Makefile-posix check || die
 }
 
 [ $BUILD_TARGET != posix-ncp ] || {
