@@ -105,7 +105,7 @@ ThreadError Dtls::Start(bool aClient, ReceiveHandler aReceiveHandler, SendHandle
     mbedtls_ssl_set_bio(&mSsl, this, &HandleMbedtlsTransmit, HandleMbedtlsReceive, NULL);
     mbedtls_ssl_set_timer_cb(&mSsl, this, &HandleMbedtlsSetTimer, HandleMbedtlsGetTimer);
 
-    rval = mbedtls_ssl_set_hs_ecjpake_password(&mSsl, (const unsigned char *)"threadjpaketest", 15);
+    rval = mbedtls_ssl_set_hs_ecjpake_password(&mSsl, mPsk, mPskLength);
     VerifyOrExit(rval == 0, ;);
 
     mStarted = true;
@@ -127,6 +127,19 @@ ThreadError Dtls::Stop(void)
     mbedtls_entropy_free(&mEntropy);
     mbedtls_ssl_cookie_free(&mCookieCtx);
     return kThreadError_None;
+}
+
+ThreadError Dtls::SetPsk(const uint8_t *aPsk, uint8_t aPskLength)
+{
+    ThreadError error = kThreadError_None;
+
+    VerifyOrExit(aPskLength <= sizeof(mPsk), error = kThreadError_InvalidArgs);
+
+    memcpy(mPsk, aPsk, aPskLength);
+    mPskLength = aPskLength;
+
+exit:
+    return error;
 }
 
 ThreadError Dtls::SetClientId(const uint8_t *aClientId, uint8_t aLength)
@@ -330,7 +343,7 @@ void Dtls::Process(void)
         else
         {
             mbedtls_ssl_session_reset(&mSsl);
-            mbedtls_ssl_set_hs_ecjpake_password(&mSsl, (const unsigned char *)"threadjpaketest", 15);
+            mbedtls_ssl_set_hs_ecjpake_password(&mSsl, mPsk, mPskLength);
             break;
         }
     }

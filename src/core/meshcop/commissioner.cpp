@@ -59,12 +59,14 @@ Commissioner::Commissioner(ThreadNetif &aThreadNetif):
     aThreadNetif.GetCoapServer().AddResource(mRelayReceive);
 }
 
-ThreadError Commissioner::Start(void)
+ThreadError Commissioner::Start(const char *aPSKd)
 {
     ThreadError error = kThreadError_None;
 
     VerifyOrExit(mState == kStateDisabled, error = kThreadError_InvalidState);
 
+    SuccessOrExit(error = mNetif.GetDtls().SetPsk(reinterpret_cast<const uint8_t *>(aPSKd),
+                                                  static_cast<uint8_t>(strlen(aPSKd))));
     SuccessOrExit(error = mSocket.Open(HandleUdpReceive, this));
     mState = kStatePetition;
     SendPetition();

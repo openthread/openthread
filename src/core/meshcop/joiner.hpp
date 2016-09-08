@@ -63,10 +63,12 @@ public:
     /**
      * This method starts the Joiner service.
      *
+     * @param[in]  aPSKd  A pointer to the PSKd.
+     *
      * @retval kThreadError_None  Successfully started the Joiner service.
      *
      */
-    ThreadError Start(void);
+    ThreadError Start(const char *aPSKd);
 
     /**
      * This method stops the Joiner service.
