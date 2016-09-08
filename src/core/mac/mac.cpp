@@ -192,6 +192,7 @@ bool Mac::GetRxOnWhenIdle(void) const
 void Mac::SetRxOnWhenIdle(bool aRxOnWhenIdle)
 {
     mRxOnWhenIdle = aRxOnWhenIdle;
+    NextOperation();
 }
 
 const ExtAddress *Mac::GetExtAddress(void) const
@@ -1019,8 +1020,6 @@ exit:
             break;
         }
     }
-
-    NextOperation();
 }
 
 ThreadError Mac::HandleMacCommand(Frame &aFrame)
