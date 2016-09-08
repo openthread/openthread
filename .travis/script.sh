@@ -38,7 +38,7 @@ set -x
 
 [ $BUILD_TARGET != pretty-check ] || {
     export PATH=/tmp/astyle/build/gcc/bin:$PATH || die
-    ./configure || die
+    ./configure --enable-cli --enable-diag --enable-commissioner --enable-joiner --with-examples=posix || die
     make pretty-check || die
 }
 
