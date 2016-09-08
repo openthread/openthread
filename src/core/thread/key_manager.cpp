@@ -161,4 +161,25 @@ void KeyManager::IncrementMleFrameCounter(void)
     mMleFrameCounter++;
 }
 
+const uint8_t *KeyManager::GetKek(void) const
+{
+    return mKek;
+}
+
+void KeyManager::SetKek(const uint8_t *aKek)
+{
+    memcpy(mKek, aKek, sizeof(mKek));
+    mKekFrameCounter = 0;
+}
+
+uint32_t KeyManager::GetKekFrameCounter(void) const
+{
+    return mKekFrameCounter;
+}
+
+void KeyManager::IncrementKekFrameCounter(void)
+{
+    mKekFrameCounter++;
+}
+
 }  // namespace Thread

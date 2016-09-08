@@ -34,6 +34,7 @@
 #include <ncp/ncp.h>
 #include <common/code_utils.hpp>
 #include <common/new.hpp>
+#include <net/ip6.hpp>
 #include <ncp/ncp.h>
 #include <ncp/ncp_uart.hpp>
 #include <platform/uart.h>

@@ -114,6 +114,54 @@ namespace Thread {
  */
 #define OPENTHREAD_URI_SERVER_DATA      "a/sd"
 
+/**
+ * @def OPENTHREAD_URI_RELAY_RX
+ *
+ * The URI Path for Relay RX.
+ *
+ */
+#define OPENTHREAD_URI_RELAY_RX         "c/rx"
+
+/**
+ * @def OPENTHREAD_URI_RELAY_TX
+ *
+ * The URI Path for Relay TX.
+ *
+ */
+#define OPENTHREAD_URI_RELAY_TX         "c/tx"
+
+/**
+ * @def OPENTHREAD_URI_JOINER_FINALIZE
+ *
+ * The URI Path for Joiner Finalize
+ *
+ */
+#define OPENTHREAD_URI_JOINER_FINALIZE  "c/jf"
+
+/**
+ * @def OPENTHREAD_URI_JOINER_ENTRUST
+ *
+ * The URI Path for Joiner Entrust
+ *
+ */
+#define OPENTHREAD_URI_JOINER_ENTRUST   "c/je"
+
+/**
+ * @def OPENTHREAD_URI_LEADER_PETITION
+ *
+ * The URI Path for Leader Petition
+ *
+ */
+#define OPENTHREAD_URI_LEADER_PETITION  "c/lp"
+
+/**
+ * @def OPENTHREAD_URI_LEADER_KEEP_ALIVE
+ *
+ * The URI Path for Leader Keep Alive
+ *
+ */
+#define OPENTHREAD_URI_LEADER_KEEP_ALIVE  "c/la"
+
 }  // namespace Thread
 
 #endif  // THREAD_URIS_HPP_

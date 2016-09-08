@@ -121,6 +121,7 @@ struct MessageInfo
     bool             mLinkSecurity : 1;  ///< Indicates whether or not link security is enabled.
     bool             mMleDiscoverRequest : 1;   ///< Identifies MLE Discover Request.
     bool             mMleDiscoverResponse : 1;  ///< Identifies MLE Discover Response.
+    bool             mJoinerEntrust : 1; ///< Indicates whether or not this message is a Joiner Entrust.
 };
 
 /**
@@ -521,6 +522,23 @@ public:
      *
      */
     void SetMleDiscoverResponse(bool aMleDiscoverResponse);
+
+    /**
+     * This method indicates whether or not this message is an Joiner Entrust.
+     *
+     * @retval TRUE   If this message is an Joiner Entrust.
+     * @retval FALSE  If this message is not an Joiner Entrust.
+     *
+     */
+    bool IsJoinerEntrust(void) const;
+
+    /**
+     * This method sets whether or not this message is an Joiner Entrust.
+     *
+     * @param[in]  aLinkSecurityEnabled  TRUE if this message is an Joiner Entrust, FALSE otherwise.
+     *
+     */
+    void SetJoinerEntrust(bool aJoinerEntrust);
 
     /**
      * This method is used to update a checksum value.

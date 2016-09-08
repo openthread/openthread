@@ -36,7 +36,7 @@
 #include <openthread-types.h>
 #include <openthread-config.h>
 #include <common/message.hpp>
-#include <thread/thread_netif.hpp>
+#include <common/tasklet.hpp>
 
 #include "spinel.h"
 

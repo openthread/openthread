@@ -28,14 +28,15 @@
 
 /**
  * @file
- *   This file includes definitions for using mbedTLS.
+ *   This file includes definitions for performing SHA-256 computations.
  */
 
-#ifndef OT_MBEDTLS_HPP_
-#define OT_MBEDTLS_HPP_
+#ifndef SHA256_HPP_
+#define SHA256_HPP_
 
-#include <openthread-config.h>
-#include <mbedtls/memory_buffer_alloc.h>
+#include <stdint.h>
+
+#include <mbedtls/sha256.h>
 
 namespace Thread {
 namespace Crypto {
@@ -48,29 +49,42 @@ namespace Crypto {
  */
 
 /**
- * This class implements mbedTLS memory.
+ * This class implements SHA-256 computation.
  *
  */
-class MbedTls
+class Sha256
 {
 public:
     enum
     {
-#if OPENTHREAD_ENABLE_DTLS
-        kMemorySize = 2048 * sizeof(void *), ///< Size of memory buffer (bytes).
-#else
-        kMemorySize = 512,                   ///< Size of memory buffer (bytes).
-#endif
+        kHashSize = 32,  ///< SHA-256 hash size (bytes)
     };
 
     /**
-     * This constructor initializes the object.
+     * This method starts the SHA-256 computation.
      *
      */
-    MbedTls(void);
+    void Start(void);
+
+    /**
+     * This method inputs bytes into the SHA-256 computation.
+     *
+     * @param[in]  aBuf        A pointer to the input buffer.
+     * @param[in]  aBufLength  The length of @p aBuf in bytes.
+     *
+     */
+    void Update(const uint8_t *aBuf, uint16_t aBufLength);
+
+    /**
+     * This method finalizes the hash computation.
+     *
+     * @param[out]  aHash  A pointer to the output buffer.
+     *
+     */
+    void Finish(uint8_t aHash[kHashSize]);
 
 private:
-    unsigned char mMemory[kMemorySize];
+    mbedtls_sha256_context mContext;
 };
 
 /**
@@ -81,4 +95,4 @@ private:
 }  // namespace Crypto
 }  // namespace Thread
 
-#endif  // OT_MBEDTLS_HPP_
+#endif  // SHA256_HPP_

@@ -148,8 +148,6 @@ public:
     /**
      * This method increments the current MAC Frame Counter value.
      *
-     * @returns The current MAC Frame Counter value.
-     *
      */
     void IncrementMacFrameCounter(void);
 
@@ -164,10 +162,38 @@ public:
     /**
      * This method increments the current MLE Frame Counter value.
      *
-     * @returns The current MLE Frame Counter value.
-     *
      */
     void IncrementMleFrameCounter(void);
+
+    /**
+     * This method returns the KEK.
+     *
+     * @returns A pointer to the KEK.
+     *
+     */
+    const uint8_t *GetKek(void) const;
+
+    /**
+     * This method sets the KEK.
+     *
+     * @param[in]  aKek  A pointer to the KEK.
+     *
+     */
+    void SetKek(const uint8_t *aKek);
+
+    /**
+     * This method returns the current KEK Frame Counter value.
+     *
+     * @returns The current KEK Frame Counter value.
+     *
+     */
+    uint32_t GetKekFrameCounter(void) const;
+
+    /**
+     * This method increments the current KEK Frame Counter value.
+     *
+     */
+    void IncrementKekFrameCounter(void);
 
 private:
     enum
@@ -187,6 +213,9 @@ private:
 
     uint32_t mMacFrameCounter;
     uint32_t mMleFrameCounter;
+
+    uint8_t mKek[kMaxKeyLength];
+    uint32_t mKekFrameCounter;
 
     ThreadNetif &mNetif;
 };

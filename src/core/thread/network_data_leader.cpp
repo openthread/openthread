@@ -460,6 +460,70 @@ exit:
     return;
 }
 
+ThreadError Leader::SetCommissioningData(const uint8_t *aValue, uint8_t aValueLength)
+{
+    ThreadError error = kThreadError_None;
+    uint8_t remaining = kMaxSize - mLength;
+    CommissioningDataTlv *commissioningDataTlv;
+
+    VerifyOrExit(sizeof(NetworkDataTlv) + aValueLength < remaining, error = kThreadError_NoBufs);
+
+    RemoveCommissioningData();
+
+    if (aValueLength > 0)
+    {
+        commissioningDataTlv = reinterpret_cast<CommissioningDataTlv *>(mTlvs + mLength);
+        Insert(reinterpret_cast<uint8_t *>(commissioningDataTlv), sizeof(CommissioningDataTlv) + aValueLength);
+        commissioningDataTlv->Init();
+        commissioningDataTlv->SetLength(aValueLength);
+        memcpy(commissioningDataTlv->GetValue(), aValue, aValueLength);
+    }
+
+    mVersion++;
+    mNetif.SetStateChangedFlags(OT_THREAD_NETDATA_UPDATED);
+
+exit:
+    return error;
+}
+
+uint8_t *Leader::GetCommissioningData(uint8_t &aLength)
+{
+    uint8_t *rval = NULL;
+
+    for (NetworkDataTlv *cur = reinterpret_cast<NetworkDataTlv *>(mTlvs);
+         cur < reinterpret_cast<NetworkDataTlv *>(mTlvs + mLength);
+         cur = cur->GetNext())
+    {
+        if (cur->GetType() == NetworkDataTlv::kTypeCommissioningData)
+        {
+            aLength = cur->GetLength();
+            ExitNow(rval = cur->GetValue());
+        }
+    }
+
+exit:
+    return rval;
+}
+
+ThreadError Leader::RemoveCommissioningData(void)
+{
+    ThreadError error = kThreadError_NotFound;
+
+    for (NetworkDataTlv *cur = reinterpret_cast<NetworkDataTlv *>(mTlvs);
+         cur < reinterpret_cast<NetworkDataTlv *>(mTlvs + mLength);
+         cur = cur->GetNext())
+    {
+        if (cur->GetType() == NetworkDataTlv::kTypeCommissioningData)
+        {
+            Remove(reinterpret_cast<uint8_t *>(cur), sizeof(NetworkDataTlv) + cur->GetLength());
+            ExitNow(error = kThreadError_None);
+        }
+    }
+
+exit:
+    return error;
+}
+
 void Leader::HandleServerData(void *aContext, Coap::Header &aHeader, Message &aMessage,
                               const Ip6::MessageInfo &aMessageInfo)
 {

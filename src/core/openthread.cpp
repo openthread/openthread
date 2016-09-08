@@ -875,9 +875,11 @@ ThreadError otEnable(void)
     VerifyOrExit(!mEnabled, error = kThreadError_InvalidState);
 
     otLogInfoApi("otEnable\n");
+
     new(&sMbedTlsRaw) Crypto::MbedTls;
     sIp6 = new(&sIp6Raw) Ip6::Ip6;
     sThreadNetif = new(&sThreadNetifRaw) ThreadNetif(*sIp6);
+
     mEnabled = true;
 
 exit:
@@ -1237,6 +1239,30 @@ ThreadError otSendPendingSet(const otOperationalDataset *aDataset, const uint8_t
 {
     return sThreadNetif->GetPendingDataset().SendSetRequest(*aDataset, aTlvs, aLength);
 }
+
+#if OPENTHREAD_ENABLE_COMMISSIONER
+ThreadError otCommissionerStart(void)
+{
+    return sThreadNetif->GetCommissioner().Start();
+}
+
+ThreadError otCommissionerStop(void)
+{
+    return sThreadNetif->GetCommissioner().Stop();
+}
+#endif  // OPENTHREAD_ENABLE_COMMISSIONER
+
+#if OPENTHREAD_ENABLE_JOINER
+ThreadError otJoinerStart(void)
+{
+    return sThreadNetif->GetJoiner().Start();
+}
+
+ThreadError otJoinerStop(void)
+{
+    return sThreadNetif->GetJoiner().Stop();
+}
+#endif  // OPENTHREAD_ENABLE_JOINER
 
 #ifdef __cplusplus
 }  // extern "C"

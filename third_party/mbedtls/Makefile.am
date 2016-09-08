@@ -27,6 +27,10 @@ lib_LIBRARIES                                 = libmbedcrypto.a
 override CFLAGS                              := $(filter-out -Wconversion,$(CFLAGS))
 override CXXFLAGS                            := $(filter-out -Wconversion,$(CXXFLAGS))
 
+# Do not enable -pedantic-errors for mbedtls
+override CFLAGS                              := $(filter-out -pedantic-errors,$(CFLAGS))
+override CXXFLAGS                            := $(filter-out -pedantic-errors,$(CXXFLAGS))
+
 MBEDTLS_SRCDIR                                = $(top_srcdir)/third_party/mbedtls/repo
 
 libmbedcrypto_a_CPPFLAGS                      = \
@@ -45,6 +49,28 @@ libmbedcrypto_a_SOURCES                       = \
     repo/library/platform.c                     \
     repo/library/sha256.c                       \
     $(NULL)
+
+if OPENTHREAD_ENABLE_DTLS
+libmbedcrypto_a_SOURCES                      += \
+    repo/library/bignum.c                       \
+    repo/library/ccm.c                          \
+    repo/library/cipher.c                       \
+    repo/library/cipher_wrap.c                  \
+    repo/library/ctr_drbg.c                     \
+    repo/library/debug.c                        \
+    repo/library/ecjpake.c                      \
+    repo/library/ecp.c                          \
+    repo/library/ecp_curves.c                   \
+    repo/library/entropy.c                      \
+    repo/library/entropy_poll.c                 \
+    repo/library/ssl_cookie.c                   \
+    repo/library/ssl_ciphersuites.c             \
+    repo/library/ssl_cli.c                      \
+    repo/library/ssl_srv.c                      \
+    repo/library/ssl_ticket.c                   \
+    repo/library/ssl_tls.c                      \
+    $(NULL)
+endif  # OPENTHREAD_ENABLE_DTLS
 
 if OPENTHREAD_BUILD_COVERAGE
 CLEANFILES                                    = $(wildcard *.gcda *.gcno)

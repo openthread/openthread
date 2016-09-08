@@ -28,38 +28,13 @@
 
 include $(abs_top_nlbuild_autotools_dir)/automake/pre.am
 
-# Always package (e.g. for 'make dist') these subdirectories.
-
-DIST_SUBDIRS                            = \
-    cli                                   \
-    commissioning                         \
-    ncp                                   \
-    platform                              \
+ot_commissioning_headers                = \
+    commissioner.h                        \
+    joiner.h                              \
     $(NULL)
 
-# Always build (e.g. for 'make all') these subdirectories.
-
-SUBDIRS                                 = \
-    cli                                   \
-    commissioning                         \
-    ncp                                   \
-    platform                              \
-    $(NULL)
-
-# Always pretty (e.g. for 'make pretty') these subdirectories.
-
-PRETTY_SUBDIRS                          = \
-    cli                                   \
-    commissioning                         \
-    ncp                                   \
-    platform                              \
-    $(NULL)
-
-include_HEADERS                         = \
-    openthread.h                          \
-    openthread-diag.h                     \
-    openthread-types.h                    \
-    $(NULL)
+ot_commissioningdir = $(includedir)/commissioning
+dist_ot_commissioning_HEADERS = $(ot_commissioning_headers)
 
 install-headers: install-includeHEADERS
 

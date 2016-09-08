@@ -420,6 +420,16 @@ public:
     ThreadError GetSecurityLevel(uint8_t &aSecurityLevel);
 
     /**
+     * This method gets the Key Identifier Mode.
+     *
+     * @param[out]  aSecurityLevel  The Key Identifier Mode.
+     *
+     * @retval kThreadError_None  Successfully retrieved the Key Identifier Mode.
+     *
+     */
+    ThreadError GetKeyIdMode(uint8_t &aKeyIdMode);
+
+    /**
      * This method gets the Frame Counter.
      *
      * @param[out]  aFrameCounter  The Frame Counter.

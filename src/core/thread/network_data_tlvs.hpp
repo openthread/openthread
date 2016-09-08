@@ -663,6 +663,21 @@ private:
 } OT_TOOL_PACKED_END;
 
 /**
+ * This class implements Commissioning Data TLV generation and parsing.
+ *
+ */
+OT_TOOL_PACKED_BEGIN
+class CommissioningDataTlv: public NetworkDataTlv
+{
+public:
+    /**
+     * This method initializes the TLV.
+     *
+     */
+    void Init() { NetworkDataTlv::Init(); SetType(kTypeCommissioningData); SetLength(0); }
+} OT_TOOL_PACKED_END;
+
+/**
  * @}
  *
  */
