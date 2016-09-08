@@ -53,6 +53,7 @@ Ip6::Ip6(void):
     mUdp(*this),
     mMpl(*this),
     mForwardingEnabled(false),
+    mSendQueueTask(mTaskletScheduler, HandleSendQueue, this),
     mReceiveIp6DatagramCallback(NULL),
     mReceiveIp6DatagramCallbackContext(NULL),
     mIsReceiveIp6FilterEnabled(false),
@@ -198,10 +199,27 @@ exit:
 
     if (error == kThreadError_None)
     {
-        HandleDatagram(message, NULL, messageInfo.mInterfaceId, NULL, false);
+        message.SetInterfaceId(messageInfo.mInterfaceId);
+        mSendQueue.Enqueue(message);
+        mSendQueueTask.Post();
     }
 
     return error;
+}
+
+void Ip6::HandleSendQueue(void *aContext)
+{
+    static_cast<Ip6 *>(aContext)->HandleSendQueue();
+}
+
+void Ip6::HandleSendQueue(void)
+{
+    while (mSendQueue.GetHead())
+    {
+        Message *message = mSendQueue.GetHead();
+        mSendQueue.Dequeue(*message);
+        HandleDatagram(*message, NULL, message->GetInterfaceId(), NULL, false);
+    }
 }
 
 ThreadError Ip6::HandleOptions(Message &message)

@@ -332,6 +332,9 @@ public:
     TimerScheduler mTimerScheduler;
 
 private:
+    static void HandleSendQueue(void *aContext);
+    void HandleSendQueue(void);
+
     void ProcessReceiveCallback(const Message &aMessage, const MessageInfo &aMessageInfo, uint8_t aIpProto);
     ThreadError HandleExtensionHeaders(Message &message, uint8_t &nextHeader, bool receive);
     ThreadError HandleFragment(Message &message);
@@ -342,6 +345,9 @@ private:
 
     Mpl mMpl;
     bool mForwardingEnabled;
+
+    MessageQueue mSendQueue;
+    Tasklet mSendQueueTask;
 
     otReceiveIp6DatagramCallback mReceiveIp6DatagramCallback;
     void *mReceiveIp6DatagramCallbackContext;

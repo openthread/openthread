@@ -114,6 +114,7 @@ struct MessageInfo
     uint8_t          mChildMask[8];      ///< A bit-vector to indicate which sleepy children need to receive this.
     uint16_t         mPanId;             ///< The Destination PAN ID.
     uint8_t          mTimeout;           ///< Seconds remaining before dropping the message.
+    int8_t           mInterfaceId;       ///< The interface ID.
 
     uint8_t          mType : 2;          ///< Identifies the type of message.
     bool             mDirectTx : 1;      ///< Used to indicate whether a direct transmission is required.
@@ -432,6 +433,22 @@ public:
      *
      */
     void SetTimeout(uint8_t aTimeout);
+
+    /**
+     * This method returns the interface ID.
+     *
+     * @returns The interface ID.
+     *
+     */
+    int8_t GetInterfaceId(void) const;
+
+    /**
+     * This method sets the interface ID.
+     *
+     * @param[in]  aInterfaceId  The interface ID value.
+     *
+     */
+    void SetInterfaceId(int8_t aInterfaceId);
 
     /**
      * This method returns whether or not message forwarding is scheduled for direct transmission.
