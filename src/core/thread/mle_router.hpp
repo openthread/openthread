@@ -579,9 +579,12 @@ private:
     bool HandleAdvertiseTimer(void);
     static void HandleStateUpdateTimer(void *aContext);
     void HandleStateUpdateTimer(void);
+    static void HandleRouterSelectionJitterTimer(void *aContext);
+    void HandleRouterSelectionJitterTimer(void);
 
     TrickleTimer mAdvertiseTimer;
     Timer mStateUpdateTimer;
+    Timer mRouterSelectionJitterTimer;
 
     Ip6::UdpSocket mSocket;
     Coap::Resource mAddressSolicit;

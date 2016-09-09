@@ -1313,7 +1313,7 @@ ThreadError MleRouter::HandleAdvertisement(const Message &aMessage, const Ip6::M
     case kDeviceStateChild:
         if ((mDeviceMode & ModeTlv::kModeFFD) && (GetActiveRouterCount() < mRouterUpgradeThreshold))
         {
-            BecomeRouter(ThreadStatusTlv::kTooFewRouters);
+            mRouterSelectionJitterTimer.Start(Timer::SecToMsec(otPlatRandomGet() % kRouterSelectionJitter));
             ExitNow();
         }
 
@@ -1738,6 +1738,25 @@ void MleRouter::HandleStateUpdateTimer(void)
     }
 
     mStateUpdateTimer.Start(kStateUpdatePeriod);
+
+exit:
+    {}
+}
+
+void MleRouter::HandleRouterSelectionJitterTimer(void *aContext)
+{
+    MleRouter *obj = reinterpret_cast<MleRouter *>(aContext);
+    obj->HandleRouterSelectionJitterTimer();
+}
+
+void MleRouter::HandleRouterSelectionJitterTimer(void)
+{
+    VerifyOrExit(mDeviceState == kDeviceStateChild, ;);
+
+    if (GetActiveRouterCount() < mRouterUpgradeThreshold)
+    {
+        BecomeRouter(ThreadStatusTlv::kTooFewRouters);
+    }
 
 exit:
     {}
