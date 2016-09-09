@@ -2075,8 +2075,7 @@ ThreadError otOpenUdpSocket(otInstance *aInstance, otUdpSocket *aSocket, otUdpRe
 /**
  * Close a UDP/IPv6 socket.
  *
- * @param[in]  aInstance A pointer to an OpenThread instance.
- * @param[in]  aSocket   A pointer to a UDP socket structure.
+ * @param[in]  aSocket  A pointer to a UDP socket structure.
  *
  * @retval kThreadErrorNone  Successfully closed the socket.
  *
@@ -2085,7 +2084,7 @@ ThreadError otOpenUdpSocket(otInstance *aInstance, otUdpSocket *aSocket, otUdpRe
  * @sa otBindUdpSocket
  * @sa otSendUdp
  */
-ThreadError otCloseUdpSocket(otInstance *aInstance, otUdpSocket *aSocket);
+ThreadError otCloseUdpSocket(otUdpSocket *aSocket);
 
 /**
  * Bind a UDP/IPv6 socket.

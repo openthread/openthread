@@ -1170,7 +1170,7 @@ ThreadError otOpenUdpSocket(otInstance *, otUdpSocket *aSocket, otUdpReceive aCa
     return socket->Open(aCallback, aCallbackContext);
 }
 
-ThreadError otCloseUdpSocket(otInstance *, otUdpSocket *aSocket)
+ThreadError otCloseUdpSocket(otUdpSocket *aSocket)
 {
     Ip6::UdpSocket *socket = reinterpret_cast<Ip6::UdpSocket *>(aSocket);
     return socket->Close();

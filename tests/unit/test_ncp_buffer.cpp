@@ -244,7 +244,7 @@ void TestNcpFrameBuffer(void)
 {
     unsigned i, j;
     uint8_t buffer[kTestBufferSize];
-    NcpFrameBuffer ncpBuffer(NULL, buffer, kTestBufferSize);
+    NcpFrameBuffer ncpBuffer(buffer, kTestBufferSize);
 
     Message *message;
     CallbackContext context;

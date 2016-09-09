@@ -83,7 +83,7 @@ NcpUart::NcpUart(otInstance *aInstance):
     NcpBase(aInstance),
     mFrameDecoder(mRxBuffer, sizeof(mRxBuffer), &NcpUart::HandleFrame, &NcpUart::HandleError, this),
     mUartBuffer(),
-    mTxFrameBuffer(aInstance, mTxBuffer, sizeof(mTxBuffer)),
+    mTxFrameBuffer(mTxBuffer, sizeof(mTxBuffer)),
     mUartSendTask(sIp6->mTaskletScheduler, EncodeAndSendToUart, this)
 {
     mState = kStartingFrame;

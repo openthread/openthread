@@ -35,7 +35,7 @@
 
 namespace Thread {
 
-NcpFrameBuffer::NcpFrameBuffer(otInstance *, uint8_t *aBuffer, uint16_t aBufferLen) :
+NcpFrameBuffer::NcpFrameBuffer(uint8_t *aBuffer, uint16_t aBufferLen) :
     mBuffer(aBuffer),
     mBufferEnd(aBuffer + aBufferLen),
     mBufferLength(aBufferLen)
