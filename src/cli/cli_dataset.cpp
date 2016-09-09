@@ -50,6 +50,7 @@ const DatasetCommand Dataset::sCommands[] =
     { "active", &ProcessActive },
     { "activetimestamp", &ProcessActiveTimestamp },
     { "channel", &ProcessChannel },
+    { "channelmask", &ProcessChannelMask },
     { "clear", &ProcessClear },
     { "commit", &ProcessCommit },
     { "delay", &ProcessDelay },
@@ -92,6 +93,23 @@ ThreadError Dataset::Print(otOperationalDataset &aDataset)
     if (aDataset.mIsChannelSet)
     {
         sServer->OutputFormat("Channel: %d\r\n", aDataset.mChannel);
+    }
+
+    if (aDataset.mIsChannelMaskSet)
+    {
+        sServer->OutputFormat("Channel Mask: ");
+
+        for (uint8_t index = 0; index < OT_CHANNEL_MASK_ENTRIES_MAX_NUM; index++)
+        {
+            if (aDataset.mChannelMask.entries[index].mMaskLength > 0)
+            {
+                sServer->OutputFormat("Page %d, Mask ", aDataset.mChannelMask.entries[index].mChannelPage);
+                OutputBytes(aDataset.mChannelMask.entries[index].m8, aDataset.mChannelMask.entries[index].mMaskLength);
+                sServer->OutputFormat("; ");
+            }
+        }
+
+        sServer->OutputFormat("\r\n");
     }
 
     if (aDataset.mIsDelaySet)
@@ -249,6 +267,36 @@ ThreadError Dataset::ProcessChannel(otInstance *aInstance, int argc, char *argv[
     SuccessOrExit(error = Interpreter::ParseLong(argv[0], value));
     sDataset.mChannel = static_cast<uint16_t>(value);
     sDataset.mIsChannelSet = true;
+
+    (void)aInstance;
+
+exit:
+    return error;
+}
+
+ThreadError Dataset::ProcessChannelMask(otInstance *aInstance, int argc, char *argv[])
+{
+    ThreadError error = kThreadError_None;
+    long value;
+    uint16_t length;
+
+    VerifyOrExit(argc > 1 && argc <= 2 * OT_CHANNEL_MASK_ENTRIES_MAX_NUM, error = kThreadError_Parse);
+
+    memset(reinterpret_cast<uint8_t *>(&sDataset.mChannelMask), 0, sizeof(sDataset.mChannelMask));
+
+    for (uint8_t index = 0; index < argc; index++)
+    {
+        SuccessOrExit(error = Interpreter::ParseLong(argv[index], value));
+        sDataset.mChannelMask.entries[index / 2].mChannelPage = static_cast<uint8_t>(value);
+
+        length = static_cast<uint16_t>((strlen(argv[++index]) + 1) / 2);
+        VerifyOrExit(length <= OT_CHANNEL_MASK_MAX_SIZE, error = kThreadError_NoBufs);
+        sDataset.mChannelMask.entries[index / 2].mMaskLength = static_cast<uint8_t>(length);
+        VerifyOrExit(Interpreter::Hex2Bin(argv[index], sDataset.mChannelMask.entries[index / 2].m8, length)
+                     == length, error = kThreadError_Parse);
+    }
+
+    sDataset.mIsChannelMaskSet = true;
 
     (void)aInstance;
 

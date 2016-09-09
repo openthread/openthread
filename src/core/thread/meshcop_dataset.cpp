@@ -121,6 +121,23 @@ void Dataset::Get(otOperationalDataset &aDataset)
             break;
         }
 
+        case Tlv::kChannelMask:
+        {
+            const ChannelMaskTlv *tlv = static_cast<const ChannelMaskTlv *>(cur);
+            const uint8_t *entry = reinterpret_cast<const uint8_t *>(cur) + sizeof(Tlv);
+            const uint8_t *entryEnd = entry + tlv->GetLength();
+
+            for (uint8_t index = 0; index < OT_CHANNEL_MASK_ENTRIES_MAX_NUM && entry < entryEnd; index++)
+            {
+                uint8_t entryLength = reinterpret_cast<const ChannelMaskEntry *>(entry)->GetMaskLength() + sizeof(ChannelMaskEntry);
+                memcpy(&aDataset.mChannelMask.entries[index].mChannelPage, entry, entryLength);
+                entry += entryLength;
+            }
+
+            aDataset.mIsChannelMaskSet = true;
+            break;
+        }
+
         case Tlv::kDelayTimer:
         {
             const DelayTimerTlv *tlv = static_cast<const DelayTimerTlv *>(cur);
@@ -239,6 +256,28 @@ ThreadError Dataset::Set(const otOperationalDataset &aDataset, bool aActive)
         Set(tlv);
     }
 
+    if (aDataset.mIsChannelMaskSet)
+    {
+        MeshCoP::ChannelMaskTlv tlv;
+        uint8_t length = 0;
+        uint8_t data[12];
+
+        tlv.Init();
+
+        for (uint8_t index = 0; index < OT_CHANNEL_MASK_ENTRIES_MAX_NUM; index++)
+        {
+            if (aDataset.mChannelMask.entries[index].mMaskLength > 0)
+            {
+                memcpy(data + length, &aDataset.mChannelMask.entries[index].mChannelPage,
+                       aDataset.mChannelMask.entries[index].mMaskLength + sizeof(MeshCoP::ChannelMaskEntry));
+                length += (aDataset.mChannelMask.entries[index].mMaskLength + sizeof(MeshCoP::ChannelMaskEntry));
+            }
+        }
+
+        tlv.SetLength(length);
+        Set(tlv, *data);
+    }
+
     if (aDataset.mIsDelaySet)
     {
         MeshCoP::DelayTimerTlv tlv;
@@ -340,6 +379,34 @@ ThreadError Dataset::Set(const Tlv &aTlv)
     // add new TLV
     memcpy(mTlvs + mLength, &aTlv, sizeof(Tlv) + aTlv.GetLength());
     mLength += sizeof(Tlv) + aTlv.GetLength();
+
+exit:
+    return error;
+}
+
+ThreadError Dataset::Set(const Tlv &aTlv, const uint8_t &aData)
+{
+    ThreadError error = kThreadError_None;
+    uint16_t bytesAvailable = sizeof(mTlvs) - mLength;
+    Tlv *old = Get(aTlv.GetType());
+
+    if (old != NULL)
+    {
+        bytesAvailable += sizeof(Tlv) + old->GetLength();
+    }
+
+    VerifyOrExit((sizeof(Tlv) + aTlv.GetLength()) <= bytesAvailable, error = kThreadError_NoBufs);
+
+    // remove old TLV
+    if (old != NULL)
+    {
+        Remove(reinterpret_cast<uint8_t *>(old), sizeof(Tlv) + old->GetLength());
+    }
+
+    memcpy(mTlvs + mLength, &aTlv, sizeof(Tlv));
+    mLength += sizeof(Tlv);
+    memcpy(mTlvs + mLength, &aData, aTlv.GetLength());
+    mLength += aTlv.GetLength();
 
 exit:
     return error;

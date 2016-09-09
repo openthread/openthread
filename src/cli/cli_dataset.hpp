@@ -77,6 +77,7 @@ private:
     static ThreadError ProcessActive(otInstance *aInstance, int argc, char *argv[]);
     static ThreadError ProcessActiveTimestamp(otInstance *aInstance, int argc, char *argv[]);
     static ThreadError ProcessChannel(otInstance *aInstance, int argc, char *argv[]);
+    static ThreadError ProcessChannelMask(otInstance *aInstance, int argc, char *argv[]);
     static ThreadError ProcessClear(otInstance *aInstance, int argc, char *argv[]);
     static ThreadError ProcessCommit(otInstance *aInstance, int argc, char *argv[]);
     static ThreadError ProcessDelay(otInstance *aInstance, int argc, char *argv[]);

@@ -215,6 +215,25 @@ enum
     OT_SECURITY_POLICY_BEACONS                = 1 << 3,  ///< Beacons enabled
 };
 
+#define OT_CHANNEL_MASK_ENTRIES_MAX_NUM    2   ///< Maximum number of Channel Mask Entries
+#define OT_CHANNEL_MASK_MAX_SIZE           4   ///< Maximum size of Channel Mask
+
+/**
+  * This structure represents Channel Mask Entry.
+  *
+  */
+typedef struct otChannelMaskEntry
+{
+    uint8_t mChannelPage;
+    uint8_t mMaskLength;
+    uint8_t m8[OT_CHANNEL_MASK_MAX_SIZE];
+} otChannelMaskEntry;
+
+typedef struct otChannelMask
+{
+    otChannelMaskEntry entries[OT_CHANNEL_MASK_ENTRIES_MAX_NUM];
+} otChannelMask;
+
 /**
  * This type represents the IEEE 802.15.4 PAN ID.
  *
@@ -349,8 +368,12 @@ typedef struct otOperationalDataset
     uint32_t          mDelay;                      ///< Delay Timer
     otPanId           mPanId;                      ///< PAN ID
     uint16_t          mChannel;                    ///< Channel
+<<<<<<< 8d465e5429f2c623bb46676dfab39a6e0ed01c83
     otPSKc            mPSKc;                       ///< PSKc
     otSecurityPolicy  mSecurityPolicy;             ///< Security Policy
+=======
+    otChannelMask     mChannelMask;                ///< Channel Mask
+>>>>>>> - Add a new Dataset::Set method to support variable TLV data payload. This is mainly for Channel Mask TLV
 
     bool              mIsActiveTimestampSet : 1;   ///< TRUE if Active Timestamp is set, FALSE otherwise.
     bool              mIsPendingTimestampSet : 1;  ///< TRUE if Pending Timestamp is set, FALSE otherwise.
@@ -361,8 +384,12 @@ typedef struct otOperationalDataset
     bool              mIsDelaySet : 1;             ///< TRUE if Delay Timer is set, FALSE otherwise.
     bool              mIsPanIdSet : 1;             ///< TRUE if PAN ID is set, FALSE otherwise.
     bool              mIsChannelSet : 1;           ///< TRUE if Channel is set, FALSE otherwise.
+<<<<<<< 8d465e5429f2c623bb46676dfab39a6e0ed01c83
     bool              mIsPSKcSet : 1;              ///< TRUE if PSKc is set, FALSE otherwise.
     bool              mIsSecurityPolicySet : 1;    ///< TRUE if Security Policy is set, FALSE otherwise.
+=======
+    bool              mIsChannelMaskSet : 1;       ///< TRUE if Channel Mask is set, FALSE otherwise.
+>>>>>>> - Add a new Dataset::Set method to support variable TLV data payload. This is mainly for Channel Mask TLV
 } otOperationalDataset;
 
 /**
