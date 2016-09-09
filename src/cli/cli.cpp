@@ -1854,11 +1854,11 @@ void Interpreter::ProcessCommissioner(int argc, char *argv[])
     if (strcmp(argv[0], "start") == 0)
     {
         VerifyOrExit(argc > 1, error = kThreadError_Parse);
-        otCommissionerStart(argv[1]);
+        otCommissionerStart(mInstance, argv[1]);
     }
     else if (strcmp(argv[0], "stop") == 0)
     {
-        otCommissionerStop();
+        otCommissionerStop(mInstance);
     }
 
 exit:
@@ -1878,11 +1878,11 @@ void Interpreter::ProcessJoiner(int argc, char *argv[])
     if (strcmp(argv[0], "start") == 0)
     {
         VerifyOrExit(argc > 1, error = kThreadError_Parse);
-        otJoinerStart(argv[1]);
+        otJoinerStart(mInstance, argv[1]);
     }
     else if (strcmp(argv[0], "stop") == 0)
     {
-        otJoinerStop();
+        otJoinerStop(mInstance);
     }
 
 exit:
