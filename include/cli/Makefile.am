@@ -29,6 +29,7 @@
 include $(abs_top_nlbuild_autotools_dir)/automake/pre.am
 
 ot_cli_headers                          = \
+    cli-console.h                         \
     cli-uart.h                            \
     $(NULL)
 

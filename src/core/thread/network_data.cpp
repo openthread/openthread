@@ -46,7 +46,8 @@ namespace Thread {
 namespace NetworkData {
 
 NetworkData::NetworkData(ThreadNetif &aThreadNetif):
-    mMle(aThreadNetif.GetMle())
+    mMle(aThreadNetif.GetMle()),
+    mSocket(aThreadNetif.GetIp6().mUdp)
 {
     mLength = 0;
     mCoapMessageId = 0;
@@ -591,7 +592,7 @@ ThreadError NetworkData::SendServerDataNotification(bool aLocal, uint16_t aRloc1
     Message *message;
     Ip6::MessageInfo messageInfo;
 
-    mSocket.Open(mMle.GetInstance(), &HandleUdpReceive, this);
+    mSocket.Open(&NetworkData::HandleUdpReceive, this);
 
     for (size_t i = 0; i < sizeof(mCoapToken); i++)
     {
@@ -608,7 +609,7 @@ ThreadError NetworkData::SendServerDataNotification(bool aLocal, uint16_t aRloc1
     header.AppendContentFormatOption(Coap::Header::kApplicationOctetStream);
     header.Finalize();
 
-    VerifyOrExit((message = Ip6::Udp::NewMessage(mMle.GetInstance(), 0)) != NULL, error = kThreadError_NoBufs);
+    VerifyOrExit((message = mSocket.NewMessage(0)) != NULL, error = kThreadError_NoBufs);
     SuccessOrExit(error = message->Append(header.GetBytes(), header.GetLength()));
 
     if (aLocal)
@@ -639,7 +640,7 @@ exit:
 
     if (error != kThreadError_None && message != NULL)
     {
-        Message::Free(*message);
+        message->Free();
     }
 
     return error;

@@ -35,8 +35,10 @@
 #include <common/code_utils.hpp>
 #include <ncp/ncp.h>
 #include <ncp/ncp_base.hpp>
+#include <net/ip6.hpp>
 #include <openthread.h>
 #include <openthread-diag.h>
+#include <openthreadinstance.h>
 #include <stdarg.h>
 #include <platform/radio.h>
 #include <platform/misc.h>
@@ -50,10 +52,10 @@ static NcpBase *sNcpContext = NULL;
 
 enum
 {
-    kThreadModeTLV_Receiver    = (1 << 3),
-    kThreadModeTLV_Secure      = (1 << 2),
-    kThreadModeTLV_DeviceType  = (1 << 1),
-    kThreadModeTLV_NetworkData = (1 << 0),
+    kThreadMode_RxOnWhenIdle        = (1 << 3),
+    kThreadMode_SecureDataRequest   = (1 << 2),
+    kThreadMode_FullFunctionDevice  = (1 << 1),
+    kThreadMode_FullNetworkData     = (1 << 0),
 };
 
 #define RSSI_OVERRIDE_DISABLED        127 // Used for PROP_MAC_WHITELIST
@@ -404,7 +406,7 @@ static uint8_t BorderRouterConfigToFlagByte(const otBorderRouterConfig &config)
 
 NcpBase::NcpBase(otInstance *aInstance):
     mInstance(aInstance),
-    mUpdateChangedPropsTask(mInstance, &NcpBase::UpdateChangedProps, this)
+    mUpdateChangedPropsTask(aInstance->mIp6.mTaskletScheduler, &NcpBase::UpdateChangedProps, this)
 {
     assert(mInstance != NULL);
     mSupportedChannelMask = kPhySupportedChannelMask;
@@ -476,7 +478,7 @@ exit:
 
     if (message != NULL)
     {
-        Message::Free(*message);
+        message->Free();
     }
 
     if (errorCode != kThreadError_None)
@@ -1074,7 +1076,7 @@ exit:
 
     if (message != NULL)
     {
-        Message::Free(*message);
+        message->Free();
     }
 
     return errorCode;
@@ -2348,22 +2350,22 @@ ThreadError NcpBase::GetPropertyHandler_THREAD_MODE(uint8_t header, spinel_prop_
 
     if (mode_config.mRxOnWhenIdle)
     {
-        numeric_mode |= kThreadModeTLV_Receiver;
+        numeric_mode |= kThreadMode_RxOnWhenIdle;
     }
 
     if (mode_config.mSecureDataRequests)
     {
-        numeric_mode |= kThreadModeTLV_Secure;
+        numeric_mode |= kThreadMode_SecureDataRequest;
     }
 
     if (mode_config.mDeviceType)
     {
-        numeric_mode |= kThreadModeTLV_DeviceType;
+        numeric_mode |= kThreadMode_FullFunctionDevice;
     }
 
     if (mode_config.mNetworkData)
     {
-        numeric_mode |= kThreadModeTLV_NetworkData;
+        numeric_mode |= kThreadMode_FullNetworkData;
     }
 
     return SendPropertyUpdate(
@@ -3105,7 +3107,7 @@ ThreadError NcpBase::SetPropertyHandler_STREAM_NET_INSECURE(uint8_t header, spin
     unsigned int frame_len(0);
     const uint8_t *meta_ptr(NULL);
     unsigned int meta_len(0);
-    Message *message(Ip6::Ip6::NewMessage(mInstance, 0));
+    Message *message(mInstance->mIp6.mMessagePool.New(Message::kTypeIp6, 0));
 
     if (message == NULL)
     {
@@ -3141,7 +3143,7 @@ ThreadError NcpBase::SetPropertyHandler_STREAM_NET_INSECURE(uint8_t header, spin
     }
     else if (message)
     {
-        Message::Free(*message);
+        message->Free();
     }
 
     if (errorCode == kThreadError_None)
@@ -3176,7 +3178,7 @@ ThreadError NcpBase::SetPropertyHandler_STREAM_NET(uint8_t header, spinel_prop_k
     unsigned int frame_len(0);
     const uint8_t *meta_ptr(NULL);
     unsigned int meta_len(0);
-    Message *message(Ip6::Ip6::NewMessage(mInstance, 0));
+    Message *message(mInstance->mIp6.mMessagePool.New(Message::kTypeIp6, 0));
 
     if (message == NULL)
     {
@@ -3212,7 +3214,7 @@ ThreadError NcpBase::SetPropertyHandler_STREAM_NET(uint8_t header, spinel_prop_k
     }
     else if (message)
     {
-        Message::Free(*message);
+        message->Free();
     }
 
     if (errorCode == kThreadError_None)
@@ -3603,10 +3605,10 @@ ThreadError NcpBase::SetPropertyHandler_THREAD_MODE(uint8_t header, spinel_prop_
 
     if (parsedLength > 0)
     {
-        mode_config.mRxOnWhenIdle = ((numeric_mode & kThreadModeTLV_Receiver) == kThreadModeTLV_Receiver);
-        mode_config.mSecureDataRequests = ((numeric_mode & kThreadModeTLV_Secure) == kThreadModeTLV_Secure);
-        mode_config.mDeviceType = ((numeric_mode & kThreadModeTLV_DeviceType) == kThreadModeTLV_DeviceType);
-        mode_config.mNetworkData = ((numeric_mode & kThreadModeTLV_NetworkData) == kThreadModeTLV_NetworkData);
+        mode_config.mRxOnWhenIdle = ((numeric_mode & kThreadMode_RxOnWhenIdle) == kThreadMode_RxOnWhenIdle);
+        mode_config.mSecureDataRequests = ((numeric_mode & kThreadMode_SecureDataRequest) == kThreadMode_SecureDataRequest);
+        mode_config.mDeviceType = ((numeric_mode & kThreadMode_FullFunctionDevice) == kThreadMode_FullFunctionDevice);
+        mode_config.mNetworkData = ((numeric_mode & kThreadMode_FullNetworkData) == kThreadMode_FullNetworkData);
 
         errorCode = otSetLinkMode(mInstance, mode_config);
 

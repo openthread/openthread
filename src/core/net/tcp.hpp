@@ -35,7 +35,7 @@
 #define TCP_HPP_
 
 #include <openthread.h>
-#include <net/ip6.hpp>
+#include <net/ip6_headers.hpp>
 
 namespace Thread {
 namespace Ip6 {

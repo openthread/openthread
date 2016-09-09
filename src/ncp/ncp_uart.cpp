@@ -34,10 +34,12 @@
 #include <ncp/ncp.h>
 #include <common/code_utils.hpp>
 #include <common/new.hpp>
+#include <net/ip6.hpp>
 #include <ncp/ncp.h>
 #include <ncp/ncp_uart.hpp>
 #include <platform/uart.h>
 #include <core/openthread-core-config.h>
+#include <openthreadinstance.h>
 
 namespace Thread {
 
@@ -80,8 +82,8 @@ NcpUart::NcpUart(otInstance *aInstance):
     NcpBase(aInstance),
     mFrameDecoder(mRxBuffer, sizeof(mRxBuffer), &NcpUart::HandleFrame, &NcpUart::HandleError, this),
     mUartBuffer(),
-    mTxFrameBuffer(aInstance, mTxBuffer, sizeof(mTxBuffer)),
-    mUartSendTask(aInstance, EncodeAndSendToUart, this)
+    mTxFrameBuffer(mTxBuffer, sizeof(mTxBuffer)),
+    mUartSendTask(aInstance->mIp6.mTaskletScheduler, EncodeAndSendToUart, this)
 {
     mState = kStartingFrame;
 

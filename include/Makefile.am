@@ -32,7 +32,7 @@ include $(abs_top_nlbuild_autotools_dir)/automake/pre.am
 
 DIST_SUBDIRS                            = \
     cli                                   \
-    crypto                                \
+    commissioning                         \
     ncp                                   \
     platform                              \
     $(NULL)
@@ -41,7 +41,7 @@ DIST_SUBDIRS                            = \
 
 SUBDIRS                                 = \
     cli                                   \
-    crypto                                \
+    commissioning                         \
     ncp                                   \
     platform                              \
     $(NULL)
@@ -50,13 +50,12 @@ SUBDIRS                                 = \
 
 PRETTY_SUBDIRS                          = \
     cli                                   \
-    crypto                                \
+    commissioning                         \
     ncp                                   \
     platform                              \
     $(NULL)
 
 include_HEADERS                         = \
-    cryptocontext.h                       \
     openthread.h                          \
     openthread-diag.h                     \
     openthread-types.h                    \

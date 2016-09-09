@@ -33,6 +33,8 @@
 
 #include <string.h>
 
+#include <openthread-config.h>
+
 #include <common/code_utils.hpp>
 #include <common/debug.hpp>
 #include <common/logging.hpp>
@@ -68,18 +70,16 @@ void Mac::StartCsmaBackoff(void)
 }
 
 Mac::Mac(ThreadNetif &aThreadNetif):
-    mBeginTransmit(aThreadNetif.GetInstance(), &Mac::HandleBeginTransmit, this),
-    mAckTimer(aThreadNetif.GetInstance(), &Mac::HandleAckTimer, this),
-    mBackoffTimer(aThreadNetif.GetInstance(), &Mac::HandleBeginTransmit, this),
-    mReceiveTimer(aThreadNetif.GetInstance(), &Mac::HandleReceiveTimer, this),
+    mBeginTransmit(aThreadNetif.GetIp6().mTaskletScheduler, &Mac::HandleBeginTransmit, this),
+    mAckTimer(aThreadNetif.GetIp6().mTimerScheduler, &Mac::HandleAckTimer, this),
+    mBackoffTimer(aThreadNetif.GetIp6().mTimerScheduler, &Mac::HandleBeginTransmit, this),
+    mReceiveTimer(aThreadNetif.GetIp6().mTimerScheduler, &Mac::HandleReceiveTimer, this),
     mKeyManager(aThreadNetif.GetKeyManager()),
     mMle(aThreadNetif.GetMle()),
     mNetif(aThreadNetif),
     mWhitelist(),
     mBlacklist()
 {
-    aThreadNetif.GetInstance()->mMac = this;
-
     mState = kStateIdle;
 
     mRxOnWhenIdle = false;
@@ -125,7 +125,7 @@ Mac::Mac(ThreadNetif &aThreadNetif):
     mPcapCallback = NULL;
     mPcapCallbackContext = NULL;
 
-    otPlatRadioEnable(aThreadNetif.GetInstance());
+    otPlatRadioEnable(mNetif.GetInstance());
 }
 
 ThreadError Mac::ActiveScan(uint32_t aScanChannels, uint16_t aScanDuration, ActiveScanHandler aHandler, void *aContext)
@@ -193,6 +193,7 @@ bool Mac::GetRxOnWhenIdle(void) const
 void Mac::SetRxOnWhenIdle(bool aRxOnWhenIdle)
 {
     mRxOnWhenIdle = aRxOnWhenIdle;
+    NextOperation();
 }
 
 const ExtAddress *Mac::GetExtAddress(void) const
@@ -442,24 +443,46 @@ void Mac::HandleBeginTransmit(void *aContext)
 
 void Mac::ProcessTransmitSecurity(Frame &aFrame)
 {
+    uint32_t frameCounter;
     uint8_t securityLevel;
+    uint8_t keyIdMode;
     uint8_t nonce[kNonceSize];
     uint8_t tagLength;
-    Crypto::AesCcm aesCcm(&mNetif.GetInstance()->mCryptoContext);
+    Crypto::AesCcm aesCcm;
+    const uint8_t *key;
 
     if (aFrame.GetSecurityEnabled() == false)
     {
         ExitNow();
     }
 
+    aFrame.GetKeyIdMode(keyIdMode);
+
+    switch (keyIdMode)
+    {
+    case Frame::kKeyIdMode0:
+        key = mKeyManager.GetKek();
+        frameCounter = mKeyManager.GetKekFrameCounter();
+        break;
+
+    case Frame::kKeyIdMode1:
+        key = mKeyManager.GetCurrentMacKey();
+        frameCounter = mKeyManager.GetMacFrameCounter();
+        mKeyManager.IncrementMacFrameCounter();
+        aFrame.SetKeyId((mKeyManager.GetCurrentKeySequence() & 0x7f) + 1);
+        break;
+
+    default:
+        assert(false);
+        break;
+    }
+
     aFrame.GetSecurityLevel(securityLevel);
-    aFrame.SetFrameCounter(mKeyManager.GetMacFrameCounter());
+    aFrame.SetFrameCounter(frameCounter);
 
-    aFrame.SetKeyId((mKeyManager.GetCurrentKeySequence() & 0x7f) + 1);
+    GenerateNonce(mExtAddress, frameCounter, securityLevel, nonce);
 
-    GenerateNonce(mExtAddress, mKeyManager.GetMacFrameCounter(), securityLevel, nonce);
-
-    aesCcm.SetKey(mKeyManager.GetCurrentMacKey(), 16);
+    aesCcm.SetKey(key, 16);
     tagLength = aFrame.GetFooterLength() - Frame::kFcsSize;
 
     aesCcm.Init(aFrame.GetHeaderLength(), aFrame.GetPayloadLength(), tagLength, nonce, sizeof(nonce));
@@ -467,8 +490,6 @@ void Mac::ProcessTransmitSecurity(Frame &aFrame)
     aesCcm.Header(aFrame.GetHeader(), aFrame.GetHeaderLength());
     aesCcm.Payload(aFrame.GetPayload(), aFrame.GetPayload(), aFrame.GetPayloadLength(), true);
     aesCcm.Finalize(aFrame.GetFooter(), &tagLength);
-
-    mKeyManager.IncrementMacFrameCounter();
 
 exit:
     {}
@@ -538,7 +559,7 @@ exit:
 
 extern "C" void otPlatRadioTransmitDone(otInstance *aInstance, bool aRxPending, ThreadError aError)
 {
-    aInstance->mMac->TransmitDoneTask(aRxPending, aError);
+    aInstance->mThreadNetif.GetMac().TransmitDoneTask(aRxPending, aError);
 }
 
 void Mac::TransmitDoneTask(bool aRxPending, ThreadError aError)
@@ -736,14 +757,15 @@ ThreadError Mac::ProcessReceiveSecurity(Frame &aFrame, const Address &aSrcAddr, 
 {
     ThreadError error = kThreadError_None;
     uint8_t securityLevel;
+    uint8_t keyIdMode;
     uint32_t frameCounter;
     uint8_t nonce[kNonceSize];
     uint8_t tag[Frame::kMaxMicSize];
     uint8_t tagLength;
     uint8_t keyid;
-    uint32_t keySequence;
+    uint32_t keySequence = 0;
     const uint8_t *macKey;
-    Crypto::AesCcm aesCcm(&mNetif.GetInstance()->mCryptoContext);
+    Crypto::AesCcm aesCcm;
 
     aFrame.SetSecurityValid(false);
 
@@ -752,44 +774,60 @@ ThreadError Mac::ProcessReceiveSecurity(Frame &aFrame, const Address &aSrcAddr, 
         ExitNow();
     }
 
-    VerifyOrExit(aNeighbor != NULL, error = kThreadError_Security);
-
     aFrame.GetSecurityLevel(securityLevel);
     aFrame.GetFrameCounter(frameCounter);
 
-    GenerateNonce(aSrcAddr.mExtAddress, frameCounter, securityLevel, nonce);
+    aFrame.GetKeyIdMode(keyIdMode);
 
-    tagLength = aFrame.GetFooterLength() - Frame::kFcsSize;
+    switch (keyIdMode)
+    {
+    case Frame::kKeyIdMode0:
+        VerifyOrExit((macKey = mKeyManager.GetKek()) != NULL, error = kThreadError_Security);
+        break;
 
-    aFrame.GetKeyId(keyid);
-    keyid--;
+    case Frame::kKeyIdMode1:
+        VerifyOrExit(aNeighbor != NULL, error = kThreadError_Security);
 
-    if (keyid == (mKeyManager.GetCurrentKeySequence() & 0x7f))
-    {
-        // same key index
-        keySequence = mKeyManager.GetCurrentKeySequence();
-        macKey = mKeyManager.GetCurrentMacKey();
-    }
-    else if (keyid == ((mKeyManager.GetCurrentKeySequence() - 1) & 0x7f))
-    {
-        // previous key index
-        keySequence = mKeyManager.GetCurrentKeySequence() - 1;
-        macKey = mKeyManager.GetTemporaryMacKey(keySequence);
-    }
-    else if (keyid == ((mKeyManager.GetCurrentKeySequence() + 1) & 0x7f))
-    {
-        // next key index
-        keySequence = mKeyManager.GetCurrentKeySequence() + 1;
-        macKey = mKeyManager.GetTemporaryMacKey(keySequence);
-    }
-    else
-    {
+        aFrame.GetKeyId(keyid);
+        keyid--;
+
+        if (keyid == (mKeyManager.GetCurrentKeySequence() & 0x7f))
+        {
+            // same key index
+            keySequence = mKeyManager.GetCurrentKeySequence();
+            macKey = mKeyManager.GetCurrentMacKey();
+        }
+        else if (keyid == ((mKeyManager.GetCurrentKeySequence() - 1) & 0x7f))
+        {
+            // previous key index
+            keySequence = mKeyManager.GetCurrentKeySequence() - 1;
+            macKey = mKeyManager.GetTemporaryMacKey(keySequence);
+        }
+        else if (keyid == ((mKeyManager.GetCurrentKeySequence() + 1) & 0x7f))
+        {
+            // next key index
+            keySequence = mKeyManager.GetCurrentKeySequence() + 1;
+            macKey = mKeyManager.GetTemporaryMacKey(keySequence);
+        }
+        else
+        {
+            ExitNow(error = kThreadError_Security);
+        }
+
+        VerifyOrExit((keySequence > aNeighbor->mKeySequence) ||
+                     ((keySequence == aNeighbor->mKeySequence) &&
+                      (frameCounter >= aNeighbor->mValid.mLinkFrameCounter)),
+                     error = kThreadError_Security);
+
+        break;
+
+    default:
         ExitNow(error = kThreadError_Security);
+        break;
     }
 
-    VerifyOrExit((keySequence > aNeighbor->mKeySequence) ||
-                 ((keySequence == aNeighbor->mKeySequence) && (frameCounter >= aNeighbor->mValid.mLinkFrameCounter)),
-                 error = kThreadError_Security);
+    GenerateNonce(aSrcAddr.mExtAddress, frameCounter, securityLevel, nonce);
+    tagLength = aFrame.GetFooterLength() - Frame::kFcsSize;
 
     aesCcm.SetKey(macKey, 16);
     aesCcm.Init(aFrame.GetHeaderLength(), aFrame.GetPayloadLength(), tagLength, nonce, sizeof(nonce));
@@ -799,20 +837,23 @@ ThreadError Mac::ProcessReceiveSecurity(Frame &aFrame, const Address &aSrcAddr, 
 
     VerifyOrExit(memcmp(tag, aFrame.GetFooter(), tagLength) == 0, error = kThreadError_Security);
 
-    if (aNeighbor->mKeySequence != keySequence)
+    if (keyIdMode == Frame::kKeyIdMode1)
     {
-        aNeighbor->mKeySequence = keySequence;
-        aNeighbor->mValid.mMleFrameCounter = 0;
-    }
+        if (aNeighbor->mKeySequence != keySequence)
+        {
+            aNeighbor->mKeySequence = keySequence;
+            aNeighbor->mValid.mMleFrameCounter = 0;
+        }
 
-    aNeighbor->mValid.mLinkFrameCounter = frameCounter + 1;
+        aNeighbor->mValid.mLinkFrameCounter = frameCounter + 1;
+
+        if (keySequence > mKeyManager.GetCurrentKeySequence())
+        {
+            mKeyManager.SetCurrentKeySequence(keySequence);
+        }
+    }
 
     aFrame.SetSecurityValid(true);
-
-    if (keySequence > mKeyManager.GetCurrentKeySequence())
-    {
-        mKeyManager.SetCurrentKeySequence(keySequence);
-    }
 
 exit:
 
@@ -829,7 +870,7 @@ exit:
 
 extern "C" void otPlatRadioReceiveDone(otInstance *aInstance, RadioPacket *aFrame, ThreadError aError)
 {
-    aInstance->mMac->ReceiveDoneTask(static_cast<Frame *>(aFrame), aError);
+    aInstance->mThreadNetif.GetMac().ReceiveDoneTask(static_cast<Frame *>(aFrame), aError);
 }
 
 void Mac::ReceiveDoneTask(Frame *aFrame, ThreadError aError)
@@ -926,7 +967,7 @@ void Mac::ReceiveDoneTask(Frame *aFrame, ThreadError aError)
 
     if (neighbor != NULL)
     {
-        neighbor->mLinkInfo.AddRss(mNetif.GetInstance(), aFrame->mPower);
+        neighbor->mLinkInfo.AddRss(mNoiseFloor, aFrame->mPower);
     }
 
     switch (mState)
@@ -1020,8 +1061,6 @@ exit:
             break;
         }
     }
-
-    NextOperation();
 }
 
 ThreadError Mac::HandleMacCommand(Frame &aFrame)

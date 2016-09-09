@@ -30,7 +30,14 @@
 #include <openthread.h>
 #include <common/debug.hpp>
 #include <crypto/aes_ccm.hpp>
+#include <crypto/mbedtls.hpp>
 #include <string.h>
+
+static Thread::Crypto::MbedTls mbedtls;
+
+extern"C" void otSignalTaskletPending(otInstance *)
+{
+}
 
 /**
  * Verifies test vectors from IEEE 802.15.4-2006 Annex C Section C.2.1
@@ -70,8 +77,7 @@ void TestMacBeaconFrame(void)
         0xB5, 0x53
     };
 
-    otCryptoContext cryptoContext;
-    Thread::Crypto::AesCcm aesCcm(&cryptoContext);
+    Thread::Crypto::AesCcm aesCcm;
     uint32_t headerLength = sizeof(test) - 8;
     uint32_t payloadLength = 0;
     uint8_t tagLength = 8;
@@ -133,8 +139,7 @@ void TestMacDataFrame()
         0x00, 0x00, 0x61, 0x62, 0x63, 0x64
     };
 
-    otCryptoContext cryptoContext;
-    Thread::Crypto::AesCcm aesCcm(&cryptoContext);
+    Thread::Crypto::AesCcm aesCcm;
     uint32_t headerLength = sizeof(test) - 4;
     uint32_t payloadLength = 4;
     uint8_t tagLength = 0;
@@ -210,8 +215,7 @@ void TestMacCommandFrame()
         0x00, 0x00, 0x00, 0x05, 0x06,
     };
 
-    otCryptoContext cryptoContext;
-    Thread::Crypto::AesCcm aesCcm(&cryptoContext);
+    Thread::Crypto::AesCcm aesCcm;
     aesCcm.SetKey(key, sizeof(key));
     aesCcm.Init(headerLength, payloadLength, tagLength, nonce, sizeof(nonce));
     aesCcm.Header(test, headerLength);

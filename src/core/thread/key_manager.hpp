@@ -37,7 +37,7 @@
 #include <stdint.h>
 
 #include <openthread-types.h>
-#include <crypto/hmac_sha256.h>
+#include <crypto/hmac_sha256.hpp>
 
 namespace Thread {
 
@@ -91,7 +91,7 @@ public:
      * @returns The current key sequence value.
      *
      */
-    uint32_t GetCurrentKeySequence() const;
+    uint32_t GetCurrentKeySequence(void) const;
 
     /**
      * This method sets the current key sequence value.
@@ -107,7 +107,7 @@ public:
      * @returns A pointer to the current MAC key.
      *
      */
-    const uint8_t *GetCurrentMacKey() const;
+    const uint8_t *GetCurrentMacKey(void) const;
 
     /**
      * This method returns a pointer to the current MLE key.
@@ -115,7 +115,7 @@ public:
      * @returns A pointer to the current MLE key.
      *
      */
-    const uint8_t *GetCurrentMleKey() const;
+    const uint8_t *GetCurrentMleKey(void) const;
 
     /**
      * This method returns a pointer to a temporary MAC key computed from the given key sequence.
@@ -143,15 +143,13 @@ public:
      * @returns The current MAC Frame Counter value.
      *
      */
-    uint32_t GetMacFrameCounter() const;
+    uint32_t GetMacFrameCounter(void) const;
 
     /**
      * This method increments the current MAC Frame Counter value.
      *
-     * @returns The current MAC Frame Counter value.
-     *
      */
-    void IncrementMacFrameCounter();
+    void IncrementMacFrameCounter(void);
 
     /**
      * This method returns the current MLE Frame Counter value.
@@ -159,15 +157,43 @@ public:
      * @returns The current MLE Frame Counter value.
      *
      */
-    uint32_t GetMleFrameCounter() const;
+    uint32_t GetMleFrameCounter(void) const;
 
     /**
      * This method increments the current MLE Frame Counter value.
      *
-     * @returns The current MLE Frame Counter value.
+     */
+    void IncrementMleFrameCounter(void);
+
+    /**
+     * This method returns the KEK.
+     *
+     * @returns A pointer to the KEK.
      *
      */
-    void IncrementMleFrameCounter();
+    const uint8_t *GetKek(void) const;
+
+    /**
+     * This method sets the KEK.
+     *
+     * @param[in]  aKek  A pointer to the KEK.
+     *
+     */
+    void SetKek(const uint8_t *aKek);
+
+    /**
+     * This method returns the current KEK Frame Counter value.
+     *
+     * @returns The current KEK Frame Counter value.
+     *
+     */
+    uint32_t GetKekFrameCounter(void) const;
+
+    /**
+     * This method increments the current KEK Frame Counter value.
+     *
+     */
+    void IncrementKekFrameCounter(void);
 
 private:
     enum
@@ -181,12 +207,15 @@ private:
     uint8_t mMasterKeyLength;
 
     uint32_t mKeySequence;
-    uint8_t mKey[otCryptoSha256Size];
+    uint8_t mKey[Crypto::HmacSha256::kHashSize];
 
-    uint8_t mTemporaryKey[otCryptoSha256Size];
+    uint8_t mTemporaryKey[Crypto::HmacSha256::kHashSize];
 
     uint32_t mMacFrameCounter;
     uint32_t mMleFrameCounter;
+
+    uint8_t mKek[kMaxKeyLength];
+    uint32_t mKekFrameCounter;
 
     ThreadNetif &mNetif;
 };

@@ -39,53 +39,58 @@
 
 namespace Thread {
 
-Tasklet::Tasklet(otInstance *aInstance, Handler aHandler, void *aContext)
+Tasklet::Tasklet(TaskletScheduler &aScheduler, Handler aHandler, void *aContext):
+    mScheduler(aScheduler),
+    mHandler(aHandler),
+    mContext(aContext),
+    mNext(NULL)
 {
-    mInstance = aInstance;
-    mHandler = aHandler;
-    mContext = aContext;
-    mNext = NULL;
 }
 
 ThreadError Tasklet::Post(void)
 {
-    return TaskletScheduler::Post(*this);
+    return mScheduler.Post(*this);
+}
+
+TaskletScheduler::TaskletScheduler(void):
+    mHead(NULL),
+    mTail(NULL)
+{
 }
 
 ThreadError TaskletScheduler::Post(Tasklet &aTasklet)
 {
     ThreadError error = kThreadError_None;
-    otInstance *aInstance = aTasklet.mInstance;
 
-    VerifyOrExit(aInstance->mTaskletTail != &aTasklet && aTasklet.mNext == NULL, error = kThreadError_Busy);
+    VerifyOrExit(mTail != &aTasklet && aTasklet.mNext == NULL, error = kThreadError_Busy);
 
-    if (aInstance->mTaskletTail == NULL)
+    if (mTail == NULL)
     {
-        aInstance->mTaskletHead = &aTasklet;
-        aInstance->mTaskletTail = &aTasklet;
-        otSignalTaskletPending(aInstance);
+        mHead = &aTasklet;
+        mTail = &aTasklet;
+        otSignalTaskletPending(NULL);
     }
     else
     {
-        aInstance->mTaskletTail->mNext = &aTasklet;
-        aInstance->mTaskletTail = &aTasklet;
+        mTail->mNext = &aTasklet;
+        mTail = &aTasklet;
     }
 
 exit:
     return error;
 }
 
-Tasklet *TaskletScheduler::PopTasklet(otInstance *aInstance)
+Tasklet *TaskletScheduler::PopTasklet(void)
 {
-    Tasklet *task = aInstance->mTaskletHead;
+    Tasklet *task = mHead;
 
     if (task != NULL)
     {
-        aInstance->mTaskletHead = aInstance->mTaskletHead->mNext;
+        mHead = mHead->mNext;
 
-        if (aInstance->mTaskletHead == NULL)
+        if (mHead == NULL)
         {
-            aInstance->mTaskletTail = NULL;
+            mTail = NULL;
         }
 
         task->mNext = NULL;
@@ -94,16 +99,16 @@ Tasklet *TaskletScheduler::PopTasklet(otInstance *aInstance)
     return task;
 }
 
-bool TaskletScheduler::AreTaskletsPending(otInstance *aInstance)
+bool TaskletScheduler::AreTaskletsPending(void)
 {
-    return aInstance->mTaskletHead != NULL;
+    return mHead != NULL;
 }
 
-void TaskletScheduler::RunNextTasklet(otInstance *aInstance)
+void TaskletScheduler::RunNextTasklet(void)
 {
     Tasklet  *task;
 
-    task = PopTasklet(aInstance);
+    task = PopTasklet();
 
     if (task != NULL)
     {

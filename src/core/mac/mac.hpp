@@ -453,6 +453,14 @@ public:
      */
     otMacCounters &GetCounters(void);
 
+    /**
+     * This method returns the noise floor state.
+     *
+     * @returns A reference to the noise floor state.
+     *
+     */
+    LinkQualityInfo &GetNoiseFloor(void) { return mNoiseFloor; }
+
 private:
     void GenerateNonce(const ExtAddress &aAddress, uint32_t aFrameCounter, uint8_t aSecurityLevel, uint8_t *aNonce);
     void NextOperation(void);
@@ -517,6 +525,8 @@ private:
     uint16_t mScanDuration;
     ActiveScanHandler mActiveScanHandler;
     void *mActiveScanContext;
+
+    LinkQualityInfo mNoiseFloor;
 
     otLinkPcapCallback mPcapCallback;
     void *mPcapCallbackContext;

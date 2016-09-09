@@ -31,7 +31,6 @@
 #include <common/debug.hpp>
 #include <common/message.hpp>
 #include <string.h>
-#include <openthreadinstance.h>
 
 #if _WIN32
 #define random rand
@@ -39,7 +38,7 @@
 
 void TestMessage(void)
 {
-    otInstance sContext;
+    Thread::MessagePool messagePool;
     Thread::Message *message;
     uint8_t writeBuffer[1024];
     uint8_t readBuffer[1024];
@@ -49,7 +48,7 @@ void TestMessage(void)
         writeBuffer[i] = static_cast<uint8_t>(random());
     }
 
-    VerifyOrQuit((message = Thread::Message::New(&sContext, Thread::Message::kTypeIp6, 0)) != NULL,
+    VerifyOrQuit((message = messagePool.New(Thread::Message::kTypeIp6, 0)) != NULL,
                  "Message::New failed\n");
     SuccessOrQuit(message->SetLength(sizeof(writeBuffer)),
                   "Message::SetLength failed\n");
@@ -61,7 +60,7 @@ void TestMessage(void)
                  "Message compare failed\n");
     VerifyOrQuit(message->GetLength() == 1024,
                  "Message::GetLength failed\n");
-    SuccessOrQuit(Thread::Message::Free(*message),
+    SuccessOrQuit(message->Free(),
                   "Message::Free failed\n");
 }
 

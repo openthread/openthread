@@ -35,29 +35,32 @@
 #include <common/timer.hpp>
 #include <common/debug.hpp>
 #include <common/logging.hpp>
+#include <net/ip6.hpp>
 #include <platform/alarm.h>
 #include <openthreadinstance.h>
 
 namespace Thread {
 
+TimerScheduler::TimerScheduler(void):
+    mHead(NULL)
+{
+}
+
 void TimerScheduler::Add(Timer &aTimer)
 {
-    otInstance *aInstance = aTimer.mInstance;
-
     Remove(aTimer);
 
-    if (aInstance->mTimerHead == NULL)
+    if (mHead == NULL)
     {
-        aInstance->mTimerHead = &aTimer;
-        aInstance->mTimerTail = &aTimer;
-        SetAlarm(aTimer.mInstance);
+        mHead = &aTimer;
+        SetAlarm();
     }
     else
     {
         Timer *prev = NULL;
         Timer *cur;
 
-        for (cur = aInstance->mTimerHead; cur; cur = cur->mNext)
+        for (cur = mHead; cur; cur = cur->mNext)
         {
             if (TimerCompare(aTimer, *cur))
             {
@@ -68,9 +71,9 @@ void TimerScheduler::Add(Timer &aTimer)
                 }
                 else
                 {
-                    aTimer.mNext = aInstance->mTimerHead;
-                    aInstance->mTimerHead = &aTimer;
-                    SetAlarm(aTimer.mInstance);
+                    aTimer.mNext = mHead;
+                    mHead = &aTimer;
+                    SetAlarm();
                 }
 
                 break;
@@ -81,58 +84,38 @@ void TimerScheduler::Add(Timer &aTimer)
 
         if (cur == NULL)
         {
-            aInstance->mTimerTail->mNext = &aTimer;
-            aInstance->mTimerTail = &aTimer;
+            prev->mNext = &aTimer;
         }
     }
 }
 
 void TimerScheduler::Remove(Timer &aTimer)
 {
-    otInstance *aInstance = aTimer.mInstance;
-
-    VerifyOrExit(aTimer.mNext != NULL || aInstance->mTimerTail == &aTimer, ;);
-
-    if (aInstance->mTimerHead == &aTimer)
+    if (mHead == &aTimer)
     {
-        aInstance->mTimerHead = aTimer.mNext;
-
-        if (aInstance->mTimerTail == &aTimer)
-        {
-            aInstance->mTimerTail = NULL;
-        }
-
-        SetAlarm(aTimer.mInstance);
+        mHead = aTimer.mNext;
+        aTimer.mNext = NULL;
+        SetAlarm();
     }
     else
     {
-        for (Timer *cur = aInstance->mTimerHead; cur; cur = cur->mNext)
+        for (Timer *cur = mHead; cur; cur = cur->mNext)
         {
             if (cur->mNext == &aTimer)
             {
                 cur->mNext = aTimer.mNext;
-
-                if (aInstance->mTimerTail == &aTimer)
-                {
-                    aInstance->mTimerTail = cur;
-                }
-
+                aTimer.mNext = NULL;
                 break;
             }
         }
     }
-
-    aTimer.mNext = NULL;
-
-exit:
-    return;
 }
 
 bool TimerScheduler::IsAdded(const Timer &aTimer)
 {
     bool rval = false;
 
-    for (Timer *cur = aTimer.mInstance->mTimerHead; cur; cur = cur->mNext)
+    for (Timer *cur = mHead; cur; cur = cur->mNext)
     {
         if (cur == &aTimer)
         {
@@ -144,36 +127,35 @@ exit:
     return rval;
 }
 
-void TimerScheduler::SetAlarm(otInstance *aInstance)
+void TimerScheduler::SetAlarm(void)
 {
     uint32_t now = otPlatAlarmGetNow();
     uint32_t elapsed;
     uint32_t remaining;
-    Timer *timer = aInstance->mTimerHead;
 
-    if (timer == NULL)
+    if (mHead == NULL)
     {
-        otPlatAlarmStop(aInstance);
+        otPlatAlarmStop(GetIp6()->GetInstance());
     }
     else
     {
-        elapsed = now - timer->mT0;
-        remaining = (timer->mDt > elapsed) ? timer->mDt - elapsed : 0;
+        elapsed = now - mHead->mT0;
+        remaining = (mHead->mDt > elapsed) ? mHead->mDt - elapsed : 0;
 
-        otPlatAlarmStartAt(aInstance, now, remaining);
+        otPlatAlarmStartAt(GetIp6()->GetInstance(), now, remaining);
     }
 }
 
 extern "C" void otPlatAlarmFired(otInstance *aInstance)
 {
-    TimerScheduler::FireTimers(aInstance);
+    aInstance->mIp6.mTimerScheduler.FireTimers();
 }
 
-void TimerScheduler::FireTimers(otInstance *aInstance)
+void TimerScheduler::FireTimers()
 {
     uint32_t now = otPlatAlarmGetNow();
     uint32_t elapsed;
-    Timer *timer = aInstance->mTimerHead;
+    Timer *timer = mHead;
 
     if (timer)
     {
@@ -186,13 +168,18 @@ void TimerScheduler::FireTimers(otInstance *aInstance)
         }
         else
         {
-            SetAlarm(aInstance);
+            SetAlarm();
         }
     }
     else
     {
-        SetAlarm(aInstance);
+        SetAlarm();
     }
+}
+
+Ip6::Ip6 *TimerScheduler::GetIp6()
+{
+    return Ip6::Ip6FromTimerScheduler(this);
 }
 
 bool TimerScheduler::TimerCompare(const Timer &aTimerA, const Timer &aTimerB)

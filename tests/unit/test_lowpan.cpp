@@ -35,14 +35,14 @@
 #include <mac/mac.hpp>
 #include <thread/thread_netif.hpp>
 #include <thread/lowpan.hpp>
-#include <openthreadinstance.h>
 
 using namespace Thread;
 
 namespace Thread {
 
-otInstance sContext;
-Lowpan::Lowpan sMockLowpan(sContext.mThreadNetif);
+Ip6::Ip6 sIp6;
+ThreadNetif sMockThreadNetif(sIp6);
+Lowpan::Lowpan sMockLowpan(sMockThreadNetif);
 
 void TestLowpanIphc(void)
 {
@@ -82,7 +82,7 @@ void TestLowpanIphc(void)
         frame.GetSrcAddr(macSource);
         frame.GetDstAddr(macDest);
 
-        VerifyOrQuit((message = Ip6::Ip6::NewMessage(&sContext, 0)) != NULL,
+        VerifyOrQuit((message = sIp6.mMessagePool.New(Message::kTypeIp6, 0)) != NULL,
                      "6lo: Ip6::NewMessage failed");
 
         // ===> Test Lowpan::Decompress
@@ -119,7 +119,7 @@ void TestLowpanIphc(void)
         VerifyOrQuit(memcmp(frame.GetPayload(), result, static_cast<size_t>(compressBytes)) == 0,
                      "6lo: Lowpan::Compress failed");
 
-        SuccessOrQuit(Message::Free(*message), "6lo: Message:Free failed");
+        SuccessOrQuit(message->Free(), "6lo: Message:Free failed");
         printf("PASS\n\n");
 
     }

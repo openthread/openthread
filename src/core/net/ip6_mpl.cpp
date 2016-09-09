@@ -33,13 +33,14 @@
 
 #include <common/code_utils.hpp>
 #include <common/message.hpp>
+#include <net/ip6.hpp>
 #include <net/ip6_mpl.hpp>
 
 namespace Thread {
 namespace Ip6 {
 
-Mpl::Mpl(otInstance *aInstance):
-    mTimer(aInstance, &Mpl::HandleTimer, this)
+Mpl::Mpl(Ip6 &aIp6):
+    mTimer(aIp6.mTimerScheduler, &HandleTimer, this)
 {
     memset(mEntries, 0, sizeof(mEntries));
     mSequence = 0;

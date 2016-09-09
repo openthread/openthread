@@ -76,11 +76,11 @@ public:
     /**
      * This method adds a new received signal strength (RSS) value to the average.
      *
-     * @param[in]  aInstance  The OpenThread instance structure.
-     * @param[in]  anRss      A new received signal strength value (in dBm) to be added to the average.
+     * @param[in] aNoiseFloor  A reference to the noise floor state.
+     * @param[in] anRss        A new received signal strength value (in dBm) to be added to the average.
      *
      */
-    void AddRss(otInstance *aInstance, int8_t anRss);
+    void AddRss(LinkQualityInfo &aNoiseFloor, int8_t anRss);
 
     /**
      * This method returns the current average signal strength value.
@@ -116,12 +116,12 @@ public:
      * This method returns the link margin. The link margin is calculated using the link's current average received
      * signal strength (RSS) and average noise floor.
      *
-     * @param[in]  aInstance  The OpenThread instance structure.
+     * @param[in]  aNoiseFloor  A reference to the noise state.
      *
      * @returns Link margin derived from average received signal strength and average noise floor.
      *
      */
-    uint8_t GetLinkMargin(otInstance *aInstance) const;
+    uint8_t GetLinkMargin(LinkQualityInfo &aNoiseFloor) const;
 
     /**
      * Returns the current one-way link quality value. The link quality value is a number 0-3.
@@ -134,22 +134,22 @@ public:
      * frequent changes, a hysteresis of 2 dB is applied when determining the link quality. For example, the average
      * link margin must be at least 12 dB to change a quality 1 link to a quality 2 link.
      *
-     * @param[in]  aInstance  The OpenThread instance structure.
+     * @param[in]  aNoiseFloor  A reference to the noise state.
      *
      * @returns The current link quality value (value 0-3 as per Thread specification).
      */
-    uint8_t GetLinkQuality(otInstance *aInstance);
+    uint8_t GetLinkQuality(LinkQualityInfo &aNoiseFloor);
 
     /**
      * This method converts a received signal strength value to a link margin value.
      *
-     * @param[in]  aInstance  The OpenThread instance structure.
-     * @param[in]  anRss      The received signal strength value (in dBm).
+     * @param[in]  aNoiseFloor  A reference to the noise state.
+     * @param[in]  anRss        The received signal strength value (in dBm).
      *
      * @returns The link margin value.
      *
      */
-    static uint8_t ConvertRssToLinkMargin(otInstance *aInstance, int8_t anRss);
+    static uint8_t ConvertRssToLinkMargin(LinkQualityInfo &aNoiseFloor, int8_t anRss);
 
     /**
      * This method converts a link margin value to a link quality value.
@@ -164,13 +164,13 @@ public:
     /**
      * This method converts a received signal strength value to a link quality value.
      *
-     * @param[in]  aInstance  The OpenThread instance structure.
-     * @param[in]  anRss      The received signal strength value (in dBm).
+     * @param[in]  aNoiseFloor  A reference to the noise state.
+     * @param[in]  anRss        The received signal strength value (in dBm).
      *
      * @returns The link quality value (0-3).
      *
      */
-    static uint8_t ConvertRssToLinkQuality(otInstance *aInstance, int8_t anRss);
+    static uint8_t ConvertRssToLinkQuality(LinkQualityInfo &aNoiseFloor, int8_t anRss);
 
 private:
     enum
@@ -199,10 +199,8 @@ private:
 
     /* Private method to update the mLinkQuality value. This is called when a new RSS value is added to average
      * or when GetLinkQuality() is invoked.
-     *
-     * @param[in]  aInstance  The OpenThread instance structure.
      */
-    void UpdateLinkQuality(otInstance *aInstance);
+    void UpdateLinkQuality(LinkQualityInfo &aNoiseFloor);
 
     /* Static private method to calculate the link quality from a given link margin while taking into account the last
      * link quality value and adding the hysteresis value to the thresholds. If there is no previous value for link
@@ -223,28 +221,28 @@ private:
 /**
  * This function returns the current average noise floor level (in dBm).
  *
- * @param[in]  aInstance  The OpenThread instance structure.
+ * @param[in]  aNoiseFloor  A reference to the noise state.
  *
  * @returns The current average noise floor level (in dBm).
  */
-int8_t GetAverageNoiseFloor(otInstance *aInstance);
+int8_t GetAverageNoiseFloor(LinkQualityInfo &aNoiseFloor);
 
 /**
  * This method adds a new noise floor value (in dBm) to the running average.
  *
- * @param[in] aInstance      The OpenThread instance structure.
- * @param[in] aNoiseFloor    A new noise floor value (in dBm) to be added to the average.
+ * @param[in]  aNoiseFloor    A reference to the noise state.
+ * @param[in]  aNoise         A new noise floor value (in dBm) to be added to the average.
  *
  */
-void AddNoiseFloor(otInstance *aInstance, int8_t aNoiseFloor);
+void AddNoiseFloor(LinkQualityInfo &aNoiseFloor, int8_t aNoise);
 
 /**
  * This method clears the current average noise floor value.
  *
- * @param[in] aInstance       The OpenThread instance structure.
+ * @param[in]  aNoiseFloor  A reference to the noise state.
  *
  */
-void ClearNoiseFloorAverage(otInstance *aInstance);
+void ClearNoiseFloorAverage(LinkQualityInfo &aNoiseFloor);
 
 
 /**

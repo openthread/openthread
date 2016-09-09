@@ -37,7 +37,7 @@
 #include <openthread-types.h>
 #include <common/message.hpp>
 #include <common/timer.hpp>
-#include <net/ip6.hpp>
+#include <net/ip6_headers.hpp>
 
 namespace Thread {
 namespace Ip6 {
@@ -173,10 +173,10 @@ public:
     /**
      * This constructor initializes the MPL object.
      *
-     * @param[in]  aInstance  The OpenThread instance structure.
+     * @param[in]  aIp6  A reference to the IPv6 network object.
      *
      */
-    Mpl(otInstance *aInstance);
+    Mpl(Ip6 &aIp6);
 
     /**
      * This method initializes the MPL option.

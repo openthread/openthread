@@ -143,6 +143,10 @@ test_diag_LDADD              = $(top_builddir)/src/core/libopenthread.a         
 test_diag_SOURCES            = test_diag.cpp
 endif
 
+if OPENTHREAD_BUILD_COVERAGE
+CLEANFILES                   = $(wildcard *.gcda *.gcno)
+endif # OPENTHREAD_BUILD_COVERAGE
+
 endif # OPENTHREAD_BUILD_TESTS
 
 include $(abs_top_nlbuild_autotools_dir)/automake/post.am

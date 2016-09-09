@@ -531,7 +531,7 @@ ThreadError Dataset::ProcessMgmtGetCommand(otInstance *aInstance, int argc, char
         }
         else if (strcmp(argv[index], "localprefix") == 0)
         {
-            tlvs[length++] = OT_MESHCOP_TLV_LOCALPREFIX;
+            tlvs[length++] = OT_MESHCOP_TLV_MESHLOCALPREFIX;
         }
         else if (strcmp(argv[index], "delaytimer") == 0)
         {

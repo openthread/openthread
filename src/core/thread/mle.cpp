@@ -62,8 +62,9 @@ Mle::Mle(ThreadNetif &aThreadNetif) :
     mMesh(aThreadNetif.GetMeshForwarder()),
     mMleRouter(aThreadNetif.GetMle()),
     mNetworkData(aThreadNetif.GetNetworkDataLeader()),
-    mParentRequestTimer(aThreadNetif.GetInstance(), &Mle::HandleParentRequestTimer, this),
-    mSendChildUpdateRequest(aThreadNetif.GetInstance(), &Mle::HandleSendChildUpdateRequest, this)
+    mParentRequestTimer(aThreadNetif.GetIp6().mTimerScheduler, &Mle::HandleParentRequestTimer, this),
+    mSocket(aThreadNetif.GetIp6().mUdp),
+    mSendChildUpdateRequest(aThreadNetif.GetIp6().mTaskletScheduler, &Mle::HandleSendChildUpdateRequest, this)
 {
     mDeviceState = kDeviceStateDisabled;
     mDeviceMode = ModeTlv::kModeRxOnWhenIdle | ModeTlv::kModeSecureDataRequest | ModeTlv::kModeFFD |
@@ -161,7 +162,7 @@ ThreadError Mle::Enable(void)
 
     // memcpy(&sockaddr.mAddr, &mLinkLocal64.GetAddress(), sizeof(sockaddr.mAddr));
     sockaddr.mPort = kUdpPort;
-    SuccessOrExit(error = mSocket.Open(mNetif.GetInstance(), &Mle::HandleUdpReceive, this));
+    SuccessOrExit(error = mSocket.Open(&Mle::HandleUdpReceive, this));
     SuccessOrExit(error = mSocket.Bind(sockaddr));
 
 exit:
@@ -173,7 +174,7 @@ ThreadError Mle::Disable(void)
     ThreadError error = kThreadError_None;
 
     SuccessOrExit(error = Stop());
-    SuccessOrExit(error = mSocket.Close(mNetif.GetInstance()));
+    SuccessOrExit(error = mSocket.Close());
 
 exit:
     return error;
@@ -234,7 +235,7 @@ ThreadError Mle::Discover(uint32_t aScanChannels, uint16_t aScanDuration, uint16
     mDiscoverContext = aContext;
     mMesh.SetDiscoverParameters(aScanChannels, aScanDuration);
 
-    VerifyOrExit((message = Ip6::Udp::NewMessage(mNetif.GetInstance(), 0)) != NULL, ;);
+    VerifyOrExit((message = mSocket.NewMessage(0)) != NULL, ;);
     message->SetLinkSecurityEnabled(false);
     message->SetMleDiscoverRequest(true);
     message->SetPanId(aPanId);
@@ -267,7 +268,7 @@ exit:
 
     if (error != kThreadError_None && message != NULL)
     {
-        Message::Free(*message);
+        message->Free();
     }
 
     return error;
@@ -327,11 +328,6 @@ bool Mle::IsAttached(void) const
             mDeviceState == kDeviceStateLeader);
 }
 
-otInstance *Mle::GetInstance(void)
-{
-    return mNetif.GetInstance();
-}
-
 DeviceState Mle::GetDeviceState(void) const
 {
     return mDeviceState;
@@ -350,7 +346,7 @@ ThreadError Mle::SetStateDetached(void)
     mParentRequestTimer.Stop();
     mMesh.SetRxOnWhenIdle(true);
     mMleRouter.HandleDetachStart();
-    Ip6::Ip6::SetForwardingEnabled(mNetif.GetInstance(), false);
+    mNetif.GetIp6().SetForwardingEnabled(false);
 
     otLogInfoMle("Mode -> Detached\n");
     return kThreadError_None;
@@ -377,7 +373,7 @@ ThreadError Mle::SetStateChild(uint16_t aRloc16)
         mMleRouter.HandleChildStart(mParentRequestMode);
     }
 
-    Ip6::Ip6::SetForwardingEnabled(mNetif.GetInstance(), false);
+    mNetif.GetIp6().SetForwardingEnabled(false);
 
     otLogInfoMle("Mode -> Child\n");
     return kThreadError_None;
@@ -939,7 +935,7 @@ void Mle::HandleNetifStateChanged(uint32_t aFlags)
 {
     if ((aFlags & (OT_IP6_ADDRESS_ADDED | OT_IP6_ADDRESS_REMOVED)) != 0)
     {
-        if (!mNetif.IsUnicastAddress(GetInstance(), mMeshLocal64.GetAddress()))
+        if (!mNetif.IsUnicastAddress(mMeshLocal64.GetAddress()))
         {
             // Mesh Local EID was removed, choose a new one and add it back
             for (int i = 8; i < 16; i++)
@@ -1085,7 +1081,7 @@ ThreadError Mle::SendParentRequest(void)
         mParentRequest.mChallenge[i] = static_cast<uint8_t>(otPlatRandomGet());
     }
 
-    VerifyOrExit((message = Ip6::Udp::NewMessage(mNetif.GetInstance(), 0)) != NULL, ;);
+    VerifyOrExit((message = mSocket.NewMessage(0)) != NULL, ;);
     message->SetLinkSecurityEnabled(false);
     SuccessOrExit(error = AppendHeader(*message, Header::kCommandParentRequest));
     SuccessOrExit(error = AppendMode(*message, mDeviceMode));
@@ -1139,7 +1135,7 @@ exit:
 
     if (error != kThreadError_None && message != NULL)
     {
-        Message::Free(*message);
+        message->Free();
     }
 
     return kThreadError_None;
@@ -1152,7 +1148,7 @@ ThreadError Mle::SendChildIdRequest(void)
     Message *message;
     Ip6::Address destination;
 
-    VerifyOrExit((message = Ip6::Udp::NewMessage(mNetif.GetInstance(), 0)) != NULL, ;);
+    VerifyOrExit((message = mSocket.NewMessage(0)) != NULL, ;);
     message->SetLinkSecurityEnabled(false);
     SuccessOrExit(error = AppendHeader(*message, Header::kCommandChildIdRequest));
     SuccessOrExit(error = AppendResponse(*message, mChildIdRequest.mChallenge, mChildIdRequest.mChallengeLength));
@@ -1187,7 +1183,7 @@ exit:
 
     if (error != kThreadError_None && message != NULL)
     {
-        Message::Free(*message);
+        message->Free();
     }
 
     return error;
@@ -1198,7 +1194,7 @@ ThreadError Mle::SendDataRequest(const Ip6::Address &aDestination, const uint8_t
     ThreadError error = kThreadError_None;
     Message *message;
 
-    VerifyOrExit((message = Ip6::Udp::NewMessage(mNetif.GetInstance(), 0)) != NULL, ;);
+    VerifyOrExit((message = mSocket.NewMessage(0)) != NULL, ;);
     message->SetLinkSecurityEnabled(false);
     SuccessOrExit(error = AppendHeader(*message, Header::kCommandDataRequest));
     SuccessOrExit(error = AppendTlvRequest(*message, aTlvs, aTlvsLength));
@@ -1213,7 +1209,7 @@ exit:
 
     if (error != kThreadError_None && message != NULL)
     {
-        Message::Free(*message);
+        message->Free();
     }
 
     return error;
@@ -1245,7 +1241,7 @@ ThreadError Mle::SendChildUpdateRequest(void)
     Ip6::Address destination;
     Message *message;
 
-    VerifyOrExit((message = Ip6::Udp::NewMessage(mNetif.GetInstance(), 0)) != NULL, ;);
+    VerifyOrExit((message = mSocket.NewMessage(0)) != NULL, ;);
     message->SetLinkSecurityEnabled(false);
     SuccessOrExit(error = AppendHeader(*message, Header::kCommandChildUpdateRequest));
     SuccessOrExit(error = AppendMode(*message, mDeviceMode));
@@ -1297,7 +1293,7 @@ exit:
 
     if (error != kThreadError_None && message != NULL)
     {
-        Message::Free(*message);
+        message->Free();
     }
 
     return error;
@@ -1311,7 +1307,7 @@ ThreadError Mle::SendMessage(Message &aMessage, const Ip6::Address &aDestination
     uint8_t nonce[13];
     uint8_t tag[4];
     uint8_t tagLength;
-    Crypto::AesCcm aesCcm(&GetInstance()->mCryptoContext);
+    Crypto::AesCcm aesCcm;
     uint8_t buf[64];
     uint16_t length;
     Ip6::MessageInfo messageInfo;
@@ -1383,7 +1379,7 @@ void Mle::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageIn
     uint16_t messageTagLength;
     uint8_t nonce[13];
     Mac::ExtAddress macAddr;
-    Crypto::AesCcm aesCcm(&GetInstance()->mCryptoContext);
+    Crypto::AesCcm aesCcm;
     uint16_t mleOffset;
     uint8_t buf[64];
     uint16_t length;
@@ -1814,7 +1810,7 @@ ThreadError Mle::HandleParentResponse(const Message &aMessage, const Ip6::Messag
     SuccessOrExit(error = Tlv::GetTlv(aMessage, Tlv::kLinkMargin, sizeof(linkMarginTlv), linkMarginTlv));
     VerifyOrExit(linkMarginTlv.IsValid(), error = kThreadError_Parse);
 
-    linkMargin = LinkQualityInfo::ConvertRssToLinkMargin(GetInstance(), threadMessageInfo->mRss);
+    linkMargin = LinkQualityInfo::ConvertRssToLinkMargin(mMac.GetNoiseFloor(), threadMessageInfo->mRss);
 
     if (linkMargin > linkMarginTlv.GetLinkMargin())
     {
@@ -1894,7 +1890,7 @@ ThreadError Mle::HandleParentResponse(const Message &aMessage, const Ip6::Messag
     mParent.mValid.mMleFrameCounter = mleFrameCounter.GetFrameCounter();
     mParent.mMode = ModeTlv::kModeFFD | ModeTlv::kModeRxOnWhenIdle | ModeTlv::kModeFullNetworkData;
     mParent.mLinkInfo.Clear();
-    mParent.mLinkInfo.AddRss(GetInstance(), threadMessageInfo->mRss);
+    mParent.mLinkInfo.AddRss(mMac.GetNoiseFloor(), threadMessageInfo->mRss);
     mParent.mState = Neighbor::kStateValid;
     mParent.mKeySequence = aKeySequence;
 
@@ -2182,7 +2178,7 @@ ThreadError Mle::SendDiscoveryResponse(const Ip6::Address &aDestination, uint16_
     MeshCoP::ExtendedPanIdTlv extPanId;
     MeshCoP::NetworkNameTlv networkName;
 
-    VerifyOrExit((message = Ip6::Udp::NewMessage(mNetif.GetInstance(), 0)) != NULL, ;);
+    VerifyOrExit((message = mSocket.NewMessage(0)) != NULL, ;);
     message->SetLinkSecurityEnabled(false);
     message->SetMleDiscoverResponse(true);
     message->SetPanId(aPanId);
@@ -2220,7 +2216,7 @@ exit:
 
     if (error != kThreadError_None && message != NULL)
     {
-        Message::Free(*message);
+        message->Free();
     }
 
     return error;
@@ -2373,15 +2369,15 @@ ThreadError Mle::CheckReachability(uint16_t aMeshSource, uint16_t aMeshDest, Ip6
         ExitNow(error = kThreadError_None);
     }
 
-    if (mNetif.IsUnicastAddress(GetInstance(), aIp6Header.GetDestination()))
+    if (mNetif.IsUnicastAddress(aIp6Header.GetDestination()))
     {
         ExitNow(error = kThreadError_None);
     }
 
     memcpy(&dst, GetMeshLocal16(), kRlocPrefixLength);
     dst.mFields.m16[7] = HostSwap16(aMeshSource);
-    Ip6::Icmp::SendError(mNetif.GetInstance(), dst, Ip6::IcmpHeader::kTypeDstUnreach,
-                         Ip6::IcmpHeader::kCodeDstUnreachNoRoute, aIp6Header);
+    mNetif.GetIp6().mIcmp.SendError(dst, Ip6::IcmpHeader::kTypeDstUnreach, Ip6::IcmpHeader::kCodeDstUnreachNoRoute,
+                                    aIp6Header);
 
 exit:
     return error;

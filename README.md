@@ -1,5 +1,6 @@
 [![OpenThread][ot-logo]][ot-repo]  
 [![Build Status][ot-travis-svg]][ot-travis]
+[![Coverage Status][ot-codecov-svg]][ot-codecov]
 
 ---
 
@@ -18,7 +19,8 @@ applications. More information about Thread can be found on
 [ot-logo]: doc/images/openthread_logo.png
 [ot-travis]: https://travis-ci.org/openthread/openthread
 [ot-travis-svg]: https://travis-ci.org/openthread/openthread.svg?branch=master
-
+[ot-codecov]: https://codecov.io/gh/openthread/openthread
+[ot-codecov-svg]: https://codecov.io/gh/openthread/openthread/branch/master/graph/badge.svg
 
 ## Features ##
 

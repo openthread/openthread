@@ -30,7 +30,7 @@
 
 import logging
 import time
-
+import threading
 import serial
 
 from pexpect_serial import SerialSpawn
@@ -40,23 +40,45 @@ logger = logging.getLogger(__name__)
 
 class OpenThreadController(object):
     """This is an simple wrapper to communicate with openthread"""
-    def __init__(self, port):
+    def __init__(self, port, log=False):
         """Initialize the controller
 
         Args:
             port (str): serial port's path or name(windows)
         """
         self.port = port
-        self.ss = None
+        self._log = log
+        self._ss = None
+        self._lv = None
         self._init()
 
     def _init(self):
         ser = serial.Serial(self.port, 115200, timeout=2)
-        self.ss = SerialSpawn(ser, timeout=2)
+        self._ss = SerialSpawn(ser, timeout=2)
+        if not self._log:
+            return
+
+        if self._lv:
+            self._lv.stop()
+        self._lv = OpenThreadLogViewer(ss=self._ss)
+        self._lv.start()
 
     def __del__(self):
-        if self.ss:
-            self.ss.close()
+        self.close()
+
+    def close(self):
+        if self._lv and self._lv.is_alive():
+            self._lv.viewing = False
+            self._lv.join()
+
+        if self._ss:
+            self._ss.close()
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, type, value, traceback):
+        self.close()
 
     def is_started(self):
         """check if openthread is started
@@ -82,11 +104,10 @@ class OpenThreadController(object):
     def reset(self):
         """Reset openthread device, not equivalent to stop and start
         """
-        self.ss.sendline('reset')
-        time.sleep(1)
-        self.ss.close()
-        time.sleep(1)
-        self._init()
+        logger.info('DUT> reset')
+        self._log and self._lv.pause()
+        self._ss.sendline('reset')
+        self._log and self._lv.resume()
 
     def _req(self, req):
         """Send command and wait for response.
@@ -100,13 +121,14 @@ class OpenThreadController(object):
             [str]: The output lines
         """
         logger.info('DUT> %s', req)
+        self._log and self._lv.pause()
         times = 3
 
         while times:
             times = times - 1
             try:
-                self.ss.sendline(req)
-                self.ss.expect(req + self.ss.linesep)
+                self._ss.sendline(req)
+                self._ss.expect(req + self._ss.linesep)
             except:
                 logger.exception('Failed to send command')
             else:
@@ -116,7 +138,7 @@ class OpenThreadController(object):
         res = []
 
         while True:
-            line = self.ss.readline().strip('\0\r\n\t ')
+            line = self._ss.readline().strip('\0\r\n\t ')
             logger.debug(line)
 
             if line:
@@ -124,6 +146,7 @@ class OpenThreadController(object):
                     break
                 res.append(line)
 
+        self._log and self._lv.resume()
         return res
 
     @property
@@ -218,3 +241,39 @@ class OpenThreadController(object):
         self._req('prefix remove %s' % prefix)
         time.sleep(1)
         self._req('netdataregister')
+
+    def enable_blacklist(self):
+        """Enable blacklist feature"""
+        self._req('blacklist enable')
+
+    def add_blacklist(self, mac):
+        """Add a mac address to blacklist"""
+        self._req('blacklist add %s' % mac)
+
+
+class OpenThreadLogViewer(threading.Thread):
+    _lock = threading.Lock()
+    viewing = False
+    def __init__(self, *args, **kwargs):
+        self._ss = kwargs.pop('ss')
+        super(OpenThreadLogViewer, self).__init__(*args, **kwargs)
+
+    def run(self):
+        self.viewing = True
+        while self.viewing and self._lock.acquire():
+            try:
+                line = self._ss.readline().strip('\0\r\n\t ')
+            except:
+                pass
+            else:
+                logger.info(line)
+            self._lock.release()
+            time.sleep(0)
+
+    def resume(self):
+        """Start dumping logs"""
+        self._lock.release()
+
+    def pause(self):
+        """Start dumping logs"""
+        self._lock.acquire()

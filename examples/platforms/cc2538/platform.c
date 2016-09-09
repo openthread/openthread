@@ -35,11 +35,13 @@
 #include <platform/uart.h>
 #include "platform-cc2538.h"
 
+otInstance *sInstance;
+
 void PlatformInit(int argc, char *argv[])
 {
     cc2538AlarmInit();
-    cc2538RadioInit();
     cc2538RandomInit();
+    cc2538RadioInit();
     otPlatUartEnable();
 
     (void)argc;
@@ -48,6 +50,8 @@ void PlatformInit(int argc, char *argv[])
 
 void PlatformProcessDrivers(otInstance *aInstance)
 {
+    sInstance = aInstance;
+
     // should sleep and wait for interrupts here
 
     cc2538UartProcess();

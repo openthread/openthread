@@ -39,26 +39,25 @@
 #include <stdbool.h>
 
 #include <openthread-types.h>
+#include <crypto/mbedtls.hpp>
+#include <net/ip6.hpp>
 #include <thread/thread_netif.hpp>
-#include <net/ip6_mpl.hpp>
-#include <net/ip6_routes.hpp>
-
-#ifndef C_ASSERT
-#define C_ASSERT(e) typedef char __C_ASSERT__[(e)?1:-1]
-#endif
 
 /**
  * This type represents all the static / global variables used by OpenThread allocated in one place.
  */
 typedef struct otInstance
 {
+    bool mEnabled;
+
     //
     // Callbacks
     //
+
     Thread::Ip6::NetifCallback mNetifCallback;
+
     otReceiveIp6DatagramCallback mReceiveIp6DatagramCallback;
     void *mReceiveIp6DatagramCallbackContext;
-    bool mIsReceiveIp6FilterEnabled;
 
     otHandleActiveScanResult mActiveScanCallback;
     void *mActiveScanCallbackContext;
@@ -70,60 +69,26 @@ typedef struct otInstance
     void *mDiscoverCallbackContext;
 
     //
-    // Variables
+    // State
     //
 
-    uint16_t mEphemeralPort;
-
-    Thread::Ip6::IcmpHandler  *mIcmpHandlers;
-
-    uint16_t mEchoSequence;
-    Thread::Ip6::Icmp::EchoReplyHandler mEchoReplyHandler;
-    void *mEchoReplyContext;
-    bool mIsEchoEnabled;
-
-    Thread::Ip6::Route *mRoutes;
-
-    Thread::Ip6::Netif *mNetifListHead;
-    int8_t mNextInterfaceId;
-
-    Thread::Mac::Mac *mMac;
-
-    int mNumFreeBuffers;
-    Thread::Buffer mBuffers[Thread::kNumBuffers];
-    Thread::Buffer *mFreeBuffers;
-    Thread::MessageList mAll;
-
-    Thread::Timer *mTimerHead;
-    Thread::Timer *mTimerTail;
-
-    Thread::Tasklet *mTaskletHead;
-    Thread::Tasklet *mTaskletTail;
-
-    Thread::Ip6::UdpSocket *mUdpSockets;
-    bool mForwardingEnabled;
-
-    otCryptoContext mCryptoContext;
-
-    Thread::LinkQualityInfo mNoiseFloorAverage;  // Store the noise floor average.
-
-    bool mEnabled;
+    Thread::Crypto::MbedTls mMbedTls;
+    Thread::Ip6::Ip6 mIp6;
     Thread::ThreadNetif mThreadNetif;
-
-    Thread::Ip6::Mpl mMpl;
 
     // Constructor
     otInstance(void);
 
 } otInstance;
 
-// Number of aligned bytes required for the instance structure
-const size_t cAlignedInstanceSize = otALIGNED_VAR_SIZE(sizeof(otInstance), uint64_t) * sizeof(uint64_t);
+__inline otInstance *otInstanceFromIp6(Thread::Ip6::Ip6 *aIp6)
+{
+    return (otInstance *)CONTAINING_RECORD(aIp6, otInstance, mIp6);
+}
 
-// Number of bytes indicated in the public header file for the instance structure
-const size_t cPublicInstanceSize = OT_INSTANCE_SIZE;
-
-// Ensure we are initializing the public definition of the size of the instance structure correctly
-C_ASSERT(cPublicInstanceSize >= cAlignedInstanceSize);
+__inline otInstance *otInstanceFromThreadNetif(Thread::ThreadNetif *aThreadNetif)
+{
+    return (otInstance *)CONTAINING_RECORD(aThreadNetif, otInstance, mIp6);
+}
 
 #endif  // OPENTHREADINSTANCE_H_

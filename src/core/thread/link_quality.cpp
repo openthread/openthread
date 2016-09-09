@@ -69,7 +69,7 @@ void LinkQualityInfo::Clear(void)
     mLinkQuality = 0;
 }
 
-void LinkQualityInfo::AddRss(otInstance *aInstance, int8_t anRss)
+void LinkQualityInfo::AddRss(LinkQualityInfo &aNoiseFloor, int8_t anRss)
 {
     uint16_t    newValue;
     uint16_t    oldAverage;
@@ -113,7 +113,7 @@ void LinkQualityInfo::AddRss(otInstance *aInstance, int8_t anRss)
         mCount++;
     }
 
-    UpdateLinkQuality(aInstance);
+    UpdateLinkQuality(aNoiseFloor);
 }
 
 int8_t LinkQualityInfo::GetAverageRss(void) const
@@ -166,33 +166,33 @@ exit:
     return error;
 }
 
-uint8_t LinkQualityInfo::GetLinkMargin(otInstance *aInstance) const
+uint8_t LinkQualityInfo::GetLinkMargin(LinkQualityInfo &aNoiseFloor) const
 {
-    return ConvertRssToLinkMargin(aInstance, GetAverageRss());
+    return ConvertRssToLinkMargin(aNoiseFloor, GetAverageRss());
 }
 
-uint8_t LinkQualityInfo::GetLinkQuality(otInstance *aInstance)
+uint8_t LinkQualityInfo::GetLinkQuality(LinkQualityInfo &aNoiseFloor)
 {
-    UpdateLinkQuality(aInstance);
+    UpdateLinkQuality(aNoiseFloor);
 
     return mLinkQuality;
 }
 
-void LinkQualityInfo::UpdateLinkQuality(otInstance *aInstance)
+void LinkQualityInfo::UpdateLinkQuality(LinkQualityInfo &aNoiseFloor)
 {
     if (mCount != 0)
     {
-        mLinkQuality = CalculateLinkQuality(GetLinkMargin(aInstance), mLinkQuality);
+        mLinkQuality = CalculateLinkQuality(GetLinkMargin(aNoiseFloor), mLinkQuality);
     }
     else
     {
-        mLinkQuality = CalculateLinkQuality(GetLinkMargin(aInstance), kNoLastLinkQualityValue);
+        mLinkQuality = CalculateLinkQuality(GetLinkMargin(aNoiseFloor), kNoLastLinkQualityValue);
     }
 }
 
-uint8_t LinkQualityInfo::ConvertRssToLinkMargin(otInstance *aInstance, int8_t anRss)
+uint8_t LinkQualityInfo::ConvertRssToLinkMargin(LinkQualityInfo &aNoiseFloor, int8_t anRss)
 {
-    int8_t linkMargin = anRss - GetAverageNoiseFloor(aInstance);
+    int8_t linkMargin = anRss - GetAverageNoiseFloor(aNoiseFloor);
 
     if (linkMargin < 0 || anRss == kUnknownRss)
     {
@@ -207,9 +207,9 @@ uint8_t LinkQualityInfo::ConvertLinkMarginToLinkQuality(uint8_t aLinkMargin)
     return CalculateLinkQuality(aLinkMargin, kNoLastLinkQualityValue);
 }
 
-uint8_t LinkQualityInfo::ConvertRssToLinkQuality(otInstance *aInstance, int8_t anRss)
+uint8_t LinkQualityInfo::ConvertRssToLinkQuality(LinkQualityInfo &aNoiseFloor, int8_t anRss)
 {
-    return ConvertLinkMarginToLinkQuality(ConvertRssToLinkMargin(aInstance, anRss));
+    return ConvertLinkMarginToLinkQuality(ConvertRssToLinkMargin(aNoiseFloor, anRss));
 }
 
 uint8_t LinkQualityInfo::CalculateLinkQuality(uint8_t aLinkMargin, uint8_t aLastLinkQuality)
@@ -260,9 +260,9 @@ uint8_t LinkQualityInfo::CalculateLinkQuality(uint8_t aLinkMargin, uint8_t aLast
     return linkQuality;
 }
 
-int8_t GetAverageNoiseFloor(otInstance *aInstance)
+int8_t GetAverageNoiseFloor(LinkQualityInfo &aNoiseFloor)
 {
-    int8_t averageNoiseFloor = aInstance->mNoiseFloorAverage.GetAverageRss();
+    int8_t averageNoiseFloor = aNoiseFloor.GetAverageRss();
 
     if (averageNoiseFloor == LinkQualityInfo::kUnknownRss)
     {
@@ -272,14 +272,14 @@ int8_t GetAverageNoiseFloor(otInstance *aInstance)
     return averageNoiseFloor;
 }
 
-void AddNoiseFloor(otInstance *aInstance, int8_t aNoiseFloor)
+void AddNoiseFloor(LinkQualityInfo &aNoiseFloor, int8_t aNoise)
 {
-    aInstance->mNoiseFloorAverage.AddRss(aInstance, aNoiseFloor);
+    aNoiseFloor.AddRss(aNoiseFloor, aNoise);
 }
 
-void ClearNoiseFloorAverage(otInstance *aInstance)
+void ClearNoiseFloorAverage(LinkQualityInfo &aNoiseFloor)
 {
-    aInstance->mNoiseFloorAverage.Clear();
+    aNoiseFloor.Clear();
 }
 
 }  // namespace Thread

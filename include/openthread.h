@@ -287,7 +287,7 @@ bool otIsSingleton(otInstance *aInstance);
  * the scan completes.
  *
  * @param[in]  aResult   A valid pointer to the beacon information or NULL when the active scan completes.
- * @param[in]  aInstance A pointer to application-specific context.
+ * @param[in]  aContext  A pointer to application-specific context.
  *
  */
 typedef void (*otHandleActiveScanResult)(otActiveScanResult *aResult, void *aContext);
@@ -322,7 +322,7 @@ bool otIsActiveScanInProgress(otInstance *aInstance);
  * scan completes.
  *
  * @param[in]  aResult   A valid pointer to the energy scan result information or NULL when the energy scan completes.
- * @param[in]  aInstance A pointer to application-specific context.
+ * @param[in]  aContext  A pointer to application-specific context.
  *
  */
 typedef void (*otHandleEnergyScanResult)(otEnergyScanResult *aResult, void *aContext);
@@ -902,7 +902,7 @@ ThreadError otSendPendingSet(otInstance *aInstance, const otOperationalDataset *
                              uint8_t aLength);
 
 /**
- * Get the data poll period of sleepy end deivce.
+ * Get the data poll period of sleepy end device.
  *
  * @param[in]  aInstance A pointer to an OpenThread instance.
  *
@@ -913,7 +913,7 @@ ThreadError otSendPendingSet(otInstance *aInstance, const otOperationalDataset *
 uint32_t otGetPollPeriod(otInstance *aInstance);
 
 /**
- * Set the data poll period for sleepy end deivce.
+ * Set the data poll period for sleepy end device.
  *
  * @param[in]  aInstance    A pointer to an OpenThread instance.
  * @param[in]  aPollPeriod  data poll period.
@@ -1564,7 +1564,7 @@ otDeviceRole otGetDeviceRole(otInstance *aInstance);
  * @param[in]   aIndex    An index into the EID cache table.
  * @param[out]  aEntry    A pointer to where the EID information is placed.
  *
- * @retval kThreadError_None         Successfully retreieved the EID cache entry.
+ * @retval kThreadError_None         Successfully retrieved the EID cache entry.
  * @retval kThreadError_InvalidArgs  @p aIndex was out of bounds or @p aEntry was NULL.
  *
  */
@@ -2075,8 +2075,7 @@ ThreadError otOpenUdpSocket(otInstance *aInstance, otUdpSocket *aSocket, otUdpRe
 /**
  * Close a UDP/IPv6 socket.
  *
- * @param[in]  aInstance A pointer to an OpenThread instance.
- * @param[in]  aSocket   A pointer to a UDP socket structure.
+ * @param[in]  aSocket  A pointer to a UDP socket structure.
  *
  * @retval kThreadErrorNone  Successfully closed the socket.
  *
@@ -2085,7 +2084,7 @@ ThreadError otOpenUdpSocket(otInstance *aInstance, otUdpSocket *aSocket, otUdpRe
  * @sa otBindUdpSocket
  * @sa otSendUdp
  */
-ThreadError otCloseUdpSocket(otInstance *aInstance, otUdpSocket *aSocket);
+ThreadError otCloseUdpSocket(otUdpSocket *aSocket);
 
 /**
  * Bind a UDP/IPv6 socket.

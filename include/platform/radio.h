@@ -120,7 +120,7 @@ typedef enum PhyState
  * The following are valid radio state transitions:
  *
  *                                    (Radio ON)
- *  +----------+  Enable()  +-------+  Receive() +---------+   Trasnmit()  +----------+
+ *  +----------+  Enable()  +-------+  Receive() +---------+   Transmit()  +----------+
  *  |          |----------->|       |----------->|         |-------------->|          |
  *  | Disabled |            | Sleep |            | Receive |               | Transmit |
  *  |          |<-----------|       |<-----------|         |<--------------|          |
@@ -211,6 +211,16 @@ ThreadError otPlatRadioEnable(otInstance *aInstance);
 ThreadError otPlatRadioDisable(otInstance *aInstance);
 
 /**
+ * Check whether radio is enabled or not.
+ *
+ * @param[in] aInstance  The OpenThread instance structure.
+ *
+ * @retval ::true   radio is enabled.
+ * @retval ::false  radio is disabled.
+ */
+bool otPlatRadioIsEnabled(otInstance *aInstance);
+
+/**
  * Transition the radio from Receive to Sleep.
  * Turn off the radio.
  *
@@ -246,7 +256,7 @@ ThreadError otPlatRadioReceive(otInstance *aInstance, uint8_t aChannel);
 extern void otPlatRadioReceiveDone(otInstance *aInstance, RadioPacket *aPacket, ThreadError aError);
 
 /**
- * The radio tranitions from Transmit to Receive.
+ * The radio transitions from Transmit to Receive.
  * This method returns a pointer to the transmit buffer.
  *
  * The caller forms the IEEE 802.15.4 frame in this buffer then calls otPlatRadioTransmit() to request transmission.

@@ -31,7 +31,14 @@
 #include <common/debug.hpp>
 #include <string.h>
 
-#include <crypto/hmac_sha256.h>
+#include <crypto/hmac_sha256.hpp>
+#include <crypto/mbedtls.hpp>
+
+static Thread::Crypto::MbedTls mbedtls;
+
+extern"C" void otSignalTaskletPending(otInstance *)
+{
+}
 
 void TestHmacSha256(void)
 {
@@ -39,7 +46,7 @@ void TestHmacSha256(void)
     {
         const char *key;
         const char *data;
-        uint8_t hash[otCryptoSha256Size];
+        uint8_t hash[Thread::Crypto::HmacSha256::kHashSize];
     } tests[] =
     {
         {
@@ -59,16 +66,14 @@ void TestHmacSha256(void)
         },
     };
 
-    otCryptoContext cryptoContext;
-    uint8_t hash[otCryptoSha256Size];
-
-    memset(&cryptoContext, 0, sizeof(cryptoContext));
+    Thread::Crypto::HmacSha256 hmac;
+    uint8_t hash[Thread::Crypto::HmacSha256::kHashSize];
 
     for (int i = 0; tests[i].key != NULL; i++)
     {
-        otCryptoHmacSha256Start(&cryptoContext, tests[i].key, static_cast<uint16_t>(strlen(tests[i].key)));
-        otCryptoHmacSha256Update(&cryptoContext, tests[i].data, static_cast<uint16_t>(strlen(tests[i].data)));
-        otCryptoHmacSha256Finish(&cryptoContext, hash);
+        hmac.Start(reinterpret_cast<const uint8_t *>(tests[i].key), static_cast<uint16_t>(strlen(tests[i].key)));
+        hmac.Update(reinterpret_cast<const uint8_t *>(tests[i].data), static_cast<uint16_t>(strlen(tests[i].data)));
+        hmac.Finish(hash);
 
         VerifyOrQuit(memcmp(hash, tests[i].hash, sizeof(tests[i].hash)) == 0,
                      "HMAC-SHA-256 failed\n");

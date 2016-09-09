@@ -385,6 +385,12 @@ ThreadError otPlatRadioDisable(otInstance *aInstance)
     return error;
 }
 
+bool otPlatRadioIsEnabled(otInstance *aInstance)
+{
+    (void)aInstance;
+    return (sState != kStateDisabled) ? true : false;
+}
+
 ThreadError otPlatRadioSleep(otInstance *aInstance)
 {
     ThreadError error = kThreadError_Busy;
@@ -455,43 +461,35 @@ bool otPlatRadioGetPromiscuous(otInstance *aInstance)
 
 void radioReceive(otInstance *aInstance)
 {
-    if (sState != kStateTransmit || sAckWait)
+    ssize_t rval = recvfrom(sSockFd, &sReceiveMessage, sizeof(sReceiveMessage), 0, NULL, NULL);
+    assert(rval >= 0);
+
+    sReceiveFrame.mLength = (uint8_t)(rval - 1);
+
+    if (sAckWait &&
+        sTransmitFrame.mChannel == sReceiveMessage.mChannel &&
+        isFrameTypeAck(sReceiveFrame.mPsdu) &&
+        getDsn(sReceiveFrame.mPsdu) == getDsn(sTransmitFrame.mPsdu))
     {
-        ssize_t rval = recvfrom(sSockFd, &sReceiveMessage, sizeof(sReceiveMessage), 0, NULL, NULL);
-        assert(rval >= 0);
-
-        sReceiveFrame.mLength = (uint8_t)(rval - 1);
-
-        if (sAckWait &&
-            sTransmitFrame.mChannel == sReceiveMessage.mChannel &&
-            isFrameTypeAck(sReceiveFrame.mPsdu))
-        {
-            uint8_t tx_sequence = getDsn(sTransmitFrame.mPsdu);
-            uint8_t rx_sequence = getDsn(sReceiveFrame.mPsdu);
-
-            if (tx_sequence == rx_sequence)
-            {
-                sState = kStateReceive;
-                sAckWait = false;
+        sState = kStateReceive;
+        sAckWait = false;
 
 #if OPENTHREAD_ENABLE_DIAG
 
-                if (otPlatDiagModeGet())
-                {
-                    otPlatDiagRadioTransmitDone(aInstance, isFramePending(sReceiveFrame.mPsdu), kThreadError_None);
-                }
-                else
-#endif
-                {
-                    otPlatRadioTransmitDone(aInstance, isFramePending(sReceiveFrame.mPsdu), kThreadError_None);
-                }
-            }
-        }
-        else if (sState == kStateReceive &&
-                 sReceiveFrame.mChannel == sReceiveMessage.mChannel)
+        if (otPlatDiagModeGet())
         {
-            radioProcessFrame(aInstance);
+            otPlatDiagRadioTransmitDone(aInstance, isFramePending(sReceiveFrame.mPsdu), kThreadError_None);
         }
+        else
+#endif
+        {
+            otPlatRadioTransmitDone(aInstance, isFramePending(sReceiveFrame.mPsdu), kThreadError_None);
+        }
+    }
+    else if ((sState == kStateReceive || sState == kStateTransmit) &&
+             (sReceiveFrame.mChannel == sReceiveMessage.mChannel))
+    {
+        radioProcessFrame(aInstance);
     }
 }
 

@@ -57,7 +57,8 @@ DatasetManager::DatasetManager(ThreadNetif &aThreadNetif, const char *aUriSet, c
     mNetworkDataLeader(aThreadNetif.GetNetworkDataLeader()),
     mResourceSet(aUriSet, &DatasetManager::HandleSet, this),
     mResourceGet(aUriGet, &DatasetManager::HandleGet, this),
-    mTimer(aThreadNetif.GetInstance(), &DatasetManager::HandleTimer, this),
+    mTimer(aThreadNetif.GetIp6().mTimerScheduler, &DatasetManager::HandleTimer, this),
+    mSocket(aThreadNetif.GetIp6().mUdp),
     mUriSet(aUriSet),
     mUriGet(aUriGet),
     mCoapServer(aThreadNetif.GetCoapServer())
@@ -161,7 +162,7 @@ ThreadError DatasetManager::Register(void)
     Ip6::MessageInfo messageInfo;
     ActiveTimestampTlv timestamp;
 
-    mSocket.Open(mNetif.GetInstance(), &DatasetManager::HandleUdpReceive, this);
+    mSocket.Open(&DatasetManager::HandleUdpReceive, this);
 
     for (size_t i = 0; i < sizeof(mCoapToken); i++)
     {
@@ -178,7 +179,7 @@ ThreadError DatasetManager::Register(void)
     header.AppendContentFormatOption(Coap::Header::kApplicationOctetStream);
     header.Finalize();
 
-    VerifyOrExit((message = Ip6::Udp::NewMessage(mNetif.GetInstance(), 0)) != NULL, error = kThreadError_NoBufs);
+    VerifyOrExit((message = mSocket.NewMessage(0)) != NULL, error = kThreadError_NoBufs);
     SuccessOrExit(error = message->Append(header.GetBytes(), header.GetLength()));
 
     timestamp.Init();
@@ -199,7 +200,7 @@ exit:
 
     if (error != kThreadError_None && message != NULL)
     {
-        Message::Free(*message);
+        message->Free();
     }
 
     return error;
@@ -317,7 +318,7 @@ ThreadError DatasetManager::SendSetRequest(const otOperationalDataset &aDataset,
     Message *message;
     Ip6::MessageInfo messageInfo;
 
-    mSocket.Open(mNetif.GetInstance(), &HandleUdpReceive, this);
+    mSocket.Open(&DatasetManager::HandleUdpReceive, this);
 
     for (size_t i = 0; i < sizeof(mCoapToken); i++)
     {
@@ -334,7 +335,7 @@ ThreadError DatasetManager::SendSetRequest(const otOperationalDataset &aDataset,
     header.AppendContentFormatOption(Coap::Header::kApplicationOctetStream);
     header.Finalize();
 
-    VerifyOrExit((message = Ip6::Udp::NewMessage(mNetif.GetInstance(), 0)) != NULL, error = kThreadError_NoBufs);
+    VerifyOrExit((message = mSocket.NewMessage(0)) != NULL, error = kThreadError_NoBufs);
     SuccessOrExit(error = message->Append(header.GetBytes(), header.GetLength()));
 
     if (aDataset.mIsActiveTimestampSet)
@@ -427,7 +428,7 @@ exit:
 
     if (error != kThreadError_None && message != NULL)
     {
-        Message::Free(*message);
+        message->Free();
     }
 
     return error;
@@ -441,7 +442,7 @@ ThreadError DatasetManager::SendGetRequest(const uint8_t *aTlvTypes, const uint8
     Ip6::MessageInfo messageInfo;
     Tlv tlv;
 
-    mSocket.Open(mNetif.GetInstance(), &HandleUdpReceive, this);
+    mSocket.Open(&DatasetManager::HandleUdpReceive, this);
 
     for (size_t i = 0; i < sizeof(mCoapToken); i++)
     {
@@ -458,7 +459,7 @@ ThreadError DatasetManager::SendGetRequest(const uint8_t *aTlvTypes, const uint8
     header.AppendContentFormatOption(Coap::Header::kApplicationOctetStream);
     header.Finalize();
 
-    VerifyOrExit((message = Ip6::Udp::NewMessage(mNetif.GetInstance(), 0)) != NULL, error = kThreadError_NoBufs);
+    VerifyOrExit((message = mSocket.NewMessage(0)) != NULL, error = kThreadError_NoBufs);
     SuccessOrExit(error = message->Append(header.GetBytes(), header.GetLength()));
 
     if (aLength > 0)
@@ -480,7 +481,7 @@ exit:
 
     if (error != kThreadError_None && message != NULL)
     {
-        Message::Free(*message);
+        message->Free();
     }
 
     return error;
@@ -494,7 +495,7 @@ void DatasetManager::SendSetResponse(const Coap::Header &aRequestHeader, const I
     Message *message;
     StateTlv state;
 
-    VerifyOrExit((message = Ip6::Udp::NewMessage(mNetif.GetInstance(), 0)) != NULL, error = kThreadError_NoBufs);
+    VerifyOrExit((message = mCoapServer.NewMessage(0)) != NULL, error = kThreadError_NoBufs);
     responseHeader.Init();
     responseHeader.SetVersion(1);
     responseHeader.SetType(Coap::Header::kTypeAcknowledgment);
@@ -516,7 +517,7 @@ exit:
 
     if (error != kThreadError_None && message != NULL)
     {
-        Message::Free(*message);
+        message->Free();
     }
 }
 
@@ -529,7 +530,7 @@ void DatasetManager::SendGetResponse(const Coap::Header &aRequestHeader, const I
     Message *message;
     uint8_t index;
 
-    VerifyOrExit((message = Ip6::Udp::NewMessage(mNetif.GetInstance(), 0)) != NULL, error = kThreadError_NoBufs);
+    VerifyOrExit((message = mCoapServer.NewMessage(0)) != NULL, error = kThreadError_NoBufs);
     responseHeader.Init();
     responseHeader.SetVersion(1);
     responseHeader.SetType(Coap::Header::kTypeAcknowledgment);
@@ -563,7 +564,7 @@ exit:
 
     if (error != kThreadError_None && message != NULL)
     {
-        Message::Free(*message);
+        message->Free();
     }
 }
 
@@ -689,7 +690,7 @@ ThreadError ActiveDataset::ApplyConfiguration(void)
 
 PendingDataset::PendingDataset(ThreadNetif &aThreadNetif):
     DatasetManager(aThreadNetif, OPENTHREAD_URI_PENDING_SET, OPENTHREAD_URI_PENDING_GET),
-    mTimer(aThreadNetif.GetInstance(), PendingDataset::HandleTimer, this)
+    mTimer(aThreadNetif.GetIp6().mTimerScheduler, PendingDataset::HandleTimer, this)
 {
 }
 

@@ -35,6 +35,8 @@ AM_DISTCHECK_CONFIGURE_FLAGS        = \
     --enable-ncp                      \
     --enable-diag                     \
     --with-examples=posix             \
+    --enable-commissioner             \
+    --enable-joiner                   \
     $(NULL)
 
 SUBDIRS                             = \

@@ -35,12 +35,10 @@
 
 namespace Thread {
 
-NcpFrameBuffer::NcpFrameBuffer(otInstance *aInstance, uint8_t *aBuffer, uint16_t aBufferLen) :
+NcpFrameBuffer::NcpFrameBuffer(uint8_t *aBuffer, uint16_t aBufferLen) :
     mBuffer(aBuffer),
     mBufferEnd(aBuffer + aBufferLen),
-    mBufferLength(aBufferLen),
-    mMessageQueue(aInstance),
-    mWriteFrameMessageQueue(aInstance)
+    mBufferLength(aBufferLen)
 {
     SetCallbacks(NULL, NULL, NULL);
     Clear();
@@ -80,13 +78,13 @@ void NcpFrameBuffer::Clear(void)
     while ((message = mWriteFrameMessageQueue.GetHead()) != NULL)
     {
         mWriteFrameMessageQueue.Dequeue(*message);
-        Message::Free(*message);
+        message->Free();
     }
 
     while ((message = mMessageQueue.GetHead()) != NULL)
     {
         mMessageQueue.Dequeue(*message);
-        Message::Free(*message);
+        message->Free();
     }
 
     if (!wasEmpty)
@@ -251,7 +249,7 @@ void NcpFrameBuffer::InFrameDiscard(void)
     while ((message = mWriteFrameMessageQueue.GetHead()) != NULL)
     {
         mWriteFrameMessageQueue.Dequeue(*message);
-        Message::Free(*message);
+        message->Free();
     }
 }
 
@@ -574,7 +572,7 @@ ThreadError NcpFrameBuffer::OutFrameRemove(void)
             if ((message = mMessageQueue.GetHead()) != NULL)
             {
                 mMessageQueue.Dequeue(*message);
-                Message::Free(*message);
+                message->Free();
             }
         }
 

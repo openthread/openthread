@@ -28,13 +28,13 @@
 
 include $(abs_top_nlbuild_autotools_dir)/automake/pre.am
 
-ot_crypto_headers                       = \
-    aes_ecb.h                             \
-    hmac_sha256.h                         \
+ot_commissioning_headers                = \
+    commissioner.h                        \
+    joiner.h                              \
     $(NULL)
 
-ot_cryptodir = $(includedir)/crypto
-dist_ot_crypto_HEADERS = $(ot_crypto_headers)
+ot_commissioningdir = $(includedir)/commissioning
+dist_ot_commissioning_HEADERS = $(ot_commissioning_headers)
 
 install-headers: install-includeHEADERS
 

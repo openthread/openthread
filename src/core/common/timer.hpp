@@ -43,6 +43,8 @@
 
 namespace Thread {
 
+namespace Ip6 { class Ip6; }
+
 class Timer;
 
 /**
@@ -65,43 +67,57 @@ class TimerScheduler
 
 public:
     /**
-     * This static method adds a timer instance to the timer scheduler.
+     * This constructor initializes the object.
+     *
+     */
+    TimerScheduler(void);
+
+    /**
+     * This method adds a timer instance to the timer scheduler.
      *
      * @param[in]  aTimer  A reference to the timer instance.
      *
      */
-    static void Add(Timer &aTimer);
+    void Add(Timer &aTimer);
 
     /**
-     * This static method removes a timer instance to the timer scheduler.
+     * This method removes a timer instance to the timer scheduler.
      *
      * @param[in]  aTimer  A reference to the timer instance.
      *
      */
-    static void Remove(Timer &aTimer);
+    void Remove(Timer &aTimer);
 
     /**
-     * This static method returns whether or not the timer instance is already added.
+     * This method returns whether or not the timer instance is already added.
      *
      * @retval TRUE   If the timer instance is already added.
      * @retval FALSE  If the timer instance is not added.
      *
      */
-    static bool IsAdded(const Timer &aTimer);
+    bool IsAdded(const Timer &aTimer);
 
     /**
-     * This static method processes all running timers.
+     * This method processes all running timers.
      *
-     * @param[in]  aInstance  The OpenThread instance structure.
+     * @param[in]  aContext  A pointer to arbitrary context information.
      *
      */
-    static void FireTimers(otInstance *aInstance);
-
-private:
-    static void SetAlarm(otInstance *aInstance);
+    void FireTimers(void);
 
     /**
-     * This static method compares two timers and returns a value to indicate
+     * This method returns the pointer to the parent Ip6 structure.
+     *
+     * @returns The pointer to the parent Ip6 structure.
+     *
+     */
+    Ip6::Ip6 *GetIp6();
+
+private:
+    void SetAlarm(void);
+
+    /**
+     * This method compares two timers and returns a value to indicate
      * which timer will fire earlier.
      *
      * @param[in] aTimerA   The first timer for comparison.
@@ -111,6 +127,8 @@ private:
      * @returns false if aTimerA will fire at the same time or after aTimerB.
      */
     static bool TimerCompare(const Timer &aTimerA, const Timer &aTimerB);
+
+    Timer *mHead;
 };
 
 /**
@@ -132,18 +150,18 @@ public:
     /**
      * This constructor creates a timer instance.
      *
-     * @param[in]  aInstance  The OpenThread instance structure.
-     * @param[in]  aHandler   A pointer to a function that is called when the timer expires.
-     * @param[in]  aContext   A pointer to arbitrary context information.
+     * @param[in]  aScheduler  A refrence to the timer scheduler.
+     * @param[in]  aHandler    A pointer to a function that is called when the timer expires.
+     * @param[in]  aContext    A pointer to arbitrary context information.
      *
      */
-    Timer(otInstance *aInstance, Handler aHandler, void *aContext) {
-        mInstance = aInstance;
-        mHandler = aHandler;
-        mContext = aContext;
-        mT0 = 0;
-        mDt = 0;
-        mNext = NULL;
+    Timer(TimerScheduler &aScheduler, Handler aHandler, void *aContext):
+        mScheduler(aScheduler),
+        mHandler(aHandler),
+        mContext(aContext),
+        mT0(0),
+        mDt(0),
+        mNext(NULL) {
     }
 
     /**
@@ -168,7 +186,7 @@ public:
      * @retval TRUE   If the timer is running.
      * @retval FALSE  If the timer is not running.
      */
-    bool IsRunning(void) const { return TimerScheduler::IsAdded(*this); }
+    bool IsRunning(void) const { return mScheduler.IsAdded(*this); }
 
     /**
      * This method schedules the timer to fire a @p dt milliseconds from now.
@@ -183,13 +201,13 @@ public:
      * @param[in]  aT0  The start time in milliseconds.
      * @param[in]  aDt  The expire time in milliseconds from @p t0.
      */
-    void StartAt(uint32_t aT0, uint32_t aDt) { mT0 = aT0; mDt = aDt; TimerScheduler::Add(*this); }
+    void StartAt(uint32_t aT0, uint32_t aDt) { mT0 = aT0; mDt = aDt; mScheduler.Add(*this); }
 
     /**
      * This method stops the timer.
      *
      */
-    void Stop(void) { TimerScheduler::Remove(*this); }
+    void Stop(void) { mScheduler.Remove(*this); }
 
     /**
      * This static method returns the current time in milliseconds.
@@ -218,12 +236,12 @@ public:
 private:
     void Fired(void) { mHandler(mContext); }
 
-    otInstance *mInstance;  ///< A pointer to the OpenThread instance.
-    Handler     mHandler;   ///< A pointer to the function that is called when the timer expires.
-    void       *mContext;   ///< A pointer to arbitrary context information.
-    uint32_t    mT0;        ///< The start time of the timer in milliseconds.
-    uint32_t    mDt;        ///< The time delay from the start time in milliseconds.
-    Timer      *mNext;      ///< The next timer in the scheduler list.
+    TimerScheduler &mScheduler;
+    Handler         mHandler;
+    void           *mContext;
+    uint32_t        mT0;
+    uint32_t        mDt;
+    Timer          *mNext;
 };
 
 /**

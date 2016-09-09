@@ -35,7 +35,7 @@ from autothreadharness.harness_case import HarnessCase
 class Router_7_1_6(HarnessCase):
     suite = 2
     case = '7 1 6'
-    golden_devices_required = 3
+    golden_devices_required = 25
     def on_dialog(self, dialog, title):
         pass
 

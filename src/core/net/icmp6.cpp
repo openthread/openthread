@@ -46,16 +46,26 @@ using Thread::Encoding::BigEndian::HostSwap16;
 namespace Thread {
 namespace Ip6 {
 
-Message *Icmp::NewMessage(otInstance *aInstance, uint16_t aReserved)
+Icmp::Icmp(Ip6 &aIp6):
+    mHandlers(NULL),
+    mEchoSequence(1),
+    mEchoReplyHandler(NULL),
+    mEchoReplyContext(NULL),
+    mIsEchoEnabled(true),
+    mIp6(aIp6)
 {
-    return Ip6::NewMessage(aInstance, sizeof(IcmpHeader) + aReserved);
 }
 
-ThreadError Icmp::RegisterCallbacks(otInstance *aInstance, IcmpHandler &aHandler)
+Message *Icmp::NewMessage(uint16_t aReserved)
+{
+    return mIp6.NewMessage(sizeof(IcmpHeader) + aReserved);
+}
+
+ThreadError Icmp::RegisterCallbacks(IcmpHandler &aHandler)
 {
     ThreadError error = kThreadError_None;
 
-    for (IcmpHandler *cur = aInstance->mIcmpHandlers; cur; cur = cur->mNext)
+    for (IcmpHandler *cur = mHandlers; cur; cur = cur->mNext)
     {
         if (cur == &aHandler)
         {
@@ -63,17 +73,17 @@ ThreadError Icmp::RegisterCallbacks(otInstance *aInstance, IcmpHandler &aHandler
         }
     }
 
-    aHandler.mNext = aInstance->mIcmpHandlers;
-    aInstance->mIcmpHandlers = &aHandler;
+    aHandler.mNext = mHandlers;
+    mHandlers = &aHandler;
 
 exit:
     return error;
 }
 
-void Icmp::SetEchoReplyHandler(otInstance *aInstance, EchoReplyHandler aHandler, void *aContext)
+void Icmp::SetEchoReplyHandler(EchoReplyHandler aHandler, void *aContext)
 {
-    aInstance->mEchoReplyHandler = aHandler;
-    aInstance->mEchoReplyContext = aContext;
+    mEchoReplyHandler = aHandler;
+    mEchoReplyContext = aContext;
 }
 
 ThreadError Icmp::SendEchoRequest(Message &aMessage, const MessageInfo &aMessageInfo)
@@ -82,18 +92,16 @@ ThreadError Icmp::SendEchoRequest(Message &aMessage, const MessageInfo &aMessage
     MessageInfo messageInfoLocal;
     IcmpHeader icmpHeader;
 
-    otInstance *aInstance = aMessage.GetInstance();
-
     messageInfoLocal = aMessageInfo;
 
     icmpHeader.Init();
     icmpHeader.SetType(IcmpHeader::kTypeEchoRequest);
     icmpHeader.SetId(1);
-    icmpHeader.SetSequence(aInstance->mEchoSequence++);
+    icmpHeader.SetSequence(mEchoSequence++);
 
     SuccessOrExit(error = aMessage.Prepend(&icmpHeader, sizeof(icmpHeader)));
     aMessage.SetOffset(0);
-    SuccessOrExit(error = Ip6::SendDatagram(aMessage, messageInfoLocal, kProtoIcmp6));
+    SuccessOrExit(error = mIp6.SendDatagram(aMessage, messageInfoLocal, kProtoIcmp6));
 
     otLogInfoIcmp("Sent echo request\n");
 
@@ -101,15 +109,15 @@ exit:
     return error;
 }
 
-ThreadError Icmp::SendError(otInstance *aInstance, const Address &aDestination, IcmpHeader::Type aType,
-                            IcmpHeader::Code aCode, const Header &aHeader)
+ThreadError Icmp::SendError(const Address &aDestination, IcmpHeader::Type aType, IcmpHeader::Code aCode,
+                            const Header &aHeader)
 {
     ThreadError error = kThreadError_None;
     MessageInfo messageInfo;
     Message *message = NULL;
     IcmpHeader icmp6Header;
 
-    VerifyOrExit((message = Ip6::NewMessage(aInstance, 0)) != NULL, error = kThreadError_NoBufs);
+    VerifyOrExit((message = mIp6.NewMessage(0)) != NULL, error = kThreadError_NoBufs);
     SuccessOrExit(error = message->SetLength(sizeof(icmp6Header) + sizeof(aHeader)));
 
     message->Write(sizeof(icmp6Header), sizeof(aHeader), &aHeader);
@@ -122,7 +130,7 @@ ThreadError Icmp::SendError(otInstance *aInstance, const Address &aDestination, 
     memset(&messageInfo, 0, sizeof(messageInfo));
     messageInfo.mPeerAddr = aDestination;
 
-    SuccessOrExit(error = Ip6::SendDatagram(*message, messageInfo, kProtoIcmp6));
+    SuccessOrExit(error = mIp6.SendDatagram(*message, messageInfo, kProtoIcmp6));
 
     otLogInfoIcmp("Sent ICMPv6 Error\n");
 
@@ -130,7 +138,7 @@ exit:
 
     if (error != kThreadError_None && message != NULL)
     {
-        Message::Free(*message);
+        message->Free();
     }
 
     return error;
@@ -176,9 +184,7 @@ ThreadError Icmp::HandleDstUnreach(Message &aMessage, const MessageInfo &aMessag
 {
     aMessage.MoveOffset(sizeof(aIcmpheader));
 
-    otInstance *aInstance = aMessage.GetInstance();
-
-    for (IcmpHandler *handler = aInstance->mIcmpHandlers; handler; handler = handler->mNext)
+    for (IcmpHandler *handler = mHandlers; handler; handler = handler->mNext)
     {
         handler->HandleDstUnreach(aMessage, aMessageInfo, aIcmpheader);
     }
@@ -194,17 +200,14 @@ ThreadError Icmp::HandleEchoRequest(Message &aRequestMessage, const MessageInfo 
     MessageInfo replyMessageInfo;
     uint16_t payloadLength;
 
-    otInstance *aInstance = aRequestMessage.GetInstance();
-
-    VerifyOrExit(aInstance->mIsEchoEnabled, ;);
+    VerifyOrExit(mIsEchoEnabled, ;);
 
     otLogInfoIcmp("Received Echo Request\n");
 
     icmp6Header.Init();
     icmp6Header.SetType(IcmpHeader::kTypeEchoReply);
 
-    VerifyOrExit((replyMessage = Ip6::NewMessage(aInstance, 0)) != NULL, otLogDebgIcmp("icmp fail\n"));
-
+    VerifyOrExit((replyMessage = mIp6.NewMessage(0)) != NULL, otLogDebgIcmp("icmp fail\n"));
     payloadLength = aRequestMessage.GetLength() - aRequestMessage.GetOffset() - IcmpHeader::GetDataOffset();
     SuccessOrExit(replyMessage->SetLength(IcmpHeader::GetDataOffset() + payloadLength));
 
@@ -222,7 +225,7 @@ ThreadError Icmp::HandleEchoRequest(Message &aRequestMessage, const MessageInfo 
 
     replyMessageInfo.mInterfaceId = aMessageInfo.mInterfaceId;
 
-    SuccessOrExit(error = Ip6::SendDatagram(*replyMessage, replyMessageInfo, kProtoIcmp6));
+    SuccessOrExit(error = mIp6.SendDatagram(*replyMessage, replyMessageInfo, kProtoIcmp6));
 
     otLogInfoIcmp("Sent Echo Reply\n");
 
@@ -230,7 +233,7 @@ exit:
 
     if (error != kThreadError_None && replyMessage != NULL)
     {
-        Message::Free(*replyMessage);
+        replyMessage->Free();
     }
 
     return error;
@@ -238,11 +241,9 @@ exit:
 
 ThreadError Icmp::HandleEchoReply(Message &aMessage, const MessageInfo &aMessageInfo)
 {
-    otInstance *aInstance = aMessage.GetInstance();
+    VerifyOrExit(mIsEchoEnabled && mEchoReplyHandler, ;);
 
-    VerifyOrExit(aInstance->mIsEchoEnabled && aInstance->mEchoReplyHandler, ;);
-
-    aInstance->mEchoReplyHandler(aInstance->mEchoReplyContext, aMessage, aMessageInfo);
+    mEchoReplyHandler(mEchoReplyContext, aMessage, aMessageInfo);
 
 exit:
     return kThreadError_None;
@@ -263,14 +264,14 @@ ThreadError Icmp::UpdateChecksum(Message &aMessage, uint16_t aChecksum)
     return kThreadError_None;
 }
 
-bool Icmp::IsEchoEnabled(otInstance *aInstance)
+bool Icmp::IsEchoEnabled(void)
 {
-    return aInstance->mIsEchoEnabled;
+    return mIsEchoEnabled;
 }
 
-void Icmp::SetEchoEnabled(otInstance *aInstance, bool aEnabled)
+void Icmp::SetEchoEnabled(bool aEnabled)
 {
-    aInstance->mIsEchoEnabled = aEnabled;
+    mIsEchoEnabled = aEnabled;
 }
 
 }  // namespace Ip6
