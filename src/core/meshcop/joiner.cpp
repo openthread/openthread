@@ -70,6 +70,14 @@ exit:
     return error;
 }
 
+ThreadError Joiner::Stop(void)
+{
+    mNetif.GetIp6Filter().RemoveUnsecurePort(mSocket.GetSockName().mPort);
+    mSocket.Close();
+    mNetif.GetDtls().Stop();
+    return kThreadError_None;
+}
+
 void Joiner::HandleDiscoverResult(otActiveScanResult *aResult, void *aContext)
 {
     static_cast<Joiner *>(aContext)->HandleDiscoverResult(aResult);
@@ -93,11 +101,6 @@ void Joiner::HandleDiscoverResult(otActiveScanResult *aResult)
 
         mNetif.GetDtls().Start(true, HandleDtlsReceive, HandleDtlsSend, this);
     }
-}
-
-ThreadError Joiner::Stop(void)
-{
-    return kThreadError_NotImplemented;
 }
 
 ThreadError Joiner::HandleDtlsSend(void *aContext, const uint8_t *aBuf, uint16_t aLength)
