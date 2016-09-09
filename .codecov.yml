@@ -2,3 +2,7 @@ coverage:
   ignore:
     - "tests/*"
     - "third_party/*"
+
+  status:
+    project: false
+    patch: false
