@@ -38,37 +38,41 @@
 
 namespace Thread {
 
-Tasklet *TaskletScheduler::sHead = NULL;
-Tasklet *TaskletScheduler::sTail = NULL;
-
-Tasklet::Tasklet(Handler aHandler, void *aContext)
+Tasklet::Tasklet(TaskletScheduler &aScheduler, Handler aHandler, void *aContext):
+    mScheduler(aScheduler),
+    mHandler(aHandler),
+    mContext(aContext),
+    mNext(NULL)
 {
-    mHandler = aHandler;
-    mContext = aContext;
-    mNext = NULL;
 }
 
 ThreadError Tasklet::Post(void)
 {
-    return TaskletScheduler::Post(*this);
+    return mScheduler.Post(*this);
+}
+
+TaskletScheduler::TaskletScheduler(void):
+    mHead(NULL),
+    mTail(NULL)
+{
 }
 
 ThreadError TaskletScheduler::Post(Tasklet &aTasklet)
 {
     ThreadError error = kThreadError_None;
 
-    VerifyOrExit(sTail != &aTasklet && aTasklet.mNext == NULL, error = kThreadError_Busy);
+    VerifyOrExit(mTail != &aTasklet && aTasklet.mNext == NULL, error = kThreadError_Busy);
 
-    if (sTail == NULL)
+    if (mTail == NULL)
     {
-        sHead = &aTasklet;
-        sTail = &aTasklet;
+        mHead = &aTasklet;
+        mTail = &aTasklet;
         otSignalTaskletPending(NULL);
     }
     else
     {
-        sTail->mNext = &aTasklet;
-        sTail = &aTasklet;
+        mTail->mNext = &aTasklet;
+        mTail = &aTasklet;
     }
 
 exit:
@@ -77,15 +81,15 @@ exit:
 
 Tasklet *TaskletScheduler::PopTasklet(void)
 {
-    Tasklet *task = sHead;
+    Tasklet *task = mHead;
 
     if (task != NULL)
     {
-        sHead = sHead->mNext;
+        mHead = mHead->mNext;
 
-        if (sHead == NULL)
+        if (mHead == NULL)
         {
-            sTail = NULL;
+            mTail = NULL;
         }
 
         task->mNext = NULL;
@@ -96,7 +100,7 @@ Tasklet *TaskletScheduler::PopTasklet(void)
 
 bool TaskletScheduler::AreTaskletsPending(void)
 {
-    return sHead != NULL;
+    return mHead != NULL;
 }
 
 void TaskletScheduler::RunNextTasklet(void)

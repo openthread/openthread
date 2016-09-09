@@ -38,88 +38,82 @@
 
 namespace Thread {
 
-static Buffer *NewBuffer(void);
-static ThreadError FreeBuffers(Buffer *aBuffer);
-static ThreadError ReclaimBuffers(int aNumBuffers);
+MessagePool::MessagePool(void)
+{
+    mFreeBuffers = mBuffers;
 
-static int sNumFreeBuffers;
-static Buffer sBuffers[kNumBuffers];
-static Buffer *sFreeBuffers;
-static MessageList sAll;
+    for (int i = 0; i < kNumBuffers - 1; i++)
+    {
+        mBuffers[i].SetNextBuffer(&mBuffers[i + 1]);
+    }
 
-Buffer *NewBuffer(void)
+    mBuffers[kNumBuffers - 1].SetNextBuffer(NULL);
+    mNumFreeBuffers = kNumBuffers;
+}
+
+Message *MessagePool::New(uint8_t aType, uint16_t aReserved)
+{
+    Message *message = NULL;
+
+    VerifyOrExit((message = static_cast<Message *>(NewBuffer())) != NULL, ;);
+
+    memset(message, 0, sizeof(*message));
+    message->SetMessagePool(this);
+    message->SetType(aType);
+    message->SetReserved(aReserved);
+    message->SetLinkSecurityEnabled(true);
+
+    if (message->SetLength(0) != kThreadError_None)
+    {
+        Free(message);
+        message = NULL;
+    }
+
+exit:
+    return message;
+}
+
+ThreadError MessagePool::Free(Message *aMessage)
+{
+    assert(aMessage->GetMessageList(MessageInfo::kListAll).mList == NULL &&
+           aMessage->GetMessageList(MessageInfo::kListInterface).mList == NULL);
+    return FreeBuffers(static_cast<Buffer *>(aMessage));
+}
+
+Buffer *MessagePool::NewBuffer(void)
 {
     Buffer *buffer = NULL;
 
-    VerifyOrExit(sFreeBuffers != NULL, ;);
+    VerifyOrExit(mFreeBuffers != NULL, ;);
 
-    buffer = sFreeBuffers;
-    sFreeBuffers = sFreeBuffers->GetNextBuffer();
+    buffer = mFreeBuffers;
+    mFreeBuffers = mFreeBuffers->GetNextBuffer();
     buffer->SetNextBuffer(NULL);
-    sNumFreeBuffers--;
+    mNumFreeBuffers--;
 
 exit:
     return buffer;
 }
 
-ThreadError FreeBuffers(Buffer *aBuffer)
+ThreadError MessagePool::FreeBuffers(Buffer *aBuffer)
 {
     Buffer *tmpBuffer;
 
     while (aBuffer != NULL)
     {
         tmpBuffer = aBuffer->GetNextBuffer();
-        aBuffer->SetNextBuffer(sFreeBuffers);
-        sFreeBuffers = aBuffer;
-        sNumFreeBuffers++;
+        aBuffer->SetNextBuffer(mFreeBuffers);
+        mFreeBuffers = aBuffer;
+        mNumFreeBuffers++;
         aBuffer = tmpBuffer;
     }
 
     return kThreadError_None;
 }
 
-ThreadError ReclaimBuffers(int aNumBuffers)
+ThreadError MessagePool::ReclaimBuffers(int aNumBuffers)
 {
-    return (aNumBuffers <= sNumFreeBuffers) ? kThreadError_None : kThreadError_NoBufs;
-}
-
-ThreadError Message::Init(void)
-{
-    sFreeBuffers = sBuffers;
-
-    for (int i = 0; i < kNumBuffers - 1; i++)
-    {
-        sBuffers[i].SetNextBuffer(&sBuffers[i + 1]);
-    }
-
-    sBuffers[kNumBuffers - 1].SetNextBuffer(NULL);
-    sNumFreeBuffers = kNumBuffers;
-
-    return kThreadError_None;
-}
-
-Message *Message::New(uint8_t aType, uint16_t aReserved)
-{
-    Message *message = NULL;
-
-    VerifyOrExit((message = reinterpret_cast<Message *>(NewBuffer())) != NULL, ;);
-
-    memset(message, 0, sizeof(*message));
-    message->SetType(aType);
-    message->SetReserved(aReserved);
-    message->SetLinkSecurityEnabled(true);
-
-    VerifyOrExit(message->SetLength(0) == kThreadError_None, Message::Free(*message));
-
-exit:
-    return message;
-}
-
-ThreadError Message::Free(Message &aMessage)
-{
-    assert(aMessage.GetMessageList(MessageInfo::kListAll).mList == NULL &&
-           aMessage.GetMessageList(MessageInfo::kListInterface).mList == NULL);
-    return FreeBuffers(reinterpret_cast<Buffer *>(&aMessage));
+    return (aNumBuffers <= mNumFreeBuffers) ? kThreadError_None : kThreadError_NoBufs;
 }
 
 ThreadError Message::ResizeMessage(uint16_t aLength)
@@ -135,7 +129,7 @@ ThreadError Message::ResizeMessage(uint16_t aLength)
     {
         if (curBuffer->GetNextBuffer() == NULL)
         {
-            curBuffer->SetNextBuffer(NewBuffer());
+            curBuffer->SetNextBuffer(GetMessagePool()->NewBuffer());
             VerifyOrExit(curBuffer->GetNextBuffer() != NULL, error = kThreadError_NoBufs);
         }
 
@@ -148,10 +142,15 @@ ThreadError Message::ResizeMessage(uint16_t aLength)
     curBuffer = curBuffer->GetNextBuffer();
     lastBuffer->SetNextBuffer(NULL);
 
-    FreeBuffers(curBuffer);
+    GetMessagePool()->FreeBuffers(curBuffer);
 
 exit:
     return error;
+}
+
+ThreadError Message::Free(void)
+{
+    return GetMessagePool()->Free(this);
 }
 
 Message *Message::GetNext(void) const
@@ -181,7 +180,7 @@ ThreadError Message::SetLength(uint16_t aLength)
         bufs -= (((totalLengthCurrent - kHeadBufferDataSize) - 1) / kBufferDataSize) + 1;
     }
 
-    SuccessOrExit(error = ReclaimBuffers(bufs));
+    SuccessOrExit(error = GetMessagePool()->ReclaimBuffers(bufs));
 
     SuccessOrExit(error = ResizeMessage(totalLengthRequest));
     mInfo.mLength = aLength;
@@ -292,7 +291,7 @@ uint16_t Message::Read(uint16_t aOffset, uint16_t aLength, void *aBuf) const
 
         aLength -= bytesToCopy;
         bytesCopied += bytesToCopy;
-        aBuf = reinterpret_cast<uint8_t *>(aBuf) + bytesToCopy;
+        aBuf = static_cast<uint8_t *>(aBuf) + bytesToCopy;
 
         aOffset = 0;
     }
@@ -328,7 +327,7 @@ uint16_t Message::Read(uint16_t aOffset, uint16_t aLength, void *aBuf) const
 
         aLength -= bytesToCopy;
         bytesCopied += bytesToCopy;
-        aBuf = reinterpret_cast<uint8_t *>(aBuf) + bytesToCopy;
+        aBuf = static_cast<uint8_t *>(aBuf) + bytesToCopy;
 
         curBuffer = curBuffer->GetNextBuffer();
         aOffset = 0;
@@ -367,7 +366,7 @@ int Message::Write(uint16_t aOffset, uint16_t aLength, const void *aBuf)
 
         aLength -= bytesToCopy;
         bytesCopied += bytesToCopy;
-        aBuf = reinterpret_cast<const uint8_t *>(aBuf) + bytesToCopy;
+        aBuf = static_cast<const uint8_t *>(aBuf) + bytesToCopy;
 
         aOffset = 0;
     }
@@ -403,7 +402,7 @@ int Message::Write(uint16_t aOffset, uint16_t aLength, const void *aBuf)
 
         aLength -= bytesToCopy;
         bytesCopied += bytesToCopy;
-        aBuf = reinterpret_cast<const uint8_t *>(aBuf) + bytesToCopy;
+        aBuf = static_cast<const uint8_t *>(aBuf) + bytesToCopy;
 
         curBuffer = curBuffer->GetNextBuffer();
         aOffset = 0;
@@ -498,6 +497,16 @@ void Message::SetTimeout(uint8_t aTimeout)
     mInfo.mTimeout = aTimeout;
 }
 
+int8_t Message::GetInterfaceId(void) const
+{
+    return mInfo.mInterfaceId;
+}
+
+void Message::SetInterfaceId(int8_t aInterfaceId)
+{
+    mInfo.mInterfaceId = aInterfaceId;
+}
+
 bool Message::GetDirectTransmission(void) const
 {
     return mInfo.mDirectTx;
@@ -541,6 +550,16 @@ bool Message::IsMleDiscoverResponse(void) const
 void Message::SetMleDiscoverResponse(bool aMleDiscoverResponse)
 {
     mInfo.mMleDiscoverResponse = aMleDiscoverResponse;
+}
+
+bool Message::IsJoinerEntrust(void) const
+{
+    return mInfo.mJoinerEntrust;
+}
+
+void Message::SetJoinerEntrust(bool aJoinerEntrust)
+{
+    mInfo.mJoinerEntrust = aJoinerEntrust;
 }
 
 uint16_t Message::UpdateChecksum(uint16_t aChecksum, uint16_t aOffset, uint16_t aLength) const
@@ -694,7 +713,7 @@ Message *MessageQueue::GetHead(void) const
 
 ThreadError MessageQueue::Enqueue(Message &aMessage)
 {
-    aMessage.GetMessageList(MessageInfo::kListAll).mList = &sAll;
+    aMessage.GetMessageList(MessageInfo::kListAll).mList = &aMessage.GetMessagePool()->mAll;
     aMessage.GetMessageList(MessageInfo::kListInterface).mList = &mInterface;
     AddToList(MessageInfo::kListAll, aMessage);
     AddToList(MessageInfo::kListInterface, aMessage);

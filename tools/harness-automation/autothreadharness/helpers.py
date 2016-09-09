@@ -56,3 +56,6 @@ class HistoryHelper(object):
 
     def is_bad_golden_device(self, port):
         return port in self.data['golden_device_black_list']
+
+    def __str__(self):
+        return json.dumps(self.data, indent=2)

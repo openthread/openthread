@@ -476,11 +476,11 @@ ThreadError Dataset::ProcessMgmtSetCommand(otInstance *aInstance, int argc, char
 
     if (strcmp(argv[0], "active") == 0)
     {
-        SuccessOrExit(error = otSendActiveSet(&dataset, tlvs, static_cast<uint8_t>(length)));
+        SuccessOrExit(error = otSendActiveSet(aInstance, &dataset, tlvs, static_cast<uint8_t>(length)));
     }
     else if (strcmp(argv[0], "pending") == 0)
     {
-        SuccessOrExit(error = otSendPendingSet(&dataset, tlvs, static_cast<uint8_t>(length)));
+        SuccessOrExit(error = otSendPendingSet(aInstance, &dataset, tlvs, static_cast<uint8_t>(length)));
     }
     else
     {
@@ -531,7 +531,7 @@ ThreadError Dataset::ProcessMgmtGetCommand(otInstance *aInstance, int argc, char
         }
         else if (strcmp(argv[index], "localprefix") == 0)
         {
-            tlvs[length++] = OT_MESHCOP_TLV_LOCALPREFIX;
+            tlvs[length++] = OT_MESHCOP_TLV_MESHLOCALPREFIX;
         }
         else if (strcmp(argv[index], "delaytimer") == 0)
         {
@@ -562,11 +562,11 @@ ThreadError Dataset::ProcessMgmtGetCommand(otInstance *aInstance, int argc, char
 
     if (strcmp(argv[0], "active") == 0)
     {
-        SuccessOrExit(error = otSendActiveGet(tlvs, static_cast<uint8_t>(length)));
+        SuccessOrExit(error = otSendActiveGet(aInstance, tlvs, static_cast<uint8_t>(length)));
     }
     else if (strcmp(argv[0], "pending") == 0)
     {
-        SuccessOrExit(error = otSendPendingGet(tlvs, static_cast<uint8_t>(length)));
+        SuccessOrExit(error = otSendPendingGet(aInstance, tlvs, static_cast<uint8_t>(length)));
     }
     else
     {

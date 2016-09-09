@@ -55,7 +55,15 @@ extern "C" {
  */
 
 /**
- * Get random stream.
+ * Get a 32-bit random value.
+ *
+ * @returns A 32-bit random value.
+ *
+ */
+uint32_t otPlatRandomGet(void);
+
+/**
+ * Get true random stream.
  *
  * @param[in]   aInputLength      The expected size of random values.
  * @param[out]  aOutput           A pointer to the buffer for the generated random stream. The pointer should never be NULL.
@@ -67,15 +75,7 @@ extern "C" {
  * @retval kThreadError_Fail         Generate random fail.
  * @retval kThreadError_InvalidArgs  Invalid args.
  */
-ThreadError otPlatSecureRandomGet(uint16_t aInputLength, uint8_t *aOutput, uint16_t *aOutputLength);
-
-/**
- * Get a 32-bit true random value.
- *
- * @returns A 32-bit true random value.
- *
- */
-uint32_t otPlatRandomGet(void);
+ThreadError otPlatRandomSecureGet(uint16_t aInputLength, uint8_t *aOutput, uint16_t *aOutputLength);
 
 /**
  * @}

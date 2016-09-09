@@ -428,6 +428,90 @@ AM_CONDITIONAL([OPENTHREAD_ENABLE_NCP],      [test "${enable_ncp}" != "no"])
 AM_CONDITIONAL([OPENTHREAD_ENABLE_NCP_SPI],  [test "${enable_ncp}"  = "spi"])
 AM_CONDITIONAL([OPENTHREAD_ENABLE_NCP_UART], [test "${enable_ncp}"  = "uart"])
 
+MBEDTLS_CPPFLAGS="-I\${abs_top_srcdir}/third_party/mbedtls"
+MBEDTLS_CPPFLAGS="${MBEDTLS_CPPFLAGS} -I\${abs_top_srcdir}/third_party/mbedtls/repo/include"
+MBEDTLS_CPPFLAGS="${MBEDTLS_CPPFLAGS} -I\${abs_top_srcdir}/third_party/mbedtls/repo/include/mbedtls"
+MBEDTLS_CPPFLAGS="${MBEDTLS_CPPFLAGS} -DMBEDTLS_CONFIG_FILE=\\\"mbedtls-config.h\\\""
+
+#
+# Thread Commissioner
+#
+
+AC_ARG_ENABLE(commissioner,
+    [AS_HELP_STRING([--enable-commissioner],[Enable commissioner suport @<:@default=no@:>@.])],
+    [
+        case "${enableval}" in
+
+        no|yes)
+            enable_commissioner=${enableval}
+            ;;
+
+        *)
+            AC_MSG_ERROR([Invalid value ${enable_commissioner} for --enable-commissioner])
+            ;;
+        esac
+    ],
+    [enable_commissioner=no])
+
+if test "$enable_commissioner" = "yes"; then
+    OPENTHREAD_ENABLE_COMMISSIONER=1
+else
+    OPENTHREAD_ENABLE_COMMISSIONER=0
+fi
+
+AC_MSG_RESULT(${enable_commissioner})
+AC_SUBST(OPENTHREAD_ENABLE_COMMISSIONER)
+AM_CONDITIONAL([OPENTHREAD_ENABLE_COMMISSIONER], [test "${enable_commissioner}" = "yes"])
+AC_DEFINE_UNQUOTED([OPENTHREAD_ENABLE_COMMISSIONER],[${OPENTHREAD_ENABLE_COMMISSIONER}],[Define to 1 to enable the commissioner role.])
+
+#
+# Thread Joiner
+#
+
+AC_ARG_ENABLE(joiner,
+    [AS_HELP_STRING([--enable-joiner],[Enable joiner suport @<:@default=no@:>@.])],
+    [
+        case "${enableval}" in
+
+        no|yes)
+            enable_joiner=${enableval}
+            ;;
+
+        *)
+            AC_MSG_ERROR([Invalid value ${enable_joiner} for --enable-joiner])
+            ;;
+        esac
+    ],
+    [enable_joiner=no])
+
+if test "$enable_joiner" = "yes"; then
+    OPENTHREAD_ENABLE_JOINER=1
+else
+    OPENTHREAD_ENABLE_JOINER=0
+fi
+
+AC_MSG_RESULT(${enable_joiner})
+AC_SUBST(OPENTHREAD_ENABLE_JOINER)
+AM_CONDITIONAL([OPENTHREAD_ENABLE_JOINER], [test "${enable_joiner}" = "yes"])
+AC_DEFINE_UNQUOTED([OPENTHREAD_ENABLE_JOINER],[${OPENTHREAD_ENABLE_JOINER}],[Define to 1 to enable the joiner role.])
+
+if test "${enable_commissioner}" = "yes" -o "${enable_joiner}" = "yes"; then
+    enable_dtls="yes"
+    OPENTHREAD_ENABLE_DTLS=1
+    MBEDTLS_CPPFLAGS="-I\${abs_top_srcdir}/third_party/mbedtls"
+    MBEDTLS_CPPFLAGS="${MBEDTLS_CPPFLAGS} -I\${abs_top_srcdir}/third_party/mbedtls/repo/include"
+    MBEDTLS_CPPFLAGS="${MBEDTLS_CPPFLAGS} -I\${abs_top_srcdir}/third_party/mbedtls/repo/include/mbedtls"
+    MBEDTLS_CPPFLAGS="${MBEDTLS_CPPFLAGS} -DMBEDTLS_CONFIG_FILE=\\\"mbedtls-config.h\\\""
+else
+    enable_dtls="no"
+    OPENTHREAD_ENABLE_DTLS=0
+fi
+
+AC_MSG_RESULT(${enable_dtls})
+AC_SUBST(OPENTHREAD_ENABLE_DTLS)
+AM_CONDITIONAL([OPENTHREAD_ENABLE_DTLS], [test "${enable_dtls}" = "yes"])
+AC_DEFINE_UNQUOTED([OPENTHREAD_ENABLE_DTLS],[${OPENTHREAD_ENABLE_DTLS}],[Define to 1 to enable dtls support.])
+
 #
 # Diagnostics Library
 #
@@ -602,6 +686,10 @@ if test "${ac_no_link}" != "yes"; then
     AC_CHECK_FUNCS([memcpy])
 fi
 
+# Add any mbedtls CPPFLAGS
+
+CPPFLAGS="${CPPFLAGS} ${MBEDTLS_CPPFLAGS}"
+
 # Add any code coverage CPPFLAGS and LDFLAGS
 
 CPPFLAGS="${CPPFLAGS} ${NL_COVERAGE_CPPFLAGS}"
@@ -620,7 +708,7 @@ AC_CONFIG_FILES([
 Makefile
 include/Makefile
 include/cli/Makefile
-include/crypto/Makefile
+include/commissioning/Makefile
 include/ncp/Makefile
 include/platform/Makefile
 src/Makefile
@@ -704,6 +792,9 @@ AC_MSG_NOTICE([
   Pretty check args                         : ${PRETTY_CHECK_ARGS:--}
   OpenThread CLI support                    : ${enable_cli}
   OpenThread NCP support                    : ${enable_ncp}
+  OpenThread Commissioner support           : ${enable_commissioner}
+  OpenThread Joiner support                 : ${enable_joiner}
+  OpenThread DTLS support                   : ${enable_dtls}
   OpenThread Diagnostics support            : ${enable_diag}
   OpenThread examples                       : ${OPENTHREAD_EXAMPLES}
   OpenThread platform information           : ${PLATFORM_INFO}

@@ -34,7 +34,7 @@ import unittest
 class Leader_5_3_6(HarnessCase):
     suite = 1
     case = '5 3 6'
-    golden_devices_required = 2
+    golden_devices_required = 5
     def on_dialog(self, dialog, title):
         pass
 

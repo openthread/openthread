@@ -38,12 +38,15 @@
 #include <openthread.h>
 #include <openthread-config.h>
 #include <openthread-diag.h>
+#include <commissioning/commissioner.h>
+#include <commissioning/joiner.h>
 
 #include "cli.hpp"
 #include "cli_dataset.hpp"
 #include "cli_uart.hpp"
 #include <common/encoding.hpp>
 #include <common/new.hpp>
+#include <net/ip6.hpp>
 #include <platform/random.h>
 #include <platform/uart.h>
 
@@ -51,6 +54,9 @@ using Thread::Encoding::BigEndian::HostSwap16;
 using Thread::Encoding::BigEndian::HostSwap32;
 
 namespace Thread {
+
+extern Ip6::Ip6 *sIp6;
+
 namespace Cli {
 
 const struct Command Interpreter::sCommands[] =
@@ -61,15 +67,27 @@ const struct Command Interpreter::sCommands[] =
     { "child", &Interpreter::ProcessChild },
     { "childmax", &Interpreter::ProcessChildMax },
     { "childtimeout", &Interpreter::ProcessChildTimeout },
+#if OPENTHREAD_ENABLE_COMMISSIONER
+    { "commissioner", &Interpreter::ProcessCommissioner },
+#endif
     { "contextreusedelay", &Interpreter::ProcessContextIdReuseDelay },
     { "counter", &Interpreter::ProcessCounters },
     { "dataset", &Interpreter::ProcessDataset },
+#if OPENTHREAD_ENABLE_DIAG
+    { "diag", &Interpreter::ProcessDiag },
+#endif
     { "discover", &Interpreter::ProcessDiscover },
     { "eidcache", &Interpreter::ProcessEidCache },
+#ifdef OPENTHREAD_EXAMPLES_POSIX
+    { "exit", &Interpreter::ProcessExit },
+#endif
     { "extaddr", &Interpreter::ProcessExtAddress },
     { "extpanid", &Interpreter::ProcessExtPanId },
     { "ifconfig", &Interpreter::ProcessIfconfig },
     { "ipaddr", &Interpreter::ProcessIpAddr },
+#if OPENTHREAD_ENABLE_JOINER
+    { "joiner", &Interpreter::ProcessJoiner },
+#endif
     { "keysequence", &Interpreter::ProcessKeySequence },
     { "leaderdata", &Interpreter::ProcessLeaderData },
     { "leaderpartitionid", &Interpreter::ProcessLeaderPartitionId },
@@ -99,19 +117,16 @@ const struct Command Interpreter::sCommands[] =
     { "thread", &Interpreter::ProcessThread },
     { "version", &Interpreter::ProcessVersion },
     { "whitelist", &Interpreter::ProcessWhitelist },
-#if OPENTHREAD_ENABLE_DIAG
-    { "diag", &Interpreter::ProcessDiag },
-#endif
 };
 
 Interpreter::Interpreter(otInstance *aInstance):
     sLength(8),
     sCount(1),
     sInterval(1000),
-    sPingTimer(&Interpreter::s_HandlePingTimer, this),
+    sPingTimer(sIp6->mTimerScheduler, &Interpreter::s_HandlePingTimer, this),
     mInstance(aInstance)
 {
-    Ip6::Icmp::SetEchoReplyHandler(&s_HandleEchoResponse, this);
+    sIp6->mIcmp.SetEchoReplyHandler(&s_HandleEchoResponse, this);
     otSetStateChangedCallback(mInstance, &Interpreter::s_HandleNetifStateChanged, this);
 }
 
@@ -548,6 +563,15 @@ exit:
     AppendResult(error);
 }
 
+#ifdef OPENTHREAD_EXAMPLES_POSIX
+void Interpreter::ProcessExit(int argc, char *argv[])
+{
+    exit(0);
+    (void)argc;
+    (void)argv;
+}
+#endif
+
 void Interpreter::ProcessExtPanId(int argc, char *argv[])
 {
     ThreadError error = kThreadError_None;
@@ -784,9 +808,9 @@ void Interpreter::ProcessMasterKey(int argc, char *argv[])
     else
     {
         int keyLength;
-        uint8_t key[16];
+        uint8_t key[OT_MASTER_KEY_SIZE];
 
-        VerifyOrExit((keyLength = Hex2Bin(argv[0], key, sizeof(key))) >= 0, error = kThreadError_Parse);
+        VerifyOrExit((keyLength = Hex2Bin(argv[0], key, sizeof(key))) == OT_MASTER_KEY_SIZE, error = kThreadError_Parse);
         SuccessOrExit(error = otSetMasterKey(mInstance, key, static_cast<uint8_t>(keyLength)));
     }
 
@@ -1045,18 +1069,18 @@ void Interpreter::HandlePingTimer()
     uint32_t timestamp = HostSwap32(Timer::GetNow());
     Message *message;
 
-    VerifyOrExit((message = Ip6::Icmp::NewMessage(0)) != NULL, error = kThreadError_NoBufs);
+    VerifyOrExit((message = sIp6->mIcmp.NewMessage(0)) != NULL, error = kThreadError_NoBufs);
     SuccessOrExit(error = message->Append(&timestamp, sizeof(timestamp)));
     SuccessOrExit(error = message->SetLength(sLength));
 
-    SuccessOrExit(error = Ip6::Icmp::SendEchoRequest(*message, sMessageInfo));
+    SuccessOrExit(error = sIp6->mIcmp.SendEchoRequest(*message, sMessageInfo));
     sCount--;
 
 exit:
 
     if (error != kThreadError_None && message != NULL)
     {
-        Message::Free(*message);
+        message->Free();
     }
 
     if (sCount)
@@ -1818,6 +1842,52 @@ void Interpreter::ProcessVersion(int argc, char *argv[])
     (void)argc;
     (void)argv;
 }
+
+#if OPENTHREAD_ENABLE_COMMISSIONER
+
+void Interpreter::ProcessCommissioner(int argc, char *argv[])
+{
+    ThreadError error = kThreadError_None;
+
+    VerifyOrExit(argc > 0, error = kThreadError_Parse);
+
+    if (strcmp(argv[0], "start") == 0)
+    {
+        otCommissionerStart();
+    }
+    else if (strcmp(argv[0], "stop") == 0)
+    {
+        otCommissionerStop();
+    }
+
+exit:
+    AppendResult(error);
+}
+
+#endif  // OPENTHREAD_ENABLE_COMMISSIONER
+
+#if OPENTHREAD_ENABLE_JOINER
+
+void Interpreter::ProcessJoiner(int argc, char *argv[])
+{
+    ThreadError error = kThreadError_None;
+
+    VerifyOrExit(argc > 0, error = kThreadError_Parse);
+
+    if (strcmp(argv[0], "start") == 0)
+    {
+        otJoinerStart();
+    }
+    else if (strcmp(argv[0], "stop") == 0)
+    {
+        otJoinerStop();
+    }
+
+exit:
+    AppendResult(error);
+}
+
+#endif // OPENTHREAD_ENABLE_JOINER
 
 void Interpreter::ProcessWhitelist(int argc, char *argv[])
 {

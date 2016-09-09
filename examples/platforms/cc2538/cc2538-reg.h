@@ -69,6 +69,7 @@
 #define RFCORE_XREG_RSSISTAT                  0x40088664  // RSSI valid status register
 #define RFCORE_XREG_AGCCTRL1                  0x400886C8  // AGC reference level
 #define RFCORE_XREG_TXFILTCFG                 0x400887E8  // TX filter configuration
+#define RFCORE_XREG_RFRND                     0x4008869C  // Random data
 #define RFCORE_SFR_RFDATA                     0x40088828  // The TX FIFO and RX FIFO
 #define RFCORE_SFR_RFERRF                     0x4008882C  // RF error interrupt flags 
 #define RFCORE_SFR_RFIRQF0                    0x40088834  // RF interrupt flags
@@ -78,8 +79,11 @@
 
 #define RFCORE_XREG_FRMCTRL0_AUTOACK          0x00000020
 #define RFCORE_XREG_FRMCTRL0_AUTOCRC          0x00000040
+#define RFCORE_XREG_FRMCTRL0_INFINITY_RX      0x00000008
 
 #define RFCORE_XREG_FRMCTRL1_PENDING_OR       0x00000004
+
+#define RFCORE_XREG_RFRND_IRND                0x00000001
 
 #define RFCORE_XREG_FSMSTAT1_TX_ACTIVE        0x00000002
 #define RFCORE_XREG_FSMSTAT1_CCA              0x00000010  // Clear channel assessment   
@@ -90,6 +94,12 @@
 #define RFCORE_XREG_RSSISTAT_RSSI_VALID       0x00000001  // RSSI value is valid. 
 
 #define RFCORE_SFR_RFERRF_RXOVERF             0x00000004  // RX FIFO overflowed.
+
+#define RFCORE_SFR_RFST_INSTR_RXON            0xE3        // Instruction set RX on
+#define RFCORE_SFR_RFST_INSTR_TXON            0xE9        // Instruction set TX on
+#define RFCORE_SFR_RFST_INSTR_RFOFF           0xEF        // Instruction set RF off
+#define RFCORE_SFR_RFST_INSTR_FLUSHRX         0xED        // Instruction set flush rx buffer
+#define RFCORE_SFR_RFST_INSTR_FLUSHTX         0xEE        // Instruction set flush tx buffer
 
 #define ANA_REGS_BASE                         0x400D6000  // ANA_REGS
 #define ANA_REGS_O_IVCTRL                     0x00000004  // Analog control register
@@ -166,5 +176,12 @@
 
 #define UART_IM_RXIM                          0x00000010  // UART receive interrupt mask
 #define UART_IM_RTIM                          0x00000040  // UART receive time-out interrupt 
+
+#define SOC_ADC_ADCCON1                       0x400D7000  // ADC Control
+#define SOC_ADC_RNDL                          0x400D7014  // RNG low data
+#define SOC_ADC_RNDH                          0x400D7018  // RNG high data
+
+#define SOC_ADC_ADCCON1_RCTRL0                0x00000004  // ADCCON1 RCTRL bit 0
+#define SOC_ADC_ADCCON1_RCTRL1                0x00000008  // ADCCON1 RCTRL bit 1
 
 #endif

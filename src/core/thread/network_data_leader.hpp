@@ -219,6 +219,28 @@ public:
      */
     ThreadError SendServerDataNotification(uint16_t aRloc16);
 
+    /**
+     * This method returns a pointer to the Commissioning Data.
+     *
+     * @param[out]  aLength  The length of the Commissioning Data in bytes.
+     *
+     * @returns A pointer to the Commissioning Data or NULL if no Commissioning Data exists.
+     *
+     */
+    uint8_t *GetCommissioningData(uint8_t &aLength);
+
+    /**
+     * This method adds Commissioning Data to the Thread Network Data.
+     *
+     * @param[in]  aValue        A pointer to the Commissioning Data value.
+     * @param[in]  aValueLength  The length of @p aValue.
+     *
+     * @retval kThreadError_None    Successfully added the Commissioning Data.
+     * @retval kThreadError_NoBufs  Insufficient space to add the Commissioning Data.
+     *
+     */
+    ThreadError SetCommissioningData(const uint8_t *aValue, uint8_t aValueLength);
+
 private:
     static void HandleServerData(void *aContext, Coap::Header &aHeader, Message &aMessage,
                                  const Ip6::MessageInfo &aMessageInfo);
@@ -244,6 +266,8 @@ private:
 
     ThreadError RemoveContext(uint8_t aContextId);
     ThreadError RemoveContext(PrefixTlv &aPrefix, uint8_t aContextId);
+
+    ThreadError RemoveCommissioningData(void);
 
     ThreadError RemoveRloc(uint16_t aRloc16);
     ThreadError RemoveRloc(PrefixTlv &aPrefix, uint16_t aRloc16);

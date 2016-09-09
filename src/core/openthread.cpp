@@ -40,6 +40,7 @@
 #include <common/new.hpp>
 #include <common/tasklet.hpp>
 #include <common/timer.hpp>
+#include <crypto/mbedtls.hpp>
 #include <net/icmp6.hpp>
 #include <net/ip6.hpp>
 #include <platform/random.h>
@@ -56,6 +57,11 @@ ThreadNetif *sThreadNetif;
 
 static Ip6::NetifCallback sNetifCallback;
 static bool mEnabled = false;
+
+static otDEFINE_ALIGNED_VAR(sMbedTlsRaw, sizeof(Crypto::MbedTls), uint64_t);
+
+static otDEFINE_ALIGNED_VAR(sIp6Raw, sizeof(Ip6::Ip6), uint64_t);
+Ip6::Ip6 *sIp6;
 
 #ifdef __cplusplus
 extern "C" {
@@ -77,12 +83,12 @@ static void *sDiscoverCallbackContext = NULL;
 
 void otProcessNextTasklet(otInstance *)
 {
-    TaskletScheduler::RunNextTasklet();
+    sIp6->mTaskletScheduler.RunNextTasklet();
 }
 
 bool otAreTaskletsPending(otInstance *)
 {
-    return TaskletScheduler::AreTaskletsPending();
+    return sIp6->mTaskletScheduler.AreTaskletsPending();
 }
 
 uint8_t otGetChannel(otInstance *)
@@ -878,9 +884,9 @@ otInstance *otInstanceInit(void *aInstanceBuffer, uint64_t *aInstanceBufferSize)
     // Construct the context
     aInstance = static_cast<otInstance *>(aInstanceBuffer);
 
-    Message::Init();
-    sThreadNetif = new(&sThreadNetifRaw) ThreadNetif;
-    Ip6::Ip6::Init();
+    new(&sMbedTlsRaw) Crypto::MbedTls;
+    sIp6 = new(&sIp6Raw) Ip6::Ip6;
+    sThreadNetif = new(&sThreadNetifRaw) ThreadNetif(*sIp6);
 
     mEnabled = true;
 
@@ -1087,33 +1093,32 @@ void HandleMleDiscover(otActiveScanResult *aResult, void *aContext)
 void otSetReceiveIp6DatagramCallback(otInstance *, otReceiveIp6DatagramCallback aCallback,
                                      void *aCallbackContext)
 {
-    Ip6::Ip6::SetReceiveDatagramCallback(aCallback, aCallbackContext);
+    sIp6->SetReceiveDatagramCallback(aCallback, aCallbackContext);
 }
 
 bool otIsReceiveIp6DatagramFilterEnabled(otInstance *)
 {
-    return Ip6::Ip6::IsReceiveIp6FilterEnabled();
+    return sIp6->IsReceiveIp6FilterEnabled();
 }
 
 void otSetReceiveIp6DatagramFilterEnabled(otInstance *, bool aEnabled)
 {
-    Ip6::Ip6::SetReceiveIp6FilterEnabled(aEnabled);
+    sIp6->SetReceiveIp6FilterEnabled(aEnabled);
 }
 
 ThreadError otSendIp6Datagram(otInstance *, otMessage aMessage)
 {
-    return Ip6::Ip6::HandleDatagram(*static_cast<Message *>(aMessage), NULL, sThreadNetif->GetInterfaceId(),
-                                    NULL, true);
+    return sIp6->HandleDatagram(*static_cast<Message *>(aMessage), NULL, sThreadNetif->GetInterfaceId(), NULL, true);
 }
 
 otMessage otNewUdpMessage(otInstance *)
 {
-    return Ip6::Udp::NewMessage(0);
+    return sIp6->mUdp.NewMessage(0);
 }
 
 ThreadError otFreeMessage(otMessage aMessage)
 {
-    return Message::Free(*static_cast<Message *>(aMessage));
+    return static_cast<Message *>(aMessage)->Free();
 }
 
 uint16_t otGetMessageLength(otMessage aMessage)
@@ -1185,12 +1190,12 @@ ThreadError otSendUdp(otUdpSocket *aSocket, otMessage aMessage, const otMessageI
 
 bool otIsIcmpEchoEnabled(otInstance *)
 {
-    return Ip6::Icmp::IsEchoEnabled();
+    return sIp6->mIcmp.IsEchoEnabled();
 }
 
 void otSetIcmpEchoEnabled(otInstance *, bool aEnabled)
 {
-    Ip6::Icmp::SetEchoEnabled(aEnabled);
+    sIp6->mIcmp.SetEchoEnabled(aEnabled);
 }
 
 uint8_t otIp6PrefixMatch(const otIp6Address *aFirst, const otIp6Address *aSecond)
@@ -1253,25 +1258,49 @@ exit:
     return error;
 }
 
-ThreadError otSendActiveGet(const uint8_t *aTlvTypes, uint8_t aLength)
+ThreadError otSendActiveGet(otInstance *, const uint8_t *aTlvTypes, uint8_t aLength)
 {
     return sThreadNetif->GetActiveDataset().SendGetRequest(aTlvTypes, aLength);
 }
 
-ThreadError otSendActiveSet(const otOperationalDataset *aDataset, const uint8_t *aTlvs, uint8_t aLength)
+ThreadError otSendActiveSet(otInstance *, const otOperationalDataset *aDataset, const uint8_t *aTlvs, uint8_t aLength)
 {
     return sThreadNetif->GetActiveDataset().SendSetRequest(*aDataset, aTlvs, aLength);
 }
 
-ThreadError otSendPendingGet(const uint8_t *aTlvTypes, uint8_t aLength)
+ThreadError otSendPendingGet(otInstance *, const uint8_t *aTlvTypes, uint8_t aLength)
 {
     return sThreadNetif->GetPendingDataset().SendGetRequest(aTlvTypes, aLength);
 }
 
-ThreadError otSendPendingSet(const otOperationalDataset *aDataset, const uint8_t *aTlvs, uint8_t aLength)
+ThreadError otSendPendingSet(otInstance *, const otOperationalDataset *aDataset, const uint8_t *aTlvs, uint8_t aLength)
 {
     return sThreadNetif->GetPendingDataset().SendSetRequest(*aDataset, aTlvs, aLength);
 }
+
+#if OPENTHREAD_ENABLE_COMMISSIONER
+ThreadError otCommissionerStart(otInstance *)
+{
+    return sThreadNetif->GetCommissioner().Start();
+}
+
+ThreadError otCommissionerStop(otInstance *)
+{
+    return sThreadNetif->GetCommissioner().Stop();
+}
+#endif  // OPENTHREAD_ENABLE_COMMISSIONER
+
+#if OPENTHREAD_ENABLE_JOINER
+ThreadError otJoinerStart(otInstance *)
+{
+    return sThreadNetif->GetJoiner().Start();
+}
+
+ThreadError otJoinerStop(otInstance *)
+{
+    return sThreadNetif->GetJoiner().Stop();
+}
+#endif  // OPENTHREAD_ENABLE_JOINER
 
 #ifdef __cplusplus
 }  // extern "C"

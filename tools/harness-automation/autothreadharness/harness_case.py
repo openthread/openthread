@@ -57,7 +57,7 @@ THREAD_CHANNEL_MIN = 11
 class HarnessCase(unittest.TestCase):
     """This is the case class of all automation test cases.
 
-    All test case classes MUST define properties `suite`, `case` and `golden_devices_needed`
+    All test case classes MUST define properties `suite`, `case` and `golden_devices_required`
     """
 
     channel = settings.THREAD_CHANNEL
@@ -85,7 +85,7 @@ class HarnessCase(unittest.TestCase):
     """str: Case id, e.g. '6 5 1'.
     """
 
-    golden_devices_needed = 0
+    golden_devices_required = 0
     """int: Golden devices needed to finish the test
     """
 
@@ -95,6 +95,9 @@ class HarnessCase(unittest.TestCase):
 
     manual_reset = False
     """bool: whether reset manually"""
+
+    auto_dut = settings.AUTO_DUT
+    """bool: whether use harness auto dut feature"""
 
     def wait_until(self, what, times=-1):
         """Wait until `what` return True
@@ -125,9 +128,7 @@ class HarnessCase(unittest.TestCase):
         self._browser = None
         self._hc = None
         self.result_dir = '%s\\%s' % (settings.OUTPUT_PATH, self.__class__.__name__)
-        # create directory
-        if self.__class__ is not HarnessCase:
-            os.system('mkdir %s' % self.result_dir)
+        self.history = HistoryHelper()
 
         super(HarnessCase, self).__init__(*args, **kwargs)
 
@@ -141,6 +142,19 @@ class HarnessCase(unittest.TestCase):
             raw_input('Reset golden devices and press enter to continue..')
             return
         elif not settings.APC_HOST:
+            if settings.GOLDEN_DEVICE_TYPE != 'OpenThread':
+                logger.warning('All golden devices may not be resetted')
+                return
+
+            for device in settings.GOLDEN_DEVICES:
+                try:
+                    with OpenThreadController(device) as otc:
+                        logger.info('Resetting %s' % device)
+                        otc.reset()
+                except:
+                    logger.exception('Failed to reset device %s' % device)
+                    self.history.mark_bad_golden_device(device)
+
             return
 
         tries = 3
@@ -187,6 +201,10 @@ class HarnessCase(unittest.TestCase):
 
         DUT will be restarted. and openthread will started.
         """
+        if self.auto_dut:
+            self.dut = None
+            return
+
         dut_port = settings.DUT_DEVICE
         dut = OpenThreadController(dut_port)
         self.dut = dut
@@ -247,6 +265,8 @@ class HarnessCase(unittest.TestCase):
         logger.info('Empty files in temps')
         os.system('del /q "%s\\Thread_Harness\\temp\\*.*"' % settings.HARNESS_HOME)
 
+        # create directory
+        os.system('mkdir %s' % self.result_dir)
         self._init_harness()
         self._init_devices()
         self._init_dut()
@@ -351,7 +371,6 @@ class HarnessCase(unittest.TestCase):
         browser = self._browser
         test_bed = browser.find_element_by_id('test-bed')
         time.sleep(3)
-        history = HistoryHelper()
         selected_hw_set = test_bed.find_elements_by_class_name('selected-hw')
         selected_hw_num = len(selected_hw_set)
 
@@ -361,17 +380,26 @@ class HarnessCase(unittest.TestCase):
             remove_button.click()
             selected_hw_num = selected_hw_num - 1
 
-        devices = filter(lambda port: not history.is_bad_golden_device(port),
+        devices = filter(lambda port: not (self.history.is_bad_golden_device(port) or (not self.auto_dut and port == settings.DUT_DEVICE )),
                          settings.GOLDEN_DEVICES)
         logger.info('Available golden devices: %s', json.dumps(devices, indent=2))
-        if len(devices) < self.golden_devices_required:
-            raise Exception('Golden devices is not enough')
         golden_devices_required = self.golden_devices_required
+
+        if self.auto_dut:
+            golden_devices_required = golden_devices_required + 1
+
+        if len(devices) < golden_devices_required:
+            raise Exception('Golden devices is not enough')
+
+        device_type_id = settings.GOLDEN_DEVICE_TYPE
+        if device_type_id == 'OpenThread':
+            device_type_id = 'ARM'
+
         while golden_devices_required:
-            golden_device = browser.find_element_by_id(settings.GOLDEN_DEVICE_TYPE)
+            freescale = browser.find_element_by_id(device_type_id)
             # drag
             action_chains = ActionChains(browser)
-            action_chains.click_and_hold(golden_device)
+            action_chains.click_and_hold(freescale)
             action_chains.move_to_element(test_bed).perform()
             time.sleep(1)
 
@@ -395,15 +423,15 @@ class HarnessCase(unittest.TestCase):
         while True:
             try:
                 self._connect_devices()
-                elem = browser.find_element_by_id('nextBtn')
-                if not self.wait_until(lambda: 'disabled' not in elem.get_attribute('class'),
-                                       times=60):
+                button_next = browser.find_element_by_id('nextBtn')
+                if not self.wait_until(lambda: 'disabled' not in button_next.get_attribute('class'),
+                                       times=120):
                     for selected_hw in selected_hw_set:
                         form_inputs = selected_hw.find_elements_by_tag_name('input')
                         form_port = form_inputs[0]
                         if form_port.is_enabled():
                             port = form_port.get_attribute('value').encode('utf8')
-                            history.mark_bad_golden_device(port)
+                            self.history.mark_bad_golden_device(port)
                             if devices:
                                 device = devices.pop()
                                 form_port.clear()
@@ -418,7 +446,16 @@ class HarnessCase(unittest.TestCase):
                         logger.info('Try again with new golden devices')
                         continue
 
-                elem.click()
+                if self.auto_dut:
+                    checkbox_auto_dut = browser.find_element_by_id('EnableAutoDutSelection')
+                    if not checkbox_auto_dut.is_selected():
+                        checkbox_auto_dut.click()
+
+                    radio_auto_dut = browser.find_element_by_class_name('AutoDUT_RadBtns')
+                    if not radio_auto_dut.is_selected():
+                        radio_auto_dut.click()
+
+                button_next.click()
             except SystemExit:
                 raise
             except:
@@ -435,6 +472,7 @@ class HarnessCase(unittest.TestCase):
         time.sleep(1)
 
         checkbox = None
+        self.wait_until(lambda: self._browser.find_elements_by_css_selector('.tree-node .tree-title') and True)
         elems = self._browser.find_elements_by_css_selector('.tree-node .tree-title')
         for elem in elems:
             action_chains = ActionChains(self._browser)
@@ -474,8 +512,9 @@ class HarnessCase(unittest.TestCase):
             if dialog.get_attribute('aria-hidden') != 'false':
                 raise Exception('Test information dialog not ready')
 
+            version = self.auto_dut and settings.DUT_VERSION or self.dut.version
             dialog.find_element_by_id('inp_dut_manufacturer').send_keys(settings.DUT_MANUFACTURER)
-            dialog.find_element_by_id('inp_dut_firmware_version').send_keys(self.dut.version)
+            dialog.find_element_by_id('inp_dut_firmware_version').send_keys(version)
             dialog.find_element_by_id('inp_tester_name').send_keys(settings.TESTER_NAME)
             dialog.find_element_by_id('inp_remarks').send_keys(settings.TESTER_REMARKS)
             dialog.find_element_by_id('generatePdf').click()
@@ -552,7 +591,8 @@ class HarnessCase(unittest.TestCase):
                 time.sleep(5)
                 done = True
 
-        time.sleep(5)
+        # Wait until case really stopped
+        self.wait_until(lambda: self._browser.find_element_by_id('runTest') and True, 30)
 
         if error:
             raise Exception('Fail for previous exceptions')
@@ -709,5 +749,5 @@ class HarnessCase(unittest.TestCase):
         # get case result
         status = self._browser.find_element_by_class_name('title-test').text
         logger.info(status)
-        success = 'Fail' not in status
+        success = 'Pass' in status
         self.assertTrue(success)

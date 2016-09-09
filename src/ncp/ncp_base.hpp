@@ -36,7 +36,7 @@
 #include <openthread-types.h>
 #include <openthread-config.h>
 #include <common/message.hpp>
-#include <thread/thread_netif.hpp>
+#include <common/tasklet.hpp>
 
 #include "spinel.h"
 
@@ -440,7 +440,7 @@ private:
     bool mAllowLocalNetworkDataChange;
     bool mRequireJoinExistingNetwork;
 
-    uint32_t mFramingErrorCounter;             // Number of inproperly formed received spinel frames.
+    uint32_t mFramingErrorCounter;             // Number of improperly formed received spinel frames.
     uint32_t mRxSpinelFrameCounter;            // Number of received (inbound) spinel frames.
     uint32_t mTxSpinelFrameCounter;            // Number of sent (outbound) spinel frames.
     uint32_t mInboundSecureIpFrameCounter;     // Number of secure inbound data/IP frames.

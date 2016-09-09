@@ -34,6 +34,7 @@
 #include <ncp/ncp.h>
 #include <common/code_utils.hpp>
 #include <common/new.hpp>
+#include <net/ip6.hpp>
 #include <ncp/ncp.h>
 #include <ncp/ncp_uart.hpp>
 #include <platform/uart.h>
@@ -43,6 +44,8 @@ namespace Thread {
 
 static otDEFINE_ALIGNED_VAR(sNcpRaw, sizeof(NcpUart), uint64_t);
 static NcpUart *sNcpUart;
+
+extern Ip6::Ip6 *sIp6;
 
 extern "C" void otNcpInit(otInstance *aInstance)
 {
@@ -81,7 +84,7 @@ NcpUart::NcpUart(otInstance *aInstance):
     mFrameDecoder(mRxBuffer, sizeof(mRxBuffer), &NcpUart::HandleFrame, &NcpUart::HandleError, this),
     mUartBuffer(),
     mTxFrameBuffer(aInstance, mTxBuffer, sizeof(mTxBuffer)),
-    mUartSendTask(EncodeAndSendToUart, this)
+    mUartSendTask(sIp6->mTaskletScheduler, EncodeAndSendToUart, this)
 {
     mState = kStartingFrame;
 

@@ -32,6 +32,7 @@
 
 #include <common/code_utils.hpp>
 #include <common/new.hpp>
+#include <net/ip6.hpp>
 #include <ncp/ncp.h>
 #include <ncp/ncp_spi.hpp>
 #include <platform/spi-slave.h>
@@ -46,6 +47,8 @@ namespace Thread {
 
 static otDEFINE_ALIGNED_VAR(sNcpRaw, sizeof(NcpSpi), uint64_t);
 static NcpSpi *sNcpSpi;
+
+extern Ip6::Ip6 *sIp6;
 
 extern "C" void otNcpInit(otInstance *aInstance)
 {
@@ -86,8 +89,8 @@ static uint16_t spi_header_get_data_len(const uint8_t *header)
 
 NcpSpi::NcpSpi(otInstance *aInstance):
     NcpBase(aInstance),
-    mHandleRxFrame(&NcpSpi::HandleRxFrame, this),
-    mHandleSendDone(&NcpSpi::PrepareTxFrame, this),
+    mHandleRxFrame(sIp6->mTaskletScheduler, &NcpSpi::HandleRxFrame, this),
+    mHandleSendDone(sIp6->mTaskletScheduler, &NcpSpi::PrepareTxFrame, this),
     mTxFrameBuffer(aInstance, mTxBuffer, sizeof(mTxBuffer))
 {
     memset(mEmptySendFrame, 0, kSpiHeaderLength);

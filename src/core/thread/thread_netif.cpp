@@ -54,8 +54,9 @@ static const uint8_t kThreadMasterKey[] =
 
 static const char name[] = "thread";
 
-ThreadNetif::ThreadNetif(void):
-    mCoapServer(kCoapUdpPort),
+ThreadNetif::ThreadNetif(Ip6::Ip6 &aIp6):
+    Netif(aIp6),
+    mCoapServer(aIp6.mUdp, kCoapUdpPort),
     mAddressResolver(*this),
     mActiveDataset(*this),
     mPendingDataset(*this),
@@ -65,7 +66,18 @@ ThreadNetif::ThreadNetif(void):
     mMeshForwarder(*this),
     mMleRouter(*this),
     mNetworkDataLocal(*this),
-    mNetworkDataLeader(*this)
+    mNetworkDataLeader(*this),
+#if OPENTHREAD_ENABLE_COMMISSIONER
+    mCommissioner(*this),
+#endif  // OPENTHREAD_ENABLE_COMMISSIONER
+#if OPENTHREAD_ENABLE_DTLS
+    mDtls(*this),
+#endif
+#if OPENTHREAD_ENABLE_JOINER
+    mJoiner(*this),
+#endif  // OPENTHREAD_ENABLE_JOINER
+    mJoinerRouter(*this),
+    mLeader(*this)
 {
     mKeyManager.SetMasterKey(kThreadMasterKey, sizeof(kThreadMasterKey));
 }
@@ -81,7 +93,7 @@ ThreadError ThreadNetif::Up(void)
 
     VerifyOrExit(!mIsUp, error = kThreadError_Already);
 
-    Netif::AddNetif();
+    mIp6.AddNetif(*this);
     mMeshForwarder.Start();
     mCoapServer.Start();
     mMleRouter.Enable();
@@ -96,7 +108,7 @@ ThreadError ThreadNetif::Down(void)
     mCoapServer.Stop();
     mMleRouter.Disable();
     mMeshForwarder.Stop();
-    Netif::RemoveNetif();
+    mIp6.RemoveNetif(*this);
     mIsUp = false;
     return kThreadError_None;
 }

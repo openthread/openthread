@@ -848,6 +848,7 @@ ThreadError otSetPendingDataset(otInstance *aInstance, otOperationalDataset *aDa
 /**
  * This function sends MGMT_ACTIVE_GET.
  *
+ * @param[in]  aInstance  A pointer to an OpenThread instance.
  * @param[in]  aTlvTypes  A pointer to the TLV Types.
  * @param[in]  aLength    The length of TLV Types.
  *
@@ -855,11 +856,12 @@ ThreadError otSetPendingDataset(otInstance *aInstance, otOperationalDataset *aDa
  * @retval kThreadError_NoBufs       Insufficient buffer space to send.
  *
  */
-ThreadError otSendActiveGet(const uint8_t *aTlvTypes, uint8_t aLength);
+ThreadError otSendActiveGet(otInstance *aInstance, const uint8_t *aTlvTypes, uint8_t aLength);
 
 /**
  * This function sends MGMT_ACTIVE_SET.
  *
+ * @param[in]  aInstance  A pointer to an OpenThread instance.
  * @param[in]  aDataset   A pointer to operational dataset.
  * @param[in]  aTlvs      A pointer to TLVs.
  * @param[in]  aLength    The length of TLVs.
@@ -868,11 +870,12 @@ ThreadError otSendActiveGet(const uint8_t *aTlvTypes, uint8_t aLength);
  * @retval kThreadError_NoBufs       Insufficient buffer space to send.
  *
  */
-ThreadError otSendActiveSet(const otOperationalDataset *aDataset, const uint8_t *aTlvs, uint8_t aLength);
+ThreadError otSendActiveSet(otInstance *aInstance, const otOperationalDataset *aDataset, const uint8_t *aTlvs, uint8_t aLength);
 
 /**
  * This function sends MGMT_PENDING_GET.
  *
+ * @param[in]  aInstance  A pointer to an OpenThread instance.
  * @param[in]  aTlvTypes  A pointer to the TLV Types.
  * @param[in]  aLength    The length of TLV Types.
  *
@@ -880,11 +883,12 @@ ThreadError otSendActiveSet(const otOperationalDataset *aDataset, const uint8_t 
  * @retval kThreadError_NoBufs       Insufficient buffer space to send.
  *
  */
-ThreadError otSendPendingGet(const uint8_t *aTlvTypes, uint8_t aLength);
+ThreadError otSendPendingGet(otInstance *aInstance, const uint8_t *aTlvTypes, uint8_t aLength);
 
 /**
  * This function sends MGMT_PENDING_SET.
  *
+ * @param[in]  aInstance  A pointer to an OpenThread instance.
  * @param[in]  aDataset   A pointer to operational dataset.
  * @param[in]  aTlvs      A pointer to TLVs.
  * @param[in]  aLength    The length of TLVs.
@@ -893,10 +897,10 @@ ThreadError otSendPendingGet(const uint8_t *aTlvTypes, uint8_t aLength);
  * @retval kThreadError_NoBufs       Insufficient buffer space to send.
  *
  */
-ThreadError otSendPendingSet(const otOperationalDataset *aDataset, const uint8_t *aTlvs, uint8_t aLength);
+ThreadError otSendPendingSet(otInstance *aInstance, const otOperationalDataset *aDataset, const uint8_t *aTlvs, uint8_t aLength);
 
 /**
- * Get the data poll period of sleepy end deivce.
+ * Get the data poll period of sleepy end device.
  *
  * @param[in]  aInstance A pointer to an OpenThread instance.
  *
@@ -907,7 +911,7 @@ ThreadError otSendPendingSet(const otOperationalDataset *aDataset, const uint8_t
 uint32_t otGetPollPeriod(otInstance *aInstance);
 
 /**
- * Set the data poll period for sleepy end deivce.
+ * Set the data poll period for sleepy end device.
  *
  * @param[in]  aInstance    A pointer to an OpenThread instance.
  * @param[in]  aPollPeriod  data poll period.
@@ -1558,7 +1562,7 @@ otDeviceRole otGetDeviceRole(otInstance *aInstance);
  * @param[in]   aIndex    An index into the EID cache table.
  * @param[out]  aEntry    A pointer to where the EID information is placed.
  *
- * @retval kThreadError_None         Successfully retreieved the EID cache entry.
+ * @retval kThreadError_None         Successfully retrieved the EID cache entry.
  * @retval kThreadError_InvalidArgs  @p aIndex was out of bounds or @p aEntry was NULL.
  *
  */
