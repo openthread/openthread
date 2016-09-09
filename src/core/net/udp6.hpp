@@ -122,12 +122,25 @@ public:
      */
     ThreadError SendTo(Message &aMessage, const MessageInfo &aMessageInfo);
 
+    /**
+     * This method returns the local socket address.
+     *
+     * @returns A reference to the local socket address.
+     *
+     */
+    SockAddr &GetSockName(void) { return *static_cast<SockAddr *>(&mSockName); }
+
+    /**
+     * This method returns the peer's socket address.
+     *
+     * @returns A reference to the peer's socket address.
+     *
+     */
+    SockAddr &GetPeerName(void) { return *static_cast<SockAddr *>(&mPeerName); }
+
 private:
     UdpSocket *GetNext(void) { return static_cast<UdpSocket *>(mNext); }
     void SetNext(UdpSocket *socket) { mNext = static_cast<otUdpSocket *>(socket); }
-
-    SockAddr &GetSockName(void) { return *static_cast<SockAddr *>(&mSockName); }
-    SockAddr &GetPeerName(void) { return *static_cast<SockAddr *>(&mPeerName); }
 
     void HandleUdpReceive(Message &aMessage, const MessageInfo &aMessageInfo) {
         mHandler(mContext, &aMessage, &aMessageInfo);

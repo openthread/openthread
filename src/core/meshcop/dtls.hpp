@@ -105,6 +105,17 @@ public:
     ThreadError Stop(void);
 
     /**
+     * This method sets the PSK.
+     *
+     * @param[in]  aPSK  A pointer to the PSK.
+     *
+     * @retval kThreadError_None         Successfully set the PSK.
+     * @retval kThreadError_InvalidArgs  The PSK is invalid.
+     *
+     */
+    ThreadError SetPsk(const uint8_t *aPsk, uint8_t aPskLength);
+
+    /**
      * This method sets the Client ID used for generating the Hello Cookie.
      *
      * @param[in]  aClientId  A pointer to the Client ID.
@@ -148,6 +159,11 @@ public:
     ThreadError Receive(Message &aMessage, uint16_t aOffset, uint16_t aLength);
 
 private:
+    enum
+    {
+        kPskMaxLength = 32,
+    };
+
     static ThreadError MapError(int rval);
 
     static void HandleMbedtlsDebug(void *ctx, int level, const char *file, int line, const char *str);
@@ -174,6 +190,9 @@ private:
     void HandleTimer(void);
 
     void Process(void);
+
+    uint8_t mPsk[kPskMaxLength];
+    uint8_t mPskLength;
 
     mbedtls_entropy_context mEntropy;
     mbedtls_ctr_drbg_context mCtrDrbg;

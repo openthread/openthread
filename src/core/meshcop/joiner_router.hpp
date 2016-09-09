@@ -76,7 +76,6 @@ private:
     ThreadError GetJoinerPort(uint16_t &aRloc);
 
     Ip6::NetifCallback mNetifCallback;
-    uint16_t mJoinerPort;
 
     Ip6::UdpSocket mSocket;
     Coap::Resource mRelayTransmit;

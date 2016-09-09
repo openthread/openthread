@@ -49,11 +49,11 @@ namespace Thread {
 namespace MeshCoP {
 
 JoinerRouter::JoinerRouter(ThreadNetif &aNetif):
-    mJoinerPort(OPENTHREAD_CONFIG_JOINER_UDP_PORT),
     mSocket(aNetif.GetIp6().mUdp),
     mRelayTransmit(OPENTHREAD_URI_RELAY_TX, &HandleRelayTransmit, this),
     mNetif(aNetif)
 {
+    mSocket.GetSockName().mPort = OPENTHREAD_CONFIG_JOINER_UDP_PORT;
     mNetif.GetCoapServer().AddResource(mRelayTransmit);
     mNetifCallback.Set(HandleNetifStateChanged, this);
     mNetif.RegisterCallback(mNetifCallback);
@@ -71,18 +71,17 @@ void JoinerRouter::HandleNetifStateChanged(uint32_t aFlags)
     VerifyOrExit(mNetif.GetMle().GetDeviceMode() & Mle::ModeTlv::kModeFFD, ;);
     VerifyOrExit(aFlags & OT_THREAD_NETDATA_UPDATED, ;);
 
-    mNetif.GetIp6Filter().RemoveUnsecurePort(mJoinerPort);
+    mNetif.GetIp6Filter().RemoveUnsecurePort(mSocket.GetSockName().mPort);
 
     if (mNetif.GetNetworkDataLeader().GetCommissioningData(length) != NULL)
     {
         Ip6::SockAddr sockaddr;
 
-        if (GetJoinerPort(mJoinerPort) != kThreadError_None)
+        if (GetJoinerPort(sockaddr.mPort) != kThreadError_None)
         {
-            mJoinerPort = OPENTHREAD_CONFIG_JOINER_UDP_PORT;
+            sockaddr.mPort = OPENTHREAD_CONFIG_JOINER_UDP_PORT;
         }
 
-        sockaddr.mPort = mJoinerPort;
         mSocket.Open(&HandleUdpReceive, this);
         mSocket.Bind(sockaddr);
         mNetif.GetIp6Filter().AddUnsecurePort(sockaddr.mPort);

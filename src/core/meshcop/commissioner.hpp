@@ -59,10 +59,12 @@ public:
     /**
      * This method starts the Commissioner service.
      *
+     * @param[in]  aPSKd  A pointer to the PSKd.
+     *
      * @retval kThreadError_None  Successfully started the Commissioner service.
      *
      */
-    ThreadError Start(void);
+    ThreadError Start(const char *aPSKd);
 
     /**
      * This method stops the Commissioner service.

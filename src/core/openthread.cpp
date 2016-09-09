@@ -1280,9 +1280,9 @@ ThreadError otSendPendingSet(otInstance *, const otOperationalDataset *aDataset,
 }
 
 #if OPENTHREAD_ENABLE_COMMISSIONER
-ThreadError otCommissionerStart(otInstance *)
+ThreadError otCommissionerStart(otInstance *, const char *aPSKd)
 {
-    return sThreadNetif->GetCommissioner().Start();
+    return sThreadNetif->GetCommissioner().Start(aPSKd);
 }
 
 ThreadError otCommissionerStop(otInstance *)
@@ -1292,9 +1292,9 @@ ThreadError otCommissionerStop(otInstance *)
 #endif  // OPENTHREAD_ENABLE_COMMISSIONER
 
 #if OPENTHREAD_ENABLE_JOINER
-ThreadError otJoinerStart(otInstance *)
+ThreadError otJoinerStart(otInstance *, const char *aPSKd)
 {
-    return sThreadNetif->GetJoiner().Start();
+    return sThreadNetif->GetJoiner().Start(aPSKd);
 }
 
 ThreadError otJoinerStop(otInstance *)

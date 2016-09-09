@@ -58,9 +58,24 @@ Joiner::Joiner(ThreadNetif &aNetif):
     mNetif.GetCoapServer().AddResource(mJoinerEntrust);
 }
 
-ThreadError Joiner::Start(void)
+ThreadError Joiner::Start(const char *aPSKd)
 {
-    return mNetif.GetMle().Discover(0, 0, OT_PANID_BROADCAST, HandleDiscoverResult, this);
+    ThreadError error;
+
+    SuccessOrExit(error = mNetif.GetDtls().SetPsk(reinterpret_cast<const uint8_t *>(aPSKd),
+                                                  static_cast<uint8_t>(strlen(aPSKd))));
+    SuccessOrExit(error = mNetif.GetMle().Discover(0, 0, OT_PANID_BROADCAST, HandleDiscoverResult, this));
+
+exit:
+    return error;
+}
+
+ThreadError Joiner::Stop(void)
+{
+    mNetif.GetIp6Filter().RemoveUnsecurePort(mSocket.GetSockName().mPort);
+    mSocket.Close();
+    mNetif.GetDtls().Stop();
+    return kThreadError_None;
 }
 
 void Joiner::HandleDiscoverResult(otActiveScanResult *aResult, void *aContext)
@@ -72,25 +87,20 @@ void Joiner::HandleDiscoverResult(otActiveScanResult *aResult)
 {
     if (aResult != NULL)
     {
-	memcpy(&mJoinerRouter, &aResult->mExtAddress, sizeof(mJoinerRouter));
+        memcpy(&mJoinerRouter, &aResult->mExtAddress, sizeof(mJoinerRouter));
     }
     else
     {
-	// open UDP port
-	Ip6::SockAddr sockaddr;
-	sockaddr.mPort = 1000;
-	mSocket.Open(&HandleUdpReceive, this);
-	mSocket.Bind(sockaddr);
+        // open UDP port
+        Ip6::SockAddr sockaddr;
+        sockaddr.mPort = 1000;
+        mSocket.Open(&HandleUdpReceive, this);
+        mSocket.Bind(sockaddr);
 
-	mNetif.GetIp6Filter().AddUnsecurePort(sockaddr.mPort);
+        mNetif.GetIp6Filter().AddUnsecurePort(sockaddr.mPort);
 
-	mNetif.GetDtls().Start(true, HandleDtlsReceive, HandleDtlsSend, this);
+        mNetif.GetDtls().Start(true, HandleDtlsReceive, HandleDtlsSend, this);
     }
-}
-
-ThreadError Joiner::Stop(void)
-{
-    return kThreadError_NotImplemented;
 }
 
 ThreadError Joiner::HandleDtlsSend(void *aContext, const uint8_t *aBuf, uint16_t aLength)
@@ -138,7 +148,7 @@ void Joiner::HandleUdpReceive(void *aContext, otMessage aMessage, const otMessag
 {
     otLogInfoMeshCoP("Joiner::HandleUdpReceive\r\n");
     static_cast<Joiner *>(aContext)->HandleUdpReceive(*static_cast<Message *>(aMessage),
-						      *static_cast<const Ip6::MessageInfo *>(aMessageInfo));
+                                                      *static_cast<const Ip6::MessageInfo *>(aMessageInfo));
 }
 
 void Joiner::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
@@ -154,7 +164,7 @@ void Joiner::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessag
 }
 
 void Joiner::HandleUdpTransmit(void *aContext)
-{ 
+{
     otLogInfoMeshCoP("Joiner::HandleUdpTransmit\r\n");
     static_cast<Joiner *>(aContext)->HandleUdpTransmit();
 }
