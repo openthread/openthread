@@ -103,11 +103,11 @@ ThreadError otPlatRandomSecureGet(uint16_t aInputLength, uint8_t *aOutput, uint1
 
     VerifyOrExit(aOutput && aOutputLength, error = kThreadError_InvalidArgs);
 
-    if (otPlatRadioIsEnabled())
+    if (otPlatRadioIsEnabled(NULL))
     {
         channel = 11 + (HWREG(RFCORE_XREG_FREQCTRL) - 11) / 5;
-        otPlatRadioSleep();
-        otPlatRadioDisable();
+        otPlatRadioSleep(NULL);
+        otPlatRadioDisable(NULL);
     }
 
     generateRandom(aInputLength, aOutput, aOutputLength);
@@ -115,8 +115,8 @@ ThreadError otPlatRandomSecureGet(uint16_t aInputLength, uint8_t *aOutput, uint1
     if (channel)
     {
         cc2538RadioInit();
-        otPlatRadioEnable();
-        otPlatRadioReceive(channel);
+        otPlatRadioEnable(NULL);
+        otPlatRadioReceive(NULL, channel);
     }
 
 exit:

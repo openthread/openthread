@@ -870,7 +870,8 @@ ThreadError otSendActiveGet(otInstance *aInstance, const uint8_t *aTlvTypes, uin
  * @retval kThreadError_NoBufs       Insufficient buffer space to send.
  *
  */
-ThreadError otSendActiveSet(otInstance *aInstance, const otOperationalDataset *aDataset, const uint8_t *aTlvs, uint8_t aLength);
+ThreadError otSendActiveSet(otInstance *aInstance, const otOperationalDataset *aDataset, const uint8_t *aTlvs,
+                            uint8_t aLength);
 
 /**
  * This function sends MGMT_PENDING_GET.
@@ -897,7 +898,8 @@ ThreadError otSendPendingGet(otInstance *aInstance, const uint8_t *aTlvTypes, ui
  * @retval kThreadError_NoBufs       Insufficient buffer space to send.
  *
  */
-ThreadError otSendPendingSet(otInstance *aInstance, const otOperationalDataset *aDataset, const uint8_t *aTlvs, uint8_t aLength);
+ThreadError otSendPendingSet(otInstance *aInstance, const otOperationalDataset *aDataset, const uint8_t *aTlvs,
+                             uint8_t aLength);
 
 /**
  * Get the data poll period of sleepy end device.
