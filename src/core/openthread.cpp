@@ -927,9 +927,10 @@ ThreadError otDisable(otInstance *aInstance)
 
     otLogInfoApi("otDisable\n");
 
-    mEnabled = false;
     otThreadStop(aInstance);
     otInterfaceDown(aInstance);
+
+    mEnabled = false;
 
 exit:
     return error;
@@ -1009,7 +1010,7 @@ bool otIsActiveScanInProgress(otInstance *)
 
 void HandleActiveScanResult(void *aContext, Mac::Frame *aFrame)
 {
-    otInstance *aInstance = reinterpret_cast<otInstance *>(aContext);
+    otInstance *aInstance = static_cast<otInstance *>(aContext);
     otActiveScanResult result;
     Mac::Address address;
     Mac::Beacon *beacon;

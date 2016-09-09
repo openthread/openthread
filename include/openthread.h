@@ -287,7 +287,7 @@ bool otIsSingleton(otInstance *aInstance);
  * the scan completes.
  *
  * @param[in]  aResult   A valid pointer to the beacon information or NULL when the active scan completes.
- * @param[in]  aInstance A pointer to application-specific context.
+ * @param[in]  aContext  A pointer to application-specific context.
  *
  */
 typedef void (*otHandleActiveScanResult)(otActiveScanResult *aResult, void *aContext);
@@ -322,7 +322,7 @@ bool otIsActiveScanInProgress(otInstance *aInstance);
  * scan completes.
  *
  * @param[in]  aResult   A valid pointer to the energy scan result information or NULL when the energy scan completes.
- * @param[in]  aInstance A pointer to application-specific context.
+ * @param[in]  aContext  A pointer to application-specific context.
  *
  */
 typedef void (*otHandleEnergyScanResult)(otEnergyScanResult *aResult, void *aContext);
