@@ -49,18 +49,10 @@
 #include <thread/thread_uris.hpp>
 #include <openthreadinstance.h>
 
-#ifndef C_ASSERT
-#define C_ASSERT(e) typedef char __C_ASSERT__[(e)?1:-1]
+#ifndef OPENTHREAD_MULTIPLE_INSTANCE
+static otDEFINE_ALIGNED_VAR(sInstanceRaw, sizeof(otInstance), uint64_t);
+otInstance *sInstance = NULL;
 #endif
-
-// Number of aligned bytes required for the instance structure
-const size_t cAlignedInstanceSize = otALIGNED_VAR_SIZE(sizeof(otInstance), uint64_t) * sizeof(uint64_t);
-
-// Number of bytes indicated in the public header file for the instance structure
-const size_t cPublicInstanceSize = OT_INSTANCE_SIZE;
-
-// Ensure we are initializing the public definition of the size of the instance structure correctly
-C_ASSERT(cPublicInstanceSize >= cAlignedInstanceSize);
 
 otInstance::otInstance(void) :
     mEnabled(false),
@@ -876,16 +868,20 @@ void otSetPollPeriod(otInstance *aInstance, uint32_t aPollPeriod)
     aInstance->mThreadNetif.GetMeshForwarder().SetAssignPollPeriod(aPollPeriod);
 }
 
+#ifdef OPENTHREAD_MULTIPLE_INSTANCE
+
 otInstance *otInstanceInit(void *aInstanceBuffer, uint64_t *aInstanceBufferSize)
 {
     otInstance *aInstance = NULL;
 
     otLogInfoApi("otInstanceInit\n");
 
-    VerifyOrExit(aInstanceBuffer != NULL, ;);
+    VerifyOrExit(aInstanceBufferSize != NULL, ;);
 
     // Make sure the input buffer is big enough
-    VerifyOrExit(cAlignedInstanceSize <= *aInstanceBufferSize, *aInstanceBufferSize = cAlignedInstanceSize);
+    VerifyOrExit(sizeof(otInstance) <= *aInstanceBufferSize, *aInstanceBufferSize = sizeof(otInstance));
+
+    VerifyOrExit(aInstanceBuffer != NULL, ;);
 
     // Construct the context
     aInstance = new(aInstanceBuffer)otInstance();
@@ -895,12 +891,34 @@ exit:
     return aInstance;
 }
 
+#else
+
+otInstance *otInstanceInit()
+{
+    otLogInfoApi("otInstanceInit\n");
+
+    VerifyOrExit(sInstance == NULL, ;);
+
+    // Construct the context
+    sInstance = new(&sInstanceRaw)otInstance();
+
+exit:
+
+    return sInstance;
+}
+
+#endif
+
 void otInstanceFinalize(otInstance *aInstance)
 {
     // Ensure we are disabled
     (void)otDisable(aInstance);
 
     // Nothing to actually free, since the caller supplied the buffer
+
+#ifndef OPENTHREAD_MULTIPLE_INSTANCE
+    sInstance = NULL;
+#endif
 }
 
 ThreadError otEnable(otInstance *aInstance)

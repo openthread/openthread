@@ -160,6 +160,7 @@ extern void otSignalTaskletPending(otInstance *aInstance);
  */
 const char *otGetVersionString(void);
 
+#ifdef OPENTHREAD_MULTIPLE_INSTANCE
 /**
  * This function initializes a new instance of the OpenThread library.
  *
@@ -174,6 +175,18 @@ const char *otGetVersionString(void);
  *
  */
 otInstance *otInstanceInit(void *aInstanceBuffer, uint64_t *aInstanceBufferSize);
+#else
+/**
+ * This function initializes the static instance of the OpenThread library.
+ *
+ * This function initializes OpenThread and prepares it for subsequent OpenThread API calls.  This function must be
+ * called before any other calls to OpenThread. By default, OpenThread is initialized in the 'enabled' state.
+ *
+ * @retval otInstance*  The new OpenThread instance structure.
+ *
+ */
+otInstance *otInstanceInit();
+#endif
 
 /**
  * This function disables the OpenThread library.
