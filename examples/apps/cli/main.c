@@ -39,16 +39,30 @@ void otSignalTaskletPending(otInstance *aInstance)
     (void)aInstance;
 }
 
-static uint8_t otInstanceBuffer[OT_INSTANCE_SIZE];
-
 int main(int argc, char *argv[])
 {
     otInstance *sInstance;
-    uint64_t otInstanceBufferLength = sizeof(otInstanceBuffer);
+
+#ifdef OPENTHREAD_MULTIPLE_INSTANCE
+    uint64_t otInstanceBufferLength = 0;
+    uint8_t *otInstanceBuffer = NULL;
+#endif
 
     PlatformInit(argc, argv);
 
+#ifdef OPENTHREAD_MULTIPLE_INSTANCE
+    // Call to query the buffer size
+    (void)otInstanceInit(NULL, &otInstanceBufferLength);
+
+    // Call to allocate the buffer
+    otInstanceBuffer = (uint8_t *)malloc(otInstanceBufferLength);
+    assert(otInstanceBuffer);
+
+    // Initialize Openthread with the buffer
     sInstance = otInstanceInit(otInstanceBuffer, &otInstanceBufferLength);
+#else
+    sInstance = otInstanceInit();
+#endif
     assert(sInstance);
 
     otCliUartInit(sInstance);
@@ -64,6 +78,9 @@ int main(int argc, char *argv[])
     }
 
     // otInstanceFinalize(sInstance);
+#ifdef OPENTHREAD_MULTIPLE_INSTANCE
+    // free(otInstanceBuffer);
+#endif
 
     return 0;
 }

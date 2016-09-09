@@ -48,12 +48,22 @@
 #include <thread/thread_netif.hpp>
 #include <thread/thread_uris.hpp>
 
+// Temporary definition
+typedef struct otInstance
+{
+} otInstance;
+
 namespace Thread {
 
 // This needs to not be static until the NCP
 // the OpenThread API is capable enough for
 // of of the features in the NCP.
 ThreadNetif *sThreadNetif;
+
+#ifndef OPENTHREAD_MULTIPLE_INSTANCE
+static otDEFINE_ALIGNED_VAR(sInstanceRaw, sizeof(otInstance), uint64_t);
+otInstance *sInstance = NULL;
+#endif
 
 static Ip6::NetifCallback sNetifCallback;
 static bool mEnabled = false;
@@ -869,20 +879,23 @@ void otSetPollPeriod(otInstance *, uint32_t aPollPeriod)
     sThreadNetif->GetMeshForwarder().SetAssignPollPeriod(aPollPeriod);
 }
 
+#ifdef OPENTHREAD_MULTIPLE_INSTANCE
+
 otInstance *otInstanceInit(void *aInstanceBuffer, uint64_t *aInstanceBufferSize)
 {
     otInstance *aInstance = NULL;
 
     otLogInfoApi("otInstanceInit\n");
 
-    VerifyOrExit(aInstanceBuffer != NULL, ;);
+    VerifyOrExit(aInstanceBufferSize != NULL, ;);
 
     // Make sure the input buffer is big enough
-    //VerifyOrExit(cAlignedInstanceSize <= *aInstanceBufferSize, *aInstanceBufferSize = cAlignedInstanceSize);
-    (void)aInstanceBufferSize;
+    VerifyOrExit(sizeof(otInstance) <= *aInstanceBufferSize, *aInstanceBufferSize = sizeof(otInstance));
+
+    VerifyOrExit(aInstanceBuffer != NULL, ;);
 
     // Construct the context
-    aInstance = static_cast<otInstance *>(aInstanceBuffer);
+    aInstance = new(aInstanceBuffer)otInstance();
 
     new(&sMbedTlsRaw) Crypto::MbedTls;
     sIp6 = new(&sIp6Raw) Ip6::Ip6;
@@ -894,6 +907,31 @@ exit:
 
     return aInstance;
 }
+
+#else
+
+otInstance *otInstanceInit()
+{
+    otLogInfoApi("otInstanceInit\n");
+
+    VerifyOrExit(sInstance == NULL, ;);
+
+    // Construct the context
+    sInstance = new(&sInstanceRaw)otInstance();
+
+    new(&sMbedTlsRaw) Crypto::MbedTls;
+    sIp6 = new(&sIp6Raw) Ip6::Ip6;
+    sThreadNetif = new(&sThreadNetifRaw) ThreadNetif(*sIp6);
+
+    mEnabled = true;
+
+exit:
+
+    return sInstance;
+
+}
+
+#endif
 
 void otInstanceFinalize(otInstance *aInstance)
 {

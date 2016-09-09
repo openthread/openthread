@@ -54,7 +54,6 @@ public:
     /**
      * This constructor creates an NCP frame buffer.
      *
-     *
      * @param[in]  aBuffer        A pointer to a buffer which will be used by NCP frame buffer.
      * @param[in]  aBufferLength  The buffer size (in bytes).
      *
