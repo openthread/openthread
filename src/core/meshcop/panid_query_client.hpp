@@ -28,57 +28,67 @@
 
 /**
  * @file
- * @brief
- *   This file includes the platform abstraction for the Thread Commissioner role.
+ *   This file includes definitions for responding to PANID Query Requests.
  */
 
-#ifndef OPENTHREAD_COMMISSIONER_H_
-#define OPENTHREAD_COMMISSIONER_H_
+#ifndef PANID_QUERY_CLIENT_HPP_
+#define PANID_QUERY_CLIENT_HPP_
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+#include <openthread-core-config.h>
+#include <openthread-types.h>
+#include <commissioning/commissioner.h>
+#include <coap/coap_server.hpp>
+#include <common/timer.hpp>
+#include <net/ip6_address.hpp>
+#include <net/udp6.hpp>
+
+namespace Thread {
+
+class ThreadNetif;
 
 /**
- * @addtogroup core-commissioning
- *
- * @{
+ * This class implements handling PANID Query Requests.
  *
  */
+class PanIdQueryClient
+{
+public:
+    /**
+     * This constructor initializes the object.
+     *
+     */
+    PanIdQueryClient(ThreadNetif &aThreadNetif);
 
-/**
- * This function enables the Thread Commissioner role.
- *
- * @param[in]  aInstance  A pointer to an OpenThread instance.
- * @param[in]  aPSKd      A pointer to the PSKd.
- *
- * @retval kThreadError_None         Successfully started the Commissioner role.
- * @retval kThreadError_InvalidArgs  @p aPSKd is invalid.
- *
- */
-ThreadError otCommissionerStart(otInstance *aInstance, const char *aPSKd);
+    ThreadError SendQuery(uint16_t aPanId, uint32_t aChannelMask, const Ip6::Address &aAddress,
+                          otCommissionerPanIdConflictCallback aCallback, void *aContext);
 
-/**
- * This function disables the Thread Commissioner role.
- *
- * @param[in]  aInstance  A pointer to an OpenThread instance.
- *
- */
-ThreadError otCommissionerStop(otInstance *aInstance);
+private:
+    static void HandleConflict(void *aContext, Coap::Header &aHeader, Message &aMessage,
+                               const Ip6::MessageInfo &aMessageInfo);
+    void HandleConflict(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
-typedef void (*otCommissionerPanIdConflictCallback)(uint16_t aPanId, uint32_t aChannelMask, void *aContext);
+    static void HandleTimer(void *aContext);
+    void HandleTimer(void);
 
-ThreadError otCommissionerPanIdQuery(otInstance *, uint16_t aPanId, uint32_t aChannelMask,
-                                     const otIp6Address *aAddress,
-                                     otCommissionerPanIdConflictCallback aCallback, void *aContext);
+    static void HandleUdpReceive(void *aContext, otMessage aMessage, const otMessageInfo *aMessageInfo);
+
+    ThreadError SendConflictResponse(const Coap::Header &aRequestHeader, const Ip6::MessageInfo &aRequestMessageInfo);
+
+    otCommissionerPanIdConflictCallback mCallback;
+    void *mContext;
+
+    Coap::Resource mPanIdQuery;
+    Ip6::UdpSocket mSocket;
+    Timer mTimer;
+
+    Coap::Server &mCoapServer;
+    ThreadNetif &mNetif;
+};
 
 /**
  * @}
- *
  */
 
-#ifdef __cplusplus
-}  // end of extern "C"
-#endif
+}  // namespace Thread
 
-#endif  // OPENTHREAD_COMMISSIONER_H_
+#endif  // PANID_QUERY_CLIENT_HPP_
