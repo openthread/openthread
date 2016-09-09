@@ -58,9 +58,16 @@ Joiner::Joiner(ThreadNetif &aNetif):
     mNetif.GetCoapServer().AddResource(mJoinerEntrust);
 }
 
-ThreadError Joiner::Start(void)
+ThreadError Joiner::Start(const char *aPSKd)
 {
-    return mNetif.GetMle().Discover(0, 0, OT_PANID_BROADCAST, HandleDiscoverResult, this);
+    ThreadError error;
+
+    SuccessOrExit(error = mNetif.GetDtls().SetPsk(reinterpret_cast<const uint8_t *>(aPSKd),
+                                                  static_cast<uint8_t>(strlen(aPSKd))));
+    SuccessOrExit(error = mNetif.GetMle().Discover(0, 0, OT_PANID_BROADCAST, HandleDiscoverResult, this));
+
+exit:
+    return error;
 }
 
 void Joiner::HandleDiscoverResult(otActiveScanResult *aResult, void *aContext)

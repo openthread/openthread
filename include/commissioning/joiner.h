@@ -49,8 +49,13 @@ extern "C" {
 /**
  * This function enables the Thread Joiner role.
  *
+ * @param[in]  aPSKd  A pointer to the PSKd.
+ *
+ * @retval kThreadError_None         Successfully started the Commissioner role.
+ * @retval kThreadError_InvalidArgs  @p aPSKd is invalid.
+ *
  */
-ThreadError otJoinerStart(void);
+ThreadError otJoinerStart(const char *aPSKd);
 
 /**
  * This function disables the Thread Joiner role.
