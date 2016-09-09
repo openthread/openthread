@@ -165,3 +165,10 @@ including ones sent to the RLOC16 address.
 
 Default value is `false`.
 
+### PROP 5383: SPINEL_PROP_THREAD_ROUTER_ROLE_ENABLED
+* Type: Read-Write
+* Packed-Encoding: `b`
+
+Allow the HOST to indicate whether or not the router role is enabled.
+If current role is a router, setting this property to `false` starts
+a re-attach process as an end-device.
