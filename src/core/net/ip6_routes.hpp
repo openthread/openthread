@@ -89,8 +89,7 @@ public:
     /**
      * This method removes an IPv6 route.
      *
-     * @param[in]  aInstance  The OpenThread instance structure.
-     * @param[in]  aRoute     A reference to the IPv6 route.
+     * @param[in]  aRoute  A reference to the IPv6 route.
      *
      * @retval kThreadError_None         Successfully removed the route.
      * @retval kThreadError_InvalidArgs  The route was not added.

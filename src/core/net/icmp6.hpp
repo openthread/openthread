@@ -370,7 +370,6 @@ public:
     /**
      * This method sets whether or not ICMPv6 Echo processing is enabled.
      *
-     * @param[in]  aInstance The OpenThread instance structure.
      * @param[in]  aEnabled  TRUE to enable ICMPv6 Echo processing, FALSE otherwise.
      *
      */

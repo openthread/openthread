@@ -114,7 +114,7 @@ void Ip6::SetReceiveDatagramCallback(otReceiveIp6DatagramCallback aCallback, voi
     mReceiveIp6DatagramCallbackContext = aCallbackContext;
 }
 
-bool Ip6::IsReceiveIp6FilterEnabled()
+bool Ip6::IsReceiveIp6FilterEnabled(void)
 {
     return mIsReceiveIp6FilterEnabled;
 }

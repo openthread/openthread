@@ -35,7 +35,6 @@
 #include <common/code_utils.hpp>
 #include <common/debug.hpp>
 #include <common/tasklet.hpp>
-#include <openthreadinstance.h>
 
 namespace Thread {
 

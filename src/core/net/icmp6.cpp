@@ -39,7 +39,6 @@
 #include <common/message.hpp>
 #include <net/icmp6.hpp>
 #include <net/ip6.hpp>
-#include <openthreadinstance.h>
 
 using Thread::Encoding::BigEndian::HostSwap16;
 

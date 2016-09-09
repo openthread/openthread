@@ -662,14 +662,6 @@ public:
      */
     static bool IsActiveRouter(uint16_t aRloc16) { return GetChildId(aRloc16) == 0; }
 
-    /**
-     * This method returns a pointer to the OpenThread instance.
-     *
-     * @returns A pointer to the OpenThread instance.
-     *
-     */
-    otInstance *GetInstance(void);
-
 protected:
     /**
      * This method appends an MLE header to a message.

@@ -37,7 +37,6 @@
 #include <openthread-types.h>
 #include <common/code_utils.hpp>
 #include <thread/link_quality.hpp>
-#include <openthreadinstance.h>
 
 namespace Thread {
 

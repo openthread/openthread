@@ -118,8 +118,6 @@ public:
     /**
      * This method indicates whether or not there are tasklets pending.
      *
-     * @param[in]  aInstance  The OpenThread instance structure.
-     *
      * @retval TRUE   If there are tasklets pending.
      * @retval FALSE  If there are no tasklets pending.
      *
@@ -128,8 +126,6 @@ public:
 
     /**
      * This method runs the next tasklet.
-     *
-     * @param[in]  aInstance  The OpenThread instance structure.
      *
      */
     void RunNextTasklet(void);

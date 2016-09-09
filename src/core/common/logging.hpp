@@ -45,14 +45,6 @@
 extern "C" {
 #endif
 
-#ifndef WINDOWS_LOGGING
-#define otLogFuncEntry()
-#define otLogFuncEntryMsg(aFormat, ...)
-#define otLogFuncExit()
-#define otLogFuncExitMsg(aFormat, ...)
-#define otLogFuncExitErr(error)
-#endif
-
 /**
  * @def otLogCrit
  *
@@ -116,8 +108,6 @@ extern "C" {
 #else
 #define otLogDebg(aRegion, aFormat, ...)
 #endif
-
-#ifndef WINDOWS_LOGGING
 
 /**
  * @def otLogCritApi
@@ -576,8 +566,6 @@ extern "C" {
 #define otLogWarnMem(aFormat, ...)
 #define otLogInfoMem(aFormat, ...)
 #define otLogDebgMem(aFormat, ...)
-#endif
-
 #endif
 
 /**

@@ -36,7 +36,6 @@
 #include <thread/key_manager.hpp>
 #include <thread/mle_router.hpp>
 #include <thread/thread_netif.hpp>
-#include <openthreadinstance.h>
 
 namespace Thread {
 

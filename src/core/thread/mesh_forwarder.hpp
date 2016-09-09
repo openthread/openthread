@@ -221,8 +221,6 @@ private:
     static void ScheduleTransmissionTask(void *aContext);
     void ScheduleTransmissionTask(void);
 
-    otInstance *mInstance;
-
     Mac::Receiver mMacReceiver;
     Mac::Sender mMacSender;
     Timer mDiscoverTimer;

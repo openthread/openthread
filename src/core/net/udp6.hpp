@@ -239,6 +239,7 @@ public:
      */
     ThreadError UpdateChecksum(Message &aMessage, uint16_t aPseudoHeaderChecksum);
 
+private:
     enum
     {
         kDynamicPortMin = 49152,  ///< Service Name and Transport Protocol Port Number Registry

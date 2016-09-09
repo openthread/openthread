@@ -54,8 +54,6 @@ void otPlatReset(otInstance *aInstance);
  *
  * These are in the same order as the Spinel reset reason codes.
  *
- * @param[in] aInstance  The OpenThread instance structure.
- *
  */
 typedef enum
 {
