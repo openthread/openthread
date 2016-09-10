@@ -1493,6 +1493,24 @@ void otSetAssignLinkQuality(otInstance *aInstance, const uint8_t *aExtAddr, uint
 void otPlatformReset(otInstance *aInstance);
 
 /**
+ * Get the ROUTER_DOWNGRADE_THRESHOLD parameter used in the Router role.
+ *
+ * @returns The ROUTER_DOWNGRADE_THRESHOLD value.
+ *
+ * @sa otSetRouterDowngradeThreshold
+ */
+uint8_t otGetRouterDowngradeThreshold(void);
+
+/**
+ * Set the ROUTER_DOWNGRADE_THRESHOLD parameter used in the Leader role.
+ *
+ * @param[in]  aThreshold  The ROUTER_DOWNGRADE_THRESHOLD value.
+ *
+ * @sa otGetRouterDowngradeThreshold
+ */
+void otSetRouterDowngradeThreshold(uint8_t aThreshold);
+
+/**
  * @}
  *
  */

@@ -64,6 +64,7 @@ MleRouter::MleRouter(ThreadNetif &aThreadNetif):
 
     mNetworkIdTimeout = kNetworkIdTimeout;
     mRouterUpgradeThreshold = kRouterUpgradeThreshold;
+    mRouterDowngradeThreshold = kRouterDowngradeThreshold;
     mLeaderWeight = kLeaderWeight;
     mFixedLeaderPartitionId = 0;
     mMaxChildrenAllowed = kMaxChildren;
@@ -72,6 +73,7 @@ MleRouter::MleRouter(ThreadNetif &aThreadNetif):
     mAdvertiseInterval = kAdvertiseIntervalMin;
     mRouterIdSequenceLastUpdated = 0;
     mRouterRoleEnabled = true;
+    mRouterSelectionJitterTimeout = 0;
 
     mCoapMessageId = static_cast<uint8_t>(otPlatRandomGet());
 }
@@ -392,6 +394,16 @@ uint8_t MleRouter::GetRouterUpgradeThreshold(void) const
 void MleRouter::SetRouterUpgradeThreshold(uint8_t aThreshold)
 {
     mRouterUpgradeThreshold = aThreshold;
+}
+
+uint8_t MleRouter::GetRouterDowngradeThreshold(void) const
+{
+    return mRouterDowngradeThreshold;
+}
+
+void MleRouter::SetRouterDowngradeThreshold(uint8_t aThreshold)
+{
+    mRouterDowngradeThreshold = aThreshold;
 }
 
 void MleRouter::HandleAdvertiseTimer(void *aContext)
@@ -1371,6 +1383,28 @@ ThreadError MleRouter::HandleAdvertisement(const Message &aMessage, const Ip6::M
         ExitNow();
 
     case kDeviceStateRouter:
+        // check current active router number
+        routerCount = 0;
+
+        for (uint8_t i = 0; i < kMaxRouterId; i++)
+        {
+            if (route.IsRouterIdSet(i))
+            {
+                routerCount++;
+            }
+        }
+
+        if (routerCount > mRouterDowngradeThreshold &&
+            mRouterSelectionJitterTimeout == 0 &&
+            HasMinDowngradeNeighborRouters() &&
+            HasSmallNumberOfChildren() &&
+            HasOneNeighborwithComparableConnectivity(route, routerId))
+        {
+            mRouterSelectionJitterTimeout = otPlatRandomGet() % kRouterSelectionJitter;
+        }
+
+    // fall through
+
     case kDeviceStateLeader:
         router = &mRouters[routerId];
 
@@ -1629,6 +1663,18 @@ void MleRouter::HandleStateUpdateTimer(void)
         if (GetLeaderAge() >= mNetworkIdTimeout)
         {
             BecomeChild(kMleAttachSamePartition);
+        }
+
+        if (mRouterSelectionJitterTimeout > 0)
+        {
+            mRouterSelectionJitterTimeout--;
+
+            if (mRouterSelectionJitterTimeout == 0 &&
+                GetActiveRouterCount() > mRouterDowngradeThreshold)
+            {
+                // downgrade to REED
+                BecomeChild(kMleAttachSamePartition);
+            }
         }
 
         break;
@@ -3492,6 +3538,133 @@ ThreadError MleRouter::AppendPendingDataset(Message &aMessage)
 
 exit:
     return error;
+}
+
+bool MleRouter::HasMinDowngradeNeighborRouters(void)
+{
+    return GetMinDowngradeNeighborRouters() >= kMinDowngradeNeighbors;
+}
+
+bool MleRouter::HasOneNeighborwithComparableConnectivity(const RouteTlv &aRoute, uint8_t aRouterId)
+{
+    bool rval = true;
+    uint8_t localLqi = 0;
+    uint8_t peerLqi = 0;
+    uint8_t routerCount = 0;
+
+    // process local neighbor routers
+    for (uint8_t i = 0; i < kMaxRouterId; i++)
+    {
+        if (i == mRouterId)
+        {
+            routerCount++;
+            continue;
+        }
+
+        // check if neighbor is valid
+        if (mRouters[i].mState == Neighbor::kStateValid)
+        {
+            // if neighbor is just peer
+            if (i == aRouterId)
+            {
+                routerCount++;
+                continue;
+            }
+
+            localLqi = mRouters[i].mLinkInfo.GetLinkQuality(mMac.GetNoiseFloor());
+
+            if (localLqi > mRouters[i].mLinkQualityOut)
+            {
+                localLqi = mRouters[i].mLinkQualityOut;
+            }
+
+            if (localLqi >= 2)
+            {
+                // check if this neighbor router is in peer Route64 TLV
+                if (aRoute.IsRouterIdSet(i) == false)
+                {
+                    ExitNow(rval = false);
+                }
+
+                // get the peer's two-way lqi to this router
+                peerLqi = aRoute.GetLinkQualityIn(routerCount);
+
+                if (peerLqi > aRoute.GetLinkQualityOut(routerCount))
+                {
+                    peerLqi = aRoute.GetLinkQualityOut(routerCount);
+                }
+
+                // compare local lqi to this router with peer's
+                if (peerLqi >= localLqi)
+                {
+                    routerCount++;
+                    continue;
+                }
+                else
+                {
+                    ExitNow(rval = false);
+                }
+            }
+
+            routerCount++;
+        }
+    }
+
+exit:
+    return rval;
+}
+
+bool MleRouter::HasSmallNumberOfChildren(void)
+{
+    Child *children;
+    uint8_t maxChildCount = 0;
+    uint8_t numChildren = 0;
+    uint8_t routerCount = GetActiveRouterCount();
+
+    VerifyOrExit(routerCount > mRouterDowngradeThreshold, ;);
+
+    children = GetChildren(&maxChildCount);
+
+    for (uint8_t i = 0; i < maxChildCount; i++)
+    {
+        if (children[i].mState == Neighbor::kStateValid)
+        {
+            numChildren++;
+        }
+    }
+
+    return numChildren < (routerCount - mRouterDowngradeThreshold) * 3;
+
+exit:
+    return false;
+}
+
+uint8_t MleRouter::GetMinDowngradeNeighborRouters(void)
+{
+    uint8_t lqi;
+    uint8_t routerCount = 0;
+
+    for (uint8_t i = 0; i < kMaxRouterId; i++)
+    {
+        if (mRouters[i].mState != Neighbor::kStateValid)
+        {
+            continue;
+        }
+
+        lqi = mRouters[i].mLinkInfo.GetLinkQuality(mMac.GetNoiseFloor());
+
+        if (lqi > mRouters[i].mLinkQualityOut)
+        {
+            lqi = mRouters[i].mLinkQualityOut;
+        }
+
+        if (lqi >= 2)
+        {
+            routerCount++;
+        }
+    }
+
+    return routerCount;
 }
 
 }  // namespace Mle

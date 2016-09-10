@@ -663,6 +663,16 @@ void otPlatformReset(otInstance *aInstance)
     otPlatReset(aInstance);
 }
 
+uint8_t otGetRouterDowngradeThreshold(void)
+{
+    return sThreadNetif->GetMle().GetRouterDowngradeThreshold();
+}
+
+void otSetRouterDowngradeThreshold(uint8_t aThreshold)
+{
+    sThreadNetif->GetMle().SetRouterDowngradeThreshold(aThreshold);
+}
+
 ThreadError otGetChildInfoById(otInstance *, uint16_t aChildId, otChildInfo *aChildInfo)
 {
     ThreadError error = kThreadError_None;
