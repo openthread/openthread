@@ -175,6 +175,27 @@ typedef struct otMeshLocalPrefix
     uint8_t m8[OT_MESH_LOCAL_PREFIX_SIZE];
 } otMeshLocalPrefix;
 
+#define OT_PSKC_MAX_SIZE           16  ///< Maximum size of the PSKc (bytes)
+
+/**
+  * This structure represents PSKc.
+  *
+  */
+typedef struct otPSKc
+{
+    uint8_t m8[OT_PSKC_MAX_SIZE];
+} otPSKc;
+
+/**
+  * This structure represent Security Policy.
+  *
+  */
+typedef struct otSecurityPolicy
+{
+    uint16_t mRotationTime;
+    uint8_t mFlags;
+} otSecurityPolicy;
+
 /**
  * This type represents the IEEE 802.15.4 PAN ID.
  *
@@ -309,6 +330,8 @@ typedef struct otOperationalDataset
     uint32_t          mDelay;                      ///< Delay Timer
     otPanId           mPanId;                      ///< PAN ID
     uint16_t          mChannel;                    ///< Channel
+    otPSKc            mPSKc;                       ///< PSKc
+    otSecurityPolicy  mSecurityPolicy;             ///< Security Policy
 
     bool              mIsActiveTimestampSet : 1;   ///< TRUE if Active Timestamp is set, FALSE otherwise.
     bool              mIsPendingTimestampSet : 1;  ///< TRUE if Pending Timestamp is set, FALSE otherwise.
@@ -319,6 +342,8 @@ typedef struct otOperationalDataset
     bool              mIsDelaySet : 1;             ///< TRUE if Delay Timer is set, FALSE otherwise.
     bool              mIsPanIdSet : 1;             ///< TRUE if PAN ID is set, FALSE otherwise.
     bool              mIsChannelSet : 1;           ///< TRUE if Channel is set, FALSE otherwise.
+    bool              mIsPSKcSet : 1;              ///< TRUE if PSKc is set, FALSE otherwise.
+    bool              mIsSecurityPolicySet : 1;    ///< TRUE if Security Policy is set, FALSE otherwise.
 } otOperationalDataset;
 
 /**

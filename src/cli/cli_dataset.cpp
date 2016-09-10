@@ -41,6 +41,8 @@
 #include "cli.hpp"
 #include "cli_dataset.hpp"
 
+using Thread::MeshCoP::SecurityPolicyTlv;
+
 namespace Thread {
 namespace Cli {
 
@@ -62,6 +64,8 @@ const DatasetCommand Dataset::sCommands[] =
     { "panid", &ProcessPanId },
     { "pending", &ProcessPending },
     { "pendingtimestamp", &ProcessPendingTimestamp },
+    { "pskc", &ProcessPSKc },
+    { "securitypolicy", &ProcessSecurityPolicy },
 };
 
 Server *Dataset::sServer;
@@ -130,6 +134,45 @@ ThreadError Dataset::Print(otOperationalDataset &aDataset)
     if (aDataset.mIsPanIdSet)
     {
         sServer->OutputFormat("PAN ID: 0x%04x\r\n", aDataset.mPanId);
+    }
+
+    if (aDataset.mIsPSKcSet)
+    {
+        sServer->OutputFormat("PSKc: ");
+        OutputBytes(aDataset.mPSKc.m8, sizeof(aDataset.mPSKc.m8));
+        sServer->OutputFormat("\r\n");
+    }
+
+    if (aDataset.mIsSecurityPolicySet)
+    {
+        sServer->OutputFormat("Security Policy: %d, ", aDataset.mSecurityPolicy.mRotationTime);
+
+        if (aDataset.mSecurityPolicy.mFlags & SecurityPolicyTlv::kObtainMasterKeyFlag)
+        {
+            sServer->OutputFormat("O");
+        }
+
+        if (aDataset.mSecurityPolicy.mFlags & SecurityPolicyTlv::kNativeCommissioningFlag)
+        {
+            sServer->OutputFormat("N");
+        }
+
+        if (aDataset.mSecurityPolicy.mFlags & SecurityPolicyTlv::kRoutersFlag)
+        {
+            sServer->OutputFormat("R");
+        }
+
+        if (aDataset.mSecurityPolicy.mFlags & SecurityPolicyTlv::kExternalCommissionerFlag)
+        {
+            sServer->OutputFormat("C");
+        }
+
+        if (aDataset.mSecurityPolicy.mFlags & SecurityPolicyTlv::kBeaconsFlag)
+        {
+            sServer->OutputFormat("B");
+        }
+
+        sServer->OutputFormat("\r\n");
     }
 
     return kThreadError_None;
@@ -548,6 +591,70 @@ ThreadError Dataset::ProcessMgmtGetCommand(int argc, char *argv[])
     {
         ExitNow(error = kThreadError_Parse);
     }
+
+exit:
+    return error;
+}
+
+ThreadError Dataset::ProcessPSKc(int argc, char *argv[])
+{
+    ThreadError error = kThreadError_None;
+    uint16_t length;
+
+    VerifyOrExit(argc > 0, error = kThreadError_Parse);
+
+    length = static_cast<uint16_t>((strlen(argv[0]) + 1) / 2);
+    VerifyOrExit(length <= OT_PSKC_MAX_SIZE, error = kThreadError_NoBufs);
+    VerifyOrExit(Interpreter::Hex2Bin(argv[0], sDataset.mPSKc.m8 + OT_PSKC_MAX_SIZE - length, length)
+                 == length, error = kThreadError_Parse);
+
+    sDataset.mIsPSKcSet = true;
+
+exit:
+    return error;
+}
+
+ThreadError Dataset::ProcessSecurityPolicy(int argc, char *argv[])
+{
+    ThreadError error = kThreadError_None;
+    long value;
+
+    VerifyOrExit(argc > 1, error = kThreadError_Parse);
+
+    SuccessOrExit(error = Interpreter::ParseLong(argv[0], value));
+    sDataset.mSecurityPolicy.mRotationTime = static_cast<uint16_t>(value);
+    sDataset.mSecurityPolicy.mFlags = 0;
+
+    for (char *arg = argv[1]; *arg != '\0'; arg++)
+    {
+        switch (*arg)
+        {
+        case 'O':
+            sDataset.mSecurityPolicy.mFlags |= SecurityPolicyTlv::kObtainMasterKeyFlag;
+            break;
+
+        case 'N':
+            sDataset.mSecurityPolicy.mFlags |= SecurityPolicyTlv::kNativeCommissioningFlag;
+            break;
+
+        case 'R':
+            sDataset.mSecurityPolicy.mFlags |= SecurityPolicyTlv::kRoutersFlag;
+            break;
+
+        case 'C':
+            sDataset.mSecurityPolicy.mFlags |= SecurityPolicyTlv::kExternalCommissionerFlag;
+            break;
+
+        case 'B':
+            sDataset.mSecurityPolicy.mFlags |= SecurityPolicyTlv::kBeaconsFlag;
+            break;
+
+        default:
+            ExitNow(error = kThreadError_Parse);
+        }
+    }
+
+    sDataset.mIsSecurityPolicySet = true;
 
 exit:
     return error;
