@@ -375,84 +375,92 @@
 
   <link href="#rfc.toc" rel="Contents"/>
 <link href="#rfc.section.1" rel="Chapter" title="1 Introduction"/>
-<link href="#rfc.section.2" rel="Chapter" title="2 Definitions"/>
-<link href="#rfc.section.3" rel="Chapter" title="3 Frame Format"/>
-<link href="#rfc.section.3.1" rel="Chapter" title="3.1 Header Format"/>
-<link href="#rfc.section.3.1.1" rel="Chapter" title="3.1.1 FLG: Flag"/>
-<link href="#rfc.section.3.1.2" rel="Chapter" title="3.1.2 IID: Interface Identifier"/>
-<link href="#rfc.section.3.1.3" rel="Chapter" title="3.1.3 TID: Transaction Identifier"/>
-<link href="#rfc.section.3.1.4" rel="Chapter" title="3.1.4 Command Identifier (CMD)"/>
-<link href="#rfc.section.3.1.5" rel="Chapter" title="3.1.5 Command Payload (Optional)"/>
-<link href="#rfc.section.4" rel="Chapter" title="4 Data Packing"/>
-<link href="#rfc.section.4.1" rel="Chapter" title="4.1 Primitive Types"/>
-<link href="#rfc.section.4.2" rel="Chapter" title="4.2 Packed Unsigned Integer"/>
-<link href="#rfc.section.4.3" rel="Chapter" title="4.3 Data Blobs"/>
-<link href="#rfc.section.4.4" rel="Chapter" title="4.4 Structured Data"/>
-<link href="#rfc.section.4.5" rel="Chapter" title="4.5 Arrays"/>
-<link href="#rfc.section.5" rel="Chapter" title="5 Commands"/>
-<link href="#rfc.section.5.1" rel="Chapter" title="5.1 CMD 0: (Host-&gt;NCP) CMD_NOOP"/>
-<link href="#rfc.section.5.2" rel="Chapter" title="5.2 CMD 1: (Host-&gt;NCP) CMD_RESET"/>
-<link href="#rfc.section.5.3" rel="Chapter" title="5.3 CMD 2: (Host-&gt;NCP) CMD_PROP_VALUE_GET"/>
-<link href="#rfc.section.5.4" rel="Chapter" title="5.4 CMD 3: (Host-&gt;NCP) CMD_PROP_VALUE_SET"/>
-<link href="#rfc.section.5.5" rel="Chapter" title="5.5 CMD 4: (Host-&gt;NCP) CMD_PROP_VALUE_INSERT"/>
-<link href="#rfc.section.5.6" rel="Chapter" title="5.6 CMD 5: (Host-&gt;NCP) CMD_PROP_VALUE_REMOVE"/>
-<link href="#rfc.section.5.7" rel="Chapter" title="5.7 CMD 6: (NCP-&gt;Host) CMD_PROP_VALUE_IS"/>
-<link href="#rfc.section.5.8" rel="Chapter" title="5.8 CMD 7: (NCP-&gt;Host) CMD_PROP_VALUE_INSERTED"/>
-<link href="#rfc.section.5.9" rel="Chapter" title="5.9 CMD 8: (NCP-&gt;Host) CMD_PROP_VALUE_REMOVED"/>
-<link href="#rfc.section.6" rel="Chapter" title="6 Properties"/>
-<link href="#rfc.section.6.1" rel="Chapter" title="6.1 Property Sections"/>
-<link href="#rfc.section.6.2" rel="Chapter" title="6.2 Core Properties"/>
-<link href="#rfc.section.6.2.1" rel="Chapter" title="6.2.1 PROP 0: PROP_LAST_STATUS"/>
-<link href="#rfc.section.6.2.2" rel="Chapter" title="6.2.2 PROP 1: PROP_PROTOCOL_VERSION"/>
-<link href="#rfc.section.6.2.3" rel="Chapter" title="6.2.3 PROP 2: PROP_NCP_VERSION"/>
-<link href="#rfc.section.6.2.4" rel="Chapter" title="6.2.4 PROP 3: PROP_INTERFACE_TYPE"/>
-<link href="#rfc.section.6.2.5" rel="Chapter" title="6.2.5 PROP 4: PROP_INTERFACE_VENDOR_ID"/>
-<link href="#rfc.section.6.2.6" rel="Chapter" title="6.2.6 PROP 5: PROP_CAPS"/>
-<link href="#rfc.section.6.2.7" rel="Chapter" title="6.2.7 PROP 6: PROP_INTERFACE_COUNT"/>
-<link href="#rfc.section.6.2.8" rel="Chapter" title="6.2.8 PROP 7: PROP_POWER_STATE"/>
-<link href="#rfc.section.6.2.9" rel="Chapter" title="6.2.9 PROP 8: PROP_HWADDR"/>
-<link href="#rfc.section.6.2.10" rel="Chapter" title="6.2.10 PROP 9: PROP_LOCK"/>
-<link href="#rfc.section.6.2.11" rel="Chapter" title="6.2.11 PROP 112: PROP_STREAM_DEBUG"/>
-<link href="#rfc.section.6.2.12" rel="Chapter" title="6.2.12 PROP 113: PROP_STREAM_RAW"/>
-<link href="#rfc.section.6.2.13" rel="Chapter" title="6.2.13 PROP 114: PROP_STREAM_NET"/>
-<link href="#rfc.section.6.2.14" rel="Chapter" title="6.2.14 PROP 114: PROP_STREAM_NET_INSECURE"/>
-<link href="#rfc.section.6.3" rel="Chapter" title="6.3 PHY Properties"/>
-<link href="#rfc.section.6.3.1" rel="Chapter" title="6.3.1 PROP 32: PROP_PHY_ENABLED"/>
-<link href="#rfc.section.6.3.2" rel="Chapter" title="6.3.2 PROP 33: PROP_PHY_CHAN"/>
-<link href="#rfc.section.6.3.3" rel="Chapter" title="6.3.3 PROP 34: PROP_PHY_CHAN_SUPPORTED"/>
-<link href="#rfc.section.6.3.4" rel="Chapter" title="6.3.4 PROP 35: PROP_PHY_FREQ"/>
-<link href="#rfc.section.6.3.5" rel="Chapter" title="6.3.5 PROP 36: PROP_PHY_CCA_THRESHOLD"/>
-<link href="#rfc.section.6.3.6" rel="Chapter" title="6.3.6 PROP 37: PROP_PHY_TX_POWER"/>
-<link href="#rfc.section.6.3.7" rel="Chapter" title="6.3.7 PROP 38: PROP_PHY_RSSI"/>
-<link href="#rfc.section.6.4" rel="Chapter" title="6.4 MAC Properties"/>
-<link href="#rfc.section.6.4.1" rel="Chapter" title="6.4.1 PROP 48: PROP_MAC_SCAN_STATE"/>
-<link href="#rfc.section.6.4.2" rel="Chapter" title="6.4.2 PROP 49: PROP_MAC_SCAN_MASK"/>
-<link href="#rfc.section.6.4.3" rel="Chapter" title="6.4.3 PROP 50: PROP_MAC_SCAN_PERIOD"/>
-<link href="#rfc.section.6.4.4" rel="Chapter" title="6.4.4 PROP 51: PROP_MAC_SCAN_BEACON"/>
-<link href="#rfc.section.6.4.5" rel="Chapter" title="6.4.5 PROP 52: PROP_MAC_15_4_LADDR"/>
-<link href="#rfc.section.6.4.6" rel="Chapter" title="6.4.6 PROP 53: PROP_MAC_15_4_SADDR"/>
-<link href="#rfc.section.6.4.7" rel="Chapter" title="6.4.7 PROP 54: PROP_MAC_15_4_PANID"/>
-<link href="#rfc.section.6.4.8" rel="Chapter" title="6.4.8 PROP 55: PROP_MAC_RAW_STREAM_ENABLED"/>
-<link href="#rfc.section.6.4.9" rel="Chapter" title="6.4.9 PROP 56: PROP_MAC_FILTER_MODE"/>
-<link href="#rfc.section.6.4.10" rel="Chapter" title="6.4.10 PROP 4864: PROP_MAC_WHITELIST"/>
-<link href="#rfc.section.6.4.11" rel="Chapter" title="6.4.11 PROP 4865: PROP_MAC_WHITELIST_ENABLED"/>
-<link href="#rfc.section.6.5" rel="Chapter" title="6.5 NET Properties"/>
-<link href="#rfc.section.6.5.1" rel="Chapter" title="6.5.1 PROP 64: PROP_NET_SAVED"/>
-<link href="#rfc.section.6.5.2" rel="Chapter" title="6.5.2 PROP 65: PROP_NET_IF_UP"/>
-<link href="#rfc.section.6.5.3" rel="Chapter" title="6.5.3 PROP 66: PROP_NET_STACK_UP"/>
-<link href="#rfc.section.6.5.4" rel="Chapter" title="6.5.4 PROP 67: PROP_NET_ROLE"/>
-<link href="#rfc.section.6.5.5" rel="Chapter" title="6.5.5 PROP 68: PROP_NET_NETWORK_NAME"/>
-<link href="#rfc.section.6.5.6" rel="Chapter" title="6.5.6 PROP 69: PROP_NET_XPANID"/>
-<link href="#rfc.section.6.5.7" rel="Chapter" title="6.5.7 PROP 70: PROP_NET_MASTER_KEY"/>
-<link href="#rfc.section.6.5.8" rel="Chapter" title="6.5.8 PROP 71: PROP_NET_KEY_SEQUENCE"/>
-<link href="#rfc.section.6.5.9" rel="Chapter" title="6.5.9 PROP 72: PROP_NET_PARTITION_ID"/>
-<link href="#rfc.section.6.6" rel="Chapter" title="6.6 IPv6 Properties"/>
-<link href="#rfc.section.6.6.1" rel="Chapter" title="6.6.1 PROP 96: PROP_IPV6_LL_ADDR"/>
-<link href="#rfc.section.6.6.2" rel="Chapter" title="6.6.2 PROP 97: PROP_IPV6_ML_ADDR"/>
-<link href="#rfc.section.6.6.3" rel="Chapter" title="6.6.3 PROP 98: PROP_IPV6_ML_PREFIX"/>
-<link href="#rfc.section.6.6.4" rel="Chapter" title="6.6.4 PROP 99: PROP_IPV6_ADDRESS_TABLE"/>
-<link href="#rfc.section.6.6.5" rel="Chapter" title="6.6.5 PROP 101: PROP_IPv6_ICMP_PING_OFFLOAD"/>
-<link href="#rfc.section.7" rel="Chapter" title="7 Status Codes"/>
+<link href="#rfc.section.1.1" rel="Chapter" title="1.1 About this Draft"/>
+<link href="#rfc.section.1.1.1" rel="Chapter" title="1.1.1 Renumbering"/>
+<link href="#rfc.section.1.1.2" rel="Chapter" title="1.1.2 Spinel as Application API"/>
+<link href="#rfc.section.1.1.3" rel="Chapter" title="1.1.3 Privileged Commands and Properties"/>
+<link href="#rfc.section.1.2" rel="Chapter" title="1.2 Property Overview"/>
+<link href="#rfc.section.1.2.1" rel="Chapter" title="1.2.1 Property Methods"/>
+<link href="#rfc.section.1.2.2" rel="Chapter" title="1.2.2 Property Types"/>
+<link href="#rfc.section.2" rel="Chapter" title="2 Frame Format"/>
+<link href="#rfc.section.2.1" rel="Chapter" title="2.1 Header Format"/>
+<link href="#rfc.section.2.1.1" rel="Chapter" title="2.1.1 FLG: Flag"/>
+<link href="#rfc.section.2.1.2" rel="Chapter" title="2.1.2 IID: Interface Identifier"/>
+<link href="#rfc.section.2.1.3" rel="Chapter" title="2.1.3 TID: Transaction Identifier"/>
+<link href="#rfc.section.2.1.4" rel="Chapter" title="2.1.4 Command Identifier (CMD)"/>
+<link href="#rfc.section.2.1.5" rel="Chapter" title="2.1.5 Command Payload (Optional)"/>
+<link href="#rfc.section.3" rel="Chapter" title="3 Data Packing"/>
+<link href="#rfc.section.3.1" rel="Chapter" title="3.1 Primitive Types"/>
+<link href="#rfc.section.3.2" rel="Chapter" title="3.2 Packed Unsigned Integer"/>
+<link href="#rfc.section.3.3" rel="Chapter" title="3.3 Data Blobs"/>
+<link href="#rfc.section.3.4" rel="Chapter" title="3.4 Structured Data"/>
+<link href="#rfc.section.3.5" rel="Chapter" title="3.5 Arrays"/>
+<link href="#rfc.section.4" rel="Chapter" title="4 Commands"/>
+<link href="#rfc.section.4.1" rel="Chapter" title="4.1 CMD 0: (Host-&gt;NCP) CMD_NOOP"/>
+<link href="#rfc.section.4.2" rel="Chapter" title="4.2 CMD 1: (Host-&gt;NCP) CMD_RESET"/>
+<link href="#rfc.section.4.3" rel="Chapter" title="4.3 CMD 2: (Host-&gt;NCP) CMD_PROP_VALUE_GET"/>
+<link href="#rfc.section.4.4" rel="Chapter" title="4.4 CMD 3: (Host-&gt;NCP) CMD_PROP_VALUE_SET"/>
+<link href="#rfc.section.4.5" rel="Chapter" title="4.5 CMD 4: (Host-&gt;NCP) CMD_PROP_VALUE_INSERT"/>
+<link href="#rfc.section.4.6" rel="Chapter" title="4.6 CMD 5: (Host-&gt;NCP) CMD_PROP_VALUE_REMOVE"/>
+<link href="#rfc.section.4.7" rel="Chapter" title="4.7 CMD 6: (NCP-&gt;Host) CMD_PROP_VALUE_IS"/>
+<link href="#rfc.section.4.8" rel="Chapter" title="4.8 CMD 7: (NCP-&gt;Host) CMD_PROP_VALUE_INSERTED"/>
+<link href="#rfc.section.4.9" rel="Chapter" title="4.9 CMD 8: (NCP-&gt;Host) CMD_PROP_VALUE_REMOVED"/>
+<link href="#rfc.section.5" rel="Chapter" title="5 Properties"/>
+<link href="#rfc.section.5.1" rel="Chapter" title="5.1 Property Sections"/>
+<link href="#rfc.section.5.2" rel="Chapter" title="5.2 Core Properties"/>
+<link href="#rfc.section.5.2.1" rel="Chapter" title="5.2.1 PROP 0: PROP_LAST_STATUS"/>
+<link href="#rfc.section.5.2.2" rel="Chapter" title="5.2.2 PROP 1: PROP_PROTOCOL_VERSION"/>
+<link href="#rfc.section.5.2.3" rel="Chapter" title="5.2.3 PROP 2: PROP_NCP_VERSION"/>
+<link href="#rfc.section.5.2.4" rel="Chapter" title="5.2.4 PROP 3: PROP_INTERFACE_TYPE"/>
+<link href="#rfc.section.5.2.5" rel="Chapter" title="5.2.5 PROP 4: PROP_INTERFACE_VENDOR_ID"/>
+<link href="#rfc.section.5.2.6" rel="Chapter" title="5.2.6 PROP 5: PROP_CAPS"/>
+<link href="#rfc.section.5.2.7" rel="Chapter" title="5.2.7 PROP 6: PROP_INTERFACE_COUNT"/>
+<link href="#rfc.section.5.2.8" rel="Chapter" title="5.2.8 PROP 7: PROP_POWER_STATE"/>
+<link href="#rfc.section.5.2.9" rel="Chapter" title="5.2.9 PROP 8: PROP_HWADDR"/>
+<link href="#rfc.section.5.2.10" rel="Chapter" title="5.2.10 PROP 9: PROP_LOCK"/>
+<link href="#rfc.section.5.2.11" rel="Chapter" title="5.2.11 PROP 112: PROP_STREAM_DEBUG"/>
+<link href="#rfc.section.5.2.12" rel="Chapter" title="5.2.12 PROP 113: PROP_STREAM_RAW"/>
+<link href="#rfc.section.5.2.13" rel="Chapter" title="5.2.13 PROP 114: PROP_STREAM_NET"/>
+<link href="#rfc.section.5.2.14" rel="Chapter" title="5.2.14 PROP 114: PROP_STREAM_NET_INSECURE"/>
+<link href="#rfc.section.5.3" rel="Chapter" title="5.3 PHY Properties"/>
+<link href="#rfc.section.5.3.1" rel="Chapter" title="5.3.1 PROP 32: PROP_PHY_ENABLED"/>
+<link href="#rfc.section.5.3.2" rel="Chapter" title="5.3.2 PROP 33: PROP_PHY_CHAN"/>
+<link href="#rfc.section.5.3.3" rel="Chapter" title="5.3.3 PROP 34: PROP_PHY_CHAN_SUPPORTED"/>
+<link href="#rfc.section.5.3.4" rel="Chapter" title="5.3.4 PROP 35: PROP_PHY_FREQ"/>
+<link href="#rfc.section.5.3.5" rel="Chapter" title="5.3.5 PROP 36: PROP_PHY_CCA_THRESHOLD"/>
+<link href="#rfc.section.5.3.6" rel="Chapter" title="5.3.6 PROP 37: PROP_PHY_TX_POWER"/>
+<link href="#rfc.section.5.3.7" rel="Chapter" title="5.3.7 PROP 38: PROP_PHY_RSSI"/>
+<link href="#rfc.section.5.4" rel="Chapter" title="5.4 MAC Properties"/>
+<link href="#rfc.section.5.4.1" rel="Chapter" title="5.4.1 PROP 48: PROP_MAC_SCAN_STATE"/>
+<link href="#rfc.section.5.4.2" rel="Chapter" title="5.4.2 PROP 49: PROP_MAC_SCAN_MASK"/>
+<link href="#rfc.section.5.4.3" rel="Chapter" title="5.4.3 PROP 50: PROP_MAC_SCAN_PERIOD"/>
+<link href="#rfc.section.5.4.4" rel="Chapter" title="5.4.4 PROP 51: PROP_MAC_SCAN_BEACON"/>
+<link href="#rfc.section.5.4.5" rel="Chapter" title="5.4.5 PROP 52: PROP_MAC_15_4_LADDR"/>
+<link href="#rfc.section.5.4.6" rel="Chapter" title="5.4.6 PROP 53: PROP_MAC_15_4_SADDR"/>
+<link href="#rfc.section.5.4.7" rel="Chapter" title="5.4.7 PROP 54: PROP_MAC_15_4_PANID"/>
+<link href="#rfc.section.5.4.8" rel="Chapter" title="5.4.8 PROP 55: PROP_MAC_RAW_STREAM_ENABLED"/>
+<link href="#rfc.section.5.4.9" rel="Chapter" title="5.4.9 PROP 56: PROP_MAC_FILTER_MODE"/>
+<link href="#rfc.section.5.4.10" rel="Chapter" title="5.4.10 PROP 4864: PROP_MAC_WHITELIST"/>
+<link href="#rfc.section.5.4.11" rel="Chapter" title="5.4.11 PROP 4865: PROP_MAC_WHITELIST_ENABLED"/>
+<link href="#rfc.section.5.5" rel="Chapter" title="5.5 NET Properties"/>
+<link href="#rfc.section.5.5.1" rel="Chapter" title="5.5.1 PROP 64: PROP_NET_SAVED"/>
+<link href="#rfc.section.5.5.2" rel="Chapter" title="5.5.2 PROP 65: PROP_NET_IF_UP"/>
+<link href="#rfc.section.5.5.3" rel="Chapter" title="5.5.3 PROP 66: PROP_NET_STACK_UP"/>
+<link href="#rfc.section.5.5.4" rel="Chapter" title="5.5.4 PROP 67: PROP_NET_ROLE"/>
+<link href="#rfc.section.5.5.5" rel="Chapter" title="5.5.5 PROP 68: PROP_NET_NETWORK_NAME"/>
+<link href="#rfc.section.5.5.6" rel="Chapter" title="5.5.6 PROP 69: PROP_NET_XPANID"/>
+<link href="#rfc.section.5.5.7" rel="Chapter" title="5.5.7 PROP 70: PROP_NET_MASTER_KEY"/>
+<link href="#rfc.section.5.5.8" rel="Chapter" title="5.5.8 PROP 71: PROP_NET_KEY_SEQUENCE"/>
+<link href="#rfc.section.5.5.9" rel="Chapter" title="5.5.9 PROP 72: PROP_NET_PARTITION_ID"/>
+<link href="#rfc.section.5.6" rel="Chapter" title="5.6 IPv6 Properties"/>
+<link href="#rfc.section.5.6.1" rel="Chapter" title="5.6.1 PROP 96: PROP_IPV6_LL_ADDR"/>
+<link href="#rfc.section.5.6.2" rel="Chapter" title="5.6.2 PROP 97: PROP_IPV6_ML_ADDR"/>
+<link href="#rfc.section.5.6.3" rel="Chapter" title="5.6.3 PROP 98: PROP_IPV6_ML_PREFIX"/>
+<link href="#rfc.section.5.6.4" rel="Chapter" title="5.6.4 PROP 99: PROP_IPV6_ADDRESS_TABLE"/>
+<link href="#rfc.section.5.6.5" rel="Chapter" title="5.6.5 PROP 101: PROP_IPv6_ICMP_PING_OFFLOAD"/>
+<link href="#rfc.section.6" rel="Chapter" title="6 Status Codes"/>
+<link href="#rfc.section.7" rel="Chapter" title="7 Security Considerations"/>
+<link href="#rfc.section.8" rel="Chapter" title="8 Acknowledgments"/>
 <link href="#rfc.appendix.A" rel="Chapter" title="A Framing Protocol"/>
 <link href="#rfc.appendix.A.1" rel="Chapter" title="A.1 UART Recommendations"/>
 <link href="#rfc.appendix.A.1.1" rel="Chapter" title="A.1.1 HDLC-Lite"/>
@@ -526,6 +534,7 @@
 <link href="#rfc.appendix.F.8" rel="Chapter" title="F.8 Adding an on-mesh prefix"/>
 <link href="#rfc.appendix.F.9" rel="Chapter" title="F.9 Entering low-power modes"/>
 <link href="#rfc.appendix.F.10" rel="Chapter" title="F.10 Sniffing raw packets"/>
+<link href="#rfc.appendix.G" rel="Chapter" title="G Glossary"/>
 <link href="#rfc.authors" rel="Chapter"/>
 
 
@@ -533,8 +542,8 @@
   <link rel="schema.dct" href="http://purl.org/dc/terms/" />
 
   <meta name="dct.creator" content="Quattlebaum, R." />
-  <meta name="dct.identifier" content="urn:ietf:id:draft-spinel-protocol-94724cf" />
-  <meta name="dct.issued" scheme="ISO8601" content="2016-9-9" />
+  <meta name="dct.identifier" content="urn:ietf:id:draft-spinel-protocol-4d55c14" />
+  <meta name="dct.issued" scheme="ISO8601" content="2016-9-10" />
   <meta name="dct.abstract" content="This document describes a general management protocol for enabling a host device to communicate with and manage a Network Control Processor (NCP).  " />
   <meta name="description" content="This document describes a general management protocol for enabling a host device to communicate with and manage a Network Control Processor (NCP).  " />
 
@@ -555,7 +564,7 @@
 </tr>
 <tr>
   <td class="left"></td>
-  <td class="right">September 9, 2016</td>
+  <td class="right">September 10, 2016</td>
 </tr>
 
     	
@@ -563,7 +572,7 @@
   </table>
 
   <p class="title">Spinel Host-Controller Protocol<br />
-  <span class="filename">draft-spinel-protocol-94724cf</span></p>
+  <span class="filename">draft-spinel-protocol-4d55c14</span></p>
   
   <h1 id="rfc.abstract">
   <a href="#rfc.abstract">Abstract</a>
@@ -599,84 +608,92 @@
   <ul class="toc">
 
   	<li>1.   <a href="#rfc.section.1">Introduction</a></li>
-<li>2.   <a href="#rfc.section.2">Definitions</a></li>
-<li>3.   <a href="#rfc.section.3">Frame Format</a></li>
-<ul><li>3.1.   <a href="#rfc.section.3.1">Header Format</a></li>
-<ul><li>3.1.1.   <a href="#rfc.section.3.1.1">FLG: Flag</a></li>
-<li>3.1.2.   <a href="#rfc.section.3.1.2">IID: Interface Identifier</a></li>
-<li>3.1.3.   <a href="#rfc.section.3.1.3">TID: Transaction Identifier</a></li>
-<li>3.1.4.   <a href="#rfc.section.3.1.4">Command Identifier (CMD)</a></li>
-<li>3.1.5.   <a href="#rfc.section.3.1.5">Command Payload (Optional)</a></li>
-</ul></ul><li>4.   <a href="#rfc.section.4">Data Packing</a></li>
-<ul><li>4.1.   <a href="#rfc.section.4.1">Primitive Types</a></li>
-<li>4.2.   <a href="#rfc.section.4.2">Packed Unsigned Integer</a></li>
-<li>4.3.   <a href="#rfc.section.4.3">Data Blobs</a></li>
-<li>4.4.   <a href="#rfc.section.4.4">Structured Data</a></li>
-<li>4.5.   <a href="#rfc.section.4.5">Arrays</a></li>
-</ul><li>5.   <a href="#rfc.section.5">Commands</a></li>
-<ul><li>5.1.   <a href="#rfc.section.5.1">CMD 0: (Host-&gt;NCP) CMD_NOOP</a></li>
-<li>5.2.   <a href="#rfc.section.5.2">CMD 1: (Host-&gt;NCP) CMD_RESET</a></li>
-<li>5.3.   <a href="#rfc.section.5.3">CMD 2: (Host-&gt;NCP) CMD_PROP_VALUE_GET</a></li>
-<li>5.4.   <a href="#rfc.section.5.4">CMD 3: (Host-&gt;NCP) CMD_PROP_VALUE_SET</a></li>
-<li>5.5.   <a href="#rfc.section.5.5">CMD 4: (Host-&gt;NCP) CMD_PROP_VALUE_INSERT</a></li>
-<li>5.6.   <a href="#rfc.section.5.6">CMD 5: (Host-&gt;NCP) CMD_PROP_VALUE_REMOVE</a></li>
-<li>5.7.   <a href="#rfc.section.5.7">CMD 6: (NCP-&gt;Host) CMD_PROP_VALUE_IS</a></li>
-<li>5.8.   <a href="#rfc.section.5.8">CMD 7: (NCP-&gt;Host) CMD_PROP_VALUE_INSERTED</a></li>
-<li>5.9.   <a href="#rfc.section.5.9">CMD 8: (NCP-&gt;Host) CMD_PROP_VALUE_REMOVED</a></li>
-</ul><li>6.   <a href="#rfc.section.6">Properties</a></li>
-<ul><li>6.1.   <a href="#rfc.section.6.1">Property Sections</a></li>
-<li>6.2.   <a href="#rfc.section.6.2">Core Properties</a></li>
-<ul><li>6.2.1.   <a href="#rfc.section.6.2.1">PROP 0: PROP_LAST_STATUS</a></li>
-<li>6.2.2.   <a href="#rfc.section.6.2.2">PROP 1: PROP_PROTOCOL_VERSION</a></li>
-<li>6.2.3.   <a href="#rfc.section.6.2.3">PROP 2: PROP_NCP_VERSION</a></li>
-<li>6.2.4.   <a href="#rfc.section.6.2.4">PROP 3: PROP_INTERFACE_TYPE</a></li>
-<li>6.2.5.   <a href="#rfc.section.6.2.5">PROP 4: PROP_INTERFACE_VENDOR_ID</a></li>
-<li>6.2.6.   <a href="#rfc.section.6.2.6">PROP 5: PROP_CAPS</a></li>
-<li>6.2.7.   <a href="#rfc.section.6.2.7">PROP 6: PROP_INTERFACE_COUNT</a></li>
-<li>6.2.8.   <a href="#rfc.section.6.2.8">PROP 7: PROP_POWER_STATE</a></li>
-<li>6.2.9.   <a href="#rfc.section.6.2.9">PROP 8: PROP_HWADDR</a></li>
-<li>6.2.10.   <a href="#rfc.section.6.2.10">PROP 9: PROP_LOCK</a></li>
-<li>6.2.11.   <a href="#rfc.section.6.2.11">PROP 112: PROP_STREAM_DEBUG</a></li>
-<li>6.2.12.   <a href="#rfc.section.6.2.12">PROP 113: PROP_STREAM_RAW</a></li>
-<li>6.2.13.   <a href="#rfc.section.6.2.13">PROP 114: PROP_STREAM_NET</a></li>
-<li>6.2.14.   <a href="#rfc.section.6.2.14">PROP 114: PROP_STREAM_NET_INSECURE</a></li>
-</ul><li>6.3.   <a href="#rfc.section.6.3">PHY Properties</a></li>
-<ul><li>6.3.1.   <a href="#rfc.section.6.3.1">PROP 32: PROP_PHY_ENABLED</a></li>
-<li>6.3.2.   <a href="#rfc.section.6.3.2">PROP 33: PROP_PHY_CHAN</a></li>
-<li>6.3.3.   <a href="#rfc.section.6.3.3">PROP 34: PROP_PHY_CHAN_SUPPORTED</a></li>
-<li>6.3.4.   <a href="#rfc.section.6.3.4">PROP 35: PROP_PHY_FREQ</a></li>
-<li>6.3.5.   <a href="#rfc.section.6.3.5">PROP 36: PROP_PHY_CCA_THRESHOLD</a></li>
-<li>6.3.6.   <a href="#rfc.section.6.3.6">PROP 37: PROP_PHY_TX_POWER</a></li>
-<li>6.3.7.   <a href="#rfc.section.6.3.7">PROP 38: PROP_PHY_RSSI</a></li>
-</ul><li>6.4.   <a href="#rfc.section.6.4">MAC Properties</a></li>
-<ul><li>6.4.1.   <a href="#rfc.section.6.4.1">PROP 48: PROP_MAC_SCAN_STATE</a></li>
-<li>6.4.2.   <a href="#rfc.section.6.4.2">PROP 49: PROP_MAC_SCAN_MASK</a></li>
-<li>6.4.3.   <a href="#rfc.section.6.4.3">PROP 50: PROP_MAC_SCAN_PERIOD</a></li>
-<li>6.4.4.   <a href="#rfc.section.6.4.4">PROP 51: PROP_MAC_SCAN_BEACON</a></li>
-<li>6.4.5.   <a href="#rfc.section.6.4.5">PROP 52: PROP_MAC_15_4_LADDR</a></li>
-<li>6.4.6.   <a href="#rfc.section.6.4.6">PROP 53: PROP_MAC_15_4_SADDR</a></li>
-<li>6.4.7.   <a href="#rfc.section.6.4.7">PROP 54: PROP_MAC_15_4_PANID</a></li>
-<li>6.4.8.   <a href="#rfc.section.6.4.8">PROP 55: PROP_MAC_RAW_STREAM_ENABLED</a></li>
-<li>6.4.9.   <a href="#rfc.section.6.4.9">PROP 56: PROP_MAC_FILTER_MODE</a></li>
-<li>6.4.10.   <a href="#rfc.section.6.4.10">PROP 4864: PROP_MAC_WHITELIST</a></li>
-<li>6.4.11.   <a href="#rfc.section.6.4.11">PROP 4865: PROP_MAC_WHITELIST_ENABLED</a></li>
-</ul><li>6.5.   <a href="#rfc.section.6.5">NET Properties</a></li>
-<ul><li>6.5.1.   <a href="#rfc.section.6.5.1">PROP 64: PROP_NET_SAVED</a></li>
-<li>6.5.2.   <a href="#rfc.section.6.5.2">PROP 65: PROP_NET_IF_UP</a></li>
-<li>6.5.3.   <a href="#rfc.section.6.5.3">PROP 66: PROP_NET_STACK_UP</a></li>
-<li>6.5.4.   <a href="#rfc.section.6.5.4">PROP 67: PROP_NET_ROLE</a></li>
-<li>6.5.5.   <a href="#rfc.section.6.5.5">PROP 68: PROP_NET_NETWORK_NAME</a></li>
-<li>6.5.6.   <a href="#rfc.section.6.5.6">PROP 69: PROP_NET_XPANID</a></li>
-<li>6.5.7.   <a href="#rfc.section.6.5.7">PROP 70: PROP_NET_MASTER_KEY</a></li>
-<li>6.5.8.   <a href="#rfc.section.6.5.8">PROP 71: PROP_NET_KEY_SEQUENCE</a></li>
-<li>6.5.9.   <a href="#rfc.section.6.5.9">PROP 72: PROP_NET_PARTITION_ID</a></li>
-</ul><li>6.6.   <a href="#rfc.section.6.6">IPv6 Properties</a></li>
-<ul><li>6.6.1.   <a href="#rfc.section.6.6.1">PROP 96: PROP_IPV6_LL_ADDR</a></li>
-<li>6.6.2.   <a href="#rfc.section.6.6.2">PROP 97: PROP_IPV6_ML_ADDR</a></li>
-<li>6.6.3.   <a href="#rfc.section.6.6.3">PROP 98: PROP_IPV6_ML_PREFIX</a></li>
-<li>6.6.4.   <a href="#rfc.section.6.6.4">PROP 99: PROP_IPV6_ADDRESS_TABLE</a></li>
-<li>6.6.5.   <a href="#rfc.section.6.6.5">PROP 101: PROP_IPv6_ICMP_PING_OFFLOAD</a></li>
-</ul></ul><li>7.   <a href="#rfc.section.7">Status Codes</a></li>
+<ul><li>1.1.   <a href="#rfc.section.1.1">About this Draft</a></li>
+<ul><li>1.1.1.   <a href="#rfc.section.1.1.1">Renumbering</a></li>
+<li>1.1.2.   <a href="#rfc.section.1.1.2">Spinel as Application API</a></li>
+<li>1.1.3.   <a href="#rfc.section.1.1.3">Privileged Commands and Properties</a></li>
+</ul><li>1.2.   <a href="#rfc.section.1.2">Property Overview</a></li>
+<ul><li>1.2.1.   <a href="#rfc.section.1.2.1">Property Methods</a></li>
+<li>1.2.2.   <a href="#rfc.section.1.2.2">Property Types</a></li>
+</ul></ul><li>2.   <a href="#rfc.section.2">Frame Format</a></li>
+<ul><li>2.1.   <a href="#rfc.section.2.1">Header Format</a></li>
+<ul><li>2.1.1.   <a href="#rfc.section.2.1.1">FLG: Flag</a></li>
+<li>2.1.2.   <a href="#rfc.section.2.1.2">IID: Interface Identifier</a></li>
+<li>2.1.3.   <a href="#rfc.section.2.1.3">TID: Transaction Identifier</a></li>
+<li>2.1.4.   <a href="#rfc.section.2.1.4">Command Identifier (CMD)</a></li>
+<li>2.1.5.   <a href="#rfc.section.2.1.5">Command Payload (Optional)</a></li>
+</ul></ul><li>3.   <a href="#rfc.section.3">Data Packing</a></li>
+<ul><li>3.1.   <a href="#rfc.section.3.1">Primitive Types</a></li>
+<li>3.2.   <a href="#rfc.section.3.2">Packed Unsigned Integer</a></li>
+<li>3.3.   <a href="#rfc.section.3.3">Data Blobs</a></li>
+<li>3.4.   <a href="#rfc.section.3.4">Structured Data</a></li>
+<li>3.5.   <a href="#rfc.section.3.5">Arrays</a></li>
+</ul><li>4.   <a href="#rfc.section.4">Commands</a></li>
+<ul><li>4.1.   <a href="#rfc.section.4.1">CMD 0: (Host-&gt;NCP) CMD_NOOP</a></li>
+<li>4.2.   <a href="#rfc.section.4.2">CMD 1: (Host-&gt;NCP) CMD_RESET</a></li>
+<li>4.3.   <a href="#rfc.section.4.3">CMD 2: (Host-&gt;NCP) CMD_PROP_VALUE_GET</a></li>
+<li>4.4.   <a href="#rfc.section.4.4">CMD 3: (Host-&gt;NCP) CMD_PROP_VALUE_SET</a></li>
+<li>4.5.   <a href="#rfc.section.4.5">CMD 4: (Host-&gt;NCP) CMD_PROP_VALUE_INSERT</a></li>
+<li>4.6.   <a href="#rfc.section.4.6">CMD 5: (Host-&gt;NCP) CMD_PROP_VALUE_REMOVE</a></li>
+<li>4.7.   <a href="#rfc.section.4.7">CMD 6: (NCP-&gt;Host) CMD_PROP_VALUE_IS</a></li>
+<li>4.8.   <a href="#rfc.section.4.8">CMD 7: (NCP-&gt;Host) CMD_PROP_VALUE_INSERTED</a></li>
+<li>4.9.   <a href="#rfc.section.4.9">CMD 8: (NCP-&gt;Host) CMD_PROP_VALUE_REMOVED</a></li>
+</ul><li>5.   <a href="#rfc.section.5">Properties</a></li>
+<ul><li>5.1.   <a href="#rfc.section.5.1">Property Sections</a></li>
+<li>5.2.   <a href="#rfc.section.5.2">Core Properties</a></li>
+<ul><li>5.2.1.   <a href="#rfc.section.5.2.1">PROP 0: PROP_LAST_STATUS</a></li>
+<li>5.2.2.   <a href="#rfc.section.5.2.2">PROP 1: PROP_PROTOCOL_VERSION</a></li>
+<li>5.2.3.   <a href="#rfc.section.5.2.3">PROP 2: PROP_NCP_VERSION</a></li>
+<li>5.2.4.   <a href="#rfc.section.5.2.4">PROP 3: PROP_INTERFACE_TYPE</a></li>
+<li>5.2.5.   <a href="#rfc.section.5.2.5">PROP 4: PROP_INTERFACE_VENDOR_ID</a></li>
+<li>5.2.6.   <a href="#rfc.section.5.2.6">PROP 5: PROP_CAPS</a></li>
+<li>5.2.7.   <a href="#rfc.section.5.2.7">PROP 6: PROP_INTERFACE_COUNT</a></li>
+<li>5.2.8.   <a href="#rfc.section.5.2.8">PROP 7: PROP_POWER_STATE</a></li>
+<li>5.2.9.   <a href="#rfc.section.5.2.9">PROP 8: PROP_HWADDR</a></li>
+<li>5.2.10.   <a href="#rfc.section.5.2.10">PROP 9: PROP_LOCK</a></li>
+<li>5.2.11.   <a href="#rfc.section.5.2.11">PROP 112: PROP_STREAM_DEBUG</a></li>
+<li>5.2.12.   <a href="#rfc.section.5.2.12">PROP 113: PROP_STREAM_RAW</a></li>
+<li>5.2.13.   <a href="#rfc.section.5.2.13">PROP 114: PROP_STREAM_NET</a></li>
+<li>5.2.14.   <a href="#rfc.section.5.2.14">PROP 114: PROP_STREAM_NET_INSECURE</a></li>
+</ul><li>5.3.   <a href="#rfc.section.5.3">PHY Properties</a></li>
+<ul><li>5.3.1.   <a href="#rfc.section.5.3.1">PROP 32: PROP_PHY_ENABLED</a></li>
+<li>5.3.2.   <a href="#rfc.section.5.3.2">PROP 33: PROP_PHY_CHAN</a></li>
+<li>5.3.3.   <a href="#rfc.section.5.3.3">PROP 34: PROP_PHY_CHAN_SUPPORTED</a></li>
+<li>5.3.4.   <a href="#rfc.section.5.3.4">PROP 35: PROP_PHY_FREQ</a></li>
+<li>5.3.5.   <a href="#rfc.section.5.3.5">PROP 36: PROP_PHY_CCA_THRESHOLD</a></li>
+<li>5.3.6.   <a href="#rfc.section.5.3.6">PROP 37: PROP_PHY_TX_POWER</a></li>
+<li>5.3.7.   <a href="#rfc.section.5.3.7">PROP 38: PROP_PHY_RSSI</a></li>
+</ul><li>5.4.   <a href="#rfc.section.5.4">MAC Properties</a></li>
+<ul><li>5.4.1.   <a href="#rfc.section.5.4.1">PROP 48: PROP_MAC_SCAN_STATE</a></li>
+<li>5.4.2.   <a href="#rfc.section.5.4.2">PROP 49: PROP_MAC_SCAN_MASK</a></li>
+<li>5.4.3.   <a href="#rfc.section.5.4.3">PROP 50: PROP_MAC_SCAN_PERIOD</a></li>
+<li>5.4.4.   <a href="#rfc.section.5.4.4">PROP 51: PROP_MAC_SCAN_BEACON</a></li>
+<li>5.4.5.   <a href="#rfc.section.5.4.5">PROP 52: PROP_MAC_15_4_LADDR</a></li>
+<li>5.4.6.   <a href="#rfc.section.5.4.6">PROP 53: PROP_MAC_15_4_SADDR</a></li>
+<li>5.4.7.   <a href="#rfc.section.5.4.7">PROP 54: PROP_MAC_15_4_PANID</a></li>
+<li>5.4.8.   <a href="#rfc.section.5.4.8">PROP 55: PROP_MAC_RAW_STREAM_ENABLED</a></li>
+<li>5.4.9.   <a href="#rfc.section.5.4.9">PROP 56: PROP_MAC_FILTER_MODE</a></li>
+<li>5.4.10.   <a href="#rfc.section.5.4.10">PROP 4864: PROP_MAC_WHITELIST</a></li>
+<li>5.4.11.   <a href="#rfc.section.5.4.11">PROP 4865: PROP_MAC_WHITELIST_ENABLED</a></li>
+</ul><li>5.5.   <a href="#rfc.section.5.5">NET Properties</a></li>
+<ul><li>5.5.1.   <a href="#rfc.section.5.5.1">PROP 64: PROP_NET_SAVED</a></li>
+<li>5.5.2.   <a href="#rfc.section.5.5.2">PROP 65: PROP_NET_IF_UP</a></li>
+<li>5.5.3.   <a href="#rfc.section.5.5.3">PROP 66: PROP_NET_STACK_UP</a></li>
+<li>5.5.4.   <a href="#rfc.section.5.5.4">PROP 67: PROP_NET_ROLE</a></li>
+<li>5.5.5.   <a href="#rfc.section.5.5.5">PROP 68: PROP_NET_NETWORK_NAME</a></li>
+<li>5.5.6.   <a href="#rfc.section.5.5.6">PROP 69: PROP_NET_XPANID</a></li>
+<li>5.5.7.   <a href="#rfc.section.5.5.7">PROP 70: PROP_NET_MASTER_KEY</a></li>
+<li>5.5.8.   <a href="#rfc.section.5.5.8">PROP 71: PROP_NET_KEY_SEQUENCE</a></li>
+<li>5.5.9.   <a href="#rfc.section.5.5.9">PROP 72: PROP_NET_PARTITION_ID</a></li>
+</ul><li>5.6.   <a href="#rfc.section.5.6">IPv6 Properties</a></li>
+<ul><li>5.6.1.   <a href="#rfc.section.5.6.1">PROP 96: PROP_IPV6_LL_ADDR</a></li>
+<li>5.6.2.   <a href="#rfc.section.5.6.2">PROP 97: PROP_IPV6_ML_ADDR</a></li>
+<li>5.6.3.   <a href="#rfc.section.5.6.3">PROP 98: PROP_IPV6_ML_PREFIX</a></li>
+<li>5.6.4.   <a href="#rfc.section.5.6.4">PROP 99: PROP_IPV6_ADDRESS_TABLE</a></li>
+<li>5.6.5.   <a href="#rfc.section.5.6.5">PROP 101: PROP_IPv6_ICMP_PING_OFFLOAD</a></li>
+</ul></ul><li>6.   <a href="#rfc.section.6">Status Codes</a></li>
+<li>7.   <a href="#rfc.section.7">Security Considerations</a></li>
+<li>8.   <a href="#rfc.section.8">Acknowledgments</a></li>
 <li>Appendix A.   <a href="#rfc.appendix.A">Framing Protocol</a></li>
 <ul><li>A.1.   <a href="#rfc.appendix.A.1">UART Recommendations</a></li>
 <ul><li>A.1.1.   <a href="#rfc.appendix.A.1.1">HDLC-Lite</a></li>
@@ -750,7 +767,8 @@
 <li>F.8.   <a href="#rfc.appendix.F.8">Adding an on-mesh prefix</a></li>
 <li>F.9.   <a href="#rfc.appendix.F.9">Entering low-power modes</a></li>
 <li>F.10.   <a href="#rfc.appendix.F.10">Sniffing raw packets</a></li>
-</ul><li><a href="#rfc.authors">Author's Address</a></li>
+</ul><li>Appendix G.   <a href="#rfc.appendix.G">Glossary</a></li>
+<li><a href="#rfc.authors">Author's Address</a></li>
 
 
   </ul>
@@ -769,30 +787,133 @@
 
 <p> </p>
 <p id="rfc.section.1.p.3">On top of this core framework, we define the properties and commands to enable various features and network protocols.  </p>
-<h1 id="rfc.section.2"><a href="#rfc.section.2">2.</a> <a href="#definitions" id="definitions">Definitions</a></h1>
+<h1 id="rfc.section.1.1"><a href="#rfc.section.1.1">1.1.</a> <a href="#about-this-draft" id="about-this-draft">About this Draft</a></h1>
+<p id="rfc.section.1.1.p.1">This document is currently in a draft status and is changing often.  This section discusses some ideas for changes to the protocol that haven't yet been fully specified, as well as some of the impetus for the current design.  </p>
+<h1 id="rfc.section.1.1.1"><a href="#rfc.section.1.1.1">1.1.1.</a> <a href="#renumbering" id="renumbering">Renumbering</a></h1>
+<p id="rfc.section.1.1.1.p.1">Efforts are currently maintained to try to prevent overtly backward-incompatible changes to the existing protocol, but if you are implementing Spinel in your own products you should expect there to be at least one large renumbering event and major version number change before the standard is considered "baked". All changes will be clearly marked and documented to make such a transition as easy as possible.  </p>
+<p id="rfc.section.1.1.1.p.2">To allow conclusive detection of protocol (in)compatibility between the host and the NCP, the following commands and properties are already considered to be "baked" and will not change: </p>
 <p/>
 
-<dl>
-  <dt>NCP</dt>
-  <dd style="margin-left: 8"><br/> Acryonym for Network Control Processor.</dd>
-  <dt>Host</dt>
-  <dd style="margin-left: 8"><br/> Computer or Micro-controller which controls the NCP.</dd>
-  <dt>TID</dt>
-  <dd style="margin-left: 8"><br/> Transaction Identifier. May be a value between zero and fifteen.  See <a href="#tid-transaction-identifier">Section 3.1.3</a> for more information.</dd>
-  <dt>IID</dt>
-  <dd style="margin-left: 8"><br/> Interface Identifier. May be a value between zero and three.  See <a href="#iid-interface-identifier">Section 3.1.2</a> for more information.</dd>
-  <dt>PUI</dt>
-  <dd style="margin-left: 8"><br/> Packed Unsigned Integer. A way to serialize an unsigned integer using one, two, or three bytes. Used throughout the Spinel protocol.  See <a href="#packed-unsigned-integer">Section 4.2</a> for more information.</dd>
-</dl>
+<ul>
+  <li>Command IDs zero through eight. (Reset, No-op, and Property-Value Commands)</li>
+  <li>Property IDs zero through two. (Last status, Protocol Version, and NCP Version)</li>
+</ul>
 
 <p> </p>
-<h1 id="rfc.section.3"><a href="#rfc.section.3">3.</a> <a href="#frame-format" id="frame-format">Frame Format</a></h1>
-<p id="rfc.section.3.p.1">A frame is defined simply as the concatenation of </p>
+<p id="rfc.section.1.1.1.p.4">Renumbering would be undertaken in order to better organize the allocation of property IDs and capability IDs. One of the initial goals of this protocol was for it to be possible for a host or NCP to only implement properties with values less than 127 and for the NCP to still be usable---relegating all larger property values for extra features or other capabilities that aren't strictly necessary. This would allow simple implementations to avoid the need to implement support for PUIs (<a href="#packed-unsigned-integer">Section 3.2</a>).  </p>
+<p id="rfc.section.1.1.1.p.5">As time has gone by and the protocol has become more fleshed out, it has become clear that some of the initial allocations were inadequate and should be revisited if we want to try to achieve the original goal.  </p>
+<h1 id="rfc.section.1.1.2"><a href="#rfc.section.1.1.2">1.1.2.</a> <a href="#spinel-as-application-api" id="spinel-as-application-api">Spinel as Application API</a></h1>
+<p id="rfc.section.1.1.2.p.1">The current primary host driver implementation is <a href="http://wpantund.org/">wpantund</a>. wpantund manages the NCP using the Spinel protocol and provides a management API for the application using <a href="https://www.freedesktop.org/wiki/Software/dbus/">D-Bus</a> IPC.  </p>
+<p id="rfc.section.1.1.2.p.2">However, some thought has been given to the idea of having a host driver daemon which uses Spinel directly as the management API. You would have user-space daemon similar to wpantund which would communicate directly with the NCP. Using Unix Domain Sockets, applications could connect to the daemon by opening a special socket file. The protocol for that socket might be (for example) HDLC-Lite-encoded (<a href="#hdlc-lite">Appendix A.1.1</a>) spinel frames, as if the application were talking directly to the NCP.  </p>
+<p id="rfc.section.1.1.2.p.3">Applications aren't necessarily interested in everything that an NCP would normally send out unsolicited, so a mechanism for specifying which properties should be listened to would need to be defined. This mechanism would not be implemented by the NCP but would instead be implemented by the daemon to control which notification packets need to be directed where.  </p>
+<p id="rfc.section.1.1.2.p.4">In the event of transaction ID collisions, the daemon would transparently renumber spinel frames so as to not cause TID collisions.  </p>
+<p id="rfc.section.1.1.2.p.5">Since there can be more than one application that is using the API at a time, the <samp>PROP_LOCK</samp> property (<a href="#prop-lock">Section 5.2.10</a>) would be used to ensure exclusive access to the NCP by an application. Only one process would be allowed to enable the lock at a time.  </p>
+<p id="rfc.section.1.1.2.p.6">Such a IPC mechanism would be desirable because it is, from a spinel perspective, future proof. New features can be added and new properties assigned and the IPC protocol would not need to be extended to support them. It is also simple and has no external dependencies other than unix domain sockets.  </p>
+<p id="rfc.section.1.1.2.p.7">Security is obviously paramount in a system like this, so a great deal of care should be taken to make sure that certain commands and properties cannot be executed or changed without the appropriate privileges.  </p>
+<h1 id="rfc.section.1.1.3"><a href="#rfc.section.1.1.3">1.1.3.</a> <a href="#privileged-commands-and-properties" id="privileged-commands-and-properties">Privileged Commands and Properties</a></h1>
+<p id="rfc.section.1.1.3.p.1">The idea here is that some commands should be considered "privileged", and actively prevented from letting normal applications access them.  This is important if the IPC protocol between the application and the NCP is Spinel.  </p>
+<p id="rfc.section.1.1.3.p.2">Examples of such privileged commands would be debugging commands like "peek" or "poke", properties which control bootloader behavior, or changing factory-specified constants. These commands should have some attribute about them that can be easily filtered to prevent applications from using issuing them directly to the NCP.  </p>
+<p id="rfc.section.1.1.3.p.3">This would likely be implemented as a part of the renumbering effort (<a href="#renumbering">Section 1.1.1</a>).  </p>
+<h1 id="rfc.section.1.2"><a href="#rfc.section.1.2">1.2.</a> <a href="#property-overview" id="property-overview">Property Overview</a></h1>
+<p id="rfc.section.1.2.p.1">Spinel is largely a property-based protocol, with a property defined for every attribute that needs to be set, changed, or known by the host. The inspiration of this approach was memory-mapped hardware registers for peripherals. The goal is to avoid, as much as possible, the use of large complicated structures and/or method argument lists.  The reason for avoiding these is because they have a tendency to change, especially early in development. Adding or removing a property from a structure can render the entire protocol incompatible. By using properties, you simply change an additional property.  </p>
+<p id="rfc.section.1.2.p.2">Almost all features and capabilities are implemented using properties.  Most new features that are initially proposed as commands can be adapted to be property-based instead. Notable exceptions include "Host Buffer Offload" (<a href="#feature-host-buffer-offload">Appendix C</a>) and "Network Save" (<a href="#feature-network-save">Appendix B</a>).  </p>
+<p id="rfc.section.1.2.p.3">In Spinel, properties are keyed by an unsigned integer between 0 and 2,097,151 (See <a href="#packed-unsigned-integer">Section 3.2</a>).  </p>
+<h1 id="rfc.section.1.2.1"><a href="#rfc.section.1.2.1">1.2.1.</a> <a href="#property-methods" id="property-methods">Property Methods</a></h1>
+<p id="rfc.section.1.2.1.p.1">Properties may support one or more of the following methods: </p>
+<p/>
+
+<ul>
+  <li>
+    <samp>VALUE_GET</samp>
+  </li>
+  <li>
+    <samp>VALUE_SET</samp>
+  </li>
+  <li>
+    <samp>VALUE_INSERT</samp>
+  </li>
+  <li>
+    <samp>VALUE_REMOVE</samp>
+  </li>
+</ul>
+
+<p> </p>
+<p id="rfc.section.1.2.1.p.3">Additionally, the NCP can send updates to the host (either synchronously or asynchronously) that inform the host about changes to specific properties: </p>
+<p/>
+
+<ul>
+  <li>
+    <samp>VALUE_IS</samp>
+  </li>
+  <li>
+    <samp>VALUE_INSERTED</samp>
+  </li>
+  <li>
+    <samp>VALUE_REMOVED</samp>
+  </li>
+</ul>
+
+<p> </p>
+<h1 id="rfc.section.1.2.2"><a href="#rfc.section.1.2.2">1.2.2.</a> <a href="#property-types" id="property-types">Property Types</a></h1>
+<p id="rfc.section.1.2.2.p.1">Conceptually, there are three different types of properties: </p>
+<p/>
+
+<ul>
+  <li>Single-value properties</li>
+  <li>Multiple-value (Array) properties</li>
+  <li>Stream properties</li>
+</ul>
+
+<p> </p>
+<h1 id="rfc.section.1.2.2.1"><a href="#rfc.section.1.2.2.1">1.2.2.1.</a> <a href="#singlevalue-properties" id="singlevalue-properties">Single-Value Properties</a></h1>
+<p id="rfc.section.1.2.2.1.p.1">Single-value properties are properties that have a simple representation of a single value. Examples would be: </p>
+<p/>
+
+<ul>
+  <li>Current radio channel (Represented as a unsigned 8-bit integer)</li>
+  <li>Network name (Represented as a UTF-8 encoded string)</li>
+  <li>802.15.4 PAN ID (Represented as a unsigned 16-bit integer)</li>
+</ul>
+
+<p> </p>
+<p id="rfc.section.1.2.2.1.p.3">The valid operations on these sorts of properties are <samp>GET</samp> and <samp>SET</samp>.  </p>
+<h1 id="rfc.section.1.2.2.2"><a href="#rfc.section.1.2.2.2">1.2.2.2.</a> <a href="#multiplevalue-properties" id="multiplevalue-properties">Multiple-Value Properties</a></h1>
+<p id="rfc.section.1.2.2.2.p.1">Multiple-Value Properties have more than one value associated with them. Examples would be: </p>
+<p/>
+
+<ul>
+  <li>List of channels supported by the radio hardware.</li>
+  <li>List of IPv6 addresses assigned to the interface.</li>
+  <li>List of capabilities supported by the NCP.</li>
+</ul>
+
+<p> </p>
+<p id="rfc.section.1.2.2.2.p.3">The valid operations on these sorts of properties are <samp>VALUE_GET</samp>, <samp>VALUE_SET</samp>, <samp>VALUE_INSERT</samp>, and <samp>VALUE_REMOVE</samp>.  </p>
+<p id="rfc.section.1.2.2.2.p.4">When the value is fetched using <samp>VALUE_GET</samp>, the returned value is the concatenation of all of the individual values in the list. If the length of the value for an individual item in the list is not defined by the type then each item returned in the list is prepended with a length (See <a href="#arrays">Section 3.5</a>). The order of the returned items, unless explicitly defined for that specific property, is undefined.  </p>
+<p><samp>VALUE_SET</samp> provides a way to completely replace all previous values.  Calling <samp>VALUE_SET</samp> with an empty value effectively instructs the NCP to clear the value of that property.  </p>
+<p><samp>VALUE_INSERT</samp> and <samp>VALUE_REMOVE</samp> provide mechanisms for the insertion or removal of individual items <em>by value</em>. The payload for these commands is a plain single value.  </p>
+<h1 id="rfc.section.1.2.2.3"><a href="#rfc.section.1.2.2.3">1.2.2.3.</a> <a href="#stream-properties" id="stream-properties">Stream Properties</a></h1>
+<p id="rfc.section.1.2.2.3.p.1">Stream properties are special properties representing streams of data.  Examples would be: </p>
+<p/>
+
+<ul>
+  <li>Network packet stream (<a href="#prop-stream-net">Section 5.2.13</a>)</li>
+  <li>Raw packet stream (<a href="#prop-stream-raw">Section 5.2.12</a>)</li>
+  <li>Debug message stream (<a href="#prop-stream-debug">Section 5.2.11</a>)</li>
+  <li>Network Beacon stream (<a href="#prop-mac-scan-beacon">Section 5.4.4</a>)</li>
+</ul>
+
+<p> </p>
+<p id="rfc.section.1.2.2.3.p.3">All such properties emit changes asynchronously using the <samp>VALUE_IS</samp> command, sent from the NCP to the host. For example, as IPv6 traffic is received by the NCP, the IPv6 packets are sent to the host by way of asynchronous <samp>VALUE_IS</samp> notifications.  </p>
+<p id="rfc.section.1.2.2.3.p.4">Some of these properties also support the host send data back to the NCP. For example, this is how the host sends IPv6 traffic to the NCP.  </p>
+<p id="rfc.section.1.2.2.3.p.5">These types of properties generally do not support <samp>VALUE_GET</samp>, as it is meaningless.  </p>
+<h1 id="rfc.section.2"><a href="#rfc.section.2">2.</a> <a href="#frame-format" id="frame-format">Frame Format</a></h1>
+<p id="rfc.section.2.p.1">A frame is defined simply as the concatenation of </p>
 <p/>
 
 <ul>
   <li>A header byte</li>
-  <li>A command (up to three bytes, see <a href="#packed-unsigned-integer">Section 4.2</a> for format)</li>
+  <li>A command (up to three bytes, see <a href="#packed-unsigned-integer">Section 3.2</a> for format)</li>
   <li>An optional command payload</li>
 </ul>
 
@@ -815,8 +936,8 @@
     </tr>
   </tbody>
 </table>
-<h1 id="rfc.section.3.1"><a href="#rfc.section.3.1">3.1.</a> <a href="#header-format" id="header-format">Header Format</a></h1>
-<p id="rfc.section.3.1.p.1">The header byte is broken down as follows: </p>
+<h1 id="rfc.section.2.1"><a href="#rfc.section.2.1">2.1.</a> <a href="#header-format" id="header-format">Header Format</a></h1>
+<p id="rfc.section.2.1.p.1">The header byte is broken down as follows: </p>
 <pre>
   0   1   2   3   4   5   6   7
 +---+---+---+---+---+---+---+---+
@@ -826,17 +947,17 @@
 <p>
   <a id="CREF2" class="info">[CREF2]<span class="info">RQ: Eventually, when https://github.com/miekg/mmark/issues/95 is addressed, the above table should be swapped out with this: | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | |---|---|---|---|---|---|---|---| |  FLG ||  IID ||      TID   ||||</span></a>
 </p>
-<h1 id="rfc.section.3.1.1"><a href="#rfc.section.3.1.1">3.1.1.</a> <a href="#flg-flag" id="flg-flag">FLG: Flag</a></h1>
-<p id="rfc.section.3.1.1.p.1">The flag field of the header byte (<samp>FLG</samp>) is always set to the value two (or <samp>10</samp> in binary). Any frame received with these bits set to any other value else MUST NOT be considered a Spinel frame.  </p>
-<p id="rfc.section.3.1.1.p.2">This convention allows Spinel to be line compatible with BTLE HCI. By defining the first two bit in this way we can disambiguate between Spinel frames and HCI frames (which always start with either <samp>0x01</samp> or <samp>0x04</samp>) without any additional framing overhead.  </p>
-<h1 id="rfc.section.3.1.2"><a href="#rfc.section.3.1.2">3.1.2.</a> <a href="#iid-interface-identifier" id="iid-interface-identifier">IID: Interface Identifier</a></h1>
-<p id="rfc.section.3.1.2.p.1">The Interface Identifier (IID) is a number between 0 and 3 which identifies which subinterface the frame is intended for. This allows the protocol to support connecting to more than one network at once.  The first subinterface (0) is considered the primary subinterface and MUST be supported. Support for all other subinterfaces is OPTIONAL.  </p>
-<h1 id="rfc.section.3.1.3"><a href="#rfc.section.3.1.3">3.1.3.</a> <a href="#tid-transaction-identifier" id="tid-transaction-identifier">TID: Transaction Identifier</a></h1>
-<p id="rfc.section.3.1.3.p.1">The least significant bits of the header represent the Transaction Identifier(TID). The TID is used for correlating responses to the commands which generated them.  </p>
-<p id="rfc.section.3.1.3.p.2">When a command is sent from the host, any reply to that command sent by the NCP will use the same value for the TID. When the host receives a frame that matches the TID of the command it sent, it can easily recognize that frame as the actual response to that command.  </p>
-<p id="rfc.section.3.1.3.p.3">The TID value of zero (0) is used for commands to which a correlated response is not expected or needed, such as for unsolicited update commands sent to the host from the NCP.  </p>
-<h1 id="rfc.section.3.1.4"><a href="#rfc.section.3.1.4">3.1.4.</a> <a href="#command-identifier-cmd" id="command-identifier-cmd">Command Identifier (CMD)</a></h1>
-<p id="rfc.section.3.1.4.p.1">The command identifier is a 21-bit unsigned integer encoded in up to three bytes using the packed unsigned integer format described in <a href="#packed-unsigned-integer">Section 4.2</a>. This encoding allows for up to 2,097,152 individual commands, with the first 127 commands represented as a single byte.  Command identifiers larger than 2,097,151 are explicitly forbidden.  </p>
+<h1 id="rfc.section.2.1.1"><a href="#rfc.section.2.1.1">2.1.1.</a> <a href="#flg-flag" id="flg-flag">FLG: Flag</a></h1>
+<p id="rfc.section.2.1.1.p.1">The flag field of the header byte (<samp>FLG</samp>) is always set to the value two (or <samp>10</samp> in binary). Any frame received with these bits set to any other value else MUST NOT be considered a Spinel frame.  </p>
+<p id="rfc.section.2.1.1.p.2">This convention allows Spinel to be line compatible with BTLE HCI. By defining the first two bit in this way we can disambiguate between Spinel frames and HCI frames (which always start with either <samp>0x01</samp> or <samp>0x04</samp>) without any additional framing overhead.  </p>
+<h1 id="rfc.section.2.1.2"><a href="#rfc.section.2.1.2">2.1.2.</a> <a href="#iid-interface-identifier" id="iid-interface-identifier">IID: Interface Identifier</a></h1>
+<p id="rfc.section.2.1.2.p.1">The Interface Identifier (IID) is a number between 0 and 3 which identifies which subinterface the frame is intended for. This allows the protocol to support connecting to more than one network at once.  The first subinterface (0) is considered the primary subinterface and MUST be supported. Support for all other subinterfaces is OPTIONAL.  </p>
+<h1 id="rfc.section.2.1.3"><a href="#rfc.section.2.1.3">2.1.3.</a> <a href="#tid-transaction-identifier" id="tid-transaction-identifier">TID: Transaction Identifier</a></h1>
+<p id="rfc.section.2.1.3.p.1">The least significant bits of the header represent the Transaction Identifier(TID). The TID is used for correlating responses to the commands which generated them.  </p>
+<p id="rfc.section.2.1.3.p.2">When a command is sent from the host, any reply to that command sent by the NCP will use the same value for the TID. When the host receives a frame that matches the TID of the command it sent, it can easily recognize that frame as the actual response to that command.  </p>
+<p id="rfc.section.2.1.3.p.3">The TID value of zero (0) is used for commands to which a correlated response is not expected or needed, such as for unsolicited update commands sent to the host from the NCP.  </p>
+<h1 id="rfc.section.2.1.4"><a href="#rfc.section.2.1.4">2.1.4.</a> <a href="#command-identifier-cmd" id="command-identifier-cmd">Command Identifier (CMD)</a></h1>
+<p id="rfc.section.2.1.4.p.1">The command identifier is a 21-bit unsigned integer encoded in up to three bytes using the packed unsigned integer format described in <a href="#packed-unsigned-integer">Section 3.2</a>. This encoding allows for up to 2,097,152 individual commands, with the first 127 commands represented as a single byte.  Command identifiers larger than 2,097,151 are explicitly forbidden.  </p>
 <table cellpadding="3" cellspacing="0" class="tt full center">
   <thead>
     <tr>
@@ -871,11 +992,11 @@
     </tr>
   </tbody>
 </table>
-<h1 id="rfc.section.3.1.5"><a href="#rfc.section.3.1.5">3.1.5.</a> <a href="#command-payload-optional" id="command-payload-optional">Command Payload (Optional)</a></h1>
-<p id="rfc.section.3.1.5.p.1">Depending on the semantics of the command in question, a payload MAY be included in the frame. The exact composition and length of the payload is defined by the command identifier.  </p>
-<h1 id="rfc.section.4"><a href="#rfc.section.4">4.</a> <a href="#data-packing" id="data-packing">Data Packing</a></h1>
-<p id="rfc.section.4.p.1">Data serialization for properties is performed using a light-weight data packing format which was loosely inspired by D-Bus. The format of a serialization is defined by a specially formatted string.  </p>
-<p id="rfc.section.4.p.2">Goals: </p>
+<h1 id="rfc.section.2.1.5"><a href="#rfc.section.2.1.5">2.1.5.</a> <a href="#command-payload-optional" id="command-payload-optional">Command Payload (Optional)</a></h1>
+<p id="rfc.section.2.1.5.p.1">Depending on the semantics of the command in question, a payload MAY be included in the frame. The exact composition and length of the payload is defined by the command identifier.  </p>
+<h1 id="rfc.section.3"><a href="#rfc.section.3">3.</a> <a href="#data-packing" id="data-packing">Data Packing</a></h1>
+<p id="rfc.section.3.p.1">Data serialization for properties is performed using a light-weight data packing format which was loosely inspired by D-Bus. The format of a serialization is defined by a specially formatted string.  </p>
+<p id="rfc.section.3.p.2">Goals: </p>
 <p/>
 
 <ul>
@@ -886,7 +1007,7 @@
 </ul>
 
 <p> </p>
-<p id="rfc.section.4.p.4">Each primitive datatype has an ASCII character associated with it.  Structures can be represented as strings of these characters. For example: </p>
+<p id="rfc.section.3.p.4">Each primitive datatype has an ASCII character associated with it.  Structures can be represented as strings of these characters. For example: </p>
 <p/>
 
 <ul>
@@ -896,8 +1017,8 @@
 </ul>
 
 <p> </p>
-<p id="rfc.section.4.p.6">In each case, the data is represented exactly as described. For example, an array of 10 IPv6 address is stored as 160 bytes.  </p>
-<h1 id="rfc.section.4.1"><a href="#rfc.section.4.1">4.1.</a> <a href="#primitive-types" id="primitive-types">Primitive Types</a></h1>
+<p id="rfc.section.3.p.6">In each case, the data is represented exactly as described. For example, an array of 10 IPv6 address is stored as 160 bytes.  </p>
+<h1 id="rfc.section.3.1"><a href="#rfc.section.3.1">3.1.</a> <a href="#primitive-types" id="primitive-types">Primitive Types</a></h1>
 <table cellpadding="3" cellspacing="0" class="tt full center">
   <thead>
     <tr>
@@ -968,7 +1089,7 @@
         <samp>i</samp>
       </td>
       <td class="left">DATATYPE_UINT_PACKED</td>
-      <td class="left">Packed Unsigned Integer. See <a href="#packed-unsigned-integer">Section 4.2</a>.</td>
+      <td class="left">Packed Unsigned Integer. See <a href="#packed-unsigned-integer">Section 3.2</a>.</td>
     </tr>
     <tr>
       <td class="center">
@@ -996,7 +1117,7 @@
         <samp>D</samp>
       </td>
       <td class="left">DATATYPE_DATA</td>
-      <td class="left">Arbitrary Data. See <a href="#data-blobs">Section 4.3</a>.</td>
+      <td class="left">Arbitrary Data. See <a href="#data-blobs">Section 3.3</a>.</td>
     </tr>
     <tr>
       <td class="center">
@@ -1010,22 +1131,22 @@
         <samp>T</samp>
       </td>
       <td class="left">DATATYPE_STRUCT</td>
-      <td class="left">Structured datatype. Compound type. See <a href="#structured-data">Section 4.4</a>.</td>
+      <td class="left">Structured datatype. Compound type. See <a href="#structured-data">Section 3.4</a>.</td>
     </tr>
     <tr>
       <td class="center">
         <samp>A</samp>
       </td>
       <td class="left">DATATYPE_ARRAY</td>
-      <td class="left">Array of datatypes. Compound type. See <a href="#arrays">Section 4.5</a>.</td>
+      <td class="left">Array of datatypes. Compound type. See <a href="#arrays">Section 3.5</a>.</td>
     </tr>
   </tbody>
 </table>
-<p id="rfc.section.4.1.p.1">All multi-byte values are little-endian unless explicitly stated otherwise.  </p>
-<h1 id="rfc.section.4.2"><a href="#rfc.section.4.2">4.2.</a> <a href="#packed-unsigned-integer" id="packed-unsigned-integer">Packed Unsigned Integer</a></h1>
-<p id="rfc.section.4.2.p.1">For certain types of integers, such command or property identifiers, usually have a value on the wire that is less than 127. However, in order to not preclude the use of values larger than 255, we would need to add an extra byte. Doing this would add an extra byte to the vast majority of instances, which can add up in terms of bandwidth.  </p>
-<p id="rfc.section.4.2.p.2">The packed unsigned integer format is based on the <a href="https://www.w3.org/TR/exi/#encodingUnsignedInteger">unsigned integer format in EXI</a>, except that we limit the maximum value to the largest value that can be encoded into three bytes(2,097,151).  </p>
-<p id="rfc.section.4.2.p.3">For all values less than 127, the packed form of the number is simply a single byte which directly represents the number. For values larger than 127, the following process is used to encode the value: </p>
+<p id="rfc.section.3.1.p.1">All multi-byte values are little-endian unless explicitly stated otherwise.  </p>
+<h1 id="rfc.section.3.2"><a href="#rfc.section.3.2">3.2.</a> <a href="#packed-unsigned-integer" id="packed-unsigned-integer">Packed Unsigned Integer</a></h1>
+<p id="rfc.section.3.2.p.1">For certain types of integers, such command or property identifiers, usually have a value on the wire that is less than 127. However, in order to not preclude the use of values larger than 255, we would need to add an extra byte. Doing this would add an extra byte to the vast majority of instances, which can add up in terms of bandwidth.  </p>
+<p id="rfc.section.3.2.p.2">The packed unsigned integer format is based on the <a href="https://www.w3.org/TR/exi/#encodingUnsignedInteger">unsigned integer format in EXI</a>, except that we limit the maximum value to the largest value that can be encoded into three bytes(2,097,151).  </p>
+<p id="rfc.section.3.2.p.3">For all values less than 127, the packed form of the number is simply a single byte which directly represents the number. For values larger than 127, the following process is used to encode the value: </p>
 <p/>
 
 <ol>
@@ -1035,39 +1156,39 @@
 </ol>
 
 <p> </p>
-<p id="rfc.section.4.2.p.5">Where <em>n</em> is the smallest number of 7-bit chunks you can use to represent the given value.  </p>
-<p id="rfc.section.4.2.p.6">Take the value 1337, for example: </p>
+<p id="rfc.section.3.2.p.5">Where <em>n</em> is the smallest number of 7-bit chunks you can use to represent the given value.  </p>
+<p id="rfc.section.3.2.p.6">Take the value 1337, for example: </p>
 <pre>
 1337 =&gt; 0x0539
      =&gt; [39 0A]
      =&gt; [B9 0A]
 </pre>
-<p id="rfc.section.4.2.p.7">To decode the value, you collect the 7-bit chunks until you find an octet with the most significant bit clear.  </p>
-<h1 id="rfc.section.4.3"><a href="#rfc.section.4.3">4.3.</a> <a href="#data-blobs" id="data-blobs">Data Blobs</a></h1>
-<p id="rfc.section.4.3.p.1">Data blobs are special datatypes in that the data that they contain does not inherently define the size of the data. This means that if the length of the data blob isn't <em>implied</em>, then the length of the blob must be prepended as a packed unsigned integer.  </p>
-<p id="rfc.section.4.3.p.2">The length of a data blob is <em>implied</em> only when it is the last datatype in a given buffer. This works because we already know the size of the buffer, and the length of the data is simply the rest of the size of the buffer.  </p>
-<p id="rfc.section.4.3.p.3">For example, let's say we have a buffer that is encoded with the datatype signature of <samp>CLLD</samp>. In this case, it is pretty easy to tell where the start and end of the data blob is: the start is 9 bytes from the start of the buffer, and its length is the length of the buffer minus 9. (9 is the number of bytes taken up by a byte and two longs) </p>
-<p id="rfc.section.4.3.p.4">However, things are a little different with <samp>CLDL</samp>. Since our data blob is no longer the last item in the signature, the length must be prepended.  </p>
-<p id="rfc.section.4.3.p.5">If you are a little confused, keep reading. This theme comes up in a a few different ways in the following sections.  </p>
-<p id="rfc.section.4.3.p.6">When a length is prepended, the length is encoded as a little-endian unsigned 16-bit integer.  </p>
+<p id="rfc.section.3.2.p.7">To decode the value, you collect the 7-bit chunks until you find an octet with the most significant bit clear.  </p>
+<h1 id="rfc.section.3.3"><a href="#rfc.section.3.3">3.3.</a> <a href="#data-blobs" id="data-blobs">Data Blobs</a></h1>
+<p id="rfc.section.3.3.p.1">Data blobs are special datatypes in that the data that they contain does not inherently define the size of the data. This means that if the length of the data blob isn't <em>implied</em>, then the length of the blob must be prepended as a packed unsigned integer.  </p>
+<p id="rfc.section.3.3.p.2">The length of a data blob is <em>implied</em> only when it is the last datatype in a given buffer. This works because we already know the size of the buffer, and the length of the data is simply the rest of the size of the buffer.  </p>
+<p id="rfc.section.3.3.p.3">For example, let's say we have a buffer that is encoded with the datatype signature of <samp>CLLD</samp>. In this case, it is pretty easy to tell where the start and end of the data blob is: the start is 9 bytes from the start of the buffer, and its length is the length of the buffer minus 9. (9 is the number of bytes taken up by a byte and two longs) </p>
+<p id="rfc.section.3.3.p.4">However, things are a little different with <samp>CLDL</samp>. Since our data blob is no longer the last item in the signature, the length must be prepended.  </p>
+<p id="rfc.section.3.3.p.5">If you are a little confused, keep reading. This theme comes up in a a few different ways in the following sections.  </p>
+<p id="rfc.section.3.3.p.6">When a length is prepended, the length is encoded as a little-endian unsigned 16-bit integer.  </p>
 <p/>
 
 <ul class="empty">
-  <li>Originally the length was a <a href="#packed-unsigned-integer">Section 4.2</a>, but it was changed to an unsigned 16-bit integer in order to help reduce protocol requirements.  </li>
+  <li>Originally the length was a <a href="#packed-unsigned-integer">Section 3.2</a>, but it was changed to an unsigned 16-bit integer in order to help reduce protocol requirements.  </li>
 </ul>
-<h1 id="rfc.section.4.4"><a href="#rfc.section.4.4">4.4.</a> <a href="#structured-data" id="structured-data">Structured Data</a></h1>
-<p id="rfc.section.4.4.p.1">The structured data type is a way of bundling together a bunch of data into a single data structure. This may at first seem useless. What is the difference between <samp>T(Cii)</samp> and just <samp>Cii</samp>? The answer is, in that particular case, nothing: they are stored in exactly the same way.  </p>
-<p id="rfc.section.4.4.p.2">However, one case where the structure datatype makes a difference is when you compare <samp>T(Cii)L</samp> to <samp>CiiL</samp>: they end up being represented entirely differently. This is because the structured data type follows the exact same semantics as the data blob type: if it isn't the last datatype in a signature, <em>it must be prepended with a length</em>. This is useful because it allows for new datatypes to be appended to the structure's signature while remaining <em>backward parsing compatibility</em>.  </p>
-<p id="rfc.section.4.4.p.3">More explicitly, if you take data that was encoded with <samp>T(Cii6)L</samp>, you can still decode it as <samp>T(Cii)L</samp>.  </p>
-<p id="rfc.section.4.4.p.4">Let's take, for example, the property <samp>PROP_IPv6_ADDR_TABLE</samp>.  Conceptually it is just a list of IPv6 addresses, so we can encode it as <samp>A(6c)</samp>. However, if we ever want to associate more data with the type (like flags), we break our backward compatibility if we add another member and use <samp>A(6cC)</samp>. To allow for data to be added without breaking backward compatibility, we use the structured data type from the start: <samp>A(T(6c))</samp>. Then when we add a new member to the structure (<samp>A(T(6cC))</samp>), we don't break backward compatibility.  </p>
-<p id="rfc.section.4.4.p.5">It's also worth noting that <samp>T(Cii)L</samp> also parses as <samp>DL</samp>. You could then take the resultant data blob and parse it as <samp>Cii</samp>.  </p>
-<p id="rfc.section.4.4.p.6">When a length is prepended, the length is encoded as a little-endian unsigned 16-bit integer.  </p>
-<h1 id="rfc.section.4.5"><a href="#rfc.section.4.5">4.5.</a> <a href="#arrays" id="arrays">Arrays</a></h1>
-<p id="rfc.section.4.5.p.1">An array is simply a concatenated set of <em>n</em> data encodings. For example, the type <samp>A(6)</samp> is simply a list of IPv6 addresses---one after the other.  </p>
-<p id="rfc.section.4.5.p.2">Just like the data blob type and the structured data type, the length of the entire array must be prepended <em>unless</em> the array is the last type in a given signature. Thus, <samp>A(C)</samp> (An array of unsigned bytes) encodes identically to <samp>D</samp>.  </p>
-<p id="rfc.section.4.5.p.3">When a length is prepended, the length is encoded as a little-endian unsigned 16-bit integer.  </p>
-<h1 id="rfc.section.5"><a href="#rfc.section.5">5.</a> <a href="#commands" id="commands">Commands</a></h1>
-<h1 id="rfc.section.5.1"><a href="#rfc.section.5.1">5.1.</a> <a href="#cmd-noop" id="cmd-noop">CMD 0: (Host-&gt;NCP) CMD_NOOP</a></h1>
+<h1 id="rfc.section.3.4"><a href="#rfc.section.3.4">3.4.</a> <a href="#structured-data" id="structured-data">Structured Data</a></h1>
+<p id="rfc.section.3.4.p.1">The structured data type is a way of bundling together a bunch of data into a single data structure. This may at first seem useless. What is the difference between <samp>T(Cii)</samp> and just <samp>Cii</samp>? The answer is, in that particular case, nothing: they are stored in exactly the same way.  </p>
+<p id="rfc.section.3.4.p.2">However, one case where the structure datatype makes a difference is when you compare <samp>T(Cii)L</samp> to <samp>CiiL</samp>: they end up being represented entirely differently. This is because the structured data type follows the exact same semantics as the data blob type: if it isn't the last datatype in a signature, <em>it must be prepended with a length</em>. This is useful because it allows for new datatypes to be appended to the structure's signature while remaining <em>backward parsing compatibility</em>.  </p>
+<p id="rfc.section.3.4.p.3">More explicitly, if you take data that was encoded with <samp>T(Cii6)L</samp>, you can still decode it as <samp>T(Cii)L</samp>.  </p>
+<p id="rfc.section.3.4.p.4">Let's take, for example, the property <samp>PROP_IPv6_ADDR_TABLE</samp>.  Conceptually it is just a list of IPv6 addresses, so we can encode it as <samp>A(6c)</samp>. However, if we ever want to associate more data with the type (like flags), we break our backward compatibility if we add another member and use <samp>A(6cC)</samp>. To allow for data to be added without breaking backward compatibility, we use the structured data type from the start: <samp>A(T(6c))</samp>. Then when we add a new member to the structure (<samp>A(T(6cC))</samp>), we don't break backward compatibility.  </p>
+<p id="rfc.section.3.4.p.5">It's also worth noting that <samp>T(Cii)L</samp> also parses as <samp>DL</samp>. You could then take the resultant data blob and parse it as <samp>Cii</samp>.  </p>
+<p id="rfc.section.3.4.p.6">When a length is prepended, the length is encoded as a little-endian unsigned 16-bit integer.  </p>
+<h1 id="rfc.section.3.5"><a href="#rfc.section.3.5">3.5.</a> <a href="#arrays" id="arrays">Arrays</a></h1>
+<p id="rfc.section.3.5.p.1">An array is simply a concatenated set of <em>n</em> data encodings. For example, the type <samp>A(6)</samp> is simply a list of IPv6 addresses---one after the other.  </p>
+<p id="rfc.section.3.5.p.2">Just like the data blob type and the structured data type, the length of the entire array must be prepended <em>unless</em> the array is the last type in a given signature. Thus, <samp>A(C)</samp> (An array of unsigned bytes) encodes identically to <samp>D</samp>.  </p>
+<p id="rfc.section.3.5.p.3">When a length is prepended, the length is encoded as a little-endian unsigned 16-bit integer.  </p>
+<h1 id="rfc.section.4"><a href="#rfc.section.4">4.</a> <a href="#commands" id="commands">Commands</a></h1>
+<h1 id="rfc.section.4.1"><a href="#rfc.section.4.1">4.1.</a> <a href="#cmd-noop" id="cmd-noop">CMD 0: (Host-&gt;NCP) CMD_NOOP</a></h1>
 <table cellpadding="3" cellspacing="0" class="tt full center">
   <thead>
     <tr>
@@ -1084,10 +1205,10 @@
     </tr>
   </tbody>
 </table>
-<p id="rfc.section.5.1.p.1">No-Operation command. Induces the NCP to send a success status back to the host. This is primarily used for liveliness checks.  </p>
-<p id="rfc.section.5.1.p.2">The command payload for this command SHOULD be empty. The receiver MUST ignore any non-empty command payload.  </p>
-<p id="rfc.section.5.1.p.3">There is no error condition for this command.  </p>
-<h1 id="rfc.section.5.2"><a href="#rfc.section.5.2">5.2.</a> <a href="#cmd-reset" id="cmd-reset">CMD 1: (Host-&gt;NCP) CMD_RESET</a></h1>
+<p id="rfc.section.4.1.p.1">No-Operation command. Induces the NCP to send a success status back to the host. This is primarily used for liveliness checks.  </p>
+<p id="rfc.section.4.1.p.2">The command payload for this command SHOULD be empty. The receiver MUST ignore any non-empty command payload.  </p>
+<p id="rfc.section.4.1.p.3">There is no error condition for this command.  </p>
+<h1 id="rfc.section.4.2"><a href="#rfc.section.4.2">4.2.</a> <a href="#cmd-reset" id="cmd-reset">CMD 1: (Host-&gt;NCP) CMD_RESET</a></h1>
 <table cellpadding="3" cellspacing="0" class="tt full center">
   <thead>
     <tr>
@@ -1104,10 +1225,10 @@
     </tr>
   </tbody>
 </table>
-<p id="rfc.section.5.2.p.1">Reset NCP command. Causes the NCP to perform a software reset. Due to the nature of this command, the TID is ignored. The host should instead wait for a <samp>CMD_PROP_VALUE_IS</samp> command from the NCP indicating <samp>PROP_LAST_STATUS</samp> has been set to <samp>STATUS_RESET_SOFTWARE</samp>.  </p>
-<p id="rfc.section.5.2.p.2">The command payload for this command SHOULD be empty. The receiver MUST ignore any non-empty command payload.  </p>
-<p id="rfc.section.5.2.p.3">If an error occurs, the value of <samp>PROP_LAST_STATUS</samp> will be emitted instead with the value set to the generated status code for the error.  </p>
-<h1 id="rfc.section.5.3"><a href="#rfc.section.5.3">5.3.</a> <a href="#prop-value-get" id="prop-value-get">CMD 2: (Host-&gt;NCP) CMD_PROP_VALUE_GET</a></h1>
+<p id="rfc.section.4.2.p.1">Reset NCP command. Causes the NCP to perform a software reset. Due to the nature of this command, the TID is ignored. The host should instead wait for a <samp>CMD_PROP_VALUE_IS</samp> command from the NCP indicating <samp>PROP_LAST_STATUS</samp> has been set to <samp>STATUS_RESET_SOFTWARE</samp>.  </p>
+<p id="rfc.section.4.2.p.2">The command payload for this command SHOULD be empty. The receiver MUST ignore any non-empty command payload.  </p>
+<p id="rfc.section.4.2.p.3">If an error occurs, the value of <samp>PROP_LAST_STATUS</samp> will be emitted instead with the value set to the generated status code for the error.  </p>
+<h1 id="rfc.section.4.3"><a href="#rfc.section.4.3">4.3.</a> <a href="#prop-value-get" id="prop-value-get">CMD 2: (Host-&gt;NCP) CMD_PROP_VALUE_GET</a></h1>
 <table cellpadding="3" cellspacing="0" class="tt full center">
   <thead>
     <tr>
@@ -1126,10 +1247,10 @@
     </tr>
   </tbody>
 </table>
-<p id="rfc.section.5.3.p.1">Get property value command. Causes the NCP to emit a <samp>CMD_PROP_VALUE_IS</samp> command for the given property identifier.  </p>
-<p id="rfc.section.5.3.p.2">The payload for this command is the property identifier encoded in the packed unsigned integer format described in <a href="#packed-unsigned-integer">Section 4.2</a>.  </p>
-<p id="rfc.section.5.3.p.3">If an error occurs, the value of <samp>PROP_LAST_STATUS</samp> will be emitted instead with the value set to the generated status code for the error.  </p>
-<h1 id="rfc.section.5.4"><a href="#rfc.section.5.4">5.4.</a> <a href="#prop-value-set" id="prop-value-set">CMD 3: (Host-&gt;NCP) CMD_PROP_VALUE_SET</a></h1>
+<p id="rfc.section.4.3.p.1">Get property value command. Causes the NCP to emit a <samp>CMD_PROP_VALUE_IS</samp> command for the given property identifier.  </p>
+<p id="rfc.section.4.3.p.2">The payload for this command is the property identifier encoded in the packed unsigned integer format described in <a href="#packed-unsigned-integer">Section 3.2</a>.  </p>
+<p id="rfc.section.4.3.p.3">If an error occurs, the value of <samp>PROP_LAST_STATUS</samp> will be emitted instead with the value set to the generated status code for the error.  </p>
+<h1 id="rfc.section.4.4"><a href="#rfc.section.4.4">4.4.</a> <a href="#prop-value-set" id="prop-value-set">CMD 3: (Host-&gt;NCP) CMD_PROP_VALUE_SET</a></h1>
 <table cellpadding="3" cellspacing="0" class="tt full center">
   <thead>
     <tr>
@@ -1150,10 +1271,10 @@
     </tr>
   </tbody>
 </table>
-<p id="rfc.section.5.4.p.1">Set property value command. Instructs the NCP to set the given property to the specific given value, replacing any previous value.  </p>
-<p id="rfc.section.5.4.p.2">The payload for this command is the property identifier encoded in the packed unsigned integer format described in <a href="#packed-unsigned-integer">Section 4.2</a>, followed by the property value. The exact format of the property value is defined by the property.  </p>
-<p id="rfc.section.5.4.p.3">If an error occurs, the value of <samp>PROP_LAST_STATUS</samp> will be emitted with the value set to the generated status code for the error.  </p>
-<h1 id="rfc.section.5.5"><a href="#rfc.section.5.5">5.5.</a> <a href="#prop-value-insert" id="prop-value-insert">CMD 4: (Host-&gt;NCP) CMD_PROP_VALUE_INSERT</a></h1>
+<p id="rfc.section.4.4.p.1">Set property value command. Instructs the NCP to set the given property to the specific given value, replacing any previous value.  </p>
+<p id="rfc.section.4.4.p.2">The payload for this command is the property identifier encoded in the packed unsigned integer format described in <a href="#packed-unsigned-integer">Section 3.2</a>, followed by the property value. The exact format of the property value is defined by the property.  </p>
+<p id="rfc.section.4.4.p.3">If an error occurs, the value of <samp>PROP_LAST_STATUS</samp> will be emitted with the value set to the generated status code for the error.  </p>
+<h1 id="rfc.section.4.5"><a href="#rfc.section.4.5">4.5.</a> <a href="#prop-value-insert" id="prop-value-insert">CMD 4: (Host-&gt;NCP) CMD_PROP_VALUE_INSERT</a></h1>
 <table cellpadding="3" cellspacing="0" class="tt full center">
   <thead>
     <tr>
@@ -1174,10 +1295,10 @@
     </tr>
   </tbody>
 </table>
-<p id="rfc.section.5.5.p.1">Insert value into property command. Instructs the NCP to insert the given value into a list-oriented property, without removing other items in the list. The resulting order of items in the list is defined by the individual property being operated on.  </p>
-<p id="rfc.section.5.5.p.2">The payload for this command is the property identifier encoded in the packed unsigned integer format described in <a href="#packed-unsigned-integer">Section 4.2</a>, followed by the value to be inserted. The exact format of the value is defined by the property.  </p>
-<p id="rfc.section.5.5.p.3">If an error occurs, the value of <samp>PROP_LAST_STATUS</samp> will be emitted with the value set to the generated status code for the error.  </p>
-<h1 id="rfc.section.5.6"><a href="#rfc.section.5.6">5.6.</a> <a href="#prop-value-remove" id="prop-value-remove">CMD 5: (Host-&gt;NCP) CMD_PROP_VALUE_REMOVE</a></h1>
+<p id="rfc.section.4.5.p.1">Insert value into property command. Instructs the NCP to insert the given value into a list-oriented property, without removing other items in the list. The resulting order of items in the list is defined by the individual property being operated on.  </p>
+<p id="rfc.section.4.5.p.2">The payload for this command is the property identifier encoded in the packed unsigned integer format described in <a href="#packed-unsigned-integer">Section 3.2</a>, followed by the value to be inserted. The exact format of the value is defined by the property.  </p>
+<p id="rfc.section.4.5.p.3">If an error occurs, the value of <samp>PROP_LAST_STATUS</samp> will be emitted with the value set to the generated status code for the error.  </p>
+<h1 id="rfc.section.4.6"><a href="#rfc.section.4.6">4.6.</a> <a href="#prop-value-remove" id="prop-value-remove">CMD 5: (Host-&gt;NCP) CMD_PROP_VALUE_REMOVE</a></h1>
 <table cellpadding="3" cellspacing="0" class="tt full center">
   <thead>
     <tr>
@@ -1198,11 +1319,11 @@
     </tr>
   </tbody>
 </table>
-<p id="rfc.section.5.6.p.1">Remove value from property command. Instructs the NCP to remove the given value from a list-oriented property, without affecting other items in the list. The resulting order of items in the list is defined by the individual property being operated on.  </p>
-<p id="rfc.section.5.6.p.2">Note that this command operates <em>by value</em>, not by index! </p>
-<p id="rfc.section.5.6.p.3">The payload for this command is the property identifier encoded in the packed unsigned integer format described in <a href="#packed-unsigned-integer">Section 4.2</a>, followed by the value to be removed. The exact format of the value is defined by the property.  </p>
-<p id="rfc.section.5.6.p.4">If an error occurs, the value of <samp>PROP_LAST_STATUS</samp> will be emitted with the value set to the generated status code for the error.  </p>
-<h1 id="rfc.section.5.7"><a href="#rfc.section.5.7">5.7.</a> <a href="#prop-value-is" id="prop-value-is">CMD 6: (NCP-&gt;Host) CMD_PROP_VALUE_IS</a></h1>
+<p id="rfc.section.4.6.p.1">Remove value from property command. Instructs the NCP to remove the given value from a list-oriented property, without affecting other items in the list. The resulting order of items in the list is defined by the individual property being operated on.  </p>
+<p id="rfc.section.4.6.p.2">Note that this command operates <em>by value</em>, not by index! </p>
+<p id="rfc.section.4.6.p.3">The payload for this command is the property identifier encoded in the packed unsigned integer format described in <a href="#packed-unsigned-integer">Section 3.2</a>, followed by the value to be removed. The exact format of the value is defined by the property.  </p>
+<p id="rfc.section.4.6.p.4">If an error occurs, the value of <samp>PROP_LAST_STATUS</samp> will be emitted with the value set to the generated status code for the error.  </p>
+<h1 id="rfc.section.4.7"><a href="#rfc.section.4.7">4.7.</a> <a href="#prop-value-is" id="prop-value-is">CMD 6: (NCP-&gt;Host) CMD_PROP_VALUE_IS</a></h1>
 <table cellpadding="3" cellspacing="0" class="tt full center">
   <thead>
     <tr>
@@ -1223,9 +1344,9 @@
     </tr>
   </tbody>
 </table>
-<p id="rfc.section.5.7.p.1">Property value notification command. This command can be sent by the NCP in response to a previous command from the host, or it can be sent by the NCP in an unsolicited fashion to notify the host of various state changes asynchronously.  </p>
-<p id="rfc.section.5.7.p.2">The payload for this command is the property identifier encoded in the packed unsigned integer format described in <a href="#packed-unsigned-integer">Section 4.2</a>, followed by the current value of the given property.  </p>
-<h1 id="rfc.section.5.8"><a href="#rfc.section.5.8">5.8.</a> <a href="#prop-value-inserted" id="prop-value-inserted">CMD 7: (NCP-&gt;Host) CMD_PROP_VALUE_INSERTED</a></h1>
+<p id="rfc.section.4.7.p.1">Property value notification command. This command can be sent by the NCP in response to a previous command from the host, or it can be sent by the NCP in an unsolicited fashion to notify the host of various state changes asynchronously.  </p>
+<p id="rfc.section.4.7.p.2">The payload for this command is the property identifier encoded in the packed unsigned integer format described in <a href="#packed-unsigned-integer">Section 3.2</a>, followed by the current value of the given property.  </p>
+<h1 id="rfc.section.4.8"><a href="#rfc.section.4.8">4.8.</a> <a href="#prop-value-inserted" id="prop-value-inserted">CMD 7: (NCP-&gt;Host) CMD_PROP_VALUE_INSERTED</a></h1>
 <table cellpadding="3" cellspacing="0" class="tt full center">
   <thead>
     <tr>
@@ -1246,10 +1367,10 @@
     </tr>
   </tbody>
 </table>
-<p id="rfc.section.5.8.p.1">Property value insertion notification command. This command can be sent by the NCP in response to the <samp>CMD_PROP_VALUE_INSERT</samp> command, or it can be sent by the NCP in an unsolicited fashion to notify the host of various state changes asynchronously.  </p>
-<p id="rfc.section.5.8.p.2">The payload for this command is the property identifier encoded in the packed unsigned integer format described in <a href="#packed-unsigned-integer">Section 4.2</a>, followed by the value that was inserted into the given property.  </p>
-<p id="rfc.section.5.8.p.3">The resulting order of items in the list is defined by the given property.  </p>
-<h1 id="rfc.section.5.9"><a href="#rfc.section.5.9">5.9.</a> <a href="#prop-value-removed" id="prop-value-removed">CMD 8: (NCP-&gt;Host) CMD_PROP_VALUE_REMOVED</a></h1>
+<p id="rfc.section.4.8.p.1">Property value insertion notification command. This command can be sent by the NCP in response to the <samp>CMD_PROP_VALUE_INSERT</samp> command, or it can be sent by the NCP in an unsolicited fashion to notify the host of various state changes asynchronously.  </p>
+<p id="rfc.section.4.8.p.2">The payload for this command is the property identifier encoded in the packed unsigned integer format described in <a href="#packed-unsigned-integer">Section 3.2</a>, followed by the value that was inserted into the given property.  </p>
+<p id="rfc.section.4.8.p.3">The resulting order of items in the list is defined by the given property.  </p>
+<h1 id="rfc.section.4.9"><a href="#rfc.section.4.9">4.9.</a> <a href="#prop-value-removed" id="prop-value-removed">CMD 8: (NCP-&gt;Host) CMD_PROP_VALUE_REMOVED</a></h1>
 <table cellpadding="3" cellspacing="0" class="tt full center">
   <thead>
     <tr>
@@ -1270,13 +1391,13 @@
     </tr>
   </tbody>
 </table>
-<p id="rfc.section.5.9.p.1">Property value removal notification command. This command can be sent by the NCP in response to the <samp>CMD_PROP_VALUE_REMOVE</samp> command, or it can be sent by the NCP in an unsolicited fashion to notify the host of various state changes asynchronously.  </p>
-<p id="rfc.section.5.9.p.2">Note that this command operates <em>by value</em>, not by index! </p>
-<p id="rfc.section.5.9.p.3">The payload for this command is the property identifier encoded in the packed unsigned integer format described in <a href="#packed-unsigned-integer">Section 4.2</a>, followed by the value that was removed from the given property.  </p>
-<p id="rfc.section.5.9.p.4">The resulting order of items in the list is defined by the given property.  </p>
-<h1 id="rfc.section.6"><a href="#rfc.section.6">6.</a> <a href="#properties" id="properties">Properties</a></h1>
-<p id="rfc.section.6.p.1">While the majority of the properties that allow the configuration of network connectivity are network protocol specific, there are several properties that are required in all implementations.  </p>
-<p id="rfc.section.6.p.2">Future property allocations SHALL be made from the following allocation plan: </p>
+<p id="rfc.section.4.9.p.1">Property value removal notification command. This command can be sent by the NCP in response to the <samp>CMD_PROP_VALUE_REMOVE</samp> command, or it can be sent by the NCP in an unsolicited fashion to notify the host of various state changes asynchronously.  </p>
+<p id="rfc.section.4.9.p.2">Note that this command operates <em>by value</em>, not by index! </p>
+<p id="rfc.section.4.9.p.3">The payload for this command is the property identifier encoded in the packed unsigned integer format described in <a href="#packed-unsigned-integer">Section 3.2</a>, followed by the value that was removed from the given property.  </p>
+<p id="rfc.section.4.9.p.4">The resulting order of items in the list is defined by the given property.  </p>
+<h1 id="rfc.section.5"><a href="#rfc.section.5">5.</a> <a href="#properties" id="properties">Properties</a></h1>
+<p id="rfc.section.5.p.1">While the majority of the properties that allow the configuration of network connectivity are network protocol specific, there are several properties that are required in all implementations.  </p>
+<p id="rfc.section.5.p.2">Future property allocations SHALL be made from the following allocation plan: </p>
 <table cellpadding="3" cellspacing="0" class="tt full center">
   <thead>
     <tr>
@@ -1307,9 +1428,9 @@
     </tr>
   </tbody>
 </table>
-<p id="rfc.section.6.p.3">For an explanation of the data format encoding shorthand used throughout this document, see <a href="#data-packing">Section 4</a>.  </p>
-<h1 id="rfc.section.6.1"><a href="#rfc.section.6.1">6.1.</a> <a href="#property-sections" id="property-sections">Property Sections</a></h1>
-<p id="rfc.section.6.1.p.1">The currently assigned properties are broken up into several sections, each with reserved ranges of property identifiers.  These ranges are: </p>
+<p id="rfc.section.5.p.3">For an explanation of the data format encoding shorthand used throughout this document, see <a href="#data-packing">Section 3</a>.  </p>
+<h1 id="rfc.section.5.1"><a href="#rfc.section.5.1">5.1.</a> <a href="#property-sections" id="property-sections">Property Sections</a></h1>
+<p id="rfc.section.5.1.p.1">The currently assigned properties are broken up into several sections, each with reserved ranges of property identifiers.  These ranges are: </p>
 <table cellpadding="3" cellspacing="0" class="tt full center">
   <thead>
     <tr>
@@ -1323,28 +1444,28 @@
       <td class="center">Core</td>
       <td class="center">0x00 - 0x1F, 0x1000 - 0x11FF</td>
       <td class="center">
-        <a href="#prop-core">Section 6.2</a>
+        <a href="#prop-core">Section 5.2</a>
       </td>
     </tr>
     <tr>
       <td class="center">PHY</td>
       <td class="center">0x20 - 0x2F, 0x1200 - 0x12FF</td>
       <td class="center">
-        <a href="#prop-phy">Section 6.3</a>
+        <a href="#prop-phy">Section 5.3</a>
       </td>
     </tr>
     <tr>
       <td class="center">MAC</td>
       <td class="center">0x30 - 0x3F, 0x1300 - 0x13FF</td>
       <td class="center">
-        <a href="#prop-mac">Section 6.4</a>
+        <a href="#prop-mac">Section 5.4</a>
       </td>
     </tr>
     <tr>
       <td class="center">NET</td>
       <td class="center">0x40 - 0x4F, 0x1400 - 0x14FF</td>
       <td class="center">
-        <a href="#prop-net">Section 6.5</a>
+        <a href="#prop-net">Section 5.5</a>
       </td>
     </tr>
     <tr>
@@ -1356,21 +1477,21 @@
       <td class="center">IPv6</td>
       <td class="center">0x60 - 0x6F, 0x1600 - 0x16FF</td>
       <td class="center">
-        <a href="#prop-ipv6">Section 6.6</a>
+        <a href="#prop-ipv6">Section 5.6</a>
       </td>
     </tr>
     <tr>
       <td class="center">Stream</td>
       <td class="center">0x70 - 0x7F, 0x1700 - 0x17FF</td>
       <td class="center">
-        <a href="#prop-core">Section 6.2</a>
+        <a href="#prop-core">Section 5.2</a>
       </td>
     </tr>
   </tbody>
 </table>
-<p id="rfc.section.6.1.p.2">Note that each property section has two reserved ranges: a primary range (which is encoded as a single byte) and an extended range (which is encoded as two bytes). properties which are used more frequently are generally allocated from the former range.  </p>
-<h1 id="rfc.section.6.2"><a href="#rfc.section.6.2">6.2.</a> <a href="#prop-core" id="prop-core">Core Properties</a></h1>
-<h1 id="rfc.section.6.2.1"><a href="#rfc.section.6.2.1">6.2.1.</a> <a href="#prop-last-status" id="prop-last-status">PROP 0: PROP_LAST_STATUS</a></h1>
+<p id="rfc.section.5.1.p.2">Note that each property section has two reserved ranges: a primary range (which is encoded as a single byte) and an extended range (which is encoded as two bytes). properties which are used more frequently are generally allocated from the former range.  </p>
+<h1 id="rfc.section.5.2"><a href="#rfc.section.5.2">5.2.</a> <a href="#prop-core" id="prop-core">Core Properties</a></h1>
+<h1 id="rfc.section.5.2.1"><a href="#rfc.section.5.2.1">5.2.1.</a> <a href="#prop-last-status" id="prop-last-status">PROP 0: PROP_LAST_STATUS</a></h1>
 <p/>
 
 <ul>
@@ -1393,11 +1514,11 @@
     </tr>
   </tbody>
 </table>
-<p id="rfc.section.6.2.1.p.2">Describes the status of the last operation. Encoded as a packed unsigned integer.  </p>
-<p id="rfc.section.6.2.1.p.3">This property is emitted often to indicate the result status of pretty much any Host-to-NCP operation.  </p>
-<p id="rfc.section.6.2.1.p.4">It is emitted automatically at NCP startup with a value indicating the reset reason.  </p>
-<p id="rfc.section.6.2.1.p.5">See <a href="#status-codes">Section 7</a> for the complete list of status codes.  </p>
-<h1 id="rfc.section.6.2.2"><a href="#rfc.section.6.2.2">6.2.2.</a> <a href="#prop-protocol-version" id="prop-protocol-version">PROP 1: PROP_PROTOCOL_VERSION</a></h1>
+<p id="rfc.section.5.2.1.p.2">Describes the status of the last operation. Encoded as a packed unsigned integer.  </p>
+<p id="rfc.section.5.2.1.p.3">This property is emitted often to indicate the result status of pretty much any Host-to-NCP operation.  </p>
+<p id="rfc.section.5.2.1.p.4">It is emitted automatically at NCP startup with a value indicating the reset reason.  </p>
+<p id="rfc.section.5.2.1.p.5">See <a href="#status-codes">Section 6</a> for the complete list of status codes.  </p>
+<h1 id="rfc.section.5.2.2"><a href="#rfc.section.5.2.2">5.2.2.</a> <a href="#prop-protocol-version" id="prop-protocol-version">PROP 1: PROP_PROTOCOL_VERSION</a></h1>
 <p/>
 
 <ul>
@@ -1422,7 +1543,7 @@
     </tr>
   </tbody>
 </table>
-<p id="rfc.section.6.2.2.p.2">Describes the protocol version information. This property contains four fields, each encoded as a packed unsigned integer: </p>
+<p id="rfc.section.5.2.2.p.2">Describes the protocol version information. This property contains four fields, each encoded as a packed unsigned integer: </p>
 <p/>
 
 <ul>
@@ -1431,13 +1552,13 @@
 </ul>
 
 <p> </p>
-<p id="rfc.section.6.2.2.p.4">This document describes major version 4, minor version 1 of this protocol.  </p>
-<h1 id="rfc.section.6.2.2.1"><a href="#rfc.section.6.2.2.1">6.2.2.1.</a> <a href="#major-version-number" id="major-version-number">Major Version Number</a></h1>
-<p id="rfc.section.6.2.2.1.p.1">The major version number is used to identify large and incompatible differences between protocol versions.  </p>
-<p id="rfc.section.6.2.2.1.p.2">The host MUST enter a FAULT state if it does not explicitly support the given major version number.  </p>
-<h1 id="rfc.section.6.2.2.2"><a href="#rfc.section.6.2.2.2">6.2.2.2.</a> <a href="#minor-version-number" id="minor-version-number">Minor Version Number</a></h1>
-<p id="rfc.section.6.2.2.2.p.1">The minor version number is used to identify small but otherwise compatible differences between protocol versions. A mismatch between the advertised minor version number and the minor version that is supported by the host SHOULD NOT be fatal to the operation of the host.  </p>
-<h1 id="rfc.section.6.2.3"><a href="#rfc.section.6.2.3">6.2.3.</a> <a href="#prop-ncp-version" id="prop-ncp-version">PROP 2: PROP_NCP_VERSION</a></h1>
+<p id="rfc.section.5.2.2.p.4">This document describes major version 4, minor version 1 of this protocol.  </p>
+<h1 id="rfc.section.5.2.2.1"><a href="#rfc.section.5.2.2.1">5.2.2.1.</a> <a href="#major-version-number" id="major-version-number">Major Version Number</a></h1>
+<p id="rfc.section.5.2.2.1.p.1">The major version number is used to identify large and incompatible differences between protocol versions.  </p>
+<p id="rfc.section.5.2.2.1.p.2">The host MUST enter a FAULT state if it does not explicitly support the given major version number.  </p>
+<h1 id="rfc.section.5.2.2.2"><a href="#rfc.section.5.2.2.2">5.2.2.2.</a> <a href="#minor-version-number" id="minor-version-number">Minor Version Number</a></h1>
+<p id="rfc.section.5.2.2.2.p.1">The minor version number is used to identify small but otherwise compatible differences between protocol versions. A mismatch between the advertised minor version number and the minor version that is supported by the host SHOULD NOT be fatal to the operation of the host.  </p>
+<h1 id="rfc.section.5.2.3"><a href="#rfc.section.5.2.3">5.2.3.</a> <a href="#prop-ncp-version" id="prop-ncp-version">PROP 2: PROP_NCP_VERSION</a></h1>
 <p/>
 
 <ul>
@@ -1460,12 +1581,12 @@
     </tr>
   </tbody>
 </table>
-<p id="rfc.section.6.2.3.p.2">Contains a string which describes the firmware currently running on the NCP. Encoded as a zero-terminated UTF-8 string.  </p>
-<p id="rfc.section.6.2.3.p.3">The format of the string is not strictly defined, but it is intended to present similarly to the "User-Agent" string from HTTP. The RECOMMENDED format of the string is as follows: </p>
+<p id="rfc.section.5.2.3.p.2">Contains a string which describes the firmware currently running on the NCP. Encoded as a zero-terminated UTF-8 string.  </p>
+<p id="rfc.section.5.2.3.p.3">The format of the string is not strictly defined, but it is intended to present similarly to the "User-Agent" string from HTTP. The RECOMMENDED format of the string is as follows: </p>
 <pre>
 STACK-NAME/STACK-VERSION[BUILD_INFO][; OTHER_INFO]; BUILD_DATE_AND_TIME
 </pre>
-<p id="rfc.section.6.2.3.p.4">Examples: </p>
+<p id="rfc.section.5.2.3.p.4">Examples: </p>
 <p/>
 
 <ul>
@@ -1478,7 +1599,7 @@ STACK-NAME/STACK-VERSION[BUILD_INFO][; OTHER_INFO]; BUILD_DATE_AND_TIME
 </ul>
 
 <p> </p>
-<h1 id="rfc.section.6.2.4"><a href="#rfc.section.6.2.4">6.2.4.</a> <a href="#prop-interface-type" id="prop-interface-type">PROP 3: PROP_INTERFACE_TYPE</a></h1>
+<h1 id="rfc.section.5.2.4"><a href="#rfc.section.5.2.4">5.2.4.</a> <a href="#prop-interface-type" id="prop-interface-type">PROP 3: PROP_INTERFACE_TYPE</a></h1>
 <p/>
 
 <ul>
@@ -1501,7 +1622,7 @@ STACK-NAME/STACK-VERSION[BUILD_INFO][; OTHER_INFO]; BUILD_DATE_AND_TIME
     </tr>
   </tbody>
 </table>
-<p id="rfc.section.6.2.4.p.2">This integer identifies what the network protocol for this NCP.  Currently defined values are: </p>
+<p id="rfc.section.5.2.4.p.2">This integer identifies what the network protocol for this NCP.  Currently defined values are: </p>
 <p/>
 
 <ul>
@@ -1511,8 +1632,8 @@ STACK-NAME/STACK-VERSION[BUILD_INFO][; OTHER_INFO]; BUILD_DATE_AND_TIME
 </ul>
 
 <p> </p>
-<p id="rfc.section.6.2.4.p.4">The host MUST enter a FAULT state if it does not recognize the protocol given by the NCP.  </p>
-<h1 id="rfc.section.6.2.5"><a href="#rfc.section.6.2.5">6.2.5.</a> <a href="#prop-interface-vendor-id" id="prop-interface-vendor-id">PROP 4: PROP_INTERFACE_VENDOR_ID</a></h1>
+<p id="rfc.section.5.2.4.p.4">The host MUST enter a FAULT state if it does not recognize the protocol given by the NCP.  </p>
+<h1 id="rfc.section.5.2.5"><a href="#rfc.section.5.2.5">5.2.5.</a> <a href="#prop-interface-vendor-id" id="prop-interface-vendor-id">PROP 4: PROP_INTERFACE_VENDOR_ID</a></h1>
 <p/>
 
 <ul>
@@ -1535,8 +1656,8 @@ STACK-NAME/STACK-VERSION[BUILD_INFO][; OTHER_INFO]; BUILD_DATE_AND_TIME
     </tr>
   </tbody>
 </table>
-<p id="rfc.section.6.2.5.p.2">Vendor identifier.  </p>
-<h1 id="rfc.section.6.2.6"><a href="#rfc.section.6.2.6">6.2.6.</a> <a href="#prop-caps" id="prop-caps">PROP 5: PROP_CAPS</a></h1>
+<p id="rfc.section.5.2.5.p.2">Vendor identifier.  </p>
+<h1 id="rfc.section.5.2.6"><a href="#rfc.section.5.2.6">5.2.6.</a> <a href="#prop-caps" id="prop-caps">PROP 5: PROP_CAPS</a></h1>
 <p/>
 
 <ul>
@@ -1563,9 +1684,9 @@ STACK-NAME/STACK-VERSION[BUILD_INFO][; OTHER_INFO]; BUILD_DATE_AND_TIME
     </tr>
   </tbody>
 </table>
-<p id="rfc.section.6.2.6.p.2">Describes the supported capabilities of this NCP. Encoded as a list of packed unsigned integers.  </p>
-<p id="rfc.section.6.2.6.p.3">A capability is defined as a 21-bit integer that describes a subset of functionality which is supported by the NCP.  </p>
-<p id="rfc.section.6.2.6.p.4">Currently defined values are: </p>
+<p id="rfc.section.5.2.6.p.2">Describes the supported capabilities of this NCP. Encoded as a list of packed unsigned integers.  </p>
+<p id="rfc.section.5.2.6.p.3">A capability is defined as a 21-bit integer that describes a subset of functionality which is supported by the NCP.  </p>
+<p id="rfc.section.5.2.6.p.4">Currently defined values are: </p>
 <p/>
 
 <ul>
@@ -1591,7 +1712,7 @@ STACK-NAME/STACK-VERSION[BUILD_INFO][; OTHER_INFO]; BUILD_DATE_AND_TIME
 </ul>
 
 <p> </p>
-<p id="rfc.section.6.2.6.p.6">Additionally, future capability allocations SHALL be made from the following allocation plan: </p>
+<p id="rfc.section.5.2.6.p.6">Additionally, future capability allocations SHALL be made from the following allocation plan: </p>
 <table cellpadding="3" cellspacing="0" class="tt full center">
   <thead>
     <tr>
@@ -1626,7 +1747,7 @@ STACK-NAME/STACK-VERSION[BUILD_INFO][; OTHER_INFO]; BUILD_DATE_AND_TIME
     </tr>
   </tbody>
 </table>
-<h1 id="rfc.section.6.2.7"><a href="#rfc.section.6.2.7">6.2.7.</a> <a href="#prop-interface-count" id="prop-interface-count">PROP 6: PROP_INTERFACE_COUNT</a></h1>
+<h1 id="rfc.section.5.2.7"><a href="#rfc.section.5.2.7">5.2.7.</a> <a href="#prop-interface-count" id="prop-interface-count">PROP 6: PROP_INTERFACE_COUNT</a></h1>
 <p/>
 
 <ul>
@@ -1651,9 +1772,9 @@ STACK-NAME/STACK-VERSION[BUILD_INFO][; OTHER_INFO]; BUILD_DATE_AND_TIME
     </tr>
   </tbody>
 </table>
-<p id="rfc.section.6.2.7.p.2">Describes the number of concurrent interfaces supported by this NCP.  Since the concurrent interface mechanism is still TBD, this value MUST always be one.  </p>
-<p id="rfc.section.6.2.7.p.3">This value is encoded as an unsigned 8-bit integer.  </p>
-<h1 id="rfc.section.6.2.8"><a href="#rfc.section.6.2.8">6.2.8.</a> <a href="#prop-power-state" id="prop-power-state">PROP 7: PROP_POWER_STATE</a></h1>
+<p id="rfc.section.5.2.7.p.2">Describes the number of concurrent interfaces supported by this NCP.  Since the concurrent interface mechanism is still TBD, this value MUST always be one.  </p>
+<p id="rfc.section.5.2.7.p.3">This value is encoded as an unsigned 8-bit integer.  </p>
+<h1 id="rfc.section.5.2.8"><a href="#rfc.section.5.2.8">5.2.8.</a> <a href="#prop-power-state" id="prop-power-state">PROP 7: PROP_POWER_STATE</a></h1>
 <p/>
 
 <ul>
@@ -1676,8 +1797,8 @@ STACK-NAME/STACK-VERSION[BUILD_INFO][; OTHER_INFO]; BUILD_DATE_AND_TIME
     </tr>
   </tbody>
 </table>
-<p id="rfc.section.6.2.8.p.2">Describes the current power state of the NCP. By writing to this property you can manage the lower state of the NCP. Enumeration is encoded as a single unsigned byte.  </p>
-<p id="rfc.section.6.2.8.p.3">Defined values are: </p>
+<p id="rfc.section.5.2.8.p.2">Describes the current power state of the NCP. By writing to this property you can manage the lower state of the NCP. Enumeration is encoded as a single unsigned byte.  </p>
+<p id="rfc.section.5.2.8.p.3">Defined values are: </p>
 <p/>
 
 <ul>
@@ -1689,7 +1810,7 @@ STACK-NAME/STACK-VERSION[BUILD_INFO][; OTHER_INFO]; BUILD_DATE_AND_TIME
 </ul>
 
 <p> </p>
-<h1 id="rfc.section.6.2.9"><a href="#rfc.section.6.2.9">6.2.9.</a> <a href="#prop-hwaddr" id="prop-hwaddr">PROP 8: PROP_HWADDR</a></h1>
+<h1 id="rfc.section.5.2.9"><a href="#rfc.section.5.2.9">5.2.9.</a> <a href="#prop-hwaddr" id="prop-hwaddr">PROP 8: PROP_HWADDR</a></h1>
 <p/>
 
 <ul>
@@ -1712,8 +1833,8 @@ STACK-NAME/STACK-VERSION[BUILD_INFO][; OTHER_INFO]; BUILD_DATE_AND_TIME
     </tr>
   </tbody>
 </table>
-<p id="rfc.section.6.2.9.p.2">The static EUI64 address of the device. This value is read-only, but may be writable under certain vendor-defined circumstances.  </p>
-<h1 id="rfc.section.6.2.10"><a href="#rfc.section.6.2.10">6.2.10.</a> <a href="#prop-lock" id="prop-lock">PROP 9: PROP_LOCK</a></h1>
+<p id="rfc.section.5.2.9.p.2">The static EUI64 address of the device. This value is read-only, but may be writable under certain vendor-defined circumstances.  </p>
+<h1 id="rfc.section.5.2.10"><a href="#rfc.section.5.2.10">5.2.10.</a> <a href="#prop-lock" id="prop-lock">PROP 9: PROP_LOCK</a></h1>
 <p/>
 
 <ul>
@@ -1736,10 +1857,10 @@ STACK-NAME/STACK-VERSION[BUILD_INFO][; OTHER_INFO]; BUILD_DATE_AND_TIME
     </tr>
   </tbody>
 </table>
-<p id="rfc.section.6.2.10.p.2">Property lock. Used for grouping changes to several properties to take effect at once, or to temporarily prevent the automatic updating of property values. When this property is set, the execution of the NCP is effectively frozen until it is cleared.  </p>
-<p id="rfc.section.6.2.10.p.3">This property is only supported if the <samp>CAP_LOCK</samp> capability is present.  </p>
-<p id="rfc.section.6.2.10.p.4">Unlike most other properties, setting this property to true when the value of the property is already true MUST fail with a last status of <samp>STATUS_ALREADY</samp>.  </p>
-<h1 id="rfc.section.6.2.11"><a href="#rfc.section.6.2.11">6.2.11.</a> <a href="#prop-stream-debug" id="prop-stream-debug">PROP 112: PROP_STREAM_DEBUG</a></h1>
+<p id="rfc.section.5.2.10.p.2">Property lock. Used for grouping changes to several properties to take effect at once, or to temporarily prevent the automatic updating of property values. When this property is set, the execution of the NCP is effectively frozen until it is cleared.  </p>
+<p id="rfc.section.5.2.10.p.3">This property is only supported if the <samp>CAP_LOCK</samp> capability is present.  </p>
+<p id="rfc.section.5.2.10.p.4">Unlike most other properties, setting this property to true when the value of the property is already true MUST fail with a last status of <samp>STATUS_ALREADY</samp>.  </p>
+<h1 id="rfc.section.5.2.11"><a href="#rfc.section.5.2.11">5.2.11.</a> <a href="#prop-stream-debug" id="prop-stream-debug">PROP 112: PROP_STREAM_DEBUG</a></h1>
 <p/>
 
 <ul>
@@ -1762,10 +1883,10 @@ STACK-NAME/STACK-VERSION[BUILD_INFO][; OTHER_INFO]; BUILD_DATE_AND_TIME
     </tr>
   </tbody>
 </table>
-<p id="rfc.section.6.2.11.p.2">This property is a streaming property, meaning that you cannot explicitly fetch the value of this property. The stream provides human-readable debugging output which may be displayed in the host logs.  </p>
-<p id="rfc.section.6.2.11.p.3">The location of newline characters is not assumed by the host: it is the NCP's responsibility to insert newline characters where needed, just like with any other text stream.  </p>
-<p id="rfc.section.6.2.11.p.4">To receive the debugging stream, you wait for <samp>CMD_PROP_VALUE_IS</samp> commands for this property from the NCP.  </p>
-<h1 id="rfc.section.6.2.12"><a href="#rfc.section.6.2.12">6.2.12.</a> <a href="#prop-stream-raw" id="prop-stream-raw">PROP 113: PROP_STREAM_RAW</a></h1>
+<p id="rfc.section.5.2.11.p.2">This property is a streaming property, meaning that you cannot explicitly fetch the value of this property. The stream provides human-readable debugging output which may be displayed in the host logs.  </p>
+<p id="rfc.section.5.2.11.p.3">The location of newline characters is not assumed by the host: it is the NCP's responsibility to insert newline characters where needed, just like with any other text stream.  </p>
+<p id="rfc.section.5.2.11.p.4">To receive the debugging stream, you wait for <samp>CMD_PROP_VALUE_IS</samp> commands for this property from the NCP.  </p>
+<h1 id="rfc.section.5.2.12"><a href="#rfc.section.5.2.12">5.2.12.</a> <a href="#prop-stream-raw" id="prop-stream-raw">PROP 113: PROP_STREAM_RAW</a></h1>
 <p/>
 
 <ul>
@@ -1792,11 +1913,11 @@ STACK-NAME/STACK-VERSION[BUILD_INFO][; OTHER_INFO]; BUILD_DATE_AND_TIME
     </tr>
   </tbody>
 </table>
-<p id="rfc.section.6.2.12.p.2">This stream provides the capability of sending and receiving raw packets to and from the radio. The exact format of the frame metadata and data is dependent on the MAC and PHY being used.  </p>
-<p id="rfc.section.6.2.12.p.3">This property is a streaming property, meaning that you cannot explicitly fetch the value of this property. To receive traffic, you wait for <samp>CMD_PROP_VALUE_IS</samp> commands with this property id from the NCP.  </p>
-<p id="rfc.section.6.2.12.p.4">Implementations may optionally support the ability to transmit arbitrary raw packets. If this capability is supported, you may call <samp>CMD_PROP_VALUE_SET</samp> on this property with the value of the raw packet.  </p>
-<p id="rfc.section.6.2.12.p.5">Any data past the end of <samp>FRAME_DATA_LEN</samp> is considered metadata. The format of the metadata is defined by the associated MAC and PHY being used, and typically includes RSSI/TX-Power, LQI, etc.  </p>
-<h1 id="rfc.section.6.2.13"><a href="#rfc.section.6.2.13">6.2.13.</a> <a href="#prop-stream-net" id="prop-stream-net">PROP 114: PROP_STREAM_NET</a></h1>
+<p id="rfc.section.5.2.12.p.2">This stream provides the capability of sending and receiving raw packets to and from the radio. The exact format of the frame metadata and data is dependent on the MAC and PHY being used.  </p>
+<p id="rfc.section.5.2.12.p.3">This property is a streaming property, meaning that you cannot explicitly fetch the value of this property. To receive traffic, you wait for <samp>CMD_PROP_VALUE_IS</samp> commands with this property id from the NCP.  </p>
+<p id="rfc.section.5.2.12.p.4">Implementations may optionally support the ability to transmit arbitrary raw packets. If this capability is supported, you may call <samp>CMD_PROP_VALUE_SET</samp> on this property with the value of the raw packet.  </p>
+<p id="rfc.section.5.2.12.p.5">Any data past the end of <samp>FRAME_DATA_LEN</samp> is considered metadata. The format of the metadata is defined by the associated MAC and PHY being used, and typically includes RSSI/TX-Power, LQI, etc.  </p>
+<h1 id="rfc.section.5.2.13"><a href="#rfc.section.5.2.13">5.2.13.</a> <a href="#prop-stream-net" id="prop-stream-net">PROP 114: PROP_STREAM_NET</a></h1>
 <p/>
 
 <ul>
@@ -1823,11 +1944,11 @@ STACK-NAME/STACK-VERSION[BUILD_INFO][; OTHER_INFO]; BUILD_DATE_AND_TIME
     </tr>
   </tbody>
 </table>
-<p id="rfc.section.6.2.13.p.2">This stream provides the capability of sending and receiving data packets to and from the currently attached network. The exact format of the frame metadata and data is dependent on the network protocol being used.  </p>
-<p id="rfc.section.6.2.13.p.3">This property is a streaming property, meaning that you cannot explicitly fetch the value of this property. To receive traffic, you wait for <samp>CMD_PROP_VALUE_IS</samp> commands with this property id from the NCP.  </p>
-<p id="rfc.section.6.2.13.p.4">To send network packets, you call <samp>CMD_PROP_VALUE_SET</samp> on this property with the value of the packet.  </p>
-<p id="rfc.section.6.2.13.p.5">Any data past the end of <samp>FRAME_DATA_LEN</samp> is considered metadata. The format of the metadata is defined by the associated network protocol and typically includes RSSI/TX-Power, LQI, etc.  </p>
-<h1 id="rfc.section.6.2.14"><a href="#rfc.section.6.2.14">6.2.14.</a> <a href="#prop-stream-net-insecure" id="prop-stream-net-insecure">PROP 114: PROP_STREAM_NET_INSECURE</a></h1>
+<p id="rfc.section.5.2.13.p.2">This stream provides the capability of sending and receiving data packets to and from the currently attached network. The exact format of the frame metadata and data is dependent on the network protocol being used.  </p>
+<p id="rfc.section.5.2.13.p.3">This property is a streaming property, meaning that you cannot explicitly fetch the value of this property. To receive traffic, you wait for <samp>CMD_PROP_VALUE_IS</samp> commands with this property id from the NCP.  </p>
+<p id="rfc.section.5.2.13.p.4">To send network packets, you call <samp>CMD_PROP_VALUE_SET</samp> on this property with the value of the packet.  </p>
+<p id="rfc.section.5.2.13.p.5">Any data past the end of <samp>FRAME_DATA_LEN</samp> is considered metadata. The format of the metadata is defined by the associated network protocol and typically includes RSSI/TX-Power, LQI, etc.  </p>
+<h1 id="rfc.section.5.2.14"><a href="#rfc.section.5.2.14">5.2.14.</a> <a href="#prop-stream-net-insecure" id="prop-stream-net-insecure">PROP 114: PROP_STREAM_NET_INSECURE</a></h1>
 <p/>
 
 <ul>
@@ -1854,12 +1975,12 @@ STACK-NAME/STACK-VERSION[BUILD_INFO][; OTHER_INFO]; BUILD_DATE_AND_TIME
     </tr>
   </tbody>
 </table>
-<p id="rfc.section.6.2.14.p.2">This stream provides the capability of sending and receiving unencrypted and unauthenticated data packets to and from nearby devices for the purposes of device commissioning. The exact format of the frame metadata and data is dependent on the network protocol being used.  </p>
-<p id="rfc.section.6.2.14.p.3">This property is a streaming property, meaning that you cannot explicitly fetch the value of this property. To receive traffic, you wait for <samp>CMD_PROP_VALUE_IS</samp> commands with this property id from the NCP.  </p>
-<p id="rfc.section.6.2.14.p.4">To send network packets, you call <samp>CMD_PROP_VALUE_SET</samp> on this property with the value of the packet.  </p>
-<p id="rfc.section.6.2.14.p.5">Any data past the end of <samp>FRAME_DATA_LEN</samp> is considered metadata. The format of the metadata is defined by the associated network protocol, and typically includes RSSI/TX-Power, LQI, etc.  </p>
-<h1 id="rfc.section.6.3"><a href="#rfc.section.6.3">6.3.</a> <a href="#prop-phy" id="prop-phy">PHY Properties</a></h1>
-<h1 id="rfc.section.6.3.1"><a href="#rfc.section.6.3.1">6.3.1.</a> <a href="#prop-phy-enabled" id="prop-phy-enabled">PROP 32: PROP_PHY_ENABLED</a></h1>
+<p id="rfc.section.5.2.14.p.2">This stream provides the capability of sending and receiving unencrypted and unauthenticated data packets to and from nearby devices for the purposes of device commissioning. The exact format of the frame metadata and data is dependent on the network protocol being used.  </p>
+<p id="rfc.section.5.2.14.p.3">This property is a streaming property, meaning that you cannot explicitly fetch the value of this property. To receive traffic, you wait for <samp>CMD_PROP_VALUE_IS</samp> commands with this property id from the NCP.  </p>
+<p id="rfc.section.5.2.14.p.4">To send network packets, you call <samp>CMD_PROP_VALUE_SET</samp> on this property with the value of the packet.  </p>
+<p id="rfc.section.5.2.14.p.5">Any data past the end of <samp>FRAME_DATA_LEN</samp> is considered metadata. The format of the metadata is defined by the associated network protocol, and typically includes RSSI/TX-Power, LQI, etc.  </p>
+<h1 id="rfc.section.5.3"><a href="#rfc.section.5.3">5.3.</a> <a href="#prop-phy" id="prop-phy">PHY Properties</a></h1>
+<h1 id="rfc.section.5.3.1"><a href="#rfc.section.5.3.1">5.3.1.</a> <a href="#prop-phy-enabled" id="prop-phy-enabled">PROP 32: PROP_PHY_ENABLED</a></h1>
 <p/>
 
 <ul>
@@ -1868,8 +1989,8 @@ STACK-NAME/STACK-VERSION[BUILD_INFO][; OTHER_INFO]; BUILD_DATE_AND_TIME
 </ul>
 
 <p> </p>
-<p id="rfc.section.6.3.1.p.2">Set to 1 if the PHY is enabled, set to 0 otherwise.  May be directly enabled to bypass higher-level packet processing in order to implement things like packet sniffers.  </p>
-<h1 id="rfc.section.6.3.2"><a href="#rfc.section.6.3.2">6.3.2.</a> <a href="#prop-phy-chan" id="prop-phy-chan">PROP 33: PROP_PHY_CHAN</a></h1>
+<p id="rfc.section.5.3.1.p.2">Set to 1 if the PHY is enabled, set to 0 otherwise.  May be directly enabled to bypass higher-level packet processing in order to implement things like packet sniffers.  </p>
+<h1 id="rfc.section.5.3.2"><a href="#rfc.section.5.3.2">5.3.2.</a> <a href="#prop-phy-chan" id="prop-phy-chan">PROP 33: PROP_PHY_CHAN</a></h1>
 <p/>
 
 <ul>
@@ -1878,8 +1999,8 @@ STACK-NAME/STACK-VERSION[BUILD_INFO][; OTHER_INFO]; BUILD_DATE_AND_TIME
 </ul>
 
 <p> </p>
-<p id="rfc.section.6.3.2.p.2">Value is the current channel. Must be set to one of the values contained in <samp>PROP_PHY_CHAN_SUPPORTED</samp>.  </p>
-<h1 id="rfc.section.6.3.3"><a href="#rfc.section.6.3.3">6.3.3.</a> <a href="#prop-phy-chan-supported" id="prop-phy-chan-supported">PROP 34: PROP_PHY_CHAN_SUPPORTED</a></h1>
+<p id="rfc.section.5.3.2.p.2">Value is the current channel. Must be set to one of the values contained in <samp>PROP_PHY_CHAN_SUPPORTED</samp>.  </p>
+<h1 id="rfc.section.5.3.3"><a href="#rfc.section.5.3.3">5.3.3.</a> <a href="#prop-phy-chan-supported" id="prop-phy-chan-supported">PROP 34: PROP_PHY_CHAN_SUPPORTED</a></h1>
 <p/>
 
 <ul>
@@ -1889,8 +2010,8 @@ STACK-NAME/STACK-VERSION[BUILD_INFO][; OTHER_INFO]; BUILD_DATE_AND_TIME
 </ul>
 
 <p> </p>
-<p id="rfc.section.6.3.3.p.2">Value is a list of channel values that are supported by the hardware.  </p>
-<h1 id="rfc.section.6.3.4"><a href="#rfc.section.6.3.4">6.3.4.</a> <a href="#prop-phy-freq" id="prop-phy-freq">PROP 35: PROP_PHY_FREQ</a></h1>
+<p id="rfc.section.5.3.3.p.2">Value is a list of channel values that are supported by the hardware.  </p>
+<h1 id="rfc.section.5.3.4"><a href="#rfc.section.5.3.4">5.3.4.</a> <a href="#prop-phy-freq" id="prop-phy-freq">PROP 35: PROP_PHY_FREQ</a></h1>
 <p/>
 
 <ul>
@@ -1900,8 +2021,8 @@ STACK-NAME/STACK-VERSION[BUILD_INFO][; OTHER_INFO]; BUILD_DATE_AND_TIME
 </ul>
 
 <p> </p>
-<p id="rfc.section.6.3.4.p.2">Value is the radio frequency (in kilohertz) of the current channel.  </p>
-<h1 id="rfc.section.6.3.5"><a href="#rfc.section.6.3.5">6.3.5.</a> <a href="#prop-phy-cca-threshold" id="prop-phy-cca-threshold">PROP 36: PROP_PHY_CCA_THRESHOLD</a></h1>
+<p id="rfc.section.5.3.4.p.2">Value is the radio frequency (in kilohertz) of the current channel.  </p>
+<h1 id="rfc.section.5.3.5"><a href="#rfc.section.5.3.5">5.3.5.</a> <a href="#prop-phy-cca-threshold" id="prop-phy-cca-threshold">PROP 36: PROP_PHY_CCA_THRESHOLD</a></h1>
 <p/>
 
 <ul>
@@ -1911,9 +2032,9 @@ STACK-NAME/STACK-VERSION[BUILD_INFO][; OTHER_INFO]; BUILD_DATE_AND_TIME
 </ul>
 
 <p> </p>
-<p id="rfc.section.6.3.5.p.2">Value is the CCA (clear-channel assessment) threshold. Set to -128 to disable.  </p>
-<p id="rfc.section.6.3.5.p.3">When setting, the value will be rounded down to a value that is supported by the underlying radio hardware.  </p>
-<h1 id="rfc.section.6.3.6"><a href="#rfc.section.6.3.6">6.3.6.</a> <a href="#prop-phy-tx-power" id="prop-phy-tx-power">PROP 37: PROP_PHY_TX_POWER</a></h1>
+<p id="rfc.section.5.3.5.p.2">Value is the CCA (clear-channel assessment) threshold. Set to -128 to disable.  </p>
+<p id="rfc.section.5.3.5.p.3">When setting, the value will be rounded down to a value that is supported by the underlying radio hardware.  </p>
+<h1 id="rfc.section.5.3.6"><a href="#rfc.section.5.3.6">5.3.6.</a> <a href="#prop-phy-tx-power" id="prop-phy-tx-power">PROP 37: PROP_PHY_TX_POWER</a></h1>
 <p/>
 
 <ul>
@@ -1923,9 +2044,9 @@ STACK-NAME/STACK-VERSION[BUILD_INFO][; OTHER_INFO]; BUILD_DATE_AND_TIME
 </ul>
 
 <p> </p>
-<p id="rfc.section.6.3.6.p.2">Value is the transmit power of the radio.  </p>
-<p id="rfc.section.6.3.6.p.3">When setting, the value will be rounded down to a value that is supported by the underlying radio hardware.  </p>
-<h1 id="rfc.section.6.3.7"><a href="#rfc.section.6.3.7">6.3.7.</a> <a href="#prop-phy-rssi" id="prop-phy-rssi">PROP 38: PROP_PHY_RSSI</a></h1>
+<p id="rfc.section.5.3.6.p.2">Value is the transmit power of the radio.  </p>
+<p id="rfc.section.5.3.6.p.3">When setting, the value will be rounded down to a value that is supported by the underlying radio hardware.  </p>
+<h1 id="rfc.section.5.3.7"><a href="#rfc.section.5.3.7">5.3.7.</a> <a href="#prop-phy-rssi" id="prop-phy-rssi">PROP 38: PROP_PHY_RSSI</a></h1>
 <p/>
 
 <ul>
@@ -1935,9 +2056,9 @@ STACK-NAME/STACK-VERSION[BUILD_INFO][; OTHER_INFO]; BUILD_DATE_AND_TIME
 </ul>
 
 <p> </p>
-<p id="rfc.section.6.3.7.p.2">Value is the current RSSI (Received signal strength indication) from the radio. This value can be used in energy scans and for determining the ambient noise floor for the operating environment.  </p>
-<h1 id="rfc.section.6.4"><a href="#rfc.section.6.4">6.4.</a> <a href="#prop-mac" id="prop-mac">MAC Properties</a></h1>
-<h1 id="rfc.section.6.4.1"><a href="#rfc.section.6.4.1">6.4.1.</a> <a href="#prop-mac-scan-state" id="prop-mac-scan-state">PROP 48: PROP_MAC_SCAN_STATE</a></h1>
+<p id="rfc.section.5.3.7.p.2">Value is the current RSSI (Received signal strength indication) from the radio. This value can be used in energy scans and for determining the ambient noise floor for the operating environment.  </p>
+<h1 id="rfc.section.5.4"><a href="#rfc.section.5.4">5.4.</a> <a href="#prop-mac" id="prop-mac">MAC Properties</a></h1>
+<h1 id="rfc.section.5.4.1"><a href="#rfc.section.5.4.1">5.4.1.</a> <a href="#prop-mac-scan-state" id="prop-mac-scan-state">PROP 48: PROP_MAC_SCAN_STATE</a></h1>
 <p/>
 
 <ul>
@@ -1947,7 +2068,7 @@ STACK-NAME/STACK-VERSION[BUILD_INFO][; OTHER_INFO]; BUILD_DATE_AND_TIME
 </ul>
 
 <p> </p>
-<p id="rfc.section.6.4.1.p.2">Possible Values: </p>
+<p id="rfc.section.5.4.1.p.2">Possible Values: </p>
 <p/>
 
 <ul>
@@ -1957,10 +2078,10 @@ STACK-NAME/STACK-VERSION[BUILD_INFO][; OTHER_INFO]; BUILD_DATE_AND_TIME
 </ul>
 
 <p> </p>
-<p id="rfc.section.6.4.1.p.4">Set to <samp>SCAN_STATE_BEACON</samp> to start an active scan.  Beacons will be emitted from <samp>PROP_MAC_SCAN_BEACON</samp>.  </p>
-<p id="rfc.section.6.4.1.p.5">Set to <samp>SCAN_STATE_ENERGY</samp> to start an energy scan.  Channel energy will be reported by alternating emissions of <samp>PROP_PHY_CHAN</samp> and <samp>PROP_PHY_RSSI</samp>.  </p>
-<p id="rfc.section.6.4.1.p.6">Values switches to <samp>SCAN_STATE_IDLE</samp> when scan is complete.  </p>
-<h1 id="rfc.section.6.4.2"><a href="#rfc.section.6.4.2">6.4.2.</a> <a href="#prop-mac-scan-mask" id="prop-mac-scan-mask">PROP 49: PROP_MAC_SCAN_MASK</a></h1>
+<p id="rfc.section.5.4.1.p.4">Set to <samp>SCAN_STATE_BEACON</samp> to start an active scan.  Beacons will be emitted from <samp>PROP_MAC_SCAN_BEACON</samp>.  </p>
+<p id="rfc.section.5.4.1.p.5">Set to <samp>SCAN_STATE_ENERGY</samp> to start an energy scan.  Channel energy will be reported by alternating emissions of <samp>PROP_PHY_CHAN</samp> and <samp>PROP_PHY_RSSI</samp>.  </p>
+<p id="rfc.section.5.4.1.p.6">Values switches to <samp>SCAN_STATE_IDLE</samp> when scan is complete.  </p>
+<h1 id="rfc.section.5.4.2"><a href="#rfc.section.5.4.2">5.4.2.</a> <a href="#prop-mac-scan-mask" id="prop-mac-scan-mask">PROP 49: PROP_MAC_SCAN_MASK</a></h1>
 <p/>
 
 <ul>
@@ -1970,7 +2091,7 @@ STACK-NAME/STACK-VERSION[BUILD_INFO][; OTHER_INFO]; BUILD_DATE_AND_TIME
 </ul>
 
 <p> </p>
-<h1 id="rfc.section.6.4.3"><a href="#rfc.section.6.4.3">6.4.3.</a> <a href="#prop-mac-scan-period" id="prop-mac-scan-period">PROP 50: PROP_MAC_SCAN_PERIOD</a></h1>
+<h1 id="rfc.section.5.4.3"><a href="#rfc.section.5.4.3">5.4.3.</a> <a href="#prop-mac-scan-period" id="prop-mac-scan-period">PROP 50: PROP_MAC_SCAN_PERIOD</a></h1>
 <p/>
 
 <ul>
@@ -1980,7 +2101,7 @@ STACK-NAME/STACK-VERSION[BUILD_INFO][; OTHER_INFO]; BUILD_DATE_AND_TIME
 </ul>
 
 <p> </p>
-<h1 id="rfc.section.6.4.4"><a href="#rfc.section.6.4.4">6.4.4.</a> <a href="#prop-mac-scan-beacon" id="prop-mac-scan-beacon">PROP 51: PROP_MAC_SCAN_BEACON</a></h1>
+<h1 id="rfc.section.5.4.4"><a href="#rfc.section.5.4.4">5.4.4.</a> <a href="#prop-mac-scan-beacon" id="prop-mac-scan-beacon">PROP 51: PROP_MAC_SCAN_BEACON</a></h1>
 <p/>
 
 <ul>
@@ -2013,7 +2134,7 @@ STACK-NAME/STACK-VERSION[BUILD_INFO][; OTHER_INFO]; BUILD_DATE_AND_TIME
     </tr>
   </tbody>
 </table>
-<p id="rfc.section.6.4.4.p.2">Scan beacons have two embedded structures which contain information about the MAC layer and the NET layer. Their format depends on the MAC and NET layer currently in use.  The format below is for an 802.15.4 MAC with Thread: </p>
+<p id="rfc.section.5.4.4.p.2">Scan beacons have two embedded structures which contain information about the MAC layer and the NET layer. Their format depends on the MAC and NET layer currently in use.  The format below is for an 802.15.4 MAC with Thread: </p>
 <p/>
 
 <ul>
@@ -2024,8 +2145,8 @@ STACK-NAME/STACK-VERSION[BUILD_INFO][; OTHER_INFO]; BUILD_DATE_AND_TIME
 </ul>
 
 <p> </p>
-<p id="rfc.section.6.4.4.p.4">Extra parameters may be added to each of the structures in the future, so care should be taken to read the length that prepends each structure.  </p>
-<h1 id="rfc.section.6.4.5"><a href="#rfc.section.6.4.5">6.4.5.</a> <a href="#prop-mac-15-4-laddr" id="prop-mac-15-4-laddr">PROP 52: PROP_MAC_15_4_LADDR</a></h1>
+<p id="rfc.section.5.4.4.p.4">Extra parameters may be added to each of the structures in the future, so care should be taken to read the length that prepends each structure.  </p>
+<h1 id="rfc.section.5.4.5"><a href="#rfc.section.5.4.5">5.4.5.</a> <a href="#prop-mac-15-4-laddr" id="prop-mac-15-4-laddr">PROP 52: PROP_MAC_15_4_LADDR</a></h1>
 <p/>
 
 <ul>
@@ -2034,9 +2155,9 @@ STACK-NAME/STACK-VERSION[BUILD_INFO][; OTHER_INFO]; BUILD_DATE_AND_TIME
 </ul>
 
 <p> </p>
-<p id="rfc.section.6.4.5.p.2">The 802.15.4 long address of this node.  </p>
-<p id="rfc.section.6.4.5.p.3">This property is only present on NCPs which implement 802.15.4 </p>
-<h1 id="rfc.section.6.4.6"><a href="#rfc.section.6.4.6">6.4.6.</a> <a href="#prop-mac-15-4-saddr" id="prop-mac-15-4-saddr">PROP 53: PROP_MAC_15_4_SADDR</a></h1>
+<p id="rfc.section.5.4.5.p.2">The 802.15.4 long address of this node.  </p>
+<p id="rfc.section.5.4.5.p.3">This property is only present on NCPs which implement 802.15.4 </p>
+<h1 id="rfc.section.5.4.6"><a href="#rfc.section.5.4.6">5.4.6.</a> <a href="#prop-mac-15-4-saddr" id="prop-mac-15-4-saddr">PROP 53: PROP_MAC_15_4_SADDR</a></h1>
 <p/>
 
 <ul>
@@ -2045,9 +2166,9 @@ STACK-NAME/STACK-VERSION[BUILD_INFO][; OTHER_INFO]; BUILD_DATE_AND_TIME
 </ul>
 
 <p> </p>
-<p id="rfc.section.6.4.6.p.2">The 802.15.4 short address of this node.  </p>
-<p id="rfc.section.6.4.6.p.3">This property is only present on NCPs which implement 802.15.4 </p>
-<h1 id="rfc.section.6.4.7"><a href="#rfc.section.6.4.7">6.4.7.</a> <a href="#prop-mac-15-4-panid" id="prop-mac-15-4-panid">PROP 54: PROP_MAC_15_4_PANID</a></h1>
+<p id="rfc.section.5.4.6.p.2">The 802.15.4 short address of this node.  </p>
+<p id="rfc.section.5.4.6.p.3">This property is only present on NCPs which implement 802.15.4 </p>
+<h1 id="rfc.section.5.4.7"><a href="#rfc.section.5.4.7">5.4.7.</a> <a href="#prop-mac-15-4-panid" id="prop-mac-15-4-panid">PROP 54: PROP_MAC_15_4_PANID</a></h1>
 <p/>
 
 <ul>
@@ -2056,9 +2177,9 @@ STACK-NAME/STACK-VERSION[BUILD_INFO][; OTHER_INFO]; BUILD_DATE_AND_TIME
 </ul>
 
 <p> </p>
-<p id="rfc.section.6.4.7.p.2">The 802.15.4 PANID this node is associated with.  </p>
-<p id="rfc.section.6.4.7.p.3">This property is only present on NCPs which implement 802.15.4 </p>
-<h1 id="rfc.section.6.4.8"><a href="#rfc.section.6.4.8">6.4.8.</a> <a href="#prop-mac-raw-stream-enabled" id="prop-mac-raw-stream-enabled">PROP 55: PROP_MAC_RAW_STREAM_ENABLED</a></h1>
+<p id="rfc.section.5.4.7.p.2">The 802.15.4 PANID this node is associated with.  </p>
+<p id="rfc.section.5.4.7.p.3">This property is only present on NCPs which implement 802.15.4 </p>
+<h1 id="rfc.section.5.4.8"><a href="#rfc.section.5.4.8">5.4.8.</a> <a href="#prop-mac-raw-stream-enabled" id="prop-mac-raw-stream-enabled">PROP 55: PROP_MAC_RAW_STREAM_ENABLED</a></h1>
 <p/>
 
 <ul>
@@ -2067,8 +2188,8 @@ STACK-NAME/STACK-VERSION[BUILD_INFO][; OTHER_INFO]; BUILD_DATE_AND_TIME
 </ul>
 
 <p> </p>
-<p id="rfc.section.6.4.8.p.2">Set to true to enable raw MAC frames to be emitted from <samp>PROP_STREAM_RAW</samp>.  See <a href="#prop-stream-raw">Section 6.2.12</a>.  </p>
-<h1 id="rfc.section.6.4.9"><a href="#rfc.section.6.4.9">6.4.9.</a> <a href="#prop-mac-filter-mode" id="prop-mac-filter-mode">PROP 56: PROP_MAC_FILTER_MODE</a></h1>
+<p id="rfc.section.5.4.8.p.2">Set to true to enable raw MAC frames to be emitted from <samp>PROP_STREAM_RAW</samp>.  See <a href="#prop-stream-raw">Section 5.2.12</a>.  </p>
+<h1 id="rfc.section.5.4.9"><a href="#rfc.section.5.4.9">5.4.9.</a> <a href="#prop-mac-filter-mode" id="prop-mac-filter-mode">PROP 56: PROP_MAC_FILTER_MODE</a></h1>
 <p/>
 
 <ul>
@@ -2077,7 +2198,7 @@ STACK-NAME/STACK-VERSION[BUILD_INFO][; OTHER_INFO]; BUILD_DATE_AND_TIME
 </ul>
 
 <p> </p>
-<p id="rfc.section.6.4.9.p.2">Possible Values: </p>
+<p id="rfc.section.5.4.9.p.2">Possible Values: </p>
 <table cellpadding="3" cellspacing="0" class="tt full center">
   <thead>
     <tr>
@@ -2110,8 +2231,8 @@ STACK-NAME/STACK-VERSION[BUILD_INFO][; OTHER_INFO]; BUILD_DATE_AND_TIME
     </tr>
   </tbody>
 </table>
-<p id="rfc.section.6.4.9.p.3">See <a href="#prop-stream-raw">Section 6.2.12</a>.  </p>
-<h1 id="rfc.section.6.4.10"><a href="#rfc.section.6.4.10">6.4.10.</a> <a href="#prop-mac-whitelist" id="prop-mac-whitelist">PROP 4864: PROP_MAC_WHITELIST</a></h1>
+<p id="rfc.section.5.4.9.p.3">See <a href="#prop-stream-raw">Section 5.2.12</a>.  </p>
+<h1 id="rfc.section.5.4.10"><a href="#rfc.section.5.4.10">5.4.10.</a> <a href="#prop-mac-whitelist" id="prop-mac-whitelist">PROP 4864: PROP_MAC_WHITELIST</a></h1>
 <p/>
 
 <ul>
@@ -2121,16 +2242,16 @@ STACK-NAME/STACK-VERSION[BUILD_INFO][; OTHER_INFO]; BUILD_DATE_AND_TIME
 </ul>
 
 <p> </p>
-<p id="rfc.section.6.4.10.p.2">Structure Parameters: </p>
+<p id="rfc.section.5.4.10.p.2">Structure Parameters: </p>
 <p/>
 
 <ul>
   <li><samp>E</samp>: EUI64 address of node</li>
-  <li><samp>c</samp>: Optional RSSI-override value. The value 127 indicates that the RSSI-override feature is not enabled for this address. If this value is ommitted when setting or inserting, it is assumed to be 127. This parameter is ignored when removing.</li>
+  <li><samp>c</samp>: Optional RSSI-override value. The value 127 indicates that the RSSI-override feature is not enabled for this address. If this value is omitted when setting or inserting, it is assumed to be 127. This parameter is ignored when removing.</li>
 </ul>
 
 <p> </p>
-<h1 id="rfc.section.6.4.11"><a href="#rfc.section.6.4.11">6.4.11.</a> <a href="#prop-mac-whitelist-enabled" id="prop-mac-whitelist-enabled">PROP 4865: PROP_MAC_WHITELIST_ENABLED</a></h1>
+<h1 id="rfc.section.5.4.11"><a href="#rfc.section.5.4.11">5.4.11.</a> <a href="#prop-mac-whitelist-enabled" id="prop-mac-whitelist-enabled">PROP 4865: PROP_MAC_WHITELIST_ENABLED</a></h1>
 <p/>
 
 <ul>
@@ -2139,8 +2260,8 @@ STACK-NAME/STACK-VERSION[BUILD_INFO][; OTHER_INFO]; BUILD_DATE_AND_TIME
 </ul>
 
 <p> </p>
-<h1 id="rfc.section.6.5"><a href="#rfc.section.6.5">6.5.</a> <a href="#prop-net" id="prop-net">NET Properties</a></h1>
-<h1 id="rfc.section.6.5.1"><a href="#rfc.section.6.5.1">6.5.1.</a> <a href="#prop-net-saved" id="prop-net-saved">PROP 64: PROP_NET_SAVED</a></h1>
+<h1 id="rfc.section.5.5"><a href="#rfc.section.5.5">5.5.</a> <a href="#prop-net" id="prop-net">NET Properties</a></h1>
+<h1 id="rfc.section.5.5.1"><a href="#rfc.section.5.5.1">5.5.1.</a> <a href="#prop-net-saved" id="prop-net-saved">PROP 64: PROP_NET_SAVED</a></h1>
 <p/>
 
 <ul>
@@ -2149,8 +2270,8 @@ STACK-NAME/STACK-VERSION[BUILD_INFO][; OTHER_INFO]; BUILD_DATE_AND_TIME
 </ul>
 
 <p> </p>
-<p id="rfc.section.6.5.1.p.2">Returns true if there is a network state stored that can be restored with a call to <samp>CMD_NET_RECALL</samp>.  </p>
-<h1 id="rfc.section.6.5.2"><a href="#rfc.section.6.5.2">6.5.2.</a> <a href="#prop-net-if-up" id="prop-net-if-up">PROP 65: PROP_NET_IF_UP</a></h1>
+<p id="rfc.section.5.5.1.p.2">Returns true if there is a network state stored that can be restored with a call to <samp>CMD_NET_RECALL</samp>.  </p>
+<h1 id="rfc.section.5.5.2"><a href="#rfc.section.5.5.2">5.5.2.</a> <a href="#prop-net-if-up" id="prop-net-if-up">PROP 65: PROP_NET_IF_UP</a></h1>
 <p/>
 
 <ul>
@@ -2159,8 +2280,8 @@ STACK-NAME/STACK-VERSION[BUILD_INFO][; OTHER_INFO]; BUILD_DATE_AND_TIME
 </ul>
 
 <p> </p>
-<p id="rfc.section.6.5.2.p.2">Network interface up/down status. Non-zero (set to 1) indicates up, zero indicates down.  </p>
-<h1 id="rfc.section.6.5.3"><a href="#rfc.section.6.5.3">6.5.3.</a> <a href="#prop-net-stack-up" id="prop-net-stack-up">PROP 66: PROP_NET_STACK_UP</a></h1>
+<p id="rfc.section.5.5.2.p.2">Network interface up/down status. Non-zero (set to 1) indicates up, zero indicates down.  </p>
+<h1 id="rfc.section.5.5.3"><a href="#rfc.section.5.5.3">5.5.3.</a> <a href="#prop-net-stack-up" id="prop-net-stack-up">PROP 66: PROP_NET_STACK_UP</a></h1>
 <p/>
 
 <ul>
@@ -2170,8 +2291,8 @@ STACK-NAME/STACK-VERSION[BUILD_INFO][; OTHER_INFO]; BUILD_DATE_AND_TIME
 </ul>
 
 <p> </p>
-<p id="rfc.section.6.5.3.p.2">Thread stack operational status. Non-zero (set to 1) indicates up, zero indicates down.  </p>
-<h1 id="rfc.section.6.5.4"><a href="#rfc.section.6.5.4">6.5.4.</a> <a href="#prop-net-role" id="prop-net-role">PROP 67: PROP_NET_ROLE</a></h1>
+<p id="rfc.section.5.5.3.p.2">Thread stack operational status. Non-zero (set to 1) indicates up, zero indicates down.  </p>
+<h1 id="rfc.section.5.5.4"><a href="#rfc.section.5.5.4">5.5.4.</a> <a href="#prop-net-role" id="prop-net-role">PROP 67: PROP_NET_ROLE</a></h1>
 <p/>
 
 <ul>
@@ -2181,7 +2302,7 @@ STACK-NAME/STACK-VERSION[BUILD_INFO][; OTHER_INFO]; BUILD_DATE_AND_TIME
 </ul>
 
 <p> </p>
-<p id="rfc.section.6.5.4.p.2">Values: </p>
+<p id="rfc.section.5.5.4.p.2">Values: </p>
 <p/>
 
 <ul>
@@ -2192,7 +2313,7 @@ STACK-NAME/STACK-VERSION[BUILD_INFO][; OTHER_INFO]; BUILD_DATE_AND_TIME
 </ul>
 
 <p> </p>
-<h1 id="rfc.section.6.5.5"><a href="#rfc.section.6.5.5">6.5.5.</a> <a href="#prop-net-network-name" id="prop-net-network-name">PROP 68: PROP_NET_NETWORK_NAME</a></h1>
+<h1 id="rfc.section.5.5.5"><a href="#rfc.section.5.5.5">5.5.5.</a> <a href="#prop-net-network-name" id="prop-net-network-name">PROP 68: PROP_NET_NETWORK_NAME</a></h1>
 <p/>
 
 <ul>
@@ -2201,7 +2322,7 @@ STACK-NAME/STACK-VERSION[BUILD_INFO][; OTHER_INFO]; BUILD_DATE_AND_TIME
 </ul>
 
 <p> </p>
-<h1 id="rfc.section.6.5.6"><a href="#rfc.section.6.5.6">6.5.6.</a> <a href="#prop-net-xpanid" id="prop-net-xpanid">PROP 69: PROP_NET_XPANID</a></h1>
+<h1 id="rfc.section.5.5.6"><a href="#rfc.section.5.5.6">5.5.6.</a> <a href="#prop-net-xpanid" id="prop-net-xpanid">PROP 69: PROP_NET_XPANID</a></h1>
 <p/>
 
 <ul>
@@ -2210,7 +2331,7 @@ STACK-NAME/STACK-VERSION[BUILD_INFO][; OTHER_INFO]; BUILD_DATE_AND_TIME
 </ul>
 
 <p> </p>
-<h1 id="rfc.section.6.5.7"><a href="#rfc.section.6.5.7">6.5.7.</a> <a href="#prop-net-master-key" id="prop-net-master-key">PROP 70: PROP_NET_MASTER_KEY</a></h1>
+<h1 id="rfc.section.5.5.7"><a href="#rfc.section.5.5.7">5.5.7.</a> <a href="#prop-net-master-key" id="prop-net-master-key">PROP 70: PROP_NET_MASTER_KEY</a></h1>
 <p/>
 
 <ul>
@@ -2219,7 +2340,7 @@ STACK-NAME/STACK-VERSION[BUILD_INFO][; OTHER_INFO]; BUILD_DATE_AND_TIME
 </ul>
 
 <p> </p>
-<h1 id="rfc.section.6.5.8"><a href="#rfc.section.6.5.8">6.5.8.</a> <a href="#prop-net-key-sequence" id="prop-net-key-sequence">PROP 71: PROP_NET_KEY_SEQUENCE</a></h1>
+<h1 id="rfc.section.5.5.8"><a href="#rfc.section.5.5.8">5.5.8.</a> <a href="#prop-net-key-sequence" id="prop-net-key-sequence">PROP 71: PROP_NET_KEY_SEQUENCE</a></h1>
 <p/>
 
 <ul>
@@ -2228,7 +2349,7 @@ STACK-NAME/STACK-VERSION[BUILD_INFO][; OTHER_INFO]; BUILD_DATE_AND_TIME
 </ul>
 
 <p> </p>
-<h1 id="rfc.section.6.5.9"><a href="#rfc.section.6.5.9">6.5.9.</a> <a href="#prop-net-partition-id" id="prop-net-partition-id">PROP 72: PROP_NET_PARTITION_ID</a></h1>
+<h1 id="rfc.section.5.5.9"><a href="#rfc.section.5.5.9">5.5.9.</a> <a href="#prop-net-partition-id" id="prop-net-partition-id">PROP 72: PROP_NET_PARTITION_ID</a></h1>
 <p/>
 
 <ul>
@@ -2237,9 +2358,9 @@ STACK-NAME/STACK-VERSION[BUILD_INFO][; OTHER_INFO]; BUILD_DATE_AND_TIME
 </ul>
 
 <p> </p>
-<p id="rfc.section.6.5.9.p.2">The partition ID of the partition that this node is a member of.  </p>
-<h1 id="rfc.section.6.6"><a href="#rfc.section.6.6">6.6.</a> <a href="#prop-ipv6" id="prop-ipv6">IPv6 Properties</a></h1>
-<h1 id="rfc.section.6.6.1"><a href="#rfc.section.6.6.1">6.6.1.</a> <a href="#prop-ipv6-ll-addr" id="prop-ipv6-ll-addr">PROP 96: PROP_IPV6_LL_ADDR</a></h1>
+<p id="rfc.section.5.5.9.p.2">The partition ID of the partition that this node is a member of.  </p>
+<h1 id="rfc.section.5.6"><a href="#rfc.section.5.6">5.6.</a> <a href="#prop-ipv6" id="prop-ipv6">IPv6 Properties</a></h1>
+<h1 id="rfc.section.5.6.1"><a href="#rfc.section.5.6.1">5.6.1.</a> <a href="#prop-ipv6-ll-addr" id="prop-ipv6-ll-addr">PROP 96: PROP_IPV6_LL_ADDR</a></h1>
 <p/>
 
 <ul>
@@ -2248,8 +2369,8 @@ STACK-NAME/STACK-VERSION[BUILD_INFO][; OTHER_INFO]; BUILD_DATE_AND_TIME
 </ul>
 
 <p> </p>
-<p id="rfc.section.6.6.1.p.2">IPv6 Address </p>
-<h1 id="rfc.section.6.6.2"><a href="#rfc.section.6.6.2">6.6.2.</a> <a href="#prop-ipv6-ml-addr" id="prop-ipv6-ml-addr">PROP 97: PROP_IPV6_ML_ADDR</a></h1>
+<p id="rfc.section.5.6.1.p.2">IPv6 Address </p>
+<h1 id="rfc.section.5.6.2"><a href="#rfc.section.5.6.2">5.6.2.</a> <a href="#prop-ipv6-ml-addr" id="prop-ipv6-ml-addr">PROP 97: PROP_IPV6_ML_ADDR</a></h1>
 <p/>
 
 <ul>
@@ -2258,8 +2379,8 @@ STACK-NAME/STACK-VERSION[BUILD_INFO][; OTHER_INFO]; BUILD_DATE_AND_TIME
 </ul>
 
 <p> </p>
-<p id="rfc.section.6.6.2.p.2">IPv6 Address + Prefix Length </p>
-<h1 id="rfc.section.6.6.3"><a href="#rfc.section.6.6.3">6.6.3.</a> <a href="#prop-ipv6-ml-prefix" id="prop-ipv6-ml-prefix">PROP 98: PROP_IPV6_ML_PREFIX</a></h1>
+<p id="rfc.section.5.6.2.p.2">IPv6 Address + Prefix Length </p>
+<h1 id="rfc.section.5.6.3"><a href="#rfc.section.5.6.3">5.6.3.</a> <a href="#prop-ipv6-ml-prefix" id="prop-ipv6-ml-prefix">PROP 98: PROP_IPV6_ML_PREFIX</a></h1>
 <p/>
 
 <ul>
@@ -2268,8 +2389,8 @@ STACK-NAME/STACK-VERSION[BUILD_INFO][; OTHER_INFO]; BUILD_DATE_AND_TIME
 </ul>
 
 <p> </p>
-<p id="rfc.section.6.6.3.p.2">IPv6 Prefix + Prefix Length </p>
-<h1 id="rfc.section.6.6.4"><a href="#rfc.section.6.6.4">6.6.4.</a> <a href="#prop-ipv6-address-table" id="prop-ipv6-address-table">PROP 99: PROP_IPV6_ADDRESS_TABLE</a></h1>
+<p id="rfc.section.5.6.3.p.2">IPv6 Prefix + Prefix Length </p>
+<h1 id="rfc.section.5.6.4"><a href="#rfc.section.5.6.4">5.6.4.</a> <a href="#prop-ipv6-address-table" id="prop-ipv6-address-table">PROP 99: PROP_IPV6_ADDRESS_TABLE</a></h1>
 <p/>
 
 <ul>
@@ -2278,7 +2399,7 @@ STACK-NAME/STACK-VERSION[BUILD_INFO][; OTHER_INFO]; BUILD_DATE_AND_TIME
 </ul>
 
 <p> </p>
-<p id="rfc.section.6.6.4.p.2">Array of structures containing: </p>
+<p id="rfc.section.5.6.4.p.2">Array of structures containing: </p>
 <p/>
 
 <ul>
@@ -2290,7 +2411,7 @@ STACK-NAME/STACK-VERSION[BUILD_INFO][; OTHER_INFO]; BUILD_DATE_AND_TIME
 </ul>
 
 <p> </p>
-<h1 id="rfc.section.6.6.5"><a href="#rfc.section.6.6.5">6.6.5.</a> <a href="#prop-101-propipv6icmppingoffload" id="prop-101-propipv6icmppingoffload">PROP 101: PROP_IPv6_ICMP_PING_OFFLOAD</a></h1>
+<h1 id="rfc.section.5.6.5"><a href="#rfc.section.5.6.5">5.6.5.</a> <a href="#prop-101-propipv6icmppingoffload" id="prop-101-propipv6icmppingoffload">PROP 101: PROP_IPv6_ICMP_PING_OFFLOAD</a></h1>
 <p/>
 
 <ul>
@@ -2299,12 +2420,12 @@ STACK-NAME/STACK-VERSION[BUILD_INFO][; OTHER_INFO]; BUILD_DATE_AND_TIME
 </ul>
 
 <p> </p>
-<p id="rfc.section.6.6.5.p.2">Allow the NCP to directly respond to ICMP ping requests. If this is turned on, ping request ICMP packets will not be passed to the host.  </p>
-<p id="rfc.section.6.6.5.p.3">Default value is <samp>false</samp>.  </p>
-<h1 id="rfc.section.7"><a href="#rfc.section.7">7.</a> <a href="#status-codes" id="status-codes">Status Codes</a></h1>
-<p id="rfc.section.7.p.1">Status codes are sent from the NCP to the host via <samp>PROP_LAST_STATUS</samp> using the <samp>CMD_VALUE_IS</samp> command to indicate the return status of a previous command. As with any response, the TID field of the FLAG byte is used to correlate the response with the request.  </p>
-<p id="rfc.section.7.p.2">Note that most successfully executed commands do not indicate a last status of <samp>STATUS_OK</samp>. The usual way the NCP indicates a successful command is to mirror the property change back to the host. For example, if you do a <samp>CMD_VALUE_SET</samp> on <samp>PROP_PHY_ENABLED</samp>, the NCP would indicate success by responding with a <samp>CMD_VALUE_IS</samp> for <samp>PROP_PHY_ENABLED</samp>. If the command failed, <samp>PROP_LAST_STATUS</samp> would be emitted instead.  </p>
-<p id="rfc.section.7.p.3">See <a href="#prop-last-status">Section 6.2.1</a> for more information on <samp>PROP_LAST_STATUS</samp>.  </p>
+<p id="rfc.section.5.6.5.p.2">Allow the NCP to directly respond to ICMP ping requests. If this is turned on, ping request ICMP packets will not be passed to the host.  </p>
+<p id="rfc.section.5.6.5.p.3">Default value is <samp>false</samp>.  </p>
+<h1 id="rfc.section.6"><a href="#rfc.section.6">6.</a> <a href="#status-codes" id="status-codes">Status Codes</a></h1>
+<p id="rfc.section.6.p.1">Status codes are sent from the NCP to the host via <samp>PROP_LAST_STATUS</samp> using the <samp>CMD_VALUE_IS</samp> command to indicate the return status of a previous command. As with any response, the TID field of the FLAG byte is used to correlate the response with the request.  </p>
+<p id="rfc.section.6.p.2">Note that most successfully executed commands do not indicate a last status of <samp>STATUS_OK</samp>. The usual way the NCP indicates a successful command is to mirror the property change back to the host. For example, if you do a <samp>CMD_VALUE_SET</samp> on <samp>PROP_PHY_ENABLED</samp>, the NCP would indicate success by responding with a <samp>CMD_VALUE_IS</samp> for <samp>PROP_PHY_ENABLED</samp>. If the command failed, <samp>PROP_LAST_STATUS</samp> would be emitted instead.  </p>
+<p id="rfc.section.6.p.3">See <a href="#prop-last-status">Section 5.2.1</a> for more information on <samp>PROP_LAST_STATUS</samp>.  </p>
 <p/>
 
 <ul>
@@ -2315,9 +2436,9 @@ STACK-NAME/STACK-VERSION[BUILD_INFO][; OTHER_INFO]; BUILD_DATE_AND_TIME
   <li>4: <samp>STATUS_INVALID_STATE</samp> : The given operation is invalid for the current state of the device.</li>
   <li>5: <samp>STATUS_INVALID_COMMAND</samp>: The given command is not recognized.</li>
   <li>6: <samp>STATUS_INVALID_INTERFACE</samp>: The given Spinel interface is not supported.</li>
-  <li>7: <samp>STATUS_INTERNAL_ERROR</samp>: An internal runtime error has occured.</li>
-  <li>8: <samp>STATUS_SECURITY_ERROR</samp>: A security or authentication error has occured.</li>
-  <li>9: <samp>STATUS_PARSE_ERROR</samp>: An error has occured while parsing the command.</li>
+  <li>7: <samp>STATUS_INTERNAL_ERROR</samp>: An internal runtime error has occurred.</li>
+  <li>8: <samp>STATUS_SECURITY_ERROR</samp>: A security or authentication error has occurred.</li>
+  <li>9: <samp>STATUS_PARSE_ERROR</samp>: An error has occurred while parsing the command.</li>
   <li>10: <samp>STATUS_IN_PROGRESS</samp>: The operation is in progress and will be completed asynchronously.</li>
   <li>11: <samp>STATUS_NOMEM</samp>: The operation has been prevented due to memory pressure.</li>
   <li>12: <samp>STATUS_BUSY</samp>: The device is currently performing a mutually exclusive operation.</li>
@@ -2338,6 +2459,14 @@ STACK-NAME/STACK-VERSION[BUILD_INFO][; OTHER_INFO]; BUILD_DATE_AND_TIME
 </ul>
 
 <p> </p>
+<h1 id="rfc.section.7"><a href="#rfc.section.7">7.</a> <a href="#security-considerations" id="security-considerations">Security Considerations</a></h1>
+<p id="rfc.section.7.p.1">TBD </p>
+<h1 id="rfc.section.8"><a href="#rfc.section.8">8.</a> <a href="#acknowledgments" id="acknowledgments">Acknowledgments</a></h1>
+<p id="rfc.section.8.p.1">Special thanks to Abtin Keshavarzian, Martin Turon, Arjuna Sivasithambaresan and Jonathan Hui for their substantial contributions and feedback related to this document.  </p>
+<p>
+  <a id="CREF3" class="info">[CREF3]<span class="info">RQ: If I have missed anyone who has contributed to this document, please let me know ASAP.</span></a>
+</p>
+<p id="rfc.section.8.p.3">This document was prepared using <a href="https://github.com/miekg/mmark">mmark</a> by (Miek Gieben) and <a href="http://xml2rfc.ietf.org/">xml2rfc (version 2)</a>.  </p>
 <h1 id="rfc.appendix.A"><a href="#rfc.appendix.A">Appendix A.</a> <a href="#framing-protocol" id="framing-protocol">Framing Protocol</a></h1>
 <p id="rfc.section.A.p.1">Since this NCP protocol is defined independently of the physical transport or framing, any number of transports and framing protocols could be used successfully. However, in the interests of compatibility, this document provides some recommendations.  </p>
 <h1 id="rfc.appendix.A.1"><a href="#rfc.appendix.A.1">A.1.</a> <a href="#uart-recommendations" id="uart-recommendations">UART Recommendations</a></h1>
@@ -2355,8 +2484,8 @@ STACK-NAME/STACK-VERSION[BUILD_INFO][; OTHER_INFO]; BUILD_DATE_AND_TIME
 
 <p> </p>
 <p id="rfc.section.A.1.p.3">These values may be adjusted depending on the individual needs of the application or product, but some sort of flow control MUST be used.  Hardware flow control is preferred over software flow control. In the absence of hardware flow control, software flow control (XON/XOFF) MUST be used instead.  </p>
-<p id="rfc.section.A.1.p.4">We also <strong>RECOMMEND</strong> an arduino-style hardware reset, where the DTR signal is coupled to the <samp>R&#773;E&#773;S&#773;</samp> pin through a 0.01&#181;F capacitor. This causes the NCP to automatically reset whenever the serial port is opened. At the very least we <strong>RECOMMEND</strong> dedicating one of your host pins to controlling the <samp>R&#773;E&#773;S&#773;</samp> pin on the NCP, so that you can easily perform a hardware reset if necessary.  </p>
-<h1 id="rfc.appendix.A.1.1"><a href="#rfc.appendix.A.1.1">A.1.1.</a> <a href="#hdlclite" id="hdlclite">HDLC-Lite</a></h1>
+<p id="rfc.section.A.1.p.4">We also <strong>RECOMMEND</strong> an Arduino-style hardware reset, where the DTR signal is coupled to the <samp>R&#773;E&#773;S&#773;</samp> pin through a 0.01&#181;F capacitor. This causes the NCP to automatically reset whenever the serial port is opened. At the very least we <strong>RECOMMEND</strong> dedicating one of your host pins to controlling the <samp>R&#773;E&#773;S&#773;</samp> pin on the NCP, so that you can easily perform a hardware reset if necessary.  </p>
+<h1 id="rfc.appendix.A.1.1"><a href="#rfc.appendix.A.1.1">A.1.1.</a> <a href="#hdlc-lite" id="hdlc-lite">HDLC-Lite</a></h1>
 <p><em>HDLC-Lite</em> is the recommended framing protocol for transmitting Spinel frames over a UART. HDLC-Lite consists of only the framing, escaping, and CRC parts of the larger HDLC protocol---all other parts of HDLC are omitted. This protocol was chosen because it works well with software flow control and is widely implemented.  </p>
 <p id="rfc.section.A.1.1.p.2">To transmit a frame with HDLC-lite, the 16-bit CRC must first be appended to the frame. The CRC function is defined to be CRC-16/CCITT, otherwise known as the <a href="http://reveng.sourceforge.net/crc-catalogue/16.htm#crc.cat.kermit">KERMIT CRC</a>.  </p>
 <p id="rfc.section.A.1.1.p.3">Individual frames are terminated with a frame delimiter octet called the 'flag' octet (<samp>0x7E</samp>).  </p>
@@ -2666,7 +2795,7 @@ STACK-NAME/STACK-VERSION[BUILD_INFO][; OTHER_INFO]; BUILD_DATE_AND_TIME
 <p> </p>
 <p id="rfc.section.D.p.4">All serious implementations of an NCP SHOULD also support the network save feature (See <a href="#feature-network-save">Appendix B</a>).  </p>
 <h1 id="rfc.appendix.D.1"><a href="#rfc.appendix.D.1">D.1.</a> <a href="#thread-capabilities" id="thread-capabilities">Thread Capabilities</a></h1>
-<p id="rfc.section.D.1.p.1">The Thread techology defines the following capabilities: </p>
+<p id="rfc.section.D.1.p.1">The Thread technology defines the following capabilities: </p>
 <p/>
 
 <ul>
@@ -2676,7 +2805,7 @@ STACK-NAME/STACK-VERSION[BUILD_INFO][; OTHER_INFO]; BUILD_DATE_AND_TIME
 
 <p> </p>
 <h1 id="rfc.appendix.D.2"><a href="#rfc.appendix.D.2">D.2.</a> <a href="#thread-properties" id="thread-properties">Thread Properties</a></h1>
-<p id="rfc.section.D.2.p.1">Properties for Thread are allocated out of the <samp>Tech</samp> property section (see <a href="#property-sections">Section 6.1</a>).  </p>
+<p id="rfc.section.D.2.p.1">Properties for Thread are allocated out of the <samp>Tech</samp> property section (see <a href="#property-sections">Section 5.1</a>).  </p>
 <h1 id="rfc.appendix.D.2.1"><a href="#rfc.appendix.D.2.1">D.2.1.</a> <a href="#prop-80-propthreadleaderaddr" id="prop-80-propthreadleaderaddr">PROP 80: PROP_THREAD_LEADER_ADDR</a></h1>
 <p/>
 
@@ -2900,7 +3029,7 @@ STACK-NAME/STACK-VERSION[BUILD_INFO][; OTHER_INFO]; BUILD_DATE_AND_TIME
 </ul>
 
 <p> </p>
-<p id="rfc.section.D.2.21.p.2">Note that some implementations may not support <samp>CMD_GET_VALUE</samp> routerids, but may support <samp>CMD_REMOVE_VALUE</samp> when the node is a leader.  </p>
+<p id="rfc.section.D.2.21.p.2">Note that some implementations may not support <samp>CMD_GET_VALUE</samp> router ids, but may support <samp>CMD_REMOVE_VALUE</samp> when the node is a leader.  </p>
 <h1 id="rfc.appendix.D.2.22"><a href="#rfc.appendix.D.2.22">D.2.22.</a> <a href="#prop-5382-propthreadrloc16debugpassthru" id="prop-5382-propthreadrloc16debugpassthru">PROP 5382: PROP_THREAD_RLOC16_DEBUG_PASSTHRU</a></h1>
 <p/>
 
@@ -2995,7 +3124,7 @@ STACK-NAME/STACK-VERSION[BUILD_INFO][; OTHER_INFO]; BUILD_DATE_AND_TIME
   </tbody>
 </table>
 <p>
-  <a id="CREF3" class="info">[CREF3]<span class="info">RQ: FIXME: This test vector is incomplete.</span></a>
+  <a id="CREF4" class="info">[CREF4]<span class="info">RQ: The PUI test-vector encodings need to be verified.</span></a>
 </p>
 <h1 id="rfc.appendix.E.2"><a href="#rfc.appendix.E.2">E.2.</a> <a href="#test-vector-reset-command" id="test-vector-reset-command">Test Vector: Reset Command</a></h1>
 <p/>
@@ -3048,12 +3177,12 @@ FE
 <h1 id="rfc.appendix.E.5"><a href="#rfc.appendix.E.5">E.5.</a> <a href="#test-vector-inbound-ipv6-packet" id="test-vector-inbound-ipv6-packet">Test Vector: Inbound IPv6 Packet</a></h1>
 <p id="rfc.section.E.5.p.1">CMD_VALUE_IS(PROP_STREAM_NET) </p>
 <p>
-  <a id="CREF4" class="info">[CREF4]<span class="info">RQ: FIXME: This test vector is incomplete.</span></a>
+  <a id="CREF5" class="info">[CREF5]<span class="info">RQ: FIXME: This test vector is incomplete.</span></a>
 </p>
 <h1 id="rfc.appendix.E.6"><a href="#rfc.appendix.E.6">E.6.</a> <a href="#test-vector-outbound-ipv6-packet" id="test-vector-outbound-ipv6-packet">Test Vector: Outbound IPv6 Packet</a></h1>
 <p id="rfc.section.E.6.p.1">CMD_VALUE_SET(PROP_STREAM_NET) </p>
 <p>
-  <a id="CREF5" class="info">[CREF5]<span class="info">RQ: FIXME: This test vector is incomplete.</span></a>
+  <a id="CREF6" class="info">[CREF6]<span class="info">RQ: FIXME: This test vector is incomplete.</span></a>
 </p>
 <h1 id="rfc.appendix.E.7"><a href="#rfc.appendix.E.7">E.7.</a> <a href="#test-vector-fetch-list-of-onmesh-networks" id="test-vector-fetch-list-of-onmesh-networks">Test Vector: Fetch list of on-mesh networks</a></h1>
 <p/>
@@ -3120,7 +3249,7 @@ FE
   <li>TID: 5</li>
   <li>CMD: 4 (<samp>CMD_VALUE_INSERT</samp>)</li>
   <li>PROP: 90 (<samp>PROP_THREAD_ON_MESH_NETS</samp>)</li>
-  <li>VALUE: Structure, encoded as <samp>6CbC</samp></li>
+  <li>VALUE: Structure, encoded as <samp>6CbCb</samp></li>
 </ul>
 
 <p> </p>
@@ -3145,10 +3274,10 @@ FE
 <p id="rfc.section.E.9.p.2">Frame: </p>
 <pre>
 85 03 5A 20 01 0D B8 00 03 00 00 00 00 00 00 00 00 00 00 40
-01 ??
+01 ?? 01
 </pre>
 <p>
-  <a id="CREF6" class="info">[CREF6]<span class="info">RQ: FIXME: This test vector is incomplete.</span></a>
+  <a id="CREF7" class="info">[CREF7]<span class="info">RQ: FIXME: This test vector is incomplete.</span></a>
 </p>
 <h1 id="rfc.appendix.E.10"><a href="#rfc.appendix.E.10">E.10.</a> <a href="#test-vector-insertion-notification-of-an-onmesh-network" id="test-vector-insertion-notification-of-an-onmesh-network">Test Vector: Insertion notification of an on-mesh network</a></h1>
 <p/>
@@ -3158,7 +3287,7 @@ FE
   <li>TID: 5</li>
   <li>CMD: 7 (<samp>CMD_VALUE_INSERTED</samp>)</li>
   <li>PROP: 90 (<samp>PROP_THREAD_ON_MESH_NETS</samp>)</li>
-  <li>VALUE: Structure, encoded as <samp>6CbC</samp></li>
+  <li>VALUE: Structure, encoded as <samp>6CbCb</samp></li>
 </ul>
 
 <p> </p>
@@ -3183,10 +3312,10 @@ FE
 <p id="rfc.section.E.10.p.2">Frame: </p>
 <pre>
 85 07 5A 20 01 0D B8 00 03 00 00 00 00 00 00 00 00 00 00 40
-01 ??
+01 ?? 01
 </pre>
 <p>
-  <a id="CREF7" class="info">[CREF7]<span class="info">RQ: FIXME: This test vector is incomplete.</span></a>
+  <a id="CREF8" class="info">[CREF8]<span class="info">RQ: FIXME: This test vector is incomplete.</span></a>
 </p>
 <h1 id="rfc.appendix.E.11"><a href="#rfc.appendix.E.11">E.11.</a> <a href="#test-vector-removing-a-local-onmesh-network" id="test-vector-removing-a-local-onmesh-network">Test Vector: Removing a local on-mesh network</a></h1>
 <p/>
@@ -3223,7 +3352,7 @@ FE
 <h1 id="rfc.appendix.F"><a href="#rfc.appendix.F">Appendix F.</a> <a href="#example-sessions" id="example-sessions">Example Sessions</a></h1>
 <h1 id="rfc.appendix.F.1"><a href="#rfc.appendix.F.1">F.1.</a> <a href="#ncp-initialization" id="ncp-initialization">NCP Initialization</a></h1>
 <p>
-  <a id="CREF8" class="info">[CREF8]<span class="info">RQ: FIXME: This example session is incomplete.</span></a>
+  <a id="CREF9" class="info">[CREF9]<span class="info">RQ: FIXME: This example session is incomplete.</span></a>
 </p>
 <p id="rfc.section.F.1.p.2">Check the protocol version to see if it is supported: </p>
 <p/>
@@ -3280,7 +3409,7 @@ FE
 <p> </p>
 <h1 id="rfc.appendix.F.2"><a href="#rfc.appendix.F.2">F.2.</a> <a href="#attaching-to-a-network" id="attaching-to-a-network">Attaching to a network</a></h1>
 <p>
-  <a id="CREF9" class="info">[CREF9]<span class="info">RQ: FIXME: This example session is incomplete.</span></a>
+  <a id="CREF10" class="info">[CREF10]<span class="info">RQ: FIXME: This example session is incomplete.</span></a>
 </p>
 <p id="rfc.section.F.2.p.2">We make the assumption that the NCP is not currently associated with a network.  </p>
 <p id="rfc.section.F.2.p.3">Set the network properties, if they were not already set: </p>
@@ -3332,7 +3461,7 @@ FE
 <p> </p>
 <h1 id="rfc.appendix.F.3"><a href="#rfc.appendix.F.3">F.3.</a> <a href="#successfully-joining-a-preexisting-network" id="successfully-joining-a-preexisting-network">Successfully joining a pre-existing network</a></h1>
 <p>
-  <a id="CREF10" class="info">[CREF10]<span class="info">RQ: FIXME: This example session is incomplete.</span></a>
+  <a id="CREF11" class="info">[CREF11]<span class="info">RQ: FIXME: This example session is incomplete.</span></a>
 </p>
 <p id="rfc.section.F.3.p.2">This example session is identical to the above session up to the point where we set PROP_NET_IF_UP to true. From there, the behavior changes.  </p>
 <p/>
@@ -3402,7 +3531,7 @@ FE
 <p id="rfc.section.F.5.p.1">TBD </p>
 <h1 id="rfc.appendix.F.6"><a href="#rfc.appendix.F.6">F.6.</a> <a href="#attaching-to-a-saved-network" id="attaching-to-a-saved-network">Attaching to a saved network</a></h1>
 <p>
-  <a id="CREF11" class="info">[CREF11]<span class="info">RQ: FIXME: This example session is incomplete.</span></a>
+  <a id="CREF12" class="info">[CREF12]<span class="info">RQ: FIXME: This example session is incomplete.</span></a>
 </p>
 <p id="rfc.section.F.6.p.2">Recall the saved network if you haven't already done so: </p>
 <p/>
@@ -3442,7 +3571,7 @@ FE
 <p> </p>
 <h1 id="rfc.appendix.F.7"><a href="#rfc.appendix.F.7">F.7.</a> <a href="#ncp-software-reset" id="ncp-software-reset">NCP Software Reset</a></h1>
 <p>
-  <a id="CREF12" class="info">[CREF12]<span class="info">RQ: FIXME: This example session is incomplete.</span></a>
+  <a id="CREF13" class="info">[CREF13]<span class="info">RQ: FIXME: This example session is incomplete.</span></a>
 </p>
 <p/>
 
@@ -3459,9 +3588,9 @@ FE
 <p id="rfc.section.F.9.p.1">TBD </p>
 <h1 id="rfc.appendix.F.10"><a href="#rfc.appendix.F.10">F.10.</a> <a href="#sniffing-raw-packets" id="sniffing-raw-packets">Sniffing raw packets</a></h1>
 <p>
-  <a id="CREF13" class="info">[CREF13]<span class="info">RQ: FIXME: This example session is incomplete.</span></a>
+  <a id="CREF14" class="info">[CREF14]<span class="info">RQ: FIXME: This example session is incomplete.</span></a>
 </p>
-<p id="rfc.section.F.10.p.2">This assuems that the NCP has been initialized.  </p>
+<p id="rfc.section.F.10.p.2">This assumes that the NCP has been initialized.  </p>
 <p id="rfc.section.F.10.p.3">Optionally set the channel: </p>
 <p/>
 
@@ -3509,6 +3638,23 @@ FE
 
 <p> </p>
 <p id="rfc.section.F.10.p.13">This mode may be entered even when associated with a network.  In that case, you should set <samp>PROP_MAC_FILTER_MODE</samp> to <samp>MAC_FILTER_MODE_PROMISCUOUS</samp> or <samp>MAC_FILTER_MODE_NORMAL</samp>, so that you can avoid receiving packets from other networks or that are destined for other nodes.  </p>
+<h1 id="rfc.appendix.G"><a href="#rfc.appendix.G">Appendix G.</a> <a href="#glossary" id="glossary">Glossary</a></h1>
+<p/>
+
+<dl>
+  <dt>NCP</dt>
+  <dd style="margin-left: 8"><br/> Acronym for Network Control Processor.</dd>
+  <dt>Host</dt>
+  <dd style="margin-left: 8"><br/> Computer or Micro-controller which controls the NCP.</dd>
+  <dt>TID</dt>
+  <dd style="margin-left: 8"><br/> Transaction Identifier. May be a value between zero and fifteen.  See <a href="#tid-transaction-identifier">Section 2.1.3</a> for more information.</dd>
+  <dt>IID</dt>
+  <dd style="margin-left: 8"><br/> Interface Identifier. May be a value between zero and three.  See <a href="#iid-interface-identifier">Section 2.1.2</a> for more information.</dd>
+  <dt>PUI</dt>
+  <dd style="margin-left: 8"><br/> Packed Unsigned Integer. A way to serialize an unsigned integer using one, two, or three bytes. Used throughout the Spinel protocol.  See <a href="#packed-unsigned-integer">Section 3.2</a> for more information.</dd>
+</dl>
+
+<p> </p>
 <h1 id="rfc.authors">
   <a href="#rfc.authors">Author's Address</a>
 </h1>

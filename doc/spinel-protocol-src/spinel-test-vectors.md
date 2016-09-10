@@ -15,7 +15,7 @@ Decimal Value | Packet Octet Encoding
        16,385 | `81 80 01`
     2,097,151 | `FF FF 7F`
 
-<!-- RQ -- FIXME: This test vector is incomplete. -->
+<!-- RQ -- The PUI test-vector encodings need to be verified. -->
 
 ## Test Vector: Reset Command
 
@@ -115,7 +115,7 @@ Frame:
 * TID: 5
 * CMD: 4 (`CMD_VALUE_INSERT`)
 * PROP: 90 (`PROP_THREAD_ON_MESH_NETS`)
-* VALUE: Structure, encoded as `6CbC`
+* VALUE: Structure, encoded as `6CbCb`
 
 IPv6 Prefix  | Prefix Length | Stable Flag | Other Flags
 -------------|---------------|-------------|--------------
@@ -124,7 +124,7 @@ IPv6 Prefix  | Prefix Length | Stable Flag | Other Flags
 Frame:
 
     85 03 5A 20 01 0D B8 00 03 00 00 00 00 00 00 00 00 00 00 40
-    01 ??
+    01 ?? 01
 
 <!-- RQ -- FIXME: This test vector is incomplete. -->
 
@@ -134,7 +134,7 @@ Frame:
 * TID: 5
 * CMD: 7 (`CMD_VALUE_INSERTED`)
 * PROP: 90 (`PROP_THREAD_ON_MESH_NETS`)
-* VALUE: Structure, encoded as `6CbC`
+* VALUE: Structure, encoded as `6CbCb`
 
 IPv6 Prefix  | Prefix Length | Stable Flag | Other Flags
 -------------|---------------|-------------|--------------
@@ -143,7 +143,7 @@ IPv6 Prefix  | Prefix Length | Stable Flag | Other Flags
 Frame:
 
     85 07 5A 20 01 0D B8 00 03 00 00 00 00 00 00 00 00 00 00 40
-    01 ??
+    01 ?? 01
 
 <!-- RQ -- FIXME: This test vector is incomplete. -->
 
