@@ -103,7 +103,7 @@ class Cert_5_1_09_REEDAttachConnectivity(unittest.TestCase):
         time.sleep(10)
 
         self.nodes[ROUTER2].start()
-        time.sleep(10)
+        time.sleep(120)
         self.assertEqual(self.nodes[ROUTER2].get_state(), 'router')
         self.assertEqual(self.nodes[REED1].get_state(), 'router')
 
