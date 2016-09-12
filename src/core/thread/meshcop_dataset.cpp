@@ -156,8 +156,8 @@ void Dataset::Get(otOperationalDataset &aDataset)
         case Tlv::kNetworkName:
         {
             const NetworkNameTlv *tlv = static_cast<const NetworkNameTlv *>(cur);
-            memcpy(aDataset.mMasterKey.m8, tlv->GetNetworkName(), tlv->GetLength());
-            aDataset.mIsMasterKeySet = true;
+            memcpy(aDataset.mNetworkName.m8, tlv->GetNetworkName(), tlv->GetLength());
+            aDataset.mIsNetworkNameSet = true;
             break;
         }
 
