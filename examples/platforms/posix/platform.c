@@ -54,7 +54,7 @@ void PlatformInit(int argc, char *argv[])
 
     if (argc != 2)
     {
-        exit(1);
+        exit(EXIT_FAILURE);
     }
 
     NODE_ID = (uint32_t)strtol(argv[1], &endptr, 0);
@@ -62,7 +62,7 @@ void PlatformInit(int argc, char *argv[])
     if (*endptr != '\0')
     {
         fprintf(stderr, "Invalid NODE_ID: %s\n", argv[1]);
-        exit(1);
+        exit(EXIT_FAILURE);
     }
 
     posixAlarmInit();
@@ -75,21 +75,28 @@ void PlatformProcessDrivers(otInstance *aInstance)
 {
     fd_set read_fds;
     fd_set write_fds;
+    fd_set error_fds;
     int max_fd = -1;
     struct timeval timeout;
     int rval;
 
     FD_ZERO(&read_fds);
     FD_ZERO(&write_fds);
+    FD_ZERO(&error_fds);
 
-    posixUartUpdateFdSet(&read_fds, &write_fds, &max_fd);
+    posixUartUpdateFdSet(&read_fds, &write_fds, &error_fds, &max_fd);
     posixRadioUpdateFdSet(&read_fds, &write_fds, &max_fd);
     posixAlarmUpdateTimeout(&timeout);
 
     if (!otAreTaskletsPending(aInstance))
     {
-        rval = select(max_fd + 1, &read_fds, &write_fds, NULL, &timeout);
-        assert(rval >= 0 && errno != ETIME);
+        rval = select(max_fd + 1, &read_fds, &write_fds, &error_fds, &timeout);
+
+        if ((rval < 0) && (errno != EINTR))
+        {
+            perror("select");
+            exit(EXIT_FAILURE);
+        }
     }
 
     posixUartProcess();

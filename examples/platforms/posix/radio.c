@@ -462,7 +462,12 @@ bool otPlatRadioGetPromiscuous(otInstance *aInstance)
 void radioReceive(otInstance *aInstance)
 {
     ssize_t rval = recvfrom(sSockFd, &sReceiveMessage, sizeof(sReceiveMessage), 0, NULL, NULL);
-    assert(rval >= 0);
+
+    if (rval < 0)
+    {
+        perror("recvfrom");
+        exit(EXIT_FAILURE);
+    }
 
     sReceiveFrame.mLength = (uint8_t)(rval - 1);
 
@@ -579,7 +584,12 @@ void radioTransmit(const struct RadioMessage *msg, const struct RadioPacket *pkt
         sockaddr.sin_port = htons(9000 + sPortOffset + i);
         rval = sendto(sSockFd, msg, 1 + pkt->mLength,
                       0, (struct sockaddr *)&sockaddr, sizeof(sockaddr));
-        assert(rval >= 0);
+
+        if (rval < 0)
+        {
+            perror("recvfrom");
+            exit(EXIT_FAILURE);
+        }
     }
 }
 
