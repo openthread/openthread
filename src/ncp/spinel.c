@@ -859,6 +859,8 @@ spinel_datatype_vpack(uint8_t *data_ptr, spinel_size_t data_len_max, const char 
 // ----------------------------------------------------------------------------
 // MARK: -
 
+// **** LCOV_EXCL_START ****
+
 const char *
 spinel_prop_key_to_cstr(spinel_prop_key_t prop_key)
 {
@@ -1114,6 +1116,10 @@ spinel_prop_key_to_cstr(spinel_prop_key_t prop_key)
         ret = "SPINEL_PROP_THREAD_RLOC16_DEBUG_PASSTHRU";
         break;
 
+    case SPINEL_PROP_THREAD_ROUTER_ROLE_ENABLED:
+        ret = "SPINEL_PROP_THREAD_ROUTER_ROLE_ENABLED";
+        break;
+
     case SPINEL_PROP_MAC_WHITELIST:
         ret = "PROP_MAC_WHITELIST";
         break;
@@ -1303,6 +1309,7 @@ const char *spinel_status_to_cstr(spinel_status_t status)
     return ret;
 }
 
+// **** LCOV_EXCL_STOP ****
 
 /* -------------------------------------------------------------------------- */
 

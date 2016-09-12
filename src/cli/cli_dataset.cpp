@@ -62,6 +62,8 @@ const DatasetCommand Dataset::sCommands[] =
     { "panid", &ProcessPanId },
     { "pending", &ProcessPending },
     { "pendingtimestamp", &ProcessPendingTimestamp },
+    { "pskc", &ProcessPSKc },
+    { "securitypolicy", &ProcessSecurityPolicy },
 };
 
 Server *Dataset::sServer;
@@ -108,10 +110,10 @@ ThreadError Dataset::Print(otOperationalDataset &aDataset)
     {
         const uint8_t *prefix = aDataset.mMeshLocalPrefix.m8;
         sServer->OutputFormat("Mesh Local Prefix: %x:%x:%x:%x/64\r\n",
-                              (static_cast<uint16_t>(prefix[0]) << 16) | prefix[1],
-                              (static_cast<uint16_t>(prefix[2]) << 16) | prefix[3],
-                              (static_cast<uint16_t>(prefix[4]) << 16) | prefix[5],
-                              (static_cast<uint16_t>(prefix[6]) << 16) | prefix[7]);
+                              (static_cast<uint16_t>(prefix[0]) << 8) | prefix[1],
+                              (static_cast<uint16_t>(prefix[2]) << 8) | prefix[3],
+                              (static_cast<uint16_t>(prefix[4]) << 8) | prefix[5],
+                              (static_cast<uint16_t>(prefix[6]) << 8) | prefix[7]);
     }
 
     if (aDataset.mIsMasterKeySet)
@@ -130,6 +132,45 @@ ThreadError Dataset::Print(otOperationalDataset &aDataset)
     if (aDataset.mIsPanIdSet)
     {
         sServer->OutputFormat("PAN ID: 0x%04x\r\n", aDataset.mPanId);
+    }
+
+    if (aDataset.mIsPSKcSet)
+    {
+        sServer->OutputFormat("PSKc: ");
+        OutputBytes(aDataset.mPSKc.m8, sizeof(aDataset.mPSKc.m8));
+        sServer->OutputFormat("\r\n");
+    }
+
+    if (aDataset.mIsSecurityPolicySet)
+    {
+        sServer->OutputFormat("Security Policy: %d, ", aDataset.mSecurityPolicy.mRotationTime);
+
+        if (aDataset.mSecurityPolicy.mFlags & OT_SECURITY_POLICY_OBTAIN_MASTER_KEY)
+        {
+            sServer->OutputFormat("o");
+        }
+
+        if (aDataset.mSecurityPolicy.mFlags & OT_SECURITY_POLICY_NATIVE_COMMISSIONING)
+        {
+            sServer->OutputFormat("n");
+        }
+
+        if (aDataset.mSecurityPolicy.mFlags & OT_SECURITY_POLICY_ROUTERS)
+        {
+            sServer->OutputFormat("r");
+        }
+
+        if (aDataset.mSecurityPolicy.mFlags & OT_SECURITY_POLICY_EXTERNAL_COMMISSIONER)
+        {
+            sServer->OutputFormat("c");
+        }
+
+        if (aDataset.mSecurityPolicy.mFlags & OT_SECURITY_POLICY_BEACONS)
+        {
+            sServer->OutputFormat("b");
+        }
+
+        sServer->OutputFormat("\r\n");
     }
 
     return kThreadError_None;
@@ -573,6 +614,75 @@ ThreadError Dataset::ProcessMgmtGetCommand(otInstance *aInstance, int argc, char
         ExitNow(error = kThreadError_Parse);
     }
 
+    (void)aInstance;
+
+exit:
+    return error;
+}
+
+ThreadError Dataset::ProcessPSKc(otInstance *aInstance, int argc, char *argv[])
+{
+    ThreadError error = kThreadError_None;
+    uint16_t length;
+
+    VerifyOrExit(argc > 0, error = kThreadError_Parse);
+
+    length = static_cast<uint16_t>((strlen(argv[0]) + 1) / 2);
+    VerifyOrExit(length <= OT_PSKC_MAX_SIZE, error = kThreadError_NoBufs);
+    VerifyOrExit(Interpreter::Hex2Bin(argv[0], sDataset.mPSKc.m8 + OT_PSKC_MAX_SIZE - length, length)
+                 == length, error = kThreadError_Parse);
+
+    sDataset.mIsPSKcSet = true;
+    (void)aInstance;
+
+exit:
+    return error;
+}
+
+ThreadError Dataset::ProcessSecurityPolicy(otInstance *aInstance, int argc, char *argv[])
+{
+    ThreadError error = kThreadError_None;
+    long value;
+
+    VerifyOrExit(argc > 0, error = kThreadError_Parse);
+
+    SuccessOrExit(error = Interpreter::ParseLong(argv[0], value));
+    sDataset.mSecurityPolicy.mRotationTime = static_cast<uint16_t>(value);
+    sDataset.mSecurityPolicy.mFlags = 0;
+
+    if (argc > 1)
+    {
+        for (char *arg = argv[1]; *arg != '\0'; arg++)
+        {
+            switch (*arg)
+            {
+            case 'o':
+                sDataset.mSecurityPolicy.mFlags |= OT_SECURITY_POLICY_OBTAIN_MASTER_KEY;
+                break;
+
+            case 'n':
+                sDataset.mSecurityPolicy.mFlags |= OT_SECURITY_POLICY_NATIVE_COMMISSIONING;
+                break;
+
+            case 'r':
+                sDataset.mSecurityPolicy.mFlags |= OT_SECURITY_POLICY_ROUTERS;
+                break;
+
+            case 'c':
+                sDataset.mSecurityPolicy.mFlags |= OT_SECURITY_POLICY_EXTERNAL_COMMISSIONER;
+                break;
+
+            case 'b':
+                sDataset.mSecurityPolicy.mFlags |= OT_SECURITY_POLICY_BEACONS;
+                break;
+
+            default:
+                ExitNow(error = kThreadError_Parse);
+            }
+        }
+    }
+
+    sDataset.mIsSecurityPolicySet = true;
     (void)aInstance;
 
 exit:

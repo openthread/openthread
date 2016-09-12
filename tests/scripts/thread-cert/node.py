@@ -100,7 +100,7 @@ class Node:
         if self.pexpect.isalive():
             if self.node_type == 'sim':
                 self.send_command('exit')
-                self.pexpect.expect('Done')
+                self.pexpect.expect(pexpect.EOF)
             elif self.node_type == 'ncp-sim':
                 self.pexpect.sendcontrol('c');
             self.pexpect.terminate()
