@@ -184,7 +184,7 @@ ThreadError Mle::Start(void)
     ThreadError error = kThreadError_None;
 
     // cannot bring up the interface if IEEE 802.15.4 promiscuous mode is enabled
-    VerifyOrExit(otPlatRadioGetPromiscuous() == false, error = kThreadError_Busy);
+    VerifyOrExit(otPlatRadioGetPromiscuous(NULL) == false, error = kThreadError_Busy);
     VerifyOrExit(mNetif.IsUp(), error = kThreadError_InvalidState);
 
     mDeviceState = kDeviceStateDetached;

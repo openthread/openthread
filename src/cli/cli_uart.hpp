@@ -48,7 +48,13 @@ namespace Cli {
 class Uart: public Server
 {
 public:
-    Uart(void);
+    /**
+     * Constructor
+     *
+     * @param[in]  aInstance  The OpenThread instance structure.
+     *
+     */
+    Uart(otInstance *aInstance);
 
     /**
      * This method delivers raw characters to the client.
@@ -75,6 +81,8 @@ public:
     void ReceiveTask(const uint8_t *aBuf, uint16_t aBufLength);
     void SendDoneTask(void);
 
+    static Uart *sUartServer;
+
 private:
     enum
     {
@@ -94,6 +102,10 @@ private:
     uint16_t mTxLength;
 
     uint16_t mSendLength;
+
+    Interpreter mInterpreter;
+
+    friend class Interpreter;
 };
 
 }  // namespace Cli

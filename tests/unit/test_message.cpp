@@ -32,11 +32,11 @@
 #include <common/message.hpp>
 #include <string.h>
 
-extern"C" void otSignalTaskletPending(void)
+extern"C" void otSignalTaskletPending(otInstance *)
 {
 }
 
-extern "C" void otPlatDiagAlarmFired(void)
+extern "C" void otPlatDiagAlarmFired(otInstance *)
 {
 }
 

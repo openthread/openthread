@@ -49,19 +49,22 @@ extern "C" {
 /**
  * This function enables the Thread Commissioner role.
  *
- * @param[in]  aPSKd  A pointer to the PSKd.
+ * @param[in]  aInstance  A pointer to an OpenThread instance.
+ * @param[in]  aPSKd      A pointer to the PSKd.
  *
  * @retval kThreadError_None         Successfully started the Commissioner role.
  * @retval kThreadError_InvalidArgs  @p aPSKd is invalid.
  *
  */
-ThreadError otCommissionerStart(const char *aPSKd);
+ThreadError otCommissionerStart(otInstance *aInstance, const char *aPSKd);
 
 /**
  * This function disables the Thread Commissioner role.
  *
+ * @param[in]  aInstance  A pointer to an OpenThread instance.
+ *
  */
-ThreadError otCommissionerStop(void);
+ThreadError otCommissionerStop(otInstance *aInstance);
 
 /**
  * @}

@@ -48,7 +48,13 @@ namespace Cli {
 class Console: public Server
 {
 public:
-    Console(void);
+    /**
+     * Constructor
+     *
+     * @param[in]  aInstance  The OpenThread instance structure.
+     *
+     */
+    Console(otInstance *aInstance);
 
     /**
      * This method delivers raw characters to the client.
@@ -98,6 +104,8 @@ private:
 
     otCliConsoleOutputCallback mCallback;
     void *mContext;
+
+    Interpreter mInterpreter;
 
 };
 

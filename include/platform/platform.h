@@ -39,7 +39,6 @@
 extern "C" {
 #endif
 
-
 /**
  * This function performs all platform-specific initialization.
  *
@@ -49,8 +48,10 @@ void PlatformInit(int argc, char *argv[]);
 /**
  * This function performs all platform-specific processing.
  *
+ * @param[in]  aInstance  The OpenThread instance structure.
+ *
  */
-void PlatformProcessDrivers(void);
+void PlatformProcessDrivers(otInstance *aInstance);
 
 #ifdef __cplusplus
 }  // end of extern "C"

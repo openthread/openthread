@@ -126,7 +126,7 @@ Mac::Mac(ThreadNetif &aThreadNetif):
     mPcapCallback = NULL;
     mPcapCallbackContext = NULL;
 
-    otPlatRadioEnable();
+    otPlatRadioEnable(NULL);
 }
 
 ThreadError Mac::ActiveScan(uint32_t aScanChannels, uint16_t aScanDuration, ActiveScanHandler aHandler, void *aContext)
@@ -214,7 +214,7 @@ ThreadError Mac::SetExtAddress(const ExtAddress &aExtAddress)
         buf[i] = aExtAddress.m8[7 - i];
     }
 
-    SuccessOrExit(error = otPlatRadioSetExtendedAddress(buf));
+    SuccessOrExit(error = otPlatRadioSetExtendedAddress(NULL, buf));
     mExtAddress = aExtAddress;
 
 exit:
@@ -229,7 +229,7 @@ ShortAddress Mac::GetShortAddress(void) const
 ThreadError Mac::SetShortAddress(ShortAddress aShortAddress)
 {
     mShortAddress = aShortAddress;
-    return otPlatRadioSetShortAddress(aShortAddress);
+    return otPlatRadioSetShortAddress(NULL, aShortAddress);
 }
 
 uint8_t Mac::GetChannel(void) const
@@ -279,7 +279,7 @@ PanId Mac::GetPanId(void) const
 ThreadError Mac::SetPanId(PanId aPanId)
 {
     mPanId = aPanId;
-    return otPlatRadioSetPanId(mPanId);
+    return otPlatRadioSetPanId(NULL, mPanId);
 }
 
 const uint8_t *Mac::GetExtendedPanId(void) const
@@ -325,17 +325,17 @@ void Mac::NextOperation(void)
     switch (mState)
     {
     case kStateActiveScan:
-        otPlatRadioReceive(mScanChannel);
+        otPlatRadioReceive(NULL, mScanChannel);
         break;
 
     default:
-        if (mRxOnWhenIdle || mReceiveTimer.IsRunning() || otPlatRadioGetPromiscuous())
+        if (mRxOnWhenIdle || mReceiveTimer.IsRunning() || otPlatRadioGetPromiscuous(NULL))
         {
-            otPlatRadioReceive(mChannel);
+            otPlatRadioReceive(NULL, mChannel);
         }
         else
         {
-            otPlatRadioSleep();
+            otPlatRadioSleep(NULL);
         }
 
         break;
@@ -498,10 +498,10 @@ exit:
 
 void Mac::HandleBeginTransmit(void)
 {
-    Frame &sendFrame(*static_cast<Frame *>(otPlatRadioGetTransmitBuffer()));
+    Frame &sendFrame(*static_cast<Frame *>(otPlatRadioGetTransmitBuffer(NULL)));
     ThreadError error = kThreadError_None;
 
-    if (otPlatRadioReceive(mChannel) != kThreadError_None)
+    if (otPlatRadioReceive(NULL, mChannel) != kThreadError_None)
     {
         mBeginTransmit.Post();
         ExitNow();
@@ -542,9 +542,9 @@ void Mac::HandleBeginTransmit(void)
         sendFrame.SetPower(mMaxTransmitPower);
     }
 
-    SuccessOrExit(error = otPlatRadioTransmit());
+    SuccessOrExit(error = otPlatRadioTransmit(NULL));
 
-    if (sendFrame.GetAckRequest() && !(otPlatRadioGetCaps() & kRadioCapsAckTimeout))
+    if (sendFrame.GetAckRequest() && !(otPlatRadioGetCaps(NULL) & kRadioCapsAckTimeout))
     {
         mAckTimer.Start(kAckTimeout);
         otLogDebgMac("ack timer start\n");
@@ -558,7 +558,7 @@ exit:
     }
 }
 
-extern "C" void otPlatRadioTransmitDone(bool aRxPending, ThreadError aError)
+extern "C" void otPlatRadioTransmitDone(otInstance *, bool aRxPending, ThreadError aError)
 {
     sMac->TransmitDoneTask(aRxPending, aError);
 }
@@ -618,7 +618,7 @@ void Mac::HandleAckTimer(void *aContext)
 
 void Mac::HandleAckTimer(void)
 {
-    otPlatRadioReceive(mChannel);
+    otPlatRadioReceive(NULL, mChannel);
 
     switch (mState)
     {
@@ -669,7 +669,7 @@ void Mac::HandleReceiveTimer(void)
 
 void Mac::SentFrame(bool aAcked)
 {
-    Frame &sendFrame(*static_cast<Frame *>(otPlatRadioGetTransmitBuffer()));
+    Frame &sendFrame(*static_cast<Frame *>(otPlatRadioGetTransmitBuffer(NULL)));
     Address destination;
     Sender *sender;
 
@@ -869,7 +869,7 @@ exit:
     return error;
 }
 
-extern "C" void otPlatRadioReceiveDone(RadioPacket *aFrame, ThreadError aError)
+extern "C" void otPlatRadioReceiveDone(otInstance *, RadioPacket *aFrame, ThreadError aError)
 {
     sMac->ReceiveDoneTask(static_cast<Frame *>(aFrame), aError);
 }
@@ -1109,14 +1109,14 @@ void Mac::SetPcapCallback(otLinkPcapCallback aPcapCallback, void *aCallbackConte
 
 bool Mac::IsPromiscuous(void)
 {
-    return otPlatRadioGetPromiscuous();
+    return otPlatRadioGetPromiscuous(NULL);
 }
 
 void Mac::SetPromiscuous(bool aPromiscuous)
 {
-    otPlatRadioSetPromiscuous(aPromiscuous);
+    otPlatRadioSetPromiscuous(NULL, aPromiscuous);
 
-    SuccessOrExit(otPlatRadioReceive(mChannel));
+    SuccessOrExit(otPlatRadioReceive(NULL, mChannel));
     NextOperation();
 
 exit:

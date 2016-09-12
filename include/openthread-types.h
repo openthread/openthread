@@ -37,11 +37,17 @@
 
 #include <stdint.h>
 #include <stdbool.h>
+
 #include <platform/toolchain.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+/**
+ * This type represents the OpenThread instance structure.
+ */
+typedef struct otInstance otInstance;
 
 /**
  * This enumeration represents error codes used throughout OpenThread.
