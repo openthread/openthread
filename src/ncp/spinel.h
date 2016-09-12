@@ -503,6 +503,12 @@ typedef enum
     SPINEL_PROP_THREAD_RLOC16_DEBUG_PASSTHRU
                                        = SPINEL_PROP_THREAD_EXT__BEGIN + 6,
 
+    /// This property indicates whether or not the `Router Role` is enabled.
+    /** Format `b`
+     */
+    SPINEL_PROP_THREAD_ROUTER_ROLE_ENABLED
+                                       = SPINEL_PROP_THREAD_EXT__BEGIN + 7,
+
     SPINEL_PROP_THREAD_EXT__END        = 0x1600,
 
     SPINEL_PROP_IPV6__BEGIN          = 0x60,

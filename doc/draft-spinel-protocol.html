@@ -501,6 +501,7 @@
 <link href="#rfc.appendix.D.2.20" rel="Chapter" title="D.2.20 PROP 5380: PROP_THREAD_NETWORK_ID_TIMEOUT"/>
 <link href="#rfc.appendix.D.2.21" rel="Chapter" title="D.2.21 PROP 5381: PROP_THREAD_ACTIVE_ROUTER_IDS"/>
 <link href="#rfc.appendix.D.2.22" rel="Chapter" title="D.2.22 PROP 5382: PROP_THREAD_RLOC16_DEBUG_PASSTHRU"/>
+<link href="#rfc.appendix.D.2.23" rel="Chapter" title="D.2.23 PROP 5383: SPINEL_PROP_THREAD_ROUTER_ROLE_ENABLED"/>
 <link href="#rfc.appendix.E" rel="Chapter" title="E Test Vectors"/>
 <link href="#rfc.appendix.E.1" rel="Chapter" title="E.1 Test Vector: Packed Unsigned Integer"/>
 <link href="#rfc.appendix.E.2" rel="Chapter" title="E.2 Test Vector: Reset Command"/>
@@ -532,8 +533,8 @@
   <link rel="schema.dct" href="http://purl.org/dc/terms/" />
 
   <meta name="dct.creator" content="Quattlebaum, R." />
-  <meta name="dct.identifier" content="urn:ietf:id:draft-spinel-protocol-f5ea928" />
-  <meta name="dct.issued" scheme="ISO8601" content="2016-9-7" />
+  <meta name="dct.identifier" content="urn:ietf:id:draft-spinel-protocol-94724cf" />
+  <meta name="dct.issued" scheme="ISO8601" content="2016-9-9" />
   <meta name="dct.abstract" content="This document describes a general management protocol for enabling a host device to communicate with and manage a Network Control Processor (NCP).  " />
   <meta name="description" content="This document describes a general management protocol for enabling a host device to communicate with and manage a Network Control Processor (NCP).  " />
 
@@ -554,7 +555,7 @@
 </tr>
 <tr>
   <td class="left"></td>
-  <td class="right">September 7, 2016</td>
+  <td class="right">September 9, 2016</td>
 </tr>
 
     	
@@ -562,7 +563,7 @@
   </table>
 
   <p class="title">Spinel Host-Controller Protocol<br />
-  <span class="filename">draft-spinel-protocol-f5ea928</span></p>
+  <span class="filename">draft-spinel-protocol-94724cf</span></p>
   
   <h1 id="rfc.abstract">
   <a href="#rfc.abstract">Abstract</a>
@@ -724,6 +725,7 @@
 <li>D.2.20.   <a href="#rfc.appendix.D.2.20">PROP 5380: PROP_THREAD_NETWORK_ID_TIMEOUT</a></li>
 <li>D.2.21.   <a href="#rfc.appendix.D.2.21">PROP 5381: PROP_THREAD_ACTIVE_ROUTER_IDS</a></li>
 <li>D.2.22.   <a href="#rfc.appendix.D.2.22">PROP 5382: PROP_THREAD_RLOC16_DEBUG_PASSTHRU</a></li>
+<li>D.2.23.   <a href="#rfc.appendix.D.2.23">PROP 5383: SPINEL_PROP_THREAD_ROUTER_ROLE_ENABLED</a></li>
 </ul></ul><li>Appendix E.   <a href="#rfc.appendix.E">Test Vectors</a></li>
 <ul><li>E.1.   <a href="#rfc.appendix.E.1">Test Vector: Packed Unsigned Integer</a></li>
 <li>E.2.   <a href="#rfc.appendix.E.2">Test Vector: Reset Command</a></li>
@@ -2910,6 +2912,16 @@ STACK-NAME/STACK-VERSION[BUILD_INFO][; OTHER_INFO]; BUILD_DATE_AND_TIME
 <p> </p>
 <p id="rfc.section.D.2.22.p.2">Allow the HOST to directly observe all IPv6 packets received by the NCP, including ones sent to the RLOC16 address.  </p>
 <p id="rfc.section.D.2.22.p.3">Default value is <samp>false</samp>.  </p>
+<h1 id="rfc.appendix.D.2.23"><a href="#rfc.appendix.D.2.23">D.2.23.</a> <a href="#prop-5383-spinelpropthreadrouterroleenabled" id="prop-5383-spinelpropthreadrouterroleenabled">PROP 5383: SPINEL_PROP_THREAD_ROUTER_ROLE_ENABLED</a></h1>
+<p/>
+
+<ul>
+  <li>Type: Read-Write</li>
+  <li>Packed-Encoding: <samp>b</samp></li>
+</ul>
+
+<p> </p>
+<p id="rfc.section.D.2.23.p.2">Allow the HOST to indicate whether or not the router role is enabled.  If current role is a router, setting this property to <samp>false</samp> starts a re-attach process as an end-device.  </p>
 <h1 id="rfc.appendix.E"><a href="#rfc.appendix.E">Appendix E.</a> <a href="#test-vectors" id="test-vectors">Test Vectors</a></h1>
 <h1 id="rfc.appendix.E.1"><a href="#rfc.appendix.E.1">E.1.</a> <a href="#test-vector-packed-unsigned-integer" id="test-vector-packed-unsigned-integer">Test Vector: Packed Unsigned Integer</a></h1>
 <table cellpadding="3" cellspacing="0" class="tt full center">

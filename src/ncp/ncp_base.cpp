@@ -124,7 +124,8 @@ const NcpBase::GetPropertyHandlerEntry NcpBase::mGetPropertyHandlerTable[] =
     { SPINEL_PROP_THREAD_STABLE_NETWORK_DATA_VERSION, &NcpBase::GetPropertyHandler_THREAD_STABLE_NETWORK_DATA_VERSION },
     { SPINEL_PROP_THREAD_LOCAL_ROUTES, &NcpBase::NcpBase::GetPropertyHandler_THREAD_LOCAL_ROUTES },
     { SPINEL_PROP_THREAD_ASSISTING_PORTS, &NcpBase::NcpBase::GetPropertyHandler_THREAD_ASSISTING_PORTS },
-    { SPINEL_PROP_THREAD_ALLOW_LOCAL_NET_DATA_CHANGE, &NcpBase::GetPropertyHandler_THREAD_ALLOW_LOCAL_NET_DATA_CHANGE},
+    { SPINEL_PROP_THREAD_ALLOW_LOCAL_NET_DATA_CHANGE, &NcpBase::GetPropertyHandler_THREAD_ALLOW_LOCAL_NET_DATA_CHANGE },
+    { SPINEL_PROP_THREAD_ROUTER_ROLE_ENABLED, &NcpBase::GetPropertyHandler_THREAD_ROUTER_ROLE_ENABLED },
 
     { SPINEL_PROP_MAC_WHITELIST, &NcpBase::GetPropertyHandler_MAC_WHITELIST },
     { SPINEL_PROP_MAC_WHITELIST_ENABLED, &NcpBase::GetPropertyHandler_MAC_WHITELIST_ENABLED },
@@ -208,8 +209,9 @@ const NcpBase::SetPropertyHandlerEntry NcpBase::mSetPropertyHandlerTable[] =
 
     { SPINEL_PROP_THREAD_LOCAL_LEADER_WEIGHT, &NcpBase::SetPropertyHandler_THREAD_LOCAL_LEADER_WEIGHT },
     { SPINEL_PROP_THREAD_ASSISTING_PORTS, &NcpBase::SetPropertyHandler_THREAD_ASSISTING_PORTS },
-    { SPINEL_PROP_THREAD_ALLOW_LOCAL_NET_DATA_CHANGE, &NcpBase::SetPropertyHandler_THREAD_ALLOW_LOCAL_NET_DATA_CHANGE},
+    { SPINEL_PROP_THREAD_ALLOW_LOCAL_NET_DATA_CHANGE, &NcpBase::SetPropertyHandler_THREAD_ALLOW_LOCAL_NET_DATA_CHANGE },
     { SPINEL_PROP_THREAD_NETWORK_ID_TIMEOUT, &NcpBase::SetPropertyHandler_THREAD_NETWORK_ID_TIMEOUT },
+    { SPINEL_PROP_THREAD_ROUTER_ROLE_ENABLED, &NcpBase::SetPropertyHandler_THREAD_ROUTER_ROLE_ENABLED },
 
     { SPINEL_PROP_STREAM_NET_INSECURE, &NcpBase::SetPropertyHandler_STREAM_NET_INSECURE },
     { SPINEL_PROP_STREAM_NET, &NcpBase::SetPropertyHandler_STREAM_NET },
@@ -1871,7 +1873,6 @@ exit:
     return errorCode;
 }
 
-
 ThreadError NcpBase::GetPropertyHandler_THREAD_ALLOW_LOCAL_NET_DATA_CHANGE(uint8_t header, spinel_prop_key_t key)
 {
     return SendPropertyUpdate(
@@ -1880,6 +1881,17 @@ ThreadError NcpBase::GetPropertyHandler_THREAD_ALLOW_LOCAL_NET_DATA_CHANGE(uint8
         key,
         SPINEL_DATATYPE_BOOL_S,
         mAllowLocalNetworkDataChange
+    );
+}
+
+ThreadError NcpBase::GetPropertyHandler_THREAD_ROUTER_ROLE_ENABLED(uint8_t header, spinel_prop_key_t key)
+{
+    return SendPropertyUpdate(
+        header,
+        SPINEL_CMD_PROP_VALUE_IS,
+        key,
+        SPINEL_DATATYPE_BOOL_S,
+        otIsRouterRoleEnabled()
     );
 }
 
@@ -3433,6 +3445,34 @@ ThreadError NcpBase::SetPropertyHandler_THREAD_ALLOW_LOCAL_NET_DATA_CHANGE(uint8
     if (should_register_with_leader)
     {
         otSendServerData();
+    }
+
+    return errorCode;
+}
+
+ThreadError NcpBase::SetPropertyHandler_THREAD_ROUTER_ROLE_ENABLED(uint8_t header, spinel_prop_key_t key,
+                                                   const uint8_t *value_ptr, uint16_t value_len)
+{
+    bool isEnabled;
+    spinel_ssize_t parsedLength;
+    ThreadError errorCode = kThreadError_None;
+
+    parsedLength = spinel_datatype_unpack(
+                       value_ptr,
+                       value_len,
+                       SPINEL_DATATYPE_BOOL_S,
+                       &isEnabled
+                   );
+
+    if (parsedLength > 0)
+    {
+        otSetRouterRoleEnabled(isEnabled);
+
+        errorCode = HandleCommandPropertyGet(header, key);
+    }
+    else
+    {
+        errorCode = SendLastStatus(header, SPINEL_STATUS_PARSE_ERROR);
     }
 
     return errorCode;
