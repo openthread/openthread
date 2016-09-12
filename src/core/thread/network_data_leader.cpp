@@ -69,6 +69,7 @@ void Leader::Reset(void)
     mLength = 0;
     mContextUsed = 0;
     mContextIdReuseDelay = kContextIdReuseDelay;
+    mNetif.SetStateChangedFlags(OT_THREAD_NETDATA_UPDATED);
 }
 
 void Leader::Start(void)
