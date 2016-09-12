@@ -199,31 +199,6 @@ otInstance *otInstanceInit();
 void otInstanceFinalize(otInstance *aInstance);
 
 /**
- * This function initializes the OpenThread library.
- *
- * This function enables OpenThread processing.
- *
- * @param[in] aInstance A pointer to an OpenThread instance.
- *
- * @retval kThreadError_None  Successfully enabled the Thread interface.
- *
- */
-ThreadError otEnable(otInstance *aInstance);
-
-/**
- * This function disables the OpenThread library.
- *
- * This function disables OpenThread processing. The client must call otEnable() to use OpenThread
- * again.
- *
- * @param[in] aInstance A pointer to an OpenThread instance.
- *
- * @retval kThreadError_None  Successfully disabled the Thread interface.
- *
- */
-ThreadError otDisable(otInstance *aInstance);
-
-/**
  * This function brings up the IPv6 interface.
  *
  * Call this function to bring up the IPv6 interface and enables IPv6 communication.

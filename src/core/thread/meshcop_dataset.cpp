@@ -156,8 +156,8 @@ void Dataset::Get(otOperationalDataset &aDataset)
         case Tlv::kNetworkName:
         {
             const NetworkNameTlv *tlv = static_cast<const NetworkNameTlv *>(cur);
-            memcpy(aDataset.mMasterKey.m8, tlv->GetNetworkName(), tlv->GetLength());
-            aDataset.mIsMasterKeySet = true;
+            memcpy(aDataset.mNetworkName.m8, tlv->GetNetworkName(), tlv->GetLength());
+            aDataset.mIsNetworkNameSet = true;
             break;
         }
 
@@ -174,6 +174,23 @@ void Dataset::Get(otOperationalDataset &aDataset)
             const PendingTimestampTlv *tlv = static_cast<const PendingTimestampTlv *>(cur);
             aDataset.mPendingTimestamp = tlv->GetSeconds();
             aDataset.mIsPendingTimestampSet = true;
+            break;
+        }
+
+        case Tlv::kPSKc:
+        {
+            const PSKcTlv *tlv = static_cast<const PSKcTlv *>(cur);
+            memcpy(aDataset.mPSKc.m8, tlv->GetPSKc(), tlv->GetLength());
+            aDataset.mIsPSKcSet = true;
+            break;
+        }
+
+        case Tlv::kSecurityPolicy:
+        {
+            const SecurityPolicyTlv *tlv = static_cast<const SecurityPolicyTlv *>(cur);
+            aDataset.mSecurityPolicy.mRotationTime = tlv->GetRotationTime();
+            aDataset.mSecurityPolicy.mFlags = tlv->GetFlags();
+            aDataset.mIsSecurityPolicySet = true;
             break;
         }
 
@@ -267,6 +284,23 @@ ThreadError Dataset::Set(const otOperationalDataset &aDataset, bool aActive)
         MeshCoP::PanIdTlv tlv;
         tlv.Init();
         tlv.SetPanId(aDataset.mPanId);
+        Set(tlv);
+    }
+
+    if (aDataset.mIsPSKcSet)
+    {
+        MeshCoP::PSKcTlv tlv;
+        tlv.Init();
+        tlv.SetPSKc(aDataset.mPSKc.m8);
+        Set(tlv);
+    }
+
+    if (aDataset.mIsSecurityPolicySet)
+    {
+        MeshCoP::SecurityPolicyTlv tlv;
+        tlv.Init();
+        tlv.SetRotationTime(aDataset.mSecurityPolicy.mRotationTime);
+        tlv.SetFlags(aDataset.mSecurityPolicy.mFlags);
         Set(tlv);
     }
 

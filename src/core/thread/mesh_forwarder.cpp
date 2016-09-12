@@ -190,6 +190,7 @@ void MeshForwarder::ScheduleTransmissionTask()
             children[i].mDataRequest &&
             (mSendMessage = GetIndirectTransmission(children[i])) != NULL)
         {
+            mSendMessage->SetOffset(children[i].mFragmentOffset);
             mMac.SendFrameRequest(mMacSender);
             ExitNow();
         }

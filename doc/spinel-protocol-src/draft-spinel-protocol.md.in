@@ -1,0 +1,145 @@
+%%%
+	title = "Spinel Host-Controller Protocol"
+   	abbrev = "Spinel Protocol (@SOURCE_VERSION@)"
+	category = "std"
+	docName = "draft-spinel-protocol-@SOURCE_VERSION@"
+	ipr = "none"
+	keyword = ["Spinel", "OpenThread", "Thread", "NCP"]
+
+	date = @SOURCE_DATE@
+
+    [pi]
+    editing = "yes"
+    private = "OpenThread"
+    compact = "yes"
+    subcompact = "yes"
+    comments = "yes"
+
+	[[author]]
+	initials = "R."
+	surname = "Quattlebaum"
+	fullname = "Robert S. Quattlebaum"
+	role = "editor"
+	organization = "Nest Labs"
+	  [author.address]
+	  email = "rquattle@nestlabs.com"
+	  [author.address.postal]
+	  street = "3400 Hillview Ave."
+	  city = "Palo Alto"
+	  region = "California"
+	  code = "94304"
+	  country = "USA"
+%%%
+
+.# Abstract
+
+This document describes a general management protocol for enabling a host
+device to communicate with and manage a Network Control Processor (NCP).
+
+While initially designed to support Thread-based NCPs, the NCP protocol
+has been designed with a layered approach that allows it to be easily
+adapted to other network technologies in the future.
+
+.# Status of This Document
+
+This document is a work in progress and subject to change.
+
+.# Copyright Notice
+
+Copyright (c) 2016, Nest Labs, Inc.
+All rights reserved.
+
+<!-- RQ
+  -- We may want to consider a license more appropriate for documentation.
+  -->
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
+
+1. Redistributions of source code must retain the above copyright
+   notice, this list of conditions and the following disclaimer.
+2. Redistributions in binary form must reproduce the above copyright
+   notice, this list of conditions and the following disclaimer in the
+   documentation and/or other materials provided with the distribution.
+3. Neither the name of the copyright holder nor the
+   names of its contributors may be used to endorse or promote products
+   derived from this software without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+POSSIBILITY OF SUCH DAMAGE.
+
+{mainmatter}
+
+# Introduction #
+
+This Network Control Processor (NCP) protocol was designed to enable a host
+device to communicate with and manage a NCP while also achieving the
+following goals:
+
+ *  Adopt a layered approach to the protocol design, allowing future
+    support for other network protocols.
+ *  Minimize the number of required commands/methods by providing a
+    rich, property-based API.
+ *  Support NCPs capable of being connected to more than one network
+    at a time.
+ *  Gracefully handle the addition of new features and capabilities
+    without necessarily breaking backward compatibility.
+ *  Be as minimal and light-weight as possible without unnecessarily
+    sacrificing flexibility.
+
+On top of this core framework, we define the properties and commands
+to enable various features and network protocols.
+
+# Definitions #
+
+NCP
+: Acryonym for Network Control Processor.
+
+Host
+: Computer or Micro-controller which controls the NCP.
+
+TID
+: Transaction Identifier. May be a value between zero and fifteen.
+  See (#tid-transaction-identifier) for more information.
+
+IID
+: Interface Identifier. May be a value between zero and three.
+  See (#iid-interface-identifier) for more information.
+
+PUI
+: Packed Unsigned Integer. A way to serialize an unsigned integer
+  using one, two, or three bytes. Used throughout the Spinel protocol.
+  See (#packed-unsigned-integer) for more information.
+
+{{spinel-frame-format.md}}
+
+{{spinel-data-packing.md}}
+
+{{spinel-commands.md}}
+
+{{spinel-prop.md}}
+
+{{spinel-status-codes.md}}
+
+{backmatter}
+
+{{spinel-framing.md}}
+
+{{spinel-feature-network-save.md}}
+
+{{spinel-feature-host-buffer-offload.md}}
+
+{{spinel-tech-thread.md}}
+
+{{spinel-test-vectors.md}}
+
+{{spinel-example-sessions.md}}

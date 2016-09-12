@@ -55,7 +55,6 @@ otInstance *sInstance = NULL;
 #endif
 
 otInstance::otInstance(void) :
-    mEnabled(false),
     mReceiveIp6DatagramCallback(NULL),
     mReceiveIp6DatagramCallbackContext(NULL),
     mActiveScanCallback(NULL),
@@ -66,7 +65,6 @@ otInstance::otInstance(void) :
     mIp6(),
     mThreadNetif(mIp6)
 {
-    mEnabled = true;
 }
 
 namespace Thread {
@@ -912,7 +910,8 @@ exit:
 void otInstanceFinalize(otInstance *aInstance)
 {
     // Ensure we are disabled
-    (void)otDisable(aInstance);
+    (void)otThreadStop(aInstance);
+    (void)otInterfaceDown(aInstance);
 
     // Nothing to actually free, since the caller supplied the buffer
 
@@ -921,46 +920,12 @@ void otInstanceFinalize(otInstance *aInstance)
 #endif
 }
 
-ThreadError otEnable(otInstance *aInstance)
-{
-    ThreadError error = kThreadError_None;
-
-    VerifyOrExit(!aInstance->mEnabled, error = kThreadError_InvalidState);
-
-    otLogInfoApi("otEnable\n");
-
-    aInstance->mEnabled = true;
-
-exit:
-    return error;
-}
-
-ThreadError otDisable(otInstance *aInstance)
-{
-    ThreadError error = kThreadError_None;
-
-    VerifyOrExit(aInstance->mEnabled, error = kThreadError_InvalidState);
-
-    otLogInfoApi("otDisable\n");
-
-    otThreadStop(aInstance);
-    otInterfaceDown(aInstance);
-
-    aInstance->mEnabled = false;
-
-exit:
-    return error;
-}
-
 ThreadError otInterfaceUp(otInstance *aInstance)
 {
     ThreadError error = kThreadError_None;
 
-    VerifyOrExit(aInstance->mEnabled, error = kThreadError_InvalidState);
-
     error = aInstance->mThreadNetif.Up();
 
-exit:
     return error;
 }
 
@@ -968,24 +933,20 @@ ThreadError otInterfaceDown(otInstance *aInstance)
 {
     ThreadError error = kThreadError_None;
 
-    VerifyOrExit(aInstance->mEnabled, error = kThreadError_InvalidState);
-
     error = aInstance->mThreadNetif.Down();
 
-exit:
     return error;
 }
 
 bool otIsInterfaceUp(otInstance *aInstance)
 {
-    return aInstance->mEnabled && aInstance->mThreadNetif.IsUp();
+    return aInstance->mThreadNetif.IsUp();
 }
 
 ThreadError otThreadStart(otInstance *aInstance)
 {
     ThreadError error = kThreadError_None;
 
-    VerifyOrExit(aInstance->mEnabled, error = kThreadError_InvalidState);
     VerifyOrExit(aInstance->mThreadNetif.GetMac().GetPanId() != Mac::kPanIdBroadcast, error = kThreadError_InvalidState);
 
     error = aInstance->mThreadNetif.GetMle().Start();
@@ -998,17 +959,14 @@ ThreadError otThreadStop(otInstance *aInstance)
 {
     ThreadError error = kThreadError_None;
 
-    VerifyOrExit(aInstance->mEnabled, error = kThreadError_InvalidState);
-
     error = aInstance->mThreadNetif.GetMle().Stop();
 
-exit:
     return error;
 }
 
 bool otIsSingleton(otInstance *aInstance)
 {
-    return aInstance->mEnabled && aInstance->mThreadNetif.GetMle().IsSingleton();
+    return aInstance->mThreadNetif.GetMle().IsSingleton();
 }
 
 ThreadError otActiveScan(otInstance *aInstance, uint32_t aScanChannels, uint16_t aScanDuration,

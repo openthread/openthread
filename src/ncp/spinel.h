@@ -425,8 +425,7 @@ typedef enum
     SPINEL_PROP_THREAD__BEGIN          = 0x50,
     SPINEL_PROP_THREAD_LEADER_ADDR     = SPINEL_PROP_THREAD__BEGIN + 0, ///< [6]
     SPINEL_PROP_THREAD_PARENT          = SPINEL_PROP_THREAD__BEGIN + 1, ///< LADDR, SADDR [ES]
-    SPINEL_PROP_THREAD_CHILD_TABLE     = SPINEL_PROP_THREAD__BEGIN + 2, ///< [A(T(ESSLLCCcbbbb))]
-        /// array(EUI64,chId,rloc16,timeout,age,netDataVer,inLqi,aveRSS,rxOnInIdle,secureDataReq,fullFunc,fullNetData)
+    SPINEL_PROP_THREAD_CHILD_TABLE     = SPINEL_PROP_THREAD__BEGIN + 2, ///< array(EUI64,rloc16,timeout,age,netDataVer,inLqi,aveRSS,mode) [A(T(ESLLCCcC))]
     SPINEL_PROP_THREAD_LEADER_RID      = SPINEL_PROP_THREAD__BEGIN + 3, ///< [C]
     SPINEL_PROP_THREAD_LEADER_WEIGHT   = SPINEL_PROP_THREAD__BEGIN + 4, ///< [C]
     SPINEL_PROP_THREAD_LOCAL_LEADER_WEIGHT
@@ -502,6 +501,12 @@ typedef enum
      */
     SPINEL_PROP_THREAD_RLOC16_DEBUG_PASSTHRU
                                        = SPINEL_PROP_THREAD_EXT__BEGIN + 6,
+
+    /// This property indicates whether or not the `Router Role` is enabled.
+    /** Format `b`
+     */
+    SPINEL_PROP_THREAD_ROUTER_ROLE_ENABLED
+                                       = SPINEL_PROP_THREAD_EXT__BEGIN + 7,
 
     SPINEL_PROP_THREAD_EXT__END        = 0x1600,
 

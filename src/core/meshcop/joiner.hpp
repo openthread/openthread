@@ -102,6 +102,7 @@ private:
     void ReceiveJoinerFinalizeResponse(uint8_t *buf, uint16_t length);
     void SendJoinerFinalize(void);
 
+    uint8_t mJoinerRouterChannel;
     Mac::ExtAddress mJoinerRouter;
     Message *mTransmitMessage;
     Ip6::UdpSocket mSocket;

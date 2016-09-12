@@ -89,6 +89,8 @@ private:
     static ThreadError ProcessPendingTimestamp(otInstance *aInstance, int argc, char *argv[]);
     static ThreadError ProcessMgmtSetCommand(otInstance *aInstance, int argc, char *argv[]);
     static ThreadError ProcessMgmtGetCommand(otInstance *aInstance, int argc, char *argv[]);
+    static ThreadError ProcessPSKc(otInstance *aInstance, int argc, char *argv[]);
+    static ThreadError ProcessSecurityPolicy(otInstance *aInstance, int argc, char *argv[]);
 
     static const DatasetCommand sCommands[];
     static otOperationalDataset sDataset;

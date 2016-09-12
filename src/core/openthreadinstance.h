@@ -48,8 +48,6 @@
  */
 typedef struct otInstance
 {
-    bool mEnabled;
-
     //
     // Callbacks
     //
