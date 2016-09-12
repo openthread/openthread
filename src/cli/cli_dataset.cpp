@@ -617,38 +617,41 @@ ThreadError Dataset::ProcessSecurityPolicy(int argc, char *argv[])
     ThreadError error = kThreadError_None;
     long value;
 
-    VerifyOrExit(argc > 1, error = kThreadError_Parse);
+    VerifyOrExit(argc > 0, error = kThreadError_Parse);
 
     SuccessOrExit(error = Interpreter::ParseLong(argv[0], value));
     sDataset.mSecurityPolicy.mRotationTime = static_cast<uint16_t>(value);
     sDataset.mSecurityPolicy.mFlags = 0;
 
-    for (char *arg = argv[1]; *arg != '\0'; arg++)
+    if (argc > 1)
     {
-        switch (*arg)
+        for (char *arg = argv[1]; *arg != '\0'; arg++)
         {
-        case 'o':
-            sDataset.mSecurityPolicy.mFlags |= OT_SECURITY_POLICY_OBTAIN_MASTER_KEY;
-            break;
+            switch (*arg)
+            {
+            case 'o':
+                sDataset.mSecurityPolicy.mFlags |= OT_SECURITY_POLICY_OBTAIN_MASTER_KEY;
+                break;
 
-        case 'n':
-            sDataset.mSecurityPolicy.mFlags |= OT_SECURITY_POLICY_NATIVE_COMMISSIONING;
-            break;
+            case 'n':
+                sDataset.mSecurityPolicy.mFlags |= OT_SECURITY_POLICY_NATIVE_COMMISSIONING;
+                break;
 
-        case 'r':
-            sDataset.mSecurityPolicy.mFlags |= OT_SECURITY_POLICY_ROUTERS;
-            break;
+            case 'r':
+                sDataset.mSecurityPolicy.mFlags |= OT_SECURITY_POLICY_ROUTERS;
+                break;
 
-        case 'c':
-            sDataset.mSecurityPolicy.mFlags |= OT_SECURITY_POLICY_EXTERNAL_COMMISSIONER;
-            break;
+            case 'c':
+                sDataset.mSecurityPolicy.mFlags |= OT_SECURITY_POLICY_EXTERNAL_COMMISSIONER;
+                break;
 
-        case 'b':
-            sDataset.mSecurityPolicy.mFlags |= OT_SECURITY_POLICY_BEACONS;
-            break;
+            case 'b':
+                sDataset.mSecurityPolicy.mFlags |= OT_SECURITY_POLICY_BEACONS;
+                break;
 
-        default:
-            ExitNow(error = kThreadError_Parse);
+            default:
+                ExitNow(error = kThreadError_Parse);
+            }
         }
     }
 
