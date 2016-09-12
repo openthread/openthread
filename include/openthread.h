@@ -1729,6 +1729,17 @@ int otWriteMessage(otMessage aMessage, uint16_t aOffset, const void *aBuf, uint1
  */
 
 /**
+ * Allocate a new message buffer for sending an IPv6 message.
+ *
+ * @param[in]  aLinkSecurityEnabled  TRUE if the message should be secured at Layer 2
+ *
+ * @returns A pointer to the message buffer or NULL if no message buffers are available.
+ *
+ * @sa otFreeMessage
+ */
+otMessage otNewIp6Message(bool aLinkSecurityEnabled);
+
+/**
  * This function pointer is called when an IPv6 datagram is received.
  *
  * @param[in]  aMessage  A pointer to the message buffer containing the received IPv6 datagram.
@@ -1752,17 +1763,6 @@ typedef void (*otReceiveIp6DatagramCallback)(otMessage aMessage, void *aContext)
  *
  */
 void otSetReceiveIp6DatagramCallback(otReceiveIp6DatagramCallback aCallback, void *aCallbackContext);
-
-/**
- * Allocate a new message buffer for sending an IPv6 message.
- *
- * @param[in]  aLinkSecurityEnabled  TRUE if the message should be secured at Layer 2
- *
- * @returns A pointer to the message buffer or NULL if no message buffers are available.
- *
- * @sa otFreeMessage
- */
-otMessage otNewIPv6Message(bool aLinkSecurityEnabled);
 
 /**
  * This function indicates whether or not Thread control traffic is filtered out when delivering IPv6 datagrams

@@ -1078,7 +1078,7 @@ otMessage otNewUdpMessage(void)
     return sIp6->mUdp.NewMessage(0);
 }
 
-otMessage otNewIPv6Message(bool aLinkSecurityEnabled)
+otMessage otNewIp6Message(bool aLinkSecurityEnabled)
 {
     Message *message = sIp6->mMessagePool.New(Message::kTypeIp6, 0);
 

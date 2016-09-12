@@ -3143,7 +3143,7 @@ ThreadError NcpBase::SetPropertyHandler_STREAM_NET_INSECURE(uint8_t header, spin
     unsigned int meta_len(0);
 
     // STREAM_NET_INSECURE packets are not secured at layer 2.
-    otMessage message = otNewIPv6Message(false);
+    otMessage message = otNewIp6Message(false);
 
     if (message == NULL)
     {
@@ -3213,7 +3213,7 @@ ThreadError NcpBase::SetPropertyHandler_STREAM_NET(uint8_t header, spinel_prop_k
     unsigned int meta_len(0);
     
     // STREAM_NET requires layer 2 security.
-    otMessage message = otNewIPv6Message(true);
+    otMessage message = otNewIp6Message(true);
 
     if (message == NULL)
     {
