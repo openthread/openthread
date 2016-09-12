@@ -64,7 +64,6 @@ DEBUG_TERM = 0
 DEBUG_CMD_RESPONSE = 0
 
 
-TIMEOUT_PING = 2
 TIMEOUT_PROP = 2
 
 gWpanApi = None
@@ -113,6 +112,7 @@ from select import select
 logging.getLogger("scapy.runtime").setLevel(logging.ERROR)
 from scapy.all import IPv6
 from scapy.all import ICMPv6EchoRequest
+from scapy.all import ICMPv6EchoReply
 
 
 MASTER_PROMPT  = "spinel-cli"
@@ -979,6 +979,9 @@ class SpinelCommandHandler(SpinelCodec):
                     pkt = IPv6(prop_value[2:])
                     pkt.show()
 
+                elif (prop_op == SPINEL_PROP_STREAM_DEBUG):
+                    logger.debug("DEBUG: "+prop_value)
+
             if gWpanApi: 
                 gWpanApi.queue_add(prop_op, prop_value, tid)
             else:
@@ -1302,10 +1305,15 @@ class WpanApi(SpinelCodec):
 
     def queue_add(self, prop, value, tid):
         #print "Q add: tid="+str(tid)+" prop="+str(prop)+" tid_filter="+str(self.tid_filter)
-        if (tid != self.tid_filter) or (prop != self.prop_filter): return
-        if (self.prop_filter == SPINEL_PROP_STREAM_NET):
+        # Asynchronous handlers don't actually add
+        if (prop == SPINEL_PROP_STREAM_NET):
             pkt = IPv6(value[2:])
-            if pkt.nh != self.ip_type_filter: return
+            if ICMPv6EchoReply in pkt:
+                print "\n%d bytes from %s: icmp_seq=%d hlim=%d time=%dms" % (
+                    pkt.plen, pkt.src, pkt.seq, pkt.hlim, 80)
+            return
+
+        if (tid != self.tid_filter) or (prop != self.prop_filter): return
         item = self.PropertyItem(prop, value, tid)
         self.__queue_prop.put_nowait(item)
         
@@ -2278,17 +2286,7 @@ class WpanDiagsCmd(Cmd, SpinelCodec):
             self.wpanApi.queue_wait_prepare(SPINEL_PROP_STREAM_NET,
                                             SPINEL_HEADER_ASYNC)
             self.wpanApi.ip_send(ping_req)
-            result = self.wpanApi.queue_wait_for_prop(SPINEL_PROP_STREAM_NET,
-                                                      TIMEOUT_PING)
-            if result:
-                pkt = IPv6(result.value[2:])
-                print "%d bytes from %s: icmp_seq=%d hlim=%d time=%dms" % (
-                    pkt.plen, pkt.src, pkt.seq, pkt.hlim, 80)
-                print("Done") 
-            else:
-                # Don't output anything when ping fails
-                #print "Fail"
-                pass
+            # Let handler print result
         except:
             print "Fail"
             print traceback.format_exc()
