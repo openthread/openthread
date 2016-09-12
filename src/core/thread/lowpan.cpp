@@ -391,7 +391,7 @@ int Lowpan::CompressExtensionHeader(Message &aMessage, uint8_t *aBuf, uint8_t &a
     aMessage.MoveOffset(sizeof(extHeader));
 
     cur[0] = kExtHdrDispatch | kExtHdrEidHbh;
-    aNextHeader = extHeader.GetNextHeader();
+    aNextHeader = static_cast<uint8_t>(extHeader.GetNextHeader());
 
     switch (extHeader.GetNextHeader())
     {
