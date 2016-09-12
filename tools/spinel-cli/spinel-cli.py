@@ -63,7 +63,6 @@ DEBUG_LOG_TUN = 0
 DEBUG_TERM = 0
 DEBUG_CMD_RESPONSE = 0
 
-
 TIMEOUT_PROP = 2
 
 gWpanApi = None
@@ -72,7 +71,7 @@ def goodbye(signum=None, frame=None):
     logger.info('\nQuitting')
     if gWpanApi:
         gWpanApi.serial.close()
-    exit(1)
+    exit(0)
 
 import os
 import sys
@@ -180,10 +179,6 @@ class Color:
     DARKMAGENTA  = "\033[35m"
     DARKCYAN     = "\033[36m"
     WHITE        = "\033[37m"
-
-IP_TYPE_UDP = 17
-IP_TYPE_ICMPv6 = 58
-
 
 SPINEL_RSSI_OVERRIDE            = 127
 
@@ -587,6 +582,21 @@ class StreamSerial(IStream):
         b = self.sock.recv(size)
         if DEBUG_LOG_RX:
             logger.debug("RX Raw: "+hexify_bytes(b))        
+        return b
+
+class StreamSocket(IStream):
+    def __init__(self, sock):
+        self.sock = sock
+
+    def write(self, data):
+        self.sock.send(data)
+        if DEBUG_LOG_TX:
+            logger.debug("TX Raw: "+str(map(hexify_chr,data)))
+
+    def read(self, size=1):
+        b = self.sock.recv(size)
+        if DEBUG_LOG_RX_BYTES:
+            logger.debug("RX Raw: "+str(map(hexify_chr,b)))        
         return b
 
 class StreamPipe(IStream):
@@ -1217,7 +1227,6 @@ class WpanApi(SpinelCodec):
         self.__queue_prop = Queue.Queue()
         self.__start_reader()
         self.tid_filter = SPINEL_HEADER_DEFAULT 
-        self.ip_type_filter = IP_TYPE_ICMPv6
 
     def __del__(self):
         self._reader_alive = False
@@ -1404,6 +1413,11 @@ class WpanApi(SpinelCodec):
 class WpanDiagsCmd(Cmd, SpinelCodec):
     
     def __init__(self, device, *a, **kw):
+
+        self.wpanApi = WpanApi(device)
+        global gWpanApi
+        gWpanApi = self.wpanApi
+
         Cmd.__init__(self)
         Cmd.identchars = string.ascii_letters + string.digits + '-'
 
@@ -1432,12 +1446,6 @@ class WpanDiagsCmd(Cmd, SpinelCodec):
             readline.parse_and_bind("tab: complete")
             if sys.platform == 'darwin':
                 readline.parse_and_bind("bind ^I rl_complete")
-
-
-        # === Initialize Shell with some important parameters ==
-        self.wpanApi = WpanApi(device)
-        global gWpanApi
-        gWpanApi = self.wpanApi
 
         self.nodeid = kw.get('nodeid','1')
         self.prop_set_value(SPINEL_PROP_THREAD_RLOC16_DEBUG_PASSTHRU, 1)
@@ -1700,16 +1708,22 @@ class WpanDiagsCmd(Cmd, SpinelCodec):
         Usage: debug <1=enable | 0=disable>
         """
         global DEBUG_ENABLE, DEBUG_LOG_PKT, DEBUG_LOG_PROP
-        global DEBUG_LOG_TX, DEBUG_LOG_RX
+        global DEBUG_LOG_TX, DEBUG_LOG_RX, DEBUG_LOG_HDLC
 
-        if line: line = int(line)
-        if line:
-            DEBUG_ENABLE = 1
-        else:
-            DEBUG_ENABLE = 0
-        #DEBUG_LOG_TX = DEBUG_ENABLE
-        DEBUG_LOG_PKT = DEBUG_ENABLE
-        DEBUG_LOG_PROP = DEBUG_ENABLE
+        if line != None and line != "":
+            level = int(line)
+
+            if level: 
+                DEBUG_ENABLE = level
+                if level >= 1: DEBUG_LOG_PROP = 1
+                if level >= 2: DEBUG_LOG_PKT = 1
+                if level >= 3: DEBUG_LOG_HDLC = 1
+            else:
+                DEBUG_ENABLE = 0
+                DEBUG_LOG_PROP = 0
+                DEBUG_LOG_PKT = 0
+                DEBUG_LOG_HDLC = 0
+
         print "DEBUG_ENABLE = "+str(DEBUG_ENABLE)
 
     def do_debugterm(self, line):
@@ -2934,6 +2948,13 @@ class WpanDiagsCmd(Cmd, SpinelCodec):
 
 
 if __name__ == "__main__":
+    # register clean exit handlers.
+    signal.signal(signal.SIGHUP, goodbye)
+    signal.signal(signal.SIGINT, goodbye)
+    signal.signal(signal.SIGCONT, goodbye)
+    signal.signal(signal.SIGABRT, goodbye)
+    signal.signal(signal.SIGTERM, goodbye)
+    signal.signal(signal.SIGPIPE, goodbye)
 
     args = sys.argv[1:] 
 
@@ -2974,13 +2995,6 @@ if __name__ == "__main__":
 
     stream = StreamOpen(streamType, streamDescriptor)
     shell = WpanDiagsCmd(stream, nodeid=options.nodeid)
-
-    # register clean exit handlers.
-    signal.signal(signal.SIGHUP, goodbye)
-    signal.signal(signal.SIGINT, goodbye)
-    signal.signal(signal.SIGABRT, goodbye)
-    signal.signal(signal.SIGTERM, goodbye)
-    signal.signal(signal.SIGPIPE, goodbye)
 
     try:
         shell.cmdloop()
