@@ -1862,7 +1862,7 @@ ThreadError otSetMessageOffset(otMessage aMessage, uint16_t aOffset);
  * @sa otReadMessage
  * @sa otWriteMessage
  */
-int otAppendMessage(otMessage aMessage, const void *aBuf, uint16_t aLength);
+ThreadError otAppendMessage(otMessage aMessage, const void *aBuf, uint16_t aLength);
 
 /**
  * Read bytes from a message.
