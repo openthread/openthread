@@ -241,9 +241,13 @@ ThreadError Message::Append(const void *aBuf, uint16_t aLength)
 {
     ThreadError error = kThreadError_None;
     uint16_t oldLength = GetLength();
+    int bytesWritten;
 
     SuccessOrExit(error = SetLength(GetLength() + aLength));
-    Write(oldLength, aLength, aBuf);
+    bytesWritten = Write(oldLength, aLength, aBuf);
+
+    assert(bytesWritten == (int)aLength);
+    (void)bytesWritten;
 
 exit:
     return error;

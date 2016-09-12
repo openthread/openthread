@@ -1091,6 +1091,18 @@ otMessage otNewUdpMessage(otInstance *aInstance)
     return aInstance->mIp6.mUdp.NewMessage(0);
 }
 
+otMessage otNewIp6Message(otInstance *aInstance, bool aLinkSecurityEnabled)
+{
+    Message *message = aInstance->mIp6.mMessagePool.New(Message::kTypeIp6, 0);
+
+    if (message)
+    {
+        message->SetLinkSecurityEnabled(aLinkSecurityEnabled);
+    }
+
+    return message;
+}
+
 ThreadError otFreeMessage(otMessage aMessage)
 {
     return static_cast<Message *>(aMessage)->Free();
@@ -1120,7 +1132,7 @@ ThreadError otSetMessageOffset(otMessage aMessage, uint16_t aOffset)
     return message->SetOffset(aOffset);
 }
 
-int otAppendMessage(otMessage aMessage, const void *aBuf, uint16_t aLength)
+ThreadError otAppendMessage(otMessage aMessage, const void *aBuf, uint16_t aLength)
 {
     Message *message = static_cast<Message *>(aMessage);
     return message->Append(aBuf, aLength);
