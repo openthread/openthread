@@ -41,8 +41,6 @@
 #include "cli.hpp"
 #include "cli_dataset.hpp"
 
-using Thread::MeshCoP::SecurityPolicyTlv;
-
 namespace Thread {
 namespace Cli {
 
@@ -147,29 +145,29 @@ ThreadError Dataset::Print(otOperationalDataset &aDataset)
     {
         sServer->OutputFormat("Security Policy: %d, ", aDataset.mSecurityPolicy.mRotationTime);
 
-        if (aDataset.mSecurityPolicy.mFlags & SecurityPolicyTlv::kObtainMasterKeyFlag)
+        if (aDataset.mSecurityPolicy.mFlags & OT_SECURITY_POLICY_OBTAIN_MASTER_KEY)
         {
-            sServer->OutputFormat("O");
+            sServer->OutputFormat("o");
         }
 
-        if (aDataset.mSecurityPolicy.mFlags & SecurityPolicyTlv::kNativeCommissioningFlag)
+        if (aDataset.mSecurityPolicy.mFlags & OT_SECURITY_POLICY_NATIVE_COMMISSIONING)
         {
-            sServer->OutputFormat("N");
+            sServer->OutputFormat("n");
         }
 
-        if (aDataset.mSecurityPolicy.mFlags & SecurityPolicyTlv::kRoutersFlag)
+        if (aDataset.mSecurityPolicy.mFlags & OT_SECURITY_POLICY_ROUTERS)
         {
-            sServer->OutputFormat("R");
+            sServer->OutputFormat("r");
         }
 
-        if (aDataset.mSecurityPolicy.mFlags & SecurityPolicyTlv::kExternalCommissionerFlag)
+        if (aDataset.mSecurityPolicy.mFlags & OT_SECURITY_POLICY_EXTERNAL_COMMISSIONER)
         {
-            sServer->OutputFormat("C");
+            sServer->OutputFormat("c");
         }
 
-        if (aDataset.mSecurityPolicy.mFlags & SecurityPolicyTlv::kBeaconsFlag)
+        if (aDataset.mSecurityPolicy.mFlags & OT_SECURITY_POLICY_BEACONS)
         {
-            sServer->OutputFormat("B");
+            sServer->OutputFormat("b");
         }
 
         sServer->OutputFormat("\r\n");
@@ -629,24 +627,24 @@ ThreadError Dataset::ProcessSecurityPolicy(int argc, char *argv[])
     {
         switch (*arg)
         {
-        case 'O':
-            sDataset.mSecurityPolicy.mFlags |= SecurityPolicyTlv::kObtainMasterKeyFlag;
+        case 'o':
+            sDataset.mSecurityPolicy.mFlags |= OT_SECURITY_POLICY_OBTAIN_MASTER_KEY;
             break;
 
-        case 'N':
-            sDataset.mSecurityPolicy.mFlags |= SecurityPolicyTlv::kNativeCommissioningFlag;
+        case 'n':
+            sDataset.mSecurityPolicy.mFlags |= OT_SECURITY_POLICY_NATIVE_COMMISSIONING;
             break;
 
-        case 'R':
-            sDataset.mSecurityPolicy.mFlags |= SecurityPolicyTlv::kRoutersFlag;
+        case 'r':
+            sDataset.mSecurityPolicy.mFlags |= OT_SECURITY_POLICY_ROUTERS;
             break;
 
-        case 'C':
-            sDataset.mSecurityPolicy.mFlags |= SecurityPolicyTlv::kExternalCommissionerFlag;
+        case 'c':
+            sDataset.mSecurityPolicy.mFlags |= OT_SECURITY_POLICY_EXTERNAL_COMMISSIONER;
             break;
 
-        case 'B':
-            sDataset.mSecurityPolicy.mFlags |= SecurityPolicyTlv::kBeaconsFlag;
+        case 'b':
+            sDataset.mSecurityPolicy.mFlags |= OT_SECURITY_POLICY_BEACONS;
             break;
 
         default:

@@ -197,6 +197,19 @@ typedef struct otSecurityPolicy
 } otSecurityPolicy;
 
 /**
+ * This enumeration represents flags that indicate security related behaviours within OpenThread.
+ *
+ */
+enum
+{
+    OT_SECURITY_POLICY_OBTAIN_MASTER_KEY      = 1 << 7,  ///< Obtaining the Master Key
+    OT_SECURITY_POLICY_NATIVE_COMMISSIONING   = 1 << 6,  ///< Native Commissioning
+    OT_SECURITY_POLICY_ROUTERS                = 1 << 5,  ///< Routers enabled
+    OT_SECURITY_POLICY_EXTERNAL_COMMISSIONER  = 1 << 4,  ///< External Commissioner allowed
+    OT_SECURITY_POLICY_BEACONS                = 1 << 3,  ///< Beacons enabled
+};
+
+/**
  * This type represents the IEEE 802.15.4 PAN ID.
  *
  */
