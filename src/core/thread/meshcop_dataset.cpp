@@ -177,6 +177,23 @@ void Dataset::Get(otOperationalDataset &aDataset)
             break;
         }
 
+        case Tlv::kPSKc:
+        {
+            const PSKcTlv *tlv = static_cast<const PSKcTlv *>(cur);
+            memcpy(aDataset.mPSKc.m8, tlv->GetPSKc(), tlv->GetLength());
+            aDataset.mIsPSKcSet = true;
+            break;
+        }
+
+        case Tlv::kSecurityPolicy:
+        {
+            const SecurityPolicyTlv *tlv = static_cast<const SecurityPolicyTlv *>(cur);
+            aDataset.mSecurityPolicy.mRotationTime = tlv->GetRotationTime();
+            aDataset.mSecurityPolicy.mFlags = tlv->GetFlags();
+            aDataset.mIsSecurityPolicySet = true;
+            break;
+        }
+
         default:
         {
             break;
@@ -267,6 +284,23 @@ ThreadError Dataset::Set(const otOperationalDataset &aDataset, bool aActive)
         MeshCoP::PanIdTlv tlv;
         tlv.Init();
         tlv.SetPanId(aDataset.mPanId);
+        Set(tlv);
+    }
+
+    if (aDataset.mIsPSKcSet)
+    {
+        MeshCoP::PSKcTlv tlv;
+        tlv.Init();
+        tlv.SetPSKc(aDataset.mPSKc.m8);
+        Set(tlv);
+    }
+
+    if (aDataset.mIsSecurityPolicySet)
+    {
+        MeshCoP::SecurityPolicyTlv tlv;
+        tlv.Init();
+        tlv.SetRotationTime(aDataset.mSecurityPolicy.mRotationTime);
+        tlv.SetFlags(aDataset.mSecurityPolicy.mFlags);
         Set(tlv);
     }
 

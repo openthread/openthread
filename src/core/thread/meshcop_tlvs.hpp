@@ -774,11 +774,11 @@ public:
 
     enum
     {
-        kObtainMasterKeyFlag      = 1 << 7,  ///< Obtaining the Master Key
-        kNativeCommissioningFlag  = 1 << 6,  ///< Native Commissioning
-        kRoutersFlag              = 1 << 5,  ///< Routers enabled
-        kExternalCommissionerFlag = 1 << 4,  ///< External Commissioner allowed
-        kBeaconsFlag              = 1 << 3,  ///< Beacons enabled
+        kObtainMasterKeyFlag      = OT_SECURITY_POLICY_OBTAIN_MASTER_KEY,      ///< Obtaining the Master Key
+        kNativeCommissioningFlag  = OT_SECURITY_POLICY_NATIVE_COMMISSIONING,   ///< Native Commissioning
+        kRoutersFlag              = OT_SECURITY_POLICY_ROUTERS,                ///< Routers enabled
+        kExternalCommissionerFlag = OT_SECURITY_POLICY_EXTERNAL_COMMISSIONER,  ///< External Commissioner allowed
+        kBeaconsFlag              = OT_SECURITY_POLICY_BEACONS,                ///< Beacons enabled
     };
 
     /**
