@@ -98,6 +98,13 @@ void Uart::ReceiveTask(const uint8_t *aBuf, uint16_t aBufLength)
 
             break;
 
+#ifdef OPENTHREAD_EXAMPLES_POSIX
+
+        case 0x03: // ASCII for Ctrl-C
+            exit(EXIT_SUCCESS);
+            break;
+#endif
+
         case '\b':
         case 127:
             if (mRxLength > 0)
