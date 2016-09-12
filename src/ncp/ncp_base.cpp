@@ -1141,8 +1141,9 @@ ThreadError NcpBase::CommandHandler_RESET(uint8_t header, unsigned int command, 
     // We only get to this point if the
     // platform doesn't support resetting.
     // In such a case we fake it.
-
-    otDisable(mInstance);
+    
+    otThreadStop(mInstance);
+    otInterfaceDown(mInstance);
 
     errorCode = SendLastStatus(SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0, SPINEL_STATUS_RESET_SOFTWARE);
 
