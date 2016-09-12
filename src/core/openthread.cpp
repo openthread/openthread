@@ -1078,6 +1078,18 @@ otMessage otNewUdpMessage(void)
     return sIp6->mUdp.NewMessage(0);
 }
 
+otMessage otNewIPv6Message(bool aLinkSecurityEnabled)
+{
+    Message *message = sIp6->mMessagePool.New(Message::kTypeIp6, 0);
+
+    if (message)
+    {
+        message->SetLinkSecurityEnabled(aLinkSecurityEnabled);
+    }
+
+    return message;
+}
+
 ThreadError otFreeMessage(otMessage aMessage)
 {
     return static_cast<Message *>(aMessage)->Free();
