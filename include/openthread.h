@@ -1658,7 +1658,8 @@ ThreadError otSetMessageOffset(otMessage aMessage, uint16_t aOffset);
  * @param[in]  aBuf      A pointer to the data to append.
  * @param[in]  aLength   Number of bytes to append.
  *
- * @returns The number of bytes appended.
+ * @retval kThreadErrorNone    Successfully appended to the message
+ * @retval kThreadErrorNoBufs  No available buffers to grow the message.
  *
  * @sa otNewUdpMessage
  * @sa otFreeMessage
@@ -1669,7 +1670,7 @@ ThreadError otSetMessageOffset(otMessage aMessage, uint16_t aOffset);
  * @sa otReadMessage
  * @sa otWriteMessage
  */
-int otAppendMessage(otMessage aMessage, const void *aBuf, uint16_t aLength);
+ThreadError otAppendMessage(otMessage aMessage, const void *aBuf, uint16_t aLength);
 
 /**
  * Read bytes from a message.

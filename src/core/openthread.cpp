@@ -1119,7 +1119,7 @@ ThreadError otSetMessageOffset(otMessage aMessage, uint16_t aOffset)
     return message->SetOffset(aOffset);
 }
 
-int otAppendMessage(otMessage aMessage, const void *aBuf, uint16_t aLength)
+ThreadError otAppendMessage(otMessage aMessage, const void *aBuf, uint16_t aLength)
 {
     Message *message = static_cast<Message *>(aMessage);
     return message->Append(aBuf, aLength);
