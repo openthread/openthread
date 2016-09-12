@@ -231,28 +231,41 @@ void Dataset::Get(otOperationalDataset &aDataset)
 ThreadError Dataset::Set(const otOperationalDataset &aDataset, bool aActive)
 {
     ThreadError error = kThreadError_None;
+    MeshCoP::ActiveTimestampTlv activeTimestampTlv;
 
     VerifyOrExit(aDataset.mIsActiveTimestampSet, error = kThreadError_InvalidArgs);
+
+    activeTimestampTlv.Init();
+    activeTimestampTlv.SetSeconds(aDataset.mActiveTimestamp);
+    Set(activeTimestampTlv);
 
     if (aActive)
     {
         mTimestamp.SetSeconds(aDataset.mActiveTimestamp);
-        mTimestamp.SetTicks(0);
-        mTimestamp.SetAuthoritative(false);
     }
     else
     {
-        MeshCoP::ActiveTimestampTlv tlv;
+        MeshCoP::PendingTimestampTlv pendingTimestampTlv;
 
         VerifyOrExit(aDataset.mIsPendingTimestampSet, error = kThreadError_InvalidArgs);
-        mTimestamp.SetSeconds(aDataset.mPendingTimestamp);
-        mTimestamp.SetTicks(0);
-        mTimestamp.SetAuthoritative(false);
 
-        tlv.Init();
-        tlv.SetSeconds(aDataset.mActiveTimestamp);
-        Set(tlv);
+        mTimestamp.SetSeconds(aDataset.mPendingTimestamp);
+
+        pendingTimestampTlv.Init();
+        pendingTimestampTlv.SetSeconds(aDataset.mPendingTimestamp);
+        Set(pendingTimestampTlv);
+
+        if (aDataset.mIsDelaySet)
+        {
+            MeshCoP::DelayTimerTlv tlv;
+            tlv.Init();
+            tlv.SetDelayTimer(aDataset.mDelay);
+            Set(tlv);
+        }
     }
+
+    mTimestamp.SetTicks(0);
+    mTimestamp.SetAuthoritative(false);
 
     if (aDataset.mIsChannelSet)
     {
@@ -285,14 +298,6 @@ ThreadError Dataset::Set(const otOperationalDataset &aDataset, bool aActive)
         }
 
         Set(channelMask.tlv);
-    }
-
-    if (aDataset.mIsDelaySet)
-    {
-        MeshCoP::DelayTimerTlv tlv;
-        tlv.Init();
-        tlv.SetDelayTimer(aDataset.mDelay);
-        Set(tlv);
     }
 
     if (aDataset.mIsExtendedPanIdSet)
