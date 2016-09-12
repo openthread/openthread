@@ -33,8 +33,8 @@
 #include <openthread-types.h>
 #include <common/code_utils.hpp>
 
-#include <prcm.h>
-#include <trng.h>
+#include <driverlib/prcm.h>
+#include <driverlib/trng.h>
 
 #include <platform/random.h>
 

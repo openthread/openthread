@@ -31,7 +31,7 @@
  ******************************************************************************/
 
 #include <platform/misc.h>
-#include <sys_ctrl.h>
+#include <driverlib/sys_ctrl.h>
 
 void otPlatReset(void)
 {
