@@ -1851,7 +1851,8 @@ ThreadError otSetMessageOffset(otMessage aMessage, uint16_t aOffset);
  * @param[in]  aBuf      A pointer to the data to append.
  * @param[in]  aLength   Number of bytes to append.
  *
- * @returns The number of bytes appended.
+ * @retval kThreadErrorNone    Successfully appended to the message
+ * @retval kThreadErrorNoBufs  No available buffers to grow the message.
  *
  * @sa otNewUdpMessage
  * @sa otFreeMessage
@@ -1862,7 +1863,7 @@ ThreadError otSetMessageOffset(otMessage aMessage, uint16_t aOffset);
  * @sa otReadMessage
  * @sa otWriteMessage
  */
-int otAppendMessage(otMessage aMessage, const void *aBuf, uint16_t aLength);
+ThreadError otAppendMessage(otMessage aMessage, const void *aBuf, uint16_t aLength);
 
 /**
  * Read bytes from a message.
@@ -1922,6 +1923,18 @@ int otWriteMessage(otMessage aMessage, uint16_t aOffset, const void *aBuf, uint1
  */
 
 /**
+ * Allocate a new message buffer for sending an IPv6 message.
+ *
+ * @param[in]  aInstance             A pointer to an OpenThread instance.
+ * @param[in]  aLinkSecurityEnabled  TRUE if the message should be secured at Layer 2
+ *
+ * @returns A pointer to the message buffer or NULL if no message buffers are available.
+ *
+ * @sa otFreeMessage
+ */
+otMessage otNewIp6Message(otInstance *aInstance, bool aLinkSecurityEnabled);
+
+/**
  * This function pointer is called when an IPv6 datagram is received.
  *
  * @param[in]  aMessage  A pointer to the message buffer containing the received IPv6 datagram.
@@ -1947,7 +1960,6 @@ typedef void (*otReceiveIp6DatagramCallback)(otMessage aMessage, void *aContext)
  */
 void otSetReceiveIp6DatagramCallback(otInstance *aInstance, otReceiveIp6DatagramCallback aCallback,
                                      void *aCallbackContext);
-
 
 /**
  * This function indicates whether or not Thread control traffic is filtered out when delivering IPv6 datagrams
