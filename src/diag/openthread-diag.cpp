@@ -46,9 +46,9 @@ namespace Diagnostics {
 extern "C" {
 #endif
 
-void diagInit()
+void diagInit(otInstance *aInstance)
 {
-    Diag::Init();
+    Diag::Init(aInstance);
 }
 
 char *diagProcessCmd(int argc, char *argv[])

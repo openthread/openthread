@@ -57,11 +57,12 @@ typedef int (*otCliConsoleOutputCallback)(const char *aBuf,
 /**
  * Initialize the CLI CONSOLE module.
  *
+ * @param[in]  aInstance   The OpenThread instance structure.
  * @param[in]  aCallback   A callback method called to process console output.
  * @param[in]  aContext    A user context pointer.
  *
  */
-void otCliConsoleInit(otCliConsoleOutputCallback aCallback, void *aContext);
+void otCliConsoleInit(otInstance *aInstance, otCliConsoleOutputCallback aCallback, void *aContext);
 
 /**
  * This method is called to feed in a console input line.

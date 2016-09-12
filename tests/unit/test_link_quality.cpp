@@ -34,7 +34,7 @@
 
 namespace Thread {
 
-extern"C" void otSignalTaskletPending(void)
+extern"C" void otSignalTaskletPending(otInstance *)
 {
 }
 

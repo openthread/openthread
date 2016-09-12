@@ -42,6 +42,12 @@
 namespace Thread {
 namespace Cli {
 
+Udp::Udp(otInstance *aInstance, Interpreter *aInterpreter):
+    mInstance(aInstance),
+    mInterpreter(aInterpreter)
+{
+}
+
 ThreadError Udp::Start(void)
 {
     ThreadError error;
@@ -50,7 +56,7 @@ ThreadError Udp::Start(void)
     memset(&sockaddr, 0, sizeof(otSockAddr));
     sockaddr.mPort = 7335;
 
-    SuccessOrExit(error = otOpenUdpSocket(&mSocket, &HandleUdpReceive, this));
+    SuccessOrExit(error = otOpenUdpSocket(mInstance, &mSocket, &Udp::HandleUdpReceive, this));
     SuccessOrExit(error = otBindUdpSocket(&mSocket, &sockaddr));
 
 exit:
@@ -83,7 +89,7 @@ void Udp::HandleUdpReceive(otMessage aMessage, const otMessageInfo *aMessageInfo
 
     mPeer = *aMessageInfo;
 
-    Interpreter::ProcessLine(buf, payloadLength, *this);
+    mInterpreter->ProcessLine(buf, payloadLength, *this);
 
 exit:
     {}
@@ -94,7 +100,7 @@ int Udp::Output(const char *aBuf, uint16_t aBufLength)
     ThreadError error = kThreadError_None;
     otMessage message;
 
-    VerifyOrExit((message = otNewUdpMessage()) != NULL, error = kThreadError_NoBufs);
+    VerifyOrExit((message = otNewUdpMessage(mInstance)) != NULL, error = kThreadError_NoBufs);
     SuccessOrExit(error = otSetMessageLength(message, aBufLength));
     otWriteMessage(message, 0, aBuf, aBufLength);
     SuccessOrExit(error = otSendUdp(&mSocket, message, &mPeer));

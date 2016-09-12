@@ -35,7 +35,7 @@
 
 static Thread::Crypto::MbedTls mbedtls;
 
-extern"C" void otSignalTaskletPending(void)
+extern"C" void otSignalTaskletPending(otInstance *)
 {
 }
 

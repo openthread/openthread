@@ -35,7 +35,7 @@
 #ifndef NCP_H_
 #define NCP_H_
 
-#include "../openthread-types.h"
+#include <openthread-types.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -44,8 +44,10 @@ extern "C" {
 /**
  * Initialize the NCP.
  *
+ * @param[in]  aInstance  The OpenThread instance structure.
+ *
  */
-void otNcpInit(void);
+void otNcpInit(otInstance *aInstance);
 
 /**
  * @brief Send data to the host via a specific stream.

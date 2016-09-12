@@ -51,13 +51,13 @@ static uint32_t sCallCount[kCallCountIndexMax];
 
 extern "C" {
 
-    void otPlatAlarmStop(void)
+    void otPlatAlarmStop(otInstance *)
     {
         sTimerOn = false;
         sCallCount[kCallCountIndexAlarmStop]++;
     }
 
-    void otPlatAlarmStartAt(uint32_t aT0, uint32_t aDt)
+    void otPlatAlarmStartAt(otInstance *, uint32_t aT0, uint32_t aDt)
     {
         sTimerOn = true;
         sCallCount[kCallCountIndexAlarmStart]++;
@@ -112,7 +112,7 @@ int TestOneTimer(void)
 
     sNow += kTimerInterval;
 
-    otPlatAlarmFired();
+    otPlatAlarmFired(NULL);
 
     VerifyOrQuit(sCallCount[kCallCountIndexAlarmStart]    == 1, "TestOneTimer: Start CallCount Failed.\n");
     VerifyOrQuit(sCallCount[kCallCountIndexAlarmStop]     == 1, "TestOneTimer: Stop CallCount Failed.\n");
@@ -136,7 +136,7 @@ int TestOneTimer(void)
 
     sNow += kTimerInterval;
 
-    otPlatAlarmFired();
+    otPlatAlarmFired(NULL);
 
     VerifyOrQuit(sCallCount[kCallCountIndexAlarmStart]    == 1, "TestOneTimer: Start CallCount Failed.\n");
     VerifyOrQuit(sCallCount[kCallCountIndexAlarmStop]     == 1, "TestOneTimer: Stop CallCount Failed.\n");
@@ -160,7 +160,7 @@ int TestOneTimer(void)
 
     sNow += kTimerInterval + 5;
 
-    otPlatAlarmFired();
+    otPlatAlarmFired(NULL);
 
     VerifyOrQuit(sCallCount[kCallCountIndexAlarmStart]    == 1, "TestOneTimer: Start CallCount Failed.\n");
     VerifyOrQuit(sCallCount[kCallCountIndexAlarmStop]     == 1, "TestOneTimer: Stop CallCount Failed.\n");
@@ -184,7 +184,7 @@ int TestOneTimer(void)
 
     sNow += kTimerInterval - 2;
 
-    otPlatAlarmFired();
+    otPlatAlarmFired(NULL);
 
     VerifyOrQuit(sCallCount[kCallCountIndexAlarmStart]    == 2, "TestOneTimer: Start CallCount Failed.\n");
     VerifyOrQuit(sCallCount[kCallCountIndexAlarmStop]     == 0, "TestOneTimer: Stop CallCount Failed.\n");
@@ -194,7 +194,7 @@ int TestOneTimer(void)
 
     sNow += kTimerInterval;
 
-    otPlatAlarmFired();
+    otPlatAlarmFired(NULL);
 
     VerifyOrQuit(sCallCount[kCallCountIndexAlarmStart]    == 2, "TestOneTimer: Start CallCount Failed.\n");
     VerifyOrQuit(sCallCount[kCallCountIndexAlarmStop]     == 1, "TestOneTimer: Stop CallCount Failed.\n");
@@ -376,7 +376,7 @@ int TestTenTimers(void)
             // timer is ready to be triggered by examining the aDt arg passed into otPlatAlarmStartAt().  If
             // that value is 0, then otPlatAlarmFired should be fired immediately. This loop calls otPlatAlarmFired()
             // the requisite number of times based on the aDt argument.
-            otPlatAlarmFired();
+            otPlatAlarmFired(NULL);
         }
         while (sPlatDt == 0);
 

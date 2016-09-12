@@ -47,9 +47,9 @@ static NcpUart *sNcpUart;
 
 extern Ip6::Ip6 *sIp6;
 
-extern "C" void otNcpInit(void)
+extern "C" void otNcpInit(otInstance *aInstance)
 {
-    sNcpUart = new(&sNcpRaw) NcpUart;
+    sNcpUart = new(&sNcpRaw) NcpUart(aInstance);
 }
 
 NcpUart::UartTxBuffer::UartTxBuffer(void)
@@ -79,9 +79,9 @@ const uint8_t *NcpUart::UartTxBuffer::GetBuffer(void) const
     return mBuffer;
 }
 
-NcpUart::NcpUart():
-    NcpBase(),
-    mFrameDecoder(mRxBuffer, sizeof(mRxBuffer), &HandleFrame, &HandleError, this),
+NcpUart::NcpUart(otInstance *aInstance):
+    NcpBase(aInstance),
+    mFrameDecoder(mRxBuffer, sizeof(mRxBuffer), &NcpUart::HandleFrame, &NcpUart::HandleError, this),
     mUartBuffer(),
     mTxFrameBuffer(mTxBuffer, sizeof(mTxBuffer)),
     mUartSendTask(sIp6->mTaskletScheduler, EncodeAndSendToUart, this)
