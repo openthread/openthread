@@ -589,7 +589,7 @@ ThreadError Dataset::ProcessMgmtGetCommand(otInstance *aInstance, int argc, char
         else if (strcmp(argv[index], "binary") == 0)
         {
             VerifyOrExit((index + 1) < argc, error = kThreadError_Parse);
-            value = (strlen(argv[++index]) + 1) / 2;
+            value = static_cast<long>(strlen(argv[++index]) + 1) / 2;
             VerifyOrExit(static_cast<size_t>(value) <= (sizeof(tlvs) - static_cast<size_t>(length)), error = kThreadError_NoBufs);
             VerifyOrExit(Interpreter::Hex2Bin(argv[index], tlvs + length, static_cast<uint16_t>(value)) >= 0,
                          error = kThreadError_Parse);

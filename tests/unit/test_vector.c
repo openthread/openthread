@@ -28,7 +28,7 @@
 
 #include "test_vector.h"
 
-const test_lowpan_vector_t sTestVectorLowpan[] =
+test_lowpan_vector_t sTestVectorLowpan[] =
 {
     {
         // I1_t1_AF_pass.pcap

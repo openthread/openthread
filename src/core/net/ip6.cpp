@@ -100,7 +100,7 @@ uint16_t Ip6::ComputePseudoheaderChecksum(const Address &src, const Address &dst
     uint16_t checksum;
 
     checksum = Ip6::UpdateChecksum(0, length);
-    checksum = Ip6::UpdateChecksum(checksum, proto);
+    checksum = Ip6::UpdateChecksum(checksum, static_cast<uint16_t>(proto));
     checksum = UpdateChecksum(checksum, src);
     checksum = UpdateChecksum(checksum, dst);
 
@@ -323,7 +323,7 @@ ThreadError Ip6::HandleExtensionHeaders(Message &message, uint8_t &nextHeader, b
             ExitNow();
         }
 
-        nextHeader = extensionHeader.GetNextHeader();
+        nextHeader = static_cast<uint8_t>(extensionHeader.GetNextHeader());
     }
 
 exit:
@@ -485,7 +485,7 @@ ThreadError Ip6::HandleDatagram(Message &message, Netif *netif, int8_t interface
     message.SetOffset(sizeof(header));
 
     // process IPv6 Extension Headers
-    nextHeader = header.GetNextHeader();
+    nextHeader = static_cast<uint8_t>(header.GetNextHeader());
     SuccessOrExit(error = HandleExtensionHeaders(message, nextHeader, receive));
 
     // process IPv6 Payload
