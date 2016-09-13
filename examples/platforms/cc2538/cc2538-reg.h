@@ -35,7 +35,7 @@
 #ifndef CC2538_REG_H_
 #define CC2538_REG_H_
 
-#include <stdint.h>
+#include <openthread-std-types.h>
 
 #define HWREG(x)                              (*((volatile uint32_t *)(x)))
 

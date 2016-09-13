@@ -32,9 +32,6 @@
  *
  */
 
-#include <stdbool.h>
-#include <stdint.h>
-
 #include <openthread-config.h>
 #include <openthread.h>
 

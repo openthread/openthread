@@ -27,7 +27,7 @@
  */
 
 #include <stdio.h>
-#include <stdint.h>
+#include <openthread-std-types.h>
 #include <platform/toolchain.h>
 #include "test_util.h"
 
