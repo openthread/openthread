@@ -1422,27 +1422,27 @@ void MeshForwarder::HandleLowpanHC(uint8_t *aFrame, uint8_t aFrameLength,
     VerifyOrExit(headerLength > 0, error = kThreadError_Drop);
 
     aFrame += headerLength;
-    aFrameLength -= static_cast<uint8_t>(headerLengthstatic_cast<uint8_t>(;
+    aFrameLength -= static_cast<uint8_t>(headerLengthstatic_cast<uint8_t>);
 
-                                                                          SuccessOrExit(error = message->SetLength(message->GetLength() + aFrameLength));
+    SuccessOrExit(error = message->SetLength(message->GetLength() + aFrameLength));
 
-                                                                          ip6PayloadLength = HostSwap16(message->GetLength() - sizeof(Ip6::Header));
-                                                                          message->Write(Ip6::Header::GetPayloadLengthOffset(), sizeof(ip6PayloadLength), &ip6PayloadLength);
+    ip6PayloadLength = HostSwap16(message->GetLength() - sizeof(Ip6::Header));
+    message->Write(Ip6::Header::GetPayloadLengthOffset(), sizeof(ip6PayloadLength), &ip6PayloadLength);
 
-                                                                          message->Write(message->GetOffset(), aFrameLength, aFrame);
+    message->Write(message->GetOffset(), aFrameLength, aFrame);
 
-                                                                          // Security Check
-                                                                          VerifyOrExit(mNetif.GetIp6Filter().Accept(*message), error = kThreadError_Drop);
+    // Security Check
+    VerifyOrExit(mNetif.GetIp6Filter().Accept(*message), error = kThreadError_Drop);
 
-                                                                          exit:
+exit:
 
-                                                                          if (error == kThreadError_None)
-{
-    error = HandleDatagram(*message, aMessageInfo);
+    if (error == kThreadError_None)
+    {
+        error = HandleDatagram(*message, aMessageInfo);
     }
     else if (message != NULL)
-{
-    message->Free();
+    {
+        message->Free();
     }
 }
 
