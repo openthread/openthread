@@ -154,7 +154,7 @@ ThreadError LinkQualityInfo::GetAverageRssAsString(char *aCharBuffer, size_t aBu
     {
         VerifyOrExit(aBufferLen >= sizeof(kUnknownRssString), error = kThreadError_NoBufs);
 
-        strlcpy(aCharBuffer, kUnknownRssString, aBufferLen);
+        strncpy(aCharBuffer, kUnknownRssString, aBufferLen);
     }
     else
     {
