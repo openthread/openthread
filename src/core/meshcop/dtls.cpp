@@ -178,7 +178,7 @@ int Dtls::HandleMbedtlsTransmit(void *aContext, const unsigned char *aBuf, size_
 int Dtls::HandleMbedtlsTransmit(const unsigned char *aBuf, size_t aLength)
 {
     ThreadError error;
-    int rval;
+    int rval = 0;
 
     otLogInfoMeshCoP("Dtls::HandleMbedtlsTransmit\r\n");
 
@@ -221,8 +221,8 @@ int Dtls::HandleMbedtlsReceive(unsigned char *aBuf, size_t aLength)
     }
 
     rval = (int)mReceiveMessage->Read(mReceiveOffset, (uint16_t)aLength, aBuf);
-    mReceiveOffset += rval;
-    mReceiveLength -= rval;
+    mReceiveOffset += static_cast<uint16_t>(rval);
+    mReceiveLength -= static_cast<uint16_t>(rval);
 
 exit:
     return rval;
@@ -351,7 +351,7 @@ void Dtls::Process(void)
 
 ThreadError Dtls::MapError(int rval)
 {
-    ThreadError error;
+    ThreadError error = kThreadError_None;
 
     switch (rval)
     {
@@ -364,15 +364,7 @@ ThreadError Dtls::MapError(int rval)
         break;
 
     default:
-        if (rval >= 0)
-        {
-            error = kThreadError_None;
-        }
-        else
-        {
-            assert(false);
-        }
-
+        assert(rval >= 0);
         break;
     }
 
