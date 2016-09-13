@@ -241,7 +241,11 @@ typedef struct otExtAddress
 /**
  * This structure represents an IPv6 address.
  */
+#ifdef _WIN32
+OT_TOOL_PACKED_BEGIN typedef struct otIp6Address
+#else
 typedef OT_TOOL_PACKED_BEGIN struct otIp6Address
+#endif
 {
     union
     {

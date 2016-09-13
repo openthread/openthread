@@ -28,7 +28,6 @@
 #ifndef MBEDTLS_CONFIG_H
 #define MBEDTLS_CONFIG_H
 
-#include <inttypes.h>
 #include <stdlib.h>
 
 #include <platform/logging.h>

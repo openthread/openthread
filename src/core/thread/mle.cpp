@@ -61,9 +61,9 @@ Mle::Mle(ThreadNetif &aThreadNetif) :
     mMesh(aThreadNetif.GetMeshForwarder()),
     mMleRouter(aThreadNetif.GetMle()),
     mNetworkData(aThreadNetif.GetNetworkDataLeader()),
-    mParentRequestTimer(aThreadNetif.GetIp6().mTimerScheduler, &HandleParentRequestTimer, this),
+    mParentRequestTimer(aThreadNetif.GetIp6().mTimerScheduler, &Mle::HandleParentRequestTimer, this),
     mSocket(aThreadNetif.GetIp6().mUdp),
-    mSendChildUpdateRequest(aThreadNetif.GetIp6().mTaskletScheduler, &HandleSendChildUpdateRequest, this)
+    mSendChildUpdateRequest(aThreadNetif.GetIp6().mTaskletScheduler, &Mle::HandleSendChildUpdateRequest, this)
 {
     mDeviceState = kDeviceStateDisabled;
     mDeviceMode = ModeTlv::kModeRxOnWhenIdle | ModeTlv::kModeSecureDataRequest | ModeTlv::kModeFFD |
@@ -143,7 +143,7 @@ Mle::Mle(ThreadNetif &aThreadNetif) :
     mRealmLocalAllThreadNodes.GetAddress().mFields.m16[7] = HostSwap16(0x0001);
     mNetif.SubscribeMulticast(mRealmLocalAllThreadNodes);
 
-    mNetifCallback.Set(&HandleNetifStateChanged, this);
+    mNetifCallback.Set(&Mle::HandleNetifStateChanged, this);
     mNetif.RegisterCallback(mNetifCallback);
 
     isAssignLinkQuality = false;
@@ -161,7 +161,7 @@ ThreadError Mle::Enable(void)
 
     // memcpy(&sockaddr.mAddr, &mLinkLocal64.GetAddress(), sizeof(sockaddr.mAddr));
     sockaddr.mPort = kUdpPort;
-    SuccessOrExit(error = mSocket.Open(&HandleUdpReceive, this));
+    SuccessOrExit(error = mSocket.Open(&Mle::HandleUdpReceive, this));
     SuccessOrExit(error = mSocket.Bind(sockaddr));
 
 exit:

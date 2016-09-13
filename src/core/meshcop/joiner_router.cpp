@@ -50,7 +50,7 @@ namespace MeshCoP {
 
 JoinerRouter::JoinerRouter(ThreadNetif &aNetif):
     mSocket(aNetif.GetIp6().mUdp),
-    mRelayTransmit(OPENTHREAD_URI_RELAY_TX, &HandleRelayTransmit, this),
+    mRelayTransmit(OPENTHREAD_URI_RELAY_TX, &JoinerRouter::HandleRelayTransmit, this),
     mNetif(aNetif)
 {
     mSocket.GetSockName().mPort = OPENTHREAD_CONFIG_JOINER_UDP_PORT;
@@ -82,7 +82,7 @@ void JoinerRouter::HandleNetifStateChanged(uint32_t aFlags)
             sockaddr.mPort = OPENTHREAD_CONFIG_JOINER_UDP_PORT;
         }
 
-        mSocket.Open(&HandleUdpReceive, this);
+        mSocket.Open(&JoinerRouter::HandleUdpReceive, this);
         mSocket.Bind(sockaddr);
         mNetif.GetIp6Filter().AddUnsecurePort(sockaddr.mPort);
         otLogInfoMeshCoP("Joiner Router: start\r\n");

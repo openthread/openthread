@@ -1,0 +1,203 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="12.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="coap\coap_header.cpp" />
+    <ClCompile Include="coap\coap_server.cpp" />
+    <ClCompile Include="common\logging.cpp" />
+    <ClCompile Include="common\message.cpp" />
+    <ClCompile Include="common\tasklet.cpp" />
+    <ClCompile Include="common\timer.cpp" />
+    <ClCompile Include="crypto\aes_ccm.cpp" />
+    <ClCompile Include="crypto\aes_ecb.cpp" />
+    <ClCompile Include="crypto\hmac_sha256.cpp" />
+    <ClCompile Include="crypto\mbedtls.cpp" />
+    <ClCompile Include="crypto\sha256.cpp" />
+    <ClCompile Include="mac\mac.cpp" />
+    <ClCompile Include="mac\mac_blacklist.cpp" />
+    <ClCompile Include="mac\mac_frame.cpp" />
+    <ClCompile Include="mac\mac_whitelist.cpp" />
+    <ClCompile Include="meshcop\commissioner.cpp" />
+    <ClCompile Include="meshcop\dtls.cpp" />
+    <ClCompile Include="meshcop\joiner.cpp" />
+    <ClCompile Include="meshcop\joiner_router.cpp" />
+    <ClCompile Include="meshcop\leader.cpp" />
+    <ClCompile Include="net\icmp6.cpp" />
+    <ClCompile Include="net\ip6.cpp" />
+    <ClCompile Include="net\ip6_address.cpp" />
+    <ClCompile Include="net\ip6_filter.cpp" />
+    <ClCompile Include="net\ip6_mpl.cpp" />
+    <ClCompile Include="net\ip6_routes.cpp" />
+    <ClCompile Include="net\netif.cpp" />
+    <ClCompile Include="net\udp6.cpp" />
+    <ClCompile Include="openthread.cpp" />
+    <ClCompile Include="thread\address_resolver.cpp" />
+    <ClCompile Include="thread\key_manager.cpp" />
+    <ClCompile Include="thread\link_quality.cpp" />
+    <ClCompile Include="thread\lowpan.cpp" />
+    <ClCompile Include="thread\meshcop_dataset.cpp" />
+    <ClCompile Include="thread\meshcop_dataset_manager.cpp" />
+    <ClCompile Include="thread\meshcop_tlvs.cpp" />
+    <ClCompile Include="thread\mesh_forwarder.cpp" />
+    <ClCompile Include="thread\mle.cpp" />
+    <ClCompile Include="thread\mle_router.cpp" />
+    <ClCompile Include="thread\mle_tlvs.cpp" />
+    <ClCompile Include="thread\network_data.cpp" />
+    <ClCompile Include="thread\network_data_leader.cpp" />
+    <ClCompile Include="thread\network_data_local.cpp" />
+    <ClCompile Include="thread\thread_netif.cpp" />
+    <ClCompile Include="thread\thread_tlvs.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="coap\coap_header.hpp" />
+    <ClInclude Include="coap\coap_server.hpp" />
+    <ClInclude Include="common\code_utils.hpp" />
+    <ClInclude Include="common\debug.hpp" />
+    <ClInclude Include="common\encoding.hpp" />
+    <ClInclude Include="common\logging.hpp" />
+    <ClInclude Include="common\message.hpp" />
+    <ClInclude Include="common\new.hpp" />
+    <ClInclude Include="common\tasklet.hpp" />
+    <ClInclude Include="common\timer.hpp" />
+    <ClInclude Include="crypto\aes_ccm.hpp" />
+    <ClInclude Include="crypto\aes_ecb.hpp" />
+    <ClInclude Include="crypto\hmac_sha256.hpp" />
+    <ClInclude Include="crypto\mbedtls.hpp" />
+    <ClInclude Include="crypto\sha256.hpp" />
+    <ClInclude Include="mac\mac.hpp" />
+    <ClInclude Include="mac\mac_blacklist.hpp" />
+    <ClInclude Include="mac\mac_frame.hpp" />
+    <ClInclude Include="mac\mac_whitelist.hpp" />
+    <ClInclude Include="meshcop\commissioner.hpp" />
+    <ClInclude Include="meshcop\dtls.hpp" />
+    <ClInclude Include="meshcop\joiner.hpp" />
+    <ClInclude Include="meshcop\joiner_router.hpp" />
+    <ClInclude Include="meshcop\leader.hpp" />
+    <ClInclude Include="net\icmp6.hpp" />
+    <ClInclude Include="net\ip6.hpp" />
+    <ClInclude Include="net\ip6_address.hpp" />
+    <ClInclude Include="net\ip6_filter.hpp" />
+    <ClInclude Include="net\ip6_mpl.hpp" />
+    <ClInclude Include="net\ip6_routes.hpp" />
+    <ClInclude Include="net\netif.hpp" />
+    <ClInclude Include="net\socket.hpp" />
+    <ClInclude Include="net\udp6.hpp" />
+    <ClInclude Include="openthread-core-config.h" />
+    <ClInclude Include="openthreadcontext.h" />
+    <ClInclude Include="thread\address_resolver.hpp" />
+    <ClInclude Include="thread\key_manager.hpp" />
+    <ClInclude Include="thread\link_quality.hpp" />
+    <ClInclude Include="thread\lowpan.hpp" />
+    <ClInclude Include="thread\meshcop_dataset.hpp" />
+    <ClInclude Include="thread\meshcop_dataset_manager.hpp" />
+    <ClInclude Include="thread\meshcop_tlvs.hpp" />
+    <ClInclude Include="thread\mesh_forwarder.hpp" />
+    <ClInclude Include="thread\mle.hpp" />
+    <ClInclude Include="thread\mle_constants.hpp" />
+    <ClInclude Include="thread\mle_router.hpp" />
+    <ClInclude Include="thread\mle_tlvs.hpp" />
+    <ClInclude Include="thread\network_data.hpp" />
+    <ClInclude Include="thread\network_data_leader.hpp" />
+    <ClInclude Include="thread\network_data_local.hpp" />
+    <ClInclude Include="thread\network_data_tlvs.hpp" />
+    <ClInclude Include="thread\thread_netif.hpp" />
+    <ClInclude Include="thread\thread_tlvs.hpp" />
+    <ClInclude Include="thread\thread_uris.hpp" />
+    <ClInclude Include="thread\topology.hpp" />
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{9B33C190-5D07-40BF-9536-68843DC5D7AF}</ProjectGuid>
+    <TemplateGuid>{0a049372-4c4d-4ea0-a64e-dc6ad88ceca1}</TemplateGuid>
+    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <MinimumVisualStudioVersion>12.0</MinimumVisualStudioVersion>
+    <Configuration>Debug</Configuration>
+    <Platform Condition="'$(Platform)' == ''">Win32</Platform>
+    <RootNamespace>libopenthread_k</RootNamespace>
+    <DriverType>KMDF</DriverType>
+    <WindowsTargetPlatformVersion>$(LatestTargetPlatformVersion)</WindowsTargetPlatformVersion>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <TargetVersion>Windows10</TargetVersion>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>WindowsKernelModeDriver10.0</PlatformToolset>
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <TargetVersion>Windows10</TargetVersion>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>WindowsKernelModeDriver10.0</PlatformToolset>
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <TargetVersion>Windows10</TargetVersion>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>WindowsKernelModeDriver10.0</PlatformToolset>
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <TargetVersion>Windows10</TargetVersion>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>WindowsKernelModeDriver10.0</PlatformToolset>
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <OutDir>$(SolutionDir)build\bin\$(Platform)\$(Configuration)\lib\</OutDir>
+    <IntDir>$(SolutionDir)build\obj\$(Platform)\$(Configuration)\$(ProjectName)\</IntDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <OutDir>$(SolutionDir)build\bin\$(Platform)\$(Configuration)\lib\</OutDir>
+    <IntDir>$(SolutionDir)build\obj\$(Platform)\$(Configuration)\$(ProjectName)\</IntDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <OutDir>$(SolutionDir)build\bin\$(Platform)\$(Configuration)\lib\</OutDir>
+    <IntDir>$(SolutionDir)build\obj\$(Platform)\$(Configuration)\$(ProjectName)\</IntDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <OutDir>$(SolutionDir)build\bin\$(Platform)\$(Configuration)\lib\</OutDir>
+    <IntDir>$(SolutionDir)build\obj\$(Platform)\$(Configuration)\$(ProjectName)\</IntDir>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <PreprocessorDefinitions>_WIN64;_AMD64_;AMD64;%(PreprocessorDefinitions);MBEDTLS_CONFIG_FILE="mbedtls-config.h";OPENTHREAD_CONFIG_FILE="openthread-windows-config.h";WINDOWS_KERNEL;OPENTHREAD_MULTIPLE_INSTANCE</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>$(SolutionDir)include;$(SolutionDir)src\core;$(SolutionDir)third_party\mbedtls;$(SolutionDir)third_party\mbedtls\repo\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <DisableSpecificWarnings>4100;4706;4748;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <TreatWarningAsError>false</TreatWarningAsError>
+    </ClCompile>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <PreprocessorDefinitions>_WIN64;_AMD64_;AMD64;%(PreprocessorDefinitions);MBEDTLS_CONFIG_FILE="mbedtls-config.h";OPENTHREAD_CONFIG_FILE="openthread-windows-config.h";WINDOWS_KERNEL;OPENTHREAD_MULTIPLE_INSTANCE</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>$(SolutionDir)include;$(SolutionDir)src\core;$(SolutionDir)third_party\mbedtls;$(SolutionDir)third_party\mbedtls\repo\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <DisableSpecificWarnings>4100;4603;4627;4706;4986;4987;4996;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <TreatWarningAsError>false</TreatWarningAsError>
+    </ClCompile>
+  </ItemDefinitionGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

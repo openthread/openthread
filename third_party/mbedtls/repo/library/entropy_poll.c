@@ -50,6 +50,28 @@
 
 #if defined(_WIN32) && !defined(EFIX64) && !defined(EFI32)
 
+#if defined(WINDOWS_KERNEL)
+
+#include <ntdef.h>
+#include <bcrypt.h>
+
+int mbedtls_platform_entropy_poll( void *data, unsigned char *output, size_t len,
+                           size_t *olen )
+{
+    // Just use the system-preferred random number generator algorithm
+    if ( !NT_SUCCESS( BCryptGenRandom( NULL, output, (ULONG)len, BCRYPT_USE_SYSTEM_PREFERRED_RNG ) ) )
+    {
+        return( MBEDTLS_ERR_ENTROPY_SOURCE_FAILED );
+    }
+
+    *olen = len;
+    ((void) data);
+
+    return( 0 );
+}
+
+#else
+
 #if !defined(_WIN32_WINNT)
 #define _WIN32_WINNT 0x0400
 #endif
@@ -80,6 +102,8 @@ int mbedtls_platform_entropy_poll( void *data, unsigned char *output, size_t len
 
     return( 0 );
 }
+#endif /* WINDOWS_KERNEL */
+
 #else /* _WIN32 && !EFIX64 && !EFI32 */
 
 /*

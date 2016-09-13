@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2016, Nest Labs, Inc.
+ *  Copyright (c) 2016, Microsoft Corporation.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -26,40 +26,41 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-/**
- * @file
- *   This file includes functions for debugging.
- */
+/* Define to 1 to enable the commissioner role. */
+#define OPENTHREAD_ENABLE_COMMISSIONER 1
 
-#ifndef DEBUG_HPP_
-#define DEBUG_HPP_
+/* Define to 1 if you want to use diagnostics module */
+#define OPENTHREAD_ENABLE_DIAG 0
 
-#include <ctype.h>
-#include <stdio.h>
-#include <string.h>
+/* Define to 1 to enable dtls support. */
+#define OPENTHREAD_ENABLE_DTLS 1
 
-#if defined(OPENTHREAD_TARGET_DARWIN) || defined(OPENTHREAD_TARGET_LINUX)
+/* Define to 1 to enable the joiner role. */
+#define OPENTHREAD_ENABLE_JOINER 1
 
-#include <assert.h>
+/* Name of package */
+#define PACKAGE "openthread"
 
-#elif defined(WINDOWS_KERNEL)
+/* Define to the address where bug reports for this package should be sent. */
+#define PACKAGE_BUGREPORT "openthread-devel@googlegroups.com"
 
-#include <wdm.h>
+/* Define to the full name of this package. */
+#define PACKAGE_NAME "OPENTHREAD"
 
-#define assert(exp) \
-    ((!(exp)) ? \
-        (RtlAssert( #exp, __FILE__, __LINE__, NULL ),FALSE) : \
-        TRUE)
+/* Define to the full name and version of this package. */
+#define PACKAGE_STRING "OPENTHREAD 0.01.00"
 
-#else
+/* Define to the one symbol short name of this package. */
+#define PACKAGE_TARNAME "openthread"
 
-#define assert(cond)                            \
-  do {                                          \
-    if (!(cond)) {                              \
-      while (1) {}                              \
-    }                                           \
-  } while (0)
+/* Define to the home page for this package. */
+#define PACKAGE_URL "http://github.com/openthread/openthread"
 
-#endif
+/* Define to the version of this package. */
+#define PACKAGE_VERSION "0.01.00"
 
-#endif  // DEBUG_HPP_
+/* Version number of package */
+#define VERSION "0.01.00"
+
+/* Platform version information */
+#define PLATFORM_INFO "Windows"

@@ -64,6 +64,7 @@ int mbedtls_platform_set_calloc_free( void * (*calloc_func)( size_t, size_t ),
 
 #if defined(_WIN32)
 #include <stdarg.h>
+#include <stdio.h>
 int mbedtls_platform_win32_snprintf( char *s, size_t n, const char *fmt, ... )
 {
     int ret;

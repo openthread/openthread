@@ -41,6 +41,10 @@
 #include <common/code_utils.hpp>
 #include <mac/mac_frame.hpp>
 
+#ifdef _WIN32
+#pragma warning(disable:4201)  //nonstandard extension used : nameless struct/union
+#endif
+
 namespace Thread {
 
 /**

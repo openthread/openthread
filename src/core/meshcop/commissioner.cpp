@@ -54,10 +54,10 @@ namespace MeshCoP {
 
 Commissioner::Commissioner(ThreadNetif &aThreadNetif):
     mTimer(aThreadNetif.GetIp6().mTimerScheduler, HandleTimer, this),
-    mTransmitTask(aThreadNetif.GetIp6().mTaskletScheduler, &HandleUdpTransmit, this),
+    mTransmitTask(aThreadNetif.GetIp6().mTaskletScheduler, &Commissioner::HandleUdpTransmit, this),
     mSendKek(false),
     mSocket(aThreadNetif.GetIp6().mUdp),
-    mRelayReceive(OPENTHREAD_URI_RELAY_RX, &HandleRelayReceive, this),
+    mRelayReceive(OPENTHREAD_URI_RELAY_RX, &Commissioner::HandleRelayReceive, this),
     mNetif(aThreadNetif)
 {
     aThreadNetif.GetCoapServer().AddResource(mRelayReceive);

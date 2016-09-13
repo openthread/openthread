@@ -53,9 +53,9 @@ DatasetManager::DatasetManager(ThreadNetif &aThreadNetif, const char *aUriSet, c
     mMle(aThreadNetif.GetMle()),
     mNetif(aThreadNetif),
     mNetworkDataLeader(aThreadNetif.GetNetworkDataLeader()),
-    mResourceSet(aUriSet, &HandleSet, this),
-    mResourceGet(aUriGet, &HandleGet, this),
-    mTimer(aThreadNetif.GetIp6().mTimerScheduler, &HandleTimer, this),
+    mResourceSet(aUriSet, &DatasetManager::HandleSet, this),
+    mResourceGet(aUriGet, &DatasetManager::HandleGet, this),
+    mTimer(aThreadNetif.GetIp6().mTimerScheduler, &DatasetManager::HandleTimer, this),
     mSocket(aThreadNetif.GetIp6().mUdp),
     mUriSet(aUriSet),
     mUriGet(aUriGet),
@@ -160,7 +160,7 @@ ThreadError DatasetManager::Register(void)
     Ip6::MessageInfo messageInfo;
     ActiveTimestampTlv timestamp;
 
-    mSocket.Open(&HandleUdpReceive, this);
+    mSocket.Open(&DatasetManager::HandleUdpReceive, this);
 
     for (size_t i = 0; i < sizeof(mCoapToken); i++)
     {
@@ -316,7 +316,7 @@ ThreadError DatasetManager::SendSetRequest(const otOperationalDataset &aDataset,
     Message *message;
     Ip6::MessageInfo messageInfo;
 
-    mSocket.Open(&HandleUdpReceive, this);
+    mSocket.Open(&DatasetManager::HandleUdpReceive, this);
 
     for (size_t i = 0; i < sizeof(mCoapToken); i++)
     {
@@ -440,7 +440,7 @@ ThreadError DatasetManager::SendGetRequest(const uint8_t *aTlvTypes, const uint8
     Ip6::MessageInfo messageInfo;
     Tlv tlv;
 
-    mSocket.Open(&HandleUdpReceive, this);
+    mSocket.Open(&DatasetManager::HandleUdpReceive, this);
 
     for (size_t i = 0; i < sizeof(mCoapToken); i++)
     {

@@ -51,11 +51,11 @@ using Thread::Encoding::BigEndian::HostSwap16;
 namespace Thread {
 
 MeshForwarder::MeshForwarder(ThreadNetif &aThreadNetif):
-    mMacReceiver(&HandleReceivedFrame, this),
-    mMacSender(&HandleFrameRequest, &HandleSentFrame, this),
-    mDiscoverTimer(aThreadNetif.GetIp6().mTimerScheduler, &HandleDiscoverTimer, this),
-    mPollTimer(aThreadNetif.GetIp6().mTimerScheduler, &HandlePollTimer, this),
-    mReassemblyTimer(aThreadNetif.GetIp6().mTimerScheduler, &HandleReassemblyTimer, this),
+    mMacReceiver(&MeshForwarder::HandleReceivedFrame, this),
+    mMacSender(&MeshForwarder::HandleFrameRequest, &MeshForwarder::HandleSentFrame, this),
+    mDiscoverTimer(aThreadNetif.GetIp6().mTimerScheduler, &MeshForwarder::HandleDiscoverTimer, this),
+    mPollTimer(aThreadNetif.GetIp6().mTimerScheduler, &MeshForwarder::HandlePollTimer, this),
+    mReassemblyTimer(aThreadNetif.GetIp6().mTimerScheduler, &MeshForwarder::HandleReassemblyTimer, this),
     mScheduleTransmissionTask(aThreadNetif.GetIp6().mTaskletScheduler, ScheduleTransmissionTask, this),
     mNetif(aThreadNetif),
     mAddressResolver(aThreadNetif.GetAddressResolver()),

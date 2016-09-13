@@ -73,10 +73,10 @@ void Mac::StartCsmaBackoff(void)
 }
 
 Mac::Mac(ThreadNetif &aThreadNetif):
-    mBeginTransmit(aThreadNetif.GetIp6().mTaskletScheduler, &HandleBeginTransmit, this),
-    mAckTimer(aThreadNetif.GetIp6().mTimerScheduler, &HandleAckTimer, this),
-    mBackoffTimer(aThreadNetif.GetIp6().mTimerScheduler, &HandleBeginTransmit, this),
-    mReceiveTimer(aThreadNetif.GetIp6().mTimerScheduler, &HandleReceiveTimer, this),
+    mBeginTransmit(aThreadNetif.GetIp6().mTaskletScheduler, &Mac::HandleBeginTransmit, this),
+    mAckTimer(aThreadNetif.GetIp6().mTimerScheduler, &Mac::HandleAckTimer, this),
+    mBackoffTimer(aThreadNetif.GetIp6().mTimerScheduler, &Mac::HandleBeginTransmit, this),
+    mReceiveTimer(aThreadNetif.GetIp6().mTimerScheduler, &Mac::HandleReceiveTimer, this),
     mKeyManager(aThreadNetif.GetKeyManager()),
     mMle(aThreadNetif.GetMle()),
     mNetif(aThreadNetif),
@@ -269,7 +269,11 @@ ThreadError Mac::SetNetworkName(const char *aNetworkName)
     VerifyOrExit(strlen(aNetworkName) <= OT_NETWORK_NAME_MAX_SIZE, error = kThreadError_InvalidArgs);
 
     memset(&mNetworkName, 0, sizeof(mNetworkName));
+#ifdef _WIN32
+    strcpy_s(mNetworkName.m8, sizeof(mNetworkName), aNetworkName);
+#else
     strncpy(mNetworkName.m8, aNetworkName, sizeof(mNetworkName));
+#endif
 
 exit:
     return error;
@@ -454,7 +458,7 @@ void Mac::ProcessTransmitSecurity(Frame &aFrame)
     uint8_t nonce[kNonceSize];
     uint8_t tagLength;
     Crypto::AesCcm aesCcm;
-    const uint8_t *key;
+    const uint8_t *key = NULL;
 
     if (aFrame.GetSecurityEnabled() == false)
     {

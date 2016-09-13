@@ -42,7 +42,7 @@ namespace Ip6 {
 
 Netif::Netif(Ip6 &aIp6):
     mIp6(aIp6),
-    mStateChangedTask(aIp6.mTaskletScheduler, &HandleStateChangedTask, this)
+    mStateChangedTask(aIp6.mTaskletScheduler, &Netif::HandleStateChangedTask, this)
 {
     mCallbacks = NULL;
     mUnicastAddresses = NULL;

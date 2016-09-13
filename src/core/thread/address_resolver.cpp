@@ -50,12 +50,12 @@ using Thread::Encoding::BigEndian::HostSwap16;
 namespace Thread {
 
 AddressResolver::AddressResolver(ThreadNetif &aThreadNetif) :
-    mAddressError(OPENTHREAD_URI_ADDRESS_ERROR, &HandleAddressError, this),
-    mAddressQuery(OPENTHREAD_URI_ADDRESS_QUERY, &HandleAddressQuery, this),
-    mAddressNotification(OPENTHREAD_URI_ADDRESS_NOTIFY, &HandleAddressNotification, this),
-    mIcmpHandler(&HandleDstUnreach, this),
+    mAddressError(OPENTHREAD_URI_ADDRESS_ERROR, &AddressResolver::HandleAddressError, this),
+    mAddressQuery(OPENTHREAD_URI_ADDRESS_QUERY, &AddressResolver::HandleAddressQuery, this),
+    mAddressNotification(OPENTHREAD_URI_ADDRESS_NOTIFY, &AddressResolver::HandleAddressNotification, this),
+    mIcmpHandler(&AddressResolver::HandleDstUnreach, this),
     mSocket(aThreadNetif.GetIp6().mUdp),
-    mTimer(aThreadNetif.GetIp6().mTimerScheduler, &HandleTimer, this),
+    mTimer(aThreadNetif.GetIp6().mTimerScheduler, &AddressResolver::HandleTimer, this),
     mMeshForwarder(aThreadNetif.GetMeshForwarder()),
     mCoapServer(aThreadNetif.GetCoapServer()),
     mMle(aThreadNetif.GetMle()),

@@ -592,7 +592,7 @@ ThreadError NetworkData::SendServerDataNotification(bool aLocal, uint16_t aRloc1
     Message *message;
     Ip6::MessageInfo messageInfo;
 
-    mSocket.Open(&HandleUdpReceive, this);
+    mSocket.Open(&NetworkData::HandleUdpReceive, this);
 
     for (size_t i = 0; i < sizeof(mCoapToken); i++)
     {

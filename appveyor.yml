@@ -1,0 +1,10 @@
+version: 0.1.{build}
+image: Previous Visual Studio 2015
+configuration:
+- Release
+- Debug
+platform: x64
+build:
+  project: openthread.sln
+  verbosity: minimal
+test: off

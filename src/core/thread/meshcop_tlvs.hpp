@@ -644,6 +644,7 @@ private:
  * This class implements the Commissioner ID TLV generation and parsing.
  *
  */
+OT_TOOL_PACKED_BEGIN
 class CommissionerIdTlv: public Tlv
 {
 public:
