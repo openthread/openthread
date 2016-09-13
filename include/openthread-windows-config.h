@@ -70,5 +70,8 @@
 #define snprintf sprintf_s
 #endif // WINDOWS_KERNEL
 
+#define strlcpy(dst,src,size) strcpy_s(dst,size,src)
+
 // Disable a few warnings that we don't care about
 #pragma warning(disable:4201)  //nonstandard extension used : nameless struct/union
+#pragma warning(disable:4291)  // no matching operator delete found 

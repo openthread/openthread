@@ -41,7 +41,6 @@
 #include <stdio.h>
 #include <string.h>
 
-#include <common/code_utils.hpp>
 #include <platform/logging.h>
 
 #ifdef __cplusplus

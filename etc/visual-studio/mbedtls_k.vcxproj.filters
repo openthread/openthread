@@ -9,77 +9,77 @@
       <UniqueIdentifier>{0a2ce77e-dccf-408c-aea0-7a781284a936}</UniqueIdentifier>
     </Filter>
     <Filter Include="Source Files\repo\library">
-      <UniqueIdentifier>{859819dc-e84e-4854-ad32-2819d60da38b}</UniqueIdentifier>
+      <UniqueIdentifier>{87ec68b3-5bec-4c60-b764-c2daf3ffcfb2}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="repo\library\aes.c">
+    <ClCompile Include="..\..\third_party\mbedtls\repo\library\aes.c">
       <Filter>Source Files\repo\library</Filter>
     </ClCompile>
-    <ClCompile Include="repo\library\bignum.c">
+    <ClCompile Include="..\..\third_party\mbedtls\repo\library\bignum.c">
       <Filter>Source Files\repo\library</Filter>
     </ClCompile>
-    <ClCompile Include="repo\library\ccm.c">
+    <ClCompile Include="..\..\third_party\mbedtls\repo\library\ccm.c">
       <Filter>Source Files\repo\library</Filter>
     </ClCompile>
-    <ClCompile Include="repo\library\cipher.c">
+    <ClCompile Include="..\..\third_party\mbedtls\repo\library\cipher.c">
       <Filter>Source Files\repo\library</Filter>
     </ClCompile>
-    <ClCompile Include="repo\library\cipher_wrap.c">
+    <ClCompile Include="..\..\third_party\mbedtls\repo\library\cipher_wrap.c">
       <Filter>Source Files\repo\library</Filter>
     </ClCompile>
-    <ClCompile Include="repo\library\ctr_drbg.c">
+    <ClCompile Include="..\..\third_party\mbedtls\repo\library\ctr_drbg.c">
       <Filter>Source Files\repo\library</Filter>
     </ClCompile>
-    <ClCompile Include="repo\library\debug.c">
+    <ClCompile Include="..\..\third_party\mbedtls\repo\library\debug.c">
       <Filter>Source Files\repo\library</Filter>
     </ClCompile>
-    <ClCompile Include="repo\library\ecjpake.c">
+    <ClCompile Include="..\..\third_party\mbedtls\repo\library\ecjpake.c">
       <Filter>Source Files\repo\library</Filter>
     </ClCompile>
-    <ClCompile Include="repo\library\ecp.c">
+    <ClCompile Include="..\..\third_party\mbedtls\repo\library\ecp.c">
       <Filter>Source Files\repo\library</Filter>
     </ClCompile>
-    <ClCompile Include="repo\library\ecp_curves.c">
+    <ClCompile Include="..\..\third_party\mbedtls\repo\library\ecp_curves.c">
       <Filter>Source Files\repo\library</Filter>
     </ClCompile>
-    <ClCompile Include="repo\library\entropy.c">
+    <ClCompile Include="..\..\third_party\mbedtls\repo\library\entropy.c">
       <Filter>Source Files\repo\library</Filter>
     </ClCompile>
-    <ClCompile Include="repo\library\entropy_poll.c">
+    <ClCompile Include="..\..\third_party\mbedtls\repo\library\entropy_poll.c">
       <Filter>Source Files\repo\library</Filter>
     </ClCompile>
-    <ClCompile Include="repo\library\md.c">
+    <ClCompile Include="..\..\third_party\mbedtls\repo\library\md.c">
       <Filter>Source Files\repo\library</Filter>
     </ClCompile>
-    <ClCompile Include="repo\library\md_wrap.c">
+    <ClCompile Include="..\..\third_party\mbedtls\repo\library\md_wrap.c">
       <Filter>Source Files\repo\library</Filter>
     </ClCompile>
-    <ClCompile Include="repo\library\memory_buffer_alloc.c">
+    <ClCompile Include="..\..\third_party\mbedtls\repo\library\memory_buffer_alloc.c">
       <Filter>Source Files\repo\library</Filter>
     </ClCompile>
-    <ClCompile Include="repo\library\platform.c">
+    <ClCompile Include="..\..\third_party\mbedtls\repo\library\platform.c">
       <Filter>Source Files\repo\library</Filter>
     </ClCompile>
-    <ClCompile Include="repo\library\sha256.c">
+    <ClCompile Include="..\..\third_party\mbedtls\repo\library\sha256.c">
       <Filter>Source Files\repo\library</Filter>
     </ClCompile>
-    <ClCompile Include="repo\library\ssl_ciphersuites.c">
+    <ClCompile Include="..\..\third_party\mbedtls\repo\library\ssl_ciphersuites.c">
       <Filter>Source Files\repo\library</Filter>
     </ClCompile>
-    <ClCompile Include="repo\library\ssl_cli.c">
+    <ClCompile Include="..\..\third_party\mbedtls\repo\library\ssl_cli.c">
       <Filter>Source Files\repo\library</Filter>
     </ClCompile>
-    <ClCompile Include="repo\library\ssl_cookie.c">
+    <ClCompile Include="..\..\third_party\mbedtls\repo\library\ssl_cookie.c">
       <Filter>Source Files\repo\library</Filter>
     </ClCompile>
-    <ClCompile Include="repo\library\ssl_srv.c">
+    <ClCompile Include="..\..\third_party\mbedtls\repo\library\ssl_srv.c">
       <Filter>Source Files\repo\library</Filter>
     </ClCompile>
-    <ClCompile Include="repo\library\ssl_ticket.c">
+    <ClCompile Include="..\..\third_party\mbedtls\repo\library\ssl_ticket.c">
       <Filter>Source Files\repo\library</Filter>
     </ClCompile>
-    <ClCompile Include="repo\library\ssl_tls.c">
+    <ClCompile Include="..\..\third_party\mbedtls\repo\library\ssl_tls.c">
       <Filter>Source Files\repo\library</Filter>
     </ClCompile>
   </ItemGroup>
