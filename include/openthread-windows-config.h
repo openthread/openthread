@@ -64,3 +64,11 @@
 
 /* Platform version information */
 #define PLATFORM_INFO "Windows"
+
+// Windows Kernel only has sprintf_s
+#ifdef WINDOWS_KERNEL
+#define snprintf sprintf_s
+#endif // WINDOWS_KERNEL
+
+// Disable a few warnings that we don't care about
+#pragma warning(disable:4201)  //nonstandard extension used : nameless struct/union

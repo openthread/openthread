@@ -34,6 +34,12 @@
 #ifndef MESSAGE_HPP_
 #define MESSAGE_HPP_
 
+#ifdef OPENTHREAD_CONFIG_FILE
+#include OPENTHREAD_CONFIG_FILE
+#else
+#include <openthread-config.h>
+#endif
+
 #include <stdint.h>
 #include <string.h>
 
@@ -41,10 +47,6 @@
 #include <openthread-core-config.h>
 #include <common/code_utils.hpp>
 #include <mac/mac_frame.hpp>
-
-#ifdef _WIN32
-#pragma warning(disable:4201)  //nonstandard extension used : nameless struct/union
-#endif
 
 namespace Thread {
 

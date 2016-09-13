@@ -868,7 +868,7 @@ const char *otGetVersionString(void)
 #ifdef  PLATFORM_INFO
         "; " PLATFORM_INFO
 #endif
-#if !defined(WINDOWS_KERNEL) || defined(DBG)
+#if defined(__DATE__)
         "; " __DATE__ " " __TIME__;
 #else
         ;
