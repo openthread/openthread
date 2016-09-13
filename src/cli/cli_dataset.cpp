@@ -97,9 +97,7 @@ ThreadError Dataset::Print(otOperationalDataset &aDataset)
 
     if (aDataset.mIsChannelMaskPage0Set)
     {
-        sServer->OutputFormat("Channel Mask Page 0: ");
-        OutputBytes(reinterpret_cast<uint8_t *>(&aDataset.mChannelMaskPage0), sizeof(aDataset.mChannelMaskPage0));
-        sServer->OutputFormat("\r\n");
+        sServer->OutputFormat("Channel Mask Page 0: %x\r\n", aDataset.mChannelMaskPage0);
     }
 
     if (aDataset.mIsDelaySet)
@@ -267,10 +265,11 @@ exit:
 ThreadError Dataset::ProcessChannelMask(otInstance *aInstance, int argc, char *argv[])
 {
     ThreadError error = kThreadError_None;
+    long value;
 
     VerifyOrExit(argc > 0, error = kThreadError_Parse);
-    VerifyOrExit(Interpreter::Hex2Bin(argv[0], reinterpret_cast<uint8_t *>(&sDataset.mChannelMaskPage0), sizeof(sDataset.mChannelMaskPage0))
-                 == sizeof(sDataset.mChannelMaskPage0), error = kThreadError_Parse);
+    SuccessOrExit(error = Interpreter::ParseLong(argv[0], value));
+    sDataset.mChannelMaskPage0 = value;
     sDataset.mIsChannelMaskPage0Set = true;
     (void)aInstance;
 
