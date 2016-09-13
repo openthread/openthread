@@ -57,8 +57,8 @@ AM_CPPFLAGS                                                         = \
 
 COMMON_LDADD                                                        = \
     $(top_builddir)/src/core/libopenthread.a                          \
-    $(top_builddir)/examples/platforms/posix/libopenthread-posix.a    \
     $(top_builddir)/third_party/mbedtls/libmbedcrypto.a               \
+    $(top_builddir)/examples/platforms/posix/libopenthread-posix.a    \
     -lpthread                                                         \
     $(NULL)
 
