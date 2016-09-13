@@ -240,7 +240,7 @@ Display version of spinel-cli tool.
 ```bash
 spinel-cli > v
 spinel-cli ver. 0.1.0
-Copyright (c) 2016 Nest Labs, Inc.
+Copyright (c) 2016 The OpenThread Authors.
 ```
 
 #### exit

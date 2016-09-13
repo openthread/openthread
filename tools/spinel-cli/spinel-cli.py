@@ -1,6 +1,6 @@
 #!/usr/bin/python
 #
-#  Copyright (c) 2016, Nest Labs, Inc.
+#  Copyright (c) 2016, The OpenThread Authors.
 #  All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
@@ -46,7 +46,7 @@ diag-repeat        help        ping              version
 diag-send          history     prefix            whitelist      
 """
 
-__copyright__   = "Copyright (c) 2016 Nest Labs, Inc."
+__copyright__   = "Copyright (c) 2016 The OpenThread Authors."
 __version__     = "0.1.0"
 
 

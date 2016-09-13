@@ -1,14 +1,33 @@
-//
-// stdint.h
-//
-//      Copyright (c) Microsoft Corporation. All rights reserved.
-//
-// The C Standard Library <stdint.h> header.
-//
-#pragma once
-#define _STDINT
+/*
+ *  Copyright (c) 2016, The OpenThread Authors.
+ *  All rights reserved.
+ *
+ *  Redistribution and use in source and binary forms, with or without
+ *  modification, are permitted provided that the following conditions are met:
+ *  1. Redistributions of source code must retain the above copyright
+ *     notice, this list of conditions and the following disclaimer.
+ *  2. Redistributions in binary form must reproduce the above copyright
+ *     notice, this list of conditions and the following disclaimer in the
+ *     documentation and/or other materials provided with the distribution.
+ *  3. Neither the name of the copyright holder nor the
+ *     names of its contributors may be used to endorse or promote products
+ *     derived from this software without specific prior written permission.
+ *
+ *  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ *  AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ *  IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ *  ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+ *  LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ *  CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ *  SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ *  INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ *  CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ *  POSSIBILITY OF SUCH DAMAGE.
+ */
 
-#ifndef RC_INVOKED
+#ifndef _STDINT_H_
+#define _STDINT_H_
 
 typedef signed char        int8_t;
 typedef short              int16_t;
@@ -19,113 +38,4 @@ typedef unsigned short     uint16_t;
 typedef unsigned int       uint32_t;
 typedef unsigned long long uint64_t;
 
-typedef signed char        int_least8_t;
-typedef short              int_least16_t;
-typedef int                int_least32_t;
-typedef long long          int_least64_t;
-typedef unsigned char      uint_least8_t;
-typedef unsigned short     uint_least16_t;
-typedef unsigned int       uint_least32_t;
-typedef unsigned long long uint_least64_t;
-
-typedef signed char        int_fast8_t;
-typedef int                int_fast16_t;
-typedef int                int_fast32_t;
-typedef long long          int_fast64_t;
-typedef unsigned char      uint_fast8_t;
-typedef unsigned int       uint_fast16_t;
-typedef unsigned int       uint_fast32_t;
-typedef unsigned long long uint_fast64_t;
-
-typedef long long          intmax_t;
-typedef unsigned long long uintmax_t;
-
-// These macros must exactly match those in the Windows SDK's intsafe.h.
-#define INT8_MIN         (-127i8 - 1)
-#define INT16_MIN        (-32767i16 - 1)
-#define INT32_MIN        (-2147483647i32 - 1)
-#define INT64_MIN        (-9223372036854775807i64 - 1)
-#define INT8_MAX         127i8
-#define INT16_MAX        32767i16
-#define INT32_MAX        2147483647i32
-#define INT64_MAX        9223372036854775807i64
-#define UINT8_MAX        0xffui8
-#define UINT16_MAX       0xffffui16
-#define UINT32_MAX       0xffffffffui32
-#define UINT64_MAX       0xffffffffffffffffui64
-
-#define INT_LEAST8_MIN   INT8_MIN
-#define INT_LEAST16_MIN  INT16_MIN
-#define INT_LEAST32_MIN  INT32_MIN
-#define INT_LEAST64_MIN  INT64_MIN
-#define INT_LEAST8_MAX   INT8_MAX
-#define INT_LEAST16_MAX  INT16_MAX
-#define INT_LEAST32_MAX  INT32_MAX
-#define INT_LEAST64_MAX  INT64_MAX
-#define UINT_LEAST8_MAX  UINT8_MAX
-#define UINT_LEAST16_MAX UINT16_MAX
-#define UINT_LEAST32_MAX UINT32_MAX
-#define UINT_LEAST64_MAX UINT64_MAX
-
-#define INT_FAST8_MIN    INT8_MIN
-#define INT_FAST16_MIN   INT32_MIN
-#define INT_FAST32_MIN   INT32_MIN
-#define INT_FAST64_MIN   INT64_MIN
-#define INT_FAST8_MAX    INT8_MAX
-#define INT_FAST16_MAX   INT32_MAX
-#define INT_FAST32_MAX   INT32_MAX
-#define INT_FAST64_MAX   INT64_MAX
-#define UINT_FAST8_MAX   UINT8_MAX
-#define UINT_FAST16_MAX  UINT32_MAX
-#define UINT_FAST32_MAX  UINT32_MAX
-#define UINT_FAST64_MAX  UINT64_MAX
-
-#ifdef _WIN64
-    #define INTPTR_MIN   INT64_MIN
-    #define INTPTR_MAX   INT64_MAX
-    #define UINTPTR_MAX  UINT64_MAX
-#else
-    #define INTPTR_MIN   INT32_MIN
-    #define INTPTR_MAX   INT32_MAX
-    #define UINTPTR_MAX  UINT32_MAX
-#endif
-
-#define INTMAX_MIN       INT64_MIN
-#define INTMAX_MAX       INT64_MAX
-#define UINTMAX_MAX      UINT64_MAX
-
-#define PTRDIFF_MIN      INTPTR_MIN
-#define PTRDIFF_MAX      INTPTR_MAX
-
-#ifndef SIZE_MAX
-    #define SIZE_MAX     UINTPTR_MAX
-#endif
-
-#define SIG_ATOMIC_MIN   INT32_MIN
-#define SIG_ATOMIC_MAX   INT32_MAX
-
-#define WCHAR_MIN        0x0000
-#define WCHAR_MAX        0xffff
-
-#define WINT_MIN         0x0000
-#define WINT_MAX         0xffff
-
-#define INT8_C(x)    (x)
-#define INT16_C(x)   (x)
-#define INT32_C(x)   (x)
-#define INT64_C(x)   (x ## LL)
-
-#define UINT8_C(x)   (x)
-#define UINT16_C(x)  (x)
-#define UINT32_C(x)  (x ## U)
-#define UINT64_C(x)  (x ## ULL)
-
-#define INTMAX_C(x)  INT64_C(x)
-#define UINTMAX_C(x) UINT64_C(x)
-
-#endif // RC_INVOKED
-
-/*
- * Copyright (c) 1992-2012 by P.J. Plauger.  ALL RIGHTS RESERVED.
- * Consult your license regarding permissions and restrictions.
-V6.00:0009 */
+#endif  // _STDINT_H_
