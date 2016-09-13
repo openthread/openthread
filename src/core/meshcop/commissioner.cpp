@@ -49,6 +49,7 @@ namespace Thread {
 namespace MeshCoP {
 
 Commissioner::Commissioner(ThreadNetif &aThreadNetif):
+    mPanIdQuery(aThreadNetif),
     mTimer(aThreadNetif.GetIp6().mTimerScheduler, HandleTimer, this),
     mTransmitTask(aThreadNetif.GetIp6().mTaskletScheduler, &HandleUdpTransmit, this),
     mSendKek(false),
@@ -81,6 +82,11 @@ ThreadError Commissioner::Stop(void)
     SendKeepAlive();
     mTimer.Start(1000);
     return kThreadError_None;
+}
+
+uint16_t Commissioner::GetSessionId(void) const
+{
+    return mSessionId;
 }
 
 void Commissioner::HandleTimer(void *aContext)
