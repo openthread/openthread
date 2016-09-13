@@ -126,10 +126,11 @@ void Dataset::Get(otOperationalDataset &aDataset)
             const uint8_t *entry = reinterpret_cast<const uint8_t *>(cur) + sizeof(Tlv) + sizeof(ChannelMaskEntry);
 
             aDataset.mChannelMaskPage0 = 0;
-            aDataset.mChannelMaskPage0 |= (entry[0] << 24);
-            aDataset.mChannelMaskPage0 |= (entry[1] << 16);
-            aDataset.mChannelMaskPage0 |= (entry[2] << 8);
-            aDataset.mChannelMaskPage0 |= entry[3];
+
+            for (uint8_t index = 0; index < sizeof(aDataset.mChannelMaskPage0); index++)
+            {
+                aDataset.mChannelMaskPage0 |= (entry[index] << (8 * index));
+            }
 
             aDataset.mIsChannelMaskPage0Set = true;
             break;
@@ -265,10 +266,10 @@ ThreadError Dataset::Set(const otOperationalDataset &aDataset, bool aActive)
         entry->SetChannelPage(0);
         entry->SetMaskLength(sizeof(aDataset.mChannelMaskPage0));
 
-        data[2] = (aDataset.mChannelMaskPage0 >> 24) & 0xff;
-        data[3] = (aDataset.mChannelMaskPage0 >> 16) & 0xff;
-        data[4] = (aDataset.mChannelMaskPage0 >> 8) & 0xff;
-        data[5] = (aDataset.mChannelMaskPage0) & 0xff;
+        for (uint8_t index = 0; index < sizeof(aDataset.mChannelMaskPage0); index++)
+        {
+            data[index + sizeof(MeshCoP::ChannelMaskEntry)] = (aDataset.mChannelMaskPage0 >> (8 * index)) & 0xff;
+        }
 
         Set(tlv, *data);
     }
