@@ -35,6 +35,9 @@
 #ifndef OPENTHREAD_H_
 #define OPENTHREAD_H_
 
+#include <stdint.h>
+#include <stdbool.h>
+
 #include <openthread-types.h>
 #include <platform/radio.h>
 

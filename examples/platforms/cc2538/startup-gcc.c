@@ -31,7 +31,7 @@
  *   This file implements gcc-specific startup code for the cc2538.
  */
 
-#include <openthread-std-types.h>
+#include <stdint.h>
 #include <string.h>
 
 #include "cc2538-reg.h"

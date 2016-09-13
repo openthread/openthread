@@ -33,7 +33,7 @@
 // Regular implementation
 //
 
-#include <openthread-std-types.h>
+#include <stdint.h>
 
 #ifdef __cplusplus
 extern "C" {

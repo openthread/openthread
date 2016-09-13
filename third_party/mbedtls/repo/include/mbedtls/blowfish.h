@@ -30,7 +30,7 @@
 #endif
 
 #include <stddef.h>
-#include <openthread-std-types.h>
+#include <stdint.h>
 
 #define MBEDTLS_BLOWFISH_ENCRYPT     1
 #define MBEDTLS_BLOWFISH_DECRYPT     0

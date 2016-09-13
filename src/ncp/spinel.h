@@ -29,7 +29,8 @@
 #define SPINEL_HEADER_INCLUDED 1
 
 #include <stdarg.h>
-#include <openthread-std-types.h>
+#include <stdbool.h>
+#include <stdint.h>
 
 // ----------------------------------------------------------------------------
 

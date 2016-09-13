@@ -35,6 +35,8 @@
 #ifndef SPI_SLAVE_H_
 #define SPI_SLAVE_H_
 
+#include <stdint.h>
+
 #include <openthread-types.h>
 
 #ifdef __cplusplus

@@ -35,7 +35,7 @@
 #ifndef OT_PLATFORM_MISC_H
 #define OT_PLATFORM_MISC_H 1
 
-#include <openthread-std-types.h>
+#include <stdint.h>
 
 #ifdef __cplusplus
 extern "C" {

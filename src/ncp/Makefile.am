@@ -87,7 +87,7 @@ if OPENTHREAD_BUILD_TESTS
 
 noinst_PROGRAMS                     = spinel-test
 spinel_test_SOURCES                 = spinel.c
-spinel_test_CFLAGS                  = -DSPINEL_SELF_TEST=1 -D_GNU_SOURCE -I$(top_srcdir)/include
+spinel_test_CFLAGS                  = -DSPINEL_SELF_TEST=1 -D_GNU_SOURCE
 
 TESTS = spinel-test
 

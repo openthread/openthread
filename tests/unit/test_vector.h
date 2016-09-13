@@ -29,7 +29,7 @@
 #ifndef TEST_VECTOR_H
 #define TEST_VECTOR_H
 
-#include <openthread-std-types.h>
+#include <stdint.h>
 
 #ifdef __cplusplus
 extern "C" {

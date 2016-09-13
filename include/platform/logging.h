@@ -35,7 +35,7 @@
 #ifndef LOGGING_H_
 #define LOGGING_H_
 
-#include <openthread-std-types.h>
+#include <stdint.h>
 
 #ifdef __cplusplus
 extern "C" {
