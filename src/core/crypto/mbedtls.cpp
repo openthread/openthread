@@ -31,7 +31,10 @@
  *   This file implements the use of mbedTLS.
  */
 
+#include <openthread-types.h>
+#include <platform/random.h>
 #include <crypto/mbedtls.hpp>
+#include <mbedtls/entropy.h>
 
 namespace Thread {
 namespace Crypto {
@@ -40,6 +43,30 @@ MbedTls::MbedTls(void)
 {
     mbedtls_memory_buffer_alloc_init(mMemory, sizeof(mMemory));
 }
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+int mbedtls_hardware_poll(void *data, unsigned char *output, size_t len, size_t *olen)
+{
+    ThreadError error;
+
+    (void)data;
+
+    error = otPlatRandomSecureGet((uint16_t)len, (uint8_t *)output, (uint16_t *)olen);
+
+    if (error != kThreadError_None)
+    {
+        return MBEDTLS_ERR_ENTROPY_SOURCE_FAILED;
+    }
+
+    return 0;
+}
+
+#ifdef __cplusplus
+};
+#endif
 
 }  // namespace Crypto
 }  // namespace Thread
