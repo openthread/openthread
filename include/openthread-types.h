@@ -35,9 +35,7 @@
 #ifndef OPENTHREAD_TYPES_H_
 #define OPENTHREAD_TYPES_H_
 
-#include <stdint.h>
-#include <stdbool.h>
-
+#include <openthread-std-types.h>
 #include <platform/toolchain.h>
 
 #ifdef __cplusplus

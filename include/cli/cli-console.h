@@ -35,7 +35,7 @@
 #ifndef CLI_CONSOLE_H_
 #define CLI_CONSOLE_H_
 
-#include <stdint.h>
+#include <openthread-std-types.h>
 
 #ifdef __cplusplus
 extern "C" {

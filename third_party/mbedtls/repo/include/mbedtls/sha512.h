@@ -30,7 +30,7 @@
 #endif
 
 #include <stddef.h>
-#include <stdint.h>
+#include <openthread-std-types.h>
 
 #if !defined(MBEDTLS_SHA512_ALT)
 // Regular implementation

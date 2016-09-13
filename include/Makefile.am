@@ -59,6 +59,7 @@ include_HEADERS                         = \
     openthread.h                          \
     openthread-diag.h                     \
     openthread-types.h                    \
+    openthread-std-types.h                \
     $(NULL)
 
 install-headers: install-includeHEADERS

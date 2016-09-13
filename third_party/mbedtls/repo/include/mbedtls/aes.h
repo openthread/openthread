@@ -30,7 +30,7 @@
 #endif
 
 #include <stddef.h>
-#include <stdint.h>
+#include <openthread-std-types.h>
 
 /* padlock.c and aesni.c rely on these values! */
 #define MBEDTLS_AES_ENCRYPT     1

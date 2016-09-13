@@ -30,7 +30,7 @@
 #endif
 
 #include <stddef.h>
-#include <stdint.h>
+#include <openthread-std-types.h>
 
 #define MBEDTLS_CAMELLIA_ENCRYPT     1
 #define MBEDTLS_CAMELLIA_DECRYPT     0

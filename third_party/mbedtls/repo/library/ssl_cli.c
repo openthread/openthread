@@ -43,7 +43,7 @@
 
 #include <string.h>
 
-#include <stdint.h>
+#include <openthread-std-types.h>
 
 #if defined(MBEDTLS_HAVE_TIME)
 #include <time.h>

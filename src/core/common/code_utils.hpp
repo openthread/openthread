@@ -34,7 +34,7 @@
 #ifndef CODE_UTILS_HPP_
 #define CODE_UTILS_HPP_
 
-#include <stdbool.h>
+#include <openthread-std-types.h>
 
 // Allocate the structure using "raw" storage.
 #define otDEFINE_ALIGNED_VAR(name, size, align_type)            \

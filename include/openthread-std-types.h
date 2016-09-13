@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2016, Nest Labs, Inc.
+ *  Copyright (c) 2016, Microsoft Corporation.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -29,73 +29,41 @@
 /**
  * @file
  * @brief
- *   This file includes the platform abstraction for the alarm service.
+ *  This file defines the types and structures used in the OpenThread library API.
  */
 
-#ifndef ALARM_H_
-#define ALARM_H_
+#ifndef OPENTHREAD_STD_TYPES_H_
+#define OPENTHREAD_STD_TYPES_H_
 
-#include <openthread-std-types.h>
+// Windows Kernel mode doesn't support most std*.h files
+#if !defined(WINDOWS_KERNEL)
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+#include <stdint.h>
+#include <stdbool.h>
 
-/**
- * @defgroup alarm Alarm
- * @ingroup platform
- *
- * @brief
- *   This module includes the platform abstraction for the alarm service.
- *
- * @{
- *
- */
+#else
 
-/**
- * Set the alarm to fire at @p aDt milliseconds after @p aT0.
- *
- * @param[in] aInstance  The OpenThread instance structure.
- * @param[in] aT0        The reference time.
- * @param[in] aDt        The time delay in milliseconds from @p aT0.
- */
-void otPlatAlarmStartAt(otInstance *aInstance, uint32_t aT0, uint32_t aDt);
+// Copied from stdint.h
+typedef signed char        int8_t;
+typedef short              int16_t;
+typedef int                int32_t;
+typedef long long          int64_t;
+typedef unsigned char      uint8_t;
+typedef unsigned short     uint16_t;
+typedef unsigned int       uint32_t;
+typedef unsigned long long uint64_t;
 
-/**
- * Stop the alarm.
- *
- * @param[in] aInstance  The OpenThread instance structure.
- */
-void otPlatAlarmStop(otInstance *aInstance);
+#ifndef __cplusplus
 
-/**
- * Get the current time.
- *
- * @returns The current time in milliseconds.
- */
-uint32_t otPlatAlarmGetNow(void);
+typedef int bool;
+#define false 0
+#define true 1
 
-/**
- * Signal that the alarm has fired.
- *
- * @param[in] aInstance  The OpenThread instance structure.
- */
-extern void otPlatAlarmFired(otInstance *aInstance);
+#endif // __cplusplus
 
-/**
- * Signal diagnostics module that the alarm has fired.
- *
- * @param[in] aInstance  The OpenThread instance structure.
- */
-extern void otPlatDiagAlarmFired(otInstance *aInstance);
+// Windows Kernel only has sprintf_s
+#define snprintf sprintf_s
 
-/**
- * @}
- *
- */
+#endif // WINDOWS_KERNEL
 
-#ifdef __cplusplus
-}  // extern "C"
-#endif
-
-#endif  // ALARM_H_
+#endif  // OPENTHREAD_STD_TYPES_H_

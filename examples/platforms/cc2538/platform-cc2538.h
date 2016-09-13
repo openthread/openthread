@@ -35,7 +35,6 @@
 #ifndef PLATFORM_CC2538_H_
 #define PLATFORM_CC2538_H_
 
-#include <stdint.h>
 #include <openthread-types.h>
 
 #include "cc2538-reg.h"

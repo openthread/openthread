@@ -34,7 +34,7 @@
 #ifndef HMAC_SHA256_HPP_
 #define HMAC_SHA256_HPP_
 
-#include <stdint.h>
+#include <openthread-std-types.h>
 
 #include <mbedtls/md.h>
 
