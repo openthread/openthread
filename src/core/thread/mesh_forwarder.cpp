@@ -1422,7 +1422,7 @@ void MeshForwarder::HandleLowpanHC(uint8_t *aFrame, uint8_t aFrameLength,
     VerifyOrExit(headerLength > 0, error = kThreadError_Drop);
 
     aFrame += headerLength;
-    aFrameLength -= static_cast<uint8_t>(headerLengthstatic_cast<uint8_t>);
+    aFrameLength -= static_cast<uint8_t>(headerLength);
 
     SuccessOrExit(error = message->SetLength(message->GetLength() + aFrameLength));
 
