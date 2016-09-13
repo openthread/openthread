@@ -1285,13 +1285,12 @@ ThreadError otCommissionerStop(otInstance *aInstance)
     return aInstance->mThreadNetif.GetCommissioner().Stop();
 }
 
-ThreadError otCommissionerPanIdQuery(otInstance *, uint16_t aPanId, uint32_t aChannelMask,
+ThreadError otCommissionerPanIdQuery(otInstance *aInstance, uint16_t aPanId, uint32_t aChannelMask,
                                      const otIp6Address *aAddress,
                                      otCommissionerPanIdConflictCallback aCallback, void *aContext)
 {
-    return sThreadNetif->GetCommissioner().mPanIdQuery.SendQuery(aPanId, aChannelMask,
-                                                                 *static_cast<const Ip6::Address *>(aAddress),
-                                                                 aCallback, aContext);
+    return aInstance->mThreadNetif.GetCommissioner().mPanIdQuery.SendQuery(
+        aPanId, aChannelMask, *static_cast<const Ip6::Address *>(aAddress), aCallback, aContext);
 }
 #endif  // OPENTHREAD_ENABLE_COMMISSIONER
 
