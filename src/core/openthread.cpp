@@ -1290,7 +1290,7 @@ ThreadError otCommissionerPanIdQuery(otInstance *aInstance, uint16_t aPanId, uin
                                      otCommissionerPanIdConflictCallback aCallback, void *aContext)
 {
     return aInstance->mThreadNetif.GetCommissioner().mPanIdQuery.SendQuery(
-        aPanId, aChannelMask, *static_cast<const Ip6::Address *>(aAddress), aCallback, aContext);
+               aPanId, aChannelMask, *static_cast<const Ip6::Address *>(aAddress), aCallback, aContext);
 }
 #endif  // OPENTHREAD_ENABLE_COMMISSIONER
 
