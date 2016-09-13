@@ -99,7 +99,7 @@ public:
      * @param[in]  aSeedLength  The MPL Seed Length.
      *
      */
-    void SetSeedLength(SeedLength aSeedLength) { mControl = (mControl & ~kSeedLengthMask) | aSeedLength; }
+    void SetSeedLength(SeedLength aSeedLength) { mControl = static_cast<uint8_t>((mControl & ~kSeedLengthMask) | aSeedLength); }
 
     /**
      * This method indicates whether or not the MPL M flag is set.

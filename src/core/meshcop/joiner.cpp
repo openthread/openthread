@@ -31,10 +31,14 @@
  *   This file implements the Joiner role.
  */
 
+#ifdef OPENTHREAD_CONFIG_FILE
+#include OPENTHREAD_CONFIG_FILE
+#else
+#include <openthread-config.h>
+#endif
+
 #include <assert.h>
 #include <stdio.h>
-
-#include <openthread-config.h>
 
 #include <common/code_utils.hpp>
 #include <common/encoding.hpp>

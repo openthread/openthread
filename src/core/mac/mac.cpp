@@ -31,9 +31,13 @@
  *   This file implements the subset of IEEE 802.15.4 primitives required for Thread.
  */
 
-#include <string.h>
-
+#ifdef OPENTHREAD_CONFIG_FILE
+#include OPENTHREAD_CONFIG_FILE
+#else
 #include <openthread-config.h>
+#endif
+
+#include <string.h>
 
 #include <common/code_utils.hpp>
 #include <common/debug.hpp>

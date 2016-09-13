@@ -247,7 +247,8 @@ void DatasetManager::HandleSet(Coap::Header &aHeader, Message &aMessage, const I
 
     VerifyOrExit(mMle.GetDeviceState() == Mle::kDeviceStateLeader, state = StateTlv::kReject);
 
-    type = strcmp(mUriSet, OPENTHREAD_URI_ACTIVE_SET) == 0 ? Tlv::kActiveTimestamp : Tlv::kPendingTimestamp;
+    type = static_cast<uint8_t>(strcmp(mUriSet,
+                                       OPENTHREAD_URI_ACTIVE_SET) == 0 ? Tlv::kActiveTimestamp : Tlv::kPendingTimestamp);
 
     while (offset < aMessage.GetLength())
     {

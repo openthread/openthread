@@ -207,7 +207,7 @@ ThreadError Message::MoveOffset(int aDelta)
     assert(GetOffset() + aDelta <= GetLength());
     VerifyOrExit(GetOffset() + aDelta <= GetLength(), error = kThreadError_InvalidArgs);
 
-    mInfo.mOffset += aDelta;
+    mInfo.mOffset += static_cast<uint16_t>(aDelta);
     assert(mInfo.mOffset <= GetLength());
 
 exit:

@@ -26,9 +26,14 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
+#ifdef OPENTHREAD_CONFIG_FILE
+#include OPENTHREAD_CONFIG_FILE
+#else
+#include <openthread-config.h>
+#endif
+
 #include <openthread-core-config.h>
 #include <openthread.h>
-#include <openthread-config.h>
 #include <openthread-diag.h>
 #include <cli/cli-uart.h>
 #include <platform/platform.h>

@@ -66,6 +66,12 @@ ThreadError otCommissionerStart(otInstance *aInstance, const char *aPSKd);
  */
 ThreadError otCommissionerStop(otInstance *aInstance);
 
+typedef void (*otCommissionerPanIdConflictCallback)(uint16_t aPanId, uint32_t aChannelMask, void *aContext);
+
+ThreadError otCommissionerPanIdQuery(otInstance *, uint16_t aPanId, uint32_t aChannelMask,
+                                     const otIp6Address *aAddress,
+                                     otCommissionerPanIdConflictCallback aCallback, void *aContext);
+
 /**
  * @}
  *

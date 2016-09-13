@@ -31,9 +31,13 @@
  *   This file implements a Commissioner role.
  */
 
-#include <stdio.h>
-
+#ifdef OPENTHREAD_CONFIG_FILE
+#include OPENTHREAD_CONFIG_FILE
+#else
 #include <openthread-config.h>
+#endif
+
+#include <stdio.h>
 
 #include <coap/coap_header.hpp>
 #include <common/logging.hpp>
@@ -49,6 +53,7 @@ namespace Thread {
 namespace MeshCoP {
 
 Commissioner::Commissioner(ThreadNetif &aThreadNetif):
+    mPanIdQuery(aThreadNetif),
     mTimer(aThreadNetif.GetIp6().mTimerScheduler, HandleTimer, this),
     mTransmitTask(aThreadNetif.GetIp6().mTaskletScheduler, &HandleUdpTransmit, this),
     mSendKek(false),
@@ -81,6 +86,11 @@ ThreadError Commissioner::Stop(void)
     SendKeepAlive();
     mTimer.Start(1000);
     return kThreadError_None;
+}
+
+uint16_t Commissioner::GetSessionId(void) const
+{
+    return mSessionId;
 }
 
 void Commissioner::HandleTimer(void *aContext)

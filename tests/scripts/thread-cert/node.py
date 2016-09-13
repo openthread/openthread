@@ -325,6 +325,11 @@ class Node:
         self.send_command('netdataregister')
         self.pexpect.expect('Done')
 
+    def panid_query(self, panid, mask, ipaddr):
+        cmd = 'commissioner panid ' + panid + ' ' + mask + ' ' + ipaddr
+        self.send_command(cmd)
+        self.pexpect.expect('Conflict:', timeout=8)
+
     def scan(self):
         self.send_command('scan')
 

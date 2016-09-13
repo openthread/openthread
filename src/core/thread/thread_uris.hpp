@@ -162,6 +162,22 @@ namespace Thread {
  */
 #define OPENTHREAD_URI_LEADER_KEEP_ALIVE  "c/la"
 
+/**
+ * @def OPENTHREAD_URI_PANID_CONFLICT
+ *
+ * The URI Path for PAN ID Conflict
+ *
+ */
+#define OPENTHREAD_URI_PANID_CONFLICT   "c/pc"
+
+/**
+ * @def OPENTHREAD_URI_PANID_QUERY
+ *
+ * The URI Path for PAN ID Query
+ *
+ */
+#define OPENTHREAD_URI_PANID_QUERY      "c/pq"
+
 }  // namespace Thread
 
 #endif  // THREAD_URIS_HPP_

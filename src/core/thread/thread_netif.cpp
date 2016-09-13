@@ -78,7 +78,8 @@ ThreadNetif::ThreadNetif(Ip6::Ip6 &aIp6):
     mJoiner(*this),
 #endif  // OPENTHREAD_ENABLE_JOINER
     mJoinerRouter(*this),
-    mLeader(*this)
+    mLeader(*this),
+    mPanIdQuery(*this)
 {
     mKeyManager.SetMasterKey(kThreadMasterKey, sizeof(kThreadMasterKey));
 }

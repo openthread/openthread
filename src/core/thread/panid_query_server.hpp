@@ -28,62 +28,77 @@
 
 /**
  * @file
- *   This file includes definitions for using mbedTLS.
+ *   This file includes definitions for responding to PANID Query Requests.
  */
 
-#ifndef OT_MBEDTLS_HPP_
-#define OT_MBEDTLS_HPP_
+#ifndef PANID_QUERY_SERVER_HPP_
+#define PANID_QUERY_SERVER_HPP_
 
-#ifdef OPENTHREAD_CONFIG_FILE
-#include OPENTHREAD_CONFIG_FILE
-#else
-#include <openthread-config.h>
-#endif
-
-#include <mbedtls/memory_buffer_alloc.h>
+#include <openthread-core-config.h>
+#include <openthread-types.h>
+#include <coap/coap_server.hpp>
+#include <common/timer.hpp>
+#include <net/ip6_address.hpp>
+#include <net/udp6.hpp>
 
 namespace Thread {
-namespace Crypto {
+
+class MeshForwarder;
+class ThreadLastTransactionTimeTlv;
+class ThreadMeshLocalEidTlv;
+class ThreadNetif;
+class ThreadTargetTlv;
 
 /**
- * @addtogroup core-security
- *
- * @{
+ * This class implements handling PANID Query Requests.
  *
  */
-
-/**
- * This class implements mbedTLS memory.
- *
- */
-class MbedTls
+class PanIdQueryServer
 {
 public:
-    enum
-    {
-#if OPENTHREAD_ENABLE_DTLS
-        kMemorySize = 2048 * sizeof(void *), ///< Size of memory buffer (bytes).
-#else
-        kMemorySize = 512,                   ///< Size of memory buffer (bytes).
-#endif
-    };
-
     /**
      * This constructor initializes the object.
      *
      */
-    MbedTls(void);
+    PanIdQueryServer(ThreadNetif &aThreadNetif);
 
 private:
-    unsigned char mMemory[kMemorySize];
+    enum
+    {
+        kScanDelay = 1000,  ///< SCAN_DELAY (milliseconds)
+    };
+
+    static void HandleQuery(void *aContext, Coap::Header &aHeader, Message &aMessage,
+                            const Ip6::MessageInfo &aMessageInfo);
+    void HandleQuery(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+
+    static void HandleScanResult(void *aContext, Mac::Frame *aFrame);
+    void HandleScanResult(Mac::Frame *aFrame);
+
+    static void HandleTimer(void *aContext);
+    void HandleTimer(void);
+
+    static void HandleUdpReceive(void *aContext, otMessage aMessage, const otMessageInfo *aMessageInfo);
+
+    ThreadError SendConflict();
+    ThreadError SendQueryResponse(const Coap::Header &aRequestHeader, const Ip6::MessageInfo &aRequestMessageInfo);
+
+    Ip6::Address mCommissioner;
+    uint32_t mChannelMask;
+    uint16_t mPanId;
+
+    Coap::Resource mPanIdQuery;
+    Ip6::UdpSocket mSocket;
+    Timer mTimer;
+
+    Coap::Server &mCoapServer;
+    ThreadNetif &mNetif;
 };
 
 /**
  * @}
- *
  */
 
-}  // namespace Crypto
 }  // namespace Thread
 
-#endif  // OT_MBEDTLS_HPP_
+#endif  // PANID_QUERY_SERVER_HPP_

@@ -34,7 +34,12 @@
 #ifndef THREAD_NETIF_HPP_
 #define THREAD_NETIF_HPP_
 
+#ifdef OPENTHREAD_CONFIG_FILE
+#include OPENTHREAD_CONFIG_FILE
+#else
 #include <openthread-config.h>
+#endif
+
 #include <openthread-types.h>
 
 #include <mac/mac.hpp>
@@ -49,6 +54,7 @@
 #include <thread/mle.hpp>
 #include <thread/mle_router.hpp>
 #include <thread/network_data_local.hpp>
+#include <thread/panid_query_server.hpp>
 
 #if OPENTHREAD_ENABLE_COMMISSIONER
 #include <meshcop/commissioner.hpp>
@@ -279,6 +285,7 @@ private:
 
     MeshCoP::JoinerRouter mJoinerRouter;
     MeshCoP::Leader mLeader;
+    PanIdQueryServer mPanIdQuery;
 };
 
 /**
