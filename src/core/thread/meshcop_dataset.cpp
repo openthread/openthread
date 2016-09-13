@@ -123,17 +123,9 @@ void Dataset::Get(otOperationalDataset &aDataset)
 
         case Tlv::kChannelMask:
         {
-            const ChannelMaskTlv *tlv = static_cast<const ChannelMaskTlv *>(cur);
             const uint8_t *entry = reinterpret_cast<const uint8_t *>(cur) + sizeof(Tlv);
-            const uint8_t *entryEnd = entry + tlv->GetLength();
-
-            for (uint8_t index = 0; index < OT_CHANNEL_MASK_ENTRIES_MAX_NUM && entry < entryEnd; index++)
-            {
-                uint8_t entryLength = reinterpret_cast<const ChannelMaskEntry *>(entry)->GetMaskLength() + sizeof(ChannelMaskEntry);
-                memcpy(&aDataset.mChannelMask.entries[index].mChannelPage, entry, entryLength);
-                entry += entryLength;
-            }
-
+            uint8_t entryLength = reinterpret_cast<const ChannelMaskEntry *>(entry)->GetMaskLength() + sizeof(ChannelMaskEntry);
+            memcpy(&aDataset.mChannelMask.mChannelPage, entry, entryLength);
             aDataset.mIsChannelMaskSet = true;
             break;
         }
@@ -259,23 +251,9 @@ ThreadError Dataset::Set(const otOperationalDataset &aDataset, bool aActive)
     if (aDataset.mIsChannelMaskSet)
     {
         MeshCoP::ChannelMaskTlv tlv;
-        uint8_t length = 0;
-        uint8_t data[12];
-
         tlv.Init();
-
-        for (uint8_t index = 0; index < OT_CHANNEL_MASK_ENTRIES_MAX_NUM; index++)
-        {
-            if (aDataset.mChannelMask.entries[index].mMaskLength > 0)
-            {
-                memcpy(data + length, &aDataset.mChannelMask.entries[index].mChannelPage,
-                       aDataset.mChannelMask.entries[index].mMaskLength + sizeof(MeshCoP::ChannelMaskEntry));
-                length += (aDataset.mChannelMask.entries[index].mMaskLength + sizeof(MeshCoP::ChannelMaskEntry));
-            }
-        }
-
-        tlv.SetLength(length);
-        Set(tlv, *data);
+        tlv.SetLength(aDataset.mChannelMask.mMaskLength + sizeof(MeshCoP::ChannelMaskEntry));
+        Set(tlv, aDataset.mChannelMask.mChannelPage);
     }
 
     if (aDataset.mIsDelaySet)

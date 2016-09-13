@@ -99,14 +99,10 @@ ThreadError Dataset::Print(otOperationalDataset &aDataset)
     {
         sServer->OutputFormat("Channel Mask: ");
 
-        for (uint8_t index = 0; index < OT_CHANNEL_MASK_ENTRIES_MAX_NUM; index++)
+        if (aDataset.mChannelMask.mMaskLength > 0)
         {
-            if (aDataset.mChannelMask.entries[index].mMaskLength > 0)
-            {
-                sServer->OutputFormat("Page %d, Mask ", aDataset.mChannelMask.entries[index].mChannelPage);
-                OutputBytes(aDataset.mChannelMask.entries[index].m8, aDataset.mChannelMask.entries[index].mMaskLength);
-                sServer->OutputFormat("; ");
-            }
+            sServer->OutputFormat("Page %d, Mask ", aDataset.mChannelMask.mChannelPage);
+            OutputBytes(aDataset.mChannelMask.m8, aDataset.mChannelMask.mMaskLength);
         }
 
         sServer->OutputFormat("\r\n");
@@ -280,21 +276,17 @@ ThreadError Dataset::ProcessChannelMask(otInstance *aInstance, int argc, char *a
     long value;
     uint16_t length;
 
-    VerifyOrExit(argc > 1 && argc <= 2 * OT_CHANNEL_MASK_ENTRIES_MAX_NUM, error = kThreadError_Parse);
+    VerifyOrExit(argc > 1, error = kThreadError_Parse);
 
     memset(reinterpret_cast<uint8_t *>(&sDataset.mChannelMask), 0, sizeof(sDataset.mChannelMask));
 
-    for (uint8_t index = 0; index < argc; index++)
-    {
-        SuccessOrExit(error = Interpreter::ParseLong(argv[index], value));
-        sDataset.mChannelMask.entries[index / 2].mChannelPage = static_cast<uint8_t>(value);
+    SuccessOrExit(error = Interpreter::ParseLong(argv[0], value));
+    sDataset.mChannelMask.mChannelPage = static_cast<uint8_t>(value);
 
-        length = static_cast<uint16_t>((strlen(argv[++index]) + 1) / 2);
-        VerifyOrExit(length <= OT_CHANNEL_MASK_MAX_SIZE, error = kThreadError_NoBufs);
-        sDataset.mChannelMask.entries[index / 2].mMaskLength = static_cast<uint8_t>(length);
-        VerifyOrExit(Interpreter::Hex2Bin(argv[index], sDataset.mChannelMask.entries[index / 2].m8, length)
-                     == length, error = kThreadError_Parse);
-    }
+    length = static_cast<uint16_t>((strlen(argv[1]) + 1) / 2);
+    VerifyOrExit(length <= OT_CHANNEL_MASK_MAX_SIZE, error = kThreadError_NoBufs);
+    sDataset.mChannelMask.mMaskLength = static_cast<uint8_t>(length);
+    VerifyOrExit(Interpreter::Hex2Bin(argv[1], sDataset.mChannelMask.m8, length) == length, error = kThreadError_Parse);
 
     sDataset.mIsChannelMaskSet = true;
 
