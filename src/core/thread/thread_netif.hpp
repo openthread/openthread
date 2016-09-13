@@ -54,6 +54,7 @@
 #include <thread/mle.hpp>
 #include <thread/mle_router.hpp>
 #include <thread/network_data_local.hpp>
+#include <thread/panid_query_server.hpp>
 
 #if OPENTHREAD_ENABLE_COMMISSIONER
 #include <meshcop/commissioner.hpp>
@@ -276,6 +277,7 @@ private:
 
     MeshCoP::JoinerRouter mJoinerRouter;
     MeshCoP::Leader mLeader;
+    PanIdQueryServer mPanIdQuery;
 };
 
 /**

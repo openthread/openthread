@@ -393,9 +393,9 @@ spinel_datatype_vunpack_(const uint8_t *data_ptr, spinel_size_t data_len, const 
                 *arg_ptr = (const char *)data_ptr;
             }
 
-            ret += len;
+            ret += (spinel_size_t)len;
             data_ptr += len;
-            data_len -= len;
+            data_len -= (spinel_size_t)len;
             break;
         }
 
@@ -719,14 +719,14 @@ spinel_datatype_vpack_(uint8_t *data_ptr, spinel_size_t data_len_max, const char
                 string_arg_len = 1;
             }
 
-            ret += string_arg_len;
+            ret += (spinel_size_t)string_arg_len;
 
             if (data_len_max >= string_arg_len)
             {
                 memcpy(data_ptr, string_arg, string_arg_len);
 
                 data_ptr += string_arg_len;
-                data_len_max -= string_arg_len;
+                data_len_max -= (spinel_size_t)string_arg_len;
             }
             else
             {

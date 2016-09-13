@@ -64,7 +64,7 @@ typedef const struct
 } test_lowpan_vector_t;
 
 
-extern const test_lowpan_vector_t sTestVectorLowpan[];
+extern test_lowpan_vector_t sTestVectorLowpan[];
 extern const unsigned sTestVectorLowpanLen;
 
 #ifdef __cplusplus
