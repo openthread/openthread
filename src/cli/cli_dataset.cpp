@@ -41,6 +41,8 @@
 #include "cli.hpp"
 #include "cli_dataset.hpp"
 
+using Thread::Encoding::BigEndian::HostSwap32;
+
 namespace Thread {
 namespace Cli {
 
@@ -95,16 +97,10 @@ ThreadError Dataset::Print(otOperationalDataset &aDataset)
         sServer->OutputFormat("Channel: %d\r\n", aDataset.mChannel);
     }
 
-    if (aDataset.mIsChannelMaskSet)
+    if (aDataset.mIsChannelMaskPage0Set)
     {
-        sServer->OutputFormat("Channel Mask: ");
-
-        if (aDataset.mChannelMask.mMaskLength > 0)
-        {
-            sServer->OutputFormat("Page %d, Mask ", aDataset.mChannelMask.mChannelPage);
-            OutputBytes(aDataset.mChannelMask.m8, aDataset.mChannelMask.mMaskLength);
-        }
-
+        sServer->OutputFormat("Channel Mask Page 0: ");
+        OutputBytes(reinterpret_cast<uint8_t *>(&aDataset.mChannelMaskPage0), sizeof(aDataset.mChannelMaskPage0));
         sServer->OutputFormat("\r\n");
     }
 
@@ -273,23 +269,11 @@ exit:
 ThreadError Dataset::ProcessChannelMask(otInstance *aInstance, int argc, char *argv[])
 {
     ThreadError error = kThreadError_None;
-    long value;
-    uint16_t length;
 
-    VerifyOrExit(argc > 1, error = kThreadError_Parse);
-
-    memset(reinterpret_cast<uint8_t *>(&sDataset.mChannelMask), 0, sizeof(sDataset.mChannelMask));
-
-    SuccessOrExit(error = Interpreter::ParseLong(argv[0], value));
-    sDataset.mChannelMask.mChannelPage = static_cast<uint8_t>(value);
-
-    length = static_cast<uint16_t>((strlen(argv[1]) + 1) / 2);
-    VerifyOrExit(length <= OT_CHANNEL_MASK_MAX_SIZE, error = kThreadError_NoBufs);
-    sDataset.mChannelMask.mMaskLength = static_cast<uint8_t>(length);
-    VerifyOrExit(Interpreter::Hex2Bin(argv[1], sDataset.mChannelMask.m8, length) == length, error = kThreadError_Parse);
-
-    sDataset.mIsChannelMaskSet = true;
-
+    VerifyOrExit(argc > 0, error = kThreadError_Parse);
+    VerifyOrExit(Interpreter::Hex2Bin(argv[0], reinterpret_cast<uint8_t *>(&sDataset.mChannelMaskPage0), sizeof(sDataset.mChannelMaskPage0))
+                 == sizeof(sDataset.mChannelMaskPage0), error = kThreadError_Parse);
+    sDataset.mIsChannelMaskPage0Set = true;
     (void)aInstance;
 
 exit:

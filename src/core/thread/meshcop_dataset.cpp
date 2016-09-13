@@ -123,10 +123,9 @@ void Dataset::Get(otOperationalDataset &aDataset)
 
         case Tlv::kChannelMask:
         {
-            const uint8_t *entry = reinterpret_cast<const uint8_t *>(cur) + sizeof(Tlv);
-            uint8_t entryLength = reinterpret_cast<const ChannelMaskEntry *>(entry)->GetMaskLength() + sizeof(ChannelMaskEntry);
-            memcpy(&aDataset.mChannelMask.mChannelPage, entry, entryLength);
-            aDataset.mIsChannelMaskSet = true;
+            const uint8_t *entry = reinterpret_cast<const uint8_t *>(cur) + sizeof(Tlv) + sizeof(ChannelMaskEntry);
+            aDataset.mChannelMaskPage0 = *reinterpret_cast<const uint32_t *>(entry);
+            aDataset.mIsChannelMaskPage0Set = true;
             break;
         }
 
@@ -248,12 +247,18 @@ ThreadError Dataset::Set(const otOperationalDataset &aDataset, bool aActive)
         Set(tlv);
     }
 
-    if (aDataset.mIsChannelMaskSet)
+    if (aDataset.mIsChannelMaskPage0Set)
     {
         MeshCoP::ChannelMaskTlv tlv;
+        MeshCoP::ChannelMaskEntry *entry;
+        uint8_t data[6];
         tlv.Init();
-        tlv.SetLength(aDataset.mChannelMask.mMaskLength + sizeof(MeshCoP::ChannelMaskEntry));
-        Set(tlv, aDataset.mChannelMask.mChannelPage);
+        tlv.SetLength(sizeof(MeshCoP::ChannelMaskEntry) + sizeof(aDataset.mChannelMaskPage0));
+        entry = reinterpret_cast<MeshCoP::ChannelMaskEntry *>(data);
+        entry->SetChannelPage(0);
+        entry->SetMaskLength(sizeof(aDataset.mChannelMaskPage0));
+        *reinterpret_cast<uint32_t *>(data + sizeof(MeshCoP::ChannelMaskEntry)) = aDataset.mChannelMaskPage0;
+        Set(tlv, *data);
     }
 
     if (aDataset.mIsDelaySet)
