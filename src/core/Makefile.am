@@ -1,5 +1,5 @@
 #
-#  Copyright (c) 2016, Nest Labs, Inc.
+#  Copyright (c) 2016, The OpenThread Authors.
 #  All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
@@ -76,6 +76,7 @@ libopenthread_a_SOURCES             = \
     thread/network_data.cpp           \
     thread/network_data_local.cpp     \
     thread/network_data_leader.cpp    \
+    thread/panid_query_server.cpp     \
     thread/thread_netif.cpp           \
     thread/thread_tlvs.cpp            \
     $(NULL)
@@ -83,6 +84,7 @@ libopenthread_a_SOURCES             = \
 if OPENTHREAD_ENABLE_COMMISSIONER
 libopenthread_a_SOURCES            += \
     meshcop/commissioner.cpp          \
+    meshcop/panid_query_client.cpp    \
     $(NULL)
 endif  # OPENTHREAD_ENABLE_COMMISSIONER
 
@@ -125,6 +127,7 @@ noinst_HEADERS                      = \
     meshcop/joiner.hpp                \
     meshcop/joiner_router.hpp         \
     meshcop/leader.hpp                \
+    meshcop/panid_query_client.hpp    \
     net/icmp6.hpp                     \
     net/ip6.hpp                       \
     net/ip6_address.hpp               \
@@ -153,6 +156,7 @@ noinst_HEADERS                      = \
     thread/network_data_leader.hpp    \
     thread/network_data_local.hpp     \
     thread/network_data_tlvs.hpp      \
+    thread/panid_query_server.hpp     \
     thread/thread_netif.hpp           \
     thread/thread_tlvs.hpp            \
     thread/thread_uris.hpp            \

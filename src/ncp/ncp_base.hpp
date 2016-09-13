@@ -1,5 +1,5 @@
 /*
- *    Copyright (c) 2016, Nest Labs, Inc.
+ *    Copyright (c) 2016, The OpenThread Authors.
  *    All rights reserved.
  *
  *    Redistribution and use in source and binary forms, with or without
@@ -33,8 +33,13 @@
 #ifndef NCP_BASE_HPP_
 #define NCP_BASE_HPP_
 
-#include <openthread-types.h>
+#ifdef OPENTHREAD_CONFIG_FILE
+#include OPENTHREAD_CONFIG_FILE
+#else
 #include <openthread-config.h>
+#endif
+
+#include <openthread-types.h>
 #include <common/message.hpp>
 #include <common/tasklet.hpp>
 

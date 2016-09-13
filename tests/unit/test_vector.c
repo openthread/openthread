@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2016, Nest Labs, Inc.
+ *  Copyright (c) 2016, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -28,7 +28,7 @@
 
 #include "test_vector.h"
 
-const test_lowpan_vector_t sTestVectorLowpan[] =
+test_lowpan_vector_t sTestVectorLowpan[] =
 {
     {
         // I1_t1_AF_pass.pcap

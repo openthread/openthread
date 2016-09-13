@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2016, Nest Labs, Inc.
+ *  Copyright (c) 2016, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -36,6 +36,7 @@
 
 #include <coap/coap_server.hpp>
 #include <common/timer.hpp>
+#include <meshcop/panid_query_client.hpp>
 #include <net/udp6.hpp>
 #include <thread/mle.hpp>
 
@@ -73,6 +74,16 @@ public:
      *
      */
     ThreadError Stop(void);
+
+    /**
+     * This method returns the Commissioner Session ID.
+     *
+     * @retuns The Commissioner Session ID.
+     *
+     */
+    uint16_t GetSessionId(void) const;
+
+    PanIdQueryClient mPanIdQuery;
 
 private:
     static void HandleTimer(void *aContext);

@@ -1,5 +1,5 @@
 /*
- *    Copyright (c) 2016, Nest Labs, Inc.
+ *    Copyright (c) 2016, The OpenThread Authors.
  *    All rights reserved.
  *
  *    Redistribution and use in source and binary forms, with or without
@@ -1167,7 +1167,7 @@ bail:
 static void print_version(void)
 {
     printf("spi-hdlc " SPI_HDLC_VERSION "(" __TIME__ " " __DATE__ ")\n");
-    printf("Copyright (c) 2016 Nest Labs, All Rights Reserved\n");
+    printf("Copyright (c) 2016 The OpenThread Authors, All Rights Reserved\n");
 }
 
 static void print_help(void)

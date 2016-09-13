@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2016, Nest Labs, Inc.
+ *  Copyright (c) 2016, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -31,8 +31,13 @@
  *   This file implements the top-level interface to the OpenThread stack.
  */
 
-#include <openthread.h>
+#ifdef OPENTHREAD_CONFIG_FILE
+#include OPENTHREAD_CONFIG_FILE
+#else
 #include <openthread-config.h>
+#endif
+
+#include <openthread.h>
 #include <common/code_utils.hpp>
 #include <common/debug.hpp>
 #include <common/logging.hpp>
@@ -1283,6 +1288,7 @@ ThreadError otSendPendingSet(otInstance *, const otOperationalDataset *aDataset,
 }
 
 #if OPENTHREAD_ENABLE_COMMISSIONER
+#include <commissioning/commissioner.h>
 ThreadError otCommissionerStart(otInstance *, const char *aPSKd)
 {
     return sThreadNetif->GetCommissioner().Start(aPSKd);
@@ -1291,6 +1297,15 @@ ThreadError otCommissionerStart(otInstance *, const char *aPSKd)
 ThreadError otCommissionerStop(otInstance *)
 {
     return sThreadNetif->GetCommissioner().Stop();
+}
+
+ThreadError otCommissionerPanIdQuery(otInstance *, uint16_t aPanId, uint32_t aChannelMask,
+                                     const otIp6Address *aAddress,
+                                     otCommissionerPanIdConflictCallback aCallback, void *aContext)
+{
+    return sThreadNetif->GetCommissioner().mPanIdQuery.SendQuery(aPanId, aChannelMask,
+                                                                 *static_cast<const Ip6::Address *>(aAddress),
+                                                                 aCallback, aContext);
 }
 #endif  // OPENTHREAD_ENABLE_COMMISSIONER
 

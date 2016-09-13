@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2016, Nest Labs, Inc.
+ *  Copyright (c) 2016, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -850,7 +850,7 @@ ThreadError MeshForwarder::SendFragment(Message &aMessage, Mac::Frame &aFrame)
     if (aMessage.IsLinkSecurityEnabled())
     {
         fcf |= Mac::Frame::kFcfSecurityEnabled;
-        secCtl = aMessage.IsJoinerEntrust() ? Mac::Frame::kKeyIdMode0 : Mac::Frame::kKeyIdMode1;
+        secCtl = static_cast<uint8_t>(aMessage.IsJoinerEntrust() ? Mac::Frame::kKeyIdMode0 : Mac::Frame::kKeyIdMode1);
         secCtl |= Mac::Frame::kSecEncMic32;
     }
 
@@ -911,7 +911,7 @@ ThreadError MeshForwarder::SendFragment(Message &aMessage, Mac::Frame &aFrame)
     {
         hcLength = mLowpan.Compress(aMessage, meshSource, meshDest, payload);
         assert(hcLength > 0);
-        headerLength += hcLength;
+        headerLength += static_cast<uint8_t>(hcLength);
 
         payloadLength = aMessage.GetLength() - aMessage.GetOffset();
 
@@ -1309,7 +1309,7 @@ void MeshForwarder::HandleFragment(uint8_t *aFrame, uint8_t aFrameLength,
         VerifyOrExit(headerLength > 0, error = kThreadError_NoBufs);
 
         aFrame += headerLength;
-        aFrameLength -= headerLength;
+        aFrameLength -= static_cast<uint8_t>(headerLength);
 
         VerifyOrExit(message->SetLength(datagramLength) == kThreadError_None, error = kThreadError_NoBufs);
         datagramLength = HostSwap16(datagramLength - sizeof(Ip6::Header));
@@ -1422,7 +1422,7 @@ void MeshForwarder::HandleLowpanHC(uint8_t *aFrame, uint8_t aFrameLength,
     VerifyOrExit(headerLength > 0, error = kThreadError_Drop);
 
     aFrame += headerLength;
-    aFrameLength -= headerLength;
+    aFrameLength -= static_cast<uint8_t>(headerLength);
 
     SuccessOrExit(error = message->SetLength(message->GetLength() + aFrameLength));
 

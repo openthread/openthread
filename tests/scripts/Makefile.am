@@ -1,5 +1,5 @@
 #
-#  Copyright (c) 2016, Nest Labs, Inc.
+#  Copyright (c) 2016, The OpenThread Authors.
 #  All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
@@ -102,6 +102,7 @@ EXTRA_DIST                                                         = \
     thread-cert/Cert_7_1_03_BorderRouterAsLeader.py                  \
     thread-cert/Cert_7_1_04_BorderRouterAsRouter.py                  \
     thread-cert/Cert_7_1_05_BorderRouterAsRouter.py                  \
+    thread-cert/Cert_9_2_14_PanIdQuery.py                            \
     thread-cert/node.py                                              \
     $(NULL)
 
@@ -216,6 +217,7 @@ check_SCRIPTS                                                     += \
     thread-cert/Cert_7_1_03_BorderRouterAsLeader.py                  \
     thread-cert/Cert_7_1_04_BorderRouterAsRouter.py                  \
     thread-cert/Cert_7_1_05_BorderRouterAsRouter.py                  \
+    thread-cert/Cert_9_2_14_PanIdQuery.py                            \
     $(NULL)
 
 endif # OPENTHREAD_TESTS_SUBSET5
@@ -247,6 +249,7 @@ XFAIL_NCP_TESTS                                                        = \
         thread-cert/Cert_7_1_03_BorderRouterAsLeader.py                  \
         thread-cert/Cert_7_1_04_BorderRouterAsRouter.py                  \
         thread-cert/Cert_7_1_05_BorderRouterAsRouter.py                  \
+        thread-cert/Cert_9_2_14_PanIdQuery.py                            \
         $(NULL)
 
 XFAIL_TESTS = $(if $(filter $(NODE_TYPE),ncp-sim),$(XFAIL_NCP_TESTS))

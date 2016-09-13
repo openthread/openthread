@@ -1,6 +1,6 @@
 #!/usr/bin/python
 #
-#  Copyright (c) 2016, Nest Labs, Inc.
+#  Copyright (c) 2016, The OpenThread Authors.
 #  All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
@@ -324,6 +324,11 @@ class Node:
     def register_netdata(self):
         self.send_command('netdataregister')
         self.pexpect.expect('Done')
+
+    def panid_query(self, panid, mask, ipaddr):
+        cmd = 'commissioner panid ' + panid + ' ' + mask + ' ' + ipaddr
+        self.send_command(cmd)
+        self.pexpect.expect('Conflict:', timeout=8)
 
     def scan(self):
         self.send_command('scan')

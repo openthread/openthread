@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2016, Nest Labs, Inc.
+ *  Copyright (c) 2016, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -161,6 +161,22 @@ namespace Thread {
  *
  */
 #define OPENTHREAD_URI_LEADER_KEEP_ALIVE  "c/la"
+
+/**
+ * @def OPENTHREAD_URI_PANID_CONFLICT
+ *
+ * The URI Path for PAN ID Conflict
+ *
+ */
+#define OPENTHREAD_URI_PANID_CONFLICT   "c/pc"
+
+/**
+ * @def OPENTHREAD_URI_PANID_QUERY
+ *
+ * The URI Path for PAN ID Query
+ *
+ */
+#define OPENTHREAD_URI_PANID_QUERY      "c/pq"
 
 }  // namespace Thread
 

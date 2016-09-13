@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2016, Nest Labs, Inc.
+ *  Copyright (c) 2016, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -77,7 +77,8 @@ ThreadNetif::ThreadNetif(Ip6::Ip6 &aIp6):
     mJoiner(*this),
 #endif  // OPENTHREAD_ENABLE_JOINER
     mJoinerRouter(*this),
-    mLeader(*this)
+    mLeader(*this),
+    mPanIdQuery(*this)
 {
     mKeyManager.SetMasterKey(kThreadMasterKey, sizeof(kThreadMasterKey));
 }
