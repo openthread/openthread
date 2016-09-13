@@ -34,9 +34,13 @@
 #ifndef CLI_HPP_
 #define CLI_HPP_
 
-#include <stdarg.h>
-
+#ifdef OPENTHREAD_CONFIG_FILE
+#include OPENTHREAD_CONFIG_FILE
+#else
 #include <openthread-config.h>
+#endif
+
+#include <stdarg.h>
 
 #include <cli/cli_server.hpp>
 #include <net/icmp6.hpp>

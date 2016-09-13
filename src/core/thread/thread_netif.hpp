@@ -34,7 +34,12 @@
 #ifndef THREAD_NETIF_HPP_
 #define THREAD_NETIF_HPP_
 
+#ifdef OPENTHREAD_CONFIG_FILE
+#include OPENTHREAD_CONFIG_FILE
+#else
 #include <openthread-config.h>
+#endif
+
 #include <openthread-types.h>
 
 #include <mac/mac.hpp>

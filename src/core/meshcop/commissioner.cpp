@@ -31,9 +31,13 @@
  *   This file implements a Commissioner role.
  */
 
-#include <stdio.h>
-
+#ifdef OPENTHREAD_CONFIG_FILE
+#include OPENTHREAD_CONFIG_FILE
+#else
 #include <openthread-config.h>
+#endif
+
+#include <stdio.h>
 
 #include <coap/coap_header.hpp>
 #include <common/logging.hpp>
