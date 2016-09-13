@@ -269,7 +269,7 @@ ThreadError Dataset::ProcessChannelMask(otInstance *aInstance, int argc, char *a
 
     VerifyOrExit(argc > 0, error = kThreadError_Parse);
     SuccessOrExit(error = Interpreter::ParseLong(argv[0], value));
-    sDataset.mChannelMaskPage0 = value;
+    sDataset.mChannelMaskPage0 = static_cast<uint32_t>(value);
     sDataset.mIsChannelMaskPage0Set = true;
     (void)aInstance;
 
