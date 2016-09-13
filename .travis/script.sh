@@ -67,5 +67,5 @@ set -x
 }
 
 [ $BUILD_TARGET != posix-ncp ] || {
-    NODE_TYPE=ncp-sim BuildJobs=10 make -f examples/Makefile-posix check || die
+    COVERAGE=1 NODE_TYPE=ncp-sim BuildJobs=10 make -f examples/Makefile-posix check || die
 }
