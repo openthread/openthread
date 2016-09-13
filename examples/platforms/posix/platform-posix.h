@@ -35,6 +35,7 @@
 #ifndef PLATFORM_POSIX_H_
 #define PLATFORM_POSIX_H_
 
+#include <stdint.h>
 #include <sys/select.h>
 #include <sys/time.h>
 

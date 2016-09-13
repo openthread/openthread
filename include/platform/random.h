@@ -35,6 +35,8 @@
 #ifndef RANDOM_H_
 #define RANDOM_H_
 
+#include <stdint.h>
+
 #include <openthread-types.h>
 
 #ifdef __cplusplus

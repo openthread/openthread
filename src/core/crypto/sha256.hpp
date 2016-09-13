@@ -34,7 +34,7 @@
 #ifndef SHA256_HPP_
 #define SHA256_HPP_
 
-#include <openthread-std-types.h>
+#include <stdint.h>
 
 #include <mbedtls/sha256.h>
 

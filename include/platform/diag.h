@@ -36,7 +36,7 @@
 #ifndef DIAG_H_
 #define DIAG_H_
 
-#include <openthread-std-types.h>
+#include <stdint.h>
 #include <stddef.h>
 
 #ifdef __cplusplus

@@ -34,6 +34,8 @@
 #ifndef KEY_MANAGER_HPP_
 #define KEY_MANAGER_HPP_
 
+#include <stdint.h>
+
 #include <openthread-types.h>
 #include <crypto/hmac_sha256.hpp>
 

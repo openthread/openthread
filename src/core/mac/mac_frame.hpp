@@ -35,6 +35,7 @@
 #define MAC_FRAME_HPP_
 
 #include <limits.h>
+#include <stdint.h>
 #include <string.h>
 
 #include <common/encoding.hpp>

@@ -34,6 +34,7 @@
 #ifndef MESSAGE_HPP_
 #define MESSAGE_HPP_
 
+#include <stdint.h>
 #include <string.h>
 
 #include <openthread-types.h>

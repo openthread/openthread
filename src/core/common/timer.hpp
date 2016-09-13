@@ -35,6 +35,7 @@
 #define TIMER_HPP_
 
 #include <stddef.h>
+#include <stdint.h>
 
 #include <openthread-types.h>
 #include <common/tasklet.hpp>

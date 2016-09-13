@@ -97,7 +97,7 @@ static int wsa_init_done = 0;
 
 #include <time.h>
 
-#include <openthread-std-types.h>
+#include <stdint.h>
 
 /*
  * Prepare for using the sockets interface

@@ -36,6 +36,8 @@
 #ifndef RADIO_H_
 #define RADIO_H_
 
+#include <stdint.h>
+
 #include <openthread-types.h>
 
 #ifdef __cplusplus
