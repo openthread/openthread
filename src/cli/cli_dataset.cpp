@@ -41,8 +41,6 @@
 #include "cli.hpp"
 #include "cli_dataset.hpp"
 
-using Thread::Encoding::BigEndian::HostSwap32;
-
 namespace Thread {
 namespace Cli {
 

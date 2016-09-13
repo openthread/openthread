@@ -215,8 +215,6 @@ enum
     OT_SECURITY_POLICY_BEACONS                = 1 << 3,  ///< Beacons enabled
 };
 
-#define OT_CHANNEL_MASK_MAX_SIZE           4   ///< Maximum size of Channel Mask
-
 /**
   * This structure represents Channel Mask Page 0.
   *
