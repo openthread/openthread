@@ -55,7 +55,7 @@ configure_OPTIONS               = \
 COMMONCFLAGS                   := \
     -fdata-sections               \
     -ffunction-sections           \
-    -O2                           \
+    -Os                           \
     -g                            \
     -Wall                         \
     -Wextra                       \
