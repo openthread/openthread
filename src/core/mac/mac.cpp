@@ -452,7 +452,7 @@ void Mac::HandleBeginTransmit(void *aContext)
 
 void Mac::ProcessTransmitSecurity(Frame &aFrame)
 {
-    uint32_t frameCounter;
+    uint32_t frameCounter = 0;
     uint8_t securityLevel;
     uint8_t keyIdMode;
     uint8_t nonce[kNonceSize];
