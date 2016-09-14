@@ -80,6 +80,7 @@ Mac::Mac(ThreadNetif &aThreadNetif):
     mKeyManager(aThreadNetif.GetKeyManager()),
     mMle(aThreadNetif.GetMle()),
     mNetif(aThreadNetif),
+    mEnergyScanSampleRssiTask(aThreadNetif.GetIp6().mTaskletScheduler, &HandleEnergyScanSampleRssi, this),
     mWhitelist(),
     mBlacklist()
 {
@@ -92,12 +93,14 @@ Mac::Mac(ThreadNetif &aThreadNetif):
     mTransmitAttempts = 0;
     mTransmitBeacon = false;
 
-    mActiveScanRequest = false;
+    mPendingScanRequest = kScanTypeNone;
     mScanChannel = kPhyMinChannel;
     mScanChannels = 0xff;
     mScanDuration = 0;
+    mScanContext = NULL;
     mActiveScanHandler = NULL;
-    mActiveScanContext = NULL;
+    mEnergyScanHandler = NULL;
+    mEnergyScanCurrentMaxRssi = kInvalidRssiValue;
 
     mSendHead = NULL;
     mSendTail = NULL;
@@ -135,12 +138,34 @@ Mac::Mac(ThreadNetif &aThreadNetif):
 
 ThreadError Mac::ActiveScan(uint32_t aScanChannels, uint16_t aScanDuration, ActiveScanHandler aHandler, void *aContext)
 {
+    ThreadError error;
+
+    SuccessOrExit(error = Scan(kScanTypeActive, aScanChannels, aScanDuration, aContext));
+    mActiveScanHandler = aHandler;
+
+exit:
+    return error;
+}
+
+ThreadError Mac::EnergyScan(uint32_t aScanChannels, uint16_t aScanDuration, EnergyScanHandler aHandler, void *aContext)
+{
+    ThreadError error;
+
+    SuccessOrExit(error = Scan(kScanTypeEnergy, aScanChannels, aScanDuration, aContext));
+    mEnergyScanHandler = aHandler;
+
+exit:
+    return error;
+}
+
+ThreadError Mac::Scan(ScanType aScanType, uint32_t aScanChannels, uint16_t aScanDuration, void *aContext)
+{
     ThreadError error = kThreadError_None;
 
-    VerifyOrExit(mState != kStateActiveScan && mActiveScanRequest == false, error = kThreadError_Busy);
+    VerifyOrExit((mState != kStateActiveScan) && (mState != kStateEnergyScan) && (mPendingScanRequest == kScanTypeNone),
+                 error = kThreadError_Busy);
 
-    mActiveScanHandler = aHandler;
-    mActiveScanContext = aContext;
+    mScanContext = aContext;
     mScanChannels = (aScanChannels == 0) ? static_cast<uint32_t>(kScanChannelsAll) : aScanChannels;
     mScanDuration = (aScanDuration == 0) ? static_cast<uint16_t>(kScanDurationDefault) : aScanDuration;
 
@@ -155,12 +180,19 @@ ThreadError Mac::ActiveScan(uint32_t aScanChannels, uint16_t aScanDuration, Acti
 
     if (mState == kStateIdle)
     {
-        mState = kStateActiveScan;
-        StartCsmaBackoff();
+        if (aScanType == kScanTypeActive)
+        {
+            mState = kStateActiveScan;
+            StartCsmaBackoff();
+        }
+        else if (aScanType == kScanTypeEnergy)
+        {
+            StartEnergyScan();
+        }
     }
     else
     {
-        mActiveScanRequest = true;
+        mPendingScanRequest = aScanType;
     }
 
 exit:
@@ -169,7 +201,49 @@ exit:
 
 bool Mac::IsActiveScanInProgress(void)
 {
-    return (mState == kStateActiveScan) || mActiveScanRequest;
+    return (mState == kStateActiveScan) || (mPendingScanRequest == kScanTypeActive);
+}
+
+bool Mac::IsEnergyScanInProgress(void)
+{
+    return (mState == kStateEnergyScan) || (mPendingScanRequest == kScanTypeEnergy);
+}
+
+void Mac::StartEnergyScan(void)
+{
+    mState = kStateEnergyScan;
+    mEnergyScanCurrentMaxRssi = kInvalidRssiValue;
+    mAckTimer.Start(mScanDuration);
+    mEnergyScanSampleRssiTask.Post();
+    NextOperation();
+}
+
+void Mac::HandleEnergyScanSampleRssi(void *aContext)
+{
+    Mac *obj = static_cast<Mac *>(aContext);
+    obj->HandleEnergyScanSampleRssi();
+}
+
+void Mac::HandleEnergyScanSampleRssi(void)
+{
+    int8_t rssi;
+
+    VerifyOrExit(mState == kStateEnergyScan, ;);
+
+    rssi = otPlatRadioGetRssi(NULL);
+
+    if (rssi != kInvalidRssiValue)
+    {
+        if ((mEnergyScanCurrentMaxRssi == kInvalidRssiValue) || (rssi > mEnergyScanCurrentMaxRssi))
+        {
+            mEnergyScanCurrentMaxRssi = rssi;
+        }
+    }
+
+    mEnergyScanSampleRssiTask.Post();
+
+exit:
+    return;
 }
 
 ThreadError Mac::RegisterReceiver(Receiver &aReceiver)
@@ -329,6 +403,7 @@ void Mac::NextOperation(void)
     switch (mState)
     {
     case kStateActiveScan:
+    case kStateEnergyScan:
         otPlatRadioReceive(NULL, mScanChannel);
         break;
 
@@ -348,11 +423,16 @@ void Mac::NextOperation(void)
 
 void Mac::ScheduleNextTransmission(void)
 {
-    if (mActiveScanRequest)
+    if (mPendingScanRequest == kScanTypeActive)
     {
-        mActiveScanRequest = false;
+        mPendingScanRequest = kScanTypeNone;
         mState = kStateActiveScan;
         StartCsmaBackoff();
+    }
+    else if (mPendingScanRequest == kScanTypeEnergy)
+    {
+        mPendingScanRequest = kScanTypeNone;
+        StartEnergyScan();
     }
     else if (mTransmitBeacon)
     {
@@ -634,7 +714,7 @@ void Mac::HandleAckTimer(void)
 
             if (mScanChannels == 0 || mScanChannel > kPhyMaxChannel)
             {
-                mActiveScanHandler(mActiveScanContext, NULL);
+                mActiveScanHandler(mScanContext, NULL);
                 ScheduleNextTransmission();
                 ExitNow();
             }
@@ -642,6 +722,34 @@ void Mac::HandleAckTimer(void)
         while ((mScanChannels & 1) == 0);
 
         StartCsmaBackoff();
+        break;
+
+    case kStateEnergyScan:
+        if (mEnergyScanCurrentMaxRssi != kInvalidRssiValue)
+        {
+            otEnergyScanResult result;
+
+            result.mChannel = mScanChannel;
+            result.mMaxRssi = mEnergyScanCurrentMaxRssi;
+            mEnergyScanHandler(mScanContext, &result);
+        }
+
+        do
+        {
+            mScanChannels >>= 1;
+            mScanChannel++;
+
+            if (mScanChannels == 0 || mScanChannel > kPhyMaxChannel)
+            {
+                mEnergyScanHandler(mScanContext, NULL);
+                ScheduleNextTransmission();
+                ExitNow();
+            }
+        }
+        while ((mScanChannels & 1) == 0);
+
+        mEnergyScanCurrentMaxRssi = kInvalidRssiValue;
+        mAckTimer.Start(mScanDuration);
         break;
 
     case kStateTransmitData:
@@ -981,7 +1089,7 @@ void Mac::ReceiveDoneTask(Frame *aFrame, ThreadError aError)
         if (aFrame->GetType() == Frame::kFcfFrameBeacon)
         {
             mCounters.mRxBeacon++;
-            mActiveScanHandler(mActiveScanContext, aFrame);
+            mActiveScanHandler(mScanContext, aFrame);
         }
         else
         {

@@ -325,7 +325,7 @@ typedef void (*otHandleEnergyScanResult)(otEnergyScanResult *aResult, void *aCon
  * @param[in]  aCallbackContext  A pointer to application-specific context.
  *
  * @retval kThreadError_None  Accepted the Energy Scan request.
- * @retval kThreadError_Busy  Already performing an Active Scan.
+ * @retval kThreadError_Busy  Could not start the energy scan.
  *
  */
 ThreadError otEnergyScan(otInstance *aInstance, uint32_t aScanChannels, uint16_t aScanDuration,
