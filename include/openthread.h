@@ -325,7 +325,7 @@ typedef void (*otHandleEnergyScanResult)(otEnergyScanResult *aResult, void *aCon
  * @param[in]  aCallbackContext  A pointer to application-specific context.
  *
  * @retval kThreadError_None  Accepted the Energy Scan request.
- * @retval kThreadError_Busy  Already performing an Active Scan.
+ * @retval kThreadError_Busy  Could not start the energy scan.
  *
  */
 ThreadError otEnergyScan(otInstance *aInstance, uint32_t aScanChannels, uint16_t aScanDuration,
@@ -501,6 +501,15 @@ const uint8_t *otGetExtendedPanId(otInstance *aInstance);
  * @sa otGetExtendedPanId
  */
 void otSetExtendedPanId(otInstance *aInstance, const uint8_t *aExtendedPanId);
+
+/**
+ * Get the factory-assigned IEEE EUI-64.
+ *
+ * @param[in]   aInstance  A pointer to the OpenThread instance.
+ * @param[out]  aEui64     A pointer to where the factory-assigned IEEE EUI-64 is placed.
+ *
+ */
+void otGetFactoryAssignedIeeeEui64(otInstance *aInstance, otExtAddress *aEui64);
 
 /**
  * This function returns a pointer to the Leader's RLOC.
@@ -1491,6 +1500,27 @@ void otSetAssignLinkQuality(otInstance *aInstance, const uint8_t *aExtAddr, uint
  * @param[in]  aInstance A pointer to an OpenThread instance.
  */
 void otPlatformReset(otInstance *aInstance);
+
+/**
+ * Get the ROUTER_DOWNGRADE_THRESHOLD parameter used in the Router role.
+ *
+ * @param[in]  aInstance  A pointer to an OpenThread instance.
+ *
+ * @returns The ROUTER_DOWNGRADE_THRESHOLD value.
+ *
+ * @sa otSetRouterDowngradeThreshold
+ */
+uint8_t otGetRouterDowngradeThreshold(otInstance *aInstance);
+
+/**
+ * Set the ROUTER_DOWNGRADE_THRESHOLD parameter used in the Leader role.
+ *
+ * @param[in]  aInstance   A pointer to an OpenThread instance.
+ * @param[in]  aThreshold  The ROUTER_DOWNGRADE_THRESHOLD value.
+ *
+ * @sa otGetRouterDowngradeThreshold
+ */
+void otSetRouterDowngradeThreshold(otInstance *aInstance, uint8_t aThreshold);
 
 /**
  * @}

@@ -23,14 +23,14 @@ Hardware flow control is preferred over software flow control. In the
 absence of hardware flow control, software flow control (XON/XOFF) **MUST**
 be used instead.
 
-We also **RECOMMEND** an arduino-style hardware reset, where the DTR
+We also **RECOMMEND** an Arduino-style hardware reset, where the DTR
 signal is coupled to the `R̅E̅S̅` pin through a 0.01µF capacitor. This
 causes the NCP to automatically reset whenever the serial port is
 opened. At the very least we **RECOMMEND** dedicating one of your host
 pins to controlling the `R̅E̅S̅` pin on the NCP, so that you can
 easily perform a hardware reset if necessary.
 
-### HDLC-Lite ####
+### HDLC-Lite {#hdlc-lite}
 
 *HDLC-Lite* is the recommended framing protocol for transmitting
 Spinel frames over a UART. HDLC-Lite consists of only the framing,

@@ -53,7 +53,6 @@
 #include <common/encoding.hpp>
 #include <common/new.hpp>
 #include <net/ip6.hpp>
-#include <platform/radio.h>
 #include <platform/random.h>
 #include <platform/uart.h>
 
@@ -115,6 +114,7 @@ const struct Command Interpreter::sCommands[] =
     { "rloc16", &Interpreter::ProcessRloc16 },
     { "route", &Interpreter::ProcessRoute },
     { "router", &Interpreter::ProcessRouter },
+    { "routerdowngradethreshold", &Interpreter::ProcessRouterDowngradeThreshold },
     { "routerrole", &Interpreter::ProcessRouterRole },
     { "routerupgradethreshold", &Interpreter::ProcessRouterUpgradeThreshold },
     { "scan", &Interpreter::ProcessScan },
@@ -554,7 +554,7 @@ void Interpreter::ProcessEui64(int argc, char *argv[])
 
     VerifyOrExit(argc == 0, error = kThreadError_Parse);
 
-    otPlatRadioGetIeeeEui64(mInstance, extAddress.m8);
+    otGetFactoryAssignedIeeeEui64(mInstance, &extAddress);
     OutputBytes(extAddress.m8, OT_EXT_ADDRESS_SIZE);
     sServer->OutputFormat("\r\n");
 
@@ -1650,6 +1650,25 @@ void Interpreter::ProcessRouter(int argc, char *argv[])
             sServer->OutputFormat("LQI Out: %d\r\n", routerInfo.mLinkQualityOut);
             sServer->OutputFormat("Age: %d\r\n", routerInfo.mAge);
         }
+    }
+
+exit:
+    AppendResult(error);
+}
+
+void Interpreter::ProcessRouterDowngradeThreshold(int argc, char *argv[])
+{
+    ThreadError error = kThreadError_None;
+    long value;
+
+    if (argc == 0)
+    {
+        sServer->OutputFormat("%d\r\n", otGetRouterDowngradeThreshold(mInstance));
+    }
+    else
+    {
+        SuccessOrExit(error = ParseLong(argv[0], value));
+        otSetRouterDowngradeThreshold(mInstance, static_cast<uint8_t>(value));
     }
 
 exit:

@@ -1143,7 +1143,7 @@ ThreadError NcpBase::CommandHandler_RESET(uint8_t header, unsigned int command, 
     // We only get to this point if the
     // platform doesn't support resetting.
     // In such a case we fake it.
-    
+
     otThreadStop(mInstance);
     otInterfaceDown(mInstance);
 
@@ -1463,6 +1463,16 @@ ThreadError NcpBase::GetPropertyHandler_MAC_SCAN_STATE(uint8_t header, spinel_pr
                         key,
                         SPINEL_DATATYPE_UINT8_S,
                         SPINEL_SCAN_STATE_BEACON
+                    );
+    }
+    else if (otIsEnergyScanInProgress(mInstance))
+    {
+        errorCode = SendPropertyUpdate(
+                        header,
+                        SPINEL_CMD_PROP_VALUE_IS,
+                        key,
+                        SPINEL_DATATYPE_UINT8_S,
+                        SPINEL_SCAN_STATE_ENERGY
                     );
     }
     else
@@ -3173,7 +3183,7 @@ ThreadError NcpBase::SetPropertyHandler_STREAM_NET_INSECURE(uint8_t header, spin
         (void)meta_ptr;
         (void)meta_len;
         (void)parsedLength;
-        
+
         errorCode = otAppendMessage(message, frame_ptr, static_cast<uint16_t>(frame_len));
     }
 
@@ -3218,7 +3228,7 @@ ThreadError NcpBase::SetPropertyHandler_STREAM_NET(uint8_t header, spinel_prop_k
     unsigned int frame_len(0);
     const uint8_t *meta_ptr(NULL);
     unsigned int meta_len(0);
-    
+
     // STREAM_NET requires layer 2 security.
     otMessage message = otNewIp6Message(mInstance, true);
 
@@ -3243,7 +3253,7 @@ ThreadError NcpBase::SetPropertyHandler_STREAM_NET(uint8_t header, spinel_prop_k
         (void)meta_ptr;
         (void)meta_len;
         (void)parsedLength;
-        
+
         errorCode = otAppendMessage(message, frame_ptr, static_cast<uint16_t>(frame_len));
     }
 

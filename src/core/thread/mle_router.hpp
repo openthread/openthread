@@ -235,6 +235,22 @@ public:
     void SetRouterUpgradeThreshold(uint8_t aThreshold);
 
     /**
+     * This method returns the ROUTER_DOWNGRADE_THRESHOLD value.
+     *
+     * @returns The ROUTER_DOWNGRADE_THRESHOLD value.
+     *
+     */
+    uint8_t GetRouterDowngradeThreshold(void) const;
+
+    /**
+     * This method sets the ROUTER_DOWNGRADE_THRESHOLD value.
+     *
+     * @returns The ROUTER_DOWNGRADE_THRESHOLD value.
+     *
+     */
+    void SetRouterDowngradeThreshold(uint8_t aThreshold);
+
+    /**
      * This method release a given Router ID.
      *
      * @param[in]  aRouterId  The Router ID to release.
@@ -521,6 +537,11 @@ private:
     Child *FindChild(uint16_t aChildId);
     Child *FindChild(const Mac::ExtAddress &aMacAddr);
 
+    bool HasMinDowngradeNeighborRouters(void);
+    bool HasOneNeighborwithComparableConnectivity(const RouteTlv &aRoute, uint8_t aRouterId);
+    bool HasSmallNumberOfChildren(void);
+    uint8_t GetMinDowngradeNeighborRouters(void);
+
     uint8_t AllocateRouterId(void);
     uint8_t AllocateRouterId(uint8_t aRouterId);
     bool InRouterIdMask(uint8_t aRouterId);
@@ -547,9 +568,11 @@ private:
     uint16_t mNextChildId;
     uint8_t mNetworkIdTimeout;
     uint8_t mRouterUpgradeThreshold;
+    uint8_t mRouterDowngradeThreshold;
     uint8_t mLeaderWeight;
     uint32_t mFixedLeaderPartitionId;  ///< only for certification testing
     bool mRouterRoleEnabled;
+    uint8_t mRouterSelectionJitterTimeout;
 
     uint8_t mRouterId;
     uint8_t mPreviousRouterId;

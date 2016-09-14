@@ -14,7 +14,7 @@ save feature (See (#feature-network-save)).
 
 ## Thread Capabilities
 
-The Thread techology defines the following capabilities:
+The Thread technology defines the following capabilities:
 
 * `CAP_NET_THREAD_1_0` - Indicates that the NCP implements v1.0 of the Thread standard.
 * `CAP_NET_THREAD_1_1` - Indicates that the NCP implements v1.1 of the Thread standard.
@@ -153,7 +153,7 @@ defined by the Thread specification.
 * Packed-Encoding: `A(C)` (List of active thread router ids)
 
 Note that some implementations may not support `CMD_GET_VALUE`
-routerids, but may support `CMD_REMOVE_VALUE` when the node is
+router ids, but may support `CMD_REMOVE_VALUE` when the node is
 a leader.
 
 ### PROP 5382: PROP_THREAD_RLOC16_DEBUG_PASSTHRU

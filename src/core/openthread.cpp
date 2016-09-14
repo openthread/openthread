@@ -79,6 +79,7 @@ extern "C" {
 #endif
 
 static void HandleActiveScanResult(void *aContext, Mac::Frame *aFrame);
+static void HandleEnergyScanResult(void *aContext, otEnergyScanResult *aResult);
 static void HandleMleDiscover(otActiveScanResult *aResult, void *aContext);
 
 void otProcessNextTasklet(otInstance *aInstance)
@@ -160,6 +161,11 @@ void otSetExtendedPanId(otInstance *aInstance, const uint8_t *aExtendedPanId)
     mlPrefix[6] = 0x00;
     mlPrefix[7] = 0x00;
     aInstance->mThreadNetif.GetMle().SetMeshLocalPrefix(mlPrefix);
+}
+
+void otGetFactoryAssignedIeeeEui64(otInstance *aInstance, otExtAddress *aEui64)
+{
+    otPlatRadioGetIeeeEui64(aInstance, aEui64->m8);
 }
 
 ThreadError otGetLeaderRloc(otInstance *aInstance, otIp6Address *aAddress)
@@ -651,6 +657,16 @@ void otPlatformReset(otInstance *aInstance)
     otPlatReset(aInstance);
 }
 
+uint8_t otGetRouterDowngradeThreshold(otInstance *aInstance)
+{
+    return aInstance->mThreadNetif.GetMle().GetRouterDowngradeThreshold();
+}
+
+void otSetRouterDowngradeThreshold(otInstance *aInstance, uint8_t aThreshold)
+{
+    aInstance->mThreadNetif.GetMle().SetRouterDowngradeThreshold(aThreshold);
+}
+
 ThreadError otGetChildInfoById(otInstance *aInstance, uint16_t aChildId, otChildInfo *aChildInfo)
 {
     ThreadError error = kThreadError_None;
@@ -1035,19 +1051,19 @@ ThreadError otEnergyScan(otInstance *aInstance, uint32_t aScanChannels, uint16_t
 {
     aInstance->mEnergyScanCallback = aCallback;
     aInstance->mEnergyScanCallbackContext = aCallbackContext;
-
-    (void)aScanChannels;
-    (void)aScanDuration;
-
-    // TODO: Implement the energy scan at mac layer.
-
-    return kThreadError_NotImplemented;
+    return aInstance->mThreadNetif.GetMac().EnergyScan(aScanChannels, aScanDuration, &HandleEnergyScanResult, aInstance);
 }
 
-bool otIsEnegyScanInProgress(otInstance *aInstance)
+void HandleEnergyScanResult(void *aContext, otEnergyScanResult *aResult)
 {
-    (void)aInstance;
-    return false;
+    otInstance *aInstance = static_cast<otInstance *>(aContext);
+
+    aInstance->mEnergyScanCallback(aResult, aInstance->mEnergyScanCallbackContext);
+}
+
+bool otIsEnergyScanInProgress(otInstance *aInstance)
+{
+    return aInstance->mThreadNetif.GetMac().IsEnergyScanInProgress();
 }
 
 ThreadError otDiscover(otInstance *aInstance, uint32_t aScanChannels, uint16_t aScanDuration, uint16_t aPanId,
