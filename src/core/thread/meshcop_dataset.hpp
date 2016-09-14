@@ -124,18 +124,6 @@ public:
      */
     ThreadError Set(const Tlv &aTlv);
 
-    /**
-     * This method sets a TLV in the Dataset.
-     *
-     * @param[in]  aTlv   A reference to the TLV.
-     * @param[in]  aData  A reference to the TLV's data.
-     *
-     * @retval kThreadError_None    Successfully set the TLV.
-     * @retval kThreadError_NoBufs  Could not set the TLV due to insufficient buffer space.
-     *
-     */
-    ThreadError Set(const Tlv &aTlv, const uint8_t &aData);
-
     ThreadError Set(const Message &aMessage, uint16_t aOffset, uint8_t aLength);
 
     ThreadError Set(const otOperationalDataset &aDataset, bool aActive);
