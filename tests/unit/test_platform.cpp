@@ -185,7 +185,7 @@ extern "C" {
 
         *aOutputLength = aInputLength;
 
-    exit:
+exit:
         return error;
     }
 
