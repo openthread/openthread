@@ -32,14 +32,6 @@
 #include <common/message.hpp>
 #include <string.h>
 
-extern"C" void otSignalTaskletPending(otInstance *)
-{
-}
-
-extern "C" void otPlatDiagAlarmFired(otInstance *)
-{
-}
-
 void TestMessage(void)
 {
     Thread::MessagePool messagePool;

@@ -35,10 +35,6 @@
 
 static Thread::Crypto::MbedTls mbedtls;
 
-extern"C" void otSignalTaskletPending(otInstance *)
-{
-}
-
 /**
  * Verifies test vectors from IEEE 802.15.4-2006 Annex C Section C.2.1
  */

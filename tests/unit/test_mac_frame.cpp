@@ -34,10 +34,6 @@
 
 namespace Thread {
 
-extern"C" void otSignalTaskletPending(otInstance *)
-{
-}
-
 void TestMacHeader(void)
 {
     static const struct

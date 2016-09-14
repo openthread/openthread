@@ -161,12 +161,12 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="..\..\tests\unit\test_aes.cpp" />
-    <ClCompile Include="..\..\tests\unit\test_diag.cpp" />
     <ClCompile Include="..\..\tests\unit\test_hmac_sha256.cpp" />
     <ClCompile Include="..\..\tests\unit\test_link_quality.cpp" />
     <ClCompile Include="..\..\tests\unit\test_lowpan.cpp" />
     <ClCompile Include="..\..\tests\unit\test_mac_frame.cpp" />
     <ClCompile Include="..\..\tests\unit\test_message.cpp" />
+    <ClCompile Include="..\..\tests\unit\test_platform.cpp" />
     <ClCompile Include="..\..\tests\unit\test_timer.cpp" />
     <ClCompile Include="..\..\tests\unit\test_toolchain.cpp" />
     <ClCompile Include="..\..\tests\unit\test_util.cpp" />

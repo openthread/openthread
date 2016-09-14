@@ -36,10 +36,6 @@
 
 static Thread::Crypto::MbedTls mbedtls;
 
-extern"C" void otSignalTaskletPending(otInstance *)
-{
-}
-
 void TestHmacSha256(void)
 {
     static const struct

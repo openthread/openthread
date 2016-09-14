@@ -43,34 +43,11 @@ enum
 };
 
 static Thread::TimerScheduler sTimerScheduler;
-static uint32_t sNow;
-static uint32_t sPlatT0;
-static uint32_t sPlatDt;
-static bool     sTimerOn;
-static uint32_t sCallCount[kCallCountIndexMax];
-
-extern "C" {
-
-    void otPlatAlarmStop(otInstance *)
-    {
-        sTimerOn = false;
-        sCallCount[kCallCountIndexAlarmStop]++;
-    }
-
-    void otPlatAlarmStartAt(otInstance *, uint32_t aT0, uint32_t aDt)
-    {
-        sTimerOn = true;
-        sCallCount[kCallCountIndexAlarmStart]++;
-        sPlatT0 = aT0;
-        sPlatDt = aDt;
-    }
-
-    uint32_t otPlatAlarmGetNow(void)
-    {
-        return sNow;
-    }
-
-} // extern "C"
+extern uint32_t sNow;
+extern uint32_t sPlatT0;
+extern uint32_t sPlatDt;
+extern bool     sTimerOn;
+extern uint32_t sCallCount[kCallCountIndexMax];
 
 void InitCounters(void)
 {

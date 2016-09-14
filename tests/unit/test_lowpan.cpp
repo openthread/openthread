@@ -40,41 +40,6 @@ using namespace Thread;
 
 namespace Thread {
 
-extern "C" void otSignalTaskletPending(otInstance *)
-{
-}
-
-extern "C" bool otAreTaskletsPending(otInstance *)
-{
-    return false;
-}
-
-extern "C" void otPlatUartSendDone(void)
-{
-}
-
-extern "C" void otPlatUartReceived(const uint8_t *aBuf, uint16_t aBufLength)
-{
-    (void)aBuf;
-    (void)aBufLength;
-}
-
-extern "C" void otPlatDiagAlarmFired(otInstance *)
-{
-}
-
-extern "C" void otPlatDiagRadioTransmitDone(otInstance *, bool aRxPending, ThreadError aError)
-{
-    (void)aRxPending;
-    (void)aError;
-}
-
-extern "C" void otPlatDiagRadioReceiveDone(otInstance *, RadioPacket *aFrame, ThreadError aError)
-{
-    (void)aFrame;
-    (void)aError;
-}
-
 Ip6::Ip6 sIp6;
 ThreadNetif sMockThreadNetif(sIp6);
 Lowpan::Lowpan sMockLowpan(sMockThreadNetif);

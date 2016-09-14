@@ -7,4 +7,5 @@ platform: x64
 build:
   project: openthread.sln
   verbosity: minimal
-test: off
+test:
+  assemblies: UnitTests.dll

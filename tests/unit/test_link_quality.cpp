@@ -34,10 +34,6 @@
 
 namespace Thread {
 
-extern"C" void otSignalTaskletPending(otInstance *)
-{
-}
-
 enum
 {
     kMaxRssValue        = 0,
