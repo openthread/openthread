@@ -86,7 +86,7 @@ __inline otInstance *otInstanceFromIp6(Thread::Ip6::Ip6 *aIp6)
 
 __inline otInstance *otInstanceFromThreadNetif(Thread::ThreadNetif *aThreadNetif)
 {
-    return (otInstance *)CONTAINING_RECORD(aThreadNetif, otInstance, mIp6);
+    return (otInstance *)CONTAINING_RECORD(aThreadNetif, otInstance, mThreadNetif);
 }
 
 #endif  // OPENTHREADINSTANCE_H_
