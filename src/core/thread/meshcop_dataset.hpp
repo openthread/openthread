@@ -52,8 +52,10 @@ public:
     /**
      * This constructor initializes the object.
      *
+     * @param[in]  aType      The type of the dataset, active or pending.
+     *
      */
-    Dataset(void);
+    Dataset(const uint8_t aType);
 
     /**
      * This method clears the Dataset.
@@ -102,10 +104,10 @@ public:
     /**
      * This method returns a reference to the Timestamp.
      *
-     * @returns A reference to the Timestamp.
+     * @returns A pointer to the Timestamp.
      *
      */
-    const Timestamp &GetTimestamp(void) const;
+    const Timestamp *GetTimestamp(void) const;
 
     /**
      * This method sets the Timestamp value.
@@ -133,7 +135,7 @@ public:
 private:
     void Remove(uint8_t *aStart, uint8_t aLength);
 
-    Timestamp mTimestamp;       ///< Active or Pending Timestamp
+    uint8_t   mType;            ///< Active or Pending
     uint8_t   mTlvs[kMaxSize];  ///< The Dataset buffer
     uint8_t   mLength;          ///< The number of valid bytes in @var mTlvs
 };

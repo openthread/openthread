@@ -69,7 +69,7 @@ protected:
         kFlagNetworkUpdated = 1 << 1,
     };
 
-    DatasetManager(ThreadNetif &aThreadNetif, const char *aUriSet, const char *aUriGet);
+    DatasetManager(ThreadNetif &aThreadNetif, const uint8_t aType, const char *aUriSet, const char *aUriGet);
 
     ThreadError Set(const Dataset &aDataset, uint8_t &aFlags);
 

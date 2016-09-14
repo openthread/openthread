@@ -41,15 +41,15 @@
 namespace Thread {
 namespace MeshCoP {
 
-Dataset::Dataset(void) :
+Dataset::Dataset(const uint8_t aType) :
+    mType(aType),
     mLength(0)
 {
-    mTimestamp.Init();
 }
 
 void Dataset::Clear(void)
 {
-    mTimestamp.Init();
+    mType = 0;
     mLength = 0;
 }
 
@@ -237,11 +237,12 @@ ThreadError Dataset::Set(const otOperationalDataset &aDataset, bool aActive)
 
     activeTimestampTlv.Init();
     activeTimestampTlv.SetSeconds(aDataset.mActiveTimestamp);
+    activeTimestampTlv.SetTicks(0);
     Set(activeTimestampTlv);
 
     if (aActive)
     {
-        mTimestamp.SetSeconds(aDataset.mActiveTimestamp);
+        mType = Tlv::kActiveTimestamp;
     }
     else
     {
@@ -249,10 +250,11 @@ ThreadError Dataset::Set(const otOperationalDataset &aDataset, bool aActive)
 
         VerifyOrExit(aDataset.mIsPendingTimestampSet, error = kThreadError_InvalidArgs);
 
-        mTimestamp.SetSeconds(aDataset.mPendingTimestamp);
+        mType = Tlv::kPendingTimestamp;
 
         pendingTimestampTlv.Init();
         pendingTimestampTlv.SetSeconds(aDataset.mPendingTimestamp);
+        pendingTimestampTlv.SetTicks(0);
         Set(pendingTimestampTlv);
 
         if (aDataset.mIsDelaySet)
@@ -263,9 +265,6 @@ ThreadError Dataset::Set(const otOperationalDataset &aDataset, bool aActive)
             Set(tlv);
         }
     }
-
-    mTimestamp.SetTicks(0);
-    mTimestamp.SetAuthoritative(false);
 
     if (aDataset.mIsChannelSet)
     {
@@ -361,14 +360,32 @@ exit:
     return error;
 }
 
-const Timestamp &Dataset::GetTimestamp(void) const
+const Timestamp *Dataset::GetTimestamp(void) const
 {
-    return mTimestamp;
+    const uint8_t *tlv = reinterpret_cast<const uint8_t *>(Get(static_cast<Tlv::Type>(mType)));
+    const Timestamp *timestamp = NULL;
+
+    VerifyOrExit(tlv != NULL, ;);
+    timestamp = reinterpret_cast<const Timestamp *>(tlv + sizeof(Tlv));
+
+exit:
+    return timestamp;
 }
 
 void Dataset::SetTimestamp(const Timestamp &aTimestamp)
 {
-    mTimestamp = aTimestamp;
+    OT_TOOL_PACKED_BEGIN
+    struct
+    {
+        Tlv tlv;
+        Timestamp timestamp;
+    } OT_TOOL_PACKED_END timestampTlv;
+
+    timestampTlv.tlv.SetType(static_cast<Tlv::Type>(mType));
+    timestampTlv.tlv.SetLength(sizeof(Timestamp));
+    timestampTlv.timestamp = aTimestamp;
+
+    Set(timestampTlv.tlv);
 }
 
 ThreadError Dataset::Set(const Tlv &aTlv)
