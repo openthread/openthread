@@ -80,7 +80,7 @@ Mac::Mac(ThreadNetif &aThreadNetif):
     mKeyManager(aThreadNetif.GetKeyManager()),
     mMle(aThreadNetif.GetMle()),
     mNetif(aThreadNetif),
-    mEnergyScanSampleRssiTask(aThreadNetif.GetIp6().mTaskletScheduler, &HandleEnergyScanSampleRssi, this),
+    mEnergyScanSampleRssiTask(aThreadNetif.GetIp6().mTaskletScheduler, &Mac::HandleEnergyScanSampleRssi, this),
     mWhitelist(),
     mBlacklist()
 {
