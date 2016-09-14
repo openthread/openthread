@@ -98,11 +98,8 @@ class Node:
 
     def __del__(self):
         if self.pexpect.isalive():
-            if self.node_type == 'sim':
-                self.send_command('exit')
-                self.pexpect.expect(pexpect.EOF)
-            elif self.node_type == 'ncp-sim':
-                self.pexpect.sendcontrol('c');
+            self.send_command('exit')
+            self.pexpect.expect(pexpect.EOF)
             self.pexpect.terminate()
             self.pexpect.close(force=True)
 
