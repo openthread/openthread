@@ -32,6 +32,7 @@
 
 #include <openthread-types.h>
 
+#include <assert.h>
 #include <common/code_utils.hpp>
 #include <platform/radio.h>
 
@@ -46,12 +47,8 @@
 #include <driverlib/rf_ieee_cmd.h>
 #include <driverlib/chipinfo.h>
 
-/* return values from the setup and teardown functions */
 #define CC2650_CRC_BIT_MASK (1<<8)
 #define CC2650_LQI_BIT_MASK 0x3f
-
-#define RF_CORE_ERROR 1
-#define RF_CORE_OK 0
 
 #define IEEE802154_MIN_LENGTH 5
 #define IEEE802154_MAX_LENGTH 127
@@ -61,7 +58,11 @@
 #define IEEE802154_ACK_REQUEST (1 << 5)
 #define IEEE802154_DSN_OFFSET 2
 
-static PhyState sState;
+/* phy state as defined by openthread */
+static volatile PhyState sState;
+/* phy states not defined by openthread */
+static volatile bool enabaling = false;
+static volatile bool transmitting = false;
 
 /* TX Power dBm lookup table - values from SmartRF Studio */
 typedef struct output_config {
@@ -119,26 +120,26 @@ static uint32_t ieee_overrides[] = {
 uint32_t rat_offset = 0;
 
 /*
- * rx command that runs in the background on the CM0
+ * radio commands that run on the CM0
  */
+static volatile rfc_CMD_SYNC_START_RAT_t cmd_start_rat;
+static volatile rfc_CMD_SYNC_STOP_RAT_t cmd_stop_rat;
+static volatile rfc_CMD_RADIO_SETUP_t cmd_radio_setup;
+static volatile rfc_CMD_FS_POWERDOWN_t cmd_fs_powerdown;
 static volatile rfc_CMD_IEEE_RX_t cmd_ieee_rx;
+static volatile rfc_CMD_IEEE_TX_t cmd_ieee_tx;
+static volatile rfc_CMD_CLEAR_RX_t cmd_clear_rx;
 
-/*
- * struct containing radio stats
- */
+/* struct containing radio stats */
 static rfc_ieeeRxOutput_t rf_stats;
 
 /* size of length in recv struct */
-#define DATA_ENTRY_LENSZ_NONE 0
 #define DATA_ENTRY_LENSZ_BYTE 1
-#define DATA_ENTRY_LENSZ_WORD 2 /* 2 bytes */
 
 #define RX_BUF_SIZE 144
-/* Four receive buffers entries with room for 1 IEEE802.15.4 frame in each */
+/* two receive buffers entries with room for 1 max IEEE802.15.4 frame in each */
 static uint8_t rx_buf_0[RX_BUF_SIZE] __attribute__ ((aligned (4)));
 static uint8_t rx_buf_1[RX_BUF_SIZE] __attribute__ ((aligned (4)));
-// static uint8_t rx_buf_2[RX_BUF_SIZE] __attribute__ ((aligned (4)));
-// static uint8_t rx_buf_3[RX_BUF_SIZE] __attribute__ ((aligned (4)));
 
 /* The RX Data Queue */
 static dataQueue_t rx_data_queue = { 0 };
@@ -150,49 +151,31 @@ static ThreadError sTransmitError;
 static ThreadError sReceiveError;
 
 static uint8_t sTransmitPsdu[kMaxPHYPacketSize] __attribute__ ((aligned (4))) ;
-/* XXX: can we point the ot stack to one of the buffers above? */
 static uint8_t sReceivePsdu[kMaxPHYPacketSize] __attribute__ ((aligned (4))) ;
 
-static void init_buffers(void)
+static void rf_core_init_buffers(void)
 {
     rfc_dataEntry_t *entry;
-
-    memset(rx_buf_0, 0, RX_BUF_SIZE);
-    memset(rx_buf_1, 0, RX_BUF_SIZE);
-    // memset(rx_buf_2, 0, RX_BUF_SIZE);
-    // memset(rx_buf_3, 0, RX_BUF_SIZE);
+    memset(rx_buf_0, 0x00, RX_BUF_SIZE);
+    memset(rx_buf_1, 0x00, RX_BUF_SIZE);
 
     entry = (rfc_dataEntry_t *)rx_buf_0;
     entry->pNextEntry = rx_buf_1;
     entry->config.lenSz = DATA_ENTRY_LENSZ_BYTE;
-    entry->length = sizeof(rx_buf_0) - 8;
+    entry->length = sizeof(rx_buf_0) - sizeof(rfc_dataEntry_t);
 
     entry = (rfc_dataEntry_t *)rx_buf_1;
     entry->pNextEntry = rx_buf_0;
-    // entry->pNextEntry = rx_buf_2;
     entry->config.lenSz = DATA_ENTRY_LENSZ_BYTE;
-    entry->length = sizeof(rx_buf_0) - 8;
-
-    /*
-    entry = (rfc_dataEntry_t *)rx_buf_2;
-    entry->pNextEntry = rx_buf_3;
-    entry->config.lenSz = DATA_ENTRY_LENSZ_BYTE;
-    entry->length = sizeof(rx_buf_0) - 8;
-
-    entry = (rfc_dataEntry_t *)rx_buf_3;
-    entry->pNextEntry = rx_buf_0;
-    entry->config.lenSz = DATA_ENTRY_LENSZ_BYTE;
-    entry->length = sizeof(rx_buf_0) - 8;
-    */
+    entry->length = sizeof(rx_buf_0) - sizeof(rfc_dataEntry_t);
 
     sTransmitFrame.mPsdu = sTransmitPsdu;
     sTransmitFrame.mLength = 0;
-
     sReceiveFrame.mPsdu = sReceivePsdu;
     sReceiveFrame.mLength = 0;
 }
 
-static void init_rf_params(void)
+static void rf_core_init_rx_params(void)
 {
     memset((void *)&cmd_ieee_rx, 0x00, sizeof(cmd_ieee_rx));
 
@@ -256,280 +239,45 @@ static void init_rf_params(void)
     cmd_ieee_rx.endTime = 0x00000000;
 }
 
-uint_fast16_t rf_core_cmd_radio_setup()
+static uint_fast8_t rf_core_cmd_abort(void)
 {
-    volatile rfc_CMD_RADIO_SETUP_t radio_setup_cmd;
-    uint16_t doorbell_ret;
-
-    /* Create radio setup command */
-    memset((void *)&radio_setup_cmd, 0, sizeof(radio_setup_cmd));
-
-    radio_setup_cmd.commandNo = CMD_RADIO_SETUP;
-    radio_setup_cmd.condition.rule = COND_NEVER;
-
-    /* initally set the radio tx power to the max */
-    radio_setup_cmd.txPower = cur_output_power->value;
-    radio_setup_cmd.pRegOverride = ieee_overrides;
-    radio_setup_cmd.mode = 1;
-
-    doorbell_ret = (RFCDoorbellSendTo((uint32_t)&radio_setup_cmd) & 0xFF);
-    if(doorbell_ret != CMDSTA_Done)
-    {
-        return doorbell_ret;
-    }
-
-    /* NOTE: order is important here */
-    while(radio_setup_cmd.status == IDLE 
-    		|| radio_setup_cmd.status == PENDING
-			|| radio_setup_cmd.status == ACTIVE)
-    {
-        /* TODO: sleep while polling */
-    	;
-    }
-
-    return radio_setup_cmd.status;
-}
-
-uint_fast16_t rf_core_cmd_start_rat(void)
-{
-    volatile rfc_CMD_SYNC_START_RAT_t start_rat_cmd;
-    uint16_t doorbell_ret;
-
-    HWREGBITW(AON_RTC_BASE + AON_RTC_O_CTL, AON_RTC_CTL_RTC_UPD_EN_BITN) = 1;
-
-    memset((void *)&start_rat_cmd, 0, sizeof(start_rat_cmd));
-
-    start_rat_cmd.commandNo = CMD_SYNC_START_RAT;
-    start_rat_cmd.condition.rule = COND_NEVER;
-
-    /* copy the value and send back */
-    start_rat_cmd.rat0 = rat_offset;
-
-    doorbell_ret = (RFCDoorbellSendTo((uint32_t)&start_rat_cmd) & 0xFF);
-    if(doorbell_ret != CMDSTA_Done)
-    {
-        return doorbell_ret;
-    }
-
-    /* NOTE: order is important here */
-    while(start_rat_cmd.status == IDLE 
-    		|| start_rat_cmd.status == PENDING
-			|| start_rat_cmd.status == ACTIVE)
-    {
-        /* TODO: sleep while polling */
-    	;
-    }
-
-    return start_rat_cmd.status;
-}
-
-uint_fast16_t rf_core_cmd_stop_rat(void)
-{
-    volatile rfc_CMD_SYNC_STOP_RAT_t stop_rat_cmd;
-    uint16_t doorbell_ret;
-
-    HWREGBITW(AON_RTC_BASE + AON_RTC_O_CTL, AON_RTC_CTL_RTC_UPD_EN_BITN) = 1;
-
-    memset((void *)&stop_rat_cmd, 0, sizeof(stop_rat_cmd));
-
-    stop_rat_cmd.commandNo = CMD_SYNC_STOP_RAT;
-    stop_rat_cmd.condition.rule = COND_NEVER;
-
-    doorbell_ret = (RFCDoorbellSendTo((uint32_t)&stop_rat_cmd) & 0xFF);
-    if(doorbell_ret != CMDSTA_Done)
-    {
-        return doorbell_ret;
-    }
-
-    /* NOTE: order is important here */
-    while(stop_rat_cmd.status == IDLE 
-    		|| stop_rat_cmd.status == PENDING
-			|| stop_rat_cmd.status == ACTIVE)
-    {
-        /* TODO: sleep while polling */
-    	;
-    }
-    rat_offset = stop_rat_cmd.rat0;
-    return stop_rat_cmd.status;
-}
-
-uint_fast8_t rf_core_cmd_set_tx_power(int dBm)
-{
-    volatile rfc_CMD_SET_TX_POWER_t tx_power_cmd;
-    unsigned int i;
-    ASSERT(dBm <= OUTPUT_POWER_MAX
-            && dBm >= OUTPUT_POWER_MIN);
-
-    memset((void *)&tx_power_cmd, 0, sizeof(tx_power_cmd));
-    for(i=0; i < OUTPUT_CONFIG_COUNT
-            && output_power[i].dbm != dBm; i++)
-    {
-        ;
-    }
-    if(i != OUTPUT_CONFIG_COUNT)
-    {
-        cur_output_power = &(output_power[i]);
-    }
-
-    tx_power_cmd.commandNo = CMD_SET_TX_POWER;
-    tx_power_cmd.txPower = cur_output_power->value;
-
-    /* immediate command, we don't need to wait */
-    return (RFCDoorbellSendTo((uint32_t)&tx_power_cmd) & 0xFF);
-}
-
-uint_fast8_t rf_core_cmd_abort()
-{
-    /* direct command, we don't need to wait */
     return (RFCDoorbellSendTo(CMDR_DIR_CMD(CMD_ABORT)) & 0xFF);
 }
 
-uint_fast8_t rf_core_cmd_abort_fg()
+static uint_fast8_t rf_core_cmd_ping(void)
 {
-    /* direct command, we don't need to wait */
-    return (RFCDoorbellSendTo(CMDR_DIR_CMD(CMD_IEEE_ABORT_FG)) & 0xFF);
-}
-
-uint_fast8_t rf_core_cmd_ping()
-{
-    /* direct command, we don't need to wait */
     return (RFCDoorbellSendTo(CMDR_DIR_CMD(CMD_PING)) & 0xFF);
 }
 
-uint_fast8_t rf_core_cmd_stop()
+static uint_fast8_t rf_core_cmd_clear_rx(dataQueue_t *queue)
 {
-    /* direct command, we don't need to wait */
-    return (RFCDoorbellSendTo(CMDR_DIR_CMD(CMD_STOP)) & 0xFF);
+    memset((void *)&cmd_clear_rx, 0, sizeof(cmd_clear_rx));
+
+    cmd_clear_rx.commandNo = CMD_CLEAR_RX;
+    cmd_clear_rx.pQueue = queue;
+
+    return (RFCDoorbellSendTo((uint32_t)&cmd_clear_rx) & 0xFF);
 }
 
-uint_fast8_t rf_core_cmd_clear_rx(dataQueue_t *queue)
+static uint_fast8_t rf_core_cmd_ieee_tx(uint8_t *psdu, uint8_t len)
 {
-    rfc_CMD_CLEAR_RX_t clear_rx_cmd;
-    memset((void *)&clear_rx_cmd, 0, sizeof(clear_rx_cmd));
+    memset((void *)&cmd_ieee_tx, 0, sizeof(cmd_ieee_tx));
+    cmd_ieee_tx.commandNo = CMD_IEEE_TX;
+    cmd_ieee_tx.condition.rule = COND_NEVER;
+    cmd_ieee_tx.payloadLen = len;
+    cmd_ieee_tx.pPayload = psdu;
+    cmd_ieee_tx.startTrigger.triggerType = TRIG_NOW;
 
-    clear_rx_cmd.commandNo = CMD_CLEAR_RX;
-    clear_rx_cmd.pQueue = queue;
-
-    /* immediate command, we don't need to wait */
-    return (RFCDoorbellSendTo((uint32_t)&clear_rx_cmd) & 0xFF);
+    return (RFCDoorbellSendTo((uint32_t)&cmd_ieee_tx) & 0xFF);
 }
 
-#if 0
-uint_fast16_t rf_core_cmd_fs(unsigned int channel, bool txMode)
+static uint_fast8_t rf_core_cmd_ieee_rx(void)
 {
-    volatile rfc_CMD_FS_t fs_cmd;
-    unsigned int i;
-    uint8_t doorbell_ret;
-    ASSERT(channel <= CHANNEL_FREQ_MAX
-            && channel >= CHANNEL_FREQ_MIN);
-
-    memset((void *)&fs_cmd, 0, sizeof(fs_cmd));
-    for(i=0; i < CHANNEL_FREQUENCY_COUNT
-            && channel_frequency[i].channel != channel; i++)
-    {
-        ;
-    }
-
-    fs_cmd.commandNo = CMD_FS;
-    fs_cmd.status = IDLE;
-    fs_cmd.startTime = 0;
-    fs_cmd.startTrigger.triggerType = TRIG_NOW;
-    fs_cmd.condition.rule = COND_NEVER;
-    fs_cmd.frequency = channel_frequency[i].frequency;
-    fs_cmd.synthConf.bTxMode = txMode ? 1 : 0;
-
-    doorbell_ret = (RFCDoorbellSendTo((uint32_t)&fs_cmd) & 0xFF);
-    if(doorbell_ret != CMDSTA_Done)
-    {
-        return doorbell_ret;
-    }
-    /* NOTE: order is important here */
-    while(fs_cmd.status == IDLE 
-    		|| fs_cmd.status == PENDING
-			|| fs_cmd.status == ACTIVE)
-    {
-        /* TODO: sleep while polling */
-    	;
-    }
-    return fs_cmd.status;
-}
-#endif
-
-uint_fast16_t rf_core_cmd_fs_powerdown(void)
-{
-    volatile rfc_CMD_FS_POWERDOWN_t fs_powerdown_cmd;
-    uint16_t doorbell_ret;
-    memset((void *)&fs_powerdown_cmd, 0, sizeof(fs_powerdown_cmd));
-
-    fs_powerdown_cmd.commandNo = CMD_FS_POWERDOWN;
-    fs_powerdown_cmd.condition.rule = COND_NEVER;
-
-    doorbell_ret = (RFCDoorbellSendTo((uint32_t)&fs_powerdown_cmd) & 0xFF);
-    if(doorbell_ret != CMDSTA_Done)
-    {
-        return doorbell_ret;
-    }
-    /* NOTE: order is important here */
-    while(fs_powerdown_cmd.status == IDLE 
-    		|| fs_powerdown_cmd.status == PENDING
-			|| fs_powerdown_cmd.status == ACTIVE)
-    {
-        /* TODO: sleep while polling */
-        ;
-    }
-
-    return fs_powerdown_cmd.status;
-}
-
-uint_fast16_t rf_core_cmd_ieee_tx(uint8_t *psdu, uint8_t len)
-{
-    volatile rfc_CMD_IEEE_TX_t ieee_tx_cmd;
-    uint8_t doorbell_ret;
-
-    memset((void *)&ieee_tx_cmd, 0, sizeof(ieee_tx_cmd));
-    ieee_tx_cmd.commandNo = CMD_IEEE_TX;
-    ieee_tx_cmd.condition.rule = COND_NEVER;
-    ieee_tx_cmd.payloadLen = len;
-    ieee_tx_cmd.pPayload = psdu;
-    ieee_tx_cmd.startTrigger.triggerType = TRIG_NOW;
-
-
-    doorbell_ret = (RFCDoorbellSendTo((uint32_t)&ieee_tx_cmd) & 0xFF);
-    if(doorbell_ret != CMDSTA_Done)
-    {
-        return doorbell_ret;
-    }
-    /* NOTE: order is important here */
-    while(ieee_tx_cmd.status == IDLE 
-    		|| ieee_tx_cmd.status == PENDING
-			|| ieee_tx_cmd.status == ACTIVE)
-    {
-        /* TODO: sleep while polling */
-        ;
-    }
-
-    return ieee_tx_cmd.status;
-}
-
-uint_fast16_t rf_core_cmd_ieee_rx()
-{
-    uint8_t doorbell_ret;
     cmd_ieee_rx.status = IDLE;
-    doorbell_ret = (RFCDoorbellSendTo((uint32_t)&cmd_ieee_rx) & 0xFF);
-    if(doorbell_ret != CMDSTA_Done)
-    {
-        return doorbell_ret;
-    }
-    while(cmd_ieee_rx.status == IDLE
-    		|| cmd_ieee_rx.status == PENDING);
-    {
-        /* TODO: sleep while polling */
-        ;
-    }
-    return cmd_ieee_rx.status;
+    return (RFCDoorbellSendTo((uint32_t)&cmd_ieee_rx) & 0xFF);
 }
 
-void rf_core_setup_interrupts()
+static void rf_core_setup_interrupts(void)
 {
     bool interrupts_disabled;
 
@@ -537,18 +285,11 @@ void rf_core_setup_interrupts()
     if(!PRCMRfReady()) {
         return;
     }
-
-    /* Disable interrupts */
     interrupts_disabled = IntMasterDisable();
 
     /* Set all interrupt channels to CPE0 channel, error to CPE1 */
     HWREG(RFC_DBELL_NONBUF_BASE + RFC_DBELL_O_RFCPEISL) = IRQ_INTERNAL_ERROR;
-
-    /* Acknowledge configured interrupts */
-    HWREG(RFC_DBELL_NONBUF_BASE + RFC_DBELL_O_RFCPEIEN) = IRQ_RX_NOK;
-
-    /* Clear interrupt flags, active low clear */
-    HWREG(RFC_DBELL_NONBUF_BASE + RFC_DBELL_O_RFCPEIFG) = 0x0;
+    HWREG(RFC_DBELL_NONBUF_BASE + RFC_DBELL_O_RFCPEIEN) = IRQ_LAST_COMMAND_DONE | IRQ_LAST_FG_COMMAND_DONE;
 
     IntPendClear(INT_RFC_CPE_0);
     IntPendClear(INT_RFC_CPE_1);
@@ -560,81 +301,51 @@ void rf_core_setup_interrupts()
     }
 }
 
-uint8_t rf_core_set_modesel()
-{
-    uint8_t rv = RF_CORE_ERROR;
-
-    if(ChipInfo_ChipFamilyIsCC26xx()) {
-        if(ChipInfo_SupportsBLE() == true &&
-                ChipInfo_SupportsIEEE_802_15_4() == true) {
-            /* CC2650 */
-            HWREG(PRCM_BASE + PRCM_O_RFCMODESEL) = PRCM_RFCMODESEL_CURR_MODE5;
-            rv = RF_CORE_OK;
-        } else if(ChipInfo_SupportsBLE() == false &&
-                ChipInfo_SupportsIEEE_802_15_4() == true) {
-            /* CC2630 */
-            HWREG(PRCM_BASE + PRCM_O_RFCMODESEL) = PRCM_RFCMODESEL_CURR_MODE2;
-            rv = RF_CORE_OK;
-        }
-    } else if(ChipInfo_ChipFamilyIsCC13xx()) {
-        if(ChipInfo_SupportsBLE() == false &&
-                ChipInfo_SupportsIEEE_802_15_4() == false) {
-            /* CC1310 */
-            HWREG(PRCM_BASE + PRCM_O_RFCMODESEL) = PRCM_RFCMODESEL_CURR_MODE3;
-            rv = RF_CORE_OK;
-        }
-    }
-
-    return rv;
-}
-
-ThreadError rf_core_update_rx(bool clearQueue)
-{
-    if(!PRCMRfReady())
-    {
-        /* The whole rf core is off, we don't need to restart if it is not
-         * started.
-         */
-        return kThreadError_None;
-    }
-
-    if(sState != kStateReceive)
-    {
-        /* The change will take effect the next time we are put into one of
-         * these states.
-         */
-        return kThreadError_None;
-    }
-
-    if(rf_core_cmd_abort() != CMDSTA_Done)
-    {
-        return kThreadError_Failed;
-    }
-
-    if(clearQueue && rf_core_cmd_clear_rx(&rx_data_queue) != CMDSTA_Done)
-    {
-        sState = kStateSleep;
-        return kThreadError_Failed;
-    }
-
-    if(rf_core_cmd_ieee_rx() != ACTIVE)
-    {
-        sState = kStateSleep;
-        return kThreadError_Failed;
-    }
-    return kThreadError_None;
-}
-
-uint8_t rf_core_power_on(void)
+static void rf_core_disable_interrupts(void)
 {
     bool interrupts_disabled;
-    /*
-     * Request the HF XOSC as the source for the HF clock. Needed before we can
+
+    interrupts_disabled = IntMasterDisable();
+
+    /* clear and disable interrupts */
+    HWREG(RFC_DBELL_NONBUF_BASE + RFC_DBELL_O_RFCPEIFG) = 0x0;
+    HWREG(RFC_DBELL_NONBUF_BASE + RFC_DBELL_O_RFCPEIEN) = 0x0;
+
+    IntPendClear(INT_RFC_CPE_0);
+    IntPendClear(INT_RFC_CPE_1);
+    IntDisable(INT_RFC_CPE_0);
+    IntDisable(INT_RFC_CPE_1);
+
+    if(!interrupts_disabled) {
+        IntMasterEnable();
+    }
+}
+
+static void rf_core_set_modesel(void)
+{
+    switch(ChipInfo_GetChipType())
+    {
+        case CHIP_TYPE_CC2650:
+            HWREG(PRCM_BASE + PRCM_O_RFCMODESEL) = PRCM_RFCMODESEL_CURR_MODE5;
+            break;
+        case CHIP_TYPE_CC2630:
+            HWREG(PRCM_BASE + PRCM_O_RFCMODESEL) = PRCM_RFCMODESEL_CURR_MODE2;
+            break;
+        default:
+            /* This code must be run on a valid cc26xx chip */
+            assert(false);
+            break;
+    }
+}
+
+static uint_fast8_t rf_core_power_on(void)
+{
+    bool interrupts_disabled;
+    /* Request the HF XOSC as the source for the HF clock. Needed before we can
      * use the FS. This will only request, it will _not_ perform the switch.
      */
     if(OSCClockSourceGet(OSC_SRC_CLK_HF) != OSC_XOSC_HF) {
-        /*
-         * Request to switch to the crystal to enable radio operation. It takes a
+        /* Request to switch to the crystal to enable radio operation. It takes a
          * while for the XTAL to be ready so instead of performing the actual
          * switch, we do other stuff while the XOSC is getting ready.
          */
@@ -647,7 +358,7 @@ uint8_t rf_core_power_on(void)
     rx_data_queue.pCurrEntry = rx_buf_0;
     rx_data_queue.pLastEntry = NULL;
 
-    init_buffers();
+    rf_core_init_buffers();
 
     /*
      * Trigger a switch to the XOSC, so that we can subsequently use the RF FS
@@ -676,10 +387,7 @@ uint8_t rf_core_power_on(void)
         ;
     }
 
-    HWREG(RFC_DBELL_NONBUF_BASE + RFC_DBELL_O_RFCPEIFG) = 0x0;
-    HWREG(RFC_DBELL_NONBUF_BASE + RFC_DBELL_O_RFCPEIEN) = 0x0;
-    IntEnable(INT_RFC_CPE_0);
-    IntEnable(INT_RFC_CPE_1);
+    rf_core_setup_interrupts();
 
     if(!interrupts_disabled) {
         IntMasterEnable();
@@ -690,26 +398,12 @@ uint8_t rf_core_power_on(void)
       | RFC_PWR_PWMCLKEN_CPE_M | RFC_PWR_PWMCLKEN_CPERAM_M);
 
     /* Send ping (to verify RFCore is ready and alive) */
-    if(rf_core_cmd_ping() != CMDSTA_Done) {
-        return RF_CORE_ERROR;
-    }
-
-    return RF_CORE_OK;
+    return rf_core_cmd_ping();
 }
 
-uint8_t rf_core_power_off(void)
+static void rf_core_power_off(void)
 {
-    bool interrupts_disabled;
-    interrupts_disabled = IntMasterDisable();
-
-    /* clear and disable interrupts */
-    HWREG(RFC_DBELL_NONBUF_BASE + RFC_DBELL_O_RFCPEIFG) = 0x0;
-    HWREG(RFC_DBELL_NONBUF_BASE + RFC_DBELL_O_RFCPEIEN) = 0x0;
-
-    if(rf_core_cmd_fs_powerdown() != DONE_OK)
-    {
-        /* continue anyway */
-    }
+    rf_core_disable_interrupts();
 
     PRCMDomainDisable(PRCM_DOMAIN_RFCORE);
     PRCMLoadSet();
@@ -718,73 +412,90 @@ uint8_t rf_core_power_off(void)
         ;
     }
 
-    /* Enable RF Core power domain */
     PRCMPowerDomainOff(PRCM_DOMAIN_RFCORE);
     while(PRCMPowerDomainStatus(PRCM_DOMAIN_RFCORE) != PRCM_DOMAIN_POWER_OFF)
     {
         ;
     }
 
-    /*
-     * Request the HF RCOSC as the source for the HF clock. Used to save power
-     * from the XOSC. This will only request, it will _not_ perform the switch.
-     */
     if(OSCClockSourceGet(OSC_SRC_CLK_HF) != OSC_RCOSC_HF) {
-        /*
-         * Request to switch to the RC osc for low power mode.
-         */
+        /* Request to switch to the RC osc for low power mode. */
         OSCClockSourceSet(OSC_SRC_CLK_MF | OSC_SRC_CLK_HF, OSC_RCOSC_HF);
         /* Switch the HF clock source (cc26xxware executes this from ROM) */
         OSCHfSourceSwitch();
     }
+}
 
-    IntPendClear(INT_RFC_CPE_0);
-    IntPendClear(INT_RFC_CPE_1);
-    IntDisable(INT_RFC_CPE_0);
-    IntDisable(INT_RFC_CPE_1);
+static uint_fast8_t rf_core_cmds_enable(void)
+{
+    /* turn on the clock line to the radio core */
+    HWREGBITW(AON_RTC_BASE + AON_RTC_O_CTL, AON_RTC_CTL_RTC_UPD_EN_BITN) = 1;
+
+    /* initialize the rat start command */
+    memset((void *)&cmd_start_rat, 0x00, sizeof(cmd_start_rat));
+    cmd_start_rat.commandNo = CMD_SYNC_START_RAT;
+    cmd_start_rat.condition.rule = COND_STOP_ON_FALSE;
+    cmd_start_rat.pNextOp =(rfc_radioOp_t *)&(cmd_radio_setup);
+    cmd_start_rat.rat0 = rat_offset;
+
+    /* initialize radio setup command */
+    memset((void *)&cmd_radio_setup, 0, sizeof(cmd_radio_setup));
+    cmd_radio_setup.commandNo = CMD_RADIO_SETUP;
+    cmd_radio_setup.condition.rule = COND_NEVER;
+    /* initally set the radio tx power to the max */
+    cmd_radio_setup.txPower = cur_output_power->value;
+    cmd_radio_setup.pRegOverride = ieee_overrides;
+    cmd_radio_setup.mode = 1;
+
+    return (RFCDoorbellSendTo((uint32_t)&cmd_start_rat) & 0xFF);
+}
+
+static uint_fast16_t rf_core_cmds_disable(void)
+{
+    uint8_t doorbell_ret;
+    bool interrupts_disabled;
+
+    HWREGBITW(AON_RTC_BASE + AON_RTC_O_CTL, AON_RTC_CTL_RTC_UPD_EN_BITN) = 1;
+
+    /* initiialize the command to power down the frequency synth */
+    memset((void *)&cmd_fs_powerdown, 0, sizeof(cmd_fs_powerdown));
+    cmd_fs_powerdown.commandNo = CMD_FS_POWERDOWN;
+    cmd_fs_powerdown.condition.rule = COND_ALWAYS;
+    cmd_fs_powerdown.pNextOp = (rfc_radioOp_t *)&cmd_stop_rat;
+
+    memset((void *)&cmd_stop_rat, 0, sizeof(cmd_stop_rat));
+    cmd_stop_rat.commandNo = CMD_SYNC_STOP_RAT;
+    cmd_stop_rat.condition.rule = COND_NEVER;
+
+    interrupts_disabled = IntMasterDisable();
+
+    HWREG(RFC_DBELL_NONBUF_BASE + RFC_DBELL_O_RFCPEIFG) = ~IRQ_LAST_COMMAND_DONE;
+
+    doorbell_ret = (RFCDoorbellSendTo((uint32_t)&cmd_fs_powerdown) & 0xFF);
+    if(doorbell_ret != CMDSTA_Done)
+    {
+        return doorbell_ret;
+    }
+
+    /* syncronously wait for the CM0 to stop */
+    while((HWREG(RFC_DBELL_NONBUF_BASE + RFC_DBELL_O_RFCPEIFG) &
+                IRQ_LAST_COMMAND_DONE) == 0x00)
+    {
+        ;
+    }
 
     if(!interrupts_disabled) {
         IntMasterEnable();
     }
 
-    return RF_CORE_OK;
+    if(cmd_stop_rat.status == DONE_OK)
+    {
+        rat_offset = cmd_stop_rat.rat0;
+    }
+    return cmd_stop_rat.status;
 }
 
-uint8_t rf_core_wakeup(void)
-{
-    if(rf_core_cmd_start_rat() != DONE_OK)
-    {
-        return RF_CORE_ERROR;
-    }
-
-    rf_core_setup_interrupts();
-
-    if(rf_core_cmd_radio_setup() != DONE_OK)
-    {
-        return RF_CORE_ERROR;
-    }
-    return RF_CORE_OK;
-}
-
-uint8_t rf_core_sleep(void)
-{
-    if(rf_core_cmd_abort() != CMDSTA_Done)
-    {
-        return RF_CORE_ERROR;
-    }
-
-    if(rf_core_cmd_fs_powerdown() != DONE_OK)
-    {
-        return RF_CORE_ERROR;
-    }
-
-    if(rf_core_cmd_stop_rat() != DONE_OK)
-    {
-        return RF_CORE_ERROR;
-    }
-    return RF_CORE_OK;
-}
-
+/* error interrupt handler */
 void RFCCPE1IntHandler(void)
 {
     if(!PRCMRfReady()) {
@@ -794,34 +505,70 @@ void RFCCPE1IntHandler(void)
     HWREG(RFC_DBELL_NONBUF_BASE + RFC_DBELL_O_RFCPEIFG) = 0x7FFFFFFF;
 }
 
+/* command done handler */
 void RFCCPE0IntHandler(void)
 {
-    if(!PRCMRfReady()) {
+    if(sState == kStateSleep)
+    {
+        if(HWREG(RFC_DBELL_NONBUF_BASE + RFC_DBELL_O_RFCPEIFG) & IRQ_LAST_COMMAND_DONE)
+        {
+            if(cmd_radio_setup.status == DONE_OK)
+            {
+                enabaling = false;
+                HWREG(RFC_DBELL_NONBUF_BASE + RFC_DBELL_O_RFCPEIFG) = ~IRQ_LAST_COMMAND_DONE;
+            }
+            else
+            {
+                rf_core_power_off();
+                sState = kStateDisabled;
+            }
+        }
     }
-
-    if(HWREG(RFC_DBELL_NONBUF_BASE + RFC_DBELL_O_RFCPEIFG) & IRQ_RX_ENTRY_DONE) {
-        /* Clear the RX_ENTRY_DONE interrupt flag */
-        HWREG(RFC_DBELL_NONBUF_BASE + RFC_DBELL_O_RFCPEIFG) = 0xFF7FFFFF;
-        /* XXX: notifiy polling function there is a frame ?? */
+    else if(sState == kStateReceive)
+    {
+        /* the rx command was probably aborted to change the channel */
+        sState = kStateSleep;
+        HWREG(RFC_DBELL_NONBUF_BASE + RFC_DBELL_O_RFCPEIFG) = ~IRQ_LAST_COMMAND_DONE;
     }
-
-    if(HWREG(RFC_DBELL_NONBUF_BASE + RFC_DBELL_O_RFCPEIFG) & IRQ_RX_NOK) {
-        /* Clear the RX_NOK interrupt flag */
-        HWREG(RFC_DBELL_NONBUF_BASE + RFC_DBELL_O_RFCPEIFG) = 0xFFFDFFFF;
-    }
-
-    if(HWREG(RFC_DBELL_NONBUF_BASE + RFC_DBELL_O_RFCPEIFG) &
-            (IRQ_LAST_FG_COMMAND_DONE | IRQ_LAST_COMMAND_DONE)) {
-        /* Clear the two TX-related interrupt flags */
-        HWREG(RFC_DBELL_NONBUF_BASE + RFC_DBELL_O_RFCPEIFG) = 0xFFFFFFF5;
-        /* XXX: we are usually polling for a command being done */
+    else if(sState == kStateTransmit)
+    {
+        switch(cmd_ieee_tx.status)
+        {
+            case IDLE:
+            case PENDING:
+            case ACTIVE:
+                break;
+            case IEEE_DONE_OK:
+                transmitting = false;
+                sTransmitError = kThreadError_None;
+                break;
+            case IEEE_DONE_TIMEOUT:
+                transmitting = false;
+                sTransmitError = kThreadError_ChannelAccessFailure;
+                break;
+            case IEEE_ERROR_NO_SETUP:
+            case IEEE_ERROR_NO_FS:
+            case IEEE_ERROR_SYNTH_PROG:
+                transmitting = false;
+                sTransmitError = kThreadError_InvalidState;
+                break;
+            case IEEE_ERROR_TXUNF:
+                transmitting = false;
+                sTransmitError = kThreadError_NoBufs;
+                break;
+            default:
+                transmitting = false;
+                sTransmitError = kThreadError_Error;
+        }
+        /* we let the process function move us back to receive */
+        HWREG(RFC_DBELL_NONBUF_BASE + RFC_DBELL_O_RFCPEIFG) = ~IRQ_LAST_FG_COMMAND_DONE;
     }
 }
 
 void cc2650RadioInit(void)
 {
     /* Populate the RX parameters data structure with default values */
-    init_rf_params();
+    rf_core_init_rx_params();
 
     sState = kStateDisabled;
 }
@@ -835,19 +582,19 @@ ThreadError otPlatRadioEnable(void)
         error = kThreadError_None;
     }
 
-    if(sState == kStateDisabled)
+    if(sState == kStateDisabled && !enabaling)
     {
-        if(rf_core_power_on() == RF_CORE_OK)
-        {
-            sState = kStateSleep;
-            error = kThreadError_None;
-        }
-        else
-        {
-            sState = kStateDisabled;
-            rf_core_power_off();
-            error = kThreadError_Failed;
-        }
+        VerifyOrExit(rf_core_power_on() == CMDSTA_Done, error = kThreadError_Failed);
+        enabaling = true;
+        sState = kStateSleep;
+        VerifyOrExit(rf_core_cmds_enable() == CMDSTA_Done, error = kThreadError_Failed);
+    }
+
+exit:
+    if(error == kThreadError_Failed)
+    {
+        rf_core_power_off();
+        sState = kStateDisabled;
     }
     return error;
 }
@@ -863,18 +610,68 @@ ThreadError otPlatRadioDisable(void)
 
     if(sState == kStateSleep)
     {
-        if(rf_core_power_off() == RF_CORE_OK)
+        rf_core_cmds_disable();
+        /* we don't want to fail if this command string doesn't work, just turn
+         * off the whole core
+         */
+        rf_core_power_off();
+        sState = kStateDisabled;
+        error = kThreadError_None;
+    }
+    return error;
+}
+
+ThreadError otPlatRadioReceive(uint8_t aChannel)
+{
+    ThreadError error = kThreadError_Busy;
+
+    if(sState == kStateSleep && !enabaling)
+    {
+        sState = kStateReceive;
+
+        /* initialize the receive command
+         * XXX: no memset here because we assume init has been called and we
+         *      may have changed some values in the rx command
+         */
+        cmd_ieee_rx.channel = aChannel;
+        VerifyOrExit(rf_core_cmd_ieee_rx() == CMDSTA_Done, error = kThreadError_Failed);
+        error = kThreadError_None;
+    }
+    else if(sState == kStateReceive || sState == kStateTransmit)
+    {
+        if(cmd_ieee_rx.status == ACTIVE && cmd_ieee_rx.channel == aChannel)
         {
-            sState = kStateDisabled;
+            /* we are already running on the right channel */
+            sState = kStateReceive;
+            error = kThreadError_None;
+        }
+        else
+        {
+            /* we have either not fallen back into our receive command or
+             * we are running on the wrong channel. Either way assume the
+             * caller correctly called us and abort all running commands.
+             */
+            VerifyOrExit(rf_core_cmd_abort() == CMDSTA_Done, error = kThreadError_Failed);
+
+            /* any frames in the queue will be for the old channel */
+            VerifyOrExit(rf_core_cmd_clear_rx(&rx_data_queue) == CMDSTA_Done,
+                    error = kThreadError_Failed);
+
+            cmd_ieee_rx.channel = aChannel;
+            VerifyOrExit(rf_core_cmd_ieee_rx() == CMDSTA_Done, error = kThreadError_Failed);
+
+            sState = kStateReceive;
             error = kThreadError_None;
         }
     }
+
+exit:
     return error;
 }
 
 ThreadError otPlatRadioSleep(void)
 {
-    ThreadError error = kThreadError_Busy;
+    ThreadError error = kThreadError_None;
 
     if(sState == kStateSleep)
     {
@@ -883,19 +680,56 @@ ThreadError otPlatRadioSleep(void)
 
     if(sState == kStateReceive)
     {
-        if(rf_core_sleep() != RF_CORE_OK)
+        if(rf_core_cmd_abort() != CMDSTA_Done)
         {
-            sState = kStateSleep;
-            error = kThreadError_None;
+            error = kThreadError_Busy;
+            return error;
         }
+
+        sState = kStateSleep;
+        return error;
     }
     
     return error;
 }
 
+RadioPacket *otPlatRadioGetTransmitBuffer(void)
+{
+    return &sTransmitFrame;
+}
+
+ThreadError otPlatRadioTransmit(void)
+{
+    ThreadError error = kThreadError_Busy;
+
+    if(sState == kStateReceive)
+    {
+        /*
+         * This is the easiest way to setup the frequency synthesizer.
+         * And we are supposed to fall into the receive state afterwards.
+         */
+        error = otPlatRadioReceive(sTransmitFrame.mChannel);
+        if(error == kThreadError_None)
+        {
+            sState = kStateTransmit;
+
+            /* removing 2 bytes of CRC placeholder because we generate that in hardware */
+            transmitting = true;
+            VerifyOrExit(rf_core_cmd_ieee_tx(sTransmitFrame.mPsdu,
+                        sTransmitFrame.mLength - 2) == CMDSTA_Done, error =
+                    kThreadError_Failed);
+            error = kThreadError_None;
+        }
+    }
+
+exit:
+    sTransmitError = error;
+    return error;
+}
+
 int8_t otPlatRadioGetRssi(void)
 {
-    /* TODO: is this meant to be the largest observed RSSI? */
+    /* XXX: is this meant to be the largest or last observed RSSI? */
     return 0;
 }
 
@@ -912,38 +746,84 @@ bool otPlatRadioGetPromiscuous(void)
 
 void otPlatRadioSetPromiscuous(bool aEnable)
 {
-    /* if we are promiscuous, disable frame filtering */
-    cmd_ieee_rx.frameFiltOpt.frameFiltEn = aEnable ? 0 : 1;
-    rf_core_update_rx(false);
+    if(aEnable != (cmd_ieee_rx.frameFiltOpt.frameFiltEn == 0))
+    {
+        if(sState == kStateReceive)
+        {
+            SuccessOrExit(rf_core_cmd_abort() == CMDSTA_Done);
+            /* if we are promiscuous, disable frame filtering */
+            cmd_ieee_rx.frameFiltOpt.frameFiltEn = aEnable ? 0 : 1;
+            SuccessOrExit(rf_core_cmd_ieee_rx() == CMDSTA_Done);
+        }
+        else if(sState != kStateTransmit)
+        {
+            /* if we are promiscuous, disable frame filtering */
+            cmd_ieee_rx.frameFiltOpt.frameFiltEn = aEnable ? 0 : 1;
+        }
+    }
+exit:
+    return;
 }
 
 ThreadError otPlatRadioSetPanId(uint16_t panid)
 {
+    ThreadError error = kThreadError_None;
     /* XXX: if the pan id is the broadcast pan id (0xFFFF) the auto ack will
      * not work. This is due to the design of the CM0 and follows IEEE 802.15.4
      */
-    cmd_ieee_rx.localPanID = panid;
-    return rf_core_update_rx(true);
+    if(sState == kStateReceive)
+    {
+        VerifyOrExit(rf_core_cmd_abort() == CMDSTA_Done, error=kThreadError_Failed);
+        cmd_ieee_rx.localPanID = panid;
+        VerifyOrExit(rf_core_cmd_clear_rx(&rx_data_queue) == CMDSTA_Done, error=kThreadError_Failed);
+        VerifyOrExit(rf_core_cmd_ieee_rx() == CMDSTA_Done, error=kThreadError_Failed);
+    }
+    else if(sState != kStateTransmit)
+    {
+        cmd_ieee_rx.localPanID = panid;
+    }
+exit:
+    return error;
 }
 
 ThreadError otPlatRadioSetExtendedAddress(uint8_t *address)
 {
-    int i;
-    uint8_t *rxAddr = (uint8_t *)(&(cmd_ieee_rx.localExtAddr));
-    for(i=0; i<8; i++)
+    /* XXX: assuming little endian format */
+    ThreadError error = kThreadError_None;
+    if(sState == kStateReceive)
     {
-        rxAddr[i] = address[i];
+        VerifyOrExit(rf_core_cmd_abort() == CMDSTA_Done, error=kThreadError_Failed);
+        cmd_ieee_rx.localExtAddr = *((uint64_t *)(address));
+        VerifyOrExit(rf_core_cmd_clear_rx(&rx_data_queue) == CMDSTA_Done, error=kThreadError_Failed);
+        VerifyOrExit(rf_core_cmd_ieee_rx() == CMDSTA_Done, error=kThreadError_Failed);
     }
-    return rf_core_update_rx(true);
+    else if(sState != kStateTransmit)
+    {
+        cmd_ieee_rx.localExtAddr = *((uint64_t *)(address));
+    }
+exit:
+    return error;
 }
 
 ThreadError otPlatRadioSetShortAddress(uint16_t address)
 {
-    cmd_ieee_rx.localShortAddr = address;
-    return rf_core_update_rx(true);
+    ThreadError error = kThreadError_None;
+    if(sState == kStateReceive)
+    {
+        VerifyOrExit(rf_core_cmd_abort() == CMDSTA_Done, error=kThreadError_Failed);
+        cmd_ieee_rx.localShortAddr = address;
+        VerifyOrExit(rf_core_cmd_clear_rx(&rx_data_queue) == CMDSTA_Done, error=kThreadError_Failed);
+        VerifyOrExit(rf_core_cmd_ieee_rx() == CMDSTA_Done, error=kThreadError_Failed);
+    }
+    else if(sState != kStateTransmit)
+    {
+        cmd_ieee_rx.localShortAddr = address;
+    }
+exit:
+    return error;
 }
 
-void readFrame(void)
+static void readFrame(void)
 {
     uint8_t crcCorr;
     uint8_t rssi;
@@ -959,8 +839,7 @@ void readFrame(void)
             && curEntry->status == DATA_ENTRY_FINISHED)
         {
             uint8_t len = payload[0];
-            /* 
-             * get the information appended to the end of the frame.
+            /* get the information appended to the end of the frame.
              * This array access looks like it is a fencepost error, but the
              * first byte is the number of bytes that follow.
              */
@@ -974,7 +853,6 @@ void readFrame(void)
                 sReceiveFrame.mChannel = cmd_ieee_rx.channel;
                 sReceiveFrame.mPower = rssi;
                 sReceiveFrame.mLqi = crcCorr & CC2650_LQI_BIT_MASK;
-
                 sReceiveError = kThreadError_None;
             }
             else
@@ -997,14 +875,13 @@ void readFrame(void)
 
 int cc2650RadioProcess(void)
 {
-    if(sState == kStateTransmit
+    if((sState == kStateTransmit && !transmitting)
             && (((sTransmitPsdu[0] & IEEE802154_ACK_REQUEST) == 0)
                 || (sTransmitError != kThreadError_None)))
     {
         /* we are not looking for an ACK packet, or failed */
         sState = kStateReceive;
 #if OPENTHREAD_ENABLE_DIAG
-
         if (otPlatDiagModeGet())
         {
             otPlatDiagRadioTransmitDone(false, sTransmitError);
@@ -1055,163 +932,3 @@ int cc2650RadioProcess(void)
     }
     return 0;
 }
-
-RadioPacket *otPlatRadioGetTransmitBuffer(void)
-{
-    return &sTransmitFrame;
-}
-
-ThreadError otPlatRadioTransmit(void)
-{
-    ThreadError error = kThreadError_Busy;
-
-    if(sState == kStateReceive)
-    {
-        /*
-         * This is the easiest way to setup the frequency synthesizer.
-         * And we are supposed to fall into the receive state afterwards.
-         */
-        error = otPlatRadioReceive(sTransmitFrame.mChannel);
-        if(error == kThreadError_None)
-        {
-            sState = kStateTransmit;
-            sTransmitError = kThreadError_None;
-
-            /* removing 2 bytes of CRC placeholder because we generate that in hardware */
-            switch(rf_core_cmd_ieee_tx(sTransmitFrame.mPsdu, sTransmitFrame.mLength - 2))
-            {
-                case IEEE_DONE_OK:
-                    error = kThreadError_None;
-                    break;
-                case IEEE_DONE_TIMEOUT:
-                    error = kThreadError_ChannelAccessFailure;
-                    break;
-                case IEEE_ERROR_NO_SETUP:
-                case IEEE_ERROR_NO_FS:
-                case IEEE_ERROR_SYNTH_PROG:
-                    error = kThreadError_InvalidState;
-                    break;
-                case IEEE_ERROR_TXUNF:
-                    error = kThreadError_NoBufs;
-                    break;
-                default:
-                    error = kThreadError_Error;
-            }
-            sTransmitError = error;
-        }
-    }
-    return error;
-}
-
-ThreadError otPlatRadioReceive(uint8_t aChannel)
-{
-    ThreadError error = kThreadError_Busy;
-
-    switch (sState)
-    {
-        case kStateDisabled:
-            break;
-        case kStateSleep:
-            if(rf_core_wakeup() != RF_CORE_OK)
-            {
-                error = kThreadError_Failed;
-                break;
-            }
-            sState = kStateReceive;
-            /* XXX: fall through */
-        case kStateReceive:
-            if(cmd_ieee_rx.status == ACTIVE)
-            {
-                /* we are running a receive already */
-                if(cmd_ieee_rx.channel == aChannel)
-                {
-                    /* we are already on the right channel */
-                    error = kThreadError_None;
-                    break;
-                }
-                if(rf_core_cmd_abort() != CMDSTA_Done)
-                {
-                    error = kThreadError_Failed;
-                    break;
-                }
-                /* any frames in the queue will be for the old channel */
-                if(rf_core_cmd_clear_rx(&rx_data_queue) != CMDSTA_Done)
-                {
-                    error = kThreadError_Failed;
-                    break;
-                }
-                /* make sure that the receive command was aborted */
-                while(cmd_ieee_rx.status != IEEE_DONE_ABORT)
-                {
-                    ;
-                }
-            }
-            else
-            {
-                if(rf_core_cmd_abort() != CMDSTA_Done)
-                {
-                    error = kThreadError_Failed;
-                    break;
-                }
-            }
-            cmd_ieee_rx.channel = aChannel;
-            if(rf_core_cmd_ieee_rx() != ACTIVE)
-            {
-                error = kThreadError_Failed;
-                break;
-            }
-            error = kThreadError_None;
-            break;
-        case kStateTransmit:
-            if(cmd_ieee_rx.channel == aChannel)
-            {
-                if(cmd_ieee_rx.status == ACTIVE)
-                {
-                    /* The command is running on the right channel already */
-                    error = kThreadError_None;
-                    sState = kStateReceive;
-                    break;
-                }
-                else if(cmd_ieee_rx.status == IEEE_SUSPENDED)
-                {
-                    /*
-                     * The RX command is suspended in the background,
-                     * abort the command running in the foreground
-                     */
-                    if(rf_core_cmd_abort_fg() != CMDSTA_Done)
-                    {
-                        error = kThreadError_Failed;
-                        break;
-                    }
-                    error = kThreadError_None;
-                    sState = kStateReceive;
-                    break;
-                }
-            }
-            /* abort all commands running on the radio */
-            if(rf_core_cmd_abort() != CMDSTA_Done)
-            {
-                error = kThreadError_Failed;
-                break;
-            }
-            /* any frames in the queue will be for the old channel */
-            if(rf_core_cmd_clear_rx(&rx_data_queue) != CMDSTA_Done)
-            {
-                error = kThreadError_Failed;
-                break;
-            }
-            cmd_ieee_rx.channel = aChannel;
-            if(rf_core_cmd_ieee_rx() != ACTIVE)
-            {
-                error = kThreadError_Failed;
-                break;
-            }
-            error = kThreadError_None;
-            sState = kStateReceive;
-            break;
-        default:
-            break;
-    }
-    return error;
-}
-
