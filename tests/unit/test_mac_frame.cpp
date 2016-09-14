@@ -88,9 +88,11 @@ void TestMacHeader(void)
 
 }  // namespace Thread
 
+#ifndef _WIN32
 int main(void)
 {
     Thread::TestMacHeader();
     printf("All tests passed\n");
     return 0;
 }
+#endif

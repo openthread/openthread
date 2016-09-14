@@ -68,9 +68,11 @@ void TestMessage(void)
                   "Message::Free failed\n");
 }
 
+#ifndef _WIN32
 int main(void)
 {
     TestMessage();
     printf("All tests passed\n");
     return 0;
 }
+#endif

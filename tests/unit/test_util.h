@@ -34,6 +34,8 @@
 
 #include <openthread-types.h>
 
+#ifndef _WIN32
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -60,6 +62,17 @@ extern "C" {
 
 #ifdef __cplusplus
 }
+#endif
+
+#else
+
+typedef void (*utAssertTrue)(bool condition, const wchar_t* message);
+extern utAssertTrue s_AssertTrue;
+
+#define SuccessOrQuit(ERR, MSG) s_AssertTrue((ERR) == kThreadError_None, L##MSG)
+
+#define VerifyOrQuit(ERR, MSG) s_AssertTrue(ERR, L##MSG)
+
 #endif
 
 #endif

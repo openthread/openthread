@@ -233,6 +233,7 @@ void TestMacCommandFrame()
                  "TestMacCommandFrame decrypt failed\n");
 }
 
+#ifndef _WIN32
 int main(void)
 {
     TestMacBeaconFrame();
@@ -241,3 +242,4 @@ int main(void)
     printf("All tests passed\n");
     return 0;
 }
+#endif

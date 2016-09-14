@@ -409,9 +409,11 @@ void RunTimerTests(void)
     TestTenTimers();
 }
 
+#ifndef _WIN32
 int main(void)
 {
     RunTimerTests();
     printf("All tests passed\n");
     return 0;
 }
+#endif

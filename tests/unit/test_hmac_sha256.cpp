@@ -80,9 +80,11 @@ void TestHmacSha256(void)
     }
 }
 
+#ifndef _WIN32
 int main(void)
 {
     TestHmacSha256();
     printf("All tests passed\n");
     return 0;
 }
+#endif

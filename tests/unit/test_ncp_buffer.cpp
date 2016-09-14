@@ -468,9 +468,11 @@ void TestNcpFrameBuffer(void)
 
 }  // namespace Thread
 
+#ifndef _WIN32
 int main(void)
 {
     Thread::TestNcpFrameBuffer();
     printf("\nAll tests passed.\n");
     return 0;
 }
+#endif

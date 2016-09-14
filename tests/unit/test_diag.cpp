@@ -165,9 +165,11 @@ void TestDiag()
     }
 }
 
+#ifndef _WIN32
 int main(void)
 {
     TestDiag();
     printf("All tests passed\n");
     return 0;
 }
+#endif

@@ -162,7 +162,7 @@ void TestLowpanIphc(void)
 
 }  // namespace Thread
 
-
+#ifndef _WIN32
 int main(void)
 {
     TestLowpanIphc();
@@ -170,3 +170,4 @@ int main(void)
     printf("All tests passed\n");
     return 0;
 }
+#endif

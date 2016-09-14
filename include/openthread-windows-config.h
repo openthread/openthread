@@ -70,6 +70,9 @@
 #define snprintf sprintf_s
 #endif // WINDOWS_KERNEL
 
+// Redefine rand to random for test code
+#define random rand
+
 // Temporary !!! TODO - Remove this once we figure out the strncpy issue
 #define _CRT_SECURE_NO_WARNINGS
 
