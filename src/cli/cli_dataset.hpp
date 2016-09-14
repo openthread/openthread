@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2016, Nest Labs, Inc.
+ *  Copyright (c) 2016, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -77,6 +77,7 @@ private:
     static ThreadError ProcessActive(otInstance *aInstance, int argc, char *argv[]);
     static ThreadError ProcessActiveTimestamp(otInstance *aInstance, int argc, char *argv[]);
     static ThreadError ProcessChannel(otInstance *aInstance, int argc, char *argv[]);
+    static ThreadError ProcessChannelMask(otInstance *aInstance, int argc, char *argv[]);
     static ThreadError ProcessClear(otInstance *aInstance, int argc, char *argv[]);
     static ThreadError ProcessCommit(otInstance *aInstance, int argc, char *argv[]);
     static ThreadError ProcessDelay(otInstance *aInstance, int argc, char *argv[]);

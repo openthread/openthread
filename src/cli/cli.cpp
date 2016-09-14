@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2016, Nest Labs, Inc.
+ *  Copyright (c) 2016, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -53,6 +53,7 @@
 #include <common/encoding.hpp>
 #include <common/new.hpp>
 #include <net/ip6.hpp>
+#include <platform/radio.h>
 #include <platform/random.h>
 #include <platform/uart.h>
 
@@ -82,6 +83,7 @@ const struct Command Interpreter::sCommands[] =
 #endif
     { "discover", &Interpreter::ProcessDiscover },
     { "eidcache", &Interpreter::ProcessEidCache },
+    { "eui64", &Interpreter::ProcessEui64 },
 #ifdef OPENTHREAD_EXAMPLES_POSIX
     { "exit", &Interpreter::ProcessExit },
 #endif
@@ -543,6 +545,22 @@ exit:
     (void)argc;
     (void)argv;
     AppendResult(kThreadError_None);
+}
+
+void Interpreter::ProcessEui64(int argc, char *argv[])
+{
+    ThreadError error = kThreadError_None;
+    otExtAddress extAddress;
+
+    VerifyOrExit(argc == 0, error = kThreadError_Parse);
+
+    otPlatRadioGetIeeeEui64(mInstance, extAddress.m8);
+    OutputBytes(extAddress.m8, OT_EXT_ADDRESS_SIZE);
+    sServer->OutputFormat("\r\n");
+
+exit:
+    (void)argv;
+    AppendResult(error);
 }
 
 void Interpreter::ProcessExtAddress(int argc, char *argv[])

@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2016, Nest Labs, Inc.
+ *  Copyright (c) 2016, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -228,6 +228,12 @@ enum
 };
 
 /**
+  * This type represents Channel Mask Page 0.
+  *
+  */
+typedef uint32_t otChannelMaskPage0;
+
+/**
  * This type represents the IEEE 802.15.4 PAN ID.
  *
  */
@@ -352,29 +358,31 @@ typedef struct otEnergyScanResult
  */
 typedef struct otOperationalDataset
 {
-    uint64_t          mActiveTimestamp;            ///< Active Timestamp
-    uint64_t          mPendingTimestamp;           ///< Pending Timestamp
-    otMasterKey       mMasterKey;                  ///< Network Master Key
-    otNetworkName     mNetworkName;                ///< Network Name
-    otExtendedPanId   mExtendedPanId;              ///< Extended PAN ID
-    otMeshLocalPrefix mMeshLocalPrefix;            ///< Mesh Local Prefix
-    uint32_t          mDelay;                      ///< Delay Timer
-    otPanId           mPanId;                      ///< PAN ID
-    uint16_t          mChannel;                    ///< Channel
-    otPSKc            mPSKc;                       ///< PSKc
-    otSecurityPolicy  mSecurityPolicy;             ///< Security Policy
+    uint64_t             mActiveTimestamp;            ///< Active Timestamp
+    uint64_t             mPendingTimestamp;           ///< Pending Timestamp
+    otMasterKey          mMasterKey;                  ///< Network Master Key
+    otNetworkName        mNetworkName;                ///< Network Name
+    otExtendedPanId      mExtendedPanId;              ///< Extended PAN ID
+    otMeshLocalPrefix    mMeshLocalPrefix;            ///< Mesh Local Prefix
+    uint32_t             mDelay;                      ///< Delay Timer
+    otPanId              mPanId;                      ///< PAN ID
+    uint16_t             mChannel;                    ///< Channel
+    otPSKc               mPSKc;                       ///< PSKc
+    otSecurityPolicy     mSecurityPolicy;             ///< Security Policy
+    otChannelMaskPage0   mChannelMaskPage0;           ///< Channel Mask Page 0
 
-    bool              mIsActiveTimestampSet : 1;   ///< TRUE if Active Timestamp is set, FALSE otherwise.
-    bool              mIsPendingTimestampSet : 1;  ///< TRUE if Pending Timestamp is set, FALSE otherwise.
-    bool              mIsMasterKeySet : 1;         ///< TRUE if Network Master Key is set, FALSE otherwise.
-    bool              mIsNetworkNameSet : 1;       ///< TRUE if Network Name is set, FALSE otherwise.
-    bool              mIsExtendedPanIdSet : 1;     ///< TRUE if Extended PAN ID is set, FALSE otherwise.
-    bool              mIsMeshLocalPrefixSet : 1;   ///< TRUE if Mesh Local Prefix is set, FALSE otherwise.
-    bool              mIsDelaySet : 1;             ///< TRUE if Delay Timer is set, FALSE otherwise.
-    bool              mIsPanIdSet : 1;             ///< TRUE if PAN ID is set, FALSE otherwise.
-    bool              mIsChannelSet : 1;           ///< TRUE if Channel is set, FALSE otherwise.
-    bool              mIsPSKcSet : 1;              ///< TRUE if PSKc is set, FALSE otherwise.
-    bool              mIsSecurityPolicySet : 1;    ///< TRUE if Security Policy is set, FALSE otherwise.
+    bool                 mIsActiveTimestampSet : 1;   ///< TRUE if Active Timestamp is set, FALSE otherwise.
+    bool                 mIsPendingTimestampSet : 1;  ///< TRUE if Pending Timestamp is set, FALSE otherwise.
+    bool                 mIsMasterKeySet : 1;         ///< TRUE if Network Master Key is set, FALSE otherwise.
+    bool                 mIsNetworkNameSet : 1;       ///< TRUE if Network Name is set, FALSE otherwise.
+    bool                 mIsExtendedPanIdSet : 1;     ///< TRUE if Extended PAN ID is set, FALSE otherwise.
+    bool                 mIsMeshLocalPrefixSet : 1;   ///< TRUE if Mesh Local Prefix is set, FALSE otherwise.
+    bool                 mIsDelaySet : 1;             ///< TRUE if Delay Timer is set, FALSE otherwise.
+    bool                 mIsPanIdSet : 1;             ///< TRUE if PAN ID is set, FALSE otherwise.
+    bool                 mIsChannelSet : 1;           ///< TRUE if Channel is set, FALSE otherwise.
+    bool                 mIsPSKcSet : 1;              ///< TRUE if PSKc is set, FALSE otherwise.
+    bool                 mIsSecurityPolicySet : 1;    ///< TRUE if Security Policy is set, FALSE otherwise.
+    bool                 mIsChannelMaskPage0Set : 1;  ///< TRUE if Channel Mask Page 0 is set, FALSE otherwise.
 } otOperationalDataset;
 
 /**

@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-#  Copyright (c) 2016, Nest Labs, Inc.
+#  Copyright (c) 2016, The OpenThread Authors.
 #  All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
@@ -67,5 +67,5 @@ set -x
 }
 
 [ $BUILD_TARGET != posix-ncp ] || {
-    NODE_TYPE=ncp-sim BuildJobs=10 make -f examples/Makefile-posix check || die
+    COVERAGE=1 NODE_TYPE=ncp-sim BuildJobs=10 make -f examples/Makefile-posix check || die
 }

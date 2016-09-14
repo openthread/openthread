@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2016, Nest Labs, Inc.
+ *  Copyright (c) 2016, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -258,6 +258,19 @@ static inline void getExtAddress(const uint8_t *frame, otExtAddress *address)
     {
         address->m8[i] = frame[IEEE802154_DSTADDR_OFFSET + (sizeof(otExtAddress) - 1 - i)];
     }
+}
+
+void otPlatRadioGetIeeeEui64(otInstance *aInstance, uint8_t *aIeeeEui64)
+{
+    (void)aInstance;
+    aIeeeEui64[0] = 0x18;
+    aIeeeEui64[1] = 0xb4;
+    aIeeeEui64[2] = 0x30;
+    aIeeeEui64[3] = 0x00;
+    aIeeeEui64[4] = (NODE_ID >> 24) & 0xff;
+    aIeeeEui64[5] = (NODE_ID >> 16) & 0xff;
+    aIeeeEui64[6] = (NODE_ID >> 8) & 0xff;
+    aIeeeEui64[7] = NODE_ID & 0xff;
 }
 
 ThreadError otPlatRadioSetPanId(otInstance *aInstance, uint16_t panid)

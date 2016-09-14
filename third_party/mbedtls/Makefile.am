@@ -1,5 +1,5 @@
 #
-#    Copyright 2016 Nest Labs Inc. All Rights Reserved.
+#    Copyright 2016 The OpenThread Authors. All Rights Reserved.
 #
 #    Licensed under the Apache License, Version 2.0 (the "License");
 #    you may not use this file except in compliance with the License.
@@ -42,6 +42,7 @@ libmbedcrypto_a_CPPFLAGS                      = \
     $(NULL)
 
 libmbedcrypto_a_SOURCES                       = \
+    hardware_entropy.c                          \
     repo/library/aes.c                          \
     repo/library/md.c                           \
     repo/library/md_wrap.c                      \

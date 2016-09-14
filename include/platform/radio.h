@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2016, Nest Labs, Inc.
+ *  Copyright (c) 2016, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -143,6 +143,15 @@ typedef enum PhyState
  * @{
  *
  */
+
+/**
+ * Get the factory-assigned IEEE EUI-64 for this interface.
+ *
+ * @param[in]  aInstance   The OpenThread instance structure.
+ * @param[out] aIeeeEui64  A pointer to where the factory-assigned IEEE EUI-64 will be placed.
+ *
+ */
+void otPlatRadioGetIeeeEui64(otInstance *aInstance, uint8_t *aIeeeEui64);
 
 /**
  * Set the PAN ID for address filtering.
