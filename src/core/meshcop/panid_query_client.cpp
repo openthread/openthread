@@ -43,9 +43,9 @@
 namespace Thread {
 
 PanIdQueryClient::PanIdQueryClient(ThreadNetif &aThreadNetif) :
-    mPanIdQuery(OPENTHREAD_URI_PANID_CONFLICT, &HandleConflict, this),
+    mPanIdQuery(OPENTHREAD_URI_PANID_CONFLICT, &PanIdQueryClient::HandleConflict, this),
     mSocket(aThreadNetif.GetIp6().mUdp),
-    mTimer(aThreadNetif.GetIp6().mTimerScheduler, &HandleTimer, this),
+    mTimer(aThreadNetif.GetIp6().mTimerScheduler, &PanIdQueryClient::HandleTimer, this),
     mCoapServer(aThreadNetif.GetCoapServer()),
     mNetif(aThreadNetif)
 {

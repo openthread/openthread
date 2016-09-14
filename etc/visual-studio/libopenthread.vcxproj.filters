@@ -135,6 +135,9 @@
     <ClCompile Include="..\..\src\core\thread\network_data_local.cpp">
       <Filter>Source Files\thread</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\core\thread\panid_query_server.cpp">
+      <Filter>Source Files\thread</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\src\core\thread\thread_netif.cpp">
       <Filter>Source Files\thread</Filter>
     </ClCompile>
@@ -172,6 +175,9 @@
       <Filter>Source Files\meshcop</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\core\meshcop\leader.cpp">
+      <Filter>Source Files\meshcop</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\core\meshcop\panid_query_client.cpp">
       <Filter>Source Files\meshcop</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\core\crypto\aes_ecb.cpp">
@@ -302,6 +308,9 @@
     <ClInclude Include="..\..\src\core\thread\network_data_tlvs.hpp">
       <Filter>Header Files\thread</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\src\core\thread\panid_query_server.hpp">
+      <Filter>Header Files\thread</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\src\core\thread\thread_netif.hpp">
       <Filter>Header Files\thread</Filter>
     </ClInclude>
@@ -339,6 +348,9 @@
       <Filter>Header Files\meshcop</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\core\meshcop\leader.hpp">
+      <Filter>Header Files\meshcop</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\core\meshcop\panid_query_client.hpp">
       <Filter>Header Files\meshcop</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\core\crypto\aes_ecb.hpp">
