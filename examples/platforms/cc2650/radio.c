@@ -239,12 +239,12 @@ static void rf_core_init_rx_params(void)
     cmd_ieee_rx.endTime = 0x00000000;
 }
 
-static uint_fast8_t rf_core_cmd_abort()
+static uint_fast8_t rf_core_cmd_abort(void)
 {
     return (RFCDoorbellSendTo(CMDR_DIR_CMD(CMD_ABORT)) & 0xFF);
 }
 
-static uint_fast8_t rf_core_cmd_ping()
+static uint_fast8_t rf_core_cmd_ping(void)
 {
     return (RFCDoorbellSendTo(CMDR_DIR_CMD(CMD_PING)) & 0xFF);
 }
@@ -271,13 +271,13 @@ static uint_fast8_t rf_core_cmd_ieee_tx(uint8_t *psdu, uint8_t len)
     return (RFCDoorbellSendTo((uint32_t)&cmd_ieee_tx) & 0xFF);
 }
 
-static uint_fast8_t rf_core_cmd_ieee_rx()
+static uint_fast8_t rf_core_cmd_ieee_rx(void)
 {
     cmd_ieee_rx.status = IDLE;
     return (RFCDoorbellSendTo((uint32_t)&cmd_ieee_rx) & 0xFF);
 }
 
-static void rf_core_setup_interrupts()
+static void rf_core_setup_interrupts(void)
 {
     bool interrupts_disabled;
 
@@ -301,7 +301,7 @@ static void rf_core_setup_interrupts()
     }
 }
 
-static void rf_core_disable_interrupts()
+static void rf_core_disable_interrupts(void)
 {
     bool interrupts_disabled;
 
@@ -321,7 +321,7 @@ static void rf_core_disable_interrupts()
     }
 }
 
-static void rf_core_set_modesel()
+static void rf_core_set_modesel(void)
 {
     switch(ChipInfo_GetChipType())
     {
@@ -426,7 +426,7 @@ static void rf_core_power_off(void)
     }
 }
 
-static uint_fast8_t rf_core_cmds_enable()
+static uint_fast8_t rf_core_cmds_enable(void)
 {
     /* turn on the clock line to the radio core */
     HWREGBITW(AON_RTC_BASE + AON_RTC_O_CTL, AON_RTC_CTL_RTC_UPD_EN_BITN) = 1;
@@ -450,7 +450,7 @@ static uint_fast8_t rf_core_cmds_enable()
     return (RFCDoorbellSendTo((uint32_t)&cmd_start_rat) & 0xFF);
 }
 
-static uint_fast16_t rf_core_cmds_disable()
+static uint_fast16_t rf_core_cmds_disable(void)
 {
     uint8_t doorbell_ret;
     bool interrupts_disabled;
