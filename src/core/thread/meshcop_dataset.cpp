@@ -228,7 +228,7 @@ void Dataset::Get(otOperationalDataset &aDataset)
     }
 }
 
-ThreadError Dataset::Set(const otOperationalDataset &aDataset, bool aActive)
+ThreadError Dataset::Set(const otOperationalDataset &aDataset)
 {
     ThreadError error = kThreadError_None;
     MeshCoP::ActiveTimestampTlv activeTimestampTlv;
@@ -240,17 +240,11 @@ ThreadError Dataset::Set(const otOperationalDataset &aDataset, bool aActive)
     activeTimestampTlv.SetTicks(0);
     Set(activeTimestampTlv);
 
-    if (aActive)
-    {
-        mType = Tlv::kActiveTimestamp;
-    }
-    else
+    if (mType == Tlv::kPendingTimestamp)
     {
         MeshCoP::PendingTimestampTlv pendingTimestampTlv;
 
         VerifyOrExit(aDataset.mIsPendingTimestampSet, error = kThreadError_InvalidArgs);
-
-        mType = Tlv::kPendingTimestamp;
 
         pendingTimestampTlv.Init();
         pendingTimestampTlv.SetSeconds(aDataset.mPendingTimestamp);

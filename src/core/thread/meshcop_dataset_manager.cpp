@@ -598,7 +598,7 @@ ThreadError ActiveDataset::Set(const otOperationalDataset &aDataset)
     ThreadError error = kThreadError_None;
     Dataset dataset(Tlv::kActiveTimestamp);
 
-    SuccessOrExit(error = dataset.Set(aDataset, true));
+    SuccessOrExit(error = dataset.Set(aDataset));
     SuccessOrExit(error = Set(dataset));
 
 exit:
@@ -717,7 +717,7 @@ ThreadError PendingDataset::Set(const otOperationalDataset &aDataset)
     ThreadError error = kThreadError_None;
     Dataset dataset(Tlv::kPendingTimestamp);
 
-    SuccessOrExit(error = dataset.Set(aDataset, false));
+    SuccessOrExit(error = dataset.Set(aDataset));
     SuccessOrExit(error = Set(dataset));
 
 exit:

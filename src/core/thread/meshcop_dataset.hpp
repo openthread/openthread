@@ -128,7 +128,7 @@ public:
 
     ThreadError Set(const Message &aMessage, uint16_t aOffset, uint8_t aLength);
 
-    ThreadError Set(const otOperationalDataset &aDataset, bool aActive);
+    ThreadError Set(const otOperationalDataset &aDataset);
 
     void Remove(Tlv::Type aType);
 
