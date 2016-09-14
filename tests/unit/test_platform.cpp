@@ -144,7 +144,7 @@ extern "C" {
         return (RadioPacket *)0;
     }
 
-    int8_t otPlatRadioGetNoiseFloor(otInstance *)
+    int8_t otPlatRadioGetRssi(otInstance *)
     {
         return 0;
     }
