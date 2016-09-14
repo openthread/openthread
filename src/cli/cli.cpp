@@ -52,7 +52,6 @@
 #include <common/encoding.hpp>
 #include <common/new.hpp>
 #include <net/ip6.hpp>
-#include <platform/radio.h>
 #include <platform/random.h>
 #include <platform/uart.h>
 
@@ -556,7 +555,7 @@ void Interpreter::ProcessEui64(int argc, char *argv[])
 
     VerifyOrExit(argc == 0, error = kThreadError_Parse);
 
-    otPlatRadioGetIeeeEui64(mInstance, extAddress.m8);
+    otGetFactoryAssignedIeeeEui64(mInstance, &extAddress);
     OutputBytes(extAddress.m8, OT_EXT_ADDRESS_SIZE);
     sServer->OutputFormat("\r\n");
 

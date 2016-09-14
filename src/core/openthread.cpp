@@ -175,6 +175,11 @@ void otSetExtendedPanId(otInstance *, const uint8_t *aExtendedPanId)
     sThreadNetif->GetMle().SetMeshLocalPrefix(mlPrefix);
 }
 
+void otGetFactoryAssignedIeeeEui64(otInstance *aInstance, otExtAddress *aEui64)
+{
+    otPlatRadioGetIeeeEui64(aInstance, aEui64->m8);
+}
+
 ThreadError otGetLeaderRloc(otInstance *, otIp6Address *aAddress)
 {
     ThreadError error;
