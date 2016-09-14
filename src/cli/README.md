@@ -41,6 +41,7 @@ OpenThread test scripts use the CLI to execute test cases.
 * [rloc16](#rloc16)
 * [route](#route)
 * [router](#router)
+* [routerdowngradethreshold](#routerdowngradethreshold)
 * [routerrole](#routerrole)
 * [routerupgradethreshold](#routerupgradethreshold)
 * [scan](#scan)
@@ -1020,6 +1021,25 @@ Cost: 0
 LQI In: 3
 LQI Out: 3
 Age: 7
+Done
+```
+
+### routerdowngradethreshold
+
+Get the ROUTER_DOWNGRADE_THRESHOLD value.
+
+```bash
+> routerdowngradethreshold
+23
+Done
+```
+
+### routerdowngradethreshold \<threshold\>
+
+Set the ROUTER_DOWNGRADE_THRESHOLD value.
+
+```bash
+> routerdowngradethreshold 23
 Done
 ```
 

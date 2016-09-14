@@ -116,6 +116,7 @@ const struct Command Interpreter::sCommands[] =
     { "rloc16", &Interpreter::ProcessRloc16 },
     { "route", &Interpreter::ProcessRoute },
     { "router", &Interpreter::ProcessRouter },
+    { "routerdowngradethreshold", &Interpreter::ProcessRouterDowngradeThreshold },
     { "routerrole", &Interpreter::ProcessRouterRole },
     { "routerupgradethreshold", &Interpreter::ProcessRouterUpgradeThreshold },
     { "scan", &Interpreter::ProcessScan },
@@ -1651,6 +1652,25 @@ void Interpreter::ProcessRouter(int argc, char *argv[])
             sServer->OutputFormat("LQI Out: %d\r\n", routerInfo.mLinkQualityOut);
             sServer->OutputFormat("Age: %d\r\n", routerInfo.mAge);
         }
+    }
+
+exit:
+    AppendResult(error);
+}
+
+void Interpreter::ProcessRouterDowngradeThreshold(int argc, char *argv[])
+{
+    ThreadError error = kThreadError_None;
+    long value;
+
+    if (argc == 0)
+    {
+        sServer->OutputFormat("%d\r\n", otGetRouterDowngradeThreshold());
+    }
+    else
+    {
+        SuccessOrExit(error = ParseLong(argv[0], value));
+        otSetRouterDowngradeThreshold(static_cast<uint8_t>(value));
     }
 
 exit:
