@@ -1516,8 +1516,20 @@ class WpanDiagsCmd(Cmd, SpinelCodec):
         # OpenThread Spinel-specific commands
         'ncp-ml64', 
         'ncp-ll64', 
+        'ncp-mac16',
+        'ncp-mac64',
+
         'ncp-tun', 
 
+        'ncp-status',
+        'ncp-vendorid',
+
+        'phy-freq',
+        'phy-cca-threshold',
+        'phy-tx-power',
+        'phy-rssi',
+
+        'mac-filter-mode',
     ]
 
 
@@ -2113,7 +2125,7 @@ class WpanDiagsCmd(Cmd, SpinelCodec):
             > masterkey 00112233445566778899aabbccddeeff
             Done
         """
-        pass 
+        self.handle_property(line, SPINEL_PROP_NET_MASTER_KEY, 'D')
 
     def do_mode(self, line): 
         """
@@ -2246,7 +2258,7 @@ class WpanDiagsCmd(Cmd, SpinelCodec):
             > networkname OpenThread
             Done
         """
-        pass 
+        self.handle_property(line, SPINEL_PROP_NET_NETWORK_NAME, 'U')
 
     def do_panid(self, line):
         """
@@ -2727,6 +2739,39 @@ class WpanDiagsCmd(Cmd, SpinelCodec):
     def do_ncpml64(self, line):
         """ Display the mesh local IPv6 address. """
         self.handle_property(line, SPINEL_PROP_IPV6_ML_ADDR, '6')
+
+    def do_ncpmac16(self, line):
+        self.handle_property(line, SPINEL_PROP_MAC_15_4_SADDR, 'H')
+
+    def do_ncpmac64(self, line):
+        self.handle_property(line, SPINEL_PROP_MAC_15_4_LADDR, 'E')
+
+    def do_ncpstatus(self, line):
+        """ Display the last status. """
+        self.handle_property(line, SPINEL_PROP_LAST_STATUS) # 'i'
+
+    def do_ncpvendorid(self, line):
+        """ Display the vendor id. """
+        self.handle_property(line, SPINEL_PROP_VENDOR_ID) # 'i'
+
+    def do_phyfreq(self, line):
+        """ Display the last status. """
+        self.handle_property(line, SPINEL_PROP_PHY_FREQ, 'L')
+
+    def do_phyccathreshold(self, line):
+        """ Display the cca threshold. """
+        self.handle_property(line, SPINEL_PROP_CCA_THRESHOLD)
+
+    def do_phytxpower(self, line):
+        """ Display the tx power level. """
+        self.handle_property(line, SPINEL_PROP_PHY_TX_POWER)
+
+    def do_phyrssi(self, line):
+        """ Display the last rssi. """
+        self.handle_property(line, SPINEL_PROP_PHY_RSSI)
+
+    def do_macfiltermode(self, line):
+        self.handle_property(line, SPINEL_PROP_MAC_FILTER_MODE)
 
     def complete_ncptun(self, text, line, begidx, endidx):
         _SUB_COMMANDS = ('up', 'down', 'add', 'del', 'ping')

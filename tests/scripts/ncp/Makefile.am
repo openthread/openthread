@@ -1,5 +1,5 @@
 #
-#  Copyright (c) 2016, The OpenThread Authors.
+#  Copyright (c) 2016, Nest Labs, Inc.
 #  All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
@@ -28,56 +28,47 @@
 
 include $(abs_top_nlbuild_autotools_dir)/automake/pre.am
 
-# Always package (e.g. for 'make dist') these subdirectories.
+LOG_DRIVER=$(abs_top_srcdir)/third_party/openthread-test-driver/test-driver
 
-DIST_SUBDIRS                            = \
-    thread-cert                           \
-    ncp                                   \
-    $(NULL)
-
-# Always build (e.g. for 'make all') these subdirectories.
-
-if OPENTHREAD_EXAMPLES_POSIX
-if OPENTHREAD_ENABLE_CLI
-SUBDIRS                                 = \
-    thread-cert                           \
-    ncp                                   \
-    $(NULL)
-endif
-endif
-
-# Always pretty (e.g. for 'make pretty') these subdirectories.
-
-PRETTY_SUBDIRS                          = \
+EXTRA_DIST                                                         = \
+    test_ncp_basics.py                                               \
+    test_ncp_phy.py                                                  \
+    test_ncp_mac.py                                                  \
+    test_ncp_net.py                                                  \
+    node.py                                                          \
     $(NULL)
 
 if OPENTHREAD_BUILD_TESTS
-if OPENTHREAD_BUILD_COVERAGE
-CLEANFILES                             = $(wildcard *.gcda *.gcno)
 
-if OPENTHREAD_BUILD_COVERAGE_REPORTS
-# The bundle should positively be qualified with the absolute build
-# path. Otherwise, VPATH will get auto-prefixed to it if there is
-# already such a directory in the non-colocated source tree.
+# First, list all essential program and script tests that MUST be run.
 
-OPENTHREAD_COVERAGE_BUNDLE             = ${abs_builddir}/${PACKAGE}${NL_COVERAGE_BUNDLE_SUFFIX}
-OPENTHREAD_COVERAGE_INFO               = ${OPENTHREAD_COVERAGE_BUNDLE}/${PACKAGE}${NL_COVERAGE_INFO_SUFFIX}
+check_PROGRAMS =
 
-$(OPENTHREAD_COVERAGE_BUNDLE):
-	$(call create-directory)
+check_SCRIPTS =
 
-$(OPENTHREAD_COVERAGE_INFO): check | $(dir $(OPENTHREAD_COVERAGE_INFO))
-	$(call generate-coverage-report,${top_builddir})
+if OPENTHREAD_ENABLE_NCP
 
-coverage-local: $(OPENTHREAD_COVERAGE_INFO)
+check_SCRIPTS                                                     += \
+    test_ncp_basics.py                                               \
+    test_ncp_phy.py                                                  \
+    test_ncp_mac.py                                                  \
+    test_ncp_net.py                                                  \
+    $(NULL)
 
-clean-local: clean-local-coverage
+endif
 
-.PHONY: clean-local-coverage
-clean-local-coverage:
-	-$(AM_V_at)rm -rf $(OPENTHREAD_COVERAGE_BUNDLE)
-endif # OPENTHREAD_BUILD_COVERAGE_REPORTS
-endif # OPENTHREAD_BUILD_COVERAGE
+TESTS_ENVIRONMENT                                                  = \
+    export                                                           \
+    top_builddir='$(top_builddir)'                                   \
+    VERBOSE=1;                                                       \
+    $(NULL)
+
+TESTS                                                              = \
+    $(check_PROGRAMS)                                                \
+    $(check_SCRIPTS)                                                 \
+    $(NULL)
+
+
 endif # OPENTHREAD_BUILD_TESTS
 
 include $(abs_top_nlbuild_autotools_dir)/automake/post.am
