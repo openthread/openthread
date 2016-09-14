@@ -111,6 +111,17 @@ void setChannel(uint8_t channel)
     HWREG(RFCORE_XREG_FREQCTRL) = 11 + (channel - 11) * 5;
 }
 
+void otPlatRadioGetIeeeEui64(otInstance *aInstance, uint8_t *aIeeeEui64)
+{
+    uint8_t *eui64 = (uint8_t *)IEEE_EUI64;
+    (void)aInstance;
+
+    for (uint8_t i = 0; i < OT_EXT_ADDRESS_SIZE; i++)
+    {
+        aIeeeEui64[i] = eui64[7 - i];
+    }
+}
+
 ThreadError otPlatRadioSetPanId(otInstance *aInstance, uint16_t panid)
 {
     ThreadError error = kThreadError_Busy;

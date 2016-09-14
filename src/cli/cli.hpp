@@ -153,6 +153,7 @@ private:
 #endif  // OPENTHREAD_ENABLE_DIAG
     void ProcessDiscover(int argc, char *argv[]);
     void ProcessEidCache(int argc, char *argv[]);
+    void ProcessEui64(int argc, char *argv[]);
 #ifdef OPENTHREAD_EXAMPLES_POSIX
     void ProcessExit(int argc, char *argv[]);
 #endif

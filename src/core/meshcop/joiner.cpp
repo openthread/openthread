@@ -44,6 +44,8 @@
 #include <common/encoding.hpp>
 #include <common/logging.hpp>
 #include <meshcop/joiner.hpp>
+#include <platform/radio.h>
+#include <platform/random.h>
 #include <thread/thread_netif.hpp>
 #include <thread/thread_uris.hpp>
 
@@ -65,6 +67,20 @@ Joiner::Joiner(ThreadNetif &aNetif):
 ThreadError Joiner::Start(const char *aPSKd)
 {
     ThreadError error;
+    union
+    {
+        Mac::ExtAddress extAddress;
+        uint8_t buf[Crypto::Sha256::kHashSize];
+    };
+    Crypto::Sha256 sha256;
+
+    // use extended address based on factory-assigned IEEE EUI-64
+    otPlatRadioGetIeeeEui64(NULL, buf);
+    sha256.Start();
+    sha256.Update(buf, OT_EXT_ADDRESS_SIZE);
+    sha256.Finish(buf);
+    mNetif.GetMac().SetExtAddress(extAddress);
+    mNetif.GetMle().UpdateLinkLocalAddress();
 
     SuccessOrExit(error = mNetif.GetDtls().SetPsk(reinterpret_cast<const uint8_t *>(aPSKd),
                                                   static_cast<uint8_t>(strlen(aPSKd))));
@@ -268,6 +284,7 @@ void Joiner::HandleJoinerEntrust(Coap::Header &aHeader, Message &aMessage, const
     ExtendedPanIdTlv extendedPanId;
     NetworkNameTlv networkName;
     ActiveTimestampTlv activeTimestamp;
+    Mac::ExtAddress extAddress;
 
     VerifyOrExit(aHeader.GetType() == Coap::Header::kTypeConfirmable &&
                  aHeader.GetCode() == Coap::Header::kCodePost, error = kThreadError_Drop);
@@ -295,6 +312,15 @@ void Joiner::HandleJoinerEntrust(Coap::Header &aHeader, Message &aMessage, const
     mNetif.GetMac().SetNetworkName(networkName.GetNetworkName());
 
     otLogInfoMeshCoP("join success!\r\n");
+
+    // configure a random Extended Address
+    for (size_t i = 0; i < sizeof(extAddress); i++)
+    {
+        extAddress.m8[i] = static_cast<uint8_t>(otPlatRandomGet());
+    }
+
+    mNetif.GetMac().SetExtAddress(extAddress);
+    mNetif.GetMle().UpdateLinkLocalAddress();
 
 exit:
     (void)aMessageInfo;
