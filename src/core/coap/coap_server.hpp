@@ -104,8 +104,11 @@ public:
     /**
      * This constructor initializes the object.
      *
+     * @param[in]  aUdp   A reference to the UDP object.
+     * @param[in]  aPort  The port to listen on.
+     *
      */
-    explicit Server(uint16_t aPort);
+    Server(Ip6::Udp &aUdp, uint16_t aPort);
 
     /**
      * This method starts the CoAP server.
@@ -133,6 +136,16 @@ public:
      *
      */
     ThreadError AddResource(Resource &aResource);
+
+    /**
+     * This method returns a new UDP message with sufficient header space reserved.
+     *
+     * @param[in]  aReserved  The number of header bytes to reserve after the UDP header.
+     *
+     * @returns A pointer to the message or NULL if no buffers are available.
+     *
+     */
+    Message *NewMessage(uint16_t aReserved);
 
     /**
      * This method sends a CoAP response from the server.

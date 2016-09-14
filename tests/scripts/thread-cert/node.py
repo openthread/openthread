@@ -41,6 +41,8 @@ class Node:
 
         if self.node_type == 'soc':
             self.__init_soc(nodeid)
+        elif self.node_type == 'ncp-sim':
+            self.__init_ncp_sim(nodeid)
         else:
             self.__init_sim(nodeid)
 
@@ -68,6 +70,26 @@ class Node:
         # Add delay to ensure that the process is ready to receive commands.
         time.sleep(0.1)
 
+
+    def __init_ncp_sim(self, nodeid):
+        """ Initialize an NCP simulation node. """
+        if "top_builddir" in os.environ.keys():
+            builddir = os.environ['top_builddir']
+            if "top_srcdir" in os.environ.keys():
+                srcdir = os.environ['top_srcdir']
+            else:
+                srcdir = os.path.dirname(os.path.realpath(__file__))
+                srcdir += "/../../.."
+            cmd = 'python %s/tools/spinel-cli/spinel-cli.py -p %s/examples/apps/ncp/ot-ncp -n' % (srcdir, builddir)
+        else:
+            cmd = './ot-ncp'
+        cmd += ' %d' % nodeid
+        print ("%s" % cmd)
+
+        self.pexpect = pexpect.spawn(cmd, timeout=2)
+        time.sleep(0.1)
+        self.pexpect.expect('spinel-cli >')
+ 
     def __init_soc(self, nodeid):
         """ Initialize a System-on-a-chip node connected via UART. """
         import fdpexpect
@@ -75,8 +97,14 @@ class Node:
         self.pexpect = fdpexpect.fdspawn(os.open(serialPort, os.O_RDWR|os.O_NONBLOCK|os.O_NOCTTY))
 
     def __del__(self):
-        self.pexpect.terminate()
-        self.pexpect.close(force=True)
+        if self.pexpect.isalive():
+            if self.node_type == 'sim':
+                self.send_command('exit')
+                self.pexpect.expect(pexpect.EOF)
+            elif self.node_type == 'ncp-sim':
+                self.pexpect.sendcontrol('c');
+            self.pexpect.terminate()
+            self.pexpect.close(force=True)
 
     def send_command(self, cmd):
         print ("%d: %s" % (self.nodeid, cmd))
@@ -98,6 +126,9 @@ class Node:
         cmd = 'mode ' + mode
         self.send_command(cmd)
         self.pexpect.expect('Done')
+
+    def debug(self, level):
+        self.send_command('debug '+str(level))
 
     def start(self):
         self.send_command('ifconfig up')
@@ -293,6 +324,11 @@ class Node:
     def register_netdata(self):
         self.send_command('netdataregister')
         self.pexpect.expect('Done')
+
+    def panid_query(self, panid, mask, ipaddr):
+        cmd = 'commissioner panid ' + panid + ' ' + mask + ' ' + ipaddr
+        self.send_command(cmd)
+        self.pexpect.expect('Conflict:', timeout=8)
 
     def scan(self):
         self.send_command('scan')

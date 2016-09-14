@@ -322,7 +322,7 @@ class ARM(IThci):
             False: OpenThread is not running
         """
         print 'call isOpenThreadRunning'
-        return self.__sendCommand('state')[0] == 'disabled'
+        return self.__sendCommand('state')[0] != 'disabled'
 
     # rloc16 might be hex string or integer, need to return actual allocated router id
     def __convertRlocToRouterId(self, xRloc16):
@@ -720,14 +720,18 @@ class ARM(IThci):
             if eRoleId == Thread_Device_Role.Leader:
                 print 'join as leader'
                 role = 'rsdn'
+                # set ROUTER_UPGRADE_THRESHOLD
+                self.__setRouterUpgradeThreshold(32)
             elif eRoleId == Thread_Device_Role.Router:
                 print 'join as router'
                 role = 'rsdn'
+                # set ROUTER_UPGRADE_THRESHOLD
+                self.__setRouterUpgradeThreshold(32)
             elif eRoleId == Thread_Device_Role.SED:
                 print 'join as sleepy end device'
                 role = 's'
-                # set data polling rate to 10s for SED
-                self.setPollingRate(10)
+                # set data polling rate to 15s for SED
+                self.setPollingRate(15)
             elif eRoleId == Thread_Device_Role.EndDevice:
                 print 'join as end device'
                 role = 'rsn'
@@ -1135,8 +1139,13 @@ class ARM(IThci):
             cmd = 'prefix add %s/64 %s %s' % (prefix, parameter, prf)
             print cmd
             if self.__sendCommand(cmd)[0] == 'Done':
-                # send server data ntf to leader
-                return self.__sendCommand('netdataregister')[0] == 'Done'
+                # if prefix configured before starting OpenThread stack
+                # do not send out server data ntf proactively
+                if not self.__isOpenThreadRunning():
+                    return True
+                else:
+                    # send server data ntf to leader
+                    return self.__sendCommand('netdataregister')[0] == 'Done'
             else:
                 return False
         except Exception, e:
@@ -1470,6 +1479,7 @@ class ARM(IThci):
 
         Returns:
             a global IPv6 address that matches with filterByPrefix
+            or None if no matched GUA
         """
         print '%s call getGUA' % self.port
         print filterByPrefix
@@ -1484,7 +1494,8 @@ class ARM(IThci):
                 for line in globalAddrs:
                     if line.startswith(filterByPrefix):
                         return line
-                return globalAddrs[0]
+                print 'no global address matched'
+                return None
         except Exception, e:
             ModuleHelper.WriteIntoDebugLogger("getGUA() Error: " + str(e))
 
@@ -1609,4 +1620,7 @@ class ARM(IThci):
         pass
 
     def setUdpJoinerPort(self, portNumber):
+        pass
+
+    def commissionerUnregister(self):
         pass

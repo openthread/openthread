@@ -36,8 +36,12 @@
 #define PLATFORM_CC2538_H_
 
 #include <stdint.h>
+#include <openthread-types.h>
 
 #include "cc2538-reg.h"
+
+// Global OpenThread instance structure
+extern otInstance *sInstance;
 
 /**
  * This function initializes the alarm service used by OpenThread.
@@ -48,8 +52,10 @@ void cc2538AlarmInit(void);
 /**
  * This function performs alarm driver processing.
  *
+ * @param[in]  aInstance  The OpenThread instance structure.
+ *
  */
-void cc2538AlarmProcess(void);
+void cc2538AlarmProcess(otInstance *aInstance);
 
 /**
  * This function initializes the radio service used by OpenThread.
@@ -60,8 +66,10 @@ void cc2538RadioInit(void);
 /**
  * This function performs radio driver processing.
  *
+ * @param[in]  aInstance  The OpenThread instance structure.
+ *
  */
-void cc2538RadioProcess(void);
+void cc2538RadioProcess(otInstance *aInstance);
 
 /**
  * This function initializes the random number service used by OpenThread.

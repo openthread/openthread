@@ -83,6 +83,7 @@ class SimpleTestResult(unittest.TestResult):
 
         # manual reset
         test.manual_reset = self.manual_reset
+        os.system('mkdir %s' % test.result_dir)
         self.log_handler = logging.FileHandler('%s\\auto-%s.log' % (test.result_dir, time.strftime('%Y%m%d%H%M%S')))
         self.log_handler.setLevel(logging.DEBUG)
         self.log_handler.setFormatter(logging.Formatter('%(asctime)s %(levelname)s %(message)s'))
@@ -149,9 +150,16 @@ def discover(names=None, pattern='*.py', skip='efp', dry_run=False,
     '''
 
     if list_devices:
-        for port in names or settings.GOLDEN_DEVICES:
+        if continue_from:
+            continue_from = settings.GOLDEN_DEVICES.index(continue_from)
+        else:
+            continue_from = 0
+        for port in names or settings.GOLDEN_DEVICES[continue_from:]:
             print('%s: %s' % (port, OpenThreadController(port).version))
         return
+
+    if delete_blacklist:
+        os.system('del history.json')
 
     log = None
     if os.path.isfile(result_file):
@@ -166,6 +174,9 @@ def discover(names=None, pattern='*.py', skip='efp', dry_run=False,
 
     suite = unittest.TestSuite()
     discovered = unittest.defaultTestLoader.discover('cases', pattern)
+
+    if names and continue_from:
+        names = names[names.index(continue_from):]
 
     for s1 in discovered:
         for s2 in s1:
@@ -226,7 +237,6 @@ def discover(names=None, pattern='*.py', skip='efp', dry_run=False,
     if dry_run:
         return
 
-    os.system('del history.json')
     suite.run(result)
 
 def main():

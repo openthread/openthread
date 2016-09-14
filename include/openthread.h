@@ -95,6 +95,7 @@ extern "C" {
  * @defgroup core-tasklet Tasklet
  * @defgroup core-timer Timer
  * @defgroup core-udp UDP
+ * @defgroup core-tcp TCP
  * @defgroup core-link-quality Link Quality
  *
  * @}
@@ -113,22 +114,28 @@ extern "C" {
 
 /**
  * Run the next queued tasklet in OpenThread.
+ *
+ * @param[in] aInstance A pointer to an OpenThread instance.
  */
-void otProcessNextTasklet(void);
+void otProcessNextTasklet(otInstance *aInstance);
 
 /**
  * Indicates whether or not OpenThread has tasklets pending.
  *
+ * @param[in] aInstance A pointer to an OpenThread instance.
+ *
  * @retval TRUE   If there are tasklets pending.
  * @retval FALSE  If there are no tasklets pending.
  */
-bool otAreTaskletsPending(void);
+bool otAreTaskletsPending(otInstance *aInstance);
 
 /**
  * OpenThread calls this function when the tasklet queue transitions from empty to non-empty.
  *
+ * @param[in] aInstance A pointer to an OpenThread instance.
+ *
  */
-extern void otSignalTaskletPending(void);
+extern void otSignalTaskletPending(otInstance *aInstance);
 
 /**
  * @}
@@ -153,87 +160,115 @@ extern void otSignalTaskletPending(void);
  */
 const char *otGetVersionString(void);
 
+#ifdef OPENTHREAD_MULTIPLE_INSTANCE
 /**
- * This function initializes the OpenThread library.
+ * This function initializes a new instance of the OpenThread library.
  *
  * This function initializes OpenThread and prepares it for subsequent OpenThread API calls.  This function must be
- * called before any other calls to OpenThread.
+ * called before any other calls to OpenThread. By default, OpenThread is initialized in the 'enabled' state.
  *
- * @retval kThreadError_None  Successfully enabled the Thread interface.
+ * @param[in]    aInstanceBuffer      The buffer for OpenThread to use for allocating the otInstance structure.
+ * @param[inout] aInstanceBufferSize  On input, the size of aInstanceBuffer. On output, if not enough space for otInstance,
+                                      the number of bytes required for otInstance.
+ *
+ * @retval otInstance*  The new OpenThread instance structure.
  *
  */
-ThreadError otEnable(void);
+otInstance *otInstanceInit(void *aInstanceBuffer, uint64_t *aInstanceBufferSize);
+#else
+/**
+ * This function initializes the static instance of the OpenThread library.
+ *
+ * This function initializes OpenThread and prepares it for subsequent OpenThread API calls.  This function must be
+ * called before any other calls to OpenThread. By default, OpenThread is initialized in the 'enabled' state.
+ *
+ * @retval otInstance*  The new OpenThread instance structure.
+ *
+ */
+otInstance *otInstanceInit();
+#endif
 
 /**
  * This function disables the OpenThread library.
  *
- * Call this function when OpenThread is no longer in use.  The client must call otEnable() to use OpenThread
- * again.
+ * Call this function when OpenThread is no longer in use.
  *
- * @retval kThreadError_None  Successfully disabled the Thread interface.
+ * @param[in] aInstance A pointer to an OpenThread instance.
  *
  */
-ThreadError otDisable(void);
+void otInstanceFinalize(otInstance *aInstance);
 
 /**
  * This function brings up the IPv6 interface.
  *
  * Call this function to bring up the IPv6 interface and enables IPv6 communication.
  *
+ * @param[in] aInstance A pointer to an OpenThread instance.
+ *
  * @retval kThreadError_None          Successfully enabled the IPv6 interface.
  * @retval kThreadError_InvalidState  OpenThread is not enabled or the IPv6 interface is already up.
  *
  */
-ThreadError otInterfaceUp(void);
+ThreadError otInterfaceUp(otInstance *aInstance);
 
 /**
  * This function brings down the IPv6 interface.
  *
  * Call this function to bring down the IPv6 interface and disable all IPv6 communication.
  *
+ * @param[in] aInstance A pointer to an OpenThread instance.
+ *
  * @retval kThreadError_None          Successfully brought the interface down.
  * @retval kThreadError_InvalidState  The interface was not up.
  *
  */
-ThreadError otInterfaceDown(void);
+ThreadError otInterfaceDown(otInstance *aInstance);
 
 /**
  * This function indicates whether or not the IPv6 interface is up.
+ *
+ * @param[in] aInstance A pointer to an OpenThread instance.
  *
  * @retval TRUE   The IPv6 interface is up.
  * @retval FALSE  The IPv6 interface is down.
  *
  */
-bool otIsInterfaceUp(void);
+bool otIsInterfaceUp(otInstance *aInstance);
 
 /**
  * This function starts Thread protocol operation.
  *
  * The interface must be up when calling this function.
  *
+ * @param[in] aInstance A pointer to an OpenThread instance.
+ *
  * @retval kThreadError_None          Successfully started Thread protocol operation.
  * @retval kThreadError_InvalidState  Thread protocol operation is already started or the interface is not up.
  *
  */
-ThreadError otThreadStart(void);
+ThreadError otThreadStart(otInstance *aInstance);
 
 /**
  * This function stops Thread protocol operation.
+ *
+ * @param[in] aInstance A pointer to an OpenThread instance.
  *
  * @retval kThreadError_None          Successfully stopped Thread protocol operation.
  * @retval kThreadError_InvalidState  The Thread protocol operation was not started.
  *
  */
-ThreadError otThreadStop(void);
+ThreadError otThreadStop(otInstance *aInstance);
 
 /**
  * This function indicates whether a node is the only router on the network.
+ *
+ * @param[in] aInstance A pointer to an OpenThread instance.
  *
  * @retval TRUE   It is the only router in the network.
  * @retval FALSE  It is a child or is not a single router in the network.
  *
  */
-bool otIsSingleton(void);
+bool otIsSingleton(otInstance *aInstance);
 
 /**
  * This function pointer is called during an IEEE 802.15.4 Active Scan when an IEEE 802.15.4 Beacon is received or
@@ -248,7 +283,8 @@ typedef void (*otHandleActiveScanResult)(otActiveScanResult *aResult, void *aCon
 /**
  * This function starts an IEEE 802.15.4 Active Scan
  *
- * @param[in]  aScanChannels    A bit vector indicating which channels to scan (e.g. OT_CHANNEL_11_MASK).
+ * @param[in]  aInstance         A pointer to an OpenThread instance.
+ * @param[in]  aScanChannels     A bit vector indicating which channels to scan (e.g. OT_CHANNEL_11_MASK).
  * @param[in]  aScanDuration     The time in milliseconds to spend scanning each channel.
  * @param[in]  aCallback         A pointer to a function called on receiving a beacon or scan completes.
  * @param[in]  aCallbackContext  A pointer to application-specific context.
@@ -257,16 +293,17 @@ typedef void (*otHandleActiveScanResult)(otActiveScanResult *aResult, void *aCon
  * @retval kThreadError_Busy  Already performing an Active Scan.
  *
  */
-ThreadError otActiveScan(uint32_t aScanChannels, uint16_t aScanDuration, otHandleActiveScanResult aCallback,
-                         void *aCallbackContext);
+ThreadError otActiveScan(otInstance *aInstance, uint32_t aScanChannels, uint16_t aScanDuration,
+                         otHandleActiveScanResult aCallback, void *aCallbackContext);
 
 /**
  * This function indicates whether or not an IEEE 802.15.4 Active Scan is currently in progress.
  *
- * @returns true if an IEEE 802.15.4 Active Scan is in progress, false otherwise.
+ * @param[in] aInstance A pointer to an OpenThread instance.
  *
+ * @returns true if an IEEE 802.15.4 Active Scan is in progress, false otherwise.
  */
-bool otIsActiveScanInProgress(void);
+bool otIsActiveScanInProgress(otInstance *aInstance);
 
 /**
  * This function pointer is called during an IEEE 802.15.4 Energy Scan when the result for a channel is ready or the
@@ -281,6 +318,7 @@ typedef void (*otHandleEnergyScanResult)(otEnergyScanResult *aResult, void *aCon
 /**
  * This function starts an IEEE 802.15.4 Energy Scan
  *
+ * @param[in]  aInstance         A pointer to an OpenThread instance.
  * @param[in]  aScanChannels     A bit vector indicating on which channels to perform energy scan.
  * @param[in]  aScanDuration     The time in milliseconds to spend scanning each channel.
  * @param[in]  aCallback         A pointer to a function called to pass on scan result on indicate scan completion.
@@ -290,20 +328,23 @@ typedef void (*otHandleEnergyScanResult)(otEnergyScanResult *aResult, void *aCon
  * @retval kThreadError_Busy  Already performing an Active Scan.
  *
  */
-ThreadError otEnergyScan(uint32_t aScanChannels, uint16_t aScanDuration, otHandleEnergyScanResult aCallback,
-                         void *aCallbackContext);
+ThreadError otEnergyScan(otInstance *aInstance, uint32_t aScanChannels, uint16_t aScanDuration,
+                         otHandleEnergyScanResult aCallback, void *aCallbackContext);
 
 /**
  * This function indicates whether or not an IEEE 802.15.4 Energy Scan is currently in progress.
  *
+ * @param[in] aInstance A pointer to an OpenThread instance.
+ *
  * @returns true if an IEEE 802.15.4 Energy Scan is in progress, false otherwise.
  *
  */
-bool otIsEnergyScanInProgress(void);
+bool otIsEnergyScanInProgress(otInstance *aInstance);
 
 /**
  * This function starts a Thread Discovery scan.
  *
+ * @param[in]  aInstance         A pointer to an OpenThread instance.
  * @param[in]  aScanChannels     A bit vector indicating which channels to scan (e.g. OT_CHANNEL_11_MASK).
  * @param[in]  aScanDuration     The time in milliseconds to spend scanning each channel.
  * @param[in]  aPanId            The PAN ID filter (set to Broadcast PAN to disable filter).
@@ -314,16 +355,16 @@ bool otIsEnergyScanInProgress(void);
  * @retval kThreadError_Busy  Already performing an Thread Discovery.
  *
  */
-ThreadError otDiscover(uint32_t aScanChannels, uint16_t aScanDuration, uint16_t aPanid,
+ThreadError otDiscover(otInstance *aInstance, uint32_t aScanChannels, uint16_t aScanDuration, uint16_t aPanid,
                        otHandleActiveScanResult aCallback, void *aCallbackContext);
 
 /**
- * This function indicates whether or not an MLE Thread Discovery is currently in progress.
+ * This function determines if an MLE Thread Discovery is currently in progress.
  *
- * @returns true if an MLE Thread Discovery is in progress, false otherwise.
+ * @param[in] aInstance A pointer to an OpenThread instance.
  *
  */
-bool otIsDiscoverInProgress(void);
+bool otIsDiscoverInProgress(otInstance *aInstance);
 
 /**
  * @}
@@ -353,15 +394,18 @@ bool otIsDiscoverInProgress(void);
 /**
  * Get the IEEE 802.15.4 channel.
  *
+ * @param[in] aInstance A pointer to an OpenThread instance.
+ *
  * @returns The IEEE 802.15.4 channel.
  *
  * @sa otSetChannel
  */
-uint8_t otGetChannel(void);
+uint8_t otGetChannel(otInstance *aInstance);
 
 /**
  * Set the IEEE 802.15.4 channel
  *
+ * @param[in]  aInstance A pointer to an OpenThread instance.
  * @param[in]  aChannel  The IEEE 802.15.4 channel.
  *
  * @retval  kThreadErrorNone         Successfully set the channel.
@@ -369,63 +413,99 @@ uint8_t otGetChannel(void);
  *
  * @sa otGetChannel
  */
-ThreadError otSetChannel(uint8_t aChannel);
+ThreadError otSetChannel(otInstance *aInstance, uint8_t aChannel);
+
+/**
+ * Get the maximum number of children currently allowed.
+ *
+ * @param[in]  aInstance A pointer to an OpenThread instance.
+ *
+ * @returns The maximum number of children currently allowed.
+ *
+ * @sa otSetMaxAllowedChildren
+ */
+uint8_t otGetMaxAllowedChildren(otInstance *aInstance);
+
+/**
+ * Set the maximum number of children currently allowed.
+ *
+ * @param[in]  aInstance     A pointer to an OpenThread instance.
+ * @param[in]  aMaxChildren  The maximum allowed children.
+ *
+ * @retval  kThreadErrorNone           Successfully set the max.
+ * @retval  kThreadError_InvalidArgs   If @p aMaxChildren is not in the range [1, OPENTHREAD_CONFIG_MAX_CHILDREN].
+ * @retval  kThreadError_InvalidState  If Thread has already been started.
+ *
+ * @sa otGetMaxAllowedChildren
+ */
+ThreadError otSetMaxAllowedChildren(otInstance *aInstance, uint8_t aMaxChildren);
 
 /**
  * Get the Thread Child Timeout used when operating in the Child role.
+ *
+ * @param[in]  aInstance A pointer to an OpenThread instance.
  *
  * @returns The Thread Child Timeout value.
  *
  * @sa otSetChildTimeout
  */
-uint32_t otGetChildTimeout(void);
+uint32_t otGetChildTimeout(otInstance *aInstance);
 
 /**
  * Set the Thread Child Timeout used when operating in the Child role.
  *
+ * @param[in]  aInstance A pointer to an OpenThread instance.
+ *
  * @sa otSetChildTimeout
  */
-void otSetChildTimeout(uint32_t aTimeout);
+void otSetChildTimeout(otInstance *aInstance, uint32_t aTimeout);
 
 /**
  * Get the IEEE 802.15.4 Extended Address.
  *
+ * @param[in]  aInstance A pointer to an OpenThread instance.
+ *
  * @returns A pointer to the IEEE 802.15.4 Extended Address.
  */
-const uint8_t *otGetExtendedAddress(void);
+const uint8_t *otGetExtendedAddress(otInstance *aInstance);
 
 /**
  * This function sets the IEEE 802.15.4 Extended Address.
  *
+ * @param[in]  aInstance         A pointer to an OpenThread instance.
  * @param[in]  aExtendedAddress  A pointer to the IEEE 802.15.4 Extended Address.
  *
  * @retval kThreadError_None         Successfully set the IEEE 802.15.4 Extended Address.
  * @retval kThreadError_InvalidArgs  @p aExtendedAddress was NULL.
  *
  */
-ThreadError otSetExtendedAddress(const otExtAddress *aExtendedAddress);
+ThreadError otSetExtendedAddress(otInstance *aInstance, const otExtAddress *aExtendedAddress);
 
 /**
  * Get the IEEE 802.15.4 Extended PAN ID.
+ *
+ * @param[in]  aInstance A pointer to an OpenThread instance.
  *
  * @returns A pointer to the IEEE 802.15.4 Extended PAN ID.
  *
  * @sa otSetExtendedPanId
  */
-const uint8_t *otGetExtendedPanId(void);
+const uint8_t *otGetExtendedPanId(otInstance *aInstance);
 
 /**
  * Set the IEEE 802.15.4 Extended PAN ID.
  *
+ * @param[in]  aInstance       A pointer to an OpenThread instance.
  * @param[in]  aExtendedPanId  A pointer to the IEEE 802.15.4 Extended PAN ID.
  *
  * @sa otGetExtendedPanId
  */
-void otSetExtendedPanId(const uint8_t *aExtendedPanId);
+void otSetExtendedPanId(otInstance *aInstance, const uint8_t *aExtendedPanId);
 
 /**
  * This function returns a pointer to the Leader's RLOC.
  *
+ * @param[in]   aInstance    A pointer to an OpenThread instance.
  * @param[out]  aLeaderRloc  A pointer to where the Leader's RLOC will be written.
  *
  * @retval kThreadError_None         The Leader's RLOC was successfully written to @p aLeaderRloc.
@@ -433,31 +513,35 @@ void otSetExtendedPanId(const uint8_t *aExtendedPanId);
  * @retval kThreadError_Detached     Not currently attached to a Thread Partition.
  *
  */
-ThreadError otGetLeaderRloc(otIp6Address *aLeaderRloc);
+ThreadError otGetLeaderRloc(otInstance *aInstance, otIp6Address *aLeaderRloc);
 
 /**
  * Get the MLE Link Mode configuration.
+ *
+ * @param[in]  aInstance A pointer to an OpenThread instance.
  *
  * @returns The MLE Link Mode configuration.
  *
  * @sa otSetLinkMode
  */
-otLinkModeConfig otGetLinkMode(void);
+otLinkModeConfig otGetLinkMode(otInstance *aInstance);
 
 /**
  * Set the MLE Link Mode configuration.
  *
- * @param[in]  aConfig  A pointer to the Link Mode configuration.
+ * @param[in]  aInstance A pointer to an OpenThread instance.
+ * @param[in]  aConfig   A pointer to the Link Mode configuration.
  *
  * @retval kThreadErrorNone  Successfully set the MLE Link Mode configuration.
  *
  * @sa otGetLinkMode
  */
-ThreadError otSetLinkMode(otLinkModeConfig aConfig);
+ThreadError otSetLinkMode(otInstance *aInstance, otLinkModeConfig aConfig);
 
 /**
  * Get the thrMasterKey.
  *
+ * @param[in]   aInstance   A pointer to an OpenThread instance.
  * @param[out]  aKeyLength  A pointer to an unsigned 8-bit value that the function will set to the number of bytes that
  *                          represent the thrMasterKey. Caller may set to NULL.
  *
@@ -465,11 +549,12 @@ ThreadError otSetLinkMode(otLinkModeConfig aConfig);
  *
  * @sa otSetMasterKey
  */
-const uint8_t *otGetMasterKey(uint8_t *aKeyLength);
+const uint8_t *otGetMasterKey(otInstance *aInstance, uint8_t *aKeyLength);
 
 /**
  * Set the thrMasterKey.
  *
+ * @param[in]  aInstance   A pointer to an OpenThread instance.
  * @param[in]  aKey        A pointer to a buffer containing the thrMasterKey.
  * @param[in]  aKeyLength  Number of bytes representing the thrMasterKey stored at aKey. Valid range is [0, 16].
  *
@@ -478,93 +563,107 @@ const uint8_t *otGetMasterKey(uint8_t *aKeyLength);
  *
  * @sa otGetMasterKey
  */
-ThreadError otSetMasterKey(const uint8_t *aKey, uint8_t aKeyLength);
+ThreadError otSetMasterKey(otInstance *aInstance, const uint8_t *aKey, uint8_t aKeyLength);
 
 /**
  * This function returns the maximum transmit power setting in dBm.
  *
+ * @param[in]  aInstance   A pointer to an OpenThread instance.
+ *
  * @returns  The maximum transmit power setting.
  *
  */
-int8_t otGetMaxTransmitPower(void);
+int8_t otGetMaxTransmitPower(otInstance *aInstance);
 
 /**
  * This function sets the maximum transmit power in dBm.
  *
- * @param[in]  aPower  The maximum transmit power in dBm.
+ * @param[in]  aInstance A pointer to an OpenThread instance.
+ * @param[in]  aPower    The maximum transmit power in dBm.
  *
  */
-void otSetMaxTransmitPower(int8_t aPower);
+void otSetMaxTransmitPower(otInstance *aInstance, int8_t aPower);
 
 /**
  * This function returns a pointer to the Mesh Local EID.
  *
+ * @param[in]  aInstance A pointer to an OpenThread instance.
+ *
  * @returns A pointer to the Mesh Local EID.
  *
  */
-const otIp6Address *otGetMeshLocalEid(void);
+const otIp6Address *otGetMeshLocalEid(otInstance *aInstance);
 
 /**
  * This function returns a pointer to the Mesh Local Prefix.
  *
+ * @param[in]  aInstance A pointer to an OpenThread instance.
+ *
  * @returns A pointer to the Mesh Local Prefix.
  *
  */
-const uint8_t *otGetMeshLocalPrefix(void);
+const uint8_t *otGetMeshLocalPrefix(otInstance *aInstance);
 
 /**
  * This function sets the Mesh Local Prefix.
  *
+ * @param[in]  aInstance         A pointer to an OpenThread instance.
  * @param[in]  aMeshLocalPrefix  A pointer to the Mesh Local Prefix.
  *
  * @retval kThreadError_None  Successfully set the Mesh Local Prefix.
  *
  */
-ThreadError otSetMeshLocalPrefix(const uint8_t *aMeshLocalPrefix);
+ThreadError otSetMeshLocalPrefix(otInstance *aInstance, const uint8_t *aMeshLocalPrefix);
 
 /**
  * This method provides a full or stable copy of the Leader's Thread Network Data.
  *
+ * @param[in]     aInstance    A pointer to an OpenThread instance.
  * @param[in]     aStable      TRUE when copying the stable version, FALSE when copying the full version.
  * @param[out]    aData        A pointer to the data buffer.
  * @param[inout]  aDataLength  On entry, size of the data buffer pointed to by @p aData.
  *                             On exit, number of copied bytes.
  */
-ThreadError otGetNetworkDataLeader(bool aStable, uint8_t *aData, uint8_t *aDataLength);
+ThreadError otGetNetworkDataLeader(otInstance *aInstance, bool aStable, uint8_t *aData, uint8_t *aDataLength);
 
 /**
  * This method provides a full or stable copy of the local Thread Network Data.
  *
+ * @param[in]     aInstance    A pointer to an OpenThread instance.
  * @param[in]     aStable      TRUE when copying the stable version, FALSE when copying the full version.
  * @param[out]    aData        A pointer to the data buffer.
  * @param[inout]  aDataLength  On entry, size of the data buffer pointed to by @p aData.
  *                             On exit, number of copied bytes.
  */
-ThreadError otGetNetworkDataLocal(bool aStable, uint8_t *aData, uint8_t *aDataLength);
+ThreadError otGetNetworkDataLocal(otInstance *aInstance, bool aStable, uint8_t *aData, uint8_t *aDataLength);
 
 /**
  * Get the Thread Network Name.
+ *
+ * @param[in]  aInstance A pointer to an OpenThread instance.
  *
  * @returns A pointer to the Thread Network Name.
  *
  * @sa otSetNetworkName
  */
-const char *otGetNetworkName(void);
+const char *otGetNetworkName(otInstance *aInstance);
 
 /**
  * Set the Thread Network Name.
  *
+ * @param[in]  aInstance     A pointer to an OpenThread instance.
  * @param[in]  aNetworkName  A pointer to the Thread Network Name.
  *
  * @retval kThreadErrorNone  Successfully set the Thread Network Name.
  *
  * @sa otGetNetworkName
  */
-ThreadError otSetNetworkName(const char *aNetworkName);
+ThreadError otSetNetworkName(otInstance *aInstance, const char *aNetworkName);
 
 /**
  * This function gets the next On Mesh Prefix in the Network Data.
  *
+ * @param[in]     aInstance  A pointer to an OpenThread instance.
  * @param[in]     aLocal     TRUE to retrieve from the local Network Data, FALSE for partition's Network Data
  * @param[inout]  aIterator  A pointer to the Network Data iterator context.
  * @param[out]    aConfig    A pointer to where the On Mesh Prefix information will be placed.
@@ -573,83 +672,97 @@ ThreadError otSetNetworkName(const char *aNetworkName);
  * @retval kThreadError_NotFound  No subsequent On Mesh prefix exists in the Thread Network Data.
  *
  */
-ThreadError otGetNextOnMeshPrefix(bool aLocal, otNetworkDataIterator *aIterator, otBorderRouterConfig *aConfig);
+ThreadError otGetNextOnMeshPrefix(otInstance *aInstance, bool aLocal, otNetworkDataIterator *aIterator,
+                                  otBorderRouterConfig *aConfig);
 
 /**
  * Get the IEEE 802.15.4 PAN ID.
+ *
+ * @param[in]  aInstance A pointer to an OpenThread instance.
  *
  * @returns The IEEE 802.15.4 PAN ID.
  *
  * @sa otSetPanId
  */
-otPanId otGetPanId(void);
+otPanId otGetPanId(otInstance *aInstance);
 
 /**
  * Set the IEEE 802.15.4 PAN ID.
  *
- * @param[in]  aPanId  The IEEE 802.15.4 PAN ID.
+ * @param[in]  aInstance A pointer to an OpenThread instance.
+ * @param[in]  aPanId    The IEEE 802.15.4 PAN ID.
  *
  * @retval kThreadErrorNone         Successfully set the PAN ID.
  * @retval kThreadErrorInvalidArgs  If aPanId is not in the range [0, 65534].
  *
  * @sa otGetPanId
  */
-ThreadError otSetPanId(otPanId aPanId);
+ThreadError otSetPanId(otInstance *aInstance, otPanId aPanId);
 
 /**
  * This function indicates whether or not the Router Role is enabled.
+ *
+ * @param[in]  aInstance A pointer to an OpenThread instance.
  *
  * @retval TRUE   If the Router Role is enabled.
  * @retval FALSE  If the Router Role is not enabled.
  *
  */
-bool otIsRouterRoleEnabled(void);
+bool otIsRouterRoleEnabled(otInstance *aInstance);
 
 /**
  * This function sets whether or not the Router Role is enabled.
  *
+ * @param[in]  aInstance A pointer to an OpenThread instance.
  * @param[in]  aEnabled  TRUE if the Router Role is enabled, FALSE otherwise.
  *
  */
-void otSetRouterRoleEnabled(bool aEnabled);
+void otSetRouterRoleEnabled(otInstance *aInstance, bool aEnabled);
 
 /**
  * Get the IEEE 802.15.4 Short Address.
  *
+ * @param[in]  aInstance A pointer to an OpenThread instance.
+ *
  * @returns A pointer to the IEEE 802.15.4 Short Address.
  */
-otShortAddress otGetShortAddress(void);
+otShortAddress otGetShortAddress(otInstance *aInstance);
 
 /**
  * Get the list of IPv6 addresses assigned to the Thread interface.
  *
+ * @param[in]  aInstance A pointer to an OpenThread instance.
+ *
  * @returns A pointer to the first Network Interface Address.
  */
-const otNetifAddress *otGetUnicastAddresses(void);
+const otNetifAddress *otGetUnicastAddresses(otInstance *aInstance);
 
 /**
  * Add a Network Interface Address to the Thread interface.
  *
- * The passed in instance @p aAddress will be added and stored by the Thread interface, so the caller should ensure
- * that the address instance remains valid (not de-alloacted) and is not modified after a successful call to this
- * method.
+ * The passed in instance @p aAddress will be copied by the Thread interface. The Thread interface only
+ * supports a fixed number of externally added unicast addresses. See OPENTHREAD_CONFIG_MAX_EXT_IP_ADDRS.
  *
+ * @param[in]  aInstance A pointer to an OpenThread instance.
  * @param[in]  aAddress  A pointer to a Network Interface Address.
  *
- * @retval kThreadErrorNone  Successfully added the Network Interface Address.
- * @retval kThreadErrorBusy  The Network Interface Address pointed to by @p aAddress is already added.
+ * @retval kThreadErrorNone          Successfully added (or updated) the Network Interface Address.
+ * @retval kThreadError_InvalidArgs  The IP Address indicated by @p aAddress is an internal address.
+ * @retval kThreadError_NoBufs       The Network Interface is already storing the maximum allowed external addresses.
  */
-ThreadError otAddUnicastAddress(otNetifAddress *aAddress);
+ThreadError otAddUnicastAddress(otInstance *aInstance, const otNetifAddress *aAddress);
 
 /**
  * Remove a Network Interface Address from the Thread interface.
  *
- * @param[in]  aAddress  A pointer to a Network Interface Address.
+ * @param[in]  aInstance A pointer to an OpenThread instance.
+ * @param[in]  aAddress  A pointer to an IP Address.
  *
- * @retval kThreadErrorNone      Successfully removed the Network Interface Address.
- * @retval kThreadErrorNotFound  The Network Interface Address point to by @p aAddress was not added.
+ * @retval kThreadErrorNone          Successfully removed the Network Interface Address.
+ * @retval kThreadError_InvalidArgs  The IP Address indicated by @p aAddress is an internal address.
+ * @retval kThreadError_NotFound     The IP Address indicated by @p aAddress was not found.
  */
-ThreadError otRemoveUnicastAddress(otNetifAddress *aAddress);
+ThreadError otRemoveUnicastAddress(otInstance *aInstance, const otIp6Address *aAddress);
 
 /**
  * This function pointer is called to notify certain configuration or state changes within OpenThread.
@@ -663,26 +776,29 @@ typedef void (*otStateChangedCallback)(uint32_t aFlags, void *aContext);
 /**
  * This function registers a callback to indicate when certain configuration or state changes within OpenThread.
  *
+ * @param[in]  aInstance  A pointer to an OpenThread instance.
  * @param[in]  aCallback  A pointer to a function that is called with certain configuration or state changes.
  * @param[in]  aContext   A pointer to application-specific context.
  *
  */
-void otSetStateChangedCallback(otStateChangedCallback aCallback, void *aContext);
+void otSetStateChangedCallback(otInstance *aInstance, otStateChangedCallback aCallback, void *aContext);
 
 /**
  * This function gets the Active Operational Dataset.
  *
+ * @param[in]   aInstance A pointer to an OpenThread instance.
  * @param[out]  aDataset  A pointer to where the Active Operational Dataset will be placed.
  *
  * @retval kThreadError_None         Successfully retrieved the Active Operational Dataset.
  * @retval kThreadError_InvalidArgs  @p aDataset was NULL.
  *
  */
-ThreadError otGetActiveDataset(otOperationalDataset *aDataset);
+ThreadError otGetActiveDataset(otInstance *aInstance, otOperationalDataset *aDataset);
 
 /**
  * This function sets the Active Operational Dataset.
  *
+ * @param[in]  aInstance A pointer to an OpenThread instance.
  * @param[in]  aDataset  A pointer to the Active Operational Dataset.
  *
  * @retval kThreadError_None         Successfully set the Active Operational Dataset.
@@ -690,22 +806,24 @@ ThreadError otGetActiveDataset(otOperationalDataset *aDataset);
  * @retval kThreadError_InvalidArgs  @p aDataset was NULL.
  *
  */
-ThreadError otSetActiveDataset(otOperationalDataset *aDataset);
+ThreadError otSetActiveDataset(otInstance *aInstance, otOperationalDataset *aDataset);
 
 /**
  * This function gets the Pending Operational Dataset.
  *
+ * @param[in]   aInstance A pointer to an OpenThread instance.
  * @param[out]  aDataset  A pointer to where the Pending Operational Dataset will be placed.
  *
  * @retval kThreadError_None         Successfully retrieved the Pending Operational Dataset.
  * @retval kThreadError_InvalidArgs  @p aDataset was NULL.
  *
  */
-ThreadError otGetPendingDataset(otOperationalDataset *aDataset);
+ThreadError otGetPendingDataset(otInstance *aInstance, otOperationalDataset *aDataset);
 
 /**
  * This function sets the Pending Operational Dataset.
  *
+ * @param[in]  aInstance A pointer to an OpenThread instance.
  * @param[in]  aDataset  A pointer to the Pending Operational Dataset.
  *
  * @retval kThreadError_None         Successfully set the Pending Operational Dataset.
@@ -713,25 +831,84 @@ ThreadError otGetPendingDataset(otOperationalDataset *aDataset);
  * @retval kThreadError_InvalidArgs  @p aDataset was NULL.
  *
  */
-ThreadError otSetPendingDataset(otOperationalDataset *aDataset);
+ThreadError otSetPendingDataset(otInstance *aInstance, otOperationalDataset *aDataset);
 
 /**
- * Get the data poll period of sleepy end deivce.
+ * This function sends MGMT_ACTIVE_GET.
+ *
+ * @param[in]  aInstance  A pointer to an OpenThread instance.
+ * @param[in]  aTlvTypes  A pointer to the TLV Types.
+ * @param[in]  aLength    The length of TLV Types.
+ *
+ * @retval kThreadError_None         Successfully send the meshcop dataset command.
+ * @retval kThreadError_NoBufs       Insufficient buffer space to send.
+ *
+ */
+ThreadError otSendActiveGet(otInstance *aInstance, const uint8_t *aTlvTypes, uint8_t aLength);
+
+/**
+ * This function sends MGMT_ACTIVE_SET.
+ *
+ * @param[in]  aInstance  A pointer to an OpenThread instance.
+ * @param[in]  aDataset   A pointer to operational dataset.
+ * @param[in]  aTlvs      A pointer to TLVs.
+ * @param[in]  aLength    The length of TLVs.
+ *
+ * @retval kThreadError_None         Successfully send the meshcop dataset command.
+ * @retval kThreadError_NoBufs       Insufficient buffer space to send.
+ *
+ */
+ThreadError otSendActiveSet(otInstance *aInstance, const otOperationalDataset *aDataset, const uint8_t *aTlvs,
+                            uint8_t aLength);
+
+/**
+ * This function sends MGMT_PENDING_GET.
+ *
+ * @param[in]  aInstance  A pointer to an OpenThread instance.
+ * @param[in]  aTlvTypes  A pointer to the TLV Types.
+ * @param[in]  aLength    The length of TLV Types.
+ *
+ * @retval kThreadError_None         Successfully send the meshcop dataset command.
+ * @retval kThreadError_NoBufs       Insufficient buffer space to send.
+ *
+ */
+ThreadError otSendPendingGet(otInstance *aInstance, const uint8_t *aTlvTypes, uint8_t aLength);
+
+/**
+ * This function sends MGMT_PENDING_SET.
+ *
+ * @param[in]  aInstance  A pointer to an OpenThread instance.
+ * @param[in]  aDataset   A pointer to operational dataset.
+ * @param[in]  aTlvs      A pointer to TLVs.
+ * @param[in]  aLength    The length of TLVs.
+ *
+ * @retval kThreadError_None         Successfully send the meshcop dataset command.
+ * @retval kThreadError_NoBufs       Insufficient buffer space to send.
+ *
+ */
+ThreadError otSendPendingSet(otInstance *aInstance, const otOperationalDataset *aDataset, const uint8_t *aTlvs,
+                             uint8_t aLength);
+
+/**
+ * Get the data poll period of sleepy end device.
+ *
+ * @param[in]  aInstance A pointer to an OpenThread instance.
  *
  * @returns  The data poll period of sleepy end device.
  *
  * @sa otSetPollPeriod
  */
-uint32_t otGetPollPeriod(void);
+uint32_t otGetPollPeriod(otInstance *aInstance);
 
 /**
- * Set the data poll period for sleepy end deivce.
+ * Set the data poll period for sleepy end device.
  *
- * param[in]  aPollPeriod  data poll period.
+ * @param[in]  aInstance    A pointer to an OpenThread instance.
+ * @param[in]  aPollPeriod  data poll period.
  *
  * @sa otGetPollPeriod
  */
-void otSetPollPeriod(uint32_t aPollPeriod);
+void otSetPollPeriod(otInstance *aInstance, uint32_t aPollPeriod);
 
 /**
  * @}
@@ -750,36 +927,42 @@ void otSetPollPeriod(uint32_t aPollPeriod);
 /**
  * Get the Thread Leader Weight used when operating in the Leader role.
  *
+ * @param[in]  aInstance A pointer to an OpenThread instance.
+ *
  * @returns The Thread Leader Weight value.
  *
  * @sa otSetLeaderWeight
  */
-uint8_t otGetLocalLeaderWeight(void);
+uint8_t otGetLocalLeaderWeight(otInstance *aInstance);
 
 /**
  * Set the Thread Leader Weight used when operating in the Leader role.
  *
- * @param[in]  aWeight  The Thread Leader Weight value..
+ * @param[in]  aInstance A pointer to an OpenThread instance.
+ * @param[in]  aWeight   The Thread Leader Weight value..
  *
  * @sa otGetLeaderWeight
  */
-void otSetLocalLeaderWeight(uint8_t aWeight);
+void otSetLocalLeaderWeight(otInstance *aInstance, uint8_t aWeight);
 
 /**
  * Get the Thread Leader Partition Id used when operating in the Leader role.
  *
+ * @param[in]  aInstance A pointer to an OpenThread instance.
+ *
  * @returns The Thread Leader Partition Id value.
  *
  */
-uint32_t otGetLocalLeaderPartitionId(void);
+uint32_t otGetLocalLeaderPartitionId(otInstance *aInstance);
 
 /**
  * Set the Thread Leader Partition Id used when operating in the Leader role.
  *
+ * @param[in]  aInstance     A pointer to an OpenThread instance.
  * @param[in]  aPartitionId  The Thread Leader Partition Id value.
  *
  */
-void otSetLocalLeaderPartitionId(uint32_t aPartitionId);
+void otSetLocalLeaderPartitionId(otInstance *aInstance, uint32_t aPartitionId);
 
 /**
  * @}
@@ -798,7 +981,8 @@ void otSetLocalLeaderPartitionId(uint32_t aPartitionId);
 /**
  * Add a border router configuration to the local network data.
  *
- * @param[in]  aConfig  A pointer to the border router configuration.
+ * @param[in]  aInstance A pointer to an OpenThread instance.
+ * @param[in]  aConfig   A pointer to the border router configuration.
  *
  * @retval kThreadErrorNone         Successfully added the configuration to the local network data.
  * @retval kThreadErrorInvalidArgs  One or more configuration parameters were invalid.
@@ -807,24 +991,26 @@ void otSetLocalLeaderPartitionId(uint32_t aPartitionId);
  * @sa otRemoveBorderRouter
  * @sa otSendServerData
  */
-ThreadError otAddBorderRouter(const otBorderRouterConfig *aConfig);
+ThreadError otAddBorderRouter(otInstance *aInstance, const otBorderRouterConfig *aConfig);
 
 /**
  * Remove a border router configuration from the local network data.
  *
- * @param [in]  aPrefix  A pointer to an IPv6 prefix.
+ * @param[in]  aInstance A pointer to an OpenThread instance.
+ * @param[in]  aPrefix   A pointer to an IPv6 prefix.
  *
  * @retval kThreadErrorNone  Successfully removed the configuration from the local network data.
  *
  * @sa otAddBorderRouter
  * @sa otSendServerData
  */
-ThreadError otRemoveBorderRouter(const otIp6Prefix *aPrefix);
+ThreadError otRemoveBorderRouter(otInstance *aInstance, const otIp6Prefix *aPrefix);
 
 /**
  * Add an external route configuration to the local network data.
  *
- * @param[in]  aConfig  A pointer to the external route configuration.
+ * @param[in]  aInstance A pointer to an OpenThread instance.
+ * @param[in]  aConfig   A pointer to the external route configuration.
  *
  * @retval kThreadErrorNone         Successfully added the configuration to the local network data.
  * @retval kThreadErrorInvalidArgs  One or more configuration parameters were invalid.
@@ -833,23 +1019,25 @@ ThreadError otRemoveBorderRouter(const otIp6Prefix *aPrefix);
  * @sa otRemoveExternalRoute
  * @sa otSendServerData
  */
-ThreadError otAddExternalRoute(const otExternalRouteConfig *aConfig);
+ThreadError otAddExternalRoute(otInstance *aInstance, const otExternalRouteConfig *aConfig);
 
 /**
  * Remove an external route configuration from the local network data.
  *
- * @param[in]  aPrefix  A pointer to an IPv6 prefix.
+ * @param[in]  aInstance A pointer to an OpenThread instance.
+ * @param[in]  aPrefix   A pointer to an IPv6 prefix.
  *
  * @retval kThreadErrorNone  Successfully removed the configuration from the local network data.
  *
  * @sa otAddExternalRoute
  * @sa otSendServerData
  */
-ThreadError otRemoveExternalRoute(const otIp6Prefix *aPrefix);
+ThreadError otRemoveExternalRoute(otInstance *aInstance, const otIp6Prefix *aPrefix);
 
 /**
  * Immediately register the local network data with the Leader.
  *
+ * @param[in]  aInstance A pointer to an OpenThread instance.
  *
  * retval kThreadErrorNone  Successfully queued a Server Data Request message for delivery.
  *
@@ -858,41 +1046,44 @@ ThreadError otRemoveExternalRoute(const otIp6Prefix *aPrefix);
  * @sa otAddExternalRoute
  * @sa otRemoveExternalRoute
  */
-ThreadError otSendServerData(void);
+ThreadError otSendServerData(otInstance *aInstance);
 
 /**
  * This function adds a port to the allowed unsecured port list.
  *
- * @param[in]  aPort  The port value.
+ * @param[in]  aInstance A pointer to an OpenThread instance.
+ * @param[in]  aPort     The port value.
  *
  * @retval kThreadError_None    The port was successfully added to the allowed unsecure port list.
  * @retval kThreadError_NoBufs  The unsecure port list is full.
  *
  */
-ThreadError otAddUnsecurePort(uint16_t aPort);
+ThreadError otAddUnsecurePort(otInstance *aInstance, uint16_t aPort);
 
 /**
  * This function removes a port from the allowed unsecure port list.
  *
- * @param[in]  aPort  The port value.
+ * @param[in]  aInstance A pointer to an OpenThread instance.
+ * @param[in]  aPort     The port value.
  *
  * @retval kThreadError_None      The port was successfully removed from the allowed unsecure port list.
  * @retval kThreadError_NotFound  The port was not found in the unsecure port list.
  *
  */
-ThreadError otRemoveUnsecurePort(uint16_t aPort);
+ThreadError otRemoveUnsecurePort(otInstance *aInstance, uint16_t aPort);
 
 /**
  * This function returns a pointer to the unsecure port list.
  *
  * @note Port value 0 is used to indicate an invalid entry.
  *
+ * @param[in]   aInstance    A pointer to an OpenThread instance.
  * @param[out]  aNumEntries  The number of entries in the list.
  *
  * @returns A pointer to the unsecure port list.
  *
  */
-const uint16_t *otGetUnsecurePorts(uint8_t *aNumEntries);
+const uint16_t *otGetUnsecurePorts(otInstance *aInstance, uint8_t *aNumEntries);
 
 /**
  * @}
@@ -912,87 +1103,101 @@ const uint16_t *otGetUnsecurePorts(uint8_t *aNumEntries);
 /**
  * Get the CONTEXT_ID_REUSE_DELAY parameter used in the Leader role.
  *
+ * @param[in]  aInstance A pointer to an OpenThread instance.
+ *
  * @returns The CONTEXT_ID_REUSE_DELAY value.
  *
  * @sa otSetContextIdReuseDelay
  */
-uint32_t otGetContextIdReuseDelay(void);
+uint32_t otGetContextIdReuseDelay(otInstance *aInstance);
 
 /**
  * Set the CONTEXT_ID_REUSE_DELAY parameter used in the Leader role.
  *
- * @param[in]  aDelay  The CONTEXT_ID_REUSE_DELAY value.
+ * @param[in]  aInstance A pointer to an OpenThread instance.
+ * @param[in]  aDelay    The CONTEXT_ID_REUSE_DELAY value.
  *
  * @sa otGetContextIdReuseDelay
  */
-void otSetContextIdReuseDelay(uint32_t aDelay);
+void otSetContextIdReuseDelay(otInstance *aInstance, uint32_t aDelay);
 
 /**
  * Get the thrKeySequenceCounter.
+ *
+ * @param[in]  aInstance A pointer to an OpenThread instance.
  *
  * @returns The thrKeySequenceCounter value.
  *
  * @sa otSetKeySequenceCounter
  */
-uint32_t otGetKeySequenceCounter(void);
+uint32_t otGetKeySequenceCounter(otInstance *aInstance);
 
 /**
  * Set the thrKeySequenceCounter.
  *
+ * @param[in]  aInstance            A pointer to an OpenThread instance.
  * @param[in]  aKeySequenceCounter  The thrKeySequenceCounter value.
  *
  * @sa otGetKeySequenceCounter
  */
-void otSetKeySequenceCounter(uint32_t aKeySequenceCounter);
+void otSetKeySequenceCounter(otInstance *aInstance, uint32_t aKeySequenceCounter);
 
 /**
  * Get the NETWORK_ID_TIMEOUT parameter used in the Router role.
+ *
+ * @param[in]  aInstance A pointer to an OpenThread instance.
  *
  * @returns The NETWORK_ID_TIMEOUT value.
  *
  * @sa otSetNetworkIdTimeout
  */
-uint8_t otGetNetworkIdTimeout(void);
+uint8_t otGetNetworkIdTimeout(otInstance *aInstance);
 
 /**
  * Set the NETWORK_ID_TIMEOUT parameter used in the Leader role.
  *
+ * @param[in]  aInstance A pointer to an OpenThread instance.
  * @param[in]  aTimeout  The NETWORK_ID_TIMEOUT value.
  *
  * @sa otGetNetworkIdTimeout
  */
-void otSetNetworkIdTimeout(uint8_t aTimeout);
+void otSetNetworkIdTimeout(otInstance *aInstance, uint8_t aTimeout);
 
 /**
  * Get the ROUTER_UPGRADE_THRESHOLD parameter used in the REED role.
+ *
+ * @param[in]  aInstance A pointer to an OpenThread instance.
  *
  * @returns The ROUTER_UPGRADE_THRESHOLD value.
  *
  * @sa otSetRouterUpgradeThreshold
  */
-uint8_t otGetRouterUpgradeThreshold(void);
+uint8_t otGetRouterUpgradeThreshold(otInstance *aInstance);
 
 /**
  * Set the ROUTER_UPGRADE_THRESHOLD parameter used in the Leader role.
  *
+ * @param[in]  aInstance   A pointer to an OpenThread instance.
  * @param[in]  aThreshold  The ROUTER_UPGRADE_THRESHOLD value.
  *
  * @sa otGetRouterUpgradeThreshold
  */
-void otSetRouterUpgradeThreshold(uint8_t aThreshold);
+void otSetRouterUpgradeThreshold(otInstance *aInstance, uint8_t aThreshold);
 
 /**
  * Release a Router ID that has been allocated by the device in the Leader role.
  *
+ * @param[in]  aInstance  A pointer to an OpenThread instance.
  * @param[in]  aRouterId  The Router ID to release. Valid range is [0, 62].
  *
  * @retval kThreadErrorNone  Successfully released the Router ID specified by aRouterId.
  */
-ThreadError otReleaseRouterId(uint8_t aRouterId);
+ThreadError otReleaseRouterId(otInstance *aInstance, uint8_t aRouterId);
 
 /**
  * Add an IEEE 802.15.4 Extended Address to the MAC whitelist.
  *
+ * @param[in]  aInstance A pointer to an OpenThread instance.
  * @param[in]  aExtAddr  A pointer to the IEEE 802.15.4 Extended Address.
  *
  * @retval kThreadErrorNone    Successfully added to the MAC whitelist.
@@ -1005,11 +1210,12 @@ ThreadError otReleaseRouterId(uint8_t aRouterId);
  * @sa otDisableMacWhitelist
  * @sa otEnableMacWhitelist
  */
-ThreadError otAddMacWhitelist(const uint8_t *aExtAddr);
+ThreadError otAddMacWhitelist(otInstance *aInstance, const uint8_t *aExtAddr);
 
 /**
  * Add an IEEE 802.15.4 Extended Address to the MAC whitelist and fix the RSSI value.
  *
+ * @param[in]  aInstance A pointer to an OpenThread instance.
  * @param[in]  aExtAddr  A pointer to the IEEE 802.15.4 Extended Address.
  * @param[in]  aRssi     The RSSI in dBm to use when receiving messages from aExtAddr.
  *
@@ -1023,11 +1229,12 @@ ThreadError otAddMacWhitelist(const uint8_t *aExtAddr);
  * @sa otDisableMacWhitelist
  * @sa otEnableMacWhitelist
  */
-ThreadError otAddMacWhitelistRssi(const uint8_t *aExtAddr, int8_t aRssi);
+ThreadError otAddMacWhitelistRssi(otInstance *aInstance, const uint8_t *aExtAddr, int8_t aRssi);
 
 /**
  * Remove an IEEE 802.15.4 Extended Address from the MAC whitelist.
  *
+ * @param[in]  aInstance A pointer to an OpenThread instance.
  * @param[in]  aExtAddr  A pointer to the IEEE 802.15.4 Extended Address.
  *
  * @sa otAddMacWhitelist
@@ -1037,22 +1244,25 @@ ThreadError otAddMacWhitelistRssi(const uint8_t *aExtAddr, int8_t aRssi);
  * @sa otDisableMacWhitelist
  * @sa otEnableMacWhitelist
  */
-void otRemoveMacWhitelist(const uint8_t *aExtAddr);
+void otRemoveMacWhitelist(otInstance *aInstance, const uint8_t *aExtAddr);
 
 /**
  * This function gets a MAC whitelist entry.
  *
- * @param[in]   aIndex  An index into the MAC whitelist table.
- * @param[out]  aEntry  A pointer to where the information is placed.
+ * @param[in]   aInstance A pointer to an OpenThread instance.
+ * @param[in]   aIndex    An index into the MAC whitelist table.
+ * @param[out]  aEntry    A pointer to where the information is placed.
  *
  * @retval kThreadError_None         Successfully retrieved the MAC whitelist entry.
  * @retval kThreadError_InvalidArgs  @p aIndex is out of bounds or @p aEntry is NULL.
  *
  */
-ThreadError otGetMacWhitelistEntry(uint8_t aIndex, otMacWhitelistEntry *aEntry);
+ThreadError otGetMacWhitelistEntry(otInstance *aInstance, uint8_t aIndex, otMacWhitelistEntry *aEntry);
 
 /**
- *  Remove all entries from the MAC whitelist.
+ * Remove all entries from the MAC whitelist.
+ *
+ * @param[in]  aInstance A pointer to an OpenThread instance.
  *
  * @sa otAddMacWhitelist
  * @sa otAddMacWhitelistRssi
@@ -1061,11 +1271,12 @@ ThreadError otGetMacWhitelistEntry(uint8_t aIndex, otMacWhitelistEntry *aEntry);
  * @sa otDisableMacWhitelist
  * @sa otEnableMacWhitelist
  */
-void otClearMacWhitelist(void);
+void otClearMacWhitelist(otInstance *aInstance);
 
 /**
  * Disable MAC whitelist filtering.
  *
+ * @param[in]  aInstance A pointer to an OpenThread instance.
  *
  * @sa otAddMacWhitelist
  * @sa otAddMacWhitelistRssi
@@ -1074,10 +1285,12 @@ void otClearMacWhitelist(void);
  * @sa otGetMacWhitelistEntry
  * @sa otEnableMacWhitelist
  */
-void otDisableMacWhitelist(void);
+void otDisableMacWhitelist(otInstance *aInstance);
 
 /**
  * Enable MAC whitelist filtering.
+ *
+ * @param[in]  aInstance A pointer to an OpenThread instance.
  *
  * @sa otAddMacWhitelist
  * @sa otAddMacWhitelistRssi
@@ -1086,10 +1299,12 @@ void otDisableMacWhitelist(void);
  * @sa otGetMacWhitelistEntry
  * @sa otDisableMacWhitelist
  */
-void otEnableMacWhitelist(void);
+void otEnableMacWhitelist(otInstance *aInstance);
 
 /**
  * This function indicates whether or not the MAC whitelist is enabled.
+ *
+ * @param[in]  aInstance A pointer to an OpenThread instance.
  *
  * @returns TRUE if the MAC whitelist is enabled, FALSE otherwise.
  *
@@ -1102,44 +1317,52 @@ void otEnableMacWhitelist(void);
  * @sa otEnableMacWhitelist
  *
  */
-bool otIsMacWhitelistEnabled(void);
+bool otIsMacWhitelistEnabled(otInstance *aInstance);
 
 /**
  * Detach from the Thread network.
  *
+ * @param[in]  aInstance A pointer to an OpenThread instance.
+ *
  * @retval kThreadErrorNone    Successfully detached from the Thread network.
  * @retval kThreadErrorBusy    Thread is disabled.
  */
-ThreadError otBecomeDetached(void);
+ThreadError otBecomeDetached(otInstance *aInstance);
 
 /**
  * Attempt to reattach as a child.
  *
- * @param[in]  aFilter  Identifies whether to join any, same, or better partition.
+ * @param[in]  aInstance A pointer to an OpenThread instance.
+ * @param[in]  aFilter   Identifies whether to join any, same, or better partition.
  *
  * @retval kThreadErrorNone    Successfully begin attempt to become a child.
  * @retval kThreadErrorBusy    Thread is disabled or in the middle of an attach process.
  */
-ThreadError otBecomeChild(otMleAttachFilter aFilter);
+ThreadError otBecomeChild(otInstance *aInstance, otMleAttachFilter aFilter);
 
 /**
  * Attempt to become a router.
  *
+ * @param[in]  aInstance A pointer to an OpenThread instance.
+ *
  * @retval kThreadErrorNone    Successfully begin attempt to become a router.
  * @retval kThreadErrorBusy    Thread is disabled or already operating in a router or leader role.
  */
-ThreadError otBecomeRouter(void);
+ThreadError otBecomeRouter(otInstance *aInstance);
 
 /**
  * Become a leader and start a new partition.
  *
+ * @param[in]  aInstance A pointer to an OpenThread instance.
+ *
  * @retval kThreadErrorNone  Successfully became a leader and started a new partition.
  */
-ThreadError otBecomeLeader(void);
+ThreadError otBecomeLeader(otInstance *aInstance);
 
 /**
  * Add an IEEE 802.15.4 Extended Address to the MAC blacklist.
  *
+ * @param[in]  aInstance A pointer to an OpenThread instance.
  * @param[in]  aExtAddr  A pointer to the IEEE 802.15.4 Extended Address.
  *
  * @retval kThreadErrorNone    Successfully added to the MAC blacklist.
@@ -1151,11 +1374,12 @@ ThreadError otBecomeLeader(void);
  * @sa otDisableMacBlacklist
  * @sa otEnableMacBlacklist
  */
-ThreadError otAddMacBlacklist(const uint8_t *aExtAddr);
+ThreadError otAddMacBlacklist(otInstance *aInstance, const uint8_t *aExtAddr);
 
 /**
  * Remove an IEEE 802.15.4 Extended Address from the MAC blacklist.
  *
+ * @param[in]  aInstance A pointer to an OpenThread instance.
  * @param[in]  aExtAddr  A pointer to the IEEE 802.15.4 Extended Address.
  *
  * @sa otAddMacBlacklist
@@ -1164,34 +1388,39 @@ ThreadError otAddMacBlacklist(const uint8_t *aExtAddr);
  * @sa otDisableMacBlacklist
  * @sa otEnableMacBlacklist
  */
-void otRemoveMacBlacklist(const uint8_t *aExtAddr);
+void otRemoveMacBlacklist(otInstance *aInstance, const uint8_t *aExtAddr);
 
 /**
  * This function gets a MAC Blacklist entry.
  *
- * @param[in]   aIndex  An index into the MAC Blacklist table.
- * @param[out]  aEntry  A pointer to where the information is placed.
+ * @param[in]   aInstance A pointer to an OpenThread instance.
+ * @param[in]   aIndex    An index into the MAC Blacklist table.
+ * @param[out]  aEntry    A pointer to where the information is placed.
  *
  * @retval kThreadError_None         Successfully retrieved the MAC Blacklist entry.
  * @retval kThreadError_InvalidArgs  @p aIndex is out of bounds or @p aEntry is NULL.
  *
  */
-ThreadError otGetMacBlacklistEntry(uint8_t aIndex, otMacBlacklistEntry *aEntry);
+ThreadError otGetMacBlacklistEntry(otInstance *aInstance, uint8_t aIndex, otMacBlacklistEntry *aEntry);
 
 /**
  *  Remove all entries from the MAC Blacklist.
  *
+ * @param[in]  aInstance A pointer to an OpenThread instance.
+ *
  * @sa otAddMacBlacklist
  * @sa otRemoveMacBlacklist
  * @sa otGetMacBlacklistEntry
  * @sa otDisableMacBlacklist
  * @sa otEnableMacBlacklist
  */
-void otClearMacBlacklist(void);
+void otClearMacBlacklist(otInstance *aInstance);
 
 /**
  * Disable MAC blacklist filtering.
  *
+ * @param[in]  aInstance A pointer to an OpenThread instance.
+ *
  *
  * @sa otAddMacBlacklist
  * @sa otRemoveMacBlacklist
@@ -1199,10 +1428,12 @@ void otClearMacBlacklist(void);
  * @sa otGetMacBlacklistEntry
  * @sa otEnableMacBlacklist
  */
-void otDisableMacBlacklist(void);
+void otDisableMacBlacklist(otInstance *aInstance);
 
 /**
  * Enable MAC Blacklist filtering.
+ *
+ * @param[in]  aInstance A pointer to an OpenThread instance.
  *
  * @sa otAddMacBlacklist
  * @sa otRemoveMacBlacklist
@@ -1210,10 +1441,12 @@ void otDisableMacBlacklist(void);
  * @sa otGetMacBlacklistEntry
  * @sa otDisableMacBlacklist
  */
-void otEnableMacBlacklist(void);
+void otEnableMacBlacklist(otInstance *aInstance);
 
 /**
  * This function indicates whether or not the MAC Blacklist is enabled.
+ *
+ * @param[in]  aInstance A pointer to an OpenThread instance.
  *
  * @returns TRUE if the MAC Blacklist is enabled, FALSE otherwise.
  *
@@ -1225,11 +1458,12 @@ void otEnableMacBlacklist(void);
  * @sa otEnableMacBlacklist
  *
  */
-bool otIsMacBlacklistEnabled(void);
+bool otIsMacBlacklistEnabled(otInstance *aInstance);
 
 /**
  * Get the assigned link quality which is on the link to a given extended address.
  *
+ * @param[in]  aInstance A pointer to an OpenThread instance.
  * @param[in]  aExtAddr  A pointer to the IEEE 802.15.4 Extended Address.
  * @param[in]  aLinkQuality A pointer to the assigned link quality.
  *
@@ -1238,22 +1472,25 @@ bool otIsMacBlacklistEnabled(void);
  *
  * @sa otSetAssignLinkQuality
  */
-ThreadError otGetAssignLinkQuality(const uint8_t *aExtAddr, uint8_t *aLinkQuality);
+ThreadError otGetAssignLinkQuality(otInstance *aInstance, const uint8_t *aExtAddr, uint8_t *aLinkQuality);
 
 /**
  * Set the link quality which is on the link to a given extended address.
  *
+ * @param[in]  aInstance A pointer to an OpenThread instance.
  * @param[in]  aExtAddr  A pointer to the IEEE 802.15.4 Extended Address.
  * @param[in]  aLinkQuality  The link quality to be set on the link.
  *
  * @sa otGetAssignLinkQuality
  */
-void otSetAssignLinkQuality(const uint8_t *aExtAddr, uint8_t aLinkQuality);
+void otSetAssignLinkQuality(otInstance *aInstance, const uint8_t *aExtAddr, uint8_t aLinkQuality);
 
 /**
  * This method triggers platform reset.
+ *
+ * @param[in]  aInstance A pointer to an OpenThread instance.
  */
-void otPlatformReset(void);
+void otPlatformReset(otInstance *aInstance);
 
 /**
  * @}
@@ -1278,23 +1515,27 @@ void otPlatformReset(void);
 /**
  * The function retains diagnostic information for an attached Child by its Child ID or RLOC16.
  *
+ * @param[in]   aInstance   A pointer to an OpenThread instance.
  * @param[in]   aChildId    The Child ID or RLOC16 for the attached child.
  * @param[out]  aChildInfo  A pointer to where the child information is placed.
  *
  */
-ThreadError otGetChildInfoById(uint16_t aChildId, otChildInfo *aChildInfo);
+ThreadError otGetChildInfoById(otInstance *aInstance, uint16_t aChildId, otChildInfo *aChildInfo);
 
 /**
  * The function retains diagnostic information for an attached Child by the internal table index.
  *
+ * @param[in]   aInstance    A pointer to an OpenThread instance.
  * @param[in]   aChildIndex  The table index.
  * @param[out]  aChildInfo   A pointer to where the child information is placed.
  *
  */
-ThreadError otGetChildInfoByIndex(uint8_t aChildIndex, otChildInfo *aChildInfo);
+ThreadError otGetChildInfoByIndex(otInstance *aInstance, uint8_t aChildIndex, otChildInfo *aChildInfo);
 
 /**
  * Get the device role.
+ *
+ * @param[in]  aInstance A pointer to an OpenThread instance.
  *
  * @retval ::kDeviceRoleDisabled  The Thread stack is disabled.
  * @retval ::kDeviceRoleDetached  The device is not currently participating in a Thread network/partition.
@@ -1302,23 +1543,25 @@ ThreadError otGetChildInfoByIndex(uint8_t aChildIndex, otChildInfo *aChildInfo);
  * @retval ::kDeviceRoleRouter    The device is currently operating as a Thread Router.
  * @retval ::kDeviceRoleLeader    The device is currently operating as a Thread Leader.
  */
-otDeviceRole otGetDeviceRole(void);
+otDeviceRole otGetDeviceRole(otInstance *aInstance);
 
 /**
  * This function gets an EID cache entry.
  *
- * @param[in]   aIndex  An index into the EID cache table.
- * @param[out]  aEntry  A pointer to where the EID information is placed.
+ * @param[in]   aInstance A pointer to an OpenThread instance.
+ * @param[in]   aIndex    An index into the EID cache table.
+ * @param[out]  aEntry    A pointer to where the EID information is placed.
  *
- * @retval kThreadError_None         Successfully retreieved the EID cache entry.
+ * @retval kThreadError_None         Successfully retrieved the EID cache entry.
  * @retval kThreadError_InvalidArgs  @p aIndex was out of bounds or @p aEntry was NULL.
  *
  */
-ThreadError otGetEidCacheEntry(uint8_t aIndex, otEidCacheEntry *aEntry);
+ThreadError otGetEidCacheEntry(otInstance *aInstance, uint8_t aIndex, otEidCacheEntry *aEntry);
 
 /**
  * This function get the Thread Leader Data.
  *
+ * @param[in]   aInstance    A pointer to an OpenThread instance.
  * @param[out]  aLeaderData  A pointer to where the leader data is placed.
  *
  * @retval kThreadError_None         Successfully retrieved the leader data.
@@ -1326,73 +1569,89 @@ ThreadError otGetEidCacheEntry(uint8_t aIndex, otEidCacheEntry *aEntry);
  * @retval kThreadError_InvalidArgs  @p aLeaderData is NULL.
  *
  */
-ThreadError otGetLeaderData(otLeaderData *aLeaderData);
+ThreadError otGetLeaderData(otInstance *aInstance, otLeaderData *aLeaderData);
 
 /**
  * Get the Leader's Router ID.
  *
+ * @param[in]  aInstance A pointer to an OpenThread instance.
+ *
  * @returns The Leader's Router ID.
  */
-uint8_t otGetLeaderRouterId(void);
+uint8_t otGetLeaderRouterId(otInstance *aInstance);
 
 /**
  * Get the Leader's Weight.
  *
+ * @param[in]  aInstance A pointer to an OpenThread instance.
+ *
  * @returns The Leader's Weight.
  */
-uint8_t otGetLeaderWeight(void);
+uint8_t otGetLeaderWeight(otInstance *aInstance);
 
 /**
  * Get the Network Data Version.
  *
+ * @param[in]  aInstance A pointer to an OpenThread instance.
+ *
  * @returns The Network Data Version.
  */
-uint8_t otGetNetworkDataVersion(void);
+uint8_t otGetNetworkDataVersion(otInstance *aInstance);
 
 /**
  * Get the Partition ID.
  *
+ * @param[in]  aInstance A pointer to an OpenThread instance.
+ *
  * @returns The Partition ID.
  */
-uint32_t otGetPartitionId(void);
+uint32_t otGetPartitionId(otInstance *aInstance);
 
 /**
  * Get the RLOC16.
  *
+ * @param[in]  aInstance A pointer to an OpenThread instance.
+ *
  * @returns The RLOC16.
  */
-uint16_t otGetRloc16(void);
+uint16_t otGetRloc16(otInstance *aInstance);
 
 /**
  * Get the current Router ID Sequence.
  *
+ * @param[in]  aInstance A pointer to an OpenThread instance.
+ *
  * @returns The Router ID Sequence.
  */
-uint8_t otGetRouterIdSequence(void);
+uint8_t otGetRouterIdSequence(otInstance *aInstance);
 
 /**
  * The function retains diagnostic information for a given Thread Router.
  *
+ * @param[in]   aInstance    A pointer to an OpenThread instance.
  * @param[in]   aRouterId    The router ID or RLOC16 for a given router.
  * @param[out]  aRouterInfo  A pointer to where the router information is placed.
  *
  */
-ThreadError otGetRouterInfo(uint16_t aRouterId, otRouterInfo *aRouterInfo);
+ThreadError otGetRouterInfo(otInstance *aInstance, uint16_t aRouterId, otRouterInfo *aRouterInfo);
 
 /**
  * The function retains diagnostic information for a Thread Router as parent.
  *
+ * @param[in]   aInstance    A pointer to an OpenThread instance.
  * @param[out]  aParentInfo  A pointer to where the parent router information is placed.
  *
  */
-ThreadError otGetParentInfo(otRouterInfo *aParentInfo);
+ThreadError otGetParentInfo(otInstance *aInstance, otRouterInfo *aParentInfo);
 
 /**
  * Get the Stable Network Data Version.
  *
+ * @param[in]  aInstance A pointer to an OpenThread instance.
+ *
  * @returns The Stable Network Data Version.
  */
-uint8_t otGetStableNetworkDataVersion(void);
+uint8_t otGetStableNetworkDataVersion(otInstance *aInstance);
 
 /**
  * This function pointer is called when an IEEE 802.15.4 frame is received.
@@ -1411,41 +1670,47 @@ typedef void (*otLinkPcapCallback)(const RadioPacket *aFrame, void *aContext);
 /**
  * This function registers a callback to provide received raw IEEE 802.15.4 frames.
  *
+ * @param[in]  aInstance         A pointer to an OpenThread instance.
  * @param[in]  aPcapCallback     A pointer to a function that is called when receiving an IEEE 802.15.4 link frame or
  *                               NULL to disable the callback.
  * @param[in]  aCallbackContext  A pointer to application-specific context.
  *
  */
-void otSetLinkPcapCallback(otLinkPcapCallback aPcapCallback, void *aCallbackContext);
+void otSetLinkPcapCallback(otInstance *aInstance, otLinkPcapCallback aPcapCallback, void *aCallbackContext);
 
 /**
  * This function indicates whether or not promiscuous mode is enabled at the link layer.
+ *
+ * @param[in]  aInstance A pointer to an OpenThread instance.
  *
  * @retval true   Promiscuous mode is enabled.
  * @retval false  Promiscuous mode is not enabled.
  *
  */
-bool otIsLinkPromiscuous(void);
+bool otIsLinkPromiscuous(otInstance *aInstance);
 
 /**
  * This function enables or disables the link layer promiscuous mode.
  *
  * @note Promiscuous mode may only be enabled when the Thread interface is disabled.
  *
+ * @param[in]  aInstance     A pointer to an OpenThread instance.
  * @param[in]  aPromiscuous  true to enable promiscuous mode, or false otherwise.
  *
  * @retval kThreadError_None  Successfully enabled promiscuous mode.
  * @retval kThreadError_Busy  Could not enable promiscuous mode because the Thread interface is enabled.
  *
  */
-ThreadError otSetLinkPromiscuous(bool aPromiscuous);
+ThreadError otSetLinkPromiscuous(otInstance *aInstance, bool aPromiscuous);
 
 /**
  * Get the MAC layer counters.
  *
+ * @param[in]  aInstance A pointer to an OpenThread instance.
+ *
  * @returns A pointer to the MAC layer counters.
  */
-const otMacCounters *otGetMacCounters(void);
+const otMacCounters *otGetMacCounters(otInstance *aInstance);
 
 /**
  * @}
@@ -1586,7 +1851,8 @@ ThreadError otSetMessageOffset(otMessage aMessage, uint16_t aOffset);
  * @param[in]  aBuf      A pointer to the data to append.
  * @param[in]  aLength   Number of bytes to append.
  *
- * @returns The number of bytes appended.
+ * @retval kThreadErrorNone    Successfully appended to the message
+ * @retval kThreadErrorNoBufs  No available buffers to grow the message.
  *
  * @sa otNewUdpMessage
  * @sa otFreeMessage
@@ -1597,7 +1863,7 @@ ThreadError otSetMessageOffset(otMessage aMessage, uint16_t aOffset);
  * @sa otReadMessage
  * @sa otWriteMessage
  */
-int otAppendMessage(otMessage aMessage, const void *aBuf, uint16_t aLength);
+ThreadError otAppendMessage(otMessage aMessage, const void *aBuf, uint16_t aLength);
 
 /**
  * Read bytes from a message.
@@ -1657,6 +1923,18 @@ int otWriteMessage(otMessage aMessage, uint16_t aOffset, const void *aBuf, uint1
  */
 
 /**
+ * Allocate a new message buffer for sending an IPv6 message.
+ *
+ * @param[in]  aInstance             A pointer to an OpenThread instance.
+ * @param[in]  aLinkSecurityEnabled  TRUE if the message should be secured at Layer 2
+ *
+ * @returns A pointer to the message buffer or NULL if no message buffers are available.
+ *
+ * @sa otFreeMessage
+ */
+otMessage otNewIp6Message(otInstance *aInstance, bool aLinkSecurityEnabled);
+
+/**
  * This function pointer is called when an IPv6 datagram is received.
  *
  * @param[in]  aMessage  A pointer to the message buffer containing the received IPv6 datagram.
@@ -1671,20 +1949,23 @@ typedef void (*otReceiveIp6DatagramCallback)(otMessage aMessage, void *aContext)
  * By default, this callback does not pass Thread control traffic.  See otSetReceiveIp6FilterEnabled() to change
  * the Thread control traffic filter setting.
  *
- * @param[in]  aCallback         A pointer to a function that is called when an IPv6 datagram is received
- *                               or NULL to disable the callback.
+ * @param[in]  aInstance         A pointer to an OpenThread instance.
+ * @param[in]  aCallback         A pointer to a function that is called when an IPv6 datagram is received or
+ *                               NULL to disable the callback.
  * @param[in]  aCallbackContext  A pointer to application-specific context.
  *
  * @sa otIsReceiveIp6FilterEnabled
  * @sa otSetReceiveIp6FilterEnabled
  *
  */
-void otSetReceiveIp6DatagramCallback(otReceiveIp6DatagramCallback aCallback, void *aCallbackContext);
-
+void otSetReceiveIp6DatagramCallback(otInstance *aInstance, otReceiveIp6DatagramCallback aCallback,
+                                     void *aCallbackContext);
 
 /**
  * This function indicates whether or not Thread control traffic is filtered out when delivering IPv6 datagrams
  * via the callback specified in otSetReceiveIp6DatagramCallback().
+ *
+ * @param[in]  aInstance A pointer to an OpenThread instance.
  *
  * @returns  TRUE if Thread control traffic is filtered out, FALSE otherwise.
  *
@@ -1692,44 +1973,49 @@ void otSetReceiveIp6DatagramCallback(otReceiveIp6DatagramCallback aCallback, voi
  * @sa otSetReceiveIp6FilterEnabled
  *
  */
-bool otIsReceiveIp6DatagramFilterEnabled(void);
+bool otIsReceiveIp6DatagramFilterEnabled(otInstance *aInstance);
 
 /**
  * This function sets whether or not Thread control traffic is filtered out when delivering IPv6 datagrams
  * via the callback specified in otSetReceiveIp6DatagramCallback().
  *
+ * @param[in]  aInstance A pointer to an OpenThread instance.
  * @param[in]  aEnabled  TRUE if Thread control traffic is filtered out, FALSE otherwise.
  *
  * @sa otSetReceiveDatagramCallback
  * @sa otIsReceiveIp6FilterEnabled
  *
  */
-void otSetReceiveIp6DatagramFilterEnabled(bool aEnabled);
+void otSetReceiveIp6DatagramFilterEnabled(otInstance *aInstance, bool aEnabled);
 
 /**
  * This function sends an IPv6 datagram via the Thread interface.
  *
+ * @param[in]  aInstance A pointer to an OpenThread instance.
  * @param[in]  aMessage  A pointer to the message buffer containing the IPv6 datagram.
  *
  */
-ThreadError otSendIp6Datagram(otMessage aMessage);
+ThreadError otSendIp6Datagram(otInstance *aInstance, otMessage aMessage);
 
 /**
  * This function indicates whether or not ICMPv6 Echo processing is enabled.
+ *
+ * @param[in]  aInstance A pointer to an OpenThread instance.
  *
  * @retval TRUE   ICMPv6 Echo processing is enabled.
  * @retval FALSE  ICMPv6 Echo processing is disabled.
  *
  */
-bool otIsIcmpEchoEnabled(void);
+bool otIsIcmpEchoEnabled(otInstance *aInstance);
 
 /**
  * This function sets whether or not ICMPv6 Echo processing is enabled.
  *
+ * @param[in]  aInstance A pointer to an OpenThread instance.
  * @param[in]  aEnabled  TRUE to enable ICMPv6 Echo processing, FALSE otherwise.
  *
  */
-void otSetIcmpEchoEnabled(bool aEnabled);
+void otSetIcmpEchoEnabled(otInstance *aInstance, bool aEnabled);
 
 /**
  * This function returns the prefix match length (bits) for two IPv6 addresses.
@@ -1760,15 +2046,18 @@ uint8_t otIp6PrefixMatch(const otIp6Address *aFirst, const otIp6Address *aSecond
 /**
  * Allocate a new message buffer for sending a UDP message.
  *
+ * @param[in]  aInstance A pointer to an OpenThread instance.
+ *
  * @returns A pointer to the message buffer or NULL if no message buffers are available.
  *
  * @sa otFreeMessage
  */
-otMessage otNewUdpMessage(void);
+otMessage otNewUdpMessage(otInstance *aInstance);
 
 /**
  * Open a UDP/IPv6 socket.
  *
+ * @param[in]  aInstance  A pointer to an OpenThread instance.
  * @param[in]  aSocket    A pointer to a UDP socket structure.
  * @param[in]  aCallback  A pointer to the application callback function.
  * @param[in]  aContext   A pointer to application-specific context.
@@ -1781,7 +2070,7 @@ otMessage otNewUdpMessage(void);
  * @sa otBindUdpSocket
  * @sa otSendUdp
  */
-ThreadError otOpenUdpSocket(otUdpSocket *aSocket, otUdpReceive aCallback, void *aContext);
+ThreadError otOpenUdpSocket(otInstance *aInstance, otUdpSocket *aSocket, otUdpReceive aCallback, void *aContext);
 
 /**
  * Close a UDP/IPv6 socket.

@@ -34,6 +34,7 @@ bin_PROGRAMS                                                           = \
 
 ot_cli_CPPFLAGS                                                        = \
     -I$(top_srcdir)/include                                              \
+    -I$(top_srcdir)/src/core                                             \
     -I$(top_srcdir)/examples/platforms                                   \
     $(NULL)
 
@@ -92,5 +93,9 @@ ot_cli_SOURCES                                                        += \
     ../../../third_party/cc26xxware/startup_files/startup_gcc.c          \
     $(NULL)
 endif
+
+if OPENTHREAD_BUILD_COVERAGE
+CLEANFILES                                                             = $(wildcard *.gcda *.gcno)
+endif # OPENTHREAD_BUILD_COVERAGE
 
 include $(abs_top_nlbuild_autotools_dir)/automake/post.am

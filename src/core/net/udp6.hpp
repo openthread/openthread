@@ -35,10 +35,12 @@
 #define UDP6_HPP_
 
 #include <openthread.h>
-#include <net/ip6.hpp>
+#include <net/ip6_headers.hpp>
 
 namespace Thread {
 namespace Ip6 {
+
+class Udp;
 
 /**
  * @addtogroup core-udp
@@ -59,6 +61,24 @@ class UdpSocket: public otUdpSocket
     friend class Udp;
 
 public:
+    /**
+     * This constructor initializes the object.
+     *
+     * @param[in]  aUdp  A reference to the UDP transport object.
+     *
+     */
+    UdpSocket(Udp &aUdp);
+
+    /**
+     * This method returns a new UDP message with sufficient header space reserved.
+     *
+     * @param[in]  aReserved  The number of header bytes to reserve after the UDP header.
+     *
+     * @returns A pointer to the message or NULL if no buffers are available.
+     *
+     */
+    Message *NewMessage(uint16_t aReserved);
+
     /**
      * This method opens the UDP socket.
      *
@@ -102,12 +122,25 @@ public:
      */
     ThreadError SendTo(Message &aMessage, const MessageInfo &aMessageInfo);
 
+    /**
+     * This method returns the local socket address.
+     *
+     * @returns A reference to the local socket address.
+     *
+     */
+    SockAddr &GetSockName(void) { return *static_cast<SockAddr *>(&mSockName); }
+
+    /**
+     * This method returns the peer's socket address.
+     *
+     * @returns A reference to the peer's socket address.
+     *
+     */
+    SockAddr &GetPeerName(void) { return *static_cast<SockAddr *>(&mPeerName); }
+
 private:
     UdpSocket *GetNext(void) { return static_cast<UdpSocket *>(mNext); }
     void SetNext(UdpSocket *socket) { mNext = static_cast<otUdpSocket *>(socket); }
-
-    SockAddr &GetSockName(void) { return *static_cast<SockAddr *>(&mSockName); }
-    SockAddr &GetPeerName(void) { return *static_cast<SockAddr *>(&mPeerName); }
 
     void HandleUdpReceive(Message &aMessage, const MessageInfo &aMessageInfo) {
         mHandler(mContext, &aMessage, &aMessageInfo);
@@ -124,17 +157,66 @@ class Udp
 
 public:
     /**
-     * This static method returns a new UDP message with sufficient header space reserved.
+     * This constructor initializes the object.
+     *
+     * @param[in]  aIp6  A reference to the IPv6 network object.
+     *
+     */
+    Udp(Ip6 &aIp6);
+
+    /**
+     * This method adds a UDP socket.
+     *
+     * @param[in]  aSocket  A reference to the UDP socket.
+     *
+     * @retval kThreadError_None  Successfully added the UDP socket.
+     *
+     */
+    ThreadError AddSocket(UdpSocket &aSocket);
+
+    /**
+     * This method removes a UDP socket.
+     *
+     * @param[in]  aSocket  A reference to the UDP socket.
+     *
+     * @retval kThreadError_None  Successfully removed the UDP socket.
+     *
+     */
+    ThreadError RemoveSocket(UdpSocket &aSocket);
+
+    /**
+     * This method returns a new ephemeral port.
+     *
+     * @returns A new ephemeral port.
+     *
+     */
+    uint16_t GetEphemeralPort(void);
+
+    /**
+     * This method returns a new UDP message with sufficient header space reserved.
      *
      * @param[in]  aReserved  The number of header bytes to reserve after the UDP header.
      *
      * @returns A pointer to the message or NULL if no buffers are available.
      *
      */
-    static Message *NewMessage(uint16_t aReserved);
+    Message *NewMessage(uint16_t aReserved);
 
     /**
-     * This static method handles a received UDP message.
+     * This method sends an IPv6 datagram.
+     *
+     * @param[in]  aMessage      A reference to the message.
+     * @param[in]  aMessageInfo  A reference to the message info associated with @p aMessage.
+     * @param[in]  aIpProto      The Internet Protocol value.
+     *
+     * @retval kThreadError_None    Successfully enqueued the message into an output interface.
+     * @retval kThreadError_NoBufs  Insufficient available buffer to add the IPv6 headers.
+     *
+     */
+    ThreadError SendDatagram(Message &aMessage, MessageInfo &aMessageInfo, IpProto aIpProto);
+
+    /**
+     * This method handles a received UDP message.
      *
      * @param[in]  aMessage      A reference to the UDP message to process.
      * @param[in]  aMessageInfo  A reference to the message info associated with @p aMessage.
@@ -143,10 +225,10 @@ public:
      * @retval kThreadError_Drop  Could not fully process the UDP message.
      *
      */
-    static ThreadError HandleMessage(Message &aMessage, MessageInfo &aMessageInfo);
+    ThreadError HandleMessage(Message &aMessage, MessageInfo &aMessageInfo);
 
     /**
-     * This static method updates the UDP checksum.
+     * This method updates the UDP checksum.
      *
      * @param[in]  aMessage               A reference to the UDP message.
      * @param[in]  aPseudoHeaderChecksum  The pseudo-header checksum value.
@@ -155,7 +237,7 @@ public:
      * @retval kThreadError_InvalidArgs  The message was invalid.
      *
      */
-    static ThreadError UpdateChecksum(Message &aMessage, uint16_t aPseudoHeaderChecksum);
+    ThreadError UpdateChecksum(Message &aMessage, uint16_t aPseudoHeaderChecksum);
 
 private:
     enum
@@ -163,8 +245,10 @@ private:
         kDynamicPortMin = 49152,  ///< Service Name and Transport Protocol Port Number Registry
         kDynamicPortMax = 65535,  ///< Service Name and Transport Protocol Port Number Registry
     };
-    static uint16_t sEphemeralPort;
-    static UdpSocket *sSockets;
+    uint16_t mEphemeralPort;
+    UdpSocket *mSockets;
+
+    Ip6 &mIp6;
 };
 
 OT_TOOL_PACKED_BEGIN

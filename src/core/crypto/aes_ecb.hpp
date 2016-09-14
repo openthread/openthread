@@ -28,18 +28,16 @@
 
 /**
  * @file
- * @brief
- *   This file includes the platform abstraction for HMAC SHA-256 computations.
+ *   This file includes definitions for performing AES-ECB computations.
  */
 
-#ifndef HMAC_SHA256_H_
-#define HMAC_SHA256_H_
+#ifndef AES_ECB_HPP_
+#define AES_ECB_HPP_
 
-#include <stdint.h>
+#include <mbedtls/aes.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+namespace Thread {
+namespace Crypto {
 
 /**
  * @addtogroup core-security
@@ -48,44 +46,46 @@ extern "C" {
  *
  */
 
-enum
+/**
+ * This class implements AES ECB computation.
+ *
+ */
+class AesEcb
 {
-    otCryptoSha256Size = 32,  ///< SHA-256 hash size (bytes)
+public:
+    enum
+    {
+        kBlockSize = 16,  ///< AES-128 block size (bytes).
+    };
+
+    /**
+     * This method sets the key.
+     *
+     * @param[in]  aKey        A pointer to the key.
+     * @param[in]  aKeyLength  The key length in bytes.
+     *
+     */
+    void SetKey(const uint8_t *aKey, uint16_t aKeyLength);
+
+    /**
+     * This method encrypts data.
+     *
+     * @param[in]   aInput   A pointer to the input buffer.
+     * @param[out]  aOutput  A pointer to the output buffer.
+     *
+     */
+    void Encrypt(const uint8_t aInput[kBlockSize], uint8_t aOutput[kBlockSize]);
+
+private:
+    mbedtls_aes_context mContext;
 };
-
-/**
- * This method sets the key.
- *
- * @param[in]  aKey        A pointer to the key.
- * @param[in]  aKeyLength  The key length in bytes.
- *
- */
-void otCryptoHmacSha256Start(const void *aKey, uint16_t aKeyLength);
-
-/**
- * This method inputs bytes into the HMAC computation.
- *
- * @param[in]  aBuf        A pointer to the input buffer.
- * @param[in]  aBufLength  The length of @p aBuf in bytes.
- *
- */
-void otCryptoHmacSha256Update(const void *aBuf, uint16_t aBufLength);
-
-/**
- * This method finalizes the hash computation.
- *
- * @param[out]  aHash  A pointer to the output buffer.
- *
- */
-void otCryptoHmacSha256Finish(uint8_t aHash[otCryptoSha256Size]);
 
 /**
  * @}
  *
  */
 
-#ifdef __cplusplus
-}  // end of extern "C"
-#endif
+}  // namespace Crypto
+}  // namespace Thread
 
-#endif  // HMAC_SHA256_H_
+#endif  // AES_ECB_HPP_

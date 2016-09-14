@@ -34,8 +34,17 @@
 #ifndef THREAD_NETIF_HPP_
 #define THREAD_NETIF_HPP_
 
+#ifdef OPENTHREAD_CONFIG_FILE
+#include OPENTHREAD_CONFIG_FILE
+#else
+#include <openthread-config.h>
+#endif
+
 #include <openthread-types.h>
+
 #include <mac/mac.hpp>
+#include <meshcop/joiner_router.hpp>
+#include <meshcop/leader.hpp>
 #include <net/ip6_filter.hpp>
 #include <net/netif.hpp>
 #include <thread/address_resolver.hpp>
@@ -45,6 +54,19 @@
 #include <thread/mle.hpp>
 #include <thread/mle_router.hpp>
 #include <thread/network_data_local.hpp>
+#include <thread/panid_query_server.hpp>
+
+#if OPENTHREAD_ENABLE_COMMISSIONER
+#include <meshcop/commissioner.hpp>
+#endif  // OPENTHREAD_ENABLE_COMMISSIONER
+
+#if OPENTHREAD_ENABLE_DTLS
+#include <meshcop/dtls.hpp>
+#endif  // OPENTHREAD_ENABLE_DTLS
+
+#if OPENTHREAD_ENABLE_JOINER
+#include <meshcop/joiner.hpp>
+#endif  // OPENTHREAD_ENABLE_JOINER
 
 namespace Thread {
 
@@ -63,8 +85,10 @@ public:
     /**
      * This constructor initializes the Thread network interface.
      *
+     * @param[in]  aIp6  A reference to the IPv6 network object.
+     *
      */
-    ThreadNetif(void);
+    ThreadNetif(Ip6::Ip6 &aIp6);
 
     /**
      * This method enables the Thread network interface.
@@ -210,6 +234,20 @@ public:
 
     MeshCoP::PendingDataset &GetPendingDataset(void) { return mPendingDataset; }
 
+    MeshCoP::JoinerRouter &GetJoinerRouter(void) { return mJoinerRouter; }
+
+#if OPENTHREAD_ENABLE_COMMISSIONER
+    MeshCoP::Commissioner &GetCommissioner(void) { return mCommissioner; }
+#endif  // OPENTHREAD_ENABLE_COMMISSIONER
+
+#if OPENTHREAD_ENABLE_DTLS
+    MeshCoP::Dtls &GetDtls(void) { return mDtls; }
+#endif  // OPENTHREAD_ENABLE_DTLS
+
+#if OPENTHREAD_ENABLE_JOINER
+    MeshCoP::Joiner &GetJoiner(void) { return mJoiner; }
+#endif  // OPENTHREAD_ENABLE_JOINER
+
 private:
     Coap::Server mCoapServer;
     AddressResolver mAddressResolver;
@@ -224,6 +262,22 @@ private:
     NetworkData::Local mNetworkDataLocal;
     NetworkData::Leader mNetworkDataLeader;
     bool mIsUp;
+
+#if OPENTHREAD_ENABLE_COMMISSIONER
+    MeshCoP::Commissioner mCommissioner;
+#endif  // OPENTHREAD_ENABLE_COMMISSIONER
+
+#if OPENTHREAD_ENABLE_DTLS
+    MeshCoP::Dtls mDtls;
+#endif// OPENTHREAD_ENABLE_DTLS
+
+#if OPENTHREAD_ENABLE_JOINER
+    MeshCoP::Joiner mJoiner;
+#endif  // OPENTHREAD_ENABLE_JOINER
+
+    MeshCoP::JoinerRouter mJoinerRouter;
+    MeshCoP::Leader mLeader;
+    PanIdQueryServer mPanIdQuery;
 };
 
 /**

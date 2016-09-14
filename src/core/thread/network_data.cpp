@@ -46,7 +46,8 @@ namespace Thread {
 namespace NetworkData {
 
 NetworkData::NetworkData(ThreadNetif &aThreadNetif):
-    mMle(aThreadNetif.GetMle())
+    mMle(aThreadNetif.GetMle()),
+    mSocket(aThreadNetif.GetIp6().mUdp)
 {
     mLength = 0;
     mCoapMessageId = 0;
@@ -67,6 +68,12 @@ void NetworkData::GetNetworkData(bool aStable, uint8_t *aData, uint8_t &aDataLen
 
 ThreadError NetworkData::GetNextOnMeshPrefix(otNetworkDataIterator *aIterator, otBorderRouterConfig *aConfig)
 {
+    return GetNextOnMeshPrefix(aIterator, Mac::kShortAddrBroadcast, aConfig);
+}
+
+ThreadError NetworkData::GetNextOnMeshPrefix(otNetworkDataIterator *aIterator, uint16_t aRloc16,
+                                             otBorderRouterConfig *aConfig)
+{
     ThreadError error = kThreadError_NotFound;
     NetworkDataTlv *cur = reinterpret_cast<NetworkDataTlv *>(mTlvs + *aIterator);
     NetworkDataTlv *end = reinterpret_cast<NetworkDataTlv *>(mTlvs + mLength);
@@ -75,7 +82,7 @@ ThreadError NetworkData::GetNextOnMeshPrefix(otNetworkDataIterator *aIterator, o
     {
         PrefixTlv *prefix;
         BorderRouterTlv *borderRouter;
-        BorderRouterEntry *borderRouterEntry;
+        BorderRouterEntry *borderRouterEntry = NULL;
 
         if (cur->GetType() != NetworkDataTlv::kTypePrefix)
         {
@@ -89,9 +96,22 @@ ThreadError NetworkData::GetNextOnMeshPrefix(otNetworkDataIterator *aIterator, o
             continue;
         }
 
-        borderRouterEntry = borderRouter->GetEntry(0);
+        for (uint8_t i = 0; i < borderRouter->GetNumEntries(); i++)
+        {
+            if (aRloc16 == Mac::kShortAddrBroadcast || borderRouter->GetEntry(i)->GetRloc() == aRloc16)
+            {
+                borderRouterEntry = borderRouter->GetEntry(i);
+                break;
+            }
+        }
 
-        memcpy(&aConfig->mPrefix.mPrefix, prefix->GetPrefix(), sizeof(aConfig->mPrefix.mPrefix));
+        if (borderRouterEntry == NULL)
+        {
+            continue;
+        }
+
+        memset(aConfig, 0, sizeof(*aConfig));
+        memcpy(&aConfig->mPrefix.mPrefix, prefix->GetPrefix(), BitVectorBytes(prefix->GetPrefixLength()));
         aConfig->mPrefix.mLength = prefix->GetPrefixLength();
         aConfig->mPreference = borderRouterEntry->GetPreference();
         aConfig->mPreferred = borderRouterEntry->IsPreferred();
@@ -109,6 +129,125 @@ ThreadError NetworkData::GetNextOnMeshPrefix(otNetworkDataIterator *aIterator, o
 
 exit:
     return error;
+}
+
+ThreadError NetworkData::GetNextExternalRoute(otNetworkDataIterator *aIterator, otExternalRouteConfig *aConfig)
+{
+    return GetNextExternalRoute(aIterator, Mac::kShortAddrBroadcast, aConfig);
+}
+
+ThreadError NetworkData::GetNextExternalRoute(otNetworkDataIterator *aIterator, uint16_t aRloc16,
+                                              otExternalRouteConfig *aConfig)
+{
+    ThreadError error = kThreadError_NotFound;
+    NetworkDataTlv *cur = reinterpret_cast<NetworkDataTlv *>(mTlvs + *aIterator);
+    NetworkDataTlv *end = reinterpret_cast<NetworkDataTlv *>(mTlvs + mLength);
+
+    for (; cur < end; cur = cur->GetNext())
+    {
+        PrefixTlv *prefix;
+        HasRouteTlv *hasRoute;
+        HasRouteEntry *hasRouteEntry = NULL;
+
+        if (cur->GetType() != NetworkDataTlv::kTypePrefix)
+        {
+            continue;
+        }
+
+        prefix = static_cast<PrefixTlv *>(cur);
+
+        if ((hasRoute = FindHasRoute(*prefix)) == NULL)
+        {
+            continue;
+        }
+
+        for (uint8_t i = 0; i < hasRoute->GetNumEntries(); i++)
+        {
+            if (aRloc16 == Mac::kShortAddrBroadcast || hasRoute->GetEntry(i)->GetRloc() == aRloc16)
+            {
+                hasRouteEntry = hasRoute->GetEntry(i);
+                break;
+            }
+        }
+
+        if (hasRouteEntry == NULL)
+        {
+            continue;
+        }
+
+        memset(aConfig, 0, sizeof(*aConfig));
+        memcpy(&aConfig->mPrefix.mPrefix, prefix->GetPrefix(), BitVectorBytes(prefix->GetPrefixLength()));
+        aConfig->mPrefix.mLength = prefix->GetPrefixLength();
+        aConfig->mPreference = hasRouteEntry->GetPreference();
+        aConfig->mStable = cur->IsStable();
+
+        *aIterator = static_cast<otNetworkDataIterator>(reinterpret_cast<uint8_t *>(cur->GetNext()) - mTlvs);
+
+        ExitNow(error = kThreadError_None);
+    }
+
+exit:
+    return error;
+}
+
+bool NetworkData::ContainsOnMeshPrefixes(NetworkData &aCompare, uint16_t aRloc16)
+{
+    otNetworkDataIterator outerIterator = OT_NETWORK_DATA_ITERATOR_INIT;
+    otBorderRouterConfig outerConfig;
+    bool rval = true;
+
+    while (aCompare.GetNextOnMeshPrefix(&outerIterator, aRloc16, &outerConfig) == kThreadError_None)
+    {
+        otNetworkDataIterator innerIterator = OT_NETWORK_DATA_ITERATOR_INIT;
+        otBorderRouterConfig innerConfig;
+        ThreadError error;
+
+        while ((error = GetNextOnMeshPrefix(&innerIterator, aRloc16, &innerConfig)) == kThreadError_None)
+        {
+            if (memcmp(&outerConfig, &innerConfig, sizeof(outerConfig)) == 0)
+            {
+                break;
+            }
+        }
+
+        if (error != kThreadError_None)
+        {
+            ExitNow(rval = false);
+        }
+    }
+
+exit:
+    return rval;
+}
+
+bool NetworkData::ContainsExternalRoutes(NetworkData &aCompare, uint16_t aRloc16)
+{
+    otNetworkDataIterator outerIterator = OT_NETWORK_DATA_ITERATOR_INIT;
+    otExternalRouteConfig outerConfig;
+    bool rval = true;
+
+    while (aCompare.GetNextExternalRoute(&outerIterator, aRloc16, &outerConfig) == kThreadError_None)
+    {
+        otNetworkDataIterator innerIterator = OT_NETWORK_DATA_ITERATOR_INIT;
+        otExternalRouteConfig innerConfig;
+        ThreadError error;
+
+        while ((error = GetNextExternalRoute(&innerIterator, aRloc16, &innerConfig)) == kThreadError_None)
+        {
+            if (memcmp(&outerConfig, &innerConfig, sizeof(outerConfig)) == 0)
+            {
+                break;
+            }
+        }
+
+        if (error != kThreadError_None)
+        {
+            ExitNow(rval = false);
+        }
+    }
+
+exit:
+    return rval;
 }
 
 void NetworkData::RemoveTemporaryData(uint8_t *aData, uint8_t &aDataLength)
@@ -470,7 +609,7 @@ ThreadError NetworkData::SendServerDataNotification(bool aLocal, uint16_t aRloc1
     header.AppendContentFormatOption(Coap::Header::kApplicationOctetStream);
     header.Finalize();
 
-    VerifyOrExit((message = Ip6::Udp::NewMessage(0)) != NULL, error = kThreadError_NoBufs);
+    VerifyOrExit((message = mSocket.NewMessage(0)) != NULL, error = kThreadError_NoBufs);
     SuccessOrExit(error = message->Append(header.GetBytes(), header.GetLength()));
 
     if (aLocal)
@@ -501,7 +640,7 @@ exit:
 
     if (error != kThreadError_None && message != NULL)
     {
-        Message::Free(*message);
+        message->Free();
     }
 
     return error;

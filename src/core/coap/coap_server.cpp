@@ -37,7 +37,8 @@
 namespace Thread {
 namespace Coap {
 
-Server::Server(uint16_t aPort)
+Server::Server(Ip6::Udp &aUdp, uint16_t aPort):
+    mSocket(aUdp)
 {
     mPort = aPort;
     mResources = NULL;
@@ -129,6 +130,11 @@ void Server::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessag
 
 exit:
     {}
+}
+
+Message *Server::NewMessage(uint16_t aReserved)
+{
+    return mSocket.NewMessage(aReserved);
 }
 
 ThreadError Server::SendMessage(Message &aMessage, const Ip6::MessageInfo &aMessageInfo)

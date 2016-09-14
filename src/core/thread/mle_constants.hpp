@@ -91,8 +91,8 @@ enum
     kMaxLeaderToRouterTimeout   = 90,   ///< INFINITE_COST_TIMEOUT (seconds)
     kReedAdvertiseInterval      = 570,  ///< REED_ADVERTISEMENT_INTERVAL (seconds)
     kReedAdvertiseJitter        = 60,   ///< REED_ADVERTISEMENT_JITTER (seconds)
-    kMleEndDeviceTimeout        = 240,  ///< MLE_END_DEVICE_TIMEOUT (secondes)
-    kLeaderWeight               = 64,   ///< Default leaderweight for the Thread Network Partition
+    kMleEndDeviceTimeout        = 240,  ///< MLE_END_DEVICE_TIMEOUT (seconds)
+    kLeaderWeight               = 64,   ///< Default leader weight for the Thread Network Partition
 };
 
 enum
@@ -101,6 +101,15 @@ enum
     kLqi2LinkCost               = 2,    ///< Link Cost for LQI 2
     kLqi1LinkCost               = 4,    ///< Link Cost for LQI 1
     kLqi0LinkCost               = 16,   ///< Link Cost for LQI 0
+};
+
+// add for certification testing
+enum
+{
+    kMinAssignedLinkMargin3     = 0x15, ///< minimal link margin for LQI 3 (21 - 255)
+    kMinAssignedLinkMargin2     = 0x0b, ///< minimal link margin for LQI 2 (11 - 20)
+    kMinAssignedLinkMargin1     = 0x03, ///< minimal link margin for LQI 1 (3 - 9)
+    kMinAssignedLinkMargin0     = 0x00, ///< minimal link margin for LQI 0 (0 - 2)
 };
 
 }  // namespace Mle

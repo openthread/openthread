@@ -29,7 +29,7 @@
 /**
  * @file
  * @brief
- *   This file includes platform abstractions for miscelaneous behaviors.
+ *   This file includes platform abstractions for miscellaneous behaviors.
  */
 
 #ifndef OT_PLATFORM_MISC_H
@@ -44,8 +44,10 @@ extern "C" {
 /**
  * This function performs a software reset on the platform, if supported.
  *
+ * @param[in] aInstance  The OpenThread instance structure.
+ *
  */
-void otPlatReset(void);
+void otPlatReset(otInstance *aInstance);
 
 /**
  * Enumeration of possible reset reason codes.
@@ -71,8 +73,10 @@ typedef enum
 /**
  * This function returns the reason for the last platform reset.
  *
+ * @param[in] aInstance  The OpenThread instance structure.
+ *
  */
-otPlatResetReason otPlatGetResetReason(void);
+otPlatResetReason otPlatGetResetReason(otInstance *aInstance);
 
 #ifdef __cplusplus
 }  // extern "C"

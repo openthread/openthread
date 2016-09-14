@@ -30,8 +30,11 @@
  *
  ******************************************************************************/
 
+#include <openthread-types.h>
 #include <platform/uart.h>
 #include "platform-cc2650.h"
+
+otInstance *sInstance;
 
 void PlatformInit(int argc, char *argv[])
 {
@@ -43,9 +46,13 @@ void PlatformInit(int argc, char *argv[])
     otPlatUartEnable();
 }
 
-void PlatformProcessDrivers(void)
+void PlatformProcessDrivers(otInstance *aInstance)
 {
+    sInstance = aInstance;
+
+    // should sleep and wait for interrupts here
+
     cc2650UartProcess();
-    cc2650RadioProcess();
-    cc2650AlarmProcess();
+    cc2650RadioProcess(aInstance);
+    cc2650AlarmProcess(aInstance);
 }

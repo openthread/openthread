@@ -573,9 +573,10 @@ void cc2650RadioInit(void)
     sState = kStateDisabled;
 }
 
-ThreadError otPlatRadioEnable(void)
+ThreadError otPlatRadioEnable(otInstance *aInstance)
 {
     ThreadError error = kThreadError_Busy;
+    (void)aInstance;
 
     if(sState == kStateSleep)
     {
@@ -599,9 +600,16 @@ exit:
     return error;
 }
 
-ThreadError otPlatRadioDisable(void)
+bool otPlatRadioIsEnabled(otInstance *aInstance)
+{
+    (void)aInstance;
+    return (sState != kStateDisabled) ? true : false;
+}
+
+ThreadError otPlatRadioDisable(otInstance *aInstance)
 {
     ThreadError error = kThreadError_Busy;
+    (void)aInstance;
 
     if(sState == kStateDisabled)
     {
@@ -621,9 +629,10 @@ ThreadError otPlatRadioDisable(void)
     return error;
 }
 
-ThreadError otPlatRadioReceive(uint8_t aChannel)
+ThreadError otPlatRadioReceive(otInstance *aInstance, uint8_t aChannel)
 {
     ThreadError error = kThreadError_Busy;
+    (void)aInstance;
 
     if(sState == kStateSleep && !enabaling)
     {
@@ -669,9 +678,10 @@ exit:
     return error;
 }
 
-ThreadError otPlatRadioSleep(void)
+ThreadError otPlatRadioSleep(otInstance *aInstance)
 {
     ThreadError error = kThreadError_None;
+    (void)aInstance;
 
     if(sState == kStateSleep)
     {
@@ -693,12 +703,13 @@ ThreadError otPlatRadioSleep(void)
     return error;
 }
 
-RadioPacket *otPlatRadioGetTransmitBuffer(void)
+RadioPacket *otPlatRadioGetTransmitBuffer(otInstance *aInstance)
 {
+    (void)aInstance;
     return &sTransmitFrame;
 }
 
-ThreadError otPlatRadioTransmit(void)
+ThreadError otPlatRadioTransmit(otInstance *aInstance)
 {
     ThreadError error = kThreadError_Busy;
 
@@ -708,7 +719,7 @@ ThreadError otPlatRadioTransmit(void)
          * This is the easiest way to setup the frequency synthesizer.
          * And we are supposed to fall into the receive state afterwards.
          */
-        error = otPlatRadioReceive(sTransmitFrame.mChannel);
+        error = otPlatRadioReceive(aInstance, sTransmitFrame.mChannel);
         if(error == kThreadError_None)
         {
             sState = kStateTransmit;
@@ -727,25 +738,29 @@ exit:
     return error;
 }
 
-int8_t otPlatRadioGetRssi(void)
+int8_t otPlatRadioGetRssi(otInstance *aInstance)
 {
+    (void)aInstance;
     /* XXX: is this meant to be the largest or last observed RSSI? */
     return 0;
 }
 
-otRadioCaps otPlatRadioGetCaps(void)
+otRadioCaps otPlatRadioGetCaps(otInstance *aInstance)
 {
+    (void)aInstance;
     return kRadioCapsNone;
 }
 
-bool otPlatRadioGetPromiscuous(void)
+bool otPlatRadioGetPromiscuous(otInstance *aInstance)
 {
+    (void)aInstance;
     /* we are promiscuous if we are not filtering */
     return cmd_ieee_rx.frameFiltOpt.frameFiltEn == 0;
 }
 
-void otPlatRadioSetPromiscuous(bool aEnable)
+void otPlatRadioSetPromiscuous(otInstance *aInstance, bool aEnable)
 {
+    (void)aInstance;
     if(aEnable != (cmd_ieee_rx.frameFiltOpt.frameFiltEn == 0))
     {
         if(sState == kStateReceive)
@@ -765,9 +780,10 @@ exit:
     return;
 }
 
-ThreadError otPlatRadioSetPanId(uint16_t panid)
+ThreadError otPlatRadioSetPanId(otInstance *aInstance, uint16_t panid)
 {
     ThreadError error = kThreadError_None;
+    (void)aInstance;
     /* XXX: if the pan id is the broadcast pan id (0xFFFF) the auto ack will
      * not work. This is due to the design of the CM0 and follows IEEE 802.15.4
      */
@@ -786,10 +802,11 @@ exit:
     return error;
 }
 
-ThreadError otPlatRadioSetExtendedAddress(uint8_t *address)
+ThreadError otPlatRadioSetExtendedAddress(otInstance *aInstance, uint8_t *address)
 {
-    /* XXX: assuming little endian format */
     ThreadError error = kThreadError_None;
+    (void)aInstance;
+    /* XXX: assuming little endian format */
     if(sState == kStateReceive)
     {
         VerifyOrExit(rf_core_cmd_abort() == CMDSTA_Done, error=kThreadError_Failed);
@@ -805,9 +822,11 @@ exit:
     return error;
 }
 
-ThreadError otPlatRadioSetShortAddress(uint16_t address)
+ThreadError otPlatRadioSetShortAddress(otInstance *aInstance, uint16_t address)
 {
     ThreadError error = kThreadError_None;
+    (void)aInstance;
+
     if(sState == kStateReceive)
     {
         VerifyOrExit(rf_core_cmd_abort() == CMDSTA_Done, error=kThreadError_Failed);
@@ -873,7 +892,7 @@ static void readFrame(void)
     return;
 }
 
-int cc2650RadioProcess(void)
+int cc2650RadioProcess(otInstance *aInstance)
 {
     if((sState == kStateTransmit && !transmitting)
             && (((sTransmitPsdu[0] & IEEE802154_ACK_REQUEST) == 0)
@@ -884,12 +903,12 @@ int cc2650RadioProcess(void)
 #if OPENTHREAD_ENABLE_DIAG
         if (otPlatDiagModeGet())
         {
-            otPlatDiagRadioTransmitDone(false, sTransmitError);
+            otPlatDiagRadioTransmitDone(aInstance, false, sTransmitError);
         }
         else
 #endif /* OPENTHREAD_ENABLE_DIAG */
         {
-            otPlatRadioTransmitDone(false, sTransmitError);
+            otPlatRadioTransmitDone(aInstance, false, sTransmitError);
         }
     }
     else if(sState == kStateReceive || sState == kStateTransmit)
@@ -906,12 +925,12 @@ int cc2650RadioProcess(void)
 
             if (otPlatDiagModeGet())
             {
-                otPlatDiagRadioTransmitDone((sReceiveFrame.mPsdu[0] & IEEE802154_FRAME_PENDING) != 0, sTransmitError);
+                otPlatDiagRadioTransmitDone(aInstance, (sReceiveFrame.mPsdu[0] & IEEE802154_FRAME_PENDING) != 0, sTransmitError);
             }
             else
 #endif /* OPENTHREAD_ENABLE_DIAG */
             {
-                otPlatRadioTransmitDone((sReceiveFrame.mPsdu[0] & IEEE802154_FRAME_PENDING) != 0, sTransmitError);
+                otPlatRadioTransmitDone(aInstance, (sReceiveFrame.mPsdu[0] & IEEE802154_FRAME_PENDING) != 0, sTransmitError);
             }
         }
         else if (sState == kStateReceive && sReceiveFrame.mLength > 0)
@@ -920,12 +939,12 @@ int cc2650RadioProcess(void)
 
             if (otPlatDiagModeGet())
             {
-                otPlatDiagRadioReceiveDone(&sReceiveFrame, sReceiveError);
+                otPlatDiagRadioReceiveDone(aInstance, &sReceiveFrame, sReceiveError);
             }
             else
 #endif /* OPENTHREAD_ENABLE_DIAG */
             {
-                otPlatRadioReceiveDone(&sReceiveFrame, sReceiveError);
+                otPlatRadioReceiveDone(aInstance, &sReceiveFrame, sReceiveError);
             }
         }
         sReceiveFrame.mLength = 0;

@@ -317,6 +317,18 @@ public:
     Child *GetChildren(uint8_t *aNumChildren);
 
     /**
+     * This method sets the max children allowed value for this Thread interface.
+     *
+     * @param[in]  aMaxChildren  The max children allowed value.
+     *
+     * @retval  kThreadErrorNone           Successfully set the max.
+     * @retval  kThreadError_InvalidArgs   If @p aMaxChildren is not in the range [1, kMaxChildren].
+     * @retval  kThreadError_InvalidState  If MLE has already been started.
+     *
+     */
+    ThreadError SetMaxAllowedChildren(uint8_t aMaxChildren);
+
+    /**
      * This method returns a pointer to a Neighbor object.
      *
      * @param[in]  aAddress  The address of the Neighbor.
@@ -357,7 +369,7 @@ public:
     Neighbor *GetNeighbor(const Ip6::Address &aAddress);
 
     /**
-     * This method retains diagnotsic information for an attached child by Child ID or RLOC16.
+     * This method retains diagnostic information for an attached child by Child ID or RLOC16.
      *
      * @param[in]   aChildId    The Child ID or RLOC16 for an attached child.
      * @param[out]  aChildInfo  The child information.
@@ -366,7 +378,7 @@ public:
     ThreadError GetChildInfoById(uint16_t aChildId, otChildInfo &aChildInfo);
 
     /**
-     * This method retains diagnotsic information for an attached child by the internal table index.
+     * This method retains diagnostic information for an attached child by the internal table index.
      *
      * @param[in]   aChildIndex  The table index.
      * @param[out]  aChildInfo   The child information.
@@ -385,7 +397,7 @@ public:
     Router *GetRouters(uint8_t *aNumRouters);
 
     /**
-     * This method retains diagnotsic information for a given router.
+     * This method retains diagnostic information for a given router.
      *
      * @param[in]   aRouterId    The router ID or RLOC16 for a given router.
      * @param[out]  aRouterInfo  The router information.
@@ -404,9 +416,9 @@ public:
     /**
      * This method indicates whether or not the given Thread partition attributes are preferred.
      *
-     * @param[in]  aSingletonA   Whether or not the Thread Parititon A has a single router.
+     * @param[in]  aSingletonA   Whether or not the Thread Partition A has a single router.
      * @param[in]  aLeaderDataA  A reference to Thread Partition A's Leader Data.
-     * @param[in]  aSingletonB   Whether or not the Thread Parititon B has a single router.
+     * @param[in]  aSingletonB   Whether or not the Thread Partition B has a single router.
      * @param[in]  aLeaderDataB  A reference to Thread Partition B's Leader Data.
      *
      * @retval 1   If partition A is preferred.
@@ -528,6 +540,7 @@ private:
     uint8_t mRouterIdSequence;
     uint32_t mRouterIdSequenceLastUpdated;
     Router mRouters[kMaxRouterId];
+    uint8_t mMaxChildrenAllowed;
     Child mChildren[kMaxChildren];
 
     uint8_t mChallenge[8];

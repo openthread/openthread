@@ -393,9 +393,9 @@ spinel_datatype_vunpack_(const uint8_t *data_ptr, spinel_size_t data_len, const 
                 *arg_ptr = (const char *)data_ptr;
             }
 
-            ret += len;
+            ret += (spinel_size_t)len;
             data_ptr += len;
-            data_len -= len;
+            data_len -= (spinel_size_t)len;
             break;
         }
 
@@ -719,14 +719,14 @@ spinel_datatype_vpack_(uint8_t *data_ptr, spinel_size_t data_len_max, const char
                 string_arg_len = 1;
             }
 
-            ret += string_arg_len;
+            ret += (spinel_size_t)string_arg_len;
 
             if (data_len_max >= string_arg_len)
             {
                 memcpy(data_ptr, string_arg, string_arg_len);
 
                 data_ptr += string_arg_len;
-                data_len_max -= string_arg_len;
+                data_len_max -= (spinel_size_t)string_arg_len;
             }
             else
             {
@@ -858,6 +858,8 @@ spinel_datatype_vpack(uint8_t *data_ptr, spinel_size_t data_len_max, const char 
 
 // ----------------------------------------------------------------------------
 // MARK: -
+
+// **** LCOV_EXCL_START ****
 
 const char *
 spinel_prop_key_to_cstr(spinel_prop_key_t prop_key)
@@ -1110,6 +1112,14 @@ spinel_prop_key_to_cstr(spinel_prop_key_t prop_key)
         ret = "SPINEL_PROP_THREAD_ALLOW_LOCAL_NET_DATA_CHANGE";
         break;
 
+    case SPINEL_PROP_THREAD_RLOC16_DEBUG_PASSTHRU:
+        ret = "SPINEL_PROP_THREAD_RLOC16_DEBUG_PASSTHRU";
+        break;
+
+    case SPINEL_PROP_THREAD_ROUTER_ROLE_ENABLED:
+        ret = "SPINEL_PROP_THREAD_ROUTER_ROLE_ENABLED";
+        break;
+
     case SPINEL_PROP_MAC_WHITELIST:
         ret = "PROP_MAC_WHITELIST";
         break;
@@ -1133,6 +1143,11 @@ spinel_prop_key_to_cstr(spinel_prop_key_t prop_key)
     case SPINEL_PROP_THREAD_CONTEXT_REUSE_DELAY:
         ret = "PROP_THREAD_CONTEXT_REUSE_DELAY";
         break;
+
+    case SPINEL_PROP_NET_REQUIRE_JOIN_EXISTING:
+        ret = "PROP_NET_REQUIRE_JOIN_EXISTING";
+        break;
+
 
     case SPINEL_PROP_NEST_STREAM_MFG:
         ret = "SPINEL_PROP_NEST_STREAM_MFG";
@@ -1235,6 +1250,22 @@ const char *spinel_status_to_cstr(spinel_status_t status)
         ret = "STATUS_ITEM_NOT_FOUND";
         break;
 
+    case SPINEL_STATUS_JOIN_FAILURE:
+        ret = "STATUS_JOIN_FAILURE";
+        break;
+
+    case SPINEL_STATUS_JOIN_SECURITY:
+        ret = "STATUS_JOIN_SECURITY";
+        break;
+
+    case SPINEL_STATUS_JOIN_NO_PEERS:
+        ret = "STATUS_JOIN_NO_PEERS";
+        break;
+
+    case SPINEL_STATUS_JOIN_INCOMPATIBLE:
+        ret = "STATUS_JOIN_INCOMPATIBLE";
+        break;
+
     case SPINEL_STATUS_RESET_POWER_ON:
         ret = "STATUS_RESET_POWER_ON";
         break;
@@ -1278,6 +1309,7 @@ const char *spinel_status_to_cstr(spinel_status_t status)
     return ret;
 }
 
+// **** LCOV_EXCL_STOP ****
 
 /* -------------------------------------------------------------------------- */
 

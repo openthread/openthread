@@ -68,7 +68,15 @@ class Routes
 {
 public:
     /**
-     * This static method adds an IPv6 route.
+     * This constructor initializes the object.
+     *
+     * @param[in]  aIp6  A reference to the IPv6 network object.
+     *
+     */
+    Routes(Ip6 &aIp6);
+
+    /**
+     * This method adds an IPv6 route.
      *
      * @param[in]  aRoute  A reference to the IPv6 route.
      *
@@ -76,10 +84,10 @@ public:
      * @retval kThreadError_Busy  The route was already added.
      *
      */
-    static ThreadError Add(Route &aRoute);
+    ThreadError Add(Route &aRoute);
 
     /**
-     * This static method removes an IPv6 route.
+     * This method removes an IPv6 route.
      *
      * @param[in]  aRoute  A reference to the IPv6 route.
      *
@@ -87,10 +95,10 @@ public:
      * @retval kThreadError_InvalidArgs  The route was not added.
      *
      */
-    static ThreadError Remove(Route &aRoute);
+    ThreadError Remove(Route &aRoute);
 
     /**
-     * This static method performs source-destination route lookup.
+     * This method performs source-destination route lookup.
      *
      * @param[in]  aSource       The IPv6 source address.
      * @param[in]  aDestination  The IPv6 destination address.
@@ -98,7 +106,11 @@ public:
      * @returns The interface identifier for the best route or -1 if no route is available.
      *
      */
-    static int8_t Lookup(const Address &aSource, const Address &aDestination);
+    int8_t Lookup(const Address &aSource, const Address &aDestination);
+
+private:
+    Route *mRoutes;
+    Ip6 &mIp6;
 };
 
 /**

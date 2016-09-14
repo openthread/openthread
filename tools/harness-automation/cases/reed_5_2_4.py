@@ -35,7 +35,7 @@ from autothreadharness.harness_case import HarnessCase
 class REED_5_2_4(HarnessCase):
     suite = 16
     case = '5 2 4'
-    golden_devices_required = 17
+    golden_devices_required = 18
     def on_dialog(self, dialog, title):
         pass
 
