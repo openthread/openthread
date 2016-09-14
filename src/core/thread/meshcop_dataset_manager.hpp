@@ -53,7 +53,8 @@ namespace MeshCoP {
 class DatasetManager
 {
 public:
-    ThreadError ApplyLocalToNetwork(void);
+    void StartLeader(void);
+    void StopLeader(void);
 
     Dataset &GetLocal(void) { return mLocal; }
 
@@ -138,6 +139,8 @@ class PendingDataset: public DatasetManager
 public:
     PendingDataset(ThreadNetif &aThreadNetif);
 
+    void StartLeader(void);
+
     void Get(otOperationalDataset &aDataset);
 
     ThreadError Set(const Dataset &aDataset);
@@ -145,8 +148,6 @@ public:
     ThreadError Set(const otOperationalDataset &aDataset);
 
     ThreadError Set(const Timestamp &aTimestamp, const Message &aMessage, uint16_t aOffset, uint8_t aLength);
-
-    void ApplyLocalToNetwork(void);
 
     void UpdateDelayTimer(void);
 

@@ -61,8 +61,19 @@ DatasetManager::DatasetManager(ThreadNetif &aThreadNetif, const char *aUriSet, c
     mUriGet(aUriGet),
     mCoapServer(aThreadNetif.GetCoapServer())
 {
+}
+
+void DatasetManager::StartLeader(void)
+{
+    mNetwork = mLocal;
     mCoapServer.AddResource(mResourceSet);
     mCoapServer.AddResource(mResourceGet);
+}
+
+void DatasetManager::StopLeader(void)
+{
+    mCoapServer.RemoveResource(mResourceSet);
+    mCoapServer.RemoveResource(mResourceGet);
 }
 
 ThreadError DatasetManager::Set(const Dataset &aDataset, uint8_t &aFlags)
@@ -125,12 +136,6 @@ ThreadError DatasetManager::Set(const Timestamp &aTimestamp, const Message &aMes
 
 exit:
     return error;
-}
-
-ThreadError DatasetManager::ApplyLocalToNetwork(void)
-{
-    mNetwork = mLocal;
-    return kThreadError_None;
 }
 
 void DatasetManager::HandleTimer(void *aContext)
@@ -738,9 +743,9 @@ exit:
     return error;
 }
 
-void PendingDataset::ApplyLocalToNetwork(void)
+void PendingDataset::StartLeader(void)
 {
-    DatasetManager::ApplyLocalToNetwork();
+    DatasetManager::StartLeader();
     mNetworkTime = mLocalTime;
 }
 

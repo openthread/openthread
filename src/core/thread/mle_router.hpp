@@ -502,6 +502,7 @@ private:
 
     ThreadError SetStateRouter(uint16_t aRloc16);
     ThreadError SetStateLeader(uint16_t aRloc16);
+    void StopLeader(void);
     ThreadError UpdateChildAddresses(const AddressRegistrationTlv &aTlv, Child &aChild);
     void UpdateRoutes(const RouteTlv &aTlv, uint8_t aRouterId);
 

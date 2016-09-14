@@ -78,6 +78,28 @@ exit:
     return error;
 }
 
+void Server::RemoveResource(Resource &aResource)
+{
+    if (mResources == &aResource)
+    {
+        mResources = aResource.mNext;
+    }
+    else
+    {
+        for (Resource *cur = mResources; cur; cur = cur->mNext)
+        {
+            if (cur->mNext == &aResource)
+            {
+                cur->mNext = aResource.mNext;
+                ExitNow();
+            }
+        }
+    }
+
+exit:
+    aResource.mNext = NULL;
+}
+
 void Server::HandleUdpReceive(void *aContext, otMessage aMessage, const otMessageInfo *aMessageInfo)
 {
     Server *obj = reinterpret_cast<Server *>(aContext);
