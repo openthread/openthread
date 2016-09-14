@@ -60,7 +60,6 @@ DEBUG_LOG_HDLC = 0
 DEBUG_LOG_PKT = DEBUG_ENABLE
 DEBUG_LOG_PROP = DEBUG_ENABLE
 DEBUG_LOG_TUN = 0
-DEBUG_TERM = 0
 DEBUG_CMD_RESPONSE = 0
 
 TIMEOUT_PROP = 2
@@ -78,8 +77,6 @@ import sys
 import time
 import threading
 import traceback
-
-import blessed
 
 import optparse
 from optparse import OptionParser, Option, OptionValueError
@@ -154,31 +151,9 @@ logging.config.dictConfig({
 logger = logging.getLogger(__name__)
 
 
-# Terminal macros
-
-class Color:
-    END          = '\033[0m'
-    BOLD         = '\033[1m'
-    DIM          = '\033[2m'
-    UNDERLINE    = '\033[4m'
-    BLINK        = '\033[5m'
-    REVERSE      = '\033[7m'
-
-    CYAN         = '\033[96m'
-    PURPLE       = '\033[95m'
-    BLUE         = '\033[94m'
-    YELLOW       = '\033[93m'
-    GREEN        = '\033[92m'
-    RED          = '\033[91m'
-
-    BLACK        = "\033[30m"
-    DARKRED      = "\033[31m"
-    DARKGREEN    = "\033[32m"
-    DARKYELLOW   = "\033[33m"
-    DARKBLUE     = "\033[34m"
-    DARKMAGENTA  = "\033[35m"
-    DARKCYAN     = "\033[36m"
-    WHITE        = "\033[37m"
+#=========================================
+#    SPINEL Constants
+#=========================================
 
 SPINEL_RSSI_OVERRIDE            = 127
 
@@ -527,21 +502,6 @@ SPINEL_LAST_STATUS_MAP = {
     0x400F: "kThreadError_NoTasklets",
 
 }
-
-#=========================================
-
-
-class DiagsTerminal(blessed.Terminal):
-    def print_title(self, strings=[]):
-        clr = term.green_reverse
-        title = term.white_reverse("  spinel-cli  ")
-        with term.location(x=0, y=0):
-            print (clr + term.center(title+clr))
-            for string in strings:
-                print (term.ljust(string))
-            print (term.ljust(" ") + term.normal)
-
-term = DiagsTerminal()
 
 #=========================================
     
@@ -1293,11 +1253,6 @@ class WpanApi(SpinelCodec):
 
             self.parse_rx(self.rx_pkt)
 
-            # Output RX status window
-            if DEBUG_TERM:
-                msg = str(map(hexify_int,self.rx_pkt))
-                term.print_title(["RX: "+msg])
-
     class PropertyItem(object):
         """ Queue item for NCP response to property commands. """
         def __init__(self, prop, value, tid):
@@ -1460,7 +1415,6 @@ class WpanDiagsCmd(Cmd, SpinelCodec):
         'clear',
         'history',
         'debug',
-        'debug-term',
 
         'v',
         'h',
@@ -1737,20 +1691,6 @@ class WpanDiagsCmd(Cmd, SpinelCodec):
                 DEBUG_LOG_HDLC = 0
 
         print "DEBUG_ENABLE = "+str(DEBUG_ENABLE)
-
-    def do_debugterm(self, line):
-        """
-        Enables a debug terminal display in the title bar for viewing 
-        raw NCP packets.
-        Usage: debug_term <1=enable | 0=disable>
-        """
-        global DEBUG_TERM
-        if line: line = int(line)
-        if line: 
-            DEBUG_TERM = 1
-        else:
-            DEBUG_TERM = 0
-
 
     def do_channel(self, line):
         """

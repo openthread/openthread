@@ -49,7 +49,6 @@ cd /tmp || die
     pip install scapy || die
     pip install pyserial || die
     pip install ipaddress || die
-    pip install blessed || die
 
     [ $BUILD_TARGET != pretty-check ] || {
         wget http://jaist.dl.sourceforge.net/project/astyle/astyle/astyle%202.05.1/astyle_2.05.1_linux.tar.gz || die
