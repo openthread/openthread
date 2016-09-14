@@ -121,6 +121,30 @@ void Dataset::Get(otOperationalDataset &aDataset)
             break;
         }
 
+        case Tlv::kChannelMask:
+        {
+            uint8_t length = cur->GetLength();
+            const uint8_t *entry = reinterpret_cast<const uint8_t *>(cur) + sizeof(Tlv);
+            const uint8_t *entryEnd =  entry + length;
+
+            while (entry < entryEnd)
+            {
+                if (reinterpret_cast<const ChannelMaskEntry *>(entry)->GetChannelPage() == 0)
+                {
+                    uint8_t i = sizeof(ChannelMaskEntry);
+                    aDataset.mChannelMaskPage0 = static_cast<uint32_t>(entry[i] | (entry[i + 1] << 8) |
+                                                                       (entry[i + 2] << 16) | (entry[i + 3] << 24));
+                    aDataset.mIsChannelMaskPage0Set = true;
+                    break;
+                }
+
+                entry += (reinterpret_cast<const ChannelMaskEntry *>(entry)->GetMaskLength() +
+                          sizeof(ChannelMaskEntry));
+            }
+
+            break;
+        }
+
         case Tlv::kDelayTimer:
         {
             const DelayTimerTlv *tlv = static_cast<const DelayTimerTlv *>(cur);
@@ -237,6 +261,30 @@ ThreadError Dataset::Set(const otOperationalDataset &aDataset, bool aActive)
         tlv.SetChannelPage(0);
         tlv.SetChannel(aDataset.mChannel);
         Set(tlv);
+    }
+
+    if (aDataset.mIsChannelMaskPage0Set)
+    {
+        OT_TOOL_PACKED_BEGIN
+        struct
+        {
+            MeshCoP::ChannelMaskTlv tlv;
+            MeshCoP::ChannelMaskEntry entry;
+            uint8_t mask[sizeof(aDataset.mChannelMaskPage0)];
+        } OT_TOOL_PACKED_END channelMask;
+
+        channelMask.tlv.Init();
+        channelMask.tlv.SetLength(sizeof(MeshCoP::ChannelMaskEntry) + sizeof(aDataset.mChannelMaskPage0));
+
+        channelMask.entry.SetChannelPage(0);
+        channelMask.entry.SetMaskLength(sizeof(aDataset.mChannelMaskPage0));
+
+        for (uint8_t index = 0; index < sizeof(aDataset.mChannelMaskPage0); index++)
+        {
+            channelMask.mask[index] = (aDataset.mChannelMaskPage0 >> (8 * index)) & 0xff;
+        }
+
+        Set(channelMask.tlv);
     }
 
     if (aDataset.mIsDelaySet)
