@@ -1326,6 +1326,8 @@ class WpanApi(SpinelCodec):
         pay = self.encode_i(prop_id)
         if format != None:
             pay += pack(format, value)
+        else:
+            pay += value
         self.transact(cmd, pay)
 
         result = self.queue_wait_for_prop(prop_id)
@@ -1472,6 +1474,7 @@ class WpanDiagsCmd(Cmd, SpinelCodec):
         'ncp-ll64', 
         'ncp-mac16',
         'ncp-mac64',
+        'ncp-mlprefix',
 
         'ncp-tun', 
 
@@ -1530,15 +1533,19 @@ class WpanDiagsCmd(Cmd, SpinelCodec):
     def prop_get_or_set_value(self, prop_id, line, format='B'):
         """ Helper to get or set a property value based on line arguments. """
         if line:
-            value = self.prop_set_value(prop_id, self.prep_line(line), format)
+            line = self.prep_line(line, format)
+            value = self.prop_set_value(prop_id, line, format)
         else:    
             value = self.prop_get_value(prop_id)
         return value
 
-    def prep_line(self, line):
+    def prep_line(self, line, format):
         """ Convert a line argument to proper type """
         if line != None: 
-            line = int(line)
+            if format == None:
+                pass
+            else:
+                line = int(line)
         return line
 
     def prop_get(self, prop_id, format='B'):
@@ -1558,7 +1565,7 @@ class WpanDiagsCmd(Cmd, SpinelCodec):
 
     def prop_set(self, prop_id, line, format='B'):        
         """ Helper to set a propery and output Done or Error. """
-        arg = self.prep_line(line)
+        arg = self.prep_line(line, format)
         value = self.prop_set_value(prop_id, arg, format)
 
         if (value == None):
@@ -2198,7 +2205,9 @@ class WpanDiagsCmd(Cmd, SpinelCodec):
             > networkname OpenThread
             Done
         """
-        self.handle_property(line, SPINEL_PROP_NET_NETWORK_NAME, 'U')
+        format = str(len(line))+'s'     # Convert spinel 'U' to pythonic pack format
+        line = pack(format, line)
+        self.handle_property(line, SPINEL_PROP_NET_NETWORK_NAME, None)
 
     def do_panid(self, line):
         """
@@ -2679,6 +2688,10 @@ class WpanDiagsCmd(Cmd, SpinelCodec):
     def do_ncpml64(self, line):
         """ Display the mesh local IPv6 address. """
         self.handle_property(line, SPINEL_PROP_IPV6_ML_ADDR, '6')
+
+    def do_ncpmlprefix(self, line):
+        """ Display the mesh local prefix. """
+        self.handle_property(line, SPINEL_PROP_IPV6_ML_PREFIX, 'D')
 
     def do_ncpmac16(self, line):
         self.handle_property(line, SPINEL_PROP_MAC_15_4_SADDR, 'H')

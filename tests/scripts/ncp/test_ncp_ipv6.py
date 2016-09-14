@@ -35,34 +35,13 @@ import unittest
 
 import node
 
-class test_ncp_phy(unittest.TestCase):
+class test_ncp_ipv6(unittest.TestCase):
     def setUp(self):
         self.node = node.Node(1)
 
-    def test_phy_freq(self):
-        self.node.send_command('phy-freq')
+    def test_ipv6_ml_prefix(self):
+        self.node.send_command('ncp-mlprefix')
         self.node.pexpect.expect('Done')
-
-    def test_phy_rssi(self):
-        self.node.send_command('phy-rssi')
-        self.node.pexpect.expect('Done')
-
-    def test_phy_channel(self):
-        self.node.send_command('channel')
-        self.node.pexpect.expect('Done')
-        self.node.send_command('channel 12')
-        self.node.pexpect.expect('Done')
-        self.node.send_command('channel')
-        self.node.pexpect.expect('12')
-        self.node.pexpect.expect('Done')
-
-    #def test_phy_cca_threshold(self):
-    #    self.node.send_command('phy-cca-threshold')
-    #    self.node.pexpect.expect('Done')
-    
-    #def test_phy_tx_power(self):
-    #    self.node.send_command('phy-tx-power')
-    #    self.node.pexpect.expect('Done')
 
 if __name__ == '__main__':
     unittest.main()

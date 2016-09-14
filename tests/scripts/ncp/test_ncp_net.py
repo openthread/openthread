@@ -44,6 +44,11 @@ class test_ncp_net(unittest.TestCase):
     def test_net_name(self):
         self.node.send_command('networkname')
         self.node.pexpect.expect('Done')
+        self.node.send_command('networkname test_ncp_net')
+        self.node.pexpect.expect('Done')
+        self.node.send_command('networkname')
+        self.node.pexpect.expect('test_ncp_net')
+        self.node.pexpect.expect('Done')
 
     def test_net_xpanid(self):
         self.node.send_command('extpanid')
