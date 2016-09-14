@@ -17,9 +17,9 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "third_party", "third_party"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "config files", "config files", "{53F4EEF6-B96D-4887-B9CF-CD21E8BECD15}"
 	ProjectSection(SolutionItems) = preProject
+		.appveyor.yml = .appveyor.yml
 		.codecov.yml = .codecov.yml
 		.travis.yml = .travis.yml
-		appveyor.yml = appveyor.yml
 	EndProjectSection
 EndProject
 Global
