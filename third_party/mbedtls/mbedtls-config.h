@@ -32,6 +32,11 @@
 
 #include <platform/logging.h>
 
+#if defined(_WIN32)
+#include <stdarg.h>
+#include <stdio.h>
+#endif
+
 #if defined(_MSC_VER) && !defined(_CRT_SECURE_NO_DEPRECATE)
 #define _CRT_SECURE_NO_DEPRECATE 1
 #endif

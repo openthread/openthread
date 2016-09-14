@@ -453,7 +453,7 @@ static void ssl_write_max_fragment_length_ext( mbedtls_ssl_context *ssl,
     *p++ = 0x00;
     *p++ = 1;
 
-    *p++ = (unsigned char)ssl->conf->mfl_code;
+    *p++ = ssl->conf->mfl_code;
 
     *olen = 5;
 }

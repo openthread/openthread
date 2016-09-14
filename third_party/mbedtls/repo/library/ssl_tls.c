@@ -1363,7 +1363,7 @@ static int ssl_encrypt_buf( mbedtls_ssl_context *ssl )
                                MBEDTLS_CIPHERSUITE_SHORT_TAG ? 8 : 16;
 
         memcpy( add_data, ssl->out_ctr, 8 );
-        add_data[8]  = (unsigned char)ssl->out_msgtype;
+        add_data[8]  = ssl->out_msgtype;
         mbedtls_ssl_write_version( ssl->major_ver, ssl->minor_ver,
                            ssl->conf->transport, add_data + 9 );
         add_data[11] = ( ssl->out_msglen >> 8 ) & 0xFF;
@@ -1658,7 +1658,7 @@ static int ssl_decrypt_buf( mbedtls_ssl_context *ssl )
         ssl->in_msglen = dec_msglen;
 
         memcpy( add_data, ssl->in_ctr, 8 );
-        add_data[8]  = (unsigned char)ssl->in_msgtype;
+        add_data[8]  = ssl->in_msgtype;
         mbedtls_ssl_write_version( ssl->major_ver, ssl->minor_ver,
                            ssl->conf->transport, add_data + 9 );
         add_data[11] = ( ssl->in_msglen >> 8 ) & 0xFF;
@@ -2505,7 +2505,7 @@ static int ssl_flight_append( mbedtls_ssl_context *ssl )
     /* Copy current handshake message with headers */
     memcpy( msg->p, ssl->out_msg, ssl->out_msglen );
     msg->len = ssl->out_msglen;
-    msg->type = (unsigned char)ssl->out_msgtype;
+    msg->type = ssl->out_msgtype;
     msg->next = NULL;
 
     /* Append to the current flight */
@@ -6003,14 +6003,14 @@ const char *mbedtls_ssl_get_alpn_protocol( const mbedtls_ssl_context *ssl )
 
 void mbedtls_ssl_conf_max_version( mbedtls_ssl_config *conf, int major, int minor )
 {
-    conf->max_major_ver = (unsigned char)major;
-    conf->max_minor_ver = (unsigned char)minor;
+    conf->max_major_ver = major;
+    conf->max_minor_ver = minor;
 }
 
 void mbedtls_ssl_conf_min_version( mbedtls_ssl_config *conf, int major, int minor )
 {
-    conf->min_major_ver = (unsigned char)major;
-    conf->min_minor_ver = (unsigned char)minor;
+    conf->min_major_ver = major;
+    conf->min_minor_ver = minor;
 }
 
 #if defined(MBEDTLS_SSL_FALLBACK_SCSV) && defined(MBEDTLS_SSL_CLI_C)
