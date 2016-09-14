@@ -19,6 +19,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\third_party\mbedtls\hardware_entropy.c" />
     <ClCompile Include="..\..\third_party\mbedtls\repo\library\aes.c" />
     <ClCompile Include="..\..\third_party\mbedtls\repo\library\bignum.c" />
     <ClCompile Include="..\..\third_party\mbedtls\repo\library\ccm.c" />
