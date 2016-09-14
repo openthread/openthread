@@ -50,7 +50,6 @@
 #include <thread/thread_netif.hpp>
 #include <openthreadinstance.h>
 
-
 namespace Thread {
 namespace Mac {
 

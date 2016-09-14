@@ -75,7 +75,7 @@ ThreadError Joiner::Start(const char *aPSKd)
     Crypto::Sha256 sha256;
 
     // use extended address based on factory-assigned IEEE EUI-64
-    otPlatRadioGetIeeeEui64(NULL, buf);
+    otPlatRadioGetIeeeEui64(mNetif.GetInstance(), buf);
     sha256.Start();
     sha256.Update(buf, OT_EXT_ADDRESS_SIZE);
     sha256.Finish(buf);
