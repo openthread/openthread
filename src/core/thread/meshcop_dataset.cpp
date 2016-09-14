@@ -139,7 +139,7 @@ void Dataset::Get(otOperationalDataset &aDataset)
                 }
 
                 entry += (reinterpret_cast<const ChannelMaskEntry *>(entry)->GetMaskLength() +
-                                                                       sizeof(ChannelMaskEntry));
+                          sizeof(ChannelMaskEntry));
             }
 
             break;
