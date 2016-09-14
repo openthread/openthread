@@ -503,6 +503,15 @@ const uint8_t *otGetExtendedPanId(otInstance *aInstance);
 void otSetExtendedPanId(otInstance *aInstance, const uint8_t *aExtendedPanId);
 
 /**
+ * Get the factory-assigned IEEE EUI-64.
+ *
+ * @param[in]   aInstance  A pointer to the OpenThread instance.
+ * @param[out]  aEui64     A pointer to where the factory-assigned IEEE EUI-64 is placed.
+ *
+ */
+void otGetFactoryAssignedIeeeEui64(otInstance *aInstance, otExtAddress *aEui64);
+
+/**
  * This function returns a pointer to the Leader's RLOC.
  *
  * @param[in]   aInstance    A pointer to an OpenThread instance.
