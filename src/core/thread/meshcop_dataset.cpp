@@ -129,16 +129,13 @@ void Dataset::Get(otOperationalDataset &aDataset)
 
             while (entry < entryEnd)
             {
-                switch (reinterpret_cast<const ChannelMaskEntry *>(entry)->GetChannelPage())
-                {
-                case 0:
+                if (reinterpret_cast<const ChannelMaskEntry *>(entry)->GetChannelPage() == 0)
                 {
                     uint8_t i = sizeof(ChannelMaskEntry);
                     aDataset.mChannelMaskPage0 = static_cast<uint32_t>(entry[i] | (entry[i + 1] << 8) | (entry[i + 2] << 16) |
                                                                        (entry[i + 3] << 24));
                     aDataset.mIsChannelMaskPage0Set = true;
                     break;
-                }
                 }
 
                 entry += (reinterpret_cast<const ChannelMaskEntry *>(entry)->GetMaskLength() + sizeof(ChannelMaskEntry));

@@ -216,7 +216,7 @@ enum
 };
 
 /**
-  * This structure represents Channel Mask Page 0.
+  * This type represents Channel Mask Page 0.
   *
   */
 typedef uint32_t otChannelMaskPage0;
