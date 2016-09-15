@@ -109,6 +109,8 @@ void Dataset::Get(otOperationalDataset &aDataset)
             const ActiveTimestampTlv *tlv = static_cast<const ActiveTimestampTlv *>(cur);
             aDataset.mActiveTimestamp = tlv->GetSeconds();
             aDataset.mIsActiveTimestampSet = true;
+
+            GetTimestamp();
             break;
         }
 
@@ -361,13 +363,13 @@ const Timestamp *Dataset::GetTimestamp(void) const
     {
         const ActiveTimestampTlv *tlv = static_cast<const ActiveTimestampTlv *>(Get(mType));
         VerifyOrExit(tlv != NULL, ;);
-        timestamp = reinterpret_cast<const Timestamp *>(tlv->GetValue());
+        timestamp = static_cast<const Timestamp *>(tlv);
     }
     else
     {
         const PendingTimestampTlv *tlv = static_cast<const PendingTimestampTlv *>(Get(mType));
         VerifyOrExit(tlv != NULL, ;);
-        timestamp = reinterpret_cast<const Timestamp *>(tlv->GetValue());
+        timestamp = static_cast<const Timestamp *>(tlv);
     }
 
 exit:
