@@ -896,12 +896,12 @@ ThreadError Mle::AppendActiveTimestamp(Message &aMessage)
 {
     ThreadError error;
     ActiveTimestampTlv timestampTlv;
-    const MeshCoP::Timestamp &timestamp(mNetif.GetActiveDataset().GetNetwork().GetTimestamp());
+    const MeshCoP::Timestamp *timestamp(mNetif.GetActiveDataset().GetNetwork().GetTimestamp());
 
-    VerifyOrExit(timestamp.GetSeconds() != 0, error = kThreadError_None);
+    VerifyOrExit(timestamp && timestamp->GetSeconds() != 0, error = kThreadError_None);
 
     timestampTlv.Init();
-    *static_cast<MeshCoP::Timestamp *>(&timestampTlv) = timestamp;
+    *static_cast<MeshCoP::Timestamp *>(&timestampTlv) = *timestamp;
     error = aMessage.Append(&timestampTlv, sizeof(timestampTlv));
 
 exit:
@@ -912,12 +912,12 @@ ThreadError Mle::AppendPendingTimestamp(Message &aMessage)
 {
     ThreadError error;
     PendingTimestampTlv timestampTlv;
-    const MeshCoP::Timestamp &timestamp(mNetif.GetPendingDataset().GetNetwork().GetTimestamp());
+    const MeshCoP::Timestamp *timestamp(mNetif.GetPendingDataset().GetNetwork().GetTimestamp());
 
-    VerifyOrExit(timestamp.GetSeconds() != 0, error = kThreadError_None);
+    VerifyOrExit(timestamp && timestamp->GetSeconds() != 0, error = kThreadError_None);
 
     timestampTlv.Init();
-    *static_cast<MeshCoP::Timestamp *>(&timestampTlv) = timestamp;
+    *static_cast<MeshCoP::Timestamp *>(&timestampTlv) = *timestamp;
     error = aMessage.Append(&timestampTlv, sizeof(timestampTlv));
 
 exit:

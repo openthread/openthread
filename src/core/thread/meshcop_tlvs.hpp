@@ -135,6 +135,14 @@ public:
     uint8_t *GetValue() { return reinterpret_cast<uint8_t *>(this) + sizeof(Tlv); }
 
     /**
+     * This method returns a pointer to the Value.
+     *
+     * @returns A pointer to the value.
+     *
+     */
+    const uint8_t *GetValue() const { return reinterpret_cast<const uint8_t *>(this) + sizeof(Tlv); }
+
+    /**
      * This method returns a pointer to the next TLV.
      *
      * @returns A pointer to the next TLV.

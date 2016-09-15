@@ -49,7 +49,10 @@
 namespace Thread {
 namespace MeshCoP {
 
-DatasetManager::DatasetManager(ThreadNetif &aThreadNetif, const char *aUriSet, const char *aUriGet):
+DatasetManager::DatasetManager(ThreadNetif &aThreadNetif, const Tlv::Type aType, const char *aUriSet,
+                               const char *aUriGet):
+    mLocal(aType),
+    mNetwork(aType),
     mMle(aThreadNetif.GetMle()),
     mNetif(aThreadNetif),
     mNetworkDataLeader(aThreadNetif.GetNetworkDataLeader()),
@@ -61,8 +64,19 @@ DatasetManager::DatasetManager(ThreadNetif &aThreadNetif, const char *aUriSet, c
     mUriGet(aUriGet),
     mCoapServer(aThreadNetif.GetCoapServer())
 {
+}
+
+void DatasetManager::StartLeader(void)
+{
+    mNetwork = mLocal;
     mCoapServer.AddResource(mResourceSet);
     mCoapServer.AddResource(mResourceGet);
+}
+
+void DatasetManager::StopLeader(void)
+{
+    mCoapServer.RemoveResource(mResourceSet);
+    mCoapServer.RemoveResource(mResourceGet);
 }
 
 ThreadError DatasetManager::Set(const Dataset &aDataset, uint8_t &aFlags)
@@ -71,7 +85,8 @@ ThreadError DatasetManager::Set(const Dataset &aDataset, uint8_t &aFlags)
 
     aFlags = 0;
 
-    VerifyOrExit(mNetwork.GetTimestamp().Compare(aDataset.GetTimestamp()) > 0, error = kThreadError_InvalidArgs);
+    VerifyOrExit((mNetwork.GetTimestamp() == NULL) || (aDataset.GetTimestamp() &&
+                                                       mNetwork.GetTimestamp()->Compare(*aDataset.GetTimestamp()) > 0), error = kThreadError_InvalidArgs);
 
     mLocal = aDataset;
     aFlags |= kFlagLocalUpdated;
@@ -102,6 +117,7 @@ ThreadError DatasetManager::Set(const Timestamp &aTimestamp, const Message &aMes
                                 uint16_t aOffset, uint8_t aLength, uint8_t &aFlags)
 {
     ThreadError error = kThreadError_None;
+    const Timestamp *timestamp;
     int compare;
 
     aFlags = 0;
@@ -110,7 +126,8 @@ ThreadError DatasetManager::Set(const Timestamp &aTimestamp, const Message &aMes
     mNetwork.SetTimestamp(aTimestamp);
     aFlags |= kFlagNetworkUpdated;
 
-    compare = mLocal.GetTimestamp().Compare(aTimestamp);
+    timestamp = mLocal.GetTimestamp();
+    compare = (timestamp == NULL) ? 1 : timestamp->Compare(aTimestamp);
 
     if (compare > 0)
     {
@@ -127,12 +144,6 @@ exit:
     return error;
 }
 
-ThreadError DatasetManager::ApplyLocalToNetwork(void)
-{
-    mNetwork = mLocal;
-    return kThreadError_None;
-}
-
 void DatasetManager::HandleTimer(void *aContext)
 {
     DatasetManager *obj = static_cast<DatasetManager *>(aContext);
@@ -141,7 +152,8 @@ void DatasetManager::HandleTimer(void *aContext)
 
 void DatasetManager::HandleTimer(void)
 {
-    VerifyOrExit(mMle.IsAttached() && mNetwork.GetTimestamp().Compare(mLocal.GetTimestamp()) > 0, ;);
+    VerifyOrExit(mMle.IsAttached() && ((mNetwork.GetTimestamp() == NULL) ||
+                                       (mLocal.GetTimestamp() && mNetwork.GetTimestamp()->Compare(*mLocal.GetTimestamp()) > 0)), ;);
     VerifyOrExit(mLocal.Get(Tlv::kDelayTimer) != NULL, ;);
 
     Register();
@@ -158,7 +170,6 @@ ThreadError DatasetManager::Register(void)
     Message *message;
     Ip6::Address leader;
     Ip6::MessageInfo messageInfo;
-    ActiveTimestampTlv timestamp;
 
     mSocket.Open(&DatasetManager::HandleUdpReceive, this);
 
@@ -179,10 +190,6 @@ ThreadError DatasetManager::Register(void)
 
     VerifyOrExit((message = mSocket.NewMessage(0)) != NULL, error = kThreadError_NoBufs);
     SuccessOrExit(error = message->Append(header.GetBytes(), header.GetLength()));
-
-    timestamp.Init();
-    *static_cast<Timestamp *>(&timestamp) = mLocal.GetTimestamp();
-    SuccessOrExit(error = message->Append(&timestamp, sizeof(timestamp)));
     SuccessOrExit(error = message->Append(mLocal.GetBytes(), mLocal.GetSize()));
 
     mMle.GetLeaderAddress(leader);
@@ -262,7 +269,8 @@ void DatasetManager::HandleSet(Coap::Header &aHeader, Message &aMessage, const I
     }
 
     // verify the request includes a timestamp that is ahead of the locally stored value
-    VerifyOrExit(offset < aMessage.GetLength() && mLocal.GetTimestamp().Compare(timestamp) > 0, state = StateTlv::kReject);
+    VerifyOrExit(offset < aMessage.GetLength() && (mLocal.GetTimestamp() == NULL ||
+                                                   mLocal.GetTimestamp()->Compare(timestamp) > 0), state = StateTlv::kReject);
 
     mLocal.Set(aMessage, aMessage.GetOffset(), static_cast<uint8_t>(aMessage.GetLength() - aMessage.GetOffset()));
     mNetwork = mLocal;
@@ -568,7 +576,7 @@ exit:
 }
 
 ActiveDataset::ActiveDataset(ThreadNetif &aThreadNetif):
-    DatasetManager(aThreadNetif, OPENTHREAD_URI_ACTIVE_SET, OPENTHREAD_URI_ACTIVE_GET)
+    DatasetManager(aThreadNetif, Tlv::kActiveTimestamp, OPENTHREAD_URI_ACTIVE_SET, OPENTHREAD_URI_ACTIVE_GET)
 {
 }
 
@@ -576,8 +584,6 @@ void ActiveDataset::Get(otOperationalDataset &aDataset)
 {
     memset(&aDataset, 0, sizeof(aDataset));
     mLocal.Get(aDataset);
-    aDataset.mActiveTimestamp = mLocal.GetTimestamp().GetSeconds();
-    aDataset.mIsActiveTimestampSet = true;
 }
 
 ThreadError ActiveDataset::Set(const Dataset &aDataset)
@@ -595,9 +601,9 @@ exit:
 ThreadError ActiveDataset::Set(const otOperationalDataset &aDataset)
 {
     ThreadError error = kThreadError_None;
-    Dataset dataset;
+    Dataset dataset(Tlv::kActiveTimestamp);
 
-    SuccessOrExit(error = dataset.Set(aDataset, true));
+    SuccessOrExit(error = dataset.Set(aDataset));
     SuccessOrExit(error = Set(dataset));
 
 exit:
@@ -688,7 +694,7 @@ ThreadError ActiveDataset::ApplyConfiguration(void)
 }
 
 PendingDataset::PendingDataset(ThreadNetif &aThreadNetif):
-    DatasetManager(aThreadNetif, OPENTHREAD_URI_PENDING_SET, OPENTHREAD_URI_PENDING_GET),
+    DatasetManager(aThreadNetif, Tlv::kPendingTimestamp, OPENTHREAD_URI_PENDING_SET, OPENTHREAD_URI_PENDING_GET),
     mTimer(aThreadNetif.GetIp6().mTimerScheduler, HandleTimer, this)
 {
 }
@@ -697,8 +703,6 @@ void PendingDataset::Get(otOperationalDataset &aDataset)
 {
     memset(&aDataset, 0, sizeof(aDataset));
     mLocal.Get(aDataset);
-    aDataset.mPendingTimestamp = mLocal.GetTimestamp().GetSeconds();
-    aDataset.mIsPendingTimestampSet = true;
 }
 
 ThreadError PendingDataset::Set(const Dataset &aDataset)
@@ -716,9 +720,9 @@ exit:
 ThreadError PendingDataset::Set(const otOperationalDataset &aDataset)
 {
     ThreadError error = kThreadError_None;
-    Dataset dataset;
+    Dataset dataset(Tlv::kPendingTimestamp);
 
-    SuccessOrExit(error = dataset.Set(aDataset, false));
+    SuccessOrExit(error = dataset.Set(aDataset));
     SuccessOrExit(error = Set(dataset));
 
 exit:
@@ -738,9 +742,9 @@ exit:
     return error;
 }
 
-void PendingDataset::ApplyLocalToNetwork(void)
+void PendingDataset::StartLeader(void)
 {
-    DatasetManager::ApplyLocalToNetwork();
+    DatasetManager::StartLeader();
     mNetworkTime = mLocalTime;
 }
 
@@ -766,7 +770,8 @@ void PendingDataset::ResetDelayTimer(uint8_t aFlags)
         mNetworkTime = Timer::GetNow();
 
         // if partition is up to date and delay timer already expired
-        if ((mNetwork.GetTimestamp().Compare(mLocal.GetTimestamp()) == 0) &&
+        if ((mNetwork.GetTimestamp() && mLocal.GetTimestamp() &&
+             (mNetwork.GetTimestamp()->Compare(*mLocal.GetTimestamp())) == 0) &&
             (delayTimer = static_cast<DelayTimerTlv *>(mLocal.Get(Tlv::kDelayTimer))) != NULL &&
             (delayTimer->GetDelayTimer() == 0))
         {
@@ -828,7 +833,8 @@ void PendingDataset::HandleTimer(void)
     // update only if one of the following is true
     // 1) not attached
     // 2) partition's pending dataset is up to date
-    VerifyOrExit(!mMle.IsAttached() || mNetwork.GetTimestamp().Compare(mLocal.GetTimestamp()) == 0, ;);
+    VerifyOrExit((!mMle.IsAttached() || (mNetwork.GetTimestamp() &&
+                                         (mNetwork.GetTimestamp()->Compare(*mLocal.GetTimestamp()))) == 0), ;);
 
     mLocal.Remove(Tlv::kDelayTimer);
 

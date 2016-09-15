@@ -41,15 +41,14 @@
 namespace Thread {
 namespace MeshCoP {
 
-Dataset::Dataset(void) :
+Dataset::Dataset(const Tlv::Type aType) :
+    mType(aType),
     mLength(0)
 {
-    mTimestamp.Init();
 }
 
 void Dataset::Clear(void)
 {
-    mTimestamp.Init();
     mLength = 0;
 }
 
@@ -110,6 +109,8 @@ void Dataset::Get(otOperationalDataset &aDataset)
             const ActiveTimestampTlv *tlv = static_cast<const ActiveTimestampTlv *>(cur);
             aDataset.mActiveTimestamp = tlv->GetSeconds();
             aDataset.mIsActiveTimestampSet = true;
+
+            GetTimestamp();
             break;
         }
 
@@ -228,30 +229,36 @@ void Dataset::Get(otOperationalDataset &aDataset)
     }
 }
 
-ThreadError Dataset::Set(const otOperationalDataset &aDataset, bool aActive)
+ThreadError Dataset::Set(const otOperationalDataset &aDataset)
 {
     ThreadError error = kThreadError_None;
+    MeshCoP::ActiveTimestampTlv activeTimestampTlv;
 
     VerifyOrExit(aDataset.mIsActiveTimestampSet, error = kThreadError_InvalidArgs);
 
-    if (aActive)
+    activeTimestampTlv.Init();
+    activeTimestampTlv.SetSeconds(aDataset.mActiveTimestamp);
+    activeTimestampTlv.SetTicks(0);
+    Set(activeTimestampTlv);
+
+    if (mType == Tlv::kPendingTimestamp)
     {
-        mTimestamp.SetSeconds(aDataset.mActiveTimestamp);
-        mTimestamp.SetTicks(0);
-        mTimestamp.SetAuthoritative(false);
-    }
-    else
-    {
-        MeshCoP::ActiveTimestampTlv tlv;
+        MeshCoP::PendingTimestampTlv pendingTimestampTlv;
 
         VerifyOrExit(aDataset.mIsPendingTimestampSet, error = kThreadError_InvalidArgs);
-        mTimestamp.SetSeconds(aDataset.mPendingTimestamp);
-        mTimestamp.SetTicks(0);
-        mTimestamp.SetAuthoritative(false);
 
-        tlv.Init();
-        tlv.SetSeconds(aDataset.mActiveTimestamp);
-        Set(tlv);
+        pendingTimestampTlv.Init();
+        pendingTimestampTlv.SetSeconds(aDataset.mPendingTimestamp);
+        pendingTimestampTlv.SetTicks(0);
+        Set(pendingTimestampTlv);
+
+        if (aDataset.mIsDelaySet)
+        {
+            MeshCoP::DelayTimerTlv tlv;
+            tlv.Init();
+            tlv.SetDelayTimer(aDataset.mDelay);
+            Set(tlv);
+        }
     }
 
     if (aDataset.mIsChannelSet)
@@ -285,14 +292,6 @@ ThreadError Dataset::Set(const otOperationalDataset &aDataset, bool aActive)
         }
 
         Set(channelMask.tlv);
-    }
-
-    if (aDataset.mIsDelaySet)
-    {
-        MeshCoP::DelayTimerTlv tlv;
-        tlv.Init();
-        tlv.SetDelayTimer(aDataset.mDelay);
-        Set(tlv);
     }
 
     if (aDataset.mIsExtendedPanIdSet)
@@ -356,14 +355,41 @@ exit:
     return error;
 }
 
-const Timestamp &Dataset::GetTimestamp(void) const
+const Timestamp *Dataset::GetTimestamp(void) const
 {
-    return mTimestamp;
+    const Timestamp *timestamp = NULL;
+
+    if (mType == Tlv::kActiveTimestamp)
+    {
+        const ActiveTimestampTlv *tlv = static_cast<const ActiveTimestampTlv *>(Get(mType));
+        VerifyOrExit(tlv != NULL, ;);
+        timestamp = static_cast<const Timestamp *>(tlv);
+    }
+    else
+    {
+        const PendingTimestampTlv *tlv = static_cast<const PendingTimestampTlv *>(Get(mType));
+        VerifyOrExit(tlv != NULL, ;);
+        timestamp = static_cast<const Timestamp *>(tlv);
+    }
+
+exit:
+    return timestamp;
 }
 
 void Dataset::SetTimestamp(const Timestamp &aTimestamp)
 {
-    mTimestamp = aTimestamp;
+    OT_TOOL_PACKED_BEGIN
+    struct
+    {
+        Tlv tlv;
+        Timestamp timestamp;
+    } OT_TOOL_PACKED_END timestampTlv;
+
+    timestampTlv.tlv.SetType(mType);
+    timestampTlv.tlv.SetLength(sizeof(Timestamp));
+    timestampTlv.timestamp = aTimestamp;
+
+    Set(timestampTlv.tlv);
 }
 
 ThreadError Dataset::Set(const Tlv &aTlv)
