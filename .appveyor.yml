@@ -8,4 +8,4 @@ build:
   project: openthread.sln
   verbosity: minimal
 test:
-  assemblies: UnitTests.dll
+  assemblies: '**\*.UnitTests.dll'
