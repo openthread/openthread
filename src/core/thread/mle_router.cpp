@@ -173,7 +173,7 @@ ThreadError MleRouter::ReleaseRouterId(uint8_t aRouterId)
     mRouterIdSequenceLastUpdated = Timer::GetNow();
     mAddressResolver.Remove(aRouterId);
     mNetworkData.RemoveBorderRouter(GetRloc16(aRouterId));
-    mAdvertiseTimer.IndicateInconsistent();
+    ResetAdvertiseInterval();
     return kThreadError_None;
 }
 
@@ -240,7 +240,8 @@ ThreadError MleRouter::BecomeLeader(void)
     }
 
     mSocket.Open(&HandleUdpReceive, this);
-    mAdvertiseTimer.IndicateInconsistent();
+    mAdvertiseTimer.Stop();
+    ResetAdvertiseInterval();
     mStateUpdateTimer.Start(kStateUpdatePeriod);
     mAddressResolver.Clear();
 
@@ -423,6 +424,18 @@ bool MleRouter::HandleAdvertiseTimer(void)
     SendAdvertisement();
 
     return true;
+}
+
+ThreadError MleRouter::ResetAdvertiseInterval(void)
+{
+    if (!mAdvertiseTimer.IsRunning())
+    {
+        mAdvertiseTimer.Start(
+            Timer::SecToMsec(kAdvertiseIntervalMin),
+            Timer::SecToMsec(kAdvertiseIntervalMax));
+    }
+
+    mAdvertiseTimer.IndicateInconsistent();
 }
 
 ThreadError MleRouter::SendAdvertisement(void)
@@ -883,7 +896,7 @@ ThreadError MleRouter::HandleLinkAccept(const Message &aMessage, const Ip6::Mess
         if (routerId != mRouterId && mRouters[routerId].mNextHop == kMaxRouterId)
         {
             mRouters[routerId].mNextHop = routerId;
-            mAdvertiseTimer.IndicateInconsistent();
+            ResetAdvertiseInterval();
         }
 
         break;
@@ -1457,7 +1470,7 @@ void MleRouter::UpdateRoutes(const RouteTlv &aRoute, uint8_t aRouterId)
                     {
                         if (mRouters[i].mNextHop == kMaxRouterId)
                         {
-                            mAdvertiseTimer.IndicateInconsistent();
+                            ResetAdvertiseInterval();
                         }
 
                         mRouters[i].mNextHop = aRouterId;
@@ -1467,7 +1480,7 @@ void MleRouter::UpdateRoutes(const RouteTlv &aRoute, uint8_t aRouterId)
                     {
                         if (mRouters[i].mNextHop == kMaxRouterId)
                         {
-                            mAdvertiseTimer.IndicateInconsistent();
+                            ResetAdvertiseInterval();
                         }
 
                         mRouters[i].mNextHop = aRouterId;
@@ -1475,7 +1488,7 @@ void MleRouter::UpdateRoutes(const RouteTlv &aRoute, uint8_t aRouterId)
                     }
                     else if (mRouters[i].mNextHop != kMaxRouterId)
                     {
-                        mAdvertiseTimer.IndicateInconsistent();
+                        ResetAdvertiseInterval();
                         mRouters[i].mNextHop = kMaxRouterId;
                         mRouters[i].mCost = 0;
                         mRouters[i].mLastHeard = Timer::GetNow();
