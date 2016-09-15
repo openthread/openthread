@@ -2988,9 +2988,7 @@ void MleRouter::HandleAddressSolicitResponse(Message &aMessage)
 
     // send link request
     SendLinkRequest(NULL);
-    mAdvertiseTimer.Start(
-        Timer::SecToMsec(kAdvertiseIntervalMin),
-        Timer::SecToMsec(kAdvertiseIntervalMax));
+    ResetAdvertiseInterval();
 
     // send child id responses
     for (int i = 0; i < mMaxChildrenAllowed; i++)
