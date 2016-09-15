@@ -72,6 +72,7 @@ int TestTenTimers();
 void test_packed1();
 void test_packed2();
 void test_packed_union();
+void test_packed_enum();
 
 #pragma endregion
 
@@ -120,5 +121,6 @@ namespace UnitTests
         TEST_METHOD(test_packed1) { ::test_packed1(); }
         TEST_METHOD(test_packed2) { ::test_packed2(); }
         TEST_METHOD(test_packed_union) { ::test_packed_union(); }
+        TEST_METHOD(test_packed_enum) { ::test_packed_enum(); }
 	};
 }
