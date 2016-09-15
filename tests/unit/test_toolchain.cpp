@@ -29,6 +29,7 @@
 #include <stdio.h>
 #include <stdint.h>
 #include <platform/toolchain.h>
+#include <thread/topology.h>
 #include "test_util.h"
 
 void test_packed1()
@@ -74,11 +75,21 @@ void test_packed_union()
     VerifyOrQuit(sizeof(packed_t) == 5, "Toolchain::OT_TOOL_PACKED failed 3\n");
 }
 
+void test_packed_enum()
+{
+    Thread::Neighbor neighbor = {0};
+    neighbor.mState = Thread::Neighbor::kStateValid;
+
+    // Make sure that when we read the 3 bit field it is read as unsigned, so it return '4'
+    VerifyOrQuit(neighbor.mState == Thread::Neighbor::kStateValid, "Toolchain::OT_TOOL_PACKED failed 4\n");
+}
+
 void TestToolchain(void)
 {
     test_packed1();
     test_packed2();
     test_packed_union();
+    test_packed_enum();
 }
 
 int main(void)
