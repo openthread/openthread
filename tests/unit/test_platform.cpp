@@ -236,7 +236,7 @@ exit:
     {
     }
 
-    void otPlatUartReceived(const uint8_t *, uint16_t )
+    void otPlatUartReceived(const uint8_t *, uint16_t)
     {
     }
 
