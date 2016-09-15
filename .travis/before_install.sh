@@ -69,12 +69,14 @@ cd /tmp || die
 
     [ $BUILD_TARGET != posix-32-bit ] || {
         sudo apt-get install g++-multilib || die
+        sudo apt-get install llvm-3.4-runtime || die
     }
 
     [ $BUILD_TARGET != posix-ncp ] || {
         pip install ipaddress || die
         pip install scapy || die
         pip install pyserial || die
+        sudo apt-get install llvm-3.4-runtime || die
     }
 }
 

@@ -139,7 +139,7 @@ void Server::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessag
         coapOption = header.GetNextOption();
     }
 
-    curUriPath[-1] = '\0';
+    if (curUriPath > uriPath) { curUriPath[-1] = '\0'; }
 
     for (Resource *resource = mResources; resource; resource = resource->mNext)
     {
