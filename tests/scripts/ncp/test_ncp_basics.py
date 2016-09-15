@@ -1,6 +1,6 @@
 #!/usr/bin/python
 #
-#  Copyright (c) 2016, Nest Labs, Inc.
+#  Copyright (c) 2016, The OpenThread Authors.
 #  All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
@@ -42,10 +42,6 @@ class test_ncp(unittest.TestCase):
     def test_version(self):
         self.node.send_command('version')
         self.node.pexpect.expect('OPENTHREAD/')
-
-    def test_scan(self):
-        self.node.send_command('scan')
-        self.node.pexpect.expect('Done')
 
     #def test_noop(self): pass
     #def test_reset(self): pass
