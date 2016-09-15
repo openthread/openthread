@@ -77,7 +77,7 @@ void test_packed_union()
 
 void test_packed_enum()
 {
-    Thread::Neighbor neighbor = {0};
+    Thread::Neighbor neighbor;
     neighbor.mState = Thread::Neighbor::kStateValid;
 
     // Make sure that when we read the 3 bit field it is read as unsigned, so it return '4'
