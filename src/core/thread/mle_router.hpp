@@ -501,7 +501,7 @@ private:
     ThreadError HandleNetworkDataUpdateRouter(void);
 
     ThreadError ProcessRouteTlv(const RouteTlv &aRoute);
-    ThreadError ResetAdvertiseInterval(void);
+    void ResetAdvertiseInterval(void);
     ThreadError SendAddressSolicit(ThreadStatusTlv::Status aStatus);
     ThreadError SendAddressRelease(void);
     void SendAddressSolicitResponse(const Coap::Header &aRequest, uint8_t aRouterId,

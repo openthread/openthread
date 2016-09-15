@@ -50,8 +50,8 @@ namespace Mle {
 
 MleRouter::MleRouter(ThreadNetif &aThreadNetif):
     Mle(aThreadNetif),
-    mAdvertiseTimer(aThreadNetif.GetIp6().mTimerScheduler, 0,
-                    kTrickleTimerModeNormal, HandleAdvertiseTimer, NULL, this),
+    mAdvertiseTimer(aThreadNetif.GetIp6().mTimerScheduler, 0, kTrickleTimerModeNormal,
+                    HandleAdvertiseTimer, NULL, this),
     mStateUpdateTimer(aThreadNetif.GetIp6().mTimerScheduler, &HandleStateUpdateTimer, this),
     mSocket(aThreadNetif.GetIp6().mUdp),
     mAddressSolicit(OPENTHREAD_URI_ADDRESS_SOLICIT, &HandleAddressSolicit, this),
@@ -426,7 +426,7 @@ bool MleRouter::HandleAdvertiseTimer(void)
     return true;
 }
 
-ThreadError MleRouter::ResetAdvertiseInterval(void)
+void MleRouter::ResetAdvertiseInterval(void)
 {
     if (!mAdvertiseTimer.IsRunning())
     {
