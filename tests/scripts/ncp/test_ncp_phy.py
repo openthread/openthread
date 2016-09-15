@@ -39,6 +39,12 @@ class test_ncp_phy(unittest.TestCase):
     def setUp(self):
         self.node = node.Node(1)
 
+    def test_phy_enabled(self):
+        self.node.send_command('phy-enabled')
+        # Get not implemented yet, so don't expect Done
+        self.node.send_command('phy-enabled 1')
+        self.node.send_command('phy-enabled 0')
+
     def test_phy_freq(self):
         self.node.send_command('phy-freq')
         self.node.pexpect.expect('Done')

@@ -47,35 +47,42 @@ class test_ncp_thread(unittest.TestCase):
 
 
     def test_assisting_ports(self):
+        # Set over empty
         self.node.send_command('ncp-assisting-ports 1234')
         self.node.pexpect.expect('Done')
-
+        # Get and verify
         self.node.send_command('ncp-assisting-ports')
         self.node.pexpect.expect('1234')
         self.node.pexpect.expect('Done')
-
+        
+        # Remove
         self.node.send_command('ncp-assisting-ports remove 1234')
         self.node.pexpect.expect('Done')
-
+        
+        # Insert and verify
         self.node.send_command('ncp-assisting-ports add 5432')
         self.node.pexpect.expect('Done')
-
         self.node.send_command('ncp-assisting-ports')
         self.node.pexpect.expect('5432')
         self.node.pexpect.expect('Done')
 
-    def test_ipaddr(self):
-        self.node.send_command('ipaddr')
+        # Insert second
+        self.node.send_command('ncp-assisting-ports add 5433')
+        self.node.pexpect.expect('Done')
+        # Remove first
+        self.node.send_command('ncp-assisting-ports remove 5432')
+        self.node.pexpect.expect('Done')
+        # Verify remaining
+        self.node.send_command('ncp-assisting-ports')
+        self.node.pexpect.expect('5433')
         self.node.pexpect.expect('Done')
 
-        self.node.send_command('ipaddr add fd00::1')
+        # Set over existing
+        self.node.send_command('ncp-assisting-ports 8080')
         self.node.pexpect.expect('Done')
-        self.node.send_command('ipaddr')
-        self.node.pexpect.expect('fd00::1')
+        self.node.send_command('ncp-assisting-ports')
+        self.node.pexpect.expect('8080')
         self.node.pexpect.expect('Done')
-
-        #self.node.send_command('ipaddr remove fd00::1')
-        #self.node.pexpect.expect('Done')
 
     def test_route(self):
         self.node.send_command('route add fd00::1/64')

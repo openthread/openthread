@@ -1482,6 +1482,7 @@ class WpanDiagsCmd(Cmd, SpinelCodec):
         'ncp-vendorid',
         'ncp-assisting-ports',
 
+        'phy-enabled',
         'phy-freq',
         'phy-cca-threshold',
         'phy-tx-power',
@@ -2008,6 +2009,10 @@ class WpanDiagsCmd(Cmd, SpinelCodec):
                 self.wpanApi.tun_if.addr_add(ipaddr)
 
         elif args[0] == "remove":
+            arr += pack('B', prefix_len) 
+            arr += pack('<L', valid)
+            arr += pack('<L', preferred)
+            arr += pack('B', flags)
             value = self.prop_remove_value(SPINEL_PROP_IPV6_ADDRESS_TABLE, 
                                            arr, str(len(arr))+'s')
             if self.wpanApi.tun_if:
@@ -2733,6 +2738,9 @@ class WpanDiagsCmd(Cmd, SpinelCodec):
         else:
             self.handle_property(line, SPINEL_PROP_THREAD_ASSISTING_PORTS, 'H')
             
+    def do_phyenabled(self, line):
+        self.handle_property(line, SPINEL_PROP_PHY_ENABLED)
+
     def do_phyfreq(self, line):
         """ Display the last status. """
         self.handle_property(line, SPINEL_PROP_PHY_FREQ, 'L')

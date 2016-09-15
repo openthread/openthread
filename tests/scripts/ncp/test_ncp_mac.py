@@ -89,5 +89,9 @@ class test_ncp_mac(unittest.TestCase):
         self.node.send_command('whitelist remove deadbeeff00dbabe')
         self.node.pexpect.expect('Done')
 
+        # Test set with RSSI_OVERRIDE_DISABLED branch
+        self.node.send_command('whitelist add deadbeeff00dcafe 127')
+        self.node.pexpect.expect('Done')
+
 if __name__ == '__main__':
     unittest.main()

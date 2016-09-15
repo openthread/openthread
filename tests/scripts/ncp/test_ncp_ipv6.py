@@ -50,5 +50,19 @@ class test_ncp_ipv6(unittest.TestCase):
         self.node.send_command('ncp-ml64')
         self.node.pexpect.expect('Done')
 
+    def test_ipaddr(self):
+        self.node.send_command('ipaddr')
+        self.node.pexpect.expect('Done')
+
+        self.node.send_command('ipaddr add fd00::1')
+        self.node.pexpect.expect('Done')
+        self.node.send_command('ipaddr')
+        self.node.pexpect.expect('fd00::1')
+        self.node.pexpect.expect('Done')
+
+        self.node.send_command('ipaddr remove fd00::1')
+        self.node.pexpect.expect('Done')
+
+
 if __name__ == '__main__':
     unittest.main()
