@@ -29,7 +29,7 @@
 #include <stdio.h>
 #include <stdint.h>
 #include <platform/toolchain.h>
-#include <thread/topology.h>
+#include <thread/topology.hpp>
 #include "test_util.h"
 
 void test_packed1()
