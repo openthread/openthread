@@ -43,6 +43,7 @@ libopenthread_a_SOURCES             = \
     common/message.cpp                \
     common/tasklet.cpp                \
     common/timer.cpp                  \
+    common/trickle_timer.cpp          \
     crypto/aes_ccm.cpp                \
     crypto/aes_ecb.cpp                \
     crypto/hmac_sha256.cpp            \
@@ -113,6 +114,7 @@ noinst_HEADERS                      = \
     common/new.hpp                    \
     common/tasklet.hpp                \
     common/timer.hpp                  \
+    common/trickle_timer.hpp          \
     crypto/aes_ccm.hpp                \
     crypto/aes_ecb.hpp                \
     crypto/hmac_sha256.hpp            \
