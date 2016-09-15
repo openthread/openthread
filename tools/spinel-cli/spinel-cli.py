@@ -1473,6 +1473,7 @@ class WpanDiagsCmd(Cmd, SpinelCodec):
         'ncp-ll64', 
         'ncp-mac16',
         'ncp-mac64',
+        'ncp-eui64',
         'ncp-mlprefix',
 
         'ncp-tun', 
@@ -2698,6 +2699,9 @@ class WpanDiagsCmd(Cmd, SpinelCodec):
 
     def do_ncpmac64(self, line):
         self.handle_property(line, SPINEL_PROP_MAC_15_4_LADDR, 'E')
+
+    def do_ncpeui64(self, line):
+        self.handle_property(line, SPINEL_PROP_HWADDR, 'E')
 
     def do_ncpstatus(self, line):
         """ Display the last status. """

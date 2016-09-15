@@ -51,6 +51,26 @@ class test_ncp_mac(unittest.TestCase):
         self.node.send_command('mac-filter-mode')
         self.node.pexpect.expect('Done')
 
+        self.node.send_command('mac-filter-mode 1')
+        self.node.pexpect.expect('Done')
+
+        self.node.send_command('mac-filter-mode 2')
+        self.node.pexpect.expect('Done')
+
+        self.node.send_command('mac-filter-mode 0')
+        self.node.pexpect.expect('Done')
+        self.node.send_command('mac-filter-mode')
+        self.node.pexpect.expect('0')
+        self.node.pexpect.expect('Done')
+
+    def test_hwaddr(self):
+        self.node.send_command('ncp-eui64')
+        self.node.pexpect.expect('Done')
+
+    def test_scan(self):
+        self.node.send_command('scan')
+        self.node.pexpect.expect('Done')
+
     def test_whitelist(self):
         self.node.send_command('whitelist')
         self.node.pexpect.expect('Disabled')

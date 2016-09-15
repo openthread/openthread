@@ -43,5 +43,12 @@ class test_ncp_ipv6(unittest.TestCase):
         self.node.send_command('ncp-mlprefix')
         self.node.pexpect.expect('Done')
 
+    def test_ipv6_ll64(self):
+        self.node.send_command('ncp-ll64')
+
+    def test_ipv6_ml64(self):
+        self.node.send_command('ncp-ml64')
+        self.node.pexpect.expect('Done')
+
 if __name__ == '__main__':
     unittest.main()

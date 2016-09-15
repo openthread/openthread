@@ -81,6 +81,16 @@ class test_ncp_thread(unittest.TestCase):
         self.node.send_command('route add fd00::1/64')
         self.node.pexpect.expect('Done')
 
+    def test_leader_weight(self):
+        self.node.send_command('leaderweight')
+        self.node.pexpect.expect('Done')
+
+        self.node.send_command('leaderweight 4')
+        self.node.pexpect.expect('Done')
+        self.node.send_command('leaderweight')
+        self.node.pexpect.expect('4')
+        self.node.pexpect.expect('Done')
+
 
 if __name__ == '__main__':
     unittest.main()
