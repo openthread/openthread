@@ -1320,6 +1320,15 @@ ThreadError otCommissionerStop(otInstance *)
     return sThreadNetif->GetCommissioner().Stop();
 }
 
+ThreadError otCommissionerEnergyScan(otInstance *, uint32_t aChannelMask, uint8_t aCount, uint16_t aPeriod,
+                                     uint16_t aScanDuration, const otIp6Address *aAddress,
+                                     otCommissionerEnergyReportCallback aCallback, void *aContext)
+{
+    return sThreadNetif->GetCommissioner().mEnergyScan.SendQuery(aChannelMask, aCount, aPeriod, aScanDuration,
+                                                                 *static_cast<const Ip6::Address *>(aAddress),
+                                                                 aCallback, aContext);
+}
+
 ThreadError otCommissionerPanIdQuery(otInstance *, uint16_t aPanId, uint32_t aChannelMask,
                                      const otIp6Address *aAddress,
                                      otCommissionerPanIdConflictCallback aCallback, void *aContext)

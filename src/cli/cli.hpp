@@ -207,6 +207,8 @@ private:
     static void s_HandleActiveScanResult(otActiveScanResult *aResult, void *aContext);
     static void s_HandleNetifStateChanged(uint32_t aFlags, void *aContext);
     static void s_HandleLinkPcapReceive(const RadioPacket *aFrame, void *aContext);
+    static void s_HandleEnergyReport(uint32_t aChannelMask, const uint8_t *aEnergyList, uint8_t aEnergyListLength,
+                                     void *aContext);
     static void s_HandlePanIdConflict(uint16_t aPanId, uint32_t aChannelMask, void *aContext);
 
     void HandleEchoResponse(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
@@ -214,6 +216,7 @@ private:
     void HandleActiveScanResult(otActiveScanResult *aResult);
     void HandleNetifStateChanged(uint32_t aFlags);
     void HandleLinkPcapReceive(const RadioPacket *aFrame);
+    void HandleEnergyReport(uint32_t aChannelMask, const uint8_t *aEnergyList, uint8_t aEnergyListLength);
     void HandlePanIdConflict(uint16_t aPanId, uint32_t aChannelMask);
 
     static const struct Command sCommands[];

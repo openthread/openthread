@@ -36,6 +36,7 @@
 
 #include <coap/coap_server.hpp>
 #include <common/timer.hpp>
+#include <meshcop/energy_scan_client.hpp>
 #include <meshcop/panid_query_client.hpp>
 #include <net/udp6.hpp>
 #include <thread/mle.hpp>
@@ -83,6 +84,7 @@ public:
      */
     uint16_t GetSessionId(void) const;
 
+    EnergyScanClient mEnergyScan;
     PanIdQueryClient mPanIdQuery;
 
 private:

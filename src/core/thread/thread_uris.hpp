@@ -91,12 +91,28 @@ namespace Thread {
 #define OPENTHREAD_URI_ACTIVE_SET       "c/as"
 
 /**
+ * @def OPENTHREAD_URI_ENERGY_SCAN
+ *
+ * The URI Path for Energy Scan
+ *
+ */
+#define OPENTHREAD_URI_ENERGY_SCAN      "c/es"
+
+/**
+ * @def OPENTHREAD_URI_ENERGY_REPORT
+ *
+ * The URI Path for Energy Report
+ *
+ */
+#define OPENTHREAD_URI_ENERGY_REPORT    "c/er"
+
+/**
  * @def OPENTHREAD_URI_PENDING_GET
  *
  * The URI Path for MGMT_PENDING_GET
  *
  */
-#define OPENTHREAD_URI_PENDING_GET       "c/pg"
+#define OPENTHREAD_URI_PENDING_GET      "c/pg"
 
 /**
  * @def OPENTHREAD_URI_PENDING_SET
@@ -104,7 +120,7 @@ namespace Thread {
  * The URI Path for MGMT_PENDING_SET
  *
  */
-#define OPENTHREAD_URI_PENDING_SET       "c/ps"
+#define OPENTHREAD_URI_PENDING_SET      "c/ps"
 
 /**
  * @def OPENTHREAD_URI_SERVER_DATA
@@ -160,7 +176,7 @@ namespace Thread {
  * The URI Path for Leader Keep Alive
  *
  */
-#define OPENTHREAD_URI_LEADER_KEEP_ALIVE  "c/la"
+#define OPENTHREAD_URI_LEADER_KEEP_ALIVE "c/la"
 
 /**
  * @def OPENTHREAD_URI_PANID_CONFLICT
