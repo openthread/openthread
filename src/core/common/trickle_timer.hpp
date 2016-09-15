@@ -38,8 +38,6 @@
 
 namespace Thread {
 
-class Timer;
-
 /**
  * @addtogroup core-timer-trickle
  *
@@ -101,8 +99,8 @@ public:
     /**
      * This method start the trickle timer.
      *
-     * @param[in]  aIntervalMin             The minimum interval for the timer, Imin.
-     * @param[in]  aIntervalMax             The maximum interval for the timer, Imax.
+     * @param[in]  aIntervalMin  The minimum interval for the timer, Imin.
+     * @param[in]  aIntervalMax  The maximum interval for the timer, Imax.
      *
      */
     void Start(uint32_t aIntervalMin, uint32_t aIntervalMax);
@@ -129,7 +127,7 @@ private:
     bool TransmitFired(void) { return mTransmitHandler(mContext); }
     bool IntervalExpiredFired(void) { return mIntervalExpiredHandler ? mIntervalExpiredHandler(mContext) : true; }
 
-    void StartNewInterval(void)
+    void StartNewInterval(void);
 
     static void HandleTimerFired(void *aContext);
     void HandleTimerFired(void);
@@ -144,10 +142,10 @@ private:
         kTricklePhaseInterval   = 3,
     } TricklePhase;
 
-    Timer           mTimer;
+    Timer mTimer;
 
     // Redundancy constant
-    const uint32_t  k;
+    const uint32_t k;
 
     // The mode of operation
     const TrickleTimerMode mMode;
@@ -167,9 +165,9 @@ private:
     TricklePhase mPhase;
 
     // Callback variables
-    Handler         mTransmitHandler;
-    Handler         mIntervalExpiredHandler;
-    void           *mContext;
+    Handler mTransmitHandler;
+    Handler mIntervalExpiredHandler;
+    void *mContext;
 };
 
 /**
