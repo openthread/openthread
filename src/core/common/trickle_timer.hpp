@@ -80,18 +80,15 @@ public:
      * This constructor creates a trickle timer instance.
      *
      * @param[in]  aScheduler               A refrence to the timer scheduler.
-     * @param[in]  aIntervalMin             The minimum interval for the timer, Imin.
-     * @param[in]  aIntervalMax             The maximum interval for the timer, Imax.
      * @param[in]  aRedundancyConstant      The redundancy constant for the timer, k.
      * @param[in]  aMode                    The operating mode for the timer.
      * @param[in]  aTransmitHandler         A pointer to a function that is called when transmission should occur.
-     * @param[in]  aIntervalExpiredHandler  A pointer to a function that is called when the interval expires.
+     * @param[in]  aIntervalExpiredHandler  An optional pointer to a function that is called when the interval expires.
      * @param[in]  aContext                 A pointer to arbitrary context information.
      *
      */
-    TrickleTimer(TimerScheduler &aScheduler, uint32_t aIntervalMin, uint32_t aIntervalMax,
-                 uint32_t aRedundancyConstant, TrickleTimerMode aMode, Handler aTransmitHandler,
-                 Handler aIntervalExpiredHandler, void *aContext);
+    TrickleTimer(TimerScheduler &aScheduler, uint32_t aRedundancyConstant, TrickleTimerMode aMode,
+                 Handler aTransmitHandler, Handler aIntervalExpiredHandler, void *aContext);
 
     /**
      * This method indicates whether or not the trickle timer instance is running.
@@ -104,20 +101,17 @@ public:
     /**
      * This method start the trickle timer.
      *
+     * @param[in]  aIntervalMin             The minimum interval for the timer, Imin.
+     * @param[in]  aIntervalMax             The maximum interval for the timer, Imax.
+     *
      */
-    void Start(void);
+    void Start(uint32_t aIntervalMin, uint32_t aIntervalMax);
 
     /**
      * This method stops the trickle timer.
      *
      */
     void Stop(void);
-
-    /**
-     * This method resets the trickle timer.
-     *
-     */
-    void Reset(void);
 
     /**
      * This method indicates to the trickle timer a 'consistent' state.
@@ -133,7 +127,9 @@ public:
 
 private:
     bool TransmitFired(void) { return mTransmitHandler(mContext); }
-    bool IntervalExpiredFired(void) { return mIntervalExpiredHandler(mContext); }
+    bool IntervalExpiredFired(void) { return mIntervalExpiredHandler ? mIntervalExpiredHandler(mContext) : true; }
+
+    void StartNewInterval(void)
 
     static void HandleTimerFired(void *aContext);
     void HandleTimerFired(void);
@@ -150,15 +146,16 @@ private:
 
     Timer           mTimer;
 
-    // Constants
-    const uint32_t  Imin;
-    const uint32_t  Imax;
+    // Redundancy constant
     const uint32_t  k;
 
     // The mode of operation
     const TrickleTimerMode mMode;
 
-    // State variables
+    // Minimum interval size
+    uint32_t Imin;
+    // Maximum interval size
+    uint32_t Imax;
 
     // The current interval size (in milliseconds)
     uint32_t I;

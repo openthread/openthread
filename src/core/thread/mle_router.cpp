@@ -50,7 +50,8 @@ namespace Mle {
 
 MleRouter::MleRouter(ThreadNetif &aThreadNetif):
     Mle(aThreadNetif),
-    mAdvertiseTimer(aThreadNetif.GetIp6().mTimerScheduler, &HandleAdvertiseTimer, this),
+    mAdvertiseTimer(aThreadNetif.GetIp6().mTimerScheduler, 0,
+                    kTrickleTimerModeNormal, HandleAdvertiseTimer, NULL, this),
     mStateUpdateTimer(aThreadNetif.GetIp6().mTimerScheduler, &HandleStateUpdateTimer, this),
     mSocket(aThreadNetif.GetIp6().mUdp),
     mAddressSolicit(OPENTHREAD_URI_ADDRESS_SOLICIT, &HandleAddressSolicit, this),
@@ -70,7 +71,6 @@ MleRouter::MleRouter(ThreadNetif &aThreadNetif):
     mMaxChildrenAllowed = kMaxChildren;
     mRouterId = kMaxRouterId;
     mPreviousRouterId = kMaxRouterId;
-    mAdvertiseInterval = kAdvertiseIntervalMin;
     mRouterIdSequenceLastUpdated = 0;
     mRouterRoleEnabled = true;
     mRouterSelectionJitterTimeout = 0;
@@ -173,7 +173,7 @@ ThreadError MleRouter::ReleaseRouterId(uint8_t aRouterId)
     mRouterIdSequenceLastUpdated = Timer::GetNow();
     mAddressResolver.Remove(aRouterId);
     mNetworkData.RemoveBorderRouter(GetRloc16(aRouterId));
-    ResetAdvertiseInterval();
+    mAdvertiseTimer.IndicateInconsistent();
     return kThreadError_None;
 }
 
@@ -240,8 +240,7 @@ ThreadError MleRouter::BecomeLeader(void)
     }
 
     mSocket.Open(&HandleUdpReceive, this);
-    mAdvertiseTimer.Stop();
-    ResetAdvertiseInterval();
+    mAdvertiseTimer.IndicateInconsistent();
     mStateUpdateTimer.Start(kStateUpdatePeriod);
     mAddressResolver.Clear();
 
@@ -299,8 +298,6 @@ ThreadError MleRouter::HandleDetachStart(void)
 
 ThreadError MleRouter::HandleChildStart(otMleAttachFilter aFilter)
 {
-    uint32_t advertiseDelay;
-
     mRouterIdSequenceLastUpdated = Timer::GetNow();
 
     StopLeader();
@@ -322,14 +319,10 @@ ThreadError MleRouter::HandleChildStart(otMleAttachFilter aFilter)
 
     if (mDeviceMode & ModeTlv::kModeFFD)
     {
-        advertiseDelay = Timer::SecToMsec(kReedAdvertiseInterval +
-                                          (otPlatRandomGet() % kReedAdvertiseJitter));
-        mAdvertiseTimer.Start(advertiseDelay);
+        mAdvertiseTimer.Start(
+            Timer::SecToMsec(kReedAdvertiseInterval),
+            Timer::SecToMsec(kReedAdvertiseInterval + kReedAdvertiseJitter));
         mNetif.SubscribeAllRoutersMulticast();
-    }
-    else
-    {
-
     }
 
     return kThreadError_None;
@@ -414,68 +407,22 @@ void MleRouter::SetRouterDowngradeThreshold(uint8_t aThreshold)
     mRouterDowngradeThreshold = aThreshold;
 }
 
-void MleRouter::HandleAdvertiseTimer(void *aContext)
+bool MleRouter::HandleAdvertiseTimer(void *aContext)
 {
     MleRouter *obj = reinterpret_cast<MleRouter *>(aContext);
-    obj->HandleAdvertiseTimer();
+    return obj->HandleAdvertiseTimer();
 }
 
-void MleRouter::HandleAdvertiseTimer(void)
+bool MleRouter::HandleAdvertiseTimer(void)
 {
-    uint32_t advertiseDelay;
-
     if ((mDeviceMode & ModeTlv::kModeFFD) == 0)
     {
-        return;
+        return false;
     }
 
     SendAdvertisement();
 
-    switch (GetDeviceState())
-    {
-    case kDeviceStateDisabled:
-    case kDeviceStateDetached:
-        assert(false);
-        break;
-
-    case kDeviceStateChild:
-        advertiseDelay = Timer::SecToMsec(kReedAdvertiseInterval +
-                                          (otPlatRandomGet() % kReedAdvertiseJitter));
-        mAdvertiseTimer.Start(advertiseDelay);
-        break;
-
-    case kDeviceStateRouter:
-    case kDeviceStateLeader:
-        mAdvertiseInterval *= 2;
-
-        if (mAdvertiseInterval > kAdvertiseIntervalMax)
-        {
-            mAdvertiseInterval = kAdvertiseIntervalMax;
-        }
-
-        advertiseDelay = Timer::SecToMsec(mAdvertiseInterval) / 2;
-        advertiseDelay += otPlatRandomGet() % (advertiseDelay);
-        mAdvertiseTimer.Start(advertiseDelay);
-        break;
-    }
-}
-
-ThreadError MleRouter::ResetAdvertiseInterval(void)
-{
-    uint32_t advertiseDelay;
-
-    VerifyOrExit(mAdvertiseInterval != kAdvertiseIntervalMin || !mAdvertiseTimer.IsRunning(), ;);
-
-    mAdvertiseInterval = kAdvertiseIntervalMin;
-
-    advertiseDelay = Timer::SecToMsec(mAdvertiseInterval) / 2;
-    advertiseDelay += otPlatRandomGet() % advertiseDelay;
-    mAdvertiseTimer.Start(advertiseDelay);
-
-    otLogInfoMle("reset advertise interval\n");
-
-exit:
-    return kThreadError_None;
+    return true;
 }
 
 ThreadError MleRouter::SendAdvertisement(void)
@@ -936,7 +883,7 @@ ThreadError MleRouter::HandleLinkAccept(const Message &aMessage, const Ip6::Mess
         if (routerId != mRouterId && mRouters[routerId].mNextHop == kMaxRouterId)
         {
             mRouters[routerId].mNextHop = routerId;
-            ResetAdvertiseInterval();
+            mAdvertiseTimer.IndicateInconsistent();
         }
 
         break;
@@ -1510,7 +1457,7 @@ void MleRouter::UpdateRoutes(const RouteTlv &aRoute, uint8_t aRouterId)
                     {
                         if (mRouters[i].mNextHop == kMaxRouterId)
                         {
-                            ResetAdvertiseInterval();
+                            mAdvertiseTimer.IndicateInconsistent();
                         }
 
                         mRouters[i].mNextHop = aRouterId;
@@ -1520,7 +1467,7 @@ void MleRouter::UpdateRoutes(const RouteTlv &aRoute, uint8_t aRouterId)
                     {
                         if (mRouters[i].mNextHop == kMaxRouterId)
                         {
-                            ResetAdvertiseInterval();
+                            mAdvertiseTimer.IndicateInconsistent();
                         }
 
                         mRouters[i].mNextHop = aRouterId;
@@ -1528,7 +1475,7 @@ void MleRouter::UpdateRoutes(const RouteTlv &aRoute, uint8_t aRouterId)
                     }
                     else if (mRouters[i].mNextHop != kMaxRouterId)
                     {
-                        ResetAdvertiseInterval();
+                        mAdvertiseTimer.IndicateInconsistent();
                         mRouters[i].mNextHop = kMaxRouterId;
                         mRouters[i].mCost = 0;
                         mRouters[i].mLastHeard = Timer::GetNow();
@@ -3028,7 +2975,9 @@ void MleRouter::HandleAddressSolicitResponse(Message &aMessage)
 
     // send link request
     SendLinkRequest(NULL);
-    ResetAdvertiseInterval();
+    mAdvertiseTimer.Start(
+        Timer::SecToMsec(kAdvertiseIntervalMin),
+        Timer::SecToMsec(kAdvertiseIntervalMax));
 
     // send child id responses
     for (int i = 0; i < mMaxChildrenAllowed; i++)

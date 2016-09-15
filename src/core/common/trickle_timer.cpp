@@ -42,8 +42,6 @@ TrickleTimer::TrickleTimer(
     Handler aIntervalExpiredHandler, void *aContext)
     :
     mTimer(aScheduler, HandleTimerFired, this),
-    Imin(aIntervalMin),
-    Imax(aIntervalMax),
     k(aRedundancyConstant),
     mMode(aMode),
     mPhase(kTricklePhaseDormant),
@@ -51,8 +49,6 @@ TrickleTimer::TrickleTimer(
     mIntervalExpiredHandler(aIntervalExpiredHandler),
     mContext(aContext)
 {
-    // Initialize I to [Imin, Imax]
-    I = Imin + otPlatRandomGet() % (Imax - Imin);
 }
 
 bool TrickleTimer::IsRunning(void) const
@@ -60,7 +56,50 @@ bool TrickleTimer::IsRunning(void) const
     return mPhase != kTricklePhaseDormant;
 }
 
-void TrickleTimer::Start(void)
+void TrickleTimer::Start(uint32_t aIntervalMin, uint32_t aIntervalMax)
+{
+    assert(!IsRunning());
+
+    // Set the interval limits
+    Imin = aIntervalMin;
+    Imax = aIntervalMax;
+
+    // Initialize I to [Imin, Imax]
+    I = Imin + otPlatRandomGet() % (Imax - Imin);
+
+    // Start a new interval
+    StartNewInterval();
+}
+
+void TrickleTimer::Stop(void)
+{
+    mPhase = kTricklePhaseDormant;
+    mTimer.Stop();
+}
+
+void TrickleTimer::IndicateConsistent(void)
+{
+    // Increment counter
+    c++;
+}
+
+void TrickleTimer::IndicateInconsistent(void)
+{
+    // Only relavent if we aren't already at 'I' == 'Imin'
+    if (IsRunning() && I != Imin)
+    {
+        // Reset I to Imin
+        I = Imin;
+
+        // Stop the existing timer
+        mTimer.Stop();
+
+        // Start a new interval
+        StartNewInterval();
+    }
+}
+
+void TrickleTimer::StartNewInterval(void)
 {
     // Reset the counter and timer phase
     c = 0;
@@ -85,40 +124,6 @@ void TrickleTimer::Start(void)
 
     // Start the timer for 't' milliseconds from now
     mTimer.Start(t);
-}
-
-void TrickleTimer::Stop(void)
-{
-    mPhase = kTricklePhaseDormant;
-    mTimer.Stop();
-}
-
-void TrickleTimer::Reset(void)
-{
-    // Reset I to Imin
-    I = Imin;
-
-    // Stop the existing timer
-    mTimer.Stop();
-
-    // Start a new interval
-    Start();
-}
-
-void TrickleTimer::IndicateConsistent(void)
-{
-    // Increment counter
-    c++;
-}
-
-void TrickleTimer::IndicateInconsistent(void)
-{
-    // Only relavent if we aren't already at I == Imin
-    if (I != Imin)
-    {
-        // Resets the current timer
-        Reset();
-    }
 }
 
 void TrickleTimer::HandleTimerFired(void *aContext)
@@ -169,7 +174,7 @@ void TrickleTimer::HandleTimerFired(void)
         if (ShouldContinue)
         {
             // Start a new interval
-            Start();
+            StartNewInterval();
         }
     }
 
