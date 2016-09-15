@@ -33,13 +33,13 @@
 
 #include <common/code_utils.hpp>
 #include <common/trickle_timer.hpp>
+#include <platform/random.h>
 
 namespace Thread {
 
 TrickleTimer::TrickleTimer(
-    TimerScheduler &aScheduler, uint32_t aIntervalMin, uint32_t aIntervalMax,
-    uint32_t aRedundancyConstant, TrickleTimerMode aMode, Handler aTransmitHandler,
-    Handler aIntervalExpiredHandler, void *aContext)
+    TimerScheduler &aScheduler, uint32_t aRedundancyConstant, TrickleTimerMode aMode,
+    Handler aTransmitHandler, Handler aIntervalExpiredHandler, void *aContext)
     :
     mTimer(aScheduler, HandleTimerFired, this),
     k(aRedundancyConstant),
@@ -139,8 +139,6 @@ void TrickleTimer::HandleTimerFired(void)
     // We have just reached time 't'
     if (mPhase == kTricklePhaseTransmit)
     {
-        bool ShouldContinue = true;
-
         // Are we not using reduncancy or is the counter still less than it?
         if (k == 0 || c < k)
         {
@@ -169,13 +167,17 @@ void TrickleTimer::HandleTimerFired(void)
         I = newI;
 
         // Invoke the interval expiration callback
-        bool ShouldContinue = IntervalExpiredFired();
+        ShouldContinue = IntervalExpiredFired();
 
         if (ShouldContinue)
         {
             // Start a new interval
             StartNewInterval();
         }
+    }
+    else
+    {
+        assert(false);
     }
 
     // If we aren't still running, we go dormant
