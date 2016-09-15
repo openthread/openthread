@@ -1326,7 +1326,7 @@ class WpanApi(SpinelCodec):
         pay = self.encode_i(prop_id)
         if format != None:
             pay += pack(format, value)
-        else:
+        elif value != None:
             pay += value
         self.transact(cmd, pay)
 
