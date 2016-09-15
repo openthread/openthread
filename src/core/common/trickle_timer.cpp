@@ -32,6 +32,7 @@
  */
 
 #include <common/code_utils.hpp>
+#include <common/debug.hpp>
 #include <common/trickle_timer.hpp>
 #include <platform/random.h>
 
