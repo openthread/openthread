@@ -359,13 +359,13 @@ const Timestamp *Dataset::GetTimestamp(void) const
 
     if (mType == Tlv::kActiveTimestamp)
     {
-        const ActiveTimestampTlv *tlv = reinterpret_cast<const ActiveTimestampTlv *>(Get(mType));
+        const ActiveTimestampTlv *tlv = static_cast<const ActiveTimestampTlv *>(Get(mType));
         VerifyOrExit(tlv != NULL, ;);
         timestamp = reinterpret_cast<const Timestamp *>(tlv->GetValue());
     }
     else
     {
-        const PendingTimestampTlv *tlv = reinterpret_cast<const PendingTimestampTlv *>(Get(mType));
+        const PendingTimestampTlv *tlv = static_cast<const PendingTimestampTlv *>(Get(mType));
         VerifyOrExit(tlv != NULL, ;);
         timestamp = reinterpret_cast<const Timestamp *>(tlv->GetValue());
     }
