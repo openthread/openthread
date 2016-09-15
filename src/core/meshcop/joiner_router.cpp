@@ -320,7 +320,6 @@ ThreadError JoinerRouter::SendJoinerEntrust(const Ip6::MessageInfo &aMessageInfo
     MeshLocalPrefixTlv meshLocalPrefix;
     ExtendedPanIdTlv extendedPanId;
     NetworkNameTlv networkName;
-    ActiveTimestampTlv activeTimestamp;
     Tlv *tlv;
 
     VerifyOrExit((message = mSocket.NewMessage(0)) != NULL, error = kThreadError_NoBufs);
@@ -353,9 +352,16 @@ ThreadError JoinerRouter::SendJoinerEntrust(const Ip6::MessageInfo &aMessageInfo
     networkName.SetNetworkName(mNetif.GetMac().GetNetworkName());
     SuccessOrExit(error = message->Append(&networkName, sizeof(Tlv) + networkName.GetLength()));
 
-    activeTimestamp.Init();
-    *static_cast<Timestamp *>(&activeTimestamp) = mNetif.GetActiveDataset().GetNetwork().GetTimestamp();
-    SuccessOrExit(error = message->Append(&activeTimestamp, sizeof(activeTimestamp)));
+    if ((tlv = mNetif.GetActiveDataset().GetNetwork().Get(Tlv::kActiveTimestamp)) != NULL)
+    {
+        SuccessOrExit(error = message->Append(tlv, sizeof(Tlv) + tlv->GetLength()));
+    }
+    else
+    {
+        ActiveTimestampTlv activeTimestamp;
+        activeTimestamp.Init();
+        SuccessOrExit(error = message->Append(&activeTimestamp, sizeof(activeTimestamp)));
+    }
 
     if ((tlv = mNetif.GetActiveDataset().GetNetwork().Get(Tlv::kChannelMask)) != NULL)
     {
