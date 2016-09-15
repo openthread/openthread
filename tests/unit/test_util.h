@@ -66,7 +66,7 @@ extern "C" {
 
 #else
 
-typedef void (*utAssertTrue)(bool condition, const wchar_t* message);
+typedef void (*utAssertTrue)(bool condition, const wchar_t *message);
 extern utAssertTrue s_AssertTrue;
 
 #define SuccessOrQuit(ERR, MSG) s_AssertTrue((ERR) == kThreadError_None, L##MSG)
