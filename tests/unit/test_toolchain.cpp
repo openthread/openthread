@@ -41,8 +41,9 @@ void test_packed1()
         uint16_t mShort;
     } OT_TOOL_PACKED_END;
 
-    typedef struct packed_t packed_t;
-
+#if _WIN32
+    static_assert(sizeof(packed_t) == 7, "Toolchain::OT_TOOL_PACKED failed 1");
+#endif
     VerifyOrQuit(sizeof(packed_t) == 7, "Toolchain::OT_TOOL_PACKED failed 1\n");
 }
 
@@ -55,8 +56,9 @@ void test_packed2()
         uint8_t mByte;
     } OT_TOOL_PACKED_END;
 
-    typedef struct packed_t packed_t;
-
+#if _WIN32
+    static_assert(sizeof(packed_t) == 4, "Toolchain::OT_TOOL_PACKED failed 2");
+#endif
     VerifyOrQuit(sizeof(packed_t) == 4, "Toolchain::OT_TOOL_PACKED failed 2\n");
 }
 
@@ -78,8 +80,9 @@ void test_packed_union()
         } OT_TOOL_PACKED_FIELD;
     } OT_TOOL_PACKED_END;
 
-    typedef struct packed_t packed_t;
-
+#if _WIN32
+    static_assert(sizeof(packed_t) == 5, "Toolchain::OT_TOOL_PACKED failed 3");
+#endif
     VerifyOrQuit(sizeof(packed_t) == 5, "Toolchain::OT_TOOL_PACKED failed 3\n");
 }
 

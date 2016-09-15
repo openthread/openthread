@@ -32,6 +32,42 @@
 #include <platform/platform.h>
 #include <platform/radio.h>
 
+extern "C" void otSignalTaskletPending(otInstance *)
+{
+}
+
+extern "C" bool otAreTaskletsPending(otInstance *)
+{
+    return false;
+}
+
+extern "C" void otPlatUartSendDone(void)
+{
+}
+
+extern "C" void otPlatUartReceived(const uint8_t *aBuf, uint16_t aBufLength)
+{
+    (void)aBuf;
+    (void)aBufLength;
+}
+
+extern "C" void otPlatAlarmFired(otInstance *)
+{
+}
+
+extern "C" void otPlatRadioTransmitDone(otInstance *, bool aRxPending, ThreadError aError)
+{
+    (void)aRxPending;
+    (void)aError;
+}
+
+extern "C" void otPlatRadioReceiveDone(otInstance *, RadioPacket *aFrame, ThreadError aError)
+{
+    (void)aFrame;
+    (void)aError;
+}
+
+
 /**
  *  diagnostics module tests
  */
