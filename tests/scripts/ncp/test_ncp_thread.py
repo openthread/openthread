@@ -38,6 +38,13 @@ import node
 class test_ncp_thread(unittest.TestCase):
     def setUp(self):
         self.node = node.Node(1)
+        self.node.send_command('panid 1')
+        self.node.pexpect.expect('Done')
+        self.node.send_command('ifconfig up')
+        self.node.pexpect.expect('Done')
+        self.node.send_command('thread start')
+        self.node.pexpect.expect('Done')
+
 
     def test_assisting_ports(self):
         self.node.send_command('ncp-assisting-ports 1234')
@@ -56,6 +63,24 @@ class test_ncp_thread(unittest.TestCase):
         self.node.send_command('ncp-assisting-ports')
         self.node.pexpect.expect('5432')
         self.node.pexpect.expect('Done')
+
+    def test_ipaddr(self):
+        self.node.send_command('ipaddr')
+        self.node.pexpect.expect('Done')
+
+        self.node.send_command('ipaddr add fd00::1')
+        self.node.pexpect.expect('Done')
+        self.node.send_command('ipaddr')
+        self.node.pexpect.expect('fd00::1')
+        self.node.pexpect.expect('Done')
+
+        #self.node.send_command('ipaddr remove fd00::1')
+        #self.node.pexpect.expect('Done')
+
+    def test_route(self):
+        self.node.send_command('route add fd00::1/64')
+        self.node.pexpect.expect('Done')
+
 
 if __name__ == '__main__':
     unittest.main()

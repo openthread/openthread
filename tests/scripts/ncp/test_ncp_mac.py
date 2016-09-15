@@ -51,5 +51,23 @@ class test_ncp_mac(unittest.TestCase):
         self.node.send_command('mac-filter-mode')
         self.node.pexpect.expect('Done')
 
+    def test_whitelist(self):
+        self.node.send_command('whitelist')
+        self.node.pexpect.expect('Disabled')
+        self.node.pexpect.expect('Done')
+
+        self.node.send_command('whitelist enable')
+        self.node.pexpect.expect('Done')
+
+        self.node.send_command('whitelist')
+        self.node.pexpect.expect('Enabled')
+        self.node.pexpect.expect('Done')
+
+        self.node.send_command('whitelist add deadbeeff00dbabe')
+        self.node.pexpect.expect('Done')
+
+        self.node.send_command('whitelist remove deadbeeff00dbabe')
+        self.node.pexpect.expect('Done')
+
 if __name__ == '__main__':
     unittest.main()
