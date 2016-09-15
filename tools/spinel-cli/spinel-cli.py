@@ -657,8 +657,8 @@ class Hdlc(IStream):
                     
     def collect(self):
         fcs = HDLC_FCS_INIT
+        raw = []
         packet = []
-        if DEBUG_LOG_HDLC: raw = []
 
         # Synchronize
         while 1:
@@ -677,9 +677,6 @@ class Hdlc(IStream):
                 b ^= 0x20
             packet.append(b)
             fcs = fcs16(b, fcs)
-            #print("State: "+str(b)+ "  FCS: 0x"+hexify_int(fcs))
-
-        #print("Fcs: 0x"+hexify_int(fcs))
 
         if DEBUG_LOG_HDLC:
             logger.debug("RX Hdlc: "+str(map(hexify_int,raw)))
@@ -722,7 +719,8 @@ class Hdlc(IStream):
 
 #  0: DATATYPE_NULL
 #'.': DATATYPE_VOID: Empty data type. Used internally.
-#'b': DATATYPE_BOOL: Boolean value. Encoded in 8-bits as either 0x00 or 0x01. All other values are illegal.
+#'b': DATATYPE_BOOL: Boolean value. 
+    # Encoded in 8-bits as either 0x00 or 0x01. All other values are illegal.
 #'C': DATATYPE_UINT8: Unsigned 8-bit integer.
 #'c': DATATYPE_INT8: Signed 8-bit integer.
 #'S': DATATYPE_UINT16: Unsigned 16-bit integer. (Little-endian)
@@ -876,11 +874,12 @@ class SpinelPropertyHandler(SpinelCodec):
     def THREAD_ON_MESH_NETS(self, payload):
         # TODO: automatically ipaddr add / remove addresses for each prefix.
         # As done by cli.cpp Interpreter::HandleNetifStateChanged
-        # Needs to pass control to Cmd thread in order to run prop_set/get_value.
+        # Needs to pass control to Cmd thread in order to run 
+        # prop_set/get_value.
         pass
 
-    def THREAD_LOCAL_ROUTES(self, payload):          pass
-    def THREAD_ASSISTING_PORTS(self, payload):       pass
+    def THREAD_LOCAL_ROUTES(self, payload):    return self.parse_D(payload)
+    def THREAD_ASSISTING_PORTS(self, payload): return self.parse_S(payload)
     def THREAD_ALLOW_LOCAL_NET_DATA_CHANGE(self, payload): 
         return self.parse_b(payload)
 
@@ -896,7 +895,7 @@ class SpinelPropertyHandler(SpinelCodec):
         return self.parse_L(payload)
 
     def THREAD_NETWORK_ID_TIMEOUT(self, payload): return self.parse_C(payload)
-    def THREAD_ACTIVE_ROUTER_IDS(self, payload): return self.parse_D(payload)
+    def THREAD_ACTIVE_ROUTER_IDS(self, payload):  return self.parse_D(payload)
     def THREAD_RLOC16_DEBUG_PASSTHRU(self, payload):   
         return self.parse_b(payload)
     
@@ -1480,6 +1479,7 @@ class WpanDiagsCmd(Cmd, SpinelCodec):
 
         'ncp-status',
         'ncp-vendorid',
+        'ncp-assisting-ports',
 
         'phy-freq',
         'phy-cca-threshold',
@@ -2707,6 +2707,28 @@ class WpanDiagsCmd(Cmd, SpinelCodec):
         """ Display the vendor id. """
         self.handle_property(line, SPINEL_PROP_VENDOR_ID) # 'i'
 
+    def do_ncpassistingports(self, line):
+        """ Display the Thread assisting ports. """
+        # TODO: handle array of ports
+
+        args = line.split(" ")
+        num = len(args)
+        if (num > 1):
+            port = int(args[1])
+
+        if args[0] == "add":
+            value = self.prop_insert_value(SPINEL_PROP_THREAD_ASSISTING_PORTS,
+                                           port, 'H')
+            print("Done")
+
+        elif args[0] == "remove":
+            value = self.prop_remove_value(SPINEL_PROP_THREAD_ASSISTING_PORTS,
+                                           port, 'H')
+            print("Done")
+
+        else:
+            self.handle_property(line, SPINEL_PROP_THREAD_ASSISTING_PORTS, 'H')
+            
     def do_phyfreq(self, line):
         """ Display the last status. """
         self.handle_property(line, SPINEL_PROP_PHY_FREQ, 'L')

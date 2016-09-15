@@ -36,6 +36,7 @@ EXTRA_DIST                                                         = \
     test_ncp_mac.py                                                  \
     test_ncp_net.py                                                  \
     test_ncp_ipv6.py                                                 \
+    test_ncp_thread.py                                               \
     node.py                                                          \
     $(NULL)
 
@@ -55,6 +56,7 @@ check_SCRIPTS                                                     += \
     test_ncp_mac.py                                                  \
     test_ncp_net.py                                                  \
     test_ncp_ipv6.py                                                 \
+    test_ncp_thread.py                                               \
     $(NULL)
 
 endif
