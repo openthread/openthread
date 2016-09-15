@@ -1,5 +1,19 @@
-* text=lf
-*.ac eol=lf
-*.vcxproj eol=crlf
-*.vcxproj.filters eol=crlf
-*.sln eol=crlf
+# Treat everything that seems like a text file as a text file, with
+# whatever line endings are specified for this repository.
+* text=auto
+
+# Treat files which are obviously binary as binary.
+*.gz -text
+
+# Files that need to keep unix file endings
+bootstrap text eol=lf
+*.sh text eol=lf
+*.m4 text eol=lf
+configure.ac text eol=lf
+Makefile.am text eol=lf
+Makefile.in text eol=lf
+
+# Files that need to keep Windows file endings
+*.vcxproj text eol=crlf
+*.vcxproj.filters text eol=crlf
+*.sln text eol=crlf
