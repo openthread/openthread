@@ -79,6 +79,7 @@ void Leader::Start(void)
 
 void Leader::Stop(void)
 {
+    mCoapServer.RemoveResource(mServerData);
 }
 
 uint8_t Leader::GetVersion(void) const

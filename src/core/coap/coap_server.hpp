@@ -138,6 +138,14 @@ public:
     ThreadError AddResource(Resource &aResource);
 
     /**
+     * This method removes a resource from the CoAP server.
+     *
+     * @param[in]  aResource  A reference to the resource.
+     *
+     */
+    void RemoveResource(Resource &aResource);
+
+    /**
      * This method returns a new UDP message with sufficient header space reserved.
      *
      * @param[in]  aReserved  The number of header bytes to reserve after the UDP header.
