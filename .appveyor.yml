@@ -3,7 +3,10 @@ image: Previous Visual Studio 2015
 configuration:
 - Release
 - Debug
-platform: x64
+platform:
+- x64
+- x86
+clone_depth: 10
 build:
   project: openthread.sln
   verbosity: minimal
