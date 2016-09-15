@@ -49,7 +49,7 @@
 namespace Thread {
 namespace MeshCoP {
 
-DatasetManager::DatasetManager(ThreadNetif &aThreadNetif, const uint8_t aType, const char *aUriSet,
+DatasetManager::DatasetManager(ThreadNetif &aThreadNetif, const Tlv::Type aType, const char *aUriSet,
                                const char *aUriGet):
     mLocal(aType),
     mNetwork(aType),

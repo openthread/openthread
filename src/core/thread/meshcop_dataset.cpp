@@ -41,7 +41,7 @@
 namespace Thread {
 namespace MeshCoP {
 
-Dataset::Dataset(const uint8_t aType) :
+Dataset::Dataset(const Tlv::Type aType) :
     mType(aType),
     mLength(0)
 {
@@ -49,7 +49,6 @@ Dataset::Dataset(const uint8_t aType) :
 
 void Dataset::Clear(void)
 {
-    mType = 0;
     mLength = 0;
 }
 
@@ -356,11 +355,20 @@ exit:
 
 const Timestamp *Dataset::GetTimestamp(void) const
 {
-    const uint8_t *tlv = reinterpret_cast<const uint8_t *>(Get(static_cast<Tlv::Type>(mType)));
     const Timestamp *timestamp = NULL;
 
-    VerifyOrExit(tlv != NULL, ;);
-    timestamp = reinterpret_cast<const Timestamp *>(tlv + sizeof(Tlv));
+    if (mType == Tlv::kActiveTimestamp)
+    {
+        const ActiveTimestampTlv *tlv = reinterpret_cast<const ActiveTimestampTlv *>(Get(mType));
+        VerifyOrExit(tlv != NULL, ;);
+        timestamp = reinterpret_cast<const Timestamp *>(tlv->GetValue());
+    }
+    else
+    {
+        const PendingTimestampTlv *tlv = reinterpret_cast<const PendingTimestampTlv *>(Get(mType));
+        VerifyOrExit(tlv != NULL, ;);
+        timestamp = reinterpret_cast<const Timestamp *>(tlv->GetValue());
+    }
 
 exit:
     return timestamp;
@@ -375,7 +383,7 @@ void Dataset::SetTimestamp(const Timestamp &aTimestamp)
         Timestamp timestamp;
     } OT_TOOL_PACKED_END timestampTlv;
 
-    timestampTlv.tlv.SetType(static_cast<Tlv::Type>(mType));
+    timestampTlv.tlv.SetType(mType);
     timestampTlv.tlv.SetLength(sizeof(Timestamp));
     timestampTlv.timestamp = aTimestamp;
 

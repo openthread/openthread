@@ -55,7 +55,7 @@ public:
      * @param[in]  aType      The type of the dataset, active or pending.
      *
      */
-    Dataset(const uint8_t aType);
+    Dataset(const Tlv::Type aType);
 
     /**
      * This method clears the Dataset.
@@ -135,9 +135,9 @@ public:
 private:
     void Remove(uint8_t *aStart, uint8_t aLength);
 
-    uint8_t   mType;            ///< Active or Pending
-    uint8_t   mTlvs[kMaxSize];  ///< The Dataset buffer
-    uint8_t   mLength;          ///< The number of valid bytes in @var mTlvs
+    Tlv::Type  mType;            ///< Active or Pending
+    uint8_t    mTlvs[kMaxSize];  ///< The Dataset buffer
+    uint8_t    mLength;          ///< The number of valid bytes in @var mTlvs
 };
 
 }  // namespace MeshCoP
