@@ -49,21 +49,22 @@ namespace Thread {
  */
 
 /**
- * Represents the modes of operation for the TrickleTimer
- */
-typedef enum TrickleTimerMode
-{
-    kTrickleTimerModeNormal = 0,  ///< Runs the normal trickle logic.
-    kTrickleTimerModeMPL    = 1,  ///< Runs the trickle logic modified for MPL.
-} TrickleTimerMode;
-
-/**
  * This class implements a trickle timer.
  *
  */
 class TrickleTimer
 {
 public:
+
+    /**
+     * Represents the modes of operation for the TrickleTimer
+     */
+    typedef enum Mode
+    {
+        kTrickleTimerModeNormal = 0,  ///< Runs the normal trickle logic.
+        kTrickleTimerModeMPL    = 1,  ///< Runs the trickle logic modified for MPL.
+    } Mode;
+
     /**
      * This function pointer is called when the timer expires.
      *
@@ -85,8 +86,11 @@ public:
      * @param[in]  aContext                 A pointer to arbitrary context information.
      *
      */
-    TrickleTimer(TimerScheduler &aScheduler, uint32_t aRedundancyConstant, TrickleTimerMode aMode,
-                 Handler aTransmitHandler, Handler aIntervalExpiredHandler, void *aContext);
+    TrickleTimer(TimerScheduler &aScheduler,
+#ifdef ENABLE_TRICKLE_TIMER_SUPPRESSION_SUPPORT
+                 uint32_t aRedundancyConstant,
+#endif
+                 Mode aMode, Handler aTransmitHandler, Handler aIntervalExpiredHandler, void *aContext);
 
     /**
      * This method indicates whether or not the trickle timer instance is running.
@@ -111,11 +115,13 @@ public:
      */
     void Stop(void);
 
+#ifdef ENABLE_TRICKLE_TIMER_SUPPRESSION_SUPPORT
     /**
      * This method indicates to the trickle timer a 'consistent' state.
      *
      */
     void IndicateConsistent(void);
+#endif
 
     /**
      * This method indicates to the trickle timer an 'inconsistent' state.
@@ -132,7 +138,7 @@ private:
     static void HandleTimerFired(void *aContext);
     void HandleTimerFired(void);
 
-    typedef enum TricklePhase
+    typedef enum Phase
     {
         ///< Indicates we are currently not running
         kTricklePhaseDormant    = 1,
@@ -140,15 +146,17 @@ private:
         kTricklePhaseTransmit   = 2,
         ///< Indicates that when the timer expires, it should process interval expiration callbacks
         kTricklePhaseInterval   = 3,
-    } TricklePhase;
+    } Phase;
 
     Timer mTimer;
 
+#ifdef ENABLE_TRICKLE_TIMER_SUPPRESSION_SUPPORT
     // Redundancy constant
     const uint32_t k;
+#endif
 
     // The mode of operation
-    const TrickleTimerMode mMode;
+    const Mode mMode;
 
     // Minimum interval size
     uint32_t Imin;
@@ -159,10 +167,12 @@ private:
     uint32_t I;
     // The time (in milliseconds) into the interval at which we should transmit
     uint32_t t;
+#ifdef ENABLE_TRICKLE_TIMER_SUPPRESSION_SUPPORT
     // A counter, keeping track of the number of "consistent" transmissions received
     uint32_t c;
+#endif
     // The current trickle phase for the timer
-    TricklePhase mPhase;
+    Phase mPhase;
 
     // Callback variables
     Handler mTransmitHandler;

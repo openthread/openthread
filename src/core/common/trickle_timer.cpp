@@ -39,11 +39,16 @@
 namespace Thread {
 
 TrickleTimer::TrickleTimer(
-    TimerScheduler &aScheduler, uint32_t aRedundancyConstant, TrickleTimerMode aMode,
-    Handler aTransmitHandler, Handler aIntervalExpiredHandler, void *aContext)
+    TimerScheduler &aScheduler,
+#ifdef ENABLE_TRICKLE_TIMER_SUPPRESSION_SUPPORT
+    uint32_t aRedundancyConstant,
+#endif
+    Mode aMode, Handler aTransmitHandler, Handler aIntervalExpiredHandler, void *aContext)
     :
     mTimer(aScheduler, HandleTimerFired, this),
+#ifdef ENABLE_TRICKLE_TIMER_SUPPRESSION_SUPPORT
     k(aRedundancyConstant),
+#endif
     mMode(aMode),
     mPhase(kTricklePhaseDormant),
     mTransmitHandler(aTransmitHandler),
@@ -78,11 +83,13 @@ void TrickleTimer::Stop(void)
     mTimer.Stop();
 }
 
+#ifdef ENABLE_TRICKLE_TIMER_SUPPRESSION_SUPPORT
 void TrickleTimer::IndicateConsistent(void)
 {
     // Increment counter
     c++;
 }
+#endif
 
 void TrickleTimer::IndicateInconsistent(void)
 {
@@ -103,7 +110,10 @@ void TrickleTimer::IndicateInconsistent(void)
 void TrickleTimer::StartNewInterval(void)
 {
     // Reset the counter and timer phase
+
+#ifdef ENABLE_TRICKLE_TIMER_SUPPRESSION_SUPPORT
     c = 0;
+#endif
     mPhase = kTricklePhaseTransmit;
 
     // Initialize t
@@ -135,20 +145,24 @@ void TrickleTimer::HandleTimerFired(void *aContext)
 
 void TrickleTimer::HandleTimerFired(void)
 {
-    bool ShouldContinue = true;
+    bool shouldContinue = true;
 
-    // We have just reached time 't'
-    if (mPhase == kTricklePhaseTransmit)
+    switch (mPhase)
     {
+    // We have just reached time 't'
+    case kTricklePhaseTransmit:
+
         // Are we not using reduncancy or is the counter still less than it?
+#ifdef ENABLE_TRICKLE_TIMER_SUPPRESSION_SUPPORT
         if (k == 0 || c < k)
+#endif
         {
             // Invoke the transmission callback
-            ShouldContinue = TransmitFired();
+            shouldContinue = TransmitFired();
         }
 
         // Wait for the rest of the interval to elapse
-        if (ShouldContinue)
+        if (shouldContinue)
         {
             // Start next phase of the timer
             mPhase = kTricklePhaseInterval;
@@ -156,10 +170,12 @@ void TrickleTimer::HandleTimerFired(void)
             // Start the time for 'I - t' milliseconds
             mTimer.Start(I - t);
         }
-    }
+
+        break;
+
     // We have just reached time 'I'
-    else if (mPhase == kTricklePhaseInterval)
-    {
+    case kTricklePhaseInterval:
+
         // Double 'I' to get the new interval length
         uint32_t newI = I == 0 ? 1 : I << 1;
 
@@ -168,21 +184,22 @@ void TrickleTimer::HandleTimerFired(void)
         I = newI;
 
         // Invoke the interval expiration callback
-        ShouldContinue = IntervalExpiredFired();
+        shouldContinue = IntervalExpiredFired();
 
-        if (ShouldContinue)
+        if (shouldContinue)
         {
             // Start a new interval
             StartNewInterval();
         }
-    }
-    else
-    {
+
+        break;
+
+    default:
         assert(false);
     }
 
     // If we aren't still running, we go dormant
-    if (!ShouldContinue)
+    if (!shouldContinue)
     {
         mPhase = kTricklePhaseDormant;
     }
