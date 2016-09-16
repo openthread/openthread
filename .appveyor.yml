@@ -16,4 +16,4 @@ test_script:
 
     if %Platform2%==x86 set Platform2=Win32
 
-    "C:\Program Files (x86)\Microsoft Visual Studio 14.0\Common7\IDE\CommonExtensions\Microsoft\TestWindow\vstest.console.exe" /platform:%Platform% build\bin\%Platform2%\%Configuration%\dll\UnitTests.dll
+    vstest.console /logger:Appveyor /inIsolation /platform:%Platform% build\bin\%Platform2%\%Configuration%\dll\UnitTests.dll
