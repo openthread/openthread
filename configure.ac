@@ -732,6 +732,8 @@ tools/spi-hdlc-adapter/Makefile
 tools/spinel-cli/Makefile
 tests/Makefile
 tests/scripts/Makefile
+tests/scripts/thread-cert/Makefile
+tests/scripts/ncp/Makefile
 tests/unit/Makefile
 doc/Makefile
 ])

@@ -1,3 +1,4 @@
+#!/usr/bin/python
 #
 #  Copyright (c) 2016, The OpenThread Authors.
 #  All rights reserved.
@@ -26,29 +27,48 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-include $(abs_top_nlbuild_autotools_dir)/automake/pre.am
+import os
+import sys
+import time
+import pexpect
+import unittest
 
-# Always package (e.g. for 'make dist') these subdirectories.
+import node
 
-DIST_SUBDIRS                            = \
-    thread-cert                           \
-    ncp                                   \
-    $(NULL)
+class test_ncp_phy(unittest.TestCase):
+    def setUp(self):
+        self.node = node.Node(1)
 
-# Always build (e.g. for 'make all') these subdirectories.
+    def test_phy_enabled(self):
+        self.node.send_command('phy-enabled')
+        # Get not implemented yet, so don't expect Done
+        self.node.send_command('phy-enabled 1')
+        self.node.send_command('phy-enabled 0')
 
-if OPENTHREAD_EXAMPLES_POSIX
-if OPENTHREAD_ENABLE_CLI
-SUBDIRS                                 = \
-    thread-cert                           \
-    ncp                                   \
-    $(NULL)
-endif
-endif
+    def test_phy_freq(self):
+        self.node.send_command('phy-freq')
+        self.node.pexpect.expect('Done')
 
-# Always pretty (e.g. for 'make pretty') these subdirectories.
+    def test_phy_rssi(self):
+        self.node.send_command('phy-rssi')
+        self.node.pexpect.expect('Done')
 
-PRETTY_SUBDIRS                          = \
-    $(NULL)
+    def test_phy_channel(self):
+        self.node.send_command('channel')
+        self.node.pexpect.expect('Done')
+        self.node.send_command('channel 12')
+        self.node.pexpect.expect('Done')
+        self.node.send_command('channel')
+        self.node.pexpect.expect('12')
+        self.node.pexpect.expect('Done')
 
-include $(abs_top_nlbuild_autotools_dir)/automake/post.am
+    #def test_phy_cca_threshold(self):
+    #    self.node.send_command('phy-cca-threshold')
+    #    self.node.pexpect.expect('Done')
+    
+    #def test_phy_tx_power(self):
+    #    self.node.send_command('phy-tx-power')
+    #    self.node.pexpect.expect('Done')
+
+if __name__ == '__main__':
+    unittest.main()

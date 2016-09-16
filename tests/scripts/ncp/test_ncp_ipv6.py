@@ -1,3 +1,4 @@
+#!/usr/bin/python
 #
 #  Copyright (c) 2016, The OpenThread Authors.
 #  All rights reserved.
@@ -26,29 +27,42 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-include $(abs_top_nlbuild_autotools_dir)/automake/pre.am
+import os
+import sys
+import time
+import pexpect
+import unittest
 
-# Always package (e.g. for 'make dist') these subdirectories.
+import node
 
-DIST_SUBDIRS                            = \
-    thread-cert                           \
-    ncp                                   \
-    $(NULL)
+class test_ncp_ipv6(unittest.TestCase):
+    def setUp(self):
+        self.node = node.Node(1)
 
-# Always build (e.g. for 'make all') these subdirectories.
+    def test_ipv6_ml_prefix(self):
+        self.node.send_command('ncp-mlprefix')
+        self.node.pexpect.expect('Done')
 
-if OPENTHREAD_EXAMPLES_POSIX
-if OPENTHREAD_ENABLE_CLI
-SUBDIRS                                 = \
-    thread-cert                           \
-    ncp                                   \
-    $(NULL)
-endif
-endif
+    def test_ipv6_ll64(self):
+        self.node.send_command('ncp-ll64')
 
-# Always pretty (e.g. for 'make pretty') these subdirectories.
+    def test_ipv6_ml64(self):
+        self.node.send_command('ncp-ml64')
+        self.node.pexpect.expect('Done')
 
-PRETTY_SUBDIRS                          = \
-    $(NULL)
+    def test_ipaddr(self):
+        self.node.send_command('ipaddr')
+        self.node.pexpect.expect('Done')
 
-include $(abs_top_nlbuild_autotools_dir)/automake/post.am
+        self.node.send_command('ipaddr add fd00::1')
+        self.node.pexpect.expect('Done')
+        self.node.send_command('ipaddr')
+        self.node.pexpect.expect('fd00::1')
+        self.node.pexpect.expect('Done')
+
+        self.node.send_command('ipaddr remove fd00::1')
+        self.node.pexpect.expect('Done')
+
+
+if __name__ == '__main__':
+    unittest.main()

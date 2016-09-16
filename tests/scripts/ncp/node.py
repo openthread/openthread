@@ -1,3 +1,4 @@
+#!/usr/bin/python
 #
 #  Copyright (c) 2016, The OpenThread Authors.
 #  All rights reserved.
@@ -26,29 +27,46 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-include $(abs_top_nlbuild_autotools_dir)/automake/pre.am
+import os
+import sys
+import time
+import pexpect
+import unittest
 
-# Always package (e.g. for 'make dist') these subdirectories.
+class Node():
+    def __init__(self, nodeid=1):
+        """ Initialize an NCP simulation node. """
+        self.nodeid = nodeid
+        self.verbose = int(float(os.getenv('VERBOSE', 0)))
 
-DIST_SUBDIRS                            = \
-    thread-cert                           \
-    ncp                                   \
-    $(NULL)
+        if "top_builddir" in os.environ.keys():
+            builddir = os.environ['top_builddir']
+            if "top_srcdir" in os.environ.keys():
+                srcdir = os.environ['top_srcdir']
+            else:
+                srcdir = os.path.dirname(os.path.realpath(__file__))
+                srcdir += "/../../.."
+            cmd = 'python %s/tools/spinel-cli/spinel-cli.py -p %s/examples/apps/ncp/ot-ncp -n' % (srcdir, builddir)
+        else:
+            cmd = '../../../examples/apps/ncp/ot-ncp'
+        cmd += ' %d' % nodeid
+        print ("%s" % cmd)
 
-# Always build (e.g. for 'make all') these subdirectories.
+        self.pexpect = pexpect.spawn(cmd, timeout=2)
+        time.sleep(0.1)
+        self.pexpect.expect('spinel-cli >')
 
-if OPENTHREAD_EXAMPLES_POSIX
-if OPENTHREAD_ENABLE_CLI
-SUBDIRS                                 = \
-    thread-cert                           \
-    ncp                                   \
-    $(NULL)
-endif
-endif
+        if self.verbose:
+            self.pexpect.logfile_read = sys.stdout
 
-# Always pretty (e.g. for 'make pretty') these subdirectories.
 
-PRETTY_SUBDIRS                          = \
-    $(NULL)
+    def __del__(self):
+        if self.pexpect.isalive():
+            self.send_command('exit')
+            self.pexpect.expect(pexpect.EOF)
+            self.pexpect.terminate()
+            self.pexpect.close(force=True)
 
-include $(abs_top_nlbuild_autotools_dir)/automake/post.am
+    def send_command(self, cmd):
+        print ("%d: %s" % (self.nodeid, cmd))
+        self.pexpect.sendline(cmd)

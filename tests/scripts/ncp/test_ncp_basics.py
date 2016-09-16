@@ -1,3 +1,4 @@
+#!/usr/bin/python
 #
 #  Copyright (c) 2016, The OpenThread Authors.
 #  All rights reserved.
@@ -26,29 +27,28 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-include $(abs_top_nlbuild_autotools_dir)/automake/pre.am
+import os
+import sys
+import time
+import pexpect
+import unittest
 
-# Always package (e.g. for 'make dist') these subdirectories.
+import node
 
-DIST_SUBDIRS                            = \
-    thread-cert                           \
-    ncp                                   \
-    $(NULL)
+class test_ncp(unittest.TestCase):
+    def setUp(self):
+        self.node = node.Node(1)
 
-# Always build (e.g. for 'make all') these subdirectories.
+    def test_version(self):
+        self.node.send_command('version')
+        self.node.pexpect.expect('OPENTHREAD/')
 
-if OPENTHREAD_EXAMPLES_POSIX
-if OPENTHREAD_ENABLE_CLI
-SUBDIRS                                 = \
-    thread-cert                           \
-    ncp                                   \
-    $(NULL)
-endif
-endif
+    #def test_noop(self): pass
+    #def test_reset(self): pass
 
-# Always pretty (e.g. for 'make pretty') these subdirectories.
+    def test_status(self): 
+        self.node.send_command('ncp-status')
+        self.node.pexpect.expect('Done')
 
-PRETTY_SUBDIRS                          = \
-    $(NULL)
-
-include $(abs_top_nlbuild_autotools_dir)/automake/post.am
+if __name__ == '__main__':
+    unittest.main()

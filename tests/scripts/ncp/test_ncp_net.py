@@ -1,3 +1,4 @@
+#!/usr/bin/python
 #
 #  Copyright (c) 2016, The OpenThread Authors.
 #  All rights reserved.
@@ -26,29 +27,42 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-include $(abs_top_nlbuild_autotools_dir)/automake/pre.am
+import os
+import sys
+import time
+import pexpect
+import unittest
 
-# Always package (e.g. for 'make dist') these subdirectories.
+import node
 
-DIST_SUBDIRS                            = \
-    thread-cert                           \
-    ncp                                   \
-    $(NULL)
+class test_ncp_net(unittest.TestCase):
+    def setUp(self):
+        self.node = node.Node(1)
+        self.node.send_command('panid 1')
+        self.node.pexpect.expect('Done')
 
-# Always build (e.g. for 'make all') these subdirectories.
+    def test_net_name(self):
+        self.node.send_command('networkname')
+        self.node.pexpect.expect('Done')
+        self.node.send_command('networkname test_ncp_net')
+        self.node.pexpect.expect('Done')
+        self.node.send_command('networkname')
+        self.node.pexpect.expect('test_ncp_net')
+        self.node.pexpect.expect('Done')
 
-if OPENTHREAD_EXAMPLES_POSIX
-if OPENTHREAD_ENABLE_CLI
-SUBDIRS                                 = \
-    thread-cert                           \
-    ncp                                   \
-    $(NULL)
-endif
-endif
+    def test_net_xpanid(self):
+        self.node.send_command('extpanid')
+        self.node.pexpect.expect('Done')
+        #self.node.send_command('extpanid 1234')
+        #self.node.pexpect.expect('Done')
+        #self.node.send_command('extpanid')
+        #self.node.pexpect.expect('1234')
+        #self.node.pexpect.expect('Done')
 
-# Always pretty (e.g. for 'make pretty') these subdirectories.
+    def test_net_masterkey(self):
+        self.node.send_command('masterkey')
+        self.node.pexpect.expect('Done')
 
-PRETTY_SUBDIRS                          = \
-    $(NULL)
 
-include $(abs_top_nlbuild_autotools_dir)/automake/post.am
+if __name__ == '__main__':
+    unittest.main()
