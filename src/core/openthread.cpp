@@ -168,6 +168,11 @@ void otGetFactoryAssignedIeeeEui64(otInstance *aInstance, otExtAddress *aEui64)
     otPlatRadioGetIeeeEui64(aInstance, aEui64->m8);
 }
 
+void otGetHashMacAddress(otInstance *aInstance, otExtAddress *aHashMacAddress)
+{
+    aInstance->mThreadNetif.GetMac().GetHashMacAddress(static_cast<Mac::ExtAddress *>(aHashMacAddress));
+}
+
 ThreadError otGetLeaderRloc(otInstance *aInstance, otIp6Address *aAddress)
 {
     ThreadError error;

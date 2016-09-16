@@ -52,7 +52,7 @@ namespace Thread {
 namespace NetworkData {
 
 Leader::Leader(ThreadNetif &aThreadNetif):
-    NetworkData(aThreadNetif),
+    NetworkData(aThreadNetif, false),
     mTimer(aThreadNetif.GetIp6().mTimerScheduler, &Leader::HandleTimer, this),
     mServerData(OPENTHREAD_URI_SERVER_DATA, &Leader::HandleServerData, this),
     mCoapServer(aThreadNetif.GetCoapServer()),
@@ -961,7 +961,7 @@ ThreadError Leader::SendServerDataNotification(uint16_t aRloc16)
 
     VerifyOrExit(rlocIn, error = kThreadError_NotFound);
 
-    SuccessOrExit(error = NetworkData::SendServerDataNotification(false, aRloc16));
+    SuccessOrExit(error = NetworkData::SendServerDataNotification(aRloc16));
 
 exit:
     return error;

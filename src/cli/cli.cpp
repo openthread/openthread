@@ -88,6 +88,7 @@ const struct Command Interpreter::sCommands[] =
 #endif
     { "extaddr", &Interpreter::ProcessExtAddress },
     { "extpanid", &Interpreter::ProcessExtPanId },
+    { "hashmacaddr", &Interpreter::ProcessHashMacAddress },
     { "ifconfig", &Interpreter::ProcessIfconfig },
     { "ipaddr", &Interpreter::ProcessIpAddr },
 #if OPENTHREAD_ENABLE_JOINER
@@ -613,6 +614,22 @@ void Interpreter::ProcessExtPanId(int argc, char *argv[])
     }
 
 exit:
+    AppendResult(error);
+}
+
+void Interpreter::ProcessHashMacAddress(int argc, char *argv[])
+{
+    ThreadError error = kThreadError_None;
+    otExtAddress hashMacAddress;
+
+    VerifyOrExit(argc == 0, error = kThreadError_Parse);
+
+    otGetHashMacAddress(mInstance, &hashMacAddress);
+    OutputBytes(hashMacAddress.m8, OT_EXT_ADDRESS_SIZE);
+    sServer->OutputFormat("\r\n");
+
+exit:
+    (void)argv;
     AppendResult(error);
 }
 
