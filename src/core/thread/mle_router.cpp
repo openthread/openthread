@@ -267,7 +267,7 @@ ThreadError MleRouter::BecomeLeader(void)
     mNetworkData.Reset();
 
     SuccessOrExit(error = SetStateLeader(GetRloc16(mRouterId)));
-    
+
     ResetAdvertiseInterval();
 
 exit:
@@ -445,7 +445,7 @@ bool MleRouter::HandleAdvertiseTimer(void)
 
 void MleRouter::ResetAdvertiseInterval(void)
 {
-    assert(GetDeviceState() == kDeviceStateRouter || 
+    assert(GetDeviceState() == kDeviceStateRouter ||
            GetDeviceState() == kDeviceStateLeader);
 
     if (!mRouterAdvertiseTimer.IsRunning())
