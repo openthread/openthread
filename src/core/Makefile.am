@@ -63,6 +63,7 @@ libopenthread_a_SOURCES             = \
     net/netif.cpp                     \
     net/udp6.cpp                      \
     thread/address_resolver.cpp       \
+    thread/energy_scan_server.cpp     \
     thread/key_manager.cpp            \
     thread/link_quality.cpp           \
     thread/lowpan.cpp                 \
@@ -84,6 +85,7 @@ libopenthread_a_SOURCES             = \
 if OPENTHREAD_ENABLE_COMMISSIONER
 libopenthread_a_SOURCES            += \
     meshcop/commissioner.cpp          \
+    meshcop/energy_scan_client.cpp    \
     meshcop/panid_query_client.cpp    \
     $(NULL)
 endif  # OPENTHREAD_ENABLE_COMMISSIONER
@@ -124,6 +126,7 @@ noinst_HEADERS                      = \
     mac/mac_blacklist.hpp             \
     meshcop/commissioner.hpp          \
     meshcop/dtls.hpp                  \
+    meshcop/energy_scan_client.hpp    \
     meshcop/joiner.hpp                \
     meshcop/joiner_router.hpp         \
     meshcop/leader.hpp                \
@@ -140,6 +143,7 @@ noinst_HEADERS                      = \
     net/udp6.hpp                      \
     net/tcp.hpp                       \
     thread/address_resolver.hpp       \
+    thread/energy_scan_server.hpp     \
     thread/key_manager.hpp            \
     thread/link_quality.hpp           \
     thread/lowpan.hpp                 \

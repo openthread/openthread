@@ -53,6 +53,7 @@ namespace Thread {
 namespace MeshCoP {
 
 Commissioner::Commissioner(ThreadNetif &aThreadNetif):
+    mEnergyScan(aThreadNetif),
     mPanIdQuery(aThreadNetif),
     mTimer(aThreadNetif.GetIp6().mTimerScheduler, HandleTimer, this),
     mTransmitTask(aThreadNetif.GetIp6().mTaskletScheduler, &HandleUdpTransmit, this),

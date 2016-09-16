@@ -66,9 +66,63 @@ ThreadError otCommissionerStart(otInstance *aInstance, const char *aPSKd);
  */
 ThreadError otCommissionerStop(otInstance *aInstance);
 
+/**
+ * This function pointer is called when the Commissioner receives an Energy Report.
+ *
+ * @param[in]  aChannelMask       The channel mask value.
+ * @param[in]  aEnergyList        A pointer to the energy measurement list.
+ * @param[in]  aEnergyListLength  Number of entries in @p aEnergyListLength.
+ * @param[in]  aContext           A pointer to application-specific context.
+ *
+ */
+typedef void (*otCommissionerEnergyReportCallback)(uint32_t aChannelMask, const uint8_t *aEnergyList,
+                                                   uint8_t aEnergyListLength, void *aContext);
+
+/**
+ * This function sends an Energy Scan Query message.
+ *
+ * @param[in]  aInstance      A pointer to an OpenThread instance.
+ * @param[in]  aChannelMask   The channel mask value.
+ * @param[in]  aCount         The number of energy measurements per channel.
+ * @param[in]  aPeriod        The time between energy measurements (milliseconds).
+ * @param[in]  aScanDuration  The scan duration for each energy measurement (milliseconds).
+ * @param[in]  aAddress       A pointer to the IPv6 destination.
+ * @param[in]  aCallback      A pointer to a function called on receiving an Energy Report message.
+ * @param[in]  aContext       A pointer to application-specific context.
+ *
+ * @retval kThreadError_None    Successfully enqueued the Energy Scan Query message.
+ * @retval kThreadError_NoBufs  Insufficient buffers to generate an Energy Scan Query message.
+ *
+ */
+ThreadError otCommissionerEnergyScan(otInstance *aInstance, uint32_t aChannelMask, uint8_t aCount, uint16_t aPeriod,
+                                     uint16_t aScanDuration, const otIp6Address *aAddress,
+                                     otCommissionerEnergyReportCallback aCallback, void *aContext);
+
+/**
+ * This function pointer is called when the Commissioner receives a PAN ID Conflict message.
+ *
+ * @param[in]  aPanId             The PAN ID value.
+ * @param[in]  aChannelMask       The channel mask value.
+ * @param[in]  aContext           A pointer to application-specific context.
+ *
+ */
 typedef void (*otCommissionerPanIdConflictCallback)(uint16_t aPanId, uint32_t aChannelMask, void *aContext);
 
-ThreadError otCommissionerPanIdQuery(otInstance *, uint16_t aPanId, uint32_t aChannelMask,
+/**
+ * This function sends a PAN ID Query message.
+ *
+ * @param[in]  aInstance      A pointer to an OpenThread instance.
+ * @param[in]  aPanId         The PAN ID to query.
+ * @param[in]  aChannelMask   The channel mask value.
+ * @param[in]  aAddress       A pointer to the IPv6 destination.
+ * @param[in]  aCallback      A pointer to a function called on receiving an Energy Report message.
+ * @param[in]  aContext       A pointer to application-specific context.
+ *
+ * @retval kThreadError_None    Successfully enqueued the PAN ID Query message.
+ * @retval kThreadError_NoBufs  Insufficient buffers to generate a PAN ID Query message.
+ *
+ */
+ThreadError otCommissionerPanIdQuery(otInstance *aInstance, uint16_t aPanId, uint32_t aChannelMask,
                                      const otIp6Address *aAddress,
                                      otCommissionerPanIdConflictCallback aCallback, void *aContext);
 
