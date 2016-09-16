@@ -17,8 +17,10 @@ OpenThread test scripts use the CLI to execute test cases.
 * [dataset](#dataset)
 * [discover](#discover)
 * [eidcache](#eidcache)
+* [eui64](#eui64)
 * [extaddr](#extaddr)
 * [extpanid](#extpanid)
+* [hashmacaddr](#hashmacaddr)
 * [ifconfig](#ifconfig)
 * [ipaddr](#ipaddr)
 * [keysequence](#keysequence)
@@ -552,6 +554,16 @@ fdde:ad00:beef:0:110a:e041:8399:17cd 6000
 Done
 ```
 
+### eui64
+
+Get the factory-assigned IEEE EUI-64.
+
+```bash
+> eui64
+0615aae900124b00
+Done
+```
+
 ### extaddr
 
 Get the IEEE 802.15.4 Extended Address.
@@ -588,6 +600,16 @@ Set the Thread Extended PAN ID value.
 
 ```bash
 > extpanid dead00beef00cafe
+Done
+```
+
+### hashmacaddr
+
+Get the HashMac address.
+
+```bash
+> hashmacaddr
+e0b220eb7d8dda7e
 Done
 ```
 

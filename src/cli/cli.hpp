@@ -159,6 +159,7 @@ private:
 #endif
     void ProcessExtAddress(int argc, char *argv[]);
     void ProcessExtPanId(int argc, char *argv[]);
+    void ProcessHashMacAddress(int argc, char *argv[]);
     void ProcessIfconfig(int argc, char *argv[]);
     void ProcessIpAddr(int argc, char *argv[]);
     ThreadError ProcessIpAddrAdd(int argc, char *argv[]);

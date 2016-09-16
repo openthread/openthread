@@ -214,6 +214,26 @@ class ARM(IThci):
         except Exception, e:
             ModuleHelper.WriteIntoDebugLogger("setRouterUpgradeThreshold() Error: " + str(e))
 
+    def __setRouterDowngradeThreshold(self, iThreshold):
+        """set router downgrade threshold
+
+        Args:
+            iThreshold: the number of active routers on the Thread network
+                        partition above which an active router may decide to
+                        become a child.
+
+        Returns:
+            True: successful to set the ROUTER_DOWNGRADE_THRESHOLD
+            False: fail to set ROUTER_DOWNGRADE_THRESHOLD
+        """
+        print 'call __setRouterDowngradeThreshold'
+        try:
+            cmd = 'routerdowngradethreshold %s' % str(iThreshold)
+            print cmd
+            return self.__sendCommand(cmd) == 'Done'
+        except Exception, e:
+            ModuleHelper.WriteIntoDebugLogger("setRouterDowngradeThreshold() Error: " + str(e))
+
     def __enableWhiteList(self):
         """enable white list filter
 
@@ -722,11 +742,15 @@ class ARM(IThci):
                 role = 'rsdn'
                 # set ROUTER_UPGRADE_THRESHOLD
                 self.__setRouterUpgradeThreshold(32)
+                # set ROUTER_DOWNGRADE_THRESHOLD
+                self.__setRouterDowngradeThreshold(33)
             elif eRoleId == Thread_Device_Role.Router:
                 print 'join as router'
                 role = 'rsdn'
                 # set ROUTER_UPGRADE_THRESHOLD
                 self.__setRouterUpgradeThreshold(32)
+                # set ROUTER_DOWNGRADE_THRESHOLD
+                self.__setRouterDowngradeThreshold(33)
             elif eRoleId == Thread_Device_Role.SED:
                 print 'join as sleepy end device'
                 role = 's'
@@ -1623,4 +1647,7 @@ class ARM(IThci):
         pass
 
     def commissionerUnregister(self):
+        pass
+
+    def sendBeacons(self, sAddr, xCommissionerSessionId, listChannelMask, xPanId):
         pass
