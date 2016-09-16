@@ -67,18 +67,10 @@ Joiner::Joiner(ThreadNetif &aNetif):
 ThreadError Joiner::Start(const char *aPSKd)
 {
     ThreadError error;
-    union
-    {
-        Mac::ExtAddress extAddress;
-        uint8_t buf[Crypto::Sha256::kHashSize];
-    };
-    Crypto::Sha256 sha256;
+    Mac::ExtAddress extAddress;
 
     // use extended address based on factory-assigned IEEE EUI-64
-    otPlatRadioGetIeeeEui64(NULL, buf);
-    sha256.Start();
-    sha256.Update(buf, OT_EXT_ADDRESS_SIZE);
-    sha256.Finish(buf);
+    mNetif.GetMac().GetHashMacAddress(&extAddress);
     mNetif.GetMac().SetExtAddress(extAddress);
     mNetif.GetMle().UpdateLinkLocalAddress();
 
