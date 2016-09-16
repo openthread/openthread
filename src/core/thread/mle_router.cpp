@@ -243,7 +243,6 @@ ThreadError MleRouter::BecomeLeader(void)
 
     mSocket.Open(&HandleUdpReceive, this);
     mReedAdvertiseTimer.Stop();
-    ResetAdvertiseInterval();
     mStateUpdateTimer.Start(kStateUpdatePeriod);
     mAddressResolver.Clear();
 
@@ -268,6 +267,8 @@ ThreadError MleRouter::BecomeLeader(void)
     mNetworkData.Reset();
 
     SuccessOrExit(error = SetStateLeader(GetRloc16(mRouterId)));
+    
+    ResetAdvertiseInterval();
 
 exit:
     return error;
@@ -444,22 +445,18 @@ bool MleRouter::HandleAdvertiseTimer(void)
 
 void MleRouter::ResetAdvertiseInterval(void)
 {
-    if (GetDeviceState() == kDeviceStateRouter || GetDeviceState() == kDeviceStateLeader)
+    assert(GetDeviceState() == kDeviceStateRouter || 
+           GetDeviceState() == kDeviceStateLeader);
+
+    if (!mRouterAdvertiseTimer.IsRunning())
     {
-        if (!mRouterAdvertiseTimer.IsRunning())
-        {
-            mRouterAdvertiseTimer.Start(
-                Timer::SecToMsec(kAdvertiseIntervalMin),
-                Timer::SecToMsec(kAdvertiseIntervalMax));
-        }
-        else
-        {
-            mRouterAdvertiseTimer.IndicateInconsistent();
-        }
+        mRouterAdvertiseTimer.Start(
+            Timer::SecToMsec(kAdvertiseIntervalMin),
+            Timer::SecToMsec(kAdvertiseIntervalMax));
     }
     else
     {
-        // TODO ...
+        mRouterAdvertiseTimer.IndicateInconsistent();
     }
 }
 
