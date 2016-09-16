@@ -78,13 +78,13 @@ void test_packed_enum();
 
 utAssertTrue s_AssertTrue;
 
-namespace UnitTests
+namespace Thread
 {		
-	TEST_CLASS(UnitTest1)
+	TEST_CLASS(UnitTests)
 	{
 	public:
 
-        UnitTest1() { s_AssertTrue = AssertTrue; }
+        UnitTests() { s_AssertTrue = AssertTrue; }
 
         // Helper for openthread test code to call
         static void AssertTrue(bool condition, const wchar_t* message)
