@@ -139,7 +139,7 @@ void TrickleTimer::StartNewInterval(void)
 
 void TrickleTimer::HandleTimerFired(void *aContext)
 {
-    TrickleTimer *obj = reinterpret_cast<TrickleTimer *>(aContext);
+    TrickleTimer *obj = static_cast<TrickleTimer *>(aContext);
     obj->HandleTimerFired();
 }
 
@@ -151,7 +151,7 @@ void TrickleTimer::HandleTimerFired(void)
     {
     // We have just reached time 't'
     case kTricklePhaseTransmit:
-
+    {
         // Are we not using reduncancy or is the counter still less than it?
 #ifdef ENABLE_TRICKLE_TIMER_SUPPRESSION_SUPPORT
         if (k == 0 || c < k)
@@ -172,10 +172,11 @@ void TrickleTimer::HandleTimerFired(void)
         }
 
         break;
+    }
 
     // We have just reached time 'I'
     case kTricklePhaseInterval:
-
+    {
         // Double 'I' to get the new interval length
         uint32_t newI = I == 0 ? 1 : I << 1;
 
@@ -193,6 +194,7 @@ void TrickleTimer::HandleTimerFired(void)
         }
 
         break;
+    }
 
     default:
         assert(false);
