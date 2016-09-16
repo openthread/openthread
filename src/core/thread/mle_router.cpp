@@ -426,7 +426,7 @@ void MleRouter::HandleReedAdvertiseTimer(void *aContext)
     {
         uint32_t advertiseDelay = Timer::SecToMsec(kReedAdvertiseInterval +
                                                    (otPlatRandomGet() % kReedAdvertiseJitter));
-        mReedAdvertiseTimer.Start(advertiseDelay);
+        obj->mReedAdvertiseTimer.Start(advertiseDelay);
     }
 }
 
