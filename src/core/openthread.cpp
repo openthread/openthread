@@ -1200,14 +1200,34 @@ int otWriteMessage(otMessage aMessage, uint16_t aOffset, const void *aBuf, uint1
 
 ThreadError otOpenUdpSocket(otInstance *, otUdpSocket *aSocket, otUdpReceive aCallback, void *aCallbackContext)
 {
+    ThreadError error = kThreadError_Busy;
     Ip6::UdpSocket *socket = reinterpret_cast<Ip6::UdpSocket *>(aSocket);
-    return socket->Open(aCallback, aCallbackContext);
+
+    if (socket->mTransport == NULL)
+    {
+        socket->mTransport = &sIp6->mUdp;
+        error = socket->Open(aCallback, aCallbackContext);
+    }
+
+    return error;
 }
 
 ThreadError otCloseUdpSocket(otUdpSocket *aSocket)
 {
+    ThreadError error = kThreadError_InvalidState;
     Ip6::UdpSocket *socket = reinterpret_cast<Ip6::UdpSocket *>(aSocket);
-    return socket->Close();
+
+    if (socket->mTransport != NULL)
+    {
+        error = socket->Close();
+
+        if (error == kThreadError_None)
+        {
+            socket->mTransport = NULL;
+        }
+    }
+
+    return error;
 }
 
 ThreadError otBindUdpSocket(otUdpSocket *aSocket, otSockAddr *aSockName)
