@@ -145,12 +145,13 @@ void TrickleTimer::HandleTimerFired(void *aContext)
 
 void TrickleTimer::HandleTimerFired(void)
 {
+    Phase curPhase = mPhase;
     bool shouldContinue = true;
 
     // Default the current state to Dormant
     mPhase = kPhaseDormant;
 
-    switch (mPhase)
+    switch (curPhase)
     {
     // We have just reached time 't'
     case kPhaseTransmit:
