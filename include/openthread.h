@@ -512,6 +512,18 @@ void otSetExtendedPanId(otInstance *aInstance, const uint8_t *aExtendedPanId);
 void otGetFactoryAssignedIeeeEui64(otInstance *aInstance, otExtAddress *aEui64);
 
 /**
+ * Get the Hash Mac Address.
+ *
+ * Hash Mac Address is the first 64 bits of the result of computing SHA-256 over factory-assigned
+ * IEEE EUI-64, which is used as IEEE 802.15.4 Extended Address during commissioning process.
+ *
+ * @param[in]   aInstance          A pointer to the OpenThread instance.
+ * @param[out]  aHashMacAddress    A pointer to where the Hash Mac Address is placed.
+ *
+ */
+void otGetHashMacAddress(otInstance *aInstance, otExtAddress *aHashMacAddress);
+
+/**
  * This function returns a pointer to the Leader's RLOC.
  *
  * @param[in]   aInstance    A pointer to an OpenThread instance.
