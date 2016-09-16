@@ -30,6 +30,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <fcntl.h>
+#include <sys/stat.h>
 
 #include <openthread-config.h>
 #include <platform/flash.h>
@@ -50,16 +51,33 @@ enum
 ThreadError otPlatFlashInit(void)
 {
     ThreadError error = kThreadError_None;
+    char fileName[16];
+    struct stat st = { 0 };
+    bool create = false;
 
-    sFlashFd = open("OT_Flash", O_RDWR | O_CREAT, 0666);
-    VerifyOrExit(ftruncate(sFlashFd, 0) == 0, error = kThreadError_Failed);
+    if (stat("tmp", &st) == -1)
+    {
+        mkdir("tmp", 0777);
+    }
+
+    snprintf(fileName, sizeof(fileName), "tmp/%d.flash", NODE_ID);
+
+    if (access(fileName, 0))
+    {
+        create = true;
+    }
+
+    sFlashFd = open(fileName, O_RDWR | O_CREAT, 0666);
     lseek(sFlashFd, 0, SEEK_SET);
 
     VerifyOrExit(sFlashFd >= 0, error = kThreadError_Failed);
 
-    for (uint16_t index = 0; index < FLASH_PAGE_NUM; index++)
+    if (create)
     {
-        SuccessOrExit(error = otPlatFlashErasePage(index * FLASH_PAGE_SIZE));
+        for (uint16_t index = 0; index < FLASH_PAGE_NUM; index++)
+        {
+            SuccessOrExit(error = otPlatFlashErasePage(index * FLASH_PAGE_SIZE));
+        }
     }
 
 exit:
@@ -98,12 +116,20 @@ ThreadError otPlatFlashStatusWait(uint32_t aTimeout)
 uint32_t otPlatFlashWrite(uint32_t aAddress, uint8_t *aData, uint32_t aSize)
 {
     uint32_t ret = 0;
+    uint32_t index = 0;
+    uint8_t byte;
 
     VerifyOrExit(sFlashFd >= 0 && aAddress < FLASH_SIZE, ;);
-    ret = (uint32_t)pwrite(sFlashFd, aData, aSize, aAddress);
+
+    for (index = 0; index < aSize; index++)
+    {
+        VerifyOrExit((ret = otPlatFlashRead(aAddress + index, &byte, 1)) == 1, ;);
+        byte &= aData[index];
+        VerifyOrExit((ret = (uint32_t)pwrite(sFlashFd, &byte, 1, aAddress + index)) == 1, ;);
+    }
 
 exit:
-    return ret;
+    return index;
 }
 
 uint32_t otPlatFlashRead(uint32_t aAddress, uint8_t *aData, uint32_t aSize)
