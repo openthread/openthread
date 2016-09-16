@@ -99,7 +99,8 @@ ThreadError otPlatFlashErasePage(uint32_t aAddress)
 
     for (uint16_t offset = 0; offset < FLASH_PAGE_SIZE; offset++)
     {
-        VerifyOrExit(pwrite(sFlashFd, &buf, 1, (aAddress & (~(FLASH_PAGE_SIZE - 1))) + offset) == 1,
+        VerifyOrExit(pwrite(sFlashFd, &buf, 1,
+                     (aAddress & (uint32_t)(~(FLASH_PAGE_SIZE - 1))) + offset) == 1,
                      error = kThreadError_Failed);
     }
 
