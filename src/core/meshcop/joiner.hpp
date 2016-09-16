@@ -103,6 +103,7 @@ private:
     void SendJoinerFinalize(void);
 
     uint8_t mJoinerRouterChannel;
+    uint16_t mJoinerRouterPanId;
     Mac::ExtAddress mJoinerRouter;
     Message *mTransmitMessage;
     Ip6::UdpSocket mSocket;
