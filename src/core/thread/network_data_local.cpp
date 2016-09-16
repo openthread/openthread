@@ -221,11 +221,13 @@ ThreadError Local::SendServerDataNotification(void)
     ThreadError error = kThreadError_None;
     uint16_t rloc = mMle.GetRloc16();
 
-    VerifyOrExit((mMle.GetDeviceMode() & Mle::ModeTlv::kModeFFD) == 0 ||
-                 (mMle.IsRouterRoleEnabled() == false) ||
-                 (mMle.GetDeviceState() >= Mle::kDeviceStateRouter) ||
-                 (mMle.GetActiveRouterCount() >= mMle.GetRouterUpgradeThreshold()),
-                 error = kThreadError_InvalidState);
+    if ((mMle.GetDeviceMode() & Mle::ModeTlv::kModeFFD) != 0 &&
+        (mMle.IsRouterRoleEnabled()) &&
+        (mMle.GetDeviceState() < Mle::kDeviceStateRouter) &&
+        (mMle.GetActiveRouterCount() < mMle.GetRouterUpgradeThreshold()))
+    {
+        ExitNow(error = kThreadError_InvalidState);
+    }
 
     UpdateRloc();
 
