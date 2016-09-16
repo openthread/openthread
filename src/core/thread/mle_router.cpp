@@ -50,9 +50,8 @@ namespace Mle {
 
 MleRouter::MleRouter(ThreadNetif &aThreadNetif):
     Mle(aThreadNetif),
-    mRouterAdvertiseTimer(aThreadNetif.GetIp6().mTimerScheduler, TrickleTimer::kModeNormal,
-                          HandleRouterAdvertiseTimer, NULL, this),
-    mReedAdvertiseTimer(aThreadNetif.GetIp6().mTimerScheduler, &HandleReedAdvertiseTimer, this),
+    mAdvertiseTimer(aThreadNetif.GetIp6().mTimerScheduler, TrickleTimer::kModeNormal,
+                    HandleAdvertiseTimer, NULL, this),
     mStateUpdateTimer(aThreadNetif.GetIp6().mTimerScheduler, &HandleStateUpdateTimer, this),
     mSocket(aThreadNetif.GetIp6().mUdp),
     mAddressSolicit(OPENTHREAD_URI_ADDRESS_SOLICIT, &HandleAddressSolicit, this),
@@ -200,8 +199,7 @@ ThreadError MleRouter::BecomeRouter(ThreadStatusTlv::Status aStatus)
     }
 
     mSocket.Open(&HandleUdpReceive, this);
-    mReedAdvertiseTimer.Stop();
-    assert(!mRouterAdvertiseTimer.IsRunning());
+    mAdvertiseTimer.Stop();
     mAddressResolver.Clear();
 
     switch (mDeviceState)
@@ -242,7 +240,7 @@ ThreadError MleRouter::BecomeLeader(void)
     }
 
     mSocket.Open(&HandleUdpReceive, this);
-    mReedAdvertiseTimer.Stop();
+    mAdvertiseTimer.Stop();
     mStateUpdateTimer.Start(kStateUpdatePeriod);
     mAddressResolver.Clear();
 
@@ -280,7 +278,7 @@ void MleRouter::StopLeader(void)
     mCoapServer.RemoveResource(mAddressRelease);
     mNetif.GetActiveDataset().StopLeader();
     mNetif.GetPendingDataset().StopLeader();
-    mRouterAdvertiseTimer.Stop();
+    mAdvertiseTimer.Stop();
     mNetworkData.Stop();
     mNetif.UnsubscribeAllRoutersMulticast();
 }
@@ -302,8 +300,6 @@ ThreadError MleRouter::HandleDetachStart(void)
 
 ThreadError MleRouter::HandleChildStart(otMleAttachFilter aFilter)
 {
-    uint32_t advertiseDelay;
-
     mRouterIdSequenceLastUpdated = Timer::GetNow();
 
     StopLeader();
@@ -325,9 +321,9 @@ ThreadError MleRouter::HandleChildStart(otMleAttachFilter aFilter)
 
     if (mDeviceMode & ModeTlv::kModeFFD)
     {
-        advertiseDelay = Timer::SecToMsec(kReedAdvertiseInterval +
-                                          (otPlatRandomGet() % kReedAdvertiseJitter));
-        mReedAdvertiseTimer.Start(advertiseDelay);
+        obj->mAdvertiseTimer.Start(
+            Timer::SecToMsec(kReedAdvertiseInterval),
+            Timer::SecToMsec(kReedAdvertiseInterval + kReedAdvertiseJitter));
         mNetif.SubscribeAllRoutersMulticast();
     }
 
@@ -413,22 +409,23 @@ void MleRouter::SetRouterDowngradeThreshold(uint8_t aThreshold)
     mRouterDowngradeThreshold = aThreshold;
 }
 
-bool MleRouter::HandleRouterAdvertiseTimer(void *aContext)
-{
-    MleRouter *obj = static_cast<MleRouter *>(aContext);
-    return obj->HandleAdvertiseTimer();
-}
-
-void MleRouter::HandleReedAdvertiseTimer(void *aContext)
+bool MleRouter::HandleAdvertiseTimer(void *aContext)
 {
     MleRouter *obj = static_cast<MleRouter *>(aContext);
 
-    if (obj->HandleAdvertiseTimer())
+    bool result = obj->HandleAdvertiseTimer();
+    if (result && obj->GetDeviceState() == kDeviceStateChild)
     {
-        uint32_t advertiseDelay = Timer::SecToMsec(kReedAdvertiseInterval +
-                                                   (otPlatRandomGet() % kReedAdvertiseJitter));
-        obj->mReedAdvertiseTimer.Start(advertiseDelay);
+        // Don't let the trickle timer continue its state machine
+        result = false;
+
+        // Manually restart it
+        obj->mAdvertiseTimer.Start(
+            Timer::SecToMsec(kReedAdvertiseInterval),
+            Timer::SecToMsec(kReedAdvertiseInterval + kReedAdvertiseJitter));
     }
+
+    return result;
 }
 
 bool MleRouter::HandleAdvertiseTimer(void)
@@ -448,15 +445,15 @@ void MleRouter::ResetAdvertiseInterval(void)
     assert(GetDeviceState() == kDeviceStateRouter ||
            GetDeviceState() == kDeviceStateLeader);
 
-    if (!mRouterAdvertiseTimer.IsRunning())
+    if (!mAdvertiseTimer.IsRunning())
     {
-        mRouterAdvertiseTimer.Start(
+        mAdvertiseTimer.Start(
             Timer::SecToMsec(kAdvertiseIntervalMin),
             Timer::SecToMsec(kAdvertiseIntervalMax));
     }
     else
     {
-        mRouterAdvertiseTimer.IndicateInconsistent();
+        mAdvertiseTimer.IndicateInconsistent();
     }
 }
 

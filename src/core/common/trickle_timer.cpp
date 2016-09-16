@@ -146,6 +146,9 @@ void TrickleTimer::HandleTimerFired(void *aContext)
 void TrickleTimer::HandleTimerFired(void)
 {
     bool shouldContinue = true;
+    
+    // Default the current state to Dormant
+    mPhase = kPhaseDormant;
 
     switch (mPhase)
     {
@@ -198,12 +201,6 @@ void TrickleTimer::HandleTimerFired(void)
 
     default:
         assert(false);
-    }
-
-    // If we aren't still running, we go dormant
-    if (!shouldContinue)
-    {
-        mPhase = kPhaseDormant;
     }
 }
 

@@ -548,14 +548,12 @@ private:
     uint8_t AllocateRouterId(uint8_t aRouterId);
     bool InRouterIdMask(uint8_t aRouterId);
 
-    static bool HandleRouterAdvertiseTimer(void *aContext);
-    static void HandleReedAdvertiseTimer(void *aContext);
+    static bool HandleAdvertiseTimer(void *aContext);
     bool HandleAdvertiseTimer(void);
     static void HandleStateUpdateTimer(void *aContext);
     void HandleStateUpdateTimer(void);
 
-    TrickleTimer mRouterAdvertiseTimer;
-    Timer mReedAdvertiseTimer;
+    TrickleTimer mAdvertiseTimer;
     Timer mStateUpdateTimer;
 
     Ip6::UdpSocket mSocket;
