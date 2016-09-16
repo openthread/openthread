@@ -50,7 +50,7 @@ namespace Mle {
 
 MleRouter::MleRouter(ThreadNetif &aThreadNetif):
     Mle(aThreadNetif),
-    mRouterAdvertiseTimer(aThreadNetif.GetIp6().mTimerScheduler, kTrickleTimerModeNormal,
+    mRouterAdvertiseTimer(aThreadNetif.GetIp6().mTimerScheduler, TrickleTimer::kModeNormal,
                           HandleRouterAdvertiseTimer, NULL, this),
     mReedAdvertiseTimer(aThreadNetif.GetIp6().mTimerScheduler, &HandleReedAdvertiseTimer, this),
     mStateUpdateTimer(aThreadNetif.GetIp6().mTimerScheduler, &HandleStateUpdateTimer, this),

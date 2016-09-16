@@ -61,8 +61,8 @@ public:
      */
     typedef enum Mode
     {
-        kTrickleTimerModeNormal = 0,  ///< Runs the normal trickle logic.
-        kTrickleTimerModeMPL    = 1,  ///< Runs the trickle logic modified for MPL.
+        kModeNormal = 0,  ///< Runs the normal trickle logic.
+        kModeMPL    = 1,  ///< Runs the trickle logic modified for MPL.
     } Mode;
 
     /**
@@ -141,11 +141,11 @@ private:
     typedef enum Phase
     {
         ///< Indicates we are currently not running
-        kTricklePhaseDormant    = 1,
+        kPhaseDormant    = 1,
         ///< Indicates that when the timer expires, it should evaluate for transmit callbacks
-        kTricklePhaseTransmit   = 2,
+        kPhaseTransmit   = 2,
         ///< Indicates that when the timer expires, it should process interval expiration callbacks
-        kTricklePhaseInterval   = 3,
+        kPhaseInterval   = 3,
     } Phase;
 
     Timer mTimer;

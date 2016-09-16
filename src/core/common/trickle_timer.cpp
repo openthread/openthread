@@ -50,7 +50,7 @@ TrickleTimer::TrickleTimer(
     k(aRedundancyConstant),
 #endif
     mMode(aMode),
-    mPhase(kTricklePhaseDormant),
+    mPhase(kPhaseDormant),
     mTransmitHandler(aTransmitHandler),
     mIntervalExpiredHandler(aIntervalExpiredHandler),
     mContext(aContext)
@@ -59,7 +59,7 @@ TrickleTimer::TrickleTimer(
 
 bool TrickleTimer::IsRunning(void) const
 {
-    return mPhase != kTricklePhaseDormant;
+    return mPhase != kPhaseDormant;
 }
 
 void TrickleTimer::Start(uint32_t aIntervalMin, uint32_t aIntervalMax)
@@ -79,7 +79,7 @@ void TrickleTimer::Start(uint32_t aIntervalMin, uint32_t aIntervalMax)
 
 void TrickleTimer::Stop(void)
 {
-    mPhase = kTricklePhaseDormant;
+    mPhase = kPhaseDormant;
     mTimer.Stop();
 }
 
@@ -114,7 +114,7 @@ void TrickleTimer::StartNewInterval(void)
 #ifdef ENABLE_TRICKLE_TIMER_SUPPRESSION_SUPPORT
     c = 0;
 #endif
-    mPhase = kTricklePhaseTransmit;
+    mPhase = kPhaseTransmit;
 
     // Initialize t
     if (I == 0)
@@ -122,7 +122,7 @@ void TrickleTimer::StartNewInterval(void)
         // Immediate interval, just set t to 0
         t = 0;
     }
-    else if (mMode == kTrickleTimerModeMPL)
+    else if (mMode == kModeMPL)
     {
         // Initialize t to random value between (0, I]
         t = otPlatRandomGet() % I;
@@ -150,7 +150,7 @@ void TrickleTimer::HandleTimerFired(void)
     switch (mPhase)
     {
     // We have just reached time 't'
-    case kTricklePhaseTransmit:
+    case kPhaseTransmit:
     {
         // Are we not using reduncancy or is the counter still less than it?
 #ifdef ENABLE_TRICKLE_TIMER_SUPPRESSION_SUPPORT
@@ -165,7 +165,7 @@ void TrickleTimer::HandleTimerFired(void)
         if (shouldContinue)
         {
             // Start next phase of the timer
-            mPhase = kTricklePhaseInterval;
+            mPhase = kPhaseInterval;
 
             // Start the time for 'I - t' milliseconds
             mTimer.Start(I - t);
@@ -175,7 +175,7 @@ void TrickleTimer::HandleTimerFired(void)
     }
 
     // We have just reached time 'I'
-    case kTricklePhaseInterval:
+    case kPhaseInterval:
     {
         // Double 'I' to get the new interval length
         uint32_t newI = I == 0 ? 1 : I << 1;
@@ -203,7 +203,7 @@ void TrickleTimer::HandleTimerFired(void)
     // If we aren't still running, we go dormant
     if (!shouldContinue)
     {
-        mPhase = kTricklePhaseDormant;
+        mPhase = kPhaseDormant;
     }
 }
 
