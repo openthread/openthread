@@ -414,6 +414,7 @@ bool MleRouter::HandleAdvertiseTimer(void *aContext)
     MleRouter *obj = static_cast<MleRouter *>(aContext);
 
     bool result = obj->HandleAdvertiseTimer();
+
     if (result && obj->GetDeviceState() == kDeviceStateChild)
     {
         // Don't let the trickle timer continue its state machine

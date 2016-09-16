@@ -146,7 +146,7 @@ void TrickleTimer::HandleTimerFired(void *aContext)
 void TrickleTimer::HandleTimerFired(void)
 {
     bool shouldContinue = true;
-    
+
     // Default the current state to Dormant
     mPhase = kPhaseDormant;
 
