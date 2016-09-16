@@ -61,8 +61,9 @@ public:
      */
     typedef enum Mode
     {
-        kModeNormal = 0,  ///< Runs the normal trickle logic.
-        kModeMPL    = 1,  ///< Runs the trickle logic modified for MPL.
+        kModeNormal     = 0,  ///< Runs the normal trickle logic.
+        kModePlainTimer = 1,  ///< Runs a normal timer between Imin and Imax.
+        kModeMPL        = 2,  ///< Runs the trickle logic modified for MPL.
     } Mode;
 
     /**
@@ -80,7 +81,6 @@ public:
      *
      * @param[in]  aScheduler               A refrence to the timer scheduler.
      * @param[in]  aRedundancyConstant      The redundancy constant for the timer, k.
-     * @param[in]  aMode                    The operating mode for the timer.
      * @param[in]  aTransmitHandler         A pointer to a function that is called when transmission should occur.
      * @param[in]  aIntervalExpiredHandler  An optional pointer to a function that is called when the interval expires.
      * @param[in]  aContext                 A pointer to arbitrary context information.
@@ -90,7 +90,7 @@ public:
 #ifdef ENABLE_TRICKLE_TIMER_SUPPRESSION_SUPPORT
                  uint32_t aRedundancyConstant,
 #endif
-                 Mode aMode, Handler aTransmitHandler, Handler aIntervalExpiredHandler, void *aContext);
+                 Handler aTransmitHandler, Handler aIntervalExpiredHandler, void *aContext);
 
     /**
      * This method indicates whether or not the trickle timer instance is running.
@@ -105,9 +105,10 @@ public:
      *
      * @param[in]  aIntervalMin  The minimum interval for the timer, Imin.
      * @param[in]  aIntervalMax  The maximum interval for the timer, Imax.
+     * @param[in]  aMode         The operating mode for the timer.
      *
      */
-    void Start(uint32_t aIntervalMin, uint32_t aIntervalMax);
+    void Start(uint32_t aIntervalMin, uint32_t aIntervalMax, Mode aMode);
 
     /**
      * This method stops the trickle timer.
@@ -155,13 +156,12 @@ private:
     const uint32_t k;
 #endif
 
-    // The mode of operation
-    const Mode mMode;
-
     // Minimum interval size
     uint32_t Imin;
     // Maximum interval size
     uint32_t Imax;
+    // The mode of operation
+    Mode mMode;
 
     // The current interval size (in milliseconds)
     uint32_t I;

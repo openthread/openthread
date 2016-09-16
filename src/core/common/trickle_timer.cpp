@@ -43,13 +43,12 @@ TrickleTimer::TrickleTimer(
 #ifdef ENABLE_TRICKLE_TIMER_SUPPRESSION_SUPPORT
     uint32_t aRedundancyConstant,
 #endif
-    Mode aMode, Handler aTransmitHandler, Handler aIntervalExpiredHandler, void *aContext)
+    Handler aTransmitHandler, Handler aIntervalExpiredHandler, void *aContext)
     :
     mTimer(aScheduler, HandleTimerFired, this),
 #ifdef ENABLE_TRICKLE_TIMER_SUPPRESSION_SUPPORT
     k(aRedundancyConstant),
 #endif
-    mMode(aMode),
     mPhase(kPhaseDormant),
     mTransmitHandler(aTransmitHandler),
     mIntervalExpiredHandler(aIntervalExpiredHandler),
@@ -62,13 +61,14 @@ bool TrickleTimer::IsRunning(void) const
     return mPhase != kPhaseDormant;
 }
 
-void TrickleTimer::Start(uint32_t aIntervalMin, uint32_t aIntervalMax)
+void TrickleTimer::Start(uint32_t aIntervalMin, uint32_t aIntervalMax, Mode aMode)
 {
     assert(!IsRunning());
 
-    // Set the interval limits
+    // Set the interval limits and mode
     Imin = aIntervalMin;
     Imax = aIntervalMax;
+    mMode = aMode;
 
     // Initialize I to [Imin, Imax]
     I = Imin + otPlatRandomGet() % (Imax - Imin);
@@ -126,6 +126,11 @@ void TrickleTimer::StartNewInterval(void)
     {
         // Initialize t to random value between (0, I]
         t = otPlatRandomGet() % I;
+    }
+    else if (mMode == kModePlainTimer)
+    {
+        // Initialize t to I, which has already been randomized in Start
+        t = I;
     }
     else
     {

@@ -50,8 +50,7 @@ namespace Mle {
 
 MleRouter::MleRouter(ThreadNetif &aThreadNetif):
     Mle(aThreadNetif),
-    mAdvertiseTimer(aThreadNetif.GetIp6().mTimerScheduler, TrickleTimer::kModeNormal,
-                    HandleAdvertiseTimer, NULL, this),
+    mAdvertiseTimer(aThreadNetif.GetIp6().mTimerScheduler, HandleAdvertiseTimer, NULL, this),
     mStateUpdateTimer(aThreadNetif.GetIp6().mTimerScheduler, &HandleStateUpdateTimer, this),
     mSocket(aThreadNetif.GetIp6().mUdp),
     mAddressSolicit(OPENTHREAD_URI_ADDRESS_SOLICIT, &HandleAddressSolicit, this),
@@ -323,7 +322,8 @@ ThreadError MleRouter::HandleChildStart(otMleAttachFilter aFilter)
     {
         mAdvertiseTimer.Start(
             Timer::SecToMsec(kReedAdvertiseInterval),
-            Timer::SecToMsec(kReedAdvertiseInterval + kReedAdvertiseJitter));
+            Timer::SecToMsec(kReedAdvertiseInterval + kReedAdvertiseJitter),
+            TrickleTimer::kModePlainTimer);
         mNetif.SubscribeAllRoutersMulticast();
     }
 
@@ -423,7 +423,8 @@ bool MleRouter::HandleAdvertiseTimer(void *aContext)
         // Manually restart it
         obj->mAdvertiseTimer.Start(
             Timer::SecToMsec(kReedAdvertiseInterval),
-            Timer::SecToMsec(kReedAdvertiseInterval + kReedAdvertiseJitter));
+            Timer::SecToMsec(kReedAdvertiseInterval + kReedAdvertiseJitter),
+            TrickleTimer::kModePlainTimer);
     }
 
     return result;
@@ -450,7 +451,8 @@ void MleRouter::ResetAdvertiseInterval(void)
     {
         mAdvertiseTimer.Start(
             Timer::SecToMsec(kAdvertiseIntervalMin),
-            Timer::SecToMsec(kAdvertiseIntervalMax));
+            Timer::SecToMsec(kAdvertiseIntervalMax),
+            TrickleTimer::kModeNormal);
     }
     else
     {
