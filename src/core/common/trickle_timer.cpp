@@ -173,11 +173,23 @@ void TrickleTimer::HandleTimerFired(void)
         // Wait for the rest of the interval to elapse
         if (shouldContinue)
         {
-            // Start next phase of the timer
-            mPhase = kPhaseInterval;
+            // If we are in plain timer mode, just randomize I and restart the interval
+            if (mMode == kModePlainTimer)
+            {
+                // Initialize I to [Imin, Imax]
+                I = Imin + otPlatRandomGet() % (Imax - Imin);
 
-            // Start the time for 'I - t' milliseconds
-            mTimer.Start(I - t);
+                // Start a new interval
+                StartNewInterval();
+            }
+            else
+            {
+                // Start next phase of the timer
+                mPhase = kPhaseInterval;
+
+                // Start the time for 'I - t' milliseconds
+                mTimer.Start(I - t);
+            }
         }
 
         break;

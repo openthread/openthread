@@ -412,22 +412,7 @@ void MleRouter::SetRouterDowngradeThreshold(uint8_t aThreshold)
 bool MleRouter::HandleAdvertiseTimer(void *aContext)
 {
     MleRouter *obj = static_cast<MleRouter *>(aContext);
-
-    bool result = obj->HandleAdvertiseTimer();
-
-    if (result && obj->GetDeviceState() == kDeviceStateChild)
-    {
-        // Don't let the trickle timer continue its state machine
-        result = false;
-
-        // Manually restart it
-        obj->mAdvertiseTimer.Start(
-            Timer::SecToMsec(kReedAdvertiseInterval),
-            Timer::SecToMsec(kReedAdvertiseInterval + kReedAdvertiseJitter),
-            TrickleTimer::kModePlainTimer);
-    }
-
-    return result;
+    return obj->HandleAdvertiseTimer();
 }
 
 bool MleRouter::HandleAdvertiseTimer(void)
@@ -454,10 +439,8 @@ void MleRouter::ResetAdvertiseInterval(void)
             Timer::SecToMsec(kAdvertiseIntervalMax),
             TrickleTimer::kModeNormal);
     }
-    else
-    {
-        mAdvertiseTimer.IndicateInconsistent();
-    }
+
+    mAdvertiseTimer.IndicateInconsistent();
 }
 
 ThreadError MleRouter::SendAdvertisement(void)
