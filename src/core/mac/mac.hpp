@@ -291,6 +291,17 @@ public:
     ThreadError SetExtAddress(const ExtAddress &aExtAddress);
 
     /**
+     * This method gets the Hash Mac Address.
+     *
+     * Hash Mac Address is the first 64 bits of the result of computing SHA-256 over factory-assigned
+     * IEEE EUI-64, which is used as IEEE 802.15.4 Extended Address during commissioning process.
+     *
+     * @param[out]  aHashMacAddress    A pointer to where the Hash Mac Address is placed.
+     *
+     */
+    void GetHashMacAddress(ExtAddress *aHashMacAddress);
+
+    /**
      * This method returns the IEEE 802.15.4 Short Address.
      *
      * @returns The IEEE 802.15.4 Short Address.

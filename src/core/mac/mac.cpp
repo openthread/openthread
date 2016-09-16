@@ -43,6 +43,7 @@
 #include <common/debug.hpp>
 #include <common/logging.hpp>
 #include <crypto/aes_ccm.hpp>
+#include <crypto/sha256.hpp>
 #include <mac/mac.hpp>
 #include <mac/mac_frame.hpp>
 #include <platform/random.h>
@@ -297,6 +298,19 @@ ThreadError Mac::SetExtAddress(const ExtAddress &aExtAddress)
 
 exit:
     return error;
+}
+
+void Mac::GetHashMacAddress(ExtAddress *aHashMacAddress)
+{
+    Crypto::Sha256 sha256;
+    uint8_t buf[Crypto::Sha256::kHashSize];
+
+    otPlatRadioGetIeeeEui64(NULL, buf);
+    sha256.Start();
+    sha256.Update(buf, OT_EXT_ADDRESS_SIZE);
+    sha256.Finish(buf);
+
+    memcpy(aHashMacAddress->m8, buf, OT_EXT_ADDRESS_SIZE);
 }
 
 ShortAddress Mac::GetShortAddress(void) const
