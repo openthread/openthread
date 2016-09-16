@@ -321,7 +321,7 @@ ThreadError MleRouter::HandleChildStart(otMleAttachFilter aFilter)
 
     if (mDeviceMode & ModeTlv::kModeFFD)
     {
-        obj->mAdvertiseTimer.Start(
+        mAdvertiseTimer.Start(
             Timer::SecToMsec(kReedAdvertiseInterval),
             Timer::SecToMsec(kReedAdvertiseInterval + kReedAdvertiseJitter));
         mNetif.SubscribeAllRoutersMulticast();
