@@ -8,7 +8,7 @@ platform:
 - x86
 clone_depth: 10
 build:
-  project: openthread.sln
+  project: etc/visual-studio/openthread.sln
   verbosity: minimal
 test_script:
 - cmd: >-
