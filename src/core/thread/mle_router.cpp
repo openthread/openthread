@@ -444,18 +444,22 @@ bool MleRouter::HandleAdvertiseTimer(void)
 
 void MleRouter::ResetAdvertiseInterval(void)
 {
-    assert(GetDeviceState() == kDeviceStateRouter ||
-           GetDeviceState() == kDeviceStateLeader);
-
-    if (!mRouterAdvertiseTimer.IsRunning())
+    if (GetDeviceState() == kDeviceStateRouter || GetDeviceState() == kDeviceStateLeader)
     {
-        mRouterAdvertiseTimer.Start(
-            Timer::SecToMsec(kAdvertiseIntervalMin),
-            Timer::SecToMsec(kAdvertiseIntervalMax));
+        if (!mRouterAdvertiseTimer.IsRunning())
+        {
+            mRouterAdvertiseTimer.Start(
+                Timer::SecToMsec(kAdvertiseIntervalMin),
+                Timer::SecToMsec(kAdvertiseIntervalMax));
+        }
+        else
+        {
+            mRouterAdvertiseTimer.IndicateInconsistent();
+        }
     }
     else
     {
-        mRouterAdvertiseTimer.IndicateInconsistent();
+        // TODO ...
     }
 }
 
