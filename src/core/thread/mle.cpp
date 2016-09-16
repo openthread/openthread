@@ -372,6 +372,7 @@ ThreadError Mle::SetStateChild(uint16_t aRloc16)
         mMleRouter.HandleChildStart(mParentRequestMode);
     }
 
+    mNetif.GetNetworkDataLocal().ClearResubmitDelayTimer();
     mNetif.GetIp6().SetForwardingEnabled(false);
 
     otLogInfoMle("Mode -> Child\n");
