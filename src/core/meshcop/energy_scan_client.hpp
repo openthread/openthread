@@ -31,8 +31,8 @@
  *   This file includes definitions for responding to PANID Query Requests.
  */
 
-#ifndef PANID_QUERY_CLIENT_HPP_
-#define PANID_QUERY_CLIENT_HPP_
+#ifndef ENERGY_SCAN_CLIENT_HPP_
+#define ENERGY_SCAN_CLIENT_HPP_
 
 #include <openthread-core-config.h>
 #include <openthread-types.h>
@@ -50,47 +50,49 @@ class ThreadNetif;
  * This class implements handling PANID Query Requests.
  *
  */
-class PanIdQueryClient
+class EnergyScanClient
 {
 public:
     /**
      * This constructor initializes the object.
      *
      */
-    PanIdQueryClient(ThreadNetif &aThreadNetif);
+    EnergyScanClient(ThreadNetif &aThreadNetif);
 
     /**
-     * This method sends a PAN ID Query message.
+     * This method sends an Energy Scan Query message.
      *
-     * @param[in]  aPanId         The PAN ID to query.
      * @param[in]  aChannelMask   The channel mask value.
+     * @param[in]  aCount         The number of energy measurements per channel.
+     * @param[in]  aPeriod        The time between energy measurements (milliseconds).
+     * @param[in]  aScanDuration  The scan duration for each energy measurement (milliseconds).
      * @param[in]  aAddress       A pointer to the IPv6 destination.
      * @param[in]  aCallback      A pointer to a function called on receiving an Energy Report message.
      * @param[in]  aContext       A pointer to application-specific context.
      *
-     * @retval kThreadError_None    Successfully enqueued the PAN ID Query message.
-     * @retval kThreadError_NoBufs  Insufficient buffers to generate a PAN ID Query message.
+     * @retval kThreadError_None    Successfully enqueued the Energy Scan Query message.
+     * @retval kThreadError_NoBufs  Insufficient buffers to generate an Energy Scan Query message.
      *
      */
-    ThreadError SendQuery(uint16_t aPanId, uint32_t aChannelMask, const Ip6::Address &aAddress,
-                          otCommissionerPanIdConflictCallback aCallback, void *aContext);
+    ThreadError SendQuery(uint32_t aChannelMask, uint8_t aCount, uint16_t aPeriod, uint16_t aScanDuration,
+                          const Ip6::Address &aAddress, otCommissionerEnergyReportCallback aCallback, void *aContext);
 
 private:
-    static void HandleConflict(void *aContext, Coap::Header &aHeader, Message &aMessage,
-                               const Ip6::MessageInfo &aMessageInfo);
-    void HandleConflict(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    static void HandleReport(void *aContext, Coap::Header &aHeader, Message &aMessage,
+                             const Ip6::MessageInfo &aMessageInfo);
+    void HandleReport(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
     static void HandleTimer(void *aContext);
     void HandleTimer(void);
 
     static void HandleUdpReceive(void *aContext, otMessage aMessage, const otMessageInfo *aMessageInfo);
 
-    ThreadError SendConflictResponse(const Coap::Header &aRequestHeader, const Ip6::MessageInfo &aRequestMessageInfo);
+    ThreadError SendResponse(const Coap::Header &aRequestHeader, const Ip6::MessageInfo &aRequestMessageInfo);
 
-    otCommissionerPanIdConflictCallback mCallback;
+    otCommissionerEnergyReportCallback mCallback;
     void *mContext;
 
-    Coap::Resource mPanIdQuery;
+    Coap::Resource mEnergyScan;
     Ip6::UdpSocket mSocket;
     Timer mTimer;
 
@@ -104,4 +106,4 @@ private:
 
 }  // namespace Thread
 
-#endif  // PANID_QUERY_CLIENT_HPP_
+#endif  // ENERGY_SCAN_CLIENT_HPP_
