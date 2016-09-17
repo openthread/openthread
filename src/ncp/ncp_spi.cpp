@@ -89,9 +89,9 @@ static uint16_t spi_header_get_data_len(const uint8_t *header)
 
 NcpSpi::NcpSpi(otInstance *aInstance):
     NcpBase(aInstance),
-    mHandleRxFrame(sIp6->mTaskletScheduler, &NcpSpi::HandleRxFrame, this),
-    mHandleSendDone(sIp6->mTaskletScheduler, &NcpSpi::PrepareTxFrame, this),
-    mTxFrameBuffer(aInstance, mTxBuffer, sizeof(mTxBuffer))
+    mHandleRxFrameTask(sIp6->mTaskletScheduler, &NcpSpi::HandleRxFrame, this),
+    mPrepareTxFrameTask(sIp6->mTaskletScheduler, &NcpSpi::PrepareTxFrame, this),
+    mTxFrameBuffer(mTxBuffer, sizeof(mTxBuffer))
 {
     memset(mEmptySendFrame, 0, kSpiHeaderLength);
     memset(mSendFrame, 0, kSpiHeaderLength);
