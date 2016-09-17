@@ -44,13 +44,13 @@ namespace Thread {
 
 EnergyScanServer::EnergyScanServer(ThreadNetif &aThreadNetif) :
     mActive(false),
-    mEnergyScan(OPENTHREAD_URI_ENERGY_SCAN, &HandleRequest, this),
+    mEnergyScan(OPENTHREAD_URI_ENERGY_SCAN, &EnergyScanServer::HandleRequest, this),
     mSocket(aThreadNetif.GetIp6().mUdp),
-    mTimer(aThreadNetif.GetIp6().mTimerScheduler, &HandleTimer, this),
+    mTimer(aThreadNetif.GetIp6().mTimerScheduler, &EnergyScanServer::HandleTimer, this),
     mCoapServer(aThreadNetif.GetCoapServer()),
     mNetif(aThreadNetif)
 {
-    mNetifCallback.Set(&HandleNetifStateChanged, this);
+    mNetifCallback.Set(&EnergyScanServer::HandleNetifStateChanged, this);
     mNetif.RegisterCallback(mNetifCallback);
 
     mCoapServer.AddResource(mEnergyScan);
@@ -116,7 +116,7 @@ exit:
 ThreadError EnergyScanServer::SendResponse(const Coap::Header &aRequestHeader, const Ip6::MessageInfo &aRequestInfo)
 {
     ThreadError error = kThreadError_None;
-    Message *message;
+    Message *message = NULL;
     Coap::Header responseHeader;
     Ip6::MessageInfo responseInfo;
 

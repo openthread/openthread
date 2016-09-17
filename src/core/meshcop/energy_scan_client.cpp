@@ -47,9 +47,9 @@ using Thread::Encoding::BigEndian::HostSwap32;
 namespace Thread {
 
 EnergyScanClient::EnergyScanClient(ThreadNetif &aThreadNetif) :
-    mEnergyScan(OPENTHREAD_URI_ENERGY_REPORT, &HandleReport, this),
+    mEnergyScan(OPENTHREAD_URI_ENERGY_REPORT, &EnergyScanClient::HandleReport, this),
     mSocket(aThreadNetif.GetIp6().mUdp),
-    mTimer(aThreadNetif.GetIp6().mTimerScheduler, &HandleTimer, this),
+    mTimer(aThreadNetif.GetIp6().mTimerScheduler, &EnergyScanClient::HandleTimer, this),
     mCoapServer(aThreadNetif.GetCoapServer()),
     mNetif(aThreadNetif)
 {
