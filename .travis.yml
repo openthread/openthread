@@ -60,6 +60,9 @@ matrix:
     - env: BUILD_TARGET="posix-32-bit" VERBOSE=1
       compiler: gcc
       os: linux
+    - env: BUILD_TARGET="posix-ncp-spi" VERBOSE=1
+      compiler: gcc
+      os: linux
     - env: BUILD_TARGET="posix-ncp" VERBOSE=1
       compiler: gcc
       os: linux

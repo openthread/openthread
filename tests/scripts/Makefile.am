@@ -102,6 +102,7 @@ EXTRA_DIST                                                         = \
     thread-cert/Cert_7_1_03_BorderRouterAsLeader.py                  \
     thread-cert/Cert_7_1_04_BorderRouterAsRouter.py                  \
     thread-cert/Cert_7_1_05_BorderRouterAsRouter.py                  \
+    thread-cert/Cert_9_2_13_EnergyScan.py                            \
     thread-cert/Cert_9_2_14_PanIdQuery.py                            \
     thread-cert/node.py                                              \
     $(NULL)
@@ -217,6 +218,7 @@ check_SCRIPTS                                                     += \
     thread-cert/Cert_7_1_03_BorderRouterAsLeader.py                  \
     thread-cert/Cert_7_1_04_BorderRouterAsRouter.py                  \
     thread-cert/Cert_7_1_05_BorderRouterAsRouter.py                  \
+    thread-cert/Cert_9_2_13_EnergyScan.py                            \
     thread-cert/Cert_9_2_14_PanIdQuery.py                            \
     $(NULL)
 
@@ -249,6 +251,7 @@ XFAIL_NCP_TESTS                                                        = \
         thread-cert/Cert_7_1_03_BorderRouterAsLeader.py                  \
         thread-cert/Cert_7_1_04_BorderRouterAsRouter.py                  \
         thread-cert/Cert_7_1_05_BorderRouterAsRouter.py                  \
+        thread-cert/Cert_9_2_13_EnergyScan.py                            \
         thread-cert/Cert_9_2_14_PanIdQuery.py                            \
         $(NULL)
 

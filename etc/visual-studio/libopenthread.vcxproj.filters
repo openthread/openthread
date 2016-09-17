@@ -69,6 +69,9 @@
     <ClCompile Include="..\..\src\core\common\timer.cpp">
       <Filter>Source Files\common</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\core\common\trickle_timer.cpp">
+      <Filter>Source Files\common</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\src\core\crypto\aes_ccm.cpp">
       <Filter>Source Files\crypto</Filter>
     </ClCompile>
@@ -103,6 +106,9 @@
       <Filter>Source Files\net</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\core\thread\address_resolver.cpp">
+      <Filter>Source Files\thread</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\core\thread\energy_scan_server.cpp">
       <Filter>Source Files\thread</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\core\thread\key_manager.cpp">
@@ -168,6 +174,9 @@
     <ClCompile Include="..\..\src\core\meshcop\dtls.cpp">
       <Filter>Source Files\meshcop</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\core\meshcop\energy_scan_client.cpp">
+      <Filter>Source Files\meshcop</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\src\core\meshcop\joiner.cpp">
       <Filter>Source Files\meshcop</Filter>
     </ClCompile>
@@ -230,6 +239,9 @@
     <ClInclude Include="..\..\src\core\common\timer.hpp">
       <Filter>Header Files\common</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\src\core\common\trickle_timer.hpp">
+      <Filter>Header Files\common</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\src\core\crypto\aes_ccm.hpp">
       <Filter>Header Files\crypto</Filter>
     </ClInclude>
@@ -270,6 +282,9 @@
       <Filter>Header Files\net</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\core\thread\address_resolver.hpp">
+      <Filter>Header Files\thread</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\core\thread\energy_scan_server.hpp">
       <Filter>Header Files\thread</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\core\thread\key_manager.hpp">
@@ -339,6 +354,9 @@
       <Filter>Header Files\meshcop</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\core\meshcop\dtls.hpp">
+      <Filter>Header Files\meshcop</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\core\meshcop\energy_scan_client.hpp">
       <Filter>Header Files\meshcop</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\core\meshcop\joiner.hpp">
