@@ -56,6 +56,8 @@ ThreadError otPlatFlashInit(void)
     struct stat st;
     bool create = false;
 
+    memset(&st, 0, sizeof(st));
+
     if (stat("tmp", &st) == -1)
     {
         mkdir("tmp", 0777);
@@ -94,15 +96,16 @@ ThreadError otPlatFlashErasePage(uint32_t aAddress)
 {
     ThreadError error = kThreadError_None;
     uint8_t buf = 0xff;
+    uint32_t address;
 
     VerifyOrExit(sFlashFd >= 0, error = kThreadError_Failed);
     VerifyOrExit(aAddress < FLASH_SIZE, error = kThreadError_InvalidArgs);
 
+    address = aAddress & (~(uint32_t)(FLASH_PAGE_SIZE - 1));
+
     for (uint16_t offset = 0; offset < FLASH_PAGE_SIZE; offset++)
     {
-        VerifyOrExit(pwrite(sFlashFd, &buf, 1,
-                     (aAddress & (uint32_t)(~(FLASH_PAGE_SIZE - 1))) + offset) == 1,
-                     error = kThreadError_Failed);
+        VerifyOrExit(pwrite(sFlashFd, &buf, 1, address + offset) == 1, error = kThreadError_Failed);
     }
 
 exit:
