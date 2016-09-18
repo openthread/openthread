@@ -56,7 +56,6 @@ ThreadError otPlatFlashInit(void)
     struct stat st;
     bool create = false;
 
-    memset(&st, 0,  sizeof(st));
     if (stat("tmp", &st) == -1)
     {
         mkdir("tmp", 0777);
