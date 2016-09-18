@@ -31,6 +31,7 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <sys/stat.h>
+#include <string.h>
 
 #include <openthread-config.h>
 #include <platform/flash.h>
@@ -52,9 +53,10 @@ ThreadError otPlatFlashInit(void)
 {
     ThreadError error = kThreadError_None;
     char fileName[16];
-    struct stat st = { 0 };
+    struct stat st;
     bool create = false;
 
+    memset(&st, 0,  sizeof(st));
     if (stat("tmp", &st) == -1)
     {
         mkdir("tmp", 0777);
