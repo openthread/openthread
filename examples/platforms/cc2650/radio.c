@@ -154,7 +154,7 @@ static uint8_t sTransmitPsdu[kMaxPHYPacketSize] __attribute__ ((aligned (4))) ;
 static uint8_t sReceivePsdu[kMaxPHYPacketSize] __attribute__ ((aligned (4))) ;
 
 /**
- * @breif initialize the RX buffers
+ * @brief initialize the RX buffers
  *
  * Zeros out the receive buffers and sets up the data structures of the receive
  * queue.
@@ -182,7 +182,7 @@ static void rf_core_init_buffers(void)
 }
 
 /**
- * @breif initialize the RX command structure
+ * @brief initialize the RX command structure
  *
  * Sets the default values for the receive command structure.
  */
@@ -251,7 +251,7 @@ static void rf_core_init_rx_params(void)
 }
 
 /**
- * @breif sends the immediate abort command to the radio core
+ * @brief sends the immediate abort command to the radio core
  *
  * @return the value from the command status register
  * @retval CMDSTA_Done the command completed correctly
@@ -262,7 +262,7 @@ static uint_fast8_t rf_core_cmd_abort(void)
 }
 
 /**
- * @breif sends the immediate ping command to the radio core
+ * @brief sends the immediate ping command to the radio core
  *
  * Check that the Radio core is alive and able to respond to commands.
  *
@@ -275,7 +275,7 @@ static uint_fast8_t rf_core_cmd_ping(void)
 }
 
 /**
- * @breif sends the immediate clear rx queue command to the radio core
+ * @brief sends the immediate clear rx queue command to the radio core
  *
  * Uses the radio core to mark all of the entries in the receive queue as
  * pending. This is used instead of clearing the entries manually to avoid race
@@ -297,7 +297,7 @@ static uint_fast8_t rf_core_cmd_clear_rx(dataQueue_t *queue)
 }
 
 /**
- * @breif sends the tx command to the radio core
+ * @brief sends the tx command to the radio core
  * 
  * Sends the packet to the radio core to be sent asynchronously.
  *
@@ -322,7 +322,7 @@ static uint_fast8_t rf_core_cmd_ieee_tx(uint8_t *psdu, uint8_t len)
 }
 
 /**
- * @breif sends the rx command to the radio core
+ * @brief sends the rx command to the radio core
  *
  * Sends the pre-built receive command to the radio core. This sets up the
  * radio to receive packets according to the settings in the global rx command.
@@ -341,7 +341,7 @@ static uint_fast8_t rf_core_cmd_ieee_rx(void)
 }
 
 /**
- * @breif enables the cpe0 and cpe1 radio interrupts
+ * @brief enables the cpe0 and cpe1 radio interrupts
  *
  * Enables the @ref IRQ_LAST_COMMAND_DONE and @ref IRQ_LAST_FG_COMMAND_DONE to
  * be handled by the @ref RFCCPE0IntHandler interrupt handler.
@@ -371,7 +371,7 @@ static void rf_core_setup_interrupts(void)
 }
 
 /**
- * @breif disables and clears the cpe0 and cpe1 radio interrupts
+ * @brief disables and clears the cpe0 and cpe1 radio interrupts
  */
 static void rf_core_disable_interrupts(void)
 {
@@ -394,7 +394,7 @@ static void rf_core_disable_interrupts(void)
 }
 
 /**
- * @breif Sets the mode for the radio core to IEEE 802.15.4
+ * @brief Sets the mode for the radio core to IEEE 802.15.4
  */
 static void rf_core_set_modesel(void)
 {
@@ -414,7 +414,7 @@ static void rf_core_set_modesel(void)
 }
 
 /**
- * @breif turns on the radio core
+ * @brief turns on the radio core
  *
  * Sets up the power and resources for the radio core.
  * - switches the high frequency clock to the xosc crystal
@@ -492,7 +492,7 @@ static uint_fast8_t rf_core_power_on(void)
 }
 
 /**
- * @breif turns off the radio core
+ * @brief turns off the radio core
  *
  * Switches off the power and resources for the radio core.
  * - disables the interrupts
@@ -526,7 +526,7 @@ static void rf_core_power_off(void)
 }
 
 /**
- * @breif sends the setup command string to the radio core
+ * @brief sends the setup command string to the radio core
  *
  * Enables the clock line from the RTC to the RF core RAT. Enables the RAT
  * timer and sets up the radio in IEEE mode.
@@ -559,7 +559,7 @@ static uint_fast8_t rf_core_cmds_enable(void)
 }
 
 /**
- * @breif sends the shutdown command string to the radio core
+ * @brief sends the shutdown command string to the radio core
  *
  * Powers down the frequency synthesizer and stops the RAT.
  *
@@ -988,7 +988,7 @@ exit:
 }
 
 /**
- * @breif search the receive queue for unprocessed messages
+ * @brief search the receive queue for unprocessed messages
  *
  * Loop through the receive queue structure looking for data entries that the
  * radio core has marked as finished. Then place those in @ref sReceiveFrame
