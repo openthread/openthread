@@ -515,7 +515,7 @@ ThreadError MeshForwarder::UpdateIp6Route(Message &aMessage)
             if (mMle.IsRoutingLocator(ip6Header.GetDestination()))
             {
                 rloc16 = HostSwap16(ip6Header.GetDestination().mFields.m16[7]);
-                VerifyOrExit(mMle.GetRouterId(rloc16) < Mle::kMaxRouterId, error = kThreadError_Drop);
+                VerifyOrExit(mMle.IsRouterIdValid(mMle.GetRouterId(rloc16)), error = kThreadError_Drop);
                 mMeshDest = rloc16;
             }
             else if ((neighbor = mMle.GetNeighbor(ip6Header.GetDestination())) != NULL)
