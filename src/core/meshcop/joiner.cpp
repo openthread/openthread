@@ -76,7 +76,7 @@ ThreadError Joiner::Start(const char *aPSKd)
 
     SuccessOrExit(error = mNetif.GetDtls().SetPsk(reinterpret_cast<const uint8_t *>(aPSKd),
                                                   static_cast<uint8_t>(strlen(aPSKd))));
-    SuccessOrExit(error = mNetif.GetMle().Discover(0, 0, OT_PANID_BROADCAST, HandleDiscoverResult, this));
+    SuccessOrExit(error = mNetif.GetMle().Discover(0, 0, mNetif.GetMac().GetPanId(), HandleDiscoverResult, this));
 
 exit:
     return error;
@@ -99,6 +99,7 @@ void Joiner::HandleDiscoverResult(otActiveScanResult *aResult)
 {
     if (aResult != NULL)
     {
+        mJoinerRouterPanId = aResult->mPanId;
         mJoinerRouterChannel = aResult->mChannel;
         memcpy(&mJoinerRouter, &aResult->mExtAddress, sizeof(mJoinerRouter));
     }
@@ -110,6 +111,7 @@ void Joiner::HandleDiscoverResult(otActiveScanResult *aResult)
         mSocket.Open(&HandleUdpReceive, this);
         mSocket.Bind(sockaddr);
 
+        mNetif.GetMac().SetPanId(mJoinerRouterPanId);
         mNetif.GetMac().SetChannel(mJoinerRouterChannel);
         mNetif.GetIp6Filter().AddUnsecurePort(sockaddr.mPort);
 
