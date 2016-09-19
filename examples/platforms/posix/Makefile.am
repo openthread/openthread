@@ -45,6 +45,7 @@ libopenthread_posix_a_SOURCES             = \
     radio.c                                 \
     random.c                                \
     uart.c                                  \
+    flash.c                                 \
     $(NULL)
 
 if OPENTHREAD_ENABLE_DIAG
