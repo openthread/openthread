@@ -101,6 +101,7 @@ ThreadError otPlatFlashErasePage(uint32_t aAddress)
     VerifyOrExit(sFlashFd >= 0, error = kThreadError_Failed);
     VerifyOrExit(aAddress < FLASH_SIZE, error = kThreadError_InvalidArgs);
 
+    // Get start address of the flash page that includes aAddress
     address = aAddress & (~(uint32_t)(FLASH_PAGE_SIZE - 1));
 
     for (uint16_t offset = 0; offset < FLASH_PAGE_SIZE; offset++)
@@ -129,6 +130,7 @@ uint32_t otPlatFlashWrite(uint32_t aAddress, uint8_t *aData, uint32_t aSize)
     for (index = 0; index < aSize; index++)
     {
         VerifyOrExit((ret = otPlatFlashRead(aAddress + index, &byte, 1)) == 1, ;);
+        // Use bitwise AND to emulate the behavior of flash memory
         byte &= aData[index];
         VerifyOrExit((ret = (uint32_t)pwrite(sFlashFd, &byte, 1, aAddress + index)) == 1, ;);
     }
