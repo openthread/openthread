@@ -58,6 +58,9 @@ static uint16_t recvTailIdx = 0;
 
 void UART0_intHandler(void);
 
+/**
+ * Function documented in platform/uart.h
+ */
 ThreadError otPlatUartEnable(void)
 {
     PRCMPowerDomainOn(PRCM_DOMAIN_SERIAL);
@@ -81,6 +84,9 @@ ThreadError otPlatUartEnable(void)
     return kThreadError_None;
 }
 
+/**
+ * Function documented in platform/uart.h
+ */
 ThreadError otPlatUartDisable(void)
 {
     UARTDisable(UART0_BASE);
@@ -101,6 +107,9 @@ ThreadError otPlatUartDisable(void)
     return kThreadError_None;
 }
 
+/**
+ * Function documented in platform/uart.h
+ */
 ThreadError otPlatUartSend(const uint8_t *aBuf, uint16_t aBufLength)
 {
     ThreadError error = kThreadError_None;
@@ -113,7 +122,10 @@ exit:
     return error;
 }
 
-void processReceive(void)
+/**
+ * @brief process the receive side of the buffers
+ */
+static void processReceive(void)
 {
     while(recvHeadIdx != recvTailIdx)
     {
@@ -133,7 +145,10 @@ void processReceive(void)
     }
 }
 
-void processTransmit(void)
+/**
+ * @brief process the transmit side of the buffers
+ */
+static void processTransmit(void)
 {
     VerifyOrExit(sendBuffer != NULL, ;);
 
@@ -150,12 +165,18 @@ exit:
     return;
 }
 
+/**
+ * Function documented in platform-cc2650.h
+ */
 void cc2650UartProcess(void)
 {
     processReceive();
     processTransmit();
 }
 
+/**
+ * @brief the interrupt handler for the uart interrupt vector
+ */
 void UART0_intHandler(void){
     while(UARTCharsAvail(UART0_BASE))
     {

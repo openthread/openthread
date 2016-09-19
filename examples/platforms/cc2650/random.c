@@ -43,6 +43,9 @@
  * 64 bytes of random data, we just ignore the upper 32 bytes
  */
 
+/**
+ * Function documented in platform-cc2650.h
+ */
 void cc2650RandomInit(void)
 {
     PRCMPowerDomainOn(PRCM_DOMAIN_PERIPH);
@@ -57,6 +60,9 @@ void cc2650RandomInit(void)
     TRNGEnable();
 }
 
+/**
+ * Function documented in platform/random.h
+ */
 uint32_t otPlatRandomGet(void)
 {
     while(!(TRNGStatusGet() & TRNG_NUMBER_READY)){
@@ -65,6 +71,9 @@ uint32_t otPlatRandomGet(void)
     return TRNGNumberGet(TRNG_LOW_WORD);
 }
 
+/**
+ * Function documented in platform/random.h
+ */
 ThreadError otPlatSecureRandomGet(uint16_t aInputLength, uint8_t *aOutput, uint16_t *aOutputLength)
 {
     ThreadError error = kThreadError_None;

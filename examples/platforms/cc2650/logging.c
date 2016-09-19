@@ -32,6 +32,9 @@
 
 #include <platform/logging.h>
 
+/**
+ * Function documented in platform/logging.h
+ */
 void otPlatLog(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aFormat, ...)
 {
     (void)aLogLevel;
