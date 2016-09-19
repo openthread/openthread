@@ -322,8 +322,13 @@ class Node:
         self.send_command('netdataregister')
         self.pexpect.expect('Done')
 
+    def energy_scan(self, mask, count, period, scan_duration, ipaddr):
+        cmd = 'commissioner energy ' + str(mask) + ' ' + str(count) + ' ' + str(period) + ' ' + str(scan_duration) + ' ' + ipaddr
+        self.send_command(cmd)
+        self.pexpect.expect('Energy:', timeout=8)
+
     def panid_query(self, panid, mask, ipaddr):
-        cmd = 'commissioner panid ' + panid + ' ' + mask + ' ' + ipaddr
+        cmd = 'commissioner panid ' + str(panid) + ' ' + str(mask) + ' ' + ipaddr
         self.send_command(cmd)
         self.pexpect.expect('Conflict:', timeout=8)
 

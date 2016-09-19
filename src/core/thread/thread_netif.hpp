@@ -48,6 +48,7 @@
 #include <net/ip6_filter.hpp>
 #include <net/netif.hpp>
 #include <thread/address_resolver.hpp>
+#include <thread/energy_scan_server.hpp>
 #include <thread/key_manager.hpp>
 #include <thread/meshcop_dataset_manager.hpp>
 #include <thread/mesh_forwarder.hpp>
@@ -286,6 +287,7 @@ private:
     MeshCoP::JoinerRouter mJoinerRouter;
     MeshCoP::Leader mLeader;
     PanIdQueryServer mPanIdQuery;
+    EnergyScanServer mEnergyScan;
 };
 
 /**

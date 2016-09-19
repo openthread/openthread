@@ -37,6 +37,7 @@
 #include <coap/coap_header.hpp>
 #include <coap/coap_server.hpp>
 #include <common/timer.hpp>
+#include <common/trickle_timer.hpp>
 #include <mac/mac_frame.hpp>
 #include <net/icmp6.hpp>
 #include <net/udp6.hpp>
@@ -500,7 +501,7 @@ private:
     ThreadError HandleNetworkDataUpdateRouter(void);
 
     ThreadError ProcessRouteTlv(const RouteTlv &aRoute);
-    ThreadError ResetAdvertiseInterval(void);
+    void ResetAdvertiseInterval(void);
     ThreadError SendAddressSolicit(ThreadStatusTlv::Status aStatus);
     ThreadError SendAddressRelease(void);
     void SendAddressSolicitResponse(const Coap::Header &aRequest, uint8_t aRouterId,
@@ -547,12 +548,12 @@ private:
     uint8_t AllocateRouterId(uint8_t aRouterId);
     bool InRouterIdMask(uint8_t aRouterId);
 
-    static void HandleAdvertiseTimer(void *aContext);
-    void HandleAdvertiseTimer(void);
+    static bool HandleAdvertiseTimer(void *aContext);
+    bool HandleAdvertiseTimer(void);
     static void HandleStateUpdateTimer(void *aContext);
     void HandleStateUpdateTimer(void);
 
-    Timer mAdvertiseTimer;
+    TrickleTimer mAdvertiseTimer;
     Timer mStateUpdateTimer;
 
     Ip6::UdpSocket mSocket;
@@ -577,7 +578,6 @@ private:
 
     uint8_t mRouterId;
     uint8_t mPreviousRouterId;
-    uint32_t mAdvertiseInterval;
 
     Coap::Server &mCoapServer;
     uint8_t mCoapToken[2];

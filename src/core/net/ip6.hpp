@@ -343,13 +343,13 @@ private:
     static void HandleSendQueue(void *aContext);
     void HandleSendQueue(void);
 
-    void ProcessReceiveCallback(const Message &aMessage, const MessageInfo &aMessageInfo, uint8_t aIpProto);
+    ThreadError ProcessReceiveCallback(const Message &aMessage, const MessageInfo &aMessageInfo, uint8_t aIpProto);
     ThreadError HandleExtensionHeaders(Message &message, uint8_t &nextHeader, bool receive);
     ThreadError HandleFragment(Message &message);
     ThreadError AddMplOption(Message &message, Header &header, IpProto nextHeader, uint16_t payloadLength);
     ThreadError HandleOptions(Message &message);
     ThreadError HandlePayload(Message &message, MessageInfo &messageInfo, uint8_t ipproto);
-    ThreadError ForwardMessage(Message &message, MessageInfo &messageInfo);
+    ThreadError ForwardMessage(Message &message, MessageInfo &messageInfo, uint8_t ipproto);
 
     Mpl mMpl;
     bool mForwardingEnabled;

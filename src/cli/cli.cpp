@@ -1918,6 +1918,40 @@ void Interpreter::ProcessCommissioner(int argc, char *argv[])
     {
         otCommissionerStop(mInstance);
     }
+    else if (strcmp(argv[0], "energy") == 0)
+    {
+        long mask;
+        long count;
+        long period;
+        long scanDuration;
+        otIp6Address address;
+
+        VerifyOrExit(argc > 5, error = kThreadError_Parse);
+
+        // mask
+        SuccessOrExit(error = ParseLong(argv[1], mask));
+
+        // count
+        SuccessOrExit(error = ParseLong(argv[2], count));
+
+        // period
+        SuccessOrExit(error = ParseLong(argv[3], period));
+
+        // scan duration
+        SuccessOrExit(error = ParseLong(argv[4], scanDuration));
+
+        // destination
+        SuccessOrExit(error = otIp6AddressFromString(argv[5], &address));
+
+        SuccessOrExit(error = otCommissionerEnergyScan(mInstance,
+                                                       static_cast<uint32_t>(mask),
+                                                       static_cast<uint8_t>(count),
+                                                       static_cast<uint16_t>(period),
+                                                       static_cast<uint16_t>(scanDuration),
+                                                       &address,
+                                                       Interpreter::s_HandleEnergyReport,
+                                                       this));
+    }
     else if (strcmp(argv[0], "panid") == 0)
     {
         long panid;
@@ -1935,13 +1969,34 @@ void Interpreter::ProcessCommissioner(int argc, char *argv[])
         // destination
         SuccessOrExit(error = otIp6AddressFromString(argv[3], &address));
 
-        SuccessOrExit(error = otCommissionerPanIdQuery(mInstance, static_cast<uint16_t>(panid),
+        SuccessOrExit(error = otCommissionerPanIdQuery(mInstance,
+                                                       static_cast<uint16_t>(panid),
                                                        static_cast<uint32_t>(mask),
-                                                       &address, Interpreter::s_HandlePanIdConflict, this));
+                                                       &address,
+                                                       Interpreter::s_HandlePanIdConflict,
+                                                       this));
     }
 
 exit:
     AppendResult(error);
+}
+
+void Interpreter::s_HandleEnergyReport(uint32_t aChannelMask, const uint8_t *aEnergyList, uint8_t aEnergyListLength,
+                                       void *aContext)
+{
+    static_cast<Interpreter *>(aContext)->HandleEnergyReport(aChannelMask, aEnergyList, aEnergyListLength);
+}
+
+void Interpreter::HandleEnergyReport(uint32_t aChannelMask, const uint8_t *aEnergyList, uint8_t aEnergyListLength)
+{
+    sServer->OutputFormat("Energy: %08x ", aChannelMask);
+
+    for (uint8_t i = 0; i < aEnergyListLength; i++)
+    {
+        sServer->OutputFormat("%d ", aEnergyList[i]);
+    }
+
+    sServer->OutputFormat("\r\n");
 }
 
 void Interpreter::s_HandlePanIdConflict(uint16_t aPanId, uint32_t aChannelMask, void *aContext)

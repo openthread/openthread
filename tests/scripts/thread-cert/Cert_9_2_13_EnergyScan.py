@@ -33,11 +33,11 @@ import unittest
 import node
 
 COMMISSIONER = 1
-LEADER1 = 2
+LEADER = 2
 ROUTER1 = 3
-LEADER2 = 4
+ED1 = 4
 
-class Cert_9_2_14_PanIdQuery(unittest.TestCase):
+class Cert_9_2_13_EnergyScan(unittest.TestCase):
     def setUp(self):
         self.nodes = {}
         for i in range(1,5):
@@ -45,25 +45,25 @@ class Cert_9_2_14_PanIdQuery(unittest.TestCase):
 
         self.nodes[COMMISSIONER].set_panid(0xface)
         self.nodes[COMMISSIONER].set_mode('rsdn')
-        self.nodes[COMMISSIONER].add_whitelist(self.nodes[LEADER1].get_addr64())
+        self.nodes[COMMISSIONER].add_whitelist(self.nodes[LEADER].get_addr64())
         self.nodes[COMMISSIONER].enable_whitelist()
 
-        self.nodes[LEADER1].set_panid(0xface)
-        self.nodes[LEADER1].set_mode('rsdn')
-        self.nodes[LEADER1].add_whitelist(self.nodes[COMMISSIONER].get_addr64())
-        self.nodes[LEADER1].add_whitelist(self.nodes[ROUTER1].get_addr64())
-        self.nodes[LEADER1].enable_whitelist()
+        self.nodes[LEADER].set_panid(0xface)
+        self.nodes[LEADER].set_mode('rsdn')
+        self.nodes[LEADER].add_whitelist(self.nodes[COMMISSIONER].get_addr64())
+        self.nodes[LEADER].add_whitelist(self.nodes[ROUTER1].get_addr64())
+        self.nodes[LEADER].enable_whitelist()
 
         self.nodes[ROUTER1].set_panid(0xface)
         self.nodes[ROUTER1].set_mode('rsdn')
-        self.nodes[ROUTER1].add_whitelist(self.nodes[LEADER1].get_addr64())
-        self.nodes[ROUTER1].add_whitelist(self.nodes[LEADER2].get_addr64())
+        self.nodes[ROUTER1].add_whitelist(self.nodes[LEADER].get_addr64())
+        self.nodes[ROUTER1].add_whitelist(self.nodes[ED1].get_addr64())
         self.nodes[ROUTER1].enable_whitelist()
 
-        self.nodes[LEADER2].set_panid(0xdead)
-        self.nodes[LEADER2].set_mode('rsdn')
-        self.nodes[LEADER2].add_whitelist(self.nodes[ROUTER1].get_addr64())
-        self.nodes[LEADER2].enable_whitelist()
+        self.nodes[ED1].set_panid(0xface)
+        self.nodes[ED1].set_mode('rs')
+        self.nodes[ED1].add_whitelist(self.nodes[ROUTER1].get_addr64())
+        self.nodes[ED1].enable_whitelist()
 
     def tearDown(self):
         for node in list(self.nodes.values()):
@@ -71,9 +71,9 @@ class Cert_9_2_14_PanIdQuery(unittest.TestCase):
         del self.nodes
 
     def test(self):
-        self.nodes[LEADER1].start()
-        self.nodes[LEADER1].set_state('leader')
-        self.assertEqual(self.nodes[LEADER1].get_state(), 'leader')
+        self.nodes[LEADER].start()
+        self.nodes[LEADER].set_state('leader')
+        self.assertEqual(self.nodes[LEADER].get_state(), 'leader')
 
         self.nodes[COMMISSIONER].start()
         time.sleep(3)
@@ -83,18 +83,27 @@ class Cert_9_2_14_PanIdQuery(unittest.TestCase):
         time.sleep(3)
         self.assertEqual(self.nodes[ROUTER1].get_state(), 'router')
 
-        self.nodes[LEADER2].start()
-        time.sleep(5)
-        self.assertEqual(self.nodes[LEADER2].get_state(), 'leader')
+        self.nodes[ED1].start()
+        time.sleep(3)
+        self.assertEqual(self.nodes[ED1].get_state(), 'child')
 
         ipaddrs = self.nodes[ROUTER1].get_addrs()
         for ipaddr in ipaddrs:
             if ipaddr[0:4] != 'fe80':
                 break
 
-        self.nodes[COMMISSIONER].panid_query(0xdead, 0xffffffff, ipaddr)
+        self.nodes[COMMISSIONER].ping(ipaddr)
+        self.nodes[COMMISSIONER].energy_scan(0x50000, 0x02, 0x20, 0x3e8, ipaddr)
 
-        self.nodes[COMMISSIONER].panid_query(0xdead, 0xffffffff, 'ff33:0040:fdde:ad00:beef:0:0:1')
+        ipaddrs = self.nodes[ED1].get_addrs()
+        for ipaddr in ipaddrs:
+            if ipaddr[0:4] != 'fe80':
+                break
+
+        self.nodes[COMMISSIONER].ping(ipaddr)
+        self.nodes[COMMISSIONER].energy_scan(0x50000, 0x02, 0x20, 0x3e8, ipaddr)
+
+        self.nodes[COMMISSIONER].energy_scan(0x50000, 0x02, 0x20, 0x3e8, 'ff33:0040:fdde:ad00:beef:0:0:1')
 
         self.nodes[COMMISSIONER].ping(ipaddr)
 
