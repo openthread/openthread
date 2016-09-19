@@ -20,6 +20,15 @@ frustration later on.
 All submissions, including submissions by project members, require review. We
 use Github pull requests for this purpose.
 
+### Code style
+Before submitting a pull request make sure to run:
+
+	make pretty
+	
+This will format the source code according to OpenThread code style. This command
+requires `astyle` tool. Please refer to your Linux distribution documentation to
+find information how to install it.
+
 ### The small print
 Contributions made by corporations are covered by a different agreement than
 the one above, the
