@@ -76,10 +76,7 @@ ThreadError Mpl::ProcessOption(const Message &aMessage)
             entry = &mEntries[i];
             diff = static_cast<int8_t>(option.GetSequence() - entry->mSequence);
 
-            if (diff <= 0)
-            {
-                error = kThreadError_Drop;
-            }
+            VerifyOrExit(diff > 0, error = kThreadError_Drop);
 
             break;
         }

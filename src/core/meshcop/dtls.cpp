@@ -342,6 +342,11 @@ void Dtls::Process(void)
         }
         else
         {
+            if (rval == MBEDTLS_ERR_SSL_PEER_CLOSE_NOTIFY)
+            {
+                mbedtls_ssl_close_notify(&mSsl);
+            }
+
             mbedtls_ssl_session_reset(&mSsl);
             mbedtls_ssl_set_hs_ecjpake_password(&mSsl, mPsk, mPskLength);
             break;
