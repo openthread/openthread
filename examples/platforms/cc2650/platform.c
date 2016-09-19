@@ -33,6 +33,9 @@
 #include <platform/uart.h>
 #include "platform-cc2650.h"
 
+/**
+ * Function documented in platform-cc2650.h
+ */
 void PlatformInit(int argc, char *argv[])
 {
     (void) argc;
@@ -43,6 +46,9 @@ void PlatformInit(int argc, char *argv[])
     otPlatUartEnable();
 }
 
+/**
+ * Function documented in platform-cc2650.h
+ */
 void PlatformProcessDrivers(void)
 {
     cc2650UartProcess();

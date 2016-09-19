@@ -33,11 +33,17 @@
 #include <platform/misc.h>
 #include <driverlib/sys_ctrl.h>
 
+/**
+ * Function documented in platform/misc.h
+ */
 void otPlatReset(void)
 {
     SysCtrlSystemReset();
 }
 
+/**
+ * Function documented in platform/misc.h
+ */
 otPlatResetReason otPlatGetResetReason(void)
 {
     switch(SysCtrlResetSourceGet())

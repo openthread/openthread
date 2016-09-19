@@ -46,6 +46,9 @@ uint32_t time0 = 0;
 uint32_t alarmTime = 0;
 bool isRunning = false;
 
+/**
+ * Function documented in platform-cc2650.h
+ */
 void cc2650AlarmInit(void)
 {
     /*
@@ -55,6 +58,9 @@ void cc2650AlarmInit(void)
     isRunning = true;
 }
 
+/**
+ * Function documented in platform/alarm.h
+ */
 uint32_t otPlatAlarmGetNow(void)
 {
     /*
@@ -66,6 +72,9 @@ uint32_t otPlatAlarmGetNow(void)
     return ((rtcVal * 1000) >> 32);
 }
 
+/**
+ * Function documented in platform/alarm.h
+ */
 void otPlatAlarmStartAt(uint32_t t0, uint32_t dt)
 {
     time0 = t0;
@@ -73,11 +82,17 @@ void otPlatAlarmStartAt(uint32_t t0, uint32_t dt)
     isRunning = true;
 }
 
+/**
+ * Function documented in platform/alarm.h
+ */
 void otPlatAlarmStop(void)
 {
     isRunning = false;
 }
 
+/**
+ * Function documented in platform-cc2650.h
+ */
 void cc2650AlarmProcess(void)
 {
     uint32_t offsetTime;

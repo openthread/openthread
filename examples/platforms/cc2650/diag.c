@@ -41,6 +41,9 @@
  */
 static bool sDiagMode = false;
 
+/**
+ * Function documented in platform/diag.h
+ */
 void otPlatDiagProcess(int argc, char *argv[], char *aOutput, size_t aOutputMaxLen)
 {
     // add more plarform specific diagnostics features here
@@ -49,11 +52,17 @@ void otPlatDiagProcess(int argc, char *argv[], char *aOutput, size_t aOutputMaxL
     (void)argc;
 }
 
+/**
+ * Function documented in platform/diag.h
+ */
 void otPlatDiagModeSet(bool aMode)
 {
     sDiagMode = aMode;
 }
 
+/**
+ * Function documented in platform/diag.h
+ */
 bool otPlatDiagModeGet()
 {
     return sDiagMode;

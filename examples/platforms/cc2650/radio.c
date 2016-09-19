@@ -153,6 +153,12 @@ static ThreadError sReceiveError;
 static uint8_t sTransmitPsdu[kMaxPHYPacketSize] __attribute__ ((aligned (4))) ;
 static uint8_t sReceivePsdu[kMaxPHYPacketSize] __attribute__ ((aligned (4))) ;
 
+/**
+ * @breif initialize the RX buffers
+ *
+ * Zeros out the receive buffers and sets up the data structures of the receive
+ * queue.
+ */
 static void rf_core_init_buffers(void)
 {
     rfc_dataEntry_t *entry;
@@ -175,6 +181,11 @@ static void rf_core_init_buffers(void)
     sReceiveFrame.mLength = 0;
 }
 
+/**
+ * @breif initialize the RX command structure
+ *
+ * Sets the default values for the receive command structure.
+ */
 static void rf_core_init_rx_params(void)
 {
     memset((void *)&cmd_ieee_rx, 0x00, sizeof(cmd_ieee_rx));
@@ -239,16 +250,42 @@ static void rf_core_init_rx_params(void)
     cmd_ieee_rx.endTime = 0x00000000;
 }
 
+/**
+ * @breif sends the immediate abort command to the radio core
+ *
+ * @return the value from the command status register
+ * @retval CMDSTA_Done the command completed correctly
+ */
 static uint_fast8_t rf_core_cmd_abort(void)
 {
     return (RFCDoorbellSendTo(CMDR_DIR_CMD(CMD_ABORT)) & 0xFF);
 }
 
+/**
+ * @breif sends the immediate ping command to the radio core
+ *
+ * Check that the Radio core is alive and able to respond to commands.
+ *
+ * @return the value from the command status register
+ * @retval CMDSTA_Done the command completed correctly
+ */
 static uint_fast8_t rf_core_cmd_ping(void)
 {
     return (RFCDoorbellSendTo(CMDR_DIR_CMD(CMD_PING)) & 0xFF);
 }
 
+/**
+ * @breif sends the immediate clear rx queue command to the radio core
+ *
+ * Uses the radio core to mark all of the entries in the receive queue as
+ * pending. This is used instead of clearing the entries manually to avoid race
+ * conditions between the main processor and the radio core.
+ *
+ * @param [in] queue a pointer to the receive queue to be cleared
+ *
+ * @return the value from the command status register
+ * @retval CMDSTA_Done the command completed correctly
+ */
 static uint_fast8_t rf_core_cmd_clear_rx(dataQueue_t *queue)
 {
     memset((void *)&cmd_clear_rx, 0, sizeof(cmd_clear_rx));
@@ -259,6 +296,19 @@ static uint_fast8_t rf_core_cmd_clear_rx(dataQueue_t *queue)
     return (RFCDoorbellSendTo((uint32_t)&cmd_clear_rx) & 0xFF);
 }
 
+/**
+ * @breif sends the tx command to the radio core
+ * 
+ * Sends the packet to the radio core to be sent asynchronously.
+ *
+ * @param [in] psdu a pointer to the data to be sent
+ * @note this *must* be 4 byte aligned and not include the FCS, that is
+ * calculated in hardware.
+ * @param [in] len the length in bytes of data pointed to by psdu.
+ *
+ * @return the value from the command status register
+ * @retval CMDSTA_Done the command completed correctly
+ */
 static uint_fast8_t rf_core_cmd_ieee_tx(uint8_t *psdu, uint8_t len)
 {
     memset((void *)&cmd_ieee_tx, 0, sizeof(cmd_ieee_tx));
@@ -271,12 +321,31 @@ static uint_fast8_t rf_core_cmd_ieee_tx(uint8_t *psdu, uint8_t len)
     return (RFCDoorbellSendTo((uint32_t)&cmd_ieee_tx) & 0xFF);
 }
 
+/**
+ * @breif sends the rx command to the radio core
+ *
+ * Sends the pre-built receive command to the radio core. This sets up the
+ * radio to receive packets according to the settings in the global rx command.
+ *
+ * @note This function does not alter any of the parameters of the rx command.
+ * It is only concerned with sending the command to the radio core. See @ref
+ * otPlatRadioSetPanId for an example of how the rx settings are set changed.
+ *
+ * @return the value from the command status register
+ * @retval CMDSTA_Done the command completed correctly
+ */
 static uint_fast8_t rf_core_cmd_ieee_rx(void)
 {
     cmd_ieee_rx.status = IDLE;
     return (RFCDoorbellSendTo((uint32_t)&cmd_ieee_rx) & 0xFF);
 }
 
+/**
+ * @breif enables the cpe0 and cpe1 radio interrupts
+ *
+ * Enables the @ref IRQ_LAST_COMMAND_DONE and @ref IRQ_LAST_FG_COMMAND_DONE to
+ * be handled by the @ref RFCCPE0IntHandler interrupt handler.
+ */
 static void rf_core_setup_interrupts(void)
 {
     bool interrupts_disabled;
@@ -301,6 +370,9 @@ static void rf_core_setup_interrupts(void)
     }
 }
 
+/**
+ * @breif disables and clears the cpe0 and cpe1 radio interrupts
+ */
 static void rf_core_disable_interrupts(void)
 {
     bool interrupts_disabled;
@@ -321,6 +393,9 @@ static void rf_core_disable_interrupts(void)
     }
 }
 
+/**
+ * @breif Sets the mode for the radio core to IEEE 802.15.4
+ */
 static void rf_core_set_modesel(void)
 {
     switch(ChipInfo_GetChipType())
@@ -338,6 +413,21 @@ static void rf_core_set_modesel(void)
     }
 }
 
+/**
+ * @breif turns on the radio core
+ *
+ * Sets up the power and resources for the radio core.
+ * - switches the high frequency clock to the xosc crystal
+ * - sets the mode for the radio core to IEEE 802.15.4
+ * - initializes the rx buffers and command
+ * - powers on the radio core power domain
+ * - enables the radio core power domain
+ * - sets up the interrupts
+ * - sends the ping command to the radio core to make sure it is running
+ *
+ * @return the value from the ping command to the radio core
+ * @retval CMDSTA_Done the radio core is alive and responding
+ */
 static uint_fast8_t rf_core_power_on(void)
 {
     bool interrupts_disabled;
@@ -401,6 +491,15 @@ static uint_fast8_t rf_core_power_on(void)
     return rf_core_cmd_ping();
 }
 
+/**
+ * @breif turns off the radio core
+ *
+ * Switches off the power and resources for the radio core.
+ * - disables the interrupts
+ * - disables the radio core power domain
+ * - powers off the radio core power domain
+ * - switches the high frequency clock to the rcosc to save power
+ */
 static void rf_core_power_off(void)
 {
     rf_core_disable_interrupts();
@@ -426,6 +525,15 @@ static void rf_core_power_off(void)
     }
 }
 
+/**
+ * @breif sends the setup command string to the radio core
+ *
+ * Enables the clock line from the RTC to the RF core RAT. Enables the RAT
+ * timer and sets up the radio in IEEE mode.
+ *
+ * @return the value from the command status register
+ * @retval CMDSTA_Done the command was received
+ */
 static uint_fast8_t rf_core_cmds_enable(void)
 {
     /* turn on the clock line to the radio core */
@@ -450,6 +558,16 @@ static uint_fast8_t rf_core_cmds_enable(void)
     return (RFCDoorbellSendTo((uint32_t)&cmd_start_rat) & 0xFF);
 }
 
+/**
+ * @breif sends the shutdown command string to the radio core
+ *
+ * Powers down the frequency synthesizer and stops the RAT.
+ *
+ * @note synchronously waits until the command string completes.
+ *
+ * @return the status of the RAT stop command
+ * @retval DONE_OK the command string executed properly
+ */
 static uint_fast16_t rf_core_cmds_disable(void)
 {
     uint8_t doorbell_ret;
@@ -457,7 +575,7 @@ static uint_fast16_t rf_core_cmds_disable(void)
 
     HWREGBITW(AON_RTC_BASE + AON_RTC_O_CTL, AON_RTC_CTL_RTC_UPD_EN_BITN) = 1;
 
-    /* initiialize the command to power down the frequency synth */
+    /* initialize the command to power down the frequency synth */
     memset((void *)&cmd_fs_powerdown, 0, sizeof(cmd_fs_powerdown));
     cmd_fs_powerdown.commandNo = CMD_FS_POWERDOWN;
     cmd_fs_powerdown.condition.rule = COND_ALWAYS;
@@ -477,7 +595,7 @@ static uint_fast16_t rf_core_cmds_disable(void)
         return doorbell_ret;
     }
 
-    /* syncronously wait for the CM0 to stop */
+    /* synchronously wait for the CM0 to stop */
     while((HWREG(RFC_DBELL_NONBUF_BASE + RFC_DBELL_O_RFCPEIFG) &
                 IRQ_LAST_COMMAND_DONE) == 0x00)
     {
@@ -495,7 +613,9 @@ static uint_fast16_t rf_core_cmds_disable(void)
     return cmd_stop_rat.status;
 }
 
-/* error interrupt handler */
+/**
+ * error interrupt handler
+ */
 void RFCCPE1IntHandler(void)
 {
     if(!PRCMRfReady()) {
@@ -505,7 +625,9 @@ void RFCCPE1IntHandler(void)
     HWREG(RFC_DBELL_NONBUF_BASE + RFC_DBELL_O_RFCPEIFG) = 0x7FFFFFFF;
 }
 
-/* command done handler */
+/**
+ * command done handler
+ */
 void RFCCPE0IntHandler(void)
 {
     if(sState == kStateSleep)
@@ -565,6 +687,9 @@ void RFCCPE0IntHandler(void)
     }
 }
 
+/**
+ * Function documented in platform-cc2650.h
+ */
 void cc2650RadioInit(void)
 {
     /* Populate the RX parameters data structure with default values */
@@ -573,6 +698,9 @@ void cc2650RadioInit(void)
     sState = kStateDisabled;
 }
 
+/**
+ * Function documented in platform/radio.h
+ */
 ThreadError otPlatRadioEnable(void)
 {
     ThreadError error = kThreadError_Busy;
@@ -599,6 +727,9 @@ exit:
     return error;
 }
 
+/**
+ * Function documented in platform/radio.h
+ */
 ThreadError otPlatRadioDisable(void)
 {
     ThreadError error = kThreadError_Busy;
@@ -621,6 +752,9 @@ ThreadError otPlatRadioDisable(void)
     return error;
 }
 
+/**
+ * Function documented in platform/radio.h
+ */
 ThreadError otPlatRadioReceive(uint8_t aChannel)
 {
     ThreadError error = kThreadError_Busy;
@@ -669,6 +803,9 @@ exit:
     return error;
 }
 
+/**
+ * Function documented in platform/radio.h
+ */
 ThreadError otPlatRadioSleep(void)
 {
     ThreadError error = kThreadError_None;
@@ -693,11 +830,17 @@ ThreadError otPlatRadioSleep(void)
     return error;
 }
 
+/**
+ * Function documented in platform/radio.h
+ */
 RadioPacket *otPlatRadioGetTransmitBuffer(void)
 {
     return &sTransmitFrame;
 }
 
+/**
+ * Function documented in platform/radio.h
+ */
 ThreadError otPlatRadioTransmit(void)
 {
     ThreadError error = kThreadError_Busy;
@@ -727,23 +870,35 @@ exit:
     return error;
 }
 
+/**
+ * Function documented in platform/radio.h
+ */
 int8_t otPlatRadioGetRssi(void)
 {
     /* XXX: is this meant to be the largest or last observed RSSI? */
     return 0;
 }
 
+/**
+ * Function documented in platform/radio.h
+ */
 otRadioCaps otPlatRadioGetCaps(void)
 {
     return kRadioCapsNone;
 }
 
+/**
+ * Function documented in platform/radio.h
+ */
 bool otPlatRadioGetPromiscuous(void)
 {
     /* we are promiscuous if we are not filtering */
     return cmd_ieee_rx.frameFiltOpt.frameFiltEn == 0;
 }
 
+/**
+ * Function documented in platform/radio.h
+ */
 void otPlatRadioSetPromiscuous(bool aEnable)
 {
     if(aEnable != (cmd_ieee_rx.frameFiltOpt.frameFiltEn == 0))
@@ -765,6 +920,9 @@ exit:
     return;
 }
 
+/**
+ * Function documented in platform/radio.h
+ */
 ThreadError otPlatRadioSetPanId(uint16_t panid)
 {
     ThreadError error = kThreadError_None;
@@ -786,6 +944,9 @@ exit:
     return error;
 }
 
+/**
+ * Function documented in platform/radio.h
+ */
 ThreadError otPlatRadioSetExtendedAddress(uint8_t *address)
 {
     /* XXX: assuming little endian format */
@@ -805,6 +966,9 @@ exit:
     return error;
 }
 
+/**
+ * Function documented in platform/radio.h
+ */
 ThreadError otPlatRadioSetShortAddress(uint16_t address)
 {
     ThreadError error = kThreadError_None;
@@ -823,6 +987,13 @@ exit:
     return error;
 }
 
+/**
+ * @breif search the receive queue for unprocessed messages
+ *
+ * Loop through the receive queue structure looking for data entries that the
+ * radio core has marked as finished. Then place those in @ref sReceiveFrame
+ * and mark any errors in @ref sReceiveError.
+ */
 static void readFrame(void)
 {
     uint8_t crcCorr;
@@ -873,6 +1044,9 @@ static void readFrame(void)
     return;
 }
 
+/**
+ * Function documented in platform-cc2650.h
+ */
 int cc2650RadioProcess(void)
 {
     if((sState == kStateTransmit && !transmitting)
