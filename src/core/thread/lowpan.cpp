@@ -750,11 +750,11 @@ exit:
 
 int Lowpan::DecompressExtensionHeader(Message &aMessage, const uint8_t *aBuf, uint16_t aBufLength)
 {
+    ThreadError error = kThreadError_None;
     const uint8_t *cur = aBuf;
     uint8_t hdr[2];
     uint8_t len;
     Ip6::IpProto nextHeader;
-    int rval = -1;
     uint8_t ctl = cur[0];
 
     cur++;
@@ -765,7 +765,7 @@ int Lowpan::DecompressExtensionHeader(Message &aMessage, const uint8_t *aBuf, ui
         len = cur[0];
         cur++;
 
-        SuccessOrExit(DispatchToNextHeader(cur[len], nextHeader));
+        SuccessOrExit(error = DispatchToNextHeader(cur[len], nextHeader));
         hdr[0] = static_cast<uint8_t>(nextHeader);
     }
     else
@@ -780,19 +780,17 @@ int Lowpan::DecompressExtensionHeader(Message &aMessage, const uint8_t *aBuf, ui
     // length
     hdr[1] = BitVectorBytes(sizeof(hdr) + len) - 1;
 
-    SuccessOrExit(aMessage.Append(hdr, sizeof(hdr)));
+    SuccessOrExit(error = aMessage.Append(hdr, sizeof(hdr)));
     aMessage.MoveOffset(sizeof(hdr));
 
     // payload
-    SuccessOrExit(aMessage.Append(cur, len));
+    SuccessOrExit(error = aMessage.Append(cur, len));
     aMessage.MoveOffset(len);
     cur += len;
 
-    rval = static_cast<int>(cur - aBuf);
-
 exit:
     (void)aBufLength;
-    return rval;
+    return (error == kThreadError_None) ? static_cast<int>(cur - aBuf) : -1;
 }
 
 int Lowpan::DecompressUdpHeader(Message &aMessage, const uint8_t *aBuf, uint16_t aBufLength, uint16_t aDatagramLength)
@@ -855,17 +853,11 @@ int Lowpan::DecompressUdpHeader(Message &aMessage, const uint8_t *aBuf, uint16_t
         udpHeader.SetLength(aDatagramLength - aMessage.GetOffset());
     }
 
-    aMessage.Append(&udpHeader, sizeof(udpHeader));
+    SuccessOrExit(error = aMessage.Append(&udpHeader, sizeof(udpHeader)));
     aMessage.MoveOffset(sizeof(udpHeader));
 
 exit:
-
-    if (error != kThreadError_None)
-    {
-        return -1;
-    }
-
-    return static_cast<int>(cur - aBuf);
+    return (error == kThreadError_None) ? static_cast<int>(cur - aBuf) : -1;
 }
 
 int Lowpan::Decompress(Message &aMessage, const Mac::Address &aMacSource, const Mac::Address &aMacDest,
@@ -911,13 +903,7 @@ int Lowpan::Decompress(Message &aMessage, const Mac::Address &aMacSource, const 
     }
 
 exit:
-
-    if (error != kThreadError_None)
-    {
-        return -1;
-    }
-
-    return static_cast<int>(cur - aBuf);
+    return (error == kThreadError_None) ? static_cast<int>(cur - aBuf) : -1;
 }
 
 }  // namespace Lowpan
