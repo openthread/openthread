@@ -43,9 +43,9 @@
 namespace Thread {
 
 PanIdQueryServer::PanIdQueryServer(ThreadNetif &aThreadNetif) :
-    mPanIdQuery(OPENTHREAD_URI_PANID_QUERY, &HandleQuery, this),
+    mPanIdQuery(OPENTHREAD_URI_PANID_QUERY, &PanIdQueryServer::HandleQuery, this),
     mSocket(aThreadNetif.GetIp6().mUdp),
-    mTimer(aThreadNetif.GetIp6().mTimerScheduler, &HandleTimer, this),
+    mTimer(aThreadNetif.GetIp6().mTimerScheduler, &PanIdQueryServer::HandleTimer, this),
     mCoapServer(aThreadNetif.GetCoapServer()),
     mNetif(aThreadNetif)
 {
@@ -100,7 +100,7 @@ ThreadError PanIdQueryServer::SendQueryResponse(const Coap::Header &aRequestHead
                                                 const Ip6::MessageInfo &aRequestInfo)
 {
     ThreadError error = kThreadError_None;
-    Message *message;
+    Message *message = NULL;
     Coap::Header responseHeader;
     Ip6::MessageInfo responseInfo;
 

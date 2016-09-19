@@ -656,6 +656,7 @@ private:
  * This class implements the Commissioner ID TLV generation and parsing.
  *
  */
+OT_TOOL_PACKED_BEGIN
 class CommissionerIdTlv: public Tlv
 {
 public:
@@ -1261,7 +1262,7 @@ public:
      */
     bool IsChannelSet(uint8_t aChannel) const {
         const uint8_t *mask = reinterpret_cast<const uint8_t *>(this) + sizeof(*this);
-        return (aChannel < (mMaskLength * 8)) ? mask[aChannel / 8] & (1 << (aChannel % 8)) : false;
+        return (aChannel < (mMaskLength * 8)) ? ((mask[aChannel / 8] & (1 << (aChannel % 8))) != 0) : false;
     }
 
 private:
@@ -1494,7 +1495,7 @@ public:
      * @retval FALSE  If the Joiner flag is not set.
      *
      */
-    bool IsJoiner(void) { return mFlags & kJoinerMask; }
+    bool IsJoiner(void) { return (mFlags & kJoinerMask) != 0; }
 
     /**
      * This method sets the Joiner flag.
@@ -1571,7 +1572,7 @@ public:
      * @retval FALSE  If the Native Commissioner flag is not set.
      *
      */
-    bool IsNativeCommissioner(void) { return mFlags & kNativeMask; }
+    bool IsNativeCommissioner(void) { return (mFlags & kNativeMask) != 0; }
 
     /**
      * This method sets the Native Commissioner flag.

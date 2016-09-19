@@ -885,11 +885,15 @@ void otSetStateChangedCallback(otInstance *, otStateChangedCallback aCallback, v
 const char *otGetVersionString(void)
 {
     static const char sVersion[] =
-        PACKAGE_NAME "/" PACKAGE_VERSION "; "
+        PACKAGE_NAME "/" PACKAGE_VERSION
 #ifdef  PLATFORM_INFO
-        PLATFORM_INFO "; "
+        "; " PLATFORM_INFO
 #endif
-        __DATE__ " " __TIME__;
+#if defined(__DATE__)
+        "; " __DATE__ " " __TIME__;
+#else
+        ;
+#endif
 
     return sVersion;
 }

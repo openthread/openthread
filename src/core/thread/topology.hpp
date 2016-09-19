@@ -73,6 +73,9 @@ public:
      *
      */
     enum State
+#if _WIN32
+        : unsigned int
+#endif
     {
         kStateInvalid,                   ///< Neighbor link is invalid
         kStateParentRequest,             ///< Received an MLE Parent Request message

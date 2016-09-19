@@ -1,0 +1,89 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Source Files\repo">
+      <UniqueIdentifier>{0a2ce77e-dccf-408c-aea0-7a781284a936}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\repo\library">
+      <UniqueIdentifier>{87ec68b3-5bec-4c60-b764-c2daf3ffcfb2}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\third_party\mbedtls\hardware_entropy.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\third_party\mbedtls\repo\library\aes.c">
+      <Filter>Source Files\repo\library</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\third_party\mbedtls\repo\library\bignum.c">
+      <Filter>Source Files\repo\library</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\third_party\mbedtls\repo\library\ccm.c">
+      <Filter>Source Files\repo\library</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\third_party\mbedtls\repo\library\cipher.c">
+      <Filter>Source Files\repo\library</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\third_party\mbedtls\repo\library\cipher_wrap.c">
+      <Filter>Source Files\repo\library</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\third_party\mbedtls\repo\library\ctr_drbg.c">
+      <Filter>Source Files\repo\library</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\third_party\mbedtls\repo\library\debug.c">
+      <Filter>Source Files\repo\library</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\third_party\mbedtls\repo\library\ecjpake.c">
+      <Filter>Source Files\repo\library</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\third_party\mbedtls\repo\library\ecp.c">
+      <Filter>Source Files\repo\library</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\third_party\mbedtls\repo\library\ecp_curves.c">
+      <Filter>Source Files\repo\library</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\third_party\mbedtls\repo\library\entropy.c">
+      <Filter>Source Files\repo\library</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\third_party\mbedtls\repo\library\entropy_poll.c">
+      <Filter>Source Files\repo\library</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\third_party\mbedtls\repo\library\md.c">
+      <Filter>Source Files\repo\library</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\third_party\mbedtls\repo\library\md_wrap.c">
+      <Filter>Source Files\repo\library</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\third_party\mbedtls\repo\library\memory_buffer_alloc.c">
+      <Filter>Source Files\repo\library</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\third_party\mbedtls\repo\library\platform.c">
+      <Filter>Source Files\repo\library</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\third_party\mbedtls\repo\library\sha256.c">
+      <Filter>Source Files\repo\library</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\third_party\mbedtls\repo\library\ssl_ciphersuites.c">
+      <Filter>Source Files\repo\library</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\third_party\mbedtls\repo\library\ssl_cli.c">
+      <Filter>Source Files\repo\library</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\third_party\mbedtls\repo\library\ssl_cookie.c">
+      <Filter>Source Files\repo\library</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\third_party\mbedtls\repo\library\ssl_srv.c">
+      <Filter>Source Files\repo\library</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\third_party\mbedtls\repo\library\ssl_ticket.c">
+      <Filter>Source Files\repo\library</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\third_party\mbedtls\repo\library\ssl_tls.c">
+      <Filter>Source Files\repo\library</Filter>
+    </ClCompile>
+  </ItemGroup>
+</Project>

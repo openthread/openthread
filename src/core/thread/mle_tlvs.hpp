@@ -1325,7 +1325,7 @@ public:
      * @retval FALSE  If the Compressed flag is not set.
      *
      */
-    bool IsCompressed(void) const { return mControl & kCompressed; }
+    bool IsCompressed(void) const { return (mControl & kCompressed) != 0; }
 
     /**
      * This method sets the Uncompressed flag.

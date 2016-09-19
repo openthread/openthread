@@ -598,7 +598,7 @@ ThreadError NetworkData::SendServerDataNotification(uint16_t aRloc16)
     VerifyOrExit(!mLastAttemptWait || static_cast<int32_t>(Timer::GetNow() - mLastAttempt) < kDataResubmitDelay,
                  error = kThreadError_Already);
 
-    mSocket.Open(&HandleUdpReceive, this);
+    mSocket.Open(&NetworkData::HandleUdpReceive, this);
 
     for (size_t i = 0; i < sizeof(mCoapToken); i++)
     {

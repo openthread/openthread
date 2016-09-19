@@ -49,7 +49,7 @@ namespace MeshCoP {
 
 Dtls::Dtls(ThreadNetif &aNetif):
     mStarted(false),
-    mTimer(aNetif.GetIp6().mTimerScheduler, &HandleTimer, this),
+    mTimer(aNetif.GetIp6().mTimerScheduler, &Dtls::HandleTimer, this),
     mTimerIntermediate(0),
     mTimerSet(false),
     mNetif(aNetif)
@@ -102,8 +102,8 @@ ThreadError Dtls::Start(bool aClient, ReceiveHandler aReceiveHandler, SendHandle
     rval = mbedtls_ssl_setup(&mSsl, &mConf);
     VerifyOrExit(rval == 0, ;);
 
-    mbedtls_ssl_set_bio(&mSsl, this, &HandleMbedtlsTransmit, HandleMbedtlsReceive, NULL);
-    mbedtls_ssl_set_timer_cb(&mSsl, this, &HandleMbedtlsSetTimer, HandleMbedtlsGetTimer);
+    mbedtls_ssl_set_bio(&mSsl, this, &Dtls::HandleMbedtlsTransmit, HandleMbedtlsReceive, NULL);
+    mbedtls_ssl_set_timer_cb(&mSsl, this, &Dtls::HandleMbedtlsSetTimer, HandleMbedtlsGetTimer);
 
     rval = mbedtls_ssl_set_hs_ecjpake_password(&mSsl, mPsk, mPskLength);
     VerifyOrExit(rval == 0, ;);

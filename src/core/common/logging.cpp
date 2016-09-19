@@ -31,6 +31,12 @@
  *   This file implements the tasklet scheduler.
  */
 
+#ifdef OPENTHREAD_CONFIG_FILE
+#include OPENTHREAD_CONFIG_FILE
+#else
+#include <openthread-config.h>
+#endif
+
 #include <ctype.h>
 #include <stdio.h>
 #include <string.h>

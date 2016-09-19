@@ -26,75 +26,53 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <stdio.h>
-#include <stdint.h>
-#include <platform/toolchain.h>
-#include <thread/topology.hpp>
-#include "test_util.h"
+/* Define to 1 to enable the commissioner role. */
+#define OPENTHREAD_ENABLE_COMMISSIONER 1
 
-void test_packed1()
-{
-    typedef OT_TOOL_PACKED_BEGIN struct
-    {
-        uint8_t  mByte;
-        uint32_t mWord;
-        uint16_t mShort;
-    } OT_TOOL_PACKED_END packed_t;
+/* Define to 1 if you want to use diagnostics module */
+#define OPENTHREAD_ENABLE_DIAG 0
 
-    VerifyOrQuit(sizeof(packed_t) == 7, "Toolchain::OT_TOOL_PACKED failed 1\n");
-}
+/* Define to 1 to enable dtls support. */
+#define OPENTHREAD_ENABLE_DTLS 1
 
-void test_packed2()
-{
-    typedef OT_TOOL_PACKED_BEGIN struct
-    {
-        uint8_t mBytes[3];
-        uint8_t mByte;
-    } OT_TOOL_PACKED_END packed_t;
+/* Define to 1 to enable the joiner role. */
+#define OPENTHREAD_ENABLE_JOINER 1
 
-    VerifyOrQuit(sizeof(packed_t) == 4, "Toolchain::OT_TOOL_PACKED failed 2\n");
-}
+/* Name of package */
+#define PACKAGE "openthread"
 
-void test_packed_union()
-{
-    typedef struct
-    {
-        uint16_t mField;
-    } nested_t;
+/* Define to the address where bug reports for this package should be sent. */
+#define PACKAGE_BUGREPORT "openthread-devel@googlegroups.com"
 
-    typedef OT_TOOL_PACKED_BEGIN struct
-    {
-        uint8_t mBytes[3];
-        union
-        {
-            nested_t mNestedStruct;
-            uint8_t  mByte;
-        } OT_TOOL_PACKED_FIELD;
-    } OT_TOOL_PACKED_END packed_t;
+/* Define to the full name of this package. */
+#define PACKAGE_NAME "OPENTHREAD"
 
-    VerifyOrQuit(sizeof(packed_t) == 5, "Toolchain::OT_TOOL_PACKED failed 3\n");
-}
+/* Define to the full name and version of this package. */
+#define PACKAGE_STRING "OPENTHREAD 0.01.00"
 
-void test_packed_enum()
-{
-    Thread::Neighbor neighbor;
-    neighbor.mState = Thread::Neighbor::kStateValid;
+/* Define to the one symbol short name of this package. */
+#define PACKAGE_TARNAME "openthread"
 
-    // Make sure that when we read the 3 bit field it is read as unsigned, so it return '4'
-    VerifyOrQuit(neighbor.mState == Thread::Neighbor::kStateValid, "Toolchain::OT_TOOL_PACKED failed 4\n");
-}
+/* Define to the home page for this package. */
+#define PACKAGE_URL "http://github.com/openthread/openthread"
 
-void TestToolchain(void)
-{
-    test_packed1();
-    test_packed2();
-    test_packed_union();
-    test_packed_enum();
-}
+/* Define to the version of this package. */
+#define PACKAGE_VERSION "0.01.00"
 
-int main(void)
-{
-    TestToolchain();
-    printf("All tests passed\n");
-    return 0;
-}
+/* Version number of package */
+#define VERSION "0.01.00"
+
+/* Platform version information */
+#define PLATFORM_INFO "Windows"
+
+// Windows Kernel only has sprintf_s
+#ifdef WINDOWS_KERNEL
+#define snprintf sprintf_s
+#endif // WINDOWS_KERNEL
+
+// Temporary !!! TODO - Remove this once we figure out the strncpy issue
+#define _CRT_SECURE_NO_WARNINGS
+
+// Disable a few warnings that we don't care about
+#pragma warning(disable:4201)  // nonstandard extension used : nameless struct/union
+#pragma warning(disable:4291)  // no matching operator delete found 

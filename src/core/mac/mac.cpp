@@ -74,14 +74,14 @@ void Mac::StartCsmaBackoff(void)
 }
 
 Mac::Mac(ThreadNetif &aThreadNetif):
-    mBeginTransmit(aThreadNetif.GetIp6().mTaskletScheduler, &HandleBeginTransmit, this),
-    mAckTimer(aThreadNetif.GetIp6().mTimerScheduler, &HandleAckTimer, this),
-    mBackoffTimer(aThreadNetif.GetIp6().mTimerScheduler, &HandleBeginTransmit, this),
-    mReceiveTimer(aThreadNetif.GetIp6().mTimerScheduler, &HandleReceiveTimer, this),
+    mBeginTransmit(aThreadNetif.GetIp6().mTaskletScheduler, &Mac::HandleBeginTransmit, this),
+    mAckTimer(aThreadNetif.GetIp6().mTimerScheduler, &Mac::HandleAckTimer, this),
+    mBackoffTimer(aThreadNetif.GetIp6().mTimerScheduler, &Mac::HandleBeginTransmit, this),
+    mReceiveTimer(aThreadNetif.GetIp6().mTimerScheduler, &Mac::HandleReceiveTimer, this),
     mKeyManager(aThreadNetif.GetKeyManager()),
     mMle(aThreadNetif.GetMle()),
     mNetif(aThreadNetif),
-    mEnergyScanSampleRssiTask(aThreadNetif.GetIp6().mTaskletScheduler, &HandleEnergyScanSampleRssi, this),
+    mEnergyScanSampleRssiTask(aThreadNetif.GetIp6().mTaskletScheduler, &Mac::HandleEnergyScanSampleRssi, this),
     mWhitelist(),
     mBlacklist()
 {
@@ -542,13 +542,13 @@ void Mac::HandleBeginTransmit(void *aContext)
 
 void Mac::ProcessTransmitSecurity(Frame &aFrame)
 {
-    uint32_t frameCounter;
+    uint32_t frameCounter = 0;
     uint8_t securityLevel;
     uint8_t keyIdMode;
     uint8_t nonce[kNonceSize];
     uint8_t tagLength;
     Crypto::AesCcm aesCcm;
-    const uint8_t *key;
+    const uint8_t *key = NULL;
 
     if (aFrame.GetSecurityEnabled() == false)
     {

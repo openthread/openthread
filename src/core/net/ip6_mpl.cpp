@@ -40,7 +40,7 @@ namespace Thread {
 namespace Ip6 {
 
 Mpl::Mpl(Ip6 &aIp6):
-    mTimer(aIp6.mTimerScheduler, &HandleTimer, this)
+    mTimer(aIp6.mTimerScheduler, &Mpl::HandleTimer, this)
 {
     memset(mEntries, 0, sizeof(mEntries));
     mSequence = 0;

@@ -108,7 +108,7 @@ public:
      * @retval FALSE  If the MPL M flag is not set.
      *
      */
-    bool IsMaxFlagSet() { return mControl & kMaxFlag; }
+    bool IsMaxFlagSet() { return (mControl & kMaxFlag) != 0; }
 
     /**
      * This method clears the MPL M flag.

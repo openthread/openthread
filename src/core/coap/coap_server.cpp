@@ -50,7 +50,7 @@ ThreadError Server::Start()
     Ip6::SockAddr sockaddr;
     sockaddr.mPort = mPort;
 
-    SuccessOrExit(error = mSocket.Open(&HandleUdpReceive, this));
+    SuccessOrExit(error = mSocket.Open(&Server::HandleUdpReceive, this));
     SuccessOrExit(error = mSocket.Bind(sockaddr));
 
 exit:

@@ -57,8 +57,8 @@ namespace MeshCoP {
 Joiner::Joiner(ThreadNetif &aNetif):
     mTransmitMessage(NULL),
     mSocket(aNetif.GetIp6().mUdp),
-    mTransmitTask(aNetif.GetIp6().mTaskletScheduler, &HandleUdpTransmit, this),
-    mJoinerEntrust(OPENTHREAD_URI_JOINER_ENTRUST, &HandleJoinerEntrust, this),
+    mTransmitTask(aNetif.GetIp6().mTaskletScheduler, &Joiner::HandleUdpTransmit, this),
+    mJoinerEntrust(OPENTHREAD_URI_JOINER_ENTRUST, &Joiner::HandleJoinerEntrust, this),
     mNetif(aNetif)
 {
     mNetif.GetCoapServer().AddResource(mJoinerEntrust);
@@ -108,7 +108,7 @@ void Joiner::HandleDiscoverResult(otActiveScanResult *aResult)
         // open UDP port
         Ip6::SockAddr sockaddr;
         sockaddr.mPort = 1000;
-        mSocket.Open(&HandleUdpReceive, this);
+        mSocket.Open(&Joiner::HandleUdpReceive, this);
         mSocket.Bind(sockaddr);
 
         mNetif.GetMac().SetPanId(mJoinerRouterPanId);

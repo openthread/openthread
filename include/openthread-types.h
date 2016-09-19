@@ -249,7 +249,8 @@ typedef struct otExtAddress
 /**
  * This structure represents an IPv6 address.
  */
-typedef OT_TOOL_PACKED_BEGIN struct otIp6Address
+OT_TOOL_PACKED_BEGIN
+struct otIp6Address
 {
     union
     {
@@ -257,7 +258,9 @@ typedef OT_TOOL_PACKED_BEGIN struct otIp6Address
         uint16_t m16[OT_IP6_ADDRESS_SIZE / sizeof(uint16_t)];  ///< 16-bit fields
         uint32_t m32[OT_IP6_ADDRESS_SIZE / sizeof(uint32_t)];  ///< 32-bit fields
     } mFields;                                                 ///< IPv6 accessor fields
-} OT_TOOL_PACKED_END otIp6Address;
+} OT_TOOL_PACKED_END;
+
+typedef struct otIp6Address otIp6Address;
 
 /**
  * @addtogroup commands  Commands
