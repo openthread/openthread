@@ -27,7 +27,6 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-import pexpect
 import time
 import unittest
 
@@ -90,7 +89,7 @@ class Cert_5_5_6_SplitWeight(unittest.TestCase):
 
         addrs = self.nodes[ROUTER2].get_addrs()
         for addr in addrs:
-            self.nodes[ROUTER1].ping(addr)
+            self.assertEqual(self.nodes[ROUTER1].ping(addr), True)
 
 if __name__ == '__main__':
     unittest.main()

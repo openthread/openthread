@@ -27,7 +27,6 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-import pexpect
 import time
 import unittest
 
@@ -108,17 +107,17 @@ class Cert_5_3_9_AddressQuery(unittest.TestCase):
         addrs = self.nodes[ROUTER3].get_addrs()
         for addr in addrs:
             if addr[0:4] != 'fe80':
-                self.nodes[SED2].ping(addr)
+                self.assertEqual(self.nodes[SED2].ping(addr), True)
 
         addrs = self.nodes[SED2].get_addrs()
         for addr in addrs:
             if addr[0:4] != 'fe80':
-                self.nodes[BR].ping(addr)
+                self.assertEqual(self.nodes[BR].ping(addr), True)
 
         addrs = self.nodes[ROUTER3].get_addrs()
         for addr in addrs:
             if addr[0:4] != 'fe80':
-                self.nodes[SED2].ping(addr)
+                self.assertEqual(self.nodes[SED2].ping(addr), True)
 
         self.nodes[ROUTER3].stop()
         time.sleep(300)
@@ -126,11 +125,7 @@ class Cert_5_3_9_AddressQuery(unittest.TestCase):
         addrs = self.nodes[ROUTER3].get_addrs()
         for addr in addrs:
             if addr[0:4] != 'fe80':
-                try:
-                    self.nodes[SED2].ping(addr)
-                    self.fail()
-                except pexpect.TIMEOUT:
-                    pass
+                self.assertEqual(self.nodes[SED2].ping(addr), False)
 
         self.nodes[SED2].stop()
         time.sleep(10)
@@ -138,11 +133,7 @@ class Cert_5_3_9_AddressQuery(unittest.TestCase):
         addrs = self.nodes[SED2].get_addrs()
         for addr in addrs:
             if addr[0:4] != 'fe80':
-                try:
-                    self.nodes[BR].ping(addr)
-                    self.fail()
-                except pexpect.TIMEOUT:
-                    pass
+                self.assertEqual(self.nodes[BR].ping(addr), False)
 
 if __name__ == '__main__':
     unittest.main()

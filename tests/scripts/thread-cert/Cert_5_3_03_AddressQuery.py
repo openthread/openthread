@@ -27,7 +27,6 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-import pexpect
 import time
 import unittest
 
@@ -109,25 +108,25 @@ class Cert_5_3_3_AddressQuery(unittest.TestCase):
         addrs = self.nodes[ROUTER3].get_addrs()
         for addr in addrs:
             if addr[0:4] != 'fe80':
-                self.nodes[ED2].ping(addr)
+                self.assertEqual(self.nodes[ED2].ping(addr), True)
                 time.sleep(1)
 
         addrs = self.nodes[ED2].get_addrs()
         for addr in addrs:
             if addr[0:4] != 'fe80':
-                self.nodes[LEADER].ping(addr)
+                self.assertEqual(self.nodes[LEADER].ping(addr), True)
                 time.sleep(1)
 
         addrs = self.nodes[BR].get_addrs()
         for addr in addrs:
             if addr[0:4] != 'fe80':
-                self.nodes[ED2].ping(addr)
+                self.assertEqual(self.nodes[ED2].ping(addr), True)
                 time.sleep(1)
 
         addrs = self.nodes[ROUTER3].get_addrs()
         for addr in addrs:
             if addr[0:4] != 'fe80':
-                self.nodes[ED2].ping(addr)
+                self.assertEqual(self.nodes[ED2].ping(addr), True)
                 time.sleep(1)
 
         addrs = self.nodes[ROUTER3].get_addrs()
@@ -136,22 +135,14 @@ class Cert_5_3_3_AddressQuery(unittest.TestCase):
 
         for addr in addrs:
             if addr[0:4] != 'fe80':
-                try:
-                    self.nodes[ED2].ping(addr)
-                    self.fail()
-                except pexpect.TIMEOUT:
-                    pass
+                self.assertEqual(self.nodes[ED2].ping(addr), False)
 
         addrs = self.nodes[ED2].get_addrs()
         self.nodes[ED2].stop()
         time.sleep(10)
         for addr in addrs:
             if addr[0:4] != 'fe80':
-                try:
-                    self.nodes[BR].ping(addr)        
-                    self.fail()
-                except pexpect.TIMEOUT:
-                    pass
+                self.assertEqual(self.nodes[BR].ping(addr), False)
 
 if __name__ == '__main__':
     unittest.main()

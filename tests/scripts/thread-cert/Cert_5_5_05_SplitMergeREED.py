@@ -27,7 +27,6 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-import pexpect
 import time
 import unittest
 
@@ -111,7 +110,7 @@ class Cert_5_5_5_SplitMergeREED(unittest.TestCase):
         addrs = self.nodes[LEADER1].get_addrs()
         for addr in addrs:
             if addr[0:4] != 'fe80':
-                self.nodes[ROUTER1].ping(addr)
+                self.assertEqual(self.nodes[ROUTER1].ping(addr), True)
 
 if __name__ == '__main__':
     unittest.main()

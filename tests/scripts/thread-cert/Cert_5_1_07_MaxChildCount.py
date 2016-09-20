@@ -98,7 +98,7 @@ class Cert_5_1_07_MaxChildCount(unittest.TestCase):
                         meshLocalEID = line
                         break
 
-                self.nodes[LEADER].ping(meshLocalEID, size=106)
+                self.assertEqual(self.nodes[LEADER].ping(meshLocalEID, size=106), True)
                 time.sleep(1)
 
         self.nodes[ED].start()

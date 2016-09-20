@@ -27,7 +27,6 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-import pexpect
 import time
 import unittest
 
@@ -100,14 +99,14 @@ class Cert_5_6_6_NetworkDataExpiration(unittest.TestCase):
         self.assertTrue(any('2002' in word for word in addrs))
         for addr in addrs:
             if addr[0:3] == '200':
-                self.nodes[LEADER].ping(addr)
+                self.assertEqual(self.nodes[LEADER].ping(addr), True)
 
         addrs = self.nodes[SED1].get_addrs()
         self.assertTrue(any('2001' in word for word in addrs))
         self.assertFalse(any('2002' in word for word in addrs))
         for addr in addrs:
             if addr[0:3] == '200':
-                self.nodes[LEADER].ping(addr)
+                self.assertEqual(self.nodes[LEADER].ping(addr), True)
 
         self.nodes[ROUTER].add_prefix('2003::/64', 'pacs')
         self.nodes[ROUTER].register_netdata()
@@ -120,7 +119,7 @@ class Cert_5_6_6_NetworkDataExpiration(unittest.TestCase):
         self.assertTrue(any('2003' in word for word in addrs))
         for addr in addrs:
             if addr[0:3] == '200':
-                self.nodes[LEADER].ping(addr)
+                self.assertEqual(self.nodes[LEADER].ping(addr), True)
 
         addrs = self.nodes[SED1].get_addrs()
         self.assertTrue(any('2001' in word for word in addrs))
@@ -128,7 +127,7 @@ class Cert_5_6_6_NetworkDataExpiration(unittest.TestCase):
         self.assertTrue(any('2003' in word for word in addrs))
         for addr in addrs:
             if addr[0:3] == '200':
-                self.nodes[LEADER].ping(addr)
+                self.assertEqual(self.nodes[LEADER].ping(addr), True)
 
         self.nodes[ROUTER].remove_prefix('2003::/64')
         self.nodes[ROUTER].register_netdata()
@@ -140,7 +139,7 @@ class Cert_5_6_6_NetworkDataExpiration(unittest.TestCase):
         self.assertFalse(any('2003' in word for word in addrs))
         for addr in addrs:
             if addr[0:3] == '200':
-                self.nodes[LEADER].ping(addr)
+                self.assertEqual(self.nodes[LEADER].ping(addr), True)
 
         addrs = self.nodes[SED1].get_addrs()
         self.assertTrue(any('2001' in word for word in addrs))
@@ -148,7 +147,7 @@ class Cert_5_6_6_NetworkDataExpiration(unittest.TestCase):
         self.assertFalse(any('2003' in word for word in addrs))
         for addr in addrs:
             if addr[0:3] == '200':
-                self.nodes[LEADER].ping(addr)
+                self.assertEqual(self.nodes[LEADER].ping(addr), True)
 
         self.nodes[ROUTER].stop()
 

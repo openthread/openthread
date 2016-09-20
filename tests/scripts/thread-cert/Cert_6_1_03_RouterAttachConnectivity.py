@@ -27,7 +27,6 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-import pexpect
 import time
 import unittest
 
@@ -94,7 +93,7 @@ class Cert_6_1_3_RouterAttachConnectivity(unittest.TestCase):
 
         addrs = self.nodes[ED].get_addrs()
         for addr in addrs:
-            self.nodes[ROUTER3].ping(addr)
+            self.assertEqual(self.nodes[ROUTER3].ping(addr), True)
 
 if __name__ == '__main__':
     unittest.main()

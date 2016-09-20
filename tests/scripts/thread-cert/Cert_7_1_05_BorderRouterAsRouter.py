@@ -27,7 +27,6 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-import pexpect
 import time
 import unittest
 
@@ -99,14 +98,14 @@ class Cert_7_1_5_BorderRouterAsRouter(unittest.TestCase):
         self.assertTrue(any('2002' in word for word in addrs))
         for addr in addrs:
             if addr[0:4] == '2001' or addr[0:4] == '2002':
-                self.nodes[LEADER].ping(addr)
+                self.assertEqual(self.nodes[LEADER].ping(addr), True)
 
         addrs = self.nodes[SED2].get_addrs()
         self.assertTrue(any('2001' in word for word in addrs))
         self.assertFalse(any('2002' in word for word in addrs))
         for addr in addrs:
             if addr[0:4] == '2001' or addr[0:4] == '2002':
-                self.nodes[LEADER].ping(addr)
+                self.assertEqual(self.nodes[LEADER].ping(addr), True)
 
         self.nodes[ROUTER].add_prefix('2003::/64', 'paros')
         self.nodes[ROUTER].register_netdata()
@@ -118,7 +117,7 @@ class Cert_7_1_5_BorderRouterAsRouter(unittest.TestCase):
         self.assertTrue(any('2003' in word for word in addrs))
         for addr in addrs:
             if addr[0:4] == '2001' or addr[0:4] == '2002' or addr[0:4] == '2003':
-                self.nodes[LEADER].ping(addr)
+                self.assertEqual(self.nodes[LEADER].ping(addr), True)
 
         addrs = self.nodes[SED2].get_addrs()
         self.assertTrue(any('2001' in word for word in addrs))
@@ -126,7 +125,7 @@ class Cert_7_1_5_BorderRouterAsRouter(unittest.TestCase):
         self.assertTrue(any('2003' in word for word in addrs))
         for addr in addrs:
             if addr[0:4] == '2001' or addr[0:4] == '2002' or addr[0:4] == '2003':
-                self.nodes[LEADER].ping(addr)
+                self.assertEqual(self.nodes[LEADER].ping(addr), True)
 
 if __name__ == '__main__':
     unittest.main()

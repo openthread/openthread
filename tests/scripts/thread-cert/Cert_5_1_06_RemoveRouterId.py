@@ -27,7 +27,6 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-import pexpect
 import time
 import unittest
 
@@ -68,14 +67,14 @@ class Cert_5_1_06_RemoveRouterId(unittest.TestCase):
         rloc16 = self.nodes[ROUTER1].get_addr16()
 
         for addr in self.nodes[ROUTER1].get_addrs():
-            self.nodes[LEADER].ping(addr)
+            self.assertEqual(self.nodes[LEADER].ping(addr), True)
 
         self.nodes[LEADER].release_router_id(rloc16 >> 10)
         time.sleep(5)
         self.assertEqual(self.nodes[ROUTER1].get_state(), 'router')
 
         for addr in self.nodes[ROUTER1].get_addrs():
-            self.nodes[LEADER].ping(addr)
+            self.assertEqual(self.nodes[LEADER].ping(addr), True)
 
 if __name__ == '__main__':
     unittest.main()

@@ -27,7 +27,6 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-import pexpect
 import time
 import unittest
 
@@ -69,14 +68,14 @@ class Cert_5_3_1_LinkLocal(unittest.TestCase):
         addrs = self.nodes[ROUTER1].get_addrs()
         for addr in addrs:
             if addr[0:4] == 'fe80':
-                self.nodes[LEADER].ping(addr, size=256)
-                self.nodes[LEADER].ping(addr)
+                self.assertEqual(self.nodes[LEADER].ping(addr, size=256), True)
+                self.assertEqual(self.nodes[LEADER].ping(addr), True)
 
-        self.nodes[LEADER].ping('ff02::1', size=256)
-        self.nodes[LEADER].ping('ff02::1')
+        self.assertEqual(self.nodes[LEADER].ping('ff02::1', size=256), True)
+        self.assertEqual(self.nodes[LEADER].ping('ff02::1'), True)
 
-        self.nodes[LEADER].ping('ff02::2', size=256)
-        self.nodes[LEADER].ping('ff02::2')
+        self.assertEqual(self.nodes[LEADER].ping('ff02::2', size=256), True)
+        self.assertEqual(self.nodes[LEADER].ping('ff02::2'), True)
 
 if __name__ == '__main__':
     unittest.main()
