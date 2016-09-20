@@ -165,7 +165,7 @@ void TestDiag()
     }
 }
 
-#ifndef _WIN32
+#ifdef ENABLE_TEST_MAIN
 int main(void)
 {
     TestDiag();

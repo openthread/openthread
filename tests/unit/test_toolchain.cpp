@@ -42,9 +42,8 @@ void test_packed1()
         uint16_t mShort;
     } OT_TOOL_PACKED_END;
 
-#if _WIN32
-    static_assert(sizeof(packed_t) == 7, "Toolchain::OT_TOOL_PACKED failed 1");
-#endif
+    CompileTimeAssert(sizeof(packed_t) == 7, "packed_t should be packed to 7 bytes");
+
     VerifyOrQuit(sizeof(packed_t) == 7, "Toolchain::OT_TOOL_PACKED failed 1\n");
 }
 
@@ -57,9 +56,8 @@ void test_packed2()
         uint8_t mByte;
     } OT_TOOL_PACKED_END;
 
-#if _WIN32
-    static_assert(sizeof(packed_t) == 4, "Toolchain::OT_TOOL_PACKED failed 2");
-#endif
+    CompileTimeAssert(sizeof(packed_t) == 4, "packed_t should be packed to 4 bytes");
+
     VerifyOrQuit(sizeof(packed_t) == 4, "Toolchain::OT_TOOL_PACKED failed 2\n");
 }
 
@@ -81,9 +79,8 @@ void test_packed_union()
         } OT_TOOL_PACKED_FIELD;
     } OT_TOOL_PACKED_END;
 
-#if _WIN32
-    static_assert(sizeof(packed_t) == 5, "Toolchain::OT_TOOL_PACKED failed 3");
-#endif
+    CompileTimeAssert(sizeof(packed_t) == 5, "packed_t should be packed to 5 bytes");
+
     VerifyOrQuit(sizeof(packed_t) == 5, "Toolchain::OT_TOOL_PACKED failed 3\n");
 }
 
@@ -104,7 +101,7 @@ void TestToolchain(void)
     test_packed_enum();
 }
 
-#ifndef _WIN32
+#ifdef ENABLE_TEST_MAIN
 int main(void)
 {
     TestToolchain();

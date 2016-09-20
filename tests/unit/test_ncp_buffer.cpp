@@ -460,7 +460,7 @@ void TestNcpFrameBuffer(void)
 
 }  // namespace Thread
 
-#ifndef _WIN32
+#ifdef ENABLE_TEST_MAIN
 int main(void)
 {
     Thread::TestNcpFrameBuffer();

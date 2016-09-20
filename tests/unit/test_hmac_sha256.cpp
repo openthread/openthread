@@ -76,7 +76,7 @@ void TestHmacSha256(void)
     }
 }
 
-#ifndef _WIN32
+#ifdef ENABLE_TEST_MAIN
 int main(void)
 {
     TestHmacSha256();

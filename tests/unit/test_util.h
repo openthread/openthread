@@ -40,6 +40,9 @@
 extern "C" {
 #endif
 
+// Enable main functions
+#define ENABLE_TEST_MAIN
+
 #define SuccessOrQuit(ERR, MSG)                 \
   do { \
     if ((ERR) != kThreadError_None)     \
@@ -60,6 +63,15 @@ extern "C" {
     } \
   } while (0)
 
+//#define CompileTimeAssert(COND, MSG) typedef char __C_ASSERT__[(COND)?1:-1]
+   
+// I would use the above definition for CompileTimeAssert, but I am getting the following errors
+// when I run 'make -f examples/Makefile-posix distcheck':
+//
+//      error: typedef ‘__C_ASSERT__’ locally defined but not used [-Werror=unused-local-typedefs]
+//
+#define CompileTimeAssert(COND, MSG)
+
 #ifdef __cplusplus
 }
 #endif
@@ -72,6 +84,8 @@ extern utAssertTrue s_AssertTrue;
 #define SuccessOrQuit(ERR, MSG) s_AssertTrue((ERR) == kThreadError_None, L##MSG)
 
 #define VerifyOrQuit(ERR, MSG) s_AssertTrue(ERR, L##MSG)
+
+#define CompileTimeAssert(COND, MSG) static_assert(COND, MSG)
 
 #endif
 

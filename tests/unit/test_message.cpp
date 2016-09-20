@@ -60,7 +60,7 @@ void TestMessage(void)
                   "Message::Free failed\n");
 }
 
-#ifndef _WIN32
+#ifdef ENABLE_TEST_MAIN
 int main(void)
 {
     TestMessage();
