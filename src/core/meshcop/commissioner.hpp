@@ -122,9 +122,9 @@ private:
 
     uint8_t mState;
 
-    Ip6::Address mJoinerRouterAddress;
     uint8_t mJoinerIid[8];
     uint16_t mJoinerPort;
+    uint16_t mJoinerRloc;
 
     uint16_t mSessionId;
     Message *mTransmitMessage;

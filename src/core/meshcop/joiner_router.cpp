@@ -166,6 +166,7 @@ void JoinerRouter::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &a
     Ip6::MessageInfo messageInfo;
     JoinerUdpPortTlv udpPort;
     JoinerIidTlv iid;
+    JoinerRouterLocatorTlv rloc;
     ExtendedTlv tlv;
     uint16_t borderAgentRloc;
 
@@ -191,6 +192,10 @@ void JoinerRouter::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &a
     iid.Init();
     iid.SetIid(aMessageInfo.GetPeerAddr().mFields.m8 + 8);
     SuccessOrExit(error = message->Append(&iid, sizeof(iid)));
+
+    rloc.Init();
+    rloc.SetJoinerRouterLocator(mNetif.GetMle().GetRloc16());
+    SuccessOrExit(error = message->Append(&rloc, sizeof(rloc)));
 
     tlv.SetType(Tlv::kJoinerDtlsEncapsulation);
     tlv.SetLength(aMessage.GetLength() - aMessage.GetOffset());

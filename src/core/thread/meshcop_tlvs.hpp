@@ -79,6 +79,7 @@ public:
         kJoinerDtlsEncapsulation = OT_MESHCOP_TLV_JOINER_DTLS,       ///< Joiner DTLS Encapsulation TLV
         kJoinerUdpPort           = OT_MESHCOP_TLV_JOINER_UDP_PORT,   ///< Joiner UDP Port TLV
         kJoinerIid               = OT_MESHCOP_TLV_JOINER_IID,        ///< Joiner IID TLV
+        kJoinerRouterLocator     = OT_MESHCOP_TLV_JOINER_RLOC,       ///< Joiner Router Locator TLV
         kJoinerRouterKek         = OT_MESHCOP_TLV_JOINER_ROUTER_KEK, ///< Joiner Router KEK TLV
         kPendingTimestamp        = OT_MESHCOP_TLV_PENDINGTIMESTAMP,  ///< Pending Timestamp TLV
         kDelayTimer              = OT_MESHCOP_TLV_DELAYTIMER,        ///< Delay Timer TLV
@@ -1080,6 +1081,49 @@ public:
 
 private:
     uint8_t mIid[8];
+} OT_TOOL_PACKED_END;
+
+/**
+ * This class implements Joiner Router Locator TLV generation and parsing.
+ *
+ */
+OT_TOOL_PACKED_BEGIN
+class JoinerRouterLocatorTlv: public Tlv
+{
+public:
+    /**
+     * This method initializes the TLV.
+     *
+     */
+    void Init(void) { SetType(kJoinerRouterLocator); SetLength(sizeof(*this) - sizeof(Tlv)); }
+
+    /**
+     * This method indicates whether or not the TLV appears to be well-formed.
+     *
+     * @retval TRUE   If the TLV appears to be well-formed.
+     * @retval FALSE  If the TLV does not appear to be well-formed.
+     *
+     */
+    bool IsValid(void) const { return GetLength() == sizeof(*this) - sizeof(Tlv); }
+
+    /**
+     * This method returns the Joiner Router Locator value.
+     *
+     * @returns The Joiner Router Locator value.
+     *
+     */
+    uint16_t GetJoinerRouterLocator(void) const { return HostSwap16(mLocator); }
+
+    /**
+     * This method sets the Joiner Router Locator value.
+     *
+     * @param[in]  aJoinerRouterLocator  The Joiner Router Locator value.
+     *
+     */
+    void SetJoinerRouterLocator(uint16_t aLocator) { mLocator = HostSwap16(aLocator); }
+
+private:
+    uint16_t mLocator;
 } OT_TOOL_PACKED_END;
 
 /**
