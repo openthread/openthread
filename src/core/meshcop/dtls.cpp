@@ -54,6 +54,7 @@ Dtls::Dtls(ThreadNetif &aNetif):
     mTimerSet(false),
     mNetif(aNetif)
 {
+    mProvisioningUrl.Init();
 }
 
 ThreadError Dtls::Start(bool aClient, ReceiveHandler aReceiveHandler, SendHandler aSendHandler, void *aContext)

@@ -1912,8 +1912,10 @@ void Interpreter::ProcessCommissioner(int argc, char *argv[])
 
     if (strcmp(argv[0], "start") == 0)
     {
+        const char *provisioningUrl;
         VerifyOrExit(argc > 1, error = kThreadError_Parse);
-        otCommissionerStart(mInstance, argv[1]);
+        provisioningUrl = argc > 2 ? argv[2] : NULL;
+        otCommissionerStart(mInstance, argv[1], provisioningUrl);
     }
     else if (strcmp(argv[0], "stop") == 0)
     {
@@ -2022,8 +2024,10 @@ void Interpreter::ProcessJoiner(int argc, char *argv[])
 
     if (strcmp(argv[0], "start") == 0)
     {
+        const char *provisioningUrl;
         VerifyOrExit(argc > 1, error = kThreadError_Parse);
-        otJoinerStart(mInstance, argv[1]);
+        provisioningUrl = (argc > 2) ? argv[2] : NULL;
+        otJoinerStart(mInstance, argv[1], provisioningUrl);
     }
     else if (strcmp(argv[0], "stop") == 0)
     {
