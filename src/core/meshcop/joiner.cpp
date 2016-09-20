@@ -226,7 +226,6 @@ void Joiner::SendJoinerFinalize(void)
     header.SetMessageId(0);
     header.SetToken(NULL, 0);
     header.AppendUriPathOptions(OPENTHREAD_URI_JOINER_FINALIZE);
-    header.AppendContentFormatOption(Coap::Header::kApplicationOctetStream);
     header.Finalize();
     memcpy(cur, header.GetBytes(), header.GetLength());
     cur += header.GetLength();

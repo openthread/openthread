@@ -185,7 +185,6 @@ ThreadError AddressResolver::SendAddressQuery(const Ip6::Address &aEid)
     header.SetMessageId(++mCoapMessageId);
     header.SetToken(NULL, 0);
     header.AppendUriPathOptions(OPENTHREAD_URI_ADDRESS_QUERY);
-    header.AppendContentFormatOption(Coap::Header::kApplicationOctetStream);
     header.Finalize();
     SuccessOrExit(error = message->Append(header.GetBytes(), header.GetLength()));
 
@@ -364,7 +363,6 @@ ThreadError AddressResolver::SendAddressError(const ThreadTargetTlv &aTarget, co
     header.SetMessageId(++mCoapMessageId);
     header.SetToken(NULL, 0);
     header.AppendUriPathOptions(OPENTHREAD_URI_ADDRESS_ERROR);
-    header.AppendContentFormatOption(Coap::Header::kApplicationOctetStream);
     header.Finalize();
     SuccessOrExit(error = message->Append(header.GetBytes(), header.GetLength()));
     SuccessOrExit(error = message->Append(&aTarget, sizeof(aTarget)));
@@ -595,7 +593,6 @@ void AddressResolver::SendAddressQueryResponse(const ThreadTargetTlv &aTargetTlv
     header.SetMessageId(++mCoapMessageId);
     header.SetToken(NULL, 0);
     header.AppendUriPathOptions(OPENTHREAD_URI_ADDRESS_NOTIFY);
-    header.AppendContentFormatOption(Coap::Header::kApplicationOctetStream);
     header.Finalize();
     SuccessOrExit(error = message->Append(header.GetBytes(), header.GetLength()));
 
