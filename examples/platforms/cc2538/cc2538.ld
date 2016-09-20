@@ -60,6 +60,11 @@ SECTIONS
         _einit_array = .;
     } > FLASH
 
+    .ARM.exidx : ALIGN(4)
+    {
+        *(.ARM.exidx*)
+    } > FLASH
+
     .data : ALIGN(4)
     {
         _data = .;

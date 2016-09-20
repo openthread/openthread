@@ -36,6 +36,9 @@
 #include <stdint.h>
 
 #include <openthread-config.h>
+#include <openthread.h>
+
+#include <platform/platform.h>
 #include <platform/alarm.h>
 #include <platform/diag.h>
 #include "platform-cc2538.h"
@@ -62,19 +65,21 @@ uint32_t otPlatAlarmGetNow(void)
     return sCounter;
 }
 
-void otPlatAlarmStartAt(uint32_t t0, uint32_t dt)
+void otPlatAlarmStartAt(otInstance *aInstance, uint32_t t0, uint32_t dt)
 {
+    (void)aInstance;
     sAlarmT0 = t0;
     sAlarmDt = dt;
     sIsRunning = true;
 }
 
-void otPlatAlarmStop(void)
+void otPlatAlarmStop(otInstance *aInstance)
 {
+    (void)aInstance;
     sIsRunning = false;
 }
 
-void cc2538AlarmProcess(void)
+void cc2538AlarmProcess(otInstance *aInstance)
 {
     uint32_t expires;
     bool fire = false;
@@ -106,12 +111,12 @@ void cc2538AlarmProcess(void)
 
             if (otPlatDiagModeGet())
             {
-                otPlatDiagAlarmFired();
+                otPlatDiagAlarmFired(aInstance);
             }
             else
 #endif
             {
-                otPlatAlarmFired();
+                otPlatAlarmFired(aInstance);
             }
         }
     }

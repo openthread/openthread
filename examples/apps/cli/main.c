@@ -26,31 +26,66 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <openthread.h>
+#ifdef OPENTHREAD_CONFIG_FILE
+#include OPENTHREAD_CONFIG_FILE
+#else
 #include <openthread-config.h>
+#endif
+
+#include <openthread-core-config.h>
+#include <openthread.h>
 #include <openthread-diag.h>
 #include <cli/cli-uart.h>
 #include <platform/platform.h>
+#include <assert.h>
 
-void otSignalTaskletPending(void)
+void otSignalTaskletPending(otInstance *aInstance)
 {
+    (void)aInstance;
 }
 
 int main(int argc, char *argv[])
 {
+    otInstance *sInstance;
+
+#ifdef OPENTHREAD_MULTIPLE_INSTANCE
+    uint64_t otInstanceBufferLength = 0;
+    uint8_t *otInstanceBuffer = NULL;
+#endif
+
     PlatformInit(argc, argv);
-    otEnable();
-    otCliUartInit();
+
+#ifdef OPENTHREAD_MULTIPLE_INSTANCE
+    // Call to query the buffer size
+    (void)otInstanceInit(NULL, &otInstanceBufferLength);
+
+    // Call to allocate the buffer
+    otInstanceBuffer = (uint8_t *)malloc(otInstanceBufferLength);
+    assert(otInstanceBuffer);
+
+    // Initialize Openthread with the buffer
+    sInstance = otInstanceInit(otInstanceBuffer, &otInstanceBufferLength);
+#else
+    sInstance = otInstanceInit();
+#endif
+    assert(sInstance);
+
+    otCliUartInit(sInstance);
 
 #if OPENTHREAD_ENABLE_DIAG
-    diagInit();
+    diagInit(sInstance);
 #endif
 
     while (1)
     {
-        otProcessNextTasklet();
-        PlatformProcessDrivers();
+        otProcessNextTasklet(sInstance);
+        PlatformProcessDrivers(sInstance);
     }
+
+    // otInstanceFinalize(sInstance);
+#ifdef OPENTHREAD_MULTIPLE_INSTANCE
+    // free(otInstanceBuffer);
+#endif
 
     return 0;
 }

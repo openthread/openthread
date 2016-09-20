@@ -35,7 +35,7 @@ from autothreadharness.harness_case import HarnessCase
 class Router_5_1_7(HarnessCase):
     suite = 2
     case = '5 1 7'
-    golden_devices_required = 7
+    golden_devices_required = 11
     def on_dialog(self, dialog, title):
         if title.startswith('Enter Router Max Child Count'):
             inp = dialog.find_element_by_id('cnfrmInpText')

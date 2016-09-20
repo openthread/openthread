@@ -33,12 +33,15 @@
 #include <stdio.h>
 #include <termios.h>
 #include <unistd.h>
+#include <errno.h>
+#include <signal.h>
 
 #include <common/code_utils.hpp>
 #include <platform/uart.h>
 #include "platform-posix.h"
 
 #ifdef OPENTHREAD_TARGET_LINUX
+#include <sys/prctl.h>
 int posix_openpt(int oflag);
 int grantpt(int fildes);
 int unlockpt(int fd);
@@ -69,9 +72,19 @@ ThreadError otPlatUartEnable(void)
     ThreadError error = kThreadError_None;
     struct termios termios;
 
+#ifdef OPENTHREAD_TARGET_LINUX
+    // Ensure we terminate this process if the
+    // parent process dies.
+    prctl(PR_SET_PDEATHSIG, SIGHUP);
+#endif
+
     s_in_fd = dup(STDIN_FILENO);
     s_out_fd = dup(STDOUT_FILENO);
     dup2(STDERR_FILENO, STDOUT_FILENO);
+
+    // We need this signal to make sure that this
+    // process terminates properly.
+    signal(SIGPIPE, SIG_DFL);
 
     if (isatty(s_in_fd))
     {
@@ -90,20 +103,17 @@ ThreadError otPlatUartEnable(void)
         // get current configuration
         VerifyOrExit(tcgetattr(s_in_fd, &termios) == 0, perror("tcgetattr"); error = kThreadError_Error);
 
-        // turn off input processing
-        termios.c_iflag &= ~(unsigned long)(IGNBRK | BRKINT | ICRNL | INLCR | PARMRK | INPCK | ISTRIP | IXON);
+        // Set up the termios settings for raw mode. This turns
+        // off input/output processing, line processing, and character processing.
+        cfmakeraw(&termios);
 
-        // turn off line processing
-        termios.c_lflag &= ~(unsigned long)(ECHO | ECHONL | ICANON | IEXTEN);
+        // Set up our cflags for local use. Turn on hangup-on-close.
+        termios.c_cflag |= HUPCL | CREAD | CLOCAL;
 
-        // turn off character processing
-        termios.c_cflag &= ~(unsigned long)(CSIZE | PARENB);
-        termios.c_cflag |= CS8 | HUPCL | CREAD | CLOCAL;
-
-        // return 1 byte at a time
+        // "Minimum number of characters for noncanonical read"
         termios.c_cc[VMIN]  = 1;
 
-        // turn off inter-character timer
+        // "Timeout in deciseconds for noncanonical read"
         termios.c_cc[VTIME] = 0;
 
         // configure baud rate
@@ -118,12 +128,15 @@ ThreadError otPlatUartEnable(void)
         // get current configuration
         VerifyOrExit(tcgetattr(s_out_fd, &termios) == 0, perror("tcgetattr"); error = kThreadError_Error);
 
-        // turn off output processing
+        // Set up the termios settings for raw mode. This turns
+        // off input/output processing, line processing, and character processing.
+        cfmakeraw(&termios);
+
+        // Absolutely obliterate all output processing.
         termios.c_oflag = 0;
 
-        // turn off character processing
-        termios.c_cflag &= ~(unsigned long)(CSIZE | PARENB);
-        termios.c_cflag |= CS8 | HUPCL | CREAD | CLOCAL;
+        // Set up our cflags for local use. Turn on hangup-on-close.
+        termios.c_cflag |= HUPCL | CREAD | CLOCAL;
 
         // configure baud rate
         VerifyOrExit(cfsetospeed(&termios, B115200) == 0, perror("cfsetospeed"); error = kThreadError_Error);
@@ -163,11 +176,16 @@ exit:
     return error;
 }
 
-void posixUartUpdateFdSet(fd_set *aReadFdSet, fd_set *aWriteFdSet, int *aMaxFd)
+void posixUartUpdateFdSet(fd_set *aReadFdSet, fd_set *aWriteFdSet, fd_set *aErrorFdSet, int *aMaxFd)
 {
     if (aReadFdSet != NULL)
     {
         FD_SET(s_in_fd, aReadFdSet);
+
+        if (aErrorFdSet != NULL)
+        {
+            FD_SET(s_in_fd, aErrorFdSet);
+        }
 
         if (aMaxFd != NULL && *aMaxFd < s_in_fd)
         {
@@ -175,9 +193,14 @@ void posixUartUpdateFdSet(fd_set *aReadFdSet, fd_set *aWriteFdSet, int *aMaxFd)
         }
     }
 
-    if (aWriteFdSet != NULL && s_write_length > 0)
+    if ((aWriteFdSet != NULL) && (s_write_length > 0))
     {
         FD_SET(s_out_fd, aWriteFdSet);
+
+        if (aErrorFdSet != NULL)
+        {
+            FD_SET(s_out_fd, aErrorFdSet);
+        }
 
         if (aMaxFd != NULL && *aMaxFd < s_out_fd)
         {
@@ -188,22 +211,68 @@ void posixUartUpdateFdSet(fd_set *aReadFdSet, fd_set *aWriteFdSet, int *aMaxFd)
 
 void posixUartProcess(void)
 {
-    const int flags = POLLRDNORM | POLLERR | POLLNVAL | POLLHUP;
-    struct pollfd pollfd = { s_in_fd, flags, 0 };
     ssize_t rval;
-
-    if (poll(&pollfd, 1, 0) > 0 && (pollfd.revents & flags) != 0)
+    const int error_flags = POLLERR | POLLNVAL | POLLHUP;
+    struct pollfd pollfd[] =
     {
-        rval = read(s_in_fd, s_receive_buffer, sizeof(s_receive_buffer));
-        assert(rval >= 0);
-        otPlatUartReceived(s_receive_buffer, (uint16_t)rval);
+        { s_in_fd,  POLLIN  | error_flags, 0 },
+        { s_out_fd, POLLOUT | error_flags, 0 },
+    };
+
+    errno = 0;
+
+    rval = poll(pollfd, sizeof(pollfd) / sizeof(*pollfd), 0);
+
+    if (rval < 0)
+    {
+        perror("poll");
+        exit(EXIT_FAILURE);
     }
 
-    if (s_write_length > 0)
+    if (rval > 0)
     {
-        rval = write(s_out_fd, s_write_buffer, s_write_length);
-        assert(rval >= 0);
-        s_write_length = 0;
-        otPlatUartSendDone();
+        if ((pollfd[0].revents & error_flags) != 0)
+        {
+            perror("s_in_fd");
+            exit(EXIT_FAILURE);
+        }
+
+        if ((pollfd[1].revents & error_flags) != 0)
+        {
+            perror("s_out_fd");
+            exit(EXIT_FAILURE);
+        }
+
+        if (pollfd[0].revents & POLLIN)
+        {
+            rval = read(s_in_fd, s_receive_buffer, sizeof(s_receive_buffer));
+
+            if (rval <= 0)
+            {
+                perror("read");
+                exit(EXIT_FAILURE);
+            }
+
+            otPlatUartReceived(s_receive_buffer, (uint16_t)rval);
+        }
+
+        if ((s_write_length > 0) && (pollfd[1].revents & POLLOUT))
+        {
+            rval = write(s_out_fd, s_write_buffer, s_write_length);
+
+            if (rval <= 0)
+            {
+                perror("write");
+                exit(EXIT_FAILURE);
+            }
+
+            s_write_buffer += (uint16_t)rval;
+            s_write_length -= (uint16_t)rval;
+
+            if (s_write_length == 0)
+            {
+                otPlatUartSendDone();
+            }
+        }
     }
 }

@@ -61,6 +61,7 @@ enum
 };
 
 class Message;
+class MessagePool;
 
 /**
  * This structure contains pointers to the head and tail of a Message list.
@@ -98,6 +99,7 @@ struct BufferHeader
  */
 struct MessageInfo
 {
+    MessagePool     *mMessagePool;       ///< Identifies the message pool for this message.
     enum
     {
         kListAll = 0,                    ///< Identifies the all messages list.
@@ -112,12 +114,14 @@ struct MessageInfo
     uint8_t          mChildMask[8];      ///< A bit-vector to indicate which sleepy children need to receive this.
     uint16_t         mPanId;             ///< The Destination PAN ID.
     uint8_t          mTimeout;           ///< Seconds remaining before dropping the message.
+    int8_t           mInterfaceId;       ///< The interface ID.
 
     uint8_t          mType : 2;          ///< Identifies the type of message.
     bool             mDirectTx : 1;      ///< Used to indicate whether a direct transmission is required.
     bool             mLinkSecurity : 1;  ///< Indicates whether or not link security is enabled.
     bool             mMleDiscoverRequest : 1;   ///< Identifies MLE Discover Request.
     bool             mMleDiscoverResponse : 1;  ///< Identifies MLE Discover Response.
+    bool             mJoinerEntrust : 1; ///< Indicates whether or not this message is a Joiner Entrust.
 };
 
 /**
@@ -200,6 +204,7 @@ private:
  */
 class Message: private Buffer
 {
+    friend class MessagePool;
     friend class MessageQueue;
 
 public:
@@ -209,6 +214,12 @@ public:
         kType6lowpan     = 1,   ///< A 6lowpan frame
         kTypeMacDataPoll = 2,   ///< A MAC data poll message
     };
+
+    /**
+     * This method frees this message buffer.
+     *
+     */
+    ThreadError Free(void);
 
     /**
      * This method returns a pointer to the next message in the same interface list.
@@ -425,6 +436,22 @@ public:
     void SetTimeout(uint8_t aTimeout);
 
     /**
+     * This method returns the interface ID.
+     *
+     * @returns The interface ID.
+     *
+     */
+    int8_t GetInterfaceId(void) const;
+
+    /**
+     * This method sets the interface ID.
+     *
+     * @param[in]  aInterfaceId  The interface ID value.
+     *
+     */
+    void SetInterfaceId(int8_t aInterfaceId);
+
+    /**
      * This method returns whether or not message forwarding is scheduled for direct transmission.
      *
      * @retval TRUE   If message forwarding is scheduled for direct transmission.
@@ -497,6 +524,23 @@ public:
     void SetMleDiscoverResponse(bool aMleDiscoverResponse);
 
     /**
+     * This method indicates whether or not this message is an Joiner Entrust.
+     *
+     * @retval TRUE   If this message is an Joiner Entrust.
+     * @retval FALSE  If this message is not an Joiner Entrust.
+     *
+     */
+    bool IsJoinerEntrust(void) const;
+
+    /**
+     * This method sets whether or not this message is an Joiner Entrust.
+     *
+     * @param[in]  aLinkSecurityEnabled  TRUE if this message is an Joiner Entrust, FALSE otherwise.
+     *
+     */
+    void SetJoinerEntrust(bool aJoinerEntrust);
+
+    /**
      * This method is used to update a checksum value.
      *
      * @param[in]  aChecksum  Initial checksum value.
@@ -508,35 +552,11 @@ public:
      */
     uint16_t UpdateChecksum(uint16_t aChecksum, uint16_t aOffset, uint16_t aLength) const;
 
-    /**
-     * This static method is used to initialize the message buffer pool.
-     *
-     */
-    static ThreadError Init(void);
-
-    /**
-     * This static method is used to obtain a new message.
-     *
-     * @param[in]  aType           The message type.
-     * @param[in]  aReserveHeader  The number of header bytes to reserve.
-     *
-     * @returns A pointer to the message or NULL if no message buffers are available.
-     *
-     */
-    static Message *New(uint8_t aType, uint16_t aReserveHeader);
-
-    /**
-     * This static method is used to free a message and return all message buffers to the buffer pool.
-     *
-     * @param[in]  aMessage  The message to free.
-     *
-     * @retval kThreadError_None         Successfully freed the message.
-     * @retval kThreadError_InvalidArgs  The message is already freed.
-     *
-     */
-    static ThreadError Free(Message &aMessage);
-
 private:
+    MessagePool *GetMessagePool(void) { return mInfo.mMessagePool; }
+
+    void SetMessagePool(MessagePool *aMessagePool) { mInfo.mMessagePool = aMessagePool; }
+
     /**
      * This method returns a reference to a message list.
      *
@@ -662,6 +682,51 @@ private:
     static ThreadError RemoveFromList(uint8_t aListId, Message &aMessage);
 
     MessageList mInterface;   ///< The instance-specific message list.
+};
+
+class MessagePool
+{
+    friend class Message;
+    friend class MessageQueue;
+
+public:
+    /**
+     * This constructor initializes the object.
+     *
+     */
+    MessagePool(void);
+
+    /**
+     * This method is used to obtain a new message.
+     *
+     * @param[in]  aType           The message type.
+     * @param[in]  aReserveHeader  The number of header bytes to reserve.
+     *
+     * @returns A pointer to the message or NULL if no message buffers are available.
+     *
+     */
+    Message *New(uint8_t aType, uint16_t aReserveHeader);
+
+    /**
+     * This method is used to free a message and return all message buffers to the buffer pool.
+     *
+     * @param[in]  aMessage  The message to free.
+     *
+     * @retval kThreadError_None         Successfully freed the message.
+     * @retval kThreadError_InvalidArgs  The message is already freed.
+     *
+     */
+    ThreadError Free(Message *aMessage);
+
+private:
+    Buffer *NewBuffer(void);
+    ThreadError FreeBuffers(Buffer *aBuffer);
+    ThreadError ReclaimBuffers(int aNumBuffers);
+
+    int mNumFreeBuffers;
+    Buffer mBuffers[kNumBuffers];
+    Buffer *mFreeBuffers;
+    MessageList mAll;
 };
 
 /**

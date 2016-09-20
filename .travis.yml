@@ -29,12 +29,16 @@
 language: cpp
 
 sudo: required
+dist: trusty
 
 before_install:
   - .travis/before_install.sh
 
 script:
   - .travis/script.sh
+
+after_success:
+  - bash <(curl -s https://codecov.io/bash)
 
 matrix:
   include:
@@ -44,21 +48,18 @@ matrix:
     - env: BUILD_TARGET="scan-build"
       compiler: clang
       os: linux
-    - env: BUILD_TARGET="posix-distcheck" DISTCHECK_CONFIGURE_FLAGS="--with-examples=posix --enable-cli --enable-ncp --with-tests=all" VERBOSE=1
-      compiler: gcc
-      os: linux
-    - env: BUILD_TARGET="posix"
-      compiler: gcc
-      os: osx
-    - env: BUILD_TARGET="posix"
-      compiler: clang
-      os: linux
-    - env: BUILD_TARGET="posix"
-      compiler: clang
-      os: osx
-    - env: BUILD_TARGET="posix-32-bit"
-      compiler: gcc
-      os: linux
     - env: BUILD_TARGET="cc2538"
+      compiler: gcc
+      os: linux
+    - env: BUILD_TARGET="posix"
+      compiler: clang
+      os: linux
+    - env: BUILD_TARGET="posix-distcheck" VERBOSE=1
+      compiler: gcc
+      os: linux
+    - env: BUILD_TARGET="posix-32-bit" VERBOSE=1
+      compiler: gcc
+      os: linux
+    - env: BUILD_TARGET="posix-ncp" VERBOSE=1
       compiler: gcc
       os: linux

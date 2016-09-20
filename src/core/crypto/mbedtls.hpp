@@ -28,20 +28,22 @@
 
 /**
  * @file
- * @brief
- *   This file includes the platform abstraction for AES ECB computations.
+ *   This file includes definitions for using mbedTLS.
  */
 
-#ifndef AES_ECB_H_
-#define AES_ECB_H_
+#ifndef OT_MBEDTLS_HPP_
+#define OT_MBEDTLS_HPP_
 
-#include <stdint.h>
-
-#include <openthread-types.h>
-
-#ifdef __cplusplus
-extern "C" {
+#ifdef OPENTHREAD_CONFIG_FILE
+#include OPENTHREAD_CONFIG_FILE
+#else
+#include <openthread-config.h>
 #endif
+
+#include <mbedtls/memory_buffer_alloc.h>
+
+namespace Thread {
+namespace Crypto {
 
 /**
  * @addtogroup core-security
@@ -50,36 +52,38 @@ extern "C" {
  *
  */
 
-enum
+/**
+ * This class implements mbedTLS memory.
+ *
+ */
+class MbedTls
 {
-    otAesBlockSize = 16,  ///< AES-128 block size.
+public:
+    enum
+    {
+#if OPENTHREAD_ENABLE_DTLS
+        kMemorySize = 2048 * sizeof(void *), ///< Size of memory buffer (bytes).
+#else
+        kMemorySize = 512,                   ///< Size of memory buffer (bytes).
+#endif
+    };
+
+    /**
+     * This constructor initializes the object.
+     *
+     */
+    MbedTls(void);
+
+private:
+    unsigned char mMemory[kMemorySize];
 };
-
-/**
- * This method sets the key.
- *
- * @param[in]  aKey        A pointer to the key.
- * @param[in]  aKeyLength  Length of the key in bytes.
- *
- */
-void otCryptoAesEcbSetKey(const void *aKey, uint16_t aKeyLength);
-
-/**
- * This method encrypts data.
- *
- * @param[in]   aInput   A pointer to the input.
- * @param[out]  aOutput  A pointer to the output.
- *
- */
-void otCryptoAesEcbEncrypt(const uint8_t aInput[otAesBlockSize], uint8_t aOutput[otAesBlockSize]);
 
 /**
  * @}
  *
  */
 
-#ifdef __cplusplus
-}  // end of extern "C"
-#endif
+}  // namespace Crypto
+}  // namespace Thread
 
-#endif  // AES_ECB_H_
+#endif  // OT_MBEDTLS_HPP_

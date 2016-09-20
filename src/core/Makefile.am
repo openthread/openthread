@@ -30,7 +30,7 @@ include $(abs_top_nlbuild_autotools_dir)/automake/pre.am
 
 lib_LIBRARIES                       = libopenthread.a
 
-libopenthread_a_CPPFLAGS =            \
+libopenthread_a_CPPFLAGS            = \
     -I$(top_srcdir)/include           \
     $(OPENTHREAD_TARGET_DEFINES)      \
     $(NULL)
@@ -44,10 +44,16 @@ libopenthread_a_SOURCES             = \
     common/tasklet.cpp                \
     common/timer.cpp                  \
     crypto/aes_ccm.cpp                \
+    crypto/aes_ecb.cpp                \
+    crypto/hmac_sha256.cpp            \
+    crypto/mbedtls.cpp                \
+    crypto/sha256.cpp                 \
     mac/mac.cpp                       \
     mac/mac_frame.cpp                 \
     mac/mac_whitelist.cpp             \
     mac/mac_blacklist.cpp             \
+    meshcop/joiner_router.cpp         \
+    meshcop/leader.cpp                \
     net/icmp6.cpp                     \
     net/ip6.cpp                       \
     net/ip6_address.cpp               \
@@ -70,9 +76,29 @@ libopenthread_a_SOURCES             = \
     thread/network_data.cpp           \
     thread/network_data_local.cpp     \
     thread/network_data_leader.cpp    \
+    thread/panid_query_server.cpp     \
     thread/thread_netif.cpp           \
     thread/thread_tlvs.cpp            \
     $(NULL)
+
+if OPENTHREAD_ENABLE_COMMISSIONER
+libopenthread_a_SOURCES            += \
+    meshcop/commissioner.cpp          \
+    meshcop/panid_query_client.cpp    \
+    $(NULL)
+endif  # OPENTHREAD_ENABLE_COMMISSIONER
+
+if OPENTHREAD_ENABLE_JOINER
+libopenthread_a_SOURCES            += \
+    meshcop/joiner.cpp                \
+    $(NULL)
+endif  # OPENTHREAD_ENABLE_JOINER
+
+if OPENTHREAD_ENABLE_DTLS
+libopenthread_a_SOURCES            += \
+    meshcop/dtls.cpp                  \
+    $(NULL)
+endif  # OPENTHREAD_ENABLE_DTLS
 
 noinst_HEADERS                      = \
     openthread-core-config.h          \
@@ -88,19 +114,31 @@ noinst_HEADERS                      = \
     common/tasklet.hpp                \
     common/timer.hpp                  \
     crypto/aes_ccm.hpp                \
+    crypto/aes_ecb.hpp                \
+    crypto/hmac_sha256.hpp            \
+    crypto/mbedtls.hpp                \
+    crypto/sha256.hpp                 \
     mac/mac.hpp                       \
     mac/mac_frame.hpp                 \
     mac/mac_whitelist.hpp             \
     mac/mac_blacklist.hpp             \
+    meshcop/commissioner.hpp          \
+    meshcop/dtls.hpp                  \
+    meshcop/joiner.hpp                \
+    meshcop/joiner_router.hpp         \
+    meshcop/leader.hpp                \
+    meshcop/panid_query_client.hpp    \
     net/icmp6.hpp                     \
     net/ip6.hpp                       \
     net/ip6_address.hpp               \
+    net/ip6_headers.hpp               \
     net/ip6_filter.hpp                \
     net/ip6_mpl.hpp                   \
     net/ip6_routes.hpp                \
     net/netif.hpp                     \
     net/socket.hpp                    \
     net/udp6.hpp                      \
+    net/tcp.hpp                       \
     thread/address_resolver.hpp       \
     thread/key_manager.hpp            \
     thread/link_quality.hpp           \
@@ -118,6 +156,7 @@ noinst_HEADERS                      = \
     thread/network_data_leader.hpp    \
     thread/network_data_local.hpp     \
     thread/network_data_tlvs.hpp      \
+    thread/panid_query_server.hpp     \
     thread/thread_netif.hpp           \
     thread/thread_tlvs.hpp            \
     thread/thread_uris.hpp            \
@@ -125,7 +164,8 @@ noinst_HEADERS                      = \
     $(NULL)
 
 if OPENTHREAD_BUILD_COVERAGE
-CLEANFILES                          = $(wildcard *.gcda *.gcno)
+Dash                                = -
+CLEANFILES                          = $(shell find $(top_builddir)/src/core $(Dash)name "*.gcda" $(Dash)o $(Dash)name "*.gcno")
 endif # OPENTHREAD_BUILD_COVERAGE
 
 include $(abs_top_nlbuild_autotools_dir)/automake/post.am

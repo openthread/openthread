@@ -40,11 +40,11 @@ using namespace Thread;
 
 namespace Thread {
 
-extern "C" void otSignalTaskletPending(void)
+extern "C" void otSignalTaskletPending(otInstance *)
 {
 }
 
-extern "C" bool otAreTaskletsPending(void)
+extern "C" bool otAreTaskletsPending(otInstance *)
 {
     return false;
 }
@@ -59,23 +59,24 @@ extern "C" void otPlatUartReceived(const uint8_t *aBuf, uint16_t aBufLength)
     (void)aBufLength;
 }
 
-extern "C" void otPlatDiagAlarmFired()
+extern "C" void otPlatDiagAlarmFired(otInstance *)
 {
 }
 
-extern "C" void otPlatDiagRadioTransmitDone(bool aRxPending, ThreadError aError)
+extern "C" void otPlatDiagRadioTransmitDone(otInstance *, bool aRxPending, ThreadError aError)
 {
     (void)aRxPending;
     (void)aError;
 }
 
-extern "C" void otPlatDiagRadioReceiveDone(RadioPacket *aFrame, ThreadError aError)
+extern "C" void otPlatDiagRadioReceiveDone(otInstance *, RadioPacket *aFrame, ThreadError aError)
 {
     (void)aFrame;
     (void)aError;
 }
 
-ThreadNetif sMockThreadNetif;
+Ip6::Ip6 sIp6;
+ThreadNetif sMockThreadNetif(sIp6);
 Lowpan::Lowpan sMockLowpan(sMockThreadNetif);
 
 void TestLowpanIphc(void)
@@ -83,7 +84,7 @@ void TestLowpanIphc(void)
     Message *message = NULL;
 
     uint8_t  result[1500];
-    unsigned resultLength = 0;
+    uint16_t resultLength = 0;
 
     Mac::Address macSource;
     Mac::Address macDest;
@@ -112,11 +113,11 @@ void TestLowpanIphc(void)
 
         Mac::Frame frame;
         frame.mPsdu = iphcVector.data();
-        frame.mLength = iphcVector.size();
+        frame.mLength = static_cast<uint8_t>(iphcVector.size());
         frame.GetSrcAddr(macSource);
         frame.GetDstAddr(macDest);
 
-        VerifyOrQuit((message = Ip6::Ip6::NewMessage(0)) != NULL,
+        VerifyOrQuit((message = sIp6.mMessagePool.New(Message::kTypeIp6, 0)) != NULL,
                      "6lo: Ip6::NewMessage failed");
 
         // ===> Test Lowpan::Decompress
@@ -126,7 +127,7 @@ void TestLowpanIphc(void)
                                    frame.GetPayloadLength(), 0);
 
         uint16_t ip6PayloadLength = frame.GetPayloadLength() -
-                                    decompressedBytes;
+                                    static_cast<uint16_t>(decompressedBytes);
         SuccessOrQuit(message->Append(frame.GetPayload() + decompressedBytes,
                                       ip6PayloadLength),
                       "6lo: Message::Append failed");
@@ -150,10 +151,10 @@ void TestLowpanIphc(void)
         printf("Compressed OpenThread:\n");
         otTestPrintHex(result, compressBytes);
 
-        VerifyOrQuit(memcmp(frame.GetPayload(), result, compressBytes) == 0,
+        VerifyOrQuit(memcmp(frame.GetPayload(), result, static_cast<size_t>(compressBytes)) == 0,
                      "6lo: Lowpan::Compress failed");
 
-        SuccessOrQuit(Message::Free(*message), "6lo: Message:Free failed");
+        SuccessOrQuit(message->Free(), "6lo: Message:Free failed");
         printf("PASS\n\n");
 
     }
@@ -164,8 +165,6 @@ void TestLowpanIphc(void)
 
 int main(void)
 {
-    Message::Init();
-
     TestLowpanIphc();
 
     printf("All tests passed\n");

@@ -33,9 +33,11 @@
  */
 
 #include <openthread-types.h>
+#include <openthread.h>
 #include <openthread-config.h>
 
 #include <common/code_utils.hpp>
+#include <platform/platform.h>
 #include <platform/radio.h>
 #include <platform/diag.h>
 #include "platform-cc2538.h"
@@ -50,15 +52,6 @@ enum
     IEEE802154_FRAME_PENDING = 1 << 4,
     IEEE802154_ACK_REQUEST = 1 << 5,
     IEEE802154_DSN_OFFSET = 2,
-};
-
-enum
-{
-    CC2538_RF_CSP_OP_ISRXON = 0xE3,
-    CC2538_RF_CSP_OP_ISTXON = 0xE9,
-    CC2538_RF_CSP_OP_ISRFOFF = 0xEF,
-    CC2538_RF_CSP_OP_ISFLUSHRX = 0xED,
-    CC2538_RF_CSP_OP_ISFLUSHTX = 0xEE,
 };
 
 enum
@@ -84,11 +77,11 @@ void enableReceiver(void)
     if (!sIsReceiverEnabled)
     {
         // flush rxfifo
-        HWREG(RFCORE_SFR_RFST) = CC2538_RF_CSP_OP_ISFLUSHRX;
-        HWREG(RFCORE_SFR_RFST) = CC2538_RF_CSP_OP_ISFLUSHRX;
+        HWREG(RFCORE_SFR_RFST) = RFCORE_SFR_RFST_INSTR_FLUSHRX;
+        HWREG(RFCORE_SFR_RFST) = RFCORE_SFR_RFST_INSTR_FLUSHRX;
 
         // enable receiver
-        HWREG(RFCORE_SFR_RFST) = CC2538_RF_CSP_OP_ISRXON;
+        HWREG(RFCORE_SFR_RFST) = RFCORE_SFR_RFST_INSTR_RXON;
         sIsReceiverEnabled = true;
     }
 }
@@ -100,13 +93,13 @@ void disableReceiver(void)
         while (HWREG(RFCORE_XREG_FSMSTAT1) & RFCORE_XREG_FSMSTAT1_TX_ACTIVE);
 
         // flush rxfifo
-        HWREG(RFCORE_SFR_RFST) = CC2538_RF_CSP_OP_ISFLUSHRX;
-        HWREG(RFCORE_SFR_RFST) = CC2538_RF_CSP_OP_ISFLUSHRX;
+        HWREG(RFCORE_SFR_RFST) = RFCORE_SFR_RFST_INSTR_FLUSHRX;
+        HWREG(RFCORE_SFR_RFST) = RFCORE_SFR_RFST_INSTR_FLUSHRX;
 
         if (HWREG(RFCORE_XREG_RXENABLE) != 0)
         {
             // disable receiver
-            HWREG(RFCORE_SFR_RFST) = CC2538_RF_CSP_OP_ISRFOFF;
+            HWREG(RFCORE_SFR_RFST) = RFCORE_SFR_RFST_INSTR_RFOFF;
         }
 
         sIsReceiverEnabled = false;
@@ -118,9 +111,10 @@ void setChannel(uint8_t channel)
     HWREG(RFCORE_XREG_FREQCTRL) = 11 + (channel - 11) * 5;
 }
 
-ThreadError otPlatRadioSetPanId(uint16_t panid)
+ThreadError otPlatRadioSetPanId(otInstance *aInstance, uint16_t panid)
 {
     ThreadError error = kThreadError_Busy;
+    (void)aInstance;
 
     if (sState != kStateTransmit)
     {
@@ -132,9 +126,10 @@ ThreadError otPlatRadioSetPanId(uint16_t panid)
     return error;
 }
 
-ThreadError otPlatRadioSetExtendedAddress(uint8_t *address)
+ThreadError otPlatRadioSetExtendedAddress(otInstance *aInstance, uint8_t *address)
 {
     ThreadError error = kThreadError_Busy;
+    (void)aInstance;
 
     if (sState != kStateTransmit)
     {
@@ -151,9 +146,10 @@ ThreadError otPlatRadioSetExtendedAddress(uint8_t *address)
     return error;
 }
 
-ThreadError otPlatRadioSetShortAddress(uint16_t address)
+ThreadError otPlatRadioSetShortAddress(otInstance *aInstance, uint16_t address)
 {
     ThreadError error = kThreadError_Busy;
+    (void)aInstance;
 
     if (sState != kStateTransmit)
     {
@@ -192,9 +188,10 @@ void cc2538RadioInit(void)
     HWREG(RFCORE_XREG_SRCMATCH) = 0;
 }
 
-ThreadError otPlatRadioEnable(void)
+ThreadError otPlatRadioEnable(otInstance *aInstance)
 {
     ThreadError error = kThreadError_Busy;
+    (void)aInstance;
 
     if (sState == kStateSleep || sState == kStateDisabled)
     {
@@ -205,9 +202,10 @@ ThreadError otPlatRadioEnable(void)
     return error;
 }
 
-ThreadError otPlatRadioDisable(void)
+ThreadError otPlatRadioDisable(otInstance *aInstance)
 {
     ThreadError error = kThreadError_Busy;
+    (void)aInstance;
 
     if (sState == kStateDisabled || sState == kStateSleep)
     {
@@ -218,9 +216,16 @@ ThreadError otPlatRadioDisable(void)
     return error;
 }
 
-ThreadError otPlatRadioSleep(void)
+bool otPlatRadioIsEnabled(otInstance *aInstance)
+{
+    (void)aInstance;
+    return (sState != kStateDisabled) ? true : false;
+}
+
+ThreadError otPlatRadioSleep(otInstance *aInstance)
 {
     ThreadError error = kThreadError_Busy;
+    (void)aInstance;
 
     if (sState == kStateSleep || sState == kStateReceive)
     {
@@ -232,9 +237,10 @@ ThreadError otPlatRadioSleep(void)
     return error;
 }
 
-ThreadError otPlatRadioReceive(uint8_t aChannel)
+ThreadError otPlatRadioReceive(otInstance *aInstance, uint8_t aChannel)
 {
     ThreadError error = kThreadError_Busy;
+    (void)aInstance;
 
     if (sState != kStateDisabled)
     {
@@ -248,9 +254,10 @@ ThreadError otPlatRadioReceive(uint8_t aChannel)
     return error;
 }
 
-ThreadError otPlatRadioTransmit(void)
+ThreadError otPlatRadioTransmit(otInstance *aInstance)
 {
     ThreadError error = kThreadError_Busy;
+    (void)aInstance;
 
     if (sState == kStateReceive)
     {
@@ -263,8 +270,8 @@ ThreadError otPlatRadioTransmit(void)
         while (HWREG(RFCORE_XREG_FSMSTAT1) & RFCORE_XREG_FSMSTAT1_TX_ACTIVE);
 
         // flush txfifo
-        HWREG(RFCORE_SFR_RFST) = CC2538_RF_CSP_OP_ISFLUSHTX;
-        HWREG(RFCORE_SFR_RFST) = CC2538_RF_CSP_OP_ISFLUSHTX;
+        HWREG(RFCORE_SFR_RFST) = RFCORE_SFR_RFST_INSTR_FLUSHTX;
+        HWREG(RFCORE_SFR_RFST) = RFCORE_SFR_RFST_INSTR_FLUSHTX;
 
         // frame length
         HWREG(RFCORE_SFR_RFDATA) = sTransmitFrame.mLength;
@@ -286,7 +293,7 @@ ThreadError otPlatRadioTransmit(void)
                      sTransmitError = kThreadError_ChannelAccessFailure);
 
         // begin transmit
-        HWREG(RFCORE_SFR_RFST) = CC2538_RF_CSP_OP_ISTXON;
+        HWREG(RFCORE_SFR_RFST) = RFCORE_SFR_RFST_INSTR_TXON;
 
         while (HWREG(RFCORE_XREG_FSMSTAT1) & RFCORE_XREG_FSMSTAT1_TX_ACTIVE);
     }
@@ -295,28 +302,34 @@ exit:
     return error;
 }
 
-RadioPacket *otPlatRadioGetTransmitBuffer(void)
+RadioPacket *otPlatRadioGetTransmitBuffer(otInstance *aInstance)
 {
+    (void)aInstance;
     return &sTransmitFrame;
 }
 
-int8_t otPlatRadioGetRssi(void)
+int8_t otPlatRadioGetRssi(otInstance *aInstance)
 {
+    (void)aInstance;
     return 0;
 }
 
-otRadioCaps otPlatRadioGetCaps(void)
+otRadioCaps otPlatRadioGetCaps(otInstance *aInstance)
 {
+    (void)aInstance;
     return kRadioCapsNone;
 }
 
-bool otPlatRadioGetPromiscuous(void)
+bool otPlatRadioGetPromiscuous(otInstance *aInstance)
 {
+    (void)aInstance;
     return (HWREG(RFCORE_XREG_FRMFILT0) & RFCORE_XREG_FRMFILT0_FRAME_FILTER_EN) == 0;
 }
 
-void otPlatRadioSetPromiscuous(bool aEnable)
+void otPlatRadioSetPromiscuous(otInstance *aInstance, bool aEnable)
 {
+    (void)aInstance;
+
     if (aEnable)
     {
         HWREG(RFCORE_XREG_FRMFILT0) &= ~RFCORE_XREG_FRMFILT0_FRAME_FILTER_EN;
@@ -359,15 +372,15 @@ void readFrame(void)
     if ((HWREG(RFCORE_XREG_FSMSTAT1) & RFCORE_XREG_FSMSTAT1_FIFOP) != 0 &&
         (HWREG(RFCORE_XREG_FSMSTAT1) & RFCORE_XREG_FSMSTAT1_FIFO) == 0)
     {
-        HWREG(RFCORE_SFR_RFST) = CC2538_RF_CSP_OP_ISFLUSHRX;
-        HWREG(RFCORE_SFR_RFST) = CC2538_RF_CSP_OP_ISFLUSHRX;
+        HWREG(RFCORE_SFR_RFST) = RFCORE_SFR_RFST_INSTR_FLUSHRX;
+        HWREG(RFCORE_SFR_RFST) = RFCORE_SFR_RFST_INSTR_FLUSHRX;
     }
 
 exit:
     return;
 }
 
-void cc2538RadioProcess(void)
+void cc2538RadioProcess(otInstance *aInstance)
 {
     readFrame();
 
@@ -377,12 +390,12 @@ void cc2538RadioProcess(void)
 
         if (otPlatDiagModeGet())
         {
-            otPlatDiagRadioReceiveDone(&sReceiveFrame, sReceiveError);
+            otPlatDiagRadioReceiveDone(aInstance, &sReceiveFrame, sReceiveError);
         }
         else
 #endif
         {
-            otPlatRadioReceiveDone(&sReceiveFrame, sReceiveError);
+            otPlatRadioReceiveDone(aInstance, &sReceiveFrame, sReceiveError);
         }
     }
 
@@ -396,12 +409,12 @@ void cc2538RadioProcess(void)
 
             if (otPlatDiagModeGet())
             {
-                otPlatDiagRadioTransmitDone(false, sTransmitError);
+                otPlatDiagRadioTransmitDone(aInstance, false, sTransmitError);
             }
             else
 #endif
             {
-                otPlatRadioTransmitDone(false, sTransmitError);
+                otPlatRadioTransmitDone(aInstance, false, sTransmitError);
             }
         }
         else if (sReceiveFrame.mLength == IEEE802154_ACK_LENGTH &&
@@ -414,12 +427,12 @@ void cc2538RadioProcess(void)
 
             if (otPlatDiagModeGet())
             {
-                otPlatDiagRadioTransmitDone((sReceiveFrame.mPsdu[0] & IEEE802154_FRAME_PENDING) != 0, sTransmitError);
+                otPlatDiagRadioTransmitDone(aInstance, (sReceiveFrame.mPsdu[0] & IEEE802154_FRAME_PENDING) != 0, sTransmitError);
             }
             else
 #endif
             {
-                otPlatRadioTransmitDone((sReceiveFrame.mPsdu[0] & IEEE802154_FRAME_PENDING) != 0, sTransmitError);
+                otPlatRadioTransmitDone(aInstance, (sReceiveFrame.mPsdu[0] & IEEE802154_FRAME_PENDING) != 0, sTransmitError);
             }
         }
     }

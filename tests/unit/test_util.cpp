@@ -40,7 +40,7 @@ void otTestHexToVector(std::string &aHex, std::vector<uint8_t> &aOutBytes)
 
     while (ss >> word)
     {
-        uint8_t n = strtol(word.data(), NULL, 16);
+        uint8_t n = static_cast<uint8_t>(strtol(word.data(), NULL, 16));
         aOutBytes.push_back(n);
     }
 }
@@ -63,12 +63,12 @@ void otTestPrintHex(uint8_t *aBuffer, int aLength)
 
 void otTestPrintHex(std::string &aString)
 {
-    otTestPrintHex((uint8_t *)aString.data(), aString.size());
+    otTestPrintHex((uint8_t *)aString.data(), static_cast<int>(aString.size()));
 }
 
 void otTestPrintHex(std::vector<uint8_t> &aBytes)
 {
-    otTestPrintHex((uint8_t *)&aBytes[0], aBytes.size());
+    otTestPrintHex((uint8_t *)&aBytes[0], static_cast<int>(aBytes.size()));
 }
 
 

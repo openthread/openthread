@@ -6,7 +6,7 @@ Setup
 
 #. Install Thread-Test-Harness1.1-Alpha v1.0-Release_13.0
 #. Install python 2.7
-#. Get OpenThread and switch to the harness automation path::
+#. Get the OpenThread and switch to the harness automation path::
 
     git clone https://github.com/openthread/openthread.git
     cd openthread/tools/harness-automation
@@ -17,21 +17,9 @@ Setup
 
 #. Update settings.
 
-    Just copy the sample and modify::
+    Just copy the sample and modify according to the comments carefully::
 
         cp autothreadharness/settings_sample.py autothreadharness/settings.py
-
-    APC_HOST
-        MUST be set to None if no APC PDU available.
-
-    GOLDEN_DEVICES
-        can be found on Windows Device Manager. You have to filter out the ports of sniffer device and DUT by yourself.
-
-    OUTPUT_PATH
-        MUST be set to a writable directory.
-
-    HARNESS_HOME
-        MUST be set to Thread Harness installation directory. e.g. ``C:\GRL\Thread``
 
 Run single case
 ---------------

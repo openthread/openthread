@@ -92,7 +92,7 @@ configure_OPTIONS               = \
     $(NULL)
 
 ifeq ($(COVERAGE),1)
-configure_OPTIONS              += --enable-coverage
+configure_OPTIONS              += --enable-coverage --enable-commissioner --enable-joiner
 else
 configure_OPTIONS              +=
 endif

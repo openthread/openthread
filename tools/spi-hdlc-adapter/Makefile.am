@@ -47,4 +47,8 @@ spi_hdlc_adapter_SOURCES                                               = \
     spi-hdlc-adapter.c                                                   \
     $(NULL)
 
+if OPENTHREAD_BUILD_COVERAGE
+CLEANFILES                                                             = $(wildcard *.gcda *.gcno)
+endif # OPENTHREAD_BUILD_COVERAGE
+
 include $(abs_top_nlbuild_autotools_dir)/automake/post.am

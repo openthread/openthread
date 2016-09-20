@@ -39,6 +39,9 @@
 extern "C" {
 #endif
 
+// Global OpenThread instance structure
+extern otInstance *sInstance;
+
 /**
  * This method initializes the alarm service used by OpenThread.
  *
@@ -49,7 +52,7 @@ void cc2650AlarmInit(void);
  * This method performs alarm driver processing.
  *
  */
-void cc2650AlarmProcess(void);
+void cc2650AlarmProcess(otInstance *aInstance);
 
 /**
  * This method initializes the radio service used by OpenThread.
@@ -61,7 +64,7 @@ void cc2650RadioInit(void);
  * This method performs radio driver processing.
  *
  */
-void cc2650RadioProcess(void);
+void cc2650RadioProcess(otInstance *aInstance);
 
 /**
  * This method initializes the random number service used by OpenThread.

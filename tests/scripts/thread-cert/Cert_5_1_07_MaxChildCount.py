@@ -39,7 +39,7 @@ ED = 3
 class Cert_5_1_07_MaxChildCount(unittest.TestCase):
     def setUp(self):
         self.nodes = {}
-        for i in range(1,9):
+        for i in range(1, 14):
             self.nodes[i] = node.Node(i)
 
         self.nodes[LEADER].set_panid(0xface)
@@ -58,9 +58,12 @@ class Cert_5_1_07_MaxChildCount(unittest.TestCase):
         self.nodes[ROUTER].add_whitelist(self.nodes[ED].get_addr64())
         self.nodes[ED].enable_whitelist()
 
-        for i in range(4, 9):
+        for i in range(4, 14):
+            if i in range(8, 14):
+                self.nodes[i].set_mode('s')
+            else:
+                self.nodes[i].set_mode('rsn')
             self.nodes[i].set_panid(0xface)
-            self.nodes[i].set_mode('rsn')
             self.nodes[i].add_whitelist(self.nodes[ROUTER].get_addr64())
             self.nodes[ROUTER].add_whitelist(self.nodes[i].get_addr64())
             self.nodes[i].enable_whitelist()
@@ -80,17 +83,30 @@ class Cert_5_1_07_MaxChildCount(unittest.TestCase):
         time.sleep(3)
         self.assertEqual(self.nodes[ROUTER].get_state(), 'router')
 
-        for i in range(4, 9):
+        for i in range(4, 14):
             self.nodes[i].start()
             time.sleep(3)
             self.assertEqual(self.nodes[i].get_state(), 'child')
+
+            if i in range(4, 8):   
+                meshLocalEID = ''    
+                ipaddrs = []
+                ipaddrs = self.nodes[i].get_addrs()
+
+                for line in ipaddrs:
+                    if 'fdde' in line and 'ff:fe00' not in line:
+                        meshLocalEID = line
+                        break
+
+                self.nodes[LEADER].ping(meshLocalEID, size=106)
+                time.sleep(1)
 
         self.nodes[ED].start()
         time.sleep(3)
         self.assertEqual(self.nodes[ED].get_state(), 'detached')
 
         self.nodes[ED].stop()
-        for i in range(4, 9):
+        for i in range(4, 14):
             self.nodes[i].stop()
         time.sleep(3)
         

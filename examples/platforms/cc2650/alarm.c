@@ -32,6 +32,7 @@
 
 #include <stdbool.h>
 #include <stdint.h>
+#include <openthread-types.h>
 #include <driverlib/aon_rtc.h>
 
 #include <platform/alarm.h>
@@ -75,8 +76,9 @@ uint32_t otPlatAlarmGetNow(void)
 /**
  * Function documented in platform/alarm.h
  */
-void otPlatAlarmStartAt(uint32_t t0, uint32_t dt)
+void otPlatAlarmStartAt(otInstance *aInstance, uint32_t t0, uint32_t dt)
 {
+    (void)aInstance;
     time0 = t0;
     alarmTime = dt;
     isRunning = true;
@@ -85,15 +87,16 @@ void otPlatAlarmStartAt(uint32_t t0, uint32_t dt)
 /**
  * Function documented in platform/alarm.h
  */
-void otPlatAlarmStop(void)
+void otPlatAlarmStop(otInstance *aInstance)
 {
+    (void)aInstance;
     isRunning = false;
 }
 
 /**
  * Function documented in platform-cc2650.h
  */
-void cc2650AlarmProcess(void)
+void cc2650AlarmProcess(otInstance *aInstance)
 {
     uint32_t offsetTime;
 
@@ -109,12 +112,12 @@ void cc2650AlarmProcess(void)
 
             if (otPlatDiagModeGet())
             {
-                otPlatDiagAlarmFired();
+                otPlatDiagAlarmFired(aInstance);
             }
             else
 #endif /* OPENTHREAD_ENABLE_DIAG */
             {
-                otPlatAlarmFired();
+                otPlatAlarmFired(aInstance);
             }
         }
     }

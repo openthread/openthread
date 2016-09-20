@@ -31,6 +31,7 @@
  *   This file implements IPv6 route tables.
  */
 
+#include <net/ip6.hpp>
 #include <net/ip6_routes.hpp>
 #include <net/netif.hpp>
 #include <common/code_utils.hpp>
@@ -39,19 +40,23 @@
 namespace Thread {
 namespace Ip6 {
 
-static Route *sRoutes = NULL;
+Routes::Routes(Ip6 &aIp6):
+    mRoutes(NULL),
+    mIp6(aIp6)
+{
+}
 
 ThreadError Routes::Add(Route &aRoute)
 {
     ThreadError error = kThreadError_None;
 
-    for (Route *cur = sRoutes; cur; cur = cur->mNext)
+    for (Route *cur = mRoutes; cur; cur = cur->mNext)
     {
         VerifyOrExit(cur != &aRoute, error = kThreadError_Busy);
     }
 
-    aRoute.mNext = sRoutes;
-    sRoutes = &aRoute;
+    aRoute.mNext = mRoutes;
+    mRoutes = &aRoute;
 
 exit:
     return error;
@@ -59,13 +64,13 @@ exit:
 
 ThreadError Routes::Remove(Route &aRoute)
 {
-    if (&aRoute == sRoutes)
+    if (&aRoute == mRoutes)
     {
-        sRoutes = aRoute.mNext;
+        mRoutes = aRoute.mNext;
     }
     else
     {
-        for (Route *cur = sRoutes; cur; cur = cur->mNext)
+        for (Route *cur = mRoutes; cur; cur = cur->mNext)
         {
             if (cur->mNext == &aRoute)
             {
@@ -86,7 +91,7 @@ int8_t Routes::Lookup(const Address &aSource, const Address &aDestination)
     uint8_t prefixMatch;
     int8_t rval = -1;
 
-    for (Route *cur = sRoutes; cur; cur = cur->mNext)
+    for (Route *cur = mRoutes; cur; cur = cur->mNext)
     {
         prefixMatch = cur->mPrefix.PrefixMatch(aDestination);
 
@@ -109,7 +114,7 @@ int8_t Routes::Lookup(const Address &aSource, const Address &aDestination)
         rval = cur->mInterfaceId;
     }
 
-    for (Netif *netif = Netif::GetNetifList(); netif; netif = netif->GetNext())
+    for (Netif *netif = mIp6.GetNetifList(); netif; netif = netif->GetNext())
     {
         if (netif->RouteLookup(aSource, aDestination, &prefixMatch) == kThreadError_None &&
             static_cast<int8_t>(prefixMatch) > maxPrefixMatch)

@@ -556,6 +556,19 @@ exit:
     return error;
 }
 
+ThreadError Frame::GetKeyIdMode(uint8_t &aKeyIdMode)
+{
+    ThreadError error = kThreadError_None;
+    uint8_t *buf;
+
+    VerifyOrExit((buf = FindSecurityHeader()) != NULL, error = kThreadError_Parse);
+
+    aKeyIdMode = buf[0] & kKeyIdModeMask;
+
+exit:
+    return error;
+}
+
 ThreadError Frame::GetFrameCounter(uint32_t &aFrameCounter)
 {
     ThreadError error = kThreadError_None;

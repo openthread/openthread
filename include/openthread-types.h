@@ -37,11 +37,17 @@
 
 #include <stdint.h>
 #include <stdbool.h>
+
 #include <platform/toolchain.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+/**
+ * This type represents the OpenThread instance structure.
+ */
+typedef struct otInstance otInstance;
 
 /**
  * This enumeration represents error codes used throughout OpenThread.
@@ -174,6 +180,40 @@ typedef struct otMeshLocalPrefix
 {
     uint8_t m8[OT_MESH_LOCAL_PREFIX_SIZE];
 } otMeshLocalPrefix;
+
+#define OT_PSKC_MAX_SIZE           16  ///< Maximum size of the PSKc (bytes)
+
+/**
+  * This structure represents PSKc.
+  *
+  */
+typedef struct otPSKc
+{
+    uint8_t m8[OT_PSKC_MAX_SIZE];
+} otPSKc;
+
+/**
+  * This structure represent Security Policy.
+  *
+  */
+typedef struct otSecurityPolicy
+{
+    uint16_t mRotationTime;
+    uint8_t mFlags;
+} otSecurityPolicy;
+
+/**
+ * This enumeration represents flags that indicate security related behaviours within OpenThread.
+ *
+ */
+enum
+{
+    OT_SECURITY_POLICY_OBTAIN_MASTER_KEY      = 1 << 7,  ///< Obtaining the Master Key
+    OT_SECURITY_POLICY_NATIVE_COMMISSIONING   = 1 << 6,  ///< Native Commissioning
+    OT_SECURITY_POLICY_ROUTERS                = 1 << 5,  ///< Routers enabled
+    OT_SECURITY_POLICY_EXTERNAL_COMMISSIONER  = 1 << 4,  ///< External Commissioner allowed
+    OT_SECURITY_POLICY_BEACONS                = 1 << 3,  ///< Beacons enabled
+};
 
 /**
  * This type represents the IEEE 802.15.4 PAN ID.
@@ -309,6 +349,8 @@ typedef struct otOperationalDataset
     uint32_t          mDelay;                      ///< Delay Timer
     otPanId           mPanId;                      ///< PAN ID
     uint16_t          mChannel;                    ///< Channel
+    otPSKc            mPSKc;                       ///< PSKc
+    otSecurityPolicy  mSecurityPolicy;             ///< Security Policy
 
     bool              mIsActiveTimestampSet : 1;   ///< TRUE if Active Timestamp is set, FALSE otherwise.
     bool              mIsPendingTimestampSet : 1;  ///< TRUE if Pending Timestamp is set, FALSE otherwise.
@@ -319,7 +361,41 @@ typedef struct otOperationalDataset
     bool              mIsDelaySet : 1;             ///< TRUE if Delay Timer is set, FALSE otherwise.
     bool              mIsPanIdSet : 1;             ///< TRUE if PAN ID is set, FALSE otherwise.
     bool              mIsChannelSet : 1;           ///< TRUE if Channel is set, FALSE otherwise.
+    bool              mIsPSKcSet : 1;              ///< TRUE if PSKc is set, FALSE otherwise.
+    bool              mIsSecurityPolicySet : 1;    ///< TRUE if Security Policy is set, FALSE otherwise.
 } otOperationalDataset;
+
+/**
+ * This enumeration represents meshcop TLV types.
+ *
+ */
+typedef enum otMeshcopTlvType
+{
+    OT_MESHCOP_TLV_CHANNEL            = 0,    ///< meshcop Channel TLV
+    OT_MESHCOP_TLV_PANID              = 1,    ///< meshcop Pan Id TLV
+    OT_MESHCOP_TLV_EXTPANID           = 2,    ///< meshcop Extended Pan Id TLV
+    OT_MESHCOP_TLV_NETWORKNAME        = 3,    ///< meshcop Network Name TLV
+    OT_MESHCOP_TLV_PSKC               = 4,    ///< meshcop PSKc TLV
+    OT_MESHCOP_TLV_MASTERKEY          = 5,    ///< meshcop Network Master Key TLV
+    OT_MESHCOP_TLV_MESHLOCALPREFIX    = 7,    ///< meshcop Mesh Local Prefix TLV
+    OT_MESHCOP_TLV_STEERING_DATA      = 8,    ///< meshcop Steering Data TLV
+    OT_MESHCOP_TLV_BORDER_AGENT_RLOC  = 9,    ///< meshcop Border Agent Locator TLV
+    OT_MESHCOP_TLV_COMMISSIONER_ID    = 10,   ///< meshcop Commissioner ID TLV
+    OT_MESHCOP_TLV_COMM_SESSION_ID    = 11,   ///< meshcop Commissioner Session ID TLV
+    OT_MESHCOP_TLV_SECURITYPOLICY     = 12,   ///< meshcop Security Policy TLV
+    OT_MESHCOP_TLV_GET                = 13,   ///< meshcop Get TLV
+    OT_MESHCOP_TLV_ACTIVETIMESTAMP    = 14,   ///< meshcop Active Timestamp TLV
+    OT_MESHCOP_TLV_STATE              = 16,   ///< meshcop State TLV
+    OT_MESHCOP_TLV_JOINER_DTLS        = 17,   ///< meshcop Joiner DTLS Encapsulation TLV
+    OT_MESHCOP_TLV_JOINER_UDP_PORT    = 18,   ///< meshcop Joiner UDP Port TLV
+    OT_MESHCOP_TLV_JOINER_IID         = 19,   ///< meshcop Joiner IID TLV
+    OT_MESHCOP_TLV_JOINER_ROUTER_KEK  = 21,   ///< meshcop Joiner Router KEK TLV
+    OT_MESHCOP_TLV_PENDINGTIMESTAMP   = 51,   ///< meshcop Pending Timestamp TLV
+    OT_MESHCOP_TLV_DELAYTIMER         = 52,   ///< meshcop Delay Timer TLV
+    OT_MESHCOP_TLV_CHANNELMASK        = 53,   ///< meshcop Channel Mask TLV
+    OT_MESHCOP_TLV_DISCOVERYREQUEST   = 128,  ///< meshcop Discovery Request TLV
+    OT_MESHCOP_TLV_DISCOVERYRESPONSE  = 129,  ///< meshcop Discovery Response TLV
+} otMeshcopTlvType;
 
 /**
  * This structure represents an MLE Link Mode configuration.
@@ -391,7 +467,7 @@ typedef struct otIp6Prefix
     uint8_t       mLength;  ///< The IPv6 prefix length.
 } otIp6Prefix;
 
-#define OT_NETWORK_DATA_ITERATOR_INIT  0  ///< Initializeer for otNetworkDataIterator.
+#define OT_NETWORK_DATA_ITERATOR_INIT  0  ///< Initializer for otNetworkDataIterator.
 
 typedef uint8_t otNetworkDataIterator;  ///< Used to iterate through Network Data information.
 
@@ -500,7 +576,7 @@ typedef struct otMacWhitelistEntry
 {
     otExtAddress mExtAddress;       ///< IEEE 802.15.4 Extended Address
     int8_t       mRssi;             ///< RSSI value
-    bool         mValid : 1;        ///< Indicates whether or not the whitelist entry is vaild
+    bool         mValid : 1;        ///< Indicates whether or not the whitelist entry is valid
     bool         mFixedRssi : 1;    ///< Indicates whether or not the RSSI value is fixed.
 } otMacWhitelistEntry;
 
@@ -511,7 +587,7 @@ typedef struct otMacWhitelistEntry
 typedef struct otMacBlacklistEntry
 {
     otExtAddress mExtAddress;       ///< IEEE 802.15.4 Extended Address
-    bool         mValid;            ///< Indicates whether or not the blacklist entry is vaild
+    bool         mValid;            ///< Indicates whether or not the blacklist entry is valid
 } otMacBlacklistEntry;
 
 /**
@@ -726,7 +802,8 @@ typedef struct otUdpSocket
     otSockAddr           mPeerName;  ///< The peer IPv6 socket address.
     otUdpReceive         mHandler;   ///< A function pointer to the application callback.
     void                *mContext;   ///< A pointer to application-specific context.
-    struct otUdpSocket *mNext;       ///< A pointer to the next UDP socket.
+    void                *mTransport; ///< A pointer to the transport object (internal use only).
+    struct otUdpSocket  *mNext;      ///< A pointer to the next UDP socket (internal use only).
 } otUdpSocket;
 
 /**

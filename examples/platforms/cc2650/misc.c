@@ -30,22 +30,25 @@
  *
  ******************************************************************************/
 
+#include <openthread-types.h>
 #include <platform/misc.h>
 #include <driverlib/sys_ctrl.h>
 
 /**
  * Function documented in platform/misc.h
  */
-void otPlatReset(void)
+void otPlatReset(otInstance *aInstance)
 {
+    (void)aInstance;
     SysCtrlSystemReset();
 }
 
 /**
  * Function documented in platform/misc.h
  */
-otPlatResetReason otPlatGetResetReason(void)
+otPlatResetReason otPlatGetResetReason(otInstance *aInstance)
 {
+    (void)aInstance;
     switch(SysCtrlResetSourceGet())
     {
         case RSTSRC_PWR_ON:
