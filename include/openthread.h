@@ -185,7 +185,7 @@ otInstance *otInstanceInit(void *aInstanceBuffer, uint64_t *aInstanceBufferSize)
  * @retval otInstance*  The new OpenThread instance structure.
  *
  */
-otInstance *otInstanceInit();
+otInstance *otInstanceInit(void);
 #endif
 
 /**
