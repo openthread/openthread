@@ -138,7 +138,6 @@ ThreadError Commissioner::SendPetition(void)
     header.SetMessageId(++mCoapMessageId);
     header.SetToken(mCoapToken, sizeof(mCoapToken));
     header.AppendUriPathOptions(OPENTHREAD_URI_LEADER_PETITION);
-    header.AppendContentFormatOption(Coap::Header::kApplicationOctetStream);
     header.Finalize();
 
     VerifyOrExit((message = mSocket.NewMessage(0)) != NULL, error = kThreadError_NoBufs);
@@ -187,7 +186,6 @@ ThreadError Commissioner::SendKeepAlive(void)
     header.SetMessageId(++mCoapMessageId);
     header.SetToken(mCoapToken, sizeof(mCoapToken));
     header.AppendUriPathOptions(OPENTHREAD_URI_LEADER_KEEP_ALIVE);
-    header.AppendContentFormatOption(Coap::Header::kApplicationOctetStream);
     header.Finalize();
 
     VerifyOrExit((message = mSocket.NewMessage(0)) != NULL, error = kThreadError_NoBufs);
@@ -335,7 +333,6 @@ ThreadError Commissioner::HandleDtlsSend(const unsigned char *aBuf, uint16_t aLe
         header.SetMessageId(0);
         header.SetToken(NULL, 0);
         header.AppendUriPathOptions(OPENTHREAD_URI_RELAY_TX);
-        header.AppendContentFormatOption(Coap::Header::kApplicationOctetStream);
         header.Finalize();
         SuccessOrExit(error = mTransmitMessage->Append(header.GetBytes(), header.GetLength()));
 
@@ -481,7 +478,6 @@ void Commissioner::SendJoinFinalizeResponse(const Coap::Header &aRequestHeader)
     responseHeader.SetCode(Coap::Header::kCodeChanged);
     responseHeader.SetMessageId(aRequestHeader.GetMessageId());
     responseHeader.SetToken(aRequestHeader.GetToken(), aRequestHeader.GetTokenLength());
-    responseHeader.AppendContentFormatOption(Coap::Header::kApplicationOctetStream);
     responseHeader.Finalize();
     memcpy(cur, responseHeader.GetBytes(), responseHeader.GetLength());
     cur += responseHeader.GetLength();
