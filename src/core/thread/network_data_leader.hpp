@@ -241,6 +241,32 @@ public:
      */
     ThreadError SetCommissioningData(const uint8_t *aValue, uint8_t aValueLength);
 
+    /**
+     * This method sends MGMT_COMMISSIONER_GET.
+     *
+     * @param[in]  aTlvs        A pointer to Commissioning Data TLVs.
+     * @param[in]  aLength      The length of requested TLVs in bytes.
+     *
+     * @retval kThreadError_None     Send MGMT_COMMISSIONER_GET successfully.
+     * @retval kThreadError_Failed   Send MGMT_COMMISSIONER_GET fail.
+     *
+     */
+    ThreadError SendGetCommissioningRequest(const uint8_t *aTlvs, uint8_t aLength);
+
+    /**
+     * This method sends MGMT_COMMISSIONER_SET.
+      *
+     * @param[in]  aDataset     A reference to Commissioning Data.
+     * @param[in]  aTlvs        A pointer to user specific Commissioning Data TLVs.
+     * @param[in]  aLength      The length of user specific TLVs in bytes.
+     *
+     * @retval kThreadError_None     Send MGMT_COMMISSIONER_SET successfully.
+     * @retval kThreadError_Failed   Send MGMT_COMMISSIONER_SET fail.
+     *
+     */
+    ThreadError SendSetCommissioningRequest(const otCommissioningDataset &aDataset,
+                                            const uint8_t *aTlvs, uint8_t aLength);
+
 private:
     static void HandleServerData(void *aContext, Coap::Header &aHeader, Message &aMessage,
                                  const Ip6::MessageInfo &aMessageInfo);
@@ -281,6 +307,18 @@ private:
     bool IsStableUpdated(uint16_t aRloc16, uint8_t *aTlvs, uint8_t aTlvsLength, uint8_t *aTlvsBase,
                          uint8_t aTlvsBaseLength);
 
+    static void HandleCommissioningSet(void *aContext, Coap::Header &aHeader, Message &aMessage,
+                                       const Ip6::MessageInfo &aMessageInfo);
+    void HandleCommissioningSet(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+
+    static void HandleCommissioningGet(void *aContext, Coap::Header &aHeader, Message &aMessage,
+                                       const Ip6::MessageInfo &aMessageInfo);
+    void HandleCommissioningGet(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+
+    void SendCommissioningGetResponse(const Coap::Header &aRequestHeader, const Ip6::MessageInfo &aMessageInfo,
+                                      uint8_t *aTlvs, uint8_t aLength);
+    void SendCommissioningSetResponse(const Coap::Header &aRequestHeader, const Ip6::MessageInfo &aMessageInfo,
+                                      MeshCoP::StateTlv::State aState);
 
     /**
      * Thread Specification Constants
@@ -301,6 +339,9 @@ private:
     Coap::Resource  mServerData;
     uint8_t         mStableVersion;
     uint8_t         mVersion;
+
+    Coap::Resource mCommissioningDataGet;
+    Coap::Resource mCommissioningDataSet;
 
     Coap::Server   &mCoapServer;
     ThreadNetif    &mNetif;

@@ -376,6 +376,34 @@ typedef struct otOperationalDataset
     bool                 mIsChannelMaskPage0Set : 1;  ///< TRUE if Channel Mask Page 0 is set, FALSE otherwise.
 } otOperationalDataset;
 
+#define OT_STEERING_DATA_MAX_LENGTH       16  ///< Max steering data length (bytes)
+
+/**
+ * This structure represents the steering data.
+ *
+ */
+typedef struct otSteeringData
+{
+    uint8_t m8[OT_STEERING_DATA_MAX_LENGTH];
+} otSteeringData;
+
+/**
+ * This structure represents a Commissioning Dataset.
+ *
+ */
+typedef struct otCommissioningDataset
+{
+    uint16_t              mLocator;                   ///< Border Router RLOC16
+    uint16_t              mSessionId;                 ///< Commissioner Session Id
+    otSteeringData        mSteeringData;              ///< Steering Data
+    uint16_t              mJoinerUdpPort;             ///< Joiner UDP Port
+
+    bool                  mIsLocatorSet : 1;          ///< TRUE if Border Router RLOC16 is set, FALSE otherwise.
+    bool                  mIsSessionIdSet: 1;         ///< TRUE if Commissioner Session Id is set, FALSE otherwise.
+    bool                  mIsSteeringDataSet : 1;     ///< TRUE if Steering Data is set, FALSE otherwise.
+    bool                  mIsJoinerUdpPortSet : 1;    ///< TRUE if Joiner UDP Port is set, FALSE otherwise.
+} otCommissioningDataset;
+
 /**
  * This enumeration represents meshcop TLV types.
  *

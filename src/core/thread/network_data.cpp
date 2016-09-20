@@ -656,6 +656,136 @@ exit:
     return error;
 }
 
+ThreadError NetworkData::SendGetCommissioningRequest(const uint8_t *aTlvs, uint8_t aLength)
+{
+    ThreadError error = kThreadError_None;
+    Coap::Header header;
+    Message *message;
+    Ip6::MessageInfo messageInfo;
+    MeshCoP::Tlv tlv;
+
+    mSocket.Open(&HandleUdpReceive, this);
+
+    for (size_t i = 0; i < sizeof(mCoapToken); i++)
+    {
+        mCoapToken[i] = static_cast<uint8_t>(otPlatRandomGet());
+    }
+
+    header.Init();
+    header.SetVersion(1);
+    header.SetType(Coap::Header::kTypeConfirmable);
+    header.SetCode(Coap::Header::kCodePost);
+    header.SetMessageId(++mCoapMessageId);
+    header.SetToken(mCoapToken, sizeof(mCoapToken));
+    header.AppendUriPathOptions(OPENTHREAD_URI_COMMISSIONER_GET);
+    header.AppendContentFormatOption(Coap::Header::kApplicationOctetStream);
+    header.Finalize();
+
+    VerifyOrExit((message = mSocket.NewMessage(0)) != NULL, error = kThreadError_NoBufs);
+    SuccessOrExit(error = message->Append(header.GetBytes(), header.GetLength()));
+
+    if (aLength > 0)
+    {
+        tlv.SetType(MeshCoP::Tlv::kGet);
+        tlv.SetLength(aLength);
+        SuccessOrExit(error = message->Append(&tlv, sizeof(tlv)));
+        SuccessOrExit(error = message->Append(aTlvs, aLength));
+    }
+
+    memset(&messageInfo, 0, sizeof(messageInfo));
+    mMle.GetLeaderAddress(messageInfo.GetPeerAddr());
+    messageInfo.mPeerPort = kCoapUdpPort;
+    SuccessOrExit(error = mSocket.SendTo(*message, messageInfo));
+
+    otLogInfoMeshCoP("sent commissioning dataset get request to leader\n");
+
+exit:
+
+    if (error != kThreadError_None && message != NULL)
+    {
+        message->Free();
+    }
+
+    return error;
+}
+
+ThreadError NetworkData::SendSetCommissioningRequest(const otCommissioningDataset &aDataset,
+                                                     const uint8_t *aTlvs, uint8_t aLength)
+{
+    ThreadError error = kThreadError_None;
+    Coap::Header header;
+    Message *message;
+    Ip6::MessageInfo messageInfo;
+
+    mSocket.Open(&HandleUdpReceive, this);
+
+    for (size_t i = 0; i < sizeof(mCoapToken); i++)
+    {
+        mCoapToken[i] = static_cast<uint8_t>(otPlatRandomGet());
+    }
+
+    header.Init();
+    header.SetVersion(1);
+    header.SetType(Coap::Header::kTypeConfirmable);
+    header.SetCode(Coap::Header::kCodePost);
+    header.SetMessageId(++mCoapMessageId);
+    header.SetToken(mCoapToken, sizeof(mCoapToken));
+    header.AppendUriPathOptions(OPENTHREAD_URI_COMMISSIONER_SET);
+    header.AppendContentFormatOption(Coap::Header::kApplicationOctetStream);
+    header.Finalize();
+
+    VerifyOrExit((message = mSocket.NewMessage(0)) != NULL, error = kThreadError_NoBufs);
+    SuccessOrExit(error = message->Append(header.GetBytes(), header.GetLength()));
+
+    if (aDataset.mIsSteeringDataSet)
+    {
+        MeshCoP::SteeringDataTlv steeringData;
+        steeringData.Init();
+
+        for (uint8_t index = 0; index < OT_STEERING_DATA_MAX_LENGTH; index++)
+        {
+            for (uint8_t offset = 0; offset < 8; offset++)
+            {
+                if (aDataset.mSteeringData.m8[index] & (1 << offset))
+                {
+                    steeringData.SetBit(8 * index + offset);
+                }
+            }
+        }
+
+        SuccessOrExit(error = message->Append(&steeringData, sizeof(steeringData)));
+    }
+
+    if (aDataset.mIsJoinerUdpPortSet)
+    {
+        MeshCoP::JoinerUdpPortTlv joinerUdpPort;
+        joinerUdpPort.Init();
+        joinerUdpPort.SetUdpPort(aDataset.mJoinerUdpPort);
+        SuccessOrExit(error = message->Append(&joinerUdpPort, sizeof(joinerUdpPort)));
+    }
+
+    if (aLength > 0)
+    {
+        SuccessOrExit(error = message->Append(aTlvs, aLength));
+    }
+
+    memset(&messageInfo, 0, sizeof(messageInfo));
+    mMle.GetLeaderAddress(messageInfo.GetPeerAddr());
+    messageInfo.mPeerPort = kCoapUdpPort;
+    SuccessOrExit(error = mSocket.SendTo(*message, messageInfo));
+
+    otLogInfoMeshCoP("sent commissioning data set request to leader\n");
+
+exit:
+
+    if (error != kThreadError_None && message != NULL)
+    {
+        message->Free();
+    }
+
+    return error;
+}
+
 void NetworkData::ClearResubmitDelayTimer(void)
 {
     mLastAttemptWait = false;

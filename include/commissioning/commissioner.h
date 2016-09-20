@@ -128,6 +128,34 @@ ThreadError otCommissionerPanIdQuery(otInstance *aInstance, uint16_t aPanId, uin
                                      otCommissionerPanIdConflictCallback aCallback, void *aContext);
 
 /**
+ * This function sends MGMT_COMMISSIONER_GET.
+ *
+ * @param[in]  aInstance  A pointer to an OpenThread instance.
+ * @param[in]  aTlvs      A pointer to TLVs.
+ * @param[in]  aLength    The length of TLVs.
+ *
+ * @retval kThreadError_None         Successfully send the meshcop dataset command.
+ * @retval kThreadError_NoBufs       Insufficient buffer space to send.
+ *
+ */
+ThreadError otSendCommissioningGet(otInstance *, const uint8_t *aTlvs, uint8_t aLength);
+
+/**
+ * This function sends MGMT_COMMISSIONER_SET.
+ *
+ * @param[in]  aInstance  A pointer to an OpenThread instance.
+ * @param[in]  aDataset   A pointer to commissioning dataset.
+ * @param[in]  aTlvs      A pointer to TLVs.
+ * @param[in]  aLength    The length of TLVs.
+ *
+ * @retval kThreadError_None         Successfully send the meshcop dataset command.
+ * @retval kThreadError_NoBufs       Insufficient buffer space to send.
+ *
+ */
+ThreadError otSendCommissioningSet(otInstance *, const otCommissioningDataset *aDataset, const uint8_t *aTlvs,
+                                   uint8_t aLength);
+
+/**
  * @}
  *
  */

@@ -194,6 +194,22 @@ namespace Thread {
  */
 #define OPENTHREAD_URI_PANID_QUERY      "c/pq"
 
+/**
+ * @def OPENTHREAD_URI_COMMISSIONER_GET
+ *
+ * The URI Path for MGMT_COMMISSIONER_GET
+ *
+ */
+#define OPENTHREAD_URI_COMMISSIONER_GET "c/cg"
+
+/**
+ * @def OPENTHREAD_URI_COMMISSIONER_SET
+ *
+ * The URI Path for MGMT_COMMISSIONER_SET
+ *
+ */
+#define OPENTHREAD_URI_COMMISSIONER_SET "c/cs"
+
 }  // namespace Thread
 
 #endif  // THREAD_URIS_HPP_
