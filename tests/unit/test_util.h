@@ -64,7 +64,7 @@ extern "C" {
   } while (0)
 
 //#define CompileTimeAssert(COND, MSG) typedef char __C_ASSERT__[(COND)?1:-1]
-   
+
 // I would use the above definition for CompileTimeAssert, but I am getting the following errors
 // when I run 'make -f examples/Makefile-posix distcheck':
 //
