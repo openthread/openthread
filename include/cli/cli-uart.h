@@ -35,6 +35,8 @@
 #ifndef CLI_UART_H_
 #define CLI_UART_H_
 
+#include <openthread-types.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif

@@ -527,8 +527,8 @@ private:
     void StartEnergyScan(void);
     ThreadError HandleMacCommand(Frame &aFrame);
 
-    static void HandleAckTimer(void *aContext);
-    void HandleAckTimer(void);
+    static void HandleMacTimer(void *aContext);
+    void HandleMacTimer(void);
     static void HandleBeginTransmit(void *aContext);
     void HandleBeginTransmit(void);
     static void HandleReceiveTimer(void *aContext);
@@ -540,7 +540,7 @@ private:
     ThreadError Scan(ScanType aType, uint32_t aScanChannels, uint16_t aScanDuration, void *aContext);
 
     Tasklet mBeginTransmit;
-    Timer mAckTimer;
+    Timer mMacTimer;
     Timer mBackoffTimer;
     Timer mReceiveTimer;
 
