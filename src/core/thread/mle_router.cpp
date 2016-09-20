@@ -57,6 +57,7 @@ MleRouter::MleRouter(ThreadNetif &aThreadNetif):
     mAddressRelease(OPENTHREAD_URI_ADDRESS_RELEASE, &MleRouter::HandleAddressRelease, this),
     mCoapServer(aThreadNetif.GetCoapServer())
 {
+    mChallengeTimeout = 0;
     mNextChildId = kMaxChildId;
     mRouterIdSequence = 0;
     memset(mChildren, 0, sizeof(mChildren));
@@ -533,6 +534,8 @@ ThreadError MleRouter::SendLinkRequest(Neighbor *aNeighbor)
             mChallenge[i] = static_cast<uint8_t>(otPlatRandomGet());
         }
 
+        mChallengeTimeout = (((2 * kMaxResponseDelay) + kStateUpdatePeriod - 1) / kStateUpdatePeriod);
+
         SuccessOrExit(error = AppendChallenge(*message, mChallenge, sizeof(mChallenge)));
         destination.mFields.m8[0] = 0xff;
         destination.mFields.m8[1] = 0x02;
@@ -545,7 +548,8 @@ ThreadError MleRouter::SendLinkRequest(Neighbor *aNeighbor)
             aNeighbor->mPending.mChallenge[i] = static_cast<uint8_t>(otPlatRandomGet());
         }
 
-        SuccessOrExit(error = AppendChallenge(*message, aNeighbor->mPending.mChallenge, sizeof(aNeighbor->mPending.mChallenge)));
+        SuccessOrExit(error = AppendChallenge(*message, aNeighbor->mPending.mChallenge,
+                                              sizeof(aNeighbor->mPending.mChallenge)));
         destination.mFields.m16[0] = HostSwap16(0xfe80);
         destination.SetIid(aNeighbor->mMacAddr);
     }
@@ -843,7 +847,7 @@ ThreadError MleRouter::HandleLinkAccept(const Message &aMessage, const Ip6::Mess
         break;
 
     case Neighbor::kStateInvalid:
-        VerifyOrExit(memcmp(mChallenge, response.GetResponse(), sizeof(mChallenge)) == 0,
+        VerifyOrExit((mChallengeTimeout > 0) && (memcmp(mChallenge, response.GetResponse(), sizeof(mChallenge)) == 0),
                      error = kThreadError_Error);
         break;
 
@@ -1632,6 +1636,11 @@ void MleRouter::HandleStateUpdateTimer(void *aContext)
 
 void MleRouter::HandleStateUpdateTimer(void)
 {
+    if (mChallengeTimeout > 0)
+    {
+        mChallengeTimeout--;
+    }
+
     switch (GetDeviceState())
     {
     case kDeviceStateDisabled:

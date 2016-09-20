@@ -58,6 +58,7 @@ enum
     kUdpPort                    = 19788, ///< MLE UDP Port
     kParentRequestRouterTimeout = 1000,  ///< Router Request timeout
     kParentRequestChildTimeout  = 2000,  ///< End Device Request timeout
+    kMaxResponseDelay           = 1000,  ///< Maximum delay before responding to a multicast request
 };
 
 enum
