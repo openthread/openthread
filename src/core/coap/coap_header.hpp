@@ -68,6 +68,11 @@ namespace Coap {
 class Header
 {
 public:
+    enum
+    {
+        kVersion1 = 1,  ///< Version 1
+    };
+
     /**
      * This method initializes the CoAP header.
      *

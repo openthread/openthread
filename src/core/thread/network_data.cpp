@@ -606,7 +606,6 @@ ThreadError NetworkData::SendServerDataNotification(uint16_t aRloc16)
     }
 
     header.Init();
-    header.SetVersion(1);
     header.SetType(Coap::Header::kTypeConfirmable);
     header.SetCode(Coap::Header::kCodePost);
     header.SetMessageId(++mCoapMessageId);

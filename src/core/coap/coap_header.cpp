@@ -45,6 +45,7 @@ void Header::Init(void)
     mNextOptionOffset = 0;
     memset(&mOption, 0, sizeof(mOption));
     memset(mHeader, 0, sizeof(mHeader));
+    SetVersion(kVersion1);
 }
 
 ThreadError Header::FromMessage(const Message &aMessage)
