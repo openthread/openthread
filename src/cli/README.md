@@ -207,6 +207,43 @@ Get the CONTEXT_ID_REUSE_DELAY value.
 Done
 ```
 
+### comissioner 
+
+The commissioner command is enabled only when building OpenThread with the
+--enable-commissioner option.
+
+### commissioner start
+
+Start the Commissioner role on this node, including petitioning for the 
+role as a Commissioner Candidate, and sending keep alives to maintain
+the state.
+
+### commissioner stop
+
+Stop the Commissioner role on this node.
+
+### commissioner energy \<mask\> \<count\> \<period\> \<scanDuration\> \<destination\>
+
+Perform a remote energy scan.  This allows the Commissioner to command one
+or more destination nodes to search for quiet channels.
+
+```bash
+> commissioner energy 327680 2 32 1000 fdde:ad00:beef:0:0:ff:fe00:c00
+Energy: 00050000 0 0 0 0 
+Done
+```
+
+### commissioner panid  \<panid\> \<mask\> \<destination\>
+
+Perform a remote panid query.  This allows the Commissioner to command one 
+or more destination nodes to search for panid conflicts, and report back.
+
+```bash
+> commissioner panid 57005 4294967295 ff33:0040:fdde:ad00:beef:0:0:1
+Conflict: dead, 00000800
+Done
+```
+
 ### contextreusedelay \<delay\>
 
 Set the CONTEXT_ID_REUSE_DELAY value.
