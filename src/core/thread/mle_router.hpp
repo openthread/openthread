@@ -470,6 +470,17 @@ public:
      */
     ThreadError SendLinkReject(const Ip6::Address &aDestination);
 
+    /**
+     * This method checks if a given Router ID has correct value.
+     *
+     * @param[in]  aRouterId  The Router ID value.
+     *
+     * @retval TRUE   If @p aRouterId is in correct range [0..62].
+     * @retval FALSE  If @p aRouterId is not a valid Router ID.
+     *
+     */
+    static bool IsRouterIdValid(uint8_t aRouterId) { return aRouterId <= kMaxRouterId; }
+
 private:
     enum
     {
@@ -562,7 +573,7 @@ private:
 
     uint8_t mRouterIdSequence;
     uint32_t mRouterIdSequenceLastUpdated;
-    Router mRouters[kMaxRouterId];
+    Router mRouters[kMaxRouterId + 1];
     uint8_t mMaxChildrenAllowed;
     Child mChildren[kMaxChildren];
 

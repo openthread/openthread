@@ -1995,7 +1995,7 @@ ThreadError Mle::HandleChildIdResponse(const Message &aMessage, const Ip6::Messa
     {
         SuccessOrExit(error = mMleRouter.ProcessRouteTlv(route));
 
-        for (uint8_t i = 0; i < kMaxRouterId; i++)
+        for (uint8_t i = 0; i <= kMaxRouterId; i++)
         {
             if (route.IsRouterIdSet(i))
             {

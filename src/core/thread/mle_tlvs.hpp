@@ -605,7 +605,7 @@ private:
         kRouteCostMask = 0xf << kRouteCostOffset,
     };
     uint8_t mRouterIdSequence;
-    uint8_t mRouterIdMask[BitVectorBytes(kMaxRouterId)];
+    uint8_t mRouterIdMask[BitVectorBytes(kMaxRouterId + 1)];
     uint8_t mRouteData[kMaxRouters];
 } OT_TOOL_PACKED_END;
 
