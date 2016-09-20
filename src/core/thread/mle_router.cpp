@@ -545,7 +545,7 @@ ThreadError MleRouter::SendLinkRequest(Neighbor *aNeighbor)
             aNeighbor->mPending.mChallenge[i] = static_cast<uint8_t>(otPlatRandomGet());
         }
 
-        SuccessOrExit(error = AppendChallenge(*message, mChallenge, sizeof(mChallenge)));
+        SuccessOrExit(error = AppendChallenge(*message, aNeighbor->mPending.mChallenge, sizeof(aNeighbor->mPending.mChallenge)));
         destination.mFields.m16[0] = HostSwap16(0xfe80);
         destination.SetIid(aNeighbor->mMacAddr);
     }
@@ -835,9 +835,21 @@ ThreadError MleRouter::HandleLinkAccept(const Message &aMessage, const Ip6::Mess
     }
 
     // verify response
-    VerifyOrExit(memcmp(mChallenge, response.GetResponse(), sizeof(mChallenge)) == 0 ||
-                 memcmp(neighbor->mPending.mChallenge, response.GetResponse(), sizeof(neighbor->mPending.mChallenge)) == 0,
-                 error = kThreadError_Error);
+    switch (neighbor->mState)
+    {
+    case Neighbor::kStateLinkRequest:
+        VerifyOrExit(memcmp(neighbor->mPending.mChallenge, response.GetResponse(), sizeof(neighbor->mPending.mChallenge)) == 0,
+                     error = kThreadError_Error);
+        break;
+
+    case Neighbor::kStateInvalid:
+        VerifyOrExit(memcmp(mChallenge, response.GetResponse(), sizeof(mChallenge)) == 0,
+                     error = kThreadError_Error);
+        break;
+
+    default:
+        ExitNow(error = kThreadError_InvalidState);
+    }
 
     switch (mDeviceState)
     {
