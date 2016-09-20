@@ -176,7 +176,6 @@ void JoinerRouter::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &a
     VerifyOrExit((message = mSocket.NewMessage(0)) != NULL, error = kThreadError_NoBufs);
 
     header.Init();
-    header.SetVersion(1);
     header.SetType(Coap::Header::kTypeNonConfirmable);
     header.SetCode(Coap::Header::kCodePost);
     header.SetMessageId(0);
@@ -326,7 +325,6 @@ ThreadError JoinerRouter::SendJoinerEntrust(const Ip6::MessageInfo &aMessageInfo
     message->SetJoinerEntrust(true);
 
     header.Init();
-    header.SetVersion(1);
     header.SetType(Coap::Header::kTypeConfirmable);
     header.SetCode(Coap::Header::kCodePost);
     header.SetMessageId(0);

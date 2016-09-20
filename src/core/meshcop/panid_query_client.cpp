@@ -70,7 +70,6 @@ ThreadError PanIdQueryClient::SendQuery(uint16_t aPanId, uint32_t aChannelMask, 
     Message *message;
 
     header.Init();
-    header.SetVersion(1);
     header.SetType(aAddress.IsMulticast() ? Coap::Header::kTypeNonConfirmable : Coap::Header::kTypeConfirmable);
     header.SetCode(Coap::Header::kCodePost);
     header.SetMessageId(0);
@@ -184,7 +183,6 @@ ThreadError PanIdQueryClient::SendConflictResponse(const Coap::Header &aRequestH
     VerifyOrExit((message = mCoapServer.NewMessage(0)) != NULL, error = kThreadError_NoBufs);
 
     responseHeader.Init();
-    responseHeader.SetVersion(1);
     responseHeader.SetType(Coap::Header::kTypeAcknowledgment);
     responseHeader.SetCode(Coap::Header::kCodeChanged);
     responseHeader.SetMessageId(aRequestHeader.GetMessageId());

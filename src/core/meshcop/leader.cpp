@@ -107,7 +107,6 @@ ThreadError Leader::SendPetitionResponse(const Coap::Header &aRequestHeader, con
 
     VerifyOrExit((message = mCoapServer.NewMessage(0)) != NULL, error = kThreadError_NoBufs);
     responseHeader.Init();
-    responseHeader.SetVersion(1);
     responseHeader.SetType(Coap::Header::kTypeAcknowledgment);
     responseHeader.SetCode(Coap::Header::kCodeChanged);
     responseHeader.SetMessageId(aRequestHeader.GetMessageId());
@@ -197,7 +196,6 @@ ThreadError Leader::SendKeepAliveResponse(const Coap::Header &aRequestHeader, co
 
     VerifyOrExit((message = mCoapServer.NewMessage(0)) != NULL, error = kThreadError_NoBufs);
     responseHeader.Init();
-    responseHeader.SetVersion(1);
     responseHeader.SetType(Coap::Header::kTypeAcknowledgment);
     responseHeader.SetCode(Coap::Header::kCodeChanged);
     responseHeader.SetMessageId(aRequestHeader.GetMessageId());

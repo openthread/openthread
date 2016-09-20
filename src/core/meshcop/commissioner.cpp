@@ -132,7 +132,6 @@ ThreadError Commissioner::SendPetition(void)
     }
 
     header.Init();
-    header.SetVersion(1);
     header.SetType(Coap::Header::kTypeConfirmable);
     header.SetCode(Coap::Header::kCodePost);
     header.SetMessageId(++mCoapMessageId);
@@ -181,7 +180,6 @@ ThreadError Commissioner::SendKeepAlive(void)
     }
 
     header.Init();
-    header.SetVersion(1);
     header.SetType(Coap::Header::kTypeConfirmable);
     header.SetCode(Coap::Header::kCodePost);
     header.SetMessageId(++mCoapMessageId);
@@ -329,7 +327,6 @@ ThreadError Commissioner::HandleDtlsSend(const unsigned char *aBuf, uint16_t aLe
         VerifyOrExit((mTransmitMessage = mSocket.NewMessage(0)) != NULL, error = kThreadError_NoBufs);
 
         header.Init();
-        header.SetVersion(1);
         header.SetType(Coap::Header::kTypeNonConfirmable);
         header.SetCode(Coap::Header::kCodePost);
         header.SetMessageId(0);
@@ -476,7 +473,6 @@ void Commissioner::SendJoinFinalizeResponse(const Coap::Header &aRequestHeader)
     uint8_t *cur = buf;
 
     responseHeader.Init();
-    responseHeader.SetVersion(1);
     responseHeader.SetType(Coap::Header::kTypeAcknowledgment);
     responseHeader.SetCode(Coap::Header::kCodeChanged);
     responseHeader.SetMessageId(aRequestHeader.GetMessageId());

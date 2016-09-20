@@ -220,7 +220,6 @@ void Joiner::SendJoinerFinalize(void)
     uint8_t *cur = buf;
 
     header.Init();
-    header.SetVersion(1);
     header.SetType(Coap::Header::kTypeConfirmable);
     header.SetCode(Coap::Header::kCodePost);
     header.SetMessageId(0);

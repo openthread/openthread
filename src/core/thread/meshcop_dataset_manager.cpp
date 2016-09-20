@@ -179,7 +179,6 @@ ThreadError DatasetManager::Register(void)
     }
 
     header.Init();
-    header.SetVersion(1);
     header.SetType(Coap::Header::kTypeConfirmable);
     header.SetCode(Coap::Header::kCodePost);
     header.SetMessageId(++mCoapMessageId);
@@ -333,7 +332,6 @@ ThreadError DatasetManager::SendSetRequest(const otOperationalDataset &aDataset,
     }
 
     header.Init();
-    header.SetVersion(1);
     header.SetType(Coap::Header::kTypeConfirmable);
     header.SetCode(Coap::Header::kCodePost);
     header.SetMessageId(++mCoapMessageId);
@@ -457,7 +455,6 @@ ThreadError DatasetManager::SendGetRequest(const uint8_t *aTlvTypes, const uint8
     }
 
     header.Init();
-    header.SetVersion(1);
     header.SetType(Coap::Header::kTypeConfirmable);
     header.SetCode(Coap::Header::kCodePost);
     header.SetMessageId(++mCoapMessageId);
@@ -504,7 +501,6 @@ void DatasetManager::SendSetResponse(const Coap::Header &aRequestHeader, const I
 
     VerifyOrExit((message = mCoapServer.NewMessage(0)) != NULL, error = kThreadError_NoBufs);
     responseHeader.Init();
-    responseHeader.SetVersion(1);
     responseHeader.SetType(Coap::Header::kTypeAcknowledgment);
     responseHeader.SetCode(Coap::Header::kCodeChanged);
     responseHeader.SetMessageId(aRequestHeader.GetMessageId());
@@ -539,7 +535,6 @@ void DatasetManager::SendGetResponse(const Coap::Header &aRequestHeader, const I
 
     VerifyOrExit((message = mCoapServer.NewMessage(0)) != NULL, error = kThreadError_NoBufs);
     responseHeader.Init();
-    responseHeader.SetVersion(1);
     responseHeader.SetType(Coap::Header::kTypeAcknowledgment);
     responseHeader.SetCode(Coap::Header::kCodeChanged);
     responseHeader.SetMessageId(aRequestHeader.GetMessageId());

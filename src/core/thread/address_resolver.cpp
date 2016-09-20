@@ -179,7 +179,6 @@ ThreadError AddressResolver::SendAddressQuery(const Ip6::Address &aEid)
     VerifyOrExit((message = mSocket.NewMessage(0)) != NULL, error = kThreadError_NoBufs);
 
     header.Init();
-    header.SetVersion(1);
     header.SetType(Coap::Header::kTypeNonConfirmable);
     header.SetCode(Coap::Header::kCodePost);
     header.SetMessageId(++mCoapMessageId);
@@ -320,7 +319,6 @@ void AddressResolver::SendAddressNotificationResponse(const Coap::Header &aReque
     VerifyOrExit((message = mCoapServer.NewMessage(0)) != NULL, error = kThreadError_NoBufs);
 
     responseHeader.Init();
-    responseHeader.SetVersion(1);
     responseHeader.SetType(Coap::Header::kTypeAcknowledgment);
     responseHeader.SetCode(Coap::Header::kCodeChanged);
     responseHeader.SetMessageId(aRequestHeader.GetMessageId());
@@ -358,7 +356,6 @@ ThreadError AddressResolver::SendAddressError(const ThreadTargetTlv &aTarget, co
     VerifyOrExit((message = mSocket.NewMessage(0)) != NULL, error = kThreadError_NoBufs);
 
     header.Init();
-    header.SetVersion(1);
     header.SetType(Coap::Header::kTypeConfirmable);
     header.SetCode(Coap::Header::kCodePost);
     header.SetMessageId(++mCoapMessageId);
@@ -410,7 +407,6 @@ void AddressResolver::SendAddressErrorResponse(const Coap::Header &aRequestHeade
     VerifyOrExit((message = mCoapServer.NewMessage(0)) != NULL, error = kThreadError_NoBufs);
 
     responseHeader.Init();
-    responseHeader.SetVersion(1);
     responseHeader.SetType(Coap::Header::kTypeAcknowledgment);
     responseHeader.SetCode(Coap::Header::kCodeChanged);
     responseHeader.SetMessageId(aRequestHeader.GetMessageId());
@@ -589,7 +585,6 @@ void AddressResolver::SendAddressQueryResponse(const ThreadTargetTlv &aTargetTlv
     VerifyOrExit((message = mSocket.NewMessage(0)) != NULL, error = kThreadError_NoBufs);
 
     header.Init();
-    header.SetVersion(1);
     header.SetType(Coap::Header::kTypeConfirmable);
     header.SetCode(Coap::Header::kCodePost);
     header.SetMessageId(++mCoapMessageId);
