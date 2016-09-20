@@ -101,6 +101,7 @@ const NcpBase::GetPropertyHandlerEntry NcpBase::mGetPropertyHandlerTable[] =
     { SPINEL_PROP_MAC_15_4_PANID, &NcpBase::GetPropertyHandler_MAC_15_4_PANID },
     { SPINEL_PROP_MAC_15_4_LADDR, &NcpBase::GetPropertyHandler_MAC_15_4_LADDR },
     { SPINEL_PROP_MAC_15_4_SADDR, &NcpBase::GetPropertyHandler_MAC_15_4_SADDR },
+    { SPINEL_PROP_MAC_RAW_STREAM_ENABLED, &NcpBase::GetPropertyHandler_MAC_RAW_STREAM_ENABLED },
     { SPINEL_PROP_MAC_FILTER_MODE, &NcpBase::GetPropertyHandler_MAC_FILTER_MODE },
 
     { SPINEL_PROP_NET_IF_UP, &NcpBase::GetPropertyHandler_NET_IF_UP },
@@ -198,6 +199,7 @@ const NcpBase::SetPropertyHandlerEntry NcpBase::mSetPropertyHandlerTable[] =
     { SPINEL_PROP_MAC_SCAN_STATE, &NcpBase::SetPropertyHandler_MAC_SCAN_STATE },
     { SPINEL_PROP_MAC_SCAN_PERIOD, &NcpBase::SetPropertyHandler_MAC_SCAN_PERIOD },
     { SPINEL_PROP_MAC_15_4_PANID, &NcpBase::SetPropertyHandler_MAC_15_4_PANID },
+    { SPINEL_PROP_MAC_RAW_STREAM_ENABLED, &NcpBase::SetPropertyHandler_MAC_RAW_STREAM_ENABLED },
 
     { SPINEL_PROP_NET_IF_UP, &NcpBase::SetPropertyHandler_NET_IF_UP },
     { SPINEL_PROP_NET_STACK_UP, &NcpBase::SetPropertyHandler_NET_STACK_UP },
@@ -419,6 +421,7 @@ NcpBase::NcpBase(otInstance *aInstance):
     mChangedFlags = NCP_PLAT_RESET_REASON;
     mAllowLocalNetworkDataChange = false;
     mRequireJoinExistingNetwork = false;
+    mIsRawStreamEnabled = false;
 
     mFramingErrorCounter = 0;
     mRxSpinelFrameCounter = 0;
@@ -432,10 +435,13 @@ NcpBase::NcpBase(otInstance *aInstance):
 
     otSetStateChangedCallback(mInstance, &NcpBase::HandleNetifStateChanged, this);
     otSetReceiveIp6DatagramCallback(mInstance, &NcpBase::HandleDatagramFromStack, this);
+    otSetLinkPcapCallback(mInstance, &NcpBase::HandleRawFrame, static_cast<void*>(this));
     otSetIcmpEchoEnabled(mInstance, false);
 
     mUpdateChangedPropsTask.Post();
 }
+
+
 
 // ----------------------------------------------------------------------------
 // MARK: Outbound Datagram Handling
@@ -500,6 +506,65 @@ exit:
         }
     }
 }
+
+// ----------------------------------------------------------------------------
+// MARK: Raw frame handling
+// ----------------------------------------------------------------------------
+
+void NcpBase::HandleRawFrame(const RadioPacket *aFrame, void *aContext)
+{
+    static_cast<NcpBase *>(aContext)->HandleRawFrame(aFrame);
+}
+
+void NcpBase::HandleRawFrame(const RadioPacket *aFrame)
+{
+    ThreadError errorCode = kThreadError_None;
+
+    if (!mIsRawStreamEnabled)
+    {
+        goto exit;
+    }
+
+    SuccessOrExit(errorCode = OutboundFrameBegin());
+
+    // Append frame header and frame length
+
+    SuccessOrExit(
+        errorCode = OutboundFrameFeedPacked(
+            "CiiS",
+            SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0,
+            SPINEL_CMD_PROP_VALUE_IS,
+            SPINEL_PROP_STREAM_RAW,
+            aFrame->mLength
+        )
+    );
+
+    // Append the frame contents
+
+    SuccessOrExit(
+        errorCode = OutboundFrameFeedData(
+            aFrame->mPsdu,
+            aFrame->mLength
+        )
+    );
+
+    // Append metadata (rssi, lqi, channel, etc)
+
+    SuccessOrExit(
+        errorCode = OutboundFrameFeedPacked(
+            "cCC",
+            aFrame->mPower,
+            aFrame->mLqi,
+            aFrame->mChannel
+        )
+    );
+
+    SuccessOrExit(errorCode = OutboundFrameSend());
+
+exit:
+    return;
+}
+
 
 // ----------------------------------------------------------------------------
 // MARK: Scan Results Glue
@@ -1570,6 +1635,17 @@ ThreadError NcpBase::GetPropertyHandler_MAC_15_4_SADDR(uint8_t header, spinel_pr
                key,
                SPINEL_DATATYPE_UINT16_S,
                otGetShortAddress(mInstance)
+           );
+}
+
+ThreadError NcpBase::GetPropertyHandler_MAC_RAW_STREAM_ENABLED(uint8_t header, spinel_prop_key_t key)
+{
+    return SendPropertyUpdate(
+               header,
+               SPINEL_CMD_PROP_VALUE_IS,
+               key,
+               SPINEL_DATATYPE_BOOL_S,
+               mIsRawStreamEnabled
            );
 }
 
@@ -2837,6 +2913,40 @@ ThreadError NcpBase::SetPropertyHandler_MAC_15_4_PANID(uint8_t header, spinel_pr
     else
     {
         errorCode = SendLastStatus(header, SPINEL_STATUS_PARSE_ERROR);
+    }
+
+    return errorCode;
+}
+
+ThreadError NcpBase::SetPropertyHandler_MAC_RAW_STREAM_ENABLED(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr,uint16_t value_len)
+{
+    bool value = false;
+    spinel_ssize_t parsedLength;
+    ThreadError errorCode = kThreadError_None;
+
+    parsedLength = spinel_datatype_unpack(
+                       value_ptr,
+                       value_len,
+                       SPINEL_DATATYPE_BOOL_S,
+                       &value
+                   );
+
+    if (parsedLength > 0)
+    {
+        mIsRawStreamEnabled = value;
+    }
+    else
+    {
+        errorCode = kThreadError_Parse;
+    }
+
+    if (errorCode == kThreadError_None)
+    {
+        errorCode = HandleCommandPropertyGet(header, key);
+    }
+    else
+    {
+        errorCode = SendLastStatus(header, ThreadErrorToSpinelStatus(errorCode));
     }
 
     return errorCode;
