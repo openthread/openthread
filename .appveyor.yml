@@ -1,5 +1,5 @@
 version: 0.1.{build}
-image: Previous Visual Studio 2015
+image: Visual Studio 2015
 configuration:
 - Release
 - Debug
