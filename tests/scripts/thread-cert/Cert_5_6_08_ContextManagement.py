@@ -85,7 +85,7 @@ class Cert_5_6_8_ContextManagement(unittest.TestCase):
         self.assertTrue(any('2001' in word for word in addrs))
         for addr in addrs:
             if addr[0:3] == '200':
-                self.assertEqual(self.nodes[ED].ping(addr), True)
+                self.assertTrue(self.nodes[ED].ping(addr))
 
         self.nodes[ROUTER].remove_prefix('2001::/64')
         self.nodes[ROUTER].register_netdata()
@@ -95,7 +95,7 @@ class Cert_5_6_8_ContextManagement(unittest.TestCase):
         self.assertFalse(any('2001' in word for word in addrs))
         for addr in addrs:
             if addr[0:3] == '200':
-                self.assertEqual(self.nodes[ED].ping(addr), True)
+                self.assertTrue(self.nodes[ED].ping(addr))
 
         self.nodes[ROUTER].add_prefix('2002::/64', 'paros')
         self.nodes[ROUTER].register_netdata()
@@ -106,7 +106,7 @@ class Cert_5_6_8_ContextManagement(unittest.TestCase):
         self.assertTrue(any('2002' in word for word in addrs))
         for addr in addrs:
             if addr[0:3] == '200':
-                self.assertEqual(self.nodes[ED].ping(addr), True)
+                self.assertTrue(self.nodes[ED].ping(addr))
 
         time.sleep(5)
         self.nodes[ROUTER].add_prefix('2003::/64', 'paros')
@@ -119,7 +119,7 @@ class Cert_5_6_8_ContextManagement(unittest.TestCase):
         self.assertTrue(any('2003' in word for word in addrs))
         for addr in addrs:
             if addr[0:3] == '200':
-                self.assertEqual(self.nodes[ED].ping(addr), True)
+                self.assertTrue(self.nodes[ED].ping(addr))
 
 if __name__ == '__main__':
     unittest.main()

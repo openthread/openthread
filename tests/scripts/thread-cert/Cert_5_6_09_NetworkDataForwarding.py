@@ -109,23 +109,23 @@ class Cert_5_6_9_NetworkDataForwarding(unittest.TestCase):
         self.nodes[ROUTER2].register_netdata()
         time.sleep(10)
 
-        self.assertEqual(self.nodes[SED].ping('2002::1'), False)
+        self.assertFalse(self.nodes[SED].ping('2002::1'))
 
-        self.assertEqual(self.nodes[SED].ping('2007::1'), False)
+        self.assertFalse(self.nodes[SED].ping('2007::1'))
 
         self.nodes[ROUTER2].remove_prefix('2001::/64')
         self.nodes[ROUTER2].add_prefix('2001::/64', 'paros', 'high')
         self.nodes[ROUTER2].register_netdata()
         time.sleep(10)
 
-        self.assertEqual(self.nodes[SED].ping('2007::1'), False)
+        self.assertFalse(self.nodes[SED].ping('2007::1'))
 
         self.nodes[ROUTER2].remove_prefix('2001::/64')
         self.nodes[ROUTER2].add_prefix('2001::/64', 'paros', 'med')
         self.nodes[ROUTER2].register_netdata()
         time.sleep(10)
 
-        self.assertEqual(self.nodes[SED].ping('2007::1'), False)
+        self.assertFalse(self.nodes[SED].ping('2007::1'))
 
 if __name__ == '__main__':
     unittest.main()

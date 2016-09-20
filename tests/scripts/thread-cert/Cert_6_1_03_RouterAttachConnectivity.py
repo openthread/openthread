@@ -93,7 +93,7 @@ class Cert_6_1_3_RouterAttachConnectivity(unittest.TestCase):
 
         addrs = self.nodes[ED].get_addrs()
         for addr in addrs:
-            self.assertEqual(self.nodes[ROUTER3].ping(addr), True)
+            self.assertTrue(self.nodes[ROUTER3].ping(addr))
 
 if __name__ == '__main__':
     unittest.main()

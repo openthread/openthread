@@ -67,14 +67,14 @@ class Cert_5_1_06_RemoveRouterId(unittest.TestCase):
         rloc16 = self.nodes[ROUTER1].get_addr16()
 
         for addr in self.nodes[ROUTER1].get_addrs():
-            self.assertEqual(self.nodes[LEADER].ping(addr), True)
+            self.assertTrue(self.nodes[LEADER].ping(addr))
 
         self.nodes[LEADER].release_router_id(rloc16 >> 10)
         time.sleep(5)
         self.assertEqual(self.nodes[ROUTER1].get_state(), 'router')
 
         for addr in self.nodes[ROUTER1].get_addrs():
-            self.assertEqual(self.nodes[LEADER].ping(addr), True)
+            self.assertTrue(self.nodes[LEADER].ping(addr))
 
 if __name__ == '__main__':
     unittest.main()

@@ -89,7 +89,7 @@ class Cert_5_5_6_SplitWeight(unittest.TestCase):
 
         addrs = self.nodes[ROUTER2].get_addrs()
         for addr in addrs:
-            self.assertEqual(self.nodes[ROUTER1].ping(addr), True)
+            self.assertTrue(self.nodes[ROUTER1].ping(addr))
 
 if __name__ == '__main__':
     unittest.main()

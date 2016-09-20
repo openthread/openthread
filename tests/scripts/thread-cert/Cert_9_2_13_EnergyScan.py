@@ -92,7 +92,7 @@ class Cert_9_2_13_EnergyScan(unittest.TestCase):
             if ipaddr[0:4] != 'fe80':
                 break
 
-        self.assertEqual(self.nodes[COMMISSIONER].ping(ipaddr), True)
+        self.assertTrue(self.nodes[COMMISSIONER].ping(ipaddr))
         self.nodes[COMMISSIONER].energy_scan(0x50000, 0x02, 0x20, 0x3e8, ipaddr)
 
         ipaddrs = self.nodes[ED1].get_addrs()
@@ -100,12 +100,12 @@ class Cert_9_2_13_EnergyScan(unittest.TestCase):
             if ipaddr[0:4] != 'fe80':
                 break
 
-        self.assertEqual(self.nodes[COMMISSIONER].ping(ipaddr), True)
+        self.assertTrue(self.nodes[COMMISSIONER].ping(ipaddr))
         self.nodes[COMMISSIONER].energy_scan(0x50000, 0x02, 0x20, 0x3e8, ipaddr)
 
         self.nodes[COMMISSIONER].energy_scan(0x50000, 0x02, 0x20, 0x3e8, 'ff33:0040:fdde:ad00:beef:0:0:1')
 
-        self.assertEqual(self.nodes[COMMISSIONER].ping(ipaddr), True)
+        self.assertTrue(self.nodes[COMMISSIONER].ping(ipaddr))
 
 if __name__ == '__main__':
     unittest.main()

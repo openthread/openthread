@@ -124,13 +124,13 @@ class Cert_5_3_4_AddressMapCache(unittest.TestCase):
             addrs = self.nodes[i].get_addrs()
             for addr in addrs:
                 if addr[0:4] != 'fe80':
-                    self.assertEqual(self.nodes[SED1].ping(addr), True)
+                    self.assertTrue(self.nodes[SED1].ping(addr))
 
         for i in range(4, 8):
             addrs = self.nodes[i].get_addrs()
             for addr in addrs:
                 if addr[0:4] != 'fe80':
-                    self.assertEqual(self.nodes[SED1].ping(addr), True)
+                    self.assertTrue(self.nodes[SED1].ping(addr))
 
 if __name__ == '__main__':
     unittest.main()

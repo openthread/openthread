@@ -68,7 +68,7 @@ class Cert_5_8_1_KeySynchronization(unittest.TestCase):
         addrs = self.nodes[LEADER].get_addrs()
         for addr in addrs:
             if 'ff:fe00' not in addr:
-                self.assertEqual(self.nodes[ED].ping(addr), True)
+                self.assertTrue(self.nodes[ED].ping(addr))
 
         key_sequence = self.nodes[ED].get_key_sequence()
         self.nodes[ED].set_key_sequence(key_sequence + 10)
@@ -76,7 +76,7 @@ class Cert_5_8_1_KeySynchronization(unittest.TestCase):
         addrs = self.nodes[LEADER].get_addrs()
         for addr in addrs:
             if 'ff:fe00' not in addr:
-                self.assertEqual(self.nodes[ED].ping(addr), False)
+                self.assertFalse(self.nodes[ED].ping(addr))
 
 if __name__ == '__main__':
     unittest.main()

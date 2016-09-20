@@ -86,7 +86,7 @@ class Cert_5_5_2_LeaderReboot(unittest.TestCase):
 
         addrs = self.nodes[ED].get_addrs()
         for addr in addrs:
-            self.assertEqual(self.nodes[ROUTER].ping(addr), True)
+            self.assertTrue(self.nodes[ROUTER].ping(addr))
 
 if __name__ == '__main__':
     unittest.main()

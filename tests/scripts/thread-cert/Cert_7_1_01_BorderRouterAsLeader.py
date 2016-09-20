@@ -97,14 +97,14 @@ class Cert_7_1_1_BorderRouterAsLeader(unittest.TestCase):
         self.assertFalse(any('2002' in word for word in addrs))
         for addr in addrs:
             if addr[0:4] == '2001' or addr[0:4] == '2002':
-                self.assertEqual(self.nodes[LEADER].ping(addr), True)
+                self.assertTrue(self.nodes[LEADER].ping(addr))
 
         addrs = self.nodes[ED1].get_addrs()
         self.assertTrue(any('2001' in word for word in addrs))
         self.assertTrue(any('2002' in word for word in addrs))
         for addr in addrs:
             if addr[0:4] == '2001' or addr[0:4] == '2002':
-                self.assertEqual(self.nodes[LEADER].ping(addr), True)
+                self.assertTrue(self.nodes[LEADER].ping(addr))
 
 if __name__ == '__main__':
     unittest.main()

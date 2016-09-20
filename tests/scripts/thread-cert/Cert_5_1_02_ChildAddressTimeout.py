@@ -96,13 +96,13 @@ class Cert_5_1_02_ChildAddressTimeout(unittest.TestCase):
         time.sleep(5)
         for addr in ed_addrs:
             if addr[0:4] != 'fe80':
-                self.assertEqual(self.nodes[LEADER].ping(addr), False)
+                self.assertFalse(self.nodes[LEADER].ping(addr))
 
         self.nodes[SED].stop()
         time.sleep(5)
         for addr in sed_addrs:
             if addr[0:4] != 'fe80':
-                self.assertEqual(self.nodes[LEADER].ping(addr), False)
+                self.assertFalse(self.nodes[LEADER].ping(addr))
 
 if __name__ == '__main__':
     unittest.main()

@@ -91,17 +91,17 @@ class Cert_5_3_2_RealmLocal(unittest.TestCase):
         addrs = self.nodes[ROUTER2].get_addrs()
         for addr in addrs:
             if addr[0:4] != 'fe80':
-                self.assertEqual(self.nodes[LEADER].ping(addr, size=256), True)
-                self.assertEqual(self.nodes[LEADER].ping(addr), True)
+                self.assertTrue(self.nodes[LEADER].ping(addr, size=256))
+                self.assertTrue(self.nodes[LEADER].ping(addr))
 
-        self.assertEqual(self.nodes[LEADER].ping('ff03::1', size=256), True)
-        self.assertEqual(self.nodes[LEADER].ping('ff03::1'), True)
+        self.assertTrue(self.nodes[LEADER].ping('ff03::1', size=256))
+        self.assertTrue(self.nodes[LEADER].ping('ff03::1'))
 
-        self.assertEqual(self.nodes[LEADER].ping('ff03::2', size=256), True)
-        self.assertEqual(self.nodes[LEADER].ping('ff03::2'), True)
+        self.assertTrue(self.nodes[LEADER].ping('ff03::2', size=256))
+        self.assertTrue(self.nodes[LEADER].ping('ff03::2'))
 
-        self.assertEqual(self.nodes[LEADER].ping('ff33:0040:fdde:ad00:beef:0:0:1', size=256), True)
-        self.assertEqual(self.nodes[LEADER].ping('ff33:0040:fdde:ad00:beef:0:0:1'), True)
+        self.assertTrue(self.nodes[LEADER].ping('ff33:0040:fdde:ad00:beef:0:0:1', size=256))
+        self.assertTrue(self.nodes[LEADER].ping('ff33:0040:fdde:ad00:beef:0:0:1'))
 
 if __name__ == '__main__':
     unittest.main()

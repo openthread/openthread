@@ -130,7 +130,7 @@ class Cert_5_2_5_AddressQuery(unittest.TestCase):
         addrs = self.nodes[REED].get_addrs()
         for addr in addrs:
             if addr[0:4] != 'fe80':
-                self.assertEqual(self.nodes[ED2].ping(addr), True)
+                self.assertTrue(self.nodes[ED2].ping(addr))
                 time.sleep(1)
 
 if __name__ == '__main__':

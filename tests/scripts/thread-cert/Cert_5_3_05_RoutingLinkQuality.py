@@ -94,7 +94,7 @@ class Cert_5_3_5_RoutingLinkQuality(unittest.TestCase):
         addrs = self.nodes[ROUTER3].get_addrs()
         for addr in addrs:
             if addr[0:4] != 'fe80':
-                self.assertEqual(self.nodes[LEADER].ping(addr), True)
+                self.assertTrue(self.nodes[LEADER].ping(addr))
 
         self.nodes[LEADER].add_whitelist(self.nodes[ROUTER1].get_addr64(), rssi=-95)
         self.nodes[ROUTER1].add_whitelist(self.nodes[LEADER].get_addr64(), rssi=-95)
@@ -104,7 +104,7 @@ class Cert_5_3_5_RoutingLinkQuality(unittest.TestCase):
         addrs = self.nodes[ROUTER3].get_addrs()
         for addr in addrs:
             if addr[0:4] != 'fe80':
-                self.assertEqual(self.nodes[LEADER].ping(addr), True)
+                self.assertTrue(self.nodes[LEADER].ping(addr))
 
         self.nodes[LEADER].add_whitelist(self.nodes[ROUTER1].get_addr64(), rssi=-85)
         self.nodes[ROUTER1].add_whitelist(self.nodes[LEADER].get_addr64(), rssi=-85)
@@ -114,7 +114,7 @@ class Cert_5_3_5_RoutingLinkQuality(unittest.TestCase):
         addrs = self.nodes[ROUTER3].get_addrs()
         for addr in addrs:
             if addr[0:4] != 'fe80':
-                self.assertEqual(self.nodes[LEADER].ping(addr), True)
+                self.assertTrue(self.nodes[LEADER].ping(addr))
 
         self.nodes[LEADER].add_whitelist(self.nodes[ROUTER1].get_addr64(), rssi=-100)
         self.nodes[ROUTER1].add_whitelist(self.nodes[LEADER].get_addr64(), rssi=-100)
@@ -124,7 +124,7 @@ class Cert_5_3_5_RoutingLinkQuality(unittest.TestCase):
         addrs = self.nodes[ROUTER3].get_addrs()
         for addr in addrs:
             if addr[0:4] != 'fe80':
-                self.assertEqual(self.nodes[LEADER].ping(addr), True)
+                self.assertTrue(self.nodes[LEADER].ping(addr))
 
 
 if __name__ == '__main__':

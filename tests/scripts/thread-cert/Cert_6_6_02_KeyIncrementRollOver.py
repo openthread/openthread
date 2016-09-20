@@ -68,14 +68,14 @@ class Cert_6_6_2_KeyIncrement1(unittest.TestCase):
 
         addrs = self.nodes[ED].get_addrs()
         for addr in addrs:
-            self.assertEqual(self.nodes[LEADER].ping(addr), True)
+            self.assertTrue(self.nodes[LEADER].ping(addr))
 
         key_sequence = self.nodes[LEADER].get_key_sequence()
         self.nodes[LEADER].set_key_sequence(key_sequence + 1)
 
         addrs = self.nodes[ED].get_addrs()
         for addr in addrs:
-            self.assertEqual(self.nodes[LEADER].ping(addr), True)
+            self.assertTrue(self.nodes[LEADER].ping(addr))
 
 if __name__ == '__main__':
     unittest.main()

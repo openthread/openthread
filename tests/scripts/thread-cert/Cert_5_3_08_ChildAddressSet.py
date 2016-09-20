@@ -102,7 +102,7 @@ class Cert_5_3_8_ChildAddressSet(unittest.TestCase):
             addrs = self.nodes[i].get_addrs()
             for addr in addrs:
                 if addr[0:4] != 'fe80':
-                    self.assertEqual(self.nodes[LEADER].ping(addr), True)
+                    self.assertTrue(self.nodes[LEADER].ping(addr))
 
 if __name__ == '__main__':
     unittest.main()

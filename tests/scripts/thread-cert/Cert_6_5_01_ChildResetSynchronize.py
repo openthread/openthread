@@ -83,7 +83,7 @@ class Cert_6_5_1_ChildResetSynchronize(unittest.TestCase):
         addrs = self.nodes[ED].get_addrs()
         for addr in addrs:
             if addr[0:4] == 'fe80':
-                self.assertEqual(self.nodes[LEADER].ping(addr), True)
+                self.assertTrue(self.nodes[LEADER].ping(addr))
 
 if __name__ == '__main__':
     unittest.main()
