@@ -66,6 +66,7 @@ ThreadError Dtls::Start(bool aClient, ReceiveHandler aReceiveHandler, SendHandle
     mSendHandler = aSendHandler;
     mContext = aContext;
     mClient = aClient;
+    mReceiveMessage = NULL;
 
     mbedtls_ssl_init(&mSsl);
     mbedtls_ssl_config_init(&mConf);
