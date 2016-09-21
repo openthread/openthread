@@ -64,7 +64,7 @@ Joiner::Joiner(ThreadNetif &aNetif):
     mNetif.GetCoapServer().AddResource(mJoinerEntrust);
 }
 
-ThreadError Joiner::Start(const char *aPSKd)
+ThreadError Joiner::Start(const char *aPSKd, const char *aProvisioningUrl)
 {
     ThreadError error;
     Mac::ExtAddress extAddress;
@@ -76,6 +76,7 @@ ThreadError Joiner::Start(const char *aPSKd)
 
     SuccessOrExit(error = mNetif.GetDtls().SetPsk(reinterpret_cast<const uint8_t *>(aPSKd),
                                                   static_cast<uint8_t>(strlen(aPSKd))));
+    SuccessOrExit(error = mNetif.GetDtls().mProvisioningUrl.SetProvisioningUrl(aProvisioningUrl));
     SuccessOrExit(error = mNetif.GetMle().Discover(0, 0, mNetif.GetMac().GetPanId(), HandleDiscoverResult, this));
 
 exit:
@@ -215,7 +216,8 @@ exit:
 void Joiner::SendJoinerFinalize(void)
 {
     Coap::Header header;
-    MeshCoP::StateTlv *stateTlv;
+    StateTlv *stateTlv;
+    uint8_t length;
     uint8_t buf[128];
     uint8_t *cur = buf;
 
@@ -234,6 +236,15 @@ void Joiner::SendJoinerFinalize(void)
     stateTlv->SetState(MeshCoP::StateTlv::kAccept);
     cur += sizeof(*stateTlv);
 
+    length = mNetif.GetDtls().mProvisioningUrl.GetLength();
+
+    if (length > 0)
+    {
+        length += sizeof(Tlv);
+        memcpy(cur, &mNetif.GetDtls().mProvisioningUrl, length);
+        cur += length;
+    }
+
     mNetif.GetDtls().Send(buf, static_cast<uint16_t>(cur - buf));
 
     otLogInfoMeshCoP("Sent joiner finalize\r\n");
@@ -241,24 +252,33 @@ void Joiner::SendJoinerFinalize(void)
 
 void Joiner::ReceiveJoinerFinalizeResponse(uint8_t *buf, uint16_t length)
 {
-    Message *message;
+    Message *message = NULL;
     Coap::Header header;
+    StateTlv state;
 
     VerifyOrExit((message = mNetif.GetIp6().mMessagePool.New(Message::kTypeIp6, 0)) != NULL, ;);
     SuccessOrExit(message->Append(buf, length));
     SuccessOrExit(header.FromMessage(*message));
+    SuccessOrExit(message->SetOffset(header.GetLength()));
 
     VerifyOrExit(header.GetType() == Coap::Header::kTypeAcknowledgment &&
                  header.GetCode() == Coap::Header::kCodeChanged &&
                  header.GetMessageId() == 0 &&
                  header.GetTokenLength() == 0, ;);
 
-    otLogInfoMeshCoP("received joiner finalize response\r\n");
+    SuccessOrExit(Tlv::GetTlv(*message, Tlv::kState, sizeof(state), state));
+    VerifyOrExit(state.IsValid(), ;);
+
+    otLogInfoMeshCoP("received joiner finalize response %d\r\n", static_cast<uint8_t>(state.GetState()));
 
     Close();
 
 exit:
-    return;
+
+    if (message != NULL)
+    {
+        message->Free();
+    }
 }
 
 void Joiner::HandleJoinerEntrust(void *aContext, Coap::Header &aHeader,

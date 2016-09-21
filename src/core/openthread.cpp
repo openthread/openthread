@@ -1339,9 +1339,9 @@ ThreadError otSendPendingSet(otInstance *, const otOperationalDataset *aDataset,
 
 #if OPENTHREAD_ENABLE_COMMISSIONER
 #include <commissioning/commissioner.h>
-ThreadError otCommissionerStart(otInstance *, const char *aPSKd)
+ThreadError otCommissionerStart(otInstance *, const char *aPSKd, const char *aProvisioningUrl)
 {
-    return sThreadNetif->GetCommissioner().Start(aPSKd);
+    return sThreadNetif->GetCommissioner().Start(aPSKd, aProvisioningUrl);
 }
 
 ThreadError otCommissionerStop(otInstance *)
@@ -1369,9 +1369,9 @@ ThreadError otCommissionerPanIdQuery(otInstance *, uint16_t aPanId, uint32_t aCh
 #endif  // OPENTHREAD_ENABLE_COMMISSIONER
 
 #if OPENTHREAD_ENABLE_JOINER
-ThreadError otJoinerStart(otInstance *, const char *aPSKd)
+ThreadError otJoinerStart(otInstance *, const char *aPSKd, const char *aProvisioningUrl)
 {
-    return sThreadNetif->GetJoiner().Start(aPSKd);
+    return sThreadNetif->GetJoiner().Start(aPSKd, aProvisioningUrl);
 }
 
 ThreadError otJoinerStop(otInstance *)

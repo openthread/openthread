@@ -61,12 +61,13 @@ public:
     /**
      * This method starts the Commissioner service.
      *
-     * @param[in]  aPSKd  A pointer to the PSKd.
+     * @param[in]  aPSKd             A pointer to the PSKd.
+     * @param[in]  aProvisioningUrl  A pointer to the Provisioning URL (may be NULL).
      *
      * @retval kThreadError_None  Successfully started the Commissioner service.
      *
      */
-    ThreadError Start(const char *aPSKd);
+    ThreadError Start(const char *aPSKd, const char *aProvisioningUrl);
 
     /**
      * This method stops the Commissioner service.
@@ -108,7 +109,7 @@ private:
     void HandleUdpTransmit(void);
 
     void ReceiveJoinerFinalize(uint8_t *buf, uint16_t length);
-    void SendJoinFinalizeResponse(const Coap::Header &aRequestHeader);
+    void SendJoinFinalizeResponse(const Coap::Header &aRequestHeader, StateTlv::State aState);
 
     ThreadError SendPetition(void);
     ThreadError SendKeepAlive(void);
