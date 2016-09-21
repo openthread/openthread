@@ -29,17 +29,45 @@
 /**
  * @file
  * @brief
- *   This file includes the posix platform-specific initializers.
+ *   This file includes the (posix or windows) platform-specific initializers.
  */
 
-#ifndef PLATFORM_POSIX_H_
-#define PLATFORM_POSIX_H_
+#ifndef PLATFORM_VIRTUAL_H_
+#define PLATFORM_VIRTUAL_H_
 
-#include <stdint.h>
+#ifdef OPENTHREAD_CONFIG_FILE
+#include OPENTHREAD_CONFIG_FILE
+#else
+#include <openthread-config.h>
+#endif
+
+#if _WIN32
+#define _CRT_SECURE_NO_WARNINGS
+#include <WinSock2.h>
+#include <WS2tcpip.h>
+#include <windows.h>
+#include <time.h>
+#define POLL WSAPoll
+#else
+#include <arpa/inet.h>
+#include <fcntl.h>
+#include <netinet/in.h>
+#include <poll.h>
 #include <sys/select.h>
+#include <sys/socket.h>
+#include <sys/stat.h>
 #include <sys/time.h>
+#include <unistd.h>
+#define POLL poll
+#endif
 
-#include <openthread-types.h>
+#include <openthread.h>
+#include <common/code_utils.hpp>
+
+#include <assert.h>
+#include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
 
 /**
  * Unique node ID.
@@ -57,7 +85,7 @@ extern uint32_t WELLKNOWN_NODE_ID;
  * This function initializes the alarm service used by OpenThread.
  *
  */
-void posixAlarmInit(void);
+void platformAlarmInit(void);
 
 /**
  * This function retrieves the time remaining until the alarm fires.
@@ -65,7 +93,7 @@ void posixAlarmInit(void);
  * @param[out]  aTimeval  A pointer to the timeval struct.
  *
  */
-void posixAlarmUpdateTimeout(struct timeval *tv);
+void platformAlarmUpdateTimeout(struct timeval *tv);
 
 /**
  * This function performs alarm driver processing.
@@ -73,13 +101,13 @@ void posixAlarmUpdateTimeout(struct timeval *tv);
  * @param[in]  aInstance  The OpenThread instance structure.
  *
  */
-void posixAlarmProcess(otInstance *aInstance);
+void platformAlarmProcess(otInstance *aInstance);
 
 /**
  * This function initializes the radio service used by OpenThread.
  *
  */
-void posixRadioInit(void);
+void platformRadioInit(void);
 
 /**
  * This function updates the file descriptor sets with file descriptors used by the radio driver.
@@ -89,7 +117,7 @@ void posixRadioInit(void);
  * @param[inout]  aMaxFd       A pointer to the max file descriptor.
  *
  */
-void posixRadioUpdateFdSet(fd_set *aReadFdSet, fd_set *aWriteFdSet, int *aMaxFd);
+void platformRadioUpdateFdSet(fd_set *aReadFdSet, fd_set *aWriteFdSet, int *aMaxFd);
 
 /**
  * This function performs radio driver processing.
@@ -97,13 +125,15 @@ void posixRadioUpdateFdSet(fd_set *aReadFdSet, fd_set *aWriteFdSet, int *aMaxFd)
  * @param[in]  aInstance  The OpenThread instance structure.
  *
  */
-void posixRadioProcess(otInstance *aInstance);
+void platformRadioProcess(otInstance *aInstance);
 
 /**
  * This function initializes the random number service used by OpenThread.
  *
  */
-void posixRandomInit(void);
+void platformRandomInit(void);
+
+#ifndef _WIN32
 
 /**
  * This function updates the file descriptor sets with file descriptors used by the UART driver.
@@ -113,12 +143,14 @@ void posixRandomInit(void);
  * @param[inout]  aMaxFd       A pointer to the max file descriptor.
  *
  */
-void posixUartUpdateFdSet(fd_set *aReadFdSet, fd_set *aWriteFdSet, fd_set *aErrorFdSet, int *aMaxFd);
+void platformUartUpdateFdSet(fd_set *aReadFdSet, fd_set *aWriteFdSet, fd_set *aErrorFdSet, int *aMaxFd);
 
 /**
  * This function performs radio driver processing.
  *
  */
-void posixUartProcess(void);
+void platformUartProcess(void);
+
+#endif
 
 #endif  // PLATFORM_POSIX_H_

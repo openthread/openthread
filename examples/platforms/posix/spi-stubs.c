@@ -26,6 +26,7 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include "platform-virtual.h"
 
 #include <stdio.h>
 #include <stdlib.h>

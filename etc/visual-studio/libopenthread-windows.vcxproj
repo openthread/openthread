@@ -19,17 +19,17 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\examples\platforms\windows\alarm.cpp" />
-    <ClCompile Include="..\..\examples\platforms\windows\logging.cpp" />
-    <ClCompile Include="..\..\examples\platforms\windows\misc.cpp" />
-    <ClCompile Include="..\..\examples\platforms\windows\platform.cpp" />
-    <ClCompile Include="..\..\examples\platforms\windows\radio.cpp" />
-    <ClCompile Include="..\..\examples\platforms\windows\random.cpp" />
-    <ClCompile Include="..\..\examples\platforms\windows\spi-stubs.cpp" />
-    <ClCompile Include="..\..\examples\platforms\windows\uart.cpp" />
+    <ClCompile Include="..\..\examples\platforms\posix\alarm.c" />
+    <ClCompile Include="..\..\examples\platforms\posix\logging.c" />
+    <ClCompile Include="..\..\examples\platforms\posix\misc.c" />
+    <ClCompile Include="..\..\examples\platforms\posix\platform.c" />
+    <ClCompile Include="..\..\examples\platforms\posix\radio.c" />
+    <ClCompile Include="..\..\examples\platforms\posix\random.c" />
+    <ClCompile Include="..\..\examples\platforms\posix\spi-stubs.c" />
+    <ClCompile Include="..\..\examples\platforms\posix\uart-windows.c" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\examples\platforms\windows\platform-windows.h" />
+    <ClInclude Include="..\..\examples\platforms\posix\platform-virtual.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{30723C38-BA3B-44C9-8D64-C5861A26934F}</ProjectGuid>

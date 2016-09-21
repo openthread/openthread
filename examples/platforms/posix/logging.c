@@ -26,16 +26,16 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include "platform-virtual.h"
+
 #include <ctype.h>
 #include <inttypes.h>
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdint.h>
 #include <string.h>
-#include <sys/time.h>
 #include <time.h>
 
-#include <common/code_utils.hpp>
 #include <platform/logging.h>
 
 // Macro to append content to end of the log string.
@@ -46,10 +46,31 @@
     offset += (unsigned int)charsWritten;                                    \
     VerifyOrExit(offset < sizeof(logString), logString[sizeof(logString) -1 ] = 0)
 
-void otPlatLog(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aFormat, ...)
+#ifdef _WIN32
+void GetTimeString(char* timeString, size_t length)
+{
+    struct tm tmLocalTime;
+    time_t now = time(NULL);
+    (void)localtime_s(&tmLocalTime, &now); 
+    
+    strftime(timeString, length, "%Y-%m-%d %H:%M:%S ", &tmLocalTime);
+}
+#else
+void GetTimeString(char* timeString, size_t length)
 {
     struct timeval tv;
-    char timeString[40];
+    size_t offset;
+
+    gettimeofday(&tv, NULL);
+
+    offset = strftime(timeString, length, "%Y-%m-%d %H:%M:%S", localtime(&tv.tv_sec));
+    snprintf(&timeString[offset], length - offset, ".%06d", (uint32_t)tv.tv_usec);
+}
+#endif
+
+void otPlatLog(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aFormat, ...)
+{
+    char timeString[50];
     char logString[512];
     unsigned int offset;
     int charsWritten;
@@ -57,10 +78,9 @@ void otPlatLog(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aFormat
 
     offset = 0;
 
-    gettimeofday(&tv, NULL);
-    strftime(timeString, sizeof(timeString), "%Y-%m-%d %H:%M:%S", localtime(&tv.tv_sec));
+    GetTimeString(timeString, sizeof(timeString));
 
-    LOG_PRINTF("%s.%06d ", timeString, (uint32_t)tv.tv_usec);
+    LOG_PRINTF("%s ", timeString);
 
     switch (aLogLevel)
     {

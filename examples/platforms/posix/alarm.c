@@ -26,35 +26,44 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include "platform-virtual.h"
+
 #include <stdbool.h>
 #include <stdio.h>
 #include <string.h>
-#include <sys/time.h>
-
-#include <openthread.h>
-#include <openthread-config.h>
 
 #include <platform/alarm.h>
 #include <platform/diag.h>
-#include "platform-posix.h"
 
 static bool s_is_running = false;
 static uint32_t s_alarm = 0;
+#ifdef _WIN32
+static uint32_t s_start;
+#else
 static struct timeval s_start;
+#endif
 
-void posixAlarmInit(void)
+void platformAlarmInit(void)
 {
+#ifdef _WIN32
+    s_start = GetTickCount();
+#else
     gettimeofday(&s_start, NULL);
+#endif
 }
 
 uint32_t otPlatAlarmGetNow(void)
 {
+#ifdef _WIN32
+    return GetTickCount();
+#else
     struct timeval tv;
 
     gettimeofday(&tv, NULL);
     timersub(&tv, &s_start, &tv);
 
     return (uint32_t)((tv.tv_sec * 1000) + (tv.tv_usec / 1000));
+#endif
 }
 
 void otPlatAlarmStartAt(otInstance *aInstance, uint32_t t0, uint32_t dt)
@@ -70,7 +79,7 @@ void otPlatAlarmStop(otInstance *aInstance)
     s_is_running = false;
 }
 
-void posixAlarmUpdateTimeout(struct timeval *aTimeout)
+void platformAlarmUpdateTimeout(struct timeval *aTimeout)
 {
     int32_t remaining;
 
@@ -101,7 +110,7 @@ void posixAlarmUpdateTimeout(struct timeval *aTimeout)
     }
 }
 
-void posixAlarmProcess(otInstance *aInstance)
+void platformAlarmProcess(otInstance *aInstance)
 {
     int32_t remaining;
 

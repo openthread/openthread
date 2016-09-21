@@ -10,33 +10,33 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\examples\platforms\windows\alarm.cpp">
+    <ClCompile Include="..\..\examples\platforms\posix\alarm.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\examples\platforms\windows\platform.cpp">
+    <ClCompile Include="..\..\examples\platforms\posix\platform.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\examples\platforms\windows\random.cpp">
+    <ClCompile Include="..\..\examples\platforms\posix\random.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\examples\platforms\windows\logging.cpp">
+    <ClCompile Include="..\..\examples\platforms\posix\logging.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\examples\platforms\windows\radio.cpp">
+    <ClCompile Include="..\..\examples\platforms\posix\radio.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\examples\platforms\windows\uart.cpp">
+    <ClCompile Include="..\..\examples\platforms\posix\uart-windows.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\examples\platforms\windows\misc.cpp">
+    <ClCompile Include="..\..\examples\platforms\posix\misc.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\examples\platforms\windows\spi-stubs.cpp">
+    <ClCompile Include="..\..\examples\platforms\posix\spi-stubs.c">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\examples\platforms\windows\platform-windows.h">
+    <ClInclude Include="..\..\examples\platforms\posix\platform-virtual.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

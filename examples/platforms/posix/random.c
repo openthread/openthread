@@ -34,15 +34,16 @@
  *   This implementation is not a true random number generator and does @em satisfy the Thread requirements.
  */
 
+#include "platform-virtual.h"
+
 #include <openthread-types.h>
 
 #include <common/code_utils.hpp>
 #include <platform/random.h>
-#include "platform-posix.h"
 
 static uint32_t s_state = 1;
 
-void posixRandomInit(void)
+void platformRandomInit(void)
 {
     s_state = NODE_ID;
 }

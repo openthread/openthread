@@ -26,19 +26,9 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <WinSock2.h>
-#include <WS2tcpip.h>
-#include <windows.h>
-#include <openthread.h>
+#include "platform-virtual.h"
 
-#include <assert.h>
-#include <fcntl.h>
-#include <stdlib.h>
-#include <stdio.h>
-
-#include <common/code_utils.hpp>
 #include <platform/uart.h>
-#include "platform-windows.h"
 
 static HANDLE s_WorkerThread;
 static HANDLE s_StopWorkerEvent;
@@ -48,14 +38,15 @@ windowsUartWorkerThread(
     _In_ LPVOID lpThreadParameter
     )
 {
+    DWORD originalConsoleMode;
     HANDLE waitHandles[] = { s_StopWorkerEvent, GetStdHandle(STD_INPUT_HANDLE) };
+    uint8_t ch;
     
     // Cache the original console mode
-    DWORD originalConsoleMode;
     GetConsoleMode(waitHandles[1], &originalConsoleMode);
 
     // Fake the first new line
-    uint8_t ch = '\n';
+    ch = '\n';
     otPlatUartReceived(&ch, 1);
 
     // Wait for console events
@@ -73,7 +64,7 @@ windowsUartWorkerThread(
                     !record.Event.KeyEvent.bKeyDown)
                     continue;
                 
-                uint8_t ch = (uint8_t)record.Event.KeyEvent.uChar.AsciiChar;
+                ch = (uint8_t)record.Event.KeyEvent.uChar.AsciiChar;
                 otPlatUartReceived(&ch, 1);
             }
         }
@@ -82,7 +73,7 @@ windowsUartWorkerThread(
     return NO_ERROR;
 }
 
-EXTERN_C ThreadError otPlatUartEnable(void)
+ThreadError otPlatUartEnable(void)
 {
     ThreadError error = kThreadError_None;
 
@@ -100,7 +91,7 @@ exit:
     return error;
 }
 
-EXTERN_C ThreadError otPlatUartDisable(void)
+ThreadError otPlatUartDisable(void)
 {
     ThreadError error = kThreadError_None;
 

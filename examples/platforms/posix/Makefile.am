@@ -44,7 +44,7 @@ libopenthread_posix_a_SOURCES             = \
     platform.c                              \
     radio.c                                 \
     random.c                                \
-    uart.c                                  \
+    uart-posix.c                            \
     flash.c                                 \
     $(NULL)
 
@@ -61,7 +61,7 @@ libopenthread_posix_a_SOURCES           += \
 endif
 
 noinst_HEADERS                            = \
-    platform-posix.h                        \
+    platform-virtual.h                      \
     $(NULL)
 
 if OPENTHREAD_BUILD_COVERAGE

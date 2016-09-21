@@ -26,27 +26,10 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <arpa/inet.h>
-#include <assert.h>
-#include <fcntl.h>
-#include <netinet/in.h>
-#include <poll.h>
-#include <string.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <sys/select.h>
-#include <sys/socket.h>
-#include <sys/stat.h>
-#include <unistd.h>
-
-#include <openthread.h>
-#include <openthread-config.h>
+#include "platform-virtual.h"
 
 #include <platform/radio.h>
 #include <platform/diag.h>
-
-#include <common/code_utils.hpp>
-#include "platform-posix.h"
 
 enum
 {
@@ -90,7 +73,8 @@ enum
     IEEE802154_MACCMD_DATA_REQ    = 4,
 };
 
-struct OT_TOOL_PACKED_BEGIN RadioMessage
+OT_TOOL_PACKED_BEGIN
+struct RadioMessage
 {
     uint8_t mChannel;
     uint8_t mPsdu[kMaxPHYPacketSize];
@@ -327,7 +311,7 @@ void otPlatRadioSetPromiscuous(otInstance *aInstance, bool aEnable)
     sPromiscuous = aEnable;
 }
 
-void posixRadioInit(void)
+void platformRadioInit(void)
 {
     struct sockaddr_in sockaddr;
     char *offset;
@@ -362,7 +346,7 @@ void posixRadioInit(void)
 
     sockaddr.sin_addr.s_addr = INADDR_ANY;
 
-    sSockFd = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
+    sSockFd = (int)socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
     bind(sSockFd, (struct sockaddr *)&sockaddr, sizeof(sockaddr));
 
     sReceiveFrame.mPsdu = sReceiveMessage.mPsdu;
@@ -474,7 +458,7 @@ bool otPlatRadioGetPromiscuous(otInstance *aInstance)
 
 void radioReceive(otInstance *aInstance)
 {
-    ssize_t rval = recvfrom(sSockFd, &sReceiveMessage, sizeof(sReceiveMessage), 0, NULL, NULL);
+    int rval = recvfrom(sSockFd, (char*)&sReceiveMessage, sizeof(sReceiveMessage), 0, NULL, NULL);
 
     if (rval < 0)
     {
@@ -537,7 +521,7 @@ void radioSendMessage(otInstance *aInstance)
     }
 }
 
-void posixRadioUpdateFdSet(fd_set *aReadFdSet, fd_set *aWriteFdSet, int *aMaxFd)
+void platformRadioUpdateFdSet(fd_set *aReadFdSet, fd_set *aWriteFdSet, int *aMaxFd)
 {
     if (aReadFdSet != NULL && (sState != kStateTransmit || sAckWait))
     {
@@ -560,12 +544,12 @@ void posixRadioUpdateFdSet(fd_set *aReadFdSet, fd_set *aWriteFdSet, int *aMaxFd)
     }
 }
 
-void posixRadioProcess(otInstance *aInstance)
+void platformRadioProcess(otInstance *aInstance)
 {
     const int flags = POLLIN | POLLRDNORM | POLLERR | POLLNVAL | POLLHUP;
     struct pollfd pollfd = { sSockFd, flags, 0 };
 
-    if (poll(&pollfd, 1, 0) > 0 && (pollfd.revents & flags) != 0)
+    if (POLL(&pollfd, 1, 0) > 0 && (pollfd.revents & flags) != 0)
     {
         radioReceive(aInstance);
     }
@@ -587,7 +571,7 @@ void radioTransmit(const struct RadioMessage *msg, const struct RadioPacket *pkt
 
     for (i = 1; i <= WELLKNOWN_NODE_ID; i++)
     {
-        ssize_t rval;
+        int rval;
 
         if (NODE_ID == i)
         {
@@ -595,7 +579,7 @@ void radioTransmit(const struct RadioMessage *msg, const struct RadioPacket *pkt
         }
 
         sockaddr.sin_port = htons(9000 + sPortOffset + i);
-        rval = sendto(sSockFd, msg, 1 + pkt->mLength,
+        rval = sendto(sSockFd, (const char*)msg, 1 + pkt->mLength,
                       0, (struct sockaddr *)&sockaddr, sizeof(sockaddr));
 
         if (rval < 0)

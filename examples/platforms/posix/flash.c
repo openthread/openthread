@@ -26,6 +26,8 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include "platform-virtual.h"
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -37,7 +39,6 @@
 #include <platform/flash.h>
 
 #include <common/code_utils.hpp>
-#include "platform-posix.h"
 
 static int sFlashFd;
 uint32_t sEraseAddress;
