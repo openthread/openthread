@@ -1322,8 +1322,10 @@ class WpanApi(SpinelCodec):
         if (prop == SPINEL_PROP_STREAM_NET):
             pkt = IPv6(value[2:])
             if ICMPv6EchoReply in pkt:
+                timenow = int(round(time.time() * 1000)) & 0xFFFFFFFF
+                timedelta = (timenow - unpack('>I', pkt.data)[0])
                 print "\n%d bytes from %s: icmp_seq=%d hlim=%d time=%dms" % (
-                    pkt.plen, pkt.src, pkt.seq, pkt.hlim, 80)
+                    pkt.plen, pkt.src, pkt.seq, pkt.hlim, timedelta)
             return
 
         if (tid != self.tid_filter) or (prop != self.prop_filter): return
@@ -1484,6 +1486,7 @@ class WpanDiagsCmd(Cmd, SpinelCodec):
         'channel', 
         'child', 
         'childtimeout', 
+        'commissioner', 
         'contextreusedelay', 
         'counter', 
         'discover', 
@@ -1816,6 +1819,44 @@ class WpanDiagsCmd(Cmd, SpinelCodec):
         \033[0m
         """
         self.handle_property(line, SPINEL_PROP_THREAD_CHILD_TIMEOUT, 'L')
+
+    def do_commissioner(self, line): 
+        """
+        These commands are enabled when configuring with --enable-commissioner.
+
+        \033[1m
+        commissioner start
+        \033[0m
+            Start the Commissioner role on this node.
+        \033[2m
+            > commissioner start
+            Done
+        \033[0m\033[1m
+        commissioner stop
+        \033[0m
+            Stop the Commissioner role on this node.
+        \033[2m
+            > commissioner stop
+            Done
+        \033[0m\033[1m
+        commissioner panid <panid> <mask> <destination>
+        \033[0m
+            Perform panid query.
+        \033[2m
+            > commissioner panid 57005 4294967295 ff33:0040:fdde:ad00:beef:0:0:1
+            Conflict: dead, 00000800
+            Done
+        \033[0m\033[1m
+        commissioner energy <mask> <count> <period> <scanDuration>
+        \033[0m
+            Perform energy scan.
+        \033[2m
+            > commissioner energy 327680 2 32 1000 fdde:ad00:beef:0:0:ff:fe00:c00
+            Energy: 00050000 0 0 0 0 
+            Done
+        \033[0m
+        """
+        pass
 
     def do_contextreusedelay(self, line):
         """
@@ -2297,7 +2338,9 @@ class WpanDiagsCmd(Cmd, SpinelCodec):
             # Generate local ping packet and send directly via spinel.
             ML64 = self.prop_get_value(SPINEL_PROP_IPV6_ML_ADDR)
             ML64 = str(ipaddress.IPv6Address(ML64))
-            ping_req = str(IPv6(src=ML64, dst=addr)/ICMPv6EchoRequest())
+            timenow = int(round(time.time() * 1000)) & 0xFFFFFFFF
+            timenow = pack('>I', timenow)
+            ping_req = str(IPv6(src=ML64, dst=addr)/ICMPv6EchoRequest()/timenow)
             self.wpanApi.ip_send(ping_req)
             # Let handler print result
         except:

@@ -86,9 +86,10 @@ class Node:
         cmd += ' %d' % nodeid
         print ("%s" % cmd)
 
-        self.pexpect = pexpect.spawn(cmd, timeout=2)
+        self.pexpect = pexpect.spawn(cmd, timeout=4)
         time.sleep(0.1)
         self.pexpect.expect('spinel-cli >')
+        self.debug(int(os.getenv('DEBUG', '0')))
  
     def __init_soc(self, nodeid):
         """ Initialize a System-on-a-chip node connected via UART. """
