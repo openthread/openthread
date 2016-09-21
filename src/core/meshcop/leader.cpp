@@ -50,7 +50,8 @@ Leader::Leader(ThreadNetif &aThreadNetif):
     mKeepAlive(OPENTHREAD_URI_LEADER_KEEP_ALIVE, HandleKeepAlive, this),
     mCoapServer(aThreadNetif.GetCoapServer()),
     mNetworkData(aThreadNetif.GetNetworkDataLeader()),
-    mTimer(aThreadNetif.GetIp6().mTimerScheduler, HandleTimer, this)
+    mTimer(aThreadNetif.GetIp6().mTimerScheduler, HandleTimer, this),
+    mSessionId(0)
 {
     mCoapServer.AddResource(mPetition);
     mCoapServer.AddResource(mKeepAlive);
@@ -78,7 +79,7 @@ void Leader::HandlePetition(Coap::Header &aHeader, Message &aMessage, const Ip6:
     data.mBorderAgentLocator.SetBorderAgentLocator(HostSwap16(aMessageInfo.GetPeerAddr().mFields.m16[7]));
 
     data.mCommissionerSessionId.Init();
-    data.mCommissionerSessionId.SetCommissionerSessionId(++mSessionId);
+    data.mCommissionerSessionId.SetCommissionerSessionId(mSessionId++);
 
     data.mSteeringData.Init();
     data.mSteeringData.SetLength(1);
