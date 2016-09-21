@@ -1962,6 +1962,8 @@ exit:
 
 ThreadError MleRouter::HandleChildUpdateRequest(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
+    static const uint8_t kMaxResponseTlvs = 8;
+
     ThreadError error = kThreadError_None;
     Mac::ExtAddress macAddr;
     ModeTlv mode;
@@ -1970,7 +1972,7 @@ ThreadError MleRouter::HandleChildUpdateRequest(const Message &aMessage, const I
     LeaderDataTlv leaderData;
     TimeoutTlv timeout;
     Child *child;
-    uint8_t tlvs[7];
+    uint8_t tlvs[kMaxResponseTlvs];
     uint8_t tlvslength = 0;
 
     otLogInfoMle("Received Child Update Request\n");
@@ -2018,12 +2020,28 @@ ThreadError MleRouter::HandleChildUpdateRequest(const Message &aMessage, const I
 
         if (child->mMode & ModeTlv::kModeFullNetworkData)
         {
+            // full network data
             child->mNetworkDataVersion = leaderData.GetDataVersion();
+
+            if (leaderData.GetDataVersion() != mNetworkData.GetVersion())
+            {
+                tlvs[tlvslength++] = Tlv::kNetworkData;
+            }
         }
         else
         {
+            // stable network data
             child->mNetworkDataVersion = leaderData.GetStableDataVersion();
+
+            if (leaderData.GetStableDataVersion() != mNetworkData.GetStableVersion())
+            {
+                tlvs[tlvslength++] = Tlv::kNetworkData;
+            }
         }
+    }
+    else
+    {
+        tlvs[tlvslength++] = Tlv::kNetworkData;
     }
 
     // Timeout
@@ -2219,6 +2237,10 @@ ThreadError MleRouter::SendChildUpdateResponse(Child *aChild, const Ip6::Message
 
         case Tlv::kMode:
             SuccessOrExit(error = AppendMode(*message, aChild->mMode));
+            break;
+
+        case Tlv::kNetworkData:
+            SuccessOrExit(error = AppendNetworkData(*message, (aChild->mMode & ModeTlv::kModeFullNetworkData) == 0));
             break;
 
         case Tlv::kResponse:

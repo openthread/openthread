@@ -2023,6 +2023,7 @@ ThreadError Mle::HandleChildUpdateResponse(const Message &aMessage, const Ip6::M
     LeaderDataTlv leaderData;
     SourceAddressTlv sourceAddress;
     TimeoutTlv timeout;
+    NetworkDataTlv networkData;
     uint8_t tlvs[] = {Tlv::kNetworkData};
 
     otLogInfoMle("Received Child Update Response\n");
@@ -2058,11 +2059,6 @@ ThreadError Mle::HandleChildUpdateResponse(const Message &aMessage, const Ip6::M
         SuccessOrExit(error = Tlv::GetTlv(aMessage, Tlv::kLeaderData, sizeof(leaderData), leaderData));
         VerifyOrExit(leaderData.IsValid(), error = kThreadError_Parse);
 
-        if (static_cast<int8_t>(leaderData.GetDataVersion() - mNetworkData.GetVersion()) > 0)
-        {
-            SendDataRequest(aMessageInfo.GetPeerAddr(), tlvs, sizeof(tlvs));
-        }
-
         // Source Address
         SuccessOrExit(error = Tlv::GetTlv(aMessage, Tlv::kSourceAddress, sizeof(sourceAddress), sourceAddress));
         VerifyOrExit(sourceAddress.IsValid(), error = kThreadError_Parse);
@@ -2080,7 +2076,16 @@ ThreadError Mle::HandleChildUpdateResponse(const Message &aMessage, const Ip6::M
             mTimeout = timeout.GetTimeout();
         }
 
-        if ((mode.GetMode() & ModeTlv::kModeRxOnWhenIdle) == 0)
+        // Network Data optional
+        if (Tlv::GetTlv(aMessage, Tlv::kNetworkData, sizeof(networkData), networkData) == kThreadError_None)
+        {
+            VerifyOrExit(networkData.IsValid(), error = kThreadError_Parse);
+            mNetworkData.SetNetworkData(leaderData.GetDataVersion(), leaderData.GetStableDataVersion(),
+                                        (mDeviceMode & ModeTlv::kModeFullNetworkData) == 0,
+                                        networkData.GetNetworkData(), networkData.GetLength());
+        }
+
+        if ((mDeviceMode & ModeTlv::kModeRxOnWhenIdle) == 0)
         {
             mMesh.SetPollPeriod(Timer::SecToMsec(mTimeout / kMaxChildKeepAliveAttempts));
             mMesh.SetRxOnWhenIdle(false);
@@ -2088,6 +2093,23 @@ ThreadError Mle::HandleChildUpdateResponse(const Message &aMessage, const Ip6::M
         else
         {
             mMesh.SetRxOnWhenIdle(true);
+        }
+
+        if (mDeviceMode & ModeTlv::kModeFullNetworkData)
+        {
+            // full network data
+            if (leaderData.GetDataVersion() != mNetworkData.GetVersion())
+            {
+                SendDataRequest(aMessageInfo.GetPeerAddr(), tlvs, sizeof(tlvs));
+            }
+        }
+        else
+        {
+            // stable network data
+            if (leaderData.GetStableDataVersion() != mNetworkData.GetStableVersion())
+            {
+                SendDataRequest(aMessageInfo.GetPeerAddr(), tlvs, sizeof(tlvs));
+            }
         }
 
         break;
