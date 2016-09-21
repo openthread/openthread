@@ -32,13 +32,13 @@ include $(abs_top_nlbuild_autotools_dir)/automake/pre.am
 
 DIST_SUBDIRS                            = \
     cc2538                                \
-    posix                                 \
+    virtual                               \
     $(NULL)
 
 # Always build (e.g. for 'make all') these subdirectories.
 
 if OPENTHREAD_EXAMPLES_POSIX
-SUBDIRS                                 = posix
+SUBDIRS                                 = virtual
 endif
 
 if OPENTHREAD_EXAMPLES_CC2538
@@ -49,7 +49,7 @@ endif
 
 PRETTY_SUBDIRS                          = \
     cc2538                                \
-    posix                                 \
+    virtual                               \
     $(NULL)
 
 include $(abs_top_nlbuild_autotools_dir)/automake/post.am
