@@ -27,7 +27,6 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-import pexpect
 import time
 import unittest
 
@@ -87,7 +86,7 @@ class Cert_5_5_2_LeaderReboot(unittest.TestCase):
 
         addrs = self.nodes[ED].get_addrs()
         for addr in addrs:
-            self.nodes[ROUTER].ping(addr)
+            self.assertTrue(self.nodes[ROUTER].ping(addr))
 
 if __name__ == '__main__':
     unittest.main()

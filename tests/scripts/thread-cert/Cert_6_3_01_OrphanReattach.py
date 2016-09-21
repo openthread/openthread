@@ -86,7 +86,7 @@ class Cert_6_3_1_OrphanReattach(unittest.TestCase):
 
         addrs = self.nodes[ED].get_addrs()
         for addr in addrs:
-            self.nodes[LEADER].ping(addr)
+            self.assertTrue(self.nodes[LEADER].ping(addr))
 
 if __name__ == '__main__':
     unittest.main()

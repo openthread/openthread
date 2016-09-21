@@ -27,7 +27,6 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-import pexpect
 import time
 import unittest
 
@@ -104,7 +103,7 @@ class Cert_5_5_8_SplitRoutersLostLeader(unittest.TestCase):
         addrs = self.nodes[ED1].get_addrs()
         for addr in addrs:
             if addr[0:4] != 'fe80':
-                self.nodes[LEADER1].ping(addr)
+                self.assertTrue(self.nodes[LEADER1].ping(addr))
 
         self.nodes[ROUTER3].stop()
         time.sleep(130)
@@ -115,7 +114,7 @@ class Cert_5_5_8_SplitRoutersLostLeader(unittest.TestCase):
         addrs = self.nodes[ED1].get_addrs()
         for addr in addrs:
             if addr[0:4] != 'fe80':
-                self.nodes[LEADER1].ping(addr)
+                self.assertTrue(self.nodes[LEADER1].ping(addr))
 
 if __name__ == '__main__':
     unittest.main()

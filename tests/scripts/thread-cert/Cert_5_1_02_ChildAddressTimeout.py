@@ -27,7 +27,6 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-import pexpect
 import time
 import unittest
 
@@ -97,21 +96,13 @@ class Cert_5_1_02_ChildAddressTimeout(unittest.TestCase):
         time.sleep(5)
         for addr in ed_addrs:
             if addr[0:4] != 'fe80':
-                try:
-                    self.nodes[LEADER].ping(addr)
-                    self.fail()
-                except pexpect.TIMEOUT:
-                    pass
+                self.assertFalse(self.nodes[LEADER].ping(addr))
 
         self.nodes[SED].stop()
         time.sleep(5)
         for addr in sed_addrs:
             if addr[0:4] != 'fe80':
-                try:
-                    self.nodes[LEADER].ping(addr)
-                    self.fail()
-                except pexpect.TIMEOUT:
-                    pass
+                self.assertFalse(self.nodes[LEADER].ping(addr))
 
 if __name__ == '__main__':
     unittest.main()

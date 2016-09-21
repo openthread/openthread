@@ -96,7 +96,7 @@ class Cert_9_2_14_PanIdQuery(unittest.TestCase):
 
         self.nodes[COMMISSIONER].panid_query(0xdead, 0xffffffff, 'ff33:0040:fdde:ad00:beef:0:0:1')
 
-        self.nodes[COMMISSIONER].ping(ipaddr)
+        self.assertTrue(self.nodes[COMMISSIONER].ping(ipaddr))
 
 if __name__ == '__main__':
     unittest.main()

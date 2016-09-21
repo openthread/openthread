@@ -27,7 +27,6 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-import pexpect
 import time
 import unittest
 
@@ -100,14 +99,14 @@ class Cert_5_6_5_NetworkDataRegisterAfterAttachRouter(unittest.TestCase):
         self.assertTrue(any('2002' in word for word in addrs))
         for addr in addrs:
             if addr[0:3] == '200':
-                self.nodes[LEADER].ping(addr)
+                self.assertTrue(self.nodes[LEADER].ping(addr))
 
         addrs = self.nodes[SED1].get_addrs()
         self.assertTrue(any('2001' in word for word in addrs))
         self.assertFalse(any('2002' in word for word in addrs))
         for addr in addrs:
             if addr[0:3] == '200':
-                self.nodes[LEADER].ping(addr)
+                self.assertTrue(self.nodes[LEADER].ping(addr))
 
         self.nodes[ROUTER].add_prefix('2003::/64', 'pacs')
         self.nodes[ROUTER].register_netdata()
@@ -120,7 +119,7 @@ class Cert_5_6_5_NetworkDataRegisterAfterAttachRouter(unittest.TestCase):
         self.assertTrue(any('2003' in word for word in addrs))
         for addr in addrs:
             if addr[0:3] == '200':
-                self.nodes[LEADER].ping(addr)
+                self.assertTrue(self.nodes[LEADER].ping(addr))
 
         addrs = self.nodes[SED1].get_addrs()
         self.assertTrue(any('2001' in word for word in addrs))
@@ -128,7 +127,7 @@ class Cert_5_6_5_NetworkDataRegisterAfterAttachRouter(unittest.TestCase):
         self.assertTrue(any('2003' in word for word in addrs))
         for addr in addrs:
             if addr[0:3] == '200':
-                self.nodes[LEADER].ping(addr)
+                self.assertTrue(self.nodes[LEADER].ping(addr))
 
 if __name__ == '__main__':
     unittest.main()

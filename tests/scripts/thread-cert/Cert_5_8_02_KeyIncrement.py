@@ -66,14 +66,14 @@ class Cert_5_8_2_KeyIncrement(unittest.TestCase):
 
         addrs = self.nodes[ROUTER].get_addrs()
         for addr in addrs:
-            self.nodes[LEADER].ping(addr)
+            self.assertTrue(self.nodes[LEADER].ping(addr))
 
         key_sequence = self.nodes[LEADER].get_key_sequence()
         self.nodes[LEADER].set_key_sequence(key_sequence + 1)
 
         addrs = self.nodes[ROUTER].get_addrs()
         for addr in addrs:
-            self.nodes[LEADER].ping(addr)
+            self.assertTrue(self.nodes[LEADER].ping(addr))
 
 if __name__ == '__main__':
     unittest.main()

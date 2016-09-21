@@ -27,7 +27,6 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-import pexpect
 import time
 import unittest
 
@@ -95,7 +94,7 @@ class Cert_5_6_7_NetworkDataRequestREED(unittest.TestCase):
         self.assertTrue(any('2003' in word for word in addrs))
         for addr in addrs:
             if addr[0:3] == '200':
-                self.nodes[LEADER].ping(addr)
+                self.assertTrue(self.nodes[LEADER].ping(addr))
 
 if __name__ == '__main__':
     unittest.main()

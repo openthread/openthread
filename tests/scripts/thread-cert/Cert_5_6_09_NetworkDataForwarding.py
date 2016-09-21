@@ -27,7 +27,6 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-import pexpect
 import time
 import unittest
 
@@ -110,35 +109,23 @@ class Cert_5_6_9_NetworkDataForwarding(unittest.TestCase):
         self.nodes[ROUTER2].register_netdata()
         time.sleep(10)
 
-        try:
-            self.nodes[SED].ping('2002::1')
-        except pexpect.TIMEOUT:
-            pass
+        self.assertFalse(self.nodes[SED].ping('2002::1'))
 
-        try:
-            self.nodes[SED].ping('2007::1')
-        except pexpect.TIMEOUT:
-            pass
+        self.assertFalse(self.nodes[SED].ping('2007::1'))
 
         self.nodes[ROUTER2].remove_prefix('2001::/64')
         self.nodes[ROUTER2].add_prefix('2001::/64', 'paros', 'high')
         self.nodes[ROUTER2].register_netdata()
         time.sleep(10)
 
-        try:
-            self.nodes[SED].ping('2007::1')
-        except pexpect.TIMEOUT:
-            pass
+        self.assertFalse(self.nodes[SED].ping('2007::1'))
 
         self.nodes[ROUTER2].remove_prefix('2001::/64')
         self.nodes[ROUTER2].add_prefix('2001::/64', 'paros', 'med')
         self.nodes[ROUTER2].register_netdata()
         time.sleep(10)
 
-        try:
-            self.nodes[SED].ping('2007::1')
-        except pexpect.TIMEOUT:
-            pass
+        self.assertFalse(self.nodes[SED].ping('2007::1'))
 
 if __name__ == '__main__':
     unittest.main()

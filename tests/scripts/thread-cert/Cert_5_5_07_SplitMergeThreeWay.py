@@ -27,7 +27,6 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-import pexpect
 import time
 import unittest
 
@@ -97,17 +96,17 @@ class Cert_5_5_7_SplitMergeThreeWay(unittest.TestCase):
         addrs = self.nodes[LEADER1].get_addrs()
         for addr in addrs:
             if addr[0:4] != 'fe80':
-                self.nodes[ROUTER1].ping(addr)
+                self.assertTrue(self.nodes[ROUTER1].ping(addr))
 
         addrs = self.nodes[ROUTER2].get_addrs()
         for addr in addrs:
             if addr[0:4] != 'fe80':
-                self.nodes[ROUTER1].ping(addr)
+                self.assertTrue(self.nodes[ROUTER1].ping(addr))
 
         addrs = self.nodes[ROUTER3].get_addrs()
         for addr in addrs:
             if addr[0:4] != 'fe80':
-                self.nodes[ROUTER1].ping(addr)
+                self.assertTrue(self.nodes[ROUTER1].ping(addr))
 
 if __name__ == '__main__':
     unittest.main()

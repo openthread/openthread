@@ -98,7 +98,7 @@ class Cert_6_2_2_NewPartition(unittest.TestCase):
 
         addrs = self.nodes[ED].get_addrs()
         for addr in addrs:
-            self.nodes[ROUTER1].ping(addr)
+            self.assertTrue(self.nodes[ROUTER1].ping(addr))
 
 if __name__ == '__main__':
     unittest.main()
