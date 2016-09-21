@@ -137,7 +137,8 @@ exit:
     (void)aMessageInfo;
 }
 
-ThreadError NetworkDiagnostic::SendDiagnosticReset(const Ip6::Address &aDestination, uint8_t aTlvTypes[], uint8_t aCount)
+ThreadError NetworkDiagnostic::SendDiagnosticReset(const Ip6::Address &aDestination, uint8_t aTlvTypes[],
+                                                   uint8_t aCount)
 {
     ThreadError error;
     Ip6::SockAddr sockaddr;
@@ -264,6 +265,7 @@ void NetworkDiagnostic::HandleDiagnosticGet(Coap::Header &aHeader, Message &aMes
     for (uint8_t i = 0; i < numTlvTypes; i++)
     {
         otLogInfoNetDiag("Received diagnostic get type %d\n", tlvTypeSet[i]);
+
         switch (tlvTypeSet[i])
         {
         case NetworkDiagnosticTlv::kExtMacAddress:
@@ -302,6 +304,7 @@ void NetworkDiagnostic::HandleDiagnosticGet(Coap::Header &aHeader, Message &aMes
                 tlv.SetTimeout(mMle.GetTimeout());
                 SuccessOrExit(error = message->Append(&tlv, sizeof(tlv)));
             }
+
             break;
         }
 
@@ -443,6 +446,7 @@ void NetworkDiagnostic::HandleDiagnosticReset(Coap::Header &aHeader, Message &aM
     numTlvTypes = aMessage.Read(aMessage.GetOffset(), kNumResetTlvTypes, tlvTypeSet);
 
     otLogInfoNetDiag("Received diagnostic reset request\n");
+
     for (uint8_t i = 0; i < numTlvTypes; i++)
     {
         switch (tlvTypeSet[i])

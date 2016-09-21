@@ -60,7 +60,8 @@ namespace NetworkDiagnostic {
  *
  */
 
-enum {
+enum
+{
     kNumResetTlvTypes = 1,
     kNumTlvTypes = 18,
 };
