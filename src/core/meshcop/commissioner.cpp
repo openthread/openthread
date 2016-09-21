@@ -225,6 +225,7 @@ void Commissioner::HandleRelayReceive(Coap::Header &aHeader, Message &aMessage, 
     ThreadError error;
     JoinerUdpPortTlv joinerPort;
     JoinerIidTlv joinerIid;
+    JoinerRouterLocatorTlv joinerRloc;
     uint16_t offset;
     uint16_t length;
 
@@ -239,16 +240,20 @@ void Commissioner::HandleRelayReceive(Coap::Header &aHeader, Message &aMessage, 
     SuccessOrExit(error = Tlv::GetTlv(aMessage, Tlv::kJoinerIid, sizeof(joinerIid), joinerIid));
     VerifyOrExit(joinerIid.IsValid(), error = kThreadError_Parse);
 
+    SuccessOrExit(error = Tlv::GetTlv(aMessage, Tlv::kJoinerRouterLocator, sizeof(joinerRloc), joinerRloc));
+    VerifyOrExit(joinerRloc.IsValid(), error = kThreadError_Parse);
+
     SuccessOrExit(error = Tlv::GetValueOffset(aMessage, Tlv::kJoinerDtlsEncapsulation, offset, length));
 
     memcpy(mJoinerIid, joinerIid.GetIid(), sizeof(mJoinerIid));
     mNetif.GetDtls().SetClientId(mJoinerIid, sizeof(mJoinerIid));
     mJoinerPort = joinerPort.GetUdpPort();
-    mJoinerRouterAddress = aMessageInfo.GetPeerAddr();
+    mJoinerRloc = joinerRloc.GetJoinerRouterLocator();
 
     mNetif.GetDtls().Receive(aMessage, offset, length);
 
 exit:
+    (void)aMessageInfo;
     return;
 }
 
@@ -320,6 +325,7 @@ ThreadError Commissioner::HandleDtlsSend(const unsigned char *aBuf, uint16_t aLe
         Coap::Header header;
         JoinerUdpPortTlv udpPort;
         JoinerIidTlv iid;
+        JoinerRouterLocatorTlv rloc;
         ExtendedTlv tlv;
 
         VerifyOrExit((mTransmitMessage = mSocket.NewMessage(0)) != NULL, error = kThreadError_NoBufs);
@@ -340,6 +346,10 @@ ThreadError Commissioner::HandleDtlsSend(const unsigned char *aBuf, uint16_t aLe
         iid.Init();
         iid.SetIid(mJoinerIid);
         SuccessOrExit(error = mTransmitMessage->Append(&iid, sizeof(iid)));
+
+        rloc.Init();
+        rloc.SetJoinerRouterLocator(mJoinerRloc);
+        SuccessOrExit(error = mTransmitMessage->Append(&rloc, sizeof(rloc)));
 
         if (mSendKek)
         {
@@ -400,9 +410,10 @@ void Commissioner::HandleUdpTransmit(void)
     mTransmitMessage->Write(mTransmitMessage->GetOffset(), sizeof(tlv), &tlv);
 
     memset(&messageInfo, 0, sizeof(messageInfo));
-    messageInfo.GetPeerAddr() = mJoinerRouterAddress;
+    messageInfo.GetPeerAddr() = *mNetif.GetMle().GetMeshLocal16();
+    messageInfo.GetPeerAddr().mFields.m16[7] = HostSwap16(mJoinerRloc);
     messageInfo.mPeerPort = kCoapUdpPort;
-    messageInfo.mInterfaceId = 1;
+    messageInfo.mInterfaceId = mNetif.GetInterfaceId();
 
     SuccessOrExit(error = mSocket.SendTo(*mTransmitMessage, messageInfo));
 
