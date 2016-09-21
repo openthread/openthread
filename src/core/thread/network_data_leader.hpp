@@ -241,32 +241,6 @@ public:
      */
     ThreadError SetCommissioningData(const uint8_t *aValue, uint8_t aValueLength);
 
-    /**
-     * This method sends MGMT_COMMISSIONER_GET.
-     *
-     * @param[in]  aTlvs        A pointer to Commissioning Data TLVs.
-     * @param[in]  aLength      The length of requested TLVs in bytes.
-     *
-     * @retval kThreadError_None     Send MGMT_COMMISSIONER_GET successfully.
-     * @retval kThreadError_Failed   Send MGMT_COMMISSIONER_GET fail.
-     *
-     */
-    ThreadError SendGetCommissioningRequest(const uint8_t *aTlvs, uint8_t aLength);
-
-    /**
-     * This method sends MGMT_COMMISSIONER_SET.
-      *
-     * @param[in]  aDataset     A reference to Commissioning Data.
-     * @param[in]  aTlvs        A pointer to user specific Commissioning Data TLVs.
-     * @param[in]  aLength      The length of user specific TLVs in bytes.
-     *
-     * @retval kThreadError_None     Send MGMT_COMMISSIONER_SET successfully.
-     * @retval kThreadError_Failed   Send MGMT_COMMISSIONER_SET fail.
-     *
-     */
-    ThreadError SendSetCommissioningRequest(const otCommissioningDataset &aDataset,
-                                            const uint8_t *aTlvs, uint8_t aLength);
-
 private:
     static void HandleServerData(void *aContext, Coap::Header &aHeader, Message &aMessage,
                                  const Ip6::MessageInfo &aMessageInfo);

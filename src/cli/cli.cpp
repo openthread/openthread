@@ -2079,7 +2079,7 @@ void Interpreter::ProcessCommissioner(int argc, char *argv[])
             }
         }
 
-        SuccessOrExit(error = otSendCommissioningGet(mInstance, tlvs, static_cast<uint8_t>(length)));
+        SuccessOrExit(error = otSendMgmtCommissionerGet(mInstance, tlvs, static_cast<uint8_t>(length)));
     }
     else if (strcmp(argv[0], "mgmtset") == 0)
     {
@@ -2096,7 +2096,21 @@ void Interpreter::ProcessCommissioner(int argc, char *argv[])
         {
             VerifyOrExit(static_cast<size_t>(length) < sizeof(tlvs), error = kThreadError_NoBufs);
 
-            if (strcmp(argv[index], "steeringdata") == 0)
+            if (strcmp(argv[index], "locator") == 0)
+            {
+                VerifyOrExit(index < argc, error = kThreadError_Parse);
+                dataset.mIsLocatorSet = true;
+                SuccessOrExit(error = Interpreter::ParseLong(argv[++index], value));
+                dataset.mLocator = static_cast<uint16_t>(value);
+            }
+            else if (strcmp(argv[index], "sessionid") == 0)
+            {
+                VerifyOrExit(index < argc, error = kThreadError_Parse);
+                dataset.mIsSessionIdSet = true;
+                SuccessOrExit(error = Interpreter::ParseLong(argv[++index], value));
+                dataset.mSessionId = static_cast<uint16_t>(value);
+            }
+            else if (strcmp(argv[index], "steeringdata") == 0)
             {
                 VerifyOrExit((index + 1) < argc, error = kThreadError_Parse);
                 dataset.mIsSteeringDataSet = true;
@@ -2104,6 +2118,7 @@ void Interpreter::ProcessCommissioner(int argc, char *argv[])
                 VerifyOrExit(static_cast<size_t>(length) <= OT_STEERING_DATA_MAX_LENGTH, error = kThreadError_NoBufs);
                 VerifyOrExit(Interpreter::Hex2Bin(argv[index], dataset.mSteeringData.m8, static_cast<uint16_t>(length)) >= 0,
                              error = kThreadError_Parse);
+                dataset.mSteeringData.mLength = length;
                 length = 0;
             }
             else if (strcmp(argv[index], "joinerudpport") == 0)
@@ -2127,7 +2142,7 @@ void Interpreter::ProcessCommissioner(int argc, char *argv[])
             }
         }
 
-        SuccessOrExit(error = otSendCommissioningSet(mInstance, &dataset, tlvs, static_cast<uint8_t>(length)));
+        SuccessOrExit(error = otSendMgmtCommissionerSet(mInstance, &dataset, tlvs, static_cast<uint8_t>(length)));
     }
 
 exit:

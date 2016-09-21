@@ -138,7 +138,7 @@ ThreadError otCommissionerPanIdQuery(otInstance *aInstance, uint16_t aPanId, uin
  * @retval kThreadError_NoBufs       Insufficient buffer space to send.
  *
  */
-ThreadError otSendCommissioningGet(otInstance *, const uint8_t *aTlvs, uint8_t aLength);
+ThreadError otSendMgmtCommissionerGet(otInstance *, const uint8_t *aTlvs, uint8_t aLength);
 
 /**
  * This function sends MGMT_COMMISSIONER_SET.
@@ -152,8 +152,8 @@ ThreadError otSendCommissioningGet(otInstance *, const uint8_t *aTlvs, uint8_t a
  * @retval kThreadError_NoBufs       Insufficient buffer space to send.
  *
  */
-ThreadError otSendCommissioningSet(otInstance *, const otCommissioningDataset *aDataset, const uint8_t *aTlvs,
-                                   uint8_t aLength);
+ThreadError otSendMgmtCommissionerSet(otInstance *, const otCommissioningDataset *aDataset,
+                                      const uint8_t *aTlvs, uint8_t aLength);
 
 /**
  * @}

@@ -384,6 +384,7 @@ typedef struct otOperationalDataset
  */
 typedef struct otSteeringData
 {
+    uint8_t mLength;
     uint8_t m8[OT_STEERING_DATA_MAX_LENGTH];
 } otSteeringData;
 

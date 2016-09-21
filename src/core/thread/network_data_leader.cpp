@@ -528,27 +528,6 @@ exit:
     return error;
 }
 
-ThreadError Leader::SendGetCommissioningRequest(const uint8_t *aTlvs, uint8_t aLength)
-{
-    ThreadError error = kThreadError_None;
-
-    SuccessOrExit(error = NetworkData::SendGetCommissioningRequest(aTlvs, aLength));
-
-exit:
-    return error;
-}
-
-ThreadError Leader::SendSetCommissioningRequest(const otCommissioningDataset &aDataset,
-                                                const uint8_t *aTlvs, uint8_t aLength)
-{
-    ThreadError error = kThreadError_None;
-
-    SuccessOrExit(error = NetworkData::SendSetCommissioningRequest(aDataset, aTlvs, aLength));
-
-exit:
-    return error;
-}
-
 void Leader::HandleServerData(void *aContext, Coap::Header &aHeader, Message &aMessage,
                               const Ip6::MessageInfo &aMessageInfo)
 {
@@ -591,30 +570,44 @@ void Leader::HandleCommissioningSet(Coap::Header &aHeader, Message &aMessage, co
     uint8_t length = static_cast<uint8_t>(aMessage.GetLength() - aMessage.GetOffset());
     uint8_t tlvs[NetworkData::kMaxSize];
     MeshCoP::StateTlv::State state = MeshCoP::StateTlv::kAccept;
+    bool hasSessionId = false;
+    uint16_t sessionId;
 
     VerifyOrExit(mMle.GetDeviceState() == Mle::kDeviceStateLeader, state = MeshCoP::StateTlv::kReject);
 
     aMessage.Read(offset, length, tlvs);
 
-    // Session Id and Border Router Locator MUST NOT be set
+    // Session Id and Border Router Locator MUST NOT be set, and only includes commissioning data tlvs
     for (MeshCoP::Tlv *cur = reinterpret_cast<MeshCoP::Tlv *>(tlvs);
          cur < reinterpret_cast<MeshCoP::Tlv *>(tlvs + length);
          cur = cur->GetNext())
     {
-        if (cur->GetType() == MeshCoP::Tlv::kCommissionerSessionId ||
-            cur->GetType() == MeshCoP::Tlv::kBorderAgentLocator)
+        MeshCoP::Tlv::Type type = cur->GetType();
+
+        VerifyOrExit(type == MeshCoP::Tlv::kCommissionerSessionId ||
+                     type == MeshCoP::Tlv::kJoinerUdpPort || type == MeshCoP::Tlv::kSteeringData,
+                     state = MeshCoP::StateTlv::kReject);
+
+        if (type == MeshCoP::Tlv::kCommissionerSessionId)
         {
-            state = MeshCoP::StateTlv::kReject;
-            ExitNow();
+            hasSessionId = true;
+            sessionId = static_cast<MeshCoP::CommissionerSessionIdTlv *>(cur)->GetCommissionerSessionId();
         }
     }
 
+    VerifyOrExit(hasSessionId, state = MeshCoP::StateTlv::kReject);
+
     for (MeshCoP::Tlv *cur = reinterpret_cast<MeshCoP::Tlv *>(mTlvs + sizeof(CommissioningDataTlv));
-         cur < reinterpret_cast<MeshCoP::Tlv *>(mTlvs + length);
+         cur < reinterpret_cast<MeshCoP::Tlv *>(mTlvs + mLength);
          cur = cur->GetNext())
     {
-        if (cur->GetType() == MeshCoP::Tlv::kCommissionerSessionId ||
-            cur->GetType() == MeshCoP::Tlv::kBorderAgentLocator)
+        if (cur->GetType() == MeshCoP::Tlv::kCommissionerSessionId)
+        {
+            VerifyOrExit(sessionId ==
+                         static_cast<MeshCoP::CommissionerSessionIdTlv *>(cur)->GetCommissionerSessionId(),
+                         state = MeshCoP::StateTlv::kReject);
+        }
+        else if (cur->GetType() == MeshCoP::Tlv::kBorderAgentLocator)
         {
             memcpy(tlvs + length, reinterpret_cast<uint8_t *>(cur), cur->GetLength() + sizeof(MeshCoP::Tlv));
             length += (cur->GetLength() + sizeof(MeshCoP::Tlv));

@@ -1367,15 +1367,15 @@ ThreadError otCommissionerPanIdQuery(otInstance *, uint16_t aPanId, uint32_t aCh
                                                                  aCallback, aContext);
 }
 
-ThreadError otSendCommissioningGet(otInstance *, const uint8_t *aTlvs, uint8_t aLength)
+ThreadError otSendMgmtCommissionerGet(otInstance *, const uint8_t *aTlvs, uint8_t aLength)
 {
-    return sThreadNetif->GetNetworkDataLeader().SendGetCommissioningRequest(aTlvs, aLength);
+    return sThreadNetif->GetCommissioner().SendMgmtCommissionerGetRequest(aTlvs, aLength);
 }
 
-ThreadError otSendCommissioningSet(otInstance *, const otCommissioningDataset *aDataset, const uint8_t *aTlvs,
-                                   uint8_t aLength)
+ThreadError otSendMgmtCommissionerSet(otInstance *, const otCommissioningDataset *aDataset,
+                                      const uint8_t *aTlvs, uint8_t aLength)
 {
-    return sThreadNetif->GetNetworkDataLeader().SendSetCommissioningRequest(*aDataset, aTlvs, aLength);
+    return sThreadNetif->GetCommissioner().SendMgmtCommissionerSetRequest(*aDataset, aTlvs, aLength);
 }
 #endif  // OPENTHREAD_ENABLE_COMMISSIONER
 
