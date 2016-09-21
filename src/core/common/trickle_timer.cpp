@@ -117,7 +117,7 @@ void TrickleTimer::StartNewInterval(void)
     mPhase = kPhaseTransmit;
 
     // Initialize t
-    if (I == 0)
+    if (I < 2)
     {
         // Immediate interval, just set t to 0
         t = 0;
