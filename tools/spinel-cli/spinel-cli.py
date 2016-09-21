@@ -38,7 +38,7 @@ clear              diag-stop   leaderdata        rloc16
 contextreusedelay  discover    leaderweight      route                 
 counter            eidcache    masterkey         router                
 debug              enabled     mode              routerupgradethreshold
-debug-term         exit        netdataregister   scan                  
+debug-mem          exit        netdataregister   scan                  
 diag               extaddr     networkidtimeout  state                 
 diag-channel       extpanid    networkname       thread                
 diag-power         h           panid             v                     
@@ -51,6 +51,7 @@ __version__     = "0.1.0"
 
 
 FEATURE_USE_HDLC = 1
+FEATURE_USE_SLACC = 1
 
 DEBUG_ENABLE = 0
 
@@ -60,7 +61,6 @@ DEBUG_LOG_HDLC = 0
 DEBUG_LOG_PKT = DEBUG_ENABLE
 DEBUG_LOG_PROP = DEBUG_ENABLE
 DEBUG_LOG_TUN = 0
-DEBUG_TERM = 0
 DEBUG_CMD_RESPONSE = 0
 
 TIMEOUT_PROP = 2
@@ -79,10 +79,7 @@ import time
 import threading
 import traceback
 
-import blessed
-
 import optparse
-from optparse import OptionParser, Option, OptionValueError
 
 import string
 import shlex
@@ -107,12 +104,12 @@ from copy import copy
 from struct import pack
 from struct import unpack
 from select import select
+from collections import defaultdict
 
 logging.getLogger("scapy.runtime").setLevel(logging.ERROR)
-from scapy.all import IPv6
-from scapy.all import ICMPv6EchoRequest
-from scapy.all import ICMPv6EchoReply
-
+from scapy.layers.inet6 import IPv6
+from scapy.layers.inet6 import ICMPv6EchoRequest
+from scapy.layers.inet6 import ICMPv6EchoReply
 
 MASTER_PROMPT  = "spinel-cli"
 
@@ -154,36 +151,15 @@ logging.config.dictConfig({
 logger = logging.getLogger(__name__)
 
 
-# Terminal macros
-
-class Color:
-    END          = '\033[0m'
-    BOLD         = '\033[1m'
-    DIM          = '\033[2m'
-    UNDERLINE    = '\033[4m'
-    BLINK        = '\033[5m'
-    REVERSE      = '\033[7m'
-
-    CYAN         = '\033[96m'
-    PURPLE       = '\033[95m'
-    BLUE         = '\033[94m'
-    YELLOW       = '\033[93m'
-    GREEN        = '\033[92m'
-    RED          = '\033[91m'
-
-    BLACK        = "\033[30m"
-    DARKRED      = "\033[31m"
-    DARKGREEN    = "\033[32m"
-    DARKYELLOW   = "\033[33m"
-    DARKBLUE     = "\033[34m"
-    DARKMAGENTA  = "\033[35m"
-    DARKCYAN     = "\033[36m"
-    WHITE        = "\033[37m"
+#=========================================
+#   Spinel
+#=========================================
 
 SPINEL_RSSI_OVERRIDE            = 127
 
 SPINEL_HEADER_ASYNC             = 0x80
 SPINEL_HEADER_DEFAULT           = 0x81
+SPINEL_HEADER_EVENT_HANDLER     = 0x82
 
 # Spinel Commands
 
@@ -529,21 +505,6 @@ SPINEL_LAST_STATUS_MAP = {
 }
 
 #=========================================
-
-
-class DiagsTerminal(blessed.Terminal):
-    def print_title(self, strings=[]):
-        clr = term.green_reverse
-        title = term.white_reverse("  spinel-cli  ")
-        with term.location(x=0, y=0):
-            print (clr + term.center(title+clr))
-            for string in strings:
-                print (term.ljust(string))
-            print (term.ljust(" ") + term.normal)
-
-term = DiagsTerminal()
-
-#=========================================
     
 def hexify_chr(s): return "%02X" % ord(s)
 def hexify_int(i): return "%02X" % i
@@ -604,7 +565,8 @@ class StreamPipe(IStream):
         """ Create a stream object from a piped system call """
         self.pipe = subprocess.Popen(filename, shell = True,
                                      stdin = subprocess.PIPE,
-                                     stdout = subprocess.PIPE)
+                                     stdout = subprocess.PIPE,
+                                     stderr = sys.stdout.fileno())
 
     def write(self, data):
         if DEBUG_LOG_TX:
@@ -840,9 +802,9 @@ class SpinelCodec():
             result = result + pack("<B", v)
         return result
 
-    def encode(self, cmd_id, payload = None):
+    def encode(self, cmd_id, payload = None, tid=SPINEL_HEADER_DEFAULT):
         """ Encode the given payload as a Spinel frame. """
-        header = pack(">B", SPINEL_HEADER_DEFAULT)
+        header = pack(">B", tid)
         cmd = self.encode_i(cmd_id)
         pkt = header + cmd + payload
         return pkt
@@ -913,11 +875,55 @@ class SpinelPropertyHandler(SpinelCodec):
     def THREAD_STABLE_NETWORK_DATA(self, payload):   pass
     def THREAD_STABLE_NETWORK_DATA_VERSION(self, payload): pass
 
+    def handle_prefix_change(self, prefix, prefixlen, stable, flags, isLocal):
+        """ Add an ip address for each prefix on prefix change. """
+
+        global gWpanApi
+
+        ipaddr = str(ipaddress.IPv6Address(prefix))
+        ipaddr += str(gWpanApi.nodeid)
+        if DEBUG_LOG_PROP:
+            print "\n\n>>>> new PREFIX add ipaddr: "+ipaddr
+
+        valid = 1
+        preferred = 1
+        flags = 0
+        prefix = ipaddress.IPv6Interface(unicode(ipaddr))
+        arr = prefix.ip.packed
+        arr += pack('B', prefixlen) 
+        arr += pack('<L', valid)
+        arr += pack('<L', preferred)
+        arr += pack('B', flags)
+
+        gWpanApi.prop_insert_async(SPINEL_PROP_IPV6_ADDRESS_TABLE, 
+                                   arr, str(len(arr))+'s', 
+                                   SPINEL_HEADER_EVENT_HANDLER)
+
+
     def THREAD_ON_MESH_NETS(self, payload):
-        # TODO: automatically ipaddr add / remove addresses for each prefix.
-        # As done by cli.cpp Interpreter::HandleNetifStateChanged
-        # Needs to pass control to Cmd thread in order to run prop_set/get_value.
-        pass
+        if FEATURE_USE_SLACC:
+            # Automatically ipaddr add / remove addresses for each prefix.
+            # As done by cli.cpp Interpreter::HandleNetifStateChanged
+            pay = payload
+            while (len(pay) >= 22):
+                (structlen) = unpack('>H', pay[:2])
+                pay = pay[2:]
+                (prefix, prefixlen, stable, flags, isLocal) = unpack('16sBBBB', pay[:20])
+                self.handle_prefix_change(prefix, prefixlen, stable, flags, isLocal)
+                pay = pay[20:]
+        
+        # ==> ipaddrs - query current addresses
+        #
+        # for ipaddr in ipaddrs:
+        #     if lifetime > 0 and not in slaac prefixes
+        #             ==> remove
+
+        # for slaac prefix in prefixes: 
+        #     if no ipaddr with lifetime > 0 in prefix:
+        #          ==> add
+
+        return self.parse_D(payload)
+
 
     def THREAD_LOCAL_ROUTES(self, payload):          pass
     def THREAD_ASSISTING_PORTS(self, payload):       pass
@@ -1211,10 +1217,11 @@ class TunInterface():
 class WpanApi(SpinelCodec):
     """ Helper class to format wpan command packets """
 
-    def __init__(self, stream, useHdlc=FEATURE_USE_HDLC):
+    def __init__(self, stream, nodeid, useHdlc=FEATURE_USE_HDLC):
 
         self.tun_if = None
         self.serial = stream
+        self.nodeid = nodeid
 
         self.useHdlc = useHdlc
         if self.useHdlc:
@@ -1224,7 +1231,8 @@ class WpanApi(SpinelCodec):
         self.rx_pkt = []
 
         # Fire up threads
-        self.__queue_prop = Queue.Queue()
+        self.__queue_prop = defaultdict(Queue.Queue)
+        self.queue_register()
         self.__start_reader()
         self.tid_filter = SPINEL_HEADER_DEFAULT 
 
@@ -1239,8 +1247,8 @@ class WpanApi(SpinelCodec):
         self.receiver_thread.setDaemon(True)
         self.receiver_thread.start()
 
-    def transact(self, cmd_id, payload = ""):
-        pkt = self.encode(cmd_id, payload)
+    def transact(self, cmd_id, payload = "", tid=SPINEL_HEADER_DEFAULT):
+        pkt = self.encode(cmd_id, payload, tid)
         if DEBUG_LOG_PKT:
             msg = "TX Pay: (%i) %s " % (len(pkt), hexify_bytes(pkt))
             logger.debug(msg)
@@ -1293,10 +1301,6 @@ class WpanApi(SpinelCodec):
 
             self.parse_rx(self.rx_pkt)
 
-            # Output RX status window
-            if DEBUG_TERM:
-                msg = str(map(hexify_int,self.rx_pkt))
-                term.print_title(["RX: "+msg])
 
     class PropertyItem(object):
         """ Queue item for NCP response to property commands. """
@@ -1305,10 +1309,13 @@ class WpanApi(SpinelCodec):
             self.value = value
             self.tid = tid
 
+    def queue_register(self, tid=SPINEL_HEADER_DEFAULT):
+        return self.__queue_prop[tid]
+
     def queue_wait_prepare(self, prop_id, tid=SPINEL_HEADER_DEFAULT):
         self.tid_filter = tid
         self.prop_filter = prop_id
-        self.queue_clear()
+        self.queue_clear(tid)
 
     def queue_add(self, prop, value, tid):
         # Asynchronous handlers don't actually add to queue.
@@ -1321,25 +1328,25 @@ class WpanApi(SpinelCodec):
 
         if (tid != self.tid_filter) or (prop != self.prop_filter): return
         item = self.PropertyItem(prop, value, tid)
-        self.__queue_prop.put_nowait(item)
+        self.__queue_prop[tid].put_nowait(item)
         
-    def queue_clear(self):
-        with self.__queue_prop.mutex:
-            self.__queue_prop.queue.clear()
+    def queue_clear(self, tid):
+        with self.__queue_prop[tid].mutex:
+            self.__queue_prop[tid].queue.clear()
 
-    def queue_wait_for_prop(self, prop, timeout=TIMEOUT_PROP):
+    def queue_wait_for_prop(self, prop, tid=SPINEL_HEADER_DEFAULT, timeout=TIMEOUT_PROP):
         try:
-            item = self.__queue_prop.get(True, timeout)
+            item = self.__queue_prop[tid].get(True, timeout)
         except:
             return None
 
         while (item):
             if (item.tid == self.tid_filter) and (item.prop == prop):
                 return item
-            if (self.__queue_prop.empty()):
+            if (self.__queue_prop[tid].empty()):
                 return None
             else:
-                item = self.__queue_prop.get_nowait()
+                item = self.__queue_prop[tid].get_nowait()
         return None
 
 
@@ -1364,45 +1371,52 @@ class WpanApi(SpinelCodec):
 
         self.transact(SPINEL_CMD_PROP_VALUE_SET, pay)
 
-    def __prop_change_value(self, cmd, prop_id, value, format='B'):
+    def prop_insert_async(self, prop_id, value, format='B', tid=SPINEL_HEADER_DEFAULT):
+        pay = self.encode_i(prop_id)
+        if format != None:
+            pay += pack(format, value)
+        cmd = SPINEL_CMD_PROP_VALUE_INSERT
+        self.transact(cmd, pay, tid)
+
+    def __prop_change_value(self, cmd, prop_id, value, format='B', tid=SPINEL_HEADER_DEFAULT):
         """ Utility routine to change a property value over Spinel. """
         self.queue_wait_prepare(prop_id)
 
         pay = self.encode_i(prop_id)
         if format != None:
             pay += pack(format, value)
-        self.transact(cmd, pay)
+        self.transact(cmd, pay, tid)
 
-        result = self.queue_wait_for_prop(prop_id)
+        result = self.queue_wait_for_prop(prop_id, tid)
         if result:
             return result.value
         else:
             return None
     
-    def prop_get_value(self, prop_id):
+    def prop_get_value(self, prop_id, tid=SPINEL_HEADER_DEFAULT):
         """ Blocking routine to get a property value over Spinel. """
         self.queue_wait_prepare(prop_id)
 
         pay = self.encode_i(prop_id)
-        self.transact(SPINEL_CMD_PROP_VALUE_GET, pay)
+        self.transact(SPINEL_CMD_PROP_VALUE_GET, pay, tid)
 
-        result = self.queue_wait_for_prop(prop_id)
+        result = self.queue_wait_for_prop(prop_id, tid)
         if result: 
             return result.value
         else:
             return None
 
-    def prop_set_value(self, prop_id, value, format='B'):
+    def prop_set_value(self, prop_id, value, format='B', tid=SPINEL_HEADER_DEFAULT):
         """ Blocking routine to set a property value over Spinel. """
         return self.__prop_change_value(SPINEL_CMD_PROP_VALUE_SET, prop_id, 
                                         value, format)
 
-    def prop_insert_value(self, prop_id, value, format='B'):
+    def prop_insert_value(self, prop_id, value, format='B', tid=SPINEL_HEADER_DEFAULT):
         """ Blocking routine to insert a property value over Spinel. """
         return self.__prop_change_value(SPINEL_CMD_PROP_VALUE_INSERT, prop_id, 
                                         value, format)
         
-    def prop_remove_value(self, prop_id, value, format='B'):
+    def prop_remove_value(self, prop_id, value, format='B', tid=SPINEL_HEADER_DEFAULT):
         """ Blocking routine to remove a property value over Spinel. """
         return self.__prop_change_value(SPINEL_CMD_PROP_VALUE_REMOVE, prop_id, 
                                         value, format)
@@ -1412,11 +1426,12 @@ class WpanApi(SpinelCodec):
 
 class WpanDiagsCmd(Cmd, SpinelCodec):
     
-    def __init__(self, device, *a, **kw):
+    def __init__(self, device, nodeid, *a, **kw):
 
-        self.wpanApi = WpanApi(device)
+        self.wpanApi = WpanApi(device, nodeid)
         global gWpanApi
         gWpanApi = self.wpanApi
+        self.wpanApi.queue_register(SPINEL_HEADER_DEFAULT)
 
         Cmd.__init__(self)
         Cmd.identchars = string.ascii_letters + string.digits + '-'
@@ -1430,8 +1445,6 @@ class WpanDiagsCmd(Cmd, SpinelCodec):
         WpanDiagsCmd.command_names.sort()
             
         self.historyFileName = os.path.expanduser("~/.spinel-cli-history")
-
-
 
         try:
             import readline
@@ -1460,7 +1473,7 @@ class WpanDiagsCmd(Cmd, SpinelCodec):
         'clear',
         'history',
         'debug',
-        'debug-term',
+        'debug-mem',
 
         'v',
         'h',
@@ -1726,18 +1739,12 @@ class WpanDiagsCmd(Cmd, SpinelCodec):
 
         print "DEBUG_ENABLE = "+str(DEBUG_ENABLE)
 
-    def do_debugterm(self, line):
-        """
-        Enables a debug terminal display in the title bar for viewing 
-        raw NCP packets.
-        Usage: debug_term <1=enable | 0=disable>
-        """
-        global DEBUG_TERM
-        if line: line = int(line)
-        if line: 
-            DEBUG_TERM = 1
-        else:
-            DEBUG_TERM = 0
+    def do_debugmem(self, line):
+        from guppy import hpy
+        h = hpy()
+        print h.heap()
+        print
+        print h.heap().byrcs
 
 
     def do_channel(self, line):
@@ -2954,13 +2961,14 @@ if __name__ == "__main__":
     signal.signal(signal.SIGCONT, goodbye)
     signal.signal(signal.SIGABRT, goodbye)
     signal.signal(signal.SIGTERM, goodbye)
+    signal.signal(signal.SIGTRAP, goodbye)
     signal.signal(signal.SIGPIPE, goodbye)
 
     args = sys.argv[1:] 
 
-    optParser = OptionParser()
+    optParser = optparse.OptionParser()
 
-    optParser = OptionParser(usage=optparse.SUPPRESS_USAGE)
+    optParser = optparse.OptionParser(usage=optparse.SUPPRESS_USAGE)
     optParser.add_option("-u", "--uart", action="store", 
                          dest="uart", type="string")
     optParser.add_option("-p", "--pipe", action="store", 

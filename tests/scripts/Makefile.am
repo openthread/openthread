@@ -236,21 +236,8 @@ TESTS                                                              = \
     $(NULL)
 
 XFAIL_NCP_TESTS                                                        = \
-        thread-cert/Cert_5_3_07_DuplicateAddress.py                      \
-        thread-cert/Cert_5_6_01_NetworkDataRegisterBeforeAttachLeader.py \
-        thread-cert/Cert_5_6_02_NetworkDataRegisterBeforeAttachRouter.py \
-        thread-cert/Cert_5_6_03_NetworkDataRegisterAfterAttachLeader.py  \
-        thread-cert/Cert_5_6_04_NetworkDataRegisterAfterAttachRouter.py  \
-        thread-cert/Cert_5_6_05_NetworkDataRegisterAfterAttachRouter.py  \
         thread-cert/Cert_5_6_06_NetworkDataExpiration.py                 \
-        thread-cert/Cert_5_6_07_NetworkDataRequestREED.py                \
         thread-cert/Cert_5_6_08_ContextManagement.py                     \
-        thread-cert/Cert_6_3_02_NetworkDataUpdate.py                     \
-        thread-cert/Cert_7_1_01_BorderRouterAsLeader.py                  \
-        thread-cert/Cert_7_1_02_BorderRouterAsRouter.py                  \
-        thread-cert/Cert_7_1_03_BorderRouterAsLeader.py                  \
-        thread-cert/Cert_7_1_04_BorderRouterAsRouter.py                  \
-        thread-cert/Cert_7_1_05_BorderRouterAsRouter.py                  \
         thread-cert/Cert_9_2_13_EnergyScan.py                            \
         thread-cert/Cert_9_2_14_PanIdQuery.py                            \
         $(NULL)
