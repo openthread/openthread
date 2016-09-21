@@ -72,7 +72,6 @@ cd /tmp || die
     }
 
     [ $BUILD_TARGET != posix-ncp ] || {
-        pip install blessed || die
         pip install ipaddress || die
         pip install scapy || die
         pip install pyserial || die
