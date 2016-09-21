@@ -1362,7 +1362,7 @@ exit:
         if (message->GetOffset() >= message->GetLength())
         {
             mReassemblyList.Dequeue(*message);
-            error = HandleDatagram(*message, aMessageInfo);
+            HandleDatagram(*message, aMessageInfo);
         }
     }
     else if (message != NULL)
@@ -1438,7 +1438,7 @@ exit:
 
     if (error == kThreadError_None)
     {
-        error = HandleDatagram(*message, aMessageInfo);
+        HandleDatagram(*message, aMessageInfo);
     }
     else if (message != NULL)
     {
