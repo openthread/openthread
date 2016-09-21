@@ -102,7 +102,7 @@ ThreadError Icmp::SendEchoRequest(Message &aMessage, const MessageInfo &aMessage
     aMessage.SetOffset(0);
     SuccessOrExit(error = mIp6.SendDatagram(aMessage, messageInfoLocal, kProtoIcmp6));
 
-    otLogInfoIcmp("Sent echo request\n");
+    otLogInfoIcmp("Sent echo request: (seq = %d)\n", icmpHeader.GetSequence());
 
 exit:
     return error;
@@ -226,7 +226,8 @@ ThreadError Icmp::HandleEchoRequest(Message &aRequestMessage, const MessageInfo 
 
     SuccessOrExit(error = mIp6.SendDatagram(*replyMessage, replyMessageInfo, kProtoIcmp6));
 
-    otLogInfoIcmp("Sent Echo Reply\n");
+    replyMessage->Read(replyMessage->GetOffset(), sizeof(icmp6Header), &icmp6Header);
+    otLogInfoIcmp("Sent Echo Reply (seq = %d)\n", icmp6Header.GetSequence());
 
 exit:
 

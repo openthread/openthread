@@ -221,6 +221,10 @@ private:
     static void ScheduleTransmissionTask(void *aContext);
     void ScheduleTransmissionTask(void);
 
+    ThreadError AddPendingSrcMatchEntries();
+    ThreadError AddSrcMatchEntry(Child &aChild);
+    void ClearSrcMatchEntry(Child &aChild);
+
     Mac::Receiver mMacReceiver;
     Mac::Sender mMacSender;
     Timer mDiscoverTimer;
@@ -259,6 +263,8 @@ private:
     Mac::Mac &mMac;
     Mle::MleRouter &mMle;
     NetworkData::Leader &mNetworkData;
+
+    bool mSrcMatchEnabled;
 };
 
 /**
