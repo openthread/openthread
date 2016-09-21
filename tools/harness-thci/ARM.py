@@ -1570,11 +1570,29 @@ class ARM(IThci):
     def setSleepyNodePollTime(self):
         pass
 
-    def diagnosticGet(self, strDestinationAddr, TLV_ids=0):
-        pass
+    def diagnosticGet(self, strDestinationAddr, listTLV_ids=[]):
+        if not listTLV_ids:
+            return
 
-    def diagnosticReset(self, strDestinationAddr, iTLV_id):
-        pass
+        if not len(listTLV_ids):
+            return
+
+        cmd = 'networkdiagnostic get %s %s' % (strDestinationAddr, ' '.join([str(tlv) for tlv in listTLV_ids]))
+        print(cmd)
+
+        return self.__sendCommand(cmd)
+
+    def diagnosticReset(self, strDestinationAddr, listTLV_ids=[]):
+        if not listTLV_ids:
+            return
+
+        if not len(listTLV_ids):
+            return
+
+        cmd = 'networkdiagnostic reset %s %s' % (strDestinationAddr, ' '.join([str(tlv) for tlv in listTLV_ids]))
+        print(cmd)
+
+        return self.__sendCommand(cmd)
 
     def startNativeCommissioner(self, strPSKc='GRLpassWord'):
         pass
