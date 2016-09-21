@@ -223,7 +223,9 @@ ThreadError NetworkDiagnostic::FillChildTable(ChildTableTlv &aTlv)
         const Child &child = children[i];
         ChildTableEntry &entry = aTlv.GetEntry(count);
         count++;
-        entry.SetTimeout(child.mTimeout >> 4);
+        uint8_t timeout = 0;
+        while (static_cast<uint32_t>(1 << timeout) < child.mTimeout) timeout++;
+        entry.SetTimeout(timeout + 4);
         entry.SetChildId(child.mValid.mRloc16);
         entry.SetMode(child.mMode);
     }
@@ -237,7 +239,7 @@ void NetworkDiagnostic::HandleDiagnosticGet(Coap::Header &aHeader, Message &aMes
                                             const Ip6::MessageInfo &aMessageInfo)
 {
     uint8_t tlvTypeSet[kNumTlvTypes];
-    uint8_t numTlvTypes;
+    uint16_t numTlvTypes;
     ThreadError error = kThreadError_None;
     Message *message = NULL;
     Coap::Header header;
@@ -433,7 +435,7 @@ void NetworkDiagnostic::HandleDiagnosticReset(Coap::Header &aHeader, Message &aM
 {
     ThreadError error = kThreadError_None;
     uint8_t tlvTypeSet[kNumResetTlvTypes];
-    uint8_t numTlvTypes;
+    uint16_t numTlvTypes;
     Message *message = NULL;
     Coap::Header header;
     Ip6::MessageInfo messageInfo;

@@ -1189,7 +1189,7 @@ public:
      * @param[in]  aVersion  The Version value.
      *
      */
-    void SetTimeout(uint16_t aTimeout) { mTimeout = aTimeout; }
+    void SetTimeout(uint8_t aTimeout) { mTimeout = aTimeout; }
 
     /**
      * This method returns the Version value.
@@ -1197,7 +1197,7 @@ public:
      * @returns The Version value.
      *
      */
-    uint8_t GetChildId(void) const { return mChildId; }
+    uint16_t GetChildId(void) const { return mChildId; }
 
     /**
      * This method sets the Version value.
@@ -1205,7 +1205,7 @@ public:
      * @param[in]  aVersion  The Version value.
      *
      */
-    void SetChildId(uint8_t aChildId) { mChildId = aChildId; }
+    void SetChildId(uint16_t aChildId) { mChildId = aChildId; }
 
     /**
      * This method returns the Version value.
@@ -1221,13 +1221,13 @@ public:
      * @param[in]  aVersion  The Version value.
      *
      */
-    void SetMode(bool aMode) { mMode = aMode; }
+    void SetMode(uint8_t aMode) { mMode = aMode; }
 
 
 private:
     uint8_t mTimeout: 5;
-    uint8_t mReserved: 3;
-    uint8_t mChildId: 8;
+    uint8_t mReserved: 2;
+    uint16_t mChildId: 9;
     uint8_t mMode: 8;
 } OT_TOOL_PACKED_END;
 
