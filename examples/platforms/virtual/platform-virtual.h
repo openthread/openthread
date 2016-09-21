@@ -48,6 +48,7 @@
 #include <windows.h>
 #include <time.h>
 #define POLL WSAPoll
+#define ssize_t int
 #else
 #include <arpa/inet.h>
 #include <fcntl.h>

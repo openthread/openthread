@@ -458,7 +458,7 @@ bool otPlatRadioGetPromiscuous(otInstance *aInstance)
 
 void radioReceive(otInstance *aInstance)
 {
-    int rval = recvfrom(sSockFd, (char *)&sReceiveMessage, sizeof(sReceiveMessage), 0, NULL, NULL);
+    ssize_t rval = recvfrom(sSockFd, (char *)&sReceiveMessage, sizeof(sReceiveMessage), 0, NULL, NULL);
 
     if (rval < 0)
     {
@@ -571,7 +571,7 @@ void radioTransmit(const struct RadioMessage *msg, const struct RadioPacket *pkt
 
     for (i = 1; i <= WELLKNOWN_NODE_ID; i++)
     {
-        int rval;
+        ssize_t rval;
 
         if (NODE_ID == i)
         {

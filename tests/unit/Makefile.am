@@ -135,8 +135,8 @@ test_toolchain_LDADD         = $(COMMON_LDADD)
 test_toolchain_SOURCES       = test_platform.cpp test_toolchain.cpp
 
 if OPENTHREAD_ENABLE_DIAG
-test_diag_LDADD              = $(top_builddir)/src/diag/libopenthread-diag.a                  \
-                               $(top_builddir)/examples/platforms/posix/libopenthread-posix.a \
+test_diag_LDADD              = $(top_builddir)/src/diag/libopenthread-diag.a                    \
+                               $(top_builddir)/examples/platforms/virtual/libopenthread-posix.a \
                                $(NULL)
 test_diag_SOURCES            = test_diag.cpp
 endif
