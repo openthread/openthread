@@ -458,7 +458,7 @@ bool otPlatRadioGetPromiscuous(otInstance *aInstance)
 
 void radioReceive(otInstance *aInstance)
 {
-    int rval = recvfrom(sSockFd, (char*)&sReceiveMessage, sizeof(sReceiveMessage), 0, NULL, NULL);
+    int rval = recvfrom(sSockFd, (char *)&sReceiveMessage, sizeof(sReceiveMessage), 0, NULL, NULL);
 
     if (rval < 0)
     {
@@ -579,7 +579,7 @@ void radioTransmit(const struct RadioMessage *msg, const struct RadioPacket *pkt
         }
 
         sockaddr.sin_port = htons(9000 + sPortOffset + i);
-        rval = sendto(sSockFd, (const char*)msg, 1 + pkt->mLength,
+        rval = sendto(sSockFd, (const char *)msg, 1 + pkt->mLength,
                       0, (struct sockaddr *)&sockaddr, sizeof(sockaddr));
 
         if (rval < 0)

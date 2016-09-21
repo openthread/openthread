@@ -47,16 +47,16 @@
     VerifyOrExit(offset < sizeof(logString), logString[sizeof(logString) -1 ] = 0)
 
 #ifdef _WIN32
-void GetTimeString(char* timeString, size_t length)
+void GetTimeString(char *timeString, size_t length)
 {
     struct tm tmLocalTime;
     time_t now = time(NULL);
-    (void)localtime_s(&tmLocalTime, &now); 
-    
+    (void)localtime_s(&tmLocalTime, &now);
+
     strftime(timeString, length, "%Y-%m-%d %H:%M:%S ", &tmLocalTime);
 }
 #else
-void GetTimeString(char* timeString, size_t length)
+void GetTimeString(char *timeString, size_t length)
 {
     struct timeval tv;
     size_t offset;
