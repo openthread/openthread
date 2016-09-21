@@ -3295,15 +3295,12 @@ exit:
     }
 }
 
-ThreadError MleRouter::AppendConnectivity(Message &aMessage)
+void MleRouter::FillConnectivityTlv(ConnectivityTlv &aTlv)
 {
-    ThreadError error;
-    ConnectivityTlv tlv;
+    ConnectivityTlv &tlv = aTlv;
     uint8_t cost;
     uint8_t lqi;
     uint8_t numChildren = 0;
-
-    tlv.Init();
 
     for (int i = 0; i < mMaxChildrenAllowed; i++)
     {
@@ -3405,6 +3402,15 @@ ThreadError MleRouter::AppendConnectivity(Message &aMessage)
     tlv.SetIdSequence(mRouterIdSequence);
     tlv.SetSedBufferSize(1280);
     tlv.SetSedDatagramCount(1);
+}
+
+ThreadError MleRouter::AppendConnectivity(Message &aMessage)
+{
+    ThreadError error;
+    ConnectivityTlv tlv;
+
+    tlv.Init();
+    FillConnectivityTlv(tlv);
 
     SuccessOrExit(error = aMessage.Append(&tlv, sizeof(tlv)));
 
@@ -3455,14 +3461,11 @@ exit:
     return error;
 }
 
-ThreadError MleRouter::AppendRoute(Message &aMessage)
+void MleRouter::FillRouteTlv(RouteTlv &tlv)
 {
-    ThreadError error;
-    RouteTlv tlv;
     uint8_t routeCount = 0;
     uint8_t cost;
 
-    tlv.Init();
     tlv.SetRouterIdSequence(mRouterIdSequence);
     tlv.ClearRouterIdMask();
 
@@ -3515,8 +3518,15 @@ ThreadError MleRouter::AppendRoute(Message &aMessage)
     }
 
     tlv.SetRouteDataLength(routeCount);
-    SuccessOrExit(error = aMessage.Append(&tlv, sizeof(Tlv) + tlv.GetLength()));
+}
 
+ThreadError MleRouter::AppendRoute(Message &aMessage)
+{
+    ThreadError error;
+    RouteTlv tlv;
+    tlv.Init();
+    FillRouteTlv(tlv);
+    SuccessOrExit(error = aMessage.Append(&tlv, sizeof(Tlv) + tlv.GetLength()));
 exit:
     return error;
 }
