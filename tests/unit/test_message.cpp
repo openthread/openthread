@@ -32,14 +32,6 @@
 #include <common/message.hpp>
 #include <string.h>
 
-extern"C" void otSignalTaskletPending(otInstance *)
-{
-}
-
-extern "C" void otPlatDiagAlarmFired(otInstance *)
-{
-}
-
 void TestMessage(void)
 {
     Thread::MessagePool messagePool;
@@ -68,9 +60,11 @@ void TestMessage(void)
                   "Message::Free failed\n");
 }
 
+#ifdef ENABLE_TEST_MAIN
 int main(void)
 {
     TestMessage();
     printf("All tests passed\n");
     return 0;
 }
+#endif

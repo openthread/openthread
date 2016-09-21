@@ -165,9 +165,11 @@ void TestDiag()
     }
 }
 
+#ifdef ENABLE_TEST_MAIN
 int main(void)
 {
     TestDiag();
     printf("All tests passed\n");
     return 0;
 }
+#endif

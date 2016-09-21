@@ -34,10 +34,6 @@
 
 namespace Thread {
 
-extern"C" void otSignalTaskletPending(otInstance *)
-{
-}
-
 enum
 {
     kMaxRssValue        = 0,
@@ -342,6 +338,7 @@ void TestLinkQualityCalculations(void)
 
 }  // namespace Thread
 
+#ifdef ENABLE_TEST_MAIN
 int main(void)
 {
     Thread::TestRssAveraging();
@@ -349,3 +346,4 @@ int main(void)
     printf("All tests passed\n");
     return 0;
 }
+#endif

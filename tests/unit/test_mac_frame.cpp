@@ -34,10 +34,6 @@
 
 namespace Thread {
 
-extern"C" void otSignalTaskletPending(otInstance *)
-{
-}
-
 void TestMacHeader(void)
 {
     static const struct
@@ -88,9 +84,11 @@ void TestMacHeader(void)
 
 }  // namespace Thread
 
+#ifdef ENABLE_TEST_MAIN
 int main(void)
 {
     Thread::TestMacHeader();
     printf("All tests passed\n");
     return 0;
 }
+#endif
