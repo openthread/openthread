@@ -927,8 +927,7 @@ exit:
 
 void Mle::HandleNetifStateChanged(uint32_t aFlags, void *aContext)
 {
-    Mle *obj = reinterpret_cast<Mle *>(aContext);
-    obj->HandleNetifStateChanged(aFlags);
+    static_cast<Mle *>(aContext)->HandleNetifStateChanged(aFlags);
 }
 
 void Mle::HandleNetifStateChanged(uint32_t aFlags)
@@ -970,8 +969,7 @@ void Mle::HandleNetifStateChanged(uint32_t aFlags)
 
 void Mle::HandleParentRequestTimer(void *aContext)
 {
-    Mle *obj = reinterpret_cast<Mle *>(aContext);
-    obj->HandleParentRequestTimer();
+    static_cast<Mle *>(aContext)->HandleParentRequestTimer();
 }
 
 void Mle::HandleParentRequestTimer(void)
@@ -1217,8 +1215,7 @@ exit:
 
 void Mle::HandleSendChildUpdateRequest(void *aContext)
 {
-    Mle *obj = reinterpret_cast<Mle *>(aContext);
-    obj->HandleSendChildUpdateRequest();
+    static_cast<Mle *>(aContext)->HandleSendChildUpdateRequest();
 }
 
 void Mle::HandleSendChildUpdateRequest(void)
@@ -1365,8 +1362,8 @@ exit:
 
 void Mle::HandleUdpReceive(void *aContext, otMessage aMessage, const otMessageInfo *aMessageInfo)
 {
-    Mle *obj = reinterpret_cast<Mle *>(aContext);
-    obj->HandleUdpReceive(*static_cast<Message *>(aMessage), *static_cast<const Ip6::MessageInfo *>(aMessageInfo));
+    static_cast<Mle *>(aContext)->HandleUdpReceive(*static_cast<Message *>(aMessage),
+                                                   *static_cast<const Ip6::MessageInfo *>(aMessageInfo));
 }
 
 void Mle::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
@@ -1779,7 +1776,7 @@ ThreadError Mle::HandleParentResponse(const Message &aMessage, const Ip6::Messag
                                       uint32_t aKeySequence)
 {
     ThreadError error = kThreadError_None;
-    const ThreadMessageInfo *threadMessageInfo = reinterpret_cast<const ThreadMessageInfo *>(aMessageInfo.mLinkInfo);
+    const ThreadMessageInfo *threadMessageInfo = static_cast<const ThreadMessageInfo *>(aMessageInfo.mLinkInfo);
     ResponseTlv response;
     SourceAddressTlv sourceAddress;
     LeaderDataTlv leaderData;
@@ -2227,7 +2224,7 @@ exit:
 ThreadError Mle::HandleDiscoveryResponse(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
     ThreadError error = kThreadError_None;
-    const ThreadMessageInfo *threadMessageInfo = reinterpret_cast<const ThreadMessageInfo *>(aMessageInfo.mLinkInfo);
+    const ThreadMessageInfo *threadMessageInfo = static_cast<const ThreadMessageInfo *>(aMessageInfo.mLinkInfo);
     Tlv tlv;
     MeshCoP::Tlv meshcopTlv;
     MeshCoP::DiscoveryResponseTlv discoveryResponse;

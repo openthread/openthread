@@ -227,8 +227,7 @@ void AddressResolver::HandleUdpReceive(void *aContext, otMessage aMessage, const
 void AddressResolver::HandleAddressNotification(void *aContext, Coap::Header &aHeader, Message &aMessage,
                                                 const Ip6::MessageInfo &aMessageInfo)
 {
-    AddressResolver *obj = reinterpret_cast<AddressResolver *>(aContext);
-    obj->HandleAddressNotification(aHeader, aMessage, aMessageInfo);
+    static_cast<AddressResolver *>(aContext)->HandleAddressNotification(aHeader, aMessage, aMessageInfo);
 }
 
 void AddressResolver::HandleAddressNotification(Coap::Header &aHeader, Message &aMessage,
@@ -429,8 +428,7 @@ exit:
 void AddressResolver::HandleAddressError(void *aContext, Coap::Header &aHeader,
                                          Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
-    AddressResolver *obj = reinterpret_cast<AddressResolver *>(aContext);
-    obj->HandleAddressError(aHeader, aMessage, aMessageInfo);
+    static_cast<AddressResolver *>(aContext)->HandleAddressError(aHeader, aMessage, aMessageInfo);
 }
 
 void AddressResolver::HandleAddressError(Coap::Header &aHeader, Message &aMessage,
@@ -508,8 +506,7 @@ exit:
 void AddressResolver::HandleAddressQuery(void *aContext, Coap::Header &aHeader, Message &aMessage,
                                          const Ip6::MessageInfo &aMessageInfo)
 {
-    AddressResolver *obj = reinterpret_cast<AddressResolver *>(aContext);
-    obj->HandleAddressQuery(aHeader, aMessage, aMessageInfo);
+    static_cast<AddressResolver *>(aContext)->HandleAddressQuery(aHeader, aMessage, aMessageInfo);
 }
 
 void AddressResolver::HandleAddressQuery(Coap::Header &aHeader, Message &aMessage,
@@ -622,8 +619,7 @@ exit:
 
 void AddressResolver::HandleTimer(void *aContext)
 {
-    AddressResolver *obj = reinterpret_cast<AddressResolver *>(aContext);
-    obj->HandleTimer();
+    static_cast<AddressResolver *>(aContext)->HandleTimer();
 }
 
 void AddressResolver::HandleTimer()
@@ -675,8 +671,7 @@ void AddressResolver::HandleTimer()
 void AddressResolver::HandleDstUnreach(void *aContext, Message &aMessage, const Ip6::MessageInfo &aMessageInfo,
                                        const Ip6::IcmpHeader &aIcmpHeader)
 {
-    AddressResolver *obj = reinterpret_cast<AddressResolver *>(aContext);
-    obj->HandleDstUnreach(aMessage, aMessageInfo, aIcmpHeader);
+    static_cast<AddressResolver *>(aContext)->HandleDstUnreach(aMessage, aMessageInfo, aIcmpHeader);
 
     (void)aMessageInfo;
 }
