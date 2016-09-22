@@ -535,7 +535,7 @@ void NcpBase::HandleRawFrame(const RadioPacket *aFrame)
             SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0,
             SPINEL_CMD_PROP_VALUE_IS,
             SPINEL_PROP_STREAM_RAW,
-            aFrame->mLength
+            aFrame->mLength + 2 // +2 for FCS
         )
     );
 
@@ -545,6 +545,15 @@ void NcpBase::HandleRawFrame(const RadioPacket *aFrame)
         errorCode = OutboundFrameFeedData(
             aFrame->mPsdu,
             aFrame->mLength
+        )
+    );
+
+    // Append the FCS
+    SuccessOrExit(
+        errorCode = OutboundFrameFeedPacked(
+            "CC",
+            (aFrame->mFcs >> 0) & 0xFF,
+            (aFrame->mFcs >> 8) & 0xFF
         )
     );
 
