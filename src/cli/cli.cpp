@@ -323,11 +323,18 @@ void Interpreter::ProcessChild(int argc, char *argv[])
     ThreadError error = kThreadError_None;
     otChildInfo childInfo;
     long value;
+    bool isTable = false;
 
     VerifyOrExit(argc > 0, error = kThreadError_Parse);
 
-    if (strcmp(argv[0], "list") == 0)
+    if (strcmp(argv[0], "list") == 0 || (isTable = (strcmp(argv[0], "table") == 0)))
     {
+        if (isTable)
+        {
+            sServer->OutputFormat("| ID  | RLOC16 | Timeout    | Age        | LQI In | C_VN |R|S|D|N| Extended MAC     |\r\n");
+            sServer->OutputFormat("+-----+--------+------------+------------+--------+------+-+-+-+-+------------------+\r\n");
+        }
+
         for (uint8_t i = 0; ; i++)
         {
             if (otGetChildInfoByIndex(mInstance, i, &childInfo) != kThreadError_None)
@@ -338,7 +345,31 @@ void Interpreter::ProcessChild(int argc, char *argv[])
 
             if (childInfo.mTimeout > 0)
             {
-                sServer->OutputFormat("%d ", childInfo.mChildId);
+                if (isTable)
+                {
+                    sServer->OutputFormat("| %3d ", childInfo.mChildId);
+                    sServer->OutputFormat("| 0x%04x ", childInfo.mRloc16);
+                    sServer->OutputFormat("| %10d ", childInfo.mTimeout);
+                    sServer->OutputFormat("| %10d ", childInfo.mAge);
+                    sServer->OutputFormat("| %6d ", childInfo.mLinkQualityIn);
+                    sServer->OutputFormat("| %4d ", childInfo.mNetworkDataVersion);
+                    sServer->OutputFormat("|%1d", childInfo.mRxOnWhenIdle);
+                    sServer->OutputFormat("|%1d", childInfo.mSecureDataRequest);
+                    sServer->OutputFormat("|%1d", childInfo.mFullFunction);
+                    sServer->OutputFormat("|%1d", childInfo.mFullNetworkData);
+                    sServer->OutputFormat("| ");
+
+                    for (size_t j = 0; j < sizeof(childInfo.mExtAddress); j++)
+                    {
+                        sServer->OutputFormat("%02x", childInfo.mExtAddress.m8[j]);
+                    }
+
+                    sServer->OutputFormat(" |\r\n");
+                }
+                else
+                {
+                    sServer->OutputFormat("%d ", childInfo.mChildId);
+                }
             }
         }
     }
@@ -1621,11 +1652,18 @@ void Interpreter::ProcessRouter(int argc, char *argv[])
     ThreadError error = kThreadError_None;
     otRouterInfo routerInfo;
     long value;
+    bool isTable = false;
 
     VerifyOrExit(argc > 0, error = kThreadError_Parse);
 
-    if (strcmp(argv[0], "list") == 0)
+    if (strcmp(argv[0], "list") == 0 || (isTable = (strcmp(argv[0], "table") == 0)))
     {
+        if (isTable)
+        {
+            sServer->OutputFormat("| ID | RLOC16 | Next Hop | Path Cost | LQI In | LQI Out | Age | Extended MAC     |\r\n");
+            sServer->OutputFormat("+----+--------+----------+-----------+--------+---------+-----+------------------+\r\n");
+        }
+
         for (uint8_t i = 0; ; i++)
         {
             if (otGetRouterInfo(mInstance, i, &routerInfo) != kThreadError_None)
@@ -1636,7 +1674,28 @@ void Interpreter::ProcessRouter(int argc, char *argv[])
 
             if (routerInfo.mAllocated)
             {
-                sServer->OutputFormat("%d ", i);
+                if (isTable)
+                {
+                    sServer->OutputFormat("| %2d ", routerInfo.mRouterId);
+                    sServer->OutputFormat("| 0x%04x ", routerInfo.mRloc16);
+                    sServer->OutputFormat("| %8d ", routerInfo.mNextHop);
+                    sServer->OutputFormat("| %9d ", routerInfo.mPathCost);
+                    sServer->OutputFormat("| %6d ", routerInfo.mLinkQualityIn);
+                    sServer->OutputFormat("| %7d ", routerInfo.mLinkQualityOut);
+                    sServer->OutputFormat("| %3d ", routerInfo.mAge);
+                    sServer->OutputFormat("| ");
+
+                    for (size_t j = 0; j < sizeof(routerInfo.mExtAddress); j++)
+                    {
+                        sServer->OutputFormat("%02x", routerInfo.mExtAddress.m8[j]);
+                    }
+
+                    sServer->OutputFormat(" |\r\n");
+                }
+                else
+                {
+                    sServer->OutputFormat("%d ", i);
+                }
             }
         }
     }
@@ -1912,8 +1971,10 @@ void Interpreter::ProcessCommissioner(int argc, char *argv[])
 
     if (strcmp(argv[0], "start") == 0)
     {
+        const char *provisioningUrl;
         VerifyOrExit(argc > 1, error = kThreadError_Parse);
-        otCommissionerStart(mInstance, argv[1]);
+        provisioningUrl = argc > 2 ? argv[2] : NULL;
+        otCommissionerStart(mInstance, argv[1], provisioningUrl);
     }
     else if (strcmp(argv[0], "stop") == 0)
     {
@@ -2022,8 +2083,10 @@ void Interpreter::ProcessJoiner(int argc, char *argv[])
 
     if (strcmp(argv[0], "start") == 0)
     {
+        const char *provisioningUrl;
         VerifyOrExit(argc > 1, error = kThreadError_Parse);
-        otJoinerStart(mInstance, argv[1]);
+        provisioningUrl = (argc > 2) ? argv[2] : NULL;
+        otJoinerStart(mInstance, argv[1], provisioningUrl);
     }
     else if (strcmp(argv[0], "stop") == 0)
     {

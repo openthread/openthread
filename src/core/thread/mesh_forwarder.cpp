@@ -170,8 +170,7 @@ void MeshForwarder::HandleResolved(const Ip6::Address &aEid, ThreadError aError)
 
 void MeshForwarder::ScheduleTransmissionTask(void *aContext)
 {
-    MeshForwarder *obj = reinterpret_cast<MeshForwarder *>(aContext);
-    obj->ScheduleTransmissionTask();
+    static_cast<MeshForwarder *>(aContext)->ScheduleTransmissionTask();
 }
 
 void MeshForwarder::ScheduleTransmissionTask()
@@ -242,7 +241,7 @@ ThreadError MeshForwarder::SendMessage(Message &aMessage)
                  (neighbor->mMode & Mle::ModeTlv::kModeRxOnWhenIdle) == 0)
         {
             // destined for a sleepy child
-            aMessage.SetChildMask(mMle.GetChildIndex(*reinterpret_cast<Child *>(neighbor)));
+            aMessage.SetChildMask(mMle.GetChildIndex(*static_cast<Child *>(neighbor)));
         }
         else
         {
@@ -259,7 +258,7 @@ ThreadError MeshForwarder::SendMessage(Message &aMessage)
             (neighbor->mMode & Mle::ModeTlv::kModeRxOnWhenIdle) == 0)
         {
             // destined for a sleepy child
-            aMessage.SetChildMask(mMle.GetChildIndex(*reinterpret_cast<Child *>(neighbor)));
+            aMessage.SetChildMask(mMle.GetChildIndex(*static_cast<Child *>(neighbor)));
         }
         else
         {
@@ -613,8 +612,7 @@ uint32_t MeshForwarder::GetPollPeriod()
 
 void MeshForwarder::HandlePollTimer(void *aContext)
 {
-    MeshForwarder *obj = reinterpret_cast<MeshForwarder *>(aContext);
-    obj->HandlePollTimer();
+    static_cast<MeshForwarder *>(aContext)->HandlePollTimer();
 }
 
 void MeshForwarder::HandlePollTimer()
@@ -678,8 +676,7 @@ ThreadError MeshForwarder::GetMacDestinationAddress(const Ip6::Address &aIp6Addr
 
 ThreadError MeshForwarder::HandleFrameRequest(void *aContext, Mac::Frame &aFrame)
 {
-    MeshForwarder *obj = reinterpret_cast<MeshForwarder *>(aContext);
-    return obj->HandleFrameRequest(aFrame);
+    return static_cast<MeshForwarder *>(aContext)->HandleFrameRequest(aFrame);
 }
 
 ThreadError MeshForwarder::HandleFrameRequest(Mac::Frame &aFrame)
@@ -982,8 +979,7 @@ ThreadError MeshForwarder::SendFragment(Message &aMessage, Mac::Frame &aFrame)
 
 void MeshForwarder::HandleSentFrame(void *aContext, Mac::Frame &aFrame)
 {
-    MeshForwarder *obj = reinterpret_cast<MeshForwarder *>(aContext);
-    obj->HandleSentFrame(aFrame);
+    static_cast<MeshForwarder *>(aContext)->HandleSentFrame(aFrame);
 }
 
 void MeshForwarder::HandleSentFrame(Mac::Frame &aFrame)
@@ -1101,8 +1097,7 @@ exit:
 
 void MeshForwarder::HandleReceivedFrame(void *aContext, Mac::Frame &aFrame, ThreadError aError)
 {
-    MeshForwarder *obj = reinterpret_cast<MeshForwarder *>(aContext);
-    obj->HandleReceivedFrame(aFrame, aError);
+    static_cast<MeshForwarder *>(aContext)->HandleReceivedFrame(aFrame, aError);
 }
 
 void MeshForwarder::HandleReceivedFrame(Mac::Frame &aFrame, ThreadError aError)
@@ -1362,7 +1357,7 @@ exit:
         if (message->GetOffset() >= message->GetLength())
         {
             mReassemblyList.Dequeue(*message);
-            error = HandleDatagram(*message, aMessageInfo);
+            HandleDatagram(*message, aMessageInfo);
         }
     }
     else if (message != NULL)
@@ -1373,8 +1368,7 @@ exit:
 
 void MeshForwarder::HandleReassemblyTimer(void *aContext)
 {
-    MeshForwarder *obj = reinterpret_cast<MeshForwarder *>(aContext);
-    obj->HandleReassemblyTimer();
+    static_cast<MeshForwarder *>(aContext)->HandleReassemblyTimer();
 }
 
 void MeshForwarder::HandleReassemblyTimer()
@@ -1438,7 +1432,7 @@ exit:
 
     if (error == kThreadError_None)
     {
-        error = HandleDatagram(*message, aMessageInfo);
+        HandleDatagram(*message, aMessageInfo);
     }
     else if (message != NULL)
     {
@@ -1468,8 +1462,8 @@ void MeshForwarder::HandleDataRequest(const Mac::Address &aMacSource, const Thre
     VerifyOrExit((neighbor = mMle.GetNeighbor(aMacSource)) != NULL, ;);
     neighbor->mLastHeard = Timer::GetNow();
 
-    mMle.HandleMacDataRequest(*reinterpret_cast<Child *>(neighbor));
-    childIndex = mMle.GetChildIndex(*reinterpret_cast<Child *>(neighbor));
+    mMle.HandleMacDataRequest(*static_cast<Child *>(neighbor));
+    childIndex = mMle.GetChildIndex(*static_cast<Child *>(neighbor));
 
     for (Message *message = mSendQueue.GetHead(); message; message = message->GetNext())
     {

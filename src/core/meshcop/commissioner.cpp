@@ -65,7 +65,7 @@ Commissioner::Commissioner(ThreadNetif &aThreadNetif):
     aThreadNetif.GetCoapServer().AddResource(mRelayReceive);
 }
 
-ThreadError Commissioner::Start(const char *aPSKd)
+ThreadError Commissioner::Start(const char *aPSKd, const char *aProvisioningUrl)
 {
     ThreadError error = kThreadError_None;
 
@@ -73,6 +73,7 @@ ThreadError Commissioner::Start(const char *aPSKd)
 
     SuccessOrExit(error = mNetif.GetDtls().SetPsk(reinterpret_cast<const uint8_t *>(aPSKd),
                                                   static_cast<uint8_t>(strlen(aPSKd))));
+    SuccessOrExit(error = mNetif.GetDtls().mProvisioningUrl.SetProvisioningUrl(aProvisioningUrl));
     SuccessOrExit(error = mSocket.Open(HandleUdpReceive, this));
     mState = kStatePetition;
     SendPetition();
@@ -225,6 +226,7 @@ void Commissioner::HandleRelayReceive(Coap::Header &aHeader, Message &aMessage, 
     ThreadError error;
     JoinerUdpPortTlv joinerPort;
     JoinerIidTlv joinerIid;
+    JoinerRouterLocatorTlv joinerRloc;
     uint16_t offset;
     uint16_t length;
 
@@ -239,16 +241,20 @@ void Commissioner::HandleRelayReceive(Coap::Header &aHeader, Message &aMessage, 
     SuccessOrExit(error = Tlv::GetTlv(aMessage, Tlv::kJoinerIid, sizeof(joinerIid), joinerIid));
     VerifyOrExit(joinerIid.IsValid(), error = kThreadError_Parse);
 
+    SuccessOrExit(error = Tlv::GetTlv(aMessage, Tlv::kJoinerRouterLocator, sizeof(joinerRloc), joinerRloc));
+    VerifyOrExit(joinerRloc.IsValid(), error = kThreadError_Parse);
+
     SuccessOrExit(error = Tlv::GetValueOffset(aMessage, Tlv::kJoinerDtlsEncapsulation, offset, length));
 
     memcpy(mJoinerIid, joinerIid.GetIid(), sizeof(mJoinerIid));
     mNetif.GetDtls().SetClientId(mJoinerIid, sizeof(mJoinerIid));
     mJoinerPort = joinerPort.GetUdpPort();
-    mJoinerRouterAddress = aMessageInfo.GetPeerAddr();
+    mJoinerRloc = joinerRloc.GetJoinerRouterLocator();
 
     mNetif.GetDtls().Receive(aMessage, offset, length);
 
 exit:
+    (void)aMessageInfo;
     return;
 }
 
@@ -320,6 +326,7 @@ ThreadError Commissioner::HandleDtlsSend(const unsigned char *aBuf, uint16_t aLe
         Coap::Header header;
         JoinerUdpPortTlv udpPort;
         JoinerIidTlv iid;
+        JoinerRouterLocatorTlv rloc;
         ExtendedTlv tlv;
 
         VerifyOrExit((mTransmitMessage = mSocket.NewMessage(0)) != NULL, error = kThreadError_NoBufs);
@@ -340,6 +347,10 @@ ThreadError Commissioner::HandleDtlsSend(const unsigned char *aBuf, uint16_t aLe
         iid.Init();
         iid.SetIid(mJoinerIid);
         SuccessOrExit(error = mTransmitMessage->Append(&iid, sizeof(iid)));
+
+        rloc.Init();
+        rloc.SetJoinerRouterLocator(mJoinerRloc);
+        SuccessOrExit(error = mTransmitMessage->Append(&rloc, sizeof(rloc)));
 
         if (mSendKek)
         {
@@ -400,9 +411,10 @@ void Commissioner::HandleUdpTransmit(void)
     mTransmitMessage->Write(mTransmitMessage->GetOffset(), sizeof(tlv), &tlv);
 
     memset(&messageInfo, 0, sizeof(messageInfo));
-    messageInfo.GetPeerAddr() = mJoinerRouterAddress;
+    messageInfo.GetPeerAddr() = *mNetif.GetMle().GetMeshLocal16();
+    messageInfo.GetPeerAddr().mFields.m16[7] = HostSwap16(mJoinerRloc);
     messageInfo.mPeerPort = kCoapUdpPort;
-    messageInfo.mInterfaceId = 1;
+    messageInfo.mInterfaceId = mNetif.GetInterfaceId();
 
     SuccessOrExit(error = mSocket.SendTo(*mTransmitMessage, messageInfo));
 
@@ -418,18 +430,21 @@ exit:
 
 void Commissioner::ReceiveJoinerFinalize(uint8_t *buf, uint16_t length)
 {
-    Message *message;
+    Message *message = NULL;
     Coap::Header header;
     char uriPath[16];
     char *curUriPath = uriPath;
     const Coap::Header::Option *coapOption;
+
+    StateTlv::State state = StateTlv::kAccept;
+    ProvisioningUrlTlv provisioningUrl;
 
     otLogInfoMeshCoP("receive joiner finalize 1\r\n");
 
     VerifyOrExit((message = mNetif.GetIp6().mMessagePool.New(Message::kTypeIp6, 0)) != NULL, ;);
     SuccessOrExit(message->Append(buf, length));
     SuccessOrExit(header.FromMessage(*message));
-    message->SetOffset(header.GetLength());
+    SuccessOrExit(message->SetOffset(header.GetLength()));
 
     coapOption = header.GetCurrentOption();
 
@@ -454,15 +469,34 @@ void Commissioner::ReceiveJoinerFinalize(uint8_t *buf, uint16_t length)
         coapOption = header.GetNextOption();
     }
 
-    curUriPath[-1] = '\0';
+    if (curUriPath > uriPath)
+    {
+        curUriPath[-1] = '\0';
+    }
 
-    SendJoinFinalizeResponse(header);
+    VerifyOrExit(strcmp(uriPath, OPENTHREAD_URI_JOINER_FINALIZE) == 0,);
+
+    if (Tlv::GetTlv(*message, Tlv::kProvisioningUrl, sizeof(provisioningUrl), provisioningUrl) == kThreadError_None)
+    {
+        if (provisioningUrl.GetLength() != mNetif.GetDtls().mProvisioningUrl.GetLength() ||
+            memcmp(provisioningUrl.GetProvisioningUrl(), mNetif.GetDtls().mProvisioningUrl.GetProvisioningUrl(),
+                   provisioningUrl.GetLength()) != 0)
+        {
+            state = StateTlv::kReject;
+        }
+    }
+
+    SendJoinFinalizeResponse(header, state);
 
 exit:
-    return;
+
+    if (message != NULL)
+    {
+        message->Free();
+    }
 }
 
-void Commissioner::SendJoinFinalizeResponse(const Coap::Header &aRequestHeader)
+void Commissioner::SendJoinFinalizeResponse(const Coap::Header &aRequestHeader, StateTlv::State aState)
 {
     Coap::Header responseHeader;
     MeshCoP::StateTlv *stateTlv;
@@ -480,7 +514,7 @@ void Commissioner::SendJoinFinalizeResponse(const Coap::Header &aRequestHeader)
 
     stateTlv = reinterpret_cast<MeshCoP::StateTlv *>(cur);
     stateTlv->Init();
-    stateTlv->SetState(MeshCoP::StateTlv::kAccept);
+    stateTlv->SetState(aState);
     cur += sizeof(*stateTlv);
 
     mSendKek = true;

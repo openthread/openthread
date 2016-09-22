@@ -54,6 +54,7 @@ Dtls::Dtls(ThreadNetif &aNetif):
     mTimerSet(false),
     mNetif(aNetif)
 {
+    mProvisioningUrl.Init();
 }
 
 ThreadError Dtls::Start(bool aClient, ReceiveHandler aReceiveHandler, SendHandler aSendHandler, void *aContext)
@@ -65,6 +66,7 @@ ThreadError Dtls::Start(bool aClient, ReceiveHandler aReceiveHandler, SendHandle
     mSendHandler = aSendHandler;
     mContext = aContext;
     mClient = aClient;
+    mReceiveMessage = NULL;
 
     mbedtls_ssl_init(&mSsl);
     mbedtls_ssl_config_init(&mConf);
@@ -342,9 +344,24 @@ void Dtls::Process(void)
         }
         else
         {
-            if (rval == MBEDTLS_ERR_SSL_PEER_CLOSE_NOTIFY)
+            switch (rval)
             {
+            case MBEDTLS_ERR_SSL_PEER_CLOSE_NOTIFY:
                 mbedtls_ssl_close_notify(&mSsl);
+                break;
+
+            case MBEDTLS_ERR_SSL_HELLO_VERIFY_REQUIRED:
+            case MBEDTLS_ERR_SSL_FATAL_ALERT_MESSAGE:
+                break;
+
+            default:
+                if (mSsl.state != MBEDTLS_SSL_HANDSHAKE_OVER)
+                {
+                    mbedtls_ssl_send_alert_message(&mSsl, MBEDTLS_SSL_ALERT_LEVEL_FATAL,
+                                                   MBEDTLS_SSL_ALERT_MSG_HANDSHAKE_FAILURE);
+                }
+
+                break;
             }
 
             mbedtls_ssl_session_reset(&mSsl);

@@ -236,7 +236,6 @@ TESTS                                                              = \
     $(NULL)
 
 XFAIL_NCP_TESTS                                                        = \
-        thread-cert/Cert_5_3_10_AddressQuery.py                          \
         thread-cert/Cert_5_6_06_NetworkDataExpiration.py                 \
         thread-cert/Cert_5_6_08_ContextManagement.py                     \
         thread-cert/Cert_9_2_13_EnergyScan.py                            \

@@ -38,6 +38,7 @@
 #include <common/message.hpp>
 #include <common/timer.hpp>
 #include <crypto/sha256.hpp>
+#include <thread/meshcop_tlvs.hpp>
 
 #include <mbedtls/ssl.h>
 #include <mbedtls/entropy.h>
@@ -157,6 +158,12 @@ public:
      *
      */
     ThreadError Receive(Message &aMessage, uint16_t aOffset, uint16_t aLength);
+
+    /**
+     * The provisioning URL is placed here so that both the Commissioner and Joiner can share the same object.
+     *
+     */
+    ProvisioningUrlTlv mProvisioningUrl;
 
 private:
     enum

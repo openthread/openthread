@@ -62,7 +62,7 @@ ThreadError Local::AddOnMeshPrefix(const uint8_t *aPrefix, uint8_t aPrefixLength
     prefixTlv->Init(0, aPrefixLength, aPrefix);
     prefixTlv->SetSubTlvsLength(sizeof(BorderRouterTlv) + sizeof(BorderRouterEntry));
 
-    brTlv = reinterpret_cast<BorderRouterTlv *>(prefixTlv->GetSubTlvs());
+    brTlv = static_cast<BorderRouterTlv *>(prefixTlv->GetSubTlvs());
     brTlv->Init();
     brTlv->SetLength(brTlv->GetLength() + sizeof(BorderRouterEntry));
     brTlv->GetEntry(0)->Init();
@@ -109,7 +109,7 @@ ThreadError Local::AddHasRoutePrefix(const uint8_t *aPrefix, uint8_t aPrefixLeng
     prefixTlv->Init(0, aPrefixLength, aPrefix);
     prefixTlv->SetSubTlvsLength(sizeof(HasRouteTlv) + sizeof(HasRouteEntry));
 
-    hasRouteTlv = reinterpret_cast<HasRouteTlv *>(prefixTlv->GetSubTlvs());
+    hasRouteTlv = static_cast<HasRouteTlv *>(prefixTlv->GetSubTlvs());
     hasRouteTlv->Init();
     hasRouteTlv->SetLength(hasRouteTlv->GetLength() + sizeof(HasRouteEntry));
     hasRouteTlv->GetEntry(0)->Init();
@@ -151,7 +151,7 @@ ThreadError Local::UpdateRloc(void)
         switch (cur->GetType())
         {
         case NetworkDataTlv::kTypePrefix:
-            UpdateRloc(*reinterpret_cast<PrefixTlv *>(cur));
+            UpdateRloc(*static_cast<PrefixTlv *>(cur));
             break;
 
         default:
@@ -167,18 +167,16 @@ ThreadError Local::UpdateRloc(void)
 
 ThreadError Local::UpdateRloc(PrefixTlv &aPrefix)
 {
-    for (NetworkDataTlv *cur = reinterpret_cast<NetworkDataTlv *>(aPrefix.GetSubTlvs());
-         cur < reinterpret_cast<NetworkDataTlv *>(aPrefix.GetSubTlvs() + aPrefix.GetSubTlvsLength());
-         cur = cur->GetNext())
+    for (NetworkDataTlv *cur = aPrefix.GetSubTlvs(); cur < aPrefix.GetNext(); cur = cur->GetNext())
     {
         switch (cur->GetType())
         {
         case NetworkDataTlv::kTypeHasRoute:
-            UpdateRloc(*reinterpret_cast<HasRouteTlv *>(cur));
+            UpdateRloc(*static_cast<HasRouteTlv *>(cur));
             break;
 
         case NetworkDataTlv::kTypeBorderRouter:
-            UpdateRloc(*reinterpret_cast<BorderRouterTlv *>(cur));
+            UpdateRloc(*static_cast<BorderRouterTlv *>(cur));
             break;
 
         default:

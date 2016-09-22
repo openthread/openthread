@@ -43,8 +43,8 @@ set -x
 }
 
 [ $BUILD_TARGET != scan-build ] || {
-    ./configure --with-examples=posix --enable-cli
-    scan-build --status-bugs -v make
+    scan-build ./configure --with-examples=posix --enable-cli --enable-ncp || die
+    scan-build --status-bugs -analyze-headers -v make || die
 }
 
 [ $BUILD_TARGET != cc2538 ] || {

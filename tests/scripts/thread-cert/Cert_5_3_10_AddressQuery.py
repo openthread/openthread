@@ -38,7 +38,7 @@ ROUTER2 = 3
 ROUTER3 = 4
 SED2 = 5
 
-class Cert_5_3_9_AddressQuery(unittest.TestCase):
+class Cert_5_3_10_AddressQuery(unittest.TestCase):
     def setUp(self):
         self.nodes = {}
         for i in range(1,6):

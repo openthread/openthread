@@ -400,7 +400,9 @@ typedef enum otMeshcopTlvType
     OT_MESHCOP_TLV_JOINER_DTLS        = 17,   ///< meshcop Joiner DTLS Encapsulation TLV
     OT_MESHCOP_TLV_JOINER_UDP_PORT    = 18,   ///< meshcop Joiner UDP Port TLV
     OT_MESHCOP_TLV_JOINER_IID         = 19,   ///< meshcop Joiner IID TLV
+    OT_MESHCOP_TLV_JOINER_RLOC        = 20,   ///< meshcop Joiner Router Locator TLV
     OT_MESHCOP_TLV_JOINER_ROUTER_KEK  = 21,   ///< meshcop Joiner Router KEK TLV
+    OT_MESHCOP_TLV_PROVISIONING_URL   = 32,   ///< meshcop Provisioning URL TLV
     OT_MESHCOP_TLV_PENDINGTIMESTAMP   = 51,   ///< meshcop Pending Timestamp TLV
     OT_MESHCOP_TLV_DELAYTIMER         = 52,   ///< meshcop Delay Timer TLV
     OT_MESHCOP_TLV_CHANNELMASK        = 53,   ///< meshcop Channel Mask TLV
