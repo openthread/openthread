@@ -1112,7 +1112,7 @@ bool otIsDiscoverInProgress(otInstance *)
 
 void HandleMleDiscover(otActiveScanResult *aResult, void *aContext)
 {
-    otInstance *aInstance = reinterpret_cast<otInstance *>(aContext);
+    otInstance *aInstance = static_cast<otInstance *>(aContext);
     (void)aInstance;
     sDiscoverCallback(aResult, sDiscoverCallbackContext);
 }
@@ -1205,7 +1205,7 @@ int otWriteMessage(otMessage aMessage, uint16_t aOffset, const void *aBuf, uint1
 ThreadError otOpenUdpSocket(otInstance *, otUdpSocket *aSocket, otUdpReceive aCallback, void *aCallbackContext)
 {
     ThreadError error = kThreadError_Busy;
-    Ip6::UdpSocket *socket = reinterpret_cast<Ip6::UdpSocket *>(aSocket);
+    Ip6::UdpSocket *socket = static_cast<Ip6::UdpSocket *>(aSocket);
 
     if (socket->mTransport == NULL)
     {
@@ -1219,7 +1219,7 @@ ThreadError otOpenUdpSocket(otInstance *, otUdpSocket *aSocket, otUdpReceive aCa
 ThreadError otCloseUdpSocket(otUdpSocket *aSocket)
 {
     ThreadError error = kThreadError_InvalidState;
-    Ip6::UdpSocket *socket = reinterpret_cast<Ip6::UdpSocket *>(aSocket);
+    Ip6::UdpSocket *socket = static_cast<Ip6::UdpSocket *>(aSocket);
 
     if (socket->mTransport != NULL)
     {
@@ -1236,15 +1236,15 @@ ThreadError otCloseUdpSocket(otUdpSocket *aSocket)
 
 ThreadError otBindUdpSocket(otUdpSocket *aSocket, otSockAddr *aSockName)
 {
-    Ip6::UdpSocket *socket = reinterpret_cast<Ip6::UdpSocket *>(aSocket);
-    return socket->Bind(*reinterpret_cast<const Ip6::SockAddr *>(aSockName));
+    Ip6::UdpSocket *socket = static_cast<Ip6::UdpSocket *>(aSocket);
+    return socket->Bind(*static_cast<const Ip6::SockAddr *>(aSockName));
 }
 
 ThreadError otSendUdp(otUdpSocket *aSocket, otMessage aMessage, const otMessageInfo *aMessageInfo)
 {
-    Ip6::UdpSocket *socket = reinterpret_cast<Ip6::UdpSocket *>(aSocket);
-    return socket->SendTo(*reinterpret_cast<Message *>(aMessage),
-                          *reinterpret_cast<const Ip6::MessageInfo *>(aMessageInfo));
+    Ip6::UdpSocket *socket = static_cast<Ip6::UdpSocket *>(aSocket);
+    return socket->SendTo(*static_cast<Message *>(aMessage),
+                          *static_cast<const Ip6::MessageInfo *>(aMessageInfo));
 }
 
 bool otIsIcmpEchoEnabled(otInstance *)

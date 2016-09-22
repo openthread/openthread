@@ -95,8 +95,7 @@ exit:
 
 void Mpl::HandleTimer(void *aContext)
 {
-    Mpl *obj = reinterpret_cast<Mpl *>(aContext);
-    obj->HandleTimer();
+    static_cast<Mpl *>(aContext)->HandleTimer();
 }
 
 void Mpl::HandleTimer()

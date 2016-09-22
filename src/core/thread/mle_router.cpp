@@ -626,7 +626,7 @@ ThreadError MleRouter::HandleLinkRequest(const Message &aMessage, const Ip6::Mes
             if (neighbor->mState != Neighbor::kStateValid)
             {
                 const ThreadMessageInfo *threadMessageInfo =
-                    reinterpret_cast<const ThreadMessageInfo *>(aMessageInfo.mLinkInfo);
+                    static_cast<const ThreadMessageInfo *>(aMessageInfo.mLinkInfo);
 
                 memcpy(&neighbor->mMacAddr, &macAddr, sizeof(neighbor->mMacAddr));
                 neighbor->mLinkInfo.Clear();
@@ -665,7 +665,7 @@ ThreadError MleRouter::SendLinkAccept(const Ip6::MessageInfo &aMessageInfo, Neig
                                       const TlvRequestTlv &aTlvRequest, const ChallengeTlv &aChallenge)
 {
     ThreadError error = kThreadError_None;
-    const ThreadMessageInfo *threadMessageInfo = reinterpret_cast<const ThreadMessageInfo *>(aMessageInfo.mLinkInfo);
+    const ThreadMessageInfo *threadMessageInfo = static_cast<const ThreadMessageInfo *>(aMessageInfo.mLinkInfo);
     static const uint8_t routerTlvs[] = {Tlv::kLinkMargin};
     Message *message;
     Header::Command command;
@@ -771,7 +771,7 @@ ThreadError MleRouter::HandleLinkAccept(const Message &aMessage, const Ip6::Mess
                                         uint32_t aKeySequence, bool aRequest)
 {
     ThreadError error = kThreadError_None;
-    const ThreadMessageInfo *threadMessageInfo = reinterpret_cast<const ThreadMessageInfo *>(aMessageInfo.mLinkInfo);
+    const ThreadMessageInfo *threadMessageInfo = static_cast<const ThreadMessageInfo *>(aMessageInfo.mLinkInfo);
     Neighbor *neighbor = NULL;
     Mac::ExtAddress macAddr;
     VersionTlv version;
@@ -1217,7 +1217,7 @@ uint8_t MleRouter::GetActiveRouterCount(void) const
 ThreadError MleRouter::HandleAdvertisement(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
     ThreadError error = kThreadError_None;
-    const ThreadMessageInfo *threadMessageInfo = reinterpret_cast<const ThreadMessageInfo *>(aMessageInfo.mLinkInfo);
+    const ThreadMessageInfo *threadMessageInfo = static_cast<const ThreadMessageInfo *>(aMessageInfo.mLinkInfo);
     Mac::ExtAddress macAddr;
     SourceAddressTlv sourceAddress;
     LeaderDataTlv leaderData;
@@ -1558,7 +1558,7 @@ void MleRouter::UpdateRoutes(const RouteTlv &aRoute, uint8_t aRouterId)
 ThreadError MleRouter::HandleParentRequest(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
     ThreadError error = kThreadError_None;
-    const ThreadMessageInfo *threadMessageInfo = reinterpret_cast<const ThreadMessageInfo *>(aMessageInfo.mLinkInfo);
+    const ThreadMessageInfo *threadMessageInfo = static_cast<const ThreadMessageInfo *>(aMessageInfo.mLinkInfo);
     Mac::ExtAddress macAddr;
     VersionTlv version;
     ScanMaskTlv scanMask;
@@ -1630,8 +1630,7 @@ exit:
 
 void MleRouter::HandleStateUpdateTimer(void *aContext)
 {
-    MleRouter *obj = reinterpret_cast<MleRouter *>(aContext);
-    obj->HandleStateUpdateTimer();
+    static_cast<MleRouter *>(aContext)->HandleStateUpdateTimer();
 }
 
 void MleRouter::HandleStateUpdateTimer(void)
@@ -1831,7 +1830,7 @@ ThreadError MleRouter::HandleChildIdRequest(const Message &aMessage, const Ip6::
                                             uint32_t aKeySequence)
 {
     ThreadError error = kThreadError_None;
-    const ThreadMessageInfo *threadMessageInfo = reinterpret_cast<const ThreadMessageInfo *>(aMessageInfo.mLinkInfo);
+    const ThreadMessageInfo *threadMessageInfo = static_cast<const ThreadMessageInfo *>(aMessageInfo.mLinkInfo);
     Mac::ExtAddress macAddr;
     ResponseTlv response;
     LinkFrameCounterTlv linkFrameCounter;
@@ -2950,9 +2949,9 @@ exit:
 
 void MleRouter::HandleUdpReceive(void *aContext, otMessage aMessage, const otMessageInfo *aMessageInfo)
 {
-    MleRouter *obj = reinterpret_cast<MleRouter *>(aContext);
+    static_cast<MleRouter *>(aContext)->HandleUdpReceive(*static_cast<Message *>(aMessage),
+                                                         *static_cast<const Ip6::MessageInfo *>(aMessageInfo));
     (void)aMessageInfo;
-    obj->HandleUdpReceive(*static_cast<Message *>(aMessage), *static_cast<const Ip6::MessageInfo *>(aMessageInfo));
 }
 
 void MleRouter::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
@@ -3049,8 +3048,7 @@ exit:
 void MleRouter::HandleAddressSolicit(void *aContext, Coap::Header &aHeader, Message &aMessage,
                                      const Ip6::MessageInfo &aMessageInfo)
 {
-    MleRouter *obj = reinterpret_cast<MleRouter *>(aContext);
-    obj->HandleAddressSolicit(aHeader, aMessage, aMessageInfo);
+    static_cast<MleRouter *>(aContext)->HandleAddressSolicit(aHeader, aMessage, aMessageInfo);
 }
 
 void MleRouter::HandleAddressSolicit(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
@@ -3212,8 +3210,7 @@ exit:
 void MleRouter::HandleAddressRelease(void *aContext, Coap::Header &aHeader, Message &aMessage,
                                      const Ip6::MessageInfo &aMessageInfo)
 {
-    MleRouter *obj = reinterpret_cast<MleRouter *>(aContext);
-    obj->HandleAddressRelease(aHeader, aMessage, aMessageInfo);
+    static_cast<MleRouter *>(aContext)->HandleAddressRelease(aHeader, aMessage, aMessageInfo);
 }
 
 void MleRouter::HandleAddressRelease(Coap::Header &aHeader, Message &aMessage,

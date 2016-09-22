@@ -351,8 +351,7 @@ void Netif::SetStateChangedFlags(uint32_t aFlags)
 
 void Netif::HandleStateChangedTask(void *aContext)
 {
-    Netif *obj = reinterpret_cast<Netif *>(aContext);
-    obj->HandleStateChangedTask();
+    static_cast<Netif *>(aContext)->HandleStateChangedTask();
 }
 
 void Netif::HandleStateChangedTask(void)
