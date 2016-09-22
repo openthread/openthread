@@ -245,30 +245,38 @@ void DatasetManager::HandleSet(Coap::Header &aHeader, Message &aMessage, const I
     Tlv tlv;
     Timestamp timestamp;
     uint16_t offset = aMessage.GetOffset();
-    uint8_t type;
+    Tlv::Type type;
     StateTlv::State state = StateTlv::kAccept;
 
     VerifyOrExit(mMle.GetDeviceState() == Mle::kDeviceStateLeader, state = StateTlv::kReject);
 
-    type = static_cast<uint8_t>(strcmp(mUriSet,
-                                       OPENTHREAD_URI_ACTIVE_SET) == 0 ? Tlv::kActiveTimestamp : Tlv::kPendingTimestamp);
+    type = (strcmp(mUriSet, OPENTHREAD_URI_ACTIVE_SET) == 0 ? Tlv::kActiveTimestamp : Tlv::kPendingTimestamp);
 
     while (offset < aMessage.GetLength())
     {
-        aMessage.Read(offset, sizeof(tlv), &tlv);
+        Tlv::Type tlvType;
 
-        if (tlv.GetType() == type)
+        aMessage.Read(offset, sizeof(tlv), &tlv);
+        tlvType = tlv.GetType();
+
+        if (tlvType == type)
         {
             aMessage.Read(offset + sizeof(Tlv), sizeof(timestamp), &timestamp);
-            break;
+        }
+
+        // verify the request does not include fields that affect connectivity
+        if (tlvType == Tlv::kChannel || tlvType == Tlv::kMeshLocalPrefix ||
+            tlvType == Tlv::kPanId || tlvType == Tlv::kNetworkMasterKey)
+        {
+            ExitNow(state = StateTlv::kReject);
         }
 
         offset += sizeof(tlv) + tlv.GetLength();
     }
 
     // verify the request includes a timestamp that is ahead of the locally stored value
-    VerifyOrExit(offset < aMessage.GetLength() && (mLocal.GetTimestamp() == NULL ||
-                                                   mLocal.GetTimestamp()->Compare(timestamp) > 0), state = StateTlv::kReject);
+    VerifyOrExit(offset == aMessage.GetLength() && (mLocal.GetTimestamp() == NULL ||
+                                                    mLocal.GetTimestamp()->Compare(timestamp) > 0), state = StateTlv::kReject);
 
     mLocal.Set(aMessage, aMessage.GetOffset(), static_cast<uint8_t>(aMessage.GetLength() - aMessage.GetOffset()));
     mNetwork = mLocal;
