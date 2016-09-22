@@ -505,6 +505,7 @@ void DatasetManager::SendSetResponse(const Coap::Header &aRequestHeader, const I
     responseHeader.Finalize();
     SuccessOrExit(error = message->Append(responseHeader.GetBytes(), responseHeader.GetLength()));
 
+    state.Init();
     state.SetState(aState);
     SuccessOrExit(error = message->Append(&state, sizeof(state)));
 
