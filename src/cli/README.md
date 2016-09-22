@@ -1,7 +1,7 @@
 # OpenThread CLI Reference
 
 The OpenThread CLI exposes configuration and management APIs via a
-command line interface. Use the CLI to play with OpenThread, which 
+command line interface. Use the CLI to play with OpenThread, which
 can also be used with additional application code. The
 OpenThread test scripts use the CLI to execute test cases.
 
@@ -133,11 +133,24 @@ Done
 
 ### child list
 
-List attached Child IDs
+List attached Child IDs.
 
 ```bash
 > child list
 1 2 3 6 7 8
+Done
+```
+
+### child table
+
+Print table of attached children.
+
+```bash
+> child table
+| ID  | RLOC16 | Timeout    | Age        | LQI In | C_VN |R|S|D|N| Extended MAC     |
++-----+--------+------------+------------+--------+------+-+-+-+-+------------------+
+|   1 | 0xe001 |        240 |         44 |      3 |  237 |1|1|1|1| d28d7f875888fccb |
+|   2 | 0xe002 |        240 |         27 |      3 |  237 |0|1|0|1| e2b3540590b0fd87 |
 Done
 ```
 
@@ -1004,11 +1017,24 @@ Done
 
 ### router list
 
-List allocated Router IDs
+List allocated Router IDs.
 
 ```bash
 > router list
 8 24 50
+Done
+```
+
+### router table
+
+Print table of routers.
+
+```bash
+> router table
+| ID | RLOC16 | Next Hop | Path Cost | LQI In | LQI Out | Age | Extended MAC     |
++----+--------+----------+-----------+--------+---------+-----+------------------+
+| 21 | 0x5400 |       21 |         0 |      3 |       3 |   5 | d28d7f875888fccb |
+| 56 | 0xe000 |       56 |         0 |      0 |       0 | 182 | f2d92a82c8d8fe43 |
 Done
 ```
 
@@ -1227,4 +1253,3 @@ Diagnostics module is enabled only when building OpenThread with --enable-diag o
 Go [diagnostics module][1] for more information.
 
 [1]:../diag/README.md
-
