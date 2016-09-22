@@ -649,6 +649,11 @@ void Mac::HandleBeginTransmit(void)
         otLogDebgMac("ack timer start\n");
     }
 
+    if (mPcapCallback)
+    {
+        mPcapCallback(&sendFrame, mPcapCallbackContext);
+    }
+
 exit:
 
     if (error != kThreadError_None)
