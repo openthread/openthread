@@ -102,6 +102,7 @@ typedef struct RadioPacket
     int8_t  mPower;          ///< Transmit/receive power in dBm.
     uint8_t mLqi;            ///< Link Quality Indicator for received frames.
     bool    mSecurityValid;  ///< Security Enabled flag is set and frame passes security checks.
+    uint16_t mFcs;           ///< Final checksum (optional)
 } RadioPacket;
 
 /**
