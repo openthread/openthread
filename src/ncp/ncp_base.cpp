@@ -548,14 +548,12 @@ void NcpBase::HandleRawFrame(const RadioPacket *aFrame)
         )
     );
 
-    // Append metadata (rssi, lqi, channel, etc)
+    // Append metadata (rssi, etc)
 
     SuccessOrExit(
         errorCode = OutboundFrameFeedPacked(
-            "cCC",
-            aFrame->mPower,
-            aFrame->mLqi,
-            aFrame->mChannel
+            "c",
+            aFrame->mPower
         )
     );
 
