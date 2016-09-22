@@ -577,6 +577,7 @@ private:
     uint8_t mMaxChildrenAllowed;
     Child mChildren[kMaxChildren];
 
+    uint8_t mChallengeTimeout;
     uint8_t mChallenge[8];
     uint16_t mNextChildId;
     uint8_t mNetworkIdTimeout;
