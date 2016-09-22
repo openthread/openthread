@@ -1391,6 +1391,8 @@ void Mle::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageIn
     aMessage.Read(aMessage.GetOffset(), sizeof(header), &header);
     VerifyOrExit(header.IsValid(),);
 
+    assert(aMessageInfo.mLinkInfo != NULL);
+
     if (header.GetSecuritySuite() == Header::kNoSecurity)
     {
         aMessage.MoveOffset(header.GetLength());
