@@ -571,7 +571,7 @@ void Leader::HandleCommissioningSet(Coap::Header &aHeader, Message &aMessage, co
     uint8_t tlvs[NetworkData::kMaxSize];
     MeshCoP::StateTlv::State state = MeshCoP::StateTlv::kAccept;
     bool hasSessionId = false;
-    uint16_t sessionId;
+    uint16_t sessionId = 0;
 
     VerifyOrExit(mMle.GetDeviceState() == Mle::kDeviceStateLeader, state = MeshCoP::StateTlv::kReject);
 
