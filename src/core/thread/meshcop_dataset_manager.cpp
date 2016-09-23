@@ -247,6 +247,7 @@ void DatasetManager::HandleSet(Coap::Header &aHeader, Message &aMessage, const I
     uint16_t offset = aMessage.GetOffset();
     Tlv::Type type;
     StateTlv::State state = StateTlv::kAccept;
+    Dataset local = mLocal;
 
     VerifyOrExit(mMle.GetDeviceState() == Mle::kDeviceStateLeader, state = StateTlv::kReject);
 
@@ -299,6 +300,68 @@ void DatasetManager::HandleSet(Coap::Header &aHeader, Message &aMessage, const I
             }
         }
 
+        if (tlvType == Tlv::kActiveTimestamp || tlvType == Tlv::kPendingTimestamp)
+        {
+            OT_TOOL_PACKED_BEGIN
+            struct
+            {
+                Tlv tlv;
+                Timestamp timestamp;
+            } OT_TOOL_PACKED_END timestampTlv;
+
+            timestampTlv.tlv.SetType(tlvType);
+            timestampTlv.tlv.SetLength(sizeof(Timestamp));
+            aMessage.Read(offset + sizeof(Tlv), sizeof(timestampTlv.timestamp), &timestampTlv.timestamp);
+            local.Set(timestampTlv.tlv);
+        }
+        else if (tlvType == Tlv::kChannelMask)
+        {
+            OT_TOOL_PACKED_BEGIN
+            struct
+            {
+                MeshCoP::ChannelMaskTlv tlv;
+                MeshCoP::ChannelMaskEntry entry;
+                uint8_t mask[sizeof(otChannelMaskPage0)];
+            } OT_TOOL_PACKED_END channelMaskTlv;
+
+            channelMaskTlv.tlv.Init();
+            channelMaskTlv.tlv.SetLength(sizeof(MeshCoP::ChannelMaskEntry) + sizeof(otChannelMaskPage0));
+            aMessage.Read(offset + sizeof(Tlv), sizeof(MeshCoP::ChannelMaskEntry) + sizeof(otChannelMaskPage0),
+                          &channelMaskTlv.entry);
+            local.Set(channelMaskTlv.tlv);
+        }
+        else if (tlvType == Tlv::kExtendedPanId)
+        {
+            MeshCoP::ExtendedPanIdTlv extPanIdTlv;
+            aMessage.Read(offset, sizeof(extPanIdTlv), &extPanIdTlv);
+            local.Set(extPanIdTlv);
+        }
+        else if (tlvType == Tlv::kNetworkName)
+        {
+            MeshCoP::NetworkNameTlv networkNameTlv;
+            aMessage.Read(offset, sizeof(Tlv), &networkNameTlv);
+            aMessage.Read(offset + sizeof(Tlv), networkNameTlv.GetLength(), networkNameTlv.GetValue());
+            local.Set(networkNameTlv);
+        }
+        else if (tlvType == Tlv::kPSKc)
+        {
+            MeshCoP::PSKcTlv pskcTlv;
+            aMessage.Read(offset, sizeof(pskcTlv), &pskcTlv);
+            local.Set(pskcTlv);
+        }
+        else if (tlvType == Tlv::kSecurityPolicy)
+        {
+            MeshCoP::SecurityPolicyTlv securityPolicyTlv;
+            aMessage.Read(offset, sizeof(securityPolicyTlv), &securityPolicyTlv);
+            local.Set(securityPolicyTlv);
+        }
+        else if (tlvType == Tlv::kDelayTimer)
+        {
+            MeshCoP::DelayTimerTlv delayTimerTlv;
+            aMessage.Read(offset, sizeof(delayTimerTlv), &delayTimerTlv);
+            local.Set(delayTimerTlv);
+        }
+
         offset += sizeof(tlv) + tlv.GetLength();
     }
 
@@ -306,7 +369,7 @@ void DatasetManager::HandleSet(Coap::Header &aHeader, Message &aMessage, const I
     VerifyOrExit(offset == aMessage.GetLength() && (mLocal.GetTimestamp() == NULL ||
                                                     mLocal.GetTimestamp()->Compare(timestamp) > 0), state = StateTlv::kReject);
 
-    mLocal.Set(aMessage, aMessage.GetOffset(), static_cast<uint8_t>(aMessage.GetLength() - aMessage.GetOffset()));
+    mLocal = local;
     mNetwork = mLocal;
     mNetworkDataLeader.IncrementVersion();
     mNetworkDataLeader.IncrementStableVersion();
