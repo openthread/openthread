@@ -49,7 +49,7 @@
 #include <net/netif.hpp>
 #include <thread/address_resolver.hpp>
 #include <thread/energy_scan_server.hpp>
-#include <thread/network_diagnostic.hpp>
+#include <thread/network_diag.hpp>
 #include <thread/key_manager.hpp>
 #include <thread/meshcop_dataset_manager.hpp>
 #include <thread/mesh_forwarder.hpp>

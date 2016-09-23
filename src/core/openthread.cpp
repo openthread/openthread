@@ -957,14 +957,17 @@ exit:
 
 #endif
 
-ThreadError otSendDiagnosticGet(otIp6Address *aDestination, uint8_t aTlvTypes[], uint8_t aCount)
+ThreadError otSendDiagnosticGet(otInstance *aInstance, otIp6Address *aDestination, uint8_t aTlvTypes[], uint8_t aCount)
 {
+    (void)aInstance;
     return sThreadNetif->GetNetworkDiagnostic().SendDiagnosticGet(*static_cast<Ip6::Address *>(aDestination), aTlvTypes,
                                                                   aCount);
 }
 
-ThreadError otSendDiagnosticReset(otIp6Address *aDestination, uint8_t aTlvTypes[], uint8_t aCount)
+ThreadError otSendDiagnosticReset(otInstance *aInstance, otIp6Address *aDestination, uint8_t aTlvTypes[],
+                                  uint8_t aCount)
 {
+    (void)aInstance;
     return sThreadNetif->GetNetworkDiagnostic().SendDiagnosticReset(*static_cast<Ip6::Address *>(aDestination), aTlvTypes,
                                                                     aCount);
 }

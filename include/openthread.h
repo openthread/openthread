@@ -2157,19 +2157,23 @@ ThreadError otSendUdp(otUdpSocket *aSocket, otMessage aMessage, const otMessageI
 
 /**
  * Send a Network Diagnostic Get request
- * @param[in]  aDestination  A pointer to destination address.
- * @param[in]  aTlvTypes     An array of Network Diagnostic TLV types.
- * @param[in]  aCount        Number of types in aTlvTypes
+ *
+ * @param[in]  aDestination   A pointer to destination address.
+ * @param[in]  aTlvTypes      An array of Network Diagnostic TLV types.
+ * @param[in]  aCount         Number of types in aTlvTypes
  */
-ThreadError otSendDiagnosticGet(otIp6Address *aDestination, uint8_t aTlvTypes[], uint8_t aCount);
+ThreadError otSendDiagnosticGet(otInstance *aInstance, otIp6Address *aDestination, uint8_t aTlvTypes[], uint8_t aCount);
 
 /**
  * Send a Network Diagnostic Reset request
- * @param[in]  aDestination  A pointer to destination address.
- * @param[in]  aTlvTypes     An array of Network Diagnostic TLV types. Currently only Type 9 is allowed.
- * @param[in]  aCount        Number of types in aTlvTypes
+ *
+ * @param[in]  aInstance      A pointer to an OpenThread instance.
+ * @param[in]  aDestination   A pointer to destination address.
+ * @param[in]  aTlvTypes      An array of Network Diagnostic TLV types. Currently only Type 9 is allowed.
+ * @param[in]  aCount         Number of types in aTlvTypes
  */
-ThreadError otSendDiagnosticReset(otIp6Address *aDestination, uint8_t aTlvTypes[], uint8_t aCount);
+ThreadError otSendDiagnosticReset(otInstance *aInstance, otIp6Address *aDestination, uint8_t aTlvTypes[],
+                                  uint8_t aCount);
 
 /**
  * @}

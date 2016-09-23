@@ -139,6 +139,8 @@ typedef enum ThreadError
 
 #define OT_MASTER_KEY_SIZE         16  ///< Size of the Thread Master Key (bytes)
 
+#define OT_NUM_NETDIAG_TLV_TYPES   18  ///< Number of Network Diagnostic TLV types
+
 /**
  * This structure represents a Thread Master Key.
  *

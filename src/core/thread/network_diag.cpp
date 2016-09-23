@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2016, Nest Labs, Inc.
+ *  Copyright (c) 2016, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -44,8 +44,8 @@
 #include <thread/thread_netif.hpp>
 #include <thread/thread_tlvs.hpp>
 #include <thread/thread_uris.hpp>
-#include <thread/network_diagnostic.hpp>
-#include <thread/network_diagnostic_tlvs.hpp>
+#include <thread/network_diag.hpp>
+#include <thread/network_diag_tlvs.hpp>
 
 using Thread::Encoding::BigEndian::HostSwap16;
 
@@ -86,13 +86,11 @@ ThreadError NetworkDiagnostic::SendDiagnosticGet(const Ip6::Address &aDestinatio
     }
 
     header.Init();
-    header.SetVersion(1);
     header.SetType(Coap::Header::kTypeConfirmable);
     header.SetCode(Coap::Header::kCodeGet);
     header.SetMessageId(++mCoapMessageId);
     header.SetToken(mCoapToken, sizeof(mCoapToken));
     header.AppendUriPathOptions(OPENTHREAD_URI_DIAGNOSTIC_GET);
-    header.AppendContentFormatOption(Coap::Header::kApplicationOctetStream);
     header.Finalize();
 
     SuccessOrExit(error = message->Append(header.GetBytes(), header.GetLength()));
@@ -158,13 +156,11 @@ ThreadError NetworkDiagnostic::SendDiagnosticReset(const Ip6::Address &aDestinat
     }
 
     header.Init();
-    header.SetVersion(1);
     header.SetType(Coap::Header::kTypeConfirmable);
     header.SetCode(Coap::Header::kCodePost);
     header.SetMessageId(++mCoapMessageId);
     header.SetToken(mCoapToken, sizeof(mCoapToken));
     header.AppendUriPathOptions(OPENTHREAD_URI_DIAGNOSTIC_RESET);
-    header.AppendContentFormatOption(Coap::Header::kApplicationOctetStream);
     header.Finalize();
 
     SuccessOrExit(error = message->Append(header.GetBytes(), header.GetLength()));
@@ -183,6 +179,11 @@ ThreadError NetworkDiagnostic::SendDiagnosticReset(const Ip6::Address &aDestinat
 
 exit:
 
+    if (error != kThreadError_None && message != NULL)
+    {
+        message->Free();
+    }
+
     return error;
 }
 
@@ -193,25 +194,57 @@ void NetworkDiagnostic::HandleDiagnosticGet(void *aContext, Coap::Header &aHeade
     obj->HandleDiagnosticGet(aHeader, aMessage, aMessageInfo);
 }
 
-ThreadError NetworkDiagnostic::FillIPv6AddressList(IPv6AddressListTlv &aTlv)
+ThreadError NetworkDiagnostic::AppendIPv6AddressList(Message &aMessage)
 {
+    ThreadError error = kThreadError_None;
+    IPv6AddressListTlv tlv;
     uint8_t count = 0;
+
+    tlv.Init();
 
     for (const Ip6::NetifUnicastAddress *addr = mNetif.GetUnicastAddresses(); addr; addr = addr->GetNext())
     {
-        aTlv.SetIPv6AddressList(count++, addr->GetAddress());
+        count++;
     }
 
-    aTlv.SetLength(count * sizeof(Ip6::Address));
+    tlv.SetLength(count * sizeof(Ip6::Address));
+    SuccessOrExit(error = aMessage.Append(&tlv, sizeof(tlv)));
 
-    return kThreadError_None;
+    for (const Ip6::NetifUnicastAddress *addr = mNetif.GetUnicastAddresses(); addr; addr = addr->GetNext())
+    {
+        SuccessOrExit(error = aMessage.Append(&addr->GetAddress(), sizeof(Ip6::Address)));
+    }
+
+exit:
+
+    return error;
 }
 
-ThreadError NetworkDiagnostic::FillChildTable(ChildTableTlv &aTlv)
+ThreadError NetworkDiagnostic::AppendChildTable(Message &aMessage)
 {
+    ThreadError error = kThreadError_None;
     uint8_t numChildren;
-    uint8_t count = 0;
     const Child *children = mMle.GetChildren(&numChildren);
+
+    {
+        uint8_t count = 0;
+
+        for (int i = 0; i < numChildren; i++)
+        {
+            if (children[i].mState != Neighbor::kStateInvalid)
+            {
+                continue;
+            }
+
+            count++;
+        }
+
+        ChildTableTlv tlv;
+        tlv.Init();
+        tlv.SetLength(count * sizeof(ChildTableEntry));
+
+        SuccessOrExit(error = aMessage.Append(&tlv, sizeof(ChildTableTlv)));
+    }
 
     for (int i = 0; i < numChildren; i++)
     {
@@ -221,18 +254,21 @@ ThreadError NetworkDiagnostic::FillChildTable(ChildTableTlv &aTlv)
         }
 
         const Child &child = children[i];
-        ChildTableEntry &entry = aTlv.GetEntry(count);
-        count++;
+        ChildTableEntry entry;
         uint8_t timeout = 0;
-        while (static_cast<uint32_t>(1 << timeout) < child.mTimeout) timeout++;
+
+        while (static_cast<uint32_t>(1 << timeout) < child.mTimeout) { timeout++; }
+
         entry.SetTimeout(timeout + 4);
         entry.SetChildId(child.mValid.mRloc16);
         entry.SetMode(child.mMode);
+
+        SuccessOrExit(error = aMessage.Append(&entry, sizeof(ChildTableEntry)));
     }
 
-    aTlv.SetLength(count * sizeof(ChildTableEntry));
+exit:
 
-    return kThreadError_None;
+    return error;
 }
 
 void NetworkDiagnostic::HandleDiagnosticGet(Coap::Header &aHeader, Message &aMessage,
@@ -251,12 +287,10 @@ void NetworkDiagnostic::HandleDiagnosticGet(Coap::Header &aHeader, Message &aMes
     otLogInfoNetDiag("Received diagnostic get request\n");
 
     header.Init();
-    header.SetVersion(1);
     header.SetType(Coap::Header::kTypeAcknowledgment);
     header.SetCode(Coap::Header::kCodeChanged);
     header.SetMessageId(aHeader.GetMessageId());
     header.SetToken(aHeader.GetToken(), aHeader.GetTokenLength());
-    header.AppendContentFormatOption(Coap::Header::kApplicationOctetStream);
     header.Finalize();
 
     VerifyOrExit((message = mSocket.NewMessage(0)) != NULL, error = kThreadError_NoBufs);
@@ -348,10 +382,7 @@ void NetworkDiagnostic::HandleDiagnosticGet(Coap::Header &aHeader, Message &aMes
 
         case NetworkDiagnosticTlv::kIPv6AddressList:
         {
-            IPv6AddressListTlv tlv;
-            tlv.Init();
-            SuccessOrExit(error = FillIPv6AddressList(tlv));
-            SuccessOrExit(error = message->Append(&tlv, tlv.GetSize()));
+            SuccessOrExit(error = AppendIPv6AddressList(*message));
             break;
         }
 
@@ -386,10 +417,7 @@ void NetworkDiagnostic::HandleDiagnosticGet(Coap::Header &aHeader, Message &aMes
 
         case NetworkDiagnosticTlv::kChildTable:
         {
-            ChildTableTlv tlv;
-            tlv.Init();
-            SuccessOrExit(error = FillChildTable(tlv));
-            SuccessOrExit(error = message->Append(&tlv, tlv.GetSize()));
+            SuccessOrExit(error = AppendChildTable(*message));
             break;
         }
 
@@ -466,7 +494,6 @@ void NetworkDiagnostic::HandleDiagnosticReset(Coap::Header &aHeader, Message &aM
 
     otLogInfoNetDiag("Received diagnostic reset request\n");
     header.Init();
-    header.SetVersion(1);
     header.SetType(Coap::Header::kTypeAcknowledgment);
     header.SetCode(Coap::Header::kCodeChanged);
     header.SetMessageId(aHeader.GetMessageId());

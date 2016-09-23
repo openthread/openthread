@@ -175,9 +175,9 @@ private:
     void ProcessMasterKey(int argc, char *argv[]);
     void ProcessMode(int argc, char *argv[]);
     void ProcessNetworkDataRegister(int argc, char *argv[]);
+    void ProcessNetworkDiagnostic(int argc, char *argv[]);
     void ProcessNetworkIdTimeout(int argc, char *argv[]);
     void ProcessNetworkName(int argc, char *argv[]);
-    void ProcessNetworkDiagnostic(int argc, char *argv[]);
     void ProcessPanId(int argc, char *argv[]);
     void ProcessParent(int argc, char *argv[]);
     void ProcessPing(int argc, char *argv[]);

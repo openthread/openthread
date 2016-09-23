@@ -97,7 +97,7 @@ public:
      * @param[out] aTlv         A reference to the tlv.
      *
      */
-    ThreadError FillIPv6AddressList(IPv6AddressListTlv &aTlv);
+    ThreadError AppendIPv6AddressList(Message &aMessage);
 
     /**
      * This method fills ChildTableTlv.
@@ -105,7 +105,7 @@ public:
      * @param[out] aTlv         A reference to the tlv.
      *
      */
-    ThreadError FillChildTable(ChildTableTlv &aTlv);
+    ThreadError AppendChildTable(Message &aMessage);
 
 private:
     static void HandleUdpReceive(void *aContext, otMessage aMessage, const otMessageInfo *aMessageInfo);
@@ -113,9 +113,11 @@ private:
 
     static void HandleDiagnosticGet(void *aContext, Coap::Header &aHeader,
                                     Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
-    void HandleDiagnosticGet(Thread::Coap::Header &, Thread::Message &, const Thread::Ip6::MessageInfo &);
+    void HandleDiagnosticGet(Thread::Coap::Header &aHeader, Thread::Message &aMessage,
+                             const Thread::Ip6::MessageInfo &aMessageInfo);
 
-    static void HandleDiagnosticReset(void *, Thread::Coap::Header &, Thread::Message &, const Thread::Ip6::MessageInfo &);
+    static void HandleDiagnosticReset(void *aContext, Thread::Coap::Header &aHeader, Thread::Message &,
+                                      const Thread::Ip6::MessageInfo &aMessageInfo);
     void HandleDiagnosticReset(Coap::Header &aHeader, Message &aMessage,
                                const Ip6::MessageInfo &aMessageInfo);
 

@@ -78,7 +78,6 @@ const struct Command Interpreter::sCommands[] =
     { "contextreusedelay", &Interpreter::ProcessContextIdReuseDelay },
     { "counter", &Interpreter::ProcessCounters },
     { "dataset", &Interpreter::ProcessDataset },
-    { "networkdiagnostic", &Interpreter::ProcessNetworkDiagnostic },
 #if OPENTHREAD_ENABLE_DIAG
     { "diag", &Interpreter::ProcessDiag },
 #endif
@@ -104,6 +103,7 @@ const struct Command Interpreter::sCommands[] =
     { "masterkey", &Interpreter::ProcessMasterKey },
     { "mode", &Interpreter::ProcessMode },
     { "netdataregister", &Interpreter::ProcessNetworkDataRegister },
+    { "networkdiagnostic", &Interpreter::ProcessNetworkDiagnostic },
     { "networkidtimeout", &Interpreter::ProcessNetworkIdTimeout },
     { "networkname", &Interpreter::ProcessNetworkName },
     { "panid", &Interpreter::ProcessPanId },
@@ -2455,14 +2455,14 @@ void Interpreter::ProcessNetworkDiagnostic(int argc, char *argv[])
     ThreadError error = kThreadError_None;
     struct otIp6Address address;
     uint8_t index = 2;
-    uint8_t tlvTypes[18];
+    uint8_t tlvTypes[OT_NUM_NETDIAG_TLV_TYPES];
     uint8_t count = 0;
 
     VerifyOrExit(argc > 1 + 1, error = kThreadError_Parse);
 
     SuccessOrExit(error = otIp6AddressFromString(argv[1], &address));
 
-    while (index < argc)
+    while (index < argc && count < sizeof(tlvTypes))
     {
         long value;
         SuccessOrExit(error = ParseLong(argv[index], value));
@@ -2472,11 +2472,11 @@ void Interpreter::ProcessNetworkDiagnostic(int argc, char *argv[])
 
     if (strcmp(argv[0], "get") == 0)
     {
-        otSendDiagnosticGet(&address, tlvTypes, count);
+        otSendDiagnosticGet(mInstance, &address, tlvTypes, count);
     }
     else if (strcmp(argv[0], "reset") == 0)
     {
-        otSendDiagnosticReset(&address, tlvTypes, count);
+        otSendDiagnosticReset(mInstance, &address, tlvTypes, count);
     }
 
 exit:

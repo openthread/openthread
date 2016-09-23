@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2016, Nest Labs, Inc.
+ *  Copyright (c) 2016, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -122,7 +122,7 @@ public:
     /**
      * This method returns the length to be sent
      */
-    uint8_t GetSize(void) const { return mLength + 2; }
+    uint8_t GetSize(void) const { return mLength + sizeof(NetworkDiagnosticTlv); }
 
     /**
      * This method sets the Length value.
@@ -887,18 +887,10 @@ public:
      * @returns A pointer to the Challenge value.
      *
      */
-    const Ip6::Address *GetIPv6AddressList(void) const { return mIPv6AddressList; }
-
-    /**
-     * This method sets the Challenge value.
-     *
-     * @param[in]  aChallenge  A pointer to the Challenge value.
-     *
-     */
-    void SetIPv6AddressList(uint8_t aIndex, const Ip6::Address &aIPv6Address) { memcpy(&mIPv6AddressList[aIndex], &aIPv6Address, sizeof(Ip6::Address)); }
+    const Ip6::Address *GetIPv6Address(uint8_t aIndex) const { return ((aIndex * 8 < GetLength()) ? &mIPv6AddressList[aIndex] : NULL); }
 
 private:
-    Ip6::Address mIPv6AddressList[kMaxSize];
+    Ip6::Address mIPv6AddressList[0];
 } OT_TOOL_PACKED_END;
 
 /**
@@ -1262,7 +1254,7 @@ public:
     }
 
 private:
-    ChildTableEntry mChildTableEntry[Thread::Mle::kMaxChildren];
+    ChildTableEntry mChildTableEntry[0];
 } OT_TOOL_PACKED_END;
 
 
