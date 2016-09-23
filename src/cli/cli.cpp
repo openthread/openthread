@@ -2118,7 +2118,7 @@ void Interpreter::ProcessCommissioner(int argc, char *argv[])
                 VerifyOrExit(static_cast<size_t>(length) <= OT_STEERING_DATA_MAX_LENGTH, error = kThreadError_NoBufs);
                 VerifyOrExit(Interpreter::Hex2Bin(argv[index], dataset.mSteeringData.m8, static_cast<uint16_t>(length)) >= 0,
                              error = kThreadError_Parse);
-                dataset.mSteeringData.mLength = length;
+                dataset.mSteeringData.mLength = static_cast<uint8_t>(length);
                 length = 0;
             }
             else if (strcmp(argv[index], "joinerudpport") == 0)
