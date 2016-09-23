@@ -102,6 +102,8 @@ EXTRA_DIST                                                         = \
     thread-cert/Cert_7_1_03_BorderRouterAsLeader.py                  \
     thread-cert/Cert_7_1_04_BorderRouterAsRouter.py                  \
     thread-cert/Cert_7_1_05_BorderRouterAsRouter.py                  \
+    thread-cert/Cert_8_1_01_Commissioning.py                         \
+    thread-cert/Cert_8_1_02_Commissioning.py                         \
     thread-cert/Cert_9_2_13_EnergyScan.py                            \
     thread-cert/Cert_9_2_14_PanIdQuery.py                            \
     thread-cert/node.py                                              \
@@ -218,6 +220,8 @@ check_SCRIPTS                                                     += \
     thread-cert/Cert_7_1_03_BorderRouterAsLeader.py                  \
     thread-cert/Cert_7_1_04_BorderRouterAsRouter.py                  \
     thread-cert/Cert_7_1_05_BorderRouterAsRouter.py                  \
+    thread-cert/Cert_8_1_01_Commissioning.py                         \
+    thread-cert/Cert_8_1_02_Commissioning.py                         \
     thread-cert/Cert_9_2_13_EnergyScan.py                            \
     thread-cert/Cert_9_2_14_PanIdQuery.py                            \
     $(NULL)
@@ -235,10 +239,12 @@ TESTS                                                              = \
     $(check_SCRIPTS)                                                 \
     $(NULL)
 
-XFAIL_NCP_TESTS                                                        = \
-        thread-cert/Cert_9_2_13_EnergyScan.py                            \
-        thread-cert/Cert_9_2_14_PanIdQuery.py                            \
-        $(NULL)
+XFAIL_NCP_TESTS                                                    = \
+    thread-cert/Cert_8_1_01_Commissioning.py                         \
+    thread-cert/Cert_8_1_02_Commissioning.py                         \
+    thread-cert/Cert_9_2_13_EnergyScan.py                            \
+    thread-cert/Cert_9_2_14_PanIdQuery.py                            \
+    $(NULL)
 
 XFAIL_TESTS = $(if $(filter $(NODE_TYPE),ncp-sim),$(XFAIL_NCP_TESTS))
 
