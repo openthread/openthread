@@ -39,6 +39,7 @@
 #endif
 
 
+#include <platform/logging.h>
 #if OPENTHREAD_ENABLE_UART_LOGGING
 #include <ctype.h>
 #include <inttypes.h>
@@ -48,7 +49,6 @@
 #include <string.h>
 
 #include <common/code_utils.hpp>
-#include <platform/logging.h>
 #include <platform/uart.h>
 
 // Macro to append content to end of the log string.
