@@ -1366,6 +1366,17 @@ ThreadError otCommissionerPanIdQuery(otInstance *, uint16_t aPanId, uint32_t aCh
                                                                  *static_cast<const Ip6::Address *>(aAddress),
                                                                  aCallback, aContext);
 }
+
+ThreadError otSendMgmtCommissionerGet(otInstance *, const uint8_t *aTlvs, uint8_t aLength)
+{
+    return sThreadNetif->GetCommissioner().SendMgmtCommissionerGetRequest(aTlvs, aLength);
+}
+
+ThreadError otSendMgmtCommissionerSet(otInstance *, const otCommissioningDataset *aDataset,
+                                      const uint8_t *aTlvs, uint8_t aLength)
+{
+    return sThreadNetif->GetCommissioner().SendMgmtCommissionerSetRequest(*aDataset, aTlvs, aLength);
+}
 #endif  // OPENTHREAD_ENABLE_COMMISSIONER
 
 #if OPENTHREAD_ENABLE_JOINER

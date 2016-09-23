@@ -604,11 +604,7 @@ public:
     void SetBit(uint8_t aBit) { mSteeringData[aBit / 8] |= 1 << (aBit % 8); }
 
 private:
-    enum
-    {
-        kMaxLength = 16,
-    };
-    uint8_t mSteeringData[kMaxLength];
+    uint8_t mSteeringData[OT_STEERING_DATA_MAX_LENGTH];
 } OT_TOOL_PACKED_END;
 
 /**
