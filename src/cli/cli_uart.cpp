@@ -205,6 +205,18 @@ extern "C" void otPlatUartSendDone(void)
     Uart::sUartServer->SendDoneTask();
 }
 
+#if OPENTHREAD_ENABLE_UART_LOGGING
+extern "C" int otPlatUartOutput(const char *aBuf, uint16_t aBufLength)
+{
+    if (NULL == Uart::sUartServer)
+    {
+        return 0;
+    }
+
+    return Uart::sUartServer->Output(aBuf, aBufLength);
+}
+#endif
+
 void Uart::SendDoneTask(void)
 {
     mTxHead = (mTxHead + mSendLength) % kTxBufferSize;

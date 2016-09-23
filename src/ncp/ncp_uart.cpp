@@ -258,4 +258,14 @@ void NcpUart::HandleError(ThreadError aError, uint8_t *aBuf, uint16_t aBufLength
     otNcpStreamWrite(0, reinterpret_cast<uint8_t*>(hexbuf + 1), static_cast<int>(strlen(hexbuf) - 1));
 }
 
+#if OPENTHREAD_ENABLE_UART_LOGGING
+extern "C" int otPlatUartOutput(const char *aBuf, uint16_t aBufLength)
+{
+    (void)aBuf;
+    (void)aBufLength;
+
+    return 0;
+}
+#endif
+
 }  // namespace Thread

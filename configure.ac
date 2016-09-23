@@ -544,6 +544,36 @@ AM_CONDITIONAL([OPENTHREAD_ENABLE_DIAG], [test "${enable_diag}" = "yes"])
 AC_DEFINE_UNQUOTED([OPENTHREAD_ENABLE_DIAG],[${OPENTHREAD_ENABLE_DIAG}],[Define to 1 if you want to use diagnostics module])
 
 #
+# Uart Logging
+#
+
+AC_ARG_ENABLE(uart_logging,
+    [AS_HELP_STRING([--enable-uart-logging],[Enable uart logging suport @<:@default=no@:>@.])],
+    [
+        case "${enableval}" in
+
+        no|yes)
+            enable_uart_logging=${enableval}
+            ;;
+
+        *)
+            AC_MSG_ERROR([Invalid value ${enable_uart_logging} for --enable-uart-logging])
+            ;;
+        esac
+    ],
+    [enable_uart_logging=no])
+
+if test "$enable_uart_logging" = "yes"; then
+    OPENTHREAD_ENABLE_UART_LOGGING=1
+else
+    OPENTHREAD_ENABLE_UART_LOGGING=0
+fi
+
+AC_SUBST(OPENTHREAD_ENABLE_UART_LOGGING)
+AM_CONDITIONAL([OPENTHREAD_ENABLE_UART_LOGGING], [test "${enable_uart_logging}" = "yes"])
+AC_DEFINE_UNQUOTED([OPENTHREAD_ENABLE_UART_LOGGING],[${OPENTHREAD_ENABLE_UART_LOGGING}],[Define to 1 if you want to enable uart logging])
+
+#
 # Examples
 #
 
@@ -796,6 +826,7 @@ AC_MSG_NOTICE([
   OpenThread Joiner support                 : ${enable_joiner}
   OpenThread DTLS support                   : ${enable_dtls}
   OpenThread Diagnostics support            : ${enable_diag}
+  OpenThread Uart logging support           : ${enable_uart_logging}
   OpenThread examples                       : ${OPENTHREAD_EXAMPLES}
   OpenThread platform information           : ${PLATFORM_INFO}
 

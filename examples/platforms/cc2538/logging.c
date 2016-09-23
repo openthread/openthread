@@ -32,12 +32,131 @@
  *
  */
 
+#ifdef OPENTHREAD_CONFIG_FILE
+#include OPENTHREAD_CONFIG_FILE
+#else
+#include <openthread-config.h>
+#endif
+
+
+#if OPENTHREAD_ENABLE_UART_LOGGING
+#include <ctype.h>
+#include <inttypes.h>
+#include <stdarg.h>
+#include <stdio.h>
+#include <stdint.h>
+#include <string.h>
+
+#include <common/code_utils.hpp>
 #include <platform/logging.h>
+#include <platform/uart.h>
+
+// Macro to append content to end of the log string.
+
+#define LOG_PRINTF(...)                                                                     \
+    charsWritten = snprintf(&sLogString[offset], sizeof(sLogString) - offset , __VA_ARGS__);    \
+    VerifyOrExit(charsWritten >= 0, sLogString[offset] = 0);                                  \
+    offset += (unsigned int)charsWritten;                                    \
+    VerifyOrExit(offset < sizeof(sLogString), sLogString[sizeof(sLogString) -1 ] = 0)
+
+static char sLogString[128];
+#endif
 
 void otPlatLog(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aFormat, ...)
 {
+#if OPENTHREAD_ENABLE_UART_LOGGING
+    unsigned int offset;
+    int charsWritten;
+    va_list args;
+
+    offset = 0;
+
+    switch (aLogLevel)
+    {
+    case kLogLevelNone:
+        LOG_PRINTF("NONE ");
+        break;
+
+    case kLogLevelCrit:
+        LOG_PRINTF("CRIT ");
+        break;
+
+    case kLogLevelWarn:
+        LOG_PRINTF("WARN ");
+        break;
+
+    case kLogLevelInfo:
+        LOG_PRINTF("INFO ");
+        break;
+
+    case kLogLevelDebg:
+        LOG_PRINTF("DEBG ");
+        break;
+
+    default:
+        return;
+    }
+
+    switch (aLogRegion)
+    {
+    case kLogRegionApi:
+        LOG_PRINTF("API  ");
+        break;
+
+    case kLogRegionMle:
+        LOG_PRINTF("MLE  ");
+        break;
+
+    case kLogRegionArp:
+        LOG_PRINTF("ARP  ");
+        break;
+
+    case kLogRegionNetData:
+        LOG_PRINTF("NETD ");
+        break;
+
+    case kLogRegionIp6:
+        LOG_PRINTF("IPV6 ");
+        break;
+
+    case kLogRegionIcmp:
+        LOG_PRINTF("ICMP ");
+        break;
+
+    case kLogRegionMac:
+        LOG_PRINTF("MAC  ");
+        break;
+
+    case kLogRegionMem:
+        LOG_PRINTF("MEM  ");
+        break;
+
+    case kLogRegionNcp:
+        LOG_PRINTF("NCP  ");
+        break;
+
+    case kLogRegionMeshCoP:
+        LOG_PRINTF("MCOP ");
+        break;
+
+    default:
+        return;
+    }
+
+    va_start(args, aFormat);
+    charsWritten = vsnprintf(&sLogString[offset], sizeof(sLogString) - offset, aFormat, args);
+    va_end(args);
+
+    VerifyOrExit(charsWritten >= 0, sLogString[offset] = 0);
+
+    offset += charsWritten;
+
+    LOG_PRINTF("\r\n");
+exit:
+    otPlatUartOutput(sLogString, offset);
+#else
     (void)aLogLevel;
     (void)aLogRegion;
     (void)aFormat;
+#endif // OPENTHREAD_ENABLE_UART_LOGGING
 }
-
