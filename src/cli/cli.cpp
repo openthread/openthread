@@ -2066,8 +2066,8 @@ void Interpreter::ProcessCommissioner(int argc, char *argv[])
             }
             else if (strcmp(argv[index], "binary") == 0)
             {
-                VerifyOrExit((index + 1) < argc, error = kThreadError_Parse);
-                value = static_cast<long>(strlen(argv[++index]) + 1) / 2;
+                VerifyOrExit(++index < argc, error = kThreadError_Parse);
+                value = static_cast<long>(strlen(argv[index]) + 1) / 2;
                 VerifyOrExit(static_cast<size_t>(value) <= (sizeof(tlvs) - static_cast<size_t>(length)), error = kThreadError_NoBufs);
                 VerifyOrExit(Interpreter::Hex2Bin(argv[index], tlvs + length, static_cast<uint16_t>(value)) >= 0,
                              error = kThreadError_Parse);
@@ -2098,23 +2098,23 @@ void Interpreter::ProcessCommissioner(int argc, char *argv[])
 
             if (strcmp(argv[index], "locator") == 0)
             {
-                VerifyOrExit(index < argc, error = kThreadError_Parse);
+                VerifyOrExit(++index < argc, error = kThreadError_Parse);
                 dataset.mIsLocatorSet = true;
-                SuccessOrExit(error = Interpreter::ParseLong(argv[++index], value));
+                SuccessOrExit(error = Interpreter::ParseLong(argv[index], value));
                 dataset.mLocator = static_cast<uint16_t>(value);
             }
             else if (strcmp(argv[index], "sessionid") == 0)
             {
-                VerifyOrExit(index < argc, error = kThreadError_Parse);
+                VerifyOrExit(++index < argc, error = kThreadError_Parse);
                 dataset.mIsSessionIdSet = true;
-                SuccessOrExit(error = Interpreter::ParseLong(argv[++index], value));
+                SuccessOrExit(error = Interpreter::ParseLong(argv[index], value));
                 dataset.mSessionId = static_cast<uint16_t>(value);
             }
             else if (strcmp(argv[index], "steeringdata") == 0)
             {
-                VerifyOrExit((index + 1) < argc, error = kThreadError_Parse);
+                VerifyOrExit(++index < argc, error = kThreadError_Parse);
                 dataset.mIsSteeringDataSet = true;
-                length = static_cast<int>((strlen(argv[++index]) + 1) / 2);
+                length = static_cast<int>((strlen(argv[index]) + 1) / 2);
                 VerifyOrExit(static_cast<size_t>(length) <= OT_STEERING_DATA_MAX_LENGTH, error = kThreadError_NoBufs);
                 VerifyOrExit(Interpreter::Hex2Bin(argv[index], dataset.mSteeringData.m8, static_cast<uint16_t>(length)) >= 0,
                              error = kThreadError_Parse);
@@ -2123,15 +2123,15 @@ void Interpreter::ProcessCommissioner(int argc, char *argv[])
             }
             else if (strcmp(argv[index], "joinerudpport") == 0)
             {
-                VerifyOrExit(index < argc, error = kThreadError_Parse);
+                VerifyOrExit(++index < argc, error = kThreadError_Parse);
                 dataset.mIsJoinerUdpPortSet = true;
-                SuccessOrExit(error = Interpreter::ParseLong(argv[++index], value));
+                SuccessOrExit(error = Interpreter::ParseLong(argv[index], value));
                 dataset.mJoinerUdpPort = static_cast<uint16_t>(value);
             }
             else if (strcmp(argv[index], "binary") == 0)
             {
-                VerifyOrExit((index + 1) < argc, error = kThreadError_Parse);
-                length = static_cast<int>((strlen(argv[++index]) + 1) / 2);
+                VerifyOrExit(++index < argc, error = kThreadError_Parse);
+                length = static_cast<int>((strlen(argv[index]) + 1) / 2);
                 VerifyOrExit(static_cast<size_t>(length) <= sizeof(tlvs), error = kThreadError_NoBufs);
                 VerifyOrExit(Interpreter::Hex2Bin(argv[index], tlvs, static_cast<uint16_t>(length)) >= 0,
                              error = kThreadError_Parse);
