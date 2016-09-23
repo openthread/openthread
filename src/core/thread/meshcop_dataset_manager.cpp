@@ -289,8 +289,8 @@ void DatasetManager::HandleSet(Coap::Header &aHeader, Message &aMessage, const I
                 {
                     uint16_t sessionId;
 
-                    sessionId = reinterpret_cast<CommissionerSessionIdTlv *>(data)->GetCommissionerSessionId();
-                    VerifyOrExit(sessionId == reinterpret_cast<CommissionerSessionIdTlv *>(&tlv)->GetCommissionerSessionId(),
+                    sessionId = static_cast<CommissionerSessionIdTlv *>(data)->GetCommissionerSessionId();
+                    VerifyOrExit(sessionId == static_cast<CommissionerSessionIdTlv *>(&tlv)->GetCommissionerSessionId(),
                                  state = StateTlv::kReject);
                     break;
                 }
