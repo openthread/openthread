@@ -59,6 +59,24 @@ public:
      */
     JoinerRouter(ThreadNetif &aNetif);
 
+    /**
+     * This method returns the Joiner UDP Port.
+     *
+     * @returns The Joiner UDP Port number .
+     *
+     */
+    uint16_t GetJoinerUdpPort(void);
+
+    /**
+     * This method sets the Joiner UDP Port.
+     *
+     * @param[in]  The Joiner UDP Port number.
+     *
+     * @retval kThreadError_None    Successfully set the Joiner UDP Port.
+     *
+     */
+    ThreadError SetJoinerUdpPort(uint16_t aJoinerUdpPort);
+
 private:
     static void HandleNetifStateChanged(uint32_t aFlags, void *aContext);
     void HandleNetifStateChanged(uint32_t aFlags);
@@ -73,13 +91,14 @@ private:
     ThreadError SendJoinerEntrust(const Ip6::MessageInfo &aMessageInfo);
 
     ThreadError GetBorderAgentRloc(uint16_t &aRloc);
-    ThreadError GetJoinerPort(uint16_t &aRloc);
 
     Ip6::NetifCallback mNetifCallback;
 
     Ip6::UdpSocket mSocket;
     Coap::Resource mRelayTransmit;
     ThreadNetif &mNetif;
+
+    uint16_t mJoinerUdpPort;
 };
 
 }  // namespace MeshCoP

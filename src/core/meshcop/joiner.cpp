@@ -100,6 +100,7 @@ void Joiner::HandleDiscoverResult(otActiveScanResult *aResult)
 {
     if (aResult != NULL)
     {
+        mJoinerUdpPort = aResult->mJoinerUdpPort;
         mJoinerRouterPanId = aResult->mPanId;
         mJoinerRouterChannel = aResult->mChannel;
         memcpy(&mJoinerRouter, &aResult->mExtAddress, sizeof(mJoinerRouter));
@@ -108,7 +109,7 @@ void Joiner::HandleDiscoverResult(otActiveScanResult *aResult)
     {
         // open UDP port
         Ip6::SockAddr sockaddr;
-        sockaddr.mPort = 1000;
+        sockaddr.mPort = mJoinerUdpPort;
         mSocket.Open(&Joiner::HandleUdpReceive, this);
         mSocket.Bind(sockaddr);
 
@@ -198,7 +199,7 @@ void Joiner::HandleUdpTransmit(void)
     memset(&messageInfo, 0, sizeof(messageInfo));
     messageInfo.GetPeerAddr().mFields.m16[0] = HostSwap16(0xfe80);
     messageInfo.GetPeerAddr().SetIid(mJoinerRouter);
-    messageInfo.mPeerPort = 1000;
+    messageInfo.mPeerPort = mJoinerUdpPort;
     messageInfo.mInterfaceId = 1;
 
     SuccessOrExit(error = mSocket.SendTo(*mTransmitMessage, messageInfo));

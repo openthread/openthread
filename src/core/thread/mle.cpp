@@ -61,6 +61,7 @@ Mle::Mle(ThreadNetif &aThreadNetif) :
     mMesh(aThreadNetif.GetMeshForwarder()),
     mMleRouter(aThreadNetif.GetMle()),
     mNetworkData(aThreadNetif.GetNetworkDataLeader()),
+    mJoinerRouter(aThreadNetif.GetJoinerRouter()),
     mParentRequestTimer(aThreadNetif.GetIp6().mTimerScheduler, &Mle::HandleParentRequestTimer, this),
     mSocket(aThreadNetif.GetIp6().mUdp),
     mSendChildUpdateRequest(aThreadNetif.GetIp6().mTaskletScheduler, &Mle::HandleSendChildUpdateRequest, this)
@@ -2207,6 +2208,7 @@ ThreadError Mle::SendDiscoveryResponse(const Ip6::Address &aDestination, uint16_
     MeshCoP::DiscoveryResponseTlv discoveryResponse;
     MeshCoP::ExtendedPanIdTlv extPanId;
     MeshCoP::NetworkNameTlv networkName;
+    MeshCoP::JoinerUdpPortTlv joinerUdpPort;
 
     VerifyOrExit((message = mSocket.NewMessage(0)) != NULL, ;);
     message->SetLinkSecurityEnabled(false);
@@ -2235,6 +2237,11 @@ ThreadError Mle::SendDiscoveryResponse(const Ip6::Address &aDestination, uint16_
     networkName.SetNetworkName(mMac.GetNetworkName());
     SuccessOrExit(error = message->Append(&networkName, sizeof(tlv) + networkName.GetLength()));
 
+    // Joiner UDP Port TLV
+    joinerUdpPort.Init();
+    joinerUdpPort.SetUdpPort(mJoinerRouter.GetJoinerUdpPort());
+    SuccessOrExit(error = message->Append(&joinerUdpPort, sizeof(tlv) + joinerUdpPort.GetLength()));
+
     tlv.SetLength(static_cast<uint8_t>(message->GetLength() - startOffset));
     message->Write(startOffset - sizeof(tlv), sizeof(tlv), &tlv);
 
@@ -2261,6 +2268,7 @@ ThreadError Mle::HandleDiscoveryResponse(const Message &aMessage, const Ip6::Mes
     MeshCoP::DiscoveryResponseTlv discoveryResponse;
     MeshCoP::ExtendedPanIdTlv extPanId;
     MeshCoP::NetworkNameTlv networkName;
+    MeshCoP::JoinerUdpPortTlv JoinerUdpPort;
     otActiveScanResult result;
     uint16_t offset;
     uint16_t end;
@@ -2321,6 +2329,12 @@ ThreadError Mle::HandleDiscoveryResponse(const Message &aMessage, const Ip6::Mes
             aMessage.Read(offset, sizeof(networkName), &networkName);
             VerifyOrExit(networkName.IsValid(), error = kThreadError_Parse);
             memcpy(&result.mNetworkName, networkName.GetNetworkName(), networkName.GetLength());
+            break;
+
+        case MeshCoP::Tlv::kJoinerUdpPort:
+            aMessage.Read(offset, sizeof(JoinerUdpPort), &JoinerUdpPort);
+            VerifyOrExit(JoinerUdpPort.IsValid(), error = kThreadError_Parse);
+            result.mJoinerUdpPort = JoinerUdpPort.GetUdpPort();
             break;
 
         default:
