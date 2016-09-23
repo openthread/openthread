@@ -40,6 +40,10 @@
 #include <net/icmp6.hpp>
 #include <net/ip6.hpp>
 
+#ifdef WINDOWS_LOGGING
+#include "icmp6.tmh"
+#endif
+
 using Thread::Encoding::BigEndian::HostSwap16;
 
 namespace Thread {
@@ -206,7 +210,12 @@ ThreadError Icmp::HandleEchoRequest(Message &aRequestMessage, const MessageInfo 
     icmp6Header.Init();
     icmp6Header.SetType(IcmpHeader::kTypeEchoReply);
 
-    VerifyOrExit((replyMessage = mIp6.NewMessage(0)) != NULL, otLogDebgIcmp("icmp fail\n"));
+    if ((replyMessage = mIp6.NewMessage(0)) == NULL)
+    { 
+        otLogDebgIcmp("icmp fail\n");
+        ExitNow();
+    }
+
     payloadLength = aRequestMessage.GetLength() - aRequestMessage.GetOffset() - IcmpHeader::GetDataOffset();
     SuccessOrExit(replyMessage->SetLength(IcmpHeader::GetDataOffset() + payloadLength));
 

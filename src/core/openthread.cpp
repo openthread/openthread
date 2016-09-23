@@ -53,6 +53,10 @@
 #include <thread/thread_netif.hpp>
 #include <thread/thread_uris.hpp>
 
+#ifdef WINDOWS_LOGGING
+#include "openthread.tmh"
+#endif
+
 // Temporary definition
 typedef struct otInstance
 {

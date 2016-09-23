@@ -42,6 +42,10 @@
 #include <thread/thread_tlvs.hpp>
 #include <thread/thread_uris.hpp>
 
+#ifdef WINDOWS_LOGGING
+#include "leader.tmh"
+#endif
+
 namespace Thread {
 namespace MeshCoP {
 

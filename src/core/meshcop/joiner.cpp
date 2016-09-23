@@ -49,6 +49,10 @@
 #include <thread/thread_netif.hpp>
 #include <thread/thread_uris.hpp>
 
+#ifdef WINDOWS_LOGGING
+#include "joiner.tmh"
+#endif
+
 using Thread::Encoding::BigEndian::HostSwap16;
 
 namespace Thread {

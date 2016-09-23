@@ -46,6 +46,10 @@
 #include <thread/mle_router.hpp>
 #include <thread/thread_netif.hpp>
 
+#ifdef WINDOWS_LOGGING
+#include "mesh_forwarder.tmh"
+#endif
+
 using Thread::Encoding::BigEndian::HostSwap16;
 
 namespace Thread {

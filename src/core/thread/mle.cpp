@@ -48,6 +48,10 @@
 #include <thread/mle_router.hpp>
 #include <thread/thread_netif.hpp>
 
+#ifdef WINDOWS_LOGGING
+#include "mle.tmh"
+#endif
+
 using Thread::Encoding::BigEndian::HostSwap16;
 
 namespace Thread {
@@ -1495,11 +1499,19 @@ void Mle::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageIn
     {
         if (keySequence == neighbor->mKeySequence)
         {
-            VerifyOrExit(frameCounter >= neighbor->mValid.mMleFrameCounter, otLogDebgMle("mle frame reject 1\n"));
+            if (frameCounter < neighbor->mValid.mMleFrameCounter)
+            {
+                otLogDebgMle("mle frame reject 1\n");
+                ExitNow();
+            }
         }
         else
         {
-            VerifyOrExit(keySequence > neighbor->mKeySequence, otLogDebgMle("mle frame reject 2\n"));
+            if (keySequence <= neighbor->mKeySequence)
+            {
+                otLogDebgMle("mle frame reject 2\n");
+                ExitNow();
+            }
             neighbor->mKeySequence = keySequence;
             neighbor->mValid.mLinkFrameCounter = 0;
         }
@@ -1508,15 +1520,18 @@ void Mle::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageIn
     }
     else
     {
-        VerifyOrExit(command == Header::kCommandLinkRequest ||
-                     command == Header::kCommandLinkAccept ||
-                     command == Header::kCommandLinkAcceptAndRequest ||
-                     command == Header::kCommandAdvertisement ||
-                     command == Header::kCommandParentRequest ||
-                     command == Header::kCommandParentResponse ||
-                     command == Header::kCommandChildIdRequest ||
-                     command == Header::kCommandChildUpdateRequest,
-                     otLogDebgMle("mle sequence unknown! %d\n", command));
+        if (!(command == Header::kCommandLinkRequest ||
+              command == Header::kCommandLinkAccept ||
+              command == Header::kCommandLinkAcceptAndRequest ||
+              command == Header::kCommandAdvertisement ||
+              command == Header::kCommandParentRequest ||
+              command == Header::kCommandParentResponse ||
+              command == Header::kCommandChildIdRequest ||
+              command == Header::kCommandChildUpdateRequest))
+        {
+            otLogDebgMle("mle sequence unknown! %d\n", command);
+            ExitNow();
+        }
     }
 
     switch (command)

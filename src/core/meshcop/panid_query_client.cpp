@@ -40,6 +40,10 @@
 #include <thread/thread_netif.hpp>
 #include <thread/thread_uris.hpp>
 
+#ifdef WINDOWS_LOGGING
+#include "panid_query_client.tmh"
+#endif
+
 namespace Thread {
 
 PanIdQueryClient::PanIdQueryClient(ThreadNetif &aThreadNetif) :

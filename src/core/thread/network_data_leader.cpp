@@ -46,6 +46,10 @@
 #include <thread/thread_tlvs.hpp>
 #include <thread/thread_uris.hpp>
 
+#ifdef WINDOWS_LOGGING
+#include "network_data_leader.tmh"
+#endif
+
 using Thread::Encoding::BigEndian::HostSwap16;
 
 namespace Thread {

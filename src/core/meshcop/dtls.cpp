@@ -44,6 +44,10 @@
 
 #include <mbedtls/debug.h>
 
+#ifdef WINDOWS_LOGGING
+#include "dtls.tmh"
+#endif
+
 namespace Thread {
 namespace MeshCoP {
 

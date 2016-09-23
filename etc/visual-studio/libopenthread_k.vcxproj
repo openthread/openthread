@@ -193,34 +193,54 @@
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
-      <PreprocessorDefinitions>WIN32;%(PreprocessorDefinitions);MBEDTLS_CONFIG_FILE="mbedtls-config.h";OPENTHREAD_CONFIG_FILE="openthread-windows-config.h";WINDOWS_KERNEL;OPENTHREAD_MULTIPLE_INSTANCE</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;%(PreprocessorDefinitions);MBEDTLS_CONFIG_FILE="mbedtls-config.h";OPENTHREAD_CONFIG_FILE="openthread-windows-config.h";WINDOWS_KERNEL;WINDOWS_LOGGING;OPENTHREAD_MULTIPLE_INSTANCE</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\..\include;..\..\src\missing\stdint;..\..\src\missing\stdbool;..\..\src\core;..\..\third_party\mbedtls;..\..\third_party\mbedtls\repo\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DisableSpecificWarnings>4100;4706;4748;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <TreatWarningAsError>true</TreatWarningAsError>
+      <WppEnabled>true</WppEnabled>
+      <WppScanConfigurationData>..\..\include\platform\logging-windows.h</WppScanConfigurationData>
+      <WppAdditionalOptions>-km %(WppAdditionalOptions)</WppAdditionalOptions>
+      <WppModuleName>otCore</WppModuleName>
+      <WppSearchString>WPP_INIT_TRACING</WppSearchString>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
-      <PreprocessorDefinitions>_WIN64;_AMD64_;AMD64;%(PreprocessorDefinitions);MBEDTLS_CONFIG_FILE="mbedtls-config.h";OPENTHREAD_CONFIG_FILE="openthread-windows-config.h";WINDOWS_KERNEL;OPENTHREAD_MULTIPLE_INSTANCE</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_WIN64;_AMD64_;AMD64;%(PreprocessorDefinitions);MBEDTLS_CONFIG_FILE="mbedtls-config.h";OPENTHREAD_CONFIG_FILE="openthread-windows-config.h";WINDOWS_KERNEL;WINDOWS_LOGGING;OPENTHREAD_MULTIPLE_INSTANCE</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\..\include;..\..\src\missing\stdint;..\..\src\missing\stdbool;..\..\src\core;..\..\third_party\mbedtls;..\..\third_party\mbedtls\repo\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DisableSpecificWarnings>4100;4706;4748;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <TreatWarningAsError>true</TreatWarningAsError>
+      <WppEnabled>true</WppEnabled>
+      <WppScanConfigurationData>..\..\include\platform\logging-windows.h</WppScanConfigurationData>
+      <WppAdditionalOptions>-km %(WppAdditionalOptions)</WppAdditionalOptions>
+      <WppModuleName>otCore</WppModuleName>
+      <WppSearchString>WPP_INIT_TRACING</WppSearchString>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
-      <PreprocessorDefinitions>WIN32;%(PreprocessorDefinitions);MBEDTLS_CONFIG_FILE="mbedtls-config.h";OPENTHREAD_CONFIG_FILE="openthread-windows-config.h";WINDOWS_KERNEL;OPENTHREAD_MULTIPLE_INSTANCE</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;%(PreprocessorDefinitions);MBEDTLS_CONFIG_FILE="mbedtls-config.h";OPENTHREAD_CONFIG_FILE="openthread-windows-config.h";WINDOWS_KERNEL;WINDOWS_LOGGING;OPENTHREAD_MULTIPLE_INSTANCE</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\..\include;..\..\src\missing\stdint;..\..\src\missing\stdbool;..\..\src\core;..\..\third_party\mbedtls;..\..\third_party\mbedtls\repo\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DisableSpecificWarnings>4100;4603;4627;4706;4986;4987;4996;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <TreatWarningAsError>true</TreatWarningAsError>
+      <WppEnabled>true</WppEnabled>
+      <WppScanConfigurationData>..\..\include\platform\logging-windows.h</WppScanConfigurationData>
+      <WppAdditionalOptions>-km %(WppAdditionalOptions)</WppAdditionalOptions>
+      <WppModuleName>otCore</WppModuleName>
+      <WppSearchString>WPP_INIT_TRACING</WppSearchString>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
-      <PreprocessorDefinitions>_WIN64;_AMD64_;AMD64;%(PreprocessorDefinitions);MBEDTLS_CONFIG_FILE="mbedtls-config.h";OPENTHREAD_CONFIG_FILE="openthread-windows-config.h";WINDOWS_KERNEL;OPENTHREAD_MULTIPLE_INSTANCE</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_WIN64;_AMD64_;AMD64;%(PreprocessorDefinitions);MBEDTLS_CONFIG_FILE="mbedtls-config.h";OPENTHREAD_CONFIG_FILE="openthread-windows-config.h";WINDOWS_KERNEL;WINDOWS_LOGGING;OPENTHREAD_MULTIPLE_INSTANCE</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\..\include;..\..\src\missing\stdint;..\..\src\missing\stdbool;..\..\src\core;..\..\third_party\mbedtls;..\..\third_party\mbedtls\repo\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DisableSpecificWarnings>4100;4603;4627;4706;4986;4987;4996;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <TreatWarningAsError>true</TreatWarningAsError>
+      <WppEnabled>true</WppEnabled>
+      <WppScanConfigurationData>..\..\include\platform\logging-windows.h</WppScanConfigurationData>
+      <WppAdditionalOptions>-km %(WppAdditionalOptions)</WppAdditionalOptions>
+      <WppModuleName>otCore</WppModuleName>
+      <WppSearchString>WPP_INIT_TRACING</WppSearchString>
     </ClCompile>
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

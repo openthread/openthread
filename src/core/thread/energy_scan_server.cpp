@@ -40,6 +40,10 @@
 #include <thread/thread_netif.hpp>
 #include <thread/thread_uris.hpp>
 
+#ifdef WINDOWS_LOGGING
+#include "energy_scan_server.tmh"
+#endif
+
 namespace Thread {
 
 EnergyScanServer::EnergyScanServer(ThreadNetif &aThreadNetif) :

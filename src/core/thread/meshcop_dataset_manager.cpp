@@ -46,6 +46,10 @@
 #include <thread/thread_tlvs.hpp>
 #include <thread/thread_uris.hpp>
 
+#ifdef WINDOWS_LOGGING
+#include "meshcop_dataset_manager.tmh"
+#endif
+
 namespace Thread {
 namespace MeshCoP {
 
