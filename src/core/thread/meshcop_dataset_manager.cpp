@@ -271,6 +271,34 @@ void DatasetManager::HandleSet(Coap::Header &aHeader, Message &aMessage, const I
             ExitNow(state = StateTlv::kReject);
         }
 
+        // verify session id is the same
+        if (tlvType == Tlv::kCommissionerSessionId)
+        {
+            uint8_t *cur;
+            uint8_t *end;
+            uint8_t length;
+
+            cur = mNetworkDataLeader.GetCommissioningData(length);
+            end = cur + length;
+
+            while (cur < end)
+            {
+                Tlv *data = reinterpret_cast<Tlv *>(cur);
+
+                if (data->GetType() == Tlv::kCommissionerSessionId)
+                {
+                    uint16_t sessionId;
+
+                    sessionId = static_cast<CommissionerSessionIdTlv *>(data)->GetCommissionerSessionId();
+                    VerifyOrExit(sessionId == static_cast<CommissionerSessionIdTlv *>(&tlv)->GetCommissionerSessionId(),
+                                 state = StateTlv::kReject);
+                    break;
+                }
+
+                cur += sizeof(Tlv) + data->GetLength();
+            }
+        }
+
         offset += sizeof(tlv) + tlv.GetLength();
     }
 
