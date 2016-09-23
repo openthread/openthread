@@ -1913,6 +1913,7 @@ ThreadError Mle::HandleParentResponse(const Message &aMessage, const Ip6::Messag
     mParent.mMode = ModeTlv::kModeFFD | ModeTlv::kModeRxOnWhenIdle | ModeTlv::kModeFullNetworkData;
     mParent.mLinkInfo.Clear();
     mParent.mLinkInfo.AddRss(mMac.GetNoiseFloor(), threadMessageInfo->mRss);
+    mParent.mLinkFailures = 0;
     mParent.mState = Neighbor::kStateValid;
     mParent.mKeySequence = aKeySequence;
 

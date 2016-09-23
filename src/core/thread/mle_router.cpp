@@ -630,6 +630,7 @@ ThreadError MleRouter::HandleLinkRequest(const Message &aMessage, const Ip6::Mes
                 memcpy(&neighbor->mMacAddr, &macAddr, sizeof(neighbor->mMacAddr));
                 neighbor->mLinkInfo.Clear();
                 neighbor->mLinkInfo.AddRss(mMac.GetNoiseFloor(), threadMessageInfo->mRss);
+                neighbor->mLinkFailures = 0;
                 neighbor->mState = Neighbor::kStateLinkRequest;
             }
             else
@@ -932,6 +933,7 @@ ThreadError MleRouter::HandleLinkAccept(const Message &aMessage, const Ip6::Mess
     neighbor->mMode = ModeTlv::kModeFFD | ModeTlv::kModeRxOnWhenIdle | ModeTlv::kModeFullNetworkData;
     neighbor->mLinkInfo.Clear();
     neighbor->mLinkInfo.AddRss(mMac.GetNoiseFloor(), threadMessageInfo->mRss);
+    neighbor->mLinkFailures = 0;
     neighbor->mState = Neighbor::kStateValid;
     neighbor->mKeySequence = aKeySequence;
 
@@ -1365,6 +1367,7 @@ ThreadError MleRouter::HandleAdvertisement(const Message &aMessage, const Ip6::M
                 memcpy(&router->mMacAddr, &macAddr, sizeof(router->mMacAddr));
                 router->mLinkInfo.Clear();
                 router->mLinkInfo.AddRss(mMac.GetNoiseFloor(), threadMessageInfo->mRss);
+                router->mLinkFailures = 0;
                 router->mState = Neighbor::kStateLinkRequest;
                 SendLinkRequest(router);
                 ExitNow(error = kThreadError_NoRoute);
@@ -1413,6 +1416,7 @@ ThreadError MleRouter::HandleAdvertisement(const Message &aMessage, const Ip6::M
             memcpy(&router->mMacAddr, &macAddr, sizeof(router->mMacAddr));
             router->mLinkInfo.Clear();
             router->mLinkInfo.AddRss(mMac.GetNoiseFloor(), threadMessageInfo->mRss);
+            router->mLinkFailures = 0;
             router->mState = Neighbor::kStateLinkRequest;
             router->mDataRequest = false;
             SendLinkRequest(router);
@@ -1619,6 +1623,7 @@ ThreadError MleRouter::HandleParentRequest(const Message &aMessage, const Ip6::M
     memcpy(&child->mMacAddr, &macAddr, sizeof(child->mMacAddr));
     child->mLinkInfo.Clear();
     child->mLinkInfo.AddRss(mMac.GetNoiseFloor(), threadMessageInfo->mRss);
+    child->mLinkFailures = 0;
     child->mState = Neighbor::kStateParentRequest;
     child->mDataRequest = false;
 

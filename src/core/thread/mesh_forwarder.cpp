@@ -1119,12 +1119,12 @@ ThreadError MeshForwarder::SendFragment(Message &aMessage, Mac::Frame &aFrame)
     return kThreadError_None;
 }
 
-void MeshForwarder::HandleSentFrame(void *aContext, Mac::Frame &aFrame)
+void MeshForwarder::HandleSentFrame(void *aContext, Mac::Frame &aFrame, ThreadError aError)
 {
-    static_cast<MeshForwarder *>(aContext)->HandleSentFrame(aFrame);
+    static_cast<MeshForwarder *>(aContext)->HandleSentFrame(aFrame, aError);
 }
 
-void MeshForwarder::HandleSentFrame(Mac::Frame &aFrame)
+void MeshForwarder::HandleSentFrame(Mac::Frame &aFrame, ThreadError aError)
 {
     Mac::Address macDest;
     Child *child;
@@ -1140,6 +1140,43 @@ void MeshForwarder::HandleSentFrame(Mac::Frame &aFrame)
     mSendMessage->SetOffset(mMessageNextOffset);
 
     aFrame.GetDstAddr(macDest);
+
+    if ((neighbor = mMle.GetNeighbor(macDest)) != NULL)
+    {
+        switch (aError)
+        {
+        case kThreadError_None:
+            neighbor->mLinkFailures = 0;
+            break;
+
+        case kThreadError_ChannelAccessFailure:
+            break;
+
+        case kThreadError_NoAck:
+            neighbor->mLinkFailures++;
+
+            if (mMle.IsActiveRouter(neighbor->mValid.mRloc16))
+            {
+                if (neighbor->mLinkFailures >= Mle::kFailedRouterTransmissions)
+                {
+                    mMle.RemoveNeighbor(*neighbor);
+                }
+            }
+            else
+            {
+                if (neighbor->mLinkFailures >= Mle::kFailedChildTransmissions)
+                {
+                    mMle.RemoveNeighbor(*neighbor);
+                }
+            }
+
+            break;
+
+        default:
+            assert(false);
+            break;
+        }
+    }
 
     if ((child = mMle.GetChild(macDest)) != NULL)
     {

@@ -46,6 +46,7 @@ enum
 {
     kMaxChildren                = OPENTHREAD_CONFIG_MAX_CHILDREN,
     kMaxChildKeepAliveAttempts  = 4,    ///< Maximum keep alive attempts before attempting to reattach to a new Parent
+    kFailedChildTransmissions   = 4,    ///< FAILED_CHILD_TRANSMISSIONS
 };
 
 /**
@@ -77,6 +78,7 @@ enum
 {
     kAdvertiseIntervalMin       = 1,                ///< ADVERTISEMENT_I_MIN (seconds)
     kAdvertiseIntervalMax       = 32,               ///< ADVERTISEMENT_I_MAX (seconds)
+    kFailedRouterTransmissions  = 4,                ///< FAILED_ROUTER_TRANSMISSIONS
     kRouterIdReuseDelay         = 100,              ///< ID_REUSE_DELAY (seconds)
     kRouterIdSequencePeriod     = 10,               ///< ID_SEQUENCE_PERIOD (seconds)
     kMaxNeighborAge             = 100,              ///< MAX_NEIGHBOR_AGE (seconds)
