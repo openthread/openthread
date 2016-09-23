@@ -1512,6 +1512,7 @@ void Mle::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageIn
                 otLogDebgMle("mle frame reject 2\n");
                 ExitNow();
             }
+
             neighbor->mKeySequence = keySequence;
             neighbor->mValid.mLinkFrameCounter = 0;
         }

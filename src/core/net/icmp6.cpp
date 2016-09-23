@@ -211,7 +211,7 @@ ThreadError Icmp::HandleEchoRequest(Message &aRequestMessage, const MessageInfo 
     icmp6Header.SetType(IcmpHeader::kTypeEchoReply);
 
     if ((replyMessage = mIp6.NewMessage(0)) == NULL)
-    { 
+    {
         otLogDebgIcmp("icmp fail\n");
         ExitNow();
     }
