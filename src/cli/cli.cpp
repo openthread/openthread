@@ -2466,7 +2466,7 @@ void Interpreter::ProcessNetworkDiagnostic(int argc, char *argv[])
     {
         long value;
         SuccessOrExit(error = ParseLong(argv[index], value));
-        tlvTypes[count++] = value;
+        tlvTypes[count++] = static_cast<uint8_t>(value);
         index++;
     }
 
