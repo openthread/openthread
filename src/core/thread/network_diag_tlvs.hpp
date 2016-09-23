@@ -1215,6 +1215,22 @@ public:
      */
     void SetMode(uint8_t aMode) { mMode = aMode; }
 
+    /**
+     * This method returns the Reserved value.
+     *
+     * @returns The Reserved value.
+     *
+     */
+    uint8_t GetReserved(void) const { return mReserved; }
+
+    /**
+     * This method sets the Reserved value.
+     *
+     * @param[in]  aReserved  The Reserved value.
+     *
+     */
+    void SetReserved(uint8_t aReserved) { mReserved = aReserved; }
+
 
 private:
     uint8_t mTimeout: 5;
