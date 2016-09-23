@@ -43,6 +43,7 @@
 #include <common/encoding.hpp>
 #include <common/new.hpp>
 #include <common/tasklet.hpp>
+#include <platform/logging.h>
 #include <platform/uart.h>
 
 namespace Thread {
@@ -205,25 +206,106 @@ extern "C" void otPlatUartSendDone(void)
     Uart::sUartServer->SendDoneTask();
 }
 
-#if OPENTHREAD_ENABLE_UART_LOGGING
-extern "C" int otPlatUartOutput(const char *aBuf, uint16_t aBufLength)
+#if OPENTHREAD_ENABLE_CLI_LOGGING
+#ifdef __cplusplus
+extern "C" {
+#endif
+void otCliLog(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aFormat, ...)
 {
     if (NULL == Uart::sUartServer)
     {
-        return 0;
+        return;
     }
 
-    return Uart::sUartServer->Output(aBuf, aBufLength);
+    switch (aLogLevel)
+    {
+    case kLogLevelNone:
+        Uart::sUartServer->OutputFormat("NONE ");
+        break;
+
+    case kLogLevelCrit:
+        Uart::sUartServer->OutputFormat("CRIT ");
+        break;
+
+    case kLogLevelWarn:
+        Uart::sUartServer->OutputFormat("WARN ");
+        break;
+
+    case kLogLevelInfo:
+        Uart::sUartServer->OutputFormat("INFO ");
+        break;
+
+    case kLogLevelDebg:
+        Uart::sUartServer->OutputFormat("DEBG ");
+        break;
+
+    default:
+        return;
+    }
+
+    switch (aLogRegion)
+    {
+    case kLogRegionApi:
+        Uart::sUartServer->OutputFormat("API  ");
+        break;
+
+    case kLogRegionMle:
+        Uart::sUartServer->OutputFormat("MLE  ");
+        break;
+
+    case kLogRegionArp:
+        Uart::sUartServer->OutputFormat("ARP  ");
+        break;
+
+    case kLogRegionNetData:
+        Uart::sUartServer->OutputFormat("NETD ");
+        break;
+
+    case kLogRegionIp6:
+        Uart::sUartServer->OutputFormat("IPV6 ");
+        break;
+
+    case kLogRegionIcmp:
+        Uart::sUartServer->OutputFormat("ICMP ");
+        break;
+
+    case kLogRegionMac:
+        Uart::sUartServer->OutputFormat("MAC  ");
+        break;
+
+    case kLogRegionMem:
+        Uart::sUartServer->OutputFormat("MEM  ");
+        break;
+
+    case kLogRegionNcp:
+        Uart::sUartServer->OutputFormat("NCP  ");
+        break;
+
+    case kLogRegionMeshCoP:
+        Uart::sUartServer->OutputFormat("MCOP ");
+        break;
+
+    default:
+        return;
+    }
+
+    va_list args;
+    va_start(args, aFormat);
+    Uart::sUartServer->OutputFormat(aFormat, args);
+    va_end(args);
 }
+#ifdef __cplusplus
+}  // extern "C"
 #endif
+#endif // OPENTHREAD_ENABLE_CLI_LOGGING
 
 void Uart::SendDoneTask(void)
 {
-    mTxHead = (mTxHead + mSendLength) % kTxBufferSize;
-    mTxLength -= mSendLength;
-    mSendLength = 0;
+mTxHead = (mTxHead + mSendLength) % kTxBufferSize;
+mTxLength -= mSendLength;
+mSendLength = 0;
 
-    Send();
+Send();
 }
 
 }  // namespace Cli

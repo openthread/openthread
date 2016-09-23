@@ -81,19 +81,6 @@ ThreadError otPlatUartDisable(void);
  */
 ThreadError otPlatUartSend(const uint8_t *aBuf, uint16_t aBufLength);
 
-#if OPENTHREAD_ENABLE_UART_LOGGING
-/**
- * Send string over the CLI UART.
- *
- * @param[in] aBuf        A pointer to the string buffer.
- * @param[in] aBufLength  Number of bytes to transmit.
- *
- * @returns The number of bytes placed in the output queue.
- *
- */
-extern int otPlatUartOutput(const char *aBuf, uint16_t aBufLength);
-#endif
-
 /**
  * The UART driver calls this method to notify OpenThread that the requested bytes have been sent.
  *
