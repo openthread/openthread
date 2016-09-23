@@ -131,6 +131,9 @@ Mle::Mle(ThreadNetif &aThreadNetif) :
     mMeshLocal16.mPreferredLifetime = 0xffffffff;
     mMeshLocal16.mValidLifetime = 0xffffffff;
 
+    // Store RLOC address reference in MPL module.
+    mNetif.GetIp6().mMpl.SetMatchingAddress(mMeshLocal16.GetAddress());
+
     // link-local all thread nodes
     mLinkLocalAllThreadNodes.GetAddress().mFields.m16[0] = HostSwap16(0xff32);
     mLinkLocalAllThreadNodes.GetAddress().mFields.m16[6] = HostSwap16(0x0000);
@@ -522,6 +525,7 @@ ThreadError Mle::SetRloc16(uint16_t aRloc16)
     }
 
     mMac.SetShortAddress(aRloc16);
+    mNetif.GetIp6().mMpl.SetSeed(aRloc16);
 
     return kThreadError_None;
 }
