@@ -2073,6 +2073,7 @@ ThreadError MleRouter::HandleChildUpdateRequest(const Message &aMessage, const I
     }
 
     child->mLastHeard = Timer::GetNow();
+    child->mAddSrcMatchEntryShort = true;
 
     SendChildUpdateResponse(child, aMessageInfo, tlvs, tlvslength, &challenge);
 

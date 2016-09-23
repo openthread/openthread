@@ -106,6 +106,9 @@ public:
     uint16_t     mFragmentOffset;                      ///< 6LoWPAN fragment offset
     uint8_t      mRequestTlvs[5];                      ///< Requested MLE TLVs
     uint8_t      mNetworkDataVersion;                  ///< Current Network Data version
+    uint16_t     mQueuedIndirectMessageCnt;            ///< Count of queued messages
+    bool         mAddSrcMatchEntryShort;               ///< Indicates whether or not to force add short address
+    bool         mAddSrcMatchEntryPending;             ///< Indicates whether or not pending to add
 };
 
 /**

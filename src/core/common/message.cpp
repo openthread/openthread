@@ -34,6 +34,7 @@
 #include <common/code_utils.hpp>
 #include <common/debug.hpp>
 #include <common/message.hpp>
+#include <common/logging.hpp>
 #include <net/ip6.hpp>
 
 namespace Thread {
@@ -84,7 +85,7 @@ Buffer *MessagePool::NewBuffer(void)
 {
     Buffer *buffer = NULL;
 
-    VerifyOrExit(mFreeBuffers != NULL, ;);
+    VerifyOrExit(mFreeBuffers != NULL, otLogInfoMac("No available message buffer\n"));
 
     buffer = mFreeBuffers;
     mFreeBuffers = mFreeBuffers->GetNextBuffer();
