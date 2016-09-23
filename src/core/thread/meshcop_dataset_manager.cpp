@@ -381,8 +381,8 @@ ThreadError DatasetManager::SendSetRequest(const otOperationalDataset &aDataset,
     {
         ActiveTimestampTlv timestamp;
         timestamp.Init();
-        static_cast<Timestamp *>(&timestamp)->SetSeconds((aDataset.mActiveTimestamp) >> 16);
-        static_cast<Timestamp *>(&timestamp)->SetTicks((aDataset.mActiveTimestamp) & 0xffff);
+        static_cast<Timestamp *>(&timestamp)->SetSeconds(aDataset.mActiveTimestamp);
+        static_cast<Timestamp *>(&timestamp)->SetTicks(0);
         SuccessOrExit(error = message->Append(&timestamp, sizeof(timestamp)));
     }
 
@@ -390,8 +390,8 @@ ThreadError DatasetManager::SendSetRequest(const otOperationalDataset &aDataset,
     {
         PendingTimestampTlv timestamp;
         timestamp.Init();
-        static_cast<Timestamp *>(&timestamp)->SetSeconds((aDataset.mPendingTimestamp) >> 16);
-        static_cast<Timestamp *>(&timestamp)->SetTicks((aDataset.mPendingTimestamp) & 0xffff);
+        static_cast<Timestamp *>(&timestamp)->SetSeconds(aDataset.mPendingTimestamp);
+        static_cast<Timestamp *>(&timestamp)->SetTicks(0);
         SuccessOrExit(error = message->Append(&timestamp, sizeof(timestamp)));
     }
 
