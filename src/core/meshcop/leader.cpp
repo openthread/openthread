@@ -51,7 +51,7 @@ Leader::Leader(ThreadNetif &aThreadNetif):
     mCoapServer(aThreadNetif.GetCoapServer()),
     mNetworkData(aThreadNetif.GetNetworkDataLeader()),
     mTimer(aThreadNetif.GetIp6().mTimerScheduler, HandleTimer, this),
-    mSessionId(0)
+    mSessionId(0xffff)
 {
     mCoapServer.AddResource(mPetition);
     mCoapServer.AddResource(mKeepAlive);
@@ -79,7 +79,7 @@ void Leader::HandlePetition(Coap::Header &aHeader, Message &aMessage, const Ip6:
     data.mBorderAgentLocator.SetBorderAgentLocator(HostSwap16(aMessageInfo.GetPeerAddr().mFields.m16[7]));
 
     data.mCommissionerSessionId.Init();
-    data.mCommissionerSessionId.SetCommissionerSessionId(mSessionId++);
+    data.mCommissionerSessionId.SetCommissionerSessionId(++mSessionId);
 
     data.mSteeringData.Init();
     data.mSteeringData.SetLength(1);
@@ -129,7 +129,6 @@ ThreadError Leader::SendPetitionResponse(const Coap::Header &aRequestHeader, con
         sessionId.Init();
         sessionId.SetCommissionerSessionId(mSessionId);
         SuccessOrExit(error = message->Append(&sessionId, sizeof(sessionId)));
-
     }
 
     SuccessOrExit(error = mCoapServer.SendMessage(*message, aMessageInfo));
