@@ -167,7 +167,7 @@ private:
     Coap::Resource mRelayReceive;
     ThreadNetif &mNetif;
 
-    bool mIsSendMgmtCommRequest = false;
+    bool mIsSendMgmtCommRequest;
 };
 
 }  // namespace MeshCoP

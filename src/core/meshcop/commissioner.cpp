@@ -60,7 +60,8 @@ Commissioner::Commissioner(ThreadNetif &aThreadNetif):
     mSendKek(false),
     mSocket(aThreadNetif.GetIp6().mUdp),
     mRelayReceive(OPENTHREAD_URI_RELAY_RX, &Commissioner::HandleRelayReceive, this),
-    mNetif(aThreadNetif)
+    mNetif(aThreadNetif),
+    mIsSendMgmtCommRequest(false)
 {
     aThreadNetif.GetCoapServer().AddResource(mRelayReceive);
 }
