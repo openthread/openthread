@@ -1532,6 +1532,24 @@ uint8_t otGetRouterDowngradeThreshold(void);
 void otSetRouterDowngradeThreshold(uint8_t aThreshold);
 
 /**
+ * Get the ROUTER_SELECTION_JITTER parameter used in the REED/Router role.
+ *
+ * @returns The ROUTER_SELECTION_JITTER value.
+ *
+ * @sa otSetRouterSelectionJitter
+ */
+uint8_t otGetRouterSelectionJitter(void);
+
+/**
+ * Set the ROUTER_SELECTION_JITTER parameter used in the REED/Router role.
+ *
+ * @param[in]  aRouterJitter  The ROUTER_SELECTION_JITTER value.
+ *
+ * @sa otGetRouterSelectionJitter
+ */
+void otSetRouterSelectionJitter(uint8_t aRouterJitter);
+
+/**
  * @}
  *
  */

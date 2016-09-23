@@ -54,6 +54,7 @@ class Cert_7_1_4_BorderRouterAsRouter(unittest.TestCase):
         self.nodes[ROUTER].add_whitelist(self.nodes[ED2].get_addr64())
         self.nodes[ROUTER].add_whitelist(self.nodes[SED2].get_addr64())
         self.nodes[ROUTER].enable_whitelist()
+        self.nodes[ROUTER].set_router_selection_jitter(1)
 
         self.nodes[ED2].set_panid(0xface)
         self.nodes[ED2].set_mode('rsn')

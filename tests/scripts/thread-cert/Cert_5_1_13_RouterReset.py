@@ -50,6 +50,7 @@ class Cert_5_1_13_RouterReset(unittest.TestCase):
         self.nodes[ROUTER].set_mode('rsdn')
         self.nodes[ROUTER].add_whitelist(self.nodes[LEADER].get_addr64())
         self.nodes[ROUTER].enable_whitelist()
+        self.nodes[ROUTER].set_router_selection_jitter(1)
 
     def tearDown(self):
         for node in list(self.nodes.values()):

@@ -60,6 +60,7 @@ class Cert_5_3_4_AddressMapCache(unittest.TestCase):
         self.nodes[ROUTER1].add_whitelist(self.nodes[LEADER].get_addr64())
         self.nodes[ROUTER1].add_whitelist(self.nodes[SED1].get_addr64())
         self.nodes[ROUTER1].enable_whitelist()
+        self.nodes[ROUTER1].set_router_selection_jitter(1)
 
         self.nodes[SED1].set_panid(0xface)
         self.nodes[SED1].set_mode('rsn')

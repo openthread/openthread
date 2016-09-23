@@ -579,12 +579,9 @@ private:
     bool HandleAdvertiseTimer(void);
     static void HandleStateUpdateTimer(void *aContext);
     void HandleStateUpdateTimer(void);
-    static void HandleRouterSelectionJitterTimer(void *aContext);
-    void HandleRouterSelectionJitterTimer(void);
 
     TrickleTimer mAdvertiseTimer;
     Timer mStateUpdateTimer;
-    Timer mRouterSelectionJitterTimer;
 
     Ip6::UdpSocket mSocket;
     Coap::Resource mAddressSolicit;
@@ -605,7 +602,6 @@ private:
     uint8_t mLeaderWeight;
     uint32_t mFixedLeaderPartitionId;  ///< only for certification testing
     bool mRouterRoleEnabled;
-    uint8_t mRouterSelectionJitterTimeout;
 
     uint8_t mRouterId;
     uint8_t mPreviousRouterId;

@@ -155,6 +155,9 @@ Mle::Mle(ThreadNetif &aThreadNetif) :
     memset(&mAddr64, 0, sizeof(mAddr64));
 
     mIsDiscoverInProgress = false;
+
+    mRouterSelectionJitterTimeout = 0;
+    mRouterSelectionJitter = kRouterSelectionJitter;
 }
 
 ThreadError Mle::Enable(void)
@@ -639,6 +642,16 @@ void Mle::SetAssignLinkQuality(const Mac::ExtAddress aMacAddr, uint8_t aLinkQual
     default:
         break;
     }
+}
+
+uint8_t Mle::GetRouterSelectionJitter(void) const
+{
+    return mRouterSelectionJitter;
+}
+
+void Mle::SetRouterSelectionJitter(uint8_t aRouterJitter)
+{
+    mRouterSelectionJitter = aRouterJitter;
 }
 
 void Mle::GenerateNonce(const Mac::ExtAddress &aMacAddr, uint32_t aFrameCounter, uint8_t aSecurityLevel,
@@ -2011,9 +2024,11 @@ ThreadError Mle::HandleChildIdResponse(const Message &aMessage, const Ip6::Messa
             }
         }
 
-        if ((mDeviceMode & ModeTlv::kModeFFD) && (numRouters < mMleRouter.GetRouterUpgradeThreshold()))
+        if (mRouterSelectionJitterTimeout == 0 &&
+            (mDeviceMode & ModeTlv::kModeFFD) &&
+            (numRouters < mMleRouter.GetRouterUpgradeThreshold()))
         {
-            mMleRouter.BecomeRouter(ThreadStatusTlv::kTooFewRouters);
+            mRouterSelectionJitterTimeout = otPlatRandomGet() % mRouterSelectionJitter;
         }
     }
 

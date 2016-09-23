@@ -47,6 +47,7 @@ class Cert_8_1_01_Commissioning(unittest.TestCase):
 
         self.nodes[JOINER].set_mode('rsdn')
         self.nodes[JOINER].set_masterkey('00112233445566778899aabbccddeeff')
+        self.nodes[JOINER].set_router_selection_jitter(1)
 
     def tearDown(self):
         for node in list(self.nodes.values()):

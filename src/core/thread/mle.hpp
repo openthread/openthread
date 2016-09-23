@@ -622,6 +622,22 @@ public:
     void SetAssignLinkQuality(const Mac::ExtAddress aMacAddr, uint8_t aLinkQuality);
 
     /**
+     * This method returns the ROUTER_SELECTION_JITTER value.
+     *
+     * @returns The ROUTER_SELECTION_JITTER value.
+     *
+     */
+    uint8_t GetRouterSelectionJitter(void) const;
+
+    /**
+     * This method sets the ROUTER_SELECTION_JITTER value.
+     *
+     * @returns The ROUTER_SELECTION_JITTER value.
+     *
+     */
+    void SetRouterSelectionJitter(uint8_t aRouterJitter);
+
+    /**
      * This method returns the Child ID portion of an RLOC16.
      *
      * @param[in]  aRloc16  The RLOC16 value.
@@ -1075,6 +1091,9 @@ protected:
     ParentRequestState mParentRequestState;  ///< The parent request state.
 
     Timer mParentRequestTimer;  ///< The timer for driving the Parent Request process.
+
+    uint8_t mRouterSelectionJitter;         ///< The variable to save the assigned jitter value.
+    uint8_t mRouterSelectionJitterTimeout;  ///< The Timeout prior to request/release Router ID.
 
 private:
     enum

@@ -55,6 +55,7 @@ class Cert_6_2_2_NewPartition(unittest.TestCase):
         self.nodes[ROUTER1].add_whitelist(self.nodes[ROUTER2].get_addr64())
         self.nodes[ROUTER1].add_whitelist(self.nodes[ED].get_addr64())
         self.nodes[ROUTER1].enable_whitelist()
+        self.nodes[ROUTER1].set_router_selection_jitter(1)
 
         self.nodes[ROUTER2].set_panid(0xface)
         self.nodes[ROUTER2].set_mode('rsdn')
@@ -62,6 +63,7 @@ class Cert_6_2_2_NewPartition(unittest.TestCase):
         self.nodes[ROUTER2].add_whitelist(self.nodes[ROUTER1].get_addr64())
         self.nodes[ROUTER2].enable_whitelist()
         self.nodes[ROUTER2].set_network_id_timeout(110)
+        self.nodes[ROUTER2].set_router_selection_jitter(1)
 
         self.nodes[ED].set_panid(0xface)
         self.nodes[ED].set_mode('rsn')

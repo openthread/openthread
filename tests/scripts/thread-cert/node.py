@@ -260,6 +260,11 @@ class Node:
         self.send_command(cmd)
         self.pexpect.expect('Done')
 
+    def set_router_downgrade_threshold(self, threshold):
+        cmd = 'routerdowngradethreshold %d' % threshold
+        self.send_command(cmd)
+        self.pexpect.expect('Done')
+
     def release_router_id(self, router_id):
         cmd = 'releaserouterid %d' % router_id
         self.send_command(cmd)
@@ -401,6 +406,11 @@ class Node:
             result = False
 
         return result
+
+    def set_router_selection_jitter(self, jitter):
+        cmd = 'routerselectionjitter %d' % jitter
+        self.send_command(cmd)
+        self.pexpect.expect('Done')
 
 if __name__ == '__main__':
     unittest.main()

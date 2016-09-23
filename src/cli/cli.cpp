@@ -119,6 +119,7 @@ const struct Command Interpreter::sCommands[] =
     { "router", &Interpreter::ProcessRouter },
     { "routerdowngradethreshold", &Interpreter::ProcessRouterDowngradeThreshold },
     { "routerrole", &Interpreter::ProcessRouterRole },
+    { "routerselectionjitter", &Interpreter::ProcessRouterSelectionJitter },
     { "routerupgradethreshold", &Interpreter::ProcessRouterUpgradeThreshold },
     { "scan", &Interpreter::ProcessScan },
     { "singleton", &Interpreter::ProcessSingleton },
@@ -1779,6 +1780,25 @@ void Interpreter::ProcessRouterRole(int argc, char *argv[])
     else
     {
         ExitNow(error = kThreadError_Parse);
+    }
+
+exit:
+    AppendResult(error);
+}
+
+void Interpreter::ProcessRouterSelectionJitter(int argc, char *argv[])
+{
+    ThreadError error = kThreadError_None;
+    long value;
+
+    if (argc == 0)
+    {
+        sServer->OutputFormat("%d\r\n", otGetRouterSelectionJitter());
+    }
+    else
+    {
+        SuccessOrExit(error = ParseLong(argv[0], value));
+        otSetRouterSelectionJitter(static_cast<uint8_t>(value));
     }
 
 exit:
