@@ -151,37 +151,8 @@ exit:
 
 ThreadError JoinerRouter::SetJoinerUdpPort(uint16_t aJoinerUdpPort)
 {
-    ThreadError error = kThreadError_None;
-    uint8_t *data;
-    uint8_t *cur;
-    uint8_t *end;
-    uint8_t length;
-
     mJoinerUdpPort = aJoinerUdpPort;
-
-    // update CommissioningData if it contains JoinerUdpPort TLV.
-    if ((data = mNetif.GetNetworkDataLeader().GetCommissioningData(length)) != NULL)
-    {
-        cur = data;
-        end = cur + length;
-
-        while (cur < end)
-        {
-            Tlv *tlv = reinterpret_cast<Tlv *>(cur);
-
-            if (tlv->GetType() == Tlv::kJoinerUdpPort)
-            {
-                reinterpret_cast<JoinerUdpPortTlv *>(tlv)->SetUdpPort(mJoinerUdpPort);
-                break;
-            }
-
-            cur += sizeof(Tlv) + tlv->GetLength();
-        }
-
-        error = mNetif.GetNetworkDataLeader().SetCommissioningData(reinterpret_cast<uint8_t *>(data), length);
-    }
-
-    return error;
+    return kThreadError_None;
 }
 
 void JoinerRouter::HandleUdpReceive(void *aContext, otMessage aMessage, const otMessageInfo *aMessageInfo)
