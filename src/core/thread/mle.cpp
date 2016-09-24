@@ -792,15 +792,20 @@ ThreadError Mle::AppendLeaderData(Message &aMessage)
     return aMessage.Append(&mLeaderData, sizeof(mLeaderData));
 }
 
+void Mle::FillNetworkDataTlv(NetworkDataTlv &aTlv, bool aStableOnly)
+{
+    uint8_t length;
+    mNetworkData.GetNetworkData(aStableOnly, aTlv.GetNetworkData(), length);
+    aTlv.SetLength(length);
+}
+
 ThreadError Mle::AppendNetworkData(Message &aMessage, bool aStableOnly)
 {
     ThreadError error = kThreadError_None;
     NetworkDataTlv tlv;
-    uint8_t length;
 
     tlv.Init();
-    mNetworkData.GetNetworkData(aStableOnly, tlv.GetNetworkData(), length);
-    tlv.SetLength(length);
+    FillNetworkDataTlv(tlv, aStableOnly);
 
     SuccessOrExit(error = aMessage.Append(&tlv, sizeof(Tlv) + tlv.GetLength()));
 

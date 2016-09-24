@@ -2156,6 +2156,26 @@ ThreadError otBindUdpSocket(otUdpSocket *aSocket, otSockAddr *aSockName);
 ThreadError otSendUdp(otUdpSocket *aSocket, otMessage aMessage, const otMessageInfo *aMessageInfo);
 
 /**
+ * Send a Network Diagnostic Get request
+ *
+ * @param[in]  aDestination   A pointer to destination address.
+ * @param[in]  aTlvTypes      An array of Network Diagnostic TLV types.
+ * @param[in]  aCount         Number of types in aTlvTypes
+ */
+ThreadError otSendDiagnosticGet(otInstance *aInstance, otIp6Address *aDestination, uint8_t aTlvTypes[], uint8_t aCount);
+
+/**
+ * Send a Network Diagnostic Reset request
+ *
+ * @param[in]  aInstance      A pointer to an OpenThread instance.
+ * @param[in]  aDestination   A pointer to destination address.
+ * @param[in]  aTlvTypes      An array of Network Diagnostic TLV types. Currently only Type 9 is allowed.
+ * @param[in]  aCount         Number of types in aTlvTypes
+ */
+ThreadError otSendDiagnosticReset(otInstance *aInstance, otIp6Address *aDestination, uint8_t aTlvTypes[],
+                                  uint8_t aCount);
+
+/**
  * @}
  *
  */

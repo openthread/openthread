@@ -662,6 +662,15 @@ public:
      */
     static bool IsActiveRouter(uint16_t aRloc16) { return GetChildId(aRloc16) == 0; }
 
+    /**
+     * This method fills the NetworkDataTlv.
+     *
+     * @param[out] aTlv         The NetworkDataTlv.
+     * @param[in]  aStableOnly  TRUE to append stable data, FALSE otherwise.
+     *
+     */
+    void FillNetworkDataTlv(NetworkDataTlv &aTlv, bool aStableOnly);
+
 protected:
     /**
      * This method appends an MLE header to a message.

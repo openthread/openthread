@@ -1022,6 +1022,57 @@ extern "C" {
 #endif
 
 /**
+ * @def otLogCritNetDiag
+ *
+ * This method generates a log with level critical for the NETDIAG region.
+ *
+ * @param[in]  aFormat  A pointer to the format string.
+ * @param[in]  ...      Arguments for the format specification.
+ *
+ */
+
+/**
+ * @def otLogWarnNetDiag
+ *
+ * This method generates a log with level warning for the NETDIAG region.
+ *
+ * @param[in]  aFormat  A pointer to the format string.
+ * @param[in]  ...      Arguments for the format specification.
+ *
+ */
+
+/**
+ * @def otLogInfoNetDiag
+ *
+ * This method generates a log with level info for the NETDIAG region.
+ *
+ * @param[in]  aFormat  A pointer to the format string.
+ * @param[in]  ...      Arguments for the format specification.
+ *
+ */
+
+/**
+ * @def otLogDebgNetDiag
+ *
+ * This method generates a log with level debug for the NETDIAG region.
+ *
+ * @param[in]  aFormat  A pointer to the format string.
+ * @param[in]  ...      Arguments for the format specification.
+ *
+ */
+#ifdef OPENTHREAD_CONFIG_LOG_NETDIAG
+#define otLogCritNetDiag(aFormat, ...) otLogCrit(kLogRegionNetDiag, aFormat, ## __VA_ARGS__)
+#define otLogWarnNetDiag(aFormat, ...) otLogWarn(kLogRegionNetDiag, aFormat, ## __VA_ARGS__)
+#define otLogInfoNetDiag(aFormat, ...) otLogInfo(kLogRegionNetDiag, aFormat, ## __VA_ARGS__)
+#define otLogDebgNetDiag(aFormat, ...) otLogDebg(kLogRegionNetDiag, aFormat, ## __VA_ARGS__)
+#else
+#define otLogCritNetDiag(aFormat, ...)
+#define otLogWarnNetDiag(aFormat, ...)
+#define otLogInfoNetDiag(aFormat, ...)
+#define otLogDebgNetDiag(aFormat, ...)
+#endif
+
+/**
  * This method dumps bytes to the log in a human-readable fashion.
  *
  * @param[in]  aLevel   The log level.

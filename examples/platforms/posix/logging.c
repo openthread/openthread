@@ -126,6 +126,9 @@ void otPlatLog(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aFormat
     case kLogRegionMeshCoP:
         LOG_PRINTF("MCOP ");
         break;
+
+    case kLogRegionNetDiag:
+        LOG_PRINTF("NDG ");
     }
 
     va_start(args, aFormat);
