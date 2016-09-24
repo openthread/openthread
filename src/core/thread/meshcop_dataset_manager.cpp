@@ -264,7 +264,7 @@ void DatasetManager::HandleSet(Coap::Header &aHeader, Message &aMessage, const I
             aMessage.Read(offset + sizeof(Tlv), sizeof(timestamp), &timestamp);
         }
 
-        // verify not include tlvs that affect connectivity
+        // verify the request does not include fields that affect connectivity
         if (tlvType == Tlv::kChannel || tlvType == Tlv::kMeshLocalPrefix ||
             tlvType == Tlv::kPanId || tlvType == Tlv::kNetworkMasterKey)
         {
