@@ -37,6 +37,7 @@
 #include <net/ip6.hpp>
 #include <ncp/ncp.h>
 #include <ncp/ncp_uart.hpp>
+#include <platform/logging.h>
 #include <platform/uart.h>
 #include <core/openthread-core-config.h>
 
@@ -257,5 +258,20 @@ void NcpUart::HandleError(ThreadError aError, uint8_t *aBuf, uint16_t aBufLength
     // We skip the first byte since it has a space in it.
     otNcpStreamWrite(0, reinterpret_cast<uint8_t*>(hexbuf + 1), static_cast<int>(strlen(hexbuf) - 1));
 }
+
+#if OPENTHREAD_ENABLE_CLI_LOGGING
+#ifdef __cplusplus
+extern "C" {
+#endif
+void otCliLog(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aFormat, ...)
+{
+    (void)aLogLevel;
+    (void)aLogRegion;
+    (void)aFormat;
+}
+#ifdef __cplusplus
+}  // extern "C"
+#endif
+#endif // OPENTHREAD_ENABLE_CLI_LOGGING
 
 }  // namespace Thread

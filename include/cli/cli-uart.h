@@ -36,6 +36,7 @@
 #define CLI_UART_H_
 
 #include <openthread-types.h>
+#include <platform/logging.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -48,6 +49,19 @@ extern "C" {
  *
  */
 void otCliUartInit(otInstance *aInstance);
+
+#if OPENTHREAD_ENABLE_CLI_LOGGING
+/**
+ * This method delivers formatted log to the client.
+ *
+ * @param[in]  aLogLevel   The log level.
+ * @param[in]  aLogRegion  The log region.
+ * @param[in]  aFormat     A pointer to the format string.
+ * @param[in]  ...         Arguments for the format specification.
+ *
+ */
+void otCliLog(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aFormat, ...);
+#endif
 
 #ifdef __cplusplus
 }  // extern "C"
