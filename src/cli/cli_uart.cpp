@@ -206,6 +206,15 @@ extern "C" void otPlatUartSendDone(void)
     Uart::sUartServer->SendDoneTask();
 }
 
+void Uart::SendDoneTask(void)
+{
+    mTxHead = (mTxHead + mSendLength) % kTxBufferSize;
+    mTxLength -= mSendLength;
+    mSendLength = 0;
+
+    Send();
+}
+
 #if OPENTHREAD_ENABLE_CLI_LOGGING
 #ifdef __cplusplus
 extern "C" {
@@ -298,15 +307,6 @@ void otCliLog(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aFormat,
 }  // extern "C"
 #endif
 #endif // OPENTHREAD_ENABLE_CLI_LOGGING
-
-void Uart::SendDoneTask(void)
-{
-mTxHead = (mTxHead + mSendLength) % kTxBufferSize;
-mTxLength -= mSendLength;
-mSendLength = 0;
-
-Send();
-}
 
 }  // namespace Cli
 }  // namespace Thread
