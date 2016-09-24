@@ -264,12 +264,9 @@ void DatasetManager::HandleSet(Coap::Header &aHeader, Message &aMessage, const I
             aMessage.Read(offset + sizeof(Tlv), sizeof(timestamp), &timestamp);
         }
 
-        // verify the request only includes dataset tlvs that do not affect connectivity
-        if (tlvType != Tlv::kActiveTimestamp && tlvType != Tlv::kPendingTimestamp &&
-            tlvType != Tlv::kChannelMask && tlvType != Tlv::kExtendedPanId &&
-            tlvType != Tlv::kNetworkName && tlvType != Tlv::kPSKc &&
-            tlvType != Tlv::kSecurityPolicy && tlvType != Tlv::kDelayTimer &&
-            tlvType != Tlv::kCommissionerSessionId)
+        // verify not include tlvs that affect connectivity
+        if (tlvType == Tlv::kChannel || tlvType == Tlv::kMeshLocalPrefix ||
+            tlvType == Tlv::kPanId || tlvType == Tlv::kNetworkMasterKey)
         {
             ExitNow(state = StateTlv::kReject);
         }
