@@ -109,6 +109,11 @@ ThreadError NetworkDiagnostic::SendDiagnosticGet(const Ip6::Address &aDestinatio
 
 exit:
 
+    if (error != kThreadError_None && message != NULL)
+    {
+        message->Free();
+    }
+
     return error;
 }
 
