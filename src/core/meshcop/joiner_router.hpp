@@ -99,6 +99,7 @@ private:
     ThreadNetif &mNetif;
 
     uint16_t mJoinerUdpPort;
+    bool mIsJoinerPortConfigured;
 };
 
 }  // namespace MeshCoP

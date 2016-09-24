@@ -53,7 +53,7 @@ JoinerRouter::JoinerRouter(ThreadNetif &aNetif):
     mRelayTransmit(OPENTHREAD_URI_RELAY_TX, &JoinerRouter::HandleRelayTransmit, this),
     mNetif(aNetif)
 {
-    mJoinerUdpPort = OPENTHREAD_CONFIG_JOINER_UDP_PORT;
+    mIsJoinerPortConfigured = false;
     mSocket.GetSockName().mPort = OPENTHREAD_CONFIG_JOINER_UDP_PORT;
     mNetif.GetCoapServer().AddResource(mRelayTransmit);
     mNetifCallback.Set(HandleNetifStateChanged, this);
@@ -128,6 +128,11 @@ uint16_t JoinerRouter::GetJoinerUdpPort(void)
     uint8_t *end;
     uint8_t length;
 
+    if (mIsJoinerPortConfigured)
+    {
+        return mJoinerUdpPort;
+    }
+
     VerifyOrExit((cur = mNetif.GetNetworkDataLeader().GetCommissioningData(length)) != NULL, ;);
 
     end = cur + length;
@@ -138,20 +143,21 @@ uint16_t JoinerRouter::GetJoinerUdpPort(void)
 
         if (tlv->GetType() == Tlv::kJoinerUdpPort)
         {
-            mJoinerUdpPort = reinterpret_cast<JoinerUdpPortTlv *>(tlv)->GetUdpPort();
-            break;
+            return reinterpret_cast<JoinerUdpPortTlv *>(tlv)->GetUdpPort();
         }
 
         cur += sizeof(Tlv) + tlv->GetLength();
     }
 
 exit:
-    return mJoinerUdpPort;
+    return OPENTHREAD_CONFIG_JOINER_UDP_PORT;
 }
 
 ThreadError JoinerRouter::SetJoinerUdpPort(uint16_t aJoinerUdpPort)
 {
     mJoinerUdpPort = aJoinerUdpPort;
+    mIsJoinerPortConfigured = true;
+    mNetif.SetStateChangedFlags(OT_THREAD_NETDATA_UPDATED);
     return kThreadError_None;
 }
 
