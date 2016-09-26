@@ -46,12 +46,14 @@ class Cert_5_5_2_LeaderReboot(unittest.TestCase):
         self.nodes[LEADER].set_mode('rsdn')
         self.nodes[LEADER].add_whitelist(self.nodes[ROUTER].get_addr64())
         self.nodes[LEADER].enable_whitelist()
+        self.nodes[LEADER].set_router_selection_jitter(1)
 
         self.nodes[ROUTER].set_panid(0xface)
         self.nodes[ROUTER].set_mode('rsdn')
         self.nodes[ROUTER].add_whitelist(self.nodes[LEADER].get_addr64())
         self.nodes[ROUTER].add_whitelist(self.nodes[ED].get_addr64())
         self.nodes[ROUTER].enable_whitelist()
+        self.nodes[ROUTER].set_router_selection_jitter(1)
 
         self.nodes[ED].set_panid(0xface)
         self.nodes[ED].set_mode('rsn')

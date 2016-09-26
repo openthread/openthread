@@ -56,6 +56,7 @@ class Cert_6_1_4_REEDAttachConnectivity(unittest.TestCase):
         self.nodes[ROUTER1].add_whitelist(self.nodes[LEADER].get_addr64())
         self.nodes[ROUTER1].add_whitelist(self.nodes[REED1].get_addr64())
         self.nodes[ROUTER1].enable_whitelist()
+        self.nodes[ROUTER1].set_router_selection_jitter(1)
 
         self.nodes[REED0].set_panid(0xface)
         self.nodes[REED0].set_mode('rsdn')

@@ -55,18 +55,21 @@ class Cert_5_5_5_SplitMergeREED(unittest.TestCase):
         self.nodes[ROUTER1].add_whitelist(self.nodes[ROUTER3].get_addr64())
         self.nodes[ROUTER1].add_whitelist(self.nodes[REED2].get_addr64())
         self.nodes[ROUTER1].enable_whitelist()
+        self.nodes[ROUTER1].set_router_selection_jitter(1)
 
         self.nodes[ROUTER2].set_panid(0xface)
         self.nodes[ROUTER2].set_mode('rsdn')
         self.nodes[ROUTER2].add_whitelist(self.nodes[LEADER1].get_addr64())
         self.nodes[ROUTER2].add_whitelist(self.nodes[REED2].get_addr64())
         self.nodes[ROUTER2].enable_whitelist()
+        self.nodes[ROUTER2].set_router_selection_jitter(1)
 
         self.nodes[ROUTER3].set_panid(0xface)
         self.nodes[ROUTER3].set_mode('rsdn')
         self.nodes[ROUTER3].add_whitelist(self.nodes[LEADER1].get_addr64())
         self.nodes[ROUTER3].add_whitelist(self.nodes[ROUTER1].get_addr64())
         self.nodes[ROUTER3].enable_whitelist()
+        self.nodes[ROUTER3].set_router_selection_jitter(1)
 
         self.nodes[REED2].set_panid(0xface)
         self.nodes[REED2].set_mode('rsdn')

@@ -73,7 +73,6 @@ MleRouter::MleRouter(ThreadNetif &aThreadNetif):
     mPreviousRouterId = kInvalidRouterId;
     mRouterIdSequenceLastUpdated = 0;
     mRouterRoleEnabled = true;
-    mRouterSelectionJitterTimeout = 0;
 
     mCoapMessageId = static_cast<uint8_t>(otPlatRandomGet());
 }
@@ -1311,9 +1310,11 @@ ThreadError MleRouter::HandleAdvertisement(const Message &aMessage, const Ip6::M
         ExitNow();
 
     case kDeviceStateChild:
-        if ((mDeviceMode & ModeTlv::kModeFFD) && (GetActiveRouterCount() < mRouterUpgradeThreshold))
+        if (mRouterSelectionJitterTimeout == 0 &&
+            (mDeviceMode & ModeTlv::kModeFFD) &&
+            (GetActiveRouterCount() < mRouterUpgradeThreshold))
         {
-            BecomeRouter(ThreadStatusTlv::kTooFewRouters);
+            mRouterSelectionJitterTimeout = otPlatRandomGet() % mRouterSelectionJitter;
             ExitNow();
         }
 
@@ -1392,7 +1393,7 @@ ThreadError MleRouter::HandleAdvertisement(const Message &aMessage, const Ip6::M
             HasSmallNumberOfChildren() &&
             HasOneNeighborwithComparableConnectivity(route, routerId))
         {
-            mRouterSelectionJitterTimeout = otPlatRandomGet() % kRouterSelectionJitter;
+            mRouterSelectionJitterTimeout = otPlatRandomGet() % mRouterSelectionJitter;
         }
 
     // fall through
@@ -1640,6 +1641,11 @@ void MleRouter::HandleStateUpdateTimer(void)
         mChallengeTimeout--;
     }
 
+    if (mRouterSelectionJitterTimeout > 0)
+    {
+        mRouterSelectionJitterTimeout--;
+    }
+
     switch (GetDeviceState())
     {
     case kDeviceStateDisabled:
@@ -1652,6 +1658,13 @@ void MleRouter::HandleStateUpdateTimer(void)
         ExitNow();
 
     case kDeviceStateChild:
+        if (mRouterSelectionJitterTimeout == 0 &&
+            GetActiveRouterCount() < mRouterUpgradeThreshold)
+        {
+            // upgrade to Router
+            BecomeRouter(ThreadStatusTlv::kTooFewRouters);
+        }
+
     case kDeviceStateRouter:
         // verify path to leader
         otLogDebgMle("network id timeout = %d\n", GetLeaderAge());
@@ -1661,16 +1674,11 @@ void MleRouter::HandleStateUpdateTimer(void)
             BecomeChild(kMleAttachSamePartition);
         }
 
-        if (mRouterSelectionJitterTimeout > 0)
+        if (mRouterSelectionJitterTimeout == 0 &&
+            GetActiveRouterCount() > mRouterDowngradeThreshold)
         {
-            mRouterSelectionJitterTimeout--;
-
-            if (mRouterSelectionJitterTimeout == 0 &&
-                GetActiveRouterCount() > mRouterDowngradeThreshold)
-            {
-                // downgrade to REED
-                BecomeChild(kMleAttachSamePartition);
-            }
+            // downgrade to REED
+            BecomeChild(kMleAttachSamePartition);
         }
 
         break;

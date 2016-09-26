@@ -602,7 +602,6 @@ private:
     uint8_t mLeaderWeight;
     uint32_t mFixedLeaderPartitionId;  ///< only for certification testing
     bool mRouterRoleEnabled;
-    uint8_t mRouterSelectionJitterTimeout;
 
     uint8_t mRouterId;
     uint8_t mPreviousRouterId;

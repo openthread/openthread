@@ -55,6 +55,7 @@ class Cert_5_3_3_AddressQuery(unittest.TestCase):
         self.nodes[BR].set_mode('rsdn')
         self.nodes[BR].add_whitelist(self.nodes[LEADER].get_addr64())
         self.nodes[BR].enable_whitelist()
+        self.nodes[BR].set_router_selection_jitter(1)
 
         self.nodes[ROUTER2].set_panid(0xface)
         self.nodes[ROUTER2].set_mode('rsdn')
@@ -62,12 +63,14 @@ class Cert_5_3_3_AddressQuery(unittest.TestCase):
         self.nodes[ROUTER2].add_whitelist(self.nodes[ROUTER3].get_addr64())
         self.nodes[ROUTER2].add_whitelist(self.nodes[ED2].get_addr64())
         self.nodes[ROUTER2].enable_whitelist()
+        self.nodes[ROUTER2].set_router_selection_jitter(1)
 
         self.nodes[ROUTER3].set_panid(0xface)
         self.nodes[ROUTER3].set_mode('rsdn')
         self.nodes[ROUTER3].add_whitelist(self.nodes[LEADER].get_addr64())
         self.nodes[ROUTER3].add_whitelist(self.nodes[ROUTER2].get_addr64())
         self.nodes[ROUTER3].enable_whitelist()
+        self.nodes[ROUTER3].set_router_selection_jitter(1)
 
         self.nodes[ED2].set_panid(0xface)
         self.nodes[ED2].set_mode('rsn')
@@ -94,15 +97,15 @@ class Cert_5_3_3_AddressQuery(unittest.TestCase):
         self.nodes[BR].register_netdata()
 
         self.nodes[ROUTER2].start()
-        time.sleep(3)
+        time.sleep(5)
         self.assertEqual(self.nodes[ROUTER2].get_state(), 'router')
 
         self.nodes[ROUTER3].start()
-        time.sleep(3)
+        time.sleep(5)
         self.assertEqual(self.nodes[ROUTER3].get_state(), 'router')
 
         self.nodes[ED2].start()
-        time.sleep(3)
+        time.sleep(5)
         self.assertEqual(self.nodes[ED2].get_state(), 'child')
 
         addrs = self.nodes[ROUTER3].get_addrs()

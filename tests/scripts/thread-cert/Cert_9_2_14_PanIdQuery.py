@@ -47,6 +47,7 @@ class Cert_9_2_14_PanIdQuery(unittest.TestCase):
         self.nodes[COMMISSIONER].set_mode('rsdn')
         self.nodes[COMMISSIONER].add_whitelist(self.nodes[LEADER1].get_addr64())
         self.nodes[COMMISSIONER].enable_whitelist()
+        self.nodes[COMMISSIONER].set_router_selection_jitter(1)
 
         self.nodes[LEADER1].set_panid(0xface)
         self.nodes[LEADER1].set_mode('rsdn')
@@ -59,6 +60,7 @@ class Cert_9_2_14_PanIdQuery(unittest.TestCase):
         self.nodes[ROUTER1].add_whitelist(self.nodes[LEADER1].get_addr64())
         self.nodes[ROUTER1].add_whitelist(self.nodes[LEADER2].get_addr64())
         self.nodes[ROUTER1].enable_whitelist()
+        self.nodes[ROUTER1].set_router_selection_jitter(1)
 
         self.nodes[LEADER2].set_panid(0xdead)
         self.nodes[LEADER2].set_mode('rsdn')

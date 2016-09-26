@@ -44,6 +44,7 @@ class Cert_5_2_2_LeaderReject1Hop(unittest.TestCase):
         self.nodes[LEADER].set_mode('rsdn')
         self.nodes[LEADER].enable_whitelist()
         self.nodes[LEADER].set_router_upgrade_threshold(32)
+        self.nodes[LEADER].set_router_downgrade_threshold(33)
 
         for i in range(2,34):
             self.nodes[i] = node.Node(i)
@@ -53,6 +54,8 @@ class Cert_5_2_2_LeaderReject1Hop(unittest.TestCase):
             self.nodes[LEADER].add_whitelist(self.nodes[i].get_addr64())
             self.nodes[i].enable_whitelist()
             self.nodes[i].set_router_upgrade_threshold(33)
+            self.nodes[i].set_router_downgrade_threshold(33)
+            self.nodes[i].set_router_selection_jitter(1)
 
     def tearDown(self):
         for node in list(self.nodes.values()):

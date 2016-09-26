@@ -47,6 +47,7 @@ OpenThread test scripts use the CLI to execute test cases.
 * [router](#router)
 * [routerdowngradethreshold](#routerdowngradethreshold)
 * [routerrole](#routerrole)
+* [routerselectionjitter](#routerselectionjitter)
 * [routerupgradethreshold](#routerupgradethreshold)
 * [scan](#scan)
 * [singleton](#singleton)
@@ -1203,6 +1204,25 @@ Disable the router role.
 
 ```bash
 > routerrole disable
+Done
+```
+
+### routerselectionjitter
+
+Get the ROUTER_SELECTION_JITTER value.
+
+```bash
+> routerselectionjitter
+120
+Done
+```
+
+### routerselectionjitter \<jitter\>
+
+Set the ROUTER_SELECTION_JITTER value.
+
+```bash
+> routerselectionjitter 120
 Done
 ```
 

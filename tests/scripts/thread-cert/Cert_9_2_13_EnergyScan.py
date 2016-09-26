@@ -47,6 +47,7 @@ class Cert_9_2_13_EnergyScan(unittest.TestCase):
         self.nodes[COMMISSIONER].set_mode('rsdn')
         self.nodes[COMMISSIONER].add_whitelist(self.nodes[LEADER].get_addr64())
         self.nodes[COMMISSIONER].enable_whitelist()
+        self.nodes[COMMISSIONER].set_router_selection_jitter(1)
 
         self.nodes[LEADER].set_panid(0xface)
         self.nodes[LEADER].set_mode('rsdn')
@@ -59,6 +60,7 @@ class Cert_9_2_13_EnergyScan(unittest.TestCase):
         self.nodes[ROUTER1].add_whitelist(self.nodes[LEADER].get_addr64())
         self.nodes[ROUTER1].add_whitelist(self.nodes[ED1].get_addr64())
         self.nodes[ROUTER1].enable_whitelist()
+        self.nodes[ROUTER1].set_router_selection_jitter(1)
 
         self.nodes[ED1].set_panid(0xface)
         self.nodes[ED1].set_mode('rs')
