@@ -179,6 +179,15 @@ int Uart::OutputFormat(const char *fmt, ...)
     return Output(buf, static_cast<uint16_t>(strlen(buf)));
 }
 
+int Uart::OutputFormatV(const char *aFmt, va_list aAp)
+{
+    char buf[kMaxLineLength];
+
+    vsnprintf(buf, sizeof(buf), aFmt, aAp);
+
+    return Output(buf, static_cast<uint16_t>(strlen(buf)));
+}
+
 void Uart::Send(void)
 {
     VerifyOrExit(mSendLength == 0, ;);
@@ -219,7 +228,7 @@ void Uart::SendDoneTask(void)
 #ifdef __cplusplus
 extern "C" {
 #endif
-void otCliLog(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aFormat, ...)
+void otCliLog(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aFormat, va_list aAp)
 {
     if (NULL == Uart::sUartServer)
     {
@@ -298,10 +307,7 @@ void otCliLog(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aFormat,
         return;
     }
 
-    va_list args;
-    va_start(args, aFormat);
-    Uart::sUartServer->OutputFormat(aFormat, args);
-    va_end(args);
+    Uart::sUartServer->OutputFormatV(aFormat, aAp);
 }
 #ifdef __cplusplus
 }  // extern "C"

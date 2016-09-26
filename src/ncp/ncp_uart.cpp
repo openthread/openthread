@@ -263,11 +263,12 @@ void NcpUart::HandleError(ThreadError aError, uint8_t *aBuf, uint16_t aBufLength
 #ifdef __cplusplus
 extern "C" {
 #endif
-void otCliLog(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aFormat, ...)
+void otCliLog(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aFormat, va_list aAp)
 {
     (void)aLogLevel;
     (void)aLogRegion;
     (void)aFormat;
+    (void)aAp;
 }
 #ifdef __cplusplus
 }  // extern "C"
