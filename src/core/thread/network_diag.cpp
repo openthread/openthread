@@ -54,8 +54,8 @@ namespace Thread {
 namespace NetworkDiagnostic {
 
 NetworkDiagnostic::NetworkDiagnostic(ThreadNetif &aThreadNetif) :
-    mDiagnosticGet(OPENTHREAD_URI_DIAGNOSTIC_GET, &HandleDiagnosticGet, this),
-    mDiagnosticReset(OPENTHREAD_URI_DIAGNOSTIC_RESET, &HandleDiagnosticReset, this),
+    mDiagnosticGet(OPENTHREAD_URI_DIAGNOSTIC_GET, &NetworkDiagnostic::HandleDiagnosticGet, this),
+    mDiagnosticReset(OPENTHREAD_URI_DIAGNOSTIC_RESET, &NetworkDiagnostic::HandleDiagnosticReset, this),
     mSocket(aThreadNetif.GetIp6().mUdp),
     mCoapServer(aThreadNetif.GetCoapServer()),
     mMle(aThreadNetif.GetMle()),
@@ -75,7 +75,7 @@ ThreadError NetworkDiagnostic::SendDiagnosticGet(const Ip6::Address &aDestinatio
     Ip6::MessageInfo messageInfo;
 
     sockaddr.mPort = kCoapUdpPort;
-    mSocket.Open(&HandleUdpReceive, this);
+    mSocket.Open(&NetworkDiagnostic::HandleUdpReceive, this);
     mSocket.Bind(sockaddr);
 
     VerifyOrExit((message = mSocket.NewMessage(0)) != NULL, error = kThreadError_NoBufs);
@@ -150,7 +150,7 @@ ThreadError NetworkDiagnostic::SendDiagnosticReset(const Ip6::Address &aDestinat
     Ip6::MessageInfo messageInfo;
 
     sockaddr.mPort = kCoapUdpPort;
-    mSocket.Open(&HandleUdpReceive, this);
+    mSocket.Open(&NetworkDiagnostic::HandleUdpReceive, this);
     mSocket.Bind(sockaddr);
 
     VerifyOrExit((message = mSocket.NewMessage(0)) != NULL, error = kThreadError_NoBufs);
