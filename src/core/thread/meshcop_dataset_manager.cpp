@@ -299,6 +299,9 @@ void DatasetManager::HandleSet(Coap::Header &aHeader, Message &aMessage, const I
             }
         }
 
+        // verify that TLV data size is less than maximum TLV value size
+        VerifyOrExit(tlv.GetLength() <= Dataset::kMaxValueSize, state = StateTlv::kReject);
+
         offset += sizeof(tlv) + tlv.GetLength();
     }
 
@@ -306,7 +309,27 @@ void DatasetManager::HandleSet(Coap::Header &aHeader, Message &aMessage, const I
     VerifyOrExit(offset == aMessage.GetLength() && (mLocal.GetTimestamp() == NULL ||
                                                     mLocal.GetTimestamp()->Compare(timestamp) > 0), state = StateTlv::kReject);
 
-    mLocal.Set(aMessage, aMessage.GetOffset(), static_cast<uint8_t>(aMessage.GetLength() - aMessage.GetOffset()));
+    // verify that does not overflow dataset buffer
+    VerifyOrExit((offset - aMessage.GetOffset()) <= Dataset::kMaxSize, state = StateTlv::kReject);
+
+    // update dataset
+    offset = aMessage.GetOffset();
+
+    while (offset < aMessage.GetLength())
+    {
+        OT_TOOL_PACKED_BEGIN
+        struct
+        {
+            Tlv tlv;
+            uint8_t value[Dataset::kMaxValueSize];
+        } OT_TOOL_PACKED_END data;
+
+        aMessage.Read(offset, sizeof(Tlv), &data.tlv);
+        aMessage.Read(offset + sizeof(Tlv), data.tlv.GetLength(), data.value);
+        mLocal.Set(data.tlv);
+        offset += sizeof(Tlv) + data.tlv.GetLength();
+    }
+
     mNetwork = mLocal;
     mNetworkDataLeader.IncrementVersion();
     mNetworkDataLeader.IncrementStableVersion();
