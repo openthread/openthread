@@ -1654,27 +1654,21 @@ void MeshForwarder::UpdateFramePending()
 
 void MeshForwarder::HandleDataRequest(const Mac::Address &aMacSource, const ThreadMessageInfo &aMessageInfo)
 {
-    Neighbor *neighbor;
-    uint8_t childIndex;
+    Child *child;
 
     // Security Check: only process secure Data Poll frames.
     VerifyOrExit(aMessageInfo.mLinkSecurity, ;);
 
     assert(mMle.GetDeviceState() != Mle::kDeviceStateDetached);
 
-    VerifyOrExit((neighbor = mMle.GetNeighbor(aMacSource)) != NULL, ;);
-    neighbor->mLastHeard = Timer::GetNow();
+    VerifyOrExit((child = mMle.GetChild(aMacSource)) != NULL, ;);
+    child->mLastHeard = Timer::GetNow();
 
-    mMle.HandleMacDataRequest(*static_cast<Child *>(neighbor));
-    childIndex = mMle.GetChildIndex(*static_cast<Child *>(neighbor));
+    mMle.HandleMacDataRequest(*child);
 
-    for (Message *message = mSendQueue.GetHead(); message; message = message->GetNext())
+    if (child->mQueuedIndirectMessageCnt > 0)
     {
-        if (message->GetDirectTransmission() == false && message->GetChildMask(childIndex))
-        {
-            neighbor->mDataRequest = true;
-            break;
-        }
+        child->mDataRequest = true;
     }
 
     mScheduleTransmissionTask.Post();
