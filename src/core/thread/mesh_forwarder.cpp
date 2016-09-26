@@ -126,6 +126,7 @@ ThreadError MeshForwarder::Stop()
     }
 
     mEnabled = false;
+    mSendMessage = NULL;
     mMac.SetRxOnWhenIdle(false);
 
 exit:
@@ -811,10 +812,12 @@ ThreadError MeshForwarder::HandleFrameRequest(void *aContext, Mac::Frame &aFrame
 
 ThreadError MeshForwarder::HandleFrameRequest(Mac::Frame &aFrame)
 {
+    ThreadError error = kThreadError_None;
     Mac::Address macDest;
     Child *child = NULL;
+
+    VerifyOrExit(mSendMessage != NULL, error = kThreadError_Abort);
     mSendBusy = true;
-    assert(mSendMessage != NULL);
 
     switch (mSendMessage->GetType())
     {
@@ -865,7 +868,8 @@ ThreadError MeshForwarder::HandleFrameRequest(Mac::Frame &aFrame)
     dump("sent frame", aFrame.GetHeader(), aFrame.GetLength());
 #endif
 
-    return kThreadError_None;
+exit:
+    return error;
 }
 
 ThreadError MeshForwarder::SendPoll(Message &aMessage, Mac::Frame &aFrame)
@@ -1131,11 +1135,7 @@ void MeshForwarder::HandleSentFrame(Mac::Frame &aFrame, ThreadError aError)
     Neighbor *neighbor;
 
     mSendBusy = false;
-
-    if (!mEnabled)
-    {
-        ExitNow();
-    }
+    VerifyOrExit(mSendMessage != NULL, ;);
 
     mSendMessage->SetOffset(mMessageNextOffset);
 
@@ -1240,6 +1240,7 @@ void MeshForwarder::HandleSentFrame(Mac::Frame &aFrame, ThreadError aError)
     {
         mSendQueue.Dequeue(*mSendMessage);
         mSendMessage->Free();
+        mSendMessage = NULL;
     }
 
     mScheduleTransmissionTask.Post();
@@ -1271,6 +1272,7 @@ void MeshForwarder::HandleDiscoverTimer(void)
         {
             mSendQueue.Dequeue(*mSendMessage);
             mSendMessage->Free();
+            mSendMessage = NULL;
             mMac.SetChannel(mRestoreChannel);
             mScanning = false;
             mMle.HandleDiscoverComplete();
