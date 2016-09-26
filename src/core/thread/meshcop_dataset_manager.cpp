@@ -299,12 +299,18 @@ void DatasetManager::HandleSet(Coap::Header &aHeader, Message &aMessage, const I
             }
         }
 
+        // verify that TLV data size is less than maximum TLV value size
+        VerifyOrExit(tlv.GetLength() <= Dataset::kMaxValueSize, state = StateTlv::kReject);
+
         offset += sizeof(tlv) + tlv.GetLength();
     }
 
     // verify the request includes a timestamp that is ahead of the locally stored value
     VerifyOrExit(offset == aMessage.GetLength() && (mLocal.GetTimestamp() == NULL ||
                                                     mLocal.GetTimestamp()->Compare(timestamp) > 0), state = StateTlv::kReject);
+
+    // verify that does not overflow dataset buffer
+    VerifyOrExit((offset - aMessage.GetOffset()) <= Dataset::kMaxSize, state = StateTlv::kReject);
 
     // update dataset
     offset = aMessage.GetOffset();
@@ -315,7 +321,7 @@ void DatasetManager::HandleSet(Coap::Header &aHeader, Message &aMessage, const I
         struct
         {
             Tlv tlv;
-            uint8_t value[16];
+            uint8_t value[Dataset::kMaxValueSize];
         } OT_TOOL_PACKED_END data;
 
         aMessage.Read(offset, sizeof(Tlv), &data.tlv);
