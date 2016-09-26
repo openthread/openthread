@@ -51,9 +51,9 @@ namespace MeshCoP {
 JoinerRouter::JoinerRouter(ThreadNetif &aNetif):
     mSocket(aNetif.GetIp6().mUdp),
     mRelayTransmit(OPENTHREAD_URI_RELAY_TX, &JoinerRouter::HandleRelayTransmit, this),
-    mNetif(aNetif)
+    mNetif(aNetif),
+    mIsJoinerPortConfigured(false)
 {
-    mIsJoinerPortConfigured = false;
     mSocket.GetSockName().mPort = OPENTHREAD_CONFIG_JOINER_UDP_PORT;
     mNetif.GetCoapServer().AddResource(mRelayTransmit);
     mNetifCallback.Set(HandleNetifStateChanged, this);
@@ -124,15 +124,12 @@ exit:
 
 uint16_t JoinerRouter::GetJoinerUdpPort(void)
 {
+    uint16_t joinerUdpPort = OPENTHREAD_CONFIG_JOINER_UDP_PORT;
     uint8_t *cur;
     uint8_t *end;
     uint8_t length;
 
-    if (mIsJoinerPortConfigured)
-    {
-        return mJoinerUdpPort;
-    }
-
+    VerifyOrExit(!mIsJoinerPortConfigured, joinerUdpPort = mJoinerUdpPort);
     VerifyOrExit((cur = mNetif.GetNetworkDataLeader().GetCommissioningData(length)) != NULL, ;);
 
     end = cur + length;
@@ -143,21 +140,21 @@ uint16_t JoinerRouter::GetJoinerUdpPort(void)
 
         if (tlv->GetType() == Tlv::kJoinerUdpPort)
         {
-            return reinterpret_cast<JoinerUdpPortTlv *>(tlv)->GetUdpPort();
+            ExitNow(joinerUdpPort = reinterpret_cast<JoinerUdpPortTlv *>(tlv)->GetUdpPort());
         }
 
         cur += sizeof(Tlv) + tlv->GetLength();
     }
 
 exit:
-    return OPENTHREAD_CONFIG_JOINER_UDP_PORT;
+    return joinerUdpPort;
 }
 
 ThreadError JoinerRouter::SetJoinerUdpPort(uint16_t aJoinerUdpPort)
 {
     mJoinerUdpPort = aJoinerUdpPort;
     mIsJoinerPortConfigured = true;
-    mNetif.SetStateChangedFlags(OT_THREAD_NETDATA_UPDATED);
+    HandleNetifStateChanged(OT_THREAD_NETDATA_UPDATED);
     return kThreadError_None;
 }
 
