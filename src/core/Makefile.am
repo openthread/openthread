@@ -81,6 +81,7 @@ libopenthread_a_SOURCES             = \
     thread/panid_query_server.cpp     \
     thread/thread_netif.cpp           \
     thread/thread_tlvs.cpp            \
+    utils/global_address.cpp          \
     $(NULL)
 
 if OPENTHREAD_ENABLE_COMMISSIONER
@@ -167,6 +168,7 @@ noinst_HEADERS                      = \
     thread/thread_tlvs.hpp            \
     thread/thread_uris.hpp            \
     thread/topology.hpp               \
+    utils/global_address.hpp          \
     $(NULL)
 
 if OPENTHREAD_BUILD_COVERAGE

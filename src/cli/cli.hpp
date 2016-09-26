@@ -131,6 +131,7 @@ private:
     enum
     {
         kMaxArgs = 32,
+        kMaxAutoAddresses = 8,
     };
 
     void AppendResult(ThreadError error);
@@ -229,7 +230,7 @@ private:
     uint32_t sInterval;
     Timer sPingTimer;
 
-    otNetifAddress sAutoAddresses[8];
+    otNetifAddress mAutoAddresses[kMaxAutoAddresses];
 
     otInstance *mInstance;
 };

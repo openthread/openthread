@@ -83,6 +83,7 @@ extern "C" {
  *
  * @defgroup core-6lowpan 6LoWPAN
  * @defgroup core-coap CoAP
+ * @defgroup core-global-address Global IPv6 Address
  * @defgroup core-ipv6 IPv6
  * @defgroup core-mac MAC
  * @defgroup core-mesh-forwarding Mesh Forwarding
@@ -784,6 +785,56 @@ ThreadError otAddUnicastAddress(otInstance *aInstance, const otNetifAddress *aAd
  * @retval kThreadError_NotFound     The IP Address indicated by @p aAddress was not found.
  */
 ThreadError otRemoveUnicastAddress(otInstance *aInstance, const otIp6Address *aAddress);
+
+/**
+ * This function pointer is called to create IPv6 IID during SLAAC procedure.
+ *
+ * @param[in]     aInstance  A pointer to an OpenThread instance.
+ * @param[inout]  aAddress   A pointer to structure containing IPv6 address for which IID is being created.
+ * @param[inout]  aContext   A pointer to creator-specific context.
+ *
+ * @retval kThreadError_None                        Created valid IID for given IPv6 address.
+ * @retval kThreadError_Ipv6AddressCreationFailure  Creation of valid IID for given IPv6 address failed.
+ *
+ */
+typedef ThreadError(*otSlaacIidCreate)(otInstance *aInstance, otNetifAddress *aAddress, void *aContext);
+
+/**
+ * Update all automatically created IPv6 addresses for prefixes from current Network Data with SLAAC procedure.
+ *
+ * @param[in]     aInstance      A pointer to an OpenThread instance.
+ * @param[inout]  aAddresses     A pointer to an array of automatically created IPv6 addresses.
+ * @param[in]     aNumAddresses  The number of slots in aAddresses array.
+ * @param[in]     aIidCreate     A pointer to a function that is called to create IPv6 IIDs.
+ * @param[in]     aContext       A pointer to data passed to aIidCreate function.
+ *
+ */
+void otSlaacUpdate(otInstance *aInstance, otNetifAddress *aAddresses, uint32_t aNumAddresses,
+                   otSlaacIidCreate aIidCreate, void *aContext);
+
+/**
+ * Create random IID for given IPv6 address.
+ *
+ * @param[in]     aInstance  A pointer to an OpenThread instance.
+ * @param[inout]  aAddress   A pointer to structure containing IPv6 address for which IID is being created.
+ * @param[in]     aContext   A pointer to unused data.
+ *
+ * @retval kThreadError_None  Created valid IID for given IPv6 address.
+ *
+ */
+ThreadError otCreateRandomIid(otInstance *aInstance, otNetifAddress *aAddresses, void *aContext);
+
+/**
+ * Create IID for given IPv6 address using extended MAC address.
+ *
+ * @param[in]     aInstance  A pointer to an OpenThread instance.
+ * @param[inout]  aAddress   A pointer to structure containing IPv6 address for which IID is being created.
+ * @param[in]     aContext   A pointer to unused data.
+ *
+ * @retval kThreadError_None  Created valid IID for given IPv6 address.
+ *
+ */
+ThreadError otCreateMacIid(otInstance *aInstance, otNetifAddress *aAddresses, void *aContext);
 
 /**
  * This function pointer is called to notify certain configuration or state changes within OpenThread.

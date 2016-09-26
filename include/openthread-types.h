@@ -132,6 +132,11 @@ typedef enum ThreadError
      */
     kThreadError_BlacklistFiltered = 27,
 
+    /**
+     * The creation of IPv6 address failed.
+     */
+    kThreadError_Ipv6AddressCreationFailure = 28,
+
     kThreadError_Error = 255,
 } ThreadError;
 

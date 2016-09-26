@@ -49,6 +49,12 @@
     <Filter Include="Header Files\meshcop">
       <UniqueIdentifier>{8f54e8b3-d8fb-4fed-88ce-42b39f171d0b}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\utils">
+      <UniqueIdentifier>{A0D2E990-DC5E-4B56-A552-888F97214A17}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\utils">
+      <UniqueIdentifier>{5ac96cb9-6257-4387-9238-27649915463a}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\core\coap\coap_header.cpp">
@@ -200,6 +206,9 @@
     </ClCompile>
     <ClCompile Include="..\..\src\core\crypto\sha256.cpp">
       <Filter>Source Files\crypto</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\core\utils\global_address.cpp">
+      <Filter>Source Files\utils</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -382,6 +391,9 @@
     </ClInclude>
     <ClInclude Include="..\..\src\core\crypto\sha256.hpp">
       <Filter>Header Files\crypto</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\core\utils\global_address.hpp">
+      <Filter>Header Files\utils</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
