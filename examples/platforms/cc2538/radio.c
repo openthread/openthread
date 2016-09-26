@@ -38,6 +38,7 @@
 
 #include <common/code_utils.hpp>
 #include <platform/platform.h>
+#include <common/logging.hpp>
 #include <platform/radio.h>
 #include <platform/diag.h>
 #include "platform-cc2538.h"
@@ -193,10 +194,9 @@ void cc2538RadioInit(void)
     HWREG(RFCORE_XREG_FIFOPCTRL) = IEEE802154_MAX_LENGTH;
 
     HWREG(RFCORE_XREG_FRMCTRL0) = RFCORE_XREG_FRMCTRL0_AUTOCRC | RFCORE_XREG_FRMCTRL0_AUTOACK;
-    HWREG(RFCORE_XREG_FRMCTRL1) |= RFCORE_XREG_FRMCTRL1_PENDING_OR;
 
-    // disable source address matching
-    HWREG(RFCORE_XREG_SRCMATCH) = 0;
+    // default: SRCMATCH.SRC_MATCH_EN(1), SRCMATCH.AUTOPEND(1),
+    // SRCMATCH.PEND_DATAREQ_ONLY(1), RFCORE_XREG_FRMCTRL1_PENDING_OR(0)
 }
 
 ThreadError otPlatRadioEnable(otInstance *aInstance)
@@ -459,4 +459,281 @@ void RFCoreRxTxIntHandler(void)
 void RFCoreErrIntHandler(void)
 {
     HWREG(RFCORE_SFR_RFERRF) = 0;
+}
+
+uint32_t getSrcMatchEntriesEnableStatus(bool aShort)
+{
+    uint32_t status = 0;
+    uint32_t *addr = aShort ? (uint32_t *) RFCORE_XREG_SRCSHORTEN0 : (uint32_t *) RFCORE_XREG_SRCEXTEN0;
+
+    for (uint8_t i = 0; i < RFCORE_XREG_SRCMATCH_ENABLE_STATUS_SIZE; i++)
+    {
+        status |= HWREG(addr++) << (i * 8);
+    }
+
+    return status;
+}
+
+int8_t findSrcMatchShortEntry(const uint16_t aShortAddress)
+{
+    int8_t entry = -1;
+    uint16_t shortAddr;
+    uint32_t bitMask;
+    uint32_t *addr = NULL;
+    uint32_t status = getSrcMatchEntriesEnableStatus(true);
+
+    for (uint8_t i = 0; i < RFCORE_XREG_SRCMATCH_SHORT_ENTRIES; i++)
+    {
+        bitMask = 0x00000001 << i;
+
+        if ((status & bitMask) == 0)
+        {
+            continue;
+        }
+
+        addr = (uint32_t *)RFCORE_FFSM_SRCADDRESS_TABLE + (i * RFCORE_XREG_SRCMATCH_SHORT_ENTRY_OFFSET);
+
+        shortAddr = HWREG(addr + 2);
+        shortAddr |= HWREG(addr + 3) << 8;
+
+        if ((shortAddr == aShortAddress))
+        {
+            ExitNow(entry = i);
+        }
+    }
+
+exit:
+    return entry;
+}
+
+int8_t findSrcMatchExtEntry(const uint8_t *aExtAddress)
+{
+    int8_t entry = -1;
+    uint32_t bitMask;
+    uint32_t *addr = NULL;
+    uint32_t status = getSrcMatchEntriesEnableStatus(false);
+
+    for (uint8_t i = 0; i < RFCORE_XREG_SRCMATCH_EXT_ENTRIES; i++)
+    {
+        uint8_t j = 0;
+        bitMask = 0x00000001 << 2 * i;
+
+        if ((status & bitMask) == 0)
+        {
+            continue;
+        }
+
+        addr = (uint32_t *)RFCORE_FFSM_SRCADDRESS_TABLE + (i * RFCORE_XREG_SRCMATCH_EXT_ENTRY_OFFSET);
+
+        for (j = 0; j < sizeof(otExtAddress); j++)
+        {
+            if (HWREG(addr + j) != aExtAddress[j])
+            {
+                break;
+            }
+        }
+
+        if (j == sizeof(otExtAddress))
+        {
+            ExitNow(entry = i);
+        }
+    }
+
+exit:
+    return entry;
+}
+
+void setSrcMatchEntryEnableStatus(bool aShort, uint8_t aEntry, bool aEnable)
+{
+    uint8_t entry = aShort ? aEntry : (2 * aEntry);
+    uint8_t index = entry / 8;
+    uint32_t *addrEn = aShort ? (uint32_t *)RFCORE_XREG_SRCSHORTEN0 : (uint32_t *)RFCORE_XREG_SRCEXTEN0;
+    uint32_t *addrAutoPendEn = aShort ? (uint32_t *)RFCORE_FFSM_SRCSHORTPENDEN0 : (uint32_t *)RFCORE_FFSM_SRCEXTPENDEN0;
+    uint32_t bitMask = 0x00000001;
+
+    if (aEnable)
+    {
+        HWREG(addrEn + index) |= (bitMask) << (entry % 8);
+        HWREG(addrAutoPendEn + index) |= (bitMask) << (entry % 8);
+    }
+    else
+    {
+        HWREG(addrEn + index) &= ~((bitMask) << (entry % 8));
+        HWREG(addrAutoPendEn + index) &= ~((bitMask) << (entry % 8));
+    }
+}
+
+int8_t findSrcMatchAvailEntry(bool aShort)
+{
+    int8_t entry = -1;
+    uint32_t bitMask;
+    uint32_t shortEnableStatus = getSrcMatchEntriesEnableStatus(true);
+    uint32_t extEnableStatus = getSrcMatchEntriesEnableStatus(false);
+
+    otLogDebgMac("Short enable status: 0x%x\n", shortEnableStatus);
+    otLogDebgMac("Ext enable status: 0x%x\n", extEnableStatus);
+
+    if (aShort)
+    {
+        bitMask = 0x00000001;
+
+        for (uint8_t i = 0; i < RFCORE_XREG_SRCMATCH_SHORT_ENTRIES; i++)
+        {
+            if ((extEnableStatus & bitMask) == 0)
+            {
+                if ((shortEnableStatus & bitMask) == 0)
+                {
+                    ExitNow(entry = i);
+                }
+            }
+
+            if (i % 2 == 1)
+            {
+                extEnableStatus = extEnableStatus >> 2;
+            }
+
+            shortEnableStatus = shortEnableStatus >> 1;
+        }
+    }
+    else
+    {
+        bitMask = 0x00000003;
+
+        for (uint8_t i = 0; i < RFCORE_XREG_SRCMATCH_EXT_ENTRIES; i++)
+        {
+            if (((extEnableStatus | shortEnableStatus) & bitMask) == 0)
+            {
+                ExitNow(entry = i);
+            }
+
+            extEnableStatus = extEnableStatus >> 2;
+            shortEnableStatus = shortEnableStatus >> 2;
+        }
+    }
+
+exit:
+    return entry;
+}
+
+void otPlatRadioEnableSrcMatch(otInstance *aInstance, bool aEnable)
+{
+    (void)aInstance;
+
+    if (aEnable)
+    {
+        // only set FramePending when ack for data poll if there are queued messages
+        // for entries in the source match table.
+        HWREG(RFCORE_XREG_FRMCTRL1) &= ~RFCORE_XREG_FRMCTRL1_PENDING_OR;
+    }
+    else
+    {
+        // set FramePending for all ack.
+        HWREG(RFCORE_XREG_FRMCTRL1) |= RFCORE_XREG_FRMCTRL1_PENDING_OR;
+    }
+}
+
+ThreadError otPlatRadioAddSrcMatchShortEntry(otInstance *aInstance, const uint16_t aShortAddress)
+{
+    ThreadError error = kThreadError_None;
+    int8_t entry = findSrcMatchAvailEntry(true);
+    uint32_t *addr = (uint32_t *)RFCORE_FFSM_SRCADDRESS_TABLE;
+    (void)aInstance;
+
+    otLogDebgMac("Available short address entry: %d\n", entry);
+
+    VerifyOrExit(entry >= 0, error = kThreadError_NoBufs);
+
+    addr += (entry * RFCORE_XREG_SRCMATCH_SHORT_ENTRY_OFFSET);
+
+    HWREG(addr++) = HWREG(RFCORE_FFSM_PAN_ID0);
+    HWREG(addr++) = HWREG(RFCORE_FFSM_PAN_ID1);
+    HWREG(addr++) = aShortAddress & 0xFF;
+    HWREG(addr++) = aShortAddress >> 8;
+
+    setSrcMatchEntryEnableStatus(true, (uint8_t)(entry), true);
+
+exit:
+    return error;
+}
+
+ThreadError otPlatRadioAddSrcMatchExtEntry(otInstance *aInstance, const uint8_t *aExtAddress)
+{
+    ThreadError error = kThreadError_None;
+    int8_t entry = findSrcMatchAvailEntry(false);
+    uint32_t *addr = (uint32_t *)RFCORE_FFSM_SRCADDRESS_TABLE;
+    (void)aInstance;
+
+    otLogDebgMac("Available extended address entry: %d\n", entry);
+
+    VerifyOrExit(entry >= 0, error = kThreadError_NoBufs);
+
+    addr += (entry * RFCORE_XREG_SRCMATCH_EXT_ENTRY_OFFSET);
+
+    for (uint8_t i = 0; i < sizeof(otExtAddress); i++)
+    {
+        HWREG(addr++) = aExtAddress[i];
+    }
+
+    setSrcMatchEntryEnableStatus(false, (uint8_t)(entry), true);
+
+exit:
+    return error;
+}
+
+ThreadError otPlatRadioClearSrcMatchShortEntry(otInstance *aInstance, const uint16_t aShortAddress)
+{
+    ThreadError error = kThreadError_None;
+    int8_t entry = findSrcMatchShortEntry(aShortAddress);
+    (void)aInstance;
+
+    otLogDebgMac("Found short address entry: %d\n", entry);
+
+    VerifyOrExit(entry >= 0, error = kThreadError_NoAddress);
+
+    setSrcMatchEntryEnableStatus(true, (uint8_t)(entry), false);
+
+exit:
+    return error;
+}
+
+ThreadError otPlatRadioClearSrcMatchExtEntry(otInstance *aInstance, const uint8_t *aExtAddress)
+{
+    ThreadError error = kThreadError_None;
+    int8_t entry = findSrcMatchExtEntry(aExtAddress);
+    (void)aInstance;
+
+    otLogDebgMac("Found ext address entry: %d\n", entry);
+
+    VerifyOrExit(entry >= 0, error = kThreadError_NoAddress);
+
+    setSrcMatchEntryEnableStatus(false, (uint8_t)(entry), false);
+
+exit:
+    return error;
+}
+
+void otPlatRadioClearSrcMatchShortEntries(otInstance *aInstance)
+{
+    uint32_t *addrEn = (uint32_t *)RFCORE_XREG_SRCSHORTEN0;
+    uint32_t *addrAutoPendEn = (uint32_t *)RFCORE_FFSM_SRCSHORTPENDEN0;
+    (void)aInstance;
+
+    for (uint8_t i = 0; i < RFCORE_XREG_SRCMATCH_ENABLE_STATUS_SIZE; i++)
+    {
+        HWREG(addrEn++) = 0;
+        HWREG(addrAutoPendEn++) = 0;
+    }
+}
+
+void otPlatRadioClearSrcMatchExtEntries(otInstance *aInstance)
+{
+    uint32_t *addrEn = (uint32_t *)RFCORE_XREG_SRCEXTEN0;
+    uint32_t *addrAutoPendEn = (uint32_t *)RFCORE_FFSM_SRCEXTPENDEN0;
+    (void)aInstance;
+
+    for (uint8_t i = 0; i < RFCORE_XREG_SRCMATCH_ENABLE_STATUS_SIZE; i++)
+    {
+        HWREG(addrEn++) = 0;
+        HWREG(addrAutoPendEn++) = 0;
+    }
 }

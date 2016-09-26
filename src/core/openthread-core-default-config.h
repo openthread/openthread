@@ -249,5 +249,14 @@
  */
 #define OPENTHREAD_CONFIG_LOG_MEM
 
+
+/**
+ * @def OPENTHREAD_CONFIG_LOG_NETDIAG
+ *
+ * Define to enable network diagnostic logging.
+ *
+ */
+#define OPENTHREAD_CONFIG_LOG_NETDIAG
+
 #endif  // OPENTHREAD_CORE_DEFAULT_CONFIG_H_
 

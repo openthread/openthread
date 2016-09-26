@@ -384,14 +384,16 @@ exit:
 int Lowpan::CompressExtensionHeader(Message &aMessage, uint8_t *aBuf, uint8_t &aNextHeader)
 {
     Ip6::ExtensionHeader extHeader;
+    Ip6::OptionHeader optionHeader;
     uint8_t *cur = aBuf;
     uint8_t len;
+    uint8_t padLength = 0;
+    uint16_t offset;
 
     aMessage.Read(aMessage.GetOffset(), sizeof(extHeader), &extHeader);
     aMessage.MoveOffset(sizeof(extHeader));
 
     cur[0] = kExtHdrDispatch | kExtHdrEidHbh;
-    aNextHeader = static_cast<uint8_t>(extHeader.GetNextHeader());
 
     switch (extHeader.GetNextHeader())
     {
@@ -408,11 +410,49 @@ int Lowpan::CompressExtensionHeader(Message &aMessage, uint8_t *aBuf, uint8_t &a
     cur++;
 
     len = (extHeader.GetLength() + 1) * 8 - sizeof(extHeader);
+
+    // RFC 6282 says: "IPv6 Hop-by-Hop and Destination Options Headers may use a trailing
+    // Pad1 or PadN to achieve 8-octet alignment. When there is a single trailing Pad1 or PadN
+    // option of 7 octets or less and the containing header is a multiple of 8 octets, the trailing
+    // Pad1 or PadN option MAY be elided by the compressor."
+    if (aNextHeader == Ip6::kProtoHopOpts || aNextHeader == Ip6::kProtoDstOpts)
+    {
+        offset = aMessage.GetOffset();
+
+        while (offset < len + aMessage.GetOffset())
+        {
+            aMessage.Read(offset, sizeof(optionHeader), &optionHeader);
+
+            if (optionHeader.GetType() == Ip6::OptionPad1::kType)
+            {
+                offset += sizeof(Ip6::OptionPad1);
+            }
+            else
+            {
+                offset += sizeof(optionHeader) + optionHeader.GetLength();
+            }
+        }
+
+        // Check if the last option can be compressed.
+        if (optionHeader.GetType() == Ip6::OptionPad1::kType)
+        {
+            padLength = sizeof(Ip6::OptionPad1);
+        }
+        else if (optionHeader.GetType() == Ip6::OptionPadN::kType)
+        {
+            padLength = sizeof(optionHeader) + optionHeader.GetLength();
+        }
+
+        len -= padLength;
+    }
+
+    aNextHeader = static_cast<uint8_t>(extHeader.GetNextHeader());
+
     cur[0] = len;
     cur++;
 
     aMessage.Read(aMessage.GetOffset(), len, cur);
-    aMessage.MoveOffset(len);
+    aMessage.MoveOffset(len + padLength);
     cur += len;
 
     return static_cast<int>(cur - aBuf);
@@ -756,6 +796,9 @@ int Lowpan::DecompressExtensionHeader(Message &aMessage, const uint8_t *aBuf, ui
     uint8_t len;
     Ip6::IpProto nextHeader;
     uint8_t ctl = cur[0];
+    uint8_t padLength;
+    Ip6::OptionPad1 optionPad1;
+    Ip6::OptionPadN optionPadN;
 
     cur++;
 
@@ -787,6 +830,27 @@ int Lowpan::DecompressExtensionHeader(Message &aMessage, const uint8_t *aBuf, ui
     SuccessOrExit(error = aMessage.Append(cur, len));
     aMessage.MoveOffset(len);
     cur += len;
+
+    // The RFC6282 says: "The trailing Pad1 or PadN option MAY be elided by the compressor.
+    // A decompressor MUST ensure that the containing header is padded out to a multiple of 8 octets
+    // in length, using a Pad1 or PadN option if necessary."
+    padLength = 8 - ((len + sizeof(hdr)) & 0x07);
+
+    if (padLength != 8)
+    {
+        if (padLength == 1)
+        {
+            optionPad1.Init();
+            SuccessOrExit(error = aMessage.Append(&optionPad1, padLength));
+        }
+        else
+        {
+            optionPadN.Init(padLength);
+            SuccessOrExit(error = aMessage.Append(&optionPadN, padLength));
+        }
+
+        aMessage.MoveOffset(padLength);
+    }
 
 exit:
     (void)aBufLength;

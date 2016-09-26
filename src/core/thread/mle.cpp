@@ -61,6 +61,7 @@ Mle::Mle(ThreadNetif &aThreadNetif) :
     mMesh(aThreadNetif.GetMeshForwarder()),
     mMleRouter(aThreadNetif.GetMle()),
     mNetworkData(aThreadNetif.GetNetworkDataLeader()),
+    mJoinerRouter(aThreadNetif.GetJoinerRouter()),
     mParentRequestTimer(aThreadNetif.GetIp6().mTimerScheduler, &Mle::HandleParentRequestTimer, this),
     mSocket(aThreadNetif.GetIp6().mUdp),
     mSendChildUpdateRequest(aThreadNetif.GetIp6().mTaskletScheduler, &Mle::HandleSendChildUpdateRequest, this)
@@ -131,6 +132,9 @@ Mle::Mle(ThreadNetif &aThreadNetif) :
     mMeshLocal16.mPreferredLifetime = 0xffffffff;
     mMeshLocal16.mValidLifetime = 0xffffffff;
 
+    // Store RLOC address reference in MPL module.
+    mNetif.GetIp6().mMpl.SetMatchingAddress(mMeshLocal16.GetAddress());
+
     // link-local all thread nodes
     mLinkLocalAllThreadNodes.GetAddress().mFields.m16[0] = HostSwap16(0xff32);
     mLinkLocalAllThreadNodes.GetAddress().mFields.m16[6] = HostSwap16(0x0000);
@@ -152,6 +156,9 @@ Mle::Mle(ThreadNetif &aThreadNetif) :
     memset(&mAddr64, 0, sizeof(mAddr64));
 
     mIsDiscoverInProgress = false;
+
+    mRouterSelectionJitterTimeout = 0;
+    mRouterSelectionJitter = kRouterSelectionJitter;
 }
 
 ThreadError Mle::Enable(void)
@@ -522,6 +529,7 @@ ThreadError Mle::SetRloc16(uint16_t aRloc16)
     }
 
     mMac.SetShortAddress(aRloc16);
+    mNetif.GetIp6().mMpl.SetSeed(aRloc16);
 
     return kThreadError_None;
 }
@@ -635,6 +643,16 @@ void Mle::SetAssignLinkQuality(const Mac::ExtAddress aMacAddr, uint8_t aLinkQual
     default:
         break;
     }
+}
+
+uint8_t Mle::GetRouterSelectionJitter(void) const
+{
+    return mRouterSelectionJitter;
+}
+
+void Mle::SetRouterSelectionJitter(uint8_t aRouterJitter)
+{
+    mRouterSelectionJitter = aRouterJitter;
 }
 
 void Mle::GenerateNonce(const Mac::ExtAddress &aMacAddr, uint32_t aFrameCounter, uint8_t aSecurityLevel,
@@ -788,15 +806,20 @@ ThreadError Mle::AppendLeaderData(Message &aMessage)
     return aMessage.Append(&mLeaderData, sizeof(mLeaderData));
 }
 
+void Mle::FillNetworkDataTlv(NetworkDataTlv &aTlv, bool aStableOnly)
+{
+    uint8_t length;
+    mNetworkData.GetNetworkData(aStableOnly, aTlv.GetNetworkData(), length);
+    aTlv.SetLength(length);
+}
+
 ThreadError Mle::AppendNetworkData(Message &aMessage, bool aStableOnly)
 {
     ThreadError error = kThreadError_None;
     NetworkDataTlv tlv;
-    uint8_t length;
 
     tlv.Init();
-    mNetworkData.GetNetworkData(aStableOnly, tlv.GetNetworkData(), length);
-    tlv.SetLength(length);
+    FillNetworkDataTlv(tlv, aStableOnly);
 
     SuccessOrExit(error = aMessage.Append(&tlv, sizeof(Tlv) + tlv.GetLength()));
 
@@ -1890,6 +1913,7 @@ ThreadError Mle::HandleParentResponse(const Message &aMessage, const Ip6::Messag
     mParent.mMode = ModeTlv::kModeFFD | ModeTlv::kModeRxOnWhenIdle | ModeTlv::kModeFullNetworkData;
     mParent.mLinkInfo.Clear();
     mParent.mLinkInfo.AddRss(mMac.GetNoiseFloor(), threadMessageInfo->mRss);
+    mParent.mLinkFailures = 0;
     mParent.mState = Neighbor::kStateValid;
     mParent.mKeySequence = aKeySequence;
 
@@ -2002,9 +2026,11 @@ ThreadError Mle::HandleChildIdResponse(const Message &aMessage, const Ip6::Messa
             }
         }
 
-        if ((mDeviceMode & ModeTlv::kModeFFD) && (numRouters < mMleRouter.GetRouterUpgradeThreshold()))
+        if (mRouterSelectionJitterTimeout == 0 &&
+            (mDeviceMode & ModeTlv::kModeFFD) &&
+            (numRouters < mMleRouter.GetRouterUpgradeThreshold()))
         {
-            mMleRouter.BecomeRouter(ThreadStatusTlv::kTooFewRouters);
+            mRouterSelectionJitterTimeout = otPlatRandomGet() % mRouterSelectionJitter;
         }
     }
 
@@ -2022,6 +2048,7 @@ ThreadError Mle::HandleChildUpdateResponse(const Message &aMessage, const Ip6::M
     LeaderDataTlv leaderData;
     SourceAddressTlv sourceAddress;
     TimeoutTlv timeout;
+    NetworkDataTlv networkData;
     uint8_t tlvs[] = {Tlv::kNetworkData};
 
     otLogInfoMle("Received Child Update Response\n");
@@ -2057,11 +2084,6 @@ ThreadError Mle::HandleChildUpdateResponse(const Message &aMessage, const Ip6::M
         SuccessOrExit(error = Tlv::GetTlv(aMessage, Tlv::kLeaderData, sizeof(leaderData), leaderData));
         VerifyOrExit(leaderData.IsValid(), error = kThreadError_Parse);
 
-        if (static_cast<int8_t>(leaderData.GetDataVersion() - mNetworkData.GetVersion()) > 0)
-        {
-            SendDataRequest(aMessageInfo.GetPeerAddr(), tlvs, sizeof(tlvs));
-        }
-
         // Source Address
         SuccessOrExit(error = Tlv::GetTlv(aMessage, Tlv::kSourceAddress, sizeof(sourceAddress), sourceAddress));
         VerifyOrExit(sourceAddress.IsValid(), error = kThreadError_Parse);
@@ -2079,7 +2101,16 @@ ThreadError Mle::HandleChildUpdateResponse(const Message &aMessage, const Ip6::M
             mTimeout = timeout.GetTimeout();
         }
 
-        if ((mode.GetMode() & ModeTlv::kModeRxOnWhenIdle) == 0)
+        // Network Data optional
+        if (Tlv::GetTlv(aMessage, Tlv::kNetworkData, sizeof(networkData), networkData) == kThreadError_None)
+        {
+            VerifyOrExit(networkData.IsValid(), error = kThreadError_Parse);
+            mNetworkData.SetNetworkData(leaderData.GetDataVersion(), leaderData.GetStableDataVersion(),
+                                        (mDeviceMode & ModeTlv::kModeFullNetworkData) == 0,
+                                        networkData.GetNetworkData(), networkData.GetLength());
+        }
+
+        if ((mDeviceMode & ModeTlv::kModeRxOnWhenIdle) == 0)
         {
             mMesh.SetPollPeriod(Timer::SecToMsec(mTimeout / kMaxChildKeepAliveAttempts));
             mMesh.SetRxOnWhenIdle(false);
@@ -2087,6 +2118,23 @@ ThreadError Mle::HandleChildUpdateResponse(const Message &aMessage, const Ip6::M
         else
         {
             mMesh.SetRxOnWhenIdle(true);
+        }
+
+        if (mDeviceMode & ModeTlv::kModeFullNetworkData)
+        {
+            // full network data
+            if (leaderData.GetDataVersion() != mNetworkData.GetVersion())
+            {
+                SendDataRequest(aMessageInfo.GetPeerAddr(), tlvs, sizeof(tlvs));
+            }
+        }
+        else
+        {
+            // stable network data
+            if (leaderData.GetStableDataVersion() != mNetworkData.GetStableVersion())
+            {
+                SendDataRequest(aMessageInfo.GetPeerAddr(), tlvs, sizeof(tlvs));
+            }
         }
 
         break;
@@ -2176,6 +2224,7 @@ ThreadError Mle::SendDiscoveryResponse(const Ip6::Address &aDestination, uint16_
     MeshCoP::DiscoveryResponseTlv discoveryResponse;
     MeshCoP::ExtendedPanIdTlv extPanId;
     MeshCoP::NetworkNameTlv networkName;
+    MeshCoP::JoinerUdpPortTlv joinerUdpPort;
 
     VerifyOrExit((message = mSocket.NewMessage(0)) != NULL, ;);
     message->SetLinkSecurityEnabled(false);
@@ -2204,6 +2253,11 @@ ThreadError Mle::SendDiscoveryResponse(const Ip6::Address &aDestination, uint16_
     networkName.SetNetworkName(mMac.GetNetworkName());
     SuccessOrExit(error = message->Append(&networkName, sizeof(tlv) + networkName.GetLength()));
 
+    // Joiner UDP Port TLV
+    joinerUdpPort.Init();
+    joinerUdpPort.SetUdpPort(mJoinerRouter.GetJoinerUdpPort());
+    SuccessOrExit(error = message->Append(&joinerUdpPort, sizeof(tlv) + joinerUdpPort.GetLength()));
+
     tlv.SetLength(static_cast<uint8_t>(message->GetLength() - startOffset));
     message->Write(startOffset - sizeof(tlv), sizeof(tlv), &tlv);
 
@@ -2230,6 +2284,7 @@ ThreadError Mle::HandleDiscoveryResponse(const Message &aMessage, const Ip6::Mes
     MeshCoP::DiscoveryResponseTlv discoveryResponse;
     MeshCoP::ExtendedPanIdTlv extPanId;
     MeshCoP::NetworkNameTlv networkName;
+    MeshCoP::JoinerUdpPortTlv JoinerUdpPort;
     otActiveScanResult result;
     uint16_t offset;
     uint16_t end;
@@ -2290,6 +2345,12 @@ ThreadError Mle::HandleDiscoveryResponse(const Message &aMessage, const Ip6::Mes
             aMessage.Read(offset, sizeof(networkName), &networkName);
             VerifyOrExit(networkName.IsValid(), error = kThreadError_Parse);
             memcpy(&result.mNetworkName, networkName.GetNetworkName(), networkName.GetLength());
+            break;
+
+        case MeshCoP::Tlv::kJoinerUdpPort:
+            aMessage.Read(offset, sizeof(JoinerUdpPort), &JoinerUdpPort);
+            VerifyOrExit(JoinerUdpPort.IsValid(), error = kThreadError_Parse);
+            result.mJoinerUdpPort = JoinerUdpPort.GetUdpPort();
             break;
 
         default:

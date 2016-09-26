@@ -481,6 +481,22 @@ public:
      */
     static bool IsRouterIdValid(uint8_t aRouterId) { return aRouterId <= kMaxRouterId; }
 
+    /**
+     * This method fills an ConnectivityTlv.
+     *
+     * @param[out]  aTlv  A reference to the tlv to be filled.
+     *
+     */
+    void FillConnectivityTlv(ConnectivityTlv &aTlv);
+
+    /**
+     * This method fills an RouteTlv.
+     *
+     * @param[out]  aTlv  A reference to the tlv to be filled.
+     *
+     */
+    void FillRouteTlv(RouteTlv &aTlv);
+
 private:
     enum
     {
@@ -586,7 +602,6 @@ private:
     uint8_t mLeaderWeight;
     uint32_t mFixedLeaderPartitionId;  ///< only for certification testing
     bool mRouterRoleEnabled;
-    uint8_t mRouterSelectionJitterTimeout;
 
     uint8_t mRouterId;
     uint8_t mPreviousRouterId;

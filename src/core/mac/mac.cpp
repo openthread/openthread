@@ -648,6 +648,11 @@ void Mac::HandleBeginTransmit(void)
         otLogDebgMac("ack timer start\n");
     }
 
+    if (mPcapCallback)
+    {
+        mPcapCallback(&sendFrame, mPcapCallbackContext);
+    }
+
 exit:
 
     if (error != kThreadError_None)
@@ -687,16 +692,12 @@ void Mac::TransmitDoneTask(bool aRxPending, ThreadError aError)
         {
             mReceiveTimer.Start(kDataPollTimeout);
         }
-        else
-        {
-            mReceiveTimer.Stop();
-        }
 
     // fall through
 
     case kStateActiveScan:
     case kStateTransmitBeacon:
-        SentFrame(aError == kThreadError_None);
+        SentFrame(aError);
         break;
 
     default:
@@ -769,7 +770,7 @@ void Mac::HandleMacTimer(void)
     case kStateTransmitData:
         otLogDebgMac("ack timer fired\n");
         mCounters.mTxTotal++;
-        SentFrame(false);
+        SentFrame(kThreadError_NoAck);
         break;
 
     default:
@@ -792,14 +793,20 @@ void Mac::HandleReceiveTimer(void)
     NextOperation();
 }
 
-void Mac::SentFrame(bool aAcked)
+void Mac::SentFrame(ThreadError aError)
 {
     Frame &sendFrame(*static_cast<Frame *>(otPlatRadioGetTransmitBuffer(NULL)));
-    Address destination;
     Sender *sender;
 
-    if (sendFrame.GetAckRequest() && !aAcked)
+    switch (aError)
     {
+    case kThreadError_None:
+        break;
+
+    case kThreadError_ChannelAccessFailure:
+        break;
+
+    case kThreadError_NoAck:
         otDumpDebgMac("NO ACK", sendFrame.GetHeader(), 16);
 
         if (mTransmitAttempts < kMaxFrameAttempts)
@@ -812,8 +819,11 @@ void Mac::SentFrame(bool aAcked)
             ExitNow();
         }
 
-        sendFrame.GetDstAddr(destination);
-        mMle.RemoveNeighbor(destination);
+        break;
+
+    default:
+        assert(false);
+        break;
     }
 
     mTransmitAttempts = 0;
@@ -822,7 +832,7 @@ void Mac::SentFrame(bool aAcked)
     {
         mCounters.mTxAckRequested++;
 
-        if (aAcked)
+        if (aError == kThreadError_None)
         {
             mCounters.mTxAcked++;
         }
@@ -865,7 +875,7 @@ void Mac::SentFrame(bool aAcked)
         sender->mNext = NULL;
 
         mDataSequence++;
-        sender->HandleSentFrame(sendFrame);
+        sender->HandleSentFrame(sendFrame, aError);
 
         ScheduleNextTransmission();
         break;
@@ -902,6 +912,7 @@ ThreadError Mac::ProcessReceiveSecurity(Frame &aFrame, const Address &aSrcAddr, 
 
     aFrame.GetSecurityLevel(securityLevel);
     aFrame.GetFrameCounter(frameCounter);
+    otLogDebgMac("Frame counter %u\n", frameCounter);
 
     aFrame.GetKeyIdMode(keyIdMode);
 
@@ -1031,6 +1042,8 @@ void Mac::ReceiveDoneTask(Frame *aFrame, ThreadError aError)
         break;
 
     case sizeof(ShortAddress):
+        otLogDebgMac("Received from short address %x\n", srcaddr.mShortAddress);
+
         if (neighbor == NULL)
         {
             otLogDebgMac("drop not neighbor\n");
@@ -1265,6 +1278,71 @@ Blacklist &Mac::GetBlacklist(void)
 otMacCounters &Mac::GetCounters(void)
 {
     return mCounters;
+}
+
+void Mac::EnableSrcMatch(bool aEnable)
+{
+    otPlatRadioEnableSrcMatch(NULL, aEnable);
+    otLogDebgMac("Enable SrcMatch -- %d(0:Dis, 1:En)\n", aEnable);
+}
+
+ThreadError Mac::AddSrcMatchEntry(Address &aAddr)
+{
+    ThreadError error = kThreadError_None;
+
+    if (aAddr.mLength == 2)
+    {
+        error = otPlatRadioAddSrcMatchShortEntry(NULL, aAddr.mShortAddress);
+        otLogDebgMac("Adding short address: 0x%x -- %d (0:Ok, 3:NoBufs)\n", aAddr.mShortAddress, error);
+    }
+    else
+    {
+        uint8_t buf[8];
+
+        for (uint8_t i = 0; i < sizeof(buf); i++)
+        {
+            buf[i] = aAddr.mExtAddress.m8[7 - i];
+        }
+
+        error = otPlatRadioAddSrcMatchExtEntry(NULL, buf);
+        otLogDebgMac("Adding extended address: 0x%02x%02x%02x%02x%02x%02x%02x%02x -- %d (0:OK, 3:NoBufs)\n",
+                     buf[7], buf[6], buf[5], buf[4], buf[3], buf[2], buf[1], buf[0], error);
+    }
+
+    return error;
+}
+
+ThreadError Mac::ClearSrcMatchEntry(Address &aAddr)
+{
+    ThreadError error = kThreadError_None;
+
+    if (aAddr.mLength == 2)
+    {
+        error = otPlatRadioClearSrcMatchShortEntry(NULL, aAddr.mShortAddress);
+        otLogDebgMac("Clearing short address: 0x%x -- %d (0:OK, 10:NoAddress)\n", aAddr.mShortAddress, error);
+    }
+    else
+    {
+        uint8_t buf[8];
+
+        for (uint8_t i = 0; i < sizeof(buf); i++)
+        {
+            buf[i] = aAddr.mExtAddress.m8[7 - i];
+        }
+
+        error = otPlatRadioClearSrcMatchExtEntry(NULL, buf);
+        otLogDebgMac("Clearing extended address: 0x%02x%02x%02x%02x%02x%02x%02x%02x -- %d (0:OK, 10:NoAddress)\n",
+                     buf[7], buf[6], buf[5], buf[4], buf[3], buf[2], buf[1], buf[0], error);
+    }
+
+    return error;
+}
+
+void Mac::ClearSrcMatchEntries()
+{
+    otPlatRadioClearSrcMatchShortEntries(NULL);
+    otPlatRadioClearSrcMatchExtEntries(NULL);
+    otLogDebgMac("Clearing source match table");
 }
 
 }  // namespace Mac

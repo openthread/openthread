@@ -43,7 +43,7 @@ from GRLLibs.UtilityModules.ModuleHelper import ModuleHelper
 
 
 class ARM(IThci):
-    firmware = '2016 7 27 13:36:46' # keep the consistency with ARM firmware style
+    firmware = 'Sep 9 2016 14:57:36'# keep the consistency with ARM firmware style
     UIStatusMsg = ''
     networkDataRequirement = ''     # indicate Thread devicde requests full or stable network data
     isPowerDown = False             # indicate if Thread device experiences a power down event
@@ -66,6 +66,7 @@ class ARM(IThci):
             self.channel = ModuleHelper.Default_Channel
             self.panId = ModuleHelper.Default_PanId
             self.xpanId = ModuleHelper.Default_XpanId
+            self.AutoDUTEnable = False
             self.intialize()
         except Exception, e:
             ModuleHelper.WriteIntoDebugLogger("initialize() Error: " + str(e))
@@ -233,6 +234,24 @@ class ARM(IThci):
             return self.__sendCommand(cmd) == 'Done'
         except Exception, e:
             ModuleHelper.WriteIntoDebugLogger("setRouterDowngradeThreshold() Error: " + str(e))
+
+    def __setRouterSelectionJitter(self, iRouterJitter):
+        """set ROUTER_SELECTION_JITTER parameter for REED to upgrade to Router
+
+        Args:
+            iRouterJitter: a random period prior to request Router ID for REED
+
+        Returns:
+            True: successful to set the ROUTER_SELECTION_JITTER
+            False: fail to set ROUTER_SELECTION_JITTER
+        """
+        print 'call _setRouterSelectionJitter'
+        try:
+            cmd = 'routerselectionjitter %s' % str(iRouterJitter)
+            print cmd
+            return self.__sendCommand(cmd) == 'Done'
+        except Exception, e:
+            ModuleHelper.WriteIntoDebugLogger("setRouterSelectionJitter() Error: " + str(e))
 
     def __enableWhiteList(self):
         """enable white list filter
@@ -740,22 +759,28 @@ class ARM(IThci):
             if eRoleId == Thread_Device_Role.Leader:
                 print 'join as leader'
                 role = 'rsdn'
-                # set ROUTER_UPGRADE_THRESHOLD
-                self.__setRouterUpgradeThreshold(32)
-                # set ROUTER_DOWNGRADE_THRESHOLD
-                self.__setRouterDowngradeThreshold(33)
+                self.__setRouterSelectionJitter(1)
+                if self.AutoDUTEnable is False:
+                    # set ROUTER_UPGRADE_THRESHOLD
+                    self.__setRouterUpgradeThreshold(32)
+                    # set ROUTER_DOWNGRADE_THRESHOLD
+                    self.__setRouterDowngradeThreshold(33)
             elif eRoleId == Thread_Device_Role.Router:
                 print 'join as router'
                 role = 'rsdn'
-                # set ROUTER_UPGRADE_THRESHOLD
-                self.__setRouterUpgradeThreshold(32)
-                # set ROUTER_DOWNGRADE_THRESHOLD
-                self.__setRouterDowngradeThreshold(33)
+                self.__setRouterSelectionJitter(1)
+                time.sleep(5) #wait for REED upgrade to Router
+                if self.AutoDUTEnable is False:
+                    # set ROUTER_UPGRADE_THRESHOLD
+                    self.__setRouterUpgradeThreshold(33)
+                    # set ROUTER_DOWNGRADE_THRESHOLD
+                    self.__setRouterDowngradeThreshold(33)
             elif eRoleId == Thread_Device_Role.SED:
                 print 'join as sleepy end device'
                 role = 's'
-                # set data polling rate to 15s for SED
-                self.setPollingRate(15)
+                if self.AutoDUTEnable is False:
+                    # set data polling rate to 15s for SED
+                    self.setPollingRate(15)
             elif eRoleId == Thread_Device_Role.EndDevice:
                 print 'join as end device'
                 role = 'rsn'
@@ -1570,11 +1595,37 @@ class ARM(IThci):
     def setSleepyNodePollTime(self):
         pass
 
-    def diagnosticGet(self, strDestinationAddr, TLV_ids=0):
-        pass
+    def enableAutoDUTObjectFlag(self):
+        """set AutoDUTenable flag"""
+        self.AutoDUTEnable = True
 
-    def diagnosticReset(self, strDestinationAddr, iTLV_id):
-        pass
+    def getChildTimeoutValue(self):
+        """get child timeout"""
+        return self.__sendCommand('childtimeout')[0]
+
+    def diagnosticGet(self, strDestinationAddr, listTLV_ids=[]):
+        if not listTLV_ids:
+            return
+
+        if not len(listTLV_ids):
+            return
+
+        cmd = 'networkdiagnostic get %s %s' % (strDestinationAddr, ' '.join([str(tlv) for tlv in listTLV_ids]))
+        print(cmd)
+
+        return self.__sendCommand(cmd)
+
+    def diagnosticReset(self, strDestinationAddr, listTLV_ids=[]):
+        if not listTLV_ids:
+            return
+
+        if not len(listTLV_ids):
+            return
+
+        cmd = 'networkdiagnostic reset %s %s' % (strDestinationAddr, ' '.join([str(tlv) for tlv in listTLV_ids]))
+        print(cmd)
+
+        return self.__sendCommand(cmd)
 
     def startNativeCommissioner(self, strPSKc='GRLpassWord'):
         pass

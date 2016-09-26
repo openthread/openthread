@@ -194,6 +194,38 @@ namespace Thread {
  */
 #define OPENTHREAD_URI_PANID_QUERY      "c/pq"
 
+/**
+ * @def OPENTHREAD_URI_COMMISSIONER_GET
+ *
+ * The URI Path for MGMT_COMMISSIONER_GET
+ *
+ */
+#define OPENTHREAD_URI_COMMISSIONER_GET "c/cg"
+
+/**
+ * @def OPENTHREAD_URI_COMMISSIONER_SET
+ *
+ * The URI Path for MGMT_COMMISSIONER_SET
+ *
+ */
+#define OPENTHREAD_URI_COMMISSIONER_SET "c/cs"
+
+/**
+ * @def OPENTHREAD_URI_DIAGNOSTIC_GET
+ *
+ * The URI Path for Network Diagnostic Get.
+ *
+ */
+#define OPENTHREAD_URI_DIAGNOSTIC_GET   "d/dg"
+
+/**
+ * @def OPENTHREAD_URI_DIAG_RST
+ *
+ * The URI Path for Network Diagnostic Reset.
+ *
+ */
+#define OPENTHREAD_URI_DIAGNOSTIC_RESET "d/dr"
+
 }  // namespace Thread
 
 #endif  // THREAD_URIS_HPP_

@@ -102,6 +102,7 @@ typedef struct RadioPacket
     int8_t  mPower;          ///< Transmit/receive power in dBm.
     uint8_t mLqi;            ///< Link Quality Indicator for received frames.
     bool    mSecurityValid;  ///< Security Enabled flag is set and frame passes security checks.
+    uint16_t mFcs;           ///< Final checksum (optional)
 } RadioPacket;
 
 /**
@@ -253,8 +254,75 @@ ThreadError otPlatRadioSleep(otInstance *aInstance);
 ThreadError otPlatRadioReceive(otInstance *aInstance, uint8_t aChannel);
 
 /**
- * The radio driver calls this method to notify OpenThread of a received packet.
+ * Enable/Disable source match for AutoPend.
  *
+ * @param[in]  aInstance   The OpenThread instance structure.
+ * @param[in]  aEnable     Enable/disable source match for automatical pending.
+ */
+void otPlatRadioEnableSrcMatch(otInstance *aInstance, bool aEnable);
+
+/**
+ * Adding short address to the source match table.
+ *
+ * @param[in]  aInstance      The OpenThread instance structure.
+ * @param[in]  aShortAddress  The short address to be added.
+ *
+ * @retval ::kThreadError_None     Successfully added short address to the source match table.
+ * @retval ::kThreadError_NoBufs   No available entry in the source match table.
+ */
+ThreadError otPlatRadioAddSrcMatchShortEntry(otInstance *aInstance, const uint16_t aShortAddress);
+
+/**
+ * Adding extended address to the source match table.
+ *
+ * @param[in]  aInstance    The OpenThread instance structure.
+ * @param[in]  aExtAddress  The extended address to be added.
+ *
+ * @retval ::kThreadError_None     Successfully added extended address to the source match table.
+ * @retval ::kThreadError_NoBufs   No available entry in the source match table.
+ */
+ThreadError otPlatRadioAddSrcMatchExtEntry(otInstance *aInstance, const uint8_t *aExtAddress);
+
+/**
+ * Removing short address to the source match table.
+ *
+ * @param[in]  aInstance      The OpenThread instance structure.
+ * @param[in]  aShortAddress  The short address to be removed.
+ *
+ * @retval ::kThreadError_None        Successfully removed short address from the source match table.
+ * @retval ::kThreadError_NoAddress   The short address is not in source match table.
+ */
+ThreadError otPlatRadioClearSrcMatchShortEntry(otInstance *aInstance, const uint16_t aShortAddress);
+
+/**
+ * Removing extended address to the source match table of the radio.
+ *
+ * @param[in]  aInstance    The OpenThread instance structure.
+ * @param[in]  aExtAddress  The extended address to be removed.
+ *
+ * @retval ::kThreadError_None        Successfully removed the extended address from the source match table.
+ * @retval ::kThreadError_NoAddress   The extended address is not in source match table.
+ */
+ThreadError otPlatRadioClearSrcMatchExtEntry(otInstance *aInstance, const uint8_t *aExtAddress);
+
+/**
+ * Removing all the short addresses from the source match table.
+ *
+ * @param[in]  aInstance   The OpenThread instance structure.
+ *
+ */
+void otPlatRadioClearSrcMatchShortEntries(otInstance *aInstance);
+
+/**
+ * Removing all the extended addresses from the source match table.
+ *
+ * @param[in]  aInstance   The OpenThread instance structure.
+ *
+ */
+void otPlatRadioClearSrcMatchExtEntries(otInstance *aInstance);
+
+/**
+ * The radio driver calls this method to notify OpenThread of a received packet.
  *
  * @param[in]  aInstance The OpenThread instance structure.
  * @param[in]  aPacket   A pointer to the received packet or NULL if the receive operation was aborted.

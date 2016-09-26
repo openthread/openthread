@@ -55,6 +55,8 @@ Leader::Leader(ThreadNetif &aThreadNetif):
     NetworkData(aThreadNetif, false),
     mTimer(aThreadNetif.GetIp6().mTimerScheduler, &Leader::HandleTimer, this),
     mServerData(OPENTHREAD_URI_SERVER_DATA, &Leader::HandleServerData, this),
+    mCommissioningDataGet(OPENTHREAD_URI_COMMISSIONER_GET, &Leader::HandleCommissioningGet, this),
+    mCommissioningDataSet(OPENTHREAD_URI_COMMISSIONER_SET, &Leader::HandleCommissioningSet, this),
     mCoapServer(aThreadNetif.GetCoapServer()),
     mNetif(aThreadNetif)
 {
@@ -75,11 +77,15 @@ void Leader::Reset(void)
 void Leader::Start(void)
 {
     mCoapServer.AddResource(mServerData);
+    mCoapServer.AddResource(mCommissioningDataGet);
+    mCoapServer.AddResource(mCommissioningDataSet);
 }
 
 void Leader::Stop(void)
 {
     mCoapServer.RemoveResource(mServerData);
+    mCoapServer.RemoveResource(mCommissioningDataGet);
+    mCoapServer.RemoveResource(mCommissioningDataSet);
 }
 
 uint8_t Leader::GetVersion(void) const
@@ -551,6 +557,106 @@ void Leader::HandleServerData(Coap::Header &aHeader, Message &aMessage,
     SendServerDataResponse(aHeader, aMessageInfo, NULL, 0);
 }
 
+void Leader::HandleCommissioningSet(void *aContext, Coap::Header &aHeader, Message &aMessage,
+                                    const Ip6::MessageInfo &aMessageInfo)
+{
+    Leader *obj = static_cast<Leader *>(aContext);
+    obj->HandleCommissioningSet(aHeader, aMessage, aMessageInfo);
+}
+
+void Leader::HandleCommissioningSet(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
+{
+    uint16_t offset = aMessage.GetOffset();
+    uint8_t length = static_cast<uint8_t>(aMessage.GetLength() - aMessage.GetOffset());
+    uint8_t tlvs[NetworkData::kMaxSize];
+    MeshCoP::StateTlv::State state = MeshCoP::StateTlv::kAccept;
+    bool hasSessionId = false;
+    uint16_t sessionId = 0;
+
+    VerifyOrExit(mMle.GetDeviceState() == Mle::kDeviceStateLeader, state = MeshCoP::StateTlv::kReject);
+
+    aMessage.Read(offset, length, tlvs);
+
+    // Session Id and Border Router Locator MUST NOT be set, and only includes commissioning data tlvs
+    for (MeshCoP::Tlv *cur = reinterpret_cast<MeshCoP::Tlv *>(tlvs);
+         cur < reinterpret_cast<MeshCoP::Tlv *>(tlvs + length);
+         cur = cur->GetNext())
+    {
+        MeshCoP::Tlv::Type type = cur->GetType();
+
+        VerifyOrExit(type == MeshCoP::Tlv::kCommissionerSessionId ||
+                     type == MeshCoP::Tlv::kJoinerUdpPort || type == MeshCoP::Tlv::kSteeringData,
+                     state = MeshCoP::StateTlv::kReject);
+
+        if (type == MeshCoP::Tlv::kCommissionerSessionId)
+        {
+            hasSessionId = true;
+            sessionId = static_cast<MeshCoP::CommissionerSessionIdTlv *>(cur)->GetCommissionerSessionId();
+        }
+    }
+
+    VerifyOrExit(hasSessionId, state = MeshCoP::StateTlv::kReject);
+
+    for (MeshCoP::Tlv *cur = reinterpret_cast<MeshCoP::Tlv *>(mTlvs + sizeof(CommissioningDataTlv));
+         cur < reinterpret_cast<MeshCoP::Tlv *>(mTlvs + mLength);
+         cur = cur->GetNext())
+    {
+        if (cur->GetType() == MeshCoP::Tlv::kCommissionerSessionId)
+        {
+            VerifyOrExit(sessionId ==
+                         static_cast<MeshCoP::CommissionerSessionIdTlv *>(cur)->GetCommissionerSessionId(),
+                         state = MeshCoP::StateTlv::kReject);
+        }
+        else if (cur->GetType() == MeshCoP::Tlv::kBorderAgentLocator)
+        {
+            memcpy(tlvs + length, reinterpret_cast<uint8_t *>(cur), cur->GetLength() + sizeof(MeshCoP::Tlv));
+            length += (cur->GetLength() + sizeof(MeshCoP::Tlv));
+        }
+    }
+
+    SetCommissioningData(tlvs, length);
+
+exit:
+
+    if (mMle.GetDeviceState() == Mle::kDeviceStateLeader)
+    {
+        SendCommissioningSetResponse(aHeader, aMessageInfo, state);
+    }
+
+    return;
+}
+
+void Leader::HandleCommissioningGet(void *aContext, Coap::Header &aHeader, Message &aMessage,
+                                    const Ip6::MessageInfo &aMessageInfo)
+{
+    Leader *obj = static_cast<Leader *>(aContext);
+    obj->HandleCommissioningGet(aHeader, aMessage, aMessageInfo);
+}
+
+void Leader::HandleCommissioningGet(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
+{
+    MeshCoP::Tlv tlv;
+    uint16_t offset = aMessage.GetOffset();
+    uint8_t tlvs[NetworkData::kMaxSize];
+    uint8_t length = 0;
+
+    while (offset < aMessage.GetLength())
+    {
+        aMessage.Read(offset, sizeof(tlv), &tlv);
+
+        if (tlv.GetType() == MeshCoP::Tlv::kGet)
+        {
+            length = tlv.GetLength();
+            aMessage.Read(offset + sizeof(MeshCoP::Tlv), length, tlvs);
+            break;
+        }
+
+        offset += sizeof(tlv) + tlv.GetLength();
+    }
+
+    SendCommissioningGetResponse(aHeader, aMessageInfo, tlvs, length);
+}
+
 void Leader::SendServerDataResponse(const Coap::Header &aRequestHeader, const Ip6::MessageInfo &aMessageInfo,
                                     const uint8_t *aTlvs, uint8_t aTlvsLength)
 {
@@ -560,7 +666,6 @@ void Leader::SendServerDataResponse(const Coap::Header &aRequestHeader, const Ip
 
     VerifyOrExit((message = mCoapServer.NewMessage(0)) != NULL, error = kThreadError_NoBufs);
     responseHeader.Init();
-    responseHeader.SetVersion(1);
     responseHeader.SetType(Coap::Header::kTypeAcknowledgment);
     responseHeader.SetCode(Coap::Header::kCodeChanged);
     responseHeader.SetMessageId(aRequestHeader.GetMessageId());
@@ -572,6 +677,105 @@ void Leader::SendServerDataResponse(const Coap::Header &aRequestHeader, const Ip
     SuccessOrExit(error = mCoapServer.SendMessage(*message, aMessageInfo));
 
     otLogInfoNetData("Sent network data registration acknowledgment\n");
+
+exit:
+
+    if (error != kThreadError_None && message != NULL)
+    {
+        message->Free();
+    }
+}
+
+void Leader::SendCommissioningGetResponse(const Coap::Header &aRequestHeader, const Ip6::MessageInfo &aMessageInfo,
+                                          uint8_t *aTlvs, uint8_t aLength)
+{
+    ThreadError error = kThreadError_None;
+    Coap::Header responseHeader;
+    Message *message;
+    uint8_t index;
+    uint8_t *data = NULL;
+    uint8_t length = 0;
+
+    VerifyOrExit((message = mCoapServer.NewMessage(0)) != NULL, error = kThreadError_NoBufs);
+    responseHeader.Init();
+    responseHeader.SetType(Coap::Header::kTypeAcknowledgment);
+    responseHeader.SetCode(Coap::Header::kCodeChanged);
+    responseHeader.SetMessageId(aRequestHeader.GetMessageId());
+    responseHeader.SetToken(aRequestHeader.GetToken(), aRequestHeader.GetTokenLength());
+    responseHeader.Finalize();
+    SuccessOrExit(error = message->Append(responseHeader.GetBytes(), responseHeader.GetLength()));
+
+    for (NetworkDataTlv *cur = reinterpret_cast<NetworkDataTlv *>(mTlvs);
+         cur < reinterpret_cast<NetworkDataTlv *>(mTlvs + mLength);
+         cur = cur->GetNext())
+    {
+        if (cur->GetType() == NetworkDataTlv::kTypeCommissioningData)
+        {
+            data = cur->GetValue();
+            length = cur->GetLength();
+            break;
+        }
+    }
+
+    VerifyOrExit(data && length, error = kThreadError_Drop);
+
+    if (aLength == 0)
+    {
+        SuccessOrExit(error = message->Append(data, length));
+    }
+    else
+    {
+        for (index = 0; index < aLength; index++)
+        {
+            for (MeshCoP::Tlv *cur = reinterpret_cast<MeshCoP::Tlv *>(data);
+                 cur < reinterpret_cast<MeshCoP::Tlv *>(data + length);
+                 cur = cur->GetNext())
+            {
+                if (cur->GetType() == aTlvs[index])
+                {
+                    SuccessOrExit(error = message->Append(cur, sizeof(NetworkDataTlv) + cur->GetLength()));
+                    break;
+                }
+            }
+        }
+    }
+
+    SuccessOrExit(error = mCoapServer.SendMessage(*message, aMessageInfo));
+
+    otLogInfoMeshCoP("sent commissioning dataset get response\n");
+
+exit:
+
+    if (error != kThreadError_None && message != NULL)
+    {
+        message->Free();
+    }
+}
+
+void Leader::SendCommissioningSetResponse(const Coap::Header &aRequestHeader, const Ip6::MessageInfo &aMessageInfo,
+                                          MeshCoP::StateTlv::State aState)
+{
+    ThreadError error = kThreadError_None;
+    Coap::Header responseHeader;
+    Message *message;
+    MeshCoP::StateTlv state;
+
+    VerifyOrExit((message = mCoapServer.NewMessage(0)) != NULL, error = kThreadError_NoBufs);
+    responseHeader.Init();
+    responseHeader.SetType(Coap::Header::kTypeAcknowledgment);
+    responseHeader.SetCode(Coap::Header::kCodeChanged);
+    responseHeader.SetMessageId(aRequestHeader.GetMessageId());
+    responseHeader.SetToken(aRequestHeader.GetToken(), aRequestHeader.GetTokenLength());
+    responseHeader.Finalize();
+    SuccessOrExit(error = message->Append(responseHeader.GetBytes(), responseHeader.GetLength()));
+
+    state.Init();
+    state.SetState(aState);
+    SuccessOrExit(error = message->Append(&state, sizeof(state)));
+
+    SuccessOrExit(error = mCoapServer.SendMessage(*message, aMessageInfo));
+
+    otLogInfoMeshCoP("sent commissioning dataset set response\n");
 
 exit:
 

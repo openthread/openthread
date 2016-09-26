@@ -49,6 +49,7 @@
 #include <net/netif.hpp>
 #include <thread/address_resolver.hpp>
 #include <thread/energy_scan_server.hpp>
+#include <thread/network_diag.hpp>
 #include <thread/key_manager.hpp>
 #include <thread/meshcop_dataset_manager.hpp>
 #include <thread/mesh_forwarder.hpp>
@@ -160,6 +161,14 @@ public:
     AddressResolver &GetAddressResolver(void) { return mAddressResolver; }
 
     /**
+     * This method returns a pointer to the network diagnostic object.
+     *
+     * @returns A reference to the address resolver object.
+     *
+     */
+    NetworkDiagnostic::NetworkDiagnostic &GetNetworkDiagnostic(void) { return mNetworkDiagnostic; }
+
+    /**
      * This method returns a pointer to the coap server object.
      *
      * @returns A pointer to the coap server object.
@@ -262,6 +271,7 @@ private:
     Mle::MleRouter mMleRouter;
     NetworkData::Local mNetworkDataLocal;
     NetworkData::Leader mNetworkDataLeader;
+    NetworkDiagnostic::NetworkDiagnostic mNetworkDiagnostic;
     bool mIsUp;
 
 #if OPENTHREAD_ENABLE_COMMISSIONER

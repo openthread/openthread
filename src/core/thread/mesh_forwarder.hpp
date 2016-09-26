@@ -208,8 +208,8 @@ private:
     static ThreadError HandleFrameRequest(void *aContext, Mac::Frame &aFrame);
     ThreadError HandleFrameRequest(Mac::Frame &aFrame);
 
-    static void HandleSentFrame(void *aContext, Mac::Frame &aFrame);
-    void HandleSentFrame(Mac::Frame &aFrame);
+    static void HandleSentFrame(void *aContext, Mac::Frame &aFrame, ThreadError aError);
+    void HandleSentFrame(Mac::Frame &aFrame, ThreadError aError);
 
     static void HandleDiscoverTimer(void *aContext);
     void HandleDiscoverTimer(void);
@@ -220,6 +220,10 @@ private:
 
     static void ScheduleTransmissionTask(void *aContext);
     void ScheduleTransmissionTask(void);
+
+    ThreadError AddPendingSrcMatchEntries();
+    ThreadError AddSrcMatchEntry(Child &aChild);
+    void ClearSrcMatchEntry(Child &aChild);
 
     Mac::Receiver mMacReceiver;
     Mac::Sender mMacSender;
@@ -259,6 +263,8 @@ private:
     Mac::Mac &mMac;
     Mle::MleRouter &mMle;
     NetworkData::Leader &mNetworkData;
+
+    bool mSrcMatchEnabled;
 };
 
 /**

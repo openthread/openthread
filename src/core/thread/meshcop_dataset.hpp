@@ -46,7 +46,8 @@ class Dataset
 public:
     enum
     {
-        kMaxSize = 256,  ///< Maximum size of MeshCoP Dataset (bytes)
+        kMaxSize = 256,      ///< Maximum size of MeshCoP Dataset (bytes)
+        kMaxValueSize = 16,  /// < Maximum size of each Dataset TLV value (bytes)
     };
 
     /**

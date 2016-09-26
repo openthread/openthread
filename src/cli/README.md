@@ -12,6 +12,7 @@ OpenThread test scripts use the CLI to execute test cases.
 * [child](#child)
 * [childmax](#childmax)
 * [childtimeout](#childtimeout)
+* [commissioner](#commissioner)
 * [contextreusedelay](#contextreusedelay)
 * [counter](#counter)
 * [dataset](#dataset)
@@ -23,6 +24,7 @@ OpenThread test scripts use the CLI to execute test cases.
 * [hashmacaddr](#hashmacaddr)
 * [ifconfig](#ifconfig)
 * [ipaddr](#ipaddr)
+* [joiner](#joiner)
 * [keysequence](#keysequence)
 * [leaderpartitionid](#leaderpartitionid)
 * [leaderweight](#leaderweight)
@@ -45,6 +47,7 @@ OpenThread test scripts use the CLI to execute test cases.
 * [router](#router)
 * [routerdowngradethreshold](#routerdowngradethreshold)
 * [routerrole](#routerrole)
+* [routerselectionjitter](#routerselectionjitter)
 * [routerupgradethreshold](#routerupgradethreshold)
 * [scan](#scan)
 * [singleton](#singleton)
@@ -208,6 +211,67 @@ Set the Thread Child Timeout value.
 ```bash
 > childtimeout 300
 Done
+```
+
+### commissioner start \<psdk\> \<provisioningUrl\>
+
+Start the Commissioner role.
+
+* pskd: Pre-Shared Key for the Joiner.
+* provisioningUrl: Provisioning URL for the Joiner (optional).
+
+This command will cause the device to send LEAD_PET and LEAD_KA messages.
+
+```bash
+> commissioner start PSK
+Done
+```
+
+### commissioner stop
+
+Stop the Commissioner role.
+
+This command will cause the device to send LEAD_KA[Reject] messages.
+
+```bash
+> commissioner stop
+Done
+```
+
+### commissioner energy \<mask\> \<count\> \<period\> \<scanDuration\> \<destination\>
+
+Send a MGMT_ED_SCAN message.
+
+* mask: Bitmask identifying channsl to perform IEEE 802.15.4 ED Scans.
+* count: Number of IEEE 802.15.4 ED Scans per channel.
+* period: Period between successive IEEE 802.15.4 ED Scans (milliseconds).
+* scanDuration: IEEE 802.15.4 ScanDuration to use when performing an IEEE 802.15.4 ED Scan (milliseconds).
+* destination: IPv6 destination for the message (may be multicast).
+
+The contents of MGMT_ED_REPORT messages (i.e. Channel Mask and Energy
+List) are printed as they are received.
+
+```bash
+> commissioner energy 0x00050000 2 32 1000 fdde:ad00:beef:0:0:ff:fe00:c00
+Done
+Energy: 00050000 0 0 0 0
+```
+
+### commissioner panid \<panid\> \<mask\> \<destination\>
+
+Send a MGMT_PANID_QUERY message.
+
+* panid: PAN ID to check for conflicts.
+* mask: Bitmask identifying channels to perform IEEE 802.15.4 Active Scans.
+* destination: IPv6 destination for the message (may be multicast).
+
+The contents of MGMT_PANID_CONFLICT messages (i.e. PAN ID and Channel
+Mask) are printed as they are received.
+
+```bash
+> commissioner panid 0xdead 0x7fff800 fdde:ad00:beef:0:0:ff:fe00:c00
+Done
+Conflict: dead, 00000800
 ```
 
 ### contextreusedelay
@@ -685,6 +749,30 @@ Delete an IPv6 address from the Thread interface.
 Done
 ```
 
+### joiner start \<pskd\> \<provisioningUrl\>
+
+Start the Joiner role.
+
+* pskd: Pre-Shared Key for the Joiner.
+* provisioningUrl: Provisioning URL for the Joiner (optional).
+
+This command will cause the device to perform an MLE Discovery and
+initiate the Thread Commissioning process.
+
+```bash
+> joiner start PSK
+Done
+```
+
+### joiner stop
+
+Stop the Joiner role.
+
+```bash
+> joiner stop
+Done
+```
+
 ### keysequence
 
 Get the Thread Key Sequence.
@@ -1116,6 +1204,25 @@ Disable the router role.
 
 ```bash
 > routerrole disable
+Done
+```
+
+### routerselectionjitter
+
+Get the ROUTER_SELECTION_JITTER value.
+
+```bash
+> routerselectionjitter
+120
+Done
+```
+
+### routerselectionjitter \<jitter\>
+
+Set the ROUTER_SELECTION_JITTER value.
+
+```bash
+> routerselectionjitter 120
 Done
 ```
 

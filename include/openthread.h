@@ -986,6 +986,29 @@ uint32_t otGetLocalLeaderPartitionId(otInstance *aInstance);
 void otSetLocalLeaderPartitionId(otInstance *aInstance, uint32_t aPartitionId);
 
 /**
+ * Get the Joiner UDP Port.
+ *
+ * @param[in] aInstance A pointer to an OpenThread instance.
+ *
+ * @returns The Joiner UDP Port number.
+ *
+ * @sa otSetJoinerUdpPort
+ */
+uint16_t otGetJoinerUdpPort(otInstance *aInstance);
+
+/**
+ * Set the Joiner UDP Port
+ *
+ * @param[in]  aInstance       A pointer to an OpenThread instance.
+ * @param[in]  aJoinerUdpPort  The Joiner UDP Port number.
+ *
+ * @retval  kThreadErrorNone   Successfully set the Joiner UDP Port.
+ *
+ * @sa otGetJoinerUdpPort
+ */
+ThreadError otSetJoinerUdpPort(otInstance *aInstance, uint16_t aJoinerUdpPort);
+
+/**
  * @}
  */
 
@@ -1530,6 +1553,24 @@ uint8_t otGetRouterDowngradeThreshold(void);
  * @sa otGetRouterDowngradeThreshold
  */
 void otSetRouterDowngradeThreshold(uint8_t aThreshold);
+
+/**
+ * Get the ROUTER_SELECTION_JITTER parameter used in the REED/Router role.
+ *
+ * @returns The ROUTER_SELECTION_JITTER value.
+ *
+ * @sa otSetRouterSelectionJitter
+ */
+uint8_t otGetRouterSelectionJitter(void);
+
+/**
+ * Set the ROUTER_SELECTION_JITTER parameter used in the REED/Router role.
+ *
+ * @param[in]  aRouterJitter  The ROUTER_SELECTION_JITTER value.
+ *
+ * @sa otGetRouterSelectionJitter
+ */
+void otSetRouterSelectionJitter(uint8_t aRouterJitter);
 
 /**
  * @}
@@ -2154,6 +2195,26 @@ ThreadError otBindUdpSocket(otUdpSocket *aSocket, otSockAddr *aSockName);
  * @sa otSendUdp
  */
 ThreadError otSendUdp(otUdpSocket *aSocket, otMessage aMessage, const otMessageInfo *aMessageInfo);
+
+/**
+ * Send a Network Diagnostic Get request
+ *
+ * @param[in]  aDestination   A pointer to destination address.
+ * @param[in]  aTlvTypes      An array of Network Diagnostic TLV types.
+ * @param[in]  aCount         Number of types in aTlvTypes
+ */
+ThreadError otSendDiagnosticGet(otInstance *aInstance, otIp6Address *aDestination, uint8_t aTlvTypes[], uint8_t aCount);
+
+/**
+ * Send a Network Diagnostic Reset request
+ *
+ * @param[in]  aInstance      A pointer to an OpenThread instance.
+ * @param[in]  aDestination   A pointer to destination address.
+ * @param[in]  aTlvTypes      An array of Network Diagnostic TLV types. Currently only Type 9 is allowed.
+ * @param[in]  aCount         Number of types in aTlvTypes
+ */
+ThreadError otSendDiagnosticReset(otInstance *aInstance, otIp6Address *aDestination, uint8_t aTlvTypes[],
+                                  uint8_t aCount);
 
 /**
  * @}

@@ -139,6 +139,8 @@ typedef enum ThreadError
 
 #define OT_MASTER_KEY_SIZE         16  ///< Size of the Thread Master Key (bytes)
 
+#define OT_NUM_NETDIAG_TLV_TYPES   18  ///< Number of Network Diagnostic TLV types
+
 /**
  * This structure represents a Thread Master Key.
  *
@@ -300,6 +302,7 @@ typedef struct otActiveScanResult
     otNetworkName   mNetworkName;     ///< Thread Network Name
     otExtendedPanId mExtendedPanId;   ///< Thread Extended PAN ID
     uint16_t        mPanId;           ///< IEEE 802.15.4 PAN ID
+    uint16_t        mJoinerUdpPort;   ///< Joiner UDP Port
     uint8_t         mChannel;         ///< IEEE 802.15.4 Channel
     int8_t          mRssi;            ///< RSSI (dBm)
     uint8_t         mLqi;             ///< LQI
@@ -375,6 +378,35 @@ typedef struct otOperationalDataset
     bool                 mIsSecurityPolicySet : 1;    ///< TRUE if Security Policy is set, FALSE otherwise.
     bool                 mIsChannelMaskPage0Set : 1;  ///< TRUE if Channel Mask Page 0 is set, FALSE otherwise.
 } otOperationalDataset;
+
+#define OT_STEERING_DATA_MAX_LENGTH       16  ///< Max steering data length (bytes)
+
+/**
+ * This structure represents the steering data.
+ *
+ */
+typedef struct otSteeringData
+{
+    uint8_t mLength;
+    uint8_t m8[OT_STEERING_DATA_MAX_LENGTH];
+} otSteeringData;
+
+/**
+ * This structure represents a Commissioning Dataset.
+ *
+ */
+typedef struct otCommissioningDataset
+{
+    uint16_t              mLocator;                   ///< Border Router RLOC16
+    uint16_t              mSessionId;                 ///< Commissioner Session Id
+    otSteeringData        mSteeringData;              ///< Steering Data
+    uint16_t              mJoinerUdpPort;             ///< Joiner UDP Port
+
+    bool                  mIsLocatorSet : 1;          ///< TRUE if Border Router RLOC16 is set, FALSE otherwise.
+    bool                  mIsSessionIdSet: 1;         ///< TRUE if Commissioner Session Id is set, FALSE otherwise.
+    bool                  mIsSteeringDataSet : 1;     ///< TRUE if Steering Data is set, FALSE otherwise.
+    bool                  mIsJoinerUdpPortSet : 1;    ///< TRUE if Joiner UDP Port is set, FALSE otherwise.
+} otCommissioningDataset;
 
 /**
  * This enumeration represents meshcop TLV types.
