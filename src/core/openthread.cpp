@@ -379,6 +379,16 @@ void otSetLocalLeaderPartitionId(otInstance *, uint32_t aPartitionId)
     return sThreadNetif->GetMle().SetLeaderPartitionId(aPartitionId);
 }
 
+uint16_t otGetJoinerUdpPort(otInstance *)
+{
+    return sThreadNetif->GetJoinerRouter().GetJoinerUdpPort();
+}
+
+ThreadError otSetJoinerUdpPort(otInstance *, uint16_t aJoinerUdpPort)
+{
+    return sThreadNetif->GetJoinerRouter().SetJoinerUdpPort(aJoinerUdpPort);
+}
+
 ThreadError otAddBorderRouter(otInstance *, const otBorderRouterConfig *aConfig)
 {
     uint8_t flags = 0;

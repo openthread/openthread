@@ -302,6 +302,7 @@ typedef struct otActiveScanResult
     otNetworkName   mNetworkName;     ///< Thread Network Name
     otExtendedPanId mExtendedPanId;   ///< Thread Extended PAN ID
     uint16_t        mPanId;           ///< IEEE 802.15.4 PAN ID
+    uint16_t        mJoinerUdpPort;   ///< Joiner UDP Port
     uint8_t         mChannel;         ///< IEEE 802.15.4 Channel
     int8_t          mRssi;            ///< RSSI (dBm)
     uint8_t         mLqi;             ///< LQI

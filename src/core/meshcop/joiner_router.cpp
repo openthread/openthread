@@ -51,7 +51,8 @@ namespace MeshCoP {
 JoinerRouter::JoinerRouter(ThreadNetif &aNetif):
     mSocket(aNetif.GetIp6().mUdp),
     mRelayTransmit(OPENTHREAD_URI_RELAY_TX, &JoinerRouter::HandleRelayTransmit, this),
-    mNetif(aNetif)
+    mNetif(aNetif),
+    mIsJoinerPortConfigured(false)
 {
     mSocket.GetSockName().mPort = OPENTHREAD_CONFIG_JOINER_UDP_PORT;
     mNetif.GetCoapServer().AddResource(mRelayTransmit);
@@ -77,10 +78,7 @@ void JoinerRouter::HandleNetifStateChanged(uint32_t aFlags)
     {
         Ip6::SockAddr sockaddr;
 
-        if (GetJoinerPort(sockaddr.mPort) != kThreadError_None)
-        {
-            sockaddr.mPort = OPENTHREAD_CONFIG_JOINER_UDP_PORT;
-        }
+        sockaddr.mPort = GetJoinerUdpPort();
 
         mSocket.Open(&JoinerRouter::HandleUdpReceive, this);
         mSocket.Bind(sockaddr);
@@ -124,13 +122,14 @@ exit:
     return error;
 }
 
-ThreadError JoinerRouter::GetJoinerPort(uint16_t &aJoinerPort)
+uint16_t JoinerRouter::GetJoinerUdpPort(void)
 {
-    ThreadError error = kThreadError_NotFound;
+    uint16_t joinerUdpPort = OPENTHREAD_CONFIG_JOINER_UDP_PORT;
     uint8_t *cur;
     uint8_t *end;
     uint8_t length;
 
+    VerifyOrExit(!mIsJoinerPortConfigured, joinerUdpPort = mJoinerUdpPort);
     VerifyOrExit((cur = mNetif.GetNetworkDataLeader().GetCommissioningData(length)) != NULL, ;);
 
     end = cur + length;
@@ -141,15 +140,22 @@ ThreadError JoinerRouter::GetJoinerPort(uint16_t &aJoinerPort)
 
         if (tlv->GetType() == Tlv::kJoinerUdpPort)
         {
-            aJoinerPort = reinterpret_cast<JoinerUdpPortTlv *>(tlv)->GetUdpPort();
-            ExitNow(error = kThreadError_None);
+            ExitNow(joinerUdpPort = reinterpret_cast<JoinerUdpPortTlv *>(tlv)->GetUdpPort());
         }
 
         cur += sizeof(Tlv) + tlv->GetLength();
     }
 
 exit:
-    return error;
+    return joinerUdpPort;
+}
+
+ThreadError JoinerRouter::SetJoinerUdpPort(uint16_t aJoinerUdpPort)
+{
+    mJoinerUdpPort = aJoinerUdpPort;
+    mIsJoinerPortConfigured = true;
+    HandleNetifStateChanged(OT_THREAD_NETDATA_UPDATED);
+    return kThreadError_None;
 }
 
 void JoinerRouter::HandleUdpReceive(void *aContext, otMessage aMessage, const otMessageInfo *aMessageInfo)

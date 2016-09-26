@@ -986,6 +986,29 @@ uint32_t otGetLocalLeaderPartitionId(otInstance *aInstance);
 void otSetLocalLeaderPartitionId(otInstance *aInstance, uint32_t aPartitionId);
 
 /**
+ * Get the Joiner UDP Port.
+ *
+ * @param[in] aInstance A pointer to an OpenThread instance.
+ *
+ * @returns The Joiner UDP Port number.
+ *
+ * @sa otSetJoinerUdpPort
+ */
+uint16_t otGetJoinerUdpPort(otInstance *aInstance);
+
+/**
+ * Set the Joiner UDP Port
+ *
+ * @param[in]  aInstance       A pointer to an OpenThread instance.
+ * @param[in]  aJoinerUdpPort  The Joiner UDP Port number.
+ *
+ * @retval  kThreadErrorNone   Successfully set the Joiner UDP Port.
+ *
+ * @sa otGetJoinerUdpPort
+ */
+ThreadError otSetJoinerUdpPort(otInstance *aInstance, uint16_t aJoinerUdpPort);
+
+/**
  * @}
  */
 

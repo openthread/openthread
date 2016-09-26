@@ -95,6 +95,7 @@ const struct Command Interpreter::sCommands[] =
 #if OPENTHREAD_ENABLE_JOINER
     { "joiner", &Interpreter::ProcessJoiner },
 #endif
+    { "joinerport", &Interpreter::ProcessJoinerPort },
     { "keysequence", &Interpreter::ProcessKeySequence },
     { "leaderdata", &Interpreter::ProcessLeaderData },
     { "leaderpartitionid", &Interpreter::ProcessLeaderPartitionId },
@@ -2205,6 +2206,25 @@ exit:
 }
 
 #endif // OPENTHREAD_ENABLE_JOINER
+
+void Interpreter::ProcessJoinerPort(int argc, char *argv[])
+{
+    ThreadError error = kThreadError_None;
+    long value;
+
+    if (argc == 0)
+    {
+        sServer->OutputFormat("%d\r\n", otGetJoinerUdpPort(mInstance));
+    }
+    else
+    {
+        SuccessOrExit(error = ParseLong(argv[0], value));
+        error = otSetJoinerUdpPort(mInstance, static_cast<uint16_t>(value));
+    }
+
+exit:
+    AppendResult(error);
+}
 
 void Interpreter::ProcessWhitelist(int argc, char *argv[])
 {

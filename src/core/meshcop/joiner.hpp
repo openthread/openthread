@@ -105,6 +105,7 @@ private:
 
     uint8_t mJoinerRouterChannel;
     uint16_t mJoinerRouterPanId;
+    uint16_t mJoinerUdpPort;
     Mac::ExtAddress mJoinerRouter;
     Message *mTransmitMessage;
     Ip6::UdpSocket mSocket;
