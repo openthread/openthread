@@ -92,7 +92,7 @@ class Cert_5_6_7_NetworkDataRequestREED(unittest.TestCase):
         time.sleep(10)
 
         addrs = self.nodes[REED].get_addrs()
-        self.assertTrue(any('2003' in word for word in addrs))
+        self.assertTrue(any('2003' in addr[0:4] for addr in addrs))
         for addr in addrs:
             if addr[0:4] == '2003':
                 self.assertTrue(self.nodes[LEADER].ping(addr))

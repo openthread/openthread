@@ -95,15 +95,15 @@ class Cert_7_1_5_BorderRouterAsRouter(unittest.TestCase):
         time.sleep(3)
 
         addrs = self.nodes[ED2].get_addrs()
-        self.assertTrue(any('2001' in word for word in addrs))
-        self.assertTrue(any('2002' in word for word in addrs))
+        self.assertTrue(any('2001' in addr[0:4] for addr in addrs))
+        self.assertTrue(any('2002' in addr[0:4] for addr in addrs))
         for addr in addrs:
             if addr[0:4] == '2001' or addr[0:4] == '2002':
                 self.assertTrue(self.nodes[LEADER].ping(addr))
 
         addrs = self.nodes[SED2].get_addrs()
-        self.assertTrue(any('2001' in word for word in addrs))
-        self.assertFalse(any('2002' in word for word in addrs))
+        self.assertTrue(any('2001' in addr[0:4] for addr in addrs))
+        self.assertFalse(any('2002' in addr[0:4] for addr in addrs))
         for addr in addrs:
             if addr[0:4] == '2001' or addr[0:4] == '2002':
                 self.assertTrue(self.nodes[LEADER].ping(addr))
@@ -113,17 +113,17 @@ class Cert_7_1_5_BorderRouterAsRouter(unittest.TestCase):
         time.sleep(3)
 
         addrs = self.nodes[ED2].get_addrs()
-        self.assertTrue(any('2001' in word for word in addrs))
-        self.assertTrue(any('2002' in word for word in addrs))
-        self.assertTrue(any('2003' in word for word in addrs))
+        self.assertTrue(any('2001' in addr[0:4] for addr in addrs))
+        self.assertTrue(any('2002' in addr[0:4] for addr in addrs))
+        self.assertTrue(any('2003' in addr[0:4] for addr in addrs))
         for addr in addrs:
             if addr[0:4] == '2001' or addr[0:4] == '2002' or addr[0:4] == '2003':
                 self.assertTrue(self.nodes[LEADER].ping(addr))
 
         addrs = self.nodes[SED2].get_addrs()
-        self.assertTrue(any('2001' in word for word in addrs))
-        self.assertFalse(any('2002' in word for word in addrs))
-        self.assertTrue(any('2003' in word for word in addrs))
+        self.assertTrue(any('2001' in addr[0:4] for addr in addrs))
+        self.assertFalse(any('2002' in addr[0:4] for addr in addrs))
+        self.assertTrue(any('2003' in addr[0:4] for addr in addrs))
         for addr in addrs:
             if addr[0:4] == '2001' or addr[0:4] == '2002' or addr[0:4] == '2003':
                 self.assertTrue(self.nodes[LEADER].ping(addr))
