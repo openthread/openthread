@@ -697,7 +697,7 @@ void Mac::TransmitDoneTask(bool aRxPending, ThreadError aError)
 
     case kStateActiveScan:
     case kStateTransmitBeacon:
-        SentFrame(aError == kThreadError_None);
+        SentFrame(aError);
         break;
 
     default:
@@ -770,7 +770,7 @@ void Mac::HandleMacTimer(void)
     case kStateTransmitData:
         otLogDebgMac("ack timer fired\n");
         mCounters.mTxTotal++;
-        SentFrame(false);
+        SentFrame(kThreadError_NoAck);
         break;
 
     default:
@@ -793,14 +793,20 @@ void Mac::HandleReceiveTimer(void)
     NextOperation();
 }
 
-void Mac::SentFrame(bool aAcked)
+void Mac::SentFrame(ThreadError aError)
 {
     Frame &sendFrame(*static_cast<Frame *>(otPlatRadioGetTransmitBuffer(NULL)));
-    Address destination;
     Sender *sender;
 
-    if (sendFrame.GetAckRequest() && !aAcked)
+    switch (aError)
     {
+    case kThreadError_None:
+        break;
+
+    case kThreadError_ChannelAccessFailure:
+        break;
+
+    case kThreadError_NoAck:
         otDumpDebgMac("NO ACK", sendFrame.GetHeader(), 16);
 
         if (mTransmitAttempts < kMaxFrameAttempts)
@@ -813,8 +819,11 @@ void Mac::SentFrame(bool aAcked)
             ExitNow();
         }
 
-        sendFrame.GetDstAddr(destination);
-        mMle.RemoveNeighbor(destination);
+        break;
+
+    default:
+        assert(false);
+        break;
     }
 
     mTransmitAttempts = 0;
@@ -823,7 +832,7 @@ void Mac::SentFrame(bool aAcked)
     {
         mCounters.mTxAckRequested++;
 
-        if (aAcked)
+        if (aError == kThreadError_None)
         {
             mCounters.mTxAcked++;
         }
@@ -866,7 +875,7 @@ void Mac::SentFrame(bool aAcked)
         sender->mNext = NULL;
 
         mDataSequence++;
-        sender->HandleSentFrame(sendFrame);
+        sender->HandleSentFrame(sendFrame, aError);
 
         ScheduleNextTransmission();
         break;
