@@ -71,7 +71,7 @@ class Cert_5_6_2_NetworkDataUpdate(unittest.TestCase):
         time.sleep(3)
 
         addrs = self.nodes[ED].get_addrs()
-        self.assertTrue(any('2001' in word for word in addrs))
+        self.assertTrue(any('2001' in addr[0:4] for addr in addrs))
         for addr in addrs:
             if addr[0:4] == '2001':
                 self.assertTrue(self.nodes[LEADER].ping(addr))
@@ -88,8 +88,8 @@ class Cert_5_6_2_NetworkDataUpdate(unittest.TestCase):
         time.sleep(10)
 
         addrs = self.nodes[ED].get_addrs()
-        self.assertTrue(any('2001' in word for word in addrs))
-        self.assertTrue(any('2002' in word for word in addrs))
+        self.assertTrue(any('2001' in addr[0:4] for addr in addrs))
+        self.assertTrue(any('2002' in addr[0:4] for addr in addrs))
         for addr in addrs:
             if addr[0:4] == '2001' or addr[0:4] == '2002':
                 self.assertTrue(self.nodes[LEADER].ping(addr))
