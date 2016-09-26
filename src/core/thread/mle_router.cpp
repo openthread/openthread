@@ -1704,7 +1704,7 @@ void MleRouter::HandleStateUpdateTimer(void)
     // update router state
     for (uint8_t i = 0; i <= kMaxRouterId; i++)
     {
-        if (mRouters[i].mState != Neighbor::kStateInvalid)
+        if (mRouters[i].mState == Neighbor::kStateValid)
         {
             if ((Timer::GetNow() - mRouters[i].mLastHeard) >= Timer::SecToMsec(kMaxNeighborAge))
             {
