@@ -1901,9 +1901,25 @@ ThreadError NcpBase::GetPropertyHandler_THREAD_LEADER_ADDR(uint8_t header, spine
 ThreadError NcpBase::GetPropertyHandler_THREAD_PARENT(uint8_t header, spinel_prop_key_t key)
 {
     ThreadError errorCode = kThreadError_None;
-    (void)key;
+    otRouterInfo parentInfo;
 
-    errorCode = SendLastStatus(header, SPINEL_STATUS_UNIMPLEMENTED);
+    errorCode = otGetParentInfo(mInstance, &parentInfo);
+
+    if (errorCode == kThreadError_None)
+    {
+        errorCode = SendPropertyUpdate(
+                        header,
+                        SPINEL_CMD_PROP_VALUE_IS,
+                        key,
+                        SPINEL_DATATYPE_EUI64_S SPINEL_DATATYPE_UINT16_S,
+                        parentInfo.mExtAddress.m8,
+                        parentInfo.mRloc16
+                    );
+    }
+    else
+    {
+        errorCode = SendLastStatus(header, ThreadErrorToSpinelStatus(errorCode));
+    }
 
     return errorCode;
 }
