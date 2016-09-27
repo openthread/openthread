@@ -1727,7 +1727,7 @@ ThreadError Mle::HandleDataResponse(const Message &aMessage, const Ip6::MessageI
     if (Tlv::GetTlv(aMessage, Tlv::kActiveTimestamp, sizeof(activeTimestamp), activeTimestamp) == kThreadError_None)
     {
         const MeshCoP::Dataset local = mNetif.GetActiveDataset().GetLocal();
-        const MeshCoP::Timestamp * localTimestamp = local.GetTimestamp();
+        const MeshCoP::Timestamp *localTimestamp = local.GetTimestamp();
 
         VerifyOrExit(activeTimestamp.IsValid(), error = kThreadError_Parse);
         VerifyOrExit(update || (localTimestamp && (activeTimestamp.Compare(*localTimestamp) == 0)), ;);
