@@ -86,19 +86,19 @@ class Cert_5_6_9_NetworkDataForwarding(unittest.TestCase):
         self.assertEqual(self.nodes[LEADER].get_state(), 'leader')
 
         self.nodes[ROUTER1].start()
-        time.sleep(3)
+        time.sleep(5)
         self.assertEqual(self.nodes[ROUTER1].get_state(), 'router')
 
         self.nodes[ROUTER2].start()
-        time.sleep(3)
+        time.sleep(5)
         self.assertEqual(self.nodes[ROUTER2].get_state(), 'router')
 
         self.nodes[ED].start()
-        time.sleep(3)
+        time.sleep(5)
         self.assertEqual(self.nodes[ED].get_state(), 'child')
 
         self.nodes[SED].start()
-        time.sleep(3)
+        time.sleep(5)
         self.assertEqual(self.nodes[SED].get_state(), 'child')
 
         self.nodes[LEADER].add_prefix('2001::/64', 'paros', 'med')

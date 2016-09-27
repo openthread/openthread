@@ -63,7 +63,7 @@ class Cert_5_3_1_LinkLocal(unittest.TestCase):
         self.assertEqual(self.nodes[LEADER].get_state(), 'leader')
 
         self.nodes[ROUTER1].start()
-        time.sleep(3)
+        time.sleep(5)
         self.assertEqual(self.nodes[ROUTER1].get_state(), 'router')
 
         addrs = self.nodes[ROUTER1].get_addrs()

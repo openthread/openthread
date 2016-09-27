@@ -62,17 +62,17 @@ class Cert_6_5_2_ChildResetReattach(unittest.TestCase):
         self.assertEqual(self.nodes[LEADER].get_state(), 'leader')
 
         self.nodes[ED].start()
-        time.sleep(3)
+        time.sleep(5)
         self.assertEqual(self.nodes[ED].get_state(), 'child')
 
         self.nodes[LEADER].remove_whitelist(self.nodes[ED].get_addr64())
         self.nodes[ED].remove_whitelist(self.nodes[LEADER].get_addr64())
 
         self.nodes[ED].stop()
-        time.sleep(3)
+        time.sleep(5)
         self.nodes[ED].start()
 
-        time.sleep(3)
+        time.sleep(5)
         self.nodes[LEADER].add_whitelist(self.nodes[ED].get_addr64())
         self.nodes[ED].add_whitelist(self.nodes[LEADER].get_addr64())
         time.sleep(5)

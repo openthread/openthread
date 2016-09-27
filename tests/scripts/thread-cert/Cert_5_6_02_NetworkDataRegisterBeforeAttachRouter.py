@@ -78,7 +78,7 @@ class Cert_5_6_2_NetworkDataRouterAsBr(unittest.TestCase):
         self.assertEqual(self.nodes[LEADER].get_state(), 'leader')
 
         self.nodes[ROUTER].start()
-        time.sleep(3)
+        time.sleep(5)
         self.assertEqual(self.nodes[ROUTER].get_state(), 'router')
 
         self.nodes[ROUTER].add_prefix('2001::/64', 'paros')
@@ -86,11 +86,11 @@ class Cert_5_6_2_NetworkDataRouterAsBr(unittest.TestCase):
         self.nodes[ROUTER].register_netdata()
 
         self.nodes[ED1].start()
-        time.sleep(3)
+        time.sleep(5)
         self.assertEqual(self.nodes[ED1].get_state(), 'child')
 
         self.nodes[SED1].start()
-        time.sleep(3)
+        time.sleep(5)
         self.assertEqual(self.nodes[SED1].get_state(), 'child')
 
         addrs = self.nodes[ED1].get_addrs()

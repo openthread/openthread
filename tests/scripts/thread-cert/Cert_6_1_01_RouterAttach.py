@@ -62,7 +62,7 @@ class Cert_6_1_1_RouterAttach(unittest.TestCase):
         self.assertEqual(self.nodes[LEADER].get_state(), 'leader')
 
         self.nodes[ED].start()
-        time.sleep(3)
+        time.sleep(5)
         self.assertEqual(self.nodes[ED].get_state(), 'child')
 
 if __name__ == '__main__':
