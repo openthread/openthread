@@ -672,6 +672,30 @@ typedef enum
 } otDeviceRole;
 
 /**
+ * This structure holds diagnostic information for a neighboring Thread node
+ *
+ */
+typedef struct
+{
+    otExtAddress   mExtAddress;            ///< IEEE 802.15.4 Extended Address
+    uint32_t       mAge;                   ///< Time last heard
+    uint16_t       mRloc16;                ///< RLOC16
+    uint32_t       mLinkFrameCounter;      ///< Link Frame Counter
+    uint32_t       mMleFrameCounter;       ///< MLE Frame Counter
+    uint8_t        mLinkQualityIn;         ///< Link Quality In
+    int8_t         mAverageRssi;           ///< Average RSSI
+    bool           mRxOnWhenIdle : 1;      ///< rx-on-when-idle
+    bool           mSecureDataRequest : 1; ///< Secure Data Requests
+    bool           mFullFunction : 1;      ///< Full Function Device
+    bool           mFullNetworkData : 1;   ///< Full Network Data
+    bool           mIsChild : 1;           ///< Is the neighbor a child
+} otNeighborInfo;
+
+#define OT_NEIGHBOR_INFO_ITERATOR_INIT  0  ///< Initializer for otNeighborInfoIterator.
+
+typedef int16_t otNeighborInfoIterator;    ///< Used to iterate through neighbor table.
+
+/**
  * This structure holds diagnostic information for a Thread Child
  *
  */
