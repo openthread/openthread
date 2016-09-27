@@ -37,6 +37,10 @@
 #include <common/logging.hpp>
 #include <net/ip6.hpp>
 
+#ifdef WINDOWS_LOGGING
+#include "message.tmh"
+#endif
+
 namespace Thread {
 
 MessagePool::MessagePool(void)
@@ -85,7 +89,11 @@ Buffer *MessagePool::NewBuffer(void)
 {
     Buffer *buffer = NULL;
 
-    VerifyOrExit(mFreeBuffers != NULL, otLogInfoMac("No available message buffer\n"));
+    if (mFreeBuffers == NULL)
+    {
+        otLogInfoMac("No available message buffer\n");
+        ExitNow();
+    }
 
     buffer = mFreeBuffers;
     mFreeBuffers = mFreeBuffers->GetNextBuffer();
