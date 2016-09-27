@@ -1310,7 +1310,7 @@ ThreadError otGetActiveDataset(otInstance *, otOperationalDataset *aDataset)
 
     VerifyOrExit(aDataset != NULL, error = kThreadError_InvalidArgs);
 
-    sThreadNetif->GetActiveDataset().Get(*aDataset);
+    sThreadNetif->GetActiveDataset().GetLocal().Get(*aDataset);
 
 exit:
     return error;
@@ -1334,7 +1334,7 @@ ThreadError otGetPendingDataset(otInstance *, otOperationalDataset *aDataset)
 
     VerifyOrExit(aDataset != NULL, error = kThreadError_InvalidArgs);
 
-    sThreadNetif->GetPendingDataset().Get(*aDataset);
+    sThreadNetif->GetPendingDataset().GetLocal().Get(*aDataset);
 
 exit:
     return error;

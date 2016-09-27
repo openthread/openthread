@@ -1748,7 +1748,7 @@ ThreadError Mle::HandleDataResponse(const Message &aMessage, const Ip6::MessageI
         if (Tlv::GetOffset(aMessage, Tlv::kPendingDataset, offset) == kThreadError_None)
         {
             aMessage.Read(offset, sizeof(tlv), &tlv);
-            mNetif.GetPendingDataset().Set(activeTimestamp, aMessage, offset + sizeof(tlv), tlv.GetLength());
+            mNetif.GetPendingDataset().Set(pendingTimestamp, aMessage, offset + sizeof(tlv), tlv.GetLength());
         }
         else
         {

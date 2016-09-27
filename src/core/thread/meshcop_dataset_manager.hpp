@@ -57,7 +57,6 @@ public:
     void StopLeader(void);
 
     Dataset &GetLocal(void) { return mLocal; }
-
     Dataset &GetNetwork(void) { return mNetwork; }
 
     ThreadError SendSetRequest(const otOperationalDataset &aDataset, const uint8_t *aTlvs, uint8_t aLength);
@@ -71,6 +70,8 @@ protected:
     };
 
     DatasetManager(ThreadNetif &aThreadNetif, const Tlv::Type aType, const char *aUriSet, const char *aUriGet);
+
+    ThreadError Set(const otOperationalDataset &aDataset, uint8_t &aFlags);
 
     ThreadError Set(const Dataset &aDataset, uint8_t &aFlags);
 
@@ -99,6 +100,8 @@ private:
     static void HandleTimer(void *aContext);
     void HandleTimer(void);
 
+    void HandleNetworkUpdate(uint8_t &aFlags);
+
     ThreadError Register(void);
     void SendSetResponse(const Coap::Header &aRequestHeader, const Ip6::MessageInfo &aMessageInfo, StateTlv::State aState);
     void SendGetResponse(const Coap::Header &aRequestHeader, const Ip6::MessageInfo &aMessageInfo,
@@ -123,11 +126,9 @@ class ActiveDataset: public DatasetManager
 public:
     ActiveDataset(ThreadNetif &aThreadNetif);
 
-    void Get(otOperationalDataset &aDataset);
+    ThreadError Set(const otOperationalDataset &aDataset);
 
     ThreadError Set(const Dataset &aDataset);
-
-    ThreadError Set(const otOperationalDataset &aDataset);
 
     ThreadError Set(const Timestamp &aTimestamp, const Message &aMessage, uint16_t aOffset, uint8_t aLength);
 
@@ -140,10 +141,6 @@ public:
     PendingDataset(ThreadNetif &aThreadNetif);
 
     void StartLeader(void);
-
-    void Get(otOperationalDataset &aDataset);
-
-    ThreadError Set(const Dataset &aDataset);
 
     ThreadError Set(const otOperationalDataset &aDataset);
 
