@@ -98,6 +98,7 @@ void Leader::IncrementVersion(void)
     if (mMle.GetDeviceState() == Mle::kDeviceStateLeader)
     {
         mVersion++;
+        mNetif.SetStateChangedFlags(OT_THREAD_NETDATA_UPDATED);
     }
 }
 
