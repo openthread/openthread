@@ -155,7 +155,11 @@ def discover(names=None, pattern='*.py', skip='efp', dry_run=False,
         else:
             continue_from = 0
         for port in names or settings.GOLDEN_DEVICES[continue_from:]:
-            print('%s: %s' % (port, OpenThreadController(port).version))
+            try:
+                with OpenThreadController(port) as otc:
+                    print('%s: %s' % (port, otc.version))
+            except:
+                logger.exception('failed to get version of %s' % port)
         return
 
     if delete_blacklist:
