@@ -103,7 +103,7 @@ endif
 ifeq ($(DEBUG),1)
 configure_OPTIONS              += --enable-debug --enable-optimization=no
 else
-configure_OPTIONS              += 
+configure_OPTIONS              +=
 endif
 
 ifndef BuildJobs

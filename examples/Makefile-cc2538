@@ -49,6 +49,18 @@ configure_OPTIONS               = \
     --with-platform-info=CC2538   \
     $(NULL)
 
+ifeq ($(CLI_LOGGING),1)
+configure_OPTIONS              += --enable-cli-logging
+endif
+
+ifeq ($(COMMISSIONER),1)
+configure_OPTIONS              += --enable-commissioner
+endif
+
+ifeq ($(JOINER),1)
+configure_OPTIONS              += --enable-joiner
+endif
+
 COMMONCFLAGS                   := \
     -fdata-sections               \
     -ffunction-sections           \
