@@ -1687,7 +1687,8 @@ ThreadError Mle::HandleDataResponse(const Message &aMessage, const Ip6::MessageI
     PendingTimestampTlv pendingTimestamp;
     Tlv tlv;
     uint16_t offset;
-    int8_t diff;
+    int8_t diff = 0;
+    bool update = false;
 
     otLogInfoMle("Received Data Response\n");
 
@@ -1710,6 +1711,7 @@ ThreadError Mle::HandleDataResponse(const Message &aMessage, const Ip6::MessageI
     else if (mRetrieveNewNetworkData)
     {
         mRetrieveNewNetworkData = false;
+        update = true;
     }
     else
     {
@@ -1724,7 +1726,11 @@ ThreadError Mle::HandleDataResponse(const Message &aMessage, const Ip6::MessageI
     // Active Timestamp
     if (Tlv::GetTlv(aMessage, Tlv::kActiveTimestamp, sizeof(activeTimestamp), activeTimestamp) == kThreadError_None)
     {
+        const MeshCoP::Dataset local = mNetif.GetActiveDataset().GetLocal();
+        const MeshCoP::Timestamp * localTimestamp = local.GetTimestamp();
+
         VerifyOrExit(activeTimestamp.IsValid(), error = kThreadError_Parse);
+        VerifyOrExit(update || (localTimestamp && (activeTimestamp.Compare(*localTimestamp) == 0)), ;);
 
         // Active Dataset
         if (Tlv::GetOffset(aMessage, Tlv::kActiveDataset, offset) == kThreadError_None)
@@ -1732,6 +1738,10 @@ ThreadError Mle::HandleDataResponse(const Message &aMessage, const Ip6::MessageI
             aMessage.Read(offset, sizeof(tlv), &tlv);
             mNetif.GetActiveDataset().Set(activeTimestamp, aMessage, offset + sizeof(tlv), tlv.GetLength());
         }
+    }
+    else
+    {
+        VerifyOrExit(update, ;);
     }
 
     // Pending Timestamp
@@ -1752,8 +1762,19 @@ ThreadError Mle::HandleDataResponse(const Message &aMessage, const Ip6::MessageI
                                 (mDeviceMode & ModeTlv::kModeFullNetworkData) == 0,
                                 networkData.GetNetworkData(), networkData.GetLength());
 
+    diff = 0;
+
 exit:
     (void)aMessageInfo;
+
+    if (diff > 0)
+    {
+        uint8_t tlvs[] = {Tlv::kNetworkData};
+
+        SendDataRequest(aMessageInfo.GetPeerAddr(), tlvs, sizeof(tlvs));
+        mRetrieveNewNetworkData = true;
+    }
+
     return error;
 }
 
