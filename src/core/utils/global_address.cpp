@@ -40,6 +40,9 @@
 #include <openthread.h>
 #include <openthread-types.h>
 #include <common/code_utils.hpp>
+#include <crypto/sha256.hpp>
+#include <mac/mac.hpp>
+#include <net/ip6_address.hpp>
 #include <utils/global_address.hpp>
 
 #include <assert.h>
@@ -159,6 +162,81 @@ ThreadError Slaac::CreateRandomIid(otInstance *aInstance, otNetifAddress *aAddre
     }
 
     return kThreadError_None;
+}
+
+ThreadError SemanticallyOpaqueIidGenerator::CreateIid(otInstance *aInstance, otNetifAddress *aAddress)
+{
+    (void) aInstance;
+
+    ThreadError error = kThreadError_None;
+
+    for (uint32_t i = 0; i <= kMaxRetries; i++)
+    {
+        error = CreateIidOnce(aInstance, aAddress);
+        VerifyOrExit(error == kThreadError_Ipv6AddressCreationFailure,);
+
+        mDadCounter++;
+    }
+
+exit:
+    return error;
+}
+
+ThreadError SemanticallyOpaqueIidGenerator::CreateIidOnce(otInstance *aInstance, otNetifAddress *aAddress)
+{
+    ThreadError error = kThreadError_None;
+    Crypto::Sha256 sha256;
+    uint8_t hash[Crypto::Sha256::kHashSize];
+    Ip6::Address *address = static_cast<Ip6::Address *>(&aAddress->mAddress);
+
+    sha256.Start();
+
+    sha256.Update(aAddress->mAddress.mFields.m8, aAddress->mPrefixLength / 8);
+
+    VerifyOrExit(mInterfaceId != NULL, error = kThreadError_InvalidArgs);
+    sha256.Update(mInterfaceId, mInterfaceIdLength);
+
+    if (mNetworkIdLength)
+    {
+        VerifyOrExit(mNetworkId != NULL, error = kThreadError_InvalidArgs);
+        sha256.Update(mNetworkId, mNetworkIdLength);
+    }
+
+    sha256.Update(static_cast<uint8_t *>(&mDadCounter), sizeof(mDadCounter));
+
+    VerifyOrExit(mSecretKey != NULL, error = kThreadError_InvalidArgs);
+    sha256.Update(mSecretKey, mSecretKeyLength);
+
+    sha256.Finish(hash);
+
+    memcpy(&aAddress->mAddress.mFields.m8[OT_IP6_ADDRESS_SIZE - OT_IP6_IID_SIZE],
+           &hash[sizeof(hash) - OT_IP6_IID_SIZE], OT_IP6_IID_SIZE);
+
+    VerifyOrExit(!IsAddressRegistered(aInstance, aAddress), error = kThreadError_Ipv6AddressCreationFailure);
+    VerifyOrExit(!address->IsIidReserved(), error = kThreadError_Ipv6AddressCreationFailure);
+
+exit:
+    return error;
+}
+
+bool SemanticallyOpaqueIidGenerator::IsAddressRegistered(otInstance *aInstance, otNetifAddress *aCreatedAddress)
+{
+    bool result = false;
+    const otNetifAddress *address = otGetUnicastAddresses(aInstance);
+
+    while (address != NULL)
+    {
+        if (0 == memcmp(aCreatedAddress->mAddress.mFields.m8, address->mAddress.mFields.m8,
+                        sizeof(address->mAddress.mFields)))
+        {
+            ExitNow(result = true);
+        }
+
+        address = address->mNext;
+    }
+
+exit:
+    return result;
 }
 
 

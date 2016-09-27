@@ -898,6 +898,11 @@ ThreadError otCreateMacIid(otInstance *, otNetifAddress *aAddress, void *)
     return kThreadError_None;
 }
 
+ThreadError otCreateSemanticallyOpaqueIid(otInstance *aInstance, otNetifAddress *aAddress, void *aContext)
+{
+    return static_cast<Utils::SemanticallyOpaqueIidGenerator *>(aContext)->CreateIid(aInstance, aAddress);
+}
+
 void otSetStateChangedCallback(otInstance *, otStateChangedCallback aCallback, void *aCallbackContext)
 {
     sNetifCallback.Set(aCallback, aCallbackContext);

@@ -63,8 +63,8 @@ public:
      * @param[inout]  aAddress   A pointer to structure containing IPv6 address for which IID is being created.
      * @param[in]     aContext   A pointer to creator-specific context.
      *
-     * @retval  kThreadError_None  if generated valid IID.
-     * @retval  kThreadError_      if creating IID failed.
+     * @retval  kThreadError_None    if generated valid IID.
+     * @retval  kThreadError_Failed  if creating IID failed.
      *
      */
     typedef ThreadError(*IidCreator)(otInstance *aInstance, otNetifAddress *aAddress, void *aContext);
@@ -92,6 +92,63 @@ public:
      * @retval  kThreadError_None  Generated valid IID.
      */
     static ThreadError CreateRandomIid(otInstance *aInstance, otNetifAddress *aAddress, void *aContext);
+};
+
+/**
+ * This class implements the Method for Generating Semantically Opaque IIDs with IPv6 SLAAC (RFC 7217).
+ *
+ */
+class SemanticallyOpaqueIidGenerator: public otSemanticallyOpaqueIidGeneratorData
+{
+public:
+    /**
+     * This function creates semantically opaque IID for given IPv6 address and context.
+     *
+     * The generator starts with DAD counter provided as a class member field. The DAD counter is automatically
+     * incremented at most kMaxRetries times if creation of valid IPv6 address fails.
+     *
+     * @param[in]     aInstance  A pointer to an OpenThread instance.
+     * @param[inout]  aAddress   A pointer to structure containing IPv6 address for which IID is being created.
+     *
+     * @retval  kThreadError_None                        Generated valid IID.
+     * @retval  kThreadError_InvalidArgs                 Any given parameter is invalid.
+     * @retval  kThreadError_Ipv6AddressCreationFailure  Could not generate IID due to RFC 7217 restrictions.
+     *
+     */
+    ThreadError CreateIid(otInstance *aInstance, otNetifAddress *aAddress);
+
+private:
+    enum
+    {
+        kMaxRetries = 255,
+    };
+
+    /**
+     * This function creates semantically opaque IID for given arguments.
+     *
+     * This function creates IID only for given DAD counter value.
+     *
+     * @param[in]     aInstance  A pointer to an OpenThread instance.
+     * @param[inout]  aAddress   A pointer to structure containing IPv6 address for which IID is being created.
+     *
+     * @retval  kThreadError_None                        Generated valid IID.
+     * @retval  kThreadError_InvalidArgs                 Any given parameter is invalid.
+     * @retval  kThreadError_Ipv6AddressCreationFailure  Could not generate IID due to RFC 7217 restrictions.
+     *
+     */
+    ThreadError CreateIidOnce(otInstance *aInstance, otNetifAddress *aAddress);
+
+    /**
+     * This function checks if created IPv6 address is already registered in the Thread interface.
+     *
+     * @param[in]  aInstance        A pointer to an OpenThread instance.
+     * @param[in]  aCreatedAddress  A pointer to created IPv6 address.
+     *
+     * @retval  true   Given address is present in the address list.
+     * @retval  false  Given address is missing in the address list.
+     *
+     */
+    bool IsAddressRegistered(otInstance *aInstance, otNetifAddress *aCreatedAddress);
 };
 
 /**

@@ -837,6 +837,19 @@ ThreadError otCreateRandomIid(otInstance *aInstance, otNetifAddress *aAddresses,
 ThreadError otCreateMacIid(otInstance *aInstance, otNetifAddress *aAddresses, void *aContext);
 
 /**
+ * Create semantically opaque IID for given IPv6 address.
+ *
+ * @param[in]     aInstance  A pointer to an OpenThread instance.
+ * @param[inout]  aAddress   A pointer to structure containing IPv6 address for which IID is being created.
+ * @param[inout]  aContext   A pointer to a otSemanticallyOpaqueIidGeneratorData structure.
+ *
+ * @retval kThreadError_None                        Created valid IID for given IPv6 address.
+ * @retval kThreadError_Ipv6AddressCreationFailure  Could not create valid IID for given IPv6 address.
+ *
+ */
+ThreadError otCreateSemanticallyOpaqueIid(otInstance *aInstance, otNetifAddress *aAddresses, void *aContext);
+
+/**
  * This function pointer is called to notify certain configuration or state changes within OpenThread.
  *
  * @param[in]  aFlags    A bit-field indicating specific state that has changed.
