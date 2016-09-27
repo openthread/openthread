@@ -71,11 +71,11 @@ class Cert_5_6_7_NetworkDataRequestREED(unittest.TestCase):
         self.assertEqual(self.nodes[LEADER].get_state(), 'leader')
 
         self.nodes[ROUTER].start()
-        time.sleep(3)
+        time.sleep(5)
         self.assertEqual(self.nodes[ROUTER].get_state(), 'router')
 
         self.nodes[REED].start()
-        time.sleep(3)
+        time.sleep(5)
         self.assertEqual(self.nodes[REED].get_state(), 'child')
 
         self.nodes[LEADER].remove_whitelist(self.nodes[REED].get_addr64())

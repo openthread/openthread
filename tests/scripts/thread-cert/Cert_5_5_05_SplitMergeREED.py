@@ -89,19 +89,19 @@ class Cert_5_5_5_SplitMergeREED(unittest.TestCase):
         self.assertEqual(self.nodes[LEADER1].get_state(), 'leader')
 
         self.nodes[ROUTER2].start()
-        time.sleep(3)
+        time.sleep(5)
         self.assertEqual(self.nodes[ROUTER2].get_state(), 'router')
 
         self.nodes[REED2].start()
-        time.sleep(3)
+        time.sleep(5)
         self.assertEqual(self.nodes[REED2].get_state(), 'child')
 
         self.nodes[ROUTER3].start()
-        time.sleep(3)
+        time.sleep(5)
         self.assertEqual(self.nodes[ROUTER3].get_state(), 'router')
 
         self.nodes[ROUTER1].start()
-        time.sleep(3)
+        time.sleep(5)
         self.assertEqual(self.nodes[ROUTER1].get_state(), 'router')
 
         self.nodes[ROUTER3].stop()

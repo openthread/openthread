@@ -92,23 +92,23 @@ class Cert_5_3_7_DuplicateAddress(unittest.TestCase):
         self.assertEqual(self.nodes[LEADER].get_state(), 'leader')
 
         self.nodes[ROUTER1].start()
-        time.sleep(3)
+        time.sleep(5)
         self.assertEqual(self.nodes[ROUTER1].get_state(), 'router')
 
         self.nodes[ROUTER2].start()
-        time.sleep(3)
+        time.sleep(5)
         self.assertEqual(self.nodes[ROUTER2].get_state(), 'router')
 
         self.nodes[ED1].start()
-        time.sleep(3)
+        time.sleep(5)
         self.assertEqual(self.nodes[ED1].get_state(), 'child')
 
         self.nodes[ED2].start()
-        time.sleep(3)
+        time.sleep(5)
         self.assertEqual(self.nodes[ED2].get_state(), 'child')
 
         self.nodes[ED3].start()
-        time.sleep(3)
+        time.sleep(5)
         self.assertEqual(self.nodes[ED3].get_state(), 'child')
 
         self.nodes[ROUTER2].add_prefix('2001::/64', 'paros')
@@ -116,7 +116,7 @@ class Cert_5_3_7_DuplicateAddress(unittest.TestCase):
 
         self.nodes[ED1].add_ipaddr('2001::1')
         self.nodes[ED2].add_ipaddr('2001::1')
-        time.sleep(3)
+        time.sleep(5)
 
         self.assertTrue(self.nodes[ED3].ping('2001::1'))
 

@@ -63,16 +63,16 @@ class Cert_5_1_13_RouterReset(unittest.TestCase):
         self.assertEqual(self.nodes[LEADER].get_state(), 'leader')
 
         self.nodes[ROUTER].start()
-        time.sleep(3)
+        time.sleep(5)
         self.assertEqual(self.nodes[ROUTER].get_state(), 'router')
 
         rloc16 = self.nodes[ROUTER].get_addr16()
 
         self.nodes[ROUTER].stop();
-        time.sleep(3)
+        time.sleep(5)
 
         self.nodes[ROUTER].start()
-        time.sleep(3)
+        time.sleep(5)
         self.assertEqual(self.nodes[ROUTER].get_state(), 'router')
         self.assertEqual(self.nodes[ROUTER].get_addr16(), rloc16)
 
