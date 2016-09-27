@@ -172,3 +172,14 @@ Default value is `false`.
 Allow the HOST to indicate whether or not the router role is enabled.
 If current role is a router, setting this property to `false` starts
 a re-attach process as an end-device.
+
+### PROP 5384: PROP_THREAD_ROUTER_DOWNGRADE_THRESHOLD
+* Type: Read-Write
+* Packed-Encoding: `C`
+
+### PROP 5385: PROP_THREAD_ROUTER_SELECTION_JITTER
+* Type: Read-Write
+* Packed-Encoding: `C`
+
+Specifies the self imposed random delay in seconds a REED waits before 
+registering to become an Active Router.

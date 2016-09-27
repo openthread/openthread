@@ -1140,6 +1140,14 @@ spinel_prop_key_to_cstr(spinel_prop_key_t prop_key)
         ret = "PROP_THREAD_ROUTER_UPGRADE_THRESHOLD";
         break;
 
+    case SPINEL_PROP_THREAD_ROUTER_DOWNGRADE_THRESHOLD:
+        ret = "PROP_THREAD_ROUTER_DOWNGRADE_THRESHOLD";
+        break;
+
+    case SPINEL_PROP_THREAD_ROUTER_SELECTION_JITTER:
+        ret = "PROP_THREAD_ROUTER_SELECTION_JITTER";
+        break;
+
     case SPINEL_PROP_THREAD_CONTEXT_REUSE_DELAY:
         ret = "PROP_THREAD_CONTEXT_REUSE_DELAY";
         break;

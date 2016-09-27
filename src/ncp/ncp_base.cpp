@@ -134,10 +134,12 @@ const NcpBase::GetPropertyHandlerEntry NcpBase::mGetPropertyHandlerTable[] =
     { SPINEL_PROP_THREAD_CHILD_TIMEOUT, &NcpBase::GetPropertyHandler_THREAD_CHILD_TIMEOUT },
     { SPINEL_PROP_THREAD_RLOC16, &NcpBase::GetPropertyHandler_THREAD_RLOC16 },
     { SPINEL_PROP_THREAD_ROUTER_UPGRADE_THRESHOLD, &NcpBase::GetPropertyHandler_THREAD_ROUTER_UPGRADE_THRESHOLD },
+    { SPINEL_PROP_THREAD_ROUTER_DOWNGRADE_THRESHOLD, &NcpBase::GetPropertyHandler_THREAD_ROUTER_DOWNGRADE_THRESHOLD },
     { SPINEL_PROP_THREAD_CONTEXT_REUSE_DELAY, &NcpBase::GetPropertyHandler_THREAD_CONTEXT_REUSE_DELAY },
     { SPINEL_PROP_THREAD_NETWORK_ID_TIMEOUT, &NcpBase::GetPropertyHandler_THREAD_NETWORK_ID_TIMEOUT },
     { SPINEL_PROP_THREAD_ON_MESH_NETS, &NcpBase::NcpBase::GetPropertyHandler_THREAD_ON_MESH_NETS },
     { SPINEL_PROP_NET_REQUIRE_JOIN_EXISTING, &NcpBase::GetPropertyHandler_NET_REQUIRE_JOIN_EXISTING },
+    { SPINEL_PROP_THREAD_ROUTER_SELECTION_JITTER, &NcpBase::GetPropertyHandler_THREAD_ROUTER_SELECTION_JITTER },
 
     { SPINEL_PROP_IPV6_ML_PREFIX, &NcpBase::GetPropertyHandler_IPV6_ML_PREFIX },
     { SPINEL_PROP_IPV6_ML_ADDR, &NcpBase::GetPropertyHandler_IPV6_ML_ADDR },
@@ -227,8 +229,10 @@ const NcpBase::SetPropertyHandlerEntry NcpBase::mSetPropertyHandlerTable[] =
     { SPINEL_PROP_THREAD_MODE, &NcpBase::SetPropertyHandler_THREAD_MODE },
     { SPINEL_PROP_THREAD_CHILD_TIMEOUT, &NcpBase::SetPropertyHandler_THREAD_CHILD_TIMEOUT },
     { SPINEL_PROP_THREAD_ROUTER_UPGRADE_THRESHOLD, &NcpBase::SetPropertyHandler_THREAD_ROUTER_UPGRADE_THRESHOLD },
+    { SPINEL_PROP_THREAD_ROUTER_DOWNGRADE_THRESHOLD, &NcpBase::SetPropertyHandler_THREAD_ROUTER_DOWNGRADE_THRESHOLD },
     { SPINEL_PROP_THREAD_CONTEXT_REUSE_DELAY, &NcpBase::SetPropertyHandler_THREAD_CONTEXT_REUSE_DELAY },
     { SPINEL_PROP_NET_REQUIRE_JOIN_EXISTING, &NcpBase::SetPropertyHandler_NET_REQUIRE_JOIN_EXISTING },
+    { SPINEL_PROP_THREAD_ROUTER_SELECTION_JITTER, &NcpBase::SetPropertyHandler_THREAD_ROUTER_SELECTION_JITTER },
 
 #if OPENTHREAD_ENABLE_DIAG
     { SPINEL_PROP_NEST_STREAM_MFG, &NcpBase::SetPropertyHandler_NEST_STREAM_MFG },
@@ -2544,6 +2548,28 @@ ThreadError NcpBase::GetPropertyHandler_THREAD_ROUTER_UPGRADE_THRESHOLD(uint8_t 
            );
 }
 
+ThreadError NcpBase::GetPropertyHandler_THREAD_ROUTER_DOWNGRADE_THRESHOLD(uint8_t header, spinel_prop_key_t key)
+{
+    return SendPropertyUpdate(
+               header,
+               SPINEL_CMD_PROP_VALUE_IS,
+               key,
+               SPINEL_DATATYPE_UINT8_S,
+               otGetRouterDowngradeThreshold(mInstance)
+           );
+}
+
+ThreadError NcpBase::GetPropertyHandler_THREAD_ROUTER_SELECTION_JITTER(uint8_t header, spinel_prop_key_t key)
+{
+    return SendPropertyUpdate(
+               header,
+               SPINEL_CMD_PROP_VALUE_IS,
+               key,
+               SPINEL_DATATYPE_UINT8_S,
+               otGetRouterSelectionJitter(mInstance)
+           );
+}
+
 ThreadError NcpBase::GetPropertyHandler_THREAD_CONTEXT_REUSE_DELAY(uint8_t header, spinel_prop_key_t key)
 {
     return SendPropertyUpdate(
@@ -3866,6 +3892,60 @@ ThreadError NcpBase::SetPropertyHandler_THREAD_ROUTER_UPGRADE_THRESHOLD(uint8_t 
     if (parsedLength > 0)
     {
         otSetRouterUpgradeThreshold(mInstance, i);
+
+        errorCode = HandleCommandPropertyGet(header, key);
+    }
+    else
+    {
+        errorCode = SendLastStatus(header, SPINEL_STATUS_PARSE_ERROR);
+    }
+
+    return errorCode;
+}
+
+ThreadError NcpBase::SetPropertyHandler_THREAD_ROUTER_DOWNGRADE_THRESHOLD(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr, uint16_t value_len)
+{
+    uint8_t i = 0;
+    spinel_ssize_t parsedLength;
+    ThreadError errorCode = kThreadError_None;
+
+    parsedLength = spinel_datatype_unpack(
+                       value_ptr,
+                       value_len,
+                       SPINEL_DATATYPE_UINT8_S,
+                       &i
+                   );
+
+    if (parsedLength > 0)
+    {
+        otSetRouterDowngradeThreshold(mInstance, i);
+
+        errorCode = HandleCommandPropertyGet(header, key);
+    }
+    else
+    {
+        errorCode = SendLastStatus(header, SPINEL_STATUS_PARSE_ERROR);
+    }
+
+    return errorCode;
+}
+
+ThreadError NcpBase::SetPropertyHandler_THREAD_ROUTER_SELECTION_JITTER(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr, uint16_t value_len)
+{
+    uint8_t i = 0;
+    spinel_ssize_t parsedLength;
+    ThreadError errorCode = kThreadError_None;
+
+    parsedLength = spinel_datatype_unpack(
+                       value_ptr,
+                       value_len,
+                       SPINEL_DATATYPE_UINT8_S,
+                       &i
+                   );
+
+    if (parsedLength > 0)
+    {
+        otSetRouterSelectionJitter(mInstance, i);
 
         errorCode = HandleCommandPropertyGet(header, key);
     }
