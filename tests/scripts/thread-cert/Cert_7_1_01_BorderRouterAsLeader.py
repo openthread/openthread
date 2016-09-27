@@ -54,6 +54,7 @@ class Cert_7_1_1_BorderRouterAsLeader(unittest.TestCase):
         self.nodes[ROUTER].set_mode('rsdn')
         self.nodes[ROUTER].add_whitelist(self.nodes[LEADER].get_addr64())
         self.nodes[ROUTER].enable_whitelist()
+        self.nodes[ROUTER].set_router_selection_jitter(1)
 
         self.nodes[SED1].set_panid(0xface)
         self.nodes[SED1].set_mode('s')
@@ -93,15 +94,15 @@ class Cert_7_1_1_BorderRouterAsLeader(unittest.TestCase):
         self.assertEqual(self.nodes[ED1].get_state(), 'child')
 
         addrs = self.nodes[SED1].get_addrs()
-        self.assertTrue(any('2001' in word for word in addrs))
-        self.assertFalse(any('2002' in word for word in addrs))
+        self.assertTrue(any('2001' in addr[0:4] for addr in addrs))
+        self.assertFalse(any('2002' in addr[0:4] for addr in addrs))
         for addr in addrs:
             if addr[0:4] == '2001' or addr[0:4] == '2002':
                 self.assertTrue(self.nodes[LEADER].ping(addr))
 
         addrs = self.nodes[ED1].get_addrs()
-        self.assertTrue(any('2001' in word for word in addrs))
-        self.assertTrue(any('2002' in word for word in addrs))
+        self.assertTrue(any('2001' in addr[0:4] for addr in addrs))
+        self.assertTrue(any('2002' in addr[0:4] for addr in addrs))
         for addr in addrs:
             if addr[0:4] == '2001' or addr[0:4] == '2002':
                 self.assertTrue(self.nodes[LEADER].ping(addr))

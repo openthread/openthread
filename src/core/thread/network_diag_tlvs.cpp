@@ -28,44 +28,59 @@
 
 /**
  * @file
- * @brief
- *  This file defines the top-level functions for the OpenThread CLI server.
+ *   This file implements common methods for manipulating Network Diagnostic TLVs.
  */
 
-#ifndef CLI_UART_H_
-#define CLI_UART_H_
+#include <common/code_utils.hpp>
+#include <common/message.hpp>
+#include <thread/network_diag_tlvs.hpp>
 
-#include <stdarg.h>
-#include <openthread-types.h>
-#include <platform/logging.h>
+namespace Thread {
+namespace NetworkDiagnostic {
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+ThreadError NetworkDiagnosticTlv::GetTlv(const Message &aMessage, Type aType, uint16_t aMaxLength,
+                                         NetworkDiagnosticTlv &aTlv)
+{
+    ThreadError error = kThreadError_Parse;
+    uint16_t offset;
 
-/**
- * Initialize the CLI UART module.
- *
- * @param[in]  aInstance  The OpenThread instance structure.
- *
- */
-void otCliUartInit(otInstance *aInstance);
+    SuccessOrExit(error = GetOffset(aMessage, aType, offset));
+    aMessage.Read(offset, sizeof(NetworkDiagnosticTlv), &aTlv);
 
-#if OPENTHREAD_ENABLE_CLI_LOGGING
-/**
- * This method delivers formatted log to the client.
- *
- * @param[in]  aLogLevel   The log level.
- * @param[in]  aLogRegion  The log region.
- * @param[in]  aFormat     A pointer to the format string.
- * @param[in]  aAp         Arguments pointer for the format specification.
- *
- */
-void otCliLog(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aFormat, va_list aAp);
-#endif
+    if (aMaxLength > sizeof(aTlv) + aTlv.GetLength())
+    {
+        aMaxLength = sizeof(aTlv) + aTlv.GetLength();
+    }
 
-#ifdef __cplusplus
-}  // extern "C"
-#endif
+    aMessage.Read(offset, aMaxLength, &aTlv);
 
-#endif
+exit:
+    return error;
+}
+
+ThreadError NetworkDiagnosticTlv::GetOffset(const Message &aMessage, Type aType, uint16_t &aOffset)
+{
+    ThreadError error = kThreadError_Parse;
+    uint16_t offset = aMessage.GetOffset();
+    uint16_t end = aMessage.GetLength();
+    NetworkDiagnosticTlv tlv;
+
+    while (offset < end)
+    {
+        aMessage.Read(offset, sizeof(NetworkDiagnosticTlv), &tlv);
+
+        if (tlv.GetType() == aType && (offset + sizeof(tlv) + tlv.GetLength()) <= end)
+        {
+            aOffset = offset;
+            ExitNow(error = kThreadError_None);
+        }
+
+        offset += sizeof(tlv) + tlv.GetLength();
+    }
+
+exit:
+    return error;
+}
+
+}  // namespace NetworkDiagnostic
+}  // namespace Thread

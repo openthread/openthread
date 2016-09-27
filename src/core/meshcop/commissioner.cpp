@@ -64,7 +64,8 @@ Commissioner::Commissioner(ThreadNetif &aThreadNetif):
     mSendKek(false),
     mSocket(aThreadNetif.GetIp6().mUdp),
     mRelayReceive(OPENTHREAD_URI_RELAY_RX, &Commissioner::HandleRelayReceive, this),
-    mNetif(aThreadNetif)
+    mNetif(aThreadNetif),
+    mIsSendMgmtCommRequest(false)
 {
     aThreadNetif.GetCoapServer().AddResource(mRelayReceive);
 }
@@ -121,6 +122,141 @@ void Commissioner::HandleTimer(void)
         mTimer.Start(5000);
         break;
     }
+}
+
+ThreadError Commissioner::SendMgmtCommissionerGetRequest(const uint8_t *aTlvs,
+                                                         uint8_t aLength)
+{
+    ThreadError error = kThreadError_None;
+    Coap::Header header;
+    Message *message;
+    Ip6::MessageInfo messageInfo;
+    MeshCoP::Tlv tlv;
+
+    mIsSendMgmtCommRequest = true;
+
+    for (size_t i = 0; i < sizeof(mCoapToken); i++)
+    {
+        mCoapToken[i] = static_cast<uint8_t>(otPlatRandomGet());
+    }
+
+    header.Init();
+    header.SetType(Coap::Header::kTypeConfirmable);
+    header.SetCode(Coap::Header::kCodePost);
+    header.SetMessageId(++mCoapMessageId);
+    header.SetToken(mCoapToken, sizeof(mCoapToken));
+    header.AppendUriPathOptions(OPENTHREAD_URI_COMMISSIONER_GET);
+    header.Finalize();
+
+    VerifyOrExit((message = mSocket.NewMessage(0)) != NULL, error = kThreadError_NoBufs);
+    SuccessOrExit(error = message->Append(header.GetBytes(), header.GetLength()));
+
+    if (aLength > 0)
+    {
+        tlv.SetType(MeshCoP::Tlv::kGet);
+        tlv.SetLength(aLength);
+        SuccessOrExit(error = message->Append(&tlv, sizeof(tlv)));
+        SuccessOrExit(error = message->Append(aTlvs, aLength));
+    }
+
+    memset(&messageInfo, 0, sizeof(messageInfo));
+    mNetif.GetMle().GetLeaderAddress(messageInfo.GetPeerAddr());
+    messageInfo.mPeerPort = kCoapUdpPort;
+    SuccessOrExit(error = mSocket.SendTo(*message, messageInfo));
+
+    otLogInfoMeshCoP("sent MGMT_COMMISSIONER_GET.req to leader\n");
+
+exit:
+
+    if (error != kThreadError_None && message != NULL)
+    {
+        mIsSendMgmtCommRequest = false;
+        message->Free();
+    }
+
+    return error;
+}
+
+ThreadError Commissioner::SendMgmtCommissionerSetRequest(const otCommissioningDataset &aDataset,
+                                                         const uint8_t *aTlvs, uint8_t aLength)
+{
+    ThreadError error = kThreadError_None;
+    Coap::Header header;
+    Message *message;
+    Ip6::MessageInfo messageInfo;
+
+    mIsSendMgmtCommRequest = true;
+
+    for (size_t i = 0; i < sizeof(mCoapToken); i++)
+    {
+        mCoapToken[i] = static_cast<uint8_t>(otPlatRandomGet());
+    }
+
+    header.Init();
+    header.SetType(Coap::Header::kTypeConfirmable);
+    header.SetCode(Coap::Header::kCodePost);
+    header.SetMessageId(++mCoapMessageId);
+    header.SetToken(mCoapToken, sizeof(mCoapToken));
+    header.AppendUriPathOptions(OPENTHREAD_URI_COMMISSIONER_SET);
+    header.Finalize();
+
+    VerifyOrExit((message = mSocket.NewMessage(0)) != NULL, error = kThreadError_NoBufs);
+    SuccessOrExit(error = message->Append(header.GetBytes(), header.GetLength()));
+
+    if (aDataset.mIsLocatorSet)
+    {
+        MeshCoP::BorderAgentLocatorTlv locator;
+        locator.Init();
+        locator.SetBorderAgentLocator(aDataset.mLocator);
+        SuccessOrExit(error = message->Append(&locator, sizeof(locator)));
+    }
+
+    if (aDataset.mIsSessionIdSet)
+    {
+        MeshCoP::CommissionerSessionIdTlv sessionId;
+        sessionId.Init();
+        sessionId.SetCommissionerSessionId(aDataset.mSessionId);
+        SuccessOrExit(error = message->Append(&sessionId, sizeof(sessionId)));
+    }
+
+    if (aDataset.mIsSteeringDataSet)
+    {
+        MeshCoP::SteeringDataTlv steeringData;
+        steeringData.Init();
+        steeringData.SetLength(aDataset.mSteeringData.mLength);
+        SuccessOrExit(error = message->Append(&steeringData, sizeof(MeshCoP::Tlv)));
+        SuccessOrExit(error = message->Append(&aDataset.mSteeringData.m8, aDataset.mSteeringData.mLength));
+    }
+
+    if (aDataset.mIsJoinerUdpPortSet)
+    {
+        MeshCoP::JoinerUdpPortTlv joinerUdpPort;
+        joinerUdpPort.Init();
+        joinerUdpPort.SetUdpPort(aDataset.mJoinerUdpPort);
+        SuccessOrExit(error = message->Append(&joinerUdpPort, sizeof(joinerUdpPort)));
+    }
+
+    if (aLength > 0)
+    {
+        SuccessOrExit(error = message->Append(aTlvs, aLength));
+    }
+
+    memset(&messageInfo, 0, sizeof(messageInfo));
+    mNetif.GetMle().GetLeaderAddress(messageInfo.GetPeerAddr());
+    messageInfo.mPeerPort = kCoapUdpPort;
+    SuccessOrExit(error = mSocket.SendTo(*message, messageInfo));
+
+    otLogInfoMeshCoP("sent MGMT_COMMISSIONER_SET.req to leader\n");
+
+exit:
+
+    if (error != kThreadError_None && message != NULL)
+    {
+        mIsSendMgmtCommRequest = false;
+        message->Free();
+    }
+
+    return error;
 }
 
 ThreadError Commissioner::SendPetition(void)
@@ -281,6 +417,15 @@ void Commissioner::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &a
                  header.GetTokenLength() == sizeof(mCoapToken) &&
                  memcmp(mCoapToken, header.GetToken(), sizeof(mCoapToken)) == 0, ;);
     aMessage.MoveOffset(header.GetLength());
+
+    if (mIsSendMgmtCommRequest)
+    {
+        mIsSendMgmtCommRequest = false;
+
+        otLogInfoMeshCoP("received MGMT_COMMISSIONER_SET and MGMT_COMMISSIONER_GET response\r\n");
+
+        ExitNow();
+    }
 
     SuccessOrExit(Tlv::GetTlv(aMessage, Tlv::kState, sizeof(state), state));
     VerifyOrExit(state.IsValid(), ;);
@@ -490,6 +635,8 @@ void Commissioner::ReceiveJoinerFinalize(uint8_t *buf, uint16_t length)
         }
     }
 
+    otDumpCertMeshCoP("[THCI] direction=recv | type=JOIN_FIN.req |", buf + header.GetLength(), length - header.GetLength());
+
     SendJoinFinalizeResponse(header, state);
 
 exit:
@@ -526,6 +673,7 @@ void Commissioner::SendJoinFinalizeResponse(const Coap::Header &aRequestHeader, 
     mSendKek = false;
 
     otLogInfoMeshCoP("sent joiner finalize response\r\n");
+    otLogCertMeshCoP("[THCI] direction=send | type=JOIN_FIN.rsp\r\n");
 }
 
 }  // namespace MeshCoP

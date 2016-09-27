@@ -383,6 +383,16 @@ void otSetLocalLeaderPartitionId(otInstance *, uint32_t aPartitionId)
     return sThreadNetif->GetMle().SetLeaderPartitionId(aPartitionId);
 }
 
+uint16_t otGetJoinerUdpPort(otInstance *)
+{
+    return sThreadNetif->GetJoinerRouter().GetJoinerUdpPort();
+}
+
+ThreadError otSetJoinerUdpPort(otInstance *, uint16_t aJoinerUdpPort)
+{
+    return sThreadNetif->GetJoinerRouter().SetJoinerUdpPort(aJoinerUdpPort);
+}
+
 ThreadError otAddBorderRouter(otInstance *, const otBorderRouterConfig *aConfig)
 {
     uint8_t flags = 0;
@@ -688,6 +698,16 @@ void otSetRouterDowngradeThreshold(uint8_t aThreshold)
     sThreadNetif->GetMle().SetRouterDowngradeThreshold(aThreshold);
 }
 
+uint8_t otGetRouterSelectionJitter(void)
+{
+    return sThreadNetif->GetMle().GetRouterSelectionJitter();
+}
+
+void otSetRouterSelectionJitter(uint8_t aRouterJitter)
+{
+    sThreadNetif->GetMle().SetRouterSelectionJitter(aRouterJitter);
+}
+
 ThreadError otGetChildInfoById(otInstance *, uint16_t aChildId, otChildInfo *aChildInfo)
 {
     ThreadError error = kThreadError_None;
@@ -960,6 +980,21 @@ exit:
 }
 
 #endif
+
+ThreadError otSendDiagnosticGet(otInstance *aInstance, otIp6Address *aDestination, uint8_t aTlvTypes[], uint8_t aCount)
+{
+    (void)aInstance;
+    return sThreadNetif->GetNetworkDiagnostic().SendDiagnosticGet(*static_cast<Ip6::Address *>(aDestination), aTlvTypes,
+                                                                  aCount);
+}
+
+ThreadError otSendDiagnosticReset(otInstance *aInstance, otIp6Address *aDestination, uint8_t aTlvTypes[],
+                                  uint8_t aCount)
+{
+    (void)aInstance;
+    return sThreadNetif->GetNetworkDiagnostic().SendDiagnosticReset(*static_cast<Ip6::Address *>(aDestination), aTlvTypes,
+                                                                    aCount);
+}
 
 void otInstanceFinalize(otInstance *aInstance)
 {
@@ -1369,6 +1404,17 @@ ThreadError otCommissionerPanIdQuery(otInstance *, uint16_t aPanId, uint32_t aCh
     return sThreadNetif->GetCommissioner().mPanIdQuery.SendQuery(aPanId, aChannelMask,
                                                                  *static_cast<const Ip6::Address *>(aAddress),
                                                                  aCallback, aContext);
+}
+
+ThreadError otSendMgmtCommissionerGet(otInstance *, const uint8_t *aTlvs, uint8_t aLength)
+{
+    return sThreadNetif->GetCommissioner().SendMgmtCommissionerGetRequest(aTlvs, aLength);
+}
+
+ThreadError otSendMgmtCommissionerSet(otInstance *, const otCommissioningDataset *aDataset,
+                                      const uint8_t *aTlvs, uint8_t aLength)
+{
+    return sThreadNetif->GetCommissioner().SendMgmtCommissionerSetRequest(*aDataset, aTlvs, aLength);
 }
 #endif  // OPENTHREAD_ENABLE_COMMISSIONER
 

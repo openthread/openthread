@@ -56,12 +56,14 @@ class Cert_5_1_08_RouterAttachConnectivity(unittest.TestCase):
         self.nodes[ROUTER1].add_whitelist(self.nodes[LEADER].get_addr64())
         self.nodes[ROUTER1].add_whitelist(self.nodes[ROUTER3].get_addr64())
         self.nodes[ROUTER1].enable_whitelist()
+        self.nodes[ROUTER1].set_router_selection_jitter(1)
 
         self.nodes[ROUTER2].set_panid(0xface)
         self.nodes[ROUTER2].set_mode('rsdn')
         self.nodes[ROUTER2].add_whitelist(self.nodes[LEADER].get_addr64())
         self.nodes[ROUTER2].add_whitelist(self.nodes[ROUTER4].get_addr64())
         self.nodes[ROUTER2].enable_whitelist()
+        self.nodes[ROUTER2].set_router_selection_jitter(1)
 
         self.nodes[ROUTER3].set_panid(0xface)
         self.nodes[ROUTER3].set_mode('rsdn')
@@ -69,12 +71,14 @@ class Cert_5_1_08_RouterAttachConnectivity(unittest.TestCase):
         self.nodes[ROUTER3].add_whitelist(self.nodes[ROUTER1].get_addr64())
         self.nodes[ROUTER3].add_whitelist(self.nodes[ROUTER4].get_addr64())
         self.nodes[ROUTER3].enable_whitelist()
+        self.nodes[ROUTER3].set_router_selection_jitter(1)
 
         self.nodes[ROUTER4].set_panid(0xface)
         self.nodes[ROUTER4].set_mode('rsdn')
         self.nodes[ROUTER4].add_whitelist(self.nodes[ROUTER2].get_addr64())
         self.nodes[ROUTER4].add_whitelist(self.nodes[ROUTER3].get_addr64())
         self.nodes[ROUTER4].enable_whitelist()
+        self.nodes[ROUTER4].set_router_selection_jitter(1)
 
     def tearDown(self):
         for node in list(self.nodes.values()):
@@ -88,7 +92,7 @@ class Cert_5_1_08_RouterAttachConnectivity(unittest.TestCase):
 
         for i in range(2, 6):
             self.nodes[i].start()
-            time.sleep(3)
+            time.sleep(5)
             self.assertEqual(self.nodes[i].get_state(), 'router')
 
 if __name__ == '__main__':

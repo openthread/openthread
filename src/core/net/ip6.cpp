@@ -128,11 +128,20 @@ ThreadError Ip6::AddMplOption(Message &message, Header &header, IpProto nextHead
     ThreadError error = kThreadError_None;
     HopByHopHeader hbhHeader;
     OptionMpl mplOption;
+    OptionPadN padOption;
 
     hbhHeader.SetNextHeader(nextHeader);
     hbhHeader.SetLength(0);
-    mMpl.InitOption(mplOption, HostSwap16(header.GetSource().mFields.m16[7]));
-    SuccessOrExit(error = message.Prepend(&mplOption, sizeof(mplOption)));
+    mMpl.InitOption(mplOption, header.GetSource());
+
+    // Mpl option may require two bytes padding.
+    if ((mplOption.GetTotalLength() + sizeof(hbhHeader)) % 8)
+    {
+        padOption.Init(2);
+        SuccessOrExit(error = message.Prepend(&padOption, padOption.GetTotalLength()));
+    }
+
+    SuccessOrExit(error = message.Prepend(&mplOption, mplOption.GetTotalLength()));
     SuccessOrExit(error = message.Prepend(&hbhHeader, sizeof(hbhHeader)));
     header.SetPayloadLength(sizeof(hbhHeader) + sizeof(mplOption) + payloadLength);
     header.SetNextHeader(kProtoHopOpts);
@@ -222,7 +231,7 @@ void Ip6::HandleSendQueue(void)
     }
 }
 
-ThreadError Ip6::HandleOptions(Message &message)
+ThreadError Ip6::HandleOptions(Message &message, Header &header)
 {
     ThreadError error = kThreadError_None;
     HopByHopHeader hbhHeader;
@@ -241,7 +250,7 @@ ThreadError Ip6::HandleOptions(Message &message)
         switch (optionHeader.GetType())
         {
         case OptionMpl::kType:
-            SuccessOrExit(error = mMpl.ProcessOption(message));
+            SuccessOrExit(error = mMpl.ProcessOption(message, header.GetSource()));
             break;
 
         default:
@@ -266,7 +275,15 @@ ThreadError Ip6::HandleOptions(Message &message)
             break;
         }
 
-        message.MoveOffset(sizeof(optionHeader) + optionHeader.GetLength());
+        if (optionHeader.GetType() == OptionPad1::kType)
+        {
+            message.MoveOffset(sizeof(OptionPad1));
+        }
+        else
+        {
+            message.MoveOffset(sizeof(optionHeader) + optionHeader.GetLength());
+        }
+
     }
 
 exit:
@@ -289,7 +306,7 @@ exit:
     return error;
 }
 
-ThreadError Ip6::HandleExtensionHeaders(Message &message, uint8_t &nextHeader, bool receive)
+ThreadError Ip6::HandleExtensionHeaders(Message &message, Header &header, uint8_t &nextHeader, bool receive)
 {
     ThreadError error = kThreadError_None;
     ExtensionHeader extensionHeader;
@@ -303,7 +320,7 @@ ThreadError Ip6::HandleExtensionHeaders(Message &message, uint8_t &nextHeader, b
         switch (nextHeader)
         {
         case kProtoHopOpts:
-            SuccessOrExit(error = HandleOptions(message));
+            SuccessOrExit(error = HandleOptions(message, header));
             break;
 
         case kProtoFragment:
@@ -311,7 +328,7 @@ ThreadError Ip6::HandleExtensionHeaders(Message &message, uint8_t &nextHeader, b
             break;
 
         case kProtoDstOpts:
-            SuccessOrExit(error = HandleOptions(message));
+            SuccessOrExit(error = HandleOptions(message, header));
             break;
 
         case kProtoIp6:
@@ -489,7 +506,7 @@ ThreadError Ip6::HandleDatagram(Message &message, Netif *netif, int8_t interface
 
     // process IPv6 Extension Headers
     nextHeader = static_cast<uint8_t>(header.GetNextHeader());
-    SuccessOrExit(error = HandleExtensionHeaders(message, nextHeader, receive));
+    SuccessOrExit(error = HandleExtensionHeaders(message, header, nextHeader, receive));
 
     // process IPv6 Payload
     if (receive)

@@ -39,11 +39,13 @@ from IThci import IThci
 from pexpect_serial import SerialSpawn
 from GRLLibs.UtilityModules.Test import Thread_Device_Role, Device_Data_Requirement, MacType
 from GRLLibs.UtilityModules.enums import PlatformDiagnosticPacket_Direction, PlatformDiagnosticPacket_Type, AddressType
-from GRLLibs.UtilityModules.ModuleHelper import ModuleHelper
+from GRLLibs.UtilityModules.ModuleHelper import ModuleHelper,ThreadRunner
+from GRLLibs.ThreadPacket.PlatformPackets import PlatformDiagnosticPacket, PlatformPackets
+from Queue import Queue
 
 
 class ARM(IThci):
-    firmware = '2016 7 27 13:36:46' # keep the consistency with ARM firmware style
+    firmware = 'Sep 9 2016 14:57:36'# keep the consistency with ARM firmware style
     UIStatusMsg = ''
     networkDataRequirement = ''     # indicate Thread devicde requests full or stable network data
     isPowerDown = False             # indicate if Thread device experiences a power down event
@@ -66,6 +68,10 @@ class ARM(IThci):
             self.channel = ModuleHelper.Default_Channel
             self.panId = ModuleHelper.Default_PanId
             self.xpanId = ModuleHelper.Default_XpanId
+            self.AutoDUTEnable = False
+            self.provisioningUrl = ''
+            self.__logThread = Queue()
+            self.__logThreadRunning = False
             self.intialize()
         except Exception, e:
             ModuleHelper.WriteIntoDebugLogger("initialize() Error: " + str(e))
@@ -233,6 +239,24 @@ class ARM(IThci):
             return self.__sendCommand(cmd) == 'Done'
         except Exception, e:
             ModuleHelper.WriteIntoDebugLogger("setRouterDowngradeThreshold() Error: " + str(e))
+
+    def __setRouterSelectionJitter(self, iRouterJitter):
+        """set ROUTER_SELECTION_JITTER parameter for REED to upgrade to Router
+
+        Args:
+            iRouterJitter: a random period prior to request Router ID for REED
+
+        Returns:
+            True: successful to set the ROUTER_SELECTION_JITTER
+            False: fail to set ROUTER_SELECTION_JITTER
+        """
+        print 'call _setRouterSelectionJitter'
+        try:
+            cmd = 'routerselectionjitter %s' % str(iRouterJitter)
+            print cmd
+            return self.__sendCommand(cmd) == 'Done'
+        except Exception, e:
+            ModuleHelper.WriteIntoDebugLogger("setRouterSelectionJitter() Error: " + str(e))
 
     def __enableWhiteList(self):
         """enable white list filter
@@ -418,6 +442,32 @@ class ARM(IThci):
 
         return string
 
+    def __readCommissioningLogs(self, durationInSeconds):
+        """read logs during the commissioning process
+
+        Args:
+            durationInSeconds: time duration for reading commissioning logs
+
+        Returns:
+            Commissioning logs
+        """
+        self.__logThreadRunning = True
+        logs = Queue()
+        t_end = time.time() + durationInSeconds
+        while time.time() < t_end:
+            try:
+                line = self.serial.readline()
+                if line:
+                    print line
+                    logs.put(line)
+                time.sleep(0.3)
+
+            except Exception,e:
+                print e
+
+        self.__logThreadRunning = False
+        return logs
+
     def closeConnection(self):
         """close current serial port connection"""
         print '%s call closeConnection' % self.port
@@ -545,18 +595,15 @@ class ARM(IThci):
         if self.isPowerDown:
             macAddr64 = self.mac
         else:
-            macAddr64 = self.__sendCommand('extaddr')[0]
+            if bType == MacType.FactoryMac:
+                macAddr64 = self.__sendCommand('eui64')[0]
+            elif bType == MacType.HashMac:
+                macAddr64 = self.__sendCommand('hashmacaddr')[0]
+            else:
+                macAddr64 = self.__sendCommand('extaddr')[0]
         print macAddr64
 
-        # only supports RandomMac now
-        if bType == MacType.FactoryMac:
-            return int(macAddr64, 16)
-        elif bType == MacType.RandomMac:
-            return int(macAddr64, 16)
-        elif bType == MacType.HashMac:
-            return int(macAddr64, 16)
-        else:
-            return int(macAddr64, 16)
+        return int(macAddr64, 16)
 
     def getLL64(self):
         """get link local unicast IPv6 address"""
@@ -740,22 +787,28 @@ class ARM(IThci):
             if eRoleId == Thread_Device_Role.Leader:
                 print 'join as leader'
                 role = 'rsdn'
-                # set ROUTER_UPGRADE_THRESHOLD
-                self.__setRouterUpgradeThreshold(32)
-                # set ROUTER_DOWNGRADE_THRESHOLD
-                self.__setRouterDowngradeThreshold(33)
+                self.__setRouterSelectionJitter(1)
+                if self.AutoDUTEnable is False:
+                    # set ROUTER_UPGRADE_THRESHOLD
+                    self.__setRouterUpgradeThreshold(32)
+                    # set ROUTER_DOWNGRADE_THRESHOLD
+                    self.__setRouterDowngradeThreshold(33)
             elif eRoleId == Thread_Device_Role.Router:
                 print 'join as router'
                 role = 'rsdn'
-                # set ROUTER_UPGRADE_THRESHOLD
-                self.__setRouterUpgradeThreshold(32)
-                # set ROUTER_DOWNGRADE_THRESHOLD
-                self.__setRouterDowngradeThreshold(33)
+                self.__setRouterSelectionJitter(1)
+                time.sleep(5) #wait for REED upgrade to Router
+                if self.AutoDUTEnable is False:
+                    # set ROUTER_UPGRADE_THRESHOLD
+                    self.__setRouterUpgradeThreshold(33)
+                    # set ROUTER_DOWNGRADE_THRESHOLD
+                    self.__setRouterDowngradeThreshold(33)
             elif eRoleId == Thread_Device_Role.SED:
                 print 'join as sleepy end device'
                 role = 's'
-                # set data polling rate to 15s for SED
-                self.setPollingRate(15)
+                if self.AutoDUTEnable is False:
+                    # set data polling rate to 15s for SED
+                    self.setPollingRate(15)
             elif eRoleId == Thread_Device_Role.EndDevice:
                 print 'join as end device'
                 role = 'rsn'
@@ -1570,35 +1623,164 @@ class ARM(IThci):
     def setSleepyNodePollTime(self):
         pass
 
-    def diagnosticGet(self, strDestinationAddr, TLV_ids=0):
-        pass
+    def enableAutoDUTObjectFlag(self):
+        """set AutoDUTenable flag"""
+        self.AutoDUTEnable = True
 
-    def diagnosticReset(self, strDestinationAddr, iTLV_id):
-        pass
+    def getChildTimeoutValue(self):
+        """get child timeout"""
+        return self.__sendCommand('childtimeout')[0]
+
+    def diagnosticGet(self, strDestinationAddr, listTLV_ids=[]):
+        if not listTLV_ids:
+            return
+
+        if not len(listTLV_ids):
+            return
+
+        cmd = 'networkdiagnostic get %s %s' % (strDestinationAddr, ' '.join([str(tlv) for tlv in listTLV_ids]))
+        print(cmd)
+
+        return self.__sendCommand(cmd)
+
+    def diagnosticReset(self, strDestinationAddr, listTLV_ids=[]):
+        if not listTLV_ids:
+            return
+
+        if not len(listTLV_ids):
+            return
+
+        cmd = 'networkdiagnostic reset %s %s' % (strDestinationAddr, ' '.join([str(tlv) for tlv in listTLV_ids]))
+        print(cmd)
+
+        return self.__sendCommand(cmd)
 
     def startNativeCommissioner(self, strPSKc='GRLpassWord'):
         pass
 
     def startCollapsedCommissioner(self):
-        pass
+        """start OpenThread stack
+
+        Returns:
+            True: successful to start OpenThread stack and thread interface up
+            False: fail to start OpenThread stack
+        """
+        print '%s call startCollapsedCommissioner' % self.port
+        return self.__startOpenThread()
 
     def setJoinKey(self, strPSKc):
         pass
 
     def scanJoiner(self, xEUI='*', strPSKd='threadjpaketest'):
-        pass
+        """start commissioner
+
+        Args:
+            xEUI: Joiner's extended address
+            strPSKd: Joiner's PSKd for commissioning
+
+        Returns:
+            True: successful to start commissioner
+            False: fail to start commissioner
+        """
+        print '%s call scanJoiner' % self.port
+        cmd = 'commissioner start %s %s' % (strPSKd, self.provisioningUrl)
+        print cmd
+        if self.__sendCommand(cmd)[0] == 'Done':
+            if self.__logThreadRunning == False:
+                self.__logThread = ThreadRunner.run(target = self.__readCommissioningLogs, args = (120,))
+            return True
+        else:
+            return False
 
     def setProvisioningUrl(self, strURL='grl.com'):
-        pass
+        """set provisioning Url
+
+        Args:
+            strURL: Provisioning Url string
+
+        Returns:
+            True: successful to set provisioning Url
+        """
+        print '%s call setProvisioningUrl' % self.port
+        self.provisioningUrl = strURL;
+        return True
 
     def allowCommission(self, strPSKc="GRLPassword"):
         pass
 
-    def joinCommissioned(self, strPSKd='GRLpassWordx', waitTime=20):
-        pass
+    def joinCommissioned(self, strPSKd='threadjpaketest', waitTime=20):
+        """start joiner
+
+        Args:
+            strPSKd: Joiner's PSKd
+
+        Returns:
+            True: successful to start commissioner
+            False: fail to start commissioner
+        """
+        print '%s call joinCommissioned' % self.port
+        self.__sendCommand('ifconfig up')
+        cmd = 'joiner start %s %s' %(strPSKd, self.provisioningUrl)
+        print cmd
+        if self.__sendCommand(cmd)[0] == "Done":
+            if self.__logThreadRunning == False:
+                self.__logThread = ThreadRunner.run(target = self.__readCommissioningLogs, args = (90,))
+            time.sleep(90)
+
+            self.__sendCommand('thread start')
+            return True
+        else:
+            return False
 
     def getCommissioningLogs(self):
-        pass
+        """get Commissioning logs
+
+        Returns:
+           Commissioning logs
+        """
+        rawLogs = self.__logThread.get()
+        ProcessedLogs = []
+        payload = []
+        while not rawLogs.empty():
+            rawLogEach = rawLogs.get()
+            print rawLogEach
+            if "[THCI]" not in rawLogEach:
+                continue
+
+            EncryptedPacket = PlatformDiagnosticPacket()
+            infoList = rawLogEach.split('[THCI]')[1].split(']')[0].split('|')
+            for eachInfo in infoList:
+                print eachInfo 
+                info = eachInfo.split("=")
+                infoType = info[0].strip()
+                infoValue = info[1].strip()
+                if "direction" in infoType:
+                    EncryptedPacket.Direction = PlatformDiagnosticPacket_Direction.IN if 'recv' in infoValue \
+                        else PlatformDiagnosticPacket_Direction.OUT if 'send' in infoValue \
+                        else PlatformDiagnosticPacket_Direction.UNKNOWN
+                elif "type" in infoType:
+                    EncryptedPacket.Type = PlatformDiagnosticPacket_Type.JOIN_FIN_req if 'JOIN_FIN.req' in infoValue \
+                        else PlatformDiagnosticPacket_Type.JOIN_FIN_rsp if 'JOIN_FIN.rsp' in infoValue \
+                        else PlatformDiagnosticPacket_Type.JOIN_ENT_rsp if 'JOIN_ENT.ntf' in infoValue \
+                        else PlatformDiagnosticPacket_Type.UNKNOWN
+                elif "len" in infoType:
+                    EncryptedPacket.TLVsLength = int(infoValue)
+                    payloadLineCount = int(infoValue)/16 + 1
+                    while payloadLineCount > 0:
+                        payloadLineCount = payloadLineCount - 1
+                        payloadLine = rawLogs.get()
+                        payloadSplit = payloadLine.split('|')
+                        for block in range(1, 3):
+                            payloadBlock = payloadSplit[block]
+                            payloadValues = payloadBlock.split(' ')
+                            for num in range(1, 9):
+                                if ".." not in payloadValues[num]:
+                                    payload.append(int(payloadValues[num], 16))
+
+                    EncryptedPacket.TLVs = PlatformPackets.read(EncryptedPacket.Type,payload) if payload != [] else []
+
+            ProcessedLogs.append(EncryptedPacket)
+        return ProcessedLogs
 
     def MGMT_ED_SCAN(self, sAddr, xCommissionerSessionId, listChannelMask, xCount, xPeriod, xScanDuration):
         pass
@@ -1643,8 +1825,20 @@ class ARM(IThci):
     def setActiveTimestamp(self, xActiveTimestamp):
         pass
 
-    def setUdpJoinerPort(self, portNumber):
-        pass
+    def setUdpJoinerPort(self, portNumber): 
+        """set Joiner UDP Port
+
+        Args:
+            portNumber: Joiner UDP Port number
+
+        Returns:
+            True: successful to set Joiner UDP Port
+            False: fail to set Joiner UDP Port
+        """
+        print '%s call setUdpJoinerPort' % self.port
+        cmd = 'joinerport %d' % portNumber
+        print cmd
+        return self.__sendCommand(cmd)[0] == 'Done'
 
     def commissionerUnregister(self):
         pass

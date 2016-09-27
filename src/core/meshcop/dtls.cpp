@@ -358,6 +358,15 @@ void Dtls::Process(void)
             case MBEDTLS_ERR_SSL_FATAL_ALERT_MESSAGE:
                 break;
 
+            case MBEDTLS_ERR_SSL_INVALID_MAC:
+                if (mSsl.state != MBEDTLS_SSL_HANDSHAKE_OVER)
+                {
+                    mbedtls_ssl_send_alert_message(&mSsl, MBEDTLS_SSL_ALERT_LEVEL_FATAL,
+                                                   MBEDTLS_SSL_ALERT_MSG_BAD_RECORD_MAC);
+                }
+
+                break;
+
             default:
                 if (mSsl.state != MBEDTLS_SSL_HANDSHAKE_OVER)
                 {

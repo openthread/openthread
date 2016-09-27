@@ -66,6 +66,8 @@
     <ClCompile Include="..\..\src\core\thread\network_data.cpp" />
     <ClCompile Include="..\..\src\core\thread\network_data_leader.cpp" />
     <ClCompile Include="..\..\src\core\thread\network_data_local.cpp" />
+    <ClCompile Include="..\..\src\core\thread\network_diag.cpp" />
+    <ClCompile Include="..\..\src\core\thread\network_diag_tlvs.cpp" />
     <ClCompile Include="..\..\src\core\thread\panid_query_server.cpp" />
     <ClCompile Include="..\..\src\core\thread\thread_netif.cpp" />
     <ClCompile Include="..\..\src\core\thread\thread_tlvs.cpp" />
@@ -126,6 +128,8 @@
     <ClInclude Include="..\..\src\core\thread\network_data_leader.hpp" />
     <ClInclude Include="..\..\src\core\thread\network_data_local.hpp" />
     <ClInclude Include="..\..\src\core\thread\network_data_tlvs.hpp" />
+    <ClInclude Include="..\..\src\core\thread\network_diag.hpp" />
+    <ClInclude Include="..\..\src\core\thread\network_diag_tlvs.hpp" />
     <ClInclude Include="..\..\src\core\thread\panid_query_server.hpp" />
     <ClInclude Include="..\..\src\core\thread\thread_netif.hpp" />
     <ClInclude Include="..\..\src\core\thread\thread_tlvs.hpp" />

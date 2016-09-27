@@ -269,11 +269,42 @@ void DatasetManager::HandleSet(Coap::Header &aHeader, Message &aMessage, const I
         }
 
         // verify the request does not include fields that affect connectivity
-        if (tlvType == Tlv::kChannel || tlvType == Tlv::kMeshLocalPrefix ||
-            tlvType == Tlv::kPanId || tlvType == Tlv::kNetworkMasterKey)
+        if ((type == Tlv::kActiveTimestamp) && (tlvType == Tlv::kChannel || tlvType == Tlv::kMeshLocalPrefix
+                                                || tlvType == Tlv::kPanId || tlvType == Tlv::kNetworkMasterKey))
         {
             ExitNow(state = StateTlv::kReject);
         }
+
+        // verify session id is the same
+        if (tlvType == Tlv::kCommissionerSessionId)
+        {
+            uint8_t *cur;
+            uint8_t *end;
+            uint8_t length;
+
+            cur = mNetworkDataLeader.GetCommissioningData(length);
+            end = cur + length;
+
+            while (cur < end)
+            {
+                Tlv *data = reinterpret_cast<Tlv *>(cur);
+
+                if (data->GetType() == Tlv::kCommissionerSessionId)
+                {
+                    uint16_t sessionId;
+
+                    sessionId = static_cast<CommissionerSessionIdTlv *>(data)->GetCommissionerSessionId();
+                    VerifyOrExit(sessionId == static_cast<CommissionerSessionIdTlv *>(&tlv)->GetCommissionerSessionId(),
+                                 state = StateTlv::kReject);
+                    break;
+                }
+
+                cur += sizeof(Tlv) + data->GetLength();
+            }
+        }
+
+        // verify that TLV data size is less than maximum TLV value size
+        VerifyOrExit(tlv.GetLength() <= Dataset::kMaxValueSize, state = StateTlv::kReject);
 
         offset += sizeof(tlv) + tlv.GetLength();
     }
@@ -282,7 +313,27 @@ void DatasetManager::HandleSet(Coap::Header &aHeader, Message &aMessage, const I
     VerifyOrExit(offset == aMessage.GetLength() && (mLocal.GetTimestamp() == NULL ||
                                                     mLocal.GetTimestamp()->Compare(timestamp) > 0), state = StateTlv::kReject);
 
-    mLocal.Set(aMessage, aMessage.GetOffset(), static_cast<uint8_t>(aMessage.GetLength() - aMessage.GetOffset()));
+    // verify that does not overflow dataset buffer
+    VerifyOrExit((offset - aMessage.GetOffset()) <= Dataset::kMaxSize, state = StateTlv::kReject);
+
+    // update dataset
+    offset = aMessage.GetOffset();
+
+    while (offset < aMessage.GetLength())
+    {
+        OT_TOOL_PACKED_BEGIN
+        struct
+        {
+            Tlv tlv;
+            uint8_t value[Dataset::kMaxValueSize];
+        } OT_TOOL_PACKED_END data;
+
+        aMessage.Read(offset, sizeof(Tlv), &data.tlv);
+        aMessage.Read(offset + sizeof(Tlv), data.tlv.GetLength(), data.value);
+        mLocal.Set(data.tlv);
+        offset += sizeof(Tlv) + data.tlv.GetLength();
+    }
+
     mNetwork = mLocal;
     mNetworkDataLeader.IncrementVersion();
     mNetworkDataLeader.IncrementStableVersion();
@@ -357,8 +408,8 @@ ThreadError DatasetManager::SendSetRequest(const otOperationalDataset &aDataset,
     {
         ActiveTimestampTlv timestamp;
         timestamp.Init();
-        static_cast<Timestamp *>(&timestamp)->SetSeconds((aDataset.mActiveTimestamp) >> 16);
-        static_cast<Timestamp *>(&timestamp)->SetTicks((aDataset.mActiveTimestamp) & 0xffff);
+        static_cast<Timestamp *>(&timestamp)->SetSeconds(aDataset.mActiveTimestamp);
+        static_cast<Timestamp *>(&timestamp)->SetTicks(0);
         SuccessOrExit(error = message->Append(&timestamp, sizeof(timestamp)));
     }
 
@@ -366,8 +417,8 @@ ThreadError DatasetManager::SendSetRequest(const otOperationalDataset &aDataset,
     {
         PendingTimestampTlv timestamp;
         timestamp.Init();
-        static_cast<Timestamp *>(&timestamp)->SetSeconds((aDataset.mPendingTimestamp) >> 16);
-        static_cast<Timestamp *>(&timestamp)->SetTicks((aDataset.mPendingTimestamp) & 0xffff);
+        static_cast<Timestamp *>(&timestamp)->SetSeconds(aDataset.mPendingTimestamp);
+        static_cast<Timestamp *>(&timestamp)->SetTicks(0);
         SuccessOrExit(error = message->Append(&timestamp, sizeof(timestamp)));
     }
 

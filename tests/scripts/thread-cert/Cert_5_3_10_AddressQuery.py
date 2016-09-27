@@ -55,18 +55,21 @@ class Cert_5_3_10_AddressQuery(unittest.TestCase):
         self.nodes[BR].set_mode('rsdn')
         self.nodes[BR].add_whitelist(self.nodes[LEADER].get_addr64())
         self.nodes[BR].enable_whitelist()
+        self.nodes[BR].set_router_selection_jitter(1)
 
         self.nodes[ROUTER2].set_panid(0xface)
         self.nodes[ROUTER2].set_mode('rsdn')
         self.nodes[ROUTER2].add_whitelist(self.nodes[LEADER].get_addr64())
         self.nodes[ROUTER2].add_whitelist(self.nodes[SED2].get_addr64())
         self.nodes[ROUTER2].enable_whitelist()
+        self.nodes[ROUTER2].set_router_selection_jitter(1)
 
         self.nodes[ROUTER3].set_panid(0xface)
         self.nodes[ROUTER3].set_mode('rsdn')
         self.nodes[ROUTER3].add_whitelist(self.nodes[LEADER].get_addr64())
         self.nodes[ROUTER3].add_whitelist(self.nodes[ROUTER2].get_addr64())
         self.nodes[ROUTER3].enable_whitelist()
+        self.nodes[ROUTER3].set_router_selection_jitter(1)
 
         self.nodes[SED2].set_panid(0xface)
         self.nodes[SED2].set_mode('sn')

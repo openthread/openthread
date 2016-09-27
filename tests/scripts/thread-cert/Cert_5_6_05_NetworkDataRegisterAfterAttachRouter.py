@@ -54,6 +54,7 @@ class Cert_5_6_5_NetworkDataRegisterAfterAttachRouter(unittest.TestCase):
         self.nodes[ROUTER].add_whitelist(self.nodes[ED1].get_addr64())
         self.nodes[ROUTER].add_whitelist(self.nodes[SED1].get_addr64())
         self.nodes[ROUTER].enable_whitelist()
+        self.nodes[ROUTER].set_router_selection_jitter(1)
 
         self.nodes[ED1].set_panid(0xface)
         self.nodes[ED1].set_mode('rsn')
@@ -95,15 +96,15 @@ class Cert_5_6_5_NetworkDataRegisterAfterAttachRouter(unittest.TestCase):
         time.sleep(10)
 
         addrs = self.nodes[ED1].get_addrs()
-        self.assertTrue(any('2001' in word for word in addrs))
-        self.assertTrue(any('2002' in word for word in addrs))
+        self.assertTrue(any('2001' in addr[0:4] for addr in addrs))
+        self.assertTrue(any('2002' in addr[0:4] for addr in addrs))
         for addr in addrs:
             if addr[0:3] == '200':
                 self.assertTrue(self.nodes[LEADER].ping(addr))
 
         addrs = self.nodes[SED1].get_addrs()
-        self.assertTrue(any('2001' in word for word in addrs))
-        self.assertFalse(any('2002' in word for word in addrs))
+        self.assertTrue(any('2001' in addr[0:4] for addr in addrs))
+        self.assertFalse(any('2002' in addr[0:4] for addr in addrs))
         for addr in addrs:
             if addr[0:3] == '200':
                 self.assertTrue(self.nodes[LEADER].ping(addr))
@@ -114,17 +115,17 @@ class Cert_5_6_5_NetworkDataRegisterAfterAttachRouter(unittest.TestCase):
         time.sleep(10)
 
         addrs = self.nodes[ED1].get_addrs()
-        self.assertTrue(any('2001' in word for word in addrs))
-        self.assertTrue(any('2002' in word for word in addrs))
-        self.assertTrue(any('2003' in word for word in addrs))
+        self.assertTrue(any('2001' in addr[0:4] for addr in addrs))
+        self.assertTrue(any('2002' in addr[0:4] for addr in addrs))
+        self.assertTrue(any('2003' in addr[0:4] for addr in addrs))
         for addr in addrs:
             if addr[0:3] == '200':
                 self.assertTrue(self.nodes[LEADER].ping(addr))
 
         addrs = self.nodes[SED1].get_addrs()
-        self.assertTrue(any('2001' in word for word in addrs))
-        self.assertFalse(any('2002' in word for word in addrs))
-        self.assertTrue(any('2003' in word for word in addrs))
+        self.assertTrue(any('2001' in addr[0:4] for addr in addrs))
+        self.assertFalse(any('2002' in addr[0:4] for addr in addrs))
+        self.assertTrue(any('2003' in addr[0:4] for addr in addrs))
         for addr in addrs:
             if addr[0:3] == '200':
                 self.assertTrue(self.nodes[LEADER].ping(addr))

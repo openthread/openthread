@@ -56,12 +56,14 @@ class Cert_6_1_3_RouterAttachConnectivity(unittest.TestCase):
         self.nodes[ROUTER1].add_whitelist(self.nodes[LEADER].get_addr64())
         self.nodes[ROUTER1].add_whitelist(self.nodes[ROUTER3].get_addr64())
         self.nodes[ROUTER1].enable_whitelist()
+        self.nodes[ROUTER1].set_router_selection_jitter(1)
 
         self.nodes[ROUTER2].set_panid(0xface)
         self.nodes[ROUTER2].set_mode('rsdn')
         self.nodes[ROUTER2].add_whitelist(self.nodes[LEADER].get_addr64())
         self.nodes[ROUTER2].add_whitelist(self.nodes[ED].get_addr64())
         self.nodes[ROUTER2].enable_whitelist()
+        self.nodes[ROUTER2].set_router_selection_jitter(1)
 
         self.nodes[ROUTER3].set_panid(0xface)
         self.nodes[ROUTER3].set_mode('rsdn')
@@ -69,6 +71,7 @@ class Cert_6_1_3_RouterAttachConnectivity(unittest.TestCase):
         self.nodes[ROUTER3].add_whitelist(self.nodes[ROUTER1].get_addr64())
         self.nodes[ROUTER3].add_whitelist(self.nodes[ED].get_addr64())
         self.nodes[ROUTER3].enable_whitelist()
+        self.nodes[ROUTER3].set_router_selection_jitter(1)
 
         self.nodes[ED].set_panid(0xface)
         self.nodes[ED].set_mode('rsdn')
@@ -86,11 +89,13 @@ class Cert_6_1_3_RouterAttachConnectivity(unittest.TestCase):
         self.nodes[LEADER].set_state('leader')
         self.assertEqual(self.nodes[LEADER].get_state(), 'leader')
 
-        for i in range(2, 6):
+        for i in range(2, 5):
             self.nodes[i].start()
             time.sleep(3)
             self.assertEqual(self.nodes[i].get_state(), 'router')
 
+        self.nodes[ED].start()
+        time.sleep(3)
         addrs = self.nodes[ED].get_addrs()
         for addr in addrs:
             self.assertTrue(self.nodes[ROUTER3].ping(addr))

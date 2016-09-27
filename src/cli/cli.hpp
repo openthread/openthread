@@ -167,6 +167,7 @@ private:
 #if OPENTHREAD_ENABLE_JOINER
     void ProcessJoiner(int argc, char *argv[]);
 #endif  // OPENTHREAD_ENABLE_JOINER
+    void ProcessJoinerPort(int argc, char *argv[]);
     void ProcessKeySequence(int argc, char *argv[]);
     void ProcessLeaderData(int argc, char *argv[]);
     void ProcessLeaderPartitionId(int argc, char *argv[]);
@@ -175,6 +176,7 @@ private:
     void ProcessMasterKey(int argc, char *argv[]);
     void ProcessMode(int argc, char *argv[]);
     void ProcessNetworkDataRegister(int argc, char *argv[]);
+    void ProcessNetworkDiagnostic(int argc, char *argv[]);
     void ProcessNetworkIdTimeout(int argc, char *argv[]);
     void ProcessNetworkName(int argc, char *argv[]);
     void ProcessPanId(int argc, char *argv[]);
@@ -192,6 +194,7 @@ private:
     void ProcessRouter(int argc, char *argv[]);
     void ProcessRouterDowngradeThreshold(int argc, char *argv[]);
     void ProcessRouterRole(int argc, char *argv[]);
+    void ProcessRouterSelectionJitter(int argc, char *argv[]);
     ThreadError ProcessRouteAdd(int argc, char *argv[]);
     ThreadError ProcessRouteRemove(int argc, char *argv[]);
     void ProcessRouterUpgradeThreshold(int argc, char *argv[]);

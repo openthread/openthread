@@ -52,6 +52,7 @@ class Cert_5_6_7_NetworkDataRequestREED(unittest.TestCase):
         self.nodes[ROUTER].set_mode('rsdn')
         self.nodes[ROUTER].add_whitelist(self.nodes[LEADER].get_addr64())
         self.nodes[ROUTER].enable_whitelist()
+        self.nodes[ROUTER].set_router_selection_jitter(1)
 
         self.nodes[REED].set_panid(0xface)
         self.nodes[REED].set_mode('rsdn')
@@ -91,9 +92,9 @@ class Cert_5_6_7_NetworkDataRequestREED(unittest.TestCase):
         time.sleep(10)
 
         addrs = self.nodes[REED].get_addrs()
-        self.assertTrue(any('2003' in word for word in addrs))
+        self.assertTrue(any('2003' in addr[0:4] for addr in addrs))
         for addr in addrs:
-            if addr[0:3] == '200':
+            if addr[0:4] == '2003':
                 self.assertTrue(self.nodes[LEADER].ping(addr))
 
 if __name__ == '__main__':
