@@ -574,6 +574,36 @@ AM_CONDITIONAL([OPENTHREAD_ENABLE_CLI_LOGGING], [test "${enable_cli_logging}" = 
 AC_DEFINE_UNQUOTED([OPENTHREAD_ENABLE_CLI_LOGGING],[${OPENTHREAD_ENABLE_CLI_LOGGING}],[Define to 1 if you want to enable cli logging])
 
 #
+# Log for certification test
+#
+
+AC_ARG_ENABLE(cert_log,
+    [AS_HELP_STRING([--enable-cert-log],[Enable certification log support @<:@default=no@:>@.])],
+    [
+        case "${enableval}" in
+
+        no|yes)
+            enable_cert_log=${enableval}
+            ;;
+
+        *)
+            AC_MSG_ERROR([Invalid value ${enable_cert_log} for --enable-cert-log])
+            ;;
+        esac
+    ],
+    [enable_cert_log=no])
+
+if test "$enable_cert_log" = "yes"; then
+    OPENTHREAD_ENABLE_CERT_LOG=1
+else
+    OPENTHREAD_ENABLE_CERT_LOG=0
+fi
+
+AC_SUBST(OPENTHREAD_ENABLE_CERT_LOG)
+AM_CONDITIONAL([OPENTHREAD_ENABLE_CERT_LOG], [test "${enable_cert_log}" = "yes"])
+AC_DEFINE_UNQUOTED([OPENTHREAD_ENABLE_CERT_LOG],[${OPENTHREAD_ENABLE_CERT_LOG}],[Define to 1 if you want to enable log for certification test])
+
+#
 # Examples
 #
 
@@ -827,6 +857,7 @@ AC_MSG_NOTICE([
   OpenThread DTLS support                   : ${enable_dtls}
   OpenThread Diagnostics support            : ${enable_diag}
   OpenThread Cli logging support            : ${enable_cli_logging}
+  OpenThread Certification log support      : ${enable_cert_log}
   OpenThread examples                       : ${OPENTHREAD_EXAMPLES}
   OpenThread platform information           : ${PLATFORM_INFO}
 
