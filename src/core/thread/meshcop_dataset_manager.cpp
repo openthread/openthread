@@ -265,8 +265,8 @@ void DatasetManager::HandleSet(Coap::Header &aHeader, Message &aMessage, const I
         }
 
         // verify the request does not include fields that affect connectivity
-        if (tlvType == Tlv::kChannel || tlvType == Tlv::kMeshLocalPrefix ||
-            tlvType == Tlv::kPanId || tlvType == Tlv::kNetworkMasterKey)
+        if ((type == Tlv::kActiveTimestamp) && (tlvType == Tlv::kChannel || tlvType == Tlv::kMeshLocalPrefix
+            || tlvType == Tlv::kPanId || tlvType == Tlv::kNetworkMasterKey))
         {
             ExitNow(state = StateTlv::kReject);
         }
