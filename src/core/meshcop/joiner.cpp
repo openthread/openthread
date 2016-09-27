@@ -249,6 +249,8 @@ void Joiner::SendJoinerFinalize(void)
     mNetif.GetDtls().Send(buf, static_cast<uint16_t>(cur - buf));
 
     otLogInfoMeshCoP("Sent joiner finalize\r\n");
+    otDumpCertMeshCoP("[THCI] direction=send | type=JOIN_FIN.req |", buf + header.GetLength(),
+                      cur - buf - header.GetLength());
 }
 
 void Joiner::ReceiveJoinerFinalizeResponse(uint8_t *buf, uint16_t length)
@@ -271,6 +273,7 @@ void Joiner::ReceiveJoinerFinalizeResponse(uint8_t *buf, uint16_t length)
     VerifyOrExit(state.IsValid(), ;);
 
     otLogInfoMeshCoP("received joiner finalize response %d\r\n", static_cast<uint8_t>(state.GetState()));
+    otLogCertMeshCoP("[THCI] direction=recv | type=JOIN_FIN.rsp\r\n");
 
     Close();
 
@@ -303,6 +306,7 @@ void Joiner::HandleJoinerEntrust(Coap::Header &aHeader, Message &aMessage, const
                  aHeader.GetCode() == Coap::Header::kCodePost, error = kThreadError_Drop);
 
     otLogInfoMeshCoP("Received joiner entrust\r\n");
+    otLogCertMeshCoP("[THCI] direction=recv | type=JOIN_ENT.ntf\r\n");
 
     SuccessOrExit(error = Tlv::GetTlv(aMessage, Tlv::kNetworkMasterKey, sizeof(masterKey), masterKey));
     VerifyOrExit(masterKey.IsValid(), error = kThreadError_Parse);
