@@ -98,27 +98,27 @@ class Cert_5_3_4_AddressMapCache(unittest.TestCase):
         self.assertEqual(self.nodes[LEADER].get_state(), 'leader')
 
         self.nodes[ROUTER1].start()
-        time.sleep(3)
+        time.sleep(5)
         self.assertEqual(self.nodes[ROUTER1].get_state(), 'router')
 
         self.nodes[SED1].start()
-        time.sleep(3)
+        time.sleep(5)
         self.assertEqual(self.nodes[SED1].get_state(), 'child')
 
         self.nodes[ED2].start()
-        time.sleep(3)
+        time.sleep(5)
         self.assertEqual(self.nodes[ED2].get_state(), 'child')
 
         self.nodes[ED3].start()
-        time.sleep(3)
+        time.sleep(5)
         self.assertEqual(self.nodes[ED3].get_state(), 'child')
 
         self.nodes[ED4].start()
-        time.sleep(3)
+        time.sleep(5)
         self.assertEqual(self.nodes[ED4].get_state(), 'child')
 
         self.nodes[ED5].start()
-        time.sleep(3)
+        time.sleep(5)
         self.assertEqual(self.nodes[ED5].get_state(), 'child')
 
         for i in range(4, 8):

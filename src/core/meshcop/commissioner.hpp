@@ -80,7 +80,7 @@ public:
     /**
      * This method returns the Commissioner Session ID.
      *
-     * @retuns The Commissioner Session ID.
+     * @returns The Commissioner Session ID.
      *
      */
     uint16_t GetSessionId(void) const;

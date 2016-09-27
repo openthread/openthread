@@ -61,7 +61,7 @@ class Cert_6_6_1_KeyIncrement(unittest.TestCase):
         self.nodes[LEADER].set_state('leader')
 
         self.nodes[ED].start()
-        time.sleep(3)
+        time.sleep(5)
         self.assertEqual(self.nodes[ED].get_state(), "child")
 
         addrs = self.nodes[ED].get_addrs()

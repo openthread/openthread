@@ -64,7 +64,7 @@ class Cert_5_8_3_KeyIncrementRollOver(unittest.TestCase):
         self.assertEqual(self.nodes[LEADER].get_state(), 'leader')
 
         self.nodes[ROUTER].start()
-        time.sleep(3)
+        time.sleep(5)
         self.assertEqual(self.nodes[ROUTER].get_state(), 'router')
 
         addrs = self.nodes[ROUTER].get_addrs()

@@ -1073,6 +1073,37 @@ extern "C" {
 #endif
 
 /**
+ * @def otLogCert
+ *
+ * This method generates a log with level none for the certification test.
+ *
+ * @param[in]  aFormat  A pointer to the format string.
+ * @param[in]  ...      Arguments for the format specification.
+ *
+ */
+#if OPENTHREAD_ENABLE_CERT_LOG
+#define otLogCertMeshCoP(aFormat, ...) otPlatLog(kLogLevelNone, kLogRegionMeshCoP, aFormat, ## __VA_ARGS__)
+#else
+#define otLogCertMeshCoP(aFormat, ...)
+#endif
+
+/**
+ * @def otDumpCert
+ *
+ * This method generates a memory dump with log level none for the certification test.
+ *
+ * @param[in]  aId      A pointer to a NULL-terminated string that is printed before the bytes.
+ * @param[in]  aBuf     A pointer to the buffer.
+ * @param[in]  aLength  Number of bytes to print.
+ *
+ */
+#if OPENTHREAD_ENABLE_CERT_LOG
+#define otDumpCertMeshCoP(aId, aBuf, aLength) otDump(kLogLevelNone, kLogRegionMeshCoP, aId, aBuf, aLength)
+#else
+#define otDumpCertMeshCoP(aId, aBuf, aLength)
+#endif
+
+/**
  * This method dumps bytes to the log in a human-readable fashion.
  *
  * @param[in]  aLevel   The log level.

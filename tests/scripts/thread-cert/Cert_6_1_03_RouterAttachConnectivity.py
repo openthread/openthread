@@ -91,11 +91,11 @@ class Cert_6_1_3_RouterAttachConnectivity(unittest.TestCase):
 
         for i in range(2, 5):
             self.nodes[i].start()
-            time.sleep(3)
+            time.sleep(5)
             self.assertEqual(self.nodes[i].get_state(), 'router')
 
         self.nodes[ED].start()
-        time.sleep(3)
+        time.sleep(5)
         addrs = self.nodes[ED].get_addrs()
         for addr in addrs:
             self.assertTrue(self.nodes[ROUTER3].ping(addr))

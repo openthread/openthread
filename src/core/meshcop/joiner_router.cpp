@@ -31,6 +31,12 @@
  *   This file implements the Joiner Router role.
  */
 
+#ifdef OPENTHREAD_CONFIG_FILE
+#include OPENTHREAD_CONFIG_FILE
+#else
+#include <openthread-config.h>
+#endif
+
 #include <assert.h>
 #include <stdio.h>
 
@@ -408,6 +414,7 @@ ThreadError JoinerRouter::SendJoinerEntrust(const Ip6::MessageInfo &aMessageInfo
     SuccessOrExit(error = mSocket.SendTo(*message, messageInfo));
 
     otLogInfoMeshCoP("Sent joiner entrust length = %d\r\n", message->GetLength());
+    otLogCertMeshCoP("[THCI] direction=send | msg_type=JOIN_ENT.ntf\r\n");
 
 exit:
 

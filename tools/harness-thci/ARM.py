@@ -39,22 +39,24 @@ from IThci import IThci
 from pexpect_serial import SerialSpawn
 from GRLLibs.UtilityModules.Test import Thread_Device_Role, Device_Data_Requirement, MacType
 from GRLLibs.UtilityModules.enums import PlatformDiagnosticPacket_Direction, PlatformDiagnosticPacket_Type, AddressType
-from GRLLibs.UtilityModules.ModuleHelper import ModuleHelper
+from GRLLibs.UtilityModules.ModuleHelper import ModuleHelper,ThreadRunner
+from GRLLibs.ThreadPacket.PlatformPackets import PlatformDiagnosticPacket, PlatformPackets
+from Queue import Queue
 
 
 class ARM(IThci):
     firmware = 'Sep 9 2016 14:57:36'# keep the consistency with ARM firmware style
     UIStatusMsg = ''
-    networkDataRequirement = ''     # indicate Thread devicde requests full or stable network data
+    networkDataRequirement = ''     # indicate Thread device requests full or stable network data
     isPowerDown = False             # indicate if Thread device experiences a power down event
     isWhiteListEnabled = False      # indicate if Thread device enables white list filter
     isBlackListEnabled = False      # indicate if Thread device enables black list filter
 
     #def __init__(self, SerialPort=COMPortName, EUI=MAC_Address):
     def __init__(self, **kwargs):
-        """initialize the serial port and default netowrk parameters
+        """initialize the serial port and default network parameters
         Args:
-            **kwargs: Arbitrary keyword aruments
+            **kwargs: Arbitrary keyword arguments
                       Includes 'EUI' and 'SerialPort'
         """
         try:
@@ -67,6 +69,9 @@ class ARM(IThci):
             self.panId = ModuleHelper.Default_PanId
             self.xpanId = ModuleHelper.Default_XpanId
             self.AutoDUTEnable = False
+            self.provisioningUrl = ''
+            self.__logThread = Queue()
+            self.__logThreadRunning = False
             self.intialize()
         except Exception, e:
             ModuleHelper.WriteIntoDebugLogger("initialize() Error: " + str(e))
@@ -121,7 +126,7 @@ class ARM(IThci):
             addressType: the specific type of IPv6 address
 
             link local: link local unicast IPv6 address that's within one-hop scope
-            gloal: global unitcast IPv6 address
+            global: global unicast IPv6 address
             rloc: mesh local unicast IPv6 address for routing in thread network
             mesh EID: mesh Endpoint Identifier
 
@@ -437,6 +442,32 @@ class ARM(IThci):
 
         return string
 
+    def __readCommissioningLogs(self, durationInSeconds):
+        """read logs during the commissioning process
+
+        Args:
+            durationInSeconds: time duration for reading commissioning logs
+
+        Returns:
+            Commissioning logs
+        """
+        self.__logThreadRunning = True
+        logs = Queue()
+        t_end = time.time() + durationInSeconds
+        while time.time() < t_end:
+            try:
+                line = self.serial.readline()
+                if line:
+                    print line
+                    logs.put(line)
+                time.sleep(0.3)
+
+            except Exception,e:
+                print e
+
+        self.__logThreadRunning = False
+        return logs
+
     def closeConnection(self):
         """close current serial port connection"""
         print '%s call closeConnection' % self.port
@@ -564,18 +595,15 @@ class ARM(IThci):
         if self.isPowerDown:
             macAddr64 = self.mac
         else:
-            macAddr64 = self.__sendCommand('extaddr')[0]
+            if bType == MacType.FactoryMac:
+                macAddr64 = self.__sendCommand('eui64')[0]
+            elif bType == MacType.HashMac:
+                macAddr64 = self.__sendCommand('hashmacaddr')[0]
+            else:
+                macAddr64 = self.__sendCommand('extaddr')[0]
         print macAddr64
 
-        # only supports RandomMac now
-        if bType == MacType.FactoryMac:
-            return int(macAddr64, 16)
-        elif bType == MacType.RandomMac:
-            return int(macAddr64, 16)
-        elif bType == MacType.HashMac:
-            return int(macAddr64, 16)
-        else:
-            return int(macAddr64, 16)
+        return int(macAddr64, 16)
 
     def getLL64(self):
         """get link local unicast IPv6 address"""
@@ -600,7 +628,7 @@ class ARM(IThci):
 
     def getGlobal(self):
         """get global unicast IPv6 address set
-           if configuring mutliple entries
+           if configuring multiple entries
         """
         print '%s call getGlobal' % self.port
         return self.__getIp6Address('global')
@@ -651,7 +679,7 @@ class ARM(IThci):
 
         Returns:
             True: successful to add a given extended address to the black list entry
-            False: fail to addd a given extended address to the black list entry
+            False: fail to add a given extended address to the black list entry
         """
         print '%s call addBlockedMAC' % self.port
         print xEUI
@@ -717,7 +745,7 @@ class ARM(IThci):
         """clear all entries in white list table
 
         Returns:
-            True: successful to clearthe white list
+            True: successful to clear the white list
             False: fail to clear the white list
         """
         print '%s call clearAllowList' % self.port
@@ -1090,7 +1118,7 @@ class ARM(IThci):
 
         Returns:
             True: successful to remove the prefix entry from border router
-            False: fail to remove the prfix entry from border router
+            False: fail to remove the prefix entry from border router
         """
         print '%s call removeRouterPrefix' % self.port
         print prefixEntry
@@ -1137,13 +1165,13 @@ class ARM(IThci):
             ModuleHelper.WriteIntoDebugLogger("resetAndRejoin() Error: " + str(e))
 
     def configBorderRouter(self, P_Prefix, P_stable=1, P_default=1, P_slaac_preferred=0, P_Dhcp=0, P_preference=0, P_on_mesh=1, P_nd_dns=0):
-        """configure the border router with a given preifx entry parameters
+        """configure the border router with a given prefix entry parameters
 
         Args:
             P_Prefix: IPv6 prefix that is available on the Thread Network
             P_stable: is true if the default router is expected to be stable network data
             P_default: is true if border router offers the default route for P_Prefix
-            P_slaac_preferred: is true if Thread device is allowed autoconfigure address using P_Prefix
+            P_slaac_preferred: is true if Thread device is allowed auto-configure address using P_Prefix
             P_Dhcp: is true if border router is a DHCPv6 Agent
             P_preference: is two-bit signed integer indicating router preference
             P_on_mesh: is true if P_Prefix is considered to be on-mesh
@@ -1189,7 +1217,7 @@ class ARM(IThci):
             print cmd
             if self.__sendCommand(cmd)[0] == 'Done':
                 # if prefix configured before starting OpenThread stack
-                # do not send out server data ntf proactively
+                # do not send out server data ntf pro-actively
                 if not self.__isOpenThreadRunning():
                     return True
                 else:
@@ -1320,7 +1348,7 @@ class ARM(IThci):
 
         Returns:
             True: successful to configure the border router with a given external route prefix
-            False: fail to configure the border router with a given exteranl route prefix
+            False: fail to configure the border router with a given external route prefix
         """
         print '%s call configExternalRouter' % self.port
         print P_Prefix
@@ -1352,10 +1380,10 @@ class ARM(IThci):
             ModuleHelper.WriteIntoDebugLogger("configExternalRouter() Error: " + str(e))
 
     def getNeighbouringRouters(self):
-        """get neihbouring routers information
+        """get neighboring routers information
 
         Returns:
-            neihbouring routers' extended address
+            neighboring routers' extended address
         """
         print '%s call getNeighbouringRouters' % self.port
         try:
@@ -1473,11 +1501,11 @@ class ARM(IThci):
             ModuleHelper.WriteIntoDebugLogger("setXpanId() Error: " + str(e))
 
     def getNeighbouringDevices(self):
-        """gets the neighbouring devices' extended address to compute the DUT
-           extended addresss automatically
+        """gets the neighboring devices' extended address to compute the DUT
+           extended address automatically
 
         Returns:
-            A list including extended address of neighbouring routers, parent
+            A list including extended address of neighboring routers, parent
             as well as children
         """
         print '%s call getNeighbouringDevices' % self.port
@@ -1494,7 +1522,7 @@ class ARM(IThci):
             for entry in childNeighbours:
                 neighbourList.append(entry)
 
-        # get neighbouring routers info
+        # get neighboring routers info
         routerNeighbours = self.getNeighbouringRouters()
         if routerNeighbours != None and len(routerNeighbours) > 0:
             for entry in routerNeighbours:
@@ -1631,25 +1659,128 @@ class ARM(IThci):
         pass
 
     def startCollapsedCommissioner(self):
-        pass
+        """start OpenThread stack
+
+        Returns:
+            True: successful to start OpenThread stack and thread interface up
+            False: fail to start OpenThread stack
+        """
+        print '%s call startCollapsedCommissioner' % self.port
+        return self.__startOpenThread()
 
     def setJoinKey(self, strPSKc):
         pass
 
     def scanJoiner(self, xEUI='*', strPSKd='threadjpaketest'):
-        pass
+        """start commissioner
+
+        Args:
+            xEUI: Joiner's extended address
+            strPSKd: Joiner's PSKd for commissioning
+
+        Returns:
+            True: successful to start commissioner
+            False: fail to start commissioner
+        """
+        print '%s call scanJoiner' % self.port
+        cmd = 'commissioner start %s %s' % (strPSKd, self.provisioningUrl)
+        print cmd
+        if self.__sendCommand(cmd)[0] == 'Done':
+            if self.__logThreadRunning == False:
+                self.__logThread = ThreadRunner.run(target = self.__readCommissioningLogs, args = (120,))
+            return True
+        else:
+            return False
 
     def setProvisioningUrl(self, strURL='grl.com'):
-        pass
+        """set provisioning Url
+
+        Args:
+            strURL: Provisioning Url string
+
+        Returns:
+            True: successful to set provisioning Url
+        """
+        print '%s call setProvisioningUrl' % self.port
+        self.provisioningUrl = strURL;
+        return True
 
     def allowCommission(self, strPSKc="GRLPassword"):
         pass
 
-    def joinCommissioned(self, strPSKd='GRLpassWordx', waitTime=20):
-        pass
+    def joinCommissioned(self, strPSKd='threadjpaketest', waitTime=20):
+        """start joiner
+
+        Args:
+            strPSKd: Joiner's PSKd
+
+        Returns:
+            True: successful to start commissioner
+            False: fail to start commissioner
+        """
+        print '%s call joinCommissioned' % self.port
+        self.__sendCommand('ifconfig up')
+        cmd = 'joiner start %s %s' %(strPSKd, self.provisioningUrl)
+        print cmd
+        if self.__sendCommand(cmd)[0] == "Done":
+            if self.__logThreadRunning == False:
+                self.__logThread = ThreadRunner.run(target = self.__readCommissioningLogs, args = (90,))
+            time.sleep(90)
+
+            self.__sendCommand('thread start')
+            return True
+        else:
+            return False
 
     def getCommissioningLogs(self):
-        pass
+        """get Commissioning logs
+
+        Returns:
+           Commissioning logs
+        """
+        rawLogs = self.__logThread.get()
+        ProcessedLogs = []
+        payload = []
+        while not rawLogs.empty():
+            rawLogEach = rawLogs.get()
+            print rawLogEach
+            if "[THCI]" not in rawLogEach:
+                continue
+
+            EncryptedPacket = PlatformDiagnosticPacket()
+            infoList = rawLogEach.split('[THCI]')[1].split(']')[0].split('|')
+            for eachInfo in infoList:
+                print eachInfo
+                info = eachInfo.split("=")
+                infoType = info[0].strip()
+                infoValue = info[1].strip()
+                if "direction" in infoType:
+                    EncryptedPacket.Direction = PlatformDiagnosticPacket_Direction.IN if 'recv' in infoValue \
+                        else PlatformDiagnosticPacket_Direction.OUT if 'send' in infoValue \
+                        else PlatformDiagnosticPacket_Direction.UNKNOWN
+                elif "type" in infoType:
+                    EncryptedPacket.Type = PlatformDiagnosticPacket_Type.JOIN_FIN_req if 'JOIN_FIN.req' in infoValue \
+                        else PlatformDiagnosticPacket_Type.JOIN_FIN_rsp if 'JOIN_FIN.rsp' in infoValue \
+                        else PlatformDiagnosticPacket_Type.JOIN_ENT_rsp if 'JOIN_ENT.ntf' in infoValue \
+                        else PlatformDiagnosticPacket_Type.UNKNOWN
+                elif "len" in infoType:
+                    EncryptedPacket.TLVsLength = int(infoValue)
+                    payloadLineCount = int(infoValue)/16 + 1
+                    while payloadLineCount > 0:
+                        payloadLineCount = payloadLineCount - 1
+                        payloadLine = rawLogs.get()
+                        payloadSplit = payloadLine.split('|')
+                        for block in range(1, 3):
+                            payloadBlock = payloadSplit[block]
+                            payloadValues = payloadBlock.split(' ')
+                            for num in range(1, 9):
+                                if ".." not in payloadValues[num]:
+                                    payload.append(int(payloadValues[num], 16))
+
+                    EncryptedPacket.TLVs = PlatformPackets.read(EncryptedPacket.Type,payload) if payload != [] else []
+
+            ProcessedLogs.append(EncryptedPacket)
+        return ProcessedLogs
 
     def MGMT_ED_SCAN(self, sAddr, xCommissionerSessionId, listChannelMask, xCount, xPeriod, xScanDuration):
         pass
@@ -1695,7 +1826,19 @@ class ARM(IThci):
         pass
 
     def setUdpJoinerPort(self, portNumber):
-        pass
+        """set Joiner UDP Port
+
+        Args:
+            portNumber: Joiner UDP Port number
+
+        Returns:
+            True: successful to set Joiner UDP Port
+            False: fail to set Joiner UDP Port
+        """
+        print '%s call setUdpJoinerPort' % self.port
+        cmd = 'joinerport %d' % portNumber
+        print cmd
+        return self.__sendCommand(cmd)[0] == 'Done'
 
     def commissionerUnregister(self):
         pass

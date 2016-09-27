@@ -57,7 +57,7 @@ class Cert_8_1_02_Commissioning(unittest.TestCase):
     def test(self):
         self.nodes[COMMISSIONER].interface_up()
         self.nodes[COMMISSIONER].thread_start()
-        time.sleep(4)
+        time.sleep(5)
         self.assertEqual(self.nodes[COMMISSIONER].get_state(), 'leader')
         self.nodes[COMMISSIONER].commissioner_start('openthread')
 

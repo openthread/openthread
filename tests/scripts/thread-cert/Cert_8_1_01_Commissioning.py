@@ -57,7 +57,7 @@ class Cert_8_1_01_Commissioning(unittest.TestCase):
     def test(self):
         self.nodes[COMMISSIONER].interface_up()
         self.nodes[COMMISSIONER].thread_start()
-        time.sleep(4)
+        time.sleep(5)
         self.assertEqual(self.nodes[COMMISSIONER].get_state(), 'leader')
         self.nodes[COMMISSIONER].commissioner_start('openthread')
 
@@ -67,7 +67,7 @@ class Cert_8_1_01_Commissioning(unittest.TestCase):
         self.assertEqual(self.nodes[JOINER].get_masterkey(), self.nodes[COMMISSIONER].get_masterkey())
 
         self.nodes[JOINER].thread_start()
-        time.sleep(3)
+        time.sleep(5)
         self.assertEqual(self.nodes[JOINER].get_state(), 'router')
 
 if __name__ == '__main__':

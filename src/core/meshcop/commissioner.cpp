@@ -631,6 +631,8 @@ void Commissioner::ReceiveJoinerFinalize(uint8_t *buf, uint16_t length)
         }
     }
 
+    otDumpCertMeshCoP("[THCI] direction=recv | type=JOIN_FIN.req |", buf + header.GetLength(), length - header.GetLength());
+
     SendJoinFinalizeResponse(header, state);
 
 exit:
@@ -667,6 +669,7 @@ void Commissioner::SendJoinFinalizeResponse(const Coap::Header &aRequestHeader, 
     mSendKek = false;
 
     otLogInfoMeshCoP("sent joiner finalize response\r\n");
+    otLogCertMeshCoP("[THCI] direction=send | type=JOIN_FIN.rsp\r\n");
 }
 
 }  // namespace MeshCoP
