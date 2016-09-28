@@ -183,3 +183,43 @@ a re-attach process as an end-device.
 
 Specifies the self imposed random delay in seconds a REED waits before 
 registering to become an Active Router.
+
+
+### PROP 5632: PROP_MESHCOP_JOINER_ENABLED
+* Type: Read-Write
+* Packed-Encoding: `b`
+
+Enables the Joiner mode of operation.
+
+### PROP 5633: PROP_MESHCOP_JOINER_CREDENTIAL
+* Type: Read-Write
+* Packed-Encoding: `U`
+
+The PSKd or JPAKE "connect code" for authenticating a new Joiner device 
+to the Commissioner.
+
+### PROP 5634: PROP_MESHCOP_JOINER_PROVISIONING_URL
+* Type: Read-Write
+* Packed-Encoding: `U`
+
+The optionally URL for specifying which Commissioning application is best 
+suited to provision this Joiner device.
+
+### PROP 5635: PROP_MESHCOP_COMMISSIONER_ENABLED
+* Type: Read-Write
+* Packed-Encoding: `b`
+
+Specifies the self imposed random delay in seconds a REED waits before 
+registering to become an Active Router.
+
+### PROP 5636: PROP_MESHCOP_COMMISSIONER_JOINER_LIST
+* Type: Read-Write
+* Packed-Encoding: `A(T(DEU))`
+
+The list of Joiners the Commissioner is trying to authorize onto the network.
+
+Data per item is:
+
+* `D`: Joiner PSKd
+* `E`: Joiner IID (optional)
+* `U`: Joiner Provisioning URL (optional)

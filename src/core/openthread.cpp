@@ -1374,14 +1374,19 @@ ThreadError otSendPendingSet(otInstance *, const otOperationalDataset *aDataset,
 
 #if OPENTHREAD_ENABLE_COMMISSIONER
 #include <commissioning/commissioner.h>
-ThreadError otCommissionerStart(otInstance *, const char *aPSKd, const char *aProvisioningUrl)
+ThreadError otCommissionerStart(otInstance *)
 {
-    return sThreadNetif->GetCommissioner().Start(aPSKd, aProvisioningUrl);
+    return sThreadNetif->GetCommissioner().Start();
 }
 
 ThreadError otCommissionerStop(otInstance *)
 {
     return sThreadNetif->GetCommissioner().Stop();
+}
+
+ThreadError otCommissionerAddJoiner(otInstance *, const char *aPSKd, const char *aProvisioningUrl)
+{
+    return sThreadNetif->GetCommissioner().AddJoiner(aPSKd, aProvisioningUrl);
 }
 
 ThreadError otCommissionerEnergyScan(otInstance *, uint32_t aChannelMask, uint8_t aCount, uint16_t aPeriod,
@@ -1415,14 +1420,24 @@ ThreadError otSendMgmtCommissionerSet(otInstance *, const otCommissioningDataset
 #endif  // OPENTHREAD_ENABLE_COMMISSIONER
 
 #if OPENTHREAD_ENABLE_JOINER
-ThreadError otJoinerStart(otInstance *, const char *aPSKd, const char *aProvisioningUrl)
+ThreadError otJoinerStart(otInstance *)
 {
-    return sThreadNetif->GetJoiner().Start(aPSKd, aProvisioningUrl);
+    return sThreadNetif->GetJoiner().Start();
 }
 
 ThreadError otJoinerStop(otInstance *)
 {
     return sThreadNetif->GetJoiner().Stop();
+}
+
+ThreadError otJoinerSetCredential(otInstance *, const char *aPSKd)
+{
+    return sThreadNetif->GetJoiner().SetCredential(aPSKd);
+}
+
+ThreadError otJoinerSetProvisioningUrl(otInstance *, const char *aProvisioningUrl)
+{
+    return sThreadNetif->GetJoiner().SetProvisioningUrl(aProvisioningUrl);
 }
 #endif  // OPENTHREAD_ENABLE_JOINER
 

@@ -64,7 +64,7 @@ Joiner::Joiner(ThreadNetif &aNetif):
     mNetif.GetCoapServer().AddResource(mJoinerEntrust);
 }
 
-ThreadError Joiner::Start(const char *aPSKd, const char *aProvisioningUrl)
+ThreadError Joiner::Start(void)
 {
     ThreadError error;
     Mac::ExtAddress extAddress;
@@ -74,9 +74,6 @@ ThreadError Joiner::Start(const char *aPSKd, const char *aProvisioningUrl)
     mNetif.GetMac().SetExtAddress(extAddress);
     mNetif.GetMle().UpdateLinkLocalAddress();
 
-    SuccessOrExit(error = mNetif.GetDtls().SetPsk(reinterpret_cast<const uint8_t *>(aPSKd),
-                                                  static_cast<uint8_t>(strlen(aPSKd))));
-    SuccessOrExit(error = mNetif.GetDtls().mProvisioningUrl.SetProvisioningUrl(aProvisioningUrl));
     SuccessOrExit(error = mNetif.GetMle().Discover(0, 0, mNetif.GetMac().GetPanId(), HandleDiscoverResult, this));
 
 exit:
@@ -89,6 +86,27 @@ ThreadError Joiner::Stop(void)
     mSocket.Close();
     mNetif.GetDtls().Stop();
     return kThreadError_None;
+}
+
+ThreadError Joiner::SetCredential(const char *aPSKd)
+{
+    ThreadError error;
+
+    SuccessOrExit(error = mNetif.GetDtls().SetPsk(reinterpret_cast<const uint8_t *>(aPSKd),
+                                                  static_cast<uint8_t>(strlen(aPSKd))));
+
+exit:
+    return error;
+}
+
+ThreadError Joiner::SetProvisioningUrl(const char *aProvisioningUrl)
+{
+    ThreadError error;
+
+    SuccessOrExit(error = mNetif.GetDtls().mProvisioningUrl.SetProvisioningUrl(aProvisioningUrl));
+
+exit:
+    return error;
 }
 
 void Joiner::HandleDiscoverResult(otActiveScanResult *aResult, void *aContext)
