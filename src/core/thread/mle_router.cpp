@@ -168,6 +168,16 @@ ThreadError MleRouter::ReleaseRouterId(uint8_t aRouterId)
     mRouters[aRouterId].mReclaimDelay = true;
     mRouters[aRouterId].mState = Neighbor::kStateInvalid;
     mRouters[aRouterId].mNextHop = kInvalidRouterId;
+
+    for (uint8_t i = 0; i <= kMaxRouterId; i++)
+    {
+        if (mRouters[i].mNextHop == aRouterId)
+        {
+            mRouters[i].mNextHop = kInvalidRouterId;
+            mRouters[i].mCost = 0;
+        }
+    }
+
     mRouterIdSequence++;
     mRouterIdSequenceLastUpdated = Timer::GetNow();
     mAddressResolver.Remove(aRouterId);
