@@ -576,7 +576,6 @@ private:
     void StartCsmaBackoff(void);
     ThreadError Scan(ScanType aType, uint32_t aScanChannels, uint16_t aScanDuration, void *aContext);
 
-    Tasklet mBeginTransmit;
     Timer mMacTimer;
     Timer mBackoffTimer;
     Timer mReceiveTimer;
