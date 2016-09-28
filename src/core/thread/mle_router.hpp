@@ -176,6 +176,20 @@ public:
     void SetLeaderPartitionId(uint32_t aPartitionId);
 
     /**
+     * This method sets the preferred Router Id. Upon becoming a router/leader the node
+     * attempts to use this Router Id. If the preferred Router Id is not set or if it
+     * can not be used, a randomly generated router Id is picked.
+     * This property can be set when he device role is detached or disabled.
+     *
+     * @param[in]  aRouterId             The preferred Router Id.
+     *
+     * @retval kThreadError_None         Successfully set the preferred Router Id.
+     * @retval kThreadError_InvalidState Could not set (role is other than detached and disabled)
+     *
+     */
+    ThreadError SetPreferredRouterId(uint8_t aRouterId);
+
+    /**
      * This method returns the next hop towards an RLOC16 destination.
      *
      * @param[in]  aDestination  The RLOC16 of the destination.

@@ -933,6 +933,23 @@ uint32_t otGetPollPeriod(otInstance *aInstance);
 void otSetPollPeriod(otInstance *aInstance, uint32_t aPollPeriod);
 
 /**
+ * Set the preferred Router Id.
+ *
+ * Upon becoming a router/leader the node attempts to use this Router Id. If the
+ * preferred Router Id is not set or if it can not be used, a randomly generated
+ * router id is picked. This property can be set only when the device role is
+ * either detached or disabled.
+ *
+ * @param[in]  aInstance    A pointer to an OpenThread instance.
+ * @param[in]  aRouterId    The preferred Router Id.
+ *
+ * @retval kThreadError_None         Successfully set the preferred Router Id.
+ * @retval kThreadError_InvalidState Could not set (role is not detached or disabled)
+ *
+ */
+ThreadError otSetPreferredRouterId(otInstance *aInstance, uint8_t aRouterId);
+
+/**
  * @}
  */
 

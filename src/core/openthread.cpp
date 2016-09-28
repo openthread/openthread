@@ -938,6 +938,11 @@ void otSetPollPeriod(otInstance *, uint32_t aPollPeriod)
     sThreadNetif->GetMeshForwarder().SetAssignPollPeriod(aPollPeriod);
 }
 
+ThreadError otSetPreferredRouterId(otInstance *, uint8_t aRouterId)
+{
+    return sThreadNetif->GetMle().SetPreferredRouterId(aRouterId);
+}
+
 #ifdef OPENTHREAD_MULTIPLE_INSTANCE
 
 otInstance *otInstanceInit(void *aInstanceBuffer, uint64_t *aInstanceBufferSize)
