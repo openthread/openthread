@@ -439,7 +439,7 @@ ThreadError otPlatRadioTransmit(otInstance *aInstance)
     ThreadError error = kThreadError_Busy;
     (void)aInstance;
 
-    if ((sState == kStateTransmit && !sAckWait) || sState == kStateReceive)
+    if (sState == kStateReceive)
     {
         error = kThreadError_None;
         sState = kStateTransmit;
