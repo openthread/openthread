@@ -245,7 +245,8 @@ ThreadError MleRouter::BecomeLeader(void)
 
     routerId = IsRouterIdValid(mPreviousRouterId) ? AllocateRouterId(mPreviousRouterId) : AllocateRouterId();
     VerifyOrExit(IsRouterIdValid(routerId), error = kThreadError_NoBufs);
-    mRouterId = static_cast<uint8_t>(routerId);
+
+    mRouterId = routerId;
     mPreviousRouterId = mRouterId;
 
     memcpy(&mRouters[mRouterId].mMacAddr, mMac.GetExtAddress(), sizeof(mRouters[mRouterId].mMacAddr));
@@ -2719,6 +2720,21 @@ uint32_t MleRouter::GetLeaderPartitionId(void) const
 void MleRouter::SetLeaderPartitionId(uint32_t aPartitionId)
 {
     mFixedLeaderPartitionId = aPartitionId;
+}
+
+ThreadError MleRouter::SetPreferredRouterId(uint8_t aRouterId)
+{
+    ThreadError error = kThreadError_None;
+
+    VerifyOrExit(
+        (mDeviceState == kDeviceStateDetached) || (mDeviceState == kDeviceStateDisabled),
+        error = kThreadError_InvalidState
+    );
+
+    mPreviousRouterId = aRouterId;
+
+exit:
+    return error;
 }
 
 void MleRouter::HandleMacDataRequest(const Child &aChild)
