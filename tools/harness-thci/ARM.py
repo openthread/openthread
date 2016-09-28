@@ -468,6 +468,23 @@ class ARM(IThci):
         self.__logThreadRunning = False
         return logs
 
+    def __setChannelMask(self, channelsArray):
+        """convert channelsArray to bitmask format
+
+        Args:
+            channelsArray: channel array (i.e. [21, 22])
+
+        Returns:
+            bitmask format corresponding to a given channel array
+        """
+        maskSet = 0
+
+        for eachChannel in channelsArray:
+            mask = 1 << eachChannel
+            maskSet = (maskSet | mask)
+
+        return maskSet
+
     def closeConnection(self):
         """close current serial port connection"""
         print '%s call closeConnection' % self.port
@@ -797,7 +814,6 @@ class ARM(IThci):
                 print 'join as router'
                 role = 'rsdn'
                 self.__setRouterSelectionJitter(1)
-                time.sleep(5) #wait for REED upgrade to Router
                 if self.AutoDUTEnable is False:
                     # set ROUTER_UPGRADE_THRESHOLD
                     self.__setRouterUpgradeThreshold(33)
@@ -1038,7 +1054,7 @@ class ARM(IThci):
             self.setNetworkKey(self.networkKey)
             self.isWhiteListEnabled = False
             self.isBlackListEnabled = False
-            self.firmware = '2016 7 27 13:36:46'
+            self.firmware = 'Sep 9 2016 14:57:36'
         except Exception, e:
             ModuleHelper.WriteIntoDebugLogger("setDefaultValue() Error: " + str(e))
 
@@ -1625,10 +1641,12 @@ class ARM(IThci):
 
     def enableAutoDUTObjectFlag(self):
         """set AutoDUTenable flag"""
+        print '%s call enableAutoDUTObjectFlag' % self.port
         self.AutoDUTEnable = True
 
     def getChildTimeoutValue(self):
         """get child timeout"""
+        print '%s call getChildTimeoutValue' % self.port
         return self.__sendCommand('childtimeout')[0]
 
     def diagnosticGet(self, strDestinationAddr, listTLV_ids=[]):
@@ -1639,7 +1657,7 @@ class ARM(IThci):
             return
 
         cmd = 'networkdiagnostic get %s %s' % (strDestinationAddr, ' '.join([str(tlv) for tlv in listTLV_ids]))
-        print(cmd)
+        print cmd
 
         return self.__sendCommand(cmd)
 
@@ -1651,7 +1669,7 @@ class ARM(IThci):
             return
 
         cmd = 'networkdiagnostic reset %s %s' % (strDestinationAddr, ' '.join([str(tlv) for tlv in listTLV_ids]))
-        print(cmd)
+        print cmd
 
         return self.__sendCommand(cmd)
 
@@ -1783,7 +1801,29 @@ class ARM(IThci):
         return ProcessedLogs
 
     def MGMT_ED_SCAN(self, sAddr, xCommissionerSessionId, listChannelMask, xCount, xPeriod, xScanDuration):
-        pass
+        """send MGMT_ED_SCAN message to a given destinaition.
+
+        Args:
+            sAddr: IPv6 destination address for this message
+            xCommissionerSessionId: commissioner session id
+            listChannelMask: a channel array to indicate which channels to be scaned
+            xCount: number of IEEE 802.15.4 ED Scans (milliseconds)
+            xPeriod: Period between successive IEEE802.15.4 ED Scans (milliseconds)
+            xScanDuration: IEEE 802.15.4 ScanDuration to use when performing an IEEE 802.15.4 ED Scan (milliseconds)
+
+        Returns:
+            True: successful to send MGMT_ED_SCAN message.
+            False: fail to send MGMT_ED_SCAN message
+        """
+        print '%s call MGMT_ED_SCAN' % self.port
+        channelMask = ''
+        channelMask = '0x' + self.__convertLongToString(self.__setChannelMask(listChannelMask))
+        try:
+            cmd = 'commissioner energy %s %s %s %s %s' % (channelMask, xCount, xPeriod, xScanDuration, sAddr)
+            print cmd
+            return self.__sendCommand(cmd) == 'Done'
+        except Exception, e:
+            modulehelper.writeintodebuglogger("MGMT_ED_SCAN() error: " + str(e))
 
     def MGMT_PANID_QUERY(self, sAddr, xCommissionerSessionId, listChannelMask, xPanId):
         pass
@@ -1802,8 +1842,8 @@ class ARM(IThci):
     def MGMT_PENDING_GET(self, Addr='', TLVs=[]):
         pass
 
-    def MGMT_PENDING_SET(self, sAddr='', xCommissionerId=None, listPendingTimestamp=None, listActiveTimestamp=None, xDelayTimer=None,
-                         xChannel=None, xPanId=None, xMasterKey=None):
+    def MGMT_PENDING_SET(self, sAddr='', xCommissionerSessionId=None, listPendingTimestamp=None, listActiveTimestamp=None, xDelayTimer=None,
+                         xChannel=None, xPanId=None, xMasterKey=None, sMeshLocalPrefix=None, sNetworkName=None):
         pass
 
     def MGMT_COMM_GET(self, Addr='ff02::1', TLVs=[]):
