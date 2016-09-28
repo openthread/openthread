@@ -728,6 +728,16 @@ exit:
     return error;
 }
 
+ThreadError otGetNextNeighborInfo(otInstance *, otNeighborInfoIterator *aIterator, otNeighborInfo *aInfo)
+{
+    ThreadError error = kThreadError_NotImplemented;
+
+    (void)aIterator;
+    (void)aInfo;
+
+    return error;
+}
+
 otDeviceRole otGetDeviceRole(otInstance *)
 {
     otDeviceRole rval = kDeviceRoleDisabled;
