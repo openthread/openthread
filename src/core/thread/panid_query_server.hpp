@@ -92,6 +92,8 @@ private:
     Timer mTimer;
 
     Coap::Server &mCoapServer;
+    uint8_t mCoapToken[2];
+    uint16_t mCoapMessageId;
     ThreadNetif &mNetif;
 };
 
