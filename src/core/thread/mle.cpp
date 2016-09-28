@@ -1685,10 +1685,10 @@ ThreadError Mle::HandleDataResponse(const Message &aMessage, const Ip6::MessageI
     NetworkDataTlv networkData;
     ActiveTimestampTlv activeTimestamp;
     PendingTimestampTlv pendingTimestamp;
-    Tlv tlv;
-    uint16_t offset;
-    int8_t diff = 0;
+    uint16_t activeDatasetOffset = 0;
+    uint16_t pendingDatasetOffset = 0;
     bool dataRequest = false;
+    Tlv tlv;
 
     otLogInfoMle("Received Data Response\n");
 
@@ -1708,14 +1708,9 @@ ThreadError Mle::HandleDataResponse(const Message &aMessage, const Ip6::MessageI
             ExitNow(error = kThreadError_Drop);
         }
     }
-    else if (mRetrieveNewNetworkData)
+    else if (!mRetrieveNewNetworkData)
     {
-        mRetrieveNewNetworkData = false;
-    }
-    else
-    {
-        diff = static_cast<int8_t>(leaderData.GetDataVersion() - mNetworkData.GetVersion());
-        VerifyOrExit(diff > 0, ;);
+        VerifyOrExit(static_cast<int8_t>(leaderData.GetDataVersion() - mNetworkData.GetVersion()) > 0, ;);
     }
 
     // Network Data
@@ -1725,35 +1720,43 @@ ThreadError Mle::HandleDataResponse(const Message &aMessage, const Ip6::MessageI
     // Active Timestamp
     if (Tlv::GetTlv(aMessage, Tlv::kActiveTimestamp, sizeof(activeTimestamp), activeTimestamp) == kThreadError_None)
     {
-        VerifyOrExit(activeTimestamp.IsValid(), error = kThreadError_Parse);
+        const MeshCoP::Timestamp *timestamp;
 
-        // Active Dataset
-        if (Tlv::GetOffset(aMessage, Tlv::kActiveDataset, offset) == kThreadError_None)
+        VerifyOrExit(activeTimestamp.IsValid(), error = kThreadError_Parse);
+        timestamp = mNetif.GetActiveDataset().GetNetwork().GetTimestamp();
+
+        // if received timestamp does not match the local value and message does not contain the dataset,
+        // send MLE Data Request
+        if ((timestamp == NULL || timestamp->Compare(activeTimestamp) != 0) &&
+            (Tlv::GetOffset(aMessage, Tlv::kActiveDataset, activeDatasetOffset) != kThreadError_None))
         {
-            aMessage.Read(offset, sizeof(tlv), &tlv);
-            mNetif.GetActiveDataset().Set(activeTimestamp, aMessage, offset + sizeof(tlv), tlv.GetLength());
+            ExitNow(dataRequest = true);
         }
-        else
-        {
-            dataRequest = true;
-        }
+    }
+    else
+    {
+        activeTimestamp.SetLength(0);
     }
 
     // Pending Timestamp
     if (Tlv::GetTlv(aMessage, Tlv::kPendingTimestamp, sizeof(pendingTimestamp), pendingTimestamp) == kThreadError_None)
     {
-        VerifyOrExit(pendingTimestamp.IsValid(), error = kThreadError_Parse);
+        const MeshCoP::Timestamp *timestamp;
 
-        // Pending Dataset
-        if (Tlv::GetOffset(aMessage, Tlv::kPendingDataset, offset) == kThreadError_None)
+        VerifyOrExit(pendingTimestamp.IsValid(), error = kThreadError_Parse);
+        timestamp = mNetif.GetPendingDataset().GetNetwork().GetTimestamp();
+
+        // if received timestamp does not match the local value and message does not contain the dataset,
+        // send MLE Data Request
+        if ((timestamp == NULL || timestamp->Compare(pendingTimestamp) != 0) &&
+            (Tlv::GetOffset(aMessage, Tlv::kPendingDataset, pendingDatasetOffset) != kThreadError_None))
         {
-            aMessage.Read(offset, sizeof(tlv), &tlv);
-            mNetif.GetPendingDataset().Set(pendingTimestamp, aMessage, offset + sizeof(tlv), tlv.GetLength());
+            ExitNow(dataRequest = true);
         }
-        else
-        {
-            dataRequest = true;
-        }
+    }
+    else
+    {
+        pendingTimestamp.SetLength(0);
     }
 
     // Network Data
@@ -1761,15 +1764,38 @@ ThreadError Mle::HandleDataResponse(const Message &aMessage, const Ip6::MessageI
                                 (mDeviceMode & ModeTlv::kModeFullNetworkData) == 0,
                                 networkData.GetNetworkData(), networkData.GetLength());
 
+    // Active Dataset
+    if (activeTimestamp.GetLength() > 0)
+    {
+        aMessage.Read(activeDatasetOffset, sizeof(tlv), &tlv);
+        mNetif.GetActiveDataset().Set(activeTimestamp, aMessage, activeDatasetOffset + sizeof(tlv), tlv.GetLength());
+    }
+    else
+    {
+        mNetif.GetActiveDataset().GetNetwork().Clear();
+    }
+
+    // Pending Dataset
+    if (pendingTimestamp.GetLength() > 0)
+    {
+        aMessage.Read(pendingDatasetOffset, sizeof(tlv), &tlv);
+        mNetif.GetPendingDataset().Set(pendingTimestamp, aMessage, pendingDatasetOffset + sizeof(tlv), tlv.GetLength());
+    }
+    else
+    {
+        mNetif.GetPendingDataset().GetNetwork().Clear();
+    }
+
+    mRetrieveNewNetworkData = false;
+
 exit:
     (void)aMessageInfo;
 
-    if (diff > 0 && dataRequest)
+    if (dataRequest)
     {
-        uint8_t tlvs[] = {Tlv::kNetworkData};
+        static const uint8_t tlvs[] = {Tlv::kNetworkData};
 
         SendDataRequest(aMessageInfo.GetPeerAddr(), tlvs, sizeof(tlvs));
-        mRetrieveNewNetworkData = true;
     }
 
     return error;
