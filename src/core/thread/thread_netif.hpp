@@ -48,6 +48,7 @@
 #include <net/ip6_filter.hpp>
 #include <net/netif.hpp>
 #include <thread/address_resolver.hpp>
+#include <thread/announce_begin_server.hpp>
 #include <thread/energy_scan_server.hpp>
 #include <thread/network_diag.hpp>
 #include <thread/key_manager.hpp>
@@ -246,6 +247,8 @@ public:
 
     MeshCoP::JoinerRouter &GetJoinerRouter(void) { return mJoinerRouter; }
 
+    AnnounceBeginServer &GetAnnounceBeginServer(void) { return mAnnounceBegin; }
+
 #if OPENTHREAD_ENABLE_COMMISSIONER
     MeshCoP::Commissioner &GetCommissioner(void) { return mCommissioner; }
 #endif  // OPENTHREAD_ENABLE_COMMISSIONER
@@ -288,6 +291,7 @@ private:
 
     MeshCoP::JoinerRouter mJoinerRouter;
     MeshCoP::Leader mLeader;
+    AnnounceBeginServer mAnnounceBegin;
     PanIdQueryServer mPanIdQuery;
     EnergyScanServer mEnergyScan;
 };

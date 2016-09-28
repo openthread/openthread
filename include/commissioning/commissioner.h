@@ -105,6 +105,22 @@ ThreadError otCommissionerRemoveJoiner(otInstance *aIntsance, const otExtAddress
 ThreadError otCommissionerSetProvisioningUrl(otInstance *aInstance, const char *aProvisioningUrl);
 
 /**
+ * This function sends an Announce Begin message.
+ *
+ * @param[in]  aInstance      A pointer to an OpenThread instance.
+ * @param[in]  aChannelMask   The channel mask value.
+ * @param[in]  aCount         The number of energy measurements per channel.
+ * @param[in]  aPeriod        The time between energy measurements (milliseconds).
+ * @param[in]  aAddress       A pointer to the IPv6 destination.
+ *
+ * @retval kThreadError_None    Successfully enqueued the Announce Begin message.
+ * @retval kThreadError_NoBufs  Insufficient buffers to generate an Announce Begin message.
+ *
+ */
+ThreadError otCommissionerAnnounceBegin(otInstance *aInstance, uint32_t aChannelMask, uint8_t aCount, uint16_t aPeriod,
+                                        const otIp6Address *aAddress);
+
+/**
  * This function pointer is called when the Commissioner receives an Energy Report.
  *
  * @param[in]  aChannelMask       The channel mask value.

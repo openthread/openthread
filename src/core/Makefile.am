@@ -64,6 +64,7 @@ libopenthread_a_SOURCES             = \
     net/netif.cpp                     \
     net/udp6.cpp                      \
     thread/address_resolver.cpp       \
+    thread/announce_begin_server.cpp  \
     thread/energy_scan_server.cpp     \
     thread/key_manager.cpp            \
     thread/link_quality.cpp           \
@@ -88,6 +89,7 @@ libopenthread_a_SOURCES             = \
 
 if OPENTHREAD_ENABLE_COMMISSIONER
 libopenthread_a_SOURCES            += \
+    meshcop/announce_begin_client.cpp \
     meshcop/commissioner.cpp          \
     meshcop/energy_scan_client.cpp    \
     meshcop/panid_query_client.cpp    \
@@ -129,6 +131,7 @@ noinst_HEADERS                      = \
     mac/mac_frame.hpp                 \
     mac/mac_whitelist.hpp             \
     mac/mac_blacklist.hpp             \
+    meshcop/announce_begin_client.hpp \
     meshcop/commissioner.hpp          \
     meshcop/dtls.hpp                  \
     meshcop/energy_scan_client.hpp    \
@@ -148,6 +151,7 @@ noinst_HEADERS                      = \
     net/udp6.hpp                      \
     net/tcp.hpp                       \
     thread/address_resolver.hpp       \
+    thread/announce_begin_server.hpp  \
     thread/energy_scan_server.hpp     \
     thread/key_manager.hpp            \
     thread/link_quality.hpp           \
