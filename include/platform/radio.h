@@ -96,13 +96,14 @@ typedef enum otRadioCaps
  */
 typedef struct RadioPacket
 {
-    uint8_t *mPsdu;          ///< The PSDU.
-    uint8_t mLength;         ///< Length of the PSDU.
-    uint8_t mChannel;        ///< Channel used to transmit/receive the frame.
-    int8_t  mPower;          ///< Transmit/receive power in dBm.
-    uint8_t mLqi;            ///< Link Quality Indicator for received frames.
-    bool    mSecurityValid;  ///< Security Enabled flag is set and frame passes security checks.
-    uint16_t mFcs;           ///< Final checksum (optional)
+    uint8_t  *mPsdu;           ///< The PSDU.
+    uint8_t  mLength;          ///< Length of the PSDU.
+    uint8_t  mChannel;         ///< Channel used to transmit/receive the frame.
+    int8_t   mPower;           ///< Transmit/receive power in dBm.
+    uint8_t  mLqi;             ///< Link Quality Indicator for received frames.
+    bool     mSecurityValid: 1; ///< Security Enabled flag is set and frame passes security checks.
+    bool     mDidTX: 1;        ///< Set to true if this packet sent from the radio. Ignored by radio driver.
+    uint16_t mFcs;             ///< Final checksum (optional)
 } RadioPacket;
 
 /**
