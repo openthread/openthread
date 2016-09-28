@@ -1543,7 +1543,7 @@ void otPlatformReset(otInstance *aInstance);
  *
  * @sa otSetRouterDowngradeThreshold
  */
-uint8_t otGetRouterDowngradeThreshold(void);
+uint8_t otGetRouterDowngradeThreshold(otInstance *aInstance);
 
 /**
  * Set the ROUTER_DOWNGRADE_THRESHOLD parameter used in the Leader role.
@@ -1552,7 +1552,7 @@ uint8_t otGetRouterDowngradeThreshold(void);
  *
  * @sa otGetRouterDowngradeThreshold
  */
-void otSetRouterDowngradeThreshold(uint8_t aThreshold);
+void otSetRouterDowngradeThreshold(otInstance *aInstance, uint8_t aThreshold);
 
 /**
  * Get the ROUTER_SELECTION_JITTER parameter used in the REED/Router role.
@@ -1561,7 +1561,7 @@ void otSetRouterDowngradeThreshold(uint8_t aThreshold);
  *
  * @sa otSetRouterSelectionJitter
  */
-uint8_t otGetRouterSelectionJitter(void);
+uint8_t otGetRouterSelectionJitter(otInstance *aInstance);
 
 /**
  * Set the ROUTER_SELECTION_JITTER parameter used in the REED/Router role.
@@ -1570,7 +1570,7 @@ uint8_t otGetRouterSelectionJitter(void);
  *
  * @sa otGetRouterSelectionJitter
  */
-void otSetRouterSelectionJitter(uint8_t aRouterJitter);
+void otSetRouterSelectionJitter(otInstance *aInstance, uint8_t aRouterJitter);
 
 /**
  * @}

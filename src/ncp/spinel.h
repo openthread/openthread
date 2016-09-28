@@ -508,6 +508,18 @@ typedef enum
     SPINEL_PROP_THREAD_ROUTER_ROLE_ENABLED
                                        = SPINEL_PROP_THREAD_EXT__BEGIN + 7,
 
+    /// Thread Router Downgrade Threshold
+    /** Format: `C`
+     */
+    SPINEL_PROP_THREAD_ROUTER_DOWNGRADE_THRESHOLD
+                                       = SPINEL_PROP_THREAD_EXT__BEGIN + 8,
+
+    /// Thread Router Selection Jitter
+    /** Format: `C`
+     */
+    SPINEL_PROP_THREAD_ROUTER_SELECTION_JITTER
+                                        = SPINEL_PROP_THREAD_EXT__BEGIN + 9,
+
     SPINEL_PROP_THREAD_EXT__END        = 0x1600,
 
     SPINEL_PROP_IPV6__BEGIN          = 0x60,

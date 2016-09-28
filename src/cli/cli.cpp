@@ -1743,12 +1743,12 @@ void Interpreter::ProcessRouterDowngradeThreshold(int argc, char *argv[])
 
     if (argc == 0)
     {
-        sServer->OutputFormat("%d\r\n", otGetRouterDowngradeThreshold());
+        sServer->OutputFormat("%d\r\n", otGetRouterDowngradeThreshold(mInstance));
     }
     else
     {
         SuccessOrExit(error = ParseLong(argv[0], value));
-        otSetRouterDowngradeThreshold(static_cast<uint8_t>(value));
+        otSetRouterDowngradeThreshold(mInstance, static_cast<uint8_t>(value));
     }
 
 exit:
@@ -1794,12 +1794,12 @@ void Interpreter::ProcessRouterSelectionJitter(int argc, char *argv[])
 
     if (argc == 0)
     {
-        sServer->OutputFormat("%d\r\n", otGetRouterSelectionJitter());
+        sServer->OutputFormat("%d\r\n", otGetRouterSelectionJitter(mInstance));
     }
     else
     {
         SuccessOrExit(error = ParseLong(argv[0], value));
-        otSetRouterSelectionJitter(static_cast<uint8_t>(value));
+        otSetRouterSelectionJitter(mInstance, static_cast<uint8_t>(value));
     }
 
 exit:

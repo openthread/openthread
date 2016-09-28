@@ -684,22 +684,22 @@ void otPlatformReset(otInstance *aInstance)
     otPlatReset(aInstance);
 }
 
-uint8_t otGetRouterDowngradeThreshold(void)
+uint8_t otGetRouterDowngradeThreshold(otInstance *)
 {
     return sThreadNetif->GetMle().GetRouterDowngradeThreshold();
 }
 
-void otSetRouterDowngradeThreshold(uint8_t aThreshold)
+void otSetRouterDowngradeThreshold(otInstance *, uint8_t aThreshold)
 {
     sThreadNetif->GetMle().SetRouterDowngradeThreshold(aThreshold);
 }
 
-uint8_t otGetRouterSelectionJitter(void)
+uint8_t otGetRouterSelectionJitter(otInstance *)
 {
     return sThreadNetif->GetMle().GetRouterSelectionJitter();
 }
 
-void otSetRouterSelectionJitter(uint8_t aRouterJitter)
+void otSetRouterSelectionJitter(otInstance *, uint8_t aRouterJitter)
 {
     sThreadNetif->GetMle().SetRouterSelectionJitter(aRouterJitter);
 }
