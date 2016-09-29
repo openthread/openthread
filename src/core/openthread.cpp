@@ -730,11 +730,13 @@ exit:
 
 ThreadError otGetNextNeighborInfo(otInstance *, otNeighborInfoIterator *aIterator, otNeighborInfo *aInfo)
 {
-    ThreadError error = kThreadError_NotImplemented;
+    ThreadError error = kThreadError_None;
 
-    (void)aIterator;
-    (void)aInfo;
+    VerifyOrExit((aInfo != NULL) && (aIterator != NULL), error = kThreadError_InvalidArgs);
 
+    error = sThreadNetif->GetMle().GetNextNeighborInfo(*aIterator, *aInfo);
+
+exit:
     return error;
 }
 
