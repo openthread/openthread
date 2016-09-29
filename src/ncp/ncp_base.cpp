@@ -41,6 +41,8 @@
 #include <stdarg.h>
 #include <platform/radio.h>
 #include <platform/misc.h>
+#include <commissioning/commissioner.h>
+#include <commissioning/joiner.h>
 
 namespace Thread
 {
@@ -141,6 +143,17 @@ const NcpBase::GetPropertyHandlerEntry NcpBase::mGetPropertyHandlerTable[] =
     { SPINEL_PROP_NET_REQUIRE_JOIN_EXISTING, &NcpBase::GetPropertyHandler_NET_REQUIRE_JOIN_EXISTING },
     { SPINEL_PROP_THREAD_ROUTER_SELECTION_JITTER, &NcpBase::GetPropertyHandler_THREAD_ROUTER_SELECTION_JITTER },
 
+#if OPENTHREAD_ENABLE_JOINER
+    { SPINEL_PROP_MESHCOP_JOINER_ENABLED, &NcpBase::GetPropertyHandler_MESHCOP_JOINER_ENABLED },
+    { SPINEL_PROP_MESHCOP_JOINER_CREDENTIAL, &NcpBase::GetPropertyHandler_MESHCOP_JOINER_CREDENTIAL },
+    { SPINEL_PROP_MESHCOP_JOINER_URL, &NcpBase::GetPropertyHandler_MESHCOP_JOINER_URL },
+#endif
+
+#if OPENTHREAD_ENABLE_COMMISSIONER
+    { SPINEL_PROP_MESHCOP_COMMISSIONER_ENABLED, &NcpBase::GetPropertyHandler_MESHCOP_COMMISSIONER_ENABLED },
+    { SPINEL_PROP_MESHCOP_COMMISSIONER_JOINER_LIST, &NcpBase::GetPropertyHandler_MESHCOP_COMMISSIONER_JOINER_LIST },
+#endif
+
     { SPINEL_PROP_IPV6_ML_PREFIX, &NcpBase::GetPropertyHandler_IPV6_ML_PREFIX },
     { SPINEL_PROP_IPV6_ML_ADDR, &NcpBase::GetPropertyHandler_IPV6_ML_ADDR },
     { SPINEL_PROP_IPV6_LL_ADDR, &NcpBase::GetPropertyHandler_IPV6_LL_ADDR },
@@ -224,6 +237,16 @@ const NcpBase::SetPropertyHandlerEntry NcpBase::mSetPropertyHandlerTable[] =
     { SPINEL_PROP_IPV6_ICMP_PING_OFFLOAD, &NcpBase::SetPropertyHandler_IPV6_ICMP_PING_OFFLOAD },
     { SPINEL_PROP_THREAD_RLOC16_DEBUG_PASSTHRU, &NcpBase::SetPropertyHandler_THREAD_RLOC16_DEBUG_PASSTHRU },
 
+#if OPENTHREAD_ENABLE_JOINER
+    { SPINEL_PROP_MESHCOP_JOINER_ENABLED, &NcpBase::SetPropertyHandler_MESHCOP_JOINER_ENABLED },
+    { SPINEL_PROP_MESHCOP_JOINER_CREDENTIAL, &NcpBase::SetPropertyHandler_MESHCOP_JOINER_CREDENTIAL },
+    { SPINEL_PROP_MESHCOP_JOINER_URL, &NcpBase::SetPropertyHandler_MESHCOP_JOINER_URL },
+#endif
+
+#if OPENTHREAD_ENABLE_COMMISSIONER
+    { SPINEL_PROP_MESHCOP_COMMISSIONER_ENABLED, &NcpBase::SetPropertyHandler_MESHCOP_COMMISSIONER_ENABLED },
+#endif
+
     { SPINEL_PROP_MAC_WHITELIST, &NcpBase::SetPropertyHandler_MAC_WHITELIST },
     { SPINEL_PROP_MAC_WHITELIST_ENABLED, &NcpBase::SetPropertyHandler_MAC_WHITELIST_ENABLED },
     { SPINEL_PROP_THREAD_MODE, &NcpBase::SetPropertyHandler_THREAD_MODE },
@@ -249,6 +272,11 @@ const NcpBase::InsertPropertyHandlerEntry NcpBase::mInsertPropertyHandlerTable[]
     { SPINEL_PROP_CNTR_RESET, &NcpBase::SetPropertyHandler_CNTR_RESET },
 
     { SPINEL_PROP_MAC_WHITELIST, &NcpBase::InsertPropertyHandler_MAC_WHITELIST },
+
+#if OPENTHREAD_ENABLE_COMMISSIONER
+    //{ SPINEL_PROP_MESHCOP_COMMISSIONER_JOINER_LIST, &NcpBase::InsertPropertyHandler_MESHCOP_COMMISSIONER_JOINER_LIST },
+#endif
+
 };
 
 const NcpBase::RemovePropertyHandlerEntry NcpBase::mRemovePropertyHandlerTable[] =
@@ -2627,6 +2655,51 @@ ThreadError NcpBase::GetPropertyHandler_THREAD_NETWORK_ID_TIMEOUT(uint8_t header
            );
 }
 
+#if OPENTHREAD_ENABLE_JOINER
+ThreadError NcpBase::GetPropertyHandler_MESHCOP_JOINER_ENABLED(uint8_t header, spinel_prop_key_t key)
+{
+    // TODO!
+    (void)key;
+
+    return SendLastStatus(header, SPINEL_STATUS_UNIMPLEMENTED);
+}
+
+ThreadError NcpBase::GetPropertyHandler_MESHCOP_JOINER_CREDENTIAL(uint8_t header, spinel_prop_key_t key)
+{
+    // TODO!
+    (void)key;
+
+    return SendLastStatus(header, SPINEL_STATUS_UNIMPLEMENTED);
+}
+
+ThreadError NcpBase::GetPropertyHandler_MESHCOP_JOINER_URL(uint8_t header, spinel_prop_key_t key)
+{
+    // TODO!
+    (void)key;
+
+    return SendLastStatus(header, SPINEL_STATUS_UNIMPLEMENTED);
+}
+#endif
+
+#if OPENTHREAD_ENABLE_COMMISSIONER
+ThreadError NcpBase::GetPropertyHandler_MESHCOP_COMMISSIONER_ENABLED(uint8_t header, spinel_prop_key_t key)
+{
+    // TODO!
+    (void)key;
+
+    return SendLastStatus(header, SPINEL_STATUS_UNIMPLEMENTED);
+}
+
+ThreadError NcpBase::GetPropertyHandler_MESHCOP_COMMISSIONER_JOINER_LIST(uint8_t header, spinel_prop_key_t key)
+{
+    // TODO!
+    (void)key;
+
+    return SendLastStatus(header, SPINEL_STATUS_UNIMPLEMENTED);
+}
+#endif
+
+
 ThreadError NcpBase::GetPropertyHandler_NET_REQUIRE_JOIN_EXISTING(uint8_t header, spinel_prop_key_t key)
 {
     return SendPropertyUpdate(
@@ -3698,6 +3771,146 @@ ThreadError NcpBase::SetPropertyHandler_THREAD_ROUTER_ROLE_ENABLED(uint8_t heade
 
     return errorCode;
 }
+
+#if OPENTHREAD_ENABLE_JOINER
+ThreadError NcpBase::SetPropertyHandler_MESHCOP_JOINER_ENABLED(uint8_t header, spinel_prop_key_t key,
+							       const uint8_t *value_ptr, uint16_t value_len)
+{
+    bool isEnabled;
+    spinel_ssize_t parsedLength;
+    ThreadError errorCode = kThreadError_None;
+
+    parsedLength = spinel_datatype_unpack(
+                       value_ptr,
+                       value_len,
+                       SPINEL_DATATYPE_BOOL_S,
+                       &isEnabled
+                   );
+
+    if (parsedLength > 0)
+    {
+        if (isEnabled) {
+	    otJoinerStart(mInstance);
+	} else {
+	    otJoinerStop(mInstance);
+	}
+	errorCode = HandleCommandPropertyGet(header, key);
+    }
+    else
+    {
+        errorCode = SendLastStatus(header, SPINEL_STATUS_PARSE_ERROR);
+    }
+
+    return errorCode;
+}
+
+ThreadError NcpBase::SetPropertyHandler_MESHCOP_JOINER_CREDENTIAL(uint8_t header, spinel_prop_key_t key, 
+								  const uint8_t *value_ptr, uint16_t value_len)
+{
+    const char *string(NULL);
+    spinel_ssize_t parsedLength;
+    ThreadError errorCode = kThreadError_None;
+
+    parsedLength = spinel_datatype_unpack(
+                       value_ptr,
+                       value_len,
+                       SPINEL_DATATYPE_UTF8_S,
+                       &string
+                   );
+
+    if ((parsedLength > 0) && (string != NULL))
+    {
+        errorCode = otJoinerSetCredential(mInstance, string);
+
+        if (errorCode == kThreadError_None)
+        {
+            errorCode = HandleCommandPropertyGet(header, key);
+        }
+        else
+        {
+            errorCode = SendLastStatus(header, ThreadErrorToSpinelStatus(errorCode));
+        }
+    }
+    else
+    {
+        errorCode = SendLastStatus(header, SPINEL_STATUS_PARSE_ERROR);
+    }
+
+    return errorCode;
+}
+
+ThreadError NcpBase::SetPropertyHandler_MESHCOP_JOINER_URL(uint8_t header, 
+							   spinel_prop_key_t key,
+							   const uint8_t *value_ptr,
+							   uint16_t value_len)
+{
+    const char *string(NULL);
+    spinel_ssize_t parsedLength;
+    ThreadError errorCode = kThreadError_None;
+
+    parsedLength = spinel_datatype_unpack(
+                       value_ptr,
+                       value_len,
+                       SPINEL_DATATYPE_UTF8_S,
+                       &string
+                   );
+
+    if ((parsedLength > 0) && (string != NULL))
+    {
+        errorCode = otJoinerSetProvisioningUrl(mInstance, string);
+
+        if (errorCode == kThreadError_None)
+        {
+            errorCode = HandleCommandPropertyGet(header, key);
+        }
+        else
+        {
+            errorCode = SendLastStatus(header, ThreadErrorToSpinelStatus(errorCode));
+        }
+    }
+    else
+    {
+        errorCode = SendLastStatus(header, SPINEL_STATUS_PARSE_ERROR);
+    }
+
+    return errorCode;
+}
+#endif // OPENTHREAD_ENABLE_JOINER
+
+
+#if OPENTHREAD_ENABLE_COMMISSIONER
+ThreadError NcpBase::SetPropertyHandler_MESHCOP_COMMISSIONER_ENABLED(uint8_t header, spinel_prop_key_t key,
+								     const uint8_t *value_ptr, uint16_t value_len)
+{
+    bool isEnabled;
+    spinel_ssize_t parsedLength;
+    ThreadError errorCode = kThreadError_None;
+
+    parsedLength = spinel_datatype_unpack(
+                       value_ptr,
+                       value_len,
+                       SPINEL_DATATYPE_BOOL_S,
+                       &isEnabled
+                   );
+
+    if (parsedLength > 0)
+    {
+        if (isEnabled) {
+	    otCommissionerStart(mInstance);
+	} else {
+	    otCommissionerStop(mInstance);
+	}
+	errorCode = HandleCommandPropertyGet(header, key);
+    }
+    else
+    {
+        errorCode = SendLastStatus(header, SPINEL_STATUS_PARSE_ERROR);
+    }
+
+    return errorCode;
+}
+#endif // OPENTHREAD_ENABLE_COMMISSIONER
+
 
 ThreadError NcpBase::SetPropertyHandler_CNTR_RESET(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr,
                                                    uint16_t value_len)

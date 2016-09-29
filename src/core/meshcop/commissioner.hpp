@@ -61,13 +61,10 @@ public:
     /**
      * This method starts the Commissioner service.
      *
-     * @param[in]  aPSKd             A pointer to the PSKd.
-     * @param[in]  aProvisioningUrl  A pointer to the Provisioning URL (may be NULL).
-     *
      * @retval kThreadError_None  Successfully started the Commissioner service.
      *
      */
-    ThreadError Start(const char *aPSKd, const char *aProvisioningUrl);
+    ThreadError Start(void);
 
     /**
      * This method stops the Commissioner service.
@@ -76,6 +73,19 @@ public:
      *
      */
     ThreadError Stop(void);
+
+    /**
+     * This method adds an entry to the list of Joiner devices the
+     * Commissioner service will authorize onto the network.  Currently
+     * this API only supports one Joiner with any IID.
+     *
+     * @param[in]  aPSKd             A pointer to the PSKd.
+     * @param[in]  aProvisioningUrl  A pointer to the Provisioning URL (may be NULL).
+     *
+     * @retval kThreadError_None  Successfully started the Commissioner service.
+     *
+     */
+    ThreadError AddJoiner(const char *aPSKd, const char *aProvisioningUrl);
 
     /**
      * This method returns the Commissioner Session ID.

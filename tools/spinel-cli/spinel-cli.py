@@ -70,7 +70,8 @@ TIMEOUT_PROP = 2
 gWpanApi = None
 
 def goodbye(signum=None, frame=None):
-    logger.info('\nQuitting')
+    if signum == None: signum = 0
+    logger.info('\nQuitting (signal=%d)' % signum)
     if gWpanApi:
         gWpanApi.serial.close()
     exit(0)
@@ -286,7 +287,15 @@ SPINEL_PROP_THREAD_ROUTER_ROLE_ENABLED = SPINEL_PROP_THREAD_EXT__BEGIN + 7 #< [b
 SPINEL_PROP_THREAD_ROUTER_DOWNGRADE_THRESHOLD = SPINEL_PROP_THREAD_EXT__BEGIN + 8 #< [C]
 SPINEL_PROP_THREAD_ROUTER_SELECTION_JITTER = SPINEL_PROP_THREAD_EXT__BEGIN + 9 #< [C]
 
-SPINEL_PROP_THREAD_EXT__END        = 0x1600,
+SPINEL_PROP_THREAD_EXT__END        = 0x1600
+
+SPINEL_PROP_MESHCOP_EXT__BEGIN      = 0x1600
+SPINEL_PROP_MESHCOP_JOINER_ENABLE = SPINEL_PROP_MESHCOP_EXT__BEGIN + 0 #< [b]
+SPINEL_PROP_MESHCOP_JOINER_CREDENTIAL = SPINEL_PROP_MESHCOP_EXT__BEGIN + 1 #< [D]
+SPINEL_PROP_MESHCOP_JOINER_URL = SPINEL_PROP_MESHCOP_EXT__BEGIN + 2 #< [U]
+SPINEL_PROP_MESHCOP_COMMISSIONER_ENABLE = SPINEL_PROP_MESHCOP_EXT__BEGIN + 3 #< [b]
+SPINEL_PROP_MESHCOP_COMMISSIONER_JOINER_LIST = SPINEL_PROP_MESHCOP_EXT__BEGIN + 4 #< [A(T(DEU))]
+SPINEL_PROP_MESHCOP_EXT__END        = 0x1700
 
 
 SPINEL_PROP_IPV6__BEGIN          = 0x60
@@ -667,7 +676,7 @@ class Hdlc(IStream):
     def collect(self):
         fcs = HDLC_FCS_INIT
         packet = []
-        if DEBUG_LOG_HDLC: raw = []
+        raw = []
 
         # Synchronize
         while 1:
@@ -891,10 +900,10 @@ class SpinelPropertyHandler(SpinelCodec):
         valid = 1
         preferred = 1
         flags = 0
-        prefix_len = 64  # always use /64
+        prefixLen = 64  # always use /64
 
         arr = ipaddr.ip.packed
-        arr += pack('B', prefix_len)
+        arr += pack('B', prefixLen)
         arr += pack('<L', valid)
         arr += pack('<L', preferred)
         arr += pack('B', flags)
@@ -1012,6 +1021,12 @@ class SpinelPropertyHandler(SpinelCodec):
     def THREAD_RLOC16_DEBUG_PASSTHRU(self, payload):
         return self.parse_b(payload)
 
+    def MESHCOP_JOINER_ENABLE(self, payload):            return self.parse_b(payload)
+    def MESHCOP_JOINER_CREDENTIAL(self, payload):        return self.parse_D(payload)
+    def MESHCOP_JOINER_URL(self, payload):               return self.parse_U(payload)
+    def MESHCOP_COMMISSIONER_ENABLE(self, payload):      return self.parse_b(payload)
+    def MESHCOP_COMMISSIONER_JOINER_LIST(self, payload): pass
+
     def IPV6_LL_ADDR(self, payload):          return self.parse_6(payload)
     def IPV6_ML_ADDR(self, payload):          return self.parse_6(payload)
     def IPV6_ML_PREFIX(self, payload):        return self.parse_E(payload)
@@ -1031,49 +1046,49 @@ class SpinelPropertyHandler(SpinelCodec):
 class SpinelCommandHandler(SpinelCodec):
 
     def handle_prop(self, name, payload, tid):
-        (prop_op, prop_len) = self.parse_i(payload)
+        (propId, prop_len) = self.parse_i(payload)
 
         try:
-            handler = SPINEL_PROP_DISPATCH[prop_op]
-            prop_name = handler.__name__
-            prop_value = handler(payload[prop_len:])
+            handler = SPINEL_PROP_DISPATCH[propId]
+            propName = handler.__name__
+            propValue = handler(payload[prop_len:])
 
             if DEBUG_LOG_PROP:
 
                 # Generic output
-                if isinstance(prop_value, basestring):
-                    prop_str = hexify_str(prop_value)
+                if isinstance(propValue, basestring):
+                    prop_str = hexify_str(propValue)
                     logger.debug("PROP_VALUE_%s [tid=%d]: %s = %s" %
-                                 (name, (tid & 0xF), prop_name, prop_str))
+                                 (name, (tid & 0xF), propName, prop_str))
                 else:
-                    prop_str = str(prop_value)
+                    prop_str = str(propValue)
 
                     logger.debug("PROP_VALUE_%s [tid=%d]: %s = %s" %
-                                 (name, (tid & 0xF), prop_name, prop_str))
+                                 (name, (tid & 0xF), propName, prop_str))
 
                 # Extend output for certain properties.
-                if (prop_op == SPINEL_PROP_LAST_STATUS):
-                    logger.debug(SPINEL_LAST_STATUS_MAP[prop_value])
+                if (propId == SPINEL_PROP_LAST_STATUS):
+                    logger.debug(SPINEL_LAST_STATUS_MAP[propValue])
 
             if DEBUG_LOG_PKT:
-                if ((prop_op == SPINEL_PROP_STREAM_NET) or
-                      (prop_op == SPINEL_PROP_STREAM_NET_INSECURE)):
-                    logger.debug("PROP_VALUE_"+name+": "+prop_name)
-                    pkt = IPv6(prop_value[2:])
+                if ((propId == SPINEL_PROP_STREAM_NET) or
+                      (propId == SPINEL_PROP_STREAM_NET_INSECURE)):
+                    logger.debug("PROP_VALUE_"+name+": "+propName)
+                    pkt = IPv6(propValue[2:])
                     pkt.show()
 
-                elif (prop_op == SPINEL_PROP_STREAM_DEBUG):
-                    logger.debug("DEBUG: "+prop_value)
+                elif (propId == SPINEL_PROP_STREAM_DEBUG):
+                    logger.debug("DEBUG: "+propValue)
 
             global gWpanApi
             if gWpanApi:
-                gWpanApi.queue_add(prop_op, prop_value, tid)
+                gWpanApi.queue_add(propId, propValue, tid)
             else:
                 print "no wpanApi"
 
         except:
-            prop_name = "Property Unknown"
-            logger.info ("\n%s (%i): " % (prop_name, prop_op))
+            propName = "Property Unknown"
+            logger.info ("\n%s (%i): " % (propName, propId))
             print traceback.format_exc()
 
 
@@ -1166,6 +1181,13 @@ SPINEL_PROP_DISPATCH = {
     SPINEL_PROP_THREAD_NETWORK_ID_TIMEOUT: wpanPropHandler.THREAD_NETWORK_ID_TIMEOUT,
     SPINEL_PROP_THREAD_ACTIVE_ROUTER_IDS: wpanPropHandler.THREAD_ACTIVE_ROUTER_IDS,
     SPINEL_PROP_THREAD_RLOC16_DEBUG_PASSTHRU: wpanPropHandler.THREAD_RLOC16_DEBUG_PASSTHRU,
+
+    SPINEL_PROP_MESHCOP_JOINER_ENABLE: wpanPropHandler.MESHCOP_JOINER_ENABLE,
+    SPINEL_PROP_MESHCOP_JOINER_CREDENTIAL: wpanPropHandler.MESHCOP_JOINER_CREDENTIAL,
+    SPINEL_PROP_MESHCOP_JOINER_URL: wpanPropHandler.MESHCOP_JOINER_URL,
+    SPINEL_PROP_MESHCOP_COMMISSIONER_ENABLE: wpanPropHandler.MESHCOP_COMMISSIONER_ENABLE,
+    SPINEL_PROP_MESHCOP_COMMISSIONER_JOINER_LIST: wpanPropHandler.MESHCOP_COMMISSIONER_JOINER_LIST,
+
 
     SPINEL_PROP_IPV6_LL_ADDR:          wpanPropHandler.IPV6_LL_ADDR,
     SPINEL_PROP_IPV6_ML_ADDR:          wpanPropHandler.IPV6_ML_ADDR,
@@ -1289,7 +1311,7 @@ class WpanApi(SpinelCodec):
 
     def __init__(self, stream, nodeid, useHdlc=FEATURE_USE_HDLC):
 
-        self.tun_if = None
+        self.tunIf = None
         self.serial = stream
         self.nodeid = nodeid
 
@@ -1301,7 +1323,7 @@ class WpanApi(SpinelCodec):
         self.rx_pkt = []
 
         # Fire up threads
-        self.tid_filter = set()
+        self.tidFilter = set()
         self.__queue_prop = defaultdict(Queue.Queue)
         self.queue_register()
         self.__start_reader()
@@ -1380,10 +1402,10 @@ class WpanApi(SpinelCodec):
             self.tid = tid
 
     def queue_register(self, tid=SPINEL_HEADER_DEFAULT):
-        self.tid_filter.add(tid)
+        self.tidFilter.add(tid)
         return self.__queue_prop[tid]
 
-    def queue_wait_prepare(self, prop_id, tid=SPINEL_HEADER_DEFAULT):
+    def queue_wait_prepare(self, propId, tid=SPINEL_HEADER_DEFAULT):
         self.queue_clear(tid)
 
     def queue_add(self, prop, value, tid):
@@ -1397,7 +1419,7 @@ class WpanApi(SpinelCodec):
                     pkt.plen, pkt.src, pkt.seq, pkt.hlim, timedelta)
             return
 
-        if (tid not in self.tid_filter): return
+        if (tid not in self.tidFilter): return
         item = self.PropertyItem(prop, value, tid)
         self.__queue_prop[tid].put_nowait(item)
 
@@ -1413,7 +1435,7 @@ class WpanApi(SpinelCodec):
             return None
 
         while (item):
-            if (item.tid in self.tid_filter) and (item.prop == prop):
+            if (item.tid in self.tidFilter) and (item.prop == prop):
                 return item
             if (self.__queue_prop[tid].empty()):
                 return None
@@ -1424,13 +1446,13 @@ class WpanApi(SpinelCodec):
 
     def if_up(self, nodeid='1'):
         if os.geteuid() == 0:
-            self.tun_if = TunInterface(nodeid)
+            self.tunIf = TunInterface(nodeid)
         else:
             print "Warning: superuser required to start tun interface."
 
     def if_down(self):
-        if self.tun_if: self.tun_if.close()
-        self.tun_if = None
+        if self.tunIf: self.tunIf.close()
+        self.tunIf = None
 
     def ip_send(self, pkt):
         pay = self.encode_i(SPINEL_PROP_STREAM_NET)
@@ -1443,76 +1465,76 @@ class WpanApi(SpinelCodec):
 
         self.transact(SPINEL_CMD_PROP_VALUE_SET, pay)
 
-    def prop_change_async(self, cmd, prop_id, value, format='B',
+    def prop_change_async(self, cmd, propId, value, format='B',
                           tid=SPINEL_HEADER_DEFAULT):
-        pay = self.encode_i(prop_id)
+        pay = self.encode_i(propId)
         if format != None:
             pay += pack(format, value)
         self.transact(cmd, pay, tid)
 
-    def prop_insert_async(self, prop_id, value, format='B',
+    def prop_insert_async(self, propId, value, format='B',
                           tid=SPINEL_HEADER_DEFAULT):
-        self.prop_change_async(SPINEL_CMD_PROP_VALUE_INSERT, prop_id,
+        self.prop_change_async(SPINEL_CMD_PROP_VALUE_INSERT, propId,
                                value, format, tid)
 
-    def prop_remove_async(self, prop_id, value, format='B',
+    def prop_remove_async(self, propId, value, format='B',
                           tid=SPINEL_HEADER_DEFAULT):
-        self.prop_change_async(SPINEL_CMD_PROP_VALUE_REMOVE, prop_id,
+        self.prop_change_async(SPINEL_CMD_PROP_VALUE_REMOVE, propId,
                                value, format, tid)
 
-    def __prop_change_value(self, cmd, prop_id, value, format='B',
+    def __prop_change_value(self, cmd, propId, value, format='B',
                             tid=SPINEL_HEADER_DEFAULT):
         """ Utility routine to change a property value over Spinel. """
-        self.queue_wait_prepare(prop_id, tid)
+        self.queue_wait_prepare(propId, tid)
 
-        pay = self.encode_i(prop_id)
+        pay = self.encode_i(propId)
         if format != None:
             pay += pack(format, value)
         self.transact(cmd, pay, tid)
 
-        result = self.queue_wait_for_prop(prop_id, tid)
+        result = self.queue_wait_for_prop(propId, tid)
         if result:
             return result.value
         else:
             return None
 
-    def prop_get_value(self, prop_id, tid=SPINEL_HEADER_DEFAULT):
+    def prop_get_value(self, propId, tid=SPINEL_HEADER_DEFAULT):
         """ Blocking routine to get a property value over Spinel. """
         if DEBUG_LOG_PROP:
-            handler = SPINEL_PROP_DISPATCH[prop_id]
-            prop_name = handler.__name__
-            print "PROP_VALUE_GET [tid=%d]: %s" % (tid&0xF, prop_name)
-        return self.__prop_change_value(SPINEL_CMD_PROP_VALUE_GET, prop_id,
+            handler = SPINEL_PROP_DISPATCH[propId]
+            propName = handler.__name__
+            print "PROP_VALUE_GET [tid=%d]: %s" % (tid&0xF, propName)
+        return self.__prop_change_value(SPINEL_CMD_PROP_VALUE_GET, propId,
                                         None, None, tid)
 
-    def prop_set_value(self, prop_id, value, format='B',
+    def prop_set_value(self, propId, value, format='B',
                        tid=SPINEL_HEADER_DEFAULT):
         """ Blocking routine to set a property value over Spinel. """
         if DEBUG_LOG_PROP:
-            handler = SPINEL_PROP_DISPATCH[prop_id]
-            prop_name = handler.__name__
-            print "PROP_VALUE_SET [tid=%d]: %s" % (tid&0xF, prop_name)
-        return self.__prop_change_value(SPINEL_CMD_PROP_VALUE_SET, prop_id,
+            handler = SPINEL_PROP_DISPATCH[propId]
+            propName = handler.__name__
+            print "PROP_VALUE_SET [tid=%d]: %s" % (tid&0xF, propName)
+        return self.__prop_change_value(SPINEL_CMD_PROP_VALUE_SET, propId,
                                         value, format, tid)
 
-    def prop_insert_value(self, prop_id, value, format='B',
+    def prop_insert_value(self, propId, value, format='B',
                           tid=SPINEL_HEADER_DEFAULT):
         """ Blocking routine to insert a property value over Spinel. """
         if DEBUG_LOG_PROP:
-            handler = SPINEL_PROP_DISPATCH[prop_id]
-            prop_name = handler.__name__
-            print "PROP_VALUE_INSERT [tid=%d]: %s" % (tid&0xF, prop_name)
-        return self.__prop_change_value(SPINEL_CMD_PROP_VALUE_INSERT, prop_id,
+            handler = SPINEL_PROP_DISPATCH[propId]
+            propName = handler.__name__
+            print "PROP_VALUE_INSERT [tid=%d]: %s" % (tid&0xF, propName)
+        return self.__prop_change_value(SPINEL_CMD_PROP_VALUE_INSERT, propId,
                                         value, format, tid)
 
-    def prop_remove_value(self, prop_id, value, format='B',
+    def prop_remove_value(self, propId, value, format='B',
                           tid=SPINEL_HEADER_DEFAULT):
         """ Blocking routine to remove a property value over Spinel. """
         if DEBUG_LOG_PROP:
-            handler = SPINEL_PROP_DISPATCH[prop_id]
-            prop_name = handler.__name__
-            print "PROP_VALUE_REMOVE [tid=%d]: %s" % (tid&0xF, prop_name)
-        return self.__prop_change_value(SPINEL_CMD_PROP_VALUE_REMOVE, prop_id,
+            handler = SPINEL_PROP_DISPATCH[propId]
+            propName = handler.__name__
+            print "PROP_VALUE_REMOVE [tid=%d]: %s" % (tid&0xF, propName)
+        return self.__prop_change_value(SPINEL_CMD_PROP_VALUE_REMOVE, propId,
                                         value, format, tid)
 
     def get_ipaddrs(self, tid=SPINEL_HEADER_DEFAULT):
@@ -1598,6 +1620,7 @@ class SpinelCliCmd(Cmd, SpinelCodec):
         'extpanid',
         'ifconfig',
         'ipaddr',
+        'joiner',
         'keysequence',
         'leaderdata',
         'leaderweight',
@@ -1670,40 +1693,52 @@ class SpinelCliCmd(Cmd, SpinelCodec):
         except ImportError:
             pass
 
-    def prop_get_value(self, prop_id):
-        return self.wpanApi.prop_get_value(prop_id)
+    def prop_get_value(self, propId):
+        return self.wpanApi.prop_get_value(propId)
 
-    def prop_set_value(self, prop_id, value, format='B'):
-        return self.wpanApi.prop_set_value(prop_id, value, format)
+    def prop_set_value(self, propId, value, pyFormat='B'):
+        return self.wpanApi.prop_set_value(propId, value, pyFormat)
 
-    def prop_insert_value(self, prop_id, value, format='B'):
-        return self.wpanApi.prop_insert_value(prop_id, value, format)
+    def prop_insert_value(self, propId, value, pyFormat='B'):
+        return self.wpanApi.prop_insert_value(propId, value, pyFormat)
 
-    def prop_remove_value(self, prop_id, value, format='B'):
-        return self.wpanApi.prop_remove_value(prop_id, value, format)
+    def prop_remove_value(self, propId, value, pyFormat='B'):
+        return self.wpanApi.prop_remove_value(propId, value, pyFormat)
 
-    def prop_get_or_set_value(self, prop_id, line, format='B'):
+    def prop_get_or_set_value(self, propId, line, format='B'):
         """ Helper to get or set a property value based on line arguments. """
         if line:
-            arg = self.prep_line(line, format)
-            if format=='D': format = str(len(arg))+'s'
-            value = self.prop_set_value(prop_id, arg, format)
+            value = self.prep_line(line, format)
+            pyFormat = self.prep_format(value, format)
+            value = self.prop_set_value(propId, value, pyFormat)
         else:
-            value = self.prop_get_value(prop_id)
+            value = self.prop_get_value(propId)
         return value
 
     def prep_line(self, line, format='B'):
-        """ Convert a line argument to proper type """
+        """ Convert a command line argument to proper binary encoding (pre-pack). """
+        value = line
         if line != None:
-            if format == 'D':
-                line = hex_to_bytes(line)
-            else:
-                line = int(line)
-        return line
+            if format=='U':         # For UTF8, just a pass through line unmodified      
+                value = line.encode('utf-8')+'\0'
+            elif format == 'D':     # Expect raw data to be hex string w/o delimeters
+                value = hex_to_bytes(line)
+            else:                 
+                value = int(line)   # Most everything else is some type of integer
+        return value
 
-    def prop_get(self, prop_id, format='B'):
+    def prep_format(self, value, format='B'):
+        """ Convert a spinel format to a python pack format. """
+        pyFormat = format
+        if value == "":
+            pyFormat = '0s'
+        elif format=='D' or format=='U': 
+            pyFormat = str(len(value))+'s'
+        return pyFormat
+
+    def prop_get(self, propId, format='B'):
         """ Helper to get a propery and output the value with Done or Error. """
-        value = self.prop_get_value(prop_id)
+        value = self.prop_get_value(propId)
         if value == None:
             print("Error")
             return None
@@ -1716,21 +1751,21 @@ class SpinelCliCmd(Cmd, SpinelCodec):
 
         return value
 
-    def prop_set(self, prop_id, line, format='B'):
+    def prop_set(self, propId, line, format='B'):
         """ Helper to set a propery and output Done or Error. """
-        arg = self.prep_line(line, format)
-        if format=='D': format = str(len(arg))+'s'
-        value = self.prop_set_value(prop_id, arg, format)
+        value = self.prep_line(line, format)
+        pyFormat = self.prep_format(value, format)
+        result = self.prop_set_value(propId, value, pyFormat)
 
-        if (value == None):
+        if (result == None):
             print("Error")
         else:
             print("Done")
 
-        return value
+        return result
 
-    def handle_property(self, line, prop_id, format='B', output=True):
-        value = self.prop_get_or_set_value(prop_id, line, format)
+    def handle_property(self, line, propId, format='B', output=True):
+        value = self.prop_get_or_set_value(propId, line, format)
         if not output: return value
 
         if value == None or value == "":
@@ -1970,7 +2005,30 @@ class SpinelCliCmd(Cmd, SpinelCodec):
             Done
         \033[0m
         """
-        pass
+
+        args = line.split(" ")
+        if (len(args) > 0): subCommand = args[0]
+
+        if subCommand == "": 
+            pass
+
+        elif subCommand == "start":
+            self.prop_set_value(SPINEL_PROP_MESHCOP_COMMISSIONER_ENABLE, 1)
+            print "Done"
+            return
+
+        elif subCommand == "stop":
+            self.prop_set_value(SPINEL_PROP_MESHCOP_COMMISSIONER_ENABLE, 0)
+            print "Done"
+            return
+
+        elif subCommand == "energy":
+            pass
+
+        elif subCommand == "panid":
+            pass
+
+        print "Fail"
 
     def do_contextreusedelay(self, line):
         """
@@ -2101,6 +2159,63 @@ class SpinelCliCmd(Cmd, SpinelCodec):
         """
         self.handle_property(line, SPINEL_PROP_NET_XPANID, 'D')
 
+
+    def do_joiner(self, line):
+        """
+        These commands are enabled when configuring with --enable-joiner.
+
+        joiner start <pskd> <provisioningUrl>
+
+            Start the Joiner role.
+
+            * pskd: Pre-Shared Key for the Joiner.
+            * provisioningUrl: Provisioning URL for the Joiner (optional).
+
+            This command will cause the device to perform an MLE Discovery and
+            initiate the Thread Commissioning process.
+           
+            > joiner start PSK
+            Done
+
+        joiner stop
+
+            Stop the Joiner role.
+
+            > joiner stop
+            Done
+        """
+        PSKd = ""
+        provisioningUrl = ""
+
+        args = line.split(" ")
+        if (len(args) > 0): subCommand = args[0]
+        if (len(args) > 1): PSKd = args[1]
+        if (len(args) > 2): provisioningUrl = args[2]
+
+        PSKd = self.prep_line(PSKd, 'U')
+        provisioningUrl = self.prep_line(provisioningUrl, 'U')
+
+        if subCommand == "":
+            pass
+
+        elif subCommand == "start":
+            pyFormat = self.prep_format(PSKd, 'U')
+            value = self.prop_set_value(SPINEL_PROP_MESHCOP_JOINER_CREDENTIAL, 
+                                        PSKd, pyFormat)
+            pyFormat = self.prep_format(provisioningUrl, 'U')
+            value = self.prop_set_value(SPINEL_PROP_MESHCOP_JOINER_URL, 
+                                        provisioningUrl, pyFormat)
+            value = self.prop_set_value(SPINEL_PROP_MESHCOP_JOINER_ENABLE, 1)
+            print "Done"
+            return
+
+        elif subCommand == "stop":
+            value = self.prop_set_value(SPINEL_PROP_MESHCOP_JOINER_ENABLE, 0)
+            print "Done"
+            return
+
+        print "Error"
+
     def complete_ifconfig(self, text, line, begidx, endidx):
         _SUB_COMMANDS = ('up', 'down')
         return [i for i in _SUB_COMMANDS if i.startswith(text)]
@@ -2186,7 +2301,7 @@ class SpinelCliCmd(Cmd, SpinelCodec):
         valid = 1
         preferred = 1
         flags = 0
-        prefix_len = 64  # always use /64, as prefix.network.prefixlen returns /128.
+        prefixLen = 64  # always use /64, as prefix.network.prefixlen returns /128.
 
         num = len(args)
         if (num > 1):
@@ -2200,24 +2315,24 @@ class SpinelCliCmd(Cmd, SpinelCodec):
                 print str(addr)
 
         elif args[0] == "add":
-            arr += pack('B', prefix_len)
+            arr += pack('B', prefixLen)
             arr += pack('<L', valid)
             arr += pack('<L', preferred)
             arr += pack('B', flags)
             value = self.prop_insert_value(SPINEL_PROP_IPV6_ADDRESS_TABLE,
                                            arr, str(len(arr))+'s')
-            if self.wpanApi.tun_if:
-                self.wpanApi.tun_if.addr_add(ipaddr)
+            if self.wpanApi.tunIf:
+                self.wpanApi.tunIf.addr_add(ipaddr)
 
         elif args[0] == "remove":
-            arr += pack('B', prefix_len)
+            arr += pack('B', prefixLen)
             arr += pack('<L', valid)
             arr += pack('<L', preferred)
             arr += pack('B', flags)
             value = self.prop_remove_value(SPINEL_PROP_IPV6_ADDRESS_TABLE,
                                            arr, str(len(arr))+'s')
-            if self.wpanApi.tun_if:
-                self.wpanApi.tun_if.addr_del(ipaddr)
+            if self.wpanApi.tunIf:
+                self.wpanApi.tunIf.addr_del(ipaddr)
 
         print("Done")
 
@@ -2996,12 +3111,12 @@ class SpinelCliCmd(Cmd, SpinelCodec):
             pass
 
         elif args[0] == "add":
-            if self.wpanApi.tun_if:
-                self.wpanApi.tun_if.addr_add(ipaddr)
+            if self.wpanApi.tunIf:
+                self.wpanApi.tunIf.addr_add(ipaddr)
 
         elif args[0] == "remove":
-            if self.wpanApi.tun_if:
-                self.wpanApi.tun_if.addr_del(ipaddr)
+            if self.wpanApi.tunIf:
+                self.wpanApi.tunIf.addr_del(ipaddr)
 
         elif args[0] == "up":
             self.wpanApi.if_up(self.nodeid)
@@ -3018,8 +3133,8 @@ class SpinelCliCmd(Cmd, SpinelCodec):
             if (len(args) > 2): count = args[2]
             if (len(args) > 3): interval = args[3]
 
-            if self.wpanApi.tun_if:
-                self.wpanApi.tun_if.ping6(" -c "+count+" -s "+size+" "+addr)
+            if self.wpanApi.tunIf:
+                self.wpanApi.tunIf.ping6(" -c "+count+" -s "+size+" "+addr)
 
         print("Done")
 

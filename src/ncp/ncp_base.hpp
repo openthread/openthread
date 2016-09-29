@@ -339,6 +339,18 @@ private:
     ThreadError GetPropertyHandler_THREAD_CONTEXT_REUSE_DELAY(uint8_t header, spinel_prop_key_t key);
     ThreadError GetPropertyHandler_THREAD_NETWORK_ID_TIMEOUT(uint8_t header, spinel_prop_key_t key);
     ThreadError GetPropertyHandler_THREAD_ON_MESH_NETS(uint8_t header, spinel_prop_key_t key);
+
+#if OPENTHREAD_ENABLE_JOINER
+    ThreadError GetPropertyHandler_MESHCOP_JOINER_ENABLED(uint8_t header, spinel_prop_key_t key);
+    ThreadError GetPropertyHandler_MESHCOP_JOINER_CREDENTIAL(uint8_t header, spinel_prop_key_t key);
+    ThreadError GetPropertyHandler_MESHCOP_JOINER_URL(uint8_t header, spinel_prop_key_t key);
+#endif
+
+#if OPENTHREAD_ENABLE_COMMISSIONER
+    ThreadError GetPropertyHandler_MESHCOP_COMMISSIONER_ENABLED(uint8_t header, spinel_prop_key_t key);
+    ThreadError GetPropertyHandler_MESHCOP_COMMISSIONER_JOINER_LIST(uint8_t header, spinel_prop_key_t key);
+#endif
+
     ThreadError GetPropertyHandler_NET_REQUIRE_JOIN_EXISTING(uint8_t header, spinel_prop_key_t key);
 
     ThreadError SetPropertyHandler_POWER_STATE(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr,
@@ -405,6 +417,7 @@ private:
                                                    const uint8_t *value_ptr, uint16_t value_len);
     ThreadError SetPropertyHandler_THREAD_ROUTER_ROLE_ENABLED(uint8_t header, spinel_prop_key_t key,
                                                    const uint8_t *value_ptr, uint16_t value_len);
+
     ThreadError SetPropertyHandler_NET_REQUIRE_JOIN_EXISTING(uint8_t header, spinel_prop_key_t key,
                                                    const uint8_t *value_ptr, uint16_t value_len);
     ThreadError SetPropertyHandler_CNTR_RESET(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr,
@@ -414,6 +427,23 @@ private:
     ThreadError SetPropertyHandler_NEST_STREAM_MFG(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr,
                                                    uint16_t value_len);
 #endif
+
+#if OPENTHREAD_ENABLE_JOINER
+    ThreadError SetPropertyHandler_MESHCOP_JOINER_ENABLED(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr,
+							  uint16_t value_len);
+    ThreadError SetPropertyHandler_MESHCOP_JOINER_CREDENTIAL(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr,
+							     uint16_t value_len);
+    ThreadError SetPropertyHandler_MESHCOP_JOINER_URL(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr,
+						      uint16_t value_len);
+#endif // OPENTHREAD_ENABLE_DIAG
+
+#if OPENTHREAD_ENABLE_COMMISSIONER
+    ThreadError SetPropertyHandler_MESHCOP_COMMISSIONER_ENABLED(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr,
+								uint16_t value_len);
+
+    ThreadError InsertPropertyHandler_MESHCOP_COMMISSIONER_JOINER_LIST(uint8_t header, spinel_prop_key_t key, 
+								       const uint8_t *value_ptr, uint16_t value_len);
+#endif // OPENTHREAD_ENABLE_COMMISSIONER
 
     ThreadError InsertPropertyHandler_IPV6_ADDRESS_TABLE(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr,
                                                          uint16_t value_len);
@@ -425,6 +455,7 @@ private:
                                                              const uint8_t *value_ptr,
                                                              uint16_t value_len);
     ThreadError InsertPropertyHandler_MAC_WHITELIST(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr, uint16_t value_len);
+
 
     ThreadError RemovePropertyHandler_IPV6_ADDRESS_TABLE(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr,
                                                          uint16_t value_len);
