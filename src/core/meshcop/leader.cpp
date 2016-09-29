@@ -31,6 +31,8 @@
  *   This file implements a MeshCoP Leader.
  */
 
+#define WPP_NAME "leader.tmh"
+
 #include <stdio.h>
 
 #include <coap/coap_header.hpp>
@@ -41,10 +43,6 @@
 #include <thread/thread_netif.hpp>
 #include <thread/thread_tlvs.hpp>
 #include <thread/thread_uris.hpp>
-
-#ifdef WINDOWS_LOGGING
-#include "leader.tmh"
-#endif
 
 namespace Thread {
 namespace MeshCoP {

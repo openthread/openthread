@@ -31,6 +31,8 @@
  *   This file implements common methods for manipulating Thread Network Data.
  */
 
+#define WPP_NAME "network_data.tmh"
+
 #include <coap/coap_header.hpp>
 #include <common/code_utils.hpp>
 #include <common/debug.hpp>
@@ -41,10 +43,6 @@
 #include <thread/thread_netif.hpp>
 #include <thread/thread_tlvs.hpp>
 #include <thread/thread_uris.hpp>
-
-#ifdef WINDOWS_LOGGING
-#include "network_data.tmh"
-#endif
 
 namespace Thread {
 namespace NetworkData {

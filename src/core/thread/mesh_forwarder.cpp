@@ -31,6 +31,8 @@
  *   This file implements mesh forwarding of IPv6/6LoWPAN messages.
  */
 
+#define WPP_NAME "mesh_forwarder.tmh"
+
 #include <common/code_utils.hpp>
 #include <common/debug.hpp>
 #include <common/logging.hpp>
@@ -45,10 +47,6 @@
 #include <thread/mesh_forwarder.hpp>
 #include <thread/mle_router.hpp>
 #include <thread/thread_netif.hpp>
-
-#ifdef WINDOWS_LOGGING
-#include "mesh_forwarder.tmh"
-#endif
 
 using Thread::Encoding::BigEndian::HostSwap16;
 

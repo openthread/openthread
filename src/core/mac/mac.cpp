@@ -31,6 +31,8 @@
  *   This file implements the subset of IEEE 802.15.4 primitives required for Thread.
  */
 
+#define WPP_NAME "mac.tmh"
+
 #ifdef OPENTHREAD_CONFIG_FILE
 #include OPENTHREAD_CONFIG_FILE
 #else
@@ -49,10 +51,6 @@
 #include <platform/random.h>
 #include <thread/mle_router.hpp>
 #include <thread/thread_netif.hpp>
-
-#ifdef WINDOWS_LOGGING
-#include "mac.tmh"
-#endif
 
 namespace Thread {
 namespace Mac {

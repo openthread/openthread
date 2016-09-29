@@ -46,6 +46,9 @@
 #include <wdm.h>
 #endif
 #include <platform/logging-windows.h>
+#ifdef WPP_NAME
+#include WPP_NAME
+#endif
 #endif
 
 #ifdef __cplusplus

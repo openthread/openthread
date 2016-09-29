@@ -31,6 +31,8 @@
  *   This file implements the necessary hooks for mbedTLS.
  */
 
+#define WPP_NAME "dtls.tmh"
+
 #include <assert.h>
 #include <stdio.h>
 
@@ -43,10 +45,6 @@
 #include <thread/thread_netif.hpp>
 
 #include <mbedtls/debug.h>
-
-#ifdef WINDOWS_LOGGING
-#include "dtls.tmh"
-#endif
 
 namespace Thread {
 namespace MeshCoP {

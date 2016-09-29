@@ -31,6 +31,8 @@
  *   This file implements Thread's EID-to-RLOC mapping and caching.
  */
 
+#define WPP_NAME "address_resolver.tmh"
+
 #include <coap/coap_header.hpp>
 #include <common/code_utils.hpp>
 #include <common/debug.hpp>
@@ -44,10 +46,6 @@
 #include <thread/thread_netif.hpp>
 #include <thread/thread_tlvs.hpp>
 #include <thread/thread_uris.hpp>
-
-#ifdef WINDOWS_LOGGING
-#include "address_resolver.tmh"
-#endif
 
 using Thread::Encoding::BigEndian::HostSwap16;
 

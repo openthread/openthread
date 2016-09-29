@@ -31,6 +31,8 @@
  *   This file implements the Thread Network Data managed by the Thread Leader.
  */
 
+#define WPP_NAME "network_data_leader.tmh"
+
 #include <coap/coap_header.hpp>
 #include <common/debug.hpp>
 #include <common/logging.hpp>
@@ -45,10 +47,6 @@
 #include <thread/thread_netif.hpp>
 #include <thread/thread_tlvs.hpp>
 #include <thread/thread_uris.hpp>
-
-#ifdef WINDOWS_LOGGING
-#include "network_data_leader.tmh"
-#endif
 
 using Thread::Encoding::BigEndian::HostSwap16;
 

@@ -31,6 +31,8 @@
  *   This file implements a Commissioner role.
  */
 
+#define WPP_NAME "commissioner.tmh"
+
 #ifdef OPENTHREAD_CONFIG_FILE
 #include OPENTHREAD_CONFIG_FILE
 #else
@@ -48,10 +50,6 @@
 #include <thread/thread_netif.hpp>
 #include <thread/thread_tlvs.hpp>
 #include <thread/thread_uris.hpp>
-
-#ifdef WINDOWS_LOGGING
-#include "commissioner.tmh"
-#endif
 
 namespace Thread {
 namespace MeshCoP {

@@ -31,6 +31,8 @@
  *   This file implements the Energy Scan Client.
  */
 
+#define WPP_NAME "energy_scan_client.tmh"
+
 #include <coap/coap_header.hpp>
 #include <common/code_utils.hpp>
 #include <common/debug.hpp>
@@ -40,10 +42,6 @@
 #include <thread/meshcop_tlvs.hpp>
 #include <thread/thread_netif.hpp>
 #include <thread/thread_uris.hpp>
-
-#ifdef WINDOWS_LOGGING
-#include "energy_scan_client.tmh"
-#endif
 
 using Thread::Encoding::BigEndian::HostSwap16;
 using Thread::Encoding::BigEndian::HostSwap32;

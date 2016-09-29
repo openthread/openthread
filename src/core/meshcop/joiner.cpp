@@ -31,6 +31,8 @@
  *   This file implements the Joiner role.
  */
 
+#define WPP_NAME "joiner.tmh"
+
 #ifdef OPENTHREAD_CONFIG_FILE
 #include OPENTHREAD_CONFIG_FILE
 #else
@@ -48,10 +50,6 @@
 #include <platform/random.h>
 #include <thread/thread_netif.hpp>
 #include <thread/thread_uris.hpp>
-
-#ifdef WINDOWS_LOGGING
-#include "joiner.tmh"
-#endif
 
 using Thread::Encoding::BigEndian::HostSwap16;
 

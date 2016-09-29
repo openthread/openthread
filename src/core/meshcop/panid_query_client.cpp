@@ -31,6 +31,8 @@
  *   This file implements the PAN ID Query Client.
  */
 
+#define WPP_NAME "panid_query_client.tmh"
+
 #include <coap/coap_header.hpp>
 #include <common/code_utils.hpp>
 #include <common/debug.hpp>
@@ -39,10 +41,6 @@
 #include <thread/meshcop_tlvs.hpp>
 #include <thread/thread_netif.hpp>
 #include <thread/thread_uris.hpp>
-
-#ifdef WINDOWS_LOGGING
-#include "panid_query_client.tmh"
-#endif
 
 namespace Thread {
 

@@ -31,6 +31,8 @@
  *   This file implements ICMPv6.
  */
 
+#define WPP_NAME "icmp6.tmh"
+
 #include <string.h>
 
 #include <common/code_utils.hpp>
@@ -39,10 +41,6 @@
 #include <common/message.hpp>
 #include <net/icmp6.hpp>
 #include <net/ip6.hpp>
-
-#ifdef WINDOWS_LOGGING
-#include "icmp6.tmh"
-#endif
 
 using Thread::Encoding::BigEndian::HostSwap16;
 

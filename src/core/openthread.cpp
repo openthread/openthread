@@ -31,6 +31,8 @@
  *   This file implements the top-level interface to the OpenThread stack.
  */
 
+#define WPP_NAME "openthread.tmh"
+
 #ifdef OPENTHREAD_CONFIG_FILE
 #include OPENTHREAD_CONFIG_FILE
 #else
@@ -52,10 +54,6 @@
 #include <platform/misc.h>
 #include <thread/thread_netif.hpp>
 #include <thread/thread_uris.hpp>
-
-#ifdef WINDOWS_LOGGING
-#include "openthread.tmh"
-#endif
 
 // Temporary definition
 typedef struct otInstance

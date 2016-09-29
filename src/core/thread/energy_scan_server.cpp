@@ -31,6 +31,8 @@
  *   This file implements the Energy Scan Server.
  */
 
+#define WPP_NAME "energy_scan_server.tmh"
+
 #include <coap/coap_header.hpp>
 #include <common/code_utils.hpp>
 #include <common/debug.hpp>
@@ -39,10 +41,6 @@
 #include <thread/energy_scan_server.hpp>
 #include <thread/thread_netif.hpp>
 #include <thread/thread_uris.hpp>
-
-#ifdef WINDOWS_LOGGING
-#include "energy_scan_server.tmh"
-#endif
 
 namespace Thread {
 

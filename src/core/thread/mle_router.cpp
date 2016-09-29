@@ -31,6 +31,8 @@
  *   This file implements MLE functionality required for the Thread Router and Leader roles.
  */
 
+#define WPP_NAME "mle_router.tmh"
+
 #include <common/code_utils.hpp>
 #include <common/debug.hpp>
 #include <common/logging.hpp>
@@ -42,10 +44,6 @@
 #include <thread/thread_netif.hpp>
 #include <thread/thread_tlvs.hpp>
 #include <thread/thread_uris.hpp>
-
-#ifdef WINDOWS_LOGGING
-#include "mle_router.tmh"
-#endif
 
 using Thread::Encoding::BigEndian::HostSwap16;
 
