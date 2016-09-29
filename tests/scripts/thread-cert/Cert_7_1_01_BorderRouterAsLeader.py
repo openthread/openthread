@@ -82,15 +82,15 @@ class Cert_7_1_1_BorderRouterAsLeader(unittest.TestCase):
         self.nodes[LEADER].register_netdata()
 
         self.nodes[ROUTER].start()
-        time.sleep(3)
+        time.sleep(5)
         self.assertEqual(self.nodes[ROUTER].get_state(), 'router')
 
         self.nodes[SED1].start()
-        time.sleep(3)
+        time.sleep(5)
         self.assertEqual(self.nodes[SED1].get_state(), 'child')
 
         self.nodes[ED1].start()
-        time.sleep(3)
+        time.sleep(5)
         self.assertEqual(self.nodes[ED1].get_state(), 'child')
 
         addrs = self.nodes[SED1].get_addrs()

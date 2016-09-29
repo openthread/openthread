@@ -71,6 +71,7 @@
     <ClCompile Include="..\..\src\core\thread\panid_query_server.cpp" />
     <ClCompile Include="..\..\src\core\thread\thread_netif.cpp" />
     <ClCompile Include="..\..\src\core\thread\thread_tlvs.cpp" />
+    <ClCompile Include="..\..\src\core\utils\global_address.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\src\core\coap\coap_header.hpp" />
@@ -135,6 +136,7 @@
     <ClInclude Include="..\..\src\core\thread\thread_tlvs.hpp" />
     <ClInclude Include="..\..\src\core\thread\thread_uris.hpp" />
     <ClInclude Include="..\..\src\core\thread\topology.hpp" />
+    <ClInclude Include="..\..\src\core\utils\global_address.hpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{DD5018BE-54C6-4FD4-9F8D-08D52FC0CD40}</ProjectGuid>

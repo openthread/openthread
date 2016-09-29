@@ -78,11 +78,11 @@ class Cert_9_2_14_PanIdQuery(unittest.TestCase):
         self.assertEqual(self.nodes[LEADER1].get_state(), 'leader')
 
         self.nodes[COMMISSIONER].start()
-        time.sleep(3)
+        time.sleep(5)
         self.assertEqual(self.nodes[COMMISSIONER].get_state(), 'router')
 
         self.nodes[ROUTER1].start()
-        time.sleep(3)
+        time.sleep(5)
         self.assertEqual(self.nodes[ROUTER1].get_state(), 'router')
 
         self.nodes[LEADER2].start()

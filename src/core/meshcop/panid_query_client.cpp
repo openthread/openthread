@@ -37,6 +37,7 @@
 #include <common/code_utils.hpp>
 #include <common/debug.hpp>
 #include <common/logging.hpp>
+#include <platform/random.h>
 #include <meshcop/panid_query_client.hpp>
 #include <thread/meshcop_tlvs.hpp>
 #include <thread/thread_netif.hpp>
@@ -47,12 +48,13 @@ namespace Thread {
 PanIdQueryClient::PanIdQueryClient(ThreadNetif &aThreadNetif) :
     mPanIdQuery(OPENTHREAD_URI_PANID_CONFLICT, &PanIdQueryClient::HandleConflict, this),
     mSocket(aThreadNetif.GetIp6().mUdp),
-    mTimer(aThreadNetif.GetIp6().mTimerScheduler, &PanIdQueryClient::HandleTimer, this),
     mCoapServer(aThreadNetif.GetCoapServer()),
     mNetif(aThreadNetif)
 {
     mCoapServer.AddResource(mPanIdQuery);
     mSocket.Open(HandleUdpReceive, this);
+
+    mCoapMessageId = static_cast<uint8_t>(otPlatRandomGet());
 }
 
 ThreadError PanIdQueryClient::SendQuery(uint16_t aPanId, uint32_t aChannelMask, const Ip6::Address &aAddress,
@@ -71,11 +73,16 @@ ThreadError PanIdQueryClient::SendQuery(uint16_t aPanId, uint32_t aChannelMask, 
     Ip6::MessageInfo messageInfo;
     Message *message;
 
+    for (size_t i = 0; i < sizeof(mCoapToken); i++)
+    {
+        mCoapToken[i] = static_cast<uint8_t>(otPlatRandomGet());
+    }
+
     header.Init();
     header.SetType(aAddress.IsMulticast() ? Coap::Header::kTypeNonConfirmable : Coap::Header::kTypeConfirmable);
     header.SetCode(Coap::Header::kCodePost);
-    header.SetMessageId(0);
-    header.SetToken(NULL, 0);
+    header.SetMessageId(++mCoapMessageId);
+    header.SetToken(mCoapToken, sizeof(mCoapToken));
     header.AppendUriPathOptions(OPENTHREAD_URI_PANID_QUERY);
     header.Finalize();
 
@@ -203,15 +210,6 @@ exit:
     }
 
     return error;
-}
-
-void PanIdQueryClient::HandleTimer(void *aContext)
-{
-    static_cast<PanIdQueryClient *>(aContext)->HandleTimer();
-}
-
-void PanIdQueryClient::HandleTimer(void)
-{
 }
 
 void PanIdQueryClient::HandleUdpReceive(void *aContext, otMessage aMessage, const otMessageInfo *aMessageInfo)

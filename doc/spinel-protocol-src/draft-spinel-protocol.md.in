@@ -344,6 +344,8 @@ by (Miek Gieben) and [xml2rfc (version 2)](http://xml2rfc.ietf.org/).
 
 # Glossary #
 
+<!-- RQ -- Alphabetize before finalization. -->
+
 NCP
 : Acronym for Network Control Processor.
 
@@ -362,3 +364,11 @@ PUI
 : Packed Unsigned Integer. A way to serialize an unsigned integer
   using one, two, or three bytes. Used throughout the Spinel protocol.
   See (#packed-unsigned-integer) for more information.
+
+FCS
+: Final Checksum. Bytes added to the end of a packet to help determine
+  if the packet was received without corruption.
+
+PHY
+: Physical layer. Refers to characteristics and parameters related to
+  the physical implementation and operation of a networking medium.

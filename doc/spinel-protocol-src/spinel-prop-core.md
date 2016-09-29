@@ -229,6 +229,8 @@ Unlike most other properties, setting this property to true when the
 value of the property is already true **MUST** fail with a last status
 of `STATUS_ALREADY`.
 
+## Stream Properties {#prop-stream}
+
 ### PROP 112: PROP_STREAM_DEBUG {#prop-stream-debug}
 
 * Type: Read-Only-Stream
@@ -266,13 +268,55 @@ This property is a streaming property, meaning that you cannot explicitly
 fetch the value of this property. To receive traffic, you wait for
 `CMD_PROP_VALUE_IS` commands with this property id from the NCP.
 
-Implementations may optionally support the ability to transmit arbitrary
+Implementations may OPTIONALLY support the ability to transmit arbitrary
 raw packets. If this capability is supported, you may call `CMD_PROP_VALUE_SET`
 on this property with the value of the raw packet.
 
-Any data past the end of `FRAME_DATA_LEN` is considered metadata. The format
-of the metadata is defined by the associated MAC and PHY being used, and
-typically includes RSSI/TX-Power, LQI, etc.
+#### Frame Metadata Format {#frame-metadata-format}
+
+Any data past the end of `FRAME_DATA_LEN` is considered metadata and is
+OPTIONAL. Frame metadata MAY be empty or partially specified. Partially
+specified metadata MUST be accepted. Default values are used for all
+unspecified fields.
+
+The same general format is used for `PROP_STREAM_RAW`, `PROP_STREAM_NET`,
+and `PROP_STREAM_NET_INSECURE`. It can be used for frames sent from the
+NCP to the host as well as frames sent from the host to the NCP.
+
+The frame metadata field consists of the following fields:
+
+ Field   | Description                  | Type       | Len   | Default
+:--------|:-----------------------------|:-----------|-------|----------
+MD_POWER | (dBm) RSSI/TX-Power          | `c` int8   | 1     | -128
+MD_NOISE | (dBm) Noise floor            | `c` int8   | 1     | -128
+MD_FLAG  | Flags (defined below)        | `S` uint16 | 2     |
+MD_PHY   | PHY-specific data            | `D` data   | >=2   |
+MD_VEND  | Vendor-specific data         | `D` data   | >=2   |
+
+The following fields are ignored by the NCP for packets sent to it from
+the host:
+
+* MD_NOISE
+* MD_FLAG
+
+When specifying `MD_POWER` for a packet to be transmitted, the actual
+transmit power is never larger than the current value of `PROP_PHY_TX_POWER`
+((#prop-phy-tx-power)). When left unspecified (or set to the value -128),
+an appropriate transmit power will be chosen by the NCP.
+
+The bit values in `MD_FLAG` are defined as follows:
+
+ Bit | Mask   | Name             | Description if set
+-----|--------|:-----------------|:----------------
+15   | 0x0001 | MD_FLAG_TX       | Packet was transmitted, not received.
+14   | 0x0002 | MD_FLAG_HAS_FCS  | Packet includes received PHY FCS
+13   | 0x0004 | MD_FLAG_BAD_FCS  | Packet was received with bad FCS
+12   | 0x0008 | MD_FLAG_DUPE     | Packet seems to be a duplicate
+0-11 | 0xFFF0 | MD_FLAG_RESERVED | Flags reserved for future use.
+
+The format of `MD_PHY` is specified by the PHY layer currently in use,
+and may contain information such as the channel, LQI, antenna, or other
+pertainent information.
 
 ### PROP 114: PROP_STREAM_NET {#prop-stream-net}
 
@@ -294,9 +338,8 @@ fetch the value of this property. To receive traffic, you wait for
 To send network packets, you call `CMD_PROP_VALUE_SET` on this property with
 the value of the packet.
 
-Any data past the end of `FRAME_DATA_LEN` is considered metadata. The format
-of the metadata is defined by the associated network protocol and
-typically includes RSSI/TX-Power, LQI, etc.
+Any data past the end of `FRAME_DATA_LEN` is considered metadata, the
+format of which is described in (#frame-metadata-format).
 
 ### PROP 114: PROP_STREAM_NET_INSECURE {#prop-stream-net-insecure}
 
@@ -319,7 +362,6 @@ fetch the value of this property. To receive traffic, you wait for
 To send network packets, you call `CMD_PROP_VALUE_SET` on this property with
 the value of the packet.
 
-Any data past the end of `FRAME_DATA_LEN` is considered metadata. The format
-of the metadata is defined by the associated network protocol, and
-typically includes RSSI/TX-Power, LQI, etc.
+Any data past the end of `FRAME_DATA_LEN` is considered metadata, the
+format of which is described in (#frame-metadata-format).
 

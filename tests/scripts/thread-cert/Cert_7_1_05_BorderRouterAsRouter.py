@@ -78,21 +78,21 @@ class Cert_7_1_5_BorderRouterAsRouter(unittest.TestCase):
         self.assertEqual(self.nodes[LEADER].get_state(), 'leader')
 
         self.nodes[ROUTER].start()
-        time.sleep(3)
+        time.sleep(5)
         self.assertEqual(self.nodes[ROUTER].get_state(), 'router')
 
         self.nodes[ED2].start()
-        time.sleep(3)
+        time.sleep(5)
         self.assertEqual(self.nodes[ED2].get_state(), 'child')
 
         self.nodes[SED2].start()
-        time.sleep(3)
+        time.sleep(5)
         self.assertEqual(self.nodes[SED2].get_state(), 'child')
 
         self.nodes[ROUTER].add_prefix('2001::/64', 'paros')
         self.nodes[ROUTER].add_prefix('2002::/64', 'paro')
         self.nodes[ROUTER].register_netdata()
-        time.sleep(3)
+        time.sleep(5)
 
         addrs = self.nodes[ED2].get_addrs()
         self.assertTrue(any('2001' in addr[0:4] for addr in addrs))
@@ -110,7 +110,7 @@ class Cert_7_1_5_BorderRouterAsRouter(unittest.TestCase):
 
         self.nodes[ROUTER].add_prefix('2003::/64', 'paros')
         self.nodes[ROUTER].register_netdata()
-        time.sleep(3)
+        time.sleep(5)
 
         addrs = self.nodes[ED2].get_addrs()
         self.assertTrue(any('2001' in addr[0:4] for addr in addrs))

@@ -93,7 +93,7 @@ void TrickleTimer::IndicateConsistent(void)
 
 void TrickleTimer::IndicateInconsistent(void)
 {
-    // Only relavent if we aren't already at 'I' == 'Imin'
+    // Only relevant if we aren't already at 'I' == 'Imin'
     if (IsRunning() && I != Imin)
     {
         // Reset I to Imin
@@ -161,7 +161,7 @@ void TrickleTimer::HandleTimerFired(void)
     // We have just reached time 't'
     case kPhaseTransmit:
     {
-        // Are we not using reduncancy or is the counter still less than it?
+        // Are we not using redundancy or is the counter still less than it?
 #ifdef ENABLE_TRICKLE_TIMER_SUPPRESSION_SUPPORT
         if (k == 0 || c < k)
 #endif

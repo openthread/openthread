@@ -63,12 +63,12 @@ class Cert_5_6_2_NetworkDataUpdate(unittest.TestCase):
         self.assertEqual(self.nodes[LEADER].get_state(), 'leader')
 
         self.nodes[ED].start()
-        time.sleep(3)
+        time.sleep(5)
         self.assertEqual(self.nodes[ED].get_state(), 'child')
 
         self.nodes[LEADER].add_prefix('2001::/64', 'paros')
         self.nodes[LEADER].register_netdata()
-        time.sleep(3)
+        time.sleep(5)
 
         addrs = self.nodes[ED].get_addrs()
         self.assertTrue(any('2001' in addr[0:4] for addr in addrs))
@@ -81,7 +81,7 @@ class Cert_5_6_2_NetworkDataUpdate(unittest.TestCase):
 
         self.nodes[LEADER].add_prefix('2002::/64', 'paros')
         self.nodes[LEADER].register_netdata()
-        time.sleep(3)
+        time.sleep(5)
 
         self.nodes[LEADER].add_whitelist(self.nodes[ED].get_addr64())
         self.nodes[ED].add_whitelist(self.nodes[LEADER].get_addr64())

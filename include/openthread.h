@@ -83,6 +83,7 @@ extern "C" {
  *
  * @defgroup core-6lowpan 6LoWPAN
  * @defgroup core-coap CoAP
+ * @defgroup core-global-address Global IPv6 Address
  * @defgroup core-ipv6 IPv6
  * @defgroup core-mac MAC
  * @defgroup core-mesh-forwarding Mesh Forwarding
@@ -686,7 +687,8 @@ ThreadError otSetNetworkName(otInstance *aInstance, const char *aNetworkName);
  *
  * @param[in]     aInstance  A pointer to an OpenThread instance.
  * @param[in]     aLocal     TRUE to retrieve from the local Network Data, FALSE for partition's Network Data
- * @param[inout]  aIterator  A pointer to the Network Data iterator context.
+ * @param[inout]  aIterator  A pointer to the Network Data iterator context. To get the first on-mesh entry
+                             it should be set to OT_NETWORK_DATA_ITERATOR_INIT.
  * @param[out]    aConfig    A pointer to where the On Mesh Prefix information will be placed.
  *
  * @retval kThreadError_None      Successfully found the next On Mesh prefix.
@@ -784,6 +786,69 @@ ThreadError otAddUnicastAddress(otInstance *aInstance, const otNetifAddress *aAd
  * @retval kThreadError_NotFound     The IP Address indicated by @p aAddress was not found.
  */
 ThreadError otRemoveUnicastAddress(otInstance *aInstance, const otIp6Address *aAddress);
+
+/**
+ * This function pointer is called to create IPv6 IID during SLAAC procedure.
+ *
+ * @param[in]     aInstance  A pointer to an OpenThread instance.
+ * @param[inout]  aAddress   A pointer to structure containing IPv6 address for which IID is being created.
+ * @param[inout]  aContext   A pointer to creator-specific context.
+ *
+ * @retval kThreadError_None                        Created valid IID for given IPv6 address.
+ * @retval kThreadError_Ipv6AddressCreationFailure  Creation of valid IID for given IPv6 address failed.
+ *
+ */
+typedef ThreadError(*otSlaacIidCreate)(otInstance *aInstance, otNetifAddress *aAddress, void *aContext);
+
+/**
+ * Update all automatically created IPv6 addresses for prefixes from current Network Data with SLAAC procedure.
+ *
+ * @param[in]     aInstance      A pointer to an OpenThread instance.
+ * @param[inout]  aAddresses     A pointer to an array of automatically created IPv6 addresses.
+ * @param[in]     aNumAddresses  The number of slots in aAddresses array.
+ * @param[in]     aIidCreate     A pointer to a function that is called to create IPv6 IIDs.
+ * @param[in]     aContext       A pointer to data passed to aIidCreate function.
+ *
+ */
+void otSlaacUpdate(otInstance *aInstance, otNetifAddress *aAddresses, uint32_t aNumAddresses,
+                   otSlaacIidCreate aIidCreate, void *aContext);
+
+/**
+ * Create random IID for given IPv6 address.
+ *
+ * @param[in]     aInstance  A pointer to an OpenThread instance.
+ * @param[inout]  aAddress   A pointer to structure containing IPv6 address for which IID is being created.
+ * @param[in]     aContext   A pointer to unused data.
+ *
+ * @retval kThreadError_None  Created valid IID for given IPv6 address.
+ *
+ */
+ThreadError otCreateRandomIid(otInstance *aInstance, otNetifAddress *aAddresses, void *aContext);
+
+/**
+ * Create IID for given IPv6 address using extended MAC address.
+ *
+ * @param[in]     aInstance  A pointer to an OpenThread instance.
+ * @param[inout]  aAddress   A pointer to structure containing IPv6 address for which IID is being created.
+ * @param[in]     aContext   A pointer to unused data.
+ *
+ * @retval kThreadError_None  Created valid IID for given IPv6 address.
+ *
+ */
+ThreadError otCreateMacIid(otInstance *aInstance, otNetifAddress *aAddresses, void *aContext);
+
+/**
+ * Create semantically opaque IID for given IPv6 address.
+ *
+ * @param[in]     aInstance  A pointer to an OpenThread instance.
+ * @param[inout]  aAddress   A pointer to structure containing IPv6 address for which IID is being created.
+ * @param[inout]  aContext   A pointer to a otSemanticallyOpaqueIidGeneratorData structure.
+ *
+ * @retval kThreadError_None                        Created valid IID for given IPv6 address.
+ * @retval kThreadError_Ipv6AddressCreationFailure  Could not create valid IID for given IPv6 address.
+ *
+ */
+ThreadError otCreateSemanticallyOpaqueIid(otInstance *aInstance, otNetifAddress *aAddresses, void *aContext);
 
 /**
  * This function pointer is called to notify certain configuration or state changes within OpenThread.
@@ -930,6 +995,23 @@ uint32_t otGetPollPeriod(otInstance *aInstance);
  * @sa otGetPollPeriod
  */
 void otSetPollPeriod(otInstance *aInstance, uint32_t aPollPeriod);
+
+/**
+ * Set the preferred Router Id.
+ *
+ * Upon becoming a router/leader the node attempts to use this Router Id. If the
+ * preferred Router Id is not set or if it can not be used, a randomly generated
+ * router id is picked. This property can be set only when the device role is
+ * either detached or disabled.
+ *
+ * @param[in]  aInstance    A pointer to an OpenThread instance.
+ * @param[in]  aRouterId    The preferred Router Id.
+ *
+ * @retval kThreadError_None         Successfully set the preferred Router Id.
+ * @retval kThreadError_InvalidState Could not set (role is not detached or disabled)
+ *
+ */
+ThreadError otSetPreferredRouterId(otInstance *aInstance, uint8_t aRouterId);
 
 /**
  * @}
@@ -1543,7 +1625,7 @@ void otPlatformReset(otInstance *aInstance);
  *
  * @sa otSetRouterDowngradeThreshold
  */
-uint8_t otGetRouterDowngradeThreshold(void);
+uint8_t otGetRouterDowngradeThreshold(otInstance *aInstance);
 
 /**
  * Set the ROUTER_DOWNGRADE_THRESHOLD parameter used in the Leader role.
@@ -1552,7 +1634,7 @@ uint8_t otGetRouterDowngradeThreshold(void);
  *
  * @sa otGetRouterDowngradeThreshold
  */
-void otSetRouterDowngradeThreshold(uint8_t aThreshold);
+void otSetRouterDowngradeThreshold(otInstance *aInstance, uint8_t aThreshold);
 
 /**
  * Get the ROUTER_SELECTION_JITTER parameter used in the REED/Router role.
@@ -1561,7 +1643,7 @@ void otSetRouterDowngradeThreshold(uint8_t aThreshold);
  *
  * @sa otSetRouterSelectionJitter
  */
-uint8_t otGetRouterSelectionJitter(void);
+uint8_t otGetRouterSelectionJitter(otInstance *aInstance);
 
 /**
  * Set the ROUTER_SELECTION_JITTER parameter used in the REED/Router role.
@@ -1570,7 +1652,7 @@ uint8_t otGetRouterSelectionJitter(void);
  *
  * @sa otGetRouterSelectionJitter
  */
-void otSetRouterSelectionJitter(uint8_t aRouterJitter);
+void otSetRouterSelectionJitter(otInstance *aInstance, uint8_t aRouterJitter);
 
 /**
  * @}
@@ -1611,6 +1693,21 @@ ThreadError otGetChildInfoById(otInstance *aInstance, uint16_t aChildId, otChild
  *
  */
 ThreadError otGetChildInfoByIndex(otInstance *aInstance, uint8_t aChildIndex, otChildInfo *aChildInfo);
+
+/**
+ * This function gets the next neighbor information. It is used to go through the entries of
+ * the neighbor table.
+ *
+ * @param[in]     aInstance  A pointer to an OpenThread instance.
+ * @param[inout]  aIterator  A pointer to the iterator context. To get the first neighbor entry
+                             it should be set to OT_NEIGHBOR_INFO_ITERATOR_INIT.
+ * @param[out]    aInfo      A pointer to where the neighbor information will be placed.
+ *
+ * @retval kThreadError_None      Successfully found the next neighbor entry in table.
+ * @retval kThreadError_NotFound  No subsequent neighbor entry exists in the table.
+ *
+ */
+ThreadError otGetNextNeighborInfo(otInstance *aInstance, otNeighborInfoIterator *aIterator, otNeighborInfo *aInfo);
 
 /**
  * Get the device role.
