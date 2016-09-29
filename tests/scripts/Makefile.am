@@ -240,8 +240,6 @@ TESTS                                                              = \
     $(NULL)
 
 XFAIL_NCP_TESTS                                                    = \
-    thread-cert/Cert_8_1_01_Commissioning.py                         \
-    thread-cert/Cert_8_1_02_Commissioning.py                         \
     thread-cert/Cert_9_2_13_EnergyScan.py                            \
     thread-cert/Cert_9_2_14_PanIdQuery.py                            \
     $(NULL)

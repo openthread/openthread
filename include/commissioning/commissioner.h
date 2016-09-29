@@ -50,14 +50,12 @@ extern "C" {
  * This function enables the Thread Commissioner role.
  *
  * @param[in]  aInstance         A pointer to an OpenThread instance.
- * @param[in]  aPSKd             A pointer to the PSKd.
- * @param[in]  aProvisioningUrl  A pointer to the Provisioning URL (may be NULL).
  *
  * @retval kThreadError_None         Successfully started the Commissioner role.
  * @retval kThreadError_InvalidArgs  @p aPSKd or @p aProvisioningUrl is invalid.
  *
  */
-ThreadError otCommissionerStart(otInstance *aInstance, const char *aPSKd, const char *aProvisioningUrl);
+ThreadError otCommissionerStart(otInstance *aInstance);
 
 /**
  * This function disables the Thread Commissioner role.
@@ -66,6 +64,20 @@ ThreadError otCommissionerStart(otInstance *aInstance, const char *aPSKd, const 
  *
  */
 ThreadError otCommissionerStop(otInstance *aInstance);
+
+/**
+ * Adds the given Joiner information to the list of devices the Commissioner
+ * will authorize onto the network.
+ *
+ * @param[in]  aInstance         A pointer to an OpenThread instance.
+ * @param[in]  aPSKd             A pointer to the PSKd.
+ * @param[in]  aProvisioningUrl  A pointer to the Provisioning URL (may be NULL).
+ *
+ * @retval kThreadError_None         Successfully started the Commissioner role.
+ * @retval kThreadError_InvalidArgs  @p aPSKd or @p aProvisioningUrl is invalid.
+ *
+ */
+ThreadError otCommissionerAddJoiner(otInstance *aInstance, const char *aPSKd, const char *aProvisioningUrl);
 
 /**
  * This function pointer is called when the Commissioner receives an Energy Report.
