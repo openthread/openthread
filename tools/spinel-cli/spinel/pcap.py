@@ -25,27 +25,39 @@
 #  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 #  POSSIBILITY OF SUCH DAMAGE.
 #
+""" Module to provide codec utilities for .pcap formatters. """
 
-include $(abs_top_nlbuild_autotools_dir)/automake/pre.am
+import struct
+from datetime import datetime
 
-EXTRA_DIST              = \
-    spinel-cli.py         \
-    sniffer.py            \
-    test_spinel.py        \
-    $(NULL)
+DLT_IEEE802_15_4 = 195
+PCAP_MAGIC_NUMBER = 0xa1b2c3d4
+PCAP_VERSION_MAJOR = 2
+PCAP_VERSION_MINOR = 4
 
-DIST_SUBDIRS                            = \
-    spinel                                \
-    $(NULL)
 
-# Always build (e.g. for 'make all') these subdirectories.
+class PcapCodec(object):
+    """ Utility class for .pcap formatters. """
 
-SUBDIRS                                 = \
-    $(NULL)
+    @classmethod
+    def encode_header(cls):
+        """ Returns a pcap file header. """
+        return struct.pack("<LHHLLLL",
+                           PCAP_MAGIC_NUMBER,
+                           PCAP_VERSION_MAJOR,
+                           PCAP_VERSION_MINOR,
+                           0, 0, 256,
+                           DLT_IEEE802_15_4)
 
-# Always pretty (e.g. for 'make pretty') these subdirectories.
-
-PRETTY_SUBDIRS                          = \
-    $(NULL)
-
-include $(abs_top_nlbuild_autotools_dir)/automake/post.am
+    @classmethod
+    def encode_frame(cls, frame):
+        """ Returns a pcap encapsulation of the given frame. """
+        # write frame pcap header
+        epoch = datetime(1970, 1, 1)
+        d_time = datetime.utcnow() - epoch
+        sec = d_time.days * 24 * 60 * 60 + d_time.seconds
+        usec = d_time.microseconds
+        length = len(frame)
+        pcap_frame = struct.pack("<LLLL", sec, usec, length, length)
+        pcap_frame += frame
+        return pcap_frame

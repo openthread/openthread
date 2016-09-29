@@ -29,23 +29,22 @@
 include $(abs_top_nlbuild_autotools_dir)/automake/pre.am
 
 EXTRA_DIST              = \
-    spinel-cli.py         \
-    sniffer.py            \
-    test_spinel.py        \
+    __init__.py           \
+    codec.py              \
+    config.py             \
+    const.py              \
+    hdlc.py               \
+    stream.py             \
+    pcap.py               \
+    tun.py                \
+    util.py               \
     $(NULL)
 
-DIST_SUBDIRS                            = \
-    spinel                                \
-    $(NULL)
-
-# Always build (e.g. for 'make all') these subdirectories.
-
-SUBDIRS                                 = \
-    $(NULL)
-
-# Always pretty (e.g. for 'make pretty') these subdirectories.
-
-PRETTY_SUBDIRS                          = \
+EXTRA_DIST             += \
+    tests.py              \
+    test_codec.py         \
+    test_hdlc.py          \
+    test_stream.py        \
     $(NULL)
 
 include $(abs_top_nlbuild_autotools_dir)/automake/post.am

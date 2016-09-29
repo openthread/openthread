@@ -1,3 +1,4 @@
+#!/usr/bin/python
 #
 #  Copyright (c) 2016, The OpenThread Authors.
 #  All rights reserved.
@@ -25,27 +26,30 @@
 #  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 #  POSSIBILITY OF SUCH DAMAGE.
 #
+""" Run all unittests for spinel module. """
 
-include $(abs_top_nlbuild_autotools_dir)/automake/pre.am
+import sys
+import optparse
+import unittest
 
-EXTRA_DIST              = \
-    spinel-cli.py         \
-    sniffer.py            \
-    test_spinel.py        \
-    $(NULL)
+import spinel.config as CONFIG
+from spinel.tests import *
 
-DIST_SUBDIRS                            = \
-    spinel                                \
-    $(NULL)
+def main():
+    """ Run all unit tests for spinel module. """
+    args = sys.argv[1:]
 
-# Always build (e.g. for 'make all') these subdirectories.
+    opt_parser = optparse.OptionParser()
+    opt_parser.add_option("-d", "--debug", action="store",
+                          dest="debug", type="int", default=CONFIG.DEBUG_ENABLE)
 
-SUBDIRS                                 = \
-    $(NULL)
+    (options, remaining_args) = opt_parser.parse_args(args)
 
-# Always pretty (e.g. for 'make pretty') these subdirectories.
+    if options.debug:
+        CONFIG.debug_set_level(options.debug)
 
-PRETTY_SUBDIRS                          = \
-    $(NULL)
+    sys.argv[1:] = remaining_args
+    unittest.main()
 
-include $(abs_top_nlbuild_autotools_dir)/automake/post.am
+if __name__ == '__main__':
+    main()
