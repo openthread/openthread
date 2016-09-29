@@ -66,15 +66,11 @@ Commissioner::Commissioner(ThreadNetif &aThreadNetif):
     aThreadNetif.GetCoapServer().AddResource(mRelayReceive);
 }
 
-ThreadError Commissioner::Start(const char *aPSKd, const char *aProvisioningUrl)
+ThreadError Commissioner::Start(void)
 {
     ThreadError error = kThreadError_None;
 
     VerifyOrExit(mState == kStateDisabled, error = kThreadError_InvalidState);
-
-    SuccessOrExit(error = mNetif.GetDtls().SetPsk(reinterpret_cast<const uint8_t *>(aPSKd),
-                                                  static_cast<uint8_t>(strlen(aPSKd))));
-    SuccessOrExit(error = mNetif.GetDtls().mProvisioningUrl.SetProvisioningUrl(aProvisioningUrl));
     SuccessOrExit(error = mSocket.Open(HandleUdpReceive, this));
     mState = kStatePetition;
     SendPetition();
@@ -89,6 +85,20 @@ ThreadError Commissioner::Stop(void)
     SendKeepAlive();
     mTimer.Start(1000);
     return kThreadError_None;
+}
+
+ThreadError Commissioner::AddJoiner(const char *aPSKd, const char *aProvisioningUrl)
+{
+    ThreadError error = kThreadError_None;
+
+    VerifyOrExit(mState == kStateDisabled, error = kThreadError_InvalidState);
+
+    SuccessOrExit(error = mNetif.GetDtls().SetPsk(reinterpret_cast<const uint8_t *>(aPSKd),
+                                                  static_cast<uint8_t>(strlen(aPSKd))));
+    SuccessOrExit(error = mNetif.GetDtls().mProvisioningUrl.SetProvisioningUrl(aProvisioningUrl));
+
+exit:
+    return error;
 }
 
 uint16_t Commissioner::GetSessionId(void) const

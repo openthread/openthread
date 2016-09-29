@@ -341,7 +341,7 @@ the value of the packet.
 Any data past the end of `FRAME_DATA_LEN` is considered metadata, the
 format of which is described in (#frame-metadata-format).
 
-### PROP 114: PROP_STREAM_NET_INSECURE {#prop-stream-net-insecure}
+### PROP 114: PROP_STREAM_NET_UNSECURED {#prop-stream-net-unsecured}
 
 * Type: Read-Write-Stream
 * Packed-Encoding: `DD`
