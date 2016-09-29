@@ -50,14 +50,12 @@ extern "C" {
  * This function enables the Thread Joiner role.
  *
  * @param[in]  aInstance         A pointer to an OpenThread instance.
- * @param[in]  aPSKd             A pointer to the PSKd.
- * @param[in]  aProvisioningUrl  A pointer to the Provisioning URL (may be NULL).
  *
  * @retval kThreadError_None         Successfully started the Commissioner role.
  * @retval kThreadError_InvalidArgs  @p aPSKd or @p aProvisioningUrl is invalid.
  *
  */
-ThreadError otJoinerStart(otInstance *aInstance, const char *aPSKd, const char *aProvisioningUrl);
+ThreadError otJoinerStart(otInstance *aInstance);
 
 /**
  * This function disables the Thread Joiner role.
@@ -66,6 +64,30 @@ ThreadError otJoinerStart(otInstance *aInstance, const char *aPSKd, const char *
  *
  */
 ThreadError otJoinerStop(otInstance *aInstance);
+
+/**
+ * This function sets the PSKd for the Thread Joiner role.
+ *
+ * @param[in]  aInstance         A pointer to an OpenThread instance.
+ * @param[in]  aPSKd             A pointer to the PSKd.
+ *
+ * @retval kThreadError_None         Successfully started the Commissioner role.
+ * @retval kThreadError_InvalidArgs  @p aPSKd or @p aProvisioningUrl is invalid.
+ *
+ */
+ThreadError otJoinerSetCredential(otInstance *, const char *aPSKd);
+
+/**
+ * This function sets the Provisioning URL for the Thread Joiner role.
+ *
+ * @param[in]  aInstance         A pointer to an OpenThread instance.
+ * @param[in]  aProvisioningUrl  A pointer to the Provisioning URL (may be NULL).
+ *
+ * @retval kThreadError_None         Successfully started the Commissioner role.
+ * @retval kThreadError_InvalidArgs  @p aPSKd or @p aProvisioningUrl is invalid.
+ *
+ */
+ThreadError otJoinerSetProvisioningUrl(otInstance *, const char *aProvisioningUrl);
 
 /**
  * @}
