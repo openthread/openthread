@@ -657,6 +657,7 @@ void Mac::HandleBeginTransmit(void)
 
     if (mPcapCallback)
     {
+        sendFrame.mDidTX = true;
         mPcapCallback(&sendFrame, mPcapCallbackContext);
     }
 
@@ -1040,6 +1041,7 @@ void Mac::ReceiveDoneTask(Frame *aFrame, ThreadError aError)
 
     if (mPcapCallback)
     {
+        aFrame->mDidTX = false;
         mPcapCallback(aFrame, mPcapCallbackContext);
     }
 

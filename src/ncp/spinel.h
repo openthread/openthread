@@ -246,6 +246,15 @@ typedef unsigned int spinel_cid_t;
 
 enum
 {
+    SPINEL_MD_FLAG_TX               = 0x0001,
+    SPINEL_MD_FLAG_HAS_FCS          = 0x0002,
+    SPINEL_MD_FLAG_BAD_FCS          = 0x0004,
+    SPINEL_MD_FLAG_DUPE             = 0x0008,
+    SPINEL_MD_FLAG_RESERVED         = 0xFFF0,
+};
+
+enum
+{
     SPINEL_CMD_NOOP                 = 0,
     SPINEL_CMD_RESET                = 1,
     SPINEL_CMD_PROP_VALUE_GET       = 2,
