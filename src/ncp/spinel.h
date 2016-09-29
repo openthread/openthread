@@ -529,6 +529,12 @@ typedef enum
     SPINEL_PROP_THREAD_ROUTER_SELECTION_JITTER
                                         = SPINEL_PROP_THREAD_EXT__BEGIN + 9,
 
+    /// Thread Preferred Router Id
+    /** Format: `C` - Write only
+     */
+    SPINEL_PROP_THREAD_PREFERRED_ROUTER_ID
+                                        = SPINEL_PROP_THREAD_EXT__BEGIN + 10,
+
     SPINEL_PROP_THREAD_EXT__END        = 0x1600,
 
     SPINEL_PROP_IPV6__BEGIN          = 0x60,

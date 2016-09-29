@@ -181,5 +181,15 @@ a re-attach process as an end-device.
 * Type: Read-Write
 * Packed-Encoding: `C`
 
-Specifies the self imposed random delay in seconds a REED waits before 
+Specifies the self imposed random delay in seconds a REED waits before
 registering to become an Active Router.
+
+### PROP 5386: PROP_THREAD_PREFERRED_ROUTER_ID
+* Type: Write
+* Packed-Encoding: `C`
+
+Specifies the preferred Router Id. Upon becoming a router/leader the node
+attempts to use this Router Id. If the preferred Router Id is not set or
+if it can not be used, a randomly generated router id is picked. This
+property can be set only when the device role is either detached or
+disabled.
