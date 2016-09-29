@@ -35,6 +35,7 @@ CPPFLAGS_COMMON                     = \
     -I$(top_srcdir)/include           \
     -I${abs_top_srcdir}/third_party/mbedtls/repo/include \
     $(MBEDTLS_CPPFLAGS)               \
+    $(MISSING_CPPFLAGS)               \
     $(OPENTHREAD_TARGET_DEFINES)      \
     $(NULL)
 
@@ -93,6 +94,40 @@ SOURCES_COMMON                      = \
     thread/thread_netif.cpp           \
     utils/slaac_address.cpp           \
     $(NULL)
+
+if MISSING_STRLCPY
+###############################################################
+# You'll see something similar to the next four lines in all
+# of these `MISSING_*` blocks. These makefile gynmastics are
+# to work around some unfortunate bugs in automake which
+# prevent a more elegant solution. We can't just pull in the
+# convenience libraries in `$(MISSING_LIBADD)` because that
+# doesn't seem to work on some platforms. Also, we can't
+# just include `$(top_srcdir)/src/missing/X/X.c` directly
+# because a bug in automake causes the `clean` target to
+# break. The following code may look ugly, but it gets the
+# job done. It does this by copying the source file to the
+# local build directory as an intermediate target. We then
+# compile that file. We have to add the path in CPPFLAGS
+# because the file might include headers from that directory.
+# Because the copied source file is explicitly labeled as
+# an intermediate target, it will always get deleted (unless
+# it already existed in the first place). -- RQ 2017-03-22
+strlcpy.c: $(top_srcdir)/src/missing/strlcpy/strlcpy.c
+	$(AM_V_GEN)cp $< $@
+.INTERMEDIATE: strlcpy.c
+CPPFLAGS_COMMON += -I$(top_srcdir)/src/missing/strlcpy
+SOURCES_COMMON += strlcpy.c
+endif
+
+if MISSING_STRLCAT
+# See comment above for explanation.
+strlcat.c: $(top_srcdir)/src/missing/strlcat/strlcat.c
+	$(AM_V_GEN)cp $< $@
+.INTERMEDIATE: strlcat.c
+CPPFLAGS_COMMON += -I$(top_srcdir)/src/missing/strlcat
+SOURCES_COMMON += strlcat.c
+endif
 
 if OPENTHREAD_ENABLE_APPLICATION_COAP
 SOURCES_COMMON                     += \

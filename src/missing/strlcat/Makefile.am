@@ -28,41 +28,31 @@
 
 include $(abs_top_nlbuild_autotools_dir)/automake/pre.am
 
-# Always package (e.g. for 'make dist') these subdirectories.
-
-DIST_SUBDIRS                            = \
-    missing                               \
-    core                                  \
-    cli                                   \
-    ncp                                   \
-    diag                                  \
+check_PROGRAMS                      = strlcat_test
+strlcat_test_SOURCES                = strlcat_test.c
+strlcat_test_CPPFLAGS               = \
+    $(AM_CPPFLAGS)                    \
+    $(MISSING_CPPFLAGS)               \
     $(NULL)
+strlcat_test_LDADD                  = $(NULL)
 
-# Always build (e.g. for 'make all') these subdirectories.
+TESTS                               = strlcat_test
 
-SUBDIRS                                 = \
-    missing                               \
-    core                                  \
+if MISSING_STRLCAT
+noinst_LTLIBRARIES                  = libstrlcat.la
+libstrlcat_la_SOURCES               = \
+    strlcat.c                         \
+    strlcat.h                         \
     $(NULL)
-
-if OPENTHREAD_ENABLE_CLI
-SUBDIRS                                += cli
+libstrlcat_la_CPPFLAGS              = \
+    $(AM_CPPFLAGS)                    \
+    $(MISSING_CPPFLAGS)               \
+    $(NULL)
+strlcat_test_LDADD                 += libstrlcat.la
 endif
 
-if OPENTHREAD_ENABLE_NCP
-SUBDIRS                                += ncp
+if MISSING_STRLCAT
+strlcat_test_LDADD                 += ../strlcpy/libstrlcpy.la
 endif
-
-if OPENTHREAD_ENABLE_DIAG
-SUBDIRS                                += diag
-endif
-
-# Always pretty (e.g. for 'make pretty') these subdirectories.
-
-PRETTY_SUBDIRS                          = \
-    cli                                   \
-    core                                  \
-    missing                               \
-    $(NULL)
 
 include $(abs_top_nlbuild_autotools_dir)/automake/post.am

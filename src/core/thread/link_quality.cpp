@@ -153,20 +153,18 @@ ThreadError LinkQualityInfo::GetAverageRssAsString(char *aCharBuffer, size_t aBu
 
     if (mCount == 0)
     {
-        VerifyOrExit(aBufferLen >= sizeof(kUnknownRssString), error = kThreadError_NoBufs);
-
-        strncpy(aCharBuffer, kUnknownRssString, aBufferLen);
+        charsWritten = static_cast<int>(strlcpy(aCharBuffer, kUnknownRssString, aBufferLen));
     }
     else
     {
         charsWritten = snprintf(aCharBuffer, aBufferLen, "%d.%s dBm",
                                 -(mRssAverage >> kRssAveragePrecisionMultipleBitShift),
                                 kLinkQualityDecimalDigitsString[mRssAverage & kRssAveragePrecisionMultipleBitMask]);
-
-        VerifyOrExit(charsWritten >= 0, error = kThreadError_NoBufs);
-
-        VerifyOrExit(static_cast<size_t>(charsWritten) < aBufferLen, error = kThreadError_NoBufs);
     }
+
+    VerifyOrExit(charsWritten >= 0, error = kThreadError_NoBufs);
+
+    VerifyOrExit(charsWritten < static_cast<int>(aBufferLen), error = kThreadError_NoBufs);
 
 exit:
     return error;
