@@ -132,6 +132,11 @@ typedef enum ThreadError
      */
     kThreadError_BlacklistFiltered = 27,
 
+    /**
+     * The creation of IPv6 address failed.
+     */
+    kThreadError_Ipv6AddressCreationFailure = 28,
+
     kThreadError_Error = 255,
 } ThreadError;
 
@@ -806,6 +811,24 @@ typedef struct otNetifAddress
     uint8_t                mPrefixLength;       ///< The Prefix length.
     struct otNetifAddress *mNext;               ///< A pointer to the next network interface address.
 } otNetifAddress;
+
+/**
+ * This structure represents data used by Semantically Opaque IID Generator.
+ *
+ */
+typedef struct
+{
+    uint8_t        *mInterfaceId;        ///< String of bytes representing interface ID. Like "eth0" or "wlan0".
+    uint8_t         mInterfaceIdLength;  ///< Length of interface ID string.
+
+    uint8_t        *mNetworkId;          ///< Network ID (or name). Can be null if mNetworkIdLength is 0.
+    uint8_t         mNetworkIdLength;    ///< Length of Network ID string.
+
+    uint8_t         mDadCounter;         ///< Duplicate address detection counter.
+
+    uint8_t        *mSecretKey;          ///< Secret key used to create IID. Cannot be null.
+    uint16_t        mSecretKeyLength;    ///< Secret key length in bytes. Should be at least 16 bytes == 128 bits.
+} otSemanticallyOpaqueIidGeneratorData;
 
 /**
  * @addtogroup messages  Message Buffers

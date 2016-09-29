@@ -48,10 +48,12 @@
 #include <crypto/mbedtls.hpp>
 #include <net/icmp6.hpp>
 #include <net/ip6.hpp>
+#include <platform/radio.h>
 #include <platform/random.h>
 #include <platform/misc.h>
 #include <thread/thread_netif.hpp>
 #include <thread/thread_uris.hpp>
+#include <utils/global_address.hpp>
 
 // Temporary definition
 typedef struct otInstance
@@ -904,6 +906,31 @@ ThreadError otAddUnicastAddress(otInstance *, const otNetifAddress *address)
 ThreadError otRemoveUnicastAddress(otInstance *, const otIp6Address *address)
 {
     return sThreadNetif->RemoveExternalUnicastAddress(*static_cast<const Ip6::Address *>(address));
+}
+
+void otSlaacUpdate(otInstance *aInstance, otNetifAddress *aAddresses, uint32_t aNumAddresses,
+                   otSlaacIidCreate aIidCreate, void *aContext)
+{
+    Utils::Slaac::UpdateAddresses(aInstance, aAddresses, aNumAddresses, aIidCreate, aContext);
+}
+
+ThreadError otCreateRandomIid(otInstance *aInstance, otNetifAddress *aAddress, void *aContext)
+{
+    return Utils::Slaac::CreateRandomIid(aInstance, aAddress, aContext);
+}
+
+ThreadError otCreateMacIid(otInstance *, otNetifAddress *aAddress, void *)
+{
+    memcpy(&aAddress->mAddress.mFields.m8[OT_IP6_ADDRESS_SIZE - OT_IP6_IID_SIZE],
+           sThreadNetif->GetMac().GetExtAddress(), OT_IP6_IID_SIZE);
+    aAddress->mAddress.mFields.m8[OT_IP6_ADDRESS_SIZE - OT_IP6_IID_SIZE] ^= 0x02;
+
+    return kThreadError_None;
+}
+
+ThreadError otCreateSemanticallyOpaqueIid(otInstance *aInstance, otNetifAddress *aAddress, void *aContext)
+{
+    return static_cast<Utils::SemanticallyOpaqueIidGenerator *>(aContext)->CreateIid(aInstance, aAddress);
 }
 
 void otSetStateChangedCallback(otInstance *, otStateChangedCallback aCallback, void *aCallbackContext)
