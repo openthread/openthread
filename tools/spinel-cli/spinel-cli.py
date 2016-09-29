@@ -88,6 +88,7 @@ import shlex
 import base64
 import textwrap
 import ipaddress
+import binascii
 
 import logging
 import logging.config
@@ -281,6 +282,9 @@ SPINEL_PROP_THREAD_CONTEXT_REUSE_DELAY = SPINEL_PROP_THREAD_EXT__BEGIN + 3 #< [L
 SPINEL_PROP_THREAD_NETWORK_ID_TIMEOUT =  SPINEL_PROP_THREAD_EXT__BEGIN + 4 #< [b]
 SPINEL_PROP_THREAD_ACTIVE_ROUTER_IDS = SPINEL_PROP_THREAD_EXT__BEGIN + 5 #< [A(b)]
 SPINEL_PROP_THREAD_RLOC16_DEBUG_PASSTHRU = SPINEL_PROP_THREAD_EXT__BEGIN + 6 #< [b]
+SPINEL_PROP_THREAD_ROUTER_ROLE_ENABLED = SPINEL_PROP_THREAD_EXT__BEGIN + 7 #< [b]
+SPINEL_PROP_THREAD_ROUTER_DOWNGRADE_THRESHOLD = SPINEL_PROP_THREAD_EXT__BEGIN + 8 #< [C]
+SPINEL_PROP_THREAD_ROUTER_SELECTION_JITTER = SPINEL_PROP_THREAD_EXT__BEGIN + 9 #< [C]
 
 SPINEL_PROP_THREAD_EXT__END        = 0x1600,
 
@@ -514,6 +518,8 @@ def hexify_int(i): return "%02X" % i
 def hexify_bytes(data): return str(map(hexify_chr,data))
 def hexify_str(s,delim=':'):
     return delim.join(x.encode('hex') for x in s)
+
+def pack_bytes(packet): return pack("%dB" % len(packet), *packet)
 
 def asciify_int(i): return "%c" % (i)
 
@@ -932,7 +938,7 @@ class SpinelPropertyHandler(SpinelCodec):
         prefixes = []
         slaacPrefixSet = set()
         while (len(pay) >= 22):
-            (structlen) = unpack('>H', pay[:2])
+            (structlen) = unpack('<H', pay[:2])
             pay = pay[2:]
             prefix = Prefix(*unpack('16sBBBB', pay[:20]))
             if (prefix.flags & kThreadPrefixSlaacFlag):
@@ -990,6 +996,12 @@ class SpinelPropertyHandler(SpinelCodec):
     def THREAD_RLOC16(self, payload):          return self.parse_S(payload)
 
     def THREAD_ROUTER_UPGRADE_THRESHOLD(self, payload):
+        return self.parse_C(payload)
+
+    def THREAD_ROUTER_DOWNGRADE_THRESHOLD(self, payload):
+        return self.parse_C(payload)
+
+    def THREAD_ROUTER_SELECTION_JITTER(self, payload):
         return self.parse_C(payload)
 
     def THREAD_CONTEXT_REUSE_DELAY(self, payload):
@@ -1148,6 +1160,8 @@ SPINEL_PROP_DISPATCH = {
     SPINEL_PROP_THREAD_CHILD_TIMEOUT: wpanPropHandler.THREAD_CHILD_TIMEOUT,
     SPINEL_PROP_THREAD_RLOC16: wpanPropHandler.THREAD_RLOC16,
     SPINEL_PROP_THREAD_ROUTER_UPGRADE_THRESHOLD: wpanPropHandler.THREAD_ROUTER_UPGRADE_THRESHOLD,
+    SPINEL_PROP_THREAD_ROUTER_DOWNGRADE_THRESHOLD: wpanPropHandler.THREAD_ROUTER_DOWNGRADE_THRESHOLD,
+    SPINEL_PROP_THREAD_ROUTER_SELECTION_JITTER: wpanPropHandler.THREAD_ROUTER_SELECTION_JITTER,
     SPINEL_PROP_THREAD_CONTEXT_REUSE_DELAY: wpanPropHandler.THREAD_CONTEXT_REUSE_DELAY,
     SPINEL_PROP_THREAD_NETWORK_ID_TIMEOUT: wpanPropHandler.THREAD_NETWORK_ID_TIMEOUT,
     SPINEL_PROP_THREAD_ACTIVE_ROUTER_IDS: wpanPropHandler.THREAD_ACTIVE_ROUTER_IDS,
@@ -1599,7 +1613,9 @@ class SpinelCliCmd(Cmd, SpinelCodec):
         'rloc16',
         'route',
         'router',
+        'routerselectionjitter',
         'routerupgradethreshold',
+        'routerdowngradethreshold',
         'scan',
         'state',
         'thread',
@@ -1669,15 +1685,20 @@ class SpinelCliCmd(Cmd, SpinelCodec):
     def prop_get_or_set_value(self, prop_id, line, format='B'):
         """ Helper to get or set a property value based on line arguments. """
         if line:
-            value = self.prop_set_value(prop_id, self.prep_line(line), format)
+            arg = self.prep_line(line, format)
+            if format=='D': format = str(len(arg))+'s'
+            value = self.prop_set_value(prop_id, arg, format)
         else:
             value = self.prop_get_value(prop_id)
         return value
 
-    def prep_line(self, line):
+    def prep_line(self, line, format='B'):
         """ Convert a line argument to proper type """
         if line != None:
-            line = int(line)
+            if format == 'D':
+                line = hex_to_bytes(line)
+            else:
+                line = int(line)
         return line
 
     def prop_get(self, prop_id, format='B'):
@@ -1697,7 +1718,8 @@ class SpinelCliCmd(Cmd, SpinelCodec):
 
     def prop_set(self, prop_id, line, format='B'):
         """ Helper to set a propery and output Done or Error. """
-        arg = self.prep_line(line)
+        arg = self.prep_line(line, format)
+        if format=='D': format = str(len(arg))+'s'
         value = self.prop_set_value(prop_id, arg, format)
 
         if (value == None):
@@ -2257,7 +2279,7 @@ class SpinelCliCmd(Cmd, SpinelCodec):
             > masterkey 00112233445566778899aabbccddeeff
             Done
         """
-        pass
+        self.handle_property(line, SPINEL_PROP_NET_MASTER_KEY, 'D')
 
     def do_mode(self, line):
         """
@@ -2639,6 +2661,26 @@ class SpinelCliCmd(Cmd, SpinelCodec):
         """
         pass
 
+
+    def do_routerselectionjitter(self, line):
+        """
+        routerselectionjitter
+
+            Get the ROUTER_SELECTION_JITTER value.
+
+            > routerselectionjitter
+            120
+            Done
+
+        routerselectionjitter <threshold>
+        
+            Set the ROUTER_SELECTION_JITTER value.
+        
+            > routerselectionjitter 120
+            Done        
+        """
+        self.handle_property(line, SPINEL_PROP_THREAD_ROUTER_SELECTION_JITTER)
+
     def do_routerupgradethreshold(self, line):
         """
         routerupgradethreshold
@@ -2657,6 +2699,25 @@ class SpinelCliCmd(Cmd, SpinelCodec):
             Done
         """
         self.handle_property(line, SPINEL_PROP_THREAD_ROUTER_UPGRADE_THRESHOLD)
+
+    def do_routerdowngradethreshold(self, line):
+        """
+        routerdowngradethreshold
+
+            Get the ROUTER_DOWNGRADE_THRESHOLD value.
+
+            > routerdowngradethreshold
+            16
+            Done
+
+        routerdowngradethreshold <threshold>
+
+            Set the ROUTER_DOWNGRADE_THRESHOLD value.
+
+            > routerdowngradethreshold 16
+            Done
+        """
+        self.handle_property(line, SPINEL_PROP_THREAD_ROUTER_DOWNGRADE_THRESHOLD)
 
     def do_scan(self, line):
         """

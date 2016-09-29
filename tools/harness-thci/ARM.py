@@ -468,6 +468,23 @@ class ARM(IThci):
         self.__logThreadRunning = False
         return logs
 
+    def __setChannelMask(self, channelsArray):
+        """convert channelsArray to bitmask format
+
+        Args:
+            channelsArray: channel array (i.e. [21, 22])
+
+        Returns:
+            bitmask format corresponding to a given channel array
+        """
+        maskSet = 0
+
+        for eachChannel in channelsArray:
+            mask = 1 << eachChannel
+            maskSet = (maskSet | mask)
+
+        return maskSet
+
     def closeConnection(self):
         """close current serial port connection"""
         print '%s call closeConnection' % self.port
@@ -797,7 +814,6 @@ class ARM(IThci):
                 print 'join as router'
                 role = 'rsdn'
                 self.__setRouterSelectionJitter(1)
-                time.sleep(5) #wait for REED upgrade to Router
                 if self.AutoDUTEnable is False:
                     # set ROUTER_UPGRADE_THRESHOLD
                     self.__setRouterUpgradeThreshold(33)
@@ -1038,7 +1054,7 @@ class ARM(IThci):
             self.setNetworkKey(self.networkKey)
             self.isWhiteListEnabled = False
             self.isBlackListEnabled = False
-            self.firmware = '2016 7 27 13:36:46'
+            self.firmware = 'Sep 9 2016 14:57:36'
         except Exception, e:
             ModuleHelper.WriteIntoDebugLogger("setDefaultValue() Error: " + str(e))
 
@@ -1625,10 +1641,12 @@ class ARM(IThci):
 
     def enableAutoDUTObjectFlag(self):
         """set AutoDUTenable flag"""
+        print '%s call enableAutoDUTObjectFlag' % self.port
         self.AutoDUTEnable = True
 
     def getChildTimeoutValue(self):
         """get child timeout"""
+        print '%s call getChildTimeoutValue' % self.port
         return self.__sendCommand('childtimeout')[0]
 
     def diagnosticGet(self, strDestinationAddr, listTLV_ids=[]):
@@ -1639,7 +1657,7 @@ class ARM(IThci):
             return
 
         cmd = 'networkdiagnostic get %s %s' % (strDestinationAddr, ' '.join([str(tlv) for tlv in listTLV_ids]))
-        print(cmd)
+        print cmd
 
         return self.__sendCommand(cmd)
 
@@ -1651,7 +1669,7 @@ class ARM(IThci):
             return
 
         cmd = 'networkdiagnostic reset %s %s' % (strDestinationAddr, ' '.join([str(tlv) for tlv in listTLV_ids]))
-        print(cmd)
+        print cmd
 
         return self.__sendCommand(cmd)
 
@@ -1783,7 +1801,29 @@ class ARM(IThci):
         return ProcessedLogs
 
     def MGMT_ED_SCAN(self, sAddr, xCommissionerSessionId, listChannelMask, xCount, xPeriod, xScanDuration):
-        pass
+        """send MGMT_ED_SCAN message to a given destinaition.
+
+        Args:
+            sAddr: IPv6 destination address for this message
+            xCommissionerSessionId: commissioner session id
+            listChannelMask: a channel array to indicate which channels to be scaned
+            xCount: number of IEEE 802.15.4 ED Scans (milliseconds)
+            xPeriod: Period between successive IEEE802.15.4 ED Scans (milliseconds)
+            xScanDuration: IEEE 802.15.4 ScanDuration to use when performing an IEEE 802.15.4 ED Scan (milliseconds)
+
+        Returns:
+            True: successful to send MGMT_ED_SCAN message.
+            False: fail to send MGMT_ED_SCAN message
+        """
+        print '%s call MGMT_ED_SCAN' % self.port
+        channelMask = ''
+        channelMask = '0x' + self.__convertLongToString(self.__setChannelMask(listChannelMask))
+        try:
+            cmd = 'commissioner energy %s %s %s %s %s' % (channelMask, xCount, xPeriod, xScanDuration, sAddr)
+            print cmd
+            return self.__sendCommand(cmd) == 'Done'
+        except Exception, e:
+            modulehelper.writeintodebuglogger("MGMT_ED_SCAN() error: " + str(e))
 
     def MGMT_PANID_QUERY(self, sAddr, xCommissionerSessionId, listChannelMask, xPanId):
         pass
@@ -1792,26 +1832,306 @@ class ARM(IThci):
         pass
 
     def MGMT_ACTIVE_GET(self, Addr='', TLVs=[]):
-        pass
+        """send MGMT_ACTIVE_GET command
+
+        Returns:
+            True: successful to send MGMT_ACTIVE_GET
+            False: fail to fail MGMT_ACTIVE_GET
+        """
+        print 'call MGMT_ACTIVE_GET'
+
+        try:
+            cmd = 'dataset mgmtgetcommand active'
+
+            if len(TLVs) != 0:
+                tlvs = "".join(hex(tlv).lstrip("0x").zfill(2) for tlv in TLVs)
+                cmd += ' binary '
+                cmd += tlvs
+
+            print cmd
+
+            return self.__sendCommand(cmd)[0] == 'Done'
+
+        except Exception, e:
+            ModuleHelper.WriteIntoDebugLogger("MGMT_ACTIVE_GET() Error: " + str(e))
 
     def MGMT_ACTIVE_SET(self, sAddr='', xCommissioningSessionId=None, listActiveTimestamp=None, listChannelMask=None, xExtendedPanId=None,
                         sNetworkName=None, sPSKc=None, listSecurityPolicy=None, xChannel=None, sMeshLocalPrefix=None, xMasterKey=None,
-                        xPanId=None, xTmfPort=None, xSteeringData=None, xBorderRouterLocator=None, xDelayTimer=None):
-        pass
+                        xPanId=None, xTmfPort=None, xSteeringData=None, xBorderRouterLocator=None, BogusTLV = None, xDelayTimer=None):
+        """send MGMT_ACTIVE_SET command
+
+        Returns:
+            True: successful to send MGMT_ACTIVE_SET
+            False: fail to fail MGMT_ACTIVE_SET
+        """
+        print 'call MGMT_ACTIVE_SET'
+
+        try:
+            cmd = 'dataset mgmtsetcommand active'
+
+            if listActiveTimestamp != None:
+                cmd += ' activetimestamp '
+                cmd += str(listActiveTimestamp[0])
+
+            if xExtendedPanId != None:
+                cmd += ' extpanid '
+                xpanid = self.__convertLongToString(xExtendedPanId)
+
+                if len(xpanid) < 16:
+                    xpanid = xpanid.zfill(16)
+
+                cmd += xpanid
+
+            if sNetworkName != None:
+                cmd += ' networkname '
+                cmd += str(sNetworkName)
+
+            if xChannel != None:
+                cmd += ' channel '
+                cmd += str(xChannel)
+
+            if sMeshLocalPrefix != None:
+                cmd += ' localprefix '
+                cmd += str(sMeshLocalPrefix)
+
+            if xMasterKey != None:
+                cmd += ' masterkey '
+                key = self.__convertLongToString(xMasterKey)
+
+                if len(key) < 32:
+                    key = key.zfill(32)
+
+                cmd += key
+
+            if xPanId != None:
+                cmd += ' panid '
+                cmd + str(xPanId)
+
+            if xDelayTimer != None:
+                cmd += ' delay '
+                cmd += str(xDelayTimer)
+
+            if  sPSKc != None or listSecurityPolicy != None or listChannelMask != None or \
+                xCommissioningSessionId != None or xTmfPort != None or xSteeringData != None or xBorderRouterLocator != None or \
+                BogusTLV != None:
+                cmd += ' binary '
+
+            if listChannelMask != None:
+                cmd += '35060004'
+                entry = self.__convertLongToString(self.__setChannelMask(listChannelMask))
+
+                if len(entry) < 8:
+                    entry = entry.zfill(8)
+
+                cmd += entry
+
+            if sPSKc != None:
+                cmd += '0410'
+                pskc = sPSKc[::-1].encode('hex')
+
+                if len(pskc) < 32:
+                    pskc = pskc.zfill(32)
+
+                cmd += pskc
+
+            if listSecurityPolicy != None:
+                cmd += '0c03'
+                policy = str(hex(listSecurityPolicy[2]))[2:]
+
+                if len(policy) < 4:
+                    policy = policy.zfill(4)
+
+                cmd += policy
+
+                policyBit = 0
+
+                if listSecurityPolicy[0]:
+                    policyBit = policyBit | 0b10000000
+                if listSecurityPolicy[1]:
+                    policyBit = policyBit | 0b01000000
+                if listSecurityPolicy[3]:
+                    policyBit = policyBit | 0b00100000
+                if listSecurityPolicy[4]:
+                    policyBit = policyBit | 0b00010000
+                if listSecurityPolicy[5]:
+                    policyBit = policyBit | 0b00001000
+
+                cmd += str(hex(policyBit))[2:]
+
+            if xCommissioningSessionId != None:
+                cmd += '0b02'
+                sessionid = str(hex(xCommissioningSessionId))[2:]
+
+                if len(sessionid) < 4:
+                    sessionid = sissionid.zfill(4)
+
+                cmd += sessionid
+
+            if xBorderRouterLocator != None:
+                cmd += '0902'
+                locator = str(hex(xBorderRouterLocator))[2:]
+
+                if len(locator) < 4:
+                    locator = locator.zfill(4)
+
+                cmd += locator
+
+            print cmd
+
+            return self.__sendCommand(cmd)[0] == 'Done'
+
+        except Exception, e:
+            ModuleHelper.WriteIntoDebugLogger("MGMT_ACTIVE_SET() Error: " + str(e))
 
     def MGMT_PENDING_GET(self, Addr='', TLVs=[]):
-        pass
+        """send MGMT_PENDING_GET command
 
-    def MGMT_PENDING_SET(self, sAddr='', xCommissionerId=None, listPendingTimestamp=None, listActiveTimestamp=None, xDelayTimer=None,
-                         xChannel=None, xPanId=None, xMasterKey=None):
-        pass
+        Returns:
+            True: successful to send MGMT_PENDING_GET
+            False: fail to fail MGMT_PENDING_GET
+        """
+        print 'call MGMT_PENDING_GET'
+
+        try:
+            cmd = 'dataset mgmtgetcommand pending'
+
+            if len(TLVs) != 0:
+                tlvs = "".join(hex(tlv).lstrip("0x").zfill(2) for tlv in TLVs)
+                cmd += ' binary '
+                cmd += tlvs
+
+            print cmd
+
+            return self.__sendCommand(cmd)[0] == 'Done'
+
+        except Exception, e:
+            ModuleHelper.WriteIntoDebugLogger("MGMT_PENDING_GET() Error: " + str(e))
+
+    def MGMT_PENDING_SET(self, sAddr='', xCommissionerSessionId=None, listPendingTimestamp=None, listActiveTimestamp=None, xDelayTimer=None,
+                         xChannel=None, xPanId=None, xMasterKey=None, sMeshLocalPrefix=None, sNetworkName=None):
+        """send MGMT_PENDING_SET command
+
+        Returns:
+            True: successful to send MGMT_PENDING_SET
+            False: fail to fail MGMT_PENDING_SET
+        """
+        print 'call MGMT_PENDING_SET'
+
+        try:
+            cmd = 'dataset mgmtsetcommand pending'
+
+            if listPendingTimestamp != None:
+                cmd += ' pendingtimestamp '
+                cmd += str(listPendingTimestamp[0])
+
+            if listActiveTimestamp != None:
+                cmd += ' activetimestamp '
+                cmd += str(listActiveTimestamp[0])
+
+            if xDelayTimer != None:
+                #cmd += ' delaytimer '
+                #cmd += str(xDelayTimer)
+                cmd += ' delaytimer 3000000'
+
+            if xChannel != None:
+                cmd += ' channel '
+                cmd += str(xChannel)
+
+            if xPanId != None:
+                cmd += ' panid '
+                cmd + str(xPanId)
+
+            if xMasterKey != None:
+                cmd += ' masterkey '
+                key = self.__convertLongToString(xMasterKey)
+
+                if len(key) < 32:
+                    key = key.zfill(32)
+
+                cmd += key
+
+            if sMeshLocalPrefix != None:
+                cmd += ' localprefix '
+                cmd += str(sMeshLocalPrefix)
+
+            if sNetworkName != None:
+                cmd += ' networkname '
+                cmd += str(sNetworkName)
+
+            if xCommissionerSessionId != None:
+                cmd += ' binary '
+
+            if xCommissionerSessionId != None:
+                cmd += '0b02'
+                sessionid = str(hex(xCommissionerSessionId))[2:]
+
+                if len(sessionid) < 4:
+                    sessionid = sissionid.zfill(4)
+
+                cmd += sessionid
+
+            print cmd
+
+            return self.__sendCommand(cmd)[0] == 'Done'
+
+        except Exception, e:
+            ModuleHelper.WriteIntoDebugLogger("MGMT_PENDING_SET() Error: " + str(e))
 
     def MGMT_COMM_GET(self, Addr='ff02::1', TLVs=[]):
-        pass
+        """send MGMT_COMM_GET command
+
+        Returns:
+            True: successful to send MGMT_COMM_GET
+            False: fail to fail MGMT_COMM_GET
+        """
+        print 'call MGMT_COMM_GET'
+
+        try:
+            cmd = 'commissioner mgmtget'
+
+            if len(TLVs) != 0:
+                tlvs = "".join(hex(tlv).lstrip("0x").zfill(2) for tlv in TLVs)
+                cmd += ' binary '
+                cmd += tlvs
+
+            print cmd
+
+            return self.__sendCommand(cmd)[0] == 'Done'
+
+        except Exception, e:
+            ModuleHelper.WriteIntoDebugLogger("MGMT_COMM_GET() Error: " + str(e))
 
     def MGMT_COMM_SET(self, Addr='ff02::1', xCommissionerSessionID=None, xSteeringData=None, xBorderRouterLocator=None,
                       xChannelTlv=None, ExceedMaxPayload=False):
-        pass
+        """send MGMT_COMM_SET command
+
+        Returns:
+            True: successful to send MGMT_COMM_SET
+            False: fail to fail MGMT_COMM_SET
+        """
+        print 'call MGMT_COMM_SET'
+
+        try:
+            cmd = 'commissioner mgmtset'
+
+            if xCommissionerSessionID != None:
+                cmd += ' sessionid '
+                cmd += str(xCommissionerSessionID)
+
+            if xSteeringData != None:
+                cmd += ' steeringdata '
+                cmd += str(hex(xSteeringData)[2:])
+
+            if xBorderRouterLocator != None:
+                cmd += ' locator '
+                cmd += str(xBorderRouterLocator)
+
+            print cmd
+
+            return self.__sendCommand(cmd)[0] == 'Done'
+
+        except Exception, e:
+            ModuleHelper.WriteIntoDebugLogger("MGMT_COMM_SET() Error: " + str(e))
 
     def setActiveDataset(self, listActiveDataset=[]):
         pass

@@ -34,6 +34,8 @@
 #ifndef MLE_ROUTER_HPP_
 #define MLE_ROUTER_HPP_
 
+#include <string.h>
+
 #include <coap/coap_header.hpp>
 #include <coap/coap_server.hpp>
 #include <common/timer.hpp>
@@ -60,6 +62,110 @@ class NetworkDataLeader;
  *
  * @{
  */
+
+/**
+ * This class implements functionality required for delaying MLE responses.
+ *
+ */
+OT_TOOL_PACKED_BEGIN
+class DelayedResponseHeader
+{
+public:
+    /**
+     * Default constructor for the object.
+     *
+     */
+    DelayedResponseHeader(void) { memset(this, 0, sizeof(*this)); };
+
+    /**
+     * This constructor initializes the object with specific values.
+     *
+     * @param[in]  aSendTime     Time when the message shall be sent.
+     * @param[in]  aDestination  IPv6 address of the message destination.
+     *
+     */
+    DelayedResponseHeader(uint32_t aSendTime, const Ip6::Address &aDestination) {
+        mSendTime = aSendTime;
+        mDestination = aDestination;
+    };
+
+    /**
+     * This method appends delayed response header to the message.
+     *
+     * @param[in]  aMessage  A reference to the message.
+     *
+     * @retval kThreadError_None    Successfully appended the bytes.
+     * @retval kThreadError_NoBufs  Insufficient available buffers to grow the message.
+     *
+     */
+    ThreadError AppendTo(Message &aMessage) {
+        return aMessage.Append(this, sizeof(*this));
+    };
+
+    /**
+     * This method reads delayed response header from the message.
+     *
+     * @param[in]  aMessage  A reference to the message.
+     *
+     * @returns The number of bytes read.
+     *
+     */
+    uint16_t ReadFrom(Message &aMessage) {
+        return aMessage.Read(aMessage.GetLength() - sizeof(*this), sizeof(*this), this);
+    };
+
+    /**
+     * This method removes delayed response header from the message.
+     *
+     * @param[in]  aMessage  A reference to the message.
+     *
+     * @retval kThreadError_None  Successfully removed the header.
+     *
+     */
+    static ThreadError RemoveFrom(Message &aMessage) {
+        return aMessage.SetLength(aMessage.GetLength() - sizeof(DelayedResponseHeader));
+    };
+
+    /**
+     * This method returns a time when the message shall be sent.
+     *
+     * @returns  A time when the message shall be sent.
+     *
+     */
+    uint32_t GetSendTime(void) const { return mSendTime; };
+
+    /**
+     * This method returns a destination of the delayed message.
+     *
+     * @returns  A destination of the delayed message.
+     *
+     */
+    const Ip6::Address &GetDestination(void) const { return mDestination; };
+
+    /**
+     * This method checks if the message shall be sent before the given time.
+     *
+     * @param[in]  aTime  A time to compare.
+     *
+     * @retval TRUE   If the message shall be sent before the given time.
+     * @retval FALSE  Otherwise.
+     */
+    bool IsEarlier(uint32_t aTime) { return (static_cast<int32_t>(aTime - mSendTime) > 0); };
+
+    /**
+     * This method checks if the message shall be sent after the given time.
+     *
+     * @param[in]  aTime  A time to compare.
+     *
+     * @retval TRUE   If the message shall be sent after the given time.
+     * @retval FALSE  Otherwise.
+     */
+    bool IsLater(uint32_t aTime) { return (static_cast<int32_t>(aTime - mSendTime) < 0); };
+
+private:
+    Ip6::Address mDestination;  ///< IPv6 address of the message destination.
+    uint32_t mSendTime;         ///< Time when the message shall be sent.
+} OT_TOOL_PACKED_END;
 
 /**
  * This class implements MLE functionality required by the Thread Router and Leader roles.
@@ -174,6 +280,20 @@ public:
      *
      */
     void SetLeaderPartitionId(uint32_t aPartitionId);
+
+    /**
+     * This method sets the preferred Router Id. Upon becoming a router/leader the node
+     * attempts to use this Router Id. If the preferred Router Id is not set or if it
+     * can not be used, a randomly generated router Id is picked.
+     * This property can be set when he device role is detached or disabled.
+     *
+     * @param[in]  aRouterId             The preferred Router Id.
+     *
+     * @retval kThreadError_None         Successfully set the preferred Router Id.
+     * @retval kThreadError_InvalidState Could not set (role is other than detached and disabled)
+     *
+     */
+    ThreadError SetPreferredRouterId(uint8_t aRouterId);
 
     /**
      * This method returns the next hop towards an RLOC16 destination.
@@ -538,7 +658,7 @@ private:
     ThreadError SendLinkRequest(Neighbor *aNeighbor);
     ThreadError SendLinkAccept(const Ip6::MessageInfo &aMessageInfo, Neighbor *aNeighbor,
                                const TlvRequestTlv &aTlvRequest, const ChallengeTlv &aChallenge);
-    ThreadError SendParentResponse(Child *aChild, const ChallengeTlv &aChallenge);
+    ThreadError SendParentResponse(Child *aChild, const ChallengeTlv &aChallenge, bool aRoutersOnlyRequest);
     ThreadError SendChildIdResponse(Child *aChild);
     ThreadError SendChildUpdateResponse(Child *aChild, const Ip6::MessageInfo &aMessageInfo,
                                         const uint8_t *aTlvs, uint8_t aTlvsLength,  const ChallengeTlv *challenge);
@@ -579,9 +699,16 @@ private:
     bool HandleAdvertiseTimer(void);
     static void HandleStateUpdateTimer(void *aContext);
     void HandleStateUpdateTimer(void);
+    static void HandleDelayedResponseTimer(void *aContext);
+    void HandleDelayedResponseTimer(void);
+
+    ThreadError AddDelayedResponse(Message &aMessage, const Ip6::Address &aDestination, uint16_t aDelay);
+
+    MessageQueue mDelayedResponses;
 
     TrickleTimer mAdvertiseTimer;
     Timer mStateUpdateTimer;
+    Timer mDelayedResponseTimer;
 
     Ip6::UdpSocket mSocket;
     Coap::Resource mAddressSolicit;

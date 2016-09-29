@@ -48,10 +48,12 @@
 #include <crypto/mbedtls.hpp>
 #include <net/icmp6.hpp>
 #include <net/ip6.hpp>
+#include <platform/radio.h>
 #include <platform/random.h>
 #include <platform/misc.h>
 #include <thread/thread_netif.hpp>
 #include <thread/thread_uris.hpp>
+#include <utils/global_address.hpp>
 
 // Temporary definition
 typedef struct otInstance
@@ -684,22 +686,22 @@ void otPlatformReset(otInstance *aInstance)
     otPlatReset(aInstance);
 }
 
-uint8_t otGetRouterDowngradeThreshold(void)
+uint8_t otGetRouterDowngradeThreshold(otInstance *)
 {
     return sThreadNetif->GetMle().GetRouterDowngradeThreshold();
 }
 
-void otSetRouterDowngradeThreshold(uint8_t aThreshold)
+void otSetRouterDowngradeThreshold(otInstance *, uint8_t aThreshold)
 {
     sThreadNetif->GetMle().SetRouterDowngradeThreshold(aThreshold);
 }
 
-uint8_t otGetRouterSelectionJitter(void)
+uint8_t otGetRouterSelectionJitter(otInstance *)
 {
     return sThreadNetif->GetMle().GetRouterSelectionJitter();
 }
 
-void otSetRouterSelectionJitter(uint8_t aRouterJitter)
+void otSetRouterSelectionJitter(otInstance *, uint8_t aRouterJitter)
 {
     sThreadNetif->GetMle().SetRouterSelectionJitter(aRouterJitter);
 }
@@ -725,6 +727,16 @@ ThreadError otGetChildInfoByIndex(otInstance *, uint8_t aChildIndex, otChildInfo
     error = sThreadNetif->GetMle().GetChildInfoByIndex(aChildIndex, *aChildInfo);
 
 exit:
+    return error;
+}
+
+ThreadError otGetNextNeighborInfo(otInstance *, otNeighborInfoIterator *aIterator, otNeighborInfo *aInfo)
+{
+    ThreadError error = kThreadError_NotImplemented;
+
+    (void)aIterator;
+    (void)aInfo;
+
     return error;
 }
 
@@ -896,6 +908,31 @@ ThreadError otRemoveUnicastAddress(otInstance *, const otIp6Address *address)
     return sThreadNetif->RemoveExternalUnicastAddress(*static_cast<const Ip6::Address *>(address));
 }
 
+void otSlaacUpdate(otInstance *aInstance, otNetifAddress *aAddresses, uint32_t aNumAddresses,
+                   otSlaacIidCreate aIidCreate, void *aContext)
+{
+    Utils::Slaac::UpdateAddresses(aInstance, aAddresses, aNumAddresses, aIidCreate, aContext);
+}
+
+ThreadError otCreateRandomIid(otInstance *aInstance, otNetifAddress *aAddress, void *aContext)
+{
+    return Utils::Slaac::CreateRandomIid(aInstance, aAddress, aContext);
+}
+
+ThreadError otCreateMacIid(otInstance *, otNetifAddress *aAddress, void *)
+{
+    memcpy(&aAddress->mAddress.mFields.m8[OT_IP6_ADDRESS_SIZE - OT_IP6_IID_SIZE],
+           sThreadNetif->GetMac().GetExtAddress(), OT_IP6_IID_SIZE);
+    aAddress->mAddress.mFields.m8[OT_IP6_ADDRESS_SIZE - OT_IP6_IID_SIZE] ^= 0x02;
+
+    return kThreadError_None;
+}
+
+ThreadError otCreateSemanticallyOpaqueIid(otInstance *aInstance, otNetifAddress *aAddress, void *aContext)
+{
+    return static_cast<Utils::SemanticallyOpaqueIidGenerator *>(aContext)->CreateIid(aInstance, aAddress);
+}
+
 void otSetStateChangedCallback(otInstance *, otStateChangedCallback aCallback, void *aCallbackContext)
 {
     sNetifCallback.Set(aCallback, aCallbackContext);
@@ -926,6 +963,11 @@ uint32_t otGetPollPeriod(otInstance *)
 void otSetPollPeriod(otInstance *, uint32_t aPollPeriod)
 {
     sThreadNetif->GetMeshForwarder().SetAssignPollPeriod(aPollPeriod);
+}
+
+ThreadError otSetPreferredRouterId(otInstance *, uint8_t aRouterId)
+{
+    return sThreadNetif->GetMle().SetPreferredRouterId(aRouterId);
 }
 
 #ifdef OPENTHREAD_MULTIPLE_INSTANCE
@@ -1310,7 +1352,7 @@ ThreadError otGetActiveDataset(otInstance *, otOperationalDataset *aDataset)
 
     VerifyOrExit(aDataset != NULL, error = kThreadError_InvalidArgs);
 
-    sThreadNetif->GetActiveDataset().Get(*aDataset);
+    sThreadNetif->GetActiveDataset().GetLocal().Get(*aDataset);
 
 exit:
     return error;
@@ -1334,7 +1376,7 @@ ThreadError otGetPendingDataset(otInstance *, otOperationalDataset *aDataset)
 
     VerifyOrExit(aDataset != NULL, error = kThreadError_InvalidArgs);
 
-    sThreadNetif->GetPendingDataset().Get(*aDataset);
+    sThreadNetif->GetPendingDataset().GetLocal().Get(*aDataset);
 
 exit:
     return error;

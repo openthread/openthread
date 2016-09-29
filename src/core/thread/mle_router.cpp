@@ -52,6 +52,7 @@ MleRouter::MleRouter(ThreadNetif &aThreadNetif):
     Mle(aThreadNetif),
     mAdvertiseTimer(aThreadNetif.GetIp6().mTimerScheduler, &MleRouter::HandleAdvertiseTimer, NULL, this),
     mStateUpdateTimer(aThreadNetif.GetIp6().mTimerScheduler, &MleRouter::HandleStateUpdateTimer, this),
+    mDelayedResponseTimer(aThreadNetif.GetIp6().mTimerScheduler, &MleRouter::HandleDelayedResponseTimer, this),
     mSocket(aThreadNetif.GetIp6().mUdp),
     mAddressSolicit(OPENTHREAD_URI_ADDRESS_SOLICIT, &MleRouter::HandleAddressSolicit, this),
     mAddressRelease(OPENTHREAD_URI_ADDRESS_RELEASE, &MleRouter::HandleAddressRelease, this),
@@ -168,6 +169,16 @@ ThreadError MleRouter::ReleaseRouterId(uint8_t aRouterId)
     mRouters[aRouterId].mReclaimDelay = true;
     mRouters[aRouterId].mState = Neighbor::kStateInvalid;
     mRouters[aRouterId].mNextHop = kInvalidRouterId;
+
+    for (uint8_t i = 0; i <= kMaxRouterId; i++)
+    {
+        if (mRouters[i].mNextHop == aRouterId)
+        {
+            mRouters[i].mNextHop = kInvalidRouterId;
+            mRouters[i].mCost = 0;
+        }
+    }
+
     mRouterIdSequence++;
     mRouterIdSequenceLastUpdated = Timer::GetNow();
     mAddressResolver.Remove(aRouterId);
@@ -245,7 +256,8 @@ ThreadError MleRouter::BecomeLeader(void)
 
     routerId = IsRouterIdValid(mPreviousRouterId) ? AllocateRouterId(mPreviousRouterId) : AllocateRouterId();
     VerifyOrExit(IsRouterIdValid(routerId), error = kThreadError_NoBufs);
-    mRouterId = static_cast<uint8_t>(routerId);
+
+    mRouterId = routerId;
     mPreviousRouterId = mRouterId;
 
     memcpy(&mRouters[mRouterId].mMacAddr, mMac.GetExtAddress(), sizeof(mRouters[mRouterId].mMacAddr));
@@ -739,9 +751,19 @@ ThreadError MleRouter::SendLinkAccept(const Ip6::MessageInfo &aMessageInfo, Neig
         aNeighbor->mState = Neighbor::kStateLinkRequest;
     }
 
-    SuccessOrExit(error = SendMessage(*message, aMessageInfo.GetPeerAddr()));
+    if (aMessageInfo.GetSockAddr().IsMulticast())
+    {
+        SuccessOrExit(error = AddDelayedResponse(*message, aMessageInfo.GetPeerAddr(),
+                                                 (otPlatRandomGet() % kMaxResponseDelay) + 1));
 
-    otLogInfoMle("Sent link accept\n");
+        otLogInfoMle("Delayed link accept\n");
+    }
+    else
+    {
+        SuccessOrExit(error = SendMessage(*message, aMessageInfo.GetPeerAddr()));
+
+        otLogInfoMle("Sent link accept\n");
+    }
 
 exit:
 
@@ -1627,8 +1649,9 @@ ThreadError MleRouter::HandleParentRequest(const Message &aMessage, const Ip6::M
     child->mState = Neighbor::kStateParentRequest;
     child->mDataRequest = false;
 
+    child->mLastHeard = Timer::GetNow();
     child->mTimeout = Timer::SecToMsec(2 * kParentRequestChildTimeout);
-    SuccessOrExit(error = SendParentResponse(child, challenge));
+    SuccessOrExit(error = SendParentResponse(child, challenge, !scanMask.IsEndDeviceFlagSet()));
 
 exit:
     return error;
@@ -1756,11 +1779,96 @@ exit:
     {}
 }
 
-ThreadError MleRouter::SendParentResponse(Child *aChild, const ChallengeTlv &challenge)
+void MleRouter::HandleDelayedResponseTimer(void *aContext)
+{
+    static_cast<MleRouter *>(aContext)->HandleDelayedResponseTimer();
+}
+
+void MleRouter::HandleDelayedResponseTimer(void)
+{
+    DelayedResponseHeader delayedResponse;
+    uint32_t now = otPlatAlarmGetNow();
+    uint32_t nextDelay = 0xffffffff;
+    Message *message = mDelayedResponses.GetHead();
+    Message *nextMessage = NULL;
+
+    while (message != NULL)
+    {
+        nextMessage = message->GetNext();
+        delayedResponse.ReadFrom(*message);
+
+        if (delayedResponse.IsLater(now))
+        {
+            // Calculate the next delay and choose the lowest.
+            if (delayedResponse.GetSendTime() - now < nextDelay)
+            {
+                nextDelay = delayedResponse.GetSendTime() - now;
+            }
+        }
+        else
+        {
+            mDelayedResponses.Dequeue(*message);
+
+            // Remove the DelayedResponseHeader from the message.
+            DelayedResponseHeader::RemoveFrom(*message);
+
+            // Send the message.
+            if (SendMessage(*message, delayedResponse.GetDestination()) == kThreadError_None)
+            {
+                otLogInfoMle("Sent delayed response\n");
+            }
+            else
+            {
+                message->Free();
+            }
+        }
+
+        message = nextMessage;
+    }
+
+    if (nextDelay != 0xffffffff)
+    {
+        mDelayedResponseTimer.Start(nextDelay);
+    }
+}
+
+ThreadError MleRouter::AddDelayedResponse(Message &aMessage, const Ip6::Address &aDestination, uint16_t aDelay)
+{
+    ThreadError error = kThreadError_None;
+    uint32_t alarmFireTime;
+    uint32_t sendTime = otPlatAlarmGetNow() + aDelay;
+
+    // Append the message with DelayedRespnoseHeader and add to the list.
+    DelayedResponseHeader delayedResponse(sendTime, aDestination);
+    SuccessOrExit(error = delayedResponse.AppendTo(aMessage));
+    mDelayedResponses.Enqueue(aMessage);
+
+    if (mDelayedResponseTimer.IsRunning())
+    {
+        // If timer is already running, check if it should be restarted with earlier fire time.
+        alarmFireTime = mDelayedResponseTimer.Gett0() + mDelayedResponseTimer.Getdt();
+
+        if (delayedResponse.IsEarlier(alarmFireTime))
+        {
+            mDelayedResponseTimer.Start(aDelay);
+        }
+    }
+    else
+    {
+        // Otherwise just set the timer.
+        mDelayedResponseTimer.Start(aDelay);
+    }
+
+exit:
+    return error;
+}
+
+ThreadError MleRouter::SendParentResponse(Child *aChild, const ChallengeTlv &challenge, bool aRoutersOnlyRequest)
 {
     ThreadError error = kThreadError_None;
     Ip6::Address destination;
     Message *message;
+    uint16_t delay;
 
     VerifyOrExit((message = mSocket.NewMessage(0)) != NULL, ;);
     message->SetLinkSecurityEnabled(false);
@@ -1795,9 +1903,19 @@ ThreadError MleRouter::SendParentResponse(Child *aChild, const ChallengeTlv &cha
     memset(&destination, 0, sizeof(destination));
     destination.mFields.m16[0] = HostSwap16(0xfe80);
     destination.SetIid(aChild->mMacAddr);
-    SuccessOrExit(error = SendMessage(*message, destination));
 
-    otLogInfoMle("Sent Parent Response\n");
+    if (aRoutersOnlyRequest)
+    {
+        delay = (otPlatRandomGet() % kParentResponseMaxDelayRouters) + 1;
+    }
+    else
+    {
+        delay = (otPlatRandomGet() % kParentResponseMaxDelayAll) + 1;
+    }
+
+    SuccessOrExit(error = AddDelayedResponse(*message, destination, delay));
+
+    otLogInfoMle("Delayed Parent Response\n");
 
 exit:
 
@@ -2719,6 +2837,21 @@ uint32_t MleRouter::GetLeaderPartitionId(void) const
 void MleRouter::SetLeaderPartitionId(uint32_t aPartitionId)
 {
     mFixedLeaderPartitionId = aPartitionId;
+}
+
+ThreadError MleRouter::SetPreferredRouterId(uint8_t aRouterId)
+{
+    ThreadError error = kThreadError_None;
+
+    VerifyOrExit(
+        (mDeviceState == kDeviceStateDetached) || (mDeviceState == kDeviceStateDisabled),
+        error = kThreadError_InvalidState
+    );
+
+    mPreviousRouterId = aRouterId;
+
+exit:
+    return error;
 }
 
 void MleRouter::HandleMacDataRequest(const Child &aChild)

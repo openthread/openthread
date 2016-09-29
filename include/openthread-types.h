@@ -132,6 +132,11 @@ typedef enum ThreadError
      */
     kThreadError_BlacklistFiltered = 27,
 
+    /**
+     * The creation of IPv6 address failed.
+     */
+    kThreadError_Ipv6AddressCreationFailure = 28,
+
     kThreadError_Error = 255,
 } ThreadError;
 
@@ -672,6 +677,30 @@ typedef enum
 } otDeviceRole;
 
 /**
+ * This structure holds diagnostic information for a neighboring Thread node
+ *
+ */
+typedef struct
+{
+    otExtAddress   mExtAddress;            ///< IEEE 802.15.4 Extended Address
+    uint32_t       mAge;                   ///< Time last heard
+    uint16_t       mRloc16;                ///< RLOC16
+    uint32_t       mLinkFrameCounter;      ///< Link Frame Counter
+    uint32_t       mMleFrameCounter;       ///< MLE Frame Counter
+    uint8_t        mLinkQualityIn;         ///< Link Quality In
+    int8_t         mAverageRssi;           ///< Average RSSI
+    bool           mRxOnWhenIdle : 1;      ///< rx-on-when-idle
+    bool           mSecureDataRequest : 1; ///< Secure Data Requests
+    bool           mFullFunction : 1;      ///< Full Function Device
+    bool           mFullNetworkData : 1;   ///< Full Network Data
+    bool           mIsChild : 1;           ///< Is the neighbor a child
+} otNeighborInfo;
+
+#define OT_NEIGHBOR_INFO_ITERATOR_INIT  0  ///< Initializer for otNeighborInfoIterator.
+
+typedef int16_t otNeighborInfoIterator;    ///< Used to iterate through neighbor table.
+
+/**
  * This structure holds diagnostic information for a Thread Child
  *
  */
@@ -782,6 +811,24 @@ typedef struct otNetifAddress
     uint8_t                mPrefixLength;       ///< The Prefix length.
     struct otNetifAddress *mNext;               ///< A pointer to the next network interface address.
 } otNetifAddress;
+
+/**
+ * This structure represents data used by Semantically Opaque IID Generator.
+ *
+ */
+typedef struct
+{
+    uint8_t        *mInterfaceId;        ///< String of bytes representing interface ID. Like "eth0" or "wlan0".
+    uint8_t         mInterfaceIdLength;  ///< Length of interface ID string.
+
+    uint8_t        *mNetworkId;          ///< Network ID (or name). Can be null if mNetworkIdLength is 0.
+    uint8_t         mNetworkIdLength;    ///< Length of Network ID string.
+
+    uint8_t         mDadCounter;         ///< Duplicate address detection counter.
+
+    uint8_t        *mSecretKey;          ///< Secret key used to create IID. Cannot be null.
+    uint16_t        mSecretKeyLength;    ///< Secret key length in bytes. Should be at least 16 bytes == 128 bits.
+} otSemanticallyOpaqueIidGeneratorData;
 
 /**
  * @addtogroup messages  Message Buffers

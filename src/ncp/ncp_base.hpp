@@ -50,7 +50,7 @@ namespace Thread {
 class NcpBase
 {
 public:
-    
+
     /**
      * This constructor creates and initializes an NcpBase instance.
      *
@@ -60,7 +60,7 @@ public:
     NcpBase(otInstance *aInstance);
 
 protected:
-    
+
     // The pointer to the OpenThread instance
     otInstance* mInstance;
 
@@ -334,6 +334,8 @@ private:
     ThreadError GetPropertyHandler_THREAD_CHILD_TIMEOUT(uint8_t header, spinel_prop_key_t key);
     ThreadError GetPropertyHandler_THREAD_RLOC16(uint8_t header, spinel_prop_key_t key);
     ThreadError GetPropertyHandler_THREAD_ROUTER_UPGRADE_THRESHOLD(uint8_t header, spinel_prop_key_t key);
+    ThreadError GetPropertyHandler_THREAD_ROUTER_DOWNGRADE_THRESHOLD(uint8_t header, spinel_prop_key_t key);
+    ThreadError GetPropertyHandler_THREAD_ROUTER_SELECTION_JITTER(uint8_t header, spinel_prop_key_t key);
     ThreadError GetPropertyHandler_THREAD_CONTEXT_REUSE_DELAY(uint8_t header, spinel_prop_key_t key);
     ThreadError GetPropertyHandler_THREAD_NETWORK_ID_TIMEOUT(uint8_t header, spinel_prop_key_t key);
     ThreadError GetPropertyHandler_THREAD_ON_MESH_NETS(uint8_t header, spinel_prop_key_t key);
@@ -391,9 +393,11 @@ private:
     ThreadError SetPropertyHandler_THREAD_MODE(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr, uint16_t value_len);
     ThreadError SetPropertyHandler_THREAD_CHILD_TIMEOUT(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr, uint16_t value_len);
     ThreadError SetPropertyHandler_THREAD_ROUTER_UPGRADE_THRESHOLD(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr, uint16_t value_len);
+    ThreadError SetPropertyHandler_THREAD_ROUTER_DOWNGRADE_THRESHOLD(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr, uint16_t value_len);
+    ThreadError SetPropertyHandler_THREAD_ROUTER_SELECTION_JITTER(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr, uint16_t value_len);
     ThreadError SetPropertyHandler_THREAD_CONTEXT_REUSE_DELAY(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr, uint16_t value_len);
     ThreadError SetPropertyHandler_THREAD_NETWORK_ID_TIMEOUT(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr, uint16_t value_len);
-
+    ThreadError SetPropertyHandler_THREAD_PREFERRED_ROUTER_ID(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr, uint16_t value_len);
 
     ThreadError SetPropertyHandler_THREAD_ASSISTING_PORTS(uint8_t header, spinel_prop_key_t key,
                                                     const uint8_t *value_ptr, uint16_t value_len);

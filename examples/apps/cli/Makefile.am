@@ -39,8 +39,8 @@ ot_cli_CPPFLAGS                                                        = \
     $(NULL)
 
 ot_cli_LDADD                                                           = \
-    $(top_builddir)/src/core/libopenthread.a                             \
     $(top_builddir)/src/cli/libopenthread-cli.a                          \
+    $(top_builddir)/src/core/libopenthread.a                             \
     $(top_builddir)/third_party/mbedtls/libmbedcrypto.a                  \
     $(NULL)
 

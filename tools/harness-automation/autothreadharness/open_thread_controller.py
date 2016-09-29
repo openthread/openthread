@@ -53,7 +53,7 @@ class OpenThreadController(object):
         self._init()
 
     def _init(self):
-        ser = serial.Serial(self.port, 115200, timeout=2)
+        ser = serial.Serial(self.port, 115200, timeout=2, xonxoff=True)
         self._ss = SerialSpawn(ser, timeout=2)
         if not self._log:
             return
@@ -123,28 +123,32 @@ class OpenThreadController(object):
         logger.info('DUT> %s', req)
         self._log and self._lv.pause()
         times = 3
+        res = None
 
         while times:
             times = times - 1
             try:
                 self._ss.sendline(req)
                 self._ss.expect(req + self._ss.linesep)
-            except:
-                logger.exception('Failed to send command')
-            else:
+
+                line = None
+                res = []
+
+                while True:
+                    line = self._ss.readline().strip('\0\r\n\t ')
+                    logger.debug(line)
+
+                    if line == 'Done':
+                        break
+
+                    if line:
+                        res.append(line)
                 break
 
-        line = None
-        res = []
-
-        while True:
-            line = self._ss.readline().strip('\0\r\n\t ')
-            logger.debug(line)
-
-            if line:
-                if line == 'Done':
-                    break
-                res.append(line)
+            except:
+                logger.exception('Failed to send command')
+                self.close()
+                self._init()
 
         self._log and self._lv.resume()
         return res

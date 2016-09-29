@@ -449,7 +449,7 @@ ThreadError Dataset::ProcessMgmtSetCommand(otInstance *aInstance, int argc, char
 {
     ThreadError error = kThreadError_None;
     otOperationalDataset dataset;
-    uint8_t tlvs[32];
+    uint8_t tlvs[128];
     long value;
     int length = 0;
     otIp6Address prefix;
@@ -489,7 +489,7 @@ ThreadError Dataset::ProcessMgmtSetCommand(otInstance *aInstance, int argc, char
             VerifyOrExit((length = static_cast<int>(strlen(argv[++index]))) <= OT_NETWORK_NAME_MAX_SIZE,
                          error = kThreadError_Parse);
             memset(&dataset.mNetworkName, 0, sizeof(sDataset.mNetworkName));
-            memcpy(dataset.mNetworkName.m8, argv[0], static_cast<size_t>(length));
+            memcpy(dataset.mNetworkName.m8, argv[index], static_cast<size_t>(length));
             length = 0;
         }
         else if (strcmp(argv[index], "extpanid") == 0)

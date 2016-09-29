@@ -52,7 +52,6 @@
 #include <common/encoding.hpp>
 #include <common/new.hpp>
 #include <net/ip6.hpp>
-#include <platform/random.h>
 #include <platform/uart.h>
 
 using Thread::Encoding::BigEndian::HostSwap16;
@@ -1743,12 +1742,12 @@ void Interpreter::ProcessRouterDowngradeThreshold(int argc, char *argv[])
 
     if (argc == 0)
     {
-        sServer->OutputFormat("%d\r\n", otGetRouterDowngradeThreshold());
+        sServer->OutputFormat("%d\r\n", otGetRouterDowngradeThreshold(mInstance));
     }
     else
     {
         SuccessOrExit(error = ParseLong(argv[0], value));
-        otSetRouterDowngradeThreshold(static_cast<uint8_t>(value));
+        otSetRouterDowngradeThreshold(mInstance, static_cast<uint8_t>(value));
     }
 
 exit:
@@ -1794,12 +1793,12 @@ void Interpreter::ProcessRouterSelectionJitter(int argc, char *argv[])
 
     if (argc == 0)
     {
-        sServer->OutputFormat("%d\r\n", otGetRouterSelectionJitter());
+        sServer->OutputFormat("%d\r\n", otGetRouterSelectionJitter(mInstance));
     }
     else
     {
         SuccessOrExit(error = ParseLong(argv[0], value));
-        otSetRouterSelectionJitter(static_cast<uint8_t>(value));
+        otSetRouterSelectionJitter(mInstance, static_cast<uint8_t>(value));
     }
 
 exit:
@@ -2389,102 +2388,10 @@ void Interpreter::s_HandleNetifStateChanged(uint32_t aFlags, void *aContext)
 
 void Interpreter::HandleNetifStateChanged(uint32_t aFlags)
 {
-    otNetworkDataIterator iterator;
-    otBorderRouterConfig config;
-
     VerifyOrExit((aFlags & OT_THREAD_NETDATA_UPDATED) != 0, ;);
 
-    // remove addresses
-    for (size_t i = 0; i < sizeof(sAutoAddresses) / sizeof(sAutoAddresses[0]); i++)
-    {
-        otNetifAddress *address = &sAutoAddresses[i];
-        bool found = false;
-
-        if (address->mValidLifetime == 0)
-        {
-            continue;
-        }
-
-        iterator = OT_NETWORK_DATA_ITERATOR_INIT;
-
-        while (otGetNextOnMeshPrefix(mInstance, false, &iterator, &config) == kThreadError_None)
-        {
-            if (config.mSlaac == false)
-            {
-                continue;
-            }
-
-            if (otIp6PrefixMatch(&config.mPrefix.mPrefix, &address->mAddress) >= config.mPrefix.mLength &&
-                config.mPrefix.mLength == address->mPrefixLength)
-            {
-                found = true;
-                break;
-            }
-        }
-
-        if (!found)
-        {
-            otRemoveUnicastAddress(mInstance, &address->mAddress);
-            address->mValidLifetime = 0;
-        }
-    }
-
-    // add addresses
-    iterator = OT_NETWORK_DATA_ITERATOR_INIT;
-
-    while (otGetNextOnMeshPrefix(mInstance, false, &iterator, &config) == kThreadError_None)
-    {
-        bool found = false;
-
-        if (config.mSlaac == false)
-        {
-            continue;
-        }
-
-        for (size_t i = 0; i < sizeof(sAutoAddresses) / sizeof(sAutoAddresses[0]); i++)
-        {
-            otNetifAddress *address = &sAutoAddresses[i];
-
-            if (address->mValidLifetime == 0)
-            {
-                continue;
-            }
-
-            if (otIp6PrefixMatch(&config.mPrefix.mPrefix, &address->mAddress) >= config.mPrefix.mLength &&
-                config.mPrefix.mLength == address->mPrefixLength)
-            {
-                found = true;
-                break;
-            }
-        }
-
-        if (!found)
-        {
-            for (size_t i = 0; i < sizeof(sAutoAddresses) / sizeof(sAutoAddresses[0]); i++)
-            {
-                otNetifAddress *address = &sAutoAddresses[i];
-
-                if (address->mValidLifetime != 0)
-                {
-                    continue;
-                }
-
-                memset(address, 0, sizeof(*address));
-                memcpy(&address->mAddress, &config.mPrefix.mPrefix, 8);
-
-                for (size_t j = 8; j < sizeof(address->mAddress); j++)
-                {
-                    address->mAddress.mFields.m8[j] = (uint8_t)otPlatRandomGet();
-                }
-
-                address->mPrefixLength = config.mPrefix.mLength;
-                address->mPreferredLifetime = config.mPreferred ? 0xffffffff : 0;
-                address->mValidLifetime = 0xffffffff;
-                otAddUnicastAddress(mInstance, address);
-                break;
-            }
-        }
-    }
+    otSlaacUpdate(mInstance, mAutoAddresses, sizeof(mAutoAddresses) / sizeof(mAutoAddresses[0]), otCreateRandomIid,
+                  NULL);
 
 exit:
     return;
