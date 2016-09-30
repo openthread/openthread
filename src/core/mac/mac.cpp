@@ -313,6 +313,7 @@ void Mac::GetHashMacAddress(ExtAddress *aHashMacAddress)
     sha256.Finish(buf);
 
     memcpy(aHashMacAddress->m8, buf, OT_EXT_ADDRESS_SIZE);
+    aHashMacAddress->SetLocal(true);
 }
 
 ShortAddress Mac::GetShortAddress(void) const
