@@ -121,14 +121,24 @@ exit:
 
 ThreadError Dtls::Stop(void)
 {
-    mStarted = false;
     mbedtls_ssl_close_notify(&mSsl);
+    Close();
+    return kThreadError_None;
+}
+
+void Dtls::Close(void)
+{
+    mStarted = false;
     mbedtls_ssl_free(&mSsl);
     mbedtls_ssl_config_free(&mConf);
     mbedtls_ctr_drbg_free(&mCtrDrbg);
     mbedtls_entropy_free(&mEntropy);
     mbedtls_ssl_cookie_free(&mCookieCtx);
-    return kThreadError_None;
+}
+
+bool Dtls::IsStarted(void)
+{
+    return mStarted;
 }
 
 ThreadError Dtls::SetPsk(const uint8_t *aPsk, uint8_t aPskLength)
@@ -321,6 +331,7 @@ void Dtls::HandleTimer(void)
 void Dtls::Process(void)
 {
     uint8_t buf[MBEDTLS_SSL_MAX_CONTENT_LEN];
+    bool shouldClose = false;
     int rval;
 
     while (mStarted)
@@ -348,10 +359,14 @@ void Dtls::Process(void)
             {
             case MBEDTLS_ERR_SSL_PEER_CLOSE_NOTIFY:
                 mbedtls_ssl_close_notify(&mSsl);
+                ExitNow(shouldClose = true);
                 break;
 
             case MBEDTLS_ERR_SSL_HELLO_VERIFY_REQUIRED:
+                break;
+
             case MBEDTLS_ERR_SSL_FATAL_ALERT_MESSAGE:
+                ExitNow(shouldClose = true);
                 break;
 
             case MBEDTLS_ERR_SSL_INVALID_MAC:
@@ -359,6 +374,7 @@ void Dtls::Process(void)
                 {
                     mbedtls_ssl_send_alert_message(&mSsl, MBEDTLS_SSL_ALERT_LEVEL_FATAL,
                                                    MBEDTLS_SSL_ALERT_MSG_BAD_RECORD_MAC);
+                    ExitNow(shouldClose = true);
                 }
 
                 break;
@@ -368,6 +384,7 @@ void Dtls::Process(void)
                 {
                     mbedtls_ssl_send_alert_message(&mSsl, MBEDTLS_SSL_ALERT_LEVEL_FATAL,
                                                    MBEDTLS_SSL_ALERT_MSG_HANDSHAKE_FAILURE);
+                    ExitNow(shouldClose = true);
                 }
 
                 break;
@@ -377,6 +394,13 @@ void Dtls::Process(void)
             mbedtls_ssl_set_hs_ecjpake_password(&mSsl, mPsk, mPskLength);
             break;
         }
+    }
+
+exit:
+
+    if (shouldClose)
+    {
+        Close();
     }
 }
 
