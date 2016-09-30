@@ -45,7 +45,8 @@ static uint32_t s_state = 1;
 
 void platformRandomInit(void)
 {
-    s_state = NODE_ID;
+    // Multiplying NODE_ID assures that no two nodes gets the same seed within an hour.
+    s_state = (uint32_t)time(NULL) + (3600 * NODE_ID);
 }
 
 uint32_t otPlatRandomGet(void)

@@ -1826,7 +1826,29 @@ class ARM(IThci):
             modulehelper.writeintodebuglogger("MGMT_ED_SCAN() error: " + str(e))
 
     def MGMT_PANID_QUERY(self, sAddr, xCommissionerSessionId, listChannelMask, xPanId):
-        pass
+        """send MGMT_PANID_QUERY message to a given destination
+
+        Args:
+            xPanId: a given PAN ID to check the conflicts
+
+        Returns:
+            True: successful to send MGMT_PANID_QUERY message.
+            False: fail to send MGMT_PANID_QUERY message.
+        """
+        print '%s call MGMT_PANID_QUERY' % self.port
+        panid = ''
+        channelMask = ''
+        channelMask = '0x' + self.__convertLongToString(self.__setChannelMask(listChannelMask))
+
+        if not isinstance(xPanId, str):
+            panid = str(hex(xPanId))
+
+        try:
+            cmd = 'commissioner panid %s %s %s' % (panid, channelMask, sAddr)
+            print cmd
+            return self.__sendCommand(cmd) == 'Done'
+        except Exception, e:
+            modulehelper.writeintodebuglogger("MGMT_PANID_QUERY() error: " + str(e))
 
     def MGMT_ANNOUNCE_BEGIN(self, sAddr, xCommissionerSessionId, listChannelMask, xCount, xPeriod):
         pass
@@ -1836,10 +1858,9 @@ class ARM(IThci):
 
         Returns:
             True: successful to send MGMT_ACTIVE_GET
-            False: fail to fail MGMT_ACTIVE_GET
+            False: fail to send MGMT_ACTIVE_GET
         """
-        print 'call MGMT_ACTIVE_GET'
-
+        print '%s call MGMT_ACTIVE_GET' % self.port
         try:
             cmd = 'dataset mgmtgetcommand active'
 
@@ -1862,10 +1883,9 @@ class ARM(IThci):
 
         Returns:
             True: successful to send MGMT_ACTIVE_SET
-            False: fail to fail MGMT_ACTIVE_SET
+            False: fail to send MGMT_ACTIVE_SET
         """
-        print 'call MGMT_ACTIVE_SET'
-
+        print '%s call MGMT_ACTIVE_SET' % self.port
         try:
             cmd = 'dataset mgmtsetcommand active'
 
@@ -1988,10 +2008,9 @@ class ARM(IThci):
 
         Returns:
             True: successful to send MGMT_PENDING_GET
-            False: fail to fail MGMT_PENDING_GET
+            False: fail to send MGMT_PENDING_GET
         """
-        print 'call MGMT_PENDING_GET'
-
+        print '%s call MGMT_PENDING_GET' % self.port
         try:
             cmd = 'dataset mgmtgetcommand pending'
 
@@ -2013,10 +2032,9 @@ class ARM(IThci):
 
         Returns:
             True: successful to send MGMT_PENDING_SET
-            False: fail to fail MGMT_PENDING_SET
+            False: fail to send MGMT_PENDING_SET
         """
-        print 'call MGMT_PENDING_SET'
-
+        print '%s call MGMT_PENDING_SET' % self.port
         try:
             cmd = 'dataset mgmtsetcommand pending'
 
@@ -2082,10 +2100,9 @@ class ARM(IThci):
 
         Returns:
             True: successful to send MGMT_COMM_GET
-            False: fail to fail MGMT_COMM_GET
+            False: fail to send MGMT_COMM_GET
         """
-        print 'call MGMT_COMM_GET'
-
+        print '%s call MGMT_COMM_GET' % self.port
         try:
             cmd = 'commissioner mgmtget'
 
@@ -2107,10 +2124,9 @@ class ARM(IThci):
 
         Returns:
             True: successful to send MGMT_COMM_SET
-            False: fail to fail MGMT_COMM_SET
+            False: fail to send MGMT_COMM_SET
         """
-        print 'call MGMT_COMM_SET'
-
+        print '%s call MGMT_COMM_SET' % self.port
         try:
             cmd = 'commissioner mgmtset'
 
