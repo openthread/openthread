@@ -98,9 +98,9 @@ static void *sEnergyScanCallbackContext = NULL;
 static otHandleActiveScanResult sDiscoverCallback = NULL;
 static void *sDiscoverCallbackContext = NULL;
 
-void otProcessNextTasklet(otInstance *)
+void otProcessQueuedTasklets(otInstance *)
 {
-    sIp6->mTaskletScheduler.RunNextTasklet();
+    sIp6->mTaskletScheduler.ProcessQueuedTasklets();
 }
 
 bool otAreTaskletsPending(otInstance *)

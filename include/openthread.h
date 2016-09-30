@@ -114,11 +114,11 @@ extern "C" {
  */
 
 /**
- * Run the next queued tasklet in OpenThread.
+ * Run all queued OpenThread tasklets at the time this is called.
  *
  * @param[in] aInstance A pointer to an OpenThread instance.
  */
-void otProcessNextTasklet(otInstance *aInstance);
+void otProcessQueuedTasklets(otInstance *aInstance);
 
 /**
  * Indicates whether or not OpenThread has tasklets pending.
