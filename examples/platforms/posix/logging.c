@@ -26,7 +26,7 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "platform-virtual.h"
+#include "platform-posix.h"
 
 #include <ctype.h>
 #include <inttypes.h>
@@ -46,31 +46,10 @@
     offset += (unsigned int)charsWritten;                                    \
     VerifyOrExit(offset < sizeof(logString), logString[sizeof(logString) -1 ] = 0)
 
-#ifdef _WIN32
-void GetTimeString(char *timeString, size_t length)
-{
-    struct tm tmLocalTime;
-    time_t now = time(NULL);
-    (void)localtime_s(&tmLocalTime, &now);
-
-    strftime(timeString, length, "%Y-%m-%d %H:%M:%S ", &tmLocalTime);
-}
-#else
-void GetTimeString(char *timeString, size_t length)
-{
-    struct timeval tv;
-    size_t offset;
-
-    gettimeofday(&tv, NULL);
-
-    offset = strftime(timeString, length, "%Y-%m-%d %H:%M:%S", localtime(&tv.tv_sec));
-    snprintf(&timeString[offset], length - offset, ".%06d", (uint32_t)tv.tv_usec);
-}
-#endif
-
 void otPlatLog(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aFormat, ...)
 {
-    char timeString[50];
+    struct timeval tv;
+    char timeString[40];
     char logString[512];
     unsigned int offset;
     int charsWritten;
@@ -78,9 +57,10 @@ void otPlatLog(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aFormat
 
     offset = 0;
 
-    GetTimeString(timeString, sizeof(timeString));
+    gettimeofday(&tv, NULL);
+    strftime(timeString, sizeof(timeString), "%Y-%m-%d %H:%M:%S", localtime(&tv.tv_sec));
 
-    LOG_PRINTF("%s ", timeString);
+    LOG_PRINTF("%s.%06d ", timeString, (uint32_t)tv.tv_usec);
 
     switch (aLogLevel)
     {

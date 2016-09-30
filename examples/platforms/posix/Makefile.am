@@ -61,7 +61,7 @@ libopenthread_posix_a_SOURCES           += \
 endif
 
 noinst_HEADERS                            = \
-    platform-virtual.h                      \
+    platform-posix.h                        \
     $(NULL)
 
 if OPENTHREAD_BUILD_COVERAGE

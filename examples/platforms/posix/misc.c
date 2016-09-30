@@ -26,58 +26,19 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "platform-virtual.h"
+#include "platform-posix.h"
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <platform/uart.h>
-#include <platform/spi-slave.h>
+#include <openthread-types.h>
+#include <platform/misc.h>
 
-// Spi-slave stubs
-
-ThreadError otPlatSpiSlaveEnable(
-    otPlatSpiSlaveTransactionCompleteCallback aCallback,
-    void *aContext
-)
+void otPlatReset(otInstance *aInstance)
 {
-    (void)aCallback;
-    (void)aContext;
-
-    fprintf(stderr, "\nNo SPI support for posix platform.");
-    exit(0);
-
-    return kThreadError_NotImplemented;
+    // This function does nothing on the Posix platform.
+    (void)aInstance;
 }
 
-void otPlatSpiSlaveDisable(void)
+otPlatResetReason otPlatGetResetReason(otInstance *aInstance)
 {
-}
-
-ThreadError otPlatSpiSlavePrepareTransaction(
-    uint8_t *anOutputBuf,
-    uint16_t anOutputBufLen,
-    uint8_t *anInputBuf,
-    uint16_t anInputBufLen,
-    bool aRequestTransactionFlag
-)
-{
-    (void)anOutputBuf;
-    (void)anOutputBufLen;
-    (void)anInputBuf;
-    (void)anInputBufLen;
-    (void)aRequestTransactionFlag;
-
-    return kThreadError_NotImplemented;
-}
-
-// Uart
-
-void otPlatUartSendDone(void)
-{
-}
-
-void otPlatUartReceived(const uint8_t *aBuf, uint16_t aBufLength)
-{
-    (void)aBuf;
-    (void)aBufLength;
+    (void)aInstance;
+    return kPlatResetReason_PowerOn;
 }

@@ -32,8 +32,8 @@
  *   This file includes the (posix or windows) platform-specific initializers.
  */
 
-#ifndef PLATFORM_VIRTUAL_H_
-#define PLATFORM_VIRTUAL_H_
+#ifndef PLATFORM_POSIX_H_
+#define PLATFORM_POSIX_H_
 
 #ifdef OPENTHREAD_CONFIG_FILE
 #include OPENTHREAD_CONFIG_FILE
@@ -49,6 +49,19 @@
 #include <time.h>
 #define POLL WSAPoll
 #define ssize_t int
+// In user mode, define some Linux functions
+__forceinline int gettimeofday(struct timeval *tv, struct timezone *tz)
+{
+    (void)tz;
+    tv->tv_sec = (long)GetTickCount(); // Generally 0 at the start of the application
+    tv->tv_usec = 0;
+    return 0;
+}
+__forceinline void timersub(struct timeval *a, struct timeval *b, struct timeval *res)
+{
+    res->tv_sec = a->tv_sec - b->tv_sec;
+    res->tv_usec = 0;
+}
 #else
 #include <arpa/inet.h>
 #include <fcntl.h>
@@ -134,8 +147,6 @@ void platformRadioProcess(otInstance *aInstance);
  */
 void platformRandomInit(void);
 
-#ifndef _WIN32
-
 /**
  * This function updates the file descriptor sets with file descriptors used by the UART driver.
  *
@@ -151,7 +162,5 @@ void platformUartUpdateFdSet(fd_set *aReadFdSet, fd_set *aWriteFdSet, fd_set *aE
  *
  */
 void platformUartProcess(void);
-
-#endif
 
 #endif  // PLATFORM_POSIX_H_

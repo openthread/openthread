@@ -55,7 +55,7 @@ endif
 
 if OPENTHREAD_EXAMPLES_POSIX
 ot_cli_LDADD                                                          += \
-    $(top_builddir)/examples/platforms/virtual/libopenthread-posix.a     \
+    $(top_builddir)/examples/platforms/posix/libopenthread-posix.a       \
     -lstdc++                                                             \
     $(NULL)
 endif

@@ -28,90 +28,61 @@
 
 /**
  * @file
- * @brief
- *   This file includes the platform-specific initializers.
+ *   This file implements a pseudo-random number generator.
+ *
+ * @warning
+ *   This implementation is not a true random number generator and does @em satisfy the Thread requirements.
  */
 
-#include "platform-virtual.h"
+#include "platform-posix.h"
 
-#include <assert.h>
-#include <errno.h>
-#include <stddef.h>
-#include <stdint.h>
-#include <stdio.h>
-#include <stdlib.h>
+#include <openthread-types.h>
 
-#include <openthread.h>
-#include <platform/alarm.h>
-#include <platform/uart.h>
+#include <common/code_utils.hpp>
+#include <platform/random.h>
 
-uint32_t NODE_ID = 1;
-uint32_t WELLKNOWN_NODE_ID = 34;
+static uint32_t s_state = 1;
 
-void PlatformInit(int argc, char *argv[])
+void platformRandomInit(void)
 {
-    char *endptr;
-
-    if (argc != 2)
-    {
-        exit(EXIT_FAILURE);
-    }
-
-    NODE_ID = (uint32_t)strtol(argv[1], &endptr, 0);
-
-    if (*endptr != '\0')
-    {
-        fprintf(stderr, "Invalid NODE_ID: %s\n", argv[1]);
-        exit(EXIT_FAILURE);
-    }
-
-    platformAlarmInit();
-    platformRadioInit();
-    platformRandomInit();
+    s_state = NODE_ID;
 }
 
-bool UartInitialized = false;
-
-void PlatformProcessDrivers(otInstance *aInstance)
+uint32_t otPlatRandomGet(void)
 {
-    fd_set read_fds;
-    fd_set write_fds;
-    fd_set error_fds;
-    int max_fd = -1;
-    struct timeval timeout;
-    int rval;
+    uint32_t mlcg, p, q;
+    uint64_t tmpstate;
 
-    if (!UartInitialized)
+    tmpstate = (uint64_t)33614 * (uint64_t)s_state;
+    q = tmpstate & 0xffffffff;
+    q = q >> 1;
+    p = tmpstate >> 32;
+    mlcg = p + q;
+
+    if (mlcg & 0x80000000)
     {
-        UartInitialized = true;
-        otPlatUartEnable();
+        mlcg &= 0x7fffffff;
+        mlcg++;
     }
 
-    FD_ZERO(&read_fds);
-    FD_ZERO(&write_fds);
-    FD_ZERO(&error_fds);
+    s_state = mlcg;
 
-#ifndef _WIN32
-    platformUartUpdateFdSet(&read_fds, &write_fds, &error_fds, &max_fd);
-#endif
-    platformRadioUpdateFdSet(&read_fds, &write_fds, &max_fd);
-    platformAlarmUpdateTimeout(&timeout);
-
-    if (!otAreTaskletsPending(aInstance))
-    {
-        rval = select(max_fd + 1, &read_fds, &write_fds, &error_fds, &timeout);
-
-        if ((rval < 0) && (errno != EINTR))
-        {
-            perror("select");
-            exit(EXIT_FAILURE);
-        }
-    }
-
-#ifndef _WIN32
-    platformUartProcess();
-#endif
-    platformRadioProcess(aInstance);
-    platformAlarmProcess(aInstance);
+    return mlcg;
 }
 
+ThreadError otPlatRandomSecureGet(uint16_t aInputLength, uint8_t *aOutput, uint16_t *aOutputLength)
+{
+    ThreadError error = kThreadError_None;
+
+    VerifyOrExit(aOutput && aOutputLength, error = kThreadError_InvalidArgs);
+
+    for (uint16_t length = 0; length < aInputLength; length++)
+    {
+        aOutput[length] = (uint8_t)otPlatRandomGet();
+    }
+
+    *aOutputLength = aInputLength;
+
+exit:
+    return error;
+}

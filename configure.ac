@@ -784,7 +784,7 @@ examples/apps/cli/Makefile
 examples/apps/ncp/Makefile
 examples/platforms/Makefile
 examples/platforms/cc2538/Makefile
-examples/platforms/virtual/Makefile
+examples/platforms/posix/Makefile
 tools/Makefile
 tools/harness-automation/Makefile
 tools/harness-thci/Makefile

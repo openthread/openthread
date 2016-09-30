@@ -26,63 +26,37 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include "platform-posix.h"
+
+#include <stdbool.h>
+#include <stdio.h>
+#include <string.h>
+#include <sys/time.h>
+
+#include <openthread-config.h>
+#include <openthread.h>
+
+#include <platform/alarm.h>
+
 /**
- * @file
- *   This file implements a pseudo-random number generator.
+ * diagnostics mode flag.
  *
- * @warning
- *   This implementation is not a true random number generator and does @em satisfy the Thread requirements.
  */
+static bool sDiagMode = false;
 
-#include "platform-virtual.h"
-
-#include <openthread-types.h>
-
-#include <common/code_utils.hpp>
-#include <platform/random.h>
-
-static uint32_t s_state = 1;
-
-void platformRandomInit(void)
+void otPlatDiagProcess(int argc, char *argv[], char *aOutput, size_t aOutputMaxLen)
 {
-    s_state = NODE_ID;
+    // no more diagnostics features for Posix platform
+    snprintf(aOutput, aOutputMaxLen, "diag feature '%s' is not supported\r\n", argv[0]);
+    (void)argc;
 }
 
-uint32_t otPlatRandomGet(void)
+void otPlatDiagModeSet(bool aMode)
 {
-    uint32_t mlcg, p, q;
-    uint64_t tmpstate;
-
-    tmpstate = (uint64_t)33614 * (uint64_t)s_state;
-    q = tmpstate & 0xffffffff;
-    q = q >> 1;
-    p = tmpstate >> 32;
-    mlcg = p + q;
-
-    if (mlcg & 0x80000000)
-    {
-        mlcg &= 0x7fffffff;
-        mlcg++;
-    }
-
-    s_state = mlcg;
-
-    return mlcg;
+    sDiagMode = aMode;
 }
 
-ThreadError otPlatRandomSecureGet(uint16_t aInputLength, uint8_t *aOutput, uint16_t *aOutputLength)
+bool otPlatDiagModeGet()
 {
-    ThreadError error = kThreadError_None;
-
-    VerifyOrExit(aOutput && aOutputLength, error = kThreadError_InvalidArgs);
-
-    for (uint16_t length = 0; length < aInputLength; length++)
-    {
-        aOutput[length] = (uint8_t)otPlatRandomGet();
-    }
-
-    *aOutputLength = aInputLength;
-
-exit:
-    return error;
+    return sDiagMode;
 }

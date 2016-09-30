@@ -26,37 +26,101 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "platform-virtual.h"
+#include "platform-posix.h"
 
 #include <stdbool.h>
 #include <stdio.h>
 #include <string.h>
-#include <sys/time.h>
-
-#include <openthread-config.h>
-#include <openthread.h>
 
 #include <platform/alarm.h>
+#include <platform/diag.h>
 
-/**
- * diagnostics mode flag.
- *
- */
-static bool sDiagMode = false;
+static bool s_is_running = false;
+static uint32_t s_alarm = 0;
+static struct timeval s_start;
 
-void otPlatDiagProcess(int argc, char *argv[], char *aOutput, size_t aOutputMaxLen)
+void platformAlarmInit(void)
 {
-    // no more diagnostics features for Posix platform
-    snprintf(aOutput, aOutputMaxLen, "diag feature '%s' is not supported\r\n", argv[0]);
-    (void)argc;
+    gettimeofday(&s_start, NULL);
 }
 
-void otPlatDiagModeSet(bool aMode)
+uint32_t otPlatAlarmGetNow(void)
 {
-    sDiagMode = aMode;
+    struct timeval tv;
+
+    gettimeofday(&tv, NULL);
+    timersub(&tv, &s_start, &tv);
+
+    return (uint32_t)((tv.tv_sec * 1000) + (tv.tv_usec / 1000));
 }
 
-bool otPlatDiagModeGet()
+void otPlatAlarmStartAt(otInstance *aInstance, uint32_t t0, uint32_t dt)
 {
-    return sDiagMode;
+    (void)aInstance;
+    s_alarm = t0 + dt;
+    s_is_running = true;
+}
+
+void otPlatAlarmStop(otInstance *aInstance)
+{
+    (void)aInstance;
+    s_is_running = false;
+}
+
+void platformAlarmUpdateTimeout(struct timeval *aTimeout)
+{
+    int32_t remaining;
+
+    if (aTimeout == NULL)
+    {
+        return;
+    }
+
+    if (s_is_running)
+    {
+        remaining = (int32_t)(s_alarm - otPlatAlarmGetNow());
+
+        if (remaining > 0)
+        {
+            aTimeout->tv_sec = remaining / 1000;
+            aTimeout->tv_usec = (remaining % 1000) * 1000;
+        }
+        else
+        {
+            aTimeout->tv_sec = 0;
+            aTimeout->tv_usec = 0;
+        }
+    }
+    else
+    {
+        aTimeout->tv_sec = 10;
+        aTimeout->tv_usec = 0;
+    }
+}
+
+void platformAlarmProcess(otInstance *aInstance)
+{
+    int32_t remaining;
+
+    if (s_is_running)
+    {
+        remaining = (int32_t)(s_alarm - otPlatAlarmGetNow());
+
+        if (remaining <= 0)
+        {
+            s_is_running = false;
+
+#if OPENTHREAD_ENABLE_DIAG
+
+            if (otPlatDiagModeGet())
+            {
+                otPlatDiagAlarmFired(aInstance);
+            }
+            else
+#endif
+            {
+                otPlatAlarmFired(aInstance);
+            }
+        }
+    }
 }

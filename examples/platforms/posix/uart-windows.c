@@ -26,7 +26,7 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "platform-virtual.h"
+#include "platform-posix.h"
 
 #include <platform/uart.h>
 
@@ -110,7 +110,7 @@ ThreadError otPlatUartDisable(void)
     return error;
 }
 
-EXTERN_C ThreadError otPlatUartSend(const uint8_t *aBuf, uint16_t aBufLength)
+ThreadError otPlatUartSend(const uint8_t *aBuf, uint16_t aBufLength)
 {
     ThreadError error = kThreadError_None;
 
@@ -121,4 +121,18 @@ EXTERN_C ThreadError otPlatUartSend(const uint8_t *aBuf, uint16_t aBufLength)
 
 exit:
     return error;
+}
+
+void platformUartUpdateFdSet(fd_set *aReadFdSet, fd_set *aWriteFdSet, fd_set *aErrorFdSet, int *aMaxFd)
+{
+    // No-op on Windows
+    UNREFERENCED_PARAMETER(aReadFdSet);
+    UNREFERENCED_PARAMETER(aWriteFdSet);
+    UNREFERENCED_PARAMETER(aErrorFdSet);
+    UNREFERENCED_PARAMETER(aMaxFd);
+}
+
+void platformUartProcess(void)
+{
+    // No-op on Windows
 }
