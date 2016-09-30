@@ -46,7 +46,6 @@
 #include <WinSock2.h>
 #include <WS2tcpip.h>
 #include <windows.h>
-#include <time.h>
 #define POLL WSAPoll
 #define ssize_t int
 // In user mode, define some Linux functions
@@ -82,6 +81,7 @@ __forceinline void timersub(struct timeval *a, struct timeval *b, struct timeval
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <time.h>
 
 /**
  * Unique node ID.
