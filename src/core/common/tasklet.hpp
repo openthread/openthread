@@ -125,10 +125,10 @@ public:
     bool AreTaskletsPending(void);
 
     /**
-     * This method runs the next tasklet.
+     * This method processes all tasklets queued when this is called.
      *
      */
-    void RunNextTasklet(void);
+    void ProcessQueuedTasklets(void);
 
 private:
     Tasklet *PopTasklet(void);
