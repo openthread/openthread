@@ -2975,6 +2975,70 @@ exit:
     return error;
 }
 
+ThreadError MleRouter::GetNextNeighborInfo(otNeighborInfoIterator &aIterator, otNeighborInfo &aNeighInfo)
+{
+    ThreadError error = kThreadError_None;
+    Neighbor *neighbor = NULL;
+    int16_t index;
+
+    memset(&aNeighInfo, 0, sizeof(aNeighInfo));
+
+    // Non-negative iterator value gives the current index into mChildren array
+
+    if (aIterator >= 0)
+    {
+        for (index = aIterator; index < mMaxChildrenAllowed; index++)
+        {
+            if (mChildren[index].mState == Neighbor::kStateValid)
+            {
+                neighbor = &mChildren[index];
+                aNeighInfo.mIsChild = true;
+                index++;
+                aIterator = index;
+                ExitNow();
+            }
+        }
+
+        aIterator = 0;
+    }
+
+    // Negative iterator value gives the current index into mRouters array
+
+    for (index = -aIterator; index <= kMaxRouterId; index++)
+    {
+        if (mRouters[index].mState == Neighbor::kStateValid)
+        {
+            neighbor = &mRouters[index];
+            aNeighInfo.mIsChild = false;
+            index++;
+            aIterator = -index;
+            ExitNow();
+        }
+    }
+
+    aIterator = -index;
+    error = kThreadError_NotFound;
+
+exit:
+
+    if (neighbor != NULL)
+    {
+        memcpy(&aNeighInfo.mExtAddress, &neighbor->mMacAddr, sizeof(aNeighInfo.mExtAddress));
+        aNeighInfo.mAge = Timer::MsecToSec(Timer::GetNow() - neighbor->mLastHeard);
+        aNeighInfo.mRloc16 = neighbor->mValid.mRloc16;
+        aNeighInfo.mLinkFrameCounter = neighbor->mValid.mLinkFrameCounter;
+        aNeighInfo.mMleFrameCounter = neighbor->mValid.mMleFrameCounter;
+        aNeighInfo.mLinkQualityIn = neighbor->mLinkInfo.GetLinkQuality(mMac.GetNoiseFloor());
+        aNeighInfo.mAverageRssi = neighbor->mLinkInfo.GetAverageRss();
+        aNeighInfo.mRxOnWhenIdle = (neighbor->mMode & ModeTlv::kModeRxOnWhenIdle) != 0;
+        aNeighInfo.mSecureDataRequest = (neighbor->mMode & ModeTlv::kModeSecureDataRequest) != 0;
+        aNeighInfo.mFullFunction = (neighbor->mMode & ModeTlv::kModeFFD) != 0;
+        aNeighInfo.mFullNetworkData = (neighbor->mMode & ModeTlv::kModeFullNetworkData) != 0;
+    }
+
+    return error;
+}
+
 ThreadError MleRouter::CheckReachability(uint16_t aMeshSource, uint16_t aMeshDest, Ip6::Header &aIp6Header)
 {
     Ip6::Address destination;

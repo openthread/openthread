@@ -524,6 +524,20 @@ public:
     ThreadError GetChildInfoByIndex(uint8_t aChildIndex, otChildInfo &aChildInfo);
 
     /**
+     * This method gets the next neighbor information. It is used to iterate through the entries of
+     * the neighbor table.
+     *
+     * @param[inout]  aIterator  A reference to the iterator context. To get the first neighbor entry
+                                 it should be set to OT_NEIGHBOR_INFO_ITERATOR_INIT.
+     * @param[out]    aNeighInfo The neighbor information.
+     *
+     * @retval kThreadError_None         Successfully found the next neighbor entry in table.
+     * @retval kThreadError_NotFound     No subsequent neighbor entry exists in the table.
+     *
+     */
+    ThreadError GetNextNeighborInfo(otNeighborInfoIterator &aIterator, otNeighborInfo &aNeighInfo);
+
+    /**
      * This method returns a pointer to a Router array.
      *
      * @param[out]  aNumRouters  A pointer to output the number of routers.
