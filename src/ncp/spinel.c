@@ -928,8 +928,8 @@ spinel_prop_key_to_cstr(spinel_prop_key_t prop_key)
         ret = "PROP_STREAM_NET";
         break;
 
-    case SPINEL_PROP_STREAM_NET_INSECURE:
-        ret = "PROP_STREAM_NET_INSECURE";
+    case SPINEL_PROP_STREAM_NET_UNSECURED:
+        ret = "PROP_STREAM_NET_UNSECURED";
         break;
 
     case SPINEL_PROP_PHY_ENABLED:

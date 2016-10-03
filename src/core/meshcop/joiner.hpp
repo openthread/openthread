@@ -61,6 +61,42 @@ public:
     Joiner(ThreadNetif &aThreadNetif);
 
     /**
+     * This method starts the Joiner service.  Requires that PSKd has been set.
+     *
+     * @retval kThreadError_None  Successfully started the Joiner service.
+     *
+     */
+    ThreadError Start(void);
+
+    /**
+     * This method stops the Joiner service.
+     *
+     * @retval kThreadError_None  Successfully stopped the Joiner service.
+     *
+     */
+    ThreadError Stop(void);
+
+    /**
+     * Sets the PSKd or Joining Device Credential for this Joiner.
+     *
+     * @param[in]  aPSKd             A pointer to the PSKd.
+     *
+     * @retval kThreadError_None  Successfully started the Joiner service.
+     *
+     */
+    ThreadError SetCredential(const char *aPSKd);
+
+    /**
+     * Sets the optional Provisioning URL for this Joiner.
+     *
+     * @param[in]  aProvisioningUrl  A pointer to the Provisioning URL (may be NULL).
+     *
+     * @retval kThreadError_None  Successfully started the Joiner service.
+     *
+     */
+    ThreadError SetProvisioningUrl(const char *aProvisioningUrl);
+
+    /**
      * This method starts the Joiner service.
      *
      * @param[in]  aPSKd             A pointer to the PSKd.
@@ -70,14 +106,6 @@ public:
      *
      */
     ThreadError Start(const char *aPSKd, const char *aProvisioningUrl);
-
-    /**
-     * This method stops the Joiner service.
-     *
-     * @retval kThreadError_None  Successfully stopped the Joiner service.
-     *
-     */
-    ThreadError Stop(void);
 
 private:
     static void HandleDiscoverResult(otActiveScanResult *aResult, void *aContext);

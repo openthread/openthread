@@ -1995,7 +1995,8 @@ void Interpreter::ProcessCommissioner(int argc, char *argv[])
         const char *provisioningUrl;
         VerifyOrExit(argc > 1, error = kThreadError_Parse);
         provisioningUrl = argc > 2 ? argv[2] : NULL;
-        otCommissionerStart(mInstance, argv[1], provisioningUrl);
+        otCommissionerAddJoiner(mInstance, argv[1], provisioningUrl);
+        otCommissionerStart(mInstance);
     }
     else if (strcmp(argv[0], "stop") == 0)
     {
@@ -2213,7 +2214,9 @@ void Interpreter::ProcessJoiner(int argc, char *argv[])
         const char *provisioningUrl;
         VerifyOrExit(argc > 1, error = kThreadError_Parse);
         provisioningUrl = (argc > 2) ? argv[2] : NULL;
-        otJoinerStart(mInstance, argv[1], provisioningUrl);
+        otJoinerSetCredential(mInstance, argv[1]);
+        otJoinerSetProvisioningUrl(mInstance, provisioningUrl);
+        otJoinerStart(mInstance);
     }
     else if (strcmp(argv[0], "stop") == 0)
     {
