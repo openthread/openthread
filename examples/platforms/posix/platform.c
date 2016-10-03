@@ -32,18 +32,18 @@
  *   This file includes the platform-specific initializers.
  */
 
+#include "platform-posix.h"
+
 #include <assert.h>
 #include <errno.h>
 #include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <sys/time.h>
 
 #include <openthread.h>
 #include <platform/alarm.h>
 #include <platform/uart.h>
-#include "platform-posix.h"
 
 uint32_t NODE_ID = 1;
 uint32_t WELLKNOWN_NODE_ID = 34;
@@ -65,11 +65,12 @@ void PlatformInit(int argc, char *argv[])
         exit(EXIT_FAILURE);
     }
 
-    posixAlarmInit();
-    posixRadioInit();
-    posixRandomInit();
-    otPlatUartEnable();
+    platformAlarmInit();
+    platformRadioInit();
+    platformRandomInit();
 }
+
+bool UartInitialized = false;
 
 void PlatformProcessDrivers(otInstance *aInstance)
 {
@@ -80,13 +81,19 @@ void PlatformProcessDrivers(otInstance *aInstance)
     struct timeval timeout;
     int rval;
 
+    if (!UartInitialized)
+    {
+        UartInitialized = true;
+        otPlatUartEnable();
+    }
+
     FD_ZERO(&read_fds);
     FD_ZERO(&write_fds);
     FD_ZERO(&error_fds);
 
-    posixUartUpdateFdSet(&read_fds, &write_fds, &error_fds, &max_fd);
-    posixRadioUpdateFdSet(&read_fds, &write_fds, &max_fd);
-    posixAlarmUpdateTimeout(&timeout);
+    platformUartUpdateFdSet(&read_fds, &write_fds, &error_fds, &max_fd);
+    platformRadioUpdateFdSet(&read_fds, &write_fds, &max_fd);
+    platformAlarmUpdateTimeout(&timeout);
 
     if (!otAreTaskletsPending(aInstance))
     {
@@ -99,8 +106,8 @@ void PlatformProcessDrivers(otInstance *aInstance)
         }
     }
 
-    posixUartProcess();
-    posixRadioProcess(aInstance);
-    posixAlarmProcess(aInstance);
+    platformUartProcess();
+    platformRadioProcess(aInstance);
+    platformAlarmProcess(aInstance);
 }
 

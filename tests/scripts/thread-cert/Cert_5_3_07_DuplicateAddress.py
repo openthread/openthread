@@ -27,7 +27,6 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-import pexpect
 import time
 import unittest
 
@@ -58,12 +57,14 @@ class Cert_5_3_7_DuplicateAddress(unittest.TestCase):
         self.nodes[ROUTER1].add_whitelist(self.nodes[LEADER].get_addr64())
         self.nodes[ROUTER1].add_whitelist(self.nodes[ED1].get_addr64())
         self.nodes[ROUTER1].enable_whitelist()
+        self.nodes[ROUTER1].set_router_selection_jitter(1)
 
         self.nodes[ROUTER2].set_panid(0xface)
         self.nodes[ROUTER2].set_mode('rsdn')
         self.nodes[ROUTER2].add_whitelist(self.nodes[LEADER].get_addr64())
         self.nodes[ROUTER2].add_whitelist(self.nodes[ED2].get_addr64())
         self.nodes[ROUTER2].enable_whitelist()
+        self.nodes[ROUTER2].set_router_selection_jitter(1)
 
         self.nodes[ED1].set_panid(0xface)
         self.nodes[ED1].set_mode('rsn')
@@ -91,23 +92,23 @@ class Cert_5_3_7_DuplicateAddress(unittest.TestCase):
         self.assertEqual(self.nodes[LEADER].get_state(), 'leader')
 
         self.nodes[ROUTER1].start()
-        time.sleep(3)
+        time.sleep(5)
         self.assertEqual(self.nodes[ROUTER1].get_state(), 'router')
 
         self.nodes[ROUTER2].start()
-        time.sleep(3)
+        time.sleep(5)
         self.assertEqual(self.nodes[ROUTER2].get_state(), 'router')
 
         self.nodes[ED1].start()
-        time.sleep(3)
+        time.sleep(5)
         self.assertEqual(self.nodes[ED1].get_state(), 'child')
 
         self.nodes[ED2].start()
-        time.sleep(3)
+        time.sleep(5)
         self.assertEqual(self.nodes[ED2].get_state(), 'child')
 
         self.nodes[ED3].start()
-        time.sleep(3)
+        time.sleep(5)
         self.assertEqual(self.nodes[ED3].get_state(), 'child')
 
         self.nodes[ROUTER2].add_prefix('2001::/64', 'paros')
@@ -115,9 +116,9 @@ class Cert_5_3_7_DuplicateAddress(unittest.TestCase):
 
         self.nodes[ED1].add_ipaddr('2001::1')
         self.nodes[ED2].add_ipaddr('2001::1')
-        time.sleep(3)
+        time.sleep(5)
 
-        self.nodes[ED3].ping('2001::1')
+        self.assertTrue(self.nodes[ED3].ping('2001::1'))
 
 if __name__ == '__main__':
     unittest.main()

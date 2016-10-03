@@ -27,7 +27,6 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-import pexpect
 import time
 import unittest
 
@@ -51,6 +50,7 @@ class Cert_5_1_06_RemoveRouterId(unittest.TestCase):
         self.nodes[ROUTER1].set_mode('rsdn')
         self.nodes[ROUTER1].add_whitelist(self.nodes[LEADER].get_addr64())
         self.nodes[ROUTER1].enable_whitelist()
+        self.nodes[ROUTER1].set_router_selection_jitter(1)
 
     def tearDown(self):
         for node in list(self.nodes.values()):
@@ -63,19 +63,19 @@ class Cert_5_1_06_RemoveRouterId(unittest.TestCase):
         self.assertEqual(self.nodes[LEADER].get_state(), 'leader')
 
         self.nodes[ROUTER1].start()
-        time.sleep(3)
+        time.sleep(5)
         self.assertEqual(self.nodes[ROUTER1].get_state(), 'router')
         rloc16 = self.nodes[ROUTER1].get_addr16()
 
         for addr in self.nodes[ROUTER1].get_addrs():
-            self.nodes[LEADER].ping(addr)
+            self.assertTrue(self.nodes[LEADER].ping(addr))
 
         self.nodes[LEADER].release_router_id(rloc16 >> 10)
         time.sleep(5)
         self.assertEqual(self.nodes[ROUTER1].get_state(), 'router')
 
         for addr in self.nodes[ROUTER1].get_addrs():
-            self.nodes[LEADER].ping(addr)
+            self.assertTrue(self.nodes[LEADER].ping(addr))
 
 if __name__ == '__main__':
     unittest.main()

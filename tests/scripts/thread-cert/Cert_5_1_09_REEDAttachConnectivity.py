@@ -27,7 +27,6 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-import pexpect
 import time
 import unittest
 
@@ -57,6 +56,7 @@ class Cert_5_1_09_REEDAttachConnectivity(unittest.TestCase):
         self.nodes[ROUTER1].add_whitelist(self.nodes[LEADER].get_addr64())
         self.nodes[ROUTER1].add_whitelist(self.nodes[REED1].get_addr64())
         self.nodes[ROUTER1].enable_whitelist()
+        self.nodes[ROUTER1].set_router_selection_jitter(1)
 
         self.nodes[REED0].set_panid(0xface)
         self.nodes[REED0].set_mode('rsdn')
@@ -78,6 +78,7 @@ class Cert_5_1_09_REEDAttachConnectivity(unittest.TestCase):
         self.nodes[ROUTER2].add_whitelist(self.nodes[REED0].get_addr64())
         self.nodes[ROUTER2].add_whitelist(self.nodes[REED1].get_addr64())
         self.nodes[ROUTER2].enable_whitelist()
+        self.nodes[ROUTER2].set_router_selection_jitter(1)
 
     def tearDown(self):
         for node in list(self.nodes.values()):
@@ -90,15 +91,15 @@ class Cert_5_1_09_REEDAttachConnectivity(unittest.TestCase):
         self.assertEqual(self.nodes[LEADER].get_state(), 'leader')
 
         self.nodes[ROUTER1].start()
-        time.sleep(3)
+        time.sleep(5)
         self.assertEqual(self.nodes[ROUTER1].get_state(), 'router')
 
         self.nodes[REED0].start()
-        time.sleep(3)
+        time.sleep(5)
         self.assertEqual(self.nodes[REED0].get_state(), 'child')
 
         self.nodes[REED1].start()
-        time.sleep(3)
+        time.sleep(5)
         self.assertEqual(self.nodes[REED1].get_state(), 'child')
 
         time.sleep(10)

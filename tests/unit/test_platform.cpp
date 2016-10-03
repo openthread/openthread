@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2016, Microsoft Corporation.
+ *  Copyright (c) 2016, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -27,6 +27,7 @@
  */
 
 #if _WIN32
+#define _CRT_SECURE_NO_WARNINGS
 #include <windows.h>
 #endif
 
@@ -62,6 +63,11 @@ extern "C" {
 
     void otSignalTaskletPending(otInstance *)
     {
+    }
+
+    bool otAreTaskletsPending(otInstance *)
+    {
+        return false;
     }
 
     //
@@ -159,6 +165,50 @@ extern "C" {
         return false;
     }
 
+    void otPlatRadioEnableSrcMatch(otInstance *aInstance, bool aEnable)
+    {
+        (void)aInstance;
+        (void)aEnable;
+    }
+
+    ThreadError otPlatRadioAddSrcMatchShortEntry(otInstance *aInstance, const uint16_t aShortAddress)
+    {
+        (void)aInstance;
+        (void)aShortAddress;
+        return kThreadError_None;
+    }
+
+    ThreadError otPlatRadioAddSrcMatchExtEntry(otInstance *aInstance, const uint8_t *aExtAddress)
+    {
+        (void)aInstance;
+        (void)aExtAddress;
+        return kThreadError_None;
+    }
+
+    ThreadError otPlatRadioClearSrcMatchShortEntry(otInstance *aInstance, const uint16_t aShortAddress)
+    {
+        (void)aInstance;
+        (void)aShortAddress;
+        return kThreadError_None;
+    }
+
+    ThreadError otPlatRadioClearSrcMatchExtEntry(otInstance *aInstance, const uint8_t *aExtAddress)
+    {
+        (void)aInstance;
+        (void)aExtAddress;
+        return kThreadError_None;
+    }
+
+    void otPlatRadioClearSrcMatchShortEntries(otInstance *aInstance)
+    {
+        (void)aInstance;
+    }
+
+    void otPlatRadioClearSrcMatchExtEntries(otInstance *aInstance)
+    {
+        (void)aInstance;
+    }
+
     //
     // Random
     //
@@ -208,6 +258,30 @@ exit:
     bool otPlatDiagModeGet()
     {
         return sDiagMode;
+    }
+
+    void otPlatDiagAlarmFired(otInstance *)
+    {
+    }
+
+    void otPlatDiagRadioTransmitDone(otInstance *, bool, ThreadError)
+    {
+    }
+
+    void otPlatDiagRadioReceiveDone(otInstance *, RadioPacket *, ThreadError)
+    {
+    }
+
+    //
+    // Uart
+    //
+
+    void otPlatUartSendDone(void)
+    {
+    }
+
+    void otPlatUartReceived(const uint8_t *, uint16_t)
+    {
     }
 
     //

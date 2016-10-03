@@ -42,6 +42,15 @@
 
 #include <assert.h>
 
+#elif defined(WINDOWS_KERNEL)
+
+#include <wdm.h>
+
+#define assert(exp) \
+    ((!(exp)) ? \
+        (RtlAssert( #exp, __FILE__, __LINE__, NULL ),FALSE) : \
+        TRUE)
+
 #else
 
 #define assert(cond)                            \

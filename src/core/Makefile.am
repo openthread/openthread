@@ -79,8 +79,11 @@ libopenthread_a_SOURCES             = \
     thread/network_data_local.cpp     \
     thread/network_data_leader.cpp    \
     thread/panid_query_server.cpp     \
+    thread/network_diag.cpp           \
+    thread/network_diag_tlvs.cpp      \
     thread/thread_netif.cpp           \
     thread/thread_tlvs.cpp            \
+    utils/global_address.cpp          \
     $(NULL)
 
 if OPENTHREAD_ENABLE_COMMISSIONER
@@ -164,10 +167,13 @@ noinst_HEADERS                      = \
     thread/network_data_local.hpp     \
     thread/network_data_tlvs.hpp      \
     thread/panid_query_server.hpp     \
+    thread/network_diag.hpp           \
+    thread/network_diag_tlvs.hpp      \
     thread/thread_netif.hpp           \
     thread/thread_tlvs.hpp            \
     thread/thread_uris.hpp            \
     thread/topology.hpp               \
+    utils/global_address.hpp          \
     $(NULL)
 
 if OPENTHREAD_BUILD_COVERAGE

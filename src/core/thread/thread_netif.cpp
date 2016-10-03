@@ -68,6 +68,7 @@ ThreadNetif::ThreadNetif(Ip6::Ip6 &aIp6):
     mMleRouter(*this),
     mNetworkDataLocal(*this),
     mNetworkDataLeader(*this),
+    mNetworkDiagnostic(*this),
 #if OPENTHREAD_ENABLE_COMMISSIONER
     mCommissioner(*this),
 #endif  // OPENTHREAD_ENABLE_COMMISSIONER

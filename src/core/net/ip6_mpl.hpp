@@ -63,6 +63,7 @@ public:
     enum
     {
         kType = 0x6d,    /* 01 1 01101 */
+        kMinLength = 2
     };
 
     /**
@@ -72,7 +73,17 @@ public:
     void Init() {
         OptionHeader::SetType(kType);
         OptionHeader::SetLength(sizeof(*this) - sizeof(OptionHeader));
+        mControl = 0;
     }
+
+    /**
+     * This method returns the total MPL Option length value including option
+     * header.
+     *
+     * @returns The total IPv6 Option Length.
+     *
+     */
+    uint8_t GetTotalLength() const { return OptionHeader::GetLength() + sizeof(OptionHeader); }
 
     /**
      * MPL Seed lengths.
@@ -108,7 +119,7 @@ public:
      * @retval FALSE  If the MPL M flag is not set.
      *
      */
-    bool IsMaxFlagSet() { return mControl & kMaxFlag; }
+    bool IsMaxFlagSet() { return (mControl & kMaxFlag) != 0; }
 
     /**
      * This method clears the MPL M flag.
@@ -156,7 +167,7 @@ private:
     enum
     {
         kSeedLengthMask = 3 << 6,
-        kMaxFlag = 1 << 5,
+        kMaxFlag = 1 << 5
     };
     uint8_t  mControl;
     uint8_t  mSequence;
@@ -181,22 +192,46 @@ public:
     /**
      * This method initializes the MPL option.
      *
-     * @param[in]  aOption  A reference to the MPL header to initialize.
-     * @param[in]  aSeed    The MPL Seed value to use.
+     * @param[in]  aOption   A reference to the MPL header to initialize.
+     * @param[in]  aAddress  A reference to the IPv6 Source Address.
      *
      */
-    void InitOption(OptionMpl &aOption, uint16_t aSeed);
+    void InitOption(OptionMpl &aOption, const Address &aAddress);
 
     /**
      * This method processes an MPL option.
      *
      * @param[in]  aMessage  A reference to the message.
+     * @param[in]  aAddress  A reference to the IPv6 Source Address.
      *
      * @retval kThreadError_None  Successfully processed the MPL option.
      * @retval kThreadError_Drop  The MPL message is a duplicate and should be dropped.
      *
      */
-    ThreadError ProcessOption(const Message &aMessage);
+    ThreadError ProcessOption(const Message &aMessage, const Address &aAddress);
+
+    /**
+     * This method returns the MPL Seed value.
+     *
+     * @returns The MPL Seed value.
+     *
+     */
+    uint16_t GetSeed() const { return mSeed; }
+
+    /**
+     * This method sets the MPL Seed value.
+     *
+     * @param[in]  aSeed  The MPL Seed value.
+     */
+    void SetSeed(uint16_t aSeed) { mSeed = aSeed; }
+
+    /**
+     * This method sets IPv6 matching address, that allows to elide seed-id.
+     *
+     * @param[in] aAddress The reference to IPv6 matching address.
+     */
+    void SetMatchingAddress(const Address &aAddress) { mMatchingAddress = &aAddress; }
+
 
 private:
     enum
@@ -210,6 +245,8 @@ private:
 
     Timer mTimer;
     uint8_t mSequence;
+    uint16_t mSeed;
+    const Address *mMatchingAddress;
 
     struct MplEntry
     {

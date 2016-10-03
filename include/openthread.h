@@ -83,6 +83,7 @@ extern "C" {
  *
  * @defgroup core-6lowpan 6LoWPAN
  * @defgroup core-coap CoAP
+ * @defgroup core-global-address Global IPv6 Address
  * @defgroup core-ipv6 IPv6
  * @defgroup core-mac MAC
  * @defgroup core-mesh-forwarding Mesh Forwarding
@@ -113,11 +114,11 @@ extern "C" {
  */
 
 /**
- * Run the next queued tasklet in OpenThread.
+ * Run all queued OpenThread tasklets at the time this is called.
  *
  * @param[in] aInstance A pointer to an OpenThread instance.
  */
-void otProcessNextTasklet(otInstance *aInstance);
+void otProcessQueuedTasklets(otInstance *aInstance);
 
 /**
  * Indicates whether or not OpenThread has tasklets pending.
@@ -185,7 +186,7 @@ otInstance *otInstanceInit(void *aInstanceBuffer, uint64_t *aInstanceBufferSize)
  * @retval otInstance*  The new OpenThread instance structure.
  *
  */
-otInstance *otInstanceInit();
+otInstance *otInstanceInit(void);
 #endif
 
 /**
@@ -686,7 +687,8 @@ ThreadError otSetNetworkName(otInstance *aInstance, const char *aNetworkName);
  *
  * @param[in]     aInstance  A pointer to an OpenThread instance.
  * @param[in]     aLocal     TRUE to retrieve from the local Network Data, FALSE for partition's Network Data
- * @param[inout]  aIterator  A pointer to the Network Data iterator context.
+ * @param[inout]  aIterator  A pointer to the Network Data iterator context. To get the first on-mesh entry
+                             it should be set to OT_NETWORK_DATA_ITERATOR_INIT.
  * @param[out]    aConfig    A pointer to where the On Mesh Prefix information will be placed.
  *
  * @retval kThreadError_None      Successfully found the next On Mesh prefix.
@@ -784,6 +786,69 @@ ThreadError otAddUnicastAddress(otInstance *aInstance, const otNetifAddress *aAd
  * @retval kThreadError_NotFound     The IP Address indicated by @p aAddress was not found.
  */
 ThreadError otRemoveUnicastAddress(otInstance *aInstance, const otIp6Address *aAddress);
+
+/**
+ * This function pointer is called to create IPv6 IID during SLAAC procedure.
+ *
+ * @param[in]     aInstance  A pointer to an OpenThread instance.
+ * @param[inout]  aAddress   A pointer to structure containing IPv6 address for which IID is being created.
+ * @param[inout]  aContext   A pointer to creator-specific context.
+ *
+ * @retval kThreadError_None                        Created valid IID for given IPv6 address.
+ * @retval kThreadError_Ipv6AddressCreationFailure  Creation of valid IID for given IPv6 address failed.
+ *
+ */
+typedef ThreadError(*otSlaacIidCreate)(otInstance *aInstance, otNetifAddress *aAddress, void *aContext);
+
+/**
+ * Update all automatically created IPv6 addresses for prefixes from current Network Data with SLAAC procedure.
+ *
+ * @param[in]     aInstance      A pointer to an OpenThread instance.
+ * @param[inout]  aAddresses     A pointer to an array of automatically created IPv6 addresses.
+ * @param[in]     aNumAddresses  The number of slots in aAddresses array.
+ * @param[in]     aIidCreate     A pointer to a function that is called to create IPv6 IIDs.
+ * @param[in]     aContext       A pointer to data passed to aIidCreate function.
+ *
+ */
+void otSlaacUpdate(otInstance *aInstance, otNetifAddress *aAddresses, uint32_t aNumAddresses,
+                   otSlaacIidCreate aIidCreate, void *aContext);
+
+/**
+ * Create random IID for given IPv6 address.
+ *
+ * @param[in]     aInstance  A pointer to an OpenThread instance.
+ * @param[inout]  aAddress   A pointer to structure containing IPv6 address for which IID is being created.
+ * @param[in]     aContext   A pointer to unused data.
+ *
+ * @retval kThreadError_None  Created valid IID for given IPv6 address.
+ *
+ */
+ThreadError otCreateRandomIid(otInstance *aInstance, otNetifAddress *aAddresses, void *aContext);
+
+/**
+ * Create IID for given IPv6 address using extended MAC address.
+ *
+ * @param[in]     aInstance  A pointer to an OpenThread instance.
+ * @param[inout]  aAddress   A pointer to structure containing IPv6 address for which IID is being created.
+ * @param[in]     aContext   A pointer to unused data.
+ *
+ * @retval kThreadError_None  Created valid IID for given IPv6 address.
+ *
+ */
+ThreadError otCreateMacIid(otInstance *aInstance, otNetifAddress *aAddresses, void *aContext);
+
+/**
+ * Create semantically opaque IID for given IPv6 address.
+ *
+ * @param[in]     aInstance  A pointer to an OpenThread instance.
+ * @param[inout]  aAddress   A pointer to structure containing IPv6 address for which IID is being created.
+ * @param[inout]  aContext   A pointer to a otSemanticallyOpaqueIidGeneratorData structure.
+ *
+ * @retval kThreadError_None                        Created valid IID for given IPv6 address.
+ * @retval kThreadError_Ipv6AddressCreationFailure  Could not create valid IID for given IPv6 address.
+ *
+ */
+ThreadError otCreateSemanticallyOpaqueIid(otInstance *aInstance, otNetifAddress *aAddresses, void *aContext);
 
 /**
  * This function pointer is called to notify certain configuration or state changes within OpenThread.
@@ -932,6 +997,23 @@ uint32_t otGetPollPeriod(otInstance *aInstance);
 void otSetPollPeriod(otInstance *aInstance, uint32_t aPollPeriod);
 
 /**
+ * Set the preferred Router Id.
+ *
+ * Upon becoming a router/leader the node attempts to use this Router Id. If the
+ * preferred Router Id is not set or if it can not be used, a randomly generated
+ * router id is picked. This property can be set only when the device role is
+ * either detached or disabled.
+ *
+ * @param[in]  aInstance    A pointer to an OpenThread instance.
+ * @param[in]  aRouterId    The preferred Router Id.
+ *
+ * @retval kThreadError_None         Successfully set the preferred Router Id.
+ * @retval kThreadError_InvalidState Could not set (role is not detached or disabled)
+ *
+ */
+ThreadError otSetPreferredRouterId(otInstance *aInstance, uint8_t aRouterId);
+
+/**
  * @}
  */
 
@@ -984,6 +1066,29 @@ uint32_t otGetLocalLeaderPartitionId(otInstance *aInstance);
  *
  */
 void otSetLocalLeaderPartitionId(otInstance *aInstance, uint32_t aPartitionId);
+
+/**
+ * Get the Joiner UDP Port.
+ *
+ * @param[in] aInstance A pointer to an OpenThread instance.
+ *
+ * @returns The Joiner UDP Port number.
+ *
+ * @sa otSetJoinerUdpPort
+ */
+uint16_t otGetJoinerUdpPort(otInstance *aInstance);
+
+/**
+ * Set the Joiner UDP Port
+ *
+ * @param[in]  aInstance       A pointer to an OpenThread instance.
+ * @param[in]  aJoinerUdpPort  The Joiner UDP Port number.
+ *
+ * @retval  kThreadErrorNone   Successfully set the Joiner UDP Port.
+ *
+ * @sa otGetJoinerUdpPort
+ */
+ThreadError otSetJoinerUdpPort(otInstance *aInstance, uint16_t aJoinerUdpPort);
 
 /**
  * @}
@@ -1535,6 +1640,24 @@ uint8_t otGetRouterDowngradeThreshold(otInstance *aInstance);
 void otSetRouterDowngradeThreshold(otInstance *aInstance, uint8_t aThreshold);
 
 /**
+ * Get the ROUTER_SELECTION_JITTER parameter used in the REED/Router role.
+ *
+ * @returns The ROUTER_SELECTION_JITTER value.
+ *
+ * @sa otSetRouterSelectionJitter
+ */
+uint8_t otGetRouterSelectionJitter(otInstance *aInstance);
+
+/**
+ * Set the ROUTER_SELECTION_JITTER parameter used in the REED/Router role.
+ *
+ * @param[in]  aRouterJitter  The ROUTER_SELECTION_JITTER value.
+ *
+ * @sa otGetRouterSelectionJitter
+ */
+void otSetRouterSelectionJitter(otInstance *aInstance, uint8_t aRouterJitter);
+
+/**
  * @}
  *
  */
@@ -1573,6 +1696,22 @@ ThreadError otGetChildInfoById(otInstance *aInstance, uint16_t aChildId, otChild
  *
  */
 ThreadError otGetChildInfoByIndex(otInstance *aInstance, uint8_t aChildIndex, otChildInfo *aChildInfo);
+
+/**
+ * This function gets the next neighbor information. It is used to go through the entries of
+ * the neighbor table.
+ *
+ * @param[in]     aInstance  A pointer to an OpenThread instance.
+ * @param[inout]  aIterator  A pointer to the iterator context. To get the first neighbor entry
+                             it should be set to OT_NEIGHBOR_INFO_ITERATOR_INIT.
+ * @param[out]    aInfo      A pointer to where the neighbor information will be placed.
+ *
+ * @retval kThreadError_None         Successfully found the next neighbor entry in table.
+ * @retval kThreadError_NotFound     No subsequent neighbor entry exists in the table.
+ * @retval kThreadError_InvalidArgs  @p aIterator or @p aInfo was NULL.
+ *
+ */
+ThreadError otGetNextNeighborInfo(otInstance *aInstance, otNeighborInfoIterator *aIterator, otNeighborInfo *aInfo);
 
 /**
  * Get the device role.
@@ -2157,6 +2296,26 @@ ThreadError otBindUdpSocket(otUdpSocket *aSocket, otSockAddr *aSockName);
  * @sa otSendUdp
  */
 ThreadError otSendUdp(otUdpSocket *aSocket, otMessage aMessage, const otMessageInfo *aMessageInfo);
+
+/**
+ * Send a Network Diagnostic Get request
+ *
+ * @param[in]  aDestination   A pointer to destination address.
+ * @param[in]  aTlvTypes      An array of Network Diagnostic TLV types.
+ * @param[in]  aCount         Number of types in aTlvTypes
+ */
+ThreadError otSendDiagnosticGet(otInstance *aInstance, otIp6Address *aDestination, uint8_t aTlvTypes[], uint8_t aCount);
+
+/**
+ * Send a Network Diagnostic Reset request
+ *
+ * @param[in]  aInstance      A pointer to an OpenThread instance.
+ * @param[in]  aDestination   A pointer to destination address.
+ * @param[in]  aTlvTypes      An array of Network Diagnostic TLV types. Currently only Type 9 is allowed.
+ * @param[in]  aCount         Number of types in aTlvTypes
+ */
+ThreadError otSendDiagnosticReset(otInstance *aInstance, otIp6Address *aDestination, uint8_t aTlvTypes[],
+                                  uint8_t aCount);
 
 /**
  * @}

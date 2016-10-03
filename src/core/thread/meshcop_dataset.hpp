@@ -46,7 +46,8 @@ class Dataset
 public:
     enum
     {
-        kMaxSize = 256,  ///< Maximum size of MeshCoP Dataset (bytes)
+        kMaxSize = 256,      ///< Maximum size of MeshCoP Dataset (bytes)
+        kMaxValueSize = 16,  /// < Maximum size of each Dataset TLV value (bytes)
     };
 
     /**
@@ -91,7 +92,7 @@ public:
      * This method converts the TLV representation to structure representation.
      *
      */
-    void Get(otOperationalDataset &aDataset);
+    void Get(otOperationalDataset &aDataset) const;
 
     /**
      * This method returns the Dataset size in bytes.
@@ -127,6 +128,8 @@ public:
     ThreadError Set(const Tlv &aTlv);
 
     ThreadError Set(const Message &aMessage, uint16_t aOffset, uint8_t aLength);
+
+    ThreadError Set(const Dataset &aDataset);
 
     ThreadError Set(const otOperationalDataset &aDataset);
 

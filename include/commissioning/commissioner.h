@@ -49,22 +49,60 @@ extern "C" {
 /**
  * This function enables the Thread Commissioner role.
  *
- * @param[in]  aInstance  A pointer to an OpenThread instance.
- * @param[in]  aPSKd      A pointer to the PSKd.
+ * @param[in]  aInstance         A pointer to an OpenThread instance.
  *
- * @retval kThreadError_None         Successfully started the Commissioner role.
- * @retval kThreadError_InvalidArgs  @p aPSKd is invalid.
+ * @retval kThreadError_None     Successfully started the Commissioner role.
  *
  */
-ThreadError otCommissionerStart(otInstance *aInstance, const char *aPSKd);
+ThreadError otCommissionerStart(otInstance *aInstance);
 
 /**
  * This function disables the Thread Commissioner role.
  *
- * @param[in]  aInstance  A pointer to an OpenThread instance.
+ * @param[in]  aInstance         A pointer to an OpenThread instance.
+ *
+ * @retval kThreadError_None     Successfully started the Commissioner role.
  *
  */
 ThreadError otCommissionerStop(otInstance *aInstance);
+
+/**
+ * This function adds a Joiner entry.
+ *
+ * @param[in]  aInstance             A pointer to an OpenThread instance.
+ * @param[in]  aExtAddress           A pointer to the Joiner's extended address or NULL for any Joiner.
+ * @param[in]  aPSKd                 A pointer to the PSKd.
+ *
+ * @retval kThreadError_None         Successfully added the Joiner.
+ * @retval kThreadError_NoBufs       No buffers available to add the Joiner.
+ * @retval kThreadError_InvalidArgs  @p aExtAddress or @p aPSKd is invalid.
+ *
+ */
+ThreadError otCommissionerAddJoiner(otInstance *aInstance, const otExtAddress *aExtAddress, const char *aPSKd);
+
+/**
+ * This function removes a Joiner entry.
+ *
+ * @param[in]  aInstance             A pointer to an OpenThread instance.
+ * @param[in]  aExtAddress           A pointer to the Joiner's extended address or NULL for any Joiner.
+ *
+ * @retval kThreadError_None         Successfully added the Joiner.
+ * @retval kThreadError_NotFound     The Joiner specified by @p aExtAddress was not found.
+ * @retval kThreadError_InvalidArgs  @p aExtAddress is invalid.
+ *
+ */
+ThreadError otCommissionerRemoveJoiner(otInstance *aIntsance, const otExtAddress *aExtAddress);
+
+/**
+ * This function sets the Provisioning URL.
+ *
+ * @param[in]  aProvisioningUrl  A pointer to the Provisioning URL (may be NULL).
+ *
+ * @retval kThreadError_None         Successfully added the Joiner.
+ * @retval kThreadError_InvalidArgs  @p aProvisioningUrl is invalid.
+ *
+ */
+ThreadError otCommissionerSetProvisioningUrl(otInstance *aInstance, const char *aProvisioningUrl);
 
 /**
  * This function pointer is called when the Commissioner receives an Energy Report.
@@ -125,6 +163,34 @@ typedef void (*otCommissionerPanIdConflictCallback)(uint16_t aPanId, uint32_t aC
 ThreadError otCommissionerPanIdQuery(otInstance *aInstance, uint16_t aPanId, uint32_t aChannelMask,
                                      const otIp6Address *aAddress,
                                      otCommissionerPanIdConflictCallback aCallback, void *aContext);
+
+/**
+ * This function sends MGMT_COMMISSIONER_GET.
+ *
+ * @param[in]  aInstance  A pointer to an OpenThread instance.
+ * @param[in]  aTlvs      A pointer to TLVs.
+ * @param[in]  aLength    The length of TLVs.
+ *
+ * @retval kThreadError_None         Successfully send the meshcop dataset command.
+ * @retval kThreadError_NoBufs       Insufficient buffer space to send.
+ *
+ */
+ThreadError otSendMgmtCommissionerGet(otInstance *, const uint8_t *aTlvs, uint8_t aLength);
+
+/**
+ * This function sends MGMT_COMMISSIONER_SET.
+ *
+ * @param[in]  aInstance  A pointer to an OpenThread instance.
+ * @param[in]  aDataset   A pointer to commissioning dataset.
+ * @param[in]  aTlvs      A pointer to TLVs.
+ * @param[in]  aLength    The length of TLVs.
+ *
+ * @retval kThreadError_None         Successfully send the meshcop dataset command.
+ * @retval kThreadError_NoBufs       Insufficient buffer space to send.
+ *
+ */
+ThreadError otSendMgmtCommissionerSet(otInstance *, const otCommissioningDataset *aDataset,
+                                      const uint8_t *aTlvs, uint8_t aLength);
 
 /**
  * @}

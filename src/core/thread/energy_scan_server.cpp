@@ -31,10 +31,13 @@
  *   This file implements the Energy Scan Server.
  */
 
+#define WPP_NAME "energy_scan_server.tmh"
+
 #include <coap/coap_header.hpp>
 #include <common/code_utils.hpp>
 #include <common/debug.hpp>
 #include <common/logging.hpp>
+#include <platform/random.h>
 #include <thread/meshcop_tlvs.hpp>
 #include <thread/energy_scan_server.hpp>
 #include <thread/thread_netif.hpp>
@@ -44,17 +47,19 @@ namespace Thread {
 
 EnergyScanServer::EnergyScanServer(ThreadNetif &aThreadNetif) :
     mActive(false),
-    mEnergyScan(OPENTHREAD_URI_ENERGY_SCAN, &HandleRequest, this),
+    mEnergyScan(OPENTHREAD_URI_ENERGY_SCAN, &EnergyScanServer::HandleRequest, this),
     mSocket(aThreadNetif.GetIp6().mUdp),
-    mTimer(aThreadNetif.GetIp6().mTimerScheduler, &HandleTimer, this),
+    mTimer(aThreadNetif.GetIp6().mTimerScheduler, &EnergyScanServer::HandleTimer, this),
     mCoapServer(aThreadNetif.GetCoapServer()),
     mNetif(aThreadNetif)
 {
-    mNetifCallback.Set(&HandleNetifStateChanged, this);
+    mNetifCallback.Set(&EnergyScanServer::HandleNetifStateChanged, this);
     mNetif.RegisterCallback(mNetifCallback);
 
     mCoapServer.AddResource(mEnergyScan);
     mSocket.Open(HandleUdpReceive, this);
+
+    mCoapMessageId = static_cast<uint8_t>(otPlatRandomGet());
 }
 
 void EnergyScanServer::HandleRequest(void *aContext, Coap::Header &aHeader, Message &aMessage,
@@ -116,7 +121,7 @@ exit:
 ThreadError EnergyScanServer::SendResponse(const Coap::Header &aRequestHeader, const Ip6::MessageInfo &aRequestInfo)
 {
     ThreadError error = kThreadError_None;
-    Message *message;
+    Message *message = NULL;
     Coap::Header responseHeader;
     Ip6::MessageInfo responseInfo;
 
@@ -125,7 +130,6 @@ ThreadError EnergyScanServer::SendResponse(const Coap::Header &aRequestHeader, c
     VerifyOrExit((message = mCoapServer.NewMessage(0)) != NULL, error = kThreadError_NoBufs);
 
     responseHeader.Init();
-    responseHeader.SetVersion(1);
     responseHeader.SetType(Coap::Header::kTypeAcknowledgment);
     responseHeader.SetCode(Coap::Header::kCodeChanged);
     responseHeader.SetMessageId(aRequestHeader.GetMessageId());
@@ -230,13 +234,11 @@ ThreadError EnergyScanServer::SendReport(void)
     Message *message;
 
     header.Init();
-    header.SetVersion(1);
     header.SetType(Coap::Header::kTypeConfirmable);
     header.SetCode(Coap::Header::kCodePost);
-    header.SetMessageId(0);
-    header.SetToken(NULL, 0);
+    header.SetMessageId(++mCoapMessageId);
+    header.SetToken(mCoapToken, sizeof(mCoapToken));
     header.AppendUriPathOptions(OPENTHREAD_URI_ENERGY_REPORT);
-    header.AppendContentFormatOption(Coap::Header::kApplicationOctetStream);
     header.Finalize();
 
     VerifyOrExit((message = mSocket.NewMessage(0)) != NULL, error = kThreadError_NoBufs);
@@ -275,6 +277,7 @@ exit:
 
 void EnergyScanServer::HandleUdpReceive(void *aContext, otMessage aMessage, const otMessageInfo *aMessageInfo)
 {
+    otLogInfoMeshCoP("received scan report response\r\n");
     (void)aContext;
     (void)aMessage;
     (void)aMessageInfo;

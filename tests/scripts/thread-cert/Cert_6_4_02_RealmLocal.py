@@ -27,7 +27,6 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-import pexpect
 import time
 import unittest
 
@@ -53,6 +52,7 @@ class Cert_5_3_2_RealmLocal(unittest.TestCase):
         self.nodes[ROUTER].add_whitelist(self.nodes[LEADER].get_addr64())
         self.nodes[ROUTER].add_whitelist(self.nodes[ED].get_addr64())
         self.nodes[ROUTER].enable_whitelist()
+        self.nodes[ROUTER].set_router_selection_jitter(1)
 
         self.nodes[ED].set_panid(0xface)
         self.nodes[ED].set_mode('rsn')
@@ -70,24 +70,24 @@ class Cert_5_3_2_RealmLocal(unittest.TestCase):
         self.assertEqual(self.nodes[LEADER].get_state(), 'leader')
 
         self.nodes[ROUTER].start()
-        time.sleep(3)
+        time.sleep(5)
         self.assertEqual(self.nodes[ROUTER].get_state(), 'router')
 
         self.nodes[ED].start()
-        time.sleep(3)
+        time.sleep(5)
         self.assertEqual(self.nodes[ED].get_state(), 'child')
 
         addrs = self.nodes[ED].get_addrs()
         for addr in addrs:
             if addr[0:4] != 'fe80':
-                self.nodes[LEADER].ping(addr, size=256)
-                self.nodes[LEADER].ping(addr)
+                self.assertTrue(self.nodes[LEADER].ping(addr, size=256))
+                self.assertTrue(self.nodes[LEADER].ping(addr))
 
-        self.nodes[LEADER].ping('ff03::1', size=256)
-        self.nodes[LEADER].ping('ff03::1')
+        self.assertTrue(self.nodes[LEADER].ping('ff03::1', size=256))
+        self.assertTrue(self.nodes[LEADER].ping('ff03::1'))
 
-        self.nodes[LEADER].ping('ff33:0040:fdde:ad00:beef:0:0:1', size=256)
-        self.nodes[LEADER].ping('ff33:0040:fdde:ad00:beef:0:0:1')
+        self.assertTrue(self.nodes[LEADER].ping('ff33:0040:fdde:ad00:beef:0:0:1', size=256))
+        self.assertTrue(self.nodes[LEADER].ping('ff33:0040:fdde:ad00:beef:0:0:1'))
 
 if __name__ == '__main__':
     unittest.main()

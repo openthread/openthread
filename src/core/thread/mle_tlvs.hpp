@@ -605,7 +605,7 @@ private:
         kRouteCostMask = 0xf << kRouteCostOffset,
     };
     uint8_t mRouterIdSequence;
-    uint8_t mRouterIdMask[BitVectorBytes(kMaxRouterId)];
+    uint8_t mRouterIdMask[BitVectorBytes(kMaxRouterId + 1)];
     uint8_t mRouteData[kMaxRouters];
 } OT_TOOL_PACKED_END;
 
@@ -1325,7 +1325,7 @@ public:
      * @retval FALSE  If the Compressed flag is not set.
      *
      */
-    bool IsCompressed(void) const { return mControl & kCompressed; }
+    bool IsCompressed(void) const { return (mControl & kCompressed) != 0; }
 
     /**
      * This method sets the Uncompressed flag.

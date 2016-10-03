@@ -53,7 +53,6 @@
 #include <common/encoding.hpp>
 #include <common/new.hpp>
 #include <net/ip6.hpp>
-#include <platform/random.h>
 #include <platform/uart.h>
 
 using Thread::Encoding::BigEndian::HostSwap16;
@@ -94,6 +93,7 @@ const struct Command Interpreter::sCommands[] =
 #if OPENTHREAD_ENABLE_JOINER
     { "joiner", &Interpreter::ProcessJoiner },
 #endif
+    { "joinerport", &Interpreter::ProcessJoinerPort },
     { "keysequence", &Interpreter::ProcessKeySequence },
     { "leaderdata", &Interpreter::ProcessLeaderData },
     { "leaderpartitionid", &Interpreter::ProcessLeaderPartitionId },
@@ -102,6 +102,7 @@ const struct Command Interpreter::sCommands[] =
     { "masterkey", &Interpreter::ProcessMasterKey },
     { "mode", &Interpreter::ProcessMode },
     { "netdataregister", &Interpreter::ProcessNetworkDataRegister },
+    { "networkdiagnostic", &Interpreter::ProcessNetworkDiagnostic },
     { "networkidtimeout", &Interpreter::ProcessNetworkIdTimeout },
     { "networkname", &Interpreter::ProcessNetworkName },
     { "panid", &Interpreter::ProcessPanId },
@@ -117,6 +118,7 @@ const struct Command Interpreter::sCommands[] =
     { "router", &Interpreter::ProcessRouter },
     { "routerdowngradethreshold", &Interpreter::ProcessRouterDowngradeThreshold },
     { "routerrole", &Interpreter::ProcessRouterRole },
+    { "routerselectionjitter", &Interpreter::ProcessRouterSelectionJitter },
     { "routerupgradethreshold", &Interpreter::ProcessRouterUpgradeThreshold },
     { "scan", &Interpreter::ProcessScan },
     { "singleton", &Interpreter::ProcessSingleton },
@@ -322,11 +324,18 @@ void Interpreter::ProcessChild(int argc, char *argv[])
     ThreadError error = kThreadError_None;
     otChildInfo childInfo;
     long value;
+    bool isTable = false;
 
     VerifyOrExit(argc > 0, error = kThreadError_Parse);
 
-    if (strcmp(argv[0], "list") == 0)
+    if (strcmp(argv[0], "list") == 0 || (isTable = (strcmp(argv[0], "table") == 0)))
     {
+        if (isTable)
+        {
+            sServer->OutputFormat("| ID  | RLOC16 | Timeout    | Age        | LQI In | C_VN |R|S|D|N| Extended MAC     |\r\n");
+            sServer->OutputFormat("+-----+--------+------------+------------+--------+------+-+-+-+-+------------------+\r\n");
+        }
+
         for (uint8_t i = 0; ; i++)
         {
             if (otGetChildInfoByIndex(mInstance, i, &childInfo) != kThreadError_None)
@@ -337,7 +346,31 @@ void Interpreter::ProcessChild(int argc, char *argv[])
 
             if (childInfo.mTimeout > 0)
             {
-                sServer->OutputFormat("%d ", childInfo.mChildId);
+                if (isTable)
+                {
+                    sServer->OutputFormat("| %3d ", childInfo.mChildId);
+                    sServer->OutputFormat("| 0x%04x ", childInfo.mRloc16);
+                    sServer->OutputFormat("| %10d ", childInfo.mTimeout);
+                    sServer->OutputFormat("| %10d ", childInfo.mAge);
+                    sServer->OutputFormat("| %6d ", childInfo.mLinkQualityIn);
+                    sServer->OutputFormat("| %4d ", childInfo.mNetworkDataVersion);
+                    sServer->OutputFormat("|%1d", childInfo.mRxOnWhenIdle);
+                    sServer->OutputFormat("|%1d", childInfo.mSecureDataRequest);
+                    sServer->OutputFormat("|%1d", childInfo.mFullFunction);
+                    sServer->OutputFormat("|%1d", childInfo.mFullNetworkData);
+                    sServer->OutputFormat("| ");
+
+                    for (size_t j = 0; j < sizeof(childInfo.mExtAddress); j++)
+                    {
+                        sServer->OutputFormat("%02x", childInfo.mExtAddress.m8[j]);
+                    }
+
+                    sServer->OutputFormat(" |\r\n");
+                }
+                else
+                {
+                    sServer->OutputFormat("%d ", childInfo.mChildId);
+                }
             }
         }
     }
@@ -1620,11 +1653,18 @@ void Interpreter::ProcessRouter(int argc, char *argv[])
     ThreadError error = kThreadError_None;
     otRouterInfo routerInfo;
     long value;
+    bool isTable = false;
 
     VerifyOrExit(argc > 0, error = kThreadError_Parse);
 
-    if (strcmp(argv[0], "list") == 0)
+    if (strcmp(argv[0], "list") == 0 || (isTable = (strcmp(argv[0], "table") == 0)))
     {
+        if (isTable)
+        {
+            sServer->OutputFormat("| ID | RLOC16 | Next Hop | Path Cost | LQI In | LQI Out | Age | Extended MAC     |\r\n");
+            sServer->OutputFormat("+----+--------+----------+-----------+--------+---------+-----+------------------+\r\n");
+        }
+
         for (uint8_t i = 0; ; i++)
         {
             if (otGetRouterInfo(mInstance, i, &routerInfo) != kThreadError_None)
@@ -1635,7 +1675,28 @@ void Interpreter::ProcessRouter(int argc, char *argv[])
 
             if (routerInfo.mAllocated)
             {
-                sServer->OutputFormat("%d ", i);
+                if (isTable)
+                {
+                    sServer->OutputFormat("| %2d ", routerInfo.mRouterId);
+                    sServer->OutputFormat("| 0x%04x ", routerInfo.mRloc16);
+                    sServer->OutputFormat("| %8d ", routerInfo.mNextHop);
+                    sServer->OutputFormat("| %9d ", routerInfo.mPathCost);
+                    sServer->OutputFormat("| %6d ", routerInfo.mLinkQualityIn);
+                    sServer->OutputFormat("| %7d ", routerInfo.mLinkQualityOut);
+                    sServer->OutputFormat("| %3d ", routerInfo.mAge);
+                    sServer->OutputFormat("| ");
+
+                    for (size_t j = 0; j < sizeof(routerInfo.mExtAddress); j++)
+                    {
+                        sServer->OutputFormat("%02x", routerInfo.mExtAddress.m8[j]);
+                    }
+
+                    sServer->OutputFormat(" |\r\n");
+                }
+                else
+                {
+                    sServer->OutputFormat("%d ", i);
+                }
             }
         }
     }
@@ -1718,6 +1779,25 @@ void Interpreter::ProcessRouterRole(int argc, char *argv[])
     else
     {
         ExitNow(error = kThreadError_Parse);
+    }
+
+exit:
+    AppendResult(error);
+}
+
+void Interpreter::ProcessRouterSelectionJitter(int argc, char *argv[])
+{
+    ThreadError error = kThreadError_None;
+    long value;
+
+    if (argc == 0)
+    {
+        sServer->OutputFormat("%d\r\n", otGetRouterSelectionJitter(mInstance));
+    }
+    else
+    {
+        SuccessOrExit(error = ParseLong(argv[0], value));
+        otSetRouterSelectionJitter(mInstance, static_cast<uint8_t>(value));
     }
 
 exit:
@@ -1911,12 +1991,42 @@ void Interpreter::ProcessCommissioner(int argc, char *argv[])
 
     if (strcmp(argv[0], "start") == 0)
     {
-        VerifyOrExit(argc > 1, error = kThreadError_Parse);
-        otCommissionerStart(mInstance, argv[1]);
+        SuccessOrExit(error = otCommissionerStart(mInstance));
     }
     else if (strcmp(argv[0], "stop") == 0)
     {
-        otCommissionerStop(mInstance);
+        SuccessOrExit(error = otCommissionerStop(mInstance));
+    }
+    else if (strcmp(argv[0], "joiner") == 0)
+    {
+        otExtAddress addr;
+        const otExtAddress *addrPtr;
+
+        VerifyOrExit(argc > 2, error = kThreadError_Parse);
+
+        if (strcmp(argv[2], "*") == 0)
+        {
+            addrPtr = NULL;
+        }
+        else
+        {
+            VerifyOrExit(Hex2Bin(argv[2], addr.m8, sizeof(addr)) == sizeof(addr), error = kThreadError_Parse);
+            addrPtr = &addr;
+        }
+
+        if (strcmp(argv[1], "add") == 0)
+        {
+            VerifyOrExit(argc > 3, error = kThreadError_Parse);
+            SuccessOrExit(error = otCommissionerAddJoiner(mInstance, addrPtr, argv[3]));
+        }
+        else if (strcmp(argv[1], "remove") == 0)
+        {
+            SuccessOrExit(error = otCommissionerRemoveJoiner(mInstance, addrPtr));
+        }
+    }
+    else if (strcmp(argv[0], "provisioningurl") == 0)
+    {
+        SuccessOrExit(error = otCommissionerSetProvisioningUrl(mInstance, (argc > 1) ? argv[1] : NULL));
     }
     else if (strcmp(argv[0], "energy") == 0)
     {
@@ -1976,6 +2086,112 @@ void Interpreter::ProcessCommissioner(int argc, char *argv[])
                                                        Interpreter::s_HandlePanIdConflict,
                                                        this));
     }
+    else if (strcmp(argv[0], "mgmtget") == 0)
+    {
+        uint8_t tlvs[32];
+        long value;
+        int length = 0;
+
+        for (uint8_t index = 1; index < argc; index++)
+        {
+            VerifyOrExit(static_cast<size_t>(length) < sizeof(tlvs), error = kThreadError_NoBufs);
+
+            if (strcmp(argv[index], "locator") == 0)
+            {
+                tlvs[length++] = OT_MESHCOP_TLV_BORDER_AGENT_RLOC;
+            }
+            else if (strcmp(argv[index], "sessionid") == 0)
+            {
+                tlvs[length++] = OT_MESHCOP_TLV_COMM_SESSION_ID;
+            }
+            else if (strcmp(argv[index], "steeringdata") == 0)
+            {
+                tlvs[length++] = OT_MESHCOP_TLV_STEERING_DATA;
+            }
+            else if (strcmp(argv[index], "joinerudpport") == 0)
+            {
+                tlvs[length++] = OT_MESHCOP_TLV_JOINER_UDP_PORT;
+            }
+            else if (strcmp(argv[index], "binary") == 0)
+            {
+                VerifyOrExit(++index < argc, error = kThreadError_Parse);
+                value = static_cast<long>(strlen(argv[index]) + 1) / 2;
+                VerifyOrExit(static_cast<size_t>(value) <= (sizeof(tlvs) - static_cast<size_t>(length)), error = kThreadError_NoBufs);
+                VerifyOrExit(Interpreter::Hex2Bin(argv[index], tlvs + length, static_cast<uint16_t>(value)) >= 0,
+                             error = kThreadError_Parse);
+                length += value;
+            }
+            else
+            {
+                ExitNow(error = kThreadError_Parse);
+            }
+        }
+
+        SuccessOrExit(error = otSendMgmtCommissionerGet(mInstance, tlvs, static_cast<uint8_t>(length)));
+    }
+    else if (strcmp(argv[0], "mgmtset") == 0)
+    {
+        otCommissioningDataset dataset;
+        uint8_t tlvs[32];
+        long value;
+        int length = 0;
+
+        VerifyOrExit(argc > 0, error = kThreadError_Parse);
+
+        memset(&dataset, 0, sizeof(dataset));
+
+        for (uint8_t index = 1; index < argc; index++)
+        {
+            VerifyOrExit(static_cast<size_t>(length) < sizeof(tlvs), error = kThreadError_NoBufs);
+
+            if (strcmp(argv[index], "locator") == 0)
+            {
+                VerifyOrExit(++index < argc, error = kThreadError_Parse);
+                dataset.mIsLocatorSet = true;
+                SuccessOrExit(error = Interpreter::ParseLong(argv[index], value));
+                dataset.mLocator = static_cast<uint16_t>(value);
+            }
+            else if (strcmp(argv[index], "sessionid") == 0)
+            {
+                VerifyOrExit(++index < argc, error = kThreadError_Parse);
+                dataset.mIsSessionIdSet = true;
+                SuccessOrExit(error = Interpreter::ParseLong(argv[index], value));
+                dataset.mSessionId = static_cast<uint16_t>(value);
+            }
+            else if (strcmp(argv[index], "steeringdata") == 0)
+            {
+                VerifyOrExit(++index < argc, error = kThreadError_Parse);
+                dataset.mIsSteeringDataSet = true;
+                length = static_cast<int>((strlen(argv[index]) + 1) / 2);
+                VerifyOrExit(static_cast<size_t>(length) <= OT_STEERING_DATA_MAX_LENGTH, error = kThreadError_NoBufs);
+                VerifyOrExit(Interpreter::Hex2Bin(argv[index], dataset.mSteeringData.m8, static_cast<uint16_t>(length)) >= 0,
+                             error = kThreadError_Parse);
+                dataset.mSteeringData.mLength = static_cast<uint8_t>(length);
+                length = 0;
+            }
+            else if (strcmp(argv[index], "joinerudpport") == 0)
+            {
+                VerifyOrExit(++index < argc, error = kThreadError_Parse);
+                dataset.mIsJoinerUdpPortSet = true;
+                SuccessOrExit(error = Interpreter::ParseLong(argv[index], value));
+                dataset.mJoinerUdpPort = static_cast<uint16_t>(value);
+            }
+            else if (strcmp(argv[index], "binary") == 0)
+            {
+                VerifyOrExit(++index < argc, error = kThreadError_Parse);
+                length = static_cast<int>((strlen(argv[index]) + 1) / 2);
+                VerifyOrExit(static_cast<size_t>(length) <= sizeof(tlvs), error = kThreadError_NoBufs);
+                VerifyOrExit(Interpreter::Hex2Bin(argv[index], tlvs, static_cast<uint16_t>(length)) >= 0,
+                             error = kThreadError_Parse);
+            }
+            else
+            {
+                ExitNow(error = kThreadError_Parse);
+            }
+        }
+
+        SuccessOrExit(error = otSendMgmtCommissionerSet(mInstance, &dataset, tlvs, static_cast<uint8_t>(length)));
+    }
 
 exit:
     AppendResult(error);
@@ -2021,8 +2237,10 @@ void Interpreter::ProcessJoiner(int argc, char *argv[])
 
     if (strcmp(argv[0], "start") == 0)
     {
+        const char *provisioningUrl;
         VerifyOrExit(argc > 1, error = kThreadError_Parse);
-        otJoinerStart(mInstance, argv[1]);
+        provisioningUrl = (argc > 2) ? argv[2] : NULL;
+        otJoinerStart(mInstance, argv[1], provisioningUrl);
     }
     else if (strcmp(argv[0], "stop") == 0)
     {
@@ -2034,6 +2252,25 @@ exit:
 }
 
 #endif // OPENTHREAD_ENABLE_JOINER
+
+void Interpreter::ProcessJoinerPort(int argc, char *argv[])
+{
+    ThreadError error = kThreadError_None;
+    long value;
+
+    if (argc == 0)
+    {
+        sServer->OutputFormat("%d\r\n", otGetJoinerUdpPort(mInstance));
+    }
+    else
+    {
+        SuccessOrExit(error = ParseLong(argv[0], value));
+        error = otSetJoinerUdpPort(mInstance, static_cast<uint16_t>(value));
+    }
+
+exit:
+    AppendResult(error);
+}
 
 void Interpreter::ProcessWhitelist(int argc, char *argv[])
 {
@@ -2178,105 +2415,46 @@ void Interpreter::s_HandleNetifStateChanged(uint32_t aFlags, void *aContext)
 
 void Interpreter::HandleNetifStateChanged(uint32_t aFlags)
 {
-    otNetworkDataIterator iterator;
-    otBorderRouterConfig config;
-
     VerifyOrExit((aFlags & OT_THREAD_NETDATA_UPDATED) != 0, ;);
 
-    // remove addresses
-    for (size_t i = 0; i < sizeof(sAutoAddresses) / sizeof(sAutoAddresses[0]); i++)
-    {
-        otNetifAddress *address = &sAutoAddresses[i];
-        bool found = false;
-
-        if (address->mValidLifetime == 0)
-        {
-            continue;
-        }
-
-        iterator = OT_NETWORK_DATA_ITERATOR_INIT;
-
-        while (otGetNextOnMeshPrefix(mInstance, false, &iterator, &config) == kThreadError_None)
-        {
-            if (config.mSlaac == false)
-            {
-                continue;
-            }
-
-            if (otIp6PrefixMatch(&config.mPrefix.mPrefix, &address->mAddress) >= config.mPrefix.mLength &&
-                config.mPrefix.mLength == address->mPrefixLength)
-            {
-                found = true;
-                break;
-            }
-        }
-
-        if (!found)
-        {
-            otRemoveUnicastAddress(mInstance, &address->mAddress);
-            address->mValidLifetime = 0;
-        }
-    }
-
-    // add addresses
-    iterator = OT_NETWORK_DATA_ITERATOR_INIT;
-
-    while (otGetNextOnMeshPrefix(mInstance, false, &iterator, &config) == kThreadError_None)
-    {
-        bool found = false;
-
-        if (config.mSlaac == false)
-        {
-            continue;
-        }
-
-        for (size_t i = 0; i < sizeof(sAutoAddresses) / sizeof(sAutoAddresses[0]); i++)
-        {
-            otNetifAddress *address = &sAutoAddresses[i];
-
-            if (address->mValidLifetime == 0)
-            {
-                continue;
-            }
-
-            if (otIp6PrefixMatch(&config.mPrefix.mPrefix, &address->mAddress) >= config.mPrefix.mLength &&
-                config.mPrefix.mLength == address->mPrefixLength)
-            {
-                found = true;
-                break;
-            }
-        }
-
-        if (!found)
-        {
-            for (size_t i = 0; i < sizeof(sAutoAddresses) / sizeof(sAutoAddresses[0]); i++)
-            {
-                otNetifAddress *address = &sAutoAddresses[i];
-
-                if (address->mValidLifetime != 0)
-                {
-                    continue;
-                }
-
-                memset(address, 0, sizeof(*address));
-                memcpy(&address->mAddress, &config.mPrefix.mPrefix, 8);
-
-                for (size_t j = 8; j < sizeof(address->mAddress); j++)
-                {
-                    address->mAddress.mFields.m8[j] = (uint8_t)otPlatRandomGet();
-                }
-
-                address->mPrefixLength = config.mPrefix.mLength;
-                address->mPreferredLifetime = config.mPreferred ? 0xffffffff : 0;
-                address->mValidLifetime = 0xffffffff;
-                otAddUnicastAddress(mInstance, address);
-                break;
-            }
-        }
-    }
+    otSlaacUpdate(mInstance, mAutoAddresses, sizeof(mAutoAddresses) / sizeof(mAutoAddresses[0]), otCreateRandomIid,
+                  NULL);
 
 exit:
     return;
+}
+
+void Interpreter::ProcessNetworkDiagnostic(int argc, char *argv[])
+{
+    ThreadError error = kThreadError_None;
+    struct otIp6Address address;
+    uint8_t index = 2;
+    uint8_t tlvTypes[OT_NUM_NETDIAG_TLV_TYPES];
+    uint8_t count = 0;
+
+    VerifyOrExit(argc > 1 + 1, error = kThreadError_Parse);
+
+    SuccessOrExit(error = otIp6AddressFromString(argv[1], &address));
+
+    while (index < argc && count < sizeof(tlvTypes))
+    {
+        long value;
+        SuccessOrExit(error = ParseLong(argv[index], value));
+        tlvTypes[count++] = static_cast<uint8_t>(value);
+        index++;
+    }
+
+    if (strcmp(argv[0], "get") == 0)
+    {
+        otSendDiagnosticGet(mInstance, &address, tlvTypes, count);
+    }
+    else if (strcmp(argv[0], "reset") == 0)
+    {
+        otSendDiagnosticReset(mInstance, &address, tlvTypes, count);
+    }
+
+exit:
+    AppendResult(error);
 }
 
 }  // namespace Cli

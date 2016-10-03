@@ -31,6 +31,8 @@
  *   This file implements a MeshCoP Leader.
  */
 
+#define WPP_NAME "leader.tmh"
+
 #include <stdio.h>
 
 #include <coap/coap_header.hpp>
@@ -50,7 +52,8 @@ Leader::Leader(ThreadNetif &aThreadNetif):
     mKeepAlive(OPENTHREAD_URI_LEADER_KEEP_ALIVE, HandleKeepAlive, this),
     mCoapServer(aThreadNetif.GetCoapServer()),
     mNetworkData(aThreadNetif.GetNetworkDataLeader()),
-    mTimer(aThreadNetif.GetIp6().mTimerScheduler, HandleTimer, this)
+    mTimer(aThreadNetif.GetIp6().mTimerScheduler, HandleTimer, this),
+    mSessionId(0xffff)
 {
     mCoapServer.AddResource(mPetition);
     mCoapServer.AddResource(mKeepAlive);
@@ -107,12 +110,10 @@ ThreadError Leader::SendPetitionResponse(const Coap::Header &aRequestHeader, con
 
     VerifyOrExit((message = mCoapServer.NewMessage(0)) != NULL, error = kThreadError_NoBufs);
     responseHeader.Init();
-    responseHeader.SetVersion(1);
     responseHeader.SetType(Coap::Header::kTypeAcknowledgment);
     responseHeader.SetCode(Coap::Header::kCodeChanged);
     responseHeader.SetMessageId(aRequestHeader.GetMessageId());
     responseHeader.SetToken(aRequestHeader.GetToken(), aRequestHeader.GetTokenLength());
-    responseHeader.AppendContentFormatOption(Coap::Header::kApplicationOctetStream);
     responseHeader.Finalize();
     SuccessOrExit(error = message->Append(responseHeader.GetBytes(), responseHeader.GetLength()));
 
@@ -130,7 +131,6 @@ ThreadError Leader::SendPetitionResponse(const Coap::Header &aRequestHeader, con
         sessionId.Init();
         sessionId.SetCommissionerSessionId(mSessionId);
         SuccessOrExit(error = message->Append(&sessionId, sizeof(sessionId)));
-
     }
 
     SuccessOrExit(error = mCoapServer.SendMessage(*message, aMessageInfo));
@@ -197,12 +197,10 @@ ThreadError Leader::SendKeepAliveResponse(const Coap::Header &aRequestHeader, co
 
     VerifyOrExit((message = mCoapServer.NewMessage(0)) != NULL, error = kThreadError_NoBufs);
     responseHeader.Init();
-    responseHeader.SetVersion(1);
     responseHeader.SetType(Coap::Header::kTypeAcknowledgment);
     responseHeader.SetCode(Coap::Header::kCodeChanged);
     responseHeader.SetMessageId(aRequestHeader.GetMessageId());
     responseHeader.SetToken(aRequestHeader.GetToken(), aRequestHeader.GetTokenLength());
-    responseHeader.AppendContentFormatOption(Coap::Header::kApplicationOctetStream);
     responseHeader.Finalize();
     SuccessOrExit(error = message->Append(responseHeader.GetBytes(), responseHeader.GetLength()));
 

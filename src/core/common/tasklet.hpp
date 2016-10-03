@@ -127,10 +127,10 @@ public:
     bool AreTaskletsPending(void);
 
     /**
-     * This method runs the next tasklet.
+     * This method processes all tasklets queued when this is called.
      *
      */
-    void RunNextTasklet(void);
+    void ProcessQueuedTasklets(void);
 
     /**
      * This method returns the pointer to the parent Ip6 structure.

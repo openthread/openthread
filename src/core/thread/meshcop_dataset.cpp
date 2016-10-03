@@ -92,7 +92,7 @@ exit:
     return rval;
 }
 
-void Dataset::Get(otOperationalDataset &aDataset)
+void Dataset::Get(otOperationalDataset &aDataset) const
 {
     const Tlv *cur = reinterpret_cast<const Tlv *>(mTlvs);
     const Tlv *end = reinterpret_cast<const Tlv *>(mTlvs + mLength);
@@ -227,6 +227,20 @@ void Dataset::Get(otOperationalDataset &aDataset)
 
         cur = cur->GetNext();
     }
+}
+
+ThreadError Dataset::Set(const Dataset &aDataset)
+{
+    memcpy(mTlvs, aDataset.mTlvs, aDataset.mLength);
+    mLength = aDataset.mLength;
+
+    if (mType == Tlv::kActiveTimestamp)
+    {
+        Remove(Tlv::kPendingTimestamp);
+        Remove(Tlv::kDelayTimer);
+    }
+
+    return kThreadError_None;
 }
 
 ThreadError Dataset::Set(const otOperationalDataset &aDataset)

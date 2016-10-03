@@ -79,7 +79,7 @@ public:
     /**
      * This constructor creates a trickle timer instance.
      *
-     * @param[in]  aScheduler               A refrence to the timer scheduler.
+     * @param[in]  aScheduler               A reference to the timer scheduler.
      * @param[in]  aRedundancyConstant      The redundancy constant for the timer, k.
      * @param[in]  aTransmitHandler         A pointer to a function that is called when transmission should occur.
      * @param[in]  aIntervalExpiredHandler  An optional pointer to a function that is called when the interval expires.

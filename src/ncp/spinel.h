@@ -246,6 +246,15 @@ typedef unsigned int spinel_cid_t;
 
 enum
 {
+    SPINEL_MD_FLAG_TX               = 0x0001,
+    SPINEL_MD_FLAG_HAS_FCS          = 0x0002,
+    SPINEL_MD_FLAG_BAD_FCS          = 0x0004,
+    SPINEL_MD_FLAG_DUPE             = 0x0008,
+    SPINEL_MD_FLAG_RESERVED         = 0xFFF0,
+};
+
+enum
+{
     SPINEL_CMD_NOOP                 = 0,
     SPINEL_CMD_RESET                = 1,
     SPINEL_CMD_PROP_VALUE_GET       = 2,
@@ -507,6 +516,24 @@ typedef enum
      */
     SPINEL_PROP_THREAD_ROUTER_ROLE_ENABLED
                                        = SPINEL_PROP_THREAD_EXT__BEGIN + 7,
+
+    /// Thread Router Downgrade Threshold
+    /** Format: `C`
+     */
+    SPINEL_PROP_THREAD_ROUTER_DOWNGRADE_THRESHOLD
+                                       = SPINEL_PROP_THREAD_EXT__BEGIN + 8,
+
+    /// Thread Router Selection Jitter
+    /** Format: `C`
+     */
+    SPINEL_PROP_THREAD_ROUTER_SELECTION_JITTER
+                                        = SPINEL_PROP_THREAD_EXT__BEGIN + 9,
+
+    /// Thread Preferred Router Id
+    /** Format: `C` - Write only
+     */
+    SPINEL_PROP_THREAD_PREFERRED_ROUTER_ID
+                                        = SPINEL_PROP_THREAD_EXT__BEGIN + 10,
 
     SPINEL_PROP_THREAD_EXT__END        = 0x1600,
 

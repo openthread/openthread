@@ -86,9 +86,10 @@ class Node:
         cmd += ' %d' % nodeid
         print ("%s" % cmd)
 
-        self.pexpect = pexpect.spawn(cmd, timeout=2)
+        self.pexpect = pexpect.spawn(cmd, timeout=4)
         time.sleep(0.1)
         self.pexpect.expect('spinel-cli >')
+        self.debug(int(os.getenv('DEBUG', '0')))
  
     def __init_soc(self, nodeid):
         """ Initialize a System-on-a-chip node connected via UART. """
@@ -127,17 +128,44 @@ class Node:
     def debug(self, level):
         self.send_command('debug '+str(level))
 
-    def start(self):
+    def interface_up(self):
         self.send_command('ifconfig up')
         self.pexpect.expect('Done')
+
+    def interface_down(self):
+        self.send_command('ifconfig down')
+        self.pexpect.expect('Done')
+
+    def thread_start(self):
         self.send_command('thread start')
         self.pexpect.expect('Done')
 
-    def stop(self):
+    def thread_stop(self):
         self.send_command('thread stop')
         self.pexpect.expect('Done')
-        self.send_command('ifconfig down')
+
+    def commissioner_start(self):
+        cmd = 'commissioner start'
+        self.send_command(cmd)
         self.pexpect.expect('Done')
+
+    def commissioner_add_joiner(self, addr, psk):
+        cmd = 'commissioner joiner add ' + addr + ' ' + psk
+        self.send_command(cmd)
+        self.pexpect.expect('Done')
+
+    def joiner_start(self, pskd='', provisioning_url=''):
+        cmd = 'joiner start ' + pskd + ' ' + provisioning_url
+        self.send_command(cmd)
+        self.pexpect.expect('Done')
+
+    def start(self):
+        self.interface_up()
+        self.thread_start()
+
+    def stop(self):
+        self.thread_stop()
+        self.interface_down()
 
     def clear_whitelist(self):
         self.send_command('whitelist clear')
@@ -179,8 +207,29 @@ class Node:
         self.pexpect.expect('Done')
         return addr64
 
+    def get_hashmacaddr(self):
+        self.send_command('hashmacaddr')
+        i = self.pexpect.expect('([0-9a-fA-F]{16})')
+        if i == 0:
+            addr = self.pexpect.match.groups()[0].decode("utf-8")
+        self.pexpect.expect('Done')
+        return addr
+
     def set_channel(self, channel):
         cmd = 'channel %d' % channel
+        self.send_command(cmd)
+        self.pexpect.expect('Done')
+
+    def get_masterkey(self):
+        self.send_command('masterkey')
+        i = self.pexpect.expect('([0-9a-fA-F]{32})')
+        if i == 0:
+            masterkey = self.pexpect.match.groups()[0].decode("utf-8")
+        self.pexpect.expect('Done')
+        return masterkey
+
+    def set_masterkey(self, masterkey):
+        cmd = 'masterkey ' + masterkey
         self.send_command(cmd)
         self.pexpect.expect('Done')
 
@@ -221,6 +270,11 @@ class Node:
 
     def set_router_upgrade_threshold(self, threshold):
         cmd = 'routerupgradethreshold %d' % threshold
+        self.send_command(cmd)
+        self.pexpect.expect('Done')
+
+    def set_router_downgrade_threshold(self, threshold):
+        cmd = 'routerdowngradethreshold %d' % threshold
         self.send_command(cmd)
         self.pexpect.expect('Done')
 
@@ -352,13 +406,24 @@ class Node:
             cmd += ' ' + str(size)
 
         self.send_command(cmd)
-        responders = {}
-        while len(responders) < num_responses:
-            i = self.pexpect.expect(['from (\S+):'])
-            if i == 0:
-                responders[self.pexpect.match.groups()[0]] = 1
-        self.pexpect.expect('\n')
-        return responders
+        
+        result = True
+        try:
+            responders = {}
+            while len(responders) < num_responses:
+                i = self.pexpect.expect(['from (\S+):'])
+                if i == 0:
+                    responders[self.pexpect.match.groups()[0]] = 1
+            self.pexpect.expect('\n')
+        except pexpect.TIMEOUT:
+            result = False
+
+        return result
+
+    def set_router_selection_jitter(self, jitter):
+        cmd = 'routerselectionjitter %d' % jitter
+        self.send_command(cmd)
+        self.pexpect.expect('Done')
 
 if __name__ == '__main__':
     unittest.main()

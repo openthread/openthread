@@ -47,6 +47,7 @@ class Cert_9_2_13_EnergyScan(unittest.TestCase):
         self.nodes[COMMISSIONER].set_mode('rsdn')
         self.nodes[COMMISSIONER].add_whitelist(self.nodes[LEADER].get_addr64())
         self.nodes[COMMISSIONER].enable_whitelist()
+        self.nodes[COMMISSIONER].set_router_selection_jitter(1)
 
         self.nodes[LEADER].set_panid(0xface)
         self.nodes[LEADER].set_mode('rsdn')
@@ -59,6 +60,7 @@ class Cert_9_2_13_EnergyScan(unittest.TestCase):
         self.nodes[ROUTER1].add_whitelist(self.nodes[LEADER].get_addr64())
         self.nodes[ROUTER1].add_whitelist(self.nodes[ED1].get_addr64())
         self.nodes[ROUTER1].enable_whitelist()
+        self.nodes[ROUTER1].set_router_selection_jitter(1)
 
         self.nodes[ED1].set_panid(0xface)
         self.nodes[ED1].set_mode('rs')
@@ -76,15 +78,15 @@ class Cert_9_2_13_EnergyScan(unittest.TestCase):
         self.assertEqual(self.nodes[LEADER].get_state(), 'leader')
 
         self.nodes[COMMISSIONER].start()
-        time.sleep(3)
+        time.sleep(5)
         self.assertEqual(self.nodes[COMMISSIONER].get_state(), 'router')
 
         self.nodes[ROUTER1].start()
-        time.sleep(3)
+        time.sleep(5)
         self.assertEqual(self.nodes[ROUTER1].get_state(), 'router')
 
         self.nodes[ED1].start()
-        time.sleep(3)
+        time.sleep(5)
         self.assertEqual(self.nodes[ED1].get_state(), 'child')
 
         ipaddrs = self.nodes[ROUTER1].get_addrs()
@@ -92,7 +94,7 @@ class Cert_9_2_13_EnergyScan(unittest.TestCase):
             if ipaddr[0:4] != 'fe80':
                 break
 
-        self.nodes[COMMISSIONER].ping(ipaddr)
+        self.assertTrue(self.nodes[COMMISSIONER].ping(ipaddr))
         self.nodes[COMMISSIONER].energy_scan(0x50000, 0x02, 0x20, 0x3e8, ipaddr)
 
         ipaddrs = self.nodes[ED1].get_addrs()
@@ -100,12 +102,12 @@ class Cert_9_2_13_EnergyScan(unittest.TestCase):
             if ipaddr[0:4] != 'fe80':
                 break
 
-        self.nodes[COMMISSIONER].ping(ipaddr)
+        self.assertTrue(self.nodes[COMMISSIONER].ping(ipaddr))
         self.nodes[COMMISSIONER].energy_scan(0x50000, 0x02, 0x20, 0x3e8, ipaddr)
 
         self.nodes[COMMISSIONER].energy_scan(0x50000, 0x02, 0x20, 0x3e8, 'ff33:0040:fdde:ad00:beef:0:0:1')
 
-        self.nodes[COMMISSIONER].ping(ipaddr)
+        self.assertTrue(self.nodes[COMMISSIONER].ping(ipaddr))
 
 if __name__ == '__main__':
     unittest.main()

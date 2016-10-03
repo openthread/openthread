@@ -47,6 +47,7 @@ class Cert_9_2_14_PanIdQuery(unittest.TestCase):
         self.nodes[COMMISSIONER].set_mode('rsdn')
         self.nodes[COMMISSIONER].add_whitelist(self.nodes[LEADER1].get_addr64())
         self.nodes[COMMISSIONER].enable_whitelist()
+        self.nodes[COMMISSIONER].set_router_selection_jitter(1)
 
         self.nodes[LEADER1].set_panid(0xface)
         self.nodes[LEADER1].set_mode('rsdn')
@@ -59,6 +60,7 @@ class Cert_9_2_14_PanIdQuery(unittest.TestCase):
         self.nodes[ROUTER1].add_whitelist(self.nodes[LEADER1].get_addr64())
         self.nodes[ROUTER1].add_whitelist(self.nodes[LEADER2].get_addr64())
         self.nodes[ROUTER1].enable_whitelist()
+        self.nodes[ROUTER1].set_router_selection_jitter(1)
 
         self.nodes[LEADER2].set_panid(0xdead)
         self.nodes[LEADER2].set_mode('rsdn')
@@ -76,11 +78,11 @@ class Cert_9_2_14_PanIdQuery(unittest.TestCase):
         self.assertEqual(self.nodes[LEADER1].get_state(), 'leader')
 
         self.nodes[COMMISSIONER].start()
-        time.sleep(3)
+        time.sleep(5)
         self.assertEqual(self.nodes[COMMISSIONER].get_state(), 'router')
 
         self.nodes[ROUTER1].start()
-        time.sleep(3)
+        time.sleep(5)
         self.assertEqual(self.nodes[ROUTER1].get_state(), 'router')
 
         self.nodes[LEADER2].start()
@@ -96,7 +98,7 @@ class Cert_9_2_14_PanIdQuery(unittest.TestCase):
 
         self.nodes[COMMISSIONER].panid_query(0xdead, 0xffffffff, 'ff33:0040:fdde:ad00:beef:0:0:1')
 
-        self.nodes[COMMISSIONER].ping(ipaddr)
+        self.assertTrue(self.nodes[COMMISSIONER].ping(ipaddr))
 
 if __name__ == '__main__':
     unittest.main()

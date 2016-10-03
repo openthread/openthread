@@ -27,7 +27,6 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-import pexpect
 import time
 import unittest
 
@@ -55,6 +54,7 @@ class Cert_5_6_1_NetworkDataLeaderAsBr(unittest.TestCase):
         self.nodes[ROUTER].add_whitelist(self.nodes[ED1].get_addr64())
         self.nodes[ROUTER].add_whitelist(self.nodes[SED1].get_addr64())
         self.nodes[ROUTER].enable_whitelist()
+        self.nodes[ROUTER].set_router_selection_jitter(1)
 
         self.nodes[ED1].set_panid(0xface)
         self.nodes[ED1].set_mode('rsn')
@@ -82,30 +82,30 @@ class Cert_5_6_1_NetworkDataLeaderAsBr(unittest.TestCase):
         self.nodes[LEADER].register_netdata()
 
         self.nodes[ROUTER].start()
-        time.sleep(3)
+        time.sleep(5)
         self.assertEqual(self.nodes[ROUTER].get_state(), 'router')
 
         self.nodes[ED1].start()
-        time.sleep(3)
+        time.sleep(5)
         self.assertEqual(self.nodes[ED1].get_state(), 'child')
 
         self.nodes[SED1].start()
-        time.sleep(3)
+        time.sleep(5)
         self.assertEqual(self.nodes[SED1].get_state(), 'child')
 
         addrs = self.nodes[ED1].get_addrs()
-        self.assertTrue(any('2001' in word for word in addrs))
-        self.assertTrue(any('2002' in word for word in addrs))
+        self.assertTrue(any('2001' in addr[0:4] for addr in addrs))
+        self.assertTrue(any('2002' in addr[0:4] for addr in addrs))
         for addr in addrs:
             if addr[0:4] == '2001' or addr[0:4] == '2002':
-                self.nodes[LEADER].ping(addr)
+                self.assertTrue(self.nodes[LEADER].ping(addr))
 
         addrs = self.nodes[SED1].get_addrs()
-        self.assertTrue(any('2001' in word for word in addrs))
-        self.assertFalse(any('2002' in word for word in addrs))
+        self.assertTrue(any('2001' in addr[0:4] for addr in addrs))
+        self.assertFalse(any('2002' in addr[0:4] for addr in addrs))
         for addr in addrs:
             if addr[0:4] == '2001' or addr[0:4] == '2002':
-                self.nodes[LEADER].ping(addr)
+                self.assertTrue(self.nodes[LEADER].ping(addr))
 
 if __name__ == '__main__':
     unittest.main()

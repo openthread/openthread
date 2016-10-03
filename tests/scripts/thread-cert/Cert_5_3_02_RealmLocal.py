@@ -27,7 +27,6 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-import pexpect
 import time
 import unittest
 
@@ -54,12 +53,14 @@ class Cert_5_3_2_RealmLocal(unittest.TestCase):
         self.nodes[ROUTER1].add_whitelist(self.nodes[LEADER].get_addr64())
         self.nodes[ROUTER1].add_whitelist(self.nodes[ROUTER2].get_addr64())
         self.nodes[ROUTER1].enable_whitelist()
+        self.nodes[ROUTER1].set_router_selection_jitter(1)
 
         self.nodes[ROUTER2].set_panid(0xface)
         self.nodes[ROUTER2].set_mode('rsdn')
         self.nodes[ROUTER2].add_whitelist(self.nodes[ROUTER1].get_addr64())
         self.nodes[ROUTER2].add_whitelist(self.nodes[SED1].get_addr64())
         self.nodes[ROUTER2].enable_whitelist()
+        self.nodes[ROUTER2].set_router_selection_jitter(1)
 
         self.nodes[SED1].set_panid(0xface)
         self.nodes[SED1].set_mode('sn')
@@ -78,31 +79,31 @@ class Cert_5_3_2_RealmLocal(unittest.TestCase):
         self.assertEqual(self.nodes[LEADER].get_state(), 'leader')
 
         self.nodes[ROUTER1].start()
-        time.sleep(3)
+        time.sleep(5)
         self.assertEqual(self.nodes[ROUTER1].get_state(), 'router')
 
         self.nodes[ROUTER2].start()
-        time.sleep(3)
+        time.sleep(5)
         self.assertEqual(self.nodes[ROUTER2].get_state(), 'router')
 
         self.nodes[SED1].start()
-        time.sleep(3)
+        time.sleep(5)
         self.assertEqual(self.nodes[SED1].get_state(), 'child')
 
         addrs = self.nodes[ROUTER2].get_addrs()
         for addr in addrs:
             if addr[0:4] != 'fe80':
-                self.nodes[LEADER].ping(addr, size=256)
-                self.nodes[LEADER].ping(addr)
+                self.assertTrue(self.nodes[LEADER].ping(addr, size=256))
+                self.assertTrue(self.nodes[LEADER].ping(addr))
 
-        self.nodes[LEADER].ping('ff03::1', size=256)
-        self.nodes[LEADER].ping('ff03::1')
+        self.assertTrue(self.nodes[LEADER].ping('ff03::1', size=256))
+        self.assertTrue(self.nodes[LEADER].ping('ff03::1'))
 
-        self.nodes[LEADER].ping('ff03::2', size=256)
-        self.nodes[LEADER].ping('ff03::2')
+        self.assertTrue(self.nodes[LEADER].ping('ff03::2', size=256))
+        self.assertTrue(self.nodes[LEADER].ping('ff03::2'))
 
-        self.nodes[LEADER].ping('ff33:0040:fdde:ad00:beef:0:0:1', size=256)
-        self.nodes[LEADER].ping('ff33:0040:fdde:ad00:beef:0:0:1')
+        self.assertTrue(self.nodes[LEADER].ping('ff33:0040:fdde:ad00:beef:0:0:1', size=256))
+        self.assertTrue(self.nodes[LEADER].ping('ff33:0040:fdde:ad00:beef:0:0:1'))
 
 if __name__ == '__main__':
     unittest.main()

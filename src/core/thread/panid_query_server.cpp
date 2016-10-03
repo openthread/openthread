@@ -31,10 +31,13 @@
  *   This file implements the PAN ID Query Server.
  */
 
+#define WPP_NAME "panid_query_server.tmh"
+
 #include <coap/coap_header.hpp>
 #include <common/code_utils.hpp>
 #include <common/debug.hpp>
 #include <common/logging.hpp>
+#include <platform/random.h>
 #include <thread/meshcop_tlvs.hpp>
 #include <thread/panid_query_server.hpp>
 #include <thread/thread_netif.hpp>
@@ -43,14 +46,16 @@
 namespace Thread {
 
 PanIdQueryServer::PanIdQueryServer(ThreadNetif &aThreadNetif) :
-    mPanIdQuery(OPENTHREAD_URI_PANID_QUERY, &HandleQuery, this),
+    mPanIdQuery(OPENTHREAD_URI_PANID_QUERY, &PanIdQueryServer::HandleQuery, this),
     mSocket(aThreadNetif.GetIp6().mUdp),
-    mTimer(aThreadNetif.GetIp6().mTimerScheduler, &HandleTimer, this),
+    mTimer(aThreadNetif.GetIp6().mTimerScheduler, &PanIdQueryServer::HandleTimer, this),
     mCoapServer(aThreadNetif.GetCoapServer()),
     mNetif(aThreadNetif)
 {
     mCoapServer.AddResource(mPanIdQuery);
     mSocket.Open(HandleUdpReceive, this);
+
+    mCoapMessageId = static_cast<uint8_t>(otPlatRandomGet());
 }
 
 void PanIdQueryServer::HandleQuery(void *aContext, Coap::Header &aHeader, Message &aMessage,
@@ -100,7 +105,7 @@ ThreadError PanIdQueryServer::SendQueryResponse(const Coap::Header &aRequestHead
                                                 const Ip6::MessageInfo &aRequestInfo)
 {
     ThreadError error = kThreadError_None;
-    Message *message;
+    Message *message = NULL;
     Coap::Header responseHeader;
     Ip6::MessageInfo responseInfo;
 
@@ -109,7 +114,6 @@ ThreadError PanIdQueryServer::SendQueryResponse(const Coap::Header &aRequestHead
     VerifyOrExit((message = mCoapServer.NewMessage(0)) != NULL, error = kThreadError_NoBufs);
 
     responseHeader.Init();
-    responseHeader.SetVersion(1);
     responseHeader.SetType(Coap::Header::kTypeAcknowledgment);
     responseHeader.SetCode(Coap::Header::kCodeChanged);
     responseHeader.SetMessageId(aRequestHeader.GetMessageId());
@@ -171,14 +175,17 @@ ThreadError PanIdQueryServer::SendConflict(void)
     Ip6::MessageInfo messageInfo;
     Message *message;
 
+    for (size_t i = 0; i < sizeof(mCoapToken); i++)
+    {
+        mCoapToken[i] = static_cast<uint8_t>(otPlatRandomGet());
+    }
+
     header.Init();
-    header.SetVersion(1);
     header.SetType(Coap::Header::kTypeConfirmable);
     header.SetCode(Coap::Header::kCodePost);
-    header.SetMessageId(0);
-    header.SetToken(NULL, 0);
+    header.SetMessageId(++mCoapMessageId);
+    header.SetToken(mCoapToken, sizeof(mCoapToken));
     header.AppendUriPathOptions(OPENTHREAD_URI_PANID_CONFLICT);
-    header.AppendContentFormatOption(Coap::Header::kApplicationOctetStream);
     header.Finalize();
 
     VerifyOrExit((message = mSocket.NewMessage(0)) != NULL, error = kThreadError_NoBufs);
@@ -233,6 +240,7 @@ void PanIdQueryServer::HandleTimer(void)
 
 void PanIdQueryServer::HandleUdpReceive(void *aContext, otMessage aMessage, const otMessageInfo *aMessageInfo)
 {
+    otLogInfoMeshCoP("received panid conflict response\r\n");
     (void)aContext;
     (void)aMessage;
     (void)aMessageInfo;

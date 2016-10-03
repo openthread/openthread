@@ -34,6 +34,12 @@
 #ifndef MESSAGE_HPP_
 #define MESSAGE_HPP_
 
+#ifdef OPENTHREAD_CONFIG_FILE
+#include OPENTHREAD_CONFIG_FILE
+#else
+#include <openthread-config.h>
+#endif
+
 #include <stdint.h>
 #include <string.h>
 

@@ -63,7 +63,7 @@ class Cert_6_5_1_ChildResetSynchronize(unittest.TestCase):
         self.assertEqual(self.nodes[LEADER].get_state(), 'leader')
 
         self.nodes[ED].start()
-        time.sleep(3)
+        time.sleep(5)
         self.assertEqual(self.nodes[ED].get_state(), 'child')
 
         self.nodes[ED].stop()
@@ -71,19 +71,19 @@ class Cert_6_5_1_ChildResetSynchronize(unittest.TestCase):
 
         self.nodes[ED].set_timeout(100)
         self.nodes[ED].start()
-        time.sleep(3)
+        time.sleep(5)
         self.assertEqual(self.nodes[ED].get_state(), 'child')
 
         self.nodes[ED].stop()
-        time.sleep(3)
+        time.sleep(5)
         self.nodes[ED].start()
-        time.sleep(3)
+        time.sleep(5)
         self.assertEqual(self.nodes[ED].get_state(), 'child')
 
         addrs = self.nodes[ED].get_addrs()
         for addr in addrs:
             if addr[0:4] == 'fe80':
-                self.nodes[LEADER].ping(addr)
+                self.assertTrue(self.nodes[LEADER].ping(addr))
 
 if __name__ == '__main__':
     unittest.main()

@@ -31,6 +31,8 @@
  *   This file implements the top-level interface to the OpenThread stack.
  */
 
+#define WPP_NAME "openthread.tmh"
+
 #ifdef OPENTHREAD_CONFIG_FILE
 #include OPENTHREAD_CONFIG_FILE
 #else
@@ -48,10 +50,12 @@
 #include <crypto/mbedtls.hpp>
 #include <net/icmp6.hpp>
 #include <net/ip6.hpp>
+#include <platform/radio.h>
 #include <platform/random.h>
 #include <platform/misc.h>
 #include <thread/thread_netif.hpp>
 #include <thread/thread_uris.hpp>
+#include <utils/global_address.hpp>
 #include <openthreadinstance.h>
 
 #ifndef OPENTHREAD_MULTIPLE_INSTANCE
@@ -82,9 +86,9 @@ static void HandleActiveScanResult(void *aContext, Mac::Frame *aFrame);
 static void HandleEnergyScanResult(void *aContext, otEnergyScanResult *aResult);
 static void HandleMleDiscover(otActiveScanResult *aResult, void *aContext);
 
-void otProcessNextTasklet(otInstance *aInstance)
+void otProcessQueuedTasklets(otInstance *aInstance)
 {
-    aInstance->mIp6.mTaskletScheduler.RunNextTasklet();
+    aInstance->mIp6.mTaskletScheduler.ProcessQueuedTasklets();
 }
 
 bool otAreTaskletsPending(otInstance *aInstance)
@@ -364,6 +368,16 @@ uint32_t otGetLocalLeaderPartitionId(otInstance *aInstance)
 void otSetLocalLeaderPartitionId(otInstance *aInstance, uint32_t aPartitionId)
 {
     return aInstance->mThreadNetif.GetMle().SetLeaderPartitionId(aPartitionId);
+}
+
+uint16_t otGetJoinerUdpPort(otInstance *aInstance)
+{
+    return aInstance->mThreadNetif.GetJoinerRouter().GetJoinerUdpPort();
+}
+
+ThreadError otSetJoinerUdpPort(otInstance *aInstance, uint16_t aJoinerUdpPort)
+{
+    return aInstance->mThreadNetif.GetJoinerRouter().SetJoinerUdpPort(aJoinerUdpPort);
 }
 
 ThreadError otAddBorderRouter(otInstance *aInstance, const otBorderRouterConfig *aConfig)
@@ -672,6 +686,16 @@ void otSetRouterDowngradeThreshold(otInstance *aInstance, uint8_t aThreshold)
     aInstance->mThreadNetif.GetMle().SetRouterDowngradeThreshold(aThreshold);
 }
 
+uint8_t otGetRouterSelectionJitter(otInstance *aInstance)
+{
+    return aInstance->mThreadNetif.GetMle().GetRouterSelectionJitter();
+}
+
+void otSetRouterSelectionJitter(otInstance *aInstance, uint8_t aRouterJitter)
+{
+    aInstance->mThreadNetif.GetMle().SetRouterSelectionJitter(aRouterJitter);
+}
+
 ThreadError otGetChildInfoById(otInstance *aInstance, uint16_t aChildId, otChildInfo *aChildInfo)
 {
     ThreadError error = kThreadError_None;
@@ -691,6 +715,18 @@ ThreadError otGetChildInfoByIndex(otInstance *aInstance, uint8_t aChildIndex, ot
     VerifyOrExit(aChildInfo != NULL, error = kThreadError_InvalidArgs);
 
     error = aInstance->mThreadNetif.GetMle().GetChildInfoByIndex(aChildIndex, *aChildInfo);
+
+exit:
+    return error;
+}
+
+ThreadError otGetNextNeighborInfo(otInstance *aInstance, otNeighborInfoIterator *aIterator, otNeighborInfo *aInfo)
+{
+    ThreadError error = kThreadError_None;
+
+    VerifyOrExit((aInfo != NULL) && (aIterator != NULL), error = kThreadError_InvalidArgs);
+
+    error = aInstance->mThreadNetif.GetMle().GetNextNeighborInfo(*aIterator, *aInfo);
 
 exit:
     return error;
@@ -864,6 +900,31 @@ ThreadError otRemoveUnicastAddress(otInstance *aInstance, const otIp6Address *ad
     return aInstance->mThreadNetif.RemoveExternalUnicastAddress(*static_cast<const Ip6::Address *>(address));
 }
 
+void otSlaacUpdate(otInstance *aInstance, otNetifAddress *aAddresses, uint32_t aNumAddresses,
+                   otSlaacIidCreate aIidCreate, void *aContext)
+{
+    Utils::Slaac::UpdateAddresses(aInstance, aAddresses, aNumAddresses, aIidCreate, aContext);
+}
+
+ThreadError otCreateRandomIid(otInstance *aInstance, otNetifAddress *aAddress, void *aContext)
+{
+    return Utils::Slaac::CreateRandomIid(aInstance, aAddress, aContext);
+}
+
+ThreadError otCreateMacIid(otInstance *aInstance, otNetifAddress *aAddress, void *)
+{
+    memcpy(&aAddress->mAddress.mFields.m8[OT_IP6_ADDRESS_SIZE - OT_IP6_IID_SIZE],
+           aInstance->mThreadNetif.GetMac().GetExtAddress(), OT_IP6_IID_SIZE);
+    aAddress->mAddress.mFields.m8[OT_IP6_ADDRESS_SIZE - OT_IP6_IID_SIZE] ^= 0x02;
+
+    return kThreadError_None;
+}
+
+ThreadError otCreateSemanticallyOpaqueIid(otInstance *aInstance, otNetifAddress *aAddress, void *aContext)
+{
+    return static_cast<Utils::SemanticallyOpaqueIidGenerator *>(aContext)->CreateIid(aInstance, aAddress);
+}
+
 void otSetStateChangedCallback(otInstance *aInstance, otStateChangedCallback aCallback, void *aCallbackContext)
 {
     aInstance->mNetifCallback.Set(aCallback, aCallbackContext);
@@ -873,11 +934,15 @@ void otSetStateChangedCallback(otInstance *aInstance, otStateChangedCallback aCa
 const char *otGetVersionString(void)
 {
     static const char sVersion[] =
-        PACKAGE_NAME "/" PACKAGE_VERSION "; "
+        PACKAGE_NAME "/" PACKAGE_VERSION
 #ifdef  PLATFORM_INFO
-        PLATFORM_INFO "; "
+        "; " PLATFORM_INFO
 #endif
-        __DATE__ " " __TIME__;
+#if defined(__DATE__)
+        "; " __DATE__ " " __TIME__;
+#else
+        ;
+#endif
 
     return sVersion;
 }
@@ -890,6 +955,11 @@ uint32_t otGetPollPeriod(otInstance *aInstance)
 void otSetPollPeriod(otInstance *aInstance, uint32_t aPollPeriod)
 {
     aInstance->mThreadNetif.GetMeshForwarder().SetAssignPollPeriod(aPollPeriod);
+}
+
+ThreadError otSetPreferredRouterId(otInstance *aInstance, uint8_t aRouterId)
+{
+    return aInstance->mThreadNetif.GetMle().SetPreferredRouterId(aRouterId);
 }
 
 #ifdef OPENTHREAD_MULTIPLE_INSTANCE
@@ -932,6 +1002,21 @@ exit:
 }
 
 #endif
+
+ThreadError otSendDiagnosticGet(otInstance *aInstance, otIp6Address *aDestination, uint8_t aTlvTypes[], uint8_t aCount)
+{
+    return aInstance->mThreadNetif.GetNetworkDiagnostic().SendDiagnosticGet(*static_cast<Ip6::Address *>(aDestination),
+                                                                            aTlvTypes,
+                                                                            aCount);
+}
+
+ThreadError otSendDiagnosticReset(otInstance *aInstance, otIp6Address *aDestination, uint8_t aTlvTypes[],
+                                  uint8_t aCount)
+{
+    return aInstance->mThreadNetif.GetNetworkDiagnostic().SendDiagnosticReset(*static_cast<Ip6::Address *>(aDestination),
+                                                                              aTlvTypes,
+                                                                              aCount);
+}
 
 void otInstanceFinalize(otInstance *aInstance)
 {
@@ -1086,7 +1171,7 @@ bool otIsDiscoverInProgress(otInstance *aInstance)
 
 void HandleMleDiscover(otActiveScanResult *aResult, void *aContext)
 {
-    otInstance *aInstance = reinterpret_cast<otInstance *>(aContext);
+    otInstance *aInstance = static_cast<otInstance *>(aContext);
     aInstance->mDiscoverCallback(aResult, aInstance->mDiscoverCallbackContext);
 }
 
@@ -1176,30 +1261,49 @@ int otWriteMessage(otMessage aMessage, uint16_t aOffset, const void *aBuf, uint1
     return message->Write(aOffset, aLength, aBuf);
 }
 
-ThreadError otOpenUdpSocket(otInstance *, otUdpSocket *aSocket, otUdpReceive aCallback, void *aCallbackContext)
+ThreadError otOpenUdpSocket(otInstance *aInstance, otUdpSocket *aSocket, otUdpReceive aCallback, void *aCallbackContext)
 {
-    // TODO - Do we not need otInstance?
-    Ip6::UdpSocket *socket = reinterpret_cast<Ip6::UdpSocket *>(aSocket);
-    return socket->Open(aCallback, aCallbackContext);
+    ThreadError error = kThreadError_Busy;
+    Ip6::UdpSocket *socket = static_cast<Ip6::UdpSocket *>(aSocket);
+
+    if (socket->mTransport == NULL)
+    {
+        socket->mTransport = &aInstance->mIp6.mUdp;
+        error = socket->Open(aCallback, aCallbackContext);
+    }
+
+    return error;
 }
 
 ThreadError otCloseUdpSocket(otUdpSocket *aSocket)
 {
-    Ip6::UdpSocket *socket = reinterpret_cast<Ip6::UdpSocket *>(aSocket);
-    return socket->Close();
+    ThreadError error = kThreadError_InvalidState;
+    Ip6::UdpSocket *socket = static_cast<Ip6::UdpSocket *>(aSocket);
+
+    if (socket->mTransport != NULL)
+    {
+        error = socket->Close();
+
+        if (error == kThreadError_None)
+        {
+            socket->mTransport = NULL;
+        }
+    }
+
+    return error;
 }
 
 ThreadError otBindUdpSocket(otUdpSocket *aSocket, otSockAddr *aSockName)
 {
-    Ip6::UdpSocket *socket = reinterpret_cast<Ip6::UdpSocket *>(aSocket);
-    return socket->Bind(*reinterpret_cast<const Ip6::SockAddr *>(aSockName));
+    Ip6::UdpSocket *socket = static_cast<Ip6::UdpSocket *>(aSocket);
+    return socket->Bind(*static_cast<const Ip6::SockAddr *>(aSockName));
 }
 
 ThreadError otSendUdp(otUdpSocket *aSocket, otMessage aMessage, const otMessageInfo *aMessageInfo)
 {
-    Ip6::UdpSocket *socket = reinterpret_cast<Ip6::UdpSocket *>(aSocket);
-    return socket->SendTo(*reinterpret_cast<Message *>(aMessage),
-                          *reinterpret_cast<const Ip6::MessageInfo *>(aMessageInfo));
+    Ip6::UdpSocket *socket = static_cast<Ip6::UdpSocket *>(aSocket);
+    return socket->SendTo(*static_cast<Message *>(aMessage),
+                          *static_cast<const Ip6::MessageInfo *>(aMessageInfo));
 }
 
 bool otIsIcmpEchoEnabled(otInstance *aInstance)
@@ -1230,7 +1334,7 @@ ThreadError otGetActiveDataset(otInstance *aInstance, otOperationalDataset *aDat
 
     VerifyOrExit(aDataset != NULL, error = kThreadError_InvalidArgs);
 
-    aInstance->mThreadNetif.GetActiveDataset().Get(*aDataset);
+    aInstance->mThreadNetif.GetActiveDataset().GetLocal().Get(*aDataset);
 
 exit:
     return error;
@@ -1254,7 +1358,7 @@ ThreadError otGetPendingDataset(otInstance *aInstance, otOperationalDataset *aDa
 
     VerifyOrExit(aDataset != NULL, error = kThreadError_InvalidArgs);
 
-    aInstance->mThreadNetif.GetPendingDataset().Get(*aDataset);
+    aInstance->mThreadNetif.GetPendingDataset().GetLocal().Get(*aDataset);
 
 exit:
     return error;
@@ -1296,14 +1400,29 @@ ThreadError otSendPendingSet(otInstance *aInstance, const otOperationalDataset *
 
 #if OPENTHREAD_ENABLE_COMMISSIONER
 #include <commissioning/commissioner.h>
-ThreadError otCommissionerStart(otInstance *aInstance, const char *aPSKd)
+ThreadError otCommissionerStart(otInstance *aInstance)
 {
-    return aInstance->mThreadNetif.GetCommissioner().Start(aPSKd);
+    return aInstance->mThreadNetif.GetCommissioner().Start();
 }
 
 ThreadError otCommissionerStop(otInstance *aInstance)
 {
     return aInstance->mThreadNetif.GetCommissioner().Stop();
+}
+
+ThreadError otCommissionerAddJoiner(otInstance *aInstance, const otExtAddress *aExtAddress, const char *aPSKd)
+{
+    return aInstance->mThreadNetif.GetCommissioner().AddJoiner(static_cast<const Mac::ExtAddress *>(aExtAddress), aPSKd);
+}
+
+ThreadError otCommissionerRemoveJoiner(otInstance *aInstance, const otExtAddress *aExtAddress)
+{
+    return aInstance->mThreadNetif.GetCommissioner().RemoveJoiner(static_cast<const Mac::ExtAddress *>(aExtAddress));
+}
+
+ThreadError otCommissionerSetProvisioningUrl(otInstance *aInstance, const char *aProvisioningUrl)
+{
+    return aInstance->mThreadNetif.GetCommissioner().SetProvisioningUrl(aProvisioningUrl);
 }
 
 ThreadError otCommissionerEnergyScan(otInstance *aInstance, uint32_t aChannelMask, uint8_t aCount, uint16_t aPeriod,
@@ -1322,12 +1441,23 @@ ThreadError otCommissionerPanIdQuery(otInstance *aInstance, uint16_t aPanId, uin
     return aInstance->mThreadNetif.GetCommissioner().mPanIdQuery.SendQuery(
                aPanId, aChannelMask, *static_cast<const Ip6::Address *>(aAddress), aCallback, aContext);
 }
+
+ThreadError otSendMgmtCommissionerGet(otInstance *aInstance, const uint8_t *aTlvs, uint8_t aLength)
+{
+    return aInstance->mThreadNetif.GetCommissioner().SendMgmtCommissionerGetRequest(aTlvs, aLength);
+}
+
+ThreadError otSendMgmtCommissionerSet(otInstance *aInstance, const otCommissioningDataset *aDataset,
+                                      const uint8_t *aTlvs, uint8_t aLength)
+{
+    return aInstance->mThreadNetif.GetCommissioner().SendMgmtCommissionerSetRequest(*aDataset, aTlvs, aLength);
+}
 #endif  // OPENTHREAD_ENABLE_COMMISSIONER
 
 #if OPENTHREAD_ENABLE_JOINER
-ThreadError otJoinerStart(otInstance *aInstance, const char *aPSKd)
+ThreadError otJoinerStart(otInstance *aInstance, const char *aPSKd, const char *aProvisioningUrl)
 {
-    return aInstance->mThreadNetif.GetJoiner().Start(aPSKd);
+    return aInstance->mThreadNetif.GetJoiner().Start(aPSKd, aProvisioningUrl);
 }
 
 ThreadError otJoinerStop(otInstance *aInstance)

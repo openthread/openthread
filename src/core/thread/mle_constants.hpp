@@ -46,6 +46,7 @@ enum
 {
     kMaxChildren                = OPENTHREAD_CONFIG_MAX_CHILDREN,
     kMaxChildKeepAliveAttempts  = 4,    ///< Maximum keep alive attempts before attempting to reattach to a new Parent
+    kFailedChildTransmissions   = 4,    ///< FAILED_CHILD_TRANSMISSIONS
 };
 
 /**
@@ -54,10 +55,13 @@ enum
  */
 enum
 {
-    kVersion                    = 2,     ///< MLE Version
-    kUdpPort                    = 19788, ///< MLE UDP Port
-    kParentRequestRouterTimeout = 1000,  ///< Router Request timeout
-    kParentRequestChildTimeout  = 2000,  ///< End Device Request timeout
+    kVersion                       = 2,     ///< MLE Version
+    kUdpPort                       = 19788, ///< MLE UDP Port
+    kParentRequestRouterTimeout    = 1000,  ///< Router Request timeout
+    kParentRequestChildTimeout     = 2000,  ///< End Device Request timeout
+    kParentResponseMaxDelayRouters = 500,   ///< Maximum delay for response for Parent Request sent to routers only
+    kParentResponseMaxDelayAll     = 1000,  ///< Maximum delay for response for Parent Request sent to all devices
+    kMaxResponseDelay              = 1000,  ///< Maximum delay before responding to a multicast request
 };
 
 enum
@@ -74,25 +78,27 @@ enum
  */
 enum
 {
-    kAdvertiseIntervalMin       = 1,    ///< ADVERTISEMENT_I_MIN (seconds)
-    kAdvertiseIntervalMax       = 32,   ///< ADVERTISEMENT_I_MAX (seconds)
-    kRouterIdReuseDelay         = 100,  ///< ID_REUSE_DELAY (seconds)
-    kRouterIdSequencePeriod     = 10,   ///< ID_SEQUENCE_PERIOD (seconds)
-    kMaxNeighborAge             = 100,  ///< MAX_NEIGHBOR_AGE (seconds)
-    kMaxRouteCost               = 16,   ///< MAX_ROUTE_COST
-    kMaxRouterId                = 62,   ///< MAX_ROUTER_ID
-    kMaxRouters                 = 32,   ///< MAX_ROUTERS
-    kMinDowngradeNeighbors      = 7,    ///< MIN_DOWNGRADE_NEIGHBORS
-    kNetworkIdTimeout           = 120,  ///< NETWORK_ID_TIMEOUT (seconds)
-    kParentRouteToLeaderTimeout = 20,   ///< PARENT_ROUTE_TO_LEADER_TIMEOUT (seconds)
-    kRouterSelectionJitter      = 120,  ///< ROUTER_SELECTION_JITTER (seconds)
-    kRouterDowngradeThreshold   = 23,   ///< ROUTER_DOWNGRADE_THRESHOLD (routers)
-    kRouterUpgradeThreshold     = 16,   ///< ROUTER_UPGRADE_THRESHOLD (routers)
-    kMaxLeaderToRouterTimeout   = 90,   ///< INFINITE_COST_TIMEOUT (seconds)
-    kReedAdvertiseInterval      = 570,  ///< REED_ADVERTISEMENT_INTERVAL (seconds)
-    kReedAdvertiseJitter        = 60,   ///< REED_ADVERTISEMENT_JITTER (seconds)
-    kMleEndDeviceTimeout        = 240,  ///< MLE_END_DEVICE_TIMEOUT (seconds)
-    kLeaderWeight               = 64,   ///< Default leader weight for the Thread Network Partition
+    kAdvertiseIntervalMin       = 1,                ///< ADVERTISEMENT_I_MIN (seconds)
+    kAdvertiseIntervalMax       = 32,               ///< ADVERTISEMENT_I_MAX (seconds)
+    kFailedRouterTransmissions  = 4,                ///< FAILED_ROUTER_TRANSMISSIONS
+    kRouterIdReuseDelay         = 100,              ///< ID_REUSE_DELAY (seconds)
+    kRouterIdSequencePeriod     = 10,               ///< ID_SEQUENCE_PERIOD (seconds)
+    kMaxNeighborAge             = 100,              ///< MAX_NEIGHBOR_AGE (seconds)
+    kMaxRouteCost               = 16,               ///< MAX_ROUTE_COST
+    kMaxRouterId                = 62,               ///< MAX_ROUTER_ID
+    kInvalidRouterId            = kMaxRouterId + 1, ///< Value indicating incorrect Router Id
+    kMaxRouters                 = 32,               ///< MAX_ROUTERS
+    kMinDowngradeNeighbors      = 7,                ///< MIN_DOWNGRADE_NEIGHBORS
+    kNetworkIdTimeout           = 120,              ///< NETWORK_ID_TIMEOUT (seconds)
+    kParentRouteToLeaderTimeout = 20,               ///< PARENT_ROUTE_TO_LEADER_TIMEOUT (seconds)
+    kRouterSelectionJitter      = 120,              ///< ROUTER_SELECTION_JITTER (seconds)
+    kRouterDowngradeThreshold   = 23,               ///< ROUTER_DOWNGRADE_THRESHOLD (routers)
+    kRouterUpgradeThreshold     = 16,               ///< ROUTER_UPGRADE_THRESHOLD (routers)
+    kMaxLeaderToRouterTimeout   = 90,               ///< INFINITE_COST_TIMEOUT (seconds)
+    kReedAdvertiseInterval      = 570,              ///< REED_ADVERTISEMENT_INTERVAL (seconds)
+    kReedAdvertiseJitter        = 60,               ///< REED_ADVERTISEMENT_JITTER (seconds)
+    kMleEndDeviceTimeout        = 240,              ///< MLE_END_DEVICE_TIMEOUT (seconds)
+    kLeaderWeight               = 64,               ///< Default leader weight for the Thread Network Partition
 };
 
 enum

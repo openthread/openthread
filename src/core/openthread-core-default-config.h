@@ -42,7 +42,7 @@
  *
  */
 #ifndef OPENTHREAD_CONFIG_NUM_MESSAGE_BUFFERS
-#define OPENTHREAD_CONFIG_NUM_MESSAGE_BUFFERS               48
+#define OPENTHREAD_CONFIG_NUM_MESSAGE_BUFFERS               40
 #endif  // OPENTHREAD_CONFIG_NUM_MESSAGE_BUFFERS
 
 /**
@@ -176,6 +176,16 @@
 #endif  // OPENTHREAD_CONFIG_MAX_ENERGY_RESULTS
 
 /**
+ * @def OPENTHREAD_CONFIG_MAX_JOINER_ENTRIES
+ *
+ * The maximum number of Joiner entries maintained by the Commissioner.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_MAX_JOINER_ENTRIES
+#define OPENTHREAD_CONFIG_MAX_JOINER_ENTRIES                2
+#endif  // OPENTHREAD_CONFIG_MAX_JOINER_ENTRIES
+
+/**
  * @def OPENTHREAD_CONFIG_LOG_LEVEL
  *
  * The log level.
@@ -248,6 +258,15 @@
  *
  */
 #define OPENTHREAD_CONFIG_LOG_MEM
+
+
+/**
+ * @def OPENTHREAD_CONFIG_LOG_NETDIAG
+ *
+ * Define to enable network diagnostic logging.
+ *
+ */
+#define OPENTHREAD_CONFIG_LOG_NETDIAG
 
 #endif  // OPENTHREAD_CORE_DEFAULT_CONFIG_H_
 

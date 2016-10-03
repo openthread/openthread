@@ -27,7 +27,6 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-import pexpect
 import time
 import unittest
 
@@ -51,6 +50,7 @@ class Cert_5_3_1_LinkLocal(unittest.TestCase):
         self.nodes[ROUTER1].set_mode('rsdn')
         self.nodes[ROUTER1].add_whitelist(self.nodes[LEADER].get_addr64())
         self.nodes[ROUTER1].enable_whitelist()
+        self.nodes[ROUTER1].set_router_selection_jitter(1)
 
     def tearDown(self):
         for node in list(self.nodes.values()):
@@ -63,20 +63,20 @@ class Cert_5_3_1_LinkLocal(unittest.TestCase):
         self.assertEqual(self.nodes[LEADER].get_state(), 'leader')
 
         self.nodes[ROUTER1].start()
-        time.sleep(3)
+        time.sleep(5)
         self.assertEqual(self.nodes[ROUTER1].get_state(), 'router')
 
         addrs = self.nodes[ROUTER1].get_addrs()
         for addr in addrs:
             if addr[0:4] == 'fe80':
-                self.nodes[LEADER].ping(addr, size=256)
-                self.nodes[LEADER].ping(addr)
+                self.assertTrue(self.nodes[LEADER].ping(addr, size=256))
+                self.assertTrue(self.nodes[LEADER].ping(addr))
 
-        self.nodes[LEADER].ping('ff02::1', size=256)
-        self.nodes[LEADER].ping('ff02::1')
+        self.assertTrue(self.nodes[LEADER].ping('ff02::1', size=256))
+        self.assertTrue(self.nodes[LEADER].ping('ff02::1'))
 
-        self.nodes[LEADER].ping('ff02::2', size=256)
-        self.nodes[LEADER].ping('ff02::2')
+        self.assertTrue(self.nodes[LEADER].ping('ff02::2', size=256))
+        self.assertTrue(self.nodes[LEADER].ping('ff02::2'))
 
 if __name__ == '__main__':
     unittest.main()

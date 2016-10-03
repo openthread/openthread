@@ -104,15 +104,20 @@ bool TaskletScheduler::AreTaskletsPending(void)
     return mHead != NULL;
 }
 
-void TaskletScheduler::RunNextTasklet(void)
+void TaskletScheduler::ProcessQueuedTasklets(void)
 {
-    Tasklet  *task;
+    Tasklet *tail = mTail;
+    Tasklet *cur;
 
-    task = PopTasklet();
-
-    if (task != NULL)
+    while ((cur = PopTasklet()) != NULL)
     {
-        task->RunTask();
+        cur->RunTask();
+
+        // only process tasklets that were queued at the time this method was called
+        if (cur == tail)
+        {
+            break;
+        }
     }
 }
 

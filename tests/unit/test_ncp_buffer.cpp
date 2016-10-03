@@ -34,6 +34,8 @@
 
 namespace Thread {
 
+// This module implements unit-test for NcpFrameBuffer class.
+
 enum
 {
     kTestBufferSize = 101,         // Size of backed buffer for NcpFrameBuffer.
@@ -458,9 +460,11 @@ void TestNcpFrameBuffer(void)
 
 }  // namespace Thread
 
+#ifdef ENABLE_TEST_MAIN
 int main(void)
 {
     Thread::TestNcpFrameBuffer();
     printf("\nAll tests passed.\n");
     return 0;
 }
+#endif

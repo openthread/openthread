@@ -38,6 +38,7 @@
 #include <common/message.hpp>
 #include <common/timer.hpp>
 #include <crypto/sha256.hpp>
+#include <thread/meshcop_tlvs.hpp>
 
 #include <mbedtls/ssl.h>
 #include <mbedtls/entropy.h>
@@ -55,6 +56,11 @@ namespace MeshCoP {
 class Dtls
 {
 public:
+    enum
+    {
+        kPskMaxLength = 32,
+    };
+
     /**
      * This constructor initializes the DTLS object.
      *
@@ -103,6 +109,14 @@ public:
      *
      */
     ThreadError Stop(void);
+
+    /**
+     * This method indicates whether or not the DTLS service is active.
+     *
+     * @returns TRUE if the DTLS service is active, FALSE otherwise.
+     *
+     */
+    bool IsStarted(void);
 
     /**
      * This method sets the PSK.
@@ -158,12 +172,13 @@ public:
      */
     ThreadError Receive(Message &aMessage, uint16_t aOffset, uint16_t aLength);
 
-private:
-    enum
-    {
-        kPskMaxLength = 32,
-    };
+    /**
+     * The provisioning URL is placed here so that both the Commissioner and Joiner can share the same object.
+     *
+     */
+    ProvisioningUrlTlv mProvisioningUrl;
 
+private:
     static ThreadError MapError(int rval);
 
     static void HandleMbedtlsDebug(void *ctx, int level, const char *file, int line, const char *str);
@@ -189,6 +204,7 @@ private:
     static void HandleTimer(void *aContext);
     void HandleTimer(void);
 
+    void Close(void);
     void Process(void);
 
     uint8_t mPsk[kPskMaxLength];

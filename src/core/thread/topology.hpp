@@ -73,6 +73,9 @@ public:
      *
      */
     enum State
+#if _WIN32
+        : unsigned int
+#endif
     {
         kStateInvalid,                   ///< Neighbor link is invalid
         kStateParentRequest,             ///< Received an MLE Parent Request message
@@ -84,6 +87,7 @@ public:
     State           mState : 3;          ///< The link state
     uint8_t         mMode : 4;           ///< The MLE device mode
     bool            mDataRequest : 1;    ///< Indicates whether or not a Data Poll was received
+    uint8_t         mLinkFailures;       ///< Consecutive link failure count
     LinkQualityInfo mLinkInfo;           ///< Link quality info (contains average RSS, link margin and link quality)
 };
 
@@ -103,6 +107,9 @@ public:
     uint16_t     mFragmentOffset;                      ///< 6LoWPAN fragment offset
     uint8_t      mRequestTlvs[5];                      ///< Requested MLE TLVs
     uint8_t      mNetworkDataVersion;                  ///< Current Network Data version
+    uint16_t     mQueuedIndirectMessageCnt;            ///< Count of queued messages
+    bool         mAddSrcMatchEntryShort;               ///< Indicates whether or not to force add short address
+    bool         mAddSrcMatchEntryPending;             ///< Indicates whether or not pending to add
 };
 
 /**

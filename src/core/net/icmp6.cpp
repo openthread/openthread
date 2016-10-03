@@ -31,6 +31,8 @@
  *   This file implements ICMPv6.
  */
 
+#define WPP_NAME "icmp6.tmh"
+
 #include <string.h>
 
 #include <common/code_utils.hpp>
@@ -102,7 +104,7 @@ ThreadError Icmp::SendEchoRequest(Message &aMessage, const MessageInfo &aMessage
     aMessage.SetOffset(0);
     SuccessOrExit(error = mIp6.SendDatagram(aMessage, messageInfoLocal, kProtoIcmp6));
 
-    otLogInfoIcmp("Sent echo request\n");
+    otLogInfoIcmp("Sent echo request: (seq = %d)\n", icmpHeader.GetSequence());
 
 exit:
     return error;
@@ -206,7 +208,12 @@ ThreadError Icmp::HandleEchoRequest(Message &aRequestMessage, const MessageInfo 
     icmp6Header.Init();
     icmp6Header.SetType(IcmpHeader::kTypeEchoReply);
 
-    VerifyOrExit((replyMessage = mIp6.NewMessage(0)) != NULL, otLogDebgIcmp("icmp fail\n"));
+    if ((replyMessage = mIp6.NewMessage(0)) == NULL)
+    {
+        otLogDebgIcmp("icmp fail\n");
+        ExitNow();
+    }
+
     payloadLength = aRequestMessage.GetLength() - aRequestMessage.GetOffset() - IcmpHeader::GetDataOffset();
     SuccessOrExit(replyMessage->SetLength(IcmpHeader::GetDataOffset() + payloadLength));
 
@@ -226,7 +233,8 @@ ThreadError Icmp::HandleEchoRequest(Message &aRequestMessage, const MessageInfo 
 
     SuccessOrExit(error = mIp6.SendDatagram(*replyMessage, replyMessageInfo, kProtoIcmp6));
 
-    otLogInfoIcmp("Sent Echo Reply\n");
+    replyMessage->Read(replyMessage->GetOffset(), sizeof(icmp6Header), &icmp6Header);
+    otLogInfoIcmp("Sent Echo Reply (seq = %d)\n", icmp6Header.GetSequence());
 
 exit:
 

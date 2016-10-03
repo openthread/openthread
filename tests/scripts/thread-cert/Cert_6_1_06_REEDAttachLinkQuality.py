@@ -27,7 +27,6 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-import pexpect
 import time
 import unittest
 
@@ -62,6 +61,7 @@ class Cert_6_1_6_REEDAttachLinkQuality(unittest.TestCase):
         self.nodes[ROUTER2].add_whitelist(self.nodes[LEADER].get_addr64())
         self.nodes[ROUTER2].add_whitelist(self.nodes[ED].get_addr64(), rssi=-85)
         self.nodes[ROUTER2].enable_whitelist()
+        self.nodes[ROUTER2].set_router_selection_jitter(1)
 
         self.nodes[ED].set_panid(0xface)
         self.nodes[ED].set_mode('rsn')
@@ -80,11 +80,11 @@ class Cert_6_1_6_REEDAttachLinkQuality(unittest.TestCase):
         self.assertEqual(self.nodes[LEADER].get_state(), 'leader')
 
         self.nodes[REED].start()
-        time.sleep(3)
+        time.sleep(5)
         self.assertEqual(self.nodes[REED].get_state(), 'child')
 
         self.nodes[ROUTER2].start()
-        time.sleep(3)
+        time.sleep(5)
         self.assertEqual(self.nodes[ROUTER2].get_state(), 'router')
 
         self.nodes[ED].start()

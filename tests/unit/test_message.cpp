@@ -32,10 +32,6 @@
 #include <common/message.hpp>
 #include <string.h>
 
-#if _WIN32
-#define random rand
-#endif
-
 void TestMessage(void)
 {
     Thread::MessagePool messagePool;
@@ -64,9 +60,11 @@ void TestMessage(void)
                   "Message::Free failed\n");
 }
 
+#ifdef ENABLE_TEST_MAIN
 int main(void)
 {
     TestMessage();
     printf("All tests passed\n");
     return 0;
 }
+#endif

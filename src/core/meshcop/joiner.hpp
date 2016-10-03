@@ -63,12 +63,13 @@ public:
     /**
      * This method starts the Joiner service.
      *
-     * @param[in]  aPSKd  A pointer to the PSKd.
+     * @param[in]  aPSKd             A pointer to the PSKd.
+     * @param[in]  aProvisioningUrl  A pointer to the Provisioning URL (may be NULL).
      *
      * @retval kThreadError_None  Successfully started the Joiner service.
      *
      */
-    ThreadError Start(const char *aPSKd);
+    ThreadError Start(const char *aPSKd, const char *aProvisioningUrl);
 
     /**
      * This method stops the Joiner service.
@@ -104,6 +105,7 @@ private:
 
     uint8_t mJoinerRouterChannel;
     uint16_t mJoinerRouterPanId;
+    uint16_t mJoinerUdpPort;
     Mac::ExtAddress mJoinerRouter;
     Message *mTransmitMessage;
     Ip6::UdpSocket mSocket;

@@ -36,10 +36,6 @@
 
 static Thread::Crypto::MbedTls mbedtls;
 
-extern"C" void otSignalTaskletPending(otInstance *)
-{
-}
-
 void TestHmacSha256(void)
 {
     static const struct
@@ -80,9 +76,11 @@ void TestHmacSha256(void)
     }
 }
 
+#ifdef ENABLE_TEST_MAIN
 int main(void)
 {
     TestHmacSha256();
     printf("All tests passed\n");
     return 0;
 }
+#endif

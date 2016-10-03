@@ -980,6 +980,10 @@ spinel_prop_key_to_cstr(spinel_prop_key_t prop_key)
         ret = "PROP_MAC_SCAN_BEACON";
         break;
 
+    case SPINEL_PROP_MAC_ENERGY_SCAN_RESULT:
+        ret = "PROP_MAC_SCAN_ENERGY_SCAN_RESULT";
+        break;
+
     case SPINEL_PROP_MAC_SCAN_PERIOD:
         ret = "PROP_MAC_SCAN_PERIOD";
         break;
@@ -1120,6 +1124,14 @@ spinel_prop_key_to_cstr(spinel_prop_key_t prop_key)
         ret = "SPINEL_PROP_THREAD_ROUTER_ROLE_ENABLED";
         break;
 
+    case SPINEL_PROP_THREAD_ROUTER_UPGRADE_THRESHOLD:
+        ret = "PROP_THREAD_ROUTER_UPGRADE_THRESHOLD";
+        break;
+
+    case SPINEL_PROP_THREAD_CONTEXT_REUSE_DELAY:
+        ret = "PROP_THREAD_CONTEXT_REUSE_DELAY";
+        break;
+
     case SPINEL_PROP_MAC_WHITELIST:
         ret = "PROP_MAC_WHITELIST";
         break;
@@ -1136,21 +1148,33 @@ spinel_prop_key_to_cstr(spinel_prop_key_t prop_key)
         ret = "PROP_THREAD_CHILD_TIMEOUT";
         break;
 
-    case SPINEL_PROP_THREAD_ROUTER_UPGRADE_THRESHOLD:
-        ret = "PROP_THREAD_ROUTER_UPGRADE_THRESHOLD";
-        break;
-
-    case SPINEL_PROP_THREAD_CONTEXT_REUSE_DELAY:
-        ret = "PROP_THREAD_CONTEXT_REUSE_DELAY";
-        break;
 
     case SPINEL_PROP_NET_REQUIRE_JOIN_EXISTING:
         ret = "PROP_NET_REQUIRE_JOIN_EXISTING";
         break;
 
-
     case SPINEL_PROP_NEST_STREAM_MFG:
         ret = "SPINEL_PROP_NEST_STREAM_MFG";
+        break;
+
+    case SPINEL_PROP_THREAD_NETWORK_ID_TIMEOUT:
+        ret = "SPINEL_PROP_THREAD_NETWORK_ID_TIMEOUT";
+        break;
+
+    case SPINEL_PROP_THREAD_ACTIVE_ROUTER_IDS:
+        ret = "SPINEL_PROP_THREAD_ACTIVE_ROUTER_IDS";
+        break;
+
+    case SPINEL_PROP_THREAD_ROUTER_DOWNGRADE_THRESHOLD:
+        ret = "SPINEL_PROP_THREAD_ROUTER_DOWNGRADE_THRESHOLD";
+        break;
+
+    case SPINEL_PROP_THREAD_ROUTER_SELECTION_JITTER:
+        ret = "SPINEL_PROP_THREAD_ROUTER_SELECTION_JITTER";
+        break;
+
+    case SPINEL_PROP_THREAD_PREFERRED_ROUTER_ID:
+        ret = "SPINEL_PROP_THREAD_PREFERRED_ROUTER_ID";
         break;
 
     default:

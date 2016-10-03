@@ -52,6 +52,7 @@ class Cert_6_2_1_NewPartition(unittest.TestCase):
         self.nodes[ROUTER1].add_whitelist(self.nodes[LEADER].get_addr64())
         self.nodes[ROUTER1].add_whitelist(self.nodes[ED].get_addr64())
         self.nodes[ROUTER1].enable_whitelist()
+        self.nodes[ROUTER1].set_router_selection_jitter(1)
 
         self.nodes[ED].set_panid(0xface)
         self.nodes[ED].set_mode('rsn')
@@ -69,7 +70,7 @@ class Cert_6_2_1_NewPartition(unittest.TestCase):
         self.assertEqual(self.nodes[LEADER].get_state(), 'leader')
 
         self.nodes[ROUTER1].start()
-        time.sleep(3)
+        time.sleep(5)
         self.assertEqual(self.nodes[ROUTER1].get_state(), 'router')
 
         self.nodes[ED].start()
@@ -83,7 +84,7 @@ class Cert_6_2_1_NewPartition(unittest.TestCase):
 
         addrs = self.nodes[ED].get_addrs()
         for addr in addrs:
-            self.nodes[ROUTER1].ping(addr)
+            self.assertTrue(self.nodes[ROUTER1].ping(addr))
 
 if __name__ == '__main__':
     unittest.main()

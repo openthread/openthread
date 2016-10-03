@@ -39,22 +39,24 @@ from IThci import IThci
 from pexpect_serial import SerialSpawn
 from GRLLibs.UtilityModules.Test import Thread_Device_Role, Device_Data_Requirement, MacType
 from GRLLibs.UtilityModules.enums import PlatformDiagnosticPacket_Direction, PlatformDiagnosticPacket_Type, AddressType
-from GRLLibs.UtilityModules.ModuleHelper import ModuleHelper
+from GRLLibs.UtilityModules.ModuleHelper import ModuleHelper,ThreadRunner
+from GRLLibs.ThreadPacket.PlatformPackets import PlatformDiagnosticPacket, PlatformPackets
+from Queue import Queue
 
 
 class ARM(IThci):
-    firmware = '2016 7 27 13:36:46' # keep the consistency with ARM firmware style
+    firmware = 'Sep 9 2016 14:57:36'# keep the consistency with ARM firmware style
     UIStatusMsg = ''
-    networkDataRequirement = ''     # indicate Thread devicde requests full or stable network data
+    networkDataRequirement = ''     # indicate Thread device requests full or stable network data
     isPowerDown = False             # indicate if Thread device experiences a power down event
     isWhiteListEnabled = False      # indicate if Thread device enables white list filter
     isBlackListEnabled = False      # indicate if Thread device enables black list filter
 
     #def __init__(self, SerialPort=COMPortName, EUI=MAC_Address):
     def __init__(self, **kwargs):
-        """initialize the serial port and default netowrk parameters
+        """initialize the serial port and default network parameters
         Args:
-            **kwargs: Arbitrary keyword aruments
+            **kwargs: Arbitrary keyword arguments
                       Includes 'EUI' and 'SerialPort'
         """
         try:
@@ -66,6 +68,12 @@ class ARM(IThci):
             self.channel = ModuleHelper.Default_Channel
             self.panId = ModuleHelper.Default_PanId
             self.xpanId = ModuleHelper.Default_XpanId
+            self.AutoDUTEnable = False
+            self.provisioningUrl = ''
+            self.logThread = Queue()
+            self.logStatus = {'stop':'stop', 'running':'running', "pauseReq":'pauseReq', 'paused':'paused'}
+            self.logThreadStatus = self.logStatus['stop']
+            self.commissionerStarted = False
             self.intialize()
         except Exception, e:
             ModuleHelper.WriteIntoDebugLogger("initialize() Error: " + str(e))
@@ -88,6 +96,11 @@ class ARM(IThci):
             Value: successfully retrieve the desired value from reference unit
             Error: some errors occur, indicates by the followed specific error number
         """
+        if self.logThreadStatus == self.logStatus['running']:
+            self.logThreadStatus = self.logStatus['pauseReq']
+            while(self.logThreadStatus != self.logStatus['paused'] and self.logThreadStatus != self.logStatus['stop']):
+                pass
+
         try:
             # command retransmit times
             retryTimes = 3
@@ -109,6 +122,10 @@ class ARM(IThci):
                     response.append(line)
                     if line == 'Done':
                         break
+
+            if self.logThreadStatus == self.logStatus['paused']:
+                self.logThreadStatus = self.logStatus['running']
+
             return response
         except Exception, e:
             ModuleHelper.WriteIntoDebugLogger("sendCommand() Error: " + str(e))
@@ -120,7 +137,7 @@ class ARM(IThci):
             addressType: the specific type of IPv6 address
 
             link local: link local unicast IPv6 address that's within one-hop scope
-            gloal: global unitcast IPv6 address
+            global: global unicast IPv6 address
             rloc: mesh local unicast IPv6 address for routing in thread network
             mesh EID: mesh Endpoint Identifier
 
@@ -233,6 +250,24 @@ class ARM(IThci):
             return self.__sendCommand(cmd) == 'Done'
         except Exception, e:
             ModuleHelper.WriteIntoDebugLogger("setRouterDowngradeThreshold() Error: " + str(e))
+
+    def __setRouterSelectionJitter(self, iRouterJitter):
+        """set ROUTER_SELECTION_JITTER parameter for REED to upgrade to Router
+
+        Args:
+            iRouterJitter: a random period prior to request Router ID for REED
+
+        Returns:
+            True: successful to set the ROUTER_SELECTION_JITTER
+            False: fail to set ROUTER_SELECTION_JITTER
+        """
+        print 'call _setRouterSelectionJitter'
+        try:
+            cmd = 'routerselectionjitter %s' % str(iRouterJitter)
+            print cmd
+            return self.__sendCommand(cmd) == 'Done'
+        except Exception, e:
+            ModuleHelper.WriteIntoDebugLogger("setRouterSelectionJitter() Error: " + str(e))
 
     def __enableWhiteList(self):
         """enable white list filter
@@ -418,6 +453,55 @@ class ARM(IThci):
 
         return string
 
+    def __readCommissioningLogs(self, durationInSeconds):
+        """read logs during the commissioning process
+
+        Args:
+            durationInSeconds: time duration for reading commissioning logs
+
+        Returns:
+            Commissioning logs
+        """
+        self.logThreadStatus = self.logStatus['running']
+        logs = Queue()
+        t_end = time.time() + durationInSeconds
+        while time.time() < t_end:
+            time.sleep(0.3)
+            if self.logThreadStatus == self.logStatus['paused']:
+                continue
+
+            try:
+                line = self.serial.readline()
+                if line:
+                    print line
+                    logs.put(line)
+
+            except Exception,e:
+                pass
+
+            if self.logThreadStatus == self.logStatus['pauseReq']:
+                self.logThreadStatus = self.logStatus['paused']
+
+        self.logThreadStatus = self.logStatus['stop']
+        return logs
+
+    def __setChannelMask(self, channelsArray):
+        """convert channelsArray to bitmask format
+
+        Args:
+            channelsArray: channel array (i.e. [21, 22])
+
+        Returns:
+            bitmask format corresponding to a given channel array
+        """
+        maskSet = 0
+
+        for eachChannel in channelsArray:
+            mask = 1 << eachChannel
+            maskSet = (maskSet | mask)
+
+        return maskSet
+
     def closeConnection(self):
         """close current serial port connection"""
         print '%s call closeConnection' % self.port
@@ -545,18 +629,15 @@ class ARM(IThci):
         if self.isPowerDown:
             macAddr64 = self.mac
         else:
-            macAddr64 = self.__sendCommand('extaddr')[0]
+            if bType == MacType.FactoryMac:
+                macAddr64 = self.__sendCommand('eui64')[0]
+            elif bType == MacType.HashMac:
+                macAddr64 = self.__sendCommand('hashmacaddr')[0]
+            else:
+                macAddr64 = self.__sendCommand('extaddr')[0]
         print macAddr64
 
-        # only supports RandomMac now
-        if bType == MacType.FactoryMac:
-            return int(macAddr64, 16)
-        elif bType == MacType.RandomMac:
-            return int(macAddr64, 16)
-        elif bType == MacType.HashMac:
-            return int(macAddr64, 16)
-        else:
-            return int(macAddr64, 16)
+        return int(macAddr64, 16)
 
     def getLL64(self):
         """get link local unicast IPv6 address"""
@@ -581,7 +662,7 @@ class ARM(IThci):
 
     def getGlobal(self):
         """get global unicast IPv6 address set
-           if configuring mutliple entries
+           if configuring multiple entries
         """
         print '%s call getGlobal' % self.port
         return self.__getIp6Address('global')
@@ -632,7 +713,7 @@ class ARM(IThci):
 
         Returns:
             True: successful to add a given extended address to the black list entry
-            False: fail to addd a given extended address to the black list entry
+            False: fail to add a given extended address to the black list entry
         """
         print '%s call addBlockedMAC' % self.port
         print xEUI
@@ -698,7 +779,7 @@ class ARM(IThci):
         """clear all entries in white list table
 
         Returns:
-            True: successful to clearthe white list
+            True: successful to clear the white list
             False: fail to clear the white list
         """
         print '%s call clearAllowList' % self.port
@@ -740,22 +821,27 @@ class ARM(IThci):
             if eRoleId == Thread_Device_Role.Leader:
                 print 'join as leader'
                 role = 'rsdn'
-                # set ROUTER_UPGRADE_THRESHOLD
-                self.__setRouterUpgradeThreshold(32)
-                # set ROUTER_DOWNGRADE_THRESHOLD
-                self.__setRouterDowngradeThreshold(33)
+                self.__setRouterSelectionJitter(1)
+                if self.AutoDUTEnable is False:
+                    # set ROUTER_UPGRADE_THRESHOLD
+                    self.__setRouterUpgradeThreshold(32)
+                    # set ROUTER_DOWNGRADE_THRESHOLD
+                    self.__setRouterDowngradeThreshold(33)
             elif eRoleId == Thread_Device_Role.Router:
                 print 'join as router'
                 role = 'rsdn'
-                # set ROUTER_UPGRADE_THRESHOLD
-                self.__setRouterUpgradeThreshold(32)
-                # set ROUTER_DOWNGRADE_THRESHOLD
-                self.__setRouterDowngradeThreshold(33)
+                self.__setRouterSelectionJitter(1)
+                if self.AutoDUTEnable is False:
+                    # set ROUTER_UPGRADE_THRESHOLD
+                    self.__setRouterUpgradeThreshold(33)
+                    # set ROUTER_DOWNGRADE_THRESHOLD
+                    self.__setRouterDowngradeThreshold(33)
             elif eRoleId == Thread_Device_Role.SED:
                 print 'join as sleepy end device'
                 role = 's'
-                # set data polling rate to 15s for SED
-                self.setPollingRate(15)
+                if self.AutoDUTEnable is False:
+                    # set data polling rate to 15s for SED
+                    self.setPollingRate(15)
             elif eRoleId == Thread_Device_Role.EndDevice:
                 print 'join as end device'
                 role = 'rsn'
@@ -985,7 +1071,7 @@ class ARM(IThci):
             self.setNetworkKey(self.networkKey)
             self.isWhiteListEnabled = False
             self.isBlackListEnabled = False
-            self.firmware = '2016 7 27 13:36:46'
+            self.firmware = 'Sep 9 2016 14:57:36'
         except Exception, e:
             ModuleHelper.WriteIntoDebugLogger("setDefaultValue() Error: " + str(e))
 
@@ -1065,7 +1151,7 @@ class ARM(IThci):
 
         Returns:
             True: successful to remove the prefix entry from border router
-            False: fail to remove the prfix entry from border router
+            False: fail to remove the prefix entry from border router
         """
         print '%s call removeRouterPrefix' % self.port
         print prefixEntry
@@ -1112,13 +1198,13 @@ class ARM(IThci):
             ModuleHelper.WriteIntoDebugLogger("resetAndRejoin() Error: " + str(e))
 
     def configBorderRouter(self, P_Prefix, P_stable=1, P_default=1, P_slaac_preferred=0, P_Dhcp=0, P_preference=0, P_on_mesh=1, P_nd_dns=0):
-        """configure the border router with a given preifx entry parameters
+        """configure the border router with a given prefix entry parameters
 
         Args:
             P_Prefix: IPv6 prefix that is available on the Thread Network
             P_stable: is true if the default router is expected to be stable network data
             P_default: is true if border router offers the default route for P_Prefix
-            P_slaac_preferred: is true if Thread device is allowed autoconfigure address using P_Prefix
+            P_slaac_preferred: is true if Thread device is allowed auto-configure address using P_Prefix
             P_Dhcp: is true if border router is a DHCPv6 Agent
             P_preference: is two-bit signed integer indicating router preference
             P_on_mesh: is true if P_Prefix is considered to be on-mesh
@@ -1164,7 +1250,7 @@ class ARM(IThci):
             print cmd
             if self.__sendCommand(cmd)[0] == 'Done':
                 # if prefix configured before starting OpenThread stack
-                # do not send out server data ntf proactively
+                # do not send out server data ntf pro-actively
                 if not self.__isOpenThreadRunning():
                     return True
                 else:
@@ -1295,7 +1381,7 @@ class ARM(IThci):
 
         Returns:
             True: successful to configure the border router with a given external route prefix
-            False: fail to configure the border router with a given exteranl route prefix
+            False: fail to configure the border router with a given external route prefix
         """
         print '%s call configExternalRouter' % self.port
         print P_Prefix
@@ -1327,10 +1413,10 @@ class ARM(IThci):
             ModuleHelper.WriteIntoDebugLogger("configExternalRouter() Error: " + str(e))
 
     def getNeighbouringRouters(self):
-        """get neihbouring routers information
+        """get neighboring routers information
 
         Returns:
-            neihbouring routers' extended address
+            neighboring routers' extended address
         """
         print '%s call getNeighbouringRouters' % self.port
         try:
@@ -1448,11 +1534,11 @@ class ARM(IThci):
             ModuleHelper.WriteIntoDebugLogger("setXpanId() Error: " + str(e))
 
     def getNeighbouringDevices(self):
-        """gets the neighbouring devices' extended address to compute the DUT
-           extended addresss automatically
+        """gets the neighboring devices' extended address to compute the DUT
+           extended address automatically
 
         Returns:
-            A list including extended address of neighbouring routers, parent
+            A list including extended address of neighboring routers, parent
             as well as children
         """
         print '%s call getNeighbouringDevices' % self.port
@@ -1469,7 +1555,7 @@ class ARM(IThci):
             for entry in childNeighbours:
                 neighbourList.append(entry)
 
-        # get neighbouring routers info
+        # get neighboring routers info
         routerNeighbours = self.getNeighbouringRouters()
         if routerNeighbours != None and len(routerNeighbours) > 0:
             for entry in routerNeighbours:
@@ -1570,66 +1656,538 @@ class ARM(IThci):
     def setSleepyNodePollTime(self):
         pass
 
-    def diagnosticGet(self, strDestinationAddr, TLV_ids=0):
-        pass
+    def enableAutoDUTObjectFlag(self):
+        """set AutoDUTenable flag"""
+        print '%s call enableAutoDUTObjectFlag' % self.port
+        self.AutoDUTEnable = True
 
-    def diagnosticReset(self, strDestinationAddr, iTLV_id):
-        pass
+    def getChildTimeoutValue(self):
+        """get child timeout"""
+        print '%s call getChildTimeoutValue' % self.port
+        return self.__sendCommand('childtimeout')[0]
+
+    def diagnosticGet(self, strDestinationAddr, listTLV_ids=[]):
+        if not listTLV_ids:
+            return
+
+        if not len(listTLV_ids):
+            return
+
+        cmd = 'networkdiagnostic get %s %s' % (strDestinationAddr, ' '.join([str(tlv) for tlv in listTLV_ids]))
+        print cmd
+
+        return self.__sendCommand(cmd)
+
+    def diagnosticReset(self, strDestinationAddr, listTLV_ids=[]):
+        if not listTLV_ids:
+            return
+
+        if not len(listTLV_ids):
+            return
+
+        cmd = 'networkdiagnostic reset %s %s' % (strDestinationAddr, ' '.join([str(tlv) for tlv in listTLV_ids]))
+        print cmd
+
+        return self.__sendCommand(cmd)
 
     def startNativeCommissioner(self, strPSKc='GRLpassWord'):
         pass
 
     def startCollapsedCommissioner(self):
-        pass
+        """start OpenThread stack
+
+        Returns:
+            True: successful to start OpenThread stack and thread interface up
+            False: fail to start OpenThread stack
+        """
+        print '%s call startCollapsedCommissioner' % self.port
+        if self.__startOpenThread():
+            time.sleep(20)
+            return True
+        else:
+            return False
+
 
     def setJoinKey(self, strPSKc):
         pass
 
     def scanJoiner(self, xEUI='*', strPSKd='threadjpaketest'):
-        pass
+        """start commissioner
+
+        Args:
+            xEUI: Joiner's EUI-64
+            strPSKd: Joiner's PSKd for commissioning
+
+        Returns:
+            True: successful to start commissioner
+            False: fail to start commissioner
+        """
+        print '%s call scanJoiner' % self.port
+        if xEUI == '*':
+            JoinerHashMac = '*'
+        else:
+            JoinerAddr = ModuleHelper.CalculateHashMac(xEUI)
+            JoinerHashMac = hex(int(JoinerAddr)).rstrip("L").lstrip("0x")
+
+        cmd = 'commissioner joiner add %s %s' % (JoinerHashMac, strPSKd)
+        print cmd
+        self.__sendCommand(cmd)
+
+        if not self.commissionerStarted:
+            cmd = 'commissioner start'
+            print cmd
+            if self.__sendCommand(cmd)[0] == 'Done':
+                self.commissionerStarted = True
+                if self.logThreadStatus == self.logStatus['stop']:
+                    self.logThread = ThreadRunner.run(target = self.__readCommissioningLogs, args = (120,))
+                return True
+            else:
+                return False
+        else:
+            return True
 
     def setProvisioningUrl(self, strURL='grl.com'):
-        pass
+        """set provisioning Url
+
+        Args:
+            strURL: Provisioning Url string
+
+        Returns:
+            True: successful to set provisioning Url
+            False: fail to set provisioning Url
+        """
+        print '%s call setProvisioningUrl' % self.port
+        cmd = 'commissioner provisioningurl %s' %(strURL)
+        self.provisioningUrl = strURL
+        print cmd
+        return self.__sendCommand(cmd)[0] == "Done"
 
     def allowCommission(self, strPSKc="GRLPassword"):
         pass
 
-    def joinCommissioned(self, strPSKd='GRLpassWordx', waitTime=20):
-        pass
+    def joinCommissioned(self, strPSKd='threadjpaketest', waitTime=20):
+        """start joiner
+
+        Args:
+            strPSKd: Joiner's PSKd
+
+        Returns:
+            True: successful to start commissioner
+            False: fail to start commissioner
+        """
+        print '%s call joinCommissioned' % self.port
+        self.__sendCommand('ifconfig up')
+        cmd = 'joiner start %s %s' %(strPSKd, self.provisioningUrl)
+        print cmd
+        if self.__sendCommand(cmd)[0] == "Done":
+            if self.logThreadStatus == self.logStatus['stop']:
+                self.logThread = ThreadRunner.run(target = self.__readCommissioningLogs, args = (90,))
+            time.sleep(100)
+
+            self.__sendCommand('thread start')
+            time.sleep(30)
+            return True
+        else:
+            return False
 
     def getCommissioningLogs(self):
-        pass
+        """get Commissioning logs
+
+        Returns:
+           Commissioning logs
+        """
+        rawLogs = self.logThread.get()
+        ProcessedLogs = []
+        payload = []
+        while not rawLogs.empty():
+            rawLogEach = rawLogs.get()
+            print rawLogEach
+            if "[THCI]" not in rawLogEach:
+                continue
+
+            EncryptedPacket = PlatformDiagnosticPacket()
+            infoList = rawLogEach.split('[THCI]')[1].split(']')[0].split('|')
+            for eachInfo in infoList:
+                print eachInfo
+                info = eachInfo.split("=")
+                infoType = info[0].strip()
+                infoValue = info[1].strip()
+                if "direction" in infoType:
+                    EncryptedPacket.Direction = PlatformDiagnosticPacket_Direction.IN if 'recv' in infoValue \
+                        else PlatformDiagnosticPacket_Direction.OUT if 'send' in infoValue \
+                        else PlatformDiagnosticPacket_Direction.UNKNOWN
+                elif "type" in infoType:
+                    EncryptedPacket.Type = PlatformDiagnosticPacket_Type.JOIN_FIN_req if 'JOIN_FIN.req' in infoValue \
+                        else PlatformDiagnosticPacket_Type.JOIN_FIN_rsp if 'JOIN_FIN.rsp' in infoValue \
+                        else PlatformDiagnosticPacket_Type.JOIN_ENT_rsp if 'JOIN_ENT.ntf' in infoValue \
+                        else PlatformDiagnosticPacket_Type.UNKNOWN
+                elif "len" in infoType:
+                    EncryptedPacket.TLVsLength = int(infoValue)
+                    payloadLineCount = int(infoValue)/16 + 1
+                    while payloadLineCount > 0:
+                        payloadLineCount = payloadLineCount - 1
+                        payloadLine = rawLogs.get()
+                        payloadSplit = payloadLine.split('|')
+                        for block in range(1, 3):
+                            payloadBlock = payloadSplit[block]
+                            payloadValues = payloadBlock.split(' ')
+                            for num in range(1, 9):
+                                if ".." not in payloadValues[num]:
+                                    payload.append(int(payloadValues[num], 16))
+
+                    EncryptedPacket.TLVs = PlatformPackets.read(EncryptedPacket.Type,payload) if payload != [] else []
+
+            ProcessedLogs.append(EncryptedPacket)
+        return ProcessedLogs
 
     def MGMT_ED_SCAN(self, sAddr, xCommissionerSessionId, listChannelMask, xCount, xPeriod, xScanDuration):
-        pass
+        """send MGMT_ED_SCAN message to a given destinaition.
+
+        Args:
+            sAddr: IPv6 destination address for this message
+            xCommissionerSessionId: commissioner session id
+            listChannelMask: a channel array to indicate which channels to be scaned
+            xCount: number of IEEE 802.15.4 ED Scans (milliseconds)
+            xPeriod: Period between successive IEEE802.15.4 ED Scans (milliseconds)
+            xScanDuration: IEEE 802.15.4 ScanDuration to use when performing an IEEE 802.15.4 ED Scan (milliseconds)
+
+        Returns:
+            True: successful to send MGMT_ED_SCAN message.
+            False: fail to send MGMT_ED_SCAN message
+        """
+        print '%s call MGMT_ED_SCAN' % self.port
+        channelMask = ''
+        channelMask = '0x' + self.__convertLongToString(self.__setChannelMask(listChannelMask))
+        try:
+            cmd = 'commissioner energy %s %s %s %s %s' % (channelMask, xCount, xPeriod, xScanDuration, sAddr)
+            print cmd
+            return self.__sendCommand(cmd) == 'Done'
+        except Exception, e:
+            modulehelper.writeintodebuglogger("MGMT_ED_SCAN() error: " + str(e))
 
     def MGMT_PANID_QUERY(self, sAddr, xCommissionerSessionId, listChannelMask, xPanId):
-        pass
+        """send MGMT_PANID_QUERY message to a given destination
+
+        Args:
+            xPanId: a given PAN ID to check the conflicts
+
+        Returns:
+            True: successful to send MGMT_PANID_QUERY message.
+            False: fail to send MGMT_PANID_QUERY message.
+        """
+        print '%s call MGMT_PANID_QUERY' % self.port
+        panid = ''
+        channelMask = ''
+        channelMask = '0x' + self.__convertLongToString(self.__setChannelMask(listChannelMask))
+
+        if not isinstance(xPanId, str):
+            panid = str(hex(xPanId))
+
+        try:
+            cmd = 'commissioner panid %s %s %s' % (panid, channelMask, sAddr)
+            print cmd
+            return self.__sendCommand(cmd) == 'Done'
+        except Exception, e:
+            modulehelper.writeintodebuglogger("MGMT_PANID_QUERY() error: " + str(e))
 
     def MGMT_ANNOUNCE_BEGIN(self, sAddr, xCommissionerSessionId, listChannelMask, xCount, xPeriod):
         pass
 
     def MGMT_ACTIVE_GET(self, Addr='', TLVs=[]):
-        pass
+        """send MGMT_ACTIVE_GET command
+
+        Returns:
+            True: successful to send MGMT_ACTIVE_GET
+            False: fail to send MGMT_ACTIVE_GET
+        """
+        print '%s call MGMT_ACTIVE_GET' % self.port
+        try:
+            cmd = 'dataset mgmtgetcommand active'
+
+            if len(TLVs) != 0:
+                tlvs = "".join(hex(tlv).lstrip("0x").zfill(2) for tlv in TLVs)
+                cmd += ' binary '
+                cmd += tlvs
+
+            print cmd
+
+            return self.__sendCommand(cmd)[0] == 'Done'
+
+        except Exception, e:
+            ModuleHelper.WriteIntoDebugLogger("MGMT_ACTIVE_GET() Error: " + str(e))
 
     def MGMT_ACTIVE_SET(self, sAddr='', xCommissioningSessionId=None, listActiveTimestamp=None, listChannelMask=None, xExtendedPanId=None,
                         sNetworkName=None, sPSKc=None, listSecurityPolicy=None, xChannel=None, sMeshLocalPrefix=None, xMasterKey=None,
-                        xPanId=None, xTmfPort=None, xSteeringData=None, xBorderRouterLocator=None, xDelayTimer=None):
-        pass
+                        xPanId=None, xTmfPort=None, xSteeringData=None, xBorderRouterLocator=None, BogusTLV = None, xDelayTimer=None):
+        """send MGMT_ACTIVE_SET command
+
+        Returns:
+            True: successful to send MGMT_ACTIVE_SET
+            False: fail to send MGMT_ACTIVE_SET
+        """
+        print '%s call MGMT_ACTIVE_SET' % self.port
+        try:
+            cmd = 'dataset mgmtsetcommand active'
+
+            if listActiveTimestamp != None:
+                cmd += ' activetimestamp '
+                cmd += str(listActiveTimestamp[0])
+
+            if xExtendedPanId != None:
+                cmd += ' extpanid '
+                xpanid = self.__convertLongToString(xExtendedPanId)
+
+                if len(xpanid) < 16:
+                    xpanid = xpanid.zfill(16)
+
+                cmd += xpanid
+
+            if sNetworkName != None:
+                cmd += ' networkname '
+                cmd += str(sNetworkName)
+
+            if xChannel != None:
+                cmd += ' channel '
+                cmd += str(xChannel)
+
+            if sMeshLocalPrefix != None:
+                cmd += ' localprefix '
+                cmd += str(sMeshLocalPrefix)
+
+            if xMasterKey != None:
+                cmd += ' masterkey '
+                key = self.__convertLongToString(xMasterKey)
+
+                if len(key) < 32:
+                    key = key.zfill(32)
+
+                cmd += key
+
+            if xPanId != None:
+                cmd += ' panid '
+                cmd + str(xPanId)
+
+            if xDelayTimer != None:
+                cmd += ' delay '
+                cmd += str(xDelayTimer)
+
+            if  sPSKc != None or listSecurityPolicy != None or listChannelMask != None or \
+                xCommissioningSessionId != None or xTmfPort != None or xSteeringData != None or xBorderRouterLocator != None or \
+                BogusTLV != None:
+                cmd += ' binary '
+
+            if listChannelMask != None:
+                cmd += '35060004'
+                entry = self.__convertLongToString(self.__setChannelMask(listChannelMask))
+
+                if len(entry) < 8:
+                    entry = entry.zfill(8)
+
+                cmd += entry
+
+            if sPSKc != None:
+                cmd += '0410'
+                pskc = sPSKc[::-1].encode('hex')
+
+                if len(pskc) < 32:
+                    pskc = pskc.zfill(32)
+
+                cmd += pskc
+
+            if listSecurityPolicy != None:
+                cmd += '0c03'
+                policy = str(hex(listSecurityPolicy[2]))[2:]
+
+                if len(policy) < 4:
+                    policy = policy.zfill(4)
+
+                cmd += policy
+
+                policyBit = 0
+
+                if listSecurityPolicy[0]:
+                    policyBit = policyBit | 0b10000000
+                if listSecurityPolicy[1]:
+                    policyBit = policyBit | 0b01000000
+                if listSecurityPolicy[3]:
+                    policyBit = policyBit | 0b00100000
+                if listSecurityPolicy[4]:
+                    policyBit = policyBit | 0b00010000
+                if listSecurityPolicy[5]:
+                    policyBit = policyBit | 0b00001000
+
+                cmd += str(hex(policyBit))[2:]
+
+            if xCommissioningSessionId != None:
+                cmd += '0b02'
+                sessionid = str(hex(xCommissioningSessionId))[2:]
+
+                if len(sessionid) < 4:
+                    sessionid = sissionid.zfill(4)
+
+                cmd += sessionid
+
+            if xBorderRouterLocator != None:
+                cmd += '0902'
+                locator = str(hex(xBorderRouterLocator))[2:]
+
+                if len(locator) < 4:
+                    locator = locator.zfill(4)
+
+                cmd += locator
+
+            print cmd
+
+            return self.__sendCommand(cmd)[0] == 'Done'
+
+        except Exception, e:
+            ModuleHelper.WriteIntoDebugLogger("MGMT_ACTIVE_SET() Error: " + str(e))
 
     def MGMT_PENDING_GET(self, Addr='', TLVs=[]):
-        pass
+        """send MGMT_PENDING_GET command
 
-    def MGMT_PENDING_SET(self, sAddr='', xCommissionerId=None, listPendingTimestamp=None, listActiveTimestamp=None, xDelayTimer=None,
-                         xChannel=None, xPanId=None, xMasterKey=None):
-        pass
+        Returns:
+            True: successful to send MGMT_PENDING_GET
+            False: fail to send MGMT_PENDING_GET
+        """
+        print '%s call MGMT_PENDING_GET' % self.port
+        try:
+            cmd = 'dataset mgmtgetcommand pending'
+
+            if len(TLVs) != 0:
+                tlvs = "".join(hex(tlv).lstrip("0x").zfill(2) for tlv in TLVs)
+                cmd += ' binary '
+                cmd += tlvs
+
+            print cmd
+
+            return self.__sendCommand(cmd)[0] == 'Done'
+
+        except Exception, e:
+            ModuleHelper.WriteIntoDebugLogger("MGMT_PENDING_GET() Error: " + str(e))
+
+    def MGMT_PENDING_SET(self, sAddr='', xCommissionerSessionId=None, listPendingTimestamp=None, listActiveTimestamp=None, xDelayTimer=None,
+                         xChannel=None, xPanId=None, xMasterKey=None, sMeshLocalPrefix=None, sNetworkName=None):
+        """send MGMT_PENDING_SET command
+
+        Returns:
+            True: successful to send MGMT_PENDING_SET
+            False: fail to send MGMT_PENDING_SET
+        """
+        print '%s call MGMT_PENDING_SET' % self.port
+        try:
+            cmd = 'dataset mgmtsetcommand pending'
+
+            if listPendingTimestamp != None:
+                cmd += ' pendingtimestamp '
+                cmd += str(listPendingTimestamp[0])
+
+            if listActiveTimestamp != None:
+                cmd += ' activetimestamp '
+                cmd += str(listActiveTimestamp[0])
+
+            if xDelayTimer != None:
+                #cmd += ' delaytimer '
+                #cmd += str(xDelayTimer)
+                cmd += ' delaytimer 3000000'
+
+            if xChannel != None:
+                cmd += ' channel '
+                cmd += str(xChannel)
+
+            if xPanId != None:
+                cmd += ' panid '
+                cmd + str(xPanId)
+
+            if xMasterKey != None:
+                cmd += ' masterkey '
+                key = self.__convertLongToString(xMasterKey)
+
+                if len(key) < 32:
+                    key = key.zfill(32)
+
+                cmd += key
+
+            if sMeshLocalPrefix != None:
+                cmd += ' localprefix '
+                cmd += str(sMeshLocalPrefix)
+
+            if sNetworkName != None:
+                cmd += ' networkname '
+                cmd += str(sNetworkName)
+
+            if xCommissionerSessionId != None:
+                cmd += ' binary '
+
+            if xCommissionerSessionId != None:
+                cmd += '0b02'
+                sessionid = str(hex(xCommissionerSessionId))[2:]
+
+                if len(sessionid) < 4:
+                    sessionid = sissionid.zfill(4)
+
+                cmd += sessionid
+
+            print cmd
+
+            return self.__sendCommand(cmd)[0] == 'Done'
+
+        except Exception, e:
+            ModuleHelper.WriteIntoDebugLogger("MGMT_PENDING_SET() Error: " + str(e))
 
     def MGMT_COMM_GET(self, Addr='ff02::1', TLVs=[]):
-        pass
+        """send MGMT_COMM_GET command
+
+        Returns:
+            True: successful to send MGMT_COMM_GET
+            False: fail to send MGMT_COMM_GET
+        """
+        print '%s call MGMT_COMM_GET' % self.port
+        try:
+            cmd = 'commissioner mgmtget'
+
+            if len(TLVs) != 0:
+                tlvs = "".join(hex(tlv).lstrip("0x").zfill(2) for tlv in TLVs)
+                cmd += ' binary '
+                cmd += tlvs
+
+            print cmd
+
+            return self.__sendCommand(cmd)[0] == 'Done'
+
+        except Exception, e:
+            ModuleHelper.WriteIntoDebugLogger("MGMT_COMM_GET() Error: " + str(e))
 
     def MGMT_COMM_SET(self, Addr='ff02::1', xCommissionerSessionID=None, xSteeringData=None, xBorderRouterLocator=None,
                       xChannelTlv=None, ExceedMaxPayload=False):
-        pass
+        """send MGMT_COMM_SET command
+
+        Returns:
+            True: successful to send MGMT_COMM_SET
+            False: fail to send MGMT_COMM_SET
+        """
+        print '%s call MGMT_COMM_SET' % self.port
+        try:
+            cmd = 'commissioner mgmtset'
+
+            if xCommissionerSessionID != None:
+                cmd += ' sessionid '
+                cmd += str(xCommissionerSessionID)
+
+            if xSteeringData != None:
+                cmd += ' steeringdata '
+                cmd += str(hex(xSteeringData)[2:])
+
+            if xBorderRouterLocator != None:
+                cmd += ' locator '
+                cmd += str(xBorderRouterLocator)
+
+            print cmd
+
+            return self.__sendCommand(cmd)[0] == 'Done'
+
+        except Exception, e:
+            ModuleHelper.WriteIntoDebugLogger("MGMT_COMM_SET() Error: " + str(e))
 
     def setActiveDataset(self, listActiveDataset=[]):
         pass
@@ -1644,10 +2202,32 @@ class ARM(IThci):
         pass
 
     def setUdpJoinerPort(self, portNumber):
-        pass
+        """set Joiner UDP Port
+
+        Args:
+            portNumber: Joiner UDP Port number
+
+        Returns:
+            True: successful to set Joiner UDP Port
+            False: fail to set Joiner UDP Port
+        """
+        print '%s call setUdpJoinerPort' % self.port
+        cmd = 'joinerport %d' % portNumber
+        print cmd
+        return self.__sendCommand(cmd)[0] == 'Done'
 
     def commissionerUnregister(self):
-        pass
+        """stop commissioner
+
+        Returns:
+            True: successful to stop commissioner
+            False: fail to stop commissioner
+        """
+        print '%s call commissionerUnregister' % self.port
+        cmd = 'commissioner stop'
+        print cmd
+        self.commissionerStarted = False
+        return self.__sendCommand(cmd)[0] == 'Done'
 
     def sendBeacons(self, sAddr, xCommissionerSessionId, listChannelMask, xPanId):
         pass

@@ -78,6 +78,17 @@ public:
      */
     int OutputFormat(const char *fmt, ...);
 
+    /**
+     * This method delivers formatted output to the client.
+     *
+     * @param[in]  aFmt  A pointer to the format string.
+     * @param[in]  aAp   A variable list of arguments for format.
+     *
+     * @returns The number of bytes placed in the output queue.
+     *
+     */
+    int OutputFormatV(const char *aFmt, va_list aAp);
+
     void ReceiveTask(const uint8_t *aBuf, uint16_t aBufLength);
     void SendDoneTask(void);
 
@@ -86,7 +97,7 @@ public:
 private:
     enum
     {
-        kRxBufferSize = 128,
+        kRxBufferSize = 512,
         kTxBufferSize = 1024,
         kMaxLineLength = 128,
     };

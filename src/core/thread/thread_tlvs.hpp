@@ -462,7 +462,7 @@ public:
 
 private:
     uint8_t mIdSequence;
-    uint8_t mAssignedRouterIdMask[BitVectorBytes(Mle::kMaxRouterId)];
+    uint8_t mAssignedRouterIdMask[BitVectorBytes(Mle::kMaxRouterId + 1)];
 };
 
 /**

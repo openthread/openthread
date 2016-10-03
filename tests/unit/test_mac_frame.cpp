@@ -34,23 +34,6 @@
 
 namespace Thread {
 
-extern "C" {
-
-    void otPlatAlarmStop(otInstance *)
-    {
-    }
-
-    void otPlatAlarmStartAt(otInstance *, uint32_t, uint32_t)
-    {
-    }
-
-    uint32_t otPlatAlarmGetNow(void)
-    {
-        return 0;
-    }
-
-} // extern "C"
-
 void TestMacHeader(void)
 {
     static const struct
@@ -101,9 +84,11 @@ void TestMacHeader(void)
 
 }  // namespace Thread
 
+#ifdef ENABLE_TEST_MAIN
 int main(void)
 {
     Thread::TestMacHeader();
     printf("All tests passed\n");
     return 0;
 }
+#endif

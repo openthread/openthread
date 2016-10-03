@@ -69,7 +69,7 @@ enum
     kMinBE                = 3,                     ///< macMinBE (IEEE 802.15.4-2006)
     kMaxBE                = 6,                     ///< macMaxBE (IEEE 802.15.4-2006)
     kMaxCSMABackoffs      = 4,                     ///< macMaxCSMABackoffs (IEEE 802.15.4-2006)
-    kMaxFrameRetries      = 15,                    ///< macMaxFrameRetries (IEEE 802.15.4-2006)
+    kMaxFrameRetries      = 3,                     ///< macMaxFrameRetries (IEEE 802.15.4-2006)
     kUnitBackoffPeriod    = 20,                    ///< Number of symbols (IEEE 802.15.4-2006)
 
     kMinBackoff           = 16,                    ///< Minimum backoff (milliseconds).
@@ -146,9 +146,10 @@ public:
      *
      * @param[in]  aContext  A pointer to arbitrary context information.
      * @param[in]  aFrame    A reference to the MAC frame buffer that was sent.
+     * @param[in]  aError    The status of the last MSDU transmission.
      *
      */
-    typedef void (*SentFrameHandler)(void *aContext, Frame &aFrame);
+    typedef void (*SentFrameHandler)(void *aContext, Frame &aFrame, ThreadError aError);
 
     /**
      * This constructor creates a MAC sender client.
@@ -167,7 +168,7 @@ public:
 
 private:
     ThreadError HandleFrameRequest(Frame &frame) { return mFrameRequestHandler(mContext, frame); }
-    void HandleSentFrame(Frame &frame) { mSentFrameHandler(mContext, frame); }
+    void HandleSentFrame(Frame &frame, ThreadError error) { mSentFrameHandler(mContext, frame, error); }
 
     FrameRequestHandler mFrameRequestHandler;
     SentFrameHandler mSentFrameHandler;
@@ -502,6 +503,42 @@ public:
      */
     LinkQualityInfo &GetNoiseFloor(void) { return mNoiseFloor; }
 
+    /**
+     * This function enable/disable source match.
+     *
+     * @param[in]  aEnable  Enable/disable source match for automatical pending.
+     *
+     */
+    void EnableSrcMatch(bool aEnable);
+
+    /**
+     * This function adds the address into the source match table.
+     *
+     * @param[in]  aAddr  The address to be added into the source match table.
+     *
+     * @retval ::kThreadError_None  Successfully added the address into the source match table.
+     * @retval ::kThreadError_NoBufs No available entry in the source match table
+     *
+     */
+    ThreadError AddSrcMatchEntry(Address &aAddr);
+
+    /**
+     * This function removes the address from the source match table.
+     *
+     * @param[in]  aAddr  The address to be removed from the source match table.
+     *
+     * @retval ::kThreadError_None  Successfully removed the address from the source match table.
+     * @retval ::kThreadError_NoAddress  The address is not in the source match table.
+     *
+     */
+    ThreadError ClearSrcMatchEntry(Address &aAddr);
+
+    /**
+     * This function emptys the source match table.
+     *
+     */
+    void ClearSrcMatchEntries();
+
 private:
     enum ScanType
     {
@@ -520,15 +557,15 @@ private:
     void ProcessTransmitSecurity(Frame &aFrame);
     ThreadError ProcessReceiveSecurity(Frame &aFrame, const Address &aSrcAddr, Neighbor *aNeighbor);
     void ScheduleNextTransmission(void);
-    void SentFrame(bool aAcked);
+    void SentFrame(ThreadError aError);
     void SendBeaconRequest(Frame &aFrame);
     void SendBeacon(Frame &aFrame);
     void StartBackoff(void);
     void StartEnergyScan(void);
     ThreadError HandleMacCommand(Frame &aFrame);
 
-    static void HandleAckTimer(void *aContext);
-    void HandleAckTimer(void);
+    static void HandleMacTimer(void *aContext);
+    void HandleMacTimer(void);
     static void HandleBeginTransmit(void *aContext);
     void HandleBeginTransmit(void);
     static void HandleReceiveTimer(void *aContext);
@@ -539,8 +576,7 @@ private:
     void StartCsmaBackoff(void);
     ThreadError Scan(ScanType aType, uint32_t aScanChannels, uint16_t aScanDuration, void *aContext);
 
-    Tasklet mBeginTransmit;
-    Timer mAckTimer;
+    Timer mMacTimer;
     Timer mBackoffTimer;
     Timer mReceiveTimer;
 

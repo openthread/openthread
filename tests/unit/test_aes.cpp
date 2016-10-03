@@ -35,10 +35,6 @@
 
 static Thread::Crypto::MbedTls mbedtls;
 
-extern"C" void otSignalTaskletPending(otInstance *)
-{
-}
-
 /**
  * Verifies test vectors from IEEE 802.15.4-2006 Annex C Section C.2.1
  */
@@ -233,6 +229,7 @@ void TestMacCommandFrame()
                  "TestMacCommandFrame decrypt failed\n");
 }
 
+#ifdef ENABLE_TEST_MAIN
 int main(void)
 {
     TestMacBeaconFrame();
@@ -241,3 +238,4 @@ int main(void)
     printf("All tests passed\n");
     return 0;
 }
+#endif

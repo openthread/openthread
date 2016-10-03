@@ -79,7 +79,9 @@ public:
         kJoinerDtlsEncapsulation = OT_MESHCOP_TLV_JOINER_DTLS,       ///< Joiner DTLS Encapsulation TLV
         kJoinerUdpPort           = OT_MESHCOP_TLV_JOINER_UDP_PORT,   ///< Joiner UDP Port TLV
         kJoinerIid               = OT_MESHCOP_TLV_JOINER_IID,        ///< Joiner IID TLV
+        kJoinerRouterLocator     = OT_MESHCOP_TLV_JOINER_RLOC,       ///< Joiner Router Locator TLV
         kJoinerRouterKek         = OT_MESHCOP_TLV_JOINER_ROUTER_KEK, ///< Joiner Router KEK TLV
+        kProvisioningUrl         = OT_MESHCOP_TLV_PROVISIONING_URL,  ///< Provisioning URL TLV
         kPendingTimestamp        = OT_MESHCOP_TLV_PENDINGTIMESTAMP,  ///< Pending Timestamp TLV
         kDelayTimer              = OT_MESHCOP_TLV_DELAYTIMER,        ///< Delay Timer TLV
         kChannelMask             = OT_MESHCOP_TLV_CHANNELMASK,       ///< Channel Mask TLV
@@ -602,11 +604,7 @@ public:
     void SetBit(uint8_t aBit) { mSteeringData[aBit / 8] |= 1 << (aBit % 8); }
 
 private:
-    enum
-    {
-        kMaxLength = 16,
-    };
-    uint8_t mSteeringData[kMaxLength];
+    uint8_t mSteeringData[OT_STEERING_DATA_MAX_LENGTH];
 } OT_TOOL_PACKED_END;
 
 /**
@@ -656,6 +654,7 @@ private:
  * This class implements the Commissioner ID TLV generation and parsing.
  *
  */
+OT_TOOL_PACKED_BEGIN
 class CommissionerIdTlv: public Tlv
 {
 public:
@@ -1082,6 +1081,49 @@ private:
 } OT_TOOL_PACKED_END;
 
 /**
+ * This class implements Joiner Router Locator TLV generation and parsing.
+ *
+ */
+OT_TOOL_PACKED_BEGIN
+class JoinerRouterLocatorTlv: public Tlv
+{
+public:
+    /**
+     * This method initializes the TLV.
+     *
+     */
+    void Init(void) { SetType(kJoinerRouterLocator); SetLength(sizeof(*this) - sizeof(Tlv)); }
+
+    /**
+     * This method indicates whether or not the TLV appears to be well-formed.
+     *
+     * @retval TRUE   If the TLV appears to be well-formed.
+     * @retval FALSE  If the TLV does not appear to be well-formed.
+     *
+     */
+    bool IsValid(void) const { return GetLength() == sizeof(*this) - sizeof(Tlv); }
+
+    /**
+     * This method returns the Joiner Router Locator value.
+     *
+     * @returns The Joiner Router Locator value.
+     *
+     */
+    uint16_t GetJoinerRouterLocator(void) const { return HostSwap16(mLocator); }
+
+    /**
+     * This method sets the Joiner Router Locator value.
+     *
+     * @param[in]  aJoinerRouterLocator  The Joiner Router Locator value.
+     *
+     */
+    void SetJoinerRouterLocator(uint16_t aLocator) { mLocator = HostSwap16(aLocator); }
+
+private:
+    uint16_t mLocator;
+} OT_TOOL_PACKED_END;
+
+/**
  * This class implements Joiner Router KEK TLV generation and parsing.
  *
  */
@@ -1261,7 +1303,7 @@ public:
      */
     bool IsChannelSet(uint8_t aChannel) const {
         const uint8_t *mask = reinterpret_cast<const uint8_t *>(this) + sizeof(*this);
-        return (aChannel < (mMaskLength * 8)) ? mask[aChannel / 8] & (1 << (aChannel % 8)) : false;
+        return (aChannel < (mMaskLength * 8)) ? ((mask[aChannel / 8] & (1 << (aChannel % 8))) != 0) : false;
     }
 
 private:
@@ -1447,6 +1489,67 @@ public:
 } OT_TOOL_PACKED_END;
 
 /**
+ * This class implements Provisioning URL TLV generation and parsing.
+ *
+ */
+OT_TOOL_PACKED_BEGIN
+class ProvisioningUrlTlv: public Tlv
+{
+public:
+    /**
+     * This method initializes the TLV.
+     *
+     */
+    void Init(void) { SetType(kProvisioningUrl); SetLength(0); }
+
+    /**
+     * This method indicates whether or not the TLV appears to be well-formed.
+     *
+     * @retval TRUE   If the TLV appears to be well-formed.
+     * @retval FALSE  If the TLV does not appear to be well-formed.
+     *
+     */
+    bool IsValid(void) const { return GetLength() <= sizeof(*this) - sizeof(Tlv); }
+
+    /**
+     * This method returns the Provisioning URL value.
+     *
+     * @returns The Provisioning URL value.
+     *
+     */
+    const char *GetProvisioningUrl(void) const { return mProvisioningUrl; }
+
+    /**
+     * This method sets the Provisioning URL value.
+     *
+     * @param[in]  aProvisioningUrl  A pointer to the Provisioning URL value.
+     *
+     */
+    ThreadError SetProvisioningUrl(const char *aProvisioningUrl) {
+        ThreadError error = kThreadError_None;
+        size_t len = aProvisioningUrl ? strnlen(aProvisioningUrl, kMaxLength + 1) : 0;
+
+        SetLength(static_cast<uint8_t>(len));
+        VerifyOrExit(len <= kMaxLength, error = kThreadError_InvalidArgs);
+
+        if (len > 0) {
+            memcpy(mProvisioningUrl, aProvisioningUrl, len);
+        }
+
+exit:
+        return error;
+    }
+
+private:
+    enum
+    {
+        kMaxLength = 64,
+    };
+
+    char mProvisioningUrl[kMaxLength];
+} OT_TOOL_PACKED_END;
+
+/**
  * This class implements Discovery Request TLV generation and parsing.
  *
  */
@@ -1494,7 +1597,7 @@ public:
      * @retval FALSE  If the Joiner flag is not set.
      *
      */
-    bool IsJoiner(void) { return mFlags & kJoinerMask; }
+    bool IsJoiner(void) { return (mFlags & kJoinerMask) != 0; }
 
     /**
      * This method sets the Joiner flag.
@@ -1571,7 +1674,7 @@ public:
      * @retval FALSE  If the Native Commissioner flag is not set.
      *
      */
-    bool IsNativeCommissioner(void) { return mFlags & kNativeMask; }
+    bool IsNativeCommissioner(void) { return (mFlags & kNativeMask) != 0; }
 
     /**
      * This method sets the Native Commissioner flag.

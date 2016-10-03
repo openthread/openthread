@@ -31,6 +31,12 @@
  *   This file implements IPv6 addresses.
  */
 
+#ifdef OPENTHREAD_CONFIG_FILE
+#include OPENTHREAD_CONFIG_FILE
+#else
+#include <openthread-config.h>
+#endif
+
 #include <stdio.h>
 #include <string.h>
 
@@ -104,6 +110,23 @@ bool Address::IsRoutingLocator(void) const
     return (mFields.m16[4] == HostSwap16(0x0000) && mFields.m16[5] == HostSwap16(0x00ff) &&
             mFields.m16[6] == HostSwap16(0xfe00));
 }
+
+bool Address::IsSubnetRouterAnycast(void) const
+{
+    return (mFields.m32[2] == 0 && mFields.m32[3] == 0);
+}
+
+bool Address::IsReservedSubnetAnycast(void) const
+{
+    return (mFields.m32[2] == HostSwap32(0xfdffffff) && mFields.m16[6] == 0xffff && mFields.m8[14] == 0xff &&
+            mFields.m8[15] >= 0x80);
+}
+
+bool Address::IsIidReserved(void) const
+{
+    return IsSubnetRouterAnycast() || IsReservedSubnetAnycast();
+}
+
 
 const uint8_t *Address::GetIid(void) const
 {

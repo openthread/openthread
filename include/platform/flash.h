@@ -35,6 +35,10 @@
 #ifndef OT_PLATFORM_FLASH_H
 #define OT_PLATFORM_FLASH_H
 
+#include <stdint.h>
+
+#include <openthread-types.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif
