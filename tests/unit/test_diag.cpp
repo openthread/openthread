@@ -67,6 +67,7 @@ extern "C" void otPlatRadioReceiveDone(otInstance *, RadioPacket *aFrame, Thread
     (void)aError;
 }
 
+
 /**
  *  diagnostics module tests
  */
