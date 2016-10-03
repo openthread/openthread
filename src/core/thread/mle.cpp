@@ -487,6 +487,11 @@ ThreadError Mle::SetMeshLocalPrefix(const uint8_t *aMeshLocalPrefix)
     // Add the address back into the table.
     mNetif.AddUnicastAddress(mMeshLocal64);
 
+    if (mDeviceState != kDeviceStateDetached)
+    {
+        mNetif.AddUnicastAddress(mMeshLocal16);
+    }
+
     // Changing the prefix also causes the mesh local address to be different.
     mNetif.SetStateChangedFlags(OT_IP6_ML_ADDR_CHANGED);
 
