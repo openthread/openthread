@@ -70,8 +70,10 @@ class ARM(IThci):
             self.xpanId = ModuleHelper.Default_XpanId
             self.AutoDUTEnable = False
             self.provisioningUrl = ''
-            self.__logThread = Queue()
-            self.__logThreadRunning = False
+            self.logThread = Queue()
+            self.logStatus = {'stop':'stop', 'running':'running', "pauseReq":'pauseReq', 'paused':'paused'}
+            self.logThreadStatus = self.logStatus['stop']
+            self.commissionerStarted = False
             self.intialize()
         except Exception, e:
             ModuleHelper.WriteIntoDebugLogger("initialize() Error: " + str(e))
@@ -94,6 +96,11 @@ class ARM(IThci):
             Value: successfully retrieve the desired value from reference unit
             Error: some errors occur, indicates by the followed specific error number
         """
+        if self.logThreadStatus == self.logStatus['running']:
+            self.logThreadStatus = self.logStatus['pauseReq']
+            while(self.logThreadStatus != self.logStatus['paused'] and self.logThreadStatus != self.logStatus['stop']):
+                pass
+
         try:
             # command retransmit times
             retryTimes = 3
@@ -115,6 +122,10 @@ class ARM(IThci):
                     response.append(line)
                     if line == 'Done':
                         break
+
+            if self.logThreadStatus == self.logStatus['paused']:
+                self.logThreadStatus = self.logStatus['running']
+
             return response
         except Exception, e:
             ModuleHelper.WriteIntoDebugLogger("sendCommand() Error: " + str(e))
@@ -451,21 +462,27 @@ class ARM(IThci):
         Returns:
             Commissioning logs
         """
-        self.__logThreadRunning = True
+        self.logThreadStatus = self.logStatus['running']
         logs = Queue()
         t_end = time.time() + durationInSeconds
         while time.time() < t_end:
+            time.sleep(0.3)
+            if self.logThreadStatus == self.logStatus['paused']:
+                continue
+
             try:
                 line = self.serial.readline()
                 if line:
                     print line
                     logs.put(line)
-                time.sleep(0.3)
 
             except Exception,e:
-                print e
+                pass
 
-        self.__logThreadRunning = False
+            if self.logThreadStatus == self.logStatus['pauseReq']:
+                self.logThreadStatus = self.logStatus['paused']
+
+        self.logThreadStatus = self.logStatus['stop']
         return logs
 
     def __setChannelMask(self, channelsArray):
@@ -1684,7 +1701,12 @@ class ARM(IThci):
             False: fail to start OpenThread stack
         """
         print '%s call startCollapsedCommissioner' % self.port
-        return self.__startOpenThread()
+        if self.__startOpenThread():
+            time.sleep(20)
+            return True
+        else:
+            return False
+
 
     def setJoinKey(self, strPSKc):
         pass
@@ -1693,7 +1715,7 @@ class ARM(IThci):
         """start commissioner
 
         Args:
-            xEUI: Joiner's extended address
+            xEUI: Joiner's EUI-64
             strPSKd: Joiner's PSKd for commissioning
 
         Returns:
@@ -1701,14 +1723,28 @@ class ARM(IThci):
             False: fail to start commissioner
         """
         print '%s call scanJoiner' % self.port
-        cmd = 'commissioner start %s %s' % (strPSKd, self.provisioningUrl)
-        print cmd
-        if self.__sendCommand(cmd)[0] == 'Done':
-            if self.__logThreadRunning == False:
-                self.__logThread = ThreadRunner.run(target = self.__readCommissioningLogs, args = (120,))
-            return True
+        if xEUI == '*':
+            JoinerHashMac = '*'
         else:
-            return False
+            JoinerAddr = ModuleHelper.CalculateHashMac(xEUI)
+            JoinerHashMac = hex(int(JoinerAddr)).rstrip("L").lstrip("0x")
+
+        cmd = 'commissioner joiner add %s %s' % (JoinerHashMac, strPSKd)
+        print cmd
+        self.__sendCommand(cmd)
+
+        if not self.commissionerStarted:
+            cmd = 'commissioner start'
+            print cmd
+            if self.__sendCommand(cmd)[0] == 'Done':
+                self.commissionerStarted = True
+                if self.logThreadStatus == self.logStatus['stop']:
+                    self.logThread = ThreadRunner.run(target = self.__readCommissioningLogs, args = (120,))
+                return True
+            else:
+                return False
+        else:
+            return True
 
     def setProvisioningUrl(self, strURL='grl.com'):
         """set provisioning Url
@@ -1718,10 +1754,13 @@ class ARM(IThci):
 
         Returns:
             True: successful to set provisioning Url
+            False: fail to set provisioning Url
         """
         print '%s call setProvisioningUrl' % self.port
-        self.provisioningUrl = strURL;
-        return True
+        cmd = 'commissioner provisioningurl %s' %(strURL)
+        self.provisioningUrl = strURL
+        print cmd
+        return self.__sendCommand(cmd)[0] == "Done"
 
     def allowCommission(self, strPSKc="GRLPassword"):
         pass
@@ -1741,11 +1780,12 @@ class ARM(IThci):
         cmd = 'joiner start %s %s' %(strPSKd, self.provisioningUrl)
         print cmd
         if self.__sendCommand(cmd)[0] == "Done":
-            if self.__logThreadRunning == False:
-                self.__logThread = ThreadRunner.run(target = self.__readCommissioningLogs, args = (90,))
-            time.sleep(90)
+            if self.logThreadStatus == self.logStatus['stop']:
+                self.logThread = ThreadRunner.run(target = self.__readCommissioningLogs, args = (90,))
+            time.sleep(100)
 
             self.__sendCommand('thread start')
+            time.sleep(30)
             return True
         else:
             return False
@@ -1756,7 +1796,7 @@ class ARM(IThci):
         Returns:
            Commissioning logs
         """
-        rawLogs = self.__logThread.get()
+        rawLogs = self.logThread.get()
         ProcessedLogs = []
         payload = []
         while not rawLogs.empty():
@@ -2177,7 +2217,17 @@ class ARM(IThci):
         return self.__sendCommand(cmd)[0] == 'Done'
 
     def commissionerUnregister(self):
-        pass
+        """stop commissioner
+
+        Returns:
+            True: successful to stop commissioner
+            False: fail to stop commissioner
+        """
+        print '%s call commissionerUnregister' % self.port
+        cmd = 'commissioner stop'
+        print cmd
+        self.commissionerStarted = False
+        return self.__sendCommand(cmd)[0] == 'Done'
 
     def sendBeacons(self, sAddr, xCommissionerSessionId, listChannelMask, xPanId):
         pass
