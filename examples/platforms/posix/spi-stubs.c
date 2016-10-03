@@ -26,6 +26,7 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include "platform-posix.h"
 
 #include <stdio.h>
 #include <stdlib.h>

@@ -26,9 +26,10 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include "platform-posix.h"
+
 #include <openthread-types.h>
 #include <platform/misc.h>
-#include "platform-posix.h"
 
 void otPlatReset(otInstance *aInstance)
 {

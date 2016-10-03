@@ -26,6 +26,8 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include "platform-posix.h"
+
 #include <stdbool.h>
 #include <stdio.h>
 #include <string.h>
@@ -35,7 +37,6 @@
 #include <openthread.h>
 
 #include <platform/alarm.h>
-#include "platform-posix.h"
 
 /**
  * diagnostics mode flag.
