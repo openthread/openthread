@@ -34,8 +34,12 @@
 #ifndef COMMISSIONER_HPP_
 #define COMMISSIONER_HPP_
 
+#include <openthread-core-config.h>
+
 #include <coap/coap_server.hpp>
 #include <common/timer.hpp>
+#include <mac/mac_frame.hpp>
+#include <meshcop/dtls.hpp>
 #include <meshcop/energy_scan_client.hpp>
 #include <meshcop/panid_query_client.hpp>
 #include <net/udp6.hpp>
@@ -61,13 +65,10 @@ public:
     /**
      * This method starts the Commissioner service.
      *
-     * @param[in]  aPSKd             A pointer to the PSKd.
-     * @param[in]  aProvisioningUrl  A pointer to the Provisioning URL (may be NULL).
-     *
      * @retval kThreadError_None  Successfully started the Commissioner service.
      *
      */
-    ThreadError Start(const char *aPSKd, const char *aProvisioningUrl);
+    ThreadError Start(void);
 
     /**
      * This method stops the Commissioner service.
@@ -76,6 +77,40 @@ public:
      *
      */
     ThreadError Stop(void);
+
+    /**
+     * This method adds a Joiner entry.
+     *
+     * @param[in]  aExtAddress      A pointer to the Joiner's extended address or NULL for any Joiner.
+     * @param[in]  aPSKd            A pointer to the PSKd
+     *
+     * @retval kThreadError_None    Successfully added the Joiner.
+     * @retval kThreadError_NoBufs  No buffers available to add the Joiner.
+     *
+     */
+    ThreadError AddJoiner(const Mac::ExtAddress *aExtAddress, const char *aPSKd);
+
+    /**
+     * This method removes a Joiner entry.
+     *
+     * @param[in]  aExtAddress        A pointer to the Joiner's extended address or NULL for any Joiner.
+     *
+     * @retval kThreadError_None      Successfully added the Joiner.
+     * @retval kThreadError_NotFound  The Joiner specified by @p aExtAddress was not found.
+     *
+     */
+    ThreadError RemoveJoiner(const Mac::ExtAddress *aExtAddress);
+
+    /**
+     * This function sets the Provisioning URL.
+     *
+     * @param[in]  aProvisioningUrl  A pointer to the Provisioning URL (may be NULL).
+     *
+     * @retval kThreadError_None         Successfully added the Joiner.
+     * @retval kThreadError_InvalidArgs  @p aProvisioningUrl is invalid.
+     *
+     */
+    ThreadError SetProvisioningUrl(const char *aProvisioningUrl);
 
     /**
      * This method returns the Commissioner Session ID.
@@ -87,7 +122,6 @@ public:
 
     EnergyScanClient mEnergyScan;
     PanIdQueryClient mPanIdQuery;
-
 
     /**
      * This method sends MGMT_COMMISSIONER_GET.
@@ -147,8 +181,16 @@ private:
         kStatePetition = 1,
         kStateActive = 2,
     };
-
     uint8_t mState;
+
+    struct Joiner
+    {
+        Mac::ExtAddress mExtAddress;
+        char mPsk[Dtls::kPskMaxLength + 1];
+        bool mValid : 1;
+        bool mAny : 1;
+    };
+    Joiner mJoiners[OPENTHREAD_CONFIG_MAX_JOINER_ENTRIES];
 
     uint8_t mJoinerIid[8];
     uint16_t mJoinerPort;

@@ -38,6 +38,7 @@
 #endif
 
 #include <stdio.h>
+#include <string.h>
 
 #include <coap/coap_header.hpp>
 #include <common/logging.hpp>
@@ -63,18 +64,16 @@ Commissioner::Commissioner(ThreadNetif &aThreadNetif):
     mNetif(aThreadNetif),
     mIsSendMgmtCommRequest(false)
 {
+    memset(mJoiners, 0, sizeof(mJoiners));
     aThreadNetif.GetCoapServer().AddResource(mRelayReceive);
 }
 
-ThreadError Commissioner::Start(const char *aPSKd, const char *aProvisioningUrl)
+ThreadError Commissioner::Start(void)
 {
     ThreadError error = kThreadError_None;
 
     VerifyOrExit(mState == kStateDisabled, error = kThreadError_InvalidState);
 
-    SuccessOrExit(error = mNetif.GetDtls().SetPsk(reinterpret_cast<const uint8_t *>(aPSKd),
-                                                  static_cast<uint8_t>(strlen(aPSKd))));
-    SuccessOrExit(error = mNetif.GetDtls().mProvisioningUrl.SetProvisioningUrl(aProvisioningUrl));
     SuccessOrExit(error = mSocket.Open(HandleUdpReceive, this));
     mState = kStatePetition;
     SendPetition();
@@ -89,6 +88,75 @@ ThreadError Commissioner::Stop(void)
     SendKeepAlive();
     mTimer.Start(1000);
     return kThreadError_None;
+}
+
+ThreadError Commissioner::AddJoiner(const Mac::ExtAddress *aExtAddress, const char *aPSKd)
+{
+    ThreadError error = kThreadError_NoBufs;
+
+    VerifyOrExit(strlen(aPSKd) <= Dtls::kPskMaxLength, error = kThreadError_InvalidArgs);
+    RemoveJoiner(aExtAddress);
+
+    for (size_t i = 0; i < sizeof(mJoiners) / sizeof(mJoiners[0]); i++)
+    {
+        if (mJoiners[i].mValid)
+        {
+            continue;
+        }
+
+        if (aExtAddress != NULL)
+        {
+            mJoiners[i].mExtAddress = *aExtAddress;
+            mJoiners[i].mAny = false;
+        }
+        else
+        {
+            mJoiners[i].mAny = true;
+        }
+
+        strncpy(mJoiners[i].mPsk, aPSKd, sizeof(mJoiners[i].mPsk));
+        mJoiners[i].mValid = true;
+        ExitNow(error = kThreadError_None);
+    }
+
+exit:
+    return error;
+}
+
+ThreadError Commissioner::RemoveJoiner(const Mac::ExtAddress *aExtAddress)
+{
+    ThreadError error = kThreadError_NotFound;
+
+    for (size_t i = 0; i < sizeof(mJoiners) / sizeof(mJoiners[0]); i++)
+    {
+        if (!mJoiners[i].mValid)
+        {
+            continue;
+        }
+
+        if (aExtAddress != NULL)
+        {
+            if (memcmp(&mJoiners[i].mExtAddress, &aExtAddress, sizeof(mJoiners[i].mExtAddress)))
+            {
+                continue;
+            }
+        }
+        else if (!mJoiners[i].mAny)
+        {
+            continue;
+        }
+
+        mJoiners[i].mValid = false;
+        ExitNow(error = kThreadError_None);
+    }
+
+exit:
+    return error;
+}
+
+ThreadError Commissioner::SetProvisioningUrl(const char *aProvisioningUrl)
+{
+    return mNetif.GetDtls().mProvisioningUrl.SetProvisioningUrl(aProvisioningUrl);
 }
 
 uint16_t Commissioner::GetSessionId(void) const
@@ -383,10 +451,36 @@ void Commissioner::HandleRelayReceive(Coap::Header &aHeader, Message &aMessage, 
     SuccessOrExit(error = Tlv::GetValueOffset(aMessage, Tlv::kJoinerDtlsEncapsulation, offset, length));
 
     memcpy(mJoinerIid, joinerIid.GetIid(), sizeof(mJoinerIid));
-    mNetif.GetDtls().SetClientId(mJoinerIid, sizeof(mJoinerIid));
     mJoinerPort = joinerPort.GetUdpPort();
     mJoinerRloc = joinerRloc.GetJoinerRouterLocator();
 
+    if (!mNetif.GetDtls().IsStarted())
+    {
+        mJoinerIid[0] ^= 0x2;
+
+        for (size_t i = 0; i < sizeof(mJoiners) / sizeof(mJoiners[0]); i++)
+        {
+            if (!mJoiners[i].mValid)
+            {
+                continue;
+            }
+
+            if (mJoiners[i].mAny || !memcmp(&mJoiners[i].mExtAddress, mJoinerIid, sizeof(mJoiners[i].mExtAddress)))
+            {
+                SuccessOrExit(error = mNetif.GetDtls().SetPsk(reinterpret_cast<const uint8_t *>(mJoiners[i].mPsk),
+                                                              static_cast<uint8_t>(strlen(mJoiners[i].mPsk))));
+                SuccessOrExit(error = mNetif.GetDtls().Start(false, HandleDtlsReceive, HandleDtlsSend, this));
+                otLogInfoMeshCoP("found joiner, starting new session\r\n");
+                break;
+            }
+        }
+
+        mJoinerIid[0] ^= 0x2;
+    }
+
+    VerifyOrExit(mNetif.GetDtls().IsStarted() && memcmp(mJoinerIid, joinerIid.GetIid(), sizeof(mJoinerIid)) == 0,);
+
+    SuccessOrExit(error = mNetif.GetDtls().SetClientId(mJoinerIid, sizeof(mJoinerIid)));
     mNetif.GetDtls().Receive(aMessage, offset, length);
 
 exit:
@@ -440,8 +534,6 @@ void Commissioner::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &a
         mSessionId = sessionId.GetCommissionerSessionId();
         mState = kStateActive;
         mTimer.Start(5000);
-
-        mNetif.GetDtls().Start(false, HandleDtlsReceive, HandleDtlsSend, this);
 
         otLogInfoMeshCoP("received petition response\r\n");
         break;

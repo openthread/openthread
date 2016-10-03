@@ -1992,14 +1992,42 @@ void Interpreter::ProcessCommissioner(int argc, char *argv[])
 
     if (strcmp(argv[0], "start") == 0)
     {
-        const char *provisioningUrl;
-        VerifyOrExit(argc > 1, error = kThreadError_Parse);
-        provisioningUrl = argc > 2 ? argv[2] : NULL;
-        otCommissionerStart(mInstance, argv[1], provisioningUrl);
+        SuccessOrExit(error = otCommissionerStart(mInstance));
     }
     else if (strcmp(argv[0], "stop") == 0)
     {
-        otCommissionerStop(mInstance);
+        SuccessOrExit(error = otCommissionerStop(mInstance));
+    }
+    else if (strcmp(argv[0], "joiner") == 0)
+    {
+        otExtAddress addr;
+        const otExtAddress *addrPtr;
+
+        VerifyOrExit(argc > 2, error = kThreadError_Parse);
+
+        if (strcmp(argv[2], "*") == 0)
+        {
+            addrPtr = NULL;
+        }
+        else
+        {
+            VerifyOrExit(Hex2Bin(argv[2], addr.m8, sizeof(addr)) == sizeof(addr), error = kThreadError_Parse);
+            addrPtr = &addr;
+        }
+
+        if (strcmp(argv[1], "add") == 0)
+        {
+            VerifyOrExit(argc > 3, error = kThreadError_Parse);
+            SuccessOrExit(error = otCommissionerAddJoiner(mInstance, addrPtr, argv[3]));
+        }
+        else if (strcmp(argv[1], "remove") == 0)
+        {
+            SuccessOrExit(error = otCommissionerRemoveJoiner(mInstance, addrPtr));
+        }
+    }
+    else if (strcmp(argv[0], "provisioningurl") == 0)
+    {
+        SuccessOrExit(error = otCommissionerSetProvisioningUrl(mInstance, (argc > 1) ? argv[1] : NULL));
     }
     else if (strcmp(argv[0], "energy") == 0)
     {

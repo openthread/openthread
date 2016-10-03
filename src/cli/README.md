@@ -213,17 +213,16 @@ Set the Thread Child Timeout value.
 Done
 ```
 
-### commissioner start \<psdk\> \<provisioningUrl\>
+### commissioner start \<provisioningUrl\>
 
 Start the Commissioner role.
 
-* pskd: Pre-Shared Key for the Joiner.
 * provisioningUrl: Provisioning URL for the Joiner (optional).
 
 This command will cause the device to send LEAD_PET and LEAD_KA messages.
 
 ```bash
-> commissioner start PSK
+> commissioner start
 Done
 ```
 
@@ -235,6 +234,38 @@ This command will cause the device to send LEAD_KA[Reject] messages.
 
 ```bash
 > commissioner stop
+Done
+```
+
+### commissioner joiner add \<hashmacaddr\> \<psdk\>
+
+Add a Joiner entry.
+
+* hashmacaddr: The Extended Address of the Joiner or '*' to match any Joiner.
+* pskd: Pre-Shared Key for the Joiner.
+
+```bash
+> commissioner joiner add d45e64fa83f81cf7 PSK
+Done
+```
+
+### commissioner joiner remove \<hashmacaddr\>
+
+Remove a Joiner entry.
+
+* hashmacaddr: The Extended Address of the Joiner or '*' to match any Joiner.
+
+```bash
+> commissioner joiner remove d45e64fa83f81cf7
+Done
+```
+
+### commissioner provisioningurl \<provisioningUrl\>
+
+Set the Provisioning URL.
+
+```bash
+> commissioner provisioningurl http://github.com/openthread/openthread
 Done
 ```
 

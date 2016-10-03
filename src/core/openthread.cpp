@@ -1418,14 +1418,29 @@ ThreadError otSendPendingSet(otInstance *, const otOperationalDataset *aDataset,
 
 #if OPENTHREAD_ENABLE_COMMISSIONER
 #include <commissioning/commissioner.h>
-ThreadError otCommissionerStart(otInstance *, const char *aPSKd, const char *aProvisioningUrl)
+ThreadError otCommissionerStart(otInstance *)
 {
-    return sThreadNetif->GetCommissioner().Start(aPSKd, aProvisioningUrl);
+    return sThreadNetif->GetCommissioner().Start();
 }
 
 ThreadError otCommissionerStop(otInstance *)
 {
     return sThreadNetif->GetCommissioner().Stop();
+}
+
+ThreadError otCommissionerAddJoiner(otInstance *, const otExtAddress *aExtAddress, const char *aPSKd)
+{
+    return sThreadNetif->GetCommissioner().AddJoiner(static_cast<const Mac::ExtAddress *>(aExtAddress), aPSKd);
+}
+
+ThreadError otCommissionerRemoveJoiner(otInstance *, const otExtAddress *aExtAddress)
+{
+    return sThreadNetif->GetCommissioner().RemoveJoiner(static_cast<const Mac::ExtAddress *>(aExtAddress));
+}
+
+ThreadError otCommissionerSetProvisioningUrl(otInstance *, const char *aProvisioningUrl)
+{
+    return sThreadNetif->GetCommissioner().SetProvisioningUrl(aProvisioningUrl);
 }
 
 ThreadError otCommissionerEnergyScan(otInstance *, uint32_t aChannelMask, uint8_t aCount, uint16_t aPeriod,

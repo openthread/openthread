@@ -144,8 +144,13 @@ class Node:
         self.send_command('thread stop')
         self.pexpect.expect('Done')
 
-    def commissioner_start(self, pskd='', provisioning_url=''):
-        cmd = 'commissioner start ' + pskd + ' ' + provisioning_url
+    def commissioner_start(self):
+        cmd = 'commissioner start'
+        self.send_command(cmd)
+        self.pexpect.expect('Done')
+
+    def commissioner_add_joiner(self, addr, psk):
+        cmd = 'commissioner joiner add ' + addr + ' ' + psk
         self.send_command(cmd)
         self.pexpect.expect('Done')
 
@@ -201,6 +206,14 @@ class Node:
             addr64 = self.pexpect.match.groups()[0].decode("utf-8")
         self.pexpect.expect('Done')
         return addr64
+
+    def get_hashmacaddr(self):
+        self.send_command('hashmacaddr')
+        i = self.pexpect.expect('([0-9a-fA-F]{16})')
+        if i == 0:
+            addr = self.pexpect.match.groups()[0].decode("utf-8")
+        self.pexpect.expect('Done')
+        return addr
 
     def set_channel(self, channel):
         cmd = 'channel %d' % channel

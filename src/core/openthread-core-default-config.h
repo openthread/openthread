@@ -176,6 +176,16 @@
 #endif  // OPENTHREAD_CONFIG_MAX_ENERGY_RESULTS
 
 /**
+ * @def OPENTHREAD_CONFIG_MAX_JOINER_ENTRIES
+ *
+ * The maximum number of Joiner entries maintained by the Commissioner.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_MAX_JOINER_ENTRIES
+#define OPENTHREAD_CONFIG_MAX_JOINER_ENTRIES                2
+#endif  // OPENTHREAD_CONFIG_MAX_JOINER_ENTRIES
+
+/**
  * @def OPENTHREAD_CONFIG_LOG_LEVEL
  *
  * The log level.
