@@ -15,54 +15,42 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\tests\unit\test_vector.c">
+    <ClCompile Include="..\..\src\ncp\flen.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\tests\unit\test_aes.cpp">
+    <ClCompile Include="..\..\src\ncp\hdlc.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\tests\unit\test_hmac_sha256.cpp">
+    <ClCompile Include="..\..\src\ncp\ncp_base.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\tests\unit\test_link_quality.cpp">
+    <ClCompile Include="..\..\src\ncp\ncp_buffer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\tests\unit\test_lowpan.cpp">
+    <ClCompile Include="..\..\src\ncp\ncp_uart.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\tests\unit\test_mac_frame.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\tests\unit\test_message.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\tests\unit\test_timer.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\tests\unit\test_toolchain.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\tests\unit\test_util.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\tests\unit\test_windows.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\tests\unit\test_platform.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\tests\unit\test_ncp_buffer.cpp">
+    <ClCompile Include="..\..\src\ncp\spinel.c">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\tests\unit\test_util.h">
+    <ClInclude Include="..\..\src\ncp\flen.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\tests\unit\test_util.hpp">
+    <ClInclude Include="..\..\src\ncp\hdlc.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\tests\unit\test_vector.h">
+    <ClInclude Include="..\..\src\ncp\ncp_base.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\ncp\ncp_buffer.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\ncp\ncp_uart.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\ncp\spinel.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
