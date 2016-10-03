@@ -39,6 +39,7 @@ libopenthread_a_SOURCES             = \
     openthread.cpp                    \
     coap/coap_header.cpp              \
     coap/coap_server.cpp              \
+    common/crc16.cpp                  \
     common/logging.cpp                \
     common/message.cpp                \
     common/tasklet.cpp                \
@@ -115,6 +116,7 @@ noinst_HEADERS                      = \
     coap/coap_header.hpp              \
     coap/coap_server.hpp              \
     common/code_utils.hpp             \
+    common/crc16.hpp                  \
     common/debug.hpp                  \
     common/encoding.hpp               \
     common/logging.hpp                \

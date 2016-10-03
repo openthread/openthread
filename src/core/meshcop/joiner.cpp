@@ -43,6 +43,7 @@
 #include <stdio.h>
 
 #include <common/code_utils.hpp>
+#include <common/crc16.hpp>
 #include <common/encoding.hpp>
 #include <common/logging.hpp>
 #include <meshcop/joiner.hpp>
@@ -102,10 +103,30 @@ void Joiner::HandleDiscoverResult(otActiveScanResult *aResult)
 {
     if (aResult != NULL)
     {
-        mJoinerUdpPort = aResult->mJoinerUdpPort;
-        mJoinerRouterPanId = aResult->mPanId;
-        mJoinerRouterChannel = aResult->mChannel;
-        memcpy(&mJoinerRouter, &aResult->mExtAddress, sizeof(mJoinerRouter));
+        SteeringDataTlv steeringData;
+        Mac::ExtAddress extAddress;
+        Crc16 ccitt(Crc16::kCcitt);
+        Crc16 ansi(Crc16::kAnsi);
+
+        mNetif.GetMac().GetHashMacAddress(&extAddress);
+
+        for (size_t i = 0; i < sizeof(extAddress); i++)
+        {
+            ccitt.Update(extAddress.m8[i]);
+            ansi.Update(extAddress.m8[i]);
+        }
+
+        steeringData.SetLength(aResult->mSteeringData.mLength);
+        memcpy(steeringData.GetValue(), aResult->mSteeringData.m8, steeringData.GetLength());
+
+        if (steeringData.GetBit(ccitt.Get() % steeringData.GetNumBits()) &&
+            steeringData.GetBit(ansi.Get() % steeringData.GetNumBits()))
+        {
+            mJoinerUdpPort = aResult->mJoinerUdpPort;
+            mJoinerRouterPanId = aResult->mPanId;
+            mJoinerRouterChannel = aResult->mChannel;
+            memcpy(&mJoinerRouter, &aResult->mExtAddress, sizeof(mJoinerRouter));
+        }
     }
     else
     {

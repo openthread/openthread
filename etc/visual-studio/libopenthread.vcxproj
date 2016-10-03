@@ -21,6 +21,7 @@
   <ItemGroup>
     <ClCompile Include="..\..\src\core\coap\coap_header.cpp" />
     <ClCompile Include="..\..\src\core\coap\coap_server.cpp" />
+    <ClCompile Include="..\..\src\core\common\crc16.cpp" />
     <ClCompile Include="..\..\src\core\common\logging.cpp" />
     <ClCompile Include="..\..\src\core\common\message.cpp" />
     <ClCompile Include="..\..\src\core\common\tasklet.cpp" />
@@ -79,6 +80,7 @@
     <ClInclude Include="..\..\src\core\coap\coap_header.hpp" />
     <ClInclude Include="..\..\src\core\coap\coap_server.hpp" />
     <ClInclude Include="..\..\src\core\common\code_utils.hpp" />
+    <ClInclude Include="..\..\src\core\common\crc16.hpp" />
     <ClInclude Include="..\..\src\core\common\debug.hpp" />
     <ClInclude Include="..\..\src\core\common\encoding.hpp" />
     <ClInclude Include="..\..\src\core\common\logging.hpp" />
