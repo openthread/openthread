@@ -65,11 +65,6 @@ extern "C" {
     {
     }
 
-    bool otAreTaskletsPending(otInstance *)
-    {
-        return false;
-    }
-
     //
     // Alarm
     //
