@@ -31,6 +31,8 @@
  *   This file implements mesh forwarding of IPv6/6LoWPAN messages.
  */
 
+#define WPP_NAME "mesh_forwarder.tmh"
+
 #include <common/code_utils.hpp>
 #include <common/debug.hpp>
 #include <common/logging.hpp>

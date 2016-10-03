@@ -31,6 +31,8 @@
  *   This file implements common methods for manipulating Thread Network Data.
  */
 
+#define WPP_NAME "network_data.tmh"
+
 #include <coap/coap_header.hpp>
 #include <common/code_utils.hpp>
 #include <common/debug.hpp>

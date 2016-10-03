@@ -31,6 +31,8 @@
  *   This file implements the message buffer pool and message buffers.
  */
 
+#define WPP_NAME "message.tmh"
+
 #include <common/code_utils.hpp>
 #include <common/debug.hpp>
 #include <common/message.hpp>
@@ -85,7 +87,11 @@ Buffer *MessagePool::NewBuffer(void)
 {
     Buffer *buffer = NULL;
 
-    VerifyOrExit(mFreeBuffers != NULL, otLogInfoMac("No available message buffer\n"));
+    if (mFreeBuffers == NULL)
+    {
+        otLogInfoMac("No available message buffer\n");
+        ExitNow();
+    }
 
     buffer = mFreeBuffers;
     mFreeBuffers = mFreeBuffers->GetNextBuffer();

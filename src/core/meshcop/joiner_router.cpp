@@ -31,6 +31,8 @@
  *   This file implements the Joiner Router role.
  */
 
+#define WPP_NAME "joiner_router.tmh"
+
 #ifdef OPENTHREAD_CONFIG_FILE
 #include OPENTHREAD_CONFIG_FILE
 #else

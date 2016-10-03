@@ -41,8 +41,26 @@
 #include <openthread-core-config.h>
 #include <platform/logging.h>
 
+#ifdef WINDOWS_LOGGING
+#ifdef WINDOWS_KERNEL
+#include <wdm.h>
+#endif
+#include <platform/logging-windows.h>
+#ifdef WPP_NAME
+#include WPP_NAME
+#endif
+#endif
+
 #ifdef __cplusplus
 extern "C" {
+#endif
+
+#ifndef WINDOWS_LOGGING
+#define otLogFuncEntry()
+#define otLogFuncEntryMsg(aFormat, ...)
+#define otLogFuncExit()
+#define otLogFuncExitMsg(aFormat, ...)
+#define otLogFuncExitErr(error)
 #endif
 
 /**
@@ -108,6 +126,8 @@ extern "C" {
 #else
 #define otLogDebg(aRegion, aFormat, ...)
 #endif
+
+#ifndef WINDOWS_LOGGING
 
 /**
  * @def otLogCritApi
@@ -567,6 +587,8 @@ extern "C" {
 #define otLogInfoMem(aFormat, ...)
 #define otLogDebgMem(aFormat, ...)
 #endif
+
+#endif // WINDOWS_LOGGING
 
 /**
  * @def otDumpCrit

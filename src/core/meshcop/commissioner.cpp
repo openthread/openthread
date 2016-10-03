@@ -31,6 +31,8 @@
  *   This file implements a Commissioner role.
  */
 
+#define WPP_NAME "commissioner.tmh"
+
 #ifdef OPENTHREAD_CONFIG_FILE
 #include OPENTHREAD_CONFIG_FILE
 #else

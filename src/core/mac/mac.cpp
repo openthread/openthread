@@ -31,6 +31,8 @@
  *   This file implements the subset of IEEE 802.15.4 primitives required for Thread.
  */
 
+#define WPP_NAME "mac.tmh"
+
 #ifdef OPENTHREAD_CONFIG_FILE
 #include OPENTHREAD_CONFIG_FILE
 #else
@@ -1075,8 +1077,11 @@ void Mac::ReceiveDoneTask(Frame *aFrame, ThreadError aError)
     }
 
     // Duplicate Address Protection
-    VerifyOrExit(memcmp(&srcaddr.mExtAddress, &mExtAddress, sizeof(srcaddr.mExtAddress)) != 0,
-                 error = kThreadError_InvalidSourceAddress; otLogDebgMac("duplicate address received\n"));
+    if (memcmp(&srcaddr.mExtAddress, &mExtAddress, sizeof(srcaddr.mExtAddress)) == 0)
+    {
+        otLogDebgMac("duplicate address received\n");
+        ExitNow(error = kThreadError_InvalidSourceAddress);
+    }
 
     // Source Whitelist Processing
     if (srcaddr.mLength != 0 && mWhitelist.IsEnabled())

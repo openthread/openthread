@@ -31,6 +31,8 @@
  *   This file implements the PAN ID Query Client.
  */
 
+#define WPP_NAME "panid_query_client.tmh"
+
 #include <coap/coap_header.hpp>
 #include <common/code_utils.hpp>
 #include <common/debug.hpp>

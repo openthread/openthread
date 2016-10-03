@@ -32,11 +32,13 @@
  *
  */
 
-#include <assert.h>
+#define WPP_NAME "meshcop_dataset_manager.tmh"
+
 #include <stdio.h>
 
 #include <openthread-types.h>
 #include <coap/coap_header.hpp>
+#include <common/debug.hpp>
 #include <common/code_utils.hpp>
 #include <common/logging.hpp>
 #include <common/timer.hpp>

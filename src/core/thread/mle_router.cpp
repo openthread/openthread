@@ -31,6 +31,8 @@
  *   This file implements MLE functionality required for the Thread Router and Leader roles.
  */
 
+#define WPP_NAME "mle_router.tmh"
+
 #include <common/code_utils.hpp>
 #include <common/debug.hpp>
 #include <common/logging.hpp>

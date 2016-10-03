@@ -31,6 +31,8 @@
  *   This file implements a MeshCoP Leader.
  */
 
+#define WPP_NAME "leader.tmh"
+
 #include <stdio.h>
 
 #include <coap/coap_header.hpp>

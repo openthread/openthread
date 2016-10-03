@@ -31,6 +31,8 @@
  *   This file implements the top-level interface to the OpenThread stack.
  */
 
+#define WPP_NAME "openthread.tmh"
+
 #ifdef OPENTHREAD_CONFIG_FILE
 #include OPENTHREAD_CONFIG_FILE
 #else

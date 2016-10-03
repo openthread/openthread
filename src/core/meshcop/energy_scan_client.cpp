@@ -31,6 +31,8 @@
  *   This file implements the Energy Scan Client.
  */
 
+#define WPP_NAME "energy_scan_client.tmh"
+
 #include <coap/coap_header.hpp>
 #include <common/code_utils.hpp>
 #include <common/debug.hpp>

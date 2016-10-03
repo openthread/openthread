@@ -31,6 +31,8 @@
  *   This file implements ICMPv6.
  */
 
+#define WPP_NAME "icmp6.tmh"
+
 #include <string.h>
 
 #include <common/code_utils.hpp>
@@ -206,7 +208,12 @@ ThreadError Icmp::HandleEchoRequest(Message &aRequestMessage, const MessageInfo 
     icmp6Header.Init();
     icmp6Header.SetType(IcmpHeader::kTypeEchoReply);
 
-    VerifyOrExit((replyMessage = mIp6.NewMessage(0)) != NULL, otLogDebgIcmp("icmp fail\n"));
+    if ((replyMessage = mIp6.NewMessage(0)) == NULL)
+    {
+        otLogDebgIcmp("icmp fail\n");
+        ExitNow();
+    }
+
     payloadLength = aRequestMessage.GetLength() - aRequestMessage.GetOffset() - IcmpHeader::GetDataOffset();
     SuccessOrExit(replyMessage->SetLength(IcmpHeader::GetDataOffset() + payloadLength));
 
