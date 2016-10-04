@@ -261,6 +261,14 @@ public:
     MeshCoP::Joiner &GetJoiner(void) { return mJoiner; }
 #endif  // OPENTHREAD_ENABLE_JOINER
 
+    /**
+     * This method returns the pointer to the parent otInstance structure.
+     *
+     * @returns The pointer to the parent otInstance structure.
+     *
+     */
+    otInstance *GetInstance();
+
 private:
     Coap::Server mCoapServer;
     AddressResolver mAddressResolver;

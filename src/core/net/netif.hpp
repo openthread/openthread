@@ -427,9 +427,6 @@ private:
     NetifUnicastAddress mExtUnicastAddresses[OPENTHREAD_CONFIG_MAX_EXT_IP_ADDRS];
     uint8_t mMaskExtUnicastAddresses; // Must have enough bits to hold OPENTHREAD_CONFIG_MAX_EXT_IP_ADDRS
 
-    static Netif *sNetifListHead;
-    static int8_t sNextInterfaceId;
-
     /**
      * This method determines if an address is one of the external unicast addresses, and if so returns
      * the index in the mExtUnicastAddresses array.

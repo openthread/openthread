@@ -37,6 +37,8 @@
 #include <stdio.h>
 
 #include <openthread-types.h>
+#include <common/code_utils.hpp>
+#include <common/debug.hpp>
 #include <coap/coap_header.hpp>
 #include <common/debug.hpp>
 #include <common/code_utils.hpp>
@@ -753,7 +755,7 @@ ThreadError ActiveDataset::ApplyConfiguration(void)
 
 PendingDataset::PendingDataset(ThreadNetif &aThreadNetif):
     DatasetManager(aThreadNetif, Tlv::kPendingTimestamp, OPENTHREAD_URI_PENDING_SET, OPENTHREAD_URI_PENDING_GET),
-    mTimer(aThreadNetif.GetIp6().mTimerScheduler, HandleTimer, this)
+    mTimer(aThreadNetif.GetIp6().mTimerScheduler, PendingDataset::HandleTimer, this)
 {
 }
 

@@ -41,6 +41,7 @@
 #include <thread/thread_netif.hpp>
 #include <thread/thread_tlvs.hpp>
 #include <thread/thread_uris.hpp>
+#include <openthread-instance.h>
 
 using Thread::Encoding::BigEndian::HostSwap16;
 
@@ -149,6 +150,11 @@ exit:
 ThreadError ThreadNetif::SendMessage(Message &message)
 {
     return mMeshForwarder.SendMessage(message);
+}
+
+otInstance *ThreadNetif::GetInstance()
+{
+    return otInstanceFromThreadNetif(this);
 }
 
 }  // namespace Thread

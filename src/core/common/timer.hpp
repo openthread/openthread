@@ -43,6 +43,8 @@
 
 namespace Thread {
 
+namespace Ip6 { class Ip6; }
+
 class Timer;
 
 /**
@@ -102,6 +104,14 @@ public:
      *
      */
     void FireTimers(void);
+
+    /**
+     * This method returns the pointer to the parent Ip6 structure.
+     *
+     * @returns The pointer to the parent Ip6 structure.
+     *
+     */
+    Ip6::Ip6 *GetIp6();
 
 private:
     void SetAlarm(void);

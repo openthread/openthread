@@ -38,6 +38,7 @@
 #include <net/ip6.hpp>
 #include <openthread.h>
 #include <openthread-diag.h>
+#include <openthread-instance.h>
 #include <stdarg.h>
 #include <platform/radio.h>
 #include <platform/misc.h>
@@ -45,7 +46,6 @@
 namespace Thread
 {
 
-extern Ip6::Ip6 *sIp6;
 static NcpBase *sNcpContext = NULL;
 
 #define NCP_PLAT_RESET_REASON        (1U<<31)
@@ -415,7 +415,7 @@ static uint8_t BorderRouterConfigToFlagByte(const otBorderRouterConfig &config)
 
 NcpBase::NcpBase(otInstance *aInstance):
     mInstance(aInstance),
-    mUpdateChangedPropsTask(sIp6->mTaskletScheduler, &NcpBase::UpdateChangedProps, this)
+    mUpdateChangedPropsTask(aInstance->mIp6.mTaskletScheduler, &NcpBase::UpdateChangedProps, this)
 {
     assert(mInstance != NULL);
     mSupportedChannelMask = kPhySupportedChannelMask;

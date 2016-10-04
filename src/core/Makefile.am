@@ -111,6 +111,7 @@ endif  # OPENTHREAD_ENABLE_DTLS
 noinst_HEADERS                      = \
     openthread-core-config.h          \
     openthread-core-default-config.h  \
+    openthread-instance.h             \
     coap/coap_header.hpp              \
     coap/coap_server.hpp              \
     common/code_utils.hpp             \

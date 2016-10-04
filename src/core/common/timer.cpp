@@ -33,18 +33,17 @@
 
 #include <common/code_utils.hpp>
 #include <common/timer.hpp>
+#include <common/debug.hpp>
+#include <common/logging.hpp>
 #include <net/ip6.hpp>
 #include <platform/alarm.h>
+#include <openthread-instance.h>
 
 namespace Thread {
-
-// FIXME: the otPlatAlarm callback should provide the context
-static TimerScheduler *sTimerScheduler;
 
 TimerScheduler::TimerScheduler(void):
     mHead(NULL)
 {
-    sTimerScheduler = this;
 }
 
 void TimerScheduler::Add(Timer &aTimer)
@@ -136,23 +135,23 @@ void TimerScheduler::SetAlarm(void)
 
     if (mHead == NULL)
     {
-        otPlatAlarmStop(NULL);
+        otPlatAlarmStop(GetIp6()->GetInstance());
     }
     else
     {
         elapsed = now - mHead->mT0;
         remaining = (mHead->mDt > elapsed) ? mHead->mDt - elapsed : 0;
 
-        otPlatAlarmStartAt(NULL, now, remaining);
+        otPlatAlarmStartAt(GetIp6()->GetInstance(), now, remaining);
     }
 }
 
-extern "C" void otPlatAlarmFired(otInstance *)
+extern "C" void otPlatAlarmFired(otInstance *aInstance)
 {
-    sTimerScheduler->FireTimers();
+    aInstance->mIp6.mTimerScheduler.FireTimers();
 }
 
-void TimerScheduler::FireTimers(void)
+void TimerScheduler::FireTimers()
 {
     uint32_t now = otPlatAlarmGetNow();
     uint32_t elapsed;
@@ -176,6 +175,11 @@ void TimerScheduler::FireTimers(void)
     {
         SetAlarm();
     }
+}
+
+Ip6::Ip6 *TimerScheduler::GetIp6()
+{
+    return Ip6::Ip6FromTimerScheduler(this);
 }
 
 bool TimerScheduler::TimerCompare(const Timer &aTimerA, const Timer &aTimerB)
