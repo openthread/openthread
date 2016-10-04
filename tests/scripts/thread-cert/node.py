@@ -425,5 +425,31 @@ class Node:
         self.send_command(cmd)
         self.pexpect.expect('Done')
 
+    def set_active_dataset(self, timestamp, panid=None, channel=None):
+        self.send_command('dataset clear')
+        self.pexpect.expect('Done')
+
+        cmd = 'dataset activetimestamp %d' % timestamp
+        self.send_command(cmd)
+        self.pexpect.expect('Done')
+
+        if panid != None:
+            cmd = 'dataset panid %d' % panid
+            self.send_command(cmd)
+            self.pexpect.expect('Done')
+
+        if channel != None:
+            cmd = 'dataset channel %d' % channel
+            self.send_command(cmd)
+            self.pexpect.expect('Done')
+
+        self.send_command('dataset commit active')
+        self.pexpect.expect('Done')
+
+    def announce_begin(self, mask, count, period, ipaddr):
+        cmd = 'commissioner announce ' + str(mask) + ' ' + str(count) + ' ' + str(period) + ' ' + ipaddr
+        self.send_command(cmd)
+        self.pexpect.expect('Done')
+
 if __name__ == '__main__':
     unittest.main()

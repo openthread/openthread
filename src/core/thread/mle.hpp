@@ -277,6 +277,7 @@ public:
         kCommandChildIdResponse      = 12,   ///< Child ID Response
         kCommandChildUpdateRequest   = 13,   ///< Child Update Request
         kCommandChildUpdateResponse  = 14,   ///< Child Update Response
+        kCommandAnnounce             = 15,   ///< Announce
         kCommandDiscoveryRequest     = 16,   ///< Discovery Request
         kCommandDiscoveryResponse    = 17,   ///< Discovery Response
     };
@@ -409,6 +410,17 @@ public:
      *
      */
     void HandleDiscoverComplete(void);
+
+    /**
+     * This method generates an MLE Announce message.
+     *
+     * @param[in]  aChannel   The channel to use when transmitting.
+     *
+     * @retval kThreadError_None    Successfully generated an MLE Announce message.
+     * @retval kThreadError_NoBufs  Insufficient buffers to generate the MLE Announce message.
+     *
+     */
+    ThreadError SendAnnounce(uint8_t aChannel);
 
     /**
      * This method causes the Thread interface to detach from the Thread network.
@@ -1002,7 +1014,7 @@ protected:
     /**
      * This method generates an MLE Child Update Request message.
      *
-     * @retval kThreadError_None    Successfully generated an MLE Child Update Request message..
+     * @retval kThreadError_None    Successfully generated an MLE Child Update Request message.
      * @retval kThreadError_NoBufs  Insufficient buffers to generate the MLE Child Update Request message.
      *
      */
@@ -1121,6 +1133,7 @@ private:
     ThreadError HandleDataResponse(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
     ThreadError HandleParentResponse(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo,
                                      uint32_t aKeySequence);
+    ThreadError HandleAnnounce(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
     ThreadError HandleDiscoveryRequest(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
     ThreadError HandleDiscoveryResponse(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
@@ -1158,6 +1171,9 @@ private:
     DiscoverHandler mDiscoverHandler;
     void *mDiscoverContext;
     bool mIsDiscoverInProgress;
+
+    uint8_t mPreviousChannel;
+    uint16_t mPreviousPanId;
 
     Ip6::NetifUnicastAddress mLinkLocal16;
     Ip6::NetifUnicastAddress mLinkLocal64;

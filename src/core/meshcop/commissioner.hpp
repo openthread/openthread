@@ -39,6 +39,7 @@
 #include <coap/coap_server.hpp>
 #include <common/timer.hpp>
 #include <mac/mac_frame.hpp>
+#include <meshcop/announce_begin_client.hpp>
 #include <meshcop/dtls.hpp>
 #include <meshcop/energy_scan_client.hpp>
 #include <meshcop/panid_query_client.hpp>
@@ -120,9 +121,6 @@ public:
      */
     uint16_t GetSessionId(void) const;
 
-    EnergyScanClient mEnergyScan;
-    PanIdQueryClient mPanIdQuery;
-
     /**
      * This method sends MGMT_COMMISSIONER_GET.
      *
@@ -148,6 +146,10 @@ public:
      */
     ThreadError SendMgmtCommissionerSetRequest(const otCommissioningDataset &aDataset,
                                                const uint8_t *aTlvs, uint8_t aLength);
+
+    AnnounceBeginClient mAnnounceBegin;
+    EnergyScanClient mEnergyScan;
+    PanIdQueryClient mPanIdQuery;
 
 private:
     static void HandleTimer(void *aContext);

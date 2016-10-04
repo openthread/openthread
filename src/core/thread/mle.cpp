@@ -161,6 +161,8 @@ Mle::Mle(ThreadNetif &aThreadNetif) :
 
     mRouterSelectionJitterTimeout = 0;
     mRouterSelectionJitter = kRouterSelectionJitter;
+
+    mPreviousPanId = Mac::kPanIdBroadcast;
 }
 
 ThreadError Mle::Enable(void)
@@ -245,7 +247,7 @@ ThreadError Mle::Discover(uint32_t aScanChannels, uint16_t aScanDuration, uint16
 
     VerifyOrExit((message = mSocket.NewMessage(0)) != NULL, ;);
     message->SetLinkSecurityEnabled(false);
-    message->SetMleDiscoverRequest(true);
+    message->SetSubType(Message::kSubTypeMleDiscoverRequest);
     message->SetPanId(aPanId);
     SuccessOrExit(error = AppendHeader(*message, Header::kCommandDiscoveryRequest));
 
@@ -383,6 +385,12 @@ ThreadError Mle::SetStateChild(uint16_t aRloc16)
 
     mNetif.GetNetworkDataLocal().ClearResubmitDelayTimer();
     mNetif.GetIp6().SetForwardingEnabled(false);
+
+    if (mPreviousPanId != Mac::kPanIdBroadcast)
+    {
+        mPreviousPanId = Mac::kPanIdBroadcast;
+        mNetif.GetAnnounceBeginServer().SendAnnounce(1 << mPreviousChannel);
+    }
 
     otLogInfoMle("Mode -> Child\n");
     return kThreadError_None;
@@ -1064,7 +1072,14 @@ void Mle::HandleParentRequestTimer(void)
             switch (mParentRequestMode)
             {
             case kMleAttachAnyPartition:
-                if (mMleRouter.BecomeLeader() != kThreadError_None)
+                if (mPreviousPanId != Mac::kPanIdBroadcast)
+                {
+                    mMac.SetChannel(mPreviousChannel);
+                    mMac.SetPanId(mPreviousPanId);
+                    mPreviousPanId = Mac::kPanIdBroadcast;
+                    BecomeDetached();
+                }
+                else if (mMleRouter.BecomeLeader() != kThreadError_None)
                 {
                     mParentRequestState = kParentIdle;
                     BecomeDetached();
@@ -1326,6 +1341,48 @@ exit:
     return error;
 }
 
+ThreadError Mle::SendAnnounce(uint8_t aChannel)
+{
+    ThreadError error = kThreadError_None;
+    ChannelTlv channel;
+    PanIdTlv panid;
+    Ip6::Address destination;
+    Message *message;
+    (void)aChannel;
+
+    VerifyOrExit((message = mSocket.NewMessage(0)) != NULL, ;);
+    message->SetSubType(Message::kSubTypeMleAnnounce);
+    message->SetChannel(aChannel);
+    SuccessOrExit(error = AppendHeader(*message, Header::kCommandAnnounce));
+
+    channel.Init();
+    channel.SetChannelPage(0);
+    channel.SetChannel(mMac.GetChannel());
+    SuccessOrExit(error = message->Append(&channel, sizeof(channel)));
+
+    SuccessOrExit(error = AppendActiveTimestamp(*message));
+
+    panid.Init();
+    panid.SetPanId(mMac.GetPanId());
+    SuccessOrExit(error = message->Append(&panid, sizeof(panid)));
+
+    memset(&destination, 0, sizeof(destination));
+    destination.mFields.m16[0] = HostSwap16(0xff02);
+    destination.mFields.m16[7] = HostSwap16(0x0001);
+    SuccessOrExit(error = SendMessage(*message, destination));
+
+    otLogInfoMle("sent announce on channel %d\n", aChannel);
+
+exit:
+
+    if (error != kThreadError_None && message != NULL)
+    {
+        message->Free();
+    }
+
+    return error;
+}
+
 ThreadError Mle::SendMessage(Message &aMessage, const Ip6::Address &aDestination)
 {
     ThreadError error = kThreadError_None;
@@ -1554,7 +1611,8 @@ void Mle::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageIn
               command == Header::kCommandParentRequest ||
               command == Header::kCommandParentResponse ||
               command == Header::kCommandChildIdRequest ||
-              command == Header::kCommandChildUpdateRequest))
+              command == Header::kCommandChildUpdateRequest ||
+              command == Header::kCommandAnnounce))
         {
             otLogDebgMle("mle sequence unknown! %d\n", command);
             ExitNow();
@@ -1613,6 +1671,10 @@ void Mle::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageIn
 
     case Header::kCommandChildUpdateResponse:
         HandleChildUpdateResponse(aMessage, aMessageInfo);
+        break;
+
+    case Header::kCommandAnnounce:
+        HandleAnnounce(aMessage, aMessageInfo);
         break;
     }
 
@@ -2211,6 +2273,41 @@ exit:
     return error;
 }
 
+ThreadError Mle::HandleAnnounce(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
+{
+    ThreadError error = kThreadError_None;
+    ChannelTlv channel;
+    ActiveTimestampTlv timestamp;
+    const MeshCoP::Timestamp *localTimestamp;
+    PanIdTlv panid;
+
+    otLogInfoMle("Received announce\n");
+
+    SuccessOrExit(Tlv::GetTlv(aMessage, Tlv::kChannel, sizeof(channel), channel));
+    VerifyOrExit(channel.IsValid(),);
+
+    SuccessOrExit(Tlv::GetTlv(aMessage, Tlv::kActiveTimestamp, sizeof(timestamp), timestamp));
+    VerifyOrExit(timestamp.IsValid(),);
+
+    SuccessOrExit(Tlv::GetTlv(aMessage, Tlv::kPanId, sizeof(panid), panid));
+    VerifyOrExit(panid.IsValid(),);
+
+    localTimestamp = mNetif.GetActiveDataset().GetNetwork().GetTimestamp();
+
+    VerifyOrExit(localTimestamp == NULL || localTimestamp->Compare(timestamp) > 0,);
+
+    Stop();
+    mPreviousChannel = mMac.GetChannel();
+    mPreviousPanId = mMac.GetPanId();
+    mMac.SetChannel(static_cast<uint8_t>(channel.GetChannel()));
+    mMac.SetPanId(panid.GetPanId());
+    Start();
+
+exit:
+    (void)aMessageInfo;
+    return error;
+}
+
 ThreadError Mle::HandleDiscoveryRequest(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
     ThreadError error = kThreadError_None;
@@ -2291,7 +2388,7 @@ ThreadError Mle::SendDiscoveryResponse(const Ip6::Address &aDestination, uint16_
 
     VerifyOrExit((message = mSocket.NewMessage(0)) != NULL, ;);
     message->SetLinkSecurityEnabled(false);
-    message->SetMleDiscoverResponse(true);
+    message->SetSubType(Message::kSubTypeMleDiscoverResponse);
     message->SetPanId(aPanId);
     SuccessOrExit(error = AppendHeader(*message, Header::kCommandDiscoveryResponse));
 
