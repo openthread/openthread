@@ -1853,7 +1853,7 @@ ThreadError Mle::HandleDataResponse(const Message &aMessage, const Ip6::MessageI
     }
     else
     {
-        mNetif.GetActiveDataset().GetNetwork().Clear();
+        mNetif.GetActiveDataset().Clear();
     }
 
     // Pending Dataset
@@ -1864,7 +1864,7 @@ ThreadError Mle::HandleDataResponse(const Message &aMessage, const Ip6::MessageI
     }
     else
     {
-        mNetif.GetPendingDataset().GetNetwork().Clear();
+        mNetif.GetPendingDataset().Clear();
     }
 
     mRetrieveNewNetworkData = false;
@@ -2099,6 +2099,10 @@ ThreadError Mle::HandleChildIdResponse(const Message &aMessage, const Ip6::Messa
             mNetif.GetActiveDataset().Set(activeTimestamp, aMessage, offset + sizeof(tlv), tlv.GetLength());
         }
     }
+    else
+    {
+        mNetif.GetActiveDataset().Clear();
+    }
 
     // Pending Timestamp
     if (Tlv::GetTlv(aMessage, Tlv::kPendingTimestamp, sizeof(pendingTimestamp), pendingTimestamp) == kThreadError_None)
@@ -2111,6 +2115,10 @@ ThreadError Mle::HandleChildIdResponse(const Message &aMessage, const Ip6::Messa
             aMessage.Read(offset, sizeof(tlv), &tlv);
             mNetif.GetPendingDataset().Set(pendingTimestamp, aMessage, offset + sizeof(tlv), tlv.GetLength());
         }
+    }
+    else
+    {
+        mNetif.GetPendingDataset().Clear();
     }
 
     // Parent Attach Success

@@ -1011,7 +1011,7 @@ void Interpreter::ProcessPanId(int argc, char *argv[])
 
     if (argc == 0)
     {
-        sServer->OutputFormat("%d\r\n", otGetPanId(mInstance));
+        sServer->OutputFormat("%04x\r\n", otGetPanId(mInstance));
     }
     else
     {

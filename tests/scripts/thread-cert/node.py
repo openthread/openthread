@@ -215,6 +215,14 @@ class Node:
         self.pexpect.expect('Done')
         return addr
 
+    def get_channel(self):
+        self.send_command('channel')
+        i = self.pexpect.expect('(\d+)\r\n')
+        if i == 0:
+            channel = int(self.pexpect.match.groups()[0])
+        self.pexpect.expect('Done')
+        return channel
+
     def set_channel(self, channel):
         cmd = 'channel %d' % channel
         self.send_command(cmd)
@@ -258,13 +266,27 @@ class Node:
 
     def get_panid(self):
         self.send_command('panid')
-        i = self.pexpect.expect('([0-9a-fA-F]{16})')
+        i = self.pexpect.expect('([0-9a-fA-F]{4})')
         if i == 0:
-            panid = self.pexpect.match.groups()[0]
+            panid = int(self.pexpect.match.groups()[0], 16)
         self.pexpect.expect('Done')
+        return panid
 
     def set_panid(self, panid):
         cmd = 'panid %d' % panid
+        self.send_command(cmd)
+        self.pexpect.expect('Done')
+
+    def get_partition_id(self):
+        self.send_command('leaderpartitionid')
+        i = self.pexpect.expect('(\d+)\r\n')
+        if i == 0:
+            weight = self.pexpect.match.groups()[0]
+        self.pexpect.expect('Done')
+        return weight
+
+    def set_partition_id(self, partition_id):
+        cmd = 'leaderpartitionid %d' % partition_id
         self.send_command(cmd)
         self.pexpect.expect('Done')
 
@@ -446,8 +468,55 @@ class Node:
         self.send_command('dataset commit active')
         self.pexpect.expect('Done')
 
+    def set_pending_dataset(self, pendingtimestamp, activetimestamp, panid=None, channel=None):
+        self.send_command('dataset clear')
+        self.pexpect.expect('Done')
+
+        cmd = 'dataset pendingtimestamp %d' % pendingtimestamp
+        self.send_command(cmd)
+        self.pexpect.expect('Done')
+
+        cmd = 'dataset activetimestamp %d' % activetimestamp
+        self.send_command(cmd)
+        self.pexpect.expect('Done')
+
+        if panid != None:
+            cmd = 'dataset panid %d' % panid
+            self.send_command(cmd)
+            self.pexpect.expect('Done')
+
+        if channel != None:
+            cmd = 'dataset channel %d' % channel
+            self.send_command(cmd)
+            self.pexpect.expect('Done')
+
+        self.send_command('dataset commit pending')
+        self.pexpect.expect('Done')
+
     def announce_begin(self, mask, count, period, ipaddr):
         cmd = 'commissioner announce ' + str(mask) + ' ' + str(count) + ' ' + str(period) + ' ' + ipaddr
+        self.send_command(cmd)
+        self.pexpect.expect('Done')
+
+    def send_mgmt_pending_set(self, pending_timestamp=None, active_timestamp=None, delay_timer=None, channel=None,
+                              panid=None):
+        cmd = 'dataset mgmtsetcommand pending '
+
+        if pending_timestamp != None:
+            cmd += 'pendingtimestamp %d ' % pending_timestamp
+
+        if active_timestamp != None:
+            cmd += 'activetimestamp %d ' % active_timestamp
+
+        if delay_timer != None:
+            cmd += 'delaytimer %d ' % delay_timer
+
+        if channel != None:
+            cmd += 'channel %d ' % channel
+
+        if panid != None:
+            cmd += 'panid %d ' % panid
+
         self.send_command(cmd)
         self.pexpect.expect('Done')
 
