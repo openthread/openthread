@@ -487,7 +487,7 @@ ThreadError Mle::SetMeshLocalPrefix(const uint8_t *aMeshLocalPrefix)
     // Add the address back into the table.
     mNetif.AddUnicastAddress(mMeshLocal64);
 
-    if (mDeviceState != kDeviceStateDetached)
+    if (mDeviceState >= kDeviceStateChild)
     {
         mNetif.AddUnicastAddress(mMeshLocal16);
     }
