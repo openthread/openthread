@@ -116,6 +116,7 @@ const NcpBase::GetPropertyHandlerEntry NcpBase::mGetPropertyHandlerTable[] =
     { SPINEL_PROP_THREAD_LEADER_ADDR, &NcpBase::GetPropertyHandler_THREAD_LEADER_ADDR },
     { SPINEL_PROP_THREAD_PARENT, &NcpBase::GetPropertyHandler_THREAD_PARENT },
     { SPINEL_PROP_THREAD_CHILD_TABLE, &NcpBase::GetPropertyHandler_THREAD_CHILD_TABLE },
+    { SPINEL_PROP_THREAD_NEIGHBOR_TABLE, &NcpBase::GetPropertyHandler_THREAD_NEIGHBOR_TABLE },
     { SPINEL_PROP_THREAD_LEADER_RID, &NcpBase::GetPropertyHandler_THREAD_LEADER_RID },
     { SPINEL_PROP_THREAD_LEADER_WEIGHT, &NcpBase::GetPropertyHandler_THREAD_LEADER_WEIGHT },
     { SPINEL_PROP_THREAD_LOCAL_LEADER_WEIGHT, &NcpBase::GetPropertyHandler_THREAD_LOCAL_LEADER_WEIGHT },
@@ -2010,6 +2011,71 @@ ThreadError NcpBase::GetPropertyHandler_THREAD_CHILD_TABLE(uint8_t header, spine
         }
 
         index++;
+    }
+
+    SuccessOrExit(errorCode = OutboundFrameSend());
+
+exit:
+    return errorCode;
+}
+
+ThreadError NcpBase::GetPropertyHandler_THREAD_NEIGHBOR_TABLE(uint8_t header, spinel_prop_key_t key)
+{
+    ThreadError errorCode = kThreadError_None;
+    otNeighborInfoIterator iter = OT_NEIGHBOR_INFO_ITERATOR_INIT;
+    otNeighborInfo neighInfo;
+    uint8_t modeFlags;
+
+    SuccessOrExit(errorCode = OutboundFrameBegin());
+    SuccessOrExit(errorCode = OutboundFrameFeedPacked("Cii", header, SPINEL_CMD_PROP_VALUE_IS, key));
+
+    while (otGetNextNeighborInfo(mInstance, &iter, &neighInfo) == kThreadError_None)
+    {
+        modeFlags = 0;
+
+        if (neighInfo.mRxOnWhenIdle)
+        {
+            modeFlags |= kThreadMode_RxOnWhenIdle;
+        }
+
+        if (neighInfo.mSecureDataRequest)
+        {
+            modeFlags |= kThreadMode_SecureDataRequest;
+        }
+
+        if (neighInfo.mFullFunction)
+        {
+            modeFlags |= kThreadMode_FullFunctionDevice;
+        }
+
+        if (neighInfo.mFullNetworkData)
+        {
+            modeFlags |= kThreadMode_FullNetworkData;
+        }
+
+        SuccessOrExit(
+            errorCode = OutboundFrameFeedPacked(
+                "T("
+                    SPINEL_DATATYPE_EUI64_S         // EUI64 Address
+                    SPINEL_DATATYPE_UINT16_S        // Rloc16
+                    SPINEL_DATATYPE_UINT32_S        // Age
+                    SPINEL_DATATYPE_UINT8_S         // Link Quality In
+                    SPINEL_DATATYPE_INT8_S          // Average RSS
+                    SPINEL_DATATYPE_UINT8_S         // Mode (flags)
+                    SPINEL_DATATYPE_BOOL_S          // Is Child
+                    SPINEL_DATATYPE_UINT32_S        // Link Frame Counter
+                    SPINEL_DATATYPE_UINT32_S        // MLE Frame Counter
+                ")",
+                neighInfo.mExtAddress.m8,
+                neighInfo.mRloc16,
+                neighInfo.mAge,
+                neighInfo.mLinkQualityIn,
+                neighInfo.mAverageRssi,
+                modeFlags,
+                neighInfo.mIsChild,
+                neighInfo.mLinkFrameCounter,
+                neighInfo.mMleFrameCounter
+        ));
     }
 
     SuccessOrExit(errorCode = OutboundFrameSend());
