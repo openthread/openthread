@@ -64,6 +64,12 @@ namespace Thread
 // test_message.cpp
 void TestMessage();
 
+// test_ncp_buffer.cpp
+namespace Thread
+{
+    void TestNcpFrameBuffer(void);
+}
+
 // test_timer.cpp
 int TestOneTimer();
 int TestTenTimers();
@@ -116,6 +122,9 @@ namespace Thread
         // test_message.cpp
         TEST_METHOD(TestOneTimer) { ::TestOneTimer(); }
         TEST_METHOD(TestTenTimers) { ::TestTenTimers(); }
+
+        // test_ncp_buffer.cpp
+        TEST_METHOD(TestNcpFrameBuffer) { Thread::TestNcpFrameBuffer(); }
 
         // test_toolchain.cpp
         TEST_METHOD(test_packed1) { ::test_packed1(); }

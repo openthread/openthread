@@ -340,7 +340,7 @@ ThreadError JoinerRouter::SendJoinerEntrust(const Ip6::MessageInfo &aMessageInfo
     Tlv *tlv;
 
     VerifyOrExit((message = mSocket.NewMessage(0)) != NULL, error = kThreadError_NoBufs);
-    message->SetJoinerEntrust(true);
+    message->SetSubType(Message::kSubTypeJoinerEntrust);
 
     header.Init();
     header.SetType(Coap::Header::kTypeConfirmable);

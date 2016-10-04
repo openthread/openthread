@@ -80,6 +80,7 @@ ThreadNetif::ThreadNetif(Ip6::Ip6 &aIp6):
 #endif  // OPENTHREAD_ENABLE_JOINER
     mJoinerRouter(*this),
     mLeader(*this),
+    mAnnounceBegin(*this),
     mPanIdQuery(*this),
     mEnergyScan(*this)
 {

@@ -1425,6 +1425,13 @@ ThreadError otCommissionerSetProvisioningUrl(otInstance *aInstance, const char *
     return aInstance->mThreadNetif.GetCommissioner().SetProvisioningUrl(aProvisioningUrl);
 }
 
+ThreadError otCommissionerAnnounceBegin(otInstance *aInstance, uint32_t aChannelMask, uint8_t aCount, uint16_t aPeriod,
+                                        const otIp6Address *aAddress)
+{
+    return aInstance->mThreadNetif.GetCommissioner().mAnnounceBegin.SendRequest(aChannelMask, aCount, aPeriod,
+                                                                                *static_cast<const Ip6::Address *>(aAddress));
+}
+
 ThreadError otCommissionerEnergyScan(otInstance *aInstance, uint32_t aChannelMask, uint8_t aCount, uint16_t aPeriod,
                                      uint16_t aScanDuration, const otIp6Address *aAddress,
                                      otCommissionerEnergyReportCallback aCallback, void *aContext)

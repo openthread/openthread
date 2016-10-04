@@ -2028,6 +2028,33 @@ void Interpreter::ProcessCommissioner(int argc, char *argv[])
     {
         SuccessOrExit(error = otCommissionerSetProvisioningUrl(mInstance, (argc > 1) ? argv[1] : NULL));
     }
+    else if (strcmp(argv[0], "announce") == 0)
+    {
+        long mask;
+        long count;
+        long period;
+        otIp6Address address;
+
+        VerifyOrExit(argc > 4, error = kThreadError_Parse);
+
+        // mask
+        SuccessOrExit(error = ParseLong(argv[1], mask));
+
+        // count
+        SuccessOrExit(error = ParseLong(argv[2], count));
+
+        // period
+        SuccessOrExit(error = ParseLong(argv[3], period));
+
+        // destination
+        SuccessOrExit(error = otIp6AddressFromString(argv[4], &address));
+
+        SuccessOrExit(error = otCommissionerAnnounceBegin(mInstance,
+                                                          static_cast<uint32_t>(mask),
+                                                          static_cast<uint8_t>(count),
+                                                          static_cast<uint16_t>(period),
+                                                          &address));
+    }
     else if (strcmp(argv[0], "energy") == 0)
     {
         long mask;

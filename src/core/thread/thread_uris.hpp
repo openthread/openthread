@@ -131,6 +131,14 @@ namespace Thread {
 #define OPENTHREAD_URI_SERVER_DATA      "a/sd"
 
 /**
+ * @def OPENTHREAD_URI_ANNOUNCE_BEGIN
+ *
+ * The URI Path for Announce Begin.
+ *
+ */
+#define OPENTHREAD_URI_ANNOUNCE_BEGIN   "c/ab"
+
+/**
  * @def OPENTHREAD_URI_RELAY_RX
  *
  * The URI Path for Relay RX.

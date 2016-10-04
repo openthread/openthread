@@ -1965,7 +1965,7 @@ class ARM(IThci):
 
             if xPanId != None:
                 cmd += ' panid '
-                cmd + str(xPanId)
+                cmd += str(xPanId)
 
             if xDelayTimer != None:
                 cmd += ' delay '
