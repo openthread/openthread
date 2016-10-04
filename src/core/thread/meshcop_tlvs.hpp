@@ -1529,8 +1529,8 @@ public:
         ThreadError error = kThreadError_None;
         size_t len = aProvisioningUrl ? strnlen(aProvisioningUrl, kMaxLength + 1) : 0;
 
-        SetLength(static_cast<uint8_t>(len));
         VerifyOrExit(len <= kMaxLength, error = kThreadError_InvalidArgs);
+        SetLength(static_cast<uint8_t>(len));
 
         if (len > 0) {
             memcpy(mProvisioningUrl, aProvisioningUrl, len);
