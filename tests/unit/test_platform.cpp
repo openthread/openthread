@@ -209,6 +209,11 @@ extern "C" {
         (void)aInstance;
     }
 
+    ThreadError otPlatRadioEnergyScan(otInstance *, uint8_t, uint16_t)
+    {
+        return kThreadError_NotImplemented;
+    }
+
     //
     // Random
     //

@@ -214,10 +214,76 @@ bool Mac::IsEnergyScanInProgress(void)
 void Mac::StartEnergyScan(void)
 {
     mState = kStateEnergyScan;
-    mEnergyScanCurrentMaxRssi = kInvalidRssiValue;
-    mMacTimer.Start(mScanDuration);
-    mEnergyScanSampleRssiTask.Post();
-    NextOperation();
+
+    if (!(otPlatRadioGetCaps(NULL) & kRadioCapsEnergyScan))
+    {
+        mEnergyScanCurrentMaxRssi = kInvalidRssiValue;
+        mMacTimer.Start(mScanDuration);
+        mEnergyScanSampleRssiTask.Post();
+        NextOperation();
+    }
+    else
+    {
+        ThreadError error = otPlatRadioEnergyScan(NULL, mScanChannel, mScanDuration);
+
+        if (error != kThreadError_None)
+        {
+            // Cancel scan
+            mEnergyScanHandler(mScanContext, NULL);
+            ScheduleNextTransmission();
+        }
+    }
+}
+
+extern "C" void otPlatRadioEnergyScanDone(otInstance *, int8_t aEnergyScanMaxRssi)
+{
+    sMac->EnergyScanDone(aEnergyScanMaxRssi);
+}
+
+void Mac::EnergyScanDone(int8_t aEnergyScanMaxRssi)
+{
+    if (aEnergyScanMaxRssi != kInvalidRssiValue)
+    {
+        otEnergyScanResult result;
+
+        result.mChannel = mScanChannel;
+        result.mMaxRssi = aEnergyScanMaxRssi;
+        mEnergyScanHandler(mScanContext, &result);
+    }
+
+    do
+    {
+        mScanChannels >>= 1;
+        mScanChannel++;
+
+        if (mScanChannels == 0 || mScanChannel > kPhyMaxChannel)
+        {
+            mEnergyScanHandler(mScanContext, NULL);
+            ScheduleNextTransmission();
+            ExitNow();
+        }
+    }
+    while ((mScanChannels & 1) == 0);
+
+    if (!(otPlatRadioGetCaps(NULL) & kRadioCapsEnergyScan))
+    {
+        mEnergyScanCurrentMaxRssi = kInvalidRssiValue;
+        mMacTimer.Start(mScanDuration);
+    }
+    else
+    {
+        ThreadError error = otPlatRadioEnergyScan(NULL, mScanChannel, mScanDuration);
+
+        if (error != kThreadError_None)
+        {
+            // Cancel scan
+            mEnergyScanHandler(mScanContext, NULL);
+            ScheduleNextTransmission();
+        }
+    }
+
+exit:
+    return;
 }
 
 void Mac::HandleEnergyScanSampleRssi(void *aContext)
@@ -751,31 +817,7 @@ void Mac::HandleMacTimer(void)
         break;
 
     case kStateEnergyScan:
-        if (mEnergyScanCurrentMaxRssi != kInvalidRssiValue)
-        {
-            otEnergyScanResult result;
-
-            result.mChannel = mScanChannel;
-            result.mMaxRssi = mEnergyScanCurrentMaxRssi;
-            mEnergyScanHandler(mScanContext, &result);
-        }
-
-        do
-        {
-            mScanChannels >>= 1;
-            mScanChannel++;
-
-            if (mScanChannels == 0 || mScanChannel > kPhyMaxChannel)
-            {
-                mEnergyScanHandler(mScanContext, NULL);
-                ScheduleNextTransmission();
-                ExitNow();
-            }
-        }
-        while ((mScanChannels & 1) == 0);
-
-        mEnergyScanCurrentMaxRssi = kInvalidRssiValue;
-        mMacTimer.Start(mScanDuration);
+        EnergyScanDone(mEnergyScanCurrentMaxRssi);
         break;
 
     case kStateTransmitData:

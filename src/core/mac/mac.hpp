@@ -236,6 +236,14 @@ public:
     ThreadError EnergyScan(uint32_t aScanChannels, uint16_t aScanDuration, EnergyScanHandler aHandler, void *aContext);
 
     /**
+     * This function indicates the energy scan for the current channel is complete.
+     *
+     * @param[in]  aEnergyScanMaxRssi  The maximum RSSI encountered on the scanned channel.
+     *
+     */
+    void EnergyScanDone(int8_t aEnergyScanMaxRssi);
+
+    /**
      * This method indicates whether or not rx-on-when-idle is enabled.
      *
      * @retval TRUE   If rx-on-when-idle is enabled.

@@ -89,6 +89,7 @@ typedef enum otRadioCaps
 {
     kRadioCapsNone          = 0,  ///< None
     kRadioCapsAckTimeout    = 1,  ///< Radio supports AckTime event
+    kRadioCapsEnergyScan    = 2,  ///< Radio supports Enegery Scans
 } otRadioCaps;
 
 /**
@@ -435,6 +436,27 @@ extern void otPlatDiagRadioTransmitDone(otInstance *aInstance, bool aFramePendin
  *
  */
 extern void otPlatDiagRadioReceiveDone(otInstance *aInstance, RadioPacket *aPacket, ThreadError aError);
+
+/**
+ * This method begins the energy scan sequence on the radio.
+ *
+ * @param[in] aInstance      The OpenThread instance structure.
+ * @param[in] aScanChannel   The channel to perform the energy scan on.
+ * @param[in] aScanDuration  The duration, in milliseconds, for the channel to be scanned.
+ *
+ * @retval ::kThreadError_None            Successfully started scanning the channel.
+ * @retval ::kThreadError_NotImplemented  The radio doesn't support energy scanning.
+ */
+ThreadError otPlatRadioEnergyScan(otInstance *aInstance, uint8_t aScanChannel, uint16_t aScanDuration);
+
+/**
+ * The radio driver calls this method to notify OpenThread that the energy scan is complete.
+ *
+ * @param[in]  aInstance           The OpenThread instance structure.
+ * @param[in]  aEnergyScanMaxRssi  The maximum RSSI encountered on the scanned channel.
+ *
+ */
+extern void otPlatRadioEnergyScanDone(otInstance *aInstance, int8_t aEnergyScanMaxRssi);
 
 /**
  * @}
