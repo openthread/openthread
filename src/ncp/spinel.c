@@ -1177,6 +1177,10 @@ spinel_prop_key_to_cstr(spinel_prop_key_t prop_key)
         ret = "SPINEL_PROP_THREAD_PREFERRED_ROUTER_ID";
         break;
 
+    case SPINEL_PROP_THREAD_NEIGHBOR_TABLE:
+        ret = "SPINEL_PROP_THREAD_NEIGHBOR_TABLE";
+        break;
+
     default:
         break;
     }

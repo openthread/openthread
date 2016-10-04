@@ -535,6 +535,12 @@ typedef enum
     SPINEL_PROP_THREAD_PREFERRED_ROUTER_ID
                                         = SPINEL_PROP_THREAD_EXT__BEGIN + 10,
 
+    /// Thread Neighbor Table
+    /** Format: `A(T(ESLCcCbLL))`
+     *  eui64, rloc16, age, inLqi ,aveRSS, mode, isChild. linkFrameCounter, mleCounter
+     */
+    SPINEL_PROP_THREAD_NEIGHBOR_TABLE  = SPINEL_PROP_THREAD_EXT__BEGIN + 11,
+
     SPINEL_PROP_THREAD_EXT__END        = 0x1600,
 
     SPINEL_PROP_IPV6__BEGIN          = 0x60,
