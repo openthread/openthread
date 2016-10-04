@@ -41,7 +41,7 @@
 #include <thread/thread_netif.hpp>
 #include <thread/thread_tlvs.hpp>
 #include <thread/thread_uris.hpp>
-#include <openthreadinstance.h>
+#include <openthread-instance.h>
 
 using Thread::Encoding::BigEndian::HostSwap16;
 

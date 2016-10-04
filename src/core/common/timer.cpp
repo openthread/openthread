@@ -37,7 +37,7 @@
 #include <common/logging.hpp>
 #include <net/ip6.hpp>
 #include <platform/alarm.h>
-#include <openthreadinstance.h>
+#include <openthread-instance.h>
 
 namespace Thread {
 

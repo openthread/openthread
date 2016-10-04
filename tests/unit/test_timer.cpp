@@ -32,7 +32,7 @@
 #include <common/timer.hpp>
 #include <platform/alarm.h>
 #include <string.h>
-#include <openthreadinstance.h>
+#include <openthread-instance.h>
 
 enum
 {

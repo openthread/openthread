@@ -46,7 +46,7 @@
 #include <platform/logging.h>
 #include <platform/uart.h>
 #include <core/openthread-core-config.h>
-#include <openthreadinstance.h>
+#include <openthread-instance.h>
 
 namespace Thread {
 

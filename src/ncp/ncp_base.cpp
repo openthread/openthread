@@ -38,7 +38,7 @@
 #include <net/ip6.hpp>
 #include <openthread.h>
 #include <openthread-diag.h>
-#include <openthreadinstance.h>
+#include <openthread-instance.h>
 #include <stdarg.h>
 #include <platform/radio.h>
 #include <platform/misc.h>

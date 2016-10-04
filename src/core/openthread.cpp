@@ -56,7 +56,7 @@
 #include <thread/thread_netif.hpp>
 #include <thread/thread_uris.hpp>
 #include <utils/global_address.hpp>
-#include <openthreadinstance.h>
+#include <openthread-instance.h>
 
 #ifndef OPENTHREAD_MULTIPLE_INSTANCE
 static otDEFINE_ALIGNED_VAR(sInstanceRaw, sizeof(otInstance), uint64_t);

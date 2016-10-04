@@ -42,7 +42,7 @@
 #include <string.h>
 
 #include <openthread.h>
-#include <openthreadinstance.h>
+#include <openthread-instance.h>
 #include <openthread-diag.h>
 #include <commissioning/commissioner.h>
 #include <commissioning/joiner.h>

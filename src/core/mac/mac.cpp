@@ -51,7 +51,7 @@
 #include <platform/random.h>
 #include <thread/mle_router.hpp>
 #include <thread/thread_netif.hpp>
-#include <openthreadinstance.h>
+#include <openthread-instance.h>
 
 namespace Thread {
 namespace Mac {

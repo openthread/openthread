@@ -37,7 +37,7 @@
 #include <ncp/ncp_spi.hpp>
 #include <platform/spi-slave.h>
 #include <core/openthread-core-config.h>
-#include <openthreadinstance.h>
+#include <openthread-instance.h>
 
 #define SPI_RESET_FLAG          0x80
 #define SPI_CRC_FLAG            0x40

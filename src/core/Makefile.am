@@ -109,9 +109,9 @@ libopenthread_a_SOURCES            += \
 endif  # OPENTHREAD_ENABLE_DTLS
 
 noinst_HEADERS                      = \
-    openthreadinstance.h              \
     openthread-core-config.h          \
     openthread-core-default-config.h  \
+    openthread-instance.h             \
     coap/coap_header.hpp              \
     coap/coap_server.hpp              \
     common/code_utils.hpp             \

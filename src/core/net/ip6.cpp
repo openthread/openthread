@@ -43,7 +43,7 @@
 #include <net/netif.hpp>
 #include <net/udp6.hpp>
 #include <thread/mle.hpp>
-#include <openthreadinstance.h>
+#include <openthread-instance.h>
 
 namespace Thread {
 namespace Ip6 {
