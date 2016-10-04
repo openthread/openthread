@@ -32,6 +32,7 @@
  */
 
 #include <common/code_utils.hpp>
+#include <common/timer.hpp>
 #include <crypto/hmac_sha256.hpp>
 #include <thread/key_manager.hpp>
 #include <thread/mle_router.hpp>
@@ -45,12 +46,28 @@ static const uint8_t kThreadString[] =
 };
 
 KeyManager::KeyManager(ThreadNetif &aThreadNetif):
-    mNetif(aThreadNetif)
+    mNetif(aThreadNetif),
+    mKeyRotationTimer(aThreadNetif.GetIp6().mTimerScheduler, &KeyManager::HandleKeyRotationTimer, this)
 {
     mMasterKeyLength = 0;
     mKeySequence = 0;
     mMacFrameCounter = 0;
     mMleFrameCounter = 0;
+
+    mKeyRotationTime = kDefaultKeyRotationTime;
+    mKeySwitchGuardTime = kDefaultKeySwitchGuardTime;
+    mKeySwitchGuardEnabled = false;
+}
+
+void KeyManager::Start(void)
+{
+    mKeySwitchGuardEnabled = false;
+    mKeyRotationTimer.Start(Timer::HoursToMsec(mKeyRotationTime));
+}
+
+void KeyManager::Stop(void)
+{
+    mKeyRotationTimer.Stop();
 }
 
 const uint8_t *KeyManager::GetMasterKey(uint8_t *aKeyLength) const
@@ -107,16 +124,57 @@ uint32_t KeyManager::GetCurrentKeySequence(void) const
 
 void KeyManager::SetCurrentKeySequence(uint32_t aKeySequence)
 {
-    if (aKeySequence != mKeySequence)
+    uint32_t now;
+    uint32_t guardStartTimestamp;
+    uint32_t guardEndTimestamp;
+
+    if (aKeySequence == mKeySequence)
     {
-        mKeySequence = aKeySequence;
-        ComputeKey(mKeySequence, mKey);
-
-        mMacFrameCounter = 0;
-        mMleFrameCounter = 0;
-
-        mNetif.SetStateChangedFlags(OT_NET_KEY_SEQUENCE);
+        ExitNow();
     }
+
+    // Check if the guard timer has expired if key rotation is requested.
+    if ((aKeySequence == (mKeySequence + 1)) &&
+        mKeyRotationTimer.IsRunning() &&
+        mKeySwitchGuardEnabled)
+    {
+        now = Timer::GetNow();
+        guardStartTimestamp = mKeyRotationTimer.Gett0();
+        guardEndTimestamp = guardStartTimestamp + Timer::HoursToMsec(mKeySwitchGuardTime);
+
+        // Check for timer overflow
+        if (guardEndTimestamp < mKeyRotationTimer.Gett0())
+        {
+            if ((now > guardStartTimestamp) || (now < guardEndTimestamp))
+            {
+                ExitNow();
+            }
+        }
+        else
+        {
+            if ((now > guardStartTimestamp) && (now < guardEndTimestamp))
+            {
+                ExitNow();
+            }
+        }
+    }
+
+    mKeySequence = aKeySequence;
+    ComputeKey(mKeySequence, mKey);
+
+    mMacFrameCounter = 0;
+    mMleFrameCounter = 0;
+
+    if (mKeyRotationTimer.IsRunning())
+    {
+        mKeySwitchGuardEnabled = true;
+        mKeyRotationTimer.Start(Timer::HoursToMsec(mKeyRotationTime));
+    }
+
+    mNetif.SetStateChangedFlags(OT_NET_KEY_SEQUENCE);
+
+exit:
+    return;
 }
 
 const uint8_t *KeyManager::GetCurrentMacKey(void) const
@@ -180,6 +238,29 @@ uint32_t KeyManager::GetKekFrameCounter(void) const
 void KeyManager::IncrementKekFrameCounter(void)
 {
     mKekFrameCounter++;
+}
+
+ThreadError KeyManager::SetKeyRotation(uint32_t aKeyRotation)
+{
+    ThreadError result = kThreadError_None;
+
+    VerifyOrExit(aKeyRotation >= static_cast<uint32_t>(kMinKeyRotationTime), result = kThreadError_InvalidArgs);
+    VerifyOrExit(aKeyRotation <= static_cast<uint32_t>(kMaxKeyRotationTime), result = kThreadError_InvalidArgs);
+
+    mKeyRotationTime = aKeyRotation;
+
+exit:
+    return result;
+}
+
+void KeyManager::HandleKeyRotationTimer(void *aContext)
+{
+    static_cast<KeyManager *>(aContext)->HandleKeyRotationTimer();
+}
+
+void KeyManager::HandleKeyRotationTimer(void)
+{
+    SetCurrentKeySequence(mKeySequence + 1);
 }
 
 }  // namespace Thread
