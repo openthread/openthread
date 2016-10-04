@@ -299,10 +299,11 @@ void DatasetManager::HandleSet(Coap::Header &aHeader, Message &aMessage, const I
                 if (data->GetType() == Tlv::kCommissionerSessionId)
                 {
                     uint16_t sessionId;
+                    uint16_t rxSessionId;
 
                     sessionId = static_cast<CommissionerSessionIdTlv *>(data)->GetCommissionerSessionId();
-                    VerifyOrExit(sessionId == static_cast<CommissionerSessionIdTlv *>(&tlv)->GetCommissionerSessionId(),
-                                 state = StateTlv::kReject);
+                    aMessage.Read(offset + sizeof(tlv), sizeof(rxSessionId), &rxSessionId);
+                    VerifyOrExit(sessionId == rxSessionId, state = StateTlv::kReject);
                     break;
                 }
 
