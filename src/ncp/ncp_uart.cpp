@@ -30,6 +30,12 @@
  *   This file contains definitions for a UART based NCP interface to the OpenThread stack.
  */
 
+#ifdef OPENTHREAD_CONFIG_FILE
+#include OPENTHREAD_CONFIG_FILE
+#else
+#include <openthread-config.h>
+#endif
+
 #include <stdio.h>
 #include <ncp/ncp.h>
 #include <common/code_utils.hpp>
