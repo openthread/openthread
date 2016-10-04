@@ -79,12 +79,12 @@ typedef struct otInstance
 
 } otInstance;
 
-__inline otInstance *otInstanceFromIp6(Thread::Ip6::Ip6 *aIp6)
+static inline otInstance *otInstanceFromIp6(Thread::Ip6::Ip6 *aIp6)
 {
     return (otInstance *)CONTAINING_RECORD(aIp6, otInstance, mIp6);
 }
 
-__inline otInstance *otInstanceFromThreadNetif(Thread::ThreadNetif *aThreadNetif)
+static inline otInstance *otInstanceFromThreadNetif(Thread::ThreadNetif *aThreadNetif)
 {
     return (otInstance *)CONTAINING_RECORD(aThreadNetif, otInstance, mThreadNetif);
 }

@@ -49,8 +49,6 @@ namespace Thread {
 static otDEFINE_ALIGNED_VAR(sNcpRaw, sizeof(NcpSpi), uint64_t);
 static NcpSpi *sNcpSpi;
 
-extern Ip6::Ip6 *sIp6;
-
 extern "C" void otNcpInit(otInstance *aInstance)
 {
     sNcpSpi = new(&sNcpRaw) NcpSpi(aInstance);
