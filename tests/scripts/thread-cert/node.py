@@ -447,7 +447,7 @@ class Node:
         self.send_command(cmd)
         self.pexpect.expect('Done')
 
-    def set_active_dataset(self, timestamp, panid=None, channel=None):
+    def set_active_dataset(self, timestamp, panid=None, channel=None, master_key=None):
         self.send_command('dataset clear')
         self.pexpect.expect('Done')
 
@@ -462,6 +462,11 @@ class Node:
 
         if channel != None:
             cmd = 'dataset channel %d' % channel
+            self.send_command(cmd)
+            self.pexpect.expect('Done')
+
+        if master_key != None:
+            cmd = 'dataset masterkey ' + master_key
             self.send_command(cmd)
             self.pexpect.expect('Done')
 
@@ -499,7 +504,7 @@ class Node:
         self.pexpect.expect('Done')
 
     def send_mgmt_pending_set(self, pending_timestamp=None, active_timestamp=None, delay_timer=None, channel=None,
-                              panid=None):
+                              panid=None, master_key=None):
         cmd = 'dataset mgmtsetcommand pending '
 
         if pending_timestamp != None:
@@ -516,6 +521,9 @@ class Node:
 
         if panid != None:
             cmd += 'panid %d ' % panid
+
+        if master_key != None:
+            cmd += 'masterkey ' + master_key + ' '
 
         self.send_command(cmd)
         self.pexpect.expect('Done')

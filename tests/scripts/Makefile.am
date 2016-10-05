@@ -107,6 +107,7 @@ EXTRA_DIST                                                         = \
     thread-cert/Cert_9_2_07_DelayTimer.py                            \
     thread-cert/Cert_9_2_09_PendingPartition.py                      \
     thread-cert/Cert_9_2_10_PendingPartition.py                      \
+    thread-cert/Cert_9_2_11_MasterKey.py                             \
     thread-cert/Cert_9_2_12_Announce.py                              \
     thread-cert/Cert_9_2_13_EnergyScan.py                            \
     thread-cert/Cert_9_2_14_PanIdQuery.py                            \
@@ -229,6 +230,7 @@ check_SCRIPTS                                                     += \
     thread-cert/Cert_9_2_07_DelayTimer.py                            \
     thread-cert/Cert_9_2_09_PendingPartition.py                      \
     thread-cert/Cert_9_2_10_PendingPartition.py                      \
+    thread-cert/Cert_9_2_11_MasterKey.py                             \
     thread-cert/Cert_9_2_12_Announce.py                              \
     thread-cert/Cert_9_2_13_EnergyScan.py                            \
     thread-cert/Cert_9_2_14_PanIdQuery.py                            \
@@ -253,6 +255,7 @@ XFAIL_NCP_TESTS                                                    = \
     thread-cert/Cert_9_2_07_DelayTimer.py                            \
     thread-cert/Cert_9_2_09_PendingPartition.py                      \
     thread-cert/Cert_9_2_10_PendingPartition.py                      \
+    thread-cert/Cert_9_2_11_MasterKey.py                             \
     thread-cert/Cert_9_2_12_Announce.py                              \
     thread-cert/Cert_9_2_13_EnergyScan.py                            \
     thread-cert/Cert_9_2_14_PanIdQuery.py                            \
