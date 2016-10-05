@@ -117,6 +117,18 @@ public:
     void SetTimestamp(const Timestamp &aTimestamp);
 
     /**
+     * This method compares this dataset to another based on the timestamp.
+     *
+     * @param[in]  aCompare  A reference to the timestamp to compare.
+     *
+     * @retval -1  if @p aCompare is older than this dataset.
+     * @retval  0  if @p aCompare is equal to this dataset.
+     * @retval  1  if @p aCompare is newer than this dataset.
+     *
+     */
+    int Compare(const Dataset &aCompare) const;
+
+    /**
      * This method sets a TLV in the Dataset.
      *
      * @param[in]  aTlv  A reference to the TLV.

@@ -406,6 +406,32 @@ void Dataset::SetTimestamp(const Timestamp &aTimestamp)
     Set(timestampTlv.tlv);
 }
 
+int Dataset::Compare(const Dataset &aCompare) const
+{
+    const Timestamp *thisTimestamp = GetTimestamp();
+    const Timestamp *compareTimestamp = aCompare.GetTimestamp();
+    int rval;
+
+    if (compareTimestamp == NULL && thisTimestamp == NULL)
+    {
+        rval = 0;
+    }
+    else if (compareTimestamp == NULL && thisTimestamp != NULL)
+    {
+        rval = -1;
+    }
+    else if (compareTimestamp != NULL && thisTimestamp == NULL)
+    {
+        rval = 1;
+    }
+    else
+    {
+        rval = thisTimestamp->Compare(*compareTimestamp);
+    }
+
+    return rval;
+}
+
 ThreadError Dataset::Set(const Tlv &aTlv)
 {
     ThreadError error = kThreadError_None;

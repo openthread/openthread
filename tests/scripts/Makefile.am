@@ -104,6 +104,7 @@ EXTRA_DIST                                                         = \
     thread-cert/Cert_7_1_05_BorderRouterAsRouter.py                  \
     thread-cert/Cert_8_1_01_Commissioning.py                         \
     thread-cert/Cert_8_1_02_Commissioning.py                         \
+    thread-cert/Cert_9_2_07_DelayTimer.py                            \
     thread-cert/Cert_9_2_12_Announce.py                              \
     thread-cert/Cert_9_2_13_EnergyScan.py                            \
     thread-cert/Cert_9_2_14_PanIdQuery.py                            \
@@ -223,6 +224,7 @@ check_SCRIPTS                                                     += \
     thread-cert/Cert_7_1_05_BorderRouterAsRouter.py                  \
     thread-cert/Cert_8_1_01_Commissioning.py                         \
     thread-cert/Cert_8_1_02_Commissioning.py                         \
+    thread-cert/Cert_9_2_07_DelayTimer.py                            \
     thread-cert/Cert_9_2_12_Announce.py                              \
     thread-cert/Cert_9_2_13_EnergyScan.py                            \
     thread-cert/Cert_9_2_14_PanIdQuery.py                            \
@@ -244,6 +246,7 @@ TESTS                                                              = \
 XFAIL_NCP_TESTS                                                    = \
     thread-cert/Cert_8_1_01_Commissioning.py                         \
     thread-cert/Cert_8_1_02_Commissioning.py                         \
+    thread-cert/Cert_9_2_07_DelayTimer.py                            \
     thread-cert/Cert_9_2_12_Announce.py                              \
     thread-cert/Cert_9_2_13_EnergyScan.py                            \
     thread-cert/Cert_9_2_14_PanIdQuery.py                            \
