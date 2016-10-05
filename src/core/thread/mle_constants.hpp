@@ -46,7 +46,6 @@ enum
 {
     kMaxChildren                = OPENTHREAD_CONFIG_MAX_CHILDREN,
     kMaxChildKeepAliveAttempts  = 4,    ///< Maximum keep alive attempts before attempting to reattach to a new Parent
-    kFailedChildTransmissions   = 4,    ///< FAILED_CHILD_TRANSMISSIONS
 };
 
 /**

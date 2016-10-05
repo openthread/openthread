@@ -1197,13 +1197,6 @@ void MeshForwarder::HandleSentFrame(Mac::Frame &aFrame, ThreadError aError)
                     mMle.RemoveNeighbor(*neighbor);
                 }
             }
-            else
-            {
-                if (neighbor->mLinkFailures >= Mle::kFailedChildTransmissions)
-                {
-                    mMle.RemoveNeighbor(*neighbor);
-                }
-            }
 
             break;
 
