@@ -613,7 +613,16 @@ ThreadError MeshForwarder::UpdateIp6Route(Message &aMessage)
         if (aMessage.IsLinkSecurityEnabled())
         {
             mMacDest.mLength = sizeof(mMacDest.mShortAddress);
-            mMacDest.mShortAddress = mMle.GetNextHop(Mac::kShortAddrBroadcast);
+
+            if (ip6Header.GetDestination().IsLinkLocalMulticast())
+            {
+                mMacDest.mShortAddress = Mac::kShortAddrBroadcast;
+            }
+            else
+            {
+                mMacDest.mShortAddress = mMle.GetNextHop(Mac::kShortAddrBroadcast);
+            }
+
             GetMacSourceAddress(ip6Header.GetSource(), mMacSource);
         }
         else if (ip6Header.GetDestination().IsLinkLocal() || ip6Header.GetDestination().IsLinkLocalMulticast())
@@ -824,7 +833,7 @@ ThreadError MeshForwarder::HandleFrameRequest(Mac::Frame &aFrame)
     switch (mSendMessage->GetType())
     {
     case Message::kTypeIp6:
-        if (mSendMessage->IsMleDiscoverRequest())
+        if (mSendMessage->GetSubType() == Message::kSubTypeMleDiscoverRequest)
         {
             if (!mScanning)
             {
@@ -995,17 +1004,41 @@ ThreadError MeshForwarder::SendFragment(Message &aMessage, Mac::Frame &aFrame)
     if (aMessage.IsLinkSecurityEnabled())
     {
         fcf |= Mac::Frame::kFcfSecurityEnabled;
-        secCtl = static_cast<uint8_t>(aMessage.IsJoinerEntrust() ? Mac::Frame::kKeyIdMode0 : Mac::Frame::kKeyIdMode1);
+
+        switch (aMessage.GetSubType())
+        {
+        case Message::kSubTypeJoinerEntrust:
+            secCtl = static_cast<uint8_t>(Mac::Frame::kKeyIdMode0);
+            break;
+
+        case Message::kSubTypeMleAnnounce:
+            secCtl = static_cast<uint8_t>(Mac::Frame::kKeyIdMode2);
+            break;
+
+        default:
+            secCtl = static_cast<uint8_t>(Mac::Frame::kKeyIdMode1);
+            break;
+        }
+
         secCtl |= Mac::Frame::kSecEncMic32;
     }
 
-    if (aMessage.IsMleDiscoverRequest() || aMessage.IsMleDiscoverResponse())
+    dstpan = mMac.GetPanId();
+
+    switch (aMessage.GetSubType())
     {
+    case Message::kSubTypeMleAnnounce:
+        aFrame.SetChannel(aMessage.GetChannel());
+        dstpan = Mac::kPanIdBroadcast;
+        break;
+
+    case Message::kSubTypeMleDiscoverRequest:
+    case Message::kSubTypeMleDiscoverResponse:
         dstpan = aMessage.GetPanId();
-    }
-    else
-    {
-        dstpan = mMac.GetPanId();
+        break;
+
+    default:
+        break;
     }
 
     if (dstpan == mMac.GetPanId())
@@ -1219,7 +1252,7 @@ void MeshForwarder::HandleSentFrame(Mac::Frame &aFrame, ThreadError aError)
             mSendMessage->SetOffset(0);
         }
 
-        if (mSendMessage->IsMleDiscoverRequest())
+        if (mSendMessage->GetSubType() == Message::kSubTypeMleDiscoverRequest)
         {
             mSendBusy = true;
             mDiscoverTimer.Start(mScanDuration);

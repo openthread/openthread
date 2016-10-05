@@ -28,41 +28,65 @@
 
 /**
  * @file
- *   This file includes macros for validating runtime conditions.
+ * @brief
+ *  This file defines the structure of the variables required for all instances of OpenThread API.
  */
 
-#ifndef CODE_UTILS_HPP_
-#define CODE_UTILS_HPP_
+#ifndef OPENTHREADINSTANCE_H_
+#define OPENTHREADINSTANCE_H_
 
+#include <stdint.h>
 #include <stdbool.h>
 
-// Calculates the aligned variable size.
-#define otALIGNED_VAR_SIZE(size, align_type)            \
-    (((size) + (sizeof (align_type) - 1)) / sizeof (align_type))
+#include <openthread-types.h>
+#include <crypto/mbedtls.hpp>
+#include <net/ip6.hpp>
+#include <thread/thread_netif.hpp>
 
-// Allocate the structure using "raw" storage.
-#define otDEFINE_ALIGNED_VAR(name, size, align_type)            \
-    align_type name[(((size) + (sizeof (align_type) - 1)) / sizeof (align_type))]
+/**
+ * This type represents all the static / global variables used by OpenThread allocated in one place.
+ */
+typedef struct otInstance
+{
+    //
+    // Callbacks
+    //
 
-#define SuccessOrExit(ERR)                      \
-  do {                                          \
-    if ((ERR) != 0) {                           \
-      goto exit;                                \
-    }                                           \
-  } while (false)
+    Thread::Ip6::NetifCallback mNetifCallback;
 
-#define VerifyOrExit(COND, ACTION) \
-  do {                             \
-    if (!(COND)) {                 \
-      ACTION;                      \
-      goto exit;                   \
-    }                              \
-  } while (false)
+    otReceiveIp6DatagramCallback mReceiveIp6DatagramCallback;
+    void *mReceiveIp6DatagramCallbackContext;
 
-#define ExitNow(...)                            \
-  do {                                          \
-    __VA_ARGS__;                                \
-    goto exit;                                  \
-  } while (false)
+    otHandleActiveScanResult mActiveScanCallback;
+    void *mActiveScanCallbackContext;
 
-#endif  // CODE_UTILS_HPP_
+    otHandleEnergyScanResult mEnergyScanCallback;
+    void *mEnergyScanCallbackContext;
+
+    otHandleActiveScanResult mDiscoverCallback;
+    void *mDiscoverCallbackContext;
+
+    //
+    // State
+    //
+
+    Thread::Crypto::MbedTls mMbedTls;
+    Thread::Ip6::Ip6 mIp6;
+    Thread::ThreadNetif mThreadNetif;
+
+    // Constructor
+    otInstance(void);
+
+} otInstance;
+
+static inline otInstance *otInstanceFromIp6(Thread::Ip6::Ip6 *aIp6)
+{
+    return (otInstance *)CONTAINING_RECORD(aIp6, otInstance, mIp6);
+}
+
+static inline otInstance *otInstanceFromThreadNetif(Thread::ThreadNetif *aThreadNetif)
+{
+    return (otInstance *)CONTAINING_RECORD(aThreadNetif, otInstance, mThreadNetif);
+}
+
+#endif  // OPENTHREADINSTANCE_H_

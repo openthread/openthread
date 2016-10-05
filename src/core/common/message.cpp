@@ -35,6 +35,7 @@
 
 #include <common/code_utils.hpp>
 #include <common/debug.hpp>
+#include <common/logging.hpp>
 #include <common/message.hpp>
 #include <common/logging.hpp>
 #include <net/ip6.hpp>
@@ -236,6 +237,16 @@ uint8_t Message::GetType(void) const
 void Message::SetType(uint8_t aType)
 {
     mInfo.mType = aType;
+}
+
+uint8_t Message::GetSubType(void) const
+{
+    return mInfo.mSubType;
+}
+
+void Message::SetSubType(uint8_t aSubType)
+{
+    mInfo.mSubType = aSubType;
 }
 
 ThreadError Message::Append(const void *aBuf, uint16_t aLength)
@@ -498,6 +509,16 @@ void Message::SetPanId(uint16_t aPanId)
     mInfo.mPanId = aPanId;
 }
 
+uint8_t Message::GetChannel(void) const
+{
+    return mInfo.mChannel;
+}
+
+void Message::SetChannel(uint8_t aChannel)
+{
+    mInfo.mChannel = aChannel;
+}
+
 uint8_t Message::GetTimeout(void) const
 {
     return mInfo.mTimeout;
@@ -541,36 +562,6 @@ bool Message::IsLinkSecurityEnabled(void) const
 void Message::SetLinkSecurityEnabled(bool aLinkSecurityEnabled)
 {
     mInfo.mLinkSecurity = aLinkSecurityEnabled;
-}
-
-bool Message::IsMleDiscoverRequest(void) const
-{
-    return mInfo.mMleDiscoverRequest;
-}
-
-void Message::SetMleDiscoverRequest(bool aMleDiscoverRequest)
-{
-    mInfo.mMleDiscoverRequest = aMleDiscoverRequest;
-}
-
-bool Message::IsMleDiscoverResponse(void) const
-{
-    return mInfo.mMleDiscoverResponse;
-}
-
-void Message::SetMleDiscoverResponse(bool aMleDiscoverResponse)
-{
-    mInfo.mMleDiscoverResponse = aMleDiscoverResponse;
-}
-
-bool Message::IsJoinerEntrust(void) const
-{
-    return mInfo.mJoinerEntrust;
-}
-
-void Message::SetJoinerEntrust(bool aJoinerEntrust)
-{
-    mInfo.mJoinerEntrust = aJoinerEntrust;
 }
 
 uint16_t Message::UpdateChecksum(uint16_t aChecksum, uint16_t aOffset, uint16_t aLength) const

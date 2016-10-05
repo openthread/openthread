@@ -89,4 +89,3 @@ draft-spinel-protocol-bis.xml: \
 	spinel-tech-thread.md \
 	spinel-test-vectors.md \
 	$(NULL)
-

@@ -1621,6 +1621,8 @@ void otPlatformReset(otInstance *aInstance);
 /**
  * Get the ROUTER_DOWNGRADE_THRESHOLD parameter used in the Router role.
  *
+ * @param[in]  aInstance  A pointer to an OpenThread instance.
+ *
  * @returns The ROUTER_DOWNGRADE_THRESHOLD value.
  *
  * @sa otSetRouterDowngradeThreshold
@@ -1630,6 +1632,7 @@ uint8_t otGetRouterDowngradeThreshold(otInstance *aInstance);
 /**
  * Set the ROUTER_DOWNGRADE_THRESHOLD parameter used in the Leader role.
  *
+ * @param[in]  aInstance   A pointer to an OpenThread instance.
  * @param[in]  aThreshold  The ROUTER_DOWNGRADE_THRESHOLD value.
  *
  * @sa otGetRouterDowngradeThreshold

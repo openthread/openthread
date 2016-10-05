@@ -323,6 +323,14 @@ public:
      */
     int8_t GetOnLinkNetif(const Address &aAddress);
 
+    /**
+     * This method returns the pointer to the parent otInstance structure.
+     *
+     * @returns The pointer to the parent otInstance structure.
+     *
+     */
+    otInstance *GetInstance();
+
     Routes mRoutes;
     Icmp mIcmp;
     Udp mUdp;
@@ -356,6 +364,16 @@ private:
     Netif *mNetifListHead;
     int8_t mNextInterfaceId;
 };
+
+static inline Ip6 *Ip6FromTaskletScheduler(TaskletScheduler *aTaskletScheduler)
+{
+    return (Ip6 *)CONTAINING_RECORD(aTaskletScheduler, Ip6, mTaskletScheduler);
+}
+
+static inline Ip6 *Ip6FromTimerScheduler(TimerScheduler *aTimerScheduler)
+{
+    return (Ip6 *)CONTAINING_RECORD(aTimerScheduler, Ip6, mTimerScheduler);
+}
 
 /**
  * @}

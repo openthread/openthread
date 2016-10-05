@@ -28,41 +28,62 @@
 
 /**
  * @file
- *   This file includes macros for validating runtime conditions.
+ *   This file includes definitions for responding to Announce Requests.
  */
 
-#ifndef CODE_UTILS_HPP_
-#define CODE_UTILS_HPP_
+#ifndef ANNOUNCE_BEGIN_CLIENT_HPP_
+#define ANNOUNCE_BEGIN_CLIENT_HPP_
 
-#include <stdbool.h>
+#include <openthread-core-config.h>
+#include <openthread-types.h>
+#include <commissioning/commissioner.h>
+#include <coap/coap_server.hpp>
+#include <net/ip6_address.hpp>
+#include <net/udp6.hpp>
 
-// Calculates the aligned variable size.
-#define otALIGNED_VAR_SIZE(size, align_type)            \
-    (((size) + (sizeof (align_type) - 1)) / sizeof (align_type))
+namespace Thread {
 
-// Allocate the structure using "raw" storage.
-#define otDEFINE_ALIGNED_VAR(name, size, align_type)            \
-    align_type name[(((size) + (sizeof (align_type) - 1)) / sizeof (align_type))]
+class ThreadNetif;
 
-#define SuccessOrExit(ERR)                      \
-  do {                                          \
-    if ((ERR) != 0) {                           \
-      goto exit;                                \
-    }                                           \
-  } while (false)
+/**
+ * This class implements handling Announce Begin Requests.
+ *
+ */
+class AnnounceBeginClient
+{
+public:
+    /**
+     * This constructor initializes the object.
+     *
+     */
+    AnnounceBeginClient(ThreadNetif &aThreadNetif);
 
-#define VerifyOrExit(COND, ACTION) \
-  do {                             \
-    if (!(COND)) {                 \
-      ACTION;                      \
-      goto exit;                   \
-    }                              \
-  } while (false)
+    /**
+     * This method sends a Announce Begin message.
+     *
+     * @param[in]  aChannelMask   The channel mask value.
+     * @param[in]  aCount         The number of energy measurements per channel.
+     * @param[in]  aPeriod        The time between energy measurements (milliseconds).
+     *
+     * @retval kThreadError_None    Successfully enqueued the Announce Begin message.
+     * @retval kThreadError_NoBufs  Insufficient buffers to generate a Announce Begin message.
+     *
+     */
+    ThreadError SendRequest(uint32_t aChannelMask, uint8_t aCount, uint16_t mPeriod, const Ip6::Address &aAddress);
 
-#define ExitNow(...)                            \
-  do {                                          \
-    __VA_ARGS__;                                \
-    goto exit;                                  \
-  } while (false)
+private:
+    static void HandleUdpReceive(void *aContext, otMessage aMessage, const otMessageInfo *aMessageInfo);
 
-#endif  // CODE_UTILS_HPP_
+    Ip6::UdpSocket mSocket;
+    uint8_t mCoapToken[2];
+    uint16_t mCoapMessageId;
+    ThreadNetif &mNetif;
+};
+
+/**
+ * @}
+ */
+
+}  // namespace Thread
+
+#endif  // ANNOUNCE_BEGIN_CLIENT_HPP_

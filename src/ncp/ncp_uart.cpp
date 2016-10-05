@@ -30,6 +30,12 @@
  *   This file contains definitions for a UART based NCP interface to the OpenThread stack.
  */
 
+#ifdef OPENTHREAD_CONFIG_FILE
+#include OPENTHREAD_CONFIG_FILE
+#else
+#include <openthread-config.h>
+#endif
+
 #include <stdio.h>
 #include <ncp/ncp.h>
 #include <common/code_utils.hpp>
@@ -40,13 +46,12 @@
 #include <platform/logging.h>
 #include <platform/uart.h>
 #include <core/openthread-core-config.h>
+#include <openthread-instance.h>
 
 namespace Thread {
 
 static otDEFINE_ALIGNED_VAR(sNcpRaw, sizeof(NcpUart), uint64_t);
 static NcpUart *sNcpUart;
-
-extern Ip6::Ip6 *sIp6;
 
 extern "C" void otNcpInit(otInstance *aInstance)
 {
@@ -85,7 +90,7 @@ NcpUart::NcpUart(otInstance *aInstance):
     mFrameDecoder(mRxBuffer, sizeof(mRxBuffer), &NcpUart::HandleFrame, &NcpUart::HandleError, this),
     mUartBuffer(),
     mTxFrameBuffer(mTxBuffer, sizeof(mTxBuffer)),
-    mUartSendTask(sIp6->mTaskletScheduler, EncodeAndSendToUart, this)
+    mUartSendTask(aInstance->mIp6.mTaskletScheduler, EncodeAndSendToUart, this)
 {
     mState = kStartingFrame;
 
