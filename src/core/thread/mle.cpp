@@ -1977,6 +1977,9 @@ ThreadError Mle::HandleParentResponse(const Message &aMessage, const Ip6::Messag
         switch (mParentRequestMode)
         {
         case kMleAttachAnyPartition:
+            VerifyOrExit((mDeviceMode & ModeTlv::kModeFFD) == 0 ||
+                         leaderData.GetPartitionId() != mLeaderData.GetPartitionId() ||
+                         static_cast<int8_t>(connectivity.GetIdSequence() - mMleRouter.GetRouterIdSequence()) > 0,);
             break;
 
         case kMleAttachSamePartition:
