@@ -2316,6 +2316,8 @@ ThreadError MleRouter::SendChildIdResponse(Child *aChild)
     SuccessOrExit(error = AppendHeader(*message, Header::kCommandChildIdResponse));
     SuccessOrExit(error = AppendSourceAddress(*message));
     SuccessOrExit(error = AppendLeaderData(*message));
+    SuccessOrExit(error = AppendActiveTimestamp(*message));
+    SuccessOrExit(error = AppendPendingTimestamp(*message));
 
     // pick next Child ID that is not being used
     do
@@ -3767,8 +3769,6 @@ ThreadError MleRouter::AppendActiveDataset(Message &aMessage)
     ThreadError error = kThreadError_None;
     Tlv tlv;
 
-    SuccessOrExit(error = AppendActiveTimestamp(aMessage));
-
     tlv.SetType(Tlv::kActiveDataset);
     tlv.SetLength(mNetif.GetActiveDataset().GetNetwork().GetSize());
     SuccessOrExit(error = aMessage.Append(&tlv, sizeof(tlv)));
@@ -3782,8 +3782,6 @@ ThreadError MleRouter::AppendPendingDataset(Message &aMessage)
 {
     ThreadError error = kThreadError_None;
     Tlv tlv;
-
-    SuccessOrExit(error = AppendPendingTimestamp(aMessage));
 
     tlv.SetType(Tlv::kPendingDataset);
     tlv.SetLength(mNetif.GetPendingDataset().GetNetwork().GetSize());

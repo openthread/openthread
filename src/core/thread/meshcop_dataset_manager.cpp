@@ -793,8 +793,10 @@ PendingDataset::PendingDataset(ThreadNetif &aThreadNetif):
 
 void PendingDataset::StartLeader(void)
 {
+    UpdateDelayTimer(mLocal, mLocalTime);
     mNetwork = mLocal;
-    mNetworkTime = mLocalTime;
+    ResetDelayTimer(kFlagNetworkUpdated);
+
     mCoapServer.AddResource(mResourceGet);
     mCoapServer.AddResource(mResourceSet);
 }
