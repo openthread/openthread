@@ -223,7 +223,7 @@ void Mac::StartEnergyScan(void)
 {
     mState = kStateEnergyScan;
 
-    if (!(otPlatRadioGetCaps(NULL) & kRadioCapsEnergyScan))
+    if (!(otPlatRadioGetCaps(mNetif.GetInstance()) & kRadioCapsEnergyScan))
     {
         mEnergyScanCurrentMaxRssi = kInvalidRssiValue;
         mMacTimer.Start(mScanDuration);
@@ -232,7 +232,7 @@ void Mac::StartEnergyScan(void)
     }
     else
     {
-        ThreadError error = otPlatRadioEnergyScan(NULL, mScanChannel, mScanDuration);
+        ThreadError error = otPlatRadioEnergyScan(mNetif.GetInstance(), mScanChannel, mScanDuration);
 
         if (error != kThreadError_None)
         {
@@ -243,9 +243,9 @@ void Mac::StartEnergyScan(void)
     }
 }
 
-extern "C" void otPlatRadioEnergyScanDone(otInstance *, int8_t aEnergyScanMaxRssi)
+extern "C" void otPlatRadioEnergyScanDone(otInstance *aInstance, int8_t aEnergyScanMaxRssi)
 {
-    sMac->EnergyScanDone(aEnergyScanMaxRssi);
+    aInstance->mThreadNetif.GetMac().EnergyScanDone(aEnergyScanMaxRssi);
 }
 
 void Mac::EnergyScanDone(int8_t aEnergyScanMaxRssi)
@@ -273,14 +273,14 @@ void Mac::EnergyScanDone(int8_t aEnergyScanMaxRssi)
     }
     while ((mScanChannels & 1) == 0);
 
-    if (!(otPlatRadioGetCaps(NULL) & kRadioCapsEnergyScan))
+    if (!(otPlatRadioGetCaps(mNetif.GetInstance()) & kRadioCapsEnergyScan))
     {
         mEnergyScanCurrentMaxRssi = kInvalidRssiValue;
         mMacTimer.Start(mScanDuration);
     }
     else
     {
-        ThreadError error = otPlatRadioEnergyScan(NULL, mScanChannel, mScanDuration);
+        ThreadError error = otPlatRadioEnergyScan(mNetif.GetInstance(), mScanChannel, mScanDuration);
 
         if (error != kThreadError_None)
         {
