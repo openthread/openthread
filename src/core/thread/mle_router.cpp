@@ -1310,7 +1310,12 @@ ThreadError MleRouter::HandleAdvertisement(const Message &aMessage, const Ip6::M
         ExitNow();
     }
 
-    if (mDeviceMode & ModeTlv::kModeFFD)
+    VerifyOrExit(IsActiveRouter(sourceAddress.GetRloc16()), ;);
+    routerId = GetRouterId(sourceAddress.GetRloc16());
+    VerifyOrExit(IsRouterIdValid(routerId), error = kThreadError_Parse);
+
+    if ((mDeviceMode & ModeTlv::kModeFFD) &&
+        static_cast<int8_t>(route.GetRouterIdSequence() - mRouterIdSequence) > 0)
     {
         bool processRouteTlv = false;
 
@@ -1321,20 +1326,12 @@ ThreadError MleRouter::HandleAdvertisement(const Message &aMessage, const Ip6::M
             break;
 
         case kDeviceStateChild:
-            if (sourceAddress.GetRloc16() == mParent.mValid.mRloc16)
-            {
-                processRouteTlv = true;
-            }
-
+            processRouteTlv = (sourceAddress.GetRloc16() == mParent.mValid.mRloc16);
             break;
 
         case kDeviceStateRouter:
         case kDeviceStateLeader:
-            if (static_cast<int8_t>(route.GetRouterIdSequence() - mRouterIdSequence) > 0)
-            {
-                processRouteTlv = true;
-            }
-
+            processRouteTlv = true;
             break;
         }
 
@@ -1343,11 +1340,6 @@ ThreadError MleRouter::HandleAdvertisement(const Message &aMessage, const Ip6::M
             SuccessOrExit(error = ProcessRouteTlv(route));
         }
     }
-
-    VerifyOrExit(IsActiveRouter(sourceAddress.GetRloc16()), ;);
-
-    routerId = GetRouterId(sourceAddress.GetRloc16());
-    VerifyOrExit(IsRouterIdValid(routerId), error = kThreadError_Parse);
 
     router = NULL;
 
