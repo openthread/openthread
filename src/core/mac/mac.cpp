@@ -250,6 +250,7 @@ extern "C" void otPlatRadioEnergyScanDone(otInstance *aInstance, int8_t aEnergyS
 
 void Mac::EnergyScanDone(int8_t aEnergyScanMaxRssi)
 {
+    // Trigger a energy scan handler callback if necessary
     if (aEnergyScanMaxRssi != kInvalidRssiValue)
     {
         otEnergyScanResult result;
@@ -259,11 +260,14 @@ void Mac::EnergyScanDone(int8_t aEnergyScanMaxRssi)
         mEnergyScanHandler(mScanContext, &result);
     }
 
+    // Update to the next scan channel
     do
     {
         mScanChannels >>= 1;
         mScanChannel++;
 
+        // If we have scanned all the channels, then fire the final callback
+        // and start the next transmission task
         if (mScanChannels == 0 || mScanChannel > kPhyMaxChannel)
         {
             mEnergyScanHandler(mScanContext, NULL);
@@ -273,22 +277,8 @@ void Mac::EnergyScanDone(int8_t aEnergyScanMaxRssi)
     }
     while ((mScanChannels & 1) == 0);
 
-    if (!(otPlatRadioGetCaps(mNetif.GetInstance()) & kRadioCapsEnergyScan))
-    {
-        mEnergyScanCurrentMaxRssi = kInvalidRssiValue;
-        mMacTimer.Start(mScanDuration);
-    }
-    else
-    {
-        ThreadError error = otPlatRadioEnergyScan(mNetif.GetInstance(), mScanChannel, mScanDuration);
-
-        if (error != kThreadError_None)
-        {
-            // Cancel scan
-            mEnergyScanHandler(mScanContext, NULL);
-            ScheduleNextTransmission();
-        }
-    }
+    // Start scanning the next channel
+    StartEnergyScan();
 
 exit:
     return;
