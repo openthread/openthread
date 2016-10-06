@@ -233,6 +233,22 @@ public:
      */
     static uint32_t MsecToSec(uint32_t aMilliseconds) { return aMilliseconds / 1000u; }
 
+    /**
+     * This static method returns the number of milliseconds given hours.
+     *
+     * @returns The number of milliseconds.
+     *
+     */
+    static uint32_t HoursToMsec(uint32_t aHours) { return SecToMsec(aHours * 3600u); }
+
+    /**
+     * This static method returns the number of hours given milliseconds.
+     *
+     * @returns The number of hours.
+     *
+     */
+    static uint32_t MsecToHours(uint32_t aMilliseconds) { return MsecToSec(aMilliseconds / 3600u); }
+
 private:
     void Fired(void) { mHandler(mContext); }
 

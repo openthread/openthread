@@ -201,6 +201,8 @@ ThreadError Mle::Start(void)
     mDeviceState = kDeviceStateDetached;
     SetStateDetached();
 
+    mKeyManager.Start();
+
     if (GetRloc16() == Mac::kShortAddrInvalid)
     {
         BecomeChild(kMleAttachAnyPartition);
@@ -222,6 +224,7 @@ exit:
 
 ThreadError Mle::Stop(void)
 {
+    mKeyManager.Stop();
     SetStateDetached();
     mNetif.RemoveUnicastAddress(mLinkLocal16);
     mNetif.RemoveUnicastAddress(mMeshLocal16);
