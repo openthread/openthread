@@ -32,51 +32,45 @@ import unittest
 
 import node
 
-LEADER1 = 1
+LEADER = 1
 ROUTER1 = 2
 ROUTER2 = 3
 ROUTER3 = 4
-REED2 = 5
+ROUTER15 = 16
+REED1 = 17
 
 class Cert_5_5_5_SplitMergeREED(unittest.TestCase):
     def setUp(self):
         self.nodes = {}
-        for i in range(1,6):
+        for i in range(1,18):
             self.nodes[i] = node.Node(i)
 
-        self.nodes[LEADER1].set_panid(0xface)
-        self.nodes[LEADER1].set_mode('rsdn')
-        self.nodes[LEADER1].add_whitelist(self.nodes[ROUTER2].get_addr64())
-        self.nodes[LEADER1].add_whitelist(self.nodes[ROUTER3].get_addr64())
-        self.nodes[LEADER1].enable_whitelist()
+        self.nodes[LEADER].set_panid(0xface)
+        self.nodes[LEADER].set_mode('rsdn')
+        for i in range(ROUTER2, ROUTER15+1):
+            self.nodes[LEADER].add_whitelist(self.nodes[i].get_addr64())
+        self.nodes[LEADER].enable_whitelist()            
+
+        for i in range(ROUTER2, ROUTER15+1):
+            self.nodes[i].set_panid(0xface)
+            self.nodes[i].set_mode('rsdn')
+            self.nodes[i].add_whitelist(self.nodes[LEADER].get_addr64())
+            self.nodes[i].enable_whitelist()
+            self.nodes[i].set_router_selection_jitter(1)
 
         self.nodes[ROUTER1].set_panid(0xface)
         self.nodes[ROUTER1].set_mode('rsdn')
         self.nodes[ROUTER1].add_whitelist(self.nodes[ROUTER3].get_addr64())
-        self.nodes[ROUTER1].add_whitelist(self.nodes[REED2].get_addr64())
         self.nodes[ROUTER1].enable_whitelist()
         self.nodes[ROUTER1].set_router_selection_jitter(1)
 
-        self.nodes[ROUTER2].set_panid(0xface)
-        self.nodes[ROUTER2].set_mode('rsdn')
-        self.nodes[ROUTER2].add_whitelist(self.nodes[LEADER1].get_addr64())
-        self.nodes[ROUTER2].add_whitelist(self.nodes[REED2].get_addr64())
-        self.nodes[ROUTER2].enable_whitelist()
-        self.nodes[ROUTER2].set_router_selection_jitter(1)
-
-        self.nodes[ROUTER3].set_panid(0xface)
-        self.nodes[ROUTER3].set_mode('rsdn')
-        self.nodes[ROUTER3].add_whitelist(self.nodes[LEADER1].get_addr64())
+        self.nodes[ROUTER2].add_whitelist(self.nodes[REED1].get_addr64())
         self.nodes[ROUTER3].add_whitelist(self.nodes[ROUTER1].get_addr64())
-        self.nodes[ROUTER3].enable_whitelist()
-        self.nodes[ROUTER3].set_router_selection_jitter(1)
 
-        self.nodes[REED2].set_panid(0xface)
-        self.nodes[REED2].set_mode('rsdn')
-        self.nodes[REED2].add_whitelist(self.nodes[ROUTER1].get_addr64())
-        self.nodes[REED2].add_whitelist(self.nodes[ROUTER2].get_addr64())
-        self.nodes[REED2].enable_whitelist()
-        self.nodes[REED2].set_router_upgrade_threshold(0)
+        self.nodes[REED1].set_panid(0xface)
+        self.nodes[REED1].set_mode('rsdn')
+        self.nodes[REED1].add_whitelist(self.nodes[ROUTER2].get_addr64())
+        self.nodes[REED1].enable_whitelist()
 
     def tearDown(self):
         for node in list(self.nodes.values()):
@@ -84,33 +78,33 @@ class Cert_5_5_5_SplitMergeREED(unittest.TestCase):
         del self.nodes
 
     def test(self):
-        self.nodes[LEADER1].start()
-        self.nodes[LEADER1].set_state('leader')
-        self.assertEqual(self.nodes[LEADER1].get_state(), 'leader')
+        self.nodes[LEADER].start()
+        self.nodes[LEADER].set_state('leader')
+        self.assertEqual(self.nodes[LEADER].get_state(), 'leader')
 
-        self.nodes[ROUTER2].start()
-        time.sleep(5)
-        self.assertEqual(self.nodes[ROUTER2].get_state(), 'router')
-
-        self.nodes[REED2].start()
-        time.sleep(5)
-        self.assertEqual(self.nodes[REED2].get_state(), 'child')
-
-        self.nodes[ROUTER3].start()
-        time.sleep(5)
-        self.assertEqual(self.nodes[ROUTER3].get_state(), 'router')
+        for i in range(ROUTER2, ROUTER15+1):
+            self.nodes[i].start()
+            time.sleep(5)
+            self.assertEqual(self.nodes[i].get_state(), 'router')
 
         self.nodes[ROUTER1].start()
         time.sleep(5)
         self.assertEqual(self.nodes[ROUTER1].get_state(), 'router')
 
+        self.nodes[REED1].start()
+        time.sleep(5)
+        self.assertEqual(self.nodes[REED1].get_state(), 'child')
+
+        self.nodes[ROUTER1].add_whitelist(self.nodes[REED1].get_addr64())
+        self.nodes[REED1].add_whitelist(self.nodes[ROUTER1].get_addr64())
+
         self.nodes[ROUTER3].stop()
-        time.sleep(150)
+        time.sleep(140)
 
-        self.assertEqual(self.nodes[REED2].get_state(), 'router')
-        self.assertEqual(self.nodes[ROUTER1].get_state(), 'router')
+        self.assertEqual(self.nodes[ROUTER1].get_state(), 'child')
+        self.assertEqual(self.nodes[REED1].get_state(), 'router')
 
-        addrs = self.nodes[LEADER1].get_addrs()
+        addrs = self.nodes[LEADER].get_addrs()
         for addr in addrs:
             if addr[0:4] != 'fe80':
                 self.assertTrue(self.nodes[ROUTER1].ping(addr))

@@ -1121,33 +1121,26 @@ exit:
 ThreadError MleRouter::ProcessRouteTlv(const RouteTlv &aRoute)
 {
     ThreadError error = kThreadError_None;
-    int8_t diff = static_cast<int8_t>(aRoute.GetRouterIdSequence() - mRouterIdSequence);
-    bool old;
 
-    // check for newer route data
-    if (diff > 0 || mDeviceState == kDeviceStateDetached || mDeviceState == kDeviceStateChild)
+    mRouterIdSequence = aRoute.GetRouterIdSequence();
+    mRouterIdSequenceLastUpdated = Timer::GetNow();
+
+    for (uint8_t i = 0; i <= kMaxRouterId; i++)
     {
-        mRouterIdSequence = aRoute.GetRouterIdSequence();
-        mRouterIdSequenceLastUpdated = Timer::GetNow();
+        bool old = mRouters[i].mAllocated;
+        mRouters[i].mAllocated = aRoute.IsRouterIdSet(i);
 
-        for (uint8_t i = 0; i <= kMaxRouterId; i++)
+        if (old && !mRouters[i].mAllocated)
         {
-            old = mRouters[i].mAllocated;
-            mRouters[i].mAllocated = aRoute.IsRouterIdSet(i);
-
-            if (old && !mRouters[i].mAllocated)
-            {
-                mRouters[i].mNextHop = kInvalidRouterId;
-                mAddressResolver.Remove(i);
-            }
+            mRouters[i].mNextHop = kInvalidRouterId;
+            mAddressResolver.Remove(i);
         }
+    }
 
-        if (GetDeviceState() == kDeviceStateRouter && !mRouters[mRouterId].mAllocated)
-        {
-            BecomeDetached();
-            ExitNow(error = kThreadError_NoRoute);
-        }
-
+    if (GetDeviceState() == kDeviceStateRouter && !mRouters[mRouterId].mAllocated)
+    {
+        BecomeDetached();
+        ExitNow(error = kThreadError_NoRoute);
     }
 
 exit:
@@ -1317,12 +1310,41 @@ ThreadError MleRouter::HandleAdvertisement(const Message &aMessage, const Ip6::M
         ExitNow();
     }
 
-    VerifyOrExit(IsActiveRouter(sourceAddress.GetRloc16()), ;);
-
     if (mDeviceMode & ModeTlv::kModeFFD)
     {
-        SuccessOrExit(error = ProcessRouteTlv(route));
+        bool processRouteTlv = false;
+
+        switch (mDeviceState)
+        {
+        case kDeviceStateDisabled:
+        case kDeviceStateDetached:
+            break;
+
+        case kDeviceStateChild:
+            if (sourceAddress.GetRloc16() == mParent.mValid.mRloc16)
+            {
+                processRouteTlv = true;
+            }
+
+            break;
+
+        case kDeviceStateRouter:
+        case kDeviceStateLeader:
+            if (static_cast<int8_t>(route.GetRouterIdSequence() - mRouterIdSequence) > 0)
+            {
+                processRouteTlv = true;
+            }
+
+            break;
+        }
+
+        if (processRouteTlv)
+        {
+            SuccessOrExit(error = ProcessRouteTlv(route));
+        }
     }
+
+    VerifyOrExit(IsActiveRouter(sourceAddress.GetRloc16()), ;);
 
     routerId = GetRouterId(sourceAddress.GetRloc16());
     VerifyOrExit(IsRouterIdValid(routerId), error = kThreadError_Parse);
