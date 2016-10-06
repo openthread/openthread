@@ -1851,8 +1851,12 @@ ThreadError Mle::HandleDataResponse(const Message &aMessage, const Ip6::MessageI
     // Active Dataset
     if (activeTimestamp.GetLength() > 0)
     {
-        aMessage.Read(activeDatasetOffset, sizeof(tlv), &tlv);
-        mNetif.GetActiveDataset().Set(activeTimestamp, aMessage, activeDatasetOffset + sizeof(tlv), tlv.GetLength());
+        if (activeDatasetOffset > 0)
+        {
+            aMessage.Read(activeDatasetOffset, sizeof(tlv), &tlv);
+            mNetif.GetActiveDataset().Set(activeTimestamp, aMessage, activeDatasetOffset + sizeof(tlv),
+                                          tlv.GetLength());
+        }
     }
     else
     {
@@ -1862,8 +1866,12 @@ ThreadError Mle::HandleDataResponse(const Message &aMessage, const Ip6::MessageI
     // Pending Dataset
     if (pendingTimestamp.GetLength() > 0)
     {
-        aMessage.Read(pendingDatasetOffset, sizeof(tlv), &tlv);
-        mNetif.GetPendingDataset().Set(pendingTimestamp, aMessage, pendingDatasetOffset + sizeof(tlv), tlv.GetLength());
+        if (pendingDatasetOffset > 0)
+        {
+            aMessage.Read(pendingDatasetOffset, sizeof(tlv), &tlv);
+            mNetif.GetPendingDataset().Set(pendingTimestamp, aMessage, pendingDatasetOffset + sizeof(tlv),
+                                           tlv.GetLength());
+        }
     }
     else
     {

@@ -52,25 +52,22 @@ class Cert_9_2_7_DelayTimer(unittest.TestCase):
         for i in range(1,4):
             self.nodes[i] = node.Node(i)
 
-        self.nodes[COMMISSIONER].set_panid(PANID_INIT)
+        self.nodes[COMMISSIONER].set_active_dataset(LEADER_ACTIVE_TIMESTAMP, panid=PANID_INIT)
         self.nodes[COMMISSIONER].set_mode('rsdn')
         self.nodes[COMMISSIONER].add_whitelist(self.nodes[LEADER].get_addr64())
         self.nodes[COMMISSIONER].enable_whitelist()
         self.nodes[COMMISSIONER].set_router_selection_jitter(1)
 
-        self.nodes[LEADER].set_active_dataset(LEADER_ACTIVE_TIMESTAMP)
-        self.nodes[LEADER].set_panid(PANID_INIT)
+        self.nodes[LEADER].set_active_dataset(LEADER_ACTIVE_TIMESTAMP, panid=PANID_INIT)
         self.nodes[LEADER].set_mode('rsdn')
         self.nodes[LEADER].set_partition_id(0xffffffff)
         self.nodes[LEADER].add_whitelist(self.nodes[COMMISSIONER].get_addr64())
         self.nodes[LEADER].enable_whitelist()
         self.nodes[LEADER].set_router_selection_jitter(1)
 
-        self.nodes[ROUTER].set_active_dataset(ROUTER_ACTIVE_TIMESTAMP)
+        self.nodes[ROUTER].set_active_dataset(ROUTER_ACTIVE_TIMESTAMP, panid=PANID_INIT)
         self.nodes[ROUTER].set_pending_dataset(ROUTER_PENDING_TIMESTAMP, ROUTER_PENDING_ACTIVE_TIMESTAMP)
-        self.nodes[ROUTER].set_panid(PANID_INIT)
         self.nodes[ROUTER].set_mode('rsdn')
-        self.nodes[ROUTER].set_partition_id(0)
         self.nodes[ROUTER].enable_whitelist()
         self.nodes[ROUTER].set_router_selection_jitter(1)
 
@@ -100,6 +97,12 @@ class Cert_9_2_7_DelayTimer(unittest.TestCase):
         self.assertEqual(self.nodes[LEADER].get_state(), 'leader')
         self.assertEqual(self.nodes[ROUTER].get_state(), 'router')
 
+        ipaddrs = self.nodes[ROUTER].get_addrs()
+        for ipaddr in ipaddrs:
+            if ipaddr[0:4] != 'fe80':
+                break
+        self.assertTrue(self.nodes[LEADER].ping(ipaddr))
+
         self.nodes[COMMISSIONER].send_mgmt_pending_set(pending_timestamp=40,
                                                        active_timestamp=80,
                                                        delay_timer=10000,
@@ -118,7 +121,6 @@ class Cert_9_2_7_DelayTimer(unittest.TestCase):
         for ipaddr in ipaddrs:
             if ipaddr[0:4] != 'fe80':
                 break
-
         self.assertTrue(self.nodes[LEADER].ping(ipaddr))
 
 if __name__ == '__main__':
