@@ -1354,7 +1354,7 @@ ThreadError MleRouter::HandleAdvertisement(const Message &aMessage, const Ip6::M
             (mDeviceMode & ModeTlv::kModeFFD) &&
             (GetActiveRouterCount() < mRouterUpgradeThreshold))
         {
-            mRouterSelectionJitterTimeout = otPlatRandomGet() % mRouterSelectionJitter;
+            mRouterSelectionJitterTimeout = (otPlatRandomGet() % mRouterSelectionJitter) + 1;
             ExitNow();
         }
 
@@ -1680,6 +1680,8 @@ void MleRouter::HandleStateUpdateTimer(void *aContext)
 
 void MleRouter::HandleStateUpdateTimer(void)
 {
+    bool routerStateUpdate = false;
+
     if (mChallengeTimeout > 0)
     {
         mChallengeTimeout--;
@@ -1688,6 +1690,11 @@ void MleRouter::HandleStateUpdateTimer(void)
     if (mRouterSelectionJitterTimeout > 0)
     {
         mRouterSelectionJitterTimeout--;
+
+        if (mRouterSelectionJitterTimeout == 0)
+        {
+            routerStateUpdate = true;
+        }
     }
 
     switch (GetDeviceState())
@@ -1702,8 +1709,7 @@ void MleRouter::HandleStateUpdateTimer(void)
         ExitNow();
 
     case kDeviceStateChild:
-        if (mRouterSelectionJitterTimeout == 0 &&
-            GetActiveRouterCount() < mRouterUpgradeThreshold)
+        if (routerStateUpdate && GetActiveRouterCount() < mRouterUpgradeThreshold)
         {
             // upgrade to Router
             BecomeRouter(ThreadStatusTlv::kTooFewRouters);
@@ -1718,8 +1724,7 @@ void MleRouter::HandleStateUpdateTimer(void)
             BecomeChild(kMleAttachSamePartition);
         }
 
-        if (mRouterSelectionJitterTimeout == 0 &&
-            GetActiveRouterCount() > mRouterDowngradeThreshold)
+        if (routerStateUpdate && GetActiveRouterCount() > mRouterDowngradeThreshold)
         {
             // downgrade to REED
             BecomeChild(kMleAttachSamePartition);
