@@ -2165,7 +2165,7 @@ ThreadError Mle::HandleChildIdResponse(const Message &aMessage, const Ip6::Messa
             (mDeviceMode & ModeTlv::kModeFFD) &&
             (numRouters < mMleRouter.GetRouterUpgradeThreshold()))
         {
-            mRouterSelectionJitterTimeout = otPlatRandomGet() % mRouterSelectionJitter;
+            mRouterSelectionJitterTimeout = (otPlatRandomGet() % mRouterSelectionJitter) + 1;
         }
     }
 
