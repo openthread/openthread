@@ -543,7 +543,9 @@ void AddressResolver::HandleAddressQuery(Coap::Header &aHeader, Message &aMessag
 
     for (int i = 0; i < numChildren; i++)
     {
-        if (children[i].mState != Neighbor::kStateValid || (children[i].mMode & Mle::ModeTlv::kModeFFD) != 0)
+        if (children[i].mState != Neighbor::kStateValid ||
+            (children[i].mMode & Mle::ModeTlv::kModeFFD) != 0 ||
+            children[i].mLinkFailures >= Mle::kFailedChildTransmissions)
         {
             continue;
         }

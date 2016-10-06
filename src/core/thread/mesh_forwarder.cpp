@@ -1693,6 +1693,7 @@ void MeshForwarder::HandleDataRequest(const Mac::Address &aMacSource, const Thre
 
     VerifyOrExit((child = mMle.GetChild(aMacSource)) != NULL, ;);
     child->mLastHeard = Timer::GetNow();
+    child->mLinkFailures = 0;
 
     mMle.HandleMacDataRequest(*child);
 
