@@ -29,66 +29,58 @@
 /**
  * @file
  * @brief
- *  This file defines the structure of the variables required for all instances of OpenThread API.
+ *   This file includes the platform abstraction for dynamic memory allocation.
  */
 
-#ifndef OPENTHREADINSTANCE_H_
-#define OPENTHREADINSTANCE_H_
+#ifndef MEMORY_H_
+#define MEMORY_H_
 
-#include <stdint.h>
-#include <stdbool.h>
-
-#include <openthread-types.h>
-#include <crypto/mbedtls.hpp>
-#include <net/ip6.hpp>
-#include <thread/thread_netif.hpp>
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /**
- * This type represents all the static / global variables used by OpenThread allocated in one place.
+ * @defgroup memory Memory
+ * @ingroup platform
+ *
+ * @brief
+ *   This module includes the platform abstraction for dynamic memory allocation.
+ *
+ * @{
+ *
  */
-typedef struct otInstance
-{
-    //
-    // Callbacks
-    //
 
-    Thread::Ip6::NetifCallback mNetifCallback;
+// Currently, OpenThread only requires dynamic memory allocation when supporting multiple
+// simultaneous instances, for MbedTls.
+#ifdef OPENTHREAD_MULTIPLE_INSTANCE
 
-    otReceiveIp6DatagramCallback mReceiveIp6DatagramCallback;
-    void *mReceiveIp6DatagramCallbackContext;
+/**
+ * Dynamically allocates new memory.
+ *
+ * @param[in] aNum   The number of blocks to allocate
+ * @param[in] aSize  The size of each block to allocate
+ *
+ * @retval void*  The pointer to the front of the memory allocated
+ * @retval NULL   Failed to allocate the memory requested.
+ */
+void *otPlatAlloc(size_t aNum, size_t aSize);
 
-    otHandleActiveScanResult mActiveScanCallback;
-    void *mActiveScanCallbackContext;
+/**
+ * Frees memory that was dynamically allocated.
+ *
+ * @param[in] aPtr  A pointer the memory blocks to free.
+ */
+void otPlatFree(void *aPtr);
 
-    otHandleEnergyScanResult mEnergyScanCallback;
-    void *mEnergyScanCallbackContext;
-
-    otHandleActiveScanResult mDiscoverCallback;
-    void *mDiscoverCallbackContext;
-
-    //
-    // State
-    //
-
-#ifndef OPENTHREAD_MULTIPLE_INSTANCE
-    Thread::Crypto::MbedTls mMbedTls;
 #endif
-    Thread::Ip6::Ip6 mIp6;
-    Thread::ThreadNetif mThreadNetif;
 
-    // Constructor
-    otInstance(void);
+/**
+ * @}
+ *
+ */
 
-} otInstance;
+#ifdef __cplusplus
+}  // extern "C"
+#endif
 
-static inline otInstance *otInstanceFromIp6(Thread::Ip6::Ip6 *aIp6)
-{
-    return (otInstance *)CONTAINING_RECORD(aIp6, otInstance, mIp6);
-}
-
-static inline otInstance *otInstanceFromThreadNetif(Thread::ThreadNetif *aThreadNetif)
-{
-    return (otInstance *)CONTAINING_RECORD(aThreadNetif, otInstance, mThreadNetif);
-}
-
-#endif  // OPENTHREADINSTANCE_H_
+#endif  // DEBUG_H_
