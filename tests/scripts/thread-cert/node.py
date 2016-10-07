@@ -259,6 +259,16 @@ class Node:
         self.send_command(cmd)
         self.pexpect.expect('Done')
 
+    def get_network_name(self):
+        self.send_command('networkname')
+        while True:
+            i = self.pexpect.expect(['Done', '(\S+)'])
+            if i != 0:
+                network_name = self.pexpect.match.groups()[0].decode('utf-8')
+            else:
+                break
+        return network_name
+
     def set_network_name(self, network_name):
         cmd = 'networkname ' + network_name
         self.send_command(cmd)
@@ -500,6 +510,28 @@ class Node:
 
     def announce_begin(self, mask, count, period, ipaddr):
         cmd = 'commissioner announce ' + str(mask) + ' ' + str(count) + ' ' + str(period) + ' ' + ipaddr
+        self.send_command(cmd)
+        self.pexpect.expect('Done')
+
+    def send_mgmt_active_set(self, active_timestamp=None, channel=None, panid=None, mesh_local=None,
+                              network_name=None):
+        cmd = 'dataset mgmtsetcommand active '
+
+        if active_timestamp != None:
+            cmd += 'activetimestamp %d ' % active_timestamp
+
+        if channel != None:
+            cmd += 'channel %d ' % channel
+
+        if panid != None:
+            cmd += 'panid %d ' % panid
+
+        if mesh_local != None:
+            cmd += 'localprefix ' + mesh_local + ' '
+
+        if network_name != None:
+            cmd += 'networkname ' + network_name + ' '
+
         self.send_command(cmd)
         self.pexpect.expect('Done')
 
