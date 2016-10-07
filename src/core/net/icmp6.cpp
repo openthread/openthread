@@ -215,7 +215,7 @@ ThreadError Icmp::HandleEchoRequest(Message &aRequestMessage, const MessageInfo 
     }
 
     payloadLength = aRequestMessage.GetLength() - aRequestMessage.GetOffset() - IcmpHeader::GetDataOffset();
-    SuccessOrExit(replyMessage->SetLength(IcmpHeader::GetDataOffset() + payloadLength));
+    SuccessOrExit(error = replyMessage->SetLength(IcmpHeader::GetDataOffset() + payloadLength));
 
     replyMessage->Write(0, IcmpHeader::GetDataOffset(), &icmp6Header);
     aRequestMessage.CopyTo(aRequestMessage.GetOffset() + IcmpHeader::GetDataOffset(),
