@@ -74,7 +74,7 @@ class Cert_6_1_3_RouterAttachConnectivity(unittest.TestCase):
         self.nodes[ROUTER3].set_router_selection_jitter(1)
 
         self.nodes[ED].set_panid(0xface)
-        self.nodes[ED].set_mode('rsdn')
+        self.nodes[ED].set_mode('rsn')
         self.nodes[ED].add_whitelist(self.nodes[ROUTER2].get_addr64())
         self.nodes[ED].add_whitelist(self.nodes[ROUTER3].get_addr64())
         self.nodes[ED].enable_whitelist()
@@ -96,6 +96,8 @@ class Cert_6_1_3_RouterAttachConnectivity(unittest.TestCase):
 
         self.nodes[ED].start()
         time.sleep(5)
+        self.assertEqual(self.nodes[ED].get_state(), 'child')
+
         addrs = self.nodes[ED].get_addrs()
         for addr in addrs:
             self.assertTrue(self.nodes[ROUTER3].ping(addr))
