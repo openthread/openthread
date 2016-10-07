@@ -53,7 +53,8 @@ Leader::Leader(ThreadNetif &aThreadNetif):
     mCoapServer(aThreadNetif.GetCoapServer()),
     mNetworkData(aThreadNetif.GetNetworkDataLeader()),
     mTimer(aThreadNetif.GetIp6().mTimerScheduler, HandleTimer, this),
-    mSessionId(0xffff)
+    mSessionId(0xffff),
+    mNetif(aThreadNetif)
 {
     mCoapServer.AddResource(mPetition);
     mCoapServer.AddResource(mKeepAlive);
@@ -229,8 +230,13 @@ void Leader::HandleTimer(void *aContext)
 
 void Leader::HandleTimer(void)
 {
+    VerifyOrExit(mNetif.GetMle().GetDeviceState() == Mle::kDeviceStateLeader, ;);
+
     otLogInfoMeshCoP("commissioner inactive\r\n");
     mNetworkData.SetCommissioningData(NULL, 0);
+
+exit:
+    return;
 }
 
 }  // namespace MeshCoP

@@ -99,6 +99,7 @@ private:
 
     CommissionerIdTlv mCommissionerId;
     uint16_t mSessionId;
+    ThreadNetif &mNetif;
 };
 
 }  // namespace MeshCoP
