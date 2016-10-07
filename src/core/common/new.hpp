@@ -35,7 +35,10 @@
 #define NEW_HPP_
 
 #include <stddef.h>
+#include <platform/toolchain.h>
 
 inline void *operator new(size_t, void *p) throw() { return p; }
+
+void OT_CDECL operator delete(void *, size_t) throw();
 
 #endif  // NEW_HPP_
