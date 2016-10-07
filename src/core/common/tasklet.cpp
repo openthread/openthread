@@ -116,6 +116,11 @@ void TaskletScheduler::ProcessQueuedTasklets(void)
         // only process tasklets that were queued at the time this method was called
         if (cur == tail)
         {
+            if (mHead != NULL)
+            {
+                otSignalTaskletPending(cur->mScheduler.GetIp6()->GetInstance());
+            }
+
             break;
         }
     }
