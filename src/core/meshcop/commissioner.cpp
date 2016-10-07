@@ -64,11 +64,14 @@ Commissioner::Commissioner(ThreadNetif &aThreadNetif):
     mSendKek(false),
     mSocket(aThreadNetif.GetIp6().mUdp),
     mRelayReceive(OPENTHREAD_URI_RELAY_RX, &Commissioner::HandleRelayReceive, this),
+    mDatasetChanged(OPENTHREAD_URI_DATASET_CHANGED, &Commissioner::HandleDatasetChanged, this),
+    mCoapServer(aThreadNetif.GetCoapServer()),
     mNetif(aThreadNetif),
     mIsSendMgmtCommRequest(false)
 {
     memset(mJoiners, 0, sizeof(mJoiners));
-    aThreadNetif.GetCoapServer().AddResource(mRelayReceive);
+    mCoapServer.AddResource(mRelayReceive);
+    mCoapServer.AddResource(mDatasetChanged);
 }
 
 ThreadError Commissioner::Start(void)
@@ -489,6 +492,52 @@ void Commissioner::HandleRelayReceive(Coap::Header &aHeader, Message &aMessage, 
 exit:
     (void)aMessageInfo;
     return;
+}
+
+void Commissioner::HandleDatasetChanged(void *aContext, Coap::Header &aHeader,
+                                        Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
+{
+    static_cast<Commissioner *>(aContext)->HandleDatasetChanged(aHeader, aMessage, aMessageInfo);
+}
+
+void Commissioner::HandleDatasetChanged(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
+{
+    VerifyOrExit(aHeader.GetType() == Coap::Header::kTypeConfirmable &&
+                 aHeader.GetCode() == Coap::Header::kCodePost, ;);
+
+    otLogInfoMeshCoP("received dataset changed\r\n");
+    (void)aMessage;
+
+    SendDatasetChangedResponse(aHeader, aMessageInfo);
+
+exit:
+    return;
+}
+
+void Commissioner::SendDatasetChangedResponse(const Coap::Header &aRequestHeader, const Ip6::MessageInfo &aMessageInfo)
+{
+    ThreadError error = kThreadError_None;
+    Coap::Header responseHeader;
+    Message *message;
+
+    VerifyOrExit((message = mCoapServer.NewMessage(0)) != NULL, error = kThreadError_NoBufs);
+    responseHeader.Init();
+    responseHeader.SetType(Coap::Header::kTypeAcknowledgment);
+    responseHeader.SetCode(Coap::Header::kCodeChanged);
+    responseHeader.SetMessageId(aRequestHeader.GetMessageId());
+    responseHeader.SetToken(aRequestHeader.GetToken(), aRequestHeader.GetTokenLength());
+    responseHeader.Finalize();
+    SuccessOrExit(error = message->Append(responseHeader.GetBytes(), responseHeader.GetLength()));
+    SuccessOrExit(error = mCoapServer.SendMessage(*message, aMessageInfo));
+
+    otLogInfoMeshCoP("Sent dataset changed acknowledgment\n");
+
+exit:
+
+    if (error != kThreadError_None && message != NULL)
+    {
+        message->Free();
+    }
 }
 
 void Commissioner::HandleUdpReceive(void *aContext, otMessage aMessage, const otMessageInfo *aMessageInfo)

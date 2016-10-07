@@ -247,6 +247,8 @@ public:
 
     MeshCoP::JoinerRouter &GetJoinerRouter(void) { return mJoinerRouter; }
 
+    MeshCoP::Leader &GetLeader(void) { return mLeader; }
+
     AnnounceBeginServer &GetAnnounceBeginServer(void) { return mAnnounceBegin; }
 
 #if OPENTHREAD_ENABLE_COMMISSIONER

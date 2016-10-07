@@ -159,6 +159,10 @@ private:
                                    Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
     void HandleRelayReceive(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
+    static void HandleDatasetChanged(void *aContext, Coap::Header &aHeader,
+                                     Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    void HandleDatasetChanged(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+
     static void HandleUdpReceive(void *aContext, otMessage aMessage, const otMessageInfo *aMessageInfo);
     void HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
@@ -173,6 +177,8 @@ private:
 
     void ReceiveJoinerFinalize(uint8_t *buf, uint16_t length);
     void SendJoinFinalizeResponse(const Coap::Header &aRequestHeader, StateTlv::State aState);
+
+    void SendDatasetChangedResponse(const Coap::Header &aRequestHeader, const Ip6::MessageInfo &aMessageInfo);
 
     ThreadError SendPetition(void);
     ThreadError SendKeepAlive(void);
@@ -209,6 +215,8 @@ private:
     uint16_t mCoapMessageId;
 
     Coap::Resource mRelayReceive;
+    Coap::Resource mDatasetChanged;
+    Coap::Server &mCoapServer;
     ThreadNetif &mNetif;
 
     bool mIsSendMgmtCommRequest;

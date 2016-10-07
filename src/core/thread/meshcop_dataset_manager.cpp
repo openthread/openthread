@@ -50,6 +50,7 @@
 #include <thread/thread_netif.hpp>
 #include <thread/thread_tlvs.hpp>
 #include <thread/thread_uris.hpp>
+#include <meshcop/leader.hpp>
 
 namespace Thread {
 namespace MeshCoP {
@@ -266,6 +267,7 @@ ThreadError DatasetManager::Set(Coap::Header &aHeader, Message &aMessage, const 
     Timestamp timestamp;
     uint16_t offset = aMessage.GetOffset();
     Tlv::Type type;
+    bool isUpdateFromCommissioner = false;
     StateTlv::State state = StateTlv::kAccept;
 
     VerifyOrExit(mMle.GetDeviceState() == Mle::kDeviceStateLeader, state = StateTlv::kReject);
@@ -299,6 +301,7 @@ ThreadError DatasetManager::Set(Coap::Header &aHeader, Message &aMessage, const 
             uint8_t *end;
             uint8_t length;
 
+            isUpdateFromCommissioner = true;
             cur = mNetworkDataLeader.GetCommissioningData(length);
             end = cur + length;
 
@@ -355,6 +358,45 @@ ThreadError DatasetManager::Set(Coap::Header &aHeader, Message &aMessage, const 
     mNetwork = mLocal;
     mNetworkDataLeader.IncrementVersion();
     mNetworkDataLeader.IncrementStableVersion();
+
+    // notify commissioner if update is from thread device
+    if (!isUpdateFromCommissioner)
+    {
+        uint8_t *cur;
+        uint8_t *end;
+        uint8_t length;
+        uint16_t locator = 0xffff;
+        Ip6::Address destination;
+
+        cur = mNetworkDataLeader.GetCommissioningData(length);
+        VerifyOrExit(cur != NULL && length != 0, ;);
+        end = cur + length;
+
+        while (cur < end)
+        {
+            Tlv *data = reinterpret_cast<Tlv *>(cur);
+
+            if (data->GetType() == Tlv::kBorderAgentLocator)
+            {
+                locator = static_cast<BorderAgentLocatorTlv *>(data)->GetBorderAgentLocator();
+                break;
+            }
+
+            cur += sizeof(Tlv) + data->GetLength();
+        }
+
+        // verify that Border Agent Locator should be available
+        VerifyOrExit(locator != 0xffff, ;);
+
+        memset(&destination, 0, sizeof(destination));
+        memcpy(&destination, mNetif.GetMle().GetMeshLocal16(), OT_MESH_LOCAL_PREFIX_SIZE);
+        destination.mFields.m16[4] = HostSwap16(0x0000);
+        destination.mFields.m16[5] = HostSwap16(0x00ff);
+        destination.mFields.m16[6] = HostSwap16(0xfe00);
+        destination.mFields.m16[7] = HostSwap16(locator);
+
+        mNetif.GetLeader().SendDatasetChanged(destination);
+    }
 
 exit:
 
