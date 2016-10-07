@@ -1023,6 +1023,7 @@ void otInstanceFinalize(otInstance *aInstance)
     (void)otInterfaceDown(aInstance);
 
     // Nothing to actually free, since the caller supplied the buffer
+    delete aInstance;
 
 #ifndef OPENTHREAD_MULTIPLE_INSTANCE
     sInstance = NULL;
