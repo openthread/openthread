@@ -763,3 +763,11 @@ void otPlatRadioClearSrcMatchExtEntries(otInstance *aInstance)
 {
     (void)aInstance;
 }
+
+ThreadError otPlatRadioEnergyScan(otInstance *aInstance, uint8_t aScanChannel, uint16_t aScanDuration)
+{
+    (void)aInstance;
+    (void)aScanChannel;
+    (void)aScanDuration;
+    return kThreadError_NotImplemented;
+}
