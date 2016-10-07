@@ -44,6 +44,7 @@ libopenthread_cc2538_a_SOURCES            = \
     radio.c                                 \
     random.c                                \
     uart.c                                  \
+    flash.c                                 \
     startup-gcc.c                           \
     $(NULL)
 
@@ -56,6 +57,7 @@ endif
 noinst_HEADERS                            = \
     cc2538-reg.h                            \
     platform-cc2538.h                       \
+    rom-utility.h                           \
     $(NULL)
 
 if OPENTHREAD_BUILD_COVERAGE
