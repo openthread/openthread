@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2016, Nest Labs, Inc.
+ *  Copyright (c) 2016, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -80,7 +80,7 @@ uint32_t otPlatFlashGetSize(void)
 {
     uint32_t reg = (HWREG(FLASH_CTRL_DIECFG0) & 0x00000070) >> 4;
 
-    return reg ? (128 * reg) : 64;
+    return reg ? (0x20000 * reg) : 0x10000;
 }
 
 ThreadError otPlatFlashErasePage(uint32_t aAddress)
@@ -89,7 +89,7 @@ ThreadError otPlatFlashErasePage(uint32_t aAddress)
     int32_t status;
     uint32_t address;
 
-    VerifyOrExit(aAddress < otPlatFlashGetSize() * 1024, error = kThreadError_InvalidArgs);
+    VerifyOrExit(aAddress < otPlatFlashGetSize(), error = kThreadError_InvalidArgs);
 
     address = FLASH_BASE + aAddress - (aAddress & (FLASH_PAGE_SIZE - 1));
     status = ROM_PageErase(address, FLASH_PAGE_SIZE);
@@ -121,7 +121,7 @@ uint32_t otPlatFlashWrite(uint32_t aAddress, uint8_t *aData, uint32_t aSize)
     int32_t status;
     uint32_t busy = 1;
 
-    VerifyOrExit(((aAddress + aSize) < (otPlatFlashGetSize() * 1024)) &&
+    VerifyOrExit(((aAddress + aSize) < otPlatFlashGetSize()) &&
                  (!(aAddress & 3)) && (!(aSize & 3)), ;);
 
     status = ROM_ProgramFlash((uint32_t *)aData, aAddress + FLASH_BASE, aSize);
@@ -141,7 +141,7 @@ uint32_t otPlatFlashRead(uint32_t aAddress, uint8_t *aData, uint32_t aSize)
 {
     uint32_t size = 0;
 
-    VerifyOrExit((aAddress + aSize) < (otPlatFlashGetSize() * 1024), ;);
+    VerifyOrExit((aAddress + aSize) < otPlatFlashGetSize(), ;);
 
     while (size <= aSize)
     {
