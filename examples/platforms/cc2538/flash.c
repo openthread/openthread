@@ -91,7 +91,7 @@ ThreadError otPlatFlashErasePage(uint32_t aAddress)
 
     VerifyOrExit(aAddress < otPlatFlashGetSize() * 1024, error = kThreadError_InvalidArgs);
 
-    address = FLASH_BASE + aAddress - (aAddress & (FLASH_PAGE_SIZE -1));
+    address = FLASH_BASE + aAddress - (aAddress & (FLASH_PAGE_SIZE - 1));
     status = ROM_PageErase(address, FLASH_PAGE_SIZE);
     error = romStatusToThread(status);
 
@@ -110,11 +110,9 @@ ThreadError otPlatFlashStatusWait(uint32_t aTimeout)
         busy = HWREG(FLASH_CTRL_FCTL) & FLASH_CTRL_FCTL_BUSY;
     }
 
-    if (busy)
-    {
-        error = kThreadError_Busy;
-    }
+    VerifyOrExit(!busy, error = kThreadError_Busy);
 
+exit:
     return error;
 }
 
@@ -122,32 +120,21 @@ uint32_t otPlatFlashWrite(uint32_t aAddress, uint8_t *aData, uint32_t aSize)
 {
     int32_t status;
     uint32_t busy = 1;
-    uint32_t *data;
-    uint32_t size = 0;
 
     VerifyOrExit(((aAddress + aSize) < (otPlatFlashGetSize() * 1024)) &&
                  (!(aAddress & 3)) && (!(aSize & 3)), ;);
 
-    data = (uint32_t *)(aData);
+    status = ROM_ProgramFlash((uint32_t *)aData, aAddress + FLASH_BASE, aSize);
 
-    while (size < aSize)
+    while (busy)
     {
-        status = ROM_ProgramFlash(data, aAddress + FLASH_BASE, 4);
-
-        while (busy)
-        {
-            busy = HWREG(FLASH_CTRL_FCTL) & FLASH_CTRL_FCTL_BUSY;
-        }
-
-        SuccessOrExit(romStatusToThread(status));
-
-        size += 4;
-        data++;
-        aAddress += 4;
+        busy = HWREG(FLASH_CTRL_FCTL) & FLASH_CTRL_FCTL_BUSY;
     }
 
+    VerifyOrExit(romStatusToThread(status) == kThreadError_None, aSize = 0);
+
 exit:
-    return size;
+    return aSize;
 }
 
 uint32_t otPlatFlashRead(uint32_t aAddress, uint8_t *aData, uint32_t aSize)
@@ -156,33 +143,24 @@ uint32_t otPlatFlashRead(uint32_t aAddress, uint8_t *aData, uint32_t aSize)
 
     VerifyOrExit((aAddress + aSize) < (otPlatFlashGetSize() * 1024), ;);
 
-    while (size < (aSize / 4))
+    while (size <= aSize)
     {
         uint32_t reg = HWREG(aAddress + FLASH_BASE);
         uint8_t *byte = (uint8_t *)&reg;
+        uint8_t maxIndex = 4;
 
-        for (uint8_t index = 0; index < 4; index++, byte++, aData++)
+        if (size == (aSize - aSize % 4))
+        {
+            maxIndex = aSize % 4;
+        }
+
+        for (uint8_t index = 0; index < maxIndex; index++, byte++, aData++)
         {
             *aData = *byte;
         }
 
-        size += 1;
-        aAddress += 4;
-    }
-
-    size *= 4;
-
-    if (aSize % 4)
-    {
-        uint32_t reg = HWREG(aAddress + FLASH_BASE);
-        uint8_t *byte = (uint8_t *)&reg;
-
-        for (uint8_t index = 0; index < aSize % 4; index++, byte++, aData++)
-        {
-            *aData = *byte;
-        }
-
-        size += (aSize % 4);
+        size += maxIndex;
+        aAddress += maxIndex;
     }
 
 exit:
