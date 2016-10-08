@@ -43,6 +43,7 @@ libopenthread_a_SOURCES             = \
     common/message.cpp                \
     common/tasklet.cpp                \
     common/timer.cpp                  \
+    common/settings.cpp               \
     common/trickle_timer.cpp          \
     crypto/aes_ccm.cpp                \
     crypto/aes_ecb.cpp                \
