@@ -123,54 +123,30 @@ void otPlatRadioGetIeeeEui64(otInstance *aInstance, uint8_t *aIeeeEui64)
     }
 }
 
-ThreadError otPlatRadioSetPanId(otInstance *aInstance, uint16_t panid)
+void otPlatRadioSetPanId(otInstance *aInstance, uint16_t panid)
 {
-    ThreadError error = kThreadError_Busy;
     (void)aInstance;
 
-    if (sState != kStateTransmit)
-    {
-        HWREG(RFCORE_FFSM_PAN_ID0) = panid & 0xFF;
-        HWREG(RFCORE_FFSM_PAN_ID1) = panid >> 8;
-        error = kThreadError_None;
-    }
-
-    return error;
+    HWREG(RFCORE_FFSM_PAN_ID0) = panid & 0xFF;
+    HWREG(RFCORE_FFSM_PAN_ID1) = panid >> 8;
 }
 
-ThreadError otPlatRadioSetExtendedAddress(otInstance *aInstance, uint8_t *address)
+void otPlatRadioSetExtendedAddress(otInstance *aInstance, uint8_t *address)
 {
-    ThreadError error = kThreadError_Busy;
     (void)aInstance;
 
-    if (sState != kStateTransmit)
+    for (int i = 0; i < 8; i++)
     {
-        int i;
-
-        for (i = 0; i < 8; i++)
-        {
-            ((volatile uint32_t *)RFCORE_FFSM_EXT_ADDR0)[i] = address[i];
-        }
-
-        error = kThreadError_None;
+        ((volatile uint32_t *)RFCORE_FFSM_EXT_ADDR0)[i] = address[i];
     }
-
-    return error;
 }
 
-ThreadError otPlatRadioSetShortAddress(otInstance *aInstance, uint16_t address)
+void otPlatRadioSetShortAddress(otInstance *aInstance, uint16_t address)
 {
-    ThreadError error = kThreadError_Busy;
     (void)aInstance;
 
-    if (sState != kStateTransmit)
-    {
-        HWREG(RFCORE_FFSM_SHORT_ADDR0) = address & 0xFF;
-        HWREG(RFCORE_FFSM_SHORT_ADDR1) = address >> 8;
-        error = kThreadError_None;
-    }
-
-    return error;
+    HWREG(RFCORE_FFSM_SHORT_ADDR0) = address & 0xFF;
+    HWREG(RFCORE_FFSM_SHORT_ADDR1) = address >> 8;
 }
 
 void cc2538RadioInit(void)

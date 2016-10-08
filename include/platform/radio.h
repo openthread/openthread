@@ -162,31 +162,26 @@ void otPlatRadioGetIeeeEui64(otInstance *aInstance, uint8_t *aIeeeEui64);
  * @param[in] aInstance  The OpenThread instance structure.
  * @param[in] aPanId     The IEEE 802.15.4 PAN ID.
  *
- * @retval ::kThreadError_None  If the PAN ID was set properly.
  */
-ThreadError otPlatRadioSetPanId(otInstance *aInstance, uint16_t aPanId);
+void otPlatRadioSetPanId(otInstance *aInstance, uint16_t aPanId);
 
 /**
  * Set the Extended Address for address filtering.
  *
- *
  * @param[in] aInstance         The OpenThread instance structure.
  * @param[in] aExtendedAddress  A pointer to the IEEE 802.15.4 Extended Address.
  *
- * @retval ::kThreadError_None  If the Extended Address was set properly.
  */
-ThreadError otPlatRadioSetExtendedAddress(otInstance *aInstance, uint8_t *aExtendedAddress);
+void otPlatRadioSetExtendedAddress(otInstance *aInstance, uint8_t *aExtendedAddress);
 
 /**
  * Set the Short Address for address filtering.
  *
- *
  * @param[in] aInstance      The OpenThread instance structure.
  * @param[in] aShortAddress  The IEEE 802.15.4 Short Address.
  *
- * @retval ::kThreadError_None  If the Short Address was set properly.
  */
-ThreadError otPlatRadioSetShortAddress(otInstance *aInstance, uint16_t aShortAddress);
+void otPlatRadioSetShortAddress(otInstance *aInstance, uint16_t aShortAddress);
 
 /**
  * @}
