@@ -39,7 +39,7 @@ from IThci import IThci
 from pexpect_serial import SerialSpawn
 from GRLLibs.UtilityModules.Test import Thread_Device_Role, Device_Data_Requirement, MacType
 from GRLLibs.UtilityModules.enums import PlatformDiagnosticPacket_Direction, PlatformDiagnosticPacket_Type, AddressType
-from GRLLibs.UtilityModules.ModuleHelper import ModuleHelper,ThreadRunner
+from GRLLibs.UtilityModules.ModuleHelper import ModuleHelper, ThreadRunner
 from GRLLibs.ThreadPacket.PlatformPackets import PlatformDiagnosticPacket, PlatformPackets
 from Queue import Queue
 
@@ -98,7 +98,7 @@ class ARM(IThci):
         """
         if self.logThreadStatus == self.logStatus['running']:
             self.logThreadStatus = self.logStatus['pauseReq']
-            while(self.logThreadStatus != self.logStatus['paused'] and self.logThreadStatus != self.logStatus['stop']):
+            while self.logThreadStatus != self.logStatus['paused'] and self.logThreadStatus != self.logStatus['stop']:
                 pass
 
         try:
@@ -476,7 +476,7 @@ class ARM(IThci):
                     print line
                     logs.put(line)
 
-            except Exception,e:
+            except Exception, e:
                 pass
 
             if self.logThreadStatus == self.logStatus['pauseReq']:
@@ -1707,7 +1707,6 @@ class ARM(IThci):
         else:
             return False
 
-
     def setJoinKey(self, strPSKc):
         pass
 
@@ -1739,7 +1738,7 @@ class ARM(IThci):
             if self.__sendCommand(cmd)[0] == 'Done':
                 self.commissionerStarted = True
                 if self.logThreadStatus == self.logStatus['stop']:
-                    self.logThread = ThreadRunner.run(target = self.__readCommissioningLogs, args = (120,))
+                    self.logThread = ThreadRunner.run(target=self.__readCommissioningLogs, args=(120,))
                 return True
             else:
                 return False
@@ -1762,8 +1761,20 @@ class ARM(IThci):
         print cmd
         return self.__sendCommand(cmd)[0] == "Done"
 
-    def allowCommission(self, strPSKc="GRLPassword"):
-        pass
+    def allowCommission(self):
+        """start commissioner candidate petition process
+
+        Returns:
+            True: successful to start commissioner candidate petition process
+            False: fail to start commissioner candidate petition process
+        """
+        print '%s call allowCommission' % self.port
+        try:
+            cmd = 'commissioner start'
+            print cmd
+            return self.__sendCommand(cmd)[0] == 'Done'
+        except Exception, e:
+            modulehelper.writeintodebuglogger("allowcommission() error: " + str(e))
 
     def joinCommissioned(self, strPSKd='threadjpaketest', waitTime=20):
         """start joiner
@@ -1781,7 +1792,7 @@ class ARM(IThci):
         print cmd
         if self.__sendCommand(cmd)[0] == "Done":
             if self.logThreadStatus == self.logStatus['stop']:
-                self.logThread = ThreadRunner.run(target = self.__readCommissioningLogs, args = (90,))
+                self.logThread = ThreadRunner.run(target=self.__readCommissioningLogs, args=(90,))
             time.sleep(100)
 
             self.__sendCommand('thread start')
@@ -1835,7 +1846,7 @@ class ARM(IThci):
                                 if ".." not in payloadValues[num]:
                                     payload.append(int(payloadValues[num], 16))
 
-                    EncryptedPacket.TLVs = PlatformPackets.read(EncryptedPacket.Type,payload) if payload != [] else []
+                    EncryptedPacket.TLVs = PlatformPackets.read(EncryptedPacket.Type, payload) if payload != [] else []
 
             ProcessedLogs.append(EncryptedPacket)
         return ProcessedLogs
@@ -1918,7 +1929,7 @@ class ARM(IThci):
 
     def MGMT_ACTIVE_SET(self, sAddr='', xCommissioningSessionId=None, listActiveTimestamp=None, listChannelMask=None, xExtendedPanId=None,
                         sNetworkName=None, sPSKc=None, listSecurityPolicy=None, xChannel=None, sMeshLocalPrefix=None, xMasterKey=None,
-                        xPanId=None, xTmfPort=None, xSteeringData=None, xBorderRouterLocator=None, BogusTLV = None, xDelayTimer=None):
+                        xPanId=None, xTmfPort=None, xSteeringData=None, xBorderRouterLocator=None, BogusTLV=None, xDelayTimer=None):
         """send MGMT_ACTIVE_SET command
 
         Returns:
@@ -2087,9 +2098,9 @@ class ARM(IThci):
                 cmd += str(listActiveTimestamp[0])
 
             if xDelayTimer != None:
-                #cmd += ' delaytimer '
-                #cmd += str(xDelayTimer)
-                cmd += ' delaytimer 3000000'
+                cmd += ' delaytimer '
+                cmd += str(xDelayTimer)
+                #cmd += ' delaytimer 3000000'
 
             if xChannel != None:
                 cmd += ' channel '
@@ -2097,7 +2108,7 @@ class ARM(IThci):
 
             if xPanId != None:
                 cmd += ' panid '
-                cmd + str(xPanId)
+                cmd += str(xPanId)
 
             if xMasterKey != None:
                 cmd += ' masterkey '
@@ -2190,16 +2201,25 @@ class ARM(IThci):
             ModuleHelper.WriteIntoDebugLogger("MGMT_COMM_SET() Error: " + str(e))
 
     def setActiveDataset(self, listActiveDataset=[]):
-        pass
+        print '%s call setActiveDataset' % self.port
 
     def setCommisionerMode(self):
-        pass
+        print '%s call setCommissionerMode' % self.port
 
     def setPSKc(self, strPSKc):
-        pass
+        print '%s call setPSKc' % self.port
 
     def setActiveTimestamp(self, xActiveTimestamp):
-        pass
+        print '%s call setActiveTimestamp' % self.port
+        try:
+            cmd = 'dataset activetimestamp %s' % str(xActiveTimestamp)
+            print cmd
+            if self.__sendCommand(cmd)[0] == 'Done':
+                return self.__sendCommand('dataset commit active')[0] == 'Done'
+            else:
+                return False
+        except Exception, e:
+            ModuleHelper.WriteIntoDebugLogger("setActiveTimestamp() Error: " + str(e))
 
     def setUdpJoinerPort(self, portNumber):
         """set Joiner UDP Port
@@ -2230,4 +2250,7 @@ class ARM(IThci):
         return self.__sendCommand(cmd)[0] == 'Done'
 
     def sendBeacons(self, sAddr, xCommissionerSessionId, listChannelMask, xPanId):
-        pass
+        print '%s call sendBeacons' % self.port
+
+    def updateRouterStatus(self):
+        print '%s call updateRouterStatus' % self.port
