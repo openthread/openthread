@@ -91,6 +91,14 @@ namespace Thread {
 #define OPENTHREAD_URI_ACTIVE_SET       "c/as"
 
 /**
+ * @def OPENTHREAD_URI_DATASET_CHANGED
+ *
+ * The URI Path for MGMT_DATASET_CHANGED
+ *
+ */
+#define OPENTHREAD_URI_DATASET_CHANGED  "c/dc"
+
+/**
  * @def OPENTHREAD_URI_ENERGY_SCAN
  *
  * The URI Path for Energy Scan

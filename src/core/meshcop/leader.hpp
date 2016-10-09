@@ -69,6 +69,17 @@ public:
      */
     Leader(ThreadNetif &aThreadNetif);
 
+    /**
+     * This method sends a MGMT_DATASET_CHANGED message to commissioner.
+     *
+     * @param[in]  aAddress   The IPv6 address of destination.
+     *
+     * @retval kThreadError_None    Successfully send MGMT_DATASET_CHANGED message.
+     * @retval kThreadError_NoBufs  Insufficient buffers to generate a MGMT_DATASET_CHANGED message.
+     *
+     */
+    ThreadError SendDatasetChanged(const Ip6::Address &aAddress);
+
 private:
     enum
     {
@@ -90,12 +101,17 @@ private:
     ThreadError SendKeepAliveResponse(const Coap::Header &aRequestHeader, const Ip6::MessageInfo &aMessageInfo,
                                       StateTlv::State aState);
 
+    static void HandleUdpReceive(void *aContext, otMessage aMessage, const otMessageInfo *aMessageInfo);
+
     Coap::Resource mPetition;
     Coap::Resource mKeepAlive;
     Coap::Server &mCoapServer;
+    uint8_t mCoapToken[2];
+    uint16_t mCoapMessageId;
     NetworkData::Leader &mNetworkData;
 
     Timer mTimer;
+    Ip6::UdpSocket mSocket;
 
     CommissionerIdTlv mCommissionerId;
     uint16_t mSessionId;

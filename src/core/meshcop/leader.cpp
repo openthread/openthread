@@ -53,11 +53,14 @@ Leader::Leader(ThreadNetif &aThreadNetif):
     mCoapServer(aThreadNetif.GetCoapServer()),
     mNetworkData(aThreadNetif.GetNetworkDataLeader()),
     mTimer(aThreadNetif.GetIp6().mTimerScheduler, HandleTimer, this),
+    mSocket(aThreadNetif.GetIp6().mUdp),
     mSessionId(0xffff),
     mNetif(aThreadNetif)
 {
     mCoapServer.AddResource(mPetition);
     mCoapServer.AddResource(mKeepAlive);
+
+    mSocket.Open(HandleUdpReceive, this);
 }
 
 void Leader::HandlePetition(void *aContext, Coap::Header &aHeader, Message &aMessage,
@@ -212,6 +215,54 @@ ThreadError Leader::SendKeepAliveResponse(const Coap::Header &aRequestHeader, co
     SuccessOrExit(error = mCoapServer.SendMessage(*message, aMessageInfo));
 
     otLogInfoMeshCoP("sent keep alive response\r\n");
+
+exit:
+
+    if (error != kThreadError_None && message != NULL)
+    {
+        message->Free();
+    }
+
+    return error;
+}
+
+void Leader::HandleUdpReceive(void *aContext, otMessage aMessage, const otMessageInfo *aMessageInfo)
+{
+    otLogInfoMeshCoP("received dataset changed response\r\n");
+    (void)aContext;
+    (void)aMessage;
+    (void)aMessageInfo;
+}
+
+ThreadError Leader::SendDatasetChanged(const Ip6::Address &aAddress)
+{
+    ThreadError error = kThreadError_None;
+    Coap::Header header;
+    Ip6::MessageInfo messageInfo;
+    Message *message;
+
+    for (size_t i = 0; i < sizeof(mCoapToken); i++)
+    {
+        mCoapToken[i] = static_cast<uint8_t>(otPlatRandomGet());
+    }
+
+    header.Init();
+    header.SetType(Coap::Header::kTypeConfirmable);
+    header.SetCode(Coap::Header::kCodePost);
+    header.SetMessageId(++mCoapMessageId);
+    header.SetToken(mCoapToken, sizeof(mCoapToken));
+    header.AppendUriPathOptions(OPENTHREAD_URI_DATASET_CHANGED);
+    header.Finalize();
+
+    VerifyOrExit((message = mSocket.NewMessage(0)) != NULL, error = kThreadError_NoBufs);
+    SuccessOrExit(error = message->Append(header.GetBytes(), header.GetLength()));
+
+    memset(&messageInfo, 0, sizeof(messageInfo));
+    messageInfo.GetPeerAddr() = aAddress;
+    messageInfo.mPeerPort = kCoapUdpPort;
+    SuccessOrExit(error = mSocket.SendTo(*message, messageInfo));
+
+    otLogInfoMeshCoP("sent dataset changed\r\n");
 
 exit:
 
