@@ -96,19 +96,16 @@ extern "C" {
     {
     }
 
-    ThreadError otPlatRadioSetPanId(otInstance *, uint16_t)
+    void otPlatRadioSetPanId(otInstance *, uint16_t)
     {
-        return kThreadError_None;
     }
 
-    ThreadError otPlatRadioSetExtendedAddress(otInstance *, uint8_t *)
+    void otPlatRadioSetExtendedAddress(otInstance *, uint8_t *)
     {
-        return kThreadError_None;
     }
 
-    ThreadError otPlatRadioSetShortAddress(otInstance *, uint16_t)
+    void otPlatRadioSetShortAddress(otInstance *, uint16_t)
     {
-        return kThreadError_None;
     }
 
     void otPlatRadioSetPromiscuous(otInstance *, bool)

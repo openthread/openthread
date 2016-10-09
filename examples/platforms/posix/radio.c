@@ -300,52 +300,26 @@ void otPlatRadioGetIeeeEui64(otInstance *aInstance, uint8_t *aIeeeEui64)
     aIeeeEui64[7] = NODE_ID & 0xff;
 }
 
-ThreadError otPlatRadioSetPanId(otInstance *aInstance, uint16_t panid)
+void otPlatRadioSetPanId(otInstance *aInstance, uint16_t panid)
 {
-    ThreadError error = kThreadError_Busy;
     (void)aInstance;
-
-    if (sState != kStateTransmit)
-    {
-        sPanid = panid;
-        error = kThreadError_None;
-    }
-
-    return error;
+    sPanid = panid;
 }
 
-ThreadError otPlatRadioSetExtendedAddress(otInstance *aInstance, uint8_t *address)
+void otPlatRadioSetExtendedAddress(otInstance *aInstance, uint8_t *address)
 {
-    ThreadError error = kThreadError_Busy;
     (void)aInstance;
 
-    if (sState != kStateTransmit)
+    for (size_t i = 0; i < sizeof(sExtendedAddress); i++)
     {
-        size_t i;
-
-        for (i = 0; i < sizeof(sExtendedAddress); i++)
-        {
-            sExtendedAddress[i] = address[sizeof(sExtendedAddress) - 1 - i];
-        }
-
-        error = kThreadError_None;
+        sExtendedAddress[i] = address[sizeof(sExtendedAddress) - 1 - i];
     }
-
-    return error;
 }
 
-ThreadError otPlatRadioSetShortAddress(otInstance *aInstance, uint16_t address)
+void otPlatRadioSetShortAddress(otInstance *aInstance, uint16_t address)
 {
-    ThreadError error = kThreadError_Busy;
     (void)aInstance;
-
-    if (sState != kStateTransmit)
-    {
-        sShortAddress = address;
-        error = kThreadError_None;
-    }
-
-    return error;
+    sShortAddress = address;
 }
 
 void otPlatRadioSetPromiscuous(otInstance *aInstance, bool aEnable)
