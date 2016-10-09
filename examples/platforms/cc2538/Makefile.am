@@ -38,14 +38,14 @@ libopenthread_cc2538_a_CPPFLAGS           = \
 
 libopenthread_cc2538_a_SOURCES            = \
     alarm.c                                 \
-    misc.c                                  \
+    flash.c                                 \
     logging.c                               \
+    misc.c                                  \
     platform.c                              \
     radio.c                                 \
     random.c                                \
-    uart.c                                  \
-    flash.c                                 \
     startup-gcc.c                           \
+    uart.c                                  \
     $(NULL)
 
 if OPENTHREAD_ENABLE_DIAG
