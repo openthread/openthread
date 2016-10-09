@@ -122,7 +122,7 @@ uint32_t otPlatFlashWrite(uint32_t aAddress, uint8_t *aData, uint32_t aSize)
     uint32_t busy = 1;
 
     VerifyOrExit(((aAddress + aSize) < otPlatFlashGetSize()) &&
-                 (!(aAddress & 3)) && (!(aSize & 3)), ;);
+                 (!(aAddress & 3)) && (!(aSize & 3)), aSize = 0);
 
     status = ROM_ProgramFlash((uint32_t *)aData, aAddress + FLASH_BASE, aSize);
 
