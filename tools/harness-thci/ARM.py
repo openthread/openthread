@@ -73,7 +73,6 @@ class ARM(IThci):
             self.logThread = Queue()
             self.logStatus = {'stop':'stop', 'running':'running', "pauseReq":'pauseReq', 'paused':'paused'}
             self.logThreadStatus = self.logStatus['stop']
-            self.commissionerStarted = False
             self.intialize()
         except Exception, e:
             ModuleHelper.WriteIntoDebugLogger("initialize() Error: " + str(e))
@@ -1694,32 +1693,35 @@ class ARM(IThci):
         pass
 
     def startCollapsedCommissioner(self):
-        """start OpenThread stack
+        """start Collapsed Commissioner
 
         Returns:
-            True: successful to start OpenThread stack and thread interface up
-            False: fail to start OpenThread stack
+            True: successful to start Commissioner
+            False: fail to start Commissioner
         """
         print '%s call startCollapsedCommissioner' % self.port
         if self.__startOpenThread():
             time.sleep(20)
-            return True
-        else:
-            return False
+            cmd = 'commissioner start'
+            print cmd
+            if self.__sendCommand(cmd)[0] == 'Done':
+                time.sleep(20) # time for petition process
+                return True
+        return False
 
     def setJoinKey(self, strPSKc):
         pass
 
     def scanJoiner(self, xEUI='*', strPSKd='threadjpaketest'):
-        """start commissioner
+        """scan Joiner
 
         Args:
             xEUI: Joiner's EUI-64
             strPSKd: Joiner's PSKd for commissioning
 
         Returns:
-            True: successful to start commissioner
-            False: fail to start commissioner
+            True: successful to add Joiner's steering data
+            False: fail to add Joiner's steering data
         """
         print '%s call scanJoiner' % self.port
         if xEUI == '*':
@@ -1730,20 +1732,12 @@ class ARM(IThci):
 
         cmd = 'commissioner joiner add %s %s' % (JoinerHashMac, strPSKd)
         print cmd
-        self.__sendCommand(cmd)
-
-        if not self.commissionerStarted:
-            cmd = 'commissioner start'
-            print cmd
-            if self.__sendCommand(cmd)[0] == 'Done':
-                self.commissionerStarted = True
-                if self.logThreadStatus == self.logStatus['stop']:
-                    self.logThread = ThreadRunner.run(target=self.__readCommissioningLogs, args=(120,))
-                return True
-            else:
-                return False
-        else:
+        if self.__sendCommand(cmd)[0] == 'Done':
+            if self.logThreadStatus == self.logStatus['stop']:
+                self.logThread = ThreadRunner.run(target = self.__readCommissioningLogs, args = (120,))
             return True
+        else:
+            return False
 
     def setProvisioningUrl(self, strURL='grl.com'):
         """set provisioning Url
@@ -1772,7 +1766,11 @@ class ARM(IThci):
         try:
             cmd = 'commissioner start'
             print cmd
-            return self.__sendCommand(cmd)[0] == 'Done'
+            if self.__sendCommand(cmd)[0] == 'Done':
+                time.sleep(40) # time for petition process and at least one keep alive
+                return True
+            else:
+                return False
         except Exception, e:
             modulehelper.writeintodebuglogger("allowcommission() error: " + str(e))
 
@@ -2246,7 +2244,6 @@ class ARM(IThci):
         print '%s call commissionerUnregister' % self.port
         cmd = 'commissioner stop'
         print cmd
-        self.commissionerStarted = False
         return self.__sendCommand(cmd)[0] == 'Done'
 
     def sendBeacons(self, sAddr, xCommissionerSessionId, listChannelMask, xPanId):
