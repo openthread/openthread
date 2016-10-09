@@ -42,9 +42,10 @@ Mesh Routing.
 ![OpenThread Contributor Logos](doc/images/openthread_contrib.png)
 
 Nest, along with ARM, Atmel, a subsidiary of Microchip Technology,
-Dialog Semiconductor, Qualcomm Technologies, Inc. (a subsidiary of
-Qualcomm Incorporated and Texas Instruments Incorporated), and Microsoft
-Corporation are contributing to the ongoing development of OpenThread.
+Dialog Semiconductor, Microsoft Corporation, Qualcomm Technologies,
+Inc. (a subsidiary of Qualcomm Incorporated), and Texas Instruments
+Incorporated are contributing to the ongoing development of
+OpenThread.
 
 
 # Getting started #
