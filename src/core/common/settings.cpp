@@ -163,7 +163,8 @@ static uint32_t swapSettingsBlock(void)
         if (!(block.block.flag & kBlockAddFlag) && (block.block.flag & kBlockDeleteFlag))
         {
             otPlatFlashRead(swapAddress, block.data, block.block.length);
-            otPlatFlashWrite(sBase + sUsedSize, reinterpret_cast<uint8_t *>(&block), block.block.length + sizeof(struct settingsBlock));
+            otPlatFlashWrite(sBase + sUsedSize, reinterpret_cast<uint8_t *>(&block),
+                             block.block.length + sizeof(struct settingsBlock));
             sUsedSize += (sizeof(struct settingsBlock) + block.block.length);
         }
         else if (block.block.flag == 0xff)
@@ -436,7 +437,8 @@ ThreadError otPlatSettingsAdd(uint16_t aKey, const uint8_t *aValue, int aValueLe
                          error = kThreadError_NoBufs);
         }
 
-        otPlatFlashWrite(sBase + sUsedSize, reinterpret_cast<uint8_t *>(stageBlock), sizeof(struct settingsBlock) + stageBlock->block.length);
+        otPlatFlashWrite(sBase + sUsedSize, reinterpret_cast<uint8_t *>(stageBlock),
+                         sizeof(struct settingsBlock) + stageBlock->block.length);
         sUsedSize += (sizeof(struct settingsBlock) + stageBlock->block.length);
         stageBlock->block.flag = 0xff;
     }
