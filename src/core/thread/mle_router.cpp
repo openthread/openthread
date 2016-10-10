@@ -504,7 +504,7 @@ exit:
 
 ThreadError MleRouter::SendLinkRequest(Neighbor *aNeighbor)
 {
-    static const uint8_t detachedTlvs[] = {Tlv::kNetworkData, Tlv::kAddress16, Tlv::kRoute};
+    static const uint8_t detachedTlvs[] = {Tlv::kAddress16, Tlv::kRoute};
     static const uint8_t routerTlvs[] = {Tlv::kLinkMargin};
     ThreadError error = kThreadError_None;
     Message *message;
@@ -727,11 +727,6 @@ ThreadError MleRouter::SendLinkAccept(const Ip6::MessageInfo &aMessageInfo, Neig
             SuccessOrExit(error = AppendAddress16(*message, aNeighbor->mValid.mRloc16));
             break;
 
-        case Tlv::kNetworkData:
-            VerifyOrExit(aNeighbor != NULL, error = kThreadError_Drop);
-            SuccessOrExit(error = AppendNetworkData(*message, (aNeighbor->mMode & ModeTlv::kModeFullNetworkData) == 0));
-            break;
-
         case Tlv::kLinkMargin:
             break;
 
@@ -807,7 +802,6 @@ ThreadError MleRouter::HandleLinkAccept(const Message &aMessage, const Ip6::Mess
     Address16Tlv address16;
     RouteTlv route;
     LeaderDataTlv leaderData;
-    NetworkDataTlv networkData;
     LinkMarginTlv linkMargin;
     ChallengeTlv challenge;
     TlvRequestTlv tlvRequest;
@@ -901,19 +895,16 @@ ThreadError MleRouter::HandleLinkAccept(const Message &aMessage, const Ip6::Mess
         VerifyOrExit(leaderData.IsValid(), error = kThreadError_Parse);
         SetLeaderData(leaderData.GetPartitionId(), leaderData.GetWeighting(), leaderData.GetLeaderRouterId());
 
-        // Network Data
-        SuccessOrExit(error = Tlv::GetTlv(aMessage, Tlv::kNetworkData, sizeof(networkData), networkData));
-        mNetworkData.SetNetworkData(leaderData.GetDataVersion(), leaderData.GetStableDataVersion(),
-                                    (mDeviceMode & ModeTlv::kModeFullNetworkData) == 0,
-                                    networkData.GetNetworkData(), networkData.GetLength());
-
         if (mLeaderData.GetLeaderRouterId() == GetRouterId(GetRloc16()))
         {
             SetStateLeader(GetRloc16());
         }
         else
         {
+            static const uint8_t tlvs[] = {Tlv::kNetworkData};
             SetStateRouter(GetRloc16());
+            mRetrieveNewNetworkData = true;
+            SendDataRequest(aMessageInfo.GetPeerAddr(), tlvs, sizeof(tlvs));
         }
 
         break;
