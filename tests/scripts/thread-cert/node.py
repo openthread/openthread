@@ -457,7 +457,7 @@ class Node:
         self.send_command(cmd)
         self.pexpect.expect('Done')
 
-    def set_active_dataset(self, timestamp, panid=None, channel=None, master_key=None):
+    def set_active_dataset(self, timestamp, panid=None, channel=None, channel_mask=None, master_key=None):
         self.send_command('dataset clear')
         self.pexpect.expect('Done')
 
@@ -472,6 +472,11 @@ class Node:
 
         if channel != None:
             cmd = 'dataset channel %d' % channel
+            self.send_command(cmd)
+            self.pexpect.expect('Done')
+
+        if channel_mask != None:
+            cmd = 'dataset channelmask %d' % channel_mask
             self.send_command(cmd)
             self.pexpect.expect('Done')
 
@@ -514,7 +519,7 @@ class Node:
         self.pexpect.expect('Done')
 
     def send_mgmt_active_set(self, active_timestamp=None, channel=None, panid=None, mesh_local=None,
-                              network_name=None):
+                             network_name=None):
         cmd = 'dataset mgmtsetcommand active '
 
         if active_timestamp != None:

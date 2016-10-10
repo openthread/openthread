@@ -1139,6 +1139,7 @@ private:
     ThreadError SendParentRequest(void);
     ThreadError SendChildIdRequest(void);
     ThreadError SendDiscoveryResponse(const Ip6::Address &aDestination, uint16_t aPanId);
+    void SendOrphanAnnounce(void);
 
     bool IsBetterParent(uint16_t aRloc16, uint8_t aLinkQuality, ConnectivityTlv &aConnectivityTlv) const;
 
@@ -1171,6 +1172,7 @@ private:
     void *mDiscoverContext;
     bool mIsDiscoverInProgress;
 
+    uint8_t mAnnounceChannel;
     uint8_t mPreviousChannel;
     uint16_t mPreviousPanId;
 
