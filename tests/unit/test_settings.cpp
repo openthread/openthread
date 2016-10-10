@@ -27,9 +27,11 @@
  */
 
 #include "test_util.h"
+#include <string.h>
+#include <unistd.h>
+#include <dirent.h>
 #include <openthread.h>
 #include <common/debug.hpp>
-#include <string.h>
 #include <openthread-instance.h>
 #include <platform/flash.h>
 #include <platform/settings.h>
@@ -212,12 +214,29 @@ void TestSettingsSwap(void)
 
 void RunSettingsTests(void)
 {
+    DIR *dir;
+    struct dirent *ent;
+
     TestSettingsInit();
     TestSettingsAdd();
     TestSettingsDelete();
     TestSettingsSet();
     TestSettingsTransaction();
     TestSettingsSwap();
+
+    VerifyOrQuit((dir = opendir("./tmp")) != NULL, "Open tmp fail\n");
+
+    while ((ent = readdir(dir)) != NULL)
+    {
+        char path[20];
+
+        strcpy(path, "./tmp/");
+        strcat(path, ent->d_name);
+        remove(path);
+    }
+
+    closedir(dir);
+    rmdir("./tmp");
 }
 
 #ifdef ENABLE_TEST_MAIN
