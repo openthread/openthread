@@ -536,7 +536,7 @@ class Node:
         self.pexpect.expect('Done')
 
     def send_mgmt_pending_set(self, pending_timestamp=None, active_timestamp=None, delay_timer=None, channel=None,
-                              panid=None, master_key=None, mesh_local=None):
+                              panid=None, master_key=None, mesh_local=None, network_name=None):
         cmd = 'dataset mgmtsetcommand pending '
 
         if pending_timestamp != None:
@@ -559,6 +559,9 @@ class Node:
 
         if mesh_local != None:
             cmd += 'localprefix ' + mesh_local + ' '
+
+        if network_name != None:
+            cmd += 'networkname ' + network_name + ' '
 
         self.send_command(cmd)
         self.pexpect.expect('Done')

@@ -270,6 +270,12 @@ ThreadError DatasetManager::Set(Coap::Header &aHeader, Message &aMessage, const 
     bool isUpdateFromCommissioner = false;
     StateTlv::State state = StateTlv::kAccept;
 
+    ActiveTimestampTlv activeTimestamp;
+    NetworkMasterKeyTlv masterKey;
+
+    activeTimestamp.SetLength(0);
+    masterKey.SetLength(0);
+
     VerifyOrExit(mMle.GetDeviceState() == Mle::kDeviceStateLeader, state = StateTlv::kReject);
 
     type = (strcmp(mUriSet, OPENTHREAD_URI_ACTIVE_SET) == 0 ? Tlv::kActiveTimestamp : Tlv::kPendingTimestamp);
@@ -284,6 +290,20 @@ ThreadError DatasetManager::Set(Coap::Header &aHeader, Message &aMessage, const 
         if (tlvType == type)
         {
             aMessage.Read(offset + sizeof(Tlv), sizeof(timestamp), &timestamp);
+        }
+
+        switch (tlvType)
+        {
+        case Tlv::kActiveTimestamp:
+            aMessage.Read(offset, sizeof(activeTimestamp), &activeTimestamp);
+            break;
+
+        case Tlv::kNetworkMasterKey:
+            aMessage.Read(offset, sizeof(masterKey), &masterKey);
+            break;
+
+        default:
+            break;
         }
 
         // verify the request does not include fields that affect connectivity
@@ -333,6 +353,17 @@ ThreadError DatasetManager::Set(Coap::Header &aHeader, Message &aMessage, const 
     // verify the request includes a timestamp that is ahead of the locally stored value
     VerifyOrExit(offset == aMessage.GetLength() && (mLocal.GetTimestamp() == NULL ||
                                                     mLocal.GetTimestamp()->Compare(timestamp) > 0), state = StateTlv::kReject);
+
+    // verify network master key if active timestamp is behind
+    if (type == Tlv::kPendingTimestamp)
+    {
+        const Timestamp *localActiveTimestamp = mNetif.GetActiveDataset().GetNetwork().GetTimestamp();
+
+        if (localActiveTimestamp != NULL && localActiveTimestamp->Compare(activeTimestamp) <= 0)
+        {
+            VerifyOrExit(masterKey.GetLength() != 0, state = StateTlv::kReject);
+        }
+    }
 
     // verify that does not overflow dataset buffer
     VerifyOrExit((offset - aMessage.GetOffset()) <= Dataset::kMaxSize, state = StateTlv::kReject);
