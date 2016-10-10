@@ -11,7 +11,7 @@ $ make -f examples/Makefile-posix
 ```
 
 After a successful build, the `elf` files are found in
-`<path-to-openthread>/output/x86_64-apple-darwin/bin`.
+`<path-to-openthread>/output/<platform>/bin`.
 
 ## 
 
@@ -20,7 +20,7 @@ After a successful build, the `elf` files are found in
 1. Spawn the process:
 
 ```bash
-$ cd openthread/examples/posix/app/cli
+$ cd <path-to-openthread>/output/<platform>/bin
 $ ./ot-cli 1
 ```
 
