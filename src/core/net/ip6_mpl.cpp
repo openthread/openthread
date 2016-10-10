@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2016, Nest Labs, Inc.
+ *  Copyright (c) 2016, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -40,30 +40,51 @@ namespace Thread {
 namespace Ip6 {
 
 Mpl::Mpl(Ip6 &aIp6):
-    mTimer(aIp6.mTimerScheduler, &HandleTimer, this)
+    mTimer(aIp6.mTimerScheduler, &Mpl::HandleTimer, this),
+    mMatchingAddress(NULL)
 {
     memset(mEntries, 0, sizeof(mEntries));
     mSequence = 0;
+    mSeed = 0;
 }
 
-void Mpl::InitOption(OptionMpl &aOption, uint16_t aSeed)
+void Mpl::InitOption(OptionMpl &aOption, const Address &aAddress)
 {
     aOption.Init();
-    aOption.SetSeedLength(OptionMpl::kSeedLength2);
     aOption.SetSequence(mSequence++);
-    aOption.SetSeed(aSeed);
+
+    // Check if Seed can be elided.
+    if (mMatchingAddress && aAddress == *mMatchingAddress)
+    {
+        aOption.SetSeedLength(OptionMpl::kSeedLength0);
+
+        // Decrease default option length.
+        aOption.SetLength(aOption.GetLength() - sizeof(mSeed));
+    }
+    else
+    {
+        aOption.SetSeedLength(OptionMpl::kSeedLength2);
+        aOption.SetSeed(mSeed);
+    }
 }
 
-ThreadError Mpl::ProcessOption(const Message &aMessage)
+ThreadError Mpl::ProcessOption(const Message &aMessage, const Address &aAddress)
 {
     ThreadError error = kThreadError_None;
     OptionMpl option;
     MplEntry *entry = NULL;
     int8_t diff;
 
-    VerifyOrExit(aMessage.Read(aMessage.GetOffset(), sizeof(option), &option) == sizeof(option) &&
-                 option.GetLength() == sizeof(OptionMpl) - sizeof(OptionHeader),
+    VerifyOrExit(aMessage.Read(aMessage.GetOffset(), sizeof(option), &option) >= OptionMpl::kMinLength &&
+                 (option.GetSeedLength() == OptionMpl::kSeedLength0 ||
+                  option.GetSeedLength() == OptionMpl::kSeedLength2),
                  error = kThreadError_Drop);
+
+    if (option.GetSeedLength() == OptionMpl::kSeedLength0)
+    {
+        // Retrieve Seed from the IPv6 Source Address.
+        option.SetSeed(HostSwap16(aAddress.mFields.m16[7]));
+    }
 
     for (int i = 0; i < kNumEntries; i++)
     {
@@ -76,10 +97,7 @@ ThreadError Mpl::ProcessOption(const Message &aMessage)
             entry = &mEntries[i];
             diff = static_cast<int8_t>(option.GetSequence() - entry->mSequence);
 
-            if (diff <= 0)
-            {
-                error = kThreadError_Drop;
-            }
+            VerifyOrExit(diff > 0, error = kThreadError_Drop);
 
             break;
         }
@@ -98,8 +116,7 @@ exit:
 
 void Mpl::HandleTimer(void *aContext)
 {
-    Mpl *obj = reinterpret_cast<Mpl *>(aContext);
-    obj->HandleTimer();
+    static_cast<Mpl *>(aContext)->HandleTimer();
 }
 
 void Mpl::HandleTimer()

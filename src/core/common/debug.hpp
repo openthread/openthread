@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2016, Nest Labs, Inc.
+ *  Copyright (c) 2016, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -41,6 +41,15 @@
 #if defined(OPENTHREAD_TARGET_DARWIN) || defined(OPENTHREAD_TARGET_LINUX)
 
 #include <assert.h>
+
+#elif defined(WINDOWS_KERNEL)
+
+#include <wdm.h>
+
+#define assert(exp) \
+    ((!(exp)) ? \
+        (RtlAssert( #exp, __FILE__, __LINE__, NULL ),FALSE) : \
+        TRUE)
 
 #else
 

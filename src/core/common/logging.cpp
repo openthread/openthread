@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2016, Nest Labs, Inc.
+ *  Copyright (c) 2016, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -30,6 +30,12 @@
  * @file
  *   This file implements the tasklet scheduler.
  */
+
+#ifdef OPENTHREAD_CONFIG_FILE
+#include OPENTHREAD_CONFIG_FILE
+#else
+#include <openthread-config.h>
+#endif
 
 #include <ctype.h>
 #include <stdio.h>
@@ -97,7 +103,7 @@ static void DumpLine(otLogLevel aLogLevel, otLogRegion aLogRegion, const void *a
         }
     }
 
-    otPlatLog(aLogLevel, aLogRegion, "%s\n", buf);
+    otPlatLog(aLogLevel, aLogRegion, "%s\r\n", buf);
 }
 
 void otDump(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aId, const void *aBuf, const size_t aLength)
@@ -107,7 +113,7 @@ void otDump(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aId, const
     char buf[80];
     char *cur = buf;
 
-    otPlatLog(aLogLevel, aLogRegion, "\n");
+    otPlatLog(aLogLevel, aLogRegion, "\r\n");
 
     for (size_t i = 0; i < (width - idlen) / 2 - 5; i++)
     {
@@ -115,7 +121,7 @@ void otDump(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aId, const
         cur += strlen(cur);
     }
 
-    snprintf(cur, sizeof(buf) - static_cast<size_t>(cur - buf), "[%s len=%03zu]", aId, aLength);
+    snprintf(cur, sizeof(buf) - static_cast<size_t>(cur - buf), "[%s len=%03u]", aId, static_cast<uint16_t>(aLength));
     cur += strlen(cur);
 
     for (size_t i = 0; i < (width - idlen) / 2 - 4; i++)
@@ -124,7 +130,7 @@ void otDump(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aId, const
         cur += strlen(cur);
     }
 
-    otPlatLog(aLogLevel, aLogRegion, "%s\n", buf);
+    otPlatLog(aLogLevel, aLogRegion, "%s\r\n", buf);
 
     for (size_t i = 0; i < aLength; i += 16)
     {
@@ -139,7 +145,7 @@ void otDump(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aId, const
         cur += strlen(cur);
     }
 
-    otPlatLog(aLogLevel, aLogRegion, "%s\n", buf);
+    otPlatLog(aLogLevel, aLogRegion, "%s\r\n", buf);
 }
 
 #ifdef __cplusplus

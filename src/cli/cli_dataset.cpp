@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2016, Nest Labs, Inc.
+ *  Copyright (c) 2016, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -55,6 +55,7 @@ const DatasetCommand Dataset::sCommands[] =
     { "active", &ProcessActive },
     { "activetimestamp", &ProcessActiveTimestamp },
     { "channel", &ProcessChannel },
+    { "channelmask", &ProcessChannelMask },
     { "clear", &ProcessClear },
     { "commit", &ProcessCommit },
     { "delay", &ProcessDelay },
@@ -97,6 +98,11 @@ ThreadError Dataset::Print(otOperationalDataset &aDataset)
     if (aDataset.mIsChannelSet)
     {
         sServer->OutputFormat("Channel: %d\r\n", aDataset.mChannel);
+    }
+
+    if (aDataset.mIsChannelMaskPage0Set)
+    {
+        sServer->OutputFormat("Channel Mask Page 0: %x\r\n", aDataset.mChannelMaskPage0);
     }
 
     if (aDataset.mIsDelaySet)
@@ -255,6 +261,21 @@ ThreadError Dataset::ProcessChannel(otInstance *aInstance, int argc, char *argv[
     sDataset.mChannel = static_cast<uint16_t>(value);
     sDataset.mIsChannelSet = true;
 
+    (void)aInstance;
+
+exit:
+    return error;
+}
+
+ThreadError Dataset::ProcessChannelMask(otInstance *aInstance, int argc, char *argv[])
+{
+    ThreadError error = kThreadError_None;
+    long value;
+
+    VerifyOrExit(argc > 0, error = kThreadError_Parse);
+    SuccessOrExit(error = Interpreter::ParseLong(argv[0], value));
+    sDataset.mChannelMaskPage0 = static_cast<uint32_t>(value);
+    sDataset.mIsChannelMaskPage0Set = true;
     (void)aInstance;
 
 exit:
@@ -428,7 +449,7 @@ ThreadError Dataset::ProcessMgmtSetCommand(otInstance *aInstance, int argc, char
 {
     ThreadError error = kThreadError_None;
     otOperationalDataset dataset;
-    uint8_t tlvs[32];
+    uint8_t tlvs[128];
     long value;
     int length = 0;
     otIp6Address prefix;
@@ -468,7 +489,7 @@ ThreadError Dataset::ProcessMgmtSetCommand(otInstance *aInstance, int argc, char
             VerifyOrExit((length = static_cast<int>(strlen(argv[++index]))) <= OT_NETWORK_NAME_MAX_SIZE,
                          error = kThreadError_Parse);
             memset(&dataset.mNetworkName, 0, sizeof(sDataset.mNetworkName));
-            memcpy(dataset.mNetworkName.m8, argv[0], static_cast<size_t>(length));
+            memcpy(dataset.mNetworkName.m8, argv[index], static_cast<size_t>(length));
             length = 0;
         }
         else if (strcmp(argv[index], "extpanid") == 0)

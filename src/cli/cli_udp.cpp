@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2016, Nest Labs, Inc.
+ *  Copyright (c) 2016, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -65,8 +65,7 @@ exit:
 
 void Udp::HandleUdpReceive(void *aContext, otMessage aMessage, const otMessageInfo *aMessageInfo)
 {
-    Udp *obj = reinterpret_cast<Udp *>(aContext);
-    obj->HandleUdpReceive(aMessage, aMessageInfo);
+    static_cast<Udp *>(aContext)->HandleUdpReceive(aMessage, aMessageInfo);
 }
 
 void Udp::HandleUdpReceive(otMessage aMessage, const otMessageInfo *aMessageInfo)

@@ -183,7 +183,7 @@ struct __RFC_STRUCT rfc_CMD_IEEE_RX_s {
    uint8_t numExtEntries;               //!<        Number of extended address entries
    uint8_t numShortEntries;             //!<        Number of short address entries
    uint32_t* pExtEntryList;             //!<        Pointer to list of extended address entries
-   rfc_shortAddrEntry_t *pShortEntryList;//!<        Pointer to list of short address entries
+   uint32_t* pShortEntryList;           //!<        Pointer to list of short address entries
    uint64_t localExtAddr;               //!<        The extended address of the local device
    uint16_t localShortAddr;             //!<        The short address of the local device
    uint16_t localPanID;                 //!<        The PAN ID of the local device

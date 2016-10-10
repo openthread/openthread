@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2016, Nest Labs, Inc.
+ *  Copyright (c) 2016, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -38,7 +38,6 @@
 #include <openthread-types.h>
 #include <commissioning/commissioner.h>
 #include <coap/coap_server.hpp>
-#include <common/timer.hpp>
 #include <net/ip6_address.hpp>
 #include <net/udp6.hpp>
 
@@ -59,6 +58,19 @@ public:
      */
     PanIdQueryClient(ThreadNetif &aThreadNetif);
 
+    /**
+     * This method sends a PAN ID Query message.
+     *
+     * @param[in]  aPanId         The PAN ID to query.
+     * @param[in]  aChannelMask   The channel mask value.
+     * @param[in]  aAddress       A pointer to the IPv6 destination.
+     * @param[in]  aCallback      A pointer to a function called on receiving an Energy Report message.
+     * @param[in]  aContext       A pointer to application-specific context.
+     *
+     * @retval kThreadError_None    Successfully enqueued the PAN ID Query message.
+     * @retval kThreadError_NoBufs  Insufficient buffers to generate a PAN ID Query message.
+     *
+     */
     ThreadError SendQuery(uint16_t aPanId, uint32_t aChannelMask, const Ip6::Address &aAddress,
                           otCommissionerPanIdConflictCallback aCallback, void *aContext);
 
@@ -66,9 +78,6 @@ private:
     static void HandleConflict(void *aContext, Coap::Header &aHeader, Message &aMessage,
                                const Ip6::MessageInfo &aMessageInfo);
     void HandleConflict(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
-
-    static void HandleTimer(void *aContext);
-    void HandleTimer(void);
 
     static void HandleUdpReceive(void *aContext, otMessage aMessage, const otMessageInfo *aMessageInfo);
 
@@ -79,9 +88,10 @@ private:
 
     Coap::Resource mPanIdQuery;
     Ip6::UdpSocket mSocket;
-    Timer mTimer;
 
     Coap::Server &mCoapServer;
+    uint8_t mCoapToken[2];
+    uint16_t mCoapMessageId;
     ThreadNetif &mNetif;
 };
 

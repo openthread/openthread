@@ -1,6 +1,6 @@
 #!/usr/bin/python
 #
-#  Copyright (c) 2016, Nest Labs, Inc.
+#  Copyright (c) 2016, The OpenThread Authors.
 #  All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
@@ -27,7 +27,6 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-import pexpect
 import time
 import unittest
 
@@ -55,6 +54,7 @@ class Cert_7_1_5_BorderRouterAsRouter(unittest.TestCase):
         self.nodes[ROUTER].add_whitelist(self.nodes[ED2].get_addr64())
         self.nodes[ROUTER].add_whitelist(self.nodes[SED2].get_addr64())
         self.nodes[ROUTER].enable_whitelist()
+        self.nodes[ROUTER].set_router_selection_jitter(1)
 
         self.nodes[ED2].set_panid(0xface)
         self.nodes[ED2].set_mode('rsn')
@@ -78,55 +78,55 @@ class Cert_7_1_5_BorderRouterAsRouter(unittest.TestCase):
         self.assertEqual(self.nodes[LEADER].get_state(), 'leader')
 
         self.nodes[ROUTER].start()
-        time.sleep(3)
+        time.sleep(5)
         self.assertEqual(self.nodes[ROUTER].get_state(), 'router')
 
         self.nodes[ED2].start()
-        time.sleep(3)
+        time.sleep(5)
         self.assertEqual(self.nodes[ED2].get_state(), 'child')
 
         self.nodes[SED2].start()
-        time.sleep(3)
+        time.sleep(5)
         self.assertEqual(self.nodes[SED2].get_state(), 'child')
 
         self.nodes[ROUTER].add_prefix('2001::/64', 'paros')
         self.nodes[ROUTER].add_prefix('2002::/64', 'paro')
         self.nodes[ROUTER].register_netdata()
-        time.sleep(3)
+        time.sleep(5)
 
         addrs = self.nodes[ED2].get_addrs()
-        self.assertTrue(any('2001' in word for word in addrs))
-        self.assertTrue(any('2002' in word for word in addrs))
+        self.assertTrue(any('2001' in addr[0:4] for addr in addrs))
+        self.assertTrue(any('2002' in addr[0:4] for addr in addrs))
         for addr in addrs:
             if addr[0:4] == '2001' or addr[0:4] == '2002':
-                self.nodes[LEADER].ping(addr)
+                self.assertTrue(self.nodes[LEADER].ping(addr))
 
         addrs = self.nodes[SED2].get_addrs()
-        self.assertTrue(any('2001' in word for word in addrs))
-        self.assertFalse(any('2002' in word for word in addrs))
+        self.assertTrue(any('2001' in addr[0:4] for addr in addrs))
+        self.assertFalse(any('2002' in addr[0:4] for addr in addrs))
         for addr in addrs:
             if addr[0:4] == '2001' or addr[0:4] == '2002':
-                self.nodes[LEADER].ping(addr)
+                self.assertTrue(self.nodes[LEADER].ping(addr))
 
         self.nodes[ROUTER].add_prefix('2003::/64', 'paros')
         self.nodes[ROUTER].register_netdata()
-        time.sleep(3)
+        time.sleep(5)
 
         addrs = self.nodes[ED2].get_addrs()
-        self.assertTrue(any('2001' in word for word in addrs))
-        self.assertTrue(any('2002' in word for word in addrs))
-        self.assertTrue(any('2003' in word for word in addrs))
+        self.assertTrue(any('2001' in addr[0:4] for addr in addrs))
+        self.assertTrue(any('2002' in addr[0:4] for addr in addrs))
+        self.assertTrue(any('2003' in addr[0:4] for addr in addrs))
         for addr in addrs:
             if addr[0:4] == '2001' or addr[0:4] == '2002' or addr[0:4] == '2003':
-                self.nodes[LEADER].ping(addr)
+                self.assertTrue(self.nodes[LEADER].ping(addr))
 
         addrs = self.nodes[SED2].get_addrs()
-        self.assertTrue(any('2001' in word for word in addrs))
-        self.assertFalse(any('2002' in word for word in addrs))
-        self.assertTrue(any('2003' in word for word in addrs))
+        self.assertTrue(any('2001' in addr[0:4] for addr in addrs))
+        self.assertFalse(any('2002' in addr[0:4] for addr in addrs))
+        self.assertTrue(any('2003' in addr[0:4] for addr in addrs))
         for addr in addrs:
             if addr[0:4] == '2001' or addr[0:4] == '2002' or addr[0:4] == '2003':
-                self.nodes[LEADER].ping(addr)
+                self.assertTrue(self.nodes[LEADER].ping(addr))
 
 if __name__ == '__main__':
     unittest.main()

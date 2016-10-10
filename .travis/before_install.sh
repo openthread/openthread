@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-#  Copyright (c) 2016, Nest Labs, Inc.
+#  Copyright (c) 2016, The OpenThread Authors.
 #  All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
@@ -72,7 +72,6 @@ cd /tmp || die
     }
 
     [ $BUILD_TARGET != posix-ncp ] || {
-        pip install blessed || die
         pip install ipaddress || die
         pip install scapy || die
         pip install pyserial || die

@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2016, Nest Labs, Inc.
+ *  Copyright (c) 2016, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -42,6 +42,7 @@
 #include <thread/mle_constants.hpp>
 #include <thread/mle_tlvs.hpp>
 #include <thread/topology.hpp>
+#include <meshcop/joiner_router.hpp>
 
 namespace Thread {
 
@@ -276,6 +277,7 @@ public:
         kCommandChildIdResponse      = 12,   ///< Child ID Response
         kCommandChildUpdateRequest   = 13,   ///< Child Update Request
         kCommandChildUpdateResponse  = 14,   ///< Child Update Response
+        kCommandAnnounce             = 15,   ///< Announce
         kCommandDiscoveryRequest     = 16,   ///< Discovery Request
         kCommandDiscoveryResponse    = 17,   ///< Discovery Response
     };
@@ -408,6 +410,17 @@ public:
      *
      */
     void HandleDiscoverComplete(void);
+
+    /**
+     * This method generates an MLE Announce message.
+     *
+     * @param[in]  aChannel   The channel to use when transmitting.
+     *
+     * @retval kThreadError_None    Successfully generated an MLE Announce message.
+     * @retval kThreadError_NoBufs  Insufficient buffers to generate the MLE Announce message.
+     *
+     */
+    ThreadError SendAnnounce(uint8_t aChannel);
 
     /**
      * This method causes the Thread interface to detach from the Thread network.
@@ -622,6 +635,22 @@ public:
     void SetAssignLinkQuality(const Mac::ExtAddress aMacAddr, uint8_t aLinkQuality);
 
     /**
+     * This method returns the ROUTER_SELECTION_JITTER value.
+     *
+     * @returns The ROUTER_SELECTION_JITTER value.
+     *
+     */
+    uint8_t GetRouterSelectionJitter(void) const;
+
+    /**
+     * This method sets the ROUTER_SELECTION_JITTER value.
+     *
+     * @returns The ROUTER_SELECTION_JITTER value.
+     *
+     */
+    void SetRouterSelectionJitter(uint8_t aRouterJitter);
+
+    /**
      * This method returns the Child ID portion of an RLOC16.
      *
      * @param[in]  aRloc16  The RLOC16 value.
@@ -661,6 +690,15 @@ public:
      *
      */
     static bool IsActiveRouter(uint16_t aRloc16) { return GetChildId(aRloc16) == 0; }
+
+    /**
+     * This method fills the NetworkDataTlv.
+     *
+     * @param[out] aTlv         The NetworkDataTlv.
+     * @param[in]  aStableOnly  TRUE to append stable data, FALSE otherwise.
+     *
+     */
+    void FillNetworkDataTlv(NetworkDataTlv &aTlv, bool aStableOnly);
 
 protected:
     /**
@@ -976,7 +1014,7 @@ protected:
     /**
      * This method generates an MLE Child Update Request message.
      *
-     * @retval kThreadError_None    Successfully generated an MLE Child Update Request message..
+     * @retval kThreadError_None    Successfully generated an MLE Child Update Request message.
      * @retval kThreadError_NoBufs  Insufficient buffers to generate the MLE Child Update Request message.
      *
      */
@@ -1030,13 +1068,14 @@ protected:
      */
     void SetLeaderData(uint32_t aPartitionId, uint8_t aWeighting, uint8_t aLeaderRouterId);
 
-    ThreadNetif         &mNetif;            ///< The Thread Network Interface object.
-    AddressResolver     &mAddressResolver;  ///< The Address Resolver object.
-    KeyManager          &mKeyManager;       ///< The Key Manager object.
-    Mac::Mac            &mMac;              ///< The MAC object.
-    MeshForwarder       &mMesh;             ///< The Mesh Forwarding object.
-    MleRouter           &mMleRouter;        ///< The MLE Router object.
-    NetworkData::Leader &mNetworkData;      ///< The Network Data object.
+    ThreadNetif           &mNetif;            ///< The Thread Network Interface object.
+    AddressResolver       &mAddressResolver;  ///< The Address Resolver object.
+    KeyManager            &mKeyManager;       ///< The Key Manager object.
+    Mac::Mac              &mMac;              ///< The MAC object.
+    MeshForwarder         &mMesh;             ///< The Mesh Forwarding object.
+    MleRouter             &mMleRouter;        ///< The MLE Router object.
+    NetworkData::Leader   &mNetworkData;      ///< The Network Data object.
+    MeshCoP::JoinerRouter &mJoinerRouter;     ///< The Joiner Router object.
 
     LeaderDataTlv mLeaderData;              ///< Last received Leader Data TLV.
     bool mRetrieveNewNetworkData;           ///< Indicating new Network Data is needed if set.
@@ -1067,6 +1106,9 @@ protected:
 
     Timer mParentRequestTimer;  ///< The timer for driving the Parent Request process.
 
+    uint8_t mRouterSelectionJitter;         ///< The variable to save the assigned jitter value.
+    uint8_t mRouterSelectionJitterTimeout;  ///< The Timeout prior to request/release Router ID.
+
 private:
     enum
     {
@@ -1091,6 +1133,7 @@ private:
     ThreadError HandleDataResponse(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
     ThreadError HandleParentResponse(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo,
                                      uint32_t aKeySequence);
+    ThreadError HandleAnnounce(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
     ThreadError HandleDiscoveryRequest(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
     ThreadError HandleDiscoveryResponse(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
@@ -1128,6 +1171,9 @@ private:
     DiscoverHandler mDiscoverHandler;
     void *mDiscoverContext;
     bool mIsDiscoverInProgress;
+
+    uint8_t mPreviousChannel;
+    uint16_t mPreviousPanId;
 
     Ip6::NetifUnicastAddress mLinkLocal16;
     Ip6::NetifUnicastAddress mLinkLocal64;

@@ -1,6 +1,6 @@
 #!/usr/bin/python
 #
-#  Copyright (c) 2016, Nest Labs, Inc.
+#  Copyright (c) 2016, The OpenThread Authors.
 #  All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
@@ -63,19 +63,19 @@ class Cert_6_6_2_KeyIncrement1(unittest.TestCase):
         self.assertEqual(self.nodes[LEADER].get_state(), 'leader')
 
         self.nodes[ED].start()
-        time.sleep(3)
+        time.sleep(5)
         self.assertEqual(self.nodes[ED].get_state(), 'child')
 
         addrs = self.nodes[ED].get_addrs()
         for addr in addrs:
-            self.nodes[LEADER].ping(addr)
+            self.assertTrue(self.nodes[LEADER].ping(addr))
 
         key_sequence = self.nodes[LEADER].get_key_sequence()
         self.nodes[LEADER].set_key_sequence(key_sequence + 1)
 
         addrs = self.nodes[ED].get_addrs()
         for addr in addrs:
-            self.nodes[LEADER].ping(addr)
+            self.assertTrue(self.nodes[LEADER].ping(addr))
 
 if __name__ == '__main__':
     unittest.main()

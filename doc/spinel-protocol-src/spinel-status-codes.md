@@ -25,9 +25,9 @@ See (#prop-last-status) for more information on `PROP_LAST_STATUS`.
     state of the device.
  *  5: `STATUS_INVALID_COMMAND`: The given command is not recognized.
  *  6: `STATUS_INVALID_INTERFACE`: The given Spinel interface is not supported.
- *  7: `STATUS_INTERNAL_ERROR`: An internal runtime error has occured.
- *  8: `STATUS_SECURITY_ERROR`: A security or authentication error has occured.
- *  9: `STATUS_PARSE_ERROR`: An error has occured while parsing the command.
+ *  7: `STATUS_INTERNAL_ERROR`: An internal runtime error has occurred.
+ *  8: `STATUS_SECURITY_ERROR`: A security or authentication error has occurred.
+ *  9: `STATUS_PARSE_ERROR`: An error has occurred while parsing the command.
  *  10: `STATUS_IN_PROGRESS`: The operation is in progress and will be
     completed asynchronously.
  *  11: `STATUS_NOMEM`: The operation has been prevented due to memory

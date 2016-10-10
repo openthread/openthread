@@ -1,6 +1,6 @@
 #!/usr/bin/python
 #
-#  Copyright (c) 2016, Nest Labs, Inc.
+#  Copyright (c) 2016, The OpenThread Authors.
 #  All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
@@ -51,6 +51,7 @@ class Cert_5_1_07_MaxChildCount(unittest.TestCase):
         self.nodes[ROUTER].set_mode('rsdn')
         self.nodes[ROUTER].add_whitelist(self.nodes[LEADER].get_addr64())
         self.nodes[ROUTER].enable_whitelist()
+        self.nodes[ROUTER].set_router_selection_jitter(1)
 
         self.nodes[ED].set_panid(0xface)
         self.nodes[ED].set_mode('rsn')
@@ -80,12 +81,12 @@ class Cert_5_1_07_MaxChildCount(unittest.TestCase):
         self.assertEqual(self.nodes[LEADER].get_state(), 'leader')
 
         self.nodes[ROUTER].start()
-        time.sleep(3)
+        time.sleep(5)
         self.assertEqual(self.nodes[ROUTER].get_state(), 'router')
 
         for i in range(4, 14):
             self.nodes[i].start()
-            time.sleep(3)
+            time.sleep(5)
             self.assertEqual(self.nodes[i].get_state(), 'child')
 
             if i in range(4, 8):   
@@ -98,23 +99,23 @@ class Cert_5_1_07_MaxChildCount(unittest.TestCase):
                         meshLocalEID = line
                         break
 
-                self.nodes[LEADER].ping(meshLocalEID, size=106)
+                self.assertTrue(self.nodes[LEADER].ping(meshLocalEID, size=106))
                 time.sleep(1)
 
         self.nodes[ED].start()
-        time.sleep(3)
+        time.sleep(5)
         self.assertEqual(self.nodes[ED].get_state(), 'detached')
 
         self.nodes[ED].stop()
         for i in range(4, 14):
             self.nodes[i].stop()
-        time.sleep(3)
+        time.sleep(5)
         
         self.nodes[LEADER].stop()
         time.sleep(100)
         
         self.nodes[ED].start()
-        time.sleep(3)
+        time.sleep(5)
         self.assertEqual(self.nodes[ED].get_state(), 'detached')
         
 if __name__ == '__main__':

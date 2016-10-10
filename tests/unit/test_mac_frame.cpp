@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2016, Nest Labs, Inc.
+ *  Copyright (c) 2016, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -33,10 +33,6 @@
 #include <string.h>
 
 namespace Thread {
-
-extern"C" void otSignalTaskletPending(otInstance *)
-{
-}
 
 void TestMacHeader(void)
 {
@@ -88,9 +84,11 @@ void TestMacHeader(void)
 
 }  // namespace Thread
 
+#ifdef ENABLE_TEST_MAIN
 int main(void)
 {
     Thread::TestMacHeader();
     printf("All tests passed\n");
     return 0;
 }
+#endif

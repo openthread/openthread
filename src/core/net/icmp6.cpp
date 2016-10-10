@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2016, Nest Labs, Inc.
+ *  Copyright (c) 2016, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -30,6 +30,8 @@
  * @file
  *   This file implements ICMPv6.
  */
+
+#define WPP_NAME "icmp6.tmh"
 
 #include <string.h>
 
@@ -102,7 +104,7 @@ ThreadError Icmp::SendEchoRequest(Message &aMessage, const MessageInfo &aMessage
     aMessage.SetOffset(0);
     SuccessOrExit(error = mIp6.SendDatagram(aMessage, messageInfoLocal, kProtoIcmp6));
 
-    otLogInfoIcmp("Sent echo request\n");
+    otLogInfoIcmp("Sent echo request: (seq = %d)\n", icmpHeader.GetSequence());
 
 exit:
     return error;
@@ -206,9 +208,14 @@ ThreadError Icmp::HandleEchoRequest(Message &aRequestMessage, const MessageInfo 
     icmp6Header.Init();
     icmp6Header.SetType(IcmpHeader::kTypeEchoReply);
 
-    VerifyOrExit((replyMessage = mIp6.NewMessage(0)) != NULL, otLogDebgIcmp("icmp fail\n"));
+    if ((replyMessage = mIp6.NewMessage(0)) == NULL)
+    {
+        otLogDebgIcmp("icmp fail\n");
+        ExitNow();
+    }
+
     payloadLength = aRequestMessage.GetLength() - aRequestMessage.GetOffset() - IcmpHeader::GetDataOffset();
-    SuccessOrExit(replyMessage->SetLength(IcmpHeader::GetDataOffset() + payloadLength));
+    SuccessOrExit(error = replyMessage->SetLength(IcmpHeader::GetDataOffset() + payloadLength));
 
     replyMessage->Write(0, IcmpHeader::GetDataOffset(), &icmp6Header);
     aRequestMessage.CopyTo(aRequestMessage.GetOffset() + IcmpHeader::GetDataOffset(),
@@ -226,7 +233,8 @@ ThreadError Icmp::HandleEchoRequest(Message &aRequestMessage, const MessageInfo 
 
     SuccessOrExit(error = mIp6.SendDatagram(*replyMessage, replyMessageInfo, kProtoIcmp6));
 
-    otLogInfoIcmp("Sent Echo Reply\n");
+    replyMessage->Read(replyMessage->GetOffset(), sizeof(icmp6Header), &icmp6Header);
+    otLogInfoIcmp("Sent Echo Reply (seq = %d)\n", icmp6Header.GetSequence());
 
 exit:
 

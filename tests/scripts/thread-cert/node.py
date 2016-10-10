@@ -1,6 +1,6 @@
 #!/usr/bin/python
 #
-#  Copyright (c) 2016, Nest Labs, Inc.
+#  Copyright (c) 2016, The OpenThread Authors.
 #  All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
@@ -86,9 +86,10 @@ class Node:
         cmd += ' %d' % nodeid
         print ("%s" % cmd)
 
-        self.pexpect = pexpect.spawn(cmd, timeout=2)
+        self.pexpect = pexpect.spawn(cmd, timeout=4)
         time.sleep(0.1)
         self.pexpect.expect('spinel-cli >')
+        self.debug(int(os.getenv('DEBUG', '0')))
  
     def __init_soc(self, nodeid):
         """ Initialize a System-on-a-chip node connected via UART. """
@@ -98,11 +99,8 @@ class Node:
 
     def __del__(self):
         if self.pexpect.isalive():
-            if self.node_type == 'sim':
-                self.send_command('exit')
-                self.pexpect.expect(pexpect.EOF)
-            elif self.node_type == 'ncp-sim':
-                self.pexpect.sendcontrol('c');
+            self.send_command('exit')
+            self.pexpect.expect(pexpect.EOF)
             self.pexpect.terminate()
             self.pexpect.close(force=True)
 
@@ -130,17 +128,44 @@ class Node:
     def debug(self, level):
         self.send_command('debug '+str(level))
 
-    def start(self):
+    def interface_up(self):
         self.send_command('ifconfig up')
         self.pexpect.expect('Done')
+
+    def interface_down(self):
+        self.send_command('ifconfig down')
+        self.pexpect.expect('Done')
+
+    def thread_start(self):
         self.send_command('thread start')
         self.pexpect.expect('Done')
 
-    def stop(self):
+    def thread_stop(self):
         self.send_command('thread stop')
         self.pexpect.expect('Done')
-        self.send_command('ifconfig down')
+
+    def commissioner_start(self):
+        cmd = 'commissioner start'
+        self.send_command(cmd)
         self.pexpect.expect('Done')
+
+    def commissioner_add_joiner(self, addr, psk):
+        cmd = 'commissioner joiner add ' + addr + ' ' + psk
+        self.send_command(cmd)
+        self.pexpect.expect('Done')
+
+    def joiner_start(self, pskd='', provisioning_url=''):
+        cmd = 'joiner start ' + pskd + ' ' + provisioning_url
+        self.send_command(cmd)
+        self.pexpect.expect('Done')
+
+    def start(self):
+        self.interface_up()
+        self.thread_start()
+
+    def stop(self):
+        self.thread_stop()
+        self.interface_down()
 
     def clear_whitelist(self):
         self.send_command('whitelist clear')
@@ -182,8 +207,37 @@ class Node:
         self.pexpect.expect('Done')
         return addr64
 
+    def get_hashmacaddr(self):
+        self.send_command('hashmacaddr')
+        i = self.pexpect.expect('([0-9a-fA-F]{16})')
+        if i == 0:
+            addr = self.pexpect.match.groups()[0].decode("utf-8")
+        self.pexpect.expect('Done')
+        return addr
+
+    def get_channel(self):
+        self.send_command('channel')
+        i = self.pexpect.expect('(\d+)\r\n')
+        if i == 0:
+            channel = int(self.pexpect.match.groups()[0])
+        self.pexpect.expect('Done')
+        return channel
+
     def set_channel(self, channel):
         cmd = 'channel %d' % channel
+        self.send_command(cmd)
+        self.pexpect.expect('Done')
+
+    def get_masterkey(self):
+        self.send_command('masterkey')
+        i = self.pexpect.expect('([0-9a-fA-F]{32})')
+        if i == 0:
+            masterkey = self.pexpect.match.groups()[0].decode("utf-8")
+        self.pexpect.expect('Done')
+        return masterkey
+
+    def set_masterkey(self, masterkey):
+        cmd = 'masterkey ' + masterkey
         self.send_command(cmd)
         self.pexpect.expect('Done')
 
@@ -205,6 +259,16 @@ class Node:
         self.send_command(cmd)
         self.pexpect.expect('Done')
 
+    def get_network_name(self):
+        self.send_command('networkname')
+        while True:
+            i = self.pexpect.expect(['Done', '(\S+)'])
+            if i != 0:
+                network_name = self.pexpect.match.groups()[0].decode('utf-8')
+            else:
+                break
+        return network_name
+
     def set_network_name(self, network_name):
         cmd = 'networkname ' + network_name
         self.send_command(cmd)
@@ -212,18 +276,37 @@ class Node:
 
     def get_panid(self):
         self.send_command('panid')
-        i = self.pexpect.expect('([0-9a-fA-F]{16})')
+        i = self.pexpect.expect('([0-9a-fA-F]{4})')
         if i == 0:
-            panid = self.pexpect.match.groups()[0]
+            panid = int(self.pexpect.match.groups()[0], 16)
         self.pexpect.expect('Done')
+        return panid
 
     def set_panid(self, panid):
         cmd = 'panid %d' % panid
         self.send_command(cmd)
         self.pexpect.expect('Done')
 
+    def get_partition_id(self):
+        self.send_command('leaderpartitionid')
+        i = self.pexpect.expect('(\d+)\r\n')
+        if i == 0:
+            weight = self.pexpect.match.groups()[0]
+        self.pexpect.expect('Done')
+        return weight
+
+    def set_partition_id(self, partition_id):
+        cmd = 'leaderpartitionid %d' % partition_id
+        self.send_command(cmd)
+        self.pexpect.expect('Done')
+
     def set_router_upgrade_threshold(self, threshold):
         cmd = 'routerupgradethreshold %d' % threshold
+        self.send_command(cmd)
+        self.pexpect.expect('Done')
+
+    def set_router_downgrade_threshold(self, threshold):
+        cmd = 'routerdowngradethreshold %d' % threshold
         self.send_command(cmd)
         self.pexpect.expect('Done')
 
@@ -325,8 +408,13 @@ class Node:
         self.send_command('netdataregister')
         self.pexpect.expect('Done')
 
+    def energy_scan(self, mask, count, period, scan_duration, ipaddr):
+        cmd = 'commissioner energy ' + str(mask) + ' ' + str(count) + ' ' + str(period) + ' ' + str(scan_duration) + ' ' + ipaddr
+        self.send_command(cmd)
+        self.pexpect.expect('Energy:', timeout=8)
+
     def panid_query(self, panid, mask, ipaddr):
-        cmd = 'commissioner panid ' + panid + ' ' + mask + ' ' + ipaddr
+        cmd = 'commissioner panid ' + str(panid) + ' ' + str(mask) + ' ' + ipaddr
         self.send_command(cmd)
         self.pexpect.expect('Conflict:', timeout=8)
 
@@ -350,13 +438,130 @@ class Node:
             cmd += ' ' + str(size)
 
         self.send_command(cmd)
-        responders = {}
-        while len(responders) < num_responses:
-            i = self.pexpect.expect(['from (\S+):'])
-            if i == 0:
-                responders[self.pexpect.match.groups()[0]] = 1
-        self.pexpect.expect('\n')
-        return responders
+        
+        result = True
+        try:
+            responders = {}
+            while len(responders) < num_responses:
+                i = self.pexpect.expect(['from (\S+):'])
+                if i == 0:
+                    responders[self.pexpect.match.groups()[0]] = 1
+            self.pexpect.expect('\n')
+        except pexpect.TIMEOUT:
+            result = False
+
+        return result
+
+    def set_router_selection_jitter(self, jitter):
+        cmd = 'routerselectionjitter %d' % jitter
+        self.send_command(cmd)
+        self.pexpect.expect('Done')
+
+    def set_active_dataset(self, timestamp, panid=None, channel=None, master_key=None):
+        self.send_command('dataset clear')
+        self.pexpect.expect('Done')
+
+        cmd = 'dataset activetimestamp %d' % timestamp
+        self.send_command(cmd)
+        self.pexpect.expect('Done')
+
+        if panid != None:
+            cmd = 'dataset panid %d' % panid
+            self.send_command(cmd)
+            self.pexpect.expect('Done')
+
+        if channel != None:
+            cmd = 'dataset channel %d' % channel
+            self.send_command(cmd)
+            self.pexpect.expect('Done')
+
+        if master_key != None:
+            cmd = 'dataset masterkey ' + master_key
+            self.send_command(cmd)
+            self.pexpect.expect('Done')
+
+        self.send_command('dataset commit active')
+        self.pexpect.expect('Done')
+
+    def set_pending_dataset(self, pendingtimestamp, activetimestamp, panid=None, channel=None):
+        self.send_command('dataset clear')
+        self.pexpect.expect('Done')
+
+        cmd = 'dataset pendingtimestamp %d' % pendingtimestamp
+        self.send_command(cmd)
+        self.pexpect.expect('Done')
+
+        cmd = 'dataset activetimestamp %d' % activetimestamp
+        self.send_command(cmd)
+        self.pexpect.expect('Done')
+
+        if panid != None:
+            cmd = 'dataset panid %d' % panid
+            self.send_command(cmd)
+            self.pexpect.expect('Done')
+
+        if channel != None:
+            cmd = 'dataset channel %d' % channel
+            self.send_command(cmd)
+            self.pexpect.expect('Done')
+
+        self.send_command('dataset commit pending')
+        self.pexpect.expect('Done')
+
+    def announce_begin(self, mask, count, period, ipaddr):
+        cmd = 'commissioner announce ' + str(mask) + ' ' + str(count) + ' ' + str(period) + ' ' + ipaddr
+        self.send_command(cmd)
+        self.pexpect.expect('Done')
+
+    def send_mgmt_active_set(self, active_timestamp=None, channel=None, panid=None, mesh_local=None,
+                              network_name=None):
+        cmd = 'dataset mgmtsetcommand active '
+
+        if active_timestamp != None:
+            cmd += 'activetimestamp %d ' % active_timestamp
+
+        if channel != None:
+            cmd += 'channel %d ' % channel
+
+        if panid != None:
+            cmd += 'panid %d ' % panid
+
+        if mesh_local != None:
+            cmd += 'localprefix ' + mesh_local + ' '
+
+        if network_name != None:
+            cmd += 'networkname ' + network_name + ' '
+
+        self.send_command(cmd)
+        self.pexpect.expect('Done')
+
+    def send_mgmt_pending_set(self, pending_timestamp=None, active_timestamp=None, delay_timer=None, channel=None,
+                              panid=None, master_key=None, mesh_local=None):
+        cmd = 'dataset mgmtsetcommand pending '
+
+        if pending_timestamp != None:
+            cmd += 'pendingtimestamp %d ' % pending_timestamp
+
+        if active_timestamp != None:
+            cmd += 'activetimestamp %d ' % active_timestamp
+
+        if delay_timer != None:
+            cmd += 'delaytimer %d ' % delay_timer
+
+        if channel != None:
+            cmd += 'channel %d ' % channel
+
+        if panid != None:
+            cmd += 'panid %d ' % panid
+
+        if master_key != None:
+            cmd += 'masterkey ' + master_key + ' '
+
+        if mesh_local != None:
+            cmd += 'localprefix ' + mesh_local + ' '
+
+        self.send_command(cmd)
+        self.pexpect.expect('Done')
 
 if __name__ == '__main__':
     unittest.main()

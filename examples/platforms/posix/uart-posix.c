@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2016, Nest Labs, Inc.
+ *  Copyright (c) 2016, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -26,6 +26,8 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include "platform-posix.h"
+
 #include <assert.h>
 #include <fcntl.h>
 #include <poll.h>
@@ -38,7 +40,6 @@
 
 #include <common/code_utils.hpp>
 #include <platform/uart.h>
-#include "platform-posix.h"
 
 #ifdef OPENTHREAD_TARGET_LINUX
 #include <sys/prctl.h>
@@ -176,7 +177,7 @@ exit:
     return error;
 }
 
-void posixUartUpdateFdSet(fd_set *aReadFdSet, fd_set *aWriteFdSet, fd_set *aErrorFdSet, int *aMaxFd)
+void platformUartUpdateFdSet(fd_set *aReadFdSet, fd_set *aWriteFdSet, fd_set *aErrorFdSet, int *aMaxFd)
 {
     if (aReadFdSet != NULL)
     {
@@ -209,7 +210,7 @@ void posixUartUpdateFdSet(fd_set *aReadFdSet, fd_set *aWriteFdSet, fd_set *aErro
     }
 }
 
-void posixUartProcess(void)
+void platformUartProcess(void)
 {
     ssize_t rval;
     const int error_flags = POLLERR | POLLNVAL | POLLHUP;

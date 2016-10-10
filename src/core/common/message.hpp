@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2016, Nest Labs, Inc.
+ *  Copyright (c) 2016, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -33,6 +33,12 @@
 
 #ifndef MESSAGE_HPP_
 #define MESSAGE_HPP_
+
+#ifdef OPENTHREAD_CONFIG_FILE
+#include OPENTHREAD_CONFIG_FILE
+#else
+#include <openthread-config.h>
+#endif
 
 #include <stdint.h>
 #include <string.h>
@@ -112,16 +118,18 @@ struct MessageInfo
     uint16_t         mDatagramTag;       ///< The datagram tag used for 6LoWPAN fragmentation.
 
     uint8_t          mChildMask[8];      ///< A bit-vector to indicate which sleepy children need to receive this.
-    uint16_t         mPanId;             ///< The Destination PAN ID.
     uint8_t          mTimeout;           ///< Seconds remaining before dropping the message.
     int8_t           mInterfaceId;       ///< The interface ID.
+    union
+    {
+        uint16_t     mPanId;             ///< Used for MLE Discover Request and Response messages.
+        uint8_t      mChannel;           ///< Used for MLE Announce.
+    };
 
     uint8_t          mType : 2;          ///< Identifies the type of message.
+    uint8_t          mSubType : 3;       ///< Identifies the message sub type.
     bool             mDirectTx : 1;      ///< Used to indicate whether a direct transmission is required.
     bool             mLinkSecurity : 1;  ///< Indicates whether or not link security is enabled.
-    bool             mMleDiscoverRequest : 1;   ///< Identifies MLE Discover Request.
-    bool             mMleDiscoverResponse : 1;  ///< Identifies MLE Discover Response.
-    bool             mJoinerEntrust : 1; ///< Indicates whether or not this message is a Joiner Entrust.
 };
 
 /**
@@ -215,6 +223,15 @@ public:
         kTypeMacDataPoll = 2,   ///< A MAC data poll message
     };
 
+    enum
+    {
+        kSubTypeNone                = 0,  ///< None
+        kSubTypeMleAnnounce         = 1,  ///< MLE Announce
+        kSubTypeMleDiscoverRequest  = 2,  ///< MLE Discover Request
+        kSubTypeMleDiscoverResponse = 3,  ///< MLE Discover Response
+        kSubTypeJoinerEntrust       = 4,  ///< Joiner Entrust
+    };
+
     /**
      * This method frees this message buffer.
      *
@@ -285,6 +302,22 @@ public:
      *
      */
     uint8_t GetType(void) const;
+
+    /**
+     * This method returns the sub type of the message.
+     *
+     * @returns The sub type of the message.
+     *
+     */
+    uint8_t GetSubType(void) const;
+
+    /**
+     * This method sets the message sub type.
+     *
+     * @param[in]  aSubType  The message sub type.
+     *
+     */
+    void SetSubType(uint8_t aSubType);
 
     /**
      * This method prepends bytes to the front of the message.
@@ -406,6 +439,8 @@ public:
     /**
      * This method returns the IEEE 802.15.4 Destination PAN ID.
      *
+     * @note Only use this when sending MLE Discover Request or Response messages.
+     *
      * @returns The IEEE 802.15.4 Destination PAN ID.
      *
      */
@@ -414,10 +449,32 @@ public:
     /**
      * This method sets the IEEE 802.15.4 Destination PAN ID.
      *
+     * @note Only use this when sending MLE Discover Request or Response messages.
+     *
      * @param[in]  aPanId  The IEEE 802.15.4 Destination PAN ID.
      *
      */
     void SetPanId(uint16_t aPanId);
+
+    /**
+     * This method returns the IEEE 802.15.4 Channel to use for transmission.
+     *
+     * @note Only use this when sending MLE Announce messages.
+     *
+     * @returns The IEEE 802.15.4 Channel to use for transmission.
+     *
+     */
+    uint8_t GetChannel(void) const;
+
+    /**
+     * This method sets the IEEE 802.15.4 Channel to use for transmission.
+     *
+     * @note Only use this when sending MLE Announce messages.
+     *
+     * @param[in]  aChannel  The IEEE 802.15.4 Channel to use for transmission.
+     *
+     */
+    void SetChannel(uint8_t aChannel);
 
     /**
      * This method returns the timeout used for 6LoWPAN reassembly.
@@ -488,57 +545,6 @@ public:
      *
      */
     void SetLinkSecurityEnabled(bool aLinkSecurityEnabled);
-
-    /**
-     * This method indicates whether or not this message is an MLE Discovery Request.
-     *
-     * @retval TRUE   If this message is an MLE Discovery Request.
-     * @retval FALSE  If this message is not an MLE Discovery Request.
-     *
-     */
-    bool IsMleDiscoverRequest(void) const;
-
-    /**
-     * This method sets whether or not this message is an MLE Discovery Request.
-     *
-     * @param[in]  aLinkSecurityEnabled  TRUE if this message is an MLE Discovery Request, FALSE otherwise.
-     *
-     */
-    void SetMleDiscoverRequest(bool aMleDiscoverRequest);
-
-    /**
-     * This method indicates whether or not this message is an MLE Discovery Response.
-     *
-     * @retval TRUE   If this message is an MLE Discovery Response.
-     * @retval FALSE  If this message is not an MLE Discovery Response.
-     *
-     */
-    bool IsMleDiscoverResponse(void) const;
-
-    /**
-     * This method sets whether or not this message is an MLE Discovery Response.
-     *
-     * @param[in]  aLinkSecurityEnabled  TRUE if this message is an MLE Discovery Response, FALSE otherwise.
-     *
-     */
-    void SetMleDiscoverResponse(bool aMleDiscoverResponse);
-
-    /**
-     * This method indicates whether or not this message is an Joiner Entrust.
-     *
-     * @retval TRUE   If this message is an Joiner Entrust.
-     * @retval FALSE  If this message is not an Joiner Entrust.
-     *
-     */
-    bool IsJoinerEntrust(void) const;
-
-    /**
-     * This method sets whether or not this message is an Joiner Entrust.
-     *
-     * @param[in]  aLinkSecurityEnabled  TRUE if this message is an Joiner Entrust, FALSE otherwise.
-     *
-     */
-    void SetJoinerEntrust(bool aJoinerEntrust);
 
     /**
      * This method is used to update a checksum value.

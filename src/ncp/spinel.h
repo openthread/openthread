@@ -1,5 +1,5 @@
 /*
- *    Copyright (c) 2016, Nest Labs, Inc.
+ *    Copyright (c) 2016, The OpenThread Authors.
  *    All rights reserved.
  *
  *    Redistribution and use in source and binary forms, with or without
@@ -243,6 +243,15 @@ typedef int spinel_ssize_t;
 typedef unsigned int spinel_size_t;
 typedef uint8_t spinel_tid_t;
 typedef unsigned int spinel_cid_t;
+
+enum
+{
+    SPINEL_MD_FLAG_TX               = 0x0001,
+    SPINEL_MD_FLAG_HAS_FCS          = 0x0002,
+    SPINEL_MD_FLAG_BAD_FCS          = 0x0004,
+    SPINEL_MD_FLAG_DUPE             = 0x0008,
+    SPINEL_MD_FLAG_RESERVED         = 0xFFF0,
+};
 
 enum
 {
@@ -507,6 +516,30 @@ typedef enum
      */
     SPINEL_PROP_THREAD_ROUTER_ROLE_ENABLED
                                        = SPINEL_PROP_THREAD_EXT__BEGIN + 7,
+
+    /// Thread Router Downgrade Threshold
+    /** Format: `C`
+     */
+    SPINEL_PROP_THREAD_ROUTER_DOWNGRADE_THRESHOLD
+                                       = SPINEL_PROP_THREAD_EXT__BEGIN + 8,
+
+    /// Thread Router Selection Jitter
+    /** Format: `C`
+     */
+    SPINEL_PROP_THREAD_ROUTER_SELECTION_JITTER
+                                        = SPINEL_PROP_THREAD_EXT__BEGIN + 9,
+
+    /// Thread Preferred Router Id
+    /** Format: `C` - Write only
+     */
+    SPINEL_PROP_THREAD_PREFERRED_ROUTER_ID
+                                        = SPINEL_PROP_THREAD_EXT__BEGIN + 10,
+
+    /// Thread Neighbor Table
+    /** Format: `A(T(ESLCcCbLL))`
+     *  eui64, rloc16, age, inLqi ,aveRSS, mode, isChild. linkFrameCounter, mleCounter
+     */
+    SPINEL_PROP_THREAD_NEIGHBOR_TABLE  = SPINEL_PROP_THREAD_EXT__BEGIN + 11,
 
     SPINEL_PROP_THREAD_EXT__END        = 0x1600,
 

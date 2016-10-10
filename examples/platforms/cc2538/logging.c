@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2016, Nest Labs, Inc.
+ *  Copyright (c) 2016, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -32,12 +32,36 @@
  *
  */
 
+#ifdef OPENTHREAD_CONFIG_FILE
+#include OPENTHREAD_CONFIG_FILE
+#else
+#include <openthread-config.h>
+#endif
+
+
 #include <platform/logging.h>
+#if OPENTHREAD_ENABLE_CLI_LOGGING
+#include <ctype.h>
+#include <inttypes.h>
+#include <stdarg.h>
+#include <stdio.h>
+#include <stdint.h>
+#include <string.h>
+
+#include <common/code_utils.hpp>
+#include <cli/cli-uart.h>
+#endif
 
 void otPlatLog(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aFormat, ...)
 {
+#if OPENTHREAD_ENABLE_CLI_LOGGING
+    va_list args;
+    va_start(args, aFormat);
+    otCliLog(aLogLevel, aLogRegion, aFormat, args);
+    va_end(args);
+#else
     (void)aLogLevel;
     (void)aLogRegion;
     (void)aFormat;
+#endif // OPENTHREAD_ENABLE_CLI_LOGGING
 }
-

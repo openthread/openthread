@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2016, Nest Labs, Inc.
+ *  Copyright (c) 2016, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -35,10 +35,6 @@
 #include <crypto/mbedtls.hpp>
 
 static Thread::Crypto::MbedTls mbedtls;
-
-extern"C" void otSignalTaskletPending(otInstance *)
-{
-}
 
 void TestHmacSha256(void)
 {
@@ -80,9 +76,11 @@ void TestHmacSha256(void)
     }
 }
 
+#ifdef ENABLE_TEST_MAIN
 int main(void)
 {
     TestHmacSha256();
     printf("All tests passed\n");
     return 0;
 }
+#endif

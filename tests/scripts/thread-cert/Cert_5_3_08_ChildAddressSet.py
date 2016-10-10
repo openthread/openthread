@@ -1,6 +1,6 @@
 #!/usr/bin/python
 #
-#  Copyright (c) 2016, Nest Labs, Inc.
+#  Copyright (c) 2016, The OpenThread Authors.
 #  All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
@@ -27,7 +27,6 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-import pexpect
 import time
 import unittest
 
@@ -84,26 +83,26 @@ class Cert_5_3_8_ChildAddressSet(unittest.TestCase):
         self.assertEqual(self.nodes[LEADER].get_state(), 'leader')
 
         self.nodes[ED1].start()
-        time.sleep(3)
+        time.sleep(5)
         self.assertEqual(self.nodes[ED1].get_state(), 'child')
 
         self.nodes[ED2].start()
-        time.sleep(3)
+        time.sleep(5)
         self.assertEqual(self.nodes[ED2].get_state(), 'child')
 
         self.nodes[ED3].start()
-        time.sleep(3)
+        time.sleep(5)
         self.assertEqual(self.nodes[ED3].get_state(), 'child')
 
         self.nodes[ED4].start()
-        time.sleep(3)
+        time.sleep(5)
         self.assertEqual(self.nodes[ED4].get_state(), 'child')
 
         for i in range(2,6):
             addrs = self.nodes[i].get_addrs()
             for addr in addrs:
                 if addr[0:4] != 'fe80':
-                    self.nodes[LEADER].ping(addr)
+                    self.assertTrue(self.nodes[LEADER].ping(addr))
 
 if __name__ == '__main__':
     unittest.main()

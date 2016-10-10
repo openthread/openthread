@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2016, Nest Labs, Inc.
+ *  Copyright (c) 2016, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -35,6 +35,7 @@
 #include <common/code_utils.hpp>
 #include <common/debug.hpp>
 #include <common/tasklet.hpp>
+#include <net/ip6.hpp>
 
 namespace Thread {
 
@@ -67,7 +68,7 @@ ThreadError TaskletScheduler::Post(Tasklet &aTasklet)
     {
         mHead = &aTasklet;
         mTail = &aTasklet;
-        otSignalTaskletPending(NULL);
+        otSignalTaskletPending(aTasklet.mScheduler.GetIp6()->GetInstance());
     }
     else
     {
@@ -103,16 +104,31 @@ bool TaskletScheduler::AreTaskletsPending(void)
     return mHead != NULL;
 }
 
-void TaskletScheduler::RunNextTasklet(void)
+void TaskletScheduler::ProcessQueuedTasklets(void)
 {
-    Tasklet  *task;
+    Tasklet *tail = mTail;
+    Tasklet *cur;
 
-    task = PopTasklet();
-
-    if (task != NULL)
+    while ((cur = PopTasklet()) != NULL)
     {
-        task->RunTask();
+        cur->RunTask();
+
+        // only process tasklets that were queued at the time this method was called
+        if (cur == tail)
+        {
+            if (mHead != NULL)
+            {
+                otSignalTaskletPending(cur->mScheduler.GetIp6()->GetInstance());
+            }
+
+            break;
+        }
     }
+}
+
+Ip6::Ip6 *TaskletScheduler::GetIp6()
+{
+    return Ip6::Ip6FromTaskletScheduler(this);
 }
 
 }  // namespace Thread

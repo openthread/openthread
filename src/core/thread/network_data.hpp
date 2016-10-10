@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2016, Nest Labs, Inc.
+ *  Copyright (c) 2016, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -92,8 +92,11 @@ public:
     /**
      * This constructor initializes the object.
      *
+     * @param[in]  aThreadNetif  A reference to the Thread network interface.
+     * @param[in]  aLocal        TRUE if this represents local network data, FALSE otherwise.
+     *
      */
-    NetworkData(ThreadNetif &aThreadNetif);
+    NetworkData(ThreadNetif &aThreadNetif, bool aLocal);
 
     /**
      * This method provides a full or stable copy of the Thread Network Data.
@@ -181,6 +184,12 @@ public:
      *
      */
     bool ContainsExternalRoutes(NetworkData &aCompare, uint16_t aRloc16);
+
+    /**
+     * This method cancels the data resubmit delay timer.
+     *
+     */
+    void ClearResubmitDelayTimer(void);
 
 protected:
     /**
@@ -318,14 +327,13 @@ protected:
     /**
      * This method sends a Server Data Notification message to the Leader.
      *
-     * @param[in]  aLocal   TRUE if notifying Leader of local network data, FALSE otherwise.
      * @param[in]  aRloc16  The old RLOC16 value that was previously registered.
      *
      * @retval kThreadError_None    Successfully enqueued the notification message.
      * @retval kThreadError_NoBufs  Insufficient message buffers to generate the notification message.
      *
      */
-    ThreadError SendServerDataNotification(bool aLocal, uint16_t aRloc16);
+    ThreadError SendServerDataNotification(uint16_t aRloc16);
 
     uint8_t mTlvs[kMaxSize];  ///< The Network Data buffer.
     uint8_t mLength;          ///< The number of valid bytes in @var mTlvs.
@@ -333,8 +341,17 @@ protected:
     Mle::MleRouter &mMle;
 
 private:
+    enum
+    {
+        kDataResubmitDelay = 300,  ///< DATA_RESUBMIT_DELAY (seconds)
+    };
+
     static void HandleUdpReceive(void *aContext, otMessage aMessage, const otMessageInfo *aMessageInfo);
     void HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+
+    const bool      mLocal;
+    bool            mLastAttemptWait;
+    uint32_t        mLastAttempt;
 
     Ip6::UdpSocket  mSocket;
     uint8_t         mCoapToken[2];

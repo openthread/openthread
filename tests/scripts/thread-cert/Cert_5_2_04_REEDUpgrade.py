@@ -1,6 +1,6 @@
 #!/usr/bin/python
 #
-#  Copyright (c) 2016, Nest Labs, Inc.
+#  Copyright (c) 2016, The OpenThread Authors.
 #  All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
@@ -27,7 +27,6 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-import pexpect
 import time
 import unittest
 
@@ -55,6 +54,7 @@ class Cert_5_2_4_REEDUpgrade(unittest.TestCase):
             self.nodes[i].add_whitelist(self.nodes[LEADER].get_addr64())
             self.nodes[LEADER].add_whitelist(self.nodes[i].get_addr64())
             self.nodes[i].enable_whitelist()
+            self.nodes[i].set_router_selection_jitter(1)
 
         self.nodes[REED].set_panid(0xface)
         self.nodes[REED].set_mode('rsdn')

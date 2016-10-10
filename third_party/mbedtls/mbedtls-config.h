@@ -28,10 +28,17 @@
 #ifndef MBEDTLS_CONFIG_H
 #define MBEDTLS_CONFIG_H
 
-#include <inttypes.h>
 #include <stdlib.h>
 
 #include <platform/logging.h>
+
+#if defined(_WIN32)
+#include <stdarg.h>
+#include <stdio.h>
+// Temporary, until the warnings can get fixed in the mbed library
+#pragma warning(disable:4242)  // conversion from '*' to '*', possible loss of data
+#pragma warning(disable:4244)  // conversion from '*' to '*', possible loss of data
+#endif
 
 #if defined(_MSC_VER) && !defined(_CRT_SECURE_NO_DEPRECATE)
 #define _CRT_SECURE_NO_DEPRECATE 1
@@ -294,7 +301,7 @@
  *
  * Uncomment to use your own hardware entropy collector.
  */
-//#define MBEDTLS_ENTROPY_HARDWARE_ALT
+#define MBEDTLS_ENTROPY_HARDWARE_ALT
 
 /**
  * \def MBEDTLS_AES_ROM_TABLES
@@ -786,7 +793,7 @@
  *
  * Uncomment this macro to disable the built-in platform entropy functions.
  */
-//#define MBEDTLS_NO_PLATFORM_ENTROPY
+#define MBEDTLS_NO_PLATFORM_ENTROPY
 
 /**
  * \def MBEDTLS_ENTROPY_FORCE_SHA256

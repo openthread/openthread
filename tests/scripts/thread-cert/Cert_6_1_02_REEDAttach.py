@@ -1,6 +1,6 @@
 #!/usr/bin/python
 #
-#  Copyright (c) 2016, Nest Labs, Inc.
+#  Copyright (c) 2016, The OpenThread Authors.
 #  All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
@@ -70,7 +70,7 @@ class Cert_6_1_2_REEDAttach(unittest.TestCase):
         self.assertEqual(self.nodes[LEADER].get_state(), 'leader')
 
         self.nodes[REED].start()
-        time.sleep(3)
+        time.sleep(5)
         self.assertEqual(self.nodes[REED].get_state(), 'child')
 
         self.nodes[ED].start()

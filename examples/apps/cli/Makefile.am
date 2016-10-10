@@ -1,5 +1,5 @@
 #
-#  Copyright (c) 2016, Nest Labs, Inc.
+#  Copyright (c) 2016, The OpenThread Authors.
 #  All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
@@ -39,8 +39,8 @@ ot_cli_CPPFLAGS                                                        = \
     $(NULL)
 
 ot_cli_LDADD                                                           = \
-    $(top_builddir)/src/core/libopenthread.a                             \
     $(top_builddir)/src/cli/libopenthread-cli.a                          \
+    $(top_builddir)/src/core/libopenthread.a                             \
     $(top_builddir)/third_party/mbedtls/libmbedcrypto.a                  \
     $(NULL)
 

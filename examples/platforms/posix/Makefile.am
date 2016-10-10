@@ -1,5 +1,5 @@
 #
-#  Copyright (c) 2016, Nest Labs, Inc.
+#  Copyright (c) 2016, The OpenThread Authors.
 #  All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
@@ -44,7 +44,8 @@ libopenthread_posix_a_SOURCES             = \
     platform.c                              \
     radio.c                                 \
     random.c                                \
-    uart.c                                  \
+    uart-posix.c                            \
+    flash.c                                 \
     $(NULL)
 
 if OPENTHREAD_ENABLE_DIAG

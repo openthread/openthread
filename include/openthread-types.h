@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2016, Nest Labs, Inc.
+ *  Copyright (c) 2016, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -42,6 +42,26 @@
 
 #ifdef __cplusplus
 extern "C" {
+#endif
+
+#ifdef _WIN32
+#ifdef WINDOWS_KERNEL
+#include <ntdef.h>
+#else
+#include <windows.h>
+#endif
+#else
+#ifndef CONTAINING_RECORD
+/*#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Winvalid-offsetof"
+#define CONTAINING_RECORD(address, type, field) \
+    ((type *)((uint8_t*)(address) - offsetof(type, field)))
+#pragma GCC diagnostic pop*/
+#define BASE 0x1
+#define myoffsetof(s,m) (((size_t)&(((s*)BASE)->m))-BASE)
+#define CONTAINING_RECORD(address, type, field) \
+    ((type *)((uint8_t*)(address) - myoffsetof(type, field)))
+#endif
 #endif
 
 /**
@@ -132,12 +152,19 @@ typedef enum ThreadError
      */
     kThreadError_BlacklistFiltered = 27,
 
+    /**
+     * The creation of IPv6 address failed.
+     */
+    kThreadError_Ipv6AddressCreationFailure = 28,
+
     kThreadError_Error = 255,
 } ThreadError;
 
 #define OT_IP6_IID_SIZE            8   ///< Size of an IPv6 Interface Identifier (bytes)
 
 #define OT_MASTER_KEY_SIZE         16  ///< Size of the Thread Master Key (bytes)
+
+#define OT_NUM_NETDIAG_TLV_TYPES   18  ///< Number of Network Diagnostic TLV types
 
 /**
  * This structure represents a Thread Master Key.
@@ -216,6 +243,12 @@ enum
 };
 
 /**
+  * This type represents Channel Mask Page 0.
+  *
+  */
+typedef uint32_t otChannelMaskPage0;
+
+/**
  * This type represents the IEEE 802.15.4 PAN ID.
  *
  */
@@ -243,7 +276,8 @@ typedef struct otExtAddress
 /**
  * This structure represents an IPv6 address.
  */
-typedef OT_TOOL_PACKED_BEGIN struct otIp6Address
+OT_TOOL_PACKED_BEGIN
+struct otIp6Address
 {
     union
     {
@@ -251,7 +285,9 @@ typedef OT_TOOL_PACKED_BEGIN struct otIp6Address
         uint16_t m16[OT_IP6_ADDRESS_SIZE / sizeof(uint16_t)];  ///< 16-bit fields
         uint32_t m32[OT_IP6_ADDRESS_SIZE / sizeof(uint32_t)];  ///< 32-bit fields
     } mFields;                                                 ///< IPv6 accessor fields
-} OT_TOOL_PACKED_END otIp6Address;
+} OT_TOOL_PACKED_END;
+
+typedef struct otIp6Address otIp6Address;
 
 /**
  * @addtogroup commands  Commands
@@ -281,6 +317,18 @@ typedef OT_TOOL_PACKED_BEGIN struct otIp6Address
 
 #define OT_CHANNEL_ALL       0xffffffff  ///< All channels
 
+#define OT_STEERING_DATA_MAX_LENGTH       16  ///< Max steering data length (bytes)
+
+/**
+ * This structure represents the steering data.
+ *
+ */
+typedef struct otSteeringData
+{
+    uint8_t mLength;
+    uint8_t m8[OT_STEERING_DATA_MAX_LENGTH];
+} otSteeringData;
+
 /**
  * This struct represents a received IEEE 802.15.4 Beacon.
  *
@@ -290,7 +338,9 @@ typedef struct otActiveScanResult
     otExtAddress    mExtAddress;      ///< IEEE 802.15.4 Extended Address
     otNetworkName   mNetworkName;     ///< Thread Network Name
     otExtendedPanId mExtendedPanId;   ///< Thread Extended PAN ID
+    otSteeringData  mSteeringData;    ///< Steering Data
     uint16_t        mPanId;           ///< IEEE 802.15.4 PAN ID
+    uint16_t        mJoinerUdpPort;   ///< Joiner UDP Port
     uint8_t         mChannel;         ///< IEEE 802.15.4 Channel
     int8_t          mRssi;            ///< RSSI (dBm)
     uint8_t         mLqi;             ///< LQI
@@ -340,30 +390,49 @@ typedef struct otEnergyScanResult
  */
 typedef struct otOperationalDataset
 {
-    uint64_t          mActiveTimestamp;            ///< Active Timestamp
-    uint64_t          mPendingTimestamp;           ///< Pending Timestamp
-    otMasterKey       mMasterKey;                  ///< Network Master Key
-    otNetworkName     mNetworkName;                ///< Network Name
-    otExtendedPanId   mExtendedPanId;              ///< Extended PAN ID
-    otMeshLocalPrefix mMeshLocalPrefix;            ///< Mesh Local Prefix
-    uint32_t          mDelay;                      ///< Delay Timer
-    otPanId           mPanId;                      ///< PAN ID
-    uint16_t          mChannel;                    ///< Channel
-    otPSKc            mPSKc;                       ///< PSKc
-    otSecurityPolicy  mSecurityPolicy;             ///< Security Policy
+    uint64_t             mActiveTimestamp;            ///< Active Timestamp
+    uint64_t             mPendingTimestamp;           ///< Pending Timestamp
+    otMasterKey          mMasterKey;                  ///< Network Master Key
+    otNetworkName        mNetworkName;                ///< Network Name
+    otExtendedPanId      mExtendedPanId;              ///< Extended PAN ID
+    otMeshLocalPrefix    mMeshLocalPrefix;            ///< Mesh Local Prefix
+    uint32_t             mDelay;                      ///< Delay Timer
+    otPanId              mPanId;                      ///< PAN ID
+    uint16_t             mChannel;                    ///< Channel
+    otPSKc               mPSKc;                       ///< PSKc
+    otSecurityPolicy     mSecurityPolicy;             ///< Security Policy
+    otChannelMaskPage0   mChannelMaskPage0;           ///< Channel Mask Page 0
 
-    bool              mIsActiveTimestampSet : 1;   ///< TRUE if Active Timestamp is set, FALSE otherwise.
-    bool              mIsPendingTimestampSet : 1;  ///< TRUE if Pending Timestamp is set, FALSE otherwise.
-    bool              mIsMasterKeySet : 1;         ///< TRUE if Network Master Key is set, FALSE otherwise.
-    bool              mIsNetworkNameSet : 1;       ///< TRUE if Network Name is set, FALSE otherwise.
-    bool              mIsExtendedPanIdSet : 1;     ///< TRUE if Extended PAN ID is set, FALSE otherwise.
-    bool              mIsMeshLocalPrefixSet : 1;   ///< TRUE if Mesh Local Prefix is set, FALSE otherwise.
-    bool              mIsDelaySet : 1;             ///< TRUE if Delay Timer is set, FALSE otherwise.
-    bool              mIsPanIdSet : 1;             ///< TRUE if PAN ID is set, FALSE otherwise.
-    bool              mIsChannelSet : 1;           ///< TRUE if Channel is set, FALSE otherwise.
-    bool              mIsPSKcSet : 1;              ///< TRUE if PSKc is set, FALSE otherwise.
-    bool              mIsSecurityPolicySet : 1;    ///< TRUE if Security Policy is set, FALSE otherwise.
+    bool                 mIsActiveTimestampSet : 1;   ///< TRUE if Active Timestamp is set, FALSE otherwise.
+    bool                 mIsPendingTimestampSet : 1;  ///< TRUE if Pending Timestamp is set, FALSE otherwise.
+    bool                 mIsMasterKeySet : 1;         ///< TRUE if Network Master Key is set, FALSE otherwise.
+    bool                 mIsNetworkNameSet : 1;       ///< TRUE if Network Name is set, FALSE otherwise.
+    bool                 mIsExtendedPanIdSet : 1;     ///< TRUE if Extended PAN ID is set, FALSE otherwise.
+    bool                 mIsMeshLocalPrefixSet : 1;   ///< TRUE if Mesh Local Prefix is set, FALSE otherwise.
+    bool                 mIsDelaySet : 1;             ///< TRUE if Delay Timer is set, FALSE otherwise.
+    bool                 mIsPanIdSet : 1;             ///< TRUE if PAN ID is set, FALSE otherwise.
+    bool                 mIsChannelSet : 1;           ///< TRUE if Channel is set, FALSE otherwise.
+    bool                 mIsPSKcSet : 1;              ///< TRUE if PSKc is set, FALSE otherwise.
+    bool                 mIsSecurityPolicySet : 1;    ///< TRUE if Security Policy is set, FALSE otherwise.
+    bool                 mIsChannelMaskPage0Set : 1;  ///< TRUE if Channel Mask Page 0 is set, FALSE otherwise.
 } otOperationalDataset;
+
+/**
+ * This structure represents a Commissioning Dataset.
+ *
+ */
+typedef struct otCommissioningDataset
+{
+    uint16_t              mLocator;                   ///< Border Router RLOC16
+    uint16_t              mSessionId;                 ///< Commissioner Session Id
+    otSteeringData        mSteeringData;              ///< Steering Data
+    uint16_t              mJoinerUdpPort;             ///< Joiner UDP Port
+
+    bool                  mIsLocatorSet : 1;          ///< TRUE if Border Router RLOC16 is set, FALSE otherwise.
+    bool                  mIsSessionIdSet: 1;         ///< TRUE if Commissioner Session Id is set, FALSE otherwise.
+    bool                  mIsSteeringDataSet : 1;     ///< TRUE if Steering Data is set, FALSE otherwise.
+    bool                  mIsJoinerUdpPortSet : 1;    ///< TRUE if Joiner UDP Port is set, FALSE otherwise.
+} otCommissioningDataset;
 
 /**
  * This enumeration represents meshcop TLV types.
@@ -389,10 +458,16 @@ typedef enum otMeshcopTlvType
     OT_MESHCOP_TLV_JOINER_DTLS        = 17,   ///< meshcop Joiner DTLS Encapsulation TLV
     OT_MESHCOP_TLV_JOINER_UDP_PORT    = 18,   ///< meshcop Joiner UDP Port TLV
     OT_MESHCOP_TLV_JOINER_IID         = 19,   ///< meshcop Joiner IID TLV
+    OT_MESHCOP_TLV_JOINER_RLOC        = 20,   ///< meshcop Joiner Router Locator TLV
     OT_MESHCOP_TLV_JOINER_ROUTER_KEK  = 21,   ///< meshcop Joiner Router KEK TLV
+    OT_MESHCOP_TLV_PROVISIONING_URL   = 32,   ///< meshcop Provisioning URL TLV
     OT_MESHCOP_TLV_PENDINGTIMESTAMP   = 51,   ///< meshcop Pending Timestamp TLV
     OT_MESHCOP_TLV_DELAYTIMER         = 52,   ///< meshcop Delay Timer TLV
     OT_MESHCOP_TLV_CHANNELMASK        = 53,   ///< meshcop Channel Mask TLV
+    OT_MESHCOP_TLV_COUNT              = 54,   ///< meshcop Count TLV
+    OT_MESHCOP_TLV_PERIOD             = 55,   ///< meshcop Period TLV
+    OT_MESHCOP_TLV_SCAN_DURATION      = 56,   ///< meshcop Scan Duration TLV
+    OT_MESHCOP_TLV_ENERGY_LIST        = 57,   ///< meshcop Energy List TLV
     OT_MESHCOP_TLV_DISCOVERYREQUEST   = 128,  ///< meshcop Discovery Request TLV
     OT_MESHCOP_TLV_DISCOVERYRESPONSE  = 129,  ///< meshcop Discovery Response TLV
 } otMeshcopTlvType;
@@ -623,6 +698,30 @@ typedef enum
 } otDeviceRole;
 
 /**
+ * This structure holds diagnostic information for a neighboring Thread node
+ *
+ */
+typedef struct
+{
+    otExtAddress   mExtAddress;            ///< IEEE 802.15.4 Extended Address
+    uint32_t       mAge;                   ///< Time last heard
+    uint16_t       mRloc16;                ///< RLOC16
+    uint32_t       mLinkFrameCounter;      ///< Link Frame Counter
+    uint32_t       mMleFrameCounter;       ///< MLE Frame Counter
+    uint8_t        mLinkQualityIn;         ///< Link Quality In
+    int8_t         mAverageRssi;           ///< Average RSSI
+    bool           mRxOnWhenIdle : 1;      ///< rx-on-when-idle
+    bool           mSecureDataRequest : 1; ///< Secure Data Requests
+    bool           mFullFunction : 1;      ///< Full Function Device
+    bool           mFullNetworkData : 1;   ///< Full Network Data
+    bool           mIsChild : 1;           ///< Is the neighbor a child
+} otNeighborInfo;
+
+#define OT_NEIGHBOR_INFO_ITERATOR_INIT  0  ///< Initializer for otNeighborInfoIterator.
+
+typedef int16_t otNeighborInfoIterator;    ///< Used to iterate through neighbor table.
+
+/**
  * This structure holds diagnostic information for a Thread Child
  *
  */
@@ -733,6 +832,24 @@ typedef struct otNetifAddress
     uint8_t                mPrefixLength;       ///< The Prefix length.
     struct otNetifAddress *mNext;               ///< A pointer to the next network interface address.
 } otNetifAddress;
+
+/**
+ * This structure represents data used by Semantically Opaque IID Generator.
+ *
+ */
+typedef struct
+{
+    uint8_t        *mInterfaceId;        ///< String of bytes representing interface ID. Like "eth0" or "wlan0".
+    uint8_t         mInterfaceIdLength;  ///< Length of interface ID string.
+
+    uint8_t        *mNetworkId;          ///< Network ID (or name). Can be null if mNetworkIdLength is 0.
+    uint8_t         mNetworkIdLength;    ///< Length of Network ID string.
+
+    uint8_t         mDadCounter;         ///< Duplicate address detection counter.
+
+    uint8_t        *mSecretKey;          ///< Secret key used to create IID. Cannot be null.
+    uint16_t        mSecretKeyLength;    ///< Secret key length in bytes. Should be at least 16 bytes == 128 bits.
+} otSemanticallyOpaqueIidGeneratorData;
 
 /**
  * @addtogroup messages  Message Buffers

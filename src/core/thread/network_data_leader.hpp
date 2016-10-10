@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2016, Nest Labs, Inc.
+ *  Copyright (c) 2016, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -281,6 +281,18 @@ private:
     bool IsStableUpdated(uint16_t aRloc16, uint8_t *aTlvs, uint8_t aTlvsLength, uint8_t *aTlvsBase,
                          uint8_t aTlvsBaseLength);
 
+    static void HandleCommissioningSet(void *aContext, Coap::Header &aHeader, Message &aMessage,
+                                       const Ip6::MessageInfo &aMessageInfo);
+    void HandleCommissioningSet(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+
+    static void HandleCommissioningGet(void *aContext, Coap::Header &aHeader, Message &aMessage,
+                                       const Ip6::MessageInfo &aMessageInfo);
+    void HandleCommissioningGet(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+
+    void SendCommissioningGetResponse(const Coap::Header &aRequestHeader, const Ip6::MessageInfo &aMessageInfo,
+                                      uint8_t *aTlvs, uint8_t aLength);
+    void SendCommissioningSetResponse(const Coap::Header &aRequestHeader, const Ip6::MessageInfo &aMessageInfo,
+                                      MeshCoP::StateTlv::State aState);
 
     /**
      * Thread Specification Constants
@@ -301,6 +313,9 @@ private:
     Coap::Resource  mServerData;
     uint8_t         mStableVersion;
     uint8_t         mVersion;
+
+    Coap::Resource mCommissioningDataGet;
+    Coap::Resource mCommissioningDataSet;
 
     Coap::Server   &mCoapServer;
     ThreadNetif    &mNetif;

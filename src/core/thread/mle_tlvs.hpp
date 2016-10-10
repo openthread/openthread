@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2016, Nest Labs, Inc.
+ *  Copyright (c) 2016, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -94,6 +94,8 @@ public:
         kStatus              = 17,   ///< Status TLV
         kVersion             = 18,   ///< Version TLV
         kAddressRegistration = 19,   ///< Address Registration TLV
+        kChannel             = 20,   ///< Channel TLV
+        kPanId               = 21,   ///< PAN ID TLV
         kActiveTimestamp     = 22,   ///< Active Timestamp TLV
         kPendingTimestamp    = 23,   ///< Pending Timestamp TLV
         kActiveDataset       = 24,   ///< Active Operational Dataset TLV
@@ -605,7 +607,7 @@ private:
         kRouteCostMask = 0xf << kRouteCostOffset,
     };
     uint8_t mRouterIdSequence;
-    uint8_t mRouterIdMask[BitVectorBytes(kMaxRouterId)];
+    uint8_t mRouterIdMask[BitVectorBytes(kMaxRouterId + 1)];
     uint8_t mRouteData[kMaxRouters];
 } OT_TOOL_PACKED_END;
 
@@ -1325,7 +1327,7 @@ public:
      * @retval FALSE  If the Compressed flag is not set.
      *
      */
-    bool IsCompressed(void) const { return mControl & kCompressed; }
+    bool IsCompressed(void) const { return (mControl & kCompressed) != 0; }
 
     /**
      * This method sets the Uncompressed flag.
@@ -1448,6 +1450,109 @@ public:
 
 private:
     AddressRegistrationEntry mAddresses[4];
+} OT_TOOL_PACKED_END;
+
+/**
+ * This class implements Channel TLV generation and parsing.
+ *
+ */
+OT_TOOL_PACKED_BEGIN
+class ChannelTlv: public Tlv
+{
+public:
+    /**
+     * This method initializes the TLV.
+     *
+     */
+    void Init(void) { SetType(kChannel); SetLength(sizeof(*this) - sizeof(Tlv)); }
+
+    /**
+     * This method indicates whether or not the TLV appears to be well-formed.
+     *
+     * @retval TRUE   If the TLV appears to be well-formed.
+     * @retval FALSE  If the TLV does not appear to be well-formed.
+     *
+     */
+    bool IsValid(void) const { return GetLength() == sizeof(*this) - sizeof(Tlv); }
+
+    /**
+     * This method returns the Channel Page value.
+     *
+     * @returns The Channel Page value.
+     *
+     */
+    uint8_t GetChannelPage(void) const { return mChannelPage; }
+
+    /**
+     * This method sets the Channel Page value.
+     *
+     * @param[in]  aChannelPage  The Channel Page value.
+     *
+     */
+    void SetChannelPage(uint8_t aChannelPage) { mChannelPage = aChannelPage; }
+
+    /**
+     * This method returns the Channel value.
+     *
+     * @returns The Channel value.
+     *
+     */
+    uint16_t GetChannel(void) const { return HostSwap16(mChannel); }
+
+    /**
+     * This method sets the Channel value.
+     *
+     * @param[in]  aChannel  The Channel value.
+     *
+     */
+    void SetChannel(uint16_t aChannel) { mChannel = HostSwap16(aChannel); }
+
+private:
+    uint8_t mChannelPage;
+    uint16_t mChannel;
+} OT_TOOL_PACKED_END;
+
+/**
+ * This class implements PAN ID TLV generation and parsing.
+ *
+ */
+OT_TOOL_PACKED_BEGIN
+class PanIdTlv: public Tlv
+{
+public:
+    /**
+     * This method initializes the TLV.
+     *
+     */
+    void Init(void) { SetType(kPanId); SetLength(sizeof(*this) - sizeof(Tlv)); }
+
+    /**
+     * This method indicates whether or not the TLV appears to be well-formed.
+     *
+     * @retval TRUE   If the TLV appears to be well-formed.
+     * @retval FALSE  If the TLV does not appear to be well-formed.
+     *
+     */
+    bool IsValid(void) const { return GetLength() == sizeof(*this) - sizeof(Tlv); }
+
+    /**
+     * This method returns the PAN ID value.
+     *
+     * @returns The PAN ID value.
+     *
+     */
+    uint16_t GetPanId(void) const { return HostSwap16(mPanId); }
+
+    /**
+     * This method sets the PAN ID value.
+     *
+     * @param[in]  aPanId  The PAN ID value.
+     *
+     */
+    void SetPanId(uint16_t aPanId) { mPanId = HostSwap16(aPanId); }
+
+private:
+    uint16_t mPanId;
 } OT_TOOL_PACKED_END;
 
 /**

@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2016, Nest Labs, Inc.
+ *  Copyright (c) 2016, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -136,6 +136,14 @@ public:
      *
      */
     ThreadError AddResource(Resource &aResource);
+
+    /**
+     * This method removes a resource from the CoAP server.
+     *
+     * @param[in]  aResource  A reference to the resource.
+     *
+     */
+    void RemoveResource(Resource &aResource);
 
     /**
      * This method returns a new UDP message with sufficient header space reserved.

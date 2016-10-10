@@ -1,5 +1,5 @@
 #
-#  Copyright (c) 2016, Nest Labs, Inc.
+#  Copyright (c) 2016, The OpenThread Authors.
 #  All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
@@ -58,6 +58,9 @@ matrix:
       compiler: gcc
       os: linux
     - env: BUILD_TARGET="posix-32-bit" VERBOSE=1
+      compiler: gcc
+      os: linux
+    - env: BUILD_TARGET="posix-ncp-spi" VERBOSE=1
       compiler: gcc
       os: linux
     - env: BUILD_TARGET="posix-ncp" VERBOSE=1

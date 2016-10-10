@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2016, Nest Labs, Inc.
+ *  Copyright (c) 2016, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -59,7 +59,7 @@ extern void RFCoreRxTxIntHandler(void);
 extern void RFCoreErrIntHandler(void);
 extern void main(void);
 
-static uint64_t stack[384] __attribute__((section(".stack")));
+static uint64_t stack[512] __attribute__((section(".stack")));
 
 __attribute__((section(".vectors"), used))
 void (*const vectors[])(void) =

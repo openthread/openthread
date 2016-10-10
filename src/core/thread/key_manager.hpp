@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2016, Nest Labs, Inc.
+ *  Copyright (c) 2016, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -37,6 +37,7 @@
 #include <stdint.h>
 
 #include <openthread-types.h>
+#include <common/timer.hpp>
 #include <crypto/hmac_sha256.hpp>
 
 namespace Thread {
@@ -62,6 +63,18 @@ public:
      *
      */
     explicit KeyManager(ThreadNetif &aThreadNetif);
+
+    /**
+     * This method starts KeyManager rotation timer and sets guard timer to initial value.
+     *
+     */
+    void Start(void);
+
+    /**
+     * This method stops KeyManager timers.
+     *
+     */
+    void Stop(void);
 
     /**
      * This method returns a pointer to the Thread Master Key
@@ -195,13 +208,65 @@ public:
      */
     void IncrementKekFrameCounter(void);
 
+    /**
+     * This method returns the KeyRotation time.
+     *
+     * The KeyRotation time is the time interval after witch security key will be automatically rotated.
+     *
+     * @returns The KeyRotation value in hours.
+     */
+    uint32_t GetKeyRotation(void) const { return mKeyRotationTime; }
+
+    /**
+     * This method sets the KeyRotation time.
+     *
+     * The KeyRotation time is the time interval after witch security key will be automatically rotated.
+     * It's value shall be in range [kMinKeyRotationTime, kMaxKeyRotationTime].
+     *
+     * @param[in]  aKeyRotation  The KeyRotation value in hours.
+     *
+     * @retval  kThreadError_None         KeyRotation time updated.
+     * @retval  kThreadError_InvalidArgs  @p aKeyRotation is out of range.
+     *
+     */
+    ThreadError SetKeyRotation(uint32_t aKeyRotation);
+
+    /**
+     * This method returns the KeySwitchGuardTime.
+     *
+     * The KeySwitchGuardTime is the time interval during which key rotation procedure is prevented.
+     *
+     * @returns The KeySwitchGuardTime value in hours.
+     *
+     */
+    uint32_t GetKeySwitchGuardTime(void) const { return mKeySwitchGuardTime; }
+
+    /**
+     * This method sets the KeySwitchGuardTime.
+     *
+     * The KeySwitchGuardTime is the time interval during which key rotation procedure is prevented.
+     *
+     * @param[in]  aKeySwitchGuardTime  The KeySwitchGuardTime value in hours.
+     *
+     */
+    void SetKeySwitchGuardTime(uint32_t aKeySwitchGuardTime) { mKeySwitchGuardTime = aKeySwitchGuardTime; }
+
 private:
     enum
     {
         kMaxKeyLength = 16,
+        kMinKeyRotationTime = 1,
+        kMaxKeyRotationTime = 0xffffffff / 3600u / 1000u,
+        kDefaultKeyRotationTime = 672,
+        kDefaultKeySwitchGuardTime = 624,
     };
 
     ThreadError ComputeKey(uint32_t aKeySequence, uint8_t *aKey);
+
+    static void HandleKeyRotationTimer(void *aContext);
+    void HandleKeyRotationTimer(void);
+
+    ThreadNetif &mNetif;
 
     uint8_t mMasterKey[kMaxKeyLength];
     uint8_t mMasterKeyLength;
@@ -214,10 +279,13 @@ private:
     uint32_t mMacFrameCounter;
     uint32_t mMleFrameCounter;
 
+    uint32_t mKeyRotationTime;
+    uint32_t mKeySwitchGuardTime;
+    bool     mKeySwitchGuardEnabled;
+    Timer    mKeyRotationTimer;
+
     uint8_t mKek[kMaxKeyLength];
     uint32_t mKekFrameCounter;
-
-    ThreadNetif &mNetif;
 };
 
 /**

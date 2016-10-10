@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2016, Nest Labs, Inc.
+ *  Copyright (c) 2016, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -26,23 +26,20 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include "platform-posix.h"
+
 #include <stdbool.h>
 #include <stdio.h>
 #include <string.h>
-#include <sys/time.h>
-
-#include <openthread.h>
-#include <openthread-config.h>
 
 #include <platform/alarm.h>
 #include <platform/diag.h>
-#include "platform-posix.h"
 
 static bool s_is_running = false;
 static uint32_t s_alarm = 0;
 static struct timeval s_start;
 
-void posixAlarmInit(void)
+void platformAlarmInit(void)
 {
     gettimeofday(&s_start, NULL);
 }
@@ -70,7 +67,7 @@ void otPlatAlarmStop(otInstance *aInstance)
     s_is_running = false;
 }
 
-void posixAlarmUpdateTimeout(struct timeval *aTimeout)
+void platformAlarmUpdateTimeout(struct timeval *aTimeout)
 {
     int32_t remaining;
 
@@ -101,7 +98,7 @@ void posixAlarmUpdateTimeout(struct timeval *aTimeout)
     }
 }
 
-void posixAlarmProcess(otInstance *aInstance)
+void platformAlarmProcess(otInstance *aInstance)
 {
     int32_t remaining;
 

@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2016, Nest Labs, Inc.
+ *  Copyright (c) 2016, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -34,17 +34,19 @@
  *   This implementation is not a true random number generator and does @em satisfy the Thread requirements.
  */
 
+#include "platform-posix.h"
+
 #include <openthread-types.h>
 
 #include <common/code_utils.hpp>
 #include <platform/random.h>
-#include "platform-posix.h"
 
 static uint32_t s_state = 1;
 
-void posixRandomInit(void)
+void platformRandomInit(void)
 {
-    s_state = NODE_ID;
+    // Multiplying NODE_ID assures that no two nodes gets the same seed within an hour.
+    s_state = (uint32_t)time(NULL) + (3600 * NODE_ID);
 }
 
 uint32_t otPlatRandomGet(void)
@@ -69,7 +71,7 @@ uint32_t otPlatRandomGet(void)
     return mlcg;
 }
 
-ThreadError otPlatSecureRandomGet(uint16_t aInputLength, uint8_t *aOutput, uint16_t *aOutputLength)
+ThreadError otPlatRandomSecureGet(uint16_t aInputLength, uint8_t *aOutput, uint16_t *aOutputLength)
 {
     ThreadError error = kThreadError_None;
 

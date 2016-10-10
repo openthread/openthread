@@ -1,5 +1,5 @@
 #
-#  Copyright (c) 2016, Nest Labs, Inc.
+#  Copyright (c) 2016, The OpenThread Authors.
 #  All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
@@ -102,7 +102,17 @@ EXTRA_DIST                                                         = \
     thread-cert/Cert_7_1_03_BorderRouterAsLeader.py                  \
     thread-cert/Cert_7_1_04_BorderRouterAsRouter.py                  \
     thread-cert/Cert_7_1_05_BorderRouterAsRouter.py                  \
+    thread-cert/Cert_8_1_01_Commissioning.py                         \
+    thread-cert/Cert_8_1_02_Commissioning.py                         \
+    thread-cert/Cert_9_2_07_DelayTimer.py                            \
+    thread-cert/Cert_9_2_09_PendingPartition.py                      \
+    thread-cert/Cert_9_2_10_PendingPartition.py                      \
+    thread-cert/Cert_9_2_11_MasterKey.py                             \
+    thread-cert/Cert_9_2_12_Announce.py                              \
+    thread-cert/Cert_9_2_13_EnergyScan.py                            \
     thread-cert/Cert_9_2_14_PanIdQuery.py                            \
+    thread-cert/Cert_9_2_15_PendingPartition.py                      \
+    thread-cert/Cert_9_2_16_ActivePendingPartition.py                \
     thread-cert/node.py                                              \
     $(NULL)
 
@@ -217,7 +227,17 @@ check_SCRIPTS                                                     += \
     thread-cert/Cert_7_1_03_BorderRouterAsLeader.py                  \
     thread-cert/Cert_7_1_04_BorderRouterAsRouter.py                  \
     thread-cert/Cert_7_1_05_BorderRouterAsRouter.py                  \
+    thread-cert/Cert_8_1_01_Commissioning.py                         \
+    thread-cert/Cert_8_1_02_Commissioning.py                         \
+    thread-cert/Cert_9_2_07_DelayTimer.py                            \
+    thread-cert/Cert_9_2_09_PendingPartition.py                      \
+    thread-cert/Cert_9_2_10_PendingPartition.py                      \
+    thread-cert/Cert_9_2_11_MasterKey.py                             \
+    thread-cert/Cert_9_2_12_Announce.py                              \
+    thread-cert/Cert_9_2_13_EnergyScan.py                            \
     thread-cert/Cert_9_2_14_PanIdQuery.py                            \
+    thread-cert/Cert_9_2_15_PendingPartition.py                      \
+    thread-cert/Cert_9_2_16_ActivePendingPartition.py                \
     $(NULL)
 
 endif # OPENTHREAD_TESTS_SUBSET5
@@ -233,24 +253,19 @@ TESTS                                                              = \
     $(check_SCRIPTS)                                                 \
     $(NULL)
 
-XFAIL_NCP_TESTS                                                        = \
-        thread-cert/Cert_5_3_07_DuplicateAddress.py                      \
-        thread-cert/Cert_5_6_01_NetworkDataRegisterBeforeAttachLeader.py \
-        thread-cert/Cert_5_6_02_NetworkDataRegisterBeforeAttachRouter.py \
-        thread-cert/Cert_5_6_03_NetworkDataRegisterAfterAttachLeader.py  \
-        thread-cert/Cert_5_6_04_NetworkDataRegisterAfterAttachRouter.py  \
-        thread-cert/Cert_5_6_05_NetworkDataRegisterAfterAttachRouter.py  \
-        thread-cert/Cert_5_6_06_NetworkDataExpiration.py                 \
-        thread-cert/Cert_5_6_07_NetworkDataRequestREED.py                \
-        thread-cert/Cert_5_6_08_ContextManagement.py                     \
-        thread-cert/Cert_6_3_02_NetworkDataUpdate.py                     \
-        thread-cert/Cert_7_1_01_BorderRouterAsLeader.py                  \
-        thread-cert/Cert_7_1_02_BorderRouterAsRouter.py                  \
-        thread-cert/Cert_7_1_03_BorderRouterAsLeader.py                  \
-        thread-cert/Cert_7_1_04_BorderRouterAsRouter.py                  \
-        thread-cert/Cert_7_1_05_BorderRouterAsRouter.py                  \
-        thread-cert/Cert_9_2_14_PanIdQuery.py                            \
-        $(NULL)
+XFAIL_NCP_TESTS                                                    = \
+    thread-cert/Cert_8_1_01_Commissioning.py                         \
+    thread-cert/Cert_8_1_02_Commissioning.py                         \
+    thread-cert/Cert_9_2_07_DelayTimer.py                            \
+    thread-cert/Cert_9_2_09_PendingPartition.py                      \
+    thread-cert/Cert_9_2_10_PendingPartition.py                      \
+    thread-cert/Cert_9_2_11_MasterKey.py                             \
+    thread-cert/Cert_9_2_12_Announce.py                              \
+    thread-cert/Cert_9_2_13_EnergyScan.py                            \
+    thread-cert/Cert_9_2_14_PanIdQuery.py                            \
+    thread-cert/Cert_9_2_15_PendingPartition.py                      \
+    thread-cert/Cert_9_2_16_ActivePendingPartition.py                \
+    $(NULL)
 
 XFAIL_TESTS = $(if $(filter $(NODE_TYPE),ncp-sim),$(XFAIL_NCP_TESTS))
 

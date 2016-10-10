@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2016, Nest Labs, Inc.
+ *  Copyright (c) 2016, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -462,7 +462,7 @@ public:
 
 private:
     uint8_t mIdSequence;
-    uint8_t mAssignedRouterIdMask[BitVectorBytes(Mle::kMaxRouterId)];
+    uint8_t mAssignedRouterIdMask[BitVectorBytes(Mle::kMaxRouterId + 1)];
 };
 
 /**
