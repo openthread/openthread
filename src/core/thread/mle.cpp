@@ -2406,6 +2406,8 @@ ThreadError Mle::SendDiscoveryResponse(const Ip6::Address &aDestination, uint16_
     MeshCoP::ExtendedPanIdTlv extPanId;
     MeshCoP::NetworkNameTlv networkName;
     MeshCoP::JoinerUdpPortTlv joinerUdpPort;
+    uint8_t *cur;
+    uint8_t length;
 
     VerifyOrExit((message = mSocket.NewMessage(0)) != NULL, ;);
     message->SetLinkSecurityEnabled(false);
@@ -2433,6 +2435,25 @@ ThreadError Mle::SendDiscoveryResponse(const Ip6::Address &aDestination, uint16_
     networkName.Init();
     networkName.SetNetworkName(mMac.GetNetworkName());
     SuccessOrExit(error = message->Append(&networkName, sizeof(tlv) + networkName.GetLength()));
+
+    // Steering Data TLV
+    if ((cur = mNetif.GetNetworkDataLeader().GetCommissioningData(length)) != NULL)
+    {
+        uint8_t *end = cur + length;
+
+        while (cur < end)
+        {
+            MeshCoP::Tlv *meshcop = reinterpret_cast<MeshCoP::Tlv *>(cur);
+
+            if (meshcop->GetType() == MeshCoP::Tlv::kSteeringData)
+            {
+                SuccessOrExit(message->Append(meshcop, sizeof(*meshcop) + meshcop->GetLength()));
+                break;
+            }
+
+            cur += sizeof(*meshcop) + meshcop->GetLength();
+        }
+    }
 
     // Joiner UDP Port TLV
     joinerUdpPort.Init();
@@ -2465,6 +2486,7 @@ ThreadError Mle::HandleDiscoveryResponse(const Message &aMessage, const Ip6::Mes
     MeshCoP::DiscoveryResponseTlv discoveryResponse;
     MeshCoP::ExtendedPanIdTlv extPanId;
     MeshCoP::NetworkNameTlv networkName;
+    MeshCoP::SteeringDataTlv steeringData;
     MeshCoP::JoinerUdpPortTlv JoinerUdpPort;
     otActiveScanResult result;
     uint16_t offset;
@@ -2526,6 +2548,13 @@ ThreadError Mle::HandleDiscoveryResponse(const Message &aMessage, const Ip6::Mes
             aMessage.Read(offset, sizeof(networkName), &networkName);
             VerifyOrExit(networkName.IsValid(), error = kThreadError_Parse);
             memcpy(&result.mNetworkName, networkName.GetNetworkName(), networkName.GetLength());
+            break;
+
+        case MeshCoP::Tlv::kSteeringData:
+            aMessage.Read(offset, sizeof(steeringData), &steeringData);
+            VerifyOrExit(steeringData.IsValid(), error = kThreadError_Parse);
+            result.mSteeringData.mLength = steeringData.GetLength();
+            memcpy(result.mSteeringData.m8, steeringData.GetValue(), result.mSteeringData.mLength);
             break;
 
         case MeshCoP::Tlv::kJoinerUdpPort:

@@ -317,6 +317,18 @@ typedef struct otIp6Address otIp6Address;
 
 #define OT_CHANNEL_ALL       0xffffffff  ///< All channels
 
+#define OT_STEERING_DATA_MAX_LENGTH       16  ///< Max steering data length (bytes)
+
+/**
+ * This structure represents the steering data.
+ *
+ */
+typedef struct otSteeringData
+{
+    uint8_t mLength;
+    uint8_t m8[OT_STEERING_DATA_MAX_LENGTH];
+} otSteeringData;
+
 /**
  * This struct represents a received IEEE 802.15.4 Beacon.
  *
@@ -326,6 +338,7 @@ typedef struct otActiveScanResult
     otExtAddress    mExtAddress;      ///< IEEE 802.15.4 Extended Address
     otNetworkName   mNetworkName;     ///< Thread Network Name
     otExtendedPanId mExtendedPanId;   ///< Thread Extended PAN ID
+    otSteeringData  mSteeringData;    ///< Steering Data
     uint16_t        mPanId;           ///< IEEE 802.15.4 PAN ID
     uint16_t        mJoinerUdpPort;   ///< Joiner UDP Port
     uint8_t         mChannel;         ///< IEEE 802.15.4 Channel
@@ -403,18 +416,6 @@ typedef struct otOperationalDataset
     bool                 mIsSecurityPolicySet : 1;    ///< TRUE if Security Policy is set, FALSE otherwise.
     bool                 mIsChannelMaskPage0Set : 1;  ///< TRUE if Channel Mask Page 0 is set, FALSE otherwise.
 } otOperationalDataset;
-
-#define OT_STEERING_DATA_MAX_LENGTH       16  ///< Max steering data length (bytes)
-
-/**
- * This structure represents the steering data.
- *
- */
-typedef struct otSteeringData
-{
-    uint8_t mLength;
-    uint8_t m8[OT_STEERING_DATA_MAX_LENGTH];
-} otSteeringData;
 
 /**
  * This structure represents a Commissioning Dataset.

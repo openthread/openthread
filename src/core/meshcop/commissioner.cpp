@@ -43,6 +43,7 @@
 #include <string.h>
 
 #include <coap/coap_header.hpp>
+#include <common/crc16.hpp>
 #include <common/logging.hpp>
 #include <meshcop/commissioner.hpp>
 #include <meshcop/joiner_router.hpp>
@@ -81,7 +82,10 @@ ThreadError Commissioner::Start(void)
     VerifyOrExit(mState == kStateDisabled, error = kThreadError_InvalidState);
 
     SuccessOrExit(error = mSocket.Open(HandleUdpReceive, this));
+
     mState = kStatePetition;
+    mTransmitAttempts = 0;
+
     SendPetition();
 
 exit:
@@ -90,10 +94,84 @@ exit:
 
 ThreadError Commissioner::Stop(void)
 {
+    ThreadError error = kThreadError_None;
+
+    VerifyOrExit(mState != kStateDisabled, error = kThreadError_InvalidState);
+
     mState = kStateDisabled;
+    mTransmitAttempts = 0;
+
     SendKeepAlive();
-    mTimer.Start(1000);
-    return kThreadError_None;
+
+exit:
+    return error;
+}
+
+ThreadError Commissioner::SendCommissionerSet(void)
+{
+    ThreadError error;
+    otCommissioningDataset dataset;
+    SteeringDataTlv steeringData;
+
+    VerifyOrExit(mState == kStateActive, error = kThreadError_InvalidState);
+
+    memset(&dataset, 0, sizeof(dataset));
+
+    // session id
+    dataset.mSessionId = mSessionId;
+    dataset.mIsSessionIdSet = true;
+
+    // compute bloom filter
+    steeringData.Init();
+    steeringData.Clear();
+
+    for (size_t i = 0; i < sizeof(mJoiners) / sizeof(mJoiners[0]); i++)
+    {
+        Crc16 ccitt(Crc16::kCcitt);
+        Crc16 ansi(Crc16::kAnsi);
+
+        if (!mJoiners[i].mValid)
+        {
+            continue;
+        }
+
+        if (mJoiners[i].mAny)
+        {
+            steeringData.SetLength(1);
+            steeringData.Set();
+            break;
+        }
+
+        for (size_t j = 0; j < sizeof(mJoiners[i].mExtAddress.m8); j++)
+        {
+            uint8_t byte = mJoiners[i].mExtAddress.m8[j];
+            ccitt.Update(byte);
+            ansi.Update(byte);
+        }
+
+        steeringData.SetBit(ccitt.Get() % steeringData.GetNumBits());
+        steeringData.SetBit(ansi.Get() % steeringData.GetNumBits());
+    }
+
+    // set bloom filter
+    memcpy(dataset.mSteeringData.m8, steeringData.GetValue(), steeringData.GetLength());
+    dataset.mSteeringData.mLength = steeringData.GetLength();
+    dataset.mIsSteeringDataSet = true;
+
+    SuccessOrExit(error = SendMgmtCommissionerSetRequest(dataset, NULL, 0));
+
+exit:
+    return error;
+}
+
+void Commissioner::ClearJoiners(void)
+{
+    for (size_t i = 0; i < sizeof(mJoiners) / sizeof(mJoiners[0]); i++)
+    {
+        mJoiners[i].mValid = false;
+    }
+
+    SendCommissionerSet();
 }
 
 ThreadError Commissioner::AddJoiner(const Mac::ExtAddress *aExtAddress, const char *aPSKd)
@@ -122,6 +200,9 @@ ThreadError Commissioner::AddJoiner(const Mac::ExtAddress *aExtAddress, const ch
 
         strncpy(mJoiners[i].mPsk, aPSKd, sizeof(mJoiners[i].mPsk));
         mJoiners[i].mValid = true;
+
+        SendCommissionerSet();
+
         ExitNow(error = kThreadError_None);
     }
 
@@ -153,6 +234,9 @@ ThreadError Commissioner::RemoveJoiner(const Mac::ExtAddress *aExtAddress)
         }
 
         mJoiners[i].mValid = false;
+
+        SendCommissionerSet();
+
         ExitNow(error = kThreadError_None);
     }
 
@@ -189,7 +273,6 @@ void Commissioner::HandleTimer(void)
 
     case kStateActive:
         SendKeepAlive();
-        mTimer.Start(5000);
         break;
     }
 }
@@ -333,9 +416,18 @@ ThreadError Commissioner::SendPetition(void)
 {
     ThreadError error = kThreadError_None;
     Coap::Header header;
-    Message *message;
+    Message *message = NULL;
     Ip6::MessageInfo messageInfo;
     CommissionerIdTlv commissionerId;
+
+    if (mTransmitAttempts >= kPetitionRetryCount)
+    {
+        mState = kStateDisabled;
+        ExitNow();
+    }
+
+    mTimer.Start(Timer::SecToMsec(kPetitionRetryDelay));
+    mTransmitAttempts++;
 
     for (size_t i = 0; i < sizeof(mCoapToken); i++)
     {
@@ -379,10 +471,19 @@ ThreadError Commissioner::SendKeepAlive(void)
 {
     ThreadError error = kThreadError_None;
     Coap::Header header;
-    Message *message;
+    Message *message = NULL;
     Ip6::MessageInfo messageInfo;
     StateTlv state;
     CommissionerSessionIdTlv sessionId;
+
+    if (mTransmitAttempts >= kPetitionRetryCount)
+    {
+        mState = kStateDisabled;
+        ExitNow();
+    }
+
+    mTimer.Start(Timer::SecToMsec(kPetitionRetryDelay));
+    mTransmitAttempts++;
 
     for (size_t i = 0; i < sizeof(mCoapToken); i++)
     {
@@ -582,16 +683,19 @@ void Commissioner::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &a
     case kStatePetition:
         SuccessOrExit(Tlv::GetTlv(aMessage, Tlv::kCommissionerSessionId, sizeof(sessionId), sessionId));
         VerifyOrExit(sessionId.IsValid(), ;);
-
         mSessionId = sessionId.GetCommissionerSessionId();
-        mState = kStateActive;
-        mTimer.Start(5000);
 
         otLogInfoMeshCoP("received petition response\r\n");
+
+        mState = kStateActive;
+        mTransmitAttempts = 0;
+        mTimer.Start(Timer::SecToMsec(kKeepAliveTimeout) / 2);
         break;
 
     case kStateActive:
         otLogInfoMeshCoP("received keep alive response\r\n");
+        mTransmitAttempts = 0;
+        mTimer.Start(Timer::SecToMsec(kKeepAliveTimeout) / 2);
         break;
     }
 

@@ -60,7 +60,8 @@ class Cert_8_1_01_Commissioning(unittest.TestCase):
         time.sleep(5)
         self.assertEqual(self.nodes[COMMISSIONER].get_state(), 'leader')
         self.nodes[COMMISSIONER].commissioner_start()
-        self.nodes[COMMISSIONER].commissioner_add_joiner('*', 'openthread')
+        time.sleep(3)
+        self.nodes[COMMISSIONER].commissioner_add_joiner(self.nodes[JOINER].get_hashmacaddr(), 'openthread')
 
         self.nodes[JOINER].interface_up()
         self.nodes[JOINER].joiner_start('openthread')

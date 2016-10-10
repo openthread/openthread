@@ -568,13 +568,27 @@ public:
      * @retval FALSE  If the TLV does not appear to be well-formed.
      *
      */
-    bool IsValid(void) const { return GetLength() == sizeof(*this) - sizeof(Tlv); }
+    bool IsValid(void) const { return GetLength() <= sizeof(*this) - sizeof(Tlv); }
 
     /**
      * This method sets all bits in the Bloom Filter to zero.
      *
      */
-    void Clear(void) { memset(mSteeringData, 0, sizeof(mSteeringData)); }
+    void Clear(void) { memset(mSteeringData, 0, GetLength()); }
+
+    /**
+     * Ths method sets all bits in the Bloom Filter to one.
+     *
+     */
+    void Set(void) { memset(mSteeringData, 0xff, GetLength()); }
+
+    /**
+     * This method returns the number of bits in the Bloom Filter.
+     *
+     * @returns The number of bits in the Bloom Filter.
+     *
+     */
+    uint8_t GetNumBits(void) const { return GetLength() * 8; }
 
     /**
      * This method indicates whether or not bit @p aBit is set.
@@ -585,7 +599,7 @@ public:
      * @retval FALSE  If bit @p aBit is not set.
      *
      */
-    bool GetBit(uint8_t aBit) const { return (mSteeringData[aBit / 8] & (1 << (aBit % 8))) != 0; }
+    bool GetBit(uint8_t aBit) const { return (mSteeringData[GetLength() - 1 - (aBit / 8)] & (1 << (aBit % 8))) != 0; }
 
     /**
      * This method clears bit @p aBit.
@@ -593,7 +607,7 @@ public:
      * @param[in]  aBit  The bit offset.
      *
      */
-    void ClearBit(uint8_t aBit) { mSteeringData[aBit / 8] &= ~(1 << (aBit % 8)); }
+    void ClearBit(uint8_t aBit) { mSteeringData[GetLength() - 1 - (aBit / 8)] &= ~(1 << (aBit % 8)); }
 
     /**
      * This method sets bit @p aBit.
@@ -601,7 +615,7 @@ public:
      * @param[in]  aBit  The bit offset.
      *
      */
-    void SetBit(uint8_t aBit) { mSteeringData[aBit / 8] |= 1 << (aBit % 8); }
+    void SetBit(uint8_t aBit) { mSteeringData[GetLength() - 1 - (aBit / 8)] |= 1 << (aBit % 8); }
 
 private:
     uint8_t mSteeringData[OT_STEERING_DATA_MAX_LENGTH];
