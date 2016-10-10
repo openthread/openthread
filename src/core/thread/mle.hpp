@@ -339,8 +339,8 @@ public:
     /**
      * This method enables MLE.
      *
-     * @retval kThreadError_None  Successfully enabled MLE.
-     * @retval kThreadError_Busy  MLE was already enabled.
+     * @retval kThreadError_None     Successfully enabled MLE.
+     * @retval kThreadError_Already  MLE was already enabled.
      *
      */
     ThreadError Enable(void);
@@ -348,8 +348,7 @@ public:
     /**
      * This method disables MLE.
      *
-     * @retval kThreadError_None  Successfully disabled MLE.
-     * @retval kThreadError_Busy  MLE was already disabled.
+     * @retval kThreadError_None     Successfully disabled MLE.
      *
      */
     ThreadError Disable(void);
@@ -357,8 +356,8 @@ public:
     /**
      * This method starts the MLE protocol operation.
      *
-     * @retval kThreadError_None  Successfully started the protocol operation.
-     * @retval kThreadError_Busy  The protocol operation was already started.
+     * @retval kThreadError_None     Successfully started the protocol operation.
+     * @retval kThreadError_Already  The protocol operation was already started.
      *
      */
     ThreadError Start(void);
@@ -367,7 +366,6 @@ public:
      * This method stops the MLE protocol operation.
      *
      * @retval kThreadError_None  Successfully stopped the protocol operation.
-     * @retval kThreadError_Busy  The protocol operation was already stopped.
      *
      */
     ThreadError Stop(void);
@@ -425,8 +423,8 @@ public:
     /**
      * This method causes the Thread interface to detach from the Thread network.
      *
-     * @retval kThreadError_None  Successfully detached from the Thread network.
-     * @retval kThreadError_Busy  The protocol operation was stopped.
+     * @retval kThreadError_None          Successfully detached from the Thread network.
+     * @retval kThreadError_InvalidState  MLE is Disabled.
      *
      */
     ThreadError BecomeDetached(void);
@@ -436,8 +434,9 @@ public:
      *
      * @param[in]  aFilter  Indicates what partitions to attach to.
      *
-     * @retval kThreadError_None  Successfully began the attach process.
-     * @retval kThreadError_Busy  An attach process is in progress or the protocol operation was stopped.
+     * @retval kThreadError_None          Successfully began the attach process.
+     * @retval kThreadError_InvalidState  MLE is Disabled.
+     * @retval kThreadError_Busy          An attach process is in progress.
      *
      */
     ThreadError BecomeChild(otMleAttachFilter aFilter);

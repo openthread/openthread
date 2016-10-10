@@ -282,7 +282,7 @@ public:
      * @param[in]  aHandler  A reference to the ICMPv6 handler.
      *
      * @retval kThreadError_None  Successfully registered the ICMPv6 handler.
-     * @retval kThreadError_Busy  The ICMPv6 handler is already registered.
+     * @retval kThreadError_Already  The ICMPv6 handler is already registered.
      *
      */
     ThreadError RegisterCallbacks(IcmpHandler &aHandler);

@@ -198,9 +198,9 @@ ThreadError MleRouter::BecomeRouter(ThreadStatusTlv::Status aStatus)
 {
     ThreadError error = kThreadError_None;
 
-    VerifyOrExit(mDeviceState == kDeviceStateDetached || mDeviceState == kDeviceStateChild,
-                 error = kThreadError_Busy);
-    VerifyOrExit(mRouterRoleEnabled && (mDeviceMode & ModeTlv::kModeFFD), error = kThreadError_InvalidState);
+    VerifyOrExit(mDeviceState != kDeviceStateDisabled, error = kThreadError_InvalidState);
+    VerifyOrExit(mDeviceState != kDeviceStateRouter, error = kThreadError_None);
+    VerifyOrExit(mRouterRoleEnabled && (mDeviceMode & ModeTlv::kModeFFD), error = kThreadError_NotCapable);
 
     for (int i = 0; i <= kMaxRouterId; i++)
     {
@@ -239,9 +239,9 @@ ThreadError MleRouter::BecomeLeader(void)
     ThreadError error = kThreadError_None;
     uint8_t routerId;
 
-    VerifyOrExit(mDeviceState != kDeviceStateDisabled && mDeviceState != kDeviceStateLeader,
-                 error = kThreadError_Busy);
-    VerifyOrExit(mRouterRoleEnabled && (mDeviceMode & ModeTlv::kModeFFD), error = kThreadError_InvalidState);
+    VerifyOrExit(mDeviceState != kDeviceStateDisabled, error = kThreadError_InvalidState);
+    VerifyOrExit(mDeviceState != kDeviceStateLeader, error = kThreadError_None);
+    VerifyOrExit(mRouterRoleEnabled && (mDeviceMode & ModeTlv::kModeFFD), error = kThreadError_NotCapable);
 
     for (int i = 0; i <= kMaxRouterId; i++)
     {

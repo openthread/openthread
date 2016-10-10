@@ -241,8 +241,8 @@ public:
      *
      * @param[in]  aAddress  A reference to the unicast address.
      *
-     * @retval kThreadError_None  Successfully added the unicast address.
-     * @retval kThreadError_Busy  The unicast address was already added.
+     * @retval kThreadError_None     Successfully added the unicast address.
+     * @retval kThreadError_Already  The unicast address was already added.
      *
      */
     ThreadError AddUnicastAddress(NetifUnicastAddress &aAddress);
@@ -320,8 +320,8 @@ public:
      *
      * @param[in]  aAddress  A reference to the multicast address.
      *
-     * @retval kThreadError_None   Successfully subscribed to @p aAddress.
-     * @retval kThreadError_Busy   The multicast address is already subscribed.
+     * @retval kThreadError_None     Successfully subscribed to @p aAddress.
+     * @retval kThreadError_Already  The multicast address is already subscribed.
      *
      */
     ThreadError SubscribeMulticast(NetifMulticastAddress &aAddress);
@@ -331,8 +331,8 @@ public:
      *
      * @param[in]  aAddress  A reference to the multicast address.
      *
-     * @retval kThreadError_None   Successfully unsubscribed to @p aAddress.
-     * @retval kThreadError_Busy   The multicast address is already unsubscribed.
+     * @retval kThreadError_None     Successfully unsubscribed to @p aAddress.
+     * @retval kThreadError_Already  The multicast address is already unsubscribed.
      *
      */
     ThreadError UnsubscribeMulticast(const NetifMulticastAddress &aAddress);
@@ -342,8 +342,8 @@ public:
      *
      * @param[in]  aCallback  A reference to the callback.
      *
-     * @retval kThreadError_None   Successfully registered the callback.
-     * @retval kThreadError_Busy   The callback was already registered.
+     * @retval kThreadError_None    Successfully registered the callback.
+     * @retval kThreadError_Already The callback was already registered.
      */
     ThreadError RegisterCallback(NetifCallback &aCallback);
 

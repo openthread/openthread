@@ -81,7 +81,7 @@ public:
      * @param[in]  aRoute  A reference to the IPv6 route.
      *
      * @retval kThreadError_None  Successfully added the route.
-     * @retval kThreadError_Busy  The route was already added.
+     * @retval kThreadError_Already  The route was already added.
      *
      */
     ThreadError Add(Route &aRoute);
@@ -92,7 +92,7 @@ public:
      * @param[in]  aRoute  A reference to the IPv6 route.
      *
      * @retval kThreadError_None         Successfully removed the route.
-     * @retval kThreadError_InvalidArgs  The route was not added.
+     * @retval kThreadError_NotFound  The route was not added.
      *
      */
     ThreadError Remove(Route &aRoute);

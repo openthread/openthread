@@ -85,8 +85,8 @@ public:
      * @param[in]  aHandler  A pointer to a function that is called when receiving UDP messages.
      * @param[in]  aContext  A pointer to arbitrary context information.
      *
-     * @retval kThreadError_None  Successfully opened the socket.
-     * @retval kThreadError_Busy  The socket is already open.
+     * @retval kThreadError_None     Successfully opened the socket.
+     * @retval kThreadError_Already  The socket is already open.
      *
      */
     ThreadError Open(otUdpReceive aHandler, void *aContext);

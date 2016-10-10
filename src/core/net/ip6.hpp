@@ -248,7 +248,7 @@ public:
      * @param  aNetif  A reference to the network interface.
      *
      * @retval kThreadError_None  Successfully enabled the network interface.
-     * @retval KThreadError_Busy  The network interface was already enabled.
+     * @retval KThreadError_Already  The network interface was already enabled.
      *
      */
     ThreadError AddNetif(Netif &aNetif);
@@ -259,7 +259,7 @@ public:
      * @param  aNetif  A reference to the network interface.
      *
      * @retval kThreadError_None  Successfully disabled the network interface.
-     * @retval KThreadError_Busy  The network interface was already disabled.
+     * @retval KThreadError_NotFound  The network interface was already disabled.
      *
      */
     ThreadError RemoveNetif(Netif &aNetif);

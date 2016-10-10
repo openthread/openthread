@@ -68,7 +68,7 @@ ThreadError Server::AddResource(Resource &aResource)
 
     for (Resource *cur = mResources; cur; cur = cur->mNext)
     {
-        VerifyOrExit(cur != &aResource, error = kThreadError_Busy);
+        VerifyOrExit(cur != &aResource, error = kThreadError_Already);
     }
 
     aResource.mNext = mResources;

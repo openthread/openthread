@@ -157,6 +157,11 @@ typedef enum ThreadError
      */
     kThreadError_Ipv6AddressCreationFailure = 28,
 
+    /**
+     * Operation prevented by mode flags
+     */
+    kThreadError_NotCapable = 29,
+
     kThreadError_Error = 255,
 } ThreadError;
 

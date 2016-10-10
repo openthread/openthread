@@ -645,8 +645,8 @@ public:
      *
      * @param[in]  aMessage  The message to add.
      *
-     * @retval kThreadError_None  Successfully added the message to the list.
-     * @retval kThreadError_Busy  The message is already enqueued in a list.
+     * @retval kThreadError_None     Successfully added the message to the list.
+     * @retval kThreadError_Already  The message is already enqueued in a list.
      *
      */
     ThreadError Enqueue(Message &aMessage);
@@ -656,8 +656,8 @@ public:
      *
      * @param[in]  aMessage  The message to remove.
      *
-     * @retval kThreadError_None  Successfully removed the message from the list.
-     * @retval kThreadError_Busy  The message is not enqueued in a list.
+     * @retval kThreadError_None      Successfully removed the message from the list.
+     * @retval kThreadError_NotFound  The message is not enqueued in a list.
      *
      */
     ThreadError Dequeue(Message &aMessage);
@@ -669,8 +669,8 @@ private:
      * @param[in]  aListId   The list to add @p aMessage to.
      * @param[in]  aMessage  The message to add to @p aListId.
      *
-     * @retval kThreadError_None  Successfully added the message to the list.
-     * @retval kThreadError_Busy  The message is already enqueued in a list.
+     * @retval kThreadError_None     Successfully added the message to the list.
+     * @retval kThreadError_Already  The message is already enqueued in a list.
      *
      */
     static ThreadError AddToList(uint8_t aListId, Message &aMessage);
@@ -681,8 +681,8 @@ private:
      * @param[in]  aListId   The list to add @p aMessage to.
      * @param[in]  aMessage  The message to add to @p aListId.
      *
-     * @retval kThreadError_None  Successfully added the message to the list.
-     * @retval kThreadError_Busy  The message is not enqueued in the list.
+     * @retval kThreadError_None      Successfully added the message to the list.
+     * @retval kThreadError_NotFound  The message is not enqueued in the list.
      *
      */
     static ThreadError RemoveFromList(uint8_t aListId, Message &aMessage);

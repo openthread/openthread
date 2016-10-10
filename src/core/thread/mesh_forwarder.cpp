@@ -90,11 +90,12 @@ ThreadError MeshForwarder::Start()
 {
     ThreadError error = kThreadError_None;
 
-    VerifyOrExit(mEnabled == false, error = kThreadError_Busy);
-    mMac.SetRxOnWhenIdle(true);
-    mEnabled = true;
+    if (mEnabled == false)
+    {
+        mMac.SetRxOnWhenIdle(true);
+        mEnabled = true;
+    }
 
-exit:
     return error;
 }
 
@@ -103,7 +104,7 @@ ThreadError MeshForwarder::Stop()
     ThreadError error = kThreadError_None;
     Message *message;
 
-    VerifyOrExit(mEnabled == true, error = kThreadError_Busy);
+    VerifyOrExit(mEnabled == true,);
 
     mPollTimer.Stop();
     mReassemblyTimer.Stop();

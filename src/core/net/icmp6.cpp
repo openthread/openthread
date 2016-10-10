@@ -70,7 +70,7 @@ ThreadError Icmp::RegisterCallbacks(IcmpHandler &aHandler)
     {
         if (cur == &aHandler)
         {
-            ExitNow(error = kThreadError_Busy);
+            ExitNow(error = kThreadError_Already);
         }
     }
 

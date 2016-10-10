@@ -219,7 +219,8 @@ public:
      * @param[in]  aStatus  The reason for requesting a Router ID.
      *
      * @retval kThreadError_None          Successfully generated an Address Solicit message.
-     * @retval kThreadError_InvalidState  Not currently an End Device.
+     * @retval kThreadError_NotCapable    Device is not capable of becoming a router
+     * @retval kThreadError_InvalidState  Thread is not enabled
      *
      */
     ThreadError BecomeRouter(ThreadStatusTlv::Status aStatus);
@@ -228,7 +229,8 @@ public:
      * This method causes the Thread interface to become a Leader and start a new partition.
      *
      * @retval kThreadError_None          Successfully become a Leader and started a new partition.
-     * @retval kThreadError_InvalidState  Either MLE is disabled or the interface is already a Leader.
+     * @retval kThreadError_NotCapable    Device is not capable of becoming a leader
+     * @retval kThreadError_InvalidState  Thread is not enabled
      *
      */
     ThreadError BecomeLeader(void);

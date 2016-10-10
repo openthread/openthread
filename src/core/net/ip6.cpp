@@ -624,7 +624,7 @@ ThreadError Ip6::AddNetif(Netif &aNetif)
         {
             if (netif == &aNetif)
             {
-                ExitNow(error = kThreadError_Busy);
+                ExitNow(error = kThreadError_Already);
             }
         }
         while (netif->mNext);
@@ -645,9 +645,9 @@ exit:
 
 ThreadError Ip6::RemoveNetif(Netif &aNetif)
 {
-    ThreadError error = kThreadError_None;
+    ThreadError error = kThreadError_NotFound;
 
-    VerifyOrExit(mNetifListHead != NULL, error = kThreadError_Busy);
+    VerifyOrExit(mNetifListHead != NULL, error = kThreadError_NotFound);
 
     if (mNetifListHead == &aNetif)
     {
@@ -663,6 +663,7 @@ ThreadError Ip6::RemoveNetif(Netif &aNetif)
             }
 
             netif->mNext = aNetif.mNext;
+            error = kThreadError_None;
             break;
         }
     }
