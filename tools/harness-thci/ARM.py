@@ -69,6 +69,10 @@ class ARM(IThci):
             self.panId = ModuleHelper.Default_PanId
             self.xpanId = ModuleHelper.Default_XpanId
             self.AutoDUTEnable = False
+            self.localprefix = ModuleHelper.Default_MLPrefix
+            self.pskc = ModuleHelper.Default_PSKc
+            self.securityPolicySecs = ModuleHelper.Default_SecurityPolicy
+            self.activetimestamp = ModuleHelper.Default_ActiveTimestamp
             self.provisioningUrl = ''
             self.logThread = Queue()
             self.logStatus = {'stop':'stop', 'running':'running', "pauseReq":'pauseReq', 'paused':'paused'}
@@ -484,7 +488,7 @@ class ARM(IThci):
         self.logThreadStatus = self.logStatus['stop']
         return logs
 
-    def __setChannelMask(self, channelsArray):
+    def __convertChannelMask(self, channelsArray):
         """convert channelsArray to bitmask format
 
         Args:
@@ -500,6 +504,34 @@ class ARM(IThci):
             maskSet = (maskSet | mask)
 
         return maskSet
+
+    def __setChannelMask(self, channelMask):
+        print 'call _setChannelMask'
+        try:
+            cmd = 'dataset channelmask %s' % channelMask
+            print cmd
+
+            if self.__sendCommand(cmd) != 'Done':
+                return False
+
+            cmd = 'dataset commit active'
+            return self.__sendCommand(cmd) == 'Done'
+        except Exception, e:
+            ModuleHelper.WriteIntoDebugLogger("setChannelMask() Error: " + str(e))
+
+    def __setSecurityPolicy(self, securityPolicySecs):
+        print 'call _setSecurityPolicy'
+        try:
+            cmd = 'dataset securitypolicy %s' % str(securityPolicySecs)
+            print cmd
+
+            if self.__sendCommand(cmd) != 'Done':
+                return False
+
+            cmd = 'dataset commit active'
+            return self.__sendCommand(cmd) == 'Done'
+        except Exception, e:
+            ModuleHelper.WriteIntoDebugLogger("setSecurityPolicy() Error: " + str(e))
 
     def closeConnection(self):
         """close current serial port connection"""
@@ -539,6 +571,14 @@ class ARM(IThci):
         print networkName
         try:
             cmd = 'networkname %s' % networkName
+            if self.__sendCommand(cmd)[0] != 'Done':
+                return False
+
+            cmd = 'dataset networkname %s' % networkName
+            if self.__sendCommand(cmd)[0] != 'Done':
+                return False
+
+            cmd = 'dataset commit active'
             return self.__sendCommand(cmd)[0] == 'Done'
         except Exception, e:
             ModuleHelper.WriteIntoDebugLogger("setNetworkName() Error: " + str(e))
@@ -566,6 +606,14 @@ class ARM(IThci):
         try:
             cmd = 'channel %s' % channel
             print cmd
+            if self.__sendCommand(cmd)[0] != 'Done':
+                return False
+
+            cmd = 'dataset channel %s' % channel
+            if self.__sendCommand(cmd)[0] != 'Done':
+                return False
+
+            cmd = 'dataset commit active'
             return self.__sendCommand(cmd)[0] == 'Done'
         except Exception, e:
             ModuleHelper.WriteIntoDebugLogger("setChannel() Error: " + str(e))
@@ -695,6 +743,14 @@ class ARM(IThci):
 
             self.networkKey = masterKey
 
+            if self.__sendCommand(cmd)[0] != 'Done':
+                return False
+
+            cmd = 'dataset masterkey %s' % masterKey
+            if self.__sendCommand(cmd)[0] != 'Done':
+                return False
+
+            cmd = 'dataset commit active'
             return self.__sendCommand(cmd)[0] == 'Done'
         except Exception, e:
             ModuleHelper.WriteIntoDebugLogger("setNetworkkey() Error: " + str(e))
@@ -1013,8 +1069,15 @@ class ARM(IThci):
                 print panid
 
             cmd = 'panid %s' % panid
-            print cmd
-            return self.__sendCommand(cmd)[0] == 'Done'
+            if self.__sendCommand(cmd)[0] != 'Done':
+                return False
+
+            cmd = 'dataset panid %s' % panid
+            if self.__sendCommand(cmd) != 'Done':
+                return False
+
+            cmd = 'dataset commit active'
+            return self.__sendCommand(cmd) == 'Done'
         except Exception, e:
             ModuleHelper.WriteIntoDebugLogger("setPANID() Error: " + str(e))
 
@@ -1062,12 +1125,17 @@ class ARM(IThci):
         """set default mandatory Thread Network parameter value"""
         print '%s call setDefaultValues' % self.port
         try:
-            self.setChannel(ModuleHelper.Default_Channel)
+            self.setActiveTimestamp(self.activetimestamp)
+            self.setChannel(self.channel)
             self.setMAC(self.mac)
             self.setPANID(self.panId)
             self.setXpanId(self.xpanId)
             self.setNetworkName(self.networkName)
             self.setNetworkKey(self.networkKey)
+            self.setMLPrefix(self.localprefix)
+            self.setPSKc(self.pskc)
+            self.__setSecurityPolicy(self.securityPolicySecs)
+            self.__setChannelMask("0xffff")
             self.isWhiteListEnabled = False
             self.isBlackListEnabled = False
             self.firmware = 'Sep 9 2016 14:57:36'
@@ -1528,6 +1596,15 @@ class ARM(IThci):
                 cmd = 'extpanid %s' % xpanid
 
             self.xpanId = xpanid
+
+            if self.__sendCommand(cmd)[0] != 'Done':
+                return False
+
+            cmd = 'dataset extpanid %s' % xpanid
+            if self.__sendCommand(cmd)[0] != 'Done':
+                return False
+
+            cmd = 'dataset commit active'
             return self.__sendCommand(cmd)[0] == 'Done'
         except Exception, e:
             ModuleHelper.WriteIntoDebugLogger("setXpanId() Error: " + str(e))
@@ -1621,6 +1698,15 @@ class ARM(IThci):
     def setMLPrefix(self, sMeshLocalPrefix):
         """set mesh local prefix"""
         print '%s call setMLPrefix' % self.port
+        try:
+            cmd = 'dataset meshlocalprefix %s' % sMeshLocalPrefix
+            if self.__sendCommand(cmd)[0] != 'Done':
+                return False
+
+            cmd = 'dataset commit active'
+            return self.__sendCommand(cmd)[0] == 'Done'
+        except Exception, e:
+            ModuleHelper.WriteIntoDebugLogger("setMLPrefix() Error: " + str(e))
 
     def getML16(self):
         """get mesh local 16 unicast address (Rloc)"""
@@ -1866,7 +1952,7 @@ class ARM(IThci):
         """
         print '%s call MGMT_ED_SCAN' % self.port
         channelMask = ''
-        channelMask = '0x' + self.__convertLongToString(self.__setChannelMask(listChannelMask))
+        channelMask = '0x' + self.__convertLongToString(self.__convertChannelMask(listChannelMask))
         try:
             cmd = 'commissioner energy %s %s %s %s %s' % (channelMask, xCount, xPeriod, xScanDuration, sAddr)
             print cmd
@@ -1887,7 +1973,7 @@ class ARM(IThci):
         print '%s call MGMT_PANID_QUERY' % self.port
         panid = ''
         channelMask = ''
-        channelMask = '0x' + self.__convertLongToString(self.__setChannelMask(listChannelMask))
+        channelMask = '0x' + self.__convertLongToString(self.__convertChannelMask(listChannelMask))
 
         if not isinstance(xPanId, str):
             panid = str(hex(xPanId))
@@ -1987,7 +2073,7 @@ class ARM(IThci):
 
             if listChannelMask != None:
                 cmd += '35060004'
-                entry = self.__convertLongToString(self.__setChannelMask(listChannelMask))
+                entry = self.__convertLongToString(self.__convertChannelMask(listChannelMask))
 
                 if len(entry) < 8:
                     entry = entry.zfill(8)
@@ -2206,6 +2292,15 @@ class ARM(IThci):
 
     def setPSKc(self, strPSKc):
         print '%s call setPSKc' % self.port
+        try:
+            cmd = 'dataset pskc %s' % strPSKc
+            print cmd
+            if self.__sendCommand(cmd)[0] == 'Done':
+                return self.__sendCommand('dataset commit active')[0] == 'Done'
+            else:
+                return False
+        except Exception, e:
+            ModuleHelper.WriteIntoDebugLogger("setPSKc() Error: " + str(e))
 
     def setActiveTimestamp(self, xActiveTimestamp):
         print '%s call setActiveTimestamp' % self.port
