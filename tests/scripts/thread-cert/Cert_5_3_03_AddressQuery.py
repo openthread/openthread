@@ -92,8 +92,8 @@ class Cert_5_3_3_AddressQuery(unittest.TestCase):
         time.sleep(5)
         self.assertEqual(self.nodes[BR].get_state(), 'router')
 
-        self.nodes[BR].add_prefix('2003::/64', 'paros')
-        self.nodes[BR].add_prefix('2004::/64', 'paros')
+        self.nodes[BR].add_prefix('3003::/64', 'paros')
+        self.nodes[BR].add_prefix('3004::/64', 'paros')
         self.nodes[BR].register_netdata()
 
         self.nodes[ROUTER2].start()
