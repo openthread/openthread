@@ -76,14 +76,12 @@ class Cert_9_2_10_PendingPartition(unittest.TestCase):
         self.nodes[ED1].set_mode('rsn')
         self.nodes[ED1].add_whitelist(self.nodes[ROUTER1].get_addr64())
         self.nodes[ED1].enable_whitelist()
-        self.nodes[ED1].set_router_selection_jitter(1)
 
         self.nodes[SED1].set_active_dataset(15, channel=CHANNEL_INIT, panid=PANID_INIT)
         self.nodes[SED1].set_mode('s')
         self.nodes[SED1].add_whitelist(self.nodes[ROUTER1].get_addr64())
         self.nodes[SED1].enable_whitelist()
         self.nodes[SED1].set_timeout(3)
-        self.nodes[SED1].set_router_selection_jitter(1)
 
     def tearDown(self):
         for node in list(self.nodes.values()):
