@@ -936,18 +936,23 @@ exit:
 
 ThreadError Mle::AppendActiveTimestamp(Message &aMessage)
 {
-    ThreadError error;
     ActiveTimestampTlv timestampTlv;
     const MeshCoP::Timestamp *timestamp(mNetif.GetActiveDataset().GetNetwork().GetTimestamp());
 
-    VerifyOrExit(timestamp && timestamp->GetSeconds() != 0, error = kThreadError_None);
-
     timestampTlv.Init();
-    *static_cast<MeshCoP::Timestamp *>(&timestampTlv) = *timestamp;
-    error = aMessage.Append(&timestampTlv, sizeof(timestampTlv));
 
-exit:
-    return error;
+    // set active timestamp to 0 if there is no valid active operational dataset
+    if (timestamp == NULL)
+    {
+        timestampTlv.SetSeconds(0);
+        timestampTlv.SetTicks(0);
+    }
+    else
+    {
+        *static_cast<MeshCoP::Timestamp *>(&timestampTlv) = *timestamp;
+    }
+
+    return aMessage.Append(&timestampTlv, sizeof(timestampTlv));
 }
 
 ThreadError Mle::AppendPendingTimestamp(Message &aMessage)
@@ -1802,11 +1807,13 @@ ThreadError Mle::HandleDataResponse(const Message &aMessage, const Ip6::MessageI
     VerifyOrExit(networkData.IsValid(), error = kThreadError_Parse);
 
     // Active Timestamp
-    if (Tlv::GetTlv(aMessage, Tlv::kActiveTimestamp, sizeof(activeTimestamp), activeTimestamp) == kThreadError_None)
+    SuccessOrExit(error = Tlv::GetTlv(aMessage, Tlv::kActiveTimestamp, sizeof(activeTimestamp), activeTimestamp));
+    VerifyOrExit(activeTimestamp.IsValid(), error = kThreadError_Parse);
+
+    if (activeTimestamp.GetSeconds() != 0)
     {
         const MeshCoP::Timestamp *timestamp;
 
-        VerifyOrExit(activeTimestamp.IsValid(), error = kThreadError_Parse);
         timestamp = mNetif.GetActiveDataset().GetNetwork().GetTimestamp();
 
         // if received timestamp does not match the local value and message does not contain the dataset,
@@ -2105,16 +2112,19 @@ ThreadError Mle::HandleChildIdResponse(const Message &aMessage, const Ip6::Messa
     {
         VerifyOrExit(activeTimestamp.IsValid(), error = kThreadError_Parse);
 
-        // Active Dataset
-        if (Tlv::GetOffset(aMessage, Tlv::kActiveDataset, offset) == kThreadError_None)
+        if (activeTimestamp.GetSeconds() != 0)
         {
-            aMessage.Read(offset, sizeof(tlv), &tlv);
-            mNetif.GetActiveDataset().Set(activeTimestamp, aMessage, offset + sizeof(tlv), tlv.GetLength());
+            // Active Dataset
+            if (Tlv::GetOffset(aMessage, Tlv::kActiveDataset, offset) == kThreadError_None)
+            {
+                aMessage.Read(offset, sizeof(tlv), &tlv);
+                mNetif.GetActiveDataset().Set(activeTimestamp, aMessage, offset + sizeof(tlv), tlv.GetLength());
+            }
         }
-    }
-    else
-    {
-        mNetif.GetActiveDataset().Clear();
+        else
+        {
+            mNetif.GetActiveDataset().Clear();
+        }
     }
 
     // Pending Timestamp
