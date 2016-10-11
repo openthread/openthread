@@ -92,7 +92,7 @@ This property is only present on NCPs which implement 802.15.4
 Set to true to enable raw MAC frames to be emitted from `PROP_STREAM_RAW`.
 See (#prop-stream-raw).
 
-### PROP 56: PROP_MAC_FILTER_MODE {#prop-mac-filter-mode}
+### PROP 56: PROP_MAC_PROMISCUOUS_MODE {#prop-mac-promiscuous-mode}
 * Type: Read-Write
 * Packed-Encoding: `C`
 
@@ -100,9 +100,9 @@ Possible Values:
 
 Id | Name                          | Description
 ---|-------------------------------|------------------
- 0 | `MAC_FILTER_MODE_NORMAL`      | Normal MAC filtering is in place.
- 1 | `MAC_FILTER_MODE_PROMISCUOUS` | All MAC packets matching network are passed up the stack.
- 2 | `MAC_FILTER_MODE_MONITOR`     | All decoded MAC packets are passed up the stack.
+ 0 | `MAC_PROMISCUOUS_MODE_OFF`    | Normal MAC filtering is in place.
+ 1 | `MAC_PROMISCUOUS_MODE_NETWORK`| All MAC packets matching network are passed up the stack.
+ 2 | `MAC_PROMISCUOUS_MODE_FULL`   | All decoded MAC packets are passed up the stack.
 
 See (#prop-stream-raw).
 

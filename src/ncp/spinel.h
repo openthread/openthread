@@ -204,19 +204,9 @@ enum
 
 enum
 {
-    SPINEL_MAC_FILTER_MODE_NORMAL      = 0, ///< Normal MAC filtering is in place.
-    SPINEL_MAC_FILTER_MODE_PROMISCUOUS = 1, ///< All MAC packets matching network are passed up the stack.
-    SPINEL_MAC_FILTER_MODE_MONITOR     = 2, ///< All decoded MAC packets are passed up the stack.
-
-    /// 802.15.4's definition of "Promiscuous" mode.
-    /** 802.15.4 defines promiscuous mode to be what
-     *  is generally considered to be "Monitor" mode.
-     *  This definition will hopefully help people who
-     *  are familiar with the 802.15.4 spec from being
-     *  confused about what they need to set this
-     *  property to in order to get the desired behavior.
-     */
-    SPINEL_MAC_FILTER_MODE_15_4_PROMISCUOUS = SPINEL_MAC_FILTER_MODE_MONITOR,
+    SPINEL_MAC_PROMISCUOUS_MODE_OFF      = 0, ///< Normal MAC filtering is in place.
+    SPINEL_MAC_PROMISCUOUS_MODE_NETWORK  = 1, ///< All MAC packets matching network are passed up the stack.
+    SPINEL_MAC_PROMISCUOUS_MODE_FULL     = 2, ///< All decoded MAC packets are passed up the stack.
 };
 
 typedef struct
@@ -369,7 +359,7 @@ typedef enum
     SPINEL_PROP_MAC_15_4_SADDR         = SPINEL_PROP_MAC__BEGIN + 5, ///< [S]
     SPINEL_PROP_MAC_15_4_PANID         = SPINEL_PROP_MAC__BEGIN + 6, ///< [S]
     SPINEL_PROP_MAC_RAW_STREAM_ENABLED = SPINEL_PROP_MAC__BEGIN + 7, ///< [C]
-    SPINEL_PROP_MAC_FILTER_MODE        = SPINEL_PROP_MAC__BEGIN + 8, ///< [C]
+    SPINEL_PROP_MAC_PROMISCUOUS_MODE   = SPINEL_PROP_MAC__BEGIN + 8, ///< [C]
     SPINEL_PROP_MAC_ENERGY_SCAN_RESULT = SPINEL_PROP_MAC__BEGIN + 9, ///< chan,maxRssi [Cc]
     SPINEL_PROP_MAC__END               = 0x40,
 

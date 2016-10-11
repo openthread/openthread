@@ -179,8 +179,8 @@ Optionally set the channel:
 
 Set the filter mode:
 
-* CMD_VALUE_SET:PROP_MAC_FILTER_MODE:MAC_FILTER_MODE_MONITOR
-* CMD_VALUE_IS:PROP_MAC_FILTER_MODE:MAC_FILTER_MODE_MONITOR
+* CMD_VALUE_SET:PROP_MAC_PROMISCUOUS_MODE:MAC_PROMISCUOUS_MODE_MONITOR
+* CMD_VALUE_IS:PROP_MAC_PROMISCUOUS_MODE:MAC_PROMISCUOUS_MODE_MONITOR
 
 Enable the raw stream:
 
@@ -200,8 +200,8 @@ PROP_STREAM_RAW:
 * CMD_VALUE_IS:PROP_STREAM_RAW:...
 
 This mode may be entered even when associated with a network.
-In that case, you should set `PROP_MAC_FILTER_MODE` to
-`MAC_FILTER_MODE_PROMISCUOUS` or `MAC_FILTER_MODE_NORMAL`, so that
+In that case, you should set `PROP_MAC_PROMISCUOUS_MODE` to
+`MAC_PROMISCUOUS_MODE_PROMISCUOUS` or `MAC_PROMISCUOUS_MODE_NORMAL`, so that
 you can avoid receiving packets from other networks or that are destined
 for other nodes.
 
