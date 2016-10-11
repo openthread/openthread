@@ -96,17 +96,17 @@ class Cert_5_6_4_NetworkDataRegisterAfterAttachRouter(unittest.TestCase):
         time.sleep(10)
 
         addrs = self.nodes[ED1].get_addrs()
-        self.assertTrue(any('2001:2:0:1' in addr[1:10] for addr in addrs))
-        self.assertTrue(any('2001:2:0:2' in addr[1:10] for addr in addrs))
+        self.assertTrue(any('2001:2:0:1' in addr[0:10] for addr in addrs))
+        self.assertTrue(any('2001:2:0:2' in addr[0:10] for addr in addrs))
         for addr in addrs:
-            if addr[1:10] == '2001:2:0:1' or addr[1:10] == '2001:2:0:2':
+            if addr[0:10] == '2001:2:0:1' or addr[0:10] == '2001:2:0:2':
                 self.assertTrue(self.nodes[LEADER].ping(addr))
 
         addrs = self.nodes[SED1].get_addrs()
-        self.assertTrue(any('2001:2:0:1' in addr[1:10] for addr in addrs))
-        self.assertFalse(any('2001:2:0:2' in addr[1:10] for addr in addrs))
+        self.assertTrue(any('2001:2:0:1' in addr[0:10] for addr in addrs))
+        self.assertFalse(any('2001:2:0:2' in addr[0:10] for addr in addrs))
         for addr in addrs:
-            if addr[1:10] == '2001:2:0:1' or addr[1:10] == '2001:2:0:2':
+            if addr[0:10] == '2001:2:0:1' or addr[0:10] == '2001:2:0:2':
                 self.assertTrue(self.nodes[LEADER].ping(addr))
 
 if __name__ == '__main__':

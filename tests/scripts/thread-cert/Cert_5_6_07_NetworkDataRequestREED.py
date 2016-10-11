@@ -92,9 +92,9 @@ class Cert_5_6_7_NetworkDataRequestREED(unittest.TestCase):
         time.sleep(10)
 
         addrs = self.nodes[REED].get_addrs()
-        self.assertTrue(any('2001:2:0:3' in addr[1:10] for addr in addrs))
+        self.assertTrue(any('2001:2:0:3' in addr[0:10] for addr in addrs))
         for addr in addrs:
-            if addr[1:10] == '2001:2:0:3':
+            if addr[0:10] == '2001:2:0:3':
                 self.assertTrue(self.nodes[LEADER].ping(addr))
 
 if __name__ == '__main__':
