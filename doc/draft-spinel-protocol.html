@@ -440,7 +440,7 @@
 <link href="#rfc.section.5.5.6" rel="Chapter" title="5.5.6 PROP 53: PROP_MAC_15_4_SADDR"/>
 <link href="#rfc.section.5.5.7" rel="Chapter" title="5.5.7 PROP 54: PROP_MAC_15_4_PANID"/>
 <link href="#rfc.section.5.5.8" rel="Chapter" title="5.5.8 PROP 55: PROP_MAC_RAW_STREAM_ENABLED"/>
-<link href="#rfc.section.5.5.9" rel="Chapter" title="5.5.9 PROP 56: PROP_MAC_FILTER_MODE"/>
+<link href="#rfc.section.5.5.9" rel="Chapter" title="5.5.9 PROP 56: PROP_MAC_PROMISCUOUS_MODE"/>
 <link href="#rfc.section.5.5.10" rel="Chapter" title="5.5.10 PROP 4864: PROP_MAC_WHITELIST"/>
 <link href="#rfc.section.5.5.11" rel="Chapter" title="5.5.11 PROP 4865: PROP_MAC_WHITELIST_ENABLED"/>
 <link href="#rfc.section.5.6" rel="Chapter" title="5.6 NET Properties"/>
@@ -513,6 +513,8 @@
 <link href="#rfc.appendix.D.2.23" rel="Chapter" title="D.2.23 PROP 5383: SPINEL_PROP_THREAD_ROUTER_ROLE_ENABLED"/>
 <link href="#rfc.appendix.D.2.24" rel="Chapter" title="D.2.24 PROP 5384: PROP_THREAD_ROUTER_DOWNGRADE_THRESHOLD"/>
 <link href="#rfc.appendix.D.2.25" rel="Chapter" title="D.2.25 PROP 5385: PROP_THREAD_ROUTER_SELECTION_JITTER"/>
+<link href="#rfc.appendix.D.2.26" rel="Chapter" title="D.2.26 PROP 5386: PROP_THREAD_PREFERRED_ROUTER_ID"/>
+<link href="#rfc.appendix.D.2.27" rel="Chapter" title="D.2.27 PROP 5387: SPINEL_PROP_THREAD_NEIGHBOR_TABLE"/>
 <link href="#rfc.appendix.E" rel="Chapter" title="E Test Vectors"/>
 <link href="#rfc.appendix.E.1" rel="Chapter" title="E.1 Test Vector: Packed Unsigned Integer"/>
 <link href="#rfc.appendix.E.2" rel="Chapter" title="E.2 Test Vector: Reset Command"/>
@@ -545,8 +547,8 @@
   <link rel="schema.dct" href="http://purl.org/dc/terms/" />
 
   <meta name="dct.creator" content="Quattlebaum, R." />
-  <meta name="dct.identifier" content="urn:ietf:id:draft-spinel-protocol-eb1e9f3-dirty" />
-  <meta name="dct.issued" scheme="ISO8601" content="2016-9-28" />
+  <meta name="dct.identifier" content="urn:ietf:id:draft-spinel-protocol-469cd3a" />
+  <meta name="dct.issued" scheme="ISO8601" content="2016-10-11" />
   <meta name="dct.abstract" content="This document describes a general management protocol for enabling a host device to communicate with and manage a Network Control Processor (NCP).  " />
   <meta name="description" content="This document describes a general management protocol for enabling a host device to communicate with and manage a Network Control Processor (NCP).  " />
 
@@ -567,7 +569,7 @@
 </tr>
 <tr>
   <td class="left"></td>
-  <td class="right">September 28, 2016</td>
+  <td class="right">October 11, 2016</td>
 </tr>
 
     	
@@ -575,7 +577,7 @@
   </table>
 
   <p class="title">Spinel Host-Controller Protocol<br />
-  <span class="filename">draft-spinel-protocol-eb1e9f3-dirty</span></p>
+  <span class="filename">draft-spinel-protocol-469cd3a</span></p>
   
   <h1 id="rfc.abstract">
   <a href="#rfc.abstract">Abstract</a>
@@ -676,7 +678,7 @@
 <li>5.5.6.   <a href="#rfc.section.5.5.6">PROP 53: PROP_MAC_15_4_SADDR</a></li>
 <li>5.5.7.   <a href="#rfc.section.5.5.7">PROP 54: PROP_MAC_15_4_PANID</a></li>
 <li>5.5.8.   <a href="#rfc.section.5.5.8">PROP 55: PROP_MAC_RAW_STREAM_ENABLED</a></li>
-<li>5.5.9.   <a href="#rfc.section.5.5.9">PROP 56: PROP_MAC_FILTER_MODE</a></li>
+<li>5.5.9.   <a href="#rfc.section.5.5.9">PROP 56: PROP_MAC_PROMISCUOUS_MODE</a></li>
 <li>5.5.10.   <a href="#rfc.section.5.5.10">PROP 4864: PROP_MAC_WHITELIST</a></li>
 <li>5.5.11.   <a href="#rfc.section.5.5.11">PROP 4865: PROP_MAC_WHITELIST_ENABLED</a></li>
 </ul><li>5.6.   <a href="#rfc.section.5.6">NET Properties</a></li>
@@ -749,6 +751,8 @@
 <li>D.2.23.   <a href="#rfc.appendix.D.2.23">PROP 5383: SPINEL_PROP_THREAD_ROUTER_ROLE_ENABLED</a></li>
 <li>D.2.24.   <a href="#rfc.appendix.D.2.24">PROP 5384: PROP_THREAD_ROUTER_DOWNGRADE_THRESHOLD</a></li>
 <li>D.2.25.   <a href="#rfc.appendix.D.2.25">PROP 5385: PROP_THREAD_ROUTER_SELECTION_JITTER</a></li>
+<li>D.2.26.   <a href="#rfc.appendix.D.2.26">PROP 5386: PROP_THREAD_PREFERRED_ROUTER_ID</a></li>
+<li>D.2.27.   <a href="#rfc.appendix.D.2.27">PROP 5387: SPINEL_PROP_THREAD_NEIGHBOR_TABLE</a></li>
 </ul></ul><li>Appendix E.   <a href="#rfc.appendix.E">Test Vectors</a></li>
 <ul><li>E.1.   <a href="#rfc.appendix.E.1">Test Vector: Packed Unsigned Integer</a></li>
 <li>E.2.   <a href="#rfc.appendix.E.2">Test Vector: Reset Command</a></li>
@@ -2301,7 +2305,7 @@ STACK-NAME/STACK-VERSION[BUILD_INFO][; OTHER_INFO]; BUILD_DATE_AND_TIME
 
 <p> </p>
 <p id="rfc.section.5.5.8.p.2">Set to true to enable raw MAC frames to be emitted from <samp>PROP_STREAM_RAW</samp>.  See <a href="#prop-stream-raw">Section 5.3.2</a>.  </p>
-<h1 id="rfc.section.5.5.9"><a href="#rfc.section.5.5.9">5.5.9.</a> <a href="#prop-mac-filter-mode" id="prop-mac-filter-mode">PROP 56: PROP_MAC_FILTER_MODE</a></h1>
+<h1 id="rfc.section.5.5.9"><a href="#rfc.section.5.5.9">5.5.9.</a> <a href="#prop-mac-promiscuous-mode" id="prop-mac-promiscuous-mode">PROP 56: PROP_MAC_PROMISCUOUS_MODE</a></h1>
 <p/>
 
 <ul>
@@ -2323,21 +2327,21 @@ STACK-NAME/STACK-VERSION[BUILD_INFO][; OTHER_INFO]; BUILD_DATE_AND_TIME
     <tr>
       <td class="center">0</td>
       <td class="center">
-        <samp>MAC_FILTER_MODE_NORMAL</samp>
+        <samp>MAC_PROMISCUOUS_MODE_OFF</samp>
       </td>
       <td class="center">Normal MAC filtering is in place.</td>
     </tr>
     <tr>
       <td class="center">1</td>
       <td class="center">
-        <samp>MAC_FILTER_MODE_PROMISCUOUS</samp>
+        <samp>MAC_PROMISCUOUS_MODE_NETWORK</samp>
       </td>
       <td class="center">All MAC packets matching network are passed up the stack.</td>
     </tr>
     <tr>
       <td class="center">2</td>
       <td class="center">
-        <samp>MAC_FILTER_MODE_MONITOR</samp>
+        <samp>MAC_PROMISCUOUS_MODE_FULL</samp>
       </td>
       <td class="center">All decoded MAC packets are passed up the stack.</td>
     </tr>
@@ -3182,6 +3186,41 @@ STACK-NAME/STACK-VERSION[BUILD_INFO][; OTHER_INFO]; BUILD_DATE_AND_TIME
 
 <p> </p>
 <p id="rfc.section.D.2.25.p.2">Specifies the self imposed random delay in seconds a REED waits before registering to become an Active Router.  </p>
+<h1 id="rfc.appendix.D.2.26"><a href="#rfc.appendix.D.2.26">D.2.26.</a> <a href="#prop-5386-propthreadpreferredrouterid" id="prop-5386-propthreadpreferredrouterid">PROP 5386: PROP_THREAD_PREFERRED_ROUTER_ID</a></h1>
+<p/>
+
+<ul>
+  <li>Type: Write-Only</li>
+  <li>Packed-Encoding: <samp>C</samp></li>
+</ul>
+
+<p> </p>
+<p id="rfc.section.D.2.26.p.2">Specifies the preferred Router Id. Upon becoming a router/leader the node attempts to use this Router Id. If the preferred Router Id is not set or if it can not be used, a randomly generated router id is picked. This property can be set only when the device role is either detached or disabled.  </p>
+<h1 id="rfc.appendix.D.2.27"><a href="#rfc.appendix.D.2.27">D.2.27.</a> <a href="#prop-5387-spinelpropthreadneighbortable" id="prop-5387-spinelpropthreadneighbortable">PROP 5387: SPINEL_PROP_THREAD_NEIGHBOR_TABLE</a></h1>
+<p/>
+
+<ul>
+  <li>Type: Read-Only</li>
+  <li>Packed-Encoding: <samp>A(T(ESLCcCbLL))</samp></li>
+</ul>
+
+<p> </p>
+<p id="rfc.section.D.2.27.p.2">Data per item is: </p>
+<p/>
+
+<ul>
+  <li><samp>E</samp>: Extended/long address</li>
+  <li><samp>S</samp>: RLOC16</li>
+  <li><samp>L</samp>: Age</li>
+  <li><samp>C</samp>: Link Quality In</li>
+  <li><samp>c</samp>: Average RSS</li>
+  <li><samp>C</samp>: Mode (bit-flags)</li>
+  <li><samp>b</samp>: <samp>true</samp> if neighbor is a child, <samp>false</samp> otherwise.</li>
+  <li><samp>L</samp>: Link Frame Counter</li>
+  <li><samp>L</samp>: MLE Frame Counter</li>
+</ul>
+
+<p> </p>
 <h1 id="rfc.appendix.E"><a href="#rfc.appendix.E">Appendix E.</a> <a href="#test-vectors" id="test-vectors">Test Vectors</a></h1>
 <h1 id="rfc.appendix.E.1"><a href="#rfc.appendix.E.1">E.1.</a> <a href="#test-vector-packed-unsigned-integer" id="test-vector-packed-unsigned-integer">Test Vector: Packed Unsigned Integer</a></h1>
 <table cellpadding="3" cellspacing="0" class="tt full center">
@@ -3735,8 +3774,8 @@ FE
 <p/>
 
 <ul>
-  <li>CMD_VALUE_SET:PROP_MAC_FILTER_MODE:MAC_FILTER_MODE_MONITOR</li>
-  <li>CMD_VALUE_IS:PROP_MAC_FILTER_MODE:MAC_FILTER_MODE_MONITOR</li>
+  <li>CMD_VALUE_SET:PROP_MAC_PROMISCUOUS_MODE:MAC_PROMISCUOUS_MODE_MONITOR</li>
+  <li>CMD_VALUE_IS:PROP_MAC_PROMISCUOUS_MODE:MAC_PROMISCUOUS_MODE_MONITOR</li>
 </ul>
 
 <p> </p>
@@ -3768,7 +3807,7 @@ FE
 </ul>
 
 <p> </p>
-<p id="rfc.section.F.10.p.13">This mode may be entered even when associated with a network.  In that case, you should set <samp>PROP_MAC_FILTER_MODE</samp> to <samp>MAC_FILTER_MODE_PROMISCUOUS</samp> or <samp>MAC_FILTER_MODE_NORMAL</samp>, so that you can avoid receiving packets from other networks or that are destined for other nodes.  </p>
+<p id="rfc.section.F.10.p.13">This mode may be entered even when associated with a network.  In that case, you should set <samp>PROP_MAC_PROMISCUOUS_MODE</samp> to <samp>MAC_PROMISCUOUS_MODE_PROMISCUOUS</samp> or <samp>MAC_PROMISCUOUS_MODE_NORMAL</samp>, so that you can avoid receiving packets from other networks or that are destined for other nodes.  </p>
 <h1 id="rfc.appendix.G"><a href="#rfc.appendix.G">Appendix G.</a> <a href="#glossary" id="glossary">Glossary</a></h1>
 <p>
   <a id="CREF15" class="info">[CREF15]<span class="info">RQ: Alphabetize before finalization.</span></a>
