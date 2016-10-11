@@ -49,6 +49,7 @@ EXTRA_DIST                                                         = \
     thread-cert/Cert_5_2_03_LeaderReject2Hops.py                     \
     thread-cert/Cert_5_2_04_REEDUpgrade.py                           \
     thread-cert/Cert_5_2_05_AddressQuery.py                          \
+    thread-cert/Cert_5_2_06_RouterDowngrade.py                       \
     thread-cert/Cert_5_2_07_REEDSynchronization.py                   \
     thread-cert/Cert_5_3_01_LinkLocal.py                             \
     thread-cert/Cert_5_3_02_RealmLocal.py                            \
@@ -153,6 +154,7 @@ check_SCRIPTS                                                     += \
     thread-cert/Cert_5_2_03_LeaderReject2Hops.py                     \
     thread-cert/Cert_5_2_04_REEDUpgrade.py                           \
     thread-cert/Cert_5_2_05_AddressQuery.py                          \
+    thread-cert/Cert_5_2_06_RouterDowngrade.py                       \
     thread-cert/Cert_5_2_07_REEDSynchronization.py                   \
     thread-cert/Cert_5_3_01_LinkLocal.py                             \
     thread-cert/Cert_5_3_02_RealmLocal.py                            \
