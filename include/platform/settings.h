@@ -43,8 +43,12 @@ extern "C" {
 
 /**
  * Performs any initialization for the settings subsystem, if necessary.
+ *
+ * @param[in]  aInstance
+ *             The OpenThread instance structure.
+ *
  */
-void otPlatSettingsInit(void);
+void otPlatSettingsInit(otInstance *aInstance);
 
 /// Begin atomic change set
 /** This function is called at the start of a sequence of changes
@@ -59,17 +63,23 @@ void otPlatSettingsInit(void);
  *  The implementation of this function is optional. If not
  *  implemented, it should return kThreadError_None.
  *
+ * @param[in]  aInstance
+ *             The OpenThread instance structure.
+ *
  *  @retval kThreadError_None    The settings commit lock has been set.
  *  @retval kThreadError_Already The commit lock is already set.
  *
  *  @sa otPlatSettingsCommitChange(), otPlatSettingsAbandonChange()
  */
-ThreadError otPlatSettingsBeginChange(void);
+ThreadError otPlatSettingsBeginChange(otInstance *aInstance);
 
 /// Commit all settings changes since previous call to otPlatSettingsBeginChange()
 /** This function is called at the end of a sequence of changes.
  *  The implementation of this function is optional. If not
  *  implemented, it should return kThreadError_NotImplemented.
+ *
+ *  @param[in]  aInstance
+ *              The OpenThread instance structure.
  *
  *  @retval kThreadError_None
  *          The changes made since the last call to
@@ -82,7 +92,7 @@ ThreadError otPlatSettingsBeginChange(void);
  *
  *  @sa otPlatSettingsBeginChange(), otPlatSettingsAbandonChange()
  */
-ThreadError otPlatSettingsCommitChange(void);
+ThreadError otPlatSettingsCommitChange(otInstance *aInstance);
 
 /// Abandon all settings changes since previous call to otPlatSettingsBeginChange()
 /** This function may be called at the end of a sequence of changes.
@@ -91,7 +101,10 @@ ThreadError otPlatSettingsCommitChange(void);
  *  rolled back and abandoned.
  *
  *  The implementation of this function is optional. If not
- *  implemented, it should return kThreadError_NotImplemented..
+ *  implemented, it should return kThreadError_NotImplemented.
+ *
+ *  @param[in]  aInstance
+ *              The OpenThread instance structure.
  *
  *  @retval kThreadError_None
  *          The changes made since the last call to
@@ -104,7 +117,7 @@ ThreadError otPlatSettingsCommitChange(void);
  *
  *  @sa otPlatSettingsBeginChange(), otPlatSettingsCommitChange()
  */
-ThreadError otPlatSettingsAbandonChange(void);
+ThreadError otPlatSettingsAbandonChange(otInstance *aInstance);
 
 /// Fetches the value of a setting
 /** This function fetches the value of the setting identified
@@ -124,6 +137,8 @@ ThreadError otPlatSettingsAbandonChange(void);
  *  values. The order of such values MAY change after ANY
  *  write operation to the store.
  *
+ *  @param[in]     aInstance
+ *                 The OpenThread instance structure.
  *  @param[in]     aKey
  *                 The key associated with the requested setting.
  *  @param[in]     aIndex
@@ -147,7 +162,7 @@ ThreadError otPlatSettingsAbandonChange(void);
  *  @retval kThreadError_NotImplemented
  *          This function is not implemented on this platform.
  */
-ThreadError otPlatSettingsGet(uint16_t aKey, int aIndex, uint8_t *aValue, int *aValueLength);
+ThreadError otPlatSettingsGet(otInstance *aInstance, uint16_t aKey, int aIndex, uint8_t *aValue, int *aValueLength);
 
 /// Sets or replaces the value of a setting
 /** This function sets or replaces the value of a setting
@@ -158,6 +173,8 @@ ThreadError otPlatSettingsGet(uint16_t aKey, int aIndex, uint8_t *aValue, int *a
  *  Calling this function successfully may cause unrelated
  *  settings with multiple values to be reordered.
  *
+ *  @param[in]  aInstance
+ *              The OpenThread instance structure.
  *  @param[in]  aKey
  *              The key associated with the setting to change.
  *  @param[out] aValue
@@ -173,7 +190,7 @@ ThreadError otPlatSettingsGet(uint16_t aKey, int aIndex, uint8_t *aValue, int *a
  *  @retval kThreadError_NotImplemented
  *          This function is not implemented on this platform.
  */
-ThreadError otPlatSettingsSet(uint16_t aKey, const uint8_t *aValue, int aValueLength);
+ThreadError otPlatSettingsSet(otInstance *aInstance, uint16_t aKey, const uint8_t *aValue, int aValueLength);
 
 /// Adds a value to a setting
 /** This function adds the value to a setting
@@ -189,6 +206,8 @@ ThreadError otPlatSettingsSet(uint16_t aKey, const uint8_t *aValue, int aValueLe
  *  Calling this function successfully may cause unrelated
  *  settings with multiple values to be reordered.
  *
+ * @param[in]     aInstance
+ *                The OpenThread instance structure.
  * @param[in]     aKey
  *                The key associated with the setting to change.
  * @param[out]    aValue
@@ -204,7 +223,7 @@ ThreadError otPlatSettingsSet(uint16_t aKey, const uint8_t *aValue, int aValueLe
  * @retval kThreadError_NotImplemented
  *         This function is not implemented on this platform.
  */
-ThreadError otPlatSettingsAdd(uint16_t aKey, const uint8_t *aValue, int aValueLength);
+ThreadError otPlatSettingsAdd(otInstance *aInstance, uint16_t aKey, const uint8_t *aValue, int aValueLength);
 
 /// Removes a setting from the setting store
 /** This function deletes a specific value from the
@@ -216,6 +235,8 @@ ThreadError otPlatSettingsAdd(uint16_t aKey, const uint8_t *aValue, int aValueLe
  *  items ordered (A, B, C) and you delete B, the resulting order
  *  is guaranteed to be (A, C).
  *
+ *  @param[in] aInstance
+ *             The OpenThread instance structure.
  *  @param[in] aKey
  *             The key associated with the requested setting.
  *  @param[in] aIndex
@@ -229,13 +250,16 @@ ThreadError otPlatSettingsAdd(uint16_t aKey, const uint8_t *aValue, int aValueLe
  *  @retval kThreadError_NotImplemented
  *          This function is not implemented on this platform.
  */
-ThreadError otPlatSettingsDelete(uint16_t aKey, int aIndex);
+ThreadError otPlatSettingsDelete(otInstance *aInstance, uint16_t aKey, int aIndex);
 
 /// Removes all settings from the setting store
 /** This function deletes all settings from the settings
  *  store, resetting it to its initial factory state.
+ *
+ *  @param[in] aInstance
+ *             The OpenThread instance structure.
  */
-void otPlatSettingsWipe(void);
+void otPlatSettingsWipe(otInstance *aInstance);
 
 #ifdef __cplusplus
 }  // extern "C"

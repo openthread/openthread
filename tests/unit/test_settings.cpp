@@ -40,28 +40,11 @@ extern "C" void otSignalTaskletPending(otInstance *)
 {
 }
 
-extern "C" bool otAreTaskletsPending(otInstance *)
-{
-    return false;
-}
-
 extern "C" void otPlatUartSendDone(void)
 {
 }
 
 extern "C" void otPlatUartReceived(const uint8_t *, uint16_t)
-{
-}
-
-extern "C" void otPlatAlarmFired(otInstance *)
-{
-}
-
-extern "C" void otPlatRadioTransmitDone(otInstance *, bool, ThreadError)
-{
-}
-
-extern "C" void otPlatRadioReceiveDone(otInstance *, RadioPacket *, ThreadError)
 {
 }
 
@@ -88,10 +71,11 @@ static int sWriteBufferLength;
 void TestSettingsInit(void)
 {
     uint8_t index;
+    otInstance aInstance;
 
     otPlatFlashInit();
-    otPlatSettingsInit();
-    otPlatSettingsWipe();
+    otPlatSettingsInit(&aInstance);
+    otPlatSettingsWipe(&aInstance);
 
     for (index = 0; index < kMaxStageDataLen; index++)
     {
@@ -106,10 +90,11 @@ void TestSettingsAdd(void)
     uint8_t key = 7;
     uint8_t readBuffer[kMaxStageDataLen];
     int readBufferLength;
+    otInstance aInstance;
 
-    VerifyOrQuit(otPlatSettingsAdd(key, sWriteBuffer, sWriteBufferLength) == kThreadError_None,
+    VerifyOrQuit(otPlatSettingsAdd(&aInstance, key, sWriteBuffer, sWriteBufferLength) == kThreadError_None,
                  "Settings::Add::Add Fail\n");
-    VerifyOrQuit(otPlatSettingsGet(key, 0, readBuffer, &readBufferLength) == kThreadError_None,
+    VerifyOrQuit(otPlatSettingsGet(&aInstance, key, 0, readBuffer, &readBufferLength) == kThreadError_None,
                  "Settings::Add::Get Fail\n");
     VerifyOrQuit(!memcmp(readBuffer, sWriteBuffer, static_cast<uint16_t>(sWriteBufferLength)),
                  "Settings::Add::Add Check Fail\n");
@@ -120,15 +105,16 @@ void TestSettingsDelete(void)
     uint8_t key = 8;
     uint8_t readBuffer[kMaxStageDataLen];
     int readBufferLength;
+    otInstance aInstance;
 
-    VerifyOrQuit(otPlatSettingsAdd(key, sWriteBuffer, sWriteBufferLength) == kThreadError_None,
+    VerifyOrQuit(otPlatSettingsAdd(&aInstance, key, sWriteBuffer, sWriteBufferLength) == kThreadError_None,
                  "Settings::Delete::Add Fail\n");
-    VerifyOrQuit(otPlatSettingsGet(key, 0, readBuffer, &readBufferLength) == kThreadError_None,
+    VerifyOrQuit(otPlatSettingsGet(&aInstance, key, 0, readBuffer, &readBufferLength) == kThreadError_None,
                  "Settings::Delete::Get Fail\n");
     VerifyOrQuit(!memcmp(readBuffer, sWriteBuffer, static_cast<uint16_t>(sWriteBufferLength)),
                  "Settings::Delete::Add Check Fail\n");
-    VerifyOrQuit(otPlatSettingsDelete(key, -1) == kThreadError_None, "Settings::Delete::Delete Fail\n");
-    VerifyOrQuit(otPlatSettingsGet(key, 0, readBuffer, &readBufferLength) == kThreadError_NotFound,
+    VerifyOrQuit(otPlatSettingsDelete(&aInstance, key, -1) == kThreadError_None, "Settings::Delete::Delete Fail\n");
+    VerifyOrQuit(otPlatSettingsGet(&aInstance, key, 0, readBuffer, &readBufferLength) == kThreadError_NotFound,
                  "Settings::Delete::Get Fail\n");
 }
 
@@ -137,49 +123,20 @@ void TestSettingsSet(void)
     uint8_t key = 9;
     uint8_t readBuffer[kMaxStageDataLen];
     int readBufferLength;
+    otInstance aInstance;
 
     for (uint8_t index = 0; index < 2; index++)
     {
-        VerifyOrQuit(otPlatSettingsAdd(key, sWriteBuffer, sWriteBufferLength) == kThreadError_None,
+        VerifyOrQuit(otPlatSettingsAdd(&aInstance, key, sWriteBuffer, sWriteBufferLength) == kThreadError_None,
                      "Settings::Set::Add Fail\n");
     }
 
-    VerifyOrQuit(otPlatSettingsSet(key, sWriteBuffer, sWriteBufferLength) == kThreadError_None,
+    VerifyOrQuit(otPlatSettingsSet(&aInstance, key, sWriteBuffer, sWriteBufferLength) == kThreadError_None,
                  "Settings::Set::Set Fail\n");
-    VerifyOrQuit(otPlatSettingsGet(key, 0, readBuffer, &readBufferLength) == kThreadError_None,
+    VerifyOrQuit(otPlatSettingsGet(&aInstance, key, 0, readBuffer, &readBufferLength) == kThreadError_None,
                  "Settings::Set::Get Fail\n");
     VerifyOrQuit(!memcmp(readBuffer, sWriteBuffer, static_cast<uint16_t>(sWriteBufferLength)),
                  "Settings::Set::Set Check Fail\n");
-}
-
-void TestSettingsTransaction(void)
-{
-    uint8_t key = 10;
-    uint8_t readBuffer[kMaxStageDataLen];
-    int readBufferLength = kMaxStageDataLen;
-
-    VerifyOrQuit(otPlatSettingsAdd(key, sWriteBuffer, sWriteBufferLength) == kThreadError_None,
-                 "Settings::Transaction::Add Fail\n");
-
-    otPlatSettingsBeginChange();
-
-    for (uint8_t index = 0; index < 2; index++)
-    {
-        VerifyOrQuit(otPlatSettingsAdd(key, sWriteBuffer, sWriteBufferLength) == kThreadError_None,
-                     "Settings::Transaction::Add Fail\n");
-    }
-
-    VerifyOrQuit(otPlatSettingsDelete(key, 0) == kThreadError_None, "Settings::Transaction::Delete Fail\n");
-
-    VerifyOrQuit(otPlatSettingsCommitChange() == kThreadError_None, "Settings::Transaction::Commit Fail\n");
-
-    for (uint8_t index = 1; index < 3; index++)
-    {
-        VerifyOrQuit(otPlatSettingsGet(key, index, readBuffer, &readBufferLength) == kThreadError_None,
-                     "Settings::Transaction::Get Fail\n");
-        VerifyOrQuit(!memcmp(readBuffer, sWriteBuffer, static_cast<uint16_t>(sWriteBufferLength)),
-                     "Settings::Transaction::Commit Check Fail\n");
-    }
 }
 
 void TestSettingsSwap(void)
@@ -189,10 +146,11 @@ void TestSettingsSwap(void)
     uint16_t index = 0;
     uint8_t readBuffer[kMaxStageDataLen];
     int readBufferLength = kMaxStageDataLen;
+    otInstance aInstance;
 
     while (true)
     {
-        error = otPlatSettingsAdd(key, sWriteBuffer, sWriteBufferLength);
+        error = otPlatSettingsAdd(&aInstance, key, sWriteBuffer, sWriteBufferLength);
         VerifyOrQuit(error == kThreadError_None || error == kThreadError_NoBufs, "Settings::Swap::Add Fail\n");
 
         if (error == kThreadError_NoBufs)
@@ -203,10 +161,10 @@ void TestSettingsSwap(void)
         index++;
     }
 
-    VerifyOrQuit(otPlatSettingsDelete(key, 0) == kThreadError_None, "Settings::Swap::Delete Fail\n");
-    VerifyOrQuit(otPlatSettingsAdd(key, sWriteBuffer, sWriteBufferLength) == kThreadError_None,
+    VerifyOrQuit(otPlatSettingsDelete(&aInstance, key, 0) == kThreadError_None, "Settings::Swap::Delete Fail\n");
+    VerifyOrQuit(otPlatSettingsAdd(&aInstance, key, sWriteBuffer, sWriteBufferLength) == kThreadError_None,
                  "Settings::Swap::Add Fail after swap\n");
-    VerifyOrQuit(otPlatSettingsGet(key, index, readBuffer, &readBufferLength) == kThreadError_None,
+    VerifyOrQuit(otPlatSettingsGet(&aInstance, key, index, readBuffer, &readBufferLength) == kThreadError_None,
                  "Settings::Swap::Get Fail\n");
     VerifyOrQuit(!memcmp(readBuffer, sWriteBuffer, static_cast<uint16_t>(sWriteBufferLength)),
                  "Settings::Swap::Add and Swap Check Fail\n");
@@ -221,7 +179,6 @@ void RunSettingsTests(void)
     TestSettingsAdd();
     TestSettingsDelete();
     TestSettingsSet();
-    TestSettingsTransaction();
     TestSettingsSwap();
 
     VerifyOrQuit((dir = opendir("./tmp")) != NULL, "Open tmp fail\n");
