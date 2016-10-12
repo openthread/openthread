@@ -68,7 +68,7 @@ void Mpl::InitOption(OptionMpl &aOption, const Address &aAddress)
     }
 }
 
-ThreadError Mpl::ProcessOption(const Message &aMessage, const Address &aAddress)
+ThreadError Mpl::ProcessOption(const Message &aMessage, const Address &aAddress, bool &aForward)
 {
     ThreadError error = kThreadError_None;
     OptionMpl option;
@@ -104,6 +104,8 @@ ThreadError Mpl::ProcessOption(const Message &aMessage, const Address &aAddress)
     }
 
     VerifyOrExit(entry != NULL, error = kThreadError_Drop);
+
+    aForward = true;
 
     entry->mSeed = option.GetSeed();
     entry->mSequence = option.GetSequence();

@@ -345,10 +345,11 @@ private:
     void HandleSendQueue(void);
 
     ThreadError ProcessReceiveCallback(const Message &aMessage, const MessageInfo &aMessageInfo, uint8_t aIpProto);
-    ThreadError HandleExtensionHeaders(Message &message, Header &header, uint8_t &nextHeader, bool receive);
+    ThreadError HandleExtensionHeaders(Message &message, Header &header, uint8_t &nextHeader, bool &forward,
+                                       bool receive);
     ThreadError HandleFragment(Message &message);
     ThreadError AddMplOption(Message &message, Header &header, IpProto nextHeader, uint16_t payloadLength);
-    ThreadError HandleOptions(Message &message, Header &header);
+    ThreadError HandleOptions(Message &message, Header &header, bool &forward);
     ThreadError HandlePayload(Message &message, MessageInfo &messageInfo, uint8_t ipproto);
     ThreadError ForwardMessage(Message &message, MessageInfo &messageInfo, uint8_t ipproto);
 
