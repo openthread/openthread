@@ -201,14 +201,15 @@ public:
     /**
      * This method processes an MPL option.
      *
-     * @param[in]  aMessage  A reference to the message.
-     * @param[in]  aAddress  A reference to the IPv6 Source Address.
+     * @param[in]   aMessage  A reference to the message.
+     * @param[in]   aAddress  A reference to the IPv6 Source Address.
+     * @param[out]  aForward  TRUE if this message should be forwarded, FALSE otherwise.
      *
      * @retval kThreadError_None  Successfully processed the MPL option.
      * @retval kThreadError_Drop  The MPL message is a duplicate and should be dropped.
      *
      */
-    ThreadError ProcessOption(const Message &aMessage, const Address &aAddress);
+    ThreadError ProcessOption(const Message &aMessage, const Address &aAddress, bool &aForward);
 
     /**
      * This method returns the MPL Seed value.
