@@ -31,8 +31,8 @@
  *   This file includes definitions for Thread global IPv6 address configuration with SLAAC.
  */
 
-#ifndef GLOBAL_ADDRESS_HPP_
-#define GLOBAL_ADDRESS_HPP_
+#ifndef SLAAC_ADDRESS_HPP_
+#define SLAAC_ADDRESS_HPP_
 
 #include <openthread-types.h>
 #include <platform/random.h>
@@ -41,7 +41,7 @@ namespace Thread {
 namespace Utils {
 
 /**
- * @addtogroup core-global-address
+ * @addtogroup core-slaac-address
  *
  * @brief
  *   This module includes definitions for Thread global IPv6 address configuration with SLAAC.
@@ -158,5 +158,5 @@ private:
 }  // namespace Slaac
 }  // namespace Thread
 
-#endif  // GLOBAL_ADDRESS_HPP_
+#endif  // SLAAC_ADDRESS_HPP_
 

@@ -47,6 +47,9 @@
 #include <mac/mac.hpp>
 #include <meshcop/joiner_router.hpp>
 #include <meshcop/leader.hpp>
+#include <net/dhcp6.hpp>
+#include <net/dhcp6_client.hpp>
+#include <net/dhcp6_server.hpp>
 #include <net/ip6_filter.hpp>
 #include <net/netif.hpp>
 #include <thread/address_resolver.hpp>
@@ -163,6 +166,26 @@ public:
      */
     NetworkDiagnostic::NetworkDiagnostic &GetNetworkDiagnostic(void) { return mNetworkDiagnostic; }
 
+#if OPENTHREAD_ENABLE_DHCP6_CLIENT
+    /**
+     * This method returns a pointer to the dhcp client object.
+     *
+     * @returns A reference to the dhcp client object.
+     *
+     */
+    Dhcp6::Dhcp6Client &GetDhcp6Client(void) { return mDhcp6Client; }
+#endif  // OPENTHREAD_ENABLE_DHCP6_CLIENT
+
+#if OPENTHREAD_ENABLE_DHCP6_SERVER
+    /**
+     * This method returns a pointer to the dhcp server object.
+     *
+     * @returns A reference to the the dhcp server object.
+     *
+     */
+    Dhcp6::Dhcp6Server &GetDhcp6Server(void) { return mDhcp6Server; }
+#endif  // OPENTHREAD_ENABLE_DHCP6_SERVER
+
     /**
      * This method returns a reference to the CoAP server object.
      *
@@ -277,6 +300,12 @@ private:
     Coap::Server mCoapServer;
     Coap::Client mCoapClient;
     AddressResolver mAddressResolver;
+#if OPENTHREAD_ENABLE_DHCP6_CLIENT
+    Dhcp6::Dhcp6Client mDhcp6Client;
+#endif  // OPENTHREAD_ENABLE_DHCP6_CLIENT
+#if OPENTHREAD_ENABLE_DHCP6_SERVER
+    Dhcp6::Dhcp6Server mDhcp6Server;
+#endif  // OPENTHREAD_ENABLE_DHCP6_SERVER
     MeshCoP::ActiveDataset mActiveDataset;
     MeshCoP::PendingDataset mPendingDataset;
     Ip6::Filter mIp6Filter;

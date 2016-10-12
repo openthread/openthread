@@ -125,6 +125,7 @@ ThreadError NetworkData::GetNextOnMeshPrefix(otNetworkDataIterator *aIterator, u
         aConfig->mDefaultRoute = borderRouterEntry->IsDefaultRoute();
         aConfig->mOnMesh = borderRouterEntry->IsOnMesh();
         aConfig->mStable = cur->IsStable();
+        aConfig->mRloc16 = borderRouterEntry->GetRloc();
 
         *aIterator = static_cast<otNetworkDataIterator>(reinterpret_cast<uint8_t *>(cur->GetNext()) - mTlvs);
 
@@ -208,7 +209,7 @@ bool NetworkData::ContainsOnMeshPrefixes(NetworkData &aCompare, uint16_t aRloc16
 
         while ((error = GetNextOnMeshPrefix(&innerIterator, aRloc16, &innerConfig)) == kThreadError_None)
         {
-            if (memcmp(&outerConfig, &innerConfig, sizeof(outerConfig)) == 0)
+            if (memcmp(&outerConfig, &innerConfig, (sizeof(outerConfig) - sizeof(outerConfig.mRloc16))) == 0)
             {
                 break;
             }

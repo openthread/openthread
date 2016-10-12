@@ -241,6 +241,20 @@ public:
      */
     ThreadError SetCommissioningData(const uint8_t *aValue, uint8_t aValueLength);
 
+#if OPENTHREAD_ENABLE_DHCP6_SERVER || OPENTHREAD_ENABLE_DHCP6_CLIENT
+    /**
+     * This method gets the Rloc of Dhcp Agent of speficified contextId.
+     *
+     * @param[in]  aContextId      A pointer to the Commissioning Data value.
+     * @param[out] aRloc16         The reference of which for output the Rloc16.
+     *
+     * @retval kThreadError_None      Successfully get the Rloc of Dhcp Agent.
+     * @retval kThreadError_NotFound  The specified @p aContextId could not be found.
+     *
+     */
+    ThreadError GetRlocByContextId(uint8_t aContextId, uint16_t &aRloc16);
+#endif  // OPENTHREAD_ENABLE_DHCP6_SERVER || OPENTHREAD_ENABLE_DHCP6_CLIENT
+
 private:
     static void HandleServerData(void *aContext, Coap::Header &aHeader, Message &aMessage,
                                  const Ip6::MessageInfo &aMessageInfo);
@@ -293,7 +307,6 @@ private:
                                       uint8_t *aTlvs, uint8_t aLength);
     void SendCommissioningSetResponse(const Coap::Header &aRequestHeader, const Ip6::MessageInfo &aMessageInfo,
                                       MeshCoP::StateTlv::State aState);
-
     /**
      * Thread Specification Constants
      *

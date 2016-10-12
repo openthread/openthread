@@ -605,6 +605,11 @@ typedef struct otBorderRouterConfig
      * TRUE, if this configuration is considered Stable Network Data.  FALSE, otherwise.
      */
     bool mStable : 1;
+
+    /**
+     * The Border Agent Rloc.
+     */
+    uint16_t mRloc16;
 } otBorderRouterConfig;
 
 /**

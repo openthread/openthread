@@ -45,6 +45,7 @@
 #include <cli/cli_server.hpp>
 #include <net/icmp6.hpp>
 #include <common/timer.hpp>
+#include <dhcp6/dhcp6_client.h>
 
 namespace Thread {
 
@@ -234,7 +235,10 @@ private:
     uint32_t sInterval;
     Timer sPingTimer;
 
-    otNetifAddress mAutoAddresses[kMaxAutoAddresses];
+    otNetifAddress  mSlaacAddresses[OPENTHREAD_CONFIG_NUM_SLAAC_ADDRESSES];
+#if OPENTHREAD_ENABLE_DHCP6_CLIENT
+    otNetifAddress  mDhcpAddresses[OPENTHREAD_CONFIG_NUM_DHCP_PREFIXES];
+#endif // OPENTHREAD_ENABLE_DHCP6_CLIENT
 
     otInstance *mInstance;
 };

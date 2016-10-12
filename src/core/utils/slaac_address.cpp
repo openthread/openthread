@@ -44,7 +44,7 @@
 #include <crypto/sha256.hpp>
 #include <mac/mac.hpp>
 #include <net/ip6_address.hpp>
-#include <utils/global_address.hpp>
+#include <utils/slaac_address.hpp>
 
 #include <string.h>
 

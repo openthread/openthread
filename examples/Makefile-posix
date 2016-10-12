@@ -92,7 +92,7 @@ configure_OPTIONS               = \
     $(NULL)
 
 ifeq ($(COVERAGE),1)
-configure_OPTIONS              += --enable-coverage --enable-commissioner --enable-joiner
+configure_OPTIONS              += --enable-coverage --enable-commissioner --enable-joiner --enable-dhcp6-client --enable-dhcp6-server
 else
 configure_OPTIONS              +=
 endif

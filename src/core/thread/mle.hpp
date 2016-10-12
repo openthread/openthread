@@ -111,8 +111,9 @@ enum AlocAllocation
 {
     kAloc16Mask                         = 0xfc,
     kAloc16Leader                       = 0xfc00,
-    kAloc16DHCPv6AgentStart             = 0xfc01,
-    kAloc16DHCPv6AgentEnd               = 0xfc0f,
+    kAloc16DhcpAgentStart               = 0xfc01,
+    kAloc16DhcpAgentEnd                 = 0xfc0f,
+    kAloc16DhcpAgentMask                = 0x03ff,
     kAloc16ServiceStart                 = 0xfc10,
     kAloc16ServiceEnd                   = 0xfc2f,
     kAloc16CommissionerStart            = 0xfc30,
