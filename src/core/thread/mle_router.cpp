@@ -279,6 +279,8 @@ ThreadError MleRouter::BecomeLeader(void)
 
     SuccessOrExit(error = SetStateLeader(GetRloc16(mRouterId)));
 
+    SuccessOrExit(error = AddLeaderAloc());
+
     ResetAdvertiseInterval();
 
 exit:

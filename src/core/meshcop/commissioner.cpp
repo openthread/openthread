@@ -313,7 +313,7 @@ ThreadError Commissioner::SendMgmtCommissionerGetRequest(const uint8_t *aTlvs,
     }
 
     memset(&messageInfo, 0, sizeof(messageInfo));
-    mNetif.GetMle().GetLeaderAddress(messageInfo.GetPeerAddr());
+    mNetif.GetMle().GetLeaderAloc(messageInfo.GetPeerAddr());
     messageInfo.mPeerPort = kCoapUdpPort;
     SuccessOrExit(error = mSocket.SendTo(*message, messageInfo));
 
@@ -395,7 +395,7 @@ ThreadError Commissioner::SendMgmtCommissionerSetRequest(const otCommissioningDa
     }
 
     memset(&messageInfo, 0, sizeof(messageInfo));
-    mNetif.GetMle().GetLeaderAddress(messageInfo.GetPeerAddr());
+    mNetif.GetMle().GetLeaderAloc(messageInfo.GetPeerAddr());
     messageInfo.mPeerPort = kCoapUdpPort;
     SuccessOrExit(error = mSocket.SendTo(*message, messageInfo));
 
@@ -451,7 +451,7 @@ ThreadError Commissioner::SendPetition(void)
     SuccessOrExit(error = message->Append(&commissionerId, sizeof(Tlv) + commissionerId.GetLength()));
 
     memset(&messageInfo, 0, sizeof(messageInfo));
-    mNetif.GetMle().GetLeaderAddress(*static_cast<Ip6::Address *>(&messageInfo.mPeerAddr));
+    mNetif.GetMle().GetLeaderAloc(*static_cast<Ip6::Address *>(&messageInfo.mPeerAddr));
     messageInfo.mPeerPort = kCoapUdpPort;
     SuccessOrExit(error = mSocket.SendTo(*message, messageInfo));
 
@@ -510,7 +510,7 @@ ThreadError Commissioner::SendKeepAlive(void)
     SuccessOrExit(error = message->Append(&sessionId, sizeof(sessionId)));
 
     memset(&messageInfo, 0, sizeof(messageInfo));
-    mNetif.GetMle().GetLeaderAddress(*static_cast<Ip6::Address *>(&messageInfo.mPeerAddr));
+    mNetif.GetMle().GetLeaderAloc(*static_cast<Ip6::Address *>(&messageInfo.mPeerAddr));
     messageInfo.mPeerPort = kCoapUdpPort;
     SuccessOrExit(error = mSocket.SendTo(*message, messageInfo));
 

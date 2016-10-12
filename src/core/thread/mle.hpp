@@ -538,6 +538,15 @@ public:
     bool IsRoutingLocator(const Ip6::Address &aAddress) const;
 
     /**
+     * This method indicates whether or not an IPv6 address is an ALOC.
+     *
+     * @retval TRUE   If @p aAddress is an ALOC.
+     * @retval FALSE  If @p aAddress is not an ALOC.
+     *
+     */
+    bool IsAnycastLocator(const Ip6::Address &aAddress) const;
+
+    /**
      * This method returns the MLE Timeout value.
      *
      * @returns The MLE Timeout value.
@@ -593,6 +602,27 @@ public:
      *
      */
     ThreadError GetLeaderAddress(Ip6::Address &aAddress) const;
+
+    /**
+     * This method retrieves the Leader's ALOC.
+     *
+     * @param[out]  aAddress  A reference to the Leader's ALOC.
+     *
+     * @retval kThreadError_None   Successfully retrieved the Leader's ALOC.
+     * @retval kThreadError_Error  The Thread interface is not currently attached to a Thread Partition.
+     *
+     */
+    ThreadError GetLeaderAloc(Ip6::Address &aAddress) const;
+
+    /**
+     * This method adds Leader's ALOC to its Thread interface.
+     *
+     * @retval kThreadError_None           Successfully added the Leader's ALOC.
+     * @retval kThreadError_Busy           The Leader's ALOC address was already added.
+     * @retval kThreadError_InvalidState   The device's role is not Leader.
+     *
+     */
+    ThreadError AddLeaderAloc(void);
 
     /**
      * This method returns the most recently received Leader Data TLV.
@@ -1174,6 +1204,8 @@ private:
 
     uint8_t mPreviousChannel;
     uint16_t mPreviousPanId;
+
+    Ip6::NetifUnicastAddress mLeaderAloc;
 
     Ip6::NetifUnicastAddress mLinkLocal16;
     Ip6::NetifUnicastAddress mLinkLocal64;

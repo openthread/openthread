@@ -228,6 +228,12 @@ ThreadError Mle::Stop(void)
     SetStateDetached();
     mNetif.RemoveUnicastAddress(mLinkLocal16);
     mNetif.RemoveUnicastAddress(mMeshLocal16);
+
+    if (mDeviceState == kDeviceStateLeader)
+    {
+        mNetif.RemoveUnicastAddress(mLeaderAloc);
+    }
+
     mDeviceState = kDeviceStateDisabled;
     return kThreadError_None;
 }
@@ -353,6 +359,11 @@ ThreadError Mle::SetStateDetached(void)
         mNetif.SetStateChangedFlags(OT_NET_ROLE);
     }
 
+    if (mDeviceState == kDeviceStateLeader)
+    {
+        mNetif.RemoveUnicastAddress(mLeaderAloc);
+    }
+
     mAddressResolver.Clear();
     mDeviceState = kDeviceStateDetached;
     mParentRequestState = kParentIdle;
@@ -370,6 +381,11 @@ ThreadError Mle::SetStateChild(uint16_t aRloc16)
     if (mDeviceState != kDeviceStateChild)
     {
         mNetif.SetStateChangedFlags(OT_NET_ROLE);
+    }
+
+    if (mDeviceState == kDeviceStateLeader)
+    {
+        mNetif.RemoveUnicastAddress(mLeaderAloc);
     }
 
     SetRloc16(aRloc16);
@@ -505,6 +521,13 @@ ThreadError Mle::SetMeshLocalPrefix(const uint8_t *aMeshLocalPrefix)
         mNetif.AddUnicastAddress(mMeshLocal16);
     }
 
+    // update Leader ALOC
+    if (mDeviceState == kDeviceStateLeader)
+    {
+        mNetif.RemoveUnicastAddress(mLeaderAloc);
+        AddLeaderAloc();
+    }
+
     // Changing the prefix also causes the mesh local address to be different.
     mNetif.SetStateChangedFlags(OT_IP6_ML_ADDR_CHANGED);
 
@@ -590,6 +613,36 @@ ThreadError Mle::GetLeaderAddress(Ip6::Address &aAddress) const
     aAddress.mFields.m16[5] = HostSwap16(0x00ff);
     aAddress.mFields.m16[6] = HostSwap16(0xfe00);
     aAddress.mFields.m16[7] = HostSwap16(GetRloc16(mLeaderData.GetLeaderRouterId()));
+
+exit:
+    return error;
+}
+
+ThreadError Mle::GetLeaderAloc(Ip6::Address &aAddress) const
+{
+    ThreadError error = kThreadError_None;
+
+    VerifyOrExit(GetRloc16() != Mac::kShortAddrInvalid, error = kThreadError_Detached);
+
+    memcpy(&aAddress, &mMeshLocal16.GetAddress(), 8);
+    aAddress.mFields.m16[4] = HostSwap16(0x0000);
+    aAddress.mFields.m16[5] = HostSwap16(0x00ff);
+    aAddress.mFields.m16[6] = HostSwap16(0xfe00);
+    aAddress.mFields.m16[7] = HostSwap16(0xfc00);
+
+exit:
+    return error;
+}
+
+ThreadError Mle::AddLeaderAloc(void)
+{
+    ThreadError error = kThreadError_None;
+
+    VerifyOrExit(mDeviceState == kDeviceStateLeader, error = kThreadError_InvalidState);
+
+    SuccessOrExit(error = GetLeaderAloc(mLeaderAloc.GetAddress()));
+
+    error = mNetif.AddUnicastAddress(mLeaderAloc);
 
 exit:
     return error;
@@ -2631,7 +2684,12 @@ uint16_t Mle::GetNextHop(uint16_t aDestination) const
 
 bool Mle::IsRoutingLocator(const Ip6::Address &aAddress) const
 {
-    return memcmp(&mMeshLocal16, &aAddress, kRlocPrefixLength) == 0;
+    return memcmp(&mMeshLocal16, &aAddress, kRlocPrefixLength) == 0 && aAddress.mFields.m8[14] != 0xfc;
+}
+
+bool Mle::IsAnycastLocator(const Ip6::Address &aAddress) const
+{
+    return memcmp(&mMeshLocal16, &aAddress, kRlocPrefixLength) == 0 && aAddress.mFields.m8[14] == 0xfc;
 }
 
 Router *Mle::GetParent()
