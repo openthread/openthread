@@ -862,7 +862,7 @@ ThreadError otSetLinkPromiscuous(otInstance *aInstance, bool aPromiscuous)
     ThreadError error = kThreadError_None;
 
     // cannot enable IEEE 802.15.4 promiscuous mode if the Thread interface is enabled
-    VerifyOrExit(aInstance->mThreadNetif.IsUp() == false, error = kThreadError_Busy);
+    VerifyOrExit(aInstance->mThreadNetif.IsUp() == false, error = kThreadError_InvalidState);
 
     aInstance->mThreadNetif.GetMac().SetPromiscuous(aPromiscuous);
 
@@ -1263,7 +1263,7 @@ int otWriteMessage(otMessage aMessage, uint16_t aOffset, const void *aBuf, uint1
 
 ThreadError otOpenUdpSocket(otInstance *aInstance, otUdpSocket *aSocket, otUdpReceive aCallback, void *aCallbackContext)
 {
-    ThreadError error = kThreadError_Busy;
+    ThreadError error = kThreadError_InvalidArgs;
     Ip6::UdpSocket *socket = static_cast<Ip6::UdpSocket *>(aSocket);
 
     if (socket->mTransport == NULL)

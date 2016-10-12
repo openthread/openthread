@@ -113,7 +113,7 @@ public:
      * @param[in]  aTasklet  A reference to the tasklet to enqueue.
      *
      * @retval kThreadError_None  Successfully enqueued the tasklet.
-     * @retval kThreadError_Busy  The tasklet was already enqueued.
+     * @retval kThreadError_Already  The tasklet was already enqueued.
      */
     ThreadError Post(Tasklet &aTasklet);
 

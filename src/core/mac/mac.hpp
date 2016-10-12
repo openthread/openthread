@@ -265,7 +265,7 @@ public:
      * @param[in]  aReceiver  A reference to the MAC receiver client.
      *
      * @retval kThreadError_None  Successfully registered the receiver.
-     * @retval kThreadError_Busy  The receiver was already registered.
+     * @retval kThreadError_Already  The receiver was already registered.
      *
      */
     ThreadError RegisterReceiver(Receiver &aReceiver);
@@ -276,7 +276,7 @@ public:
      * @param[in]  aSender  A reference to the MAC sender client.
      *
      * @retval kThreadError_None  Successfully registered the sender.
-     * @retval kThreadError_Busy  The sender was already registered.
+     * @retval kThreadError_Already  The sender was already registered.
      *
      */
     ThreadError SendFrameRequest(Sender &aSender);

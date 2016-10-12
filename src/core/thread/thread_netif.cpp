@@ -94,18 +94,16 @@ const char *ThreadNetif::GetName(void) const
 
 ThreadError ThreadNetif::Up(void)
 {
-    ThreadError error = kThreadError_None;
+    if (!mIsUp)
+    {
+        mIp6.AddNetif(*this);
+        mMeshForwarder.Start();
+        mCoapServer.Start();
+        mMleRouter.Enable();
+        mIsUp = true;
+    }
 
-    VerifyOrExit(!mIsUp, error = kThreadError_Already);
-
-    mIp6.AddNetif(*this);
-    mMeshForwarder.Start();
-    mCoapServer.Start();
-    mMleRouter.Enable();
-    mIsUp = true;
-
-exit:
-    return error;
+    return kThreadError_None;
 }
 
 ThreadError ThreadNetif::Down(void)

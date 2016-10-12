@@ -82,7 +82,6 @@ public:
      * This method enables mesh forwarding and the IEEE 802.15.4 MAC layer.
      *
      * @retval kThreadError_None          Successfully enabled the mesh forwarder.
-     * @retval kThreadError_InvalidState  The mesh forwarder was already enabled.
      *
      */
     ThreadError Start(void);
@@ -91,7 +90,6 @@ public:
      * This method disables mesh forwarding and the IEEE 802.15.4 MAC layer.
      *
      * @retval kThreadError_None          Successfully disabled the mesh forwarder.
-     * @retval kThreadError_InvalidState  The mesh forwarder was already disabled.
      *
      */
     ThreadError Stop(void);

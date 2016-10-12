@@ -195,7 +195,7 @@ ThreadError Mle::Start(void)
     ThreadError error = kThreadError_None;
 
     // cannot bring up the interface if IEEE 802.15.4 promiscuous mode is enabled
-    VerifyOrExit(otPlatRadioGetPromiscuous(mNetif.GetInstance()) == false, error = kThreadError_Busy);
+    VerifyOrExit(otPlatRadioGetPromiscuous(mNetif.GetInstance()) == false, error = kThreadError_InvalidState);
     VerifyOrExit(mNetif.IsUp(), error = kThreadError_InvalidState);
 
     mDeviceState = kDeviceStateDetached;
@@ -302,7 +302,7 @@ ThreadError Mle::BecomeDetached(void)
 {
     ThreadError error = kThreadError_None;
 
-    VerifyOrExit(mDeviceState != kDeviceStateDisabled, error = kThreadError_Busy);
+    VerifyOrExit(mDeviceState != kDeviceStateDisabled, error = kThreadError_InvalidState);
 
     SetStateDetached();
     SetRloc16(Mac::kShortAddrInvalid);
@@ -316,8 +316,8 @@ ThreadError Mle::BecomeChild(otMleAttachFilter aFilter)
 {
     ThreadError error = kThreadError_None;
 
-    VerifyOrExit(mDeviceState != kDeviceStateDisabled &&
-                 mParentRequestState == kParentIdle, error = kThreadError_Busy);
+    VerifyOrExit(mDeviceState != kDeviceStateDisabled, error = kThreadError_InvalidState);
+    VerifyOrExit(mParentRequestState == kParentIdle, error = kThreadError_Busy);
 
     mParentRequestState = kParentRequestStart;
     mParentRequestMode = aFilter;
