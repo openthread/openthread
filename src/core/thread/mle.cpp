@@ -936,12 +936,15 @@ exit:
 
 ThreadError Mle::AppendActiveTimestamp(Message &aMessage)
 {
+    ThreadError error;
     ActiveTimestampTlv timestampTlv;
     const MeshCoP::Timestamp *timestamp(mNetif.GetActiveDataset().GetNetwork().GetTimestamp());
 
+    VerifyOrExit(timestamp || mDeviceState == kDeviceStateLeader, error = kThreadError_None);
+
     timestampTlv.Init();
 
-    // set active timestamp to 0 if there is no valid active operational dataset
+    // only for Leader: set active timestamp to 0 if it is not initialized
     if (timestamp == NULL)
     {
         timestampTlv.SetSeconds(0);
@@ -952,7 +955,10 @@ ThreadError Mle::AppendActiveTimestamp(Message &aMessage)
         *static_cast<MeshCoP::Timestamp *>(&timestampTlv) = *timestamp;
     }
 
-    return aMessage.Append(&timestampTlv, sizeof(timestampTlv));
+    error = aMessage.Append(&timestampTlv, sizeof(timestampTlv));
+
+exit:
+    return error;
 }
 
 ThreadError Mle::AppendPendingTimestamp(Message &aMessage)
@@ -1807,13 +1813,11 @@ ThreadError Mle::HandleDataResponse(const Message &aMessage, const Ip6::MessageI
     VerifyOrExit(networkData.IsValid(), error = kThreadError_Parse);
 
     // Active Timestamp
-    SuccessOrExit(error = Tlv::GetTlv(aMessage, Tlv::kActiveTimestamp, sizeof(activeTimestamp), activeTimestamp));
-    VerifyOrExit(activeTimestamp.IsValid(), error = kThreadError_Parse);
-
-    if (activeTimestamp.GetSeconds() != 0)
+    if (Tlv::GetTlv(aMessage, Tlv::kActiveTimestamp, sizeof(activeTimestamp), activeTimestamp) == kThreadError_None)
     {
         const MeshCoP::Timestamp *timestamp;
 
+        VerifyOrExit(activeTimestamp.IsValid(), error = kThreadError_Parse);
         timestamp = mNetif.GetActiveDataset().GetNetwork().GetTimestamp();
 
         // if received timestamp does not match the local value and message does not contain the dataset,
@@ -2112,18 +2116,11 @@ ThreadError Mle::HandleChildIdResponse(const Message &aMessage, const Ip6::Messa
     {
         VerifyOrExit(activeTimestamp.IsValid(), error = kThreadError_Parse);
 
-        if (activeTimestamp.GetSeconds() != 0)
+        // Active Dataset
+        if (Tlv::GetOffset(aMessage, Tlv::kActiveDataset, offset) == kThreadError_None)
         {
-            // Active Dataset
-            if (Tlv::GetOffset(aMessage, Tlv::kActiveDataset, offset) == kThreadError_None)
-            {
-                aMessage.Read(offset, sizeof(tlv), &tlv);
-                mNetif.GetActiveDataset().Set(activeTimestamp, aMessage, offset + sizeof(tlv), tlv.GetLength());
-            }
-        }
-        else
-        {
-            mNetif.GetActiveDataset().Clear();
+            aMessage.Read(offset, sizeof(tlv), &tlv);
+            mNetif.GetActiveDataset().Set(activeTimestamp, aMessage, offset + sizeof(tlv), tlv.GetLength());
         }
     }
 
@@ -2138,10 +2135,6 @@ ThreadError Mle::HandleChildIdResponse(const Message &aMessage, const Ip6::Messa
             aMessage.Read(offset, sizeof(tlv), &tlv);
             mNetif.GetPendingDataset().Set(pendingTimestamp, aMessage, offset + sizeof(tlv), tlv.GetLength());
         }
-    }
-    else
-    {
-        mNetif.GetPendingDataset().Clear();
     }
 
     // Parent Attach Success
