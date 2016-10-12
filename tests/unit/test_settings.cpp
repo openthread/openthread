@@ -164,7 +164,7 @@ void TestSettingsSwap(void)
     VerifyOrQuit(otPlatSettingsDelete(&aInstance, key, 0) == kThreadError_None, "Settings::Swap::Delete Fail\n");
     VerifyOrQuit(otPlatSettingsAdd(&aInstance, key, sWriteBuffer, sWriteBufferLength) == kThreadError_None,
                  "Settings::Swap::Add Fail after swap\n");
-    VerifyOrQuit(otPlatSettingsGet(&aInstance, key, index, readBuffer, &readBufferLength) == kThreadError_None,
+    VerifyOrQuit(otPlatSettingsGet(&aInstance, key, index - 1, readBuffer, &readBufferLength) == kThreadError_None,
                  "Settings::Swap::Get Fail\n");
     VerifyOrQuit(!memcmp(readBuffer, sWriteBuffer, static_cast<uint16_t>(sWriteBufferLength)),
                  "Settings::Swap::Add and Swap Check Fail\n");
