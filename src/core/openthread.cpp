@@ -964,7 +964,7 @@ ThreadError otSetPreferredRouterId(otInstance *aInstance, uint8_t aRouterId)
 
 #ifdef OPENTHREAD_MULTIPLE_INSTANCE
 
-otInstance *otInstanceInit(void *aInstanceBuffer, uint64_t *aInstanceBufferSize)
+otInstance *otInstanceInit(void *aInstanceBuffer, size_t *aInstanceBufferSize)
 {
     otInstance *aInstance = NULL;
 
@@ -1003,17 +1003,20 @@ exit:
 
 #endif
 
-ThreadError otSendDiagnosticGet(otInstance *aInstance, otIp6Address *aDestination, uint8_t aTlvTypes[], uint8_t aCount)
+ThreadError otSendDiagnosticGet(otInstance *aInstance, const otIp6Address *aDestination, const uint8_t aTlvTypes[],
+                                uint8_t aCount)
 {
-    return aInstance->mThreadNetif.GetNetworkDiagnostic().SendDiagnosticGet(*static_cast<Ip6::Address *>(aDestination),
+    return aInstance->mThreadNetif.GetNetworkDiagnostic().SendDiagnosticGet(*static_cast<const Ip6::Address *>
+                                                                            (aDestination),
                                                                             aTlvTypes,
                                                                             aCount);
 }
 
-ThreadError otSendDiagnosticReset(otInstance *aInstance, otIp6Address *aDestination, uint8_t aTlvTypes[],
+ThreadError otSendDiagnosticReset(otInstance *aInstance, const otIp6Address *aDestination, const uint8_t aTlvTypes[],
                                   uint8_t aCount)
 {
-    return aInstance->mThreadNetif.GetNetworkDiagnostic().SendDiagnosticReset(*static_cast<Ip6::Address *>(aDestination),
+    return aInstance->mThreadNetif.GetNetworkDiagnostic().SendDiagnosticReset(*static_cast<const Ip6::Address *>
+                                                                              (aDestination),
                                                                               aTlvTypes,
                                                                               aCount);
 }
@@ -1340,7 +1343,7 @@ exit:
     return error;
 }
 
-ThreadError otSetActiveDataset(otInstance *aInstance, otOperationalDataset *aDataset)
+ThreadError otSetActiveDataset(otInstance *aInstance, const otOperationalDataset *aDataset)
 {
     ThreadError error;
 
@@ -1364,7 +1367,7 @@ exit:
     return error;
 }
 
-ThreadError otSetPendingDataset(otInstance *aInstance, otOperationalDataset *aDataset)
+ThreadError otSetPendingDataset(otInstance *aInstance, const otOperationalDataset *aDataset)
 {
     ThreadError error;
 

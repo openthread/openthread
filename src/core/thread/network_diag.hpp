@@ -79,7 +79,7 @@ public:
      * @param[in] aCount        Number of types in aTlvTypes
      *
      */
-    ThreadError SendDiagnosticGet(const Ip6::Address &aDestination, uint8_t aTlvTypes[], uint8_t aCount);
+    ThreadError SendDiagnosticGet(const Ip6::Address &aDestination, const uint8_t aTlvTypes[], uint8_t aCount);
 
     /**
      * This method sends Diagnostic Reset request.
@@ -89,7 +89,7 @@ public:
      * @param[in] aCount        Number of types in aTlvTypes
      *
      */
-    ThreadError SendDiagnosticReset(const Ip6::Address &aDestination, uint8_t aTlvTypes[], uint8_t aCount);
+    ThreadError SendDiagnosticReset(const Ip6::Address &aDestination, const uint8_t aTlvTypes[], uint8_t aCount);
 
     /**
      * This method fills IPv6AddressListTlv.

@@ -175,7 +175,7 @@ const char *otGetVersionString(void);
  * @retval otInstance*  The new OpenThread instance structure.
  *
  */
-otInstance *otInstanceInit(void *aInstanceBuffer, uint64_t *aInstanceBufferSize);
+otInstance *otInstanceInit(void *aInstanceBuffer, size_t *aInstanceBufferSize);
 #else
 /**
  * This function initializes the static instance of the OpenThread library.
@@ -894,7 +894,7 @@ ThreadError otGetActiveDataset(otInstance *aInstance, otOperationalDataset *aDat
  * @retval kThreadError_InvalidArgs  @p aDataset was NULL.
  *
  */
-ThreadError otSetActiveDataset(otInstance *aInstance, otOperationalDataset *aDataset);
+ThreadError otSetActiveDataset(otInstance *aInstance, const otOperationalDataset *aDataset);
 
 /**
  * This function gets the Pending Operational Dataset.
@@ -919,7 +919,7 @@ ThreadError otGetPendingDataset(otInstance *aInstance, otOperationalDataset *aDa
  * @retval kThreadError_InvalidArgs  @p aDataset was NULL.
  *
  */
-ThreadError otSetPendingDataset(otInstance *aInstance, otOperationalDataset *aDataset);
+ThreadError otSetPendingDataset(otInstance *aInstance, const otOperationalDataset *aDataset);
 
 /**
  * This function sends MGMT_ACTIVE_GET.
@@ -2308,7 +2308,8 @@ ThreadError otSendUdp(otUdpSocket *aSocket, otMessage aMessage, const otMessageI
  * @param[in]  aTlvTypes      An array of Network Diagnostic TLV types.
  * @param[in]  aCount         Number of types in aTlvTypes
  */
-ThreadError otSendDiagnosticGet(otInstance *aInstance, otIp6Address *aDestination, uint8_t aTlvTypes[], uint8_t aCount);
+ThreadError otSendDiagnosticGet(otInstance *aInstance, const otIp6Address *aDestination, const uint8_t aTlvTypes[],
+                                uint8_t aCount);
 
 /**
  * Send a Network Diagnostic Reset request
@@ -2318,7 +2319,7 @@ ThreadError otSendDiagnosticGet(otInstance *aInstance, otIp6Address *aDestinatio
  * @param[in]  aTlvTypes      An array of Network Diagnostic TLV types. Currently only Type 9 is allowed.
  * @param[in]  aCount         Number of types in aTlvTypes
  */
-ThreadError otSendDiagnosticReset(otInstance *aInstance, otIp6Address *aDestination, uint8_t aTlvTypes[],
+ThreadError otSendDiagnosticReset(otInstance *aInstance, const otIp6Address *aDestination, const uint8_t aTlvTypes[],
                                   uint8_t aCount);
 
 /**
