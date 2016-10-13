@@ -389,7 +389,7 @@ public:
      * @retval kThreadError_Already The callback was not in the list.
      */
     ThreadError RemoveCallback(NetifCallback &aCallback);
-    
+
     /**
      * This method indicates whether or not a state changed callback is pending.
      *
