@@ -294,10 +294,8 @@ public:
      *
      * @param[in]  aExtAddress  A reference to the IEEE 802.15.4 Extended Address.
      *
-     * @retval kThreadError_None  Successfully set the IEEE 802.15.4 Extended Address.
-     *
      */
-    ThreadError SetExtAddress(const ExtAddress &aExtAddress);
+    void SetExtAddress(const ExtAddress &aExtAddress);
 
     /**
      * This method gets the Hash Mac Address.

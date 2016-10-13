@@ -141,8 +141,8 @@ ThreadError otSetExtendedAddress(otInstance *aInstance, const otExtAddress *aExt
 
     VerifyOrExit(aExtAddress != NULL, error = kThreadError_InvalidArgs);
 
-    SuccessOrExit(error = aInstance->mThreadNetif.GetMac().SetExtAddress(*static_cast<const Mac::ExtAddress *>
-                                                                         (aExtAddress)));
+    aInstance->mThreadNetif.GetMac().SetExtAddress(*static_cast<const Mac::ExtAddress *>(aExtAddress));
+
     SuccessOrExit(error = aInstance->mThreadNetif.GetMle().UpdateLinkLocalAddress());
 
 exit:
