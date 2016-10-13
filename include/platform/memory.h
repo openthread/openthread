@@ -58,8 +58,8 @@ extern "C" {
  * Dynamically allocates new memory. On platforms that support it, should just redirect to calloc. For
  * those that don't support calloc, should support the same functionality:
  *
- *   "The calloc() function contiguously allocates enough space for count objects that are size bytes of 
- *   memory each and returns a pointer to the allocated memory. The allocated memory is filled with bytes 
+ *   "The calloc() function contiguously allocates enough space for count objects that are size bytes of
+ *   memory each and returns a pointer to the allocated memory. The allocated memory is filled with bytes
  *   of value zero."
  *
  * @param[in] aNum   The number of blocks to allocate
