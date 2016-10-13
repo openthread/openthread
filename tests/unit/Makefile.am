@@ -129,10 +129,8 @@ test_message_SOURCES         = test_platform.cpp test_message.cpp
 test_ncp_buffer_LDADD        = $(COMMON_LDADD)
 test_ncp_buffer_SOURCES      = test_platform.cpp test_ncp_buffer.cpp
 
-test_settings_LDADD          = $(COMMON_LDADD)  \
-                               $(top_builddir)/examples/platforms/posix/libopenthread-posix.a \
-                               $(NULL)
-test_settings_SOURCES        = test_settings.cpp
+test_settings_LDADD          = $(COMMON_LDADD)
+test_settings_SOURCES        = test_platform.cpp test_settings.cpp
 
 test_timer_LDADD             = $(COMMON_LDADD)
 test_timer_SOURCES           = test_platform.cpp test_timer.cpp

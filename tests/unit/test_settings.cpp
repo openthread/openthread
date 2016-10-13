@@ -36,30 +36,6 @@
 #include <platform/flash.h>
 #include <platform/settings.h>
 
-extern "C" void otSignalTaskletPending(otInstance *)
-{
-}
-
-extern "C" void otPlatUartSendDone(void)
-{
-}
-
-extern "C" void otPlatUartReceived(const uint8_t *, uint16_t)
-{
-}
-
-extern "C" void otPlatDiagRadioTransmitDone(otInstance *, bool, ThreadError)
-{
-}
-
-extern "C" void otPlatDiagRadioReceiveDone(otInstance *, RadioPacket *, ThreadError)
-{
-}
-
-extern "C" void otPlatDiagAlarmFired(otInstance *)
-{
-}
-
 enum
 {
     kMaxStageDataLen = 32,
@@ -172,28 +148,11 @@ void TestSettingsSwap(void)
 
 void RunSettingsTests(void)
 {
-    DIR *dir;
-    struct dirent *ent;
-
     TestSettingsInit();
     TestSettingsAdd();
     TestSettingsDelete();
     TestSettingsSet();
     TestSettingsSwap();
-
-    VerifyOrQuit((dir = opendir("./tmp")) != NULL, "Open tmp fail\n");
-
-    while ((ent = readdir(dir)) != NULL)
-    {
-        char path[20];
-
-        strcpy(path, "./tmp/");
-        strcat(path, ent->d_name);
-        remove(path);
-    }
-
-    closedir(dir);
-    rmdir("./tmp");
 }
 
 #ifdef ENABLE_TEST_MAIN

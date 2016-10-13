@@ -41,6 +41,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 enum
 {
@@ -58,6 +59,13 @@ bool     sTimerOn;
 uint32_t sCallCount[kCallCountIndexMax];
 
 bool sDiagMode = false;
+
+enum
+{
+    kFlashSize = 0x40000,
+};
+
+uint8_t sFlashBuffer[kFlashSize];
 
 extern "C" {
 
@@ -294,6 +302,57 @@ exit:
     {
         (void)aInstance;
         return kPlatResetReason_PowerOn;
+    }
+
+    //
+    // Flash
+    //
+    ThreadError otPlatFlashInit(void)
+    {
+        return kThreadError_None;
+    }
+
+    uint32_t otPlatFlashGetSize(void)
+    {
+        return kFlashSize;
+    }
+
+    ThreadError otPlatFlashErasePage(uint32_t aAddress)
+    {
+        (void)aAddress;
+        return kThreadError_None;
+    }
+
+    ThreadError otPlatFlashStatusWait(uint32_t aTimeout)
+    {
+        (void)aTimeout;
+        return kThreadError_None;
+    }
+
+    uint32_t otPlatFlashWrite(uint32_t aAddress, uint8_t *aData, uint32_t aSize)
+    {
+        uint32_t ret = 0;
+
+        VerifyOrExit(aAddress < kFlashSize, ;);
+
+        memcpy(sFlashBuffer + aAddress, aData, aSize);
+        ret = aSize;
+
+exit:
+        return ret;
+    }
+
+    uint32_t otPlatFlashRead(uint32_t aAddress, uint8_t *aData, uint32_t aSize)
+    {
+        uint32_t ret = 0;
+
+        VerifyOrExit(aAddress < kFlashSize, ;);
+
+        memcpy(aData, sFlashBuffer + aAddress, aSize);
+        ret = aSize;
+
+exit:
+        return ret;
     }
 
 } // extern "C"
