@@ -658,7 +658,7 @@ ThreadError MeshForwarder::UpdateIp6Route(Message &aMessage)
                 // only support Leader ALOC for now
                 aloc16 = HostSwap16(ip6Header.GetDestination().mFields.m16[7]);
 
-                if (aloc16 == 0xfc00)
+                if (aloc16 == Mle::kAloc16Leader)
                 {
                     mMeshDest = mMle.GetRloc16(mMle.GetLeaderId());
                 }

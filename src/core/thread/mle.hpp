@@ -104,6 +104,24 @@ enum DeviceState
 };
 
 /**
+ * This enumeration represents the allocation of the ALOC Space
+ *
+ */
+enum AlocAllocation
+{
+    kAloc16Mask                         = 0xfc,
+    kAloc16Leader                       = 0xfc00,
+    kAloc16DHCPv6AgentStart             = 0xfc01,
+    kAloc16DHCPv6AgentEnd               = 0xfc0f,
+    kAloc16ServiceStart                 = 0xfc10,
+    kAloc16ServiceEnd                   = 0xfc2f,
+    kAloc16CommissionerStart            = 0xfc30,
+    kAloc16CommissionerEnd              = 0xfc37,
+    kAloc16NeighborDiscoveryAgentStart  = 0xfc40,
+    kAloc16NeighborDiscoveryAgentEnd    = 0xfc4e,
+};
+
+/**
  * This class implements MLE Header generation and parsing.
  *
  */
