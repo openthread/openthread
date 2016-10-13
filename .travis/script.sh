@@ -63,7 +63,9 @@ set -x
 }
 
 [ $BUILD_TARGET != posix-32-bit ] || {
-    COVERAGE=1 CFLAGS=-m32 CXXFLAGS=-m32 LDFLAGS=-m32 BuildJobs=10 make -f examples/Makefile-posix check || die
+    export ASAN_OPTIONS=symbolize=1 || die
+    export ASAN_SYMBOLIZER_PATH=`which llvm-symbolizer-3.4` || die
+    COVERAGE=1 CFLAGS=-m32 CXXFLAGS=-m32 LDFLAGS=-m32 BuildJobs=16 make -f examples/Makefile-posix check || die
 }
 
 [ $BUILD_TARGET != posix-ncp-spi ] || {
@@ -71,5 +73,7 @@ set -x
 }
 
 [ $BUILD_TARGET != posix-ncp ] || {
-    COVERAGE=1 NODE_TYPE=ncp-sim BuildJobs=10 make -f examples/Makefile-posix check || die
+    export ASAN_OPTIONS=symbolize=1 || die
+    export ASAN_SYMBOLIZER_PATH=`which llvm-symbolizer-3.4` || die
+    COVERAGE=1 NODE_TYPE=ncp-sim BuildJobs=7 make -f examples/Makefile-posix check || die
 }
