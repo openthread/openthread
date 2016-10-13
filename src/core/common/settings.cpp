@@ -71,7 +71,7 @@ OT_TOOL_PACKED_BEGIN
 struct settingsBlock
 {
     uint16_t key;
-    uint8_t flag;
+    uint16_t flag;
     uint16_t length;
     uint16_t reserved;
 } OT_TOOL_PACKED_END;
