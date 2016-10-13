@@ -162,6 +162,7 @@ Mle::Mle(ThreadNetif &aThreadNetif) :
     mRouterSelectionJitterTimeout = 0;
     mRouterSelectionJitter = kRouterSelectionJitter;
 
+    mAnnounceChannel = kPhyMinChannel;
     mPreviousPanId = Mac::kPanIdBroadcast;
 }
 
@@ -1093,6 +1094,11 @@ void Mle::HandleParentRequestTimer(void)
                     mPreviousPanId = Mac::kPanIdBroadcast;
                     BecomeDetached();
                 }
+                else if ((mDeviceMode & ModeTlv::kModeFFD) == 0)
+                {
+                    SendOrphanAnnounce();
+                    BecomeDetached();
+                }
                 else if (mMleRouter.BecomeLeader() != kThreadError_None)
                 {
                     mParentRequestState = kParentIdle;
@@ -1396,6 +1402,48 @@ exit:
 
     return error;
 }
+
+void Mle::SendOrphanAnnounce(void)
+{
+    MeshCoP::ChannelMask0Tlv *channelMask;
+    uint8_t channel;
+
+    channelMask = static_cast<MeshCoP::ChannelMask0Tlv *>(mNetif.GetActiveDataset().GetNetwork().Get(
+                                                              MeshCoP::Tlv::kChannelMask));
+
+    VerifyOrExit(channelMask != NULL,);
+
+    // find next channel in the Active Operational Dataset Channel Mask
+    channel = mAnnounceChannel;
+
+    while (!channelMask->IsChannelSet(channel))
+    {
+        channel++;
+
+        if (channel > kPhyMaxChannel)
+        {
+            channel = kPhyMinChannel;
+        }
+
+        VerifyOrExit(channel != mAnnounceChannel,);
+    }
+
+    // Send Annuonce message
+    SendAnnounce(channel);
+
+    // Move to next channel
+    mAnnounceChannel++;
+
+    if (mAnnounceChannel > kPhyMaxChannel)
+    {
+        mAnnounceChannel = kPhyMinChannel;
+    }
+
+exit:
+    return;
+}
+
+
 
 ThreadError Mle::SendMessage(Message &aMessage, const Ip6::Address &aDestination)
 {
@@ -2318,14 +2366,19 @@ ThreadError Mle::HandleAnnounce(const Message &aMessage, const Ip6::MessageInfo 
 
     localTimestamp = mNetif.GetActiveDataset().GetNetwork().GetTimestamp();
 
-    VerifyOrExit(localTimestamp == NULL || localTimestamp->Compare(timestamp) > 0,);
-
-    Stop();
-    mPreviousChannel = mMac.GetChannel();
-    mPreviousPanId = mMac.GetPanId();
-    mMac.SetChannel(static_cast<uint8_t>(channel.GetChannel()));
-    mMac.SetPanId(panid.GetPanId());
-    Start();
+    if (localTimestamp == NULL || localTimestamp->Compare(timestamp) > 0)
+    {
+        Stop();
+        mPreviousChannel = mMac.GetChannel();
+        mPreviousPanId = mMac.GetPanId();
+        mMac.SetChannel(static_cast<uint8_t>(channel.GetChannel()));
+        mMac.SetPanId(panid.GetPanId());
+        Start();
+    }
+    else
+    {
+        SendAnnounce(static_cast<uint8_t>(channel.GetChannel()));
+    }
 
 exit:
     (void)aMessageInfo;

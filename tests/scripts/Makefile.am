@@ -114,6 +114,7 @@ EXTRA_DIST                                                         = \
     thread-cert/Cert_9_2_14_PanIdQuery.py                            \
     thread-cert/Cert_9_2_15_PendingPartition.py                      \
     thread-cert/Cert_9_2_16_ActivePendingPartition.py                \
+    thread-cert/Cert_9_2_17_Orphan.py                                \
     thread-cert/Cert_9_2_18_RollBackActiveTimestamp.py               \
     thread-cert/node.py                                              \
     $(NULL)
@@ -241,6 +242,7 @@ check_SCRIPTS                                                     += \
     thread-cert/Cert_9_2_14_PanIdQuery.py                            \
     thread-cert/Cert_9_2_15_PendingPartition.py                      \
     thread-cert/Cert_9_2_16_ActivePendingPartition.py                \
+    thread-cert/Cert_9_2_17_Orphan.py                                \
     thread-cert/Cert_9_2_18_RollBackActiveTimestamp.py               \
     $(NULL)
 
@@ -269,6 +271,7 @@ XFAIL_NCP_TESTS                                                    = \
     thread-cert/Cert_9_2_14_PanIdQuery.py                            \
     thread-cert/Cert_9_2_15_PendingPartition.py                      \
     thread-cert/Cert_9_2_16_ActivePendingPartition.py                \
+    thread-cert/Cert_9_2_17_Orphan.py                                \
     thread-cert/Cert_9_2_18_RollBackActiveTimestamp.py               \
     $(NULL)
 

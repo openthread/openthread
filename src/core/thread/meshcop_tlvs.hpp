@@ -1350,6 +1350,26 @@ public:
 } OT_TOOL_PACKED_END;
 
 /**
+ * This class implements Channel Mask TLV generation and parsing.
+ *
+ */
+OT_TOOL_PACKED_BEGIN
+class ChannelMask0Tlv: public ChannelMaskTlv, public ChannelMaskEntry
+{
+public:
+    /**
+     * This method returns the Channel Mask value.
+     *
+     * @returns The Channel Mask value.
+     *
+     */
+    uint32_t GetMask(void) { return HostSwap32(mMask); }
+
+private:
+    uint32_t mMask;
+} OT_TOOL_PACKED_END;
+
+/**
  * This class implements Count TLV generation and parsing.
  *
  */
