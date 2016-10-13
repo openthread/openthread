@@ -455,6 +455,28 @@ int Message::CopyTo(uint16_t aSourceOffset, uint16_t aDestinationOffset, uint16_
     return bytesCopied;
 }
 
+Message *Message::Clone(void) const
+{
+    ThreadError error = kThreadError_None;
+    Message *messageCopy;
+
+    VerifyOrExit((messageCopy = GetMessagePool()->New(GetType(), GetReserved())) != NULL, error = kThreadError_NoBufs);
+    SuccessOrExit(error = messageCopy->SetLength(GetLength()));
+    CopyTo(0, 0, GetLength(), *messageCopy);
+    memcpy(&messageCopy->mInfo, &mInfo, sizeof(mInfo));
+    memset(&messageCopy->mInfo.mList, 0, sizeof(messageCopy->mInfo.mList));
+
+exit:
+
+    if (error != kThreadError_None && messageCopy != NULL)
+    {
+        messageCopy->Free();
+        messageCopy = NULL;
+    }
+
+    return messageCopy;
+}
+
 uint16_t Message::GetDatagramTag(void) const
 {
     return mInfo.mDatagramTag;

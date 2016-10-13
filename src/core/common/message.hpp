@@ -385,6 +385,14 @@ public:
     int CopyTo(uint16_t aSourceOffset, uint16_t aDestinationOffset, uint16_t aLength, Message &aMessage) const;
 
     /**
+     * This method creates an exact copy of the current Message. It allocates the new one
+     * from the same Message Poll as the original Message.
+     *
+     * @returns A pointer to the message or NULL if insufficient message buffers are available.
+     */
+    Message *Clone(void) const;
+
+    /**
      * This method returns the datagram tag used for 6LoWPAN fragmentation.
      *
      * @returns The 6LoWPAN datagram tag.
@@ -559,7 +567,7 @@ public:
     uint16_t UpdateChecksum(uint16_t aChecksum, uint16_t aOffset, uint16_t aLength) const;
 
 private:
-    MessagePool *GetMessagePool(void) { return mInfo.mMessagePool; }
+    MessagePool *GetMessagePool(void) const { return mInfo.mMessagePool; }
 
     void SetMessagePool(MessagePool *aMessagePool) { mInfo.mMessagePool = aMessagePool; }
 
