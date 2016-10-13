@@ -269,6 +269,7 @@ ThreadError DatasetManager::Set(Coap::Header &aHeader, Message &aMessage, const 
     Tlv::Type type;
     bool isUpdateFromCommissioner = false;
     StateTlv::State state = StateTlv::kAccept;
+    bool isTlvsAffectConnectivity = false;
 
     ActiveTimestampTlv activeTimestamp;
     NetworkMasterKeyTlv masterKey;
@@ -311,7 +312,7 @@ ThreadError DatasetManager::Set(Coap::Header &aHeader, Message &aMessage, const 
             (tlvType == Tlv::kChannel || tlvType == Tlv::kMeshLocalPrefix ||
              tlvType == Tlv::kPanId || tlvType == Tlv::kNetworkMasterKey))
         {
-            ExitNow(state = StateTlv::kReject);
+            isTlvsAffectConnectivity = true;
         }
 
         // verify session id is the same
@@ -354,6 +355,9 @@ ThreadError DatasetManager::Set(Coap::Header &aHeader, Message &aMessage, const 
     VerifyOrExit(offset == aMessage.GetLength() && (mLocal.GetTimestamp() == NULL ||
                                                     mLocal.GetTimestamp()->Compare(timestamp) > 0), state = StateTlv::kReject);
 
+    // update from commissioner doest not affect connectivity
+    VerifyOrExit(!isUpdateFromCommissioner || !isTlvsAffectConnectivity, state = StateTlv::kReject);
+
     // verify network master key if active timestamp is behind
     if (type == Tlv::kPendingTimestamp)
     {
@@ -381,8 +385,15 @@ ThreadError DatasetManager::Set(Coap::Header &aHeader, Message &aMessage, const 
         } OT_TOOL_PACKED_END data;
 
         aMessage.Read(offset, sizeof(Tlv), &data.tlv);
-        aMessage.Read(offset + sizeof(Tlv), data.tlv.GetLength(), data.value);
-        mLocal.Set(data.tlv);
+
+        if ((type != Tlv::kActiveTimestamp) ||
+            (data.tlv.GetType() != Tlv::kChannel && data.tlv.GetType() != Tlv::kMeshLocalPrefix &&
+             data.tlv.GetType() != Tlv::kPanId && data.tlv.GetType() != Tlv::kNetworkMasterKey))
+        {
+            aMessage.Read(offset + sizeof(Tlv), data.tlv.GetLength(), data.value);
+            mLocal.Set(data.tlv);
+        }
+
         offset += sizeof(Tlv) + data.tlv.GetLength();
     }
 
