@@ -63,6 +63,7 @@ bool sDiagMode = false;
 enum
 {
     kFlashSize = 0x40000,
+    kFlashPageSize = 0x800,
 };
 
 uint8_t sFlashBuffer[kFlashSize];
@@ -309,6 +310,7 @@ exit:
     //
     ThreadError otPlatFlashInit(void)
     {
+        memset(sFlashBuffer, 0xff, kFlashSize);
         return kThreadError_None;
     }
 
@@ -319,8 +321,17 @@ exit:
 
     ThreadError otPlatFlashErasePage(uint32_t aAddress)
     {
-        (void)aAddress;
-        return kThreadError_None;
+        ThreadError error = kThreadError_None;
+        uint32_t address;
+
+        VerifyOrExit(aAddress < kFlashSize, error = kThreadError_InvalidArgs);
+
+        // Get start address of the flash page that includes aAddress
+        address = aAddress & (~(uint32_t)(kFlashPageSize - 1));
+        memset(sFlashBuffer + address, 0xff, kFlashPageSize);
+
+exit:
+        return error;
     }
 
     ThreadError otPlatFlashStatusWait(uint32_t aTimeout)
