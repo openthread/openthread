@@ -31,6 +31,8 @@
  *   This file implements a multiplexed timer service on top of the alarm abstraction.
  */
 
+#define WPP_NAME "timer.tmh"
+
 #include <common/code_utils.hpp>
 #include <common/timer.hpp>
 #include <common/debug.hpp>
@@ -148,7 +150,9 @@ void TimerScheduler::SetAlarm(void)
 
 extern "C" void otPlatAlarmFired(otInstance *aInstance)
 {
+    otLogFuncEntry();
     aInstance->mIp6.mTimerScheduler.FireTimers();
+    otLogFuncExit();
 }
 
 void TimerScheduler::FireTimers()

@@ -39,7 +39,6 @@
 #include <openthread-config.h>
 #endif
 
-#include <assert.h>
 #include <stdio.h>
 
 #include <common/code_utils.hpp>
@@ -52,6 +51,7 @@
 #include <thread/thread_uris.hpp>
 
 using Thread::Encoding::BigEndian::HostSwap16;
+using Thread::Encoding::BigEndian::HostSwap64;
 
 namespace Thread {
 namespace MeshCoP {
@@ -91,7 +91,7 @@ void JoinerRouter::HandleNetifStateChanged(uint32_t aFlags)
         mSocket.Open(&JoinerRouter::HandleUdpReceive, this);
         mSocket.Bind(sockaddr);
         mNetif.GetIp6Filter().AddUnsecurePort(sockaddr.mPort);
-        otLogInfoMeshCoP("Joiner Router: start\r\n");
+        otLogInfoMeshCoP("Joiner Router: start\n");
     }
     else
     {
@@ -160,9 +160,11 @@ exit:
 
 ThreadError JoinerRouter::SetJoinerUdpPort(uint16_t aJoinerUdpPort)
 {
+    otLogFuncEntry();
     mJoinerUdpPort = aJoinerUdpPort;
     mIsJoinerPortConfigured = true;
     HandleNetifStateChanged(OT_THREAD_NETDATA_UPDATED);
+    otLogFuncExit();
     return kThreadError_None;
 }
 
@@ -184,7 +186,8 @@ void JoinerRouter::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &a
     ExtendedTlv tlv;
     uint16_t borderAgentRloc;
 
-    otLogInfoMeshCoP("JoinerRouter::HandleUdpReceive\r\n");
+    otLogFuncEntryMsg("from peer: %llX", HostSwap64(*(uint64_t *)(aMessageInfo.GetPeerAddr().mFields.m8 + 8)));
+    otLogInfoMeshCoP("JoinerRouter::HandleUdpReceive\n");
 
     SuccessOrExit(error = GetBorderAgentRloc(borderAgentRloc));
 
@@ -240,7 +243,7 @@ void JoinerRouter::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &a
 
     SuccessOrExit(error = mSocket.SendTo(*message, messageInfo));
 
-    otLogInfoMeshCoP("Sent relay rx\r\n");
+    otLogInfoMeshCoP("Sent relay rx\n");
 
 exit:
 
@@ -248,6 +251,8 @@ exit:
     {
         message->Free();
     }
+
+    otLogFuncExitErr(error);
 }
 
 void JoinerRouter::HandleRelayTransmit(void *aContext, Coap::Header &aHeader,
@@ -267,10 +272,11 @@ void JoinerRouter::HandleRelayTransmit(Coap::Header &aHeader, Message &aMessage,
     Message *message = NULL;
     Ip6::MessageInfo messageInfo;
 
+    otLogFuncEntry();
     VerifyOrExit(aHeader.GetType() == Coap::Header::kTypeNonConfirmable &&
                  aHeader.GetCode() == Coap::Header::kCodePost, error = kThreadError_Drop);
 
-    otLogInfoMeshCoP("Received relay transmit\r\n");
+    otLogInfoMeshCoP("Received relay transmit\n");
 
     SuccessOrExit(error = Tlv::GetTlv(aMessage, Tlv::kJoinerUdpPort, sizeof(joinerPort), joinerPort));
     VerifyOrExit(joinerPort.IsValid(), error = kThreadError_Parse);
@@ -312,7 +318,7 @@ void JoinerRouter::HandleRelayTransmit(Coap::Header &aHeader, Message &aMessage,
 
     if (Tlv::GetTlv(aMessage, Tlv::kJoinerRouterKek, sizeof(kek), kek) == kThreadError_None)
     {
-        otLogInfoMeshCoP("Received kek\r\n");
+        otLogInfoMeshCoP("Received kek\n");
         mNetif.GetKeyManager().SetKek(kek.GetKek());
         SendJoinerEntrust(messageInfo);
     }
@@ -324,6 +330,8 @@ exit:
     {
         message->Free();
     }
+
+    otLogFuncExitErr(error);
 }
 
 ThreadError JoinerRouter::SendJoinerEntrust(const Ip6::MessageInfo &aMessageInfo)
@@ -339,6 +347,7 @@ ThreadError JoinerRouter::SendJoinerEntrust(const Ip6::MessageInfo &aMessageInfo
     NetworkNameTlv networkName;
     Tlv *tlv;
 
+    otLogFuncEntry();
     VerifyOrExit((message = mSocket.NewMessage(0)) != NULL, error = kThreadError_NoBufs);
     message->SetSubType(Message::kSubTypeJoinerEntrust);
 
@@ -415,8 +424,8 @@ ThreadError JoinerRouter::SendJoinerEntrust(const Ip6::MessageInfo &aMessageInfo
     messageInfo.mPeerPort = kCoapUdpPort;
     SuccessOrExit(error = mSocket.SendTo(*message, messageInfo));
 
-    otLogInfoMeshCoP("Sent joiner entrust length = %d\r\n", message->GetLength());
-    otLogCertMeshCoP("[THCI] direction=send | msg_type=JOIN_ENT.ntf\r\n");
+    otLogInfoMeshCoP("Sent joiner entrust length = %d\n", message->GetLength());
+    otLogCertMeshCoP("[THCI] direction=send | msg_type=JOIN_ENT.ntf\n");
 
 exit:
 
@@ -425,6 +434,7 @@ exit:
         message->Free();
     }
 
+    otLogFuncExitErr(error);
     return error;
 }
 

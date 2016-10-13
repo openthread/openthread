@@ -151,7 +151,7 @@ ThreadError AnnounceBeginServer::SendResponse(const Coap::Header &aRequestHeader
     memset(&responseInfo.mSockAddr, 0, sizeof(responseInfo.mSockAddr));
     SuccessOrExit(error = mCoapServer.SendMessage(*message, responseInfo));
 
-    otLogInfoMeshCoP("sent announce begin response\r\n");
+    otLogInfoMeshCoP("sent announce begin response\n");
 
 exit:
 

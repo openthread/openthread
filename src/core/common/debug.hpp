@@ -42,7 +42,7 @@
 
 #include <assert.h>
 
-#elif defined(WINDOWS_KERNEL)
+#elif defined(_KERNEL_MODE)
 
 #include <wdm.h>
 

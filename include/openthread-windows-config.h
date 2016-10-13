@@ -66,9 +66,9 @@
 #define PLATFORM_INFO "Windows"
 
 // Windows Kernel only has sprintf_s
-#ifdef WINDOWS_KERNEL
+#ifdef _KERNEL_MODE
 #define snprintf sprintf_s
-#endif // WINDOWS_KERNEL
+#endif // _KERNEL_MODE
 
 // Redefine rand to random for test code
 #define random rand
