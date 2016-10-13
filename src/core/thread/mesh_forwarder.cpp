@@ -588,6 +588,7 @@ ThreadError MeshForwarder::UpdateIp6Route(Message &aMessage)
     ThreadError error = kThreadError_None;
     Ip6::Header ip6Header;
     uint16_t rloc16;
+    uint16_t aloc16;
     Neighbor *neighbor;
 
     mAddMeshHeader = false;
@@ -652,6 +653,21 @@ ThreadError MeshForwarder::UpdateIp6Route(Message &aMessage)
                 rloc16 = HostSwap16(ip6Header.GetDestination().mFields.m16[7]);
                 VerifyOrExit(mMle.IsRouterIdValid(mMle.GetRouterId(rloc16)), error = kThreadError_Drop);
                 mMeshDest = rloc16;
+            }
+            else if (mMle.IsAnycastLocator(ip6Header.GetDestination()))
+            {
+                // only support Leader ALOC for now
+                aloc16 = HostSwap16(ip6Header.GetDestination().mFields.m16[7]);
+
+                if (aloc16 == Mle::kAloc16Leader)
+                {
+                    mMeshDest = mMle.GetRloc16(mMle.GetLeaderId());
+                }
+                else
+                {
+                    // TODO: support ALOC for DHCPv6 Agent, Service, Commissioner, Neighbor Discovery Agent
+                    ExitNow(error = kThreadError_Drop);
+                }
             }
             else if ((neighbor = mMle.GetNeighbor(ip6Header.GetDestination())) != NULL)
             {
