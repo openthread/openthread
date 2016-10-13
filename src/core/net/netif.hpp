@@ -176,6 +176,39 @@ public:
         mContext = aContext;
     }
 
+    /**
+     * This method tests whether the object is free or in use.
+     *
+     * @returns True if the object is free, false otherwise.
+     *
+     */
+    bool IsFree(void) {
+        return (mCallback == NULL);
+    }
+
+    /**
+     * This method frees the object.
+     *
+     */
+    void Free(void) {
+        mCallback = NULL;
+        mContext = NULL;
+        mNext = NULL;
+    }
+
+    /**
+     * This method tests whether the object is set to the provided elements.
+     *
+     * @param[in]  aCallback  A pointer to a function that is called when configuration or state changes.
+     * @param[in]  aContext   A pointer to arbitrary context information.
+     *
+     * @returns True if the object elements equal the input params, false otherwise.
+     *
+     */
+    bool IsServing(otStateChangedCallback aCallback, void *aContext) {
+        return (aCallback == mCallback && aContext == mContext);
+    }
+
 private:
     void Callback(uint32_t aFlags) {
         if (mCallback != NULL) {
@@ -347,6 +380,16 @@ public:
      */
     ThreadError RegisterCallback(NetifCallback &aCallback);
 
+    /**
+     * This method removes a network interface callback.
+     *
+     * @param[in]  aCallback  A reference to the callback.
+     *
+     * @retval kThreadError_None    Successfully removed the callback.
+     * @retval kThreadError_Already The callback was not in the list.
+     */
+    ThreadError RemoveCallback(NetifCallback &aCallback);
+    
     /**
      * This method indicates whether or not a state changed callback is pending.
      *

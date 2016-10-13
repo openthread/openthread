@@ -925,10 +925,34 @@ ThreadError otCreateSemanticallyOpaqueIid(otInstance *aInstance, otNetifAddress 
     return static_cast<Utils::SemanticallyOpaqueIidGenerator *>(aContext)->CreateIid(aInstance, aAddress);
 }
 
-void otSetStateChangedCallback(otInstance *aInstance, otStateChangedCallback aCallback, void *aCallbackContext)
+ThreadError otSetStateChangedCallback(otInstance *aInstance, otStateChangedCallback aCallback, void *aCallbackContext)
 {
-    aInstance->mNetifCallback.Set(aCallback, aCallbackContext);
-    aInstance->mThreadNetif.RegisterCallback(aInstance->mNetifCallback);
+    ThreadError error = kThreadError_NoBufs;
+
+    for (size_t i = 0; i < OPENTHREAD_CONFIG_MAX_STATECHANGE_HANDLERS; i++)
+    {
+        if (aInstance->mNetifCallback[i].IsFree())
+        {
+            aInstance->mNetifCallback[i].Set(aCallback, aCallbackContext);
+            error = aInstance->mThreadNetif.RegisterCallback(aInstance->mNetifCallback[i]);
+            break;
+        }
+    }
+
+    return error;
+}
+
+void otRemoveStateChangeCallback(otInstance *aInstance, otStateChangedCallback aCallback, void *aCallbackContext)
+{
+    for (size_t i = 0; i < OPENTHREAD_CONFIG_MAX_STATECHANGE_HANDLERS; i++)
+    {
+        if (aInstance->mNetifCallback[i].IsServing(aCallback, aCallbackContext))
+        {
+            aInstance->mThreadNetif.RemoveCallback(aInstance->mNetifCallback[i]);
+            aInstance->mNetifCallback[i].Free();
+            break;
+        }
+    }
 }
 
 const char *otGetVersionString(void)

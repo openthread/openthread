@@ -868,8 +868,21 @@ typedef void (*otStateChangedCallback)(uint32_t aFlags, void *aContext);
  * @param[in]  aCallback  A pointer to a function that is called with certain configuration or state changes.
  * @param[in]  aContext   A pointer to application-specific context.
  *
+ * @retval kThreadError_None    Added the callback to the list of callbacks.
+ * @retval kThreadError_NoBufs  Could not add the callback due to resource constraints.
+ *
  */
-void otSetStateChangedCallback(otInstance *aInstance, otStateChangedCallback aCallback, void *aContext);
+ThreadError otSetStateChangedCallback(otInstance *aInstance, otStateChangedCallback aCallback, void *aContext);
+
+/**
+ * This function removes a callback to indicate when certain configuration or state changes within OpenThread.
+ *
+ * @param[in]  aInstance  A pointer to an OpenThread instance.
+ * @param[in]  aCallback  A pointer to a function that is called with certain configuration or state changes.
+ * @param[in]  aContext   A pointer to application-specific context.
+ *
+ */
+void otRemoveStateChangeCallback(otInstance *aInstance, otStateChangedCallback aCallback, void *aCallbackContext);
 
 /**
  * This function gets the Active Operational Dataset.
