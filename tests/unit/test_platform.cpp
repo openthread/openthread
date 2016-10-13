@@ -343,10 +343,17 @@ exit:
     uint32_t otPlatFlashWrite(uint32_t aAddress, uint8_t *aData, uint32_t aSize)
     {
         uint32_t ret = 0;
+        uint8_t byte;
 
         VerifyOrExit(aAddress < kFlashSize, ;);
 
-        memcpy(sFlashBuffer + aAddress, aData, aSize);
+        for (uint32_t index = 0; index < aSize; index++)
+        {
+            byte = sFlashBuffer[aAddress + index];
+            byte &= aData[index];
+            sFlashBuffer[aAddress + index] = byte;
+        }
+
         ret = aSize;
 
 exit:
