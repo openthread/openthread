@@ -80,6 +80,13 @@ void test_packed2();
 void test_packed_union();
 void test_packed_enum();
 
+// test_settings.cpp
+void TestSettingsInit()
+void TestSettingsAdd();
+void TestSettingsDelete();
+void TestSettingsSet();
+void TestSettingsSwap();
+
 #pragma endregion
 
 utAssertTrue s_AssertTrue;
@@ -131,5 +138,12 @@ namespace Thread
         TEST_METHOD(test_packed2) { ::test_packed2(); }
         TEST_METHOD(test_packed_union) { ::test_packed_union(); }
         TEST_METHOD(test_packed_enum) { ::test_packed_enum(); }
+
+        // test_settings.cpp
+        TEST_METHOD(TestSettingsInit) { ::TestSettingsInit(); }
+        TEST_METHOD(TestSettingsAdd) { ::TestSettingsAdd(); }
+        TEST_METHOD(TestSettingsDelete) { ::TestSettingsDelete(); }
+        TEST_METHOD(TestSettingsSet) { ::TestSettingsSet(); }
+        TEST_METHOD(TestSettingsSwap) { ::TestSettingsSwap(); }
 	};
 }
