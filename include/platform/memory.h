@@ -68,7 +68,7 @@ extern "C" {
  * @retval void*  The pointer to the front of the memory allocated
  * @retval NULL   Failed to allocate the memory requested.
  */
-void *otPlatAlloc(size_t aNum, size_t aSize);
+void *otPlatCAlloc(size_t aNum, size_t aSize);
 
 /**
  * Frees memory that was dynamically allocated.
