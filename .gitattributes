@@ -43,4 +43,3 @@ Makefile          eol=lf
 *.sln             eol=crlf
 *.rc     text     eol=crlf
 *.inf    text     eol=crlf
-*.reg    text     eol=crlf
