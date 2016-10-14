@@ -28,10 +28,10 @@
 
 include $(abs_top_nlbuild_autotools_dir)/automake/pre.am
 
-EXTRA_DIST              = \
-    spinel-cli.py         \
-    sniffer.py            \
-    test_spinel.py        \
+EXTRA_DIST                              = \
+    spinel-cli.py                         \
+    sniffer.py                            \
+    test_spinel.py                        \
     $(NULL)
 
 DIST_SUBDIRS                            = \
@@ -47,5 +47,18 @@ SUBDIRS                                 = \
 
 PRETTY_SUBDIRS                          = \
     $(NULL)
+
+if OPENTHREAD_ENABLE_NCP
+
+# List all essential script tests that MUST be run.
+
+TESTS_ENVIRONMENT                       = \
+    $(NULL)
+
+TESTS                                   = \
+    test_spinel.py                        \
+    $(NULL)
+
+endif # OPENTHREAD_ENABLE_NCP
 
 include $(abs_top_nlbuild_autotools_dir)/automake/post.am

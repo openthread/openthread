@@ -84,6 +84,7 @@ def sniffer_init(wpan_api, options):
     wpan_api.queue_register(SPINEL.HEADER_ASYNC)
 
     wpan_api.cmd_send(SPINEL.CMD_RESET)
+    wpan_api.prop_set_value(SPINEL.PROP_PHY_ENABLED, 1)
     wpan_api.prop_set_value(SPINEL.PROP_MAC_FILTER_MODE, SPINEL.MAC_FILTER_MODE_MONITOR)
     wpan_api.prop_set_value(SPINEL.PROP_PHY_CHAN, options.channel)
     wpan_api.prop_set_value(SPINEL.PROP_MAC_15_4_PANID, 0xFFFF, 'H')

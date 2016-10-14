@@ -45,6 +45,7 @@ EXTRA_DIST             += \
     test_codec.py         \
     test_hdlc.py          \
     test_stream.py        \
+    test_sniffer.py       \
     $(NULL)
 
 include $(abs_top_nlbuild_autotools_dir)/automake/post.am

@@ -40,6 +40,7 @@ DIST_SUBDIRS                            = \
 # Always build (e.g. for 'make all') these subdirectories.
 
 SUBDIRS                                 = \
+    spinel-cli                            \
     $(NULL)
 
 if OPENTHREAD_TARGET_LINUX
