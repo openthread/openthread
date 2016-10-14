@@ -1,3 +1,4 @@
+#!/usr/bin/python
 #
 #  Copyright (c) 2016, The OpenThread Authors.
 #  All rights reserved.
@@ -26,30 +27,22 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-include $(abs_top_nlbuild_autotools_dir)/automake/pre.am
+def hexify_chr(s): return "%02X" % ord(s)
+def hexify_int(i): return "%02X" % i
+def hexify_bytes(data): return str(map(hexify_chr,data))
+def hexify_str(s,delim=':'):
+    return delim.join(x.encode('hex') for x in s)
 
-# Always package (e.g. for 'make dist') these subdirectories.
+def pack_bytes(packet): return pack("%dB" % len(packet), *packet)
+def packed_to_array(packet): return map(ord, packet)
 
-DIST_SUBDIRS                            = \
-    harness-automation                    \
-    harness-thci                          \
-    spi-hdlc-adapter                      \
-    spinel-cli                            \
-    $(NULL)
+def asciify_int(i): return "%c" % (i)
 
-# Always build (e.g. for 'make all') these subdirectories.
-
-SUBDIRS                                 = \
-    spinel-cli                            \
-    $(NULL)
-
-if OPENTHREAD_TARGET_LINUX
-SUBDIRS                                += spi-hdlc-adapter
-endif
-
-# Always pretty (e.g. for 'make pretty') these subdirectories.
-
-PRETTY_SUBDIRS                          = \
-    $(NULL)
-
-include $(abs_top_nlbuild_autotools_dir)/automake/post.am
+def hex_to_bytes(s):
+    result = ''
+    for i in xrange(0, len(s), 2):
+        (b1, b2) = s[i:i+2]
+        hex = b1+b2
+        v = int(hex, 16)
+        result += chr(v)
+    return result

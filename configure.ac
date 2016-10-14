@@ -790,6 +790,7 @@ tools/harness-automation/Makefile
 tools/harness-thci/Makefile
 tools/spi-hdlc-adapter/Makefile
 tools/spinel-cli/Makefile
+tools/spinel-cli/spinel/Makefile
 tests/Makefile
 tests/scripts/Makefile
 tests/unit/Makefile

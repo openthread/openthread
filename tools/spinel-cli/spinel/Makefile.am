@@ -28,28 +28,24 @@
 
 include $(abs_top_nlbuild_autotools_dir)/automake/pre.am
 
-# Always package (e.g. for 'make dist') these subdirectories.
-
-DIST_SUBDIRS                            = \
-    harness-automation                    \
-    harness-thci                          \
-    spi-hdlc-adapter                      \
-    spinel-cli                            \
+EXTRA_DIST              = \
+    __init__.py           \
+    codec.py              \
+    config.py             \
+    const.py              \
+    hdlc.py               \
+    stream.py             \
+    pcap.py               \
+    tun.py                \
+    util.py               \
     $(NULL)
 
-# Always build (e.g. for 'make all') these subdirectories.
-
-SUBDIRS                                 = \
-    spinel-cli                            \
-    $(NULL)
-
-if OPENTHREAD_TARGET_LINUX
-SUBDIRS                                += spi-hdlc-adapter
-endif
-
-# Always pretty (e.g. for 'make pretty') these subdirectories.
-
-PRETTY_SUBDIRS                          = \
+EXTRA_DIST             += \
+    tests.py              \
+    test_codec.py         \
+    test_hdlc.py          \
+    test_stream.py        \
+    test_sniffer.py       \
     $(NULL)
 
 include $(abs_top_nlbuild_autotools_dir)/automake/post.am

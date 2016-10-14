@@ -1,3 +1,4 @@
+#!/usr/bin/python
 #
 #  Copyright (c) 2016, The OpenThread Authors.
 #  All rights reserved.
@@ -26,30 +27,6 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-include $(abs_top_nlbuild_autotools_dir)/automake/pre.am
-
-# Always package (e.g. for 'make dist') these subdirectories.
-
-DIST_SUBDIRS                            = \
-    harness-automation                    \
-    harness-thci                          \
-    spi-hdlc-adapter                      \
-    spinel-cli                            \
-    $(NULL)
-
-# Always build (e.g. for 'make all') these subdirectories.
-
-SUBDIRS                                 = \
-    spinel-cli                            \
-    $(NULL)
-
-if OPENTHREAD_TARGET_LINUX
-SUBDIRS                                += spi-hdlc-adapter
-endif
-
-# Always pretty (e.g. for 'make pretty') these subdirectories.
-
-PRETTY_SUBDIRS                          = \
-    $(NULL)
-
-include $(abs_top_nlbuild_autotools_dir)/automake/post.am
+from spinel.test_hdlc import TestHdlc
+from spinel.test_codec import TestCodec
+from spinel.test_sniffer import TestSniffer
