@@ -497,6 +497,16 @@ void otSetKeySequenceCounter(otInstance *aInstance, uint32_t aKeySequenceCounter
     aInstance->mThreadNetif.GetKeyManager().SetCurrentKeySequence(aKeySequenceCounter);
 }
 
+uint32_t otGetKeySwitchGuardTime(otInstance *aInstance)
+{
+    return aInstance->mThreadNetif.GetKeyManager().GetKeySwitchGuardTime();
+}
+
+void otSetKeySwitchGuardTime(otInstance *aInstance, uint32_t aKeySwitchGuardTime)
+{
+    aInstance->mThreadNetif.GetKeyManager().SetKeySwitchGuardTime(aKeySwitchGuardTime);
+}
+
 uint8_t otGetNetworkIdTimeout(otInstance *aInstance)
 {
     return aInstance->mThreadNetif.GetMle().GetNetworkIdTimeout();

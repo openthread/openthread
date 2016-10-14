@@ -124,10 +124,6 @@ uint32_t KeyManager::GetCurrentKeySequence(void) const
 
 void KeyManager::SetCurrentKeySequence(uint32_t aKeySequence)
 {
-    uint32_t now;
-    uint32_t guardStartTimestamp;
-    uint32_t guardEndTimestamp;
-
     if (aKeySequence == mKeySequence)
     {
         ExitNow();
@@ -135,12 +131,13 @@ void KeyManager::SetCurrentKeySequence(uint32_t aKeySequence)
 
     // Check if the guard timer has expired if key rotation is requested.
     if ((aKeySequence == (mKeySequence + 1)) &&
+        (mKeySwitchGuardTime != 0) &&
         mKeyRotationTimer.IsRunning() &&
         mKeySwitchGuardEnabled)
     {
-        now = Timer::GetNow();
-        guardStartTimestamp = mKeyRotationTimer.Gett0();
-        guardEndTimestamp = guardStartTimestamp + Timer::HoursToMsec(mKeySwitchGuardTime);
+        uint32_t now = Timer::GetNow();
+        uint32_t guardStartTimestamp = mKeyRotationTimer.Gett0();
+        uint32_t guardEndTimestamp = guardStartTimestamp + Timer::HoursToMsec(mKeySwitchGuardTime);
 
         // Check for timer overflow
         if (guardEndTimestamp < mKeyRotationTimer.Gett0())
