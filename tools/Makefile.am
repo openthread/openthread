@@ -42,9 +42,11 @@ DIST_SUBDIRS                            = \
 SUBDIRS                                 = \
     $(NULL)
 
+if OPENTHREAD_BUILD_TOOLS
 if OPENTHREAD_TARGET_LINUX
 SUBDIRS                                += spi-hdlc-adapter
 endif
+endif # OPENTHREAD_BUILD_TOOLS
 
 # Always pretty (e.g. for 'make pretty') these subdirectories.
 
