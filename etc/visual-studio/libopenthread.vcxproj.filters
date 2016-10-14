@@ -216,6 +216,12 @@
     <ClCompile Include="..\..\src\core\utils\global_address.cpp">
       <Filter>Source Files\utils</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\core\meshcop\announce_begin_client.cpp">
+      <Filter>Source Files\meshcop</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\core\thread\announce_begin_server.cpp">
+      <Filter>Source Files\thread</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\src\core\openthreadcontext.h">
@@ -406,6 +412,12 @@
     </ClInclude>
     <ClInclude Include="..\..\src\core\utils\global_address.hpp">
       <Filter>Header Files\utils</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\core\meshcop\announce_begin_client.hpp">
+      <Filter>Header Files\meshcop</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\core\meshcop\announce_begin_server.hpp">
+      <Filter>Header Files\thread</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

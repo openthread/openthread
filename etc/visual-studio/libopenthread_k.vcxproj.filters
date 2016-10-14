@@ -207,14 +207,17 @@
     <ClCompile Include="..\..\src\core\crypto\hmac_sha256.cpp">
       <Filter>Source Files\crypto</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\core\crypto\mbedtls.cpp">
-      <Filter>Source Files\crypto</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\src\core\crypto\sha256.cpp">
       <Filter>Source Files\crypto</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\core\utils\global_address.cpp">
       <Filter>Source Files\utils</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\core\thread\announce_begin_server.cpp">
+      <Filter>Source Files\thread</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\core\meshcop\announce_begin_client.cpp">
+      <Filter>Source Files\meshcop</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -406,6 +409,12 @@
     </ClInclude>
     <ClInclude Include="..\..\src\core\utils\global_address.hpp">
       <Filter>Header Files\utils</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\core\meshcop\announce_begin_server.hpp">
+      <Filter>Header Files\thread</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\core\meshcop\announce_begin_client.hpp">
+      <Filter>Header Files\meshcop</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

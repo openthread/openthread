@@ -59,6 +59,14 @@ Dtls::Dtls(ThreadNetif &aNetif):
     mProvisioningUrl.Init();
 }
 
+Dtls::~Dtls(void)
+{
+    if (mStarted)
+    {
+        Close();
+    }
+}
+
 ThreadError Dtls::Start(bool aClient, ReceiveHandler aReceiveHandler, SendHandler aSendHandler, void *aContext)
 {
     static const int ciphersuites[2] = {0xC0FF, 0}; // EC-JPAKE cipher suite
