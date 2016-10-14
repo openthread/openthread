@@ -6,14 +6,16 @@ can be saved or piped directly into Wireshark.
 
 ## System Requirements
 
-| OS     | Minimum Version  |
-|--------|------------------|
-| Ubuntu | 14.04 Trusty     |
-| Mac OS | 10.11 El Capitan |
+The tool has been tested on the following platforms:
 
-| Language | Minimum Version  |
-|----------|------------------|
-| Python   | 2.7.10           |
+| Platforms | Version          |
+|-----------|------------------|
+| Ubuntu    | 14.04 Trusty     |
+| Mac OS    | 10.11 El Capitan |
+
+| Language  | Version          |
+|-----------|------------------|
+| Python    | 2.7.10           |
 
 ### Package Installation
 
@@ -21,6 +23,7 @@ can be saved or piped directly into Wireshark.
 sudo easy_install pip
 sudo pip install ipaddress
 sudo pip install scapy
+sudo pip install pyserial
 ```
 
 ## Usage
@@ -90,5 +93,4 @@ From openthread root:
 This will connect to stock openthread ncp firmware over the given UART, 
 make the node into a promiscuous mode sniffer on the given channel, 
 open up wireshark, and start streaming packets into wireshark. 
-No preference settings or dialog box configuration are needed.
 

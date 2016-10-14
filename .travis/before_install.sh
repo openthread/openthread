@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 #
 #  Copyright (c) 2016, The OpenThread Authors.
 #  All rights reserved.
@@ -45,6 +45,14 @@ cd /tmp || die
     sudo -H pip install pexpect || die
     pip install pexpect || die
 
+    # Packages used by ncp tools.
+    sudo -H pip install ipaddress || die
+    sudo -H pip install scapy || die
+    sudo -H pip install pyserial || die
+    pip install ipaddress || die
+    pip install scapy || die
+    pip install pyserial || die
+
     [ $BUILD_TARGET != pretty-check ] || {
         wget http://jaist.dl.sourceforge.net/project/astyle/astyle/astyle%202.05.1/astyle_2.05.1_linux.tar.gz || die
         tar xzvf astyle_2.05.1_linux.tar.gz || die
@@ -70,19 +78,6 @@ cd /tmp || die
     [ $BUILD_TARGET != posix-32-bit ] || {
         sudo apt-get install g++-multilib || die
     }
-
-    if [ $BUILD_TARGET == posix-ncp ] ||
-       [ $BUILD_TARGET == posix-distcheck ] ||
-       [ $BUILD_TARGET == posix-32-bit ] ||
-       [ $BUILD_TARGET == posix-ncp-spi ];
-    then
-        sudo -H pip install ipaddress || die
-        sudo -H pip install scapy || die
-        sudo -H pip install pyserial || die
-        pip install ipaddress || die
-        pip install scapy || die
-        pip install pyserial || die
-    fi
 }
 
 [ $TRAVIS_OS_NAME != osx ] || {
