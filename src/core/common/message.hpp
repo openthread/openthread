@@ -385,7 +385,7 @@ public:
     int CopyTo(uint16_t aSourceOffset, uint16_t aDestinationOffset, uint16_t aLength, Message &aMessage) const;
 
     /**
-     * This method creates an exact copy of the current Message. It allocates the new one
+     * This method creates a copy of the current Message. It allocates the new one
      * from the same Message Poll as the original Message.
      *
      * @returns A pointer to the message or NULL if insufficient message buffers are available.

@@ -463,8 +463,12 @@ Message *Message::Clone(void) const
     VerifyOrExit((messageCopy = GetMessagePool()->New(GetType(), GetReserved())) != NULL, error = kThreadError_NoBufs);
     SuccessOrExit(error = messageCopy->SetLength(GetLength()));
     CopyTo(0, 0, GetLength(), *messageCopy);
-    memcpy(&messageCopy->mInfo, &mInfo, sizeof(mInfo));
-    memset(&messageCopy->mInfo.mList, 0, sizeof(messageCopy->mInfo.mList));
+
+    // Copy selected message information.
+    messageCopy->SetOffset(GetOffset());
+    messageCopy->SetInterfaceId(GetInterfaceId());
+    messageCopy->SetSubType(GetSubType());
+    messageCopy->SetLinkSecurityEnabled(IsLinkSecurityEnabled());
 
 exit:
 
