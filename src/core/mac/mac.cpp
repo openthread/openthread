@@ -72,6 +72,12 @@ static const otExtAddress sMode2ExtAddress =
 static const uint8_t sExtendedPanidInit[] = {0xde, 0xad, 0x00, 0xbe, 0xef, 0x00, 0xca, 0xfe};
 static const char sNetworkNameInit[] = "OpenThread";
 
+#ifdef _WIN32
+const uint32_t kMinBackoffSum = kMinBackoff + (kUnitBackoffPeriod *kPhyUsPerSymbol * (1 << kMinBE)) / 1000;
+const uint32_t kMaxBackoffSum = kMinBackoff + (kUnitBackoffPeriod *kPhyUsPerSymbol * (1 << kMaxBE)) / 1000;
+static_assert(kMinBackoffSum > 0, "The min backoff value should be greater than zero!");
+#endif
+
 void Mac::StartCsmaBackoff(void)
 {
     uint32_t backoffExponent = kMinBE + mTransmitAttempts + mCsmaAttempts;

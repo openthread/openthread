@@ -219,11 +219,11 @@
     <ClCompile Include="..\..\src\core\meshcop\announce_begin_client.cpp">
       <Filter>Source Files\meshcop</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\core\common\crc16.cpp">
+      <Filter>Source Files\common</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\src\core\openthreadcontext.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\src\core\openthread-core-config.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -415,6 +415,27 @@
     </ClInclude>
     <ClInclude Include="..\..\src\core\meshcop\announce_begin_client.hpp">
       <Filter>Header Files\meshcop</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\core\common\crc16.hpp">
+      <Filter>Header Files\common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\openthread.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\openthread-types.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\openthread-windows-config.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\core\openthread-core-default-config.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\core\openthread-core-windows-config.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\core\openthread-instance.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
