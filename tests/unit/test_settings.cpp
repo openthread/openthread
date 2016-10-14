@@ -28,7 +28,6 @@
 
 #include "test_util.h"
 #include <string.h>
-#include <unistd.h>
 #include <dirent.h>
 #include <openthread.h>
 #include <common/debug.hpp>
