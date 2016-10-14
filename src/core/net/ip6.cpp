@@ -412,20 +412,10 @@ ThreadError Ip6::ProcessReceiveCallback(const Message &aMessage, const MessageIn
     }
 
     // make a copy of the datagram to pass to host
-    VerifyOrExit((messageCopy = NewMessage(0)) != NULL, error = kThreadError_NoBufs);
-    SuccessOrExit(error = messageCopy->SetLength(aMessage.GetLength()));
-    aMessage.CopyTo(0, 0, aMessage.GetLength(), *messageCopy);
-    messageCopy->SetLinkSecurityEnabled(aMessage.IsLinkSecurityEnabled());
-
+    VerifyOrExit((messageCopy = aMessage.Clone()) != NULL, error = kThreadError_NoBufs);
     mReceiveIp6DatagramCallback(messageCopy, mReceiveIp6DatagramCallbackContext);
 
 exit:
-
-    if (error != kThreadError_None && messageCopy != NULL)
-    {
-        messageCopy->Free();
-    }
-
     return error;
 }
 
