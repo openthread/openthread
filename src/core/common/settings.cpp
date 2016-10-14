@@ -103,17 +103,17 @@ static uint32_t swapSettingsBlock(otInstance *aInstance)
     uint32_t oldBase = aInstance->mSettingsBaseAddress;
     uint32_t swapAddress = oldBase;
     uint32_t usedSize = aInstance->mSettingsUsedSize;
-    uint32_t settingsSize = OPENTHREAD_CONFIG_SETTINGS_PAGE_NUM > 1 ?
-                            OPENTHREAD_CONFIG_SETTINGS_PAGE_SIZE * OPENTHREAD_CONFIG_SETTINGS_PAGE_NUM / 2 :
+    uint8_t pageNum = OPENTHREAD_CONFIG_SETTINGS_PAGE_NUM;
+    uint32_t settingsSize = pageNum > 1? OPENTHREAD_CONFIG_SETTINGS_PAGE_SIZE * pageNum / 2:
                             OPENTHREAD_CONFIG_SETTINGS_PAGE_SIZE;
 
-    VerifyOrExit(OPENTHREAD_CONFIG_SETTINGS_PAGE_NUM > 1, ;);
+    VerifyOrExit(pageNum > 1, ;);
 
     aInstance->mSettingsBaseAddress = (swapAddress == OPENTHREAD_CONFIG_SETTINGS_BASE_ADDRESS) ?
                                       (swapAddress + settingsSize) :
                                       OPENTHREAD_CONFIG_SETTINGS_BASE_ADDRESS;
 
-    initSettings(aInstance->mSettingsBaseAddress, kSettingsInSwap);
+    initSettings(aInstance->mSettingsBaseAddress, static_cast<uint32_t>(kSettingsInSwap));
     aInstance->mSettingsUsedSize = kSettingsFlagSize;
     swapAddress += kSettingsFlagSize;
 
@@ -167,8 +167,8 @@ static uint32_t swapSettingsBlock(otInstance *aInstance)
         swapAddress += addBlock.block.length;
     }
 
-    setSettingsFlag(aInstance->mSettingsBaseAddress, kSettingsInUse);
-    setSettingsFlag(oldBase, kSettingsNotUse);
+    setSettingsFlag(aInstance->mSettingsBaseAddress, static_cast<uint32_t>(kSettingsInUse));
+    setSettingsFlag(oldBase, static_cast<uint32_t>(kSettingsNotUse));
 
 exit:
     return settingsSize - aInstance->mSettingsUsedSize;
@@ -254,7 +254,7 @@ void otPlatSettingsInit(otInstance *aInstance)
 
     if (index == 2)
     {
-        initSettings(aInstance->mSettingsBaseAddress, kSettingsInUse);
+        initSettings(aInstance->mSettingsBaseAddress, static_cast<uint32_t>(kSettingsInUse));
     }
 
     aInstance->mSettingsUsedSize = kSettingsFlagSize;
@@ -403,7 +403,7 @@ ThreadError otPlatSettingsDelete(otInstance *aInstance, uint16_t aKey, int aInde
 
 void otPlatSettingsWipe(otInstance *aInstance)
 {
-    initSettings(aInstance->mSettingsBaseAddress, kSettingsInUse);
+    initSettings(aInstance->mSettingsBaseAddress, static_cast<uint32_t>(kSettingsInUse));
     otPlatSettingsInit(aInstance);
 }
 
