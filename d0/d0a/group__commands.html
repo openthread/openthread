@@ -34,7 +34,7 @@
   <td id="projectlogo"><img alt="Logo" src="../../Open-Thread-Logo-200x42.png"/></td>
   <td style="padding-left: 0.5em;">
    <div id="projectname">
-   &#160;<span id="projectnumber">gb2b10b8</span>
+   &#160;<span id="projectnumber">gddd0704</span>
    </div>
   </td>
  </tr>
@@ -125,12 +125,22 @@ Collaboration diagram for Commands:</div>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="nested-classes"></a>
 Classes</h2></td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../d2/d0a/structotSteeringData.html">otSteeringData</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">This structure represents the steering data.  <a href="../../d2/d0a/structotSteeringData.html#details">More...</a><br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../d1/de8/structotActiveScanResult.html">otActiveScanResult</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">This struct represents a received IEEE 802.15.4 Beacon.  <a href="../../d1/de8/structotActiveScanResult.html#details">More...</a><br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../d6/d3f/structotEnergyScanResult.html">otEnergyScanResult</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">This struct represents an energy scan result.  <a href="../../d6/d3f/structotEnergyScanResult.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="define-members"></a>
 Macros</h2></td></tr>
+<tr class="memitem:ga83a6fca9b333eadabd6f4b77664df1d6"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ga83a6fca9b333eadabd6f4b77664df1d6"></a>
+#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../d0/d0a/group__commands.html#ga83a6fca9b333eadabd6f4b77664df1d6">OT_PANID_BROADCAST</a>&#160;&#160;&#160;0xffff</td></tr>
+<tr class="memdesc:ga83a6fca9b333eadabd6f4b77664df1d6"><td class="mdescLeft">&#160;</td><td class="mdescRight">IEEE 802.15.4 Broadcast PAN ID. <br /></td></tr>
+<tr class="separator:ga83a6fca9b333eadabd6f4b77664df1d6"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:gac0d1d9835f20eb8d382f5a1c11682a59"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="gac0d1d9835f20eb8d382f5a1c11682a59"></a>
 #define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../d0/d0a/group__commands.html#gac0d1d9835f20eb8d382f5a1c11682a59">OT_CHANNEL_11_MASK</a>&#160;&#160;&#160;(1 &lt;&lt; 11)</td></tr>
 <tr class="memdesc:gac0d1d9835f20eb8d382f5a1c11682a59"><td class="mdescLeft">&#160;</td><td class="mdescRight">Channel 11. <br /></td></tr>
@@ -199,56 +209,89 @@ Macros</h2></td></tr>
 #define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../d0/d0a/group__commands.html#gaf80da4789d9329997f096a6b15c794f1">OT_CHANNEL_ALL</a>&#160;&#160;&#160;0xffffffff</td></tr>
 <tr class="memdesc:gaf80da4789d9329997f096a6b15c794f1"><td class="mdescLeft">&#160;</td><td class="mdescRight">All channels. <br /></td></tr>
 <tr class="separator:gaf80da4789d9329997f096a6b15c794f1"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga1ebabebe4437a27d5b3c9b070fa15b2f"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ga1ebabebe4437a27d5b3c9b070fa15b2f"></a>
+#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../d0/d0a/group__commands.html#ga1ebabebe4437a27d5b3c9b070fa15b2f">OT_STEERING_DATA_MAX_LENGTH</a>&#160;&#160;&#160;16</td></tr>
+<tr class="memdesc:ga1ebabebe4437a27d5b3c9b070fa15b2f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Max steering data length (bytes) <br /></td></tr>
+<tr class="separator:ga1ebabebe4437a27d5b3c9b070fa15b2f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="typedef-members"></a>
 Typedefs</h2></td></tr>
+<tr class="memitem:gac8fb951ebcdf31912d821a3021e71c1c"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="gac8fb951ebcdf31912d821a3021e71c1c"></a>
+typedef struct <a class="el" href="../../d2/d0a/structotSteeringData.html">otSteeringData</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../d0/d0a/group__commands.html#gac8fb951ebcdf31912d821a3021e71c1c">otSteeringData</a></td></tr>
+<tr class="memdesc:gac8fb951ebcdf31912d821a3021e71c1c"><td class="mdescLeft">&#160;</td><td class="mdescRight">This structure represents the steering data. <br /></td></tr>
+<tr class="separator:gac8fb951ebcdf31912d821a3021e71c1c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ga790d3662a5cb6281e2043a0373d64d5d"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ga790d3662a5cb6281e2043a0373d64d5d"></a>
 typedef struct <a class="el" href="../../d1/de8/structotActiveScanResult.html">otActiveScanResult</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../d0/d0a/group__commands.html#ga790d3662a5cb6281e2043a0373d64d5d">otActiveScanResult</a></td></tr>
 <tr class="memdesc:ga790d3662a5cb6281e2043a0373d64d5d"><td class="mdescLeft">&#160;</td><td class="mdescRight">This struct represents a received IEEE 802.15.4 Beacon. <br /></td></tr>
 <tr class="separator:ga790d3662a5cb6281e2043a0373d64d5d"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ga7dfbd6ce8dde9cb68d0e4b54310ecb30"><td class="memItemLeft" align="right" valign="top">typedef void(*&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../d0/d0a/group__commands.html#ga7dfbd6ce8dde9cb68d0e4b54310ecb30">otHandleActiveScanResult</a>) (<a class="el" href="../../d1/de8/structotActiveScanResult.html">otActiveScanResult</a> *aResult)</td></tr>
-<tr class="memdesc:ga7dfbd6ce8dde9cb68d0e4b54310ecb30"><td class="mdescLeft">&#160;</td><td class="mdescRight">This function pointer is called during an IEEE 802.15.4 Active Scan when an IEEE 802.15.4 Beacon is received or the scan completes.  <a href="#ga7dfbd6ce8dde9cb68d0e4b54310ecb30">More...</a><br /></td></tr>
-<tr class="separator:ga7dfbd6ce8dde9cb68d0e4b54310ecb30"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga667d7f8c8d46993c1b11d0eb471f9a6e"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ga667d7f8c8d46993c1b11d0eb471f9a6e"></a>
+typedef struct <a class="el" href="../../d6/d3f/structotEnergyScanResult.html">otEnergyScanResult</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../d0/d0a/group__commands.html#ga667d7f8c8d46993c1b11d0eb471f9a6e">otEnergyScanResult</a></td></tr>
+<tr class="memdesc:ga667d7f8c8d46993c1b11d0eb471f9a6e"><td class="mdescLeft">&#160;</td><td class="mdescRight">This struct represents an energy scan result. <br /></td></tr>
+<tr class="separator:ga667d7f8c8d46993c1b11d0eb471f9a6e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga0d80ba776e018ab1ccfe06bec5dffdae"><td class="memItemLeft" align="right" valign="top">typedef void(*&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../d0/d0a/group__commands.html#ga0d80ba776e018ab1ccfe06bec5dffdae">otHandleActiveScanResult</a>) (<a class="el" href="../../d1/de8/structotActiveScanResult.html">otActiveScanResult</a> *aResult, void *aContext)</td></tr>
+<tr class="memdesc:ga0d80ba776e018ab1ccfe06bec5dffdae"><td class="mdescLeft">&#160;</td><td class="mdescRight">This function pointer is called during an IEEE 802.15.4 Active Scan when an IEEE 802.15.4 Beacon is received or the scan completes.  <a href="#ga0d80ba776e018ab1ccfe06bec5dffdae">More...</a><br /></td></tr>
+<tr class="separator:ga0d80ba776e018ab1ccfe06bec5dffdae"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:gaf46bb8c08be86055fb18e7729123f3ca"><td class="memItemLeft" align="right" valign="top">typedef void(*&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../d0/d0a/group__commands.html#gaf46bb8c08be86055fb18e7729123f3ca">otHandleEnergyScanResult</a>) (<a class="el" href="../../d6/d3f/structotEnergyScanResult.html">otEnergyScanResult</a> *aResult, void *aContext)</td></tr>
+<tr class="memdesc:gaf46bb8c08be86055fb18e7729123f3ca"><td class="mdescLeft">&#160;</td><td class="mdescRight">This function pointer is called during an IEEE 802.15.4 Energy Scan when the result for a channel is ready or the scan completes.  <a href="#gaf46bb8c08be86055fb18e7729123f3ca">More...</a><br /></td></tr>
+<tr class="separator:gaf46bb8c08be86055fb18e7729123f3ca"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 Functions</h2></td></tr>
-<tr class="memitem:ga11ec161cd87814ef1ae532017fa211dc"><td class="memItemLeft" align="right" valign="top"><a class="el" href="../../dc/dbf/openthread-types_8h.html#ab701d053a9c34ab7f11e43e0dc09ac9f">ThreadError</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../d0/d0a/group__commands.html#ga11ec161cd87814ef1ae532017fa211dc">otEnable</a> (void)</td></tr>
-<tr class="memdesc:ga11ec161cd87814ef1ae532017fa211dc"><td class="mdescLeft">&#160;</td><td class="mdescRight">This function initializes the OpenThread library.  <a href="#ga11ec161cd87814ef1ae532017fa211dc">More...</a><br /></td></tr>
-<tr class="separator:ga11ec161cd87814ef1ae532017fa211dc"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:gada88df6c7f3db6dcf65a90b37af2150f"><td class="memItemLeft" align="right" valign="top"><a class="el" href="../../dc/dbf/openthread-types_8h.html#ab701d053a9c34ab7f11e43e0dc09ac9f">ThreadError</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../d0/d0a/group__commands.html#gada88df6c7f3db6dcf65a90b37af2150f">otDisable</a> (void)</td></tr>
-<tr class="memdesc:gada88df6c7f3db6dcf65a90b37af2150f"><td class="mdescLeft">&#160;</td><td class="mdescRight">This function disables the OpenThread library.  <a href="#gada88df6c7f3db6dcf65a90b37af2150f">More...</a><br /></td></tr>
-<tr class="separator:gada88df6c7f3db6dcf65a90b37af2150f"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:gaef7f3f976d118468db29e9768cedb060"><td class="memItemLeft" align="right" valign="top"><a class="el" href="../../dc/dbf/openthread-types_8h.html#ab701d053a9c34ab7f11e43e0dc09ac9f">ThreadError</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../d0/d0a/group__commands.html#gaef7f3f976d118468db29e9768cedb060">otInterfaceUp</a> (void)</td></tr>
-<tr class="memdesc:gaef7f3f976d118468db29e9768cedb060"><td class="mdescLeft">&#160;</td><td class="mdescRight">This function brings up the IPv6 interface.  <a href="#gaef7f3f976d118468db29e9768cedb060">More...</a><br /></td></tr>
-<tr class="separator:gaef7f3f976d118468db29e9768cedb060"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:gaa91b1e5a452dd5f3033312ea5cf5741c"><td class="memItemLeft" align="right" valign="top"><a class="el" href="../../dc/dbf/openthread-types_8h.html#ab701d053a9c34ab7f11e43e0dc09ac9f">ThreadError</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../d0/d0a/group__commands.html#gaa91b1e5a452dd5f3033312ea5cf5741c">otInterfaceDown</a> (void)</td></tr>
-<tr class="memdesc:gaa91b1e5a452dd5f3033312ea5cf5741c"><td class="mdescLeft">&#160;</td><td class="mdescRight">This function brings down the IPv6 interface.  <a href="#gaa91b1e5a452dd5f3033312ea5cf5741c">More...</a><br /></td></tr>
-<tr class="separator:gaa91b1e5a452dd5f3033312ea5cf5741c"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ga1dd1b2d6b37b852f22975eb0671b67e0"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../d0/d0a/group__commands.html#ga1dd1b2d6b37b852f22975eb0671b67e0">otIsInterfaceUp</a> (void)</td></tr>
-<tr class="memdesc:ga1dd1b2d6b37b852f22975eb0671b67e0"><td class="mdescLeft">&#160;</td><td class="mdescRight">This function indicates whether or not the IPv6 interface is up.  <a href="#ga1dd1b2d6b37b852f22975eb0671b67e0">More...</a><br /></td></tr>
-<tr class="separator:ga1dd1b2d6b37b852f22975eb0671b67e0"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ga49261298a6f385dda4a0d555f41932cd"><td class="memItemLeft" align="right" valign="top"><a class="el" href="../../dc/dbf/openthread-types_8h.html#ab701d053a9c34ab7f11e43e0dc09ac9f">ThreadError</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../d0/d0a/group__commands.html#ga49261298a6f385dda4a0d555f41932cd">otThreadStart</a> (void)</td></tr>
-<tr class="memdesc:ga49261298a6f385dda4a0d555f41932cd"><td class="mdescLeft">&#160;</td><td class="mdescRight">This function starts Thread protocol operation.  <a href="#ga49261298a6f385dda4a0d555f41932cd">More...</a><br /></td></tr>
-<tr class="separator:ga49261298a6f385dda4a0d555f41932cd"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:gaea882ef7f8fa773cd0c30e5b70966680"><td class="memItemLeft" align="right" valign="top"><a class="el" href="../../dc/dbf/openthread-types_8h.html#ab701d053a9c34ab7f11e43e0dc09ac9f">ThreadError</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../d0/d0a/group__commands.html#gaea882ef7f8fa773cd0c30e5b70966680">otThreadStop</a> (void)</td></tr>
-<tr class="memdesc:gaea882ef7f8fa773cd0c30e5b70966680"><td class="mdescLeft">&#160;</td><td class="mdescRight">This function stops Thread protocol operation.  <a href="#gaea882ef7f8fa773cd0c30e5b70966680">More...</a><br /></td></tr>
-<tr class="separator:gaea882ef7f8fa773cd0c30e5b70966680"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ga3b008b917cabba2a752b3dab322c6bba"><td class="memItemLeft" align="right" valign="top"><a class="el" href="../../dc/dbf/openthread-types_8h.html#ab701d053a9c34ab7f11e43e0dc09ac9f">ThreadError</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../d0/d0a/group__commands.html#ga3b008b917cabba2a752b3dab322c6bba">otActiveScan</a> (uint32_t aScanChannels, uint16_t aScanDuration, <a class="el" href="../../d0/d0a/group__commands.html#ga7dfbd6ce8dde9cb68d0e4b54310ecb30">otHandleActiveScanResult</a> aCallback)</td></tr>
-<tr class="memdesc:ga3b008b917cabba2a752b3dab322c6bba"><td class="mdescLeft">&#160;</td><td class="mdescRight">This function starts an IEEE 802.15.4 Active Scan.  <a href="#ga3b008b917cabba2a752b3dab322c6bba">More...</a><br /></td></tr>
-<tr class="separator:ga3b008b917cabba2a752b3dab322c6bba"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ga4a886a2e45bce0920bfa083188cf1f88"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../d0/d0a/group__commands.html#ga4a886a2e45bce0920bfa083188cf1f88">otActiveScanInProgress</a> (void)</td></tr>
-<tr class="memdesc:ga4a886a2e45bce0920bfa083188cf1f88"><td class="mdescLeft">&#160;</td><td class="mdescRight">This function determines if an IEEE 802.15.4 Active Scan is currently in progress.  <a href="#ga4a886a2e45bce0920bfa083188cf1f88">More...</a><br /></td></tr>
-<tr class="separator:ga4a886a2e45bce0920bfa083188cf1f88"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga768af70c94547bf06bb42faf6448efe8"><td class="memItemLeft" align="right" valign="top">const char *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../d0/d0a/group__commands.html#ga768af70c94547bf06bb42faf6448efe8">otGetVersionString</a> (void)</td></tr>
+<tr class="memdesc:ga768af70c94547bf06bb42faf6448efe8"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the OpenThread version string.  <a href="#ga768af70c94547bf06bb42faf6448efe8">More...</a><br /></td></tr>
+<tr class="separator:ga768af70c94547bf06bb42faf6448efe8"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga05c0a89211be5a032fca805abfdb41f8"><td class="memItemLeft" align="right" valign="top"><a class="el" href="../../d2/d83/structotInstance.html">otInstance</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../d0/d0a/group__commands.html#ga05c0a89211be5a032fca805abfdb41f8">otInstanceInit</a> (void)</td></tr>
+<tr class="memdesc:ga05c0a89211be5a032fca805abfdb41f8"><td class="mdescLeft">&#160;</td><td class="mdescRight">This function initializes the static instance of the OpenThread library.  <a href="#ga05c0a89211be5a032fca805abfdb41f8">More...</a><br /></td></tr>
+<tr class="separator:ga05c0a89211be5a032fca805abfdb41f8"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:gaab0dc090f71b80671ff3dad620314b43"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../d0/d0a/group__commands.html#gaab0dc090f71b80671ff3dad620314b43">otInstanceFinalize</a> (<a class="el" href="../../d2/d83/structotInstance.html">otInstance</a> *aInstance)</td></tr>
+<tr class="memdesc:gaab0dc090f71b80671ff3dad620314b43"><td class="mdescLeft">&#160;</td><td class="mdescRight">This function disables the OpenThread library.  <a href="#gaab0dc090f71b80671ff3dad620314b43">More...</a><br /></td></tr>
+<tr class="separator:gaab0dc090f71b80671ff3dad620314b43"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga16b0f2f53ff41fe70044d39226f2c2da"><td class="memItemLeft" align="right" valign="top"><a class="el" href="../../dc/dbf/openthread-types_8h.html#ab701d053a9c34ab7f11e43e0dc09ac9f">ThreadError</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../d0/d0a/group__commands.html#ga16b0f2f53ff41fe70044d39226f2c2da">otInterfaceUp</a> (<a class="el" href="../../d2/d83/structotInstance.html">otInstance</a> *aInstance)</td></tr>
+<tr class="memdesc:ga16b0f2f53ff41fe70044d39226f2c2da"><td class="mdescLeft">&#160;</td><td class="mdescRight">This function brings up the IPv6 interface.  <a href="#ga16b0f2f53ff41fe70044d39226f2c2da">More...</a><br /></td></tr>
+<tr class="separator:ga16b0f2f53ff41fe70044d39226f2c2da"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga0e2dfd90f079bb52c8bfb406ade88d8a"><td class="memItemLeft" align="right" valign="top"><a class="el" href="../../dc/dbf/openthread-types_8h.html#ab701d053a9c34ab7f11e43e0dc09ac9f">ThreadError</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../d0/d0a/group__commands.html#ga0e2dfd90f079bb52c8bfb406ade88d8a">otInterfaceDown</a> (<a class="el" href="../../d2/d83/structotInstance.html">otInstance</a> *aInstance)</td></tr>
+<tr class="memdesc:ga0e2dfd90f079bb52c8bfb406ade88d8a"><td class="mdescLeft">&#160;</td><td class="mdescRight">This function brings down the IPv6 interface.  <a href="#ga0e2dfd90f079bb52c8bfb406ade88d8a">More...</a><br /></td></tr>
+<tr class="separator:ga0e2dfd90f079bb52c8bfb406ade88d8a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:gaa27a8a819cc401045e172d3b016afad5"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../d0/d0a/group__commands.html#gaa27a8a819cc401045e172d3b016afad5">otIsInterfaceUp</a> (<a class="el" href="../../d2/d83/structotInstance.html">otInstance</a> *aInstance)</td></tr>
+<tr class="memdesc:gaa27a8a819cc401045e172d3b016afad5"><td class="mdescLeft">&#160;</td><td class="mdescRight">This function indicates whether or not the IPv6 interface is up.  <a href="#gaa27a8a819cc401045e172d3b016afad5">More...</a><br /></td></tr>
+<tr class="separator:gaa27a8a819cc401045e172d3b016afad5"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga62fbc1cdb7b036df73975ca5683f8573"><td class="memItemLeft" align="right" valign="top"><a class="el" href="../../dc/dbf/openthread-types_8h.html#ab701d053a9c34ab7f11e43e0dc09ac9f">ThreadError</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../d0/d0a/group__commands.html#ga62fbc1cdb7b036df73975ca5683f8573">otThreadStart</a> (<a class="el" href="../../d2/d83/structotInstance.html">otInstance</a> *aInstance)</td></tr>
+<tr class="memdesc:ga62fbc1cdb7b036df73975ca5683f8573"><td class="mdescLeft">&#160;</td><td class="mdescRight">This function starts Thread protocol operation.  <a href="#ga62fbc1cdb7b036df73975ca5683f8573">More...</a><br /></td></tr>
+<tr class="separator:ga62fbc1cdb7b036df73975ca5683f8573"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga9dd31b4b5ff1c0b06a39683bc5196972"><td class="memItemLeft" align="right" valign="top"><a class="el" href="../../dc/dbf/openthread-types_8h.html#ab701d053a9c34ab7f11e43e0dc09ac9f">ThreadError</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../d0/d0a/group__commands.html#ga9dd31b4b5ff1c0b06a39683bc5196972">otThreadStop</a> (<a class="el" href="../../d2/d83/structotInstance.html">otInstance</a> *aInstance)</td></tr>
+<tr class="memdesc:ga9dd31b4b5ff1c0b06a39683bc5196972"><td class="mdescLeft">&#160;</td><td class="mdescRight">This function stops Thread protocol operation.  <a href="#ga9dd31b4b5ff1c0b06a39683bc5196972">More...</a><br /></td></tr>
+<tr class="separator:ga9dd31b4b5ff1c0b06a39683bc5196972"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga0b5e932f27ea83d933d8c0b2ec58c340"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../d0/d0a/group__commands.html#ga0b5e932f27ea83d933d8c0b2ec58c340">otIsSingleton</a> (<a class="el" href="../../d2/d83/structotInstance.html">otInstance</a> *aInstance)</td></tr>
+<tr class="memdesc:ga0b5e932f27ea83d933d8c0b2ec58c340"><td class="mdescLeft">&#160;</td><td class="mdescRight">This function indicates whether a node is the only router on the network.  <a href="#ga0b5e932f27ea83d933d8c0b2ec58c340">More...</a><br /></td></tr>
+<tr class="separator:ga0b5e932f27ea83d933d8c0b2ec58c340"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga2f08c9b06e586b155d9d1ae5bbf79439"><td class="memItemLeft" align="right" valign="top"><a class="el" href="../../dc/dbf/openthread-types_8h.html#ab701d053a9c34ab7f11e43e0dc09ac9f">ThreadError</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../d0/d0a/group__commands.html#ga2f08c9b06e586b155d9d1ae5bbf79439">otActiveScan</a> (<a class="el" href="../../d2/d83/structotInstance.html">otInstance</a> *aInstance, uint32_t aScanChannels, uint16_t aScanDuration, <a class="el" href="../../d0/d0a/group__commands.html#ga0d80ba776e018ab1ccfe06bec5dffdae">otHandleActiveScanResult</a> aCallback, void *aCallbackContext)</td></tr>
+<tr class="memdesc:ga2f08c9b06e586b155d9d1ae5bbf79439"><td class="mdescLeft">&#160;</td><td class="mdescRight">This function starts an IEEE 802.15.4 Active Scan.  <a href="#ga2f08c9b06e586b155d9d1ae5bbf79439">More...</a><br /></td></tr>
+<tr class="separator:ga2f08c9b06e586b155d9d1ae5bbf79439"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga74cab550a48bfb41b7439d77086c9288"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../d0/d0a/group__commands.html#ga74cab550a48bfb41b7439d77086c9288">otIsActiveScanInProgress</a> (<a class="el" href="../../d2/d83/structotInstance.html">otInstance</a> *aInstance)</td></tr>
+<tr class="memdesc:ga74cab550a48bfb41b7439d77086c9288"><td class="mdescLeft">&#160;</td><td class="mdescRight">This function indicates whether or not an IEEE 802.15.4 Active Scan is currently in progress.  <a href="#ga74cab550a48bfb41b7439d77086c9288">More...</a><br /></td></tr>
+<tr class="separator:ga74cab550a48bfb41b7439d77086c9288"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga7c364a9620dd9b6df30fb2c357bb883b"><td class="memItemLeft" align="right" valign="top"><a class="el" href="../../dc/dbf/openthread-types_8h.html#ab701d053a9c34ab7f11e43e0dc09ac9f">ThreadError</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../d0/d0a/group__commands.html#ga7c364a9620dd9b6df30fb2c357bb883b">otEnergyScan</a> (<a class="el" href="../../d2/d83/structotInstance.html">otInstance</a> *aInstance, uint32_t aScanChannels, uint16_t aScanDuration, <a class="el" href="../../d0/d0a/group__commands.html#gaf46bb8c08be86055fb18e7729123f3ca">otHandleEnergyScanResult</a> aCallback, void *aCallbackContext)</td></tr>
+<tr class="memdesc:ga7c364a9620dd9b6df30fb2c357bb883b"><td class="mdescLeft">&#160;</td><td class="mdescRight">This function starts an IEEE 802.15.4 Energy Scan.  <a href="#ga7c364a9620dd9b6df30fb2c357bb883b">More...</a><br /></td></tr>
+<tr class="separator:ga7c364a9620dd9b6df30fb2c357bb883b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga93b20cfbbaeadec1e0345f15979f06fa"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../d0/d0a/group__commands.html#ga93b20cfbbaeadec1e0345f15979f06fa">otIsEnergyScanInProgress</a> (<a class="el" href="../../d2/d83/structotInstance.html">otInstance</a> *aInstance)</td></tr>
+<tr class="memdesc:ga93b20cfbbaeadec1e0345f15979f06fa"><td class="mdescLeft">&#160;</td><td class="mdescRight">This function indicates whether or not an IEEE 802.15.4 Energy Scan is currently in progress.  <a href="#ga93b20cfbbaeadec1e0345f15979f06fa">More...</a><br /></td></tr>
+<tr class="separator:ga93b20cfbbaeadec1e0345f15979f06fa"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga8422cdf7d0b8b22c6dd107e6bb1309f2"><td class="memItemLeft" align="right" valign="top"><a class="el" href="../../dc/dbf/openthread-types_8h.html#ab701d053a9c34ab7f11e43e0dc09ac9f">ThreadError</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../d0/d0a/group__commands.html#ga8422cdf7d0b8b22c6dd107e6bb1309f2">otDiscover</a> (<a class="el" href="../../d2/d83/structotInstance.html">otInstance</a> *aInstance, uint32_t aScanChannels, uint16_t aScanDuration, uint16_t aPanid, <a class="el" href="../../d0/d0a/group__commands.html#ga0d80ba776e018ab1ccfe06bec5dffdae">otHandleActiveScanResult</a> aCallback, void *aCallbackContext)</td></tr>
+<tr class="memdesc:ga8422cdf7d0b8b22c6dd107e6bb1309f2"><td class="mdescLeft">&#160;</td><td class="mdescRight">This function starts a Thread Discovery scan.  <a href="#ga8422cdf7d0b8b22c6dd107e6bb1309f2">More...</a><br /></td></tr>
+<tr class="separator:ga8422cdf7d0b8b22c6dd107e6bb1309f2"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:gace318f8f279ecf06c6d595ac19aa8d32"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../d0/d0a/group__commands.html#gace318f8f279ecf06c6d595ac19aa8d32">otIsDiscoverInProgress</a> (<a class="el" href="../../d2/d83/structotInstance.html">otInstance</a> *aInstance)</td></tr>
+<tr class="memdesc:gace318f8f279ecf06c6d595ac19aa8d32"><td class="mdescLeft">&#160;</td><td class="mdescRight">This function determines if an MLE Thread Discovery is currently in progress.  <a href="#gace318f8f279ecf06c6d595ac19aa8d32">More...</a><br /></td></tr>
+<tr class="separator:gace318f8f279ecf06c6d595ac19aa8d32"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <p>This module includes functions for OpenThread commands. </p>
 <h2 class="groupheader">Typedef Documentation</h2>
-<a class="anchor" id="ga7dfbd6ce8dde9cb68d0e4b54310ecb30"></a>
+<a class="anchor" id="ga0d80ba776e018ab1ccfe06bec5dffdae"></a>
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">typedef void(* otHandleActiveScanResult) (<a class="el" href="../../d1/de8/structotActiveScanResult.html">otActiveScanResult</a> *aResult)</td>
+          <td class="memname">typedef void(* otHandleActiveScanResult) (<a class="el" href="../../d1/de8/structotActiveScanResult.html">otActiveScanResult</a> *aResult, void *aContext)</td>
         </tr>
       </table>
 </div><div class="memdoc">
@@ -257,6 +300,28 @@ Functions</h2></td></tr>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramdir">[in]</td><td class="paramname">aResult</td><td>A valid pointer to the beacon information or NULL when the active scan completes. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">aContext</td><td>A pointer to application-specific context. </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a class="anchor" id="gaf46bb8c08be86055fb18e7729123f3ca"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">typedef void(* otHandleEnergyScanResult) (<a class="el" href="../../d6/d3f/structotEnergyScanResult.html">otEnergyScanResult</a> *aResult, void *aContext)</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>This function pointer is called during an IEEE 802.15.4 Energy Scan when the result for a channel is ready or the scan completes. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">aResult</td><td>A valid pointer to the energy scan result information or NULL when the energy scan completes. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">aContext</td><td>A pointer to application-specific context. </td></tr>
   </table>
   </dd>
 </dl>
@@ -264,13 +329,19 @@ Functions</h2></td></tr>
 </div>
 </div>
 <h2 class="groupheader">Function Documentation</h2>
-<a class="anchor" id="ga3b008b917cabba2a752b3dab322c6bba"></a>
+<a class="anchor" id="ga2f08c9b06e586b155d9d1ae5bbf79439"></a>
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
           <td class="memname"><a class="el" href="../../dc/dbf/openthread-types_8h.html#ab701d053a9c34ab7f11e43e0dc09ac9f">ThreadError</a> otActiveScan </td>
           <td>(</td>
+          <td class="paramtype"><a class="el" href="../../d2/d83/structotInstance.html">otInstance</a> *&#160;</td>
+          <td class="paramname"><em>aInstance</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
           <td class="paramtype">uint32_t&#160;</td>
           <td class="paramname"><em>aScanChannels</em>, </td>
         </tr>
@@ -283,8 +354,14 @@ Functions</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype"><a class="el" href="../../d0/d0a/group__commands.html#ga7dfbd6ce8dde9cb68d0e4b54310ecb30">otHandleActiveScanResult</a>&#160;</td>
-          <td class="paramname"><em>aCallback</em>&#160;</td>
+          <td class="paramtype"><a class="el" href="../../d0/d0a/group__commands.html#ga0d80ba776e018ab1ccfe06bec5dffdae">otHandleActiveScanResult</a>&#160;</td>
+          <td class="paramname"><em>aCallback</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">void *&#160;</td>
+          <td class="paramname"><em>aCallbackContext</em>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -297,9 +374,11 @@ Functions</h2></td></tr>
 <p>This function starts an IEEE 802.15.4 Active Scan. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">aInstance</td><td>A pointer to an OpenThread instance. </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">aScanChannels</td><td>A bit vector indicating which channels to scan (e.g. OT_CHANNEL_11_MASK). </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">aScanDuration</td><td>The time in milliseconds to spend scanning each channel. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">aCallback</td><td>A pointer to a function that is called when a beacon is received or the scan completes.</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">aCallback</td><td>A pointer to a function called on receiving a beacon or scan completes. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">aCallbackContext</td><td>A pointer to application-specific context.</td></tr>
   </table>
   </dd>
 </dl>
@@ -312,25 +391,259 @@ Functions</h2></td></tr>
 </dl>
 
 <p><div class="dynheader">
+Here is the call graph for this function:</div>
+<div class="dyncontent">
+<div class="center"><img src="../../d0/d0a/group__commands_ga2f08c9b06e586b155d9d1ae5bbf79439_cgraph.png" border="0" usemap="#d0/d0a/group__commands_ga2f08c9b06e586b155d9d1ae5bbf79439_cgraph" alt=""/></div>
+<map name="d0/d0a/group__commands_ga2f08c9b06e586b155d9d1ae5bbf79439_cgraph" id="d0/d0a/group__commands_ga2f08c9b06e586b155d9d1ae5bbf79439_cgraph">
+<area shape="rect" id="node2" href="../../d3/d8e/classThread_1_1ThreadNetif.html#aec59b0e172327889e9b0f4f08b0e69f9" title="This method returns a pointer to the mac object. " alt="" coords="184,5,324,44"/>
+<area shape="rect" id="node3" href="../../d6/d88/classThread_1_1Mac_1_1Mac.html#a45f85fd96c07c7da1c464b92546a3096" title="This method starts an IEEE 802.15.4 Active Scan. " alt="" coords="152,68,355,93"/>
+</map>
+</div>
+</p>
+
+<p><div class="dynheader">
 Here is the caller graph for this function:</div>
 <div class="dyncontent">
-<div class="center"><img src="../../d0/d0a/group__commands_ga3b008b917cabba2a752b3dab322c6bba_icgraph.png" border="0" usemap="#d0/d0a/group__commands_ga3b008b917cabba2a752b3dab322c6bba_icgraph" alt=""/></div>
-<map name="d0/d0a/group__commands_ga3b008b917cabba2a752b3dab322c6bba_icgraph" id="d0/d0a/group__commands_ga3b008b917cabba2a752b3dab322c6bba_icgraph">
-<area shape="rect" id="node2" href="../../d9/dc8/classThread_1_1NcpBase.html#ad628aea520da8553bbb090ff4f50b09e" title="Called by the superclass to indicate when a send has been completed. " alt="" coords="152,31,390,56"/>
-<area shape="rect" id="node3" href="../../d2/de4/ncp_8h.html#aef46036f17188b217a2ffcb8c325f516" title="Initialize the NCP. " alt="" coords="498,5,572,31"/>
-<area shape="rect" id="node4" href="../../db/def/group__uart.html#gab2950583380bb90a3779f980c28fbaa0" title="The UART driver calls this method to notify OpenThread that the requested bytes have been sent..." alt="" coords="438,55,632,80"/>
+<div class="center"><img src="../../d0/d0a/group__commands_ga2f08c9b06e586b155d9d1ae5bbf79439_icgraph.png" border="0" usemap="#d0/d0a/group__commands_ga2f08c9b06e586b155d9d1ae5bbf79439_icgraph" alt=""/></div>
+<map name="d0/d0a/group__commands_ga2f08c9b06e586b155d9d1ae5bbf79439_icgraph" id="d0/d0a/group__commands_ga2f08c9b06e586b155d9d1ae5bbf79439_icgraph">
+<area shape="rect" id="node2" href="../../d5/dc2/structThread_1_1Cli_1_1Interpreter.html#a11ee1f86cffe17aab7de3de0bb16dee7" title="This method parses an ASCII string as an unsigned long. " alt="" coords="171,5,326,44"/>
+<area shape="rect" id="node3" href="../../d9/dc8/classThread_1_1NcpBase.html#ad14f0f1d60c77f7f537a0a441a9fb35c" title="This method is called by the framer whenever a framing error is detected. " alt="" coords="152,68,344,107"/>
+<area shape="rect" id="node4" href="../../dc/d60/classThread_1_1NcpUart.html#a34e4ca7aff5b9056593e8ce0aa6e2fbb" title="This method is called when uart received a data buffer. " alt="" coords="392,68,587,107"/>
 </map>
 </div>
 </p>
 
 </div>
 </div>
-<a class="anchor" id="ga4a886a2e45bce0920bfa083188cf1f88"></a>
+<a class="anchor" id="ga8422cdf7d0b8b22c6dd107e6bb1309f2"></a>
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">bool otActiveScanInProgress </td>
+          <td class="memname"><a class="el" href="../../dc/dbf/openthread-types_8h.html#ab701d053a9c34ab7f11e43e0dc09ac9f">ThreadError</a> otDiscover </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="../../d2/d83/structotInstance.html">otInstance</a> *&#160;</td>
+          <td class="paramname"><em>aInstance</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">uint32_t&#160;</td>
+          <td class="paramname"><em>aScanChannels</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">uint16_t&#160;</td>
+          <td class="paramname"><em>aScanDuration</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">uint16_t&#160;</td>
+          <td class="paramname"><em>aPanid</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="../../d0/d0a/group__commands.html#ga0d80ba776e018ab1ccfe06bec5dffdae">otHandleActiveScanResult</a>&#160;</td>
+          <td class="paramname"><em>aCallback</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">void *&#160;</td>
+          <td class="paramname"><em>aCallbackContext</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>This function starts a Thread Discovery scan. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">aInstance</td><td>A pointer to an OpenThread instance. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">aScanChannels</td><td>A bit vector indicating which channels to scan (e.g. OT_CHANNEL_11_MASK). </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">aScanDuration</td><td>The time in milliseconds to spend scanning each channel. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">aPanId</td><td>The PAN ID filter (set to Broadcast PAN to disable filter). </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">aCallback</td><td>A pointer to a function called on receiving an MLE Discovery Response or scan completes. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">aCallbackContext</td><td>A pointer to application-specific context.</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="retval"><dt>Return values</dt><dd>
+  <table class="retval">
+    <tr><td class="paramname">kThreadError_None</td><td>Accepted the Thread Discovery request. </td></tr>
+    <tr><td class="paramname">kThreadError_Busy</td><td>Already performing an Thread Discovery. </td></tr>
+  </table>
+  </dd>
+</dl>
+
+<p><div class="dynheader">
+Here is the call graph for this function:</div>
+<div class="dyncontent">
+<div class="center"><img src="../../d0/d0a/group__commands_ga8422cdf7d0b8b22c6dd107e6bb1309f2_cgraph.png" border="0" usemap="#d0/d0a/group__commands_ga8422cdf7d0b8b22c6dd107e6bb1309f2_cgraph" alt=""/></div>
+<map name="d0/d0a/group__commands_ga8422cdf7d0b8b22c6dd107e6bb1309f2_cgraph" id="d0/d0a/group__commands_ga8422cdf7d0b8b22c6dd107e6bb1309f2_cgraph">
+<area shape="rect" id="node2" href="../../d3/d8e/classThread_1_1ThreadNetif.html#ad49d56e324f096d728c0083d9292f52d" title="This method returns a pointer to the mle object. " alt="" coords="158,2443,298,2482"/>
+<area shape="rect" id="node3" href="../../df/d94/group__core-mle-core.html#gab299d00d1b2beabe8130e400dd6eca91" title="This method initiates a Thread Discovery. " alt="" coords="138,2506,318,2531"/>
+<area shape="rect" id="node4" href="../../dd/d1d/classThread_1_1MeshForwarder.html#a5f726671448fb7cd72f8ee96db40731a" title="This method sets the scan parameters for MLE Discovery Request messages. " alt="" coords="379,1342,549,1381"/>
+<area shape="rect" id="node6" href="../../dc/d3c/classThread_1_1Message.html#adc9d723284f5807d9c272ab89bc52b45" title="This method frees this message buffer. " alt="" coords="1144,345,1304,370"/>
+<area shape="rect" id="node16" href="../../dc/d75/classThread_1_1Ip6_1_1UdpSocket.html#aafb4481c92d1f8515e51cfa822a1bde1" title="This method returns a new UDP message with sufficient header space reserved. " alt="" coords="1143,442,1305,481"/>
+<area shape="rect" id="node17" href="../../dc/d3c/classThread_1_1Message.html#a942818bf261c0af93b793017407c2b2c" title="This method sets whether or not link security is enabled for the message. " alt="" coords="1136,798,1313,837"/>
+<area shape="rect" id="node18" href="../../df/d94/group__core-mle-core.html#gadbe9c0d542453bbe67270fb5dc47db93" title="This method appends an MLE header to a message. " alt="" coords="1137,1033,1312,1071"/>
+<area shape="rect" id="node19" href="../../dc/d3c/classThread_1_1Message.html#a3c3d1c48e940f2553586d16e1618277d" title="This method appends bytes to the end of the message. " alt="" coords="1375,982,1554,1007"/>
+<area shape="rect" id="node20" href="../../df/d94/group__core-mle-core.html#ga0ea27201cf13a4e1b0680a9da6c54a64" title="This method submits an MLE message to the UDP socket. " alt="" coords="859,1010,1073,1035"/>
+<area shape="rect" id="node21" href="../../dc/d3c/classThread_1_1Message.html#add75c76a1fa70eb5d4eb03b68c5d1df8" title="This method writes bytes to the message. " alt="" coords="1142,2455,1306,2481"/>
+<area shape="rect" id="node22" href="../../dc/d3c/classThread_1_1Message.html#a2cf440376e834030c38bb2ced4ca49e9" title="This method returns the number of bytes in the message. " alt="" coords="1127,195,1322,221"/>
+<area shape="rect" id="node23" href="../../dc/d39/classThread_1_1Mle_1_1Tlv.html#aa9531efdff2976fbea3881c7c893a1c8" title="This method sets the Length value. " alt="" coords="1131,2582,1317,2607"/>
+<area shape="rect" id="node24" href="../../dc/d3c/classThread_1_1Message.html#ac4ef16141a9922e6a059851ba065a5f1" title="This method sets the message sub type. " alt="" coords="1122,2670,1327,2695"/>
+<area shape="rect" id="node25" href="../../dc/d3c/classThread_1_1Message.html#a1628f80117b198ed5d4f0765af2e0304" title="This method sets the IEEE 802.15.4 Destination PAN ID. " alt="" coords="1130,2354,1318,2379"/>
+<area shape="rect" id="node26" href="../../dc/d39/classThread_1_1Mle_1_1Tlv.html#a20693a0ee15c8eed9d63c29408a3dd21" title="This method sets the Type value. " alt="" coords="1137,2719,1311,2745"/>
+<area shape="rect" id="node49" href="../../d9/df2/classThread_1_1MeshCoP_1_1DiscoveryRequestTlv.html#a44a804178991ffc34fcac14881c62582" title="This method initializes the TLV. " alt="" coords="366,2810,562,2849"/>
+<area shape="rect" id="node50" href="../../d9/df2/classThread_1_1MeshCoP_1_1DiscoveryRequestTlv.html#ab7ac11ac8ffc884c2114c242e709edb0" title="This method sets the Version value. " alt="" coords="366,2873,562,2911"/>
+<area shape="rect" id="node5" href="../../da/d1a/classThread_1_1MessageQueue.html#a501d831849c577b2114fcbb4034d074d" title="This method removes a message from the list. " alt="" coords="628,2165,793,2203"/>
+<area shape="rect" id="node7" href="../../d6/d88/classThread_1_1Mac_1_1Mac.html#a67edffbeed3e53c57b6740d2899483be" title="This method sets the IEEE 802.15.4 Channel. " alt="" coords="1121,931,1327,957"/>
+<area shape="rect" id="node8" href="../../df/d94/group__core-mle-core.html#gad2d9620c90fcec98fc11a399c6d1f62e" title="This method is called by the MeshForwarder to indicate that discovery is complete. " alt="" coords="625,2227,796,2266"/>
+<area shape="rect" id="node9" href="../../dc/d3c/classThread_1_1Message.html#a566601529b2827024c7b33bd09d86ca0" title="This method schedules forwarding using direct transmission. " alt="" coords="617,2290,804,2329"/>
+<area shape="rect" id="node10" href="../../d4/d92/classThread_1_1Tasklet.html#a50a39a6f422851035b89aace87482425" title="This method puts the tasklet on the run queue. " alt="" coords="637,347,784,373"/>
+<area shape="rect" id="node11" href="../../d5/d19/classThread_1_1Mac_1_1Frame.html#a6f117ad3d248cdcf4d215424a4b3aa94" title="This method returns a pointer to the MAC Header. " alt="" coords="639,397,782,435"/>
+<area shape="rect" id="node12" href="../../d5/d19/classThread_1_1Mac_1_1Frame.html#a1d4368e69d78cc6c14cefa5016b64bb1" title="This method returns the MAC Frame Length. " alt="" coords="639,459,782,498"/>
+<area shape="rect" id="node13" href="../../d5/d19/classThread_1_1Mac_1_1Frame.html#a822db6a8c7e1cdaa03536e428025fed6" title="This method gets the Source Address. " alt="" coords="639,522,782,561"/>
+<area shape="rect" id="node14" href="../../d9/db1/classThread_1_1Ip6_1_1Address.html#a7e4fe6c422ffbaf30638bbf7065da6fa" title="This method sets the Interface Identifier. " alt="" coords="638,585,783,623"/>
+<area shape="rect" id="node15" href="../../db/dec/group__core-mle-router.html#ga7126c084ace25827febebc4210928cd4" title="This method generates an MLE Link Reject. " alt="" coords="630,773,791,811"/>
+<area shape="rect" id="node27" href="../../d5/d19/classThread_1_1Mac_1_1Frame.html#a8a6520ee4233fd2746f1004d7ad2ff97" title="This method gets the Destination Address. " alt="" coords="639,647,782,686"/>
+<area shape="rect" id="node28" href="../../db/dec/group__core-mle-router.html#ga09a998103a939f3e6c8aa97785fac87f" title="This method returns a pointer to a Child object. " alt="" coords="630,710,791,749"/>
+<area shape="rect" id="node29" href="../../d5/d19/classThread_1_1Mac_1_1Frame.html#a40c9526d37bb288cdbdb2695b420c670" title="This method gets the Source PAN Identifier. " alt="" coords="639,938,782,977"/>
+<area shape="rect" id="node30" href="../../d5/d19/classThread_1_1Mac_1_1Frame.html#ac3d7050937855b460dca12d48568b47c" title="This method returns the IEEE 802.15.4 channel used for transmission or reception. ..." alt="" coords="639,1001,782,1039"/>
+<area shape="rect" id="node31" href="../../d5/d19/classThread_1_1Mac_1_1Frame.html#a610b5a57124838a4e45ea7c4ec702166" title="This method returns the transmit/receive power in dBm used for transmission or reception. " alt="" coords="639,1063,782,1102"/>
+<area shape="rect" id="node32" href="../../d5/d19/classThread_1_1Mac_1_1Frame.html#a1d0d834e9d25cd755f00b0de75ba9f89" title="This method returns the receive Link Quality Indicator. " alt="" coords="639,1126,782,1165"/>
+<area shape="rect" id="node33" href="../../d5/d19/classThread_1_1Mac_1_1Frame.html#ae19eb91741db8d325ce23d8d0054dfc9" title="This method indicates whether or not security is enabled. " alt="" coords="637,1189,784,1227"/>
+<area shape="rect" id="node34" href="../../d5/d19/classThread_1_1Mac_1_1Frame.html#a88ed2e5889a4f69c74e15a2bd34e718d" title="This method returns a pointer to the MAC Payload. " alt="" coords="639,1251,782,1290"/>
+<area shape="rect" id="node35" href="../../d5/d19/classThread_1_1Mac_1_1Frame.html#ad71176e2e535e1d386d7ffddb2fb1c5c" title="This method returns the current MAC Payload length. " alt="" coords="639,1314,782,1353"/>
+<area shape="rect" id="node36" href="../../d1/d40/classThread_1_1Timer.html#a8815311dffb2fff6b548b63bfc7d6dba" title="This method indicates whether or not the timer instance is running. " alt="" coords="624,1377,796,1402"/>
+<area shape="rect" id="node37" href="../../d5/d19/classThread_1_1Mac_1_1Frame.html#a0a1fff7e3dcdf7e8f15e681adf2507ce" title="This method indicates whether or not the Frame Pending bit is set. " alt="" coords="639,1426,782,1465"/>
+<area shape="rect" id="node38" href="../../d1/d40/classThread_1_1Timer.html#a475731e21b59be6b17b24f5b5e175f62" title="This method schedules the timer to fire a dt milliseconds from now. " alt="" coords="640,1489,781,1514"/>
+<area shape="rect" id="node39" href="../../d5/d19/classThread_1_1Mac_1_1Frame.html#aa97494929ac0f0e6923e8021b5e5d924" title="This method returns the IEEE 802.15.4 Frame Type. " alt="" coords="639,1538,782,1577"/>
+<area shape="rect" id="node40" href="../../d8/d3a/classThread_1_1Lowpan_1_1Lowpan.html#ade9d72685760a1b3901c72b9a798f057" title="This method indicates whether or not the header is a LOWPAN_IPHC header. " alt="" coords="625,1601,796,1639"/>
+<area shape="rect" id="node41" href="../../d5/d19/classThread_1_1Mac_1_1Frame.html#a09d352ee711d0b403e55094a2fbb4365" title="This method gets the Command ID. " alt="" coords="639,1663,782,1702"/>
+<area shape="rect" id="node42" href="../../db/db1/classThread_1_1Lowpan_1_1MeshHeader.html#aca669774393e548cff16e290780b9d33" title="This method indicates whether or not the Mesh Header appears to be well&#45;formed. " alt="" coords="610,1726,811,1765"/>
+<area shape="rect" id="node43" href="../../db/db1/classThread_1_1Lowpan_1_1MeshHeader.html#ad199618dbd207c048d8320525e73be83" title="This method returns the Mesh Source address. " alt="" coords="610,1789,811,1827"/>
+<area shape="rect" id="node44" href="../../db/db1/classThread_1_1Lowpan_1_1MeshHeader.html#a7e1ec6692cd44d3e53c4d9fb75b82297" title="This method returns the Mesh Destination address. " alt="" coords="610,1851,811,1890"/>
+<area shape="rect" id="node45" href="../../d6/d88/classThread_1_1Mac_1_1Mac.html#ac00b980b5fa6eca48cd29aa7b8ccebe8" title="This method returns the IEEE 802.15.4 Short Address. " alt="" coords="616,1914,805,1953"/>
+<area shape="rect" id="node46" href="../../db/db1/classThread_1_1Lowpan_1_1MeshHeader.html#ae65701e6d34abd28e66332395bd95430" title="This static method returns the size of the Mesh Header in bytes. " alt="" coords="610,1977,811,2015"/>
+<area shape="rect" id="node47" href="../../db/db1/classThread_1_1Lowpan_1_1MeshHeader.html#abeec141e1ac19ad0fb6dde601b650dce" title="This method returns the Hops Left value. " alt="" coords="610,2039,811,2078"/>
+<area shape="rect" id="node48" href="../../db/db1/classThread_1_1Lowpan_1_1MeshHeader.html#ac29f926f9297f350791d94dc4022e403" title="This method sets the Hops Left value. " alt="" coords="610,2102,811,2141"/>
+</map>
+</div>
+</p>
+
+<p><div class="dynheader">
+Here is the caller graph for this function:</div>
+<div class="dyncontent">
+<div class="center"><img src="../../d0/d0a/group__commands_ga8422cdf7d0b8b22c6dd107e6bb1309f2_icgraph.png" border="0" usemap="#d0/d0a/group__commands_ga8422cdf7d0b8b22c6dd107e6bb1309f2_icgraph" alt=""/></div>
+<map name="d0/d0a/group__commands_ga8422cdf7d0b8b22c6dd107e6bb1309f2_icgraph" id="d0/d0a/group__commands_ga8422cdf7d0b8b22c6dd107e6bb1309f2_icgraph">
+<area shape="rect" id="node2" href="../../d5/dc2/structThread_1_1Cli_1_1Interpreter.html#a11ee1f86cffe17aab7de3de0bb16dee7" title="This method parses an ASCII string as an unsigned long. " alt="" coords="138,5,293,44"/>
+</map>
+</div>
+</p>
+
+</div>
+</div>
+<a class="anchor" id="ga7c364a9620dd9b6df30fb2c357bb883b"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="../../dc/dbf/openthread-types_8h.html#ab701d053a9c34ab7f11e43e0dc09ac9f">ThreadError</a> otEnergyScan </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="../../d2/d83/structotInstance.html">otInstance</a> *&#160;</td>
+          <td class="paramname"><em>aInstance</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">uint32_t&#160;</td>
+          <td class="paramname"><em>aScanChannels</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">uint16_t&#160;</td>
+          <td class="paramname"><em>aScanDuration</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="../../d0/d0a/group__commands.html#gaf46bb8c08be86055fb18e7729123f3ca">otHandleEnergyScanResult</a>&#160;</td>
+          <td class="paramname"><em>aCallback</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">void *&#160;</td>
+          <td class="paramname"><em>aCallbackContext</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>This function starts an IEEE 802.15.4 Energy Scan. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">aInstance</td><td>A pointer to an OpenThread instance. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">aScanChannels</td><td>A bit vector indicating on which channels to perform energy scan. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">aScanDuration</td><td>The time in milliseconds to spend scanning each channel. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">aCallback</td><td>A pointer to a function called to pass on scan result on indicate scan completion. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">aCallbackContext</td><td>A pointer to application-specific context.</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="retval"><dt>Return values</dt><dd>
+  <table class="retval">
+    <tr><td class="paramname">kThreadError_None</td><td>Accepted the Energy Scan request. </td></tr>
+    <tr><td class="paramname">kThreadError_Busy</td><td>Could not start the energy scan. </td></tr>
+  </table>
+  </dd>
+</dl>
+
+<p><div class="dynheader">
+Here is the call graph for this function:</div>
+<div class="dyncontent">
+<div class="center"><img src="../../d0/d0a/group__commands_ga7c364a9620dd9b6df30fb2c357bb883b_cgraph.png" border="0" usemap="#d0/d0a/group__commands_ga7c364a9620dd9b6df30fb2c357bb883b_cgraph" alt=""/></div>
+<map name="d0/d0a/group__commands_ga7c364a9620dd9b6df30fb2c357bb883b_cgraph" id="d0/d0a/group__commands_ga7c364a9620dd9b6df30fb2c357bb883b_cgraph">
+<area shape="rect" id="node2" href="../../d3/d8e/classThread_1_1ThreadNetif.html#aec59b0e172327889e9b0f4f08b0e69f9" title="This method returns a pointer to the mac object. " alt="" coords="193,5,333,44"/>
+<area shape="rect" id="node3" href="../../d6/d88/classThread_1_1Mac_1_1Mac.html#a2e3d342c67dbb8b33de85672f9b2c0e5" title="This function starts an IEEE 802.15.4 Energy Scan. " alt="" coords="158,68,367,93"/>
+</map>
+</div>
+</p>
+
+<p><div class="dynheader">
+Here is the caller graph for this function:</div>
+<div class="dyncontent">
+<div class="center"><img src="../../d0/d0a/group__commands_ga7c364a9620dd9b6df30fb2c357bb883b_icgraph.png" border="0" usemap="#d0/d0a/group__commands_ga7c364a9620dd9b6df30fb2c357bb883b_icgraph" alt=""/></div>
+<map name="d0/d0a/group__commands_ga7c364a9620dd9b6df30fb2c357bb883b_icgraph" id="d0/d0a/group__commands_ga7c364a9620dd9b6df30fb2c357bb883b_icgraph">
+<area shape="rect" id="node2" href="../../d9/dc8/classThread_1_1NcpBase.html#ad14f0f1d60c77f7f537a0a441a9fb35c" title="This method is called by the framer whenever a framing error is detected. " alt="" coords="158,5,350,44"/>
+<area shape="rect" id="node3" href="../../dc/d60/classThread_1_1NcpUart.html#a34e4ca7aff5b9056593e8ce0aa6e2fbb" title="This method is called when uart received a data buffer. " alt="" coords="398,5,593,44"/>
+</map>
+</div>
+</p>
+
+</div>
+</div>
+<a class="anchor" id="ga768af70c94547bf06bb42faf6448efe8"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">const char* otGetVersionString </td>
           <td>(</td>
           <td class="paramtype">void&#160;</td>
           <td class="paramname"></td><td>)</td>
@@ -339,42 +652,42 @@ Here is the caller graph for this function:</div>
       </table>
 </div><div class="memdoc">
 
-<p>This function determines if an IEEE 802.15.4 Active Scan is currently in progress. </p>
-<dl class="section return"><dt>Returns</dt><dd>true if an active scan is in progress. </dd></dl>
+<p>Get the OpenThread version string. </p>
+<dl class="section return"><dt>Returns</dt><dd>A pointer to the OpenThread version. </dd></dl>
 
 <p><div class="dynheader">
 Here is the caller graph for this function:</div>
 <div class="dyncontent">
-<div class="center"><img src="../../d0/d0a/group__commands_ga4a886a2e45bce0920bfa083188cf1f88_icgraph.png" border="0" usemap="#d0/d0a/group__commands_ga4a886a2e45bce0920bfa083188cf1f88_icgraph" alt=""/></div>
-<map name="d0/d0a/group__commands_ga4a886a2e45bce0920bfa083188cf1f88_icgraph" id="d0/d0a/group__commands_ga4a886a2e45bce0920bfa083188cf1f88_icgraph">
-<area shape="rect" id="node2" href="../../d9/dc8/classThread_1_1NcpBase.html#ad628aea520da8553bbb090ff4f50b09e" title="Called by the superclass to indicate when a send has been completed. " alt="" coords="217,31,455,56"/>
-<area shape="rect" id="node3" href="../../d2/de4/ncp_8h.html#aef46036f17188b217a2ffcb8c325f516" title="Initialize the NCP. " alt="" coords="562,5,636,31"/>
-<area shape="rect" id="node4" href="../../db/def/group__uart.html#gab2950583380bb90a3779f980c28fbaa0" title="The UART driver calls this method to notify OpenThread that the requested bytes have been sent..." alt="" coords="503,55,696,80"/>
+<div class="center"><img src="../../d0/d0a/group__commands_ga768af70c94547bf06bb42faf6448efe8_icgraph.png" border="0" usemap="#d0/d0a/group__commands_ga768af70c94547bf06bb42faf6448efe8_icgraph" alt=""/></div>
+<map name="d0/d0a/group__commands_ga768af70c94547bf06bb42faf6448efe8_icgraph" id="d0/d0a/group__commands_ga768af70c94547bf06bb42faf6448efe8_icgraph">
+<area shape="rect" id="node2" href="../../d5/dc2/structThread_1_1Cli_1_1Interpreter.html#a11ee1f86cffe17aab7de3de0bb16dee7" title="This method parses an ASCII string as an unsigned long. " alt="" coords="205,5,360,44"/>
+<area shape="rect" id="node3" href="../../d9/dc8/classThread_1_1NcpBase.html#ad14f0f1d60c77f7f537a0a441a9fb35c" title="This method is called by the framer whenever a framing error is detected. " alt="" coords="187,68,378,107"/>
+<area shape="rect" id="node4" href="../../dc/d60/classThread_1_1NcpUart.html#a34e4ca7aff5b9056593e8ce0aa6e2fbb" title="This method is called when uart received a data buffer. " alt="" coords="426,68,621,107"/>
 </map>
 </div>
 </p>
 
 </div>
 </div>
-<a class="anchor" id="gada88df6c7f3db6dcf65a90b37af2150f"></a>
+<a class="anchor" id="gaab0dc090f71b80671ff3dad620314b43"></a>
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname"><a class="el" href="../../dc/dbf/openthread-types_8h.html#ab701d053a9c34ab7f11e43e0dc09ac9f">ThreadError</a> otDisable </td>
+          <td class="memname">void otInstanceFinalize </td>
           <td>(</td>
-          <td class="paramtype">void&#160;</td>
-          <td class="paramname"></td><td>)</td>
+          <td class="paramtype"><a class="el" href="../../d2/d83/structotInstance.html">otInstance</a> *&#160;</td>
+          <td class="paramname"><em>aInstance</em></td><td>)</td>
           <td></td>
         </tr>
       </table>
 </div><div class="memdoc">
 
 <p>This function disables the OpenThread library. </p>
-<p>Call this function when OpenThread is no longer in use. The client must call <a class="el" href="../../d0/d0a/group__commands.html#ga11ec161cd87814ef1ae532017fa211dc" title="This function initializes the OpenThread library. ">otEnable()</a> to use OpenThread again.</p>
-<dl class="retval"><dt>Return values</dt><dd>
-  <table class="retval">
-    <tr><td class="paramname">kThreadError_None</td><td>Successfully disabled the Thread interface. </td></tr>
+<p>Call this function when OpenThread is no longer in use.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">aInstance</td><td>A pointer to an OpenThread instance. </td></tr>
   </table>
   </dd>
 </dl>
@@ -382,34 +695,54 @@ Here is the caller graph for this function:</div>
 <p><div class="dynheader">
 Here is the call graph for this function:</div>
 <div class="dyncontent">
-<div class="center"><img src="../../d0/d0a/group__commands_gada88df6c7f3db6dcf65a90b37af2150f_cgraph.png" border="0" usemap="#d0/d0a/group__commands_gada88df6c7f3db6dcf65a90b37af2150f_cgraph" alt=""/></div>
-<map name="d0/d0a/group__commands_gada88df6c7f3db6dcf65a90b37af2150f_cgraph" id="d0/d0a/group__commands_gada88df6c7f3db6dcf65a90b37af2150f_cgraph">
-<area shape="rect" id="node2" href="../../d0/d0a/group__commands.html#gaea882ef7f8fa773cd0c30e5b70966680" title="This function stops Thread protocol operation. " alt="" coords="138,5,241,31"/>
-<area shape="rect" id="node3" href="../../d0/d0a/group__commands.html#gaa91b1e5a452dd5f3033312ea5cf5741c" title="This function brings down the IPv6 interface. " alt="" coords="130,55,249,80"/>
+<div class="center"><img src="../../d0/d0a/group__commands_gaab0dc090f71b80671ff3dad620314b43_cgraph.png" border="0" usemap="#d0/d0a/group__commands_gaab0dc090f71b80671ff3dad620314b43_cgraph" alt=""/></div>
+<map name="d0/d0a/group__commands_gaab0dc090f71b80671ff3dad620314b43_cgraph" id="d0/d0a/group__commands_gaab0dc090f71b80671ff3dad620314b43_cgraph">
+<area shape="rect" id="node2" href="../../d0/d0a/group__commands.html#ga9dd31b4b5ff1c0b06a39683bc5196972" title="This function stops Thread protocol operation. " alt="" coords="190,420,292,445"/>
+<area shape="rect" id="node24" href="../../d0/d0a/group__commands.html#ga0e2dfd90f079bb52c8bfb406ade88d8a" title="This function brings down the IPv6 interface. " alt="" coords="182,476,301,501"/>
+<area shape="rect" id="node3" href="../../d3/d8e/classThread_1_1ThreadNetif.html#ad49d56e324f096d728c0083d9292f52d" title="This method returns a pointer to the mle object. " alt="" coords="349,413,489,452"/>
+<area shape="rect" id="node4" href="../../df/d94/group__core-mle-core.html#gab0d4493caf85385a335ec64e1eb1b70c" title="This method stops the MLE protocol operation. " alt="" coords="761,363,918,388"/>
+<area shape="rect" id="node5" href="../../d6/d44/classThread_1_1KeyManager.html#a048243a0e7564e607510d2ed60c99b2e" title="This method stops KeyManager timers. " alt="" coords="985,527,1132,565"/>
+<area shape="rect" id="node7" href="../../df/d94/group__core-mle-core.html#gaa5ec48ae440f38d5bf24f9d09ca66c65" title="This method sets the Device State to Detached. " alt="" coords="969,340,1149,379"/>
+<area shape="rect" id="node14" href="../../d2/d55/classThread_1_1Ip6_1_1Netif.html#ad00e58b94ab00cc71a5f3a242b7ef42c" title="This method removes a unicast address from the network interface. " alt="" coords="1215,131,1387,169"/>
+<area shape="rect" id="node6" href="../../d1/d40/classThread_1_1Timer.html#a9acdec1cdf4edf947c563d40871f2bc8" title="This method stops the timer. " alt="" coords="1487,425,1627,451"/>
+<area shape="rect" id="node8" href="../../d2/d55/classThread_1_1Ip6_1_1Netif.html#a092484addf28568306ab45941abffff4" title="This method schedules notification of aFlags. " alt="" coords="1474,193,1640,232"/>
+<area shape="rect" id="node18" href="../../d4/dcf/classThread_1_1AddressResolver.html#af9e813b464854994a8beda21d91c989c" title="This method clears the EID&#45;to&#45;RLOC cache. " alt="" coords="1215,485,1388,524"/>
+<area shape="rect" id="node19" href="../../dd/d1d/classThread_1_1MeshForwarder.html#a2343ec6e8df3c5885415fa912889a752" title="This method sets the rx&#45;on&#45;when&#45;idle mode. " alt="" coords="1219,371,1383,409"/>
+<area shape="rect" id="node22" href="../../d2/d55/classThread_1_1Ip6_1_1Netif.html#a9972d917c57200b504d9f2df7eb44974" title="This method returns a reference to the IPv6 network object. " alt="" coords="1239,245,1363,284"/>
+<area shape="rect" id="node23" href="../../d3/d05/classThread_1_1Ip6_1_1Ip6.html#ac54ddaad6442e3858eb21a2e7801aeaf" title="This method enables/disables IPv6 forwarding. " alt="" coords="1197,308,1406,347"/>
+<area shape="rect" id="node9" href="../../d4/d92/classThread_1_1Tasklet.html#a50a39a6f422851035b89aace87482425" title="This method puts the tasklet on the run queue. " alt="" coords="1708,200,1855,225"/>
+<area shape="rect" id="node10" href="../../d8/de8/classThread_1_1TaskletScheduler.html#a137292acddf92acdef54cc7a33ea5fac" title="This method enqueues a tasklet into the run queue. " alt="" coords="1903,193,2075,232"/>
+<area shape="rect" id="node11" href="../../d1/de3/group__execution.html#ga04d5608ac68a78eb3e8fc167587c61f3" title="OpenThread calls this function when the tasklet queue transitions from empty to non&#45;empty. " alt="" coords="2140,144,2300,169"/>
+<area shape="rect" id="node12" href="../../d8/de8/classThread_1_1TaskletScheduler.html#aeaf526c316bbea7d53d20fa9e3c94c40" title="This method returns the pointer to the parent Ip6 structure. " alt="" coords="2134,193,2307,232"/>
+<area shape="rect" id="node13" href="../../d3/d05/classThread_1_1Ip6_1_1Ip6.html#a624d9508f3ecfa586378a3d802cb6ff7" title="This method returns the pointer to the parent otInstance structure. " alt="" coords="2123,256,2318,281"/>
+<area shape="rect" id="node15" href="../../d9/d13/classThread_1_1Ip6_1_1NetifUnicastAddress.html#ac7f38e1322075b0e6dfc7afc048f7eec" title="This method returns the next unicast address assigned to the interface. " alt="" coords="1473,5,1641,44"/>
+<area shape="rect" id="node16" href="../../d9/d13/classThread_1_1Ip6_1_1NetifUnicastAddress.html#a2bb426bd29e271bd1fc09b61d1044911" title="This method returns the unicast address. " alt="" coords="1473,68,1641,107"/>
+<area shape="rect" id="node17" href="../../d9/db1/classThread_1_1Ip6_1_1Address.html#a042097e2896ce7eebc1844140c0d2aeb" title="This method indicates whether or not the IPv6 address is a RLOC address. " alt="" coords="1484,131,1630,169"/>
+<area shape="rect" id="node20" href="../../d6/d88/classThread_1_1Mac_1_1Mac.html#ab74d0b0b142cadd19e6d2a24d441223f" title="This method sets the rx&#45;on&#45;when&#45;idle mode. " alt="" coords="1462,475,1652,513"/>
+<area shape="rect" id="node21" href="../../d1/d40/classThread_1_1Timer.html#a475731e21b59be6b17b24f5b5e175f62" title="This method schedules the timer to fire a dt milliseconds from now. " alt="" coords="1487,376,1627,401"/>
+<area shape="rect" id="node25" href="../../d3/d8e/classThread_1_1ThreadNetif.html#a1a24f802ede854243223bcae3b7cb5ad" title="This method disables the Thread network interface. " alt="" coords="349,476,489,515"/>
+<area shape="rect" id="node26" href="../../de/d76/classThread_1_1Coap_1_1Server.html#ae3cd8474a329165783b06b5d6f235266" title="This method stops the CoAP server. " alt="" coords="549,525,699,564"/>
+<area shape="rect" id="node28" href="../../df/d94/group__core-mle-core.html#gac6a8e30097a5712eba62a7fa694c9866" title="This method disables MLE. " alt="" coords="537,476,710,501"/>
+<area shape="rect" id="node29" href="../../dd/d1d/classThread_1_1MeshForwarder.html#a9a108930edeab22236a5eae4ced14ca6" title="This method disables mesh forwarding and the IEEE 802.15.4 MAC layer. " alt="" coords="1219,600,1383,639"/>
+<area shape="rect" id="node35" href="../../d3/d05/classThread_1_1Ip6_1_1Ip6.html#a8c27ed3b61b8a116616f4688381b4825" title="This method disables the network interface. " alt="" coords="538,413,710,452"/>
+<area shape="rect" id="node27" href="../../dc/d75/classThread_1_1Ip6_1_1UdpSocket.html#a2c050c372e20976105003cb8d4d6fc90" title="This method closes the UDP socket. " alt="" coords="758,497,921,536"/>
+<area shape="rect" id="node30" href="../../d6/d88/classThread_1_1Mac_1_1Mac.html#a67edffbeed3e53c57b6740d2899483be" title="This method sets the IEEE 802.15.4 Channel. " alt="" coords="1454,775,1660,800"/>
+<area shape="rect" id="node31" href="../../df/d94/group__core-mle-core.html#gad2d9620c90fcec98fc11a399c6d1f62e" title="This method is called by the MeshForwarder to indicate that discovery is complete. " alt="" coords="1472,537,1643,576"/>
+<area shape="rect" id="node32" href="../../da/d1a/classThread_1_1MessageQueue.html#ac0e8b64309aca4d66b262f0354d72e83" title="This method returns a pointer to the first message. " alt="" coords="1474,600,1640,639"/>
+<area shape="rect" id="node33" href="../../da/d1a/classThread_1_1MessageQueue.html#a501d831849c577b2114fcbb4034d074d" title="This method removes a message from the list. " alt="" coords="1474,663,1640,701"/>
+<area shape="rect" id="node34" href="../../dc/d3c/classThread_1_1Message.html#adc9d723284f5807d9c272ab89bc52b45" title="This method frees this message buffer. " alt="" coords="1477,725,1637,751"/>
 </map>
 </div>
 </p>
 
-<p><div class="dynheader">
-Here is the caller graph for this function:</div>
-<div class="dyncontent">
-<div class="center"><img src="../../d0/d0a/group__commands_gada88df6c7f3db6dcf65a90b37af2150f_icgraph.png" border="0" usemap="#d0/d0a/group__commands_gada88df6c7f3db6dcf65a90b37af2150f_icgraph" alt=""/></div>
-<map name="d0/d0a/group__commands_gada88df6c7f3db6dcf65a90b37af2150f_icgraph" id="d0/d0a/group__commands_gada88df6c7f3db6dcf65a90b37af2150f_icgraph">
-<area shape="rect" id="node2" href="../../d9/dc8/classThread_1_1NcpBase.html#ad628aea520da8553bbb090ff4f50b09e" title="Called by the superclass to indicate when a send has been completed. " alt="" coords="130,31,368,56"/>
-<area shape="rect" id="node3" href="../../d2/de4/ncp_8h.html#aef46036f17188b217a2ffcb8c325f516" title="Initialize the NCP. " alt="" coords="476,5,550,31"/>
-<area shape="rect" id="node4" href="../../db/def/group__uart.html#gab2950583380bb90a3779f980c28fbaa0" title="The UART driver calls this method to notify OpenThread that the requested bytes have been sent..." alt="" coords="416,55,609,80"/>
-</map>
-</div>
-</p>
-
 </div>
 </div>
-<a class="anchor" id="ga11ec161cd87814ef1ae532017fa211dc"></a>
+<a class="anchor" id="ga05c0a89211be5a032fca805abfdb41f8"></a>
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname"><a class="el" href="../../dc/dbf/openthread-types_8h.html#ab701d053a9c34ab7f11e43e0dc09ac9f">ThreadError</a> otEnable </td>
+          <td class="memname"><a class="el" href="../../d2/d83/structotInstance.html">otInstance</a>* otInstanceInit </td>
           <td>(</td>
           <td class="paramtype">void&#160;</td>
           <td class="paramname"></td><td>)</td>
@@ -418,48 +751,38 @@ Here is the caller graph for this function:</div>
       </table>
 </div><div class="memdoc">
 
-<p>This function initializes the OpenThread library. </p>
-<p>This function initializes OpenThread and prepares it for subsequent OpenThread API calls. This function must be called before any other calls to OpenThread.</p>
+<p>This function initializes the static instance of the OpenThread library. </p>
+<p>This function initializes OpenThread and prepares it for subsequent OpenThread API calls. This function must be called before any other calls to OpenThread. By default, OpenThread is initialized in the 'enabled' state.</p>
 <dl class="retval"><dt>Return values</dt><dd>
   <table class="retval">
-    <tr><td class="paramname">kThreadError_None</td><td>Successfully enabled the Thread interface. </td></tr>
+    <tr><td class="paramname">otInstance*</td><td>The new OpenThread instance structure. </td></tr>
   </table>
   </dd>
 </dl>
 
 <p><div class="dynheader">
-Here is the call graph for this function:</div>
-<div class="dyncontent">
-<div class="center"><img src="../../d0/d0a/group__commands_ga11ec161cd87814ef1ae532017fa211dc_cgraph.png" border="0" usemap="#d0/d0a/group__commands_ga11ec161cd87814ef1ae532017fa211dc_cgraph" alt=""/></div>
-<map name="d0/d0a/group__commands_ga11ec161cd87814ef1ae532017fa211dc_cgraph" id="d0/d0a/group__commands_ga11ec161cd87814ef1ae532017fa211dc_cgraph">
-<area shape="rect" id="node2" href="../../dc/d3c/classThread_1_1Message.html#aacc2b52cbd27007968c6e525d3e28a84" title="This static method is used to initialize the message buffer pool. " alt="" coords="127,5,278,31"/>
-</map>
-</div>
-</p>
-
-<p><div class="dynheader">
 Here is the caller graph for this function:</div>
 <div class="dyncontent">
-<div class="center"><img src="../../d0/d0a/group__commands_ga11ec161cd87814ef1ae532017fa211dc_icgraph.png" border="0" usemap="#d0/d0a/group__commands_ga11ec161cd87814ef1ae532017fa211dc_icgraph" alt=""/></div>
-<map name="d0/d0a/group__commands_ga11ec161cd87814ef1ae532017fa211dc_icgraph" id="d0/d0a/group__commands_ga11ec161cd87814ef1ae532017fa211dc_icgraph">
-<area shape="rect" id="node2" href="../../d9/dc8/classThread_1_1NcpBase.html#ad628aea520da8553bbb090ff4f50b09e" title="Called by the superclass to indicate when a send has been completed. " alt="" coords="127,31,365,56"/>
-<area shape="rect" id="node3" href="../../d2/de4/ncp_8h.html#aef46036f17188b217a2ffcb8c325f516" title="Initialize the NCP. " alt="" coords="473,5,547,31"/>
-<area shape="rect" id="node4" href="../../db/def/group__uart.html#gab2950583380bb90a3779f980c28fbaa0" title="The UART driver calls this method to notify OpenThread that the requested bytes have been sent..." alt="" coords="413,55,606,80"/>
+<div class="center"><img src="../../d0/d0a/group__commands_ga05c0a89211be5a032fca805abfdb41f8_icgraph.png" border="0" usemap="#d0/d0a/group__commands_ga05c0a89211be5a032fca805abfdb41f8_icgraph" alt=""/></div>
+<map name="d0/d0a/group__commands_ga05c0a89211be5a032fca805abfdb41f8_icgraph" id="d0/d0a/group__commands_ga05c0a89211be5a032fca805abfdb41f8_icgraph">
+<area shape="rect" id="node2" href="../../df/d4f/group__config-general.html#gab9cc17a13fdabb576df4a1e43a49bf4d" title="Set the preferred Router Id. " alt="" coords="154,12,313,37"/>
+<area shape="rect" id="node3" href="../../d9/dc8/classThread_1_1NcpBase.html#ad14f0f1d60c77f7f537a0a441a9fb35c" title="This method is called by the framer whenever a framing error is detected. " alt="" coords="361,5,553,44"/>
+<area shape="rect" id="node4" href="../../dc/d60/classThread_1_1NcpUart.html#a34e4ca7aff5b9056593e8ce0aa6e2fbb" title="This method is called when uart received a data buffer. " alt="" coords="601,5,796,44"/>
 </map>
 </div>
 </p>
 
 </div>
 </div>
-<a class="anchor" id="gaa91b1e5a452dd5f3033312ea5cf5741c"></a>
+<a class="anchor" id="ga0e2dfd90f079bb52c8bfb406ade88d8a"></a>
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
           <td class="memname"><a class="el" href="../../dc/dbf/openthread-types_8h.html#ab701d053a9c34ab7f11e43e0dc09ac9f">ThreadError</a> otInterfaceDown </td>
           <td>(</td>
-          <td class="paramtype">void&#160;</td>
-          <td class="paramname"></td><td>)</td>
+          <td class="paramtype"><a class="el" href="../../d2/d83/structotInstance.html">otInstance</a> *&#160;</td>
+          <td class="paramname"><em>aInstance</em></td><td>)</td>
           <td></td>
         </tr>
       </table>
@@ -467,38 +790,83 @@ Here is the caller graph for this function:</div>
 
 <p>This function brings down the IPv6 interface. </p>
 <p>Call this function to bring down the IPv6 interface and disable all IPv6 communication.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">aInstance</td><td>A pointer to an OpenThread instance.</td></tr>
+  </table>
+  </dd>
+</dl>
 <dl class="retval"><dt>Return values</dt><dd>
   <table class="retval">
-    <tr><td class="paramname">kThreadError_None</td><td>Successfully brought the interface down. </td></tr>
-    <tr><td class="paramname">kThreadError_InvalidState</td><td>The interface was not up. </td></tr>
+    <tr><td class="paramname">kThreadError_None</td><td>Successfully brought the interface down, or the interface was already down. </td></tr>
   </table>
   </dd>
 </dl>
 
 <p><div class="dynheader">
+Here is the call graph for this function:</div>
+<div class="dyncontent">
+<div class="center"><img src="../../d0/d0a/group__commands_ga0e2dfd90f079bb52c8bfb406ade88d8a_cgraph.png" border="0" usemap="#d0/d0a/group__commands_ga0e2dfd90f079bb52c8bfb406ade88d8a_cgraph" alt=""/></div>
+<map name="d0/d0a/group__commands_ga0e2dfd90f079bb52c8bfb406ade88d8a_cgraph" id="d0/d0a/group__commands_ga0e2dfd90f079bb52c8bfb406ade88d8a_cgraph">
+<area shape="rect" id="node2" href="../../d3/d8e/classThread_1_1ThreadNetif.html#a1a24f802ede854243223bcae3b7cb5ad" title="This method disables the Thread network interface. " alt="" coords="172,503,312,541"/>
+<area shape="rect" id="node3" href="../../de/d76/classThread_1_1Coap_1_1Server.html#ae3cd8474a329165783b06b5d6f235266" title="This method stops the CoAP server. " alt="" coords="372,417,522,456"/>
+<area shape="rect" id="node5" href="../../df/d94/group__core-mle-core.html#gac6a8e30097a5712eba62a7fa694c9866" title="This method disables MLE. " alt="" coords="360,480,534,505"/>
+<area shape="rect" id="node26" href="../../dd/d1d/classThread_1_1MeshForwarder.html#a9a108930edeab22236a5eae4ced14ca6" title="This method disables mesh forwarding and the IEEE 802.15.4 MAC layer. " alt="" coords="1042,600,1207,639"/>
+<area shape="rect" id="node32" href="../../d3/d05/classThread_1_1Ip6_1_1Ip6.html#a8c27ed3b61b8a116616f4688381b4825" title="This method disables the network interface. " alt="" coords="361,588,533,627"/>
+<area shape="rect" id="node4" href="../../dc/d75/classThread_1_1Ip6_1_1UdpSocket.html#a2c050c372e20976105003cb8d4d6fc90" title="This method closes the UDP socket. " alt="" coords="582,417,744,456"/>
+<area shape="rect" id="node6" href="../../df/d94/group__core-mle-core.html#gab0d4493caf85385a335ec64e1eb1b70c" title="This method stops the MLE protocol operation. " alt="" coords="585,480,741,505"/>
+<area shape="rect" id="node7" href="../../d6/d44/classThread_1_1KeyManager.html#a048243a0e7564e607510d2ed60c99b2e" title="This method stops KeyManager timers. " alt="" coords="808,473,955,512"/>
+<area shape="rect" id="node9" href="../../df/d94/group__core-mle-core.html#gaa5ec48ae440f38d5bf24f9d09ca66c65" title="This method sets the Device State to Detached. " alt="" coords="792,340,972,379"/>
+<area shape="rect" id="node16" href="../../d2/d55/classThread_1_1Ip6_1_1Netif.html#ad00e58b94ab00cc71a5f3a242b7ef42c" title="This method removes a unicast address from the network interface. " alt="" coords="1039,131,1210,169"/>
+<area shape="rect" id="node8" href="../../d1/d40/classThread_1_1Timer.html#a9acdec1cdf4edf947c563d40871f2bc8" title="This method stops the timer. " alt="" coords="1311,425,1450,451"/>
+<area shape="rect" id="node10" href="../../d2/d55/classThread_1_1Ip6_1_1Netif.html#a092484addf28568306ab45941abffff4" title="This method schedules notification of aFlags. " alt="" coords="1297,193,1464,232"/>
+<area shape="rect" id="node20" href="../../d4/dcf/classThread_1_1AddressResolver.html#af9e813b464854994a8beda21d91c989c" title="This method clears the EID&#45;to&#45;RLOC cache. " alt="" coords="1038,485,1211,524"/>
+<area shape="rect" id="node21" href="../../dd/d1d/classThread_1_1MeshForwarder.html#a2343ec6e8df3c5885415fa912889a752" title="This method sets the rx&#45;on&#45;when&#45;idle mode. " alt="" coords="1042,371,1207,409"/>
+<area shape="rect" id="node24" href="../../d2/d55/classThread_1_1Ip6_1_1Netif.html#a9972d917c57200b504d9f2df7eb44974" title="This method returns a reference to the IPv6 network object. " alt="" coords="1062,245,1187,284"/>
+<area shape="rect" id="node25" href="../../d3/d05/classThread_1_1Ip6_1_1Ip6.html#ac54ddaad6442e3858eb21a2e7801aeaf" title="This method enables/disables IPv6 forwarding. " alt="" coords="1020,308,1229,347"/>
+<area shape="rect" id="node11" href="../../d4/d92/classThread_1_1Tasklet.html#a50a39a6f422851035b89aace87482425" title="This method puts the tasklet on the run queue. " alt="" coords="1531,200,1678,225"/>
+<area shape="rect" id="node12" href="../../d8/de8/classThread_1_1TaskletScheduler.html#a137292acddf92acdef54cc7a33ea5fac" title="This method enqueues a tasklet into the run queue. " alt="" coords="1726,193,1898,232"/>
+<area shape="rect" id="node13" href="../../d1/de3/group__execution.html#ga04d5608ac68a78eb3e8fc167587c61f3" title="OpenThread calls this function when the tasklet queue transitions from empty to non&#45;empty. " alt="" coords="1964,144,2124,169"/>
+<area shape="rect" id="node14" href="../../d8/de8/classThread_1_1TaskletScheduler.html#aeaf526c316bbea7d53d20fa9e3c94c40" title="This method returns the pointer to the parent Ip6 structure. " alt="" coords="1957,193,2130,232"/>
+<area shape="rect" id="node15" href="../../d3/d05/classThread_1_1Ip6_1_1Ip6.html#a624d9508f3ecfa586378a3d802cb6ff7" title="This method returns the pointer to the parent otInstance structure. " alt="" coords="1946,256,2141,281"/>
+<area shape="rect" id="node17" href="../../d9/d13/classThread_1_1Ip6_1_1NetifUnicastAddress.html#ac7f38e1322075b0e6dfc7afc048f7eec" title="This method returns the next unicast address assigned to the interface. " alt="" coords="1296,5,1465,44"/>
+<area shape="rect" id="node18" href="../../d9/d13/classThread_1_1Ip6_1_1NetifUnicastAddress.html#a2bb426bd29e271bd1fc09b61d1044911" title="This method returns the unicast address. " alt="" coords="1296,68,1465,107"/>
+<area shape="rect" id="node19" href="../../d9/db1/classThread_1_1Ip6_1_1Address.html#a042097e2896ce7eebc1844140c0d2aeb" title="This method indicates whether or not the IPv6 address is a RLOC address. " alt="" coords="1307,131,1453,169"/>
+<area shape="rect" id="node22" href="../../d6/d88/classThread_1_1Mac_1_1Mac.html#ab74d0b0b142cadd19e6d2a24d441223f" title="This method sets the rx&#45;on&#45;when&#45;idle mode. " alt="" coords="1285,475,1475,513"/>
+<area shape="rect" id="node23" href="../../d1/d40/classThread_1_1Timer.html#a475731e21b59be6b17b24f5b5e175f62" title="This method schedules the timer to fire a dt milliseconds from now. " alt="" coords="1310,376,1450,401"/>
+<area shape="rect" id="node27" href="../../d6/d88/classThread_1_1Mac_1_1Mac.html#a67edffbeed3e53c57b6740d2899483be" title="This method sets the IEEE 802.15.4 Channel. " alt="" coords="1277,775,1483,800"/>
+<area shape="rect" id="node28" href="../../df/d94/group__core-mle-core.html#gad2d9620c90fcec98fc11a399c6d1f62e" title="This method is called by the MeshForwarder to indicate that discovery is complete. " alt="" coords="1295,537,1466,576"/>
+<area shape="rect" id="node29" href="../../da/d1a/classThread_1_1MessageQueue.html#ac0e8b64309aca4d66b262f0354d72e83" title="This method returns a pointer to the first message. " alt="" coords="1298,600,1463,639"/>
+<area shape="rect" id="node30" href="../../da/d1a/classThread_1_1MessageQueue.html#a501d831849c577b2114fcbb4034d074d" title="This method removes a message from the list. " alt="" coords="1298,663,1463,701"/>
+<area shape="rect" id="node31" href="../../dc/d3c/classThread_1_1Message.html#adc9d723284f5807d9c272ab89bc52b45" title="This method frees this message buffer. " alt="" coords="1300,725,1460,751"/>
+</map>
+</div>
+</p>
+
+<p><div class="dynheader">
 Here is the caller graph for this function:</div>
 <div class="dyncontent">
-<div class="center"><img src="../../d0/d0a/group__commands_gaa91b1e5a452dd5f3033312ea5cf5741c_icgraph.png" border="0" usemap="#d0/d0a/group__commands_gaa91b1e5a452dd5f3033312ea5cf5741c_icgraph" alt=""/></div>
-<map name="d0/d0a/group__commands_gaa91b1e5a452dd5f3033312ea5cf5741c_icgraph" id="d0/d0a/group__commands_gaa91b1e5a452dd5f3033312ea5cf5741c_icgraph">
-<area shape="rect" id="node2" href="../../d0/d0a/group__commands.html#gada88df6c7f3db6dcf65a90b37af2150f" title="This function disables the OpenThread library. " alt="" coords="172,5,249,31"/>
-<area shape="rect" id="node3" href="../../d9/dc8/classThread_1_1NcpBase.html#ad628aea520da8553bbb090ff4f50b09e" title="Called by the superclass to indicate when a send has been completed. " alt="" coords="297,31,534,56"/>
-<area shape="rect" id="node4" href="../../d2/de4/ncp_8h.html#aef46036f17188b217a2ffcb8c325f516" title="Initialize the NCP. " alt="" coords="642,5,716,31"/>
-<area shape="rect" id="node5" href="../../db/def/group__uart.html#gab2950583380bb90a3779f980c28fbaa0" title="The UART driver calls this method to notify OpenThread that the requested bytes have been sent..." alt="" coords="582,55,776,80"/>
+<div class="center"><img src="../../d0/d0a/group__commands_ga0e2dfd90f079bb52c8bfb406ade88d8a_icgraph.png" border="0" usemap="#d0/d0a/group__commands_ga0e2dfd90f079bb52c8bfb406ade88d8a_icgraph" alt=""/></div>
+<map name="d0/d0a/group__commands_ga0e2dfd90f079bb52c8bfb406ade88d8a_icgraph" id="d0/d0a/group__commands_ga0e2dfd90f079bb52c8bfb406ade88d8a_icgraph">
+<area shape="rect" id="node2" href="../../d5/dc2/structThread_1_1Cli_1_1Interpreter.html#a11ee1f86cffe17aab7de3de0bb16dee7" title="This method parses an ASCII string as an unsigned long. " alt="" coords="190,5,345,44"/>
+<area shape="rect" id="node3" href="../../d0/d0a/group__commands.html#gaab0dc090f71b80671ff3dad620314b43" title="This function disables the OpenThread library. " alt="" coords="203,68,332,93"/>
+<area shape="rect" id="node4" href="../../d9/dc8/classThread_1_1NcpBase.html#ad14f0f1d60c77f7f537a0a441a9fb35c" title="This method is called by the framer whenever a framing error is detected. " alt="" coords="172,117,364,156"/>
+<area shape="rect" id="node5" href="../../dc/d60/classThread_1_1NcpUart.html#a34e4ca7aff5b9056593e8ce0aa6e2fbb" title="This method is called when uart received a data buffer. " alt="" coords="412,117,606,156"/>
 </map>
 </div>
 </p>
 
 </div>
 </div>
-<a class="anchor" id="gaef7f3f976d118468db29e9768cedb060"></a>
+<a class="anchor" id="ga16b0f2f53ff41fe70044d39226f2c2da"></a>
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
           <td class="memname"><a class="el" href="../../dc/dbf/openthread-types_8h.html#ab701d053a9c34ab7f11e43e0dc09ac9f">ThreadError</a> otInterfaceUp </td>
           <td>(</td>
-          <td class="paramtype">void&#160;</td>
-          <td class="paramname"></td><td>)</td>
+          <td class="paramtype"><a class="el" href="../../d2/d83/structotInstance.html">otInstance</a> *&#160;</td>
+          <td class="paramname"><em>aInstance</em></td><td>)</td>
           <td></td>
         </tr>
       </table>
@@ -506,43 +874,209 @@ Here is the caller graph for this function:</div>
 
 <p>This function brings up the IPv6 interface. </p>
 <p>Call this function to bring up the IPv6 interface and enables IPv6 communication.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">aInstance</td><td>A pointer to an OpenThread instance.</td></tr>
+  </table>
+  </dd>
+</dl>
 <dl class="retval"><dt>Return values</dt><dd>
   <table class="retval">
-    <tr><td class="paramname">kThreadError_None</td><td>Successfully enabled the IPv6 interface. </td></tr>
-    <tr><td class="paramname">kThreadError_InvalidState</td><td>OpenThread is not enabled or the IPv6 interface is already up. </td></tr>
+    <tr><td class="paramname">kThreadError_None</td><td>Successfully enabled the IPv6 interface, or the interface was already enabled. </td></tr>
   </table>
   </dd>
 </dl>
 
 <p><div class="dynheader">
+Here is the call graph for this function:</div>
+<div class="dyncontent">
+<div class="center"><img src="../../d0/d0a/group__commands_ga16b0f2f53ff41fe70044d39226f2c2da_cgraph.png" border="0" usemap="#d0/d0a/group__commands_ga16b0f2f53ff41fe70044d39226f2c2da_cgraph" alt=""/></div>
+<map name="d0/d0a/group__commands_ga16b0f2f53ff41fe70044d39226f2c2da_cgraph" id="d0/d0a/group__commands_ga16b0f2f53ff41fe70044d39226f2c2da_cgraph">
+<area shape="rect" id="node2" href="../../d3/d8e/classThread_1_1ThreadNetif.html#a50d195eeba8c64bdb46767f1113a7a65" title="This method enables the Thread network interface. " alt="" coords="155,93,320,119"/>
+<area shape="rect" id="node3" href="../../d3/d05/classThread_1_1Ip6_1_1Ip6.html#a78380bbe5b0f22a61c4133c9d1a54c31" title="This method enables the network interface. " alt="" coords="368,5,542,31"/>
+<area shape="rect" id="node4" href="../../dd/d1d/classThread_1_1MeshForwarder.html#a8d509a0b25136785f88ecfc8404e6ba8" title="This method enables mesh forwarding and the IEEE 802.15.4 MAC layer. " alt="" coords="373,55,537,93"/>
+<area shape="rect" id="node6" href="../../de/d76/classThread_1_1Coap_1_1Server.html#a3352908cff3adc599389f65cc16d219e" title="This method starts the CoAP server. " alt="" coords="380,117,530,156"/>
+<area shape="rect" id="node9" href="../../df/d94/group__core-mle-core.html#gae589c2fd18f1c683fd52ca0324d48f54" title="This method enables MLE. " alt="" coords="370,180,540,205"/>
+<area shape="rect" id="node5" href="../../d6/d88/classThread_1_1Mac_1_1Mac.html#ab74d0b0b142cadd19e6d2a24d441223f" title="This method sets the rx&#45;on&#45;when&#45;idle mode. " alt="" coords="590,55,780,93"/>
+<area shape="rect" id="node7" href="../../dc/d75/classThread_1_1Ip6_1_1UdpSocket.html#aaa9112c22813ceb55338050f0365c598" title="This method opens the UDP socket. " alt="" coords="604,180,766,219"/>
+<area shape="rect" id="node8" href="../../dc/d75/classThread_1_1Ip6_1_1UdpSocket.html#aa07479b557c551452986ff7a0ce20773" title="This method binds the UDP socket. " alt="" coords="604,117,766,156"/>
+</map>
+</div>
+</p>
+
+<p><div class="dynheader">
 Here is the caller graph for this function:</div>
 <div class="dyncontent">
-<div class="center"><img src="../../d0/d0a/group__commands_gaef7f3f976d118468db29e9768cedb060_icgraph.png" border="0" usemap="#d0/d0a/group__commands_gaef7f3f976d118468db29e9768cedb060_icgraph" alt=""/></div>
-<map name="d0/d0a/group__commands_gaef7f3f976d118468db29e9768cedb060_icgraph" id="d0/d0a/group__commands_gaef7f3f976d118468db29e9768cedb060_icgraph">
-<area shape="rect" id="node2" href="../../d9/dc8/classThread_1_1NcpBase.html#ad628aea520da8553bbb090ff4f50b09e" title="Called by the superclass to indicate when a send has been completed. " alt="" coords="155,31,392,56"/>
-<area shape="rect" id="node3" href="../../d2/de4/ncp_8h.html#aef46036f17188b217a2ffcb8c325f516" title="Initialize the NCP. " alt="" coords="500,5,574,31"/>
-<area shape="rect" id="node4" href="../../db/def/group__uart.html#gab2950583380bb90a3779f980c28fbaa0" title="The UART driver calls this method to notify OpenThread that the requested bytes have been sent..." alt="" coords="440,55,634,80"/>
+<div class="center"><img src="../../d0/d0a/group__commands_ga16b0f2f53ff41fe70044d39226f2c2da_icgraph.png" border="0" usemap="#d0/d0a/group__commands_ga16b0f2f53ff41fe70044d39226f2c2da_icgraph" alt=""/></div>
+<map name="d0/d0a/group__commands_ga16b0f2f53ff41fe70044d39226f2c2da_icgraph" id="d0/d0a/group__commands_ga16b0f2f53ff41fe70044d39226f2c2da_icgraph">
+<area shape="rect" id="node2" href="../../d5/dc2/structThread_1_1Cli_1_1Interpreter.html#a11ee1f86cffe17aab7de3de0bb16dee7" title="This method parses an ASCII string as an unsigned long. " alt="" coords="173,5,328,44"/>
+<area shape="rect" id="node3" href="../../d9/dc8/classThread_1_1NcpBase.html#ad14f0f1d60c77f7f537a0a441a9fb35c" title="This method is called by the framer whenever a framing error is detected. " alt="" coords="155,68,346,107"/>
+<area shape="rect" id="node4" href="../../dc/d60/classThread_1_1NcpUart.html#a34e4ca7aff5b9056593e8ce0aa6e2fbb" title="This method is called when uart received a data buffer. " alt="" coords="394,68,589,107"/>
 </map>
 </div>
 </p>
 
 </div>
 </div>
-<a class="anchor" id="ga1dd1b2d6b37b852f22975eb0671b67e0"></a>
+<a class="anchor" id="ga74cab550a48bfb41b7439d77086c9288"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool otIsActiveScanInProgress </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="../../d2/d83/structotInstance.html">otInstance</a> *&#160;</td>
+          <td class="paramname"><em>aInstance</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>This function indicates whether or not an IEEE 802.15.4 Active Scan is currently in progress. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">aInstance</td><td>A pointer to an OpenThread instance.</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>true if an IEEE 802.15.4 Active Scan is in progress, false otherwise. </dd></dl>
+
+<p><div class="dynheader">
+Here is the call graph for this function:</div>
+<div class="dyncontent">
+<div class="center"><img src="../../d0/d0a/group__commands_ga74cab550a48bfb41b7439d77086c9288_cgraph.png" border="0" usemap="#d0/d0a/group__commands_ga74cab550a48bfb41b7439d77086c9288_cgraph" alt=""/></div>
+<map name="d0/d0a/group__commands_ga74cab550a48bfb41b7439d77086c9288_cgraph" id="d0/d0a/group__commands_ga74cab550a48bfb41b7439d77086c9288_cgraph">
+<area shape="rect" id="node2" href="../../d3/d8e/classThread_1_1ThreadNetif.html#aec59b0e172327889e9b0f4f08b0e69f9" title="This method returns a pointer to the mac object. " alt="" coords="248,5,389,44"/>
+<area shape="rect" id="node3" href="../../d6/d88/classThread_1_1Mac_1_1Mac.html#a414175448670686bb12e8e8536eb0bef" title="This method returns if an active scan is in progress. " alt="" coords="227,68,410,107"/>
+</map>
+</div>
+</p>
+
+<p><div class="dynheader">
+Here is the caller graph for this function:</div>
+<div class="dyncontent">
+<div class="center"><img src="../../d0/d0a/group__commands_ga74cab550a48bfb41b7439d77086c9288_icgraph.png" border="0" usemap="#d0/d0a/group__commands_ga74cab550a48bfb41b7439d77086c9288_icgraph" alt=""/></div>
+<map name="d0/d0a/group__commands_ga74cab550a48bfb41b7439d77086c9288_icgraph" id="d0/d0a/group__commands_ga74cab550a48bfb41b7439d77086c9288_icgraph">
+<area shape="rect" id="node2" href="../../d9/dc8/classThread_1_1NcpBase.html#ad14f0f1d60c77f7f537a0a441a9fb35c" title="This method is called by the framer whenever a framing error is detected. " alt="" coords="227,5,419,44"/>
+<area shape="rect" id="node3" href="../../dc/d60/classThread_1_1NcpUart.html#a34e4ca7aff5b9056593e8ce0aa6e2fbb" title="This method is called when uart received a data buffer. " alt="" coords="467,5,662,44"/>
+</map>
+</div>
+</p>
+
+</div>
+</div>
+<a class="anchor" id="gace318f8f279ecf06c6d595ac19aa8d32"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool otIsDiscoverInProgress </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="../../d2/d83/structotInstance.html">otInstance</a> *&#160;</td>
+          <td class="paramname"><em>aInstance</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>This function determines if an MLE Thread Discovery is currently in progress. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">aInstance</td><td>A pointer to an OpenThread instance. </td></tr>
+  </table>
+  </dd>
+</dl>
+
+<p><div class="dynheader">
+Here is the call graph for this function:</div>
+<div class="dyncontent">
+<div class="center"><img src="../../d0/d0a/group__commands_gace318f8f279ecf06c6d595ac19aa8d32_cgraph.png" border="0" usemap="#d0/d0a/group__commands_gace318f8f279ecf06c6d595ac19aa8d32_cgraph" alt=""/></div>
+<map name="d0/d0a/group__commands_gace318f8f279ecf06c6d595ac19aa8d32_cgraph" id="d0/d0a/group__commands_gace318f8f279ecf06c6d595ac19aa8d32_cgraph">
+<area shape="rect" id="node2" href="../../d3/d8e/classThread_1_1ThreadNetif.html#ad49d56e324f096d728c0083d9292f52d" title="This method returns a pointer to the mle object. " alt="" coords="238,5,378,44"/>
+<area shape="rect" id="node3" href="../../df/d94/group__core-mle-core.html#ga7d899825dbc331c273f0411d6b18b105" title="This method indicates whether or not an MLE Thread Discovery is currently in progress. " alt="" coords="212,68,404,107"/>
+</map>
+</div>
+</p>
+
+</div>
+</div>
+<a class="anchor" id="ga93b20cfbbaeadec1e0345f15979f06fa"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool otIsEnergyScanInProgress </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="../../d2/d83/structotInstance.html">otInstance</a> *&#160;</td>
+          <td class="paramname"><em>aInstance</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>This function indicates whether or not an IEEE 802.15.4 Energy Scan is currently in progress. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">aInstance</td><td>A pointer to an OpenThread instance.</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>true if an IEEE 802.15.4 Energy Scan is in progress, false otherwise. </dd></dl>
+
+<p><div class="dynheader">
+Here is the call graph for this function:</div>
+<div class="dyncontent">
+<div class="center"><img src="../../d0/d0a/group__commands_ga93b20cfbbaeadec1e0345f15979f06fa_cgraph.png" border="0" usemap="#d0/d0a/group__commands_ga93b20cfbbaeadec1e0345f15979f06fa_cgraph" alt=""/></div>
+<map name="d0/d0a/group__commands_ga93b20cfbbaeadec1e0345f15979f06fa_cgraph" id="d0/d0a/group__commands_ga93b20cfbbaeadec1e0345f15979f06fa_cgraph">
+<area shape="rect" id="node2" href="../../d3/d8e/classThread_1_1ThreadNetif.html#aec59b0e172327889e9b0f4f08b0e69f9" title="This method returns a pointer to the mac object. " alt="" coords="257,48,398,87"/>
+<area shape="rect" id="node3" href="../../d6/d88/classThread_1_1Mac_1_1Mac.html#a99305013a985466a1dbf218d34ee31eb" title="This method returns if an energy scan is in progress. " alt="" coords="233,111,422,149"/>
+<area shape="rect" id="node4" href="../../d7/d9c/group__radio-operation.html#ga5a5999dadb6ac0ee70a69a960930f132" title="Get the radio capabilities. " alt="" coords="480,5,623,31"/>
+<area shape="rect" id="node5" href="../../d3/d8e/classThread_1_1ThreadNetif.html#a83517ab2bff2614e403895426df6a61b" title="This method returns the pointer to the parent otInstance structure. " alt="" coords="481,55,622,93"/>
+<area shape="rect" id="node6" href="../../d1/d40/classThread_1_1Timer.html#a475731e21b59be6b17b24f5b5e175f62" title="This method schedules the timer to fire a dt milliseconds from now. " alt="" coords="481,117,622,143"/>
+<area shape="rect" id="node7" href="../../d4/d92/classThread_1_1Tasklet.html#a50a39a6f422851035b89aace87482425" title="This method puts the tasklet on the run queue. " alt="" coords="478,167,625,192"/>
+<area shape="rect" id="node12" href="../../d7/d9c/group__radio-operation.html#gae3b9ed222f4ad93e1d09e285b57be1ef" title="This method begins the energy scan sequence on the radio. " alt="" coords="470,216,633,241"/>
+<area shape="rect" id="node8" href="../../d8/de8/classThread_1_1TaskletScheduler.html#a137292acddf92acdef54cc7a33ea5fac" title="This method enqueues a tasklet into the run queue. " alt="" coords="681,160,853,199"/>
+<area shape="rect" id="node9" href="../../d1/de3/group__execution.html#ga04d5608ac68a78eb3e8fc167587c61f3" title="OpenThread calls this function when the tasklet queue transitions from empty to non&#45;empty. " alt="" coords="919,111,1079,136"/>
+<area shape="rect" id="node10" href="../../d8/de8/classThread_1_1TaskletScheduler.html#aeaf526c316bbea7d53d20fa9e3c94c40" title="This method returns the pointer to the parent Ip6 structure. " alt="" coords="913,160,1085,199"/>
+<area shape="rect" id="node11" href="../../d3/d05/classThread_1_1Ip6_1_1Ip6.html#a624d9508f3ecfa586378a3d802cb6ff7" title="This method returns the pointer to the parent otInstance structure. " alt="" coords="901,223,1096,248"/>
+</map>
+</div>
+</p>
+
+<p><div class="dynheader">
+Here is the caller graph for this function:</div>
+<div class="dyncontent">
+<div class="center"><img src="../../d0/d0a/group__commands_ga93b20cfbbaeadec1e0345f15979f06fa_icgraph.png" border="0" usemap="#d0/d0a/group__commands_ga93b20cfbbaeadec1e0345f15979f06fa_icgraph" alt=""/></div>
+<map name="d0/d0a/group__commands_ga93b20cfbbaeadec1e0345f15979f06fa_icgraph" id="d0/d0a/group__commands_ga93b20cfbbaeadec1e0345f15979f06fa_icgraph">
+<area shape="rect" id="node2" href="../../d9/dc8/classThread_1_1NcpBase.html#ad14f0f1d60c77f7f537a0a441a9fb35c" title="This method is called by the framer whenever a framing error is detected. " alt="" coords="233,5,425,44"/>
+<area shape="rect" id="node3" href="../../dc/d60/classThread_1_1NcpUart.html#a34e4ca7aff5b9056593e8ce0aa6e2fbb" title="This method is called when uart received a data buffer. " alt="" coords="473,5,668,44"/>
+</map>
+</div>
+</p>
+
+</div>
+</div>
+<a class="anchor" id="gaa27a8a819cc401045e172d3b016afad5"></a>
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
           <td class="memname">bool otIsInterfaceUp </td>
           <td>(</td>
-          <td class="paramtype">void&#160;</td>
-          <td class="paramname"></td><td>)</td>
+          <td class="paramtype"><a class="el" href="../../d2/d83/structotInstance.html">otInstance</a> *&#160;</td>
+          <td class="paramname"><em>aInstance</em></td><td>)</td>
           <td></td>
         </tr>
       </table>
 </div><div class="memdoc">
 
 <p>This function indicates whether or not the IPv6 interface is up. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">aInstance</td><td>A pointer to an OpenThread instance.</td></tr>
+  </table>
+  </dd>
+</dl>
 <dl class="retval"><dt>Return values</dt><dd>
   <table class="retval">
     <tr><td class="paramname">TRUE</td><td>The IPv6 interface is up. </td></tr>
@@ -552,28 +1086,91 @@ Here is the caller graph for this function:</div>
 </dl>
 
 <p><div class="dynheader">
+Here is the call graph for this function:</div>
+<div class="dyncontent">
+<div class="center"><img src="../../d0/d0a/group__commands_gaa27a8a819cc401045e172d3b016afad5_cgraph.png" border="0" usemap="#d0/d0a/group__commands_gaa27a8a819cc401045e172d3b016afad5_cgraph" alt=""/></div>
+<map name="d0/d0a/group__commands_gaa27a8a819cc401045e172d3b016afad5_cgraph" id="d0/d0a/group__commands_gaa27a8a819cc401045e172d3b016afad5_cgraph">
+<area shape="rect" id="node2" href="../../d3/d8e/classThread_1_1ThreadNetif.html#a0db4974c5baaf90e14b1fa42a6c3be0c" title="This method indicates whether or not the Thread network interface is enabled. " alt="" coords="165,5,306,44"/>
+</map>
+</div>
+</p>
+
+<p><div class="dynheader">
 Here is the caller graph for this function:</div>
 <div class="dyncontent">
-<div class="center"><img src="../../d0/d0a/group__commands_ga1dd1b2d6b37b852f22975eb0671b67e0_icgraph.png" border="0" usemap="#d0/d0a/group__commands_ga1dd1b2d6b37b852f22975eb0671b67e0_icgraph" alt=""/></div>
-<map name="d0/d0a/group__commands_ga1dd1b2d6b37b852f22975eb0671b67e0_icgraph" id="d0/d0a/group__commands_ga1dd1b2d6b37b852f22975eb0671b67e0_icgraph">
-<area shape="rect" id="node2" href="../../d9/dc8/classThread_1_1NcpBase.html#ad628aea520da8553bbb090ff4f50b09e" title="Called by the superclass to indicate when a send has been completed. " alt="" coords="165,31,403,56"/>
-<area shape="rect" id="node3" href="../../d2/de4/ncp_8h.html#aef46036f17188b217a2ffcb8c325f516" title="Initialize the NCP. " alt="" coords="511,5,584,31"/>
-<area shape="rect" id="node4" href="../../db/def/group__uart.html#gab2950583380bb90a3779f980c28fbaa0" title="The UART driver calls this method to notify OpenThread that the requested bytes have been sent..." alt="" coords="451,55,644,80"/>
+<div class="center"><img src="../../d0/d0a/group__commands_gaa27a8a819cc401045e172d3b016afad5_icgraph.png" border="0" usemap="#d0/d0a/group__commands_gaa27a8a819cc401045e172d3b016afad5_icgraph" alt=""/></div>
+<map name="d0/d0a/group__commands_gaa27a8a819cc401045e172d3b016afad5_icgraph" id="d0/d0a/group__commands_gaa27a8a819cc401045e172d3b016afad5_icgraph">
+<area shape="rect" id="node2" href="../../d5/dc2/structThread_1_1Cli_1_1Interpreter.html#a11ee1f86cffe17aab7de3de0bb16dee7" title="This method parses an ASCII string as an unsigned long. " alt="" coords="183,5,339,44"/>
+<area shape="rect" id="node3" href="../../d9/dc8/classThread_1_1NcpBase.html#ad14f0f1d60c77f7f537a0a441a9fb35c" title="This method is called by the framer whenever a framing error is detected. " alt="" coords="165,68,357,107"/>
+<area shape="rect" id="node4" href="../../dc/d60/classThread_1_1NcpUart.html#a34e4ca7aff5b9056593e8ce0aa6e2fbb" title="This method is called when uart received a data buffer. " alt="" coords="405,68,600,107"/>
 </map>
 </div>
 </p>
 
 </div>
 </div>
-<a class="anchor" id="ga49261298a6f385dda4a0d555f41932cd"></a>
+<a class="anchor" id="ga0b5e932f27ea83d933d8c0b2ec58c340"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool otIsSingleton </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="../../d2/d83/structotInstance.html">otInstance</a> *&#160;</td>
+          <td class="paramname"><em>aInstance</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>This function indicates whether a node is the only router on the network. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">aInstance</td><td>A pointer to an OpenThread instance.</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="retval"><dt>Return values</dt><dd>
+  <table class="retval">
+    <tr><td class="paramname">TRUE</td><td>It is the only router in the network. </td></tr>
+    <tr><td class="paramname">FALSE</td><td>It is a child or is not a single router in the network. </td></tr>
+  </table>
+  </dd>
+</dl>
+
+<p><div class="dynheader">
+Here is the call graph for this function:</div>
+<div class="dyncontent">
+<div class="center"><img src="../../d0/d0a/group__commands_ga0b5e932f27ea83d933d8c0b2ec58c340_cgraph.png" border="0" usemap="#d0/d0a/group__commands_ga0b5e932f27ea83d933d8c0b2ec58c340_cgraph" alt=""/></div>
+<map name="d0/d0a/group__commands_ga0b5e932f27ea83d933d8c0b2ec58c340_cgraph" id="d0/d0a/group__commands_ga0b5e932f27ea83d933d8c0b2ec58c340_cgraph">
+<area shape="rect" id="node2" href="../../d3/d8e/classThread_1_1ThreadNetif.html#ad49d56e324f096d728c0083d9292f52d" title="This method returns a pointer to the mle object. " alt="" coords="162,5,303,44"/>
+<area shape="rect" id="node3" href="../../db/dec/group__core-mle-router.html#ga77c040805ea115e685375e15e90ec671" title="This method indicates whether a node is the only router on the network. " alt="" coords="152,68,313,107"/>
+</map>
+</div>
+</p>
+
+<p><div class="dynheader">
+Here is the caller graph for this function:</div>
+<div class="dyncontent">
+<div class="center"><img src="../../d0/d0a/group__commands_ga0b5e932f27ea83d933d8c0b2ec58c340_icgraph.png" border="0" usemap="#d0/d0a/group__commands_ga0b5e932f27ea83d933d8c0b2ec58c340_icgraph" alt=""/></div>
+<map name="d0/d0a/group__commands_ga0b5e932f27ea83d933d8c0b2ec58c340_icgraph" id="d0/d0a/group__commands_ga0b5e932f27ea83d933d8c0b2ec58c340_icgraph">
+<area shape="rect" id="node2" href="../../d5/dc2/structThread_1_1Cli_1_1Interpreter.html#a11ee1f86cffe17aab7de3de0bb16dee7" title="This method parses an ASCII string as an unsigned long. " alt="" coords="167,5,323,44"/>
+<area shape="rect" id="node3" href="../../d9/dc8/classThread_1_1NcpBase.html#a6a04825243722f9500cac2818a07c7b4" title="This constructor creates and initializes an NcpBase instance. " alt="" coords="152,68,338,93"/>
+</map>
+</div>
+</p>
+
+</div>
+</div>
+<a class="anchor" id="ga62fbc1cdb7b036df73975ca5683f8573"></a>
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
           <td class="memname"><a class="el" href="../../dc/dbf/openthread-types_8h.html#ab701d053a9c34ab7f11e43e0dc09ac9f">ThreadError</a> otThreadStart </td>
           <td>(</td>
-          <td class="paramtype">void&#160;</td>
-          <td class="paramname"></td><td>)</td>
+          <td class="paramtype"><a class="el" href="../../d2/d83/structotInstance.html">otInstance</a> *&#160;</td>
+          <td class="paramname"><em>aInstance</em></td><td>)</td>
           <td></td>
         </tr>
       </table>
@@ -581,60 +1178,160 @@ Here is the caller graph for this function:</div>
 
 <p>This function starts Thread protocol operation. </p>
 <p>The interface must be up when calling this function.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">aInstance</td><td>A pointer to an OpenThread instance.</td></tr>
+  </table>
+  </dd>
+</dl>
 <dl class="retval"><dt>Return values</dt><dd>
   <table class="retval">
     <tr><td class="paramname">kThreadError_None</td><td>Successfully started Thread protocol operation. </td></tr>
-    <tr><td class="paramname">kThreadError_InvalidState</td><td>Thread protocol operation is already started or the interface is not up. </td></tr>
+    <tr><td class="paramname">kThreadError_InvalidState</td><td>The network interface was not not up. </td></tr>
   </table>
   </dd>
 </dl>
 
 <p><div class="dynheader">
+Here is the call graph for this function:</div>
+<div class="dyncontent">
+<div class="center"><img src="../../d0/d0a/group__commands_ga62fbc1cdb7b036df73975ca5683f8573_cgraph.png" border="0" usemap="#d0/d0a/group__commands_ga62fbc1cdb7b036df73975ca5683f8573_cgraph" alt=""/></div>
+<map name="d0/d0a/group__commands_ga62fbc1cdb7b036df73975ca5683f8573_cgraph" id="d0/d0a/group__commands_ga62fbc1cdb7b036df73975ca5683f8573_cgraph">
+<area shape="rect" id="node2" href="../../d3/d8e/classThread_1_1ThreadNetif.html#aec59b0e172327889e9b0f4f08b0e69f9" title="This method returns a pointer to the mac object. " alt="" coords="164,63,305,102"/>
+<area shape="rect" id="node3" href="../../d6/d88/classThread_1_1Mac_1_1Mac.html#a4f56293a69aa4eaf731c799f1bb73890" title="This method returns the IEEE 802.15.4 PAN ID. " alt="" coords="861,875,1054,901"/>
+<area shape="rect" id="node4" href="../../d3/d8e/classThread_1_1ThreadNetif.html#ad49d56e324f096d728c0083d9292f52d" title="This method returns a pointer to the mle object. " alt="" coords="164,827,305,866"/>
+<area shape="rect" id="node5" href="../../df/d94/group__core-mle-core.html#ga01c7e5a022360a6f35e30d07221dbfea" title="This method starts the MLE protocol operation. " alt="" coords="156,778,313,803"/>
+<area shape="rect" id="node6" href="../../d7/d9c/group__radio-operation.html#gaef6191a2f5c0dd177dc009dae3796e8e" title="Get the status of promiscuous mode. " alt="" coords="362,1814,551,1839"/>
+<area shape="rect" id="node7" href="../../d3/d8e/classThread_1_1ThreadNetif.html#a83517ab2bff2614e403895426df6a61b" title="This method returns the pointer to the parent otInstance structure. " alt="" coords="386,1863,527,1902"/>
+<area shape="rect" id="node8" href="../../d3/d8e/classThread_1_1ThreadNetif.html#a0db4974c5baaf90e14b1fa42a6c3be0c" title="This method indicates whether or not the Thread network interface is enabled. " alt="" coords="386,609,527,647"/>
+<area shape="rect" id="node9" href="../../df/d94/group__core-mle-core.html#gaa5ec48ae440f38d5bf24f9d09ca66c65" title="This method sets the Device State to Detached. " alt="" coords="366,269,546,307"/>
+<area shape="rect" id="node20" href="../../d1/d40/classThread_1_1Timer.html#a475731e21b59be6b17b24f5b5e175f62" title="This method schedules the timer to fire a dt milliseconds from now. " alt="" coords="1127,767,1267,793"/>
+<area shape="rect" id="node23" href="../../d6/d44/classThread_1_1KeyManager.html#aa4d5db0a3a8a22b915889c85154b674f" title="This method starts KeyManager rotation timer and sets guard timer to initial value. " alt="" coords="383,671,530,710"/>
+<area shape="rect" id="node25" href="../../df/d94/group__core-mle-core.html#ga4934863fd1274f1b86dc9bcee8d8682d" title="This method returns the RLOC16 assigned to the Thread interface. " alt="" coords="862,1455,1054,1481"/>
+<area shape="rect" id="node27" href="../../df/d94/group__core-mle-core.html#gabe6ce4ca7175574ca785eed7f4ab8da2" title="This method causes the Thread interface to attempt an MLE attach. " alt="" coords="367,813,545,851"/>
+<area shape="rect" id="node28" href="../../df/d94/group__core-mle-core.html#ga99e523b68d245889329e59fc7f20fb64" title="This method indicates whether or not aRloc16 refers to an active router. " alt="" coords="870,987,1045,1026"/>
+<area shape="rect" id="node29" href="../../db/dec/group__core-mle-router.html#ga2c1a170b6fbb5e7aefe57e0b52136560" title="This method generates an Address Solicit request for a Router ID. " alt="" coords="376,514,537,553"/>
+<area shape="rect" id="node32" href="../../df/d94/group__core-mle-core.html#ga09239c621861382d25163980ab5d983b" title="This method generates an MLE Child Update Request message. " alt="" coords="361,1265,551,1303"/>
+<area shape="rect" id="node10" href="../../d2/d55/classThread_1_1Ip6_1_1Netif.html#a092484addf28568306ab45941abffff4" title="This method schedules notification of aFlags. " alt="" coords="874,6,1041,45"/>
+<area shape="rect" id="node12" href="../../d2/d55/classThread_1_1Ip6_1_1Netif.html#ad00e58b94ab00cc71a5f3a242b7ef42c" title="This method removes a unicast address from the network interface. " alt="" coords="621,63,792,102"/>
+<area shape="rect" id="node16" href="../../d4/dcf/classThread_1_1AddressResolver.html#af9e813b464854994a8beda21d91c989c" title="This method clears the EID&#45;to&#45;RLOC cache. " alt="" coords="620,406,793,445"/>
+<area shape="rect" id="node17" href="../../d1/d40/classThread_1_1Timer.html#a9acdec1cdf4edf947c563d40871f2bc8" title="This method stops the timer. " alt="" coords="1127,619,1267,645"/>
+<area shape="rect" id="node18" href="../../dd/d1d/classThread_1_1MeshForwarder.html#a2343ec6e8df3c5885415fa912889a752" title="This method sets the rx&#45;on&#45;when&#45;idle mode. " alt="" coords="876,925,1040,963"/>
+<area shape="rect" id="node21" href="../../d2/d55/classThread_1_1Ip6_1_1Netif.html#a9972d917c57200b504d9f2df7eb44974" title="This method returns a reference to the IPv6 network object. " alt="" coords="644,241,769,279"/>
+<area shape="rect" id="node22" href="../../d3/d05/classThread_1_1Ip6_1_1Ip6.html#ac54ddaad6442e3858eb21a2e7801aeaf" title="This method enables/disables IPv6 forwarding. " alt="" coords="602,178,811,217"/>
+<area shape="rect" id="node11" href="../../d4/d92/classThread_1_1Tasklet.html#a50a39a6f422851035b89aace87482425" title="This method puts the tasklet on the run queue. " alt="" coords="1124,13,1270,38"/>
+<area shape="rect" id="node13" href="../../d9/d13/classThread_1_1Ip6_1_1NetifUnicastAddress.html#ac7f38e1322075b0e6dfc7afc048f7eec" title="This method returns the next unicast address assigned to the interface. " alt="" coords="873,646,1042,685"/>
+<area shape="rect" id="node14" href="../../d9/d13/classThread_1_1Ip6_1_1NetifUnicastAddress.html#a2bb426bd29e271bd1fc09b61d1044911" title="This method returns the unicast address. " alt="" coords="873,761,1042,799"/>
+<area shape="rect" id="node15" href="../../d9/db1/classThread_1_1Ip6_1_1Address.html#a042097e2896ce7eebc1844140c0d2aeb" title="This method indicates whether or not the IPv6 address is a RLOC address. " alt="" coords="885,69,1031,107"/>
+<area shape="rect" id="node19" href="../../d6/d88/classThread_1_1Mac_1_1Mac.html#ab74d0b0b142cadd19e6d2a24d441223f" title="This method sets the rx&#45;on&#45;when&#45;idle mode. " alt="" coords="1102,925,1292,963"/>
+<area shape="rect" id="node24" href="../../d1/d40/classThread_1_1Timer.html#a172d3d4acd2ee14b151f065be0ce50a9" title="This static method returns the number of milliseconds given hours. " alt="" coords="610,634,803,659"/>
+<area shape="rect" id="node26" href="../../d6/d88/classThread_1_1Mac_1_1Mac.html#ac00b980b5fa6eca48cd29aa7b8ccebe8" title="This method returns the IEEE 802.15.4 Short Address. " alt="" coords="1102,1449,1292,1487"/>
+<area shape="rect" id="node30" href="../../dc/d75/classThread_1_1Ip6_1_1UdpSocket.html#aaa9112c22813ceb55338050f0365c598" title="This method opens the UDP socket. " alt="" coords="625,571,788,610"/>
+<area shape="rect" id="node31" href="../../dd/d68/classThread_1_1TrickleTimer.html#a7df8440dbaec9a62b5d97b9dc6b3ef6b" title="This method stops the trickle timer. " alt="" coords="886,457,1029,495"/>
+<area shape="rect" id="node33" href="../../dc/d75/classThread_1_1Ip6_1_1UdpSocket.html#aafb4481c92d1f8515e51cfa822a1bde1" title="This method returns a new UDP message with sufficient header space reserved. " alt="" coords="877,1214,1039,1253"/>
+<area shape="rect" id="node34" href="../../dc/d3c/classThread_1_1Message.html#a942818bf261c0af93b793017407c2b2c" title="This method sets whether or not link security is enabled for the message. " alt="" coords="869,1339,1046,1378"/>
+<area shape="rect" id="node35" href="../../df/d94/group__core-mle-core.html#gadbe9c0d542453bbe67270fb5dc47db93" title="This method appends an MLE header to a message. " alt="" coords="870,1277,1045,1315"/>
+<area shape="rect" id="node40" href="../../df/d94/group__core-mle-core.html#ga5823de0f82c798ac9ef2e2e228e4c0ca" title="This method appends a Mode TLV to a message. " alt="" coords="602,1347,810,1373"/>
+<area shape="rect" id="node41" href="../../df/d94/group__core-mle-core.html#gad555ca36631eff9b978e448ecbcf8e2e" title="This method appends an Address Registration TLV to a message. " alt="" coords="619,786,794,825"/>
+<area shape="rect" id="node42" href="../../dd/d10/group__random.html#gaa20820ca4e6e1ce8cd47ded9762b14ca" title="Get a 32&#45;bit random value. " alt="" coords="894,1402,1021,1427"/>
+<area shape="rect" id="node43" href="../../df/d94/group__core-mle-core.html#gabc11a09e2f8d6c841de76c23d0b2885b" title="This method appends a Challenge TLV to a message. " alt="" coords="619,1511,794,1550"/>
+<area shape="rect" id="node44" href="../../df/d94/group__core-mle-core.html#gace3f7519077411e84b40e6c6891122be" title="This method appends a Source Address TLV to a message. " alt="" coords="619,1449,794,1487"/>
+<area shape="rect" id="node45" href="../../df/d94/group__core-mle-core.html#ga5887fba704e73e18c9416d7822e8f44d" title="This method appends a Leader Data TLV to a message. " alt="" coords="619,1574,794,1613"/>
+<area shape="rect" id="node46" href="../../df/d94/group__core-mle-core.html#ga1737f37491d03e583b62035208e5f4a9" title="This method appends a Timeout TLV to a message. " alt="" coords="619,1637,794,1675"/>
+<area shape="rect" id="node47" href="../../d9/db1/classThread_1_1Ip6_1_1Address.html#a7e4fe6c422ffbaf30638bbf7065da6fa" title="This method sets the Interface Identifier. " alt="" coords="634,1699,779,1738"/>
+<area shape="rect" id="node48" href="../../df/d94/group__core-mle-core.html#ga0ea27201cf13a4e1b0680a9da6c54a64" title="This method submits an MLE message to the UDP socket. " alt="" coords="599,1094,813,1119"/>
+<area shape="rect" id="node49" href="../../dd/d1d/classThread_1_1MeshForwarder.html#a969c6fac135cdee3ed9380a0859eaaa8" title="This method sets the Data Poll period. " alt="" coords="876,1050,1040,1089"/>
+<area shape="rect" id="node50" href="../../dc/d3c/classThread_1_1Message.html#adc9d723284f5807d9c272ab89bc52b45" title="This method frees this message buffer. " alt="" coords="878,1165,1038,1190"/>
+<area shape="rect" id="node36" href="../../df/d94/group__core-mle-core.html#ga816bfec3316a129c70092d63141ecbac" title="This method initializes the MLE header. " alt="" coords="1125,1299,1269,1338"/>
+<area shape="rect" id="node37" href="../../df/d94/group__core-mle-core.html#ga31f6d8ae4e3872d7081435a6ba62779f" title="This method sets the Security Suite value. " alt="" coords="1125,1362,1269,1401"/>
+<area shape="rect" id="node38" href="../../df/d94/group__core-mle-core.html#gab3f74f5cf47286ec13eb63769602648a" title="This method sets the Key ID Mode to 2. " alt="" coords="1125,1174,1269,1213"/>
+<area shape="rect" id="node39" href="../../df/d94/group__core-mle-core.html#gacfda331d1a40fd11951bbaa603d9c77a" title="This method sets the Command Type value. " alt="" coords="1125,1237,1269,1275"/>
+</map>
+</div>
+</p>
+
+<p><div class="dynheader">
 Here is the caller graph for this function:</div>
 <div class="dyncontent">
-<div class="center"><img src="../../d0/d0a/group__commands_ga49261298a6f385dda4a0d555f41932cd_icgraph.png" border="0" usemap="#d0/d0a/group__commands_ga49261298a6f385dda4a0d555f41932cd_icgraph" alt=""/></div>
-<map name="d0/d0a/group__commands_ga49261298a6f385dda4a0d555f41932cd_icgraph" id="d0/d0a/group__commands_ga49261298a6f385dda4a0d555f41932cd_icgraph">
-<area shape="rect" id="node2" href="../../d9/dc8/classThread_1_1NcpBase.html#ad628aea520da8553bbb090ff4f50b09e" title="Called by the superclass to indicate when a send has been completed. " alt="" coords="156,31,394,56"/>
-<area shape="rect" id="node3" href="../../d2/de4/ncp_8h.html#aef46036f17188b217a2ffcb8c325f516" title="Initialize the NCP. " alt="" coords="502,5,576,31"/>
-<area shape="rect" id="node4" href="../../db/def/group__uart.html#gab2950583380bb90a3779f980c28fbaa0" title="The UART driver calls this method to notify OpenThread that the requested bytes have been sent..." alt="" coords="442,55,635,80"/>
+<div class="center"><img src="../../d0/d0a/group__commands_ga62fbc1cdb7b036df73975ca5683f8573_icgraph.png" border="0" usemap="#d0/d0a/group__commands_ga62fbc1cdb7b036df73975ca5683f8573_icgraph" alt=""/></div>
+<map name="d0/d0a/group__commands_ga62fbc1cdb7b036df73975ca5683f8573_icgraph" id="d0/d0a/group__commands_ga62fbc1cdb7b036df73975ca5683f8573_icgraph">
+<area shape="rect" id="node2" href="../../d5/dc2/structThread_1_1Cli_1_1Interpreter.html#a11ee1f86cffe17aab7de3de0bb16dee7" title="This method parses an ASCII string as an unsigned long. " alt="" coords="174,5,330,44"/>
+<area shape="rect" id="node3" href="../../d9/dc8/classThread_1_1NcpBase.html#ad14f0f1d60c77f7f537a0a441a9fb35c" title="This method is called by the framer whenever a framing error is detected. " alt="" coords="156,68,348,107"/>
+<area shape="rect" id="node4" href="../../dc/d60/classThread_1_1NcpUart.html#a34e4ca7aff5b9056593e8ce0aa6e2fbb" title="This method is called when uart received a data buffer. " alt="" coords="396,68,591,107"/>
 </map>
 </div>
 </p>
 
 </div>
 </div>
-<a class="anchor" id="gaea882ef7f8fa773cd0c30e5b70966680"></a>
+<a class="anchor" id="ga9dd31b4b5ff1c0b06a39683bc5196972"></a>
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
           <td class="memname"><a class="el" href="../../dc/dbf/openthread-types_8h.html#ab701d053a9c34ab7f11e43e0dc09ac9f">ThreadError</a> otThreadStop </td>
           <td>(</td>
-          <td class="paramtype">void&#160;</td>
-          <td class="paramname"></td><td>)</td>
+          <td class="paramtype"><a class="el" href="../../d2/d83/structotInstance.html">otInstance</a> *&#160;</td>
+          <td class="paramname"><em>aInstance</em></td><td>)</td>
           <td></td>
         </tr>
       </table>
 </div><div class="memdoc">
 
 <p>This function stops Thread protocol operation. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">aInstance</td><td>A pointer to an OpenThread instance.</td></tr>
+  </table>
+  </dd>
+</dl>
 <dl class="retval"><dt>Return values</dt><dd>
   <table class="retval">
     <tr><td class="paramname">kThreadError_None</td><td>Successfully stopped Thread protocol operation. </td></tr>
-    <tr><td class="paramname">kThreadError_InvalidState</td><td>The Thread protocol operation was not started. </td></tr>
   </table>
   </dd>
 </dl>
 
 <p><div class="dynheader">
+Here is the call graph for this function:</div>
+<div class="dyncontent">
+<div class="center"><img src="../../d0/d0a/group__commands_ga9dd31b4b5ff1c0b06a39683bc5196972_cgraph.png" border="0" usemap="#d0/d0a/group__commands_ga9dd31b4b5ff1c0b06a39683bc5196972_cgraph" alt=""/></div>
+<map name="d0/d0a/group__commands_ga9dd31b4b5ff1c0b06a39683bc5196972_cgraph" id="d0/d0a/group__commands_ga9dd31b4b5ff1c0b06a39683bc5196972_cgraph">
+<area shape="rect" id="node2" href="../../d3/d8e/classThread_1_1ThreadNetif.html#ad49d56e324f096d728c0083d9292f52d" title="This method returns a pointer to the mle object. " alt="" coords="163,160,304,199"/>
+<area shape="rect" id="node3" href="../../df/d94/group__core-mle-core.html#gab0d4493caf85385a335ec64e1eb1b70c" title="This method stops the MLE protocol operation. " alt="" coords="155,223,312,248"/>
+<area shape="rect" id="node4" href="../../d6/d44/classThread_1_1KeyManager.html#a048243a0e7564e607510d2ed60c99b2e" title="This method stops KeyManager timers. " alt="" coords="376,68,523,107"/>
+<area shape="rect" id="node6" href="../../df/d94/group__core-mle-core.html#gaa5ec48ae440f38d5bf24f9d09ca66c65" title="This method sets the Device State to Detached. " alt="" coords="360,216,540,255"/>
+<area shape="rect" id="node13" href="../../d2/d55/classThread_1_1Ip6_1_1Netif.html#ad00e58b94ab00cc71a5f3a242b7ef42c" title="This method removes a unicast address from the network interface. " alt="" coords="606,393,778,432"/>
+<area shape="rect" id="node5" href="../../d1/d40/classThread_1_1Timer.html#a9acdec1cdf4edf947c563d40871f2bc8" title="This method stops the timer. " alt="" coords="871,141,1010,167"/>
+<area shape="rect" id="node7" href="../../d2/d55/classThread_1_1Ip6_1_1Netif.html#a092484addf28568306ab45941abffff4" title="This method schedules notification of aFlags. " alt="" coords="857,303,1024,341"/>
+<area shape="rect" id="node17" href="../../d4/dcf/classThread_1_1AddressResolver.html#af9e813b464854994a8beda21d91c989c" title="This method clears the EID&#45;to&#45;RLOC cache. " alt="" coords="606,331,779,369"/>
+<area shape="rect" id="node18" href="../../dd/d1d/classThread_1_1MeshForwarder.html#a2343ec6e8df3c5885415fa912889a752" title="This method sets the rx&#45;on&#45;when&#45;idle mode. " alt="" coords="610,216,775,255"/>
+<area shape="rect" id="node21" href="../../d2/d55/classThread_1_1Ip6_1_1Netif.html#a9972d917c57200b504d9f2df7eb44974" title="This method returns a reference to the IPv6 network object. " alt="" coords="630,39,755,77"/>
+<area shape="rect" id="node22" href="../../d3/d05/classThread_1_1Ip6_1_1Ip6.html#ac54ddaad6442e3858eb21a2e7801aeaf" title="This method enables/disables IPv6 forwarding. " alt="" coords="588,101,797,140"/>
+<area shape="rect" id="node8" href="../../d4/d92/classThread_1_1Tasklet.html#a50a39a6f422851035b89aace87482425" title="This method puts the tasklet on the run queue. " alt="" coords="1083,309,1230,335"/>
+<area shape="rect" id="node9" href="../../d8/de8/classThread_1_1TaskletScheduler.html#a137292acddf92acdef54cc7a33ea5fac" title="This method enqueues a tasklet into the run queue. " alt="" coords="1278,303,1451,341"/>
+<area shape="rect" id="node10" href="../../d1/de3/group__execution.html#ga04d5608ac68a78eb3e8fc167587c61f3" title="OpenThread calls this function when the tasklet queue transitions from empty to non&#45;empty. " alt="" coords="1516,253,1676,279"/>
+<area shape="rect" id="node11" href="../../d8/de8/classThread_1_1TaskletScheduler.html#aeaf526c316bbea7d53d20fa9e3c94c40" title="This method returns the pointer to the parent Ip6 structure. " alt="" coords="1510,303,1682,341"/>
+<area shape="rect" id="node12" href="../../d3/d05/classThread_1_1Ip6_1_1Ip6.html#a624d9508f3ecfa586378a3d802cb6ff7" title="This method returns the pointer to the parent otInstance structure. " alt="" coords="1499,365,1693,391"/>
+<area shape="rect" id="node14" href="../../d9/d13/classThread_1_1Ip6_1_1NetifUnicastAddress.html#ac7f38e1322075b0e6dfc7afc048f7eec" title="This method returns the next unicast address assigned to the interface. " alt="" coords="856,428,1025,467"/>
+<area shape="rect" id="node15" href="../../d9/d13/classThread_1_1Ip6_1_1NetifUnicastAddress.html#a2bb426bd29e271bd1fc09b61d1044911" title="This method returns the unicast address. " alt="" coords="856,491,1025,529"/>
+<area shape="rect" id="node16" href="../../d9/db1/classThread_1_1Ip6_1_1Address.html#a042097e2896ce7eebc1844140c0d2aeb" title="This method indicates whether or not the IPv6 address is a RLOC address. " alt="" coords="867,365,1013,404"/>
+<area shape="rect" id="node19" href="../../d6/d88/classThread_1_1Mac_1_1Mac.html#ab74d0b0b142cadd19e6d2a24d441223f" title="This method sets the rx&#45;on&#45;when&#45;idle mode. " alt="" coords="845,240,1035,279"/>
+<area shape="rect" id="node20" href="../../d1/d40/classThread_1_1Timer.html#a475731e21b59be6b17b24f5b5e175f62" title="This method schedules the timer to fire a dt milliseconds from now. " alt="" coords="870,191,1010,216"/>
+</map>
+</div>
+</p>
+
+<p><div class="dynheader">
 Here is the caller graph for this function:</div>
 <div class="dyncontent">
-<div class="center"><img src="../../d0/d0a/group__commands_gaea882ef7f8fa773cd0c30e5b70966680_icgraph.png" border="0" usemap="#d0/d0a/group__commands_gaea882ef7f8fa773cd0c30e5b70966680_icgraph" alt=""/></div>
-<map name="d0/d0a/group__commands_gaea882ef7f8fa773cd0c30e5b70966680_icgraph" id="d0/d0a/group__commands_gaea882ef7f8fa773cd0c30e5b70966680_icgraph">
-<area shape="rect" id="node2" href="../../d0/d0a/group__commands.html#gada88df6c7f3db6dcf65a90b37af2150f" title="This function disables the OpenThread library. " alt="" coords="155,5,232,31"/>
-<area shape="rect" id="node3" href="../../d9/dc8/classThread_1_1NcpBase.html#ad628aea520da8553bbb090ff4f50b09e" title="Called by the superclass to indicate when a send has been completed. " alt="" coords="280,31,518,56"/>
-<area shape="rect" id="node4" href="../../d2/de4/ncp_8h.html#aef46036f17188b217a2ffcb8c325f516" title="Initialize the NCP. " alt="" coords="626,5,700,31"/>
-<area shape="rect" id="node5" href="../../db/def/group__uart.html#gab2950583380bb90a3779f980c28fbaa0" title="The UART driver calls this method to notify OpenThread that the requested bytes have been sent..." alt="" coords="566,55,759,80"/>
+<div class="center"><img src="../../d0/d0a/group__commands_ga9dd31b4b5ff1c0b06a39683bc5196972_icgraph.png" border="0" usemap="#d0/d0a/group__commands_ga9dd31b4b5ff1c0b06a39683bc5196972_icgraph" alt=""/></div>
+<map name="d0/d0a/group__commands_ga9dd31b4b5ff1c0b06a39683bc5196972_icgraph" id="d0/d0a/group__commands_ga9dd31b4b5ff1c0b06a39683bc5196972_icgraph">
+<area shape="rect" id="node2" href="../../d5/dc2/structThread_1_1Cli_1_1Interpreter.html#a11ee1f86cffe17aab7de3de0bb16dee7" title="This method parses an ASCII string as an unsigned long. " alt="" coords="174,5,329,44"/>
+<area shape="rect" id="node3" href="../../d0/d0a/group__commands.html#gaab0dc090f71b80671ff3dad620314b43" title="This function disables the OpenThread library. " alt="" coords="187,68,316,93"/>
+<area shape="rect" id="node4" href="../../d9/dc8/classThread_1_1NcpBase.html#a6a04825243722f9500cac2818a07c7b4" title="This constructor creates and initializes an NcpBase instance. " alt="" coords="158,117,345,143"/>
+<area shape="rect" id="node5" href="../../d9/dc8/classThread_1_1NcpBase.html#ad14f0f1d60c77f7f537a0a441a9fb35c" title="This method is called by the framer whenever a framing error is detected. " alt="" coords="155,167,347,205"/>
+<area shape="rect" id="node6" href="../../dc/d60/classThread_1_1NcpUart.html#a34e4ca7aff5b9056593e8ce0aa6e2fbb" title="This method is called when uart received a data buffer. " alt="" coords="395,167,590,205"/>
 </map>
 </div>
 </p>
@@ -646,7 +1343,7 @@ Here is the caller graph for this function:</div>
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
-    <li class="footer">Generated on Wed Jul 27 2016 17:09:43 for OpenThread by
+    <li class="footer">Generated on Fri Oct 14 2016 08:44:35 for OpenThread by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="../../doxygen.png" alt="doxygen"/></a> 1.8.11 </li>
   </ul>

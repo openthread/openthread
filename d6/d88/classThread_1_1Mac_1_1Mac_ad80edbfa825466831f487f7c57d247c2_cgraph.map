@@ -1,3 +1,4 @@
 <map id="Thread::Mac::Mac::SetShortAddress" name="Thread::Mac::Mac::SetShortAddress">
-<area shape="rect" id="node2" href="$d1/d69/group__radio-config.html#ga275c098ae520634e7fad587e8ddca424" title="Set the Short Address for address filtering. " alt="" coords="241,12,432,37"/>
+<area shape="rect" id="node2" href="$d1/d69/group__radio-config.html#ga1a58663d2bdcc4f3d89fda081a59cdb7" title="Set the Short Address for address filtering. " alt="" coords="241,5,432,31"/>
+<area shape="rect" id="node3" href="$d3/d8e/classThread_1_1ThreadNetif.html#a83517ab2bff2614e403895426df6a61b" title="This method returns the pointer to the parent otInstance structure. " alt="" coords="267,55,407,93"/>
 </map>

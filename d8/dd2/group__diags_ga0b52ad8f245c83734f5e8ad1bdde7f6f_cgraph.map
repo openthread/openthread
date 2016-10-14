@@ -1,0 +1,6 @@
+<map id="otIsLinkPromiscuous" name="otIsLinkPromiscuous">
+<area shape="rect" id="node2" href="$d3/d8e/classThread_1_1ThreadNetif.html#aec59b0e172327889e9b0f4f08b0e69f9" title="This method returns a pointer to the mac object. " alt="" coords="239,5,380,44"/>
+<area shape="rect" id="node3" href="$d6/d88/classThread_1_1Mac_1_1Mac.html#a1b04f6a76c128bcdc30f77b0d01c8f52" title="This function indicates whether or not promiscuous mode is enabled at the link layer. " alt="" coords="198,68,421,93"/>
+<area shape="rect" id="node4" href="$d7/d9c/group__radio-operation.html#gaef6191a2f5c0dd177dc009dae3796e8e" title="Get the status of promiscuous mode. " alt="" coords="469,40,658,65"/>
+<area shape="rect" id="node5" href="$d3/d8e/classThread_1_1ThreadNetif.html#a83517ab2bff2614e403895426df6a61b" title="This method returns the pointer to the parent otInstance structure. " alt="" coords="493,89,634,128"/>
+</map>

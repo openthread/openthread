@@ -1,6 +1,7 @@
 var classThread_1_1Coap_1_1Header =
 [
     [ "Option", "d1/d84/structThread_1_1Coap_1_1Header_1_1Option.html", "d1/d84/structThread_1_1Coap_1_1Header_1_1Option" ],
+    [ "kVersion1", "d0/d7f/classThread_1_1Coap_1_1Header.html#a369806d409bee9d0f481ccc300ba8e37aa6cdb2d12a0bbfa3462b189a62265a9f", null ],
     [ "Code", "d0/d7f/classThread_1_1Coap_1_1Header.html#a14de12f3c0338e69a239cb4dc9afaf07", [
       [ "kCodeGet", "d0/d7f/classThread_1_1Coap_1_1Header.html#a14de12f3c0338e69a239cb4dc9afaf07a1e8498ada7b11adfbea2a80da56bf790", null ],
       [ "kCodePost", "d0/d7f/classThread_1_1Coap_1_1Header.html#a14de12f3c0338e69a239cb4dc9afaf07acb4a9e80ab913eadb58f694e619da0d8", null ],
@@ -38,5 +39,9 @@ var classThread_1_1Coap_1_1Header =
     [ "SetMessageId", "d0/d7f/classThread_1_1Coap_1_1Header.html#a7a374b4bd31694216d9397e1409209a0", null ],
     [ "SetToken", "d0/d7f/classThread_1_1Coap_1_1Header.html#a9d8d2a7b438e4a7d27ce3b979b0bb2a0", null ],
     [ "SetType", "d0/d7f/classThread_1_1Coap_1_1Header.html#ad4147a19a4e8861f321c8aaaa5db6baa", null ],
-    [ "SetVersion", "d0/d7f/classThread_1_1Coap_1_1Header.html#a411c64839fe9cf63ac201f9a6760199c", null ]
+    [ "SetVersion", "d0/d7f/classThread_1_1Coap_1_1Header.html#a411c64839fe9cf63ac201f9a6760199c", null ],
+    [ "mCode", "d0/d7f/classThread_1_1Coap_1_1Header.html#a9cc326b483119c87bf1b8da567f59c38", null ],
+    [ "mHeader", "d0/d7f/classThread_1_1Coap_1_1Header.html#a607e722c8453c76c19a53a45f688c17f", null ],
+    [ "mMessageId", "d0/d7f/classThread_1_1Coap_1_1Header.html#a8241d84bbd9da6e0d11711a2427d80a2", null ],
+    [ "mVersionTypeToken", "d0/d7f/classThread_1_1Coap_1_1Header.html#a361d11ad05859e35047ccd55920e273f", null ]
 ];

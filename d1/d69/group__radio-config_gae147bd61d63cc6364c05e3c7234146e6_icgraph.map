@@ -1,0 +1,8 @@
+<map id="otPlatRadioSetExtendedAddress" name="otPlatRadioSetExtendedAddress">
+<area shape="rect" id="node2" href="$d6/d88/classThread_1_1Mac_1_1Mac.html#a31574748a5ba6d5cd7d876f6c1241876" title="This method sets the IEEE 802.15.4 Extended Address. " alt="" coords="269,87,444,125"/>
+<area shape="rect" id="node3" href="$d6/d88/classThread_1_1Mac_1_1Mac.html#afe65837f6f2e5f566187fc410786ef86" title="This constructor initializes the MAC object. " alt="" coords="498,5,660,31"/>
+<area shape="rect" id="node4" href="$d4/db5/classThread_1_1MeshCoP_1_1Joiner.html#a1ca1f767cfe15e7c25b8f65606e7fefb" title="This method starts the Joiner service. " alt="" coords="492,55,666,93"/>
+<area shape="rect" id="node5" href="$d4/db5/classThread_1_1MeshCoP_1_1Joiner.html#a5109c8ea0e2c168c18f729d767e6b999" title="This method stops the Joiner service. " alt="" coords="492,117,666,156"/>
+<area shape="rect" id="node6" href="$df/d4f/group__config-general.html#gaf3245ebddd1200f21fdce21451b8eeda" title="This function sets the IEEE 802.15.4 Extended Address. " alt="" coords="500,180,658,205"/>
+<area shape="rect" id="node7" href="$d5/dc2/structThread_1_1Cli_1_1Interpreter.html#a11ee1f86cffe17aab7de3de0bb16dee7" title="This method parses an ASCII string as an unsigned long. " alt="" coords="714,173,869,212"/>
+</map>

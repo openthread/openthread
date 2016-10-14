@@ -34,7 +34,7 @@
   <td id="projectlogo"><img alt="Logo" src="../../Open-Thread-Logo-200x42.png"/></td>
   <td style="padding-left: 0.5em;">
    <div id="projectname">
-   &#160;<span id="projectnumber">gb2b10b8</span>
+   &#160;<span id="projectnumber">gddd0704</span>
    </div>
   </td>
  </tr>
@@ -122,24 +122,61 @@ Collaboration diagram for Alarm:</div>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 Functions</h2></td></tr>
-<tr class="memitem:ga1539c2bf378f1ae03ad2bc1eba70fa8e"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../dd/db6/group__alarm.html#ga1539c2bf378f1ae03ad2bc1eba70fa8e">otPlatAlarmStartAt</a> (uint32_t aT0, uint32_t aDt)</td></tr>
-<tr class="memdesc:ga1539c2bf378f1ae03ad2bc1eba70fa8e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set the alarm to fire at <code>aDt</code> milliseconds after <code>aT0</code>.  <a href="#ga1539c2bf378f1ae03ad2bc1eba70fa8e">More...</a><br /></td></tr>
-<tr class="separator:ga1539c2bf378f1ae03ad2bc1eba70fa8e"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ga2329a0a170b33c8dbd84e500e05918f4"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ga2329a0a170b33c8dbd84e500e05918f4"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../dd/db6/group__alarm.html#ga2329a0a170b33c8dbd84e500e05918f4">otPlatAlarmStop</a> (void)</td></tr>
-<tr class="memdesc:ga2329a0a170b33c8dbd84e500e05918f4"><td class="mdescLeft">&#160;</td><td class="mdescRight">Stop the alarm. <br /></td></tr>
-<tr class="separator:ga2329a0a170b33c8dbd84e500e05918f4"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:gab9b96ec4fe6a41ad8ba4ac91fd861f53"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../dd/db6/group__alarm.html#gab9b96ec4fe6a41ad8ba4ac91fd861f53">otPlatAlarmStartAt</a> (<a class="el" href="../../d2/d83/structotInstance.html">otInstance</a> *aInstance, uint32_t aT0, uint32_t aDt)</td></tr>
+<tr class="memdesc:gab9b96ec4fe6a41ad8ba4ac91fd861f53"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set the alarm to fire at <code>aDt</code> milliseconds after <code>aT0</code>.  <a href="#gab9b96ec4fe6a41ad8ba4ac91fd861f53">More...</a><br /></td></tr>
+<tr class="separator:gab9b96ec4fe6a41ad8ba4ac91fd861f53"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga68278ebdaa8b35f1bb305649708f061a"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../dd/db6/group__alarm.html#ga68278ebdaa8b35f1bb305649708f061a">otPlatAlarmStop</a> (<a class="el" href="../../d2/d83/structotInstance.html">otInstance</a> *aInstance)</td></tr>
+<tr class="memdesc:ga68278ebdaa8b35f1bb305649708f061a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Stop the alarm.  <a href="#ga68278ebdaa8b35f1bb305649708f061a">More...</a><br /></td></tr>
+<tr class="separator:ga68278ebdaa8b35f1bb305649708f061a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:gaf8829e3591e03e29e136685fcdeb3300"><td class="memItemLeft" align="right" valign="top">uint32_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../dd/db6/group__alarm.html#gaf8829e3591e03e29e136685fcdeb3300">otPlatAlarmGetNow</a> (void)</td></tr>
 <tr class="memdesc:gaf8829e3591e03e29e136685fcdeb3300"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the current time.  <a href="#gaf8829e3591e03e29e136685fcdeb3300">More...</a><br /></td></tr>
 <tr class="separator:gaf8829e3591e03e29e136685fcdeb3300"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:gaea1cdec86ed3e3081acfa2a2a2aa7038"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="gaea1cdec86ed3e3081acfa2a2a2aa7038"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../dd/db6/group__alarm.html#gaea1cdec86ed3e3081acfa2a2a2aa7038">otPlatAlarmFired</a> (void)</td></tr>
-<tr class="memdesc:gaea1cdec86ed3e3081acfa2a2a2aa7038"><td class="mdescLeft">&#160;</td><td class="mdescRight">Signal that the alarm has fired. <br /></td></tr>
-<tr class="separator:gaea1cdec86ed3e3081acfa2a2a2aa7038"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:gabaa04a10427f04205a1f899408c7681e"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../dd/db6/group__alarm.html#gabaa04a10427f04205a1f899408c7681e">otPlatAlarmFired</a> (<a class="el" href="../../d2/d83/structotInstance.html">otInstance</a> *aInstance)</td></tr>
+<tr class="memdesc:gabaa04a10427f04205a1f899408c7681e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Signal that the alarm has fired.  <a href="#gabaa04a10427f04205a1f899408c7681e">More...</a><br /></td></tr>
+<tr class="separator:gabaa04a10427f04205a1f899408c7681e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:gacf1f0acac2fd94a3434b64dd09bf49e9"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../dd/db6/group__alarm.html#gacf1f0acac2fd94a3434b64dd09bf49e9">otPlatDiagAlarmFired</a> (<a class="el" href="../../d2/d83/structotInstance.html">otInstance</a> *aInstance)</td></tr>
+<tr class="memdesc:gacf1f0acac2fd94a3434b64dd09bf49e9"><td class="mdescLeft">&#160;</td><td class="mdescRight">Signal diagnostics module that the alarm has fired.  <a href="#gacf1f0acac2fd94a3434b64dd09bf49e9">More...</a><br /></td></tr>
+<tr class="separator:gacf1f0acac2fd94a3434b64dd09bf49e9"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <p>This module includes the platform abstraction for the alarm service. </p>
 <h2 class="groupheader">Function Documentation</h2>
+<a class="anchor" id="gabaa04a10427f04205a1f899408c7681e"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void otPlatAlarmFired </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="../../d2/d83/structotInstance.html">otInstance</a> *&#160;</td>
+          <td class="paramname"><em>aInstance</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Signal that the alarm has fired. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">aInstance</td><td>The OpenThread instance structure. </td></tr>
+  </table>
+  </dd>
+</dl>
+
+<p><div class="dynheader">
+Here is the call graph for this function:</div>
+<div class="dyncontent">
+<div class="center"><img src="../../dd/db6/group__alarm_gabaa04a10427f04205a1f899408c7681e_cgraph.png" border="0" usemap="#dd/db6/group__alarm_gabaa04a10427f04205a1f899408c7681e_cgraph" alt=""/></div>
+<map name="dd/db6/group__alarm_gabaa04a10427f04205a1f899408c7681e_cgraph" id="dd/db6/group__alarm_gabaa04a10427f04205a1f899408c7681e_cgraph">
+<area shape="rect" id="node2" href="../../df/d1f/classThread_1_1TimerScheduler.html#a3298ced9b82a19c2a902dcfc1994660e" title="This method processes all running timers. " alt="" coords="174,27,339,65"/>
+<area shape="rect" id="node3" href="../../dd/db6/group__alarm.html#gaf8829e3591e03e29e136685fcdeb3300" title="Get the current time. " alt="" coords="400,5,538,31"/>
+<area shape="rect" id="node4" href="../../df/d1f/classThread_1_1TimerScheduler.html#a6bcb9ef68dd35e2006c4273e8c58d48b" title="This method removes a timer instance to the timer scheduler. " alt="" coords="387,55,551,93"/>
+</map>
+</div>
+</p>
+
+</div>
+</div>
 <a class="anchor" id="gaf8829e3591e03e29e136685fcdeb3300"></a>
 <div class="memitem">
 <div class="memproto">
@@ -162,52 +199,74 @@ Here is the caller graph for this function:</div>
 <div class="dyncontent">
 <div class="center"><img src="../../dd/db6/group__alarm_gaf8829e3591e03e29e136685fcdeb3300_icgraph.png" border="0" usemap="#dd/db6/group__alarm_gaf8829e3591e03e29e136685fcdeb3300_icgraph" alt=""/></div>
 <map name="dd/db6/group__alarm_gaf8829e3591e03e29e136685fcdeb3300_icgraph" id="dd/db6/group__alarm_gaf8829e3591e03e29e136685fcdeb3300_icgraph">
-<area shape="rect" id="node2" href="../../df/d1f/classThread_1_1TimerScheduler.html#a3ec74000b170526ee3d0f1ff0b2881f1" title="This static method returns whether or not the timer instance is already added. " alt="" coords="192,275,356,313"/>
-<area shape="rect" id="node27" href="../../df/d1f/classThread_1_1TimerScheduler.html#a3298ced9b82a19c2a902dcfc1994660e" title="This static method processes all running timers. " alt="" coords="192,347,356,385"/>
-<area shape="rect" id="node29" href="../../d1/d40/classThread_1_1Timer.html#a0596072dec177b5e2b494db19800267d" title="This static method returns the current time in milliseconds. " alt="" coords="880,661,1040,687"/>
-<area shape="rect" id="node3" href="../../d1/d40/classThread_1_1Timer.html#a8815311dffb2fff6b548b63bfc7d6dba" title="This method indicates whether or not the timer instance is running. " alt="" coords="404,263,576,288"/>
-<area shape="rect" id="node4" href="../../d6/d88/classThread_1_1Mac_1_1Mac.html#aacc5fd2b9ea373a699840afa8e562dc9" title="This method registers a new MAC sender client. " alt="" coords="624,245,830,284"/>
-<area shape="rect" id="node6" href="../../d4/dcf/classThread_1_1AddressResolver.html#ac249179518a77ecfdaf7d4502ef2f940" title="This method returns the RLOC16 for a given EID, or initiates an Address Query if the mapping is not k..." alt="" coords="1091,245,1263,284"/>
-<area shape="rect" id="node8" href="../../dd/d1d/classThread_1_1MeshForwarder.html#a969c6fac135cdee3ed9380a0859eaaa8" title="This method sets the Data Poll period. " alt="" coords="1523,300,1688,339"/>
-<area shape="rect" id="node21" href="../../db/dec/group__core-mle-router.html#ga2f58e7783003a5d53b12a556ac4375f2" title="This method sets the ROUTER_UPGRADE_THRESHOLD value. " alt="" coords="2985,517,3184,556"/>
-<area shape="rect" id="node26" href="../../d6/d88/classThread_1_1Mac_1_1Mac.html#adb6ca8a4287b21a2f9e35090ed716506" title="This method is called to handle transmit events. " alt="" coords="634,131,821,169"/>
-<area shape="rect" id="node5" href="../../dd/d1d/classThread_1_1MeshForwarder.html#a7668817d03306dadcb36ff9eaad72299" title="This method is called by the address resolver when an EID&#45;to&#45;RLOC mapping has been resolved..." alt="" coords="878,245,1043,284"/>
-<area shape="rect" id="node7" href="../../dd/d1d/classThread_1_1MeshForwarder.html#a361ef901f6b665b3c7feac206089a7df" title="This method submits a message to the mesh forwarder for forwarding. " alt="" coords="1311,245,1475,284"/>
-<area shape="rect" id="node25" href="../../d3/d8e/classThread_1_1ThreadNetif.html#a95f2ad1f6785b0de74e660e43ac86d33" title="This method submits a message to the network interface. " alt="" coords="1535,237,1676,276"/>
-<area shape="rect" id="node9" href="../../df/d94/group__core-mle-core.html#gad555ca36631eff9b978e448ecbcf8e2e" title="This method appends an Address Registration TLV to a message. " alt="" coords="1736,297,1911,336"/>
-<area shape="rect" id="node10" href="../../df/d94/group__core-mle-core.html#ga09239c621861382d25163980ab5d983b" title="This method generates an MLE Child Update Request message. " alt="" coords="1959,300,2149,339"/>
-<area shape="rect" id="node16" href="../../df/d94/group__core-mle-core.html#ga0ea27201cf13a4e1b0680a9da6c54a64" title="This method submits an MLE message to the UDP socket. " alt="" coords="2723,409,2937,435"/>
-<area shape="rect" id="node11" href="../../df/d94/group__core-mle-core.html#ga01c7e5a022360a6f35e30d07221dbfea" title="This method starts the MLE protocol operation. " alt="" coords="2230,365,2387,391"/>
-<area shape="rect" id="node12" href="../../df/d94/group__core-mle-core.html#gafb51db61e6e184d664a9e7cc3833dcf4" title="This method sets the MLE Timeout value. " alt="" coords="2210,267,2406,292"/>
-<area shape="rect" id="node13" href="../../df/d94/group__core-mle-core.html#ga453d94c377c5825a4a5e8b66a728e591" title="This method sets the Device Mode as reported in the Mode TLV. " alt="" coords="2197,316,2420,341"/>
-<area shape="rect" id="node14" href="../../df/d94/group__core-mle-core.html#gaac7d42ff61704aa43e94dbb781c78c5e" title="This method notifies MLE that the Network Data has changed. " alt="" coords="2223,467,2394,505"/>
-<area shape="rect" id="node15" href="../../d6/d9b/classThread_1_1NetworkData_1_1Leader.html#a428d60927d6f4b4ac8e878e792d2f716" title="This method is used by non&#45;Leader devices to set newly received Network Data from the Leader..." alt="" coords="2484,460,2659,499"/>
-<area shape="rect" id="node22" href="../../d6/d9b/classThread_1_1NetworkData_1_1Leader.html#a5baddd109ff06b58140e2678e3c97a16" title="This method removes Network Data associated with a given RLOC16. " alt="" coords="2468,841,2675,880"/>
-<area shape="rect" id="node17" href="../../df/d94/group__core-mle-core.html#gac13477847483bba0aeab32fd93a7dbac" title="This method generates an MLE Data Request message. " alt="" coords="2991,403,3179,441"/>
-<area shape="rect" id="node18" href="../../df/d94/group__core-mle-core.html#ga4a192897e2fe5f4b0ab2ed1535fd2657" title="This method generates an MLE Data Response message. " alt="" coords="2991,340,3179,379"/>
-<area shape="rect" id="node19" href="../../db/dec/group__core-mle-router.html#ga7126c084ace25827febebc4210928cd4" title="This method generates an MLE Link Reject. " alt="" coords="3239,517,3400,556"/>
-<area shape="rect" id="node20" href="../../db/dec/group__core-mle-router.html#gaf13c43af2bf2f9057629cbb74fca0af0" title="This method handles MAC Data Poll messages. " alt="" coords="3232,173,3406,212"/>
-<area shape="rect" id="node23" href="../../db/dec/group__core-mle-router.html#ga179fad5b4b75849e76811006761d2b3e" title="This method release a given Router ID. " alt="" coords="2749,841,2911,880"/>
-<area shape="rect" id="node24" href="../../db/dec/group__core-mle-router.html#gac7d2542017033898d0bc0f17a65d4656" title="This method checks if the destination is reachable. " alt="" coords="3004,745,3165,784"/>
-<area shape="rect" id="node28" href="../../dd/db6/group__alarm.html#gaea1cdec86ed3e3081acfa2a2a2aa7038" title="Signal that the alarm has fired. " alt="" coords="430,353,551,379"/>
-<area shape="rect" id="node30" href="../../db/dec/group__core-mle-router.html#ga2f6818707e05950f56e8cb84a21c14c2" title="This method sets whether or not the Router Role is enabled. " alt="" coords="1094,952,1259,991"/>
-<area shape="rect" id="node31" href="../../db/dec/group__core-mle-router.html#gaa7f41c573cc9321a61157a84db18eca5" title="This method returns the time in seconds since the last Router ID Sequence update. ..." alt="" coords="2491,575,2652,613"/>
-<area shape="rect" id="node32" href="../../db/dec/group__core-mle-router.html#ga3f865671b35cf4f88b555fb1873ca79a" title="This method causes the Thread interface to become a Leader and start a new partition. " alt="" coords="1313,481,1474,520"/>
-<area shape="rect" id="node33" href="../../db/dec/group__core-mle-router.html#ga0b12b10b1918482301269a6a124be400" title="This method retains diagnotsic information for an attached child by the internal table index..." alt="" coords="1096,563,1258,601"/>
-<area shape="rect" id="node34" href="../../db/dec/group__core-mle-router.html#gaf18111d06e517f8e2a2d4a29eabffba0" title="This method retains diagnotsic information for a given router. " alt="" coords="1096,625,1258,664"/>
+<area shape="rect" id="node2" href="../../df/d1f/classThread_1_1TimerScheduler.html#a3ec74000b170526ee3d0f1ff0b2881f1" title="This method returns whether or not the timer instance is already added. " alt="" coords="428,5,593,44"/>
+<area shape="rect" id="node3" href="../../df/d1f/classThread_1_1TimerScheduler.html#a3298ced9b82a19c2a902dcfc1994660e" title="This method processes all running timers. " alt="" coords="192,120,356,159"/>
+<area shape="rect" id="node5" href="../../df/d1f/classThread_1_1TimerScheduler.html#a30607b67c129e95cea089db692f26552" title="This method returns the pointer to the parent Ip6 structure. " alt="" coords="192,5,356,44"/>
+<area shape="rect" id="node6" href="../../d1/d40/classThread_1_1Timer.html#a0596072dec177b5e2b494db19800267d" title="This static method returns the current time in milliseconds. " alt="" coords="194,615,354,640"/>
+<area shape="rect" id="node26" href="../../db/dec/group__core-mle-router.html#gac532b9ffa61813ee2c1463b6820c8c75" title="This method returns the number of active routers. " alt="" coords="1466,803,1628,841"/>
+<area shape="rect" id="node4" href="../../dd/db6/group__alarm.html#gabaa04a10427f04205a1f899408c7681e" title="Signal that the alarm has fired. " alt="" coords="450,68,571,93"/>
+<area shape="rect" id="node7" href="../../d5/dc2/structThread_1_1Cli_1_1Interpreter.html#a11ee1f86cffe17aab7de3de0bb16dee7" title="This method parses an ASCII string as an unsigned long. " alt="" coords="2280,631,2436,669"/>
+<area shape="rect" id="node8" href="../../d0/d5d/classThread_1_1MeshCoP_1_1Dtls.html#a6ab4602c1046d668aaba6dfcafe59cfa" title="This method provides a received DTLS message to the DTLS object. " alt="" coords="430,700,590,739"/>
+<area shape="rect" id="node9" href="../../d4/dcf/classThread_1_1AddressResolver.html#ac249179518a77ecfdaf7d4502ef2f940" title="This method returns the RLOC16 for a given EID, or initiates an Address Query if the mapping is not k..." alt="" coords="1461,109,1634,148"/>
+<area shape="rect" id="node12" href="../../dd/d1d/classThread_1_1MeshForwarder.html#a5f726671448fb7cd72f8ee96db40731a" title="This method sets the scan parameters for MLE Discovery Request messages. " alt="" coords="2273,1457,2443,1496"/>
+<area shape="rect" id="node15" href="../../d6/d44/classThread_1_1KeyManager.html#a1c2cda0961979d7655a5311f29de57c7" title="This method sets the current key sequence value. " alt="" coords="422,637,598,676"/>
+<area shape="rect" id="node21" href="../../df/d94/group__core-mle-core.html#ga0ea27201cf13a4e1b0680a9da6c54a64" title="This method submits an MLE message to the UDP socket. " alt="" coords="678,1016,892,1041"/>
+<area shape="rect" id="node24" href="../../db/dec/group__core-mle-router.html#ga12a2afd1fef5036981d7f1f05d3e6f01" title="This method sets the ROUTER_DOWNGRADE_THRESHOLD value. " alt="" coords="1697,1165,1914,1204"/>
+<area shape="rect" id="node27" href="../../db/dec/group__core-mle-router.html#gac7d2542017033898d0bc0f17a65d4656" title="This method checks if the destination is reachable. " alt="" coords="1725,732,1886,771"/>
+<area shape="rect" id="node34" href="../../db/dec/group__core-mle-router.html#ga7126c084ace25827febebc4210928cd4" title="This method generates an MLE Link Reject. " alt="" coords="984,1457,1145,1496"/>
+<area shape="rect" id="node35" href="../../db/dec/group__core-mle-router.html#ga2f6818707e05950f56e8cb84a21c14c2" title="This method sets whether or not the Router Role is enabled. " alt="" coords="703,1231,868,1269"/>
+<area shape="rect" id="node37" href="../../db/dec/group__core-mle-router.html#ga179fad5b4b75849e76811006761d2b3e" title="This method release a given Router ID. " alt="" coords="1233,669,1394,708"/>
+<area shape="rect" id="node39" href="../../db/dec/group__core-mle-router.html#gaa7f41c573cc9321a61157a84db18eca5" title="This method returns the time in seconds since the last Router ID Sequence update. ..." alt="" coords="430,815,591,853"/>
+<area shape="rect" id="node40" href="../../db/dec/group__core-mle-router.html#ga3f865671b35cf4f88b555fb1873ca79a" title="This method causes the Thread interface to become a Leader and start a new partition. " alt="" coords="984,587,1145,625"/>
+<area shape="rect" id="node42" href="../../db/dec/group__core-mle-router.html#ga0b12b10b1918482301269a6a124be400" title="This method retains diagnostic information for an attached child by the internal table index..." alt="" coords="1233,1405,1394,1444"/>
+<area shape="rect" id="node44" href="../../db/dec/group__core-mle-router.html#gaf18111d06e517f8e2a2d4a29eabffba0" title="This method retains diagnostic information for a given router. " alt="" coords="1467,172,1628,211"/>
+<area shape="rect" id="node46" href="../../db/dec/group__core-mle-router.html#ga0433e0a49c33c2b5734dfaf401e3baa0" title="This method gets the next neighbor information. " alt="" coords="430,271,591,309"/>
+<area shape="rect" id="node48" href="../../d4/d80/group__core-netdata-core.html#ga0caa53c797a248a80b591f963d110657" title="This method sends a Server Data Notification message to the Leader. " alt="" coords="404,385,616,437"/>
+<area shape="rect" id="node49" href="../../d6/d9b/classThread_1_1NetworkData_1_1Leader.html#a719450dae714bd29bfea19b7d1eb6e9f" title="This method sends a Server Data Notification message to the Leader indicating an invalid RLOC16..." alt="" coords="664,320,906,359"/>
+<area shape="rect" id="node10" href="../../dd/d1d/classThread_1_1MeshForwarder.html#a361ef901f6b665b3c7feac206089a7df" title="This method submits a message to the mesh forwarder for forwarding. " alt="" coords="2015,121,2180,160"/>
+<area shape="rect" id="node11" href="../../dd/d1d/classThread_1_1MeshForwarder.html#a3a55dcf590bf5941d216ff313b6ce0d0" title="This method gets the Data Poll period. " alt="" coords="2276,153,2440,192"/>
+<area shape="rect" id="node14" href="../../d3/d8e/classThread_1_1ThreadNetif.html#a95f2ad1f6785b0de74e660e43ac86d33" title="This method submits a message to the network interface. " alt="" coords="2288,91,2428,129"/>
+<area shape="rect" id="node13" href="../../df/d94/group__core-mle-core.html#gab299d00d1b2beabe8130e400dd6eca91" title="This method initiates a Thread Discovery. " alt="" coords="2491,1436,2672,1461"/>
+<area shape="rect" id="node16" href="../../d6/d88/classThread_1_1Mac_1_1Mac.html#adb6ca8a4287b21a2f9e35090ed716506" title="This method is called to handle transmit events. " alt="" coords="691,637,879,676"/>
+<area shape="rect" id="node19" href="../../db/d57/group__config-test.html#ga19026028d5cf3411c36484844b03c9ec" title="Set the thrKeySequenceCounter. " alt="" coords="1222,536,1405,561"/>
+<area shape="rect" id="node20" href="../../d6/d44/classThread_1_1KeyManager.html#a950f8fcd206978cf239304c74a61368b" title="This method sets the KeyRotation time. " alt="" coords="712,700,859,739"/>
+<area shape="rect" id="node17" href="../../d6/d88/classThread_1_1Mac_1_1Mac.html#aacc5fd2b9ea373a699840afa8e562dc9" title="This method registers a new MAC sender client. " alt="" coords="961,699,1167,737"/>
+<area shape="rect" id="node18" href="../../d7/d9c/group__radio-operation.html#ga7d10a9bce7521f75bd84b32b979e1aa7" title="The radio driver calls this method to notify OpenThread that the transmission has completed..." alt="" coords="978,649,1151,675"/>
+<area shape="rect" id="node22" href="../../df/d94/group__core-mle-core.html#gace8437c6340cefbd5db1a53f9e00422b" title="This method appends a Pending Timestamp TLV to a message. " alt="" coords="1226,965,1401,1004"/>
+<area shape="rect" id="node23" href="../../df/d94/group__core-mle-core.html#gac13477847483bba0aeab32fd93a7dbac" title="This method generates an MLE Data Request message. " alt="" coords="1453,1135,1641,1173"/>
+<area shape="rect" id="node32" href="../../df/d94/group__core-mle-core.html#ga09239c621861382d25163980ab5d983b" title="This method generates an MLE Child Update Request message. " alt="" coords="969,1065,1159,1104"/>
+<area shape="rect" id="node33" href="../../df/d94/group__core-mle-core.html#ga91214fcb8db3271fc3ad0472e38c1e0a" title="This method generates an MLE Announce message. " alt="" coords="954,1016,1174,1041"/>
+<area shape="rect" id="node25" href="../../db/d57/group__config-test.html#ga907be1830046930bb04f606dc6dc3ec1" title="Set the ROUTER_DOWNGRADE_THRESHOLD parameter used in the Leader role. " alt="" coords="1988,1048,2208,1073"/>
+<area shape="rect" id="node28" href="../../db/dec/group__core-mle-router.html#gadf4904db11b31b2931f2f5ed1b988f83" title="This method fills an RouteTlv. " alt="" coords="1725,863,1886,901"/>
+<area shape="rect" id="node30" href="../../dd/dd1/classThread_1_1NetworkData_1_1Local.html#a6688957845dc3ee7fc08bbc50145d98e" title="This method sends a Server Data Notification message to the Leader. " alt="" coords="1689,800,1922,839"/>
+<area shape="rect" id="node29" href="../../d6/d17/classThread_1_1NetworkDiagnostic_1_1NetworkDiagnostic.html#aabefee38f58e0a8bcd39650ccc386e12" title="This method fills ChildTableTlv. " alt="" coords="1970,863,2225,901"/>
+<area shape="rect" id="node31" href="../../db/da2/group__config-br.html#gaf9f7e49c190e8e11297d534e223d6274" title="Immediately register the local network data with the Leader. " alt="" coords="2032,801,2163,827"/>
+<area shape="rect" id="node36" href="../../df/d4f/group__config-general.html#gacea2a7cd04c4b816588748fee68d1e78" title="This function sets whether or not the Router Role is enabled. " alt="" coords="1229,1356,1398,1381"/>
+<area shape="rect" id="node38" href="../../db/d57/group__config-test.html#gad4fe54c65dbe7e37a29a7805198bba72" title="Release a Router ID that has been allocated by the device in the Leader role. " alt="" coords="1481,637,1614,663"/>
+<area shape="rect" id="node41" href="../../db/d57/group__config-test.html#ga026f58bcf552f7d8cd5da53e38bff94d" title="Become a leader and start a new partition. " alt="" coords="1252,589,1375,615"/>
+<area shape="rect" id="node43" href="../../d8/dd2/group__diags.html#ga9b5695168596c7ce3be6934e3b37a888" title="The function retains diagnostic information for an attached Child by the internal table index..." alt="" coords="1470,1409,1625,1435"/>
+<area shape="rect" id="node45" href="../../d8/dd2/group__diags.html#ga9061b62356c4d9810e6d0aaad470ca20" title="The function retains diagnostic information for a given Thread Router. " alt="" coords="1747,180,1864,205"/>
+<area shape="rect" id="node47" href="../../d8/dd2/group__diags.html#ga22fa36953c63f5364da72b9acef36f92" title="This function gets the next neighbor information. " alt="" coords="706,271,864,296"/>
+<area shape="rect" id="node50" href="../../db/dec/group__core-mle-router.html#gacc03d6eee4a8cc0fa65e15d1e65ca909" title="This method removes a link to a neighbor. " alt="" coords="984,320,1145,359"/>
 </map>
 </div>
 </p>
 
 </div>
 </div>
-<a class="anchor" id="ga1539c2bf378f1ae03ad2bc1eba70fa8e"></a>
+<a class="anchor" id="gab9b96ec4fe6a41ad8ba4ac91fd861f53"></a>
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
           <td class="memname">void otPlatAlarmStartAt </td>
           <td>(</td>
+          <td class="paramtype"><a class="el" href="../../d2/d83/structotInstance.html">otInstance</a> *&#160;</td>
+          <td class="paramname"><em>aInstance</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
           <td class="paramtype">uint32_t&#160;</td>
           <td class="paramname"><em>aT0</em>, </td>
         </tr>
@@ -228,6 +287,7 @@ Here is the caller graph for this function:</div>
 <p>Set the alarm to fire at <code>aDt</code> milliseconds after <code>aT0</code>. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">aInstance</td><td>The OpenThread instance structure. </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">aT0</td><td>The reference time. </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">aDt</td><td>The time delay in milliseconds from <code>aT0</code>. </td></tr>
   </table>
@@ -237,36 +297,70 @@ Here is the caller graph for this function:</div>
 <p><div class="dynheader">
 Here is the caller graph for this function:</div>
 <div class="dyncontent">
-<div class="center"><img src="../../dd/db6/group__alarm_ga1539c2bf378f1ae03ad2bc1eba70fa8e_icgraph.png" border="0" usemap="#dd/db6/group__alarm_ga1539c2bf378f1ae03ad2bc1eba70fa8e_icgraph" alt=""/></div>
-<map name="dd/db6/group__alarm_ga1539c2bf378f1ae03ad2bc1eba70fa8e_icgraph" id="dd/db6/group__alarm_ga1539c2bf378f1ae03ad2bc1eba70fa8e_icgraph">
-<area shape="rect" id="node2" href="../../df/d1f/classThread_1_1TimerScheduler.html#a3ec74000b170526ee3d0f1ff0b2881f1" title="This static method returns whether or not the timer instance is already added. " alt="" coords="184,495,349,534"/>
-<area shape="rect" id="node3" href="../../d1/d40/classThread_1_1Timer.html#a8815311dffb2fff6b548b63bfc7d6dba" title="This method indicates whether or not the timer instance is running. " alt="" coords="397,502,569,527"/>
-<area shape="rect" id="node4" href="../../d6/d88/classThread_1_1Mac_1_1Mac.html#aacc5fd2b9ea373a699840afa8e562dc9" title="This method registers a new MAC sender client. " alt="" coords="617,495,823,534"/>
-<area shape="rect" id="node6" href="../../d4/dcf/classThread_1_1AddressResolver.html#ac249179518a77ecfdaf7d4502ef2f940" title="This method returns the RLOC16 for a given EID, or initiates an Address Query if the mapping is not k..." alt="" coords="1083,441,1256,479"/>
-<area shape="rect" id="node8" href="../../dd/d1d/classThread_1_1MeshForwarder.html#a969c6fac135cdee3ed9380a0859eaaa8" title="This method sets the Data Poll period. " alt="" coords="1516,275,1680,314"/>
-<area shape="rect" id="node21" href="../../db/dec/group__core-mle-router.html#ga2f58e7783003a5d53b12a556ac4375f2" title="This method sets the ROUTER_UPGRADE_THRESHOLD value. " alt="" coords="2978,271,3177,310"/>
-<area shape="rect" id="node26" href="../../d6/d88/classThread_1_1Mac_1_1Mac.html#adb6ca8a4287b21a2f9e35090ed716506" title="This method is called to handle transmit events. " alt="" coords="626,610,814,649"/>
-<area shape="rect" id="node5" href="../../dd/d1d/classThread_1_1MeshForwarder.html#a7668817d03306dadcb36ff9eaad72299" title="This method is called by the address resolver when an EID&#45;to&#45;RLOC mapping has been resolved..." alt="" coords="871,495,1035,534"/>
-<area shape="rect" id="node7" href="../../dd/d1d/classThread_1_1MeshForwarder.html#a361ef901f6b665b3c7feac206089a7df" title="This method submits a message to the mesh forwarder for forwarding. " alt="" coords="1304,441,1468,479"/>
-<area shape="rect" id="node25" href="../../d3/d8e/classThread_1_1ThreadNetif.html#a95f2ad1f6785b0de74e660e43ac86d33" title="This method submits a message to the network interface. " alt="" coords="1528,441,1669,479"/>
-<area shape="rect" id="node9" href="../../df/d94/group__core-mle-core.html#gad555ca36631eff9b978e448ecbcf8e2e" title="This method appends an Address Registration TLV to a message. " alt="" coords="1728,246,1903,285"/>
-<area shape="rect" id="node10" href="../../df/d94/group__core-mle-core.html#ga09239c621861382d25163980ab5d983b" title="This method generates an MLE Child Update Request message. " alt="" coords="1951,274,2141,313"/>
-<area shape="rect" id="node16" href="../../df/d94/group__core-mle-core.html#ga0ea27201cf13a4e1b0680a9da6c54a64" title="This method submits an MLE message to the UDP socket. " alt="" coords="2716,163,2930,189"/>
-<area shape="rect" id="node11" href="../../df/d94/group__core-mle-core.html#ga01c7e5a022360a6f35e30d07221dbfea" title="This method starts the MLE protocol operation. " alt="" coords="2222,309,2379,334"/>
-<area shape="rect" id="node12" href="../../df/d94/group__core-mle-core.html#gafb51db61e6e184d664a9e7cc3833dcf4" title="This method sets the MLE Timeout value. " alt="" coords="2203,358,2399,383"/>
-<area shape="rect" id="node13" href="../../df/d94/group__core-mle-core.html#ga453d94c377c5825a4a5e8b66a728e591" title="This method sets the Device Mode as reported in the Mode TLV. " alt="" coords="2189,407,2412,433"/>
-<area shape="rect" id="node14" href="../../df/d94/group__core-mle-core.html#gaac7d42ff61704aa43e94dbb781c78c5e" title="This method notifies MLE that the Network Data has changed. " alt="" coords="2215,246,2386,285"/>
-<area shape="rect" id="node15" href="../../d6/d9b/classThread_1_1NetworkData_1_1Leader.html#a428d60927d6f4b4ac8e878e792d2f716" title="This method is used by non&#45;Leader devices to set newly received Network Data from the Leader..." alt="" coords="2477,246,2651,285"/>
-<area shape="rect" id="node22" href="../../d6/d9b/classThread_1_1NetworkData_1_1Leader.html#a5baddd109ff06b58140e2678e3c97a16" title="This method removes Network Data associated with a given RLOC16. " alt="" coords="2460,394,2668,433"/>
-<area shape="rect" id="node17" href="../../df/d94/group__core-mle-core.html#gac13477847483bba0aeab32fd93a7dbac" title="This method generates an MLE Data Request message. " alt="" coords="2983,157,3171,195"/>
-<area shape="rect" id="node18" href="../../df/d94/group__core-mle-core.html#ga4a192897e2fe5f4b0ab2ed1535fd2657" title="This method generates an MLE Data Response message. " alt="" coords="2983,94,3171,133"/>
-<area shape="rect" id="node19" href="../../db/dec/group__core-mle-router.html#ga7126c084ace25827febebc4210928cd4" title="This method generates an MLE Link Reject. " alt="" coords="3231,159,3393,198"/>
-<area shape="rect" id="node20" href="../../db/dec/group__core-mle-router.html#gaf13c43af2bf2f9057629cbb74fca0af0" title="This method handles MAC Data Poll messages. " alt="" coords="3225,41,3399,79"/>
-<area shape="rect" id="node23" href="../../db/dec/group__core-mle-router.html#ga179fad5b4b75849e76811006761d2b3e" title="This method release a given Router ID. " alt="" coords="2742,394,2903,433"/>
-<area shape="rect" id="node24" href="../../db/dec/group__core-mle-router.html#gac7d2542017033898d0bc0f17a65d4656" title="This method checks if the destination is reachable. " alt="" coords="2997,451,3158,490"/>
+<div class="center"><img src="../../dd/db6/group__alarm_gab9b96ec4fe6a41ad8ba4ac91fd861f53_icgraph.png" border="0" usemap="#dd/db6/group__alarm_gab9b96ec4fe6a41ad8ba4ac91fd861f53_icgraph" alt=""/></div>
+<map name="dd/db6/group__alarm_gab9b96ec4fe6a41ad8ba4ac91fd861f53_icgraph" id="dd/db6/group__alarm_gab9b96ec4fe6a41ad8ba4ac91fd861f53_icgraph">
+<area shape="rect" id="node2" href="../../df/d1f/classThread_1_1TimerScheduler.html#a3ec74000b170526ee3d0f1ff0b2881f1" title="This method returns whether or not the timer instance is already added. " alt="" coords="184,5,349,44"/>
 </map>
 </div>
 </p>
+
+</div>
+</div>
+<a class="anchor" id="ga68278ebdaa8b35f1bb305649708f061a"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void otPlatAlarmStop </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="../../d2/d83/structotInstance.html">otInstance</a> *&#160;</td>
+          <td class="paramname"><em>aInstance</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Stop the alarm. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">aInstance</td><td>The OpenThread instance structure. </td></tr>
+  </table>
+  </dd>
+</dl>
+
+<p><div class="dynheader">
+Here is the caller graph for this function:</div>
+<div class="dyncontent">
+<div class="center"><img src="../../dd/db6/group__alarm_ga68278ebdaa8b35f1bb305649708f061a_icgraph.png" border="0" usemap="#dd/db6/group__alarm_ga68278ebdaa8b35f1bb305649708f061a_icgraph" alt=""/></div>
+<map name="dd/db6/group__alarm_ga68278ebdaa8b35f1bb305649708f061a_icgraph" id="dd/db6/group__alarm_ga68278ebdaa8b35f1bb305649708f061a_icgraph">
+<area shape="rect" id="node2" href="../../df/d1f/classThread_1_1TimerScheduler.html#a3ec74000b170526ee3d0f1ff0b2881f1" title="This method returns whether or not the timer instance is already added. " alt="" coords="171,5,336,44"/>
+</map>
+</div>
+</p>
+
+</div>
+</div>
+<a class="anchor" id="gacf1f0acac2fd94a3434b64dd09bf49e9"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void otPlatDiagAlarmFired </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="../../d2/d83/structotInstance.html">otInstance</a> *&#160;</td>
+          <td class="paramname"><em>aInstance</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Signal diagnostics module that the alarm has fired. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">aInstance</td><td>The OpenThread instance structure. </td></tr>
+  </table>
+  </dd>
+</dl>
 
 </div>
 </div>
@@ -275,7 +369,7 @@ Here is the caller graph for this function:</div>
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
-    <li class="footer">Generated on Wed Jul 27 2016 17:09:43 for OpenThread by
+    <li class="footer">Generated on Fri Oct 14 2016 08:44:35 for OpenThread by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="../../doxygen.png" alt="doxygen"/></a> 1.8.11 </li>
   </ul>

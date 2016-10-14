@@ -34,7 +34,7 @@
   <td id="projectlogo"><img alt="Logo" src="../../Open-Thread-Logo-200x42.png"/></td>
   <td style="padding-left: 0.5em;">
    <div id="projectname">
-   &#160;<span id="projectnumber">gb2b10b8</span>
+   &#160;<span id="projectnumber">gddd0704</span>
    </div>
   </td>
  </tr>
@@ -117,11 +117,16 @@ $(document).ready(function(){initNavTree('d1/d79/random_8h.html','../../');});
 <p>This file includes the platform abstraction for true random number generation.  
 <a href="#details">More...</a></p>
 <div class="textblock"><code>#include &lt;stdint.h&gt;</code><br />
+<code>#include &lt;<a class="el" href="../../dc/dbf/openthread-types_8h_source.html">openthread-types.h</a>&gt;</code><br />
 </div><div class="textblock"><div class="dynheader">
 Include dependency graph for random.h:</div>
 <div class="dyncontent">
 <div class="center"><img src="../../db/dfa/random_8h__incl.png" border="0" usemap="#include_2platform_2random_8h" alt=""/></div>
 <map name="include_2platform_2random_8h" id="include_2platform_2random_8h">
+<area shape="rect" id="node2" href="../../df/dd8/stdint_8h_source.html" title="stdint.h" alt="" coords="14,152,79,177"/>
+<area shape="rect" id="node3" href="../../dc/dbf/openthread-types_8h.html" title="This file defines the types and structures used in the OpenThread library API. " alt="" coords="78,79,215,104"/>
+<area shape="rect" id="node4" href="../../d9/d5e/stdbool_8h_source.html" title="stdbool.h" alt="" coords="105,152,180,177"/>
+<area shape="rect" id="node5" href="../../d3/da9/toolchain_8h_source.html" title="platform/toolchain.h" alt="" coords="204,152,342,177"/>
 </map>
 </div>
 </div><div class="textblock"><div class="dynheader">
@@ -129,14 +134,27 @@ This graph shows which files directly or indirectly include this file:</div>
 <div class="dyncontent">
 <div class="center"><img src="../../d0/d46/random_8h__dep__incl.png" border="0" usemap="#include_2platform_2random_8hdep" alt=""/></div>
 <map name="include_2platform_2random_8hdep" id="include_2platform_2random_8hdep">
-<area shape="rect" id="node2" href="../../d4/dd9/mac_8cpp.html" title="This file implements the subset of IEEE 802.15.4 primitives required for Thread. " alt="" coords="5,85,157,111"/>
-<area shape="rect" id="node3" href="../../da/d60/openthread_8cpp.html" title="This file implements the top&#45;level interface to the OpenThread stack. " alt="" coords="181,85,346,111"/>
-<area shape="rect" id="node4" href="../../de/d27/address__resolver_8cpp.html" title="This file implements Thread&#39;s EID&#45;to&#45;RLOC mapping and caching. " alt="" coords="370,79,531,117"/>
-<area shape="rect" id="node5" href="../../df/d6b/mesh__forwarder_8cpp.html" title="This file implements mesh forwarding of IPv6/6LoWPAN messages. " alt="" coords="555,79,701,117"/>
-<area shape="rect" id="node6" href="../../d1/df9/mle_8cpp.html" title="This file implements MLE functionality required for the Thread Child, Router and Leader roles..." alt="" coords="725,85,886,111"/>
-<area shape="rect" id="node7" href="../../d9/d88/mle__router_8cpp.html" title="This file implements MLE functionality required for the Thread Router and Leader roles. " alt="" coords="909,79,1045,117"/>
-<area shape="rect" id="node8" href="../../d0/d0f/network__data__leader_8cpp.html" title="This file implements the Thread Network Data managed by the Thread Leader. " alt="" coords="1069,79,1230,117"/>
-<area shape="rect" id="node9" href="../../dd/d90/network__data__local_8cpp.html" title="This file implements the local Thread Network Data. " alt="" coords="1253,79,1414,117"/>
+<area shape="rect" id="node2" href="../../df/d7b/trickle__timer_8cpp.html" title="This file implements the trickle timer logic. " alt="" coords="5,79,167,117"/>
+<area shape="rect" id="node3" href="../../d4/dd9/mac_8cpp.html" title="This file implements the subset of IEEE 802.15.4 primitives required for Thread. " alt="" coords="192,85,344,111"/>
+<area shape="rect" id="node4" href="../../d3/dd0/announce__begin__client_8cpp.html" title="This file implements the Announce Begin Client. " alt="" coords="368,79,557,117"/>
+<area shape="rect" id="node5" href="../../d7/d69/commissioner_8cpp.html" title="This file implements a Commissioner role. " alt="" coords="581,85,818,111"/>
+<area shape="rect" id="node6" href="../../dd/d3b/energy__scan__client_8cpp.html" title="This file implements the Energy Scan Client. " alt="" coords="842,79,1013,117"/>
+<area shape="rect" id="node7" href="../../d4/d64/joiner_8cpp.html" title="This file implements the Joiner role. " alt="" coords="1037,85,1224,111"/>
+<area shape="rect" id="node8" href="../../d7/d02/leader_8cpp.html" title="This file implements a MeshCoP Leader. " alt="" coords="1248,85,1440,111"/>
+<area shape="rect" id="node9" href="../../d5/de7/panid__query__client_8cpp.html" title="This file implements the PAN ID Query Client. " alt="" coords="1464,79,1626,117"/>
+<area shape="rect" id="node10" href="../../da/d60/openthread_8cpp.html" title="This file implements the top&#45;level interface to the OpenThread stack. " alt="" coords="2444,172,2609,197"/>
+<area shape="rect" id="node11" href="../../de/d27/address__resolver_8cpp.html" title="This file implements Thread&#39;s EID&#45;to&#45;RLOC mapping and caching. " alt="" coords="1702,79,1863,117"/>
+<area shape="rect" id="node12" href="../../da/d6e/energy__scan__server_8cpp.html" title="This file implements the Energy Scan Server. " alt="" coords="1888,79,2042,117"/>
+<area shape="rect" id="node13" href="../../df/d6b/mesh__forwarder_8cpp.html" title="This file implements mesh forwarding of IPv6/6LoWPAN messages. " alt="" coords="2066,79,2213,117"/>
+<area shape="rect" id="node14" href="../../df/d42/meshcop__dataset__manager_8cpp.html" title="This file implements MeshCoP Datasets manager to process commands. " alt="" coords="2237,79,2405,117"/>
+<area shape="rect" id="node15" href="../../d1/df9/mle_8cpp.html" title="This file implements MLE functionality required for the Thread Child, Router and Leader roles..." alt="" coords="2429,85,2589,111"/>
+<area shape="rect" id="node16" href="../../d9/d88/mle__router_8cpp.html" title="This file implements MLE functionality required for the Thread Router and Leader roles. " alt="" coords="2613,79,2749,117"/>
+<area shape="rect" id="node17" href="../../d9/d20/network__data_8cpp.html" title="This file implements common methods for manipulating Thread Network Data. " alt="" coords="2773,79,2933,117"/>
+<area shape="rect" id="node18" href="../../d0/d0f/network__data__leader_8cpp.html" title="This file implements the Thread Network Data managed by the Thread Leader. " alt="" coords="2957,79,3117,117"/>
+<area shape="rect" id="node19" href="../../d1/da2/network__diag_8cpp.html" title="This file implements Thread&#39;s Network Diagnostic processing. " alt="" coords="3141,79,3301,117"/>
+<area shape="rect" id="node20" href="../../d1/d58/panid__query__server_8cpp.html" title="This file implements the PAN ID Query Server. " alt="" coords="3325,79,3472,117"/>
+<area shape="rect" id="node21" href="../../dd/d31/global__address_8hpp.html" title="This file includes definitions for Thread global IPv6 address configuration with SLAAC. " alt="" coords="3496,79,3631,117"/>
+<area shape="rect" id="node22" href="../../d4/dbe/global__address_8cpp.html" title="This file implements the Thread IPv6 global addresses configuration utilities. " alt="" coords="3496,165,3631,204"/>
 </map>
 </div>
 </div>
@@ -145,8 +163,11 @@ This graph shows which files directly or indirectly include this file:</div>
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 Functions</h2></td></tr>
 <tr class="memitem:gaa20820ca4e6e1ce8cd47ded9762b14ca"><td class="memItemLeft" align="right" valign="top">uint32_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../dd/d10/group__random.html#gaa20820ca4e6e1ce8cd47ded9762b14ca">otPlatRandomGet</a> (void)</td></tr>
-<tr class="memdesc:gaa20820ca4e6e1ce8cd47ded9762b14ca"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get a 32-bit true random value.  <a href="../../dd/d10/group__random.html#gaa20820ca4e6e1ce8cd47ded9762b14ca">More...</a><br /></td></tr>
+<tr class="memdesc:gaa20820ca4e6e1ce8cd47ded9762b14ca"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get a 32-bit random value.  <a href="../../dd/d10/group__random.html#gaa20820ca4e6e1ce8cd47ded9762b14ca">More...</a><br /></td></tr>
 <tr class="separator:gaa20820ca4e6e1ce8cd47ded9762b14ca"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:gad05a02879d22d5fb3f69f523b0667f10"><td class="memItemLeft" align="right" valign="top"><a class="el" href="../../dc/dbf/openthread-types_8h.html#ab701d053a9c34ab7f11e43e0dc09ac9f">ThreadError</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../dd/d10/group__random.html#gad05a02879d22d5fb3f69f523b0667f10">otPlatRandomSecureGet</a> (uint16_t aInputLength, uint8_t *aOutput, uint16_t *aOutputLength)</td></tr>
+<tr class="memdesc:gad05a02879d22d5fb3f69f523b0667f10"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get true random stream.  <a href="../../dd/d10/group__random.html#gad05a02879d22d5fb3f69f523b0667f10">More...</a><br /></td></tr>
+<tr class="separator:gad05a02879d22d5fb3f69f523b0667f10"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>This file includes the platform abstraction for true random number generation. </p>
@@ -156,7 +177,7 @@ Functions</h2></td></tr>
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
     <li class="navelem"><a class="el" href="../../dir_d44c64559bbebec7f509842c48db8b23.html">include</a></li><li class="navelem"><a class="el" href="../../dir_ac186d3e8926949364e5821f25491cc3.html">platform</a></li><li class="navelem"><a class="el" href="../../d1/d79/random_8h.html">random.h</a></li>
-    <li class="footer">Generated on Wed Jul 27 2016 17:09:42 for OpenThread by
+    <li class="footer">Generated on Fri Oct 14 2016 08:44:34 for OpenThread by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="../../doxygen.png" alt="doxygen"/></a> 1.8.11 </li>
   </ul>

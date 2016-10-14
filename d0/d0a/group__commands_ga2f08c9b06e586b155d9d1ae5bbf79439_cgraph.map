@@ -1,0 +1,4 @@
+<map id="otActiveScan" name="otActiveScan">
+<area shape="rect" id="node2" href="$d3/d8e/classThread_1_1ThreadNetif.html#aec59b0e172327889e9b0f4f08b0e69f9" title="This method returns a pointer to the mac object. " alt="" coords="184,5,324,44"/>
+<area shape="rect" id="node3" href="$d6/d88/classThread_1_1Mac_1_1Mac.html#a45f85fd96c07c7da1c464b92546a3096" title="This method starts an IEEE 802.15.4 Active Scan. " alt="" coords="152,68,355,93"/>
+</map>

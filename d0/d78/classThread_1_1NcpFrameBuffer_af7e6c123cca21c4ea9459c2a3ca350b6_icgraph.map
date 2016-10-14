@@ -1,0 +1,4 @@
+<map id="Thread::NcpFrameBuffer::OutFrameBegin" name="Thread::NcpFrameBuffer::OutFrameBegin">
+<area shape="rect" id="node2" href="$d0/d2a/classThread_1_1NcpSpi.html#ae9c67ca2e9b95ac4a4fa5650d44a2eed" title="This method finalizes and sends the current outbound frame. " alt="" coords="225,5,405,44"/>
+<area shape="rect" id="node3" href="$dc/d60/classThread_1_1NcpUart.html#a8398d715de6960bf6257d93ac81dfa3a" title="This method finalizes and sends the current outbound frame. " alt="" coords="222,68,408,107"/>
+</map>

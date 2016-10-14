@@ -1,0 +1,10 @@
+<map id="otInterfaceUp" name="otInterfaceUp">
+<area shape="rect" id="node2" href="$d3/d8e/classThread_1_1ThreadNetif.html#a50d195eeba8c64bdb46767f1113a7a65" title="This method enables the Thread network interface. " alt="" coords="155,93,320,119"/>
+<area shape="rect" id="node3" href="$d3/d05/classThread_1_1Ip6_1_1Ip6.html#a78380bbe5b0f22a61c4133c9d1a54c31" title="This method enables the network interface. " alt="" coords="368,5,542,31"/>
+<area shape="rect" id="node4" href="$dd/d1d/classThread_1_1MeshForwarder.html#a8d509a0b25136785f88ecfc8404e6ba8" title="This method enables mesh forwarding and the IEEE 802.15.4 MAC layer. " alt="" coords="373,55,537,93"/>
+<area shape="rect" id="node6" href="$de/d76/classThread_1_1Coap_1_1Server.html#a3352908cff3adc599389f65cc16d219e" title="This method starts the CoAP server. " alt="" coords="380,117,530,156"/>
+<area shape="rect" id="node9" href="$df/d94/group__core-mle-core.html#gae589c2fd18f1c683fd52ca0324d48f54" title="This method enables MLE. " alt="" coords="370,180,540,205"/>
+<area shape="rect" id="node5" href="$d6/d88/classThread_1_1Mac_1_1Mac.html#ab74d0b0b142cadd19e6d2a24d441223f" title="This method sets the rx&#45;on&#45;when&#45;idle mode. " alt="" coords="590,55,780,93"/>
+<area shape="rect" id="node7" href="$dc/d75/classThread_1_1Ip6_1_1UdpSocket.html#aaa9112c22813ceb55338050f0365c598" title="This method opens the UDP socket. " alt="" coords="604,180,766,219"/>
+<area shape="rect" id="node8" href="$dc/d75/classThread_1_1Ip6_1_1UdpSocket.html#aa07479b557c551452986ff7a0ce20773" title="This method binds the UDP socket. " alt="" coords="604,117,766,156"/>
+</map>

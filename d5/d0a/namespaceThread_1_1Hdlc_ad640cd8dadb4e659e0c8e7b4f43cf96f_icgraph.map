@@ -1,6 +1,8 @@
 <map id="Thread::Hdlc::UpdateFcs" name="Thread::Hdlc::UpdateFcs">
-<area shape="rect" id="node2" href="$d4/d27/classThread_1_1Hdlc_1_1Encoder.html#a89f6e268087e2fa6c1303f4566c131ed" title="This method encodes a single byte into a buffer at aIterator. " alt="" coords="223,36,378,75"/>
-<area shape="rect" id="node5" href="$d2/de8/classThread_1_1Hdlc_1_1Decoder.html#aa4376b51dd47f5d9bcf08ee9d7aa1234" title="This method streams bytes into the decoder. " alt="" coords="223,99,378,137"/>
-<area shape="rect" id="node3" href="$d4/d27/classThread_1_1Hdlc_1_1Encoder.html#a1dd8633eefe3efb8f8cf4eca28e61f4a" title="This method encodes the frame into a buffer at aIterator. " alt="" coords="426,5,581,44"/>
-<area shape="rect" id="node4" href="$d4/d27/classThread_1_1Hdlc_1_1Encoder.html#a5513b8590576eb7008068fd953ad7ba7" title="This method finalizes an HDLC frame. " alt="" coords="426,68,581,107"/>
+<area shape="rect" id="node2" href="$d4/d27/classThread_1_1Hdlc_1_1Encoder.html#a89f6e268087e2fa6c1303f4566c131ed" title="This method encodes a single byte into a buffer at aIterator. " alt="" coords="223,81,378,120"/>
+<area shape="rect" id="node6" href="$d2/de8/classThread_1_1Hdlc_1_1Decoder.html#aa4376b51dd47f5d9bcf08ee9d7aa1234" title="This method streams bytes into the decoder. " alt="" coords="223,157,378,196"/>
+<area shape="rect" id="node3" href="$d4/d27/classThread_1_1Hdlc_1_1Encoder.html#a1dd8633eefe3efb8f8cf4eca28e61f4a" title="This method encodes the frame into a buffer at aIterator. " alt="" coords="446,5,601,44"/>
+<area shape="rect" id="node4" href="$d4/d27/classThread_1_1Hdlc_1_1Encoder.html#a5513b8590576eb7008068fd953ad7ba7" title="This method finalizes an HDLC frame. " alt="" coords="446,68,601,107"/>
+<area shape="rect" id="node5" href="$dc/d60/classThread_1_1NcpUart.html#a8398d715de6960bf6257d93ac81dfa3a" title="This method finalizes and sends the current outbound frame. " alt="" coords="669,97,855,136"/>
+<area shape="rect" id="node7" href="$dc/d60/classThread_1_1NcpUart.html#a34e4ca7aff5b9056593e8ce0aa6e2fbb" title="This method is called when uart received a data buffer. " alt="" coords="426,183,621,221"/>
 </map>

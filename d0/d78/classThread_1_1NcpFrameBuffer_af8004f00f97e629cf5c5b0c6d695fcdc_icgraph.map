@@ -1,3 +1,5 @@
 <map id="Thread::NcpFrameBuffer::OutFrameReadByte" name="Thread::NcpFrameBuffer::OutFrameReadByte">
-<area shape="rect" id="node2" href="$d0/d78/classThread_1_1NcpFrameBuffer.html#a4062341057541242068c5680c35f5a1c" title="This method reads bytes from the current output frame. " alt="" coords="222,5,390,44"/>
+<area shape="rect" id="node2" href="$d0/d78/classThread_1_1NcpFrameBuffer.html#a4062341057541242068c5680c35f5a1c" title="This method reads bytes from the current output frame. " alt="" coords="231,5,399,44"/>
+<area shape="rect" id="node4" href="$dc/d60/classThread_1_1NcpUart.html#a8398d715de6960bf6257d93ac81dfa3a" title="This method finalizes and sends the current outbound frame. " alt="" coords="222,68,408,107"/>
+<area shape="rect" id="node3" href="$d0/d2a/classThread_1_1NcpSpi.html#ae9c67ca2e9b95ac4a4fa5650d44a2eed" title="This method finalizes and sends the current outbound frame. " alt="" coords="456,5,636,44"/>
 </map>

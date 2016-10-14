@@ -1,0 +1,5 @@
+<map id="otSetPreferredRouterId" name="otSetPreferredRouterId">
+<area shape="rect" id="node2" href="$d3/d8e/classThread_1_1ThreadNetif.html#ad49d56e324f096d728c0083d9292f52d" title="This method returns a pointer to the mle object. " alt="" coords="223,5,364,44"/>
+<area shape="rect" id="node3" href="$db/dec/group__core-mle-router.html#ga5e12c7091205fea435df559a15fa7acd" title="This method sets the preferred Router Id. " alt="" coords="213,68,374,107"/>
+<area shape="rect" id="node4" href="$d0/d0a/group__commands.html#ga05c0a89211be5a032fca805abfdb41f8" title="This function initializes the static instance of the OpenThread library. " alt="" coords="243,131,344,156"/>
+</map>

@@ -1,0 +1,5 @@
+<map id="otClearMacWhitelist" name="otClearMacWhitelist">
+<area shape="rect" id="node2" href="$d3/d8e/classThread_1_1ThreadNetif.html#aec59b0e172327889e9b0f4f08b0e69f9" title="This method returns a pointer to the mac object. " alt="" coords="227,5,368,44"/>
+<area shape="rect" id="node3" href="$d6/d88/classThread_1_1Mac_1_1Mac.html#a05fd9b44a1eac9906100f90e19d6d404" title="This method returns the MAC whitelist filter. " alt="" coords="193,68,401,93"/>
+<area shape="rect" id="node4" href="$d7/d98/classThread_1_1Mac_1_1Whitelist.html#a95503128cd8b0f8e8b16d11529aba6db" title="This method removes all entries from the whitelist filter. " alt="" coords="220,117,374,156"/>
+</map>

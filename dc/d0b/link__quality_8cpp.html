@@ -34,7 +34,7 @@
   <td id="projectlogo"><img alt="Logo" src="../../Open-Thread-Logo-200x42.png"/></td>
   <td style="padding-left: 0.5em;">
    <div id="projectname">
-   &#160;<span id="projectnumber">gb2b10b8</span>
+   &#160;<span id="projectnumber">gddd0704</span>
    </div>
   </td>
  </tr>
@@ -118,7 +118,8 @@ $(document).ready(function(){initNavTree('dc/d0b/link__quality_8cpp.html','../..
 
 <p>This file implements link quality information processing and storage.  
 <a href="#details">More...</a></p>
-<div class="textblock"><code>#include &lt;stdio.h&gt;</code><br />
+<div class="textblock"><code>#include &lt;openthread-config.h&gt;</code><br />
+<code>#include &lt;stdio.h&gt;</code><br />
 <code>#include &lt;string.h&gt;</code><br />
 <code>#include &lt;<a class="el" href="../../dc/dbf/openthread-types_8h_source.html">openthread-types.h</a>&gt;</code><br />
 <code>#include &lt;<a class="el" href="../../da/d7b/code__utils_8hpp_source.html">common/code_utils.hpp</a>&gt;</code><br />
@@ -128,39 +129,38 @@ Include dependency graph for link_quality.cpp:</div>
 <div class="dyncontent">
 <div class="center"><img src="../../da/df0/link__quality_8cpp__incl.png" border="0" usemap="#src_2core_2thread_2link__quality_8cpp" alt=""/></div>
 <map name="src_2core_2thread_2link__quality_8cpp" id="src_2core_2thread_2link__quality_8cpp">
-<area shape="rect" id="node4" href="../../dc/dbf/openthread-types_8h.html" title="This file defines the types and structures used in the OpenThread library API. " alt="" coords="180,165,316,191"/>
-<area shape="rect" id="node8" href="../../da/d7b/code__utils_8hpp.html" title="This file includes macros for validating runtime conditions. " alt="" coords="340,165,502,191"/>
-<area shape="rect" id="node9" href="../../d2/d49/link__quality_8hpp.html" title="This file includes definitions for storing and processing link quality information. " alt="" coords="229,92,383,117"/>
-<area shape="rect" id="node7" href="../../d3/da9/toolchain_8h_source.html" title="platform/toolchain.h" alt="" coords="189,239,327,264"/>
+<area shape="rect" id="node2" href="../../da/d45/openthread-config_8h_source.html" title="openthread&#45;config.h" alt="" coords="5,92,145,117"/>
+<area shape="rect" id="node5" href="../../dc/dbf/openthread-types_8h.html" title="This file defines the types and structures used in the OpenThread library API. " alt="" coords="343,165,479,191"/>
+<area shape="rect" id="node9" href="../../da/d7b/code__utils_8hpp.html" title="This file includes macros for validating runtime conditions. " alt="" coords="504,165,666,191"/>
+<area shape="rect" id="node10" href="../../d2/d49/link__quality_8hpp.html" title="This file includes definitions for storing and processing link quality information. " alt="" coords="393,92,547,117"/>
+<area shape="rect" id="node6" href="../../df/dd8/stdint_8h_source.html" title="stdint.h" alt="" coords="264,239,329,264"/>
+<area shape="rect" id="node7" href="../../d9/d5e/stdbool_8h_source.html" title="stdbool.h" alt="" coords="526,239,601,264"/>
+<area shape="rect" id="node8" href="../../d3/da9/toolchain_8h_source.html" title="platform/toolchain.h" alt="" coords="353,239,491,264"/>
 </map>
 </div>
 </div><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="enum-members"></a>
 Enumerations</h2></td></tr>
-<tr class="memitem:aa1ec839e523b814c26dec34db879e705"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aa1ec839e523b814c26dec34db879e705"></a>enum &#160;</td><td class="memItemRight" valign="bottom">{ <b>kDefaultNoiseFloor</b> = -100
+<tr class="memitem:a84357ba4c0f67457ae11da9f61a39f81"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a84357ba4c0f67457ae11da9f61a39f81"></a>enum &#160;</td><td class="memItemRight" valign="bottom">{ <b>kDefaultNoiseFloor</b> = -100
  }</td></tr>
-<tr class="separator:aa1ec839e523b814c26dec34db879e705"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="separator:a84357ba4c0f67457ae11da9f61a39f81"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 Functions</h2></td></tr>
-<tr class="memitem:gaf5de6bda87e42eef536daa7d45a53475"><td class="memItemLeft" align="right" valign="top">int8_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../d3/d4b/group__core-link-quality.html#gaf5de6bda87e42eef536daa7d45a53475">Thread::GetAverageNoiseFloor</a> (void)</td></tr>
-<tr class="memdesc:gaf5de6bda87e42eef536daa7d45a53475"><td class="mdescLeft">&#160;</td><td class="mdescRight">This function returns the current average noise floor level (in dBm).  <a href="../../d3/d4b/group__core-link-quality.html#gaf5de6bda87e42eef536daa7d45a53475">More...</a><br /></td></tr>
-<tr class="separator:gaf5de6bda87e42eef536daa7d45a53475"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ga070a9ee12b3bc035be2a8e611aa719ac"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../d3/d4b/group__core-link-quality.html#ga070a9ee12b3bc035be2a8e611aa719ac">Thread::AddNoiseFloor</a> (int8_t aNoiseFloor)</td></tr>
-<tr class="memdesc:ga070a9ee12b3bc035be2a8e611aa719ac"><td class="mdescLeft">&#160;</td><td class="mdescRight">This method adds a new noise floor value (in dBm) to the running average.  <a href="../../d3/d4b/group__core-link-quality.html#ga070a9ee12b3bc035be2a8e611aa719ac">More...</a><br /></td></tr>
-<tr class="separator:ga070a9ee12b3bc035be2a8e611aa719ac"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ga18d7aae2a22468b6738ed3cca947a051"><td class="memItemLeft" align="right" valign="top">
-void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../d3/d4b/group__core-link-quality.html#ga18d7aae2a22468b6738ed3cca947a051">Thread::ClearNoiseFloorAverage</a> (void)</td></tr>
-<tr class="memdesc:ga18d7aae2a22468b6738ed3cca947a051"><td class="mdescLeft">&#160;</td><td class="mdescRight">This method clears the current average noise floor value. <br /></td></tr>
-<tr class="separator:ga18d7aae2a22468b6738ed3cca947a051"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga327fac3c27070325354e650d4695e230"><td class="memItemLeft" align="right" valign="top">int8_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../d3/d4b/group__core-link-quality.html#ga327fac3c27070325354e650d4695e230">Thread::GetAverageNoiseFloor</a> (LinkQualityInfo &amp;aNoiseFloor)</td></tr>
+<tr class="memdesc:ga327fac3c27070325354e650d4695e230"><td class="mdescLeft">&#160;</td><td class="mdescRight">This function returns the current average noise floor level (in dBm).  <a href="../../d3/d4b/group__core-link-quality.html#ga327fac3c27070325354e650d4695e230">More...</a><br /></td></tr>
+<tr class="separator:ga327fac3c27070325354e650d4695e230"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga6c4f9e7e92b216865dc7c2783bfe9ea5"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../d3/d4b/group__core-link-quality.html#ga6c4f9e7e92b216865dc7c2783bfe9ea5">Thread::AddNoiseFloor</a> (LinkQualityInfo &amp;aNoiseFloor, int8_t aNoise)</td></tr>
+<tr class="memdesc:ga6c4f9e7e92b216865dc7c2783bfe9ea5"><td class="mdescLeft">&#160;</td><td class="mdescRight">This method adds a new noise floor value (in dBm) to the running average.  <a href="../../d3/d4b/group__core-link-quality.html#ga6c4f9e7e92b216865dc7c2783bfe9ea5">More...</a><br /></td></tr>
+<tr class="separator:ga6c4f9e7e92b216865dc7c2783bfe9ea5"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga3f3a4611a2d5eca6dc77cc8ff49ea64b"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../d3/d4b/group__core-link-quality.html#ga3f3a4611a2d5eca6dc77cc8ff49ea64b">Thread::ClearNoiseFloorAverage</a> (LinkQualityInfo &amp;aNoiseFloor)</td></tr>
+<tr class="memdesc:ga3f3a4611a2d5eca6dc77cc8ff49ea64b"><td class="mdescLeft">&#160;</td><td class="mdescRight">This method clears the current average noise floor value.  <a href="../../d3/d4b/group__core-link-quality.html#ga3f3a4611a2d5eca6dc77cc8ff49ea64b">More...</a><br /></td></tr>
+<tr class="separator:ga3f3a4611a2d5eca6dc77cc8ff49ea64b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="var-members"></a>
 Variables</h2></td></tr>
 <tr class="memitem:afa6fc4d38086902fbe01829a3cbf5843"><td class="memItemLeft" align="right" valign="top">static const char *const&#160;</td><td class="memItemRight" valign="bottom"><b>Thread::kLinkQualityDecimalDigitsString</b> [8]</td></tr>
 <tr class="separator:afa6fc4d38086902fbe01829a3cbf5843"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a95faee619c166c474d14671cd844f830"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a95faee619c166c474d14671cd844f830"></a>
-static LinkQualityInfo&#160;</td><td class="memItemRight" valign="bottom"><b>Thread::sNoiseFloorAverage</b></td></tr>
-<tr class="separator:a95faee619c166c474d14671cd844f830"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>This file implements link quality information processing and storage. </p>
@@ -191,7 +191,7 @@ static LinkQualityInfo&#160;</td><td class="memItemRight" valign="bottom"><b>Thr
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
     <li class="navelem"><a class="el" href="../../dir_68267d1309a1af8e8297ef4c3efbcdba.html">src</a></li><li class="navelem"><a class="el" href="../../dir_aebb8dcc11953d78e620bbef0b9e2183.html">core</a></li><li class="navelem"><a class="el" href="../../dir_fd71accbf528c1576ca21e7ec5716833.html">thread</a></li><li class="navelem"><a class="el" href="../../dc/d0b/link__quality_8cpp.html">link_quality.cpp</a></li>
-    <li class="footer">Generated on Wed Jul 27 2016 17:09:42 for OpenThread by
+    <li class="footer">Generated on Fri Oct 14 2016 08:44:34 for OpenThread by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="../../doxygen.png" alt="doxygen"/></a> 1.8.11 </li>
   </ul>

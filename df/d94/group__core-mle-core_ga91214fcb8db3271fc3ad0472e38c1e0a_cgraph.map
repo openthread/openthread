@@ -1,0 +1,51 @@
+<map id="Thread::Mle::Mle::SendAnnounce" name="Thread::Mle::Mle::SendAnnounce">
+<area shape="rect" id="node2" href="$dc/d75/classThread_1_1Ip6_1_1UdpSocket.html#aafb4481c92d1f8515e51cfa822a1bde1" title="This method returns a new UDP message with sufficient header space reserved. " alt="" coords="558,518,720,556"/>
+<area shape="rect" id="node3" href="$dc/d3c/classThread_1_1Message.html#ac4ef16141a9922e6a059851ba065a5f1" title="This method sets the message sub type. " alt="" coords="536,580,742,606"/>
+<area shape="rect" id="node4" href="$dc/d3c/classThread_1_1Message.html#a51e8dbe65c96182872c3a9ba806f51d9" title="This method sets the IEEE 802.15.4 Channel to use for transmission. " alt="" coords="279,1406,481,1431"/>
+<area shape="rect" id="node5" href="$df/d94/group__core-mle-core.html#gadbe9c0d542453bbe67270fb5dc47db93" title="This method appends an MLE header to a message. " alt="" coords="552,2122,726,2160"/>
+<area shape="rect" id="node10" href="$dc/d3c/classThread_1_1Message.html#a3c3d1c48e940f2553586d16e1618277d" title="This method appends bytes to the end of the message. " alt="" coords="807,807,986,832"/>
+<area shape="rect" id="node12" href="$d0/d0d/classThread_1_1Mle_1_1ChannelTlv.html#a828810c59677af4327ddd58a8093ae59" title="This method initializes the TLV. " alt="" coords="555,290,723,328"/>
+<area shape="rect" id="node15" href="$d0/d0d/classThread_1_1Mle_1_1ChannelTlv.html#a211a350725634dfde2b11fd0047b8ed7" title="This method sets the Channel Page value. " alt="" coords="297,1455,464,1494"/>
+<area shape="rect" id="node16" href="$d0/d0d/classThread_1_1Mle_1_1ChannelTlv.html#a2fa66b31d663774dcfe245aa7ce13a3c" title="This method sets the Channel value. " alt="" coords="297,1518,464,1556"/>
+<area shape="rect" id="node17" href="$d6/d88/classThread_1_1Mac_1_1Mac.html#a4465d77c4eae8edcf0a91995be6f2317" title="This method returns the IEEE 802.15.4 Channel. " alt="" coords="535,630,743,655"/>
+<area shape="rect" id="node18" href="$df/d94/group__core-mle-core.html#ga04a5d0693da52823a013a1808825344a" title="This method appends a Active Timestamp TLV to a message. " alt="" coords="293,195,468,234"/>
+<area shape="rect" id="node20" href="$d6/d83/classThread_1_1MeshCoP_1_1Dataset.html#a3258521bf66915fc5da53679c867e233" title="This method returns a pointer to the TLV. " alt="" coords="791,80,1002,106"/>
+<area shape="rect" id="node24" href="$d6/dcf/classThread_1_1Mle_1_1PanIdTlv.html#a345c417d86d7cfc56ceab2a2b7bec7e2" title="This method initializes the TLV. " alt="" coords="563,352,715,391"/>
+<area shape="rect" id="node25" href="$d6/dcf/classThread_1_1Mle_1_1PanIdTlv.html#a59d68adb2d4a91849d1d9cbef75a038e" title="This method sets the PAN ID value. " alt="" coords="304,1580,457,1619"/>
+<area shape="rect" id="node26" href="$d6/d88/classThread_1_1Mac_1_1Mac.html#a4f56293a69aa4eaf731c799f1bb73890" title="This method returns the IEEE 802.15.4 PAN ID. " alt="" coords="543,2184,735,2210"/>
+<area shape="rect" id="node27" href="$df/d94/group__core-mle-core.html#ga0ea27201cf13a4e1b0680a9da6c54a64" title="This method submits an MLE message to the UDP socket. " alt="" coords="273,1203,487,1228"/>
+<area shape="rect" id="node49" href="$dc/d3c/classThread_1_1Message.html#adc9d723284f5807d9c272ab89bc52b45" title="This method frees this message buffer. " alt="" coords="559,2234,719,2259"/>
+<area shape="rect" id="node50" href="$d6/d52/classThread_1_1MeshCoP_1_1ChannelMaskEntry.html#a77c3e965a450ece05a109d694b3a5b8d" title="This method indicates whether or not the bit corresponding to aChannel in ChannelMask is set..." alt="" coords="287,1643,474,1682"/>
+<area shape="rect" id="node6" href="$df/d94/group__core-mle-core.html#ga816bfec3316a129c70092d63141ecbac" title="This method initializes the MLE header. " alt="" coords="825,2044,968,2083"/>
+<area shape="rect" id="node7" href="$df/d94/group__core-mle-core.html#ga31f6d8ae4e3872d7081435a6ba62779f" title="This method sets the Security Suite value. " alt="" coords="825,2107,968,2146"/>
+<area shape="rect" id="node8" href="$df/d94/group__core-mle-core.html#gab3f74f5cf47286ec13eb63769602648a" title="This method sets the Key ID Mode to 2. " alt="" coords="825,2170,968,2208"/>
+<area shape="rect" id="node9" href="$df/d94/group__core-mle-core.html#gacfda331d1a40fd11951bbaa603d9c77a" title="This method sets the Command Type value. " alt="" coords="825,2232,968,2271"/>
+<area shape="rect" id="node11" href="$df/d94/group__core-mle-core.html#ga925735f456674a1aff117ee85e992391" title="This method returns the MLE header and Command Type length. " alt="" coords="825,1967,968,2006"/>
+<area shape="rect" id="node13" href="$dc/d39/classThread_1_1Mle_1_1Tlv.html#a20693a0ee15c8eed9d63c29408a3dd21" title="This method sets the Type value. " alt="" coords="810,303,984,328"/>
+<area shape="rect" id="node14" href="$dc/d39/classThread_1_1Mle_1_1Tlv.html#aa9531efdff2976fbea3881c7c893a1c8" title="This method sets the Length value. " alt="" coords="804,356,989,382"/>
+<area shape="rect" id="node19" href="$d6/d83/classThread_1_1MeshCoP_1_1Dataset.html#a2576874faa1595dcae546fa8cd2c70f3" title="This method returns a reference to the Timestamp. " alt="" coords="548,164,730,203"/>
+<area shape="rect" id="node21" href="$da/d12/classThread_1_1Mle_1_1ActiveTimestampTlv.html#a4e0d4fa97435a7480eace6f6a622481f" title="This method initializes the TLV. " alt="" coords="538,227,740,266"/>
+<area shape="rect" id="node22" href="$d1/def/classThread_1_1MeshCoP_1_1Timestamp.html#a10afaf06203c87bf2b9295639bdce780" title="This method sets the Seconds value. " alt="" coords="538,102,740,140"/>
+<area shape="rect" id="node23" href="$d1/def/classThread_1_1MeshCoP_1_1Timestamp.html#a02855ab824c2ac45e88b8ff7552c3cbd" title="This method sets the Ticks value. " alt="" coords="538,39,740,78"/>
+<area shape="rect" id="node28" href="$dc/d3c/classThread_1_1Message.html#a76033bbc15170d72452186058defafa2" title="This method reads bytes from the message. " alt="" coords="557,1532,721,1558"/>
+<area shape="rect" id="node29" href="$df/d94/group__core-mle-core.html#ga2e915acb11e9a25e0d71a683a4e7f1b2" title="This method returns the Security Suite value. " alt="" coords="567,1582,711,1620"/>
+<area shape="rect" id="node30" href="$df/d94/group__core-mle-core.html#gaa9fcbf1b82fc19b542aa1ece85e8c22c" title="This method sets the Frame Counter value. " alt="" coords="567,1644,711,1683"/>
+<area shape="rect" id="node31" href="$d6/d44/classThread_1_1KeyManager.html#a9e2b4af61a761c465c99131bc8d51e8b" title="This method returns the current MLE Frame Counter value. " alt="" coords="560,1707,718,1746"/>
+<area shape="rect" id="node32" href="$d6/d44/classThread_1_1KeyManager.html#afe262bf20500517935f58158fb7e2fae" title="This method returns the current key sequence value. " alt="" coords="550,1770,728,1808"/>
+<area shape="rect" id="node33" href="$df/d94/group__core-mle-core.html#ga8cfb8dcba608f0de7964875c8a3005f4" title="This method sets the Key ID value. " alt="" coords="567,1832,711,1871"/>
+<area shape="rect" id="node34" href="$dc/d3c/classThread_1_1Message.html#add75c76a1fa70eb5d4eb03b68c5d1df8" title="This method writes bytes to the message. " alt="" coords="557,1895,721,1920"/>
+<area shape="rect" id="node35" href="$d6/d88/classThread_1_1Mac_1_1Mac.html#a95ec637c1529d1258cd5316e93e4b8c9" title="This method returns a pointer to the IEEE 802.15.4 Extended Address. " alt="" coords="551,1996,727,2035"/>
+<area shape="rect" id="node36" href="$d2/dde/classThread_1_1Crypto_1_1AesCcm.html#afa12aabd74472bb1c8bf6e8bb73430d4" title="This method sets the key. " alt="" coords="555,2059,723,2098"/>
+<area shape="rect" id="node37" href="$d6/d44/classThread_1_1KeyManager.html#a569ad9589f0250e965158b5059d6fb2e" title="This method returns a pointer to the current MLE key. " alt="" coords="566,782,712,820"/>
+<area shape="rect" id="node38" href="$d2/dde/classThread_1_1Crypto_1_1AesCcm.html#aa7dabbd99f28efd22176e6fed8ce2eb3" title="This method initializes the AES CCM computation. " alt="" coords="555,844,723,883"/>
+<area shape="rect" id="node39" href="$df/d94/group__core-mle-core.html#ga05325afe6fe1ad832761ba2480a4cb31" title="This method returns the MLE header length (excluding the Command Type). " alt="" coords="567,907,711,946"/>
+<area shape="rect" id="node40" href="$dc/d3c/classThread_1_1Message.html#a2cf440376e834030c38bb2ced4ca49e9" title="This method returns the number of bytes in the message. " alt="" coords="542,970,736,995"/>
+<area shape="rect" id="node41" href="$d2/dde/classThread_1_1Crypto_1_1AesCcm.html#a2c363bc7a25302a14931bb33d41ee15a" title="This method processes the header. " alt="" coords="555,1019,723,1058"/>
+<area shape="rect" id="node42" href="$d9/d13/classThread_1_1Ip6_1_1NetifUnicastAddress.html#a2bb426bd29e271bd1fc09b61d1044911" title="This method returns the unicast address. " alt="" coords="555,1082,723,1120"/>
+<area shape="rect" id="node43" href="$df/d94/group__core-mle-core.html#ga1f33ecfb8914590fca328101c1d6ac8b" title="This method returns a pointer to first byte of the MLE header. " alt="" coords="567,1196,711,1235"/>
+<area shape="rect" id="node44" href="$dc/d3c/classThread_1_1Message.html#acaa6ed0d0c060a524cb5da25451acc0d" title="This method sets the byte offset within the message. " alt="" coords="545,1259,733,1284"/>
+<area shape="rect" id="node45" href="$dc/d3c/classThread_1_1Message.html#ac8304ee00c9e0b303539687e98e192e0" title="This method returns the byte offset within the message. " alt="" coords="544,1308,734,1334"/>
+<area shape="rect" id="node46" href="$d2/dde/classThread_1_1Crypto_1_1AesCcm.html#a5d36c3f13b85f66ea1e51627ec7d4297" title="This method processes the payload. " alt="" coords="555,1358,723,1396"/>
+<area shape="rect" id="node47" href="$dc/d3c/classThread_1_1Message.html#a7b45edaa8ba9f31a437aea73cfca387c" title="This method moves the byte offset within the message. " alt="" coords="539,1420,739,1446"/>
+<area shape="rect" id="node48" href="$d2/dde/classThread_1_1Crypto_1_1AesCcm.html#a666e2ddbf5e0cf91abc191221254fcb8" title="This method generates the tag. " alt="" coords="555,1470,723,1508"/>
+</map>

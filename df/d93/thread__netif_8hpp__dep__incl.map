@@ -1,19 +1,34 @@
 <map id="src/core/thread/thread_netif.hpp" name="src/core/thread/thread_netif.hpp">
-<area shape="rect" id="node2" href="$d4/dd9/mac_8cpp.html" title="This file implements the subset of IEEE 802.15.4 primitives required for Thread. " alt="" coords="5,99,157,124"/>
-<area shape="rect" id="node3" href="$da/d60/openthread_8cpp.html" title="This file implements the top&#45;level interface to the OpenThread stack. " alt="" coords="181,99,346,124"/>
-<area shape="rect" id="node4" href="$de/d27/address__resolver_8cpp.html" title="This file implements Thread&#39;s EID&#45;to&#45;RLOC mapping and caching. " alt="" coords="370,92,531,131"/>
-<area shape="rect" id="node5" href="$dd/d59/key__manager_8cpp.html" title="This file implements Thread security material generation. " alt="" coords="555,92,690,131"/>
-<area shape="rect" id="node6" href="$d6/d2b/lowpan_8cpp.html" title="This file implements 6LoWPAN header compression. " alt="" coords="714,99,896,124"/>
-<area shape="rect" id="node7" href="$df/d6b/mesh__forwarder_8cpp.html" title="This file implements mesh forwarding of IPv6/6LoWPAN messages. " alt="" coords="920,92,1066,131"/>
-<area shape="rect" id="node8" href="$d1/df9/mle_8cpp.html" title="This file implements MLE functionality required for the Thread Child, Router and Leader roles..." alt="" coords="1090,99,1251,124"/>
-<area shape="rect" id="node9" href="$d9/d88/mle__router_8cpp.html" title="This file implements MLE functionality required for the Thread Router and Leader roles. " alt="" coords="1275,92,1410,131"/>
-<area shape="rect" id="node10" href="$d0/d0f/network__data__leader_8cpp.html" title="This file implements the Thread Network Data managed by the Thread Leader. " alt="" coords="1434,92,1595,131"/>
-<area shape="rect" id="node11" href="$dd/d90/network__data__local_8cpp.html" title="This file implements the local Thread Network Data. " alt="" coords="1618,92,1779,131"/>
-<area shape="rect" id="node12" href="$db/d84/thread__netif_8cpp.html" title="This file implements the Thread network interface. " alt="" coords="1803,92,1954,131"/>
-<area shape="rect" id="node13" href="$df/d54/ncp__base_8hpp.html" title="This file contains definitions a spinel interface to the OpenThread stack. " alt="" coords="1979,99,2130,124"/>
-<area shape="rect" id="node14" href="$d5/d6a/ncp__base_8cpp.html" title="This file implements a Spinel interface to the OpenThread stack. " alt="" coords="1810,179,1961,204"/>
-<area shape="rect" id="node15" href="$d7/df2/ncp__spi_8hpp.html" title="This file contains definitions for a SPI interface to the OpenThread stack. " alt="" coords="1985,179,2124,204"/>
-<area shape="rect" id="node17" href="$d4/d5f/ncp__uart_8hpp.html" title="This file contains definitions for an FLEN/HDLC interface to the OpenThread stack. " alt="" coords="2148,179,2294,204"/>
-<area shape="rect" id="node16" href="$d0/d95/ncp__spi_8cpp.html" title="This file implements a SPI interface to the OpenThread stack. " alt="" coords="1985,252,2124,277"/>
-<area shape="rect" id="node18" href="$d4/dae/ncp__uart_8cpp.html" title="This file implements an HDLC interface to the Thread stack. " alt="" coords="2149,252,2294,277"/>
+<area shape="rect" id="node2" href="$d4/dd9/mac_8cpp.html" title="This file implements the subset of IEEE 802.15.4 primitives required for Thread. " alt="" coords="5,185,157,211"/>
+<area shape="rect" id="node3" href="$d3/dd0/announce__begin__client_8cpp.html" title="This file implements the Announce Begin Client. " alt="" coords="1223,92,1412,131"/>
+<area shape="rect" id="node4" href="$d7/d69/commissioner_8cpp.html" title="This file implements a Commissioner role. " alt="" coords="1436,99,1673,124"/>
+<area shape="rect" id="node5" href="$d2/d47/dtls_8cpp.html" title="This file implements the necessary hooks for mbedTLS. " alt="" coords="1697,99,1873,124"/>
+<area shape="rect" id="node6" href="$dd/d3b/energy__scan__client_8cpp.html" title="This file implements the Energy Scan Client. " alt="" coords="1897,92,2068,131"/>
+<area shape="rect" id="node7" href="$d4/d64/joiner_8cpp.html" title="This file implements the Joiner role. " alt="" coords="2092,99,2279,124"/>
+<area shape="rect" id="node8" href="$db/dc3/joiner__router_8cpp.html" title="This file implements the Joiner Router role. " alt="" coords="2302,92,2465,131"/>
+<area shape="rect" id="node9" href="$d7/d02/leader_8cpp.html" title="This file implements a MeshCoP Leader. " alt="" coords="2489,99,2681,124"/>
+<area shape="rect" id="node10" href="$d5/de7/panid__query__client_8cpp.html" title="This file implements the PAN ID Query Client. " alt="" coords="2705,92,2868,131"/>
+<area shape="rect" id="node11" href="$d2/dfc/openthread-instance_8h.html" title="This file defines the structure of the variables required for all instances of OpenThread API..." alt="" coords="750,92,890,131"/>
+<area shape="rect" id="node15" href="$da/d60/openthread_8cpp.html" title="This file implements the top&#45;level interface to the OpenThread stack. " alt="" coords="1179,185,1344,211"/>
+<area shape="rect" id="node16" href="$db/d84/thread__netif_8cpp.html" title="This file implements the Thread network interface. " alt="" coords="1368,179,1520,217"/>
+<area shape="rect" id="node20" href="$de/d27/address__resolver_8cpp.html" title="This file implements Thread&#39;s EID&#45;to&#45;RLOC mapping and caching. " alt="" coords="2893,92,3054,131"/>
+<area shape="rect" id="node21" href="$d4/d67/announce__begin__server_8cpp.html" title="This file implements the Announce Begin Server. " alt="" coords="3078,92,3250,131"/>
+<area shape="rect" id="node22" href="$da/d6e/energy__scan__server_8cpp.html" title="This file implements the Energy Scan Server. " alt="" coords="3275,92,3429,131"/>
+<area shape="rect" id="node23" href="$dd/d59/key__manager_8cpp.html" title="This file implements Thread security material generation. " alt="" coords="3454,92,3589,131"/>
+<area shape="rect" id="node24" href="$d6/d2b/lowpan_8cpp.html" title="This file implements 6LoWPAN header compression. " alt="" coords="3613,99,3795,124"/>
+<area shape="rect" id="node25" href="$df/d6b/mesh__forwarder_8cpp.html" title="This file implements mesh forwarding of IPv6/6LoWPAN messages. " alt="" coords="3819,92,3965,131"/>
+<area shape="rect" id="node26" href="$df/d42/meshcop__dataset__manager_8cpp.html" title="This file implements MeshCoP Datasets manager to process commands. " alt="" coords="3989,92,4157,131"/>
+<area shape="rect" id="node27" href="$d1/df9/mle_8cpp.html" title="This file implements MLE functionality required for the Thread Child, Router and Leader roles..." alt="" coords="4181,99,4342,124"/>
+<area shape="rect" id="node28" href="$d9/d88/mle__router_8cpp.html" title="This file implements MLE functionality required for the Thread Router and Leader roles. " alt="" coords="4365,92,4501,131"/>
+<area shape="rect" id="node29" href="$d9/d20/network__data_8cpp.html" title="This file implements common methods for manipulating Thread Network Data. " alt="" coords="4525,92,4686,131"/>
+<area shape="rect" id="node30" href="$d0/d0f/network__data__leader_8cpp.html" title="This file implements the Thread Network Data managed by the Thread Leader. " alt="" coords="4709,92,4870,131"/>
+<area shape="rect" id="node31" href="$dd/d90/network__data__local_8cpp.html" title="This file implements the local Thread Network Data. " alt="" coords="4893,92,5054,131"/>
+<area shape="rect" id="node32" href="$d1/da2/network__diag_8cpp.html" title="This file implements Thread&#39;s Network Diagnostic processing. " alt="" coords="5077,92,5238,131"/>
+<area shape="rect" id="node33" href="$d1/d58/panid__query__server_8cpp.html" title="This file implements the PAN ID Query Server. " alt="" coords="5261,92,5408,131"/>
+<area shape="rect" id="node12" href="$dd/d48/cli_8cpp.html" title="This file implements the CLI interpreter. " alt="" coords="690,185,787,211"/>
+<area shape="rect" id="node13" href="$dc/de5/timer_8cpp.html" title="This file implements a multiplexed timer service on top of the alarm abstraction. ..." alt="" coords="811,185,992,211"/>
+<area shape="rect" id="node14" href="$d5/d8d/ip6_8cpp.html" title="This file implements IPv6 networking. " alt="" coords="1016,185,1154,211"/>
+<area shape="rect" id="node17" href="$d5/d6a/ncp__base_8cpp.html" title="This file implements a Spinel interface to the OpenThread stack. " alt="" coords="182,185,333,211"/>
+<area shape="rect" id="node18" href="$d0/d95/ncp__spi_8cpp.html" title="This file implements a SPI interface to the OpenThread stack. " alt="" coords="357,185,496,211"/>
+<area shape="rect" id="node19" href="$d4/dae/ncp__uart_8cpp.html" title="This file contains definitions for a UART based NCP interface to the OpenThread stack. " alt="" coords="521,185,666,211"/>
 </map>

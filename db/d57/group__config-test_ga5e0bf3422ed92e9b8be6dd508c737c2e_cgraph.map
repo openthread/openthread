@@ -1,0 +1,5 @@
+<map id="otBecomeChild" name="otBecomeChild">
+<area shape="rect" id="node2" href="$d3/d8e/classThread_1_1ThreadNetif.html#ad49d56e324f096d728c0083d9292f52d" title="This method returns a pointer to the mle object. " alt="" coords="184,5,324,44"/>
+<area shape="rect" id="node3" href="$df/d94/group__core-mle-core.html#gabe6ce4ca7175574ca785eed7f4ab8da2" title="This method causes the Thread interface to attempt an MLE attach. " alt="" coords="165,68,343,107"/>
+<area shape="rect" id="node4" href="$d1/d40/classThread_1_1Timer.html#a475731e21b59be6b17b24f5b5e175f62" title="This method schedules the timer to fire a dt milliseconds from now. " alt="" coords="391,75,531,100"/>
+</map>

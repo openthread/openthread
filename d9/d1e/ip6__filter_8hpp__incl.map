@@ -1,5 +1,7 @@
 <map id="src/core/net/ip6_filter.hpp" name="src/core/net/ip6_filter.hpp">
 <area shape="rect" id="node2" href="$dd/d45/openthread_8h.html" title="This file defines the top&#45;level functions for the OpenThread library. " alt="" coords="105,79,205,104"/>
+<area shape="rect" id="node3" href="$df/dd8/stdint_8h_source.html" title="stdint.h" alt="" coords="5,299,70,324"/>
+<area shape="rect" id="node4" href="$d9/d5e/stdbool_8h_source.html" title="stdbool.h" alt="" coords="256,299,331,324"/>
 <area shape="rect" id="node5" href="$dc/dbf/openthread-types_8h.html" title="This file defines the types and structures used in the OpenThread library API. " alt="" coords="101,225,238,251"/>
 <area shape="rect" id="node7" href="$d7/d62/radio_8h.html" title="This file defines the radio interface for OpenThread. " alt="" coords="51,152,165,177"/>
 <area shape="rect" id="node6" href="$d3/da9/toolchain_8h_source.html" title="platform/toolchain.h" alt="" coords="94,299,232,324"/>

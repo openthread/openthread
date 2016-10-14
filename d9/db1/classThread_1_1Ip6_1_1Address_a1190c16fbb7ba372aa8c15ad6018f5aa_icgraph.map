@@ -1,0 +1,4 @@
+<map id="Thread::Ip6::Address::IsReservedSubnetAnycast" name="Thread::Ip6::Address::IsReservedSubnetAnycast">
+<area shape="rect" id="node2" href="$d9/db1/classThread_1_1Ip6_1_1Address.html#a88e2c3649cb021b804c74c96355c2b54" title="This method indicates whether or not the IPv6 address contains Reserved IPv6 IID (RFC 5453)..." alt="" coords="239,5,385,44"/>
+<area shape="rect" id="node3" href="$dd/d32/classThread_1_1Utils_1_1SemanticallyOpaqueIidGenerator.html#aa63452c20829bd917ecdbe0448bacab8" title="This function creates semantically opaque IID for given IPv6 address and context. ..." alt="" coords="433,5,637,44"/>
+</map>

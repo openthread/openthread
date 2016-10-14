@@ -1,3 +1,4 @@
 <map id="Graphical Class Hierarchy" name="Graphical Class Hierarchy">
-<area shape="rect" id="node1" href="$d0/d63/classThread_1_1Coap_1_1Resource.html" title="This class implements CoAP resource handling. " alt="" coords="5,5,173,31"/>
+<area shape="rect" id="node1" href="$da/dfd/structotUdpSocket.html" title="This structure represents a UDP socket. " alt="" coords="5,5,103,31"/>
+<area shape="rect" id="node2" href="$dc/d75/classThread_1_1Ip6_1_1UdpSocket.html" title="This class implements a UDP/IPv6 socket. " alt="" coords="151,5,313,31"/>
 </map>

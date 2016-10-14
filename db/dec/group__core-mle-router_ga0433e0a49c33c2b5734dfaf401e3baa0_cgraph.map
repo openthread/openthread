@@ -1,0 +1,11 @@
+<map id="Thread::Mle::MleRouter::GetNextNeighborInfo" name="Thread::Mle::MleRouter::GetNextNeighborInfo">
+<area shape="rect" id="node2" href="$d1/d40/classThread_1_1Timer.html#a8d56b463dc5c9f2fa82764efe3a700c7" title="This static method returns the number of seconds given milliseconds. " alt="" coords="220,5,401,31"/>
+<area shape="rect" id="node3" href="$d1/d40/classThread_1_1Timer.html#a0596072dec177b5e2b494db19800267d" title="This static method returns the current time in milliseconds. " alt="" coords="231,55,391,80"/>
+<area shape="rect" id="node5" href="$dd/d38/classThread_1_1LinkQualityInfo.html#a54ec264efb11c7bc2e0b4f2aa73d66d9" title="Returns the current one&#45;way link quality value. " alt="" coords="231,104,390,143"/>
+<area shape="rect" id="node9" href="$dd/d38/classThread_1_1LinkQualityInfo.html#a6bb9667b219989c9825d292d6501ac66" title="This method returns the current average signal strength value. " alt="" coords="1142,111,1301,149"/>
+<area shape="rect" id="node10" href="$d6/d88/classThread_1_1Mac_1_1Mac.html#a66adbd2802117755ceff80c2aa1a4d84" title="This method returns the noise floor state. " alt="" coords="215,219,406,257"/>
+<area shape="rect" id="node4" href="$dd/db6/group__alarm.html#gaf8829e3591e03e29e136685fcdeb3300" title="Get the current time. " alt="" coords="465,55,603,80"/>
+<area shape="rect" id="node6" href="$dd/d38/classThread_1_1LinkQualityInfo.html#a756abbb6d5f4d84bfe763559ba3c1c71" title="This method returns the link margin. " alt="" coords="454,104,614,143"/>
+<area shape="rect" id="node7" href="$dd/d38/classThread_1_1LinkQualityInfo.html#aecb995df780f6eb79a340614e71d1b5c" title="This method converts a received signal strength value to a link margin value. " alt="" coords="662,53,839,92"/>
+<area shape="rect" id="node8" href="$d3/d4b/group__core-link-quality.html#ga327fac3c27070325354e650d4695e230" title="This function returns the current average noise floor level (in dBm). " alt="" coords="887,64,1094,89"/>
+</map>

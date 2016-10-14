@@ -1,6 +1,7 @@
 <map id="Thread::MessageListEntry" name="Thread::MessageListEntry">
-<area shape="rect" id="node4" href="$de/dcc/structThread_1_1MessageInfo.html" title="This structure contains metdata about a Message. " alt="" coords="5,92,153,117"/>
-<area shape="rect" id="node2" href="$dc/d3c/classThread_1_1Message.html" title="This class represents a message. " alt="" coords="90,267,215,292"/>
-<area shape="rect" id="node5" href="$da/d60/structThread_1_1MessageList.html" title="This structure contains pointers to the head and tail of a Message list. " alt="" coords="138,367,284,392"/>
-<area shape="rect" id="node3" href="$db/d50/classThread_1_1Buffer.html" title="This class represents a Message buffer. " alt="" coords="41,192,147,217"/>
+<area shape="rect" id="node4" href="$de/dcc/structThread_1_1MessageInfo.html" title="This structure contains metdata about a Message. " alt="" coords="84,92,231,117"/>
+<area shape="rect" id="node2" href="$dc/d3c/classThread_1_1Message.html" title="This class represents a message. " alt="" coords="168,267,293,292"/>
+<area shape="rect" id="node6" href="$da/d60/structThread_1_1MessageList.html" title="This structure contains pointers to the head and tail of a Message list. " alt="" coords="216,367,362,392"/>
+<area shape="rect" id="node3" href="$db/d50/classThread_1_1Buffer.html" title="This class represents a Message buffer. " alt="" coords="119,192,225,217"/>
+<area shape="rect" id="node5" href="$d5/d9f/classThread_1_1MessagePool.html" title="Thread::MessagePool" alt="" coords="5,5,157,31"/>
 </map>

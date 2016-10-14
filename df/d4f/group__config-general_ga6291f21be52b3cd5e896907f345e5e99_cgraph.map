@@ -1,0 +1,4 @@
+<map id="otGetPollPeriod" name="otGetPollPeriod">
+<area shape="rect" id="node2" href="$d3/d8e/classThread_1_1ThreadNetif.html#a162f0ae891d29185452f5373a48d5f97" title="This method returns a pointer to the mesh forwarder object. " alt="" coords="178,5,322,44"/>
+<area shape="rect" id="node3" href="$dd/d1d/classThread_1_1MeshForwarder.html#a494646e3a3054896746f70390dfff513" title="This method gets the customized Data Poll period. " alt="" coords="168,68,332,107"/>
+</map>

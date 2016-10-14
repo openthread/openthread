@@ -1,3 +1,11 @@
 <map id="Thread::ThreadNetif" name="Thread::ThreadNetif">
-<area shape="rect" id="node2" href="$d2/d55/classThread_1_1Ip6_1_1Netif.html" title="This class implements an IPv6 network interface. " alt="" coords="13,5,138,31"/>
+<area shape="rect" id="node2" href="$d2/d55/classThread_1_1Ip6_1_1Netif.html" title="This class implements an IPv6 network interface. " alt="" coords="539,153,663,179"/>
+<area shape="rect" id="node3" href="$d3/d05/classThread_1_1Ip6_1_1Ip6.html" title="This class implements the core IPv6 message processing. " alt="" coords="342,153,458,179"/>
+<area shape="rect" id="node4" href="$d8/de8/classThread_1_1TaskletScheduler.html" title="This class implements the tasklet scheduler. " alt="" coords="5,5,178,31"/>
+<area shape="rect" id="node5" href="$da/dd7/classThread_1_1Ip6_1_1Icmp.html" title="This class implements ICMPv6. " alt="" coords="29,55,155,80"/>
+<area shape="rect" id="node6" href="$dd/d60/classThread_1_1Ip6_1_1Mpl.html" title="This class implements MPL message processing. " alt="" coords="32,104,151,129"/>
+<area shape="rect" id="node7" href="$de/ded/classThread_1_1Ip6_1_1Udp.html" title="This class implements core UDP message handling. " alt="" coords="31,153,152,179"/>
+<area shape="rect" id="node8" href="$d5/d9f/classThread_1_1MessagePool.html" title="Thread::MessagePool" alt="" coords="16,203,167,228"/>
+<area shape="rect" id="node9" href="$db/ddb/classThread_1_1Ip6_1_1Routes.html" title="This class implements IPv6 route management. " alt="" coords="22,252,161,277"/>
+<area shape="rect" id="node10" href="$df/d1f/classThread_1_1TimerScheduler.html" title="This class implements the timer scheduler. " alt="" coords="9,301,174,327"/>
 </map>

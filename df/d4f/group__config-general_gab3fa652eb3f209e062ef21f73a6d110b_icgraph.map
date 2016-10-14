@@ -1,0 +1,6 @@
+<map id="otGetUnicastAddresses" name="otGetUnicastAddresses">
+<area shape="rect" id="node2" href="$d5/dc2/structThread_1_1Cli_1_1Interpreter.html#a11ee1f86cffe17aab7de3de0bb16dee7" title="This method parses an ASCII string as an unsigned long. " alt="" coords="239,5,395,44"/>
+<area shape="rect" id="node3" href="$dd/d32/classThread_1_1Utils_1_1SemanticallyOpaqueIidGenerator.html#aa63452c20829bd917ecdbe0448bacab8" title="This function creates semantically opaque IID for given IPv6 address and context. ..." alt="" coords="215,68,419,107"/>
+<area shape="rect" id="node4" href="$d9/dc8/classThread_1_1NcpBase.html#ad14f0f1d60c77f7f537a0a441a9fb35c" title="This method is called by the framer whenever a framing error is detected. " alt="" coords="221,131,413,169"/>
+<area shape="rect" id="node5" href="$dc/d60/classThread_1_1NcpUart.html#a34e4ca7aff5b9056593e8ce0aa6e2fbb" title="This method is called when uart received a data buffer. " alt="" coords="467,131,662,169"/>
+</map>

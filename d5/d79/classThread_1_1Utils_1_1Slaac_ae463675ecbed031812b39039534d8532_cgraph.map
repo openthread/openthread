@@ -1,0 +1,21 @@
+<map id="Thread::Utils::Slaac::UpdateAddresses" name="Thread::Utils::Slaac::UpdateAddresses">
+<area shape="rect" id="node2" href="$df/d4f/group__config-general.html#ga4c11c12b233a8594806eba8588dedcd7" title="This function gets the next On Mesh Prefix in the Network Data. " alt="" coords="196,100,362,125"/>
+<area shape="rect" id="node7" href="$db/de8/group__ip6.html#ga4133edcf0a1ea5e618741060969d9bc7" title="This function returns the prefix match length (bits) for two IPv6 addresses. " alt="" coords="218,167,339,192"/>
+<area shape="rect" id="node8" href="$df/d4f/group__config-general.html#ga9971f6d8d2a2404cd042fb395bc19180" title="Remove a Network Interface Address from the Thread interface. " alt="" coords="191,216,366,241"/>
+<area shape="rect" id="node17" href="$d5/d79/classThread_1_1Utils_1_1Slaac.html#a4dc0d6478561125fc73d8b43300c6985" title="This function creates randomly generated IPv6 IID for given IPv6 address. " alt="" coords="210,319,348,357"/>
+<area shape="rect" id="node19" href="$df/d4f/group__config-general.html#ga8ea01f3799b8910ccafb8b438df8dfec" title="Add a Network Interface Address to the Thread interface. " alt="" coords="204,267,354,292"/>
+<area shape="rect" id="node3" href="$d3/d8e/classThread_1_1ThreadNetif.html#a7325de1ad382ff7d28402f91f48da67c" title="This method returns a pointer to the network data local object. " alt="" coords="445,5,604,44"/>
+<area shape="rect" id="node4" href="$d4/d80/group__core-netdata-core.html#ga1f1cacaf85d15baa1cf784b23665f421" title="This method provides the next On Mesh prefix in the Thread Network Data. " alt="" coords="419,68,631,120"/>
+<area shape="rect" id="node5" href="$d3/d8e/classThread_1_1ThreadNetif.html#a16d20f33e997eaf877024914707f052a" title="This method returns a pointer to the network data leader object. " alt="" coords="440,144,609,183"/>
+<area shape="rect" id="node6" href="$d3/d8e/classThread_1_1ThreadNetif.html#a83517ab2bff2614e403895426df6a61b" title="This method returns the pointer to the parent otInstance structure. " alt="" coords="697,144,838,183"/>
+<area shape="rect" id="node9" href="$d2/d55/classThread_1_1Ip6_1_1Netif.html#a9ba666b91ccb367ede10cc95d696237e" title="This method removes a external (to OpenThread) unicast address from the network interface. " alt="" coords="414,207,635,245"/>
+<area shape="rect" id="node10" href="$d9/d13/classThread_1_1Ip6_1_1NetifUnicastAddress.html#ac7f38e1322075b0e6dfc7afc048f7eec" title="This method returns the next unicast address assigned to the interface. " alt="" coords="683,269,852,308"/>
+<area shape="rect" id="node11" href="$d2/d55/classThread_1_1Ip6_1_1Netif.html#a092484addf28568306ab45941abffff4" title="This method schedules notification of aFlags. " alt="" coords="684,207,851,245"/>
+<area shape="rect" id="node12" href="$d4/d92/classThread_1_1Tasklet.html#a50a39a6f422851035b89aace87482425" title="This method puts the tasklet on the run queue. " alt="" coords="900,213,1047,239"/>
+<area shape="rect" id="node13" href="$d8/de8/classThread_1_1TaskletScheduler.html#a137292acddf92acdef54cc7a33ea5fac" title="This method enqueues a tasklet into the run queue. " alt="" coords="1095,207,1267,245"/>
+<area shape="rect" id="node14" href="$d1/de3/group__execution.html#ga04d5608ac68a78eb3e8fc167587c61f3" title="OpenThread calls this function when the tasklet queue transitions from empty to non&#45;empty. " alt="" coords="1332,157,1492,183"/>
+<area shape="rect" id="node15" href="$d8/de8/classThread_1_1TaskletScheduler.html#aeaf526c316bbea7d53d20fa9e3c94c40" title="This method returns the pointer to the parent Ip6 structure. " alt="" coords="1326,207,1499,245"/>
+<area shape="rect" id="node16" href="$d3/d05/classThread_1_1Ip6_1_1Ip6.html#a624d9508f3ecfa586378a3d802cb6ff7" title="This method returns the pointer to the parent otInstance structure. " alt="" coords="1315,269,1510,295"/>
+<area shape="rect" id="node18" href="$dd/d10/group__random.html#gaa20820ca4e6e1ce8cd47ded9762b14ca" title="Get a 32&#45;bit random value. " alt="" coords="461,332,588,357"/>
+<area shape="rect" id="node20" href="$d2/d55/classThread_1_1Ip6_1_1Netif.html#ab186c9e859dd260cd8432fbebf7e2d67" title="This method adds an external (to OpenThread) unicast address to the network interface. " alt="" coords="427,269,622,308"/>
+</map>

@@ -34,7 +34,7 @@
   <td id="projectlogo"><img alt="Logo" src="../../Open-Thread-Logo-200x42.png"/></td>
   <td style="padding-left: 0.5em;">
    <div id="projectname">
-   &#160;<span id="projectnumber">gb2b10b8</span>
+   &#160;<span id="projectnumber">gddd0704</span>
    </div>
   </td>
  </tr>
@@ -110,6 +110,7 @@ $(document).ready(function(){initNavTree('d5/dc2/structThread_1_1Cli_1_1Interpre
 
 <div class="header">
   <div class="summary">
+<a href="#pub-methods">Public Member Functions</a> &#124;
 <a href="#pub-static-methods">Static Public Member Functions</a> &#124;
 <a href="../../d9/dbf/classThread_1_1Cli_1_1Interpreter-members.html">List of all members</a>  </div>
   <div class="headertitle">
@@ -136,21 +137,221 @@ Collaboration diagram for Thread::Cli::Interpreter:</div>
 </map>
 <center><span class="legend">[<a target="top" href="../../graph_legend.html">legend</a>]</span></center></div>
 <table class="memberdecls">
-<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-static-methods"></a>
-Static Public Member Functions</h2></td></tr>
-<tr class="memitem:ac3a6d19e1230529b3970e31ca7324373"><td class="memItemLeft" align="right" valign="top">static void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../d5/dc2/structThread_1_1Cli_1_1Interpreter.html#ac3a6d19e1230529b3970e31ca7324373">ProcessLine</a> (char *aBuf, uint16_t aBufLength, <a class="el" href="../../d4/d5c/classThread_1_1Cli_1_1Server.html">Server</a> &amp;aServer)</td></tr>
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
+Public Member Functions</h2></td></tr>
+<tr class="memitem:a21091247724ba31894e85a4be1d82c2b"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a21091247724ba31894e85a4be1d82c2b"></a>
+&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../d5/dc2/structThread_1_1Cli_1_1Interpreter.html#a21091247724ba31894e85a4be1d82c2b">Interpreter</a> (<a class="el" href="../../d2/d83/structotInstance.html">otInstance</a> *aInstance)</td></tr>
+<tr class="memdesc:a21091247724ba31894e85a4be1d82c2b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Constructor. <br /></td></tr>
+<tr class="separator:a21091247724ba31894e85a4be1d82c2b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac3a6d19e1230529b3970e31ca7324373"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../d5/dc2/structThread_1_1Cli_1_1Interpreter.html#ac3a6d19e1230529b3970e31ca7324373">ProcessLine</a> (char *aBuf, uint16_t aBufLength, <a class="el" href="../../d4/d5c/classThread_1_1Cli_1_1Server.html">Server</a> &amp;aServer)</td></tr>
 <tr class="memdesc:ac3a6d19e1230529b3970e31ca7324373"><td class="mdescLeft">&#160;</td><td class="mdescRight">This method interprets a CLI command.  <a href="#ac3a6d19e1230529b3970e31ca7324373">More...</a><br /></td></tr>
 <tr class="separator:ac3a6d19e1230529b3970e31ca7324373"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-static-methods"></a>
+Static Public Member Functions</h2></td></tr>
+<tr class="memitem:ab1da78e1c424f644d017962d4ccc4654"><td class="memItemLeft" align="right" valign="top">static <a class="el" href="../../dc/dbf/openthread-types_8h.html#ab701d053a9c34ab7f11e43e0dc09ac9f">ThreadError</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../d5/dc2/structThread_1_1Cli_1_1Interpreter.html#ab1da78e1c424f644d017962d4ccc4654">ParseLong</a> (char *aString, long &amp;aLong)</td></tr>
+<tr class="memdesc:ab1da78e1c424f644d017962d4ccc4654"><td class="mdescLeft">&#160;</td><td class="mdescRight">This method parses an ASCII string as a long.  <a href="#ab1da78e1c424f644d017962d4ccc4654">More...</a><br /></td></tr>
+<tr class="separator:ab1da78e1c424f644d017962d4ccc4654"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a11ee1f86cffe17aab7de3de0bb16dee7"><td class="memItemLeft" align="right" valign="top">static <a class="el" href="../../dc/dbf/openthread-types_8h.html#ab701d053a9c34ab7f11e43e0dc09ac9f">ThreadError</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../d5/dc2/structThread_1_1Cli_1_1Interpreter.html#a11ee1f86cffe17aab7de3de0bb16dee7">ParseUnsignedLong</a> (char *aString, unsigned long &amp;aUnsignedLong)</td></tr>
+<tr class="memdesc:a11ee1f86cffe17aab7de3de0bb16dee7"><td class="mdescLeft">&#160;</td><td class="mdescRight">This method parses an ASCII string as an unsigned long.  <a href="#a11ee1f86cffe17aab7de3de0bb16dee7">More...</a><br /></td></tr>
+<tr class="separator:a11ee1f86cffe17aab7de3de0bb16dee7"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a64ca2d7604aca3bfda7cb5cad691e9e7"><td class="memItemLeft" align="right" valign="top">static int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../d5/dc2/structThread_1_1Cli_1_1Interpreter.html#a64ca2d7604aca3bfda7cb5cad691e9e7">Hex2Bin</a> (const char *aHex, uint8_t *aBin, uint16_t aBinLength)</td></tr>
+<tr class="memdesc:a64ca2d7604aca3bfda7cb5cad691e9e7"><td class="mdescLeft">&#160;</td><td class="mdescRight">This method converts a hex string to binary.  <a href="#a64ca2d7604aca3bfda7cb5cad691e9e7">More...</a><br /></td></tr>
+<tr class="separator:a64ca2d7604aca3bfda7cb5cad691e9e7"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>This class implements the CLI interpreter. </p>
 </div><h2 class="groupheader">Member Function Documentation</h2>
-<a class="anchor" id="ac3a6d19e1230529b3970e31ca7324373"></a>
+<a class="anchor" id="a64ca2d7604aca3bfda7cb5cad691e9e7"></a>
 <div class="memitem">
 <div class="memproto">
 <table class="mlabels">
   <tr>
   <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">int Thread::Cli::Interpreter::Hex2Bin </td>
+          <td>(</td>
+          <td class="paramtype">const char *&#160;</td>
+          <td class="paramname"><em>aHex</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">uint8_t *&#160;</td>
+          <td class="paramname"><em>aBin</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">uint16_t&#160;</td>
+          <td class="paramname"><em>aBinLength</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>This method converts a hex string to binary. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">aHex</td><td>A pointer to the hex string. </td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">aBin</td><td>A pointer to where the binary representation is placed. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">aBinLength</td><td>Maximum length of the binary representation.</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>The number of bytes in the binary representation. </dd></dl>
+
+<p><div class="dynheader">
+Here is the call graph for this function:</div>
+<div class="dyncontent">
+<div class="center"><img src="../../d5/dc2/structThread_1_1Cli_1_1Interpreter_a64ca2d7604aca3bfda7cb5cad691e9e7_cgraph.png" border="0" usemap="#d5/dc2/structThread_1_1Cli_1_1Interpreter_a64ca2d7604aca3bfda7cb5cad691e9e7_cgraph" alt=""/></div>
+<map name="d5/dc2/structThread_1_1Cli_1_1Interpreter_a64ca2d7604aca3bfda7cb5cad691e9e7_cgraph" id="d5/dc2/structThread_1_1Cli_1_1Interpreter_a64ca2d7604aca3bfda7cb5cad691e9e7_cgraph">
+<area shape="rect" id="node2" href="../../d4/d5c/classThread_1_1Cli_1_1Server.html#a6918e15cdf1736faa7267acef183de74" title="This method delivers formatted output to the client. " alt="" coords="209,5,342,44"/>
+</map>
+</div>
+</p>
+
+<p><div class="dynheader">
+Here is the caller graph for this function:</div>
+<div class="dyncontent">
+<div class="center"><img src="../../d5/dc2/structThread_1_1Cli_1_1Interpreter_a64ca2d7604aca3bfda7cb5cad691e9e7_icgraph.png" border="0" usemap="#d5/dc2/structThread_1_1Cli_1_1Interpreter_a64ca2d7604aca3bfda7cb5cad691e9e7_icgraph" alt=""/></div>
+<map name="d5/dc2/structThread_1_1Cli_1_1Interpreter_a64ca2d7604aca3bfda7cb5cad691e9e7_icgraph" id="d5/dc2/structThread_1_1Cli_1_1Interpreter_a64ca2d7604aca3bfda7cb5cad691e9e7_icgraph">
+<area shape="rect" id="node2" href="../../d5/dc2/structThread_1_1Cli_1_1Interpreter.html#a11ee1f86cffe17aab7de3de0bb16dee7" title="This method parses an ASCII string as an unsigned long. " alt="" coords="397,5,552,44"/>
+<area shape="rect" id="node3" href="../../df/d2d/classThread_1_1Cli_1_1Dataset.html#acda5580472dea133cc225f32d7e90246" title="This method interprets a list of CLI arguments. " alt="" coords="209,33,349,72"/>
+</map>
+</div>
+</p>
+
+</div>
+</div>
+<a class="anchor" id="ab1da78e1c424f644d017962d4ccc4654"></a>
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="../../dc/dbf/openthread-types_8h.html#ab701d053a9c34ab7f11e43e0dc09ac9f">ThreadError</a> Thread::Cli::Interpreter::ParseLong </td>
+          <td>(</td>
+          <td class="paramtype">char *&#160;</td>
+          <td class="paramname"><em>aString</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">long &amp;&#160;</td>
+          <td class="paramname"><em>aLong</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>This method parses an ASCII string as a long. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">aString</td><td>A pointer to the ASCII string. </td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">aLong</td><td>A reference to where the parsed long is placed.</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="retval"><dt>Return values</dt><dd>
+  <table class="retval">
+    <tr><td class="paramname">kThreadError_None</td><td>Successfully parsed the ASCII string. </td></tr>
+    <tr><td class="paramname">kThreadError_Parse</td><td>Could not parse the ASCII string. </td></tr>
+  </table>
+  </dd>
+</dl>
+
+<p><div class="dynheader">
+Here is the caller graph for this function:</div>
+<div class="dyncontent">
+<div class="center"><img src="../../d5/dc2/structThread_1_1Cli_1_1Interpreter_ab1da78e1c424f644d017962d4ccc4654_icgraph.png" border="0" usemap="#d5/dc2/structThread_1_1Cli_1_1Interpreter_ab1da78e1c424f644d017962d4ccc4654_icgraph" alt=""/></div>
+<map name="d5/dc2/structThread_1_1Cli_1_1Interpreter_ab1da78e1c424f644d017962d4ccc4654_icgraph" id="d5/dc2/structThread_1_1Cli_1_1Interpreter_ab1da78e1c424f644d017962d4ccc4654_icgraph">
+<area shape="rect" id="node2" href="../../d5/dc2/structThread_1_1Cli_1_1Interpreter.html#a11ee1f86cffe17aab7de3de0bb16dee7" title="This method parses an ASCII string as an unsigned long. " alt="" coords="412,5,568,44"/>
+<area shape="rect" id="node3" href="../../d5/dc2/structThread_1_1Cli_1_1Interpreter.html#ac3a6d19e1230529b3970e31ca7324373" title="This method interprets a CLI command. " alt="" coords="209,124,364,163"/>
+<area shape="rect" id="node7" href="../../df/d2d/classThread_1_1Cli_1_1Dataset.html#acda5580472dea133cc225f32d7e90246" title="This method interprets a list of CLI arguments. " alt="" coords="217,61,356,100"/>
+<area shape="rect" id="node4" href="../../dd/dce/classThread_1_1Cli_1_1Console.html#ab5454035d54e21e0e780335eddf7ca7d" title="This method sets a callback that is called when console has some output. " alt="" coords="419,68,561,107"/>
+<area shape="rect" id="node5" href="../../db/def/group__uart.html#ga2aec94bad212a6bd72bc82fe310eaca2" title="The UART driver calls this method to notify OpenThread that bytes have been received. " alt="" coords="422,131,558,156"/>
+<area shape="rect" id="node6" href="../../dc/df5/classThread_1_1Cli_1_1Udp.html#ab23c737fe108c24331f40d024d5f446a" title="This method starts the CLI server. " alt="" coords="413,180,567,205"/>
+</map>
+</div>
+</p>
+
+</div>
+</div>
+<a class="anchor" id="a11ee1f86cffe17aab7de3de0bb16dee7"></a>
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="../../dc/dbf/openthread-types_8h.html#ab701d053a9c34ab7f11e43e0dc09ac9f">ThreadError</a> Thread::Cli::Interpreter::ParseUnsignedLong </td>
+          <td>(</td>
+          <td class="paramtype">char *&#160;</td>
+          <td class="paramname"><em>aString</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">unsigned long &amp;&#160;</td>
+          <td class="paramname"><em>aUnsignedLong</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>This method parses an ASCII string as an unsigned long. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">aString</td><td>A pointer to the ASCII string. </td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">aUnsignedLong</td><td>A reference to where the parsed unsigned long is placed.</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="retval"><dt>Return values</dt><dd>
+  <table class="retval">
+    <tr><td class="paramname">kThreadError_None</td><td>Successfully parsed the ASCII string. </td></tr>
+    <tr><td class="paramname">kThreadError_Parse</td><td>Could not parse the ASCII string. </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a class="anchor" id="ac3a6d19e1230529b3970e31ca7324373"></a>
+<div class="memitem">
+<div class="memproto">
       <table class="memname">
         <tr>
           <td class="memname">void Thread::Cli::Interpreter::ProcessLine </td>
@@ -176,11 +377,6 @@ Static Public Member Functions</h2></td></tr>
           <td></td><td></td>
         </tr>
       </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">static</span></span>  </td>
-  </tr>
-</table>
 </div><div class="memdoc">
 
 <p>This method interprets a CLI command. </p>
@@ -194,12 +390,71 @@ Static Public Member Functions</h2></td></tr>
 </dl>
 
 <p><div class="dynheader">
+Here is the call graph for this function:</div>
+<div class="dyncontent">
+<div class="center"><img src="../../d5/dc2/structThread_1_1Cli_1_1Interpreter_ac3a6d19e1230529b3970e31ca7324373_cgraph.png" border="0" usemap="#d5/dc2/structThread_1_1Cli_1_1Interpreter_ac3a6d19e1230529b3970e31ca7324373_cgraph" alt=""/></div>
+<map name="d5/dc2/structThread_1_1Cli_1_1Interpreter_ac3a6d19e1230529b3970e31ca7324373_cgraph" id="d5/dc2/structThread_1_1Cli_1_1Interpreter_ac3a6d19e1230529b3970e31ca7324373_cgraph">
+<area shape="rect" id="node2" href="../../d4/d5c/classThread_1_1Cli_1_1Server.html#a6918e15cdf1736faa7267acef183de74" title="This method delivers formatted output to the client. " alt="" coords="225,697,358,736"/>
+<area shape="rect" id="node3" href="../../df/d4f/group__config-general.html#gab62f7686b9c065cfb269c603155b0b66" title="Update all automatically created IPv6 addresses for prefixes from current Network Data with SLAAC pro..." alt="" coords="237,760,346,785"/>
+<area shape="rect" id="node4" href="../../df/d4f/group__config-general.html#ga5765a8abaaa91408d717814bcb853919" title="Create random IID for given IPv6 address. " alt="" coords="223,809,360,835"/>
+<area shape="rect" id="node5" href="../../dd/d45/openthread_8h.html#a99a9a16995c031b1a4be608b10cceb01" title="Convert a human&#45;readable IPv6 address string into a binary representation. " alt="" coords="209,859,375,884"/>
+<area shape="rect" id="node6" href="../../d5/dc2/structThread_1_1Cli_1_1Interpreter.html#ab1da78e1c424f644d017962d4ccc4654" title="This method parses an ASCII string as a long. " alt="" coords="214,908,369,947"/>
+<area shape="rect" id="node7" href="../../d2/d11/group__udp.html#ga4198c5e5356efec22801439076076a9f" title="Send a Network Diagnostic Get request. " alt="" coords="218,1020,365,1045"/>
+<area shape="rect" id="node49" href="../../d2/d11/group__udp.html#ga6f3d90ff7fcd39b3767b1ebc8eb58e1a" title="Send a Network Diagnostic Reset request. " alt="" coords="211,971,372,996"/>
+<area shape="rect" id="node8" href="../../d3/d8e/classThread_1_1ThreadNetif.html#a51609995a6e04a1aac273e430af4f53f" title="This method returns a pointer to the network diagnostic object. " alt="" coords="480,988,641,1027"/>
+<area shape="rect" id="node9" href="../../d6/d17/classThread_1_1NetworkDiagnostic_1_1NetworkDiagnostic.html#abc624ac04ecaf17b1b738a475e5b0d6a" title="This method sends Diagnostic Get request. " alt="" coords="429,1083,691,1121"/>
+<area shape="rect" id="node10" href="../../dc/d75/classThread_1_1Ip6_1_1UdpSocket.html#aaa9112c22813ceb55338050f0365c598" title="This method opens the UDP socket. " alt="" coords="757,895,919,933"/>
+<area shape="rect" id="node11" href="../../dc/d75/classThread_1_1Ip6_1_1UdpSocket.html#aa07479b557c551452986ff7a0ce20773" title="This method binds the UDP socket. " alt="" coords="757,1020,919,1059"/>
+<area shape="rect" id="node12" href="../../dc/d75/classThread_1_1Ip6_1_1UdpSocket.html#aafb4481c92d1f8515e51cfa822a1bde1" title="This method returns a new UDP message with sufficient header space reserved. " alt="" coords="757,1445,919,1484"/>
+<area shape="rect" id="node13" href="../../dd/d10/group__random.html#gaa20820ca4e6e1ce8cd47ded9762b14ca" title="Get a 32&#45;bit random value. " alt="" coords="774,545,901,571"/>
+<area shape="rect" id="node14" href="../../d0/d7f/classThread_1_1Coap_1_1Header.html#ad221953768fdb61bd62fa1bc3ffd4c89" title="This method initializes the CoAP header. " alt="" coords="761,420,915,459"/>
+<area shape="rect" id="node16" href="../../d0/d7f/classThread_1_1Coap_1_1Header.html#ad4147a19a4e8861f321c8aaaa5db6baa" title="This method sets the Type value. " alt="" coords="761,1145,915,1184"/>
+<area shape="rect" id="node17" href="../../d0/d7f/classThread_1_1Coap_1_1Header.html#a0a2c1cf0ff97aab363e71f716254a736" title="This method sets the Code value. " alt="" coords="761,1208,915,1247"/>
+<area shape="rect" id="node18" href="../../d0/d7f/classThread_1_1Coap_1_1Header.html#a7a374b4bd31694216d9397e1409209a0" title="This method sets the Message ID value. " alt="" coords="761,1271,915,1309"/>
+<area shape="rect" id="node19" href="../../d0/d7f/classThread_1_1Coap_1_1Header.html#a9d8d2a7b438e4a7d27ce3b979b0bb2a0" title="This method sets the Token value and length. " alt="" coords="761,1333,915,1372"/>
+<area shape="rect" id="node20" href="../../d0/d7f/classThread_1_1Coap_1_1Header.html#a1df234ef27c9000081fbbe24e7c97dd6" title="This method appends a Uri&#45;Path option. " alt="" coords="755,957,920,996"/>
+<area shape="rect" id="node22" href="../../d0/d7f/classThread_1_1Coap_1_1Header.html#aecbcbb8b836e0283559b89bd64fbc47f" title="This method terminates the CoAP header. " alt="" coords="761,483,915,521"/>
+<area shape="rect" id="node23" href="../../dc/d3c/classThread_1_1Message.html#a3c3d1c48e940f2553586d16e1618277d" title="This method appends bytes to the end of the message. " alt="" coords="748,595,927,620"/>
+<area shape="rect" id="node24" href="../../d0/d7f/classThread_1_1Coap_1_1Header.html#a5259ece3cbe8e332599f7de4c488ad32" title="This method returns a pointer to the first byte of the header. " alt="" coords="761,644,915,683"/>
+<area shape="rect" id="node25" href="../../d0/d7f/classThread_1_1Coap_1_1Header.html#ae1679d627108d5381dc1ae45d2254299" title="This method returns the header length in bytes. " alt="" coords="761,707,915,745"/>
+<area shape="rect" id="node26" href="../../da/d46/classThread_1_1Ip6_1_1MessageInfo.html#a794b87e17aa877f3551c00aa8c892072" title="This method returns a reference to the peer socket address. " alt="" coords="751,769,924,808"/>
+<area shape="rect" id="node27" href="../../da/d46/classThread_1_1Ip6_1_1MessageInfo.html#a97e94677a677f600a227dd970f4a02e8" title="This method returns a reference to the local socket address. " alt="" coords="988,543,1161,581"/>
+<area shape="rect" id="node28" href="../../df/d94/group__core-mle-core.html#gae4cc6a5939309cfc729293345142a15a" title="This method returns a pointer to the RLOC assigned to the Thread interface. " alt="" coords="746,1083,929,1121"/>
+<area shape="rect" id="node30" href="../../d2/d55/classThread_1_1Ip6_1_1Netif.html#a6c8c4f1757a98e7a45197c97da1ec8b8" title="This method returns the network interface identifier. " alt="" coords="775,832,900,871"/>
+<area shape="rect" id="node31" href="../../dc/d75/classThread_1_1Ip6_1_1UdpSocket.html#ac4fb0ea0ae514fa0edfeaa91dfbdabca" title="This method sends a UDP message. " alt="" coords="757,305,919,344"/>
+<area shape="rect" id="node42" href="../../dc/d3c/classThread_1_1Message.html#adc9d723284f5807d9c272ab89bc52b45" title="This method frees this message buffer. " alt="" coords="758,1396,918,1421"/>
+<area shape="rect" id="node43" href="../../d0/d7f/classThread_1_1Coap_1_1Header.html#a134a9321fd50bc3cc6c2e7a8d313ed23" title="This method parses the CoAP header from a message. " alt="" coords="761,1623,915,1661"/>
+<area shape="rect" id="node44" href="../../d0/d7f/classThread_1_1Coap_1_1Header.html#a552cf5eab882b244b178b8093e8a18e9" title="This method returns the Token length. " alt="" coords="997,1715,1151,1753"/>
+<area shape="rect" id="node45" href="../../d0/d7f/classThread_1_1Coap_1_1Header.html#a0d72d5dcded14ce9da3678a456cb70a8" title="This method returns the Type value. " alt="" coords="761,1685,915,1724"/>
+<area shape="rect" id="node46" href="../../d0/d7f/classThread_1_1Coap_1_1Header.html#a08454fc48790efe33c95be2311e1e6d1" title="This method returns the Code value. " alt="" coords="761,1748,915,1787"/>
+<area shape="rect" id="node47" href="../../d0/d7f/classThread_1_1Coap_1_1Header.html#ad45e8b7c304fce8c896ef531be34e9d6" title="This method returns the Message ID value. " alt="" coords="761,1863,915,1901"/>
+<area shape="rect" id="node48" href="../../d0/d7f/classThread_1_1Coap_1_1Header.html#ad51db46720122c64e67143e10eaf3820" title="This method returns a pointer to the Token value. " alt="" coords="761,1560,915,1599"/>
+<area shape="rect" id="node15" href="../../d0/d7f/classThread_1_1Coap_1_1Header.html#a411c64839fe9cf63ac201f9a6760199c" title="This method sets the Version value. " alt="" coords="997,605,1151,644"/>
+<area shape="rect" id="node21" href="../../d0/d7f/classThread_1_1Coap_1_1Header.html#ac047d4a2285b8315c1f11d66c04994a4" title="This method appends a CoAP option. " alt="" coords="997,957,1151,996"/>
+<area shape="rect" id="node29" href="../../d9/d13/classThread_1_1Ip6_1_1NetifUnicastAddress.html#a2bb426bd29e271bd1fc09b61d1044911" title="This method returns the unicast address. " alt="" coords="990,1083,1159,1121"/>
+<area shape="rect" id="node32" href="../../d9/db1/classThread_1_1Ip6_1_1Address.html#a51cfd76548da9f661a0d7a47a8d5e813" title="This method indicates whether or not the IPv6 address is the Unspecified Address. ..." alt="" coords="1001,55,1147,93"/>
+<area shape="rect" id="node33" href="../../dc/d75/classThread_1_1Ip6_1_1UdpSocket.html#a4c3b5b3798c5a209d94f145dd9f08424" title="This method returns the local socket address. " alt="" coords="993,117,1155,156"/>
+<area shape="rect" id="node34" href="../../d2/d7a/classThread_1_1Ip6_1_1SockAddr.html#a9f92ec4fbccf1d095aa8a43dd882dd2f" title="This method returns a reference to the IPv6 address. " alt="" coords="997,180,1152,219"/>
+<area shape="rect" id="node35" href="../../d7/dd3/classThread_1_1Ip6_1_1UdpHeader.html#a3e48adfe7fb163bd8dd6e6f26cb5dda4" title="This method sets the UDP Source Port. " alt="" coords="992,243,1157,281"/>
+<area shape="rect" id="node36" href="../../d7/dd3/classThread_1_1Ip6_1_1UdpHeader.html#aa6b4ee310b27450ea21696b8a1ab9e36" title="This method sets the UDP Destination Port. " alt="" coords="992,305,1157,344"/>
+<area shape="rect" id="node37" href="../../d7/dd3/classThread_1_1Ip6_1_1UdpHeader.html#a232ac624d1b666065516cd2b7dc5f729" title="This method sets the UDP Length. " alt="" coords="992,368,1157,407"/>
+<area shape="rect" id="node38" href="../../dc/d3c/classThread_1_1Message.html#a2cf440376e834030c38bb2ced4ca49e9" title="This method returns the number of bytes in the message. " alt="" coords="977,1027,1172,1052"/>
+<area shape="rect" id="node39" href="../../d7/dd3/classThread_1_1Ip6_1_1UdpHeader.html#ada31b17064f026a602cac8ce755cffcf" title="This method sets the UDP Checksum. " alt="" coords="992,431,1157,469"/>
+<area shape="rect" id="node40" href="../../dc/d3c/classThread_1_1Message.html#a9c900e4c1ddbb44f1d9c87d10172f63a" title="This method prepends bytes to the front of the message. " alt="" coords="983,493,1166,519"/>
+<area shape="rect" id="node41" href="../../dc/d3c/classThread_1_1Message.html#acaa6ed0d0c060a524cb5da25451acc0d" title="This method sets the byte offset within the message. " alt="" coords="980,5,1168,31"/>
+<area shape="rect" id="node50" href="../../d6/d17/classThread_1_1NetworkDiagnostic_1_1NetworkDiagnostic.html#a0777620633e36db7a9bafe8654019d92" title="This method sends Diagnostic Reset request. " alt="" coords="423,895,698,933"/>
+</map>
+</div>
+</p>
+
+<p><div class="dynheader">
 Here is the caller graph for this function:</div>
 <div class="dyncontent">
 <div class="center"><img src="../../d5/dc2/structThread_1_1Cli_1_1Interpreter_ac3a6d19e1230529b3970e31ca7324373_icgraph.png" border="0" usemap="#d5/dc2/structThread_1_1Cli_1_1Interpreter_ac3a6d19e1230529b3970e31ca7324373_icgraph" alt=""/></div>
 <map name="d5/dc2/structThread_1_1Cli_1_1Interpreter_ac3a6d19e1230529b3970e31ca7324373_icgraph" id="d5/dc2/structThread_1_1Cli_1_1Interpreter_ac3a6d19e1230529b3970e31ca7324373_icgraph">
-<area shape="rect" id="node2" href="../../db/def/group__uart.html#ga2aec94bad212a6bd72bc82fe310eaca2" title="The UART driver calls this method to notify OpenThread that bytes have been received. " alt="" coords="218,5,354,31"/>
-<area shape="rect" id="node3" href="../../dc/df5/classThread_1_1Cli_1_1Udp.html#ab23c737fe108c24331f40d024d5f446a" title="This method starts the CLI server. " alt="" coords="209,55,363,80"/>
+<area shape="rect" id="node2" href="../../dd/dce/classThread_1_1Cli_1_1Console.html#ab5454035d54e21e0e780335eddf7ca7d" title="This method sets a callback that is called when console has some output. " alt="" coords="214,5,357,44"/>
+<area shape="rect" id="node3" href="../../db/def/group__uart.html#ga2aec94bad212a6bd72bc82fe310eaca2" title="The UART driver calls this method to notify OpenThread that bytes have been received. " alt="" coords="218,68,354,93"/>
+<area shape="rect" id="node4" href="../../dc/df5/classThread_1_1Cli_1_1Udp.html#ab23c737fe108c24331f40d024d5f446a" title="This method starts the CLI server. " alt="" coords="209,117,363,143"/>
 </map>
 </div>
 </p>
@@ -216,7 +471,7 @@ Here is the caller graph for this function:</div>
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
     <li class="navelem"><b>Thread</b></li><li class="navelem"><a class="el" href="../../dd/d1d/namespaceThread_1_1Cli.html">Cli</a></li><li class="navelem"><a class="el" href="../../d5/dc2/structThread_1_1Cli_1_1Interpreter.html">Interpreter</a></li>
-    <li class="footer">Generated on Wed Jul 27 2016 17:09:43 for OpenThread by
+    <li class="footer">Generated on Fri Oct 14 2016 08:44:36 for OpenThread by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="../../doxygen.png" alt="doxygen"/></a> 1.8.11 </li>
   </ul>

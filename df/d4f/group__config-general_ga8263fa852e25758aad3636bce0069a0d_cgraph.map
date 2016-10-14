@@ -1,0 +1,51 @@
+<map id="otSetLinkMode" name="otSetLinkMode">
+<area shape="rect" id="node2" href="$d3/d8e/classThread_1_1ThreadNetif.html#ad49d56e324f096d728c0083d9292f52d" title="This method returns a pointer to the mle object. " alt="" coords="205,801,345,839"/>
+<area shape="rect" id="node3" href="$df/d94/group__core-mle-core.html#ga453d94c377c5825a4a5e8b66a728e591" title="This method sets the Device Mode as reported in the Mode TLV. " alt="" coords="164,863,387,889"/>
+<area shape="rect" id="node4" href="$df/d94/group__core-mle-core.html#ga3aa8531c34bed98206a8ce98e8a13a6e" title="This method sets the Device State to Child. " alt="" coords="941,611,1121,650"/>
+<area shape="rect" id="node28" href="$df/d94/group__core-mle-core.html#ga4934863fd1274f1b86dc9bcee8d8682d" title="This method returns the RLOC16 assigned to the Thread interface. " alt="" coords="935,1393,1127,1418"/>
+<area shape="rect" id="node30" href="$df/d94/group__core-mle-core.html#ga09239c621861382d25163980ab5d983b" title="This method generates an MLE Child Update Request message. " alt="" coords="435,1041,625,1079"/>
+<area shape="rect" id="node47" href="$df/d94/group__core-mle-core.html#ga965b4a6e302d906d47e6a72b0e2a1e41" title="This method causes the Thread interface to detach from the Thread network. " alt="" coords="942,769,1120,807"/>
+<area shape="rect" id="node5" href="$d2/d55/classThread_1_1Ip6_1_1Netif.html#a092484addf28568306ab45941abffff4" title="This method schedules notification of aFlags. " alt="" coords="1686,530,1852,569"/>
+<area shape="rect" id="node7" href="$d2/d55/classThread_1_1Ip6_1_1Netif.html#ad00e58b94ab00cc71a5f3a242b7ef42c" title="This method removes a unicast address from the network interface. " alt="" coords="1446,590,1618,629"/>
+<area shape="rect" id="node11" href="$df/d94/group__core-mle-core.html#ga228b07b6cd812413027a0c94d5b4e6f1" title="This method sets the RLOC16 assigned to the Thread interface. " alt="" coords="1182,781,1372,806"/>
+<area shape="rect" id="node14" href="$d2/d55/classThread_1_1Ip6_1_1Netif.html#a9972d917c57200b504d9f2df7eb44974" title="This method returns a reference to the IPv6 network object. " alt="" coords="1470,653,1594,691"/>
+<area shape="rect" id="node16" href="$d1/d40/classThread_1_1Timer.html#a475731e21b59be6b17b24f5b5e175f62" title="This method schedules the timer to fire a dt milliseconds from now. " alt="" coords="1699,1074,1839,1099"/>
+<area shape="rect" id="node17" href="$d1/d40/classThread_1_1Timer.html#a38c2681adb35b234d62b9848f89318b0" title="This static method returns the number of milliseconds given seconds. " alt="" coords="1186,882,1367,907"/>
+<area shape="rect" id="node18" href="$d3/d8e/classThread_1_1ThreadNetif.html#a7325de1ad382ff7d28402f91f48da67c" title="This method returns a pointer to the network data local object. " alt="" coords="1197,603,1356,642"/>
+<area shape="rect" id="node19" href="$d4/d80/group__core-netdata-core.html#gaa8ec766398d8edf196d931889e6e0827" title="This method cancels the data resubmit delay timer. " alt="" coords="1176,218,1377,270"/>
+<area shape="rect" id="node26" href="$d3/d05/classThread_1_1Ip6_1_1Ip6.html#ac54ddaad6442e3858eb21a2e7801aeaf" title="This method enables/disables IPv6 forwarding. " alt="" coords="1427,475,1637,514"/>
+<area shape="rect" id="node27" href="$da/d6e/classThread_1_1AnnounceBeginServer.html#a853e2a87857bb8fd911f04bd95505a70" title="This method begins the MLE Announce transmission process using Count=3 and Period=1s. " alt="" coords="1175,541,1379,579"/>
+<area shape="rect" id="node6" href="$d4/d92/classThread_1_1Tasklet.html#a50a39a6f422851035b89aace87482425" title="This method puts the tasklet on the run queue. " alt="" coords="1901,537,2048,562"/>
+<area shape="rect" id="node8" href="$d9/d13/classThread_1_1Ip6_1_1NetifUnicastAddress.html#ac7f38e1322075b0e6dfc7afc048f7eec" title="This method returns the next unicast address assigned to the interface. " alt="" coords="1685,593,1853,631"/>
+<area shape="rect" id="node9" href="$d9/d13/classThread_1_1Ip6_1_1NetifUnicastAddress.html#a2bb426bd29e271bd1fc09b61d1044911" title="This method returns the unicast address. " alt="" coords="1685,718,1853,757"/>
+<area shape="rect" id="node10" href="$d9/db1/classThread_1_1Ip6_1_1Address.html#a042097e2896ce7eebc1844140c0d2aeb" title="This method indicates whether or not the IPv6 address is a RLOC address. " alt="" coords="1696,655,1842,694"/>
+<area shape="rect" id="node12" href="$d2/d55/classThread_1_1Ip6_1_1Netif.html#ad891ec81750a2f7c4c722d07d7dc2632" title="This method adds a unicast address to the network interface. " alt="" coords="1459,715,1605,754"/>
+<area shape="rect" id="node13" href="$d6/d88/classThread_1_1Mac_1_1Mac.html#ad80edbfa825466831f487f7c57d247c2" title="This method sets the IEEE 802.15.4 Short Address. " alt="" coords="1438,830,1626,869"/>
+<area shape="rect" id="node15" href="$dd/d60/classThread_1_1Ip6_1_1Mpl.html#a4afd5c557ae50db3eb16e47cc40d7053" title="This method sets the MPL Seed value. " alt="" coords="1443,893,1620,918"/>
+<area shape="rect" id="node20" href="$d0/d7f/classThread_1_1Coap_1_1Header.html#a134a9321fd50bc3cc6c2e7a8d313ed23" title="This method parses the CoAP header from a message. " alt="" coords="1455,47,1609,86"/>
+<area shape="rect" id="node21" href="$d0/d7f/classThread_1_1Coap_1_1Header.html#a552cf5eab882b244b178b8093e8a18e9" title="This method returns the Token length. " alt="" coords="1692,19,1846,58"/>
+<area shape="rect" id="node22" href="$d0/d7f/classThread_1_1Coap_1_1Header.html#a0d72d5dcded14ce9da3678a456cb70a8" title="This method returns the Type value. " alt="" coords="1455,350,1609,389"/>
+<area shape="rect" id="node23" href="$d0/d7f/classThread_1_1Coap_1_1Header.html#a08454fc48790efe33c95be2311e1e6d1" title="This method returns the Code value. " alt="" coords="1455,162,1609,201"/>
+<area shape="rect" id="node24" href="$d0/d7f/classThread_1_1Coap_1_1Header.html#ad45e8b7c304fce8c896ef531be34e9d6" title="This method returns the Message ID value. " alt="" coords="1455,225,1609,263"/>
+<area shape="rect" id="node25" href="$d0/d7f/classThread_1_1Coap_1_1Header.html#ad51db46720122c64e67143e10eaf3820" title="This method returns a pointer to the Token value. " alt="" coords="1455,287,1609,326"/>
+<area shape="rect" id="node29" href="$d6/d88/classThread_1_1Mac_1_1Mac.html#ac00b980b5fa6eca48cd29aa7b8ccebe8" title="This method returns the IEEE 802.15.4 Short Address. " alt="" coords="1182,1386,1372,1425"/>
+<area shape="rect" id="node31" href="$dc/d75/classThread_1_1Ip6_1_1UdpSocket.html#aafb4481c92d1f8515e51cfa822a1bde1" title="This method returns a new UDP message with sufficient header space reserved. " alt="" coords="950,881,1112,919"/>
+<area shape="rect" id="node32" href="$dc/d3c/classThread_1_1Message.html#a942818bf261c0af93b793017407c2b2c" title="This method sets whether or not link security is enabled for the message. " alt="" coords="942,1222,1119,1261"/>
+<area shape="rect" id="node33" href="$df/d94/group__core-mle-core.html#gadbe9c0d542453bbe67270fb5dc47db93" title="This method appends an MLE header to a message. " alt="" coords="943,1159,1118,1198"/>
+<area shape="rect" id="node36" href="$df/d94/group__core-mle-core.html#ga5823de0f82c798ac9ef2e2e228e4c0ca" title="This method appends a Mode TLV to a message. " alt="" coords="676,1449,884,1474"/>
+<area shape="rect" id="node37" href="$df/d94/group__core-mle-core.html#gad555ca36631eff9b978e448ecbcf8e2e" title="This method appends an Address Registration TLV to a message. " alt="" coords="1444,413,1619,451"/>
+<area shape="rect" id="node38" href="$dd/d10/group__random.html#gaa20820ca4e6e1ce8cd47ded9762b14ca" title="Get a 32&#45;bit random value. " alt="" coords="967,1285,1094,1310"/>
+<area shape="rect" id="node39" href="$df/d94/group__core-mle-core.html#gabc11a09e2f8d6c841de76c23d0b2885b" title="This method appends a Challenge TLV to a message. " alt="" coords="692,729,867,767"/>
+<area shape="rect" id="node40" href="$df/d94/group__core-mle-core.html#gace3f7519077411e84b40e6c6891122be" title="This method appends a Source Address TLV to a message. " alt="" coords="692,1386,867,1425"/>
+<area shape="rect" id="node41" href="$df/d94/group__core-mle-core.html#ga5887fba704e73e18c9416d7822e8f44d" title="This method appends a Leader Data TLV to a message. " alt="" coords="692,894,867,933"/>
+<area shape="rect" id="node42" href="$df/d94/group__core-mle-core.html#ga1737f37491d03e583b62035208e5f4a9" title="This method appends a Timeout TLV to a message. " alt="" coords="692,957,867,995"/>
+<area shape="rect" id="node43" href="$d9/db1/classThread_1_1Ip6_1_1Address.html#a7e4fe6c422ffbaf30638bbf7065da6fa" title="This method sets the Interface Identifier. " alt="" coords="707,1069,853,1107"/>
+<area shape="rect" id="node44" href="$df/d94/group__core-mle-core.html#ga0ea27201cf13a4e1b0680a9da6c54a64" title="This method submits an MLE message to the UDP socket. " alt="" coords="673,1019,887,1045"/>
+<area shape="rect" id="node45" href="$dd/d1d/classThread_1_1MeshForwarder.html#a969c6fac135cdee3ed9380a0859eaaa8" title="This method sets the Data Poll period. " alt="" coords="949,1097,1113,1135"/>
+<area shape="rect" id="node46" href="$dd/d1d/classThread_1_1MeshForwarder.html#a2343ec6e8df3c5885415fa912889a752" title="This method sets the rx&#45;on&#45;when&#45;idle mode. " alt="" coords="1450,1095,1614,1134"/>
+<area shape="rect" id="node50" href="$dc/d3c/classThread_1_1Message.html#adc9d723284f5807d9c272ab89bc52b45" title="This method frees this message buffer. " alt="" coords="951,831,1111,857"/>
+<area shape="rect" id="node34" href="$df/d94/group__core-mle-core.html#ga816bfec3316a129c70092d63141ecbac" title="This method initializes the MLE header. " alt="" coords="1205,1209,1349,1247"/>
+<area shape="rect" id="node35" href="$df/d94/group__core-mle-core.html#ga31f6d8ae4e3872d7081435a6ba62779f" title="This method sets the Security Suite value. " alt="" coords="1205,1271,1349,1310"/>
+<area shape="rect" id="node48" href="$df/d94/group__core-mle-core.html#gaa5ec48ae440f38d5bf24f9d09ca66c65" title="This method sets the Device State to Detached. " alt="" coords="1187,666,1367,705"/>
+<area shape="rect" id="node49" href="$df/d94/group__core-mle-core.html#gabe6ce4ca7175574ca785eed7f4ab8da2" title="This method causes the Thread interface to attempt an MLE attach. " alt="" coords="1188,931,1366,970"/>
+</map>

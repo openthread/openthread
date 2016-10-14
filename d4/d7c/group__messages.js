@@ -1,7 +1,7 @@
 var group__messages =
 [
     [ "otMessage", "d4/d7c/group__messages.html#ga461fb1347aeb99b1d4aab520915e121e", null ],
-    [ "otAppendMessage", "d4/d7c/group__messages.html#ga1b30be5150534aac975a1d6030f557a4", null ],
+    [ "otAppendMessage", "d4/d7c/group__messages.html#ga45737ce666685e64c2caadaaebe10ac8", null ],
     [ "otFreeMessage", "d4/d7c/group__messages.html#ga538d36d69a14bd432d651e062070bc06", null ],
     [ "otGetMessageLength", "d4/d7c/group__messages.html#gafa9e6e7f3e377bf71b6df9ec9652fb2a", null ],
     [ "otGetMessageOffset", "d4/d7c/group__messages.html#gabf8e9a9bfe727ddd659d8f74cc436d32", null ],

@@ -1,6 +1,0 @@
-<map id="Thread::Timer::IsRunning" name="Thread::Timer::IsRunning">
-<area shape="rect" id="node2" href="$df/d1f/classThread_1_1TimerScheduler.html#a3ec74000b170526ee3d0f1ff0b2881f1" title="This static method returns whether or not the timer instance is already added. " alt="" coords="225,48,390,87"/>
-<area shape="rect" id="node3" href="$dd/db6/group__alarm.html#gaf8829e3591e03e29e136685fcdeb3300" title="Get the current time. " alt="" coords="438,5,576,31"/>
-<area shape="rect" id="node4" href="$dd/db6/group__alarm.html#ga2329a0a170b33c8dbd84e500e05918f4" title="Stop the alarm. " alt="" coords="448,55,566,80"/>
-<area shape="rect" id="node5" href="$dd/db6/group__alarm.html#ga1539c2bf378f1ae03ad2bc1eba70fa8e" title="Set the alarm to fire at aDt milliseconds after aT0. " alt="" coords="442,104,573,129"/>
-</map>

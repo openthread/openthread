@@ -1,18 +1,21 @@
 <map id="Thread::Mle::Mle::Stop" name="Thread::Mle::Mle::Stop">
-<area shape="rect" id="node2" href="$df/d94/group__core-mle-core.html#gaa5ec48ae440f38d5bf24f9d09ca66c65" title="This method sets the Device State to Detached. " alt="" coords="210,151,389,189"/>
-<area shape="rect" id="node13" href="$dc/d75/classThread_1_1Ip6_1_1UdpSocket.html#a2c050c372e20976105003cb8d4d6fc90" title="This method closes the UDP socket. " alt="" coords="218,213,381,252"/>
-<area shape="rect" id="node14" href="$d2/d55/classThread_1_1Ip6_1_1Netif.html#ad00e58b94ab00cc71a5f3a242b7ef42c" title="This method removes a unicast address from the network interface. " alt="" coords="214,276,385,315"/>
-<area shape="rect" id="node3" href="$d2/d55/classThread_1_1Ip6_1_1Netif.html#a092484addf28568306ab45941abffff4" title="This method schedules notification of aFlags. " alt="" coords="440,211,607,249"/>
-<area shape="rect" id="node7" href="$d4/dcf/classThread_1_1AddressResolver.html#af9e813b464854994a8beda21d91c989c" title="This method clears the EID&#45;to&#45;RLOC cache. " alt="" coords="437,96,610,135"/>
-<area shape="rect" id="node8" href="$d1/d40/classThread_1_1Timer.html#a9acdec1cdf4edf947c563d40871f2bc8" title="This method stops the timer. " alt="" coords="683,136,823,161"/>
-<area shape="rect" id="node10" href="$dd/d1d/classThread_1_1MeshForwarder.html#a2343ec6e8df3c5885415fa912889a752" title="This method sets the rx&#45;on&#45;when&#45;idle mode. " alt="" coords="442,33,606,72"/>
-<area shape="rect" id="node4" href="$d4/d92/classThread_1_1Tasklet.html#a50a39a6f422851035b89aace87482425" title="This method puts the tasklet on the run queue. " alt="" coords="680,217,826,243"/>
-<area shape="rect" id="node5" href="$d8/de8/classThread_1_1TaskletScheduler.html#a137292acddf92acdef54cc7a33ea5fac" title="This static method enqueues a tasklet into the run queue. " alt="" coords="896,211,1069,249"/>
-<area shape="rect" id="node6" href="$d1/de3/group__execution.html#ga0d8ce270d8b69230a851ac7b9538ed56" title="OpenThread calls this function when the tasklet queue transitions from empty to non&#45;empty. " alt="" coords="1117,217,1277,243"/>
-<area shape="rect" id="node9" href="$df/d1f/classThread_1_1TimerScheduler.html#a6bcb9ef68dd35e2006c4273e8c58d48b" title="This static method removes a timer instance to the timer scheduler. " alt="" coords="900,129,1065,168"/>
-<area shape="rect" id="node11" href="$d6/d88/classThread_1_1Mac_1_1Mac.html#ab74d0b0b142cadd19e6d2a24d441223f" title="This method sets the rx&#45;on&#45;when&#45;idle mode. " alt="" coords="658,5,848,44"/>
-<area shape="rect" id="node12" href="$d1/d40/classThread_1_1Timer.html#a475731e21b59be6b17b24f5b5e175f62" title="This method schedules the timer to fire a dt milliseconds from now. " alt="" coords="683,68,823,93"/>
-<area shape="rect" id="node15" href="$d9/d13/classThread_1_1Ip6_1_1NetifUnicastAddress.html#ac7f38e1322075b0e6dfc7afc048f7eec" title="This method returns the next unicast address assigned to the interface. " alt="" coords="439,336,608,375"/>
-<area shape="rect" id="node16" href="$d9/d13/classThread_1_1Ip6_1_1NetifUnicastAddress.html#a2bb426bd29e271bd1fc09b61d1044911" title="This method returns the unicast address. " alt="" coords="439,399,608,437"/>
-<area shape="rect" id="node17" href="$d9/db1/classThread_1_1Ip6_1_1Address.html#a042097e2896ce7eebc1844140c0d2aeb" title="This method indicates whether or not the IPv6 address is a RLOC address. " alt="" coords="451,273,597,312"/>
+<area shape="rect" id="node2" href="$d6/d44/classThread_1_1KeyManager.html#a048243a0e7564e607510d2ed60c99b2e" title="This method stops KeyManager timers. " alt="" coords="226,68,373,107"/>
+<area shape="rect" id="node4" href="$df/d94/group__core-mle-core.html#gaa5ec48ae440f38d5bf24f9d09ca66c65" title="This method sets the Device State to Detached. " alt="" coords="210,216,389,255"/>
+<area shape="rect" id="node11" href="$d2/d55/classThread_1_1Ip6_1_1Netif.html#ad00e58b94ab00cc71a5f3a242b7ef42c" title="This method removes a unicast address from the network interface. " alt="" coords="456,393,628,432"/>
+<area shape="rect" id="node3" href="$d1/d40/classThread_1_1Timer.html#a9acdec1cdf4edf947c563d40871f2bc8" title="This method stops the timer. " alt="" coords="720,141,860,167"/>
+<area shape="rect" id="node5" href="$d2/d55/classThread_1_1Ip6_1_1Netif.html#a092484addf28568306ab45941abffff4" title="This method schedules notification of aFlags. " alt="" coords="707,303,873,341"/>
+<area shape="rect" id="node15" href="$d4/dcf/classThread_1_1AddressResolver.html#af9e813b464854994a8beda21d91c989c" title="This method clears the EID&#45;to&#45;RLOC cache. " alt="" coords="456,331,629,369"/>
+<area shape="rect" id="node16" href="$dd/d1d/classThread_1_1MeshForwarder.html#a2343ec6e8df3c5885415fa912889a752" title="This method sets the rx&#45;on&#45;when&#45;idle mode. " alt="" coords="460,216,624,255"/>
+<area shape="rect" id="node19" href="$d2/d55/classThread_1_1Ip6_1_1Netif.html#a9972d917c57200b504d9f2df7eb44974" title="This method returns a reference to the IPv6 network object. " alt="" coords="480,39,604,77"/>
+<area shape="rect" id="node20" href="$d3/d05/classThread_1_1Ip6_1_1Ip6.html#ac54ddaad6442e3858eb21a2e7801aeaf" title="This method enables/disables IPv6 forwarding. " alt="" coords="437,101,647,140"/>
+<area shape="rect" id="node6" href="$d4/d92/classThread_1_1Tasklet.html#a50a39a6f422851035b89aace87482425" title="This method puts the tasklet on the run queue. " alt="" coords="933,309,1080,335"/>
+<area shape="rect" id="node7" href="$d8/de8/classThread_1_1TaskletScheduler.html#a137292acddf92acdef54cc7a33ea5fac" title="This method enqueues a tasklet into the run queue. " alt="" coords="1128,303,1300,341"/>
+<area shape="rect" id="node8" href="$d1/de3/group__execution.html#ga04d5608ac68a78eb3e8fc167587c61f3" title="OpenThread calls this function when the tasklet queue transitions from empty to non&#45;empty. " alt="" coords="1366,253,1526,279"/>
+<area shape="rect" id="node9" href="$d8/de8/classThread_1_1TaskletScheduler.html#aeaf526c316bbea7d53d20fa9e3c94c40" title="This method returns the pointer to the parent Ip6 structure. " alt="" coords="1360,303,1532,341"/>
+<area shape="rect" id="node10" href="$d3/d05/classThread_1_1Ip6_1_1Ip6.html#a624d9508f3ecfa586378a3d802cb6ff7" title="This method returns the pointer to the parent otInstance structure. " alt="" coords="1348,365,1543,391"/>
+<area shape="rect" id="node12" href="$d9/d13/classThread_1_1Ip6_1_1NetifUnicastAddress.html#ac7f38e1322075b0e6dfc7afc048f7eec" title="This method returns the next unicast address assigned to the interface. " alt="" coords="706,428,875,467"/>
+<area shape="rect" id="node13" href="$d9/d13/classThread_1_1Ip6_1_1NetifUnicastAddress.html#a2bb426bd29e271bd1fc09b61d1044911" title="This method returns the unicast address. " alt="" coords="706,491,875,529"/>
+<area shape="rect" id="node14" href="$d9/db1/classThread_1_1Ip6_1_1Address.html#a042097e2896ce7eebc1844140c0d2aeb" title="This method indicates whether or not the IPv6 address is a RLOC address. " alt="" coords="717,365,863,404"/>
+<area shape="rect" id="node17" href="$d6/d88/classThread_1_1Mac_1_1Mac.html#ab74d0b0b142cadd19e6d2a24d441223f" title="This method sets the rx&#45;on&#45;when&#45;idle mode. " alt="" coords="695,240,885,279"/>
+<area shape="rect" id="node18" href="$d1/d40/classThread_1_1Timer.html#a475731e21b59be6b17b24f5b5e175f62" title="This method schedules the timer to fire a dt milliseconds from now. " alt="" coords="720,191,860,216"/>
 </map>

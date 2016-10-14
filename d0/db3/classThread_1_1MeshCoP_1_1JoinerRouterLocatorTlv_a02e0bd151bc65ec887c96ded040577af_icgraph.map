@@ -1,0 +1,4 @@
+<map id="Thread::MeshCoP::JoinerRouterLocatorTlv::GetJoinerRouterLocator" name="Thread::MeshCoP::JoinerRouterLocatorTlv::GetJoinerRouterLocator">
+<area shape="rect" id="node2" href="$dc/d67/classThread_1_1MeshCoP_1_1Commissioner.html#a8639c79f9379e80285fa9f362dbacdd1" title="This method sends MGMT_COMMISSIONER_SET. " alt="" coords="287,5,535,44"/>
+<area shape="rect" id="node3" href="$dc/d67/classThread_1_1MeshCoP_1_1Commissioner.html#a142100561cda243c291e4bc7a4d6511a" title="This method stops the Commissioner service. " alt="" coords="583,5,805,44"/>
+</map>

@@ -1,0 +1,6 @@
+<map id="otSendDiagnosticGet" name="otSendDiagnosticGet">
+<area shape="rect" id="node2" href="$d5/dc2/structThread_1_1Cli_1_1Interpreter.html#ac3a6d19e1230529b3970e31ca7324373" title="This method interprets a CLI command. " alt="" coords="201,61,356,100"/>
+<area shape="rect" id="node3" href="$dd/dce/classThread_1_1Cli_1_1Console.html#ab5454035d54e21e0e780335eddf7ca7d" title="This method sets a callback that is called when console has some output. " alt="" coords="410,5,553,44"/>
+<area shape="rect" id="node4" href="$db/def/group__uart.html#ga2aec94bad212a6bd72bc82fe310eaca2" title="The UART driver calls this method to notify OpenThread that bytes have been received. " alt="" coords="413,68,549,93"/>
+<area shape="rect" id="node5" href="$dc/df5/classThread_1_1Cli_1_1Udp.html#ab23c737fe108c24331f40d024d5f446a" title="This method starts the CLI server. " alt="" coords="404,117,558,143"/>
+</map>

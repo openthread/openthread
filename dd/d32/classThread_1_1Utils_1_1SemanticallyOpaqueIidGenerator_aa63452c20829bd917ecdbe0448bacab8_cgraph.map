@@ -1,0 +1,10 @@
+<map id="Thread::Utils::SemanticallyOpaqueIidGenerator::CreateIid" name="Thread::Utils::SemanticallyOpaqueIidGenerator::CreateIid">
+<area shape="rect" id="node2" href="$d0/dad/classThread_1_1Crypto_1_1Sha256.html#a1669230129da388c39957d064e56cd91" title="This method starts the SHA&#45;256 computation. " alt="" coords="258,5,421,44"/>
+<area shape="rect" id="node3" href="$d0/dad/classThread_1_1Crypto_1_1Sha256.html#ab73cec68935d6ea376a717350fbe82e5" title="This method inputs bytes into the SHA&#45;256 computation. " alt="" coords="258,68,421,107"/>
+<area shape="rect" id="node4" href="$d0/dad/classThread_1_1Crypto_1_1Sha256.html#a1b5e941ab243292a8ca7a63dc012a733" title="This method finalizes the hash computation. " alt="" coords="258,131,421,169"/>
+<area shape="rect" id="node5" href="$d9/db1/classThread_1_1Ip6_1_1Address.html#a88e2c3649cb021b804c74c96355c2b54" title="This method indicates whether or not the IPv6 address contains Reserved IPv6 IID (RFC 5453)..." alt="" coords="267,193,412,232"/>
+<area shape="rect" id="node8" href="$df/d4f/group__config-general.html#gab3fa652eb3f209e062ef21f73a6d110b" title="Get the list of IPv6 addresses assigned to the Thread interface. " alt="" coords="259,259,420,284"/>
+<area shape="rect" id="node6" href="$d9/db1/classThread_1_1Ip6_1_1Address.html#a304f6cee01d4bb854cb3f2a875de2ab5" title="This method indicates whether or not the IPv6 address is Subnet&#45;Router Anycast (RFC 4291)..." alt="" coords="478,131,647,169"/>
+<area shape="rect" id="node7" href="$d9/db1/classThread_1_1Ip6_1_1Address.html#a1190c16fbb7ba372aa8c15ad6018f5aa" title="This method indicates whether or not the IPv6 address is Reserved Subnet Anycast (RFC 2526)..." alt="" coords="469,193,655,232"/>
+<area shape="rect" id="node9" href="$d2/d55/classThread_1_1Ip6_1_1Netif.html#a5cc22cea2bfe4013bc67e03f379eb450" title="This method returns a pointer to the list of unicast addresses. " alt="" coords="483,256,641,295"/>
+</map>

@@ -1,4 +1,3 @@
 <map id="Graphical Class Hierarchy" name="Graphical Class Hierarchy">
-<area shape="rect" id="node1" href="$dd/ddf/classThread_1_1Mle_1_1Mle.html" title="This class implements MLE functionality required by the Thread EndDevices, Router, and Leader roles. " alt="" coords="5,5,127,31"/>
-<area shape="rect" id="node2" href="$df/da5/classThread_1_1Mle_1_1MleRouter.html" title="This class implements MLE functionality required by the Thread Router and Leader roles. " alt="" coords="175,5,336,31"/>
+<area shape="rect" id="node1" href="$d2/dfb/classThread_1_1Ip6_1_1NetifCallback.html" title="This class implements network interface handlers. " alt="" coords="5,5,181,31"/>
 </map>

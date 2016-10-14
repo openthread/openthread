@@ -1,4 +1,6 @@
 <map id="Thread::Ip6::ExtensionHeader::SetNextHeader" name="Thread::Ip6::ExtensionHeader::SetNextHeader">
-<area shape="rect" id="node2" href="$d3/d05/classThread_1_1Ip6_1_1Ip6.html#a628b86a744a2c4cdb44dfb3b4c915b6c" title="This function registers a callback to provide received raw IPv6 datagrams. " alt="" coords="253,5,444,44"/>
-<area shape="rect" id="node3" href="$db/de8/group__ip6.html#ga9eb7ca204eac0191d7f4a2799c95708f" title="This function registers a callback to provide received IPv6 datagrams. " alt="" coords="492,12,720,37"/>
+<area shape="rect" id="node2" href="$d3/d05/classThread_1_1Ip6_1_1Ip6.html#a8a27760878c9ad9932e3f59bc651c826" title="This method sets whether or not Thread control traffic is filtered out when delivering IPv6 datagrams..." alt="" coords="253,5,444,44"/>
+<area shape="rect" id="node3" href="$db/de8/group__ip6.html#ga17d9c1c306a1ad33d12e4a15a09c13d7" title="This function sets whether or not Thread control traffic is filtered out when delivering IPv6 datagra..." alt="" coords="492,5,699,44"/>
+<area shape="rect" id="node4" href="$d9/dc8/classThread_1_1NcpBase.html#ad14f0f1d60c77f7f537a0a441a9fb35c" title="This method is called by the framer whenever a framing error is detected. " alt="" coords="747,5,939,44"/>
+<area shape="rect" id="node5" href="$dc/d60/classThread_1_1NcpUart.html#a34e4ca7aff5b9056593e8ce0aa6e2fbb" title="This method is called when uart received a data buffer. " alt="" coords="987,5,1181,44"/>
 </map>

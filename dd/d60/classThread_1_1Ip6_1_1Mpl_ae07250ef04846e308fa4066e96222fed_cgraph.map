@@ -1,0 +1,9 @@
+<map id="Thread::Ip6::Mpl::InitOption" name="Thread::Ip6::Mpl::InitOption">
+<area shape="rect" id="node2" href="$db/dfd/classThread_1_1Ip6_1_1OptionMpl.html#ab15337033e8873669ad8ac4b3633e57b" title="This method initializes the MPL header. " alt="" coords="247,11,405,49"/>
+<area shape="rect" id="node4" href="$d2/d7c/classThread_1_1Ip6_1_1OptionHeader.html#aaa4be8de89f592ab4aa5a260e43fa083" title="This method sets the IPv6 Option Length value. " alt="" coords="464,68,644,107"/>
+<area shape="rect" id="node5" href="$db/dfd/classThread_1_1Ip6_1_1OptionMpl.html#acd216e486ea81e1d8b598ee544310f7b" title="This method sets the MPL Sequence value. " alt="" coords="247,125,405,164"/>
+<area shape="rect" id="node6" href="$db/dfd/classThread_1_1Ip6_1_1OptionMpl.html#a6d6019b6d89f2377d7537e31fcd2f228" title="This method sets the MPL Seed Length value. " alt="" coords="247,188,405,227"/>
+<area shape="rect" id="node7" href="$d2/d7c/classThread_1_1Ip6_1_1OptionHeader.html#ac284bc7a465a12b3a2ac20927ecda327" title="This method returns the IPv6 Option Length value. " alt="" coords="236,251,416,289"/>
+<area shape="rect" id="node8" href="$db/dfd/classThread_1_1Ip6_1_1OptionMpl.html#a5d5e29c101be9cec717957bb736944db" title="This method sets the MPL Seed value. " alt="" coords="247,313,405,352"/>
+<area shape="rect" id="node3" href="$d2/d7c/classThread_1_1Ip6_1_1OptionHeader.html#ad60561b7bb2228c9636d7d1b6b4e18c2" title="This method sets the IPv6 Option Type value. " alt="" coords="464,5,644,44"/>
+</map>

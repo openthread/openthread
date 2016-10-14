@@ -1,0 +1,4 @@
+<map id="Thread::MessagePool::Free" name="Thread::MessagePool::Free">
+<area shape="rect" id="node2" href="$db/d50/classThread_1_1Buffer.html#a34ab22941ccd9bb222d251a6a18c95bf" title="This method returns a pointer to the next message buffer. " alt="" coords="205,5,403,31"/>
+<area shape="rect" id="node3" href="$db/d50/classThread_1_1Buffer.html#a437ec9ccafa1ef6040a6e8e4fae9c3ca" title="This method sets the pointer to the next message buffer. " alt="" coords="206,55,402,80"/>
+</map>

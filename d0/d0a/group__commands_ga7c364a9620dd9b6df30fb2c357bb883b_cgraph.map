@@ -1,0 +1,4 @@
+<map id="otEnergyScan" name="otEnergyScan">
+<area shape="rect" id="node2" href="$d3/d8e/classThread_1_1ThreadNetif.html#aec59b0e172327889e9b0f4f08b0e69f9" title="This method returns a pointer to the mac object. " alt="" coords="193,5,333,44"/>
+<area shape="rect" id="node3" href="$d6/d88/classThread_1_1Mac_1_1Mac.html#a2e3d342c67dbb8b33de85672f9b2c0e5" title="This function starts an IEEE 802.15.4 Energy Scan. " alt="" coords="158,68,367,93"/>
+</map>

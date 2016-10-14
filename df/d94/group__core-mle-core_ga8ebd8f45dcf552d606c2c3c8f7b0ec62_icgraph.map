@@ -1,0 +1,6 @@
+<map id="Thread::Mle::Mle::UpdateLinkLocalAddress" name="Thread::Mle::Mle::UpdateLinkLocalAddress">
+<area shape="rect" id="node2" href="$d4/db5/classThread_1_1MeshCoP_1_1Joiner.html#a1ca1f767cfe15e7c25b8f65606e7fefb" title="This method starts the Joiner service. " alt="" coords="225,5,398,44"/>
+<area shape="rect" id="node3" href="$d4/db5/classThread_1_1MeshCoP_1_1Joiner.html#a5109c8ea0e2c168c18f729d767e6b999" title="This method stops the Joiner service. " alt="" coords="225,68,398,107"/>
+<area shape="rect" id="node4" href="$df/d4f/group__config-general.html#gaf3245ebddd1200f21fdce21451b8eeda" title="This function sets the IEEE 802.15.4 Extended Address. " alt="" coords="233,131,391,156"/>
+<area shape="rect" id="node5" href="$d5/dc2/structThread_1_1Cli_1_1Interpreter.html#a11ee1f86cffe17aab7de3de0bb16dee7" title="This method parses an ASCII string as an unsigned long. " alt="" coords="446,124,602,163"/>
+</map>

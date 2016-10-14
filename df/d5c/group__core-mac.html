@@ -34,7 +34,7 @@
   <td id="projectlogo"><img alt="Logo" src="../../Open-Thread-Logo-200x42.png"/></td>
   <td style="padding-left: 0.5em;">
    <div id="projectname">
-   &#160;<span id="projectnumber">gb2b10b8</span>
+   &#160;<span id="projectnumber">gddd0704</span>
    </div>
   </td>
  </tr>
@@ -134,6 +134,9 @@ Classes</h2></td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../d6/d88/classThread_1_1Mac_1_1Mac.html">Thread::Mac::Mac</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">This class implements the IEEE 802.15.4 MAC.  <a href="../../d6/d88/classThread_1_1Mac_1_1Mac.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../d4/db9/classThread_1_1Mac_1_1Blacklist.html">Thread::Mac::Blacklist</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">This class implements blacklist filtering on IEEE 802.15.4 frames.  <a href="../../d4/db9/classThread_1_1Mac_1_1Blacklist.html#details">More...</a><br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../d9/d3c/classThread_1_1Mac_1_1ExtAddress.html">Thread::Mac::ExtAddress</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">This structure represents an IEEE 802.15.4 Extended <a class="el" href="../../dd/dcd/structThread_1_1Mac_1_1Address.html" title="This structure represents an IEEE 802.15.4 Short or Extended Address. ">Address</a>.  <a href="../../d9/d3c/classThread_1_1Mac_1_1ExtAddress.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -163,35 +166,35 @@ typedef <a class="el" href="../../dc/dbf/openthread-types_8h.html#a9199b7f0fe13e
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="enum-members"></a>
 Enumerations</h2></td></tr>
-<tr class="memitem:ga39202eb8b74a06a712acb3f950f433cb"><td class="memItemLeft" align="right" valign="top">enum &#160;</td><td class="memItemRight" valign="bottom">{ <br />
-&#160;&#160;<a class="el" href="../../df/d5c/group__core-mac.html#gga39202eb8b74a06a712acb3f950f433cba7b742ca3d8a8f407f6e8deb2fd31272d">Thread::Mac::kMinBE</a> = 3, 
+<tr class="memitem:ga9328de818c75038bfceb68c088f5af35"><td class="memItemLeft" align="right" valign="top">enum &#160;</td><td class="memItemRight" valign="bottom">{ <br />
+&#160;&#160;<a class="el" href="../../df/d5c/group__core-mac.html#gga9328de818c75038bfceb68c088f5af35a7b742ca3d8a8f407f6e8deb2fd31272d">Thread::Mac::kMinBE</a> = 1, 
 <br />
-&#160;&#160;<a class="el" href="../../df/d5c/group__core-mac.html#gga39202eb8b74a06a712acb3f950f433cbad918db6a0e68f1ec04fd5af61d4aef42">Thread::Mac::kMaxBE</a> = 6, 
+&#160;&#160;<a class="el" href="../../df/d5c/group__core-mac.html#gga9328de818c75038bfceb68c088f5af35ad918db6a0e68f1ec04fd5af61d4aef42">Thread::Mac::kMaxBE</a> = 5, 
 <br />
-&#160;&#160;<a class="el" href="../../df/d5c/group__core-mac.html#gga39202eb8b74a06a712acb3f950f433cbafb4c6e06b96ea2c2bc0cfebf2a4f548f">Thread::Mac::kMaxCSMABackoffs</a> = 4, 
+&#160;&#160;<a class="el" href="../../df/d5c/group__core-mac.html#gga9328de818c75038bfceb68c088f5af35afb4c6e06b96ea2c2bc0cfebf2a4f548f">Thread::Mac::kMaxCSMABackoffs</a> = 4, 
 <br />
-&#160;&#160;<a class="el" href="../../df/d5c/group__core-mac.html#gga39202eb8b74a06a712acb3f950f433cba70a03ebf7f572c93f8cbe6f3713599dd">Thread::Mac::kMaxFrameRetries</a> = 15, 
+&#160;&#160;<a class="el" href="../../df/d5c/group__core-mac.html#gga9328de818c75038bfceb68c088f5af35a70a03ebf7f572c93f8cbe6f3713599dd">Thread::Mac::kMaxFrameRetries</a> = 3, 
 <br />
-&#160;&#160;<a class="el" href="../../df/d5c/group__core-mac.html#gga39202eb8b74a06a712acb3f950f433cbac4b5355fb6b791eca7631eb1720efad3">Thread::Mac::kUnitBackoffPeriod</a> = 20, 
+&#160;&#160;<a class="el" href="../../df/d5c/group__core-mac.html#gga9328de818c75038bfceb68c088f5af35ac4b5355fb6b791eca7631eb1720efad3">Thread::Mac::kUnitBackoffPeriod</a> = 20, 
 <br />
-&#160;&#160;<a class="el" href="../../df/d5c/group__core-mac.html#gga39202eb8b74a06a712acb3f950f433cba14804844bbe7312c59ce5dc422c12b24">Thread::Mac::kMinBackoff</a> = 16, 
+&#160;&#160;<a class="el" href="../../df/d5c/group__core-mac.html#gga9328de818c75038bfceb68c088f5af35a14804844bbe7312c59ce5dc422c12b24">Thread::Mac::kMinBackoff</a> = 1, 
 <br />
-&#160;&#160;<a class="el" href="../../df/d5c/group__core-mac.html#gga39202eb8b74a06a712acb3f950f433cba12f1a37f028ef163011bdf6b5b698f19">Thread::Mac::kMaxFrameAttempts</a> = kMaxFrameRetries + 1, 
+&#160;&#160;<a class="el" href="../../df/d5c/group__core-mac.html#gga9328de818c75038bfceb68c088f5af35a12f1a37f028ef163011bdf6b5b698f19">Thread::Mac::kMaxFrameAttempts</a> = kMaxFrameRetries + 1, 
 <br />
-&#160;&#160;<a class="el" href="../../df/d5c/group__core-mac.html#gga39202eb8b74a06a712acb3f950f433cba876248ab724f86ea93bc9be8d5a93086">Thread::Mac::kAckTimeout</a> = 16, 
+&#160;&#160;<a class="el" href="../../df/d5c/group__core-mac.html#gga9328de818c75038bfceb68c088f5af35a876248ab724f86ea93bc9be8d5a93086">Thread::Mac::kAckTimeout</a> = 16, 
 <br />
-&#160;&#160;<a class="el" href="../../df/d5c/group__core-mac.html#gga39202eb8b74a06a712acb3f950f433cba0a52a8eeddd236b34f6e9ac504f3e458">Thread::Mac::kDataPollTimeout</a> = 100, 
+&#160;&#160;<a class="el" href="../../df/d5c/group__core-mac.html#gga9328de818c75038bfceb68c088f5af35a0a52a8eeddd236b34f6e9ac504f3e458">Thread::Mac::kDataPollTimeout</a> = 100, 
 <br />
-&#160;&#160;<a class="el" href="../../df/d5c/group__core-mac.html#gga39202eb8b74a06a712acb3f950f433cbab4ed738476b0ce5ae862adfe2f7713f0">Thread::Mac::kNonceSize</a> = 13, 
+&#160;&#160;<a class="el" href="../../df/d5c/group__core-mac.html#gga9328de818c75038bfceb68c088f5af35ab4ed738476b0ce5ae862adfe2f7713f0">Thread::Mac::kNonceSize</a> = 13, 
 <br />
-&#160;&#160;<a class="el" href="../../df/d5c/group__core-mac.html#gga39202eb8b74a06a712acb3f950f433cbacc3396adb11466301f133308574e7c57">Thread::Mac::kScanChannelsAll</a> = OT_CHANNEL_ALL, 
+&#160;&#160;<a class="el" href="../../df/d5c/group__core-mac.html#gga9328de818c75038bfceb68c088f5af35acc3396adb11466301f133308574e7c57">Thread::Mac::kScanChannelsAll</a> = OT_CHANNEL_ALL, 
 <br />
-&#160;&#160;<a class="el" href="../../df/d5c/group__core-mac.html#gga39202eb8b74a06a712acb3f950f433cbad99d1187189dca9d16adbb17eb14e656">Thread::Mac::kScanDurationDefault</a> = 200
+&#160;&#160;<a class="el" href="../../df/d5c/group__core-mac.html#gga9328de818c75038bfceb68c088f5af35ad99d1187189dca9d16adbb17eb14e656">Thread::Mac::kScanDurationDefault</a> = 200
 <br />
- }<tr class="memdesc:ga39202eb8b74a06a712acb3f950f433cb"><td class="mdescLeft">&#160;</td><td class="mdescRight">Protocol parameters and constants.  <a href="../../df/d5c/group__core-mac.html#ga39202eb8b74a06a712acb3f950f433cb">More...</a><br /></td></tr>
+ }<tr class="memdesc:ga9328de818c75038bfceb68c088f5af35"><td class="mdescLeft">&#160;</td><td class="mdescRight">Protocol parameters and constants.  <a href="../../df/d5c/group__core-mac.html#ga9328de818c75038bfceb68c088f5af35">More...</a><br /></td></tr>
 </td></tr>
-<tr class="separator:ga39202eb8b74a06a712acb3f950f433cb"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:gaadf791522fbf7ab904c0c1ea84e8a530"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="gaadf791522fbf7ab904c0c1ea84e8a530"></a>enum &#160;</td><td class="memItemRight" valign="bottom">{ <br />
+<tr class="separator:ga9328de818c75038bfceb68c088f5af35"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:gac1312e63aebcfa329ac45e9f2b2f2b4f"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="gac1312e63aebcfa329ac45e9f2b2f2b4f"></a>enum &#160;</td><td class="memItemRight" valign="bottom">{ <br />
 &#160;&#160;<b>kShortAddrBroadcast</b> = 0xffff, 
 <br />
 &#160;&#160;<b>kShortAddrInvalid</b> = 0xfffe, 
@@ -199,7 +202,7 @@ Enumerations</h2></td></tr>
 &#160;&#160;<b>kPanIdBroadcast</b> = 0xffff
 <br />
  }</td></tr>
-<tr class="separator:gaadf791522fbf7ab904c0c1ea84e8a530"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="separator:gac1312e63aebcfa329ac45e9f2b2f2b4f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="var-members"></a>
 Variables</h2></td></tr>
@@ -210,7 +213,7 @@ class <a class="el" href="../../dc/dbd/classThread_1_1Mac_1_1Beacon.html">Thread
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <p>This module includes definitions for the IEEE 802.15.4 MAC. </p>
 <h2 class="groupheader">Enumeration Type Documentation</h2>
-<a class="anchor" id="ga39202eb8b74a06a712acb3f950f433cb"></a>
+<a class="anchor" id="ga9328de818c75038bfceb68c088f5af35"></a>
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
@@ -222,40 +225,40 @@ class <a class="el" href="../../dc/dbd/classThread_1_1Mac_1_1Beacon.html">Thread
 
 <p>Protocol parameters and constants. </p>
 <table class="fieldtable">
-<tr><th colspan="2">Enumerator</th></tr><tr><td class="fieldname"><a class="anchor" id="gga39202eb8b74a06a712acb3f950f433cba7b742ca3d8a8f407f6e8deb2fd31272d"></a>kMinBE&#160;</td><td class="fielddoc">
+<tr><th colspan="2">Enumerator</th></tr><tr><td class="fieldname"><a class="anchor" id="gga9328de818c75038bfceb68c088f5af35a7b742ca3d8a8f407f6e8deb2fd31272d"></a>kMinBE&#160;</td><td class="fielddoc">
 <p>macMinBE (IEEE 802.15.4-2006) </p>
 </td></tr>
-<tr><td class="fieldname"><a class="anchor" id="gga39202eb8b74a06a712acb3f950f433cbad918db6a0e68f1ec04fd5af61d4aef42"></a>kMaxBE&#160;</td><td class="fielddoc">
+<tr><td class="fieldname"><a class="anchor" id="gga9328de818c75038bfceb68c088f5af35ad918db6a0e68f1ec04fd5af61d4aef42"></a>kMaxBE&#160;</td><td class="fielddoc">
 <p>macMaxBE (IEEE 802.15.4-2006) </p>
 </td></tr>
-<tr><td class="fieldname"><a class="anchor" id="gga39202eb8b74a06a712acb3f950f433cbafb4c6e06b96ea2c2bc0cfebf2a4f548f"></a>kMaxCSMABackoffs&#160;</td><td class="fielddoc">
+<tr><td class="fieldname"><a class="anchor" id="gga9328de818c75038bfceb68c088f5af35afb4c6e06b96ea2c2bc0cfebf2a4f548f"></a>kMaxCSMABackoffs&#160;</td><td class="fielddoc">
 <p>macMaxCSMABackoffs (IEEE 802.15.4-2006) </p>
 </td></tr>
-<tr><td class="fieldname"><a class="anchor" id="gga39202eb8b74a06a712acb3f950f433cba70a03ebf7f572c93f8cbe6f3713599dd"></a>kMaxFrameRetries&#160;</td><td class="fielddoc">
+<tr><td class="fieldname"><a class="anchor" id="gga9328de818c75038bfceb68c088f5af35a70a03ebf7f572c93f8cbe6f3713599dd"></a>kMaxFrameRetries&#160;</td><td class="fielddoc">
 <p>macMaxFrameRetries (IEEE 802.15.4-2006) </p>
 </td></tr>
-<tr><td class="fieldname"><a class="anchor" id="gga39202eb8b74a06a712acb3f950f433cbac4b5355fb6b791eca7631eb1720efad3"></a>kUnitBackoffPeriod&#160;</td><td class="fielddoc">
+<tr><td class="fieldname"><a class="anchor" id="gga9328de818c75038bfceb68c088f5af35ac4b5355fb6b791eca7631eb1720efad3"></a>kUnitBackoffPeriod&#160;</td><td class="fielddoc">
 <p>Number of symbols (IEEE 802.15.4-2006) </p>
 </td></tr>
-<tr><td class="fieldname"><a class="anchor" id="gga39202eb8b74a06a712acb3f950f433cba14804844bbe7312c59ce5dc422c12b24"></a>kMinBackoff&#160;</td><td class="fielddoc">
+<tr><td class="fieldname"><a class="anchor" id="gga9328de818c75038bfceb68c088f5af35a14804844bbe7312c59ce5dc422c12b24"></a>kMinBackoff&#160;</td><td class="fielddoc">
 <p>Minimum backoff (milliseconds). </p>
 </td></tr>
-<tr><td class="fieldname"><a class="anchor" id="gga39202eb8b74a06a712acb3f950f433cba12f1a37f028ef163011bdf6b5b698f19"></a>kMaxFrameAttempts&#160;</td><td class="fielddoc">
+<tr><td class="fieldname"><a class="anchor" id="gga9328de818c75038bfceb68c088f5af35a12f1a37f028ef163011bdf6b5b698f19"></a>kMaxFrameAttempts&#160;</td><td class="fielddoc">
 <p>Number of transmission attempts. </p>
 </td></tr>
-<tr><td class="fieldname"><a class="anchor" id="gga39202eb8b74a06a712acb3f950f433cba876248ab724f86ea93bc9be8d5a93086"></a>kAckTimeout&#160;</td><td class="fielddoc">
+<tr><td class="fieldname"><a class="anchor" id="gga9328de818c75038bfceb68c088f5af35a876248ab724f86ea93bc9be8d5a93086"></a>kAckTimeout&#160;</td><td class="fielddoc">
 <p>Timeout for waiting on an ACK (milliseconds). </p>
 </td></tr>
-<tr><td class="fieldname"><a class="anchor" id="gga39202eb8b74a06a712acb3f950f433cba0a52a8eeddd236b34f6e9ac504f3e458"></a>kDataPollTimeout&#160;</td><td class="fielddoc">
+<tr><td class="fieldname"><a class="anchor" id="gga9328de818c75038bfceb68c088f5af35a0a52a8eeddd236b34f6e9ac504f3e458"></a>kDataPollTimeout&#160;</td><td class="fielddoc">
 <p>Timeout for receiving Data <a class="el" href="../../d5/d19/classThread_1_1Mac_1_1Frame.html" title="This class implements IEEE 802.15.4 MAC frame generation and parsing. ">Frame</a> (milliseconds). </p>
 </td></tr>
-<tr><td class="fieldname"><a class="anchor" id="gga39202eb8b74a06a712acb3f950f433cbab4ed738476b0ce5ae862adfe2f7713f0"></a>kNonceSize&#160;</td><td class="fielddoc">
+<tr><td class="fieldname"><a class="anchor" id="gga9328de818c75038bfceb68c088f5af35ab4ed738476b0ce5ae862adfe2f7713f0"></a>kNonceSize&#160;</td><td class="fielddoc">
 <p>Size of IEEE 802.15.4 Nonce (bytes). </p>
 </td></tr>
-<tr><td class="fieldname"><a class="anchor" id="gga39202eb8b74a06a712acb3f950f433cbacc3396adb11466301f133308574e7c57"></a>kScanChannelsAll&#160;</td><td class="fielddoc">
+<tr><td class="fieldname"><a class="anchor" id="gga9328de818c75038bfceb68c088f5af35acc3396adb11466301f133308574e7c57"></a>kScanChannelsAll&#160;</td><td class="fielddoc">
 <p>All channels. </p>
 </td></tr>
-<tr><td class="fieldname"><a class="anchor" id="gga39202eb8b74a06a712acb3f950f433cbad99d1187189dca9d16adbb17eb14e656"></a>kScanDurationDefault&#160;</td><td class="fielddoc">
+<tr><td class="fieldname"><a class="anchor" id="gga9328de818c75038bfceb68c088f5af35ad99d1187189dca9d16adbb17eb14e656"></a>kScanDurationDefault&#160;</td><td class="fielddoc">
 <p>Default interval between channels (milliseconds). </p>
 </td></tr>
 </table>
@@ -267,7 +270,7 @@ class <a class="el" href="../../dc/dbd/classThread_1_1Mac_1_1Beacon.html">Thread
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
-    <li class="footer">Generated on Wed Jul 27 2016 17:09:43 for OpenThread by
+    <li class="footer">Generated on Fri Oct 14 2016 08:44:35 for OpenThread by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="../../doxygen.png" alt="doxygen"/></a> 1.8.11 </li>
   </ul>

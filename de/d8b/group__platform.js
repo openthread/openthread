@@ -1,6 +1,7 @@
 var group__platform =
 [
     [ "Alarm", "dd/db6/group__alarm.html", "dd/db6/group__alarm" ],
+    [ "Diag", "df/d93/group__diag.html", "df/d93/group__diag" ],
     [ "Logging", "d8/dff/group__logging.html", "d8/dff/group__logging" ],
     [ "Radio", "d0/d5b/group__radio.html", "d0/d5b/group__radio" ],
     [ "Random", "dd/d10/group__random.html", "dd/d10/group__random" ],

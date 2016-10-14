@@ -1,0 +1,51 @@
+<map id="otSetChildTimeout" name="otSetChildTimeout">
+<area shape="rect" id="node2" href="$d3/d8e/classThread_1_1ThreadNetif.html#ad49d56e324f096d728c0083d9292f52d" title="This method returns a pointer to the mle object. " alt="" coords="212,1523,352,1561"/>
+<area shape="rect" id="node3" href="$df/d94/group__core-mle-core.html#gafb51db61e6e184d664a9e7cc3833dcf4" title="This method sets the MLE Timeout value. " alt="" coords="184,1585,380,1611"/>
+<area shape="rect" id="node4" href="$df/d94/group__core-mle-core.html#ga09239c621861382d25163980ab5d983b" title="This method generates an MLE Child Update Request message. " alt="" coords="428,1579,619,1617"/>
+<area shape="rect" id="node47" href="$d1/d40/classThread_1_1Timer.html#a475731e21b59be6b17b24f5b5e175f62" title="This method schedules the timer to fire a dt milliseconds from now. " alt="" coords="1219,936,1360,961"/>
+<area shape="rect" id="node48" href="$d1/d40/classThread_1_1Timer.html#a38c2681adb35b234d62b9848f89318b0" title="This static method returns the number of milliseconds given seconds. " alt="" coords="948,2367,1129,2392"/>
+<area shape="rect" id="node5" href="$dc/d75/classThread_1_1Ip6_1_1UdpSocket.html#aafb4481c92d1f8515e51cfa822a1bde1" title="This method returns a new UDP message with sufficient header space reserved. " alt="" coords="958,1712,1120,1751"/>
+<area shape="rect" id="node6" href="$dc/d3c/classThread_1_1Message.html#a942818bf261c0af93b793017407c2b2c" title="This method sets whether or not link security is enabled for the message. " alt="" coords="950,1775,1127,1813"/>
+<area shape="rect" id="node7" href="$df/d94/group__core-mle-core.html#gadbe9c0d542453bbe67270fb5dc47db93" title="This method appends an MLE header to a message. " alt="" coords="951,2241,1126,2280"/>
+<area shape="rect" id="node14" href="$df/d94/group__core-mle-core.html#ga5823de0f82c798ac9ef2e2e228e4c0ca" title="This method appends a Mode TLV to a message. " alt="" coords="670,1387,878,1412"/>
+<area shape="rect" id="node19" href="$df/d94/group__core-mle-core.html#gad555ca36631eff9b978e448ecbcf8e2e" title="This method appends an Address Registration TLV to a message. " alt="" coords="686,477,861,516"/>
+<area shape="rect" id="node31" href="$dd/d10/group__random.html#gaa20820ca4e6e1ce8cd47ded9762b14ca" title="Get a 32&#45;bit random value. " alt="" coords="975,1837,1102,1863"/>
+<area shape="rect" id="node32" href="$df/d94/group__core-mle-core.html#gabc11a09e2f8d6c841de76c23d0b2885b" title="This method appends a Challenge TLV to a message. " alt="" coords="951,1281,1126,1320"/>
+<area shape="rect" id="node33" href="$df/d94/group__core-mle-core.html#gace3f7519077411e84b40e6c6891122be" title="This method appends a Source Address TLV to a message. " alt="" coords="686,1049,861,1088"/>
+<area shape="rect" id="node37" href="$df/d94/group__core-mle-core.html#ga5887fba704e73e18c9416d7822e8f44d" title="This method appends a Leader Data TLV to a message. " alt="" coords="686,1976,861,2015"/>
+<area shape="rect" id="node43" href="$df/d94/group__core-mle-core.html#ga1737f37491d03e583b62035208e5f4a9" title="This method appends a Timeout TLV to a message. " alt="" coords="686,2039,861,2077"/>
+<area shape="rect" id="node44" href="$d9/db1/classThread_1_1Ip6_1_1Address.html#a7e4fe6c422ffbaf30638bbf7065da6fa" title="This method sets the Interface Identifier. " alt="" coords="701,2101,847,2140"/>
+<area shape="rect" id="node45" href="$df/d94/group__core-mle-core.html#ga0ea27201cf13a4e1b0680a9da6c54a64" title="This method submits an MLE message to the UDP socket. " alt="" coords="667,1585,881,1611"/>
+<area shape="rect" id="node46" href="$dd/d1d/classThread_1_1MeshForwarder.html#a969c6fac135cdee3ed9380a0859eaaa8" title="This method sets the Data Poll period. " alt="" coords="956,929,1121,968"/>
+<area shape="rect" id="node49" href="$dd/d1d/classThread_1_1MeshForwarder.html#a2343ec6e8df3c5885415fa912889a752" title="This method sets the rx&#45;on&#45;when&#45;idle mode. " alt="" coords="956,1156,1121,1195"/>
+<area shape="rect" id="node50" href="$dc/d3c/classThread_1_1Message.html#adc9d723284f5807d9c272ab89bc52b45" title="This method frees this message buffer. " alt="" coords="959,1459,1119,1484"/>
+<area shape="rect" id="node8" href="$df/d94/group__core-mle-core.html#ga816bfec3316a129c70092d63141ecbac" title="This method initializes the MLE header. " alt="" coords="1218,2335,1361,2373"/>
+<area shape="rect" id="node9" href="$df/d94/group__core-mle-core.html#ga31f6d8ae4e3872d7081435a6ba62779f" title="This method sets the Security Suite value. " alt="" coords="1218,2147,1361,2185"/>
+<area shape="rect" id="node10" href="$df/d94/group__core-mle-core.html#gab3f74f5cf47286ec13eb63769602648a" title="This method sets the Key ID Mode to 2. " alt="" coords="1218,2209,1361,2248"/>
+<area shape="rect" id="node11" href="$df/d94/group__core-mle-core.html#gacfda331d1a40fd11951bbaa603d9c77a" title="This method sets the Command Type value. " alt="" coords="1218,2272,1361,2311"/>
+<area shape="rect" id="node12" href="$dc/d3c/classThread_1_1Message.html#a3c3d1c48e940f2553586d16e1618277d" title="This method appends bytes to the end of the message. " alt="" coords="1200,1511,1379,1536"/>
+<area shape="rect" id="node13" href="$df/d94/group__core-mle-core.html#ga925735f456674a1aff117ee85e992391" title="This method returns the MLE header and Command Type length. " alt="" coords="1218,1756,1361,1795"/>
+<area shape="rect" id="node15" href="$de/db8/classThread_1_1Mle_1_1ModeTlv.html#af6e0197018dc3873cd76c8352b4a358d" title="This method initializes the TLV. " alt="" coords="963,1219,1114,1257"/>
+<area shape="rect" id="node18" href="$de/db8/classThread_1_1Mle_1_1ModeTlv.html#a8695feb1ffaa91235708fc92982da59a" title="This method sets the Mode value. " alt="" coords="963,1396,1114,1435"/>
+<area shape="rect" id="node16" href="$dc/d39/classThread_1_1Mle_1_1Tlv.html#a20693a0ee15c8eed9d63c29408a3dd21" title="This method sets the Type value. " alt="" coords="1203,1232,1377,1257"/>
+<area shape="rect" id="node17" href="$dc/d39/classThread_1_1Mle_1_1Tlv.html#aa9531efdff2976fbea3881c7c893a1c8" title="This method sets the Length value. " alt="" coords="1197,1285,1382,1311"/>
+<area shape="rect" id="node20" href="$dc/d3c/classThread_1_1Message.html#a2cf440376e834030c38bb2ced4ca49e9" title="This method returns the number of bytes in the message. " alt="" coords="941,705,1136,731"/>
+<area shape="rect" id="node21" href="$d2/d55/classThread_1_1Ip6_1_1Netif.html#a5cc22cea2bfe4013bc67e03f379eb450" title="This method returns a pointer to the list of unicast addresses. " alt="" coords="960,164,1117,203"/>
+<area shape="rect" id="node22" href="$d9/d13/classThread_1_1Ip6_1_1NetifUnicastAddress.html#ac7f38e1322075b0e6dfc7afc048f7eec" title="This method returns the next unicast address assigned to the interface. " alt="" coords="954,227,1123,265"/>
+<area shape="rect" id="node23" href="$d9/d13/classThread_1_1Ip6_1_1NetifUnicastAddress.html#a2bb426bd29e271bd1fc09b61d1044911" title="This method returns the unicast address. " alt="" coords="954,867,1123,905"/>
+<area shape="rect" id="node24" href="$d6/d9b/classThread_1_1NetworkData_1_1Leader.html#aeda6636db45b59e47b41830e19eb3676" title="This method retrieves the 6LoWPAN Context information based on a given IPv6 address. " alt="" coords="965,289,1113,328"/>
+<area shape="rect" id="node25" href="$df/d6c/classThread_1_1Mle_1_1AddressRegistrationEntry.html#acc68cf4111904aca1997c4d99847e733" title="This method sets the Context ID value. " alt="" coords="929,352,1149,391"/>
+<area shape="rect" id="node26" href="$df/d6c/classThread_1_1Mle_1_1AddressRegistrationEntry.html#ad690b0bb8eb77e3850fc6161f3d57a2d" title="This method sets the IID value. " alt="" coords="929,415,1149,453"/>
+<area shape="rect" id="node27" href="$df/d6c/classThread_1_1Mle_1_1AddressRegistrationEntry.html#a5a6b0fd53d79de1ce334f41af004335a" title="This method sets the Uncompressed flag. " alt="" coords="929,477,1149,516"/>
+<area shape="rect" id="node28" href="$df/d6c/classThread_1_1Mle_1_1AddressRegistrationEntry.html#a3421311501c4c047f7d74dff4dbc3beb" title="This method sets the IPv6 Address value. " alt="" coords="929,540,1149,579"/>
+<area shape="rect" id="node29" href="$df/d6c/classThread_1_1Mle_1_1AddressRegistrationEntry.html#a39276c30327ff9905f0dfdf43628ded1" title="This method returns the IPv6 address or IID length. " alt="" coords="929,101,1149,140"/>
+<area shape="rect" id="node30" href="$dc/d3c/classThread_1_1Message.html#add75c76a1fa70eb5d4eb03b68c5d1df8" title="This method writes bytes to the message. " alt="" coords="957,755,1120,780"/>
+<area shape="rect" id="node34" href="$d4/ddb/classThread_1_1Mle_1_1SourceAddressTlv.html#a5e01a70cbbe412b5d2c1caae42598624" title="This method initializes the TLV. " alt="" coords="943,992,1134,1031"/>
+<area shape="rect" id="node35" href="$d4/ddb/classThread_1_1Mle_1_1SourceAddressTlv.html#a468ba63071c52018a43b4f880bf7508d" title="This method sets the RLOC16 value. " alt="" coords="943,804,1134,843"/>
+<area shape="rect" id="node36" href="$df/d94/group__core-mle-core.html#ga4934863fd1274f1b86dc9bcee8d8682d" title="This method returns the RLOC16 assigned to the Thread interface. " alt="" coords="943,1107,1134,1132"/>
+<area shape="rect" id="node38" href="$d5/d64/classThread_1_1Mle_1_1LeaderDataTlv.html#a648b2f7503e27f3b973e9c262e3bc69c" title="This method initializes the TLV. " alt="" coords="945,2012,1132,2051"/>
+<area shape="rect" id="node39" href="$d5/d64/classThread_1_1Mle_1_1LeaderDataTlv.html#ac821c1679a9bd9cea274a39ba49c4a40" title="This method sets the Data Version value. " alt="" coords="945,2304,1132,2343"/>
+<area shape="rect" id="node40" href="$d6/d9b/classThread_1_1NetworkData_1_1Leader.html#a88ab46f99bc237628ebdc4153678ffca" title="This method returns the Thread Network Data version. " alt="" coords="965,1887,1113,1925"/>
+<area shape="rect" id="node41" href="$d5/d64/classThread_1_1Mle_1_1LeaderDataTlv.html#a8d70ab84c9d3b00b0e857ddef0018349" title="This method sets the Stable Data Version value. " alt="" coords="945,2127,1132,2165"/>
+<area shape="rect" id="node42" href="$d6/d9b/classThread_1_1NetworkData_1_1Leader.html#af1d68084596bca7052e15217b2e96ccf" title="This method returns the Thread Network Data stable version. " alt="" coords="948,1949,1129,1988"/>
+</map>

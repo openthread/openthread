@@ -1,0 +1,8 @@
+<map id="Thread::NetworkData::Leader::RemoveBorderRouter" name="Thread::NetworkData::Leader::RemoveBorderRouter">
+<area shape="rect" id="node2" href="$d2/d55/classThread_1_1Ip6_1_1Netif.html#a092484addf28568306ab45941abffff4" title="This method schedules notification of aFlags. " alt="" coords="261,55,427,93"/>
+<area shape="rect" id="node3" href="$d4/d92/classThread_1_1Tasklet.html#a50a39a6f422851035b89aace87482425" title="This method puts the tasklet on the run queue. " alt="" coords="475,61,622,87"/>
+<area shape="rect" id="node4" href="$d8/de8/classThread_1_1TaskletScheduler.html#a137292acddf92acdef54cc7a33ea5fac" title="This method enqueues a tasklet into the run queue. " alt="" coords="670,55,842,93"/>
+<area shape="rect" id="node5" href="$d1/de3/group__execution.html#ga04d5608ac68a78eb3e8fc167587c61f3" title="OpenThread calls this function when the tasklet queue transitions from empty to non&#45;empty. " alt="" coords="908,5,1068,31"/>
+<area shape="rect" id="node6" href="$d8/de8/classThread_1_1TaskletScheduler.html#aeaf526c316bbea7d53d20fa9e3c94c40" title="This method returns the pointer to the parent Ip6 structure. " alt="" coords="902,55,1074,93"/>
+<area shape="rect" id="node7" href="$d3/d05/classThread_1_1Ip6_1_1Ip6.html#a624d9508f3ecfa586378a3d802cb6ff7" title="This method returns the pointer to the parent otInstance structure. " alt="" coords="890,117,1085,143"/>
+</map>

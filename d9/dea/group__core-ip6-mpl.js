@@ -1,7 +1,8 @@
 var group__core_ip6_mpl =
 [
     [ "OptionMpl", "db/dfd/classThread_1_1Ip6_1_1OptionMpl.html", [
-      [ "kType", "db/dfd/classThread_1_1Ip6_1_1OptionMpl.html#a04019136891d78a11510eb0ce6c80a82a30de0ba4d4120e37d1382d9ddbeca310", null ],
+      [ "kType", "db/dfd/classThread_1_1Ip6_1_1OptionMpl.html#a4451420e32f8dc3d8f18a4b18990258aa30de0ba4d4120e37d1382d9ddbeca310", null ],
+      [ "kMinLength", "db/dfd/classThread_1_1Ip6_1_1OptionMpl.html#a4451420e32f8dc3d8f18a4b18990258aa2fb7f8e42ad70ad9c6b707c6866d0232", null ],
       [ "SeedLength", "db/dfd/classThread_1_1Ip6_1_1OptionMpl.html#ac8a0bf83e9a64915259f9f0a832a10ed", [
         [ "kSeedLength0", "db/dfd/classThread_1_1Ip6_1_1OptionMpl.html#ac8a0bf83e9a64915259f9f0a832a10edafe58ebd1c6af25155759487ad2364232", null ],
         [ "kSeedLength2", "db/dfd/classThread_1_1Ip6_1_1OptionMpl.html#ac8a0bf83e9a64915259f9f0a832a10eda70ad54b14fcb27ad76aa8145a31e6039", null ],
@@ -12,6 +13,7 @@ var group__core_ip6_mpl =
       [ "GetSeed", "db/dfd/classThread_1_1Ip6_1_1OptionMpl.html#a57857e25569c36be19669ba214743040", null ],
       [ "GetSeedLength", "db/dfd/classThread_1_1Ip6_1_1OptionMpl.html#a0cbe1e0d63012946621ba84971d940d1", null ],
       [ "GetSequence", "db/dfd/classThread_1_1Ip6_1_1OptionMpl.html#ac60f99926af918684912b585620c33ae", null ],
+      [ "GetTotalLength", "db/dfd/classThread_1_1Ip6_1_1OptionMpl.html#aed85f80a7180aa7e49df4995169da991", null ],
       [ "Init", "db/dfd/classThread_1_1Ip6_1_1OptionMpl.html#ab15337033e8873669ad8ac4b3633e57b", null ],
       [ "IsMaxFlagSet", "db/dfd/classThread_1_1Ip6_1_1OptionMpl.html#a8197a09f4003a637470e6e668e63a5f6", null ],
       [ "SetMaxFlag", "db/dfd/classThread_1_1Ip6_1_1OptionMpl.html#a512d0881f014c02a8bba47dfa8f0355b", null ],
@@ -20,8 +22,11 @@ var group__core_ip6_mpl =
       [ "SetSequence", "db/dfd/classThread_1_1Ip6_1_1OptionMpl.html#acd216e486ea81e1d8b598ee544310f7b", null ]
     ] ],
     [ "Mpl", "dd/d60/classThread_1_1Ip6_1_1Mpl.html", [
-      [ "Mpl", "dd/d60/classThread_1_1Ip6_1_1Mpl.html#a4e03c63b8c7adc5470946df600e51df5", null ],
-      [ "InitOption", "dd/d60/classThread_1_1Ip6_1_1Mpl.html#a727b25074aaa92ab630682ccf25dbb2d", null ],
-      [ "ProcessOption", "dd/d60/classThread_1_1Ip6_1_1Mpl.html#a781a12bbd3f79ac534068f085c3d9982", null ]
+      [ "Mpl", "dd/d60/classThread_1_1Ip6_1_1Mpl.html#a55dd8adebcfa647759c9645e264af832", null ],
+      [ "GetSeed", "dd/d60/classThread_1_1Ip6_1_1Mpl.html#a99c8eae7d6348164418adaa68cae27f9", null ],
+      [ "InitOption", "dd/d60/classThread_1_1Ip6_1_1Mpl.html#ae07250ef04846e308fa4066e96222fed", null ],
+      [ "ProcessOption", "dd/d60/classThread_1_1Ip6_1_1Mpl.html#a0a337fec22aa43fcf36038761a6a8900", null ],
+      [ "SetMatchingAddress", "dd/d60/classThread_1_1Ip6_1_1Mpl.html#a75c79b6b35103d0b551485414970b304", null ],
+      [ "SetSeed", "dd/d60/classThread_1_1Ip6_1_1Mpl.html#a4afd5c557ae50db3eb16e47cc40d7053", null ]
     ] ]
 ];

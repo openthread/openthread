@@ -1,5 +1,13 @@
 <map id="Thread::Ip6::UdpSocket::Close" name="Thread::Ip6::UdpSocket::Close">
-<area shape="rect" id="node2" href="$de/d76/classThread_1_1Coap_1_1Server.html#ae3cd8474a329165783b06b5d6f235266" title="This method stops the CoAP server. " alt="" coords="219,5,368,44"/>
-<area shape="rect" id="node4" href="$df/d94/group__core-mle-core.html#gab0d4493caf85385a335ec64e1eb1b70c" title="This method stops the MLE protocol operation. " alt="" coords="215,68,372,93"/>
-<area shape="rect" id="node3" href="$d3/d8e/classThread_1_1ThreadNetif.html#a1a24f802ede854243223bcae3b7cb5ad" title="This method disables the Thread network interface. " alt="" coords="420,33,560,72"/>
+<area shape="rect" id="node2" href="$de/d76/classThread_1_1Coap_1_1Server.html#ae3cd8474a329165783b06b5d6f235266" title="This method stops the CoAP server. " alt="" coords="252,5,401,44"/>
+<area shape="rect" id="node9" href="$dc/d67/classThread_1_1MeshCoP_1_1Commissioner.html#a33ab4a2ed05cecac714108bcea316643" title="This method returns the Commissioner Session ID. " alt="" coords="215,68,438,107"/>
+<area shape="rect" id="node10" href="$d4/db5/classThread_1_1MeshCoP_1_1Joiner.html#a5109c8ea0e2c168c18f729d767e6b999" title="This method stops the Joiner service. " alt="" coords="240,131,413,169"/>
+<area shape="rect" id="node11" href="$dd/d9d/classThread_1_1MeshCoP_1_1JoinerRouter.html#a5479381c182fcb3e0135c2c75fc2c96e" title="This constructor initializes the Joiner Router object. " alt="" coords="220,193,433,232"/>
+<area shape="rect" id="node12" href="$df/d94/group__core-mle-core.html#gac6a8e30097a5712eba62a7fa694c9866" title="This method disables MLE. " alt="" coords="240,256,413,281"/>
+<area shape="rect" id="node3" href="$d3/d8e/classThread_1_1ThreadNetif.html#a1a24f802ede854243223bcae3b7cb5ad" title="This method disables the Thread network interface. " alt="" coords="486,128,626,167"/>
+<area shape="rect" id="node4" href="$d0/d0a/group__commands.html#ga0e2dfd90f079bb52c8bfb406ade88d8a" title="This function brings down the IPv6 interface. " alt="" coords="674,135,793,160"/>
+<area shape="rect" id="node5" href="$d5/dc2/structThread_1_1Cli_1_1Interpreter.html#a11ee1f86cffe17aab7de3de0bb16dee7" title="This method parses an ASCII string as an unsigned long. " alt="" coords="859,72,1014,111"/>
+<area shape="rect" id="node6" href="$d0/d0a/group__commands.html#gaab0dc090f71b80671ff3dad620314b43" title="This function disables the OpenThread library. " alt="" coords="872,135,1001,160"/>
+<area shape="rect" id="node7" href="$d9/dc8/classThread_1_1NcpBase.html#ad14f0f1d60c77f7f537a0a441a9fb35c" title="This method is called by the framer whenever a framing error is detected. " alt="" coords="841,184,1032,223"/>
+<area shape="rect" id="node8" href="$dc/d60/classThread_1_1NcpUart.html#a34e4ca7aff5b9056593e8ce0aa6e2fbb" title="This method is called when uart received a data buffer. " alt="" coords="1080,184,1275,223"/>
 </map>

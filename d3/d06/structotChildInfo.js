@@ -1,8 +1,8 @@
 var structotChildInfo =
 [
-    [ "mAge", "d3/d06/structotChildInfo.html#a148c33ad24a6d5b23d3dac81ee79c873", null ],
+    [ "mAge", "d3/d06/structotChildInfo.html#a57326b3085bc8b31f4d6190c46fb802b", null ],
     [ "mAverageRssi", "d3/d06/structotChildInfo.html#ae25353bb36836cecf7ad2f0125ffe110", null ],
-    [ "mChildId", "d3/d06/structotChildInfo.html#a9c6120b7a502925c090c9bee19d10a00", null ],
+    [ "mChildId", "d3/d06/structotChildInfo.html#aadda1d2aa5e6dfb24fd28a243e5e9acd", null ],
     [ "mExtAddress", "d3/d06/structotChildInfo.html#afdf7c45d4b4fa14c402e93ec6600ebeb", null ],
     [ "mFullFunction", "d3/d06/structotChildInfo.html#a569d0cf97b20e6ec8b17d806eca108e1", null ],
     [ "mFullNetworkData", "d3/d06/structotChildInfo.html#ab9a16ae35c8e709a8d4fb6c0d1343e75", null ],

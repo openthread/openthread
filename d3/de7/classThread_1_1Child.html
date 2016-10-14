@@ -34,7 +34,7 @@
   <td id="projectlogo"><img alt="Logo" src="../../Open-Thread-Logo-200x42.png"/></td>
   <td style="padding-left: 0.5em;">
    <div id="projectname">
-   &#160;<span id="projectnumber">gb2b10b8</span>
+   &#160;<span id="projectnumber">gddd0704</span>
    </div>
   </td>
  </tr>
@@ -146,9 +146,9 @@ Collaboration diagram for Thread::Child:</div>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-types"></a>
 Public Types</h2></td></tr>
-<tr class="memitem:ac49e032706c5882eff57941d92308043"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ac49e032706c5882eff57941d92308043"></a>enum &#160;</td><td class="memItemRight" valign="bottom">{ <b>kMaxIp6AddressPerChild</b> = OPENTHREAD_CONFIG_IP_ADDRS_PER_CHILD
+<tr class="memitem:a60a3111ce232fc4a7e6ca645f18984e8"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a60a3111ce232fc4a7e6ca645f18984e8"></a>enum &#160;</td><td class="memItemRight" valign="bottom">{ <b>kMaxIp6AddressPerChild</b> = OPENTHREAD_CONFIG_IP_ADDRS_PER_CHILD
  }</td></tr>
-<tr class="separator:ac49e032706c5882eff57941d92308043"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="separator:a60a3111ce232fc4a7e6ca645f18984e8"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="inherit_header pub_types_classThread_1_1Neighbor"><td colspan="2" onclick="javascript:toggleInherit('pub_types_classThread_1_1Neighbor')"><img src="../../closed.png" alt="-"/>&#160;Public Types inherited from <a class="el" href="../../da/dd9/classThread_1_1Neighbor.html">Thread::Neighbor</a></td></tr>
 <tr class="memitem:ab01d7958f449ab7d7f163f00110e80cd inherit pub_types_classThread_1_1Neighbor"><td class="memItemLeft" align="right" valign="top">enum &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../da/dd9/classThread_1_1Neighbor.html#ab01d7958f449ab7d7f163f00110e80cd">State</a> { <br />
 &#160;&#160;<a class="el" href="../../da/dd9/classThread_1_1Neighbor.html#ab01d7958f449ab7d7f163f00110e80cda5e2e9154102031460ff8957e065df50d">kStateInvalid</a>, 
@@ -179,14 +179,26 @@ uint32_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="
 uint16_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../d3/de7/classThread_1_1Child.html#ae4e2105e933582a4882d85f60f75d652">mFragmentOffset</a></td></tr>
 <tr class="memdesc:ae4e2105e933582a4882d85f60f75d652"><td class="mdescLeft">&#160;</td><td class="mdescRight">6LoWPAN fragment offset <br /></td></tr>
 <tr class="separator:ae4e2105e933582a4882d85f60f75d652"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:adae58e8115ed198699f68fbdea4c4a1d"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="adae58e8115ed198699f68fbdea4c4a1d"></a>
-uint8_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../d3/de7/classThread_1_1Child.html#adae58e8115ed198699f68fbdea4c4a1d">mRequestTlvs</a> [4]</td></tr>
-<tr class="memdesc:adae58e8115ed198699f68fbdea4c4a1d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Requested MLE TLVs. <br /></td></tr>
-<tr class="separator:adae58e8115ed198699f68fbdea4c4a1d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9d4eca3c560d00d63ec4ef341de94a58"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a9d4eca3c560d00d63ec4ef341de94a58"></a>
+uint8_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../d3/de7/classThread_1_1Child.html#a9d4eca3c560d00d63ec4ef341de94a58">mRequestTlvs</a> [7]</td></tr>
+<tr class="memdesc:a9d4eca3c560d00d63ec4ef341de94a58"><td class="mdescLeft">&#160;</td><td class="mdescRight">Requested MLE TLVs. <br /></td></tr>
+<tr class="separator:a9d4eca3c560d00d63ec4ef341de94a58"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a9fbb910c8dd6654d97bcc29193ad4af7"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a9fbb910c8dd6654d97bcc29193ad4af7"></a>
 uint8_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../d3/de7/classThread_1_1Child.html#a9fbb910c8dd6654d97bcc29193ad4af7">mNetworkDataVersion</a></td></tr>
 <tr class="memdesc:a9fbb910c8dd6654d97bcc29193ad4af7"><td class="mdescLeft">&#160;</td><td class="mdescRight">Current Network Data version. <br /></td></tr>
 <tr class="separator:a9fbb910c8dd6654d97bcc29193ad4af7"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae990e98b6b222966465ac89266cb1146"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ae990e98b6b222966465ac89266cb1146"></a>
+uint16_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../d3/de7/classThread_1_1Child.html#ae990e98b6b222966465ac89266cb1146">mQueuedIndirectMessageCnt</a></td></tr>
+<tr class="memdesc:ae990e98b6b222966465ac89266cb1146"><td class="mdescLeft">&#160;</td><td class="mdescRight">Count of queued messages. <br /></td></tr>
+<tr class="separator:ae990e98b6b222966465ac89266cb1146"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a969e6c8148a6c76e30e1f33a7c79ab38"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a969e6c8148a6c76e30e1f33a7c79ab38"></a>
+bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../d3/de7/classThread_1_1Child.html#a969e6c8148a6c76e30e1f33a7c79ab38">mAddSrcMatchEntryShort</a></td></tr>
+<tr class="memdesc:a969e6c8148a6c76e30e1f33a7c79ab38"><td class="mdescLeft">&#160;</td><td class="mdescRight">Indicates whether or not to force add short address. <br /></td></tr>
+<tr class="separator:a969e6c8148a6c76e30e1f33a7c79ab38"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a037eb024c680f287cfd77b28f2473cf9"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a037eb024c680f287cfd77b28f2473cf9"></a>
+bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../d3/de7/classThread_1_1Child.html#a037eb024c680f287cfd77b28f2473cf9">mAddSrcMatchEntryPending</a></td></tr>
+<tr class="memdesc:a037eb024c680f287cfd77b28f2473cf9"><td class="mdescLeft">&#160;</td><td class="mdescRight">Indicates whether or not pending to add. <br /></td></tr>
+<tr class="separator:a037eb024c680f287cfd77b28f2473cf9"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="inherit_header pub_attribs_classThread_1_1Neighbor"><td colspan="2" onclick="javascript:toggleInherit('pub_attribs_classThread_1_1Neighbor')"><img src="../../closed.png" alt="-"/>&#160;Public Attributes inherited from <a class="el" href="../../da/dd9/classThread_1_1Neighbor.html">Thread::Neighbor</a></td></tr>
 <tr class="memitem:ae0cee06d43705fd3d4c8dfc4776c4f8c inherit pub_attribs_classThread_1_1Neighbor"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ae0cee06d43705fd3d4c8dfc4776c4f8c"></a>
 <a class="el" href="../../d9/d3c/classThread_1_1Mac_1_1ExtAddress.html">Mac::ExtAddress</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../da/dd9/classThread_1_1Neighbor.html#ae0cee06d43705fd3d4c8dfc4776c4f8c">mMacAddr</a></td></tr>
@@ -196,38 +208,38 @@ uint8_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href=".
 uint32_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../da/dd9/classThread_1_1Neighbor.html#a196092c07e8f54b8e92fbb70ef199203">mLastHeard</a></td></tr>
 <tr class="memdesc:a196092c07e8f54b8e92fbb70ef199203 inherit pub_attribs_classThread_1_1Neighbor"><td class="mdescLeft">&#160;</td><td class="mdescRight">Time when last heard. <br /></td></tr>
 <tr class="separator:a196092c07e8f54b8e92fbb70ef199203 inherit pub_attribs_classThread_1_1Neighbor"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a3613300bbb26b82743a051fd70f283f1 inherit pub_attribs_classThread_1_1Neighbor"><td class="memItemLeft" ><a class="anchor" id="a3613300bbb26b82743a051fd70f283f1"></a>
+<tr class="memitem:a7adaeae9dfceae4142381ae6bc6a326f inherit pub_attribs_classThread_1_1Neighbor"><td class="memItemLeft" ><a class="anchor" id="a7adaeae9dfceae4142381ae6bc6a326f"></a>
 union {</td></tr>
-<tr class="memitem:aab38643b7eb0b6e9ca36fce74c4fb596 inherit pub_attribs_classThread_1_1Neighbor"><td class="memItemLeft" >
+<tr class="memitem:aa48f157781fa5056793747c853a2ce7e inherit pub_attribs_classThread_1_1Neighbor"><td class="memItemLeft" >
 &#160;&#160;&#160;struct {</td></tr>
-<tr class="memitem:a9ce0667b5ad42c936fae0538e5ca50e4 inherit pub_attribs_classThread_1_1Neighbor"><td class="memItemLeft" >
+<tr class="memitem:a7f6628f59d9c95c3663bcb2fefaf90a5 inherit pub_attribs_classThread_1_1Neighbor"><td class="memItemLeft" >
 &#160;&#160;&#160;&#160;&#160;&#160;uint32_t&#160;&#160;&#160;<a class="el" href="../../da/dd9/classThread_1_1Neighbor.html#a25e063d8cb2a052425f9a7c529de4b22">mLinkFrameCounter</a></td></tr>
-<tr class="memdesc:a9ce0667b5ad42c936fae0538e5ca50e4 inherit pub_attribs_classThread_1_1Neighbor"><td class="mdescLeft">&#160;</td><td class="mdescRight">The Link Frame Counter. <br /></td></tr>
-<tr class="separator:a9ce0667b5ad42c936fae0538e5ca50e4 inherit pub_attribs_classThread_1_1Neighbor"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a7a47cc2e28baeae3d0af837269618d4b inherit pub_attribs_classThread_1_1Neighbor"><td class="memItemLeft" >
+<tr class="memdesc:a7f6628f59d9c95c3663bcb2fefaf90a5 inherit pub_attribs_classThread_1_1Neighbor"><td class="mdescLeft">&#160;</td><td class="mdescRight">The Link Frame Counter. <br /></td></tr>
+<tr class="separator:a7f6628f59d9c95c3663bcb2fefaf90a5 inherit pub_attribs_classThread_1_1Neighbor"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac05e6a9065a8001dcc1e31c5e9c5f9ae inherit pub_attribs_classThread_1_1Neighbor"><td class="memItemLeft" >
 &#160;&#160;&#160;&#160;&#160;&#160;uint32_t&#160;&#160;&#160;<a class="el" href="../../da/dd9/classThread_1_1Neighbor.html#a85277f348f381529be7cc5702848a9b9">mMleFrameCounter</a></td></tr>
-<tr class="memdesc:a7a47cc2e28baeae3d0af837269618d4b inherit pub_attribs_classThread_1_1Neighbor"><td class="mdescLeft">&#160;</td><td class="mdescRight">The MLE Frame Counter. <br /></td></tr>
-<tr class="separator:a7a47cc2e28baeae3d0af837269618d4b inherit pub_attribs_classThread_1_1Neighbor"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a76ce8e163b0f31a726fb16377c1171b3 inherit pub_attribs_classThread_1_1Neighbor"><td class="memItemLeft" >
+<tr class="memdesc:ac05e6a9065a8001dcc1e31c5e9c5f9ae inherit pub_attribs_classThread_1_1Neighbor"><td class="mdescLeft">&#160;</td><td class="mdescRight">The MLE Frame Counter. <br /></td></tr>
+<tr class="separator:ac05e6a9065a8001dcc1e31c5e9c5f9ae inherit pub_attribs_classThread_1_1Neighbor"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a4e82d36cd172c713007621f05f96532d inherit pub_attribs_classThread_1_1Neighbor"><td class="memItemLeft" >
 &#160;&#160;&#160;&#160;&#160;&#160;uint16_t&#160;&#160;&#160;<a class="el" href="../../da/dd9/classThread_1_1Neighbor.html#a92dd82c88583d2e0a8a17ed3751560dc">mRloc16</a></td></tr>
-<tr class="memdesc:a76ce8e163b0f31a726fb16377c1171b3 inherit pub_attribs_classThread_1_1Neighbor"><td class="mdescLeft">&#160;</td><td class="mdescRight">The RLOC16. <br /></td></tr>
-<tr class="separator:a76ce8e163b0f31a726fb16377c1171b3 inherit pub_attribs_classThread_1_1Neighbor"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aab38643b7eb0b6e9ca36fce74c4fb596 inherit pub_attribs_classThread_1_1Neighbor"><td class="memItemLeft" valign="top">&#160;&#160;&#160;}&#160;&#160;&#160;<b>mValid</b></td></tr>
-<tr class="separator:aab38643b7eb0b6e9ca36fce74c4fb596 inherit pub_attribs_classThread_1_1Neighbor"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a8c925aa4066808aad9143ce30981cabf inherit pub_attribs_classThread_1_1Neighbor"><td class="memItemLeft" >
+<tr class="memdesc:a4e82d36cd172c713007621f05f96532d inherit pub_attribs_classThread_1_1Neighbor"><td class="mdescLeft">&#160;</td><td class="mdescRight">The RLOC16. <br /></td></tr>
+<tr class="separator:a4e82d36cd172c713007621f05f96532d inherit pub_attribs_classThread_1_1Neighbor"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa48f157781fa5056793747c853a2ce7e inherit pub_attribs_classThread_1_1Neighbor"><td class="memItemLeft" valign="top">&#160;&#160;&#160;}&#160;&#160;&#160;<b>mValid</b></td></tr>
+<tr class="separator:aa48f157781fa5056793747c853a2ce7e inherit pub_attribs_classThread_1_1Neighbor"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a99d25055059bd0f36a06625cc8287ea9 inherit pub_attribs_classThread_1_1Neighbor"><td class="memItemLeft" >
 &#160;&#160;&#160;struct {</td></tr>
-<tr class="memitem:a1409c9d00e7e247f8a43d350a788b249 inherit pub_attribs_classThread_1_1Neighbor"><td class="memItemLeft" >
-&#160;&#160;&#160;&#160;&#160;&#160;uint8_t&#160;&#160;&#160;<a class="el" href="../../da/dd9/classThread_1_1Neighbor.html#ab92902c95b78e4b742966cef84ab9350">mChallenge</a> [<a class="el" href="../../da/d3f/classThread_1_1Mle_1_1ChallengeTlv.html#ac0fad07e376d25613d8388d7925f34e8a8735abacfa1e0b26c8f5bc0bd1c4cbca">Mle::ChallengeTlv::kMaxSize</a>]</td></tr>
-<tr class="memdesc:a1409c9d00e7e247f8a43d350a788b249 inherit pub_attribs_classThread_1_1Neighbor"><td class="mdescLeft">&#160;</td><td class="mdescRight">The challenge value. <br /></td></tr>
-<tr class="separator:a1409c9d00e7e247f8a43d350a788b249 inherit pub_attribs_classThread_1_1Neighbor"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a66cbadc4e414436e936b5f8bbecf8cfd inherit pub_attribs_classThread_1_1Neighbor"><td class="memItemLeft" >
+<tr class="memitem:af71e488c3b692edb3ec5becf30c0817c inherit pub_attribs_classThread_1_1Neighbor"><td class="memItemLeft" >
+&#160;&#160;&#160;&#160;&#160;&#160;uint8_t&#160;&#160;&#160;<a class="el" href="../../da/dd9/classThread_1_1Neighbor.html#ab92902c95b78e4b742966cef84ab9350">mChallenge</a> [<a class="el" href="../../da/d3f/classThread_1_1Mle_1_1ChallengeTlv.html#adcab3a1fe8d6eb53f12ea5d767cb1628a8735abacfa1e0b26c8f5bc0bd1c4cbca">Mle::ChallengeTlv::kMaxSize</a>]</td></tr>
+<tr class="memdesc:af71e488c3b692edb3ec5becf30c0817c inherit pub_attribs_classThread_1_1Neighbor"><td class="mdescLeft">&#160;</td><td class="mdescRight">The challenge value. <br /></td></tr>
+<tr class="separator:af71e488c3b692edb3ec5becf30c0817c inherit pub_attribs_classThread_1_1Neighbor"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:abb07c1d93458d6ad2d26770443876587 inherit pub_attribs_classThread_1_1Neighbor"><td class="memItemLeft" >
 &#160;&#160;&#160;&#160;&#160;&#160;uint8_t&#160;&#160;&#160;<a class="el" href="../../da/dd9/classThread_1_1Neighbor.html#a1582bd23b78f413a112c36ad82318810">mChallengeLength</a></td></tr>
-<tr class="memdesc:a66cbadc4e414436e936b5f8bbecf8cfd inherit pub_attribs_classThread_1_1Neighbor"><td class="mdescLeft">&#160;</td><td class="mdescRight">The challenge length. <br /></td></tr>
-<tr class="separator:a66cbadc4e414436e936b5f8bbecf8cfd inherit pub_attribs_classThread_1_1Neighbor"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a8c925aa4066808aad9143ce30981cabf inherit pub_attribs_classThread_1_1Neighbor"><td class="memItemLeft" valign="top">&#160;&#160;&#160;}&#160;&#160;&#160;<b>mPending</b></td></tr>
-<tr class="separator:a8c925aa4066808aad9143ce30981cabf inherit pub_attribs_classThread_1_1Neighbor"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a3613300bbb26b82743a051fd70f283f1 inherit pub_attribs_classThread_1_1Neighbor"><td class="memItemLeft" valign="top">};&#160;</td><td class="memItemRight" valign="bottom"></td></tr>
-<tr class="separator:a3613300bbb26b82743a051fd70f283f1 inherit pub_attribs_classThread_1_1Neighbor"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memdesc:abb07c1d93458d6ad2d26770443876587 inherit pub_attribs_classThread_1_1Neighbor"><td class="mdescLeft">&#160;</td><td class="mdescRight">The challenge length. <br /></td></tr>
+<tr class="separator:abb07c1d93458d6ad2d26770443876587 inherit pub_attribs_classThread_1_1Neighbor"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a99d25055059bd0f36a06625cc8287ea9 inherit pub_attribs_classThread_1_1Neighbor"><td class="memItemLeft" valign="top">&#160;&#160;&#160;}&#160;&#160;&#160;<b>mPending</b></td></tr>
+<tr class="separator:a99d25055059bd0f36a06625cc8287ea9 inherit pub_attribs_classThread_1_1Neighbor"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7adaeae9dfceae4142381ae6bc6a326f inherit pub_attribs_classThread_1_1Neighbor"><td class="memItemLeft" valign="top">};&#160;</td><td class="memItemRight" valign="bottom"></td></tr>
+<tr class="separator:a7adaeae9dfceae4142381ae6bc6a326f inherit pub_attribs_classThread_1_1Neighbor"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a01a8a9f7b7838a01d54251e535a20553 inherit pub_attribs_classThread_1_1Neighbor"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a01a8a9f7b7838a01d54251e535a20553"></a>
 uint32_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../da/dd9/classThread_1_1Neighbor.html#a01a8a9f7b7838a01d54251e535a20553">mKeySequence</a></td></tr>
 <tr class="memdesc:a01a8a9f7b7838a01d54251e535a20553 inherit pub_attribs_classThread_1_1Neighbor"><td class="mdescLeft">&#160;</td><td class="mdescRight">Current key sequence. <br /></td></tr>
@@ -244,6 +256,10 @@ uint8_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href=".
 bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../da/dd9/classThread_1_1Neighbor.html#ae4073f674b4f04c21dbda33ff0906abb">mDataRequest</a>: 1</td></tr>
 <tr class="memdesc:ae4073f674b4f04c21dbda33ff0906abb inherit pub_attribs_classThread_1_1Neighbor"><td class="mdescLeft">&#160;</td><td class="mdescRight">Indicates whether or not a Data Poll was received. <br /></td></tr>
 <tr class="separator:ae4073f674b4f04c21dbda33ff0906abb inherit pub_attribs_classThread_1_1Neighbor"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae30650fda4acc6dafdc9b57992414884 inherit pub_attribs_classThread_1_1Neighbor"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ae30650fda4acc6dafdc9b57992414884"></a>
+uint8_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../da/dd9/classThread_1_1Neighbor.html#ae30650fda4acc6dafdc9b57992414884">mLinkFailures</a></td></tr>
+<tr class="memdesc:ae30650fda4acc6dafdc9b57992414884 inherit pub_attribs_classThread_1_1Neighbor"><td class="mdescLeft">&#160;</td><td class="mdescRight">Consecutive link failure count. <br /></td></tr>
+<tr class="separator:ae30650fda4acc6dafdc9b57992414884 inherit pub_attribs_classThread_1_1Neighbor"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a59cd22765c14d446c332b284642ddfb7 inherit pub_attribs_classThread_1_1Neighbor"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a59cd22765c14d446c332b284642ddfb7"></a>
 <a class="el" href="../../dd/d38/classThread_1_1LinkQualityInfo.html">LinkQualityInfo</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../da/dd9/classThread_1_1Neighbor.html#a59cd22765c14d446c332b284642ddfb7">mLinkInfo</a></td></tr>
 <tr class="memdesc:a59cd22765c14d446c332b284642ddfb7 inherit pub_attribs_classThread_1_1Neighbor"><td class="mdescLeft">&#160;</td><td class="mdescRight">Link quality info (contains average RSS, link margin and link quality) <br /></td></tr>
@@ -260,7 +276,7 @@ bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../.
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
     <li class="navelem"><b>Thread</b></li><li class="navelem"><a class="el" href="../../d3/de7/classThread_1_1Child.html">Child</a></li>
-    <li class="footer">Generated on Wed Jul 27 2016 17:09:43 for OpenThread by
+    <li class="footer">Generated on Fri Oct 14 2016 08:44:35 for OpenThread by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="../../doxygen.png" alt="doxygen"/></a> 1.8.11 </li>
   </ul>

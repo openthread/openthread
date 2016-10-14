@@ -1,0 +1,4 @@
+<map id="Thread::NcpFrameBuffer::InFrameFeedMessage" name="Thread::NcpFrameBuffer::InFrameFeedMessage">
+<area shape="rect" id="node2" href="$d0/d2a/classThread_1_1NcpSpi.html#a9614ae49bf12256c3b0086c55a877142" title="This method adds a message to the current outbound frame being written. " alt="" coords="225,5,405,44"/>
+<area shape="rect" id="node3" href="$dc/d60/classThread_1_1NcpUart.html#a7e2aed732161d738b481849ff1dad610" title="This method adds a message to the current outbound frame being written. " alt="" coords="222,68,408,107"/>
+</map>

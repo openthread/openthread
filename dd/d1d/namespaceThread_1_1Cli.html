@@ -34,7 +34,7 @@
   <td id="projectlogo"><img alt="Logo" src="../../Open-Thread-Logo-200x42.png"/></td>
   <td style="padding-left: 0.5em;">
    <div id="projectname">
-   &#160;<span id="projectnumber">gb2b10b8</span>
+   &#160;<span id="projectnumber">gddd0704</span>
    </div>
   </td>
  </tr>
@@ -124,6 +124,15 @@ Classes</h2></td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../d8/d91/structThread_1_1Cli_1_1Command.html">Command</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">This structure represents a CLI command.  <a href="../../d8/d91/structThread_1_1Cli_1_1Command.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../dd/dce/classThread_1_1Cli_1_1Console.html">Console</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">This class implements the CLI server on top of the CONSOLE platform abstraction.  <a href="../../dd/dce/classThread_1_1Cli_1_1Console.html#details">More...</a><br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../df/d2d/classThread_1_1Cli_1_1Dataset.html">Dataset</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">This class implements the CLI interpreter.  <a href="../../df/d2d/classThread_1_1Cli_1_1Dataset.html#details">More...</a><br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../d7/dbb/structThread_1_1Cli_1_1DatasetCommand.html">DatasetCommand</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">This structure represents a CLI command.  <a href="../../d7/dbb/structThread_1_1Cli_1_1DatasetCommand.html#details">More...</a><br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../d5/dc2/structThread_1_1Cli_1_1Interpreter.html">Interpreter</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">This class implements the CLI interpreter.  <a href="../../d5/dc2/structThread_1_1Cli_1_1Interpreter.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -139,13 +148,21 @@ Classes</h2></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 Functions</h2></td></tr>
+<tr class="memitem:acb96790bfcfb6c611ce66d90b640f8de"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="acb96790bfcfb6c611ce66d90b640f8de"></a>
+static&#160;</td><td class="memItemRight" valign="bottom"><b>otDEFINE_ALIGNED_VAR</b> (sCliConsoleRaw, sizeof(<a class="el" href="../../dd/dce/classThread_1_1Cli_1_1Console.html">Console</a>), uint64_t)</td></tr>
+<tr class="separator:acb96790bfcfb6c611ce66d90b640f8de"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aefc780415258b80e7530e89401b4331c"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../dd/d1d/namespaceThread_1_1Cli.html#aefc780415258b80e7530e89401b4331c">otCliConsoleInit</a> (<a class="el" href="../../d2/d83/structotInstance.html">otInstance</a> *aInstance, <a class="el" href="../../d6/d07/cli-console_8h.html#a1777e383f674ffdc508daca106e4e075">otCliConsoleOutputCallback</a> aCallback, void *aContext)</td></tr>
+<tr class="memdesc:aefc780415258b80e7530e89401b4331c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Initialize the CLI CONSOLE module.  <a href="#aefc780415258b80e7530e89401b4331c">More...</a><br /></td></tr>
+<tr class="separator:aefc780415258b80e7530e89401b4331c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:afa748ea58c0a0198a3dbdea15df84314"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../dd/d1d/namespaceThread_1_1Cli.html#afa748ea58c0a0198a3dbdea15df84314">otCliConsoleInputLine</a> (char *aBuf, uint16_t aBufLength)</td></tr>
+<tr class="memdesc:afa748ea58c0a0198a3dbdea15df84314"><td class="mdescLeft">&#160;</td><td class="mdescRight">This method is called to feed in a console input line.  <a href="#afa748ea58c0a0198a3dbdea15df84314">More...</a><br /></td></tr>
+<tr class="separator:afa748ea58c0a0198a3dbdea15df84314"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a2e7bb03a4252bc03c6716f1b67742726"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a2e7bb03a4252bc03c6716f1b67742726"></a>
 static&#160;</td><td class="memItemRight" valign="bottom"><b>otDEFINE_ALIGNED_VAR</b> (sCliUartRaw, sizeof(<a class="el" href="../../d1/d15/classThread_1_1Cli_1_1Uart.html">Uart</a>), uint64_t)</td></tr>
 <tr class="separator:a2e7bb03a4252bc03c6716f1b67742726"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a16905195b6a33e94cffacc413241b7f2"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a16905195b6a33e94cffacc413241b7f2"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../dd/d1d/namespaceThread_1_1Cli.html#a16905195b6a33e94cffacc413241b7f2">otCliUartInit</a> (void)</td></tr>
-<tr class="memdesc:a16905195b6a33e94cffacc413241b7f2"><td class="mdescLeft">&#160;</td><td class="mdescRight">Initialize the CLI UART module. <br /></td></tr>
-<tr class="separator:a16905195b6a33e94cffacc413241b7f2"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a0afc4597583182249dd08ee3b368f55c"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../dd/d1d/namespaceThread_1_1Cli.html#a0afc4597583182249dd08ee3b368f55c">otCliUartInit</a> (<a class="el" href="../../d2/d83/structotInstance.html">otInstance</a> *aInstance)</td></tr>
+<tr class="memdesc:a0afc4597583182249dd08ee3b368f55c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Initialize the CLI UART module.  <a href="#a0afc4597583182249dd08ee3b368f55c">More...</a><br /></td></tr>
+<tr class="separator:a0afc4597583182249dd08ee3b368f55c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ga2aec94bad212a6bd72bc82fe310eaca2"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../db/def/group__uart.html#ga2aec94bad212a6bd72bc82fe310eaca2">otPlatUartReceived</a> (const uint8_t *aBuf, uint16_t aBufLength)</td></tr>
 <tr class="memdesc:ga2aec94bad212a6bd72bc82fe310eaca2"><td class="mdescLeft">&#160;</td><td class="mdescRight">The UART driver calls this method to notify OpenThread that bytes have been received.  <a href="../../db/def/group__uart.html#ga2aec94bad212a6bd72bc82fe310eaca2">More...</a><br /></td></tr>
 <tr class="separator:ga2aec94bad212a6bd72bc82fe310eaca2"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -156,12 +173,9 @@ void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../.
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="var-members"></a>
 Variables</h2></td></tr>
-<tr class="memitem:a8a03195a6101c7101cc638dd5dab5c69"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a8a03195a6101c7101cc638dd5dab5c69"></a>
-<a class="el" href="../../dc/ddf/classThread_1_1Ip6_1_1IcmpEcho.html">Ip6::IcmpEcho</a> Interpreter::sIcmpEcho &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>HandleEchoResponse</b></td></tr>
-<tr class="separator:a8a03195a6101c7101cc638dd5dab5c69"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ad9487c03fed1aa8bf3a2fd6686808a77"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ad9487c03fed1aa8bf3a2fd6686808a77"></a>
-<a class="el" href="../../d1/d40/classThread_1_1Timer.html">Timer</a> Interpreter::sPingTimer &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>HandlePingTimer</b></td></tr>
-<tr class="separator:ad9487c03fed1aa8bf3a2fd6686808a77"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a989a813407a0841d6d97a924a6f7854a"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a989a813407a0841d6d97a924a6f7854a"></a>
+static <a class="el" href="../../dd/dce/classThread_1_1Cli_1_1Console.html">Console</a> *&#160;</td><td class="memItemRight" valign="bottom"><b>sServer</b></td></tr>
+<tr class="separator:a989a813407a0841d6d97a924a6f7854a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ad7343a01a201a6e082094ec4743751fd"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ad7343a01a201a6e082094ec4743751fd"></a>
 static const char&#160;</td><td class="memItemRight" valign="bottom"><b>sCommandPrompt</b> [] = {'&gt;', ' '}</td></tr>
 <tr class="separator:ad7343a01a201a6e082094ec4743751fd"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -171,19 +185,118 @@ static const char&#160;</td><td class="memItemRight" valign="bottom"><b>sEraseSt
 <tr class="memitem:a38bca1d30af7a74ebc150d7d754e03f8"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a38bca1d30af7a74ebc150d7d754e03f8"></a>
 static const char&#160;</td><td class="memItemRight" valign="bottom"><b>CRNL</b> [] = {'\r', '\n'}</td></tr>
 <tr class="separator:a38bca1d30af7a74ebc150d7d754e03f8"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ae34262ce63642fe87402bf4f8ed5fb51"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ae34262ce63642fe87402bf4f8ed5fb51"></a>
-static <a class="el" href="../../d1/d15/classThread_1_1Cli_1_1Uart.html">Uart</a> *&#160;</td><td class="memItemRight" valign="bottom"><b>sServer</b></td></tr>
-<tr class="separator:ae34262ce63642fe87402bf4f8ed5fb51"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>This namespace contains definitions for the CLI interpreter. </p>
-</div></div><!-- contents -->
+</div><h2 class="groupheader">Function Documentation</h2>
+<a class="anchor" id="aefc780415258b80e7530e89401b4331c"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void Thread::Cli::otCliConsoleInit </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="../../d2/d83/structotInstance.html">otInstance</a> *&#160;</td>
+          <td class="paramname"><em>aInstance</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="../../d6/d07/cli-console_8h.html#a1777e383f674ffdc508daca106e4e075">otCliConsoleOutputCallback</a>&#160;</td>
+          <td class="paramname"><em>aCallback</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">void *&#160;</td>
+          <td class="paramname"><em>aContext</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Initialize the CLI CONSOLE module. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">aInstance</td><td>The OpenThread instance structure. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">aCallback</td><td>A callback method called to process console output. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">aContext</td><td>A user context pointer. </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a class="anchor" id="afa748ea58c0a0198a3dbdea15df84314"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void Thread::Cli::otCliConsoleInputLine </td>
+          <td>(</td>
+          <td class="paramtype">char *&#160;</td>
+          <td class="paramname"><em>aBuf</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">uint16_t&#160;</td>
+          <td class="paramname"><em>aBufLength</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>This method is called to feed in a console input line. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">aBuf</td><td>A pointer to a buffer with an input. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">aBufLength</td><td>A length of the input data stored in the buffer. </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a class="anchor" id="a0afc4597583182249dd08ee3b368f55c"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void Thread::Cli::otCliUartInit </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="../../d2/d83/structotInstance.html">otInstance</a> *&#160;</td>
+          <td class="paramname"><em>aInstance</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Initialize the CLI UART module. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">aInstance</td><td>The OpenThread instance structure. </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+</div><!-- contents -->
 </div><!-- doc-content -->
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
     <li class="navelem"><b>Thread</b></li><li class="navelem"><a class="el" href="../../dd/d1d/namespaceThread_1_1Cli.html">Cli</a></li>
-    <li class="footer">Generated on Wed Jul 27 2016 17:09:43 for OpenThread by
+    <li class="footer">Generated on Fri Oct 14 2016 08:44:36 for OpenThread by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="../../doxygen.png" alt="doxygen"/></a> 1.8.11 </li>
   </ul>

@@ -1,3 +1,4 @@
 <map id="Thread::Mac::Whitelist::GetFixedRssi" name="Thread::Mac::Whitelist::GetFixedRssi">
 <area shape="rect" id="node2" href="$d6/d88/classThread_1_1Mac_1_1Mac.html#a1b58865279aa421b1da0a665a6260e1d" title="This method is called to handle receive events. " alt="" coords="207,5,392,44"/>
+<area shape="rect" id="node3" href="$d7/d9c/group__radio-operation.html#ga75836c10d52472c0dfca98f490c4a5f7" title="The radio driver calls this method to notify OpenThread of a received packet. " alt="" coords="440,12,610,37"/>
 </map>

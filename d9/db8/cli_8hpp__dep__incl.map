@@ -1,5 +1,7 @@
 <map id="src/cli/cli.hpp" name="src/cli/cli.hpp">
 <area shape="rect" id="node2" href="$dd/d48/cli_8cpp.html" title="This file implements the CLI interpreter. " alt="" coords="5,79,102,104"/>
-<area shape="rect" id="node3" href="$db/d13/cli__uart_8cpp.html" title="This file implements the CLI server on the UART service. " alt="" coords="126,79,253,104"/>
-<area shape="rect" id="node4" href="$df/d8a/cli__udp_8cpp.html" title="This file implements the CLI server on a UDP socket. " alt="" coords="277,79,404,104"/>
+<area shape="rect" id="node3" href="$dd/df4/cli__console_8cpp.html" title="This file implements the CLI server on the CONSOLE service. " alt="" coords="127,79,277,104"/>
+<area shape="rect" id="node4" href="$d3/d16/cli__dataset_8cpp.html" title="This file implements the CLI interpreter. " alt="" coords="301,79,449,104"/>
+<area shape="rect" id="node5" href="$db/d13/cli__uart_8cpp.html" title="This file implements the CLI server on the UART service. " alt="" coords="473,79,600,104"/>
+<area shape="rect" id="node6" href="$df/d8a/cli__udp_8cpp.html" title="This file implements the CLI server on a UDP socket. " alt="" coords="624,79,750,104"/>
 </map>

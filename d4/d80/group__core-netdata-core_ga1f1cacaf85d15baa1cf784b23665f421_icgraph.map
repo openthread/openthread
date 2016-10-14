@@ -1,0 +1,12 @@
+<map id="Thread::NetworkData::NetworkData::GetNextOnMeshPrefix" name="Thread::NetworkData::NetworkData::GetNextOnMeshPrefix">
+<area shape="rect" id="node2" href="$df/d4f/group__config-general.html#ga4c11c12b233a8594806eba8588dedcd7" title="This function gets the next On Mesh Prefix in the Network Data. " alt="" coords="1023,35,1188,60"/>
+<area shape="rect" id="node7" href="$d4/d80/group__core-netdata-core.html#ga9e4be52c4b1edb2b456372e07f936e64" title="This method indicates whether or not the Thread Network Data contains all of the on mesh prefix infor..." alt="" coords="266,84,482,136"/>
+<area shape="rect" id="node3" href="$d5/dc2/structThread_1_1Cli_1_1Interpreter.html#a11ee1f86cffe17aab7de3de0bb16dee7" title="This method parses an ASCII string as an unsigned long. " alt="" coords="1255,68,1410,107"/>
+<area shape="rect" id="node4" href="$d5/d79/classThread_1_1Utils_1_1Slaac.html#ae463675ecbed031812b39039534d8532" title="This function update addresses that shall be automatically created using SLAAC. " alt="" coords="1264,5,1402,44"/>
+<area shape="rect" id="node5" href="$d9/dc8/classThread_1_1NcpBase.html#ad14f0f1d60c77f7f537a0a441a9fb35c" title="This method is called by the framer whenever a framing error is detected. " alt="" coords="1237,131,1429,169"/>
+<area shape="rect" id="node6" href="$dc/d60/classThread_1_1NcpUart.html#a34e4ca7aff5b9056593e8ce0aa6e2fbb" title="This method is called when uart received a data buffer. " alt="" coords="1477,131,1671,169"/>
+<area shape="rect" id="node8" href="$dd/dd1/classThread_1_1NetworkData_1_1Local.html#aca96f012e0a75890e6b3e24223b37fea" title="This method removes a Border Router entry from the Thread Network Data. " alt="" coords="530,91,741,129"/>
+<area shape="rect" id="node9" href="$db/da2/group__config-br.html#gae424b85a559043b4ae5a8b1846d68ced" title="Remove an external route configuration from the local network data. " alt="" coords="1022,84,1189,109"/>
+<area shape="rect" id="node10" href="$dd/dd1/classThread_1_1NetworkData_1_1Local.html#abdce87272d09f0d5aa77b8bc3886c950" title="This method adds a Has Route entry to the Thread Network data. " alt="" coords="789,135,974,173"/>
+<area shape="rect" id="node11" href="$db/da2/group__config-br.html#gadb015f3cec5745e5161788d0a2eabb23" title="Add an external route configuration to the local network data. " alt="" coords="1035,137,1176,163"/>
+</map>

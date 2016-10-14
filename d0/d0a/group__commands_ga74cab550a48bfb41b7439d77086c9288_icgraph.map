@@ -1,0 +1,4 @@
+<map id="otIsActiveScanInProgress" name="otIsActiveScanInProgress">
+<area shape="rect" id="node2" href="$d9/dc8/classThread_1_1NcpBase.html#ad14f0f1d60c77f7f537a0a441a9fb35c" title="This method is called by the framer whenever a framing error is detected. " alt="" coords="227,5,419,44"/>
+<area shape="rect" id="node3" href="$dc/d60/classThread_1_1NcpUart.html#a34e4ca7aff5b9056593e8ce0aa6e2fbb" title="This method is called when uart received a data buffer. " alt="" coords="467,5,662,44"/>
+</map>

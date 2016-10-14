@@ -1,0 +1,5 @@
+<map id="otGetRloc16" name="otGetRloc16">
+<area shape="rect" id="node2" href="$d3/d8e/classThread_1_1ThreadNetif.html#ad49d56e324f096d728c0083d9292f52d" title="This method returns a pointer to the mle object. " alt="" coords="174,5,315,44"/>
+<area shape="rect" id="node3" href="$df/d94/group__core-mle-core.html#ga4934863fd1274f1b86dc9bcee8d8682d" title="This method returns the RLOC16 assigned to the Thread interface. " alt="" coords="149,68,341,93"/>
+<area shape="rect" id="node4" href="$d6/d88/classThread_1_1Mac_1_1Mac.html#ac00b980b5fa6eca48cd29aa7b8ccebe8" title="This method returns the IEEE 802.15.4 Short Address. " alt="" coords="389,61,578,100"/>
+</map>

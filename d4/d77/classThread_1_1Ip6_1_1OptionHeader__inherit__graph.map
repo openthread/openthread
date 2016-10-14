@@ -1,3 +1,4 @@
 <map id="Thread::Ip6::OptionHeader" name="Thread::Ip6::OptionHeader">
-<area shape="rect" id="node2" href="$db/dfd/classThread_1_1Ip6_1_1OptionMpl.html" title="This class implements MPL header generation and parsing. " alt="" coords="16,79,174,104"/>
+<area shape="rect" id="node2" href="$db/dfd/classThread_1_1Ip6_1_1OptionMpl.html" title="This class implements MPL header generation and parsing. " alt="" coords="5,79,163,104"/>
+<area shape="rect" id="node3" href="$d7/d93/classThread_1_1Ip6_1_1OptionPadN.html" title="This class implements IPv6 PadN Option generation and parsing. " alt="" coords="187,79,357,104"/>
 </map>

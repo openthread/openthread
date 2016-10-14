@@ -34,7 +34,7 @@
   <td id="projectlogo"><img alt="Logo" src="../../Open-Thread-Logo-200x42.png"/></td>
   <td style="padding-left: 0.5em;">
    <div id="projectname">
-   &#160;<span id="projectnumber">gb2b10b8</span>
+   &#160;<span id="projectnumber">gddd0704</span>
    </div>
   </td>
  </tr>
@@ -122,61 +122,503 @@ Collaboration diagram for Operation:</div>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 Functions</h2></td></tr>
-<tr class="memitem:ga3df468574cb0ffda6db9a7ba8da7526b"><td class="memItemLeft" align="right" valign="top"><a class="el" href="../../dc/dbf/openthread-types_8h.html#ab701d053a9c34ab7f11e43e0dc09ac9f">ThreadError</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../d7/d9c/group__radio-operation.html#ga3df468574cb0ffda6db9a7ba8da7526b">otPlatRadioEnable</a> (void)</td></tr>
-<tr class="memdesc:ga3df468574cb0ffda6db9a7ba8da7526b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Enable the radio.  <a href="#ga3df468574cb0ffda6db9a7ba8da7526b">More...</a><br /></td></tr>
-<tr class="separator:ga3df468574cb0ffda6db9a7ba8da7526b"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ga21ffaf3512769c45ec3e6661afe6e942"><td class="memItemLeft" align="right" valign="top"><a class="el" href="../../dc/dbf/openthread-types_8h.html#ab701d053a9c34ab7f11e43e0dc09ac9f">ThreadError</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../d7/d9c/group__radio-operation.html#ga21ffaf3512769c45ec3e6661afe6e942">otPlatRadioDisable</a> (void)</td></tr>
-<tr class="memdesc:ga21ffaf3512769c45ec3e6661afe6e942"><td class="mdescLeft">&#160;</td><td class="mdescRight">Disable the radio.  <a href="#ga21ffaf3512769c45ec3e6661afe6e942">More...</a><br /></td></tr>
-<tr class="separator:ga21ffaf3512769c45ec3e6661afe6e942"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:gabfbdcea85c7b9cdd6b37c1be77cb45ec"><td class="memItemLeft" align="right" valign="top"><a class="el" href="../../dc/dbf/openthread-types_8h.html#ab701d053a9c34ab7f11e43e0dc09ac9f">ThreadError</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../d7/d9c/group__radio-operation.html#gabfbdcea85c7b9cdd6b37c1be77cb45ec">otPlatRadioSleep</a> (void)</td></tr>
-<tr class="memdesc:gabfbdcea85c7b9cdd6b37c1be77cb45ec"><td class="mdescLeft">&#160;</td><td class="mdescRight">Transition the radio from Receive to Sleep.  <a href="#gabfbdcea85c7b9cdd6b37c1be77cb45ec">More...</a><br /></td></tr>
-<tr class="separator:gabfbdcea85c7b9cdd6b37c1be77cb45ec"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ga3097c7532cd2047b3a5e338bcd6c4b5e"><td class="memItemLeft" align="right" valign="top"><a class="el" href="../../dc/dbf/openthread-types_8h.html#ab701d053a9c34ab7f11e43e0dc09ac9f">ThreadError</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../d7/d9c/group__radio-operation.html#ga3097c7532cd2047b3a5e338bcd6c4b5e">otPlatRadioReceive</a> (uint8_t aChannel)</td></tr>
-<tr class="memdesc:ga3097c7532cd2047b3a5e338bcd6c4b5e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Transitioning the radio from Sleep to Receive.  <a href="#ga3097c7532cd2047b3a5e338bcd6c4b5e">More...</a><br /></td></tr>
-<tr class="separator:ga3097c7532cd2047b3a5e338bcd6c4b5e"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ga5719e439a302ffe5d54c60cfd0965d1e"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../d7/d9c/group__radio-operation.html#ga5719e439a302ffe5d54c60cfd0965d1e">otPlatRadioReceiveDone</a> (<a class="el" href="../../db/ddc/structRadioPacket.html">RadioPacket</a> *aPacket, <a class="el" href="../../dc/dbf/openthread-types_8h.html#ab701d053a9c34ab7f11e43e0dc09ac9f">ThreadError</a> aError)</td></tr>
-<tr class="memdesc:ga5719e439a302ffe5d54c60cfd0965d1e"><td class="mdescLeft">&#160;</td><td class="mdescRight">The radio driver calls this method to notify OpenThread of a received packet.  <a href="#ga5719e439a302ffe5d54c60cfd0965d1e">More...</a><br /></td></tr>
-<tr class="separator:ga5719e439a302ffe5d54c60cfd0965d1e"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:gad694a1bf5125d395cb282a950d759813"><td class="memItemLeft" align="right" valign="top"><a class="el" href="../../db/ddc/structRadioPacket.html">RadioPacket</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../d7/d9c/group__radio-operation.html#gad694a1bf5125d395cb282a950d759813">otPlatRadioGetTransmitBuffer</a> (void)</td></tr>
-<tr class="memdesc:gad694a1bf5125d395cb282a950d759813"><td class="mdescLeft">&#160;</td><td class="mdescRight">The radio tranitions from Transmit to Receive.  <a href="#gad694a1bf5125d395cb282a950d759813">More...</a><br /></td></tr>
-<tr class="separator:gad694a1bf5125d395cb282a950d759813"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:gae77575566fe30b5b5a21c9278e1fce5e"><td class="memItemLeft" align="right" valign="top"><a class="el" href="../../dc/dbf/openthread-types_8h.html#ab701d053a9c34ab7f11e43e0dc09ac9f">ThreadError</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../d7/d9c/group__radio-operation.html#gae77575566fe30b5b5a21c9278e1fce5e">otPlatRadioTransmit</a> (void)</td></tr>
-<tr class="memdesc:gae77575566fe30b5b5a21c9278e1fce5e"><td class="mdescLeft">&#160;</td><td class="mdescRight">This method begins the transmit sequence on the radio.  <a href="#gae77575566fe30b5b5a21c9278e1fce5e">More...</a><br /></td></tr>
-<tr class="separator:gae77575566fe30b5b5a21c9278e1fce5e"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:gabc5be38871893d0c8641064fb193b3ea"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../d7/d9c/group__radio-operation.html#gabc5be38871893d0c8641064fb193b3ea">otPlatRadioTransmitDone</a> (bool aFramePending, <a class="el" href="../../dc/dbf/openthread-types_8h.html#ab701d053a9c34ab7f11e43e0dc09ac9f">ThreadError</a> aError)</td></tr>
-<tr class="memdesc:gabc5be38871893d0c8641064fb193b3ea"><td class="mdescLeft">&#160;</td><td class="mdescRight">The radio driver calls this method to notify OpenThread that the transmission has completed.  <a href="#gabc5be38871893d0c8641064fb193b3ea">More...</a><br /></td></tr>
-<tr class="separator:gabc5be38871893d0c8641064fb193b3ea"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:gab331c8626df6faf4afb8ef23443a318a"><td class="memItemLeft" align="right" valign="top">int8_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../d7/d9c/group__radio-operation.html#gab331c8626df6faf4afb8ef23443a318a">otPlatRadioGetNoiseFloor</a> (void)</td></tr>
-<tr class="memdesc:gab331c8626df6faf4afb8ef23443a318a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the most recent RSSI measurement.  <a href="#gab331c8626df6faf4afb8ef23443a318a">More...</a><br /></td></tr>
-<tr class="separator:gab331c8626df6faf4afb8ef23443a318a"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:gabe88f22727e816ff25de7f6ea336faf9"><td class="memItemLeft" align="right" valign="top"><a class="el" href="../../db/d1b/group__radio-types.html#ga64d6a0cf11075e2ab0079c9d86c34b55">otRadioCaps</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../d7/d9c/group__radio-operation.html#gabe88f22727e816ff25de7f6ea336faf9">otPlatRadioGetCaps</a> (void)</td></tr>
-<tr class="memdesc:gabe88f22727e816ff25de7f6ea336faf9"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the radio capabilities.  <a href="#gabe88f22727e816ff25de7f6ea336faf9">More...</a><br /></td></tr>
-<tr class="separator:gabe88f22727e816ff25de7f6ea336faf9"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ga11b64d16bc2a19d51ea7a23a1488210f"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../d7/d9c/group__radio-operation.html#ga11b64d16bc2a19d51ea7a23a1488210f">otPlatRadioGetPromiscuous</a> (void)</td></tr>
-<tr class="memdesc:ga11b64d16bc2a19d51ea7a23a1488210f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the status of promiscuous mode.  <a href="#ga11b64d16bc2a19d51ea7a23a1488210f">More...</a><br /></td></tr>
-<tr class="separator:ga11b64d16bc2a19d51ea7a23a1488210f"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:gab59a1acdb231bcd6234dbc93c9e0a618"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../d7/d9c/group__radio-operation.html#gab59a1acdb231bcd6234dbc93c9e0a618">otPlatRadioSetPromiscuous</a> (bool aEnable)</td></tr>
-<tr class="memdesc:gab59a1acdb231bcd6234dbc93c9e0a618"><td class="mdescLeft">&#160;</td><td class="mdescRight">Enable or disable promiscuous mode.  <a href="#gab59a1acdb231bcd6234dbc93c9e0a618">More...</a><br /></td></tr>
-<tr class="separator:gab59a1acdb231bcd6234dbc93c9e0a618"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:gad2f1f79b0fe0bb9015fd996c723ed52e"><td class="memItemLeft" align="right" valign="top"><a class="el" href="../../dc/dbf/openthread-types_8h.html#ab701d053a9c34ab7f11e43e0dc09ac9f">ThreadError</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../d7/d9c/group__radio-operation.html#gad2f1f79b0fe0bb9015fd996c723ed52e">otPlatRadioEnable</a> (<a class="el" href="../../d2/d83/structotInstance.html">otInstance</a> *aInstance)</td></tr>
+<tr class="memdesc:gad2f1f79b0fe0bb9015fd996c723ed52e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Enable the radio.  <a href="#gad2f1f79b0fe0bb9015fd996c723ed52e">More...</a><br /></td></tr>
+<tr class="separator:gad2f1f79b0fe0bb9015fd996c723ed52e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga5b14c6db562150d0a80c47ef278e5ab8"><td class="memItemLeft" align="right" valign="top"><a class="el" href="../../dc/dbf/openthread-types_8h.html#ab701d053a9c34ab7f11e43e0dc09ac9f">ThreadError</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../d7/d9c/group__radio-operation.html#ga5b14c6db562150d0a80c47ef278e5ab8">otPlatRadioDisable</a> (<a class="el" href="../../d2/d83/structotInstance.html">otInstance</a> *aInstance)</td></tr>
+<tr class="memdesc:ga5b14c6db562150d0a80c47ef278e5ab8"><td class="mdescLeft">&#160;</td><td class="mdescRight">Disable the radio.  <a href="#ga5b14c6db562150d0a80c47ef278e5ab8">More...</a><br /></td></tr>
+<tr class="separator:ga5b14c6db562150d0a80c47ef278e5ab8"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:gaf26840dd6a3c6bd1da7156127c8306f5"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../d7/d9c/group__radio-operation.html#gaf26840dd6a3c6bd1da7156127c8306f5">otPlatRadioIsEnabled</a> (<a class="el" href="../../d2/d83/structotInstance.html">otInstance</a> *aInstance)</td></tr>
+<tr class="memdesc:gaf26840dd6a3c6bd1da7156127c8306f5"><td class="mdescLeft">&#160;</td><td class="mdescRight">Check whether radio is enabled or not.  <a href="#gaf26840dd6a3c6bd1da7156127c8306f5">More...</a><br /></td></tr>
+<tr class="separator:gaf26840dd6a3c6bd1da7156127c8306f5"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga979f5ee2e63f0cba66f372149b2ac013"><td class="memItemLeft" align="right" valign="top"><a class="el" href="../../dc/dbf/openthread-types_8h.html#ab701d053a9c34ab7f11e43e0dc09ac9f">ThreadError</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../d7/d9c/group__radio-operation.html#ga979f5ee2e63f0cba66f372149b2ac013">otPlatRadioSleep</a> (<a class="el" href="../../d2/d83/structotInstance.html">otInstance</a> *aInstance)</td></tr>
+<tr class="memdesc:ga979f5ee2e63f0cba66f372149b2ac013"><td class="mdescLeft">&#160;</td><td class="mdescRight">Transition the radio from Receive to Sleep.  <a href="#ga979f5ee2e63f0cba66f372149b2ac013">More...</a><br /></td></tr>
+<tr class="separator:ga979f5ee2e63f0cba66f372149b2ac013"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga063a389dc7d1e68cbe495cc3cff758c1"><td class="memItemLeft" align="right" valign="top"><a class="el" href="../../dc/dbf/openthread-types_8h.html#ab701d053a9c34ab7f11e43e0dc09ac9f">ThreadError</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../d7/d9c/group__radio-operation.html#ga063a389dc7d1e68cbe495cc3cff758c1">otPlatRadioReceive</a> (<a class="el" href="../../d2/d83/structotInstance.html">otInstance</a> *aInstance, uint8_t aChannel)</td></tr>
+<tr class="memdesc:ga063a389dc7d1e68cbe495cc3cff758c1"><td class="mdescLeft">&#160;</td><td class="mdescRight">Transitioning the radio from Sleep to Receive.  <a href="#ga063a389dc7d1e68cbe495cc3cff758c1">More...</a><br /></td></tr>
+<tr class="separator:ga063a389dc7d1e68cbe495cc3cff758c1"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:gabb1f75e02a0c91b2db8e1325e8575861"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../d7/d9c/group__radio-operation.html#gabb1f75e02a0c91b2db8e1325e8575861">otPlatRadioEnableSrcMatch</a> (<a class="el" href="../../d2/d83/structotInstance.html">otInstance</a> *aInstance, bool aEnable)</td></tr>
+<tr class="memdesc:gabb1f75e02a0c91b2db8e1325e8575861"><td class="mdescLeft">&#160;</td><td class="mdescRight">Enable/Disable source match for AutoPend.  <a href="#gabb1f75e02a0c91b2db8e1325e8575861">More...</a><br /></td></tr>
+<tr class="separator:gabb1f75e02a0c91b2db8e1325e8575861"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga5e1cf45dd77ef0608056f2e9cf992d8d"><td class="memItemLeft" align="right" valign="top"><a class="el" href="../../dc/dbf/openthread-types_8h.html#ab701d053a9c34ab7f11e43e0dc09ac9f">ThreadError</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../d7/d9c/group__radio-operation.html#ga5e1cf45dd77ef0608056f2e9cf992d8d">otPlatRadioAddSrcMatchShortEntry</a> (<a class="el" href="../../d2/d83/structotInstance.html">otInstance</a> *aInstance, const uint16_t aShortAddress)</td></tr>
+<tr class="memdesc:ga5e1cf45dd77ef0608056f2e9cf992d8d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Adding short address to the source match table.  <a href="#ga5e1cf45dd77ef0608056f2e9cf992d8d">More...</a><br /></td></tr>
+<tr class="separator:ga5e1cf45dd77ef0608056f2e9cf992d8d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga3f24dc46cba2235b6dea0670df50a5c2"><td class="memItemLeft" align="right" valign="top"><a class="el" href="../../dc/dbf/openthread-types_8h.html#ab701d053a9c34ab7f11e43e0dc09ac9f">ThreadError</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../d7/d9c/group__radio-operation.html#ga3f24dc46cba2235b6dea0670df50a5c2">otPlatRadioAddSrcMatchExtEntry</a> (<a class="el" href="../../d2/d83/structotInstance.html">otInstance</a> *aInstance, const uint8_t *aExtAddress)</td></tr>
+<tr class="memdesc:ga3f24dc46cba2235b6dea0670df50a5c2"><td class="mdescLeft">&#160;</td><td class="mdescRight">Adding extended address to the source match table.  <a href="#ga3f24dc46cba2235b6dea0670df50a5c2">More...</a><br /></td></tr>
+<tr class="separator:ga3f24dc46cba2235b6dea0670df50a5c2"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga923d941e8a4d37be5d41de6be4fc275f"><td class="memItemLeft" align="right" valign="top"><a class="el" href="../../dc/dbf/openthread-types_8h.html#ab701d053a9c34ab7f11e43e0dc09ac9f">ThreadError</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../d7/d9c/group__radio-operation.html#ga923d941e8a4d37be5d41de6be4fc275f">otPlatRadioClearSrcMatchShortEntry</a> (<a class="el" href="../../d2/d83/structotInstance.html">otInstance</a> *aInstance, const uint16_t aShortAddress)</td></tr>
+<tr class="memdesc:ga923d941e8a4d37be5d41de6be4fc275f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Removing short address to the source match table.  <a href="#ga923d941e8a4d37be5d41de6be4fc275f">More...</a><br /></td></tr>
+<tr class="separator:ga923d941e8a4d37be5d41de6be4fc275f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga57238173bfc0ad9cce66e999f9ad3234"><td class="memItemLeft" align="right" valign="top"><a class="el" href="../../dc/dbf/openthread-types_8h.html#ab701d053a9c34ab7f11e43e0dc09ac9f">ThreadError</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../d7/d9c/group__radio-operation.html#ga57238173bfc0ad9cce66e999f9ad3234">otPlatRadioClearSrcMatchExtEntry</a> (<a class="el" href="../../d2/d83/structotInstance.html">otInstance</a> *aInstance, const uint8_t *aExtAddress)</td></tr>
+<tr class="memdesc:ga57238173bfc0ad9cce66e999f9ad3234"><td class="mdescLeft">&#160;</td><td class="mdescRight">Removing extended address to the source match table of the radio.  <a href="#ga57238173bfc0ad9cce66e999f9ad3234">More...</a><br /></td></tr>
+<tr class="separator:ga57238173bfc0ad9cce66e999f9ad3234"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga95d8f1c200b49f481d117765ec7a66d4"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../d7/d9c/group__radio-operation.html#ga95d8f1c200b49f481d117765ec7a66d4">otPlatRadioClearSrcMatchShortEntries</a> (<a class="el" href="../../d2/d83/structotInstance.html">otInstance</a> *aInstance)</td></tr>
+<tr class="memdesc:ga95d8f1c200b49f481d117765ec7a66d4"><td class="mdescLeft">&#160;</td><td class="mdescRight">Removing all the short addresses from the source match table.  <a href="#ga95d8f1c200b49f481d117765ec7a66d4">More...</a><br /></td></tr>
+<tr class="separator:ga95d8f1c200b49f481d117765ec7a66d4"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga3f50253b5f4847da0444a001e014ba65"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../d7/d9c/group__radio-operation.html#ga3f50253b5f4847da0444a001e014ba65">otPlatRadioClearSrcMatchExtEntries</a> (<a class="el" href="../../d2/d83/structotInstance.html">otInstance</a> *aInstance)</td></tr>
+<tr class="memdesc:ga3f50253b5f4847da0444a001e014ba65"><td class="mdescLeft">&#160;</td><td class="mdescRight">Removing all the extended addresses from the source match table.  <a href="#ga3f50253b5f4847da0444a001e014ba65">More...</a><br /></td></tr>
+<tr class="separator:ga3f50253b5f4847da0444a001e014ba65"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga75836c10d52472c0dfca98f490c4a5f7"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../d7/d9c/group__radio-operation.html#ga75836c10d52472c0dfca98f490c4a5f7">otPlatRadioReceiveDone</a> (<a class="el" href="../../d2/d83/structotInstance.html">otInstance</a> *aInstance, <a class="el" href="../../db/ddc/structRadioPacket.html">RadioPacket</a> *aPacket, <a class="el" href="../../dc/dbf/openthread-types_8h.html#ab701d053a9c34ab7f11e43e0dc09ac9f">ThreadError</a> aError)</td></tr>
+<tr class="memdesc:ga75836c10d52472c0dfca98f490c4a5f7"><td class="mdescLeft">&#160;</td><td class="mdescRight">The radio driver calls this method to notify OpenThread of a received packet.  <a href="#ga75836c10d52472c0dfca98f490c4a5f7">More...</a><br /></td></tr>
+<tr class="separator:ga75836c10d52472c0dfca98f490c4a5f7"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:gafe1fdf44907fccdb06be0db517d4fb01"><td class="memItemLeft" align="right" valign="top"><a class="el" href="../../db/ddc/structRadioPacket.html">RadioPacket</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../d7/d9c/group__radio-operation.html#gafe1fdf44907fccdb06be0db517d4fb01">otPlatRadioGetTransmitBuffer</a> (<a class="el" href="../../d2/d83/structotInstance.html">otInstance</a> *aInstance)</td></tr>
+<tr class="memdesc:gafe1fdf44907fccdb06be0db517d4fb01"><td class="mdescLeft">&#160;</td><td class="mdescRight">The radio transitions from Transmit to Receive.  <a href="#gafe1fdf44907fccdb06be0db517d4fb01">More...</a><br /></td></tr>
+<tr class="separator:gafe1fdf44907fccdb06be0db517d4fb01"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga23aa0adfee1ed815c98fc3c087700ed1"><td class="memItemLeft" align="right" valign="top"><a class="el" href="../../dc/dbf/openthread-types_8h.html#ab701d053a9c34ab7f11e43e0dc09ac9f">ThreadError</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../d7/d9c/group__radio-operation.html#ga23aa0adfee1ed815c98fc3c087700ed1">otPlatRadioTransmit</a> (<a class="el" href="../../d2/d83/structotInstance.html">otInstance</a> *aInstance)</td></tr>
+<tr class="memdesc:ga23aa0adfee1ed815c98fc3c087700ed1"><td class="mdescLeft">&#160;</td><td class="mdescRight">This method begins the transmit sequence on the radio.  <a href="#ga23aa0adfee1ed815c98fc3c087700ed1">More...</a><br /></td></tr>
+<tr class="separator:ga23aa0adfee1ed815c98fc3c087700ed1"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga7d10a9bce7521f75bd84b32b979e1aa7"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../d7/d9c/group__radio-operation.html#ga7d10a9bce7521f75bd84b32b979e1aa7">otPlatRadioTransmitDone</a> (<a class="el" href="../../d2/d83/structotInstance.html">otInstance</a> *aInstance, bool aFramePending, <a class="el" href="../../dc/dbf/openthread-types_8h.html#ab701d053a9c34ab7f11e43e0dc09ac9f">ThreadError</a> aError)</td></tr>
+<tr class="memdesc:ga7d10a9bce7521f75bd84b32b979e1aa7"><td class="mdescLeft">&#160;</td><td class="mdescRight">The radio driver calls this method to notify OpenThread that the transmission has completed.  <a href="#ga7d10a9bce7521f75bd84b32b979e1aa7">More...</a><br /></td></tr>
+<tr class="separator:ga7d10a9bce7521f75bd84b32b979e1aa7"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga4ac10bba73d06f59af623bbb3349d3fb"><td class="memItemLeft" align="right" valign="top">int8_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../d7/d9c/group__radio-operation.html#ga4ac10bba73d06f59af623bbb3349d3fb">otPlatRadioGetRssi</a> (<a class="el" href="../../d2/d83/structotInstance.html">otInstance</a> *aInstance)</td></tr>
+<tr class="memdesc:ga4ac10bba73d06f59af623bbb3349d3fb"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the most recent RSSI measurement.  <a href="#ga4ac10bba73d06f59af623bbb3349d3fb">More...</a><br /></td></tr>
+<tr class="separator:ga4ac10bba73d06f59af623bbb3349d3fb"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga5a5999dadb6ac0ee70a69a960930f132"><td class="memItemLeft" align="right" valign="top"><a class="el" href="../../db/d1b/group__radio-types.html#ga64d6a0cf11075e2ab0079c9d86c34b55">otRadioCaps</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../d7/d9c/group__radio-operation.html#ga5a5999dadb6ac0ee70a69a960930f132">otPlatRadioGetCaps</a> (<a class="el" href="../../d2/d83/structotInstance.html">otInstance</a> *aInstance)</td></tr>
+<tr class="memdesc:ga5a5999dadb6ac0ee70a69a960930f132"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the radio capabilities.  <a href="#ga5a5999dadb6ac0ee70a69a960930f132">More...</a><br /></td></tr>
+<tr class="separator:ga5a5999dadb6ac0ee70a69a960930f132"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:gaef6191a2f5c0dd177dc009dae3796e8e"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../d7/d9c/group__radio-operation.html#gaef6191a2f5c0dd177dc009dae3796e8e">otPlatRadioGetPromiscuous</a> (<a class="el" href="../../d2/d83/structotInstance.html">otInstance</a> *aInstance)</td></tr>
+<tr class="memdesc:gaef6191a2f5c0dd177dc009dae3796e8e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the status of promiscuous mode.  <a href="#gaef6191a2f5c0dd177dc009dae3796e8e">More...</a><br /></td></tr>
+<tr class="separator:gaef6191a2f5c0dd177dc009dae3796e8e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga0a905ad5c76c5931ee2ef395342f0dca"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../d7/d9c/group__radio-operation.html#ga0a905ad5c76c5931ee2ef395342f0dca">otPlatRadioSetPromiscuous</a> (<a class="el" href="../../d2/d83/structotInstance.html">otInstance</a> *aInstance, bool aEnable)</td></tr>
+<tr class="memdesc:ga0a905ad5c76c5931ee2ef395342f0dca"><td class="mdescLeft">&#160;</td><td class="mdescRight">Enable or disable promiscuous mode.  <a href="#ga0a905ad5c76c5931ee2ef395342f0dca">More...</a><br /></td></tr>
+<tr class="separator:ga0a905ad5c76c5931ee2ef395342f0dca"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga3554fa9c78ba169eb13483533ed9f20c"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../d7/d9c/group__radio-operation.html#ga3554fa9c78ba169eb13483533ed9f20c">otPlatDiagRadioTransmitDone</a> (<a class="el" href="../../d2/d83/structotInstance.html">otInstance</a> *aInstance, bool aFramePending, <a class="el" href="../../dc/dbf/openthread-types_8h.html#ab701d053a9c34ab7f11e43e0dc09ac9f">ThreadError</a> aError)</td></tr>
+<tr class="memdesc:ga3554fa9c78ba169eb13483533ed9f20c"><td class="mdescLeft">&#160;</td><td class="mdescRight">The radio driver calls this method to notify OpenThread diagnostics module that the transmission has completed.  <a href="#ga3554fa9c78ba169eb13483533ed9f20c">More...</a><br /></td></tr>
+<tr class="separator:ga3554fa9c78ba169eb13483533ed9f20c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:gaa0be6d07fec8fccc00da07a29d698d6d"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../d7/d9c/group__radio-operation.html#gaa0be6d07fec8fccc00da07a29d698d6d">otPlatDiagRadioReceiveDone</a> (<a class="el" href="../../d2/d83/structotInstance.html">otInstance</a> *aInstance, <a class="el" href="../../db/ddc/structRadioPacket.html">RadioPacket</a> *aPacket, <a class="el" href="../../dc/dbf/openthread-types_8h.html#ab701d053a9c34ab7f11e43e0dc09ac9f">ThreadError</a> aError)</td></tr>
+<tr class="memdesc:gaa0be6d07fec8fccc00da07a29d698d6d"><td class="mdescLeft">&#160;</td><td class="mdescRight">The radio driver calls this method to notify OpenThread diagnostics module of a received packet.  <a href="#gaa0be6d07fec8fccc00da07a29d698d6d">More...</a><br /></td></tr>
+<tr class="separator:gaa0be6d07fec8fccc00da07a29d698d6d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:gae3b9ed222f4ad93e1d09e285b57be1ef"><td class="memItemLeft" align="right" valign="top"><a class="el" href="../../dc/dbf/openthread-types_8h.html#ab701d053a9c34ab7f11e43e0dc09ac9f">ThreadError</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../d7/d9c/group__radio-operation.html#gae3b9ed222f4ad93e1d09e285b57be1ef">otPlatRadioEnergyScan</a> (<a class="el" href="../../d2/d83/structotInstance.html">otInstance</a> *aInstance, uint8_t aScanChannel, uint16_t aScanDuration)</td></tr>
+<tr class="memdesc:gae3b9ed222f4ad93e1d09e285b57be1ef"><td class="mdescLeft">&#160;</td><td class="mdescRight">This method begins the energy scan sequence on the radio.  <a href="#gae3b9ed222f4ad93e1d09e285b57be1ef">More...</a><br /></td></tr>
+<tr class="separator:gae3b9ed222f4ad93e1d09e285b57be1ef"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga65b11fca984c76f2b4bc782cd1e4811a"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../d7/d9c/group__radio-operation.html#ga65b11fca984c76f2b4bc782cd1e4811a">otPlatRadioEnergyScanDone</a> (<a class="el" href="../../d2/d83/structotInstance.html">otInstance</a> *aInstance, int8_t aEnergyScanMaxRssi)</td></tr>
+<tr class="memdesc:ga65b11fca984c76f2b4bc782cd1e4811a"><td class="mdescLeft">&#160;</td><td class="mdescRight">The radio driver calls this method to notify OpenThread that the energy scan is complete.  <a href="#ga65b11fca984c76f2b4bc782cd1e4811a">More...</a><br /></td></tr>
+<tr class="separator:ga65b11fca984c76f2b4bc782cd1e4811a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <p>This module includes the platform abstraction for radio operations. </p>
 <h2 class="groupheader">Function Documentation</h2>
-<a class="anchor" id="ga21ffaf3512769c45ec3e6661afe6e942"></a>
+<a class="anchor" id="gaa0be6d07fec8fccc00da07a29d698d6d"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void otPlatDiagRadioReceiveDone </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="../../d2/d83/structotInstance.html">otInstance</a> *&#160;</td>
+          <td class="paramname"><em>aInstance</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="../../db/ddc/structRadioPacket.html">RadioPacket</a> *&#160;</td>
+          <td class="paramname"><em>aPacket</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="../../dc/dbf/openthread-types_8h.html#ab701d053a9c34ab7f11e43e0dc09ac9f">ThreadError</a>&#160;</td>
+          <td class="paramname"><em>aError</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>The radio driver calls this method to notify OpenThread diagnostics module of a received packet. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">aInstance</td><td>The OpenThread instance structure. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">aPacket</td><td>A pointer to the received packet or NULL if the receive operation was aborted. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">aError</td><td>::kThreadError_None when successfully received a frame, ::kThreadError_Abort when reception was aborted and a frame was not received. </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a class="anchor" id="ga3554fa9c78ba169eb13483533ed9f20c"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void otPlatDiagRadioTransmitDone </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="../../d2/d83/structotInstance.html">otInstance</a> *&#160;</td>
+          <td class="paramname"><em>aInstance</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">bool&#160;</td>
+          <td class="paramname"><em>aFramePending</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="../../dc/dbf/openthread-types_8h.html#ab701d053a9c34ab7f11e43e0dc09ac9f">ThreadError</a>&#160;</td>
+          <td class="paramname"><em>aError</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>The radio driver calls this method to notify OpenThread diagnostics module that the transmission has completed. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">aInstance</td><td>The OpenThread instance structure. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">aFramePending</td><td>TRUE if an ACK frame was received and the Frame Pending bit was set. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">aError</td><td>::kThreadError_None when the frame was transmitted, <a class="el" href="../../dc/dbf/openthread-types_8h.html#ab701d053a9c34ab7f11e43e0dc09ac9fa5be4067720a92215d4ea451977b712de" title="No acknowledgment was received after macMaxFrameRetries (IEEE 802.15.4-2006). ">kThreadError_NoAck</a> when the frame was transmitted but no ACK was received, <a class="el" href="../../dc/dbf/openthread-types_8h.html#ab701d053a9c34ab7f11e43e0dc09ac9fa66b2ada6dcb9e04269b303854a2826cf" title="A transmission could not take place due to activity on the channel, i.e., the CSMA-CA mechanism has f...">kThreadError_ChannelAccessFailure</a> when the transmission could not take place due to activity on the channel, ::kThreadError_Abort when transmission was aborted for other reasons. </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a class="anchor" id="ga3f24dc46cba2235b6dea0670df50a5c2"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="../../dc/dbf/openthread-types_8h.html#ab701d053a9c34ab7f11e43e0dc09ac9f">ThreadError</a> otPlatRadioAddSrcMatchExtEntry </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="../../d2/d83/structotInstance.html">otInstance</a> *&#160;</td>
+          <td class="paramname"><em>aInstance</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const uint8_t *&#160;</td>
+          <td class="paramname"><em>aExtAddress</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Adding extended address to the source match table. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">aInstance</td><td>The OpenThread instance structure. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">aExtAddress</td><td>The extended address to be added.</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="retval"><dt>Return values</dt><dd>
+  <table class="retval">
+    <tr><td class="paramname">::kThreadError_None</td><td>Successfully added extended address to the source match table. </td></tr>
+    <tr><td class="paramname">::kThreadError_NoBufs</td><td>No available entry in the source match table. </td></tr>
+  </table>
+  </dd>
+</dl>
+
+<p><div class="dynheader">
+Here is the caller graph for this function:</div>
+<div class="dyncontent">
+<div class="center"><img src="../../d7/d9c/group__radio-operation_ga3f24dc46cba2235b6dea0670df50a5c2_icgraph.png" border="0" usemap="#d7/d9c/group__radio-operation_ga3f24dc46cba2235b6dea0670df50a5c2_icgraph" alt=""/></div>
+<map name="d7/d9c/group__radio-operation_ga3f24dc46cba2235b6dea0670df50a5c2_icgraph" id="d7/d9c/group__radio-operation_ga3f24dc46cba2235b6dea0670df50a5c2_icgraph">
+<area shape="rect" id="node2" href="../../d6/d88/classThread_1_1Mac_1_1Mac.html#a554efe51c322cba3f72ce7262198af37" title="This function adds the address into the source match table. " alt="" coords="243,68,423,107"/>
+<area shape="rect" id="node3" href="../../dd/d1d/classThread_1_1MeshForwarder.html#a7668817d03306dadcb36ff9eaad72299" title="This method is called by the address resolver when an EID&#45;to&#45;RLOC mapping has been resolved..." alt="" coords="471,68,635,107"/>
+<area shape="rect" id="node4" href="../../d4/dcf/classThread_1_1AddressResolver.html#ac249179518a77ecfdaf7d4502ef2f940" title="This method returns the RLOC16 for a given EID, or initiates an Address Query if the mapping is not k..." alt="" coords="683,68,856,107"/>
+<area shape="rect" id="node5" href="../../dd/d1d/classThread_1_1MeshForwarder.html#a361ef901f6b665b3c7feac206089a7df" title="This method submits a message to the mesh forwarder for forwarding. " alt="" coords="904,68,1068,107"/>
+<area shape="rect" id="node6" href="../../dd/d1d/classThread_1_1MeshForwarder.html#a3a55dcf590bf5941d216ff313b6ce0d0" title="This method gets the Data Poll period. " alt="" coords="1119,5,1283,44"/>
+<area shape="rect" id="node7" href="../../dd/d1d/classThread_1_1MeshForwarder.html#a5f726671448fb7cd72f8ee96db40731a" title="This method sets the scan parameters for MLE Discovery Request messages. " alt="" coords="1116,68,1286,107"/>
+<area shape="rect" id="node12" href="../../d3/d8e/classThread_1_1ThreadNetif.html#a95f2ad1f6785b0de74e660e43ac86d33" title="This method submits a message to the network interface. " alt="" coords="1130,131,1271,169"/>
+<area shape="rect" id="node8" href="../../df/d94/group__core-mle-core.html#gab299d00d1b2beabe8130e400dd6eca91" title="This method initiates a Thread Discovery. " alt="" coords="1334,75,1514,100"/>
+<area shape="rect" id="node9" href="../../d4/db5/classThread_1_1MeshCoP_1_1Joiner.html#a1ca1f767cfe15e7c25b8f65606e7fefb" title="This method starts the Joiner service. " alt="" coords="1562,40,1735,79"/>
+<area shape="rect" id="node10" href="../../d0/d0a/group__commands.html#ga8422cdf7d0b8b22c6dd107e6bb1309f2" title="This function starts a Thread Discovery scan. " alt="" coords="1607,103,1691,128"/>
+<area shape="rect" id="node11" href="../../d5/dc2/structThread_1_1Cli_1_1Interpreter.html#a11ee1f86cffe17aab7de3de0bb16dee7" title="This method parses an ASCII string as an unsigned long. " alt="" coords="1783,96,1939,135"/>
+</map>
+</div>
+</p>
+
+</div>
+</div>
+<a class="anchor" id="ga5e1cf45dd77ef0608056f2e9cf992d8d"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="../../dc/dbf/openthread-types_8h.html#ab701d053a9c34ab7f11e43e0dc09ac9f">ThreadError</a> otPlatRadioAddSrcMatchShortEntry </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="../../d2/d83/structotInstance.html">otInstance</a> *&#160;</td>
+          <td class="paramname"><em>aInstance</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const uint16_t&#160;</td>
+          <td class="paramname"><em>aShortAddress</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Adding short address to the source match table. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">aInstance</td><td>The OpenThread instance structure. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">aShortAddress</td><td>The short address to be added.</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="retval"><dt>Return values</dt><dd>
+  <table class="retval">
+    <tr><td class="paramname">::kThreadError_None</td><td>Successfully added short address to the source match table. </td></tr>
+    <tr><td class="paramname">::kThreadError_NoBufs</td><td>No available entry in the source match table. </td></tr>
+  </table>
+  </dd>
+</dl>
+
+<p><div class="dynheader">
+Here is the caller graph for this function:</div>
+<div class="dyncontent">
+<div class="center"><img src="../../d7/d9c/group__radio-operation_ga5e1cf45dd77ef0608056f2e9cf992d8d_icgraph.png" border="0" usemap="#d7/d9c/group__radio-operation_ga5e1cf45dd77ef0608056f2e9cf992d8d_icgraph" alt=""/></div>
+<map name="d7/d9c/group__radio-operation_ga5e1cf45dd77ef0608056f2e9cf992d8d_icgraph" id="d7/d9c/group__radio-operation_ga5e1cf45dd77ef0608056f2e9cf992d8d_icgraph">
+<area shape="rect" id="node2" href="../../d6/d88/classThread_1_1Mac_1_1Mac.html#a554efe51c322cba3f72ce7262198af37" title="This function adds the address into the source match table. " alt="" coords="256,68,435,107"/>
+<area shape="rect" id="node3" href="../../dd/d1d/classThread_1_1MeshForwarder.html#a7668817d03306dadcb36ff9eaad72299" title="This method is called by the address resolver when an EID&#45;to&#45;RLOC mapping has been resolved..." alt="" coords="483,68,648,107"/>
+<area shape="rect" id="node4" href="../../d4/dcf/classThread_1_1AddressResolver.html#ac249179518a77ecfdaf7d4502ef2f940" title="This method returns the RLOC16 for a given EID, or initiates an Address Query if the mapping is not k..." alt="" coords="696,68,868,107"/>
+<area shape="rect" id="node5" href="../../dd/d1d/classThread_1_1MeshForwarder.html#a361ef901f6b665b3c7feac206089a7df" title="This method submits a message to the mesh forwarder for forwarding. " alt="" coords="916,68,1081,107"/>
+<area shape="rect" id="node6" href="../../dd/d1d/classThread_1_1MeshForwarder.html#a3a55dcf590bf5941d216ff313b6ce0d0" title="This method gets the Data Poll period. " alt="" coords="1131,5,1296,44"/>
+<area shape="rect" id="node7" href="../../dd/d1d/classThread_1_1MeshForwarder.html#a5f726671448fb7cd72f8ee96db40731a" title="This method sets the scan parameters for MLE Discovery Request messages. " alt="" coords="1129,68,1298,107"/>
+<area shape="rect" id="node12" href="../../d3/d8e/classThread_1_1ThreadNetif.html#a95f2ad1f6785b0de74e660e43ac86d33" title="This method submits a message to the network interface. " alt="" coords="1143,131,1284,169"/>
+<area shape="rect" id="node8" href="../../df/d94/group__core-mle-core.html#gab299d00d1b2beabe8130e400dd6eca91" title="This method initiates a Thread Discovery. " alt="" coords="1346,75,1527,100"/>
+<area shape="rect" id="node9" href="../../d4/db5/classThread_1_1MeshCoP_1_1Joiner.html#a1ca1f767cfe15e7c25b8f65606e7fefb" title="This method starts the Joiner service. " alt="" coords="1575,40,1748,79"/>
+<area shape="rect" id="node10" href="../../d0/d0a/group__commands.html#ga8422cdf7d0b8b22c6dd107e6bb1309f2" title="This function starts a Thread Discovery scan. " alt="" coords="1619,103,1704,128"/>
+<area shape="rect" id="node11" href="../../d5/dc2/structThread_1_1Cli_1_1Interpreter.html#a11ee1f86cffe17aab7de3de0bb16dee7" title="This method parses an ASCII string as an unsigned long. " alt="" coords="1796,96,1951,135"/>
+</map>
+</div>
+</p>
+
+</div>
+</div>
+<a class="anchor" id="ga3f50253b5f4847da0444a001e014ba65"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void otPlatRadioClearSrcMatchExtEntries </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="../../d2/d83/structotInstance.html">otInstance</a> *&#160;</td>
+          <td class="paramname"><em>aInstance</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Removing all the extended addresses from the source match table. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">aInstance</td><td>The OpenThread instance structure. </td></tr>
+  </table>
+  </dd>
+</dl>
+
+<p><div class="dynheader">
+Here is the caller graph for this function:</div>
+<div class="dyncontent">
+<div class="center"><img src="../../d7/d9c/group__radio-operation_ga3f50253b5f4847da0444a001e014ba65_icgraph.png" border="0" usemap="#d7/d9c/group__radio-operation_ga3f50253b5f4847da0444a001e014ba65_icgraph" alt=""/></div>
+<map name="d7/d9c/group__radio-operation_ga3f50253b5f4847da0444a001e014ba65_icgraph" id="d7/d9c/group__radio-operation_ga3f50253b5f4847da0444a001e014ba65_icgraph">
+<area shape="rect" id="node2" href="../../d6/d88/classThread_1_1Mac_1_1Mac.html#a62566a20fe0561dcf9ad87fa976be14f" title="This function emptys the source match table. " alt="" coords="232,5,420,44"/>
+</map>
+</div>
+</p>
+
+</div>
+</div>
+<a class="anchor" id="ga57238173bfc0ad9cce66e999f9ad3234"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="../../dc/dbf/openthread-types_8h.html#ab701d053a9c34ab7f11e43e0dc09ac9f">ThreadError</a> otPlatRadioClearSrcMatchExtEntry </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="../../d2/d83/structotInstance.html">otInstance</a> *&#160;</td>
+          <td class="paramname"><em>aInstance</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const uint8_t *&#160;</td>
+          <td class="paramname"><em>aExtAddress</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Removing extended address to the source match table of the radio. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">aInstance</td><td>The OpenThread instance structure. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">aExtAddress</td><td>The extended address to be removed.</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="retval"><dt>Return values</dt><dd>
+  <table class="retval">
+    <tr><td class="paramname">::kThreadError_None</td><td>Successfully removed the extended address from the source match table. </td></tr>
+    <tr><td class="paramname">::kThreadError_NoAddress</td><td>The extended address is not in source match table. </td></tr>
+  </table>
+  </dd>
+</dl>
+
+<p><div class="dynheader">
+Here is the caller graph for this function:</div>
+<div class="dyncontent">
+<div class="center"><img src="../../d7/d9c/group__radio-operation_ga57238173bfc0ad9cce66e999f9ad3234_icgraph.png" border="0" usemap="#d7/d9c/group__radio-operation_ga57238173bfc0ad9cce66e999f9ad3234_icgraph" alt=""/></div>
+<map name="d7/d9c/group__radio-operation_ga57238173bfc0ad9cce66e999f9ad3234_icgraph" id="d7/d9c/group__radio-operation_ga57238173bfc0ad9cce66e999f9ad3234_icgraph">
+<area shape="rect" id="node2" href="../../d6/d88/classThread_1_1Mac_1_1Mac.html#aa6b6474625ad896bbdff3438e7f96566" title="This function removes the address from the source match table. " alt="" coords="232,68,420,107"/>
+<area shape="rect" id="node3" href="../../dd/d1d/classThread_1_1MeshForwarder.html#a7668817d03306dadcb36ff9eaad72299" title="This method is called by the address resolver when an EID&#45;to&#45;RLOC mapping has been resolved..." alt="" coords="468,68,632,107"/>
+<area shape="rect" id="node4" href="../../d4/dcf/classThread_1_1AddressResolver.html#ac249179518a77ecfdaf7d4502ef2f940" title="This method returns the RLOC16 for a given EID, or initiates an Address Query if the mapping is not k..." alt="" coords="680,68,853,107"/>
+<area shape="rect" id="node5" href="../../dd/d1d/classThread_1_1MeshForwarder.html#a361ef901f6b665b3c7feac206089a7df" title="This method submits a message to the mesh forwarder for forwarding. " alt="" coords="901,68,1065,107"/>
+<area shape="rect" id="node6" href="../../dd/d1d/classThread_1_1MeshForwarder.html#a3a55dcf590bf5941d216ff313b6ce0d0" title="This method gets the Data Poll period. " alt="" coords="1116,5,1280,44"/>
+<area shape="rect" id="node7" href="../../dd/d1d/classThread_1_1MeshForwarder.html#a5f726671448fb7cd72f8ee96db40731a" title="This method sets the scan parameters for MLE Discovery Request messages. " alt="" coords="1113,68,1283,107"/>
+<area shape="rect" id="node12" href="../../d3/d8e/classThread_1_1ThreadNetif.html#a95f2ad1f6785b0de74e660e43ac86d33" title="This method submits a message to the network interface. " alt="" coords="1127,131,1268,169"/>
+<area shape="rect" id="node8" href="../../df/d94/group__core-mle-core.html#gab299d00d1b2beabe8130e400dd6eca91" title="This method initiates a Thread Discovery. " alt="" coords="1331,75,1511,100"/>
+<area shape="rect" id="node9" href="../../d4/db5/classThread_1_1MeshCoP_1_1Joiner.html#a1ca1f767cfe15e7c25b8f65606e7fefb" title="This method starts the Joiner service. " alt="" coords="1559,40,1732,79"/>
+<area shape="rect" id="node10" href="../../d0/d0a/group__commands.html#ga8422cdf7d0b8b22c6dd107e6bb1309f2" title="This function starts a Thread Discovery scan. " alt="" coords="1604,103,1688,128"/>
+<area shape="rect" id="node11" href="../../d5/dc2/structThread_1_1Cli_1_1Interpreter.html#a11ee1f86cffe17aab7de3de0bb16dee7" title="This method parses an ASCII string as an unsigned long. " alt="" coords="1780,96,1936,135"/>
+</map>
+</div>
+</p>
+
+</div>
+</div>
+<a class="anchor" id="ga95d8f1c200b49f481d117765ec7a66d4"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void otPlatRadioClearSrcMatchShortEntries </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="../../d2/d83/structotInstance.html">otInstance</a> *&#160;</td>
+          <td class="paramname"><em>aInstance</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Removing all the short addresses from the source match table. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">aInstance</td><td>The OpenThread instance structure. </td></tr>
+  </table>
+  </dd>
+</dl>
+
+<p><div class="dynheader">
+Here is the caller graph for this function:</div>
+<div class="dyncontent">
+<div class="center"><img src="../../d7/d9c/group__radio-operation_ga95d8f1c200b49f481d117765ec7a66d4_icgraph.png" border="0" usemap="#d7/d9c/group__radio-operation_ga95d8f1c200b49f481d117765ec7a66d4_icgraph" alt=""/></div>
+<map name="d7/d9c/group__radio-operation_ga95d8f1c200b49f481d117765ec7a66d4_icgraph" id="d7/d9c/group__radio-operation_ga95d8f1c200b49f481d117765ec7a66d4_icgraph">
+<area shape="rect" id="node2" href="../../d6/d88/classThread_1_1Mac_1_1Mac.html#a62566a20fe0561dcf9ad87fa976be14f" title="This function emptys the source match table. " alt="" coords="232,5,420,44"/>
+</map>
+</div>
+</p>
+
+</div>
+</div>
+<a class="anchor" id="ga923d941e8a4d37be5d41de6be4fc275f"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="../../dc/dbf/openthread-types_8h.html#ab701d053a9c34ab7f11e43e0dc09ac9f">ThreadError</a> otPlatRadioClearSrcMatchShortEntry </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="../../d2/d83/structotInstance.html">otInstance</a> *&#160;</td>
+          <td class="paramname"><em>aInstance</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const uint16_t&#160;</td>
+          <td class="paramname"><em>aShortAddress</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Removing short address to the source match table. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">aInstance</td><td>The OpenThread instance structure. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">aShortAddress</td><td>The short address to be removed.</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="retval"><dt>Return values</dt><dd>
+  <table class="retval">
+    <tr><td class="paramname">::kThreadError_None</td><td>Successfully removed short address from the source match table. </td></tr>
+    <tr><td class="paramname">::kThreadError_NoAddress</td><td>The short address is not in source match table. </td></tr>
+  </table>
+  </dd>
+</dl>
+
+<p><div class="dynheader">
+Here is the caller graph for this function:</div>
+<div class="dyncontent">
+<div class="center"><img src="../../d7/d9c/group__radio-operation_ga923d941e8a4d37be5d41de6be4fc275f_icgraph.png" border="0" usemap="#d7/d9c/group__radio-operation_ga923d941e8a4d37be5d41de6be4fc275f_icgraph" alt=""/></div>
+<map name="d7/d9c/group__radio-operation_ga923d941e8a4d37be5d41de6be4fc275f_icgraph" id="d7/d9c/group__radio-operation_ga923d941e8a4d37be5d41de6be4fc275f_icgraph">
+<area shape="rect" id="node2" href="../../d6/d88/classThread_1_1Mac_1_1Mac.html#aa6b6474625ad896bbdff3438e7f96566" title="This function removes the address from the source match table. " alt="" coords="232,68,420,107"/>
+<area shape="rect" id="node3" href="../../dd/d1d/classThread_1_1MeshForwarder.html#a7668817d03306dadcb36ff9eaad72299" title="This method is called by the address resolver when an EID&#45;to&#45;RLOC mapping has been resolved..." alt="" coords="468,68,632,107"/>
+<area shape="rect" id="node4" href="../../d4/dcf/classThread_1_1AddressResolver.html#ac249179518a77ecfdaf7d4502ef2f940" title="This method returns the RLOC16 for a given EID, or initiates an Address Query if the mapping is not k..." alt="" coords="680,68,853,107"/>
+<area shape="rect" id="node5" href="../../dd/d1d/classThread_1_1MeshForwarder.html#a361ef901f6b665b3c7feac206089a7df" title="This method submits a message to the mesh forwarder for forwarding. " alt="" coords="901,68,1065,107"/>
+<area shape="rect" id="node6" href="../../dd/d1d/classThread_1_1MeshForwarder.html#a3a55dcf590bf5941d216ff313b6ce0d0" title="This method gets the Data Poll period. " alt="" coords="1116,5,1280,44"/>
+<area shape="rect" id="node7" href="../../dd/d1d/classThread_1_1MeshForwarder.html#a5f726671448fb7cd72f8ee96db40731a" title="This method sets the scan parameters for MLE Discovery Request messages. " alt="" coords="1113,68,1283,107"/>
+<area shape="rect" id="node12" href="../../d3/d8e/classThread_1_1ThreadNetif.html#a95f2ad1f6785b0de74e660e43ac86d33" title="This method submits a message to the network interface. " alt="" coords="1127,131,1268,169"/>
+<area shape="rect" id="node8" href="../../df/d94/group__core-mle-core.html#gab299d00d1b2beabe8130e400dd6eca91" title="This method initiates a Thread Discovery. " alt="" coords="1331,75,1511,100"/>
+<area shape="rect" id="node9" href="../../d4/db5/classThread_1_1MeshCoP_1_1Joiner.html#a1ca1f767cfe15e7c25b8f65606e7fefb" title="This method starts the Joiner service. " alt="" coords="1559,40,1732,79"/>
+<area shape="rect" id="node10" href="../../d0/d0a/group__commands.html#ga8422cdf7d0b8b22c6dd107e6bb1309f2" title="This function starts a Thread Discovery scan. " alt="" coords="1604,103,1688,128"/>
+<area shape="rect" id="node11" href="../../d5/dc2/structThread_1_1Cli_1_1Interpreter.html#a11ee1f86cffe17aab7de3de0bb16dee7" title="This method parses an ASCII string as an unsigned long. " alt="" coords="1780,96,1936,135"/>
+</map>
+</div>
+</p>
+
+</div>
+</div>
+<a class="anchor" id="ga5b14c6db562150d0a80c47ef278e5ab8"></a>
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
           <td class="memname"><a class="el" href="../../dc/dbf/openthread-types_8h.html#ab701d053a9c34ab7f11e43e0dc09ac9f">ThreadError</a> otPlatRadioDisable </td>
           <td>(</td>
-          <td class="paramtype">void&#160;</td>
-          <td class="paramname"></td><td>)</td>
+          <td class="paramtype"><a class="el" href="../../d2/d83/structotInstance.html">otInstance</a> *&#160;</td>
+          <td class="paramname"><em>aInstance</em></td><td>)</td>
           <td></td>
         </tr>
       </table>
 </div><div class="memdoc">
 
 <p>Disable the radio. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">aInstance</td><td>The OpenThread instance structure.</td></tr>
+  </table>
+  </dd>
+</dl>
 <dl class="retval"><dt>Return values</dt><dd>
   <table class="retval">
     <tr><td class="paramname">::kThreadError_None</td><td>Successfully transitioned to Disabled. </td></tr>
@@ -187,36 +629,41 @@ Functions</h2></td></tr>
 <p><div class="dynheader">
 Here is the caller graph for this function:</div>
 <div class="dyncontent">
-<div class="center"><img src="../../d7/d9c/group__radio-operation_ga21ffaf3512769c45ec3e6661afe6e942_icgraph.png" border="0" usemap="#d7/d9c/group__radio-operation_ga21ffaf3512769c45ec3e6661afe6e942_icgraph" alt=""/></div>
-<map name="d7/d9c/group__radio-operation_ga21ffaf3512769c45ec3e6661afe6e942_icgraph" id="d7/d9c/group__radio-operation_ga21ffaf3512769c45ec3e6661afe6e942_icgraph">
-<area shape="rect" id="node2" href="../../d9/dc8/classThread_1_1NcpBase.html#ad628aea520da8553bbb090ff4f50b09e" title="Called by the superclass to indicate when a send has been completed. " alt="" coords="188,31,426,56"/>
-<area shape="rect" id="node3" href="../../d2/de4/ncp_8h.html#aef46036f17188b217a2ffcb8c325f516" title="Initialize the NCP. " alt="" coords="533,5,607,31"/>
-<area shape="rect" id="node4" href="../../db/def/group__uart.html#gab2950583380bb90a3779f980c28fbaa0" title="The UART driver calls this method to notify OpenThread that the requested bytes have been sent..." alt="" coords="474,55,667,80"/>
+<div class="center"><img src="../../d7/d9c/group__radio-operation_ga5b14c6db562150d0a80c47ef278e5ab8_icgraph.png" border="0" usemap="#d7/d9c/group__radio-operation_ga5b14c6db562150d0a80c47ef278e5ab8_icgraph" alt=""/></div>
+<map name="d7/d9c/group__radio-operation_ga5b14c6db562150d0a80c47ef278e5ab8_icgraph" id="d7/d9c/group__radio-operation_ga5b14c6db562150d0a80c47ef278e5ab8_icgraph">
+<area shape="rect" id="node2" href="../../d9/dc8/classThread_1_1NcpBase.html#ad14f0f1d60c77f7f537a0a441a9fb35c" title="This method is called by the framer whenever a framing error is detected. " alt="" coords="188,5,380,44"/>
+<area shape="rect" id="node3" href="../../dc/d60/classThread_1_1NcpUart.html#a34e4ca7aff5b9056593e8ce0aa6e2fbb" title="This method is called when uart received a data buffer. " alt="" coords="428,5,623,44"/>
 </map>
 </div>
 </p>
 
 </div>
 </div>
-<a class="anchor" id="ga3df468574cb0ffda6db9a7ba8da7526b"></a>
+<a class="anchor" id="gad2f1f79b0fe0bb9015fd996c723ed52e"></a>
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
           <td class="memname"><a class="el" href="../../dc/dbf/openthread-types_8h.html#ab701d053a9c34ab7f11e43e0dc09ac9f">ThreadError</a> otPlatRadioEnable </td>
           <td>(</td>
-          <td class="paramtype">void&#160;</td>
-          <td class="paramname"></td><td>)</td>
+          <td class="paramtype"><a class="el" href="../../d2/d83/structotInstance.html">otInstance</a> *&#160;</td>
+          <td class="paramname"><em>aInstance</em></td><td>)</td>
           <td></td>
         </tr>
       </table>
 </div><div class="memdoc">
 
 <p>Enable the radio. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">aInstance</td><td>The OpenThread instance structure.</td></tr>
+  </table>
+  </dd>
+</dl>
 <dl class="retval"><dt>Return values</dt><dd>
   <table class="retval">
-    <tr><td class="paramname">::kThreadError_None</td><td>Successfully transitioned to Sleep. </td></tr>
-    <tr><td class="paramname">::kThreadError_Busy</td><td>The radio was already enabled. </td></tr>
+    <tr><td class="paramname">::kThreadError_None</td><td>Successfully enabled. </td></tr>
+    <tr><td class="paramname">::kThreadError_Failure</td><td>The radio could not be enabled. </td></tr>
   </table>
   </dd>
 </dl>
@@ -224,114 +671,258 @@ Here is the caller graph for this function:</div>
 <p><div class="dynheader">
 Here is the caller graph for this function:</div>
 <div class="dyncontent">
-<div class="center"><img src="../../d7/d9c/group__radio-operation_ga3df468574cb0ffda6db9a7ba8da7526b_icgraph.png" border="0" usemap="#d7/d9c/group__radio-operation_ga3df468574cb0ffda6db9a7ba8da7526b_icgraph" alt=""/></div>
-<map name="d7/d9c/group__radio-operation_ga3df468574cb0ffda6db9a7ba8da7526b_icgraph" id="d7/d9c/group__radio-operation_ga3df468574cb0ffda6db9a7ba8da7526b_icgraph">
-<area shape="rect" id="node2" href="../../d6/d88/classThread_1_1Mac_1_1Mac.html#afe65837f6f2e5f566187fc410786ef86" title="This constructor initializes the MAC object. " alt="" coords="223,5,385,31"/>
-<area shape="rect" id="node3" href="../../d9/dc8/classThread_1_1NcpBase.html#ad628aea520da8553bbb090ff4f50b09e" title="Called by the superclass to indicate when a send has been completed. " alt="" coords="185,55,423,80"/>
-<area shape="rect" id="node4" href="../../d2/de4/ncp_8h.html#aef46036f17188b217a2ffcb8c325f516" title="Initialize the NCP. " alt="" coords="531,29,605,55"/>
-<area shape="rect" id="node5" href="../../db/def/group__uart.html#gab2950583380bb90a3779f980c28fbaa0" title="The UART driver calls this method to notify OpenThread that the requested bytes have been sent..." alt="" coords="471,79,664,104"/>
+<div class="center"><img src="../../d7/d9c/group__radio-operation_gad2f1f79b0fe0bb9015fd996c723ed52e_icgraph.png" border="0" usemap="#d7/d9c/group__radio-operation_gad2f1f79b0fe0bb9015fd996c723ed52e_icgraph" alt=""/></div>
+<map name="d7/d9c/group__radio-operation_gad2f1f79b0fe0bb9015fd996c723ed52e_icgraph" id="d7/d9c/group__radio-operation_gad2f1f79b0fe0bb9015fd996c723ed52e_icgraph">
+<area shape="rect" id="node2" href="../../d6/d88/classThread_1_1Mac_1_1Mac.html#afe65837f6f2e5f566187fc410786ef86" title="This constructor initializes the MAC object. " alt="" coords="200,5,362,31"/>
+<area shape="rect" id="node3" href="../../d9/dc8/classThread_1_1NcpBase.html#ad14f0f1d60c77f7f537a0a441a9fb35c" title="This method is called by the framer whenever a framing error is detected. " alt="" coords="185,55,377,93"/>
+<area shape="rect" id="node4" href="../../dc/d60/classThread_1_1NcpUart.html#a34e4ca7aff5b9056593e8ce0aa6e2fbb" title="This method is called when uart received a data buffer. " alt="" coords="425,55,620,93"/>
 </map>
 </div>
 </p>
 
 </div>
 </div>
-<a class="anchor" id="gabe88f22727e816ff25de7f6ea336faf9"></a>
+<a class="anchor" id="gabb1f75e02a0c91b2db8e1325e8575861"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void otPlatRadioEnableSrcMatch </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="../../d2/d83/structotInstance.html">otInstance</a> *&#160;</td>
+          <td class="paramname"><em>aInstance</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">bool&#160;</td>
+          <td class="paramname"><em>aEnable</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Enable/Disable source match for AutoPend. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">aInstance</td><td>The OpenThread instance structure. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">aEnable</td><td>Enable/disable source match for automatical pending. </td></tr>
+  </table>
+  </dd>
+</dl>
+
+<p><div class="dynheader">
+Here is the caller graph for this function:</div>
+<div class="dyncontent">
+<div class="center"><img src="../../d7/d9c/group__radio-operation_gabb1f75e02a0c91b2db8e1325e8575861_icgraph.png" border="0" usemap="#d7/d9c/group__radio-operation_gabb1f75e02a0c91b2db8e1325e8575861_icgraph" alt=""/></div>
+<map name="d7/d9c/group__radio-operation_gabb1f75e02a0c91b2db8e1325e8575861_icgraph" id="d7/d9c/group__radio-operation_gabb1f75e02a0c91b2db8e1325e8575861_icgraph">
+<area shape="rect" id="node2" href="../../d6/d88/classThread_1_1Mac_1_1Mac.html#a2061fad3af040aad48d6bfb4d0b44cce" title="This function enable/disable source match. " alt="" coords="241,37,419,76"/>
+<area shape="rect" id="node3" href="../../dd/d1d/classThread_1_1MeshForwarder.html#aec43d8823d60a45b00c4f2dd40f624c6" title="This constructor initializes the object. " alt="" coords="467,5,631,44"/>
+<area shape="rect" id="node4" href="../../dd/d1d/classThread_1_1MeshForwarder.html#a7668817d03306dadcb36ff9eaad72299" title="This method is called by the address resolver when an EID&#45;to&#45;RLOC mapping has been resolved..." alt="" coords="467,68,631,107"/>
+<area shape="rect" id="node5" href="../../d4/dcf/classThread_1_1AddressResolver.html#ac249179518a77ecfdaf7d4502ef2f940" title="This method returns the RLOC16 for a given EID, or initiates an Address Query if the mapping is not k..." alt="" coords="679,68,852,107"/>
+<area shape="rect" id="node6" href="../../dd/d1d/classThread_1_1MeshForwarder.html#a361ef901f6b665b3c7feac206089a7df" title="This method submits a message to the mesh forwarder for forwarding. " alt="" coords="900,68,1064,107"/>
+<area shape="rect" id="node7" href="../../dd/d1d/classThread_1_1MeshForwarder.html#a3a55dcf590bf5941d216ff313b6ce0d0" title="This method gets the Data Poll period. " alt="" coords="1115,5,1279,44"/>
+<area shape="rect" id="node8" href="../../dd/d1d/classThread_1_1MeshForwarder.html#a5f726671448fb7cd72f8ee96db40731a" title="This method sets the scan parameters for MLE Discovery Request messages. " alt="" coords="1112,68,1282,107"/>
+<area shape="rect" id="node13" href="../../d3/d8e/classThread_1_1ThreadNetif.html#a95f2ad1f6785b0de74e660e43ac86d33" title="This method submits a message to the network interface. " alt="" coords="1127,131,1267,169"/>
+<area shape="rect" id="node9" href="../../df/d94/group__core-mle-core.html#gab299d00d1b2beabe8130e400dd6eca91" title="This method initiates a Thread Discovery. " alt="" coords="1330,75,1510,100"/>
+<area shape="rect" id="node10" href="../../d4/db5/classThread_1_1MeshCoP_1_1Joiner.html#a1ca1f767cfe15e7c25b8f65606e7fefb" title="This method starts the Joiner service. " alt="" coords="1558,40,1732,79"/>
+<area shape="rect" id="node11" href="../../d0/d0a/group__commands.html#ga8422cdf7d0b8b22c6dd107e6bb1309f2" title="This function starts a Thread Discovery scan. " alt="" coords="1603,103,1687,128"/>
+<area shape="rect" id="node12" href="../../d5/dc2/structThread_1_1Cli_1_1Interpreter.html#a11ee1f86cffe17aab7de3de0bb16dee7" title="This method parses an ASCII string as an unsigned long. " alt="" coords="1780,96,1935,135"/>
+</map>
+</div>
+</p>
+
+</div>
+</div>
+<a class="anchor" id="gae3b9ed222f4ad93e1d09e285b57be1ef"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="../../dc/dbf/openthread-types_8h.html#ab701d053a9c34ab7f11e43e0dc09ac9f">ThreadError</a> otPlatRadioEnergyScan </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="../../d2/d83/structotInstance.html">otInstance</a> *&#160;</td>
+          <td class="paramname"><em>aInstance</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">uint8_t&#160;</td>
+          <td class="paramname"><em>aScanChannel</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">uint16_t&#160;</td>
+          <td class="paramname"><em>aScanDuration</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>This method begins the energy scan sequence on the radio. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">aInstance</td><td>The OpenThread instance structure. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">aScanChannel</td><td>The channel to perform the energy scan on. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">aScanDuration</td><td>The duration, in milliseconds, for the channel to be scanned.</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="retval"><dt>Return values</dt><dd>
+  <table class="retval">
+    <tr><td class="paramname">::kThreadError_None</td><td>Successfully started scanning the channel. </td></tr>
+    <tr><td class="paramname">::kThreadError_NotImplemented</td><td>The radio doesn't support energy scanning. </td></tr>
+  </table>
+  </dd>
+</dl>
+
+<p><div class="dynheader">
+Here is the caller graph for this function:</div>
+<div class="dyncontent">
+<div class="center"><img src="../../d7/d9c/group__radio-operation_gae3b9ed222f4ad93e1d09e285b57be1ef_icgraph.png" border="0" usemap="#d7/d9c/group__radio-operation_gae3b9ed222f4ad93e1d09e285b57be1ef_icgraph" alt=""/></div>
+<map name="d7/d9c/group__radio-operation_gae3b9ed222f4ad93e1d09e285b57be1ef_icgraph" id="d7/d9c/group__radio-operation_gae3b9ed222f4ad93e1d09e285b57be1ef_icgraph">
+<area shape="rect" id="node2" href="../../d6/d88/classThread_1_1Mac_1_1Mac.html#a99305013a985466a1dbf218d34ee31eb" title="This method returns if an energy scan is in progress. " alt="" coords="216,5,405,44"/>
+<area shape="rect" id="node3" href="../../d0/d0a/group__commands.html#ga93b20cfbbaeadec1e0345f15979f06fa" title="This function indicates whether or not an IEEE 802.15.4 Energy Scan is currently in progress..." alt="" coords="453,12,633,37"/>
+<area shape="rect" id="node4" href="../../d9/dc8/classThread_1_1NcpBase.html#ad14f0f1d60c77f7f537a0a441a9fb35c" title="This method is called by the framer whenever a framing error is detected. " alt="" coords="681,5,873,44"/>
+<area shape="rect" id="node5" href="../../dc/d60/classThread_1_1NcpUart.html#a34e4ca7aff5b9056593e8ce0aa6e2fbb" title="This method is called when uart received a data buffer. " alt="" coords="921,5,1115,44"/>
+</map>
+</div>
+</p>
+
+</div>
+</div>
+<a class="anchor" id="ga65b11fca984c76f2b4bc782cd1e4811a"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void otPlatRadioEnergyScanDone </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="../../d2/d83/structotInstance.html">otInstance</a> *&#160;</td>
+          <td class="paramname"><em>aInstance</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int8_t&#160;</td>
+          <td class="paramname"><em>aEnergyScanMaxRssi</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>The radio driver calls this method to notify OpenThread that the energy scan is complete. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">aInstance</td><td>The OpenThread instance structure. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">aEnergyScanMaxRssi</td><td>The maximum RSSI encountered on the scanned channel. </td></tr>
+  </table>
+  </dd>
+</dl>
+
+<p><div class="dynheader">
+Here is the call graph for this function:</div>
+<div class="dyncontent">
+<div class="center"><img src="../../d7/d9c/group__radio-operation_ga65b11fca984c76f2b4bc782cd1e4811a_cgraph.png" border="0" usemap="#d7/d9c/group__radio-operation_ga65b11fca984c76f2b4bc782cd1e4811a_cgraph" alt=""/></div>
+<map name="d7/d9c/group__radio-operation_ga65b11fca984c76f2b4bc782cd1e4811a_cgraph" id="d7/d9c/group__radio-operation_ga65b11fca984c76f2b4bc782cd1e4811a_cgraph">
+<area shape="rect" id="node2" href="../../d3/d8e/classThread_1_1ThreadNetif.html#aec59b0e172327889e9b0f4f08b0e69f9" title="This method returns a pointer to the mac object. " alt="" coords="267,5,408,44"/>
+<area shape="rect" id="node3" href="../../d6/d88/classThread_1_1Mac_1_1Mac.html#afb0ae648acc64f50f204be5b7375c57c" title="This function indicates the energy scan for the current channel is complete. " alt="" coords="248,68,427,107"/>
+<area shape="rect" id="node4" href="../../d7/d9c/group__radio-operation.html#ga4ac10bba73d06f59af623bbb3349d3fb" title="Get the most recent RSSI measurement. " alt="" coords="479,19,617,44"/>
+<area shape="rect" id="node5" href="../../d3/d8e/classThread_1_1ThreadNetif.html#a83517ab2bff2614e403895426df6a61b" title="This method returns the pointer to the parent otInstance structure. " alt="" coords="478,68,618,107"/>
+<area shape="rect" id="node6" href="../../d4/d92/classThread_1_1Tasklet.html#a50a39a6f422851035b89aace87482425" title="This method puts the tasklet on the run queue. " alt="" coords="475,131,621,156"/>
+<area shape="rect" id="node7" href="../../d8/de8/classThread_1_1TaskletScheduler.html#a137292acddf92acdef54cc7a33ea5fac" title="This method enqueues a tasklet into the run queue. " alt="" coords="669,124,842,163"/>
+<area shape="rect" id="node8" href="../../d1/de3/group__execution.html#ga04d5608ac68a78eb3e8fc167587c61f3" title="OpenThread calls this function when the tasklet queue transitions from empty to non&#45;empty. " alt="" coords="907,75,1067,100"/>
+<area shape="rect" id="node9" href="../../d8/de8/classThread_1_1TaskletScheduler.html#aeaf526c316bbea7d53d20fa9e3c94c40" title="This method returns the pointer to the parent Ip6 structure. " alt="" coords="901,124,1073,163"/>
+<area shape="rect" id="node10" href="../../d3/d05/classThread_1_1Ip6_1_1Ip6.html#a624d9508f3ecfa586378a3d802cb6ff7" title="This method returns the pointer to the parent otInstance structure. " alt="" coords="890,187,1084,212"/>
+</map>
+</div>
+</p>
+
+</div>
+</div>
+<a class="anchor" id="ga5a5999dadb6ac0ee70a69a960930f132"></a>
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
           <td class="memname"><a class="el" href="../../db/d1b/group__radio-types.html#ga64d6a0cf11075e2ab0079c9d86c34b55">otRadioCaps</a> otPlatRadioGetCaps </td>
           <td>(</td>
-          <td class="paramtype">void&#160;</td>
-          <td class="paramname"></td><td>)</td>
+          <td class="paramtype"><a class="el" href="../../d2/d83/structotInstance.html">otInstance</a> *&#160;</td>
+          <td class="paramname"><em>aInstance</em></td><td>)</td>
           <td></td>
         </tr>
       </table>
 </div><div class="memdoc">
 
 <p>Get the radio capabilities. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">aInstance</td><td>The OpenThread instance structure.</td></tr>
+  </table>
+  </dd>
+</dl>
 <dl class="section return"><dt>Returns</dt><dd>The radio capability bit vector. The stack enables or disables some functions based on this value. </dd></dl>
 
 <p><div class="dynheader">
 Here is the caller graph for this function:</div>
 <div class="dyncontent">
-<div class="center"><img src="../../d7/d9c/group__radio-operation_gabe88f22727e816ff25de7f6ea336faf9_icgraph.png" border="0" usemap="#d7/d9c/group__radio-operation_gabe88f22727e816ff25de7f6ea336faf9_icgraph" alt=""/></div>
-<map name="d7/d9c/group__radio-operation_gabe88f22727e816ff25de7f6ea336faf9_icgraph" id="d7/d9c/group__radio-operation_gabe88f22727e816ff25de7f6ea336faf9_icgraph">
-<area shape="rect" id="node2" href="../../d6/d88/classThread_1_1Mac_1_1Mac.html#aacc5fd2b9ea373a699840afa8e562dc9" title="This method registers a new MAC sender client. " alt="" coords="196,179,402,218"/>
-<area shape="rect" id="node3" href="../../dd/d1d/classThread_1_1MeshForwarder.html#a7668817d03306dadcb36ff9eaad72299" title="This method is called by the address resolver when an EID&#45;to&#45;RLOC mapping has been resolved..." alt="" coords="450,179,614,218"/>
-<area shape="rect" id="node4" href="../../d4/dcf/classThread_1_1AddressResolver.html#ac249179518a77ecfdaf7d4502ef2f940" title="This method returns the RLOC16 for a given EID, or initiates an Address Query if the mapping is not k..." alt="" coords="662,179,835,218"/>
-<area shape="rect" id="node5" href="../../dd/d1d/classThread_1_1MeshForwarder.html#a361ef901f6b665b3c7feac206089a7df" title="This method submits a message to the mesh forwarder for forwarding. " alt="" coords="883,179,1047,218"/>
-<area shape="rect" id="node6" href="../../dd/d1d/classThread_1_1MeshForwarder.html#a969c6fac135cdee3ed9380a0859eaaa8" title="This method sets the Data Poll period. " alt="" coords="1095,179,1260,218"/>
-<area shape="rect" id="node23" href="../../d3/d8e/classThread_1_1ThreadNetif.html#a95f2ad1f6785b0de74e660e43ac86d33" title="This method submits a message to the network interface. " alt="" coords="1107,242,1248,281"/>
-<area shape="rect" id="node7" href="../../df/d94/group__core-mle-core.html#gad555ca36631eff9b978e448ecbcf8e2e" title="This method appends an Address Registration TLV to a message. " alt="" coords="1308,237,1482,275"/>
-<area shape="rect" id="node8" href="../../df/d94/group__core-mle-core.html#ga09239c621861382d25163980ab5d983b" title="This method generates an MLE Child Update Request message. " alt="" coords="1530,237,1721,275"/>
-<area shape="rect" id="node14" href="../../df/d94/group__core-mle-core.html#ga0ea27201cf13a4e1b0680a9da6c54a64" title="This method submits an MLE message to the UDP socket. " alt="" coords="2295,375,2509,401"/>
-<area shape="rect" id="node9" href="../../df/d94/group__core-mle-core.html#ga01c7e5a022360a6f35e30d07221dbfea" title="This method starts the MLE protocol operation. " alt="" coords="1802,145,1959,170"/>
-<area shape="rect" id="node10" href="../../df/d94/group__core-mle-core.html#gafb51db61e6e184d664a9e7cc3833dcf4" title="This method sets the MLE Timeout value. " alt="" coords="1782,194,1978,219"/>
-<area shape="rect" id="node11" href="../../df/d94/group__core-mle-core.html#ga453d94c377c5825a4a5e8b66a728e591" title="This method sets the Device Mode as reported in the Mode TLV. " alt="" coords="1769,243,1992,269"/>
-<area shape="rect" id="node12" href="../../df/d94/group__core-mle-core.html#gaac7d42ff61704aa43e94dbb781c78c5e" title="This method notifies MLE that the Network Data has changed. " alt="" coords="1795,293,1966,331"/>
-<area shape="rect" id="node13" href="../../d6/d9b/classThread_1_1NetworkData_1_1Leader.html#a428d60927d6f4b4ac8e878e792d2f716" title="This method is used by non&#45;Leader devices to set newly received Network Data from the Leader..." alt="" coords="2056,293,2231,331"/>
-<area shape="rect" id="node20" href="../../d6/d9b/classThread_1_1NetworkData_1_1Leader.html#a5baddd109ff06b58140e2678e3c97a16" title="This method removes Network Data associated with a given RLOC16. " alt="" coords="2040,219,2247,258"/>
-<area shape="rect" id="node19" href="../../db/dec/group__core-mle-router.html#ga2f58e7783003a5d53b12a556ac4375f2" title="This method sets the ROUTER_UPGRADE_THRESHOLD value. " alt="" coords="2557,267,2756,306"/>
-<area shape="rect" id="node15" href="../../df/d94/group__core-mle-core.html#gac13477847483bba0aeab32fd93a7dbac" title="This method generates an MLE Data Request message. " alt="" coords="2562,445,2751,483"/>
-<area shape="rect" id="node16" href="../../df/d94/group__core-mle-core.html#ga4a192897e2fe5f4b0ab2ed1535fd2657" title="This method generates an MLE Data Response message. " alt="" coords="2562,330,2751,369"/>
-<area shape="rect" id="node17" href="../../db/dec/group__core-mle-router.html#ga7126c084ace25827febebc4210928cd4" title="This method generates an MLE Link Reject. " alt="" coords="2810,359,2972,398"/>
-<area shape="rect" id="node18" href="../../db/dec/group__core-mle-router.html#gaf13c43af2bf2f9057629cbb74fca0af0" title="This method handles MAC Data Poll messages. " alt="" coords="2804,127,2978,166"/>
-<area shape="rect" id="node21" href="../../db/dec/group__core-mle-router.html#ga179fad5b4b75849e76811006761d2b3e" title="This method release a given Router ID. " alt="" coords="2321,210,2483,249"/>
-<area shape="rect" id="node22" href="../../db/dec/group__core-mle-router.html#gac7d2542017033898d0bc0f17a65d4656" title="This method checks if the destination is reachable. " alt="" coords="2576,87,2737,126"/>
+<div class="center"><img src="../../d7/d9c/group__radio-operation_ga5a5999dadb6ac0ee70a69a960930f132_icgraph.png" border="0" usemap="#d7/d9c/group__radio-operation_ga5a5999dadb6ac0ee70a69a960930f132_icgraph" alt=""/></div>
+<map name="d7/d9c/group__radio-operation_ga5a5999dadb6ac0ee70a69a960930f132_icgraph" id="d7/d9c/group__radio-operation_ga5a5999dadb6ac0ee70a69a960930f132_icgraph">
+<area shape="rect" id="node2" href="../../d6/d88/classThread_1_1Mac_1_1Mac.html#a99305013a985466a1dbf218d34ee31eb" title="This method returns if an energy scan is in progress. " alt="" coords="205,5,394,44"/>
+<area shape="rect" id="node6" href="../../d6/d88/classThread_1_1Mac_1_1Mac.html#aacc5fd2b9ea373a699840afa8e562dc9" title="This method registers a new MAC sender client. " alt="" coords="196,68,402,107"/>
+<area shape="rect" id="node3" href="../../d0/d0a/group__commands.html#ga93b20cfbbaeadec1e0345f15979f06fa" title="This function indicates whether or not an IEEE 802.15.4 Energy Scan is currently in progress..." alt="" coords="450,12,630,37"/>
+<area shape="rect" id="node4" href="../../d9/dc8/classThread_1_1NcpBase.html#ad14f0f1d60c77f7f537a0a441a9fb35c" title="This method is called by the framer whenever a framing error is detected. " alt="" coords="678,5,870,44"/>
+<area shape="rect" id="node5" href="../../dc/d60/classThread_1_1NcpUart.html#a34e4ca7aff5b9056593e8ce0aa6e2fbb" title="This method is called when uart received a data buffer. " alt="" coords="918,5,1113,44"/>
+<area shape="rect" id="node7" href="../../dd/d1d/classThread_1_1MeshForwarder.html#a7668817d03306dadcb36ff9eaad72299" title="This method is called by the address resolver when an EID&#45;to&#45;RLOC mapping has been resolved..." alt="" coords="458,68,622,107"/>
+<area shape="rect" id="node8" href="../../d4/dcf/classThread_1_1AddressResolver.html#ac249179518a77ecfdaf7d4502ef2f940" title="This method returns the RLOC16 for a given EID, or initiates an Address Query if the mapping is not k..." alt="" coords="688,68,860,107"/>
+<area shape="rect" id="node9" href="../../dd/d1d/classThread_1_1MeshForwarder.html#a361ef901f6b665b3c7feac206089a7df" title="This method submits a message to the mesh forwarder for forwarding. " alt="" coords="933,68,1097,107"/>
+<area shape="rect" id="node10" href="../../dd/d1d/classThread_1_1MeshForwarder.html#a3a55dcf590bf5941d216ff313b6ce0d0" title="This method gets the Data Poll period. " alt="" coords="1163,5,1327,44"/>
+<area shape="rect" id="node11" href="../../dd/d1d/classThread_1_1MeshForwarder.html#a5f726671448fb7cd72f8ee96db40731a" title="This method sets the scan parameters for MLE Discovery Request messages. " alt="" coords="1161,68,1330,107"/>
+<area shape="rect" id="node16" href="../../d3/d8e/classThread_1_1ThreadNetif.html#a95f2ad1f6785b0de74e660e43ac86d33" title="This method submits a message to the network interface. " alt="" coords="1175,131,1316,169"/>
+<area shape="rect" id="node12" href="../../df/d94/group__core-mle-core.html#gab299d00d1b2beabe8130e400dd6eca91" title="This method initiates a Thread Discovery. " alt="" coords="1378,75,1559,100"/>
+<area shape="rect" id="node13" href="../../d4/db5/classThread_1_1MeshCoP_1_1Joiner.html#a1ca1f767cfe15e7c25b8f65606e7fefb" title="This method starts the Joiner service. " alt="" coords="1607,40,1780,79"/>
+<area shape="rect" id="node14" href="../../d0/d0a/group__commands.html#ga8422cdf7d0b8b22c6dd107e6bb1309f2" title="This function starts a Thread Discovery scan. " alt="" coords="1651,103,1735,128"/>
+<area shape="rect" id="node15" href="../../d5/dc2/structThread_1_1Cli_1_1Interpreter.html#a11ee1f86cffe17aab7de3de0bb16dee7" title="This method parses an ASCII string as an unsigned long. " alt="" coords="1828,96,1983,135"/>
 </map>
 </div>
 </p>
 
 </div>
 </div>
-<a class="anchor" id="gab331c8626df6faf4afb8ef23443a318a"></a>
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">int8_t otPlatRadioGetNoiseFloor </td>
-          <td>(</td>
-          <td class="paramtype">void&#160;</td>
-          <td class="paramname"></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p>Get the most recent RSSI measurement. </p>
-<dl class="section return"><dt>Returns</dt><dd>The noise floor value in dBm when the noise floor value is valid. 127 when noise floor value is invalid. </dd></dl>
-
-<p><div class="dynheader">
-Here is the caller graph for this function:</div>
-<div class="dyncontent">
-<div class="center"><img src="../../d7/d9c/group__radio-operation_gab331c8626df6faf4afb8ef23443a318a_icgraph.png" border="0" usemap="#d7/d9c/group__radio-operation_gab331c8626df6faf4afb8ef23443a318a_icgraph" alt=""/></div>
-<map name="d7/d9c/group__radio-operation_gab331c8626df6faf4afb8ef23443a318a_icgraph" id="d7/d9c/group__radio-operation_gab331c8626df6faf4afb8ef23443a318a_icgraph">
-<area shape="rect" id="node2" href="../../d9/dc8/classThread_1_1NcpBase.html#ad628aea520da8553bbb090ff4f50b09e" title="Called by the superclass to indicate when a send has been completed. " alt="" coords="230,31,467,56"/>
-<area shape="rect" id="node3" href="../../d2/de4/ncp_8h.html#aef46036f17188b217a2ffcb8c325f516" title="Initialize the NCP. " alt="" coords="575,5,649,31"/>
-<area shape="rect" id="node4" href="../../db/def/group__uart.html#gab2950583380bb90a3779f980c28fbaa0" title="The UART driver calls this method to notify OpenThread that the requested bytes have been sent..." alt="" coords="515,55,709,80"/>
-</map>
-</div>
-</p>
-
-</div>
-</div>
-<a class="anchor" id="ga11b64d16bc2a19d51ea7a23a1488210f"></a>
+<a class="anchor" id="gaef6191a2f5c0dd177dc009dae3796e8e"></a>
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
           <td class="memname">bool otPlatRadioGetPromiscuous </td>
           <td>(</td>
-          <td class="paramtype">void&#160;</td>
-          <td class="paramname"></td><td>)</td>
+          <td class="paramtype"><a class="el" href="../../d2/d83/structotInstance.html">otInstance</a> *&#160;</td>
+          <td class="paramname"><em>aInstance</em></td><td>)</td>
           <td></td>
         </tr>
       </table>
 </div><div class="memdoc">
 
 <p>Get the status of promiscuous mode. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">aInstance</td><td>The OpenThread instance structure.</td></tr>
+  </table>
+  </dd>
+</dl>
 <dl class="retval"><dt>Return values</dt><dd>
   <table class="retval">
     <tr><td class="paramname">true</td><td>Promiscuous mode is enabled. </td></tr>
@@ -343,103 +934,201 @@ Here is the caller graph for this function:</div>
 <p><div class="dynheader">
 Here is the caller graph for this function:</div>
 <div class="dyncontent">
-<div class="center"><img src="../../d7/d9c/group__radio-operation_ga11b64d16bc2a19d51ea7a23a1488210f_icgraph.png" border="0" usemap="#d7/d9c/group__radio-operation_ga11b64d16bc2a19d51ea7a23a1488210f_icgraph" alt=""/></div>
-<map name="d7/d9c/group__radio-operation_ga11b64d16bc2a19d51ea7a23a1488210f_icgraph" id="d7/d9c/group__radio-operation_ga11b64d16bc2a19d51ea7a23a1488210f_icgraph">
-<area shape="rect" id="node2" href="../../d6/d88/classThread_1_1Mac_1_1Mac.html#aacc5fd2b9ea373a699840afa8e562dc9" title="This method registers a new MAC sender client. " alt="" coords="258,157,464,195"/>
-<area shape="rect" id="node9" href="../../df/d94/group__core-mle-core.html#ga01c7e5a022360a6f35e30d07221dbfea" title="This method starts the MLE protocol operation. " alt="" coords="1908,195,2065,221"/>
-<area shape="rect" id="node24" href="../../d6/d88/classThread_1_1Mac_1_1Mac.html#a1b04f6a76c128bcdc30f77b0d01c8f52" title="This function indicates whether or not promiscuous mode is enabled at the link layer. " alt="" coords="249,219,473,245"/>
-<area shape="rect" id="node25" href="../../d9/dc8/classThread_1_1NcpBase.html#ad628aea520da8553bbb090ff4f50b09e" title="Called by the superclass to indicate when a send has been completed. " alt="" coords="242,269,480,294"/>
-<area shape="rect" id="node3" href="../../dd/d1d/classThread_1_1MeshForwarder.html#a7668817d03306dadcb36ff9eaad72299" title="This method is called by the address resolver when an EID&#45;to&#45;RLOC mapping has been resolved..." alt="" coords="542,169,707,207"/>
-<area shape="rect" id="node4" href="../../d4/dcf/classThread_1_1AddressResolver.html#ac249179518a77ecfdaf7d4502ef2f940" title="This method returns the RLOC16 for a given EID, or initiates an Address Query if the mapping is not k..." alt="" coords="769,202,942,241"/>
-<area shape="rect" id="node5" href="../../dd/d1d/classThread_1_1MeshForwarder.html#a361ef901f6b665b3c7feac206089a7df" title="This method submits a message to the mesh forwarder for forwarding. " alt="" coords="990,265,1154,303"/>
-<area shape="rect" id="node6" href="../../dd/d1d/classThread_1_1MeshForwarder.html#a969c6fac135cdee3ed9380a0859eaaa8" title="This method sets the Data Poll period. " alt="" coords="1202,295,1366,334"/>
-<area shape="rect" id="node23" href="../../d3/d8e/classThread_1_1ThreadNetif.html#a95f2ad1f6785b0de74e660e43ac86d33" title="This method submits a message to the network interface. " alt="" coords="1214,233,1355,271"/>
-<area shape="rect" id="node7" href="../../df/d94/group__core-mle-core.html#gad555ca36631eff9b978e448ecbcf8e2e" title="This method appends an Address Registration TLV to a message. " alt="" coords="1414,254,1589,293"/>
-<area shape="rect" id="node8" href="../../df/d94/group__core-mle-core.html#ga09239c621861382d25163980ab5d983b" title="This method generates an MLE Child Update Request message. " alt="" coords="1637,262,1827,301"/>
-<area shape="rect" id="node14" href="../../df/d94/group__core-mle-core.html#ga0ea27201cf13a4e1b0680a9da6c54a64" title="This method submits an MLE message to the UDP socket. " alt="" coords="2402,229,2616,254"/>
-<area shape="rect" id="node10" href="../../df/d94/group__core-mle-core.html#gafb51db61e6e184d664a9e7cc3833dcf4" title="This method sets the MLE Timeout value. " alt="" coords="1889,245,2085,270"/>
-<area shape="rect" id="node11" href="../../df/d94/group__core-mle-core.html#ga453d94c377c5825a4a5e8b66a728e591" title="This method sets the Device Mode as reported in the Mode TLV. " alt="" coords="1875,294,2098,319"/>
-<area shape="rect" id="node12" href="../../df/d94/group__core-mle-core.html#gaac7d42ff61704aa43e94dbb781c78c5e" title="This method notifies MLE that the Network Data has changed. " alt="" coords="1901,395,2072,434"/>
-<area shape="rect" id="node13" href="../../d6/d9b/classThread_1_1NetworkData_1_1Leader.html#a428d60927d6f4b4ac8e878e792d2f716" title="This method is used by non&#45;Leader devices to set newly received Network Data from the Leader..." alt="" coords="2163,333,2337,371"/>
-<area shape="rect" id="node20" href="../../d6/d9b/classThread_1_1NetworkData_1_1Leader.html#a5baddd109ff06b58140e2678e3c97a16" title="This method removes Network Data associated with a given RLOC16. " alt="" coords="2146,395,2354,434"/>
-<area shape="rect" id="node19" href="../../db/dec/group__core-mle-router.html#ga2f58e7783003a5d53b12a556ac4375f2" title="This method sets the ROUTER_UPGRADE_THRESHOLD value. " alt="" coords="2664,337,2863,375"/>
-<area shape="rect" id="node15" href="../../df/d94/group__core-mle-core.html#gac13477847483bba0aeab32fd93a7dbac" title="This method generates an MLE Data Request message. " alt="" coords="2669,159,2857,198"/>
-<area shape="rect" id="node16" href="../../df/d94/group__core-mle-core.html#ga4a192897e2fe5f4b0ab2ed1535fd2657" title="This method generates an MLE Data Response message. " alt="" coords="2669,222,2857,261"/>
-<area shape="rect" id="node17" href="../../db/dec/group__core-mle-router.html#ga7126c084ace25827febebc4210928cd4" title="This method generates an MLE Link Reject. " alt="" coords="2917,338,3079,377"/>
-<area shape="rect" id="node18" href="../../db/dec/group__core-mle-router.html#gaf13c43af2bf2f9057629cbb74fca0af0" title="This method handles MAC Data Poll messages. " alt="" coords="2911,130,3085,169"/>
-<area shape="rect" id="node21" href="../../db/dec/group__core-mle-router.html#ga179fad5b4b75849e76811006761d2b3e" title="This method release a given Router ID. " alt="" coords="2428,395,2589,434"/>
-<area shape="rect" id="node22" href="../../db/dec/group__core-mle-router.html#gac7d2542017033898d0bc0f17a65d4656" title="This method checks if the destination is reachable. " alt="" coords="2683,510,2844,549"/>
-<area shape="rect" id="node26" href="../../d2/de4/ncp_8h.html#aef46036f17188b217a2ffcb8c325f516" title="Initialize the NCP. " alt="" coords="588,243,662,269"/>
-<area shape="rect" id="node27" href="../../db/def/group__uart.html#gab2950583380bb90a3779f980c28fbaa0" title="The UART driver calls this method to notify OpenThread that the requested bytes have been sent..." alt="" coords="528,293,721,318"/>
+<div class="center"><img src="../../d7/d9c/group__radio-operation_gaef6191a2f5c0dd177dc009dae3796e8e_icgraph.png" border="0" usemap="#d7/d9c/group__radio-operation_gaef6191a2f5c0dd177dc009dae3796e8e_icgraph" alt=""/></div>
+<map name="d7/d9c/group__radio-operation_gaef6191a2f5c0dd177dc009dae3796e8e_icgraph" id="d7/d9c/group__radio-operation_gaef6191a2f5c0dd177dc009dae3796e8e_icgraph">
+<area shape="rect" id="node2" href="../../d5/dc2/structThread_1_1Cli_1_1Interpreter.html#a11ee1f86cffe17aab7de3de0bb16dee7" title="This method parses an ASCII string as an unsigned long. " alt="" coords="2839,489,2994,528"/>
+<area shape="rect" id="node3" href="../../d6/d88/classThread_1_1Mac_1_1Mac.html#aacc5fd2b9ea373a699840afa8e562dc9" title="This method registers a new MAC sender client. " alt="" coords="242,113,448,152"/>
+<area shape="rect" id="node13" href="../../d6/d88/classThread_1_1Mac_1_1Mac.html#a1b04f6a76c128bcdc30f77b0d01c8f52" title="This function indicates whether or not promiscuous mode is enabled at the link layer. " alt="" coords="496,12,720,37"/>
+<area shape="rect" id="node15" href="../../df/d94/group__core-mle-core.html#ga01c7e5a022360a6f35e30d07221dbfea" title="This method starts the MLE protocol operation. " alt="" coords="267,460,424,485"/>
+<area shape="rect" id="node17" href="../../d9/dc8/classThread_1_1NcpBase.html#ad14f0f1d60c77f7f537a0a441a9fb35c" title="This method is called by the framer whenever a framing error is detected. " alt="" coords="2135,623,2327,661"/>
+<area shape="rect" id="node4" href="../../dd/d1d/classThread_1_1MeshForwarder.html#a7668817d03306dadcb36ff9eaad72299" title="This method is called by the address resolver when an EID&#45;to&#45;RLOC mapping has been resolved..." alt="" coords="526,113,690,152"/>
+<area shape="rect" id="node5" href="../../d4/dcf/classThread_1_1AddressResolver.html#ac249179518a77ecfdaf7d4502ef2f940" title="This method returns the RLOC16 for a given EID, or initiates an Address Query if the mapping is not k..." alt="" coords="1061,113,1233,152"/>
+<area shape="rect" id="node6" href="../../dd/d1d/classThread_1_1MeshForwarder.html#a361ef901f6b665b3c7feac206089a7df" title="This method submits a message to the mesh forwarder for forwarding. " alt="" coords="1877,229,2041,268"/>
+<area shape="rect" id="node7" href="../../dd/d1d/classThread_1_1MeshForwarder.html#a3a55dcf590bf5941d216ff313b6ce0d0" title="This method gets the Data Poll period. " alt="" coords="2149,180,2313,219"/>
+<area shape="rect" id="node8" href="../../dd/d1d/classThread_1_1MeshForwarder.html#a5f726671448fb7cd72f8ee96db40731a" title="This method sets the scan parameters for MLE Discovery Request messages. " alt="" coords="2146,117,2316,156"/>
+<area shape="rect" id="node12" href="../../d3/d8e/classThread_1_1ThreadNetif.html#a95f2ad1f6785b0de74e660e43ac86d33" title="This method submits a message to the network interface. " alt="" coords="2161,243,2301,281"/>
+<area shape="rect" id="node9" href="../../df/d94/group__core-mle-core.html#gab299d00d1b2beabe8130e400dd6eca91" title="This method initiates a Thread Discovery. " alt="" coords="2382,307,2563,332"/>
+<area shape="rect" id="node10" href="../../d4/db5/classThread_1_1MeshCoP_1_1Joiner.html#a1ca1f767cfe15e7c25b8f65606e7fefb" title="This method starts the Joiner service. " alt="" coords="2618,300,2791,339"/>
+<area shape="rect" id="node11" href="../../d0/d0a/group__commands.html#ga8422cdf7d0b8b22c6dd107e6bb1309f2" title="This function starts a Thread Discovery scan. " alt="" coords="2662,391,2746,416"/>
+<area shape="rect" id="node14" href="../../d8/dd2/group__diags.html#ga0b52ad8f245c83734f5e8ad1bdde7f6f" title="This function indicates whether or not promiscuous mode is enabled at the link layer. " alt="" coords="2400,12,2544,37"/>
+<area shape="rect" id="node16" href="../../d0/d0a/group__commands.html#ga62fbc1cdb7b036df73975ca5683f8573" title="This function starts Thread protocol operation. " alt="" coords="1908,785,2011,811"/>
+<area shape="rect" id="node19" href="../../df/d94/group__core-mle-core.html#ga0ea27201cf13a4e1b0680a9da6c54a64" title="This method submits an MLE message to the UDP socket. " alt="" coords="501,400,715,425"/>
+<area shape="rect" id="node18" href="../../dc/d60/classThread_1_1NcpUart.html#a34e4ca7aff5b9056593e8ce0aa6e2fbb" title="This method is called when uart received a data buffer. " alt="" coords="2375,623,2570,661"/>
+<area shape="rect" id="node20" href="../../df/d94/group__core-mle-core.html#gace8437c6340cefbd5db1a53f9e00422b" title="This method appends a Pending Timestamp TLV to a message. " alt="" coords="1060,393,1234,432"/>
+<area shape="rect" id="node21" href="../../df/d94/group__core-mle-core.html#gac13477847483bba0aeab32fd93a7dbac" title="This method generates an MLE Data Request message. " alt="" coords="1311,463,1499,501"/>
+<area shape="rect" id="node22" href="../../db/dec/group__core-mle-router.html#ga12a2afd1fef5036981d7f1f05d3e6f01" title="This method sets the ROUTER_DOWNGRADE_THRESHOLD value. " alt="" coords="1559,521,1775,560"/>
+<area shape="rect" id="node24" href="../../db/dec/group__core-mle-router.html#gac532b9ffa61813ee2c1463b6820c8c75" title="This method returns the number of active routers. " alt="" coords="1324,344,1486,383"/>
+<area shape="rect" id="node30" href="../../df/d94/group__core-mle-core.html#ga09239c621861382d25163980ab5d983b" title="This method generates an MLE Child Update Request message. " alt="" coords="782,583,973,621"/>
+<area shape="rect" id="node35" href="../../df/d94/group__core-mle-core.html#ga91214fcb8db3271fc3ad0472e38c1e0a" title="This method generates an MLE Announce message. " alt="" coords="768,241,988,267"/>
+<area shape="rect" id="node37" href="../../db/dec/group__core-mle-router.html#ga7126c084ace25827febebc4210928cd4" title="This method generates an MLE Link Reject. " alt="" coords="797,175,958,213"/>
+<area shape="rect" id="node23" href="../../db/d57/group__config-test.html#ga907be1830046930bb04f606dc6dc3ec1" title="Set the ROUTER_DOWNGRADE_THRESHOLD parameter used in the Leader role. " alt="" coords="1849,528,2069,553"/>
+<area shape="rect" id="node25" href="../../db/dec/group__core-mle-router.html#gac7d2542017033898d0bc0f17a65d4656" title="This method checks if the destination is reachable. " alt="" coords="1587,229,1748,268"/>
+<area shape="rect" id="node26" href="../../db/dec/group__core-mle-router.html#gadf4904db11b31b2931f2f5ed1b988f83" title="This method fills an RouteTlv. " alt="" coords="1587,344,1748,383"/>
+<area shape="rect" id="node28" href="../../dd/dd1/classThread_1_1NetworkData_1_1Local.html#a6688957845dc3ee7fc08bbc50145d98e" title="This method sends a Server Data Notification message to the Leader. " alt="" coords="1551,407,1784,445"/>
+<area shape="rect" id="node27" href="../../d6/d17/classThread_1_1NetworkDiagnostic_1_1NetworkDiagnostic.html#aabefee38f58e0a8bcd39650ccc386e12" title="This method fills ChildTableTlv. " alt="" coords="1832,344,2087,383"/>
+<area shape="rect" id="node29" href="../../db/da2/group__config-br.html#gaf9f7e49c190e8e11297d534e223d6274" title="Immediately register the local network data with the Leader. " alt="" coords="1894,471,2025,496"/>
+<area shape="rect" id="node31" href="../../df/d94/group__core-mle-core.html#gafb51db61e6e184d664a9e7cc3833dcf4" title="This method sets the MLE Timeout value. " alt="" coords="1306,632,1503,657"/>
+<area shape="rect" id="node33" href="../../df/d94/group__core-mle-core.html#ga453d94c377c5825a4a5e8b66a728e591" title="This method sets the Device Mode as reported in the Mode TLV. " alt="" coords="1036,684,1258,709"/>
+<area shape="rect" id="node32" href="../../df/d4f/group__config-general.html#ga6b28b99c77378da98922a3d994b7641c" title="Set the Thread Child Timeout used when operating in the Child role. " alt="" coords="1894,629,2025,655"/>
+<area shape="rect" id="node34" href="../../df/d4f/group__config-general.html#ga8263fa852e25758aad3636bce0069a0d" title="Set the MLE Link Mode configuration. " alt="" coords="1904,684,2014,709"/>
+<area shape="rect" id="node36" href="../../da/d6e/classThread_1_1AnnounceBeginServer.html#a0ec55dcc678b320251be99112cfc037b" title="This method begins the MLE Announce transmission process. " alt="" coords="1045,228,1249,267"/>
 </map>
 </div>
 </p>
 
 </div>
 </div>
-<a class="anchor" id="gad694a1bf5125d395cb282a950d759813"></a>
+<a class="anchor" id="ga4ac10bba73d06f59af623bbb3349d3fb"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int8_t otPlatRadioGetRssi </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="../../d2/d83/structotInstance.html">otInstance</a> *&#160;</td>
+          <td class="paramname"><em>aInstance</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Get the most recent RSSI measurement. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">aInstance</td><td>The OpenThread instance structure.</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>The RSSI in dBm when it is valid. 127 when RSSI is invalid. </dd></dl>
+
+<p><div class="dynheader">
+Here is the caller graph for this function:</div>
+<div class="dyncontent">
+<div class="center"><img src="../../d7/d9c/group__radio-operation_ga4ac10bba73d06f59af623bbb3349d3fb_icgraph.png" border="0" usemap="#d7/d9c/group__radio-operation_ga4ac10bba73d06f59af623bbb3349d3fb_icgraph" alt=""/></div>
+<map name="d7/d9c/group__radio-operation_ga4ac10bba73d06f59af623bbb3349d3fb_icgraph" id="d7/d9c/group__radio-operation_ga4ac10bba73d06f59af623bbb3349d3fb_icgraph">
+<area shape="rect" id="node2" href="../../d6/d88/classThread_1_1Mac_1_1Mac.html#afb0ae648acc64f50f204be5b7375c57c" title="This function indicates the energy scan for the current channel is complete. " alt="" coords="198,96,376,135"/>
+<area shape="rect" id="node17" href="../../d9/dc8/classThread_1_1NcpBase.html#ad14f0f1d60c77f7f537a0a441a9fb35c" title="This method is called by the framer whenever a framing error is detected. " alt="" coords="191,159,383,197"/>
+<area shape="rect" id="node3" href="../../d7/d9c/group__radio-operation.html#ga65b11fca984c76f2b4bc782cd1e4811a" title="The radio driver calls this method to notify OpenThread that the energy scan is complete. " alt="" coords="431,47,626,72"/>
+<area shape="rect" id="node4" href="../../d6/d88/classThread_1_1Mac_1_1Mac.html#adb6ca8a4287b21a2f9e35090ed716506" title="This method is called to handle transmit events. " alt="" coords="434,96,622,135"/>
+<area shape="rect" id="node5" href="../../d6/d88/classThread_1_1Mac_1_1Mac.html#aacc5fd2b9ea373a699840afa8e562dc9" title="This method registers a new MAC sender client. " alt="" coords="674,68,879,107"/>
+<area shape="rect" id="node16" href="../../d7/d9c/group__radio-operation.html#ga7d10a9bce7521f75bd84b32b979e1aa7" title="The radio driver calls this method to notify OpenThread that the transmission has completed..." alt="" coords="690,131,863,156"/>
+<area shape="rect" id="node6" href="../../dd/d1d/classThread_1_1MeshForwarder.html#a7668817d03306dadcb36ff9eaad72299" title="This method is called by the address resolver when an EID&#45;to&#45;RLOC mapping has been resolved..." alt="" coords="927,68,1092,107"/>
+<area shape="rect" id="node7" href="../../d4/dcf/classThread_1_1AddressResolver.html#ac249179518a77ecfdaf7d4502ef2f940" title="This method returns the RLOC16 for a given EID, or initiates an Address Query if the mapping is not k..." alt="" coords="1140,68,1312,107"/>
+<area shape="rect" id="node8" href="../../dd/d1d/classThread_1_1MeshForwarder.html#a361ef901f6b665b3c7feac206089a7df" title="This method submits a message to the mesh forwarder for forwarding. " alt="" coords="1360,68,1525,107"/>
+<area shape="rect" id="node9" href="../../dd/d1d/classThread_1_1MeshForwarder.html#a3a55dcf590bf5941d216ff313b6ce0d0" title="This method gets the Data Poll period. " alt="" coords="1575,5,1740,44"/>
+<area shape="rect" id="node10" href="../../dd/d1d/classThread_1_1MeshForwarder.html#a5f726671448fb7cd72f8ee96db40731a" title="This method sets the scan parameters for MLE Discovery Request messages. " alt="" coords="1573,68,1742,107"/>
+<area shape="rect" id="node15" href="../../d3/d8e/classThread_1_1ThreadNetif.html#a95f2ad1f6785b0de74e660e43ac86d33" title="This method submits a message to the network interface. " alt="" coords="1587,131,1728,169"/>
+<area shape="rect" id="node11" href="../../df/d94/group__core-mle-core.html#gab299d00d1b2beabe8130e400dd6eca91" title="This method initiates a Thread Discovery. " alt="" coords="1790,75,1971,100"/>
+<area shape="rect" id="node12" href="../../d4/db5/classThread_1_1MeshCoP_1_1Joiner.html#a1ca1f767cfe15e7c25b8f65606e7fefb" title="This method starts the Joiner service. " alt="" coords="2019,40,2192,79"/>
+<area shape="rect" id="node13" href="../../d0/d0a/group__commands.html#ga8422cdf7d0b8b22c6dd107e6bb1309f2" title="This function starts a Thread Discovery scan. " alt="" coords="2063,103,2148,128"/>
+<area shape="rect" id="node14" href="../../d5/dc2/structThread_1_1Cli_1_1Interpreter.html#a11ee1f86cffe17aab7de3de0bb16dee7" title="This method parses an ASCII string as an unsigned long. " alt="" coords="2240,96,2396,135"/>
+<area shape="rect" id="node18" href="../../dc/d60/classThread_1_1NcpUart.html#a34e4ca7aff5b9056593e8ce0aa6e2fbb" title="This method is called when uart received a data buffer. " alt="" coords="431,159,626,197"/>
+</map>
+</div>
+</p>
+
+</div>
+</div>
+<a class="anchor" id="gafe1fdf44907fccdb06be0db517d4fb01"></a>
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
           <td class="memname"><a class="el" href="../../db/ddc/structRadioPacket.html">RadioPacket</a>* otPlatRadioGetTransmitBuffer </td>
           <td>(</td>
-          <td class="paramtype">void&#160;</td>
-          <td class="paramname"></td><td>)</td>
+          <td class="paramtype"><a class="el" href="../../d2/d83/structotInstance.html">otInstance</a> *&#160;</td>
+          <td class="paramname"><em>aInstance</em></td><td>)</td>
           <td></td>
         </tr>
       </table>
 </div><div class="memdoc">
 
-<p>The radio tranitions from Transmit to Receive. </p>
+<p>The radio transitions from Transmit to Receive. </p>
 <p>This method returns a pointer to the transmit buffer.</p>
-<p>The caller forms the IEEE 802.15.4 frame in this buffer then calls <a class="el" href="../../d7/d9c/group__radio-operation.html#gae77575566fe30b5b5a21c9278e1fce5e" title="This method begins the transmit sequence on the radio. ">otPlatRadioTransmit()</a> to request transmission.</p>
+<p>The caller forms the IEEE 802.15.4 frame in this buffer then calls <a class="el" href="../../d7/d9c/group__radio-operation.html#ga23aa0adfee1ed815c98fc3c087700ed1" title="This method begins the transmit sequence on the radio. ">otPlatRadioTransmit()</a> to request transmission.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">aInstance</td><td>The OpenThread instance structure.</td></tr>
+  </table>
+  </dd>
+</dl>
 <dl class="section return"><dt>Returns</dt><dd>A pointer to the transmit buffer. </dd></dl>
 
 <p><div class="dynheader">
 Here is the caller graph for this function:</div>
 <div class="dyncontent">
-<div class="center"><img src="../../d7/d9c/group__radio-operation_gad694a1bf5125d395cb282a950d759813_icgraph.png" border="0" usemap="#d7/d9c/group__radio-operation_gad694a1bf5125d395cb282a950d759813_icgraph" alt=""/></div>
-<map name="d7/d9c/group__radio-operation_gad694a1bf5125d395cb282a950d759813_icgraph" id="d7/d9c/group__radio-operation_gad694a1bf5125d395cb282a950d759813_icgraph">
-<area shape="rect" id="node2" href="../../d6/d88/classThread_1_1Mac_1_1Mac.html#aacc5fd2b9ea373a699840afa8e562dc9" title="This method registers a new MAC sender client. " alt="" coords="252,179,458,218"/>
-<area shape="rect" id="node24" href="../../d6/d88/classThread_1_1Mac_1_1Mac.html#adb6ca8a4287b21a2f9e35090ed716506" title="This method is called to handle transmit events. " alt="" coords="261,242,448,281"/>
-<area shape="rect" id="node3" href="../../dd/d1d/classThread_1_1MeshForwarder.html#a7668817d03306dadcb36ff9eaad72299" title="This method is called by the address resolver when an EID&#45;to&#45;RLOC mapping has been resolved..." alt="" coords="506,179,670,218"/>
-<area shape="rect" id="node4" href="../../d4/dcf/classThread_1_1AddressResolver.html#ac249179518a77ecfdaf7d4502ef2f940" title="This method returns the RLOC16 for a given EID, or initiates an Address Query if the mapping is not k..." alt="" coords="718,179,891,218"/>
-<area shape="rect" id="node5" href="../../dd/d1d/classThread_1_1MeshForwarder.html#a361ef901f6b665b3c7feac206089a7df" title="This method submits a message to the mesh forwarder for forwarding. " alt="" coords="939,179,1103,218"/>
-<area shape="rect" id="node6" href="../../dd/d1d/classThread_1_1MeshForwarder.html#a969c6fac135cdee3ed9380a0859eaaa8" title="This method sets the Data Poll period. " alt="" coords="1151,179,1315,218"/>
-<area shape="rect" id="node23" href="../../d3/d8e/classThread_1_1ThreadNetif.html#a95f2ad1f6785b0de74e660e43ac86d33" title="This method submits a message to the network interface. " alt="" coords="1163,242,1303,281"/>
-<area shape="rect" id="node7" href="../../df/d94/group__core-mle-core.html#gad555ca36631eff9b978e448ecbcf8e2e" title="This method appends an Address Registration TLV to a message. " alt="" coords="1363,237,1538,275"/>
-<area shape="rect" id="node8" href="../../df/d94/group__core-mle-core.html#ga09239c621861382d25163980ab5d983b" title="This method generates an MLE Child Update Request message. " alt="" coords="1586,237,1776,275"/>
-<area shape="rect" id="node14" href="../../df/d94/group__core-mle-core.html#ga0ea27201cf13a4e1b0680a9da6c54a64" title="This method submits an MLE message to the UDP socket. " alt="" coords="2350,375,2565,401"/>
-<area shape="rect" id="node9" href="../../df/d94/group__core-mle-core.html#ga01c7e5a022360a6f35e30d07221dbfea" title="This method starts the MLE protocol operation. " alt="" coords="1857,145,2014,170"/>
-<area shape="rect" id="node10" href="../../df/d94/group__core-mle-core.html#gafb51db61e6e184d664a9e7cc3833dcf4" title="This method sets the MLE Timeout value. " alt="" coords="1837,194,2034,219"/>
-<area shape="rect" id="node11" href="../../df/d94/group__core-mle-core.html#ga453d94c377c5825a4a5e8b66a728e591" title="This method sets the Device Mode as reported in the Mode TLV. " alt="" coords="1824,243,2047,269"/>
-<area shape="rect" id="node12" href="../../df/d94/group__core-mle-core.html#gaac7d42ff61704aa43e94dbb781c78c5e" title="This method notifies MLE that the Network Data has changed. " alt="" coords="1850,293,2021,331"/>
-<area shape="rect" id="node13" href="../../d6/d9b/classThread_1_1NetworkData_1_1Leader.html#a428d60927d6f4b4ac8e878e792d2f716" title="This method is used by non&#45;Leader devices to set newly received Network Data from the Leader..." alt="" coords="2111,293,2286,331"/>
-<area shape="rect" id="node20" href="../../d6/d9b/classThread_1_1NetworkData_1_1Leader.html#a5baddd109ff06b58140e2678e3c97a16" title="This method removes Network Data associated with a given RLOC16. " alt="" coords="2095,219,2302,258"/>
-<area shape="rect" id="node19" href="../../db/dec/group__core-mle-router.html#ga2f58e7783003a5d53b12a556ac4375f2" title="This method sets the ROUTER_UPGRADE_THRESHOLD value. " alt="" coords="2613,267,2812,306"/>
-<area shape="rect" id="node15" href="../../df/d94/group__core-mle-core.html#gac13477847483bba0aeab32fd93a7dbac" title="This method generates an MLE Data Request message. " alt="" coords="2618,445,2806,483"/>
-<area shape="rect" id="node16" href="../../df/d94/group__core-mle-core.html#ga4a192897e2fe5f4b0ab2ed1535fd2657" title="This method generates an MLE Data Response message. " alt="" coords="2618,330,2806,369"/>
-<area shape="rect" id="node17" href="../../db/dec/group__core-mle-router.html#ga7126c084ace25827febebc4210928cd4" title="This method generates an MLE Link Reject. " alt="" coords="2866,359,3027,398"/>
-<area shape="rect" id="node18" href="../../db/dec/group__core-mle-router.html#gaf13c43af2bf2f9057629cbb74fca0af0" title="This method handles MAC Data Poll messages. " alt="" coords="2860,127,3034,166"/>
-<area shape="rect" id="node21" href="../../db/dec/group__core-mle-router.html#ga179fad5b4b75849e76811006761d2b3e" title="This method release a given Router ID. " alt="" coords="2377,210,2538,249"/>
-<area shape="rect" id="node22" href="../../db/dec/group__core-mle-router.html#gac7d2542017033898d0bc0f17a65d4656" title="This method checks if the destination is reachable. " alt="" coords="2631,87,2793,126"/>
+<div class="center"><img src="../../d7/d9c/group__radio-operation_gafe1fdf44907fccdb06be0db517d4fb01_icgraph.png" border="0" usemap="#d7/d9c/group__radio-operation_gafe1fdf44907fccdb06be0db517d4fb01_icgraph" alt=""/></div>
+<map name="d7/d9c/group__radio-operation_gafe1fdf44907fccdb06be0db517d4fb01_icgraph" id="d7/d9c/group__radio-operation_gafe1fdf44907fccdb06be0db517d4fb01_icgraph">
+<area shape="rect" id="node2" href="../../d6/d88/classThread_1_1Mac_1_1Mac.html#aacc5fd2b9ea373a699840afa8e562dc9" title="This method registers a new MAC sender client. " alt="" coords="487,68,693,107"/>
+<area shape="rect" id="node13" href="../../d6/d88/classThread_1_1Mac_1_1Mac.html#adb6ca8a4287b21a2f9e35090ed716506" title="This method is called to handle transmit events. " alt="" coords="252,124,439,163"/>
+<area shape="rect" id="node3" href="../../dd/d1d/classThread_1_1MeshForwarder.html#a7668817d03306dadcb36ff9eaad72299" title="This method is called by the address resolver when an EID&#45;to&#45;RLOC mapping has been resolved..." alt="" coords="741,68,906,107"/>
+<area shape="rect" id="node4" href="../../d4/dcf/classThread_1_1AddressResolver.html#ac249179518a77ecfdaf7d4502ef2f940" title="This method returns the RLOC16 for a given EID, or initiates an Address Query if the mapping is not k..." alt="" coords="954,68,1126,107"/>
+<area shape="rect" id="node5" href="../../dd/d1d/classThread_1_1MeshForwarder.html#a361ef901f6b665b3c7feac206089a7df" title="This method submits a message to the mesh forwarder for forwarding. " alt="" coords="1174,68,1338,107"/>
+<area shape="rect" id="node6" href="../../dd/d1d/classThread_1_1MeshForwarder.html#a3a55dcf590bf5941d216ff313b6ce0d0" title="This method gets the Data Poll period. " alt="" coords="1389,5,1553,44"/>
+<area shape="rect" id="node7" href="../../dd/d1d/classThread_1_1MeshForwarder.html#a5f726671448fb7cd72f8ee96db40731a" title="This method sets the scan parameters for MLE Discovery Request messages. " alt="" coords="1386,68,1556,107"/>
+<area shape="rect" id="node12" href="../../d3/d8e/classThread_1_1ThreadNetif.html#a95f2ad1f6785b0de74e660e43ac86d33" title="This method submits a message to the network interface. " alt="" coords="1401,131,1541,169"/>
+<area shape="rect" id="node8" href="../../df/d94/group__core-mle-core.html#gab299d00d1b2beabe8130e400dd6eca91" title="This method initiates a Thread Discovery. " alt="" coords="1604,75,1785,100"/>
+<area shape="rect" id="node9" href="../../d4/db5/classThread_1_1MeshCoP_1_1Joiner.html#a1ca1f767cfe15e7c25b8f65606e7fefb" title="This method starts the Joiner service. " alt="" coords="1833,40,2006,79"/>
+<area shape="rect" id="node10" href="../../d0/d0a/group__commands.html#ga8422cdf7d0b8b22c6dd107e6bb1309f2" title="This function starts a Thread Discovery scan. " alt="" coords="1877,103,1961,128"/>
+<area shape="rect" id="node11" href="../../d5/dc2/structThread_1_1Cli_1_1Interpreter.html#a11ee1f86cffe17aab7de3de0bb16dee7" title="This method parses an ASCII string as an unsigned long. " alt="" coords="2054,96,2209,135"/>
+<area shape="rect" id="node14" href="../../d7/d9c/group__radio-operation.html#ga7d10a9bce7521f75bd84b32b979e1aa7" title="The radio driver calls this method to notify OpenThread that the transmission has completed..." alt="" coords="504,131,677,156"/>
 </map>
 </div>
 </p>
 
 </div>
 </div>
-<a class="anchor" id="ga3097c7532cd2047b3a5e338bcd6c4b5e"></a>
+<a class="anchor" id="gaf26840dd6a3c6bd1da7156127c8306f5"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool otPlatRadioIsEnabled </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="../../d2/d83/structotInstance.html">otInstance</a> *&#160;</td>
+          <td class="paramname"><em>aInstance</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Check whether radio is enabled or not. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">aInstance</td><td>The OpenThread instance structure.</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="retval"><dt>Return values</dt><dd>
+  <table class="retval">
+    <tr><td class="paramname">::true</td><td>radio is enabled. </td></tr>
+    <tr><td class="paramname">::false</td><td>radio is disabled. </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a class="anchor" id="ga063a389dc7d1e68cbe495cc3cff758c1"></a>
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
           <td class="memname"><a class="el" href="../../dc/dbf/openthread-types_8h.html#ab701d053a9c34ab7f11e43e0dc09ac9f">ThreadError</a> otPlatRadioReceive </td>
           <td>(</td>
-          <td class="paramtype">uint8_t&#160;</td>
-          <td class="paramname"><em>aChannel</em></td><td>)</td>
+          <td class="paramtype"><a class="el" href="../../d2/d83/structotInstance.html">otInstance</a> *&#160;</td>
+          <td class="paramname"><em>aInstance</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
           <td></td>
+          <td class="paramtype">uint8_t&#160;</td>
+          <td class="paramname"><em>aChannel</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
         </tr>
       </table>
 </div><div class="memdoc">
@@ -448,6 +1137,7 @@ Here is the caller graph for this function:</div>
 <p>Turn on the radio.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">aInstance</td><td>The OpenThread instance structure. </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">aChannel</td><td>The channel to use for receiving.</td></tr>
   </table>
   </dd>
@@ -455,7 +1145,7 @@ Here is the caller graph for this function:</div>
 <dl class="retval"><dt>Return values</dt><dd>
   <table class="retval">
     <tr><td class="paramname">::kThreadError_None</td><td>Successfully transitioned to Receive. </td></tr>
-    <tr><td class="paramname">::kThreadError_Busy</td><td>The radio was not in the Sleep state. </td></tr>
+    <tr><td class="paramname">::kThreadError_InvalidState</td><td>The radio was disabled or transmitting. </td></tr>
   </table>
   </dd>
 </dl>
@@ -463,45 +1153,40 @@ Here is the caller graph for this function:</div>
 <p><div class="dynheader">
 Here is the caller graph for this function:</div>
 <div class="dyncontent">
-<div class="center"><img src="../../d7/d9c/group__radio-operation_ga3097c7532cd2047b3a5e338bcd6c4b5e_icgraph.png" border="0" usemap="#d7/d9c/group__radio-operation_ga3097c7532cd2047b3a5e338bcd6c4b5e_icgraph" alt=""/></div>
-<map name="d7/d9c/group__radio-operation_ga3097c7532cd2047b3a5e338bcd6c4b5e_icgraph" id="d7/d9c/group__radio-operation_ga3097c7532cd2047b3a5e338bcd6c4b5e_icgraph">
-<area shape="rect" id="node2" href="../../d6/d88/classThread_1_1Mac_1_1Mac.html#aacc5fd2b9ea373a699840afa8e562dc9" title="This method registers a new MAC sender client. " alt="" coords="205,179,411,218"/>
-<area shape="rect" id="node24" href="../../d6/d88/classThread_1_1Mac_1_1Mac.html#adb6ca8a4287b21a2f9e35090ed716506" title="This method is called to handle transmit events. " alt="" coords="215,242,402,281"/>
-<area shape="rect" id="node25" href="../../d6/d88/classThread_1_1Mac_1_1Mac.html#aeacaaf9b0fb951c5d78892a9ea9b5c53" title="This function enables or disables the link layer promiscuous mode. " alt="" coords="192,305,425,330"/>
-<area shape="rect" id="node3" href="../../dd/d1d/classThread_1_1MeshForwarder.html#a7668817d03306dadcb36ff9eaad72299" title="This method is called by the address resolver when an EID&#45;to&#45;RLOC mapping has been resolved..." alt="" coords="473,179,637,218"/>
-<area shape="rect" id="node4" href="../../d4/dcf/classThread_1_1AddressResolver.html#ac249179518a77ecfdaf7d4502ef2f940" title="This method returns the RLOC16 for a given EID, or initiates an Address Query if the mapping is not k..." alt="" coords="685,179,858,218"/>
-<area shape="rect" id="node5" href="../../dd/d1d/classThread_1_1MeshForwarder.html#a361ef901f6b665b3c7feac206089a7df" title="This method submits a message to the mesh forwarder for forwarding. " alt="" coords="906,179,1070,218"/>
-<area shape="rect" id="node6" href="../../dd/d1d/classThread_1_1MeshForwarder.html#a969c6fac135cdee3ed9380a0859eaaa8" title="This method sets the Data Poll period. " alt="" coords="1118,179,1283,218"/>
-<area shape="rect" id="node23" href="../../d3/d8e/classThread_1_1ThreadNetif.html#a95f2ad1f6785b0de74e660e43ac86d33" title="This method submits a message to the network interface. " alt="" coords="1130,242,1271,281"/>
-<area shape="rect" id="node7" href="../../df/d94/group__core-mle-core.html#gad555ca36631eff9b978e448ecbcf8e2e" title="This method appends an Address Registration TLV to a message. " alt="" coords="1331,237,1505,275"/>
-<area shape="rect" id="node8" href="../../df/d94/group__core-mle-core.html#ga09239c621861382d25163980ab5d983b" title="This method generates an MLE Child Update Request message. " alt="" coords="1553,237,1744,275"/>
-<area shape="rect" id="node14" href="../../df/d94/group__core-mle-core.html#ga0ea27201cf13a4e1b0680a9da6c54a64" title="This method submits an MLE message to the UDP socket. " alt="" coords="2318,375,2532,401"/>
-<area shape="rect" id="node9" href="../../df/d94/group__core-mle-core.html#ga01c7e5a022360a6f35e30d07221dbfea" title="This method starts the MLE protocol operation. " alt="" coords="1825,145,1982,170"/>
-<area shape="rect" id="node10" href="../../df/d94/group__core-mle-core.html#gafb51db61e6e184d664a9e7cc3833dcf4" title="This method sets the MLE Timeout value. " alt="" coords="1805,194,2001,219"/>
-<area shape="rect" id="node11" href="../../df/d94/group__core-mle-core.html#ga453d94c377c5825a4a5e8b66a728e591" title="This method sets the Device Mode as reported in the Mode TLV. " alt="" coords="1792,243,2015,269"/>
-<area shape="rect" id="node12" href="../../df/d94/group__core-mle-core.html#gaac7d42ff61704aa43e94dbb781c78c5e" title="This method notifies MLE that the Network Data has changed. " alt="" coords="1818,293,1989,331"/>
-<area shape="rect" id="node13" href="../../d6/d9b/classThread_1_1NetworkData_1_1Leader.html#a428d60927d6f4b4ac8e878e792d2f716" title="This method is used by non&#45;Leader devices to set newly received Network Data from the Leader..." alt="" coords="2079,293,2254,331"/>
-<area shape="rect" id="node20" href="../../d6/d9b/classThread_1_1NetworkData_1_1Leader.html#a5baddd109ff06b58140e2678e3c97a16" title="This method removes Network Data associated with a given RLOC16. " alt="" coords="2063,219,2270,258"/>
-<area shape="rect" id="node19" href="../../db/dec/group__core-mle-router.html#ga2f58e7783003a5d53b12a556ac4375f2" title="This method sets the ROUTER_UPGRADE_THRESHOLD value. " alt="" coords="2580,267,2779,306"/>
-<area shape="rect" id="node15" href="../../df/d94/group__core-mle-core.html#gac13477847483bba0aeab32fd93a7dbac" title="This method generates an MLE Data Request message. " alt="" coords="2585,445,2774,483"/>
-<area shape="rect" id="node16" href="../../df/d94/group__core-mle-core.html#ga4a192897e2fe5f4b0ab2ed1535fd2657" title="This method generates an MLE Data Response message. " alt="" coords="2585,330,2774,369"/>
-<area shape="rect" id="node17" href="../../db/dec/group__core-mle-router.html#ga7126c084ace25827febebc4210928cd4" title="This method generates an MLE Link Reject. " alt="" coords="2833,359,2995,398"/>
-<area shape="rect" id="node18" href="../../db/dec/group__core-mle-router.html#gaf13c43af2bf2f9057629cbb74fca0af0" title="This method handles MAC Data Poll messages. " alt="" coords="2827,127,3001,166"/>
-<area shape="rect" id="node21" href="../../db/dec/group__core-mle-router.html#ga179fad5b4b75849e76811006761d2b3e" title="This method release a given Router ID. " alt="" coords="2344,210,2506,249"/>
-<area shape="rect" id="node22" href="../../db/dec/group__core-mle-router.html#gac7d2542017033898d0bc0f17a65d4656" title="This method checks if the destination is reachable. " alt="" coords="2599,87,2760,126"/>
+<div class="center"><img src="../../d7/d9c/group__radio-operation_ga063a389dc7d1e68cbe495cc3cff758c1_icgraph.png" border="0" usemap="#d7/d9c/group__radio-operation_ga063a389dc7d1e68cbe495cc3cff758c1_icgraph" alt=""/></div>
+<map name="d7/d9c/group__radio-operation_ga063a389dc7d1e68cbe495cc3cff758c1_icgraph" id="d7/d9c/group__radio-operation_ga063a389dc7d1e68cbe495cc3cff758c1_icgraph">
+<area shape="rect" id="node2" href="../../d6/d88/classThread_1_1Mac_1_1Mac.html#aacc5fd2b9ea373a699840afa8e562dc9" title="This method registers a new MAC sender client. " alt="" coords="427,68,633,107"/>
+<area shape="rect" id="node13" href="../../d6/d88/classThread_1_1Mac_1_1Mac.html#adb6ca8a4287b21a2f9e35090ed716506" title="This method is called to handle transmit events. " alt="" coords="192,124,379,163"/>
+<area shape="rect" id="node3" href="../../dd/d1d/classThread_1_1MeshForwarder.html#a7668817d03306dadcb36ff9eaad72299" title="This method is called by the address resolver when an EID&#45;to&#45;RLOC mapping has been resolved..." alt="" coords="681,68,846,107"/>
+<area shape="rect" id="node4" href="../../d4/dcf/classThread_1_1AddressResolver.html#ac249179518a77ecfdaf7d4502ef2f940" title="This method returns the RLOC16 for a given EID, or initiates an Address Query if the mapping is not k..." alt="" coords="894,68,1066,107"/>
+<area shape="rect" id="node5" href="../../dd/d1d/classThread_1_1MeshForwarder.html#a361ef901f6b665b3c7feac206089a7df" title="This method submits a message to the mesh forwarder for forwarding. " alt="" coords="1114,68,1278,107"/>
+<area shape="rect" id="node6" href="../../dd/d1d/classThread_1_1MeshForwarder.html#a3a55dcf590bf5941d216ff313b6ce0d0" title="This method gets the Data Poll period. " alt="" coords="1329,5,1493,44"/>
+<area shape="rect" id="node7" href="../../dd/d1d/classThread_1_1MeshForwarder.html#a5f726671448fb7cd72f8ee96db40731a" title="This method sets the scan parameters for MLE Discovery Request messages. " alt="" coords="1326,68,1496,107"/>
+<area shape="rect" id="node12" href="../../d3/d8e/classThread_1_1ThreadNetif.html#a95f2ad1f6785b0de74e660e43ac86d33" title="This method submits a message to the network interface. " alt="" coords="1341,131,1481,169"/>
+<area shape="rect" id="node8" href="../../df/d94/group__core-mle-core.html#gab299d00d1b2beabe8130e400dd6eca91" title="This method initiates a Thread Discovery. " alt="" coords="1544,75,1725,100"/>
+<area shape="rect" id="node9" href="../../d4/db5/classThread_1_1MeshCoP_1_1Joiner.html#a1ca1f767cfe15e7c25b8f65606e7fefb" title="This method starts the Joiner service. " alt="" coords="1773,40,1946,79"/>
+<area shape="rect" id="node10" href="../../d0/d0a/group__commands.html#ga8422cdf7d0b8b22c6dd107e6bb1309f2" title="This function starts a Thread Discovery scan. " alt="" coords="1817,103,1901,128"/>
+<area shape="rect" id="node11" href="../../d5/dc2/structThread_1_1Cli_1_1Interpreter.html#a11ee1f86cffe17aab7de3de0bb16dee7" title="This method parses an ASCII string as an unsigned long. " alt="" coords="1994,96,2149,135"/>
+<area shape="rect" id="node14" href="../../d7/d9c/group__radio-operation.html#ga7d10a9bce7521f75bd84b32b979e1aa7" title="The radio driver calls this method to notify OpenThread that the transmission has completed..." alt="" coords="443,131,617,156"/>
 </map>
 </div>
 </p>
 
 </div>
 </div>
-<a class="anchor" id="ga5719e439a302ffe5d54c60cfd0965d1e"></a>
+<a class="anchor" id="ga75836c10d52472c0dfca98f490c4a5f7"></a>
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
           <td class="memname">void otPlatRadioReceiveDone </td>
           <td>(</td>
+          <td class="paramtype"><a class="el" href="../../d2/d83/structotInstance.html">otInstance</a> *&#160;</td>
+          <td class="paramname"><em>aInstance</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
           <td class="paramtype"><a class="el" href="../../db/ddc/structRadioPacket.html">RadioPacket</a> *&#160;</td>
           <td class="paramname"><em>aPacket</em>, </td>
         </tr>
@@ -522,24 +1207,60 @@ Here is the caller graph for this function:</div>
 <p>The radio driver calls this method to notify OpenThread of a received packet. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">aInstance</td><td>The OpenThread instance structure. </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">aPacket</td><td>A pointer to the received packet or NULL if the receive operation was aborted. </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">aError</td><td>::kThreadError_None when successfully received a frame, ::kThreadError_Abort when reception was aborted and a frame was not received. </td></tr>
   </table>
   </dd>
 </dl>
 
+<p><div class="dynheader">
+Here is the call graph for this function:</div>
+<div class="dyncontent">
+<div class="center"><img src="../../d7/d9c/group__radio-operation_ga75836c10d52472c0dfca98f490c4a5f7_cgraph.png" border="0" usemap="#d7/d9c/group__radio-operation_ga75836c10d52472c0dfca98f490c4a5f7_cgraph" alt=""/></div>
+<map name="d7/d9c/group__radio-operation_ga75836c10d52472c0dfca98f490c4a5f7_cgraph" id="d7/d9c/group__radio-operation_ga75836c10d52472c0dfca98f490c4a5f7_cgraph">
+<area shape="rect" id="node2" href="../../d3/d8e/classThread_1_1ThreadNetif.html#aec59b0e172327889e9b0f4f08b0e69f9" title="This method returns a pointer to the mac object. " alt="" coords="245,319,386,357"/>
+<area shape="rect" id="node3" href="../../d6/d88/classThread_1_1Mac_1_1Mac.html#a1b58865279aa421b1da0a665a6260e1d" title="This method is called to handle receive events. " alt="" coords="224,381,408,420"/>
+<area shape="rect" id="node4" href="../../d5/d19/classThread_1_1Mac_1_1Frame.html#a822db6a8c7e1cdaa03536e428025fed6" title="This method gets the Source Address. " alt="" coords="466,5,608,44"/>
+<area shape="rect" id="node5" href="../../db/dec/group__core-mle-router.html#gae77c691904889226f188bf0b7847baa8" title="This method returns a pointer to a Neighbor object. " alt="" coords="456,68,617,107"/>
+<area shape="rect" id="node7" href="../../d7/d98/classThread_1_1Mac_1_1Whitelist.html#aca8b8971afb8bd239077c11d711de0af" title="This method indicates whether or not the whitelist filter is enabled. " alt="" coords="460,131,614,169"/>
+<area shape="rect" id="node8" href="../../d7/d98/classThread_1_1Mac_1_1Whitelist.html#ad79d158eb35d6e10284cbc678335a994" title="This method finds a whitelist entry. " alt="" coords="460,193,614,232"/>
+<area shape="rect" id="node9" href="../../d7/d98/classThread_1_1Mac_1_1Whitelist.html#a8f97f7200b5a28e4a192fcd14a31332e" title="This method indicates whether or not the fixed RSSI is set. " alt="" coords="460,256,614,295"/>
+<area shape="rect" id="node10" href="../../d4/db9/classThread_1_1Mac_1_1Blacklist.html#a269d89343e4dd874d7c59bc1946cc9ac" title="This method indicates whether or not the blacklist filter is enabled. " alt="" coords="460,319,613,357"/>
+<area shape="rect" id="node11" href="../../d4/db9/classThread_1_1Mac_1_1Blacklist.html#afa72e97964846b2c9b73d7bf31a81371" title="This method finds a blacklist entry. " alt="" coords="460,381,613,420"/>
+<area shape="rect" id="node12" href="../../d5/d19/classThread_1_1Mac_1_1Frame.html#a8a6520ee4233fd2746f1004d7ad2ff97" title="This method gets the Destination Address. " alt="" coords="466,444,608,483"/>
+<area shape="rect" id="node13" href="../../d5/d19/classThread_1_1Mac_1_1Frame.html#a2828cc7a1d1c91126d4d8a1421bee328" title="This method gets the Destination PAN Identifier. " alt="" coords="466,507,608,545"/>
+<area shape="rect" id="node14" href="../../dd/d38/classThread_1_1LinkQualityInfo.html#a45dfdc4409e7f87889b95d445aefcdd9" title="This method adds a new received signal strength (RSS) value to the average. " alt="" coords="457,569,616,608"/>
+<area shape="rect" id="node15" href="../../d5/d19/classThread_1_1Mac_1_1Frame.html#aa97494929ac0f0e6923e8021b5e5d924" title="This method returns the IEEE 802.15.4 Frame Type. " alt="" coords="466,632,608,671"/>
+<area shape="rect" id="node16" href="../../d1/d40/classThread_1_1Timer.html#a9acdec1cdf4edf947c563d40871f2bc8" title="This method stops the timer. " alt="" coords="467,695,606,720"/>
+<area shape="rect" id="node17" href="../../d5/d19/classThread_1_1Mac_1_1Frame.html#a09d352ee711d0b403e55094a2fbb4365" title="This method gets the Command ID. " alt="" coords="466,744,608,783"/>
+<area shape="rect" id="node6" href="../../df/d94/group__core-mle-core.html#gaf9288bc975f39346b4e5d15796bf08b6" title="This method returns a pointer to the neighbor object. " alt="" coords="665,75,870,100"/>
+</map>
+</div>
+</p>
+
 </div>
 </div>
-<a class="anchor" id="gab59a1acdb231bcd6234dbc93c9e0a618"></a>
+<a class="anchor" id="ga0a905ad5c76c5931ee2ef395342f0dca"></a>
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
           <td class="memname">void otPlatRadioSetPromiscuous </td>
           <td>(</td>
-          <td class="paramtype">bool&#160;</td>
-          <td class="paramname"><em>aEnable</em></td><td>)</td>
+          <td class="paramtype"><a class="el" href="../../d2/d83/structotInstance.html">otInstance</a> *&#160;</td>
+          <td class="paramname"><em>aInstance</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
           <td></td>
+          <td class="paramtype">bool&#160;</td>
+          <td class="paramname"><em>aEnable</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
         </tr>
       </table>
 </div><div class="memdoc">
@@ -547,6 +1268,7 @@ Here is the caller graph for this function:</div>
 <p>Enable or disable promiscuous mode. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">aInstance</td><td>The OpenThread instance structure. </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">aEnable</td><td>A value to enable or disable promiscuous mode. </td></tr>
   </table>
   </dd>
@@ -555,27 +1277,28 @@ Here is the caller graph for this function:</div>
 <p><div class="dynheader">
 Here is the caller graph for this function:</div>
 <div class="dyncontent">
-<div class="center"><img src="../../d7/d9c/group__radio-operation_gab59a1acdb231bcd6234dbc93c9e0a618_icgraph.png" border="0" usemap="#d7/d9c/group__radio-operation_gab59a1acdb231bcd6234dbc93c9e0a618_icgraph" alt=""/></div>
-<map name="d7/d9c/group__radio-operation_gab59a1acdb231bcd6234dbc93c9e0a618_icgraph" id="d7/d9c/group__radio-operation_gab59a1acdb231bcd6234dbc93c9e0a618_icgraph">
-<area shape="rect" id="node2" href="../../d6/d88/classThread_1_1Mac_1_1Mac.html#aeacaaf9b0fb951c5d78892a9ea9b5c53" title="This function enables or disables the link layer promiscuous mode. " alt="" coords="243,5,476,31"/>
-<area shape="rect" id="node3" href="../../d9/dc8/classThread_1_1NcpBase.html#ad628aea520da8553bbb090ff4f50b09e" title="Called by the superclass to indicate when a send has been completed. " alt="" coords="241,55,478,80"/>
-<area shape="rect" id="node4" href="../../d2/de4/ncp_8h.html#aef46036f17188b217a2ffcb8c325f516" title="Initialize the NCP. " alt="" coords="586,29,660,55"/>
-<area shape="rect" id="node5" href="../../db/def/group__uart.html#gab2950583380bb90a3779f980c28fbaa0" title="The UART driver calls this method to notify OpenThread that the requested bytes have been sent..." alt="" coords="526,79,720,104"/>
+<div class="center"><img src="../../d7/d9c/group__radio-operation_ga0a905ad5c76c5931ee2ef395342f0dca_icgraph.png" border="0" usemap="#d7/d9c/group__radio-operation_ga0a905ad5c76c5931ee2ef395342f0dca_icgraph" alt=""/></div>
+<map name="d7/d9c/group__radio-operation_ga0a905ad5c76c5931ee2ef395342f0dca_icgraph" id="d7/d9c/group__radio-operation_ga0a905ad5c76c5931ee2ef395342f0dca_icgraph">
+<area shape="rect" id="node2" href="../../d6/d88/classThread_1_1Mac_1_1Mac.html#aeacaaf9b0fb951c5d78892a9ea9b5c53" title="This function enables or disables the link layer promiscuous mode. " alt="" coords="241,12,474,37"/>
+<area shape="rect" id="node5" href="../../d9/dc8/classThread_1_1NcpBase.html#ad14f0f1d60c77f7f537a0a441a9fb35c" title="This method is called by the framer whenever a framing error is detected. " alt="" coords="261,61,453,100"/>
+<area shape="rect" id="node3" href="../../d8/dd2/group__diags.html#ga029c1ebd63a0fbb18df80df3e8fa1956" title="This function enables or disables the link layer promiscuous mode. " alt="" coords="542,12,696,37"/>
+<area shape="rect" id="node4" href="../../d5/dc2/structThread_1_1Cli_1_1Interpreter.html#a11ee1f86cffe17aab7de3de0bb16dee7" title="This method parses an ASCII string as an unsigned long. " alt="" coords="765,5,920,44"/>
+<area shape="rect" id="node6" href="../../dc/d60/classThread_1_1NcpUart.html#a34e4ca7aff5b9056593e8ce0aa6e2fbb" title="This method is called when uart received a data buffer. " alt="" coords="522,61,717,100"/>
 </map>
 </div>
 </p>
 
 </div>
 </div>
-<a class="anchor" id="gabfbdcea85c7b9cdd6b37c1be77cb45ec"></a>
+<a class="anchor" id="ga979f5ee2e63f0cba66f372149b2ac013"></a>
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
           <td class="memname"><a class="el" href="../../dc/dbf/openthread-types_8h.html#ab701d053a9c34ab7f11e43e0dc09ac9f">ThreadError</a> otPlatRadioSleep </td>
           <td>(</td>
-          <td class="paramtype">void&#160;</td>
-          <td class="paramname"></td><td>)</td>
+          <td class="paramtype"><a class="el" href="../../d2/d83/structotInstance.html">otInstance</a> *&#160;</td>
+          <td class="paramname"><em>aInstance</em></td><td>)</td>
           <td></td>
         </tr>
       </table>
@@ -583,10 +1306,17 @@ Here is the caller graph for this function:</div>
 
 <p>Transition the radio from Receive to Sleep. </p>
 <p>Turn off the radio.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">aInstance</td><td>The OpenThread instance structure.</td></tr>
+  </table>
+  </dd>
+</dl>
 <dl class="retval"><dt>Return values</dt><dd>
   <table class="retval">
     <tr><td class="paramname">::kThreadError_None</td><td>Successfully transitioned to Sleep. </td></tr>
-    <tr><td class="paramname">::kThreadError_Busy</td><td>The radio was not in the Receive state. </td></tr>
+    <tr><td class="paramname">::kThreadError_Busy</td><td>The radio was transmitting </td></tr>
+    <tr><td class="paramname">::kThreadError_InvalidState</td><td>The radio was disabled </td></tr>
   </table>
   </dd>
 </dl>
@@ -594,60 +1324,55 @@ Here is the caller graph for this function:</div>
 <p><div class="dynheader">
 Here is the caller graph for this function:</div>
 <div class="dyncontent">
-<div class="center"><img src="../../d7/d9c/group__radio-operation_gabfbdcea85c7b9cdd6b37c1be77cb45ec_icgraph.png" border="0" usemap="#d7/d9c/group__radio-operation_gabfbdcea85c7b9cdd6b37c1be77cb45ec_icgraph" alt=""/></div>
-<map name="d7/d9c/group__radio-operation_gabfbdcea85c7b9cdd6b37c1be77cb45ec_icgraph" id="d7/d9c/group__radio-operation_gabfbdcea85c7b9cdd6b37c1be77cb45ec_icgraph">
-<area shape="rect" id="node2" href="../../d6/d88/classThread_1_1Mac_1_1Mac.html#aacc5fd2b9ea373a699840afa8e562dc9" title="This method registers a new MAC sender client. " alt="" coords="178,179,384,218"/>
-<area shape="rect" id="node3" href="../../dd/d1d/classThread_1_1MeshForwarder.html#a7668817d03306dadcb36ff9eaad72299" title="This method is called by the address resolver when an EID&#45;to&#45;RLOC mapping has been resolved..." alt="" coords="432,179,596,218"/>
-<area shape="rect" id="node4" href="../../d4/dcf/classThread_1_1AddressResolver.html#ac249179518a77ecfdaf7d4502ef2f940" title="This method returns the RLOC16 for a given EID, or initiates an Address Query if the mapping is not k..." alt="" coords="644,179,816,218"/>
-<area shape="rect" id="node5" href="../../dd/d1d/classThread_1_1MeshForwarder.html#a361ef901f6b665b3c7feac206089a7df" title="This method submits a message to the mesh forwarder for forwarding. " alt="" coords="864,179,1029,218"/>
-<area shape="rect" id="node6" href="../../dd/d1d/classThread_1_1MeshForwarder.html#a969c6fac135cdee3ed9380a0859eaaa8" title="This method sets the Data Poll period. " alt="" coords="1077,179,1241,218"/>
-<area shape="rect" id="node23" href="../../d3/d8e/classThread_1_1ThreadNetif.html#a95f2ad1f6785b0de74e660e43ac86d33" title="This method submits a message to the network interface. " alt="" coords="1089,242,1229,281"/>
-<area shape="rect" id="node7" href="../../df/d94/group__core-mle-core.html#gad555ca36631eff9b978e448ecbcf8e2e" title="This method appends an Address Registration TLV to a message. " alt="" coords="1289,237,1464,275"/>
-<area shape="rect" id="node8" href="../../df/d94/group__core-mle-core.html#ga09239c621861382d25163980ab5d983b" title="This method generates an MLE Child Update Request message. " alt="" coords="1512,237,1702,275"/>
-<area shape="rect" id="node14" href="../../df/d94/group__core-mle-core.html#ga0ea27201cf13a4e1b0680a9da6c54a64" title="This method submits an MLE message to the UDP socket. " alt="" coords="2276,375,2490,401"/>
-<area shape="rect" id="node9" href="../../df/d94/group__core-mle-core.html#ga01c7e5a022360a6f35e30d07221dbfea" title="This method starts the MLE protocol operation. " alt="" coords="1783,145,1940,170"/>
-<area shape="rect" id="node10" href="../../df/d94/group__core-mle-core.html#gafb51db61e6e184d664a9e7cc3833dcf4" title="This method sets the MLE Timeout value. " alt="" coords="1763,194,1960,219"/>
-<area shape="rect" id="node11" href="../../df/d94/group__core-mle-core.html#ga453d94c377c5825a4a5e8b66a728e591" title="This method sets the Device Mode as reported in the Mode TLV. " alt="" coords="1750,243,1973,269"/>
-<area shape="rect" id="node12" href="../../df/d94/group__core-mle-core.html#gaac7d42ff61704aa43e94dbb781c78c5e" title="This method notifies MLE that the Network Data has changed. " alt="" coords="1776,293,1947,331"/>
-<area shape="rect" id="node13" href="../../d6/d9b/classThread_1_1NetworkData_1_1Leader.html#a428d60927d6f4b4ac8e878e792d2f716" title="This method is used by non&#45;Leader devices to set newly received Network Data from the Leader..." alt="" coords="2037,293,2212,331"/>
-<area shape="rect" id="node20" href="../../d6/d9b/classThread_1_1NetworkData_1_1Leader.html#a5baddd109ff06b58140e2678e3c97a16" title="This method removes Network Data associated with a given RLOC16. " alt="" coords="2021,219,2228,258"/>
-<area shape="rect" id="node19" href="../../db/dec/group__core-mle-router.html#ga2f58e7783003a5d53b12a556ac4375f2" title="This method sets the ROUTER_UPGRADE_THRESHOLD value. " alt="" coords="2538,267,2738,306"/>
-<area shape="rect" id="node15" href="../../df/d94/group__core-mle-core.html#gac13477847483bba0aeab32fd93a7dbac" title="This method generates an MLE Data Request message. " alt="" coords="2544,445,2732,483"/>
-<area shape="rect" id="node16" href="../../df/d94/group__core-mle-core.html#ga4a192897e2fe5f4b0ab2ed1535fd2657" title="This method generates an MLE Data Response message. " alt="" coords="2544,330,2732,369"/>
-<area shape="rect" id="node17" href="../../db/dec/group__core-mle-router.html#ga7126c084ace25827febebc4210928cd4" title="This method generates an MLE Link Reject. " alt="" coords="2792,359,2953,398"/>
-<area shape="rect" id="node18" href="../../db/dec/group__core-mle-router.html#gaf13c43af2bf2f9057629cbb74fca0af0" title="This method handles MAC Data Poll messages. " alt="" coords="2786,127,2960,166"/>
-<area shape="rect" id="node21" href="../../db/dec/group__core-mle-router.html#ga179fad5b4b75849e76811006761d2b3e" title="This method release a given Router ID. " alt="" coords="2303,210,2464,249"/>
-<area shape="rect" id="node22" href="../../db/dec/group__core-mle-router.html#gac7d2542017033898d0bc0f17a65d4656" title="This method checks if the destination is reachable. " alt="" coords="2557,87,2719,126"/>
+<div class="center"><img src="../../d7/d9c/group__radio-operation_ga979f5ee2e63f0cba66f372149b2ac013_icgraph.png" border="0" usemap="#d7/d9c/group__radio-operation_ga979f5ee2e63f0cba66f372149b2ac013_icgraph" alt=""/></div>
+<map name="d7/d9c/group__radio-operation_ga979f5ee2e63f0cba66f372149b2ac013_icgraph" id="d7/d9c/group__radio-operation_ga979f5ee2e63f0cba66f372149b2ac013_icgraph">
+<area shape="rect" id="node2" href="../../d6/d88/classThread_1_1Mac_1_1Mac.html#aacc5fd2b9ea373a699840afa8e562dc9" title="This method registers a new MAC sender client. " alt="" coords="178,68,384,107"/>
+<area shape="rect" id="node3" href="../../dd/d1d/classThread_1_1MeshForwarder.html#a7668817d03306dadcb36ff9eaad72299" title="This method is called by the address resolver when an EID&#45;to&#45;RLOC mapping has been resolved..." alt="" coords="432,68,596,107"/>
+<area shape="rect" id="node4" href="../../d4/dcf/classThread_1_1AddressResolver.html#ac249179518a77ecfdaf7d4502ef2f940" title="This method returns the RLOC16 for a given EID, or initiates an Address Query if the mapping is not k..." alt="" coords="644,68,816,107"/>
+<area shape="rect" id="node5" href="../../dd/d1d/classThread_1_1MeshForwarder.html#a361ef901f6b665b3c7feac206089a7df" title="This method submits a message to the mesh forwarder for forwarding. " alt="" coords="864,68,1029,107"/>
+<area shape="rect" id="node6" href="../../dd/d1d/classThread_1_1MeshForwarder.html#a3a55dcf590bf5941d216ff313b6ce0d0" title="This method gets the Data Poll period. " alt="" coords="1079,5,1244,44"/>
+<area shape="rect" id="node7" href="../../dd/d1d/classThread_1_1MeshForwarder.html#a5f726671448fb7cd72f8ee96db40731a" title="This method sets the scan parameters for MLE Discovery Request messages. " alt="" coords="1077,68,1246,107"/>
+<area shape="rect" id="node12" href="../../d3/d8e/classThread_1_1ThreadNetif.html#a95f2ad1f6785b0de74e660e43ac86d33" title="This method submits a message to the network interface. " alt="" coords="1091,131,1232,169"/>
+<area shape="rect" id="node8" href="../../df/d94/group__core-mle-core.html#gab299d00d1b2beabe8130e400dd6eca91" title="This method initiates a Thread Discovery. " alt="" coords="1294,75,1475,100"/>
+<area shape="rect" id="node9" href="../../d4/db5/classThread_1_1MeshCoP_1_1Joiner.html#a1ca1f767cfe15e7c25b8f65606e7fefb" title="This method starts the Joiner service. " alt="" coords="1523,40,1696,79"/>
+<area shape="rect" id="node10" href="../../d0/d0a/group__commands.html#ga8422cdf7d0b8b22c6dd107e6bb1309f2" title="This function starts a Thread Discovery scan. " alt="" coords="1567,103,1652,128"/>
+<area shape="rect" id="node11" href="../../d5/dc2/structThread_1_1Cli_1_1Interpreter.html#a11ee1f86cffe17aab7de3de0bb16dee7" title="This method parses an ASCII string as an unsigned long. " alt="" coords="1744,96,1900,135"/>
 </map>
 </div>
 </p>
 
 </div>
 </div>
-<a class="anchor" id="gae77575566fe30b5b5a21c9278e1fce5e"></a>
+<a class="anchor" id="ga23aa0adfee1ed815c98fc3c087700ed1"></a>
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
           <td class="memname"><a class="el" href="../../dc/dbf/openthread-types_8h.html#ab701d053a9c34ab7f11e43e0dc09ac9f">ThreadError</a> otPlatRadioTransmit </td>
           <td>(</td>
-          <td class="paramtype">void&#160;</td>
-          <td class="paramname"></td><td>)</td>
+          <td class="paramtype"><a class="el" href="../../d2/d83/structotInstance.html">otInstance</a> *&#160;</td>
+          <td class="paramname"><em>aInstance</em></td><td>)</td>
           <td></td>
         </tr>
       </table>
 </div><div class="memdoc">
 
 <p>This method begins the transmit sequence on the radio. </p>
-<p>The caller must form the IEEE 802.15.4 frame in the buffer provided by <a class="el" href="../../d7/d9c/group__radio-operation.html#gad694a1bf5125d395cb282a950d759813" title="The radio tranitions from Transmit to Receive. ">otPlatRadioGetTransmitBuffer()</a> before requesting transmission. The channel and transmit power are also included in the <a class="el" href="../../db/ddc/structRadioPacket.html" title="This structure represents an IEEE 802.15.4 radio frame. ">RadioPacket</a> structure.</p>
+<p>The caller must form the IEEE 802.15.4 frame in the buffer provided by <a class="el" href="../../d7/d9c/group__radio-operation.html#gafe1fdf44907fccdb06be0db517d4fb01" title="The radio transitions from Transmit to Receive. ">otPlatRadioGetTransmitBuffer()</a> before requesting transmission. The channel and transmit power are also included in the <a class="el" href="../../db/ddc/structRadioPacket.html" title="This structure represents an IEEE 802.15.4 radio frame. ">RadioPacket</a> structure.</p>
 <p>The transmit sequence consists of:</p><ol type="1">
 <li>Transitioning the radio to Transmit from Receive.</li>
 <li>Transmits the psdu on the given channel and at the given transmit power.</li>
 </ol>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">aInstance</td><td>The OpenThread instance structure.</td></tr>
+  </table>
+  </dd>
+</dl>
 <dl class="retval"><dt>Return values</dt><dd>
   <table class="retval">
     <tr><td class="paramname">::kThreadError_None</td><td>Successfully transitioned to Transmit. </td></tr>
-    <tr><td class="paramname">::kThreadError_Busy</td><td>The radio was not in the Receive state. </td></tr>
+    <tr><td class="paramname">::kThreadError_InvalidState</td><td>The radio was not in the Receive state. </td></tr>
   </table>
   </dd>
 </dl>
@@ -655,43 +1380,38 @@ Here is the caller graph for this function:</div>
 <p><div class="dynheader">
 Here is the caller graph for this function:</div>
 <div class="dyncontent">
-<div class="center"><img src="../../d7/d9c/group__radio-operation_gae77575566fe30b5b5a21c9278e1fce5e_icgraph.png" border="0" usemap="#d7/d9c/group__radio-operation_gae77575566fe30b5b5a21c9278e1fce5e_icgraph" alt=""/></div>
-<map name="d7/d9c/group__radio-operation_gae77575566fe30b5b5a21c9278e1fce5e_icgraph" id="d7/d9c/group__radio-operation_gae77575566fe30b5b5a21c9278e1fce5e_icgraph">
-<area shape="rect" id="node2" href="../../d6/d88/classThread_1_1Mac_1_1Mac.html#aacc5fd2b9ea373a699840afa8e562dc9" title="This method registers a new MAC sender client. " alt="" coords="195,179,401,218"/>
-<area shape="rect" id="node3" href="../../dd/d1d/classThread_1_1MeshForwarder.html#a7668817d03306dadcb36ff9eaad72299" title="This method is called by the address resolver when an EID&#45;to&#45;RLOC mapping has been resolved..." alt="" coords="449,179,613,218"/>
-<area shape="rect" id="node4" href="../../d4/dcf/classThread_1_1AddressResolver.html#ac249179518a77ecfdaf7d4502ef2f940" title="This method returns the RLOC16 for a given EID, or initiates an Address Query if the mapping is not k..." alt="" coords="661,179,834,218"/>
-<area shape="rect" id="node5" href="../../dd/d1d/classThread_1_1MeshForwarder.html#a361ef901f6b665b3c7feac206089a7df" title="This method submits a message to the mesh forwarder for forwarding. " alt="" coords="882,179,1046,218"/>
-<area shape="rect" id="node6" href="../../dd/d1d/classThread_1_1MeshForwarder.html#a969c6fac135cdee3ed9380a0859eaaa8" title="This method sets the Data Poll period. " alt="" coords="1094,179,1258,218"/>
-<area shape="rect" id="node23" href="../../d3/d8e/classThread_1_1ThreadNetif.html#a95f2ad1f6785b0de74e660e43ac86d33" title="This method submits a message to the network interface. " alt="" coords="1106,242,1247,281"/>
-<area shape="rect" id="node7" href="../../df/d94/group__core-mle-core.html#gad555ca36631eff9b978e448ecbcf8e2e" title="This method appends an Address Registration TLV to a message. " alt="" coords="1306,237,1481,275"/>
-<area shape="rect" id="node8" href="../../df/d94/group__core-mle-core.html#ga09239c621861382d25163980ab5d983b" title="This method generates an MLE Child Update Request message. " alt="" coords="1529,237,1719,275"/>
-<area shape="rect" id="node14" href="../../df/d94/group__core-mle-core.html#ga0ea27201cf13a4e1b0680a9da6c54a64" title="This method submits an MLE message to the UDP socket. " alt="" coords="2294,375,2508,401"/>
-<area shape="rect" id="node9" href="../../df/d94/group__core-mle-core.html#ga01c7e5a022360a6f35e30d07221dbfea" title="This method starts the MLE protocol operation. " alt="" coords="1800,145,1957,170"/>
-<area shape="rect" id="node10" href="../../df/d94/group__core-mle-core.html#gafb51db61e6e184d664a9e7cc3833dcf4" title="This method sets the MLE Timeout value. " alt="" coords="1781,194,1977,219"/>
-<area shape="rect" id="node11" href="../../df/d94/group__core-mle-core.html#ga453d94c377c5825a4a5e8b66a728e591" title="This method sets the Device Mode as reported in the Mode TLV. " alt="" coords="1767,243,1990,269"/>
-<area shape="rect" id="node12" href="../../df/d94/group__core-mle-core.html#gaac7d42ff61704aa43e94dbb781c78c5e" title="This method notifies MLE that the Network Data has changed. " alt="" coords="1793,293,1964,331"/>
-<area shape="rect" id="node13" href="../../d6/d9b/classThread_1_1NetworkData_1_1Leader.html#a428d60927d6f4b4ac8e878e792d2f716" title="This method is used by non&#45;Leader devices to set newly received Network Data from the Leader..." alt="" coords="2055,293,2229,331"/>
-<area shape="rect" id="node20" href="../../d6/d9b/classThread_1_1NetworkData_1_1Leader.html#a5baddd109ff06b58140e2678e3c97a16" title="This method removes Network Data associated with a given RLOC16. " alt="" coords="2038,219,2246,258"/>
-<area shape="rect" id="node19" href="../../db/dec/group__core-mle-router.html#ga2f58e7783003a5d53b12a556ac4375f2" title="This method sets the ROUTER_UPGRADE_THRESHOLD value. " alt="" coords="2556,267,2755,306"/>
-<area shape="rect" id="node15" href="../../df/d94/group__core-mle-core.html#gac13477847483bba0aeab32fd93a7dbac" title="This method generates an MLE Data Request message. " alt="" coords="2561,445,2749,483"/>
-<area shape="rect" id="node16" href="../../df/d94/group__core-mle-core.html#ga4a192897e2fe5f4b0ab2ed1535fd2657" title="This method generates an MLE Data Response message. " alt="" coords="2561,330,2749,369"/>
-<area shape="rect" id="node17" href="../../db/dec/group__core-mle-router.html#ga7126c084ace25827febebc4210928cd4" title="This method generates an MLE Link Reject. " alt="" coords="2809,359,2971,398"/>
-<area shape="rect" id="node18" href="../../db/dec/group__core-mle-router.html#gaf13c43af2bf2f9057629cbb74fca0af0" title="This method handles MAC Data Poll messages. " alt="" coords="2803,127,2977,166"/>
-<area shape="rect" id="node21" href="../../db/dec/group__core-mle-router.html#ga179fad5b4b75849e76811006761d2b3e" title="This method release a given Router ID. " alt="" coords="2320,210,2481,249"/>
-<area shape="rect" id="node22" href="../../db/dec/group__core-mle-router.html#gac7d2542017033898d0bc0f17a65d4656" title="This method checks if the destination is reachable. " alt="" coords="2575,87,2736,126"/>
+<div class="center"><img src="../../d7/d9c/group__radio-operation_ga23aa0adfee1ed815c98fc3c087700ed1_icgraph.png" border="0" usemap="#d7/d9c/group__radio-operation_ga23aa0adfee1ed815c98fc3c087700ed1_icgraph" alt=""/></div>
+<map name="d7/d9c/group__radio-operation_ga23aa0adfee1ed815c98fc3c087700ed1_icgraph" id="d7/d9c/group__radio-operation_ga23aa0adfee1ed815c98fc3c087700ed1_icgraph">
+<area shape="rect" id="node2" href="../../d6/d88/classThread_1_1Mac_1_1Mac.html#aacc5fd2b9ea373a699840afa8e562dc9" title="This method registers a new MAC sender client. " alt="" coords="195,68,401,107"/>
+<area shape="rect" id="node3" href="../../dd/d1d/classThread_1_1MeshForwarder.html#a7668817d03306dadcb36ff9eaad72299" title="This method is called by the address resolver when an EID&#45;to&#45;RLOC mapping has been resolved..." alt="" coords="449,68,613,107"/>
+<area shape="rect" id="node4" href="../../d4/dcf/classThread_1_1AddressResolver.html#ac249179518a77ecfdaf7d4502ef2f940" title="This method returns the RLOC16 for a given EID, or initiates an Address Query if the mapping is not k..." alt="" coords="661,68,834,107"/>
+<area shape="rect" id="node5" href="../../dd/d1d/classThread_1_1MeshForwarder.html#a361ef901f6b665b3c7feac206089a7df" title="This method submits a message to the mesh forwarder for forwarding. " alt="" coords="882,68,1046,107"/>
+<area shape="rect" id="node6" href="../../dd/d1d/classThread_1_1MeshForwarder.html#a3a55dcf590bf5941d216ff313b6ce0d0" title="This method gets the Data Poll period. " alt="" coords="1097,5,1261,44"/>
+<area shape="rect" id="node7" href="../../dd/d1d/classThread_1_1MeshForwarder.html#a5f726671448fb7cd72f8ee96db40731a" title="This method sets the scan parameters for MLE Discovery Request messages. " alt="" coords="1094,68,1264,107"/>
+<area shape="rect" id="node12" href="../../d3/d8e/classThread_1_1ThreadNetif.html#a95f2ad1f6785b0de74e660e43ac86d33" title="This method submits a message to the network interface. " alt="" coords="1108,131,1249,169"/>
+<area shape="rect" id="node8" href="../../df/d94/group__core-mle-core.html#gab299d00d1b2beabe8130e400dd6eca91" title="This method initiates a Thread Discovery. " alt="" coords="1312,75,1492,100"/>
+<area shape="rect" id="node9" href="../../d4/db5/classThread_1_1MeshCoP_1_1Joiner.html#a1ca1f767cfe15e7c25b8f65606e7fefb" title="This method starts the Joiner service. " alt="" coords="1540,40,1713,79"/>
+<area shape="rect" id="node10" href="../../d0/d0a/group__commands.html#ga8422cdf7d0b8b22c6dd107e6bb1309f2" title="This function starts a Thread Discovery scan. " alt="" coords="1585,103,1669,128"/>
+<area shape="rect" id="node11" href="../../d5/dc2/structThread_1_1Cli_1_1Interpreter.html#a11ee1f86cffe17aab7de3de0bb16dee7" title="This method parses an ASCII string as an unsigned long. " alt="" coords="1761,96,1917,135"/>
 </map>
 </div>
 </p>
 
 </div>
 </div>
-<a class="anchor" id="gabc5be38871893d0c8641064fb193b3ea"></a>
+<a class="anchor" id="ga7d10a9bce7521f75bd84b32b979e1aa7"></a>
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
           <td class="memname">void otPlatRadioTransmitDone </td>
           <td>(</td>
+          <td class="paramtype"><a class="el" href="../../d2/d83/structotInstance.html">otInstance</a> *&#160;</td>
+          <td class="paramname"><em>aInstance</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
           <td class="paramtype">bool&#160;</td>
           <td class="paramname"><em>aFramePending</em>, </td>
         </tr>
@@ -712,11 +1432,66 @@ Here is the caller graph for this function:</div>
 <p>The radio driver calls this method to notify OpenThread that the transmission has completed. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">aInstance</td><td>The OpenThread instance structure. </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">aFramePending</td><td>TRUE if an ACK frame was received and the Frame Pending bit was set. </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">aError</td><td>::kThreadError_None when the frame was transmitted, <a class="el" href="../../dc/dbf/openthread-types_8h.html#ab701d053a9c34ab7f11e43e0dc09ac9fa5be4067720a92215d4ea451977b712de" title="No acknowledgment was received after macMaxFrameRetries (IEEE 802.15.4-2006). ">kThreadError_NoAck</a> when the frame was transmitted but no ACK was received, <a class="el" href="../../dc/dbf/openthread-types_8h.html#ab701d053a9c34ab7f11e43e0dc09ac9fa66b2ada6dcb9e04269b303854a2826cf" title="A transmission could not take place due to activity on the channel, i.e., the CSMA-CA mechanism has f...">kThreadError_ChannelAccessFailure</a> when the transmission could not take place due to activity on the channel, ::kThreadError_Abort when transmission was aborted for other reasons. </td></tr>
   </table>
   </dd>
 </dl>
+
+<p><div class="dynheader">
+Here is the call graph for this function:</div>
+<div class="dyncontent">
+<div class="center"><img src="../../d7/d9c/group__radio-operation_ga7d10a9bce7521f75bd84b32b979e1aa7_cgraph.png" border="0" usemap="#d7/d9c/group__radio-operation_ga7d10a9bce7521f75bd84b32b979e1aa7_cgraph" alt=""/></div>
+<map name="d7/d9c/group__radio-operation_ga7d10a9bce7521f75bd84b32b979e1aa7_cgraph" id="d7/d9c/group__radio-operation_ga7d10a9bce7521f75bd84b32b979e1aa7_cgraph">
+<area shape="rect" id="node2" href="../../d3/d8e/classThread_1_1ThreadNetif.html#aec59b0e172327889e9b0f4f08b0e69f9" title="This method returns a pointer to the mac object. " alt="" coords="250,816,391,855"/>
+<area shape="rect" id="node3" href="../../d6/d88/classThread_1_1Mac_1_1Mac.html#adb6ca8a4287b21a2f9e35090ed716506" title="This method is called to handle transmit events. " alt="" coords="227,879,414,917"/>
+<area shape="rect" id="node4" href="../../d1/d40/classThread_1_1Timer.html#a9acdec1cdf4edf947c563d40871f2bc8" title="This method stops the timer. " alt="" coords="492,19,631,44"/>
+<area shape="rect" id="node5" href="../../d1/d40/classThread_1_1Timer.html#a475731e21b59be6b17b24f5b5e175f62" title="This method schedules the timer to fire a dt milliseconds from now. " alt="" coords="736,5,876,31"/>
+<area shape="rect" id="node6" href="../../d7/d9c/group__radio-operation.html#ga063a389dc7d1e68cbe495cc3cff758c1" title="Transitioning the radio from Sleep to Receive. " alt="" coords="492,385,631,411"/>
+<area shape="rect" id="node7" href="../../d3/d8e/classThread_1_1ThreadNetif.html#a83517ab2bff2614e403895426df6a61b" title="This method returns the pointer to the parent otInstance structure. " alt="" coords="735,416,876,455"/>
+<area shape="rect" id="node8" href="../../d1/d69/group__radio-config.html#ga8497b9950b7d61cf0ce336a755871b81" title="Set the PAN ID for address filtering. " alt="" coords="489,435,634,460"/>
+<area shape="rect" id="node9" href="../../d6/d88/classThread_1_1Mac_1_1Mac.html#afb0ae648acc64f50f204be5b7375c57c" title="This function indicates the energy scan for the current channel is complete. " alt="" coords="472,271,651,309"/>
+<area shape="rect" id="node16" href="../../d7/d9c/group__radio-operation.html#gafe1fdf44907fccdb06be0db517d4fb01" title="The radio transitions from Transmit to Receive. " alt="" coords="462,484,661,509"/>
+<area shape="rect" id="node17" href="../../d1/d40/classThread_1_1Timer.html#a8815311dffb2fff6b548b63bfc7d6dba" title="This method indicates whether or not the timer instance is running. " alt="" coords="720,55,892,80"/>
+<area shape="rect" id="node18" href="../../d5/d19/classThread_1_1Mac_1_1Frame.html#adad1e326ec1c3bf027a0e6e485f178b8" title="This method sets the security valid attribute. " alt="" coords="491,533,633,572"/>
+<area shape="rect" id="node19" href="../../d5/d19/classThread_1_1Mac_1_1Frame.html#ae19eb91741db8d325ce23d8d0054dfc9" title="This method indicates whether or not security is enabled. " alt="" coords="488,596,635,635"/>
+<area shape="rect" id="node20" href="../../d5/d19/classThread_1_1Mac_1_1Frame.html#a89607cec976b1db25537e5bb1e7a045c" title="This method gets the Security Level Identifier. " alt="" coords="491,659,633,697"/>
+<area shape="rect" id="node21" href="../../d5/d19/classThread_1_1Mac_1_1Frame.html#ab64f3e24c31a8ded0406483973295f04" title="This method gets the Frame Counter. " alt="" coords="491,721,633,760"/>
+<area shape="rect" id="node22" href="../../d5/d19/classThread_1_1Mac_1_1Frame.html#aa7f129de3239e299fc3f8125c65c9345" title="This method gets the Key Identifier Mode. " alt="" coords="491,784,633,823"/>
+<area shape="rect" id="node23" href="../../d6/d44/classThread_1_1KeyManager.html#a1906bf33568d5a8e5ba3259c7b49b076" title="This method returns the KEK. " alt="" coords="488,847,635,885"/>
+<area shape="rect" id="node24" href="../../d5/d19/classThread_1_1Mac_1_1Frame.html#a8b202bc4f2409a356a4948d7b5078fb4" title="This method gets the Key Identifier. " alt="" coords="491,909,633,948"/>
+<area shape="rect" id="node25" href="../../d6/d44/classThread_1_1KeyManager.html#afe262bf20500517935f58158fb7e2fae" title="This method returns the current key sequence value. " alt="" coords="473,972,650,1011"/>
+<area shape="rect" id="node26" href="../../d6/d44/classThread_1_1KeyManager.html#a58f3915761d729578c389313a70a4bf1" title="This method returns a pointer to the current MAC key. " alt="" coords="488,1035,635,1073"/>
+<area shape="rect" id="node27" href="../../d6/d44/classThread_1_1KeyManager.html#a400b67e13a99d9a97f44f79934d8aad2" title="This method returns a pointer to a temporary MAC key computed from the given key sequence. " alt="" coords="481,1097,642,1136"/>
+<area shape="rect" id="node28" href="../../d5/d19/classThread_1_1Mac_1_1Frame.html#a518f92d5d97631d411d94f1015c7cf1d" title="This method returns the MAC footer size. " alt="" coords="491,1160,633,1199"/>
+<area shape="rect" id="node29" href="../../d2/dde/classThread_1_1Crypto_1_1AesCcm.html#afa12aabd74472bb1c8bf6e8bb73430d4" title="This method sets the key. " alt="" coords="478,1223,646,1261"/>
+<area shape="rect" id="node31" href="../../d2/dde/classThread_1_1Crypto_1_1AesCcm.html#aa7dabbd99f28efd22176e6fed8ce2eb3" title="This method initializes the AES CCM computation. " alt="" coords="478,1411,646,1449"/>
+<area shape="rect" id="node33" href="../../d5/d19/classThread_1_1Mac_1_1Frame.html#a2a266a9026c141543aa6772f4c43f695" title="This method returns the MAC header size. " alt="" coords="491,1536,633,1575"/>
+<area shape="rect" id="node34" href="../../d5/d19/classThread_1_1Mac_1_1Frame.html#ad71176e2e535e1d386d7ffddb2fb1c5c" title="This method returns the current MAC Payload length. " alt="" coords="491,1599,633,1637"/>
+<area shape="rect" id="node35" href="../../d2/dde/classThread_1_1Crypto_1_1AesCcm.html#a2c363bc7a25302a14931bb33d41ee15a" title="This method processes the header. " alt="" coords="478,1473,646,1512"/>
+<area shape="rect" id="node36" href="../../d5/d19/classThread_1_1Mac_1_1Frame.html#a6f117ad3d248cdcf4d215424a4b3aa94" title="This method returns a pointer to the MAC Header. " alt="" coords="491,1661,633,1700"/>
+<area shape="rect" id="node37" href="../../d2/dde/classThread_1_1Crypto_1_1AesCcm.html#a5d36c3f13b85f66ea1e51627ec7d4297" title="This method processes the payload. " alt="" coords="478,1285,646,1324"/>
+<area shape="rect" id="node38" href="../../d5/d19/classThread_1_1Mac_1_1Frame.html#a88ed2e5889a4f69c74e15a2bd34e718d" title="This method returns a pointer to the MAC Payload. " alt="" coords="491,1724,633,1763"/>
+<area shape="rect" id="node39" href="../../d2/dde/classThread_1_1Crypto_1_1AesCcm.html#a666e2ddbf5e0cf91abc191221254fcb8" title="This method generates the tag. " alt="" coords="478,1348,646,1387"/>
+<area shape="rect" id="node40" href="../../d5/d19/classThread_1_1Mac_1_1Frame.html#aa840430bfe9ca943731425c6c011e565" title="This method returns a pointer to the MAC Footer. " alt="" coords="491,1787,633,1825"/>
+<area shape="rect" id="node41" href="../../d6/d44/classThread_1_1KeyManager.html#a1c2cda0961979d7655a5311f29de57c7" title="This method sets the current key sequence value. " alt="" coords="474,171,650,209"/>
+<area shape="rect" id="node10" href="../../d7/d9c/group__radio-operation.html#ga4ac10bba73d06f59af623bbb3349d3fb" title="Get the most recent RSSI measurement. " alt="" coords="737,367,874,392"/>
+<area shape="rect" id="node11" href="../../d4/d92/classThread_1_1Tasklet.html#a50a39a6f422851035b89aace87482425" title="This method puts the tasklet on the run queue. " alt="" coords="950,287,1097,312"/>
+<area shape="rect" id="node12" href="../../d8/de8/classThread_1_1TaskletScheduler.html#a137292acddf92acdef54cc7a33ea5fac" title="This method enqueues a tasklet into the run queue. " alt="" coords="1145,280,1317,319"/>
+<area shape="rect" id="node13" href="../../d1/de3/group__execution.html#ga04d5608ac68a78eb3e8fc167587c61f3" title="OpenThread calls this function when the tasklet queue transitions from empty to non&#45;empty. " alt="" coords="1383,231,1543,256"/>
+<area shape="rect" id="node14" href="../../d8/de8/classThread_1_1TaskletScheduler.html#aeaf526c316bbea7d53d20fa9e3c94c40" title="This method returns the pointer to the parent Ip6 structure. " alt="" coords="1377,280,1549,319"/>
+<area shape="rect" id="node15" href="../../d3/d05/classThread_1_1Ip6_1_1Ip6.html#a624d9508f3ecfa586378a3d802cb6ff7" title="This method returns the pointer to the parent otInstance structure. " alt="" coords="1365,343,1560,368"/>
+<area shape="rect" id="node30" href="../../d4/db8/classThread_1_1Crypto_1_1AesEcb.html#a6c805bc8b44cb66d543b7916bf1cbaad" title="This method sets the key. " alt="" coords="724,1223,887,1261"/>
+<area shape="rect" id="node32" href="../../d4/db8/classThread_1_1Crypto_1_1AesEcb.html#ad04c88631904f76101b5494c485b91d4" title="This method encrypts data. " alt="" coords="724,1380,887,1419"/>
+<area shape="rect" id="node42" href="../../d1/d40/classThread_1_1Timer.html#a0596072dec177b5e2b494db19800267d" title="This static method returns the current time in milliseconds. " alt="" coords="726,104,886,129"/>
+<area shape="rect" id="node44" href="../../d1/d40/classThread_1_1Timer.html#a93beaa1e8a8b8692b1558fe5ae138406" title="This method returns the start time in milliseconds for the timer. " alt="" coords="733,153,878,179"/>
+<area shape="rect" id="node45" href="../../d1/d40/classThread_1_1Timer.html#a172d3d4acd2ee14b151f065be0ce50a9" title="This static method returns the number of milliseconds given hours. " alt="" coords="709,203,902,228"/>
+<area shape="rect" id="node46" href="../../d2/d55/classThread_1_1Ip6_1_1Netif.html#a092484addf28568306ab45941abffff4" title="This method schedules notification of aFlags. " alt="" coords="722,252,889,291"/>
+<area shape="rect" id="node43" href="../../dd/db6/group__alarm.html#gaf8829e3591e03e29e136685fcdeb3300" title="Get the current time. " alt="" coords="954,104,1093,129"/>
+</map>
+</div>
+</p>
 
 </div>
 </div>
@@ -725,7 +1500,7 @@ Here is the caller graph for this function:</div>
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
-    <li class="footer">Generated on Wed Jul 27 2016 17:09:43 for OpenThread by
+    <li class="footer">Generated on Fri Oct 14 2016 08:44:35 for OpenThread by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="../../doxygen.png" alt="doxygen"/></a> 1.8.11 </li>
   </ul>

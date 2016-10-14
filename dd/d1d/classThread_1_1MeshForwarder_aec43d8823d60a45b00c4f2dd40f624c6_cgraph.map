@@ -1,4 +1,7 @@
 <map id="Thread::MeshForwarder::MeshForwarder" name="Thread::MeshForwarder::MeshForwarder">
-<area shape="rect" id="node2" href="$dd/d10/group__random.html#gaa20820ca4e6e1ce8cd47ded9762b14ca" title="Get a 32&#45;bit true random value. " alt="" coords="247,5,374,31"/>
-<area shape="rect" id="node3" href="$d6/d88/classThread_1_1Mac_1_1Mac.html#a3870d4cf831ccefc6be2ff49c25547f2" title="This method registers a new MAC receiver client. " alt="" coords="218,55,404,93"/>
+<area shape="rect" id="node2" href="$dd/d10/group__random.html#gaa20820ca4e6e1ce8cd47ded9762b14ca" title="Get a 32&#45;bit random value. " alt="" coords="247,5,374,31"/>
+<area shape="rect" id="node3" href="$d6/d88/classThread_1_1Mac_1_1Mac.html#a2061fad3af040aad48d6bfb4d0b44cce" title="This function enable/disable source match. " alt="" coords="222,55,399,93"/>
+<area shape="rect" id="node6" href="$d6/d88/classThread_1_1Mac_1_1Mac.html#a3870d4cf831ccefc6be2ff49c25547f2" title="This method registers a new MAC receiver client. " alt="" coords="218,117,404,156"/>
+<area shape="rect" id="node4" href="$d7/d9c/group__radio-operation.html#gabb1f75e02a0c91b2db8e1325e8575861" title="Enable/Disable source match for AutoPend. " alt="" coords="452,33,640,59"/>
+<area shape="rect" id="node5" href="$d3/d8e/classThread_1_1ThreadNetif.html#a83517ab2bff2614e403895426df6a61b" title="This method returns the pointer to the parent otInstance structure. " alt="" coords="475,83,616,121"/>
 </map>

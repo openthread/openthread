@@ -1,11 +1,9 @@
 <map id="Thread::NcpFrameBuffer::Clear" name="Thread::NcpFrameBuffer::Clear">
-<area shape="rect" id="node2" href="$d0/d78/classThread_1_1NcpFrameBuffer.html#a34a6141ff650ec07602b246fe3e65404" title="This method checks if the buffer is empty. " alt="" coords="222,63,390,101"/>
-<area shape="rect" id="node3" href="$da/d1a/classThread_1_1MessageQueue.html#ac0e8b64309aca4d66b262f0354d72e83" title="This method returns a pointer to the first message. " alt="" coords="454,5,619,44"/>
-<area shape="rect" id="node8" href="$da/d1a/classThread_1_1MessageQueue.html#a501d831849c577b2114fcbb4034d074d" title="This method removes a message from the list. " alt="" coords="224,125,389,164"/>
-<area shape="rect" id="node9" href="$dc/d3c/classThread_1_1Message.html#a3ab9d6d42d7ae9054eaf0cad0c4e44bb" title="This static method is used to free a message and return all message buffers to the buffer pool..." alt="" coords="226,188,386,213"/>
-<area shape="rect" id="node4" href="$dc/d3c/classThread_1_1Message.html#a89b66912022440cb19aa5eefef093b46" title="This method returns a pointer to the next message in the same interface list. " alt="" coords="446,68,627,93"/>
-<area shape="rect" id="node5" href="$dc/d3c/classThread_1_1Message.html#ad5cd679cc64dd84fa4609d52878c664b" title="This method reads bytes from the message. " alt="" coords="455,117,619,143"/>
-<area shape="rect" id="node6" href="$dc/d3c/classThread_1_1Message.html#a2cf440376e834030c38bb2ced4ca49e9" title="This method returns the number of bytes in the message. " alt="" coords="685,117,879,143"/>
-<area shape="rect" id="node7" href="$db/d50/classThread_1_1Buffer.html#a34ab22941ccd9bb222d251a6a18c95bf" title="This method returns a pointer to the next message buffer. " alt="" coords="683,167,881,192"/>
-<area shape="rect" id="node10" href="$db/d50/classThread_1_1Buffer.html#a437ec9ccafa1ef6040a6e8e4fae9c3ca" title="This method sets the pointer to the next message buffer. " alt="" coords="438,219,635,244"/>
+<area shape="rect" id="node2" href="$d0/d78/classThread_1_1NcpFrameBuffer.html#a34a6141ff650ec07602b246fe3e65404" title="This method checks if the buffer is empty. " alt="" coords="222,61,390,100"/>
+<area shape="rect" id="node3" href="$da/d1a/classThread_1_1MessageQueue.html#ac0e8b64309aca4d66b262f0354d72e83" title="This method returns a pointer to the first message. " alt="" coords="447,5,612,44"/>
+<area shape="rect" id="node7" href="$da/d1a/classThread_1_1MessageQueue.html#a501d831849c577b2114fcbb4034d074d" title="This method removes a message from the list. " alt="" coords="224,124,389,163"/>
+<area shape="rect" id="node8" href="$dc/d3c/classThread_1_1Message.html#adc9d723284f5807d9c272ab89bc52b45" title="This method frees this message buffer. " alt="" coords="226,187,386,212"/>
+<area shape="rect" id="node4" href="$dc/d3c/classThread_1_1Message.html#a89b66912022440cb19aa5eefef093b46" title="This method returns a pointer to the next message in the same interface list. " alt="" coords="438,68,620,93"/>
+<area shape="rect" id="node5" href="$dc/d3c/classThread_1_1Message.html#a76033bbc15170d72452186058defafa2" title="This method reads bytes from the message. " alt="" coords="447,117,611,143"/>
+<area shape="rect" id="node6" href="$db/d50/classThread_1_1Buffer.html#a34ab22941ccd9bb222d251a6a18c95bf" title="This method returns a pointer to the next message buffer. " alt="" coords="668,117,866,143"/>
 </map>

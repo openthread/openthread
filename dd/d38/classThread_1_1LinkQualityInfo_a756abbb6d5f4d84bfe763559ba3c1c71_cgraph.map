@@ -1,0 +1,5 @@
+<map id="Thread::LinkQualityInfo::GetLinkMargin" name="Thread::LinkQualityInfo::GetLinkMargin">
+<area shape="rect" id="node2" href="$dd/d38/classThread_1_1LinkQualityInfo.html#aecb995df780f6eb79a340614e71d1b5c" title="This method converts a received signal strength value to a link margin value. " alt="" coords="213,5,390,44"/>
+<area shape="rect" id="node4" href="$dd/d38/classThread_1_1LinkQualityInfo.html#a6bb9667b219989c9825d292d6501ac66" title="This method returns the current average signal strength value. " alt="" coords="693,36,852,75"/>
+<area shape="rect" id="node3" href="$d3/d4b/group__core-link-quality.html#ga327fac3c27070325354e650d4695e230" title="This function returns the current average noise floor level (in dBm). " alt="" coords="438,16,645,41"/>
+</map>

@@ -20,7 +20,9 @@ var dir_4eeddf84fddd42d44de1574042fba5c7 =
       [ "NcpFrameBuffer", "d0/d78/classThread_1_1NcpFrameBuffer.html", "d0/d78/classThread_1_1NcpFrameBuffer" ]
     ] ],
     [ "ncp_spi.cpp", "d0/d95/ncp__spi_8cpp.html", "d0/d95/ncp__spi_8cpp" ],
-    [ "ncp_spi.hpp", "d7/df2/ncp__spi_8hpp.html", "d7/df2/ncp__spi_8hpp" ],
+    [ "ncp_spi.hpp", "d7/df2/ncp__spi_8hpp.html", [
+      [ "NcpSpi", "d0/d2a/classThread_1_1NcpSpi.html", "d0/d2a/classThread_1_1NcpSpi" ]
+    ] ],
     [ "ncp_uart.cpp", "d4/dae/ncp__uart_8cpp.html", "d4/dae/ncp__uart_8cpp" ],
     [ "ncp_uart.hpp", "d4/d5f/ncp__uart_8hpp.html", [
       [ "NcpUart", "dc/d60/classThread_1_1NcpUart.html", "dc/d60/classThread_1_1NcpUart" ]

@@ -1,6 +1,8 @@
 <map id="src/core/thread/network_data_tlvs.hpp" name="src/core/thread/network_data_tlvs.hpp">
 <area shape="rect" id="node3" href="$df/d57/encoding_8hpp.html" title="This file includes definitions for byte&#45;ordering encoding. " alt="" coords="94,92,251,117"/>
 <area shape="rect" id="node6" href="$dc/d02/ip6__address_8hpp.html" title="This file includes definitions for IPv6 addresses. " alt="" coords="275,92,417,117"/>
+<area shape="rect" id="node5" href="$df/dd8/stdint_8h_source.html" title="stdint.h" alt="" coords="234,239,298,264"/>
 <area shape="rect" id="node7" href="$dc/dbf/openthread-types_8h.html" title="This file defines the types and structures used in the OpenThread library API. " alt="" coords="303,165,439,191"/>
+<area shape="rect" id="node8" href="$d9/d5e/stdbool_8h_source.html" title="stdbool.h" alt="" coords="327,239,402,264"/>
 <area shape="rect" id="node9" href="$d3/da9/toolchain_8h_source.html" title="platform/toolchain.h" alt="" coords="426,239,564,264"/>
 </map>

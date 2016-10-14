@@ -1,0 +1,9 @@
+<map id="src/diag/diag_process.hpp" name="src/diag/diag_process.hpp">
+<area shape="rect" id="node3" href="$dc/dbf/openthread-types_8h.html" title="This file defines the types and structures used in the OpenThread library API. " alt="" coords="127,152,263,177"/>
+<area shape="rect" id="node7" href="$d7/d62/radio_8h.html" title="This file defines the radio interface for OpenThread. " alt="" coords="150,79,264,104"/>
+<area shape="rect" id="node8" href="$d2/d2d/alarm_8h.html" title="This file includes the platform abstraction for the alarm service. " alt="" coords="288,79,406,104"/>
+<area shape="rect" id="node9" href="$d2/dd2/diag_8h.html" title="This file defines the platform diag interface. " alt="" coords="429,79,539,104"/>
+<area shape="rect" id="node4" href="$df/dd8/stdint_8h_source.html" title="stdint.h" alt="" coords="303,225,367,251"/>
+<area shape="rect" id="node5" href="$d9/d5e/stdbool_8h_source.html" title="stdbool.h" alt="" coords="173,225,248,251"/>
+<area shape="rect" id="node6" href="$d3/da9/toolchain_8h_source.html" title="platform/toolchain.h" alt="" coords="11,225,149,251"/>
+</map>

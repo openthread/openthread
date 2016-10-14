@@ -1,0 +1,7 @@
+<map id="Thread::NetworkDiagnostic::NetworkDiagnostic::SendDiagnosticGet" name="Thread::NetworkDiagnostic::NetworkDiagnostic::SendDiagnosticGet">
+<area shape="rect" id="node2" href="$d2/d11/group__udp.html#ga4198c5e5356efec22801439076076a9f" title="Send a Network Diagnostic Get request. " alt="" coords="316,68,463,93"/>
+<area shape="rect" id="node3" href="$d5/dc2/structThread_1_1Cli_1_1Interpreter.html#ac3a6d19e1230529b3970e31ca7324373" title="This method interprets a CLI command. " alt="" coords="511,61,666,100"/>
+<area shape="rect" id="node4" href="$dd/dce/classThread_1_1Cli_1_1Console.html#ab5454035d54e21e0e780335eddf7ca7d" title="This method sets a callback that is called when console has some output. " alt="" coords="720,5,863,44"/>
+<area shape="rect" id="node5" href="$db/def/group__uart.html#ga2aec94bad212a6bd72bc82fe310eaca2" title="The UART driver calls this method to notify OpenThread that bytes have been received. " alt="" coords="723,68,859,93"/>
+<area shape="rect" id="node6" href="$dc/df5/classThread_1_1Cli_1_1Udp.html#ab23c737fe108c24331f40d024d5f446a" title="This method starts the CLI server. " alt="" coords="714,117,868,143"/>
+</map>

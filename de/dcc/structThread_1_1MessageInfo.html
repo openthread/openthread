@@ -34,7 +34,7 @@
   <td id="projectlogo"><img alt="Logo" src="../../Open-Thread-Logo-200x42.png"/></td>
   <td style="padding-left: 0.5em;">
    <div id="projectname">
-   &#160;<span id="projectnumber">gb2b10b8</span>
+   &#160;<span id="projectnumber">gddd0704</span>
    </div>
   </td>
  </tr>
@@ -127,25 +127,30 @@ Collaboration diagram for Thread::MessageInfo:</div>
 <div class="dyncontent">
 <div class="center"><img src="../../dc/d96/structThread_1_1MessageInfo__coll__graph.png" border="0" usemap="#Thread_1_1MessageInfo_coll__map" alt="Collaboration graph"/></div>
 <map name="Thread_1_1MessageInfo_coll__map" id="Thread_1_1MessageInfo_coll__map">
-<area shape="rect" id="node4" href="../../db/d50/classThread_1_1Buffer.html" title="This class represents a Message buffer. " alt="" coords="100,92,207,117"/>
-<area shape="rect" id="node2" href="../../d9/dd7/structThread_1_1MessageListEntry.html" title="This structure contains pointers to the MessageList structure, the next Message, and previous Message..." alt="" coords="50,355,227,380"/>
-<area shape="rect" id="node3" href="../../dc/d3c/classThread_1_1Message.html" title="This class represents a message. " alt="" coords="76,167,201,192"/>
-<area shape="rect" id="node5" href="../../da/d60/structThread_1_1MessageList.html" title="This structure contains pointers to the head and tail of a Message list. " alt="" coords="66,267,212,293"/>
+<area shape="rect" id="node5" href="../../db/d50/classThread_1_1Buffer.html" title="This class represents a Message buffer. " alt="" coords="100,179,207,204"/>
+<area shape="rect" id="node2" href="../../d5/d9f/classThread_1_1MessagePool.html" title="Thread::MessagePool" alt="" coords="159,5,311,31"/>
+<area shape="rect" id="node3" href="../../d9/dd7/structThread_1_1MessageListEntry.html" title="This structure contains pointers to the MessageList structure, the next Message, and previous Message..." alt="" coords="50,441,227,467"/>
+<area shape="rect" id="node4" href="../../dc/d3c/classThread_1_1Message.html" title="This class represents a message. " alt="" coords="76,253,201,279"/>
+<area shape="rect" id="node6" href="../../da/d60/structThread_1_1MessageList.html" title="This structure contains pointers to the head and tail of a Message list. " alt="" coords="66,354,212,379"/>
 </map>
 <center><span class="legend">[<a target="top" href="../../graph_legend.html">legend</a>]</span></center></div>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-types"></a>
 Public Types</h2></td></tr>
-<tr class="memitem:ac6a701b49101161eda6ab2e8ae83afcc"><td class="memItemLeft" align="right" valign="top">enum &#160;</td><td class="memItemRight" valign="bottom">{ <br />
-&#160;&#160;<a class="el" href="../../de/dcc/structThread_1_1MessageInfo.html#ac6a701b49101161eda6ab2e8ae83afcca9ed087efe5a3d7cf6f5f45f28f37deb2">kListAll</a> = 0, 
+<tr class="memitem:a5fcb0dc46ae52db6e3e530df6b2217d4"><td class="memItemLeft" align="right" valign="top">enum &#160;</td><td class="memItemRight" valign="bottom">{ <br />
+&#160;&#160;<a class="el" href="../../de/dcc/structThread_1_1MessageInfo.html#a5fcb0dc46ae52db6e3e530df6b2217d4a9ed087efe5a3d7cf6f5f45f28f37deb2">kListAll</a> = 0, 
 <br />
-&#160;&#160;<a class="el" href="../../de/dcc/structThread_1_1MessageInfo.html#ac6a701b49101161eda6ab2e8ae83afcca6aaf5c6edddad3bc91d596cccfff0496">kListInterface</a> = 1
+&#160;&#160;<a class="el" href="../../de/dcc/structThread_1_1MessageInfo.html#a5fcb0dc46ae52db6e3e530df6b2217d4a6aaf5c6edddad3bc91d596cccfff0496">kListInterface</a> = 1
 <br />
  }</td></tr>
-<tr class="separator:ac6a701b49101161eda6ab2e8ae83afcc"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="separator:a5fcb0dc46ae52db6e3e530df6b2217d4"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-attribs"></a>
 Public Attributes</h2></td></tr>
+<tr class="memitem:a256d28dece4ea865476b6ed12da24942"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a256d28dece4ea865476b6ed12da24942"></a>
+<a class="el" href="../../d5/d9f/classThread_1_1MessagePool.html">MessagePool</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../de/dcc/structThread_1_1MessageInfo.html#a256d28dece4ea865476b6ed12da24942">mMessagePool</a></td></tr>
+<tr class="memdesc:a256d28dece4ea865476b6ed12da24942"><td class="mdescLeft">&#160;</td><td class="mdescRight">Identifies the message pool for this message. <br /></td></tr>
+<tr class="separator:a256d28dece4ea865476b6ed12da24942"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a7ea2c68dbcca801da35bb35aedf0f700"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a7ea2c68dbcca801da35bb35aedf0f700"></a>
 <a class="el" href="../../d9/dd7/structThread_1_1MessageListEntry.html">MessageListEntry</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../de/dcc/structThread_1_1MessageInfo.html#a7ea2c68dbcca801da35bb35aedf0f700">mList</a> [2]</td></tr>
 <tr class="memdesc:a7ea2c68dbcca801da35bb35aedf0f700"><td class="mdescLeft">&#160;</td><td class="mdescRight"><a class="el" href="../../dc/d3c/classThread_1_1Message.html" title="This class represents a message. ">Message</a> lists. <br /></td></tr>
@@ -166,18 +171,38 @@ uint16_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="
 uint16_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../de/dcc/structThread_1_1MessageInfo.html#a004a1eff77952cd34b14d3d3996bad6d">mDatagramTag</a></td></tr>
 <tr class="memdesc:a004a1eff77952cd34b14d3d3996bad6d"><td class="mdescLeft">&#160;</td><td class="mdescRight">The datagram tag used for 6LoWPAN fragmentation. <br /></td></tr>
 <tr class="separator:a004a1eff77952cd34b14d3d3996bad6d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a487c2e0476296e5470d19711b68a9bef"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a487c2e0476296e5470d19711b68a9bef"></a>
+uint8_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../de/dcc/structThread_1_1MessageInfo.html#a487c2e0476296e5470d19711b68a9bef">mChildMask</a> [8]</td></tr>
+<tr class="memdesc:a487c2e0476296e5470d19711b68a9bef"><td class="mdescLeft">&#160;</td><td class="mdescRight">A bit-vector to indicate which sleepy children need to receive this. <br /></td></tr>
+<tr class="separator:a487c2e0476296e5470d19711b68a9bef"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a5cd9363a39a0241e90167fdcb92a3f3b"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a5cd9363a39a0241e90167fdcb92a3f3b"></a>
 uint8_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../de/dcc/structThread_1_1MessageInfo.html#a5cd9363a39a0241e90167fdcb92a3f3b">mTimeout</a></td></tr>
 <tr class="memdesc:a5cd9363a39a0241e90167fdcb92a3f3b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Seconds remaining before dropping the message. <br /></td></tr>
 <tr class="separator:a5cd9363a39a0241e90167fdcb92a3f3b"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a487c2e0476296e5470d19711b68a9bef"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a487c2e0476296e5470d19711b68a9bef"></a>
-uint8_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../de/dcc/structThread_1_1MessageInfo.html#a487c2e0476296e5470d19711b68a9bef">mChildMask</a> [8]</td></tr>
-<tr class="memdesc:a487c2e0476296e5470d19711b68a9bef"><td class="mdescLeft">&#160;</td><td class="mdescRight">A bit-vector to indicate which sleepy children need to receive this message. <br /></td></tr>
-<tr class="separator:a487c2e0476296e5470d19711b68a9bef"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab738dbead95c8d85eaa0a2d02114cfbc"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ab738dbead95c8d85eaa0a2d02114cfbc"></a>
+int8_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../de/dcc/structThread_1_1MessageInfo.html#ab738dbead95c8d85eaa0a2d02114cfbc">mInterfaceId</a></td></tr>
+<tr class="memdesc:ab738dbead95c8d85eaa0a2d02114cfbc"><td class="mdescLeft">&#160;</td><td class="mdescRight">The interface ID. <br /></td></tr>
+<tr class="separator:ab738dbead95c8d85eaa0a2d02114cfbc"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5255d5ff28965a59ac341cdfb17e77c2"><td class="memItemLeft" ><a class="anchor" id="a5255d5ff28965a59ac341cdfb17e77c2"></a>
+union {</td></tr>
+<tr class="memitem:a2300119a16cb857e4dc6280617c97667"><td class="memItemLeft" >
+&#160;&#160;&#160;uint16_t&#160;&#160;&#160;<a class="el" href="../../de/dcc/structThread_1_1MessageInfo.html#a51a5c757f626bfdcb602649447b08e84">mPanId</a></td></tr>
+<tr class="memdesc:a2300119a16cb857e4dc6280617c97667"><td class="mdescLeft">&#160;</td><td class="mdescRight">Used for MLE Discover Request and Response messages. <br /></td></tr>
+<tr class="separator:a2300119a16cb857e4dc6280617c97667"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:adf24db33837703f1f5eaa518eca7e194"><td class="memItemLeft" >
+&#160;&#160;&#160;uint8_t&#160;&#160;&#160;<a class="el" href="../../de/dcc/structThread_1_1MessageInfo.html#a711cd88dcfbf425a2e56599764dfad02">mChannel</a></td></tr>
+<tr class="memdesc:adf24db33837703f1f5eaa518eca7e194"><td class="mdescLeft">&#160;</td><td class="mdescRight">Used for MLE Announce. <br /></td></tr>
+<tr class="separator:adf24db33837703f1f5eaa518eca7e194"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5255d5ff28965a59ac341cdfb17e77c2"><td class="memItemLeft" valign="top">};&#160;</td><td class="memItemRight" valign="bottom"></td></tr>
+<tr class="separator:a5255d5ff28965a59ac341cdfb17e77c2"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a50cfccac2d7e2742675333cde1cb92d2"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a50cfccac2d7e2742675333cde1cb92d2"></a>
 uint8_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../de/dcc/structThread_1_1MessageInfo.html#a50cfccac2d7e2742675333cde1cb92d2">mType</a>: 2</td></tr>
 <tr class="memdesc:a50cfccac2d7e2742675333cde1cb92d2"><td class="mdescLeft">&#160;</td><td class="mdescRight">Identifies the type of message. <br /></td></tr>
 <tr class="separator:a50cfccac2d7e2742675333cde1cb92d2"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2dda9c9791237c5b8f8c44262f82ef95"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a2dda9c9791237c5b8f8c44262f82ef95"></a>
+uint8_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../de/dcc/structThread_1_1MessageInfo.html#a2dda9c9791237c5b8f8c44262f82ef95">mSubType</a>: 3</td></tr>
+<tr class="memdesc:a2dda9c9791237c5b8f8c44262f82ef95"><td class="mdescLeft">&#160;</td><td class="mdescRight">Identifies the message sub type. <br /></td></tr>
+<tr class="separator:a2dda9c9791237c5b8f8c44262f82ef95"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a4304fa97f8cf74ea50693b2f7b21719d"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a4304fa97f8cf74ea50693b2f7b21719d"></a>
 bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../de/dcc/structThread_1_1MessageInfo.html#a4304fa97f8cf74ea50693b2f7b21719d">mDirectTx</a>: 1</td></tr>
 <tr class="memdesc:a4304fa97f8cf74ea50693b2f7b21719d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Used to indicate whether a direct transmission is required. <br /></td></tr>
@@ -190,7 +215,7 @@ bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../.
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>This structure contains metdata about a <a class="el" href="../../dc/d3c/classThread_1_1Message.html" title="This class represents a message. ">Message</a>. </p>
 </div><h2 class="groupheader">Member Enumeration Documentation</h2>
-<a class="anchor" id="ac6a701b49101161eda6ab2e8ae83afcc"></a>
+<a class="anchor" id="a5fcb0dc46ae52db6e3e530df6b2217d4"></a>
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
@@ -200,10 +225,10 @@ bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../.
       </table>
 </div><div class="memdoc">
 <table class="fieldtable">
-<tr><th colspan="2">Enumerator</th></tr><tr><td class="fieldname"><a class="anchor" id="ac6a701b49101161eda6ab2e8ae83afcca9ed087efe5a3d7cf6f5f45f28f37deb2"></a>kListAll&#160;</td><td class="fielddoc">
+<tr><th colspan="2">Enumerator</th></tr><tr><td class="fieldname"><a class="anchor" id="a5fcb0dc46ae52db6e3e530df6b2217d4a9ed087efe5a3d7cf6f5f45f28f37deb2"></a>kListAll&#160;</td><td class="fielddoc">
 <p>Identifies the all messages list. </p>
 </td></tr>
-<tr><td class="fieldname"><a class="anchor" id="ac6a701b49101161eda6ab2e8ae83afcca6aaf5c6edddad3bc91d596cccfff0496"></a>kListInterface&#160;</td><td class="fielddoc">
+<tr><td class="fieldname"><a class="anchor" id="a5fcb0dc46ae52db6e3e530df6b2217d4a6aaf5c6edddad3bc91d596cccfff0496"></a>kListInterface&#160;</td><td class="fielddoc">
 <p>Identifies the per-interface message list. </p>
 </td></tr>
 </table>
@@ -219,7 +244,7 @@ bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../.
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
     <li class="navelem"><b>Thread</b></li><li class="navelem"><a class="el" href="../../de/dcc/structThread_1_1MessageInfo.html">MessageInfo</a></li>
-    <li class="footer">Generated on Wed Jul 27 2016 17:09:43 for OpenThread by
+    <li class="footer">Generated on Fri Oct 14 2016 08:44:36 for OpenThread by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="../../doxygen.png" alt="doxygen"/></a> 1.8.11 </li>
   </ul>

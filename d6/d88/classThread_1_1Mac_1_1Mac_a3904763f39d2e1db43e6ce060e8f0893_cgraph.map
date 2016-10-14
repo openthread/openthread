@@ -1,3 +1,4 @@
 <map id="Thread::Mac::Mac::SetPanId" name="Thread::Mac::Mac::SetPanId">
-<area shape="rect" id="node2" href="$d1/d69/group__radio-config.html#gab28574d1293f63907531926d0e26697a" title="Set the PAN ID for address filtering. " alt="" coords="244,5,389,31"/>
+<area shape="rect" id="node2" href="$d1/d69/group__radio-config.html#ga8497b9950b7d61cf0ce336a755871b81" title="Set the PAN ID for address filtering. " alt="" coords="244,5,389,31"/>
+<area shape="rect" id="node3" href="$d3/d8e/classThread_1_1ThreadNetif.html#a83517ab2bff2614e403895426df6a61b" title="This method returns the pointer to the parent otInstance structure. " alt="" coords="247,55,387,93"/>
 </map>

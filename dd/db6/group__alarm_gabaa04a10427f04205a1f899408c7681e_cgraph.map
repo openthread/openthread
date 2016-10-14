@@ -1,0 +1,5 @@
+<map id="otPlatAlarmFired" name="otPlatAlarmFired">
+<area shape="rect" id="node2" href="$df/d1f/classThread_1_1TimerScheduler.html#a3298ced9b82a19c2a902dcfc1994660e" title="This method processes all running timers. " alt="" coords="174,27,339,65"/>
+<area shape="rect" id="node3" href="$dd/db6/group__alarm.html#gaf8829e3591e03e29e136685fcdeb3300" title="Get the current time. " alt="" coords="400,5,538,31"/>
+<area shape="rect" id="node4" href="$df/d1f/classThread_1_1TimerScheduler.html#a6bcb9ef68dd35e2006c4273e8c58d48b" title="This method removes a timer instance to the timer scheduler. " alt="" coords="387,55,551,93"/>
+</map>

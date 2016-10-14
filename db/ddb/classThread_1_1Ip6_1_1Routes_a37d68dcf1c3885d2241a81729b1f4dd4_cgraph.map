@@ -1,0 +1,4 @@
+<map id="Thread::Ip6::Routes::Lookup" name="Thread::Ip6::Routes::Lookup">
+<area shape="rect" id="node2" href="$d3/d05/classThread_1_1Ip6_1_1Ip6.html#a1925e10c3f64fc3278cf3b4f1ed20d49" title="This method returns the network interface list. " alt="" coords="193,5,385,31"/>
+<area shape="rect" id="node3" href="$d2/d55/classThread_1_1Ip6_1_1Netif.html#adc2577aa7e4aa3481587e8f075967246" title="This method returns the next network interface in the list. " alt="" coords="227,55,351,93"/>
+</map>

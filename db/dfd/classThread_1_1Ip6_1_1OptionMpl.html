@@ -34,7 +34,7 @@
   <td id="projectlogo"><img alt="Logo" src="../../Open-Thread-Logo-200x42.png"/></td>
   <td style="padding-left: 0.5em;">
    <div id="projectname">
-   &#160;<span id="projectnumber">gb2b10b8</span>
+   &#160;<span id="projectnumber">gddd0704</span>
    </div>
   </td>
  </tr>
@@ -141,9 +141,13 @@ Collaboration diagram for Thread::Ip6::OptionMpl:</div>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-types"></a>
 Public Types</h2></td></tr>
-<tr class="memitem:a04019136891d78a11510eb0ce6c80a82"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a04019136891d78a11510eb0ce6c80a82"></a>enum &#160;</td><td class="memItemRight" valign="bottom">{ <b>kType</b> = 0x6d
+<tr class="memitem:a4451420e32f8dc3d8f18a4b18990258a"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a4451420e32f8dc3d8f18a4b18990258a"></a>enum &#160;</td><td class="memItemRight" valign="bottom">{ <br />
+&#160;&#160;<b>kType</b> = 0x6d, 
+<br />
+&#160;&#160;<b>kMinLength</b> = 2
+<br />
  }</td></tr>
-<tr class="separator:a04019136891d78a11510eb0ce6c80a82"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="separator:a4451420e32f8dc3d8f18a4b18990258a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ac8a0bf83e9a64915259f9f0a832a10ed"><td class="memItemLeft" align="right" valign="top">enum &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../db/dfd/classThread_1_1Ip6_1_1OptionMpl.html#ac8a0bf83e9a64915259f9f0a832a10ed">SeedLength</a> { <br />
 &#160;&#160;<a class="el" href="../../db/dfd/classThread_1_1Ip6_1_1OptionMpl.html#ac8a0bf83e9a64915259f9f0a832a10edafe58ebd1c6af25155759487ad2364232">kSeedLength0</a> = 0 &lt;&lt; 6, 
 <br />
@@ -178,6 +182,9 @@ Public Member Functions</h2></td></tr>
 void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../db/dfd/classThread_1_1Ip6_1_1OptionMpl.html#ab15337033e8873669ad8ac4b3633e57b">Init</a> ()</td></tr>
 <tr class="memdesc:ab15337033e8873669ad8ac4b3633e57b"><td class="mdescLeft">&#160;</td><td class="mdescRight">This method initializes the MPL header. <br /></td></tr>
 <tr class="separator:ab15337033e8873669ad8ac4b3633e57b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aed85f80a7180aa7e49df4995169da991"><td class="memItemLeft" align="right" valign="top">uint8_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../db/dfd/classThread_1_1Ip6_1_1OptionMpl.html#aed85f80a7180aa7e49df4995169da991">GetTotalLength</a> () const </td></tr>
+<tr class="memdesc:aed85f80a7180aa7e49df4995169da991"><td class="mdescLeft">&#160;</td><td class="mdescRight">This method returns the total MPL Option length value including option header.  <a href="#aed85f80a7180aa7e49df4995169da991">More...</a><br /></td></tr>
+<tr class="separator:aed85f80a7180aa7e49df4995169da991"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a0cbe1e0d63012946621ba84971d940d1"><td class="memItemLeft" align="right" valign="top"><a class="el" href="../../db/dfd/classThread_1_1Ip6_1_1OptionMpl.html#ac8a0bf83e9a64915259f9f0a832a10ed">SeedLength</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../db/dfd/classThread_1_1Ip6_1_1OptionMpl.html#a0cbe1e0d63012946621ba84971d940d1">GetSeedLength</a> ()</td></tr>
 <tr class="memdesc:a0cbe1e0d63012946621ba84971d940d1"><td class="mdescLeft">&#160;</td><td class="mdescRight">This method returns the MPL Seed Length value.  <a href="#a0cbe1e0d63012946621ba84971d940d1">More...</a><br /></td></tr>
 <tr class="separator:a0cbe1e0d63012946621ba84971d940d1"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -285,7 +292,22 @@ Here is the caller graph for this function:</div>
 <div class="dyncontent">
 <div class="center"><img src="../../db/dfd/classThread_1_1Ip6_1_1OptionMpl_a57857e25569c36be19669ba214743040_icgraph.png" border="0" usemap="#db/dfd/classThread_1_1Ip6_1_1OptionMpl_a57857e25569c36be19669ba214743040_icgraph" alt=""/></div>
 <map name="db/dfd/classThread_1_1Ip6_1_1OptionMpl_a57857e25569c36be19669ba214743040_icgraph" id="db/dfd/classThread_1_1Ip6_1_1OptionMpl_a57857e25569c36be19669ba214743040_icgraph">
-<area shape="rect" id="node2" href="../../dd/d60/classThread_1_1Ip6_1_1Mpl.html#a781a12bbd3f79ac534068f085c3d9982" title="This method processes an MPL option. " alt="" coords="211,5,385,44"/>
+<area shape="rect" id="node2" href="../../dd/d60/classThread_1_1Ip6_1_1Mpl.html#a0a337fec22aa43fcf36038761a6a8900" title="This method processes an MPL option. " alt="" coords="211,133,385,172"/>
+<area shape="rect" id="node3" href="../../d3/d05/classThread_1_1Ip6_1_1Ip6.html#a4aa215eb5c0d575403b5ca683e8427c2" title="This method sends an IPv6 datagram. " alt="" coords="433,140,646,165"/>
+<area shape="rect" id="node4" href="../../da/dd7/classThread_1_1Ip6_1_1Icmp.html#a8989f736211cf82f9cefb258decd7c3e" title="This method sends an ICMPv6 Echo Request message. " alt="" coords="1013,5,1146,44"/>
+<area shape="rect" id="node6" href="../../da/dd7/classThread_1_1Ip6_1_1Icmp.html#a1652c3864180133512f7d6499cd684f2" title="This method sends an ICMPv6 error message. " alt="" coords="736,71,869,109"/>
+<area shape="rect" id="node16" href="../../da/dd7/classThread_1_1Ip6_1_1Icmp.html#ad28878461d364df3eeac50588479c9c1" title="This method handles an ICMPv6 message. " alt="" coords="736,133,869,172"/>
+<area shape="rect" id="node17" href="../../de/ded/classThread_1_1Ip6_1_1Udp.html#aa8d41afcd7a8894a7005bc1c32343f7d" title="This method sends an IPv6 datagram. " alt="" coords="694,196,912,221"/>
+<area shape="rect" id="node5" href="../../d5/dc2/structThread_1_1Cli_1_1Interpreter.html#a11ee1f86cffe17aab7de3de0bb16dee7" title="This method parses an ASCII string as an unsigned long. " alt="" coords="2336,76,2492,115"/>
+<area shape="rect" id="node7" href="../../df/d94/group__core-mle-core.html#ga27bbb63f94a4f59d1249fce8baa830ed" title="This method checks if the destination is reachable. " alt="" coords="960,77,1199,103"/>
+<area shape="rect" id="node8" href="../../db/dec/group__core-mle-router.html#gac7d2542017033898d0bc0f17a65d4656" title="This method checks if the destination is reachable. " alt="" coords="1247,121,1409,160"/>
+<area shape="rect" id="node9" href="../../dd/d1d/classThread_1_1MeshForwarder.html#a361ef901f6b665b3c7feac206089a7df" title="This method submits a message to the mesh forwarder for forwarding. " alt="" coords="1457,121,1621,160"/>
+<area shape="rect" id="node11" href="../../dd/d1d/classThread_1_1MeshForwarder.html#a5f726671448fb7cd72f8ee96db40731a" title="This method sets the scan parameters for MLE Discovery Request messages. " alt="" coords="1669,184,1839,223"/>
+<area shape="rect" id="node10" href="../../dd/d1d/classThread_1_1MeshForwarder.html#a3a55dcf590bf5941d216ff313b6ce0d0" title="This method gets the Data Poll period. " alt="" coords="1672,59,1836,97"/>
+<area shape="rect" id="node15" href="../../d3/d8e/classThread_1_1ThreadNetif.html#a95f2ad1f6785b0de74e660e43ac86d33" title="This method submits a message to the network interface. " alt="" coords="1683,121,1824,160"/>
+<area shape="rect" id="node12" href="../../df/d94/group__core-mle-core.html#gab299d00d1b2beabe8130e400dd6eca91" title="This method initiates a Thread Discovery. " alt="" coords="1887,156,2067,181"/>
+<area shape="rect" id="node13" href="../../d4/db5/classThread_1_1MeshCoP_1_1Joiner.html#a1ca1f767cfe15e7c25b8f65606e7fefb" title="This method starts the Joiner service. " alt="" coords="2115,93,2288,132"/>
+<area shape="rect" id="node14" href="../../d0/d0a/group__commands.html#ga8422cdf7d0b8b22c6dd107e6bb1309f2" title="This function starts a Thread Discovery scan. " alt="" coords="2160,156,2244,181"/>
 </map>
 </div>
 </p>
@@ -315,6 +337,31 @@ Here is the caller graph for this function:</div>
 
 <p>This method returns the MPL Seed Length value. </p>
 <dl class="section return"><dt>Returns</dt><dd>The MPL Seed Length value. </dd></dl>
+
+<p><div class="dynheader">
+Here is the caller graph for this function:</div>
+<div class="dyncontent">
+<div class="center"><img src="../../db/dfd/classThread_1_1Ip6_1_1OptionMpl_a0cbe1e0d63012946621ba84971d940d1_icgraph.png" border="0" usemap="#db/dfd/classThread_1_1Ip6_1_1OptionMpl_a0cbe1e0d63012946621ba84971d940d1_icgraph" alt=""/></div>
+<map name="db/dfd/classThread_1_1Ip6_1_1OptionMpl_a0cbe1e0d63012946621ba84971d940d1_icgraph" id="db/dfd/classThread_1_1Ip6_1_1OptionMpl_a0cbe1e0d63012946621ba84971d940d1_icgraph">
+<area shape="rect" id="node2" href="../../dd/d60/classThread_1_1Ip6_1_1Mpl.html#a0a337fec22aa43fcf36038761a6a8900" title="This method processes an MPL option. " alt="" coords="211,133,385,172"/>
+<area shape="rect" id="node3" href="../../d3/d05/classThread_1_1Ip6_1_1Ip6.html#a4aa215eb5c0d575403b5ca683e8427c2" title="This method sends an IPv6 datagram. " alt="" coords="433,140,646,165"/>
+<area shape="rect" id="node4" href="../../da/dd7/classThread_1_1Ip6_1_1Icmp.html#a8989f736211cf82f9cefb258decd7c3e" title="This method sends an ICMPv6 Echo Request message. " alt="" coords="1013,5,1146,44"/>
+<area shape="rect" id="node6" href="../../da/dd7/classThread_1_1Ip6_1_1Icmp.html#a1652c3864180133512f7d6499cd684f2" title="This method sends an ICMPv6 error message. " alt="" coords="736,71,869,109"/>
+<area shape="rect" id="node16" href="../../da/dd7/classThread_1_1Ip6_1_1Icmp.html#ad28878461d364df3eeac50588479c9c1" title="This method handles an ICMPv6 message. " alt="" coords="736,133,869,172"/>
+<area shape="rect" id="node17" href="../../de/ded/classThread_1_1Ip6_1_1Udp.html#aa8d41afcd7a8894a7005bc1c32343f7d" title="This method sends an IPv6 datagram. " alt="" coords="694,196,912,221"/>
+<area shape="rect" id="node5" href="../../d5/dc2/structThread_1_1Cli_1_1Interpreter.html#a11ee1f86cffe17aab7de3de0bb16dee7" title="This method parses an ASCII string as an unsigned long. " alt="" coords="2336,76,2492,115"/>
+<area shape="rect" id="node7" href="../../df/d94/group__core-mle-core.html#ga27bbb63f94a4f59d1249fce8baa830ed" title="This method checks if the destination is reachable. " alt="" coords="960,77,1199,103"/>
+<area shape="rect" id="node8" href="../../db/dec/group__core-mle-router.html#gac7d2542017033898d0bc0f17a65d4656" title="This method checks if the destination is reachable. " alt="" coords="1247,121,1409,160"/>
+<area shape="rect" id="node9" href="../../dd/d1d/classThread_1_1MeshForwarder.html#a361ef901f6b665b3c7feac206089a7df" title="This method submits a message to the mesh forwarder for forwarding. " alt="" coords="1457,121,1621,160"/>
+<area shape="rect" id="node11" href="../../dd/d1d/classThread_1_1MeshForwarder.html#a5f726671448fb7cd72f8ee96db40731a" title="This method sets the scan parameters for MLE Discovery Request messages. " alt="" coords="1669,184,1839,223"/>
+<area shape="rect" id="node10" href="../../dd/d1d/classThread_1_1MeshForwarder.html#a3a55dcf590bf5941d216ff313b6ce0d0" title="This method gets the Data Poll period. " alt="" coords="1672,59,1836,97"/>
+<area shape="rect" id="node15" href="../../d3/d8e/classThread_1_1ThreadNetif.html#a95f2ad1f6785b0de74e660e43ac86d33" title="This method submits a message to the network interface. " alt="" coords="1683,121,1824,160"/>
+<area shape="rect" id="node12" href="../../df/d94/group__core-mle-core.html#gab299d00d1b2beabe8130e400dd6eca91" title="This method initiates a Thread Discovery. " alt="" coords="1887,156,2067,181"/>
+<area shape="rect" id="node13" href="../../d4/db5/classThread_1_1MeshCoP_1_1Joiner.html#a1ca1f767cfe15e7c25b8f65606e7fefb" title="This method starts the Joiner service. " alt="" coords="2115,93,2288,132"/>
+<area shape="rect" id="node14" href="../../d0/d0a/group__commands.html#ga8422cdf7d0b8b22c6dd107e6bb1309f2" title="This function starts a Thread Discovery scan. " alt="" coords="2160,156,2244,181"/>
+</map>
+</div>
+</p>
 
 </div>
 </div>
@@ -348,7 +395,71 @@ Here is the caller graph for this function:</div>
 <div class="dyncontent">
 <div class="center"><img src="../../db/dfd/classThread_1_1Ip6_1_1OptionMpl_ac60f99926af918684912b585620c33ae_icgraph.png" border="0" usemap="#db/dfd/classThread_1_1Ip6_1_1OptionMpl_ac60f99926af918684912b585620c33ae_icgraph" alt=""/></div>
 <map name="db/dfd/classThread_1_1Ip6_1_1OptionMpl_ac60f99926af918684912b585620c33ae_icgraph" id="db/dfd/classThread_1_1Ip6_1_1OptionMpl_ac60f99926af918684912b585620c33ae_icgraph">
-<area shape="rect" id="node2" href="../../dd/d60/classThread_1_1Ip6_1_1Mpl.html#a781a12bbd3f79ac534068f085c3d9982" title="This method processes an MPL option. " alt="" coords="211,5,385,44"/>
+<area shape="rect" id="node2" href="../../dd/d60/classThread_1_1Ip6_1_1Mpl.html#a0a337fec22aa43fcf36038761a6a8900" title="This method processes an MPL option. " alt="" coords="211,133,385,172"/>
+<area shape="rect" id="node3" href="../../d3/d05/classThread_1_1Ip6_1_1Ip6.html#a4aa215eb5c0d575403b5ca683e8427c2" title="This method sends an IPv6 datagram. " alt="" coords="433,140,646,165"/>
+<area shape="rect" id="node4" href="../../da/dd7/classThread_1_1Ip6_1_1Icmp.html#a8989f736211cf82f9cefb258decd7c3e" title="This method sends an ICMPv6 Echo Request message. " alt="" coords="1013,5,1146,44"/>
+<area shape="rect" id="node6" href="../../da/dd7/classThread_1_1Ip6_1_1Icmp.html#a1652c3864180133512f7d6499cd684f2" title="This method sends an ICMPv6 error message. " alt="" coords="736,71,869,109"/>
+<area shape="rect" id="node16" href="../../da/dd7/classThread_1_1Ip6_1_1Icmp.html#ad28878461d364df3eeac50588479c9c1" title="This method handles an ICMPv6 message. " alt="" coords="736,133,869,172"/>
+<area shape="rect" id="node17" href="../../de/ded/classThread_1_1Ip6_1_1Udp.html#aa8d41afcd7a8894a7005bc1c32343f7d" title="This method sends an IPv6 datagram. " alt="" coords="694,196,912,221"/>
+<area shape="rect" id="node5" href="../../d5/dc2/structThread_1_1Cli_1_1Interpreter.html#a11ee1f86cffe17aab7de3de0bb16dee7" title="This method parses an ASCII string as an unsigned long. " alt="" coords="2336,76,2492,115"/>
+<area shape="rect" id="node7" href="../../df/d94/group__core-mle-core.html#ga27bbb63f94a4f59d1249fce8baa830ed" title="This method checks if the destination is reachable. " alt="" coords="960,77,1199,103"/>
+<area shape="rect" id="node8" href="../../db/dec/group__core-mle-router.html#gac7d2542017033898d0bc0f17a65d4656" title="This method checks if the destination is reachable. " alt="" coords="1247,121,1409,160"/>
+<area shape="rect" id="node9" href="../../dd/d1d/classThread_1_1MeshForwarder.html#a361ef901f6b665b3c7feac206089a7df" title="This method submits a message to the mesh forwarder for forwarding. " alt="" coords="1457,121,1621,160"/>
+<area shape="rect" id="node11" href="../../dd/d1d/classThread_1_1MeshForwarder.html#a5f726671448fb7cd72f8ee96db40731a" title="This method sets the scan parameters for MLE Discovery Request messages. " alt="" coords="1669,184,1839,223"/>
+<area shape="rect" id="node10" href="../../dd/d1d/classThread_1_1MeshForwarder.html#a3a55dcf590bf5941d216ff313b6ce0d0" title="This method gets the Data Poll period. " alt="" coords="1672,59,1836,97"/>
+<area shape="rect" id="node15" href="../../d3/d8e/classThread_1_1ThreadNetif.html#a95f2ad1f6785b0de74e660e43ac86d33" title="This method submits a message to the network interface. " alt="" coords="1683,121,1824,160"/>
+<area shape="rect" id="node12" href="../../df/d94/group__core-mle-core.html#gab299d00d1b2beabe8130e400dd6eca91" title="This method initiates a Thread Discovery. " alt="" coords="1887,156,2067,181"/>
+<area shape="rect" id="node13" href="../../d4/db5/classThread_1_1MeshCoP_1_1Joiner.html#a1ca1f767cfe15e7c25b8f65606e7fefb" title="This method starts the Joiner service. " alt="" coords="2115,93,2288,132"/>
+<area shape="rect" id="node14" href="../../d0/d0a/group__commands.html#ga8422cdf7d0b8b22c6dd107e6bb1309f2" title="This function starts a Thread Discovery scan. " alt="" coords="2160,156,2244,181"/>
+</map>
+</div>
+</p>
+
+</div>
+</div>
+<a class="anchor" id="aed85f80a7180aa7e49df4995169da991"></a>
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">uint8_t Thread::Ip6::OptionMpl::GetTotalLength </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td> const</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>This method returns the total MPL Option length value including option header. </p>
+<dl class="section return"><dt>Returns</dt><dd>The total IPv6 Option Length. </dd></dl>
+
+<p><div class="dynheader">
+Here is the call graph for this function:</div>
+<div class="dyncontent">
+<div class="center"><img src="../../db/dfd/classThread_1_1Ip6_1_1OptionMpl_aed85f80a7180aa7e49df4995169da991_cgraph.png" border="0" usemap="#db/dfd/classThread_1_1Ip6_1_1OptionMpl_aed85f80a7180aa7e49df4995169da991_cgraph" alt=""/></div>
+<map name="db/dfd/classThread_1_1Ip6_1_1OptionMpl_aed85f80a7180aa7e49df4995169da991_cgraph" id="db/dfd/classThread_1_1Ip6_1_1OptionMpl_aed85f80a7180aa7e49df4995169da991_cgraph">
+<area shape="rect" id="node2" href="../../d2/d7c/classThread_1_1Ip6_1_1OptionHeader.html#ac284bc7a465a12b3a2ac20927ecda327" title="This method returns the IPv6 Option Length value. " alt="" coords="211,5,391,44"/>
+</map>
+</div>
+</p>
+
+<p><div class="dynheader">
+Here is the caller graph for this function:</div>
+<div class="dyncontent">
+<div class="center"><img src="../../db/dfd/classThread_1_1Ip6_1_1OptionMpl_aed85f80a7180aa7e49df4995169da991_icgraph.png" border="0" usemap="#db/dfd/classThread_1_1Ip6_1_1OptionMpl_aed85f80a7180aa7e49df4995169da991_icgraph" alt=""/></div>
+<map name="db/dfd/classThread_1_1Ip6_1_1OptionMpl_aed85f80a7180aa7e49df4995169da991_icgraph" id="db/dfd/classThread_1_1Ip6_1_1OptionMpl_aed85f80a7180aa7e49df4995169da991_icgraph">
+<area shape="rect" id="node2" href="../../d3/d05/classThread_1_1Ip6_1_1Ip6.html#a8a27760878c9ad9932e3f59bc651c826" title="This method sets whether or not Thread control traffic is filtered out when delivering IPv6 datagrams..." alt="" coords="211,5,402,44"/>
+<area shape="rect" id="node3" href="../../db/de8/group__ip6.html#ga17d9c1c306a1ad33d12e4a15a09c13d7" title="This function sets whether or not Thread control traffic is filtered out when delivering IPv6 datagra..." alt="" coords="450,5,657,44"/>
+<area shape="rect" id="node4" href="../../d9/dc8/classThread_1_1NcpBase.html#ad14f0f1d60c77f7f537a0a441a9fb35c" title="This method is called by the framer whenever a framing error is detected. " alt="" coords="705,5,897,44"/>
+<area shape="rect" id="node5" href="../../dc/d60/classThread_1_1NcpUart.html#a34e4ca7aff5b9056593e8ce0aa6e2fbb" title="This method is called when uart received a data buffer. " alt="" coords="945,5,1140,44"/>
 </map>
 </div>
 </p>
@@ -422,7 +533,27 @@ Here is the caller graph for this function:</div>
 <div class="dyncontent">
 <div class="center"><img src="../../db/dfd/classThread_1_1Ip6_1_1OptionMpl_a5d5e29c101be9cec717957bb736944db_icgraph.png" border="0" usemap="#db/dfd/classThread_1_1Ip6_1_1OptionMpl_a5d5e29c101be9cec717957bb736944db_icgraph" alt=""/></div>
 <map name="db/dfd/classThread_1_1Ip6_1_1OptionMpl_a5d5e29c101be9cec717957bb736944db_icgraph" id="db/dfd/classThread_1_1Ip6_1_1OptionMpl_a5d5e29c101be9cec717957bb736944db_icgraph">
-<area shape="rect" id="node2" href="../../dd/d60/classThread_1_1Ip6_1_1Mpl.html#a727b25074aaa92ab630682ccf25dbb2d" title="This method initializes the MPL option. " alt="" coords="211,12,394,37"/>
+<area shape="rect" id="node2" href="../../dd/d60/classThread_1_1Ip6_1_1Mpl.html#ae07250ef04846e308fa4066e96222fed" title="This method initializes the MPL option. " alt="" coords="211,80,394,105"/>
+<area shape="rect" id="node7" href="../../dd/d60/classThread_1_1Ip6_1_1Mpl.html#a0a337fec22aa43fcf36038761a6a8900" title="This method processes an MPL option. " alt="" coords="215,160,389,199"/>
+<area shape="rect" id="node3" href="../../d3/d05/classThread_1_1Ip6_1_1Ip6.html#a8a27760878c9ad9932e3f59bc651c826" title="This method sets whether or not Thread control traffic is filtered out when delivering IPv6 datagrams..." alt="" coords="453,13,644,52"/>
+<area shape="rect" id="node4" href="../../db/de8/group__ip6.html#ga17d9c1c306a1ad33d12e4a15a09c13d7" title="This function sets whether or not Thread control traffic is filtered out when delivering IPv6 datagra..." alt="" coords="708,5,915,44"/>
+<area shape="rect" id="node5" href="../../d9/dc8/classThread_1_1NcpBase.html#ad14f0f1d60c77f7f537a0a441a9fb35c" title="This method is called by the framer whenever a framing error is detected. " alt="" coords="993,5,1184,44"/>
+<area shape="rect" id="node6" href="../../dc/d60/classThread_1_1NcpUart.html#a34e4ca7aff5b9056593e8ce0aa6e2fbb" title="This method is called when uart received a data buffer. " alt="" coords="1256,5,1451,44"/>
+<area shape="rect" id="node8" href="../../d3/d05/classThread_1_1Ip6_1_1Ip6.html#a4aa215eb5c0d575403b5ca683e8427c2" title="This method sends an IPv6 datagram. " alt="" coords="442,181,654,207"/>
+<area shape="rect" id="node9" href="../../da/dd7/classThread_1_1Ip6_1_1Icmp.html#a8989f736211cf82f9cefb258decd7c3e" title="This method sends an ICMPv6 Echo Request message. " alt="" coords="1514,57,1648,96"/>
+<area shape="rect" id="node11" href="../../da/dd7/classThread_1_1Ip6_1_1Icmp.html#a1652c3864180133512f7d6499cd684f2" title="This method sends an ICMPv6 error message. " alt="" coords="745,120,878,159"/>
+<area shape="rect" id="node21" href="../../da/dd7/classThread_1_1Ip6_1_1Icmp.html#ad28878461d364df3eeac50588479c9c1" title="This method handles an ICMPv6 message. " alt="" coords="745,183,878,221"/>
+<area shape="rect" id="node22" href="../../de/ded/classThread_1_1Ip6_1_1Udp.html#aa8d41afcd7a8894a7005bc1c32343f7d" title="This method sends an IPv6 datagram. " alt="" coords="702,245,921,271"/>
+<area shape="rect" id="node10" href="../../d5/dc2/structThread_1_1Cli_1_1Interpreter.html#a11ee1f86cffe17aab7de3de0bb16dee7" title="This method parses an ASCII string as an unsigned long. " alt="" coords="2379,125,2534,164"/>
+<area shape="rect" id="node12" href="../../df/d94/group__core-mle-core.html#ga27bbb63f94a4f59d1249fce8baa830ed" title="This method checks if the destination is reachable. " alt="" coords="969,127,1208,152"/>
+<area shape="rect" id="node13" href="../../db/dec/group__core-mle-router.html#gac7d2542017033898d0bc0f17a65d4656" title="This method checks if the destination is reachable. " alt="" coords="1273,171,1434,209"/>
+<area shape="rect" id="node14" href="../../dd/d1d/classThread_1_1MeshForwarder.html#a361ef901f6b665b3c7feac206089a7df" title="This method submits a message to the mesh forwarder for forwarding. " alt="" coords="1499,171,1663,209"/>
+<area shape="rect" id="node16" href="../../dd/d1d/classThread_1_1MeshForwarder.html#a5f726671448fb7cd72f8ee96db40731a" title="This method sets the scan parameters for MLE Discovery Request messages. " alt="" coords="1711,233,1881,272"/>
+<area shape="rect" id="node15" href="../../dd/d1d/classThread_1_1MeshForwarder.html#a3a55dcf590bf5941d216ff313b6ce0d0" title="This method gets the Data Poll period. " alt="" coords="1714,108,1878,147"/>
+<area shape="rect" id="node20" href="../../d3/d8e/classThread_1_1ThreadNetif.html#a95f2ad1f6785b0de74e660e43ac86d33" title="This method submits a message to the network interface. " alt="" coords="1726,171,1866,209"/>
+<area shape="rect" id="node17" href="../../df/d94/group__core-mle-core.html#gab299d00d1b2beabe8130e400dd6eca91" title="This method initiates a Thread Discovery. " alt="" coords="1929,205,2109,231"/>
+<area shape="rect" id="node18" href="../../d4/db5/classThread_1_1MeshCoP_1_1Joiner.html#a1ca1f767cfe15e7c25b8f65606e7fefb" title="This method starts the Joiner service. " alt="" coords="2157,143,2331,181"/>
+<area shape="rect" id="node19" href="../../d0/d0a/group__commands.html#ga8422cdf7d0b8b22c6dd107e6bb1309f2" title="This function starts a Thread Discovery scan. " alt="" coords="2202,205,2286,231"/>
 </map>
 </div>
 </p>
@@ -464,7 +595,11 @@ Here is the caller graph for this function:</div>
 <div class="dyncontent">
 <div class="center"><img src="../../db/dfd/classThread_1_1Ip6_1_1OptionMpl_a6d6019b6d89f2377d7537e31fcd2f228_icgraph.png" border="0" usemap="#db/dfd/classThread_1_1Ip6_1_1OptionMpl_a6d6019b6d89f2377d7537e31fcd2f228_icgraph" alt=""/></div>
 <map name="db/dfd/classThread_1_1Ip6_1_1OptionMpl_a6d6019b6d89f2377d7537e31fcd2f228_icgraph" id="db/dfd/classThread_1_1Ip6_1_1OptionMpl_a6d6019b6d89f2377d7537e31fcd2f228_icgraph">
-<area shape="rect" id="node2" href="../../dd/d60/classThread_1_1Ip6_1_1Mpl.html#a727b25074aaa92ab630682ccf25dbb2d" title="This method initializes the MPL option. " alt="" coords="211,12,394,37"/>
+<area shape="rect" id="node2" href="../../dd/d60/classThread_1_1Ip6_1_1Mpl.html#ae07250ef04846e308fa4066e96222fed" title="This method initializes the MPL option. " alt="" coords="211,12,394,37"/>
+<area shape="rect" id="node3" href="../../d3/d05/classThread_1_1Ip6_1_1Ip6.html#a8a27760878c9ad9932e3f59bc651c826" title="This method sets whether or not Thread control traffic is filtered out when delivering IPv6 datagrams..." alt="" coords="442,5,633,44"/>
+<area shape="rect" id="node4" href="../../db/de8/group__ip6.html#ga17d9c1c306a1ad33d12e4a15a09c13d7" title="This function sets whether or not Thread control traffic is filtered out when delivering IPv6 datagra..." alt="" coords="681,5,888,44"/>
+<area shape="rect" id="node5" href="../../d9/dc8/classThread_1_1NcpBase.html#ad14f0f1d60c77f7f537a0a441a9fb35c" title="This method is called by the framer whenever a framing error is detected. " alt="" coords="936,5,1128,44"/>
+<area shape="rect" id="node6" href="../../dc/d60/classThread_1_1NcpUart.html#a34e4ca7aff5b9056593e8ce0aa6e2fbb" title="This method is called when uart received a data buffer. " alt="" coords="1176,5,1371,44"/>
 </map>
 </div>
 </p>
@@ -506,7 +641,11 @@ Here is the caller graph for this function:</div>
 <div class="dyncontent">
 <div class="center"><img src="../../db/dfd/classThread_1_1Ip6_1_1OptionMpl_acd216e486ea81e1d8b598ee544310f7b_icgraph.png" border="0" usemap="#db/dfd/classThread_1_1Ip6_1_1OptionMpl_acd216e486ea81e1d8b598ee544310f7b_icgraph" alt=""/></div>
 <map name="db/dfd/classThread_1_1Ip6_1_1OptionMpl_acd216e486ea81e1d8b598ee544310f7b_icgraph" id="db/dfd/classThread_1_1Ip6_1_1OptionMpl_acd216e486ea81e1d8b598ee544310f7b_icgraph">
-<area shape="rect" id="node2" href="../../dd/d60/classThread_1_1Ip6_1_1Mpl.html#a727b25074aaa92ab630682ccf25dbb2d" title="This method initializes the MPL option. " alt="" coords="211,12,394,37"/>
+<area shape="rect" id="node2" href="../../dd/d60/classThread_1_1Ip6_1_1Mpl.html#ae07250ef04846e308fa4066e96222fed" title="This method initializes the MPL option. " alt="" coords="211,12,394,37"/>
+<area shape="rect" id="node3" href="../../d3/d05/classThread_1_1Ip6_1_1Ip6.html#a8a27760878c9ad9932e3f59bc651c826" title="This method sets whether or not Thread control traffic is filtered out when delivering IPv6 datagrams..." alt="" coords="442,5,633,44"/>
+<area shape="rect" id="node4" href="../../db/de8/group__ip6.html#ga17d9c1c306a1ad33d12e4a15a09c13d7" title="This function sets whether or not Thread control traffic is filtered out when delivering IPv6 datagra..." alt="" coords="681,5,888,44"/>
+<area shape="rect" id="node5" href="../../d9/dc8/classThread_1_1NcpBase.html#ad14f0f1d60c77f7f537a0a441a9fb35c" title="This method is called by the framer whenever a framing error is detected. " alt="" coords="936,5,1128,44"/>
+<area shape="rect" id="node6" href="../../dc/d60/classThread_1_1NcpUart.html#a34e4ca7aff5b9056593e8ce0aa6e2fbb" title="This method is called when uart received a data buffer. " alt="" coords="1176,5,1371,44"/>
 </map>
 </div>
 </p>
@@ -522,7 +661,7 @@ Here is the caller graph for this function:</div>
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
     <li class="navelem"><b>Thread</b></li><li class="navelem"><a class="el" href="../../d2/de1/namespaceThread_1_1Ip6.html">Ip6</a></li><li class="navelem"><a class="el" href="../../db/dfd/classThread_1_1Ip6_1_1OptionMpl.html">OptionMpl</a></li>
-    <li class="footer">Generated on Wed Jul 27 2016 17:09:43 for OpenThread by
+    <li class="footer">Generated on Fri Oct 14 2016 08:44:36 for OpenThread by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="../../doxygen.png" alt="doxygen"/></a> 1.8.11 </li>
   </ul>

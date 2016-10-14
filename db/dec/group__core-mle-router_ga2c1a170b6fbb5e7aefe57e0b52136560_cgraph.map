@@ -1,0 +1,7 @@
+<map id="Thread::Mle::MleRouter::BecomeRouter" name="Thread::Mle::MleRouter::BecomeRouter">
+<area shape="rect" id="node2" href="$dc/d75/classThread_1_1Ip6_1_1UdpSocket.html#aaa9112c22813ceb55338050f0365c598" title="This method opens the UDP socket. " alt="" coords="220,5,382,44"/>
+<area shape="rect" id="node3" href="$dd/d68/classThread_1_1TrickleTimer.html#a7df8440dbaec9a62b5d97b9dc6b3ef6b" title="This method stops the trickle timer. " alt="" coords="229,68,373,107"/>
+<area shape="rect" id="node5" href="$d4/dcf/classThread_1_1AddressResolver.html#af9e813b464854994a8beda21d91c989c" title="This method clears the EID&#45;to&#45;RLOC cache. " alt="" coords="215,131,387,169"/>
+<area shape="rect" id="node6" href="$d1/d40/classThread_1_1Timer.html#a475731e21b59be6b17b24f5b5e175f62" title="This method schedules the timer to fire a dt milliseconds from now. " alt="" coords="231,193,371,219"/>
+<area shape="rect" id="node4" href="$d1/d40/classThread_1_1Timer.html#a9acdec1cdf4edf947c563d40871f2bc8" title="This method stops the timer. " alt="" coords="435,75,575,100"/>
+</map>

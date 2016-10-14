@@ -1,4 +1,6 @@
 <map id="Thread::NcpFrameBuffer::SetCallbacks" name="Thread::NcpFrameBuffer::SetCallbacks">
-<area shape="rect" id="node2" href="$d0/d78/classThread_1_1NcpFrameBuffer.html#ad20ceecdfd9130815f4f59a9192afeeb" title="This constructor creates an NCP frame buffer. " alt="" coords="222,5,390,44"/>
-<area shape="rect" id="node3" href="$d0/d78/classThread_1_1NcpFrameBuffer.html#ae80bc3d36fafc2a41b13270f7ffe54c2" title="This destructor clears the NCP frame buffer and clears all frames. " alt="" coords="222,68,390,107"/>
+<area shape="rect" id="node2" href="$d0/d78/classThread_1_1NcpFrameBuffer.html#ad20ceecdfd9130815f4f59a9192afeeb" title="This constructor creates an NCP frame buffer. " alt="" coords="226,5,394,44"/>
+<area shape="rect" id="node3" href="$d0/d78/classThread_1_1NcpFrameBuffer.html#ae80bc3d36fafc2a41b13270f7ffe54c2" title="This destructor clears the NCP frame buffer and clears all frames. " alt="" coords="226,68,394,107"/>
+<area shape="rect" id="node4" href="$d0/d2a/classThread_1_1NcpSpi.html#a755449adff7ec14f4985ac462c7914bd" title="Constructor. " alt="" coords="228,131,392,156"/>
+<area shape="rect" id="node5" href="$dc/d60/classThread_1_1NcpUart.html#abdc6252f8097fc29b2569b52d0bd43ed" title="Constructor. " alt="" coords="222,180,398,205"/>
 </map>

@@ -1,4 +1,6 @@
 <map id="src/core/common/logging.hpp" name="src/core/common/logging.hpp">
 <area shape="rect" id="node5" href="$df/dcb/openthread-core-config_8h.html" title="This file includes compile&#45;time configuration constants for OpenThread. " alt="" coords="267,79,437,104"/>
-<area shape="rect" id="node6" href="$d5/d77/logging_8h.html" title="This file includes the platform abstraction for the debug log service. " alt="" coords="462,79,589,104"/>
+<area shape="rect" id="node7" href="$d5/d77/logging_8h.html" title="This file includes the platform abstraction for the debug log service. " alt="" coords="462,79,589,104"/>
+<area shape="rect" id="node6" href="$d7/d08/openthread-core-default-config_8h.html" title="This file includes default compile&#45;time configuration constants for OpenThread. " alt="" coords="270,152,434,191"/>
+<area shape="rect" id="node8" href="$df/dd8/stdint_8h_source.html" title="stdint.h" alt="" coords="493,159,558,184"/>
 </map>

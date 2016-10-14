@@ -1,4 +1,5 @@
 <map id="Thread::Cli::Interpreter::ProcessLine" name="Thread::Cli::Interpreter::ProcessLine">
-<area shape="rect" id="node2" href="$db/def/group__uart.html#ga2aec94bad212a6bd72bc82fe310eaca2" title="The UART driver calls this method to notify OpenThread that bytes have been received. " alt="" coords="218,5,354,31"/>
-<area shape="rect" id="node3" href="$dc/df5/classThread_1_1Cli_1_1Udp.html#ab23c737fe108c24331f40d024d5f446a" title="This method starts the CLI server. " alt="" coords="209,55,363,80"/>
+<area shape="rect" id="node2" href="$dd/dce/classThread_1_1Cli_1_1Console.html#ab5454035d54e21e0e780335eddf7ca7d" title="This method sets a callback that is called when console has some output. " alt="" coords="214,5,357,44"/>
+<area shape="rect" id="node3" href="$db/def/group__uart.html#ga2aec94bad212a6bd72bc82fe310eaca2" title="The UART driver calls this method to notify OpenThread that bytes have been received. " alt="" coords="218,68,354,93"/>
+<area shape="rect" id="node4" href="$dc/df5/classThread_1_1Cli_1_1Udp.html#ab23c737fe108c24331f40d024d5f446a" title="This method starts the CLI server. " alt="" coords="209,117,363,143"/>
 </map>

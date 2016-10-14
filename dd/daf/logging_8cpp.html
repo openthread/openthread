@@ -34,7 +34,7 @@
   <td id="projectlogo"><img alt="Logo" src="../../Open-Thread-Logo-200x42.png"/></td>
   <td style="padding-left: 0.5em;">
    <div id="projectname">
-   &#160;<span id="projectnumber">gb2b10b8</span>
+   &#160;<span id="projectnumber">gddd0704</span>
    </div>
   </td>
  </tr>
@@ -116,7 +116,8 @@ $(document).ready(function(){initNavTree('dd/daf/logging_8cpp.html','../../');})
 
 <p>This file implements the tasklet scheduler.  
 <a href="#details">More...</a></p>
-<div class="textblock"><code>#include &lt;ctype.h&gt;</code><br />
+<div class="textblock"><code>#include &lt;openthread-config.h&gt;</code><br />
+<code>#include &lt;ctype.h&gt;</code><br />
 <code>#include &lt;stdio.h&gt;</code><br />
 <code>#include &lt;string.h&gt;</code><br />
 <code>#include &lt;<a class="el" href="../../d5/d77/logging_8h_source.html">platform/logging.h</a>&gt;</code><br />
@@ -125,23 +126,25 @@ Include dependency graph for logging.cpp:</div>
 <div class="dyncontent">
 <div class="center"><img src="../../d6/dee/logging_8cpp__incl.png" border="0" usemap="#src_2core_2common_2logging_8cpp" alt=""/></div>
 <map name="src_2core_2common_2logging_8cpp" id="src_2core_2common_2logging_8cpp">
-<area shape="rect" id="node5" href="../../d5/d77/logging_8h.html" title="This file includes the platform abstraction for the debug log service. " alt="" coords="267,79,394,104"/>
+<area shape="rect" id="node2" href="../../da/d45/openthread-config_8h_source.html" title="openthread&#45;config.h" alt="" coords="5,79,145,104"/>
+<area shape="rect" id="node6" href="../../d5/d77/logging_8h.html" title="This file includes the platform abstraction for the debug log service. " alt="" coords="432,79,559,104"/>
+<area shape="rect" id="node7" href="../../df/dd8/stdint_8h_source.html" title="stdint.h" alt="" coords="463,152,527,177"/>
 </map>
 </div>
 </div><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 Functions</h2></td></tr>
-<tr class="memitem:abf8337b5d4c08181ad50ff808735fa63"><td class="memItemLeft" align="right" valign="top">static void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../dd/daf/logging_8cpp.html#abf8337b5d4c08181ad50ff808735fa63">DumpLine</a> (<a class="el" href="../../d8/dff/group__logging.html#ga84a41d6b28556e61b4dd8b508472ab13">otLogLevel</a> aLogLevel, <a class="el" href="../../d8/dff/group__logging.html#gaee25d56d067df60b93f75b2ff587668c">otLogRegion</a> aLogRegion, const void *aBuf, const int aLength)</td></tr>
-<tr class="memdesc:abf8337b5d4c08181ad50ff808735fa63"><td class="mdescLeft">&#160;</td><td class="mdescRight">This static method outputs a line of the memory dump.  <a href="#abf8337b5d4c08181ad50ff808735fa63">More...</a><br /></td></tr>
-<tr class="separator:abf8337b5d4c08181ad50ff808735fa63"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a4ffd713b9b37abf8ed0815031efa2d94"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../dd/daf/logging_8cpp.html#a4ffd713b9b37abf8ed0815031efa2d94">otDump</a> (<a class="el" href="../../d8/dff/group__logging.html#ga84a41d6b28556e61b4dd8b508472ab13">otLogLevel</a> aLogLevel, <a class="el" href="../../d8/dff/group__logging.html#gaee25d56d067df60b93f75b2ff587668c">otLogRegion</a> aLogRegion, const char *aId, const void *aBuf, const int aLength)</td></tr>
-<tr class="memdesc:a4ffd713b9b37abf8ed0815031efa2d94"><td class="mdescLeft">&#160;</td><td class="mdescRight">This method dumps bytes to the log in a human-readable fashion.  <a href="#a4ffd713b9b37abf8ed0815031efa2d94">More...</a><br /></td></tr>
-<tr class="separator:a4ffd713b9b37abf8ed0815031efa2d94"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a483a264c2a729b8d8f44508b799524cc"><td class="memItemLeft" align="right" valign="top">static void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../dd/daf/logging_8cpp.html#a483a264c2a729b8d8f44508b799524cc">DumpLine</a> (<a class="el" href="../../d8/dff/group__logging.html#ga84a41d6b28556e61b4dd8b508472ab13">otLogLevel</a> aLogLevel, <a class="el" href="../../d8/dff/group__logging.html#gaee25d56d067df60b93f75b2ff587668c">otLogRegion</a> aLogRegion, const void *aBuf, const size_t aLength)</td></tr>
+<tr class="memdesc:a483a264c2a729b8d8f44508b799524cc"><td class="mdescLeft">&#160;</td><td class="mdescRight">This static method outputs a line of the memory dump.  <a href="#a483a264c2a729b8d8f44508b799524cc">More...</a><br /></td></tr>
+<tr class="separator:a483a264c2a729b8d8f44508b799524cc"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:afd28dfaf2ce645e3949d6824b99bcc40"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="afd28dfaf2ce645e3949d6824b99bcc40"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>otDump</b> (<a class="el" href="../../d8/dff/group__logging.html#ga84a41d6b28556e61b4dd8b508472ab13">otLogLevel</a> aLogLevel, <a class="el" href="../../d8/dff/group__logging.html#gaee25d56d067df60b93f75b2ff587668c">otLogRegion</a> aLogRegion, const char *aId, const void *aBuf, const size_t aLength)</td></tr>
+<tr class="separator:afd28dfaf2ce645e3949d6824b99bcc40"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>This file implements the tasklet scheduler. </p>
 </div><h2 class="groupheader">Function Documentation</h2>
-<a class="anchor" id="abf8337b5d4c08181ad50ff808735fa63"></a>
+<a class="anchor" id="a483a264c2a729b8d8f44508b799524cc"></a>
 <div class="memitem">
 <div class="memproto">
 <table class="mlabels">
@@ -169,7 +172,7 @@ Functions</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">const int&#160;</td>
+          <td class="paramtype">const size_t&#160;</td>
           <td class="paramname"><em>aLength</em>&#160;</td>
         </tr>
         <tr>
@@ -199,86 +202,10 @@ Functions</h2></td></tr>
 <p><div class="dynheader">
 Here is the call graph for this function:</div>
 <div class="dyncontent">
-<div class="center"><img src="../../dd/daf/logging_8cpp_abf8337b5d4c08181ad50ff808735fa63_cgraph.png" border="0" usemap="#dd/daf/logging_8cpp_abf8337b5d4c08181ad50ff808735fa63_cgraph" alt=""/></div>
-<map name="dd/daf/logging_8cpp_abf8337b5d4c08181ad50ff808735fa63_cgraph" id="dd/daf/logging_8cpp_abf8337b5d4c08181ad50ff808735fa63_cgraph">
+<div class="center"><img src="../../dd/daf/logging_8cpp_a483a264c2a729b8d8f44508b799524cc_cgraph.png" border="0" usemap="#dd/daf/logging_8cpp_a483a264c2a729b8d8f44508b799524cc_cgraph" alt=""/></div>
+<map name="dd/daf/logging_8cpp_a483a264c2a729b8d8f44508b799524cc_cgraph" id="dd/daf/logging_8cpp_a483a264c2a729b8d8f44508b799524cc_cgraph">
 <area shape="rect" id="node2" href="../../d8/dff/group__logging.html#gada6f3e6235ef97eb169bccb45755fd5a" title="This function outputs logs. " alt="" coords="135,5,213,31"/>
-</map>
-</div>
-</p>
-
-<p><div class="dynheader">
-Here is the caller graph for this function:</div>
-<div class="dyncontent">
-<div class="center"><img src="../../dd/daf/logging_8cpp_abf8337b5d4c08181ad50ff808735fa63_icgraph.png" border="0" usemap="#dd/daf/logging_8cpp_abf8337b5d4c08181ad50ff808735fa63_icgraph" alt=""/></div>
-<map name="dd/daf/logging_8cpp_abf8337b5d4c08181ad50ff808735fa63_icgraph" id="dd/daf/logging_8cpp_abf8337b5d4c08181ad50ff808735fa63_icgraph">
-<area shape="rect" id="node2" href="../../d0/da9/logging_8hpp.html#a8c3942109236d8e5543e83767b017d87" title="This method dumps bytes to the log in a human&#45;readable fashion. " alt="" coords="135,5,203,31"/>
-</map>
-</div>
-</p>
-
-</div>
-</div>
-<a class="anchor" id="a4ffd713b9b37abf8ed0815031efa2d94"></a>
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">void otDump </td>
-          <td>(</td>
-          <td class="paramtype"><a class="el" href="../../d8/dff/group__logging.html#ga84a41d6b28556e61b4dd8b508472ab13">otLogLevel</a>&#160;</td>
-          <td class="paramname"><em>aLevel</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype"><a class="el" href="../../d8/dff/group__logging.html#gaee25d56d067df60b93f75b2ff587668c">otLogRegion</a>&#160;</td>
-          <td class="paramname"><em>aRegion</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">const char *&#160;</td>
-          <td class="paramname"><em>aId</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">const void *&#160;</td>
-          <td class="paramname"><em>aBuf</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">const int&#160;</td>
-          <td class="paramname"><em>aLength</em>&#160;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p>This method dumps bytes to the log in a human-readable fashion. </p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">aLevel</td><td>The log level. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">aRegion</td><td>The log region. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">aId</td><td>A pointer to a NULL-terminated string that is printed before the bytes. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">aBuf</td><td>A pointer to the buffer. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">aLength</td><td>Number of bytes to print. </td></tr>
-  </table>
-  </dd>
-</dl>
-
-<p><div class="dynheader">
-Here is the call graph for this function:</div>
-<div class="dyncontent">
-<div class="center"><img src="../../dd/daf/logging_8cpp_a4ffd713b9b37abf8ed0815031efa2d94_cgraph.png" border="0" usemap="#dd/daf/logging_8cpp_a4ffd713b9b37abf8ed0815031efa2d94_cgraph" alt=""/></div>
-<map name="dd/daf/logging_8cpp_a4ffd713b9b37abf8ed0815031efa2d94_cgraph" id="dd/daf/logging_8cpp_a4ffd713b9b37abf8ed0815031efa2d94_cgraph">
-<area shape="rect" id="node2" href="../../d8/dff/group__logging.html#gada6f3e6235ef97eb169bccb45755fd5a" title="This function outputs logs. " alt="" coords="251,5,329,31"/>
-<area shape="rect" id="node3" href="../../dd/daf/logging_8cpp.html#abf8337b5d4c08181ad50ff808735fa63" title="This static method outputs a line of the memory dump. " alt="" coords="121,31,203,56"/>
+<area shape="rect" id="node3" href="../../d0/da9/logging_8hpp.html#a8c3942109236d8e5543e83767b017d87" title="This method dumps bytes to the log in a human&#45;readable fashion. " alt="" coords="140,55,208,80"/>
 </map>
 </div>
 </p>
@@ -291,7 +218,7 @@ Here is the call graph for this function:</div>
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
     <li class="navelem"><a class="el" href="../../dir_68267d1309a1af8e8297ef4c3efbcdba.html">src</a></li><li class="navelem"><a class="el" href="../../dir_aebb8dcc11953d78e620bbef0b9e2183.html">core</a></li><li class="navelem"><a class="el" href="../../dir_34b4cee2b5900b653deb3438fc906cf4.html">common</a></li><li class="navelem"><a class="el" href="../../dd/daf/logging_8cpp.html">logging.cpp</a></li>
-    <li class="footer">Generated on Wed Jul 27 2016 17:09:42 for OpenThread by
+    <li class="footer">Generated on Fri Oct 14 2016 08:44:34 for OpenThread by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="../../doxygen.png" alt="doxygen"/></a> 1.8.11 </li>
   </ul>

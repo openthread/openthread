@@ -1,5 +1,10 @@
 <map id="src/core/thread/key_manager.hpp" name="src/core/thread/key_manager.hpp">
-<area shape="rect" id="node3" href="$dc/dbf/openthread-types_8h.html" title="This file defines the types and structures used in the OpenThread library API. " alt="" coords="203,92,339,117"/>
-<area shape="rect" id="node6" href="$da/de8/hmac__sha256_8h.html" title="This file includes the platform abstraction for HMAC SHA&#45;256 computations. " alt="" coords="22,92,178,117"/>
-<area shape="rect" id="node5" href="$d3/da9/toolchain_8h_source.html" title="platform/toolchain.h" alt="" coords="294,165,432,191"/>
+<area shape="rect" id="node2" href="$df/dd8/stdint_8h_source.html" title="stdint.h" alt="" coords="454,312,519,337"/>
+<area shape="rect" id="node3" href="$dc/dbf/openthread-types_8h.html" title="This file defines the types and structures used in the OpenThread library API. " alt="" coords="226,239,363,264"/>
+<area shape="rect" id="node6" href="$df/d05/timer_8hpp.html" title="This file includes definitions for the multiplexed timer service. " alt="" coords="262,92,393,117"/>
+<area shape="rect" id="node10" href="$df/dbf/hmac__sha256_8hpp.html" title="This file includes definitions for performing HMAC SHA&#45;256 computations. " alt="" coords="452,92,623,117"/>
+<area shape="rect" id="node4" href="$d9/d5e/stdbool_8h_source.html" title="stdbool.h" alt="" coords="306,312,382,337"/>
+<area shape="rect" id="node5" href="$d3/da9/toolchain_8h_source.html" title="platform/toolchain.h" alt="" coords="144,312,282,337"/>
+<area shape="rect" id="node8" href="$df/d84/tasklet_8hpp.html" title="This file includes definitions for tasklets and the tasklet scheduler. " alt="" coords="23,165,164,191"/>
+<area shape="rect" id="node9" href="$d2/d2d/alarm_8h.html" title="This file includes the platform abstraction for the alarm service. " alt="" coords="332,165,449,191"/>
 </map>

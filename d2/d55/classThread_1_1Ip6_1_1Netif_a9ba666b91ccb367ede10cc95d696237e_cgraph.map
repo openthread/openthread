@@ -1,0 +1,9 @@
+<map id="Thread::Ip6::Netif::RemoveExternalUnicastAddress" name="Thread::Ip6::Netif::RemoveExternalUnicastAddress">
+<area shape="rect" id="node2" href="$d9/d13/classThread_1_1Ip6_1_1NetifUnicastAddress.html#ac7f38e1322075b0e6dfc7afc048f7eec" title="This method returns the next unicast address assigned to the interface. " alt="" coords="274,5,443,44"/>
+<area shape="rect" id="node3" href="$d2/d55/classThread_1_1Ip6_1_1Netif.html#a092484addf28568306ab45941abffff4" title="This method schedules notification of aFlags. " alt="" coords="275,68,442,107"/>
+<area shape="rect" id="node4" href="$d4/d92/classThread_1_1Tasklet.html#a50a39a6f422851035b89aace87482425" title="This method puts the tasklet on the run queue. " alt="" coords="491,75,637,100"/>
+<area shape="rect" id="node5" href="$d8/de8/classThread_1_1TaskletScheduler.html#a137292acddf92acdef54cc7a33ea5fac" title="This method enqueues a tasklet into the run queue. " alt="" coords="685,68,858,107"/>
+<area shape="rect" id="node6" href="$d1/de3/group__execution.html#ga04d5608ac68a78eb3e8fc167587c61f3" title="OpenThread calls this function when the tasklet queue transitions from empty to non&#45;empty. " alt="" coords="923,19,1083,44"/>
+<area shape="rect" id="node7" href="$d8/de8/classThread_1_1TaskletScheduler.html#aeaf526c316bbea7d53d20fa9e3c94c40" title="This method returns the pointer to the parent Ip6 structure. " alt="" coords="917,68,1090,107"/>
+<area shape="rect" id="node8" href="$d3/d05/classThread_1_1Ip6_1_1Ip6.html#a624d9508f3ecfa586378a3d802cb6ff7" title="This method returns the pointer to the parent otInstance structure. " alt="" coords="906,131,1101,156"/>
+</map>

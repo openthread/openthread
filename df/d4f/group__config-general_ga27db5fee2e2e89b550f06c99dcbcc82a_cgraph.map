@@ -1,0 +1,8 @@
+<map id="otGetLeaderRloc" name="otGetLeaderRloc">
+<area shape="rect" id="node2" href="$d3/d8e/classThread_1_1ThreadNetif.html#ad49d56e324f096d728c0083d9292f52d" title="This method returns a pointer to the mle object. " alt="" coords="201,5,342,44"/>
+<area shape="rect" id="node3" href="$df/d94/group__core-mle-core.html#gab96dca53cc6ec25ace821730835d96fc" title="This method retrieves the Leader&#39;s RLOC. " alt="" coords="175,68,367,107"/>
+<area shape="rect" id="node4" href="$df/d94/group__core-mle-core.html#ga4934863fd1274f1b86dc9bcee8d8682d" title="This method returns the RLOC16 assigned to the Thread interface. " alt="" coords="415,19,607,44"/>
+<area shape="rect" id="node6" href="$d9/d13/classThread_1_1Ip6_1_1NetifUnicastAddress.html#a2bb426bd29e271bd1fc09b61d1044911" title="This method returns the unicast address. " alt="" coords="427,68,596,107"/>
+<area shape="rect" id="node7" href="$d5/d64/classThread_1_1Mle_1_1LeaderDataTlv.html#a2c8dc66cf97829e3488d4e6821b8d695" title="This method returns the Leader Router ID value. " alt="" coords="417,131,605,169"/>
+<area shape="rect" id="node5" href="$d6/d88/classThread_1_1Mac_1_1Mac.html#ac00b980b5fa6eca48cd29aa7b8ccebe8" title="This method returns the IEEE 802.15.4 Short Address. " alt="" coords="655,12,845,51"/>
+</map>

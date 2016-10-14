@@ -12,6 +12,6 @@ var misc_8h =
       [ "kPlatResetReason_Watchdog", "d4/d08/misc_8h.html#a0cba84283c1ab3c6aa37c143e9a552c8ade0fa6b88a275f37763bbe14f4155cfc", null ],
       [ "kPlatResetReason_Count", "d4/d08/misc_8h.html#a0cba84283c1ab3c6aa37c143e9a552c8a3b60f43e7653f1e5458ba7a2261f6a25", null ]
     ] ],
-    [ "otPlatGetResetReason", "d4/d08/misc_8h.html#a50867a2dfbcb3aeb79298175331210e0", null ],
-    [ "otPlatReset", "d4/d08/misc_8h.html#a6b303d0295953052b3028f6ae570b5cb", null ]
+    [ "otPlatGetResetReason", "d4/d08/misc_8h.html#ab26ce83d07357b4c94234a5c12aff289", null ],
+    [ "otPlatReset", "d4/d08/misc_8h.html#a6e5e33121dff7942b201db3cc37e9e86", null ]
 ];

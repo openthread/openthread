@@ -1,15 +1,15 @@
 <map id="Thread::Mac::Mac::Mac" name="Thread::Mac::Mac::Mac">
-<area shape="rect" id="node2" href="$dc/dbd/classThread_1_1Mac_1_1Beacon.html#aa81f013fe7fa5d8b17c430f2401c81c1" title="This method initializes the Beacon message. " alt="" coords="261,5,409,44"/>
-<area shape="rect" id="node3" href="$dd/d10/group__random.html#gaa20820ca4e6e1ce8cd47ded9762b14ca" title="Get a 32&#45;bit true random value. " alt="" coords="271,68,399,93"/>
-<area shape="rect" id="node4" href="$d6/d88/classThread_1_1Mac_1_1Mac.html#a7b14e0ef951c11be75ae3f271bfd5bc0" title="This method sets the IEEE 802.15.4 Extended PAN ID. " alt="" coords="229,117,441,156"/>
-<area shape="rect" id="node6" href="$d6/d88/classThread_1_1Mac_1_1Mac.html#a5e193dd2519ecb5ffde4b7ae486e42e5" title="This method sets the IEEE 802.15.4 Network Name. " alt="" coords="215,180,455,205"/>
-<area shape="rect" id="node8" href="$d6/d88/classThread_1_1Mac_1_1Mac.html#a3904763f39d2e1db43e6ce060e8f0893" title="This method sets the IEEE 802.15.4 PAN ID. " alt="" coords="240,229,431,255"/>
-<area shape="rect" id="node10" href="$d6/d88/classThread_1_1Mac_1_1Mac.html#a1d817c84b2cb40fd81521fe23e7566bd" title="This method sets the IEEE 802.15.4 Extended Address. " alt="" coords="247,279,423,317"/>
-<area shape="rect" id="node12" href="$d6/d88/classThread_1_1Mac_1_1Mac.html#ad80edbfa825466831f487f7c57d247c2" title="This method sets the IEEE 802.15.4 Short Address. " alt="" coords="241,341,429,380"/>
-<area shape="rect" id="node14" href="$d7/d9c/group__radio-operation.html#ga3df468574cb0ffda6db9a7ba8da7526b" title="Enable the radio. " alt="" coords="269,404,401,429"/>
-<area shape="rect" id="node5" href="$dc/dbd/classThread_1_1Mac_1_1Beacon.html#ad12ac64e6477dc001e11895e20d43da7" title="This method sets the Extended PAN ID field. " alt="" coords="537,111,686,149"/>
-<area shape="rect" id="node7" href="$dc/dbd/classThread_1_1Mac_1_1Beacon.html#a3f4c8086af85d09b65d35fa0c13edef1" title="This method sets the Network Name field. " alt="" coords="537,173,686,212"/>
-<area shape="rect" id="node9" href="$d1/d69/group__radio-config.html#gab28574d1293f63907531926d0e26697a" title="Set the PAN ID for address filtering. " alt="" coords="539,236,684,261"/>
-<area shape="rect" id="node11" href="$d1/d69/group__radio-config.html#gacc03ae19538517915bb059c944f7192d" title="Set the Extended Address for address filtering. " alt="" coords="503,285,719,311"/>
-<area shape="rect" id="node13" href="$d1/d69/group__radio-config.html#ga275c098ae520634e7fad587e8ddca424" title="Set the Short Address for address filtering. " alt="" coords="516,348,707,373"/>
+<area shape="rect" id="node2" href="$dd/d10/group__random.html#gaa20820ca4e6e1ce8cd47ded9762b14ca" title="Get a 32&#45;bit random value. " alt="" coords="271,5,399,31"/>
+<area shape="rect" id="node3" href="$d9/d3c/classThread_1_1Mac_1_1ExtAddress.html#a46495e874468bb305e1e3ddc410a16d0" title="This method sets the Group bit. " alt="" coords="249,55,421,93"/>
+<area shape="rect" id="node4" href="$d9/d3c/classThread_1_1Mac_1_1ExtAddress.html#a846827d778c476fb5c5c059903efc4fb" title="This method sets the Local bit. " alt="" coords="249,117,421,156"/>
+<area shape="rect" id="node5" href="$d6/d88/classThread_1_1Mac_1_1Mac.html#a7b14e0ef951c11be75ae3f271bfd5bc0" title="This method sets the IEEE 802.15.4 Extended PAN ID. " alt="" coords="229,180,441,219"/>
+<area shape="rect" id="node6" href="$d6/d88/classThread_1_1Mac_1_1Mac.html#a5e193dd2519ecb5ffde4b7ae486e42e5" title="This method sets the IEEE 802.15.4 Network Name. " alt="" coords="215,243,455,268"/>
+<area shape="rect" id="node7" href="$d6/d88/classThread_1_1Mac_1_1Mac.html#a3904763f39d2e1db43e6ce060e8f0893" title="This method sets the IEEE 802.15.4 PAN ID. " alt="" coords="240,292,431,317"/>
+<area shape="rect" id="node9" href="$d3/d8e/classThread_1_1ThreadNetif.html#a83517ab2bff2614e403895426df6a61b" title="This method returns the pointer to the parent otInstance structure. " alt="" coords="541,340,681,379"/>
+<area shape="rect" id="node10" href="$d6/d88/classThread_1_1Mac_1_1Mac.html#a31574748a5ba6d5cd7d876f6c1241876" title="This method sets the IEEE 802.15.4 Extended Address. " alt="" coords="247,393,423,432"/>
+<area shape="rect" id="node12" href="$d6/d88/classThread_1_1Mac_1_1Mac.html#ad80edbfa825466831f487f7c57d247c2" title="This method sets the IEEE 802.15.4 Short Address. " alt="" coords="241,456,429,495"/>
+<area shape="rect" id="node14" href="$d7/d9c/group__radio-operation.html#gad2f1f79b0fe0bb9015fd996c723ed52e" title="Enable the radio. " alt="" coords="269,519,401,544"/>
+<area shape="rect" id="node8" href="$d1/d69/group__radio-config.html#ga8497b9950b7d61cf0ce336a755871b81" title="Set the PAN ID for address filtering. " alt="" coords="539,291,684,316"/>
+<area shape="rect" id="node11" href="$d1/d69/group__radio-config.html#gae147bd61d63cc6364c05e3c7234146e6" title="Set the Extended Address for address filtering. " alt="" coords="503,403,719,428"/>
+<area shape="rect" id="node13" href="$d1/d69/group__radio-config.html#ga1a58663d2bdcc4f3d89fda081a59cdb7" title="Set the Short Address for address filtering. " alt="" coords="516,463,707,488"/>
 </map>

@@ -1,0 +1,14 @@
+<map id="otSendPendingSet" name="otSendPendingSet">
+<area shape="rect" id="node2" href="$d7/d42/group__core-commissioning.html#ga854253a3f0689c0ad92d0787a5c7da80" title="This function enables the Thread Commissioner role. " alt="" coords="227,5,372,31"/>
+<area shape="rect" id="node3" href="$d7/d42/group__core-commissioning.html#ga3cd811aefff2ff186e755cf74a7869ef" title="This function disables the Thread Commissioner role. " alt="" coords="227,55,372,80"/>
+<area shape="rect" id="node4" href="$d7/d42/group__core-commissioning.html#ga5ddd173d43687ca866240d437030f720" title="This function adds a Joiner entry. " alt="" coords="211,104,388,129"/>
+<area shape="rect" id="node5" href="$d7/d42/group__core-commissioning.html#ga7eca08cb99f4224e37476b67a348ad9f" title="This function removes a Joiner entry. " alt="" coords="198,153,401,179"/>
+<area shape="rect" id="node6" href="$d7/d42/group__core-commissioning.html#gae331dc98d42e20b22a5e5fa1ef6495ab" title="This function sets the Provisioning URL. " alt="" coords="186,203,413,228"/>
+<area shape="rect" id="node7" href="$d7/d42/group__core-commissioning.html#gafc7d7b8c957afd5f70262d76fb09e5c7" title="This function sends an Announce Begin message. " alt="" coords="194,252,405,277"/>
+<area shape="rect" id="node8" href="$d7/d42/group__core-commissioning.html#gae9ca3bf349ed3865e8a29b4dd4757ab9" title="This function sends an Energy Scan Query message. " alt="" coords="204,301,395,327"/>
+<area shape="rect" id="node9" href="$d7/d42/group__core-commissioning.html#ga22936071b82ace08544b3b40a585ee54" title="This function sends a PAN ID Query message. " alt="" coords="205,351,394,376"/>
+<area shape="rect" id="node10" href="$d7/d42/group__core-commissioning.html#ga85d8a2ef989afe2475ba56ce0f732a60" title="This function sends MGMT_COMMISSIONER_GET. " alt="" coords="198,400,401,425"/>
+<area shape="rect" id="node11" href="$d7/d42/group__core-commissioning.html#ga35893b93367df048361583d6d95496de" title="This function sends MGMT_COMMISSIONER_SET. " alt="" coords="198,449,401,475"/>
+<area shape="rect" id="node12" href="$d7/d42/group__core-commissioning.html#ga6d56d0dab4187a01e9b07e485398db36" title="This function enables the Thread Joiner role. " alt="" coords="251,499,348,524"/>
+<area shape="rect" id="node13" href="$d7/d42/group__core-commissioning.html#gaf117a4c8483d3035d6d1a96684a0f6fa" title="This function disables the Thread Joiner role. " alt="" coords="251,548,348,573"/>
+</map>

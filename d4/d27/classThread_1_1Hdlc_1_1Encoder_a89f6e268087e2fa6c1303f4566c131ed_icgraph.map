@@ -1,4 +1,5 @@
 <map id="Thread::Hdlc::Encoder::Encode" name="Thread::Hdlc::Encoder::Encode">
 <area shape="rect" id="node2" href="$d4/d27/classThread_1_1Hdlc_1_1Encoder.html#a1dd8633eefe3efb8f8cf4eca28e61f4a" title="This method encodes the frame into a buffer at aIterator. " alt="" coords="208,5,363,44"/>
 <area shape="rect" id="node3" href="$d4/d27/classThread_1_1Hdlc_1_1Encoder.html#a5513b8590576eb7008068fd953ad7ba7" title="This method finalizes an HDLC frame. " alt="" coords="208,68,363,107"/>
+<area shape="rect" id="node4" href="$dc/d60/classThread_1_1NcpUart.html#a8398d715de6960bf6257d93ac81dfa3a" title="This method finalizes and sends the current outbound frame. " alt="" coords="411,97,597,136"/>
 </map>

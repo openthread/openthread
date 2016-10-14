@@ -1,0 +1,27 @@
+var structotOperationalDataset =
+[
+    [ "mActiveTimestamp", "d5/d59/structotOperationalDataset.html#a7bd9d62fafb29ee4e3517e065166588a", null ],
+    [ "mChannel", "d5/d59/structotOperationalDataset.html#aab6258c1a117bc4c4bd7c0fac0bd577a", null ],
+    [ "mChannelMaskPage0", "d5/d59/structotOperationalDataset.html#a69fff5b0adef80ae4d70b526e66f549f", null ],
+    [ "mDelay", "d5/d59/structotOperationalDataset.html#a36d2dd5b146d8af6971c41c13d8fe3aa", null ],
+    [ "mExtendedPanId", "d5/d59/structotOperationalDataset.html#afe29b5a7ad4991fedda85dc7f0d0a9ba", null ],
+    [ "mIsActiveTimestampSet", "d5/d59/structotOperationalDataset.html#a29fb0ff5439b46a5f0a4ac312503596e", null ],
+    [ "mIsChannelMaskPage0Set", "d5/d59/structotOperationalDataset.html#adf3c793425d63e81349e1acd11915c77", null ],
+    [ "mIsChannelSet", "d5/d59/structotOperationalDataset.html#a314e176489ee5735aae63c5d3ad4173d", null ],
+    [ "mIsDelaySet", "d5/d59/structotOperationalDataset.html#a5db3d3de0cb229abbd65c9fb78f5d189", null ],
+    [ "mIsExtendedPanIdSet", "d5/d59/structotOperationalDataset.html#afb3e0c2e076b5222c0dc35b4a8dfccdb", null ],
+    [ "mIsMasterKeySet", "d5/d59/structotOperationalDataset.html#a2fee0c2c306ec7539b668af2fe0465ad", null ],
+    [ "mIsMeshLocalPrefixSet", "d5/d59/structotOperationalDataset.html#a2f15c46b6feb4804dc7f1c898cd8b0ac", null ],
+    [ "mIsNetworkNameSet", "d5/d59/structotOperationalDataset.html#a470a232798359e9a30d4a7d9968ea27f", null ],
+    [ "mIsPanIdSet", "d5/d59/structotOperationalDataset.html#abe92ab20f1dc91a45192f7ab41eb0664", null ],
+    [ "mIsPendingTimestampSet", "d5/d59/structotOperationalDataset.html#a9499b1c42c0154c9355a7ee8128f2534", null ],
+    [ "mIsPSKcSet", "d5/d59/structotOperationalDataset.html#a96a0fc795b0b4f583f9227e6431bd857", null ],
+    [ "mIsSecurityPolicySet", "d5/d59/structotOperationalDataset.html#a18f0296d88d9ef237ca9372e2f3e5bbf", null ],
+    [ "mMasterKey", "d5/d59/structotOperationalDataset.html#a21cdf110114fa89731699bf580396f82", null ],
+    [ "mMeshLocalPrefix", "d5/d59/structotOperationalDataset.html#a106decaee164d7c68cb1025d137b5efb", null ],
+    [ "mNetworkName", "d5/d59/structotOperationalDataset.html#a16a2d0c0dd134ea0b568ae2e4442cca7", null ],
+    [ "mPanId", "d5/d59/structotOperationalDataset.html#ae9041fb788284181dd84b642da23e9d9", null ],
+    [ "mPendingTimestamp", "d5/d59/structotOperationalDataset.html#a7518f47c4959daeb761e41ab29196517", null ],
+    [ "mPSKc", "d5/d59/structotOperationalDataset.html#aa4df599f2af182a469fd06fef8ddb4e5", null ],
+    [ "mSecurityPolicy", "d5/d59/structotOperationalDataset.html#a65ccebe7430e029a474800d5197de8f6", null ]
+];

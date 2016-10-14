@@ -1,0 +1,4 @@
+<map id="otGetUnsecurePorts" name="otGetUnsecurePorts">
+<area shape="rect" id="node2" href="$d3/d8e/classThread_1_1ThreadNetif.html#ac9cdcb6443cd6fd0748e3217cccff8a4" title="This method returns a reference to the IPv6 filter object. " alt="" coords="195,5,336,44"/>
+<area shape="rect" id="node3" href="$d2/df2/group__core-ipv6.html#gad48cac4b6d358fcc1ce7af400501e94d" title="This method returns a pointer to the unsecure port list. " alt="" coords="197,68,335,107"/>
+</map>

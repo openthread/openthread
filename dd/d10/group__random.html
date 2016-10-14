@@ -34,7 +34,7 @@
   <td id="projectlogo"><img alt="Logo" src="../../Open-Thread-Logo-200x42.png"/></td>
   <td style="padding-left: 0.5em;">
    <div id="projectname">
-   &#160;<span id="projectnumber">gb2b10b8</span>
+   &#160;<span id="projectnumber">gddd0704</span>
    </div>
   </td>
  </tr>
@@ -123,8 +123,11 @@ Collaboration diagram for Random:</div>
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 Functions</h2></td></tr>
 <tr class="memitem:gaa20820ca4e6e1ce8cd47ded9762b14ca"><td class="memItemLeft" align="right" valign="top">uint32_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../dd/d10/group__random.html#gaa20820ca4e6e1ce8cd47ded9762b14ca">otPlatRandomGet</a> (void)</td></tr>
-<tr class="memdesc:gaa20820ca4e6e1ce8cd47ded9762b14ca"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get a 32-bit true random value.  <a href="#gaa20820ca4e6e1ce8cd47ded9762b14ca">More...</a><br /></td></tr>
+<tr class="memdesc:gaa20820ca4e6e1ce8cd47ded9762b14ca"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get a 32-bit random value.  <a href="#gaa20820ca4e6e1ce8cd47ded9762b14ca">More...</a><br /></td></tr>
 <tr class="separator:gaa20820ca4e6e1ce8cd47ded9762b14ca"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:gad05a02879d22d5fb3f69f523b0667f10"><td class="memItemLeft" align="right" valign="top"><a class="el" href="../../dc/dbf/openthread-types_8h.html#ab701d053a9c34ab7f11e43e0dc09ac9f">ThreadError</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../dd/d10/group__random.html#gad05a02879d22d5fb3f69f523b0667f10">otPlatRandomSecureGet</a> (uint16_t aInputLength, uint8_t *aOutput, uint16_t *aOutputLength)</td></tr>
+<tr class="memdesc:gad05a02879d22d5fb3f69f523b0667f10"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get true random stream.  <a href="#gad05a02879d22d5fb3f69f523b0667f10">More...</a><br /></td></tr>
+<tr class="separator:gad05a02879d22d5fb3f69f523b0667f10"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <p>This module includes the platform abstraction to support critical sections. </p>
@@ -143,48 +146,116 @@ Functions</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>Get a 32-bit true random value. </p>
-<dl class="section return"><dt>Returns</dt><dd>A 32-bit true random value. </dd></dl>
+<p>Get a 32-bit random value. </p>
+<dl class="section return"><dt>Returns</dt><dd>A 32-bit random value. </dd></dl>
 
 <p><div class="dynheader">
 Here is the caller graph for this function:</div>
 <div class="dyncontent">
 <div class="center"><img src="../../dd/d10/group__random_gaa20820ca4e6e1ce8cd47ded9762b14ca_icgraph.png" border="0" usemap="#dd/d10/group__random_gaa20820ca4e6e1ce8cd47ded9762b14ca_icgraph" alt=""/></div>
 <map name="dd/d10/group__random_gaa20820ca4e6e1ce8cd47ded9762b14ca_icgraph" id="dd/d10/group__random_gaa20820ca4e6e1ce8cd47ded9762b14ca_icgraph">
-<area shape="rect" id="node2" href="../../d6/d88/classThread_1_1Mac_1_1Mac.html#afe65837f6f2e5f566187fc410786ef86" title="This constructor initializes the MAC object. " alt="" coords="186,5,348,31"/>
-<area shape="rect" id="node3" href="../../d4/dcf/classThread_1_1AddressResolver.html#a178438299a058ea03995b643ddd6aa72" title="This constructor initializes the object. " alt="" coords="181,55,353,93"/>
-<area shape="rect" id="node4" href="../../d4/dcf/classThread_1_1AddressResolver.html#ac249179518a77ecfdaf7d4502ef2f940" title="This method returns the RLOC16 for a given EID, or initiates an Address Query if the mapping is not k..." alt="" coords="181,548,353,587"/>
-<area shape="rect" id="node7" href="../../df/d94/group__core-mle-core.html#gad555ca36631eff9b978e448ecbcf8e2e" title="This method appends an Address Registration TLV to a message. " alt="" coords="826,320,1001,359"/>
-<area shape="rect" id="node8" href="../../df/d94/group__core-mle-core.html#ga09239c621861382d25163980ab5d983b" title="This method generates an MLE Child Update Request message. " alt="" coords="1049,320,1239,359"/>
-<area shape="rect" id="node17" href="../../db/dec/group__core-mle-router.html#ga7126c084ace25827febebc4210928cd4" title="This method generates an MLE Link Reject. " alt="" coords="2329,465,2490,504"/>
-<area shape="rect" id="node19" href="../../db/dec/group__core-mle-router.html#ga2f58e7783003a5d53b12a556ac4375f2" title="This method sets the ROUTER_UPGRADE_THRESHOLD value. " alt="" coords="2075,528,2274,567"/>
-<area shape="rect" id="node22" href="../../db/dec/group__core-mle-router.html#gac7d2542017033898d0bc0f17a65d4656" title="This method checks if the destination is reachable. " alt="" coords="2094,773,2255,812"/>
-<area shape="rect" id="node24" href="../../dd/d1d/classThread_1_1MeshForwarder.html#aec43d8823d60a45b00c4f2dd40f624c6" title="This constructor initializes the object. " alt="" coords="185,663,349,701"/>
-<area shape="rect" id="node25" href="../../df/d94/group__core-mle-core.html#ga7e32ce7f27d8c98579441f446c1b399d" title="This constructor initializes the MLE object. " alt="" coords="192,725,342,751"/>
-<area shape="rect" id="node26" href="../../db/dec/group__core-mle-router.html#ga03125334d8abeac9175e9b7b52ef37f6" title="This constructor initializes the object. " alt="" coords="186,775,348,813"/>
-<area shape="rect" id="node27" href="../../db/dec/group__core-mle-router.html#ga2f6818707e05950f56e8cb84a21c14c2" title="This method sets whether or not the Router Role is enabled. " alt="" coords="184,837,349,876"/>
-<area shape="rect" id="node28" href="../../db/dec/group__core-mle-router.html#ga3f865671b35cf4f88b555fb1873ca79a" title="This method causes the Thread interface to become a Leader and start a new partition. " alt="" coords="403,320,564,359"/>
-<area shape="rect" id="node29" href="../../d6/d9b/classThread_1_1NetworkData_1_1Leader.html#a631f664fa6b994e74b133b9761fae421" title="This method reset the Thread Network Data. " alt="" coords="193,383,341,421"/>
-<area shape="rect" id="node31" href="../../d6/d9b/classThread_1_1NetworkData_1_1Leader.html#a1b2353a4e3b28d869003c6cdabc56437" title="This method retrieves the 6LoWPAN Context information based on a given Context ID. " alt="" coords="193,900,341,939"/>
-<area shape="rect" id="node32" href="../../dd/dd1/classThread_1_1NetworkData_1_1Local.html#a26b8189963fc960e308f137f1d6e31d8" title="This method sends a Server Data Registration message to the Leader. " alt="" coords="193,963,341,1001"/>
-<area shape="rect" id="node5" href="../../dd/d1d/classThread_1_1MeshForwarder.html#a361ef901f6b665b3c7feac206089a7df" title="This method submits a message to the mesh forwarder for forwarding. " alt="" coords="401,595,566,633"/>
-<area shape="rect" id="node6" href="../../dd/d1d/classThread_1_1MeshForwarder.html#a969c6fac135cdee3ed9380a0859eaaa8" title="This method sets the Data Poll period. " alt="" coords="614,627,778,665"/>
-<area shape="rect" id="node23" href="../../d3/d8e/classThread_1_1ThreadNetif.html#a95f2ad1f6785b0de74e660e43ac86d33" title="This method submits a message to the network interface. " alt="" coords="625,564,766,603"/>
-<area shape="rect" id="node14" href="../../df/d94/group__core-mle-core.html#ga0ea27201cf13a4e1b0680a9da6c54a64" title="This method submits an MLE message to the UDP socket. " alt="" coords="1813,417,2027,443"/>
-<area shape="rect" id="node9" href="../../df/d94/group__core-mle-core.html#ga01c7e5a022360a6f35e30d07221dbfea" title="This method starts the MLE protocol operation. " alt="" coords="1320,319,1477,344"/>
-<area shape="rect" id="node10" href="../../df/d94/group__core-mle-core.html#gafb51db61e6e184d664a9e7cc3833dcf4" title="This method sets the MLE Timeout value. " alt="" coords="1300,220,1497,245"/>
-<area shape="rect" id="node11" href="../../df/d94/group__core-mle-core.html#ga453d94c377c5825a4a5e8b66a728e591" title="This method sets the Device Mode as reported in the Mode TLV. " alt="" coords="1287,269,1510,295"/>
-<area shape="rect" id="node12" href="../../df/d94/group__core-mle-core.html#gaac7d42ff61704aa43e94dbb781c78c5e" title="This method notifies MLE that the Network Data has changed. " alt="" coords="1313,471,1484,509"/>
-<area shape="rect" id="node13" href="../../d6/d9b/classThread_1_1NetworkData_1_1Leader.html#a428d60927d6f4b4ac8e878e792d2f716" title="This method is used by non&#45;Leader devices to set newly received Network Data from the Leader..." alt="" coords="1574,471,1749,509"/>
-<area shape="rect" id="node20" href="../../d6/d9b/classThread_1_1NetworkData_1_1Leader.html#a5baddd109ff06b58140e2678e3c97a16" title="This method removes Network Data associated with a given RLOC16. " alt="" coords="1558,585,1765,624"/>
-<area shape="rect" id="node15" href="../../df/d94/group__core-mle-core.html#gac13477847483bba0aeab32fd93a7dbac" title="This method generates an MLE Data Request message. " alt="" coords="2081,351,2269,389"/>
-<area shape="rect" id="node16" href="../../df/d94/group__core-mle-core.html#ga4a192897e2fe5f4b0ab2ed1535fd2657" title="This method generates an MLE Data Response message. " alt="" coords="2081,465,2269,504"/>
-<area shape="rect" id="node18" href="../../db/dec/group__core-mle-router.html#gaf13c43af2bf2f9057629cbb74fca0af0" title="This method handles MAC Data Poll messages. " alt="" coords="2322,611,2496,649"/>
-<area shape="rect" id="node21" href="../../db/dec/group__core-mle-router.html#ga179fad5b4b75849e76811006761d2b3e" title="This method release a given Router ID. " alt="" coords="1839,585,2001,624"/>
-<area shape="rect" id="node30" href="../../d6/d9b/classThread_1_1NetworkData_1_1Leader.html#af0d5b5a867cd80bbc200c58c97c22b5e" title="This constructor initializes the object. " alt="" coords="409,383,557,421"/>
+<area shape="rect" id="node2" href="../../dd/d68/classThread_1_1TrickleTimer.html#ac701207b53eda0706d3a9bd08cf6bd82" title="This method start the trickle timer. " alt="" coords="247,423,390,461"/>
+<area shape="rect" id="node3" href="../../db/dec/group__core-mle-router.html#ga3f865671b35cf4f88b555fb1873ca79a" title="This method causes the Thread interface to become a Leader and start a new partition. " alt="" coords="545,360,706,399"/>
+<area shape="rect" id="node5" href="../../df/d94/group__core-mle-core.html#gace8437c6340cefbd5db1a53f9e00422b" title="This method appends a Pending Timestamp TLV to a message. " alt="" coords="794,363,969,401"/>
+<area shape="rect" id="node7" href="../../df/d94/group__core-mle-core.html#ga0ea27201cf13a4e1b0680a9da6c54a64" title="This method submits an MLE message to the UDP socket. " alt="" coords="1253,423,1467,448"/>
+<area shape="rect" id="node9" href="../../df/d94/group__core-mle-core.html#ga09239c621861382d25163980ab5d983b" title="This method generates an MLE Child Update Request message. " alt="" coords="1530,308,1720,347"/>
+<area shape="rect" id="node14" href="../../db/dec/group__core-mle-router.html#ga12a2afd1fef5036981d7f1f05d3e6f01" title="This method sets the ROUTER_DOWNGRADE_THRESHOLD value. " alt="" coords="1517,575,1733,613"/>
+<area shape="rect" id="node18" href="../../db/dec/group__core-mle-router.html#gac532b9ffa61813ee2c1463b6820c8c75" title="This method returns the number of active routers. " alt="" coords="1544,99,1706,137"/>
+<area shape="rect" id="node19" href="../../db/dec/group__core-mle-router.html#gac7d2542017033898d0bc0f17a65d4656" title="This method checks if the destination is reachable. " alt="" coords="1819,36,1980,75"/>
+<area shape="rect" id="node23" href="../../dd/d68/classThread_1_1TrickleTimer.html#a5e84cb0ebecd16b9087d0b5409fe86a9" title="This method indicates to the trickle timer an &#39;inconsistent&#39; state. " alt="" coords="1038,581,1184,620"/>
+<area shape="rect" id="node24" href="../../d6/d88/classThread_1_1Mac_1_1Mac.html#afe65837f6f2e5f566187fc410786ef86" title="This constructor initializes the MAC object. " alt="" coords="238,689,399,715"/>
+<area shape="rect" id="node25" href="../../d8/d13/classThread_1_1AnnounceBeginClient.html#a65eb6c3f230119f402fb923bff27adfa" title="This constructor initializes the object. " alt="" coords="219,739,418,777"/>
+<area shape="rect" id="node26" href="../../d8/d13/classThread_1_1AnnounceBeginClient.html#a1e2f665eab6acc191367c082d2ff8134" title="This method sends a Announce Begin message. " alt="" coords="219,801,418,840"/>
+<area shape="rect" id="node27" href="../../dc/d67/classThread_1_1MeshCoP_1_1Commissioner.html#aea8334e3a50c507bc1d8c4611830dff6" title="This method sends MGMT_COMMISSIONER_GET. " alt="" coords="194,864,443,903"/>
+<area shape="rect" id="node28" href="../../dc/d67/classThread_1_1MeshCoP_1_1Commissioner.html#a8639c79f9379e80285fa9f362dbacdd1" title="This method sends MGMT_COMMISSIONER_SET. " alt="" coords="194,927,442,965"/>
+<area shape="rect" id="node30" href="../../d6/df9/classThread_1_1EnergyScanClient.html#a6917789d4d27136cb62cb64cd3e24bff" title="This constructor initializes the object. " alt="" coords="230,989,407,1028"/>
+<area shape="rect" id="node31" href="../../d6/df9/classThread_1_1EnergyScanClient.html#a6d639305cb6c6762d41a2825ff8da85e" title="This method sends an Energy Scan Query message. " alt="" coords="230,1052,407,1091"/>
+<area shape="rect" id="node32" href="../../d4/db5/classThread_1_1MeshCoP_1_1Joiner.html#a5109c8ea0e2c168c18f729d767e6b999" title="This method stops the Joiner service. " alt="" coords="232,1115,405,1153"/>
+<area shape="rect" id="node33" href="../../d6/db2/classThread_1_1MeshCoP_1_1Leader.html#adffbb83d392429643d1fed548a738366" title="This method sends a MGMT_DATASET_CHANGED message to commissioner. " alt="" coords="229,1177,408,1216"/>
+<area shape="rect" id="node34" href="../../dc/da5/classThread_1_1PanIdQueryClient.html#ad4813a9c511a71d766a35f0bb628f012" title="This constructor initializes the object. " alt="" coords="230,1240,407,1279"/>
+<area shape="rect" id="node35" href="../../dc/da5/classThread_1_1PanIdQueryClient.html#a440066c1be45fe125c8298276c232939" title="This method sends a PAN ID Query message. " alt="" coords="230,1303,407,1341"/>
+<area shape="rect" id="node36" href="../../d4/dcf/classThread_1_1AddressResolver.html#a178438299a058ea03995b643ddd6aa72" title="This constructor initializes the object. " alt="" coords="232,1365,405,1404"/>
+<area shape="rect" id="node37" href="../../de/d9d/classThread_1_1EnergyScanServer.html#aee01420f701ef44d6432280d8e4bf3e3" title="This constructor initializes the object. " alt="" coords="227,1428,410,1467"/>
+<area shape="rect" id="node38" href="../../dd/d1d/classThread_1_1MeshForwarder.html#aec43d8823d60a45b00c4f2dd40f624c6" title="This constructor initializes the object. " alt="" coords="236,1491,401,1529"/>
+<area shape="rect" id="node39" href="../../df/d94/group__core-mle-core.html#ga7e32ce7f27d8c98579441f446c1b399d" title="This constructor initializes the MLE object. " alt="" coords="243,1553,394,1579"/>
+<area shape="rect" id="node40" href="../../db/dec/group__core-mle-router.html#ga03125334d8abeac9175e9b7b52ef37f6" title="This constructor initializes the object. " alt="" coords="238,1603,399,1641"/>
+<area shape="rect" id="node41" href="../../db/dec/group__core-mle-router.html#ga2f6818707e05950f56e8cb84a21c14c2" title="This method sets whether or not the Router Role is enabled. " alt="" coords="236,1665,401,1704"/>
+<area shape="rect" id="node43" href="../../d4/d80/group__core-netdata-core.html#ga0caa53c797a248a80b591f963d110657" title="This method sends a Server Data Notification message to the Leader. " alt="" coords="213,232,424,284"/>
+<area shape="rect" id="node45" href="../../d6/d9b/classThread_1_1NetworkData_1_1Leader.html#a631f664fa6b994e74b133b9761fae421" title="This method reset the Thread Network Data. " alt="" coords="244,360,392,399"/>
+<area shape="rect" id="node46" href="../../d6/d17/classThread_1_1NetworkDiagnostic_1_1NetworkDiagnostic.html#a6cf352b99106964ed2cfe677a071e782" title="This constructor initializes the object. " alt="" coords="189,1728,448,1767"/>
+<area shape="rect" id="node47" href="../../d6/d17/classThread_1_1NetworkDiagnostic_1_1NetworkDiagnostic.html#abc624ac04ecaf17b1b738a475e5b0d6a" title="This method sends Diagnostic Get request. " alt="" coords="187,1791,450,1829"/>
+<area shape="rect" id="node48" href="../../d6/d17/classThread_1_1NetworkDiagnostic_1_1NetworkDiagnostic.html#a0777620633e36db7a9bafe8654019d92" title="This method sends Diagnostic Reset request. " alt="" coords="181,1853,456,1892"/>
+<area shape="rect" id="node49" href="../../d7/dc5/classThread_1_1PanIdQueryServer.html#a9a7504e52a1a9f4023dcf2ceedd3cbf6" title="This constructor initializes the object. " alt="" coords="228,1916,409,1955"/>
+<area shape="rect" id="node50" href="../../d5/d79/classThread_1_1Utils_1_1Slaac.html#a4dc0d6478561125fc73d8b43300c6985" title="This function creates randomly generated IPv6 IID for given IPv6 address. " alt="" coords="250,1979,387,2017"/>
+<area shape="rect" id="node4" href="../../db/d57/group__config-test.html#ga026f58bcf552f7d8cd5da53e38bff94d" title="Become a leader and start a new partition. " alt="" coords="820,313,943,339"/>
+<area shape="rect" id="node6" href="../../df/d94/group__core-mle-core.html#gac13477847483bba0aeab32fd93a7dbac" title="This method generates an MLE Data Request message. " alt="" coords="1017,365,1205,404"/>
+<area shape="rect" id="node8" href="../../df/d94/group__core-mle-core.html#gab299d00d1b2beabe8130e400dd6eca91" title="This method initiates a Thread Discovery. " alt="" coords="2494,476,2674,501"/>
+<area shape="rect" id="node13" href="../../df/d94/group__core-mle-core.html#ga91214fcb8db3271fc3ad0472e38c1e0a" title="This method generates an MLE Announce message. " alt="" coords="1515,423,1735,448"/>
+<area shape="rect" id="node16" href="../../db/dec/group__core-mle-router.html#ga7126c084ace25827febebc4210928cd4" title="This method generates an MLE Link Reject. " alt="" coords="2065,421,2227,460"/>
+<area shape="rect" id="node10" href="../../df/d94/group__core-mle-core.html#ga01c7e5a022360a6f35e30d07221dbfea" title="This method starts the MLE protocol operation. " alt="" coords="1821,371,1978,396"/>
+<area shape="rect" id="node11" href="../../df/d94/group__core-mle-core.html#gafb51db61e6e184d664a9e7cc3833dcf4" title="This method sets the MLE Timeout value. " alt="" coords="1801,317,1998,343"/>
+<area shape="rect" id="node12" href="../../df/d94/group__core-mle-core.html#ga453d94c377c5825a4a5e8b66a728e591" title="This method sets the Device Mode as reported in the Mode TLV. " alt="" coords="1788,268,2011,293"/>
+<area shape="rect" id="node15" href="../../db/d57/group__config-test.html#ga907be1830046930bb04f606dc6dc3ec1" title="Set the ROUTER_DOWNGRADE_THRESHOLD parameter used in the Leader role. " alt="" coords="1789,581,2009,607"/>
+<area shape="rect" id="node17" href="../../dd/d1d/classThread_1_1MeshForwarder.html#a5f726671448fb7cd72f8ee96db40731a" title="This method sets the scan parameters for MLE Discovery Request messages. " alt="" coords="2276,421,2446,460"/>
+<area shape="rect" id="node21" href="../../db/dec/group__core-mle-router.html#gadf4904db11b31b2931f2f5ed1b988f83" title="This method fills an RouteTlv. " alt="" coords="1819,99,1980,137"/>
+<area shape="rect" id="node22" href="../../dd/dd1/classThread_1_1NetworkData_1_1Local.html#a6688957845dc3ee7fc08bbc50145d98e" title="This method sends a Server Data Notification message to the Leader. " alt="" coords="1783,161,2016,200"/>
+<area shape="rect" id="node20" href="../../dd/d1d/classThread_1_1MeshForwarder.html#a361ef901f6b665b3c7feac206089a7df" title="This method submits a message to the mesh forwarder for forwarding. " alt="" coords="2064,75,2228,113"/>
+<area shape="rect" id="node29" href="../../dc/d67/classThread_1_1MeshCoP_1_1Commissioner.html#a142100561cda243c291e4bc7a4d6511a" title="This method stops the Commissioner service. " alt="" coords="514,927,736,965"/>
+<area shape="rect" id="node42" href="../../df/d4f/group__config-general.html#gacea2a7cd04c4b816588748fee68d1e78" title="This function sets whether or not the Router Role is enabled. " alt="" coords="541,1672,710,1697"/>
+<area shape="rect" id="node44" href="../../d6/d9b/classThread_1_1NetworkData_1_1Leader.html#a719450dae714bd29bfea19b7d1eb6e9f" title="This method sends a Server Data Notification message to the Leader indicating an invalid RLOC16..." alt="" coords="504,264,746,303"/>
 </map>
 </div>
 </p>
+
+</div>
+</div>
+<a class="anchor" id="gad05a02879d22d5fb3f69f523b0667f10"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="../../dc/dbf/openthread-types_8h.html#ab701d053a9c34ab7f11e43e0dc09ac9f">ThreadError</a> otPlatRandomSecureGet </td>
+          <td>(</td>
+          <td class="paramtype">uint16_t&#160;</td>
+          <td class="paramname"><em>aInputLength</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">uint8_t *&#160;</td>
+          <td class="paramname"><em>aOutput</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">uint16_t *&#160;</td>
+          <td class="paramname"><em>aOutputLength</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Get true random stream. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">aInputLength</td><td>The expected size of random values. </td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">aOutput</td><td>A pointer to the buffer for the generated random stream. The pointer should never be NULL. </td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">aOutputLength</td><td>A pointer to the generated size of random stream. It is supposed to be the same as aInputLength, but maybe less than aInputLength. The pointer should never be NULL.</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="retval"><dt>Return values</dt><dd>
+  <table class="retval">
+    <tr><td class="paramname">kThreadError_None</td><td>Generate random successfully. </td></tr>
+    <tr><td class="paramname">kThreadError_Fail</td><td>Generate random fail. </td></tr>
+    <tr><td class="paramname">kThreadError_InvalidArgs</td><td>Invalid args. </td></tr>
+  </table>
+  </dd>
+</dl>
 
 </div>
 </div>
@@ -193,7 +264,7 @@ Here is the caller graph for this function:</div>
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
-    <li class="footer">Generated on Wed Jul 27 2016 17:09:43 for OpenThread by
+    <li class="footer">Generated on Fri Oct 14 2016 08:44:35 for OpenThread by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="../../doxygen.png" alt="doxygen"/></a> 1.8.11 </li>
   </ul>

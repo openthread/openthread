@@ -2,7 +2,8 @@ var group__core_coap =
 [
     [ "Header", "d0/d7f/classThread_1_1Coap_1_1Header.html", [
       [ "Option", "d1/d84/structThread_1_1Coap_1_1Header_1_1Option.html", [
-        [ "kOptionDeltaOffset", "d1/d84/structThread_1_1Coap_1_1Header_1_1Option.html#a8eecf36c5b82d30df88941b1c6991adea92b0b438b1d379d3d38886a8ccbc014e", null ],
+        [ "kOptionDeltaOffset", "d1/d84/structThread_1_1Coap_1_1Header_1_1Option.html#ae1e3e4cb2ec191342455bcc18a296a79a92b0b438b1d379d3d38886a8ccbc014e", null ],
+        [ "kOptionDeltaMask", "d1/d84/structThread_1_1Coap_1_1Header_1_1Option.html#ae1e3e4cb2ec191342455bcc18a296a79ab371bb9b10e928846f74a1a42b3dd2fb", null ],
         [ "Type", "d1/d84/structThread_1_1Coap_1_1Header_1_1Option.html#a8a5e73d0ad2efffd4de813a1fdd40089", [
           [ "kOptionUriPath", "d1/d84/structThread_1_1Coap_1_1Header_1_1Option.html#a8a5e73d0ad2efffd4de813a1fdd40089a0e65e3e14b86582767797f3432d0b3b6", null ],
           [ "kOptionContentFormat", "d1/d84/structThread_1_1Coap_1_1Header_1_1Option.html#a8a5e73d0ad2efffd4de813a1fdd40089a83e06f1e67155c91d81e55945adb10b1", null ]
@@ -11,6 +12,7 @@ var group__core_coap =
         [ "mNumber", "d1/d84/structThread_1_1Coap_1_1Header_1_1Option.html#ac3b15830d02c0536252044812e459bcb", null ],
         [ "mValue", "d1/d84/structThread_1_1Coap_1_1Header_1_1Option.html#a06c4b7697acd4559de7c5790395368ae", null ]
       ] ],
+      [ "kVersion1", "d0/d7f/classThread_1_1Coap_1_1Header.html#a369806d409bee9d0f481ccc300ba8e37aa6cdb2d12a0bbfa3462b189a62265a9f", null ],
       [ "Code", "d0/d7f/classThread_1_1Coap_1_1Header.html#a14de12f3c0338e69a239cb4dc9afaf07", [
         [ "kCodeGet", "d0/d7f/classThread_1_1Coap_1_1Header.html#a14de12f3c0338e69a239cb4dc9afaf07a1e8498ada7b11adfbea2a80da56bf790", null ],
         [ "kCodePost", "d0/d7f/classThread_1_1Coap_1_1Header.html#a14de12f3c0338e69a239cb4dc9afaf07acb4a9e80ab913eadb58f694e619da0d8", null ],
@@ -48,7 +50,11 @@ var group__core_coap =
       [ "SetMessageId", "d0/d7f/classThread_1_1Coap_1_1Header.html#a7a374b4bd31694216d9397e1409209a0", null ],
       [ "SetToken", "d0/d7f/classThread_1_1Coap_1_1Header.html#a9d8d2a7b438e4a7d27ce3b979b0bb2a0", null ],
       [ "SetType", "d0/d7f/classThread_1_1Coap_1_1Header.html#ad4147a19a4e8861f321c8aaaa5db6baa", null ],
-      [ "SetVersion", "d0/d7f/classThread_1_1Coap_1_1Header.html#a411c64839fe9cf63ac201f9a6760199c", null ]
+      [ "SetVersion", "d0/d7f/classThread_1_1Coap_1_1Header.html#a411c64839fe9cf63ac201f9a6760199c", null ],
+      [ "mCode", "d0/d7f/classThread_1_1Coap_1_1Header.html#a9cc326b483119c87bf1b8da567f59c38", null ],
+      [ "mHeader", "d0/d7f/classThread_1_1Coap_1_1Header.html#a607e722c8453c76c19a53a45f688c17f", null ],
+      [ "mMessageId", "d0/d7f/classThread_1_1Coap_1_1Header.html#a8241d84bbd9da6e0d11711a2427d80a2", null ],
+      [ "mVersionTypeToken", "d0/d7f/classThread_1_1Coap_1_1Header.html#a361d11ad05859e35047ccd55920e273f", null ]
     ] ],
     [ "Resource", "d0/d63/classThread_1_1Coap_1_1Resource.html", [
       [ "CoapMessageHandler", "d0/d63/classThread_1_1Coap_1_1Resource.html#a90c9ec7ffb90463f3b7ab0ef86b53b7c", null ],
@@ -56,8 +62,10 @@ var group__core_coap =
       [ "Server", "d0/d63/classThread_1_1Coap_1_1Resource.html#ac2055578ac48afabe5af487878450f68", null ]
     ] ],
     [ "Server", "de/d76/classThread_1_1Coap_1_1Server.html", [
-      [ "Server", "de/d76/classThread_1_1Coap_1_1Server.html#ac58b727b802bf3e285bae6d95da6ab72", null ],
+      [ "Server", "de/d76/classThread_1_1Coap_1_1Server.html#af79d7e1964f4badd0606c6116a3115e8", null ],
       [ "AddResource", "de/d76/classThread_1_1Coap_1_1Server.html#a6c2d2fb6a4a5ce7ef157e5d9cc308af6", null ],
+      [ "NewMessage", "de/d76/classThread_1_1Coap_1_1Server.html#a2f1fb2b1a1e98b79a9d086aca2dbb764", null ],
+      [ "RemoveResource", "de/d76/classThread_1_1Coap_1_1Server.html#ab3b5bca6d4d748d1c8476bcafbf4038e", null ],
       [ "SendMessage", "de/d76/classThread_1_1Coap_1_1Server.html#aeb97e0257808d7cad4adceccd87f6b7d", null ],
       [ "Start", "de/d76/classThread_1_1Coap_1_1Server.html#a3352908cff3adc599389f65cc16d219e", null ],
       [ "Stop", "de/d76/classThread_1_1Coap_1_1Server.html#ae3cd8474a329165783b06b5d6f235266", null ]

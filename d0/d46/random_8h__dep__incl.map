@@ -1,10 +1,23 @@
 <map id="include/platform/random.h" name="include/platform/random.h">
-<area shape="rect" id="node2" href="$d4/dd9/mac_8cpp.html" title="This file implements the subset of IEEE 802.15.4 primitives required for Thread. " alt="" coords="5,85,157,111"/>
-<area shape="rect" id="node3" href="$da/d60/openthread_8cpp.html" title="This file implements the top&#45;level interface to the OpenThread stack. " alt="" coords="181,85,346,111"/>
-<area shape="rect" id="node4" href="$de/d27/address__resolver_8cpp.html" title="This file implements Thread&#39;s EID&#45;to&#45;RLOC mapping and caching. " alt="" coords="370,79,531,117"/>
-<area shape="rect" id="node5" href="$df/d6b/mesh__forwarder_8cpp.html" title="This file implements mesh forwarding of IPv6/6LoWPAN messages. " alt="" coords="555,79,701,117"/>
-<area shape="rect" id="node6" href="$d1/df9/mle_8cpp.html" title="This file implements MLE functionality required for the Thread Child, Router and Leader roles..." alt="" coords="725,85,886,111"/>
-<area shape="rect" id="node7" href="$d9/d88/mle__router_8cpp.html" title="This file implements MLE functionality required for the Thread Router and Leader roles. " alt="" coords="909,79,1045,117"/>
-<area shape="rect" id="node8" href="$d0/d0f/network__data__leader_8cpp.html" title="This file implements the Thread Network Data managed by the Thread Leader. " alt="" coords="1069,79,1230,117"/>
-<area shape="rect" id="node9" href="$dd/d90/network__data__local_8cpp.html" title="This file implements the local Thread Network Data. " alt="" coords="1253,79,1414,117"/>
+<area shape="rect" id="node2" href="$df/d7b/trickle__timer_8cpp.html" title="This file implements the trickle timer logic. " alt="" coords="5,79,167,117"/>
+<area shape="rect" id="node3" href="$d4/dd9/mac_8cpp.html" title="This file implements the subset of IEEE 802.15.4 primitives required for Thread. " alt="" coords="192,85,344,111"/>
+<area shape="rect" id="node4" href="$d3/dd0/announce__begin__client_8cpp.html" title="This file implements the Announce Begin Client. " alt="" coords="368,79,557,117"/>
+<area shape="rect" id="node5" href="$d7/d69/commissioner_8cpp.html" title="This file implements a Commissioner role. " alt="" coords="581,85,818,111"/>
+<area shape="rect" id="node6" href="$dd/d3b/energy__scan__client_8cpp.html" title="This file implements the Energy Scan Client. " alt="" coords="842,79,1013,117"/>
+<area shape="rect" id="node7" href="$d4/d64/joiner_8cpp.html" title="This file implements the Joiner role. " alt="" coords="1037,85,1224,111"/>
+<area shape="rect" id="node8" href="$d7/d02/leader_8cpp.html" title="This file implements a MeshCoP Leader. " alt="" coords="1248,85,1440,111"/>
+<area shape="rect" id="node9" href="$d5/de7/panid__query__client_8cpp.html" title="This file implements the PAN ID Query Client. " alt="" coords="1464,79,1626,117"/>
+<area shape="rect" id="node10" href="$da/d60/openthread_8cpp.html" title="This file implements the top&#45;level interface to the OpenThread stack. " alt="" coords="2444,172,2609,197"/>
+<area shape="rect" id="node11" href="$de/d27/address__resolver_8cpp.html" title="This file implements Thread&#39;s EID&#45;to&#45;RLOC mapping and caching. " alt="" coords="1702,79,1863,117"/>
+<area shape="rect" id="node12" href="$da/d6e/energy__scan__server_8cpp.html" title="This file implements the Energy Scan Server. " alt="" coords="1888,79,2042,117"/>
+<area shape="rect" id="node13" href="$df/d6b/mesh__forwarder_8cpp.html" title="This file implements mesh forwarding of IPv6/6LoWPAN messages. " alt="" coords="2066,79,2213,117"/>
+<area shape="rect" id="node14" href="$df/d42/meshcop__dataset__manager_8cpp.html" title="This file implements MeshCoP Datasets manager to process commands. " alt="" coords="2237,79,2405,117"/>
+<area shape="rect" id="node15" href="$d1/df9/mle_8cpp.html" title="This file implements MLE functionality required for the Thread Child, Router and Leader roles..." alt="" coords="2429,85,2589,111"/>
+<area shape="rect" id="node16" href="$d9/d88/mle__router_8cpp.html" title="This file implements MLE functionality required for the Thread Router and Leader roles. " alt="" coords="2613,79,2749,117"/>
+<area shape="rect" id="node17" href="$d9/d20/network__data_8cpp.html" title="This file implements common methods for manipulating Thread Network Data. " alt="" coords="2773,79,2933,117"/>
+<area shape="rect" id="node18" href="$d0/d0f/network__data__leader_8cpp.html" title="This file implements the Thread Network Data managed by the Thread Leader. " alt="" coords="2957,79,3117,117"/>
+<area shape="rect" id="node19" href="$d1/da2/network__diag_8cpp.html" title="This file implements Thread&#39;s Network Diagnostic processing. " alt="" coords="3141,79,3301,117"/>
+<area shape="rect" id="node20" href="$d1/d58/panid__query__server_8cpp.html" title="This file implements the PAN ID Query Server. " alt="" coords="3325,79,3472,117"/>
+<area shape="rect" id="node21" href="$dd/d31/global__address_8hpp.html" title="This file includes definitions for Thread global IPv6 address configuration with SLAAC. " alt="" coords="3496,79,3631,117"/>
+<area shape="rect" id="node22" href="$d4/dbe/global__address_8cpp.html" title="This file implements the Thread IPv6 global addresses configuration utilities. " alt="" coords="3496,165,3631,204"/>
 </map>

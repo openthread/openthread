@@ -1,2 +1,6 @@
 <map id="include/platform/misc.h" name="include/platform/misc.h">
+<area shape="rect" id="node2" href="$df/dd8/stdint_8h_source.html" title="stdint.h" alt="" coords="5,152,70,177"/>
+<area shape="rect" id="node3" href="$dc/dbf/openthread-types_8h.html" title="This file defines the types and structures used in the OpenThread library API. " alt="" coords="69,79,206,104"/>
+<area shape="rect" id="node4" href="$d9/d5e/stdbool_8h_source.html" title="stdbool.h" alt="" coords="96,152,171,177"/>
+<area shape="rect" id="node5" href="$d3/da9/toolchain_8h_source.html" title="platform/toolchain.h" alt="" coords="195,152,333,177"/>
 </map>

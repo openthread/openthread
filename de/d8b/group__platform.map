@@ -2,8 +2,9 @@
 <area shape="rect" id="node1" href="$d8/dff/group__logging.html" title="This module includes the platform abstraction for the debug log service. " alt="" coords="200,5,268,31"/>
 <area shape="rect" id="node2" href="$d7/da1/group__toolchain.html" title="This module defines a toolchain abstraction layer through macros. " alt="" coords="195,55,273,80"/>
 <area shape="rect" id="node3" href="$d1/d88/group__spi-slave.html" title="This module includes the platform abstraction for SPI slave communication. " alt="" coords="194,104,274,129"/>
-<area shape="rect" id="node4" href="$dd/db6/group__alarm.html" title="This module includes the platform abstraction for the alarm service. " alt="" coords="206,153,262,179"/>
-<area shape="rect" id="node5" href="$d0/d5b/group__radio.html" title="This module includes the platform abstraction for radio communication. " alt="" coords="206,203,262,228"/>
-<area shape="rect" id="node6" href="$db/def/group__uart.html" title="This module includes the platform abstraction for UART communication. " alt="" coords="205,252,263,277"/>
-<area shape="rect" id="node7" href="$dd/d10/group__random.html" title="This module includes the platform abstraction to support critical sections. " alt="" coords="198,301,270,327"/>
+<area shape="rect" id="node4" href="$df/d93/group__diag.html" title="This module includes the platform abstraction for diagnostics features. " alt="" coords="210,153,258,179"/>
+<area shape="rect" id="node5" href="$dd/db6/group__alarm.html" title="This module includes the platform abstraction for the alarm service. " alt="" coords="206,203,262,228"/>
+<area shape="rect" id="node6" href="$d0/d5b/group__radio.html" title="This module includes the platform abstraction for radio communication. " alt="" coords="206,252,262,277"/>
+<area shape="rect" id="node7" href="$db/def/group__uart.html" title="This module includes the platform abstraction for UART communication. " alt="" coords="205,301,263,327"/>
+<area shape="rect" id="node8" href="$dd/d10/group__random.html" title="This module includes the platform abstraction to support critical sections. " alt="" coords="198,351,270,376"/>
 </map>

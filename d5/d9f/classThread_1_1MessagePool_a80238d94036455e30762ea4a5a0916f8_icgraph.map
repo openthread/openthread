@@ -1,0 +1,30 @@
+<map id="Thread::MessagePool::Free" name="Thread::MessagePool::Free">
+<area shape="rect" id="node2" href="$d5/d9f/classThread_1_1MessagePool.html#a2d10b04dfeb1e0c9321eab0e95fda55f" title="This method is used to obtain a new message. " alt="" coords="205,196,391,221"/>
+<area shape="rect" id="node3" href="$dc/d67/classThread_1_1MeshCoP_1_1Commissioner.html#a8639c79f9379e80285fa9f362dbacdd1" title="This method sends MGMT_COMMISSIONER_SET. " alt="" coords="439,5,687,44"/>
+<area shape="rect" id="node5" href="$d4/db5/classThread_1_1MeshCoP_1_1Joiner.html#a5109c8ea0e2c168c18f729d767e6b999" title="This method stops the Joiner service. " alt="" coords="476,68,650,107"/>
+<area shape="rect" id="node6" href="$d3/d05/classThread_1_1Ip6_1_1Ip6.html#a215eeb84e75972828efbc163eedc1ec5" title="This method allocates a new message buffer from the buffer pool. " alt="" coords="461,259,665,284"/>
+<area shape="rect" id="node13" href="$dd/d1d/classThread_1_1MeshForwarder.html#a3a55dcf590bf5941d216ff313b6ce0d0" title="This method gets the Data Poll period. " alt="" coords="2244,400,2408,439"/>
+<area shape="rect" id="node14" href="$dd/d1d/classThread_1_1MeshForwarder.html#a5f726671448fb7cd72f8ee96db40731a" title="This method sets the scan parameters for MLE Discovery Request messages. " alt="" coords="2241,228,2411,267"/>
+<area shape="rect" id="node27" href="$db/de8/group__ip6.html#gaad24ff034036ee73ff5f384f7758dd67" title="Allocate a new message buffer for sending an IPv6 message. " alt="" coords="497,508,629,533"/>
+<area shape="rect" id="node4" href="$dc/d67/classThread_1_1MeshCoP_1_1Commissioner.html#a142100561cda243c291e4bc7a4d6511a" title="This method stops the Commissioner service. " alt="" coords="735,5,957,44"/>
+<area shape="rect" id="node7" href="$da/dd7/classThread_1_1Ip6_1_1Icmp.html#a8a0da4e72f9736aeee94ad6a26e25e58" title="This method returns a new ICMP message with sufficient header space reserved. " alt="" coords="1834,183,1967,221"/>
+<area shape="rect" id="node9" href="$da/dd7/classThread_1_1Ip6_1_1Icmp.html#a1652c3864180133512f7d6499cd684f2" title="This method sends an ICMPv6 error message. " alt="" coords="1308,233,1442,272"/>
+<area shape="rect" id="node19" href="$da/dd7/classThread_1_1Ip6_1_1Icmp.html#ad28878461d364df3eeac50588479c9c1" title="This method handles an ICMPv6 message. " alt="" coords="780,335,913,373"/>
+<area shape="rect" id="node20" href="$d3/d05/classThread_1_1Ip6_1_1Ip6.html#a4aa215eb5c0d575403b5ca683e8427c2" title="This method sends an IPv6 datagram. " alt="" coords="1005,319,1218,344"/>
+<area shape="rect" id="node23" href="$de/ded/classThread_1_1Ip6_1_1Udp.html#afe746fb2f5c83a97c20e54fdb9c595a3" title="This method returns a new UDP message with sufficient header space reserved. " alt="" coords="741,397,951,423"/>
+<area shape="rect" id="node8" href="$d5/dc2/structThread_1_1Cli_1_1Interpreter.html#a11ee1f86cffe17aab7de3de0bb16dee7" title="This method parses an ASCII string as an unsigned long. " alt="" coords="2909,256,3064,295"/>
+<area shape="rect" id="node10" href="$df/d94/group__core-mle-core.html#ga27bbb63f94a4f59d1249fce8baa830ed" title="This method checks if the destination is reachable. " alt="" coords="1532,287,1771,312"/>
+<area shape="rect" id="node11" href="$db/dec/group__core-mle-router.html#gac7d2542017033898d0bc0f17a65d4656" title="This method checks if the destination is reachable. " alt="" coords="1819,261,1981,300"/>
+<area shape="rect" id="node12" href="$dd/d1d/classThread_1_1MeshForwarder.html#a361ef901f6b665b3c7feac206089a7df" title="This method submits a message to the mesh forwarder for forwarding. " alt="" coords="2029,289,2193,328"/>
+<area shape="rect" id="node18" href="$d3/d8e/classThread_1_1ThreadNetif.html#a95f2ad1f6785b0de74e660e43ac86d33" title="This method submits a message to the network interface. " alt="" coords="2256,291,2396,329"/>
+<area shape="rect" id="node15" href="$df/d94/group__core-mle-core.html#gab299d00d1b2beabe8130e400dd6eca91" title="This method initiates a Thread Discovery. " alt="" coords="2459,235,2639,260"/>
+<area shape="rect" id="node16" href="$d4/db5/classThread_1_1MeshCoP_1_1Joiner.html#a1ca1f767cfe15e7c25b8f65606e7fefb" title="This method starts the Joiner service. " alt="" coords="2687,200,2861,239"/>
+<area shape="rect" id="node17" href="$d0/d0a/group__commands.html#ga8422cdf7d0b8b22c6dd107e6bb1309f2" title="This function starts a Thread Discovery scan. " alt="" coords="2732,263,2816,288"/>
+<area shape="rect" id="node21" href="$da/dd7/classThread_1_1Ip6_1_1Icmp.html#a8989f736211cf82f9cefb258decd7c3e" title="This method sends an ICMPv6 Echo Request message. " alt="" coords="2044,505,2178,544"/>
+<area shape="rect" id="node22" href="$de/ded/classThread_1_1Ip6_1_1Udp.html#aa8d41afcd7a8894a7005bc1c32343f7d" title="This method sends an IPv6 datagram. " alt="" coords="1266,296,1484,321"/>
+<area shape="rect" id="node24" href="$d2/d11/group__udp.html#ga830b1fac9ad667bbedc0e68da91e70aa" title="Allocate a new message buffer for sending a UDP message. " alt="" coords="1043,397,1180,423"/>
+<area shape="rect" id="node25" href="$dc/df5/classThread_1_1Cli_1_1Udp.html#a50e5829bd74bf2845d8313575e2dd15c" title="This method delivers raw characters to the client. " alt="" coords="1292,397,1458,423"/>
+<area shape="rect" id="node26" href="$dc/df5/classThread_1_1Cli_1_1Udp.html#ab8ac2489d2049ef5880c77ac1cdc639f" title="This method delivers formatted output to the client. " alt="" coords="1569,391,1735,429"/>
+<area shape="rect" id="node28" href="$d9/dc8/classThread_1_1NcpBase.html#ad14f0f1d60c77f7f537a0a441a9fb35c" title="This method is called by the framer whenever a framing error is detected. " alt="" coords="750,505,942,544"/>
+<area shape="rect" id="node29" href="$dc/d60/classThread_1_1NcpUart.html#a34e4ca7aff5b9056593e8ce0aa6e2fbb" title="This method is called when uart received a data buffer. " alt="" coords="1014,505,1209,544"/>
+</map>

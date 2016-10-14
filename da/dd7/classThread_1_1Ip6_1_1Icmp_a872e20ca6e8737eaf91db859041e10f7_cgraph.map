@@ -1,9 +1,9 @@
 <map id="Thread::Ip6::Icmp::UpdateChecksum" name="Thread::Ip6::Icmp::UpdateChecksum">
-<area shape="rect" id="node2" href="$dc/d3c/classThread_1_1Message.html#a97e576ca01bc7a858f2d5cd35c82b731" title="This method is used to update a checksum value. " alt="" coords="187,89,425,114"/>
-<area shape="rect" id="node3" href="$dc/d3c/classThread_1_1Message.html#a2cf440376e834030c38bb2ced4ca49e9" title="This method returns the number of bytes in the message. " alt="" coords="475,16,669,41"/>
-<area shape="rect" id="node6" href="$dc/d3c/classThread_1_1Message.html#ac8304ee00c9e0b303539687e98e192e0" title="This method returns the byte offset within the message. " alt="" coords="211,138,400,164"/>
-<area shape="rect" id="node7" href="$dc/d3c/classThread_1_1Message.html#add75c76a1fa70eb5d4eb03b68c5d1df8" title="This method writes bytes to the message. " alt="" coords="224,40,387,65"/>
-<area shape="rect" id="node8" href="$d2/de0/classThread_1_1Ip6_1_1IcmpHeader.html#aeda92e625e305e9021bc18ccadfba4ca" title="This static method returns the byte offset of the Checksum field in the ICMPv6 header. " alt="" coords="221,188,391,226"/>
-<area shape="rect" id="node4" href="$d3/d05/classThread_1_1Ip6_1_1Ip6.html#a65af4f070c4734601f0308ab48affba8" title="This static method updates a checksum. " alt="" coords="489,114,655,153"/>
-<area shape="rect" id="node5" href="$db/d50/classThread_1_1Buffer.html#a34ab22941ccd9bb222d251a6a18c95bf" title="This method returns a pointer to the next message buffer. " alt="" coords="473,65,671,90"/>
+<area shape="rect" id="node2" href="$dc/d3c/classThread_1_1Message.html#a97e576ca01bc7a858f2d5cd35c82b731" title="This method is used to update a checksum value. " alt="" coords="187,12,425,37"/>
+<area shape="rect" id="node5" href="$dc/d3c/classThread_1_1Message.html#ac8304ee00c9e0b303539687e98e192e0" title="This method returns the byte offset within the message. " alt="" coords="211,61,400,87"/>
+<area shape="rect" id="node6" href="$dc/d3c/classThread_1_1Message.html#a2cf440376e834030c38bb2ced4ca49e9" title="This method returns the number of bytes in the message. " alt="" coords="208,111,403,136"/>
+<area shape="rect" id="node7" href="$dc/d3c/classThread_1_1Message.html#add75c76a1fa70eb5d4eb03b68c5d1df8" title="This method writes bytes to the message. " alt="" coords="224,160,387,185"/>
+<area shape="rect" id="node8" href="$d2/de0/classThread_1_1Ip6_1_1IcmpHeader.html#aeda92e625e305e9021bc18ccadfba4ca" title="This static method returns the byte offset of the Checksum field in the ICMPv6 header. " alt="" coords="221,209,391,248"/>
+<area shape="rect" id="node3" href="$d3/d05/classThread_1_1Ip6_1_1Ip6.html#a65af4f070c4734601f0308ab48affba8" title="This static method updates a checksum. " alt="" coords="489,5,655,44"/>
+<area shape="rect" id="node4" href="$db/d50/classThread_1_1Buffer.html#a34ab22941ccd9bb222d251a6a18c95bf" title="This method returns a pointer to the next message buffer. " alt="" coords="473,113,671,139"/>
 </map>

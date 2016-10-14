@@ -1,3 +1,9 @@
 <map id="Thread::Mle::Mle::SetMeshLocalPrefix" name="Thread::Mle::Mle::SetMeshLocalPrefix">
-<area shape="rect" id="node2" href="$df/d94/group__core-mle-core.html#ga7e32ce7f27d8c98579441f446c1b399d" title="This constructor initializes the MLE object. " alt="" coords="235,12,385,37"/>
+<area shape="rect" id="node2" href="$d4/db5/classThread_1_1MeshCoP_1_1Joiner.html#a5109c8ea0e2c168c18f729d767e6b999" title="This method stops the Joiner service. " alt="" coords="235,5,408,44"/>
+<area shape="rect" id="node3" href="$df/d4f/group__config-general.html#gae9186210ba40aac389c31e111fd4fc86" title="Set the IEEE 802.15.4 Extended PAN ID. " alt="" coords="250,68,393,93"/>
+<area shape="rect" id="node7" href="$df/d4f/group__config-general.html#ga119a5c43974d265918ed0f3fb6365f41" title="This function sets the Mesh Local Prefix. " alt="" coords="246,117,397,143"/>
+<area shape="rect" id="node8" href="$df/d94/group__core-mle-core.html#ga7e32ce7f27d8c98579441f446c1b399d" title="This constructor initializes the MLE object. " alt="" coords="246,167,396,192"/>
+<area shape="rect" id="node4" href="$d5/dc2/structThread_1_1Cli_1_1Interpreter.html#a11ee1f86cffe17aab7de3de0bb16dee7" title="This method parses an ASCII string as an unsigned long. " alt="" coords="474,48,630,87"/>
+<area shape="rect" id="node5" href="$d9/dc8/classThread_1_1NcpBase.html#ad14f0f1d60c77f7f537a0a441a9fb35c" title="This method is called by the framer whenever a framing error is detected. " alt="" coords="456,111,648,149"/>
+<area shape="rect" id="node6" href="$dc/d60/classThread_1_1NcpUart.html#a34e4ca7aff5b9056593e8ce0aa6e2fbb" title="This method is called when uart received a data buffer. " alt="" coords="696,111,891,149"/>
 </map>

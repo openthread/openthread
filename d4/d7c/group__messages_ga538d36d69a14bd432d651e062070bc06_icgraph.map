@@ -1,4 +1,6 @@
 <map id="otFreeMessage" name="otFreeMessage">
-<area shape="rect" id="node2" href="$dc/df5/classThread_1_1Cli_1_1Udp.html#a50e5829bd74bf2845d8313575e2dd15c" title="This method delivers raw characters to the client. " alt="" coords="167,12,333,37"/>
-<area shape="rect" id="node3" href="$dc/df5/classThread_1_1Cli_1_1Udp.html#ab8ac2489d2049ef5880c77ac1cdc639f" title="This method delivers formatted output to the client. " alt="" coords="381,5,547,44"/>
+<area shape="rect" id="node2" href="$dc/df5/classThread_1_1Cli_1_1Udp.html#a50e5829bd74bf2845d8313575e2dd15c" title="This method delivers raw characters to the client. " alt="" coords="180,15,346,40"/>
+<area shape="rect" id="node4" href="$d9/dc8/classThread_1_1NcpBase.html#ad14f0f1d60c77f7f537a0a441a9fb35c" title="This method is called by the framer whenever a framing error is detected. " alt="" coords="167,65,359,104"/>
+<area shape="rect" id="node3" href="$dc/df5/classThread_1_1Cli_1_1Udp.html#ab8ac2489d2049ef5880c77ac1cdc639f" title="This method delivers formatted output to the client. " alt="" coords="422,5,587,44"/>
+<area shape="rect" id="node5" href="$dc/d60/classThread_1_1NcpUart.html#a34e4ca7aff5b9056593e8ce0aa6e2fbb" title="This method is called when uart received a data buffer. " alt="" coords="407,68,602,107"/>
 </map>

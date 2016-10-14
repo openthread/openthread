@@ -34,7 +34,7 @@
   <td id="projectlogo"><img alt="Logo" src="../../Open-Thread-Logo-200x42.png"/></td>
   <td style="padding-left: 0.5em;">
    <div id="projectname">
-   &#160;<span id="projectnumber">gb2b10b8</span>
+   &#160;<span id="projectnumber">gddd0704</span>
    </div>
   </td>
  </tr>
@@ -115,14 +115,19 @@ $(document).ready(function(){initNavTree('d4/d08/misc_8h.html','../../');});
 </div><!--header-->
 <div class="contents">
 
-<p>This file includes platform abstractions for miscelaneous behaviors.  
+<p>This file includes platform abstractions for miscellaneous behaviors.  
 <a href="#details">More...</a></p>
 <div class="textblock"><code>#include &lt;stdint.h&gt;</code><br />
+<code>#include &lt;<a class="el" href="../../dc/dbf/openthread-types_8h_source.html">openthread-types.h</a>&gt;</code><br />
 </div><div class="textblock"><div class="dynheader">
 Include dependency graph for misc.h:</div>
 <div class="dyncontent">
 <div class="center"><img src="../../d1/d65/misc_8h__incl.png" border="0" usemap="#include_2platform_2misc_8h" alt=""/></div>
 <map name="include_2platform_2misc_8h" id="include_2platform_2misc_8h">
+<area shape="rect" id="node2" href="../../df/dd8/stdint_8h_source.html" title="stdint.h" alt="" coords="5,152,70,177"/>
+<area shape="rect" id="node3" href="../../dc/dbf/openthread-types_8h.html" title="This file defines the types and structures used in the OpenThread library API. " alt="" coords="69,79,206,104"/>
+<area shape="rect" id="node4" href="../../d9/d5e/stdbool_8h_source.html" title="stdbool.h" alt="" coords="96,152,171,177"/>
+<area shape="rect" id="node5" href="../../d3/da9/toolchain_8h_source.html" title="platform/toolchain.h" alt="" coords="195,152,333,177"/>
 </map>
 </div>
 </div><div class="textblock"><div class="dynheader">
@@ -130,7 +135,8 @@ This graph shows which files directly or indirectly include this file:</div>
 <div class="dyncontent">
 <div class="center"><img src="../../dd/da6/misc_8h__dep__incl.png" border="0" usemap="#include_2platform_2misc_8hdep" alt=""/></div>
 <map name="include_2platform_2misc_8hdep" id="include_2platform_2misc_8hdep">
-<area shape="rect" id="node2" href="../../d5/d6a/ncp__base_8cpp.html" title="This file implements a Spinel interface to the OpenThread stack. " alt="" coords="9,79,160,104"/>
+<area shape="rect" id="node2" href="../../da/d60/openthread_8cpp.html" title="This file implements the top&#45;level interface to the OpenThread stack. " alt="" coords="5,79,170,104"/>
+<area shape="rect" id="node3" href="../../d5/d6a/ncp__base_8cpp.html" title="This file implements a Spinel interface to the OpenThread stack. " alt="" coords="195,79,346,104"/>
 </map>
 </div>
 </div>
@@ -165,17 +171,15 @@ Enumerations</h2></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 Functions</h2></td></tr>
-<tr class="memitem:a6b303d0295953052b3028f6ae570b5cb"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a6b303d0295953052b3028f6ae570b5cb"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../d4/d08/misc_8h.html#a6b303d0295953052b3028f6ae570b5cb">otPlatReset</a> (void)</td></tr>
-<tr class="memdesc:a6b303d0295953052b3028f6ae570b5cb"><td class="mdescLeft">&#160;</td><td class="mdescRight">This function performs a software reset on the platform, if supported. <br /></td></tr>
-<tr class="separator:a6b303d0295953052b3028f6ae570b5cb"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a50867a2dfbcb3aeb79298175331210e0"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a50867a2dfbcb3aeb79298175331210e0"></a>
-<a class="el" href="../../d4/d08/misc_8h.html#a0cba84283c1ab3c6aa37c143e9a552c8">otPlatResetReason</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../d4/d08/misc_8h.html#a50867a2dfbcb3aeb79298175331210e0">otPlatGetResetReason</a> (void)</td></tr>
-<tr class="memdesc:a50867a2dfbcb3aeb79298175331210e0"><td class="mdescLeft">&#160;</td><td class="mdescRight">This function returns the reason for the last platform reset. <br /></td></tr>
-<tr class="separator:a50867a2dfbcb3aeb79298175331210e0"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6e5e33121dff7942b201db3cc37e9e86"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../d4/d08/misc_8h.html#a6e5e33121dff7942b201db3cc37e9e86">otPlatReset</a> (<a class="el" href="../../d2/d83/structotInstance.html">otInstance</a> *aInstance)</td></tr>
+<tr class="memdesc:a6e5e33121dff7942b201db3cc37e9e86"><td class="mdescLeft">&#160;</td><td class="mdescRight">This function performs a software reset on the platform, if supported.  <a href="#a6e5e33121dff7942b201db3cc37e9e86">More...</a><br /></td></tr>
+<tr class="separator:a6e5e33121dff7942b201db3cc37e9e86"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab26ce83d07357b4c94234a5c12aff289"><td class="memItemLeft" align="right" valign="top"><a class="el" href="../../d4/d08/misc_8h.html#a0cba84283c1ab3c6aa37c143e9a552c8">otPlatResetReason</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../d4/d08/misc_8h.html#ab26ce83d07357b4c94234a5c12aff289">otPlatGetResetReason</a> (<a class="el" href="../../d2/d83/structotInstance.html">otInstance</a> *aInstance)</td></tr>
+<tr class="memdesc:ab26ce83d07357b4c94234a5c12aff289"><td class="mdescLeft">&#160;</td><td class="mdescRight">This function returns the reason for the last platform reset.  <a href="#ab26ce83d07357b4c94234a5c12aff289">More...</a><br /></td></tr>
+<tr class="separator:ab26ce83d07357b4c94234a5c12aff289"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
-<div class="textblock"><p>This file includes platform abstractions for miscelaneous behaviors. </p>
+<div class="textblock"><p>This file includes platform abstractions for miscellaneous behaviors. </p>
 </div><h2 class="groupheader">Enumeration Type Documentation</h2>
 <a class="anchor" id="a0cba84283c1ab3c6aa37c143e9a552c8"></a>
 <div class="memitem">
@@ -192,13 +196,85 @@ void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../.
 
 </div>
 </div>
+<h2 class="groupheader">Function Documentation</h2>
+<a class="anchor" id="ab26ce83d07357b4c94234a5c12aff289"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="../../d4/d08/misc_8h.html#a0cba84283c1ab3c6aa37c143e9a552c8">otPlatResetReason</a> otPlatGetResetReason </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="../../d2/d83/structotInstance.html">otInstance</a> *&#160;</td>
+          <td class="paramname"><em>aInstance</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>This function returns the reason for the last platform reset. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">aInstance</td><td>The OpenThread instance structure. </td></tr>
+  </table>
+  </dd>
+</dl>
+
+<p><div class="dynheader">
+Here is the caller graph for this function:</div>
+<div class="dyncontent">
+<div class="center"><img src="../../d4/d08/misc_8h_ab26ce83d07357b4c94234a5c12aff289_icgraph.png" border="0" usemap="#d4/d08/misc_8h_ab26ce83d07357b4c94234a5c12aff289_icgraph" alt=""/></div>
+<map name="d4/d08/misc_8h_ab26ce83d07357b4c94234a5c12aff289_icgraph" id="d4/d08/misc_8h_ab26ce83d07357b4c94234a5c12aff289_icgraph">
+<area shape="rect" id="node2" href="../../d9/dc8/classThread_1_1NcpBase.html#a6a04825243722f9500cac2818a07c7b4" title="This constructor creates and initializes an NcpBase instance. " alt="" coords="211,5,398,31"/>
+</map>
+</div>
+</p>
+
+</div>
+</div>
+<a class="anchor" id="a6e5e33121dff7942b201db3cc37e9e86"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void otPlatReset </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="../../d2/d83/structotInstance.html">otInstance</a> *&#160;</td>
+          <td class="paramname"><em>aInstance</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>This function performs a software reset on the platform, if supported. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">aInstance</td><td>The OpenThread instance structure. </td></tr>
+  </table>
+  </dd>
+</dl>
+
+<p><div class="dynheader">
+Here is the caller graph for this function:</div>
+<div class="dyncontent">
+<div class="center"><img src="../../d4/d08/misc_8h_a6e5e33121dff7942b201db3cc37e9e86_icgraph.png" border="0" usemap="#d4/d08/misc_8h_a6e5e33121dff7942b201db3cc37e9e86_icgraph" alt=""/></div>
+<map name="d4/d08/misc_8h_a6e5e33121dff7942b201db3cc37e9e86_icgraph" id="d4/d08/misc_8h_a6e5e33121dff7942b201db3cc37e9e86_icgraph">
+<area shape="rect" id="node2" href="../../db/d57/group__config-test.html#ga383bd88f862315010ce91c795ef6acba" title="This method triggers platform reset. " alt="" coords="181,15,298,40"/>
+<area shape="rect" id="node4" href="../../d9/dc8/classThread_1_1NcpBase.html#ad14f0f1d60c77f7f537a0a441a9fb35c" title="This method is called by the framer whenever a framing error is detected. " alt="" coords="144,65,335,104"/>
+<area shape="rect" id="node3" href="../../d5/dc2/structThread_1_1Cli_1_1Interpreter.html#a11ee1f86cffe17aab7de3de0bb16dee7" title="This method parses an ASCII string as an unsigned long. " alt="" coords="403,5,558,44"/>
+<area shape="rect" id="node5" href="../../dc/d60/classThread_1_1NcpUart.html#a34e4ca7aff5b9056593e8ce0aa6e2fbb" title="This method is called when uart received a data buffer. " alt="" coords="383,68,578,107"/>
+</map>
+</div>
+</p>
+
+</div>
+</div>
 </div><!-- contents -->
 </div><!-- doc-content -->
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
     <li class="navelem"><a class="el" href="../../dir_d44c64559bbebec7f509842c48db8b23.html">include</a></li><li class="navelem"><a class="el" href="../../dir_ac186d3e8926949364e5821f25491cc3.html">platform</a></li><li class="navelem"><a class="el" href="../../d4/d08/misc_8h.html">misc.h</a></li>
-    <li class="footer">Generated on Wed Jul 27 2016 17:09:42 for OpenThread by
+    <li class="footer">Generated on Fri Oct 14 2016 08:44:34 for OpenThread by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="../../doxygen.png" alt="doxygen"/></a> 1.8.11 </li>
   </ul>

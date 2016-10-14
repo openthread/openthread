@@ -1,12 +1,18 @@
 <map id="Thread::Mle::Mle::SetMeshLocalPrefix" name="Thread::Mle::Mle::SetMeshLocalPrefix">
-<area shape="rect" id="node2" href="$d2/d55/classThread_1_1Ip6_1_1Netif.html#ad00e58b94ab00cc71a5f3a242b7ef42c" title="This method removes a unicast address from the network interface. " alt="" coords="237,131,409,169"/>
-<area shape="rect" id="node4" href="$d9/d13/classThread_1_1Ip6_1_1NetifUnicastAddress.html#a2bb426bd29e271bd1fc09b61d1044911" title="This method returns the unicast address. " alt="" coords="460,5,628,44"/>
-<area shape="rect" id="node6" href="$d2/d55/classThread_1_1Ip6_1_1Netif.html#a092484addf28568306ab45941abffff4" title="This method schedules notification of aFlags. " alt="" coords="461,193,627,232"/>
-<area shape="rect" id="node10" href="$d6/d94/classThread_1_1Ip6_1_1NetifMulticastAddress.html#a10800bf39d15ffa0735e857c13e8d489" title="This method returns the multicast address. " alt="" coords="235,245,412,284"/>
-<area shape="rect" id="node11" href="$d2/d55/classThread_1_1Ip6_1_1Netif.html#ad891ec81750a2f7c4c722d07d7dc2632" title="This method adds a unicast address to the network interface. " alt="" coords="250,68,396,107"/>
-<area shape="rect" id="node3" href="$d9/d13/classThread_1_1Ip6_1_1NetifUnicastAddress.html#ac7f38e1322075b0e6dfc7afc048f7eec" title="This method returns the next unicast address assigned to the interface. " alt="" coords="460,68,628,107"/>
-<area shape="rect" id="node5" href="$d9/db1/classThread_1_1Ip6_1_1Address.html#a042097e2896ce7eebc1844140c0d2aeb" title="This method indicates whether or not the IPv6 address is a RLOC address. " alt="" coords="471,131,617,169"/>
-<area shape="rect" id="node7" href="$d4/d92/classThread_1_1Tasklet.html#a50a39a6f422851035b89aace87482425" title="This method puts the tasklet on the run queue. " alt="" coords="676,200,823,225"/>
-<area shape="rect" id="node8" href="$d8/de8/classThread_1_1TaskletScheduler.html#a137292acddf92acdef54cc7a33ea5fac" title="This static method enqueues a tasklet into the run queue. " alt="" coords="871,193,1044,232"/>
-<area shape="rect" id="node9" href="$d1/de3/group__execution.html#ga0d8ce270d8b69230a851ac7b9538ed56" title="OpenThread calls this function when the tasklet queue transitions from empty to non&#45;empty. " alt="" coords="1092,200,1252,225"/>
+<area shape="rect" id="node2" href="$d2/d55/classThread_1_1Ip6_1_1Netif.html#ad00e58b94ab00cc71a5f3a242b7ef42c" title="This method removes a unicast address from the network interface. " alt="" coords="526,117,697,156"/>
+<area shape="rect" id="node4" href="$d9/d13/classThread_1_1Ip6_1_1NetifUnicastAddress.html#a2bb426bd29e271bd1fc09b61d1044911" title="This method returns the unicast address. " alt="" coords="780,256,949,295"/>
+<area shape="rect" id="node6" href="$d2/d55/classThread_1_1Ip6_1_1Netif.html#a092484addf28568306ab45941abffff4" title="This method schedules notification of aFlags. " alt="" coords="781,55,948,93"/>
+<area shape="rect" id="node12" href="$d6/d94/classThread_1_1Ip6_1_1NetifMulticastAddress.html#a10800bf39d15ffa0735e857c13e8d489" title="This method returns the multicast address. " alt="" coords="256,199,433,237"/>
+<area shape="rect" id="node13" href="$d2/d55/classThread_1_1Ip6_1_1Netif.html#ad891ec81750a2f7c4c722d07d7dc2632" title="This method adds a unicast address to the network interface. " alt="" coords="539,180,684,219"/>
+<area shape="rect" id="node14" href="$df/d94/group__core-mle-core.html#gacd4f15b92d4a6e2fb10ed5a82131b26c" title="This method adds Leader&#39;s ALOC to its Thread interface. " alt="" coords="235,313,455,339"/>
+<area shape="rect" id="node3" href="$d9/d13/classThread_1_1Ip6_1_1NetifUnicastAddress.html#ac7f38e1322075b0e6dfc7afc048f7eec" title="This method returns the next unicast address assigned to the interface. " alt="" coords="780,180,949,219"/>
+<area shape="rect" id="node5" href="$d9/db1/classThread_1_1Ip6_1_1Address.html#a042097e2896ce7eebc1844140c0d2aeb" title="This method indicates whether or not the IPv6 address is a RLOC address. " alt="" coords="791,117,937,156"/>
+<area shape="rect" id="node7" href="$d4/d92/classThread_1_1Tasklet.html#a50a39a6f422851035b89aace87482425" title="This method puts the tasklet on the run queue. " alt="" coords="1030,61,1176,87"/>
+<area shape="rect" id="node8" href="$d8/de8/classThread_1_1TaskletScheduler.html#a137292acddf92acdef54cc7a33ea5fac" title="This method enqueues a tasklet into the run queue. " alt="" coords="1246,55,1418,93"/>
+<area shape="rect" id="node9" href="$d1/de3/group__execution.html#ga04d5608ac68a78eb3e8fc167587c61f3" title="OpenThread calls this function when the tasklet queue transitions from empty to non&#45;empty. " alt="" coords="1484,5,1644,31"/>
+<area shape="rect" id="node10" href="$d8/de8/classThread_1_1TaskletScheduler.html#aeaf526c316bbea7d53d20fa9e3c94c40" title="This method returns the pointer to the parent Ip6 structure. " alt="" coords="1477,55,1650,93"/>
+<area shape="rect" id="node11" href="$d3/d05/classThread_1_1Ip6_1_1Ip6.html#a624d9508f3ecfa586378a3d802cb6ff7" title="This method returns the pointer to the parent otInstance structure. " alt="" coords="1466,117,1661,143"/>
+<area shape="rect" id="node15" href="$df/d94/group__core-mle-core.html#gaac61a870e313e3d199d16efb5af3a603" title="This method retrieves the Leader&#39;s ALOC. " alt="" coords="503,364,720,389"/>
+<area shape="rect" id="node16" href="$df/d94/group__core-mle-core.html#ga4934863fd1274f1b86dc9bcee8d8682d" title="This method returns the RLOC16 assigned to the Thread interface. " alt="" coords="768,364,960,389"/>
+<area shape="rect" id="node17" href="$d6/d88/classThread_1_1Mac_1_1Mac.html#ac00b980b5fa6eca48cd29aa7b8ccebe8" title="This method returns the IEEE 802.15.4 Short Address. " alt="" coords="1008,357,1198,396"/>
 </map>

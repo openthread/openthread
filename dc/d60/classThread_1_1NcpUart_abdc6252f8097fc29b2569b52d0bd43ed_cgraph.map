@@ -1,0 +1,6 @@
+<map id="Thread::NcpUart::NcpUart" name="Thread::NcpUart::NcpUart">
+<area shape="rect" id="node2" href="$d0/d78/classThread_1_1NcpFrameBuffer.html#a69de51cb5b7132fa7d82270f3090f4dc" title="This method sets the callbacks and context. " alt="" coords="230,68,398,107"/>
+<area shape="rect" id="node3" href="$da/d1a/classThread_1_1MessageQueue.html#ac0e8b64309aca4d66b262f0354d72e83" title="This method returns a pointer to the first message. " alt="" coords="446,5,611,44"/>
+<area shape="rect" id="node4" href="$da/d1a/classThread_1_1MessageQueue.html#a501d831849c577b2114fcbb4034d074d" title="This method removes a message from the list. " alt="" coords="446,68,611,107"/>
+<area shape="rect" id="node5" href="$dc/d3c/classThread_1_1Message.html#adc9d723284f5807d9c272ab89bc52b45" title="This method frees this message buffer. " alt="" coords="449,131,609,156"/>
+</map>

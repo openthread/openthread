@@ -34,7 +34,7 @@
   <td id="projectlogo"><img alt="Logo" src="../../Open-Thread-Logo-200x42.png"/></td>
   <td style="padding-left: 0.5em;">
    <div id="projectname">
-   &#160;<span id="projectnumber">gb2b10b8</span>
+   &#160;<span id="projectnumber">gddd0704</span>
    </div>
   </td>
  </tr>
@@ -133,19 +133,20 @@ Collaboration diagram for otBorderRouterConfig:</div>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-attribs"></a>
 Public Attributes</h2></td></tr>
-<tr class="memitem:a5c009110abe241276bf9cefb13e11822"><td class="memItemLeft" align="right" valign="top"><a class="el" href="../../d2/ddd/structotIp6Prefix.html">otIp6Prefix</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../dd/dd0/structotBorderRouterConfig.html#a5c009110abe241276bf9cefb13e11822">mPrefix</a></td></tr>
-<tr class="memdesc:a5c009110abe241276bf9cefb13e11822"><td class="mdescLeft">&#160;</td><td class="mdescRight">TRUE, if this border router is a DHCPv6 Agent that supplies other configuration data.  <a href="#a5c009110abe241276bf9cefb13e11822">More...</a><br /></td></tr>
+<tr class="memitem:a5c009110abe241276bf9cefb13e11822"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a5c009110abe241276bf9cefb13e11822"></a>
+<a class="el" href="../../d2/ddd/structotIp6Prefix.html">otIp6Prefix</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../dd/dd0/structotBorderRouterConfig.html#a5c009110abe241276bf9cefb13e11822">mPrefix</a></td></tr>
+<tr class="memdesc:a5c009110abe241276bf9cefb13e11822"><td class="mdescLeft">&#160;</td><td class="mdescRight">The IPv6 prefix. <br /></td></tr>
 <tr class="separator:a5c009110abe241276bf9cefb13e11822"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a581993094e5a7b6c1eb69bf6d5c55340"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a581993094e5a7b6c1eb69bf6d5c55340"></a>
 int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../dd/dd0/structotBorderRouterConfig.html#a581993094e5a7b6c1eb69bf6d5c55340">mPreference</a>: 2</td></tr>
 <tr class="memdesc:a581993094e5a7b6c1eb69bf6d5c55340"><td class="mdescLeft">&#160;</td><td class="mdescRight">A 2-bit signed integer indicating router preference as defined in RFC 4291. <br /></td></tr>
 <tr class="separator:a581993094e5a7b6c1eb69bf6d5c55340"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a390c86e6c972ef7f03f98d9edc0e5f40"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../dd/dd0/structotBorderRouterConfig.html#a390c86e6c972ef7f03f98d9edc0e5f40">mSlaacPreferred</a>: 1</td></tr>
-<tr class="memdesc:a390c86e6c972ef7f03f98d9edc0e5f40"><td class="mdescLeft">&#160;</td><td class="mdescRight">TRUE, if <code>mPrefix</code> is preferred and should e used for address autoconfiguration.  <a href="#a390c86e6c972ef7f03f98d9edc0e5f40">More...</a><br /></td></tr>
-<tr class="separator:a390c86e6c972ef7f03f98d9edc0e5f40"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ab70b156eef98be0f5c149f3facb87eed"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../dd/dd0/structotBorderRouterConfig.html#ab70b156eef98be0f5c149f3facb87eed">mSlaacValid</a>: 1</td></tr>
-<tr class="memdesc:ab70b156eef98be0f5c149f3facb87eed"><td class="mdescLeft">&#160;</td><td class="mdescRight">TRUE, if <code>mPrefix</code> is valid and should be used for address autoconfiguration.  <a href="#ab70b156eef98be0f5c149f3facb87eed">More...</a><br /></td></tr>
-<tr class="separator:ab70b156eef98be0f5c149f3facb87eed"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2cbb73bd5a2311773b612bfbb2164bc2"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../dd/dd0/structotBorderRouterConfig.html#a2cbb73bd5a2311773b612bfbb2164bc2">mPreferred</a>: 1</td></tr>
+<tr class="memdesc:a2cbb73bd5a2311773b612bfbb2164bc2"><td class="mdescLeft">&#160;</td><td class="mdescRight">TRUE, if <code>mPrefix</code> is preferred.  <a href="#a2cbb73bd5a2311773b612bfbb2164bc2">More...</a><br /></td></tr>
+<tr class="separator:a2cbb73bd5a2311773b612bfbb2164bc2"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:acb3d9aa94909a591af0a48e93809160c"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../dd/dd0/structotBorderRouterConfig.html#acb3d9aa94909a591af0a48e93809160c">mSlaac</a>: 1</td></tr>
+<tr class="memdesc:acb3d9aa94909a591af0a48e93809160c"><td class="mdescLeft">&#160;</td><td class="mdescRight">TRUE, if <code>mPrefix</code> should be used for address autoconfiguration.  <a href="#acb3d9aa94909a591af0a48e93809160c">More...</a><br /></td></tr>
+<tr class="separator:acb3d9aa94909a591af0a48e93809160c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a4c51169916172340439b8c363dbb6968"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../dd/dd0/structotBorderRouterConfig.html#a4c51169916172340439b8c363dbb6968">mDhcp</a>: 1</td></tr>
 <tr class="memdesc:a4c51169916172340439b8c363dbb6968"><td class="mdescLeft">&#160;</td><td class="mdescRight">TRUE, if this border router is a DHCPv6 Agent that supplies IPv6 address configuration.  <a href="#a4c51169916172340439b8c363dbb6968">More...</a><br /></td></tr>
 <tr class="separator:a4c51169916172340439b8c363dbb6968"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -155,6 +156,9 @@ int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../..
 <tr class="memitem:a5a65e884930293c4a40c253524c56327"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../dd/dd0/structotBorderRouterConfig.html#a5a65e884930293c4a40c253524c56327">mDefaultRoute</a>: 1</td></tr>
 <tr class="memdesc:a5a65e884930293c4a40c253524c56327"><td class="mdescLeft">&#160;</td><td class="mdescRight">TRUE, if this border router is a default route for <code>mPrefix</code>.  <a href="#a5a65e884930293c4a40c253524c56327">More...</a><br /></td></tr>
 <tr class="separator:a5a65e884930293c4a40c253524c56327"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1319bf366108cae969556d26cabc4cd2"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../dd/dd0/structotBorderRouterConfig.html#a1319bf366108cae969556d26cabc4cd2">mOnMesh</a>: 1</td></tr>
+<tr class="memdesc:a1319bf366108cae969556d26cabc4cd2"><td class="mdescLeft">&#160;</td><td class="mdescRight">TRUE, if this prefix is considered on-mesh.  <a href="#a1319bf366108cae969556d26cabc4cd2">More...</a><br /></td></tr>
+<tr class="separator:a1319bf366108cae969556d26cabc4cd2"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a6b0ab66d71377681702e00905e849f43"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../dd/dd0/structotBorderRouterConfig.html#a6b0ab66d71377681702e00905e849f43">mStable</a>: 1</td></tr>
 <tr class="memdesc:a6b0ab66d71377681702e00905e849f43"><td class="mdescLeft">&#160;</td><td class="mdescRight">TRUE, if this configuration is considered Stable Network Data.  <a href="#a6b0ab66d71377681702e00905e849f43">More...</a><br /></td></tr>
 <tr class="separator:a6b0ab66d71377681702e00905e849f43"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -207,47 +211,47 @@ int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../..
 
 </div>
 </div>
-<a class="anchor" id="a5c009110abe241276bf9cefb13e11822"></a>
+<a class="anchor" id="a1319bf366108cae969556d26cabc4cd2"></a>
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname"><a class="el" href="../../d2/ddd/structotIp6Prefix.html">otIp6Prefix</a> otBorderRouterConfig::mPrefix</td>
+          <td class="memname">bool otBorderRouterConfig::mOnMesh</td>
         </tr>
       </table>
 </div><div class="memdoc">
 
-<p>TRUE, if this border router is a DHCPv6 Agent that supplies other configuration data. </p>
+<p>TRUE, if this prefix is considered on-mesh. </p>
 <p>FALSE, otherwise. </p>
 
 </div>
 </div>
-<a class="anchor" id="a390c86e6c972ef7f03f98d9edc0e5f40"></a>
+<a class="anchor" id="a2cbb73bd5a2311773b612bfbb2164bc2"></a>
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">bool otBorderRouterConfig::mSlaacPreferred</td>
+          <td class="memname">bool otBorderRouterConfig::mPreferred</td>
         </tr>
       </table>
 </div><div class="memdoc">
 
-<p>TRUE, if <code>mPrefix</code> is preferred and should e used for address autoconfiguration. </p>
+<p>TRUE, if <code>mPrefix</code> is preferred. </p>
 <p>FALSE, otherwise. </p>
 
 </div>
 </div>
-<a class="anchor" id="ab70b156eef98be0f5c149f3facb87eed"></a>
+<a class="anchor" id="acb3d9aa94909a591af0a48e93809160c"></a>
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">bool otBorderRouterConfig::mSlaacValid</td>
+          <td class="memname">bool otBorderRouterConfig::mSlaac</td>
         </tr>
       </table>
 </div><div class="memdoc">
 
-<p>TRUE, if <code>mPrefix</code> is valid and should be used for address autoconfiguration. </p>
+<p>TRUE, if <code>mPrefix</code> should be used for address autoconfiguration. </p>
 <p>FALSE, otherwise. </p>
 
 </div>
@@ -276,7 +280,7 @@ int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../..
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
     <li class="navelem"><a class="el" href="../../dd/dd0/structotBorderRouterConfig.html">otBorderRouterConfig</a></li>
-    <li class="footer">Generated on Wed Jul 27 2016 17:09:43 for OpenThread by
+    <li class="footer">Generated on Fri Oct 14 2016 08:44:35 for OpenThread by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="../../doxygen.png" alt="doxygen"/></a> 1.8.11 </li>
   </ul>

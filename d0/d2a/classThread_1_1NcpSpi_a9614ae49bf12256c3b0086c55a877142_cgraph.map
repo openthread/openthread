@@ -1,0 +1,4 @@
+<map id="Thread::NcpSpi::OutboundFrameFeedMessage" name="Thread::NcpSpi::OutboundFrameFeedMessage">
+<area shape="rect" id="node2" href="$d0/d78/classThread_1_1NcpFrameBuffer.html#af5fa8d69618ffb232ea0693f5622e948" title="This method adds a message to the current input frame being written to the buffer. " alt="" coords="233,5,402,44"/>
+<area shape="rect" id="node3" href="$da/d1a/classThread_1_1MessageQueue.html#a5e6f37c86a48e8dfbfcc7a7c14c23808" title="This method adds a message to the end of the list. " alt="" coords="450,5,615,44"/>
+</map>

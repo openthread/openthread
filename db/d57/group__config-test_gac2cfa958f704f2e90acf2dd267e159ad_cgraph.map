@@ -1,0 +1,4 @@
+<map id="otGetRouterDowngradeThreshold" name="otGetRouterDowngradeThreshold">
+<area shape="rect" id="node2" href="$d3/d8e/classThread_1_1ThreadNetif.html#ad49d56e324f096d728c0083d9292f52d" title="This method returns a pointer to the mle object. " alt="" coords="313,5,454,44"/>
+<area shape="rect" id="node3" href="$db/dec/group__core-mle-router.html#ga26a74cb6afe4b82ff10a2fe83bb8a4be" title="This method returns the ROUTER_DOWNGRADE_THRESHOLD value. " alt="" coords="275,68,493,107"/>
+</map>

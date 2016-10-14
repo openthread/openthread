@@ -1,0 +1,4 @@
+<map id="otGetKeySequenceCounter" name="otGetKeySequenceCounter">
+<area shape="rect" id="node2" href="$d3/d8e/classThread_1_1ThreadNetif.html#a25b149621cbd28f9319ee1708ac1f703" title="This method returns a pointer to the key manager object. " alt="" coords="256,5,397,44"/>
+<area shape="rect" id="node3" href="$d6/d44/classThread_1_1KeyManager.html#afe262bf20500517935f58158fb7e2fae" title="This method returns the current key sequence value. " alt="" coords="238,68,415,107"/>
+</map>

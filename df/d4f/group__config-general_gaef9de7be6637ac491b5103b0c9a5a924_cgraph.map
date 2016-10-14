@@ -1,0 +1,8 @@
+<map id="otSetPollPeriod" name="otSetPollPeriod">
+<area shape="rect" id="node2" href="$d3/d8e/classThread_1_1ThreadNetif.html#a162f0ae891d29185452f5373a48d5f97" title="This method returns a pointer to the mesh forwarder object. " alt="" coords="177,5,321,44"/>
+<area shape="rect" id="node3" href="$dd/d1d/classThread_1_1MeshForwarder.html#a3225df0339f0f996cba784017d8f6e1e" title="This method sets customized Data Poll period. " alt="" coords="167,68,331,107"/>
+<area shape="rect" id="node4" href="$d1/d40/classThread_1_1Timer.html#a8815311dffb2fff6b548b63bfc7d6dba" title="This method indicates whether or not the timer instance is running. " alt="" coords="405,25,577,51"/>
+<area shape="rect" id="node5" href="$df/d94/group__core-mle-core.html#gac26c98b0fa6179640188f1dd0c9b3e8d" title="This method returns the Device Mode as reported in the Mode TLV. " alt="" coords="379,75,603,100"/>
+<area shape="rect" id="node6" href="$dd/d1d/classThread_1_1MeshForwarder.html#a969c6fac135cdee3ed9380a0859eaaa8" title="This method sets the Data Poll period. " alt="" coords="409,124,573,163"/>
+<area shape="rect" id="node7" href="$d1/d40/classThread_1_1Timer.html#a475731e21b59be6b17b24f5b5e175f62" title="This method schedules the timer to fire a dt milliseconds from now. " alt="" coords="651,131,791,156"/>
+</map>

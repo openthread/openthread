@@ -34,7 +34,7 @@
   <td id="projectlogo"><img alt="Logo" src="../../Open-Thread-Logo-200x42.png"/></td>
   <td style="padding-left: 0.5em;">
    <div id="projectname">
-   &#160;<span id="projectnumber">gb2b10b8</span>
+   &#160;<span id="projectnumber">gddd0704</span>
    </div>
   </td>
  </tr>
@@ -108,8 +108,7 @@ $(document).ready(function(){initNavTree('dc/de5/timer_8cpp.html','../../');});
 
 <div class="header">
   <div class="summary">
-<a href="#func-members">Functions</a> &#124;
-<a href="#var-members">Variables</a>  </div>
+<a href="#func-members">Functions</a>  </div>
   <div class="headertitle">
 <div class="title">timer.cpp File Reference</div>  </div>
 </div><!--header-->
@@ -119,36 +118,67 @@ $(document).ready(function(){initNavTree('dc/de5/timer_8cpp.html','../../');});
 <a href="#details">More...</a></p>
 <div class="textblock"><code>#include &lt;<a class="el" href="../../da/d7b/code__utils_8hpp_source.html">common/code_utils.hpp</a>&gt;</code><br />
 <code>#include &lt;<a class="el" href="../../df/d05/timer_8hpp_source.html">common/timer.hpp</a>&gt;</code><br />
+<code>#include &lt;<a class="el" href="../../da/d7b/debug_8hpp_source.html">common/debug.hpp</a>&gt;</code><br />
+<code>#include &lt;<a class="el" href="../../d0/da9/logging_8hpp_source.html">common/logging.hpp</a>&gt;</code><br />
+<code>#include &lt;<a class="el" href="../../d1/dd4/ip6_8hpp_source.html">net/ip6.hpp</a>&gt;</code><br />
 <code>#include &lt;<a class="el" href="../../d2/d2d/alarm_8h_source.html">platform/alarm.h</a>&gt;</code><br />
+<code>#include &lt;<a class="el" href="../../d2/dfc/openthread-instance_8h_source.html">openthread-instance.h</a>&gt;</code><br />
 </div><div class="textblock"><div class="dynheader">
 Include dependency graph for timer.cpp:</div>
 <div class="dyncontent">
 <div class="center"><img src="../../d1/d2b/timer_8cpp__incl.png" border="0" usemap="#src_2core_2common_2timer_8cpp" alt=""/></div>
 <map name="src_2core_2common_2timer_8cpp" id="src_2core_2common_2timer_8cpp">
-<area shape="rect" id="node2" href="../../da/d7b/code__utils_8hpp.html" title="This file includes macros for validating runtime conditions. " alt="" coords="5,225,167,251"/>
-<area shape="rect" id="node4" href="../../df/d05/timer_8hpp.html" title="This file includes definitions for the multiplexed timer service. " alt="" coords="320,79,451,104"/>
-<area shape="rect" id="node10" href="../../d2/d2d/alarm_8h.html" title="This file includes the platform abstraction for the alarm service. " alt="" coords="494,152,612,177"/>
-<area shape="rect" id="node7" href="../../dc/dbf/openthread-types_8h.html" title="This file defines the types and structures used in the OpenThread library API. " alt="" coords="192,225,328,251"/>
-<area shape="rect" id="node9" href="../../df/d84/tasklet_8hpp.html" title="This file includes definitions for tasklets and the tasklet scheduler. " alt="" coords="185,152,326,177"/>
-<area shape="rect" id="node8" href="../../d3/da9/toolchain_8h_source.html" title="platform/toolchain.h" alt="" coords="191,299,329,324"/>
+<area shape="rect" id="node2" href="../../da/d7b/code__utils_8hpp.html" title="This file includes macros for validating runtime conditions. " alt="" coords="3528,779,3690,804"/>
+<area shape="rect" id="node4" href="../../df/d05/timer_8hpp.html" title="This file includes definitions for the multiplexed timer service. " alt="" coords="1130,632,1262,657"/>
+<area shape="rect" id="node10" href="../../d2/d2d/alarm_8h.html" title="This file includes the platform abstraction for the alarm service. " alt="" coords="677,705,795,731"/>
+<area shape="rect" id="node11" href="../../da/d7b/debug_8hpp.html" title="This file includes functions for debugging. " alt="" coords="3420,705,3559,731"/>
+<area shape="rect" id="node15" href="../../d0/da9/logging_8hpp.html" title="This file includes functions for debugging. " alt="" coords="3250,705,3395,731"/>
+<area shape="rect" id="node19" href="../../d1/dd4/ip6_8hpp.html" title="This file includes definitions for IPv6 packet processing. " alt="" coords="2182,392,2269,417"/>
+<area shape="rect" id="node34" href="../../d2/dfc/openthread-instance_8h.html" title="This file defines the structure of the variables required for all instances of OpenThread API..." alt="" coords="1948,79,2102,104"/>
+<area shape="rect" id="node3" href="../../d9/d5e/stdbool_8h_source.html" title="stdbool.h" alt="" coords="3156,939,3231,964"/>
+<area shape="rect" id="node6" href="../../df/dd8/stdint_8h_source.html" title="stdint.h" alt="" coords="1860,939,1924,964"/>
+<area shape="rect" id="node7" href="../../dc/dbf/openthread-types_8h.html" title="This file defines the types and structures used in the OpenThread library API. " alt="" coords="1444,859,1580,884"/>
+<area shape="rect" id="node9" href="../../df/d84/tasklet_8hpp.html" title="This file includes definitions for tasklets and the tasklet scheduler. " alt="" coords="1232,705,1373,731"/>
+<area shape="rect" id="node8" href="../../d3/da9/toolchain_8h_source.html" title="platform/toolchain.h" alt="" coords="1443,939,1581,964"/>
+<area shape="rect" id="node16" href="../../df/dcb/openthread-core-config_8h.html" title="This file includes compile&#45;time configuration constants for OpenThread. " alt="" coords="376,779,546,804"/>
+<area shape="rect" id="node18" href="../../d5/d77/logging_8h.html" title="This file includes the platform abstraction for the debug log service. " alt="" coords="3203,859,3330,884"/>
+<area shape="rect" id="node17" href="../../d7/d08/openthread-core-default-config_8h.html" title="This file includes default compile&#45;time configuration constants for OpenThread. " alt="" coords="380,852,543,891"/>
+<area shape="rect" id="node20" href="../../df/d57/encoding_8hpp.html" title="This file includes definitions for byte&#45;ordering encoding. " alt="" coords="2729,859,2885,884"/>
+<area shape="rect" id="node22" href="../../d5/d8c/message_8hpp.html" title="This file includes definitions for the message buffer pool and message buffers. " alt="" coords="2575,705,2731,731"/>
+<area shape="rect" id="node25" href="../../d0/dba/icmp6_8hpp.html" title="This file includes definitions for ICMPv6. " alt="" coords="2506,472,2611,497"/>
+<area shape="rect" id="node26" href="../../db/d51/ip6__headers_8hpp.html" title="This file includes definitions for IPv6 packet processing. " alt="" coords="2297,552,2439,577"/>
+<area shape="rect" id="node27" href="../../dc/d02/ip6__address_8hpp.html" title="This file includes definitions for IPv6 addresses. " alt="" coords="2146,779,2288,804"/>
+<area shape="rect" id="node28" href="../../d0/d86/netif_8hpp.html" title="This file includes definitions for IPv6 network interfaces. " alt="" coords="2313,632,2407,657"/>
+<area shape="rect" id="node29" href="../../da/dfc/socket_8hpp.html" title="This file includes definitions for IPv6 sockets. " alt="" coords="2198,705,2306,731"/>
+<area shape="rect" id="node31" href="../../df/dc2/ip6__routes_8hpp.html" title="This file includes definitions for manipulating IPv6 routing tables. " alt="" coords="2055,632,2187,657"/>
+<area shape="rect" id="node32" href="../../df/dab/ip6__mpl_8hpp.html" title="This file includes definitions for MPL. " alt="" coords="2265,472,2381,497"/>
+<area shape="rect" id="node33" href="../../d0/db7/udp6_8hpp.html" title="This file includes definitions for UDP/IPv6 sockets. " alt="" coords="1786,472,1886,497"/>
+<area shape="rect" id="node23" href="../../da/d45/openthread-config_8h_source.html" title="openthread&#45;config.h" alt="" coords="2989,779,3129,804"/>
+<area shape="rect" id="node24" href="../../d1/d97/mac__frame_8hpp.html" title="This file includes definitions for generating and processing IEEE 802.15.4 MAC frames. " alt="" coords="2569,779,2711,804"/>
+<area shape="rect" id="node30" href="../../dd/d45/openthread_8h.html" title="This file defines the top&#45;level functions for the OpenThread library. " alt="" coords="1842,779,1942,804"/>
+<area shape="rect" id="node35" href="../../d2/d8a/mbedtls_8hpp.html" title="This file includes definitions for using mbedTLS. " alt="" coords="3029,152,3163,177"/>
+<area shape="rect" id="node37" href="../../d1/d54/thread__netif_8hpp.html" title="This file includes definitions for the Thread network interface. " alt="" coords="1472,152,1632,177"/>
+<area shape="rect" id="node38" href="../../da/db5/mac_8hpp.html" title="This file includes definitions for the IEEE 802.15.4 MAC. " alt="" coords="1181,472,1283,497"/>
+<area shape="rect" id="node39" href="../../de/d0b/key__manager_8hpp.html" title="This file includes definitions for Thread security material generation. " alt="" coords="600,552,768,577"/>
+<area shape="rect" id="node40" href="../../da/d7f/joiner__router_8hpp.html" title="This file includes definitions for the Joiner Router role. " alt="" coords="2293,392,2472,417"/>
+<area shape="rect" id="node41" href="../../d9/d7e/leader_8hpp.html" title="This file includes definitions for a MeshCoP Leader. " alt="" coords="1589,232,1731,257"/>
+<area shape="rect" id="node42" href="../../d0/d78/mle_8hpp.html" title="This file includes definitions for MLE functionality required by the Thread Child, Router, and Leader roles. " alt="" coords="1898,312,2008,337"/>
+<area shape="rect" id="node43" href="../../da/d32/ip6__filter_8hpp.html" title="This file includes definitions for IPv6 datagram filtering. " alt="" coords="1539,312,1658,337"/>
+<area shape="rect" id="node44" href="../../d9/d2d/address__resolver_8hpp.html" title="This file includes definitions for Thread EID&#45;to&#45;RLOC mapping and caching. " alt="" coords="994,392,1185,417"/>
+<area shape="rect" id="node45" href="../../d8/d26/announce__begin__server_8hpp.html" title="This file includes definitions for responding to Announce Requests. " alt="" coords="793,545,954,584"/>
+<area shape="rect" id="node46" href="../../df/d7a/energy__scan__server_8hpp.html" title="This file includes definitions for responding to Energy Scan Requests. " alt="" coords="830,385,970,424"/>
+<area shape="rect" id="node47" href="../../dd/d07/network__diag_8hpp.html" title="This file includes definitions for handle network diagnostic. " alt="" coords="296,392,464,417"/>
+<area shape="rect" id="node48" href="../../d2/d1d/meshcop__dataset__manager_8hpp.html" title="This file includes definitions for managing MeshCoP Datasets. " alt="" coords="1755,225,1923,264"/>
+<area shape="rect" id="node49" href="../../da/d80/mesh__forwarder_8hpp.html" title="This file includes definitions for forwarding IPv6 datagrams across the Thread mesh. " alt="" coords="1229,312,1414,337"/>
+<area shape="rect" id="node50" href="../../d6/d6f/mle__router_8hpp.html" title="This file includes definitions for MLE functionality required by the Thread Router and Leader roles..." alt="" coords="2025,232,2177,257"/>
 </map>
 </div>
 </div><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 Functions</h2></td></tr>
-<tr class="memitem:gaea1cdec86ed3e3081acfa2a2a2aa7038"><td class="memItemLeft" align="right" valign="top">
-void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../dd/db6/group__alarm.html#gaea1cdec86ed3e3081acfa2a2a2aa7038">Thread::otPlatAlarmFired</a> (void)</td></tr>
-<tr class="memdesc:gaea1cdec86ed3e3081acfa2a2a2aa7038"><td class="mdescLeft">&#160;</td><td class="mdescRight">Signal that the alarm has fired. <br /></td></tr>
-<tr class="separator:gaea1cdec86ed3e3081acfa2a2a2aa7038"><td class="memSeparator" colspan="2">&#160;</td></tr>
-</table><table class="memberdecls">
-<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="var-members"></a>
-Variables</h2></td></tr>
-<tr class="memitem:a0668eeefebd3b0d8c5f0e36b2477efc3"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a0668eeefebd3b0d8c5f0e36b2477efc3"></a>
-static Timer *&#160;</td><td class="memItemRight" valign="bottom"><b>Thread::sHead</b> = NULL</td></tr>
-<tr class="separator:a0668eeefebd3b0d8c5f0e36b2477efc3"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a7dabdc898fe64e353de129d635a971f6"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a7dabdc898fe64e353de129d635a971f6"></a>
-static Timer *&#160;</td><td class="memItemRight" valign="bottom"><b>Thread::sTail</b> = NULL</td></tr>
-<tr class="separator:a7dabdc898fe64e353de129d635a971f6"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:gabaa04a10427f04205a1f899408c7681e"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../dd/db6/group__alarm.html#gabaa04a10427f04205a1f899408c7681e">Thread::otPlatAlarmFired</a> (<a class="el" href="../../d2/d83/structotInstance.html">otInstance</a> *aInstance)</td></tr>
+<tr class="memdesc:gabaa04a10427f04205a1f899408c7681e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Signal that the alarm has fired.  <a href="../../dd/db6/group__alarm.html#gabaa04a10427f04205a1f899408c7681e">More...</a><br /></td></tr>
+<tr class="separator:gabaa04a10427f04205a1f899408c7681e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>This file implements a multiplexed timer service on top of the alarm abstraction. </p>
@@ -158,7 +188,7 @@ static Timer *&#160;</td><td class="memItemRight" valign="bottom"><b>Thread::sTa
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
     <li class="navelem"><a class="el" href="../../dir_68267d1309a1af8e8297ef4c3efbcdba.html">src</a></li><li class="navelem"><a class="el" href="../../dir_aebb8dcc11953d78e620bbef0b9e2183.html">core</a></li><li class="navelem"><a class="el" href="../../dir_34b4cee2b5900b653deb3438fc906cf4.html">common</a></li><li class="navelem"><a class="el" href="../../dc/de5/timer_8cpp.html">timer.cpp</a></li>
-    <li class="footer">Generated on Wed Jul 27 2016 17:09:42 for OpenThread by
+    <li class="footer">Generated on Fri Oct 14 2016 08:44:34 for OpenThread by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="../../doxygen.png" alt="doxygen"/></a> 1.8.11 </li>
   </ul>

@@ -1,0 +1,4 @@
+<map id="Thread::MeshCoP::Joiner::Joiner" name="Thread::MeshCoP::Joiner::Joiner">
+<area shape="rect" id="node2" href="$d3/d8e/classThread_1_1ThreadNetif.html#a9534c584160c16086f910d192f6f2af5" title="This method returns a pointer to the coap server object. " alt="" coords="231,5,372,44"/>
+<area shape="rect" id="node3" href="$de/d76/classThread_1_1Coap_1_1Server.html#a6c2d2fb6a4a5ce7ef157e5d9cc308af6" title="This method adds a resource to the CoAP server. " alt="" coords="227,68,376,107"/>
+</map>

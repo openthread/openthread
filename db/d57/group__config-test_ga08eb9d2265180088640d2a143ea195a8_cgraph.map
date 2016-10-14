@@ -1,0 +1,9 @@
+<map id="otBecomeRouter" name="otBecomeRouter">
+<area shape="rect" id="node2" href="$d3/d8e/classThread_1_1ThreadNetif.html#ad49d56e324f096d728c0083d9292f52d" title="This method returns a pointer to the mle object. " alt="" coords="185,37,326,76"/>
+<area shape="rect" id="node3" href="$db/dec/group__core-mle-router.html#ga2c1a170b6fbb5e7aefe57e0b52136560" title="This method generates an Address Solicit request for a Router ID. " alt="" coords="175,100,336,139"/>
+<area shape="rect" id="node4" href="$dc/d75/classThread_1_1Ip6_1_1UdpSocket.html#aaa9112c22813ceb55338050f0365c598" title="This method opens the UDP socket. " alt="" coords="389,5,551,44"/>
+<area shape="rect" id="node5" href="$dd/d68/classThread_1_1TrickleTimer.html#a7df8440dbaec9a62b5d97b9dc6b3ef6b" title="This method stops the trickle timer. " alt="" coords="399,68,542,107"/>
+<area shape="rect" id="node7" href="$d4/dcf/classThread_1_1AddressResolver.html#af9e813b464854994a8beda21d91c989c" title="This method clears the EID&#45;to&#45;RLOC cache. " alt="" coords="384,131,557,169"/>
+<area shape="rect" id="node8" href="$d1/d40/classThread_1_1Timer.html#a475731e21b59be6b17b24f5b5e175f62" title="This method schedules the timer to fire a dt milliseconds from now. " alt="" coords="400,193,540,219"/>
+<area shape="rect" id="node6" href="$d1/d40/classThread_1_1Timer.html#a9acdec1cdf4edf947c563d40871f2bc8" title="This method stops the timer. " alt="" coords="605,75,744,100"/>
+</map>

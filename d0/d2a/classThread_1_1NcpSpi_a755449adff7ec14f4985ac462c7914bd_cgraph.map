@@ -1,0 +1,13 @@
+<map id="Thread::NcpSpi::NcpSpi" name="Thread::NcpSpi::NcpSpi">
+<area shape="rect" id="node2" href="$d0/d78/classThread_1_1NcpFrameBuffer.html#a69de51cb5b7132fa7d82270f3090f4dc" title="This method sets the callbacks and context. " alt="" coords="246,68,414,107"/>
+<area shape="rect" id="node6" href="$d1/d88/group__spi-slave.html#gab202b9e8a3a12e7e738467c4693acd44" title="Initialize the SPI slave interface. " alt="" coords="255,131,405,156"/>
+<area shape="rect" id="node7" href="$d1/d88/group__spi-slave.html#ga545203c4c963f46b40586b830d817a45" title="Prepare data for the next SPI transaction. " alt="" coords="218,180,442,205"/>
+<area shape="rect" id="node8" href="$d4/d92/classThread_1_1Tasklet.html#a50a39a6f422851035b89aace87482425" title="This method puts the tasklet on the run queue. " alt="" coords="257,229,403,255"/>
+<area shape="rect" id="node3" href="$da/d1a/classThread_1_1MessageQueue.html#ac0e8b64309aca4d66b262f0354d72e83" title="This method returns a pointer to the first message. " alt="" coords="494,5,659,44"/>
+<area shape="rect" id="node4" href="$da/d1a/classThread_1_1MessageQueue.html#a501d831849c577b2114fcbb4034d074d" title="This method removes a message from the list. " alt="" coords="494,68,659,107"/>
+<area shape="rect" id="node5" href="$dc/d3c/classThread_1_1Message.html#adc9d723284f5807d9c272ab89bc52b45" title="This method frees this message buffer. " alt="" coords="497,131,657,156"/>
+<area shape="rect" id="node9" href="$d8/de8/classThread_1_1TaskletScheduler.html#a137292acddf92acdef54cc7a33ea5fac" title="This method enqueues a tasklet into the run queue. " alt="" coords="490,223,663,261"/>
+<area shape="rect" id="node10" href="$d1/de3/group__execution.html#ga04d5608ac68a78eb3e8fc167587c61f3" title="OpenThread calls this function when the tasklet queue transitions from empty to non&#45;empty. " alt="" coords="728,173,888,199"/>
+<area shape="rect" id="node11" href="$d8/de8/classThread_1_1TaskletScheduler.html#aeaf526c316bbea7d53d20fa9e3c94c40" title="This method returns the pointer to the parent Ip6 structure. " alt="" coords="722,223,895,261"/>
+<area shape="rect" id="node12" href="$d3/d05/classThread_1_1Ip6_1_1Ip6.html#a624d9508f3ecfa586378a3d802cb6ff7" title="This method returns the pointer to the parent otInstance structure. " alt="" coords="711,285,906,311"/>
+</map>

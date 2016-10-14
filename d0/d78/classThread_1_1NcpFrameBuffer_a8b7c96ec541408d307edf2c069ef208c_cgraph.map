@@ -1,8 +1,8 @@
 <map id="Thread::NcpFrameBuffer::OutFrameGetLength" name="Thread::NcpFrameBuffer::OutFrameGetLength">
-<area shape="rect" id="node2" href="$d0/d78/classThread_1_1NcpFrameBuffer.html#a34a6141ff650ec07602b246fe3e65404" title="This method checks if the buffer is empty. " alt="" coords="222,60,390,99"/>
-<area shape="rect" id="node3" href="$da/d1a/classThread_1_1MessageQueue.html#ac0e8b64309aca4d66b262f0354d72e83" title="This method returns a pointer to the first message. " alt="" coords="447,5,612,44"/>
-<area shape="rect" id="node4" href="$dc/d3c/classThread_1_1Message.html#a89b66912022440cb19aa5eefef093b46" title="This method returns a pointer to the next message in the same interface list. " alt="" coords="438,120,620,145"/>
-<area shape="rect" id="node6" href="$dc/d3c/classThread_1_1Message.html#a2cf440376e834030c38bb2ced4ca49e9" title="This method returns the number of bytes in the message. " alt="" coords="669,147,864,172"/>
-<area shape="rect" id="node5" href="$dc/d3c/classThread_1_1Message.html#ad5cd679cc64dd84fa4609d52878c664b" title="This method reads bytes from the message. " alt="" coords="447,69,611,95"/>
-<area shape="rect" id="node7" href="$db/d50/classThread_1_1Buffer.html#a34ab22941ccd9bb222d251a6a18c95bf" title="This method returns a pointer to the next message buffer. " alt="" coords="668,69,866,95"/>
+<area shape="rect" id="node2" href="$d0/d78/classThread_1_1NcpFrameBuffer.html#a34a6141ff650ec07602b246fe3e65404" title="This method checks if the buffer is empty. " alt="" coords="235,61,404,100"/>
+<area shape="rect" id="node3" href="$da/d1a/classThread_1_1MessageQueue.html#ac0e8b64309aca4d66b262f0354d72e83" title="This method returns a pointer to the first message. " alt="" coords="473,5,638,44"/>
+<area shape="rect" id="node4" href="$dc/d3c/classThread_1_1Message.html#a89b66912022440cb19aa5eefef093b46" title="This method returns a pointer to the next message in the same interface list. " alt="" coords="465,121,646,147"/>
+<area shape="rect" id="node7" href="$dc/d3c/classThread_1_1Message.html#a2cf440376e834030c38bb2ced4ca49e9" title="This method returns the number of bytes in the message. " alt="" coords="222,176,417,201"/>
+<area shape="rect" id="node5" href="$dc/d3c/classThread_1_1Message.html#a76033bbc15170d72452186058defafa2" title="This method reads bytes from the message. " alt="" coords="473,68,638,93"/>
+<area shape="rect" id="node6" href="$db/d50/classThread_1_1Buffer.html#a34ab22941ccd9bb222d251a6a18c95bf" title="This method returns a pointer to the next message buffer. " alt="" coords="694,68,892,93"/>
 </map>

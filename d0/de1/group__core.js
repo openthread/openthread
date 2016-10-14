@@ -2,6 +2,7 @@ var group__core =
 [
     [ "6LoWPAN", "d9/db4/group__core-6lowpan.html", "d9/db4/group__core-6lowpan" ],
     [ "CoAP", "d5/de9/group__core-coap.html", "d5/de9/group__core-coap" ],
+    [ "Global IPv6 Address", "d3/d6c/group__core-global-address.html", "d3/d6c/group__core-global-address" ],
     [ "IPv6", "d2/df2/group__core-ipv6.html", "d2/df2/group__core-ipv6" ],
     [ "MAC", "df/d5c/group__core-mac.html", "df/d5c/group__core-mac" ],
     [ "Mesh Forwarding", "d4/d0a/group__core-mesh-forwarding.html", "d4/d0a/group__core-mesh-forwarding" ],
@@ -14,5 +15,6 @@ var group__core =
     [ "Tasklet", "d2/d20/group__core-tasklet.html", "d2/d20/group__core-tasklet" ],
     [ "Timer", "df/d90/group__core-timer.html", "df/d90/group__core-timer" ],
     [ "UDP", "db/daa/group__core-udp.html", "db/daa/group__core-udp" ],
+    [ "TCP", "d1/d79/group__core-tcp.html", "d1/d79/group__core-tcp" ],
     [ "Link Quality", "d3/d4b/group__core-link-quality.html", "d3/d4b/group__core-link-quality" ]
 ];

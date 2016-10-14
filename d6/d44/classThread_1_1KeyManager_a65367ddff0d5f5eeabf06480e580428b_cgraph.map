@@ -1,0 +1,16 @@
+<map id="Thread::KeyManager::GetKeyRotation" name="Thread::KeyManager::GetKeyRotation">
+<area shape="rect" id="node2" href="$d6/d44/classThread_1_1KeyManager.html#a950f8fcd206978cf239304c74a61368b" title="This method sets the KeyRotation time. " alt="" coords="200,123,347,161"/>
+<area shape="rect" id="node3" href="$d6/d44/classThread_1_1KeyManager.html#a1c2cda0961979d7655a5311f29de57c7" title="This method sets the current key sequence value. " alt="" coords="395,123,571,161"/>
+<area shape="rect" id="node4" href="$d1/d40/classThread_1_1Timer.html#a8815311dffb2fff6b548b63bfc7d6dba" title="This method indicates whether or not the timer instance is running. " alt="" coords="629,5,801,31"/>
+<area shape="rect" id="node5" href="$d1/d40/classThread_1_1Timer.html#a0596072dec177b5e2b494db19800267d" title="This static method returns the current time in milliseconds. " alt="" coords="635,55,796,80"/>
+<area shape="rect" id="node7" href="$d1/d40/classThread_1_1Timer.html#a93beaa1e8a8b8692b1558fe5ae138406" title="This method returns the start time in milliseconds for the timer. " alt="" coords="643,104,788,129"/>
+<area shape="rect" id="node8" href="$d1/d40/classThread_1_1Timer.html#a172d3d4acd2ee14b151f065be0ce50a9" title="This static method returns the number of milliseconds given hours. " alt="" coords="619,153,812,179"/>
+<area shape="rect" id="node9" href="$d1/d40/classThread_1_1Timer.html#a475731e21b59be6b17b24f5b5e175f62" title="This method schedules the timer to fire a dt milliseconds from now. " alt="" coords="645,203,786,228"/>
+<area shape="rect" id="node10" href="$d2/d55/classThread_1_1Ip6_1_1Netif.html#a092484addf28568306ab45941abffff4" title="This method schedules notification of aFlags. " alt="" coords="632,252,799,291"/>
+<area shape="rect" id="node6" href="$dd/db6/group__alarm.html#gaf8829e3591e03e29e136685fcdeb3300" title="Get the current time. " alt="" coords="864,55,1003,80"/>
+<area shape="rect" id="node11" href="$d4/d92/classThread_1_1Tasklet.html#a50a39a6f422851035b89aace87482425" title="This method puts the tasklet on the run queue. " alt="" coords="860,259,1007,284"/>
+<area shape="rect" id="node12" href="$d8/de8/classThread_1_1TaskletScheduler.html#a137292acddf92acdef54cc7a33ea5fac" title="This method enqueues a tasklet into the run queue. " alt="" coords="1055,252,1227,291"/>
+<area shape="rect" id="node13" href="$d1/de3/group__execution.html#ga04d5608ac68a78eb3e8fc167587c61f3" title="OpenThread calls this function when the tasklet queue transitions from empty to non&#45;empty. " alt="" coords="1293,203,1453,228"/>
+<area shape="rect" id="node14" href="$d8/de8/classThread_1_1TaskletScheduler.html#aeaf526c316bbea7d53d20fa9e3c94c40" title="This method returns the pointer to the parent Ip6 structure. " alt="" coords="1286,252,1459,291"/>
+<area shape="rect" id="node15" href="$d3/d05/classThread_1_1Ip6_1_1Ip6.html#a624d9508f3ecfa586378a3d802cb6ff7" title="This method returns the pointer to the parent otInstance structure. " alt="" coords="1275,315,1470,340"/>
+</map>

@@ -1,4 +1,6 @@
 <map id="src/core/common/tasklet.hpp" name="src/core/common/tasklet.hpp">
 <area shape="rect" id="node2" href="$dc/dbf/openthread-types_8h.html" title="This file defines the types and structures used in the OpenThread library API. " alt="" coords="63,79,199,104"/>
+<area shape="rect" id="node3" href="$df/dd8/stdint_8h_source.html" title="stdint.h" alt="" coords="5,152,70,177"/>
+<area shape="rect" id="node4" href="$d9/d5e/stdbool_8h_source.html" title="stdbool.h" alt="" coords="93,152,169,177"/>
 <area shape="rect" id="node5" href="$d3/da9/toolchain_8h_source.html" title="platform/toolchain.h" alt="" coords="193,152,330,177"/>
 </map>

@@ -1,0 +1,4 @@
+<map id="Thread::Ip6::Ip6::SetReceiveDatagramCallback" name="Thread::Ip6::Ip6::SetReceiveDatagramCallback">
+<area shape="rect" id="node2" href="$db/de8/group__ip6.html#gaef68a2e4dd98fdce1b9a007dbbf59786" title="This function registers a callback to provide received IPv6 datagrams. " alt="" coords="244,12,473,37"/>
+<area shape="rect" id="node3" href="$d9/dc8/classThread_1_1NcpBase.html#a6a04825243722f9500cac2818a07c7b4" title="This constructor creates and initializes an NcpBase instance. " alt="" coords="521,12,708,37"/>
+</map>

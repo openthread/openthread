@@ -1,0 +1,9 @@
+<map id="Thread::NetworkData::NetworkData::ContainsExternalRoutes" name="Thread::NetworkData::NetworkData::ContainsExternalRoutes">
+<area shape="rect" id="node2" href="$dd/dd1/classThread_1_1NetworkData_1_1Local.html#aca96f012e0a75890e6b3e24223b37fea" title="This method removes a Border Router entry from the Thread Network Data. " alt="" coords="268,37,479,76"/>
+<area shape="rect" id="node3" href="$db/da2/group__config-br.html#gae424b85a559043b4ae5a8b1846d68ced" title="Remove an external route configuration from the local network data. " alt="" coords="760,15,927,40"/>
+<area shape="rect" id="node7" href="$dd/dd1/classThread_1_1NetworkData_1_1Local.html#abdce87272d09f0d5aa77b8bc3886c950" title="This method adds a Has Route entry to the Thread Network data. " alt="" coords="527,65,712,104"/>
+<area shape="rect" id="node4" href="$d5/dc2/structThread_1_1Cli_1_1Interpreter.html#a11ee1f86cffe17aab7de3de0bb16dee7" title="This method parses an ASCII string as an unsigned long. " alt="" coords="993,5,1148,44"/>
+<area shape="rect" id="node5" href="$d9/dc8/classThread_1_1NcpBase.html#ad14f0f1d60c77f7f537a0a441a9fb35c" title="This method is called by the framer whenever a framing error is detected. " alt="" coords="975,68,1167,107"/>
+<area shape="rect" id="node6" href="$dc/d60/classThread_1_1NcpUart.html#a34e4ca7aff5b9056593e8ce0aa6e2fbb" title="This method is called when uart received a data buffer. " alt="" coords="1215,68,1409,107"/>
+<area shape="rect" id="node8" href="$db/da2/group__config-br.html#gadb015f3cec5745e5161788d0a2eabb23" title="Add an external route configuration to the local network data. " alt="" coords="773,72,914,97"/>
+</map>

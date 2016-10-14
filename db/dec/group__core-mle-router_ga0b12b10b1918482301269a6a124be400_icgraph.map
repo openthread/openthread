@@ -1,0 +1,6 @@
+<map id="Thread::Mle::MleRouter::GetChildInfoByIndex" name="Thread::Mle::MleRouter::GetChildInfoByIndex">
+<area shape="rect" id="node2" href="$d8/dd2/group__diags.html#ga9b5695168596c7ce3be6934e3b37a888" title="The function retains diagnostic information for an attached Child by the internal table index..." alt="" coords="215,44,369,69"/>
+<area shape="rect" id="node3" href="$d5/dc2/structThread_1_1Cli_1_1Interpreter.html#a11ee1f86cffe17aab7de3de0bb16dee7" title="This method parses an ASCII string as an unsigned long. " alt="" coords="436,5,591,44"/>
+<area shape="rect" id="node4" href="$d9/dc8/classThread_1_1NcpBase.html#ad14f0f1d60c77f7f537a0a441a9fb35c" title="This method is called by the framer whenever a framing error is detected. " alt="" coords="417,68,609,107"/>
+<area shape="rect" id="node5" href="$dc/d60/classThread_1_1NcpUart.html#a34e4ca7aff5b9056593e8ce0aa6e2fbb" title="This method is called when uart received a data buffer. " alt="" coords="657,68,852,107"/>
+</map>

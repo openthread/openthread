@@ -1,0 +1,4 @@
+<map id="otGetLocalLeaderPartitionId" name="otGetLocalLeaderPartitionId">
+<area shape="rect" id="node2" href="$d3/d8e/classThread_1_1ThreadNetif.html#ad49d56e324f096d728c0083d9292f52d" title="This method returns a pointer to the mle object. " alt="" coords="251,5,392,44"/>
+<area shape="rect" id="node3" href="$db/dec/group__core-mle-router.html#gace8744ec1ff6f40e4cc672c0068dffaf" title="This method returns the fixed Partition Id of Thread network partition for certification testing..." alt="" coords="241,68,402,107"/>
+</map>

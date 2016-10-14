@@ -1,0 +1,16 @@
+<map id="src/cli/cli_console.hpp" name="src/cli/cli_console.hpp">
+<area shape="rect" id="node2" href="$dc/dbf/openthread-types_8h.html" title="This file defines the types and structures used in the OpenThread library API. " alt="" coords="533,385,669,411"/>
+<area shape="rect" id="node6" href="$d8/d86/cli__server_8hpp.html" title="This file contains definitions for adding a CLI command to the CLI server. " alt="" coords="627,79,746,104"/>
+<area shape="rect" id="node17" href="$d6/d07/cli-console_8h.html" title="This file defines the top&#45;level functions for the OpenThread CLI server. " alt="" coords="31,305,142,331"/>
+<area shape="rect" id="node3" href="$df/dd8/stdint_8h_source.html" title="stdint.h" alt="" coords="189,459,253,484"/>
+<area shape="rect" id="node4" href="$d9/d5e/stdbool_8h_source.html" title="stdbool.h" alt="" coords="778,459,854,484"/>
+<area shape="rect" id="node5" href="$d3/da9/toolchain_8h_source.html" title="platform/toolchain.h" alt="" coords="532,459,670,484"/>
+<area shape="rect" id="node7" href="$d5/d8c/message_8hpp.html" title="This file includes definitions for the message buffer pool and message buffers. " alt="" coords="608,152,765,177"/>
+<area shape="rect" id="node8" href="$da/d45/openthread-config_8h_source.html" title="openthread&#45;config.h" alt="" coords="510,225,650,251"/>
+<area shape="rect" id="node10" href="$df/dcb/openthread-core-config_8h.html" title="This file includes compile&#45;time configuration constants for OpenThread. " alt="" coords="775,225,945,251"/>
+<area shape="rect" id="node12" href="$da/d7b/code__utils_8hpp.html" title="This file includes macros for validating runtime conditions. " alt="" coords="820,385,982,411"/>
+<area shape="rect" id="node13" href="$d1/d97/mac__frame_8hpp.html" title="This file includes definitions for generating and processing IEEE 802.15.4 MAC frames. " alt="" coords="343,225,486,251"/>
+<area shape="rect" id="node11" href="$d7/d08/openthread-core-default-config_8h.html" title="This file includes default compile&#45;time configuration constants for OpenThread. " alt="" coords="777,299,940,337"/>
+<area shape="rect" id="node15" href="$df/d57/encoding_8hpp.html" title="This file includes definitions for byte&#45;ordering encoding. " alt="" coords="218,305,374,331"/>
+<area shape="rect" id="node16" href="$d7/d62/radio_8h.html" title="This file defines the radio interface for OpenThread. " alt="" coords="449,305,563,331"/>
+</map>

@@ -1,0 +1,4 @@
+<map id="otGetMasterKey" name="otGetMasterKey">
+<area shape="rect" id="node2" href="$d3/d8e/classThread_1_1ThreadNetif.html#a25b149621cbd28f9319ee1708ac1f703" title="This method returns a pointer to the key manager object. " alt="" coords="174,5,315,44"/>
+<area shape="rect" id="node3" href="$d6/d44/classThread_1_1KeyManager.html#ae5b15c034edb118f46e01364aca37ee9" title="This method returns a pointer to the Thread Master Key. " alt="" coords="171,68,318,107"/>
+</map>

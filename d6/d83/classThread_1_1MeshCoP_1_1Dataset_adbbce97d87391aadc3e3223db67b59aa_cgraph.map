@@ -1,0 +1,16 @@
+<map id="Thread::MeshCoP::Dataset::Compare" name="Thread::MeshCoP::Dataset::Compare">
+<area shape="rect" id="node2" href="$d6/d83/classThread_1_1MeshCoP_1_1Dataset.html#a2576874faa1595dcae546fa8cd2c70f3" title="This method returns a reference to the Timestamp. " alt="" coords="246,40,429,79"/>
+<area shape="rect" id="node13" href="$d1/def/classThread_1_1MeshCoP_1_1Timestamp.html#aa13f4aa7fb7852e57b3466feff2a4e99" title="This method compares this timestamp to another. " alt="" coords="236,103,439,141"/>
+<area shape="rect" id="node3" href="$d6/d83/classThread_1_1MeshCoP_1_1Dataset.html#a3258521bf66915fc5da53679c867e233" title="This method returns a pointer to the TLV. " alt="" coords="487,47,698,72"/>
+<area shape="rect" id="node4" href="$dd/d8d/classThread_1_1MeshCoP_1_1Tlv.html#a6b50f0231142d7c272ac1732ae0fdca7" title="This method returns the Type value. " alt="" coords="1172,5,1327,44"/>
+<area shape="rect" id="node5" href="$dd/d8d/classThread_1_1MeshCoP_1_1Tlv.html#aa2f476effa6f74d304b38fd6280ede7d" title="This method returns a pointer to the next TLV. " alt="" coords="746,68,901,107"/>
+<area shape="rect" id="node6" href="$dd/d8d/classThread_1_1MeshCoP_1_1Tlv.html#a5560e18099408223e7a5c610e44bdc7f" title="This static method reads the requested TLV out of aMessage. " alt="" coords="949,68,1104,107"/>
+<area shape="rect" id="node12" href="$dd/d8d/classThread_1_1MeshCoP_1_1Tlv.html#afc7c287ad7c84b712621db6fa5cbd0f9" title="This static method finds the offset and length of a given TLV type. " alt="" coords="949,131,1104,169"/>
+<area shape="rect" id="node7" href="$dc/d3c/classThread_1_1Message.html#ac8304ee00c9e0b303539687e98e192e0" title="This method returns the byte offset within the message. " alt="" coords="1155,131,1344,156"/>
+<area shape="rect" id="node8" href="$dc/d3c/classThread_1_1Message.html#a2cf440376e834030c38bb2ced4ca49e9" title="This method returns the number of bytes in the message. " alt="" coords="1152,180,1347,205"/>
+<area shape="rect" id="node9" href="$dc/d3c/classThread_1_1Message.html#a76033bbc15170d72452186058defafa2" title="This method reads bytes from the message. " alt="" coords="1167,229,1331,255"/>
+<area shape="rect" id="node11" href="$dd/d8d/classThread_1_1MeshCoP_1_1Tlv.html#ae448a8785f6715b07e973d570e715c69" title="This method returns the Length value. " alt="" coords="1172,68,1327,107"/>
+<area shape="rect" id="node10" href="$db/d50/classThread_1_1Buffer.html#a34ab22941ccd9bb222d251a6a18c95bf" title="This method returns a pointer to the next message buffer. " alt="" coords="1395,229,1593,255"/>
+<area shape="rect" id="node14" href="$d1/def/classThread_1_1MeshCoP_1_1Timestamp.html#aee593abfb8d266dcfd49f4c910dd8d07" title="This method returns the Seconds value. " alt="" coords="491,161,694,200"/>
+<area shape="rect" id="node15" href="$d1/def/classThread_1_1MeshCoP_1_1Timestamp.html#a0f899f485f785af3aec8e8ad4f29257a" title="This method returns the Ticks value. " alt="" coords="491,99,694,137"/>
+</map>

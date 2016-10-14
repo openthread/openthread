@@ -1,12 +1,8 @@
 <map id="Thread::Mle::Mle::AppendHeader" name="Thread::Mle::Mle::AppendHeader">
 <area shape="rect" id="node2" href="$df/d94/group__core-mle-core.html#ga816bfec3316a129c70092d63141ecbac" title="This method initializes the MLE header. " alt="" coords="246,5,389,44"/>
-<area shape="rect" id="node3" href="$df/d94/group__core-mle-core.html#gab3f74f5cf47286ec13eb63769602648a" title="This method sets the Key ID Mode to 2. " alt="" coords="246,68,389,107"/>
-<area shape="rect" id="node4" href="$df/d94/group__core-mle-core.html#ga6cfee71f368110aff795d23137e5c894" title="This method sets the Key ID Mode to 1. " alt="" coords="246,131,389,169"/>
+<area shape="rect" id="node3" href="$df/d94/group__core-mle-core.html#ga31f6d8ae4e3872d7081435a6ba62779f" title="This method sets the Security Suite value. " alt="" coords="246,68,389,107"/>
+<area shape="rect" id="node4" href="$df/d94/group__core-mle-core.html#gab3f74f5cf47286ec13eb63769602648a" title="This method sets the Key ID Mode to 2. " alt="" coords="246,131,389,169"/>
 <area shape="rect" id="node5" href="$df/d94/group__core-mle-core.html#gacfda331d1a40fd11951bbaa603d9c77a" title="This method sets the Command Type value. " alt="" coords="246,193,389,232"/>
 <area shape="rect" id="node6" href="$dc/d3c/classThread_1_1Message.html#a3c3d1c48e940f2553586d16e1618277d" title="This method appends bytes to the end of the message. " alt="" coords="228,256,407,281"/>
-<area shape="rect" id="node11" href="$df/d94/group__core-mle-core.html#ga925735f456674a1aff117ee85e992391" title="This method returns the MLE header and Command Type length. " alt="" coords="246,305,389,344"/>
-<area shape="rect" id="node7" href="$dc/d3c/classThread_1_1Message.html#a2cf440376e834030c38bb2ced4ca49e9" title="This method returns the number of bytes in the message. " alt="" coords="697,256,892,281"/>
-<area shape="rect" id="node8" href="$dc/d3c/classThread_1_1Message.html#acecf07ee065974c8b211c151ea5d6e14" title="This method sets the number of bytes in the message. " alt="" coords="455,256,648,281"/>
-<area shape="rect" id="node9" href="$dc/d3c/classThread_1_1Message.html#add75c76a1fa70eb5d4eb03b68c5d1df8" title="This method writes bytes to the message. " alt="" coords="470,305,633,331"/>
-<area shape="rect" id="node10" href="$db/d50/classThread_1_1Buffer.html#a34ab22941ccd9bb222d251a6a18c95bf" title="This method returns a pointer to the next message buffer. " alt="" coords="696,305,894,331"/>
+<area shape="rect" id="node7" href="$df/d94/group__core-mle-core.html#ga925735f456674a1aff117ee85e992391" title="This method returns the MLE header and Command Type length. " alt="" coords="246,305,389,344"/>
 </map>

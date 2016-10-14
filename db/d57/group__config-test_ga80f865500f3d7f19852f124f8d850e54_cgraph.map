@@ -1,0 +1,4 @@
+<map id="otSetNetworkIdTimeout" name="otSetNetworkIdTimeout">
+<area shape="rect" id="node2" href="$d3/d8e/classThread_1_1ThreadNetif.html#ad49d56e324f096d728c0083d9292f52d" title="This method returns a pointer to the mle object. " alt="" coords="224,5,365,44"/>
+<area shape="rect" id="node3" href="$db/dec/group__core-mle-router.html#ga825638587ebef252b508cb7f4c3aace4" title="This method sets the NETWORK_ID_TIMEOUT value. " alt="" coords="213,68,375,107"/>
+</map>

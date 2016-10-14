@@ -1,3 +1,8 @@
 <map id="Thread::Mac::Mac::SetNetworkName" name="Thread::Mac::Mac::SetNetworkName">
-<area shape="rect" id="node2" href="$d6/d88/classThread_1_1Mac_1_1Mac.html#afe65837f6f2e5f566187fc410786ef86" title="This constructor initializes the MAC object. " alt="" coords="294,5,455,31"/>
+<area shape="rect" id="node2" href="$d6/d88/classThread_1_1Mac_1_1Mac.html#afe65837f6f2e5f566187fc410786ef86" title="This constructor initializes the MAC object. " alt="" coords="300,5,461,31"/>
+<area shape="rect" id="node3" href="$d4/db5/classThread_1_1MeshCoP_1_1Joiner.html#a5109c8ea0e2c168c18f729d767e6b999" title="This method stops the Joiner service. " alt="" coords="294,55,467,93"/>
+<area shape="rect" id="node4" href="$df/d4f/group__config-general.html#gaf7bca853881e2246a2d15567b2f19e0b" title="Set the Thread Network Name. " alt="" coords="312,117,449,143"/>
+<area shape="rect" id="node5" href="$d5/dc2/structThread_1_1Cli_1_1Interpreter.html#a11ee1f86cffe17aab7de3de0bb16dee7" title="This method parses an ASCII string as an unsigned long. " alt="" coords="533,79,689,117"/>
+<area shape="rect" id="node6" href="$d9/dc8/classThread_1_1NcpBase.html#ad14f0f1d60c77f7f537a0a441a9fb35c" title="This method is called by the framer whenever a framing error is detected. " alt="" coords="515,141,707,180"/>
+<area shape="rect" id="node7" href="$dc/d60/classThread_1_1NcpUart.html#a34e4ca7aff5b9056593e8ce0aa6e2fbb" title="This method is called when uart received a data buffer. " alt="" coords="755,141,950,180"/>
 </map>

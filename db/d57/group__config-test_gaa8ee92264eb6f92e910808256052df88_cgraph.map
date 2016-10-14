@@ -1,0 +1,7 @@
+<map id="otAddMacWhitelistRssi" name="otAddMacWhitelistRssi">
+<area shape="rect" id="node2" href="$d3/d8e/classThread_1_1ThreadNetif.html#aec59b0e172327889e9b0f4f08b0e69f9" title="This method returns a pointer to the mac object. " alt="" coords="245,5,385,44"/>
+<area shape="rect" id="node3" href="$d6/d88/classThread_1_1Mac_1_1Mac.html#a05fd9b44a1eac9906100f90e19d6d404" title="This method returns the MAC whitelist filter. " alt="" coords="211,68,419,93"/>
+<area shape="rect" id="node4" href="$d7/d98/classThread_1_1Mac_1_1Whitelist.html#a4f392b61c209adb971a1dd174185e1f5" title="This method adds an Extended Address to the whitelist filter. " alt="" coords="222,117,408,143"/>
+<area shape="rect" id="node6" href="$d7/d98/classThread_1_1Mac_1_1Whitelist.html#aec8fb6e5055a3a3923535c0bd07b29d4" title="This method sets a fixed RSSI value for all received messages matching aEntry. " alt="" coords="238,167,392,205"/>
+<area shape="rect" id="node5" href="$d7/d98/classThread_1_1Mac_1_1Whitelist.html#ad79d158eb35d6e10284cbc678335a994" title="This method finds a whitelist entry. " alt="" coords="467,111,621,149"/>
+</map>

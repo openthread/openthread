@@ -6,7 +6,7 @@ var group__core_ip6_icmp6 =
       [ "m8", "d4/d90/structThread_1_1Ip6_1_1IcmpHeaderPoD.html#afd8ac304182050a19c9aca80fab2d591", null ],
       [ "mChecksum", "d4/d90/structThread_1_1Ip6_1_1IcmpHeaderPoD.html#a1f9efcf2fc78902fe8dd520ae05fcea8", null ],
       [ "mCode", "d4/d90/structThread_1_1Ip6_1_1IcmpHeaderPoD.html#a9340c0b6398ee6f072f20a6dac7983ce", null ],
-      [ "mData", "d4/d90/structThread_1_1Ip6_1_1IcmpHeaderPoD.html#a1b11bdb00969b07405c5bd878734ee5a", null ],
+      [ "mData", "d4/d90/structThread_1_1Ip6_1_1IcmpHeaderPoD.html#a7964bba0309c888464566a609e566210", null ],
       [ "mType", "d4/d90/structThread_1_1Ip6_1_1IcmpHeaderPoD.html#a1d3fc65dcc6b226759c2da5eb1f7422b", null ]
     ] ],
     [ "IcmpHeader", "d2/de0/classThread_1_1Ip6_1_1IcmpHeader.html", [
@@ -32,23 +32,22 @@ var group__core_ip6_icmp6 =
       [ "SetSequence", "d2/de0/classThread_1_1Ip6_1_1IcmpHeader.html#a275fba913f341b9d0e7018b5e02e072a", null ],
       [ "SetType", "d2/de0/classThread_1_1Ip6_1_1IcmpHeader.html#a8609c3839e26f6ab4625159bf9c35873", null ]
     ] ],
-    [ "IcmpEcho", "dc/ddf/classThread_1_1Ip6_1_1IcmpEcho.html", [
-      [ "EchoReplyHandler", "dc/ddf/classThread_1_1Ip6_1_1IcmpEcho.html#a097c28b65c6c77d4c233e752bf3ec07d", null ],
-      [ "IcmpEcho", "dc/ddf/classThread_1_1Ip6_1_1IcmpEcho.html#afc1fcdacdee671ce68d8e26bdc2f623b", null ],
-      [ "SendEchoRequest", "dc/ddf/classThread_1_1Ip6_1_1IcmpEcho.html#abe01fa9b5c27147270cae355f78fa552", null ],
-      [ "Icmp", "dc/ddf/classThread_1_1Ip6_1_1IcmpEcho.html#aa295923a8787f9de4fbe16136f3c931c", null ]
-    ] ],
     [ "IcmpHandler", "da/dff/classThread_1_1Ip6_1_1IcmpHandler.html", [
       [ "DstUnreachHandler", "da/dff/classThread_1_1Ip6_1_1IcmpHandler.html#a29e4de7922e90efb1c9f2195a7e4cf3c", null ],
       [ "IcmpHandler", "da/dff/classThread_1_1Ip6_1_1IcmpHandler.html#a0d479f55838901ccb5b1ebd383e20db4", null ],
       [ "Icmp", "da/dff/classThread_1_1Ip6_1_1IcmpHandler.html#aa295923a8787f9de4fbe16136f3c931c", null ]
     ] ],
     [ "Icmp", "da/dd7/classThread_1_1Ip6_1_1Icmp.html", [
+      [ "EchoReplyHandler", "da/dd7/classThread_1_1Ip6_1_1Icmp.html#a1576fd382cb2f92f9b48f0b78c671a62", null ],
+      [ "Icmp", "da/dd7/classThread_1_1Ip6_1_1Icmp.html#a7db924d98efff91c4ae22d19d3b16efe", null ],
       [ "HandleMessage", "da/dd7/classThread_1_1Ip6_1_1Icmp.html#ad28878461d364df3eeac50588479c9c1", null ],
       [ "IsEchoEnabled", "da/dd7/classThread_1_1Ip6_1_1Icmp.html#af4cae4712ae9ef69a40f856a1ee32116", null ],
+      [ "NewMessage", "da/dd7/classThread_1_1Ip6_1_1Icmp.html#a8a0da4e72f9736aeee94ad6a26e25e58", null ],
       [ "RegisterCallbacks", "da/dd7/classThread_1_1Ip6_1_1Icmp.html#a6fa5b3b4d5b3a4a4057d88c03b5eac3d", null ],
+      [ "SendEchoRequest", "da/dd7/classThread_1_1Ip6_1_1Icmp.html#a8989f736211cf82f9cefb258decd7c3e", null ],
       [ "SendError", "da/dd7/classThread_1_1Ip6_1_1Icmp.html#a1652c3864180133512f7d6499cd684f2", null ],
       [ "SetEchoEnabled", "da/dd7/classThread_1_1Ip6_1_1Icmp.html#afc6634532527100a9a9e9e1234f49e5f", null ],
+      [ "SetEchoReplyHandler", "da/dd7/classThread_1_1Ip6_1_1Icmp.html#ac53f16d45fe5add683ad1024c0dff624", null ],
       [ "UpdateChecksum", "da/dd7/classThread_1_1Ip6_1_1Icmp.html#a872e20ca6e8737eaf91db859041e10f7", null ]
     ] ]
 ];

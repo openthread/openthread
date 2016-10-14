@@ -1,0 +1,13 @@
+<map id="otIsEnergyScanInProgress" name="otIsEnergyScanInProgress">
+<area shape="rect" id="node2" href="$d3/d8e/classThread_1_1ThreadNetif.html#aec59b0e172327889e9b0f4f08b0e69f9" title="This method returns a pointer to the mac object. " alt="" coords="257,48,398,87"/>
+<area shape="rect" id="node3" href="$d6/d88/classThread_1_1Mac_1_1Mac.html#a99305013a985466a1dbf218d34ee31eb" title="This method returns if an energy scan is in progress. " alt="" coords="233,111,422,149"/>
+<area shape="rect" id="node4" href="$d7/d9c/group__radio-operation.html#ga5a5999dadb6ac0ee70a69a960930f132" title="Get the radio capabilities. " alt="" coords="480,5,623,31"/>
+<area shape="rect" id="node5" href="$d3/d8e/classThread_1_1ThreadNetif.html#a83517ab2bff2614e403895426df6a61b" title="This method returns the pointer to the parent otInstance structure. " alt="" coords="481,55,622,93"/>
+<area shape="rect" id="node6" href="$d1/d40/classThread_1_1Timer.html#a475731e21b59be6b17b24f5b5e175f62" title="This method schedules the timer to fire a dt milliseconds from now. " alt="" coords="481,117,622,143"/>
+<area shape="rect" id="node7" href="$d4/d92/classThread_1_1Tasklet.html#a50a39a6f422851035b89aace87482425" title="This method puts the tasklet on the run queue. " alt="" coords="478,167,625,192"/>
+<area shape="rect" id="node12" href="$d7/d9c/group__radio-operation.html#gae3b9ed222f4ad93e1d09e285b57be1ef" title="This method begins the energy scan sequence on the radio. " alt="" coords="470,216,633,241"/>
+<area shape="rect" id="node8" href="$d8/de8/classThread_1_1TaskletScheduler.html#a137292acddf92acdef54cc7a33ea5fac" title="This method enqueues a tasklet into the run queue. " alt="" coords="681,160,853,199"/>
+<area shape="rect" id="node9" href="$d1/de3/group__execution.html#ga04d5608ac68a78eb3e8fc167587c61f3" title="OpenThread calls this function when the tasklet queue transitions from empty to non&#45;empty. " alt="" coords="919,111,1079,136"/>
+<area shape="rect" id="node10" href="$d8/de8/classThread_1_1TaskletScheduler.html#aeaf526c316bbea7d53d20fa9e3c94c40" title="This method returns the pointer to the parent Ip6 structure. " alt="" coords="913,160,1085,199"/>
+<area shape="rect" id="node11" href="$d3/d05/classThread_1_1Ip6_1_1Ip6.html#a624d9508f3ecfa586378a3d802cb6ff7" title="This method returns the pointer to the parent otInstance structure. " alt="" coords="901,223,1096,248"/>
+</map>

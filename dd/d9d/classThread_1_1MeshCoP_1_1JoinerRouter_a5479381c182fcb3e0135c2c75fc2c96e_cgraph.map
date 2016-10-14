@@ -1,0 +1,51 @@
+<map id="Thread::MeshCoP::JoinerRouter::JoinerRouter" name="Thread::MeshCoP::JoinerRouter::JoinerRouter">
+<area shape="rect" id="node2" href="$dc/d75/classThread_1_1Ip6_1_1UdpSocket.html#a4c3b5b3798c5a209d94f145dd9f08424" title="This method returns the local socket address. " alt="" coords="298,265,460,304"/>
+<area shape="rect" id="node3" href="$d3/d8e/classThread_1_1ThreadNetif.html#a9534c584160c16086f910d192f6f2af5" title="This method returns a pointer to the coap server object. " alt="" coords="308,328,449,367"/>
+<area shape="rect" id="node4" href="$de/d76/classThread_1_1Coap_1_1Server.html#a6c2d2fb6a4a5ce7ef157e5d9cc308af6" title="This method adds a resource to the CoAP server. " alt="" coords="304,391,454,429"/>
+<area shape="rect" id="node5" href="$d2/dfb/classThread_1_1Ip6_1_1NetifCallback.html#a994d81f140fa4a62245e3336d37f0aaf" title="This method sets the callback information. " alt="" coords="277,453,480,479"/>
+<area shape="rect" id="node6" href="$d2/d55/classThread_1_1Ip6_1_1Netif.html#aca4693ab30ec940aef090d8228ea4429" title="This method registers a network interface callback. " alt="" coords="314,503,444,541"/>
+<area shape="rect" id="node7" href="$d3/d8e/classThread_1_1ThreadNetif.html#ad49d56e324f096d728c0083d9292f52d" title="This method returns a pointer to the mle object. " alt="" coords="308,565,449,604"/>
+<area shape="rect" id="node8" href="$df/d94/group__core-mle-core.html#gac26c98b0fa6179640188f1dd0c9b3e8d" title="This method returns the Device Mode as reported in the Mode TLV. " alt="" coords="267,628,491,653"/>
+<area shape="rect" id="node9" href="$d3/d8e/classThread_1_1ThreadNetif.html#ac9cdcb6443cd6fd0748e3217cccff8a4" title="This method returns a reference to the IPv6 filter object. " alt="" coords="308,677,449,716"/>
+<area shape="rect" id="node10" href="$d2/df2/group__core-ipv6.html#ga3acc28966050de95753946d13db6c55f" title="This method removes a port from the allowed unsecure port list. " alt="" coords="299,740,459,779"/>
+<area shape="rect" id="node11" href="$d3/d8e/classThread_1_1ThreadNetif.html#a16d20f33e997eaf877024914707f052a" title="This method returns a pointer to the network data leader object. " alt="" coords="564,797,733,836"/>
+<area shape="rect" id="node13" href="$d6/d9b/classThread_1_1NetworkData_1_1Leader.html#ab1860ae9877c2b0f6a83d677d41e31d6" title="This method returns a pointer to the Commissioning Data. " alt="" coords="539,963,757,1001"/>
+<area shape="rect" id="node27" href="$dd/d8d/classThread_1_1MeshCoP_1_1Tlv.html#a6b50f0231142d7c272ac1732ae0fdca7" title="This method returns the Type value. " alt="" coords="837,68,991,107"/>
+<area shape="rect" id="node28" href="$dd/d8d/classThread_1_1MeshCoP_1_1Tlv.html#ae448a8785f6715b07e973d570e715c69" title="This method returns the Length value. " alt="" coords="837,1939,991,1977"/>
+<area shape="rect" id="node46" href="$dd/d9d/classThread_1_1MeshCoP_1_1JoinerRouter.html#a484af9ea3f5c73ec07d3e47c21a647c5" title="This method returns the Joiner UDP Port. " alt="" coords="272,855,485,893"/>
+<area shape="rect" id="node47" href="$dc/d75/classThread_1_1Ip6_1_1UdpSocket.html#aaa9112c22813ceb55338050f0365c598" title="This method opens the UDP socket. " alt="" coords="298,1071,460,1109"/>
+<area shape="rect" id="node48" href="$dc/d75/classThread_1_1Ip6_1_1UdpSocket.html#aa07479b557c551452986ff7a0ce20773" title="This method binds the UDP socket. " alt="" coords="298,1133,460,1172"/>
+<area shape="rect" id="node49" href="$d2/df2/group__core-ipv6.html#ga1300d30ac5dfe405714178b4aede4c82" title="This method adds a port to the allowed unsecured port list. " alt="" coords="312,1196,446,1235"/>
+<area shape="rect" id="node50" href="$dc/d75/classThread_1_1Ip6_1_1UdpSocket.html#a2c050c372e20976105003cb8d4d6fc90" title="This method closes the UDP socket. " alt="" coords="298,1259,460,1297"/>
+<area shape="rect" id="node12" href="$d3/d8e/classThread_1_1ThreadNetif.html#a83517ab2bff2614e403895426df6a61b" title="This method returns the pointer to the parent otInstance structure. " alt="" coords="844,5,984,44"/>
+<area shape="rect" id="node14" href="$d5/d81/classThread_1_1NetworkData_1_1NetworkDataTlv.html#af812881954a5608981bfa430eca30731" title="This method returns a pointer to the next Network Data TLV. " alt="" coords="824,131,1004,169"/>
+<area shape="rect" id="node15" href="$d4/d80/group__core-netdata-core.html#ga3b02c75d7d5dce213601521df50b24a3" title="This method removes bytes from the Network Data. " alt="" coords="833,193,995,232"/>
+<area shape="rect" id="node16" href="$dd/d2b/classThread_1_1ThreadTlv.html#a4a079523209bf967433700e7010f4bde" title="This static method reads the requested TLV out of aMessage. " alt="" coords="845,359,983,397"/>
+<area shape="rect" id="node17" href="$dc/d3c/classThread_1_1Message.html#ac8304ee00c9e0b303539687e98e192e0" title="This method returns the byte offset within the message. " alt="" coords="1073,272,1262,297"/>
+<area shape="rect" id="node18" href="$dc/d3c/classThread_1_1Message.html#a2cf440376e834030c38bb2ced4ca49e9" title="This method returns the number of bytes in the message. " alt="" coords="1070,351,1265,376"/>
+<area shape="rect" id="node19" href="$dc/d3c/classThread_1_1Message.html#a76033bbc15170d72452186058defafa2" title="This method reads bytes from the message. " alt="" coords="1086,400,1250,425"/>
+<area shape="rect" id="node20" href="$dd/d2b/classThread_1_1ThreadTlv.html#ad58148cecaf4a01c4f53c923a09b51d1" title="This method returns the Length value. " alt="" coords="1099,451,1237,489"/>
+<area shape="rect" id="node21" href="$d6/d9b/classThread_1_1NetworkData_1_1Leader.html#a5baddd109ff06b58140e2678e3c97a16" title="This method removes Network Data associated with a given RLOC16. " alt="" coords="810,524,1018,563"/>
+<area shape="rect" id="node22" href="$db/d2d/classThread_1_1ThreadRloc16Tlv.html#a840ece43248e4382b2e69b0da34ba105" title="This method returns the RLOC16 value. " alt="" coords="828,587,1000,625"/>
+<area shape="rect" id="node23" href="$d6/df1/classThread_1_1ThreadNetworkDataTlv.html#af824e57fa1bf027d457158487ea10fc4" title="This method returns a pointer to the Network Data TLVs. " alt="" coords="819,649,1009,688"/>
+<area shape="rect" id="node24" href="$df/d94/group__core-mle-core.html#gabc154b6e95f5b169febcd7a582dfa1a3" title="This method returns the current Thread interface state. " alt="" coords="818,712,1009,751"/>
+<area shape="rect" id="node25" href="$dd/d8d/classThread_1_1MeshCoP_1_1Tlv.html#aa2f476effa6f74d304b38fd6280ede7d" title="This method returns a pointer to the next TLV. " alt="" coords="837,775,991,813"/>
+<area shape="rect" id="node26" href="$d6/d9b/classThread_1_1NetworkData_1_1Leader.html#a46d1a76edcb210f1cf58c463f3c1bdad" title="This method adds Commissioning Data to the Thread Network Data. " alt="" coords="805,837,1022,876"/>
+<area shape="rect" id="node29" href="$de/d76/classThread_1_1Coap_1_1Server.html#a2f1fb2b1a1e98b79a9d086aca2dbb764" title="This method returns a new UDP message with sufficient header space reserved. " alt="" coords="839,900,989,939"/>
+<area shape="rect" id="node30" href="$d0/d7f/classThread_1_1Coap_1_1Header.html#ad221953768fdb61bd62fa1bc3ffd4c89" title="This method initializes the CoAP header. " alt="" coords="837,963,991,1001"/>
+<area shape="rect" id="node31" href="$d0/d7f/classThread_1_1Coap_1_1Header.html#ad4147a19a4e8861f321c8aaaa5db6baa" title="This method sets the Type value. " alt="" coords="837,1025,991,1064"/>
+<area shape="rect" id="node32" href="$d0/d7f/classThread_1_1Coap_1_1Header.html#a0a2c1cf0ff97aab363e71f716254a736" title="This method sets the Code value. " alt="" coords="837,1088,991,1127"/>
+<area shape="rect" id="node33" href="$d0/d7f/classThread_1_1Coap_1_1Header.html#a7a374b4bd31694216d9397e1409209a0" title="This method sets the Message ID value. " alt="" coords="837,1151,991,1189"/>
+<area shape="rect" id="node34" href="$d0/d7f/classThread_1_1Coap_1_1Header.html#ad45e8b7c304fce8c896ef531be34e9d6" title="This method returns the Message ID value. " alt="" coords="837,1213,991,1252"/>
+<area shape="rect" id="node35" href="$d0/d7f/classThread_1_1Coap_1_1Header.html#a9d8d2a7b438e4a7d27ce3b979b0bb2a0" title="This method sets the Token value and length. " alt="" coords="837,1276,991,1315"/>
+<area shape="rect" id="node36" href="$d0/d7f/classThread_1_1Coap_1_1Header.html#ad51db46720122c64e67143e10eaf3820" title="This method returns a pointer to the Token value. " alt="" coords="837,1339,991,1377"/>
+<area shape="rect" id="node37" href="$d0/d7f/classThread_1_1Coap_1_1Header.html#a552cf5eab882b244b178b8093e8a18e9" title="This method returns the Token length. " alt="" coords="837,1401,991,1440"/>
+<area shape="rect" id="node38" href="$d0/d7f/classThread_1_1Coap_1_1Header.html#aecbcbb8b836e0283559b89bd64fbc47f" title="This method terminates the CoAP header. " alt="" coords="837,1464,991,1503"/>
+<area shape="rect" id="node39" href="$dc/d3c/classThread_1_1Message.html#a3c3d1c48e940f2553586d16e1618277d" title="This method appends bytes to the end of the message. " alt="" coords="825,1527,1003,1552"/>
+<area shape="rect" id="node40" href="$d0/d7f/classThread_1_1Coap_1_1Header.html#a5259ece3cbe8e332599f7de4c488ad32" title="This method returns a pointer to the first byte of the header. " alt="" coords="837,1576,991,1615"/>
+<area shape="rect" id="node41" href="$d0/d7f/classThread_1_1Coap_1_1Header.html#ae1679d627108d5381dc1ae45d2254299" title="This method returns the header length in bytes. " alt="" coords="837,1639,991,1677"/>
+<area shape="rect" id="node42" href="$de/d76/classThread_1_1Coap_1_1Server.html#aeb97e0257808d7cad4adceccd87f6b7d" title="This method sends a CoAP response from the server. " alt="" coords="839,1701,989,1740"/>
+<area shape="rect" id="node43" href="$dc/d3c/classThread_1_1Message.html#adc9d723284f5807d9c272ab89bc52b45" title="This method frees this message buffer. " alt="" coords="834,1764,994,1789"/>
+<area shape="rect" id="node44" href="$d2/da8/classThread_1_1MeshCoP_1_1StateTlv.html#afcb686b1046800a35985dc810c119472" title="This method initializes the TLV. " alt="" coords="821,1813,1007,1852"/>
+<area shape="rect" id="node45" href="$d2/da8/classThread_1_1MeshCoP_1_1StateTlv.html#a86346d8e24a97d249ce73684009e8adb" title="This method sets the State value. " alt="" coords="821,1876,1007,1915"/>
+</map>

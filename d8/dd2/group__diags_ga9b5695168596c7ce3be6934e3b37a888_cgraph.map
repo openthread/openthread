@@ -1,0 +1,14 @@
+<map id="otGetChildInfoByIndex" name="otGetChildInfoByIndex">
+<area shape="rect" id="node2" href="$d3/d8e/classThread_1_1ThreadNetif.html#ad49d56e324f096d728c0083d9292f52d" title="This method returns a pointer to the mle object. " alt="" coords="218,63,359,101"/>
+<area shape="rect" id="node3" href="$db/dec/group__core-mle-router.html#ga0b12b10b1918482301269a6a124be400" title="This method retains diagnostic information for an attached child by the internal table index..." alt="" coords="208,125,369,164"/>
+<area shape="rect" id="node4" href="$df/d94/group__core-mle-core.html#ga85abf85f882565f74d5037122e6c359a" title="This method returns the Child ID portion of an RLOC16. " alt="" coords="417,5,609,31"/>
+<area shape="rect" id="node5" href="$d1/d40/classThread_1_1Timer.html#a8d56b463dc5c9f2fa82764efe3a700c7" title="This static method returns the number of seconds given milliseconds. " alt="" coords="423,55,604,80"/>
+<area shape="rect" id="node6" href="$d1/d40/classThread_1_1Timer.html#a0596072dec177b5e2b494db19800267d" title="This static method returns the current time in milliseconds. " alt="" coords="433,104,593,129"/>
+<area shape="rect" id="node8" href="$dd/d38/classThread_1_1LinkQualityInfo.html#a54ec264efb11c7bc2e0b4f2aa73d66d9" title="Returns the current one&#45;way link quality value. " alt="" coords="434,153,593,192"/>
+<area shape="rect" id="node12" href="$dd/d38/classThread_1_1LinkQualityInfo.html#a6bb9667b219989c9825d292d6501ac66" title="This method returns the current average signal strength value. " alt="" coords="1344,160,1504,199"/>
+<area shape="rect" id="node13" href="$d6/d88/classThread_1_1Mac_1_1Mac.html#a66adbd2802117755ceff80c2aa1a4d84" title="This method returns the noise floor state. " alt="" coords="417,268,609,307"/>
+<area shape="rect" id="node7" href="$dd/db6/group__alarm.html#gaf8829e3591e03e29e136685fcdeb3300" title="Get the current time. " alt="" coords="668,104,806,129"/>
+<area shape="rect" id="node9" href="$dd/d38/classThread_1_1LinkQualityInfo.html#a756abbb6d5f4d84bfe763559ba3c1c71" title="This method returns the link margin. " alt="" coords="657,153,816,192"/>
+<area shape="rect" id="node10" href="$dd/d38/classThread_1_1LinkQualityInfo.html#aecb995df780f6eb79a340614e71d1b5c" title="This method converts a received signal strength value to a link margin value. " alt="" coords="864,103,1042,141"/>
+<area shape="rect" id="node11" href="$d3/d4b/group__core-link-quality.html#ga327fac3c27070325354e650d4695e230" title="This function returns the current average noise floor level (in dBm). " alt="" coords="1090,113,1296,139"/>
+</map>

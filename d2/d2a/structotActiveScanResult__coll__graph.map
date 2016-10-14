@@ -1,3 +1,6 @@
 <map id="otActiveScanResult" name="otActiveScanResult">
-<area shape="rect" id="node2" href="$d3/d8f/structotExtAddress.html" title="This type represents the IEEE 802.15.4 Extended Address. " alt="" coords="23,5,124,31"/>
+<area shape="rect" id="node2" href="$d3/d8f/structotExtAddress.html" title="This type represents the IEEE 802.15.4 Extended Address. " alt="" coords="5,5,106,31"/>
+<area shape="rect" id="node3" href="$d2/d0a/structotSteeringData.html" title="This structure represents the steering data. " alt="" coords="130,5,240,31"/>
+<area shape="rect" id="node4" href="$dc/d20/structotExtendedPanId.html" title="This structure represents an Extended PAN ID. " alt="" coords="264,5,388,31"/>
+<area shape="rect" id="node5" href="$df/d91/structotNetworkName.html" title="This structure represents a Network Name. " alt="" coords="412,5,529,31"/>
 </map>

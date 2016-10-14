@@ -1,10 +1,9 @@
 <map id="Thread::NcpFrameBuffer::InFrameEnd" name="Thread::NcpFrameBuffer::InFrameEnd">
 <area shape="rect" id="node2" href="$d0/d78/classThread_1_1NcpFrameBuffer.html#a34a6141ff650ec07602b246fe3e65404" title="This method checks if the buffer is empty. " alt="" coords="222,61,390,100"/>
 <area shape="rect" id="node3" href="$da/d1a/classThread_1_1MessageQueue.html#ac0e8b64309aca4d66b262f0354d72e83" title="This method returns a pointer to the first message. " alt="" coords="447,5,612,44"/>
-<area shape="rect" id="node8" href="$da/d1a/classThread_1_1MessageQueue.html#a501d831849c577b2114fcbb4034d074d" title="This method removes a message from the list. " alt="" coords="224,124,389,163"/>
-<area shape="rect" id="node9" href="$da/d1a/classThread_1_1MessageQueue.html#a5e6f37c86a48e8dfbfcc7a7c14c23808" title="This method adds a message to the end of the list. " alt="" coords="224,187,389,225"/>
+<area shape="rect" id="node7" href="$da/d1a/classThread_1_1MessageQueue.html#a501d831849c577b2114fcbb4034d074d" title="This method removes a message from the list. " alt="" coords="224,124,389,163"/>
+<area shape="rect" id="node8" href="$da/d1a/classThread_1_1MessageQueue.html#a5e6f37c86a48e8dfbfcc7a7c14c23808" title="This method adds a message to the end of the list. " alt="" coords="224,187,389,225"/>
 <area shape="rect" id="node4" href="$dc/d3c/classThread_1_1Message.html#a89b66912022440cb19aa5eefef093b46" title="This method returns a pointer to the next message in the same interface list. " alt="" coords="438,68,620,93"/>
-<area shape="rect" id="node5" href="$dc/d3c/classThread_1_1Message.html#ad5cd679cc64dd84fa4609d52878c664b" title="This method reads bytes from the message. " alt="" coords="447,117,611,143"/>
-<area shape="rect" id="node6" href="$dc/d3c/classThread_1_1Message.html#a2cf440376e834030c38bb2ced4ca49e9" title="This method returns the number of bytes in the message. " alt="" coords="669,92,864,117"/>
-<area shape="rect" id="node7" href="$db/d50/classThread_1_1Buffer.html#a34ab22941ccd9bb222d251a6a18c95bf" title="This method returns a pointer to the next message buffer. " alt="" coords="668,141,866,167"/>
+<area shape="rect" id="node5" href="$dc/d3c/classThread_1_1Message.html#a76033bbc15170d72452186058defafa2" title="This method reads bytes from the message. " alt="" coords="447,117,611,143"/>
+<area shape="rect" id="node6" href="$db/d50/classThread_1_1Buffer.html#a34ab22941ccd9bb222d251a6a18c95bf" title="This method returns a pointer to the next message buffer. " alt="" coords="668,117,866,143"/>
 </map>

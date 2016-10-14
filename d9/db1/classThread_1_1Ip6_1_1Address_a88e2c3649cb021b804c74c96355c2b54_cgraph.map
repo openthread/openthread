@@ -1,0 +1,4 @@
+<map id="Thread::Ip6::Address::IsIidReserved" name="Thread::Ip6::Address::IsIidReserved">
+<area shape="rect" id="node2" href="$d9/db1/classThread_1_1Ip6_1_1Address.html#a304f6cee01d4bb854cb3f2a875de2ab5" title="This method indicates whether or not the IPv6 address is Subnet&#45;Router Anycast (RFC 4291)..." alt="" coords="208,5,377,44"/>
+<area shape="rect" id="node3" href="$d9/db1/classThread_1_1Ip6_1_1Address.html#a1190c16fbb7ba372aa8c15ad6018f5aa" title="This method indicates whether or not the IPv6 address is Reserved Subnet Anycast (RFC 2526)..." alt="" coords="199,68,385,107"/>
+</map>

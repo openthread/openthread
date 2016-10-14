@@ -7,7 +7,10 @@ var classThread_1_1ThreadTlv =
       [ "kMeshLocalEid", "dd/d2b/classThread_1_1ThreadTlv.html#a95dcbabfa2637b1949a8fc7e6c9c6c20a5bc550ea0e7e24ffc6b6b8566d3f5068", null ],
       [ "kStatus", "dd/d2b/classThread_1_1ThreadTlv.html#a95dcbabfa2637b1949a8fc7e6c9c6c20aab835b03f77da024a7fee49c28fc6529", null ],
       [ "kLastTransactionTime", "dd/d2b/classThread_1_1ThreadTlv.html#a95dcbabfa2637b1949a8fc7e6c9c6c20aefa4b27643bfe9c91d60a44787905bb6", null ],
-      [ "kRouterMask", "dd/d2b/classThread_1_1ThreadTlv.html#a95dcbabfa2637b1949a8fc7e6c9c6c20ae79af98d544670d96254aa99f21a2f8c", null ]
+      [ "kRouterMask", "dd/d2b/classThread_1_1ThreadTlv.html#a95dcbabfa2637b1949a8fc7e6c9c6c20ae79af98d544670d96254aa99f21a2f8c", null ],
+      [ "kNDOption", "dd/d2b/classThread_1_1ThreadTlv.html#a95dcbabfa2637b1949a8fc7e6c9c6c20ae591ba9f07e54e7d23980ca6f9d3c082", null ],
+      [ "kNDData", "dd/d2b/classThread_1_1ThreadTlv.html#a95dcbabfa2637b1949a8fc7e6c9c6c20ad9415a2fc0a3090e5c16268159186e9f", null ],
+      [ "kThreadNetworkData", "dd/d2b/classThread_1_1ThreadTlv.html#a95dcbabfa2637b1949a8fc7e6c9c6c20a7636ee0c4f850dfa0b8c7412f5ea3367", null ]
     ] ],
     [ "GetLength", "dd/d2b/classThread_1_1ThreadTlv.html#ad58148cecaf4a01c4f53c923a09b51d1", null ],
     [ "GetTlv", "dd/d2b/classThread_1_1ThreadTlv.html#a4a079523209bf967433700e7010f4bde", null ],

@@ -1,3 +1,4 @@
 <map id="otPlatUartSend" name="otPlatUartSend">
-<area shape="rect" id="node2" href="$d1/d15/classThread_1_1Cli_1_1Uart.html#a672ac9fb4707c1a1a7168d0ea9ea4ebd" title="This method delivers formatted output to the client. " alt="" coords="165,5,292,44"/>
+<area shape="rect" id="node2" href="$d1/d15/classThread_1_1Cli_1_1Uart.html#aa44a5954b16d6f958825966a78e166de" title="This method delivers formatted output to the client. " alt="" coords="195,5,321,44"/>
+<area shape="rect" id="node3" href="$dc/d60/classThread_1_1NcpUart.html#a8398d715de6960bf6257d93ac81dfa3a" title="This method finalizes and sends the current outbound frame. " alt="" coords="165,68,351,107"/>
 </map>

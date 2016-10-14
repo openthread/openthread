@@ -1,3 +1,8 @@
 <map id="Thread::Mac::Whitelist::IsEnabled" name="Thread::Mac::Whitelist::IsEnabled">
 <area shape="rect" id="node2" href="$d6/d88/classThread_1_1Mac_1_1Mac.html#a1b58865279aa421b1da0a665a6260e1d" title="This method is called to handle receive events. " alt="" coords="207,5,392,44"/>
+<area shape="rect" id="node4" href="$db/d57/group__config-test.html#gac5c65503f3741301ce67d986bf28e9e8" title="This function indicates whether or not the MAC whitelist is enabled. " alt="" coords="216,68,383,93"/>
+<area shape="rect" id="node3" href="$d7/d9c/group__radio-operation.html#ga75836c10d52472c0dfca98f490c4a5f7" title="The radio driver calls this method to notify OpenThread of a received packet. " alt="" coords="450,12,621,37"/>
+<area shape="rect" id="node5" href="$d5/dc2/structThread_1_1Cli_1_1Interpreter.html#a11ee1f86cffe17aab7de3de0bb16dee7" title="This method parses an ASCII string as an unsigned long. " alt="" coords="458,61,613,100"/>
+<area shape="rect" id="node6" href="$d9/dc8/classThread_1_1NcpBase.html#ad14f0f1d60c77f7f537a0a441a9fb35c" title="This method is called by the framer whenever a framing error is detected. " alt="" coords="440,124,631,163"/>
+<area shape="rect" id="node7" href="$dc/d60/classThread_1_1NcpUart.html#a34e4ca7aff5b9056593e8ce0aa6e2fbb" title="This method is called when uart received a data buffer. " alt="" coords="679,124,874,163"/>
 </map>

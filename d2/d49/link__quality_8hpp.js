@@ -1,6 +1,6 @@
 var link__quality_8hpp =
 [
-    [ "AddNoiseFloor", "d2/d49/link__quality_8hpp.html#ga070a9ee12b3bc035be2a8e611aa719ac", null ],
-    [ "ClearNoiseFloorAverage", "d2/d49/link__quality_8hpp.html#ga18d7aae2a22468b6738ed3cca947a051", null ],
-    [ "GetAverageNoiseFloor", "d2/d49/link__quality_8hpp.html#gaf5de6bda87e42eef536daa7d45a53475", null ]
+    [ "AddNoiseFloor", "d2/d49/link__quality_8hpp.html#ga6c4f9e7e92b216865dc7c2783bfe9ea5", null ],
+    [ "ClearNoiseFloorAverage", "d2/d49/link__quality_8hpp.html#ga3f3a4611a2d5eca6dc77cc8ff49ea64b", null ],
+    [ "GetAverageNoiseFloor", "d2/d49/link__quality_8hpp.html#ga327fac3c27070325354e650d4695e230", null ]
 ];

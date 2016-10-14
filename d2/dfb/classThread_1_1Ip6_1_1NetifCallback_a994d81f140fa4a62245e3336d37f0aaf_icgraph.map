@@ -1,3 +1,8 @@
 <map id="Thread::Ip6::NetifCallback::Set" name="Thread::Ip6::NetifCallback::Set">
-<area shape="rect" id="node2" href="$df/d94/group__core-mle-core.html#ga7e32ce7f27d8c98579441f446c1b399d" title="This constructor initializes the MLE object. " alt="" coords="256,5,406,31"/>
+<area shape="rect" id="node2" href="$dd/d9d/classThread_1_1MeshCoP_1_1JoinerRouter.html#a5479381c182fcb3e0135c2c75fc2c96e" title="This constructor initializes the Joiner Router object. " alt="" coords="256,5,470,44"/>
+<area shape="rect" id="node3" href="$df/d4f/group__config-general.html#gaa280497ee93a71ecfc7c0920ebd9e2d3" title="This function registers a callback to indicate when certain configuration or state changes within Ope..." alt="" coords="268,68,457,93"/>
+<area shape="rect" id="node6" href="$de/d9d/classThread_1_1EnergyScanServer.html#aee01420f701ef44d6432280d8e4bf3e3" title="This constructor initializes the object. " alt="" coords="271,117,454,156"/>
+<area shape="rect" id="node7" href="$df/d94/group__core-mle-core.html#ga7e32ce7f27d8c98579441f446c1b399d" title="This constructor initializes the MLE object. " alt="" coords="288,180,438,205"/>
+<area shape="rect" id="node4" href="$d5/dc2/structThread_1_1Cli_1_1Interpreter.html#a21091247724ba31894e85a4be1d82c2b" title="Constructor. " alt="" coords="533,33,689,72"/>
+<area shape="rect" id="node5" href="$d9/dc8/classThread_1_1NcpBase.html#a6a04825243722f9500cac2818a07c7b4" title="This constructor creates and initializes an NcpBase instance. " alt="" coords="518,96,704,121"/>
 </map>

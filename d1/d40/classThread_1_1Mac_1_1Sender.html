@@ -34,7 +34,7 @@
   <td id="projectlogo"><img alt="Logo" src="../../Open-Thread-Logo-200x42.png"/></td>
   <td style="padding-left: 0.5em;">
    <div id="projectname">
-   &#160;<span id="projectnumber">gb2b10b8</span>
+   &#160;<span id="projectnumber">gddd0704</span>
    </div>
   </td>
  </tr>
@@ -129,13 +129,13 @@ Public Types</h2></td></tr>
 <tr class="memitem:a61b8355297f8e4acff04c373e2e09ae0"><td class="memItemLeft" align="right" valign="top">typedef <a class="el" href="../../dc/dbf/openthread-types_8h.html#ab701d053a9c34ab7f11e43e0dc09ac9f">ThreadError</a>(*&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../d1/d40/classThread_1_1Mac_1_1Sender.html#a61b8355297f8e4acff04c373e2e09ae0">FrameRequestHandler</a>) (void *aContext, <a class="el" href="../../d5/d19/classThread_1_1Mac_1_1Frame.html">Frame</a> &amp;aFrame)</td></tr>
 <tr class="memdesc:a61b8355297f8e4acff04c373e2e09ae0"><td class="mdescLeft">&#160;</td><td class="mdescRight">This function pointer is called when the MAC is about to transmit the frame.  <a href="#a61b8355297f8e4acff04c373e2e09ae0">More...</a><br /></td></tr>
 <tr class="separator:a61b8355297f8e4acff04c373e2e09ae0"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:af1448365ee353a604e28e88cf0f5a59f"><td class="memItemLeft" align="right" valign="top">typedef void(*&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../d1/d40/classThread_1_1Mac_1_1Sender.html#af1448365ee353a604e28e88cf0f5a59f">SentFrameHandler</a>) (void *aContext, <a class="el" href="../../d5/d19/classThread_1_1Mac_1_1Frame.html">Frame</a> &amp;aFrame)</td></tr>
-<tr class="memdesc:af1448365ee353a604e28e88cf0f5a59f"><td class="mdescLeft">&#160;</td><td class="mdescRight">This function pointer is called when the MAC is done sending the frame.  <a href="#af1448365ee353a604e28e88cf0f5a59f">More...</a><br /></td></tr>
-<tr class="separator:af1448365ee353a604e28e88cf0f5a59f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae2975643f6a91f8feb440fa30f3c38ff"><td class="memItemLeft" align="right" valign="top">typedef void(*&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../d1/d40/classThread_1_1Mac_1_1Sender.html#ae2975643f6a91f8feb440fa30f3c38ff">SentFrameHandler</a>) (void *aContext, <a class="el" href="../../d5/d19/classThread_1_1Mac_1_1Frame.html">Frame</a> &amp;aFrame, <a class="el" href="../../dc/dbf/openthread-types_8h.html#ab701d053a9c34ab7f11e43e0dc09ac9f">ThreadError</a> aError)</td></tr>
+<tr class="memdesc:ae2975643f6a91f8feb440fa30f3c38ff"><td class="mdescLeft">&#160;</td><td class="mdescRight">This function pointer is called when the MAC is done sending the frame.  <a href="#ae2975643f6a91f8feb440fa30f3c38ff">More...</a><br /></td></tr>
+<tr class="separator:ae2975643f6a91f8feb440fa30f3c38ff"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:a033dcb90f7430fcab0e0944c0af71c62"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../d1/d40/classThread_1_1Mac_1_1Sender.html#a033dcb90f7430fcab0e0944c0af71c62">Sender</a> (<a class="el" href="../../d1/d40/classThread_1_1Mac_1_1Sender.html#a61b8355297f8e4acff04c373e2e09ae0">FrameRequestHandler</a> aFrameRequestHandler, <a class="el" href="../../d1/d40/classThread_1_1Mac_1_1Sender.html#af1448365ee353a604e28e88cf0f5a59f">SentFrameHandler</a> aSentFrameHandler, void *aContext)</td></tr>
+<tr class="memitem:a033dcb90f7430fcab0e0944c0af71c62"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../d1/d40/classThread_1_1Mac_1_1Sender.html#a033dcb90f7430fcab0e0944c0af71c62">Sender</a> (<a class="el" href="../../d1/d40/classThread_1_1Mac_1_1Sender.html#a61b8355297f8e4acff04c373e2e09ae0">FrameRequestHandler</a> aFrameRequestHandler, <a class="el" href="../../d1/d40/classThread_1_1Mac_1_1Sender.html#ae2975643f6a91f8feb440fa30f3c38ff">SentFrameHandler</a> aSentFrameHandler, void *aContext)</td></tr>
 <tr class="memdesc:a033dcb90f7430fcab0e0944c0af71c62"><td class="mdescLeft">&#160;</td><td class="mdescRight">This constructor creates a MAC sender client.  <a href="#a033dcb90f7430fcab0e0944c0af71c62">More...</a><br /></td></tr>
 <tr class="separator:a033dcb90f7430fcab0e0944c0af71c62"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
@@ -169,12 +169,12 @@ class&#160;</td><td class="memItemRight" valign="bottom"><b>Mac</b></td></tr>
 
 </div>
 </div>
-<a class="anchor" id="af1448365ee353a604e28e88cf0f5a59f"></a>
+<a class="anchor" id="ae2975643f6a91f8feb440fa30f3c38ff"></a>
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">typedef void(* Thread::Mac::Sender::SentFrameHandler) (void *aContext, <a class="el" href="../../d5/d19/classThread_1_1Mac_1_1Frame.html">Frame</a> &amp;aFrame)</td>
+          <td class="memname">typedef void(* Thread::Mac::Sender::SentFrameHandler) (void *aContext, <a class="el" href="../../d5/d19/classThread_1_1Mac_1_1Frame.html">Frame</a> &amp;aFrame, <a class="el" href="../../dc/dbf/openthread-types_8h.html#ab701d053a9c34ab7f11e43e0dc09ac9f">ThreadError</a> aError)</td>
         </tr>
       </table>
 </div><div class="memdoc">
@@ -184,6 +184,7 @@ class&#160;</td><td class="memItemRight" valign="bottom"><b>Mac</b></td></tr>
   <table class="params">
     <tr><td class="paramdir">[in]</td><td class="paramname">aContext</td><td>A pointer to arbitrary context information. </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">aFrame</td><td>A reference to the MAC frame buffer that was sent. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">aError</td><td>The status of the last MSDU transmission. </td></tr>
   </table>
   </dd>
 </dl>
@@ -207,7 +208,7 @@ class&#160;</td><td class="memItemRight" valign="bottom"><b>Mac</b></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype"><a class="el" href="../../d1/d40/classThread_1_1Mac_1_1Sender.html#af1448365ee353a604e28e88cf0f5a59f">SentFrameHandler</a>&#160;</td>
+          <td class="paramtype"><a class="el" href="../../d1/d40/classThread_1_1Mac_1_1Sender.html#ae2975643f6a91f8feb440fa30f3c38ff">SentFrameHandler</a>&#160;</td>
           <td class="paramname"><em>aSentFrameHandler</em>, </td>
         </tr>
         <tr>
@@ -250,7 +251,7 @@ class&#160;</td><td class="memItemRight" valign="bottom"><b>Mac</b></td></tr>
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
     <li class="navelem"><b>Thread</b></li><li class="navelem"><b>Mac</b></li><li class="navelem"><a class="el" href="../../d1/d40/classThread_1_1Mac_1_1Sender.html">Sender</a></li>
-    <li class="footer">Generated on Wed Jul 27 2016 17:09:44 for OpenThread by
+    <li class="footer">Generated on Fri Oct 14 2016 08:44:36 for OpenThread by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="../../doxygen.png" alt="doxygen"/></a> 1.8.11 </li>
   </ul>

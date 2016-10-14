@@ -1,3 +1,4 @@
 <map id="Graphical Class Hierarchy" name="Graphical Class Hierarchy">
-<area shape="rect" id="node1" href="$d7/d98/classThread_1_1Mac_1_1Whitelist.html" title="This class implements whitelist filtering on IEEE 802.15.4 frames. " alt="" coords="5,5,159,31"/>
+<area shape="rect" id="node1" href="$de/db9/structThread_1_1Ip6_1_1HeaderPoD.html" title="This structure represents an IPv6 header. " alt="" coords="5,5,172,31"/>
+<area shape="rect" id="node2" href="$d8/d6e/classThread_1_1Ip6_1_1Header.html" title="This class implements IPv6 header generation and parsing. " alt="" coords="220,5,361,31"/>
 </map>

@@ -34,7 +34,7 @@
   <td id="projectlogo"><img alt="Logo" src="../../Open-Thread-Logo-200x42.png"/></td>
   <td style="padding-left: 0.5em;">
    <div id="projectname">
-   &#160;<span id="projectnumber">gb2b10b8</span>
+   &#160;<span id="projectnumber">gddd0704</span>
    </div>
   </td>
  </tr>
@@ -116,13 +116,26 @@ $(document).ready(function(){initNavTree('d2/de4/ncp_8h.html','../../');});
 
 <p>This file defines the top-level functions for the OpenThread NCP module.  
 <a href="#details">More...</a></p>
-<div class="textblock"><div class="dynheader">
+<div class="textblock"><code>#include &lt;<a class="el" href="../../dc/dbf/openthread-types_8h_source.html">openthread-types.h</a>&gt;</code><br />
+</div><div class="textblock"><div class="dynheader">
+Include dependency graph for ncp.h:</div>
+<div class="dyncontent">
+<div class="center"><img src="../../dd/d6f/ncp_8h__incl.png" border="0" usemap="#include_2ncp_2ncp_8h" alt=""/></div>
+<map name="include_2ncp_2ncp_8h" id="include_2ncp_2ncp_8h">
+<area shape="rect" id="node2" href="../../dc/dbf/openthread-types_8h.html" title="This file defines the types and structures used in the OpenThread library API. " alt="" coords="63,79,199,104"/>
+<area shape="rect" id="node3" href="../../df/dd8/stdint_8h_source.html" title="stdint.h" alt="" coords="5,152,70,177"/>
+<area shape="rect" id="node4" href="../../d9/d5e/stdbool_8h_source.html" title="stdbool.h" alt="" coords="93,152,169,177"/>
+<area shape="rect" id="node5" href="../../d3/da9/toolchain_8h_source.html" title="platform/toolchain.h" alt="" coords="193,152,330,177"/>
+</map>
+</div>
+</div><div class="textblock"><div class="dynheader">
 This graph shows which files directly or indirectly include this file:</div>
 <div class="dyncontent">
 <div class="center"><img src="../../d5/db0/ncp_8h__dep__incl.png" border="0" usemap="#include_2ncp_2ncp_8hdep" alt=""/></div>
 <map name="include_2ncp_2ncp_8hdep" id="include_2ncp_2ncp_8hdep">
-<area shape="rect" id="node2" href="../../d0/d95/ncp__spi_8cpp.html" title="This file implements a SPI interface to the OpenThread stack. " alt="" coords="5,79,145,104"/>
-<area shape="rect" id="node3" href="../../d4/dae/ncp__uart_8cpp.html" title="This file implements an HDLC interface to the Thread stack. " alt="" coords="169,79,314,104"/>
+<area shape="rect" id="node2" href="../../d5/d6a/ncp__base_8cpp.html" title="This file implements a Spinel interface to the OpenThread stack. " alt="" coords="5,79,156,104"/>
+<area shape="rect" id="node3" href="../../d0/d95/ncp__spi_8cpp.html" title="This file implements a SPI interface to the OpenThread stack. " alt="" coords="181,79,320,104"/>
+<area shape="rect" id="node4" href="../../d4/dae/ncp__uart_8cpp.html" title="This file contains definitions for a UART based NCP interface to the OpenThread stack. " alt="" coords="344,79,489,104"/>
 </map>
 </div>
 </div>
@@ -130,20 +143,109 @@ This graph shows which files directly or indirectly include this file:</div>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 Functions</h2></td></tr>
-<tr class="memitem:aef46036f17188b217a2ffcb8c325f516"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aef46036f17188b217a2ffcb8c325f516"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../d2/de4/ncp_8h.html#aef46036f17188b217a2ffcb8c325f516">otNcpInit</a> (void)</td></tr>
-<tr class="memdesc:aef46036f17188b217a2ffcb8c325f516"><td class="mdescLeft">&#160;</td><td class="mdescRight">Initialize the NCP. <br /></td></tr>
-<tr class="separator:aef46036f17188b217a2ffcb8c325f516"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af50bdc3f97838bbc87b35bce324be625"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../d2/de4/ncp_8h.html#af50bdc3f97838bbc87b35bce324be625">otNcpInit</a> (<a class="el" href="../../d2/d83/structotInstance.html">otInstance</a> *aInstance)</td></tr>
+<tr class="memdesc:af50bdc3f97838bbc87b35bce324be625"><td class="mdescLeft">&#160;</td><td class="mdescRight">Initialize the NCP.  <a href="#af50bdc3f97838bbc87b35bce324be625">More...</a><br /></td></tr>
+<tr class="separator:af50bdc3f97838bbc87b35bce324be625"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a525ce21ede544e3c8743cf8cdb96e20c"><td class="memItemLeft" align="right" valign="top"><a class="el" href="../../dc/dbf/openthread-types_8h.html#ab701d053a9c34ab7f11e43e0dc09ac9f">ThreadError</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../d2/de4/ncp_8h.html#a525ce21ede544e3c8743cf8cdb96e20c">otNcpStreamWrite</a> (int aStreamId, const uint8_t *aDataPtr, int aDataLen)</td></tr>
+<tr class="memdesc:a525ce21ede544e3c8743cf8cdb96e20c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Send data to the host via a specific stream.  <a href="#a525ce21ede544e3c8743cf8cdb96e20c">More...</a><br /></td></tr>
+<tr class="separator:a525ce21ede544e3c8743cf8cdb96e20c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>This file defines the top-level functions for the OpenThread NCP module. </p>
-</div></div><!-- contents -->
+</div><h2 class="groupheader">Function Documentation</h2>
+<a class="anchor" id="af50bdc3f97838bbc87b35bce324be625"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void otNcpInit </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="../../d2/d83/structotInstance.html">otInstance</a> *&#160;</td>
+          <td class="paramname"><em>aInstance</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Initialize the NCP. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">aInstance</td><td>The OpenThread instance structure. </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a class="anchor" id="a525ce21ede544e3c8743cf8cdb96e20c"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="../../dc/dbf/openthread-types_8h.html#ab701d053a9c34ab7f11e43e0dc09ac9f">ThreadError</a> otNcpStreamWrite </td>
+          <td>(</td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>aStreamId</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const uint8_t *&#160;</td>
+          <td class="paramname"><em>aDataPtr</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>aDataLen</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Send data to the host via a specific stream. </p>
+<p>This function attempts to send the given data to the host using the given aStreamId. This is useful for reporting error messages, implementing debug/diagnostic consoles, and potentially other types of datastreams.</p>
+<p>The write either is accepted in its entirety or rejected. Partial writes are not attempted.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">aStreamId</td><td>A numeric identifier for the stream to write to. If set to '0', will default to the debug stream. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">aDataPtr</td><td>A pointer to the data to send on the stream. If aDataLen is non-zero, this param MUST NOT be NULL. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">aDataLen</td><td>The number of bytes of data from aDataPtr to send.</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="retval"><dt>Return values</dt><dd>
+  <table class="retval">
+    <tr><td class="paramname">kThreadError_None</td><td>The data was queued for delivery to the host. </td></tr>
+    <tr><td class="paramname">kThreadError_Busy</td><td>There are not enough resources to complete this request. This is usually a temporary condition. </td></tr>
+    <tr><td class="paramname">kThreadError_InvalidArgs</td><td>The given aStreamId was invalid. </td></tr>
+  </table>
+  </dd>
+</dl>
+
+<p><div class="dynheader">
+Here is the caller graph for this function:</div>
+<div class="dyncontent">
+<div class="center"><img src="../../d2/de4/ncp_8h_a525ce21ede544e3c8743cf8cdb96e20c_icgraph.png" border="0" usemap="#d2/de4/ncp_8h_a525ce21ede544e3c8743cf8cdb96e20c_icgraph" alt=""/></div>
+<map name="d2/de4/ncp_8h_a525ce21ede544e3c8743cf8cdb96e20c_icgraph" id="d2/de4/ncp_8h_a525ce21ede544e3c8743cf8cdb96e20c_icgraph">
+<area shape="rect" id="node2" href="../../dc/d60/classThread_1_1NcpUart.html#a34e4ca7aff5b9056593e8ce0aa6e2fbb" title="This method is called when uart received a data buffer. " alt="" coords="183,5,378,44"/>
+</map>
+</div>
+</p>
+
+</div>
+</div>
+</div><!-- contents -->
 </div><!-- doc-content -->
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
     <li class="navelem"><a class="el" href="../../dir_d44c64559bbebec7f509842c48db8b23.html">include</a></li><li class="navelem"><a class="el" href="../../dir_d189681250857864fbf3ffb4fcc214b1.html">ncp</a></li><li class="navelem"><a class="el" href="../../d2/de4/ncp_8h.html">ncp.h</a></li>
-    <li class="footer">Generated on Wed Jul 27 2016 17:09:42 for OpenThread by
+    <li class="footer">Generated on Fri Oct 14 2016 08:44:34 for OpenThread by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="../../doxygen.png" alt="doxygen"/></a> 1.8.11 </li>
   </ul>

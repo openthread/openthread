@@ -1,3 +1,4 @@
 <map id="Thread::Ip6::IcmpHeader::SetId" name="Thread::Ip6::IcmpHeader::SetId">
-<area shape="rect" id="node2" href="$dc/ddf/classThread_1_1Ip6_1_1IcmpEcho.html#abe01fa9b5c27147270cae355f78fa552" title="This method sends an ICMPv6 Echo Request message. " alt="" coords="223,5,379,44"/>
+<area shape="rect" id="node2" href="$da/dd7/classThread_1_1Ip6_1_1Icmp.html#a8989f736211cf82f9cefb258decd7c3e" title="This method sends an ICMPv6 Echo Request message. " alt="" coords="223,5,356,44"/>
+<area shape="rect" id="node3" href="$d5/dc2/structThread_1_1Cli_1_1Interpreter.html#a11ee1f86cffe17aab7de3de0bb16dee7" title="This method parses an ASCII string as an unsigned long. " alt="" coords="404,5,560,44"/>
 </map>

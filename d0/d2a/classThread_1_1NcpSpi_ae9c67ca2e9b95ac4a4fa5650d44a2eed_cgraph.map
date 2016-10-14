@@ -1,0 +1,26 @@
+<map id="Thread::NcpSpi::OutboundFrameEnd" name="Thread::NcpSpi::OutboundFrameEnd">
+<area shape="rect" id="node2" href="$d0/d78/classThread_1_1NcpFrameBuffer.html#a46d59d1e7c71eff0d4cf9ea91b821ead" title="This method finalizes/ends the current input frame being written to the buffer. " alt="" coords="261,120,430,159"/>
+<area shape="rect" id="node3" href="$d0/d78/classThread_1_1NcpFrameBuffer.html#a34a6141ff650ec07602b246fe3e65404" title="This method checks if the buffer is empty. " alt="" coords="519,183,688,221"/>
+<area shape="rect" id="node10" href="$d4/d92/classThread_1_1Tasklet.html#a50a39a6f422851035b89aace87482425" title="This method puts the tasklet on the run queue. " alt="" coords="272,427,419,452"/>
+<area shape="rect" id="node15" href="$d0/d78/classThread_1_1NcpFrameBuffer.html#af7e6c123cca21c4ea9459c2a3ca350b6" title="This method begins/prepares a new output frame to be read from the frame buffer. " alt="" coords="261,476,430,515"/>
+<area shape="rect" id="node16" href="$d0/d78/classThread_1_1NcpFrameBuffer.html#a8b7c96ec541408d307edf2c069ef208c" title="This method returns the number of bytes (length) of current/front frame in the NCP frame buffer..." alt="" coords="261,364,430,403"/>
+<area shape="rect" id="node18" href="$d0/d78/classThread_1_1NcpFrameBuffer.html#a4062341057541242068c5680c35f5a1c" title="This method reads bytes from the current output frame. " alt="" coords="261,539,430,577"/>
+<area shape="rect" id="node21" href="$d1/d88/group__spi-slave.html#ga545203c4c963f46b40586b830d817a45" title="Prepare data for the next SPI transaction. " alt="" coords="233,601,458,627"/>
+<area shape="rect" id="node22" href="$d0/d78/classThread_1_1NcpFrameBuffer.html#ab8a97ac52ae66b96155e6fb72cbd7e38" title="This method removes the current/front output frame from the buffer. " alt="" coords="261,240,430,279"/>
+<area shape="rect" id="node24" href="$d9/dc8/classThread_1_1NcpBase.html#a22e9a31900fdf4eb3ef49dc32987f44c" title="Called by the subclass to indicate when a frame was removed and some space in tx buffer is available..." alt="" coords="239,651,452,689"/>
+<area shape="rect" id="node25" href="$d9/dc8/classThread_1_1NcpBase.html#a3a325e6ac211c2a40186dd78d1e88e42" title="Called by the subclass to indicate when a frame has been received. " alt="" coords="234,713,457,739"/>
+<area shape="rect" id="node4" href="$da/d1a/classThread_1_1MessageQueue.html#ac0e8b64309aca4d66b262f0354d72e83" title="This method returns a pointer to the first message. " alt="" coords="764,240,929,279"/>
+<area shape="rect" id="node8" href="$da/d1a/classThread_1_1MessageQueue.html#a501d831849c577b2114fcbb4034d074d" title="This method removes a message from the list. " alt="" coords="521,120,686,159"/>
+<area shape="rect" id="node9" href="$da/d1a/classThread_1_1MessageQueue.html#a5e6f37c86a48e8dfbfcc7a7c14c23808" title="This method adds a message to the end of the list. " alt="" coords="521,5,686,44"/>
+<area shape="rect" id="node5" href="$dc/d3c/classThread_1_1Message.html#a89b66912022440cb19aa5eefef093b46" title="This method returns a pointer to the next message in the same interface list. " alt="" coords="755,352,937,377"/>
+<area shape="rect" id="node6" href="$dc/d3c/classThread_1_1Message.html#a76033bbc15170d72452186058defafa2" title="This method reads bytes from the message. " alt="" coords="764,189,928,215"/>
+<area shape="rect" id="node7" href="$db/d50/classThread_1_1Buffer.html#a34ab22941ccd9bb222d251a6a18c95bf" title="This method returns a pointer to the next message buffer. " alt="" coords="991,189,1189,215"/>
+<area shape="rect" id="node11" href="$d8/de8/classThread_1_1TaskletScheduler.html#a137292acddf92acdef54cc7a33ea5fac" title="This method enqueues a tasklet into the run queue. " alt="" coords="517,500,690,539"/>
+<area shape="rect" id="node12" href="$d1/de3/group__execution.html#ga04d5608ac68a78eb3e8fc167587c61f3" title="OpenThread calls this function when the tasklet queue transitions from empty to non&#45;empty. " alt="" coords="766,451,926,476"/>
+<area shape="rect" id="node13" href="$d8/de8/classThread_1_1TaskletScheduler.html#aeaf526c316bbea7d53d20fa9e3c94c40" title="This method returns the pointer to the parent Ip6 structure. " alt="" coords="760,500,932,539"/>
+<area shape="rect" id="node14" href="$d3/d05/classThread_1_1Ip6_1_1Ip6.html#a624d9508f3ecfa586378a3d802cb6ff7" title="This method returns the pointer to the parent otInstance structure. " alt="" coords="749,563,943,588"/>
+<area shape="rect" id="node17" href="$dc/d3c/classThread_1_1Message.html#a2cf440376e834030c38bb2ced4ca49e9" title="This method returns the number of bytes in the message. " alt="" coords="506,399,701,424"/>
+<area shape="rect" id="node19" href="$d0/d78/classThread_1_1NcpFrameBuffer.html#abf94a643cd4931c947e4682c6fa21a64" title="This method checks if the current output frame (being read) has ended. " alt="" coords="519,563,688,601"/>
+<area shape="rect" id="node20" href="$d0/d78/classThread_1_1NcpFrameBuffer.html#af8004f00f97e629cf5c5b0c6d695fcdc" title="This method reads and returns the next byte from the current output frame. " alt="" coords="519,625,688,664"/>
+<area shape="rect" id="node23" href="$dc/d3c/classThread_1_1Message.html#adc9d723284f5807d9c272ab89bc52b45" title="This method frees this message buffer. " alt="" coords="523,297,683,323"/>
+</map>

@@ -1,0 +1,10 @@
+<map id="Thread::MeshCoP::Tlv::GetNext" name="Thread::MeshCoP::Tlv::GetNext">
+<area shape="rect" id="node2" href="$dd/d8d/classThread_1_1MeshCoP_1_1Tlv.html#a5560e18099408223e7a5c610e44bdc7f" title="This static method reads the requested TLV out of aMessage. " alt="" coords="208,80,363,119"/>
+<area shape="rect" id="node9" href="$dd/d8d/classThread_1_1MeshCoP_1_1Tlv.html#afc7c287ad7c84b712621db6fa5cbd0f9" title="This static method finds the offset and length of a given TLV type. " alt="" coords="208,143,363,181"/>
+<area shape="rect" id="node3" href="$dc/d3c/classThread_1_1Message.html#ac8304ee00c9e0b303539687e98e192e0" title="This method returns the byte offset within the message. " alt="" coords="413,68,603,93"/>
+<area shape="rect" id="node4" href="$dc/d3c/classThread_1_1Message.html#a2cf440376e834030c38bb2ced4ca49e9" title="This method returns the number of bytes in the message. " alt="" coords="411,117,606,143"/>
+<area shape="rect" id="node5" href="$dc/d3c/classThread_1_1Message.html#a76033bbc15170d72452186058defafa2" title="This method reads bytes from the message. " alt="" coords="426,167,590,192"/>
+<area shape="rect" id="node7" href="$dd/d8d/classThread_1_1MeshCoP_1_1Tlv.html#a6b50f0231142d7c272ac1732ae0fdca7" title="This method returns the Type value. " alt="" coords="431,216,585,255"/>
+<area shape="rect" id="node8" href="$dd/d8d/classThread_1_1MeshCoP_1_1Tlv.html#ae448a8785f6715b07e973d570e715c69" title="This method returns the Length value. " alt="" coords="431,5,585,44"/>
+<area shape="rect" id="node6" href="$db/d50/classThread_1_1Buffer.html#a34ab22941ccd9bb222d251a6a18c95bf" title="This method returns a pointer to the next message buffer. " alt="" coords="654,167,852,192"/>
+</map>

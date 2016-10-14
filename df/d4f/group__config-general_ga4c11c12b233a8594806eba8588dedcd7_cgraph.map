@@ -1,0 +1,6 @@
+<map id="otGetNextOnMeshPrefix" name="otGetNextOnMeshPrefix">
+<area shape="rect" id="node2" href="$d3/d8e/classThread_1_1ThreadNetif.html#a7325de1ad382ff7d28402f91f48da67c" title="This method returns a pointer to the network data local object. " alt="" coords="246,5,405,44"/>
+<area shape="rect" id="node3" href="$d4/d80/group__core-netdata-core.html#ga1f1cacaf85d15baa1cf784b23665f421" title="This method provides the next On Mesh prefix in the Thread Network Data. " alt="" coords="219,68,432,120"/>
+<area shape="rect" id="node4" href="$d3/d8e/classThread_1_1ThreadNetif.html#a16d20f33e997eaf877024914707f052a" title="This method returns a pointer to the network data leader object. " alt="" coords="241,144,410,183"/>
+<area shape="rect" id="node5" href="$d3/d8e/classThread_1_1ThreadNetif.html#a83517ab2bff2614e403895426df6a61b" title="This method returns the pointer to the parent otInstance structure. " alt="" coords="480,144,620,183"/>
+</map>

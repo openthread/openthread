@@ -1,0 +1,35 @@
+<map id="Thread::MeshCoP::PendingDataset" name="Thread::MeshCoP::PendingDataset">
+<area shape="rect" id="node2" href="$d8/dc7/classThread_1_1MeshCoP_1_1DatasetManager.html" title="Thread::MeshCoP::Dataset\lManager" alt="" coords="1671,118,1854,156"/>
+<area shape="rect" id="node3" href="$d6/d83/classThread_1_1MeshCoP_1_1Dataset.html" title="Thread::MeshCoP::Dataset" alt="" coords="1354,74,1537,99"/>
+<area shape="rect" id="node4" href="$d6/d9b/classThread_1_1NetworkData_1_1Leader.html" title="This class implements the Thread Network Data maintained by the Leader. " alt="" coords="988,87,1136,126"/>
+<area shape="rect" id="node7" href="$dd/ddf/classThread_1_1Mle_1_1Mle.html" title="This class implements MLE functionality required by the Thread EndDevices, Router, and Leader roles. " alt="" coords="1385,336,1506,362"/>
+<area shape="rect" id="node5" href="$d2/d66/classThread_1_1NetworkData_1_1NetworkData.html" title="This class implements Network Data processing. " alt="" coords="1957,210,2105,248"/>
+<area shape="rect" id="node6" href="$df/da5/classThread_1_1Mle_1_1MleRouter.html" title="This class implements MLE functionality required by the Thread Router and Leader roles. " alt="" coords="1681,303,1843,328"/>
+<area shape="rect" id="node8" href="$db/d81/classThread_1_1Router.html" title="This class represents a Thread Router. " alt="" coords="1006,479,1117,504"/>
+<area shape="rect" id="node9" href="$da/dd9/classThread_1_1Neighbor.html" title="This class represents a Thread neighbor. " alt="" coords="639,479,764,504"/>
+<area shape="rect" id="node10" href="$dd/d38/classThread_1_1LinkQualityInfo.html" title="This class encapsulates/stores all relevant information about quality of a link, including average re..." alt="" coords="348,442,508,467"/>
+<area shape="rect" id="node11" href="$d9/d3c/classThread_1_1Mac_1_1ExtAddress.html" title="This structure represents an IEEE 802.15.4 Extended Address. " alt="" coords="342,510,514,535"/>
+<area shape="rect" id="node12" href="$d3/d8f/structotExtAddress.html" title="This type represents the IEEE 802.15.4 Extended Address. " alt="" coords="41,510,142,535"/>
+<area shape="rect" id="node13" href="$dd/d9d/classThread_1_1MeshCoP_1_1JoinerRouter.html" title="Thread::MeshCoP::JoinerRouter" alt="" coords="955,580,1168,606"/>
+<area shape="rect" id="node14" href="$d6/d88/classThread_1_1Mac_1_1Mac.html" title="This class implements the IEEE 802.15.4 MAC. " alt="" coords="997,630,1126,655"/>
+<area shape="rect" id="node15" href="$d6/d3f/structotEnergyScanResult.html" title="This struct represents an energy scan result. " alt="" coords="630,607,773,632"/>
+<area shape="rect" id="node16" href="$d5/d19/classThread_1_1Mac_1_1Frame.html" title="This class implements IEEE 802.15.4 MAC frame generation and parsing. " alt="" coords="631,656,773,682"/>
+<area shape="rect" id="node17" href="$db/ddc/structRadioPacket.html" title="This structure represents an IEEE 802.15.4 radio frame. " alt="" coords="380,656,477,682"/>
+<area shape="rect" id="node18" href="$dd/d1d/classThread_1_1MeshForwarder.html" title="This class implements mesh forwarding within Thread. " alt="" coords="980,171,1144,196"/>
+<area shape="rect" id="node19" href="$d4/dcf/classThread_1_1AddressResolver.html" title="This class implements the EID&#45;to&#45;RLOC mapping and caching. " alt="" coords="976,282,1148,307"/>
+<area shape="rect" id="node20" href="$d3/d8e/classThread_1_1ThreadNetif.html" title="Thread::ThreadNetif" alt="" coords="991,227,1132,252"/>
+<area shape="rect" id="node21" href="$d2/d55/classThread_1_1Ip6_1_1Netif.html" title="This class implements an IPv6 network interface. " alt="" coords="639,227,764,252"/>
+<area shape="rect" id="node22" href="$d3/d05/classThread_1_1Ip6_1_1Ip6.html" title="This class implements the core IPv6 message processing. " alt="" coords="370,227,486,252"/>
+<area shape="rect" id="node23" href="$d8/de8/classThread_1_1TaskletScheduler.html" title="This class implements the tasklet scheduler. " alt="" coords="5,178,178,203"/>
+<area shape="rect" id="node24" href="$da/dd7/classThread_1_1Ip6_1_1Icmp.html" title="This class implements ICMPv6. " alt="" coords="29,227,155,252"/>
+<area shape="rect" id="node25" href="$dd/d60/classThread_1_1Ip6_1_1Mpl.html" title="This class implements MPL message processing. " alt="" coords="32,276,151,302"/>
+<area shape="rect" id="node26" href="$de/ded/classThread_1_1Ip6_1_1Udp.html" title="This class implements core UDP message handling. " alt="" coords="31,326,152,351"/>
+<area shape="rect" id="node27" href="$d5/d9f/classThread_1_1MessagePool.html" title="Thread::MessagePool" alt="" coords="16,375,167,400"/>
+<area shape="rect" id="node28" href="$db/ddb/classThread_1_1Ip6_1_1Routes.html" title="This class implements IPv6 route management. " alt="" coords="22,79,161,104"/>
+<area shape="rect" id="node29" href="$df/d1f/classThread_1_1TimerScheduler.html" title="This class implements the timer scheduler. " alt="" coords="9,128,174,154"/>
+<area shape="rect" id="node30" href="$d1/d40/classThread_1_1Timer.html" title="This class implements a timer. " alt="" coords="1010,380,1114,406"/>
+<area shape="rect" id="node31" href="$d5/d64/classThread_1_1Mle_1_1LeaderDataTlv.html" title="This class implements Source Address TLV generation and parsing. " alt="" coords="968,430,1155,455"/>
+<area shape="rect" id="node32" href="$dc/d39/classThread_1_1Mle_1_1Tlv.html" title="This class implements MLE TLV generation and parsing. " alt="" coords="643,430,760,455"/>
+<area shape="rect" id="node33" href="$d6/d44/classThread_1_1KeyManager.html" title="Thread::KeyManager" alt="" coords="988,331,1135,356"/>
+<area shape="rect" id="node34" href="$de/d76/classThread_1_1Coap_1_1Server.html" title="This class implements the CoAP server. " alt="" coords="1370,24,1520,50"/>
+</map>

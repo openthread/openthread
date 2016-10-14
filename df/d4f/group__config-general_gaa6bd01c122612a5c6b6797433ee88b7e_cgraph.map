@@ -1,0 +1,11 @@
+<map id="otGetNetworkDataLeader" name="otGetNetworkDataLeader">
+<area shape="rect" id="node2" href="$d3/d8e/classThread_1_1ThreadNetif.html#a16d20f33e997eaf877024914707f052a" title="This method returns a pointer to the network data leader object. " alt="" coords="247,63,416,101"/>
+<area shape="rect" id="node4" href="$d4/d80/group__core-netdata-core.html#ga8772a76056134e6ad65d37cad55225c1" title="This method provides a full or stable copy of the Thread Network Data. " alt="" coords="226,125,438,164"/>
+<area shape="rect" id="node3" href="$d3/d8e/classThread_1_1ThreadNetif.html#a83517ab2bff2614e403895426df6a61b" title="This method returns the pointer to the parent otInstance structure. " alt="" coords="542,63,683,101"/>
+<area shape="rect" id="node5" href="$d4/d80/group__core-netdata-core.html#gacaa88ef88dee8b6be852ec7d19b19fa0" title="This method strips non&#45;stable data from the Thread Network Data. " alt="" coords="486,125,740,164"/>
+<area shape="rect" id="node6" href="$d5/d81/classThread_1_1NetworkData_1_1NetworkDataTlv.html#a30c105cfada5eeffd6a9f99c9187ee84" title="This method returns the Type value. " alt="" coords="796,5,978,44"/>
+<area shape="rect" id="node7" href="$d0/d48/classThread_1_1NetworkData_1_1PrefixTlv.html#af03628b4c4e83e968aaebed104496552" title="This method returns the Sub&#45;TLVs length in bytes. " alt="" coords="788,68,986,107"/>
+<area shape="rect" id="node8" href="$d5/d81/classThread_1_1NetworkData_1_1NetworkDataTlv.html#ae8fa9bac54dd256c88ccc5df8e3b0ef8" title="This method returns the Length value. " alt="" coords="1034,97,1227,136"/>
+<area shape="rect" id="node9" href="$d5/d81/classThread_1_1NetworkData_1_1NetworkDataTlv.html#af812881954a5608981bfa430eca30731" title="This method returns a pointer to the next Network Data TLV. " alt="" coords="797,183,977,221"/>
+<area shape="rect" id="node10" href="$d5/d81/classThread_1_1NetworkData_1_1NetworkDataTlv.html#acf2d4444312a7b915bfd8005aee13fa8" title="This method indicates whether or not the Stable bit is set. " alt="" coords="797,245,976,284"/>
+</map>

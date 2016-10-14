@@ -1,0 +1,11 @@
+<map id="otPlatRadioEnergyScanDone" name="otPlatRadioEnergyScanDone">
+<area shape="rect" id="node2" href="$d3/d8e/classThread_1_1ThreadNetif.html#aec59b0e172327889e9b0f4f08b0e69f9" title="This method returns a pointer to the mac object. " alt="" coords="267,5,408,44"/>
+<area shape="rect" id="node3" href="$d6/d88/classThread_1_1Mac_1_1Mac.html#afb0ae648acc64f50f204be5b7375c57c" title="This function indicates the energy scan for the current channel is complete. " alt="" coords="248,68,427,107"/>
+<area shape="rect" id="node4" href="$d7/d9c/group__radio-operation.html#ga4ac10bba73d06f59af623bbb3349d3fb" title="Get the most recent RSSI measurement. " alt="" coords="479,19,617,44"/>
+<area shape="rect" id="node5" href="$d3/d8e/classThread_1_1ThreadNetif.html#a83517ab2bff2614e403895426df6a61b" title="This method returns the pointer to the parent otInstance structure. " alt="" coords="478,68,618,107"/>
+<area shape="rect" id="node6" href="$d4/d92/classThread_1_1Tasklet.html#a50a39a6f422851035b89aace87482425" title="This method puts the tasklet on the run queue. " alt="" coords="475,131,621,156"/>
+<area shape="rect" id="node7" href="$d8/de8/classThread_1_1TaskletScheduler.html#a137292acddf92acdef54cc7a33ea5fac" title="This method enqueues a tasklet into the run queue. " alt="" coords="669,124,842,163"/>
+<area shape="rect" id="node8" href="$d1/de3/group__execution.html#ga04d5608ac68a78eb3e8fc167587c61f3" title="OpenThread calls this function when the tasklet queue transitions from empty to non&#45;empty. " alt="" coords="907,75,1067,100"/>
+<area shape="rect" id="node9" href="$d8/de8/classThread_1_1TaskletScheduler.html#aeaf526c316bbea7d53d20fa9e3c94c40" title="This method returns the pointer to the parent Ip6 structure. " alt="" coords="901,124,1073,163"/>
+<area shape="rect" id="node10" href="$d3/d05/classThread_1_1Ip6_1_1Ip6.html#a624d9508f3ecfa586378a3d802cb6ff7" title="This method returns the pointer to the parent otInstance structure. " alt="" coords="890,187,1084,212"/>
+</map>

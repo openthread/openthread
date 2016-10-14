@@ -22,7 +22,10 @@ var logging_8h =
       [ "kLogRegionIcmp", "d8/dff/group__logging.html#ggaee25d56d067df60b93f75b2ff587668caabd0f54f25492e4b2ad3282777761eed", null ],
       [ "kLogRegionIp6", "d8/dff/group__logging.html#ggaee25d56d067df60b93f75b2ff587668ca23282f221d40e51b9bdc1124299ab418", null ],
       [ "kLogRegionMac", "d8/dff/group__logging.html#ggaee25d56d067df60b93f75b2ff587668ca5b3b119a4abb512caab4e00735f70f7e", null ],
-      [ "kLogRegionMem", "d8/dff/group__logging.html#ggaee25d56d067df60b93f75b2ff587668cae041e0188420de65f4e0514452bd707d", null ]
+      [ "kLogRegionMem", "d8/dff/group__logging.html#ggaee25d56d067df60b93f75b2ff587668cae041e0188420de65f4e0514452bd707d", null ],
+      [ "kLogRegionNcp", "d8/dff/group__logging.html#ggaee25d56d067df60b93f75b2ff587668ca7ca6af65ae617ccab42ec8174d68ebcd", null ],
+      [ "kLogRegionMeshCoP", "d8/dff/group__logging.html#ggaee25d56d067df60b93f75b2ff587668ca2e24c126abad883195527cc62c8d907b", null ],
+      [ "kLogRegionNetDiag", "d8/dff/group__logging.html#ggaee25d56d067df60b93f75b2ff587668caae978914f3d7b4f4cbc77db1dfb347c0", null ]
     ] ],
     [ "otPlatLog", "d8/dff/group__logging.html#gada6f3e6235ef97eb169bccb45755fd5a", null ]
 ];

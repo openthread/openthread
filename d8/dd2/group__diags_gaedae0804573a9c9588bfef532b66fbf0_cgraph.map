@@ -1,0 +1,9 @@
+<map id="otGetStableNetworkDataVersion" name="otGetStableNetworkDataVersion">
+<area shape="rect" id="node2" href="$d3/d8e/classThread_1_1ThreadNetif.html#ad49d56e324f096d728c0083d9292f52d" title="This method returns a pointer to the mle object. " alt="" coords="292,37,433,76"/>
+<area shape="rect" id="node3" href="$df/d94/group__core-mle-core.html#gac11fbb5a1fadffd85de03b269ba22ba6" title="This method returns the most recently received Leader Data TLV. " alt="" coords="267,100,458,139"/>
+<area shape="rect" id="node8" href="$d5/d64/classThread_1_1Mle_1_1LeaderDataTlv.html#af4d2338db31bec69a7d3a66f6cf6cbb7" title="This method returns the Stable Data Version value. " alt="" coords="269,163,456,201"/>
+<area shape="rect" id="node4" href="$d5/d64/classThread_1_1Mle_1_1LeaderDataTlv.html#ac821c1679a9bd9cea274a39ba49c4a40" title="This method sets the Data Version value. " alt="" coords="506,5,694,44"/>
+<area shape="rect" id="node5" href="$d6/d9b/classThread_1_1NetworkData_1_1Leader.html#a88ab46f99bc237628ebdc4153678ffca" title="This method returns the Thread Network Data version. " alt="" coords="526,68,674,107"/>
+<area shape="rect" id="node6" href="$d5/d64/classThread_1_1Mle_1_1LeaderDataTlv.html#a8d70ab84c9d3b00b0e857ddef0018349" title="This method sets the Stable Data Version value. " alt="" coords="506,131,694,169"/>
+<area shape="rect" id="node7" href="$d6/d9b/classThread_1_1NetworkData_1_1Leader.html#af1d68084596bca7052e15217b2e96ccf" title="This method returns the Thread Network Data stable version. " alt="" coords="509,193,691,232"/>
+</map>

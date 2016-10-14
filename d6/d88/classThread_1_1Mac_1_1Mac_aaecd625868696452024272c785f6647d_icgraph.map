@@ -1,0 +1,5 @@
+<map id="Thread::Mac::Mac::SetPcapCallback" name="Thread::Mac::Mac::SetPcapCallback">
+<area shape="rect" id="node2" href="$d8/dd2/group__diags.html#gaae3520103d17a0206ef7889d64d278e8" title="This function registers a callback to provide received raw IEEE 802.15.4 frames. " alt="" coords="240,40,398,65"/>
+<area shape="rect" id="node3" href="$d5/dc2/structThread_1_1Cli_1_1Interpreter.html#a11ee1f86cffe17aab7de3de0bb16dee7" title="This method parses an ASCII string as an unsigned long. " alt="" coords="462,5,617,44"/>
+<area shape="rect" id="node4" href="$d9/dc8/classThread_1_1NcpBase.html#a6a04825243722f9500cac2818a07c7b4" title="This constructor creates and initializes an NcpBase instance. " alt="" coords="446,68,633,93"/>
+</map>

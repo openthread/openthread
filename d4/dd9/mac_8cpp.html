@@ -34,7 +34,7 @@
   <td id="projectlogo"><img alt="Logo" src="../../Open-Thread-Logo-200x42.png"/></td>
   <td style="padding-left: 0.5em;">
    <div id="projectname">
-   &#160;<span id="projectnumber">gb2b10b8</span>
+   &#160;<span id="projectnumber">gddd0704</span>
    </div>
   </td>
  </tr>
@@ -108,6 +108,7 @@ $(document).ready(function(){initNavTree('d4/dd9/mac_8cpp.html','../../');});
 
 <div class="header">
   <div class="summary">
+<a href="#define-members">Macros</a> &#124;
 <a href="#func-members">Functions</a> &#124;
 <a href="#var-members">Variables</a>  </div>
   <div class="headertitle">
@@ -117,96 +118,152 @@ $(document).ready(function(){initNavTree('d4/dd9/mac_8cpp.html','../../');});
 
 <p>This file implements the subset of IEEE 802.15.4 primitives required for Thread.  
 <a href="#details">More...</a></p>
-<div class="textblock"><code>#include &lt;string.h&gt;</code><br />
+<div class="textblock"><code>#include &lt;openthread-config.h&gt;</code><br />
+<code>#include &lt;string.h&gt;</code><br />
 <code>#include &lt;<a class="el" href="../../da/d7b/code__utils_8hpp_source.html">common/code_utils.hpp</a>&gt;</code><br />
 <code>#include &lt;<a class="el" href="../../da/d7b/debug_8hpp_source.html">common/debug.hpp</a>&gt;</code><br />
 <code>#include &lt;<a class="el" href="../../d0/da9/logging_8hpp_source.html">common/logging.hpp</a>&gt;</code><br />
 <code>#include &lt;<a class="el" href="../../d0/da7/aes__ccm_8hpp_source.html">crypto/aes_ccm.hpp</a>&gt;</code><br />
+<code>#include &lt;<a class="el" href="../../d5/d68/sha256_8hpp_source.html">crypto/sha256.hpp</a>&gt;</code><br />
 <code>#include &lt;<a class="el" href="../../da/db5/mac_8hpp_source.html">mac/mac.hpp</a>&gt;</code><br />
 <code>#include &lt;<a class="el" href="../../d1/d97/mac__frame_8hpp_source.html">mac/mac_frame.hpp</a>&gt;</code><br />
 <code>#include &lt;<a class="el" href="../../d1/d79/random_8h_source.html">platform/random.h</a>&gt;</code><br />
 <code>#include &lt;<a class="el" href="../../d6/d6f/mle__router_8hpp_source.html">thread/mle_router.hpp</a>&gt;</code><br />
 <code>#include &lt;<a class="el" href="../../d1/d54/thread__netif_8hpp_source.html">thread/thread_netif.hpp</a>&gt;</code><br />
+<code>#include &lt;<a class="el" href="../../d2/dfc/openthread-instance_8h_source.html">openthread-instance.h</a>&gt;</code><br />
 </div><div class="textblock"><div class="dynheader">
 Include dependency graph for mac.cpp:</div>
 <div class="dyncontent">
 <div class="center"><img src="../../da/ddd/mac_8cpp__incl.png" border="0" usemap="#src_2core_2mac_2mac_8cpp" alt=""/></div>
 <map name="src_2core_2mac_2mac_8cpp" id="src_2core_2mac_2mac_8cpp">
-<area shape="rect" id="node3" href="../../da/d7b/code__utils_8hpp.html" title="This file includes macros for validating runtime conditions. " alt="" coords="198,752,360,777"/>
-<area shape="rect" id="node5" href="../../da/d7b/debug_8hpp.html" title="This file includes functions for debugging. " alt="" coords="29,679,169,704"/>
-<area shape="rect" id="node8" href="../../d0/da9/logging_8hpp.html" title="This file includes functions for debugging. " alt="" coords="288,679,433,704"/>
-<area shape="rect" id="node12" href="../../d0/da7/aes__ccm_8hpp.html" title="This file includes definitions for performing AES&#45;CCM computations. " alt="" coords="3173,752,3313,777"/>
-<area shape="rect" id="node16" href="../../da/db5/mac_8hpp.html" title="This file includes definitions for the IEEE 802.15.4 MAC. " alt="" coords="2427,385,2528,411"/>
-<area shape="rect" id="node21" href="../../d1/d97/mac__frame_8hpp.html" title="This file includes definitions for generating and processing IEEE 802.15.4 MAC frames. " alt="" coords="2142,752,2285,777"/>
-<area shape="rect" id="node38" href="../../d1/d79/random_8h.html" title="This file includes the platform abstraction for true random number generation. " alt="" coords="3276,79,3405,104"/>
-<area shape="rect" id="node39" href="../../d6/d6f/mle__router_8hpp.html" title="This file includes definitions for MLE functionality required by the Thread Router and Leader roles..." alt="" coords="1856,239,2008,264"/>
-<area shape="rect" id="node45" href="../../d1/d54/thread__netif_8hpp.html" title="This file includes definitions for the Thread network interface. " alt="" coords="2185,79,2344,104"/>
-<area shape="rect" id="node9" href="../../df/dcb/openthread-core-config_8h.html" title="This file includes compile&#45;time configuration constants for OpenThread. " alt="" coords="638,752,808,777"/>
-<area shape="rect" id="node10" href="../../d5/d77/logging_8h.html" title="This file includes the platform abstraction for the debug log service. " alt="" coords="542,899,669,924"/>
-<area shape="rect" id="node13" href="../../dc/dbf/openthread-types_8h.html" title="This file defines the types and structures used in the OpenThread library API. " alt="" coords="1816,899,1952,924"/>
-<area shape="rect" id="node15" href="../../de/d0d/aes__ecb_8h.html" title="This file includes the platform abstraction for AES ECB computations. " alt="" coords="3212,825,3335,851"/>
-<area shape="rect" id="node14" href="../../d3/da9/toolchain_8h_source.html" title="platform/toolchain.h" alt="" coords="1815,972,1953,997"/>
-<area shape="rect" id="node17" href="../../df/d84/tasklet_8hpp.html" title="This file includes definitions for tasklets and the tasklet scheduler. " alt="" coords="1547,679,1688,704"/>
-<area shape="rect" id="node18" href="../../df/d05/timer_8hpp.html" title="This file includes definitions for the multiplexed timer service. " alt="" coords="1981,532,2112,557"/>
-<area shape="rect" id="node24" href="../../d7/d62/radio_8h.html" title="This file defines the radio interface for OpenThread. " alt="" coords="2150,825,2264,851"/>
-<area shape="rect" id="node25" href="../../d6/d79/mac__whitelist_8hpp.html" title="This file includes definitions for IEEE 802.15.4 frame filtering based on MAC address. " alt="" coords="2657,679,2813,704"/>
-<area shape="rect" id="node26" href="../../de/d0b/key__manager_8hpp.html" title="This file includes definitions for Thread security material generation. " alt="" coords="2969,825,3138,851"/>
-<area shape="rect" id="node28" href="../../df/d4b/topology_8hpp.html" title="This file includes definitions for maintaining Thread network topologies. " alt="" coords="1211,459,1349,484"/>
-<area shape="rect" id="node20" href="../../d2/d2d/alarm_8h.html" title="This file includes the platform abstraction for the alarm service. " alt="" coords="2296,605,2414,631"/>
-<area shape="rect" id="node23" href="../../df/d57/encoding_8hpp.html" title="This file includes definitions for byte&#45;ordering encoding. " alt="" coords="2390,825,2546,851"/>
-<area shape="rect" id="node27" href="../../da/de8/hmac__sha256_8h.html" title="This file includes the platform abstraction for HMAC SHA&#45;256 computations. " alt="" coords="2973,899,3129,924"/>
-<area shape="rect" id="node29" href="../../d1/dd4/ip6_8hpp.html" title="This file includes definitions for IPv6 packet processing. " alt="" coords="1634,532,1721,557"/>
-<area shape="rect" id="node35" href="../../d1/df7/mle__tlvs_8hpp.html" title="This file includes definitions for generating and processing MLE TLVs. " alt="" coords="1094,605,1232,631"/>
-<area shape="rect" id="node37" href="../../d2/d49/link__quality_8hpp.html" title="This file includes definitions for storing and processing link quality information. " alt="" coords="1094,532,1248,557"/>
-<area shape="rect" id="node30" href="../../d5/d8c/message_8hpp.html" title="This file includes definitions for the message buffer pool and message buffers. " alt="" coords="811,679,968,704"/>
-<area shape="rect" id="node31" href="../../dc/d02/ip6__address_8hpp.html" title="This file includes definitions for IPv6 addresses. " alt="" coords="1813,752,1955,777"/>
-<area shape="rect" id="node32" href="../../d0/d86/netif_8hpp.html" title="This file includes definitions for IPv6 network interfaces. " alt="" coords="1873,605,1968,631"/>
-<area shape="rect" id="node33" href="../../da/dfc/socket_8hpp.html" title="This file includes definitions for IPv6 sockets. " alt="" coords="1916,679,2024,704"/>
-<area shape="rect" id="node34" href="../../dd/d45/openthread_8h.html" title="This file defines the top&#45;level functions for the OpenThread library. " alt="" coords="2018,752,2118,777"/>
-<area shape="rect" id="node36" href="../../d9/dd3/mle__constants_8hpp.html" title="This file includes definitions for MLE functionality required by the Thread Child, Router, and Leader roles. " alt="" coords="1297,679,1472,704"/>
-<area shape="rect" id="node40" href="../../d1/d8d/coap__header_8hpp.html" title="This file includes definitions for generating and processing CoAP headers. " alt="" coords="608,532,765,557"/>
-<area shape="rect" id="node41" href="../../dd/d28/coap__server_8hpp.html" title="This file includes definitions for the CoAP server. " alt="" coords="1045,385,1198,411"/>
-<area shape="rect" id="node42" href="../../d0/db7/udp6_8hpp.html" title="This file includes definitions for UDP/IPv6 sockets. " alt="" coords="2025,459,2125,484"/>
-<area shape="rect" id="node43" href="../../d0/dba/icmp6_8hpp.html" title="This file includes definitions for ICMPv6. " alt="" coords="1933,385,2038,411"/>
-<area shape="rect" id="node44" href="../../d0/d78/mle_8hpp.html" title="This file includes definitions for MLE functionality required by the Thread Child, Router, and Leader roles. " alt="" coords="2189,312,2299,337"/>
-<area shape="rect" id="node46" href="../../da/d32/ip6__filter_8hpp.html" title="This file includes definitions for IPv6 datagram filtering. " alt="" coords="2750,159,2869,184"/>
-<area shape="rect" id="node47" href="../../d9/d2d/address__resolver_8hpp.html" title="This file includes definitions for Thread EID&#45;to&#45;RLOC mapping and caching. " alt="" coords="1730,312,1921,337"/>
-<area shape="rect" id="node48" href="../../da/d80/mesh__forwarder_8hpp.html" title="This file includes definitions for forwarding IPv6 datagrams across the Thread mesh. " alt="" coords="865,239,1050,264"/>
-<area shape="rect" id="node50" href="../../d0/d03/network__data__local_8hpp.html" title="This file includes definitions for manipulating local Thread Network Data. " alt="" coords="2083,152,2226,191"/>
-<area shape="rect" id="node49" href="../../de/d66/lowpan_8hpp.html" title="This file includes definitions for 6LoWPAN header compression. " alt="" coords="1525,459,1656,484"/>
+<area shape="rect" id="node2" href="../../da/d45/openthread-config_8h_source.html" title="openthread&#45;config.h" alt="" coords="1565,225,1705,251"/>
+<area shape="rect" id="node4" href="../../da/d7b/code__utils_8hpp.html" title="This file includes macros for validating runtime conditions. " alt="" coords="4225,152,4387,177"/>
+<area shape="rect" id="node6" href="../../da/d7b/debug_8hpp.html" title="This file includes functions for debugging. " alt="" coords="5,545,145,571"/>
+<area shape="rect" id="node9" href="../../d0/da9/logging_8hpp.html" title="This file includes functions for debugging. " alt="" coords="169,545,314,571"/>
+<area shape="rect" id="node13" href="../../d0/da7/aes__ccm_8hpp.html" title="This file includes definitions for performing AES&#45;CCM computations. " alt="" coords="513,692,653,717"/>
+<area shape="rect" id="node16" href="../../d5/d68/sha256_8hpp.html" title="This file includes definitions for performing SHA&#45;256 computations. " alt="" coords="321,79,452,104"/>
+<area shape="rect" id="node18" href="../../da/db5/mac_8hpp.html" title="This file includes definitions for the IEEE 802.15.4 MAC. " alt="" coords="1910,465,2011,491"/>
+<area shape="rect" id="node21" href="../../d1/d97/mac__frame_8hpp.html" title="This file includes definitions for generating and processing IEEE 802.15.4 MAC frames. " alt="" coords="1239,619,1382,644"/>
+<area shape="rect" id="node30" href="../../d1/d79/random_8h.html" title="This file includes the platform abstraction for true random number generation. " alt="" coords="1145,692,1274,717"/>
+<area shape="rect" id="node31" href="../../d6/d6f/mle__router_8hpp.html" title="This file includes definitions for MLE functionality required by the Thread Router and Leader roles..." alt="" coords="1070,225,1221,251"/>
+<area shape="rect" id="node40" href="../../d1/d54/thread__netif_8hpp.html" title="This file includes definitions for the Thread network interface. " alt="" coords="2597,152,2756,177"/>
+<area shape="rect" id="node50" href="../../d2/dfc/openthread-instance_8h.html" title="This file defines the structure of the variables required for all instances of OpenThread API..." alt="" coords="2985,79,3139,104"/>
+<area shape="rect" id="node5" href="../../d9/d5e/stdbool_8h_source.html" title="stdbool.h" alt="" coords="4149,839,4225,864"/>
+<area shape="rect" id="node10" href="../../df/dcb/openthread-core-config_8h.html" title="This file includes compile&#45;time configuration constants for OpenThread. " alt="" coords="3379,619,3549,644"/>
+<area shape="rect" id="node11" href="../../d5/d77/logging_8h.html" title="This file includes the platform abstraction for the debug log service. " alt="" coords="186,765,313,791"/>
+<area shape="rect" id="node12" href="../../df/dd8/stdint_8h_source.html" title="stdint.h" alt="" coords="1381,839,1446,864"/>
+<area shape="rect" id="node14" href="../../dc/dbf/openthread-types_8h.html" title="This file defines the types and structures used in the OpenThread library API. " alt="" coords="2189,765,2326,791"/>
+<area shape="rect" id="node15" href="../../d3/d71/aes__ecb_8hpp.html" title="This file includes definitions for performing AES&#45;ECB computations. " alt="" coords="514,765,652,791"/>
+<area shape="rect" id="node19" href="../../df/d84/tasklet_8hpp.html" title="This file includes definitions for tasklets and the tasklet scheduler. " alt="" coords="2133,692,2273,717"/>
+<area shape="rect" id="node20" href="../../df/d05/timer_8hpp.html" title="This file includes definitions for the multiplexed timer service. " alt="" coords="2240,619,2371,644"/>
+<area shape="rect" id="node24" href="../../d7/d62/radio_8h.html" title="This file defines the radio interface for OpenThread. " alt="" coords="1503,692,1617,717"/>
+<area shape="rect" id="node25" href="../../d6/d79/mac__whitelist_8hpp.html" title="This file includes definitions for IEEE 802.15.4 frame filtering based on MAC address. " alt="" coords="1414,545,1570,571"/>
+<area shape="rect" id="node26" href="../../de/d6e/mac__blacklist_8hpp.html" title="This file includes definitions for IEEE 802.15.4 frame filtering based on MAC address. " alt="" coords="1646,545,1802,571"/>
+<area shape="rect" id="node27" href="../../de/d0b/key__manager_8hpp.html" title="This file includes definitions for Thread security material generation. " alt="" coords="1997,545,2166,571"/>
+<area shape="rect" id="node28" href="../../df/d4b/topology_8hpp.html" title="This file includes definitions for maintaining Thread network topologies. " alt="" coords="1048,545,1187,571"/>
+<area shape="rect" id="node23" href="../../df/d57/encoding_8hpp.html" title="This file includes definitions for byte&#45;ordering encoding. " alt="" coords="890,692,1046,717"/>
+<area shape="rect" id="node29" href="../../d1/df7/mle__tlvs_8hpp.html" title="This file includes definitions for generating and processing MLE TLVs. " alt="" coords="897,619,1034,644"/>
+<area shape="rect" id="node32" href="../../d1/d8d/coap__header_8hpp.html" title="This file includes definitions for generating and processing CoAP headers. " alt="" coords="1059,619,1216,644"/>
+<area shape="rect" id="node33" href="../../dd/d28/coap__server_8hpp.html" title="This file includes definitions for the CoAP server. " alt="" coords="2747,545,2899,571"/>
+<area shape="rect" id="node34" href="../../d0/db7/udp6_8hpp.html" title="This file includes definitions for UDP/IPv6 sockets. " alt="" coords="2988,619,3087,644"/>
+<area shape="rect" id="node35" href="../../d0/d11/trickle__timer_8hpp.html" title="This file includes definitions for the trickle timer logic. " alt="" coords="2140,385,2314,411"/>
+<area shape="rect" id="node36" href="../../d0/dba/icmp6_8hpp.html" title="This file includes definitions for ICMPv6. " alt="" coords="678,465,783,491"/>
+<area shape="rect" id="node37" href="../../d0/d78/mle_8hpp.html" title="This file includes definitions for MLE functionality required by the Thread Child, Router, and Leader roles. " alt="" coords="1904,385,2014,411"/>
+<area shape="rect" id="node39" href="../../d8/d26/thread__tlvs_8hpp.html" title="This file includes definitions and methods for generating and processing Thread Network Layer TLVs..." alt="" coords="1433,305,1587,331"/>
+<area shape="rect" id="node38" href="../../da/d7f/joiner__router_8hpp.html" title="This file includes definitions for the Joiner Router role. " alt="" coords="2139,465,2318,491"/>
+<area shape="rect" id="node41" href="../../d9/d7e/leader_8hpp.html" title="This file includes definitions for a MeshCoP Leader. " alt="" coords="2595,305,2736,331"/>
+<area shape="rect" id="node42" href="../../da/d32/ip6__filter_8hpp.html" title="This file includes definitions for IPv6 datagram filtering. " alt="" coords="2494,225,2613,251"/>
+<area shape="rect" id="node43" href="../../d0/d86/netif_8hpp.html" title="This file includes definitions for IPv6 network interfaces. " alt="" coords="1878,545,1973,571"/>
+<area shape="rect" id="node44" href="../../d9/d2d/address__resolver_8hpp.html" title="This file includes definitions for Thread EID&#45;to&#45;RLOC mapping and caching. " alt="" coords="2949,385,3139,411"/>
+<area shape="rect" id="node45" href="../../d8/d26/announce__begin__server_8hpp.html" title="This file includes definitions for responding to Announce Requests. " alt="" coords="3441,459,3602,497"/>
+<area shape="rect" id="node46" href="../../df/d7a/energy__scan__server_8hpp.html" title="This file includes definitions for responding to Energy Scan Requests. " alt="" coords="3176,459,3315,497"/>
+<area shape="rect" id="node47" href="../../dd/d07/network__diag_8hpp.html" title="This file includes definitions for handle network diagnostic. " alt="" coords="3627,465,3795,491"/>
+<area shape="rect" id="node48" href="../../d2/d1d/meshcop__dataset__manager_8hpp.html" title="This file includes definitions for managing MeshCoP Datasets. " alt="" coords="2760,299,2928,337"/>
+<area shape="rect" id="node49" href="../../da/d80/mesh__forwarder_8hpp.html" title="This file includes definitions for forwarding IPv6 datagrams across the Thread mesh. " alt="" coords="3069,305,3254,331"/>
 </map>
 </div>
 </div><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="define-members"></a>
+Macros</h2></td></tr>
+<tr class="memitem:a02ea32929cc78ee79cc2ad2b31360704"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a02ea32929cc78ee79cc2ad2b31360704"></a>
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>WPP_NAME</b>&#160;&#160;&#160;&quot;mac.tmh&quot;</td></tr>
+<tr class="separator:a02ea32929cc78ee79cc2ad2b31360704"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 Functions</h2></td></tr>
-<tr class="memitem:gabc5be38871893d0c8641064fb193b3ea"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../d7/d9c/group__radio-operation.html#gabc5be38871893d0c8641064fb193b3ea">Thread::Mac::otPlatRadioTransmitDone</a> (bool aRxPending, <a class="el" href="../../dc/dbf/openthread-types_8h.html#ab701d053a9c34ab7f11e43e0dc09ac9f">ThreadError</a> aError)</td></tr>
-<tr class="memdesc:gabc5be38871893d0c8641064fb193b3ea"><td class="mdescLeft">&#160;</td><td class="mdescRight">The radio driver calls this method to notify OpenThread that the transmission has completed.  <a href="../../d7/d9c/group__radio-operation.html#gabc5be38871893d0c8641064fb193b3ea">More...</a><br /></td></tr>
-<tr class="separator:gabc5be38871893d0c8641064fb193b3ea"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ga5719e439a302ffe5d54c60cfd0965d1e"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../d7/d9c/group__radio-operation.html#ga5719e439a302ffe5d54c60cfd0965d1e">Thread::Mac::otPlatRadioReceiveDone</a> (<a class="el" href="../../db/ddc/structRadioPacket.html">RadioPacket</a> *aFrame, <a class="el" href="../../dc/dbf/openthread-types_8h.html#ab701d053a9c34ab7f11e43e0dc09ac9f">ThreadError</a> aError)</td></tr>
-<tr class="memdesc:ga5719e439a302ffe5d54c60cfd0965d1e"><td class="mdescLeft">&#160;</td><td class="mdescRight">The radio driver calls this method to notify OpenThread of a received packet.  <a href="../../d7/d9c/group__radio-operation.html#ga5719e439a302ffe5d54c60cfd0965d1e">More...</a><br /></td></tr>
-<tr class="separator:ga5719e439a302ffe5d54c60cfd0965d1e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga65b11fca984c76f2b4bc782cd1e4811a"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../d7/d9c/group__radio-operation.html#ga65b11fca984c76f2b4bc782cd1e4811a">Thread::Mac::otPlatRadioEnergyScanDone</a> (<a class="el" href="../../d2/d83/structotInstance.html">otInstance</a> *aInstance, int8_t aEnergyScanMaxRssi)</td></tr>
+<tr class="memdesc:ga65b11fca984c76f2b4bc782cd1e4811a"><td class="mdescLeft">&#160;</td><td class="mdescRight">The radio driver calls this method to notify OpenThread that the energy scan is complete.  <a href="../../d7/d9c/group__radio-operation.html#ga65b11fca984c76f2b4bc782cd1e4811a">More...</a><br /></td></tr>
+<tr class="separator:ga65b11fca984c76f2b4bc782cd1e4811a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga7d10a9bce7521f75bd84b32b979e1aa7"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../d7/d9c/group__radio-operation.html#ga7d10a9bce7521f75bd84b32b979e1aa7">Thread::Mac::otPlatRadioTransmitDone</a> (<a class="el" href="../../d2/d83/structotInstance.html">otInstance</a> *aInstance, bool aRxPending, <a class="el" href="../../dc/dbf/openthread-types_8h.html#ab701d053a9c34ab7f11e43e0dc09ac9f">ThreadError</a> aError)</td></tr>
+<tr class="memdesc:ga7d10a9bce7521f75bd84b32b979e1aa7"><td class="mdescLeft">&#160;</td><td class="mdescRight">The radio driver calls this method to notify OpenThread that the transmission has completed.  <a href="../../d7/d9c/group__radio-operation.html#ga7d10a9bce7521f75bd84b32b979e1aa7">More...</a><br /></td></tr>
+<tr class="separator:ga7d10a9bce7521f75bd84b32b979e1aa7"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga75836c10d52472c0dfca98f490c4a5f7"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../d7/d9c/group__radio-operation.html#ga75836c10d52472c0dfca98f490c4a5f7">Thread::Mac::otPlatRadioReceiveDone</a> (<a class="el" href="../../d2/d83/structotInstance.html">otInstance</a> *aInstance, <a class="el" href="../../db/ddc/structRadioPacket.html">RadioPacket</a> *aFrame, <a class="el" href="../../dc/dbf/openthread-types_8h.html#ab701d053a9c34ab7f11e43e0dc09ac9f">ThreadError</a> aError)</td></tr>
+<tr class="memdesc:ga75836c10d52472c0dfca98f490c4a5f7"><td class="mdescLeft">&#160;</td><td class="mdescRight">The radio driver calls this method to notify OpenThread of a received packet.  <a href="../../d7/d9c/group__radio-operation.html#ga75836c10d52472c0dfca98f490c4a5f7">More...</a><br /></td></tr>
+<tr class="separator:ga75836c10d52472c0dfca98f490c4a5f7"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="var-members"></a>
 Variables</h2></td></tr>
+<tr class="memitem:aaac355ceab704b5c992bcff353403db1"><td class="memItemLeft" align="right" valign="top">static const uint8_t&#160;</td><td class="memItemRight" valign="bottom"><b>Thread::Mac::sMode2Key</b> []</td></tr>
+<tr class="separator:aaac355ceab704b5c992bcff353403db1"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae76838e7dc41f625e9b9887f8f08c59d"><td class="memItemLeft" align="right" valign="top">static const <a class="el" href="../../d3/d8f/structotExtAddress.html">otExtAddress</a>&#160;</td><td class="memItemRight" valign="bottom"><b>Thread::Mac::sMode2ExtAddress</b></td></tr>
+<tr class="separator:ae76838e7dc41f625e9b9887f8f08c59d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:adae76fed392b2b8e09f932e3db06c629"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="adae76fed392b2b8e09f932e3db06c629"></a>
 static const uint8_t&#160;</td><td class="memItemRight" valign="bottom"><b>Thread::Mac::sExtendedPanidInit</b> [] = {0xde, 0xad, 0x00, 0xbe, 0xef, 0x00, 0xca, 0xfe}</td></tr>
 <tr class="separator:adae76fed392b2b8e09f932e3db06c629"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aaf54da75f9bd36d048f04d72dbd36b1a"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aaf54da75f9bd36d048f04d72dbd36b1a"></a>
 static const char&#160;</td><td class="memItemRight" valign="bottom"><b>Thread::Mac::sNetworkNameInit</b> [] = &quot;OpenThread&quot;</td></tr>
 <tr class="separator:aaf54da75f9bd36d048f04d72dbd36b1a"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a2f2713e9bf73c66844c2d6ba5b04253a"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a2f2713e9bf73c66844c2d6ba5b04253a"></a>
-static Mac *&#160;</td><td class="memItemRight" valign="bottom"><b>Thread::Mac::sMac</b></td></tr>
-<tr class="separator:a2f2713e9bf73c66844c2d6ba5b04253a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>This file implements the subset of IEEE 802.15.4 primitives required for Thread. </p>
-</div></div><!-- contents -->
+</div><h2 class="groupheader">Variable Documentation</h2>
+<a class="anchor" id="file_ae76838e7dc41f625e9b9887f8f08c59d"></a>
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">const <a class="el" href="../../d3/d8f/structotExtAddress.html">otExtAddress</a> Thread::Mac::sMode2ExtAddress</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<b>Initial value:</b><div class="fragment"><div class="line">=</div><div class="line">{</div><div class="line">    { 0x35, 0x06, 0xfe, 0xb8, 0x23, 0xd4, 0x87, 0x12 },</div><div class="line">}</div></div><!-- fragment -->
+</div>
+</div>
+<a class="anchor" id="file_aaac355ceab704b5c992bcff353403db1"></a>
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">const uint8_t Thread::Mac::sMode2Key[]</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<b>Initial value:</b><div class="fragment"><div class="line">=</div><div class="line">{</div><div class="line">    0x78, 0x58, 0x16, 0x86, 0xfd, 0xb4, 0x58, 0x0f, 0xb0, 0x92, 0x54, 0x6a, 0xec, 0xbd, 0x15, 0x66</div><div class="line">}</div></div><!-- fragment -->
+</div>
+</div>
+</div><!-- contents -->
 </div><!-- doc-content -->
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
     <li class="navelem"><a class="el" href="../../dir_68267d1309a1af8e8297ef4c3efbcdba.html">src</a></li><li class="navelem"><a class="el" href="../../dir_aebb8dcc11953d78e620bbef0b9e2183.html">core</a></li><li class="navelem"><a class="el" href="../../dir_4f2226f7ee388b01e44ffc735c8969ec.html">mac</a></li><li class="navelem"><a class="el" href="../../d4/dd9/mac_8cpp.html">mac.cpp</a></li>
-    <li class="footer">Generated on Wed Jul 27 2016 17:09:42 for OpenThread by
+    <li class="footer">Generated on Fri Oct 14 2016 08:44:34 for OpenThread by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="../../doxygen.png" alt="doxygen"/></a> 1.8.11 </li>
   </ul>

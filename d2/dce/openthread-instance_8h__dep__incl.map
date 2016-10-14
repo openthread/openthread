@@ -1,0 +1,11 @@
+<map id="src/core/openthread&#45;instance.h" name="src/core/openthread&#45;instance.h">
+<area shape="rect" id="node2" href="$dd/d48/cli_8cpp.html" title="This file implements the CLI interpreter. " alt="" coords="5,99,102,124"/>
+<area shape="rect" id="node3" href="$dc/de5/timer_8cpp.html" title="This file implements a multiplexed timer service on top of the alarm abstraction. ..." alt="" coords="126,99,307,124"/>
+<area shape="rect" id="node4" href="$d4/dd9/mac_8cpp.html" title="This file implements the subset of IEEE 802.15.4 primitives required for Thread. " alt="" coords="331,99,483,124"/>
+<area shape="rect" id="node5" href="$d5/d8d/ip6_8cpp.html" title="This file implements IPv6 networking. " alt="" coords="508,99,645,124"/>
+<area shape="rect" id="node6" href="$da/d60/openthread_8cpp.html" title="This file implements the top&#45;level interface to the OpenThread stack. " alt="" coords="670,99,835,124"/>
+<area shape="rect" id="node7" href="$db/d84/thread__netif_8cpp.html" title="This file implements the Thread network interface. " alt="" coords="859,92,1011,131"/>
+<area shape="rect" id="node8" href="$d5/d6a/ncp__base_8cpp.html" title="This file implements a Spinel interface to the OpenThread stack. " alt="" coords="1036,99,1187,124"/>
+<area shape="rect" id="node9" href="$d0/d95/ncp__spi_8cpp.html" title="This file implements a SPI interface to the OpenThread stack. " alt="" coords="1211,99,1350,124"/>
+<area shape="rect" id="node10" href="$d4/dae/ncp__uart_8cpp.html" title="This file contains definitions for a UART based NCP interface to the OpenThread stack. " alt="" coords="1375,99,1520,124"/>
+</map>

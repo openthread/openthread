@@ -1,16 +1,27 @@
 <map id="src/core/net/ip6_routes.cpp" name="src/core/net/ip6_routes.cpp">
-<area shape="rect" id="node2" href="$df/dc2/ip6__routes_8hpp.html" title="This file includes definitions for manipulating IPv6 routing tables. " alt="" coords="547,79,679,104"/>
-<area shape="rect" id="node7" href="$d5/d8c/message_8hpp.html" title="This file includes definitions for the message buffer pool and message buffers. " alt="" coords="387,152,543,177"/>
-<area shape="rect" id="node10" href="$da/d7b/code__utils_8hpp.html" title="This file includes macros for validating runtime conditions. " alt="" coords="1010,225,1172,251"/>
-<area shape="rect" id="node16" href="$d0/d86/netif_8hpp.html" title="This file includes definitions for IPv6 network interfaces. " alt="" coords="703,79,798,104"/>
-<area shape="rect" id="node3" href="$dc/dbf/openthread-types_8h.html" title="This file defines the types and structures used in the OpenThread library API. " alt="" coords="636,372,772,397"/>
-<area shape="rect" id="node15" href="$dc/d02/ip6__address_8hpp.html" title="This file includes definitions for IPv6 addresses. " alt="" coords="669,225,811,251"/>
-<area shape="rect" id="node6" href="$d3/da9/toolchain_8h_source.html" title="platform/toolchain.h" alt="" coords="635,445,773,471"/>
-<area shape="rect" id="node9" href="$df/dcb/openthread-core-config_8h.html" title="This file includes compile&#45;time configuration constants for OpenThread. " alt="" coords="148,225,319,251"/>
-<area shape="rect" id="node11" href="$d1/d97/mac__frame_8hpp.html" title="This file includes definitions for generating and processing IEEE 802.15.4 MAC frames. " alt="" coords="394,225,537,251"/>
-<area shape="rect" id="node13" href="$df/d57/encoding_8hpp.html" title="This file includes definitions for byte&#45;ordering encoding. " alt="" coords="169,299,325,324"/>
-<area shape="rect" id="node14" href="$d7/d62/radio_8h.html" title="This file defines the radio interface for OpenThread. " alt="" coords="451,299,565,324"/>
-<area shape="rect" id="node17" href="$df/d84/tasklet_8hpp.html" title="This file includes definitions for tasklets and the tasklet scheduler. " alt="" coords="903,152,1044,177"/>
-<area shape="rect" id="node18" href="$da/dfc/socket_8hpp.html" title="This file includes definitions for IPv6 sockets. " alt="" coords="771,152,879,177"/>
-<area shape="rect" id="node19" href="$dd/d45/openthread_8h.html" title="This file defines the top&#45;level functions for the OpenThread library. " alt="" coords="835,225,935,251"/>
+<area shape="rect" id="node2" href="$d1/dd4/ip6_8hpp.html" title="This file includes definitions for IPv6 packet processing. " alt="" coords="680,79,767,104"/>
+<area shape="rect" id="node10" href="$d5/d8c/message_8hpp.html" title="This file includes definitions for the message buffer pool and message buffers. " alt="" coords="1215,372,1371,397"/>
+<area shape="rect" id="node15" href="$da/d7b/code__utils_8hpp.html" title="This file includes macros for validating runtime conditions. " alt="" coords="1774,445,1937,471"/>
+<area shape="rect" id="node21" href="$d0/d86/netif_8hpp.html" title="This file includes definitions for IPv6 network interfaces. " alt="" coords="528,299,623,324"/>
+<area shape="rect" id="node25" href="$df/dc2/ip6__routes_8hpp.html" title="This file includes definitions for manipulating IPv6 routing tables. " alt="" coords="1315,299,1447,324"/>
+<area shape="rect" id="node4" href="$dc/dbf/openthread-types_8h.html" title="This file defines the types and structures used in the OpenThread library API. " alt="" coords="957,605,1093,631"/>
+<area shape="rect" id="node8" href="$df/d57/encoding_8hpp.html" title="This file includes definitions for byte&#45;ordering encoding. " alt="" coords="5,525,162,551"/>
+<area shape="rect" id="node18" href="$d0/dba/icmp6_8hpp.html" title="This file includes definitions for ICMPv6. " alt="" coords="298,152,403,177"/>
+<area shape="rect" id="node19" href="$db/d51/ip6__headers_8hpp.html" title="This file includes definitions for IPv6 packet processing. " alt="" coords="613,225,756,251"/>
+<area shape="rect" id="node20" href="$dc/d02/ip6__address_8hpp.html" title="This file includes definitions for IPv6 addresses. " alt="" coords="264,445,407,471"/>
+<area shape="rect" id="node23" href="$da/dfc/socket_8hpp.html" title="This file includes definitions for IPv6 sockets. " alt="" coords="367,372,475,397"/>
+<area shape="rect" id="node26" href="$df/dab/ip6__mpl_8hpp.html" title="This file includes definitions for MPL. " alt="" coords="864,152,980,177"/>
+<area shape="rect" id="node29" href="$d0/db7/udp6_8hpp.html" title="This file includes definitions for UDP/IPv6 sockets. " alt="" coords="674,152,773,177"/>
+<area shape="rect" id="node5" href="$df/dd8/stdint_8h_source.html" title="stdint.h" alt="" coords="471,679,536,704"/>
+<area shape="rect" id="node6" href="$d9/d5e/stdbool_8h_source.html" title="stdbool.h" alt="" coords="1052,679,1128,704"/>
+<area shape="rect" id="node7" href="$d3/da9/toolchain_8h_source.html" title="platform/toolchain.h" alt="" coords="891,679,1028,704"/>
+<area shape="rect" id="node11" href="$da/d45/openthread-config_8h_source.html" title="openthread&#45;config.h" alt="" coords="1509,445,1649,471"/>
+<area shape="rect" id="node13" href="$df/dcb/openthread-core-config_8h.html" title="This file includes compile&#45;time configuration constants for OpenThread. " alt="" coords="1316,445,1486,471"/>
+<area shape="rect" id="node16" href="$d1/d97/mac__frame_8hpp.html" title="This file includes definitions for generating and processing IEEE 802.15.4 MAC frames. " alt="" coords="481,445,624,471"/>
+<area shape="rect" id="node14" href="$d7/d08/openthread-core-default-config_8h.html" title="This file includes default compile&#45;time configuration constants for OpenThread. " alt="" coords="1319,519,1483,557"/>
+<area shape="rect" id="node17" href="$d7/d62/radio_8h.html" title="This file defines the radio interface for OpenThread. " alt="" coords="541,525,655,551"/>
+<area shape="rect" id="node22" href="$df/d84/tasklet_8hpp.html" title="This file includes definitions for tasklets and the tasklet scheduler. " alt="" coords="601,372,742,397"/>
+<area shape="rect" id="node24" href="$dd/d45/openthread_8h.html" title="This file defines the top&#45;level functions for the OpenThread library. " alt="" coords="648,445,748,471"/>
+<area shape="rect" id="node27" href="$df/d05/timer_8hpp.html" title="This file includes definitions for the multiplexed timer service. " alt="" coords="857,299,988,324"/>
+<area shape="rect" id="node28" href="$d2/d2d/alarm_8h.html" title="This file includes the platform abstraction for the alarm service. " alt="" coords="730,525,848,551"/>
 </map>

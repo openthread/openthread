@@ -1,0 +1,14 @@
+<map id="Thread::Mle::Mle::GetChildId" name="Thread::Mle::Mle::GetChildId">
+<area shape="rect" id="node2" href="$db/dec/group__core-mle-router.html#ga7126c084ace25827febebc4210928cd4" title="This method generates an MLE Link Reject. " alt="" coords="245,52,406,91"/>
+<area shape="rect" id="node8" href="$db/dec/group__core-mle-router.html#gacb4fce19665e67f6f238dea3482d86ea" title="This method retains diagnostic information for an attached child by Child ID or RLOC16. " alt="" coords="459,112,620,151"/>
+<area shape="rect" id="node10" href="$db/dec/group__core-mle-router.html#ga0b12b10b1918482301269a6a124be400" title="This method retains diagnostic information for an attached child by the internal table index..." alt="" coords="245,169,406,208"/>
+<area shape="rect" id="node3" href="$dd/d1d/classThread_1_1MeshForwarder.html#a5f726671448fb7cd72f8ee96db40731a" title="This method sets the scan parameters for MLE Discovery Request messages. " alt="" coords="454,49,624,88"/>
+<area shape="rect" id="node4" href="$df/d94/group__core-mle-core.html#gab299d00d1b2beabe8130e400dd6eca91" title="This method initiates a Thread Discovery. " alt="" coords="678,56,858,81"/>
+<area shape="rect" id="node5" href="$d4/db5/classThread_1_1MeshCoP_1_1Joiner.html#a1ca1f767cfe15e7c25b8f65606e7fefb" title="This method starts the Joiner service. " alt="" coords="923,5,1096,44"/>
+<area shape="rect" id="node6" href="$d0/d0a/group__commands.html#ga8422cdf7d0b8b22c6dd107e6bb1309f2" title="This function starts a Thread Discovery scan. " alt="" coords="967,68,1051,93"/>
+<area shape="rect" id="node7" href="$d5/dc2/structThread_1_1Cli_1_1Interpreter.html#a11ee1f86cffe17aab7de3de0bb16dee7" title="This method parses an ASCII string as an unsigned long. " alt="" coords="1155,112,1310,151"/>
+<area shape="rect" id="node9" href="$d8/dd2/group__diags.html#gae6aeb169c8a237d56c4c2c92f7fa4285" title="The function retains diagnostic information for an attached Child by its Child ID or RLOC16..." alt="" coords="701,119,835,144"/>
+<area shape="rect" id="node11" href="$d8/dd2/group__diags.html#ga9b5695168596c7ce3be6934e3b37a888" title="The function retains diagnostic information for an attached Child by the internal table index..." alt="" coords="462,176,617,201"/>
+<area shape="rect" id="node12" href="$d9/dc8/classThread_1_1NcpBase.html#ad14f0f1d60c77f7f537a0a441a9fb35c" title="This method is called by the framer whenever a framing error is detected. " alt="" coords="672,220,864,259"/>
+<area shape="rect" id="node13" href="$dc/d60/classThread_1_1NcpUart.html#a34e4ca7aff5b9056593e8ce0aa6e2fbb" title="This method is called when uart received a data buffer. " alt="" coords="912,220,1107,259"/>
+</map>

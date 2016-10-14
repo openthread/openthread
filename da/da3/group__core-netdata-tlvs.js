@@ -27,7 +27,7 @@ var group__core_netdata_tlvs =
       [ "SetRloc", "da/dc3/classThread_1_1NetworkData_1_1HasRouteEntry.html#af292305ab28c84078cca0202895f57bc", null ]
     ] ],
     [ "HasRouteTlv", "db/da1/classThread_1_1NetworkData_1_1HasRouteTlv.html", [
-      [ "GetEntry", "db/da1/classThread_1_1NetworkData_1_1HasRouteTlv.html#ac74614a31ed72568910db0d0e1f0f8fc", null ],
+      [ "GetEntry", "db/da1/classThread_1_1NetworkData_1_1HasRouteTlv.html#af793fac409ea244556f3f4690f4b4181", null ],
       [ "GetNumEntries", "db/da1/classThread_1_1NetworkData_1_1HasRouteTlv.html#a2fd02d06c9508d0cba5a95c741f51fd3", null ],
       [ "Init", "db/da1/classThread_1_1NetworkData_1_1HasRouteTlv.html#a62a398f221f165f3513f7b1a8ba39049", null ]
     ] ],
@@ -35,24 +35,26 @@ var group__core_netdata_tlvs =
       [ "GetDomainId", "d0/d48/classThread_1_1NetworkData_1_1PrefixTlv.html#aa52a1e2f9d25a1e761002685c92f1759", null ],
       [ "GetPrefix", "d0/d48/classThread_1_1NetworkData_1_1PrefixTlv.html#aba35dd736801e79069757eee1d30d204", null ],
       [ "GetPrefixLength", "d0/d48/classThread_1_1NetworkData_1_1PrefixTlv.html#a65883f0127059dc652e37a6b97ac4c07", null ],
-      [ "GetSubTlvs", "d0/d48/classThread_1_1NetworkData_1_1PrefixTlv.html#aff8b9ca40c9616c26fd026179b6f5e80", null ],
+      [ "GetSubTlvs", "d0/d48/classThread_1_1NetworkData_1_1PrefixTlv.html#a99a8265aa86b2a1a26340ae1a51421f2", null ],
       [ "GetSubTlvsLength", "d0/d48/classThread_1_1NetworkData_1_1PrefixTlv.html#af03628b4c4e83e968aaebed104496552", null ],
       [ "Init", "d0/d48/classThread_1_1NetworkData_1_1PrefixTlv.html#a3dfaab63612e1c0b225e04688104f7a5", null ],
-      [ "SetSubTlvsLength", "d0/d48/classThread_1_1NetworkData_1_1PrefixTlv.html#ada87986e83826285dadc2d7164d670e8", null ]
+      [ "SetSubTlvsLength", "d0/d48/classThread_1_1NetworkData_1_1PrefixTlv.html#ae68db3e779a6ef0aaaa9daa28183ae63", null ]
     ] ],
     [ "BorderRouterEntry", "d9/d64/classThread_1_1NetworkData_1_1BorderRouterEntry.html", [
-      [ "kPreferenceOffset", "d9/d64/classThread_1_1NetworkData_1_1BorderRouterEntry.html#a3bc9fe5cdb515a320deb88ef84260407a47d0c42046ded9aba718cc5329b6850e", null ],
-      [ "kPreferenceMask", "d9/d64/classThread_1_1NetworkData_1_1BorderRouterEntry.html#a3bc9fe5cdb515a320deb88ef84260407ab039e9dd5c75b98a942ede4cc6f1a2fc", null ],
-      [ "kPreferredFlag", "d9/d64/classThread_1_1NetworkData_1_1BorderRouterEntry.html#a3bc9fe5cdb515a320deb88ef84260407a649a7a7b61bf1ff654aaf5a55c1a4061", null ],
-      [ "kValidFlag", "d9/d64/classThread_1_1NetworkData_1_1BorderRouterEntry.html#a3bc9fe5cdb515a320deb88ef84260407ac9299de210aff56e9d5f63ad1e300388", null ],
-      [ "kDhcpFlag", "d9/d64/classThread_1_1NetworkData_1_1BorderRouterEntry.html#a3bc9fe5cdb515a320deb88ef84260407a19906167b92771a8e2647fec1e22d4cd", null ],
-      [ "kConfigureFlag", "d9/d64/classThread_1_1NetworkData_1_1BorderRouterEntry.html#a3bc9fe5cdb515a320deb88ef84260407a454899abe31b85bde0fbe1d9edf1a2b1", null ],
-      [ "kDefaultRouteFlag", "d9/d64/classThread_1_1NetworkData_1_1BorderRouterEntry.html#a3bc9fe5cdb515a320deb88ef84260407a814ac17790a57f0d2316221fc2db71d0", null ],
+      [ "kPreferenceOffset", "d9/d64/classThread_1_1NetworkData_1_1BorderRouterEntry.html#abbdd6df09dd819c8704607e851ca5fcda47d0c42046ded9aba718cc5329b6850e", null ],
+      [ "kPreferenceMask", "d9/d64/classThread_1_1NetworkData_1_1BorderRouterEntry.html#abbdd6df09dd819c8704607e851ca5fcdab039e9dd5c75b98a942ede4cc6f1a2fc", null ],
+      [ "kPreferredFlag", "d9/d64/classThread_1_1NetworkData_1_1BorderRouterEntry.html#abbdd6df09dd819c8704607e851ca5fcda649a7a7b61bf1ff654aaf5a55c1a4061", null ],
+      [ "kSlaacFlag", "d9/d64/classThread_1_1NetworkData_1_1BorderRouterEntry.html#abbdd6df09dd819c8704607e851ca5fcda6323504f795e3dea674e59462201cc1f", null ],
+      [ "kDhcpFlag", "d9/d64/classThread_1_1NetworkData_1_1BorderRouterEntry.html#abbdd6df09dd819c8704607e851ca5fcda19906167b92771a8e2647fec1e22d4cd", null ],
+      [ "kConfigureFlag", "d9/d64/classThread_1_1NetworkData_1_1BorderRouterEntry.html#abbdd6df09dd819c8704607e851ca5fcda454899abe31b85bde0fbe1d9edf1a2b1", null ],
+      [ "kDefaultRouteFlag", "d9/d64/classThread_1_1NetworkData_1_1BorderRouterEntry.html#abbdd6df09dd819c8704607e851ca5fcda814ac17790a57f0d2316221fc2db71d0", null ],
+      [ "kOnMeshFlag", "d9/d64/classThread_1_1NetworkData_1_1BorderRouterEntry.html#abbdd6df09dd819c8704607e851ca5fcda89a0a8567db8a50d0db8c45b520f1e72", null ],
       [ "ClearConfigure", "d9/d64/classThread_1_1NetworkData_1_1BorderRouterEntry.html#a4b5a94d51657059590f93b1154a4f2ee", null ],
       [ "ClearDefaultRoute", "d9/d64/classThread_1_1NetworkData_1_1BorderRouterEntry.html#aaf07466f2181a24282d6986f5a943fd7", null ],
       [ "ClearDhcp", "d9/d64/classThread_1_1NetworkData_1_1BorderRouterEntry.html#a6457becc9298917d6c134a3dfeedfe47", null ],
+      [ "ClearOnMesh", "d9/d64/classThread_1_1NetworkData_1_1BorderRouterEntry.html#acd86e6cac09b7848359ce10cc52bf289", null ],
       [ "ClearPreferred", "d9/d64/classThread_1_1NetworkData_1_1BorderRouterEntry.html#a2f894a14f1f28c1719282a4190d14088", null ],
-      [ "ClearValid", "d9/d64/classThread_1_1NetworkData_1_1BorderRouterEntry.html#ae4ffacd4164c269d9bd3810544a41880", null ],
+      [ "ClearSlaac", "d9/d64/classThread_1_1NetworkData_1_1BorderRouterEntry.html#a044a176edbcefd7d8ce23aec2e4e76ae", null ],
       [ "GetFlags", "d9/d64/classThread_1_1NetworkData_1_1BorderRouterEntry.html#a134ba714ed023e6e632a732288991dc6", null ],
       [ "GetPreference", "d9/d64/classThread_1_1NetworkData_1_1BorderRouterEntry.html#ad4e72cfbc88a537f30ee61f6c8176913", null ],
       [ "GetRloc", "d9/d64/classThread_1_1NetworkData_1_1BorderRouterEntry.html#af46474a303cb601ee647ea39660b6a07", null ],
@@ -60,19 +62,21 @@ var group__core_netdata_tlvs =
       [ "IsConfigure", "d9/d64/classThread_1_1NetworkData_1_1BorderRouterEntry.html#aa0d54ff42613eeb0a4c510535fbe3aed", null ],
       [ "IsDefaultRoute", "d9/d64/classThread_1_1NetworkData_1_1BorderRouterEntry.html#aa9c48016b846b002c858f69a2143a10b", null ],
       [ "IsDhcp", "d9/d64/classThread_1_1NetworkData_1_1BorderRouterEntry.html#a33178a534e67fc122220e28d77f26e64", null ],
+      [ "IsOnMesh", "d9/d64/classThread_1_1NetworkData_1_1BorderRouterEntry.html#afee6e69c2d58a79c9c22a93dfcb966ea", null ],
       [ "IsPreferred", "d9/d64/classThread_1_1NetworkData_1_1BorderRouterEntry.html#a295d4e743042a5b995fc222dd286b621", null ],
-      [ "IsValid", "d9/d64/classThread_1_1NetworkData_1_1BorderRouterEntry.html#ad2286f59e086abe9ce406c6c95d766e0", null ],
+      [ "IsSlaac", "d9/d64/classThread_1_1NetworkData_1_1BorderRouterEntry.html#ad1294bc438ca13972f93358036200bef", null ],
       [ "SetConfigure", "d9/d64/classThread_1_1NetworkData_1_1BorderRouterEntry.html#a8871e157a23a68f4d296c50c594ce027", null ],
       [ "SetDefaultRoute", "d9/d64/classThread_1_1NetworkData_1_1BorderRouterEntry.html#abe0e36a130c454b8f4a615adef171959", null ],
       [ "SetDhcp", "d9/d64/classThread_1_1NetworkData_1_1BorderRouterEntry.html#a220cdfeb5b67f227f66db66530c6bf36", null ],
       [ "SetFlags", "d9/d64/classThread_1_1NetworkData_1_1BorderRouterEntry.html#a4674e7cd29600273d26da729585176a8", null ],
+      [ "SetOnMesh", "d9/d64/classThread_1_1NetworkData_1_1BorderRouterEntry.html#a2a19d33e4ee221ae8e42ce13084fd2b2", null ],
       [ "SetPreference", "d9/d64/classThread_1_1NetworkData_1_1BorderRouterEntry.html#a476693d756cfe0dee6d6f60ede7b2daa", null ],
       [ "SetPreferred", "d9/d64/classThread_1_1NetworkData_1_1BorderRouterEntry.html#a2fdba3655a66a78c058801bb8cf5b4df", null ],
       [ "SetRloc", "d9/d64/classThread_1_1NetworkData_1_1BorderRouterEntry.html#a3a5f9b543ac49d0b7b28c4d07748b771", null ],
-      [ "SetValid", "d9/d64/classThread_1_1NetworkData_1_1BorderRouterEntry.html#a7c1c5a6b085139c5641b33c6febae3ad", null ]
+      [ "SetSlaac", "d9/d64/classThread_1_1NetworkData_1_1BorderRouterEntry.html#a10d3fc09627f0f5ca5dc7ad2d9093a67", null ]
     ] ],
     [ "BorderRouterTlv", "d2/d89/classThread_1_1NetworkData_1_1BorderRouterTlv.html", [
-      [ "GetEntry", "d2/d89/classThread_1_1NetworkData_1_1BorderRouterTlv.html#ab4baf1f4d38f6ae76abdce624a9b2019", null ],
+      [ "GetEntry", "d2/d89/classThread_1_1NetworkData_1_1BorderRouterTlv.html#a245a0e91159fd6178382a7443b906db7", null ],
       [ "GetNumEntries", "d2/d89/classThread_1_1NetworkData_1_1BorderRouterTlv.html#a16b09bf46df7664d73748b4f15017be2", null ],
       [ "Init", "d2/d89/classThread_1_1NetworkData_1_1BorderRouterTlv.html#a3d1275d791b9f61d24d4e1256db6abdc", null ]
     ] ],
@@ -85,5 +89,8 @@ var group__core_netdata_tlvs =
       [ "SetCompress", "df/d56/classThread_1_1NetworkData_1_1ContextTlv.html#ae76fc3fc66d06499b9f36caab5f1e599", null ],
       [ "SetContextId", "df/d56/classThread_1_1NetworkData_1_1ContextTlv.html#a436bddda3ee77f005a83f97f35e71bfb", null ],
       [ "SetContextLength", "df/d56/classThread_1_1NetworkData_1_1ContextTlv.html#a4be9b8bbcde6083724a07320f00aede0", null ]
+    ] ],
+    [ "CommissioningDataTlv", "d0/d15/classThread_1_1NetworkData_1_1CommissioningDataTlv.html", [
+      [ "Init", "d0/d15/classThread_1_1NetworkData_1_1CommissioningDataTlv.html#a4f90032ec9250ce972df82f1e4a3b86f", null ]
     ] ]
 ];

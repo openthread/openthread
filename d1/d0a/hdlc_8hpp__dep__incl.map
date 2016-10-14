@@ -1,5 +1,5 @@
 <map id="src/ncp/hdlc.hpp" name="src/ncp/hdlc.hpp">
 <area shape="rect" id="node2" href="$d5/d02/hdlc_8cpp.html" title="This file implements an HDLC&#45;lite encoder and decoder. " alt="" coords="5,79,123,104"/>
-<area shape="rect" id="node3" href="$d4/d5f/ncp__uart_8hpp.html" title="This file contains definitions for an FLEN/HDLC interface to the OpenThread stack. " alt="" coords="147,79,293,104"/>
-<area shape="rect" id="node4" href="$d4/dae/ncp__uart_8cpp.html" title="This file implements an HDLC interface to the Thread stack. " alt="" coords="148,152,293,177"/>
+<area shape="rect" id="node3" href="$d4/d5f/ncp__uart_8hpp.html" title="This file contains definitions for a UART based NCP interface to the OpenThread stack. " alt="" coords="147,79,293,104"/>
+<area shape="rect" id="node4" href="$d4/dae/ncp__uart_8cpp.html" title="This file contains definitions for a UART based NCP interface to the OpenThread stack. " alt="" coords="148,152,293,177"/>
 </map>

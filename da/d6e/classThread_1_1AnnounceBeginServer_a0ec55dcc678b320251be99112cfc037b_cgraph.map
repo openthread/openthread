@@ -1,0 +1,51 @@
+<map id="Thread::AnnounceBeginServer::SendAnnounce" name="Thread::AnnounceBeginServer::SendAnnounce">
+<area shape="rect" id="node2" href="$d1/d40/classThread_1_1Timer.html#a475731e21b59be6b17b24f5b5e175f62" title="This method schedules the timer to fire a dt milliseconds from now. " alt="" coords="298,5,438,31"/>
+<area shape="rect" id="node3" href="$d0/d7f/classThread_1_1Coap_1_1Header.html#a08454fc48790efe33c95be2311e1e6d1" title="This method returns the Code value. " alt="" coords="291,55,445,93"/>
+<area shape="rect" id="node4" href="$dd/d8d/classThread_1_1MeshCoP_1_1Tlv.html#a5560e18099408223e7a5c610e44bdc7f" title="This static method reads the requested TLV out of aMessage. " alt="" coords="555,780,710,819"/>
+<area shape="rect" id="node11" href="$d5/d5f/classThread_1_1MeshCoP_1_1CountTlv.html#ad29c6a756f0322b7e08c076999348150" title="This method indicates whether or not the TLV appears to be well&#45;formed. " alt="" coords="538,315,728,353"/>
+<area shape="rect" id="node12" href="$d0/d9f/classThread_1_1MeshCoP_1_1PeriodTlv.html#aa21aa77dc91d0d8461e1235ac6ae5b34" title="This method indicates whether or not the TLV appears to be well&#45;formed. " alt="" coords="536,195,729,233"/>
+<area shape="rect" id="node13" href="$da/d6e/classThread_1_1AnnounceBeginServer.html#a853e2a87857bb8fd911f04bd95505a70" title="This method begins the MLE Announce transmission process using Count=3 and Period=1s. " alt="" coords="266,271,470,309"/>
+<area shape="rect" id="node14" href="$d5/d5f/classThread_1_1MeshCoP_1_1CountTlv.html#aac7ee2a42709f0d93769c3e6282780ea" title="This method returns the Count value. " alt="" coords="273,333,463,372"/>
+<area shape="rect" id="node15" href="$d0/d9f/classThread_1_1MeshCoP_1_1PeriodTlv.html#a482f6651a8d836b1d0229bc3c373d3a4" title="This method returns the Period value. " alt="" coords="271,396,464,435"/>
+<area shape="rect" id="node16" href="$d0/d7f/classThread_1_1Coap_1_1Header.html#a0d72d5dcded14ce9da3678a456cb70a8" title="This method returns the Type value. " alt="" coords="291,459,445,497"/>
+<area shape="rect" id="node17" href="$de/d76/classThread_1_1Coap_1_1Server.html#a2f1fb2b1a1e98b79a9d086aca2dbb764" title="This method returns a new UDP message with sufficient header space reserved. " alt="" coords="558,2049,707,2088"/>
+<area shape="rect" id="node19" href="$d0/d7f/classThread_1_1Coap_1_1Header.html#ad221953768fdb61bd62fa1bc3ffd4c89" title="This method initializes the CoAP header. " alt="" coords="291,573,445,612"/>
+<area shape="rect" id="node21" href="$d0/d7f/classThread_1_1Coap_1_1Header.html#ad4147a19a4e8861f321c8aaaa5db6baa" title="This method sets the Type value. " alt="" coords="291,636,445,675"/>
+<area shape="rect" id="node22" href="$d0/d7f/classThread_1_1Coap_1_1Header.html#a0a2c1cf0ff97aab363e71f716254a736" title="This method sets the Code value. " alt="" coords="291,699,445,737"/>
+<area shape="rect" id="node23" href="$d0/d7f/classThread_1_1Coap_1_1Header.html#a7a374b4bd31694216d9397e1409209a0" title="This method sets the Message ID value. " alt="" coords="291,761,445,800"/>
+<area shape="rect" id="node24" href="$d0/d7f/classThread_1_1Coap_1_1Header.html#ad45e8b7c304fce8c896ef531be34e9d6" title="This method returns the Message ID value. " alt="" coords="291,824,445,863"/>
+<area shape="rect" id="node25" href="$d0/d7f/classThread_1_1Coap_1_1Header.html#a9d8d2a7b438e4a7d27ce3b979b0bb2a0" title="This method sets the Token value and length. " alt="" coords="291,887,445,925"/>
+<area shape="rect" id="node26" href="$d0/d7f/classThread_1_1Coap_1_1Header.html#ad51db46720122c64e67143e10eaf3820" title="This method returns a pointer to the Token value. " alt="" coords="291,949,445,988"/>
+<area shape="rect" id="node27" href="$d0/d7f/classThread_1_1Coap_1_1Header.html#a552cf5eab882b244b178b8093e8a18e9" title="This method returns the Token length. " alt="" coords="291,1012,445,1051"/>
+<area shape="rect" id="node28" href="$d0/d7f/classThread_1_1Coap_1_1Header.html#aecbcbb8b836e0283559b89bd64fbc47f" title="This method terminates the CoAP header. " alt="" coords="291,1075,445,1113"/>
+<area shape="rect" id="node29" href="$dc/d3c/classThread_1_1Message.html#a3c3d1c48e940f2553586d16e1618277d" title="This method appends bytes to the end of the message. " alt="" coords="1053,1379,1231,1404"/>
+<area shape="rect" id="node30" href="$d0/d7f/classThread_1_1Coap_1_1Header.html#a5259ece3cbe8e332599f7de4c488ad32" title="This method returns a pointer to the first byte of the header. " alt="" coords="291,1189,445,1228"/>
+<area shape="rect" id="node31" href="$d0/d7f/classThread_1_1Coap_1_1Header.html#ae1679d627108d5381dc1ae45d2254299" title="This method returns the header length in bytes. " alt="" coords="291,1252,445,1291"/>
+<area shape="rect" id="node32" href="$de/d76/classThread_1_1Coap_1_1Server.html#aeb97e0257808d7cad4adceccd87f6b7d" title="This method sends a CoAP response from the server. " alt="" coords="558,491,707,529"/>
+<area shape="rect" id="node34" href="$dc/d3c/classThread_1_1Message.html#adc9d723284f5807d9c272ab89bc52b45" title="This method frees this message buffer. " alt="" coords="811,1264,971,1289"/>
+<area shape="rect" id="node35" href="$d3/d8e/classThread_1_1ThreadNetif.html#ad49d56e324f096d728c0083d9292f52d" title="This method returns a pointer to the mle object. " alt="" coords="297,1517,438,1556"/>
+<area shape="rect" id="node36" href="$df/d94/group__core-mle-core.html#ga91214fcb8db3271fc3ad0472e38c1e0a" title="This method generates an MLE Announce message. " alt="" coords="258,1468,478,1493"/>
+<area shape="rect" id="node5" href="$dc/d3c/classThread_1_1Message.html#ac8304ee00c9e0b303539687e98e192e0" title="This method returns the byte offset within the message. " alt="" coords="797,900,986,925"/>
+<area shape="rect" id="node6" href="$dc/d3c/classThread_1_1Message.html#a2cf440376e834030c38bb2ced4ca49e9" title="This method returns the number of bytes in the message. " alt="" coords="1045,844,1239,869"/>
+<area shape="rect" id="node7" href="$dc/d3c/classThread_1_1Message.html#a76033bbc15170d72452186058defafa2" title="This method reads bytes from the message. " alt="" coords="809,949,974,975"/>
+<area shape="rect" id="node9" href="$dd/d8d/classThread_1_1MeshCoP_1_1Tlv.html#a6b50f0231142d7c272ac1732ae0fdca7" title="This method returns the Type value. " alt="" coords="814,999,969,1037"/>
+<area shape="rect" id="node10" href="$dd/d8d/classThread_1_1MeshCoP_1_1Tlv.html#ae448a8785f6715b07e973d570e715c69" title="This method returns the Length value. " alt="" coords="814,519,969,557"/>
+<area shape="rect" id="node8" href="$db/d50/classThread_1_1Buffer.html#a34ab22941ccd9bb222d251a6a18c95bf" title="This method returns a pointer to the next message buffer. " alt="" coords="1043,949,1241,975"/>
+<area shape="rect" id="node18" href="$dc/d75/classThread_1_1Ip6_1_1UdpSocket.html#aafb4481c92d1f8515e51cfa822a1bde1" title="This method returns a new UDP message with sufficient header space reserved. " alt="" coords="810,1703,972,1741"/>
+<area shape="rect" id="node20" href="$d0/d7f/classThread_1_1Coap_1_1Header.html#a411c64839fe9cf63ac201f9a6760199c" title="This method sets the Version value. " alt="" coords="556,843,710,881"/>
+<area shape="rect" id="node33" href="$dc/d75/classThread_1_1Ip6_1_1UdpSocket.html#ac4fb0ea0ae514fa0edfeaa91dfbdabca" title="This method sends a UDP message. " alt="" coords="810,837,972,876"/>
+<area shape="rect" id="node37" href="$dc/d3c/classThread_1_1Message.html#ac4ef16141a9922e6a059851ba065a5f1" title="This method sets the message sub type. " alt="" coords="789,1525,994,1551"/>
+<area shape="rect" id="node38" href="$dc/d3c/classThread_1_1Message.html#a51e8dbe65c96182872c3a9ba806f51d9" title="This method sets the IEEE 802.15.4 Channel to use for transmission. " alt="" coords="532,1760,734,1785"/>
+<area shape="rect" id="node39" href="$df/d94/group__core-mle-core.html#gadbe9c0d542453bbe67270fb5dc47db93" title="This method appends an MLE header to a message. " alt="" coords="804,1372,979,1411"/>
+<area shape="rect" id="node40" href="$d0/d0d/classThread_1_1Mle_1_1ChannelTlv.html#a828810c59677af4327ddd58a8093ae59" title="This method initializes the TLV. " alt="" coords="549,1809,716,1848"/>
+<area shape="rect" id="node41" href="$d0/d0d/classThread_1_1Mle_1_1ChannelTlv.html#a211a350725634dfde2b11fd0047b8ed7" title="This method sets the Channel Page value. " alt="" coords="549,1872,716,1911"/>
+<area shape="rect" id="node42" href="$d0/d0d/classThread_1_1Mle_1_1ChannelTlv.html#a2fa66b31d663774dcfe245aa7ce13a3c" title="This method sets the Channel value. " alt="" coords="549,1935,716,1973"/>
+<area shape="rect" id="node43" href="$d6/d88/classThread_1_1Mac_1_1Mac.html#a4465d77c4eae8edcf0a91995be6f2317" title="This method returns the IEEE 802.15.4 Channel. " alt="" coords="788,1215,995,1240"/>
+<area shape="rect" id="node44" href="$df/d94/group__core-mle-core.html#ga04a5d0693da52823a013a1808825344a" title="This method appends a Active Timestamp TLV to a message. " alt="" coords="804,1599,979,1637"/>
+<area shape="rect" id="node45" href="$d6/dcf/classThread_1_1Mle_1_1PanIdTlv.html#a345c417d86d7cfc56ceab2a2b7bec7e2" title="This method initializes the TLV. " alt="" coords="556,1265,709,1304"/>
+<area shape="rect" id="node46" href="$d6/dcf/classThread_1_1Mle_1_1PanIdTlv.html#a59d68adb2d4a91849d1d9cbef75a038e" title="This method sets the PAN ID value. " alt="" coords="556,1328,709,1367"/>
+<area shape="rect" id="node47" href="$d6/d88/classThread_1_1Mac_1_1Mac.html#a4f56293a69aa4eaf731c799f1bb73890" title="This method returns the IEEE 802.15.4 PAN ID. " alt="" coords="795,1464,988,1489"/>
+<area shape="rect" id="node48" href="$df/d94/group__core-mle-core.html#ga0ea27201cf13a4e1b0680a9da6c54a64" title="This method submits an MLE message to the UDP socket. " alt="" coords="526,1113,740,1139"/>
+<area shape="rect" id="node49" href="$d6/d83/classThread_1_1MeshCoP_1_1Dataset.html#a3258521bf66915fc5da53679c867e233" title="This method returns a pointer to the TLV. " alt="" coords="527,1008,739,1033"/>
+<area shape="rect" id="node50" href="$d6/d52/classThread_1_1MeshCoP_1_1ChannelMaskEntry.html#a77c3e965a450ece05a109d694b3a5b8d" title="This method indicates whether or not the bit corresponding to aChannel in ChannelMask is set..." alt="" coords="539,1544,726,1583"/>
+</map>

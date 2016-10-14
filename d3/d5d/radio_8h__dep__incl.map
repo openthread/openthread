@@ -1,51 +1,51 @@
 <map id="include/platform/radio.h" name="include/platform/radio.h">
-<area shape="rect" id="node2" href="$da/db5/mac_8hpp.html" title="This file includes definitions for the IEEE 802.15.4 MAC. " alt="" coords="1125,479,1278,504"/>
-<area shape="rect" id="node12" href="$d1/df9/mle_8cpp.html" title="This file implements MLE functionality required for the Thread Child, Router and Leader roles..." alt="" coords="2296,825,2456,851"/>
-<area shape="rect" id="node18" href="$d5/d6a/ncp__base_8cpp.html" title="This file implements a Spinel interface to the OpenThread stack. " alt="" coords="1842,905,1993,931"/>
-<area shape="rect" id="node23" href="$d1/d97/mac__frame_8hpp.html" title="This file includes definitions for generating and processing IEEE 802.15.4 MAC frames. " alt="" coords="619,79,813,104"/>
-<area shape="rect" id="node46" href="$dd/d45/openthread_8h.html" title="This file defines the top&#45;level functions for the OpenThread library. " alt="" coords="3330,79,3476,104"/>
-<area shape="rect" id="node3" href="$d4/dd9/mac_8cpp.html" title="This file implements the subset of IEEE 802.15.4 primitives required for Thread. " alt="" coords="212,825,364,851"/>
-<area shape="rect" id="node4" href="$d9/d2d/address__resolver_8hpp.html" title="This file includes definitions for Thread EID&#45;to&#45;RLOC mapping and caching. " alt="" coords="1483,559,1645,597"/>
-<area shape="rect" id="node6" href="$da/d80/mesh__forwarder_8hpp.html" title="This file includes definitions for forwarding IPv6 datagrams across the Thread mesh. " alt="" coords="1660,645,1807,684"/>
-<area shape="rect" id="node8" href="$d1/d54/thread__netif_8hpp.html" title="This file includes definitions for the Thread network interface. " alt="" coords="1731,732,1883,771"/>
-<area shape="rect" id="node19" href="$d0/d78/mle_8hpp.html" title="This file includes definitions for MLE functionality required by the Thread Child, Router, and Leader roles. " alt="" coords="1847,565,2009,591"/>
-<area shape="rect" id="node5" href="$de/d27/address__resolver_8cpp.html" title="This file implements Thread&#39;s EID&#45;to&#45;RLOC mapping and caching. " alt="" coords="1115,819,1277,857"/>
-<area shape="rect" id="node7" href="$df/d6b/mesh__forwarder_8cpp.html" title="This file implements mesh forwarding of IPv6/6LoWPAN messages. " alt="" coords="2661,819,2808,857"/>
-<area shape="rect" id="node9" href="$da/d60/openthread_8cpp.html" title="This file implements the top&#45;level interface to the OpenThread stack. " alt="" coords="3225,825,3391,851"/>
-<area shape="rect" id="node10" href="$dd/d59/key__manager_8cpp.html" title="This file implements Thread security material generation. " alt="" coords="1670,819,1805,857"/>
-<area shape="rect" id="node11" href="$d6/d2b/lowpan_8cpp.html" title="This file implements 6LoWPAN header compression. " alt="" coords="2884,825,3065,851"/>
-<area shape="rect" id="node13" href="$d9/d88/mle__router_8cpp.html" title="This file implements MLE functionality required for the Thread Router and Leader roles. " alt="" coords="1300,819,1436,857"/>
-<area shape="rect" id="node14" href="$d0/d0f/network__data__leader_8cpp.html" title="This file implements the Thread Network Data managed by the Thread Leader. " alt="" coords="462,819,623,857"/>
-<area shape="rect" id="node15" href="$dd/d90/network__data__local_8cpp.html" title="This file implements the local Thread Network Data. " alt="" coords="1460,819,1620,857"/>
-<area shape="rect" id="node16" href="$db/d84/thread__netif_8cpp.html" title="This file implements the Thread network interface. " alt="" coords="2021,819,2173,857"/>
-<area shape="rect" id="node17" href="$df/d54/ncp__base_8hpp.html" title="This file contains definitions a spinel interface to the OpenThread stack. " alt="" coords="1841,825,1993,851"/>
-<area shape="rect" id="node20" href="$de/db9/ip6__filter_8cpp.html" title="This file implements IPv6 datagram filtering. " alt="" coords="2274,652,2443,677"/>
-<area shape="rect" id="node21" href="$d6/d6f/mle__router_8hpp.html" title="This file includes definitions for MLE functionality required by the Thread Router and Leader roles..." alt="" coords="1091,645,1226,684"/>
-<area shape="rect" id="node22" href="$d8/d26/thread__tlvs_8hpp.html" title="This file includes definitions and methods for generating and processing Thread Network Layer TLVs..." alt="" coords="1453,732,1605,771"/>
-<area shape="rect" id="node24" href="$d5/d8c/message_8hpp.html" title="This file includes definitions for the message buffer pool and message buffers. " alt="" coords="1714,152,1921,177"/>
-<area shape="rect" id="node35" href="$de/d66/lowpan_8hpp.html" title="This file includes definitions for 6LoWPAN header compression. " alt="" coords="3025,392,3207,417"/>
-<area shape="rect" id="node36" href="$df/d4b/topology_8hpp.html" title="This file includes definitions for maintaining Thread network topologies. " alt="" coords="1125,392,1315,417"/>
-<area shape="rect" id="node40" href="$d0/d86/netif_8hpp.html" title="This file includes definitions for IPv6 network interfaces. " alt="" coords="2482,225,2628,251"/>
-<area shape="rect" id="node43" href="$d3/d9e/mac__frame_8cpp.html" title="This file implements IEEE 802.15.4 header generation and processing. " alt="" coords="143,152,337,177"/>
-<area shape="rect" id="node44" href="$d6/d79/mac__whitelist_8hpp.html" title="This file includes definitions for IEEE 802.15.4 frame filtering based on MAC address. " alt="" coords="504,225,712,251"/>
-<area shape="rect" id="node45" href="$d2/db6/ip6__address_8cpp.html" title="This file implements IPv6 addresses. " alt="" coords="410,152,603,177"/>
-<area shape="rect" id="node25" href="$d8/d86/cli__server_8hpp.html" title="This file contains definitions for adding a CLI command to the CLI server. " alt="" coords="1301,225,1443,251"/>
-<area shape="rect" id="node26" href="$d1/d8d/coap__header_8hpp.html" title="This file includes definitions for generating and processing CoAP headers. " alt="" coords="453,385,587,424"/>
-<area shape="rect" id="node27" href="$dd/d28/coap__server_8hpp.html" title="This file includes definitions for the CoAP server. " alt="" coords="917,472,1051,511"/>
-<area shape="rect" id="node28" href="$d8/d6a/message_8cpp.html" title="This file implements the message buffer pool and message buffers. " alt="" coords="1783,392,1990,417"/>
-<area shape="rect" id="node29" href="$df/d5b/icmp6_8cpp.html" title="This file implements ICMPv6. " alt="" coords="2014,392,2170,417"/>
-<area shape="rect" id="node30" href="$d5/d8d/ip6_8cpp.html" title="This file implements IPv6 networking. " alt="" coords="1744,479,1882,504"/>
-<area shape="rect" id="node31" href="$d1/dd4/ip6_8hpp.html" title="This file includes definitions for IPv6 packet processing. " alt="" coords="2188,305,2327,331"/>
-<area shape="rect" id="node32" href="$df/dab/ip6__mpl_8hpp.html" title="This file includes definitions for MPL. " alt="" coords="1440,392,1608,417"/>
-<area shape="rect" id="node33" href="$d3/d05/ip6__mpl_8cpp.html" title="This file implements MPL. " alt="" coords="1503,479,1670,504"/>
-<area shape="rect" id="node37" href="$dd/daa/ip6__routes_8cpp.html" title="This file implements IPv6 route tables. " alt="" coords="1778,305,1960,331"/>
-<area shape="rect" id="node38" href="$df/dc2/ip6__routes_8hpp.html" title="This file includes definitions for manipulating IPv6 routing tables. " alt="" coords="1726,225,1909,251"/>
-<area shape="rect" id="node39" href="$d9/db7/netif_8cpp.html" title="This file implements IPv6 network interfaces. " alt="" coords="2401,305,2546,331"/>
-<area shape="rect" id="node41" href="$d6/daf/mle__tlvs_8cpp.html" title="This file implements common methods for manipulating MLE TLVs. " alt="" coords="915,385,1050,424"/>
-<area shape="rect" id="node42" href="$d1/df7/mle__tlvs_8hpp.html" title="This file includes definitions for generating and processing MLE TLVs. " alt="" coords="1091,299,1226,337"/>
-<area shape="rect" id="node34" href="$d0/db7/udp6_8hpp.html" title="This file includes definitions for UDP/IPv6 sockets. " alt="" coords="2396,392,2546,417"/>
-<area shape="rect" id="node47" href="$dd/d48/cli_8cpp.html" title="This file implements the CLI interpreter. " alt="" coords="3380,152,3476,177"/>
-<area shape="rect" id="node48" href="$d0/d54/tasklet_8cpp.html" title="This file implements the tasklet scheduler. " alt="" coords="3500,152,3692,177"/>
-<area shape="rect" id="node49" href="$da/d32/ip6__filter_8hpp.html" title="This file includes definitions for IPv6 datagram filtering. " alt="" coords="2476,565,2646,591"/>
-<area shape="rect" id="node50" href="$da/dfc/socket_8hpp.html" title="This file includes definitions for IPv6 sockets. " alt="" coords="2475,152,2634,177"/>
+<area shape="rect" id="node2" href="$da/db5/mac_8hpp.html" title="This file includes definitions for the IEEE 802.15.4 MAC. " alt="" coords="1282,245,1435,271"/>
+<area shape="rect" id="node10" href="$d4/d64/joiner_8cpp.html" title="This file implements the Joiner role. " alt="" coords="3573,679,3760,704"/>
+<area shape="rect" id="node12" href="$da/d60/openthread_8cpp.html" title="This file implements the top&#45;level interface to the OpenThread stack. " alt="" coords="3962,679,4127,704"/>
+<area shape="rect" id="node13" href="$d4/d67/announce__begin__server_8cpp.html" title="This file implements the Announce Begin Server. " alt="" coords="5,672,178,711"/>
+<area shape="rect" id="node14" href="$d1/df9/mle_8cpp.html" title="This file implements MLE functionality required for the Thread Child, Router and Leader roles..." alt="" coords="2826,679,2987,704"/>
+<area shape="rect" id="node29" href="$d1/d97/mac__frame_8hpp.html" title="This file includes definitions for generating and processing IEEE 802.15.4 MAC frames. " alt="" coords="1381,79,1575,104"/>
+<area shape="rect" id="node39" href="$d3/d1b/diag__process_8hpp.html" title="This file contains definitions for the diagnostics module. " alt="" coords="3074,79,3251,104"/>
+<area shape="rect" id="node42" href="$d5/d6a/ncp__base_8cpp.html" title="This file implements a Spinel interface to the OpenThread stack. " alt="" coords="3275,159,3426,184"/>
+<area shape="rect" id="node43" href="$dd/d45/openthread_8h.html" title="This file defines the top&#45;level functions for the OpenThread library. " alt="" coords="3416,79,3562,104"/>
+<area shape="rect" id="node3" href="$d4/dd9/mac_8cpp.html" title="This file implements the subset of IEEE 802.15.4 primitives required for Thread. " alt="" coords="570,679,722,704"/>
+<area shape="rect" id="node4" href="$d9/d2d/address__resolver_8hpp.html" title="This file includes definitions for Thread EID&#45;to&#45;RLOC mapping and caching. " alt="" coords="1275,412,1436,451"/>
+<area shape="rect" id="node6" href="$da/d80/mesh__forwarder_8hpp.html" title="This file includes definitions for forwarding IPv6 datagrams across the Thread mesh. " alt="" coords="1138,499,1285,537"/>
+<area shape="rect" id="node9" href="$d1/d54/thread__netif_8hpp.html" title="This file includes definitions for the Thread network interface. " alt="" coords="1490,585,1642,624"/>
+<area shape="rect" id="node20" href="$d0/d78/mle_8hpp.html" title="This file includes definitions for MLE functionality required by the Thread Child, Router, and Leader roles. " alt="" coords="1874,332,2035,357"/>
+<area shape="rect" id="node28" href="$d4/dbe/global__address_8cpp.html" title="This file implements the Thread IPv6 global addresses configuration utilities. " alt="" coords="1349,325,1485,364"/>
+<area shape="rect" id="node5" href="$de/d27/address__resolver_8cpp.html" title="This file implements Thread&#39;s EID&#45;to&#45;RLOC mapping and caching. " alt="" coords="1096,672,1258,711"/>
+<area shape="rect" id="node7" href="$df/d6b/mesh__forwarder_8cpp.html" title="This file implements mesh forwarding of IPv6/6LoWPAN messages. " alt="" coords="2472,672,2618,711"/>
+<area shape="rect" id="node8" href="$d1/da2/network__diag_8cpp.html" title="This file implements Thread&#39;s Network Diagnostic processing. " alt="" coords="906,672,1067,711"/>
+<area shape="rect" id="node11" href="$db/dc3/joiner__router_8cpp.html" title="This file implements the Joiner Router role. " alt="" coords="1686,672,1849,711"/>
+<area shape="rect" id="node15" href="$d9/d88/mle__router_8cpp.html" title="This file implements MLE functionality required for the Thread Router and Leader roles. " alt="" coords="747,672,882,711"/>
+<area shape="rect" id="node16" href="$d9/d20/network__data_8cpp.html" title="This file implements common methods for manipulating Thread Network Data. " alt="" coords="202,672,363,711"/>
+<area shape="rect" id="node17" href="$d0/d0f/network__data__leader_8cpp.html" title="This file implements the Thread Network Data managed by the Thread Leader. " alt="" coords="386,672,547,711"/>
+<area shape="rect" id="node18" href="$dd/d90/network__data__local_8cpp.html" title="This file implements the local Thread Network Data. " alt="" coords="2642,672,2803,711"/>
+<area shape="rect" id="node19" href="$db/d84/thread__netif_8cpp.html" title="This file implements the Thread network interface. " alt="" coords="2073,672,2225,711"/>
+<area shape="rect" id="node21" href="$d4/da4/commissioner_8hpp.html" title="This file includes definitions for the Commissioner role. " alt="" coords="2741,419,2978,444"/>
+<area shape="rect" id="node22" href="$d9/d7e/leader_8hpp.html" title="This file includes definitions for a MeshCoP Leader. " alt="" coords="1855,419,2048,444"/>
+<area shape="rect" id="node23" href="$d5/d8d/ip6_8cpp.html" title="This file implements IPv6 networking. " alt="" coords="2173,419,2311,444"/>
+<area shape="rect" id="node24" href="$de/db9/ip6__filter_8cpp.html" title="This file implements IPv6 datagram filtering. " alt="" coords="3256,419,3426,444"/>
+<area shape="rect" id="node25" href="$d2/d1d/meshcop__dataset__manager_8hpp.html" title="This file includes definitions for managing MeshCoP Datasets. " alt="" coords="1512,412,1680,451"/>
+<area shape="rect" id="node26" href="$d6/d6f/mle__router_8hpp.html" title="This file includes definitions for MLE functionality required by the Thread Router and Leader roles..." alt="" coords="928,499,1063,537"/>
+<area shape="rect" id="node27" href="$d8/d26/thread__tlvs_8hpp.html" title="This file includes definitions and methods for generating and processing Thread Network Layer TLVs..." alt="" coords="642,412,794,451"/>
+<area shape="rect" id="node30" href="$d5/d8c/message_8hpp.html" title="This file includes definitions for the message buffer pool and message buffers. " alt="" coords="2192,159,2399,184"/>
+<area shape="rect" id="node31" href="$da/d7f/joiner__router_8hpp.html" title="This file includes definitions for the Joiner Router role. " alt="" coords="1992,239,2154,277"/>
+<area shape="rect" id="node32" href="$d0/d86/netif_8hpp.html" title="This file includes definitions for IPv6 network interfaces. " alt="" coords="2421,332,2567,357"/>
+<area shape="rect" id="node33" href="$de/d66/lowpan_8hpp.html" title="This file includes definitions for 6LoWPAN header compression. " alt="" coords="1071,245,1253,271"/>
+<area shape="rect" id="node34" href="$de/d6e/mac__blacklist_8hpp.html" title="This file includes definitions for IEEE 802.15.4 frame filtering based on MAC address. " alt="" coords="1260,159,1467,184"/>
+<area shape="rect" id="node35" href="$d3/d9e/mac__frame_8cpp.html" title="This file implements IEEE 802.15.4 header generation and processing. " alt="" coords="1772,159,1966,184"/>
+<area shape="rect" id="node36" href="$d6/d79/mac__whitelist_8hpp.html" title="This file includes definitions for IEEE 802.15.4 frame filtering based on MAC address. " alt="" coords="1491,159,1698,184"/>
+<area shape="rect" id="node37" href="$d2/db6/ip6__address_8cpp.html" title="This file implements IPv6 addresses. " alt="" coords="1043,159,1236,184"/>
+<area shape="rect" id="node38" href="$df/d4b/topology_8hpp.html" title="This file includes definitions for maintaining Thread network topologies. " alt="" coords="830,159,1020,184"/>
+<area shape="rect" id="node40" href="$d0/d76/diag__process_8cpp.html" title="This file implements the diagnostics module. " alt="" coords="3074,159,3250,184"/>
+<area shape="rect" id="node41" href="$d5/dce/openthread-diag_8cpp.html" title="This file implements the top&#45;level interface to diagnostics module. " alt="" coords="2911,152,3051,191"/>
+<area shape="rect" id="node44" href="$dd/d48/cli_8cpp.html" title="This file implements the CLI interpreter. " alt="" coords="3602,159,3699,184"/>
+<area shape="rect" id="node45" href="$d3/d16/cli__dataset_8cpp.html" title="This file implements the CLI interpreter. " alt="" coords="3723,159,3871,184"/>
+<area shape="rect" id="node46" href="$d0/d54/tasklet_8cpp.html" title="This file implements the tasklet scheduler. " alt="" coords="3895,159,4086,184"/>
+<area shape="rect" id="node47" href="$da/d32/ip6__filter_8hpp.html" title="This file includes definitions for IPv6 datagram filtering. " alt="" coords="3154,332,3325,357"/>
+<area shape="rect" id="node48" href="$da/dfc/socket_8hpp.html" title="This file includes definitions for IPv6 sockets. " alt="" coords="2896,245,3055,271"/>
+<area shape="rect" id="node49" href="$d3/d23/tcp_8hpp.html" title="This file includes definitions for parsing TCP header. " alt="" coords="3552,245,3690,271"/>
+<area shape="rect" id="node50" href="$d0/db7/udp6_8hpp.html" title="This file includes definitions for UDP/IPv6 sockets. " alt="" coords="2474,159,2624,184"/>
 </map>

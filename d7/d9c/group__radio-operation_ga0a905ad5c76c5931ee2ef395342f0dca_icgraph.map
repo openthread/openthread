@@ -1,0 +1,7 @@
+<map id="otPlatRadioSetPromiscuous" name="otPlatRadioSetPromiscuous">
+<area shape="rect" id="node2" href="$d6/d88/classThread_1_1Mac_1_1Mac.html#aeacaaf9b0fb951c5d78892a9ea9b5c53" title="This function enables or disables the link layer promiscuous mode. " alt="" coords="241,12,474,37"/>
+<area shape="rect" id="node5" href="$d9/dc8/classThread_1_1NcpBase.html#ad14f0f1d60c77f7f537a0a441a9fb35c" title="This method is called by the framer whenever a framing error is detected. " alt="" coords="261,61,453,100"/>
+<area shape="rect" id="node3" href="$d8/dd2/group__diags.html#ga029c1ebd63a0fbb18df80df3e8fa1956" title="This function enables or disables the link layer promiscuous mode. " alt="" coords="542,12,696,37"/>
+<area shape="rect" id="node4" href="$d5/dc2/structThread_1_1Cli_1_1Interpreter.html#a11ee1f86cffe17aab7de3de0bb16dee7" title="This method parses an ASCII string as an unsigned long. " alt="" coords="765,5,920,44"/>
+<area shape="rect" id="node6" href="$dc/d60/classThread_1_1NcpUart.html#a34e4ca7aff5b9056593e8ce0aa6e2fbb" title="This method is called when uart received a data buffer. " alt="" coords="522,61,717,100"/>
+</map>

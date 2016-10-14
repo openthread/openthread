@@ -1,4 +1,5 @@
 <map id="include/ncp/ncp.h" name="include/ncp/ncp.h">
-<area shape="rect" id="node2" href="$d0/d95/ncp__spi_8cpp.html" title="This file implements a SPI interface to the OpenThread stack. " alt="" coords="5,79,145,104"/>
-<area shape="rect" id="node3" href="$d4/dae/ncp__uart_8cpp.html" title="This file implements an HDLC interface to the Thread stack. " alt="" coords="169,79,314,104"/>
+<area shape="rect" id="node2" href="$d5/d6a/ncp__base_8cpp.html" title="This file implements a Spinel interface to the OpenThread stack. " alt="" coords="5,79,156,104"/>
+<area shape="rect" id="node3" href="$d0/d95/ncp__spi_8cpp.html" title="This file implements a SPI interface to the OpenThread stack. " alt="" coords="181,79,320,104"/>
+<area shape="rect" id="node4" href="$d4/dae/ncp__uart_8cpp.html" title="This file contains definitions for a UART based NCP interface to the OpenThread stack. " alt="" coords="344,79,489,104"/>
 </map>

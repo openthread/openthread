@@ -1,9 +1,8 @@
 <map id="Thread::Ip6::Ip6::NewMessage" name="Thread::Ip6::Ip6::NewMessage">
-<area shape="rect" id="node2" href="$dc/d3c/classThread_1_1Message.html#a91be16485334ce1fa61f289b1eeb682a" title="This static method is used to obtain a new message. " alt="" coords="257,68,416,93"/>
-<area shape="rect" id="node3" href="$dc/d3c/classThread_1_1Message.html#a942818bf261c0af93b793017407c2b2c" title="This method sets whether or not link security is enabled for the message. " alt="" coords="472,5,649,44"/>
-<area shape="rect" id="node4" href="$dc/d3c/classThread_1_1Message.html#acecf07ee065974c8b211c151ea5d6e14" title="This method sets the number of bytes in the message. " alt="" coords="464,68,657,93"/>
-<area shape="rect" id="node6" href="$dc/d3c/classThread_1_1Message.html#a3ab9d6d42d7ae9054eaf0cad0c4e44bb" title="This static method is used to free a message and return all message buffers to the buffer pool..." alt="" coords="481,117,641,143"/>
-<area shape="rect" id="node5" href="$dc/d3c/classThread_1_1Message.html#a2cf440376e834030c38bb2ced4ca49e9" title="This method returns the number of bytes in the message. " alt="" coords="707,68,902,93"/>
-<area shape="rect" id="node7" href="$db/d50/classThread_1_1Buffer.html#a34ab22941ccd9bb222d251a6a18c95bf" title="This method returns a pointer to the next message buffer. " alt="" coords="705,117,903,143"/>
-<area shape="rect" id="node8" href="$db/d50/classThread_1_1Buffer.html#a437ec9ccafa1ef6040a6e8e4fae9c3ca" title="This method sets the pointer to the next message buffer. " alt="" coords="706,167,903,192"/>
+<area shape="rect" id="node2" href="$d5/d9f/classThread_1_1MessagePool.html#a2d10b04dfeb1e0c9321eab0e95fda55f" title="This method is used to obtain a new message. " alt="" coords="257,68,443,93"/>
+<area shape="rect" id="node3" href="$dc/d3c/classThread_1_1Message.html#a942818bf261c0af93b793017407c2b2c" title="This method sets whether or not link security is enabled for the message. " alt="" coords="499,5,676,44"/>
+<area shape="rect" id="node4" href="$dc/d3c/classThread_1_1Message.html#acecf07ee065974c8b211c151ea5d6e14" title="This method sets the number of bytes in the message. " alt="" coords="491,68,684,93"/>
+<area shape="rect" id="node5" href="$d5/d9f/classThread_1_1MessagePool.html#a80238d94036455e30762ea4a5a0916f8" title="This method is used to free a message and return all message buffers to the buffer pool..." alt="" coords="512,117,663,156"/>
+<area shape="rect" id="node6" href="$db/d50/classThread_1_1Buffer.html#a34ab22941ccd9bb222d251a6a18c95bf" title="This method returns a pointer to the next message buffer. " alt="" coords="732,99,930,124"/>
+<area shape="rect" id="node7" href="$db/d50/classThread_1_1Buffer.html#a437ec9ccafa1ef6040a6e8e4fae9c3ca" title="This method sets the pointer to the next message buffer. " alt="" coords="733,148,929,173"/>
 </map>

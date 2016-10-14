@@ -1,7 +1,10 @@
 var classThread_1_1NetworkData_1_1NetworkData =
 [
-    [ "kMaxSize", "d4/d80/group__core-netdata-core.html#ggae06957b2fcbaf1837208b9e01d8e38e7aefe709ad8c7d1e0f5aeb273dbb5082f7", null ],
-    [ "NetworkData", "d4/d80/group__core-netdata-core.html#ga3f0de33590c4bd7e3340a12c74cc10df", null ],
+    [ "kMaxSize", "d4/d80/group__core-netdata-core.html#gga7bc408a1b012da1d593c9b6a8280ae5aaefe709ad8c7d1e0f5aeb273dbb5082f7", null ],
+    [ "NetworkData", "d4/d80/group__core-netdata-core.html#ga51bf866830fd8ba2c9c886c4759722ce", null ],
+    [ "ClearResubmitDelayTimer", "d4/d80/group__core-netdata-core.html#gaa8ec766398d8edf196d931889e6e0827", null ],
+    [ "ContainsExternalRoutes", "d4/d80/group__core-netdata-core.html#gaad3d7b2e97324d6cb9d87c464bcb995a", null ],
+    [ "ContainsOnMeshPrefixes", "d4/d80/group__core-netdata-core.html#ga9e4be52c4b1edb2b456372e07f936e64", null ],
     [ "FindBorderRouter", "d4/d80/group__core-netdata-core.html#gabe230a18b5a65ec7a63f08db1cb0e613", null ],
     [ "FindBorderRouter", "d4/d80/group__core-netdata-core.html#ga7abcf2b9efea9803dbb1f54e50524588", null ],
     [ "FindContext", "d4/d80/group__core-netdata-core.html#ga722be438ba262b0aba0128f5082388b1", null ],
@@ -10,10 +13,16 @@ var classThread_1_1NetworkData_1_1NetworkData =
     [ "FindPrefix", "d4/d80/group__core-netdata-core.html#ga5c8a8452951d8bb01eb646de656321a3", null ],
     [ "FindPrefix", "d4/d80/group__core-netdata-core.html#ga308642334e8be6ef99b1b7b0b781baca", null ],
     [ "GetNetworkData", "d4/d80/group__core-netdata-core.html#ga8772a76056134e6ad65d37cad55225c1", null ],
+    [ "GetNextExternalRoute", "d4/d80/group__core-netdata-core.html#ga15e4cd603674f7ba4e4d1323239b5004", null ],
+    [ "GetNextExternalRoute", "d4/d80/group__core-netdata-core.html#gad8c476283fcfb1bca993c14de5a9f5e0", null ],
+    [ "GetNextOnMeshPrefix", "d4/d80/group__core-netdata-core.html#ga1f1cacaf85d15baa1cf784b23665f421", null ],
+    [ "GetNextOnMeshPrefix", "d4/d80/group__core-netdata-core.html#ga557db8fd0f37e855cfcf5623f6a4700a", null ],
     [ "Insert", "d4/d80/group__core-netdata-core.html#ga9f5162a9bc93eab0d3c02ffd7647223d", null ],
     [ "PrefixMatch", "d4/d80/group__core-netdata-core.html#ga5ff7c89eab94daf8fffde176c02f2093", null ],
     [ "Remove", "d4/d80/group__core-netdata-core.html#ga3b02c75d7d5dce213601521df50b24a3", null ],
     [ "RemoveTemporaryData", "d4/d80/group__core-netdata-core.html#gacaa88ef88dee8b6be852ec7d19b19fa0", null ],
     [ "RemoveTemporaryData", "d4/d80/group__core-netdata-core.html#ga91ced18d726877f3bd4a1fbcf2871b22", null ],
+    [ "SendServerDataNotification", "d4/d80/group__core-netdata-core.html#ga0caa53c797a248a80b591f963d110657", null ],
+    [ "mMle", "d4/d80/group__core-netdata-core.html#ga5f3e6793f1e4c296e561356f084e7435", null ],
     [ "mTlvs", "d4/d80/group__core-netdata-core.html#ga0e78f3ca45c7e136a56b66008d0fb2ae", null ]
 ];

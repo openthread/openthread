@@ -1,0 +1,6 @@
+<map id="otPlatReset" name="otPlatReset">
+<area shape="rect" id="node2" href="$db/d57/group__config-test.html#ga383bd88f862315010ce91c795ef6acba" title="This method triggers platform reset. " alt="" coords="181,15,298,40"/>
+<area shape="rect" id="node4" href="$d9/dc8/classThread_1_1NcpBase.html#ad14f0f1d60c77f7f537a0a441a9fb35c" title="This method is called by the framer whenever a framing error is detected. " alt="" coords="144,65,335,104"/>
+<area shape="rect" id="node3" href="$d5/dc2/structThread_1_1Cli_1_1Interpreter.html#a11ee1f86cffe17aab7de3de0bb16dee7" title="This method parses an ASCII string as an unsigned long. " alt="" coords="403,5,558,44"/>
+<area shape="rect" id="node5" href="$dc/d60/classThread_1_1NcpUart.html#a34e4ca7aff5b9056593e8ce0aa6e2fbb" title="This method is called when uart received a data buffer. " alt="" coords="383,68,578,107"/>
+</map>

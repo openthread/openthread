@@ -34,7 +34,7 @@
   <td id="projectlogo"><img alt="Logo" src="Open-Thread-Logo-200x42.png"/></td>
   <td style="padding-left: 0.5em;">
    <div id="projectname">
-   &#160;<span id="projectnumber">gb2b10b8</span>
+   &#160;<span id="projectnumber">gddd0704</span>
    </div>
   </td>
  </tr>
@@ -100,6 +100,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
       <li><a href="functions_g.html#index_g"><span>g</span></a></li>
       <li><a href="functions_h.html#index_h"><span>h</span></a></li>
       <li><a href="functions_i.html#index_i"><span>i</span></a></li>
+      <li><a href="functions_j.html#index_j"><span>j</span></a></li>
       <li><a href="functions_k.html#index_k"><span>k</span></a></li>
       <li><a href="functions_l.html#index_l"><span>l</span></a></li>
       <li><a href="functions_m.html#index_m"><span>m</span></a></li>
@@ -157,11 +158,20 @@ $(document).ready(function(){initNavTree('functions_c.html','');});
 <li>Clear()
 : <a class="el" href="d4/dcf/classThread_1_1AddressResolver.html#af9e813b464854994a8beda21d91c989c">Thread::AddressResolver</a>
 , <a class="el" href="dd/d38/classThread_1_1LinkQualityInfo.html#a476c18fbd4d727fd09a778bfdc983c86">Thread::LinkQualityInfo</a>
+, <a class="el" href="d4/db9/classThread_1_1Mac_1_1Blacklist.html#afed00b8cfd28a81ed41f72428a7c43a0">Thread::Mac::Blacklist</a>
 , <a class="el" href="d7/d98/classThread_1_1Mac_1_1Whitelist.html#a95503128cd8b0f8e8b16d11529aba6db">Thread::Mac::Whitelist</a>
+, <a class="el" href="d6/d83/classThread_1_1MeshCoP_1_1Dataset.html#a8a8d126f604b8dbedb7128c9292480f9">Thread::MeshCoP::Dataset</a>
+, <a class="el" href="d5/d0c/classThread_1_1MeshCoP_1_1SteeringDataTlv.html#a90cfa85560c90e598b0d0b67498f9e99">Thread::MeshCoP::SteeringDataTlv</a>
 , <a class="el" href="d0/d78/classThread_1_1NcpFrameBuffer.html#ab2380a440712abb615835172a0863bdf">Thread::NcpFrameBuffer</a>
 </li>
 <li>ClearAssignedRouterIdMask()
 : <a class="el" href="dd/dd2/classThread_1_1ThreadRouterMaskTlv.html#ae5dbeb88e3c99ebc83078c64e8383651">Thread::ThreadRouterMaskTlv</a>
+</li>
+<li>ClearBit()
+: <a class="el" href="d5/d0c/classThread_1_1MeshCoP_1_1SteeringDataTlv.html#af1ea982702e0ba080d5ba3b4a4ee18b0">Thread::MeshCoP::SteeringDataTlv</a>
+</li>
+<li>ClearChannel()
+: <a class="el" href="d6/d52/classThread_1_1MeshCoP_1_1ChannelMaskEntry.html#a86e52a2c26e383177e1d2ad5b71e9845">Thread::MeshCoP::ChannelMaskEntry</a>
 </li>
 <li>ClearChildMask()
 : <a class="el" href="dc/d3c/classThread_1_1Message.html#a83c952b13dc03db254c352e08cdc22d0">Thread::Message</a>
@@ -187,6 +197,9 @@ $(document).ready(function(){initNavTree('functions_c.html','');});
 <li>ClearFixedRssi()
 : <a class="el" href="d7/d98/classThread_1_1Mac_1_1Whitelist.html#a066c75306e898fdeccd346cdd5e8e4cf">Thread::Mac::Whitelist</a>
 </li>
+<li>ClearJoiners()
+: <a class="el" href="dc/d67/classThread_1_1MeshCoP_1_1Commissioner.html#afcaf41372cb39fcc8a1502cb0121a3a5">Thread::MeshCoP::Commissioner</a>
+</li>
 <li>ClearJoiningPermitted()
 : <a class="el" href="dc/dbd/classThread_1_1Mac_1_1Beacon.html#a8be37c57b5d825c4835a91533636c849">Thread::Mac::Beacon</a>
 </li>
@@ -199,20 +212,33 @@ $(document).ready(function(){initNavTree('functions_c.html','');});
 <li>ClearNative()
 : <a class="el" href="dc/dbd/classThread_1_1Mac_1_1Beacon.html#a6025c99678cf4cbaf9573c40b158e7e7">Thread::Mac::Beacon</a>
 </li>
+<li>ClearOnMesh()
+: <a class="el" href="d9/d64/classThread_1_1NetworkData_1_1BorderRouterEntry.html#acd86e6cac09b7848359ce10cc52bf289">Thread::NetworkData::BorderRouterEntry</a>
+</li>
 <li>ClearPreferred()
 : <a class="el" href="d9/d64/classThread_1_1NetworkData_1_1BorderRouterEntry.html#a2f894a14f1f28c1719282a4190d14088">Thread::NetworkData::BorderRouterEntry</a>
+</li>
+<li>ClearResubmitDelayTimer()
+: <a class="el" href="d4/d80/group__core-netdata-core.html#gaa8ec766398d8edf196d931889e6e0827">Thread::NetworkData::NetworkData</a>
 </li>
 <li>ClearRouterFlag()
 : <a class="el" href="da/d3d/classThread_1_1Mle_1_1ScanMaskTlv.html#a6ae41fc5cbc1f0f0647451756d056117">Thread::Mle::ScanMaskTlv</a>
 </li>
 <li>ClearRouterIdMask()
 : <a class="el" href="d6/d9e/classThread_1_1Mle_1_1RouteTlv.html#a4a8c59d3c400c4cece6a169a6bb8428d">Thread::Mle::RouteTlv</a>
+, <a class="el" href="d6/d79/classThread_1_1NetworkDiagnostic_1_1RouteTlv.html#a3bc220708925d0c9f0b49a05a1f6bf69">Thread::NetworkDiagnostic::RouteTlv</a>
+</li>
+<li>ClearSlaac()
+: <a class="el" href="d9/d64/classThread_1_1NetworkData_1_1BorderRouterEntry.html#a044a176edbcefd7d8ce23aec2e4e76ae">Thread::NetworkData::BorderRouterEntry</a>
+</li>
+<li>ClearSrcMatchEntries()
+: <a class="el" href="d6/d88/classThread_1_1Mac_1_1Mac.html#a62566a20fe0561dcf9ad87fa976be14f">Thread::Mac::Mac</a>
+</li>
+<li>ClearSrcMatchEntry()
+: <a class="el" href="d6/d88/classThread_1_1Mac_1_1Mac.html#aa6b6474625ad896bbdff3438e7f96566">Thread::Mac::Mac</a>
 </li>
 <li>ClearStable()
 : <a class="el" href="d5/d81/classThread_1_1NetworkData_1_1NetworkDataTlv.html#aa4859aa514ee48c935c7af7bb7b2f7fa">Thread::NetworkData::NetworkDataTlv</a>
-</li>
-<li>ClearValid()
-: <a class="el" href="d9/d64/classThread_1_1NetworkData_1_1BorderRouterEntry.html#ae4ffacd4164c269d9bd3810544a41880">Thread::NetworkData::BorderRouterEntry</a>
 </li>
 <li>Close()
 : <a class="el" href="dc/d75/classThread_1_1Ip6_1_1UdpSocket.html#a2c050c372e20976105003cb8d4d6fc90">Thread::Ip6::UdpSocket</a>
@@ -227,23 +253,51 @@ $(document).ready(function(){initNavTree('functions_c.html','');});
 <li>Command
 : <a class="el" href="df/d94/group__core-mle-core.html#ga031d27cab64728206709aeee8440f4ff">Thread::Mle::Header</a>
 </li>
+<li>Commissioner()
+: <a class="el" href="dc/d67/classThread_1_1MeshCoP_1_1Commissioner.html#a8406c25cf23c739f803812e58619b444">Thread::MeshCoP::Commissioner</a>
+</li>
+<li>Compare()
+: <a class="el" href="d6/d83/classThread_1_1MeshCoP_1_1Dataset.html#adbbce97d87391aadc3e3223db67b59aa">Thread::MeshCoP::Dataset</a>
+, <a class="el" href="d1/def/classThread_1_1MeshCoP_1_1Timestamp.html#aa13f4aa7fb7852e57b3466feff2a4e99">Thread::MeshCoP::Timestamp</a>
+</li>
+<li>ComparePartitions()
+: <a class="el" href="db/dec/group__core-mle-router.html#ga8ff435384ef5423683fbb74f0d87c1a9">Thread::Mle::MleRouter</a>
+</li>
 <li>Compress()
 : <a class="el" href="d8/d3a/classThread_1_1Lowpan_1_1Lowpan.html#a96cd83be02e4d74593f98a86ee1a477c">Thread::Lowpan::Lowpan</a>
 </li>
 <li>ComputePseudoheaderChecksum()
 : <a class="el" href="d3/d05/classThread_1_1Ip6_1_1Ip6.html#a5f39ba98f1e62d4b618aa83ac8c047b6">Thread::Ip6::Ip6</a>
 </li>
+<li>Console()
+: <a class="el" href="dd/dce/classThread_1_1Cli_1_1Console.html#a3eeb91cf175c812701734c56a3b58c60">Thread::Cli::Console</a>
+</li>
+<li>ContainsExternalRoutes()
+: <a class="el" href="d4/d80/group__core-netdata-core.html#gaad3d7b2e97324d6cb9d87c464bcb995a">Thread::NetworkData::NetworkData</a>
+</li>
+<li>ContainsOnMeshPrefixes()
+: <a class="el" href="d4/d80/group__core-netdata-core.html#ga9e4be52c4b1edb2b456372e07f936e64">Thread::NetworkData::NetworkData</a>
+</li>
 <li>ConvertLinkMarginToLinkQuality()
 : <a class="el" href="dd/d38/classThread_1_1LinkQualityInfo.html#a4b535d272b35be3caa31dbd007d87b86">Thread::LinkQualityInfo</a>
 </li>
 <li>ConvertRssToLinkMargin()
-: <a class="el" href="dd/d38/classThread_1_1LinkQualityInfo.html#a89d22a837f94dbfacc6e8a93071867d6">Thread::LinkQualityInfo</a>
+: <a class="el" href="dd/d38/classThread_1_1LinkQualityInfo.html#aecb995df780f6eb79a340614e71d1b5c">Thread::LinkQualityInfo</a>
 </li>
 <li>ConvertRssToLinkQuality()
-: <a class="el" href="dd/d38/classThread_1_1LinkQualityInfo.html#a485c094ddb7de1d2c3d774847bca8faa">Thread::LinkQualityInfo</a>
+: <a class="el" href="dd/d38/classThread_1_1LinkQualityInfo.html#a71ca210fafdcf960124dd2a4b52ea875">Thread::LinkQualityInfo</a>
 </li>
 <li>CopyTo()
-: <a class="el" href="dc/d3c/classThread_1_1Message.html#ad47a7071aba65e82d675d83017d3d92c">Thread::Message</a>
+: <a class="el" href="dc/d3c/classThread_1_1Message.html#a6ad07f345f6fbc1c0917d2ccf5ce9042">Thread::Message</a>
+</li>
+<li>Crc16()
+: <a class="el" href="de/dd3/classThread_1_1Crc16.html#aad0debba6eeaba0e983c3ee4cf01eb81">Thread::Crc16</a>
+</li>
+<li>CreateIid()
+: <a class="el" href="dd/d32/classThread_1_1Utils_1_1SemanticallyOpaqueIidGenerator.html#aa63452c20829bd917ecdbe0448bacab8">Thread::Utils::SemanticallyOpaqueIidGenerator</a>
+</li>
+<li>CreateRandomIid()
+: <a class="el" href="d5/d79/classThread_1_1Utils_1_1Slaac.html#a4dc0d6478561125fc73d8b43300c6985">Thread::Utils::Slaac</a>
 </li>
 </ul>
 </div><!-- contents -->
@@ -251,7 +305,7 @@ $(document).ready(function(){initNavTree('functions_c.html','');});
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
-    <li class="footer">Generated on Wed Jul 27 2016 17:09:44 for OpenThread by
+    <li class="footer">Generated on Fri Oct 14 2016 08:44:38 for OpenThread by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.11 </li>
   </ul>

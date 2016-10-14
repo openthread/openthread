@@ -1,0 +1,11 @@
+<map id="Thread::Ip6::Ip6::SelectSourceAddress" name="Thread::Ip6::Ip6::SelectSourceAddress">
+<area shape="rect" id="node2" href="$da/d46/classThread_1_1Ip6_1_1MessageInfo.html#a794b87e17aa877f3551c00aa8c892072" title="This method returns a reference to the peer socket address. " alt="" coords="223,5,396,44"/>
+<area shape="rect" id="node3" href="$d3/d05/classThread_1_1Ip6_1_1Ip6.html#a1925e10c3f64fc3278cf3b4f1ed20d49" title="This method returns the network interface list. " alt="" coords="213,68,406,93"/>
+<area shape="rect" id="node4" href="$d9/d13/classThread_1_1Ip6_1_1NetifUnicastAddress.html#ac7f38e1322075b0e6dfc7afc048f7eec" title="This method returns the next unicast address assigned to the interface. " alt="" coords="225,117,394,156"/>
+<area shape="rect" id="node5" href="$d9/db1/classThread_1_1Ip6_1_1Address.html#a95748f9c0a5048ce8700cd040d7efc52" title="This method indicates whether or not the IPv6 address scope is Link&#45;Local. " alt="" coords="454,169,600,208"/>
+<area shape="rect" id="node6" href="$d9/db1/classThread_1_1Ip6_1_1Address.html#a37b709740053966d80e6c4b65e38ad2e" title="This method indicates whether or not the IPv6 address is multicast address. " alt="" coords="454,295,600,333"/>
+<area shape="rect" id="node7" href="$d9/db1/classThread_1_1Ip6_1_1Address.html#ad4ff2b7d05753e0d533ff30a186f53dc" title="This method returns the IPv6 address scope. " alt="" coords="237,232,382,271"/>
+<area shape="rect" id="node9" href="$d9/d13/classThread_1_1Ip6_1_1NetifUnicastAddress.html#a2bb426bd29e271bd1fc09b61d1044911" title="This method returns the unicast address. " alt="" coords="225,347,394,385"/>
+<area shape="rect" id="node10" href="$d9/db1/classThread_1_1Ip6_1_1Address.html#a50ea97e2c30c6d86a74ec20558076c46" title="This method returns the number of IPv6 prefix bits that match. " alt="" coords="237,409,382,448"/>
+<area shape="rect" id="node8" href="$d9/db1/classThread_1_1Ip6_1_1Address.html#adf30776c446d5413a6bc783fe967311b" title="This method indicates whether or not the IPv6 address is the Loopback Address. " alt="" coords="454,232,600,271"/>
+</map>

@@ -1,3 +1,4 @@
 <map id="otPlatSpiSlavePrepareTransaction" name="otPlatSpiSlavePrepareTransaction">
-<area shape="rect" id="node2" href="$d2/de4/ncp_8h.html#aef46036f17188b217a2ffcb8c325f516" title="Initialize the NCP. " alt="" coords="278,5,352,31"/>
+<area shape="rect" id="node2" href="$d0/d2a/classThread_1_1NcpSpi.html#a755449adff7ec14f4985ac462c7914bd" title="Constructor. " alt="" coords="286,5,450,31"/>
+<area shape="rect" id="node3" href="$d0/d2a/classThread_1_1NcpSpi.html#ae9c67ca2e9b95ac4a4fa5650d44a2eed" title="This method finalizes and sends the current outbound frame. " alt="" coords="278,55,458,93"/>
 </map>

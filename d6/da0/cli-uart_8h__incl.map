@@ -1,0 +1,7 @@
+<map id="include/cli/cli&#45;uart.h" name="include/cli/cli&#45;uart.h">
+<area shape="rect" id="node3" href="$dc/dbf/openthread-types_8h.html" title="This file defines the types and structures used in the OpenThread library API. " alt="" coords="251,79,387,104"/>
+<area shape="rect" id="node7" href="$d5/d77/logging_8h.html" title="This file includes the platform abstraction for the debug log service. " alt="" coords="99,79,226,104"/>
+<area shape="rect" id="node4" href="$df/dd8/stdint_8h_source.html" title="stdint.h" alt="" coords="161,152,226,177"/>
+<area shape="rect" id="node5" href="$d9/d5e/stdbool_8h_source.html" title="stdbool.h" alt="" coords="265,152,340,177"/>
+<area shape="rect" id="node6" href="$d3/da9/toolchain_8h_source.html" title="platform/toolchain.h" alt="" coords="365,152,502,177"/>
+</map>

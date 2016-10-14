@@ -3,6 +3,8 @@
 <area shape="rect" id="node4" href="$da/d7b/debug_8hpp.html" title="This file includes functions for debugging. " alt="" coords="773,79,912,104"/>
 <area shape="rect" id="node8" href="$d1/d97/mac__frame_8hpp.html" title="This file includes definitions for generating and processing IEEE 802.15.4 MAC frames. " alt="" coords="426,79,569,104"/>
 <area shape="rect" id="node15" href="$dc/d02/ip6__address_8hpp.html" title="This file includes definitions for IPv6 addresses. " alt="" coords="129,152,271,177"/>
+<area shape="rect" id="node3" href="$d9/d5e/stdbool_8h_source.html" title="stdbool.h" alt="" coords="95,299,171,324"/>
+<area shape="rect" id="node10" href="$df/dd8/stdint_8h_source.html" title="stdint.h" alt="" coords="398,299,463,324"/>
 <area shape="rect" id="node11" href="$df/d57/encoding_8hpp.html" title="This file includes definitions for byte&#45;ordering encoding. " alt="" coords="535,152,691,177"/>
 <area shape="rect" id="node12" href="$dc/dbf/openthread-types_8h.html" title="This file defines the types and structures used in the OpenThread library API. " alt="" coords="242,225,379,251"/>
 <area shape="rect" id="node14" href="$d7/d62/radio_8h.html" title="This file defines the radio interface for OpenThread. " alt="" coords="345,152,459,177"/>

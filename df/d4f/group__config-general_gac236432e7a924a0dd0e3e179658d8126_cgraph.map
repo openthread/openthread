@@ -1,0 +1,5 @@
+<map id="otSetMaxAllowedChildren" name="otSetMaxAllowedChildren">
+<area shape="rect" id="node2" href="$d3/d8e/classThread_1_1ThreadNetif.html#ad49d56e324f096d728c0083d9292f52d" title="This method returns a pointer to the mle object. " alt="" coords="242,5,383,44"/>
+<area shape="rect" id="node3" href="$db/dec/group__core-mle-router.html#gaac9800c2830fea9007f968e1f0c10447" title="This method sets the max children allowed value for this Thread interface. " alt="" coords="227,68,398,107"/>
+<area shape="rect" id="node4" href="$df/d94/group__core-mle-core.html#gabc154b6e95f5b169febcd7a582dfa1a3" title="This method returns the current Thread interface state. " alt="" coords="446,68,637,107"/>
+</map>

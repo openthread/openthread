@@ -1,6 +1,8 @@
 <map id="src/core/mac/mac_frame.hpp" name="src/core/mac/mac_frame.hpp">
+<area shape="rect" id="node3" href="$df/dd8/stdint_8h_source.html" title="stdint.h" alt="" coords="176,225,240,251"/>
 <area shape="rect" id="node5" href="$df/d57/encoding_8hpp.html" title="This file includes definitions for byte&#45;ordering encoding. " alt="" coords="122,79,278,104"/>
 <area shape="rect" id="node6" href="$dc/dbf/openthread-types_8h.html" title="This file defines the types and structures used in the OpenThread library API. " alt="" coords="291,152,427,177"/>
 <area shape="rect" id="node9" href="$d7/d62/radio_8h.html" title="This file defines the radio interface for OpenThread. " alt="" coords="302,79,416,104"/>
+<area shape="rect" id="node7" href="$d9/d5e/stdbool_8h_source.html" title="stdbool.h" alt="" coords="442,225,518,251"/>
 <area shape="rect" id="node8" href="$d3/da9/toolchain_8h_source.html" title="platform/toolchain.h" alt="" coords="280,225,418,251"/>
 </map>

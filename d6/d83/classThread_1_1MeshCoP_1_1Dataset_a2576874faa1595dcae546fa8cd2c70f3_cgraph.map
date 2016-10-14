@@ -1,0 +1,12 @@
+<map id="Thread::MeshCoP::Dataset::GetTimestamp" name="Thread::MeshCoP::Dataset::GetTimestamp">
+<area shape="rect" id="node2" href="$d6/d83/classThread_1_1MeshCoP_1_1Dataset.html#a3258521bf66915fc5da53679c867e233" title="This method returns a pointer to the TLV. " alt="" coords="236,45,448,71"/>
+<area shape="rect" id="node3" href="$dd/d8d/classThread_1_1MeshCoP_1_1Tlv.html#a6b50f0231142d7c272ac1732ae0fdca7" title="This method returns the Type value. " alt="" coords="921,5,1076,44"/>
+<area shape="rect" id="node4" href="$dd/d8d/classThread_1_1MeshCoP_1_1Tlv.html#aa2f476effa6f74d304b38fd6280ede7d" title="This method returns a pointer to the next TLV. " alt="" coords="496,68,651,107"/>
+<area shape="rect" id="node5" href="$dd/d8d/classThread_1_1MeshCoP_1_1Tlv.html#a5560e18099408223e7a5c610e44bdc7f" title="This static method reads the requested TLV out of aMessage. " alt="" coords="699,68,853,107"/>
+<area shape="rect" id="node11" href="$dd/d8d/classThread_1_1MeshCoP_1_1Tlv.html#afc7c287ad7c84b712621db6fa5cbd0f9" title="This static method finds the offset and length of a given TLV type. " alt="" coords="699,131,853,169"/>
+<area shape="rect" id="node6" href="$dc/d3c/classThread_1_1Message.html#ac8304ee00c9e0b303539687e98e192e0" title="This method returns the byte offset within the message. " alt="" coords="904,131,1093,156"/>
+<area shape="rect" id="node7" href="$dc/d3c/classThread_1_1Message.html#a2cf440376e834030c38bb2ced4ca49e9" title="This method returns the number of bytes in the message. " alt="" coords="901,180,1096,205"/>
+<area shape="rect" id="node8" href="$dc/d3c/classThread_1_1Message.html#a76033bbc15170d72452186058defafa2" title="This method reads bytes from the message. " alt="" coords="917,229,1081,255"/>
+<area shape="rect" id="node10" href="$dd/d8d/classThread_1_1MeshCoP_1_1Tlv.html#ae448a8785f6715b07e973d570e715c69" title="This method returns the Length value. " alt="" coords="921,68,1076,107"/>
+<area shape="rect" id="node9" href="$db/d50/classThread_1_1Buffer.html#a34ab22941ccd9bb222d251a6a18c95bf" title="This method returns a pointer to the next message buffer. " alt="" coords="1144,229,1342,255"/>
+</map>

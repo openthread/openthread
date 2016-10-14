@@ -1,7 +1,7 @@
 <map id="src/ncp/ncp_base.hpp" name="src/ncp/ncp_base.hpp">
 <area shape="rect" id="node2" href="$d5/d6a/ncp__base_8cpp.html" title="This file implements a Spinel interface to the OpenThread stack. " alt="" coords="5,79,156,104"/>
 <area shape="rect" id="node3" href="$d7/df2/ncp__spi_8hpp.html" title="This file contains definitions for a SPI interface to the OpenThread stack. " alt="" coords="180,79,320,104"/>
-<area shape="rect" id="node5" href="$d4/d5f/ncp__uart_8hpp.html" title="This file contains definitions for an FLEN/HDLC interface to the OpenThread stack. " alt="" coords="344,79,490,104"/>
+<area shape="rect" id="node5" href="$d4/d5f/ncp__uart_8hpp.html" title="This file contains definitions for a UART based NCP interface to the OpenThread stack. " alt="" coords="344,79,490,104"/>
 <area shape="rect" id="node4" href="$d0/d95/ncp__spi_8cpp.html" title="This file implements a SPI interface to the OpenThread stack. " alt="" coords="181,152,320,177"/>
-<area shape="rect" id="node6" href="$d4/dae/ncp__uart_8cpp.html" title="This file implements an HDLC interface to the Thread stack. " alt="" coords="344,152,489,177"/>
+<area shape="rect" id="node6" href="$d4/dae/ncp__uart_8cpp.html" title="This file contains definitions for a UART based NCP interface to the OpenThread stack. " alt="" coords="344,152,489,177"/>
 </map>

@@ -1,0 +1,6 @@
+<map id="Thread::Mac::Mac::EnergyScan" name="Thread::Mac::Mac::EnergyScan">
+<area shape="rect" id="node2" href="$d0/d0a/group__commands.html#ga7c364a9620dd9b6df30fb2c357bb883b" title="This function starts an IEEE 802.15.4 Energy Scan. " alt="" coords="301,12,406,37"/>
+<area shape="rect" id="node5" href="$de/d9d/classThread_1_1EnergyScanServer.html#aee01420f701ef44d6432280d8e4bf3e3" title="This constructor initializes the object. " alt="" coords="262,61,445,100"/>
+<area shape="rect" id="node3" href="$d9/dc8/classThread_1_1NcpBase.html#ad14f0f1d60c77f7f537a0a441a9fb35c" title="This method is called by the framer whenever a framing error is detected. " alt="" coords="493,5,685,44"/>
+<area shape="rect" id="node4" href="$dc/d60/classThread_1_1NcpUart.html#a34e4ca7aff5b9056593e8ce0aa6e2fbb" title="This method is called when uart received a data buffer. " alt="" coords="733,5,928,44"/>
+</map>

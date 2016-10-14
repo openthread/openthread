@@ -34,7 +34,7 @@
   <td id="projectlogo"><img alt="Logo" src="../../Open-Thread-Logo-200x42.png"/></td>
   <td style="padding-left: 0.5em;">
    <div id="projectname">
-   &#160;<span id="projectnumber">gb2b10b8</span>
+   &#160;<span id="projectnumber">gddd0704</span>
    </div>
   </td>
  </tr>
@@ -128,12 +128,15 @@ Public Types</h2></td></tr>
 <tr class="memitem:aa47484267f8c1330dac9bfab262b51d6"><td class="memItemLeft" align="right" valign="top">typedef void(*&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../d2/de8/classThread_1_1Hdlc_1_1Decoder.html#aa47484267f8c1330dac9bfab262b51d6">FrameHandler</a>) (void *aContext, uint8_t *aFrame, uint16_t aFrameLength)</td></tr>
 <tr class="memdesc:aa47484267f8c1330dac9bfab262b51d6"><td class="mdescLeft">&#160;</td><td class="mdescRight">This function pointer is called when a complete frame has been formed.  <a href="#aa47484267f8c1330dac9bfab262b51d6">More...</a><br /></td></tr>
 <tr class="separator:aa47484267f8c1330dac9bfab262b51d6"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a004e2c671a1a230fca9eab0c9914b7ba"><td class="memItemLeft" align="right" valign="top">typedef void(*&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../d2/de8/classThread_1_1Hdlc_1_1Decoder.html#a004e2c671a1a230fca9eab0c9914b7ba">ErrorHandler</a>) (void *aContext, <a class="el" href="../../dc/dbf/openthread-types_8h.html#ab701d053a9c34ab7f11e43e0dc09ac9f">ThreadError</a> aError, uint8_t *aFrame, uint16_t aFrameLength)</td></tr>
+<tr class="memdesc:a004e2c671a1a230fca9eab0c9914b7ba"><td class="mdescLeft">&#160;</td><td class="mdescRight">This function pointer is called when an error has occurred.  <a href="#a004e2c671a1a230fca9eab0c9914b7ba">More...</a><br /></td></tr>
+<tr class="separator:a004e2c671a1a230fca9eab0c9914b7ba"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:a2bada6f026c335367065d5273e147363"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../d2/de8/classThread_1_1Hdlc_1_1Decoder.html#a2bada6f026c335367065d5273e147363">Decoder</a> (uint8_t *aOutBuf, uint16_t aOutLength, <a class="el" href="../../d2/de8/classThread_1_1Hdlc_1_1Decoder.html#aa47484267f8c1330dac9bfab262b51d6">FrameHandler</a> aFrameHandler, void *aContext)</td></tr>
-<tr class="memdesc:a2bada6f026c335367065d5273e147363"><td class="mdescLeft">&#160;</td><td class="mdescRight">This constructor initializes the decoder.  <a href="#a2bada6f026c335367065d5273e147363">More...</a><br /></td></tr>
-<tr class="separator:a2bada6f026c335367065d5273e147363"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac3ff95919f6e434fc806ca0d8c17f1b0"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../d2/de8/classThread_1_1Hdlc_1_1Decoder.html#ac3ff95919f6e434fc806ca0d8c17f1b0">Decoder</a> (uint8_t *aOutBuf, uint16_t aOutLength, <a class="el" href="../../d2/de8/classThread_1_1Hdlc_1_1Decoder.html#aa47484267f8c1330dac9bfab262b51d6">FrameHandler</a> aFrameHandler, <a class="el" href="../../d2/de8/classThread_1_1Hdlc_1_1Decoder.html#a004e2c671a1a230fca9eab0c9914b7ba">ErrorHandler</a> aErrorHandler, void *aContext)</td></tr>
+<tr class="memdesc:ac3ff95919f6e434fc806ca0d8c17f1b0"><td class="mdescLeft">&#160;</td><td class="mdescRight">This constructor initializes the decoder.  <a href="#ac3ff95919f6e434fc806ca0d8c17f1b0">More...</a><br /></td></tr>
+<tr class="separator:ac3ff95919f6e434fc806ca0d8c17f1b0"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aa4376b51dd47f5d9bcf08ee9d7aa1234"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../d2/de8/classThread_1_1Hdlc_1_1Decoder.html#aa4376b51dd47f5d9bcf08ee9d7aa1234">Decode</a> (const uint8_t *aInBuf, uint16_t aInLength)</td></tr>
 <tr class="memdesc:aa4376b51dd47f5d9bcf08ee9d7aa1234"><td class="mdescLeft">&#160;</td><td class="mdescRight">This method streams bytes into the decoder.  <a href="#aa4376b51dd47f5d9bcf08ee9d7aa1234">More...</a><br /></td></tr>
 <tr class="separator:aa4376b51dd47f5d9bcf08ee9d7aa1234"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -141,6 +144,29 @@ Public Member Functions</h2></td></tr>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>This class implements the HDLC-lite decoder. </p>
 </div><h2 class="groupheader">Member Typedef Documentation</h2>
+<a class="anchor" id="a004e2c671a1a230fca9eab0c9914b7ba"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">typedef void(* Thread::Hdlc::Decoder::ErrorHandler) (void *aContext, <a class="el" href="../../dc/dbf/openthread-types_8h.html#ab701d053a9c34ab7f11e43e0dc09ac9f">ThreadError</a> aError, uint8_t *aFrame, uint16_t aFrameLength)</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>This function pointer is called when an error has occurred. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">aContext</td><td>A pointer to arbitrary context information. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">aError</td><td>An error code describing the error. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">aFrame</td><td>A pointer to the frame. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">aFrameLength</td><td>The frame length in bytes. </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
 <a class="anchor" id="aa47484267f8c1330dac9bfab262b51d6"></a>
 <div class="memitem">
 <div class="memproto">
@@ -164,7 +190,7 @@ Public Member Functions</h2></td></tr>
 </div>
 </div>
 <h2 class="groupheader">Constructor &amp; Destructor Documentation</h2>
-<a class="anchor" id="a2bada6f026c335367065d5273e147363"></a>
+<a class="anchor" id="ac3ff95919f6e434fc806ca0d8c17f1b0"></a>
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
@@ -185,6 +211,12 @@ Public Member Functions</h2></td></tr>
           <td></td>
           <td class="paramtype"><a class="el" href="../../d2/de8/classThread_1_1Hdlc_1_1Decoder.html#aa47484267f8c1330dac9bfab262b51d6">FrameHandler</a>&#160;</td>
           <td class="paramname"><em>aFrameHandler</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="../../d2/de8/classThread_1_1Hdlc_1_1Decoder.html#a004e2c671a1a230fca9eab0c9914b7ba">ErrorHandler</a>&#160;</td>
+          <td class="paramname"><em>aErrorHandler</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
@@ -257,6 +289,16 @@ Here is the call graph for this function:</div>
 </div>
 </p>
 
+<p><div class="dynheader">
+Here is the caller graph for this function:</div>
+<div class="dyncontent">
+<div class="center"><img src="../../d2/de8/classThread_1_1Hdlc_1_1Decoder_aa4376b51dd47f5d9bcf08ee9d7aa1234_icgraph.png" border="0" usemap="#d2/de8/classThread_1_1Hdlc_1_1Decoder_aa4376b51dd47f5d9bcf08ee9d7aa1234_icgraph" alt=""/></div>
+<map name="d2/de8/classThread_1_1Hdlc_1_1Decoder_aa4376b51dd47f5d9bcf08ee9d7aa1234_icgraph" id="d2/de8/classThread_1_1Hdlc_1_1Decoder_aa4376b51dd47f5d9bcf08ee9d7aa1234_icgraph">
+<area shape="rect" id="node2" href="../../dc/d60/classThread_1_1NcpUart.html#a34e4ca7aff5b9056593e8ce0aa6e2fbb" title="This method is called when uart received a data buffer. " alt="" coords="209,5,404,44"/>
+</map>
+</div>
+</p>
+
 </div>
 </div>
 <hr/>The documentation for this class was generated from the following files:<ul>
@@ -269,7 +311,7 @@ Here is the call graph for this function:</div>
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
     <li class="navelem"><b>Thread</b></li><li class="navelem"><a class="el" href="../../d5/d0a/namespaceThread_1_1Hdlc.html">Hdlc</a></li><li class="navelem"><a class="el" href="../../d2/de8/classThread_1_1Hdlc_1_1Decoder.html">Decoder</a></li>
-    <li class="footer">Generated on Wed Jul 27 2016 17:09:43 for OpenThread by
+    <li class="footer">Generated on Fri Oct 14 2016 08:44:36 for OpenThread by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="../../doxygen.png" alt="doxygen"/></a> 1.8.11 </li>
   </ul>

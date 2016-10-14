@@ -1,0 +1,5 @@
+<map id="otIsMacBlacklistEnabled" name="otIsMacBlacklistEnabled">
+<area shape="rect" id="node2" href="$d3/d8e/classThread_1_1ThreadNetif.html#aec59b0e172327889e9b0f4f08b0e69f9" title="This method returns a pointer to the mac object. " alt="" coords="252,5,393,44"/>
+<area shape="rect" id="node3" href="$d6/d88/classThread_1_1Mac_1_1Mac.html#a02bf48282ebb10d37831df0f402c9c5d" title="This method returns the MAC blacklist filter. " alt="" coords="219,68,426,93"/>
+<area shape="rect" id="node4" href="$d4/db9/classThread_1_1Mac_1_1Blacklist.html#a269d89343e4dd874d7c59bc1946cc9ac" title="This method indicates whether or not the blacklist filter is enabled. " alt="" coords="246,117,399,156"/>
+</map>

@@ -12,13 +12,14 @@ var classThread_1_1Neighbor =
     [ "mDataRequest", "da/dd9/classThread_1_1Neighbor.html#ae4073f674b4f04c21dbda33ff0906abb", null ],
     [ "mKeySequence", "da/dd9/classThread_1_1Neighbor.html#a01a8a9f7b7838a01d54251e535a20553", null ],
     [ "mLastHeard", "da/dd9/classThread_1_1Neighbor.html#a196092c07e8f54b8e92fbb70ef199203", null ],
+    [ "mLinkFailures", "da/dd9/classThread_1_1Neighbor.html#ae30650fda4acc6dafdc9b57992414884", null ],
     [ "mLinkFrameCounter", "da/dd9/classThread_1_1Neighbor.html#a25e063d8cb2a052425f9a7c529de4b22", null ],
     [ "mLinkInfo", "da/dd9/classThread_1_1Neighbor.html#a59cd22765c14d446c332b284642ddfb7", null ],
     [ "mMacAddr", "da/dd9/classThread_1_1Neighbor.html#ae0cee06d43705fd3d4c8dfc4776c4f8c", null ],
     [ "mMleFrameCounter", "da/dd9/classThread_1_1Neighbor.html#a85277f348f381529be7cc5702848a9b9", null ],
     [ "mMode", "da/dd9/classThread_1_1Neighbor.html#a15f05d7037f87472ad7201f9a6a8c2d0", null ],
-    [ "mPending", "da/dd9/classThread_1_1Neighbor.html#ab4b9a40af2968395454aaa997d78d728", null ],
+    [ "mPending", "da/dd9/classThread_1_1Neighbor.html#a72a6b76650b028052ecde6e4ef93070c", null ],
     [ "mRloc16", "da/dd9/classThread_1_1Neighbor.html#a92dd82c88583d2e0a8a17ed3751560dc", null ],
     [ "mState", "da/dd9/classThread_1_1Neighbor.html#ae38900ccf7c8ed271c2d1072add36660", null ],
-    [ "mValid", "da/dd9/classThread_1_1Neighbor.html#a751b89e2ab9a2b41b5642fdcfbad2c59", null ]
+    [ "mValid", "da/dd9/classThread_1_1Neighbor.html#a210d5121426afea219781e0b7e01d71d", null ]
 ];

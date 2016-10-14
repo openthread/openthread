@@ -1,3 +1,4 @@
 <map id="Thread::Mac::Mac::IsPromiscuous" name="Thread::Mac::Mac::IsPromiscuous">
-<area shape="rect" id="node2" href="$d7/d9c/group__radio-operation.html#ga11b64d16bc2a19d51ea7a23a1488210f" title="Get the status of promiscuous mode. " alt="" coords="277,5,466,31"/>
+<area shape="rect" id="node2" href="$d7/d9c/group__radio-operation.html#gaef6191a2f5c0dd177dc009dae3796e8e" title="Get the status of promiscuous mode. " alt="" coords="277,5,466,31"/>
+<area shape="rect" id="node3" href="$d3/d8e/classThread_1_1ThreadNetif.html#a83517ab2bff2614e403895426df6a61b" title="This method returns the pointer to the parent otInstance structure. " alt="" coords="301,55,442,93"/>
 </map>

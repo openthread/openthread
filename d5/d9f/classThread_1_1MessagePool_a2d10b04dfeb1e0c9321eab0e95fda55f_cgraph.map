@@ -1,0 +1,7 @@
+<map id="Thread::MessagePool::New" name="Thread::MessagePool::New">
+<area shape="rect" id="node2" href="$dc/d3c/classThread_1_1Message.html#a942818bf261c0af93b793017407c2b2c" title="This method sets whether or not link security is enabled for the message. " alt="" coords="247,5,424,44"/>
+<area shape="rect" id="node3" href="$dc/d3c/classThread_1_1Message.html#acecf07ee065974c8b211c151ea5d6e14" title="This method sets the number of bytes in the message. " alt="" coords="239,68,432,93"/>
+<area shape="rect" id="node4" href="$d5/d9f/classThread_1_1MessagePool.html#a80238d94036455e30762ea4a5a0916f8" title="This method is used to free a message and return all message buffers to the buffer pool..." alt="" coords="260,117,412,156"/>
+<area shape="rect" id="node5" href="$db/d50/classThread_1_1Buffer.html#a34ab22941ccd9bb222d251a6a18c95bf" title="This method returns a pointer to the next message buffer. " alt="" coords="480,99,678,124"/>
+<area shape="rect" id="node6" href="$db/d50/classThread_1_1Buffer.html#a437ec9ccafa1ef6040a6e8e4fae9c3ca" title="This method sets the pointer to the next message buffer. " alt="" coords="481,148,678,173"/>
+</map>

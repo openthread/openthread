@@ -1,20 +1,20 @@
 var group__core_link_quality =
 [
     [ "LinkQualityInfo", "dd/d38/classThread_1_1LinkQualityInfo.html", [
-      [ "kUnknownRss", "dd/d38/classThread_1_1LinkQualityInfo.html#aa453027a0a923c05f566b01aa9445a5faea26cfdb42a8571c14569b537ca653d9", null ],
+      [ "kUnknownRss", "dd/d38/classThread_1_1LinkQualityInfo.html#a6b79cbecd29c4387c44ee532f83a04aaaea26cfdb42a8571c14569b537ca653d9", null ],
       [ "LinkQualityInfo", "dd/d38/classThread_1_1LinkQualityInfo.html#ae3350c09b41861b46a69d7a64756604b", null ],
-      [ "AddRss", "dd/d38/classThread_1_1LinkQualityInfo.html#ab760e6afbbc5b37c8089d2d0c9dfe276", null ],
+      [ "AddRss", "dd/d38/classThread_1_1LinkQualityInfo.html#a45dfdc4409e7f87889b95d445aefcdd9", null ],
       [ "Clear", "dd/d38/classThread_1_1LinkQualityInfo.html#a476c18fbd4d727fd09a778bfdc983c86", null ],
       [ "ConvertLinkMarginToLinkQuality", "dd/d38/classThread_1_1LinkQualityInfo.html#a4b535d272b35be3caa31dbd007d87b86", null ],
-      [ "ConvertRssToLinkMargin", "dd/d38/classThread_1_1LinkQualityInfo.html#a89d22a837f94dbfacc6e8a93071867d6", null ],
-      [ "ConvertRssToLinkQuality", "dd/d38/classThread_1_1LinkQualityInfo.html#a485c094ddb7de1d2c3d774847bca8faa", null ],
+      [ "ConvertRssToLinkMargin", "dd/d38/classThread_1_1LinkQualityInfo.html#aecb995df780f6eb79a340614e71d1b5c", null ],
+      [ "ConvertRssToLinkQuality", "dd/d38/classThread_1_1LinkQualityInfo.html#a71ca210fafdcf960124dd2a4b52ea875", null ],
       [ "GetAverageRss", "dd/d38/classThread_1_1LinkQualityInfo.html#a6bb9667b219989c9825d292d6501ac66", null ],
       [ "GetAverageRssAsEncodedWord", "dd/d38/classThread_1_1LinkQualityInfo.html#a836ef1226ff3179bcf6d4616ee322618", null ],
       [ "GetAverageRssAsString", "dd/d38/classThread_1_1LinkQualityInfo.html#a5b7d8179a8f0bab3cb93aea0b08a344a", null ],
-      [ "GetLinkMargin", "dd/d38/classThread_1_1LinkQualityInfo.html#a0b95900bcf8d92d35589c41f5d4da461", null ],
-      [ "GetLinkQuality", "dd/d38/classThread_1_1LinkQualityInfo.html#ac9ba138f36e5f5af91c8b7a8ddae3604", null ]
+      [ "GetLinkMargin", "dd/d38/classThread_1_1LinkQualityInfo.html#a756abbb6d5f4d84bfe763559ba3c1c71", null ],
+      [ "GetLinkQuality", "dd/d38/classThread_1_1LinkQualityInfo.html#a54ec264efb11c7bc2e0b4f2aa73d66d9", null ]
     ] ],
-    [ "AddNoiseFloor", "d3/d4b/group__core-link-quality.html#ga070a9ee12b3bc035be2a8e611aa719ac", null ],
-    [ "ClearNoiseFloorAverage", "d3/d4b/group__core-link-quality.html#ga18d7aae2a22468b6738ed3cca947a051", null ],
-    [ "GetAverageNoiseFloor", "d3/d4b/group__core-link-quality.html#gaf5de6bda87e42eef536daa7d45a53475", null ]
+    [ "AddNoiseFloor", "d3/d4b/group__core-link-quality.html#ga6c4f9e7e92b216865dc7c2783bfe9ea5", null ],
+    [ "ClearNoiseFloorAverage", "d3/d4b/group__core-link-quality.html#ga3f3a4611a2d5eca6dc77cc8ff49ea64b", null ],
+    [ "GetAverageNoiseFloor", "d3/d4b/group__core-link-quality.html#ga327fac3c27070325354e650d4695e230", null ]
 ];

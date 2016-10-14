@@ -1,0 +1,5 @@
+<map id="otGetChildInfoById" name="otGetChildInfoById">
+<area shape="rect" id="node2" href="$d3/d8e/classThread_1_1ThreadNetif.html#ad49d56e324f096d728c0083d9292f52d" title="This method returns a pointer to the mle object. " alt="" coords="197,5,338,44"/>
+<area shape="rect" id="node3" href="$db/dec/group__core-mle-router.html#gacb4fce19665e67f6f238dea3482d86ea" title="This method retains diagnostic information for an attached child by Child ID or RLOC16. " alt="" coords="187,68,348,107"/>
+<area shape="rect" id="node4" href="$df/d94/group__core-mle-core.html#ga85abf85f882565f74d5037122e6c359a" title="This method returns the Child ID portion of an RLOC16. " alt="" coords="396,75,588,100"/>
+</map>

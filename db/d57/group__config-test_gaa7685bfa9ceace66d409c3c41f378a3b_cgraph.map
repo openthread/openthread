@@ -1,0 +1,5 @@
+<map id="otGetContextIdReuseDelay" name="otGetContextIdReuseDelay">
+<area shape="rect" id="node2" href="$d3/d8e/classThread_1_1ThreadNetif.html#a16d20f33e997eaf877024914707f052a" title="This method returns a pointer to the network data leader object. " alt="" coords="250,5,419,44"/>
+<area shape="rect" id="node4" href="$d6/d9b/classThread_1_1NetworkData_1_1Leader.html#a077a8f039d961db6d8f0cf7fc01128aa" title="This method returns CONTEXT_ID_RESUSE_DELAY value. " alt="" coords="237,68,432,120"/>
+<area shape="rect" id="node3" href="$d3/d8e/classThread_1_1ThreadNetif.html#a83517ab2bff2614e403895426df6a61b" title="This method returns the pointer to the parent otInstance structure. " alt="" coords="480,5,620,44"/>
+</map>

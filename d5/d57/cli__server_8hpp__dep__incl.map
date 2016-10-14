@@ -1,8 +1,12 @@
 <map id="src/cli/cli_server.hpp" name="src/cli/cli_server.hpp">
-<area shape="rect" id="node2" href="$d3/db5/cli_8hpp.html" title="This file contains definitions for the CLI interpreter. " alt="" coords="158,79,256,104"/>
-<area shape="rect" id="node6" href="$dc/d51/cli__uart_8hpp.html" title="This file contains definitions for a CLI server on the UART service. " alt="" coords="5,79,133,104"/>
-<area shape="rect" id="node7" href="$d2/d1a/cli__udp_8hpp.html" title="This file contains definitions for a CLI server on a UDP socket. " alt="" coords="279,79,406,104"/>
-<area shape="rect" id="node3" href="$dd/d48/cli_8cpp.html" title="This file implements the CLI interpreter. " alt="" coords="158,152,255,177"/>
-<area shape="rect" id="node4" href="$db/d13/cli__uart_8cpp.html" title="This file implements the CLI server on the UART service. " alt="" coords="6,152,133,177"/>
-<area shape="rect" id="node5" href="$df/d8a/cli__udp_8cpp.html" title="This file implements the CLI server on a UDP socket. " alt="" coords="279,152,406,177"/>
+<area shape="rect" id="node2" href="$d3/db5/cli_8hpp.html" title="This file contains definitions for the CLI interpreter. " alt="" coords="331,79,429,104"/>
+<area shape="rect" id="node8" href="$d9/de3/cli__dataset_8hpp.html" title="This file contains definitions for the CLI interpreter. " alt="" coords="5,79,154,104"/>
+<area shape="rect" id="node9" href="$dc/d51/cli__uart_8hpp.html" title="This file contains definitions for a CLI server on the UART service. " alt="" coords="178,79,306,104"/>
+<area shape="rect" id="node10" href="$d1/df9/cli__console_8hpp.html" title="This file contains definitions for a CLI server on the CONSOLE service. " alt="" coords="452,79,603,104"/>
+<area shape="rect" id="node11" href="$d2/d1a/cli__udp_8hpp.html" title="This file contains definitions for a CLI server on a UDP socket. " alt="" coords="627,79,754,104"/>
+<area shape="rect" id="node3" href="$dd/d48/cli_8cpp.html" title="This file implements the CLI interpreter. " alt="" coords="181,152,278,177"/>
+<area shape="rect" id="node4" href="$dd/df4/cli__console_8cpp.html" title="This file implements the CLI server on the CONSOLE service. " alt="" coords="453,152,603,177"/>
+<area shape="rect" id="node5" href="$d3/d16/cli__dataset_8cpp.html" title="This file implements the CLI interpreter. " alt="" coords="7,152,155,177"/>
+<area shape="rect" id="node6" href="$db/d13/cli__uart_8cpp.html" title="This file implements the CLI server on the UART service. " alt="" coords="301,152,429,177"/>
+<area shape="rect" id="node7" href="$df/d8a/cli__udp_8cpp.html" title="This file implements the CLI server on a UDP socket. " alt="" coords="627,152,754,177"/>
 </map>

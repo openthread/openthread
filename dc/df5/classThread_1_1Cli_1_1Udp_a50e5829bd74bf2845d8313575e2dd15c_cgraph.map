@@ -1,16 +1,15 @@
 <map id="Thread::Cli::Udp::Output" name="Thread::Cli::Udp::Output">
-<area shape="rect" id="node2" href="$d2/d11/group__udp.html#ga004cae7040d8568e962ae6066571c037" title="Allocate a new message buffer for sending a UDP message. " alt="" coords="224,21,362,47"/>
-<area shape="rect" id="node12" href="$d4/d7c/group__messages.html#gaac267d70f2030fc0f0fe9716a3bcc33e" title="Set the message length in bytes. " alt="" coords="219,71,367,96"/>
-<area shape="rect" id="node13" href="$d4/d7c/group__messages.html#gacbea00276153042b1c6807bc6c61917e" title="Write bytes to a message. " alt="" coords="234,120,352,145"/>
-<area shape="rect" id="node14" href="$d2/d11/group__udp.html#gaafd3057272c0b42c69aa7d35956f5c92" title="Send a UDP/IPv6 message. " alt="" coords="249,169,337,195"/>
-<area shape="rect" id="node15" href="$d4/d7c/group__messages.html#ga538d36d69a14bd432d651e062070bc06" title="Free an allocated message buffer. " alt="" coords="462,171,576,196"/>
-<area shape="rect" id="node3" href="$de/ded/classThread_1_1Ip6_1_1Udp.html#afe746fb2f5c83a97c20e54fdb9c595a3" title="This static method returns a new UDP message with sufficient header space reserved. " alt="" coords="415,35,624,60"/>
-<area shape="rect" id="node4" href="$d3/d05/classThread_1_1Ip6_1_1Ip6.html#a215eeb84e75972828efbc163eedc1ec5" title="This static method allocates a new message buffer from the buffer pool. " alt="" coords="672,60,876,85"/>
-<area shape="rect" id="node5" href="$dc/d3c/classThread_1_1Message.html#a91be16485334ce1fa61f289b1eeb682a" title="This static method is used to obtain a new message. " alt="" coords="924,67,1083,92"/>
-<area shape="rect" id="node6" href="$dc/d3c/classThread_1_1Message.html#a942818bf261c0af93b793017407c2b2c" title="This method sets whether or not link security is enabled for the message. " alt="" coords="1139,5,1316,44"/>
-<area shape="rect" id="node7" href="$dc/d3c/classThread_1_1Message.html#acecf07ee065974c8b211c151ea5d6e14" title="This method sets the number of bytes in the message. " alt="" coords="1131,68,1324,93"/>
-<area shape="rect" id="node9" href="$dc/d3c/classThread_1_1Message.html#a3ab9d6d42d7ae9054eaf0cad0c4e44bb" title="This static method is used to free a message and return all message buffers to the buffer pool..." alt="" coords="1148,156,1308,181"/>
-<area shape="rect" id="node8" href="$dc/d3c/classThread_1_1Message.html#a2cf440376e834030c38bb2ced4ca49e9" title="This method returns the number of bytes in the message. " alt="" coords="1374,68,1569,93"/>
-<area shape="rect" id="node10" href="$db/d50/classThread_1_1Buffer.html#a34ab22941ccd9bb222d251a6a18c95bf" title="This method returns a pointer to the next message buffer. " alt="" coords="1372,131,1570,156"/>
-<area shape="rect" id="node11" href="$db/d50/classThread_1_1Buffer.html#a437ec9ccafa1ef6040a6e8e4fae9c3ca" title="This method sets the pointer to the next message buffer. " alt="" coords="1373,180,1569,205"/>
+<area shape="rect" id="node2" href="$d2/d11/group__udp.html#ga830b1fac9ad667bbedc0e68da91e70aa" title="Allocate a new message buffer for sending a UDP message. " alt="" coords="224,68,362,93"/>
+<area shape="rect" id="node11" href="$d4/d7c/group__messages.html#gaac267d70f2030fc0f0fe9716a3bcc33e" title="Set the message length in bytes. " alt="" coords="219,117,367,143"/>
+<area shape="rect" id="node12" href="$d4/d7c/group__messages.html#gacbea00276153042b1c6807bc6c61917e" title="Write bytes to a message. " alt="" coords="234,167,352,192"/>
+<area shape="rect" id="node13" href="$d2/d11/group__udp.html#gaafd3057272c0b42c69aa7d35956f5c92" title="Send a UDP/IPv6 message. " alt="" coords="249,216,337,241"/>
+<area shape="rect" id="node14" href="$d4/d7c/group__messages.html#ga538d36d69a14bd432d651e062070bc06" title="Free an allocated message buffer. " alt="" coords="236,265,350,291"/>
+<area shape="rect" id="node3" href="$de/ded/classThread_1_1Ip6_1_1Udp.html#afe746fb2f5c83a97c20e54fdb9c595a3" title="This method returns a new UDP message with sufficient header space reserved. " alt="" coords="415,68,624,93"/>
+<area shape="rect" id="node4" href="$d3/d05/classThread_1_1Ip6_1_1Ip6.html#a215eeb84e75972828efbc163eedc1ec5" title="This method allocates a new message buffer from the buffer pool. " alt="" coords="672,68,876,93"/>
+<area shape="rect" id="node5" href="$d5/d9f/classThread_1_1MessagePool.html#a2d10b04dfeb1e0c9321eab0e95fda55f" title="This method is used to obtain a new message. " alt="" coords="924,68,1110,93"/>
+<area shape="rect" id="node6" href="$dc/d3c/classThread_1_1Message.html#a942818bf261c0af93b793017407c2b2c" title="This method sets whether or not link security is enabled for the message. " alt="" coords="1166,5,1343,44"/>
+<area shape="rect" id="node7" href="$dc/d3c/classThread_1_1Message.html#acecf07ee065974c8b211c151ea5d6e14" title="This method sets the number of bytes in the message. " alt="" coords="1158,68,1351,93"/>
+<area shape="rect" id="node8" href="$d5/d9f/classThread_1_1MessagePool.html#a80238d94036455e30762ea4a5a0916f8" title="This method is used to free a message and return all message buffers to the buffer pool..." alt="" coords="1178,117,1330,156"/>
+<area shape="rect" id="node9" href="$db/d50/classThread_1_1Buffer.html#a34ab22941ccd9bb222d251a6a18c95bf" title="This method returns a pointer to the next message buffer. " alt="" coords="1399,99,1597,124"/>
+<area shape="rect" id="node10" href="$db/d50/classThread_1_1Buffer.html#a437ec9ccafa1ef6040a6e8e4fae9c3ca" title="This method sets the pointer to the next message buffer. " alt="" coords="1400,148,1596,173"/>
 </map>

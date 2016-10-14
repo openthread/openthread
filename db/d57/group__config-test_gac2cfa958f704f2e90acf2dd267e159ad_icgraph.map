@@ -1,0 +1,5 @@
+<map id="otGetRouterDowngradeThreshold" name="otGetRouterDowngradeThreshold">
+<area shape="rect" id="node2" href="$d5/dc2/structThread_1_1Cli_1_1Interpreter.html#a11ee1f86cffe17aab7de3de0bb16dee7" title="This method parses an ASCII string as an unsigned long. " alt="" coords="293,5,448,44"/>
+<area shape="rect" id="node3" href="$d9/dc8/classThread_1_1NcpBase.html#ad14f0f1d60c77f7f537a0a441a9fb35c" title="This method is called by the framer whenever a framing error is detected. " alt="" coords="275,68,467,107"/>
+<area shape="rect" id="node4" href="$dc/d60/classThread_1_1NcpUart.html#a34e4ca7aff5b9056593e8ce0aa6e2fbb" title="This method is called when uart received a data buffer. " alt="" coords="515,68,709,107"/>
+</map>

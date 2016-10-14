@@ -1,3 +1,4 @@
 <map id="include/platform/misc.h" name="include/platform/misc.h">
-<area shape="rect" id="node2" href="$d5/d6a/ncp__base_8cpp.html" title="This file implements a Spinel interface to the OpenThread stack. " alt="" coords="9,79,160,104"/>
+<area shape="rect" id="node2" href="$da/d60/openthread_8cpp.html" title="This file implements the top&#45;level interface to the OpenThread stack. " alt="" coords="5,79,170,104"/>
+<area shape="rect" id="node3" href="$d5/d6a/ncp__base_8cpp.html" title="This file implements a Spinel interface to the OpenThread stack. " alt="" coords="195,79,346,104"/>
 </map>

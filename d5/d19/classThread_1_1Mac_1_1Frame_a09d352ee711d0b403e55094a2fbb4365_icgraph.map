@@ -1,22 +1,9 @@
 <map id="Thread::Mac::Frame::GetCommandId" name="Thread::Mac::Frame::GetCommandId">
-<area shape="rect" id="node2" href="$d6/d88/classThread_1_1Mac_1_1Mac.html#a1b58865279aa421b1da0a665a6260e1d" title="This method is called to handle receive events. " alt="" coords="195,305,380,344"/>
-<area shape="rect" id="node3" href="$dd/d1d/classThread_1_1MeshForwarder.html#a969c6fac135cdee3ed9380a0859eaaa8" title="This method sets the Data Poll period. " alt="" coords="205,368,370,407"/>
-<area shape="rect" id="node4" href="$df/d94/group__core-mle-core.html#gad555ca36631eff9b978e448ecbcf8e2e" title="This method appends an Address Registration TLV to a message. " alt="" coords="428,307,603,345"/>
-<area shape="rect" id="node5" href="$df/d94/group__core-mle-core.html#ga09239c621861382d25163980ab5d983b" title="This method generates an MLE Child Update Request message. " alt="" coords="651,235,841,273"/>
-<area shape="rect" id="node11" href="$df/d94/group__core-mle-core.html#ga0ea27201cf13a4e1b0680a9da6c54a64" title="This method submits an MLE message to the UDP socket. " alt="" coords="1415,159,1629,184"/>
-<area shape="rect" id="node6" href="$df/d94/group__core-mle-core.html#ga01c7e5a022360a6f35e30d07221dbfea" title="This method starts the MLE protocol operation. " alt="" coords="922,175,1079,200"/>
-<area shape="rect" id="node7" href="$df/d94/group__core-mle-core.html#gafb51db61e6e184d664a9e7cc3833dcf4" title="This method sets the MLE Timeout value. " alt="" coords="902,224,1099,249"/>
-<area shape="rect" id="node8" href="$df/d94/group__core-mle-core.html#ga453d94c377c5825a4a5e8b66a728e591" title="This method sets the Device Mode as reported in the Mode TLV. " alt="" coords="889,273,1112,299"/>
-<area shape="rect" id="node9" href="$df/d94/group__core-mle-core.html#gaac7d42ff61704aa43e94dbb781c78c5e" title="This method notifies MLE that the Network Data has changed. " alt="" coords="915,60,1086,99"/>
-<area shape="rect" id="node10" href="$d6/d9b/classThread_1_1NetworkData_1_1Leader.html#a428d60927d6f4b4ac8e878e792d2f716" title="This method is used by non&#45;Leader devices to set newly received Network Data from the Leader..." alt="" coords="1176,60,1351,99"/>
-<area shape="rect" id="node17" href="$d6/d9b/classThread_1_1NetworkData_1_1Leader.html#a5baddd109ff06b58140e2678e3c97a16" title="This method removes Network Data associated with a given RLOC16. " alt="" coords="1160,217,1367,256"/>
-<area shape="rect" id="node16" href="$db/dec/group__core-mle-router.html#ga2f58e7783003a5d53b12a556ac4375f2" title="This method sets the ROUTER_UPGRADE_THRESHOLD value. " alt="" coords="1677,60,1876,99"/>
-<area shape="rect" id="node12" href="$df/d94/group__core-mle-core.html#gac13477847483bba0aeab32fd93a7dbac" title="This method generates an MLE Data Request message. " alt="" coords="1683,123,1871,161"/>
-<area shape="rect" id="node13" href="$df/d94/group__core-mle-core.html#ga4a192897e2fe5f4b0ab2ed1535fd2657" title="This method generates an MLE Data Response message. " alt="" coords="1683,237,1871,276"/>
-<area shape="rect" id="node14" href="$db/dec/group__core-mle-router.html#ga7126c084ace25827febebc4210928cd4" title="This method generates an MLE Link Reject. " alt="" coords="1931,209,2092,248"/>
-<area shape="rect" id="node15" href="$db/dec/group__core-mle-router.html#gaf13c43af2bf2f9057629cbb74fca0af0" title="This method handles MAC Data Poll messages. " alt="" coords="1924,401,2098,440"/>
-<area shape="rect" id="node18" href="$db/dec/group__core-mle-router.html#ga179fad5b4b75849e76811006761d2b3e" title="This method release a given Router ID. " alt="" coords="1441,295,1603,333"/>
-<area shape="rect" id="node19" href="$db/dec/group__core-mle-router.html#gac7d2542017033898d0bc0f17a65d4656" title="This method checks if the destination is reachable. " alt="" coords="1696,473,1857,512"/>
-<area shape="rect" id="node20" href="$dd/d1d/classThread_1_1MeshForwarder.html#a361ef901f6b665b3c7feac206089a7df" title="This method submits a message to the mesh forwarder for forwarding. " alt="" coords="1929,489,2093,528"/>
-<area shape="rect" id="node21" href="$d3/d8e/classThread_1_1ThreadNetif.html#a95f2ad1f6785b0de74e660e43ac86d33" title="This method submits a message to the network interface. " alt="" coords="2146,489,2287,528"/>
+<area shape="rect" id="node2" href="$d6/d88/classThread_1_1Mac_1_1Mac.html#a1b58865279aa421b1da0a665a6260e1d" title="This method is called to handle receive events. " alt="" coords="195,5,380,44"/>
+<area shape="rect" id="node4" href="$dd/d1d/classThread_1_1MeshForwarder.html#a5f726671448fb7cd72f8ee96db40731a" title="This method sets the scan parameters for MLE Discovery Request messages. " alt="" coords="203,68,372,107"/>
+<area shape="rect" id="node3" href="$d7/d9c/group__radio-operation.html#ga75836c10d52472c0dfca98f490c4a5f7" title="The radio driver calls this method to notify OpenThread of a received packet. " alt="" coords="433,12,603,37"/>
+<area shape="rect" id="node5" href="$df/d94/group__core-mle-core.html#gab299d00d1b2beabe8130e400dd6eca91" title="This method initiates a Thread Discovery. " alt="" coords="428,75,608,100"/>
+<area shape="rect" id="node6" href="$d4/db5/classThread_1_1MeshCoP_1_1Joiner.html#a1ca1f767cfe15e7c25b8f65606e7fefb" title="This method starts the Joiner service. " alt="" coords="656,40,830,79"/>
+<area shape="rect" id="node7" href="$d0/d0a/group__commands.html#ga8422cdf7d0b8b22c6dd107e6bb1309f2" title="This function starts a Thread Discovery scan. " alt="" coords="701,103,785,128"/>
+<area shape="rect" id="node8" href="$d5/dc2/structThread_1_1Cli_1_1Interpreter.html#a11ee1f86cffe17aab7de3de0bb16dee7" title="This method parses an ASCII string as an unsigned long. " alt="" coords="878,96,1033,135"/>
 </map>

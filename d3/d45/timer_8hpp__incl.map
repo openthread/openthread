@@ -1,6 +1,8 @@
 <map id="src/core/common/timer.hpp" name="src/core/common/timer.hpp">
-<area shape="rect" id="node4" href="$dc/dbf/openthread-types_8h.html" title="This file defines the types and structures used in the OpenThread library API. " alt="" coords="290,152,427,177"/>
-<area shape="rect" id="node7" href="$df/d84/tasklet_8hpp.html" title="This file includes definitions for tasklets and the tasklet scheduler. " alt="" coords="200,79,341,104"/>
-<area shape="rect" id="node8" href="$d2/d2d/alarm_8h.html" title="This file includes the platform abstraction for the alarm service. " alt="" coords="149,152,267,177"/>
-<area shape="rect" id="node6" href="$d3/da9/toolchain_8h_source.html" title="platform/toolchain.h" alt="" coords="391,225,529,251"/>
+<area shape="rect" id="node3" href="$df/dd8/stdint_8h_source.html" title="stdint.h" alt="" coords="176,225,240,251"/>
+<area shape="rect" id="node4" href="$dc/dbf/openthread-types_8h.html" title="This file defines the types and structures used in the OpenThread library API. " alt="" coords="269,152,405,177"/>
+<area shape="rect" id="node7" href="$df/d84/tasklet_8hpp.html" title="This file includes definitions for tasklets and the tasklet scheduler. " alt="" coords="291,79,431,104"/>
+<area shape="rect" id="node8" href="$d2/d2d/alarm_8h.html" title="This file includes the platform abstraction for the alarm service. " alt="" coords="149,79,267,104"/>
+<area shape="rect" id="node5" href="$d9/d5e/stdbool_8h_source.html" title="stdbool.h" alt="" coords="269,225,344,251"/>
+<area shape="rect" id="node6" href="$d3/da9/toolchain_8h_source.html" title="platform/toolchain.h" alt="" coords="368,225,506,251"/>
 </map>

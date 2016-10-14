@@ -1,0 +1,7 @@
+<map id="Thread::Ip6::Filter::RemoveUnsecurePort" name="Thread::Ip6::Filter::RemoveUnsecurePort">
+<area shape="rect" id="node2" href="$d4/db5/classThread_1_1MeshCoP_1_1Joiner.html#a5109c8ea0e2c168c18f729d767e6b999" title="This method stops the Joiner service. " alt="" coords="233,5,407,44"/>
+<area shape="rect" id="node3" href="$dd/d9d/classThread_1_1MeshCoP_1_1JoinerRouter.html#a5479381c182fcb3e0135c2c75fc2c96e" title="This constructor initializes the Joiner Router object. " alt="" coords="213,68,427,107"/>
+<area shape="rect" id="node4" href="$db/da2/group__config-br.html#gaeac6d5f2e179d969ea87c640caad8b3d" title="This function removes a port from the allowed unsecure port list. " alt="" coords="238,131,402,156"/>
+<area shape="rect" id="node5" href="$d9/dc8/classThread_1_1NcpBase.html#ad14f0f1d60c77f7f537a0a441a9fb35c" title="This method is called by the framer whenever a framing error is detected. " alt="" coords="475,124,666,163"/>
+<area shape="rect" id="node6" href="$dc/d60/classThread_1_1NcpUart.html#a34e4ca7aff5b9056593e8ce0aa6e2fbb" title="This method is called when uart received a data buffer. " alt="" coords="714,124,909,163"/>
+</map>

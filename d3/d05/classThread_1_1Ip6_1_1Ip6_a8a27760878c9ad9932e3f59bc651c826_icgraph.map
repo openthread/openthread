@@ -1,0 +1,5 @@
+<map id="Thread::Ip6::Ip6::SetReceiveIp6FilterEnabled" name="Thread::Ip6::Ip6::SetReceiveIp6FilterEnabled">
+<area shape="rect" id="node2" href="$db/de8/group__ip6.html#ga17d9c1c306a1ad33d12e4a15a09c13d7" title="This function sets whether or not Thread control traffic is filtered out when delivering IPv6 datagra..." alt="" coords="244,5,452,44"/>
+<area shape="rect" id="node3" href="$d9/dc8/classThread_1_1NcpBase.html#ad14f0f1d60c77f7f537a0a441a9fb35c" title="This method is called by the framer whenever a framing error is detected. " alt="" coords="500,5,692,44"/>
+<area shape="rect" id="node4" href="$dc/d60/classThread_1_1NcpUart.html#a34e4ca7aff5b9056593e8ce0aa6e2fbb" title="This method is called when uart received a data buffer. " alt="" coords="740,5,934,44"/>
+</map>

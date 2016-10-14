@@ -1,0 +1,4 @@
+<map id="otGetLocalLeaderWeight" name="otGetLocalLeaderWeight">
+<area shape="rect" id="node2" href="$d3/d8e/classThread_1_1ThreadNetif.html#ad49d56e324f096d728c0083d9292f52d" title="This method returns a pointer to the mle object. " alt="" coords="232,5,373,44"/>
+<area shape="rect" id="node3" href="$db/dec/group__core-mle-router.html#gadd5080f8b2e2303a6d90c5e04c3b903e" title="This method returns the Leader Weighting value for this Thread interface. " alt="" coords="222,68,383,107"/>
+</map>

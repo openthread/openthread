@@ -1,0 +1,40 @@
+<map id="Thread::AnnounceBeginClient::SendRequest" name="Thread::AnnounceBeginClient::SendRequest">
+<area shape="rect" id="node2" href="$dd/d10/group__random.html#gaa20820ca4e6e1ce8cd47ded9762b14ca" title="Get a 32&#45;bit random value. " alt="" coords="323,5,451,31"/>
+<area shape="rect" id="node3" href="$d0/d7f/classThread_1_1Coap_1_1Header.html#ad221953768fdb61bd62fa1bc3ffd4c89" title="This method initializes the CoAP header. " alt="" coords="310,55,464,93"/>
+<area shape="rect" id="node5" href="$d0/d7f/classThread_1_1Coap_1_1Header.html#ad4147a19a4e8861f321c8aaaa5db6baa" title="This method sets the Type value. " alt="" coords="310,117,464,156"/>
+<area shape="rect" id="node6" href="$d9/db1/classThread_1_1Ip6_1_1Address.html#a37b709740053966d80e6c4b65e38ad2e" title="This method indicates whether or not the IPv6 address is multicast address. " alt="" coords="314,180,460,219"/>
+<area shape="rect" id="node7" href="$d0/d7f/classThread_1_1Coap_1_1Header.html#a0a2c1cf0ff97aab363e71f716254a736" title="This method sets the Code value. " alt="" coords="310,243,464,281"/>
+<area shape="rect" id="node8" href="$d0/d7f/classThread_1_1Coap_1_1Header.html#a7a374b4bd31694216d9397e1409209a0" title="This method sets the Message ID value. " alt="" coords="310,305,464,344"/>
+<area shape="rect" id="node9" href="$d0/d7f/classThread_1_1Coap_1_1Header.html#a9d8d2a7b438e4a7d27ce3b979b0bb2a0" title="This method sets the Token value and length. " alt="" coords="310,368,464,407"/>
+<area shape="rect" id="node10" href="$d0/d7f/classThread_1_1Coap_1_1Header.html#a1df234ef27c9000081fbbe24e7c97dd6" title="This method appends a Uri&#45;Path option. " alt="" coords="304,431,470,469"/>
+<area shape="rect" id="node12" href="$d0/d7f/classThread_1_1Coap_1_1Header.html#aecbcbb8b836e0283559b89bd64fbc47f" title="This method terminates the CoAP header. " alt="" coords="310,493,464,532"/>
+<area shape="rect" id="node13" href="$dc/d75/classThread_1_1Ip6_1_1UdpSocket.html#aafb4481c92d1f8515e51cfa822a1bde1" title="This method returns a new UDP message with sufficient header space reserved. " alt="" coords="306,556,468,595"/>
+<area shape="rect" id="node14" href="$dc/d3c/classThread_1_1Message.html#a3c3d1c48e940f2553586d16e1618277d" title="This method appends bytes to the end of the message. " alt="" coords="298,619,476,644"/>
+<area shape="rect" id="node15" href="$d0/d7f/classThread_1_1Coap_1_1Header.html#a5259ece3cbe8e332599f7de4c488ad32" title="This method returns a pointer to the first byte of the header. " alt="" coords="310,668,464,707"/>
+<area shape="rect" id="node16" href="$d0/d7f/classThread_1_1Coap_1_1Header.html#ae1679d627108d5381dc1ae45d2254299" title="This method returns the header length in bytes. " alt="" coords="310,731,464,769"/>
+<area shape="rect" id="node17" href="$d3/d4c/classThread_1_1MeshCoP_1_1CommissionerSessionIdTlv.html#a98d9b606bb5d7547c8f19bed9b5c029c" title="This method initializes the TLV. " alt="" coords="276,793,498,832"/>
+<area shape="rect" id="node20" href="$d3/d4c/classThread_1_1MeshCoP_1_1CommissionerSessionIdTlv.html#a6abb04fc2c60f534add26eb9ba6c276c" title="This method sets the Commissioner Session ID value. " alt="" coords="253,981,521,1020"/>
+<area shape="rect" id="node21" href="$d5/d5f/classThread_1_1MeshCoP_1_1CountTlv.html#aeda1fd8f32f691d2870ae7e4db077ada" title="This method initializes the TLV. " alt="" coords="292,856,482,895"/>
+<area shape="rect" id="node22" href="$d5/d5f/classThread_1_1MeshCoP_1_1CountTlv.html#a67c2f9b7fd6268969a44cc801802debd" title="This method sets the Count value. " alt="" coords="292,1044,482,1083"/>
+<area shape="rect" id="node23" href="$d0/d9f/classThread_1_1MeshCoP_1_1PeriodTlv.html#ac8ffceadfad93125afa8eeed39857bbb" title="This method initializes the TLV. " alt="" coords="290,919,484,957"/>
+<area shape="rect" id="node24" href="$d0/d9f/classThread_1_1MeshCoP_1_1PeriodTlv.html#a6b80722bb8aee5bd7499f0884b4e09ad" title="This method sets the Period value. " alt="" coords="290,1107,484,1145"/>
+<area shape="rect" id="node25" href="$da/d46/classThread_1_1Ip6_1_1MessageInfo.html#a794b87e17aa877f3551c00aa8c892072" title="This method returns a reference to the peer socket address. " alt="" coords="300,1169,474,1208"/>
+<area shape="rect" id="node26" href="$d2/d55/classThread_1_1Ip6_1_1Netif.html#a6c8c4f1757a98e7a45197c97da1ec8b8" title="This method returns the network interface identifier. " alt="" coords="325,1232,449,1271"/>
+<area shape="rect" id="node27" href="$dc/d75/classThread_1_1Ip6_1_1UdpSocket.html#ac4fb0ea0ae514fa0edfeaa91dfbdabca" title="This method sends a UDP message. " alt="" coords="306,1295,468,1333"/>
+<area shape="rect" id="node39" href="$dc/d3c/classThread_1_1Message.html#adc9d723284f5807d9c272ab89bc52b45" title="This method frees this message buffer. " alt="" coords="307,1357,467,1383"/>
+<area shape="rect" id="node4" href="$d0/d7f/classThread_1_1Coap_1_1Header.html#a411c64839fe9cf63ac201f9a6760199c" title="This method sets the Version value. " alt="" coords="590,55,744,93"/>
+<area shape="rect" id="node11" href="$d0/d7f/classThread_1_1Coap_1_1Header.html#ac047d4a2285b8315c1f11d66c04994a4" title="This method appends a CoAP option. " alt="" coords="590,431,744,469"/>
+<area shape="rect" id="node18" href="$dd/d8d/classThread_1_1MeshCoP_1_1Tlv.html#af4de18174724fddc7ac516c219cd16cd" title="This method sets the Type value. " alt="" coords="589,887,744,925"/>
+<area shape="rect" id="node19" href="$dd/d8d/classThread_1_1MeshCoP_1_1Tlv.html#a0524dd75d253e44a53dab3cc0de3393e" title="This method sets the Length value. " alt="" coords="589,824,744,863"/>
+<area shape="rect" id="node28" href="$da/d46/classThread_1_1Ip6_1_1MessageInfo.html#a97e94677a677f600a227dd970f4a02e8" title="This method returns a reference to the local socket address. " alt="" coords="580,1044,753,1083"/>
+<area shape="rect" id="node29" href="$d9/db1/classThread_1_1Ip6_1_1Address.html#a51cfd76548da9f661a0d7a47a8d5e813" title="This method indicates whether or not the IPv6 address is the Unspecified Address. ..." alt="" coords="594,1107,740,1145"/>
+<area shape="rect" id="node30" href="$dc/d75/classThread_1_1Ip6_1_1UdpSocket.html#a4c3b5b3798c5a209d94f145dd9f08424" title="This method returns the local socket address. " alt="" coords="586,1169,748,1208"/>
+<area shape="rect" id="node31" href="$d2/d7a/classThread_1_1Ip6_1_1SockAddr.html#a9f92ec4fbccf1d095aa8a43dd882dd2f" title="This method returns a reference to the IPv6 address. " alt="" coords="589,1232,744,1271"/>
+<area shape="rect" id="node32" href="$d7/dd3/classThread_1_1Ip6_1_1UdpHeader.html#a3e48adfe7fb163bd8dd6e6f26cb5dda4" title="This method sets the UDP Source Port. " alt="" coords="584,1295,749,1333"/>
+<area shape="rect" id="node33" href="$d7/dd3/classThread_1_1Ip6_1_1UdpHeader.html#aa6b4ee310b27450ea21696b8a1ab9e36" title="This method sets the UDP Destination Port. " alt="" coords="584,1357,749,1396"/>
+<area shape="rect" id="node34" href="$d7/dd3/classThread_1_1Ip6_1_1UdpHeader.html#a232ac624d1b666065516cd2b7dc5f729" title="This method sets the UDP Length. " alt="" coords="584,1420,749,1459"/>
+<area shape="rect" id="node35" href="$dc/d3c/classThread_1_1Message.html#a2cf440376e834030c38bb2ced4ca49e9" title="This method returns the number of bytes in the message. " alt="" coords="569,1483,764,1508"/>
+<area shape="rect" id="node36" href="$d7/dd3/classThread_1_1Ip6_1_1UdpHeader.html#ada31b17064f026a602cac8ce755cffcf" title="This method sets the UDP Checksum. " alt="" coords="584,1532,749,1571"/>
+<area shape="rect" id="node37" href="$dc/d3c/classThread_1_1Message.html#a9c900e4c1ddbb44f1d9c87d10172f63a" title="This method prepends bytes to the front of the message. " alt="" coords="575,1595,758,1620"/>
+<area shape="rect" id="node38" href="$dc/d3c/classThread_1_1Message.html#acaa6ed0d0c060a524cb5da25451acc0d" title="This method sets the byte offset within the message. " alt="" coords="573,995,761,1020"/>
+</map>

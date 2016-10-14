@@ -1,0 +1,4 @@
+<map id="otSetNetworkName" name="otSetNetworkName">
+<area shape="rect" id="node2" href="$d3/d8e/classThread_1_1ThreadNetif.html#aec59b0e172327889e9b0f4f08b0e69f9" title="This method returns a pointer to the mac object. " alt="" coords="240,5,381,44"/>
+<area shape="rect" id="node3" href="$d6/d88/classThread_1_1Mac_1_1Mac.html#a5e193dd2519ecb5ffde4b7ae486e42e5" title="This method sets the IEEE 802.15.4 Network Name. " alt="" coords="190,68,431,93"/>
+</map>

@@ -1,0 +1,5 @@
+<map id="otGetMeshLocalPrefix" name="otGetMeshLocalPrefix">
+<area shape="rect" id="node2" href="$d3/d8e/classThread_1_1ThreadNetif.html#ad49d56e324f096d728c0083d9292f52d" title="This method returns a pointer to the mle object. " alt="" coords="227,5,368,44"/>
+<area shape="rect" id="node3" href="$df/d94/group__core-mle-core.html#ga1892b5d66471226fa03645a966cb3eed" title="This method returns a pointer to the Mesh Local Prefix. " alt="" coords="206,68,389,107"/>
+<area shape="rect" id="node4" href="$d9/d13/classThread_1_1Ip6_1_1NetifUnicastAddress.html#a2bb426bd29e271bd1fc09b61d1044911" title="This method returns the unicast address. " alt="" coords="437,68,606,107"/>
+</map>

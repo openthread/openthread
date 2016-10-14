@@ -1,3 +1,15 @@
 <map id="Thread::KeyManager::GetTemporaryMacKey" name="Thread::KeyManager::GetTemporaryMacKey">
-<area shape="rect" id="node2" href="$d6/d88/classThread_1_1Mac_1_1Mac.html#adb6ca8a4287b21a2f9e35090ed716506" title="This method is called to handle transmit events. " alt="" coords="215,5,402,44"/>
+<area shape="rect" id="node2" href="$d6/d88/classThread_1_1Mac_1_1Mac.html#adb6ca8a4287b21a2f9e35090ed716506" title="This method is called to handle transmit events. " alt="" coords="215,96,402,135"/>
+<area shape="rect" id="node3" href="$d6/d88/classThread_1_1Mac_1_1Mac.html#aacc5fd2b9ea373a699840afa8e562dc9" title="This method registers a new MAC sender client. " alt="" coords="450,68,656,107"/>
+<area shape="rect" id="node14" href="$d7/d9c/group__radio-operation.html#ga7d10a9bce7521f75bd84b32b979e1aa7" title="The radio driver calls this method to notify OpenThread that the transmission has completed..." alt="" coords="466,131,640,156"/>
+<area shape="rect" id="node4" href="$dd/d1d/classThread_1_1MeshForwarder.html#a7668817d03306dadcb36ff9eaad72299" title="This method is called by the address resolver when an EID&#45;to&#45;RLOC mapping has been resolved..." alt="" coords="704,68,868,107"/>
+<area shape="rect" id="node5" href="$d4/dcf/classThread_1_1AddressResolver.html#ac249179518a77ecfdaf7d4502ef2f940" title="This method returns the RLOC16 for a given EID, or initiates an Address Query if the mapping is not k..." alt="" coords="916,68,1089,107"/>
+<area shape="rect" id="node6" href="$dd/d1d/classThread_1_1MeshForwarder.html#a361ef901f6b665b3c7feac206089a7df" title="This method submits a message to the mesh forwarder for forwarding. " alt="" coords="1137,68,1301,107"/>
+<area shape="rect" id="node7" href="$dd/d1d/classThread_1_1MeshForwarder.html#a3a55dcf590bf5941d216ff313b6ce0d0" title="This method gets the Data Poll period. " alt="" coords="1352,5,1516,44"/>
+<area shape="rect" id="node8" href="$dd/d1d/classThread_1_1MeshForwarder.html#a5f726671448fb7cd72f8ee96db40731a" title="This method sets the scan parameters for MLE Discovery Request messages. " alt="" coords="1349,68,1519,107"/>
+<area shape="rect" id="node13" href="$d3/d8e/classThread_1_1ThreadNetif.html#a95f2ad1f6785b0de74e660e43ac86d33" title="This method submits a message to the network interface. " alt="" coords="1364,131,1504,169"/>
+<area shape="rect" id="node9" href="$df/d94/group__core-mle-core.html#gab299d00d1b2beabe8130e400dd6eca91" title="This method initiates a Thread Discovery. " alt="" coords="1567,75,1747,100"/>
+<area shape="rect" id="node10" href="$d4/db5/classThread_1_1MeshCoP_1_1Joiner.html#a1ca1f767cfe15e7c25b8f65606e7fefb" title="This method starts the Joiner service. " alt="" coords="1795,40,1969,79"/>
+<area shape="rect" id="node11" href="$d0/d0a/group__commands.html#ga8422cdf7d0b8b22c6dd107e6bb1309f2" title="This function starts a Thread Discovery scan. " alt="" coords="1840,103,1924,128"/>
+<area shape="rect" id="node12" href="$d5/dc2/structThread_1_1Cli_1_1Interpreter.html#a11ee1f86cffe17aab7de3de0bb16dee7" title="This method parses an ASCII string as an unsigned long. " alt="" coords="2017,96,2172,135"/>
 </map>

@@ -1,3 +1,4 @@
 <map id="Graphical Class Hierarchy" name="Graphical Class Hierarchy">
-<area shape="rect" id="node1" href="$df/d91/structspinel__eui64__t.html" title="spinel_eui64_t" alt="" coords="5,5,113,31"/>
+<area shape="rect" id="node1" href="$dd/d76/structotMessageInfo.html" title="This structure represents the local and peer IPv6 socket addresses. " alt="" coords="5,5,114,31"/>
+<area shape="rect" id="node2" href="$da/d46/classThread_1_1Ip6_1_1MessageInfo.html" title="This class implements message information for an IPv6 message. " alt="" coords="162,5,335,31"/>
 </map>

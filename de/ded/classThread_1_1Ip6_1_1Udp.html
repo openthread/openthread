@@ -34,7 +34,7 @@
   <td id="projectlogo"><img alt="Logo" src="../../Open-Thread-Logo-200x42.png"/></td>
   <td style="padding-left: 0.5em;">
    <div id="projectname">
-   &#160;<span id="projectnumber">gb2b10b8</span>
+   &#160;<span id="projectnumber">gddd0704</span>
    </div>
   </td>
  </tr>
@@ -110,7 +110,7 @@ $(document).ready(function(){initNavTree('de/ded/classThread_1_1Ip6_1_1Udp.html'
 
 <div class="header">
   <div class="summary">
-<a href="#pub-static-methods">Static Public Member Functions</a> &#124;
+<a href="#pub-methods">Public Member Functions</a> &#124;
 <a href="#friends">Friends</a> &#124;
 <a href="../../d1/d6a/classThread_1_1Ip6_1_1Udp-members.html">List of all members</a>  </div>
   <div class="headertitle">
@@ -123,16 +123,31 @@ $(document).ready(function(){initNavTree('de/ded/classThread_1_1Ip6_1_1Udp.html'
 
 <p><code>#include &lt;<a class="el" href="../../d0/db7/udp6_8hpp_source.html">src/core/net/udp6.hpp</a>&gt;</code></p>
 <table class="memberdecls">
-<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-static-methods"></a>
-Static Public Member Functions</h2></td></tr>
-<tr class="memitem:afe746fb2f5c83a97c20e54fdb9c595a3"><td class="memItemLeft" align="right" valign="top">static <a class="el" href="../../dc/d3c/classThread_1_1Message.html">Message</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../de/ded/classThread_1_1Ip6_1_1Udp.html#afe746fb2f5c83a97c20e54fdb9c595a3">NewMessage</a> (uint16_t aReserved)</td></tr>
-<tr class="memdesc:afe746fb2f5c83a97c20e54fdb9c595a3"><td class="mdescLeft">&#160;</td><td class="mdescRight">This static method returns a new UDP message with sufficient header space reserved.  <a href="#afe746fb2f5c83a97c20e54fdb9c595a3">More...</a><br /></td></tr>
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
+Public Member Functions</h2></td></tr>
+<tr class="memitem:ae5bb3f296710b0648e8ec38c81340ad6"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../de/ded/classThread_1_1Ip6_1_1Udp.html#ae5bb3f296710b0648e8ec38c81340ad6">Udp</a> (<a class="el" href="../../d3/d05/classThread_1_1Ip6_1_1Ip6.html">Ip6</a> &amp;aIp6)</td></tr>
+<tr class="memdesc:ae5bb3f296710b0648e8ec38c81340ad6"><td class="mdescLeft">&#160;</td><td class="mdescRight">This constructor initializes the object.  <a href="#ae5bb3f296710b0648e8ec38c81340ad6">More...</a><br /></td></tr>
+<tr class="separator:ae5bb3f296710b0648e8ec38c81340ad6"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a36da6039e1c4a6bd9f8a123cea276adc"><td class="memItemLeft" align="right" valign="top"><a class="el" href="../../dc/dbf/openthread-types_8h.html#ab701d053a9c34ab7f11e43e0dc09ac9f">ThreadError</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../de/ded/classThread_1_1Ip6_1_1Udp.html#a36da6039e1c4a6bd9f8a123cea276adc">AddSocket</a> (<a class="el" href="../../dc/d75/classThread_1_1Ip6_1_1UdpSocket.html">UdpSocket</a> &amp;aSocket)</td></tr>
+<tr class="memdesc:a36da6039e1c4a6bd9f8a123cea276adc"><td class="mdescLeft">&#160;</td><td class="mdescRight">This method adds a UDP socket.  <a href="#a36da6039e1c4a6bd9f8a123cea276adc">More...</a><br /></td></tr>
+<tr class="separator:a36da6039e1c4a6bd9f8a123cea276adc"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:abada2f7d6b56caaf4a5a686a86c32428"><td class="memItemLeft" align="right" valign="top"><a class="el" href="../../dc/dbf/openthread-types_8h.html#ab701d053a9c34ab7f11e43e0dc09ac9f">ThreadError</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../de/ded/classThread_1_1Ip6_1_1Udp.html#abada2f7d6b56caaf4a5a686a86c32428">RemoveSocket</a> (<a class="el" href="../../dc/d75/classThread_1_1Ip6_1_1UdpSocket.html">UdpSocket</a> &amp;aSocket)</td></tr>
+<tr class="memdesc:abada2f7d6b56caaf4a5a686a86c32428"><td class="mdescLeft">&#160;</td><td class="mdescRight">This method removes a UDP socket.  <a href="#abada2f7d6b56caaf4a5a686a86c32428">More...</a><br /></td></tr>
+<tr class="separator:abada2f7d6b56caaf4a5a686a86c32428"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a13473099ea53876a2f722c938e7081d8"><td class="memItemLeft" align="right" valign="top">uint16_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../de/ded/classThread_1_1Ip6_1_1Udp.html#a13473099ea53876a2f722c938e7081d8">GetEphemeralPort</a> (void)</td></tr>
+<tr class="memdesc:a13473099ea53876a2f722c938e7081d8"><td class="mdescLeft">&#160;</td><td class="mdescRight">This method returns a new ephemeral port.  <a href="#a13473099ea53876a2f722c938e7081d8">More...</a><br /></td></tr>
+<tr class="separator:a13473099ea53876a2f722c938e7081d8"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:afe746fb2f5c83a97c20e54fdb9c595a3"><td class="memItemLeft" align="right" valign="top"><a class="el" href="../../dc/d3c/classThread_1_1Message.html">Message</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../de/ded/classThread_1_1Ip6_1_1Udp.html#afe746fb2f5c83a97c20e54fdb9c595a3">NewMessage</a> (uint16_t aReserved)</td></tr>
+<tr class="memdesc:afe746fb2f5c83a97c20e54fdb9c595a3"><td class="mdescLeft">&#160;</td><td class="mdescRight">This method returns a new UDP message with sufficient header space reserved.  <a href="#afe746fb2f5c83a97c20e54fdb9c595a3">More...</a><br /></td></tr>
 <tr class="separator:afe746fb2f5c83a97c20e54fdb9c595a3"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a3f645b8190d7e4345fbc195db5b03e49"><td class="memItemLeft" align="right" valign="top">static <a class="el" href="../../dc/dbf/openthread-types_8h.html#ab701d053a9c34ab7f11e43e0dc09ac9f">ThreadError</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../de/ded/classThread_1_1Ip6_1_1Udp.html#a3f645b8190d7e4345fbc195db5b03e49">HandleMessage</a> (<a class="el" href="../../dc/d3c/classThread_1_1Message.html">Message</a> &amp;aMessage, <a class="el" href="../../da/d46/classThread_1_1Ip6_1_1MessageInfo.html">MessageInfo</a> &amp;aMessageInfo)</td></tr>
-<tr class="memdesc:a3f645b8190d7e4345fbc195db5b03e49"><td class="mdescLeft">&#160;</td><td class="mdescRight">This static method handles a received UDP message.  <a href="#a3f645b8190d7e4345fbc195db5b03e49">More...</a><br /></td></tr>
+<tr class="memitem:aa8d41afcd7a8894a7005bc1c32343f7d"><td class="memItemLeft" align="right" valign="top"><a class="el" href="../../dc/dbf/openthread-types_8h.html#ab701d053a9c34ab7f11e43e0dc09ac9f">ThreadError</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../de/ded/classThread_1_1Ip6_1_1Udp.html#aa8d41afcd7a8894a7005bc1c32343f7d">SendDatagram</a> (<a class="el" href="../../dc/d3c/classThread_1_1Message.html">Message</a> &amp;aMessage, <a class="el" href="../../da/d46/classThread_1_1Ip6_1_1MessageInfo.html">MessageInfo</a> &amp;aMessageInfo, <a class="el" href="../../d9/dcf/group__core-ip6-ip6.html#ga83d94b02a618038e1534f9e12001d095">IpProto</a> aIpProto)</td></tr>
+<tr class="memdesc:aa8d41afcd7a8894a7005bc1c32343f7d"><td class="mdescLeft">&#160;</td><td class="mdescRight">This method sends an IPv6 datagram.  <a href="#aa8d41afcd7a8894a7005bc1c32343f7d">More...</a><br /></td></tr>
+<tr class="separator:aa8d41afcd7a8894a7005bc1c32343f7d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a3f645b8190d7e4345fbc195db5b03e49"><td class="memItemLeft" align="right" valign="top"><a class="el" href="../../dc/dbf/openthread-types_8h.html#ab701d053a9c34ab7f11e43e0dc09ac9f">ThreadError</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../de/ded/classThread_1_1Ip6_1_1Udp.html#a3f645b8190d7e4345fbc195db5b03e49">HandleMessage</a> (<a class="el" href="../../dc/d3c/classThread_1_1Message.html">Message</a> &amp;aMessage, <a class="el" href="../../da/d46/classThread_1_1Ip6_1_1MessageInfo.html">MessageInfo</a> &amp;aMessageInfo)</td></tr>
+<tr class="memdesc:a3f645b8190d7e4345fbc195db5b03e49"><td class="mdescLeft">&#160;</td><td class="mdescRight">This method handles a received UDP message.  <a href="#a3f645b8190d7e4345fbc195db5b03e49">More...</a><br /></td></tr>
 <tr class="separator:a3f645b8190d7e4345fbc195db5b03e49"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aa6462f860311b25afef6cb90805dd778"><td class="memItemLeft" align="right" valign="top">static <a class="el" href="../../dc/dbf/openthread-types_8h.html#ab701d053a9c34ab7f11e43e0dc09ac9f">ThreadError</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../de/ded/classThread_1_1Ip6_1_1Udp.html#aa6462f860311b25afef6cb90805dd778">UpdateChecksum</a> (<a class="el" href="../../dc/d3c/classThread_1_1Message.html">Message</a> &amp;aMessage, uint16_t aPseudoHeaderChecksum)</td></tr>
-<tr class="memdesc:aa6462f860311b25afef6cb90805dd778"><td class="mdescLeft">&#160;</td><td class="mdescRight">This static method updates the UDP checksum.  <a href="#aa6462f860311b25afef6cb90805dd778">More...</a><br /></td></tr>
+<tr class="memitem:aa6462f860311b25afef6cb90805dd778"><td class="memItemLeft" align="right" valign="top"><a class="el" href="../../dc/dbf/openthread-types_8h.html#ab701d053a9c34ab7f11e43e0dc09ac9f">ThreadError</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../de/ded/classThread_1_1Ip6_1_1Udp.html#aa6462f860311b25afef6cb90805dd778">UpdateChecksum</a> (<a class="el" href="../../dc/d3c/classThread_1_1Message.html">Message</a> &amp;aMessage, uint16_t aPseudoHeaderChecksum)</td></tr>
+<tr class="memdesc:aa6462f860311b25afef6cb90805dd778"><td class="mdescLeft">&#160;</td><td class="mdescRight">This method updates the UDP checksum.  <a href="#aa6462f860311b25afef6cb90805dd778">More...</a><br /></td></tr>
 <tr class="separator:aa6462f860311b25afef6cb90805dd778"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="friends"></a>
@@ -143,13 +158,84 @@ class&#160;</td><td class="memItemRight" valign="bottom"><b>UdpSocket</b></td></
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>This class implements core UDP message handling. </p>
-</div><h2 class="groupheader">Member Function Documentation</h2>
+</div><h2 class="groupheader">Constructor &amp; Destructor Documentation</h2>
+<a class="anchor" id="ae5bb3f296710b0648e8ec38c81340ad6"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">Thread::Ip6::Udp::Udp </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="../../d3/d05/classThread_1_1Ip6_1_1Ip6.html">Ip6</a> &amp;&#160;</td>
+          <td class="paramname"><em>aIp6</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>This constructor initializes the object. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">aIp6</td><td>A reference to the IPv6 network object. </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<h2 class="groupheader">Member Function Documentation</h2>
+<a class="anchor" id="a36da6039e1c4a6bd9f8a123cea276adc"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="../../dc/dbf/openthread-types_8h.html#ab701d053a9c34ab7f11e43e0dc09ac9f">ThreadError</a> Thread::Ip6::Udp::AddSocket </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="../../dc/d75/classThread_1_1Ip6_1_1UdpSocket.html">UdpSocket</a> &amp;&#160;</td>
+          <td class="paramname"><em>aSocket</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>This method adds a UDP socket. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">aSocket</td><td>A reference to the UDP socket.</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="retval"><dt>Return values</dt><dd>
+  <table class="retval">
+    <tr><td class="paramname">kThreadError_None</td><td>Successfully added the UDP socket. </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a class="anchor" id="a13473099ea53876a2f722c938e7081d8"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">uint16_t Thread::Ip6::Udp::GetEphemeralPort </td>
+          <td>(</td>
+          <td class="paramtype">void&#160;</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>This method returns a new ephemeral port. </p>
+<dl class="section return"><dt>Returns</dt><dd>A new ephemeral port. </dd></dl>
+
+</div>
+</div>
 <a class="anchor" id="a3f645b8190d7e4345fbc195db5b03e49"></a>
 <div class="memitem">
 <div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
       <table class="memname">
         <tr>
           <td class="memname"><a class="el" href="../../dc/dbf/openthread-types_8h.html#ab701d053a9c34ab7f11e43e0dc09ac9f">ThreadError</a> Thread::Ip6::Udp::HandleMessage </td>
@@ -169,14 +255,9 @@ class&#160;</td><td class="memItemRight" valign="bottom"><b>UdpSocket</b></td></
           <td></td><td></td>
         </tr>
       </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">static</span></span>  </td>
-  </tr>
-</table>
 </div><div class="memdoc">
 
-<p>This static method handles a received UDP message. </p>
+<p>This method handles a received UDP message. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramdir">[in]</td><td class="paramname">aMessage</td><td>A reference to the UDP message to process. </td></tr>
@@ -197,19 +278,19 @@ Here is the call graph for this function:</div>
 <div class="dyncontent">
 <div class="center"><img src="../../de/ded/classThread_1_1Ip6_1_1Udp_a3f645b8190d7e4345fbc195db5b03e49_cgraph.png" border="0" usemap="#de/ded/classThread_1_1Ip6_1_1Udp_a3f645b8190d7e4345fbc195db5b03e49_cgraph" alt=""/></div>
 <map name="de/ded/classThread_1_1Ip6_1_1Udp_a3f645b8190d7e4345fbc195db5b03e49_cgraph" id="de/ded/classThread_1_1Ip6_1_1Udp_a3f645b8190d7e4345fbc195db5b03e49_cgraph">
-<area shape="rect" id="node2" href="../../dc/d3c/classThread_1_1Message.html#a2cf440376e834030c38bb2ced4ca49e9" title="This method returns the number of bytes in the message. " alt="" coords="512,93,707,119"/>
-<area shape="rect" id="node3" href="../../dc/d3c/classThread_1_1Message.html#ac8304ee00c9e0b303539687e98e192e0" title="This method returns the byte offset within the message. " alt="" coords="515,237,705,263"/>
-<area shape="rect" id="node4" href="../../d3/d05/classThread_1_1Ip6_1_1Ip6.html#a5f39ba98f1e62d4b618aa83ac8c047b6" title="This static method computes the pseudoheader checksum. " alt="" coords="255,205,432,244"/>
-<area shape="rect" id="node6" href="../../da/d46/classThread_1_1Ip6_1_1MessageInfo.html#a794b87e17aa877f3551c00aa8c892072" title="This method returns a reference to the peer socket address. " alt="" coords="257,320,430,359"/>
-<area shape="rect" id="node7" href="../../da/d46/classThread_1_1Ip6_1_1MessageInfo.html#a97e94677a677f600a227dd970f4a02e8" title="This method returns a reference to the local socket address. " alt="" coords="257,383,430,421"/>
-<area shape="rect" id="node8" href="../../dc/d3c/classThread_1_1Message.html#a97e576ca01bc7a858f2d5cd35c82b731" title="This method is used to update a checksum value. " alt="" coords="224,55,463,80"/>
-<area shape="rect" id="node10" href="../../dc/d3c/classThread_1_1Message.html#ad5cd679cc64dd84fa4609d52878c664b" title="This method reads bytes from the message. " alt="" coords="261,5,426,31"/>
-<area shape="rect" id="node11" href="../../dc/d3c/classThread_1_1Message.html#a7b45edaa8ba9f31a437aea73cfca387c" title="This method moves the byte offset within the message. " alt="" coords="243,156,444,181"/>
-<area shape="rect" id="node12" href="../../d7/dd3/classThread_1_1Ip6_1_1UdpHeader.html#a83d995609237751bce5a8905c0bf837f" title="This method returns the UDP Source Port. " alt="" coords="261,445,426,484"/>
-<area shape="rect" id="node13" href="../../d7/dd3/classThread_1_1Ip6_1_1UdpHeader.html#a21cbe8e5d4940ca6192f2fa58636c8cc" title="This method returns the UDP Destination Port. " alt="" coords="261,508,426,547"/>
-<area shape="rect" id="node14" href="../../d9/db1/classThread_1_1Ip6_1_1Address.html#a37b709740053966d80e6c4b65e38ad2e" title="This method indicates whether or not the IPv6 address is multicast address. " alt="" coords="271,571,417,609"/>
-<area shape="rect" id="node5" href="../../d3/d05/classThread_1_1Ip6_1_1Ip6.html#a65af4f070c4734601f0308ab48affba8" title="This static method updates a checksum. " alt="" coords="527,175,693,213"/>
-<area shape="rect" id="node9" href="../../db/d50/classThread_1_1Buffer.html#a34ab22941ccd9bb222d251a6a18c95bf" title="This method returns a pointer to the next message buffer. " alt="" coords="511,31,709,56"/>
+<area shape="rect" id="node2" href="../../dc/d3c/classThread_1_1Message.html#a2cf440376e834030c38bb2ced4ca49e9" title="This method returns the number of bytes in the message. " alt="" coords="246,5,441,31"/>
+<area shape="rect" id="node3" href="../../dc/d3c/classThread_1_1Message.html#ac8304ee00c9e0b303539687e98e192e0" title="This method returns the byte offset within the message. " alt="" coords="249,55,438,80"/>
+<area shape="rect" id="node4" href="../../d3/d05/classThread_1_1Ip6_1_1Ip6.html#a5f39ba98f1e62d4b618aa83ac8c047b6" title="This static method computes the pseudoheader checksum. " alt="" coords="255,104,432,143"/>
+<area shape="rect" id="node6" href="../../da/d46/classThread_1_1Ip6_1_1MessageInfo.html#a794b87e17aa877f3551c00aa8c892072" title="This method returns a reference to the peer socket address. " alt="" coords="257,167,430,205"/>
+<area shape="rect" id="node7" href="../../da/d46/classThread_1_1Ip6_1_1MessageInfo.html#a97e94677a677f600a227dd970f4a02e8" title="This method returns a reference to the local socket address. " alt="" coords="257,229,430,268"/>
+<area shape="rect" id="node8" href="../../dc/d3c/classThread_1_1Message.html#a97e576ca01bc7a858f2d5cd35c82b731" title="This method is used to update a checksum value. " alt="" coords="224,292,463,317"/>
+<area shape="rect" id="node10" href="../../dc/d3c/classThread_1_1Message.html#a76033bbc15170d72452186058defafa2" title="This method reads bytes from the message. " alt="" coords="261,341,426,367"/>
+<area shape="rect" id="node11" href="../../dc/d3c/classThread_1_1Message.html#a7b45edaa8ba9f31a437aea73cfca387c" title="This method moves the byte offset within the message. " alt="" coords="243,391,444,416"/>
+<area shape="rect" id="node12" href="../../d7/dd3/classThread_1_1Ip6_1_1UdpHeader.html#a83d995609237751bce5a8905c0bf837f" title="This method returns the UDP Source Port. " alt="" coords="261,440,426,479"/>
+<area shape="rect" id="node13" href="../../d7/dd3/classThread_1_1Ip6_1_1UdpHeader.html#a21cbe8e5d4940ca6192f2fa58636c8cc" title="This method returns the UDP Destination Port. " alt="" coords="261,503,426,541"/>
+<area shape="rect" id="node14" href="../../d9/db1/classThread_1_1Ip6_1_1Address.html#a37b709740053966d80e6c4b65e38ad2e" title="This method indicates whether or not the IPv6 address is multicast address. " alt="" coords="271,565,417,604"/>
+<area shape="rect" id="node5" href="../../d3/d05/classThread_1_1Ip6_1_1Ip6.html#a65af4f070c4734601f0308ab48affba8" title="This static method updates a checksum. " alt="" coords="527,180,693,219"/>
+<area shape="rect" id="node9" href="../../db/d50/classThread_1_1Buffer.html#a34ab22941ccd9bb222d251a6a18c95bf" title="This method returns a pointer to the next message buffer. " alt="" coords="511,317,709,343"/>
 </map>
 </div>
 </p>
@@ -219,34 +300,21 @@ Here is the caller graph for this function:</div>
 <div class="dyncontent">
 <div class="center"><img src="../../de/ded/classThread_1_1Ip6_1_1Udp_a3f645b8190d7e4345fbc195db5b03e49_icgraph.png" border="0" usemap="#de/ded/classThread_1_1Ip6_1_1Udp_a3f645b8190d7e4345fbc195db5b03e49_icgraph" alt=""/></div>
 <map name="de/ded/classThread_1_1Ip6_1_1Udp_a3f645b8190d7e4345fbc195db5b03e49_icgraph" id="de/ded/classThread_1_1Ip6_1_1Udp_a3f645b8190d7e4345fbc195db5b03e49_icgraph">
-<area shape="rect" id="node2" href="../../d3/d05/classThread_1_1Ip6_1_1Ip6.html#a4aa215eb5c0d575403b5ca683e8427c2" title="This static method sends an IPv6 datagram. " alt="" coords="224,383,437,409"/>
-<area shape="rect" id="node3" href="../../dc/ddf/classThread_1_1Ip6_1_1IcmpEcho.html#abe01fa9b5c27147270cae355f78fa552" title="This method sends an ICMPv6 Echo Request message. " alt="" coords="488,233,644,271"/>
-<area shape="rect" id="node4" href="../../da/dd7/classThread_1_1Ip6_1_1Icmp.html#a1652c3864180133512f7d6499cd684f2" title="This static method sends an ICMPv6 error message. " alt="" coords="499,295,633,334"/>
-<area shape="rect" id="node25" href="../../da/dd7/classThread_1_1Ip6_1_1Icmp.html#ad28878461d364df3eeac50588479c9c1" title="This static method handles an ICMPv6 message. " alt="" coords="499,439,633,478"/>
-<area shape="rect" id="node26" href="../../dc/d75/classThread_1_1Ip6_1_1UdpSocket.html#ac4fb0ea0ae514fa0edfeaa91dfbdabca" title="This method sends a UDP message. " alt="" coords="485,377,647,415"/>
-<area shape="rect" id="node5" href="../../df/d94/group__core-mle-core.html#ga27bbb63f94a4f59d1249fce8baa830ed" title="This method checks if the destination is reachable. " alt="" coords="695,282,934,307"/>
-<area shape="rect" id="node6" href="../../db/dec/group__core-mle-router.html#gac7d2542017033898d0bc0f17a65d4656" title="This method checks if the destination is reachable. " alt="" coords="988,317,1149,355"/>
-<area shape="rect" id="node7" href="../../dd/d1d/classThread_1_1MeshForwarder.html#a361ef901f6b665b3c7feac206089a7df" title="This method submits a message to the mesh forwarder for forwarding. " alt="" coords="1203,338,1367,377"/>
-<area shape="rect" id="node8" href="../../dd/d1d/classThread_1_1MeshForwarder.html#a969c6fac135cdee3ed9380a0859eaaa8" title="This method sets the Data Poll period. " alt="" coords="1415,277,1580,315"/>
-<area shape="rect" id="node24" href="../../d3/d8e/classThread_1_1ThreadNetif.html#a95f2ad1f6785b0de74e660e43ac86d33" title="This method submits a message to the network interface. " alt="" coords="1427,339,1568,378"/>
-<area shape="rect" id="node9" href="../../df/d94/group__core-mle-core.html#gad555ca36631eff9b978e448ecbcf8e2e" title="This method appends an Address Registration TLV to a message. " alt="" coords="1628,230,1802,269"/>
-<area shape="rect" id="node10" href="../../df/d94/group__core-mle-core.html#ga09239c621861382d25163980ab5d983b" title="This method generates an MLE Child Update Request message. " alt="" coords="1850,233,2041,271"/>
-<area shape="rect" id="node16" href="../../df/d94/group__core-mle-core.html#ga0ea27201cf13a4e1b0680a9da6c54a64" title="This method submits an MLE message to the UDP socket. " alt="" coords="2615,287,2829,313"/>
-<area shape="rect" id="node11" href="../../df/d94/group__core-mle-core.html#ga01c7e5a022360a6f35e30d07221dbfea" title="This method starts the MLE protocol operation. " alt="" coords="2122,195,2278,221"/>
-<area shape="rect" id="node12" href="../../df/d94/group__core-mle-core.html#gafb51db61e6e184d664a9e7cc3833dcf4" title="This method sets the MLE Timeout value. " alt="" coords="2102,245,2298,270"/>
-<area shape="rect" id="node13" href="../../df/d94/group__core-mle-core.html#ga453d94c377c5825a4a5e8b66a728e591" title="This method sets the Device Mode as reported in the Mode TLV. " alt="" coords="2089,294,2311,319"/>
-<area shape="rect" id="node14" href="../../df/d94/group__core-mle-core.html#gaac7d42ff61704aa43e94dbb781c78c5e" title="This method notifies MLE that the Network Data has changed. " alt="" coords="2114,395,2286,434"/>
-<area shape="rect" id="node15" href="../../d6/d9b/classThread_1_1NetworkData_1_1Leader.html#a428d60927d6f4b4ac8e878e792d2f716" title="This method is used by non&#45;Leader devices to set newly received Network Data from the Leader..." alt="" coords="2376,395,2550,434"/>
-<area shape="rect" id="node22" href="../../d6/d9b/classThread_1_1NetworkData_1_1Leader.html#a5baddd109ff06b58140e2678e3c97a16" title="This method removes Network Data associated with a given RLOC16. " alt="" coords="2359,561,2567,599"/>
-<area shape="rect" id="node21" href="../../db/dec/group__core-mle-router.html#ga2f58e7783003a5d53b12a556ac4375f2" title="This method sets the ROUTER_UPGRADE_THRESHOLD value. " alt="" coords="2877,395,3076,434"/>
-<area shape="rect" id="node17" href="../../df/d94/group__core-mle-core.html#gac13477847483bba0aeab32fd93a7dbac" title="This method generates an MLE Data Request message. " alt="" coords="2882,281,3070,319"/>
-<area shape="rect" id="node18" href="../../df/d94/group__core-mle-core.html#ga4a192897e2fe5f4b0ab2ed1535fd2657" title="This method generates an MLE Data Response message. " alt="" coords="2882,218,3070,257"/>
-<area shape="rect" id="node19" href="../../db/dec/group__core-mle-router.html#ga7126c084ace25827febebc4210928cd4" title="This method generates an MLE Link Reject. " alt="" coords="3130,395,3292,434"/>
-<area shape="rect" id="node20" href="../../db/dec/group__core-mle-router.html#gaf13c43af2bf2f9057629cbb74fca0af0" title="This method handles MAC Data Poll messages. " alt="" coords="3124,102,3298,141"/>
-<area shape="rect" id="node23" href="../../db/dec/group__core-mle-router.html#ga179fad5b4b75849e76811006761d2b3e" title="This method release a given Router ID. " alt="" coords="2641,510,2802,549"/>
-<area shape="rect" id="node27" href="../../de/d76/classThread_1_1Coap_1_1Server.html#aeb97e0257808d7cad4adceccd87f6b7d" title="This method sends a CoAP response from the server. " alt="" coords="740,497,889,535"/>
-<area shape="rect" id="node28" href="../../d4/dcf/classThread_1_1AddressResolver.html#ac249179518a77ecfdaf7d4502ef2f940" title="This method returns the RLOC16 for a given EID, or initiates an Address Query if the mapping is not k..." alt="" coords="982,379,1155,418"/>
-<area shape="rect" id="node29" href="../../dd/dd1/classThread_1_1NetworkData_1_1Local.html#a26b8189963fc960e308f137f1d6e31d8" title="This method sends a Server Data Registration message to the Leader. " alt="" coords="741,434,889,473"/>
+<area shape="rect" id="node2" href="../../d3/d05/classThread_1_1Ip6_1_1Ip6.html#a4aa215eb5c0d575403b5ca683e8427c2" title="This method sends an IPv6 datagram. " alt="" coords="224,140,437,165"/>
+<area shape="rect" id="node3" href="../../da/dd7/classThread_1_1Ip6_1_1Icmp.html#a8989f736211cf82f9cefb258decd7c3e" title="This method sends an ICMPv6 Echo Request message. " alt="" coords="804,5,938,44"/>
+<area shape="rect" id="node5" href="../../da/dd7/classThread_1_1Ip6_1_1Icmp.html#a1652c3864180133512f7d6499cd684f2" title="This method sends an ICMPv6 error message. " alt="" coords="528,71,661,109"/>
+<area shape="rect" id="node15" href="../../da/dd7/classThread_1_1Ip6_1_1Icmp.html#ad28878461d364df3eeac50588479c9c1" title="This method handles an ICMPv6 message. " alt="" coords="528,133,661,172"/>
+<area shape="rect" id="node16" href="../../de/ded/classThread_1_1Ip6_1_1Udp.html#aa8d41afcd7a8894a7005bc1c32343f7d" title="This method sends an IPv6 datagram. " alt="" coords="485,196,703,221"/>
+<area shape="rect" id="node4" href="../../d5/dc2/structThread_1_1Cli_1_1Interpreter.html#a11ee1f86cffe17aab7de3de0bb16dee7" title="This method parses an ASCII string as an unsigned long. " alt="" coords="2128,76,2283,115"/>
+<area shape="rect" id="node6" href="../../df/d94/group__core-mle-core.html#ga27bbb63f94a4f59d1249fce8baa830ed" title="This method checks if the destination is reachable. " alt="" coords="751,77,991,103"/>
+<area shape="rect" id="node7" href="../../db/dec/group__core-mle-router.html#gac7d2542017033898d0bc0f17a65d4656" title="This method checks if the destination is reachable. " alt="" coords="1039,121,1200,160"/>
+<area shape="rect" id="node8" href="../../dd/d1d/classThread_1_1MeshForwarder.html#a361ef901f6b665b3c7feac206089a7df" title="This method submits a message to the mesh forwarder for forwarding. " alt="" coords="1248,121,1412,160"/>
+<area shape="rect" id="node10" href="../../dd/d1d/classThread_1_1MeshForwarder.html#a5f726671448fb7cd72f8ee96db40731a" title="This method sets the scan parameters for MLE Discovery Request messages. " alt="" coords="1460,184,1630,223"/>
+<area shape="rect" id="node9" href="../../dd/d1d/classThread_1_1MeshForwarder.html#a3a55dcf590bf5941d216ff313b6ce0d0" title="This method gets the Data Poll period. " alt="" coords="1463,59,1627,97"/>
+<area shape="rect" id="node14" href="../../d3/d8e/classThread_1_1ThreadNetif.html#a95f2ad1f6785b0de74e660e43ac86d33" title="This method submits a message to the network interface. " alt="" coords="1475,121,1615,160"/>
+<area shape="rect" id="node11" href="../../df/d94/group__core-mle-core.html#gab299d00d1b2beabe8130e400dd6eca91" title="This method initiates a Thread Discovery. " alt="" coords="1678,156,1859,181"/>
+<area shape="rect" id="node12" href="../../d4/db5/classThread_1_1MeshCoP_1_1Joiner.html#a1ca1f767cfe15e7c25b8f65606e7fefb" title="This method starts the Joiner service. " alt="" coords="1907,93,2080,132"/>
+<area shape="rect" id="node13" href="../../d0/d0a/group__commands.html#ga8422cdf7d0b8b22c6dd107e6bb1309f2" title="This function starts a Thread Discovery scan. " alt="" coords="1951,156,2035,181"/>
 </map>
 </div>
 </p>
@@ -256,9 +324,6 @@ Here is the caller graph for this function:</div>
 <a class="anchor" id="afe746fb2f5c83a97c20e54fdb9c595a3"></a>
 <div class="memitem">
 <div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
       <table class="memname">
         <tr>
           <td class="memname"><a class="el" href="../../dc/d3c/classThread_1_1Message.html">Message</a> * Thread::Ip6::Udp::NewMessage </td>
@@ -268,14 +333,9 @@ Here is the caller graph for this function:</div>
           <td></td>
         </tr>
       </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">static</span></span>  </td>
-  </tr>
-</table>
 </div><div class="memdoc">
 
-<p>This static method returns a new UDP message with sufficient header space reserved. </p>
+<p>This method returns a new UDP message with sufficient header space reserved. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramdir">[in]</td><td class="paramname">aReserved</td><td>The number of header bytes to reserve after the UDP header.</td></tr>
@@ -289,14 +349,13 @@ Here is the call graph for this function:</div>
 <div class="dyncontent">
 <div class="center"><img src="../../de/ded/classThread_1_1Ip6_1_1Udp_afe746fb2f5c83a97c20e54fdb9c595a3_cgraph.png" border="0" usemap="#de/ded/classThread_1_1Ip6_1_1Udp_afe746fb2f5c83a97c20e54fdb9c595a3_cgraph" alt=""/></div>
 <map name="de/ded/classThread_1_1Ip6_1_1Udp_afe746fb2f5c83a97c20e54fdb9c595a3_cgraph" id="de/ded/classThread_1_1Ip6_1_1Udp_afe746fb2f5c83a97c20e54fdb9c595a3_cgraph">
-<area shape="rect" id="node2" href="../../d3/d05/classThread_1_1Ip6_1_1Ip6.html#a215eeb84e75972828efbc163eedc1ec5" title="This static method allocates a new message buffer from the buffer pool. " alt="" coords="263,68,467,93"/>
-<area shape="rect" id="node3" href="../../dc/d3c/classThread_1_1Message.html#a91be16485334ce1fa61f289b1eeb682a" title="This static method is used to obtain a new message. " alt="" coords="515,68,674,93"/>
-<area shape="rect" id="node4" href="../../dc/d3c/classThread_1_1Message.html#a942818bf261c0af93b793017407c2b2c" title="This method sets whether or not link security is enabled for the message. " alt="" coords="730,5,907,44"/>
-<area shape="rect" id="node5" href="../../dc/d3c/classThread_1_1Message.html#acecf07ee065974c8b211c151ea5d6e14" title="This method sets the number of bytes in the message. " alt="" coords="722,68,915,93"/>
-<area shape="rect" id="node7" href="../../dc/d3c/classThread_1_1Message.html#a3ab9d6d42d7ae9054eaf0cad0c4e44bb" title="This static method is used to free a message and return all message buffers to the buffer pool..." alt="" coords="738,117,898,143"/>
-<area shape="rect" id="node6" href="../../dc/d3c/classThread_1_1Message.html#a2cf440376e834030c38bb2ced4ca49e9" title="This method returns the number of bytes in the message. " alt="" coords="965,68,1159,93"/>
-<area shape="rect" id="node8" href="../../db/d50/classThread_1_1Buffer.html#a34ab22941ccd9bb222d251a6a18c95bf" title="This method returns a pointer to the next message buffer. " alt="" coords="963,117,1161,143"/>
-<area shape="rect" id="node9" href="../../db/d50/classThread_1_1Buffer.html#a437ec9ccafa1ef6040a6e8e4fae9c3ca" title="This method sets the pointer to the next message buffer. " alt="" coords="964,167,1160,192"/>
+<area shape="rect" id="node2" href="../../d3/d05/classThread_1_1Ip6_1_1Ip6.html#a215eeb84e75972828efbc163eedc1ec5" title="This method allocates a new message buffer from the buffer pool. " alt="" coords="263,68,467,93"/>
+<area shape="rect" id="node3" href="../../d5/d9f/classThread_1_1MessagePool.html#a2d10b04dfeb1e0c9321eab0e95fda55f" title="This method is used to obtain a new message. " alt="" coords="515,68,700,93"/>
+<area shape="rect" id="node4" href="../../dc/d3c/classThread_1_1Message.html#a942818bf261c0af93b793017407c2b2c" title="This method sets whether or not link security is enabled for the message. " alt="" coords="757,5,934,44"/>
+<area shape="rect" id="node5" href="../../dc/d3c/classThread_1_1Message.html#acecf07ee065974c8b211c151ea5d6e14" title="This method sets the number of bytes in the message. " alt="" coords="748,68,942,93"/>
+<area shape="rect" id="node6" href="../../d5/d9f/classThread_1_1MessagePool.html#a80238d94036455e30762ea4a5a0916f8" title="This method is used to free a message and return all message buffers to the buffer pool..." alt="" coords="769,117,921,156"/>
+<area shape="rect" id="node7" href="../../db/d50/classThread_1_1Buffer.html#a34ab22941ccd9bb222d251a6a18c95bf" title="This method returns a pointer to the next message buffer. " alt="" coords="990,99,1188,124"/>
+<area shape="rect" id="node8" href="../../db/d50/classThread_1_1Buffer.html#a437ec9ccafa1ef6040a6e8e4fae9c3ca" title="This method sets the pointer to the next message buffer. " alt="" coords="990,148,1187,173"/>
 </map>
 </div>
 </p>
@@ -306,30 +365,146 @@ Here is the caller graph for this function:</div>
 <div class="dyncontent">
 <div class="center"><img src="../../de/ded/classThread_1_1Ip6_1_1Udp_afe746fb2f5c83a97c20e54fdb9c595a3_icgraph.png" border="0" usemap="#de/ded/classThread_1_1Ip6_1_1Udp_afe746fb2f5c83a97c20e54fdb9c595a3_icgraph" alt=""/></div>
 <map name="de/ded/classThread_1_1Ip6_1_1Udp_afe746fb2f5c83a97c20e54fdb9c595a3_icgraph" id="de/ded/classThread_1_1Ip6_1_1Udp_afe746fb2f5c83a97c20e54fdb9c595a3_icgraph">
-<area shape="rect" id="node2" href="../../d2/d11/group__udp.html#ga004cae7040d8568e962ae6066571c037" title="Allocate a new message buffer for sending a UDP message. " alt="" coords="280,16,418,41"/>
-<area shape="rect" id="node5" href="../../d4/dcf/classThread_1_1AddressResolver.html#ac249179518a77ecfdaf7d4502ef2f940" title="This method returns the RLOC16 for a given EID, or initiates an Address Query if the mapping is not k..." alt="" coords="263,608,435,647"/>
-<area shape="rect" id="node8" href="../../df/d94/group__core-mle-core.html#gad555ca36631eff9b978e448ecbcf8e2e" title="This method appends an Address Registration TLV to a message. " alt="" coords="911,320,1086,359"/>
-<area shape="rect" id="node9" href="../../df/d94/group__core-mle-core.html#ga09239c621861382d25163980ab5d983b" title="This method generates an MLE Child Update Request message. " alt="" coords="1134,320,1324,359"/>
-<area shape="rect" id="node16" href="../../df/d94/group__core-mle-core.html#gac13477847483bba0aeab32fd93a7dbac" title="This method generates an MLE Data Request message. " alt="" coords="2166,359,2354,397"/>
-<area shape="rect" id="node17" href="../../df/d94/group__core-mle-core.html#ga4a192897e2fe5f4b0ab2ed1535fd2657" title="This method generates an MLE Data Response message. " alt="" coords="2166,421,2354,460"/>
-<area shape="rect" id="node18" href="../../db/dec/group__core-mle-router.html#ga7126c084ace25827febebc4210928cd4" title="This method generates an MLE Link Reject. " alt="" coords="2414,631,2575,669"/>
-<area shape="rect" id="node20" href="../../db/dec/group__core-mle-router.html#ga2f58e7783003a5d53b12a556ac4375f2" title="This method sets the ROUTER_UPGRADE_THRESHOLD value. " alt="" coords="2160,113,2360,152"/>
-<area shape="rect" id="node21" href="../../d6/d9b/classThread_1_1NetworkData_1_1Leader.html#a5baddd109ff06b58140e2678e3c97a16" title="This method removes Network Data associated with a given RLOC16. " alt="" coords="1643,688,1850,727"/>
-<area shape="rect" id="node23" href="../../db/dec/group__core-mle-router.html#gac7d2542017033898d0bc0f17a65d4656" title="This method checks if the destination is reachable. " alt="" coords="2179,771,2341,809"/>
-<area shape="rect" id="node25" href="../../dd/dd1/classThread_1_1NetworkData_1_1Local.html#a26b8189963fc960e308f137f1d6e31d8" title="This method sends a Server Data Registration message to the Leader. " alt="" coords="275,955,423,993"/>
-<area shape="rect" id="node3" href="../../dc/df5/classThread_1_1Cli_1_1Udp.html#a50e5829bd74bf2845d8313575e2dd15c" title="This method delivers raw characters to the client. " alt="" coords="483,16,649,41"/>
-<area shape="rect" id="node4" href="../../dc/df5/classThread_1_1Cli_1_1Udp.html#ab8ac2489d2049ef5880c77ac1cdc639f" title="This method delivers formatted output to the client. " alt="" coords="697,5,863,44"/>
-<area shape="rect" id="node6" href="../../dd/d1d/classThread_1_1MeshForwarder.html#a361ef901f6b665b3c7feac206089a7df" title="This method submits a message to the mesh forwarder for forwarding. " alt="" coords="484,608,649,647"/>
-<area shape="rect" id="node7" href="../../dd/d1d/classThread_1_1MeshForwarder.html#a969c6fac135cdee3ed9380a0859eaaa8" title="This method sets the Data Poll period. " alt="" coords="698,529,862,568"/>
-<area shape="rect" id="node24" href="../../d3/d8e/classThread_1_1ThreadNetif.html#a95f2ad1f6785b0de74e660e43ac86d33" title="This method submits a message to the network interface. " alt="" coords="710,608,851,647"/>
-<area shape="rect" id="node15" href="../../df/d94/group__core-mle-core.html#ga0ea27201cf13a4e1b0680a9da6c54a64" title="This method submits an MLE message to the UDP socket. " alt="" coords="1898,399,2112,424"/>
-<area shape="rect" id="node10" href="../../df/d94/group__core-mle-core.html#ga01c7e5a022360a6f35e30d07221dbfea" title="This method starts the MLE protocol operation. " alt="" coords="1405,221,1562,247"/>
-<area shape="rect" id="node11" href="../../df/d94/group__core-mle-core.html#gafb51db61e6e184d664a9e7cc3833dcf4" title="This method sets the MLE Timeout value. " alt="" coords="1385,271,1582,296"/>
-<area shape="rect" id="node12" href="../../df/d94/group__core-mle-core.html#ga453d94c377c5825a4a5e8b66a728e591" title="This method sets the Device Mode as reported in the Mode TLV. " alt="" coords="1372,320,1595,345"/>
-<area shape="rect" id="node13" href="../../df/d94/group__core-mle-core.html#gaac7d42ff61704aa43e94dbb781c78c5e" title="This method notifies MLE that the Network Data has changed. " alt="" coords="1398,421,1569,460"/>
-<area shape="rect" id="node14" href="../../d6/d9b/classThread_1_1NetworkData_1_1Leader.html#a428d60927d6f4b4ac8e878e792d2f716" title="This method is used by non&#45;Leader devices to set newly received Network Data from the Leader..." alt="" coords="1659,421,1834,460"/>
-<area shape="rect" id="node19" href="../../db/dec/group__core-mle-router.html#gaf13c43af2bf2f9057629cbb74fca0af0" title="This method handles MAC Data Poll messages. " alt="" coords="2408,476,2582,515"/>
-<area shape="rect" id="node22" href="../../db/dec/group__core-mle-router.html#ga179fad5b4b75849e76811006761d2b3e" title="This method release a given Router ID. " alt="" coords="1925,688,2086,727"/>
+<area shape="rect" id="node2" href="../../d2/d11/group__udp.html#ga830b1fac9ad667bbedc0e68da91e70aa" title="Allocate a new message buffer for sending a UDP message. " alt="" coords="263,12,401,37"/>
+<area shape="rect" id="node3" href="../../dc/df5/classThread_1_1Cli_1_1Udp.html#a50e5829bd74bf2845d8313575e2dd15c" title="This method delivers raw characters to the client. " alt="" coords="449,12,614,37"/>
+<area shape="rect" id="node4" href="../../dc/df5/classThread_1_1Cli_1_1Udp.html#ab8ac2489d2049ef5880c77ac1cdc639f" title="This method delivers formatted output to the client. " alt="" coords="662,5,828,44"/>
+</map>
+</div>
+</p>
+
+</div>
+</div>
+<a class="anchor" id="abada2f7d6b56caaf4a5a686a86c32428"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="../../dc/dbf/openthread-types_8h.html#ab701d053a9c34ab7f11e43e0dc09ac9f">ThreadError</a> Thread::Ip6::Udp::RemoveSocket </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="../../dc/d75/classThread_1_1Ip6_1_1UdpSocket.html">UdpSocket</a> &amp;&#160;</td>
+          <td class="paramname"><em>aSocket</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>This method removes a UDP socket. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">aSocket</td><td>A reference to the UDP socket.</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="retval"><dt>Return values</dt><dd>
+  <table class="retval">
+    <tr><td class="paramname">kThreadError_None</td><td>Successfully removed the UDP socket. </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a class="anchor" id="aa8d41afcd7a8894a7005bc1c32343f7d"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="../../dc/dbf/openthread-types_8h.html#ab701d053a9c34ab7f11e43e0dc09ac9f">ThreadError</a> Thread::Ip6::Udp::SendDatagram </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="../../dc/d3c/classThread_1_1Message.html">Message</a> &amp;&#160;</td>
+          <td class="paramname"><em>aMessage</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="../../da/d46/classThread_1_1Ip6_1_1MessageInfo.html">MessageInfo</a> &amp;&#160;</td>
+          <td class="paramname"><em>aMessageInfo</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="../../d9/dcf/group__core-ip6-ip6.html#ga83d94b02a618038e1534f9e12001d095">IpProto</a>&#160;</td>
+          <td class="paramname"><em>aIpProto</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>This method sends an IPv6 datagram. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">aMessage</td><td>A reference to the message. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">aMessageInfo</td><td>A reference to the message info associated with <code>aMessage</code>. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">aIpProto</td><td>The Internet Protocol value.</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="retval"><dt>Return values</dt><dd>
+  <table class="retval">
+    <tr><td class="paramname">kThreadError_None</td><td>Successfully enqueued the message into an output interface. </td></tr>
+    <tr><td class="paramname">kThreadError_NoBufs</td><td>Insufficient available buffer to add the IPv6 headers. </td></tr>
+  </table>
+  </dd>
+</dl>
+
+<p><div class="dynheader">
+Here is the call graph for this function:</div>
+<div class="dyncontent">
+<div class="center"><img src="../../de/ded/classThread_1_1Ip6_1_1Udp_aa8d41afcd7a8894a7005bc1c32343f7d_cgraph.png" border="0" usemap="#de/ded/classThread_1_1Ip6_1_1Udp_aa8d41afcd7a8894a7005bc1c32343f7d_cgraph" alt=""/></div>
+<map name="de/ded/classThread_1_1Ip6_1_1Udp_aa8d41afcd7a8894a7005bc1c32343f7d_cgraph" id="de/ded/classThread_1_1Ip6_1_1Udp_aa8d41afcd7a8894a7005bc1c32343f7d_cgraph">
+<area shape="rect" id="node2" href="../../d3/d05/classThread_1_1Ip6_1_1Ip6.html#a4aa215eb5c0d575403b5ca683e8427c2" title="This method sends an IPv6 datagram. " alt="" coords="272,1377,484,1402"/>
+<area shape="rect" id="node3" href="../../dc/d3c/classThread_1_1Message.html#a2cf440376e834030c38bb2ced4ca49e9" title="This method returns the number of bytes in the message. " alt="" coords="802,1076,997,1101"/>
+<area shape="rect" id="node4" href="../../d8/d6e/classThread_1_1Ip6_1_1Header.html#ae759dab83ad87de26f3e5661d4331a54" title="This method initializes the IPv6 header. " alt="" coords="571,52,711,90"/>
+<area shape="rect" id="node5" href="../../d8/d6e/classThread_1_1Ip6_1_1Header.html#aec92bb6790fffab9ddb424d85a1e39b3" title="This method sets the IPv6 Payload Length value. " alt="" coords="571,114,711,153"/>
+<area shape="rect" id="node6" href="../../d8/d6e/classThread_1_1Ip6_1_1Header.html#afc6dbaaca33c8996ce396195cb6f8978" title="This method sets the IPv6 Next Header value. " alt="" coords="571,177,711,216"/>
+<area shape="rect" id="node7" href="../../d8/d6e/classThread_1_1Ip6_1_1Header.html#a60add06692d13d0b9ff26d1d1459cafa" title="This method sets the IPv6 Hop Limit value. " alt="" coords="829,428,970,466"/>
+<area shape="rect" id="node8" href="../../da/d46/classThread_1_1Ip6_1_1MessageInfo.html#a97e94677a677f600a227dd970f4a02e8" title="This method returns a reference to the local socket address. " alt="" coords="813,1472,986,1510"/>
+<area shape="rect" id="node9" href="../../d9/db1/classThread_1_1Ip6_1_1Address.html#a51cfd76548da9f661a0d7a47a8d5e813" title="This method indicates whether or not the IPv6 address is the Unspecified Address. ..." alt="" coords="568,354,714,393"/>
+<area shape="rect" id="node10" href="../../d3/d05/classThread_1_1Ip6_1_1Ip6.html#a5ba0f65f507234b1f228b7249af6f1ee" title="This method perform default source address selection. " alt="" coords="561,240,721,278"/>
+<area shape="rect" id="node11" href="../../da/d46/classThread_1_1Ip6_1_1MessageInfo.html#a794b87e17aa877f3551c00aa8c892072" title="This method returns a reference to the peer socket address. " alt="" coords="813,753,986,792"/>
+<area shape="rect" id="node12" href="../../d9/db1/classThread_1_1Ip6_1_1Address.html#a95748f9c0a5048ce8700cd040d7efc52" title="This method indicates whether or not the IPv6 address scope is Link&#45;Local. " alt="" coords="826,297,972,336"/>
+<area shape="rect" id="node13" href="../../d9/d13/classThread_1_1Ip6_1_1NetifUnicastAddress.html#a2bb426bd29e271bd1fc09b61d1044911" title="This method returns the unicast address. " alt="" coords="815,114,984,153"/>
+<area shape="rect" id="node14" href="../../d8/d6e/classThread_1_1Ip6_1_1Header.html#a73e5209e71173a59f2295cbbc905e296" title="This method sets the IPv6 Source address. " alt="" coords="571,633,711,672"/>
+<area shape="rect" id="node15" href="../../d8/d6e/classThread_1_1Ip6_1_1Header.html#ab519252dba4f3843a511aec35a8a0756" title="This method sets the IPv6 Destination address. " alt="" coords="571,696,711,734"/>
+<area shape="rect" id="node16" href="../../d8/d6e/classThread_1_1Ip6_1_1Header.html#a24b065a50a342b00d2d8907b2fb3a66a" title="This method returns the IPv6 Destination address. " alt="" coords="829,498,970,537"/>
+<area shape="rect" id="node17" href="../../d9/db1/classThread_1_1Ip6_1_1Address.html#a25eecfa3d5faa101e497e8fde3964e13" title="This method indicates whether or not the IPv6 address is a link&#45;local multicast address. " alt="" coords="567,810,715,849"/>
+<area shape="rect" id="node18" href="../../d9/db1/classThread_1_1Ip6_1_1Address.html#ab70000abd6ac0e216974ab012d4159d6" title="This method indicates whether or not the IPv6 address is a realm&#45;local multicast address. " alt="" coords="560,873,722,912"/>
+<area shape="rect" id="node19" href="../../dc/d3c/classThread_1_1Message.html#a9c900e4c1ddbb44f1d9c87d10172f63a" title="This method prepends bytes to the front of the message. " alt="" coords="549,936,732,961"/>
+<area shape="rect" id="node20" href="../../d3/d05/classThread_1_1Ip6_1_1Ip6.html#a5f39ba98f1e62d4b618aa83ac8c047b6" title="This static method computes the pseudoheader checksum. " alt="" coords="811,1898,988,1937"/>
+<area shape="rect" id="node21" href="../../d8/d6e/classThread_1_1Ip6_1_1Header.html#a6cc72334ebe32da12f67b0389b9bae21" title="This method returns the IPv6 Source address. " alt="" coords="829,566,970,605"/>
+<area shape="rect" id="node22" href="../../de/ded/classThread_1_1Ip6_1_1Udp.html#aa6462f860311b25afef6cb90805dd778" title="This method updates the UDP checksum. " alt="" coords="555,1100,727,1138"/>
+<area shape="rect" id="node23" href="../../dc/d3c/classThread_1_1Message.html#ac8304ee00c9e0b303539687e98e192e0" title="This method returns the byte offset within the message. " alt="" coords="805,1250,994,1276"/>
+<area shape="rect" id="node24" href="../../da/dd7/classThread_1_1Ip6_1_1Icmp.html#a872e20ca6e8737eaf91db859041e10f7" title="This method updates the ICMPv6 checksum. " alt="" coords="574,1037,707,1076"/>
+<area shape="rect" id="node25" href="../../dc/d3c/classThread_1_1Message.html#a8603ae822ebd6eaabef59fcd16d5667d" title="This method sets the interface ID. " alt="" coords="533,1265,749,1290"/>
+<area shape="rect" id="node26" href="../../da/d1a/classThread_1_1MessageQueue.html#a5e6f37c86a48e8dfbfcc7a7c14c23808" title="This method adds a message to the end of the list. " alt="" coords="558,1314,723,1353"/>
+<area shape="rect" id="node27" href="../../d4/d92/classThread_1_1Tasklet.html#a50a39a6f422851035b89aace87482425" title="This method puts the tasklet on the run queue. " alt="" coords="568,1377,714,1402"/>
+<area shape="rect" id="node28" href="../../da/d1a/classThread_1_1MessageQueue.html#ac0e8b64309aca4d66b262f0354d72e83" title="This method returns a pointer to the first message. " alt="" coords="558,1426,723,1465"/>
+<area shape="rect" id="node29" href="../../da/d1a/classThread_1_1MessageQueue.html#a501d831849c577b2114fcbb4034d074d" title="This method removes a message from the list. " alt="" coords="558,1489,723,1528"/>
+<area shape="rect" id="node30" href="../../d3/d05/classThread_1_1Ip6_1_1Ip6.html#aac26950e3836c09b286ec241ced9d2c6" title="This method processes a received IPv6 datagram. " alt="" coords="558,570,723,609"/>
+<area shape="rect" id="node31" href="../../dc/d3c/classThread_1_1Message.html#a76033bbc15170d72452186058defafa2" title="This method reads bytes from the message. " alt="" coords="817,1621,981,1646"/>
+<area shape="rect" id="node32" href="../../dc/d3c/classThread_1_1Message.html#a34004dc217702d4a9ba3ddcbf2d91f74" title="This method returns the interface ID. " alt="" coords="532,1677,749,1702"/>
+<area shape="rect" id="node33" href="../../de/df0/classThread_1_1Ip6_1_1ExtensionHeader.html#a9494816a3cf63e9bf4c637485f301cf6" title="This method returns the IPv6 Header Extension Length value. " alt="" coords="541,1726,740,1765"/>
+<area shape="rect" id="node34" href="../../dc/d3c/classThread_1_1Message.html#a7b45edaa8ba9f31a437aea73cfca387c" title="This method moves the byte offset within the message. " alt="" coords="799,2276,999,2301"/>
+<area shape="rect" id="node35" href="../../d2/d7c/classThread_1_1Ip6_1_1OptionHeader.html#a5526d213a992d14362a9eb8387a4403f" title="This method returns the IPv6 Option Type value. " alt="" coords="551,1841,731,1880"/>
+<area shape="rect" id="node36" href="../../dd/d60/classThread_1_1Ip6_1_1Mpl.html#a0a337fec22aa43fcf36038761a6a8900" title="This method processes an MPL option. " alt="" coords="554,1552,728,1590"/>
+<area shape="rect" id="node37" href="../../d2/d7c/classThread_1_1Ip6_1_1OptionHeader.html#ae5d9638cee80149e0a3f2116aba422ff" title="This method returns the IPv6 Option action for unrecognized IPv6 Options. " alt="" coords="551,1956,731,1994"/>
+<area shape="rect" id="node38" href="../../d2/d7c/classThread_1_1Ip6_1_1OptionHeader.html#ac284bc7a465a12b3a2ac20927ecda327" title="This method returns the IPv6 Option Length value. " alt="" coords="551,2018,731,2057"/>
+<area shape="rect" id="node39" href="../../d6/d56/classThread_1_1Ip6_1_1FragmentHeader.html#a6d9809c6894727de7750600ecaa7fbca" title="This method returns the Fragment Offset value. " alt="" coords="542,2081,740,2120"/>
+<area shape="rect" id="node40" href="../../d6/d56/classThread_1_1Ip6_1_1FragmentHeader.html#a1116d92ecdb212ff53468c483f9d7688" title="This method returns the M flag value. " alt="" coords="542,2144,740,2182"/>
+<area shape="rect" id="node41" href="../../de/df0/classThread_1_1Ip6_1_1ExtensionHeader.html#a68764e95bf4a7ac8c85463822ae756b8" title="This method returns the IPv6 Next Header value. " alt="" coords="541,2206,740,2245"/>
+<area shape="rect" id="node42" href="../../de/ded/classThread_1_1Ip6_1_1Udp.html#a3f645b8190d7e4345fbc195db5b03e49" title="This method handles a received UDP message. " alt="" coords="555,1614,726,1653"/>
+<area shape="rect" id="node43" href="../../d7/dd3/classThread_1_1Ip6_1_1UdpHeader.html#a21cbe8e5d4940ca6192f2fa58636c8cc" title="This method returns the UDP Destination Port. " alt="" coords="817,2088,982,2126"/>
+<area shape="rect" id="node44" href="../../da/dd7/classThread_1_1Ip6_1_1Icmp.html#ad28878461d364df3eeac50588479c9c1" title="This method handles an ICMPv6 message. " alt="" coords="574,2269,707,2308"/>
+<area shape="rect" id="node45" href="../../d2/de0/classThread_1_1Ip6_1_1IcmpHeader.html#ad51a0764c274f4d82fd23a99fa1e6800" title="This method returns the ICMPv6 message type. " alt="" coords="814,2350,984,2389"/>
+<area shape="rect" id="node46" href="../../d3/d05/classThread_1_1Ip6_1_1Ip6.html#a215eeb84e75972828efbc163eedc1ec5" title="This method allocates a new message buffer from the buffer pool. " alt="" coords="797,2461,1001,2486"/>
+<area shape="rect" id="node47" href="../../dc/d3c/classThread_1_1Message.html#acecf07ee065974c8b211c151ea5d6e14" title="This method sets the number of bytes in the message. " alt="" coords="803,2536,996,2561"/>
+<area shape="rect" id="node48" href="../../dc/d3c/classThread_1_1Message.html#a6ad07f345f6fbc1c0917d2ccf5ce9042" title="This method copies bytes from one message to another. " alt="" coords="810,2586,988,2612"/>
+<area shape="rect" id="node49" href="../../d9/db1/classThread_1_1Ip6_1_1Address.html#a042097e2896ce7eebc1844140c0d2aeb" title="This method indicates whether or not the IPv6 address is a RLOC address. " alt="" coords="568,2637,714,2676"/>
+<area shape="rect" id="node50" href="../../da/dd7/classThread_1_1Ip6_1_1Icmp.html#af4cae4712ae9ef69a40f856a1ee32116" title="This method indicates whether or not ICMPv6 Echo processing is enabled. " alt="" coords="574,2700,707,2738"/>
 </map>
 </div>
 </p>
@@ -339,9 +514,6 @@ Here is the caller graph for this function:</div>
 <a class="anchor" id="aa6462f860311b25afef6cb90805dd778"></a>
 <div class="memitem">
 <div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
       <table class="memname">
         <tr>
           <td class="memname"><a class="el" href="../../dc/dbf/openthread-types_8h.html#ab701d053a9c34ab7f11e43e0dc09ac9f">ThreadError</a> Thread::Ip6::Udp::UpdateChecksum </td>
@@ -361,14 +533,9 @@ Here is the caller graph for this function:</div>
           <td></td><td></td>
         </tr>
       </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">static</span></span>  </td>
-  </tr>
-</table>
 </div><div class="memdoc">
 
-<p>This static method updates the UDP checksum. </p>
+<p>This method updates the UDP checksum. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramdir">[in]</td><td class="paramname">aMessage</td><td>A reference to the UDP message. </td></tr>
@@ -389,13 +556,13 @@ Here is the call graph for this function:</div>
 <div class="dyncontent">
 <div class="center"><img src="../../de/ded/classThread_1_1Ip6_1_1Udp_aa6462f860311b25afef6cb90805dd778_cgraph.png" border="0" usemap="#de/ded/classThread_1_1Ip6_1_1Udp_aa6462f860311b25afef6cb90805dd778_cgraph" alt=""/></div>
 <map name="de/ded/classThread_1_1Ip6_1_1Udp_aa6462f860311b25afef6cb90805dd778_cgraph" id="de/ded/classThread_1_1Ip6_1_1Udp_aa6462f860311b25afef6cb90805dd778_cgraph">
-<area shape="rect" id="node2" href="../../dc/d3c/classThread_1_1Message.html#a97e576ca01bc7a858f2d5cd35c82b731" title="This method is used to update a checksum value. " alt="" coords="225,87,464,112"/>
-<area shape="rect" id="node3" href="../../dc/d3c/classThread_1_1Message.html#a2cf440376e834030c38bb2ced4ca49e9" title="This method returns the number of bytes in the message. " alt="" coords="513,13,708,39"/>
-<area shape="rect" id="node6" href="../../dc/d3c/classThread_1_1Message.html#ac8304ee00c9e0b303539687e98e192e0" title="This method returns the byte offset within the message. " alt="" coords="250,136,439,161"/>
-<area shape="rect" id="node7" href="../../dc/d3c/classThread_1_1Message.html#add75c76a1fa70eb5d4eb03b68c5d1df8" title="This method writes bytes to the message. " alt="" coords="263,37,426,63"/>
-<area shape="rect" id="node8" href="../../d7/dd3/classThread_1_1Ip6_1_1UdpHeader.html#adb6ca8f7e1f62ee5b7669daeb2eb3db6" title="This static method returns the byte offset for the UDP Checksum. " alt="" coords="262,185,427,224"/>
-<area shape="rect" id="node4" href="../../d3/d05/classThread_1_1Ip6_1_1Ip6.html#a65af4f070c4734601f0308ab48affba8" title="This static method updates a checksum. " alt="" coords="528,112,694,151"/>
-<area shape="rect" id="node5" href="../../db/d50/classThread_1_1Buffer.html#a34ab22941ccd9bb222d251a6a18c95bf" title="This method returns a pointer to the next message buffer. " alt="" coords="512,63,710,88"/>
+<area shape="rect" id="node2" href="../../dc/d3c/classThread_1_1Message.html#a97e576ca01bc7a858f2d5cd35c82b731" title="This method is used to update a checksum value. " alt="" coords="225,12,464,37"/>
+<area shape="rect" id="node5" href="../../dc/d3c/classThread_1_1Message.html#ac8304ee00c9e0b303539687e98e192e0" title="This method returns the byte offset within the message. " alt="" coords="250,61,439,87"/>
+<area shape="rect" id="node6" href="../../dc/d3c/classThread_1_1Message.html#a2cf440376e834030c38bb2ced4ca49e9" title="This method returns the number of bytes in the message. " alt="" coords="247,111,442,136"/>
+<area shape="rect" id="node7" href="../../dc/d3c/classThread_1_1Message.html#add75c76a1fa70eb5d4eb03b68c5d1df8" title="This method writes bytes to the message. " alt="" coords="263,160,426,185"/>
+<area shape="rect" id="node8" href="../../d7/dd3/classThread_1_1Ip6_1_1UdpHeader.html#adb6ca8f7e1f62ee5b7669daeb2eb3db6" title="This static method returns the byte offset for the UDP Checksum. " alt="" coords="262,209,427,248"/>
+<area shape="rect" id="node3" href="../../d3/d05/classThread_1_1Ip6_1_1Ip6.html#a65af4f070c4734601f0308ab48affba8" title="This static method updates a checksum. " alt="" coords="528,5,694,44"/>
+<area shape="rect" id="node4" href="../../db/d50/classThread_1_1Buffer.html#a34ab22941ccd9bb222d251a6a18c95bf" title="This method returns a pointer to the next message buffer. " alt="" coords="512,113,710,139"/>
 </map>
 </div>
 </p>
@@ -405,34 +572,21 @@ Here is the caller graph for this function:</div>
 <div class="dyncontent">
 <div class="center"><img src="../../de/ded/classThread_1_1Ip6_1_1Udp_aa6462f860311b25afef6cb90805dd778_icgraph.png" border="0" usemap="#de/ded/classThread_1_1Ip6_1_1Udp_aa6462f860311b25afef6cb90805dd778_icgraph" alt=""/></div>
 <map name="de/ded/classThread_1_1Ip6_1_1Udp_aa6462f860311b25afef6cb90805dd778_icgraph" id="de/ded/classThread_1_1Ip6_1_1Udp_aa6462f860311b25afef6cb90805dd778_icgraph">
-<area shape="rect" id="node2" href="../../d3/d05/classThread_1_1Ip6_1_1Ip6.html#a4aa215eb5c0d575403b5ca683e8427c2" title="This static method sends an IPv6 datagram. " alt="" coords="225,383,438,409"/>
-<area shape="rect" id="node3" href="../../dc/ddf/classThread_1_1Ip6_1_1IcmpEcho.html#abe01fa9b5c27147270cae355f78fa552" title="This method sends an ICMPv6 Echo Request message. " alt="" coords="489,233,645,271"/>
-<area shape="rect" id="node4" href="../../da/dd7/classThread_1_1Ip6_1_1Icmp.html#a1652c3864180133512f7d6499cd684f2" title="This static method sends an ICMPv6 error message. " alt="" coords="500,295,633,334"/>
-<area shape="rect" id="node25" href="../../da/dd7/classThread_1_1Ip6_1_1Icmp.html#ad28878461d364df3eeac50588479c9c1" title="This static method handles an ICMPv6 message. " alt="" coords="500,439,633,478"/>
-<area shape="rect" id="node26" href="../../dc/d75/classThread_1_1Ip6_1_1UdpSocket.html#ac4fb0ea0ae514fa0edfeaa91dfbdabca" title="This method sends a UDP message. " alt="" coords="486,377,648,415"/>
-<area shape="rect" id="node5" href="../../df/d94/group__core-mle-core.html#ga27bbb63f94a4f59d1249fce8baa830ed" title="This method checks if the destination is reachable. " alt="" coords="696,282,935,307"/>
-<area shape="rect" id="node6" href="../../db/dec/group__core-mle-router.html#gac7d2542017033898d0bc0f17a65d4656" title="This method checks if the destination is reachable. " alt="" coords="989,317,1150,355"/>
-<area shape="rect" id="node7" href="../../dd/d1d/classThread_1_1MeshForwarder.html#a361ef901f6b665b3c7feac206089a7df" title="This method submits a message to the mesh forwarder for forwarding. " alt="" coords="1204,338,1368,377"/>
-<area shape="rect" id="node8" href="../../dd/d1d/classThread_1_1MeshForwarder.html#a969c6fac135cdee3ed9380a0859eaaa8" title="This method sets the Data Poll period. " alt="" coords="1416,277,1580,315"/>
-<area shape="rect" id="node24" href="../../d3/d8e/classThread_1_1ThreadNetif.html#a95f2ad1f6785b0de74e660e43ac86d33" title="This method submits a message to the network interface. " alt="" coords="1428,339,1568,378"/>
-<area shape="rect" id="node9" href="../../df/d94/group__core-mle-core.html#gad555ca36631eff9b978e448ecbcf8e2e" title="This method appends an Address Registration TLV to a message. " alt="" coords="1628,230,1803,269"/>
-<area shape="rect" id="node10" href="../../df/d94/group__core-mle-core.html#ga09239c621861382d25163980ab5d983b" title="This method generates an MLE Child Update Request message. " alt="" coords="1851,233,2041,271"/>
-<area shape="rect" id="node16" href="../../df/d94/group__core-mle-core.html#ga0ea27201cf13a4e1b0680a9da6c54a64" title="This method submits an MLE message to the UDP socket. " alt="" coords="2616,287,2830,313"/>
-<area shape="rect" id="node11" href="../../df/d94/group__core-mle-core.html#ga01c7e5a022360a6f35e30d07221dbfea" title="This method starts the MLE protocol operation. " alt="" coords="2122,195,2279,221"/>
-<area shape="rect" id="node12" href="../../df/d94/group__core-mle-core.html#gafb51db61e6e184d664a9e7cc3833dcf4" title="This method sets the MLE Timeout value. " alt="" coords="2103,245,2299,270"/>
-<area shape="rect" id="node13" href="../../df/d94/group__core-mle-core.html#ga453d94c377c5825a4a5e8b66a728e591" title="This method sets the Device Mode as reported in the Mode TLV. " alt="" coords="2089,294,2312,319"/>
-<area shape="rect" id="node14" href="../../df/d94/group__core-mle-core.html#gaac7d42ff61704aa43e94dbb781c78c5e" title="This method notifies MLE that the Network Data has changed. " alt="" coords="2115,395,2286,434"/>
-<area shape="rect" id="node15" href="../../d6/d9b/classThread_1_1NetworkData_1_1Leader.html#a428d60927d6f4b4ac8e878e792d2f716" title="This method is used by non&#45;Leader devices to set newly received Network Data from the Leader..." alt="" coords="2376,395,2551,434"/>
-<area shape="rect" id="node22" href="../../d6/d9b/classThread_1_1NetworkData_1_1Leader.html#a5baddd109ff06b58140e2678e3c97a16" title="This method removes Network Data associated with a given RLOC16. " alt="" coords="2360,561,2568,599"/>
-<area shape="rect" id="node21" href="../../db/dec/group__core-mle-router.html#ga2f58e7783003a5d53b12a556ac4375f2" title="This method sets the ROUTER_UPGRADE_THRESHOLD value. " alt="" coords="2878,395,3077,434"/>
-<area shape="rect" id="node17" href="../../df/d94/group__core-mle-core.html#gac13477847483bba0aeab32fd93a7dbac" title="This method generates an MLE Data Request message. " alt="" coords="2883,281,3071,319"/>
-<area shape="rect" id="node18" href="../../df/d94/group__core-mle-core.html#ga4a192897e2fe5f4b0ab2ed1535fd2657" title="This method generates an MLE Data Response message. " alt="" coords="2883,218,3071,257"/>
-<area shape="rect" id="node19" href="../../db/dec/group__core-mle-router.html#ga7126c084ace25827febebc4210928cd4" title="This method generates an MLE Link Reject. " alt="" coords="3131,395,3292,434"/>
-<area shape="rect" id="node20" href="../../db/dec/group__core-mle-router.html#gaf13c43af2bf2f9057629cbb74fca0af0" title="This method handles MAC Data Poll messages. " alt="" coords="3125,102,3299,141"/>
-<area shape="rect" id="node23" href="../../db/dec/group__core-mle-router.html#ga179fad5b4b75849e76811006761d2b3e" title="This method release a given Router ID. " alt="" coords="2642,510,2803,549"/>
-<area shape="rect" id="node27" href="../../de/d76/classThread_1_1Coap_1_1Server.html#aeb97e0257808d7cad4adceccd87f6b7d" title="This method sends a CoAP response from the server. " alt="" coords="741,497,890,535"/>
-<area shape="rect" id="node28" href="../../d4/dcf/classThread_1_1AddressResolver.html#ac249179518a77ecfdaf7d4502ef2f940" title="This method returns the RLOC16 for a given EID, or initiates an Address Query if the mapping is not k..." alt="" coords="983,379,1156,418"/>
-<area shape="rect" id="node29" href="../../dd/dd1/classThread_1_1NetworkData_1_1Local.html#a26b8189963fc960e308f137f1d6e31d8" title="This method sends a Server Data Registration message to the Leader. " alt="" coords="741,434,889,473"/>
+<area shape="rect" id="node2" href="../../d3/d05/classThread_1_1Ip6_1_1Ip6.html#a4aa215eb5c0d575403b5ca683e8427c2" title="This method sends an IPv6 datagram. " alt="" coords="225,140,438,165"/>
+<area shape="rect" id="node3" href="../../da/dd7/classThread_1_1Ip6_1_1Icmp.html#a8989f736211cf82f9cefb258decd7c3e" title="This method sends an ICMPv6 Echo Request message. " alt="" coords="805,5,938,44"/>
+<area shape="rect" id="node5" href="../../da/dd7/classThread_1_1Ip6_1_1Icmp.html#a1652c3864180133512f7d6499cd684f2" title="This method sends an ICMPv6 error message. " alt="" coords="528,71,662,109"/>
+<area shape="rect" id="node15" href="../../da/dd7/classThread_1_1Ip6_1_1Icmp.html#ad28878461d364df3eeac50588479c9c1" title="This method handles an ICMPv6 message. " alt="" coords="528,133,662,172"/>
+<area shape="rect" id="node16" href="../../de/ded/classThread_1_1Ip6_1_1Udp.html#aa8d41afcd7a8894a7005bc1c32343f7d" title="This method sends an IPv6 datagram. " alt="" coords="486,196,704,221"/>
+<area shape="rect" id="node4" href="../../d5/dc2/structThread_1_1Cli_1_1Interpreter.html#a11ee1f86cffe17aab7de3de0bb16dee7" title="This method parses an ASCII string as an unsigned long. " alt="" coords="2129,76,2284,115"/>
+<area shape="rect" id="node6" href="../../df/d94/group__core-mle-core.html#ga27bbb63f94a4f59d1249fce8baa830ed" title="This method checks if the destination is reachable. " alt="" coords="752,77,991,103"/>
+<area shape="rect" id="node7" href="../../db/dec/group__core-mle-router.html#gac7d2542017033898d0bc0f17a65d4656" title="This method checks if the destination is reachable. " alt="" coords="1039,121,1201,160"/>
+<area shape="rect" id="node8" href="../../dd/d1d/classThread_1_1MeshForwarder.html#a361ef901f6b665b3c7feac206089a7df" title="This method submits a message to the mesh forwarder for forwarding. " alt="" coords="1249,121,1413,160"/>
+<area shape="rect" id="node10" href="../../dd/d1d/classThread_1_1MeshForwarder.html#a5f726671448fb7cd72f8ee96db40731a" title="This method sets the scan parameters for MLE Discovery Request messages. " alt="" coords="1461,184,1631,223"/>
+<area shape="rect" id="node9" href="../../dd/d1d/classThread_1_1MeshForwarder.html#a3a55dcf590bf5941d216ff313b6ce0d0" title="This method gets the Data Poll period. " alt="" coords="1464,59,1628,97"/>
+<area shape="rect" id="node14" href="../../d3/d8e/classThread_1_1ThreadNetif.html#a95f2ad1f6785b0de74e660e43ac86d33" title="This method submits a message to the network interface. " alt="" coords="1476,121,1616,160"/>
+<area shape="rect" id="node11" href="../../df/d94/group__core-mle-core.html#gab299d00d1b2beabe8130e400dd6eca91" title="This method initiates a Thread Discovery. " alt="" coords="1679,156,1859,181"/>
+<area shape="rect" id="node12" href="../../d4/db5/classThread_1_1MeshCoP_1_1Joiner.html#a1ca1f767cfe15e7c25b8f65606e7fefb" title="This method starts the Joiner service. " alt="" coords="1907,93,2081,132"/>
+<area shape="rect" id="node13" href="../../d0/d0a/group__commands.html#ga8422cdf7d0b8b22c6dd107e6bb1309f2" title="This function starts a Thread Discovery scan. " alt="" coords="1952,156,2036,181"/>
 </map>
 </div>
 </p>
@@ -449,7 +603,7 @@ Here is the caller graph for this function:</div>
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
     <li class="navelem"><b>Thread</b></li><li class="navelem"><a class="el" href="../../d2/de1/namespaceThread_1_1Ip6.html">Ip6</a></li><li class="navelem"><a class="el" href="../../de/ded/classThread_1_1Ip6_1_1Udp.html">Udp</a></li>
-    <li class="footer">Generated on Wed Jul 27 2016 17:09:43 for OpenThread by
+    <li class="footer">Generated on Fri Oct 14 2016 08:44:36 for OpenThread by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="../../doxygen.png" alt="doxygen"/></a> 1.8.11 </li>
   </ul>
