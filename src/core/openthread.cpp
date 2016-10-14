@@ -1225,9 +1225,16 @@ ThreadError otSendIp6Datagram(otInstance *aInstance, otMessage aMessage)
                                           NULL, true);
 }
 
-otMessage otNewUdpMessage(otInstance *aInstance)
+otMessage otNewUdpMessage(otInstance *aInstance, bool aLinkSecurityEnabled)
 {
-    return aInstance->mIp6.mUdp.NewMessage(0);
+    Message *message = aInstance->mIp6.mUdp.NewMessage(0);
+
+    if (message)
+    {
+        message->SetLinkSecurityEnabled(aLinkSecurityEnabled);
+    }
+
+    return message;
 }
 
 otMessage otNewIp6Message(otInstance *aInstance, bool aLinkSecurityEnabled)
