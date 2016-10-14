@@ -160,6 +160,7 @@ public:
 
     ThreadError Set(const Timestamp &aTimestamp, const Message &aMessage, uint16_t aOffset, uint8_t aLength);
 
+    void ResetDelayTimer(uint8_t aFlags);
     void UpdateDelayTimer(void);
 
 private:
@@ -174,7 +175,6 @@ private:
     static void HandleTimer(void *aContext);
     void HandleTimer(void);
 
-    void ResetDelayTimer(uint8_t aFlags);
     void UpdateDelayTimer(Dataset &aDataset, uint32_t &aStartTime);
 
     Coap::Resource mResourceGet;

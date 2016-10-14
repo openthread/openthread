@@ -168,6 +168,7 @@ ThreadError DatasetManager::Register(void)
     Message *message;
     Ip6::Address leader;
     Ip6::MessageInfo messageInfo;
+    bool isCommissioner = false;
 
     mSocket.Open(&DatasetManager::HandleUdpReceive, this);
 
@@ -192,7 +193,31 @@ ThreadError DatasetManager::Register(void)
 
     VerifyOrExit((message = mSocket.NewMessage(0)) != NULL, error = kThreadError_NoBufs);
     SuccessOrExit(error = message->Append(header.GetBytes(), header.GetLength()));
-    SuccessOrExit(error = message->Append(mLocal.GetBytes(), mLocal.GetSize()));
+
+#if OPENTHREAD_ENABLE_COMMISSIONER
+    isCommissioner = mNetif.GetCommissioner().GetState() > MeshCoP::Commissioner::kStateDisabled? true: false;
+#endif  // OPENTHREAD_ENABLE_COMMISSIONER
+
+    if (!isCommissioner)
+    {
+        SuccessOrExit(error = message->Append(mLocal.GetBytes(), mLocal.GetSize()));
+    }
+    else
+    {
+        const Tlv *cur = reinterpret_cast<const Tlv *>(mLocal.GetBytes());
+        const Tlv *end = reinterpret_cast<const Tlv *>(mLocal.GetBytes() + mLocal.GetSize());
+
+        while (cur < end)
+        {
+            Tlv::Type type = cur->GetType();
+
+            if (type != Tlv::kChannel && type != Tlv::kMeshLocalPrefix &&
+                type != Tlv::kPanId && type != Tlv::kNetworkMasterKey)
+            {
+                SuccessOrExit(error = message->Append(cur, cur->GetLength() + sizeof(Tlv)));
+            }
+        }
+    }
 
     mMle.GetLeaderAddress(leader);
 
@@ -385,21 +410,41 @@ ThreadError DatasetManager::Set(Coap::Header &aHeader, Message &aMessage, const 
         } OT_TOOL_PACKED_END data;
 
         aMessage.Read(offset, sizeof(Tlv), &data.tlv);
+        aMessage.Read(offset + sizeof(Tlv), data.tlv.GetLength(), data.value);
 
-        if ((type != Tlv::kActiveTimestamp) ||
-            (data.tlv.GetType() != Tlv::kChannel && data.tlv.GetType() != Tlv::kMeshLocalPrefix &&
-             data.tlv.GetType() != Tlv::kPanId && data.tlv.GetType() != Tlv::kNetworkMasterKey))
+        if (!isUpdateFromCommissioner && isTlvsAffectConnectivity)
         {
-            aMessage.Read(offset + sizeof(Tlv), data.tlv.GetLength(), data.value);
+            mNetif.GetPendingDataset().GetNetwork().Set(data.tlv);;
+        }
+        else
+        {
             mLocal.Set(data.tlv);
         }
 
         offset += sizeof(Tlv) + data.tlv.GetLength();
     }
 
-    mNetwork = mLocal;
-    mNetworkDataLeader.IncrementVersion();
-    mNetworkDataLeader.IncrementStableVersion();
+    if (!isUpdateFromCommissioner && isTlvsAffectConnectivity)
+    {
+        DelayTimerTlv delaytimer;
+        PendingTimestampTlv pendingtimestamp;
+
+        delaytimer.Init();
+        delaytimer.SetDelayTimer(OPENTHREAD_CONFIG_MIN_DELAY_TIMER);
+        mNetif.GetPendingDataset().GetNetwork().Set(delaytimer);
+
+        pendingtimestamp.Init();
+        *static_cast<Timestamp *>(&pendingtimestamp) = timestamp;
+        mNetif.GetPendingDataset().GetNetwork().Set(pendingtimestamp);
+
+        mNetif.GetPendingDataset().ResetDelayTimer(kFlagNetworkUpdated);
+    }
+    else
+    {
+        mNetwork = mLocal;
+        mNetworkDataLeader.IncrementVersion();
+        mNetworkDataLeader.IncrementStableVersion();
+    }
 
     // notify commissioner if update is from thread device
     if (!isUpdateFromCommissioner)
