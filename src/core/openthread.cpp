@@ -63,6 +63,8 @@ static otDEFINE_ALIGNED_VAR(sInstanceRaw, sizeof(otInstance), uint64_t);
 otInstance *sInstance = NULL;
 #endif
 
+void OT_CDECL operator delete(void *, size_t) throw() { }
+
 otInstance::otInstance(void) :
     mReceiveIp6DatagramCallback(NULL),
     mReceiveIp6DatagramCallbackContext(NULL),
@@ -70,8 +72,6 @@ otInstance::otInstance(void) :
     mActiveScanCallbackContext(NULL),
     mDiscoverCallback(NULL),
     mDiscoverCallbackContext(NULL),
-    mMbedTls(),
-    mIp6(),
     mThreadNetif(mIp6)
 {
 }
@@ -1051,7 +1051,8 @@ void otInstanceFinalize(otInstance *aInstance)
     (void)otThreadStop(aInstance);
     (void)otInterfaceDown(aInstance);
 
-    // Nothing to actually free, since the caller supplied the buffer
+    // Free the otInstance structure
+    delete aInstance;
 
 #ifndef OPENTHREAD_MULTIPLE_INSTANCE
     sInstance = NULL;

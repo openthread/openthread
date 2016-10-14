@@ -71,7 +71,9 @@ typedef struct otInstance
     // State
     //
 
+#ifndef OPENTHREAD_MULTIPLE_INSTANCE
     Thread::Crypto::MbedTls mMbedTls;
+#endif
     Thread::Ip6::Ip6 mIp6;
     Thread::ThreadNetif mThreadNetif;
 
