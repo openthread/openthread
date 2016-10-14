@@ -534,10 +534,6 @@ void NcpBase::HandleRawFrame(const RadioPacket *aFrame)
 
     SuccessOrExit(errorCode = OutboundFrameBegin());
 
-    if (aFrame->mFcs != 0x0000)
-    {
-        flags |= SPINEL_MD_FLAG_HAS_FCS;
-    }
 
     if (aFrame->mDidTX)
     {
@@ -551,11 +547,7 @@ void NcpBase::HandleRawFrame(const RadioPacket *aFrame)
             SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0,
             SPINEL_CMD_PROP_VALUE_IS,
             SPINEL_PROP_STREAM_RAW,
-            aFrame->mLength + (
-                ((flags & SPINEL_MD_FLAG_HAS_FCS) == SPINEL_MD_FLAG_HAS_FCS)
-                ? 2 // +2 if we are appending the FCS
-                : 0 // +0 if we aren't appending the FCS
-            )
+            aFrame->mLength
         )
     );
 
@@ -566,18 +558,6 @@ void NcpBase::HandleRawFrame(const RadioPacket *aFrame)
             aFrame->mLength
         )
     );
-
-    if ((flags & SPINEL_MD_FLAG_HAS_FCS) == SPINEL_MD_FLAG_HAS_FCS)
-    {
-        // Append the FCS
-        SuccessOrExit(
-            errorCode = OutboundFrameFeedPacked(
-                "CC",
-                (aFrame->mFcs >> 0) & 0xFF,
-                (aFrame->mFcs >> 8) & 0xFF
-            )
-        );
-    }
 
     // Append metadata (rssi, etc)
     SuccessOrExit(
