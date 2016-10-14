@@ -81,7 +81,7 @@ void test_packed_union();
 void test_packed_enum();
 
 // test_settings.cpp
-void TestSettingsInit()
+void TestSettingsInit();
 void TestSettingsAdd();
 void TestSettingsDelete();
 void TestSettingsSet();
