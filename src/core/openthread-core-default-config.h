@@ -186,6 +186,17 @@
 #endif  // OPENTHREAD_CONFIG_MAX_JOINER_ENTRIES
 
 /**
+ * @def OPENTHREAD_CONFIG_NUM_MESSAGE_BUFFERS
+ *
+ * The number of message buffers in the buffer pool.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_MAX_STATECHANGE_HANDLERS
+#define OPENTHREAD_CONFIG_MAX_STATECHANGE_HANDLERS          1
+#endif  // OPENTHREAD_CONFIG_MAX_STATECHANGE_HANDLERS
+
+
+/**
  * @def OPENTHREAD_CONFIG_LOG_LEVEL
  *
  * The log level.
