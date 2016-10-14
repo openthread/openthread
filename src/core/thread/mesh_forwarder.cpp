@@ -1348,6 +1348,7 @@ void MeshForwarder::HandleReceivedFrame(Mac::Frame &aFrame, ThreadError aError)
     Ip6::Address destination;
     uint8_t commandId;
     Child *child = NULL;
+    ThreadError error = kThreadError_None;
 
 #if 0
     dump("received frame", aFrame.GetHeader(), aFrame.GetLength());
@@ -1355,10 +1356,10 @@ void MeshForwarder::HandleReceivedFrame(Mac::Frame &aFrame, ThreadError aError)
 
     if (!mEnabled)
     {
-        ExitNow();
+        ExitNow(error = kThreadError_InvalidState);
     }
 
-    SuccessOrExit(aFrame.GetSrcAddr(macSource));
+    SuccessOrExit(error = aFrame.GetSrcAddr(macSource));
 
     if (aError == kThreadError_Security)
     {
@@ -1378,11 +1379,11 @@ void MeshForwarder::HandleReceivedFrame(Mac::Frame &aFrame, ThreadError aError)
             break;
 
         default:
-            ExitNow();
+            ExitNow(error = kThreadError_Parse);
         }
 
         mMle.SendLinkReject(destination);
-        ExitNow();
+        ExitNow(error = kThreadError_Security);
     }
 
     SuccessOrExit(aFrame.GetDstAddr(macDest));
@@ -1441,7 +1442,11 @@ void MeshForwarder::HandleReceivedFrame(Mac::Frame &aFrame, ThreadError aError)
     }
 
 exit:
-    {}
+
+    if (error != kThreadError_None)
+    {
+        otLogDebgMacErr(error, "Dropping received frame");
+    }
 }
 
 void MeshForwarder::HandleMesh(uint8_t *aFrame, uint8_t aFrameLength, const ThreadMessageInfo &aMessageInfo)
@@ -1453,7 +1458,7 @@ void MeshForwarder::HandleMesh(uint8_t *aFrame, uint8_t aFrameLength, const Thre
     Lowpan::MeshHeader *meshHeader = reinterpret_cast<Lowpan::MeshHeader *>(aFrame);
 
     // Security Check: only process Mesh Header frames that had security enabled.
-    VerifyOrExit(aMessageInfo.mLinkSecurity && meshHeader->IsValid(), error = kThreadError_Drop);
+    VerifyOrExit(aMessageInfo.mLinkSecurity && meshHeader->IsValid(), error = kThreadError_Security);
 
     meshSource.mLength = sizeof(meshSource.mShortAddress);
     meshSource.mShortAddress = meshHeader->GetSource();
@@ -1475,7 +1480,7 @@ void MeshForwarder::HandleMesh(uint8_t *aFrame, uint8_t aFrameLength, const Thre
         }
         else
         {
-            ExitNow();
+            ExitNow(error = kThreadError_Parse);
         }
     }
     else if (meshHeader->GetHopsLeft() > 0)
@@ -1485,7 +1490,7 @@ void MeshForwarder::HandleMesh(uint8_t *aFrame, uint8_t aFrameLength, const Thre
         meshHeader->SetHopsLeft(meshHeader->GetHopsLeft() - 1);
 
         VerifyOrExit((message = mNetif.GetIp6().mMessagePool.New(Message::kType6lowpan, 0)) != NULL,
-                     error = kThreadError_Drop);
+                     error = kThreadError_NoBufs);
         SuccessOrExit(error = message->SetLength(aFrameLength));
         message->Write(0, aFrameLength, aFrame);
         message->SetLinkSecurityEnabled(aMessageInfo.mLinkSecurity);
@@ -1496,9 +1501,14 @@ void MeshForwarder::HandleMesh(uint8_t *aFrame, uint8_t aFrameLength, const Thre
 
 exit:
 
-    if (error != kThreadError_None && message != NULL)
+    if (error != kThreadError_None)
     {
-        message->Free();
+        otLogDebgMacErr(error, "Dropping received mesh frame");
+
+        if (message != NULL)
+        {
+            message->Free();
+        }
     }
 }
 
@@ -1551,12 +1561,12 @@ void MeshForwarder::HandleFragment(uint8_t *aFrame, uint8_t aFrameLength,
         message->SetLinkSecurityEnabled(aMessageInfo.mLinkSecurity);
         message->SetPanId(aMessageInfo.mPanId);
         headerLength = mLowpan.Decompress(*message, aMacSource, aMacDest, aFrame, aFrameLength, datagramLength);
-        VerifyOrExit(headerLength > 0, error = kThreadError_NoBufs);
+        VerifyOrExit(headerLength > 0, error = kThreadError_Parse);
 
         aFrame += headerLength;
         aFrameLength -= static_cast<uint8_t>(headerLength);
 
-        VerifyOrExit(message->SetLength(datagramLength) == kThreadError_None, error = kThreadError_NoBufs);
+        SuccessOrExit(error = message->SetLength(datagramLength));
         datagramLength = HostSwap16(datagramLength - sizeof(Ip6::Header));
         message->Write(Ip6::Header::GetPayloadLengthOffset(), sizeof(datagramLength), &datagramLength);
         message->SetDatagramTag(datagramTag);
@@ -1610,9 +1620,14 @@ exit:
             HandleDatagram(*message, aMessageInfo);
         }
     }
-    else if (message != NULL)
+    else
     {
-        message->Free();
+        otLogDebgMacErr(error, "Dropping received fragment");
+
+        if (message != NULL)
+        {
+            message->Free();
+        }
     }
 }
 
@@ -1663,7 +1678,7 @@ void MeshForwarder::HandleLowpanHC(uint8_t *aFrame, uint8_t aFrameLength,
     message->SetPanId(aMessageInfo.mPanId);
 
     headerLength = mLowpan.Decompress(*message, aMacSource, aMacDest, aFrame, aFrameLength, 0);
-    VerifyOrExit(headerLength > 0, error = kThreadError_Drop);
+    VerifyOrExit(headerLength > 0, error = kThreadError_Parse);
 
     aFrame += headerLength;
     aFrameLength -= static_cast<uint8_t>(headerLength);
@@ -1684,9 +1699,14 @@ exit:
     {
         HandleDatagram(*message, aMessageInfo);
     }
-    else if (message != NULL)
+    else
     {
-        message->Free();
+        otLogDebgMacErr(error, "Dropping received lowpan HC");
+
+        if (message != NULL)
+        {
+            message->Free();
+        }
     }
 }
 

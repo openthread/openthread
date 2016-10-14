@@ -31,6 +31,8 @@
  *   This file implements IPv6 networking.
  */
 
+#define WPP_NAME "ip6.tmh"
+
 #include <common/code_utils.hpp>
 #include <common/debug.hpp>
 #include <common/logging.hpp>
@@ -441,6 +443,8 @@ ThreadError Ip6::HandleDatagram(Message &message, Netif *netif, int8_t interface
     uint8_t nextHeader;
     uint8_t hopLimit;
 
+    otLogFuncEntry();
+
 #if 0
     uint8_t buf[1024];
     message.Read(0, sizeof(buf), buf);
@@ -544,6 +548,7 @@ exit:
         message.Free();
     }
 
+    otLogFuncExitErr(error);
     return error;
 }
 
@@ -552,6 +557,8 @@ ThreadError Ip6::ForwardMessage(Message &message, MessageInfo &messageInfo, uint
     ThreadError error = kThreadError_None;
     int8_t interfaceId;
     Netif *netif;
+
+    otLogFuncEntry();
 
     if (messageInfo.GetSockAddr().IsMulticast())
     {
@@ -601,6 +608,8 @@ ThreadError Ip6::ForwardMessage(Message &message, MessageInfo &messageInfo, uint
     SuccessOrExit(error = netif->SendMessage(message));
 
 exit:
+
+    otLogFuncExitErr(error);
     return error;
 }
 
