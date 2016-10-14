@@ -2244,13 +2244,14 @@ uint8_t otIp6PrefixMatch(const otIp6Address *aFirst, const otIp6Address *aSecond
 /**
  * Allocate a new message buffer for sending a UDP message.
  *
- * @param[in]  aInstance A pointer to an OpenThread instance.
+ * @param[in]  aInstance             A pointer to an OpenThread instance.
+ * @param[in]  aLinkSecurityEnabled  TRUE if the message should be secured at Layer 2.
  *
  * @returns A pointer to the message buffer or NULL if no message buffers are available.
  *
  * @sa otFreeMessage
  */
-otMessage otNewUdpMessage(otInstance *aInstance);
+otMessage otNewUdpMessage(otInstance *aInstance, bool aLinkSecurityEnabled);
 
 /**
  * Open a UDP/IPv6 socket.
