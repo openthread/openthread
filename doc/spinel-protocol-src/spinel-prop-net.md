@@ -46,7 +46,7 @@ Values:
 * Type: Read-Write
 * Packed-Encoding: `D`
 
-### PROP 71: PROP_NET_KEY_SEQUENCE   {#prop-net-key-sequence}
+### PROP 71: PROP_NET_KEY_SEQUENCE_COUNTER   {#prop-net-key-sequence-counter}
 * Type: Read-Write
 * Packed-Encoding: `L`
 
@@ -56,5 +56,8 @@ Values:
 
 The partition ID of the partition that this node is a member of.
 
+### PROP 73: PROP_NET_KEY_SWITCH_GUARDTIME   {#prop-net-key-swtich-guardtime}
+* Type: Read-Write
+* Packed-Encoding: `L`
 
 

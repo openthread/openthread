@@ -298,8 +298,9 @@ private:
     ThreadError GetPropertyHandler_NET_NETWORK_NAME(uint8_t header, spinel_prop_key_t key);
     ThreadError GetPropertyHandler_NET_XPANID(uint8_t header, spinel_prop_key_t key);
     ThreadError GetPropertyHandler_NET_MASTER_KEY(uint8_t header, spinel_prop_key_t key);
-    ThreadError GetPropertyHandler_NET_KEY_SEQUENCE(uint8_t header, spinel_prop_key_t key);
+    ThreadError GetPropertyHandler_NET_KEY_SEQUENCE_COUNTER(uint8_t header, spinel_prop_key_t key);
     ThreadError GetPropertyHandler_NET_PARTITION_ID(uint8_t header, spinel_prop_key_t key);
+    ThreadError GetPropertyHandler_NET_KEY_SWITCH_GUARDTIME(uint8_t header, spinel_prop_key_t key);
     ThreadError GetPropertyHandler_THREAD_LEADER(uint8_t header, spinel_prop_key_t key);
     ThreadError GetPropertyHandler_IPV6_ML_PREFIX(uint8_t header, spinel_prop_key_t key);
     ThreadError GetPropertyHandler_IPV6_ML_ADDR(uint8_t header, spinel_prop_key_t key);
@@ -368,7 +369,9 @@ private:
                                               uint16_t value_len);
     ThreadError SetPropertyHandler_NET_MASTER_KEY(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr,
                                                   uint16_t value_len);
-    ThreadError SetPropertyHandler_NET_KEY_SEQUENCE(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr,
+    ThreadError SetPropertyHandler_NET_KEY_SEQUENCE_COUNTER(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr,
+                                                    uint16_t value_len);
+    ThreadError SetPropertyHandler_NET_KEY_SWITCH_GUARDTIME(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr,
                                                     uint16_t value_len);
     ThreadError SetPropertyHandler_STREAM_NET_INSECURE(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr,
                                                        uint16_t value_len);

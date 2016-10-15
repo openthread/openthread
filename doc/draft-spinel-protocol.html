@@ -451,8 +451,9 @@
 <link href="#rfc.section.5.6.5" rel="Chapter" title="5.6.5 PROP 68: PROP_NET_NETWORK_NAME"/>
 <link href="#rfc.section.5.6.6" rel="Chapter" title="5.6.6 PROP 69: PROP_NET_XPANID"/>
 <link href="#rfc.section.5.6.7" rel="Chapter" title="5.6.7 PROP 70: PROP_NET_MASTER_KEY"/>
-<link href="#rfc.section.5.6.8" rel="Chapter" title="5.6.8 PROP 71: PROP_NET_KEY_SEQUENCE"/>
+<link href="#rfc.section.5.6.8" rel="Chapter" title="5.6.8 PROP 71: PROP_NET_KEY_SEQUENCE_COUNTER"/>
 <link href="#rfc.section.5.6.9" rel="Chapter" title="5.6.9 PROP 72: PROP_NET_PARTITION_ID"/>
+<link href="#rfc.section.5.6.10" rel="Chapter" title="5.6.10 PROP 73: PROP_NET_KEY_SWITCH_GUARDTIME"/>
 <link href="#rfc.section.5.7" rel="Chapter" title="5.7 IPv6 Properties"/>
 <link href="#rfc.section.5.7.1" rel="Chapter" title="5.7.1 PROP 96: PROP_IPV6_LL_ADDR"/>
 <link href="#rfc.section.5.7.2" rel="Chapter" title="5.7.2 PROP 97: PROP_IPV6_ML_ADDR"/>
@@ -689,8 +690,9 @@
 <li>5.6.5.   <a href="#rfc.section.5.6.5">PROP 68: PROP_NET_NETWORK_NAME</a></li>
 <li>5.6.6.   <a href="#rfc.section.5.6.6">PROP 69: PROP_NET_XPANID</a></li>
 <li>5.6.7.   <a href="#rfc.section.5.6.7">PROP 70: PROP_NET_MASTER_KEY</a></li>
-<li>5.6.8.   <a href="#rfc.section.5.6.8">PROP 71: PROP_NET_KEY_SEQUENCE</a></li>
+<li>5.6.8.   <a href="#rfc.section.5.6.8">PROP 71: PROP_NET_KEY_SEQUENCE_COUNTER</a></li>
 <li>5.6.9.   <a href="#rfc.section.5.6.9">PROP 72: PROP_NET_PARTITION_ID</a></li>
+<li>5.6.10.   <a href="#rfc.section.5.6.10">PROP 73: PROP_NET_KEY_SWITCH_GUARDTIME</a></li>
 </ul><li>5.7.   <a href="#rfc.section.5.7">IPv6 Properties</a></li>
 <ul><li>5.7.1.   <a href="#rfc.section.5.7.1">PROP 96: PROP_IPV6_LL_ADDR</a></li>
 <li>5.7.2.   <a href="#rfc.section.5.7.2">PROP 97: PROP_IPV6_ML_ADDR</a></li>
@@ -2456,7 +2458,7 @@ STACK-NAME/STACK-VERSION[BUILD_INFO][; OTHER_INFO]; BUILD_DATE_AND_TIME
 </ul>
 
 <p> </p>
-<h1 id="rfc.section.5.6.8"><a href="#rfc.section.5.6.8">5.6.8.</a> <a href="#prop-net-key-sequence" id="prop-net-key-sequence">PROP 71: PROP_NET_KEY_SEQUENCE</a></h1>
+<h1 id="rfc.section.5.6.8"><a href="#rfc.section.5.6.8">5.6.8.</a> <a href="#prop-net-key-sequence-counter" id="prop-net-key-sequence-counter">PROP 71: PROP_NET_KEY_SEQUENCE_COUNTER</a></h1>
 <p/>
 
 <ul>
@@ -2475,6 +2477,17 @@ STACK-NAME/STACK-VERSION[BUILD_INFO][; OTHER_INFO]; BUILD_DATE_AND_TIME
 
 <p> </p>
 <p id="rfc.section.5.6.9.p.2">The partition ID of the partition that this node is a member of.  </p>
+
+<p> </p>
+<h1 id="rfc.section.5.6.10"><a href="#rfc.section.5.6.10">5.6.10.</a> <a href="#prop-net-key-switch-guardtime" id="prop-net-key-switch-guardtime">PROP 73: PROP_NET_KEY_SWITCH_GUARDTIME</a></h1>
+<p/>
+
+<ul>
+  <li>Type: Read-Write</li>
+  <li>Packed-Encoding: <samp>L</samp></li>
+</ul>
+
+
 <h1 id="rfc.section.5.7"><a href="#rfc.section.5.7">5.7.</a> <a href="#prop-ipv6" id="prop-ipv6">IPv6 Properties</a></h1>
 <h1 id="rfc.section.5.7.1"><a href="#rfc.section.5.7.1">5.7.1.</a> <a href="#prop-ipv6-ll-addr" id="prop-ipv6-ll-addr">PROP 96: PROP_IPV6_LL_ADDR</a></h1>
 <p/>
@@ -3596,8 +3609,10 @@ FE
   <li>CMD_VALUE_IS:PROP_NET_NETWORK_NAME</li>
   <li>CMD_VALUE_SET:PROP_NET_MASTER_KEY</li>
   <li>CMD_VALUE_IS:PROP_NET_MASTER_KEY</li>
-  <li>CMD_VALUE_SET:PROP_NET_KEY_SEQUENCE</li>
-  <li>CMD_VALUE_IS:PROP_NET_KEY_SEQUENCE</li>
+  <li>CMD_VALUE_SET:PROP_NET_KEY_SEQUENCE_COUNTER</li>
+  <li>CMD_VALUE_IS:PROP_NET_KEY_SEQUENCE_COUNTER</li>
+  <li>CMD_VALUE_SET:PROP_NET_KEY_SWITCH_GUARDTIME</li>
+  <li>CMD_VALUE_IS:PROP_NET_KEY_SWITCH_GUARDTIME</li>
 </ul>
 
 <p> </p>

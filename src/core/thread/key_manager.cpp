@@ -92,7 +92,7 @@ ThreadError KeyManager::SetMasterKey(const void *aKey, uint8_t aKeyLength)
     mKeySequence = 0;
     ComputeKey(mKeySequence, mKey);
 
-    mNetif.SetStateChangedFlags(OT_NET_KEY_SEQUENCE);
+    mNetif.SetStateChangedFlags(OT_NET_KEY_SEQUENCE_COUNTER);
 
 exit:
     return error;
@@ -168,7 +168,7 @@ void KeyManager::SetCurrentKeySequence(uint32_t aKeySequence)
         mKeyRotationTimer.Start(Timer::HoursToMsec(mKeyRotationTime));
     }
 
-    mNetif.SetStateChangedFlags(OT_NET_KEY_SEQUENCE);
+    mNetif.SetStateChangedFlags(OT_NET_KEY_SEQUENCE_COUNTER);
 
 exit:
     return;
