@@ -241,16 +241,21 @@ class Node:
         self.send_command(cmd)
         self.pexpect.expect('Done')
 
-    def get_key_sequence(self):
-        self.send_command('keysequence')
+    def get_key_sequence_counter(self):
+        self.send_command('keysequence counter')
         i = self.pexpect.expect('(\d+)\r\n')
         if i == 0:
-            key_sequence = int(self.pexpect.match.groups()[0])
+            key_sequence_counter = int(self.pexpect.match.groups()[0])
         self.pexpect.expect('Done')
-        return key_sequence
+        return key_sequence_counter
 
-    def set_key_sequence(self, key_sequence):
-        cmd = 'keysequence %d' % key_sequence
+    def set_key_sequence_counter(self, key_sequence_counter):
+        cmd = 'keysequence counter %d' % key_sequence_counter
+        self.send_command(cmd)
+        self.pexpect.expect('Done')
+
+    def set_key_switch_guardtime(self, key_switch_guardtime):
+        cmd = 'keysequence guardtime %d' % key_switch_guardtime
         self.send_command(cmd)
         self.pexpect.expect('Done')
 
