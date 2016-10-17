@@ -47,1529 +47,87 @@ diag-repeat        ifconfig    ping              version
 diag-send          ipaddr      prefix            whitelist
 """
 
-__copyright__   = "Copyright (c) 2016 The OpenThread Authors."
-__version__     = "0.1.0"
-
-
-FEATURE_USE_HDLC = 1
-FEATURE_USE_SLACC = 1
-
-DEBUG_ENABLE = 0
-
-DEBUG_LOG_TX = 0
-DEBUG_LOG_RX = 0
-DEBUG_LOG_HDLC = 0
-DEBUG_LOG_PKT = DEBUG_ENABLE
-DEBUG_LOG_SERIAL = DEBUG_ENABLE
-DEBUG_LOG_PROP = DEBUG_ENABLE
-DEBUG_LOG_TUN = 0
-DEBUG_CMD_RESPONSE = 0
-
-TIMEOUT_PROP = 2
-
-gWpanApi = None
-
-def goodbye(signum=None, frame=None):
-    logger.info('\nQuitting')
-    if gWpanApi:
-        gWpanApi.serial.close()
-    exit(0)
+from __future__ import print_function
 
 import os
 import sys
 import time
-import threading
 import traceback
 
 import optparse
 
 import string
-import shlex
-import base64
 import textwrap
-import ipaddress
-import binascii
 
 import logging
 import logging.config
 import logging.handlers
-import traceback
-import subprocess
-import Queue
-
-import serial
-import socket
-import signal
-import fcntl
 
 from cmd import Cmd
-from copy import copy
 from struct import pack
-from struct import unpack
-from select import select
-from collections import namedtuple
-from collections import defaultdict
+
+from spinel.const import SPINEL
+from spinel.const import kThread
+from spinel.codec import WpanApi
+from spinel.codec import SpinelCodec
+from spinel.stream import StreamOpen
+import spinel.config as CONFIG
+import spinel.util as util
+
+import ipaddress
 
 logging.getLogger("scapy.runtime").setLevel(logging.ERROR)
 from scapy.layers.inet6 import IPv6
 from scapy.layers.inet6 import ICMPv6EchoRequest
-from scapy.layers.inet6 import ICMPv6EchoReply
 
-MASTER_PROMPT  = "spinel-cli"
 
-DEFAULT_NODE_TYPE = 2
+__copyright__ = "Copyright (c) 2016 The OpenThread Authors."
+__version__ = "0.1.0"
 
-logging.config.dictConfig({
-    'version': 1,
-    'disable_existing_loggers': False,
-
-    'formatters': {
-        'minimal': {
-            'format': '%(message)s'
-        },
-        'standard': {
-            'format': '%(asctime)s [%(levelname)s] %(name)s: %(message)s'
-        },
-    },
-    'handlers': {
-        'console': {
-            #'level':'INFO',
-            'level':'DEBUG',
-            'class':'logging.StreamHandler',
-        },
-        #'syslog': {
-        #    'level':'DEBUG',
-        #    'class':'logging.handlers.SysLogHandler',
-        #    'address': '/dev/log'
-        #},
-    },
-    'loggers': {
-        '': {
-            'handlers': ['console'], #,'syslog'],
-            'level': 'DEBUG',
-            'propagate': True
-        }
-    }
-})
-
-logger = logging.getLogger(__name__)
-
-
-#=========================================
-#   Spinel
-#=========================================
-
-SPINEL_RSSI_OVERRIDE            = 127
-
-SPINEL_HEADER_ASYNC             = 0x80
-SPINEL_HEADER_DEFAULT           = 0x81
-SPINEL_HEADER_EVENT_HANDLER     = 0x82
-
-# Spinel Commands
-
-SPINEL_CMD_NOOP                 = 0
-SPINEL_CMD_RESET                = 1
-SPINEL_CMD_PROP_VALUE_GET       = 2
-SPINEL_CMD_PROP_VALUE_SET       = 3
-SPINEL_CMD_PROP_VALUE_INSERT    = 4
-SPINEL_CMD_PROP_VALUE_REMOVE    = 5
-
-SPINEL_RSP_PROP_VALUE_IS        = 6
-SPINEL_RSP_PROP_VALUE_INSERTED  = 7
-SPINEL_RSP_PROP_VALUE_REMOVED   = 8
-
-SPINEL_CMD_NET_SAVE             = 9
-SPINEL_CMD_NET_CLEAR            = 10
-SPINEL_CMD_NET_RECALL           = 11
-
-SPINEL_RSP_HBO_OFFLOAD          = 12
-SPINEL_RSP_HBO_RECLAIM          = 13
-SPINEL_RSP_HBO_DROP             = 14
-
-SPINEL_CMD_HBO_OFFLOADED        = 15
-SPINEL_CMD_HBO_RECLAIMED        = 16
-SPINEL_CMD_HBO_DROPPED          = 17
-
-SPINEL_CMD_NEST__BEGIN          = 15296
-SPINEL_CMD_NEST__END            = 15360
-
-SPINEL_CMD_VENDOR__BEGIN        = 15360
-SPINEL_CMD_VENDOR__END          = 16384
-
-SPINEL_CMD_EXPERIMENTAL__BEGIN  = 2000000
-SPINEL_CMD_EXPERIMENTAL__END    = 2097152
-
-# Spinel Properties
-
-SPINEL_PROP_LAST_STATUS             = 0        #< status [i]
-SPINEL_PROP_PROTOCOL_VERSION        = 1        #< major, minor [i,i]
-SPINEL_PROP_NCP_VERSION             = 2        #< version string [U]
-SPINEL_PROP_INTERFACE_TYPE          = 3        #< [i]
-SPINEL_PROP_VENDOR_ID               = 4        #< [i]
-SPINEL_PROP_CAPS                    = 5        #< capability list [A(i)]
-SPINEL_PROP_INTERFACE_COUNT         = 6        #< Interface count [C]
-SPINEL_PROP_POWER_STATE             = 7        #< PowerState [C]
-SPINEL_PROP_HWADDR                  = 8        #< PermEUI64 [E]
-SPINEL_PROP_LOCK                    = 9        #< PropLock [b]
-SPINEL_PROP_HBO_MEM_MAX             = 10       #< Max offload mem [S]
-SPINEL_PROP_HBO_BLOCK_MAX           = 11       #< Max offload block [S]
-
-SPINEL_PROP_PHY__BEGIN              = 0x20
-SPINEL_PROP_PHY_ENABLED             = SPINEL_PROP_PHY__BEGIN + 0 #< [b]
-SPINEL_PROP_PHY_CHAN                = SPINEL_PROP_PHY__BEGIN + 1 #< [C]
-SPINEL_PROP_PHY_CHAN_SUPPORTED      = SPINEL_PROP_PHY__BEGIN + 2 #< [A(C)]
-SPINEL_PROP_PHY_FREQ                = SPINEL_PROP_PHY__BEGIN + 3 #< kHz [L]
-SPINEL_PROP_PHY_CCA_THRESHOLD       = SPINEL_PROP_PHY__BEGIN + 4 #< dBm [c]
-SPINEL_PROP_PHY_TX_POWER            = SPINEL_PROP_PHY__BEGIN + 5 #< [c]
-SPINEL_PROP_PHY_RSSI                = SPINEL_PROP_PHY__BEGIN + 6 #< dBm [c]
-SPINEL_PROP_PHY__END                = 0x30
-
-SPINEL_PROP_MAC__BEGIN             = 0x30
-SPINEL_PROP_MAC_SCAN_STATE         = SPINEL_PROP_MAC__BEGIN + 0 #< [C]
-SPINEL_PROP_MAC_SCAN_MASK          = SPINEL_PROP_MAC__BEGIN + 1 #< [A(C)]
-SPINEL_PROP_MAC_SCAN_PERIOD        = SPINEL_PROP_MAC__BEGIN + 2 #< ms-per-channel [S]
-SPINEL_PROP_MAC_SCAN_BEACON        = SPINEL_PROP_MAC__BEGIN + 3 #< chan,rssi,(laddr,saddr,panid,lqi),(proto,xtra) [CcT(ESSC.)T(i).]
-SPINEL_PROP_MAC_15_4_LADDR         = SPINEL_PROP_MAC__BEGIN + 4 #< [E]
-SPINEL_PROP_MAC_15_4_SADDR         = SPINEL_PROP_MAC__BEGIN + 5 #< [S]
-SPINEL_PROP_MAC_15_4_PANID         = SPINEL_PROP_MAC__BEGIN + 6 #< [S]
-SPINEL_PROP_MAC_RAW_STREAM_ENABLED = SPINEL_PROP_MAC__BEGIN + 7 #< [C]
-SPINEL_PROP_MAC_FILTER_MODE        = SPINEL_PROP_MAC__BEGIN + 8 #< [C]
-SPINEL_PROP_MAC__END               = 0x40
-
-SPINEL_PROP_MAC_EXT__BEGIN         = 0x1300
-# Format: `A(T(Ec))`
-# * `E`: EUI64 address of node
-# * `c`: Optional fixed RSSI. -127 means not set.
-SPINEL_PROP_MAC_WHITELIST          = SPINEL_PROP_MAC_EXT__BEGIN + 0
-SPINEL_PROP_MAC_WHITELIST_ENABLED  = SPINEL_PROP_MAC_EXT__BEGIN + 1  #< [b]
-SPINEL_PROP_MAC_EXT__END           = 0x1400
-
-SPINEL_PROP_NET__BEGIN           = 0x40
-SPINEL_PROP_NET_SAVED            = SPINEL_PROP_NET__BEGIN + 0 #< [b]
-SPINEL_PROP_NET_IF_UP            = SPINEL_PROP_NET__BEGIN + 1 #< [b]
-SPINEL_PROP_NET_STACK_UP         = SPINEL_PROP_NET__BEGIN + 2 #< [C]
-SPINEL_PROP_NET_ROLE             = SPINEL_PROP_NET__BEGIN + 3 #< [C]
-SPINEL_PROP_NET_NETWORK_NAME     = SPINEL_PROP_NET__BEGIN + 4 #< [U]
-SPINEL_PROP_NET_XPANID           = SPINEL_PROP_NET__BEGIN + 5 #< [D]
-SPINEL_PROP_NET_MASTER_KEY       = SPINEL_PROP_NET__BEGIN + 6 #< [D]
-SPINEL_PROP_NET_KEY_SEQUENCE     = SPINEL_PROP_NET__BEGIN + 7 #< [L]
-SPINEL_PROP_NET_PARTITION_ID     = SPINEL_PROP_NET__BEGIN + 8 #< [L]
-SPINEL_PROP_NET__END             = 0x50
-
-SPINEL_PROP_THREAD__BEGIN          = 0x50
-SPINEL_PROP_THREAD_LEADER_ADDR     = SPINEL_PROP_THREAD__BEGIN + 0 #< [6]
-SPINEL_PROP_THREAD_PARENT          = SPINEL_PROP_THREAD__BEGIN + 1 #< LADDR, SADDR [ES]
-SPINEL_PROP_THREAD_CHILD_TABLE     = SPINEL_PROP_THREAD__BEGIN + 2 #< [A(T(ES))]
-SPINEL_PROP_THREAD_LEADER_RID      = SPINEL_PROP_THREAD__BEGIN + 3 #< [C]
-SPINEL_PROP_THREAD_LEADER_WEIGHT   = SPINEL_PROP_THREAD__BEGIN + 4 #< [C]
-SPINEL_PROP_THREAD_LOCAL_LEADER_WEIGHT = SPINEL_PROP_THREAD__BEGIN + 5 #< [C]
-SPINEL_PROP_THREAD_NETWORK_DATA    = SPINEL_PROP_THREAD__BEGIN + 6 #< [D]
-SPINEL_PROP_THREAD_NETWORK_DATA_VERSION = SPINEL_PROP_THREAD__BEGIN + 7 #< [S]
-SPINEL_PROP_THREAD_STABLE_NETWORK_DATA  = SPINEL_PROP_THREAD__BEGIN + 8 #< [D]
-SPINEL_PROP_THREAD_STABLE_NETWORK_DATA_VERSION = SPINEL_PROP_THREAD__BEGIN + 9  #< [S]
-SPINEL_PROP_THREAD_ON_MESH_NETS    = SPINEL_PROP_THREAD__BEGIN + 10 #< array(ipv6prefix,prefixlen,stable,flags) [A(T(6CbC))]
-SPINEL_PROP_THREAD_LOCAL_ROUTES    = SPINEL_PROP_THREAD__BEGIN + 11 #< array(ipv6prefix,prefixlen,stable,flags) [A(T(6CbC))]
-SPINEL_PROP_THREAD_ASSISTING_PORTS = SPINEL_PROP_THREAD__BEGIN + 12 #< array(portn) [A(S)]
-SPINEL_PROP_THREAD_ALLOW_LOCAL_NET_DATA_CHANGE = SPINEL_PROP_THREAD__BEGIN + 13 #< [b]
-SPINEL_PROP_THREAD_MODE            = SPINEL_PROP_THREAD__BEGIN + 14
-SPINEL_PROP_THREAD__END            = 0x60
-
-SPINEL_PROP_THREAD_EXT__BEGIN      = 0x1500
-SPINEL_PROP_THREAD_CHILD_TIMEOUT   = SPINEL_PROP_THREAD_EXT__BEGIN + 0  #< [L]
-SPINEL_PROP_THREAD_RLOC16          = SPINEL_PROP_THREAD_EXT__BEGIN + 1  #< [S]
-SPINEL_PROP_THREAD_ROUTER_UPGRADE_THRESHOLD = SPINEL_PROP_THREAD_EXT__BEGIN + 2 #< [C]
-SPINEL_PROP_THREAD_CONTEXT_REUSE_DELAY = SPINEL_PROP_THREAD_EXT__BEGIN + 3 #< [L]
-SPINEL_PROP_THREAD_NETWORK_ID_TIMEOUT =  SPINEL_PROP_THREAD_EXT__BEGIN + 4 #< [b]
-SPINEL_PROP_THREAD_ACTIVE_ROUTER_IDS = SPINEL_PROP_THREAD_EXT__BEGIN + 5 #< [A(b)]
-SPINEL_PROP_THREAD_RLOC16_DEBUG_PASSTHRU = SPINEL_PROP_THREAD_EXT__BEGIN + 6 #< [b]
-SPINEL_PROP_THREAD_ROUTER_ROLE_ENABLED = SPINEL_PROP_THREAD_EXT__BEGIN + 7 #< [b]
-SPINEL_PROP_THREAD_ROUTER_DOWNGRADE_THRESHOLD = SPINEL_PROP_THREAD_EXT__BEGIN + 8 #< [C]
-SPINEL_PROP_THREAD_ROUTER_SELECTION_JITTER = SPINEL_PROP_THREAD_EXT__BEGIN + 9 #< [C]
-
-SPINEL_PROP_THREAD_EXT__END        = 0x1600,
-
-
-SPINEL_PROP_IPV6__BEGIN          = 0x60
-SPINEL_PROP_IPV6_LL_ADDR         = SPINEL_PROP_IPV6__BEGIN + 0 #< [6]
-SPINEL_PROP_IPV6_ML_ADDR         = SPINEL_PROP_IPV6__BEGIN + 1 #< [6C]
-SPINEL_PROP_IPV6_ML_PREFIX       = SPINEL_PROP_IPV6__BEGIN + 2 #< [6C]
-SPINEL_PROP_IPV6_ADDRESS_TABLE   = SPINEL_PROP_IPV6__BEGIN + 3 #< array(ipv6addr,prefixlen,valid,preferred,flags) [A(T(6CLLC))]
-SPINEL_PROP_IPV6_ROUTE_TABLE     = SPINEL_PROP_IPV6__BEGIN + 4 #< array(ipv6prefix,prefixlen,iface,flags) [A(T(6CCC))]
-SPINEL_PROP_IPv6_ICMP_PING_OFFLOAD = SPINEL_PROP_IPV6__BEGIN + 5 #< [b]
-
-SPINEL_PROP_STREAM__BEGIN       = 0x70
-SPINEL_PROP_STREAM_DEBUG        = SPINEL_PROP_STREAM__BEGIN + 0 #< [U]
-SPINEL_PROP_STREAM_RAW          = SPINEL_PROP_STREAM__BEGIN + 1 #< [D]
-SPINEL_PROP_STREAM_NET          = SPINEL_PROP_STREAM__BEGIN + 2 #< [D]
-SPINEL_PROP_STREAM_NET_INSECURE = SPINEL_PROP_STREAM__BEGIN + 3 #< [D]
-SPINEL_PROP_STREAM__END         = 0x80
-
-# UART Bitrate
-# Format: `L`
-SPINEL_PROP_UART_BITRATE    = 0x100
-
-# UART Software Flow Control
-# Format: `b`
-SPINEL_PROP_UART_XON_XOFF   = 0x101
-
-SPINEL_PROP_15_4_PIB__BEGIN     = 1024
-SPINEL_PROP_15_4_PIB_PHY_CHANNELS_SUPPORTED = SPINEL_PROP_15_4_PIB__BEGIN + 0x01 #< [A(L)]
-SPINEL_PROP_15_4_PIB_MAC_PROMISCUOUS_MODE   = SPINEL_PROP_15_4_PIB__BEGIN + 0x51 #< [b]
-SPINEL_PROP_15_4_PIB_MAC_SECURITY_ENABLED   = SPINEL_PROP_15_4_PIB__BEGIN + 0x5d #< [b]
-SPINEL_PROP_15_4_PIB__END       = 1280
-
-SPINEL_PROP_CNTR__BEGIN        = 1280
-
-# Counter reset behavior
-# Format: `C`
-SPINEL_PROP_CNTR_RESET             = SPINEL_PROP_CNTR__BEGIN + 0
-
-# The total number of transmissions.
-# Format: `L` (Read-only) */
-SPINEL_PROP_CNTR_TX_PKT_TOTAL      = SPINEL_PROP_CNTR__BEGIN + 1
-
-# The number of transmissions with ack request.
-# Format: `L` (Read-only) */
-SPINEL_PROP_CNTR_TX_PKT_ACK_REQ    = SPINEL_PROP_CNTR__BEGIN + 2
-
-# The number of transmissions that were acked.
-# Format: `L` (Read-only) */
-SPINEL_PROP_CNTR_TX_PKT_ACKED      = SPINEL_PROP_CNTR__BEGIN + 3
-
-# The number of transmissions without ack request.
-# Format: `L` (Read-only) */
-SPINEL_PROP_CNTR_TX_PKT_NO_ACK_REQ = SPINEL_PROP_CNTR__BEGIN + 4
-
-# The number of transmitted data.
-# Format: `L` (Read-only) */
-SPINEL_PROP_CNTR_TX_PKT_DATA       = SPINEL_PROP_CNTR__BEGIN + 5
-
-# The number of transmitted data poll.
-# Format: `L` (Read-only) */
-SPINEL_PROP_CNTR_TX_PKT_DATA_POLL  = SPINEL_PROP_CNTR__BEGIN + 6
-
-# The number of transmitted beacon.
-# Format: `L` (Read-only) */
-SPINEL_PROP_CNTR_TX_PKT_BEACON     = SPINEL_PROP_CNTR__BEGIN + 7
-
-# The number of transmitted beacon request.
-# Format: `L` (Read-only) */
-SPINEL_PROP_CNTR_TX_PKT_BEACON_REQ = SPINEL_PROP_CNTR__BEGIN + 8
-
-# The number of transmitted other types of frames.
-# Format: `L` (Read-only) */
-SPINEL_PROP_CNTR_TX_PKT_OTHER      = SPINEL_PROP_CNTR__BEGIN + 9
-
-# The number of retransmission times.
-# Format: `L` (Read-only) */
-SPINEL_PROP_CNTR_TX_PKT_RETRY      = SPINEL_PROP_CNTR__BEGIN + 10
-
-# The number of CCA failure times.
-# Format: `L` (Read-only) */
-SPINEL_PROP_CNTR_TX_ERR_CCA        = SPINEL_PROP_CNTR__BEGIN + 11
-
-# The total number of received packets.
-# Format: `L` (Read-only) */
-SPINEL_PROP_CNTR_RX_PKT_TOTAL      = SPINEL_PROP_CNTR__BEGIN + 100
-
-# The number of received data.
-# Format: `L` (Read-only) */
-SPINEL_PROP_CNTR_RX_PKT_DATA       = SPINEL_PROP_CNTR__BEGIN + 101
-
-# The number of received data poll.
-# Format: `L` (Read-only) */
-SPINEL_PROP_CNTR_RX_PKT_DATA_POLL  = SPINEL_PROP_CNTR__BEGIN + 102
-
-# The number of received beacon.
-# Format: `L` (Read-only) */
-SPINEL_PROP_CNTR_RX_PKT_BEACON     = SPINEL_PROP_CNTR__BEGIN + 103
-
-# The number of received beacon request.
-# Format: `L` (Read-only) */
-SPINEL_PROP_CNTR_RX_PKT_BEACON_REQ = SPINEL_PROP_CNTR__BEGIN + 104
-
-# The number of received other types of frames.
-# Format: `L` (Read-only) */
-SPINEL_PROP_CNTR_RX_PKT_OTHER      = SPINEL_PROP_CNTR__BEGIN + 105
-
-# The number of received packets filtered by whitelist.
-# Format: `L` (Read-only) */
-SPINEL_PROP_CNTR_RX_PKT_FILT_WL    = SPINEL_PROP_CNTR__BEGIN + 106
-
-# The number of received packets filtered by destination check.
-# Format: `L` (Read-only) */
-SPINEL_PROP_CNTR_RX_PKT_FILT_DA    = SPINEL_PROP_CNTR__BEGIN + 107
-
-# The number of received packets that are empty.
-# Format: `L` (Read-only) */
-SPINEL_PROP_CNTR_RX_ERR_EMPTY      = SPINEL_PROP_CNTR__BEGIN + 108
-
-# The number of received packets from an unknown neighbor.
-# Format: `L` (Read-only) */
-SPINEL_PROP_CNTR_RX_ERR_UKWN_NBR   = SPINEL_PROP_CNTR__BEGIN + 109
-
-# The number of received packets whose source address is invalid.
-# Format: `L` (Read-only) */
-SPINEL_PROP_CNTR_RX_ERR_NVLD_SADDR = SPINEL_PROP_CNTR__BEGIN + 110
-
-# The number of received packets with a security error.
-# Format: `L` (Read-only) */
-SPINEL_PROP_CNTR_RX_ERR_SECURITY   = SPINEL_PROP_CNTR__BEGIN + 111
-
-# The number of received packets with a checksum error.
-# Format: `L` (Read-only) */
-SPINEL_PROP_CNTR_RX_ERR_BAD_FCS    = SPINEL_PROP_CNTR__BEGIN + 112
-
-# The number of received packets with other errors.
-# Format: `L` (Read-only) */
-SPINEL_PROP_CNTR_RX_ERR_OTHER      = SPINEL_PROP_CNTR__BEGIN + 113
-
-
-#=========================================
-
-kDeviceRoleDisabled = 0  #< The Thread stack is disabled.
-kDeviceRoleDetached = 1  #< Not currently in a Thread network/partition.
-kDeviceRoleChild = 2     #< The Thread Child role.
-kDeviceRoleRouter = 3    #< The Thread Router role.
-kDeviceRoleLeader = 4    #< The Thread Leader role.
-
-THREAD_STATE_MAP = {
-    kDeviceRoleDisabled: "disabled",
-    kDeviceRoleDetached: "detached",
-    kDeviceRoleChild: "child",
-    kDeviceRoleRouter: "router",
-    kDeviceRoleLeader: "leader",
-}
-
-THREAD_STATE_NAME_MAP = {
-    "disabled": kDeviceRoleDisabled,
-    "detached": kDeviceRoleDetached,
-    "child": kDeviceRoleChild,
-    "router": kDeviceRoleRouter,
-    "leader": kDeviceRoleLeader,
-}
-
-#=========================================
-
-kThreadPrefixPreferenceOffset  = 6
-kThreadPrefixPreferredFlag     = 1 << 5
-kThreadPrefixSlaacFlag         = 1 << 4
-kThreadPrefixDhcpFlag          = 1 << 3
-kThreadPrefixConfigureFlag     = 1 << 2
-kThreadPrefixDefaultRouteFlag  = 1 << 1
-kThreadPrefixOnMeshFlag        = 1 << 0
-
-#=========================================
-
-SPINEL_LAST_STATUS_MAP = {
-    0: "STATUS_OK: Operation has completed successfully.",
-    1: "STATUS_FAILURE: Operation has failed for some undefined reason.",
-    2: "STATUS_UNIMPLEMENTED: The given operation has not been implemented.",
-    3: "STATUS_INVALID_ARGUMENT: An argument to the given operation is invalid.",
-    4: "STATUS_INVALID_STATE : The given operation is invalid for the current state of the device.",
-    5: "STATUS_INVALID_COMMAND: The given command is not recognized.",
-    6: "STATUS_INVALID_INTERFACE: The given Spinel interface is not supported.",
-    7: "STATUS_INTERNAL_ERROR: An internal runtime error has occured.",
-    8: "STATUS_SECURITY_ERROR: A security or authentication error has occured.",
-    9: "STATUS_PARSE_ERROR: An error has occured while parsing the command.",
-    10: "STATUS_IN_PROGRESS: The operation is in progress and will be completed asynchronously.",
-    11: "STATUS_NOMEM: The operation has been prevented due to memory pressure.",
-    12: "STATUS_BUSY: The device is currently performing a mutually exclusive operation.",
-    13: "STATUS_PROPERTY_NOT_FOUND: The given property is not recognized.",
-    14: "STATUS_PACKET_DROPPED: The packet was dropped.",
-    15: "STATUS_EMPTY: The result of the operation is empty.",
-    16: "STATUS_CMD_TOO_BIG: The command was too large to fit in the internal buffer.",
-    17: "STATUS_NO_ACK: The packet was not acknowledged.",
-    18: "STATUS_CCA_FAILURE: The packet was not sent due to a CCA failure.",
-
-    112: "STATUS_RESET_POWER_ON",
-    113: "STATUS_RESET_EXTERNAL",
-    114: "STATUS_RESET_SOFTWARE",
-    115: "STATUS_RESET_FAULT",
-    116: "STATUS_RESET_CRASH",
-    117: "STATUS_RESET_ASSERT",
-    118: "STATUS_RESET_OTHER",
-    119: "STATUS_RESET_UNKNOWN",
-    120: "STATUS_RESET_WATCHDOG",
-
-    0x4000: "kThreadError_None",
-    0x4001: "kThreadError_Failed",
-    0x4002: "kThreadError_Drop",
-    0x4003: "kThreadError_NoBufs",
-    0x4004: "kThreadError_NoRoute",
-    0x4005: "kThreadError_Busy",
-    0x4006: "kThreadError_Parse",
-    0x4007: "kThreadError_InvalidArgs",
-    0x4008: "kThreadError_Security",
-    0x4009: "kThreadError_AddressQuery",
-    0x400A: "kThreadError_NoAddress",
-    0x400B: "kThreadError_NotReceiving",
-    0x400C: "kThreadError_Abort",
-    0x400D: "kThreadError_NotImplemented",
-    0x400E: "kThreadError_InvalidState",
-    0x400F: "kThreadError_NoTasklets",
-
-}
-
-#=========================================
-
-def hexify_chr(s): return "%02X" % ord(s)
-def hexify_int(i): return "%02X" % i
-def hexify_bytes(data): return str(map(hexify_chr,data))
-def hexify_str(s,delim=':'):
-    return delim.join(x.encode('hex') for x in s)
-
-def pack_bytes(packet): return pack("%dB" % len(packet), *packet)
-
-def asciify_int(i): return "%c" % (i)
-
-def hex_to_bytes(s):
-    result = ''
-    for i in xrange(0, len(s), 2):
-        (b1, b2) = s[i:i+2]
-        hex = b1+b2
-        v = int(hex, 16)
-        result += chr(v)
-    return result
-
-def print_stack():
-    for line in traceback.format_stack():
-        print line.strip()
-
-#=========================================
-
-class IStream():
-    def read(self, size): pass
-    def write(self, data): pass
-    def close(self): pass
-
-class StreamSerial(IStream):
-    def __init__(self, dev, baudrate=115200):
-        comm = serial.Serial(dev, baudrate, timeout=1)
-        logger.debug("TX Raw: (%d) %s" % (len(data), hexify_bytes(data)))
-
-    def read(self, size=1):
-        b = self.sock.recv(size)
-        if DEBUG_LOG_RX:
-            logger.debug("RX Raw: "+hexify_bytes(b))
-        return b
-
-class StreamSocket(IStream):
-    def __init__(self, sock):
-        self.sock = sock
-
-    def write(self, data):
-        self.sock.send(data)
-        if DEBUG_LOG_TX:
-            logger.debug("TX Raw: "+str(map(hexify_chr,data)))
-
-    def read(self, size=1):
-        b = self.sock.recv(size)
-        if DEBUG_LOG_RX_BYTES:
-            logger.debug("RX Raw: "+str(map(hexify_chr,b)))
-        return b
-
-class StreamPipe(IStream):
-    def __init__(self, filename):
-        """ Create a stream object from a piped system call """
-        self.pipe = subprocess.Popen(filename, shell = True,
-                                     stdin = subprocess.PIPE,
-                                     stdout = subprocess.PIPE,
-                                     stderr = sys.stdout.fileno())
-
-    def write(self, data):
-        if DEBUG_LOG_TX:
-            logger.debug("TX Raw: (%d) %s" % (len(data), hexify_bytes(data)))
-        self.pipe.stdin.write(data)
-
-    def read(self, size=1):
-        """ Blocking read on stream object """
-        for b in iter(lambda: self.pipe.stdout.read(size), ''):
-            if DEBUG_LOG_RX:
-                logger.debug("RX Raw: "+hexify_bytes(b))
-            return ord(b)
-
-    def close(self):
-        if self.pipe:
-            self.pipe.kill()
-            self.pipe = None
-
-def StreamOpen(type, descriptor):
-    """
-    Factory function that creates and opens a stream connection.
-
-    type:
-        'u' = uart (/dev/tty#)
-        's' = socket (port #)
-        'p' = pipe (stdin/stdout)
-
-    descriptor:
-        uart - filename of device (/dev/tty#)
-        socket - port to open connection to on localhost
-        pipe - filename of command to execute and bind via stdin/stdout
-    """
-
-    if (type == 'p'):
-        print "Opening pipe to "+str(descriptor)
-        return StreamPipe(descriptor)
-
-    elif (type == 's'):
-        port = int(descriptor)
-        hostname = "localhost"
-        print "Opening socket to "+hostname+":"+str(port)
-        return StreamSocket(hostname, port)
-
-    elif (type == 'u'):
-        dev = str(descriptor)
-        baudrate = 115200
-        print "Opening serial to "+dev+" @ "+str(baudrate)
-        return StreamSerial(dev, baudrate)
-
-    else:
-        return None
-
-#=========================================
-
-HDLC_FLAG     = 0x7e
-HDLC_ESCAPE   = 0x7d
-
-# RFC 1662 Appendix C
-
-HDLC_FCS_INIT = 0xFFFF
-HDLC_FCS_POLY = 0x8408
-HDLC_FCS_GOOD = 0xF0B8
-
-
-class Hdlc(IStream):
-    def __init__(self, stream):
-        self.stream = stream
-        self.fcstab = self.mkfcstab()
-
-    def mkfcstab(self):
-        P = HDLC_FCS_POLY
-
-        def valiter():
-            for b in range(256):
-                v = b
-                i = 8
-                while i:
-                    v = (v >> 1) ^ P if v & 1 else v >> 1
-                    i -= 1
-
-                yield v & 0xFFFF
-
-        return tuple(valiter())
-
-    def fcs16(self, byte, fcs):
-        fcs = (fcs >> 8) ^ self.fcstab[(fcs ^ byte) & 0xff]
-        return fcs
-
-    def collect(self):
-        fcs = HDLC_FCS_INIT
-        packet = []
-        if DEBUG_LOG_HDLC: raw = []
-
-        # Synchronize
-        while 1:
-            b = self.stream.read()
-            if DEBUG_LOG_HDLC: raw.append(b)
-            if (b == HDLC_FLAG): break
-
-        # Read packet, updating fcs, and escaping bytes as needed
-        while 1:
-            b = self.stream.read()
-            if DEBUG_LOG_HDLC: raw.append(b)
-            if (b == HDLC_FLAG): break
-            if (b == HDLC_ESCAPE):
-                b = self.stream.read()
-                if DEBUG_LOG_HDLC: raw.append(b)
-                b ^= 0x20
-            packet.append(b)
-            fcs = self.fcs16(b, fcs)
-
-        if DEBUG_LOG_HDLC:
-            logger.debug("RX Hdlc: "+str(map(hexify_int,raw)))
-
-        if (fcs != HDLC_FCS_GOOD):
-            packet = None
-
-        return packet
-
-    def encode_b(self, b, packet = []):
-        if (b == HDLC_ESCAPE) or (b == HDLC_FLAG):
-            packet.append(HDLC_ESCAPE)
-            packet.append(b ^ 0x20)
-        else:
-            packet.append(b)
-        return packet
-
-    def encode(self, payload = ""):
-        fcs = HDLC_FCS_INIT
-        packet = []
-        packet.append(HDLC_FLAG)
-        for b in payload:
-            b = ord(b)
-            fcs = self.fcs16(b, fcs)
-            packet = self.encode_b(b, packet)
-
-        fcs ^= 0xffff;
-        b = fcs & 0xFF
-        packet = self.encode_b(b, packet)
-        b = fcs >> 8
-        packet = self.encode_b(b, packet)
-        packet.append(HDLC_FLAG)
-        packet = pack("%dB" % len(packet), *packet)
-
-        if DEBUG_LOG_HDLC:
-            logger.debug("TX Hdlc: "+hexify_bytes(packet))
-        return packet
-
-#=========================================
-
-#  0: DATATYPE_NULL
-#'.': DATATYPE_VOID: Empty data type. Used internally.
-#'b': DATATYPE_BOOL: Boolean value. Encoded in 8-bits as either 0x00 or 0x01. All other values are illegal.
-#'C': DATATYPE_UINT8: Unsigned 8-bit integer.
-#'c': DATATYPE_INT8: Signed 8-bit integer.
-#'S': DATATYPE_UINT16: Unsigned 16-bit integer. (Little-endian)
-#'s': DATATYPE_INT16: Signed 16-bit integer. (Little-endian)
-#'L': DATATYPE_UINT32: Unsigned 32-bit integer. (Little-endian)
-#'l': DATATYPE_INT32: Signed 32-bit integer. (Little-endian)
-#'i': DATATYPE_UINT_PACKED: Packed Unsigned Integer. (See section 7.2)
-#'6': DATATYPE_IPv6ADDR: IPv6 Address. (Big-endian)
-#'E': DATATYPE_EUI64: EUI-64 Address. (Big-endian)
-#'e': DATATYPE_EUI48: EUI-48 Address. (Big-endian)
-#'D': DATATYPE_DATA: Arbitrary Data. (See section 7.3)
-#'U': DATATYPE_UTF8: Zero-terminated UTF8-encoded string.
-#'T': DATATYPE_STRUCT: Structured datatype. Compound type. (See section 7.4)
-#'A': DATATYPE_ARRAY: Array of datatypes. Compound type. (See section 7.5)
-
-class SpinelCodec():
-    def parse_b(self, payload): return unpack("<B", payload[:1])[0]
-    def parse_c(self, payload): return unpack("<b", payload[:1])[0]
-    def parse_C(self, payload): return unpack("<B", payload[:1])[0]
-    def parse_s(self, payload): return unpack("<h", payload[:2])[0]
-    def parse_S(self, payload): return unpack("<H", payload[:2])[0]
-    def parse_l(self, payload): return unpack("<l", payload[:4])[0]
-    def parse_L(self, payload): return unpack("<L", payload[:4])[0]
-
-    def parse_6(self, payload): return payload[:16]
-    def parse_E(self, payload): return payload[:8]
-    def parse_e(self, payload): return payload[:6]
-    def parse_U(self, payload): return payload[:-2]   # remove FCS16 from end
-    def parse_D(self, payload): return payload[:-2]   # remove FCS16 from end
-
-    def parse_i(self, payload):
-        """ Decode EXI integer format. """
-        op = 0
-        op_len = 0
-        op_mul = 1
-
-        while op_len < 4:
-            b = ord(payload[op_len])
-            op += (b & 0x7F) * op_mul
-            if (b < 0x80): break
-            op_mul *= 0x80
-            op_len += 1
-
-        return (op, op_len+1)
-
-    def parse_field(self, payload, format):
-        dispath_map = {
-            'b': self.parse_b,
-            'c': self.parse_c,
-            'C': self.parse_C,
-            's': self.parse_s,
-            'S': self.parse_S,
-            'L': self.parse_L,
-            'l': self.parse_l,
-            '6': self.parse_6,
-            'E': self.parse_E,
-            'e': self.parse_e,
-            'U': self.parse_U,
-            'D': self.parse_D,
-            'i': self.parse_i,
-        }
-        try:
-            return dispatch_map[format[0]](payload)
-        except:
-            print_stack()
-            return None
-
-    def encode_i(self, data):
-        """ Encode EXI integer format. """
-        result = ""
-        while (data):
-            v = data & 0x7F
-            data >>= 7
-            if data: v |= 0x80
-            result = result + pack("<B", v)
-        return result
-
-    def encode(self, cmd_id, payload = None, tid=SPINEL_HEADER_DEFAULT):
-        """ Encode the given payload as a Spinel frame. """
-        header = pack(">B", tid)
-        cmd = self.encode_i(cmd_id)
-        pkt = header + cmd + payload
-        return pkt
-
-
-#=========================================
-
-class SpinelPropertyHandler(SpinelCodec):
-
-    def LAST_STATUS(self, payload):           return self.parse_i(payload)[0]
-    def PROTOCOL_VERSION(self, payload):      pass
-    def NCP_VERSION(self, payload):           return self.parse_U(payload)
-    def INTERFACE_TYPE(self, payload):        return self.parse_i(payload)[0]
-    def VENDOR_ID(self, payload):             return self.parse_i(payload)[0]
-    def CAPS(self, payload):                  pass
-    def INTERFACE_COUNT(self, payload):       return self.parse_C(payload)
-    def POWER_STATE(self, payload):           return self.parse_C(payload)
-    def HWADDR(self, payload):                return self.parse_E(payload)
-    def LOCK(self, payload):                  return self.parse_b(payload)
-
-    def HBO_MEM_MAX(self, payload):           return self.parse_L(payload)
-    def HBO_BLOCK_MAX(self, payload):         return self.parse_S(payload)
-
-    def PHY_ENABLED(self, payload):           return self.parse_b(payload)
-    def PHY_CHAN(self, payload):              return self.parse_C(payload)
-    def PHY_CHAN_SUPPORTED(self, payload):    pass
-    def PHY_FREQ(self, payload):              return self.parse_L(payload)
-    def PHY_CCA_THRESHOLD(self, payload):     return self.parse_c(payload)
-    def PHY_TX_POWER(self, payload):          return self.parse_c(payload)
-    def PHY_RSSI(self, payload):              return self.parse_c(payload)
-
-    def MAC_SCAN_STATE(self, payload):        return self.parse_C(payload)
-    def MAC_SCAN_MASK(self, payload):         return self.parse_U(payload)
-    def MAC_SCAN_PERIOD(self, payload):       return self.parse_S(payload)
-    def MAC_SCAN_BEACON(self, payload):       return self.parse_U(payload)
-    def MAC_15_4_LADDR(self, payload):        return self.parse_E(payload)
-    def MAC_15_4_SADDR(self, payload):        return self.parse_S(payload)
-    def MAC_15_4_PANID(self, payload):        return self.parse_S(payload)
-    def MAC_RAW_STREAM_ENABLED(self, payload):return self.parse_b(payload)
-    def MAC_FILTER_MODE(self, payload):       return self.parse_C(payload)
-
-    def MAC_WHITELIST(self, payload):         pass
-    def MAC_WHITELIST_ENABLED(self, payload): return self.parse_b(payload)
-
-    def NET_SAVED(self, payload):             return self.parse_b(payload)
-    def NET_IF_UP(self, payload):             return self.parse_b(payload)
-    def NET_STACK_UP(self, payload):          return self.parse_C(payload)
-    def NET_ROLE(self, payload):              return self.parse_C(payload)
-    def NET_NETWORK_NAME(self, payload):      return self.parse_U(payload)
-    def NET_XPANID(self, payload):            return self.parse_D(payload)
-    def NET_MASTER_KEY(self, payload):        return self.parse_D(payload)
-    def NET_KEY_SEQUENCE(self, payload):      return self.parse_L(payload)
-    def NET_PARTITION_ID(self, payload):      return self.parse_L(payload)
-
-    def THREAD_LEADER_ADDR(self, payload):    return self.parse_6(payload)
-    def THREAD_PARENT(self, payload):         pass
-    def THREAD_CHILD_TABLE(self, payload):    return self.parse_D(payload)
-
-    def THREAD_LEADER_RID(self, payload):     return self.parse_C(payload)
-    def THREAD_LEADER_WEIGHT(self, payload):  return self.parse_C(payload)
-    def THREAD_LOCAL_LEADER_WEIGHT(self, payload):
-        return self.parse_C(payload)
-
-    def THREAD_NETWORK_DATA(self, payload):
-        return self.parse_D(payload)
-
-    def THREAD_NETWORK_DATA_VERSION(self, payload):  pass
-    def THREAD_STABLE_NETWORK_DATA(self, payload):   pass
-    def THREAD_STABLE_NETWORK_DATA_VERSION(self, payload): pass
-
-    def __init__(self):
-        self.autoAddresses = set()
-
-        self.__queue_prefix = Queue.Queue()
-        self.prefix_thread = threading.Thread(target=self.__run_prefix_handler)
-        self.prefix_thread.setDaemon(True)
-        self.prefix_thread.start()
-
-    def handle_ipaddr_remove(self, ipaddr):
-        valid = 1
-        preferred = 1
-        flags = 0
-        prefix_len = 64  # always use /64
-
-        arr = ipaddr.ip.packed
-        arr += pack('B', prefix_len)
-        arr += pack('<L', valid)
-        arr += pack('<L', preferred)
-        arr += pack('B', flags)
-        gWpanApi.prop_remove_async(SPINEL_PROP_IPV6_ADDRESS_TABLE,
-                                   arr, str(len(arr))+'s',
-                                   SPINEL_HEADER_EVENT_HANDLER)
-
-    def handle_ipaddr_insert(self, prefix, prefixlen, stable, flags, isLocal):
-        """ Add an ip address for each prefix on prefix change. """
-
-        global gWpanApi
-
-        ipaddrStr = str(ipaddress.IPv6Address(prefix)) + str(gWpanApi.nodeid)
-        if DEBUG_LOG_PROP:
-            print "\n>>>> new PREFIX add ipaddr: "+ipaddr
-
-        valid = 1
-        preferred = 1
-        flags = 0
-        ipaddr = ipaddress.IPv6Interface(unicode(ipaddrStr))
-        self.autoAddresses.add(ipaddr)
-
-        arr = ipaddr.ip.packed
-        arr += pack('B', prefixlen)
-        arr += pack('<L', valid)
-        arr += pack('<L', preferred)
-        arr += pack('B', flags)
-
-        gWpanApi.prop_insert_async(SPINEL_PROP_IPV6_ADDRESS_TABLE,
-                                   arr, str(len(arr))+'s',
-                                   SPINEL_HEADER_EVENT_HANDLER)
-
-
-    def handle_prefix_change(self, payload):
-        """ Automatically ipaddr add / remove addresses for each new prefix. """
-        # As done by cli.cpp Interpreter::HandleNetifStateChanged
-
-        # First parse payload and extract slaac prefix information.
-        pay = payload
-        Prefix = namedtuple("Prefix", "prefix prefixlen stable flags isLocal")
-        prefixes = []
-        slaacPrefixSet = set()
-        while (len(pay) >= 22):
-            (structlen) = unpack('<H', pay[:2])
-            pay = pay[2:]
-            prefix = Prefix(*unpack('16sBBBB', pay[:20]))
-            if (prefix.flags & kThreadPrefixSlaacFlag):
-                net6 = ipaddress.IPv6Network(prefix.prefix)
-                net6 = net6.supernet(new_prefix=prefix.prefixlen)
-                slaacPrefixSet.add(net6)
-                prefixes.append(prefix)
-            pay = pay[20:]
-
-        for prefix in prefixes:
-            self.handle_ipaddr_insert(*prefix)
-
-        if DEBUG_LOG_PROP:
-            print "\n========= PREFIX ============"
-            print "ipaddrs: "+str(self.autoAddresses)
-            print "slaac prefix set: "+str(slaacPrefixSet)
-            print "==============================\n"
-
-        # ==> ipaddrs - query current addresses
-        #
-        # for ipaddr in ipaddrs:
-        #     if lifetime > 0 and not in slaac prefixes
-        #             ==> remove
-        for ipaddr in self.autoAddresses:
-            if not any(ipaddr in prefix for prefix in slaacPrefixSet):
-                self.handle_ipaddr_remove(ipaddr)
-
-        # for slaac prefix in prefixes:
-        #     if no ipaddr with lifetime > 0 in prefix:
-        #          ==> add
-
-
-    def __run_prefix_handler(self):
-        while 1:
-            payload = self.__queue_prefix.get(True)
-            self.handle_prefix_change(payload)
-            self.__queue_prefix.task_done()
-
-    def THREAD_ON_MESH_NETS(self, payload):
-        if FEATURE_USE_SLACC:
-            # Kick prefix handler thread to allow serial rx thread to work.
-            self.__queue_prefix.put_nowait(payload)
-
-        return self.parse_D(payload)
-
-
-    def THREAD_LOCAL_ROUTES(self, payload):          pass
-    def THREAD_ASSISTING_PORTS(self, payload):       pass
-    def THREAD_ALLOW_LOCAL_NET_DATA_CHANGE(self, payload):
-        return self.parse_b(payload)
-
-    def THREAD_MODE(self, payload):            return self.parse_C(payload)
-
-    def THREAD_CHILD_TIMEOUT(self, payload):   return self.parse_L(payload)
-    def THREAD_RLOC16(self, payload):          return self.parse_S(payload)
-
-    def THREAD_ROUTER_UPGRADE_THRESHOLD(self, payload):
-        return self.parse_C(payload)
-
-    def THREAD_ROUTER_DOWNGRADE_THRESHOLD(self, payload):
-        return self.parse_C(payload)
-
-    def THREAD_ROUTER_SELECTION_JITTER(self, payload):
-        return self.parse_C(payload)
-
-    def THREAD_CONTEXT_REUSE_DELAY(self, payload):
-        return self.parse_L(payload)
-
-    def THREAD_NETWORK_ID_TIMEOUT(self, payload): return self.parse_C(payload)
-    def THREAD_ACTIVE_ROUTER_IDS(self, payload): return self.parse_D(payload)
-    def THREAD_RLOC16_DEBUG_PASSTHRU(self, payload):
-        return self.parse_b(payload)
-
-    def IPV6_LL_ADDR(self, payload):          return self.parse_6(payload)
-    def IPV6_ML_ADDR(self, payload):          return self.parse_6(payload)
-    def IPV6_ML_PREFIX(self, payload):        return self.parse_E(payload)
-
-    def IPV6_ADDRESS_TABLE(self, payload):    return self.parse_D(payload)
-    def IPV6_ROUTE_TABLE(self, payload):      return self.parse_D(payload)
-    def IPv6_ICMP_PING_OFFLOAD(self, payload): return self.parse_b(payload)
-
-    def STREAM_DEBUG(self, payload):          return self.parse_U(payload)
-    def STREAM_RAW(self, payload):            return self.parse_D(payload)
-    def STREAM_NET(self, payload):            return self.parse_D(payload)
-    def STREAM_NET_INSECURE(self, payload):   return self.parse_D(payload)
-
-
-#=========================================
-
-class SpinelCommandHandler(SpinelCodec):
-
-    def handle_prop(self, name, payload, tid):
-        (prop_op, prop_len) = self.parse_i(payload)
-
-        try:
-            handler = SPINEL_PROP_DISPATCH[prop_op]
-            prop_name = handler.__name__
-            prop_value = handler(payload[prop_len:])
-
-            if DEBUG_LOG_PROP:
-
-                # Generic output
-                if isinstance(prop_value, basestring):
-                    prop_str = hexify_str(prop_value)
-                    logger.debug("PROP_VALUE_%s [tid=%d]: %s = %s" %
-                                 (name, (tid & 0xF), prop_name, prop_str))
-                else:
-                    prop_str = str(prop_value)
-
-                    logger.debug("PROP_VALUE_%s [tid=%d]: %s = %s" %
-                                 (name, (tid & 0xF), prop_name, prop_str))
-
-                # Extend output for certain properties.
-                if (prop_op == SPINEL_PROP_LAST_STATUS):
-                    logger.debug(SPINEL_LAST_STATUS_MAP[prop_value])
-
-            if DEBUG_LOG_PKT:
-                if ((prop_op == SPINEL_PROP_STREAM_NET) or
-                      (prop_op == SPINEL_PROP_STREAM_NET_INSECURE)):
-                    logger.debug("PROP_VALUE_"+name+": "+prop_name)
-                    pkt = IPv6(prop_value[2:])
-                    pkt.show()
-
-                elif (prop_op == SPINEL_PROP_STREAM_DEBUG):
-                    logger.debug("DEBUG: "+prop_value)
-
-            global gWpanApi
-            if gWpanApi:
-                gWpanApi.queue_add(prop_op, prop_value, tid)
-            else:
-                print "no wpanApi"
-
-        except:
-            prop_name = "Property Unknown"
-            logger.info ("\n%s (%i): " % (prop_name, prop_op))
-            print traceback.format_exc()
-
-
-    def PROP_VALUE_IS(self, payload, tid):
-        self.handle_prop("IS", payload, tid)
-
-    def PROP_VALUE_INSERTED(self, payload, tid):
-        self.handle_prop("INSERTED", payload, tid)
-
-    def PROP_VALUE_REMOVED(self, payload, tid):
-        self.handle_prop("REMOVED", payload, tid)
-
-
-wpanHandler = SpinelCommandHandler()
-
-SPINEL_COMMAND_DISPATCH = {
-    SPINEL_RSP_PROP_VALUE_IS: wpanHandler.PROP_VALUE_IS,
-    SPINEL_RSP_PROP_VALUE_INSERTED: wpanHandler.PROP_VALUE_INSERTED,
-    SPINEL_RSP_PROP_VALUE_REMOVED: wpanHandler.PROP_VALUE_REMOVED,
-}
-
-wpanPropHandler = SpinelPropertyHandler()
-
-SPINEL_PROP_DISPATCH = {
-    SPINEL_PROP_LAST_STATUS:           wpanPropHandler.LAST_STATUS,
-    SPINEL_PROP_PROTOCOL_VERSION:      wpanPropHandler.PROTOCOL_VERSION,
-    SPINEL_PROP_NCP_VERSION:           wpanPropHandler.NCP_VERSION,
-    SPINEL_PROP_INTERFACE_TYPE:        wpanPropHandler.INTERFACE_TYPE,
-    SPINEL_PROP_VENDOR_ID:             wpanPropHandler.VENDOR_ID,
-    SPINEL_PROP_CAPS:                  wpanPropHandler.CAPS,
-    SPINEL_PROP_INTERFACE_COUNT:       wpanPropHandler.INTERFACE_COUNT,
-    SPINEL_PROP_POWER_STATE:           wpanPropHandler.POWER_STATE,
-    SPINEL_PROP_HWADDR:                wpanPropHandler.HWADDR,
-    SPINEL_PROP_LOCK:                  wpanPropHandler.LOCK,
-    SPINEL_PROP_HBO_MEM_MAX:           wpanPropHandler.HBO_MEM_MAX,
-    SPINEL_PROP_HBO_BLOCK_MAX:         wpanPropHandler.HBO_BLOCK_MAX,
-
-    SPINEL_PROP_PHY_ENABLED:           wpanPropHandler.PHY_ENABLED,
-    SPINEL_PROP_PHY_CHAN:              wpanPropHandler.PHY_CHAN,
-    SPINEL_PROP_PHY_CHAN_SUPPORTED:    wpanPropHandler.PHY_CHAN_SUPPORTED,
-    SPINEL_PROP_PHY_FREQ:              wpanPropHandler.PHY_FREQ,
-    SPINEL_PROP_PHY_CCA_THRESHOLD:     wpanPropHandler.PHY_CCA_THRESHOLD,
-    SPINEL_PROP_PHY_TX_POWER:          wpanPropHandler.PHY_TX_POWER,
-    SPINEL_PROP_PHY_RSSI:              wpanPropHandler.PHY_RSSI,
-
-    SPINEL_PROP_MAC_SCAN_STATE:        wpanPropHandler.MAC_SCAN_STATE,
-    SPINEL_PROP_MAC_SCAN_MASK:         wpanPropHandler.MAC_SCAN_MASK,
-    SPINEL_PROP_MAC_SCAN_PERIOD:       wpanPropHandler.MAC_SCAN_PERIOD,
-    SPINEL_PROP_MAC_SCAN_BEACON:       wpanPropHandler.MAC_SCAN_BEACON,
-    SPINEL_PROP_MAC_15_4_LADDR:        wpanPropHandler.MAC_15_4_LADDR,
-    SPINEL_PROP_MAC_15_4_SADDR:        wpanPropHandler.MAC_15_4_SADDR,
-    SPINEL_PROP_MAC_15_4_PANID:        wpanPropHandler.MAC_15_4_PANID,
-    SPINEL_PROP_MAC_RAW_STREAM_ENABLED:wpanPropHandler.MAC_RAW_STREAM_ENABLED,
-    SPINEL_PROP_MAC_FILTER_MODE:       wpanPropHandler.MAC_FILTER_MODE,
-
-    SPINEL_PROP_MAC_WHITELIST:         wpanPropHandler.MAC_WHITELIST,
-    SPINEL_PROP_MAC_WHITELIST_ENABLED: wpanPropHandler.MAC_WHITELIST_ENABLED,
-
-    SPINEL_PROP_NET_SAVED:             wpanPropHandler.NET_SAVED,
-    SPINEL_PROP_NET_IF_UP:             wpanPropHandler.NET_IF_UP,
-    SPINEL_PROP_NET_STACK_UP:          wpanPropHandler.NET_STACK_UP,
-    SPINEL_PROP_NET_ROLE:              wpanPropHandler.NET_ROLE,
-    SPINEL_PROP_NET_NETWORK_NAME:      wpanPropHandler.NET_NETWORK_NAME,
-    SPINEL_PROP_NET_XPANID:            wpanPropHandler.NET_XPANID,
-    SPINEL_PROP_NET_MASTER_KEY:        wpanPropHandler.NET_MASTER_KEY,
-    SPINEL_PROP_NET_KEY_SEQUENCE:      wpanPropHandler.NET_KEY_SEQUENCE,
-    SPINEL_PROP_NET_PARTITION_ID:      wpanPropHandler.NET_PARTITION_ID,
-
-    SPINEL_PROP_THREAD_LEADER_ADDR: wpanPropHandler.THREAD_LEADER_ADDR,
-    SPINEL_PROP_THREAD_PARENT: wpanPropHandler.THREAD_PARENT,
-    SPINEL_PROP_THREAD_CHILD_TABLE:  wpanPropHandler.THREAD_CHILD_TABLE,
-    SPINEL_PROP_THREAD_LEADER_RID: wpanPropHandler.THREAD_LEADER_RID,
-    SPINEL_PROP_THREAD_LEADER_WEIGHT: wpanPropHandler.THREAD_LEADER_WEIGHT,
-    SPINEL_PROP_THREAD_LOCAL_LEADER_WEIGHT: wpanPropHandler.THREAD_LOCAL_LEADER_WEIGHT,
-    SPINEL_PROP_THREAD_NETWORK_DATA: wpanPropHandler.THREAD_NETWORK_DATA,
-    SPINEL_PROP_THREAD_NETWORK_DATA_VERSION: wpanPropHandler.THREAD_NETWORK_DATA_VERSION,
-    SPINEL_PROP_THREAD_STABLE_NETWORK_DATA: wpanPropHandler.THREAD_STABLE_NETWORK_DATA,
-    SPINEL_PROP_THREAD_STABLE_NETWORK_DATA_VERSION:wpanPropHandler.THREAD_STABLE_NETWORK_DATA_VERSION,
-    SPINEL_PROP_THREAD_ON_MESH_NETS: wpanPropHandler.THREAD_ON_MESH_NETS,
-    SPINEL_PROP_THREAD_LOCAL_ROUTES: wpanPropHandler.THREAD_LOCAL_ROUTES,
-    SPINEL_PROP_THREAD_ASSISTING_PORTS: wpanPropHandler.THREAD_ASSISTING_PORTS,
-    SPINEL_PROP_THREAD_ALLOW_LOCAL_NET_DATA_CHANGE: wpanPropHandler.THREAD_ALLOW_LOCAL_NET_DATA_CHANGE,
-    SPINEL_PROP_THREAD_MODE: wpanPropHandler.THREAD_MODE,
-    SPINEL_PROP_THREAD_CHILD_TIMEOUT: wpanPropHandler.THREAD_CHILD_TIMEOUT,
-    SPINEL_PROP_THREAD_RLOC16: wpanPropHandler.THREAD_RLOC16,
-    SPINEL_PROP_THREAD_ROUTER_UPGRADE_THRESHOLD: wpanPropHandler.THREAD_ROUTER_UPGRADE_THRESHOLD,
-    SPINEL_PROP_THREAD_ROUTER_DOWNGRADE_THRESHOLD: wpanPropHandler.THREAD_ROUTER_DOWNGRADE_THRESHOLD,
-    SPINEL_PROP_THREAD_ROUTER_SELECTION_JITTER: wpanPropHandler.THREAD_ROUTER_SELECTION_JITTER,
-    SPINEL_PROP_THREAD_CONTEXT_REUSE_DELAY: wpanPropHandler.THREAD_CONTEXT_REUSE_DELAY,
-    SPINEL_PROP_THREAD_NETWORK_ID_TIMEOUT: wpanPropHandler.THREAD_NETWORK_ID_TIMEOUT,
-    SPINEL_PROP_THREAD_ACTIVE_ROUTER_IDS: wpanPropHandler.THREAD_ACTIVE_ROUTER_IDS,
-    SPINEL_PROP_THREAD_RLOC16_DEBUG_PASSTHRU: wpanPropHandler.THREAD_RLOC16_DEBUG_PASSTHRU,
-
-    SPINEL_PROP_IPV6_LL_ADDR:          wpanPropHandler.IPV6_LL_ADDR,
-    SPINEL_PROP_IPV6_ML_ADDR:          wpanPropHandler.IPV6_ML_ADDR,
-    SPINEL_PROP_IPV6_ML_PREFIX:        wpanPropHandler.IPV6_ML_PREFIX,
-    SPINEL_PROP_IPV6_ADDRESS_TABLE:    wpanPropHandler.IPV6_ADDRESS_TABLE,
-    SPINEL_PROP_IPV6_ROUTE_TABLE:      wpanPropHandler.IPV6_ROUTE_TABLE,
-    SPINEL_PROP_IPv6_ICMP_PING_OFFLOAD: wpanPropHandler.IPv6_ICMP_PING_OFFLOAD,
-
-    SPINEL_PROP_STREAM_DEBUG:          wpanPropHandler.STREAM_DEBUG,
-    SPINEL_PROP_STREAM_RAW:            wpanPropHandler.STREAM_RAW,
-    SPINEL_PROP_STREAM_NET:            wpanPropHandler.STREAM_NET,
-    SPINEL_PROP_STREAM_NET_INSECURE:   wpanPropHandler.STREAM_NET_INSECURE,
-}
-
-
-class TunInterface():
-    def __init__(self, id):
-        self.id = id
-        self.ifname = "tun"+str(self.id)
-
-        platform = sys.platform
-        if platform == "linux" or platform == "linux2":
-            self.__init_linux()
-        elif platform == "darwin":
-            self.__init_osx()
-
-        self.ifconfig("up")
-        #self.ifconfig("inet6 add fd00::1/64")
-        self.__start_tun_thread()
-
-    def __init_osx(self):
-        logger.info("TUN: Starting osx "+self.ifname)
-        filename = "/dev/"+self.ifname
-        self.tun = os.open(filename, os.O_RDWR)
-        self.fd = self.tun
-        # trick osx to auto-assign a link local address
-        self.addr_add("fe80::1")
-        self.addr_del("fe80::1")
-
-    def __init_linux(self):
-        logger.info("TUN: Starting linux "+self.ifname)
-        self.tun = open("/dev/net/tun", "r+b")
-        self.fd = self.tun.fileno()
-
-        IFF_TUNSETIFF = 0x400454ca
-        IFF_TUNSETOWNER = IFF_TUNSETIFF + 2
-        IFF_TUN = 0x0001
-        IFF_TAP = 0x0002
-        IFF_NO_PI = 0x1000
-
-        ifr = pack("16sH", self.ifname, IFF_TUN | IFF_NO_PI)
-        fcntl.ioctl(self.tun, IFF_TUNSETIFF, ifr)      # Name interface tun#
-        fcntl.ioctl(self.tun, IFF_TUNSETOWNER, 1000)   # Allow non-sudo access
-
-    def close(self):
-        if self.tun:
-            os.close(self.fd)
-            self.fd = None
-            self.tun = None
-
-    def command(self, cmd):
-        subprocess.check_call(cmd, shell=True)
-
-    def ifconfig(self, args):
-        """ Bring interface up and/or assign addresses. """
-        self.command('ifconfig '+self.ifname+' '+args)
-
-    def ping6(self, args):
-        """ Ping an address. """
-        cmd = 'ping6 '+args
-        print cmd
-        self.command(cmd)
-
-    def addr_add(self, addr):
-        self.ifconfig('inet6 add '+addr)
-
-    def addr_del(self, addr):
-        platform = sys.platform
-        if platform == "linux" or platform == "linux2":
-            self.ifconfig('inet6 del '+addr)
-        elif platform == "darwin":
-            self.ifconfig('inet6 delete '+addr)
-
-    def write(self, packet):
-        global gWpanApi
-        gWpanApi.ip_send(packet)
-        #os.write(self.fd, packet)    # Loop back
-        if DEBUG_LOG_TUN:
-            logger.debug("\nTUN: TX ("+str(len(packet))+") "+hexify_str(packet))
-
-    def __run_tun_thread(self):
-        while self.fd:
-            try:
-                r = select([self.fd],[],[])[0][0]
-                if r == self.fd:
-                    packet = os.read(self.fd, 4000)
-                    if DEBUG_LOG_TUN:
-                        logger.debug("\nTUN: RX ("+str(len(packet))+") "+
-                                  hexify_str(packet))
-                    self.write(packet)
-            except:
-                print traceback.format_exc()
-                break
-
-        logger.info("TUN: exiting")
-        if self.fd:
-            os.close(self.fd)
-            self.fd = None
-
-    def __start_tun_thread(self):
-        """Start reader thread"""
-        self._reader_alive = True
-        # start serial->console thread
-        self.receiver_thread = threading.Thread(target=self.__run_tun_thread)
-        self.receiver_thread.setDaemon(True)
-        self.receiver_thread.start()
-
-
-class WpanApi(SpinelCodec):
-    """ Helper class to format wpan command packets """
-
-    def __init__(self, stream, nodeid, useHdlc=FEATURE_USE_HDLC):
-
-        self.tun_if = None
-        self.serial = stream
-        self.nodeid = nodeid
-
-        self.useHdlc = useHdlc
-        if self.useHdlc:
-            self.hdlc = Hdlc(self.serial)
-
-        # PARSER state
-        self.rx_pkt = []
-
-        # Fire up threads
-        self.tid_filter = set()
-        self.__queue_prop = defaultdict(Queue.Queue)
-        self.queue_register()
-        self.__start_reader()
-
-    def __del__(self):
-        self._reader_alive = False
-
-    def __start_reader(self):
-        """Start reader thread"""
-        self._reader_alive = True
-        # start serial->console thread
-        self.receiver_thread = threading.Thread(target=self.serial_rx)
-        self.receiver_thread.setDaemon(True)
-        self.receiver_thread.start()
-
-    def transact(self, cmd_id, payload = "", tid=SPINEL_HEADER_DEFAULT):
-        pkt = self.encode(cmd_id, payload, tid)
-        if DEBUG_LOG_SERIAL:
-            msg = "TX Pay: (%i) %s " % (len(pkt), hexify_bytes(pkt))
-            logger.debug(msg)
-
-        if self.useHdlc: pkt = self.hdlc.encode(pkt)
-        self.serial_tx(pkt)
-
-    def parse_rx(self, pkt):
-        if DEBUG_LOG_SERIAL:
-            msg = "RX Pay: (%i) %s " % (len(pkt), str(map(hexify_int,pkt)))
-            logger.debug(msg)
-
-        if not pkt: return
-
-        length = len(pkt) - 2
-        if (length < 0): return
-
-        spkt = "".join(map(chr, pkt))
-
-        tid = self.parse_C(spkt[:1])
-        (cmd_op, cmd_len) = self.parse_i(spkt[1:])
-        pay_start = cmd_len + 1
-        payload = spkt[pay_start:]
-
-        try:
-            handler = SPINEL_COMMAND_DISPATCH[cmd_op]
-            cmd_name = handler.__name__
-            handler(payload, tid)
-
-        except:
-            print traceback.format_exc()
-            cmd_name = "CB_Unknown"
-            logger.info ("\n%s (%i): " % (cmd_name, cmd_op))
-
-        if DEBUG_CMD_RESPONSE:
-            logger.info ("\n%s (%i): " % (cmd_name, cmd_op))
-            logger.info ("===> %s" % hexify_str(payload))
-
-
-    def serial_tx(self, pkt):
-        # Encapsulate lagging and Framer support in self.serial class.
-        self.serial.write(pkt)
-
-
-    def serial_rx(self):
-        """ Recieve thread and parser. """
-        while self._reader_alive:
-            if self.useHdlc:
-                self.rx_pkt = self.hdlc.collect()
-
-            self.parse_rx(self.rx_pkt)
-
-
-    class PropertyItem(object):
-        """ Queue item for NCP response to property commands. """
-        def __init__(self, prop, value, tid):
-            self.prop = prop
-            self.value = value
-            self.tid = tid
-
-    def queue_register(self, tid=SPINEL_HEADER_DEFAULT):
-        self.tid_filter.add(tid)
-        return self.__queue_prop[tid]
-
-    def queue_wait_prepare(self, prop_id, tid=SPINEL_HEADER_DEFAULT):
-        self.queue_clear(tid)
-
-    def queue_add(self, prop, value, tid):
-        # Asynchronous handlers don't actually add to queue.
-        if (prop == SPINEL_PROP_STREAM_NET):
-            pkt = IPv6(value[2:])
-            if ICMPv6EchoReply in pkt:
-                timenow = int(round(time.time() * 1000)) & 0xFFFFFFFF
-                timedelta = (timenow - unpack('>I', pkt.data)[0])
-                print "\n%d bytes from %s: icmp_seq=%d hlim=%d time=%dms" % (
-                    pkt.plen, pkt.src, pkt.seq, pkt.hlim, timedelta)
-            return
-
-        if (tid not in self.tid_filter): return
-        item = self.PropertyItem(prop, value, tid)
-        self.__queue_prop[tid].put_nowait(item)
-
-    def queue_clear(self, tid):
-        with self.__queue_prop[tid].mutex:
-            self.__queue_prop[tid].queue.clear()
-
-    def queue_wait_for_prop(self, prop, tid=SPINEL_HEADER_DEFAULT, timeout=TIMEOUT_PROP):
-        try:
-            item = self.__queue_prop[tid].get(True, timeout)
-            self.__queue_prop[tid].task_done()
-        except:
-            return None
-
-        while (item):
-            if (item.tid in self.tid_filter) and (item.prop == prop):
-                return item
-            if (self.__queue_prop[tid].empty()):
-                return None
-            else:
-                item = self.__queue_prop[tid].get_nowait()
-        return None
-
-
-    def if_up(self, nodeid='1'):
-        if os.geteuid() == 0:
-            self.tun_if = TunInterface(nodeid)
-        else:
-            print "Warning: superuser required to start tun interface."
-
-    def if_down(self):
-        if self.tun_if: self.tun_if.close()
-        self.tun_if = None
-
-    def ip_send(self, pkt):
-        pay = self.encode_i(SPINEL_PROP_STREAM_NET)
-
-        pkt_len = len(pkt)
-        pay += pack("<H",pkt_len)          # Start with length of IPv6 packet
-
-        pkt_len += 2                       # Increment to include length word
-        pay += pack("%ds" % pkt_len, pkt)  # Append packet after length
-
-        self.transact(SPINEL_CMD_PROP_VALUE_SET, pay)
-
-    def prop_change_async(self, cmd, prop_id, value, format='B',
-                          tid=SPINEL_HEADER_DEFAULT):
-        pay = self.encode_i(prop_id)
-        if format != None:
-            pay += pack(format, value)
-        self.transact(cmd, pay, tid)
-
-    def prop_insert_async(self, prop_id, value, format='B',
-                          tid=SPINEL_HEADER_DEFAULT):
-        self.prop_change_async(SPINEL_CMD_PROP_VALUE_INSERT, prop_id,
-                               value, format, tid)
-
-    def prop_remove_async(self, prop_id, value, format='B',
-                          tid=SPINEL_HEADER_DEFAULT):
-        self.prop_change_async(SPINEL_CMD_PROP_VALUE_REMOVE, prop_id,
-                               value, format, tid)
-
-    def __prop_change_value(self, cmd, prop_id, value, format='B',
-                            tid=SPINEL_HEADER_DEFAULT):
-        """ Utility routine to change a property value over Spinel. """
-        self.queue_wait_prepare(prop_id, tid)
-
-        pay = self.encode_i(prop_id)
-        if format != None:
-            pay += pack(format, value)
-        self.transact(cmd, pay, tid)
-
-        result = self.queue_wait_for_prop(prop_id, tid)
-        if result:
-            return result.value
-        else:
-            return None
-
-    def prop_get_value(self, prop_id, tid=SPINEL_HEADER_DEFAULT):
-        """ Blocking routine to get a property value over Spinel. """
-        if DEBUG_LOG_PROP:
-            handler = SPINEL_PROP_DISPATCH[prop_id]
-            prop_name = handler.__name__
-            print "PROP_VALUE_GET [tid=%d]: %s" % (tid&0xF, prop_name)
-        return self.__prop_change_value(SPINEL_CMD_PROP_VALUE_GET, prop_id,
-                                        None, None, tid)
-
-    def prop_set_value(self, prop_id, value, format='B',
-                       tid=SPINEL_HEADER_DEFAULT):
-        """ Blocking routine to set a property value over Spinel. """
-        if DEBUG_LOG_PROP:
-            handler = SPINEL_PROP_DISPATCH[prop_id]
-            prop_name = handler.__name__
-            print "PROP_VALUE_SET [tid=%d]: %s" % (tid&0xF, prop_name)
-        return self.__prop_change_value(SPINEL_CMD_PROP_VALUE_SET, prop_id,
-                                        value, format, tid)
-
-    def prop_insert_value(self, prop_id, value, format='B',
-                          tid=SPINEL_HEADER_DEFAULT):
-        """ Blocking routine to insert a property value over Spinel. """
-        if DEBUG_LOG_PROP:
-            handler = SPINEL_PROP_DISPATCH[prop_id]
-            prop_name = handler.__name__
-            print "PROP_VALUE_INSERT [tid=%d]: %s" % (tid&0xF, prop_name)
-        return self.__prop_change_value(SPINEL_CMD_PROP_VALUE_INSERT, prop_id,
-                                        value, format, tid)
-
-    def prop_remove_value(self, prop_id, value, format='B',
-                          tid=SPINEL_HEADER_DEFAULT):
-        """ Blocking routine to remove a property value over Spinel. """
-        if DEBUG_LOG_PROP:
-            handler = SPINEL_PROP_DISPATCH[prop_id]
-            prop_name = handler.__name__
-            print "PROP_VALUE_REMOVE [tid=%d]: %s" % (tid&0xF, prop_name)
-        return self.__prop_change_value(SPINEL_CMD_PROP_VALUE_REMOVE, prop_id,
-                                        value, format, tid)
-
-    def get_ipaddrs(self, tid=SPINEL_HEADER_DEFAULT):
-        v = self.prop_get_value(SPINEL_PROP_IPV6_ADDRESS_TABLE, tid)
-        # TODO: clean up table parsing to be less hard-coded magic.
-        if v == None: return None
-        sz = 0x1B
-        addrs = [v[i:i+sz] for i in xrange(0, len(v), sz)]
-        ipaddrs = []
-        for addr in addrs:
-            addr = addr[2:18]
-            ipaddrs.append(ipaddress.IPv6Address(addr))
-        return ipaddrs
-
-#=========================================
+MASTER_PROMPT = "spinel-cli"
 
 
 class SpinelCliCmd(Cmd, SpinelCodec):
+    """
+    A command line shell for controlling OpenThread NCP nodes
+    via the Spinel protocol.
+    """
 
-    def __init__(self, device, nodeid, *a, **kw):
+    def __init__(self, stream_desc, nodeid, *_a, **kw):
 
-        self.wpanApi = WpanApi(device, nodeid)
-        global gWpanApi
-        gWpanApi = self.wpanApi
-        self.wpanApi.queue_register(SPINEL_HEADER_DEFAULT)
+        self.wpan_api = WpanApi(stream_desc, nodeid)
+        self.wpan_api.queue_register(SPINEL.HEADER_DEFAULT)
+        self.nodeid = kw.get('nodeid', '1')
 
         Cmd.__init__(self)
         Cmd.identchars = string.ascii_letters + string.digits + '-'
 
-        if (sys.stdin.isatty()):
-            self.prompt = MASTER_PROMPT+" > "
+        if sys.stdin.isatty():
+            self.prompt = MASTER_PROMPT + " > "
         else:
             self.use_rawinput = 0
             self.prompt = ""
 
         SpinelCliCmd.command_names.sort()
 
-        self.historyFileName = os.path.expanduser("~/.spinel-cli-history")
+        self.history_filename = os.path.expanduser("~/.spinel-cli-history")
 
         try:
             import readline
             try:
-                readline.read_history_file(self.historyFileName)
+                readline.read_history_file(self.history_filename)
             except IOError:
                 pass
         except ImportError:
-            print "Module readline unavailable"
+            print("Module readline unavailable")
         else:
-            import rlcompleter
+            #import rlcompleter
             readline.parse_and_bind("tab: complete")
             if sys.platform == 'darwin':
                 readline.parse_and_bind("bind ^I rl_complete")
 
-        self.nodeid = kw.get('nodeid','1')
-        self.prop_set_value(SPINEL_PROP_IPv6_ICMP_PING_OFFLOAD, 1)
-        self.prop_set_value(SPINEL_PROP_THREAD_RLOC16_DEBUG_PASSTHRU, 1)
-
+        self.prop_set_value(SPINEL.PROP_IPv6_ICMP_PING_OFFLOAD, 1)
+        self.prop_set_value(SPINEL.PROP_THREAD_RLOC16_DEBUG_PASSTHRU, 1)
 
     command_names = [
         # Shell commands
@@ -1598,6 +156,7 @@ class SpinelCliCmd(Cmd, SpinelCodec):
         'extpanid',
         'ifconfig',
         'ipaddr',
+        'joiner',
         'keysequence',
         'leaderdata',
         'leaderweight',
@@ -1619,7 +178,6 @@ class SpinelCliCmd(Cmd, SpinelCodec):
         'scan',
         'state',
         'thread',
-        'tun',
         'version',
         'whitelist',
 
@@ -1638,120 +196,145 @@ class SpinelCliCmd(Cmd, SpinelCodec):
         'ncp-ml64',
         'ncp-ll64',
         'ncp-tun',
+        'ncp-raw',
+        'ncp-filter',
 
     ]
 
-
-    def log(self,text) :
-        logger.info(text)
+    @classmethod
+    def log(cls, text):
+        """ Common log handler. """
+        logging.info(text)
 
     def parseline(self, line):
         cmd, arg, line = Cmd.parseline(self, line)
-        if (cmd):
-            cmd = self.shortCommandName(cmd)
+        if cmd:
+            cmd = self.short_command_name(cmd)
             line = cmd + ' ' + arg
         return cmd, arg, line
 
     def completenames(self, text, *ignored):
-        return [ name + ' ' for name in SpinelCliCmd.command_names \
-                 if name.startswith(text) \
-                 or self.shortCommandName(name).startswith(text) ]
+        return [name + ' ' for name in SpinelCliCmd.command_names
+                if name.startswith(text)
+                or self.short_command_name(name).startswith(text)]
 
-    def shortCommandName(self, cmd):
+    @classmethod
+    def short_command_name(cls, cmd):
         return cmd.replace('-', '')
 
     def postloop(self):
         try:
             import readline
             try:
-                readline.write_history_file(self.historyFileName)
+                readline.write_history_file(self.history_filename)
             except IOError:
                 pass
         except ImportError:
             pass
 
     def prop_get_value(self, prop_id):
-        return self.wpanApi.prop_get_value(prop_id)
+        """ Blocking helper to return value for given propery identifier. """
+        return self.wpan_api.prop_get_value(prop_id)
 
-    def prop_set_value(self, prop_id, value, format='B'):
-        return self.wpanApi.prop_set_value(prop_id, value, format)
+    def prop_set_value(self, prop_id, value, py_format='B'):
+        """ Blocking helper to set value for given propery identifier. """
+        return self.wpan_api.prop_set_value(prop_id, value, py_format)
 
-    def prop_insert_value(self, prop_id, value, format='B'):
-        return self.wpanApi.prop_insert_value(prop_id, value, format)
+    def prop_insert_value(self, prop_id, value, py_format='B'):
+        """ Blocking helper to insert entry for given list property. """
+        return self.wpan_api.prop_insert_value(prop_id, value, py_format)
 
-    def prop_remove_value(self, prop_id, value, format='B'):
-        return self.wpanApi.prop_remove_value(prop_id, value, format)
+    def prop_remove_value(self, prop_id, value, py_format='B'):
+        """ Blocking helper to remove entry for given list property. """
+        return self.wpan_api.prop_remove_value(prop_id, value, py_format)
 
-    def prop_get_or_set_value(self, prop_id, line, format='B'):
+    def prop_get_or_set_value(self, prop_id, line, mixed_format='B'):
         """ Helper to get or set a property value based on line arguments. """
         if line:
-            arg = self.prep_line(line, format)
-            if format=='D': format = str(len(arg))+'s'
-            value = self.prop_set_value(prop_id, arg, format)
+            value = self.prep_line(line, mixed_format)
+            py_format = self.prep_format(value, mixed_format)
+            value = self.prop_set_value(prop_id, value, py_format)
         else:
             value = self.prop_get_value(prop_id)
         return value
 
-    def prep_line(self, line, format='B'):
-        """ Convert a line argument to proper type """
+    @classmethod
+    def prep_line(cls, line, mixed_format='B'):
+        """ Convert a command line argument to proper binary encoding (pre-pack). """
+        value = line
         if line != None:
-            if format == 'D':
-                line = hex_to_bytes(line)
+            if mixed_format == 'U':         # For UTF8, just a pass through line unmodified
+                value = line.encode('utf-8') + '\0'
+            elif mixed_format == 'D':     # Expect raw data to be hex string w/o delimeters
+                value = util.hex_to_bytes(line)
             else:
-                line = int(line)
-        return line
+                # Most everything else is some type of integer
+                value = int(line)
+        return value
 
-    def prop_get(self, prop_id, format='B'):
+    @classmethod
+    def prep_format(cls, value, mixed_format='B'):
+        """ Convert a spinel format to a python pack format. """
+        py_format = mixed_format
+        if value == "":
+            py_format = '0s'
+        elif mixed_format == 'D' or mixed_format == 'U':
+            py_format = str(len(value)) + 's'
+        return py_format
+
+    def prop_get(self, prop_id, mixed_format='B'):
         """ Helper to get a propery and output the value with Done or Error. """
         value = self.prop_get_value(prop_id)
-        if value == None:
+        if value is None:
             print("Error")
             return None
 
-        if (format == 'D') or (format == 'E'):
-            print hexify_str(value,'')
+        if (mixed_format == 'D') or (mixed_format == 'E'):
+            print(util.hexify_str(value, ''))
         else:
-            print str(value)
+            print(str(value))
         print("Done")
 
         return value
 
-    def prop_set(self, prop_id, line, format='B'):
+    def prop_set(self, prop_id, line, mixed_format='B'):
         """ Helper to set a propery and output Done or Error. """
-        arg = self.prep_line(line, format)
-        if format=='D': format = str(len(arg))+'s'
-        value = self.prop_set_value(prop_id, arg, format)
+        value = self.prep_line(line, mixed_format)
+        py_format = self.prep_format(value, mixed_format)
+        result = self.prop_set_value(prop_id, value, py_format)
 
-        if (value == None):
+        if result is None:
             print("Error")
         else:
             print("Done")
 
-        return value
+        return result
 
-    def handle_property(self, line, prop_id, format='B', output=True):
-        value = self.prop_get_or_set_value(prop_id, line, format)
-        if not output: return value
+    def handle_property(self, line, prop_id, mixed_format='B', output=True):
+        """ Helper to set property when line argument passed, get otherwise. """
+        value = self.prop_get_or_set_value(prop_id, line, mixed_format)
+        if not output:
+            return value
 
-        if value == None or value == "":
+        if value is None or value == "":
             print("Error")
             return None
 
-        if line == None or line == "":
+        if line is None or line == "":
             # Only print value on PROP_VALUE_GET
-            if (format == '6'):
-                print str(ipaddress.IPv6Address(value))
-            elif (format == 'D') or (format == 'E'):
-                print hexify_str(value,'')
+            if mixed_format == '6':
+                print(str(ipaddress.IPv6Address(value)))
+            elif (mixed_format == 'D') or (mixed_format == 'E'):
+                print(util.hexify_str(value, ''))
             else:
-                print str(value)
+                print(str(value))
 
         print("Done")
         return value
 
     def do_help(self, line):
-        if (line):
-            cmd, arg, unused = self.parseline(line)
+        if line:
+            cmd, _arg, _unused = self.parseline(line)
             try:
                 doc = getattr(self, 'do_' + cmd).__doc__
             except AttributeError:
@@ -1761,24 +344,24 @@ class SpinelCliCmd(Cmd, SpinelCodec):
             else:
                 self.log("No help on %s\n" % (line))
         else:
-            self.print_topics("\nAvailable commands (type help <name> for more information):", SpinelCliCmd.command_names, 15, 80)
+            self.print_topics(
+                "\nAvailable commands (type help <name> for more information):",
+                SpinelCliCmd.command_names, 15, 80)
 
-
-    def do_v(self, line):
+    def do_v(self, _line):
         """
         version
             Shows detailed version information on spinel-cli tool:
         """
-        logger.info(MASTER_PROMPT+" ver. "+__version__)
-        logger.info(__copyright__)
+        self.log(MASTER_PROMPT + " ver. " + __version__)
+        self.log(__copyright__)
 
-
-    def do_clear(self, line):
+    @classmethod
+    def do_clear(cls, _line):
         """ Clean up the display. """
         os.system('reset')
 
-
-    def do_history(self, line):
+    def do_history(self, _line):
         """
         history
 
@@ -1787,82 +370,64 @@ class SpinelCliCmd(Cmd, SpinelCodec):
 
         try:
             import readline
-            h = readline.get_current_history_length()
-            for n in range(1,h+1):
-                logger.info(readline.get_history_item(n))
+            hist = readline.get_current_history_length()
+            for idx in range(1, hist + 1):
+                self.log(readline.get_history_item(idx))
         except ImportError:
             pass
 
-
     def do_h(self, line):
+        """ Shortcut for history. """
         self.do_history(line)
 
-
-    def do_exit(self, line):
-        logger.info("exit")
+    def do_exit(self, _line):
+        """ Exit the shell. """
+        self.log("exit")
         return True
-
 
     def do_quit(self, line):
-        logger.info("quit")
-        return True
-
+        """ Exit the shell. """
+        return self.do_exit(line)
 
     def do_q(self, line):
-        return True
+        """ Exit the shell. """
+        return self.do_exit(line)
 
-
-    def do_EOF(self, line):
+    def do_EOF(self, _line):
+        """ End of file handler for when commands are piped into shell. """
         self.log("\n")
-        goodbye()
         return True
-
 
     def emptyline(self):
         pass
 
     def default(self, line):
         if line[0] == "#":
-            logger.debug(line)
+            logging.debug(line)
         else:
-            logger.info(line + ": command not found")
-            #exec(line)
-
+            logging.info(line + ": command not found")
+            # exec(line)
 
     def do_debug(self, line):
         """
         Enables detail logging of bytes over the wire to the radio modem.
         Usage: debug <1=enable | 0=disable>
         """
-        global DEBUG_ENABLE, DEBUG_LOG_PROP
-        global DEBUG_LOG_PKT, DEBUG_LOG_SERIAL
-        global DEBUG_LOG_TX, DEBUG_LOG_RX, DEBUG_LOG_HDLC
 
         if line != None and line != "":
             level = int(line)
+        else:
+            level = 0
 
-            if level:
-                DEBUG_ENABLE = level
-                if level >= 1: DEBUG_LOG_PROP = 1
-                if level >= 2: DEBUG_LOG_PKT = 1
-                if level >= 3: DEBUG_LOG_SERIAL = 1
-                if level >= 4: DEBUG_LOG_HDLC = 1
-            else:
-                DEBUG_ENABLE = 0
-                DEBUG_LOG_PROP = 0
-                DEBUG_LOG_PKT = 0
-                DEBUG_LOG_SERIAL = 0
-                DEBUG_LOG_HDLC = 0
+        CONFIG.debug_set_level(level)
 
-        print "DEBUG_ENABLE = "+str(DEBUG_ENABLE)
-
-    def do_debugmem(self, line):
+    def do_debugmem(self, _line):
+        """ Profile python memory usage. """
         from guppy import hpy
-        h = hpy()
-        print h.heap()
-        print
-        print h.heap().byrcs
-
+        heap_stats = hpy()
+        print(heap_stats.heap())
+        print()
+        print(heap_stats.heap().byrcs)
 
     def do_channel(self, line):
         """
@@ -1882,7 +447,7 @@ class SpinelCliCmd(Cmd, SpinelCodec):
             Done
         \033[0m
         """
-        self.handle_property(line, SPINEL_PROP_PHY_CHAN)
+        self.handle_property(line, SPINEL.PROP_PHY_CHAN)
 
     def do_child(self, line):
         """\033[1m
@@ -1932,7 +497,7 @@ class SpinelCliCmd(Cmd, SpinelCodec):
             Done
         \033[0m
         """
-        self.handle_property(line, SPINEL_PROP_THREAD_CHILD_TIMEOUT, 'L')
+        self.handle_property(line, SPINEL.PROP_THREAD_CHILD_TIMEOUT, 'L')
 
     def do_commissioner(self, line):
         """
@@ -1989,7 +554,7 @@ class SpinelCliCmd(Cmd, SpinelCodec):
             > contextreusedelay 11
             Done
         """
-        self.handle_property(line, SPINEL_PROP_THREAD_CONTEXT_REUSE_DELAY, 'L')
+        self.handle_property(line, SPINEL.PROP_THREAD_CONTEXT_REUSE_DELAY, 'L')
 
     def do_counter(self, line):
         """
@@ -2040,7 +605,9 @@ class SpinelCliCmd(Cmd, SpinelCodec):
 
              Perform an MLE Discovery operation.
 
-        channel: The channel to discover on. If no channel is provided, the discovery will cover all valid channels.
+        channel: The channel to discover on. If no channel is provided,
+        the discovery will cover all valid channels.
+
         > discover
         | J | Network Name     | Extended PAN     | PAN  | MAC Address      | Ch | dBm | LQI |
         +---+------------------+------------------+------+------------------+----+-----+-----+
@@ -2080,7 +647,7 @@ class SpinelCliCmd(Cmd, SpinelCodec):
             dead00beef00cafe
             Done
         """
-        self.handle_property(line, SPINEL_PROP_MAC_15_4_LADDR, 'E')
+        self.handle_property(line, SPINEL.PROP_MAC_15_4_LADDR, 'E')
 
     def do_extpanid(self, line):
         """
@@ -2099,11 +666,64 @@ class SpinelCliCmd(Cmd, SpinelCodec):
             > extpanid dead00beef00cafe
             Done
         """
-        self.handle_property(line, SPINEL_PROP_NET_XPANID, 'D')
+        self.handle_property(line, SPINEL.PROP_NET_XPANID, 'D')
 
-    def complete_ifconfig(self, text, line, begidx, endidx):
-        _SUB_COMMANDS = ('up', 'down')
-        return [i for i in _SUB_COMMANDS if i.startswith(text)]
+    def do_joiner(self, line):
+        """
+        These commands are enabled when configuring with --enable-joiner.
+
+        joiner start <pskd> <provisioningUrl>
+
+            Start the Joiner role.
+
+            * pskd: Pre-Shared Key for the Joiner.
+            * provisioningUrl: Provisioning URL for the Joiner (optional).
+
+            This command will cause the device to perform an MLE Discovery and
+            initiate the Thread Commissioning process.
+
+            > joiner start PSK
+            Done
+
+        joiner stop
+
+            Stop the Joiner role.
+
+            > joiner stop
+            Done
+        """
+        PSKd = ""
+
+        params = line.split(" ")
+        if len(params) > 0:
+            sub_command = params[0]
+        if len(params) > 1:
+            PSKd = params[1]
+
+        PSKd = self.prep_line(PSKd, 'U')
+
+        if sub_command == "":
+            pass
+
+        elif sub_command == "start":
+            py_format = self.prep_format(PSKd, 'U')
+            self.prop_set_value(SPINEL.PROP_MESHCOP_JOINER_CREDENTIAL,
+                                PSKd, py_format)
+            self.prop_set_value(SPINEL.PROP_MESHCOP_JOINER_ENABLE, 1)
+            print("Done")
+            return
+
+        elif sub_command == "stop":
+            self.prop_set_value(SPINEL.PROP_MESHCOP_JOINER_ENABLE, 0)
+            print("Done")
+            return
+
+        print("Error")
+
+    def complete_ifconfig(self, text, _line, _begidx, _endidx):
+        """ Subcommand completion handler for ifconfig command. """
+        map_sub_commands = ('up', 'down')
+        return [i for i in map_sub_commands if i.startswith(text)]
 
     def do_ifconfig(self, line):
         """
@@ -2130,30 +750,31 @@ class SpinelCliCmd(Cmd, SpinelCodec):
             Done
         """
 
-        args = line.split(" ")
+        params = line.split(" ")
 
-        if args[0] == "":
-            value = self.prop_get_value(SPINEL_PROP_NET_IF_UP)
+        if params[0] == "":
+            value = self.prop_get_value(SPINEL.PROP_NET_IF_UP)
             if value != None:
-                ARG_MAP_VALUE = {
+                map_arg_value = {
                     0: "down",
                     1: "up",
                 }
-                print ARG_MAP_VALUE[value]
+                print(map_arg_value[value])
 
-        elif args[0] == "up":
-            self.prop_set(SPINEL_PROP_NET_IF_UP, '1')
+        elif params[0] == "up":
+            self.prop_set(SPINEL.PROP_NET_IF_UP, '1')
             return
 
-        elif args[0] == "down":
-            self.prop_set(SPINEL_PROP_NET_IF_UP, '0')
+        elif params[0] == "down":
+            self.prop_set(SPINEL.PROP_NET_IF_UP, '0')
             return
 
         print("Done")
 
-    def complete_ipaddr(self, text, line, begidx, endidx):
-        _SUB_COMMANDS = ('add', 'remove')
-        return [i for i in _SUB_COMMANDS if i.startswith(text)]
+    def complete_ipaddr(self, text, _line, _begidx, _endidx):
+        """ Subcommand completion handler for ipaddr command. """
+        map_sub_commands = ('add', 'remove')
+        return [i for i in map_sub_commands if i.startswith(text)]
 
     def do_ipaddr(self, line):
         """
@@ -2182,65 +803,98 @@ class SpinelCliCmd(Cmd, SpinelCodec):
             > ipaddr del 2001::dead:beef:cafe
             Done
         """
-        args = line.split(" ")
+        params = line.split(" ")
         valid = 1
         preferred = 1
         flags = 0
-        prefix_len = 64  # always use /64, as prefix.network.prefixlen returns /128.
+        # always use /64, as prefix.network.prefixlen returns /128.
+        prefix_len = 64
 
-        num = len(args)
-        if (num > 1):
-            ipaddr = args[1]
+        num = len(params)
+        if num > 1:
+            ipaddr = params[1]
             prefix = ipaddress.IPv6Interface(unicode(ipaddr))
             arr = prefix.ip.packed
 
-        if args[0] == "":
-            addrs = self.wpanApi.get_ipaddrs()
+        if params[0] == "":
+            addrs = self.wpan_api.get_ipaddrs()
             for addr in addrs:
-                print str(addr)
+                print(str(addr))
 
-        elif args[0] == "add":
-            arr += pack('B', prefix_len)
-            arr += pack('<L', valid)
-            arr += pack('<L', preferred)
-            arr += pack('B', flags)
-            value = self.prop_insert_value(SPINEL_PROP_IPV6_ADDRESS_TABLE,
-                                           arr, str(len(arr))+'s')
-            if self.wpanApi.tun_if:
-                self.wpanApi.tun_if.addr_add(ipaddr)
+        elif params[0] == "add":
+            arr += self.wpan_api.encode_fields('CLLC',
+                                               prefix_len,
+                                               valid,
+                                               preferred,
+                                               flags)
 
-        elif args[0] == "remove":
-            arr += pack('B', prefix_len)
-            arr += pack('<L', valid)
-            arr += pack('<L', preferred)
-            arr += pack('B', flags)
-            value = self.prop_remove_value(SPINEL_PROP_IPV6_ADDRESS_TABLE,
-                                           arr, str(len(arr))+'s')
-            if self.wpanApi.tun_if:
-                self.wpanApi.tun_if.addr_del(ipaddr)
+            self.prop_insert_value(SPINEL.PROP_IPV6_ADDRESS_TABLE,
+                                   arr, str(len(arr)) + 's')
+
+            if self.wpan_api.tun_if:
+                self.wpan_api.tun_if.addr_add(ipaddr)
+
+        elif params[0] == "remove":
+            arr += self.wpan_api.encode_fields('CLLC',
+                                               prefix_len,
+                                               valid,
+                                               preferred,
+                                               flags)
+
+            self.prop_remove_value(SPINEL.PROP_IPV6_ADDRESS_TABLE,
+                                   arr, str(len(arr)) + 's')
+            if self.wpan_api.tun_if:
+                self.wpan_api.tun_if.addr_del(ipaddr)
 
         print("Done")
 
     def do_keysequence(self, line):
         """
-        keysequence
+        keysequence counter
 
-            Get the Thread Key Sequence.
+            Get the Thread Key Sequence Counter.
 
-            > keysequence
+            > keysequence counter
             10
             Done
 
-        keysequence <keysequence>
+        keysequence counter <counter>
 
-            Set the Thread Key Sequence.
+            Set the Thread Key Sequence Counter.
 
-            > keysequence 10
+            > keysequence counter 10
+            Done
+
+        keysequence guardtime
+
+            Get the thrKeySwitchGuardTime (in hours).
+
+            > keysequence guardtime
+            0
+            Done
+
+        keysequence guardtime <guardtime>
+
+            Set the thrKeySwitchGuardTime (in hours).
+
+            > keysequence guardtime 0
             Done
         """
-        self.handle_property(line, SPINEL_PROP_NET_KEY_SEQUENCE, 'L')
+
+        args = line.split(" ")
+
+        if args[0] == "counter":
+            newline = line.replace("counter","")
+            self.handle_property(newline, SPINEL.PROP_NET_KEY_SEQUENCE_COUNTER, 'L')
+
+        elif args[0] == "guardtime":
+            newline = line.replace("guardtime","")
+            self.handle_property(newline, SPINEL.PROP_NET_KEY_SWITCH_GUARDTIME, 'L')
 
     def do_leaderdata(self, line):
+        """
+        leaderdata
+        """
         pass
 
     def do_leaderweight(self, line):
@@ -2260,7 +914,7 @@ class SpinelCliCmd(Cmd, SpinelCodec):
             > leaderweight 128
             Done
         """
-        self.handle_property(line, SPINEL_PROP_THREAD_LOCAL_LEADER_WEIGHT)
+        self.handle_property(line, SPINEL.PROP_THREAD_LOCAL_LEADER_WEIGHT)
 
     def do_masterkey(self, line):
         """
@@ -2279,7 +933,7 @@ class SpinelCliCmd(Cmd, SpinelCodec):
             > masterkey 00112233445566778899aabbccddeeff
             Done
         """
-        self.handle_property(line, SPINEL_PROP_NET_MASTER_KEY, 'D')
+        self.handle_property(line, SPINEL.PROP_NET_MASTER_KEY, 'D')
 
     def do_mode(self, line):
         """
@@ -2308,7 +962,7 @@ class SpinelCliCmd(Cmd, SpinelCodec):
             > mode rsdn
             Done
         """
-        THREAD_MODE_MAP_VALUE = {
+        map_arg_value = {
             0x00: "0",
             0x01: "n",
             0x02: "d",
@@ -2327,7 +981,7 @@ class SpinelCliCmd(Cmd, SpinelCodec):
             0x0F: "rsdn",
         }
 
-        THREAD_MODE_MAP_NAME = {
+        map_arg_name = {
             "0": 0x00,
             "n": 0x01,
             "d": 0x02,
@@ -2349,21 +1003,20 @@ class SpinelCliCmd(Cmd, SpinelCodec):
         if line:
             try:
                 # remap string state names to integer
-                line = THREAD_MODE_MAP_NAME[line]
-            except:
+                line = map_arg_name[line]
+            except KeyError, _ex:
                 print("Error")
                 return
 
-        result = self.prop_get_or_set_value(SPINEL_PROP_THREAD_MODE, line)
+        result = self.prop_get_or_set_value(SPINEL.PROP_THREAD_MODE, line)
         if result != None:
             if not line:
-                print THREAD_MODE_MAP_VALUE[result]
+                print(map_arg_value[result])
             print("Done")
         else:
             print("Error")
 
-
-    def do_netdataregister(self, line):
+    def do_netdataregister(self, _line):
         """
         netdataregister
 
@@ -2372,9 +1025,9 @@ class SpinelCliCmd(Cmd, SpinelCodec):
             > netdataregister
             Done
         """
-        self.prop_set_value(SPINEL_PROP_THREAD_ALLOW_LOCAL_NET_DATA_CHANGE, 1)
-        self.handle_property("0", SPINEL_PROP_THREAD_ALLOW_LOCAL_NET_DATA_CHANGE)
-        pass
+        self.prop_set_value(SPINEL.PROP_THREAD_ALLOW_LOCAL_NET_DATA_CHANGE, 1)
+        self.handle_property(
+            "0", SPINEL.PROP_THREAD_ALLOW_LOCAL_NET_DATA_CHANGE)
 
     def do_networkidtimeout(self, line):
         """
@@ -2393,7 +1046,7 @@ class SpinelCliCmd(Cmd, SpinelCodec):
             > networkidtimeout 120
             Done
         """
-        self.handle_property(line, SPINEL_PROP_THREAD_NETWORK_ID_TIMEOUT)
+        self.handle_property(line, SPINEL.PROP_THREAD_NETWORK_ID_TIMEOUT)
 
     def do_networkname(self, line):
         """
@@ -2412,7 +1065,7 @@ class SpinelCliCmd(Cmd, SpinelCodec):
             > networkname OpenThread
             Done
         """
-        pass
+        self.handle_property(line, SPINEL.PROP_NET_NETWORK_NAME, 'U')
 
     def do_panid(self, line):
         """
@@ -2431,7 +1084,7 @@ class SpinelCliCmd(Cmd, SpinelCodec):
             > panid 0xdead
             Done
         """
-        self.handle_property(line, SPINEL_PROP_MAC_15_4_PANID, 'H')
+        self.handle_property(line, SPINEL.PROP_MAC_15_4_PANID, 'H')
 
     def do_ping(self, line):
         """
@@ -2442,32 +1095,38 @@ class SpinelCliCmd(Cmd, SpinelCodec):
             > ping fdde:ad00:beef:0:558:f56b:d688:799
             16 bytes from fdde:ad00:beef:0:558:f56b:d688:799: icmp_seq=1 hlim=64 time=28ms
         """
-        args = line.split(" ")
+        params = line.split(" ")
         addr = "::1"
-        size = "56"
-        count = "1"
-        interval = "1"
-        if (len(args) > 0): addr = args[0]
-        if (len(args) > 1): size = args[1]
-        if (len(args) > 2): count = args[2]
-        if (len(args) > 3): interval = args[3]
+        _size = "56"
+        _count = "1"
+        _interval = "1"
+        if len(params) > 0:
+            addr = params[0]
+        if len(params) > 1:
+            _size = params[1]
+        if len(params) > 2:
+            _count = params[2]
+        if len(params) > 3:
+            _interval = params[3]
 
         try:
             # Generate local ping packet and send directly via spinel.
-            ML64 = self.prop_get_value(SPINEL_PROP_IPV6_ML_ADDR)
-            ML64 = str(ipaddress.IPv6Address(ML64))
+            ml64 = self.prop_get_value(SPINEL.PROP_IPV6_ML_ADDR)
+            ml64 = str(ipaddress.IPv6Address(ml64))
             timenow = int(round(time.time() * 1000)) & 0xFFFFFFFF
             timenow = pack('>I', timenow)
-            ping_req = str(IPv6(src=ML64, dst=addr)/ICMPv6EchoRequest()/timenow)
-            self.wpanApi.ip_send(ping_req)
+            ping_req = str(IPv6(src=ml64, dst=addr) /
+                           ICMPv6EchoRequest() / timenow)
+            self.wpan_api.ip_send(ping_req)
             # Let handler print result
         except:
-            print "Fail"
-            print traceback.format_exc()
+            print("Fail")
+            print(traceback.format_exc())
 
-    def complete_prefix(self, text, line, begidx, endidx):
-        _SUB_COMMANDS = ('add', 'remove')
-        return [i for i in _SUB_COMMANDS if i.startswith(text)]
+    def complete_prefix(self, text, _line, _begidx, _endidx):
+        """ Subcommand completion handler for prefix command. """
+        map_sub_commands = ('add', 'remove')
+        return [i for i in map_sub_commands if i.startswith(text)]
 
     def do_prefix(self, line):
         """
@@ -2493,51 +1152,66 @@ class SpinelCliCmd(Cmd, SpinelCodec):
             > prefix remove 2001:dead:beef:cafe::/64
             Done
         """
-        args = line.split(" ")
+        params = line.split(" ")
         stable = 0
         flags = 0
+        arr = ""
 
-        num = len(args)
+        num = len(params)
         if num > 1:
-            prefix = ipaddress.IPv6Interface(unicode(args[1]))
+            prefix = ipaddress.IPv6Interface(unicode(params[1]))
             arr = prefix.ip.packed
+
         if num > 2:
-            for c in args[2]:
-                if c == 'p': flags |= kThreadPrefixPreferredFlag
-                if c == 'a': flags |= kThreadPrefixSlaacFlag
-                if c == 'd': flags |= kThreadPrefixDhcpFlag
-                if c == 'c': flags |= kThreadPrefixConfigureFlag
-                if c == 'r': flags |= kThreadPrefixDefaultRouteFlag
-                if c == 'o': flags |= kThreadPrefixOnMeshFlag
-                if c == 's': stable = 1  # Stable flag
+            map_param_to_flag = {
+                'p': kThread.PrefixPreferredFlag,
+                'a': kThread.PrefixSlaacFlag,
+                'd': kThread.PrefixDhcpFlag,
+                'c': kThread.PrefixConfigureFlag,
+                'r': kThread.PrefixDefaultRouteFlag,
+                'o': kThread.PrefixOnMeshFlag,
+            }
+            for char in params[2]:
+                if char == 's':
+                    stable = 1  # Stable flag
+                else:
+                    flag = map_param_to_flag.get(char, None)
+                    if flag is not None:
+                        flags |= flag
+
         if num > 3:
-            ARG_MAP_NAME = {
+            map_arg_name = {
                 "high": 2,
                 "med": 1,
                 "low": 0,
             }
-            prf = ARG_MAP_NAME[args[3]]
-            flags |= (prf << kThreadPrefixPreferenceOffset)
+            prf = map_arg_name[params[3]]
+            flags |= (prf << kThread.PrefixPreferenceOffset)
 
-        if args[0] == "":
-            value = self.prop_get_value(SPINEL_PROP_THREAD_ON_MESH_NETS)
+        if params[0] == "":
+            self.prop_get_value(SPINEL.PROP_THREAD_ON_MESH_NETS)
 
-        elif args[0] == "add":
-            arr += pack('B', prefix.network.prefixlen)
-            arr += pack('B', stable)
-            arr += pack('B', flags)
+        elif params[0] == "add":
+            arr += self.wpan_api.encode_fields('CbC',
+                                               prefix.network.prefixlen,
+                                               stable,
+                                               flags)
 
-            self.prop_set_value(SPINEL_PROP_THREAD_ALLOW_LOCAL_NET_DATA_CHANGE,1)
-            value = self.prop_insert_value(SPINEL_PROP_THREAD_ON_MESH_NETS,
-                                           arr, str(len(arr))+'s')
+            self.prop_set_value(
+                SPINEL.PROP_THREAD_ALLOW_LOCAL_NET_DATA_CHANGE, 1)
+            self.prop_insert_value(SPINEL.PROP_THREAD_ON_MESH_NETS,
+                                   arr, str(len(arr)) + 's')
 
-        elif args[0] == "remove":
-            arr += pack('B', prefix.network.prefixlen)
-            arr += pack('B', stable)
-            arr += pack('B', flags)
-            self.prop_set_value(SPINEL_PROP_THREAD_ALLOW_LOCAL_NET_DATA_CHANGE,1)
-            value = self.prop_remove_value(SPINEL_PROP_THREAD_ON_MESH_NETS,
-                                           arr, str(len(arr))+'s')
+        elif params[0] == "remove":
+            arr += self.wpan_api.encode_fields('CbC',
+                                               prefix.network.prefixlen,
+                                               stable,
+                                               flags)
+
+            self.prop_set_value(
+                SPINEL.PROP_THREAD_ALLOW_LOCAL_NET_DATA_CHANGE, 1)
+            self.prop_remove_value(SPINEL.PROP_THREAD_ON_MESH_NETS,
+                                   arr, str(len(arr)) + 's')
 
         print("Done")
 
@@ -2552,9 +1226,8 @@ class SpinelCliCmd(Cmd, SpinelCodec):
         """
         if line:
             value = int(line)
-            self.prop_remove_value(SPINEL_PROP_THREAD_ACTIVE_ROUTER_IDS, value)
+            self.prop_remove_value(SPINEL.PROP_THREAD_ACTIVE_ROUTER_IDS, value)
         print("Done")
-
 
     def do_rloc16(self, line):
         """
@@ -2566,11 +1239,12 @@ class SpinelCliCmd(Cmd, SpinelCodec):
             0xdead
             Done
         """
-        self.handle_property(line, SPINEL_PROP_THREAD_RLOC16, 'H')
+        self.handle_property(line, SPINEL.PROP_THREAD_RLOC16, 'H')
 
-    def complete_route(self, text, line, begidx, endidx):
-        _SUB_COMMANDS = ('add', 'remove')
-        return [i for i in _SUB_COMMANDS if i.startswith(text)]
+    def complete_route(self, text, _line, _begidx, _endidx):
+        """ Subcommand completion handler for route command. """
+        map_sub_commands = ('add', 'remove')
+        return [i for i in map_sub_commands if i.startswith(text)]
 
     def do_route(self, line):
         """
@@ -2591,31 +1265,34 @@ class SpinelCliCmd(Cmd, SpinelCodec):
             > route remove 2001:dead:beef:cafe::/64
             Done
         """
-        args = line.split(" ")
+        params = line.split(" ")
         stable = 0
         prf = 0
 
-        num = len(args)
-        if (num > 1):
-            prefix = ipaddress.IPv6Interface(unicode(args[1]))
+        num = len(params)
+        if num > 1:
+            prefix = ipaddress.IPv6Interface(unicode(params[1]))
             arr = prefix.ip.packed
 
-        if args[0] == "":
-            value = self.prop_get_value(SPINEL_PROP_THREAD_LOCAL_ROUTES)
+        if params[0] == "":
+            self.prop_get_value(SPINEL.PROP_THREAD_LOCAL_ROUTES)
 
-        elif args[0] == "add":
-            arr += pack('B', prefix.network.prefixlen)
-            arr += pack('B', stable)
-            arr += pack('B', prf)
+        elif params[0] == "add":
+            arr += self.wpan_api.encode_fields('CbC',
+                                               prefix.network.prefixlen,
+                                               stable,
+                                               prf)
 
-            self.prop_set_value(SPINEL_PROP_THREAD_ALLOW_LOCAL_NET_DATA_CHANGE,1)
-            value = self.prop_insert_value(SPINEL_PROP_THREAD_LOCAL_ROUTES,
-                                           arr, str(len(arr))+'s')
+            self.prop_set_value(
+                SPINEL.PROP_THREAD_ALLOW_LOCAL_NET_DATA_CHANGE, 1)
+            self.prop_insert_value(SPINEL.PROP_THREAD_LOCAL_ROUTES,
+                                   arr, str(len(arr)) + 's')
 
-        elif args[0] == "remove":
-            self.prop_set_value(SPINEL_PROP_THREAD_ALLOW_LOCAL_NET_DATA_CHANGE,1)
-            value = self.prop_remove_value(SPINEL_PROP_THREAD_LOCAL_ROUTES,
-                                           arr, str(len(arr))+'s')
+        elif params[0] == "remove":
+            self.prop_set_value(
+                SPINEL.PROP_THREAD_ALLOW_LOCAL_NET_DATA_CHANGE, 1)
+            self.prop_remove_value(SPINEL.PROP_THREAD_LOCAL_ROUTES,
+                                   arr, str(len(arr)) + 's')
 
         print("Done")
 
@@ -2631,7 +1308,8 @@ class SpinelCliCmd(Cmd, SpinelCodec):
 
         router <id>
 
-            Print diagnostic information for a Thread Router. The id may be a Router ID or an RLOC16.
+            Print diagnostic information for a Thread Router.
+            The id may be a Router ID or an RLOC16.
 
             > router 50
             Alloc: 1
@@ -2661,7 +1339,6 @@ class SpinelCliCmd(Cmd, SpinelCodec):
         """
         pass
 
-
     def do_routerselectionjitter(self, line):
         """
         routerselectionjitter
@@ -2673,13 +1350,13 @@ class SpinelCliCmd(Cmd, SpinelCodec):
             Done
 
         routerselectionjitter <threshold>
-        
+
             Set the ROUTER_SELECTION_JITTER value.
-        
+
             > routerselectionjitter 120
-            Done        
+            Done
         """
-        self.handle_property(line, SPINEL_PROP_THREAD_ROUTER_SELECTION_JITTER)
+        self.handle_property(line, SPINEL.PROP_THREAD_ROUTER_SELECTION_JITTER)
 
     def do_routerupgradethreshold(self, line):
         """
@@ -2698,7 +1375,7 @@ class SpinelCliCmd(Cmd, SpinelCodec):
             > routerupgradethreshold 16
             Done
         """
-        self.handle_property(line, SPINEL_PROP_THREAD_ROUTER_UPGRADE_THRESHOLD)
+        self.handle_property(line, SPINEL.PROP_THREAD_ROUTER_UPGRADE_THRESHOLD)
 
     def do_routerdowngradethreshold(self, line):
         """
@@ -2717,15 +1394,17 @@ class SpinelCliCmd(Cmd, SpinelCodec):
             > routerdowngradethreshold 16
             Done
         """
-        self.handle_property(line, SPINEL_PROP_THREAD_ROUTER_DOWNGRADE_THRESHOLD)
+        self.handle_property(
+            line, SPINEL.PROP_THREAD_ROUTER_DOWNGRADE_THRESHOLD)
 
-    def do_scan(self, line):
+    def do_scan(self, _line):
         """
         scan [channel]
 
             Perform an IEEE 802.15.4 Active Scan.
 
-              channel: The channel to scan on. If no channel is provided, the active scan will cover all valid channels.
+              channel: The channel to scan on. If no channel is provided,
+              the active scan will cover all valid channels.
 
             > scan
             | J | Network Name     | Extended PAN     | PAN  | MAC Address      | Ch | dBm | LQI |
@@ -2734,17 +1413,16 @@ class SpinelCliCmd(Cmd, SpinelCodec):
         Done
         """
         # Initial mock-up of scan
-        self.handle_property("15", SPINEL_PROP_MAC_SCAN_MASK)
-        self.handle_property("4", SPINEL_PROP_MAC_SCAN_PERIOD, 'H')
-        self.handle_property("1", SPINEL_PROP_MAC_SCAN_STATE)
-        import time
+        self.handle_property("15", SPINEL.PROP_MAC_SCAN_MASK)
+        self.handle_property("4", SPINEL.PROP_MAC_SCAN_PERIOD, 'H')
+        self.handle_property("1", SPINEL.PROP_MAC_SCAN_STATE)
         time.sleep(5)
-        self.handle_property("", SPINEL_PROP_MAC_SCAN_BEACON, 'U')
+        self.handle_property("", SPINEL.PROP_MAC_SCAN_BEACON, 'U')
 
-
-    def complete_thread(self, text, line, begidx, endidx):
-        _SUB_COMMANDS = ('start', 'stop')
-        return [i for i in _SUB_COMMANDS if i.startswith(text)]
+    def complete_thread(self, text, _line, _begidx, _endidx):
+        """ Subcommand completion handler for thread command. """
+        map_sub_commands = ('start', 'stop')
+        return [i for i in map_sub_commands if i.startswith(text)]
 
     def do_thread(self, line):
         """
@@ -2762,14 +1440,14 @@ class SpinelCliCmd(Cmd, SpinelCodec):
             > thread stop
             Done
         """
-        ARG_MAP_VALUE = {
+        map_arg_value = {
             0: "stop",
             1: "start",
             2: "start",
             3: "start",
         }
 
-        ARG_MAP_NAME = {
+        map_arg_name = {
             "stop": "0",
             "start": "2",
         }
@@ -2777,28 +1455,31 @@ class SpinelCliCmd(Cmd, SpinelCodec):
         if line:
             try:
                 # remap string state names to integer
-                line = ARG_MAP_NAME[line]
+                line = map_arg_name[line]
             except:
                 print("Error")
                 return
 
-        result = self.prop_get_or_set_value(SPINEL_PROP_NET_STACK_UP, line)
+        result = self.prop_get_or_set_value(SPINEL.PROP_NET_STACK_UP, line)
         if result != None:
             if not line:
-                print ARG_MAP_VALUE[result]
+                print(map_arg_value[result])
             print("Done")
         else:
             print("Error")
 
     def do_state(self, line):
-        ROLE_MAP_VALUE = {
+        """
+        state
+        """
+        map_arg_value = {
             0: "detached",
             1: "child",
             2: "router",
             3: "leader",
         }
 
-        ROLE_MAP_NAME = {
+        map_arg_name = {
             "disabled": "0",
             "detached": "0",
             "child": "1",
@@ -2809,18 +1490,18 @@ class SpinelCliCmd(Cmd, SpinelCodec):
         if line:
             try:
                 # remap string state names to integer
-                line = ROLE_MAP_NAME[line]
+                line = map_arg_name[line]
             except:
                 print("Error")
                 return
 
-        result = self.prop_get_or_set_value(SPINEL_PROP_NET_ROLE, line)
+        result = self.prop_get_or_set_value(SPINEL.PROP_NET_ROLE, line)
         if result != None:
             if not line:
-                state = ROLE_MAP_VALUE[result]
+                state = map_arg_value[result]
                 # TODO: if state="disabled": get NET_STATE to determine
                 #       whether "disabled" or "detached"
-                print state
+                print(state)
             print("Done")
         else:
             print("Error")
@@ -2835,11 +1516,12 @@ class SpinelCliCmd(Cmd, SpinelCodec):
             OPENTHREAD/gf4f2f04; Jul  1 2016 17:00:09
             Done
         """
-        self.handle_property(line, SPINEL_PROP_NCP_VERSION, 'U')
+        self.handle_property(line, SPINEL.PROP_NCP_VERSION, 'U')
 
-    def complete_whitelist(self, text, line, begidx, endidx):
-        _SUB_COMMANDS = ('add', 'remove', 'clear', 'enable', 'disable')
-        return [i for i in _SUB_COMMANDS if i.startswith(text)]
+    def complete_whitelist(self, text, _line, _begidx, _endidx):
+        """ Subcommand completion handler for whitelist command. """
+        map_sub_commands = ('add', 'remove', 'clear', 'enable', 'disable')
+        return [i for i in map_sub_commands if i.startswith(text)]
 
     def do_whitelist(self, line):
         """
@@ -2889,59 +1571,74 @@ class SpinelCliCmd(Cmd, SpinelCodec):
             > whitelist remove dead00beef00cafe
             Done
         """
-        ARG_MAP_VALUE = {
+        map_arg_value = {
             0: "Disabled",
             1: "Enabled",
         }
 
-        args = line.split(" ")
+        params = line.split(" ")
 
-        if args[0] == "":
-            value = self.prop_get_value(SPINEL_PROP_MAC_WHITELIST_ENABLED)
+        if params[0] == "":
+            value = self.prop_get_value(SPINEL.PROP_MAC_WHITELIST_ENABLED)
             if value != None:
-                print ARG_MAP_VALUE[value]
-            value = self.prop_get_value(SPINEL_PROP_MAC_WHITELIST)
+                print(map_arg_value[value])
+            value = self.prop_get_value(SPINEL.PROP_MAC_WHITELIST)
 
-        elif args[0] == "enable":
-            self.prop_set(SPINEL_PROP_MAC_WHITELIST_ENABLED, '1')
+        elif params[0] == "enable":
+            self.prop_set(SPINEL.PROP_MAC_WHITELIST_ENABLED, '1')
             return
 
-        elif args[0] == "disable":
-            self.prop_set(SPINEL_PROP_MAC_WHITELIST_ENABLED, '0')
+        elif params[0] == "disable":
+            self.prop_set(SPINEL.PROP_MAC_WHITELIST_ENABLED, '0')
             return
 
-        elif args[0] == "clear":
-            value = self.prop_set_value(SPINEL_PROP_MAC_WHITELIST, None, None)
+        elif params[0] == "clear":
+            value = self.prop_set_value(SPINEL.PROP_MAC_WHITELIST, None, None)
 
-        elif args[0] == "add":
-            arr = hex_to_bytes(args[1])
+        elif params[0] == "add":
+            arr = util.hex_to_bytes(params[1])
             try:
-                rssi = int(args[2])
+                rssi = int(params[2])
             except:
-                rssi = SPINEL_RSSI_OVERRIDE
+                rssi = SPINEL.RSSI_OVERRIDE
             arr += pack('b', rssi)
-            value = self.prop_insert_value(SPINEL_PROP_MAC_WHITELIST, arr,
-                                           str(len(arr))+'s')
+            value = self.prop_insert_value(SPINEL.PROP_MAC_WHITELIST, arr,
+                                           str(len(arr)) + 's')
 
-        elif args[0] == "remove":
-            arr = hex_to_bytes(args[1])
-            arr += pack('b', SPINEL_RSSI_OVERRIDE)
-            value = self.prop_remove_value(SPINEL_PROP_MAC_WHITELIST, arr,
-                                           str(len(arr))+'s')
+        elif params[0] == "remove":
+            arr = util.hex_to_bytes(params[1])
+            arr += pack('b', SPINEL.RSSI_OVERRIDE)
+            value = self.prop_remove_value(SPINEL.PROP_MAC_WHITELIST, arr,
+                                           str(len(arr)) + 's')
 
         print("Done")
 
     def do_ncpll64(self, line):
         """ Display the link local IPv6 address. """
-        self.handle_property(line, SPINEL_PROP_IPV6_LL_ADDR, '6')
+        self.handle_property(line, SPINEL.PROP_IPV6_LL_ADDR, '6')
 
     def do_ncpml64(self, line):
         """ Display the mesh local IPv6 address. """
-        self.handle_property(line, SPINEL_PROP_IPV6_ML_ADDR, '6')
+        self.handle_property(line, SPINEL.PROP_IPV6_ML_ADDR, '6')
 
-    def complete_ncptun(self, text, line, begidx, endidx):
-        _SUB_COMMANDS = ('up', 'down', 'add', 'remove', 'ping')
-        return [i for i in _SUB_COMMANDS if i.startswith(text)]
+    def do_ncpraw(self, line):
+        """ Enable MAC raw stream. """
+        self.handle_property(line, SPINEL.PROP_MAC_RAW_STREAM_ENABLED, 'B')
+
+    def do_ncpfilter(self, line):
+        """
+        Set MAC filter mode:
+
+        0 = MAC_FILTER_MODE_NORMAL	Normal MAC filtering is in place.
+        1 = MAC_FILTER_MODE_PROMISCUOUS	All MAC packets matching network are passed up the stack.
+        2 = MAC_FILTER_MODE_MONITOR	All decoded MAC packets are passed up the stack.
+        """
+        self.handle_property(line, SPINEL.PROP_MAC_FILTER_MODE, 'B')
+
+    def complete_ncptun(self, text, _line, _begidx, _endidx):
+        """ Subcommand completion handler for ncp-tun command. """
+        map_sub_commands = ('up', 'down', 'add', 'remove', 'ping')
+        return [i for i in map_sub_commands if i.startswith(text)]
 
     def do_ncptun(self, line):
         """
@@ -2984,45 +1681,48 @@ class SpinelCliCmd(Cmd, SpinelCodec):
             > ncp-tun ping fdde:ad00:beef:0:558:f56b:d688:799
             16 bytes from fdde:ad00:beef:0:558:f56b:d688:799: icmp_seq=1 hlim=64 time=28ms
         """
-        args = line.split(" ")
+        params = line.split(" ")
 
-        num = len(args)
-        if (num > 1):
-            ipaddr = args[1]
+        num = len(params)
+        if num > 1:
+            ipaddr = params[1]
             prefix = ipaddress.IPv6Interface(unicode(ipaddr))
-            arr = prefix.ip.packed
+            _arr = prefix.ip.packed
 
-        if args[0] == "":
+        if params[0] == "":
             pass
 
-        elif args[0] == "add":
-            if self.wpanApi.tun_if:
-                self.wpanApi.tun_if.addr_add(ipaddr)
+        elif params[0] == "add":
+            if self.wpan_api.tun_if:
+                self.wpan_api.tun_if.addr_add(ipaddr)
 
-        elif args[0] == "remove":
-            if self.wpanApi.tun_if:
-                self.wpanApi.tun_if.addr_del(ipaddr)
+        elif params[0] == "remove":
+            if self.wpan_api.tun_if:
+                self.wpan_api.tun_if.addr_del(ipaddr)
 
-        elif args[0] == "up":
-            self.wpanApi.if_up(self.nodeid)
+        elif params[0] == "up":
+            self.wpan_api.if_up(self.nodeid)
 
-        elif args[0] == "down":
-            self.wpanApi.if_down()
+        elif params[0] == "down":
+            self.wpan_api.if_down()
 
-        elif args[0] == "ping":
+        elif params[0] == "ping":
             # Use tunnel to send ping
             size = "56"
             count = "1"
-            interval = "1"
-            if (len(args) > 1): size = args[1]
-            if (len(args) > 2): count = args[2]
-            if (len(args) > 3): interval = args[3]
+            _interval = "1"
+            if len(params) > 1:
+                size = params[1]
+            if len(params) > 2:
+                count = params[2]
+            if len(params) > 3:
+                _interval = params[3]
 
-            if self.wpanApi.tun_if:
-                self.wpanApi.tun_if.ping6(" -c "+count+" -s "+size+" "+addr)
+            if self.wpan_api.tun_if:
+                self.wpan_api.tun_if.ping6(
+                    " -c " + count + " -s " + size + " " + ipaddr)
 
         print("Done")
-
 
     def do_diag(self, line):
         """
@@ -3157,62 +1857,63 @@ class SpinelCliCmd(Cmd, SpinelCodec):
         """
         pass
 
-
-if __name__ == "__main__":
-    # register clean exit handlers.
-    signal.signal(signal.SIGHUP, goodbye)
-    signal.signal(signal.SIGINT, goodbye)
-    signal.signal(signal.SIGCONT, goodbye)
-    signal.signal(signal.SIGABRT, goodbye)
-    signal.signal(signal.SIGTERM, goodbye)
-    signal.signal(signal.SIGTRAP, goodbye)
-    signal.signal(signal.SIGPIPE, goodbye)
-
+def parse_args():
+    """" Send spinel commands to initialize sniffer node. """
     args = sys.argv[1:]
 
-    optParser = optparse.OptionParser()
+    opt_parser = optparse.OptionParser(usage=optparse.SUPPRESS_USAGE)
+    opt_parser.add_option("-u", "--uart", action="store",
+                          dest="uart", type="string")
+    opt_parser.add_option("-p", "--pipe", action="store",
+                          dest="pipe", type="string")
+    opt_parser.add_option("-s", "--socket", action="store",
+                          dest="socket", type="string")
+    opt_parser.add_option("-n", "--nodeid", action="store",
+                          dest="nodeid", type="string", default="1")
+    opt_parser.add_option("-q", "--quiet", action="store_true", dest="quiet")
+    opt_parser.add_option(
+        "-v", "--verbose", action="store_false", dest="verbose")
+    opt_parser.add_option("-d", "--debug", action="store",
+                          dest="debug", type="int", default=CONFIG.DEBUG_ENABLE)
 
-    optParser = optparse.OptionParser(usage=optparse.SUPPRESS_USAGE)
-    optParser.add_option("-u", "--uart", action="store",
-                         dest="uart", type="string")
-    optParser.add_option("-p", "--pipe", action="store",
-                         dest="pipe", type="string")
-    optParser.add_option("-s", "--socket", action="store",
-                         dest="socket", type="string")
-    optParser.add_option("-n", "--nodeid", action="store",
-                         dest="nodeid", type="string", default="1")
-    optParser.add_option("-q", "--quiet", action="store_true", dest="quiet")
-    optParser.add_option("-v", "--verbose", action="store_false",dest="verbose")
-    optParser.add_option("-d", "--debug", action="store",
-                         dest="debug", type="string")
+    return opt_parser.parse_args(args)
 
-    (options, remainingArgs) = optParser.parse_args(args)
+def main():
+    """ Top-level main for spinel-cli tool. """
+    (options, remaining_args) = parse_args()
 
+    if options.debug:
+        CONFIG.debug_set_level(options.debug)
 
     # Set default stream to pipe
-    streamType = 'p'
-    streamDescriptor = "../../examples/apps/ncp/ot-ncp "+options.nodeid
+    stream_type = 'p'
+    stream_descriptor = "../../examples/apps/ncp/ot-ncp " + options.nodeid
 
     if options.uart:
-        streamType = 'u'
-        streamDescriptor = options.uart
+        stream_type = 'u'
+        stream_descriptor = options.uart
     elif options.socket:
-        streamType = 's'
-        streamDescriptor = options.socket
+        stream_type = 's'
+        stream_descriptor = options.socket
     elif options.pipe:
-        streamType = 'p'
-        streamDescriptor = options.pipe
-        if options.nodeid: streamDescriptor += " "+str(options.nodeid)
+        stream_type = 'p'
+        stream_descriptor = options.pipe
+        if options.nodeid:
+            stream_descriptor += " " + str(options.nodeid)
     else:
-        if len(remainingArgs) > 0:
-            streamDescriptor = " ".join(remainingArgs)
+        if len(remaining_args) > 0:
+            stream_descriptor = " ".join(remaining_args)
 
-    stream = StreamOpen(streamType, streamDescriptor)
+    stream = StreamOpen(stream_type, stream_descriptor)
     shell = SpinelCliCmd(stream, nodeid=options.nodeid)
 
     try:
         shell.cmdloop()
     except KeyboardInterrupt:
-        logger.info('\nCTRL+C Pressed')
+        logging.info('\nCTRL+C Pressed')
 
-    goodbye()
+    if shell.wpan_api:
+        shell.wpan_api.stream.close()
+
+if __name__ == "__main__":
+    main()

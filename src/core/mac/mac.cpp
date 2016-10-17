@@ -672,11 +672,15 @@ void Mac::ProcessTransmitSecurity(Frame &aFrame)
         break;
 
     case Frame::kKeyIdMode2:
+    {
+        const uint8_t keySource[] = {0xff, 0xff, 0xff, 0xff};
         key = sMode2Key;
         frameCounter = 0xffffffff;
+        aFrame.SetKeySource(keySource);
         aFrame.SetKeyId(0xff);
         extAddress = static_cast<const ExtAddress *>(&sMode2ExtAddress);
         break;
+    }
 
     default:
         assert(false);

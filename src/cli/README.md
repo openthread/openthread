@@ -804,22 +804,42 @@ Stop the Joiner role.
 Done
 ```
 
-### keysequence
+### keysequence counter
 
-Get the Thread Key Sequence.
+Get the Thread Key Sequence Counter.
 
 ```bash
-> keysequence
+> keysequence counter
 10
 Done
 ```
 
-### keysequence \<keysequence\>
+### keysequence counter \<counter\>
 
-Set the Thread Key Sequence.
+Set the Thread Key Sequence Counter.
 
 ```bash
-> keysequence 10
+> keysequence counter 10
+Done
+```
+
+### keysequence guardtime
+
+Get Thread Key Switch Guard Time (in hours)
+
+```bash
+> keysequence guardtime
+0
+Done
+```
+
+### keysequence guardtime \<guardtime\>
+
+Set Thread Key Switch Guard Time (in hours)
+0 means Thread Key Switch imediately if key index match
+
+```bash
+> keysequence guardtime 0
 Done
 ```
 

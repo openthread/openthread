@@ -45,11 +45,13 @@ class Cert_6_6_1_KeyIncrement(unittest.TestCase):
         self.nodes[LEADER].set_mode('rsdn')
         self.nodes[LEADER].add_whitelist(self.nodes[ED].get_addr64())
         self.nodes[LEADER].enable_whitelist()
+        self.nodes[LEADER].set_key_switch_guardtime(0)
 
         self.nodes[ED].set_panid(0xface)
         self.nodes[ED].set_mode('rsn')
         self.nodes[ED].add_whitelist(self.nodes[LEADER].get_addr64())
         self.nodes[ED].enable_whitelist()
+        self.nodes[ED].set_key_switch_guardtime(0)
 
     def tearDown(self):
         for node in list(self.nodes.values()):
@@ -68,8 +70,8 @@ class Cert_6_6_1_KeyIncrement(unittest.TestCase):
         for addr in addrs:
             self.assertTrue(self.nodes[LEADER].ping(addr))
 
-        key_sequence = self.nodes[LEADER].get_key_sequence()
-        self.nodes[LEADER].set_key_sequence(key_sequence + 1)
+        key_sequence_counter = self.nodes[LEADER].get_key_sequence_counter()
+        self.nodes[LEADER].set_key_sequence_counter(key_sequence_counter + 1)
 
         addrs = self.nodes[ED].get_addrs()
         for addr in addrs:

@@ -1284,6 +1284,28 @@ uint32_t otGetKeySequenceCounter(otInstance *aInstance);
 void otSetKeySequenceCounter(otInstance *aInstance, uint32_t aKeySequenceCounter);
 
 /**
+ * Get the thrKeySwitchGuardTime
+ *
+ * @param[in]  aInstance A pointer to an OpenThread instance.
+ *
+ * @returns The thrKeySwitchGuardTime value (in hours).
+ *
+ * @sa otSetKeySwitchGuardTime
+ */
+uint32_t otGetKeySwitchGuardTime(otInstance *aInstance);
+
+/**
+ * Set the thrKeySwitchGuardTime
+ *
+ * @param[in]  aInstance            A pointer to an OpenThread instance.
+ * @param[in]  aKeySwitchGuardTime  The thrKeySwitchGuardTime value (in hours).
+ *
+ * @sa otGetKeySwitchGuardTime
+ */
+void otSetKeySwitchGuardTime(otInstance *aInstance, uint32_t aKeySwitchGuardTime);
+
+
+/**
  * Get the NETWORK_ID_TIMEOUT parameter used in the Router role.
  *
  * @param[in]  aInstance A pointer to an OpenThread instance.
@@ -2244,13 +2266,14 @@ uint8_t otIp6PrefixMatch(const otIp6Address *aFirst, const otIp6Address *aSecond
 /**
  * Allocate a new message buffer for sending a UDP message.
  *
- * @param[in]  aInstance A pointer to an OpenThread instance.
+ * @param[in]  aInstance             A pointer to an OpenThread instance.
+ * @param[in]  aLinkSecurityEnabled  TRUE if the message should be secured at Layer 2.
  *
  * @returns A pointer to the message buffer or NULL if no message buffers are available.
  *
  * @sa otFreeMessage
  */
-otMessage otNewUdpMessage(otInstance *aInstance);
+otMessage otNewUdpMessage(otInstance *aInstance, bool aLinkSecurityEnabled);
 
 /**
  * Open a UDP/IPv6 socket.

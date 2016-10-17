@@ -514,7 +514,7 @@ enum
 
     OT_NET_ROLE               = 1 << 3,  ///< Device role (disabled, detached, child, router, leader) changed
     OT_NET_PARTITION_ID       = 1 << 4,  ///< Partition ID changed
-    OT_NET_KEY_SEQUENCE       = 1 << 5,  ///< Thread Key Sequence changed
+    OT_NET_KEY_SEQUENCE_COUNTER = 1 << 5,  ///< Thread Key Sequence changed
 
     OT_THREAD_CHILD_ADDED     = 1 << 6,  ///< Child was added
     OT_THREAD_CHILD_REMOVED   = 1 << 7,  ///< Child was removed

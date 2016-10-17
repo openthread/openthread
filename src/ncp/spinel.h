@@ -394,7 +394,8 @@ typedef enum
     SPINEL_PROP_NET_NETWORK_NAME     = SPINEL_PROP_NET__BEGIN + 4, ///< [U]
     SPINEL_PROP_NET_XPANID           = SPINEL_PROP_NET__BEGIN + 5, ///< [D]
     SPINEL_PROP_NET_MASTER_KEY       = SPINEL_PROP_NET__BEGIN + 6, ///< [D]
-    SPINEL_PROP_NET_KEY_SEQUENCE     = SPINEL_PROP_NET__BEGIN + 7, ///< [L]
+    SPINEL_PROP_NET_KEY_SEQUENCE_COUNTER
+                                     = SPINEL_PROP_NET__BEGIN + 7, ///< [L]
     SPINEL_PROP_NET_PARTITION_ID     = SPINEL_PROP_NET__BEGIN + 8, ///< [L]
 
     /// Require Join Existing
@@ -417,6 +418,9 @@ typedef enum
      */
     SPINEL_PROP_NET_REQUIRE_JOIN_EXISTING
                                      = SPINEL_PROP_NET__BEGIN + 9,
+
+    SPINEL_PROP_NET_KEY_SWITCH_GUARDTIME
+                                     = SPINEL_PROP_NET__BEGIN + 10, ///< [L]
 
     SPINEL_PROP_NET__END             = 0x50,
 

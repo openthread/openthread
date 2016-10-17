@@ -62,6 +62,7 @@ Joiner::Joiner(ThreadNetif &aNetif):
     mTransmitMessage(NULL),
     mSocket(aNetif.GetIp6().mUdp),
     mTransmitTask(aNetif.GetIp6().mTaskletScheduler, &Joiner::HandleUdpTransmit, this),
+    mTimer(aNetif.GetIp6().mTimerScheduler, &Joiner::HandleTimer, this),
     mJoinerEntrust(OPENTHREAD_URI_JOINER_ENTRUST, &Joiner::HandleJoinerEntrust, this),
     mNetif(aNetif)
 {
@@ -355,7 +356,6 @@ void Joiner::HandleJoinerEntrust(Coap::Header &aHeader, Message &aMessage, const
     ExtendedPanIdTlv extendedPanId;
     NetworkNameTlv networkName;
     ActiveTimestampTlv activeTimestamp;
-    Mac::ExtAddress extAddress;
 
     otLogFuncEntry();
 
@@ -387,7 +387,23 @@ void Joiner::HandleJoinerEntrust(Coap::Header &aHeader, Message &aMessage, const
 
     otLogInfoMeshCoP("join success!\n");
 
-    // configure a random Extended Address
+    // Delay extended address configuration to allow DTLS wrap up.
+    mTimer.Start(kConfigExtAddressDelay);
+
+exit:
+    (void)aMessageInfo;
+    otLogFuncExit();
+}
+
+void Joiner::HandleTimer(void *aContext)
+{
+    static_cast<Joiner *>(aContext)->HandleTimer();
+}
+
+void Joiner::HandleTimer(void)
+{
+    Mac::ExtAddress extAddress;
+
     for (size_t i = 0; i < sizeof(extAddress); i++)
     {
         extAddress.m8[i] = static_cast<uint8_t>(otPlatRandomGet());
@@ -395,10 +411,6 @@ void Joiner::HandleJoinerEntrust(Coap::Header &aHeader, Message &aMessage, const
 
     mNetif.GetMac().SetExtAddress(extAddress);
     mNetif.GetMle().UpdateLinkLocalAddress();
-
-exit:
-    (void)aMessageInfo;
-    otLogFuncExit();
 }
 
 void Joiner::Close(void)

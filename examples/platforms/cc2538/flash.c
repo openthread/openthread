@@ -120,21 +120,31 @@ uint32_t otPlatFlashWrite(uint32_t aAddress, uint8_t *aData, uint32_t aSize)
 {
     int32_t status;
     uint32_t busy = 1;
+    uint32_t *data;
+    uint32_t size = 0;
 
     VerifyOrExit(((aAddress + aSize) < otPlatFlashGetSize()) &&
                  (!(aAddress & 3)) && (!(aSize & 3)), aSize = 0);
 
-    status = ROM_ProgramFlash((uint32_t *)aData, aAddress + FLASH_BASE, aSize);
+    data = (uint32_t *)(aData);
 
-    while (busy)
+    while (size < aSize)
     {
-        busy = HWREG(FLASH_CTRL_FCTL) & FLASH_CTRL_FCTL_BUSY;
+        status = ROM_ProgramFlash(data, aAddress + FLASH_BASE, 4);
+
+        while (busy)
+        {
+            busy = HWREG(FLASH_CTRL_FCTL) & FLASH_CTRL_FCTL_BUSY;
+        }
+
+        VerifyOrExit(romStatusToThread(status) == kThreadError_None, ;);
+        size += 4;
+        data++;
+        aAddress += 4;
     }
 
-    VerifyOrExit(romStatusToThread(status) == kThreadError_None, aSize = 0);
-
 exit:
-    return aSize;
+    return size;
 }
 
 uint32_t otPlatFlashRead(uint32_t aAddress, uint8_t *aData, uint32_t aSize)
@@ -143,7 +153,7 @@ uint32_t otPlatFlashRead(uint32_t aAddress, uint8_t *aData, uint32_t aSize)
 
     VerifyOrExit((aAddress + aSize) < otPlatFlashGetSize(), ;);
 
-    while (size <= aSize)
+    while (size < aSize)
     {
         uint32_t reg = HWREG(aAddress + FLASH_BASE);
         uint8_t *byte = (uint8_t *)&reg;
