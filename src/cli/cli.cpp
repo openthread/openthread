@@ -1107,7 +1107,7 @@ void Interpreter::ProcessPing(int argc, char *argv[])
 
     memset(&sMessageInfo, 0, sizeof(sMessageInfo));
     SuccessOrExit(error = sMessageInfo.GetPeerAddr().FromString(argv[0]));
-    sMessageInfo.mInterfaceId = 1;
+    sMessageInfo.mInterfaceId = OT_NETIF_INTERFACE_ID_THREAD;
 
     sLength = 8;
     sCount = 1;

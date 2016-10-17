@@ -74,7 +74,7 @@ public:
      */
     enum State
 #if _WIN32
-        : unsigned int
+    : unsigned int
 #endif
     {
         kStateInvalid,                   ///< Neighbor link is invalid

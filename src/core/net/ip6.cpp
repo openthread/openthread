@@ -58,8 +58,7 @@ Ip6::Ip6(void):
     mReceiveIp6DatagramCallback(NULL),
     mReceiveIp6DatagramCallbackContext(NULL),
     mIsReceiveIp6FilterEnabled(false),
-    mNetifListHead(NULL),
-    mNextInterfaceId(1)
+    mNetifListHead(NULL)
 {
 }
 
@@ -609,7 +608,7 @@ ThreadError Ip6::AddNetif(Netif &aNetif)
 
         do
         {
-            if (netif == &aNetif)
+            if (netif == &aNetif || netif->mInterfaceId == aNetif.mInterfaceId)
             {
                 ExitNow(error = kThreadError_Already);
             }
@@ -620,11 +619,6 @@ ThreadError Ip6::AddNetif(Netif &aNetif)
     }
 
     aNetif.mNext = NULL;
-
-    if (aNetif.mInterfaceId < 0)
-    {
-        aNetif.mInterfaceId = mNextInterfaceId++;
-    }
 
 exit:
     return error;
@@ -673,22 +667,6 @@ Netif *Ip6::GetNetifById(int8_t aInterfaceId)
     for (netif = mNetifListHead; netif; netif = netif->mNext)
     {
         if (netif->GetInterfaceId() == aInterfaceId)
-        {
-            ExitNow();
-        }
-    }
-
-exit:
-    return netif;
-}
-
-Netif *Ip6::GetNetifByName(char *aName)
-{
-    Netif *netif;
-
-    for (netif = mNetifListHead; netif; netif = netif->mNext)
-    {
-        if (strcmp(netif->GetName(), aName) == 0)
         {
             ExitNow();
         }
