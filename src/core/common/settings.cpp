@@ -104,7 +104,7 @@ static uint32_t swapSettingsBlock(otInstance *aInstance)
     uint32_t swapAddress = oldBase;
     uint32_t usedSize = aInstance->mSettingsUsedSize;
     uint8_t pageNum = OPENTHREAD_CONFIG_SETTINGS_PAGE_NUM;
-    uint32_t settingsSize = pageNum > 1? OPENTHREAD_CONFIG_SETTINGS_PAGE_SIZE * pageNum / 2:
+    uint32_t settingsSize = pageNum > 1 ? OPENTHREAD_CONFIG_SETTINGS_PAGE_SIZE * pageNum / 2 :
                             OPENTHREAD_CONFIG_SETTINGS_PAGE_SIZE;
 
     VerifyOrExit(pageNum > 1, ;);
