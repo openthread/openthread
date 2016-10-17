@@ -850,22 +850,46 @@ class SpinelCliCmd(Cmd, SpinelCodec):
 
     def do_keysequence(self, line):
         """
-        keysequence
+        keysequence counter
 
-            Get the Thread Key Sequence.
+            Get the Thread Key Sequence Counter.
 
-            > keysequence
+            > keysequence counter
             10
             Done
 
-        keysequence <keysequence>
+        keysequence counter <counter>
 
-            Set the Thread Key Sequence.
+            Set the Thread Key Sequence Counter.
 
-            > keysequence 10
+            > keysequence counter 10
+            Done
+
+        keysequence guardtime
+
+            Get the thrKeySwitchGuardTime (in hours).
+
+            > keysequence guardtime
+            0
+            Done
+
+        keysequence guardtime <guardtime>
+
+            Set the thrKeySwitchGuardTime (in hours).
+
+            > keysequence guardtime 0
             Done
         """
-        self.handle_property(line, SPINEL.PROP_NET_KEY_SEQUENCE, 'L')
+
+        args = line.split(" ")
+
+        if args[0] == "counter":
+            newline = line.replace("counter","")
+            self.handle_property(newline, SPINEL.PROP_NET_KEY_SEQUENCE_COUNTER, 'L')
+
+        elif args[0] == "guardtime":
+            newline = line.replace("guardtime","")
+            self.handle_property(newline, SPINEL.PROP_NET_KEY_SWITCH_GUARDTIME, 'L')
 
     def do_leaderdata(self, line):
         """

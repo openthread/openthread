@@ -1028,12 +1028,16 @@ spinel_prop_key_to_cstr(spinel_prop_key_t prop_key)
         ret = "PROP_NET_MASTER_KEY";
         break;
 
-    case SPINEL_PROP_NET_KEY_SEQUENCE:
-        ret = "PROP_NET_KEY_SEQUENCE";
+    case SPINEL_PROP_NET_KEY_SEQUENCE_COUNTER:
+        ret = "PROP_NET_KEY_SEQUENCE_COUNTER";
         break;
 
     case SPINEL_PROP_NET_PARTITION_ID:
         ret = "PROP_NET_PARTITION_ID";
+        break;
+
+    case SPINEL_PROP_NET_KEY_SWITCH_GUARDTIME:
+        ret = "PROP_NET_KEY_SWITCH_GUARDTIME";
         break;
 
     case SPINEL_PROP_THREAD_LEADER_ADDR:
