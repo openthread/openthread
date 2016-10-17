@@ -219,6 +219,13 @@ public:
         kKeyIdMode3           = 3 << 3,
         kKeyIdModeMask        = 3 << 3,
 
+        kKeySourceSizeMode0   = 0,
+        kKeySourceSizeMode1   = 0,
+        kKeySourceSizeMode2   = 4,
+        kKeySourceSizeMode3   = 8,
+
+        kKeyIndexSize         = sizeof(uint8_t),
+
         kMacCmdAssociationRequest          = 1,
         kMacCmdAssociationResponse         = 2,
         kMacCmdDisassociationNotification  = 3,
@@ -450,6 +457,22 @@ public:
     ThreadError SetFrameCounter(uint32_t aFrameCounter);
 
     /**
+     * This method returns a pointer to the Key Source.
+     *
+     * @returns A pointer to the Key Source.
+     *
+     */
+    const uint8_t *GetKeySource(void);
+
+    /**
+     * This method sets the Key Source.
+     *
+     * @param[in]  aKeySource  A pointer to the Key Source value.
+     *
+     */
+    void SetKeySource(const uint8_t *aKeySource);
+
+    /**
      * This method gets the Key Identifier.
      *
      * @param[out]  aKeyId  The Key Identifier.
@@ -663,20 +686,13 @@ public:
     uint8_t *GetFooter(void);
 
 private:
-    enum
-    {
-        kKeyIdLengthMode0 = 0,   ///< Mode 0 Key ID Length in bytes (IEEE 802.15.4-2006)
-        kKeyIdLengthMode1 = 1,   ///< Mode 1 Key ID Length in bytes (IEEE 802.15.4-2006)
-        kKeyIdLengthMode2 = 5,   ///< Mode 2 Key ID Length in bytes (IEEE 802.15.4-2006)
-        kKeyIdLengthMode3 = 9,   ///< Mode 3 Key ID Length in bytes (IEEE 802.15.4-2006)
-    };
-
     uint8_t *FindSequence(void);
     uint8_t *FindDstPanId(void);
     uint8_t *FindDstAddr(void);
     uint8_t *FindSrcPanId(void);
     uint8_t *FindSrcAddr(void);
     uint8_t *FindSecurityHeader(void);
+    static uint8_t GetKeySourceLength(uint8_t aKeyIdMode);
 };
 
 /**

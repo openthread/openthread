@@ -104,7 +104,6 @@ typedef struct RadioPacket
     uint8_t  mLqi;             ///< Link Quality Indicator for received frames.
     bool     mSecurityValid: 1; ///< Security Enabled flag is set and frame passes security checks.
     bool     mDidTX: 1;        ///< Set to true if this packet sent from the radio. Ignored by radio driver.
-    uint16_t mFcs;             ///< Final checksum (optional)
 } RadioPacket;
 
 /**

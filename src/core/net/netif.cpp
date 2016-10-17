@@ -74,6 +74,35 @@ exit:
     return error;
 }
 
+ThreadError Netif::RemoveCallback(NetifCallback &aCallback)
+{
+    ThreadError error = kThreadError_Already;
+    NetifCallback *prev = NULL;
+
+    for (NetifCallback *cur = mCallbacks; cur; cur = cur->mNext)
+    {
+        if (cur == &aCallback)
+        {
+            if (prev)
+            {
+                prev->mNext = cur->mNext;
+            }
+            else
+            {
+                mCallbacks = mCallbacks->mNext;
+            }
+
+            cur->mNext = NULL;
+            error = kThreadError_None;
+            break;
+        }
+
+        prev = cur;
+    }
+
+    return error;
+}
+
 Netif *Netif::GetNext() const
 {
     return mNext;

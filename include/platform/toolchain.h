@@ -134,6 +134,23 @@ extern "C" {
 
 // =========== TOOLCHAIN SELECTION : END ===========
 
+#ifdef _MSC_VER
+
+#ifdef _WIN64
+#define OT_CALL
+#define OT_CDECL
+#else
+#define OT_CALL  __stdcall
+#define OT_CDECL __cdecl
+#endif
+
+#else
+
+#define OT_CALL
+#define OT_CDECL
+
+#endif
+
 /**
  * @}
  *

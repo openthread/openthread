@@ -69,7 +69,7 @@
 // ----------------------------------------------------------------------------
 
 #define SPINEL_PROTOCOL_VERSION_THREAD_MAJOR    4
-#define SPINEL_PROTOCOL_VERSION_THREAD_MINOR    1
+#define SPINEL_PROTOCOL_VERSION_THREAD_MINOR    2
 
 #define SPINEL_FRAME_MAX_SIZE                   1300
 
@@ -236,11 +236,10 @@ typedef unsigned int spinel_cid_t;
 
 enum
 {
-    SPINEL_MD_FLAG_TX               = 0x0001,
-    SPINEL_MD_FLAG_HAS_FCS          = 0x0002,
-    SPINEL_MD_FLAG_BAD_FCS          = 0x0004,
-    SPINEL_MD_FLAG_DUPE             = 0x0008,
-    SPINEL_MD_FLAG_RESERVED         = 0xFFF0,
+    SPINEL_MD_FLAG_TX               = 0x0001, //!< Packet was transmitted, not received.
+    SPINEL_MD_FLAG_BAD_FCS          = 0x0004, //!< Packet was received with bad FCS
+    SPINEL_MD_FLAG_DUPE             = 0x0008, //!< Packet seems to be a duplicate
+    SPINEL_MD_FLAG_RESERVED         = 0xFFF2, //!< Flags reserved for future use.
 };
 
 enum
@@ -395,7 +394,8 @@ typedef enum
     SPINEL_PROP_NET_NETWORK_NAME     = SPINEL_PROP_NET__BEGIN + 4, ///< [U]
     SPINEL_PROP_NET_XPANID           = SPINEL_PROP_NET__BEGIN + 5, ///< [D]
     SPINEL_PROP_NET_MASTER_KEY       = SPINEL_PROP_NET__BEGIN + 6, ///< [D]
-    SPINEL_PROP_NET_KEY_SEQUENCE     = SPINEL_PROP_NET__BEGIN + 7, ///< [L]
+    SPINEL_PROP_NET_KEY_SEQUENCE_COUNTER
+                                     = SPINEL_PROP_NET__BEGIN + 7, ///< [L]
     SPINEL_PROP_NET_PARTITION_ID     = SPINEL_PROP_NET__BEGIN + 8, ///< [L]
 
     /// Require Join Existing
@@ -418,6 +418,9 @@ typedef enum
      */
     SPINEL_PROP_NET_REQUIRE_JOIN_EXISTING
                                      = SPINEL_PROP_NET__BEGIN + 9,
+
+    SPINEL_PROP_NET_KEY_SWITCH_GUARDTIME
+                                     = SPINEL_PROP_NET__BEGIN + 10, ///< [L]
 
     SPINEL_PROP_NET__END             = 0x50,
 

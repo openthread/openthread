@@ -110,8 +110,9 @@ const NcpBase::GetPropertyHandlerEntry NcpBase::mGetPropertyHandlerTable[] =
     { SPINEL_PROP_NET_NETWORK_NAME, &NcpBase::GetPropertyHandler_NET_NETWORK_NAME },
     { SPINEL_PROP_NET_XPANID, &NcpBase::GetPropertyHandler_NET_XPANID },
     { SPINEL_PROP_NET_MASTER_KEY, &NcpBase::GetPropertyHandler_NET_MASTER_KEY },
-    { SPINEL_PROP_NET_KEY_SEQUENCE, &NcpBase::GetPropertyHandler_NET_KEY_SEQUENCE },
+    { SPINEL_PROP_NET_KEY_SEQUENCE_COUNTER, &NcpBase::GetPropertyHandler_NET_KEY_SEQUENCE_COUNTER },
     { SPINEL_PROP_NET_PARTITION_ID, &NcpBase::GetPropertyHandler_NET_PARTITION_ID },
+    { SPINEL_PROP_NET_KEY_SWITCH_GUARDTIME, &NcpBase::GetPropertyHandler_NET_KEY_SWITCH_GUARDTIME},
 
     { SPINEL_PROP_THREAD_LEADER_ADDR, &NcpBase::GetPropertyHandler_THREAD_LEADER_ADDR },
     { SPINEL_PROP_THREAD_PARENT, &NcpBase::GetPropertyHandler_THREAD_PARENT },
@@ -210,7 +211,8 @@ const NcpBase::SetPropertyHandlerEntry NcpBase::mSetPropertyHandlerTable[] =
     { SPINEL_PROP_NET_NETWORK_NAME, &NcpBase::SetPropertyHandler_NET_NETWORK_NAME },
     { SPINEL_PROP_NET_XPANID, &NcpBase::SetPropertyHandler_NET_XPANID },
     { SPINEL_PROP_NET_MASTER_KEY, &NcpBase::SetPropertyHandler_NET_MASTER_KEY },
-    { SPINEL_PROP_NET_KEY_SEQUENCE, &NcpBase::SetPropertyHandler_NET_KEY_SEQUENCE },
+    { SPINEL_PROP_NET_KEY_SEQUENCE_COUNTER, &NcpBase::SetPropertyHandler_NET_KEY_SEQUENCE_COUNTER },
+    { SPINEL_PROP_NET_KEY_SWITCH_GUARDTIME, &NcpBase::SetPropertyHandler_NET_KEY_SWITCH_GUARDTIME},
 
     { SPINEL_PROP_THREAD_LOCAL_LEADER_WEIGHT, &NcpBase::SetPropertyHandler_THREAD_LOCAL_LEADER_WEIGHT },
     { SPINEL_PROP_THREAD_ASSISTING_PORTS, &NcpBase::SetPropertyHandler_THREAD_ASSISTING_PORTS },
@@ -534,10 +536,6 @@ void NcpBase::HandleRawFrame(const RadioPacket *aFrame)
 
     SuccessOrExit(errorCode = OutboundFrameBegin());
 
-    if (aFrame->mFcs != 0x0000)
-    {
-        flags |= SPINEL_MD_FLAG_HAS_FCS;
-    }
 
     if (aFrame->mDidTX)
     {
@@ -551,11 +549,7 @@ void NcpBase::HandleRawFrame(const RadioPacket *aFrame)
             SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0,
             SPINEL_CMD_PROP_VALUE_IS,
             SPINEL_PROP_STREAM_RAW,
-            aFrame->mLength + (
-                ((flags & SPINEL_MD_FLAG_HAS_FCS) == SPINEL_MD_FLAG_HAS_FCS)
-                ? 2 // +2 if we are appending the FCS
-                : 0 // +0 if we aren't appending the FCS
-            )
+            aFrame->mLength
         )
     );
 
@@ -566,18 +560,6 @@ void NcpBase::HandleRawFrame(const RadioPacket *aFrame)
             aFrame->mLength
         )
     );
-
-    if ((flags & SPINEL_MD_FLAG_HAS_FCS) == SPINEL_MD_FLAG_HAS_FCS)
-    {
-        // Append the FCS
-        SuccessOrExit(
-            errorCode = OutboundFrameFeedPacked(
-                "CC",
-                (aFrame->mFcs >> 0) & 0xFF,
-                (aFrame->mFcs >> 8) & 0xFF
-            )
-        );
-    }
 
     // Append metadata (rssi, etc)
     SuccessOrExit(
@@ -802,13 +784,13 @@ void NcpBase::UpdateChangedProps(void)
                           ));
             mChangedFlags &= ~static_cast<uint32_t>(OT_NET_PARTITION_ID);
         }
-        else if ((mChangedFlags & OT_NET_KEY_SEQUENCE) != 0)
+        else if ((mChangedFlags & OT_NET_KEY_SEQUENCE_COUNTER) != 0)
         {
             SuccessOrExit(HandleCommandPropertyGet(
                               SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0,
-                              SPINEL_PROP_NET_KEY_SEQUENCE
+                              SPINEL_PROP_NET_KEY_SEQUENCE_COUNTER
                           ));
-            mChangedFlags &= ~static_cast<uint32_t>(OT_NET_KEY_SEQUENCE);
+            mChangedFlags &= ~static_cast<uint32_t>(OT_NET_KEY_SEQUENCE_COUNTER);
         }
         else if ((mChangedFlags & (OT_IP6_ADDRESS_ADDED | OT_IP6_ADDRESS_REMOVED)) != 0)
         {
@@ -1776,7 +1758,7 @@ ThreadError NcpBase::GetPropertyHandler_NET_MASTER_KEY(uint8_t header, spinel_pr
            );
 }
 
-ThreadError NcpBase::GetPropertyHandler_NET_KEY_SEQUENCE(uint8_t header, spinel_prop_key_t key)
+ThreadError NcpBase::GetPropertyHandler_NET_KEY_SEQUENCE_COUNTER(uint8_t header, spinel_prop_key_t key)
 {
     return SendPropertyUpdate(
                header,
@@ -1795,6 +1777,17 @@ ThreadError NcpBase::GetPropertyHandler_NET_PARTITION_ID(uint8_t header, spinel_
                key,
                SPINEL_DATATYPE_UINT32_S,
                otGetPartitionId(mInstance)
+           );
+}
+
+ThreadError NcpBase::GetPropertyHandler_NET_KEY_SWITCH_GUARDTIME(uint8_t header, spinel_prop_key_t key)
+{
+    return SendPropertyUpdate(
+               header,
+               SPINEL_CMD_PROP_VALUE_IS,
+               key,
+               SPINEL_DATATYPE_UINT32_S,
+               otGetKeySwitchGuardTime(mInstance)
            );
 }
 
@@ -3329,7 +3322,7 @@ ThreadError NcpBase::SetPropertyHandler_NET_MASTER_KEY(uint8_t header, spinel_pr
     return errorCode;
 }
 
-ThreadError NcpBase::SetPropertyHandler_NET_KEY_SEQUENCE(uint8_t header, spinel_prop_key_t key,
+ThreadError NcpBase::SetPropertyHandler_NET_KEY_SEQUENCE_COUNTER(uint8_t header, spinel_prop_key_t key,
                                                          const uint8_t *value_ptr,
                                                          uint16_t value_len)
 {
@@ -3347,6 +3340,34 @@ ThreadError NcpBase::SetPropertyHandler_NET_KEY_SEQUENCE(uint8_t header, spinel_
     if (parsedLength > 0)
     {
         otSetKeySequenceCounter(mInstance, i);
+        errorCode = HandleCommandPropertyGet(header, key);
+    }
+    else
+    {
+        errorCode = SendLastStatus(header, SPINEL_STATUS_PARSE_ERROR);
+    }
+
+    return errorCode;
+}
+
+ThreadError NcpBase::SetPropertyHandler_NET_KEY_SWITCH_GUARDTIME(uint8_t header, spinel_prop_key_t key,
+                                                         const uint8_t *value_ptr,
+                                                         uint16_t value_len)
+{
+    unsigned int i(0);
+    spinel_ssize_t parsedLength;
+    ThreadError errorCode = kThreadError_None;
+
+    parsedLength = spinel_datatype_unpack(
+                       value_ptr,
+                       value_len,
+                       SPINEL_DATATYPE_UINT32_S,
+                       &i
+                   );
+
+    if (parsedLength > 0)
+    {
+        otSetKeySwitchGuardTime(mInstance, i);
         errorCode = HandleCommandPropertyGet(header, key);
     }
     else

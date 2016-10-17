@@ -868,8 +868,21 @@ typedef void (*otStateChangedCallback)(uint32_t aFlags, void *aContext);
  * @param[in]  aCallback  A pointer to a function that is called with certain configuration or state changes.
  * @param[in]  aContext   A pointer to application-specific context.
  *
+ * @retval kThreadError_None    Added the callback to the list of callbacks.
+ * @retval kThreadError_NoBufs  Could not add the callback due to resource constraints.
+ *
  */
-void otSetStateChangedCallback(otInstance *aInstance, otStateChangedCallback aCallback, void *aContext);
+ThreadError otSetStateChangedCallback(otInstance *aInstance, otStateChangedCallback aCallback, void *aContext);
+
+/**
+ * This function removes a callback to indicate when certain configuration or state changes within OpenThread.
+ *
+ * @param[in]  aInstance  A pointer to an OpenThread instance.
+ * @param[in]  aCallback  A pointer to a function that is called with certain configuration or state changes.
+ * @param[in]  aContext   A pointer to application-specific context.
+ *
+ */
+void otRemoveStateChangeCallback(otInstance *aInstance, otStateChangedCallback aCallback, void *aCallbackContext);
 
 /**
  * This function gets the Active Operational Dataset.
@@ -1269,6 +1282,28 @@ uint32_t otGetKeySequenceCounter(otInstance *aInstance);
  * @sa otGetKeySequenceCounter
  */
 void otSetKeySequenceCounter(otInstance *aInstance, uint32_t aKeySequenceCounter);
+
+/**
+ * Get the thrKeySwitchGuardTime
+ *
+ * @param[in]  aInstance A pointer to an OpenThread instance.
+ *
+ * @returns The thrKeySwitchGuardTime value (in hours).
+ *
+ * @sa otSetKeySwitchGuardTime
+ */
+uint32_t otGetKeySwitchGuardTime(otInstance *aInstance);
+
+/**
+ * Set the thrKeySwitchGuardTime
+ *
+ * @param[in]  aInstance            A pointer to an OpenThread instance.
+ * @param[in]  aKeySwitchGuardTime  The thrKeySwitchGuardTime value (in hours).
+ *
+ * @sa otGetKeySwitchGuardTime
+ */
+void otSetKeySwitchGuardTime(otInstance *aInstance, uint32_t aKeySwitchGuardTime);
+
 
 /**
  * Get the NETWORK_ID_TIMEOUT parameter used in the Router role.
@@ -2231,13 +2266,14 @@ uint8_t otIp6PrefixMatch(const otIp6Address *aFirst, const otIp6Address *aSecond
 /**
  * Allocate a new message buffer for sending a UDP message.
  *
- * @param[in]  aInstance A pointer to an OpenThread instance.
+ * @param[in]  aInstance             A pointer to an OpenThread instance.
+ * @param[in]  aLinkSecurityEnabled  TRUE if the message should be secured at Layer 2.
  *
  * @returns A pointer to the message buffer or NULL if no message buffers are available.
  *
  * @sa otFreeMessage
  */
-otMessage otNewUdpMessage(otInstance *aInstance);
+otMessage otNewUdpMessage(otInstance *aInstance, bool aLinkSecurityEnabled);
 
 /**
  * Open a UDP/IPv6 socket.

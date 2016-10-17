@@ -63,6 +63,8 @@ static otDEFINE_ALIGNED_VAR(sInstanceRaw, sizeof(otInstance), uint64_t);
 otInstance *sInstance = NULL;
 #endif
 
+void OT_CDECL operator delete(void *, size_t) throw() { }
+
 otInstance::otInstance(void) :
     mReceiveIp6DatagramCallback(NULL),
     mReceiveIp6DatagramCallbackContext(NULL),
@@ -70,8 +72,6 @@ otInstance::otInstance(void) :
     mActiveScanCallbackContext(NULL),
     mDiscoverCallback(NULL),
     mDiscoverCallbackContext(NULL),
-    mMbedTls(),
-    mIp6(),
     mThreadNetif(mIp6)
 {
 }
@@ -497,6 +497,16 @@ uint32_t otGetKeySequenceCounter(otInstance *aInstance)
 void otSetKeySequenceCounter(otInstance *aInstance, uint32_t aKeySequenceCounter)
 {
     aInstance->mThreadNetif.GetKeyManager().SetCurrentKeySequence(aKeySequenceCounter);
+}
+
+uint32_t otGetKeySwitchGuardTime(otInstance *aInstance)
+{
+    return aInstance->mThreadNetif.GetKeyManager().GetKeySwitchGuardTime();
+}
+
+void otSetKeySwitchGuardTime(otInstance *aInstance, uint32_t aKeySwitchGuardTime)
+{
+    aInstance->mThreadNetif.GetKeyManager().SetKeySwitchGuardTime(aKeySwitchGuardTime);
 }
 
 uint8_t otGetNetworkIdTimeout(otInstance *aInstance)
@@ -927,10 +937,34 @@ ThreadError otCreateSemanticallyOpaqueIid(otInstance *aInstance, otNetifAddress 
     return static_cast<Utils::SemanticallyOpaqueIidGenerator *>(aContext)->CreateIid(aInstance, aAddress);
 }
 
-void otSetStateChangedCallback(otInstance *aInstance, otStateChangedCallback aCallback, void *aCallbackContext)
+ThreadError otSetStateChangedCallback(otInstance *aInstance, otStateChangedCallback aCallback, void *aCallbackContext)
 {
-    aInstance->mNetifCallback.Set(aCallback, aCallbackContext);
-    aInstance->mThreadNetif.RegisterCallback(aInstance->mNetifCallback);
+    ThreadError error = kThreadError_NoBufs;
+
+    for (size_t i = 0; i < OPENTHREAD_CONFIG_MAX_STATECHANGE_HANDLERS; i++)
+    {
+        if (aInstance->mNetifCallback[i].IsFree())
+        {
+            aInstance->mNetifCallback[i].Set(aCallback, aCallbackContext);
+            error = aInstance->mThreadNetif.RegisterCallback(aInstance->mNetifCallback[i]);
+            break;
+        }
+    }
+
+    return error;
+}
+
+void otRemoveStateChangeCallback(otInstance *aInstance, otStateChangedCallback aCallback, void *aCallbackContext)
+{
+    for (size_t i = 0; i < OPENTHREAD_CONFIG_MAX_STATECHANGE_HANDLERS; i++)
+    {
+        if (aInstance->mNetifCallback[i].IsServing(aCallback, aCallbackContext))
+        {
+            aInstance->mThreadNetif.RemoveCallback(aInstance->mNetifCallback[i]);
+            aInstance->mNetifCallback[i].Free();
+            break;
+        }
+    }
 }
 
 const char *otGetVersionString(void)
@@ -1036,7 +1070,8 @@ void otInstanceFinalize(otInstance *aInstance)
     (void)otThreadStop(aInstance);
     (void)otInterfaceDown(aInstance);
 
-    // Nothing to actually free, since the caller supplied the buffer
+    // Free the otInstance structure
+    delete aInstance;
 
 #ifndef OPENTHREAD_MULTIPLE_INSTANCE
     sInstance = NULL;
@@ -1231,9 +1266,16 @@ ThreadError otSendIp6Datagram(otInstance *aInstance, otMessage aMessage)
     return error;
 }
 
-otMessage otNewUdpMessage(otInstance *aInstance)
+otMessage otNewUdpMessage(otInstance *aInstance, bool aLinkSecurityEnabled)
 {
-    return aInstance->mIp6.mUdp.NewMessage(0);
+    Message *message = aInstance->mIp6.mUdp.NewMessage(0);
+
+    if (message)
+    {
+        message->SetLinkSecurityEnabled(aLinkSecurityEnabled);
+    }
+
+    return message;
 }
 
 otMessage otNewIp6Message(otInstance *aInstance, bool aLinkSecurityEnabled)

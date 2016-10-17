@@ -38,6 +38,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 
+#include <openthread-core-config.h>
 #include <openthread-types.h>
 #include <crypto/mbedtls.hpp>
 #include <net/ip6.hpp>
@@ -52,7 +53,7 @@ typedef struct otInstance
     // Callbacks
     //
 
-    Thread::Ip6::NetifCallback mNetifCallback;
+    Thread::Ip6::NetifCallback mNetifCallback[OPENTHREAD_CONFIG_MAX_STATECHANGE_HANDLERS];
 
     otReceiveIp6DatagramCallback mReceiveIp6DatagramCallback;
     void *mReceiveIp6DatagramCallbackContext;
@@ -70,9 +71,18 @@ typedef struct otInstance
     // State
     //
 
+#ifndef OPENTHREAD_MULTIPLE_INSTANCE
     Thread::Crypto::MbedTls mMbedTls;
+#endif
     Thread::Ip6::Ip6 mIp6;
     Thread::ThreadNetif mThreadNetif;
+
+    //
+    // Platform specific variables
+    //
+
+    uint32_t mSettingsBaseAddress;
+    uint32_t mSettingsUsedSize;
 
     // Constructor
     otInstance(void);
