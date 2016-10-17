@@ -80,6 +80,11 @@ public:
     ThreadError Stop(void);
 
 private:
+    enum
+    {
+        kConfigExtAddressDelay = 100,  ///< milliseconds
+    };
+
     static void HandleDiscoverResult(otActiveScanResult *aResult, void *aContext);
     void HandleDiscoverResult(otActiveScanResult *aResult);
 
@@ -99,6 +104,9 @@ private:
                                     Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
     void HandleJoinerEntrust(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
+    static void HandleTimer(void *aContext);
+    void HandleTimer(void);
+
     void Close(void);
     void ReceiveJoinerFinalizeResponse(uint8_t *buf, uint16_t length);
     void SendJoinerFinalize(void);
@@ -111,6 +119,7 @@ private:
     Ip6::UdpSocket mSocket;
 
     Tasklet mTransmitTask;
+    Timer mTimer;
     Coap::Resource mJoinerEntrust;
     ThreadNetif &mNetif;
 };
