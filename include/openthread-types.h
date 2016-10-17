@@ -162,6 +162,11 @@ typedef enum ThreadError
      */
     kThreadError_NotCapable = 29,
 
+    /**
+     * Coap response or acknowledgment not received.
+     */
+    kThreadError_ResponseTimeout = 30,
+
     kThreadError_Error = 255,
 } ThreadError;
 
@@ -927,6 +932,104 @@ typedef struct otUdpSocket
     void                *mTransport; ///< A pointer to the transport object (internal use only).
     struct otUdpSocket  *mNext;      ///< A pointer to the next UDP socket (internal use only).
 } otUdpSocket;
+
+/**
+ * @}
+ *
+ */
+
+/**
+ * @addtogroup coap  CoAP
+ *
+ * @brief
+ *   This module includes functions that control CoAP communication.
+ *
+ * @{
+ *
+ */
+
+/**
+ * CoAP Type values.
+ *
+ */
+typedef enum otCoapType
+{
+    kCoapTypeConfirmable    = 0x00,  ///< Confirmable
+    kCoapTypeNonConfirmable = 0x10,  ///< Non-confirmable
+    kCoapTypeAcknowledgment = 0x20,  ///< Acknowledgment
+    kCoapTypeReset          = 0x30,  ///< Reset
+} otCoapType;
+
+/**
+ * CoAP Code values.
+ *
+ */
+typedef enum otCoapCode
+{
+    kCoapRequestGet      = 0x01,  ///< Get
+    kCoapRequestPost     = 0x02,  ///< Post
+    kCoapRequestPut      = 0x03,  ///< Put
+    kCoapRequestDelete   = 0x04,  ///< Delete
+    kCoapResponseChanged = 0x44,  ///< Changed
+    kCoapResponseContent = 0x45,  ///< Content
+} otCoapCode;
+
+/**
+ * CoAP Option Numbers
+ */
+typedef enum otCoapOptionType
+{
+    kCoapOptionUriPath       = 11,   ///< Uri-Path
+    kCoapOptionContentFormat = 12,   ///< Content-Format
+} otCoapOptionType;
+
+/**
+ * This structure represents a CoAP option.
+ *
+ */
+typedef struct otCoapOption
+{
+    uint16_t       mNumber;  ///< Option Number
+    uint16_t       mLength;  ///< Option Length
+    const uint8_t *mValue;   ///< A pointer to the Option Value
+} otCoapOption;
+
+#define OT_COAP_HEADER_MAX_LENGTH       128  ///< Max CoAP header length (bytes)
+
+/**
+ * This structure represents a CoAP header.
+ *
+ */
+typedef struct otCoapHeader
+{
+    union
+    {
+        struct
+        {
+            uint8_t mVersionTypeToken;
+            uint8_t mCode;
+            uint16_t mMessageId;
+        } mFields;
+        uint8_t mBytes[OT_COAP_HEADER_MAX_LENGTH];
+    } mHeader;
+    uint8_t mHeaderLength;
+    uint16_t mOptionLast;
+    uint16_t mNextOptionOffset;
+    otCoapOption mOption;
+} otCoapHeader;
+
+/**
+ * This function pointer is called when a CoAP response is received or on the request timeout.
+ *
+ * @param[in]  aContext  A pointer to application-specific context.
+ * @param[in[  aHeader   A pointer to the received CoAP header. NULL if no response was received.
+ * @param[in]  aMessage  A pointer to the message buffer containing the response. NULL if no response was received.
+ * @param[in]  aResult   A result of the CoAP transaction. kThreadError_None if the response
+                         was received successfully, otherwise an error code is returned.
+ *
+ */
+typedef void (*otCoapResponseHandler)(void *aContext, otCoapHeader *aHeader, otMessage aMessage,
+                                      ThreadError aResult);
 
 /**
  * @}

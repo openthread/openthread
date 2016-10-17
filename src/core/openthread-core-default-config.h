@@ -195,6 +195,36 @@
 #define OPENTHREAD_CONFIG_MAX_STATECHANGE_HANDLERS          1
 #endif  // OPENTHREAD_CONFIG_MAX_STATECHANGE_HANDLERS
 
+/**
+ * @def OPENTHREAD_CONFIG_COAP_ACK_TIMEOUT
+ *
+ * Minimum spacing before first retransmission when ACK is not received (RFC7252 default value is 2).
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_COAP_ACK_TIMEOUT
+#define OPENTHREAD_CONFIG_COAP_ACK_TIMEOUT                  2
+#endif  // OPENTHREAD_CONFIG_COAP_ACK_TIMEOUT
+
+/**
+ * @def OPENTHREAD_CONFIG_COAP_ACK_RANDOM_FACTOR
+ *
+ * Value used to calculate maximum spacing before first retransmission when ACK is not received
+ * (RFC7252 default value is 1.5, must not be decreased below 1).
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_COAP_ACK_RANDOM_FACTOR
+#define OPENTHREAD_CONFIG_COAP_ACK_RANDOM_FACTOR            1
+#endif  // OPENTHREAD_CONFIG_COAP_ACK_RANDOM_FACTOR
+
+/**
+ * @def OPENTHREAD_CONFIG_COAP_MAX_RETRANSMIT
+ *
+ * Maximum number of retransmissions for CoAP Confirmable messages (RFC7252 default value is 4).
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_COAP_MAX_RETRANSMIT
+#define OPENTHREAD_CONFIG_COAP_MAX_RETRANSMIT               2
+#endif  // OPENTHREAD_CONFIG_COAP_MAX_RETRANSMIT
 
 /**
  * @def OPENTHREAD_CONFIG_LOG_LEVEL
@@ -269,7 +299,6 @@
  *
  */
 #define OPENTHREAD_CONFIG_LOG_MEM
-
 
 /**
  * @def OPENTHREAD_CONFIG_LOG_NETDIAG

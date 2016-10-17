@@ -36,6 +36,7 @@
 
 #include <string.h>
 
+#include <openthread-types.h>
 #include <common/encoding.hpp>
 #include <common/message.hpp>
 
@@ -65,12 +66,15 @@ namespace Coap {
  * This class implements CoAP header generation and parsing.
  *
  */
-class Header
+class Header : public otCoapHeader
 {
 public:
     enum
     {
-        kVersion1 = 1,  ///< Version 1
+        kVersion1           = 1,                         ///< Version 1
+        kMinHeaderLength    = 4,                         ///< Minimum header length
+        kMaxHeaderLength    = OT_COAP_HEADER_MAX_LENGTH, ///< Maximum header length
+        kDefaultTokenLength = 2                          ///< Default token length
     };
 
     /**
@@ -96,7 +100,7 @@ public:
      * @returns The Version value.
      *
      */
-    uint8_t GetVersion(void) const { return (mHeader[0] & kVersionMask) >> kVersionOffset; }
+    uint8_t GetVersion(void) const { return (mHeader.mFields.mVersionTypeToken & kVersionMask) >> kVersionOffset; }
 
     /**
      * This method sets the Version value.
@@ -104,7 +108,10 @@ public:
      * @param[in]  aVersion  The Version value.
      *
      */
-    void SetVersion(uint8_t aVersion) { mHeader[0] &= ~kVersionMask; mHeader[0] |= aVersion << kVersionOffset; }
+    void SetVersion(uint8_t aVersion) {
+        mHeader.mFields.mVersionTypeToken &= ~kVersionMask;
+        mHeader.mFields.mVersionTypeToken |= aVersion << kVersionOffset;
+    }
 
     /**
      * CoAP Type values.
@@ -124,7 +131,7 @@ public:
      * @returns The Type value.
      *
      */
-    Type GetType(void) const { return static_cast<Header::Type>(mHeader[0] & kTypeMask); }
+    Type GetType(void) const { return static_cast<Header::Type>(mHeader.mFields.mVersionTypeToken & kTypeMask); }
 
     /**
      * This method sets the Type value.
@@ -132,7 +139,11 @@ public:
      * @param[in]  aType  The Type value.
      *
      */
-    void SetType(Type aType) { mHeader[0] &= ~kTypeMask; mHeader[0] |= aType; }
+    void SetType(Type aType) {
+        mHeader.mFields.mVersionTypeToken &= ~kTypeMask;
+        mHeader.mFields.mVersionTypeToken |= aType;
+    }
+
 
     /**
      * CoAP Code values.
@@ -154,7 +165,7 @@ public:
      * @returns The Code value.
      *
      */
-    Code GetCode(void) const { return static_cast<Code>(mCode); }
+    Code GetCode(void) const { return static_cast<Code>(mHeader.mFields.mCode); }
 
     /**
      * This method sets the Code value.
@@ -162,7 +173,7 @@ public:
      * @param[in]  aCode  The Code value.
      *
      */
-    void SetCode(Code aCode) { mCode = static_cast<uint8_t>(aCode); }
+    void SetCode(Code aCode) { mHeader.mFields.mCode = static_cast<uint8_t>(aCode); }
 
     /**
      * This method returns the Message ID value.
@@ -170,7 +181,7 @@ public:
      * @returns The Message ID value.
      *
      */
-    uint16_t GetMessageId(void) const { return HostSwap16(mMessageId); }
+    uint16_t GetMessageId(void) const { return HostSwap16(mHeader.mFields.mMessageId); }
 
     /**
      * This method sets the Message ID value.
@@ -178,7 +189,7 @@ public:
      * @param[in]  aMessageId  The Message ID value.
      *
      */
-    void SetMessageId(uint16_t aMessageId) { mMessageId = HostSwap16(aMessageId); }
+    void SetMessageId(uint16_t aMessageId) { mHeader.mFields.mMessageId = HostSwap16(aMessageId); }
 
     /**
      * This method returns the Token length.
@@ -186,7 +197,7 @@ public:
      * @returns The Token length.
      *
      */
-    uint8_t GetTokenLength(void) const { return (mHeader[0] & kTokenLengthMask) >> kTokenLengthOffset; }
+    uint8_t GetTokenLength(void) const { return (mHeader.mFields.mVersionTypeToken & kTokenLengthMask) >> kTokenLengthOffset; }
 
     /**
      * This method returns a pointer to the Token value.
@@ -194,7 +205,7 @@ public:
      * @returns A pointer to the Token value.
      *
      */
-    const uint8_t *GetToken(void) const { return mHeader + kTokenOffset; }
+    const uint8_t *GetToken(void) const { return mHeader.mBytes + kTokenOffset; }
 
     /**
      * This method sets the Token value and length.
@@ -204,16 +215,39 @@ public:
      *
      */
     void SetToken(const uint8_t *aToken, uint8_t aTokenLength) {
-        mHeader[0] = (mHeader[0] & ~kTokenLengthMask) | ((aTokenLength << kTokenLengthOffset) & kTokenLengthMask);
-        memcpy(mHeader + kTokenOffset, aToken, aTokenLength);
+        mHeader.mFields.mVersionTypeToken = (mHeader.mFields.mVersionTypeToken & ~kTokenLengthMask) |
+                                            ((aTokenLength << kTokenLengthOffset) & kTokenLengthMask);
+        memcpy(mHeader.mBytes + kTokenOffset, aToken, aTokenLength);
         mHeaderLength += aTokenLength;
+    }
+
+    /**
+     * This method sets the Token length and randomizes its value.
+     *
+     * @param[in]  aTokenLength  The Length of a Token to set.
+     *
+     */
+    void SetToken(uint8_t aTokenLength);
+
+    /**
+     *  This method checks if Tokens in two CoAP headers are equal.
+     *
+     *  @param[in]  aHeader  A header to compare.
+     *
+     * @retval TRUE   If two Tokens are equal.
+     * @retval FALSE  If Tokens differ in length or value.
+     *
+     */
+    bool IsTokenEqual(const Header &aHeader) const {
+        return ((this->GetTokenLength() == aHeader.GetTokenLength()) &&
+                (memcmp(this->GetToken(), aHeader.GetToken(), this->GetTokenLength()) == 0));
     }
 
     /**
      * This structure represents a CoAP option.
      *
      */
-    struct Option
+    struct Option : public otCoapOption
     {
         /**
          * Protocol Constants
@@ -233,10 +267,6 @@ public:
             kOptionUriPath       = 11,   ///< Uri-Path
             kOptionContentFormat = 12,   ///< Content-Format
         };
-
-        uint16_t       mNumber;  ///< Option Number
-        uint16_t       mLength;  ///< Option Length
-        const uint8_t *mValue;   ///< A pointer to the Option Value
     };
 
     /**
@@ -246,6 +276,7 @@ public:
      *
      * @retval kThreadError_None         Successfully appended the option.
      * @retval kThreadError_InvalidArgs  The option type is not equal or greater than the last option type.
+     * @retval kThreadError_NoBufs       The option length exceeds the buffer size.
      *
      */
     ThreadError AppendOption(const Option &aOption);
@@ -257,6 +288,7 @@ public:
      *
      * @retval kThreadError_None         Successfully appended the option.
      * @retval kThreadError_InvalidArgs  The option type is not equal or greater than the last option type.
+     * @retval kThreadError_NoBufs       The option length exceeds the buffer size.
      *
      */
     ThreadError AppendUriPathOptions(const char *aUriPath);
@@ -277,6 +309,7 @@ public:
      *
      * @retval kThreadError_None         Successfully appended the option.
      * @retval kThreadError_InvalidArgs  The option type is not equal or greater than the last option type.
+     * @retval kThreadError_NoBufs       The option length exceeds the buffer size.
      *
      */
     ThreadError AppendContentFormatOption(MediaType aType);
@@ -300,8 +333,11 @@ public:
     /**
      * This method terminates the CoAP header.
      *
+     * @retval kThreadError_None    Header successfully terminated.
+     * @retval kThreadError_NoBufs  Header Payload Marker exceeds the buffer size.
+     *
      */
-    void Finalize(void) { mHeader[mHeaderLength++] = 0xff; }
+    ThreadError Finalize(void);
 
     /**
      * This method returns a pointer to the first byte of the header.
@@ -309,7 +345,7 @@ public:
      * @returns A pointer to the first byte of the header.
      *
      */
-    const uint8_t *GetBytes(void) const { return mHeader; }
+    const uint8_t *GetBytes(void) const { return mHeader.mBytes; }
 
     /**
      * This method returns the header length in bytes.
@@ -318,6 +354,77 @@ public:
      *
      */
     uint8_t GetLength(void) const { return mHeaderLength; }
+
+    /**
+     * This method sets a default response header based on request header.
+     *
+     * @param[in]  aRequestHeader  Request header to base on.
+     *
+     */
+    void SetDefaultResponseHeader(const Header &aRequestHeader);
+
+    /**
+     * This method checks if a header is an empty message header.
+     *
+     * @retval TRUE   Header is an empty message header.
+     * @retval FALSE  Header is not an empty message header.
+     *
+     */
+    bool IsEmpty(void) const { return (GetCode() == 0); };
+
+    /**
+     * This method checks if a header is a request header.
+     *
+     * @retval TRUE   Header is a request header.
+     * @retval FALSE  Header is not a request header.
+     *
+     */
+    bool IsRequest(void) const { return (GetCode() >= kCodeGet && GetCode() <= kCodeDelete); };
+
+    /**
+     * This method checks if a header is a response header.
+     *
+     * @retval TRUE   Header is a response header.
+     * @retval FALSE  Header is not a response header.
+     *
+     */
+    bool IsResponse(void) const { return (GetCode() >= kCodeChanged); };
+
+    /**
+     * This method checks if a header is a CON message header.
+     *
+     * @retval TRUE   Header is a CON message header.
+     * @retval FALSE  Header is not is a CON message header.
+     *
+     */
+    bool IsConfirmable(void) const { return (GetType() == kTypeConfirmable); };
+
+    /**
+     * This method checks if a header is a NON message header.
+     *
+     * @retval TRUE   Header is a NON message header.
+     * @retval FALSE  Header is not is a NON message header.
+     *
+     */
+    bool IsNonConfirmable(void) const { return (GetType() == kTypeNonConfirmable); };
+
+    /**
+     * This method checks if a header is a ACK message header.
+     *
+     * @retval TRUE   Header is a ACK message header.
+     * @retval FALSE  Header is not is a ACK message header.
+     *
+     */
+    bool IsAck(void) const { return (GetType() == kTypeAcknowledgment); };
+
+    /**
+     * This method checks if a header is a RST message header.
+     *
+     * @retval TRUE   Header is a RST message header.
+     * @retval FALSE  Header is not is a RST message header.
+     *
+     */
+    bool IsReset(void) const { return (GetType() == kTypeReset);  };
 
 private:
     /**
@@ -329,10 +436,14 @@ private:
         kVersionMask                = 0xc0,  ///< Version mask as specified (RFC 7252).
         kVersionOffset              = 6,     ///< Version offset as specified (RFC 7252).
 
+        kTypeMask                   = 0x30,  ///< Type mask as specified (RFC 7252).
+
         kTokenLengthMask            = 0x0f,  ///< Token Length mask as specified (RFC 7252).
         kTokenLengthOffset          = 0,     ///< Token Length offset as specified (RFC 7252).
         kTokenOffset                = 4,     ///< Token offset as specified (RFC 7252).
         kMaxTokenLength             = 8,     ///< Max token length as specified (RFC 7252).
+
+        kMaxOptionHeaderSize        = 5,     ///< Maximum size of an Option header
 
         kOption1ByteExtension       = 13,    ///< Indicates a 1 byte extension (RFC 7252).
         kOption2ByteExtension       = 14,    ///< Indicates a 1 byte extension (RFC 7252).
@@ -340,27 +451,6 @@ private:
         kOption1ByteExtensionOffset = 13,    ///< Delta/Length offset as specified (RFC 7252).
         kOption2ByteExtensionOffset = 269,   ///< Delta/Length offset as specified (RFC 7252).
     };
-
-    enum
-    {
-        kTypeMask = 0x30,
-        kMinHeaderLength = 4,
-        kMaxHeaderLength = 128,
-    };
-    union
-    {
-        struct
-        {
-            uint8_t mVersionTypeToken;
-            uint8_t mCode;
-            uint16_t mMessageId;
-        };
-        uint8_t mHeader[kMaxHeaderLength];
-    };
-    uint8_t mHeaderLength;
-    uint16_t mOptionLast;
-    uint16_t mNextOptionOffset;
-    Option mOption;
 };
 
 /**
