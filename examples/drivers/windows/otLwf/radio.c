@@ -838,6 +838,9 @@ ThreadError otPlatRadioEnergyScan(_In_ otInstance *otCtx, uint8_t aScanChannel, 
     
     LogInfo(DRIVER_DEFAULT, "Filter %p starting energy scan on channel %d (%d ms).", pFilter, aScanChannel, aScanDuration);
 
+    // Cache the listening channel
+    pFilter->otCurrentListenChannel = aScanChannel;
+
     // Indicate to the miniport
     status = 
         otLwfSendInternalRequest(

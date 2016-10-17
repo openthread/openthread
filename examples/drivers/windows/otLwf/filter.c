@@ -1041,9 +1041,9 @@ void otLwfStateChangedCallback(uint32_t aFlags, _In_ void *aContext)
         LogVerbose(DRIVER_DEFAULT, "Filter %p received OT_NET_PARTITION_ID", pFilter);
     }
 
-    if ((aFlags & OT_NET_KEY_SEQUENCE) != 0)
+    if ((aFlags & OT_NET_KEY_SEQUENCE_COUNTER) != 0)
     {
-        LogVerbose(DRIVER_DEFAULT, "Filter %p received OT_NET_KEY_SEQUENCE", pFilter);
+        LogVerbose(DRIVER_DEFAULT, "Filter %p received OT_NET_KEY_SEQUENCE_COUNTER", pFilter);
     }
 
     if ((aFlags & OT_THREAD_CHILD_ADDED) != 0)

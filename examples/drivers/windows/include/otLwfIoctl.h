@@ -649,9 +649,14 @@ typedef struct otCommissionConfig
     // otOperationalDataset - aDataset
     // uint8_t - aLength
     // uint8_t[aLength] - aTlvs
+    
+#define IOCTL_OTLWF_OT_KEY_SWITCH_GUARDTIME \
+    OTLWF_CTL_CODE(191, METHOD_BUFFERED, FILE_READ_DATA | FILE_WRITE_DATA)
+    // GUID - InterfaceGuid
+    // uint32_t - aKeySwitchGuardTime
 
 // OpenThread function IOCTL codes
 #define MIN_OTLWF_IOCTL_FUNC_CODE 100
-#define MAX_OTLWF_IOCTL_FUNC_CODE 190
+#define MAX_OTLWF_IOCTL_FUNC_CODE 191
 
 #endif //__OTLWFIOCTL_H__
