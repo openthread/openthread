@@ -58,6 +58,7 @@ static const char name[] = "thread";
 ThreadNetif::ThreadNetif(Ip6::Ip6 &aIp6):
     Netif(aIp6),
     mCoapServer(aIp6.mUdp, kCoapUdpPort),
+    mCoapClient(*this),
     mAddressResolver(*this),
     mActiveDataset(*this),
     mPendingDataset(*this),
@@ -103,12 +104,14 @@ ThreadError ThreadNetif::Up(void)
         mIsUp = true;
     }
 
+    mCoapClient.Start();
     return kThreadError_None;
 }
 
 ThreadError ThreadNetif::Down(void)
 {
     mCoapServer.Stop();
+    mCoapClient.Stop();
     mMleRouter.Disable();
     mMeshForwarder.Stop();
     mIp6.RemoveNetif(*this);
