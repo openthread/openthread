@@ -1421,7 +1421,6 @@ ThreadError Mle::SendAnnounce(uint8_t aChannel)
     PanIdTlv panid;
     Ip6::Address destination;
     Message *message;
-    (void)aChannel;
 
     VerifyOrExit((message = mSocket.NewMessage(0)) != NULL, ;);
     message->SetSubType(Message::kSubTypeMleAnnounce);
