@@ -23,7 +23,6 @@
     <ClCompile Include="..\..\src\core\coap\coap_server.cpp" />
     <ClCompile Include="..\..\src\core\common\logging.cpp" />
     <ClCompile Include="..\..\src\core\common\message.cpp" />
-    <ClCompile Include="..\..\src\core\common\settings.cpp" />
     <ClCompile Include="..\..\src\core\common\tasklet.cpp" />
     <ClCompile Include="..\..\src\core\common\timer.cpp" />
     <ClCompile Include="..\..\src\core\common\trickle_timer.cpp" />
