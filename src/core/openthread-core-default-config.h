@@ -186,9 +186,9 @@
 #endif  // OPENTHREAD_CONFIG_MAX_JOINER_ENTRIES
 
 /**
- * @def OPENTHREAD_CONFIG_NUM_MESSAGE_BUFFERS
+ * @def OPENTHREAD_CONFIG_MAX_STATECHANGE_HANDLERS
  *
- * The number of message buffers in the buffer pool.
+ * The maximum number of state-changed callback handlers (set using `otSetStateChangedCallback()`).
  *
  */
 #ifndef OPENTHREAD_CONFIG_MAX_STATECHANGE_HANDLERS
