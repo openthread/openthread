@@ -127,10 +127,10 @@ public:
      */
     uint16_t GetSessionId(void) const;
 
-     /**
-     * Commissioner State.
-     *
-     */
+    /**
+    * Commissioner State.
+    *
+    */
     enum
     {
         kStateDisabled = 0,
