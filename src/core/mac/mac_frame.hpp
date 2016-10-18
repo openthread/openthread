@@ -801,8 +801,7 @@ public:
      * This method sets the Joining Permitted flag.
      *
      */
-    void SetJoiningPermitted(void) 
-    { 
+    void SetJoiningPermitted(void) {
         mFlags |= kJoiningFlag;
 
 #if OPENTHREAD_CONFIG_JOIN_BEACON_VERSION != kProtocolVersion
