@@ -48,7 +48,10 @@ matrix:
     - env: BUILD_TARGET="scan-build"
       compiler: clang
       os: linux
-    - env: BUILD_TARGET="cc2538"
+    - env: BUILD_TARGET="arm-gcc49"
+      compiler: gcc
+      os: linux
+    - env: BUILD_TARGET="arm-gcc54"
       compiler: gcc
       os: linux
     - env: BUILD_TARGET="posix"

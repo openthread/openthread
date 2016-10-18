@@ -224,7 +224,7 @@ AC_PROG_LN_S
 #
 
 PROSPECTIVE_CFLAGS="-Wall -Wextra -Wshadow -Werror -std=c99 -pedantic-errors"
-PROSPECTIVE_CXXFLAGS="-Wall -Wextra -Wshadow -Werror"
+PROSPECTIVE_CXXFLAGS="-Wall -Wextra -Wshadow -Werror -Wno-c++14-compat"
 
 AC_CACHE_CHECK([whether $CC is Clang],
     [nl_cv_clang],
