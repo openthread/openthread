@@ -844,6 +844,14 @@ typedef struct otNetifAddress
 } otNetifAddress;
 
 /**
+ * This enumeration represents the list of allowable values for an InterfaceId.
+ */
+typedef enum otNetifInterfaceId
+{
+    OT_NETIF_INTERFACE_ID_THREAD = 1,  ///< The Thread Network interface ID.
+} otNetifInterfaceId;
+
+/**
  * This structure represents data used by Semantically Opaque IID Generator.
  *
  */

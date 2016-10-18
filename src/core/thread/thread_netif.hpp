@@ -117,14 +117,6 @@ public:
     bool IsUp(void) const;
 
     /**
-     * This method returns a pointer to a NULL-terminated string that names the interface.
-     *
-     * @returns A pointer to a NULL-terminated string that names the interface.
-     *
-     */
-    const char *GetName(void) const;
-
-    /**
      * This method retrieves the link address.
      *
      * @param[out]  aAddress  A reference to the link address.

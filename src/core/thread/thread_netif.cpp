@@ -53,10 +53,8 @@ static const uint8_t kThreadMasterKey[] =
     0x88, 0x99, 0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff,
 };
 
-static const char name[] = "thread";
-
 ThreadNetif::ThreadNetif(Ip6::Ip6 &aIp6):
-    Netif(aIp6),
+    Netif(aIp6, OT_NETIF_INTERFACE_ID_THREAD),
     mCoapServer(aIp6.mUdp, kCoapUdpPort),
     mCoapClient(*this),
     mAddressResolver(*this),
@@ -86,11 +84,6 @@ ThreadNetif::ThreadNetif(Ip6::Ip6 &aIp6):
     mEnergyScan(*this)
 {
     mKeyManager.SetMasterKey(kThreadMasterKey, sizeof(kThreadMasterKey));
-}
-
-const char *ThreadNetif::GetName(void) const
-{
-    return name;
 }
 
 ThreadError ThreadNetif::Up(void)
