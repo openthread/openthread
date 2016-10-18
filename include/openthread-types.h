@@ -162,6 +162,11 @@ typedef enum ThreadError
      */
     kThreadError_NotCapable = 29,
 
+    /**
+     * Coap response or acknowledgment not received.
+     */
+    kThreadError_ResponseTimeout = 30,
+
     kThreadError_Error = 255,
 } ThreadError;
 

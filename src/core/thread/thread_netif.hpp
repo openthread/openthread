@@ -42,6 +42,8 @@
 
 #include <openthread-types.h>
 
+#include <coap/coap_server.hpp>
+#include <coap/coap_client.hpp>
 #include <mac/mac.hpp>
 #include <meshcop/joiner_router.hpp>
 #include <meshcop/leader.hpp>
@@ -170,12 +172,20 @@ public:
     NetworkDiagnostic::NetworkDiagnostic &GetNetworkDiagnostic(void) { return mNetworkDiagnostic; }
 
     /**
-     * This method returns a pointer to the coap server object.
+     * This method returns a reference to the CoAP server object.
      *
-     * @returns A pointer to the coap server object.
+     * @returns A reference to the CoAP server object.
      *
      */
     Coap::Server &GetCoapServer(void) { return mCoapServer; }
+
+    /**
+     * This method returns a reference to the CoAP client object.
+     *
+     * @returns A reference to the CoAP client object.
+     *
+     */
+    Coap::Client &GetCoapClient(void) { return mCoapClient; }
 
     /**
      * This method returns a reference to the IPv6 filter object.
@@ -273,6 +283,7 @@ public:
 
 private:
     Coap::Server mCoapServer;
+    Coap::Client mCoapClient;
     AddressResolver mAddressResolver;
     MeshCoP::ActiveDataset mActiveDataset;
     MeshCoP::PendingDataset mPendingDataset;
