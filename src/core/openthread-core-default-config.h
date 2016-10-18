@@ -238,6 +238,16 @@
 #endif  // OPENTHREAD_CONFIG_COAP_MAX_RETRANSMIT
 
 /**
+ * @def OPENTHREAD_CONFIG_JOIN_BEACON_VERSION
+ *
+ * The Beacon version to use when the beacon join flag is set.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_JOIN_BEACON_VERSION
+#define OPENTHREAD_CONFIG_JOIN_BEACON_VERSION kProtocolVersion
+#endif  // OPENTHREAD_CONFIG_ALT_BEACON_VERSION
+
+/**
  * @def OPENTHREAD_CONFIG_LOG_LEVEL
  *
  * The log level.

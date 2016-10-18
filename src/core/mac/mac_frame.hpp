@@ -34,6 +34,8 @@
 #ifndef MAC_FRAME_HPP_
 #define MAC_FRAME_HPP_
 
+#include <openthread-core-config.h>
+
 #include <limits.h>
 #include <stdint.h>
 #include <string.h>
@@ -799,7 +801,15 @@ public:
      * This method sets the Joining Permitted flag.
      *
      */
-    void SetJoiningPermitted(void) { mFlags |= kJoiningFlag; }
+    void SetJoiningPermitted(void) 
+    { 
+        mFlags |= kJoiningFlag;
+
+#if OPENTHREAD_CONFIG_JOIN_BEACON_VERSION != kProtocolVersion
+        mFlags &= ~kVersionMask;
+        mFlags |=  OPENTHREAD_CONFIG_JOIN_BEACON_VERSION << kVersionOffset;
+#endif
+    }
 
     /**
      * This method returns a pointer to the Network Name field.
