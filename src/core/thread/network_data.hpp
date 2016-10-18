@@ -339,6 +339,7 @@ protected:
     uint8_t mLength;          ///< The number of valid bytes in @var mTlvs.
 
     Mle::MleRouter &mMle;
+    ThreadNetif &mNetif;
 
 private:
     enum
