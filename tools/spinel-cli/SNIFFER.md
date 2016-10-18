@@ -96,6 +96,7 @@ open up wireshark, and start streaming packets into wireshark.
 
 ## Troubleshooting
 Q: sniffer.py throws ```ImportError: No module named dnet``` on OSX
+
 A: install the libdnet package for OSX -
 ```
 brew install --with-python libdnet
@@ -104,5 +105,6 @@ touch /Users/YourUsernameHere/Library/Python/2.7/lib/python/site-packages/homebr
 echo 'import site; site.addsitedir("/usr/local/lib/python2.7/site-packages")' >> /Users/YourUsernameHere/Library/Python/2.7/lib/python/site-packages/homebrew.pth
 ```
 you may need to reinstall the scapy pip dependency listed above
+
 you can read more about this issue here: http://stackoverflow.com/questions/26229057/scapy-installation-fails-on-osx-with-dnet-import-error
 
