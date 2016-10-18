@@ -39,6 +39,8 @@
 
 inline void *operator new(size_t, void *p) throw() { return p; }
 
+#ifdef _WIN32
 void OT_CDECL operator delete(void *, size_t) throw();
+#endif
 
 #endif  // NEW_HPP_
