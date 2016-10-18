@@ -155,7 +155,7 @@ void DatasetManager::HandleTimer(void)
     VerifyOrExit(mLocal.Compare(mNetwork) < 0,);
 
     Register();
-    mTimer.Start(1000);
+    // mTimer.Start(1000);
 
 exit:
     return;
@@ -195,7 +195,7 @@ ThreadError DatasetManager::Register(void)
     SuccessOrExit(error = message->Append(header.GetBytes(), header.GetLength()));
 
 #if OPENTHREAD_ENABLE_COMMISSIONER
-    isCommissioner = mNetif.GetCommissioner().GetState() > MeshCoP::Commissioner::kStateDisabled? true: false;
+    isCommissioner = mNetif.GetCommissioner().GetState() > MeshCoP::Commissioner::kStateDisabled ? true : false;
 #endif  // OPENTHREAD_ENABLE_COMMISSIONER
 
     if (!isCommissioner)
@@ -427,16 +427,15 @@ ThreadError DatasetManager::Set(Coap::Header &aHeader, Message &aMessage, const 
     if (!isUpdateFromCommissioner && isTlvsAffectConnectivity)
     {
         DelayTimerTlv delaytimer;
-        PendingTimestampTlv pendingtimestamp;
+        uint8_t flags;
 
         delaytimer.Init();
         delaytimer.SetDelayTimer(OPENTHREAD_CONFIG_MIN_DELAY_TIMER);
         mNetif.GetPendingDataset().GetNetwork().Set(delaytimer);
 
-        pendingtimestamp.Init();
-        *static_cast<Timestamp *>(&pendingtimestamp) = timestamp;
-        mNetif.GetPendingDataset().GetNetwork().Set(pendingtimestamp);
+        mNetif.GetPendingDataset().GetNetwork().SetTimestamp(timestamp);
 
+        mNetif.GetPendingDataset().HandleNetworkUpdate(flags);
         mNetif.GetPendingDataset().ResetDelayTimer(kFlagNetworkUpdated);
     }
     else
@@ -997,6 +996,11 @@ void PendingDataset::HandleSet(Coap::Header &aHeader, Message &aMessage, const I
 
 exit:
     return;
+}
+
+void PendingDataset::HandleNetworkUpdate(uint8_t &aFlags)
+{
+    DatasetManager::HandleNetworkUpdate(aFlags);
 }
 
 void PendingDataset::ResetDelayTimer(uint8_t aFlags)
