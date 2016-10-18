@@ -49,7 +49,6 @@ namespace NetworkData {
 
 NetworkData::NetworkData(ThreadNetif &aThreadNetif, bool aLocal):
     mMle(aThreadNetif.GetMle()),
-    mNetif(aThreadNetif),
     mLocal(aLocal),
     mLastAttemptWait(false),
     mLastAttempt(0),
@@ -597,7 +596,6 @@ ThreadError NetworkData::SendServerDataNotification(uint16_t aRloc16)
     Coap::Header header;
     Message *message = NULL;
     Ip6::MessageInfo messageInfo;
-    bool isCommissioner = false;
 
     VerifyOrExit(!mLastAttemptWait || static_cast<int32_t>(Timer::GetNow() - mLastAttempt) < kDataResubmitDelay,
                  error = kThreadError_Already);
@@ -638,20 +636,7 @@ ThreadError NetworkData::SendServerDataNotification(uint16_t aRloc16)
     }
 
     memset(&messageInfo, 0, sizeof(messageInfo));
-
-#if OPENTHREAD_ENABLE_COMMISSIONER
-    isCommissioner = mNetif.GetCommissioner().GetState() >= MeshCoP::Commissioner::kStateActive ? true : false;
-#endif
-
-    if (isCommissioner)
-    {
-        mMle.GetLeaderAloc(messageInfo.GetPeerAddr());
-    }
-    else
-    {
-        mMle.GetLeaderAddress(messageInfo.GetPeerAddr());
-    }
-
+    mMle.GetLeaderAloc(messageInfo.GetPeerAddr());
     messageInfo.mPeerPort = kCoapUdpPort;
     SuccessOrExit(error = mSocket.SendTo(*message, messageInfo));
 

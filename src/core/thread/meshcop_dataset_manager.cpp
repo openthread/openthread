@@ -168,7 +168,6 @@ ThreadError DatasetManager::Register(void)
     Message *message;
     Ip6::Address leader;
     Ip6::MessageInfo messageInfo;
-    bool isCommissioner = false;
 
     mSocket.Open(&DatasetManager::HandleUdpReceive, this);
 
@@ -195,18 +194,7 @@ ThreadError DatasetManager::Register(void)
     SuccessOrExit(error = message->Append(header.GetBytes(), header.GetLength()));
     SuccessOrExit(error = message->Append(mLocal.GetBytes(), mLocal.GetSize()));
 
-#if OPENTHREAD_ENABLE_COMMISSIONER
-    isCommissioner = mNetif.GetCommissioner().GetState() >= MeshCoP::Commissioner::kStateActive ? true : false;
-#endif
-
-    if (isCommissioner)
-    {
-        mMle.GetLeaderAloc(leader);
-    }
-    else
-    {
-        mMle.GetLeaderAddress(leader);
-    }
+    mMle.GetLeaderAloc(leader);
 
     memset(&messageInfo, 0, sizeof(messageInfo));
     memcpy(&messageInfo.mPeerAddr, &leader, sizeof(messageInfo.mPeerAddr));
@@ -457,7 +445,6 @@ ThreadError DatasetManager::SendSetRequest(const otOperationalDataset &aDataset,
     Coap::Header header;
     Message *message;
     Ip6::MessageInfo messageInfo;
-    bool isCommissioner = false;
 
     mSocket.Open(&DatasetManager::HandleUdpReceive, this);
 
@@ -557,20 +544,7 @@ ThreadError DatasetManager::SendSetRequest(const otOperationalDataset &aDataset,
     }
 
     memset(&messageInfo, 0, sizeof(messageInfo));
-
-#if OPENTHREAD_ENABLE_COMMISSIONER
-    isCommissioner = mNetif.GetCommissioner().GetState() >= MeshCoP::Commissioner::kStateActive ? true : false;
-#endif
-
-    if (isCommissioner)
-    {
-        mMle.GetLeaderAloc(messageInfo.GetPeerAddr());
-    }
-    else
-    {
-        mMle.GetLeaderAddress(messageInfo.GetPeerAddr());
-    }
-
+    mMle.GetLeaderAloc(messageInfo.GetPeerAddr());
     messageInfo.mPeerPort = kCoapUdpPort;
     SuccessOrExit(error = mSocket.SendTo(*message, messageInfo));
 
@@ -593,7 +567,6 @@ ThreadError DatasetManager::SendGetRequest(const uint8_t *aTlvTypes, const uint8
     Message *message;
     Ip6::MessageInfo messageInfo;
     Tlv tlv;
-    bool isCommissioner = false;
 
     mSocket.Open(&DatasetManager::HandleUdpReceive, this);
 
@@ -622,20 +595,7 @@ ThreadError DatasetManager::SendGetRequest(const uint8_t *aTlvTypes, const uint8
     }
 
     memset(&messageInfo, 0, sizeof(messageInfo));
-
-#if OPENTHREAD_ENABLE_COMMISSIONER
-    isCommissioner = mNetif.GetCommissioner().GetState() >= MeshCoP::Commissioner::kStateActive ? true : false;
-#endif
-
-    if (isCommissioner)
-    {
-        mMle.GetLeaderAloc(messageInfo.GetPeerAddr());
-    }
-    else
-    {
-        mMle.GetLeaderAddress(messageInfo.GetPeerAddr());
-    }
-
+    mMle.GetLeaderAloc(messageInfo.GetPeerAddr());
     messageInfo.mPeerPort = kCoapUdpPort;
     SuccessOrExit(error = mSocket.SendTo(*message, messageInfo));
 
