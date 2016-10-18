@@ -27,9 +27,9 @@
  */
 
 #include <string.h>
-#include <assert.h>
 
 #include <coap/coap_client.hpp>
+#include <common/debug.hpp>
 #include <common/code_utils.hpp>
 #include <net/ip6.hpp>
 #include <platform/random.h>
@@ -58,6 +58,7 @@ ThreadError Client::Stop()
 {
     Message *message = mPendingRequests.GetHead();
     Message *messageToRemove;
+    RequestMetadata requestMetadata;
 
     // Remove all pending messages.
     while (message != NULL)
@@ -65,7 +66,8 @@ ThreadError Client::Stop()
         messageToRemove = message;
         message = message->GetNext();
 
-        DequeueMessage(*messageToRemove);
+        requestMetadata.ReadFrom(*messageToRemove);
+        FinalizeCoapTransaction(*messageToRemove, requestMetadata, NULL, NULL, kThreadError_Abort);
     }
 
     return mSocket.Close();
@@ -134,7 +136,8 @@ exit:
     return error;
 }
 
-Message *Client::CopyAndEnqueueMessage(const Message &aMessage, uint16_t aCopyLength, RequestMetadata &aRequestMetadata)
+Message *Client::CopyAndEnqueueMessage(const Message &aMessage, uint16_t aCopyLength,
+                                       const RequestMetadata &aRequestMetadata)
 {
     ThreadError error = kThreadError_None;
     Message *messageCopy = NULL;
@@ -355,7 +358,7 @@ exit:
     return message;
 }
 
-void Client::FinalizeCoapTransaction(Message &aRequest, RequestMetadata &aRequestMetadata,
+void Client::FinalizeCoapTransaction(Message &aRequest, const RequestMetadata &aRequestMetadata,
                                      Header *aResponseHeader, Message *aResponse, ThreadError aResult)
 {
     DequeueMessage(aRequest);
@@ -463,7 +466,8 @@ RequestMetadata::RequestMetadata(bool aConfirmable, const Ip6::MessageInfo &aMes
     mRetransmissionCount = 0;
     mRetransmissionTimeout = Timer::SecToMsec(kAckTimeout);
     mRetransmissionTimeout += otPlatRandomGet() %
-                              (Timer::SecToMsec(kAckTimeout) * kAckRandomFactor - Timer::SecToMsec(kAckTimeout) + 1);
+                              (Timer::SecToMsec(kAckTimeout) * kAckRandomFactorNumerator / kAckRandomFactorDenominator -
+                               Timer::SecToMsec(kAckTimeout) + 1);
 
     if (aConfirmable)
     {

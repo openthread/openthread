@@ -30,6 +30,7 @@
 #define COAP_CLIENT_HPP_
 
 #include <openthread-types.h>
+#include <openthread-coap.h>
 #include <coap/coap_header.hpp>
 #include <common/message.hpp>
 #include <common/timer.hpp>
@@ -52,21 +53,24 @@ class Client;
  */
 enum
 {
-    kAckTimeout         = OPENTHREAD_CONFIG_COAP_ACK_TIMEOUT,
-    kAckRandomFactor    = OPENTHREAD_CONFIG_COAP_ACK_RANDOM_FACTOR,
-    kMaxRetransmit      = OPENTHREAD_CONFIG_COAP_MAX_RETRANSMIT,
-    kNStart             = 1,
-    kDefaultLeisure     = 5,
-    kProbingRate        = 1,
+    kAckTimeout                 = OPENTHREAD_CONFIG_COAP_ACK_TIMEOUT,
+    kAckRandomFactorNumerator   = OPENTHREAD_CONFIG_COAP_ACK_RANDOM_FACTOR_NUMERATOR,
+    kAckRandomFactorDenominator = OPENTHREAD_CONFIG_COAP_ACK_RANDOM_FACTOR_DENOMINATOR,
+    kMaxRetransmit              = OPENTHREAD_CONFIG_COAP_MAX_RETRANSMIT,
+    kNStart                     = 1,
+    kDefaultLeisure             = 5,
+    kProbingRate                = 1,
 
     // Note that 2 << (kMaxRetransmit - 1) is equal to kMaxRetransmit power of 2
-    kMaxTransmitSpan    = kAckTimeout * ((2 << (kMaxRetransmit - 1)) - 1) * kAckRandomFactor,
-    kMaxTransmitWait    = kAckTimeout * ((2 << kMaxRetransmit) - 1) * kAckRandomFactor,
-    kMaxLatency         = 100,
-    kProcessingDelay    = kAckTimeout,
-    kMaxRtt             = 2 * kMaxLatency + kAckTimeout,
-    kExchangeLifetime   = kMaxTransmitSpan + 2 * (kMaxLatency) + kProcessingDelay,
-    kNonLifetime        = kMaxTransmitSpan + kMaxLatency
+    kMaxTransmitSpan            = kAckTimeout * ((2 << (kMaxRetransmit - 1)) - 1) *
+                                  kAckRandomFactorNumerator / kAckRandomFactorDenominator,
+    kMaxTransmitWait            = kAckTimeout * ((2 << kMaxRetransmit) - 1) *
+                                  kAckRandomFactorNumerator / kAckRandomFactorDenominator,
+    kMaxLatency                 = 100,
+    kProcessingDelay            = kAckTimeout,
+    kMaxRtt                     = 2 * kMaxLatency + kProcessingDelay,
+    kExchangeLifetime           = kMaxTransmitSpan + 2 * (kMaxLatency) + kProcessingDelay,
+    kNonLifetime                = kMaxTransmitSpan + kMaxLatency
 };
 
 /**
@@ -115,7 +119,7 @@ public:
      * @retval kThreadError_NoBufs  Insufficient available buffers to grow the message.
      *
      */
-    ThreadError AppendTo(Message &aMessage) {
+    ThreadError AppendTo(Message &aMessage) const {
         return aMessage.Append(this, sizeof(*this));
     };
 
@@ -139,7 +143,7 @@ public:
      * @returns The number of bytes updated.
      *
      */
-    int UpdateIn(Message &aMessage) {
+    int UpdateIn(Message &aMessage) const {
         return aMessage.Write(aMessage.GetLength() - sizeof(*this), sizeof(*this), this);
     }
 
@@ -151,7 +155,7 @@ public:
      * @retval TRUE   If the message shall be sent before the given time.
      * @retval FALSE  Otherwise.
      */
-    bool IsEarlier(uint32_t aTime) { return (static_cast<int32_t>(aTime - mNextTimerShot) > 0); };
+    bool IsEarlier(uint32_t aTime) const { return (static_cast<int32_t>(aTime - mNextTimerShot) > 0); };
 
     /**
      * This method checks if the message shall be sent after the given time.
@@ -161,7 +165,7 @@ public:
      * @retval TRUE   If the message shall be sent after the given time.
      * @retval FALSE  Otherwise.
      */
-    bool IsLater(uint32_t aTime) { return (static_cast<int32_t>(aTime - mNextTimerShot) < 0); };
+    bool IsLater(uint32_t aTime) const { return (static_cast<int32_t>(aTime - mNextTimerShot) < 0); };
 
 private:
 
@@ -221,7 +225,7 @@ public:
     /**
      * This method sends a CoAP message.
      *
-     * If a response for a request is expected, respective function and contex information should be provided.
+     * If a response for a request is expected, respective function and context information should be provided.
      * If no response is expected, these arguments should be NULL pointers.
      * If Message Id was not set in the header (equal to 0), this function will assign unique Message Id to the message.
      *
@@ -239,11 +243,11 @@ public:
 
 private:
     Message *CopyAndEnqueueMessage(const Message &aMessage, uint16_t aCopyLength,
-                                   RequestMetadata &aRequestMetadata);
+                                   const RequestMetadata &aRequestMetadata);
     void DequeueMessage(Message &aMessage);
     Message *FindRelatedRequest(const Header &aResponseHeader, const Ip6::MessageInfo &aMessageInfo,
                                 Header &aRequestHeader, RequestMetadata &aRequestMetadata);
-    void FinalizeCoapTransaction(Message &aRequest, RequestMetadata &aRequestMetadata,
+    void FinalizeCoapTransaction(Message &aRequest, const RequestMetadata &aRequestMetadata,
                                  Header *aResponseHeader, Message *aResponse, ThreadError aResult);
 
     ThreadError SendCopy(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo);

@@ -31,9 +31,8 @@
  *   This file implements the CoAP header generation and parsing.
  */
 
-#include <assert.h>
-
 #include <coap/coap_header.hpp>
+#include <common/debug.hpp>
 #include <common/code_utils.hpp>
 #include <common/encoding.hpp>
 #include <platform/random.h>

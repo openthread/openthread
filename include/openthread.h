@@ -59,6 +59,7 @@ extern "C" {
  * @defgroup messages Message Buffers
  * @defgroup ip6 IPv6
  * @defgroup udp UDP
+ * @defgroup coap CoAP
  *
  * @}
  *
@@ -2357,115 +2358,6 @@ ThreadError otSendDiagnosticGet(otInstance *aInstance, const otIp6Address *aDest
  */
 ThreadError otSendDiagnosticReset(otInstance *aInstance, const otIp6Address *aDestination, const uint8_t aTlvTypes[],
                                   uint8_t aCount);
-
-/**
- * @}
- *
- */
-
-/**
- * @addtogroup coap  CoAP
- *
- * @brief
- *   This module includes functions that control CoAP communication.
- *
- * @{
- *
- */
-
-/**
- * This method initializes the CoAP header.
- *
- * @param[inout] aHeader  A pointer to the CoAP header to initialize.
- * @param[in]    aType    CoAP message type.
- * @param[in]    aCode    CoAP message code.
- *
- */
-void otCoapHeaderInit(otCoapHeader *aHeader, otCoapType aType, otCoapCode aCode);
-
-/**
- * This method sets the Token value and length in a header.
- *
- * @param[inout]  aHeader       A pointer to the CoAP header.
- * @param[in]     aToken        A pointer to the Token value.
- * @param[in]     aTokenLength  The Length of @p aToken.
- *
- */
-void otCoapHeaderSetToken(otCoapHeader *aHeader, const uint8_t *aToken, uint8_t aTokenLength);
-
-/**
- * This method appends a CoAP option in a header.
- *
- * @param[inout]  aHeader  A pointer to the CoAP header.
- * @param[in]     aOption  A pointer to the CoAP option.
- *
- * @retval kThreadError_None         Successfully appended the option.
- * @retval kThreadError_InvalidArgs  The option type is not equal or greater than the last option type.
- * @retval kThreadError_NoBufs       The option length exceeds the buffer size.
- *
- */
-ThreadError otCoapHeaderAppendOption(otCoapHeader *aHeader, const otCoapOption *aOption);
-
-/**
- * This method adds Payload Marker indicating beginning of the payload to the CoAP header.
- *
- * @param[inout]  aHeader  A pointer to the CoAP header.
- *
- * @retval kThreadError_None    Payload Marker successfully added..
- * @retval kThreadError_NoBufs  Header Payload Marker exceeds the buffer size.
- *
- */
-void otCoapHeaderSetPayloadMarker(otCoapHeader *aHeader);
-
-/**
- * This method returns a pointer to the current option.
- *
- * @param[in]  aHeader  A pointer to the CoAP header.
- *
- * @returns A pointer to the current option. If no option is present NULL pointer is returned.
- *
- */
-const otCoapOption *otCoapGetCurrentOption(const otCoapHeader *aHeader);
-
-/**
- * This method returns a pointer to the next option.
- *
- * @param[in]  aHeader  A pointer to the CoAP header.
- *
- * @returns A pointer to the next option. If no more options are present NULL pointer is returned.
- *
- */
-const otCoapOption *otCoapGetNextOption(otCoapHeader *aHeader);
-
-/**
- * This method creates a new message with a CoAP header.
- *
- * @param[in]  aInstance     A pointer to an OpenThread instance.
- * @param[in]  aHeader  A pointer to a CoAP header that is used to create the message.
- *
- * @returns A pointer to the message or NULL if failed to allocate message.
- *
- */
-otMessage otNewCoapMessage(otInstance *aInstance, const otCoapHeader *aHeader);
-
-/**
- * This method sends a CoAP message.
- *
- * If a response for a request is expected, respective function and contex information should be provided.
- * If no response is expected, these arguments should be NULL pointers.
- *
- * @param[in]  aInstance     A pointer to an OpenThread instance.
- * @param[in]  aMessage      A pointer to the message to send.
- * @param[in]  aMessageInfo  A pointer to the message info associated with @p aMessage.
- * @param[in]  aHandler      A function pointer that shall be called on response reception or timeout.
- * @param[in]  aContext      A pointer to arbitrary context information. May be NULL if not used.
- *
- * @retval kThreadError_None   Successfully sent CoAP message.
- * @retval kThreadError_NoBufs Failed to allocate retransmission data.
- *
- */
-ThreadError otSendCoapMessage(otInstance *aInstance, otMessage aMessage, const otMessageInfo *aMessageInfo,
-                              otCoapResponseHandler aHandler, void *aContext);
 
 /**
  * @}

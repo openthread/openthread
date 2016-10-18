@@ -37,6 +37,7 @@
 #include <string.h>
 
 #include <openthread-types.h>
+#include <openthread-coap.h>
 #include <common/encoding.hpp>
 #include <common/message.hpp>
 
