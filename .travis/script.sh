@@ -62,6 +62,8 @@ set -x
 }
 
 [ $BUILD_TARGET != posix ] || {
+    sh -c '$CC --version' || die
+    sh -c '$CXX --version' || die
     make -f examples/Makefile-posix || die
 }
 
