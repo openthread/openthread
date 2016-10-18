@@ -47,10 +47,10 @@ cd /tmp || die
 
     # Packages used by ncp tools.
     sudo -H pip install ipaddress || die
-    sudo -H pip install scapy || die
+    sudo -H pip install scapy==2.3.2 || die
     sudo -H pip install pyserial || die
     pip install ipaddress || die
-    pip install scapy || die
+    pip install scapy==2.3.2 || die
     pip install pyserial || die
 
     [ $BUILD_TARGET != pretty-check ] || {
