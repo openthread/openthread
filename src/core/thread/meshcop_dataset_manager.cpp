@@ -155,7 +155,7 @@ void DatasetManager::HandleTimer(void)
     VerifyOrExit(mLocal.Compare(mNetwork) < 0,);
 
     Register();
-    mTimer.Start(1000);
+    // mTimer.Start(1000);
 
 exit:
     return;
@@ -168,6 +168,7 @@ ThreadError DatasetManager::Register(void)
     Message *message;
     Ip6::Address leader;
     Ip6::MessageInfo messageInfo;
+    bool isCommissioner = false;
 
     mSocket.Open(&DatasetManager::HandleUdpReceive, this);
 
@@ -192,7 +193,31 @@ ThreadError DatasetManager::Register(void)
 
     VerifyOrExit((message = mSocket.NewMessage(0)) != NULL, error = kThreadError_NoBufs);
     SuccessOrExit(error = message->Append(header.GetBytes(), header.GetLength()));
-    SuccessOrExit(error = message->Append(mLocal.GetBytes(), mLocal.GetSize()));
+
+#if OPENTHREAD_ENABLE_COMMISSIONER
+    isCommissioner = mNetif.GetCommissioner().GetState() > MeshCoP::Commissioner::kStateDisabled ? true : false;
+#endif  // OPENTHREAD_ENABLE_COMMISSIONER
+
+    if (!isCommissioner)
+    {
+        SuccessOrExit(error = message->Append(mLocal.GetBytes(), mLocal.GetSize()));
+    }
+    else
+    {
+        const Tlv *cur = reinterpret_cast<const Tlv *>(mLocal.GetBytes());
+        const Tlv *end = reinterpret_cast<const Tlv *>(mLocal.GetBytes() + mLocal.GetSize());
+
+        while (cur < end)
+        {
+            Tlv::Type type = cur->GetType();
+
+            if (type != Tlv::kChannel && type != Tlv::kMeshLocalPrefix &&
+                type != Tlv::kPanId && type != Tlv::kNetworkMasterKey)
+            {
+                SuccessOrExit(error = message->Append(cur, cur->GetLength() + sizeof(Tlv)));
+            }
+        }
+    }
 
     mMle.GetLeaderAddress(leader);
 
@@ -269,6 +294,7 @@ ThreadError DatasetManager::Set(Coap::Header &aHeader, Message &aMessage, const 
     Tlv::Type type;
     bool isUpdateFromCommissioner = false;
     StateTlv::State state = StateTlv::kAccept;
+    bool isTlvsAffectConnectivity = false;
 
     ActiveTimestampTlv activeTimestamp;
     NetworkMasterKeyTlv masterKey;
@@ -311,7 +337,7 @@ ThreadError DatasetManager::Set(Coap::Header &aHeader, Message &aMessage, const 
             (tlvType == Tlv::kChannel || tlvType == Tlv::kMeshLocalPrefix ||
              tlvType == Tlv::kPanId || tlvType == Tlv::kNetworkMasterKey))
         {
-            ExitNow(state = StateTlv::kReject);
+            isTlvsAffectConnectivity = true;
         }
 
         // verify session id is the same
@@ -354,6 +380,9 @@ ThreadError DatasetManager::Set(Coap::Header &aHeader, Message &aMessage, const 
     VerifyOrExit(offset == aMessage.GetLength() && (mLocal.GetTimestamp() == NULL ||
                                                     mLocal.GetTimestamp()->Compare(timestamp) > 0), state = StateTlv::kReject);
 
+    // update from commissioner doest not affect connectivity
+    VerifyOrExit(!isUpdateFromCommissioner || !isTlvsAffectConnectivity, state = StateTlv::kReject);
+
     // verify network master key if active timestamp is behind
     if (type == Tlv::kPendingTimestamp)
     {
@@ -382,13 +411,39 @@ ThreadError DatasetManager::Set(Coap::Header &aHeader, Message &aMessage, const 
 
         aMessage.Read(offset, sizeof(Tlv), &data.tlv);
         aMessage.Read(offset + sizeof(Tlv), data.tlv.GetLength(), data.value);
-        mLocal.Set(data.tlv);
+
+        if (!isUpdateFromCommissioner && isTlvsAffectConnectivity)
+        {
+            mNetif.GetPendingDataset().GetNetwork().Set(data.tlv);;
+        }
+        else
+        {
+            mLocal.Set(data.tlv);
+        }
+
         offset += sizeof(Tlv) + data.tlv.GetLength();
     }
 
-    mNetwork = mLocal;
-    mNetworkDataLeader.IncrementVersion();
-    mNetworkDataLeader.IncrementStableVersion();
+    if (!isUpdateFromCommissioner && isTlvsAffectConnectivity)
+    {
+        DelayTimerTlv delaytimer;
+        uint8_t flags;
+
+        delaytimer.Init();
+        delaytimer.SetDelayTimer(OPENTHREAD_CONFIG_MIN_DELAY_TIMER);
+        mNetif.GetPendingDataset().GetNetwork().Set(delaytimer);
+
+        mNetif.GetPendingDataset().GetNetwork().SetTimestamp(timestamp);
+
+        mNetif.GetPendingDataset().HandleNetworkUpdate(flags);
+        mNetif.GetPendingDataset().ResetDelayTimer(kFlagNetworkUpdated);
+    }
+    else
+    {
+        mNetwork = mLocal;
+        mNetworkDataLeader.IncrementVersion();
+        mNetworkDataLeader.IncrementStableVersion();
+    }
 
     // notify commissioner if update is from thread device
     if (!isUpdateFromCommissioner)
@@ -949,6 +1004,11 @@ void PendingDataset::HandleSet(Coap::Header &aHeader, Message &aMessage, const I
 
 exit:
     return;
+}
+
+void PendingDataset::HandleNetworkUpdate(uint8_t &aFlags)
+{
+    DatasetManager::HandleNetworkUpdate(aFlags);
 }
 
 void PendingDataset::ResetDelayTimer(uint8_t aFlags)

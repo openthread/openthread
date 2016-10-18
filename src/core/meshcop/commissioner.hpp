@@ -128,6 +128,25 @@ public:
     uint16_t GetSessionId(void) const;
 
     /**
+     * Commissioner State.
+     *
+     */
+    enum
+    {
+        kStateDisabled = 0,
+        kStatePetition = 1,
+        kStateActive = 2,
+    };
+
+    /**
+     * This method returns the Commissioner State.
+     *
+     * @returns The Commissioner State.
+     *
+     */
+    uint8_t GetState(void) const;
+
+    /**
      * This method sends MGMT_COMMISSIONER_GET.
      *
      * @param[in]  aTlvs        A pointer to Commissioning Data TLVs.
@@ -197,12 +216,6 @@ private:
     ThreadError SendPetition(void);
     ThreadError SendKeepAlive(void);
 
-    enum
-    {
-        kStateDisabled = 0,
-        kStatePetition = 1,
-        kStateActive = 2,
-    };
     uint8_t mState;
 
     struct Joiner
