@@ -117,8 +117,12 @@ void Uart::ReceiveTask(const uint8_t *aBuf, uint16_t aBufLength)
             break;
 
         default:
-            Output(reinterpret_cast<const char *>(aBuf), 1);
-            mRxBuffer[mRxLength++] = static_cast<char>(*aBuf);
+            if (mRxLength < kRxBufferSize)
+            {
+                Output(reinterpret_cast<const char *>(aBuf), 1);
+                mRxBuffer[mRxLength++] = static_cast<char>(*aBuf);
+            }
+
             break;
         }
     }
