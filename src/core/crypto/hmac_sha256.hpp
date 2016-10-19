@@ -61,6 +61,16 @@ public:
     };
 
     /**
+     * @brief constructor for initialization of mbedtls_md_context_t
+     */
+    HmacSha256();
+
+    /**
+     * @brief destructor for freeing of mbedtls_md_context_t
+     */
+    ~HmacSha256();
+
+    /**
      * This method sets the key.
      *
      * @param[in]  aKey        A pointer to the key.

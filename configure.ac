@@ -428,11 +428,6 @@ AM_CONDITIONAL([OPENTHREAD_ENABLE_NCP],      [test "${enable_ncp}" != "no"])
 AM_CONDITIONAL([OPENTHREAD_ENABLE_NCP_SPI],  [test "${enable_ncp}"  = "spi"])
 AM_CONDITIONAL([OPENTHREAD_ENABLE_NCP_UART], [test "${enable_ncp}"  = "uart"])
 
-MBEDTLS_CPPFLAGS="-I\${abs_top_srcdir}/third_party/mbedtls"
-MBEDTLS_CPPFLAGS="${MBEDTLS_CPPFLAGS} -I\${abs_top_srcdir}/third_party/mbedtls/repo/include"
-MBEDTLS_CPPFLAGS="${MBEDTLS_CPPFLAGS} -I\${abs_top_srcdir}/third_party/mbedtls/repo/include/mbedtls"
-MBEDTLS_CPPFLAGS="${MBEDTLS_CPPFLAGS} -DMBEDTLS_CONFIG_FILE=\\\"mbedtls-config.h\\\""
-
 #
 # Thread Commissioner
 #
@@ -498,14 +493,20 @@ AC_DEFINE_UNQUOTED([OPENTHREAD_ENABLE_JOINER],[${OPENTHREAD_ENABLE_JOINER}],[Def
 if test "${enable_commissioner}" = "yes" -o "${enable_joiner}" = "yes"; then
     enable_dtls="yes"
     OPENTHREAD_ENABLE_DTLS=1
-    MBEDTLS_CPPFLAGS="-I\${abs_top_srcdir}/third_party/mbedtls"
-    MBEDTLS_CPPFLAGS="${MBEDTLS_CPPFLAGS} -I\${abs_top_srcdir}/third_party/mbedtls/repo/include"
-    MBEDTLS_CPPFLAGS="${MBEDTLS_CPPFLAGS} -I\${abs_top_srcdir}/third_party/mbedtls/repo/include/mbedtls"
-    MBEDTLS_CPPFLAGS="${MBEDTLS_CPPFLAGS} -DMBEDTLS_CONFIG_FILE=\\\"mbedtls-config.h\\\""
 else
     enable_dtls="no"
     OPENTHREAD_ENABLE_DTLS=0
 fi
+
+# 
+# define the mbed cppflags if they were not defined going into this script
+#
+if test ! "${MBEDTLS_CPPFLAGS}"; then
+    MBEDTLS_CPPFLAGS="${MBEDTLS_CPPFLAGS} -DMBEDTLS_CONFIG_FILE=\\\"mbedtls-config.h\\\""
+    MBEDTLS_CPPFLAGS="${MBEDTLS_CPPFLAGS} -I\${abs_top_srcdir}/third_party/mbedtls"
+fi
+
+AC_SUBST([MBEDTLS_CPPFLAGS],[${MBEDTLS_CPPFLAGS}],[Defined to the mbedtls config file and include paths])
 
 AC_MSG_RESULT(${enable_dtls})
 AC_SUBST(OPENTHREAD_ENABLE_DTLS)
@@ -693,10 +694,6 @@ AC_TYPE_UINT64_T
 if test "${ac_no_link}" != "yes"; then
     AC_CHECK_FUNCS([memcpy])
 fi
-
-# Add any mbedtls CPPFLAGS
-
-CPPFLAGS="${CPPFLAGS} ${MBEDTLS_CPPFLAGS}"
 
 # Add any code coverage CPPFLAGS and LDFLAGS
 

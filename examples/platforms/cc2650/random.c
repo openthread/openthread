@@ -38,6 +38,8 @@
 
 #include <platform/random.h>
 
+#include <mbedtls/entropy_poll.h>
+
 /**
  * \note if more than 32 bits of entropy are needed, the TRNG core produces
  * 64 bytes of random data, we just ignore the upper 32 bytes
@@ -72,24 +74,25 @@ uint32_t otPlatRandomGet(void)
 }
 
 /**
- * Function documented in platform/random.h
+ * Fill an arbitrary area with random data
+ *
+ * @param [out] output area to place the random data
+ * @param [in] len size of the area to place random data
+ * @param [out] olen how much of the output was written to
+ *
+ * @return indication of error
+ * @retval 0 no error occured
  */
-ThreadError otPlatSecureRandomGet(uint16_t aInputLength, uint8_t *aOutput, uint16_t *aOutputLength)
+static int TRNGPoll( unsigned char *output, size_t len, size_t *olen )
 {
-    ThreadError error = kThreadError_None;
-
-    uint16_t length;
+    size_t length = 0;
     union {
         uint32_t u32[2];
         uint8_t u8[8];
     } buffer;
 
-    VerifyOrExit(aOutput && aOutputLength, error = kThreadError_InvalidArgs);
-
-    for(length = 0; length < aInputLength; length++)
+    while(length < len)
     {
-        *aOutputLength = length;
-
         if(length % 8 == 0)
         {
             /* we've run to the end of the buffer */
@@ -104,9 +107,43 @@ ThreadError otPlatSecureRandomGet(uint16_t aInputLength, uint8_t *aOutput, uint1
             buffer.u32[1] = HWREG(TRNG_BASE + TRNG_O_OUT1);
             HWREG(TRNG_BASE + TRNG_O_IRQFLAGCLR) = 0x1;
         }
-        aOutput[length] = buffer.u8[length % 8];
+        output[length] = buffer.u8[length % 8];
+
+        length++;
+        *olen = length;
     }
 
+    return 0;
+}
+
+
+/**
+ * Function documented in platform/random.h
+ */
+ThreadError otPlatSecureRandomGet(uint16_t aInputLength, uint8_t *aOutput, uint16_t *aOutputLength)
+{
+    ThreadError error = kThreadError_None;
+    size_t temp_size;
+    size_t length = aInputLength;
+
+    VerifyOrExit(aOutput && aOutputLength, error = kThreadError_InvalidArgs);
+
+    VerifyOrExit(TRNGPoll((unsigned char *)aOutput, length, &temp_size) != 0,
+            error = kThreadError_Failed);
+
 exit:
+    *aOutputLength = temp_size;
     return error;
+}
+
+/**
+ * Entropy function for the entropy pool in mbedtls.
+ * 
+ * Function defined in mbedtls/entropy_poll.h .
+ */
+int mbedtls_hardware_poll( void *data, unsigned char *output, size_t len,
+        size_t *olen )
+{
+    (void)data;
+    return TRNGPoll(output, len, olen);
 }

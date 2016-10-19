@@ -40,6 +40,8 @@ libopenthread_cc2650_a_CPPFLAGS                       = \
     -I$(top_srcdir)/examples/platforms                  \
     -I$(top_srcdir)/examples/platforms/cc2650           \
     -I$(top_srcdir)/third_party/cc26xxware              \
+    -I$(top_srcdir)/third_party/mbedtls/repo/include    \
+    $(MBEDTLS_CPPFLAGS)                                 \
     $(NULL)
 
 libopenthread_cc2650_a_SOURCES                        = \
@@ -50,6 +52,8 @@ libopenthread_cc2650_a_SOURCES                        = \
     random.c                              \
     uart.c                                \
     misc.c                                \
+	crypto/sha256_alt.c                   \
+	crypto/aes_alt.c                      \
     $(NULL)
 
 libopenthread_cc2650_a_DEPENDENCIES = \

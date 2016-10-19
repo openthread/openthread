@@ -32,6 +32,8 @@ lib_LIBRARIES                       = libopenthread.a
 
 libopenthread_a_CPPFLAGS            = \
     -I$(top_srcdir)/include           \
+    -I${abs_top_srcdir}/third_party/mbedtls/repo/include \
+    $(MBEDTLS_CPPFLAGS)               \
     $(OPENTHREAD_TARGET_DEFINES)      \
     $(NULL)
 

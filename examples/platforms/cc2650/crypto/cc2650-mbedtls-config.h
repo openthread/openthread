@@ -231,7 +231,7 @@
  * Uncomment a macro to enable alternate implementation of the corresponding
  * module.
  */
-//#define MBEDTLS_AES_ALT
+#define MBEDTLS_AES_ALT
 //#define MBEDTLS_ARC4_ALT
 //#define MBEDTLS_BLOWFISH_ALT
 //#define MBEDTLS_CAMELLIA_ALT
@@ -242,7 +242,7 @@
 //#define MBEDTLS_MD5_ALT
 //#define MBEDTLS_RIPEMD160_ALT
 //#define MBEDTLS_SHA1_ALT
-//#define MBEDTLS_SHA256_ALT
+#define MBEDTLS_SHA256_ALT
 //#define MBEDTLS_SHA512_ALT
 
 /**
@@ -294,7 +294,7 @@
  *
  * Uncomment to use your own hardware entropy collector.
  */
-//#define MBEDTLS_ENTROPY_HARDWARE_ALT
+#define MBEDTLS_ENTROPY_HARDWARE_ALT
 
 /**
  * \def MBEDTLS_AES_ROM_TABLES
@@ -786,7 +786,7 @@
  *
  * Uncomment this macro to disable the built-in platform entropy functions.
  */
-//#define MBEDTLS_NO_PLATFORM_ENTROPY
+#define MBEDTLS_NO_PLATFORM_ENTROPY
 
 /**
  * \def MBEDTLS_ENTROPY_FORCE_SHA256
