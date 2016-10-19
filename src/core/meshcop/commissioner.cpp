@@ -254,6 +254,11 @@ uint16_t Commissioner::GetSessionId(void) const
     return mSessionId;
 }
 
+uint8_t Commissioner::GetState(void) const
+{
+    return mState;
+}
+
 void Commissioner::HandleTimer(void *aContext)
 {
     static_cast<Commissioner *>(aContext)->HandleTimer();
