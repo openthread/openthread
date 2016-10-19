@@ -547,6 +547,7 @@ void Leader::HandleServerData(Coap::Header &aHeader, Message &aMessage,
 
     if (ThreadTlv::GetTlv(aMessage, ThreadTlv::kRloc16, sizeof(rloc16), rloc16) == kThreadError_None)
     {
+        VerifyOrExit(rloc16.IsValid(), ;);
         RemoveBorderRouter(rloc16.GetRloc16());
     }
 
@@ -558,6 +559,9 @@ void Leader::HandleServerData(Coap::Header &aHeader, Message &aMessage,
     }
 
     SendServerDataResponse(aHeader, aMessageInfo, NULL, 0);
+
+exit:
+    return;
 }
 
 void Leader::HandleCommissioningSet(void *aContext, Coap::Header &aHeader, Message &aMessage,
