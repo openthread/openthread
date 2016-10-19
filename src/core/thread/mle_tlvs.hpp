@@ -1008,7 +1008,7 @@ public:
      * @returns The Parent Priority value.
      *
      */
-    int8_t GetParentPriority(void) const { return (mParentPriority & kParentPriorityOffset) >> kParentPriorityOffset; }
+    int8_t GetParentPriority(void) const { return (mParentPriority & kParentPriorityMask) >> kParentPriorityOffset; }
 
     /**
      * This method sets the Parent Priority value.
