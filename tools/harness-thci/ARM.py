@@ -2009,7 +2009,21 @@ class ARM(IThci):
             modulehelper.writeintodebuglogger("MGMT_PANID_QUERY() error: " + str(e))
 
     def MGMT_ANNOUNCE_BEGIN(self, sAddr, xCommissionerSessionId, listChannelMask, xCount, xPeriod):
-        pass
+        """send MGMT_ANNOUNCE_BEGIN message to a given destination
+
+        Returns:
+            True: successful to send MGMT_ANNOUNCE_BEGIN message.
+            False: fail to send MGMT_ANNOUNCE_BEGIN message.
+        """
+        print '%s call MGMT_ANNOUNCE_BEGIN' % self.port
+        channelMask = ''
+        channelMask = '0x' + self.__convertLongToString(self.__convertChannelMask(listChannelMask))
+        try:
+            cmd = 'commissioner announce %s %s %s %s' % (channelMask, xCount, xPeriod, sAddr)
+            print cmd
+            return self.__sendCommand(cmd) == 'Done'
+        except Exception, e:
+            modulehelper.writeintodebuglogger("MGMT_ANNOUNCE_BEGIN() error: " + str(e))
 
     def MGMT_ACTIVE_GET(self, Addr='', TLVs=[]):
         """send MGMT_ACTIVE_GET command
@@ -2089,19 +2103,20 @@ class ARM(IThci):
                 cmd += ' delay '
                 cmd += str(xDelayTimer)
 
-            if  sPSKc != None or listSecurityPolicy != None or listChannelMask != None or \
-                xCommissioningSessionId != None or xTmfPort != None or xSteeringData != None or xBorderRouterLocator != None or \
-                BogusTLV != None:
-                cmd += ' binary '
-
             if listChannelMask != None:
-                cmd += '35060004'
+                cmd += ' channelmask '
+                print listChannelMask
                 entry = self.__convertLongToString(self.__convertChannelMask(listChannelMask))
 
                 if len(entry) < 8:
                     entry = entry.zfill(8)
 
-                cmd += entry
+                cmd += '0x' + entry
+
+            if  sPSKc != None or listSecurityPolicy != None \
+                xCommissioningSessionId != None or xTmfPort != None or xSteeringData != None or xBorderRouterLocator != None or \
+                BogusTLV != None:
+                cmd += ' binary '
 
             if sPSKc != None:
                 cmd += '0410'

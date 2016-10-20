@@ -57,6 +57,8 @@
 #include <thread/thread_uris.hpp>
 #include <utils/global_address.hpp>
 #include <openthread-instance.h>
+#include <coap/coap_header.hpp>
+#include <coap/coap_client.hpp>
 
 #ifndef OPENTHREAD_MULTIPLE_INSTANCE
 static otDEFINE_ALIGNED_VAR(sInstanceRaw, sizeof(otInstance), uint64_t);
@@ -1547,6 +1549,53 @@ ThreadError otJoinerStop(otInstance *aInstance)
     return aInstance->mThreadNetif.GetJoiner().Stop();
 }
 #endif  // OPENTHREAD_ENABLE_JOINER
+
+void otCoapHeaderInit(otCoapHeader *aHeader, otCoapType aType, otCoapCode aCode)
+{
+    Coap::Header *header = static_cast<Coap::Header *>(aHeader);
+    header->Init();
+    header->SetType(static_cast<Coap::Header::Type>(aType));
+    header->SetCode(static_cast<Coap::Header::Code>(aCode));
+}
+
+void otCoapHeaderSetToken(otCoapHeader *aHeader, const uint8_t *aToken, uint8_t aTokenLength)
+{
+    static_cast<Coap::Header *>(aHeader)->SetToken(aToken, aTokenLength);
+}
+
+ThreadError otCoapHeaderAppendOption(otCoapHeader *aHeader, const otCoapOption *aOption)
+{
+    return static_cast<Coap::Header *>(aHeader)->AppendOption(*static_cast<const Coap::Header::Option *>(aOption));
+}
+
+void otCoapHeaderSetPayloadMarker(otCoapHeader *aHeader)
+{
+    static_cast<Coap::Header *>(aHeader)->Finalize();
+}
+
+const otCoapOption *otCoapGetCurrentOption(const otCoapHeader *aHeader)
+{
+    return static_cast<const otCoapOption *>(static_cast<const Coap::Header *>(aHeader)->GetCurrentOption());
+}
+
+const otCoapOption *otCoapGetNextOption(otCoapHeader *aHeader)
+{
+    return static_cast<const otCoapOption *>(static_cast<Coap::Header *>(aHeader)->GetNextOption());
+}
+
+otMessage otNewCoapMessage(otInstance *aInstance, const otCoapHeader *aHeader)
+{
+    return aInstance->mThreadNetif.GetCoapClient().NewMessage(*(static_cast<const Coap::Header *>(aHeader)));
+}
+
+ThreadError otSendCoapMessage(otInstance *aInstance, otMessage aMessage, const otMessageInfo *aMessageInfo,
+                              otCoapResponseHandler aHandler, void *aContext)
+{
+    return aInstance->mThreadNetif.GetCoapClient().SendMessage(
+               *static_cast<Message *>(aMessage),
+               *static_cast<const Ip6::MessageInfo *>(aMessageInfo),
+               aHandler, aContext);
+}
 
 #ifdef __cplusplus
 }  // extern "C"

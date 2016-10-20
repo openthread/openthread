@@ -19,6 +19,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\src\core\coap\coap_client.cpp" />
     <ClCompile Include="..\..\src\core\coap\coap_header.cpp" />
     <ClCompile Include="..\..\src\core\coap\coap_server.cpp" />
     <ClCompile Include="..\..\src\core\common\crc16.cpp" />
@@ -76,6 +77,7 @@
     <ClCompile Include="..\..\src\core\utils\global_address.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\src\core\coap\coap_client.hpp" />
     <ClInclude Include="..\..\src\core\coap\coap_header.hpp" />
     <ClInclude Include="..\..\src\core\coap\coap_server.hpp" />
     <ClInclude Include="..\..\src\core\common\code_utils.hpp" />

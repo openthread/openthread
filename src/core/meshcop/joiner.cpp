@@ -251,7 +251,7 @@ void Joiner::HandleUdpTransmit(void)
     messageInfo.GetPeerAddr().mFields.m16[0] = HostSwap16(0xfe80);
     messageInfo.GetPeerAddr().SetIid(mJoinerRouter);
     messageInfo.mPeerPort = mJoinerUdpPort;
-    messageInfo.mInterfaceId = 1;
+    messageInfo.mInterfaceId = OT_NETIF_INTERFACE_ID_THREAD;
 
     SuccessOrExit(error = mSocket.SendTo(*mTransmitMessage, messageInfo));
 

@@ -106,6 +106,8 @@ EXTRA_DIST                                                         = \
     thread-cert/Cert_8_1_01_Commissioning.py                         \
     thread-cert/Cert_8_1_02_Commissioning.py                         \
     thread-cert/Cert_8_2_01_JoinerRouter.py                          \
+    thread-cert/Cert_8_2_02_JoinerRouter.py                          \
+    thread-cert/Cert_9_2_04_ActiveDataset.py                         \
     thread-cert/Cert_9_2_07_DelayTimer.py                            \
     thread-cert/Cert_9_2_09_PendingPartition.py                      \
     thread-cert/Cert_9_2_10_PendingPartition.py                      \
@@ -235,6 +237,8 @@ check_SCRIPTS                                                     += \
     thread-cert/Cert_8_1_01_Commissioning.py                         \
     thread-cert/Cert_8_1_02_Commissioning.py                         \
     thread-cert/Cert_8_2_01_JoinerRouter.py                          \
+    thread-cert/Cert_8_2_02_JoinerRouter.py                          \
+    thread-cert/Cert_9_2_04_ActiveDataset.py                         \
     thread-cert/Cert_9_2_07_DelayTimer.py                            \
     thread-cert/Cert_9_2_09_PendingPartition.py                      \
     thread-cert/Cert_9_2_10_PendingPartition.py                      \
@@ -265,6 +269,8 @@ XFAIL_NCP_TESTS                                                    = \
     thread-cert/Cert_8_1_01_Commissioning.py                         \
     thread-cert/Cert_8_1_02_Commissioning.py                         \
     thread-cert/Cert_8_2_01_JoinerRouter.py                          \
+    thread-cert/Cert_8_2_02_JoinerRouter.py                          \
+    thread-cert/Cert_9_2_04_ActiveDataset.py                         \
     thread-cert/Cert_9_2_07_DelayTimer.py                            \
     thread-cert/Cert_9_2_09_PendingPartition.py                      \
     thread-cert/Cert_9_2_10_PendingPartition.py                      \

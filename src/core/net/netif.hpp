@@ -233,10 +233,11 @@ public:
     /**
      * This constructor initializes the network interface.
      *
-     * @param[in]  aIp6  A reference to the IPv6 network object.
+     * @param[in]  aIp6             A reference to the IPv6 network object.
+     * @param[in]  aInterfaceId     The interface ID for this object.
      *
      */
-    Netif(Ip6 &aIp6);
+    Netif(Ip6 &aIp6, int8_t aInterfaceId);
 
     /**
      * This method returns a reference to the IPv6 network object.
@@ -417,14 +418,6 @@ public:
      *
      */
     virtual ThreadError SendMessage(Message &aMessage) = 0;
-
-    /**
-     * This virtual method returns a NULL-terminated string that names the network interface.
-     *
-     * @returns A NULL-terminated string that names the network interface.
-     *
-     */
-    virtual const char *GetName(void) const = 0;
 
     /**
      * This virtual method fills out @p aAddress with the link address.

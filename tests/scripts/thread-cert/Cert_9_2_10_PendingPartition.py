@@ -146,7 +146,7 @@ class Cert_9_2_10_PendingPartition(unittest.TestCase):
 
         self.nodes[LEADER].add_whitelist(self.nodes[ROUTER1].get_addr64())
         self.nodes[ROUTER1].add_whitelist(self.nodes[LEADER].get_addr64())
-        time.sleep(40)
+        time.sleep(60)
 
         self.assertEqual(self.nodes[COMMISSIONER].get_state(), 'router')
         self.assertEqual(self.nodes[LEADER].get_state(), 'leader')

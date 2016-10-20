@@ -38,6 +38,7 @@
 
 #include <coap/coap_header.hpp>
 #include <coap/coap_server.hpp>
+#include <coap/coap_client.hpp>
 #include <common/timer.hpp>
 #include <common/trickle_timer.hpp>
 #include <mac/mac_frame.hpp>
@@ -686,9 +687,9 @@ private:
     ThreadError UpdateChildAddresses(const AddressRegistrationTlv &aTlv, Child &aChild);
     void UpdateRoutes(const RouteTlv &aTlv, uint8_t aRouterId);
 
-    static void HandleUdpReceive(void *aContext, otMessage aMessage, const otMessageInfo *aMessageInfo);
-    void HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
-    void HandleAddressSolicitResponse(Message &aMessage);
+    static void HandleAddressSolicitResponse(void *aContext, otCoapHeader *aHeader, otMessage aMessage,
+                                             ThreadError result);
+    void HandleAddressSolicitResponse(Coap::Header *aHeader, Message *aMessage, ThreadError result);
     static void HandleAddressRelease(void *aContext, Coap::Header &aHeader, Message &aMessage,
                                      const Ip6::MessageInfo &aMessageInfo);
     void HandleAddressRelease(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
@@ -726,7 +727,6 @@ private:
     Timer mStateUpdateTimer;
     Timer mDelayedResponseTimer;
 
-    Ip6::UdpSocket mSocket;
     Coap::Resource mAddressSolicit;
     Coap::Resource mAddressRelease;
 
@@ -750,8 +750,7 @@ private:
     uint8_t mPreviousRouterId;
 
     Coap::Server &mCoapServer;
-    uint8_t mCoapToken[2];
-    uint16_t mCoapMessageId;
+    Coap::Client &mCoapClient;
 };
 
 }  // namespace Mle

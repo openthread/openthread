@@ -162,6 +162,11 @@ typedef enum ThreadError
      */
     kThreadError_NotCapable = 29,
 
+    /**
+     * Coap response or acknowledgment not received.
+     */
+    kThreadError_ResponseTimeout = 30,
+
     kThreadError_Error = 255,
 } ThreadError;
 
@@ -837,6 +842,14 @@ typedef struct otNetifAddress
     uint8_t                mPrefixLength;       ///< The Prefix length.
     struct otNetifAddress *mNext;               ///< A pointer to the next network interface address.
 } otNetifAddress;
+
+/**
+ * This enumeration represents the list of allowable values for an InterfaceId.
+ */
+typedef enum otNetifInterfaceId
+{
+    OT_NETIF_INTERFACE_ID_THREAD = 1,  ///< The Thread Network interface ID.
+} otNetifInterfaceId;
 
 /**
  * This structure represents data used by Semantically Opaque IID Generator.
