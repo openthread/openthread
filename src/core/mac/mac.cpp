@@ -444,7 +444,6 @@ const char *Mac::GetNetworkName(void) const
 ThreadError Mac::SetNetworkName(const char *aNetworkName)
 {
     ThreadError error = kThreadError_None;
-    otLogFuncEntryMsg("%s", aNetworkName);
 
     otLogFuncEntryMsg("%s", aNetworkName);
 

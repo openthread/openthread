@@ -71,7 +71,6 @@ Joiner::Joiner(ThreadNetif &aNetif):
 
 ThreadError Joiner::Start(const char *aPSKd, const char *aProvisioningUrl)
 {
-    otLogFuncEntry();
     ThreadError error;
     Mac::ExtAddress extAddress;
 
@@ -172,7 +171,6 @@ ThreadError Joiner::HandleDtlsSend(void *aContext, const uint8_t *aBuf, uint16_t
 
 ThreadError Joiner::HandleDtlsSend(const unsigned char *aBuf, uint16_t aLength)
 {
-    otLogFuncEntry();
     ThreadError error = kThreadError_None;
 
     otLogFuncEntry();
