@@ -543,7 +543,7 @@ void Leader::HandleServerData(Coap::Header &aHeader, Message &aMessage,
     ThreadNetworkDataTlv networkData;
     ThreadRloc16Tlv rloc16;
 
-    otLogInfoNetData("Received network data registration\n");
+    otLogInfoNetData("Received network data registration");
 
     if (ThreadTlv::GetTlv(aMessage, ThreadTlv::kRloc16, sizeof(rloc16), rloc16) == kThreadError_None)
     {
@@ -679,7 +679,7 @@ void Leader::SendServerDataResponse(const Coap::Header &aRequestHeader, const Ip
 
     SuccessOrExit(error = mCoapServer.SendMessage(*message, aMessageInfo));
 
-    otLogInfoNetData("Sent network data registration acknowledgment\n");
+    otLogInfoNetData("Sent network data registration acknowledgment");
 
 exit:
 
@@ -745,7 +745,7 @@ void Leader::SendCommissioningGetResponse(const Coap::Header &aRequestHeader, co
 
     SuccessOrExit(error = mCoapServer.SendMessage(*message, aMessageInfo));
 
-    otLogInfoMeshCoP("sent commissioning dataset get response\n");
+    otLogInfoMeshCoP("sent commissioning dataset get response");
 
 exit:
 
@@ -778,7 +778,7 @@ void Leader::SendCommissioningSetResponse(const Coap::Header &aRequestHeader, co
 
     SuccessOrExit(error = mCoapServer.SendMessage(*message, aMessageInfo));
 
-    otLogInfoMeshCoP("sent commissioning dataset set response\n");
+    otLogInfoMeshCoP("sent commissioning dataset set response");
 
 exit:
 
@@ -1132,7 +1132,7 @@ int Leader::AllocateContext(void)
         {
             mContextUsed |= 1 << i;
             rval = i;
-            otLogInfoNetData("Allocated Context ID = %d\n", rval);
+            otLogInfoNetData("Allocated Context ID = %d", rval);
             ExitNow();
         }
     }
@@ -1143,7 +1143,7 @@ exit:
 
 ThreadError Leader::FreeContext(uint8_t aContextId)
 {
-    otLogInfoNetData("Free Context Id = %d\n", aContextId);
+    otLogInfoNetData("Free Context Id = %d", aContextId);
     RemoveContext(aContextId);
     mContextUsed &= ~(1 << aContextId);
     mVersion++;

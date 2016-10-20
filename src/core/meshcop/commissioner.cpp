@@ -340,7 +340,7 @@ ThreadError Commissioner::SendMgmtCommissionerGetRequest(const uint8_t *aTlvs,
     messageInfo.mPeerPort = kCoapUdpPort;
     SuccessOrExit(error = mSocket.SendTo(*message, messageInfo));
 
-    otLogInfoMeshCoP("sent MGMT_COMMISSIONER_GET.req to leader\n");
+    otLogInfoMeshCoP("sent MGMT_COMMISSIONER_GET.req to leader");
 
 exit:
 
@@ -424,7 +424,7 @@ ThreadError Commissioner::SendMgmtCommissionerSetRequest(const otCommissioningDa
     messageInfo.mPeerPort = kCoapUdpPort;
     SuccessOrExit(error = mSocket.SendTo(*message, messageInfo));
 
-    otLogInfoMeshCoP("sent MGMT_COMMISSIONER_SET.req to leader\n");
+    otLogInfoMeshCoP("sent MGMT_COMMISSIONER_SET.req to leader");
 
 exit:
 
@@ -483,7 +483,7 @@ ThreadError Commissioner::SendPetition(void)
     messageInfo.mPeerPort = kCoapUdpPort;
     SuccessOrExit(error = mSocket.SendTo(*message, messageInfo));
 
-    otLogInfoMeshCoP("sent petition\n");
+    otLogInfoMeshCoP("sent petition");
 
 exit:
 
@@ -545,7 +545,7 @@ ThreadError Commissioner::SendKeepAlive(void)
     messageInfo.mPeerPort = kCoapUdpPort;
     SuccessOrExit(error = mSocket.SendTo(*message, messageInfo));
 
-    otLogInfoMeshCoP("sent keep alive\n");
+    otLogInfoMeshCoP("sent keep alive");
 
 exit:
 
@@ -593,7 +593,7 @@ void Commissioner::HandleRelayReceive(Coap::Header &aHeader, Message &aMessage, 
     mJoinerPort = joinerPort.GetUdpPort();
     mJoinerRloc = joinerRloc.GetJoinerRouterLocator();
 
-    otLogInfoMeshCoP("Received relay receive for %llX, rloc:%x\n", HostSwap64(mJoinerIid64), mJoinerRloc);
+    otLogInfoMeshCoP("Received relay receive for %llX, rloc:%x", HostSwap64(mJoinerIid64), mJoinerRloc);
 
     if (!mNetif.GetDtls().IsStarted())
     {
@@ -611,7 +611,7 @@ void Commissioner::HandleRelayReceive(Coap::Header &aHeader, Message &aMessage, 
                 SuccessOrExit(error = mNetif.GetDtls().SetPsk(reinterpret_cast<const uint8_t *>(mJoiners[i].mPsk),
                                                               static_cast<uint8_t>(strlen(mJoiners[i].mPsk))));
                 SuccessOrExit(error = mNetif.GetDtls().Start(false, HandleDtlsReceive, HandleDtlsSend, this));
-                otLogInfoMeshCoP("found joiner, starting new session\n");
+                otLogInfoMeshCoP("found joiner, starting new session");
                 break;
             }
         }
@@ -641,7 +641,7 @@ void Commissioner::HandleDatasetChanged(Coap::Header &aHeader, Message &aMessage
     VerifyOrExit(aHeader.GetType() == Coap::Header::kTypeConfirmable &&
                  aHeader.GetCode() == Coap::Header::kCodePost, ;);
 
-    otLogInfoMeshCoP("received dataset changed\n");
+    otLogInfoMeshCoP("received dataset changed");
     (void)aMessage;
 
     SendDatasetChangedResponse(aHeader, aMessageInfo);
@@ -667,7 +667,7 @@ void Commissioner::SendDatasetChangedResponse(const Coap::Header &aRequestHeader
     SuccessOrExit(error = message->Append(responseHeader.GetBytes(), responseHeader.GetLength()));
     SuccessOrExit(error = mCoapServer.SendMessage(*message, aMessageInfo));
 
-    otLogInfoMeshCoP("Sent dataset changed acknowledgment\n");
+    otLogInfoMeshCoP("Sent dataset changed acknowledgment");
 
 exit:
 
@@ -704,7 +704,7 @@ void Commissioner::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &a
     {
         mIsSendMgmtCommRequest = false;
 
-        otLogInfoMeshCoP("received MGMT_COMMISSIONER_SET and MGMT_COMMISSIONER_GET response\n");
+        otLogInfoMeshCoP("received MGMT_COMMISSIONER_SET and MGMT_COMMISSIONER_GET response");
 
         ExitNow();
     }
@@ -724,7 +724,7 @@ void Commissioner::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &a
         VerifyOrExit(sessionId.IsValid(), ;);
         mSessionId = sessionId.GetCommissionerSessionId();
 
-        otLogInfoMeshCoP("received petition response\n");
+        otLogInfoMeshCoP("received petition response");
 
         mState = kStateActive;
         mTransmitAttempts = 0;
@@ -732,7 +732,7 @@ void Commissioner::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &a
         break;
 
     case kStateActive:
-        otLogInfoMeshCoP("received keep alive response\n");
+        otLogInfoMeshCoP("received keep alive response");
         mTransmitAttempts = 0;
         mTimer.Start(Timer::SecToMsec(kKeepAliveTimeout) / 2);
         break;
@@ -745,7 +745,7 @@ exit:
 
 ThreadError Commissioner::HandleDtlsSend(void *aContext, const uint8_t *aBuf, uint16_t aLength)
 {
-    otLogInfoMeshCoP("Commissioner::HandleDtlsTransmit\n");
+    otLogInfoMeshCoP("Commissioner::HandleDtlsTransmit");
     return static_cast<Commissioner *>(aContext)->HandleDtlsSend(aBuf, aLength);
 }
 
@@ -818,7 +818,7 @@ exit:
 
 void Commissioner::HandleDtlsReceive(void *aContext, uint8_t *aBuf, uint16_t aLength)
 {
-    otLogInfoMeshCoP("Commissioner::HandleDtlsReceive\n");
+    otLogInfoMeshCoP("Commissioner::HandleDtlsReceive");
     static_cast<Commissioner *>(aContext)->HandleDtlsReceive(aBuf, aLength);
 }
 
@@ -831,7 +831,7 @@ void Commissioner::HandleDtlsReceive(uint8_t *aBuf, uint16_t aLength)
 
 void Commissioner::HandleUdpTransmit(void *aContext)
 {
-    otLogInfoMeshCoP("Commissioner::HandleUdpTransmit\n");
+    otLogInfoMeshCoP("Commissioner::HandleUdpTransmit");
     static_cast<Commissioner *>(aContext)->HandleUdpTransmit();
 }
 
@@ -879,7 +879,7 @@ void Commissioner::ReceiveJoinerFinalize(uint8_t *buf, uint16_t length)
     ProvisioningUrlTlv provisioningUrl;
 
     otLogFuncEntry();
-    otLogInfoMeshCoP("receive joiner finalize 1\n");
+    otLogInfoMeshCoP("receive joiner finalize");
 
     VerifyOrExit((message = mNetif.GetIp6().mMessagePool.New(Message::kTypeIp6, 0)) != NULL, ;);
     SuccessOrExit(message->Append(buf, length));
@@ -967,8 +967,8 @@ void Commissioner::SendJoinFinalizeResponse(const Coap::Header &aRequestHeader, 
     mNetif.GetDtls().Send(buf, static_cast<uint16_t>(cur - buf));
     mSendKek = false;
 
-    otLogInfoMeshCoP("sent joiner finalize response\n");
-    otLogCertMeshCoP("[THCI] direction=send | type=JOIN_FIN.rsp\n");
+    otLogInfoMeshCoP("sent joiner finalize response");
+    otLogCertMeshCoP("[THCI] direction=send | type=JOIN_FIN.rsp");
     otLogFuncExit();
 }
 

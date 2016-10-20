@@ -201,7 +201,7 @@ ThreadError DatasetManager::Register(void)
     messageInfo.mPeerPort = kCoapUdpPort;
     SuccessOrExit(error = mSocket.SendTo(*message, messageInfo));
 
-    otLogInfoMeshCoP("sent dataset to leader\n");
+    otLogInfoMeshCoP("sent dataset to leader");
 
 exit:
 
@@ -231,7 +231,7 @@ void DatasetManager::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo 
                  header.GetTokenLength() == sizeof(mCoapToken) &&
                  memcmp(mCoapToken, header.GetToken(), sizeof(mCoapToken)) == 0, ;);
 
-    otLogInfoMeshCoP("received response from leader\n");
+    otLogInfoMeshCoP("received response from leader");
 
 exit:
     return;
@@ -556,7 +556,7 @@ ThreadError DatasetManager::SendSetRequest(const otOperationalDataset &aDataset,
     messageInfo.mPeerPort = kCoapUdpPort;
     SuccessOrExit(error = mSocket.SendTo(*message, messageInfo));
 
-    otLogInfoMeshCoP("sent dataset set request to leader\n");
+    otLogInfoMeshCoP("sent dataset set request to leader");
 
 exit:
 
@@ -607,7 +607,7 @@ ThreadError DatasetManager::SendGetRequest(const uint8_t *aTlvTypes, const uint8
     messageInfo.mPeerPort = kCoapUdpPort;
     SuccessOrExit(error = mSocket.SendTo(*message, messageInfo));
 
-    otLogInfoMeshCoP("sent dataset get request to leader\n");
+    otLogInfoMeshCoP("sent dataset get request to leader");
 
 exit:
 
@@ -642,7 +642,7 @@ void DatasetManager::SendSetResponse(const Coap::Header &aRequestHeader, const I
 
     SuccessOrExit(error = mCoapServer.SendMessage(*message, aMessageInfo));
 
-    otLogInfoMeshCoP("sent dataset set response\n");
+    otLogInfoMeshCoP("sent dataset set response");
 
 exit:
 
@@ -687,7 +687,7 @@ void DatasetManager::SendGetResponse(const Coap::Header &aRequestHeader, const I
 
     SuccessOrExit(error = mCoapServer.SendMessage(*message, aMessageInfo));
 
-    otLogInfoMeshCoP("sent dataset get response\n");
+    otLogInfoMeshCoP("sent dataset get response");
 
 exit:
 
@@ -974,7 +974,7 @@ void PendingDataset::ResetDelayTimer(uint8_t aFlags)
             else
             {
                 mTimer.Start(delayTimer->GetDelayTimer());
-                otLogInfoMeshCoP("delay timer started\n");
+                otLogInfoMeshCoP("delay timer started");
             }
         }
     }
@@ -1025,7 +1025,7 @@ void PendingDataset::HandleTimer(void)
 {
     DelayTimerTlv *delayTimer;
 
-    otLogInfoMeshCoP("pending delay timer expired\n");
+    otLogInfoMeshCoP("pending delay timer expired");
 
     UpdateDelayTimer();
     delayTimer = static_cast<DelayTimerTlv *>(mNetwork.Get(Tlv::kDelayTimer));

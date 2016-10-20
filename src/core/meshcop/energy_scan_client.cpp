@@ -132,7 +132,7 @@ ThreadError EnergyScanClient::SendQuery(uint32_t aChannelMask, uint8_t aCount, u
     messageInfo.mInterfaceId = mNetif.GetInterfaceId();
     SuccessOrExit(error = mSocket.SendTo(*message, messageInfo));
 
-    otLogInfoMeshCoP("sent energy scan query\n");
+    otLogInfoMeshCoP("sent energy scan query");
 
     mCallback = aCallback;
     mContext = aContext;
@@ -173,7 +173,7 @@ void EnergyScanClient::HandleReport(Coap::Header &aHeader, Message &aMessage, co
     VerifyOrExit(aHeader.GetType() == Coap::Header::kTypeConfirmable &&
                  aHeader.GetCode() == Coap::Header::kCodePost, ;);
 
-    otLogInfoMeshCoP("received energy scan report\n");
+    otLogInfoMeshCoP("received energy scan report");
 
     SuccessOrExit(MeshCoP::Tlv::GetTlv(aMessage, MeshCoP::Tlv::kChannelMask, sizeof(channelMask), channelMask.tlv));
     VerifyOrExit(channelMask.tlv.IsValid() &&
@@ -227,7 +227,7 @@ exit:
 
 void EnergyScanClient::HandleUdpReceive(void *aContext, otMessage aMessage, const otMessageInfo *aMessageInfo)
 {
-    otLogInfoMeshCoP("received energy scan query response\n");
+    otLogInfoMeshCoP("received energy scan query response");
     (void)aContext;
     (void)aMessage;
     (void)aMessageInfo;
