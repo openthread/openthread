@@ -43,10 +43,11 @@
 #include <stdint.h>
 #include <string.h>
 
-#include <openthread-types.h>
 #include <openthread-core-config.h>
+#include <openthread-types.h>
 #include <common/code_utils.hpp>
 #include <mac/mac_frame.hpp>
+#include <platform/messagepool.h>
 
 namespace Thread {
 
@@ -90,14 +91,7 @@ struct MessageListEntry
     Message            *mPrev;  ///< A pointer to the previous Message in the list.
 };
 
-/**
- * This structure contains a pointer to the next Message buffer.
- *
- */
-struct BufferHeader
-{
-    class Buffer *mNext;  ///< A pointer to the next Message buffer.
-};
+
 
 /**
  * This structure contains metdata about a Message.
@@ -136,7 +130,7 @@ struct MessageInfo
  * This class represents a Message buffer.
  *
  */
-class Buffer
+class Buffer : public ::BufferHeader
 {
     friend class Message;
 
@@ -147,13 +141,13 @@ public:
      * @returns A pointer to the next message buffer.
      *
      */
-    class Buffer *GetNextBuffer(void) const { return mHeader.mNext; }
+    class Buffer *GetNextBuffer(void) const { return static_cast<Buffer *>(mNext); }
 
     /**
      * This method sets the pointer to the next message buffer.
      *
      */
-    void SetNextBuffer(class Buffer *buf) { mHeader.mNext = buf; }
+    void SetNextBuffer(class Buffer *buf) { mNext = static_cast<BufferHeader *>(buf); }
 
 private:
     /**
@@ -194,7 +188,6 @@ private:
         kHeadBufferDataSize = kBufferDataSize - sizeof(struct MessageInfo),
     };
 
-    struct BufferHeader mHeader;
     union
     {
         struct
