@@ -942,7 +942,7 @@ public:
      * This method initializes the TLV.
      *
      */
-    void Init(void) { SetType(kActiveTimestamp); SetLength(sizeof(*this) - sizeof(Tlv)); }
+    void Init(void) { SetType(kActiveTimestamp); SetLength(sizeof(*this) - sizeof(Tlv)); Timestamp::Init(); }
 
     /**
      * This method indicates whether or not the TLV appears to be well-formed.
@@ -1192,7 +1192,7 @@ public:
      * This method initializes the TLV.
      *
      */
-    void Init(void) { SetType(kPendingTimestamp); SetLength(sizeof(*this) - sizeof(Tlv)); }
+    void Init(void) { SetType(kPendingTimestamp); SetLength(sizeof(*this) - sizeof(Tlv)); Timestamp::Init(); }
 
     /**
      * This method indicates whether or not the TLV appears to be well-formed.
