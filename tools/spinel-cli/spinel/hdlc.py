@@ -99,7 +99,11 @@ class Hdlc(IStream):
             if CONFIG.DEBUG_HDLC:
                 raw.append(byte)
             if byte == HDLC_FLAG:
-                break
+                if len(packet) != 0:
+                    break
+                else:
+                    # If multiple FLAG bytes in a row, keep looking for data.
+                    continue
             if byte == HDLC_ESCAPE:
                 byte = self.stream.read()
                 if CONFIG.DEBUG_HDLC:
