@@ -80,6 +80,7 @@
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\src\core\coap\coap_client.cpp" />
     <ClCompile Include="..\..\src\core\coap\coap_header.cpp" />
     <ClCompile Include="..\..\src\core\coap\coap_server.cpp" />
     <ClCompile Include="..\..\src\core\common\crc16.cpp" />
@@ -140,6 +141,7 @@
     <ClInclude Include="..\..\include\openthread.h" />
     <ClInclude Include="..\..\include\openthread-types.h" />
     <ClInclude Include="..\..\include\openthread-windows-config.h" />
+    <ClInclude Include="..\..\src\core\coap\coap_client.hpp" />
     <ClInclude Include="..\..\src\core\coap\coap_header.hpp" />
     <ClInclude Include="..\..\src\core\coap\coap_server.hpp" />
     <ClInclude Include="..\..\src\core\common\code_utils.hpp" />

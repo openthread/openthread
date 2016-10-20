@@ -390,7 +390,7 @@ void Mac::GetHashMacAddress(ExtAddress *aHashMacAddress)
     memcpy(aHashMacAddress->m8, buf, OT_EXT_ADDRESS_SIZE);
     aHashMacAddress->SetLocal(true);
 
-    otLogFuncExitMsg("%llX", HostSwap64(*(uint64_t *)aHashMacAddress));
+    otLogFuncExitMsg("%llX", HostSwap64(*reinterpret_cast<uint64_t *>(aHashMacAddress)));
 }
 
 ShortAddress Mac::GetShortAddress(void) const
@@ -444,6 +444,8 @@ const char *Mac::GetNetworkName(void) const
 ThreadError Mac::SetNetworkName(const char *aNetworkName)
 {
     ThreadError error = kThreadError_None;
+    otLogFuncEntryMsg("%s", aNetworkName);
+
     otLogFuncEntryMsg("%s", aNetworkName);
 
     VerifyOrExit(strlen(aNetworkName) <= OT_NETWORK_NAME_MAX_SIZE, error = kThreadError_InvalidArgs);

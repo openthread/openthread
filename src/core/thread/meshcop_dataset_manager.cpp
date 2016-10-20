@@ -194,7 +194,7 @@ ThreadError DatasetManager::Register(void)
     SuccessOrExit(error = message->Append(header.GetBytes(), header.GetLength()));
     SuccessOrExit(error = message->Append(mLocal.GetBytes(), mLocal.GetSize()));
 
-    mMle.GetLeaderAddress(leader);
+    mMle.GetLeaderAloc(leader);
 
     memset(&messageInfo, 0, sizeof(messageInfo));
     memcpy(&messageInfo.mPeerAddr, &leader, sizeof(messageInfo.mPeerAddr));
@@ -538,13 +538,21 @@ ThreadError DatasetManager::SendSetRequest(const otOperationalDataset &aDataset,
         SuccessOrExit(error = message->Append(&channel, sizeof(channel)));
     }
 
+    if (aDataset.mIsChannelMaskPage0Set)
+    {
+        ChannelMask0Tlv channelMask;
+        channelMask.Init();
+        channelMask.SetMask(aDataset.mChannelMaskPage0);
+        SuccessOrExit(error = message->Append(&channelMask, sizeof(channelMask)));
+    }
+
     if (aLength > 0)
     {
         SuccessOrExit(error = message->Append(aTlvs, aLength));
     }
 
     memset(&messageInfo, 0, sizeof(messageInfo));
-    mMle.GetLeaderAddress(messageInfo.GetPeerAddr());
+    mMle.GetLeaderAloc(messageInfo.GetPeerAddr());
     messageInfo.mPeerPort = kCoapUdpPort;
     SuccessOrExit(error = mSocket.SendTo(*message, messageInfo));
 
@@ -595,7 +603,7 @@ ThreadError DatasetManager::SendGetRequest(const uint8_t *aTlvTypes, const uint8
     }
 
     memset(&messageInfo, 0, sizeof(messageInfo));
-    mMle.GetLeaderAddress(messageInfo.GetPeerAddr());
+    mMle.GetLeaderAloc(messageInfo.GetPeerAddr());
     messageInfo.mPeerPort = kCoapUdpPort;
     SuccessOrExit(error = mSocket.SendTo(*message, messageInfo));
 

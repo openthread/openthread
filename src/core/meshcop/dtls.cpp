@@ -97,11 +97,7 @@ ThreadError Dtls::Start(bool aClient, ReceiveHandler aReceiveHandler, SendHandle
     mbedtls_ssl_conf_ciphersuites(&mConf, ciphersuites);
     mbedtls_ssl_conf_export_keys_cb(&mConf, HandleMbedtlsExportKeys, this);
     mbedtls_ssl_conf_handshake_timeout(&mConf, 8000, 60000);
-#ifdef _KERNEL_MODE
     mbedtls_ssl_conf_dbg(&mConf, HandleMbedtlsDebug, NULL);
-#else
-    mbedtls_ssl_conf_dbg(&mConf, HandleMbedtlsDebug, stdout);
-#endif
 
     if (!mClient)
     {
@@ -438,23 +434,27 @@ ThreadError Dtls::MapError(int rval)
     return error;
 }
 
-void Dtls::HandleMbedtlsDebug(void *ctx, int level, const char *file, int line, const char *str)
+void Dtls::HandleMbedtlsDebug(void *, int level, const char *, int , const char *str)
 {
-#ifdef WINDOWS_LOGGING
-
-    if (strnlen(str, 512) != 512)
+    switch (level)
     {
-        otLogInfoMbedTls("%s", str);
-    }
+    case 1:
+        otLogCritMbedTls("%s\n", str);
+        break;
 
-#else
-    otLogInfoMbedTls("%s:%04d: %s\n", file, line, str);
-#endif
-    (void)ctx;
-    (void)level;
-    (void)file;
-    (void)line;
-    (void)str;
+    case 2:
+        otLogWarnMbedTls("%s\n", str);
+        break;
+
+    case 3:
+        otLogInfoMbedTls("%s\n", str);
+        break;
+
+    case 4:
+    default:
+        otLogDebgMbedTls("%s\n", str);
+        break;
+    }
 }
 
 }  // namespace MeshCoP

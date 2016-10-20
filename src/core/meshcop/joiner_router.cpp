@@ -186,7 +186,8 @@ void JoinerRouter::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &a
     ExtendedTlv tlv;
     uint16_t borderAgentRloc;
 
-    otLogFuncEntryMsg("from peer: %llX", HostSwap64(*(uint64_t *)(aMessageInfo.GetPeerAddr().mFields.m8 + 8)));
+    otLogFuncEntryMsg("from peer: %llX",
+                      HostSwap64(*reinterpret_cast<const uint64_t *>(aMessageInfo.GetPeerAddr().mFields.m8 + 8)));
     otLogInfoMeshCoP("JoinerRouter::HandleUdpReceive\n");
 
     SuccessOrExit(error = GetBorderAgentRloc(borderAgentRloc));

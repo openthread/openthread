@@ -190,7 +190,7 @@ ThreadError Commissioner::AddJoiner(const Mac::ExtAddress *aExtAddress, const ch
 {
     ThreadError error = kThreadError_NoBufs;
 
-    otLogFuncEntryMsg("%llX, %s", (aExtAddress ? HostSwap64(*(uint64_t *)aExtAddress) : 0), aPSKd);
+    otLogFuncEntryMsg("%llX, %s", (aExtAddress ? HostSwap64(*reinterpret_cast<const uint64_t *>(aExtAddress)) : 0), aPSKd);
     VerifyOrExit(strlen(aPSKd) <= Dtls::kPskMaxLength, error = kThreadError_InvalidArgs);
     RemoveJoiner(aExtAddress);
 
@@ -228,7 +228,7 @@ ThreadError Commissioner::RemoveJoiner(const Mac::ExtAddress *aExtAddress)
 {
     ThreadError error = kThreadError_NotFound;
 
-    otLogFuncEntryMsg("%llX", (aExtAddress ? HostSwap64(*(uint64_t *)aExtAddress) : 0));
+    otLogFuncEntryMsg("%llX", (aExtAddress ? HostSwap64(*reinterpret_cast<const uint64_t *>(aExtAddress)) : 0));
 
     for (size_t i = 0; i < sizeof(mJoiners) / sizeof(mJoiners[0]); i++)
     {
@@ -269,6 +269,11 @@ ThreadError Commissioner::SetProvisioningUrl(const char *aProvisioningUrl)
 uint16_t Commissioner::GetSessionId(void) const
 {
     return mSessionId;
+}
+
+uint8_t Commissioner::GetState(void) const
+{
+    return mState;
 }
 
 void Commissioner::HandleTimer(void *aContext)
@@ -567,7 +572,6 @@ void Commissioner::HandleRelayReceive(Coap::Header &aHeader, Message &aMessage, 
     JoinerRouterLocatorTlv joinerRloc;
     uint16_t offset;
     uint16_t length;
-    uint64_t iid;
 
     otLogFuncEntry();
 
@@ -589,8 +593,7 @@ void Commissioner::HandleRelayReceive(Coap::Header &aHeader, Message &aMessage, 
     mJoinerPort = joinerPort.GetUdpPort();
     mJoinerRloc = joinerRloc.GetJoinerRouterLocator();
 
-    memcpy(&iid, mJoinerIid, sizeof(iid));
-    otLogInfoMeshCoP("Received relay receive for %llX, rloc:%x\n", HostSwap64(iid), mJoinerRloc);
+    otLogInfoMeshCoP("Received relay receive for %llX, rloc:%x\n", HostSwap64(mJoinerIid64), mJoinerRloc);
 
     if (!mNetif.GetDtls().IsStarted())
     {

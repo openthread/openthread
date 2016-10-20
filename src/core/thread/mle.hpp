@@ -1106,6 +1106,14 @@ protected:
     ThreadError SetStateChild(uint16_t aRloc16);
 
     /**
+     * This method returns a new MLE message.
+     *
+     * @returns A pointer to the message or NULL if no buffers are available.
+     *
+     */
+    Message *NewMessage(void) { return mSocket.NewMessage(0); };
+
+    /**
      * This method sets the Leader's Partition ID, Weighting, and Router ID values.
      *
      * @param[in]  aPartitionId     The Leader's Partition ID value.
