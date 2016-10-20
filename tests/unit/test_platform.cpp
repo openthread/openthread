@@ -35,6 +35,7 @@
 
 #include <common/code_utils.hpp>
 #include <platform/alarm.h>
+#include <platform/logging.h>
 #include <platform/misc.h>
 #include <platform/radio.h>
 #include <platform/random.h>
@@ -303,6 +304,10 @@ exit:
     {
         (void)aInstance;
         return kPlatResetReason_PowerOn;
+    }
+
+    void otPlatLog(otLogLevel , otLogRegion , const char *, ...)
+    {
     }
 
     //

@@ -90,7 +90,9 @@ static void HandleMleDiscover(otActiveScanResult *aResult, void *aContext);
 
 void otProcessQueuedTasklets(otInstance *aInstance)
 {
+    otLogFuncEntry();
     aInstance->mIp6.mTaskletScheduler.ProcessQueuedTasklets();
+    otLogFuncExit();
 }
 
 bool otAreTaskletsPending(otInstance *aInstance)
@@ -1004,6 +1006,7 @@ otInstance *otInstanceInit(void *aInstanceBuffer, size_t *aInstanceBufferSize)
 {
     otInstance *aInstance = NULL;
 
+    otLogFuncEntry();
     otLogInfoApi("otInstanceInit\n");
 
     VerifyOrExit(aInstanceBufferSize != NULL, ;);
@@ -1018,6 +1021,7 @@ otInstance *otInstanceInit(void *aInstanceBuffer, size_t *aInstanceBufferSize)
 
 exit:
 
+    otLogFuncExit();
     return aInstance;
 }
 
@@ -1025,6 +1029,8 @@ exit:
 
 otInstance *otInstanceInit()
 {
+    otLogFuncEntry();
+
     otLogInfoApi("otInstanceInit\n");
 
     VerifyOrExit(sInstance == NULL, ;);
@@ -1034,6 +1040,7 @@ otInstance *otInstanceInit()
 
 exit:
 
+    otLogFuncExit();
     return sInstance;
 }
 
@@ -1059,6 +1066,8 @@ ThreadError otSendDiagnosticReset(otInstance *aInstance, const otIp6Address *aDe
 
 void otInstanceFinalize(otInstance *aInstance)
 {
+    otLogFuncEntry();
+
     // Ensure we are disabled
     (void)otThreadStop(aInstance);
     (void)otInterfaceDown(aInstance);
@@ -1069,14 +1078,18 @@ void otInstanceFinalize(otInstance *aInstance)
 #ifndef OPENTHREAD_MULTIPLE_INSTANCE
     sInstance = NULL;
 #endif
+    otLogFuncExit();
 }
 
 ThreadError otInterfaceUp(otInstance *aInstance)
 {
     ThreadError error = kThreadError_None;
 
+    otLogFuncEntry();
+
     error = aInstance->mThreadNetif.Up();
 
+    otLogFuncExitErr(error);
     return error;
 }
 
@@ -1084,8 +1097,11 @@ ThreadError otInterfaceDown(otInstance *aInstance)
 {
     ThreadError error = kThreadError_None;
 
+    otLogFuncEntry();
+
     error = aInstance->mThreadNetif.Down();
 
+    otLogFuncExitErr(error);
     return error;
 }
 
@@ -1098,11 +1114,14 @@ ThreadError otThreadStart(otInstance *aInstance)
 {
     ThreadError error = kThreadError_None;
 
+    otLogFuncEntry();
+
     VerifyOrExit(aInstance->mThreadNetif.GetMac().GetPanId() != Mac::kPanIdBroadcast, error = kThreadError_InvalidState);
 
     error = aInstance->mThreadNetif.GetMle().Start();
 
 exit:
+    otLogFuncExitErr(error);
     return error;
 }
 
@@ -1110,8 +1129,11 @@ ThreadError otThreadStop(otInstance *aInstance)
 {
     ThreadError error = kThreadError_None;
 
+    otLogFuncEntry();
+
     error = aInstance->mThreadNetif.GetMle().Stop();
 
+    otLogFuncExitErr(error);
     return error;
 }
 
@@ -1233,8 +1255,16 @@ void otSetReceiveIp6DatagramFilterEnabled(otInstance *aInstance, bool aEnabled)
 
 ThreadError otSendIp6Datagram(otInstance *aInstance, otMessage aMessage)
 {
-    return aInstance->mIp6.HandleDatagram(*static_cast<Message *>(aMessage), NULL, aInstance->mThreadNetif.GetInterfaceId(),
-                                          NULL, true);
+    ThreadError error;
+
+    otLogFuncEntry();
+
+    error = aInstance->mIp6.HandleDatagram(*static_cast<Message *>(aMessage), NULL,
+                                           aInstance->mThreadNetif.GetInterfaceId(), NULL, true);
+
+    otLogFuncExitErr(error);
+
+    return error;
 }
 
 otMessage otNewUdpMessage(otInstance *aInstance, bool aLinkSecurityEnabled)

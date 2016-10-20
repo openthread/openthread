@@ -117,7 +117,7 @@ ThreadError PanIdQueryClient::SendQuery(uint16_t aPanId, uint32_t aChannelMask, 
     messageInfo.mInterfaceId = mNetif.GetInterfaceId();
     SuccessOrExit(error = mSocket.SendTo(*message, messageInfo));
 
-    otLogInfoMeshCoP("sent panid query\r\n");
+    otLogInfoMeshCoP("sent panid query\n");
 
     mCallback = aCallback;
     mContext = aContext;
@@ -153,7 +153,7 @@ void PanIdQueryClient::HandleConflict(Coap::Header &aHeader, Message &aMessage, 
     VerifyOrExit(aHeader.GetType() == Coap::Header::kTypeConfirmable &&
                  aHeader.GetCode() == Coap::Header::kCodePost, ;);
 
-    otLogInfoMeshCoP("received panid conflict\r\n");
+    otLogInfoMeshCoP("received panid conflict\n");
 
     SuccessOrExit(MeshCoP::Tlv::GetTlv(aMessage, MeshCoP::Tlv::kPanId, sizeof(panId), panId));
     VerifyOrExit(panId.IsValid(), ;);
@@ -214,7 +214,7 @@ exit:
 
 void PanIdQueryClient::HandleUdpReceive(void *aContext, otMessage aMessage, const otMessageInfo *aMessageInfo)
 {
-    otLogInfoMeshCoP("received panid query response\r\n");
+    otLogInfoMeshCoP("received panid query response\n");
     (void)aContext;
     (void)aMessage;
     (void)aMessageInfo;

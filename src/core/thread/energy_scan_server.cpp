@@ -141,7 +141,7 @@ ThreadError EnergyScanServer::SendResponse(const Coap::Header &aRequestHeader, c
     memset(&responseInfo.mSockAddr, 0, sizeof(responseInfo.mSockAddr));
     SuccessOrExit(error = mCoapServer.SendMessage(*message, responseInfo));
 
-    otLogInfoMeshCoP("sent energy scan query response\r\n");
+    otLogInfoMeshCoP("sent energy scan query response\n");
 
 exit:
 
@@ -166,7 +166,7 @@ void EnergyScanServer::HandleTimer(void)
     {
         // grab the lowest channel to scan
         uint32_t channelMask = mChannelMaskCurrent & ~(mChannelMaskCurrent - 1);
-        otLogInfoMeshCoP("%x\r\n", channelMask);
+        otLogInfoMeshCoP("%x\n", channelMask);
         mNetif.GetMac().EnergyScan(channelMask, mScanDuration, HandleScanResult, this);
     }
     else
@@ -261,7 +261,7 @@ ThreadError EnergyScanServer::SendReport(void)
     messageInfo.mPeerPort = kCoapUdpPort;
     SuccessOrExit(error = mSocket.SendTo(*message, messageInfo));
 
-    otLogInfoMeshCoP("sent scan results\r\n");
+    otLogInfoMeshCoP("sent scan results\n");
 
 exit:
 
@@ -277,7 +277,7 @@ exit:
 
 void EnergyScanServer::HandleUdpReceive(void *aContext, otMessage aMessage, const otMessageInfo *aMessageInfo)
 {
-    otLogInfoMeshCoP("received scan report response\r\n");
+    otLogInfoMeshCoP("received scan report response\n");
     (void)aContext;
     (void)aMessage;
     (void)aMessageInfo;

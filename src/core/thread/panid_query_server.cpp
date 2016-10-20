@@ -125,7 +125,7 @@ ThreadError PanIdQueryServer::SendQueryResponse(const Coap::Header &aRequestHead
     memset(&responseInfo.mSockAddr, 0, sizeof(responseInfo.mSockAddr));
     SuccessOrExit(error = mCoapServer.SendMessage(*message, responseInfo));
 
-    otLogInfoMeshCoP("sent panid query response\r\n");
+    otLogInfoMeshCoP("sent panid query response\n");
 
 exit:
 
@@ -214,7 +214,7 @@ ThreadError PanIdQueryServer::SendConflict(void)
     messageInfo.mPeerPort = kCoapUdpPort;
     SuccessOrExit(error = mSocket.SendTo(*message, messageInfo));
 
-    otLogInfoMeshCoP("sent panid conflict\r\n");
+    otLogInfoMeshCoP("sent panid conflict\n");
 
 exit:
 
@@ -233,14 +233,14 @@ void PanIdQueryServer::HandleTimer(void *aContext)
 
 void PanIdQueryServer::HandleTimer(void)
 {
-    otLogInfoMeshCoP("%x\r\n", mChannelMask);
+    otLogInfoMeshCoP("%x\n", mChannelMask);
     mNetif.GetMac().ActiveScan(mChannelMask, 0, HandleScanResult, this);
     mChannelMask = 0;
 }
 
 void PanIdQueryServer::HandleUdpReceive(void *aContext, otMessage aMessage, const otMessageInfo *aMessageInfo)
 {
-    otLogInfoMeshCoP("received panid conflict response\r\n");
+    otLogInfoMeshCoP("received panid conflict response\n");
     (void)aContext;
     (void)aMessage;
     (void)aMessageInfo;
