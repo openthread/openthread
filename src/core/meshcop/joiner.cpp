@@ -112,7 +112,7 @@ void Joiner::HandleDiscoverResult(otActiveScanResult *aResult)
 {
     if (aResult != NULL)
     {
-        otLogFuncEntryMsg("aResult = %llX", HostSwap64(*(uint64_t *)&aResult->mExtAddress));
+        otLogFuncEntryMsg("aResult = %llX", HostSwap64(*reinterpret_cast<uint64_t *>(&aResult->mExtAddress)));
 
         SteeringDataTlv steeringData;
         Mac::ExtAddress extAddress;
@@ -244,7 +244,8 @@ void Joiner::HandleUdpTransmit(void)
 
     VerifyOrExit(mTransmitMessage != NULL, error = kThreadError_NoBufs);
 
-    otLogInfoMeshCoP("transmit %d (to %llX)\n", mTransmitMessage->GetLength(), HostSwap64(*(uint64_t *)&mJoinerRouter));
+    otLogInfoMeshCoP("transmit %d (to %llX)\n", mTransmitMessage->GetLength(),
+                     HostSwap64(*reinterpret_cast<uint64_t *>(&mJoinerRouter)));
 
     memset(&messageInfo, 0, sizeof(messageInfo));
     messageInfo.GetPeerAddr().mFields.m16[0] = HostSwap16(0xfe80);
