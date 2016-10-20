@@ -40,14 +40,14 @@
 namespace Thread {
 namespace Ip6 {
 
-Netif::Netif(Ip6 &aIp6):
+Netif::Netif(Ip6 &aIp6, int8_t aInterfaceId):
     mIp6(aIp6),
     mStateChangedTask(aIp6.mTaskletScheduler, &Netif::HandleStateChangedTask, this)
 {
     mCallbacks = NULL;
     mUnicastAddresses = NULL;
     mMulticastAddresses = NULL;
-    mInterfaceId = -1;
+    mInterfaceId = aInterfaceId;
     mAllRoutersSubscribed = false;
     mNext = NULL;
     mMaskExtUnicastAddresses = 0;

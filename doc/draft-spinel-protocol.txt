@@ -152,8 +152,9 @@ Quattlebaum              Expires April 14, 2017                 [Page 2]
        5.6.5.  PROP 68: PROP_NET_NETWORK_NAME  . . . . . . . . . . .  35
        5.6.6.  PROP 69: PROP_NET_XPANID  . . . . . . . . . . . . . .  35
        5.6.7.  PROP 70: PROP_NET_MASTER_KEY  . . . . . . . . . . . .  35
-       5.6.8.  PROP 71: PROP_NET_KEY_SEQUENCE  . . . . . . . . . . .  35
+       5.6.8.  PROP 71: PROP_NET_KEY_SEQUENCE_COUNTER. . . . . . . .  35
        5.6.9.  PROP 72: PROP_NET_PARTITION_ID  . . . . . . . . . . .  35
+       5.6.10.  PROP 73: PROP_NET_KEY_SWITCH_GUARDTIME . . . . . . .  35
      5.7.  IPv6 Properties . . . . . . . . . . . . . . . . . . . . .  35
        5.7.1.  PROP 96: PROP_IPV6_LL_ADDR  . . . . . . . . . . . . .  35
        5.7.2.  PROP 97: PROP_IPV6_ML_ADDR  . . . . . . . . . . . . .  36
@@ -1934,7 +1935,7 @@ Quattlebaum              Expires April 14, 2017                [Page 34]
    o  Type: Read-Write
    o  Packed-Encoding: "D"
 
-5.6.8.  PROP 71: PROP_NET_KEY_SEQUENCE
+5.6.8.  PROP 71: PROP_NET_KEY_SEQUENCE_COUNTER
 
    o  Type: Read-Write
    o  Packed-Encoding: "L"
@@ -1945,6 +1946,11 @@ Quattlebaum              Expires April 14, 2017                [Page 34]
    o  Packed-Encoding: "L"
 
    The partition ID of the partition that this node is a member of.
+
+5.6.10.  PROP 73: PROP_NET_KEY_SWITCH_GUARDTIME
+
+   o  Type: Read-Write
+   o  Packed-Encoding: "L"
 
 5.7.  IPv6 Properties
 
@@ -3103,8 +3109,10 @@ F.2.  Attaching to a network
    o  CMD_VALUE_IS:PROP_NET_NETWORK_NAME
    o  CMD_VALUE_SET:PROP_NET_MASTER_KEY
    o  CMD_VALUE_IS:PROP_NET_MASTER_KEY
-   o  CMD_VALUE_SET:PROP_NET_KEY_SEQUENCE
-   o  CMD_VALUE_IS:PROP_NET_KEY_SEQUENCE
+   o  CMD_VALUE_SET:PROP_NET_KEY_SEQUENCE_COUNTER
+   o  CMD_VALUE_IS:PROP_NET_KEY_SEQUENCE_COUNTER
+   o  CMD_VALUE_SET:PROP_NET_KEY_SWITCH_GUARDTIME
+   o  CMD_VALUE_IS:PROP_NET_KEY_SWITCH_GUARDTIME
 
    Bring the network interface up:
 

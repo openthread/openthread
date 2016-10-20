@@ -527,6 +527,13 @@ ThreadError Dataset::ProcessMgmtSetCommand(otInstance *aInstance, int argc, char
             SuccessOrExit(error = Interpreter::ParseLong(argv[++index], value));
             dataset.mChannel = static_cast<uint16_t>(value);
         }
+        else if (strcmp(argv[index], "channelmask") == 0)
+        {
+            VerifyOrExit(index < argc, error = kThreadError_Parse);
+            dataset.mIsChannelMaskPage0Set = true;
+            SuccessOrExit(error = Interpreter::ParseLong(argv[++index], value));
+            dataset.mChannelMaskPage0 = static_cast<uint32_t>(value);
+        }
         else if (strcmp(argv[index], "binary") == 0)
         {
             VerifyOrExit((index + 1) < argc, error = kThreadError_Parse);

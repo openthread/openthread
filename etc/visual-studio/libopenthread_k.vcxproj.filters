@@ -57,6 +57,9 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\src\core\coap\coap_client.cpp">
+      <Filter>Source Files\coap</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\src\core\coap\coap_header.cpp">
       <Filter>Source Files\coap</Filter>
     </ClCompile>
@@ -67,6 +70,9 @@
       <Filter>Source Files\common</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\core\common\message.cpp">
+      <Filter>Source Files\common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\core\common\settings.cpp">
       <Filter>Source Files\common</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\core\common\tasklet.cpp">
@@ -226,6 +232,9 @@
     </ClInclude>
     <ClInclude Include="..\..\src\core\openthread-core-config.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\core\coap\coap_client.hpp">
+      <Filter>Header Files\coap</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\core\coap\coap_header.hpp">
       <Filter>Header Files\coap</Filter>

@@ -75,7 +75,7 @@ void Leader::HandlePetition(Coap::Header &aHeader, Message &aMessage, const Ip6:
     CommissionerIdTlv commissionerId;
     StateTlv::State state = StateTlv::kReject;
 
-    otLogInfoMeshCoP("received petition\r\n");
+    otLogInfoMeshCoP("received petition\n");
 
     SuccessOrExit(Tlv::GetTlv(aMessage, Tlv::kCommissionerId, sizeof(commissionerId), commissionerId));
 
@@ -139,7 +139,7 @@ ThreadError Leader::SendPetitionResponse(const Coap::Header &aRequestHeader, con
 
     SuccessOrExit(error = mCoapServer.SendMessage(*message, aMessageInfo));
 
-    otLogInfoMeshCoP("sent petition response\r\n");
+    otLogInfoMeshCoP("sent petition response\n");
 
 exit:
 
@@ -163,7 +163,7 @@ void Leader::HandleKeepAlive(Coap::Header &aHeader, Message &aMessage, const Ip6
     CommissionerSessionIdTlv sessionId;
     StateTlv::State responseState;
 
-    otLogInfoMeshCoP("received keep alive\r\n");
+    otLogInfoMeshCoP("received keep alive\n");
 
     SuccessOrExit(Tlv::GetTlv(aMessage, Tlv::kState, sizeof(state), state));
     SuccessOrExit(Tlv::GetTlv(aMessage, Tlv::kCommissionerSessionId, sizeof(sessionId), sessionId));
@@ -177,7 +177,7 @@ void Leader::HandleKeepAlive(Coap::Header &aHeader, Message &aMessage, const Ip6
         responseState = StateTlv::kReject;
         mTimer.Stop();
         mNetworkData.SetCommissioningData(NULL, 0);
-        otLogInfoMeshCoP("commissioner inactive\r\n");
+        otLogInfoMeshCoP("commissioner inactive\n");
     }
     else
     {
@@ -214,7 +214,7 @@ ThreadError Leader::SendKeepAliveResponse(const Coap::Header &aRequestHeader, co
 
     SuccessOrExit(error = mCoapServer.SendMessage(*message, aMessageInfo));
 
-    otLogInfoMeshCoP("sent keep alive response\r\n");
+    otLogInfoMeshCoP("sent keep alive response\n");
 
 exit:
 
@@ -228,7 +228,7 @@ exit:
 
 void Leader::HandleUdpReceive(void *aContext, otMessage aMessage, const otMessageInfo *aMessageInfo)
 {
-    otLogInfoMeshCoP("received dataset changed response\r\n");
+    otLogInfoMeshCoP("received dataset changed response\n");
     (void)aContext;
     (void)aMessage;
     (void)aMessageInfo;
@@ -262,7 +262,7 @@ ThreadError Leader::SendDatasetChanged(const Ip6::Address &aAddress)
     messageInfo.mPeerPort = kCoapUdpPort;
     SuccessOrExit(error = mSocket.SendTo(*message, messageInfo));
 
-    otLogInfoMeshCoP("sent dataset changed\r\n");
+    otLogInfoMeshCoP("sent dataset changed\n");
 
 exit:
 
@@ -283,7 +283,7 @@ void Leader::HandleTimer(void)
 {
     VerifyOrExit(mNetif.GetMle().GetDeviceState() == Mle::kDeviceStateLeader, ;);
 
-    otLogInfoMeshCoP("commissioner inactive\r\n");
+    otLogInfoMeshCoP("commissioner inactive\n");
     mNetworkData.SetCommissioningData(NULL, 0);
 
 exit:

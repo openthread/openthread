@@ -121,7 +121,7 @@ ThreadError AnnounceBeginClient::SendRequest(uint32_t aChannelMask, uint8_t aCou
     messageInfo.mInterfaceId = mNetif.GetInterfaceId();
     SuccessOrExit(error = mSocket.SendTo(*message, messageInfo));
 
-    otLogInfoMeshCoP("sent announce begin query\r\n");
+    otLogInfoMeshCoP("sent announce begin query\n");
 
 exit:
 
@@ -135,7 +135,7 @@ exit:
 
 void AnnounceBeginClient::HandleUdpReceive(void *aContext, otMessage aMessage, const otMessageInfo *aMessageInfo)
 {
-    otLogInfoMeshCoP("received announce begin response\r\n");
+    otLogInfoMeshCoP("received announce begin response\n");
     (void)aContext;
     (void)aMessage;
     (void)aMessageInfo;

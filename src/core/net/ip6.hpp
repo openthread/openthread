@@ -283,16 +283,6 @@ public:
     Netif *GetNetifById(int8_t aInterfaceId);
 
     /**
-     * This method returns the network interface identified by @p aName.
-     *
-     * @param[in]  aName  A pointer to a NULL-terminated string.
-     *
-     * @returns A pointer to the network interface or NULL if none is found.
-     *
-     */
-    Netif *GetNetifByName(char *aName);
-
-    /**
      * This method indicates whether or not @p aAddress is assigned to a network interface.
      *
      * @param[in]  aAddress  A reference to the IPv6 address.
@@ -363,7 +353,6 @@ private:
     bool mIsReceiveIp6FilterEnabled;
 
     Netif *mNetifListHead;
-    int8_t mNextInterfaceId;
 };
 
 static inline Ip6 *Ip6FromTaskletScheduler(TaskletScheduler *aTaskletScheduler)

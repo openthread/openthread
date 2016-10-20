@@ -39,13 +39,13 @@
 
 #include <openthread.h>
 #include <openthread-types.h>
+#include <common/debug.hpp>
 #include <common/code_utils.hpp>
 #include <crypto/sha256.hpp>
 #include <mac/mac.hpp>
 #include <net/ip6_address.hpp>
 #include <utils/global_address.hpp>
 
-#include <assert.h>
 #include <string.h>
 
 namespace Thread {
@@ -151,11 +151,8 @@ void Slaac::UpdateAddresses(otInstance *aInstance, otNetifAddress *aAddresses, u
     }
 }
 
-ThreadError Slaac::CreateRandomIid(otInstance *aInstance, otNetifAddress *aAddress, void *aContext)
+ThreadError Slaac::CreateRandomIid(otInstance *, otNetifAddress *aAddress, void *)
 {
-    (void) aInstance;
-    (void) aContext;
-
     for (size_t i = sizeof(aAddress[i].mAddress) - OT_IP6_IID_SIZE; i < sizeof(aAddress[i].mAddress); i++)
     {
         aAddress->mAddress.mFields.m8[i] = static_cast<uint8_t>(otPlatRandomGet());
@@ -166,8 +163,6 @@ ThreadError Slaac::CreateRandomIid(otInstance *aInstance, otNetifAddress *aAddre
 
 ThreadError SemanticallyOpaqueIidGenerator::CreateIid(otInstance *aInstance, otNetifAddress *aAddress)
 {
-    (void) aInstance;
-
     ThreadError error = kThreadError_None;
 
     for (uint32_t i = 0; i <= kMaxRetries; i++)

@@ -31,6 +31,8 @@
  *   This file implements Thread's Network Diagnostic processing.
  */
 
+#define WPP_NAME "network_diag.tmh"
+
 #include <coap/coap_header.hpp>
 #include <common/code_utils.hpp>
 #include <common/debug.hpp>

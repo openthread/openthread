@@ -162,6 +162,11 @@ typedef enum ThreadError
      */
     kThreadError_NotCapable = 29,
 
+    /**
+     * Coap response or acknowledgment not received.
+     */
+    kThreadError_ResponseTimeout = 30,
+
     kThreadError_Error = 255,
 } ThreadError;
 
@@ -514,7 +519,7 @@ enum
 
     OT_NET_ROLE               = 1 << 3,  ///< Device role (disabled, detached, child, router, leader) changed
     OT_NET_PARTITION_ID       = 1 << 4,  ///< Partition ID changed
-    OT_NET_KEY_SEQUENCE       = 1 << 5,  ///< Thread Key Sequence changed
+    OT_NET_KEY_SEQUENCE_COUNTER = 1 << 5,  ///< Thread Key Sequence changed
 
     OT_THREAD_CHILD_ADDED     = 1 << 6,  ///< Child was added
     OT_THREAD_CHILD_REMOVED   = 1 << 7,  ///< Child was removed
@@ -837,6 +842,14 @@ typedef struct otNetifAddress
     uint8_t                mPrefixLength;       ///< The Prefix length.
     struct otNetifAddress *mNext;               ///< A pointer to the next network interface address.
 } otNetifAddress;
+
+/**
+ * This enumeration represents the list of allowable values for an InterfaceId.
+ */
+typedef enum otNetifInterfaceId
+{
+    OT_NETIF_INTERFACE_ID_THREAD = 1,  ///< The Thread Network interface ID.
+} otNetifInterfaceId;
 
 /**
  * This structure represents data used by Semantically Opaque IID Generator.

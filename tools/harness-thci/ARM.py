@@ -533,6 +533,28 @@ class ARM(IThci):
         except Exception, e:
             ModuleHelper.WriteIntoDebugLogger("setSecurityPolicy() Error: " + str(e))
 
+    def __setKeySwitchGuardTime(self, iKeySwitchGuardTime):
+        """ set the Key switch guard time
+
+        Args:
+            iKeySwitchGuardTime: key switch guard time
+
+        Returns:
+            True: successful to set key switch guard time
+            False: fail to set key switch guard time
+        """
+        print '%s call setKeySwitchGuardTime' % self.port
+        print iKeySwitchGuardTime
+        try:
+            cmd = 'keysequence guardtime %s' % str(iKeySwitchGuardTime)
+            if self.__sendCommand(cmd)[0] == 'Done':
+                time.sleep(1)
+                return True
+            else:
+                return False
+        except Exception, e:
+            ModuleHelper.WriteIntoDebugLogger("setKeySwitchGuardTime() Error; " + str(e))
+
     def closeConnection(self):
         """close current serial port connection"""
         print '%s call closeConnection' % self.port
@@ -919,6 +941,7 @@ class ARM(IThci):
 
             # set Thread device with a given role
             self.__setDeviceRole(role)
+            self.__setKeySwitchGuardTime(0)
 
             # start OpenThread
             self.__startOpenThread()
@@ -1381,7 +1404,7 @@ class ARM(IThci):
         print '%s call setKeySequenceCounter' % self.port
         print iKeySequenceValue
         try:
-            cmd = 'keysequence %s' % str(iKeySequenceValue)
+            cmd = 'keysequence counter %s' % str(iKeySequenceValue)
             if self.__sendCommand(cmd)[0] == 'Done':
                 time.sleep(1)
                 return True
@@ -1394,7 +1417,7 @@ class ARM(IThci):
         """get current Thread Network key sequence"""
         print '%s call getKeySequenceCounter' % self.port
         keySequence = ''
-        keySequence = self.__sendCommand('keysequence')[0]
+        keySequence = self.__sendCommand('keysequence counter')[0]
         return keySequence
 
     def incrementKeySequenceCounter(self, iIncrementValue=1):
@@ -1986,7 +2009,21 @@ class ARM(IThci):
             modulehelper.writeintodebuglogger("MGMT_PANID_QUERY() error: " + str(e))
 
     def MGMT_ANNOUNCE_BEGIN(self, sAddr, xCommissionerSessionId, listChannelMask, xCount, xPeriod):
-        pass
+        """send MGMT_ANNOUNCE_BEGIN message to a given destination
+
+        Returns:
+            True: successful to send MGMT_ANNOUNCE_BEGIN message.
+            False: fail to send MGMT_ANNOUNCE_BEGIN message.
+        """
+        print '%s call MGMT_ANNOUNCE_BEGIN' % self.port
+        channelMask = ''
+        channelMask = '0x' + self.__convertLongToString(self.__convertChannelMask(listChannelMask))
+        try:
+            cmd = 'commissioner announce %s %s %s %s' % (channelMask, xCount, xPeriod, sAddr)
+            print cmd
+            return self.__sendCommand(cmd) == 'Done'
+        except Exception, e:
+            modulehelper.writeintodebuglogger("MGMT_ANNOUNCE_BEGIN() error: " + str(e))
 
     def MGMT_ACTIVE_GET(self, Addr='', TLVs=[]):
         """send MGMT_ACTIVE_GET command
@@ -2066,19 +2103,20 @@ class ARM(IThci):
                 cmd += ' delay '
                 cmd += str(xDelayTimer)
 
-            if  sPSKc != None or listSecurityPolicy != None or listChannelMask != None or \
-                xCommissioningSessionId != None or xTmfPort != None or xSteeringData != None or xBorderRouterLocator != None or \
-                BogusTLV != None:
-                cmd += ' binary '
-
             if listChannelMask != None:
-                cmd += '35060004'
+                cmd += ' channelmask '
+                print listChannelMask
                 entry = self.__convertLongToString(self.__convertChannelMask(listChannelMask))
 
                 if len(entry) < 8:
                     entry = entry.zfill(8)
 
-                cmd += entry
+                cmd += '0x' + entry
+
+            if  sPSKc != None or listSecurityPolicy != None \
+                xCommissioningSessionId != None or xTmfPort != None or xSteeringData != None or xBorderRouterLocator != None or \
+                BogusTLV != None:
+                cmd += ' binary '
 
             if sPSKc != None:
                 cmd += '0410'

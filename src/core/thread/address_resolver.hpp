@@ -36,6 +36,7 @@
 
 #include <openthread-core-config.h>
 #include <openthread-types.h>
+#include <coap/coap_client.hpp>
 #include <coap/coap_server.hpp>
 #include <common/timer.hpp>
 #include <mac/mac.hpp>
@@ -181,13 +182,12 @@ private:
     Coap::Resource mAddressQuery;
     Coap::Resource mAddressNotification;
     Cache mCache[kCacheEntries];
-    uint16_t mCoapMessageId;
     Ip6::IcmpHandler mIcmpHandler;
-    Ip6::UdpSocket mSocket;
     Timer mTimer;
 
     MeshForwarder &mMeshForwarder;
     Coap::Server &mCoapServer;
+    Coap::Client &mCoapClient;
     Mle::MleRouter &mMle;
     Ip6::Netif &mNetif;
 };

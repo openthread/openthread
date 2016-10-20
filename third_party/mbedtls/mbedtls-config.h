@@ -41,7 +41,20 @@
 #pragma warning(disable:4244)  // conversion from '*' to '*', possible loss of data
 #endif
 
-#if defined(_MSC_VER) && !defined(_CRT_SECURE_NO_DEPRECATE)
+#if defined(_KERNEL_MODE)
+#define MBEDTLS_PLATFORM_EXIT_MACRO
+__inline int windows_kernel_snprintf(char * s, size_t n, const char * format, ...)
+{
+    va_list argp;
+    va_start( argp, format );
+    int ret = _vsnprintf_s( s, n, _TRUNCATE, format, argp );
+    va_end( argp );
+    return ret;
+}
+#define MBEDTLS_PLATFORM_STD_SNPRINTF    windows_kernel_snprintf
+#endif
+
+#if defined(_MSC_VER) && !defined(_CRT_SECURE_NO_DEPRECATE) && !defined(_KERNEL_MODE)
 #define _CRT_SECURE_NO_DEPRECATE 1
 #endif
 

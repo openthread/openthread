@@ -37,6 +37,7 @@ libopenthread_a_CPPFLAGS            = \
 
 libopenthread_a_SOURCES             = \
     openthread.cpp                    \
+    coap/coap_client.cpp              \
     coap/coap_header.cpp              \
     coap/coap_server.cpp              \
     common/crc16.cpp                  \
@@ -44,6 +45,7 @@ libopenthread_a_SOURCES             = \
     common/message.cpp                \
     common/tasklet.cpp                \
     common/timer.cpp                  \
+    common/settings.cpp               \
     common/trickle_timer.cpp          \
     crypto/aes_ccm.cpp                \
     crypto/aes_ecb.cpp                \
@@ -113,6 +115,7 @@ noinst_HEADERS                      = \
     openthread-core-config.h          \
     openthread-core-default-config.h  \
     openthread-instance.h             \
+    coap/coap_client.hpp              \
     coap/coap_header.hpp              \
     coap/coap_server.hpp              \
     common/code_utils.hpp             \

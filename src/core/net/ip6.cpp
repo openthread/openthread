@@ -31,6 +31,8 @@
  *   This file implements IPv6 networking.
  */
 
+#define WPP_NAME "ip6.tmh"
+
 #include <common/code_utils.hpp>
 #include <common/debug.hpp>
 #include <common/logging.hpp>
@@ -58,8 +60,7 @@ Ip6::Ip6(void):
     mReceiveIp6DatagramCallback(NULL),
     mReceiveIp6DatagramCallbackContext(NULL),
     mIsReceiveIp6FilterEnabled(false),
-    mNetifListHead(NULL),
-    mNextInterfaceId(1)
+    mNetifListHead(NULL)
 {
 }
 
@@ -431,6 +432,8 @@ ThreadError Ip6::HandleDatagram(Message &message, Netif *netif, int8_t interface
     uint8_t nextHeader;
     uint8_t hopLimit;
 
+    otLogFuncEntry();
+
 #if 0
     uint8_t buf[1024];
     message.Read(0, sizeof(buf), buf);
@@ -534,6 +537,7 @@ exit:
         message.Free();
     }
 
+    otLogFuncExitErr(error);
     return error;
 }
 
@@ -542,6 +546,8 @@ ThreadError Ip6::ForwardMessage(Message &message, MessageInfo &messageInfo, uint
     ThreadError error = kThreadError_None;
     int8_t interfaceId;
     Netif *netif;
+
+    otLogFuncEntry();
 
     if (messageInfo.GetSockAddr().IsMulticast())
     {
@@ -591,6 +597,8 @@ ThreadError Ip6::ForwardMessage(Message &message, MessageInfo &messageInfo, uint
     SuccessOrExit(error = netif->SendMessage(message));
 
 exit:
+
+    otLogFuncExitErr(error);
     return error;
 }
 
@@ -609,7 +617,7 @@ ThreadError Ip6::AddNetif(Netif &aNetif)
 
         do
         {
-            if (netif == &aNetif)
+            if (netif == &aNetif || netif->mInterfaceId == aNetif.mInterfaceId)
             {
                 ExitNow(error = kThreadError_Already);
             }
@@ -620,11 +628,6 @@ ThreadError Ip6::AddNetif(Netif &aNetif)
     }
 
     aNetif.mNext = NULL;
-
-    if (aNetif.mInterfaceId < 0)
-    {
-        aNetif.mInterfaceId = mNextInterfaceId++;
-    }
 
 exit:
     return error;
@@ -673,22 +676,6 @@ Netif *Ip6::GetNetifById(int8_t aInterfaceId)
     for (netif = mNetifListHead; netif; netif = netif->mNext)
     {
         if (netif->GetInterfaceId() == aInterfaceId)
-        {
-            ExitNow();
-        }
-    }
-
-exit:
-    return netif;
-}
-
-Netif *Ip6::GetNetifByName(char *aName)
-{
-    Netif *netif;
-
-    for (netif = mNetifListHead; netif; netif = netif->mNext)
-    {
-        if (strcmp(netif->GetName(), aName) == 0)
         {
             ExitNow();
         }
