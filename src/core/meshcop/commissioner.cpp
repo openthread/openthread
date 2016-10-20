@@ -190,7 +190,7 @@ ThreadError Commissioner::AddJoiner(const Mac::ExtAddress *aExtAddress, const ch
 {
     ThreadError error = kThreadError_NoBufs;
 
-    otLogFuncEntryMsg("%llX, %s", (aExtAddress ? HostSwap64(*reinterpret_cast<uint64_t *>(aExtAddress)) : 0), aPSKd);
+    otLogFuncEntryMsg("%llX, %s", (aExtAddress ? HostSwap64(*reinterpret_cast<const uint64_t *>(aExtAddress)) : 0), aPSKd);
     VerifyOrExit(strlen(aPSKd) <= Dtls::kPskMaxLength, error = kThreadError_InvalidArgs);
     RemoveJoiner(aExtAddress);
 
@@ -228,7 +228,7 @@ ThreadError Commissioner::RemoveJoiner(const Mac::ExtAddress *aExtAddress)
 {
     ThreadError error = kThreadError_NotFound;
 
-    otLogFuncEntryMsg("%llX", (aExtAddress ? HostSwap64(*reinterpret_cast<uint64_t *>(aExtAddress)) : 0));
+    otLogFuncEntryMsg("%llX", (aExtAddress ? HostSwap64(*reinterpret_cast<const uint64_t *>(aExtAddress)) : 0));
 
     for (size_t i = 0; i < sizeof(mJoiners) / sizeof(mJoiners[0]); i++)
     {
