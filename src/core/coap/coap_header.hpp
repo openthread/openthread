@@ -79,10 +79,31 @@ public:
     };
 
     /**
+     * CoAP Type values.
+     *
+     */
+    typedef otCoapType Type;
+
+    /**
+     * CoAP Code values.
+     *
+     */
+    typedef otCoapCode Code;
+
+    /**
      * This method initializes the CoAP header.
      *
      */
     void Init(void);
+
+    /**
+     * This method initializes the CoAP header with specific Type and Code.
+     *
+     * @param[in]  aType  The Type value.
+     * @param[in]  aCode  The Code value.
+     *
+     */
+    void Init(Type aType, Code aCode);
 
     /**
      * This method parses the CoAP header from a message.
@@ -115,18 +136,6 @@ public:
     }
 
     /**
-     * CoAP Type values.
-     *
-     */
-    enum Type
-    {
-        kTypeConfirmable    = 0x00,  ///< Confirmable
-        kTypeNonConfirmable = 0x10,  ///< Non-confirmable
-        kTypeAcknowledgment = 0x20,  ///< Acknowledgment
-        kTypeReset          = 0x30,  ///< Reset
-    };
-
-    /**
      * This method returns the Type value.
      *
      * @returns The Type value.
@@ -144,21 +153,6 @@ public:
         mHeader.mFields.mVersionTypeToken &= ~kTypeMask;
         mHeader.mFields.mVersionTypeToken |= aType;
     }
-
-
-    /**
-     * CoAP Code values.
-     *
-     */
-    enum Code
-    {
-        kCodeGet     = 0x01,  ///< Get
-        kCodePost    = 0x02,  ///< Post
-        kCodePut     = 0x03,  ///< Put
-        kCodeDelete  = 0x04,  ///< Delete
-        kCodeChanged = 0x44,  ///< Changed
-        kCodeContent = 0x45,  ///< Content
-    };
 
     /**
      * This method returns the Code value.
@@ -263,11 +257,7 @@ public:
         /**
          * Option Numbers
          */
-        enum Type
-        {
-            kOptionUriPath       = 11,   ///< Uri-Path
-            kOptionContentFormat = 12,   ///< Content-Format
-        };
+        typedef otCoapOptionType Type;
     };
 
     /**
@@ -332,13 +322,13 @@ public:
     const Option *GetNextOption(void);
 
     /**
-     * This method terminates the CoAP header.
+     * This method adds Payload Marker indicating beginning of the payload to the CoAP header.
      *
-     * @retval kThreadError_None    Header successfully terminated.
+     * @retval kThreadError_None    Payload Marker successfully added.
      * @retval kThreadError_NoBufs  Header Payload Marker exceeds the buffer size.
      *
      */
-    ThreadError Finalize(void);
+    ThreadError SetPayloadMarker(void);
 
     /**
      * This method returns a pointer to the first byte of the header.
@@ -380,7 +370,7 @@ public:
      * @retval FALSE  Header is not a request header.
      *
      */
-    bool IsRequest(void) const { return (GetCode() >= kCodeGet && GetCode() <= kCodeDelete); };
+    bool IsRequest(void) const { return (GetCode() >= kCoapRequestGet && GetCode() <= kCoapRequestDelete); };
 
     /**
      * This method checks if a header is a response header.
@@ -389,7 +379,7 @@ public:
      * @retval FALSE  Header is not a response header.
      *
      */
-    bool IsResponse(void) const { return (GetCode() >= kCodeChanged); };
+    bool IsResponse(void) const { return (GetCode() >= kCoapResponseChanged); };
 
     /**
      * This method checks if a header is a CON message header.
@@ -398,7 +388,7 @@ public:
      * @retval FALSE  Header is not is a CON message header.
      *
      */
-    bool IsConfirmable(void) const { return (GetType() == kTypeConfirmable); };
+    bool IsConfirmable(void) const { return (GetType() == kCoapTypeConfirmable); };
 
     /**
      * This method checks if a header is a NON message header.
@@ -407,7 +397,7 @@ public:
      * @retval FALSE  Header is not is a NON message header.
      *
      */
-    bool IsNonConfirmable(void) const { return (GetType() == kTypeNonConfirmable); };
+    bool IsNonConfirmable(void) const { return (GetType() == kCoapTypeNonConfirmable); };
 
     /**
      * This method checks if a header is a ACK message header.
@@ -416,7 +406,7 @@ public:
      * @retval FALSE  Header is not is a ACK message header.
      *
      */
-    bool IsAck(void) const { return (GetType() == kTypeAcknowledgment); };
+    bool IsAck(void) const { return (GetType() == kCoapTypeAcknowledgment); };
 
     /**
      * This method checks if a header is a RST message header.
@@ -425,7 +415,7 @@ public:
      * @retval FALSE  Header is not is a RST message header.
      *
      */
-    bool IsReset(void) const { return (GetType() == kTypeReset);  };
+    bool IsReset(void) const { return (GetType() == kCoapTypeReset);  };
 
 private:
     /**

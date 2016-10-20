@@ -71,6 +71,7 @@ typedef enum otCoapType
  */
 typedef enum otCoapCode
 {
+    kCoapCodeEmpty       = 0x00,  ///< Empty message code
     kCoapRequestGet      = 0x01,  ///< Get
     kCoapRequestPost     = 0x02,  ///< Post
     kCoapRequestPut      = 0x03,  ///< Put

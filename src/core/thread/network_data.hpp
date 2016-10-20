@@ -35,6 +35,7 @@
 #define NETWORK_DATA_HPP_
 
 #include <openthread-types.h>
+#include <coap/coap_client.hpp>
 #include <net/udp6.hpp>
 #include <thread/lowpan.hpp>
 #include <thread/mle_router.hpp>
@@ -346,16 +347,11 @@ private:
         kDataResubmitDelay = 300,  ///< DATA_RESUBMIT_DELAY (seconds)
     };
 
-    static void HandleUdpReceive(void *aContext, otMessage aMessage, const otMessageInfo *aMessageInfo);
-    void HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
-
     const bool      mLocal;
     bool            mLastAttemptWait;
     uint32_t        mLastAttempt;
 
-    Ip6::UdpSocket  mSocket;
-    uint8_t         mCoapToken[2];
-    uint16_t        mCoapMessageId;
+    Coap::Client &mCoapClient;
 };
 
 }  // namespace NetworkData

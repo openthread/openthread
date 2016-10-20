@@ -107,7 +107,7 @@ void AnnounceBeginServer::HandleRequest(Coap::Header &aHeader, Message &aMessage
     MeshCoP::CountTlv count;
     MeshCoP::PeriodTlv period;
 
-    VerifyOrExit(aHeader.GetCode() == Coap::Header::kCodePost, ;);
+    VerifyOrExit(aHeader.GetCode() == kCoapRequestPost, ;);
 
     SuccessOrExit(MeshCoP::Tlv::GetTlv(aMessage, MeshCoP::Tlv::kChannelMask, sizeof(channelMask), channelMask.tlv));
     VerifyOrExit(channelMask.tlv.IsValid() &&
@@ -135,16 +135,12 @@ ThreadError AnnounceBeginServer::SendResponse(const Coap::Header &aRequestHeader
     Coap::Header responseHeader;
     Ip6::MessageInfo responseInfo;
 
-    VerifyOrExit(aRequestHeader.GetType() == Coap::Header::kTypeConfirmable, ;);
+    VerifyOrExit(aRequestHeader.GetType() == kCoapTypeConfirmable, ;);
 
     VerifyOrExit((message = mCoapServer.NewMessage(0)) != NULL, error = kThreadError_NoBufs);
 
-    responseHeader.Init();
-    responseHeader.SetType(Coap::Header::kTypeAcknowledgment);
-    responseHeader.SetCode(Coap::Header::kCodeChanged);
-    responseHeader.SetMessageId(aRequestHeader.GetMessageId());
-    responseHeader.SetToken(aRequestHeader.GetToken(), aRequestHeader.GetTokenLength());
-    responseHeader.Finalize();
+    responseHeader.SetDefaultResponseHeader(aRequestHeader);
+
     SuccessOrExit(error = message->Append(responseHeader.GetBytes(), responseHeader.GetLength()));
 
     memcpy(&responseInfo, &aRequestInfo, sizeof(responseInfo));

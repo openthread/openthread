@@ -104,10 +104,7 @@ private:
                          uint8_t *aTlvs, uint8_t aLength);
 
     Timer mTimer;
-
-    Ip6::UdpSocket mSocket;
-    uint8_t        mCoapToken[2];
-    uint16_t       mCoapMessageId;
+    Coap::Client &mCoapClient;
 
     const char *mUriSet;
     const char *mUriGet;

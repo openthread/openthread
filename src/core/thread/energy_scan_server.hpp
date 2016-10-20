@@ -36,6 +36,7 @@
 
 #include <openthread-core-config.h>
 #include <openthread-types.h>
+#include <coap/coap_client.hpp>
 #include <coap/coap_server.hpp>
 #include <common/timer.hpp>
 #include <net/ip6_address.hpp>
@@ -79,8 +80,6 @@ private:
     static void HandleTimer(void *aContext);
     void HandleTimer(void);
 
-    static void HandleUdpReceive(void *aContext, otMessage aMessage, const otMessageInfo *aMessageInfo);
-
     static void HandleNetifStateChanged(uint32_t aFlags, void *aContext);
     void HandleNetifStateChanged(uint32_t aFlags);
 
@@ -98,15 +97,14 @@ private:
     int8_t mScanResults[OPENTHREAD_CONFIG_MAX_ENERGY_RESULTS];
     uint8_t mScanResultsLength;
 
-    Coap::Resource mEnergyScan;
-    Ip6::UdpSocket mSocket;
     Timer mTimer;
 
     Ip6::NetifCallback mNetifCallback;
 
+    Coap::Resource mEnergyScan;
     Coap::Server &mCoapServer;
-    uint8_t mCoapToken[2];
-    uint16_t mCoapMessageId;
+    Coap::Client &mCoapClient;
+
     ThreadNetif &mNetif;
 };
 

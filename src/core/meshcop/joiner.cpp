@@ -275,14 +275,11 @@ void Joiner::SendJoinerFinalize(void)
     uint8_t *cur = buf;
 
     otLogFuncEntry();
-
-    header.Init();
-    header.SetType(Coap::Header::kTypeConfirmable);
-    header.SetCode(Coap::Header::kCodePost);
+    header.Init(kCoapTypeConfirmable, kCoapRequestPost);
     header.SetMessageId(0);
     header.SetToken(NULL, 0);
     header.AppendUriPathOptions(OPENTHREAD_URI_JOINER_FINALIZE);
-    header.Finalize();
+    header.SetPayloadMarker();
     memcpy(cur, header.GetBytes(), header.GetLength());
     cur += header.GetLength();
 
@@ -321,8 +318,8 @@ void Joiner::ReceiveJoinerFinalizeResponse(uint8_t *buf, uint16_t length)
     SuccessOrExit(header.FromMessage(*message));
     SuccessOrExit(message->SetOffset(header.GetLength()));
 
-    VerifyOrExit(header.GetType() == Coap::Header::kTypeAcknowledgment &&
-                 header.GetCode() == Coap::Header::kCodeChanged &&
+    VerifyOrExit(header.GetType() == kCoapTypeAcknowledgment &&
+                 header.GetCode() == kCoapResponseChanged &&
                  header.GetMessageId() == 0 &&
                  header.GetTokenLength() == 0, ;);
 
@@ -362,8 +359,8 @@ void Joiner::HandleJoinerEntrust(Coap::Header &aHeader, Message &aMessage, const
 
     otLogFuncEntry();
 
-    VerifyOrExit(aHeader.GetType() == Coap::Header::kTypeConfirmable &&
-                 aHeader.GetCode() == Coap::Header::kCodePost, error = kThreadError_Drop);
+    VerifyOrExit(aHeader.GetType() == kCoapTypeConfirmable &&
+                 aHeader.GetCode() == kCoapRequestPost, error = kThreadError_Drop);
 
     otLogInfoMeshCoP("Received joiner entrust");
     otLogCertMeshCoP("[THCI] direction=recv | type=JOIN_ENT.ntf");
