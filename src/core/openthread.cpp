@@ -1253,16 +1253,15 @@ void otSetReceiveIp6DatagramFilterEnabled(otInstance *aInstance, bool aEnabled)
 
 ThreadError otSendIp6Datagram(otInstance *aInstance, otMessage aMessage)
 {
+    ThreadError error;
+
     otLogFuncEntry();
-    ThreadError error =
-        aInstance->mIp6.HandleDatagram(
-            *static_cast<Message *>(aMessage),
-            NULL,
-            aInstance->mThreadNetif.GetInterfaceId(),
-            NULL,
-            true
-        );
+
+    error = aInstance->mIp6.HandleDatagram(*static_cast<Message *>(aMessage), NULL,
+                                           aInstance->mThreadNetif.GetInterfaceId(), NULL, true);
+
     otLogFuncExitErr(error);
+
     return error;
 }
 

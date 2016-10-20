@@ -97,11 +97,7 @@ ThreadError Dtls::Start(bool aClient, ReceiveHandler aReceiveHandler, SendHandle
     mbedtls_ssl_conf_ciphersuites(&mConf, ciphersuites);
     mbedtls_ssl_conf_export_keys_cb(&mConf, HandleMbedtlsExportKeys, this);
     mbedtls_ssl_conf_handshake_timeout(&mConf, 8000, 60000);
-#ifdef _KERNEL_MODE
     mbedtls_ssl_conf_dbg(&mConf, HandleMbedtlsDebug, NULL);
-#else
-    mbedtls_ssl_conf_dbg(&mConf, HandleMbedtlsDebug, stdout);
-#endif
 
     if (!mClient)
     {
@@ -441,12 +437,7 @@ ThreadError Dtls::MapError(int rval)
 void Dtls::HandleMbedtlsDebug(void *ctx, int level, const char *file, int line, const char *str)
 {
 #ifdef WINDOWS_LOGGING
-
-    if (strnlen(str, 512) != 512)
-    {
-        otLogInfoMbedTls("%s", str);
-    }
-
+    otLogInfoMbedTls("%s", str);
 #else
     otLogInfoMbedTls("%s:%04d: %s\n", file, line, str);
 #endif
