@@ -434,18 +434,27 @@ ThreadError Dtls::MapError(int rval)
     return error;
 }
 
-void Dtls::HandleMbedtlsDebug(void *ctx, int level, const char *file, int line, const char *str)
+void Dtls::HandleMbedtlsDebug(void *, int level, const char *, int , const char *str)
 {
-#ifdef WINDOWS_LOGGING
-    otLogInfoMbedTls("%s", str);
-#else
-    otLogInfoMbedTls("%s:%04d: %s\n", file, line, str);
-#endif
-    (void)ctx;
-    (void)level;
-    (void)file;
-    (void)line;
-    (void)str;
+    switch (level)
+    {
+    case 1:
+        otLogCritMbedTls("%s\n", str);
+        break;
+
+    case 2:
+        otLogWarnMbedTls("%s\n", str);
+        break;
+
+    case 3:
+        otLogInfoMbedTls("%s\n", str);
+        break;
+
+    case 4:
+    default:
+        otLogDebgMbedTls("%s\n", str);
+        break;
+    }
 }
 
 }  // namespace MeshCoP
