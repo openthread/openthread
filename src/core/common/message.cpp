@@ -101,7 +101,9 @@ Buffer *MessagePool::NewBuffer(void)
     {
         otLogInfoMac("No available message buffer\n");
     }
+
 #else // OPENTHREAD_CONFIG_PLATFORM_MESSAGE_MANAGEMENT
+
     if (mFreeBuffers == NULL)
     {
         otLogInfoMac("No available message buffer\n");
