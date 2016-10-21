@@ -172,11 +172,9 @@ ThreadError AddressResolver::SendAddressQuery(const Ip6::Address &aEid)
     ThreadTargetTlv targetTlv;
     Ip6::MessageInfo messageInfo;
 
-    header.Init();
-    header.SetType(Coap::Header::kTypeNonConfirmable);
-    header.SetCode(Coap::Header::kCodePost);
+    header.Init(kCoapTypeNonConfirmable, kCoapRequestPost);
     header.AppendUriPathOptions(OPENTHREAD_URI_ADDRESS_QUERY);
-    header.Finalize();
+    header.SetPayloadMarker();
 
     VerifyOrExit((message = mCoapClient.NewMessage(header)) != NULL, error = kThreadError_NoBufs);
 
@@ -191,7 +189,7 @@ ThreadError AddressResolver::SendAddressQuery(const Ip6::Address &aEid)
     messageInfo.mPeerPort = kCoapUdpPort;
     messageInfo.mInterfaceId = mNetif.GetInterfaceId();
 
-    SuccessOrExit(error = mCoapClient.SendMessage(*message, messageInfo, NULL, NULL));
+    SuccessOrExit(error = mCoapClient.SendMessage(*message, messageInfo));
 
     otLogInfoArp("Sent address query");
 
@@ -225,8 +223,8 @@ void AddressResolver::HandleAddressNotification(Coap::Header &aHeader, Message &
     ThreadLastTransactionTimeTlv lastTransactionTimeTlv;
     uint32_t lastTransactionTime;
 
-    VerifyOrExit(aHeader.GetType() == Coap::Header::kTypeConfirmable &&
-                 aHeader.GetCode() == Coap::Header::kCodePost, ;);
+    VerifyOrExit(aHeader.GetType() == kCoapTypeConfirmable &&
+                 aHeader.GetCode() == kCoapRequestPost, ;);
 
     otLogInfoArp("Received address notification from %04x", HostSwap16(aMessageInfo.GetPeerAddr().mFields.m16[7]));
 
@@ -303,6 +301,7 @@ void AddressResolver::SendAddressNotificationResponse(const Coap::Header &aReque
     VerifyOrExit((message = mCoapServer.NewMessage(0)) != NULL, error = kThreadError_NoBufs);
 
     responseHeader.SetDefaultResponseHeader(aRequestHeader);
+
     SuccessOrExit(error = message->Append(responseHeader.GetBytes(), responseHeader.GetLength()));
 
     memcpy(&responseInfo, &aRequestInfo, sizeof(responseInfo));
@@ -327,11 +326,10 @@ ThreadError AddressResolver::SendAddressError(const ThreadTargetTlv &aTarget, co
     Coap::Header header;
     Ip6::MessageInfo messageInfo;
 
-    header.Init();
-    header.SetType(aDestination == NULL ? Coap::Header::kTypeNonConfirmable : Coap::Header::kTypeConfirmable);
-    header.SetCode(Coap::Header::kCodePost);
+    header.Init(aDestination == NULL ? kCoapTypeNonConfirmable : kCoapTypeConfirmable,
+                kCoapRequestPost);
     header.AppendUriPathOptions(OPENTHREAD_URI_ADDRESS_ERROR);
-    header.Finalize();
+    header.SetPayloadMarker();
 
     VerifyOrExit((message = mCoapClient.NewMessage(header)) != NULL, error = kThreadError_NoBufs);
 
@@ -353,7 +351,7 @@ ThreadError AddressResolver::SendAddressError(const ThreadTargetTlv &aTarget, co
     messageInfo.mPeerPort = kCoapUdpPort;
     messageInfo.mInterfaceId = mNetif.GetInterfaceId();
 
-    SuccessOrExit(error = mCoapClient.SendMessage(*message, messageInfo, NULL, NULL));
+    SuccessOrExit(error = mCoapClient.SendMessage(*message, messageInfo));
 
     otLogInfoArp("Sent address error");
 
@@ -412,8 +410,8 @@ void AddressResolver::HandleAddressError(Coap::Header &aHeader, Message &aMessag
     Mac::ExtAddress macAddr;
     Ip6::Address destination;
 
-    VerifyOrExit(aHeader.GetType() == Coap::Header::kTypeConfirmable &&
-                 aHeader.GetCode() == Coap::Header::kCodePost, error = kThreadError_Drop);
+    VerifyOrExit(aHeader.GetType() == kCoapTypeConfirmable &&
+                 aHeader.GetCode() == kCoapRequestPost, error = kThreadError_Drop);
 
     otLogInfoArp("Received address error notification");
 
@@ -488,8 +486,8 @@ void AddressResolver::HandleAddressQuery(Coap::Header &aHeader, Message &aMessag
     Child *children;
     uint8_t numChildren;
 
-    VerifyOrExit(aHeader.GetType() == Coap::Header::kTypeNonConfirmable &&
-                 aHeader.GetCode() == Coap::Header::kCodePost, ;);
+    VerifyOrExit(aHeader.GetType() == kCoapTypeNonConfirmable &&
+                 aHeader.GetCode() == kCoapRequestPost, ;);
 
     otLogInfoArp("Received address query from %04x", HostSwap16(aMessageInfo.GetPeerAddr().mFields.m16[7]));
 
@@ -549,11 +547,9 @@ void AddressResolver::SendAddressQueryResponse(const ThreadTargetTlv &aTargetTlv
     ThreadRloc16Tlv rloc16Tlv;
     Ip6::MessageInfo messageInfo;
 
-    header.Init();
-    header.SetType(Coap::Header::kTypeConfirmable);
-    header.SetCode(Coap::Header::kCodePost);
+    header.Init(kCoapTypeConfirmable, kCoapRequestPost);
     header.AppendUriPathOptions(OPENTHREAD_URI_ADDRESS_NOTIFY);
-    header.Finalize();
+    header.SetPayloadMarker();
 
     VerifyOrExit((message = mCoapClient.NewMessage(header)) != NULL, error = kThreadError_NoBufs);
 
@@ -574,7 +570,7 @@ void AddressResolver::SendAddressQueryResponse(const ThreadTargetTlv &aTargetTlv
     messageInfo.GetSockAddr() = *mMle.GetMeshLocal16();
     messageInfo.mPeerPort = kCoapUdpPort;
 
-    SuccessOrExit(error = mCoapClient.SendMessage(*message, messageInfo, NULL, NULL));
+    SuccessOrExit(error = mCoapClient.SendMessage(*message, messageInfo));
 
     otLogInfoArp("Sent address notification");
 

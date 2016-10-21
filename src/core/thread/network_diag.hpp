@@ -36,6 +36,7 @@
 
 #include <openthread-core-config.h>
 #include <openthread-types.h>
+#include <coap/coap_client.hpp>
 #include <coap/coap_server.hpp>
 #include <net/udp6.hpp>
 
@@ -108,8 +109,9 @@ public:
     ThreadError AppendChildTable(Message &aMessage);
 
 private:
-    static void HandleUdpReceive(void *aContext, otMessage aMessage, const otMessageInfo *aMessageInfo);
-    void HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    static void HandleDiagnosticGetResponse(void *aContext, otCoapHeader *aHeader, otMessage aMessage,
+                                            ThreadError result);
+    void HandleDiagnosticGetResponse(Coap::Header *aHeader, Message *aMessage, ThreadError result);
 
     static void HandleDiagnosticGet(void *aContext, Coap::Header &aHeader,
                                     Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
@@ -123,11 +125,9 @@ private:
 
     Coap::Resource mDiagnosticGet;
     Coap::Resource mDiagnosticReset;
-    Ip6::UdpSocket mSocket;
-
-    uint8_t mCoapToken[2];
-    uint16_t mCoapMessageId;
     Coap::Server &mCoapServer;
+    Coap::Client &mCoapClient;
+
     Mle::MleRouter &mMle;
     ThreadNetif &mNetif;
 };

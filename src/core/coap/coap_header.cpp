@@ -50,6 +50,13 @@ void Header::Init(void)
     SetVersion(kVersion1);
 }
 
+void Header::Init(Type aType, Code aCode)
+{
+    Init();
+    SetType(aType);
+    SetCode(aCode);
+}
+
 ThreadError Header::FromMessage(const Message &aMessage)
 {
     ThreadError error = kThreadError_Parse;
@@ -69,7 +76,7 @@ ThreadError Header::FromMessage(const Message &aMessage)
     VerifyOrExit(GetVersion() == 1, error = kThreadError_Parse);
 
     tokenLength = GetTokenLength();
-    VerifyOrExit(tokenLength <= kMaxTokenLength && tokenLength < length, error = kThreadError_Parse);
+    VerifyOrExit(tokenLength <= kMaxTokenLength && tokenLength <= length, error = kThreadError_Parse);
     aMessage.Read(offset, tokenLength, mHeader.mBytes + mHeaderLength);
     mHeaderLength += tokenLength;
     offset += tokenLength;
@@ -155,6 +162,12 @@ ThreadError Header::FromMessage(const Message &aMessage)
         length -= optionLength;
     }
 
+    if (length == 0)
+    {
+        // No payload present - return success.
+        error = kThreadError_None;
+    }
+
 exit:
     return error;
 }
@@ -232,7 +245,7 @@ ThreadError Header::AppendUriPathOptions(const char *aUriPath)
     const char *end;
     Header::Option coapOption;
 
-    coapOption.mNumber = Option::kOptionUriPath;
+    coapOption.mNumber = kCoapOptionUriPath;
 
     while ((end = strchr(cur, '/')) != NULL)
     {
@@ -255,7 +268,7 @@ ThreadError Header::AppendContentFormatOption(MediaType aType)
     Option coapOption;
     uint8_t type = static_cast<uint8_t>(aType);
 
-    coapOption.mNumber = Option::kOptionContentFormat;
+    coapOption.mNumber = kCoapOptionContentFormat;
     coapOption.mLength = 1;
     coapOption.mValue = &type;
 
@@ -329,7 +342,7 @@ exit:
     return rval;
 }
 
-ThreadError Header::Finalize(void)
+ThreadError Header::SetPayloadMarker(void)
 {
     ThreadError error = kThreadError_None;
 
@@ -356,12 +369,9 @@ void Header::SetToken(uint8_t aTokenLength)
 
 void Header::SetDefaultResponseHeader(const Header &aRequestHeader)
 {
-    Init();
-    SetType(kTypeAcknowledgment);
-    SetCode(kCodeChanged);
+    Init(kCoapTypeAcknowledgment, kCoapResponseChanged);
     SetMessageId(aRequestHeader.GetMessageId());
     SetToken(aRequestHeader.GetToken(), aRequestHeader.GetTokenLength());
-    Finalize();
 }
 
 }  // namespace Coap

@@ -1553,9 +1553,7 @@ ThreadError otJoinerStop(otInstance *aInstance)
 void otCoapHeaderInit(otCoapHeader *aHeader, otCoapType aType, otCoapCode aCode)
 {
     Coap::Header *header = static_cast<Coap::Header *>(aHeader);
-    header->Init();
-    header->SetType(static_cast<Coap::Header::Type>(aType));
-    header->SetCode(static_cast<Coap::Header::Code>(aCode));
+    header->Init(aType, aCode);
 }
 
 void otCoapHeaderSetToken(otCoapHeader *aHeader, const uint8_t *aToken, uint8_t aTokenLength)
@@ -1570,7 +1568,7 @@ ThreadError otCoapHeaderAppendOption(otCoapHeader *aHeader, const otCoapOption *
 
 void otCoapHeaderSetPayloadMarker(otCoapHeader *aHeader)
 {
-    static_cast<Coap::Header *>(aHeader)->Finalize();
+    static_cast<Coap::Header *>(aHeader)->SetPayloadMarker();
 }
 
 const otCoapOption *otCoapGetCurrentOption(const otCoapHeader *aHeader)

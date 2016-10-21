@@ -3114,12 +3114,10 @@ ThreadError MleRouter::SendAddressSolicit(ThreadStatusTlv::Status aStatus)
     Ip6::MessageInfo messageInfo;
     Message *message;
 
-    header.Init();
-    header.SetType(Coap::Header::kTypeConfirmable);
-    header.SetCode(Coap::Header::kCodePost);
+    header.Init(kCoapTypeConfirmable, kCoapRequestPost);
     header.SetToken(Coap::Header::kDefaultTokenLength);
     header.AppendUriPathOptions(OPENTHREAD_URI_ADDRESS_SOLICIT);
-    header.Finalize();
+    header.SetPayloadMarker();
 
     VerifyOrExit((message = mCoapClient.NewMessage(header)) != NULL, error = kThreadError_NoBufs);
 
@@ -3166,12 +3164,10 @@ ThreadError MleRouter::SendAddressRelease(void)
     Ip6::MessageInfo messageInfo;
     Message *message;
 
-    header.Init();
-    header.SetType(Coap::Header::kTypeConfirmable);
-    header.SetCode(Coap::Header::kCodePost);
+    header.Init(kCoapTypeConfirmable, kCoapRequestPost);
     header.SetToken(Coap::Header::kDefaultTokenLength);
     header.AppendUriPathOptions(OPENTHREAD_URI_ADDRESS_RELEASE);
-    header.Finalize();
+    header.SetPayloadMarker();
 
     VerifyOrExit((message = mCoapClient.NewMessage(header)) != NULL, error = kThreadError_NoBufs);
 
@@ -3186,7 +3182,7 @@ ThreadError MleRouter::SendAddressRelease(void)
     memset(&messageInfo, 0, sizeof(messageInfo));
     SuccessOrExit(error = GetLeaderAddress(messageInfo.GetPeerAddr()));
     messageInfo.mPeerPort = kCoapUdpPort;
-    SuccessOrExit(error = mCoapClient.SendMessage(*message, messageInfo, NULL, NULL));
+    SuccessOrExit(error = mCoapClient.SendMessage(*message, messageInfo));
 
     otLogInfoMle("Sent address release");
 
@@ -3219,7 +3215,7 @@ void MleRouter::HandleAddressSolicitResponse(Coap::Header *aHeader, Message *aMe
 
     VerifyOrExit(result == kThreadError_None && aHeader != NULL && aMessage != NULL, ;);
 
-    VerifyOrExit(aHeader->GetCode() == Coap::Header::kCodeChanged, ;);
+    VerifyOrExit(aHeader->GetCode() == kCoapResponseChanged, ;);
 
     otLogInfoMle("Received address reply");
 
@@ -3303,7 +3299,7 @@ void MleRouter::HandleAddressSolicit(Coap::Header &aHeader, Message &aMessage, c
     ThreadStatusTlv statusTlv;
     uint8_t routerId = kInvalidRouterId;
 
-    VerifyOrExit(aHeader.GetType() == Coap::Header::kTypeConfirmable && aHeader.GetCode() == Coap::Header::kCodePost,
+    VerifyOrExit(aHeader.GetType() == kCoapTypeConfirmable && aHeader.GetCode() == kCoapRequestPost,
                  error = kThreadError_Parse);
 
     otLogInfoMle("Received address solicit");
@@ -3406,7 +3402,10 @@ void MleRouter::SendAddressSolicitResponse(const Coap::Header &aRequestHeader, u
     Message *message;
 
     VerifyOrExit((message = mCoapServer.NewMessage(0)) != NULL, error = kThreadError_NoBufs);
+
     responseHeader.SetDefaultResponseHeader(aRequestHeader);
+    responseHeader.SetPayloadMarker();
+
     SuccessOrExit(error = message->Append(responseHeader.GetBytes(), responseHeader.GetLength()));
 
     statusTlv.Init();
@@ -3461,8 +3460,8 @@ void MleRouter::HandleAddressRelease(Coap::Header &aHeader, Message &aMessage,
     uint8_t routerId;
     Router *router;
 
-    VerifyOrExit(aHeader.GetType() == Coap::Header::kTypeConfirmable &&
-                 aHeader.GetCode() == Coap::Header::kCodePost, ;);
+    VerifyOrExit(aHeader.GetType() == kCoapTypeConfirmable &&
+                 aHeader.GetCode() == kCoapRequestPost, ;);
 
     otLogInfoMle("Received address release");
 
@@ -3491,6 +3490,7 @@ void MleRouter::SendAddressReleaseResponse(const Coap::Header &aRequestHeader, c
     Message *message;
 
     VerifyOrExit((message = mCoapServer.NewMessage(0)) != NULL, error = kThreadError_NoBufs);
+
     responseHeader.SetDefaultResponseHeader(aRequestHeader);
 
     SuccessOrExit(error = message->Append(responseHeader.GetBytes(), responseHeader.GetLength()));
