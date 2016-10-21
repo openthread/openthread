@@ -109,6 +109,12 @@ Mle::Mle(ThreadNetif &aThreadNetif) :
     mLinkLocal16.mPreferredLifetime = 0xffffffff;
     mLinkLocal16.mValidLifetime = 0xffffffff;
 
+    // Leader Aloc
+    memset(&mLeaderAloc, 0, sizeof(mLeaderAloc));
+    mLeaderAloc.mPrefixLength = 128;
+    mLeaderAloc.mPreferredLifetime = 0xffffffff;
+    mLeaderAloc.mValidLifetime = 0xffffffff;
+
     // initialize Mesh Local Prefix
     mMeshLocal64.GetAddress().mFields.m8[0] = 0xfd;
     memcpy(mMeshLocal64.GetAddress().mFields.m8 + 1, mMac.GetExtendedPanId(), 5);
