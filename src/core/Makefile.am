@@ -125,6 +125,7 @@ noinst_HEADERS                      = \
     common/logging.hpp                \
     common/message.hpp                \
     common/new.hpp                    \
+    common/settings.hpp               \
     common/tasklet.hpp                \
     common/timer.hpp                  \
     common/trickle_timer.hpp          \

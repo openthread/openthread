@@ -57,8 +57,8 @@ namespace MeshCoP {
 
 DatasetManager::DatasetManager(ThreadNetif &aThreadNetif, const Tlv::Type aType, const char *aUriSet,
                                const char *aUriGet):
-    mLocal(aType),
-    mNetwork(aType),
+    mLocal(aThreadNetif.GetInstance(), aType),
+    mNetwork(aThreadNetif.GetInstance(), aType),
     mCoapServer(aThreadNetif.GetCoapServer()),
     mMle(aThreadNetif.GetMle()),
     mNetif(aThreadNetif),
@@ -75,6 +75,7 @@ ThreadError DatasetManager::Set(const otOperationalDataset &aDataset, uint8_t &a
     ThreadError error = kThreadError_None;
 
     SuccessOrExit(error = mLocal.Set(aDataset));
+    mLocal.Store();
     aFlags = kFlagLocalUpdated;
 
     switch (mMle.GetDeviceState())
@@ -101,7 +102,12 @@ exit:
 
 ThreadError DatasetManager::Clear(uint8_t &aFlags)
 {
-    mNetwork.Clear();
+    if (mLocal.Compare(mNetwork) == 0)
+    {
+        mLocal.Clear(true);
+    }
+
+    mNetwork.Clear(false);
     HandleNetworkUpdate(aFlags);
     return kThreadError_None;
 }
@@ -135,6 +141,7 @@ void DatasetManager::HandleNetworkUpdate(uint8_t &aFlags)
     if (compare > 0)
     {
         mLocal = mNetwork;
+        mLocal.Store();
         aFlags |= kFlagLocalUpdated;
     }
     else if (compare < 0)
@@ -386,6 +393,7 @@ ThreadError DatasetManager::Set(Coap::Header &aHeader, Message &aMessage, const 
         offset += sizeof(Tlv) + data.tlv.GetLength();
     }
 
+    mLocal.Store();
     mNetwork = mLocal;
     mNetworkDataLeader.IncrementVersion();
     mNetworkDataLeader.IncrementStableVersion();
@@ -704,8 +712,59 @@ ActiveDataset::ActiveDataset(ThreadNetif &aThreadNetif):
 {
 }
 
+void ActiveDataset::Restore(void)
+{
+    mLocal.Restore();
+    ApplyConfiguration();
+}
+
 void ActiveDataset::StartLeader(void)
 {
+    if (mLocal.GetTimestamp() == NULL)
+    {
+        otOperationalDataset dataset;
+
+        memset(&dataset, 0, sizeof(dataset));
+
+        // Active Timestamp
+        dataset.mActiveTimestamp = 0;
+        dataset.mIsActiveTimestampSet = true;
+
+        // Channel
+        dataset.mChannel = mNetif.GetMac().GetChannel();
+        dataset.mIsChannelSet = true;
+
+        // Extended PAN ID
+        memcpy(dataset.mExtendedPanId.m8, mNetif.GetMac().GetExtendedPanId(), sizeof(dataset.mExtendedPanId));
+        dataset.mIsExtendedPanIdSet = true;
+
+        // Mesh-Local Prefix
+        memcpy(dataset.mMeshLocalPrefix.m8, mNetif.GetMle().GetMeshLocalPrefix(), sizeof(dataset.mMeshLocalPrefix));
+        dataset.mIsMeshLocalPrefixSet = true;
+
+        // Master Key
+        const uint8_t *key;
+        uint8_t keyLength;
+
+        key = mNetif.GetKeyManager().GetMasterKey(&keyLength);
+        memcpy(dataset.mMasterKey.m8, key, keyLength);
+        dataset.mIsMasterKeySet = true;
+
+        // Network Name
+        const char *name;
+
+        name = mNetif.GetMac().GetNetworkName();
+        memcpy(dataset.mNetworkName.m8, name, strlen(name));
+        dataset.mIsNetworkNameSet = true;
+
+        // Pan ID
+        dataset.mPanId = mNetif.GetMac().GetPanId();
+        dataset.mIsPanIdSet = true;
+
+        mLocal.Set(dataset);
+    }
+
+    mLocal.Store();
     mNetwork = mLocal;
     mCoapServer.AddResource(mResourceGet);
     mCoapServer.AddResource(mResourceSet);
@@ -872,9 +931,16 @@ PendingDataset::PendingDataset(ThreadNetif &aThreadNetif):
 {
 }
 
+void PendingDataset::Restore(void)
+{
+    mLocal.Restore();
+    ResetDelayTimer(kFlagLocalUpdated);
+}
+
 void PendingDataset::StartLeader(void)
 {
     UpdateDelayTimer(mLocal, mLocalTime);
+    mLocal.Store();
     mNetwork = mLocal;
     ResetDelayTimer(kFlagNetworkUpdated);
 
@@ -1032,6 +1098,8 @@ void PendingDataset::HandleTimer(void)
     assert(delayTimer != NULL && delayTimer->GetDelayTimer() == 0);
 
     mNetif.GetActiveDataset().Set(mNetwork);
+
+    Clear();
 }
 
 }  // namespace MeshCoP

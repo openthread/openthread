@@ -36,6 +36,7 @@
 #define OT_PLATFORM_SETTINGS_H 1
 
 #include <stdint.h>
+#include <openthread-instance.h>
 
 #ifdef __cplusplus
 extern "C" {

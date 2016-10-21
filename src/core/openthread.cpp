@@ -50,6 +50,7 @@
 #include <crypto/mbedtls.hpp>
 #include <net/icmp6.hpp>
 #include <net/ip6.hpp>
+#include <platform/settings.h>
 #include <platform/radio.h>
 #include <platform/random.h>
 #include <platform/misc.h>
@@ -1019,6 +1020,13 @@ otInstance *otInstanceInit(void *aInstanceBuffer, size_t *aInstanceBufferSize)
     // Construct the context
     aInstance = new(aInstanceBuffer)otInstance();
 
+    // restore datasets
+    otPlatSettingsInit(aInstance);
+
+    aInstance->mThreadNetif.GetActiveDataset().Restore();
+
+    aInstance->mThreadNetif.GetPendingDataset().Restore();
+
 exit:
 
     otLogFuncExit();
@@ -1037,6 +1045,13 @@ otInstance *otInstanceInit()
 
     // Construct the context
     sInstance = new(&sInstanceRaw)otInstance();
+
+    // restore datasets
+    otPlatSettingsInit(sInstance);
+
+    sInstance->mThreadNetif.GetActiveDataset().Restore();
+
+    sInstance->mThreadNetif.GetPendingDataset().Restore();
 
 exit:
 

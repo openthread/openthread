@@ -26,37 +26,34 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-/**
- * @file
- * @brief
- *   This file includes the platform-specific initializers.
- */
+#include "platform-posix.h"
 
-#include <platform/uart.h>
-#include <platform/flash.h>
-#include "platform-cc2538.h"
-
-otInstance *sInstance;
-
-void PlatformInit(int argc, char *argv[])
+ThreadError otPlatFlashInit(void)
 {
-    cc2538AlarmInit();
-    cc2538RandomInit();
-    cc2538RadioInit();
-    otPlatUartEnable();
-    otPlatFlashInit();
-
-    (void)argc;
-    (void)argv;
+    return kThreadError_NotImplemented;
 }
 
-void PlatformProcessDrivers(otInstance *aInstance)
+uint32_t otPlatFlashGetSize(void)
 {
-    sInstance = aInstance;
+    return 0;
+}
 
-    // should sleep and wait for interrupts here
+ThreadError otPlatFlashErasePage(uint32_t aAddress)
+{
+    return kThreadError_NotImplemented;
+}
 
-    cc2538UartProcess();
-    cc2538RadioProcess(aInstance);
-    cc2538AlarmProcess(aInstance);
+ThreadError otPlatFlashStatusWait(uint32_t aTimeout)
+{
+    return kThreadError_None;
+}
+
+uint32_t otPlatFlashWrite(uint32_t aAddress, uint8_t *aData, uint32_t aSize)
+{
+    return 0;
+}
+
+uint32_t otPlatFlashRead(uint32_t aAddress, uint8_t *aData, uint32_t aSize)
+{
+    return 0;
 }

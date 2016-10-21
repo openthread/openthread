@@ -118,6 +118,8 @@ class ActiveDataset: public DatasetManager
 public:
     ActiveDataset(ThreadNetif &aThreadNetif);
 
+    void Restore(void);
+
     void StartLeader(void);
 
     void StopLeader(void);
@@ -149,6 +151,8 @@ class PendingDataset: public DatasetManager
 {
 public:
     PendingDataset(ThreadNetif &aThreadNetif);
+
+    void Restore(void);
 
     void StartLeader(void);
 

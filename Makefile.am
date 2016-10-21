@@ -79,6 +79,10 @@ PRETTY_SUBDIRS                      = \
     tools                             \
     $(NULL)
 
+# Ignore the pseudo flash files on Posix platform during diskcheck
+distcleancheck_listfiles            = \
+    $(AM_V_at)find . -type f -name "*flash"
+
 #
 # Package version files:
 #
