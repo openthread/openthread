@@ -271,8 +271,24 @@ exit:
 ThreadError Message::Prepend(const void *aBuf, uint16_t aLength)
 {
     ThreadError error = kThreadError_None;
+    Buffer *newBuffer = NULL;
 
-    VerifyOrExit(aLength <= GetReserved(), error = kThreadError_NoBufs);
+    while (aLength > GetReserved())
+    {
+        VerifyOrExit((newBuffer = GetMessagePool()->NewBuffer()) != NULL, error = kThreadError_NoBufs);
+
+        newBuffer->SetNextBuffer(GetNextBuffer());
+        SetNextBuffer(newBuffer);
+
+        if (GetReserved() < sizeof(mHeadData))
+        {
+            // Copy payload from the first buffer.
+            memcpy(newBuffer->mHeadData + GetReserved(), mHeadData + GetReserved(),
+                   sizeof(mHeadData) - GetReserved());
+        }
+
+        SetReserved(GetReserved() + kBufferDataSize);
+    }
 
     SetReserved(GetReserved() - aLength);
     mInfo.mLength += aLength;
