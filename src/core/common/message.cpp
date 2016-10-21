@@ -93,7 +93,7 @@ Buffer *MessagePool::NewBuffer(void)
 
     if (mFreeBuffers == NULL)
     {
-        otLogInfoMac("No available message buffer\n");
+        otLogInfoMac("No available message buffer");
         ExitNow();
     }
 

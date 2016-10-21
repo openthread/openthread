@@ -312,6 +312,7 @@ void otCliLog(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aFormat,
     }
 
     Uart::sUartServer->OutputFormatV(aFormat, aAp);
+    Uart::sUartServer->OutputFormat("\r\n");
 }
 #ifdef __cplusplus
 }  // extern "C"

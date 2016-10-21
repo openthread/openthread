@@ -647,7 +647,7 @@ ThreadError NetworkData::SendServerDataNotification(uint16_t aRloc16)
         mLastAttemptWait = true;
     }
 
-    otLogInfoNetData("Sent server data notification\n");
+    otLogInfoNetData("Sent server data notification");
 
 exit:
 
@@ -681,7 +681,7 @@ void NetworkData::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aM
                  header.GetTokenLength() == sizeof(mCoapToken) &&
                  memcmp(mCoapToken, header.GetToken(), sizeof(mCoapToken)) == 0, ;);
 
-    otLogInfoNetData("Server data notification acknowledged\n");
+    otLogInfoNetData("Server data notification acknowledged");
 
 exit:
     (void)aMessageInfo;

@@ -108,7 +108,7 @@ ThreadError NetworkDiagnostic::SendDiagnosticGet(const Ip6::Address &aDestinatio
 
     SuccessOrExit(error = mSocket.SendTo(*message, messageInfo));
 
-    otLogInfoNetDiag("Sent diagnostic get\n");
+    otLogInfoNetDiag("Sent diagnostic get");
 
 exit:
 
@@ -137,7 +137,7 @@ void NetworkDiagnostic::HandleUdpReceive(Message &aMessage, const Ip6::MessageIn
                  header.GetTokenLength() == sizeof(mCoapToken) &&
                  memcmp(mCoapToken, header.GetToken(), sizeof(mCoapToken)) == 0, ;);
 
-    otLogInfoNetDiag("Network Diagnostic message acknowledged\n");
+    otLogInfoNetDiag("Network Diagnostic message acknowledged");
 
 exit:
     (void)aMessageInfo;
@@ -183,7 +183,7 @@ ThreadError NetworkDiagnostic::SendDiagnosticReset(const Ip6::Address &aDestinat
 
     SuccessOrExit(error = mSocket.SendTo(*message, messageInfo));
 
-    otLogInfoNetDiag("Sent network diagnostic reset\n");
+    otLogInfoNetDiag("Sent network diagnostic reset");
 
 exit:
 
@@ -292,7 +292,7 @@ void NetworkDiagnostic::HandleDiagnosticGet(Coap::Header &aHeader, Message &aMes
     VerifyOrExit(aHeader.GetType() == Coap::Header::kTypeConfirmable &&
                  aHeader.GetCode() == Coap::Header::kCodeGet, error = kThreadError_Drop);
 
-    otLogInfoNetDiag("Received diagnostic get request\n");
+    otLogInfoNetDiag("Received diagnostic get request");
 
     header.Init();
     header.SetType(Coap::Header::kTypeAcknowledgment);
@@ -308,7 +308,7 @@ void NetworkDiagnostic::HandleDiagnosticGet(Coap::Header &aHeader, Message &aMes
 
     for (uint8_t i = 0; i < numTlvTypes; i++)
     {
-        otLogInfoNetDiag("Received diagnostic get type %d\n", tlvTypeSet[i]);
+        otLogInfoNetDiag("Received diagnostic get type %d", tlvTypeSet[i]);
 
         switch (tlvTypeSet[i])
         {
@@ -446,10 +446,10 @@ void NetworkDiagnostic::HandleDiagnosticGet(Coap::Header &aHeader, Message &aMes
 
     memcpy(&messageInfo, &aMessageInfo, sizeof(messageInfo));
     memset(&messageInfo.mSockAddr, 0, sizeof(messageInfo.mSockAddr));
-    otLogInfoNetDiag("Sending diagnostic get acknowledgment\n");
+    otLogInfoNetDiag("Sending diagnostic get acknowledgment");
     SuccessOrExit(error = mCoapServer.SendMessage(*message, messageInfo));
 
-    otLogInfoNetDiag("Sent diagnostic get acknowledgment\n");
+    otLogInfoNetDiag("Sent diagnostic get acknowledgment");
 
 exit:
 
@@ -475,15 +475,15 @@ void NetworkDiagnostic::HandleDiagnosticReset(Coap::Header &aHeader, Message &aM
     Message *message = NULL;
     Coap::Header header;
     Ip6::MessageInfo messageInfo;
-    otLogInfoNetDiag("Received diagnostic reset request\n");
+    otLogInfoNetDiag("Received diagnostic reset request");
 
     VerifyOrExit(aHeader.GetType() == Coap::Header::kTypeConfirmable &&
                  aHeader.GetCode() == Coap::Header::kCodePost, error = kThreadError_Drop);
 
-    otLogInfoNetDiag("Received diagnostic reset request\n");
+    otLogInfoNetDiag("Received diagnostic reset request");
     numTlvTypes = aMessage.Read(aMessage.GetOffset(), kNumResetTlvTypes, tlvTypeSet);
 
-    otLogInfoNetDiag("Received diagnostic reset request\n");
+    otLogInfoNetDiag("Received diagnostic reset request");
 
     for (uint8_t i = 0; i < numTlvTypes; i++)
     {
@@ -497,10 +497,10 @@ void NetworkDiagnostic::HandleDiagnosticReset(Coap::Header &aHeader, Message &aM
         }
     }
 
-    otLogInfoNetDiag("Received diagnostic reset request\n");
+    otLogInfoNetDiag("Received diagnostic reset request");
     VerifyOrExit((message = mSocket.NewMessage(0)) != NULL, error = kThreadError_NoBufs);
 
-    otLogInfoNetDiag("Received diagnostic reset request\n");
+    otLogInfoNetDiag("Received diagnostic reset request");
     header.Init();
     header.SetType(Coap::Header::kTypeAcknowledgment);
     header.SetCode(Coap::Header::kCodeChanged);
@@ -514,7 +514,7 @@ void NetworkDiagnostic::HandleDiagnosticReset(Coap::Header &aHeader, Message &aM
 
     SuccessOrExit(error = mCoapServer.SendMessage(*message, messageInfo));
 
-    otLogInfoNetDiag("Sent diagnostic reset acknowledgment\n");
+    otLogInfoNetDiag("Sent diagnostic reset acknowledgment");
 
 exit:
 

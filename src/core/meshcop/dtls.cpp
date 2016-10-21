@@ -121,7 +121,7 @@ ThreadError Dtls::Start(bool aClient, ReceiveHandler aReceiveHandler, SendHandle
     mStarted = true;
     Process();
 
-    otLogInfoMeshCoP("DTLS started\n");
+    otLogInfoMeshCoP("DTLS started");
 
 exit:
     return MapError(rval);
@@ -200,7 +200,7 @@ int Dtls::HandleMbedtlsTransmit(const unsigned char *aBuf, size_t aLength)
     ThreadError error;
     int rval = 0;
 
-    otLogInfoMeshCoP("Dtls::HandleMbedtlsTransmit\n");
+    otLogInfoMeshCoP("Dtls::HandleMbedtlsTransmit");
 
     error = mSendHandler(mContext, aBuf, (uint16_t)aLength);
 
@@ -231,7 +231,7 @@ int Dtls::HandleMbedtlsReceive(unsigned char *aBuf, size_t aLength)
 {
     int rval;
 
-    otLogInfoMeshCoP("Dtls::HandleMbedtlsReceive\n");
+    otLogInfoMeshCoP("Dtls::HandleMbedtlsReceive");
 
     VerifyOrExit(mReceiveMessage != NULL && mReceiveLength != 0, rval = MBEDTLS_ERR_SSL_WANT_READ);
 
@@ -257,7 +257,7 @@ int Dtls::HandleMbedtlsGetTimer(void)
 {
     int rval;
 
-    otLogInfoMeshCoP("Dtls::HandleMbedtlsGetTimer\n");
+    otLogInfoMeshCoP("Dtls::HandleMbedtlsGetTimer");
 
     if (!mTimerSet)
     {
@@ -286,7 +286,7 @@ void Dtls::HandleMbedtlsSetTimer(void *aContext, uint32_t aIntermediate, uint32_
 
 void Dtls::HandleMbedtlsSetTimer(uint32_t aIntermediate, uint32_t aFinish)
 {
-    otLogInfoMeshCoP("Dtls::SetTimer\n");
+    otLogInfoMeshCoP("Dtls::SetTimer");
 
     if (aFinish == 0)
     {
@@ -320,7 +320,7 @@ int Dtls::HandleMbedtlsExportKeys(const unsigned char *aMasterSecret, const unsi
 
     mNetif.GetKeyManager().SetKek(kek);
 
-    otLogInfoMeshCoP("Generated KEK\n");
+    otLogInfoMeshCoP("Generated KEK");
 
     (void)aMasterSecret;
     return 0;
@@ -439,20 +439,20 @@ void Dtls::HandleMbedtlsDebug(void *, int level, const char *, int , const char 
     switch (level)
     {
     case 1:
-        otLogCritMbedTls("%s\n", str);
+        otLogCritMbedTls("%s", str);
         break;
 
     case 2:
-        otLogWarnMbedTls("%s\n", str);
+        otLogWarnMbedTls("%s", str);
         break;
 
     case 3:
-        otLogInfoMbedTls("%s\n", str);
+        otLogInfoMbedTls("%s", str);
         break;
 
     case 4:
     default:
-        otLogDebgMbedTls("%s\n", str);
+        otLogDebgMbedTls("%s", str);
         break;
     }
 }
