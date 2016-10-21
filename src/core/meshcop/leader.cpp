@@ -78,6 +78,7 @@ void Leader::HandlePetition(Coap::Header &aHeader, Message &aMessage, const Ip6:
     otLogInfoMeshCoP("received petition\n");
 
     SuccessOrExit(Tlv::GetTlv(aMessage, Tlv::kCommissionerId, sizeof(commissionerId), commissionerId));
+    VerifyOrExit(commissionerId.IsValid(), ;);
 
     VerifyOrExit(!mTimer.IsRunning(), ;);
 
@@ -166,7 +167,10 @@ void Leader::HandleKeepAlive(Coap::Header &aHeader, Message &aMessage, const Ip6
     otLogInfoMeshCoP("received keep alive\n");
 
     SuccessOrExit(Tlv::GetTlv(aMessage, Tlv::kState, sizeof(state), state));
+    VerifyOrExit(state.IsValid(),);
+
     SuccessOrExit(Tlv::GetTlv(aMessage, Tlv::kCommissionerSessionId, sizeof(sessionId), sessionId));
+    VerifyOrExit(sessionId.IsValid(),);
 
     if (sessionId.GetCommissionerSessionId() != mSessionId)
     {
