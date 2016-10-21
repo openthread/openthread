@@ -57,7 +57,7 @@ MessagePool::MessagePool(void)
 #if OPENTHREAD_CONFIG_PLATFORM_MESSAGE_MANAGEMENT
     // Pass the list of free buffers and a pointer to the count of free buffers
     // to the platform for management.
-    otPlatMessagePoolInit(static_cast<BufferHeader *>(mFreeBuffers), &mNumFreeBuffers);
+    otPlatMessagePoolInit(static_cast<BufferHeader *>(mFreeBuffers), &mNumFreeBuffers, sizeof(Buffer));
 #endif
 }
 

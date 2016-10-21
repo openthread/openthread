@@ -66,10 +66,11 @@ extern "C" {
  * Initialize the platform implemented message pool with the provided buffer list.
  *
  * @param[in] aFreeBufferList   A linked list of free buffers.
- * @param[in] aNumFreeBuffers   A pointer to an int containing the number of free buffers in aFreeBufferList
+ * @param[in] aNumFreeBuffers   A pointer to an int containing the number of free buffers in aFreeBufferList.
+ * @param[in] aBufferSize       The size in bytes of a Buffer object.
  *
  */
-void otPlatMessagePoolInit(struct BufferHeader *aFreeBufferList, int *aNumFreeBuffers);
+void otPlatMessagePoolInit(struct BufferHeader *aFreeBufferList, int *aNumFreeBuffers, size_t aBufferSize);
 
 /**
  * Allocate a buffer from the platform managed buffer pool
