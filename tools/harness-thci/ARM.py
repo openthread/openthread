@@ -1843,7 +1843,7 @@ class ARM(IThci):
         print cmd
         if self.__sendCommand(cmd)[0] == 'Done':
             if self.logThreadStatus == self.logStatus['stop']:
-                self.logThread = ThreadRunner.run(target = self.__readCommissioningLogs, args = (120,))
+                self.logThread = ThreadRunner.run(target=self.__readCommissioningLogs, args=(120,))
             return True
         else:
             return False
@@ -2105,17 +2105,11 @@ class ARM(IThci):
 
             if listChannelMask != None:
                 cmd += ' channelmask '
-                print listChannelMask
-                entry = self.__convertLongToString(self.__convertChannelMask(listChannelMask))
+                cmd += str(hex(1 << listChannelMask[1]))
 
-                if len(entry) < 8:
-                    entry = entry.zfill(8)
-
-                cmd += '0x' + entry
-
-            if  sPSKc != None or listSecurityPolicy != None \
-                xCommissioningSessionId != None or xTmfPort != None or xSteeringData != None or xBorderRouterLocator != None or \
-                BogusTLV != None:
+            if sPSKc != None or listSecurityPolicy != None or \
+               xCommissioningSessionId != None or xTmfPort != None or xSteeringData != None or xBorderRouterLocator != None or \
+               BogusTLV != None:
                 cmd += ' binary '
 
             if sPSKc != None:
@@ -2330,6 +2324,7 @@ class ARM(IThci):
 
     def setPSKc(self, strPSKc):
         print '%s call setPSKc' % self.port
+        return
         try:
             cmd = 'dataset pskc %s' % strPSKc
             print cmd
