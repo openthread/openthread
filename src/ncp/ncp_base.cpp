@@ -740,7 +740,16 @@ void NcpBase::UpdateChangedProps(void)
         {
             if (mRequireJoinExistingNetwork)
             {
-                mRequireJoinExistingNetwork = false;
+                switch (otGetDeviceRole(mInstance))
+                {
+                case kDeviceRoleDetached:
+                case kDeviceRoleDisabled:
+                    break;
+
+                default:
+                    mRequireJoinExistingNetwork = false;
+                    break;
+                }
 
                 if ( (otGetDeviceRole(mInstance) == kDeviceRoleLeader)
                   && otIsSingleton(mInstance)
