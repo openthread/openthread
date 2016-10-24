@@ -57,7 +57,7 @@
         %(PreprocessorDefinitions);
         MBEDTLS_CONFIG_FILE="mbedtls-config.h";
         OPENTHREAD_CONFIG_FILE="openthread-windows-config.h";
-        OPENTHREAD_PORJECT_CORE_CONFIG_FILE="openthread-core-windows-config.h";
+        OPENTHREAD_PROJECT_CORE_CONFIG_FILE="openthread-core-windows-config.h";
         WINDOWS_LOGGING;
         OPENTHREAD_MULTIPLE_INSTANCE;
       </PreprocessorDefinitions>
