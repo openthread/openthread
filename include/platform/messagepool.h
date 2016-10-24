@@ -73,7 +73,7 @@ extern "C" {
 void otPlatMessagePoolInit(struct BufferHeader *aFreeBufferList, int *aNumFreeBuffers, size_t aBufferSize);
 
 /**
- * Allocate a buffer from the platform managed buffer pool
+ * Allocate a buffer from the platform managed buffer pool.
  *
  * @returns A pointer to the Buffer or NULL if no Buffers are available.
  *
@@ -81,7 +81,7 @@ void otPlatMessagePoolInit(struct BufferHeader *aFreeBufferList, int *aNumFreeBu
 struct BufferHeader *otPlatMessagePoolNew(void);
 
 /**
- * This function is used to free a Buffer to the free Buffer pool.
+ * This function is used to free a Buffer back to the platform managed buffer pool.
  *
  * @param[in]  aBuffer  The Buffer to free.
  *
