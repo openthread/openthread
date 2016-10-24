@@ -481,6 +481,26 @@ class SpinelCliCmd(Cmd, SpinelCodec):
         """
         pass
 
+    def do_childmax(self, line):
+        """\033[1m
+        childmax
+        \033[0m
+            Get the Thread Child Count Max value.
+        \033[2m
+            > childmax
+            10
+            Done
+        \033[0m\033[1m
+        childmax <timeout>
+        \033[0m
+            Set the Thread Child Count Max value.
+        \033[2m
+            > childmax 5
+            Done
+        \033[0m
+        """
+        self.handle_property(line, SPINEL.PROP_THREAD_CHILD_COUNT_MAX)
+
     def do_childtimeout(self, line):
         """\033[1m
         childtimeout
@@ -500,26 +520,6 @@ class SpinelCliCmd(Cmd, SpinelCodec):
         \033[0m
         """
         self.handle_property(line, SPINEL.PROP_THREAD_CHILD_TIMEOUT, 'L')
-
-    def do_childmax(self, line):
-        """\033[1m
-        childmax
-        \033[0m
-            Get the Thread Child Count Max value.
-        \033[2m
-            > childmax
-            10
-            Done
-        \033[0m\033[1m
-        childmax <timeout>
-        \033[0m
-            Set the Thread Child Count Max value.
-        \033[2m
-            > childmax 5
-            Done
-        \033[0m
-        """
-        self.handle_property(line, SPINEL.PROP_THREAD_CHILD_COUNT_MAX, 'C')
 
     def do_commissioner(self, line):
         """
