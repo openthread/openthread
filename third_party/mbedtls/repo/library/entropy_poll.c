@@ -80,7 +80,6 @@ int mbedtls_platform_entropy_poll( void *data, unsigned char *output, size_t len
 
     return( 0 );
 }
-
 #else /* _WIN32 && !EFIX64 && !EFI32 */
 
 /*
