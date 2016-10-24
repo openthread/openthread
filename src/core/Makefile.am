@@ -50,6 +50,7 @@ libopenthread_a_SOURCES             = \
     crypto/aes_ccm.cpp                \
     crypto/aes_ecb.cpp                \
     crypto/hmac_sha256.cpp            \
+    crypto/openthread-crypto.cpp      \
     crypto/mbedtls.cpp                \
     crypto/sha256.cpp                 \
     mac/mac.cpp                       \
