@@ -386,11 +386,21 @@ public:
 
     /**
      * This method creates a copy of the current Message. It allocates the new one
-     * from the same Message Poll as the original Message.
+     * from the same Message Poll as the original Message and copies @p aLength octets of a payload.
+     *
+     * @param[in] aLength  Number of payload bytes to copy.
      *
      * @returns A pointer to the message or NULL if insufficient message buffers are available.
      */
-    Message *Clone(void) const;
+    Message *Clone(uint16_t aLength) const;
+
+    /**
+     * This method creates a copy of the current Message. It allocates the new one
+     * from the same Message Poll as the original Message and copies a full payload.
+     *
+     * @returns A pointer to the message or NULL if insufficient message buffers are available.
+     */
+    Message *Clone(void) const { return Clone(GetLength()); };
 
     /**
      * This method returns the datagram tag used for 6LoWPAN fragmentation.

@@ -146,6 +146,14 @@ public:
     ThreadError HandleDatagram(Message &aMessage, Netif *aNetif, int8_t aInterfaceId,
                                const void *aLinkMessageInfo, bool aFromNcpHost);
 
+
+    /**
+     * This methods adds a full IPv6 packet to the transmit queue.
+     *
+     * @param aMessage A reference to the message.
+     */
+    void EnqueueDatagram(Message &aMessage);
+
     /**
      * This static method updates a checksum.
      *
@@ -335,7 +343,7 @@ private:
     void HandleSendQueue(void);
 
     ThreadError ProcessReceiveCallback(const Message &aMessage, const MessageInfo &aMessageInfo, uint8_t aIpProto);
-    ThreadError HandleExtensionHeaders(Message &message, Header &header, uint8_t &nextHeader, bool &forward,
+    ThreadError HandleExtensionHeaders(Message &message, Header &header, uint8_t &nextHeader, bool forward,
                                        bool receive);
     ThreadError HandleFragment(Message &message);
     ThreadError AddMplOption(Message &message, Header &header, IpProto nextHeader, uint16_t payloadLength);

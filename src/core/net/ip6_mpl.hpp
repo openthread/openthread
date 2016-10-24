@@ -86,31 +86,31 @@ public:
     uint8_t GetTotalLength() const { return OptionHeader::GetLength() + sizeof(OptionHeader); }
 
     /**
-     * MPL Seed lengths.
+     * MPL Seed Id lengths.
      */
-    enum SeedLength
+    enum SeedIdLength
     {
-        kSeedLength0  = 0 << 6,  ///< 0-byte MPL Seed Length.
-        kSeedLength2  = 1 << 6,  ///< 2-byte MPL Seed Length.
-        kSeedLength8  = 2 << 6,  ///< 8-byte MPL Seed Length.
-        kSeedLength16 = 3 << 6,  ///< 16-byte MPL Seed Length.
+        kSeedIdLength0  = 0 << 6,  ///< 0-byte MPL Seed Id Length.
+        kSeedIdLength2  = 1 << 6,  ///< 2-byte MPL Seed Id Length.
+        kSeedIdLength8  = 2 << 6,  ///< 8-byte MPL Seed Id Length.
+        kSeedIdLength16 = 3 << 6,  ///< 16-byte MPL Seed Id Length.
     };
 
     /**
-     * This method returns the MPL Seed Length value.
+     * This method returns the MPL Seed Id Length value.
      *
-     * @returns The MPL Seed Length value.
+     * @returns The MPL Seed Id Length value.
      *
      */
-    SeedLength GetSeedLength() { return static_cast<SeedLength>(mControl & kSeedLengthMask); }
+    SeedIdLength GetSeedIdLength() { return static_cast<SeedIdLength>(mControl & kSeedIdLengthMask); }
 
     /**
-     * This method sets the MPL Seed Length value.
+     * This method sets the MPL Seed Id Length value.
      *
-     * @param[in]  aSeedLength  The MPL Seed Length.
+     * @param[in]  aSeedIdLength  The MPL Seed Length.
      *
      */
-    void SetSeedLength(SeedLength aSeedLength) { mControl = static_cast<uint8_t>((mControl & ~kSeedLengthMask) | aSeedLength); }
+    void SetSeedIdLength(SeedIdLength aSeedIdLength) { mControl = static_cast<uint8_t>((mControl & ~kSeedIdLengthMask) | aSeedIdLength); }
 
     /**
      * This method indicates whether or not the MPL M flag is set.
@@ -145,33 +145,281 @@ public:
      * This method sets the MPL Sequence value.
      *
      * @param[in]  aSequence  The MPL Sequence value.
+     *
      */
     void SetSequence(uint8_t aSequence) { mSequence = aSequence; }
 
     /**
-     * This method returns the MPL Seed value.
+     * This method returns the MPL Seed Id value.
      *
-     * @returns The MPL Seed value.
+     * @returns The MPL Seed Id value.
      *
      */
-    uint16_t GetSeed() const { return HostSwap16(mSeed); }
+    uint16_t GetSeedId() const { return HostSwap16(mSeedId); }
 
     /**
-     * This method sets the MPL Seed value.
+     * This method sets the MPL Seed Id value.
      *
-     * @param[in]  aSeed  The MPL Seed value.
+     * @param[in]  aSeedId  The MPL Seed Id value.
+     *
      */
-    void SetSeed(uint16_t aSeed) { mSeed = HostSwap16(aSeed); }
+    void SetSeedId(uint16_t aSeedId) { mSeedId = HostSwap16(aSeedId); }
 
 private:
     enum
     {
-        kSeedLengthMask = 3 << 6,
+        kSeedIdLengthMask = 3 << 6,
         kMaxFlag = 1 << 5
     };
     uint8_t  mControl;
     uint8_t  mSequence;
-    uint16_t mSeed;
+    uint16_t mSeedId;
+} OT_TOOL_PACKED_END;
+
+/**
+ * This class represents an MPL's Seed Set entry.
+ *
+ */
+class MplSeedEntry
+{
+public:
+    /**
+     * This method returns the MPL Seed Id value.
+     *
+     * @returns The MPL Seed Id value.
+     *
+     */
+    uint16_t GetSeedId() const { return mSeedId; }
+
+    /**
+     * This method sets the MPL Seed Id value.
+     *
+     * @param[in]  aSeedId  The MPL Seed Id value.
+     *
+     */
+    void SetSeedId(uint16_t aSeedId) { mSeedId = aSeedId; }
+
+    /**
+     * This method returns the MPL Sequence value.
+     *
+     * @returns The MPL Sequence value.
+     *
+     */
+    uint8_t GetSequence() const { return mSequence; }
+
+    /**
+     * This method sets the MPL Sequence value.
+     *
+     * @param[in]  aSequence  The MPL Sequence value.
+     *
+     */
+    void SetSequence(uint8_t aSequence) { mSequence = aSequence; }
+
+    /**
+     * This method returns the MPL Seed Set entry's remaining lifetime.
+     *
+     * @returns The MPL Seed Set entry's remaining lifetime.
+     *
+     */
+    uint8_t GetLifetime() const { return mLifetime; }
+
+    /**
+     * This method sets the remaining lifetime of the Seed Set entry.
+     *
+     * @param[in]  aLifetime  The remaining lifetime of the Seed Set entry.
+     *
+     */
+    void SetLifetime(uint8_t aLifetime) { mLifetime = aLifetime; }
+
+private:
+    uint16_t mSeedId;
+    uint8_t  mSequence;
+    uint8_t  mLifetime;
+};
+
+/**
+ * This class represents metadata required for MPL retransmissions.
+ *
+ */
+OT_TOOL_PACKED_BEGIN
+class MplBufferedMessageMetadata
+{
+public:
+    /**
+     * Default constructor for the object.
+     *
+     */
+    MplBufferedMessageMetadata(void):
+        mSeedId(0),
+        mSequence(0),
+        mTransmissionCount(0),
+        mTransmissionTime(0),
+        mIntervalOffset(0) {
+    };
+
+    /**
+     * This method appends MPL Buffered Message metadata to the message.
+     *
+     * @param[in]  aMessage  A reference to the message.
+     *
+     * @retval kThreadError_None    Successfully appended the bytes.
+     * @retval kThreadError_NoBufs  Insufficient available buffers to grow the message.
+     *
+     */
+    ThreadError AppendTo(Message &aMessage) const {
+        return aMessage.Append(this, sizeof(*this));
+    };
+
+    /**
+     * This method reads request data from the message.
+     *
+     * @param[in]  aMessage  A reference to the message.
+     *
+     * @returns The number of bytes that have been read.
+     *
+     */
+    uint16_t ReadFrom(const Message &aMessage) {
+        return aMessage.Read(aMessage.GetLength() - sizeof(*this), sizeof(*this), this);
+    };
+
+    /**
+     * This method removes MPL Buffered Messsage metadata from the message.
+     *
+     * @param[in]  aMessage  A reference to the message.
+     *
+     * @retval kThreadError_None  Successfully removed the header.
+     *
+     */
+    ThreadError RemoveFrom(Message &aMessage) {
+        return aMessage.SetLength(aMessage.GetLength() - sizeof(*this));
+    };
+
+    /**
+     * This method updates MPL Buffered Messsage metadata in the message.
+     *
+     * @param[in]  aMessage  A reference to the message.
+     *
+     * @returns The number of bytes that have been updated.
+     *
+     */
+    int UpdateIn(Message &aMessage) const {
+        return aMessage.Write(aMessage.GetLength() - sizeof(*this), sizeof(*this), this);
+    }
+
+    /**
+     * This method checks if the message shall be sent before the given time.
+     *
+     * @param[in]  aTime  A time to compare.
+     *
+     * @retval TRUE   If the message shall be sent before the given time.
+     * @retval FALSE  Otherwise.
+     */
+    bool IsEarlier(uint32_t aTime) const { return (static_cast<int32_t>(aTime - mTransmissionTime) > 0); };
+
+    /**
+     * This method checks if the message shall be sent after the given time.
+     *
+     * @param[in]  aTime  A time to compare.
+     *
+     * @retval TRUE   If the message shall be sent after the given time.
+     * @retval FALSE  Otherwise.
+     */
+    bool IsLater(uint32_t aTime) const { return (static_cast<int32_t>(aTime - mTransmissionTime) < 0); };
+
+    /**
+     * This method returns the MPL Seed Id value.
+     *
+     * @returns The MPL Seed Id value.
+     *
+     */
+    uint16_t GetSeedId() const { return mSeedId; }
+
+    /**
+     * This method sets the MPL Seed Id value.
+     *
+     * @param[in]  aSeedId  The MPL Seed Id value.
+     *
+     */
+    void SetSeedId(uint16_t aSeedId) { mSeedId = aSeedId; }
+
+    /**
+     * This method returns the MPL Sequence value.
+     *
+     * @returns The MPL Sequence value.
+     *
+     */
+    uint8_t GetSequence() const { return mSequence; }
+
+    /**
+     * This method sets the MPL Sequence value.
+     *
+     * @param[in]  aSequence  The MPL Sequence value.
+     *
+     */
+    void SetSequence(uint8_t aSequence) { mSequence = aSequence; }
+
+    /**
+     * This method returns the number of already preformed transmissions.
+     *
+     * @returns The number of already preformed transmissions.
+     *
+     */
+    uint8_t GetTransmissionCount() const { return mTransmissionCount; }
+
+    /**
+     * This method sets the number of already performed transmissions.
+     *
+     * @param[in]  aTransmissionCount  The number of already performed transmissions.
+     *
+     */
+    void SetTransmissionCount(uint8_t aTransmissionCount) { mTransmissionCount = aTransmissionCount; }
+
+    /**
+     * This method returns the transmission timestamp of the message.
+     *
+     * @returns The transmission timestamp of the message.
+     *
+     */
+    uint32_t GetTransmissionTime() const { return mTransmissionTime; }
+
+    /**
+     * This method sets the transmission timestamp of the message.
+     *
+     * @param[in]  aTransmissionTime  The transmission timestamp of the message.
+     *
+     */
+    void SetTransmissionTime(uint32_t aTransmissionTime) { mTransmissionTime = aTransmissionTime; }
+
+    /**
+     * This method returns the offset from the transmission time to the end of trickle interval.
+     *
+     * @returns The offset from the the transmission time to the end of trickle interval.
+     *
+     */
+    uint32_t GetIntervalOffset() const { return mIntervalOffset; }
+
+    /**
+     * This method sets the offset from the transmission time to the end of trickle interval.
+     *
+     * @param[in]  aIntervalOffset  The offset from the the transmission time to the end of trickle interval.
+     *
+     */
+    void SetIntervalOffset(uint8_t aIntervalOffset) { mIntervalOffset = aIntervalOffset; }
+
+    /**
+     * This method generates the next transmission time for the MPL Data Message.
+     *
+     * @param[in] aCurrentTime Current time (in milliseconds).
+     * @param[in] aInterval    The current interval size (in milliseconds).
+     */
+    void GenerateNextTransmissionTime(uint32_t aCurrentTime, uint8_t aInterval);
+
+private:
+    uint16_t mSeedId;
+    uint8_t  mSequence;
+    uint8_t  mTransmissionCount;
+    uint32_t mTransmissionTime;
+    uint8_t  mIntervalOffset;
 } OT_TOOL_PACKED_END;
 
 /**
@@ -199,64 +447,96 @@ public:
     void InitOption(OptionMpl &aOption, const Address &aAddress);
 
     /**
-     * This method processes an MPL option.
+     * This method processes an MPL option. When the MPL module acts as an MPL Forwarder
+     * it disseminates MPL Data Message using Trickle timer expirations. When acts as an
+     * MPL Seed it allows to send the first MPL Data Message directly, then sets up Trickle
+     * timer expirations for subsequent retransmissions.
      *
-     * @param[in]   aMessage  A reference to the message.
-     * @param[in]   aAddress  A reference to the IPv6 Source Address.
-     * @param[out]  aForward  TRUE if this message should be forwarded, FALSE otherwise.
+     * @param[in]  aMessage    A reference to the message.
+     * @param[in]  aAddress    A reference to the IPv6 Source Address.
+     * @param[in]  aIsOutbound TRUE if this message was locally generated, FALSE otherwise.
      *
      * @retval kThreadError_None  Successfully processed the MPL option.
      * @retval kThreadError_Drop  The MPL message is a duplicate and should be dropped.
      *
      */
-    ThreadError ProcessOption(const Message &aMessage, const Address &aAddress, bool &aForward);
+    ThreadError ProcessOption(Message &aMessage, const Address &aAddress, bool aIsOutbound);
 
     /**
-     * This method returns the MPL Seed value.
+     * This method returns the MPL Seed Id value.
      *
-     * @returns The MPL Seed value.
+     * @returns The MPL Seed Id value.
      *
      */
-    uint16_t GetSeed() const { return mSeed; }
+    uint16_t GetSeedId() const { return mSeedId; }
 
     /**
-     * This method sets the MPL Seed value.
+     * This method sets the MPL Seed Id value.
      *
-     * @param[in]  aSeed  The MPL Seed value.
+     * @param[in]  aSeedId  The MPL Seed Id value.
+     *
      */
-    void SetSeed(uint16_t aSeed) { mSeed = aSeed; }
+    void SetSeedId(uint16_t aSeedId) { mSeedId = aSeedId; }
 
     /**
-     * This method sets IPv6 matching address, that allows to elide seed-id.
+     * This method gets the MPL number of Trickle timer expirations that occur before
+     * terminating the Trickle algorithm's retransmission of a given MPL Data Message.
      *
-     * @param[in] aAddress The reference to IPv6 matching address.
+     * @returns The MPL number of Trickle timer expirations.
+     *
+     */
+    uint8_t GetTimerExpirations() const { return mTimerExpirations; }
+
+    /**
+     * This method sets the MPL number of Trickle timer expirations that occur before
+     * terminating the Trickle algorithm's retransmission of a given MPL Data Message.
+     *
+     * @param[in]  aTimerExpirations  The number of Trickle timer expirations.
+     *
+     */
+    void SetTimerExpirations(uint8_t aTimerExpirations) { mTimerExpirations = aTimerExpirations; }
+
+    /**
+     * This method sets the IPv6 matching address, that allows to elide MPL Seed Id.
+     *
+     * @param[in] aAddress The reference to the IPv6 matching address.
+     *
      */
     void SetMatchingAddress(const Address &aAddress) { mMatchingAddress = &aAddress; }
-
 
 private:
     enum
     {
-        kNumEntries = OPENTHREAD_CONFIG_MPL_CACHE_ENTRIES,
-        kLifetime = OPENTHREAD_CONFIG_MPL_CACHE_ENTRY_LIFETIME,
+        kNumSeedEntries = OPENTHREAD_CONFIG_MPL_SEED_SET_ENTRIES,
+        kSeedEntryLifetime = OPENTHREAD_CONFIG_MPL_SEED_SET_ENTRY_LIFETIME,
+        kSeedEntryLifetimeDt = 1000,
+        kDataMessageInterval = 64
     };
 
-    static void HandleTimer(void *context);
-    void HandleTimer();
+    ThreadError UpdateSeedSet(uint16_t aSeedId, uint8_t aSequence);
+    void UpdateBufferedSet(uint16_t aSeedId, uint8_t aSequence);
+    void AddBufferedMessage(Message &aMessage, uint16_t aSeedId, uint8_t aSequence, bool aIsOutbound);
 
-    Timer mTimer;
+    static void HandleSeedSetTimer(void *aContext);
+    void HandleSeedSetTimer();
+
+    static void HandleRetransmissionTimer(void *aContext);
+    void HandleRetransmissionTimer();
+
+    Ip6 &mIp6;
+
+    Timer mSeedSetTimer;
+    Timer mRetransmissionTimer;
+
+    uint8_t mTimerExpirations;
     uint8_t mSequence;
-    uint16_t mSeed;
+    uint16_t mSeedId;
     const Address *mMatchingAddress;
 
-    struct MplEntry
-    {
-        uint16_t mSeed;
-        uint8_t mSequence;
-        uint8_t mLifetime;
-    };
-    MplEntry mEntries[kNumEntries];
+    MplSeedEntry mSeedSet[kNumSeedEntries];
+    MessageQueue mBufferedMessageSet;
 };
+
 
 /**
  * @}

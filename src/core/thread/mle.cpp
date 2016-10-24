@@ -390,6 +390,7 @@ ThreadError Mle::SetStateDetached(void)
     mMesh.SetRxOnWhenIdle(true);
     mMleRouter.HandleDetachStart();
     mNetif.GetIp6().SetForwardingEnabled(false);
+    mNetif.GetIp6().mMpl.SetTimerExpirations(0);
 
     otLogInfoMle("Mode -> Detached");
     return kThreadError_None;
@@ -423,6 +424,7 @@ ThreadError Mle::SetStateChild(uint16_t aRloc16)
 
     mNetif.GetNetworkDataLocal().ClearResubmitDelayTimer();
     mNetif.GetIp6().SetForwardingEnabled(false);
+    mNetif.GetIp6().mMpl.SetTimerExpirations(kMplChildDataMessageTimerExpirations);
 
     if (mPreviousPanId != Mac::kPanIdBroadcast && (mDeviceMode & ModeTlv::kModeFFD))
     {
@@ -589,7 +591,7 @@ ThreadError Mle::SetRloc16(uint16_t aRloc16)
     }
 
     mMac.SetShortAddress(aRloc16);
-    mNetif.GetIp6().mMpl.SetSeed(aRloc16);
+    mNetif.GetIp6().mMpl.SetSeedId(aRloc16);
 
     return kThreadError_None;
 }
