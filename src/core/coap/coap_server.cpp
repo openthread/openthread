@@ -122,14 +122,14 @@ void Server::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessag
     {
         switch (coapOption->mNumber)
         {
-        case Header::Option::kOptionUriPath:
+        case kCoapOptionUriPath:
             VerifyOrExit(coapOption->mLength < sizeof(uriPath) - static_cast<size_t>(curUriPath - uriPath), ;);
             memcpy(curUriPath, coapOption->mValue, coapOption->mLength);
             curUriPath[coapOption->mLength] = '/';
             curUriPath += coapOption->mLength + 1;
             break;
 
-        case Header::Option::kOptionContentFormat:
+        case kCoapOptionContentFormat:
             break;
 
         default:

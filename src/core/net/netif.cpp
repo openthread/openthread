@@ -219,10 +219,7 @@ ThreadError Netif::AddUnicastAddress(NetifUnicastAddress &aAddress)
     aAddress.mNext = mUnicastAddresses;
     mUnicastAddresses = &aAddress;
 
-    if (!aAddress.GetAddress().IsRoutingLocator())
-    {
-        SetStateChangedFlags(OT_IP6_ADDRESS_ADDED);
-    }
+    SetStateChangedFlags(OT_IP6_ADDRESS_ADDED);
 
 exit:
     return error;
@@ -253,7 +250,7 @@ ThreadError Netif::RemoveUnicastAddress(const NetifUnicastAddress &aAddress)
 
 exit:
 
-    if (!aAddress.GetAddress().IsRoutingLocator())
+    if (error != kThreadError_NotFound)
     {
         SetStateChangedFlags(OT_IP6_ADDRESS_REMOVED);
     }

@@ -52,10 +52,9 @@ NetworkData::NetworkData(ThreadNetif &aThreadNetif, bool aLocal):
     mLocal(aLocal),
     mLastAttemptWait(false),
     mLastAttempt(0),
-    mSocket(aThreadNetif.GetIp6().mUdp)
+    mCoapClient(aThreadNetif.GetCoapClient())
 {
     mLength = 0;
-    mCoapMessageId = 0;
 }
 
 void NetworkData::GetNetworkData(bool aStable, uint8_t *aData, uint8_t &aDataLength)
@@ -600,23 +599,12 @@ ThreadError NetworkData::SendServerDataNotification(uint16_t aRloc16)
     VerifyOrExit(!mLastAttemptWait || static_cast<int32_t>(Timer::GetNow() - mLastAttempt) < kDataResubmitDelay,
                  error = kThreadError_Already);
 
-    mSocket.Open(&NetworkData::HandleUdpReceive, this);
-
-    for (size_t i = 0; i < sizeof(mCoapToken); i++)
-    {
-        mCoapToken[i] = static_cast<uint8_t>(otPlatRandomGet());
-    }
-
-    header.Init();
-    header.SetType(Coap::Header::kTypeConfirmable);
-    header.SetCode(Coap::Header::kCodePost);
-    header.SetMessageId(++mCoapMessageId);
-    header.SetToken(mCoapToken, sizeof(mCoapToken));
+    header.Init(kCoapTypeConfirmable, kCoapRequestPost);
+    header.SetToken(Coap::Header::kDefaultTokenLength);
     header.AppendUriPathOptions(OPENTHREAD_URI_SERVER_DATA);
-    header.Finalize();
+    header.SetPayloadMarker();
 
-    VerifyOrExit((message = mSocket.NewMessage(0)) != NULL, error = kThreadError_NoBufs);
-    SuccessOrExit(error = message->Append(header.GetBytes(), header.GetLength()));
+    VerifyOrExit((message = mCoapClient.NewMessage(header)) != NULL, error = kThreadError_NoBufs);
 
     if (mLocal)
     {
@@ -637,8 +625,9 @@ ThreadError NetworkData::SendServerDataNotification(uint16_t aRloc16)
 
     memset(&messageInfo, 0, sizeof(messageInfo));
     mMle.GetLeaderAloc(messageInfo.GetPeerAddr());
+    messageInfo.mSockAddr = *mMle.GetMeshLocal16();
     messageInfo.mPeerPort = kCoapUdpPort;
-    SuccessOrExit(error = mSocket.SendTo(*message, messageInfo));
+    SuccessOrExit(error = mCoapClient.SendMessage(*message, messageInfo));
 
     if (mLocal)
     {
@@ -646,7 +635,7 @@ ThreadError NetworkData::SendServerDataNotification(uint16_t aRloc16)
         mLastAttemptWait = true;
     }
 
-    otLogInfoNetData("Sent server data notification\n");
+    otLogInfoNetData("Sent server data notification");
 
 exit:
 
@@ -661,29 +650,6 @@ exit:
 void NetworkData::ClearResubmitDelayTimer(void)
 {
     mLastAttemptWait = false;
-}
-
-void NetworkData::HandleUdpReceive(void *aContext, otMessage aMessage, const otMessageInfo *aMessageInfo)
-{
-    Local *obj = static_cast<Local *>(aContext);
-    obj->HandleUdpReceive(*static_cast<Message *>(aMessage), *static_cast<const Ip6::MessageInfo *>(aMessageInfo));
-}
-
-void NetworkData::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
-{
-    Coap::Header header;
-
-    SuccessOrExit(header.FromMessage(aMessage));
-    VerifyOrExit(header.GetType() == Coap::Header::kTypeAcknowledgment &&
-                 header.GetCode() == Coap::Header::kCodeChanged &&
-                 header.GetMessageId() == mCoapMessageId &&
-                 header.GetTokenLength() == sizeof(mCoapToken) &&
-                 memcmp(mCoapToken, header.GetToken(), sizeof(mCoapToken)) == 0, ;);
-
-    otLogInfoNetData("Server data notification acknowledged\n");
-
-exit:
-    (void)aMessageInfo;
 }
 
 }  // namespace NetworkData

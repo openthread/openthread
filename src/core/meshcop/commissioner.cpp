@@ -316,13 +316,11 @@ ThreadError Commissioner::SendMgmtCommissionerGetRequest(const uint8_t *aTlvs,
         mCoapToken[i] = static_cast<uint8_t>(otPlatRandomGet());
     }
 
-    header.Init();
-    header.SetType(Coap::Header::kTypeConfirmable);
-    header.SetCode(Coap::Header::kCodePost);
+    header.Init(kCoapTypeConfirmable, kCoapRequestPost);
     header.SetMessageId(++mCoapMessageId);
     header.SetToken(mCoapToken, sizeof(mCoapToken));
     header.AppendUriPathOptions(OPENTHREAD_URI_COMMISSIONER_GET);
-    header.Finalize();
+    header.SetPayloadMarker();
 
     VerifyOrExit((message = mSocket.NewMessage(0)) != NULL, error = kThreadError_NoBufs);
     SuccessOrExit(error = message->Append(header.GetBytes(), header.GetLength()));
@@ -340,7 +338,7 @@ ThreadError Commissioner::SendMgmtCommissionerGetRequest(const uint8_t *aTlvs,
     messageInfo.mPeerPort = kCoapUdpPort;
     SuccessOrExit(error = mSocket.SendTo(*message, messageInfo));
 
-    otLogInfoMeshCoP("sent MGMT_COMMISSIONER_GET.req to leader\n");
+    otLogInfoMeshCoP("sent MGMT_COMMISSIONER_GET.req to leader");
 
 exit:
 
@@ -370,13 +368,11 @@ ThreadError Commissioner::SendMgmtCommissionerSetRequest(const otCommissioningDa
         mCoapToken[i] = static_cast<uint8_t>(otPlatRandomGet());
     }
 
-    header.Init();
-    header.SetType(Coap::Header::kTypeConfirmable);
-    header.SetCode(Coap::Header::kCodePost);
+    header.Init(kCoapTypeConfirmable, kCoapRequestPost);
     header.SetMessageId(++mCoapMessageId);
     header.SetToken(mCoapToken, sizeof(mCoapToken));
     header.AppendUriPathOptions(OPENTHREAD_URI_COMMISSIONER_SET);
-    header.Finalize();
+    header.SetPayloadMarker();
 
     VerifyOrExit((message = mSocket.NewMessage(0)) != NULL, error = kThreadError_NoBufs);
     SuccessOrExit(error = message->Append(header.GetBytes(), header.GetLength()));
@@ -424,7 +420,7 @@ ThreadError Commissioner::SendMgmtCommissionerSetRequest(const otCommissioningDa
     messageInfo.mPeerPort = kCoapUdpPort;
     SuccessOrExit(error = mSocket.SendTo(*message, messageInfo));
 
-    otLogInfoMeshCoP("sent MGMT_COMMISSIONER_SET.req to leader\n");
+    otLogInfoMeshCoP("sent MGMT_COMMISSIONER_SET.req to leader");
 
 exit:
 
@@ -462,13 +458,11 @@ ThreadError Commissioner::SendPetition(void)
         mCoapToken[i] = otPlatRandomGet() & 0xff;
     }
 
-    header.Init();
-    header.SetType(Coap::Header::kTypeConfirmable);
-    header.SetCode(Coap::Header::kCodePost);
+    header.Init(kCoapTypeConfirmable, kCoapRequestPost);
     header.SetMessageId(++mCoapMessageId);
     header.SetToken(mCoapToken, sizeof(mCoapToken));
     header.AppendUriPathOptions(OPENTHREAD_URI_LEADER_PETITION);
-    header.Finalize();
+    header.SetPayloadMarker();
 
     VerifyOrExit((message = mSocket.NewMessage(0)) != NULL, error = kThreadError_NoBufs);
     SuccessOrExit(error = message->Append(header.GetBytes(), header.GetLength()));
@@ -483,7 +477,7 @@ ThreadError Commissioner::SendPetition(void)
     messageInfo.mPeerPort = kCoapUdpPort;
     SuccessOrExit(error = mSocket.SendTo(*message, messageInfo));
 
-    otLogInfoMeshCoP("sent petition\n");
+    otLogInfoMeshCoP("sent petition");
 
 exit:
 
@@ -521,13 +515,11 @@ ThreadError Commissioner::SendKeepAlive(void)
         mCoapToken[i] = otPlatRandomGet() & 0xff;
     }
 
-    header.Init();
-    header.SetType(Coap::Header::kTypeConfirmable);
-    header.SetCode(Coap::Header::kCodePost);
+    header.Init(kCoapTypeConfirmable, kCoapRequestPost);
     header.SetMessageId(++mCoapMessageId);
     header.SetToken(mCoapToken, sizeof(mCoapToken));
     header.AppendUriPathOptions(OPENTHREAD_URI_LEADER_KEEP_ALIVE);
-    header.Finalize();
+    header.SetPayloadMarker();
 
     VerifyOrExit((message = mSocket.NewMessage(0)) != NULL, error = kThreadError_NoBufs);
     SuccessOrExit(error = message->Append(header.GetBytes(), header.GetLength()));
@@ -545,7 +537,7 @@ ThreadError Commissioner::SendKeepAlive(void)
     messageInfo.mPeerPort = kCoapUdpPort;
     SuccessOrExit(error = mSocket.SendTo(*message, messageInfo));
 
-    otLogInfoMeshCoP("sent keep alive\n");
+    otLogInfoMeshCoP("sent keep alive");
 
 exit:
 
@@ -575,8 +567,8 @@ void Commissioner::HandleRelayReceive(Coap::Header &aHeader, Message &aMessage, 
 
     otLogFuncEntry();
 
-    VerifyOrExit(aHeader.GetType() == Coap::Header::kTypeNonConfirmable &&
-                 aHeader.GetCode() == Coap::Header::kCodePost, ;);
+    VerifyOrExit(aHeader.GetType() == kCoapTypeNonConfirmable &&
+                 aHeader.GetCode() == kCoapRequestPost, ;);
 
     SuccessOrExit(error = Tlv::GetTlv(aMessage, Tlv::kJoinerUdpPort, sizeof(joinerPort), joinerPort));
     VerifyOrExit(joinerPort.IsValid(), error = kThreadError_Parse);
@@ -593,7 +585,7 @@ void Commissioner::HandleRelayReceive(Coap::Header &aHeader, Message &aMessage, 
     mJoinerPort = joinerPort.GetUdpPort();
     mJoinerRloc = joinerRloc.GetJoinerRouterLocator();
 
-    otLogInfoMeshCoP("Received relay receive for %llX, rloc:%x\n", HostSwap64(mJoinerIid64), mJoinerRloc);
+    otLogInfoMeshCoP("Received relay receive for %llX, rloc:%x", HostSwap64(mJoinerIid64), mJoinerRloc);
 
     if (!mNetif.GetDtls().IsStarted())
     {
@@ -611,7 +603,7 @@ void Commissioner::HandleRelayReceive(Coap::Header &aHeader, Message &aMessage, 
                 SuccessOrExit(error = mNetif.GetDtls().SetPsk(reinterpret_cast<const uint8_t *>(mJoiners[i].mPsk),
                                                               static_cast<uint8_t>(strlen(mJoiners[i].mPsk))));
                 SuccessOrExit(error = mNetif.GetDtls().Start(false, HandleDtlsReceive, HandleDtlsSend, this));
-                otLogInfoMeshCoP("found joiner, starting new session\n");
+                otLogInfoMeshCoP("found joiner, starting new session");
                 break;
             }
         }
@@ -638,10 +630,10 @@ void Commissioner::HandleDatasetChanged(void *aContext, Coap::Header &aHeader,
 void Commissioner::HandleDatasetChanged(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
     otLogFuncEntry();
-    VerifyOrExit(aHeader.GetType() == Coap::Header::kTypeConfirmable &&
-                 aHeader.GetCode() == Coap::Header::kCodePost, ;);
+    VerifyOrExit(aHeader.GetType() == kCoapTypeConfirmable &&
+                 aHeader.GetCode() == kCoapRequestPost, ;);
 
-    otLogInfoMeshCoP("received dataset changed\n");
+    otLogInfoMeshCoP("received dataset changed");
     (void)aMessage;
 
     SendDatasetChangedResponse(aHeader, aMessageInfo);
@@ -658,16 +650,14 @@ void Commissioner::SendDatasetChangedResponse(const Coap::Header &aRequestHeader
 
     otLogFuncEntry();
     VerifyOrExit((message = mCoapServer.NewMessage(0)) != NULL, error = kThreadError_NoBufs);
-    responseHeader.Init();
-    responseHeader.SetType(Coap::Header::kTypeAcknowledgment);
-    responseHeader.SetCode(Coap::Header::kCodeChanged);
+    responseHeader.Init(kCoapTypeAcknowledgment, kCoapResponseChanged);
     responseHeader.SetMessageId(aRequestHeader.GetMessageId());
     responseHeader.SetToken(aRequestHeader.GetToken(), aRequestHeader.GetTokenLength());
-    responseHeader.Finalize();
+    responseHeader.SetPayloadMarker();
     SuccessOrExit(error = message->Append(responseHeader.GetBytes(), responseHeader.GetLength()));
     SuccessOrExit(error = mCoapServer.SendMessage(*message, aMessageInfo));
 
-    otLogInfoMeshCoP("Sent dataset changed acknowledgment\n");
+    otLogInfoMeshCoP("Sent dataset changed acknowledgment");
 
 exit:
 
@@ -693,8 +683,8 @@ void Commissioner::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &a
 
     otLogFuncEntry();
     SuccessOrExit(header.FromMessage(aMessage));
-    VerifyOrExit(header.GetType() == Coap::Header::kTypeAcknowledgment &&
-                 header.GetCode() == Coap::Header::kCodeChanged &&
+    VerifyOrExit(header.GetType() == kCoapTypeAcknowledgment &&
+                 header.GetCode() == kCoapResponseChanged &&
                  header.GetMessageId() == mCoapMessageId &&
                  header.GetTokenLength() == sizeof(mCoapToken) &&
                  memcmp(mCoapToken, header.GetToken(), sizeof(mCoapToken)) == 0, ;);
@@ -704,7 +694,7 @@ void Commissioner::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &a
     {
         mIsSendMgmtCommRequest = false;
 
-        otLogInfoMeshCoP("received MGMT_COMMISSIONER_SET and MGMT_COMMISSIONER_GET response\n");
+        otLogInfoMeshCoP("received MGMT_COMMISSIONER_SET and MGMT_COMMISSIONER_GET response");
 
         ExitNow();
     }
@@ -724,7 +714,7 @@ void Commissioner::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &a
         VerifyOrExit(sessionId.IsValid(), ;);
         mSessionId = sessionId.GetCommissionerSessionId();
 
-        otLogInfoMeshCoP("received petition response\n");
+        otLogInfoMeshCoP("received petition response");
 
         mState = kStateActive;
         mTransmitAttempts = 0;
@@ -732,7 +722,7 @@ void Commissioner::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &a
         break;
 
     case kStateActive:
-        otLogInfoMeshCoP("received keep alive response\n");
+        otLogInfoMeshCoP("received keep alive response");
         mTransmitAttempts = 0;
         mTimer.Start(Timer::SecToMsec(kKeepAliveTimeout) / 2);
         break;
@@ -745,7 +735,7 @@ exit:
 
 ThreadError Commissioner::HandleDtlsSend(void *aContext, const uint8_t *aBuf, uint16_t aLength)
 {
-    otLogInfoMeshCoP("Commissioner::HandleDtlsTransmit\n");
+    otLogInfoMeshCoP("Commissioner::HandleDtlsTransmit");
     return static_cast<Commissioner *>(aContext)->HandleDtlsSend(aBuf, aLength);
 }
 
@@ -765,13 +755,11 @@ ThreadError Commissioner::HandleDtlsSend(const unsigned char *aBuf, uint16_t aLe
 
         VerifyOrExit((mTransmitMessage = mSocket.NewMessage(0)) != NULL, error = kThreadError_NoBufs);
 
-        header.Init();
-        header.SetType(Coap::Header::kTypeNonConfirmable);
-        header.SetCode(Coap::Header::kCodePost);
+        header.Init(kCoapTypeNonConfirmable, kCoapRequestPost);
         header.SetMessageId(0);
         header.SetToken(NULL, 0);
         header.AppendUriPathOptions(OPENTHREAD_URI_RELAY_TX);
-        header.Finalize();
+        header.SetPayloadMarker();
         SuccessOrExit(error = mTransmitMessage->Append(header.GetBytes(), header.GetLength()));
 
         udpPort.Init();
@@ -818,7 +806,7 @@ exit:
 
 void Commissioner::HandleDtlsReceive(void *aContext, uint8_t *aBuf, uint16_t aLength)
 {
-    otLogInfoMeshCoP("Commissioner::HandleDtlsReceive\n");
+    otLogInfoMeshCoP("Commissioner::HandleDtlsReceive");
     static_cast<Commissioner *>(aContext)->HandleDtlsReceive(aBuf, aLength);
 }
 
@@ -831,7 +819,7 @@ void Commissioner::HandleDtlsReceive(uint8_t *aBuf, uint16_t aLength)
 
 void Commissioner::HandleUdpTransmit(void *aContext)
 {
-    otLogInfoMeshCoP("Commissioner::HandleUdpTransmit\n");
+    otLogInfoMeshCoP("Commissioner::HandleUdpTransmit");
     static_cast<Commissioner *>(aContext)->HandleUdpTransmit();
 }
 
@@ -879,7 +867,7 @@ void Commissioner::ReceiveJoinerFinalize(uint8_t *buf, uint16_t length)
     ProvisioningUrlTlv provisioningUrl;
 
     otLogFuncEntry();
-    otLogInfoMeshCoP("receive joiner finalize 1\n");
+    otLogInfoMeshCoP("receive joiner finalize");
 
     VerifyOrExit((message = mNetif.GetIp6().mMessagePool.New(Message::kTypeIp6, 0)) != NULL, ;);
     SuccessOrExit(message->Append(buf, length));
@@ -892,14 +880,14 @@ void Commissioner::ReceiveJoinerFinalize(uint8_t *buf, uint16_t length)
     {
         switch (coapOption->mNumber)
         {
-        case Coap::Header::Option::kOptionUriPath:
+        case kCoapOptionUriPath:
             VerifyOrExit(coapOption->mLength < sizeof(uriPath) - static_cast<uint16_t>(curUriPath - uriPath), ;);
             memcpy(curUriPath, coapOption->mValue, coapOption->mLength);
             curUriPath[coapOption->mLength] = '/';
             curUriPath += coapOption->mLength + 1;
             break;
 
-        case Coap::Header::Option::kOptionContentFormat:
+        case kCoapOptionContentFormat:
             break;
 
         default:
@@ -948,13 +936,10 @@ void Commissioner::SendJoinFinalizeResponse(const Coap::Header &aRequestHeader, 
     uint8_t *cur = buf;
 
     otLogFuncEntry();
-
-    responseHeader.Init();
-    responseHeader.SetType(Coap::Header::kTypeAcknowledgment);
-    responseHeader.SetCode(Coap::Header::kCodeChanged);
+    responseHeader.Init(kCoapTypeAcknowledgment, kCoapResponseChanged);
     responseHeader.SetMessageId(aRequestHeader.GetMessageId());
     responseHeader.SetToken(aRequestHeader.GetToken(), aRequestHeader.GetTokenLength());
-    responseHeader.Finalize();
+    responseHeader.SetPayloadMarker();
     memcpy(cur, responseHeader.GetBytes(), responseHeader.GetLength());
     cur += responseHeader.GetLength();
 
@@ -967,8 +952,8 @@ void Commissioner::SendJoinFinalizeResponse(const Coap::Header &aRequestHeader, 
     mNetif.GetDtls().Send(buf, static_cast<uint16_t>(cur - buf));
     mSendKek = false;
 
-    otLogInfoMeshCoP("sent joiner finalize response\n");
-    otLogCertMeshCoP("[THCI] direction=send | type=JOIN_FIN.rsp\n");
+    otLogInfoMeshCoP("sent joiner finalize response");
+    otLogCertMeshCoP("[THCI] direction=send | type=JOIN_FIN.rsp");
     otLogFuncExit();
 }
 

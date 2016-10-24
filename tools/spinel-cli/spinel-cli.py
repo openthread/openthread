@@ -326,6 +326,8 @@ class SpinelCliCmd(Cmd, SpinelCodec):
                 print(str(ipaddress.IPv6Address(value)))
             elif (mixed_format == 'D') or (mixed_format == 'E'):
                 print(util.hexify_str(value, ''))
+            elif mixed_format == 'H':
+                print("%04x" % value)
             else:
                 print(str(value))
 

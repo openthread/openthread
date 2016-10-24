@@ -47,14 +47,11 @@ namespace Thread {
 
 PanIdQueryClient::PanIdQueryClient(ThreadNetif &aThreadNetif) :
     mPanIdQuery(OPENTHREAD_URI_PANID_CONFLICT, &PanIdQueryClient::HandleConflict, this),
-    mSocket(aThreadNetif.GetIp6().mUdp),
     mCoapServer(aThreadNetif.GetCoapServer()),
+    mCoapClient(aThreadNetif.GetCoapClient()),
     mNetif(aThreadNetif)
 {
     mCoapServer.AddResource(mPanIdQuery);
-    mSocket.Open(HandleUdpReceive, this);
-
-    mCoapMessageId = static_cast<uint8_t>(otPlatRandomGet());
 }
 
 ThreadError PanIdQueryClient::SendQuery(uint16_t aPanId, uint32_t aChannelMask, const Ip6::Address &aAddress,
@@ -73,21 +70,13 @@ ThreadError PanIdQueryClient::SendQuery(uint16_t aPanId, uint32_t aChannelMask, 
     Ip6::MessageInfo messageInfo;
     Message *message;
 
-    for (size_t i = 0; i < sizeof(mCoapToken); i++)
-    {
-        mCoapToken[i] = static_cast<uint8_t>(otPlatRandomGet());
-    }
-
-    header.Init();
-    header.SetType(aAddress.IsMulticast() ? Coap::Header::kTypeNonConfirmable : Coap::Header::kTypeConfirmable);
-    header.SetCode(Coap::Header::kCodePost);
-    header.SetMessageId(++mCoapMessageId);
-    header.SetToken(mCoapToken, sizeof(mCoapToken));
+    header.Init(aAddress.IsMulticast() ? kCoapTypeNonConfirmable : kCoapTypeConfirmable,
+                kCoapRequestPost);
+    header.SetToken(Coap::Header::kDefaultTokenLength);
     header.AppendUriPathOptions(OPENTHREAD_URI_PANID_QUERY);
-    header.Finalize();
+    header.SetPayloadMarker();
 
-    VerifyOrExit((message = mSocket.NewMessage(0)) != NULL, error = kThreadError_NoBufs);
-    SuccessOrExit(error = message->Append(header.GetBytes(), header.GetLength()));
+    VerifyOrExit((message = mCoapClient.NewMessage(header)) != NULL, error = kThreadError_NoBufs);
 
     sessionId.Init();
     sessionId.SetCommissionerSessionId(mNetif.GetCommissioner().GetSessionId());
@@ -115,9 +104,9 @@ ThreadError PanIdQueryClient::SendQuery(uint16_t aPanId, uint32_t aChannelMask, 
     messageInfo.GetPeerAddr() = aAddress;
     messageInfo.mPeerPort = kCoapUdpPort;
     messageInfo.mInterfaceId = mNetif.GetInterfaceId();
-    SuccessOrExit(error = mSocket.SendTo(*message, messageInfo));
+    SuccessOrExit(error = mCoapClient.SendMessage(*message, messageInfo));
 
-    otLogInfoMeshCoP("sent panid query\n");
+    otLogInfoMeshCoP("sent panid query");
 
     mCallback = aCallback;
     mContext = aContext;
@@ -150,10 +139,10 @@ void PanIdQueryClient::HandleConflict(Coap::Header &aHeader, Message &aMessage, 
     uint16_t offset;
     uint16_t length;
 
-    VerifyOrExit(aHeader.GetType() == Coap::Header::kTypeConfirmable &&
-                 aHeader.GetCode() == Coap::Header::kCodePost, ;);
+    VerifyOrExit(aHeader.GetType() == kCoapTypeConfirmable &&
+                 aHeader.GetCode() == kCoapRequestPost, ;);
 
-    otLogInfoMeshCoP("received panid conflict\n");
+    otLogInfoMeshCoP("received panid conflict");
 
     SuccessOrExit(MeshCoP::Tlv::GetTlv(aMessage, MeshCoP::Tlv::kPanId, sizeof(panId), panId));
     VerifyOrExit(panId.IsValid(), ;);
@@ -190,12 +179,8 @@ ThreadError PanIdQueryClient::SendConflictResponse(const Coap::Header &aRequestH
 
     VerifyOrExit((message = mCoapServer.NewMessage(0)) != NULL, error = kThreadError_NoBufs);
 
-    responseHeader.Init();
-    responseHeader.SetType(Coap::Header::kTypeAcknowledgment);
-    responseHeader.SetCode(Coap::Header::kCodeChanged);
-    responseHeader.SetMessageId(aRequestHeader.GetMessageId());
-    responseHeader.SetToken(aRequestHeader.GetToken(), aRequestHeader.GetTokenLength());
-    responseHeader.Finalize();
+    responseHeader.SetDefaultResponseHeader(aRequestHeader);
+
     SuccessOrExit(error = message->Append(responseHeader.GetBytes(), responseHeader.GetLength()));
 
     memcpy(&responseInfo, &aRequestInfo, sizeof(responseInfo));
@@ -210,14 +195,6 @@ exit:
     }
 
     return error;
-}
-
-void PanIdQueryClient::HandleUdpReceive(void *aContext, otMessage aMessage, const otMessageInfo *aMessageInfo)
-{
-    otLogInfoMeshCoP("received panid query response\n");
-    (void)aContext;
-    (void)aMessage;
-    (void)aMessageInfo;
 }
 
 }  // namespace Thread

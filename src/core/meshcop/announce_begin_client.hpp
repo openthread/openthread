@@ -37,7 +37,7 @@
 #include <openthread-core-config.h>
 #include <openthread-types.h>
 #include <commissioning/commissioner.h>
-#include <coap/coap_server.hpp>
+#include <coap/coap_client.hpp>
 #include <net/ip6_address.hpp>
 #include <net/udp6.hpp>
 
@@ -72,12 +72,8 @@ public:
     ThreadError SendRequest(uint32_t aChannelMask, uint8_t aCount, uint16_t mPeriod, const Ip6::Address &aAddress);
 
 private:
-    static void HandleUdpReceive(void *aContext, otMessage aMessage, const otMessageInfo *aMessageInfo);
-
-    Ip6::UdpSocket mSocket;
-    uint8_t mCoapToken[2];
-    uint16_t mCoapMessageId;
     ThreadNetif &mNetif;
+    Coap::Client &mCoapClient;
 };
 
 /**

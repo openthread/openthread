@@ -34,6 +34,7 @@
 #ifndef MESHCOP_LEADER_HPP_
 #define MESHCOP_LEADER_HPP_
 
+#include <coap/coap_client.hpp>
 #include <coap/coap_server.hpp>
 #include <common/timer.hpp>
 #include <net/udp6.hpp>
@@ -106,12 +107,10 @@ private:
     Coap::Resource mPetition;
     Coap::Resource mKeepAlive;
     Coap::Server &mCoapServer;
-    uint8_t mCoapToken[2];
-    uint16_t mCoapMessageId;
+    Coap::Client &mCoapClient;
     NetworkData::Leader &mNetworkData;
 
     Timer mTimer;
-    Ip6::UdpSocket mSocket;
 
     CommissionerIdTlv mCommissionerId;
     uint16_t mSessionId;

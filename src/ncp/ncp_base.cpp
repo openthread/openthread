@@ -740,7 +740,16 @@ void NcpBase::UpdateChangedProps(void)
         {
             if (mRequireJoinExistingNetwork)
             {
-                mRequireJoinExistingNetwork = false;
+                switch (otGetDeviceRole(mInstance))
+                {
+                case kDeviceRoleDetached:
+                case kDeviceRoleDisabled:
+                    break;
+
+                default:
+                    mRequireJoinExistingNetwork = false;
+                    break;
+                }
 
                 if ( (otGetDeviceRole(mInstance) == kDeviceRoleLeader)
                   && otIsSingleton(mInstance)
@@ -3187,7 +3196,7 @@ ThreadError NcpBase::SetPropertyHandler_NET_ROLE(uint8_t header, spinel_prop_key
         switch (i)
         {
         case SPINEL_NET_ROLE_DETACHED:
-            errorCode = kThreadError_InvalidArgs;
+            errorCode = otBecomeDetached(mInstance);
             break;
 
         case SPINEL_NET_ROLE_ROUTER:

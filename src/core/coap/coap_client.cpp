@@ -228,8 +228,7 @@ void Client::SendEmptyMessage(const Ip6::Address &aAddress, uint16_t aPort, uint
     Message *message;
     ThreadError error = kThreadError_None;
 
-    header.Init();
-    header.SetType(aType);
+    header.Init(aType, kCoapCodeEmpty);
     header.SetMessageId(aMessageId);
 
     VerifyOrExit((message = NewMessage(header)) != NULL, ;);
@@ -331,8 +330,8 @@ Message *Client::FindRelatedRequest(const Header &aResponseHeader, const Ip6::Me
 
             switch (aResponseHeader.GetType())
             {
-            case Header::kTypeReset:
-            case Header::kTypeAcknowledgment:
+            case kCoapTypeReset:
+            case kCoapTypeAcknowledgment:
                 if (aResponseHeader.GetMessageId() == aRequestHeader.GetMessageId())
                 {
                     ExitNow();
@@ -340,8 +339,8 @@ Message *Client::FindRelatedRequest(const Header &aResponseHeader, const Ip6::Me
 
                 break;
 
-            case Header::kTypeConfirmable:
-            case Header::kTypeNonConfirmable:
+            case kCoapTypeConfirmable:
+            case kCoapTypeNonConfirmable:
                 if (aResponseHeader.IsTokenEqual(aRequestHeader))
                 {
                     ExitNow();
@@ -396,7 +395,7 @@ void Client::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessag
 
     switch (responseHeader.GetType())
     {
-    case Header::kTypeReset:
+    case kCoapTypeReset:
         if (responseHeader.IsEmpty())
         {
             FinalizeCoapTransaction(*message, requestMetadata, NULL, NULL, kThreadError_Abort);
@@ -405,7 +404,7 @@ void Client::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessag
         // Silently ignore non-empty reset messages (RFC 7252, p. 4.2).
         break;
 
-    case Header::kTypeAcknowledgment:
+    case kCoapTypeAcknowledgment:
         if (responseHeader.IsEmpty())
         {
             // Empty acknowledgment.
@@ -431,8 +430,8 @@ void Client::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessag
         // or with no token match (RFC 7252, p. 5.3.2)
         break;
 
-    case Header::kTypeConfirmable:
-    case Header::kTypeNonConfirmable:
+    case kCoapTypeConfirmable:
+    case kCoapTypeNonConfirmable:
         if (responseHeader.IsConfirmable())
         {
             // Send empty ACK if it is a CON message.

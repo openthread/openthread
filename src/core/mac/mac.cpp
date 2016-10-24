@@ -594,7 +594,7 @@ void Mac::SendBeaconRequest(Frame &aFrame)
     aFrame.SetDstAddr(kShortAddrBroadcast);
     aFrame.SetCommandId(Frame::kMacCmdBeaconRequest);
 
-    otLogInfoMac("Sent Beacon Request\n");
+    otLogInfoMac("Sent Beacon Request");
 }
 
 void Mac::SendBeacon(Frame &aFrame)
@@ -630,7 +630,7 @@ void Mac::SendBeacon(Frame &aFrame)
 
     aFrame.SetPayloadLength(sizeof(*beacon));
 
-    otLogInfoMac("Sent Beacon\n");
+    otLogInfoMac("Sent Beacon");
 }
 
 void Mac::HandleBeginTransmit(void *aContext)
@@ -755,7 +755,7 @@ void Mac::HandleBeginTransmit(void)
     if (sendFrame.GetAckRequest() && !(otPlatRadioGetCaps(mNetif.GetInstance()) & kRadioCapsAckTimeout))
     {
         mMacTimer.Start(kAckTimeout);
-        otLogDebgMac("ack timer start\n");
+        otLogDebgMac("ack timer start");
     }
 
     if (mPcapCallback)
@@ -857,7 +857,7 @@ void Mac::HandleMacTimer(void)
         break;
 
     case kStateTransmitData:
-        otLogDebgMac("ack timer fired\n");
+        otLogDebgMac("ack timer fired");
         mCounters.mTxTotal++;
         SentFrame(kThreadError_NoAck);
         break;
@@ -878,7 +878,7 @@ void Mac::HandleReceiveTimer(void *aContext)
 
 void Mac::HandleReceiveTimer(void)
 {
-    otLogInfoMac("data poll timeout!\n");
+    otLogInfoMac("data poll timeout!");
 
     if (mState == kStateIdle)
     {
@@ -1005,7 +1005,7 @@ ThreadError Mac::ProcessReceiveSecurity(Frame &aFrame, const Address &aSrcAddr, 
 
     aFrame.GetSecurityLevel(securityLevel);
     aFrame.GetFrameCounter(frameCounter);
-    otLogDebgMac("Frame counter %u\n", frameCounter);
+    otLogDebgMac("Frame counter %u", frameCounter);
 
     aFrame.GetKeyIdMode(keyIdMode);
 
@@ -1146,11 +1146,11 @@ void Mac::ReceiveDoneTask(Frame *aFrame, ThreadError aError)
         break;
 
     case sizeof(ShortAddress):
-        otLogDebgMac("Received from short address %x\n", srcaddr.mShortAddress);
+        otLogDebgMac("Received from short address %x", srcaddr.mShortAddress);
 
         if (neighbor == NULL)
         {
-            otLogDebgMac("drop not neighbor\n");
+            otLogDebgMac("drop not neighbor");
             ExitNow(error = kThreadError_UnknownNeighbor);
         }
 
@@ -1168,7 +1168,7 @@ void Mac::ReceiveDoneTask(Frame *aFrame, ThreadError aError)
     // Duplicate Address Protection
     if (memcmp(&srcaddr.mExtAddress, &mExtAddress, sizeof(srcaddr.mExtAddress)) == 0)
     {
-        otLogDebgMac("duplicate address received\n");
+        otLogDebgMac("duplicate address received");
         ExitNow(error = kThreadError_InvalidSourceAddress);
     }
 
@@ -1326,7 +1326,7 @@ ThreadError Mac::HandleMacCommand(Frame &aFrame)
     {
     case Frame::kMacCmdBeaconRequest:
         mCounters.mRxBeaconRequest++;
-        otLogInfoMac("Received Beacon Request\n");
+        otLogInfoMac("Received Beacon Request");
 
         mTransmitBeacon = true;
 
@@ -1391,7 +1391,7 @@ otMacCounters &Mac::GetCounters(void)
 void Mac::EnableSrcMatch(bool aEnable)
 {
     otPlatRadioEnableSrcMatch(mNetif.GetInstance(), aEnable);
-    otLogDebgMac("Enable SrcMatch -- %d(0:Dis, 1:En)\n", aEnable);
+    otLogDebgMac("Enable SrcMatch -- %d(0:Dis, 1:En)", aEnable);
 }
 
 ThreadError Mac::AddSrcMatchEntry(Address &aAddr)
@@ -1401,7 +1401,7 @@ ThreadError Mac::AddSrcMatchEntry(Address &aAddr)
     if (aAddr.mLength == 2)
     {
         error = otPlatRadioAddSrcMatchShortEntry(mNetif.GetInstance(), aAddr.mShortAddress);
-        otLogDebgMac("Adding short address: 0x%x -- %d (0:Ok, 3:NoBufs)\n", aAddr.mShortAddress, error);
+        otLogDebgMac("Adding short address: 0x%x -- %d (0:Ok, 3:NoBufs)", aAddr.mShortAddress, error);
     }
     else
     {
@@ -1413,7 +1413,7 @@ ThreadError Mac::AddSrcMatchEntry(Address &aAddr)
         }
 
         error = otPlatRadioAddSrcMatchExtEntry(mNetif.GetInstance(), buf);
-        otLogDebgMac("Adding extended address: 0x%02x%02x%02x%02x%02x%02x%02x%02x -- %d (0:OK, 3:NoBufs)\n",
+        otLogDebgMac("Adding extended address: 0x%02x%02x%02x%02x%02x%02x%02x%02x -- %d (0:OK, 3:NoBufs)",
                      buf[7], buf[6], buf[5], buf[4], buf[3], buf[2], buf[1], buf[0], error);
     }
 
@@ -1427,7 +1427,7 @@ ThreadError Mac::ClearSrcMatchEntry(Address &aAddr)
     if (aAddr.mLength == 2)
     {
         error = otPlatRadioClearSrcMatchShortEntry(mNetif.GetInstance(), aAddr.mShortAddress);
-        otLogDebgMac("Clearing short address: 0x%x -- %d (0:OK, 10:NoAddress)\n", aAddr.mShortAddress, error);
+        otLogDebgMac("Clearing short address: 0x%x -- %d (0:OK, 10:NoAddress)", aAddr.mShortAddress, error);
     }
     else
     {
@@ -1439,7 +1439,7 @@ ThreadError Mac::ClearSrcMatchEntry(Address &aAddr)
         }
 
         error = otPlatRadioClearSrcMatchExtEntry(mNetif.GetInstance(), buf);
-        otLogDebgMac("Clearing extended address: 0x%02x%02x%02x%02x%02x%02x%02x%02x -- %d (0:OK, 10:NoAddress)\n",
+        otLogDebgMac("Clearing extended address: 0x%02x%02x%02x%02x%02x%02x%02x%02x -- %d (0:OK, 10:NoAddress)",
                      buf[7], buf[6], buf[5], buf[4], buf[3], buf[2], buf[1], buf[0], error);
     }
 

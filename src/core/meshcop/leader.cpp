@@ -51,16 +51,14 @@ Leader::Leader(ThreadNetif &aThreadNetif):
     mPetition(OPENTHREAD_URI_LEADER_PETITION, HandlePetition, this),
     mKeepAlive(OPENTHREAD_URI_LEADER_KEEP_ALIVE, HandleKeepAlive, this),
     mCoapServer(aThreadNetif.GetCoapServer()),
+    mCoapClient(aThreadNetif.GetCoapClient()),
     mNetworkData(aThreadNetif.GetNetworkDataLeader()),
     mTimer(aThreadNetif.GetIp6().mTimerScheduler, HandleTimer, this),
-    mSocket(aThreadNetif.GetIp6().mUdp),
     mSessionId(0xffff),
     mNetif(aThreadNetif)
 {
     mCoapServer.AddResource(mPetition);
     mCoapServer.AddResource(mKeepAlive);
-
-    mSocket.Open(HandleUdpReceive, this);
 }
 
 void Leader::HandlePetition(void *aContext, Coap::Header &aHeader, Message &aMessage,
@@ -75,9 +73,10 @@ void Leader::HandlePetition(Coap::Header &aHeader, Message &aMessage, const Ip6:
     CommissionerIdTlv commissionerId;
     StateTlv::State state = StateTlv::kReject;
 
-    otLogInfoMeshCoP("received petition\n");
+    otLogInfoMeshCoP("received petition");
 
     SuccessOrExit(Tlv::GetTlv(aMessage, Tlv::kCommissionerId, sizeof(commissionerId), commissionerId));
+    VerifyOrExit(commissionerId.IsValid(), ;);
 
     VerifyOrExit(!mTimer.IsRunning(), ;);
 
@@ -113,12 +112,10 @@ ThreadError Leader::SendPetitionResponse(const Coap::Header &aRequestHeader, con
     Message *message;
 
     VerifyOrExit((message = mCoapServer.NewMessage(0)) != NULL, error = kThreadError_NoBufs);
-    responseHeader.Init();
-    responseHeader.SetType(Coap::Header::kTypeAcknowledgment);
-    responseHeader.SetCode(Coap::Header::kCodeChanged);
-    responseHeader.SetMessageId(aRequestHeader.GetMessageId());
-    responseHeader.SetToken(aRequestHeader.GetToken(), aRequestHeader.GetTokenLength());
-    responseHeader.Finalize();
+
+    responseHeader.SetDefaultResponseHeader(aRequestHeader);
+    responseHeader.SetPayloadMarker();
+
     SuccessOrExit(error = message->Append(responseHeader.GetBytes(), responseHeader.GetLength()));
 
     state.Init();
@@ -139,7 +136,7 @@ ThreadError Leader::SendPetitionResponse(const Coap::Header &aRequestHeader, con
 
     SuccessOrExit(error = mCoapServer.SendMessage(*message, aMessageInfo));
 
-    otLogInfoMeshCoP("sent petition response\n");
+    otLogInfoMeshCoP("sent petition response");
 
 exit:
 
@@ -163,10 +160,13 @@ void Leader::HandleKeepAlive(Coap::Header &aHeader, Message &aMessage, const Ip6
     CommissionerSessionIdTlv sessionId;
     StateTlv::State responseState;
 
-    otLogInfoMeshCoP("received keep alive\n");
+    otLogInfoMeshCoP("received keep alive");
 
     SuccessOrExit(Tlv::GetTlv(aMessage, Tlv::kState, sizeof(state), state));
+    VerifyOrExit(state.IsValid(),);
+
     SuccessOrExit(Tlv::GetTlv(aMessage, Tlv::kCommissionerSessionId, sizeof(sessionId), sessionId));
+    VerifyOrExit(sessionId.IsValid(),);
 
     if (sessionId.GetCommissionerSessionId() != mSessionId)
     {
@@ -177,7 +177,7 @@ void Leader::HandleKeepAlive(Coap::Header &aHeader, Message &aMessage, const Ip6
         responseState = StateTlv::kReject;
         mTimer.Stop();
         mNetworkData.SetCommissioningData(NULL, 0);
-        otLogInfoMeshCoP("commissioner inactive\n");
+        otLogInfoMeshCoP("commissioner inactive");
     }
     else
     {
@@ -200,12 +200,10 @@ ThreadError Leader::SendKeepAliveResponse(const Coap::Header &aRequestHeader, co
     Message *message;
 
     VerifyOrExit((message = mCoapServer.NewMessage(0)) != NULL, error = kThreadError_NoBufs);
-    responseHeader.Init();
-    responseHeader.SetType(Coap::Header::kTypeAcknowledgment);
-    responseHeader.SetCode(Coap::Header::kCodeChanged);
-    responseHeader.SetMessageId(aRequestHeader.GetMessageId());
-    responseHeader.SetToken(aRequestHeader.GetToken(), aRequestHeader.GetTokenLength());
-    responseHeader.Finalize();
+
+    responseHeader.SetDefaultResponseHeader(aRequestHeader);
+    responseHeader.SetPayloadMarker();
+
     SuccessOrExit(error = message->Append(responseHeader.GetBytes(), responseHeader.GetLength()));
 
     state.Init();
@@ -214,7 +212,7 @@ ThreadError Leader::SendKeepAliveResponse(const Coap::Header &aRequestHeader, co
 
     SuccessOrExit(error = mCoapServer.SendMessage(*message, aMessageInfo));
 
-    otLogInfoMeshCoP("sent keep alive response\n");
+    otLogInfoMeshCoP("sent keep alive response");
 
 exit:
 
@@ -226,14 +224,6 @@ exit:
     return error;
 }
 
-void Leader::HandleUdpReceive(void *aContext, otMessage aMessage, const otMessageInfo *aMessageInfo)
-{
-    otLogInfoMeshCoP("received dataset changed response\n");
-    (void)aContext;
-    (void)aMessage;
-    (void)aMessageInfo;
-}
-
 ThreadError Leader::SendDatasetChanged(const Ip6::Address &aAddress)
 {
     ThreadError error = kThreadError_None;
@@ -241,28 +231,19 @@ ThreadError Leader::SendDatasetChanged(const Ip6::Address &aAddress)
     Ip6::MessageInfo messageInfo;
     Message *message;
 
-    for (size_t i = 0; i < sizeof(mCoapToken); i++)
-    {
-        mCoapToken[i] = static_cast<uint8_t>(otPlatRandomGet());
-    }
-
-    header.Init();
-    header.SetType(Coap::Header::kTypeConfirmable);
-    header.SetCode(Coap::Header::kCodePost);
-    header.SetMessageId(++mCoapMessageId);
-    header.SetToken(mCoapToken, sizeof(mCoapToken));
+    header.Init(kCoapTypeConfirmable, kCoapRequestPost);
+    header.SetToken(Coap::Header::kDefaultTokenLength);
     header.AppendUriPathOptions(OPENTHREAD_URI_DATASET_CHANGED);
-    header.Finalize();
+    header.SetPayloadMarker();
 
-    VerifyOrExit((message = mSocket.NewMessage(0)) != NULL, error = kThreadError_NoBufs);
-    SuccessOrExit(error = message->Append(header.GetBytes(), header.GetLength()));
+    VerifyOrExit((message = mCoapClient.NewMessage(header)) != NULL, error = kThreadError_NoBufs);
 
     memset(&messageInfo, 0, sizeof(messageInfo));
     messageInfo.GetPeerAddr() = aAddress;
     messageInfo.mPeerPort = kCoapUdpPort;
-    SuccessOrExit(error = mSocket.SendTo(*message, messageInfo));
+    SuccessOrExit(error = mCoapClient.SendMessage(*message, messageInfo));
 
-    otLogInfoMeshCoP("sent dataset changed\n");
+    otLogInfoMeshCoP("sent dataset changed");
 
 exit:
 
@@ -283,7 +264,7 @@ void Leader::HandleTimer(void)
 {
     VerifyOrExit(mNetif.GetMle().GetDeviceState() == Mle::kDeviceStateLeader, ;);
 
-    otLogInfoMeshCoP("commissioner inactive\n");
+    otLogInfoMeshCoP("commissioner inactive");
     mNetworkData.SetCommissioningData(NULL, 0);
 
 exit:

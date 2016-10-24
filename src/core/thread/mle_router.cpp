@@ -156,7 +156,7 @@ uint8_t MleRouter::AllocateRouterId(uint8_t aRouterId)
     mRouterIdSequenceLastUpdated = Timer::GetNow();
     rval = aRouterId;
 
-    otLogInfoMle("add router id %d\n", aRouterId);
+    otLogInfoMle("add router id %d", aRouterId);
 
 exit:
     return rval;
@@ -164,7 +164,7 @@ exit:
 
 ThreadError MleRouter::ReleaseRouterId(uint8_t aRouterId)
 {
-    otLogInfoMle("delete router id %d\n", aRouterId);
+    otLogInfoMle("delete router id %d", aRouterId);
     mRouters[aRouterId].mAllocated = false;
     mRouters[aRouterId].mReclaimDelay = true;
     mRouters[aRouterId].mState = Neighbor::kStateInvalid;
@@ -360,7 +360,7 @@ ThreadError MleRouter::SetStateRouter(uint16_t aRloc16)
     mStateUpdateTimer.Start(kStateUpdatePeriod);
     mNetif.GetIp6().SetForwardingEnabled(true);
 
-    otLogInfoMle("Mode -> Router\n");
+    otLogInfoMle("Mode -> Router");
     return kThreadError_None;
 }
 
@@ -387,7 +387,7 @@ ThreadError MleRouter::SetStateLeader(uint16_t aRloc16)
     mCoapServer.AddResource(mAddressRelease);
     mNetif.GetIp6().SetForwardingEnabled(true);
 
-    otLogInfoMle("Mode -> Leader %d\n", mLeaderData.GetPartitionId());
+    otLogInfoMle("Mode -> Leader %d", mLeaderData.GetPartitionId());
     return kThreadError_None;
 }
 
@@ -488,7 +488,7 @@ ThreadError MleRouter::SendAdvertisement(void)
     destination.mFields.m16[7] = HostSwap16(0x0001);
     SuccessOrExit(error = SendMessage(*message, destination));
 
-    otLogInfoMle("Sent advertisement\n");
+    otLogInfoMle("Sent advertisement");
 
 exit:
 
@@ -567,7 +567,7 @@ ThreadError MleRouter::SendLinkRequest(Neighbor *aNeighbor)
 
     SuccessOrExit(error = SendMessage(*message, destination));
 
-    otLogInfoMle("Sent link request\n");
+    otLogInfoMle("Sent link request");
 
 exit:
 
@@ -591,7 +591,7 @@ ThreadError MleRouter::HandleLinkRequest(const Message &aMessage, const Ip6::Mes
     TlvRequestTlv tlvRequest;
     uint16_t rloc16;
 
-    otLogInfoMle("Received link request\n");
+    otLogInfoMle("Received link request");
 
     VerifyOrExit(GetDeviceState() == kDeviceStateRouter ||
                  GetDeviceState() == kDeviceStateLeader, ;);
@@ -751,13 +751,13 @@ ThreadError MleRouter::SendLinkAccept(const Ip6::MessageInfo &aMessageInfo, Neig
         SuccessOrExit(error = AddDelayedResponse(*message, aMessageInfo.GetPeerAddr(),
                                                  (otPlatRandomGet() % kMaxResponseDelay) + 1));
 
-        otLogInfoMle("Delayed link accept\n");
+        otLogInfoMle("Delayed link accept");
     }
     else
     {
         SuccessOrExit(error = SendMessage(*message, aMessageInfo.GetPeerAddr()));
 
-        otLogInfoMle("Sent link accept\n");
+        otLogInfoMle("Sent link accept");
     }
 
 exit:
@@ -773,14 +773,14 @@ exit:
 ThreadError MleRouter::HandleLinkAccept(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo,
                                         uint32_t aKeySequence)
 {
-    otLogInfoMle("Received link accept\n");
+    otLogInfoMle("Received link accept");
     return HandleLinkAccept(aMessage, aMessageInfo, aKeySequence, false);
 }
 
 ThreadError MleRouter::HandleLinkAcceptAndRequest(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo,
                                                   uint32_t aKeySequence)
 {
-    otLogInfoMle("Received link accept and request\n");
+    otLogInfoMle("Received link accept and request");
     return HandleLinkAccept(aMessage, aMessageInfo, aKeySequence, true);
 }
 
@@ -985,7 +985,7 @@ ThreadError MleRouter::SendLinkReject(const Ip6::Address &aDestination)
 
     SuccessOrExit(error = SendMessage(*message, aDestination));
 
-    otLogInfoMle("Sent link reject\n");
+    otLogInfoMle("Sent link reject");
 
 exit:
 
@@ -1003,7 +1003,7 @@ ThreadError MleRouter::HandleLinkReject(const Message &aMessage, const Ip6::Mess
 
     (void)aMessage;
 
-    otLogInfoMle("Received link reject\n");
+    otLogInfoMle("Received link reject");
 
     macAddr.Set(aMessageInfo.GetPeerAddr());
 
@@ -1260,7 +1260,7 @@ ThreadError MleRouter::HandleAdvertisement(const Message &aMessage, const Ip6::M
 
     if (partitionId != mLeaderData.GetPartitionId())
     {
-        otLogDebgMle("different partition! %d %d %d %d\n",
+        otLogDebgMle("different partition! %d %d %d %d",
                      leaderData.GetWeighting(), partitionId,
                      mLeaderData.GetWeighting(), mLeaderData.GetPartitionId());
 
@@ -1282,7 +1282,7 @@ ThreadError MleRouter::HandleAdvertisement(const Message &aMessage, const Ip6::M
 
         if (ComparePartitions(routerCount <= 1, leaderData, IsSingleton(), mLeaderData) > 0)
         {
-            otLogDebgMle("trying to migrate\n");
+            otLogDebgMle("trying to migrate");
             BecomeChild(kMleAttachBetterPartition);
         }
 
@@ -1579,7 +1579,7 @@ void MleRouter::UpdateRoutes(const RouteTlv &aRoute, uint8_t aRouterId)
             continue;
         }
 
-        otLogDebgMle("%x: %x %d %d %d %d\n", GetRloc16(i), GetRloc16(mRouters[i].mNextHop),
+        otLogDebgMle("%x: %x %d %d %d %d", GetRloc16(i), GetRloc16(mRouters[i].mNextHop),
                      mRouters[i].mCost, GetLinkCost(i), mRouters[i].mLinkInfo.GetLinkQuality(mMac.GetNoiseFloor()),
                      mRouters[i].mLinkQualityOut);
     }
@@ -1597,7 +1597,7 @@ ThreadError MleRouter::HandleParentRequest(const Message &aMessage, const Ip6::M
     ChallengeTlv challenge;
     Child *child;
 
-    otLogInfoMle("Received parent request\n");
+    otLogInfoMle("Received parent request");
 
     // A Router MUST NOT send an MLE Parent Response if:
 
@@ -1706,7 +1706,7 @@ void MleRouter::HandleStateUpdateTimer(void)
 
     case kDeviceStateRouter:
         // verify path to leader
-        otLogDebgMle("network id timeout = %d\n", GetLeaderAge());
+        otLogDebgMle("network id timeout = %d", GetLeaderAge());
 
         if (GetLeaderAge() >= mNetworkIdTimeout)
         {
@@ -1825,7 +1825,7 @@ void MleRouter::HandleDelayedResponseTimer(void)
             // Send the message.
             if (SendMessage(*message, delayedResponse.GetDestination()) == kThreadError_None)
             {
-                otLogInfoMle("Sent delayed response\n");
+                otLogInfoMle("Sent delayed response");
             }
             else
             {
@@ -1925,7 +1925,7 @@ ThreadError MleRouter::SendParentResponse(Child *aChild, const ChallengeTlv &cha
 
     SuccessOrExit(error = AddDelayedResponse(*message, destination, delay));
 
-    otLogInfoMle("Delayed Parent Response\n");
+    otLogInfoMle("Delayed Parent Response");
 
 exit:
 
@@ -1985,7 +1985,7 @@ ThreadError MleRouter::HandleChildIdRequest(const Message &aMessage, const Ip6::
     Child *child;
     uint8_t numTlvs;
 
-    otLogInfoMle("Received Child ID Request\n");
+    otLogInfoMle("Received Child ID Request");
 
     // Find Child
     macAddr.Set(aMessageInfo.GetPeerAddr());
@@ -2138,7 +2138,7 @@ ThreadError MleRouter::HandleChildUpdateRequest(const Message &aMessage, const I
     uint8_t tlvs[kMaxResponseTlvs];
     uint8_t tlvslength = 0;
 
-    otLogInfoMle("Received Child Update Request\n");
+    otLogInfoMle("Received Child Update Request");
 
     // Find Child
     macAddr.Set(aMessageInfo.GetPeerAddr());
@@ -2233,7 +2233,7 @@ ThreadError MleRouter::HandleDataRequest(const Message &aMessage, const Ip6::Mes
     uint8_t tlvs[4];
     uint8_t numTlvs;
 
-    otLogInfoMle("Received Data Request\n");
+    otLogInfoMle("Received Data Request");
 
     // TLV Request
     SuccessOrExit(error = Tlv::GetTlv(aMessage, Tlv::kTlvRequest, sizeof(tlvRequest), tlvRequest));
@@ -2368,7 +2368,7 @@ ThreadError MleRouter::SendChildIdResponse(Child *aChild)
     destination.SetIid(aChild->mMacAddr);
     SuccessOrExit(error = SendMessage(*message, destination));
 
-    otLogInfoMle("Sent Child ID Response\n");
+    otLogInfoMle("Sent Child ID Response");
 
 exit:
 
@@ -2431,7 +2431,7 @@ ThreadError MleRouter::SendChildUpdateResponse(Child *aChild, const Ip6::Message
 
     SuccessOrExit(error = SendMessage(*message, aMessageInfo.GetPeerAddr()));
 
-    otLogInfoMle("Sent Child Update Response\n");
+    otLogInfoMle("Sent Child Update Response");
 
 exit:
 
@@ -2480,7 +2480,7 @@ ThreadError MleRouter::SendDataResponse(const Ip6::Address &aDestination, const 
 
     SuccessOrExit(error = SendMessage(*message, aDestination));
 
-    otLogInfoMle("Sent Data Response\n");
+    otLogInfoMle("Sent Data Response");
 
 exit:
 
@@ -3114,12 +3114,10 @@ ThreadError MleRouter::SendAddressSolicit(ThreadStatusTlv::Status aStatus)
     Ip6::MessageInfo messageInfo;
     Message *message;
 
-    header.Init();
-    header.SetType(Coap::Header::kTypeConfirmable);
-    header.SetCode(Coap::Header::kCodePost);
+    header.Init(kCoapTypeConfirmable, kCoapRequestPost);
     header.SetToken(Coap::Header::kDefaultTokenLength);
     header.AppendUriPathOptions(OPENTHREAD_URI_ADDRESS_SOLICIT);
-    header.Finalize();
+    header.SetPayloadMarker();
 
     VerifyOrExit((message = mCoapClient.NewMessage(header)) != NULL, error = kThreadError_NoBufs);
 
@@ -3145,7 +3143,7 @@ ThreadError MleRouter::SendAddressSolicit(ThreadStatusTlv::Status aStatus)
     SuccessOrExit(error = mCoapClient.SendMessage(*message, messageInfo,
                                                   &MleRouter::HandleAddressSolicitResponse, this));
 
-    otLogInfoMle("Sent address solicit to %04x\n", HostSwap16(messageInfo.GetPeerAddr().mFields.m16[7]));
+    otLogInfoMle("Sent address solicit to %04x", HostSwap16(messageInfo.GetPeerAddr().mFields.m16[7]));
 
 exit:
 
@@ -3166,12 +3164,10 @@ ThreadError MleRouter::SendAddressRelease(void)
     Ip6::MessageInfo messageInfo;
     Message *message;
 
-    header.Init();
-    header.SetType(Coap::Header::kTypeConfirmable);
-    header.SetCode(Coap::Header::kCodePost);
+    header.Init(kCoapTypeConfirmable, kCoapRequestPost);
     header.SetToken(Coap::Header::kDefaultTokenLength);
     header.AppendUriPathOptions(OPENTHREAD_URI_ADDRESS_RELEASE);
-    header.Finalize();
+    header.SetPayloadMarker();
 
     VerifyOrExit((message = mCoapClient.NewMessage(header)) != NULL, error = kThreadError_NoBufs);
 
@@ -3186,9 +3182,9 @@ ThreadError MleRouter::SendAddressRelease(void)
     memset(&messageInfo, 0, sizeof(messageInfo));
     SuccessOrExit(error = GetLeaderAddress(messageInfo.GetPeerAddr()));
     messageInfo.mPeerPort = kCoapUdpPort;
-    SuccessOrExit(error = mCoapClient.SendMessage(*message, messageInfo, NULL, NULL));
+    SuccessOrExit(error = mCoapClient.SendMessage(*message, messageInfo));
 
-    otLogInfoMle("Sent address release\n");
+    otLogInfoMle("Sent address release");
 
 exit:
 
@@ -3219,9 +3215,9 @@ void MleRouter::HandleAddressSolicitResponse(Coap::Header *aHeader, Message *aMe
 
     VerifyOrExit(result == kThreadError_None && aHeader != NULL && aMessage != NULL, ;);
 
-    VerifyOrExit(aHeader->GetCode() == Coap::Header::kCodeChanged, ;);
+    VerifyOrExit(aHeader->GetCode() == kCoapResponseChanged, ;);
 
-    otLogInfoMle("Received address reply\n");
+    otLogInfoMle("Received address reply");
 
     SuccessOrExit(ThreadTlv::GetTlv(*aMessage, ThreadTlv::kStatus, sizeof(statusTlv), statusTlv));
     VerifyOrExit(statusTlv.IsValid() && statusTlv.GetStatus() == statusTlv.kSuccess, ;);
@@ -3303,10 +3299,10 @@ void MleRouter::HandleAddressSolicit(Coap::Header &aHeader, Message &aMessage, c
     ThreadStatusTlv statusTlv;
     uint8_t routerId = kInvalidRouterId;
 
-    VerifyOrExit(aHeader.GetType() == Coap::Header::kTypeConfirmable && aHeader.GetCode() == Coap::Header::kCodePost,
+    VerifyOrExit(aHeader.GetType() == kCoapTypeConfirmable && aHeader.GetCode() == kCoapRequestPost,
                  error = kThreadError_Parse);
 
-    otLogInfoMle("Received address solicit\n");
+    otLogInfoMle("Received address solicit");
 
     SuccessOrExit(error = ThreadTlv::GetTlv(aMessage, ThreadTlv::kExtMacAddress, sizeof(macAddr64Tlv), macAddr64Tlv));
     VerifyOrExit(macAddr64Tlv.IsValid(), error = kThreadError_Parse);
@@ -3375,7 +3371,7 @@ void MleRouter::HandleAddressSolicit(Coap::Header &aHeader, Message &aMessage, c
     }
     else
     {
-        otLogInfoMle("router id requested and provided!\n");
+        otLogInfoMle("router id requested and provided!");
     }
 
     if (IsRouterIdValid(routerId))
@@ -3384,7 +3380,7 @@ void MleRouter::HandleAddressSolicit(Coap::Header &aHeader, Message &aMessage, c
     }
     else
     {
-        otLogInfoMle("router address unavailable!\n");
+        otLogInfoMle("router address unavailable!");
     }
 
 exit:
@@ -3406,7 +3402,10 @@ void MleRouter::SendAddressSolicitResponse(const Coap::Header &aRequestHeader, u
     Message *message;
 
     VerifyOrExit((message = mCoapServer.NewMessage(0)) != NULL, error = kThreadError_NoBufs);
+
     responseHeader.SetDefaultResponseHeader(aRequestHeader);
+    responseHeader.SetPayloadMarker();
+
     SuccessOrExit(error = message->Append(responseHeader.GetBytes(), responseHeader.GetLength()));
 
     statusTlv.Init();
@@ -3436,7 +3435,7 @@ void MleRouter::SendAddressSolicitResponse(const Coap::Header &aRequestHeader, u
 
     SuccessOrExit(error = mCoapServer.SendMessage(*message, aMessageInfo));
 
-    otLogInfoMle("Sent address reply\n");
+    otLogInfoMle("Sent address reply");
 
 exit:
 
@@ -3461,10 +3460,10 @@ void MleRouter::HandleAddressRelease(Coap::Header &aHeader, Message &aMessage,
     uint8_t routerId;
     Router *router;
 
-    VerifyOrExit(aHeader.GetType() == Coap::Header::kTypeConfirmable &&
-                 aHeader.GetCode() == Coap::Header::kCodePost, ;);
+    VerifyOrExit(aHeader.GetType() == kCoapTypeConfirmable &&
+                 aHeader.GetCode() == kCoapRequestPost, ;);
 
-    otLogInfoMle("Received address release\n");
+    otLogInfoMle("Received address release");
 
     SuccessOrExit(ThreadTlv::GetTlv(aMessage, ThreadTlv::kRloc16, sizeof(rlocTlv), rlocTlv));
     VerifyOrExit(rlocTlv.IsValid(), ;);
@@ -3491,13 +3490,14 @@ void MleRouter::SendAddressReleaseResponse(const Coap::Header &aRequestHeader, c
     Message *message;
 
     VerifyOrExit((message = mCoapServer.NewMessage(0)) != NULL, error = kThreadError_NoBufs);
+
     responseHeader.SetDefaultResponseHeader(aRequestHeader);
 
     SuccessOrExit(error = message->Append(responseHeader.GetBytes(), responseHeader.GetLength()));
 
     SuccessOrExit(error = mCoapServer.SendMessage(*message, aMessageInfo));
 
-    otLogInfoMle("Sent address release response\n");
+    otLogInfoMle("Sent address release response");
 
 exit:
 

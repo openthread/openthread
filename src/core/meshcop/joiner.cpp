@@ -140,7 +140,7 @@ void Joiner::HandleDiscoverResult(otActiveScanResult *aResult)
         }
         else
         {
-            otLogDebgMeshCoP("Steering data not set\n");
+            otLogDebgMeshCoP("Steering data not set");
         }
     }
     else if (mJoinerRouterPanId != Mac::kPanIdBroadcast)
@@ -165,7 +165,7 @@ void Joiner::HandleDiscoverResult(otActiveScanResult *aResult)
 
 ThreadError Joiner::HandleDtlsSend(void *aContext, const uint8_t *aBuf, uint16_t aLength)
 {
-    otLogInfoMeshCoP("Joiner::HandleDtlsTransmit\n");
+    otLogInfoMeshCoP("Joiner::HandleDtlsTransmit");
     return static_cast<Joiner *>(aContext)->HandleDtlsSend(aBuf, aLength);
 }
 
@@ -198,7 +198,7 @@ exit:
 
 void Joiner::HandleDtlsReceive(void *aContext, uint8_t *aBuf, uint16_t aLength)
 {
-    otLogInfoMeshCoP("Joiner::HandleDtlsReceive\n");
+    otLogInfoMeshCoP("Joiner::HandleDtlsReceive");
     static_cast<Joiner *>(aContext)->HandleDtlsReceive(aBuf, aLength);
 }
 
@@ -209,7 +209,7 @@ void Joiner::HandleDtlsReceive(uint8_t *aBuf, uint16_t aLength)
 
 void Joiner::HandleUdpReceive(void *aContext, otMessage aMessage, const otMessageInfo *aMessageInfo)
 {
-    otLogInfoMeshCoP("Joiner::HandleUdpReceive\n");
+    otLogInfoMeshCoP("Joiner::HandleUdpReceive");
     static_cast<Joiner *>(aContext)->HandleUdpReceive(*static_cast<Message *>(aMessage),
                                                       *static_cast<const Ip6::MessageInfo *>(aMessageInfo));
 }
@@ -231,7 +231,7 @@ void Joiner::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessag
 
 void Joiner::HandleUdpTransmit(void *aContext)
 {
-    otLogInfoMeshCoP("Joiner::HandleUdpTransmit\n");
+    otLogInfoMeshCoP("Joiner::HandleUdpTransmit");
     static_cast<Joiner *>(aContext)->HandleUdpTransmit();
 }
 
@@ -244,7 +244,7 @@ void Joiner::HandleUdpTransmit(void)
 
     VerifyOrExit(mTransmitMessage != NULL, error = kThreadError_NoBufs);
 
-    otLogInfoMeshCoP("transmit %d (to %llX)\n", mTransmitMessage->GetLength(),
+    otLogInfoMeshCoP("transmit %d (to %llX)", mTransmitMessage->GetLength(),
                      HostSwap64(*reinterpret_cast<uint64_t *>(&mJoinerRouter)));
 
     memset(&messageInfo, 0, sizeof(messageInfo));
@@ -275,14 +275,11 @@ void Joiner::SendJoinerFinalize(void)
     uint8_t *cur = buf;
 
     otLogFuncEntry();
-
-    header.Init();
-    header.SetType(Coap::Header::kTypeConfirmable);
-    header.SetCode(Coap::Header::kCodePost);
+    header.Init(kCoapTypeConfirmable, kCoapRequestPost);
     header.SetMessageId(0);
     header.SetToken(NULL, 0);
     header.AppendUriPathOptions(OPENTHREAD_URI_JOINER_FINALIZE);
-    header.Finalize();
+    header.SetPayloadMarker();
     memcpy(cur, header.GetBytes(), header.GetLength());
     cur += header.GetLength();
 
@@ -302,7 +299,7 @@ void Joiner::SendJoinerFinalize(void)
 
     mNetif.GetDtls().Send(buf, static_cast<uint16_t>(cur - buf));
 
-    otLogInfoMeshCoP("Sent joiner finalize\n");
+    otLogInfoMeshCoP("Sent joiner finalize");
     otDumpCertMeshCoP("[THCI] direction=send | type=JOIN_FIN.req |", buf + header.GetLength(),
                       cur - buf - header.GetLength());
     otLogFuncExit();
@@ -321,16 +318,16 @@ void Joiner::ReceiveJoinerFinalizeResponse(uint8_t *buf, uint16_t length)
     SuccessOrExit(header.FromMessage(*message));
     SuccessOrExit(message->SetOffset(header.GetLength()));
 
-    VerifyOrExit(header.GetType() == Coap::Header::kTypeAcknowledgment &&
-                 header.GetCode() == Coap::Header::kCodeChanged &&
+    VerifyOrExit(header.GetType() == kCoapTypeAcknowledgment &&
+                 header.GetCode() == kCoapResponseChanged &&
                  header.GetMessageId() == 0 &&
                  header.GetTokenLength() == 0, ;);
 
     SuccessOrExit(Tlv::GetTlv(*message, Tlv::kState, sizeof(state), state));
     VerifyOrExit(state.IsValid(), ;);
 
-    otLogInfoMeshCoP("received joiner finalize response %d\n", static_cast<uint8_t>(state.GetState()));
-    otLogCertMeshCoP("[THCI] direction=recv | type=JOIN_FIN.rsp\n");
+    otLogInfoMeshCoP("received joiner finalize response %d", static_cast<uint8_t>(state.GetState()));
+    otLogCertMeshCoP("[THCI] direction=recv | type=JOIN_FIN.rsp");
 
     Close();
 
@@ -362,11 +359,11 @@ void Joiner::HandleJoinerEntrust(Coap::Header &aHeader, Message &aMessage, const
 
     otLogFuncEntry();
 
-    VerifyOrExit(aHeader.GetType() == Coap::Header::kTypeConfirmable &&
-                 aHeader.GetCode() == Coap::Header::kCodePost, error = kThreadError_Drop);
+    VerifyOrExit(aHeader.GetType() == kCoapTypeConfirmable &&
+                 aHeader.GetCode() == kCoapRequestPost, error = kThreadError_Drop);
 
-    otLogInfoMeshCoP("Received joiner entrust\n");
-    otLogCertMeshCoP("[THCI] direction=recv | type=JOIN_ENT.ntf\n");
+    otLogInfoMeshCoP("Received joiner entrust");
+    otLogCertMeshCoP("[THCI] direction=recv | type=JOIN_ENT.ntf");
 
     SuccessOrExit(error = Tlv::GetTlv(aMessage, Tlv::kNetworkMasterKey, sizeof(masterKey), masterKey));
     VerifyOrExit(masterKey.IsValid(), error = kThreadError_Parse);
@@ -388,7 +385,7 @@ void Joiner::HandleJoinerEntrust(Coap::Header &aHeader, Message &aMessage, const
     mNetif.GetMac().SetExtendedPanId(extendedPanId.GetExtendedPanId());
     mNetif.GetMac().SetNetworkName(networkName.GetNetworkName());
 
-    otLogInfoMeshCoP("join success!\n");
+    otLogInfoMeshCoP("join success!");
 
     // Delay extended address configuration to allow DTLS wrap up.
     mTimer.Start(kConfigExtAddressDelay);

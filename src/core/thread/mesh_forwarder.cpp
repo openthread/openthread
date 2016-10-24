@@ -251,8 +251,8 @@ ThreadError MeshForwarder::AddSrcMatchEntry(Child &aChild)
     ThreadError error = kThreadError_NoBufs;
     Mac::Address macAddr;
 
-    otLogDebgMac("Queuing for child (0x%x)\n", aChild.mValid.mRloc16);
-    otLogDebgMac("SrcMatch %d (0:Dis, 1:En))\n", mSrcMatchEnabled);
+    otLogDebgMac("Queuing for child (0x%x)", aChild.mValid.mRloc16);
+    otLogDebgMac("SrcMatch %d (0:Dis, 1:En))", mSrcMatchEnabled);
 
     // first queued message, to be added into source match table
     if (aChild.mQueuedIndirectMessageCnt == 1)
@@ -294,7 +294,7 @@ exit:
 void MeshForwarder::ClearSrcMatchEntry(Child &aChild)
 {
     Mac::Address macAddr;
-    otLogDebgMac("SrcMatch %d (0:Dis, 1:En))\n", mSrcMatchEnabled);
+    otLogDebgMac("SrcMatch %d (0:Dis, 1:En))", mSrcMatchEnabled);
 
     if (aChild.mAddSrcMatchEntryShort)
     {
@@ -781,7 +781,7 @@ void MeshForwarder::HandlePollTimer()
     if ((message = mNetif.GetIp6().mMessagePool.New(Message::kTypeMacDataPoll, 0)) != NULL)
     {
         SendMessage(*message);
-        otLogInfoMac("Sent poll\n");
+        otLogInfoMac("Sent poll");
     }
 
     mPollTimer.Start(mPollPeriod);
@@ -1239,7 +1239,7 @@ void MeshForwarder::HandleSentFrame(Mac::Frame &aFrame, ThreadError aError)
             if ((child->mMode & Mle::ModeTlv::kModeRxOnWhenIdle) == 0)
             {
                 child->mQueuedIndirectMessageCnt--;
-                otLogDebgMac("Sent to child (0x%x), still queued message (%d)\n",
+                otLogDebgMac("Sent to child (0x%x), still queued message (%d)",
                              child->mValid.mRloc16, child->mQueuedIndirectMessageCnt);
 
                 if (child->mQueuedIndirectMessageCnt == 0)
