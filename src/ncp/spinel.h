@@ -532,7 +532,12 @@ typedef enum
     /** Format: `A(T(ESLCcCbLL))`
      *  eui64, rloc16, age, inLqi ,aveRSS, mode, isChild. linkFrameCounter, mleCounter
      */
-    SPINEL_PROP_THREAD_NEIGHBOR_TABLE  = SPINEL_PROP_THREAD_EXT__BEGIN + 11,
+    SPINEL_PROP_THREAD_NEIGHBOR_TABLE   = SPINEL_PROP_THREAD_EXT__BEGIN + 11,
+
+    /// Thread Max Child Count
+    /** Format: `C`
+     */
+    SPINEL_PROP_THREAD_CHILD_COUNT_MAX  = SPINEL_PROP_THREAD_EXT__BEGIN + 12,
 
     SPINEL_PROP_THREAD_EXT__END        = 0x1600,
 
