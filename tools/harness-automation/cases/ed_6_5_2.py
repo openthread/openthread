@@ -35,7 +35,7 @@ import re
 from autothreadharness.harness_case import HarnessCase
 
 class ED_6_5_2(HarnessCase):
-    suite = 32
+    role = HarnessCase.ROLE_ED
     case = '6 5 2'
     golden_devices_required = 2
     def on_dialog(self, dialog, title):

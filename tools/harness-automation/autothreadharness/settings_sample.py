@@ -79,6 +79,12 @@ TESTER_NAME = 'Thread Open'
 TESTER_REMARKS = 'OpenThread is great'
 """str: Any comments in the final PDF"""
 
+SER2NET_HOSTNAME = '192.168.1.1'
+"""str: ser2net hostname, used by items in `GOLDEN_DEVICES` with prefix `NET`."""
+
+SER2NET_PORTBASE = 9000
+"""str: ser2net port base, `NET1` will be mapped to `SER2NET_PORTBASE + 1`."""
+
 GOLDEN_DEVICE_TYPE = 'OpenThread'
 """str: Golden device type. Possible values are: `OpenThread`, `ARM`, `SiLabs` and `Freescale`."""
 

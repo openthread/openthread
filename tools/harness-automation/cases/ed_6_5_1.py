@@ -34,7 +34,7 @@ import time
 from autothreadharness.harness_case import HarnessCase
 
 class ED_6_5_1(HarnessCase):
-    suite = 32
+    role = HarnessCase.ROLE_ED
     case = '6 5 1'
     golden_devices_required = 1
     def on_dialog(self, dialog, title):
