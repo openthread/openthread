@@ -151,6 +151,12 @@ exit:
     return error;
 }
 
+void Ip6::EnqueueDatagram(Message &aMessage)
+{
+    mSendQueue.Enqueue(aMessage);
+    mSendQueueTask.Post();
+}
+
 ThreadError Ip6::SendDatagram(Message &message, MessageInfo &messageInfo, IpProto ipproto)
 {
     ThreadError error = kThreadError_None;
@@ -211,8 +217,7 @@ exit:
     if (error == kThreadError_None)
     {
         message.SetInterfaceId(messageInfo.mInterfaceId);
-        mSendQueue.Enqueue(message);
-        mSendQueueTask.Post();
+        EnqueueDatagram(message);
     }
 
     return error;
@@ -308,7 +313,7 @@ exit:
     return error;
 }
 
-ThreadError Ip6::HandleExtensionHeaders(Message &message, Header &header, uint8_t &nextHeader, bool &forward,
+ThreadError Ip6::HandleExtensionHeaders(Message &message, Header &header, uint8_t &nextHeader, bool forward,
                                         bool receive)
 {
     ThreadError error = kThreadError_None;
@@ -488,6 +493,7 @@ ThreadError Ip6::HandleDatagram(Message &message, Netif *netif, int8_t interface
         }
     }
 
+    message.SetInterfaceId(interfaceId);
     message.SetOffset(sizeof(header));
 
     // process IPv6 Extension Headers
