@@ -347,6 +347,8 @@ private:
                                        bool receive);
     ThreadError HandleFragment(Message &message);
     ThreadError AddMplOption(Message &message, Header &header, IpProto nextHeader, uint16_t payloadLength);
+    ThreadError InsertMplOption(Message &message, Header &header);
+    ThreadError RemoveMplOption(Message &aMessage);
     ThreadError HandleOptions(Message &message, Header &header, bool &forward);
     ThreadError HandlePayload(Message &message, MessageInfo &messageInfo, uint8_t ipproto);
     ThreadError ForwardMessage(Message &message, MessageInfo &messageInfo, uint8_t ipproto);

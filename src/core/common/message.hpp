@@ -327,6 +327,16 @@ public:
     ThreadError Prepend(const void *aBuf, uint16_t aLength);
 
     /**
+     * This method removes header bytes from the message.
+     *
+     * @param[in]  aLength  Number of header bytes to remove.
+     *
+     * @retval kThreadError_None  Successfully removed header bytes from the message.
+     *
+     */
+    ThreadError RemoveHeader(uint16_t aLength);
+
+    /**
      * This method appends bytes to the end of the message.
      *
      * On success, this method grows the message by @p aLength bytes.
