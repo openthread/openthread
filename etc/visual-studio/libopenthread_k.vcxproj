@@ -64,6 +64,7 @@
       <AdditionalIncludeDirectories>
         %(AdditionalIncludeDirectories);
         ..\..\include;
+        ..\..\examples\drivers\windows\include;
         ..\..\src\core;
         ..\..\src\missing\stdint;
         ..\..\src\missing\stdbool;
