@@ -520,24 +520,24 @@ typedef enum
     /** Format: `C`
      */
     SPINEL_PROP_THREAD_ROUTER_SELECTION_JITTER
-                                        = SPINEL_PROP_THREAD_EXT__BEGIN + 9,
+                                       = SPINEL_PROP_THREAD_EXT__BEGIN + 9,
 
     /// Thread Preferred Router Id
     /** Format: `C` - Write only
      */
     SPINEL_PROP_THREAD_PREFERRED_ROUTER_ID
-                                        = SPINEL_PROP_THREAD_EXT__BEGIN + 10,
+                                       = SPINEL_PROP_THREAD_EXT__BEGIN + 10,
 
     /// Thread Neighbor Table
     /** Format: `A(T(ESLCcCbLL))`
      *  eui64, rloc16, age, inLqi ,aveRSS, mode, isChild. linkFrameCounter, mleCounter
      */
-    SPINEL_PROP_THREAD_NEIGHBOR_TABLE   = SPINEL_PROP_THREAD_EXT__BEGIN + 11,
+    SPINEL_PROP_THREAD_NEIGHBOR_TABLE  = SPINEL_PROP_THREAD_EXT__BEGIN + 11,
 
     /// Thread Max Child Count
     /** Format: `C`
      */
-    SPINEL_PROP_THREAD_CHILD_COUNT_MAX  = SPINEL_PROP_THREAD_EXT__BEGIN + 12,
+    SPINEL_PROP_THREAD_CHILD_COUNT_MAX = SPINEL_PROP_THREAD_EXT__BEGIN + 12,
 
     SPINEL_PROP_THREAD_EXT__END        = 0x1600,
 
