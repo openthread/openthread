@@ -83,6 +83,9 @@
     <ClCompile Include="..\..\examples\drivers\windows\otLwf\address.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\examples\drivers\windows\otLwf\settings.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="..\..\examples\drivers\windows\otLwf\filter.rc">

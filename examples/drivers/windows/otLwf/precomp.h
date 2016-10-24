@@ -69,6 +69,7 @@ RtlCopyBufferToMdl(
 #include <platform/radio.h>
 #include <platform/misc.h>
 #include <platform/alarm.h>
+#include <platform/settings.h>
 
 #include <otLwfIoctl.h>
 #include <otOID.h>
