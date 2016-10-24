@@ -4575,11 +4575,8 @@ ThreadError NcpBase::RemovePropertyHandler_IPV6_ADDRESS_TABLE(uint8_t header, sp
     parsedLength = spinel_datatype_unpack(
                        value_ptr,
                        value_len,
-                       "6CLL",
-                       &addr_ptr,
-                       NULL,
-                       NULL,
-                       NULL
+                       "6",
+                       &addr_ptr
                    );
 
     if (parsedLength > 0)
