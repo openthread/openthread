@@ -474,14 +474,14 @@ int Message::CopyTo(uint16_t aSourceOffset, uint16_t aDestinationOffset, uint16_
     return bytesCopied;
 }
 
-Message *Message::Clone(void) const
+Message *Message::Clone(uint16_t aLength) const
 {
     ThreadError error = kThreadError_None;
     Message *messageCopy;
 
     VerifyOrExit((messageCopy = GetMessagePool()->New(GetType(), GetReserved())) != NULL, error = kThreadError_NoBufs);
-    SuccessOrExit(error = messageCopy->SetLength(GetLength()));
-    CopyTo(0, 0, GetLength(), *messageCopy);
+    SuccessOrExit(error = messageCopy->SetLength(aLength));
+    CopyTo(0, 0, aLength, *messageCopy);
 
     // Copy selected message information.
     messageCopy->SetOffset(GetOffset());
