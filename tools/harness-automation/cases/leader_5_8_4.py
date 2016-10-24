@@ -32,10 +32,10 @@ import unittest
 
 from autothreadharness.harness_case import HarnessCase
 
-class Commissioner_9_2_14(HarnessCase):
-    role = HarnessCase.ROLE_COMMISSIONER
-    case = '9 2 14'
-    golden_devices_required = 3
+class Leader_5_8_4(HarnessCase):
+    role = HarnessCase.ROLE_LEADER
+    case = '5 8 4'
+    golden_devices_required = 4
     def on_dialog(self, dialog, title):
         pass
 
