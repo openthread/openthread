@@ -345,6 +345,11 @@ class Node:
         self.send_command(cmd)
         self.pexpect.expect('Done')
 
+    def set_max_children(self, number):
+        cmd = 'childmax %d' % number
+        self.send_command(cmd)
+        self.pexpect.expect('Done')
+
     def get_weight(self):
         self.send_command('leaderweight')
         i = self.pexpect.expect('(\d+)\r\n')
