@@ -105,13 +105,21 @@ static size_t spinel_strnlen_(const char *s, size_t maxlen)
 #endif
 
 #ifndef require_action
+#if SPINEL_PLATFORM_SHOULD_LOG_ASSERTS
 #define require_action(c, l, a) \
     do { if (!(c)) { \
         assert_printf("Requirement Failed (%s)", # c); \
         a; \
         goto l; \
     } } while (0)
-#endif
+#else // if DEBUG
+#define require_action(c, l, a) \
+    do { if (!(c)) { \
+        a; \
+        goto l; \
+    } } while (0)
+#endif // else DEBUG
+#endif // ifndef require_action
 
 #ifndef require
 #define require(c, l)   require_action(c, l, {})
