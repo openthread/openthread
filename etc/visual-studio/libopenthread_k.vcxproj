@@ -18,6 +18,68 @@
       <Platform>x64</Platform>
     </ProjectConfiguration>
   </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{9B33C190-5D07-40BF-9536-68843DC5D7AF}</ProjectGuid>
+    <TemplateGuid>{0a049372-4c4d-4ea0-a64e-dc6ad88ceca1}</TemplateGuid>
+    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <MinimumVisualStudioVersion>12.0</MinimumVisualStudioVersion>
+    <Configuration>Debug</Configuration>
+    <Platform Condition="'$(Platform)' == ''">Win32</Platform>
+    <RootNamespace>Thread</RootNamespace>
+    <DriverType>KMDF</DriverType>
+    <WindowsTargetPlatformVersion>$(LatestTargetPlatformVersion)</WindowsTargetPlatformVersion>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)'=='Debug'" Label="Configuration">
+    <TargetVersion>Windows10</TargetVersion>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>WindowsKernelModeDriver10.0</PlatformToolset>
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)'=='Release'" Label="Configuration">
+    <TargetVersion>Windows10</TargetVersion>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>WindowsKernelModeDriver10.0</PlatformToolset>
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings" />
+  <ImportGroup Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup>
+    <OutDir>..\..\build\bin\$(Platform)\$(Configuration)\lib\</OutDir>
+    <IntDir>..\..\build\obj\$(Platform)\$(Configuration)\$(ProjectName)\</IntDir>
+  </PropertyGroup>
+  <ItemDefinitionGroup>
+    <ClCompile>
+      <PreprocessorDefinitions>
+        %(PreprocessorDefinitions);
+        MBEDTLS_CONFIG_FILE="mbedtls-config.h";
+        OPENTHREAD_CONFIG_FILE="openthread-windows-config.h";
+        OPENTHREAD_PROJECT_CORE_CONFIG_FILE="openthread-core-windows-config.h";
+        WINDOWS_LOGGING;
+        OPENTHREAD_MULTIPLE_INSTANCE;
+      </PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>
+        %(AdditionalIncludeDirectories);
+        ..\..\include;
+        ..\..\examples\drivers\windows\include;
+        ..\..\src\core;
+        ..\..\src\missing\stdint;
+        ..\..\src\missing\stdbool;
+        ..\..\third_party\mbedtls;
+        ..\..\third_party\mbedtls\repo\include;
+      </AdditionalIncludeDirectories>
+      <DisableSpecificWarnings>4100;4706;4748;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <TreatWarningAsError>true</TreatWarningAsError>
+      <WppEnabled>true</WppEnabled>
+      <WppScanConfigurationData>..\..\include\platform\logging-windows.h</WppScanConfigurationData>
+      <WppAdditionalOptions>-km %(WppAdditionalOptions)</WppAdditionalOptions>
+      <WppModuleName>otCore</WppModuleName>
+      <WppSearchString>WPP_INIT_TRACING</WppSearchString>
+    </ClCompile>
+  </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\core\coap\coap_client.cpp" />
     <ClCompile Include="..\..\src\core\coap\coap_header.cpp" />
@@ -77,6 +139,9 @@
     <ClCompile Include="..\..\src\core\utils\global_address.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\include\openthread.h" />
+    <ClInclude Include="..\..\include\openthread-types.h" />
+    <ClInclude Include="..\..\include\openthread-windows-config.h" />
     <ClInclude Include="..\..\src\core\coap\coap_client.hpp" />
     <ClInclude Include="..\..\src\core\coap\coap_header.hpp" />
     <ClInclude Include="..\..\src\core\coap\coap_server.hpp" />
@@ -117,7 +182,9 @@
     <ClInclude Include="..\..\src\core\net\socket.hpp" />
     <ClInclude Include="..\..\src\core\net\udp6.hpp" />
     <ClInclude Include="..\..\src\core\openthread-core-config.h" />
-    <ClInclude Include="..\..\src\core\openthreadcontext.h" />
+    <ClInclude Include="..\..\src\core\openthread-core-default-config.h" />
+    <ClInclude Include="..\..\src\core\openthread-core-windows-config.h" />
+    <ClInclude Include="..\..\src\core\openthread-instance.h" />
     <ClInclude Include="..\..\src\core\thread\address_resolver.hpp" />
     <ClInclude Include="..\..\src\core\meshcop\announce_begin_server.hpp" />
     <ClInclude Include="..\..\src\core\thread\energy_scan_server.hpp" />
@@ -145,118 +212,6 @@
     <ClInclude Include="..\..\src\core\thread\topology.hpp" />
     <ClInclude Include="..\..\src\core\utils\global_address.hpp" />
   </ItemGroup>
-  <PropertyGroup Label="Globals">
-    <ProjectGuid>{9B33C190-5D07-40BF-9536-68843DC5D7AF}</ProjectGuid>
-    <TemplateGuid>{0a049372-4c4d-4ea0-a64e-dc6ad88ceca1}</TemplateGuid>
-    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
-    <MinimumVisualStudioVersion>12.0</MinimumVisualStudioVersion>
-    <Configuration>Debug</Configuration>
-    <Platform Condition="'$(Platform)' == ''">Win32</Platform>
-    <RootNamespace>libopenthread_k</RootNamespace>
-    <DriverType>KMDF</DriverType>
-    <WindowsTargetPlatformVersion>$(LatestTargetPlatformVersion)</WindowsTargetPlatformVersion>
-  </PropertyGroup>
-  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
-    <TargetVersion>Windows10</TargetVersion>
-    <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>WindowsKernelModeDriver10.0</PlatformToolset>
-    <ConfigurationType>StaticLibrary</ConfigurationType>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
-    <TargetVersion>Windows10</TargetVersion>
-    <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>WindowsKernelModeDriver10.0</PlatformToolset>
-    <ConfigurationType>StaticLibrary</ConfigurationType>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
-    <TargetVersion>Windows10</TargetVersion>
-    <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>WindowsKernelModeDriver10.0</PlatformToolset>
-    <ConfigurationType>StaticLibrary</ConfigurationType>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
-    <TargetVersion>Windows10</TargetVersion>
-    <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>WindowsKernelModeDriver10.0</PlatformToolset>
-    <ConfigurationType>StaticLibrary</ConfigurationType>
-  </PropertyGroup>
-  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
-  <ImportGroup Label="ExtensionSettings">
-  </ImportGroup>
-  <ImportGroup Label="PropertySheets">
-    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
-  </ImportGroup>
-  <PropertyGroup Label="UserMacros" />
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <OutDir>..\..\build\bin\$(Platform)\$(Configuration)\lib\</OutDir>
-    <IntDir>..\..\build\obj\$(Platform)\$(Configuration)\$(ProjectName)\</IntDir>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <OutDir>..\..\build\bin\$(Platform)\$(Configuration)\lib\</OutDir>
-    <IntDir>..\..\build\obj\$(Platform)\$(Configuration)\$(ProjectName)\</IntDir>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <OutDir>..\..\build\bin\$(Platform)\$(Configuration)\lib\</OutDir>
-    <IntDir>..\..\build\obj\$(Platform)\$(Configuration)\$(ProjectName)\</IntDir>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <OutDir>..\..\build\bin\$(Platform)\$(Configuration)\lib\</OutDir>
-    <IntDir>..\..\build\obj\$(Platform)\$(Configuration)\$(ProjectName)\</IntDir>
-  </PropertyGroup>
-  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <ClCompile>
-      <PreprocessorDefinitions>WIN32;%(PreprocessorDefinitions);MBEDTLS_CONFIG_FILE="mbedtls-config.h";OPENTHREAD_CONFIG_FILE="openthread-windows-config.h";WINDOWS_KERNEL;WINDOWS_LOGGING;OPENTHREAD_MULTIPLE_INSTANCE</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\..\include;..\..\src\missing\stdint;..\..\src\missing\stdbool;..\..\src\core;..\..\third_party\mbedtls;..\..\third_party\mbedtls\repo\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <DisableSpecificWarnings>4100;4706;4748;%(DisableSpecificWarnings)</DisableSpecificWarnings>
-      <TreatWarningAsError>true</TreatWarningAsError>
-      <WppEnabled>true</WppEnabled>
-      <WppScanConfigurationData>..\..\include\platform\logging-windows.h</WppScanConfigurationData>
-      <WppAdditionalOptions>-km %(WppAdditionalOptions)</WppAdditionalOptions>
-      <WppModuleName>otCore</WppModuleName>
-      <WppSearchString>WPP_INIT_TRACING</WppSearchString>
-    </ClCompile>
-  </ItemDefinitionGroup>
-  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <ClCompile>
-      <PreprocessorDefinitions>_WIN64;_AMD64_;AMD64;%(PreprocessorDefinitions);MBEDTLS_CONFIG_FILE="mbedtls-config.h";OPENTHREAD_CONFIG_FILE="openthread-windows-config.h";WINDOWS_KERNEL;WINDOWS_LOGGING;OPENTHREAD_MULTIPLE_INSTANCE</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\..\include;..\..\src\missing\stdint;..\..\src\missing\stdbool;..\..\src\core;..\..\third_party\mbedtls;..\..\third_party\mbedtls\repo\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <DisableSpecificWarnings>4100;4706;4748;%(DisableSpecificWarnings)</DisableSpecificWarnings>
-      <TreatWarningAsError>true</TreatWarningAsError>
-      <WppEnabled>true</WppEnabled>
-      <WppScanConfigurationData>..\..\include\platform\logging-windows.h</WppScanConfigurationData>
-      <WppAdditionalOptions>-km %(WppAdditionalOptions)</WppAdditionalOptions>
-      <WppModuleName>otCore</WppModuleName>
-      <WppSearchString>WPP_INIT_TRACING</WppSearchString>
-    </ClCompile>
-  </ItemDefinitionGroup>
-  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <ClCompile>
-      <PreprocessorDefinitions>WIN32;%(PreprocessorDefinitions);MBEDTLS_CONFIG_FILE="mbedtls-config.h";OPENTHREAD_CONFIG_FILE="openthread-windows-config.h";WINDOWS_KERNEL;WINDOWS_LOGGING;OPENTHREAD_MULTIPLE_INSTANCE</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\..\include;..\..\src\missing\stdint;..\..\src\missing\stdbool;..\..\src\core;..\..\third_party\mbedtls;..\..\third_party\mbedtls\repo\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <DisableSpecificWarnings>4100;4603;4627;4706;4986;4987;4996;%(DisableSpecificWarnings)</DisableSpecificWarnings>
-      <TreatWarningAsError>true</TreatWarningAsError>
-      <WppEnabled>true</WppEnabled>
-      <WppScanConfigurationData>..\..\include\platform\logging-windows.h</WppScanConfigurationData>
-      <WppAdditionalOptions>-km %(WppAdditionalOptions)</WppAdditionalOptions>
-      <WppModuleName>otCore</WppModuleName>
-      <WppSearchString>WPP_INIT_TRACING</WppSearchString>
-    </ClCompile>
-  </ItemDefinitionGroup>
-  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <ClCompile>
-      <PreprocessorDefinitions>_WIN64;_AMD64_;AMD64;%(PreprocessorDefinitions);MBEDTLS_CONFIG_FILE="mbedtls-config.h";OPENTHREAD_CONFIG_FILE="openthread-windows-config.h";WINDOWS_KERNEL;WINDOWS_LOGGING;OPENTHREAD_MULTIPLE_INSTANCE</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\..\include;..\..\src\missing\stdint;..\..\src\missing\stdbool;..\..\src\core;..\..\third_party\mbedtls;..\..\third_party\mbedtls\repo\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <DisableSpecificWarnings>4100;4603;4627;4706;4986;4987;4996;%(DisableSpecificWarnings)</DisableSpecificWarnings>
-      <TreatWarningAsError>true</TreatWarningAsError>
-      <WppEnabled>true</WppEnabled>
-      <WppScanConfigurationData>..\..\include\platform\logging-windows.h</WppScanConfigurationData>
-      <WppAdditionalOptions>-km %(WppAdditionalOptions)</WppAdditionalOptions>
-      <WppModuleName>otCore</WppModuleName>
-      <WppSearchString>WPP_INIT_TRACING</WppSearchString>
-    </ClCompile>
-  </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
-  <ImportGroup Label="ExtensionTargets">
-  </ImportGroup>
+  <ImportGroup Label="ExtensionTargets" />
 </Project>

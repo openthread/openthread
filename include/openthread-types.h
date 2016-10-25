@@ -45,7 +45,7 @@ extern "C" {
 #endif
 
 #ifdef _WIN32
-#ifdef WINDOWS_KERNEL
+#ifdef _KERNEL_MODE
 #include <ntdef.h>
 #else
 #include <windows.h>

@@ -28,21 +28,40 @@
 
 /**
  * @file
- *   This file includes compile-time configuration constants for OpenThread.
+ * @brief
+ *  This file implements the alarm functions required for the OpenThread library.
  */
 
-#ifndef OPENTHREAD_CORE_CONFIG_H_
-#define OPENTHREAD_CORE_CONFIG_H_
+#include "precomp.h"
+#include "alarm.tmh"
 
-#define OPENTHREAD_CORE_CONFIG_H_IN
+uint32_t 
+otPlatAlarmGetNow()
+{
+    // Return number of 'ticks'
+    LARGE_INTEGER PerformanceCounter = KeQueryPerformanceCounter(NULL);
 
-#ifdef OPENTHREAD_PROJECT_CORE_CONFIG_FILE
-#include OPENTHREAD_PROJECT_CORE_CONFIG_FILE
-#endif
+    // Multiply by 1000 ms/sec and divide by 'ticks'/sec to get ms
+    return (uint32_t)(PerformanceCounter.QuadPart * 1000 / FilterPerformanceFrequency.QuadPart);
+}
 
-#include <openthread-core-default-config.h>
+void 
+otPlatAlarmStop(
+    _In_ otInstance *otCtx
+    )
+{
+    LogVerbose(DRIVER_DEFAULT, "otPlatAlarmStop");
+    otLwfEventProcessingIndicateNewWaitTime(otCtxToFilter(otCtx), (ULONG)(-1));
+}
 
-#undef OPENTHREAD_CORE_CONFIG_H_IN
-
-#endif  // OPENTHREAD_CORE_CONFIG_H_
-
+void 
+otPlatAlarmStartAt(
+    _In_ otInstance *otCtx, 
+    uint32_t now, 
+    uint32_t waitTime
+    )
+{
+    UNREFERENCED_PARAMETER(now);
+    LogVerbose(DRIVER_DEFAULT, "otPlatAlarmStartAt %u ms", waitTime);
+    otLwfEventProcessingIndicateNewWaitTime(otCtxToFilter(otCtx), waitTime);
+}

@@ -28,21 +28,58 @@
 
 /**
  * @file
- *   This file includes compile-time configuration constants for OpenThread.
+ * @brief
+ *  This file defines the top-level functions and variables for driver initialization
+ *  and clean up.
  */
 
-#ifndef OPENTHREAD_CORE_CONFIG_H_
-#define OPENTHREAD_CORE_CONFIG_H_
+#ifndef _DRIVER_H
+#define _DRIVER_H
 
-#define OPENTHREAD_CORE_CONFIG_H_IN
+// Legal values include:
+//    6.0  Available starting with Windows Vista RTM
+//    6.1  Available starting with Windows Vista SP1 / Windows Server 2008
+//    6.20 Available starting with Windows 7 / Windows Server 2008 R2
+//    6.30 Available starting with Windows 8 / Windows Server "8"
+#define FILTER_MAJOR_NDIS_VERSION   6
 
-#ifdef OPENTHREAD_PROJECT_CORE_CONFIG_FILE
-#include OPENTHREAD_PROJECT_CORE_CONFIG_FILE
+#if defined(NDIS60)
+#define FILTER_MINOR_NDIS_VERSION   0
+#elif defined(NDIS620)
+#define FILTER_MINOR_NDIS_VERSION   20
+#elif defined(NDIS630)
+#define FILTER_MINOR_NDIS_VERSION   30
 #endif
 
-#include <openthread-core-default-config.h>
+//
+// Global variables
+//
 
-#undef OPENTHREAD_CORE_CONFIG_H_IN
+// Global Driver Object from DriverEntry
+extern PDRIVER_OBJECT      FilterDriverObject;
 
-#endif  // OPENTHREAD_CORE_CONFIG_H_
+// NDIS Filter handle from NdisFRegisterFilterDriver
+extern NDIS_HANDLE         FilterDriverHandle;
 
+// IoControl Device Object from IoCreateDeviceSecure
+extern PDEVICE_OBJECT      IoDeviceObject;
+
+// Global list of THREAD_FILTER instances
+extern NDIS_SPIN_LOCK      FilterListLock;
+extern LIST_ENTRY          FilterModuleList;
+
+// Cached performance frequency of the system
+extern LARGE_INTEGER       FilterPerformanceFrequency;
+
+#define FILTER_FRIENDLY_NAME        L"OpenThread NDIS LightWeight Filter"
+#define FILTER_UNIQUE_NAME          L"{B3A3845A-164E-4727-B12E-32B8DCE1F6CD}" //unique name, quid name
+#define FILTER_SERVICE_NAME         L"OTLWF"
+
+//
+// Function prototypes
+//
+INITCODE DRIVER_INITIALIZE DriverEntry;
+
+PAGEDX DRIVER_UNLOAD DriverUnload;
+
+#endif // _DRIVER_H

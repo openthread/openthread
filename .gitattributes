@@ -41,4 +41,5 @@ Makefile          eol=lf
 *.vcxproj         eol=crlf
 *.vcxproj.filters eol=crlf
 *.sln             eol=crlf
-
+*.rc     text     eol=crlf
+*.inf    text     eol=crlf

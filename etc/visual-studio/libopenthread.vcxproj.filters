@@ -228,6 +228,9 @@
     <ClCompile Include="..\..\src\core\thread\announce_begin_server.cpp">
       <Filter>Source Files\thread</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\core\common\crc16.cpp">
+      <Filter>Source Files\common</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\src\core\openthreadcontext.h">
@@ -427,6 +430,9 @@
     </ClInclude>
     <ClInclude Include="..\..\src\core\meshcop\announce_begin_server.hpp">
       <Filter>Header Files\thread</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\core\common\crc16.hpp">
+      <Filter>Header Files\common</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

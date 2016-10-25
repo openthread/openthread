@@ -28,21 +28,52 @@
 
 /**
  * @file
- *   This file includes compile-time configuration constants for OpenThread.
+ *   This file includes Windows compile-time configuration constants
+ *   for OpenThread.
  */
 
-#ifndef OPENTHREAD_CORE_CONFIG_H_
-#define OPENTHREAD_CORE_CONFIG_H_
+#ifndef OPENTHREAD_CORE_WINDOWS_CONFIG_H_
+#define OPENTHREAD_CORE_WINDOWS_CONFIG_H_
 
-#define OPENTHREAD_CORE_CONFIG_H_IN
+/**
+ * @def OPENTHREAD_CONFIG_NUM_MESSAGE_BUFFERS
+ *
+ * The number of message buffers in the buffer pool.
+ *
+ */
+#define OPENTHREAD_CONFIG_NUM_MESSAGE_BUFFERS               2048
 
-#ifdef OPENTHREAD_PROJECT_CORE_CONFIG_FILE
-#include OPENTHREAD_PROJECT_CORE_CONFIG_FILE
-#endif
+/**
+ * @def OPENTHREAD_CONFIG_MAX_CHILDREN
+ *
+ * The maximum number of children.
+ *
+ */
+#define OPENTHREAD_CONFIG_MAX_CHILDREN                      32
 
-#include <openthread-core-default-config.h>
+/**
+ * @def OPENTHREAD_CONFIG_IP_ADDRS_PER_CHILD
+ *
+ * The minimum number of supported IPv6 address registrations per child.
+ *
+ */
+#define OPENTHREAD_CONFIG_IP_ADDRS_PER_CHILD                6
 
-#undef OPENTHREAD_CORE_CONFIG_H_IN
+/**
+ * @def OPENTHREAD_CONFIG_MAX_JOINER_ENTRIES
+ *
+ * The maximum number of Joiner entries maintained by the Commissioner.
+ *
+ */
+#define OPENTHREAD_CONFIG_MAX_JOINER_ENTRIES                16
 
-#endif  // OPENTHREAD_CORE_CONFIG_H_
+/**
+ * @def OPENTHREAD_CONFIG_LOG_LEVEL
+ *
+ * The log level.
+ *
+ */
+#define OPENTHREAD_CONFIG_LOG_LEVEL                         OPENTHREAD_LOG_LEVEL_DEBG
+
+#endif  // OPENTHREAD_CORE_WINDOWS_CONFIG_H_
 
