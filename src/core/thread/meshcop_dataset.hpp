@@ -53,7 +53,8 @@ public:
     /**
      * This constructor initializes the object.
      *
-     * @param[in]  aType      The type of the dataset, active or pending.
+     * @param[in]  aInstance  A pointer to an OpenThread instance.
+     * @param[in]  aType       The type of the dataset, active or pending.
      *
      */
     Dataset(otInstance *aInstance, const Tlv::Type aType);
@@ -102,7 +103,7 @@ public:
      * @returns The Dataset size in bytes.
      *
      */
-    uint8_t GetSize(void) const { return mLength; }
+    uint16_t GetSize(void) const { return mLength; }
 
     /**
      * This method returns a reference to the Timestamp.
@@ -172,7 +173,7 @@ private:
 
     Tlv::Type  mType;            ///< Active or Pending
     uint8_t    mTlvs[kMaxSize];  ///< The Dataset buffer
-    uint8_t    mLength;          ///< The number of valid bytes in @var mTlvs
+    uint16_t   mLength;          ///< The number of valid bytes in @var mTlvs
     otInstance *mInstance;       ///< The pointer to an OpenThread instance
 };
 
