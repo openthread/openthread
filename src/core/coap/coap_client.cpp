@@ -144,9 +144,7 @@ Message *Client::CopyAndEnqueueMessage(const Message &aMessage, uint16_t aCopyLe
     uint32_t alarmFireTime;
 
     // Create a message copy of requested size.
-    VerifyOrExit((messageCopy = mSocket.NewMessage(0)) != NULL, error = kThreadError_NoBufs);
-    SuccessOrExit(error = messageCopy->SetLength(aCopyLength));
-    aMessage.CopyTo(0, 0, aCopyLength, *messageCopy);
+    VerifyOrExit((messageCopy = aMessage.Clone(aCopyLength)) != NULL, error = kThreadError_NoBufs);
 
     // Append the copy with retransmission data.
     SuccessOrExit(error = aRequestMetadata.AppendTo(*messageCopy));
@@ -204,9 +202,8 @@ ThreadError Client::SendCopy(const Message &aMessage, const Ip6::MessageInfo &aM
     Message *messageCopy = NULL;
 
     // Create a message copy for lower layers.
-    VerifyOrExit((messageCopy = mSocket.NewMessage(0)) != NULL, error = kThreadError_NoBufs);
-    SuccessOrExit(error = messageCopy->SetLength(aMessage.GetLength() - sizeof(RequestMetadata)));
-    aMessage.CopyTo(0, 0, aMessage.GetLength() - sizeof(RequestMetadata), *messageCopy);
+    VerifyOrExit((messageCopy = aMessage.Clone(aMessage.GetLength() - sizeof(RequestMetadata))) != NULL,
+                 error = kThreadError_NoBufs);
 
     // Send the copy.
     SuccessOrExit(error = mSocket.SendTo(*messageCopy, aMessageInfo));
