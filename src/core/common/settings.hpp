@@ -28,35 +28,28 @@
 
 /**
  * @file
- * @brief
- *   This file includes the platform-specific initializers.
+ *   This file includes functions for debugging.
  */
 
-#include <platform/uart.h>
-#include <platform/flash.h>
-#include "platform-cc2538.h"
+#ifndef SETTINGS_HPP_
+#define SETTINGS_HPP_
 
-otInstance *sInstance;
+#ifdef __cplusplus
+extern "C" {
+#endif
 
-void PlatformInit(int argc, char *argv[])
+/**
+ * This enumeration defines the keys of settings
+ *
+ */
+enum
 {
-    cc2538AlarmInit();
-    cc2538RandomInit();
-    cc2538RadioInit();
-    otPlatUartEnable();
-    otPlatFlashInit();
+    kKeyActiveDataset  = 0x0001,
+    kKeyPendingDataset = 0x0002,
+};
 
-    (void)argc;
-    (void)argv;
-}
+#ifdef __cplusplus
+};
+#endif
 
-void PlatformProcessDrivers(otInstance *aInstance)
-{
-    sInstance = aInstance;
-
-    // should sleep and wait for interrupts here
-
-    cc2538UartProcess();
-    cc2538RadioProcess(aInstance);
-    cc2538AlarmProcess(aInstance);
-}
+#endif  // SETTINGS_HPP_
