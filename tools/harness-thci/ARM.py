@@ -32,9 +32,12 @@
 >> Class : ARM
 '''
 
+import re
 import sys
 import time
 import serial
+import socket
+import logging
 from IThci import IThci
 from pexpect_serial import SerialSpawn
 from GRLLibs.UtilityModules.Test import Thread_Device_Role, Device_Data_Requirement, MacType
@@ -43,6 +46,8 @@ from GRLLibs.UtilityModules.ModuleHelper import ModuleHelper, ThreadRunner
 from GRLLibs.ThreadPacket.PlatformPackets import PlatformDiagnosticPacket, PlatformPackets
 from Queue import Queue
 
+linesepx = re.compile(r'\r\n|\n')
+"""regex: used to split lines"""
 
 class ARM(IThci):
     firmware = 'Sep 9 2016 14:57:36'# keep the consistency with ARM firmware style
@@ -62,6 +67,7 @@ class ARM(IThci):
         try:
             self.mac = kwargs.get('EUI')
             self.port = kwargs.get('SerialPort')
+            self.handle = None
             self.UIStatusMsg = self.firmware
             self.networkName = ModuleHelper.Default_NwkName
             self.networkKey = ModuleHelper.Default_NwkKey
@@ -84,9 +90,91 @@ class ARM(IThci):
     def __del__(self):
         """close the serial port connection"""
         try:
-            self.serial.close()
+            self.closeConnection()
         except Exception, e:
             ModuleHelper.WriteIntoDebugLogger("delete() Error: " + str(e))
+
+    def _expect(self, expected, times=100):
+        """Find the `expected` line within `times` trials.
+
+        Args:
+            expected    str: the expected string
+            times       int: number of trials
+        """
+        print('[%s] Expecting [%s]' % (self.port, expected))
+
+        for i in range(0, times):
+            line = self._readline()
+            print('[%s] Got line [%s]' % (self.port, line))
+
+            if line == expected:
+                print('[%s] Expected [%s]' % (self.port, expected))
+                return
+
+            if not line:
+                time.sleep(1)
+
+        raise Exception('failed to find expected string[%s]' % expected)
+
+
+    def _read(self, size=512):
+        logging.info('%s: reading', self.port)
+        if self._is_net:
+            return self.handle.recv(size)
+        else:
+            return self.handle.read(size)
+
+    def _write(self, data):
+        logging.info('%s: writing', self.port)
+        if self._is_net:
+            self.handle.sendall(data)
+        else:
+            self.handle.write(data)
+
+    def _readline(self):
+        """Read exactly one line from the device
+
+        Returns:
+            None on no data
+        """
+        logging.info('%s: reading line', self.port)
+        if len(self.lines) > 1:
+            return self.lines.pop(0)
+
+        tail = ''
+        if len(self.lines):
+            tail = self.lines.pop()
+
+        try:
+            tail += self._read()
+        except socket.error:
+            logging.exception('%s: No new data', self.port)
+            time.sleep(0.1)
+
+        self.lines += linesepx.split(tail)
+        if len(self.lines) > 1:
+            return self.lines.pop(0)
+
+    def _sendline(self, line):
+        """Send exactly one line to the device
+
+        Args:
+            line str: data send to device
+        """
+        logging.info('%s: sending line', self.port)
+        # clear buffer
+        self.lines = []
+        try:
+            self._read()
+        except socket.error:
+            logging.debug('%s: Nothing cleared', self.port)
+
+        print('sending [%s]' % line)
+        self._write(line + '\r\n')
+
+        # wait for write to complete
+        time.sleep(0.1)
+
 
     def __sendCommand(self, cmd):
         """send specific command to reference unit over serial port
@@ -99,6 +187,7 @@ class ARM(IThci):
             Value: successfully retrieve the desired value from reference unit
             Error: some errors occur, indicates by the followed specific error number
         """
+        logging.info('%s: sendCommand[%s]', self.port, cmd)
         if self.logThreadStatus == self.logStatus['running']:
             self.logThreadStatus = self.logStatus['pauseReq']
             while self.logThreadStatus != self.logStatus['paused'] and self.logThreadStatus != self.logStatus['stop']:
@@ -110,28 +199,35 @@ class ARM(IThci):
             while retryTimes:
                 retryTimes -= 1
                 try:
-                    self.serial.sendline(cmd)
-                    self.serial.expect(cmd + self.serial.linesep)
+                    self._sendline(cmd)
+                    self._expect(cmd)
                 except Exception as e:
-                    print 'Failed to send command: %s' % str(e)
+                    logging.exception('%s: failed to send command[%s]: %s', self.port, cmd, str(e))
+                    if not retryTimes:
+                        raise
                 else:
                     break
 
             line = None
             response = []
-            while True:
-                line = self.serial.readline().strip('\0\r\n\t')
+            max_lines = 50
+            while max_lines:
+                max_lines -= 1
+                line = self._readline()
+                logging.info('%s: the read line is[%s]', self.port, line)
                 if line:
                     response.append(line)
                     if line == 'Done':
                         break
-
-            if self.logThreadStatus == self.logStatus['paused']:
-                self.logThreadStatus = self.logStatus['running']
-
+                else:
+                    time.sleep(0.1)
+            if line != 'Done':
+                raise Exception('%s: failed to find end of response' % self.port)
+            logging.info('%s: send command[%s] done!', self.port, cmd)
             return response
         except Exception, e:
             ModuleHelper.WriteIntoDebugLogger("sendCommand() Error: " + str(e))
+            raise
 
     def __getIp6Address(self, addressType):
         """get specific type of IPv6 address configured on thread device
@@ -559,21 +655,34 @@ class ARM(IThci):
         """close current serial port connection"""
         print '%s call closeConnection' % self.port
         try:
-            self.serial.close()
+            if self.handle:
+                self.handle.close()
+                self.handle = None
         except Exception, e:
             ModuleHelper.WriteIntoDebugLogger("closeConnection() Error: " + str(e))
+
+    def _connect(self):
+        print('My port is %s' % self.port)
+        if self.port.startswith('COM'):
+            self.handle = serial.Serial(self.port, 115200, timeout=0, xonxoff=True)
+            self._is_net = False
+        elif ':' in self.port:
+            host, port = self.port.split(':')
+            self.handle = socket.create_connection((host, port))
+            self.handle.setblocking(0)
+            self._is_net = True
+        else:
+            raise Exception('Unknown port schema')
 
     def intialize(self):
         """initialize the serial port with baudrate, timeout parameters"""
         print '%s call intialize' % self.port
         try:
             # init serial port
-            serialDevice = serial.Serial(self.port, 115200, timeout=1)
-            self.serial = SerialSpawn(serialDevice)
+            self._connect()
             time.sleep(3)
 
-            if self.serial != None:
-                self.deviceConnected = True
+            self.deviceConnected = True
         except Exception, e:
             ModuleHelper.WriteIntoDebugLogger("intialize() Error: " + str(e))
             self.deviceConnected = False
@@ -994,11 +1103,14 @@ class ARM(IThci):
         """power down the Thread device"""
         print '%s call powerDown' % self.port
         self.isPowerDown = True
-        self.serial.sendline('reset')
+        self.reset()
 
     def powerUp(self):
         """power up the Thread device"""
         print '%s call powerUp' % self.port
+        if not self.handle:
+            self._connect()
+
         self.isPowerDown = False
 
         if not self.__isOpenThreadRunning():
@@ -1041,8 +1153,8 @@ class ARM(IThci):
         try:
             cmd = 'ping %s %s' % (destination, str(length))
             print cmd
-            self.serial.sendline(cmd)
-            self.serial.expect(cmd + self.serial.linesep)
+            self._sendline(cmd)
+            self._expect(cmd)
             # wait echo reply
             time.sleep(1)
         except Exception, e:
@@ -1061,8 +1173,8 @@ class ARM(IThci):
         try:
             cmd = 'ping %s %s' % (destination, str(length))
             print cmd
-            self.serial.sendline(cmd)
-            self.serial.expect(cmd + self.serial.linesep)
+            self._sendline(cmd)
+            self._expect(cmd)
             # wait echo reply
             time.sleep(1)
         except Exception, e:
@@ -1113,8 +1225,8 @@ class ARM(IThci):
         """factory reset"""
         print '%s call reset' % self.port
         try:
-            self.serial.sendline('reset')
-            time.sleep(3)
+            self._sendline('reset')
+            self._read()
         except Exception, e:
             ModuleHelper.WriteIntoDebugLogger("reset() Error: " + str(e))
 
