@@ -66,7 +66,7 @@ ThreadError otPlatSettingsAbandonChange(otInstance *otCtx)
     return kThreadError_NotImplemented;
 }
 
-ThreadError otPlatSettingsGet(otInstance *otCtx, uint16_t aKey, int aIndex, uint8_t *aValue, int *aValueLength)
+ThreadError otPlatSettingsGet(otInstance *otCtx, uint16_t aKey, int aIndex, uint8_t *aValue, uint16_t *aValueLength)
 {
     NT_ASSERT(otCtx);
     PMS_FILTER pFilter = otCtxToFilter(otCtx);
@@ -78,7 +78,7 @@ ThreadError otPlatSettingsGet(otInstance *otCtx, uint16_t aKey, int aIndex, uint
     return kThreadError_NotImplemented;
 }
 
-ThreadError otPlatSettingsSet(otInstance *otCtx, uint16_t aKey, const uint8_t *aValue, int aValueLength)
+ThreadError otPlatSettingsSet(otInstance *otCtx, uint16_t aKey, const uint8_t *aValue, uint16_t aValueLength)
 {
     NT_ASSERT(otCtx);
     PMS_FILTER pFilter = otCtxToFilter(otCtx);
@@ -89,7 +89,7 @@ ThreadError otPlatSettingsSet(otInstance *otCtx, uint16_t aKey, const uint8_t *a
     return kThreadError_NotImplemented;
 }
 
-ThreadError otPlatSettingsAdd(otInstance *otCtx, uint16_t aKey, const uint8_t *aValue, int aValueLength)
+ThreadError otPlatSettingsAdd(otInstance *otCtx, uint16_t aKey, const uint8_t *aValue, uint16_t aValueLength)
 {
     NT_ASSERT(otCtx);
     PMS_FILTER pFilter = otCtxToFilter(otCtx);

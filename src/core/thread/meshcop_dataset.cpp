@@ -56,7 +56,8 @@ void Dataset::Clear(bool isLocal)
 
     if (isLocal)
     {
-        otPlatSettingsDelete(mInstance, mType == Tlv::kActiveTimestamp ? kKeyActiveDataset : kKeyPendingDataset, -1);
+        otPlatSettingsDelete(mInstance, static_cast<uint16_t>(mType == Tlv::kActiveTimestamp ? kKeyActiveDataset :
+                                                              kKeyPendingDataset), -1);
     }
 }
 
@@ -440,14 +441,14 @@ int Dataset::Compare(const Dataset &aCompare) const
 
 ThreadError Dataset::Restore(void)
 {
-    return otPlatSettingsGet(mInstance, mType == Tlv::kActiveTimestamp ? kKeyActiveDataset : kKeyPendingDataset, 0, mTlvs,
-                             &mLength);
+    return otPlatSettingsGet(mInstance, static_cast<uint16_t>(mType == Tlv::kActiveTimestamp ? kKeyActiveDataset :
+                                                              kKeyPendingDataset), 0, mTlvs, &mLength);
 }
 
 ThreadError Dataset::Store(void)
 {
-    return otPlatSettingsSet(mInstance, mType == Tlv::kActiveTimestamp ? kKeyActiveDataset : kKeyPendingDataset, mTlvs,
-                             mLength);
+    return otPlatSettingsSet(mInstance, static_cast<uint16_t>(mType == Tlv::kActiveTimestamp ? kKeyActiveDataset :
+                                                              kKeyPendingDataset), mTlvs, mLength);
 }
 
 ThreadError Dataset::Set(const Tlv &aTlv)

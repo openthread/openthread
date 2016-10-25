@@ -54,6 +54,7 @@ EXTRA_DIST                          = \
     .astyle/astyle-wrap.sh            \
     .default-version                  \
     bootstrap                         \
+    etc                               \
     README.md                         \
     NOTICE                            \
     CONTRIBUTING.md                   \
