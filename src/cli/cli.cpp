@@ -1920,6 +1920,10 @@ void Interpreter::ProcessState(int argc, char *argv[])
     {
         switch (otGetDeviceRole(mInstance))
         {
+        case kDeviceRoleOffline:
+            sServer->OutputFormat("offline\r\n");
+            break;
+
         case kDeviceRoleDisabled:
             sServer->OutputFormat("disabled\r\n");
             break;
