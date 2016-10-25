@@ -33,7 +33,7 @@ import unittest
 from autothreadharness.harness_case import HarnessCase
 
 class Leader_5_3_8(HarnessCase):
-    suite = 1
+    role = HarnessCase.ROLE_LEADER
     case = '5 3 8'
     golden_devices_required = 4
     def on_dialog(self, dialog, title):

@@ -57,7 +57,7 @@ THREAD_CHANNEL_MIN = 11
 class HarnessCase(unittest.TestCase):
     """This is the case class of all automation test cases.
 
-    All test case classes MUST define properties `suite`, `case` and `golden_devices_required`
+    All test case classes MUST define properties `role`, `case` and `golden_devices_required`
     """
 
     channel = settings.THREAD_CHANNEL
@@ -65,8 +65,20 @@ class HarnessCase(unittest.TestCase):
 
     Thread channel ranges from 11 to 26.
     """
-    suite = None
-    """int: Suite id.
+
+    ROLE_LEADER         = 1
+    ROLE_ROUTER         = 2
+    ROLE_SED            = 4
+    ROLE_BORDER         = 8
+    ROLE_REED           = 16
+    ROLE_ED             = 32
+    ROLE_COMMISSIONER   = 64
+    ROLE_JOINER         = 128
+    ROLE_FED            = 512
+    ROLE_MED            = 1024
+
+    role = None
+    """int: role id.
 
     1
         Leader
@@ -78,7 +90,14 @@ class HarnessCase(unittest.TestCase):
         Router eligible end device
     32
         End device
-
+    64
+        Commissioner
+    128
+        Joiner
+    512
+        Full end device
+    1024
+        Minimal end device
     """
 
     case = None
@@ -111,6 +130,7 @@ class HarnessCase(unittest.TestCase):
 
         """
         while times:
+            logger.info('Waiting times left %d', times)
             try:
                 if what() is True:
                     return True
@@ -463,12 +483,12 @@ class HarnessCase(unittest.TestCase):
             else:
                 break
 
-    def _select_case(self, suite, case):
+    def _select_case(self, role, case):
         """Select the test case.
         """
         # select the case
         elem = Select(self._browser.find_element_by_id('select-dut'))
-        elem.select_by_value(str(suite))
+        elem.select_by_value(str(role))
         time.sleep(1)
 
         checkbox = None
@@ -718,7 +738,7 @@ class HarnessCase(unittest.TestCase):
             logger.warning('Skip this harness itself')
             return
 
-        logger.info('Testing suite[%d] case[%s]', self.suite, self.case)
+        logger.info('Testing role[%d] case[%s]', self.role, self.case)
         try:
             self._init_browser()
             # prepare test case
@@ -736,7 +756,7 @@ class HarnessCase(unittest.TestCase):
             logger.exception('Failed to connect to harness server')
             raise SystemExit()
 
-        self._select_case(self.suite, self.case)
+        self._select_case(self.role, self.case)
 
         self._wait_dialog()
 
