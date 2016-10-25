@@ -711,40 +711,43 @@ void Mac::HandleBeginTransmit(void)
     Frame &sendFrame(*static_cast<Frame *>(otPlatRadioGetTransmitBuffer(mNetif.GetInstance())));
     ThreadError error = kThreadError_None;
 
-    sendFrame.SetPower(mMaxTransmitPower);
-
-    switch (mState)
-    {
-    case kStateActiveScan:
-        otPlatRadioSetPanId(mNetif.GetInstance(), kPanIdBroadcast);
-        sendFrame.SetChannel(mScanChannel);
-        SendBeaconRequest(sendFrame);
-        sendFrame.SetSequence(0);
-        break;
-
-    case kStateTransmitBeacon:
-        sendFrame.SetChannel(mChannel);
-        SendBeacon(sendFrame);
-        sendFrame.SetSequence(mBeaconSequence++);
-        break;
-
-    case kStateTransmitData:
-        sendFrame.SetChannel(mChannel);
-        SuccessOrExit(error = mSendHead->HandleFrameRequest(sendFrame));
-        sendFrame.SetSequence(mDataSequence);
-        break;
-
-    default:
-        assert(false);
-        break;
-    }
-
-    // Security Processing
-    ProcessTransmitSecurity(sendFrame);
-
-    if (sendFrame.GetPower() > mMaxTransmitPower)
+    if (mCsmaAttempts == 0 && mTransmitAttempts == 0)
     {
         sendFrame.SetPower(mMaxTransmitPower);
+
+        switch (mState)
+        {
+        case kStateActiveScan:
+            otPlatRadioSetPanId(mNetif.GetInstance(), kPanIdBroadcast);
+            sendFrame.SetChannel(mScanChannel);
+            SendBeaconRequest(sendFrame);
+            sendFrame.SetSequence(0);
+            break;
+
+        case kStateTransmitBeacon:
+            sendFrame.SetChannel(mChannel);
+            SendBeacon(sendFrame);
+            sendFrame.SetSequence(mBeaconSequence++);
+            break;
+
+        case kStateTransmitData:
+            sendFrame.SetChannel(mChannel);
+            SuccessOrExit(error = mSendHead->HandleFrameRequest(sendFrame));
+            sendFrame.SetSequence(mDataSequence);
+            break;
+
+        default:
+            assert(false);
+            break;
+        }
+
+        // Security Processing
+        ProcessTransmitSecurity(sendFrame);
+
+        if (sendFrame.GetPower() > mMaxTransmitPower)
+        {
+            sendFrame.SetPower(mMaxTransmitPower);
+        }
     }
 
     error = otPlatRadioReceive(mNetif.GetInstance(), sendFrame.GetChannel());
