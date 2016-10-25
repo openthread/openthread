@@ -31,20 +31,21 @@ spinel-cli.py
 
 available commands (type help <name> for more information):
 ============================================================
-channel            diag-sleep  keysequence       q
-child              diag-start  leaderdata        quit
-childtimeout       diag-stats  leaderweight      releaserouterid
-clear              diag-stop   masterkey         rloc16
-commissioner       discover    mode              route
-contextreusedelay  eidcache    ncp-ll64          router
-counter            exit        ncp-ml64          routerupgradethreshold
-debug              extaddr     ncp-tun           scan
-debug-mem          extpanid    netdataregister   state
-diag               h           networkidtimeout  thread
-diag-channel       help        networkname       tun
-diag-power         history     panid             v
-diag-repeat        ifconfig    ping              version
-diag-send          ipaddr      prefix            whitelist
+channel            diag-sleep  leaderdata       releaserouterid
+child              diag-start  leaderweight     rloc16
+childmax           diag-stats  masterkey        route
+childtimeout       diag-stop   mode             router
+clear              discover    ncp-ll64         routerupgradethreshold
+commissioner       eidcache    ncp-ml64         scan
+contextreusedelay  exit        ncp-tun          state
+counter            extaddr     netdataregister  thread
+debug              extpanid    networkidtimeout tun
+debug-mem          h           networkname      v
+diag               help        panid            version
+diag-channel       history     ping             whitelist
+diag-power         ifconfig    prefix
+diag-repeat        ipaddr      q
+diag-send          keysequence quit
 """
 
 from __future__ import print_function
@@ -146,6 +147,7 @@ class SpinelCliCmd(Cmd, SpinelCodec):
         'help',
         'channel',
         'child',
+        'childmax',
         'childtimeout',
         'commissioner',
         'contextreusedelay',
@@ -480,6 +482,26 @@ class SpinelCliCmd(Cmd, SpinelCodec):
         \033[0m
         """
         pass
+
+    def do_childmax(self, line):
+        """\033[1m
+        childmax
+        \033[0m
+            Get the Thread Child Count Max value.
+        \033[2m
+            > childmax
+            10
+            Done
+        \033[0m\033[1m
+        childmax <timeout>
+        \033[0m
+            Set the Thread Child Count Max value.
+        \033[2m
+            > childmax 5
+            Done
+        \033[0m
+        """
+        self.handle_property(line, SPINEL.PROP_THREAD_CHILD_COUNT_MAX)
 
     def do_childtimeout(self, line):
         """\033[1m

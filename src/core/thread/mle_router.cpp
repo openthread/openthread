@@ -359,6 +359,7 @@ ThreadError MleRouter::SetStateRouter(uint16_t aRloc16)
     mNetworkData.Stop();
     mStateUpdateTimer.Start(kStateUpdatePeriod);
     mNetif.GetIp6().SetForwardingEnabled(true);
+    mNetif.GetIp6().mMpl.SetTimerExpirations(kMplRouterDataMessageTimerExpirations);
 
     otLogInfoMle("Mode -> Router");
     return kThreadError_None;
@@ -386,6 +387,7 @@ ThreadError MleRouter::SetStateLeader(uint16_t aRloc16)
     mCoapServer.AddResource(mAddressSolicit);
     mCoapServer.AddResource(mAddressRelease);
     mNetif.GetIp6().SetForwardingEnabled(true);
+    mNetif.GetIp6().mMpl.SetTimerExpirations(kMplRouterDataMessageTimerExpirations);
 
     otLogInfoMle("Mode -> Leader %d", mLeaderData.GetPartitionId());
     return kThreadError_None;
@@ -3749,7 +3751,7 @@ ThreadError MleRouter::AppendActiveDataset(Message &aMessage)
     Tlv tlv;
 
     tlv.SetType(Tlv::kActiveDataset);
-    tlv.SetLength(mNetif.GetActiveDataset().GetNetwork().GetSize());
+    tlv.SetLength(static_cast<uint8_t>(mNetif.GetActiveDataset().GetNetwork().GetSize()));
     SuccessOrExit(error = aMessage.Append(&tlv, sizeof(tlv)));
     SuccessOrExit(error = aMessage.Append(mNetif.GetActiveDataset().GetNetwork().GetBytes(), tlv.GetLength()));
 
@@ -3763,7 +3765,7 @@ ThreadError MleRouter::AppendPendingDataset(Message &aMessage)
     Tlv tlv;
 
     tlv.SetType(Tlv::kPendingDataset);
-    tlv.SetLength(mNetif.GetPendingDataset().GetNetwork().GetSize());
+    tlv.SetLength(static_cast<uint8_t>(mNetif.GetPendingDataset().GetNetwork().GetSize()));
     SuccessOrExit(error = aMessage.Append(&tlv, sizeof(tlv)));
     mNetif.GetPendingDataset().UpdateDelayTimer();
     SuccessOrExit(error = aMessage.Append(mNetif.GetPendingDataset().GetNetwork().GetBytes(), tlv.GetLength()));

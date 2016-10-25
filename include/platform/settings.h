@@ -36,6 +36,7 @@
 #define OT_PLATFORM_SETTINGS_H 1
 
 #include <stdint.h>
+#include <openthread-instance.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -162,7 +163,8 @@ ThreadError otPlatSettingsAbandonChange(otInstance *aInstance);
  *  @retval kThreadError_NotImplemented
  *          This function is not implemented on this platform.
  */
-ThreadError otPlatSettingsGet(otInstance *aInstance, uint16_t aKey, int aIndex, uint8_t *aValue, int *aValueLength);
+ThreadError otPlatSettingsGet(otInstance *aInstance, uint16_t aKey, int aIndex, uint8_t *aValue,
+                              uint16_t *aValueLength);
 
 /// Sets or replaces the value of a setting
 /** This function sets or replaces the value of a setting
@@ -190,7 +192,7 @@ ThreadError otPlatSettingsGet(otInstance *aInstance, uint16_t aKey, int aIndex, 
  *  @retval kThreadError_NotImplemented
  *          This function is not implemented on this platform.
  */
-ThreadError otPlatSettingsSet(otInstance *aInstance, uint16_t aKey, const uint8_t *aValue, int aValueLength);
+ThreadError otPlatSettingsSet(otInstance *aInstance, uint16_t aKey, const uint8_t *aValue, uint16_t aValueLength);
 
 /// Adds a value to a setting
 /** This function adds the value to a setting
@@ -223,7 +225,7 @@ ThreadError otPlatSettingsSet(otInstance *aInstance, uint16_t aKey, const uint8_
  * @retval kThreadError_NotImplemented
  *         This function is not implemented on this platform.
  */
-ThreadError otPlatSettingsAdd(otInstance *aInstance, uint16_t aKey, const uint8_t *aValue, int aValueLength);
+ThreadError otPlatSettingsAdd(otInstance *aInstance, uint16_t aKey, const uint8_t *aValue, uint16_t aValueLength);
 
 /// Removes a setting from the setting store
 /** This function deletes a specific value from the

@@ -58,6 +58,7 @@ PRETTY_SUBDIRS                          = \
 include_HEADERS                         = \
     openthread.h                          \
     openthread-diag.h                     \
+    openthread-crypto.h                   \
     openthread-types.h                    \
     openthread-coap.h                     \
     $(NULL)

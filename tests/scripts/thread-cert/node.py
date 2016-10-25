@@ -65,10 +65,10 @@ class Node:
         cmd += ' %d' % nodeid
         print ("%s" % cmd)
 
-        self.pexpect = pexpect.spawn(cmd, timeout=2)
+        self.pexpect = pexpect.spawn(cmd, timeout=4)
 
         # Add delay to ensure that the process is ready to receive commands.
-        time.sleep(0.1)
+        time.sleep(0.2)
 
 
     def __init_ncp_sim(self, nodeid):
@@ -87,7 +87,7 @@ class Node:
         print ("%s" % cmd)
 
         self.pexpect = pexpect.spawn(cmd, timeout=4)
-        time.sleep(0.1)
+        time.sleep(0.2)
         self.pexpect.expect('spinel-cli >')
         self.debug(int(os.getenv('DEBUG', '0')))
  
@@ -342,6 +342,11 @@ class Node:
 
     def set_timeout(self, timeout):
         cmd = 'childtimeout %d' % timeout
+        self.send_command(cmd)
+        self.pexpect.expect('Done')
+
+    def set_max_children(self, number):
+        cmd = 'childmax %d' % number
         self.send_command(cmd)
         self.pexpect.expect('Done')
 

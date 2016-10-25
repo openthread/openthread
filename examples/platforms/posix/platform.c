@@ -43,6 +43,7 @@
 
 #include <openthread.h>
 #include <platform/alarm.h>
+#include <platform/flash.h>
 #include <platform/uart.h>
 
 uint32_t NODE_ID = 1;
@@ -68,6 +69,7 @@ void PlatformInit(int argc, char *argv[])
     platformAlarmInit();
     platformRadioInit();
     platformRandomInit();
+    otPlatFlashInit();
 }
 
 bool UartInitialized = false;

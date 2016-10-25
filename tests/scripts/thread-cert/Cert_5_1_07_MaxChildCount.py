@@ -52,6 +52,7 @@ class Cert_5_1_07_MaxChildCount(unittest.TestCase):
         self.nodes[ROUTER].add_whitelist(self.nodes[LEADER].get_addr64())
         self.nodes[ROUTER].enable_whitelist()
         self.nodes[ROUTER].set_router_selection_jitter(1)
+        self.nodes[ROUTER].set_max_children(10)
 
         self.nodes[ED].set_panid(0xface)
         self.nodes[ED].set_mode('rsn')

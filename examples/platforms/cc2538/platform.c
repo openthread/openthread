@@ -33,6 +33,7 @@
  */
 
 #include <platform/uart.h>
+#include <platform/flash.h>
 #include "platform-cc2538.h"
 
 otInstance *sInstance;
@@ -43,6 +44,7 @@ void PlatformInit(int argc, char *argv[])
     cc2538RandomInit();
     cc2538RadioInit();
     otPlatUartEnable();
+    otPlatFlashInit();
 
     (void)argc;
     (void)argv;

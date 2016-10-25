@@ -34,7 +34,7 @@ import time
 import unittest
 
 class Leader_5_5_7(HarnessCase):
-    suite = 1
+    role = HarnessCase.ROLE_LEADER
     case = '5 5 7'
     golden_devices_required = 3
     def on_dialog(self, dialog, title):

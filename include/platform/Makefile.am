@@ -41,6 +41,7 @@ ot_platform_headers                      =\
     spi-slave.h                           \
     flash.h                               \
     settings.h                            \
+    messagepool.h                         \
     toolchain.h                           \
     $(NULL)
 

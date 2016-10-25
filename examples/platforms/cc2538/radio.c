@@ -69,6 +69,7 @@ static ThreadError sReceiveError;
 
 static uint8_t sTransmitPsdu[IEEE802154_MAX_LENGTH];
 static uint8_t sReceivePsdu[IEEE802154_MAX_LENGTH];
+static uint8_t sChannel = 0;
 
 static PhyState sState = kStateDisabled;
 static bool sIsReceiverEnabled = false;
@@ -109,7 +110,24 @@ void disableReceiver(void)
 
 void setChannel(uint8_t channel)
 {
-    HWREG(RFCORE_XREG_FREQCTRL) = 11 + (channel - 11) * 5;
+    if (sChannel != channel)
+    {
+        bool enabled = false;
+
+        if (sIsReceiverEnabled)
+        {
+            disableReceiver();
+            enabled = true;
+        }
+
+        HWREG(RFCORE_XREG_FREQCTRL) = 11 + (channel - 11) * 5;
+        sChannel = channel;
+
+        if (enabled)
+        {
+            enableReceiver();
+        }
+    }
 }
 
 void otPlatRadioGetIeeeEui64(otInstance *aInstance, uint8_t *aIeeeEui64)
