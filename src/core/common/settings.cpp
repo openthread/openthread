@@ -180,7 +180,7 @@ exit:
 }
 
 static ThreadError addSetting(otInstance *aInstance, uint16_t aKey, bool aIndex0, const uint8_t *aValue,
-                              int aValueLength)
+                              uint16_t aValueLength)
 {
     ThreadError error = kThreadError_None;
     OT_TOOL_PACKED_BEGIN
@@ -202,7 +202,7 @@ static ThreadError addSetting(otInstance *aInstance, uint16_t aKey, bool aIndex0
     }
 
     addBlock.block.flag &= (~kBlockAddBeginFlag);
-    addBlock.block.length = static_cast<uint16_t>(aValueLength);
+    addBlock.block.length = aValueLength;
 
     if ((aInstance->mSettingsUsedSize + getAlignLength(addBlock.block.length) + sizeof(struct settingsBlock)) >=
         settingsSize)
@@ -296,7 +296,7 @@ ThreadError otPlatSettingsAbandonChange(otInstance *aInstance)
     return kThreadError_None;
 }
 
-ThreadError otPlatSettingsGet(otInstance *aInstance, uint16_t aKey, int aIndex, uint8_t *aValue, int *aValueLength)
+ThreadError otPlatSettingsGet(otInstance *aInstance, uint16_t aKey, int aIndex, uint8_t *aValue, uint16_t *aValueLength)
 {
     ThreadError error = kThreadError_NotFound;
     uint32_t address = aInstance->mSettingsBaseAddress + kSettingsFlagSize;
@@ -344,14 +344,14 @@ exit:
     return error;
 }
 
-ThreadError otPlatSettingsSet(otInstance *aInstance, uint16_t aKey, const uint8_t *aValue, int aValueLength)
+ThreadError otPlatSettingsSet(otInstance *aInstance, uint16_t aKey, const uint8_t *aValue, uint16_t aValueLength)
 {
     return addSetting(aInstance, aKey, true, aValue, aValueLength);
 }
 
-ThreadError otPlatSettingsAdd(otInstance *aInstance, uint16_t aKey, const uint8_t *aValue, int aValueLength)
+ThreadError otPlatSettingsAdd(otInstance *aInstance, uint16_t aKey, const uint8_t *aValue, uint16_t aValueLength)
 {
-    int length;
+    uint16_t length;
     bool index0;
 
     index0 = (otPlatSettingsGet(aInstance, aKey, 0, NULL, &length) == kThreadError_NotFound ? true : false);

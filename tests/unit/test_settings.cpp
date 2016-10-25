@@ -63,7 +63,7 @@ void TestSettingsAdd(void)
 {
     uint8_t key = 7;
     uint8_t readBuffer[kMaxStageDataLen];
-    int readBufferLength;
+    uint16_t readBufferLength;
 
     VerifyOrQuit(otPlatSettingsAdd(&sInstance, key, sWriteBuffer, sWriteBufferLength) == kThreadError_None,
                  "Settings::Add::Add Fail\n");
@@ -77,7 +77,7 @@ void TestSettingsDelete(void)
 {
     uint8_t key = 8;
     uint8_t readBuffer[kMaxStageDataLen];
-    int readBufferLength;
+    uint16_t readBufferLength;
 
     VerifyOrQuit(otPlatSettingsAdd(&sInstance, key, sWriteBuffer, sWriteBufferLength) == kThreadError_None,
                  "Settings::Delete::Add Fail\n");
@@ -94,7 +94,7 @@ void TestSettingsSet(void)
 {
     uint8_t key = 9;
     uint8_t readBuffer[kMaxStageDataLen];
-    int readBufferLength;
+    uint16_t readBufferLength;
 
     for (uint8_t index = 0; index < 2; index++)
     {
@@ -116,7 +116,7 @@ void TestSettingsSwap(void)
     uint8_t key = 11;
     uint16_t index = 0;
     uint8_t readBuffer[kMaxStageDataLen];
-    int readBufferLength = kMaxStageDataLen;
+    uint16_t readBufferLength = kMaxStageDataLen;
 
     while (true)
     {
