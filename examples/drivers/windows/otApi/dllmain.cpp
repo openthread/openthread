@@ -26,64 +26,33 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-/**
- * @file
- * @brief
- *   This file includes the platform abstraction for the Thread Joiner role.
- */
+#include "precomp.h"
+#include "dllmain.tmh"
 
-#ifndef OPENTHREAD_JOINER_H_
-#define OPENTHREAD_JOINER_H_
+BOOL 
+__stdcall 
+DllMain(
+    HINSTANCE hinstDll, 
+    DWORD dwReason, 
+    LPVOID /* lpvReserved */
+    )
+{
+    switch (dwReason)
+    {
+    case DLL_PROCESS_ATTACH:
+        DisableThreadLibraryCalls(hinstDll);
+        WPP_INIT_TRACING(L"otApi");
+        break;
 
-#ifdef OTDLL
-#ifndef OTAPI
-#define OTAPI __declspec(dllimport)
-#endif
-#define OTCALL WINAPI
-#else
-#define OTAPI
-#define OTCALL
-#endif
+    case DLL_PROCESS_DETACH:
+        WPP_CLEANUP();
+        break;
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+    case DLL_THREAD_ATTACH:
+    case DLL_THREAD_DETACH:
+        break;
+    }
 
-/**
- * @addtogroup core-commissioning
- *
- * @{
- *
- */
+    return TRUE;
+}
 
-/**
- * This function enables the Thread Joiner role.
- *
- * @param[in]  aInstance         A pointer to an OpenThread instance.
- * @param[in]  aPSKd             A pointer to the PSKd.
- * @param[in]  aProvisioningUrl  A pointer to the Provisioning URL (may be NULL).
- *
- * @retval kThreadError_None         Successfully started the Commissioner role.
- * @retval kThreadError_InvalidArgs  @p aPSKd or @p aProvisioningUrl is invalid.
- *
- */
-OTAPI ThreadError OTCALL otJoinerStart(otInstance *aInstance, const char *aPSKd, const char *aProvisioningUrl);
-
-/**
- * This function disables the Thread Joiner role.
- *
- * @param[in]  aInstance  A pointer to an OpenThread instance.
- *
- */
-OTAPI ThreadError OTCALL otJoinerStop(otInstance *aInstance);
-
-/**
- * @}
- *
- */
-
-#ifdef __cplusplus
-}  // end of extern "C"
-#endif
-
-#endif  // OPENTHREAD_JOINER_H_

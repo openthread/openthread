@@ -47,12 +47,177 @@ typedef enum _NSI_STORE {
     NsiBootFirmwareTable
 } NSI_STORE;
 
+typedef enum _NSI_SET_ACTION {  
+    NsiSetDefault,  
+    NsiSetCreateOnly,  
+    NsiSetCreateOrSet,  
+    NsiSetDelete,  
+    NsiSetReset,  
+    NsiSetClear,  
+    NsiSetCreateOrSetWithReference,  
+    NsiSetDeleteWithReference,  
+} NSI_SET_ACTION;  
+
 typedef enum _NSI_STRUCT_TYPE {
     NsiStructRw,
     NsiStructRoDynamic,
     NsiStructRoStatic,
     NsiMaximumStructType
 } NSI_STRUCT_TYPE;
+
+typedef struct _NL_INTERFACE_KEY {  
+    IF_LUID Luid;  
+} NL_INTERFACE_KEY, *PNL_INTERFACE_KEY;  
+
+typedef enum _NL_TYPE_OF_INTERFACE {  
+    InterfaceAllowAll = 0,  
+    InterfaceDisallowUnicast,  
+    InterfaceDisallowMulticast,  
+    InterfaceDisallowAll,  
+    InterfaceUnchanged = -1  
+} NL_TYPE_OF_INTERFACE;  
+  
+typedef enum _NL_DOMAIN_NETWORK_LOCATION {  
+    DomainNetworkLocationRemote = 0,   // connect to a domain network remotely via DA i.e. outside corp network.  
+    DomainNetworkCategoryLink = 1,     // connect to a domain network directly i.e. inside corp network.  
+    DomainNetworkUnchanged = -1  
+} NL_DOMAIN_NETWORK_LOCATION;  
+  
+typedef enum _NL_DOMAIN_TYPE {  
+    DomainTypeNonDomainNetwork = 0,    // connected to non-domain network.  
+    DomainTypeDomainNetwork = 1,       // connected to a network that has active directory.  
+    DomainTypeDomainAuthenticated = 2, // connected to AD network and machine is authenticated against it.  
+    DomainTypeUnchanged = -1  
+} NL_DOMAIN_TYPE;  
+  
+typedef enum _NL_INTERFACE_ECN_CAPABILITY {  
+    NlInterfaceEcnUnchanged = -1,  
+    NlInterfaceEcnDisabled = 0,  
+    NlInterfaceEcnUseEct1 = 1,  
+    NlInterfaceEcnUseEct0 = 2,  
+    NlInterfaceEcnAppDecide = 3  
+} NL_INTERFACE_ECN_CAPABILITY, *PNL_INTERFACE_ECN_CAPABILITY;  
+  
+typedef enum _NL_INTERNET_CONNECTIVITY_STATUS {  
+    NlNoInternetConnectivity,  
+    NlNoInternetDnsResolutionSucceeded,  
+    NlInternetConnectivityDetected,  
+    NlInternetConnectivityUnknown = -1  
+} NL_INTERNET_CONNECTIVITY_STATUS, *PNL_INTERNET_CONNECTIVITY_STATUS;  
+
+typedef union _IP_ADDRESS_STORAGE {  
+    IN_ADDR Ipv4;  
+    IN6_ADDR Ipv6;  
+    UCHAR Buffer[sizeof(IN6_ADDR)];  
+} IP_ADDRESS_STORAGE, *PIP_ADDRESS_STORAGE;  
+
+typedef struct _NL_INTERFACE_RW {  
+    BOOLEAN AdvertisingEnabled;  
+    BOOLEAN ForwardingEnabled;  
+    BOOLEAN MulticastForwardingEnabled;  
+    BOOLEAN WeakHostSend;  
+    BOOLEAN WeakHostReceive;  
+    BOOLEAN UseNeighborUnreachabilityDetection;  
+    BOOLEAN UseAutomaticMetric;
+    BOOLEAN UseZeroBroadcastAddress;  
+    BOOLEAN UseBroadcastForRouterDiscovery;  
+    BOOLEAN DhcpRouterDiscoveryEnabled;  
+    BOOLEAN ManagedAddressConfigurationSupported;  
+    BOOLEAN OtherStatefulConfigurationSupported;  
+    BOOLEAN AdvertiseDefaultRoute;  
+    NL_NETWORK_CATEGORY NetworkCategory;  
+    NL_ROUTER_DISCOVERY_BEHAVIOR RouterDiscoveryBehavior;  
+    NL_TYPE_OF_INTERFACE TypeOfInterface;  
+    ULONG Metric;  
+    ULONG BaseReachableTime;    // Base for random ReachableTime (in ms).  
+    ULONG RetransmitTime;       // Neighbor Solicitation timeout (in ms).  
+    ULONG PathMtuDiscoveryTimeout; // Path MTU discovery timeout (in ms).  
+    ULONG DadTransmits;         // DupAddrDetectTransmits in RFC 2462.  
+    NL_LINK_LOCAL_ADDRESS_BEHAVIOR LinkLocalAddressBehavior;  
+    ULONG LinkLocalAddressTimeout; // In ms.  
+    ULONG ZoneIndices[ScopeLevelCount]; // Zone part of a SCOPE_ID.  
+    ULONG NlMtu;  
+    ULONG SitePrefixLength;  
+    ULONG MulticastForwardingHopLimit;  
+    ULONG CurrentHopLimit; 
+    IP_ADDRESS_STORAGE LinkLocalAddress;  
+    BOOLEAN DisableDefaultRoutes;  
+    ULONG AdvertisedRouterLifetime;  
+    BOOLEAN SendUnsolicitedNeighborAdvertisementOnDad;  
+    BOOLEAN LimitedLinkConnectivity;  
+    BOOLEAN ForceARPNDPattern;  
+    BOOLEAN EnableDirectMACPattern;  
+    BOOLEAN EnableWol;  
+    BOOLEAN ForceTunneling;  
+    NL_DOMAIN_NETWORK_LOCATION DomainNetworkLocation;  
+    ULONGLONG RandomizedEpoch;  
+    NL_INTERFACE_ECN_CAPABILITY EcnCapability;  
+    NL_DOMAIN_TYPE DomainType;  
+    GUID NetworkSignature;  
+    NL_INTERNET_CONNECTIVITY_STATUS InternetConnectivityDetected;  
+    BOOLEAN ProxyDetected;  
+    ULONG DadRetransmitTime;  
+    BOOLEAN PrefixSharing;  
+    BOOLEAN DisableUnconstrainedRouteLookup;  
+    ULONG NetworkContext;  
+    BOOLEAN ResetAutoconfigurationOnOperStatusDown;   
+    BOOLEAN ClampMssEnabled;  
+  
+} NL_INTERFACE_RW, *PNL_INTERFACE_RW;  
+
+__inline  
+VOID  
+NlInitializeInterfaceRw(  
+    IN OUT PNL_INTERFACE_RW Rw  
+    )  
+{  
+    //  
+    // Initialize all fields to values that indicate "no change".  
+    //  
+    memset(Rw, 0xff, sizeof(*Rw));  
+    Rw->BaseReachableTime = 0;  
+    Rw->RetransmitTime = 0;  
+    Rw->PathMtuDiscoveryTimeout = 0;  
+    Rw->NlMtu = 0;  
+    Rw->DadRetransmitTime = 0;  
+}  
+
+typedef enum {  
+    NlBestRouteObject,  
+    NlCompartmentForwardingObject,  
+    NlCompartmentObject,  
+    NlControlProtocolObject,  
+    NlEchoRequestObject,  
+    NlEchoSequenceRequestObject,  
+    NlGlobalObject,  
+    NlInterfaceObject,  
+    NlLocalAnycastAddressObject,  
+    NlLocalMulticastAddressObject,  
+    NlLocalUnicastAddressObject,  
+    NlNeighborObject,  
+    NlPathObject,  
+    NlPotentialRouterObject,  
+    NlPrefixPolicyObject,  
+    NlProxyNeighborObject,  
+    NlRouteObject,  
+    NlSitePrefixObject,  
+    NlSubInterfaceObject,  
+    NlWakeUpPatternObject,  
+    NlResolveNeighborObject,  
+    NlSortAddressesObject,  
+    NlMfeObject,  
+    NlMfeNotifyObject,  
+    NlInterfaceHopObject,  
+    NlInterfaceUnprivilegedObject,  
+    NlTunnelPhysicalInterfaceObject,  
+    NlLocalityObject,  
+    NlLocalityDataObject,  
+    NlLocalityPrivateObject,  
+    NlLocalBottleneckObject,  
+    NlTimerObject,  
+    NlDisconnectInterface,  
+    NlMaximumObject  
+} NL_OBJECT_TYPE, *PNL_OBJECT_TYPE;  
 
 NSISTATUS
 NsiGetParameter(
@@ -66,6 +231,18 @@ NsiGetParameter(
     __in ULONG ParameterLen,
     __in ULONG ParameterOffset
     );
+
+NSISTATUS  
+NsiSetAllParameters(  
+    __in NSI_STORE      Store,  
+    __in NSI_SET_ACTION Action,  
+    __in PNPI_MODULEID  ModuleId,  
+    __in ULONG          ObjectIndex,  
+    __in_bcount_opt(KeyStructLength) PVOID KeyStruct,  
+    __in ULONG          KeyStructLength,  
+    __in_bcount_opt(RwParameterStructLength) PVOID RwParameterStruct,  
+    __in ULONG          RwParameterStructLength  
+    );  
 
 extern CONST NPI_MODULEID NPI_MS_NDIS_MODULEID;
 
