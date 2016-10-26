@@ -570,7 +570,7 @@ class ARM(IThci):
                 continue
 
             try:
-                line = self.serial.readline()
+                line = self._readline()
                 if line:
                     print line
                     logs.put(line)
