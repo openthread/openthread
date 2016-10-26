@@ -623,10 +623,9 @@ ThreadError NetworkData::SendServerDataNotification(uint16_t aRloc16)
         SuccessOrExit(error = message->Append(&rloc16Tlv, sizeof(rloc16Tlv)));
     }
 
-    memset(&messageInfo, 0, sizeof(messageInfo));
     mMle.GetLeaderAloc(messageInfo.GetPeerAddr());
-    messageInfo.mSockAddr = *mMle.GetMeshLocal16();
-    messageInfo.mPeerPort = kCoapUdpPort;
+    messageInfo.SetSockAddr(mMle.GetMeshLocal16());
+    messageInfo.SetPeerPort(kCoapUdpPort);
     SuccessOrExit(error = mCoapClient.SendMessage(*message, messageInfo));
 
     if (mLocal)

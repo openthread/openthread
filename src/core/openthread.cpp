@@ -273,7 +273,7 @@ void otSetMaxTransmitPower(otInstance *aInstance, int8_t aPower)
 
 const otIp6Address *otGetMeshLocalEid(otInstance *aInstance)
 {
-    return aInstance->mThreadNetif.GetMle().GetMeshLocal64();
+    return &aInstance->mThreadNetif.GetMle().GetMeshLocal64();
 }
 
 const uint8_t *otGetMeshLocalPrefix(otInstance *aInstance)

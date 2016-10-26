@@ -248,11 +248,10 @@ void Joiner::HandleUdpTransmit(void)
     otLogInfoMeshCoP("transmit %d (to %llX)", mTransmitMessage->GetLength(),
                      HostSwap64(*reinterpret_cast<uint64_t *>(&mJoinerRouter)));
 
-    memset(&messageInfo, 0, sizeof(messageInfo));
     messageInfo.GetPeerAddr().mFields.m16[0] = HostSwap16(0xfe80);
     messageInfo.GetPeerAddr().SetIid(mJoinerRouter);
-    messageInfo.mPeerPort = mJoinerUdpPort;
-    messageInfo.mInterfaceId = OT_NETIF_INTERFACE_ID_THREAD;
+    messageInfo.SetPeerPort(mJoinerUdpPort);
+    messageInfo.SetInterfaceId(OT_NETIF_INTERFACE_ID_THREAD);
 
     SuccessOrExit(error = mSocket.SendTo(*mTransmitMessage, messageInfo));
 
@@ -405,7 +404,7 @@ void Joiner::SendJoinerEntrustResponse(const Coap::Header &aRequestHeader,
     ThreadError error = kThreadError_None;
     Message *message;
     Coap::Header responseHeader;
-    Ip6::MessageInfo responseInfo;
+    Ip6::MessageInfo responseInfo(aRequestInfo);
 
     VerifyOrExit((message = mCoapServer.NewMessage(0)) != NULL, error = kThreadError_NoBufs);
 
@@ -413,7 +412,6 @@ void Joiner::SendJoinerEntrustResponse(const Coap::Header &aRequestHeader,
 
     SuccessOrExit(error = message->Append(responseHeader.GetBytes(), responseHeader.GetLength()));
 
-    memcpy(&responseInfo, &aRequestInfo, sizeof(responseInfo));
     memset(&responseInfo.mSockAddr, 0, sizeof(responseInfo.mSockAddr));
     SuccessOrExit(error = mCoapServer.SendMessage(*message, responseInfo));
 

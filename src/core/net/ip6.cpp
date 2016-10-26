@@ -348,7 +348,7 @@ ThreadError Ip6::SendDatagram(Message &message, MessageInfo &messageInfo, IpProt
 
     if (header.GetDestination().IsLinkLocal() || header.GetDestination().IsLinkLocalMulticast())
     {
-        VerifyOrExit(messageInfo.mInterfaceId != 0, error = kThreadError_Drop);
+        VerifyOrExit(messageInfo.GetInterfaceId() != 0, error = kThreadError_Drop);
     }
 
     if (messageInfo.GetPeerAddr().IsRealmLocalMulticast())
@@ -380,7 +380,7 @@ exit:
 
     if (error == kThreadError_None)
     {
-        message.SetInterfaceId(messageInfo.mInterfaceId);
+        message.SetInterfaceId(messageInfo.GetInterfaceId());
         EnqueueDatagram(message);
     }
 
@@ -622,12 +622,11 @@ ThreadError Ip6::HandleDatagram(Message &message, Netif *netif, int8_t interface
     VerifyOrExit(sizeof(header) + payloadLength == message.GetLength() &&
                  sizeof(header) + payloadLength <= Ip6::kMaxDatagramLength, error = kThreadError_Drop);
 
-    memset(&messageInfo, 0, sizeof(messageInfo));
-    messageInfo.GetPeerAddr() = header.GetSource();
-    messageInfo.GetSockAddr() = header.GetDestination();
-    messageInfo.mInterfaceId = interfaceId;
-    messageInfo.mHopLimit = header.GetHopLimit();
-    messageInfo.mLinkInfo = linkMessageInfo;
+    messageInfo.SetPeerAddr(header.GetSource());
+    messageInfo.SetSockAddr(header.GetDestination());
+    messageInfo.SetInterfaceId(interfaceId);
+    messageInfo.SetHopLimit(header.GetHopLimit());
+    messageInfo.SetLinkInfo(linkMessageInfo);
 
     // determine destination of packet
     if (header.GetDestination().IsMulticast())

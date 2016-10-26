@@ -120,7 +120,7 @@ ThreadError EnergyScanServer::SendResponse(const Coap::Header &aRequestHeader, c
     ThreadError error = kThreadError_None;
     Message *message = NULL;
     Coap::Header responseHeader;
-    Ip6::MessageInfo responseInfo;
+    Ip6::MessageInfo responseInfo(aRequestInfo);
 
     VerifyOrExit(aRequestHeader.GetType() == kCoapTypeConfirmable, ;);
 
@@ -130,7 +130,6 @@ ThreadError EnergyScanServer::SendResponse(const Coap::Header &aRequestHeader, c
 
     SuccessOrExit(error = message->Append(responseHeader.GetBytes(), responseHeader.GetLength()));
 
-    memcpy(&responseInfo, &aRequestInfo, sizeof(responseInfo));
     memset(&responseInfo.mSockAddr, 0, sizeof(responseInfo.mSockAddr));
     SuccessOrExit(error = mCoapServer.SendMessage(*message, responseInfo));
 
@@ -244,9 +243,8 @@ ThreadError EnergyScanServer::SendReport(void)
     SuccessOrExit(error = message->Append(&energyList, sizeof(energyList)));
     SuccessOrExit(error = message->Append(mScanResults, mScanResultsLength));
 
-    memset(&messageInfo, 0, sizeof(messageInfo));
-    messageInfo.GetPeerAddr() = mCommissioner;
-    messageInfo.mPeerPort = kCoapUdpPort;
+    messageInfo.SetPeerAddr(mCommissioner);
+    messageInfo.SetPeerPort(kCoapUdpPort);
     SuccessOrExit(error = mCoapClient.SendMessage(*message, messageInfo));
 
     otLogInfoMeshCoP("sent scan results");

@@ -327,9 +327,8 @@ ThreadError Commissioner::SendMgmtCommissionerGetRequest(const uint8_t *aTlvs,
         SuccessOrExit(error = message->Append(aTlvs, aLength));
     }
 
-    memset(&messageInfo, 0, sizeof(messageInfo));
     mNetif.GetMle().GetLeaderAloc(messageInfo.GetPeerAddr());
-    messageInfo.mPeerPort = kCoapUdpPort;
+    messageInfo.SetPeerPort(kCoapUdpPort);
     SuccessOrExit(error = mCoapClient.SendMessage(*message, messageInfo,
                                                   Commissioner::HandleMgmtCommissionerGetResponse, this));
 
@@ -421,9 +420,8 @@ ThreadError Commissioner::SendMgmtCommissionerSetRequest(const otCommissioningDa
         SuccessOrExit(error = message->Append(aTlvs, aLength));
     }
 
-    memset(&messageInfo, 0, sizeof(messageInfo));
     mNetif.GetMle().GetLeaderAloc(messageInfo.GetPeerAddr());
-    messageInfo.mPeerPort = kCoapUdpPort;
+    messageInfo.SetPeerPort(kCoapUdpPort);
     SuccessOrExit(error = mCoapClient.SendMessage(*message, messageInfo,
                                                   Commissioner::HandleMgmtCommissionerSetResponse, this));
 
@@ -483,9 +481,8 @@ ThreadError Commissioner::SendPetition(void)
 
     SuccessOrExit(error = message->Append(&commissionerId, sizeof(Tlv) + commissionerId.GetLength()));
 
-    memset(&messageInfo, 0, sizeof(messageInfo));
     mNetif.GetMle().GetLeaderAloc(*static_cast<Ip6::Address *>(&messageInfo.mPeerAddr));
-    messageInfo.mPeerPort = kCoapUdpPort;
+    messageInfo.SetPeerPort(kCoapUdpPort);
     SuccessOrExit(error = mCoapClient.SendMessage(*message, messageInfo,
                                                   Commissioner::HandleLeaderPetitionResponse, this));
 
@@ -580,9 +577,8 @@ ThreadError Commissioner::SendKeepAlive(void)
     sessionId.SetCommissionerSessionId(mSessionId);
     SuccessOrExit(error = message->Append(&sessionId, sizeof(sessionId)));
 
-    memset(&messageInfo, 0, sizeof(messageInfo));
     mNetif.GetMle().GetLeaderAloc(*static_cast<Ip6::Address *>(&messageInfo.mPeerAddr));
-    messageInfo.mPeerPort = kCoapUdpPort;
+    messageInfo.SetPeerPort(kCoapUdpPort);
     SuccessOrExit(error = mCoapClient.SendMessage(*message, messageInfo,
                                                   Commissioner::HandleLeaderKeepAliveResponse, this));
 
@@ -849,11 +845,10 @@ void Commissioner::HandleUdpTransmit(void)
     mTransmitMessage->Write(mTransmitMessage->GetOffset(), sizeof(tlv), &tlv);
     mTransmitMessage->SetOffset(0);
 
-    memset(&messageInfo, 0, sizeof(messageInfo));
-    messageInfo.GetPeerAddr() = *mNetif.GetMle().GetMeshLocal16();
+    messageInfo.SetPeerAddr(mNetif.GetMle().GetMeshLocal16());
     messageInfo.GetPeerAddr().mFields.m16[7] = HostSwap16(mJoinerRloc);
-    messageInfo.mPeerPort = kCoapUdpPort;
-    messageInfo.mInterfaceId = mNetif.GetInterfaceId();
+    messageInfo.SetPeerPort(kCoapUdpPort);
+    messageInfo.SetInterfaceId(mNetif.GetInterfaceId());
 
     SuccessOrExit(error = mCoapClient.SendMessage(*mTransmitMessage, messageInfo));
 

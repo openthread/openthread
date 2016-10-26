@@ -230,9 +230,8 @@ void Client::SendEmptyMessage(const Ip6::Address &aAddress, uint16_t aPort, uint
 
     VerifyOrExit((message = NewMessage(header)) != NULL, ;);
 
-    memset(&messageInfo, 0, sizeof(messageInfo));
-    messageInfo.GetPeerAddr() = aAddress;
-    messageInfo.mPeerPort = aPort;
+    messageInfo.SetPeerAddr(aAddress);
+    messageInfo.SetPeerPort(aPort);
 
     SuccessOrExit(error = mSocket.SendTo(*message, messageInfo));
 
@@ -289,9 +288,8 @@ void Client::HandleRetransmissionTimer(void)
             // Retransmit
             if (!requestMetadata.mAcknowledged)
             {
-                memset(&messageInfo, 0, sizeof(messageInfo));
-                messageInfo.GetPeerAddr() = requestMetadata.mDestinationAddress;
-                messageInfo.mPeerPort = requestMetadata.mDestinationPort;
+                messageInfo.SetPeerAddr(requestMetadata.mDestinationAddress);
+                messageInfo.SetPeerPort(requestMetadata.mDestinationPort);
 
                 SendCopy(*message, messageInfo);
             }
@@ -321,7 +319,7 @@ Message *Client::FindRelatedRequest(const Header &aResponseHeader, const Ip6::Me
         aRequestMetadata.ReadFrom(*message);
 
         if ((aRequestMetadata.mDestinationAddress == aMessageInfo.GetPeerAddr()) &&
-            (aRequestMetadata.mDestinationPort == aMessageInfo.mPeerPort))
+            (aRequestMetadata.mDestinationPort == aMessageInfo.GetPeerPort()))
         {
             assert(aRequestHeader.FromMessage(*message) == kThreadError_None);
 
@@ -432,7 +430,7 @@ void Client::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessag
         if (responseHeader.IsConfirmable())
         {
             // Send empty ACK if it is a CON message.
-            SendEmptyAck(aMessageInfo.GetPeerAddr(), aMessageInfo.mPeerPort, responseHeader.GetMessageId());
+            SendEmptyAck(aMessageInfo.GetPeerAddr(), aMessageInfo.GetPeerPort(), responseHeader.GetMessageId());
         }
 
         FinalizeCoapTransaction(*message, requestMetadata, &responseHeader, &aMessage, kThreadError_None);
@@ -447,7 +445,7 @@ exit:
         if (responseHeader.IsConfirmable() || responseHeader.IsNonConfirmable())
         {
             // Successfully parsed a header but no matching request was found - reject the message by sending reset.
-            SendReset(aMessageInfo.GetPeerAddr(), aMessageInfo.mPeerPort, responseHeader.GetMessageId());
+            SendReset(aMessageInfo.GetPeerAddr(), aMessageInfo.GetPeerPort(), responseHeader.GetMessageId());
         }
     }
 }
@@ -455,7 +453,7 @@ exit:
 RequestMetadata::RequestMetadata(bool aConfirmable, const Ip6::MessageInfo &aMessageInfo,
                                  otCoapResponseHandler aHandler, void *aContext)
 {
-    mDestinationPort = aMessageInfo.mPeerPort;
+    mDestinationPort = aMessageInfo.GetPeerPort();
     mDestinationAddress = aMessageInfo.GetPeerAddr();
     mResponseHandler = aHandler;
     mResponseContext = aContext;
