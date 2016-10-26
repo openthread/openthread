@@ -430,13 +430,14 @@ public:
     /**
      * This method generates an MLE Announce message.
      *
-     * @param[in]  aChannel   The channel to use when transmitting.
+     * @param[in]  aChannel        The channel to use when transmitting.
+     * @param[in]  aOrphanAnnounce To indiciate if MLE Announce is sent from an orphan end device.
      *
      * @retval kThreadError_None    Successfully generated an MLE Announce message.
      * @retval kThreadError_NoBufs  Insufficient buffers to generate the MLE Announce message.
      *
      */
-    ThreadError SendAnnounce(uint8_t aChannel);
+    ThreadError SendAnnounce(uint8_t aChannel, bool aOrphanAnnounce);
 
     /**
      * This method causes the Thread interface to detach from the Thread network.

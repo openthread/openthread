@@ -1434,11 +1434,12 @@ exit:
     return error;
 }
 
-ThreadError Mle::SendAnnounce(uint8_t aChannel)
+ThreadError Mle::SendAnnounce(uint8_t aChannel, bool aOrphanAnnounce)
 {
     ThreadError error = kThreadError_None;
     ChannelTlv channel;
     PanIdTlv panid;
+    ActiveTimestampTlv activeTimestamp;
     Ip6::Address destination;
     Message *message;
 
@@ -1452,7 +1453,19 @@ ThreadError Mle::SendAnnounce(uint8_t aChannel)
     channel.SetChannel(mMac.GetChannel());
     SuccessOrExit(error = message->Append(&channel, sizeof(channel)));
 
-    SuccessOrExit(error = AppendActiveTimestamp(*message));
+    if (aOrphanAnnounce)
+    {
+        activeTimestamp.Init();
+        activeTimestamp.SetSeconds(0);
+        activeTimestamp.SetTicks(0);
+        activeTimestamp.SetAuthoritative(true);
+
+        SuccessOrExit(error = message->Append(&activeTimestamp, sizeof(activeTimestamp)));
+    }
+    else
+    {
+        SuccessOrExit(error = AppendActiveTimestamp(*message));
+    }
 
     panid.Init();
     panid.SetPanId(mMac.GetPanId());
@@ -1501,7 +1514,7 @@ void Mle::SendOrphanAnnounce(void)
     }
 
     // Send Annuonce message
-    SendAnnounce(channel);
+    SendAnnounce(channel, true);
 
     // Move to next channel
     mAnnounceChannel++;
@@ -2488,7 +2501,7 @@ ThreadError Mle::HandleAnnounce(const Message &aMessage, const Ip6::MessageInfo 
     }
     else
     {
-        SendAnnounce(static_cast<uint8_t>(channel.GetChannel()));
+        SendAnnounce(static_cast<uint8_t>(channel.GetChannel()), false);
     }
 
 exit:

@@ -166,7 +166,7 @@ void AnnounceBeginServer::HandleTimer(void *aContext)
 
 void AnnounceBeginServer::HandleTimer(void)
 {
-    mNetif.GetMle().SendAnnounce(mChannel++);
+    mNetif.GetMle().SendAnnounce(mChannel++, false);
 
     while (mCount > 0)
     {
