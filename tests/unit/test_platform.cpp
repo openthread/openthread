@@ -302,4 +302,82 @@ exit:
     {
     }
 
+    //
+    // Settings
+    //
+
+    void otPlatSettingsInit(otInstance *aInstance)
+    {
+        (void)aInstance;
+    }
+
+    ThreadError otPlatSettingsBeginChange(otInstance *aInstance)
+    {
+        (void)aInstance;
+
+        return kThreadError_None;
+    }
+
+    ThreadError otPlatSettingsCommitChange(otInstance *aInstance)
+    {
+        (void)aInstance;
+
+        return kThreadError_None;
+    }
+
+    ThreadError otPlatSettingsAbandonChange(otInstance *aInstance)
+    {
+        (void)aInstance;
+
+        return kThreadError_None;
+    }
+
+    ThreadError otPlatSettingsGet(otInstance *aInstance, uint16_t aKey, int aIndex, uint8_t *aValue,
+                              uint16_t *aValueLength)
+    {
+        (void)aInstance;
+        (void)aKey;
+        (void)aIndex;
+        (void)aValue;
+        (void)aValueLength;
+
+        return kThreadError_None;
+    }
+
+    ThreadError otPlatSettingsSet(otInstance *aInstance, uint16_t aKey, const uint8_t *aValue, uint16_t aValueLength)
+    {
+        (void)aInstance;
+        (void)aKey;
+        (void)aValue;
+        (void)aValueLength;
+
+        return kThreadError_None;
+    }
+
+    ThreadError otPlatSettingsAdd(otInstance *aInstance, uint16_t aKey, const uint8_t *aValue, uint16_t aValueLength)
+    {
+        (void)aInstance;
+        (void)aKey;
+        (void)aValue;
+        (void)aValueLength;
+
+        return kThreadError_None;
+    }
+
+    ThreadError otPlatSettingsDelete(otInstance *aInstance, uint16_t aKey, int aIndex)
+    {
+        (void)aInstance;
+        (void)aKey;
+        (void)aIndex;
+
+        return kThreadError_None;
+    }
+
+    void otPlatSettingsWipe(otInstance *aInstance)
+    {
+        (void)aInstance;
+
+        return kThreadError_None;
+    }
+
 } // extern "C"
