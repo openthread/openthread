@@ -104,6 +104,8 @@ private:
                                     Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
     void HandleJoinerEntrust(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
+    void SendJoinerEntrustResponse(const Coap::Header &aRequestHeader, const Ip6::MessageInfo &aRequestInfo);
+
     static void HandleTimer(void *aContext);
     void HandleTimer(void);
 
@@ -121,6 +123,7 @@ private:
     Tasklet mTransmitTask;
     Timer mTimer;
     Coap::Resource mJoinerEntrust;
+    Coap::Server &mCoapServer;
     ThreadNetif &mNetif;
 };
 

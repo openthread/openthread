@@ -64,9 +64,10 @@ Joiner::Joiner(ThreadNetif &aNetif):
     mTransmitTask(aNetif.GetIp6().mTaskletScheduler, &Joiner::HandleUdpTransmit, this),
     mTimer(aNetif.GetIp6().mTimerScheduler, &Joiner::HandleTimer, this),
     mJoinerEntrust(OPENTHREAD_URI_JOINER_ENTRUST, &Joiner::HandleJoinerEntrust, this),
+    mCoapServer(aNetif.GetCoapServer()),
     mNetif(aNetif)
 {
-    mNetif.GetCoapServer().AddResource(mJoinerEntrust);
+    mCoapServer.AddResource(mJoinerEntrust);
 }
 
 ThreadError Joiner::Start(const char *aPSKd, const char *aProvisioningUrl)
@@ -387,12 +388,43 @@ void Joiner::HandleJoinerEntrust(Coap::Header &aHeader, Message &aMessage, const
 
     otLogInfoMeshCoP("join success!");
 
+    // Send dummy response.
+    SendJoinerEntrustResponse(aHeader, aMessageInfo);
+
     // Delay extended address configuration to allow DTLS wrap up.
     mTimer.Start(kConfigExtAddressDelay);
 
 exit:
-    (void)aMessageInfo;
     otLogFuncExit();
+}
+
+void Joiner::SendJoinerEntrustResponse(const Coap::Header &aRequestHeader,
+                                       const Ip6::MessageInfo &aRequestInfo)
+{
+
+    ThreadError error = kThreadError_None;
+    Message *message;
+    Coap::Header responseHeader;
+    Ip6::MessageInfo responseInfo;
+
+    VerifyOrExit((message = mCoapServer.NewMessage(0)) != NULL, error = kThreadError_NoBufs);
+
+    responseHeader.SetDefaultResponseHeader(aRequestHeader);
+
+    SuccessOrExit(error = message->Append(responseHeader.GetBytes(), responseHeader.GetLength()));
+
+    memcpy(&responseInfo, &aRequestInfo, sizeof(responseInfo));
+    memset(&responseInfo.mSockAddr, 0, sizeof(responseInfo.mSockAddr));
+    SuccessOrExit(error = mCoapServer.SendMessage(*message, responseInfo));
+
+    otLogInfoArp("Sent address notification acknowledgment");
+
+exit:
+
+    if (error != kThreadError_None && message != NULL)
+    {
+        message->Free();
+    }
 }
 
 void Joiner::HandleTimer(void *aContext)

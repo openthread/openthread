@@ -36,6 +36,7 @@
 
 #include <openthread-core-config.h>
 
+#include <coap/coap_client.hpp>
 #include <coap/coap_server.hpp>
 #include <common/timer.hpp>
 #include <mac/mac_frame.hpp>
@@ -188,6 +189,19 @@ private:
     static void HandleTimer(void *aContext);
     void HandleTimer(void);
 
+    static void HandleMgmtCommissionerSetResponse(void *aContext, otCoapHeader *aHeader,
+                                                  otMessage aMessage, ThreadError aResult);
+    void HandleMgmtCommissisonerSetResponse(Coap::Header *aHeader, Message *aMessage, ThreadError aResult);
+    static void HandleMgmtCommissionerGetResponse(void *aContext, otCoapHeader *aHeader,
+                                                  otMessage aMessage, ThreadError aResult);
+    void HandleMgmtCommissisonerGetResponse(Coap::Header *aHeader, Message *aMessage, ThreadError aResult);
+    static void HandleLeaderPetitionResponse(void *aContext, otCoapHeader *aHeader,
+                                             otMessage aMessage, ThreadError aResult);
+    void HandleLeaderPetitionResponse(Coap::Header *aHeader, Message *aMessage, ThreadError aResult);
+    static void HandleLeaderKeepAliveResponse(void *aContext, otCoapHeader *aHeader,
+                                              otMessage aMessage, ThreadError aResult);
+    void HandleLeaderKeepAliveResponse(Coap::Header *aHeader, Message *aMessage, ThreadError aResult);
+
     static void HandleRelayReceive(void *aContext, Coap::Header &aHeader,
                                    Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
     void HandleRelayReceive(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
@@ -195,9 +209,6 @@ private:
     static void HandleDatasetChanged(void *aContext, Coap::Header &aHeader,
                                      Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
     void HandleDatasetChanged(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
-
-    static void HandleUdpReceive(void *aContext, otMessage aMessage, const otMessageInfo *aMessageInfo);
-    void HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
     static void HandleDtlsReceive(void *aContext, uint8_t *aBuf, uint16_t aLength);
     void HandleDtlsReceive(uint8_t *aBuf, uint16_t aLength);
@@ -242,15 +253,12 @@ private:
     uint8_t mTransmitAttempts;
     bool mSendKek;
 
-    Ip6::UdpSocket mSocket;
-    uint8_t mCoapToken[2];
-    uint16_t mCoapMessageId;
-
     Coap::Resource mRelayReceive;
     Coap::Resource mDatasetChanged;
     Coap::Server &mCoapServer;
+    Coap::Client &mCoapClient;
+
     ThreadNetif &mNetif;
-    bool mIsSendMgmtCommRequest;
 };
 
 }  // namespace MeshCoP
