@@ -96,10 +96,6 @@ void TestLowpanIphc(void)
         SuccessOrQuit(message->Append(frame.GetPayload() + decompressedBytes,
                                       ip6PayloadLength),
                       "6lo: Message::Append failed");
-        ip6PayloadLength = HostSwap16(message->GetLength() -
-                                      sizeof(Ip6::Header));
-        message->Write(Ip6::Header::GetPayloadLengthOffset(),
-                       sizeof(ip6PayloadLength), &ip6PayloadLength);
 
         resultLength = message->GetLength();
         message->Read(0, resultLength, result);
@@ -109,6 +105,8 @@ void TestLowpanIphc(void)
 
         VerifyOrQuit(memcmp(ipVector.data(), result, resultLength) == 0,
                      "6lo: Lowpan::Decompress failed");
+
+        message->SetOffset(0);
 
         // ===> Test Lowpan::Compress
         int compressBytes = sMockLowpan.Compress(*message, macSource, macDest,

@@ -1567,8 +1567,7 @@ void MeshForwarder::HandleFragment(uint8_t *aFrame, uint8_t aFrameLength,
         aFrameLength -= static_cast<uint8_t>(headerLength);
 
         SuccessOrExit(error = message->SetLength(datagramLength));
-        datagramLength = HostSwap16(datagramLength - sizeof(Ip6::Header));
-        message->Write(Ip6::Header::GetPayloadLengthOffset(), sizeof(datagramLength), &datagramLength);
+
         message->SetDatagramTag(datagramTag);
         message->SetTimeout(kReassemblyTimeout);
 
@@ -1670,7 +1669,6 @@ void MeshForwarder::HandleLowpanHC(uint8_t *aFrame, uint8_t aFrameLength,
     ThreadError error = kThreadError_None;
     Message *message;
     int headerLength;
-    uint16_t ip6PayloadLength;
 
     VerifyOrExit((message = mNetif.GetIp6().mMessagePool.New(Message::kTypeIp6, 0)) != NULL,
                  error = kThreadError_NoBufs);
@@ -1684,10 +1682,6 @@ void MeshForwarder::HandleLowpanHC(uint8_t *aFrame, uint8_t aFrameLength,
     aFrameLength -= static_cast<uint8_t>(headerLength);
 
     SuccessOrExit(error = message->SetLength(message->GetLength() + aFrameLength));
-
-    ip6PayloadLength = HostSwap16(message->GetLength() - sizeof(Ip6::Header));
-    message->Write(Ip6::Header::GetPayloadLengthOffset(), sizeof(ip6PayloadLength), &ip6PayloadLength);
-
     message->Write(message->GetOffset(), aFrameLength, aFrame);
 
     // Security Check
