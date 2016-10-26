@@ -333,7 +333,7 @@ exit:
     }
 
     ThreadError otPlatSettingsGet(otInstance *aInstance, uint16_t aKey, int aIndex, uint8_t *aValue,
-                              uint16_t *aValueLength)
+                                  uint16_t *aValueLength)
     {
         (void)aInstance;
         (void)aKey;
