@@ -457,7 +457,7 @@ void Commissioner::HandleMgmtCommissisonerSetResponse(Coap::Header *aHeader, Mes
     otLogInfoMeshCoP("received MGMT_COMMISSIONER_SET response");
 
 exit:
-    {}
+    otLogFuncExit();
 }
 
 ThreadError Commissioner::SendPetition(void)
