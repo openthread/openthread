@@ -36,9 +36,6 @@
     <ClCompile Include="..\..\tests\unit\test_message.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\tests\unit\test_settings.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\tests\unit\test_timer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>

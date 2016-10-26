@@ -61,14 +61,6 @@ uint32_t sCallCount[kCallCountIndexMax];
 
 bool sDiagMode = false;
 
-enum
-{
-    kFlashSize = 0x40000,
-    kFlashPageSize = 0x800,
-};
-
-uint8_t sFlashBuffer[kFlashSize];
-
 extern "C" {
 
     void otSignalTaskletPending(otInstance *)
@@ -308,74 +300,6 @@ exit:
 
     void otPlatLog(otLogLevel , otLogRegion , const char *, ...)
     {
-    }
-
-    //
-    // Flash
-    //
-    ThreadError otPlatFlashInit(void)
-    {
-        memset(sFlashBuffer, 0xff, kFlashSize);
-        return kThreadError_None;
-    }
-
-    uint32_t otPlatFlashGetSize(void)
-    {
-        return kFlashSize;
-    }
-
-    ThreadError otPlatFlashErasePage(uint32_t aAddress)
-    {
-        ThreadError error = kThreadError_None;
-        uint32_t address;
-
-        VerifyOrExit(aAddress < kFlashSize, error = kThreadError_InvalidArgs);
-
-        // Get start address of the flash page that includes aAddress
-        address = aAddress & (~(uint32_t)(kFlashPageSize - 1));
-        memset(sFlashBuffer + address, 0xff, kFlashPageSize);
-
-exit:
-        return error;
-    }
-
-    ThreadError otPlatFlashStatusWait(uint32_t aTimeout)
-    {
-        (void)aTimeout;
-        return kThreadError_None;
-    }
-
-    uint32_t otPlatFlashWrite(uint32_t aAddress, uint8_t *aData, uint32_t aSize)
-    {
-        uint32_t ret = 0;
-        uint8_t byte;
-
-        VerifyOrExit(aAddress < kFlashSize, ;);
-
-        for (uint32_t index = 0; index < aSize; index++)
-        {
-            byte = sFlashBuffer[aAddress + index];
-            byte &= aData[index];
-            sFlashBuffer[aAddress + index] = byte;
-        }
-
-        ret = aSize;
-
-exit:
-        return ret;
-    }
-
-    uint32_t otPlatFlashRead(uint32_t aAddress, uint8_t *aData, uint32_t aSize)
-    {
-        uint32_t ret = 0;
-
-        VerifyOrExit(aAddress < kFlashSize, ;);
-
-        memcpy(aData, sFlashBuffer + aAddress, aSize);
-        ret = aSize;
-
-exit:
-        return ret;
     }
 
 } // extern "C"

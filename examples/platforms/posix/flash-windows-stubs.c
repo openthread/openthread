@@ -28,32 +28,32 @@
 
 #include "platform-posix.h"
 
-ThreadError otPlatFlashInit(void)
+ThreadError utilsFlashInit(void)
 {
     return kThreadError_NotImplemented;
 }
 
-uint32_t otPlatFlashGetSize(void)
+uint32_t utilsFlashGetSize(void)
 {
     return 0;
 }
 
-ThreadError otPlatFlashErasePage(uint32_t aAddress)
+ThreadError utilsFlashErasePage(uint32_t aAddress)
 {
     return kThreadError_NotImplemented;
 }
 
-ThreadError otPlatFlashStatusWait(uint32_t aTimeout)
+ThreadError utilsFlashStatusWait(uint32_t aTimeout)
 {
     return kThreadError_None;
 }
 
-uint32_t otPlatFlashWrite(uint32_t aAddress, uint8_t *aData, uint32_t aSize)
+uint32_t utilsFlashWrite(uint32_t aAddress, uint8_t *aData, uint32_t aSize)
 {
     return 0;
 }
 
-uint32_t otPlatFlashRead(uint32_t aAddress, uint8_t *aData, uint32_t aSize)
+uint32_t utilsFlashRead(uint32_t aAddress, uint8_t *aData, uint32_t aSize)
 {
     return 0;
 }

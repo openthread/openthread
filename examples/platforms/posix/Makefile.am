@@ -46,6 +46,7 @@ libopenthread_posix_a_SOURCES             = \
     random.c                                \
     uart-posix.c                            \
     flash.c                                 \
+    ../utils/settings.cpp                   \
     $(NULL)
 
 if OPENTHREAD_ENABLE_DIAG

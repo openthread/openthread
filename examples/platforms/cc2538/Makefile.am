@@ -46,6 +46,7 @@ libopenthread_cc2538_a_SOURCES            = \
     random.c                                \
     startup-gcc.c                           \
     uart.c                                  \
+    ../utils/settings.cpp                   \
     $(NULL)
 
 if OPENTHREAD_ENABLE_DIAG
