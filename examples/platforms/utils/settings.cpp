@@ -43,7 +43,7 @@
 
 #include <common/code_utils.hpp>
 #include <platform/settings.h>
-#include "flash.h"
+#include <utils/flash.h>
 
 #ifdef __cplusplus
 extern "C" {

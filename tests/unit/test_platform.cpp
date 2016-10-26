@@ -376,8 +376,6 @@ exit:
     void otPlatSettingsWipe(otInstance *aInstance)
     {
         (void)aInstance;
-
-        return kThreadError_None;
     }
 
 } // extern "C"
