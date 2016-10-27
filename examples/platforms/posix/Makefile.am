@@ -37,6 +37,11 @@ libopenthread_posix_a_CPPFLAGS            = \
     -D_GNU_SOURCE                           \
     $(NULL)
 
+libopenthread_posix_settings.cpp: $(srcdir)/../utils/settings.cpp
+	cp $? $@
+
+CLEANFILES = libopenthread_posix_settings.cpp
+
 libopenthread_posix_a_SOURCES             = \
     alarm.c                                 \
     misc.c                                  \
@@ -46,7 +51,7 @@ libopenthread_posix_a_SOURCES             = \
     random.c                                \
     uart-posix.c                            \
     flash.c                                 \
-    ../utils/settings.cpp                   \
+    libopenthread_posix_settings.cpp        \
     $(NULL)
 
 if OPENTHREAD_ENABLE_DIAG
@@ -66,7 +71,7 @@ noinst_HEADERS                            = \
     $(NULL)
 
 if OPENTHREAD_BUILD_COVERAGE
-CLEANFILES                                = $(wildcard *.gcda *.gcno)
+CLEANFILES                               += $(wildcard *.gcda *.gcno)
 endif # OPENTHREAD_BUILD_COVERAGE
 
 include $(abs_top_nlbuild_autotools_dir)/automake/post.am
