@@ -33,7 +33,7 @@ in order to send the packets out over the network.
 
 `otLwf.sys` supports operating in two modes: Full Stack and Tunnel. Full Stack mode is where OpenThread is 
 running on the host (in Windows) and a simple radio device is connected externally. Tunnel mode is where 
-OpenThread is running on the external device and Windows is meerly a pass through for commands and packets.
+OpenThread is running on the external device and Windows is merely a pass through for commands and packets.
 
 In Full Stack mode, `otLwf.sys` hosts the OpenThread core library and manages serializing all Windows
 networking inputs to the OpenThread APIs. It maintains one dedicated worker thread for running all
@@ -70,8 +70,8 @@ This is a 'full solution' device, that exposes the entire OpenThread interface v
 ## Build ##
 
 Open the Visual Studio Solution `openthread.sln` under `etc\visual-studio` and then pick the
-configuration and platform you wish to build for. For instance, `Release` and `x64`. build
-the whole solution (F6). This will output the file here:
+configuration and platform you wish to build for. For instance, `Release` and `x64`. Build
+the whole solution (F6). This will output the files here:
 
 ```
 build\bin\<platform>\<configuration>
