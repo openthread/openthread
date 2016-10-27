@@ -100,10 +100,9 @@ ThreadError PanIdQueryClient::SendQuery(uint16_t aPanId, uint32_t aChannelMask, 
     panId.SetPanId(aPanId);
     SuccessOrExit(error = message->Append(&panId, sizeof(panId)));
 
-    memset(&messageInfo, 0, sizeof(messageInfo));
-    messageInfo.GetPeerAddr() = aAddress;
-    messageInfo.mPeerPort = kCoapUdpPort;
-    messageInfo.mInterfaceId = mNetif.GetInterfaceId();
+    messageInfo.SetPeerAddr(aAddress);
+    messageInfo.SetPeerPort(kCoapUdpPort);
+    messageInfo.SetInterfaceId(mNetif.GetInterfaceId());
     SuccessOrExit(error = mCoapClient.SendMessage(*message, messageInfo));
 
     otLogInfoMeshCoP("sent panid query");
@@ -175,7 +174,7 @@ ThreadError PanIdQueryClient::SendConflictResponse(const Coap::Header &aRequestH
     ThreadError error = kThreadError_None;
     Message *message;
     Coap::Header responseHeader;
-    Ip6::MessageInfo responseInfo;
+    Ip6::MessageInfo responseInfo(aRequestInfo);
 
     VerifyOrExit((message = mCoapServer.NewMessage(0)) != NULL, error = kThreadError_NoBufs);
 
@@ -183,7 +182,6 @@ ThreadError PanIdQueryClient::SendConflictResponse(const Coap::Header &aRequestH
 
     SuccessOrExit(error = message->Append(responseHeader.GetBytes(), responseHeader.GetLength()));
 
-    memcpy(&responseInfo, &aRequestInfo, sizeof(responseInfo));
     memset(&responseInfo.mSockAddr, 0, sizeof(responseInfo.mSockAddr));
     SuccessOrExit(error = mCoapServer.SendMessage(*message, responseInfo));
 

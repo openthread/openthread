@@ -587,20 +587,20 @@ public:
     uint16_t GetRloc16(void) const;
 
     /**
-     * This method returns a pointer to the RLOC assigned to the Thread interface.
+     * This method returns a reference to the RLOC assigned to the Thread interface.
      *
-     * @returns A pointer to the RLOC assigned to the Thread interface.
+     * @returns A reference to the RLOC assigned to the Thread interface.
      *
      */
-    const Ip6::Address *GetMeshLocal16(void) const;
+    const Ip6::Address &GetMeshLocal16(void) const;
 
     /**
-     * This method returns a pointer to the ML-EID assigned to the Thread interface.
+     * This method returns a reference to the ML-EID assigned to the Thread interface.
      *
-     * @returns A pointer to the ML-EID assigned to the Thread interface.
+     * @returns A reference to the ML-EID assigned to the Thread interface.
      *
      */
-    const Ip6::Address *GetMeshLocal64(void) const;
+    const Ip6::Address &GetMeshLocal64(void) const;
 
     /**
      * This method returns the Router ID of the Leader.

@@ -193,9 +193,8 @@ ThreadError PanIdQueryServer::SendConflict(void)
     panId.SetPanId(mPanId);
     SuccessOrExit(error = message->Append(&panId, sizeof(panId)));
 
-    memset(&messageInfo, 0, sizeof(messageInfo));
-    messageInfo.GetPeerAddr() = mCommissioner;
-    messageInfo.mPeerPort = kCoapUdpPort;
+    messageInfo.SetPeerAddr(mCommissioner);
+    messageInfo.SetPeerPort(kCoapUdpPort);
     SuccessOrExit(error = mCoapClient.SendMessage(*message, messageInfo));
 
     otLogInfoMeshCoP("sent panid conflict");

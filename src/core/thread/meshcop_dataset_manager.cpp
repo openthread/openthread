@@ -193,9 +193,8 @@ ThreadError DatasetManager::Register(void)
 
     mMle.GetLeaderAloc(leader);
 
-    memset(&messageInfo, 0, sizeof(messageInfo));
-    memcpy(&messageInfo.mPeerAddr, &leader, sizeof(messageInfo.mPeerAddr));
-    messageInfo.mPeerPort = kCoapUdpPort;
+    messageInfo.SetPeerAddr(leader);
+    messageInfo.SetPeerPort(kCoapUdpPort);
     SuccessOrExit(error = mCoapClient.SendMessage(*message, messageInfo));
 
     otLogInfoMeshCoP("sent dataset to leader");
@@ -394,7 +393,7 @@ ThreadError DatasetManager::Set(Coap::Header &aHeader, Message &aMessage, const 
         VerifyOrExit(locator != 0xffff, ;);
 
         memset(&destination, 0, sizeof(destination));
-        memcpy(&destination, mNetif.GetMle().GetMeshLocal16(), OT_MESH_LOCAL_PREFIX_SIZE);
+        destination = mNetif.GetMle().GetMeshLocal16();
         destination.mFields.m16[4] = HostSwap16(0x0000);
         destination.mFields.m16[5] = HostSwap16(0x00ff);
         destination.mFields.m16[6] = HostSwap16(0xfe00);
@@ -514,9 +513,8 @@ ThreadError DatasetManager::SendSetRequest(const otOperationalDataset &aDataset,
         SuccessOrExit(error = message->Append(aTlvs, aLength));
     }
 
-    memset(&messageInfo, 0, sizeof(messageInfo));
     mMle.GetLeaderAloc(messageInfo.GetPeerAddr());
-    messageInfo.mPeerPort = kCoapUdpPort;
+    messageInfo.SetPeerPort(kCoapUdpPort);
     SuccessOrExit(error = mCoapClient.SendMessage(*message, messageInfo));
 
     otLogInfoMeshCoP("sent dataset set request to leader");
@@ -554,9 +552,8 @@ ThreadError DatasetManager::SendGetRequest(const uint8_t *aTlvTypes, const uint8
         SuccessOrExit(error = message->Append(aTlvTypes, aLength));
     }
 
-    memset(&messageInfo, 0, sizeof(messageInfo));
     mMle.GetLeaderAloc(messageInfo.GetPeerAddr());
-    messageInfo.mPeerPort = kCoapUdpPort;
+    messageInfo.SetPeerPort(kCoapUdpPort);
     SuccessOrExit(error = mCoapClient.SendMessage(*message, messageInfo));
 
     otLogInfoMeshCoP("sent dataset get request to leader");

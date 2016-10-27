@@ -133,7 +133,7 @@ ThreadError AnnounceBeginServer::SendResponse(const Coap::Header &aRequestHeader
     ThreadError error = kThreadError_None;
     Message *message = NULL;
     Coap::Header responseHeader;
-    Ip6::MessageInfo responseInfo;
+    Ip6::MessageInfo responseInfo(aRequestInfo);
 
     VerifyOrExit(aRequestHeader.GetType() == kCoapTypeConfirmable, ;);
 
@@ -143,7 +143,6 @@ ThreadError AnnounceBeginServer::SendResponse(const Coap::Header &aRequestHeader
 
     SuccessOrExit(error = message->Append(responseHeader.GetBytes(), responseHeader.GetLength()));
 
-    memcpy(&responseInfo, &aRequestInfo, sizeof(responseInfo));
     memset(&responseInfo.mSockAddr, 0, sizeof(responseInfo.mSockAddr));
     SuccessOrExit(error = mCoapServer.SendMessage(*message, responseInfo));
 

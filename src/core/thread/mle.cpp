@@ -613,14 +613,14 @@ void Mle::SetLeaderData(uint32_t aPartitionId, uint8_t aWeighting, uint8_t aLead
     mLeaderData.SetLeaderRouterId(aLeaderRouterId);
 }
 
-const Ip6::Address *Mle::GetMeshLocal16(void) const
+const Ip6::Address &Mle::GetMeshLocal16(void) const
 {
-    return &mMeshLocal16.GetAddress();
+    return mMeshLocal16.GetAddress();
 }
 
-const Ip6::Address *Mle::GetMeshLocal64(void) const
+const Ip6::Address &Mle::GetMeshLocal64(void) const
 {
-    return &mMeshLocal64.GetAddress();
+    return mMeshLocal64.GetAddress();
 }
 
 ThreadError Mle::GetLeaderAddress(Ip6::Address &aAddress) const
@@ -1579,12 +1579,11 @@ ThreadError Mle::SendMessage(Message &aMessage, const Ip6::Address &aDestination
         mKeyManager.IncrementMleFrameCounter();
     }
 
-    memset(&messageInfo, 0, sizeof(messageInfo));
-    memcpy(&messageInfo.GetPeerAddr(), &aDestination, sizeof(messageInfo.GetPeerAddr()));
-    memcpy(&messageInfo.GetSockAddr(), &mLinkLocal64.GetAddress(), sizeof(messageInfo.GetSockAddr()));
-    messageInfo.mPeerPort = kUdpPort;
-    messageInfo.mInterfaceId = mNetif.GetInterfaceId();
-    messageInfo.mHopLimit = 255;
+    messageInfo.SetPeerAddr(aDestination);
+    messageInfo.SetSockAddr(mLinkLocal64.GetAddress());
+    messageInfo.SetPeerPort(kUdpPort);
+    messageInfo.SetInterfaceId(mNetif.GetInterfaceId());
+    messageInfo.SetHopLimit(255);
 
     SuccessOrExit(error = mSocket.SendTo(aMessage, messageInfo));
 
@@ -1620,7 +1619,7 @@ void Mle::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageIn
     aMessage.Read(aMessage.GetOffset(), sizeof(header), &header);
     VerifyOrExit(header.IsValid(),);
 
-    assert(aMessageInfo.mLinkInfo != NULL);
+    assert(aMessageInfo.GetLinkInfo() != NULL);
 
     if (header.GetSecuritySuite() == Header::kNoSecurity)
     {
@@ -2095,7 +2094,7 @@ ThreadError Mle::HandleParentResponse(const Message &aMessage, const Ip6::Messag
                                       uint32_t aKeySequence)
 {
     ThreadError error = kThreadError_None;
-    const ThreadMessageInfo *threadMessageInfo = static_cast<const ThreadMessageInfo *>(aMessageInfo.mLinkInfo);
+    const ThreadMessageInfo *threadMessageInfo = static_cast<const ThreadMessageInfo *>(aMessageInfo.GetLinkInfo());
     ResponseTlv response;
     SourceAddressTlv sourceAddress;
     LeaderDataTlv leaderData;
@@ -2666,7 +2665,7 @@ exit:
 ThreadError Mle::HandleDiscoveryResponse(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
     ThreadError error = kThreadError_None;
-    const ThreadMessageInfo *threadMessageInfo = static_cast<const ThreadMessageInfo *>(aMessageInfo.mLinkInfo);
+    const ThreadMessageInfo *threadMessageInfo = static_cast<const ThreadMessageInfo *>(aMessageInfo.GetLinkInfo());
     Tlv tlv;
     MeshCoP::Tlv meshcopTlv;
     MeshCoP::DiscoveryResponseTlv discoveryResponse;
@@ -2841,7 +2840,7 @@ ThreadError Mle::CheckReachability(uint16_t aMeshSource, uint16_t aMeshDest, Ip6
         ExitNow(error = kThreadError_None);
     }
 
-    memcpy(&dst, GetMeshLocal16(), kRlocPrefixLength);
+    dst = GetMeshLocal16();
     dst.mFields.m16[7] = HostSwap16(aMeshSource);
     mNetif.GetIp6().mIcmp.SendError(dst, Ip6::IcmpHeader::kTypeDstUnreach, Ip6::IcmpHeader::kCodeDstUnreachNoRoute,
                                     aIp6Header);

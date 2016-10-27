@@ -91,7 +91,7 @@ ThreadError UdpSocket::SendTo(Message &aMessage, const MessageInfo &aMessageInfo
 
     if (messageInfoLocal.GetSockAddr().IsUnspecified())
     {
-        messageInfoLocal.GetSockAddr() = GetSockName().GetAddress();
+        messageInfoLocal.SetSockAddr(GetSockName().GetAddress());
     }
 
     if (GetSockName().mPort == 0)
