@@ -1103,7 +1103,9 @@ class ARM(IThci):
         """power down the Thread device"""
         print '%s call powerDown' % self.port
         self.isPowerDown = True
-        self.reset()
+        self._sendline('reset')
+        time.sleep(3)
+        self.setMAC(self.mac)
 
     def powerUp(self):
         """power up the Thread device"""
@@ -1225,7 +1227,7 @@ class ARM(IThci):
         """factory reset"""
         print '%s call reset' % self.port
         try:
-            self._sendline('reset')
+            self._sendline('factoryreset')
             self._read()
         except Exception, e:
             ModuleHelper.WriteIntoDebugLogger("reset() Error: " + str(e))
@@ -2210,10 +2212,6 @@ class ARM(IThci):
             if xPanId != None:
                 cmd += ' panid '
                 cmd += str(xPanId)
-
-            if xDelayTimer != None:
-                cmd += ' delay '
-                cmd += str(xDelayTimer)
 
             if listChannelMask != None:
                 cmd += ' channelmask '

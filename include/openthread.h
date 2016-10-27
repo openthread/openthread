@@ -1658,6 +1658,13 @@ void otSetAssignLinkQuality(otInstance *aInstance, const uint8_t *aExtAddr, uint
 void otPlatformReset(otInstance *aInstance);
 
 /**
+ * This method deletes all the settings stored on non-volatile memory, and then triggers platform reset.
+ *
+ * @param[in]  aInstance A pointer to an OpenThread instance.
+ */
+void otFactoryReset(otInstance *aInstance);
+
+/**
  * Get the ROUTER_DOWNGRADE_THRESHOLD parameter used in the Router role.
  *
  * @param[in]  aInstance  A pointer to an OpenThread instance.

@@ -87,6 +87,7 @@ const struct Command Interpreter::sCommands[] =
 #endif
     { "extaddr", &Interpreter::ProcessExtAddress },
     { "extpanid", &Interpreter::ProcessExtPanId },
+    { "factoryreset", &Interpreter::ProcessFactoryReset },
     { "hashmacaddr", &Interpreter::ProcessHashMacAddress },
     { "ifconfig", &Interpreter::ProcessIfconfig },
     { "ipaddr", &Interpreter::ProcessIpAddr },
@@ -648,6 +649,13 @@ void Interpreter::ProcessExtPanId(int argc, char *argv[])
 
 exit:
     AppendResult(error);
+}
+
+void Interpreter::ProcessFactoryReset(int argc, char *argv[])
+{
+    otFactoryReset(mInstance);
+    (void)argc;
+    (void)argv;
 }
 
 void Interpreter::ProcessHashMacAddress(int argc, char *argv[])
