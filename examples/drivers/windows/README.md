@@ -26,41 +26,46 @@ which can then be returned back to the client.
 
 ### otLwf.sys ###
 
-This is where most of the real logic lives. otLwf.sys is an [NDIS][ndis] Light Weight Filter ([LWF][lwf]) driver.
+This is where most of the real logic lives. `otLwf.sys` is an [NDIS][ndis] Light Weight Filter ([LWF][lwf]) driver.
 It plugs into the networking stack, binding to a protocol driver (TCPIP) at the top, and an NDIS [Miniport][miniport]
 at the bottom. It's job is to take IPv6 packets from TCPIP and pass the necessary data down to the Miniport
 in order to send the packets out over the network.
 
-otLwf.sys supports operating in two modes: Full Stack and Tunnel. Full Stack mode is where OpenThread is 
+`otLwf.sys` supports operating in two modes: Full Stack and Tunnel. Full Stack mode is where OpenThread is 
 running on the host (in Windows) and a simple radio device is connected externally. Tunnel mode is where 
 OpenThread is running on the external device and Windows is meerly a pass through for commands and packets.
 
-In Full Stack mode, otLwf.sys hosts the OpenThread core library and manages serializing all Windows
+In Full Stack mode, `otLwf.sys` hosts the OpenThread core library and manages serializing all Windows
 networking inputs to the OpenThread APIs. It maintains one dedicated worker thread for running all
 OpenThread related logic, including IOCTL commands, data packets, and basic OpenThread processing logic.
-otLwf.sys uses [OID][oid]s to send control path commands (channel, panid, etc.) and [NBL][nbl]s to send and
+`otLwf.sys` uses [OID][oid]s to send control path commands (channel, panid, etc.) and [NBL][nbl]s to send and
 receive the 802.15.4 data packets to/from the miniport. The miniport then passes this information, in the
 proper format, off to the radio device.
 
-In Tunnel mode, otLwf.sys mainly just manages the serialization of Windows networking inputs to 
+In Tunnel mode, `otLwf.sys` mainly just manages the serialization of Windows networking inputs to 
 Spinel commands (and back). The Spinel commands are passed down (in [NBL][nbl]s) to the miniport which will then pass
 the commands (correctly encoded) to whatever device is externally connected.
 
 ### 802.15.4 PHY Miniport ###
 
-`TODO`
+This is the component responsible for taking the [OID][oid]s and [NBL][nbl]s from `otLwf.sys` and sending the
+information down to the matching 802.15.4 PHY Device, in the proper format. In other words, it's job is mainly
+handling the arrival/removal of the physical device and serialization of the info in the proper format for
+the device it's paired with.
 
 ### Thread Miniport ###
 
-`TODO`
+This is the component for taking the [NBL][nbl]s, containing Spinel commands, from `otLwf.sys` and sending them
+down to the matching OpenThread (NCP) Device. Again, like the PHY miniport, it's job is handling device arrival/removal
+and command serialization.
 
 ### 802.15.4 PHY Device ###
 
-`TODO`
+This is a 'simple' device, exposing a mostly PHY layer interface (with a few MAC layer constructs).
 
 ### OpenThread (NCP) Device ###
 
-`TODO`
+This is a 'full solution' device, that exposes the entire OpenThread interface via NCP.
 
 ## Build ##
 
