@@ -266,8 +266,6 @@ TESTS                                                              = \
     $(NULL)
 
 XFAIL_NCP_TESTS                                                    = \
-    thread-cert/Cert_5_3_02_RealmLocal.py                            \
-    thread-cert/Cert_6_4_02_RealmLocal.py                            \
     thread-cert/Cert_8_1_01_Commissioning.py                         \
     thread-cert/Cert_8_1_02_Commissioning.py                         \
     thread-cert/Cert_8_2_01_JoinerRouter.py                          \

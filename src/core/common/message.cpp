@@ -315,10 +315,32 @@ ThreadError Message::Prepend(const void *aBuf, uint16_t aLength)
     mInfo.mLength += aLength;
     SetOffset(GetOffset() + aLength);
 
-    Write(0, aLength, aBuf);
+    if (aBuf != NULL)
+    {
+        Write(0, aLength, aBuf);
+    }
 
 exit:
     return error;
+}
+
+ThreadError Message::RemoveHeader(uint16_t aLength)
+{
+    assert(aLength <= mInfo.mLength);
+
+    mInfo.mReserved += aLength;
+    mInfo.mLength -= aLength;
+
+    if (mInfo.mOffset > aLength)
+    {
+        mInfo.mOffset -= aLength;
+    }
+    else
+    {
+        mInfo.mOffset = 0;
+    }
+
+    return kThreadError_None;
 }
 
 uint16_t Message::Read(uint16_t aOffset, uint16_t aLength, void *aBuf) const

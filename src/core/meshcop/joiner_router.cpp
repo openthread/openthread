@@ -59,6 +59,7 @@ namespace MeshCoP {
 JoinerRouter::JoinerRouter(ThreadNetif &aNetif):
     mSocket(aNetif.GetIp6().mUdp),
     mRelayTransmit(OPENTHREAD_URI_RELAY_TX, &JoinerRouter::HandleRelayTransmit, this),
+    mCoapClient(aNetif.GetCoapClient()),
     mNetif(aNetif),
     mIsJoinerPortConfigured(false)
 {
@@ -347,15 +348,13 @@ ThreadError JoinerRouter::SendJoinerEntrust(const Ip6::MessageInfo &aMessageInfo
     Tlv *tlv;
 
     otLogFuncEntry();
-    VerifyOrExit((message = mSocket.NewMessage(0)) != NULL, error = kThreadError_NoBufs);
-    message->SetSubType(Message::kSubTypeJoinerEntrust);
 
     header.Init(kCoapTypeConfirmable, kCoapRequestPost);
-    header.SetMessageId(0);
-    header.SetToken(NULL, 0);
     header.AppendUriPathOptions(OPENTHREAD_URI_JOINER_ENTRUST);
     header.SetPayloadMarker();
-    SuccessOrExit(error = message->Append(header.GetBytes(), header.GetLength()));
+
+    VerifyOrExit((message = mCoapClient.NewMessage(header)) != NULL, error = kThreadError_NoBufs);
+    message->SetSubType(Message::kSubTypeJoinerEntrust);
 
     masterKey.Init();
     masterKey.SetNetworkMasterKey(mNetif.GetKeyManager().GetMasterKey(NULL));
@@ -419,7 +418,7 @@ ThreadError JoinerRouter::SendJoinerEntrust(const Ip6::MessageInfo &aMessageInfo
 
     messageInfo = aMessageInfo;
     messageInfo.mPeerPort = kCoapUdpPort;
-    SuccessOrExit(error = mSocket.SendTo(*message, messageInfo));
+    SuccessOrExit(error = mCoapClient.SendMessage(*message, messageInfo));
 
     otLogInfoMeshCoP("Sent joiner entrust length = %d", message->GetLength());
     otLogCertMeshCoP("[THCI] direction=send | msg_type=JOIN_ENT.ntf");
