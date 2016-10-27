@@ -37,6 +37,9 @@
     <ClCompile Include="..\..\examples\platforms\posix\uart-windows.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\examples\platforms\utils\settings.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\examples\platforms\posix\platform-posix.h">

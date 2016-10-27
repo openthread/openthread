@@ -35,6 +35,10 @@ DIST_SUBDIRS                            = \
     posix                                 \
     $(NULL)
 
+EXTRA_DIST                              = \
+    utils                                 \
+    $(NULL)
+
 # Always build (e.g. for 'make all') these subdirectories.
 
 if OPENTHREAD_EXAMPLES_POSIX
