@@ -548,8 +548,8 @@ public:
     /**
      * This function indicates whether or not transmit retries and CSMA backoff logic is supported by the radio layer.
      *
-     * @retval true   Logic mode is supported.
-     * @retval false  Logic mode is not supported.
+     * @retval true   Retries and CSMA are supported by the radio.
+     * @retval false  Retries and CSMA are not supported by the radio.
      *
      */
     bool RadioSupportsRetriesAndCsmaBackofff(void);
