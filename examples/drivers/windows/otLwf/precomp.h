@@ -61,6 +61,7 @@ RtlCopyBufferToMdl(
 
 #include <openthread-core-config.h>
 #include <openthread.h>
+#include <openthread-ip6.h>
 #include <commissioning/commissioner.h>
 #include <commissioning/joiner.h>
 #include <common/code_utils.hpp>

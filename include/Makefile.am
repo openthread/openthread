@@ -61,6 +61,7 @@ include_HEADERS                         = \
     openthread-crypto.h                   \
     openthread-types.h                    \
     openthread-coap.h                     \
+    openthread-ip6.h                      \
     $(NULL)
 
 install-headers: install-includeHEADERS

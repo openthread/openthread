@@ -36,7 +36,7 @@
 
 #include <stddef.h>
 
-#include <openthread-types.h>
+#include <openthread-ip6.h>
 #include <common/encoding.hpp>
 #include <common/message.hpp>
 #include <net/icmp6.hpp>
