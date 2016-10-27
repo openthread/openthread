@@ -114,50 +114,6 @@ extern "C" {
  *
  */
 
-#ifndef OTDLL
-
-/**
- * @addtogroup execution  Execution
- *
- * @brief
- *   This module includes functions that control the Thread stack's execution.
- *
- * @{
- *
- */
-
-/**
- * Run all queued OpenThread tasklets at the time this is called.
- *
- * @param[in] aInstance A pointer to an OpenThread instance.
- */
-void otProcessQueuedTasklets(otInstance *aInstance);
-
-/**
- * Indicates whether or not OpenThread has tasklets pending.
- *
- * @param[in] aInstance A pointer to an OpenThread instance.
- *
- * @retval TRUE   If there are tasklets pending.
- * @retval FALSE  If there are no tasklets pending.
- */
-bool otAreTaskletsPending(otInstance *aInstance);
-
-/**
- * OpenThread calls this function when the tasklet queue transitions from empty to non-empty.
- *
- * @param[in] aInstance A pointer to an OpenThread instance.
- *
- */
-extern void otSignalTaskletPending(otInstance *aInstance);
-
-#endif
-
-/**
- * @}
- *
- */
-
 /**
  * @addtogroup commands  Commands
  *

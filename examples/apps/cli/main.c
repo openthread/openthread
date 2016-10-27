@@ -37,6 +37,7 @@
 #include <openthread-diag.h>
 #include <cli/cli-uart.h>
 #include <platform/platform.h>
+#include <platform/tasklet.h>
 #include <assert.h>
 
 void otSignalTaskletPending(otInstance *aInstance)

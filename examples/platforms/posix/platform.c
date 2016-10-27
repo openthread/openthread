@@ -44,6 +44,7 @@
 #include <openthread.h>
 #include <platform/alarm.h>
 #include <platform/flash.h>
+#include <platform/tasklet.h>
 #include <platform/uart.h>
 
 uint32_t NODE_ID = 1;

@@ -42,6 +42,7 @@ ot_platform_headers                      =\
     flash.h                               \
     settings.h                            \
     messagepool.h                         \
+    tasklet.h                             \
     toolchain.h                           \
     $(NULL)
 

@@ -26,67 +26,63 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifdef OPENTHREAD_CONFIG_FILE
-#include OPENTHREAD_CONFIG_FILE
-#else
-#include <openthread-config.h>
+/**
+ * @file
+ * @brief
+ *   This file includes the platform abstraction for the tasklet service.
+ */
+
+#ifndef TASKLET_H_
+#define TASKLET_H_
+
+#include <openthread-types.h>
+
+#ifdef __cplusplus
+extern "C" {
 #endif
 
-#include <openthread-core-config.h>
-#include <openthread.h>
-#include <openthread-diag.h>
-#include <common/debug.hpp>
-#include <ncp/ncp.h>
-#include <platform/platform.h>
-#include <platform/tasklet.h>
+/**
+ * @addtogroup execution  Execution
+ *
+ * @brief
+ *   This module includes functions that control the Thread stack's execution.
+ *
+ * @{
+ *
+ */
 
-void otSignalTaskletPending(otInstance *aInstance)
-{
-    (void)aInstance;
-}
+/**
+ * Run all queued OpenThread tasklets at the time this is called.
+ *
+ * @param[in] aInstance A pointer to an OpenThread instance.
+ */
+void otProcessQueuedTasklets(otInstance *aInstance);
 
-int main(int argc, char *argv[])
-{
-    otInstance *sInstance;
+/**
+ * Indicates whether or not OpenThread has tasklets pending.
+ *
+ * @param[in] aInstance A pointer to an OpenThread instance.
+ *
+ * @retval TRUE   If there are tasklets pending.
+ * @retval FALSE  If there are no tasklets pending.
+ */
+bool otAreTaskletsPending(otInstance *aInstance);
 
-#ifdef OPENTHREAD_MULTIPLE_INSTANCE
-    uint64_t otInstanceBufferLength = 0;
-    uint8_t *otInstanceBuffer = NULL;
+/**
+ * OpenThread calls this function when the tasklet queue transitions from empty to non-empty.
+ *
+ * @param[in] aInstance A pointer to an OpenThread instance.
+ *
+ */
+extern void otSignalTaskletPending(otInstance *aInstance);
+
+/**
+ * @}
+ *
+ */
+
+#ifdef __cplusplus
+}  // extern "C"
 #endif
 
-    PlatformInit(argc, argv);
-
-#ifdef OPENTHREAD_MULTIPLE_INSTANCE
-    // Call to query the buffer size
-    (void)otInstanceInit(NULL, &otInstanceBufferLength);
-
-    // Call to allocate the buffer
-    otInstanceBuffer = (uint8_t *)malloc(otInstanceBufferLength);
-    assert(otInstanceBuffer);
-
-    // Initialize Openthread with the buffer
-    sInstance = otInstanceInit(otInstanceBuffer, &otInstanceBufferLength);
-#else
-    sInstance = otInstanceInit();
-#endif
-    assert(sInstance);
-
-    otNcpInit(sInstance);
-
-#if OPENTHREAD_ENABLE_DIAG
-    diagInit(sInstance);
-#endif
-
-    while (1)
-    {
-        otProcessQueuedTasklets(sInstance);
-        PlatformProcessDrivers(sInstance);
-    }
-
-    // otInstanceFinalize(sInstance);
-#ifdef OPENTHREAD_MULTIPLE_INSTANCE
-    // free(otInstanceBuffer);
-#endif
-
-    return 0;
-}
+#endif  // TASKLET_H_

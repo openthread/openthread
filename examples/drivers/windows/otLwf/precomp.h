@@ -70,6 +70,7 @@ RtlCopyBufferToMdl(
 #include <platform/misc.h>
 #include <platform/alarm.h>
 #include <platform/settings.h>
+#include <platform/tasklet.h>
 
 #include <otLwfIoctl.h>
 #include <otOID.h>
