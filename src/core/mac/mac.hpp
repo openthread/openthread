@@ -545,6 +545,15 @@ public:
      */
     void ClearSrcMatchEntries();
 
+    /**
+     * This function indicates whether or not transmit retries and CSMA backoff logic is supported by the radio layer.
+     *
+     * @retval true   Logic mode is supported.
+     * @retval false  Logic mode is not supported.
+     *
+     */
+    bool RadioSupportsRetriesAndCsmaBackofff(void);
+
 private:
     enum ScanType
     {
