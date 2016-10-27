@@ -21,6 +21,7 @@ OpenThread test scripts use the CLI to execute test cases.
 * [eui64](#eui64)
 * [extaddr](#extaddr)
 * [extpanid](#extpanid)
+* [factoryreset](#factoryreset)
 * [hashmacaddr](#hashmacaddr)
 * [ifconfig](#ifconfig)
 * [ipaddr](#ipaddr)
@@ -709,6 +710,13 @@ Set the Thread Extended PAN ID value.
 ```bash
 > extpanid dead00beef00cafe
 Done
+```
+
+### factoryreset
+Delete all stored settings, and signal a platform reset.
+
+```bash
+> factoryreset
 ```
 
 ### hashmacaddr

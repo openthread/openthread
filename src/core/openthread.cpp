@@ -691,6 +691,12 @@ void otPlatformReset(otInstance *aInstance)
     otPlatReset(aInstance);
 }
 
+void otFactoryReset(otInstance *aInstance)
+{
+    otPlatSettingsWipe(aInstance);
+    otPlatReset(aInstance);
+}
+
 uint8_t otGetRouterDowngradeThreshold(otInstance *aInstance)
 {
     return aInstance->mThreadNetif.GetMle().GetRouterDowngradeThreshold();
