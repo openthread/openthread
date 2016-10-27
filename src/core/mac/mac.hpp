@@ -552,7 +552,7 @@ public:
      * @retval false  Retries and CSMA are not supported by the radio.
      *
      */
-    bool RadioSupportsRetriesAndCsmaBackofff(void);
+    bool RadioSupportsRetriesAndCsmaBackoff(void);
 
 private:
     enum ScanType

@@ -80,7 +80,7 @@ static_assert(kMinBackoffSum > 0, "The min backoff value should be greater than 
 
 void Mac::StartCsmaBackoff(void)
 {
-    if (RadioSupportsRetriesAndCsmaBackofff())
+    if (RadioSupportsRetriesAndCsmaBackoff())
     {
         // If the radio supports the retry and back off logic, immediately schedule the send,
         // and the radio will take care of everything.
@@ -797,7 +797,7 @@ void Mac::TransmitDoneTask(bool aRxPending, ThreadError aError)
 
     mCounters.mTxTotal++;
 
-    if (!RadioSupportsRetriesAndCsmaBackofff() &&
+    if (!RadioSupportsRetriesAndCsmaBackoff() &&
         aError == kThreadError_ChannelAccessFailure &&
         mCsmaAttempts < kMaxCSMABackoffs)
     {
@@ -914,7 +914,7 @@ void Mac::SentFrame(ThreadError aError)
     case kThreadError_NoAck:
         otDumpDebgMac("NO ACK", sendFrame.GetHeader(), 16);
 
-        if (!RadioSupportsRetriesAndCsmaBackofff() &&
+        if (!RadioSupportsRetriesAndCsmaBackoff() &&
             mTransmitAttempts < kMaxFrameAttempts)
         {
             mTransmitAttempts++;
@@ -1387,7 +1387,7 @@ void Mac::SetPromiscuous(bool aPromiscuous)
     }
 }
 
-bool Mac::RadioSupportsRetriesAndCsmaBackofff(void)
+bool Mac::RadioSupportsRetriesAndCsmaBackoff(void)
 {
     return (otPlatRadioGetCaps(mNetif.GetInstance()) & kRadioCapsTransmitRetries) != 0;
 }
