@@ -304,12 +304,13 @@ public:
     /**
      * This method perform default source address selection.
      *
+     * @param[in]  aDestination  A reference to the destination address.
      * @param[in]  aMessageInfo  A reference to the message information.
      *
      * @returns A pointer to the selected IPv6 source address or NULL if no source address was found.
      *
      */
-    const NetifUnicastAddress *SelectSourceAddress(MessageInfo &aMessageInfo);
+    const NetifUnicastAddress *SelectSourceAddress(const Address &aDestination, MessageInfo &aMessageInfo);
 
     /**
      * This method determines which network interface @p aAddress is on-link, if any.
@@ -346,8 +347,9 @@ private:
     ThreadError HandleExtensionHeaders(Message &message, Header &header, uint8_t &nextHeader, bool forward,
                                        bool receive);
     ThreadError HandleFragment(Message &message);
-    ThreadError AddMplOption(Message &message, Header &header, IpProto nextHeader, uint16_t payloadLength);
-    ThreadError InsertMplOption(Message &message, Header &header);
+    ThreadError AddMplOption(Message &message, Header &header);
+    ThreadError AddTunneledMplOption(Message &message, Header &header, MessageInfo &messageInfo);
+    ThreadError InsertMplOption(Message &message, Header &header, MessageInfo &messageInfo);
     ThreadError RemoveMplOption(Message &aMessage);
     ThreadError HandleOptions(Message &message, Header &header, bool &forward);
     ThreadError HandlePayload(Message &message, MessageInfo &messageInfo, uint8_t ipproto);

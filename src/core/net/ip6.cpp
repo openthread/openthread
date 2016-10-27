@@ -125,14 +125,14 @@ void Ip6::SetReceiveIp6FilterEnabled(bool aEnabled)
     mIsReceiveIp6FilterEnabled = aEnabled;
 }
 
-ThreadError Ip6::AddMplOption(Message &message, Header &header, IpProto nextHeader, uint16_t payloadLength)
+ThreadError Ip6::AddMplOption(Message &message, Header &header)
 {
     ThreadError error = kThreadError_None;
     HopByHopHeader hbhHeader;
     OptionMpl mplOption;
     OptionPadN padOption;
 
-    hbhHeader.SetNextHeader(nextHeader);
+    hbhHeader.SetNextHeader(header.GetNextHeader());
     hbhHeader.SetLength(0);
     mMpl.InitOption(mplOption, header.GetSource());
 
@@ -145,60 +145,97 @@ ThreadError Ip6::AddMplOption(Message &message, Header &header, IpProto nextHead
 
     SuccessOrExit(error = message.Prepend(&mplOption, mplOption.GetTotalLength()));
     SuccessOrExit(error = message.Prepend(&hbhHeader, sizeof(hbhHeader)));
-    header.SetPayloadLength(sizeof(hbhHeader) + sizeof(mplOption) + payloadLength);
+    header.SetPayloadLength(header.GetPayloadLength() + sizeof(hbhHeader) + sizeof(mplOption));
     header.SetNextHeader(kProtoHopOpts);
 exit:
     return error;
 }
 
-ThreadError Ip6::InsertMplOption(Message &aMessage, Header &aIp6Header)
+ThreadError Ip6::AddTunneledMplOption(Message &aMessage, Header &aHeader, MessageInfo &aMessageInfo)
+{
+    ThreadError error = kThreadError_None;
+    Header tunnelHeader;
+    Address tunnelAddress;
+    const NetifUnicastAddress *source;
+
+    // Use IP-in-IP encapsulation (RFC2473) and ALL_MPL_FORWARDERS address.
+    memset(&tunnelAddress, 0, sizeof(tunnelAddress));
+    tunnelAddress.mFields.m16[0] = HostSwap16(0xff03);
+    tunnelAddress.mFields.m16[7] = HostSwap16(0x00fc);
+
+    tunnelHeader.Init();
+    tunnelHeader.SetHopLimit(static_cast<uint8_t>(kDefaultHopLimit));
+    tunnelHeader.SetPayloadLength(aHeader.GetPayloadLength() + sizeof(tunnelHeader));
+    tunnelHeader.SetDestination(tunnelAddress);
+    tunnelHeader.SetNextHeader(kProtoIp6);
+
+    VerifyOrExit((source = SelectSourceAddress(tunnelAddress, aMessageInfo)) != NULL,
+                 error = kThreadError_Error);
+
+    tunnelHeader.SetSource(source->GetAddress());
+
+    SuccessOrExit(error = AddMplOption(aMessage, tunnelHeader));
+    SuccessOrExit(error = aMessage.Prepend(&tunnelHeader, sizeof(tunnelHeader)));
+
+exit:
+    return error;
+}
+
+ThreadError Ip6::InsertMplOption(Message &aMessage, Header &aIp6Header, MessageInfo &aMessageInfo)
 {
     ThreadError error = kThreadError_None;
 
-    VerifyOrExit(aIp6Header.GetDestination().IsRealmLocalMulticast(),);
+    VerifyOrExit(aIp6Header.GetDestination().IsMulticast() &&
+                 aIp6Header.GetDestination().GetScope() >= Address::kRealmLocalScope, ;);
 
-    aMessage.RemoveHeader(sizeof(aIp6Header));
-
-    if (aIp6Header.GetNextHeader() == kProtoHopOpts)
+    if (aIp6Header.GetDestination().IsRealmLocalMulticast())
     {
-        HopByHopHeader hbh;
-        uint8_t hbhLength = 0;
-        OptionMpl mplOption;
+        aMessage.RemoveHeader(sizeof(aIp6Header));
 
-        // read existing hop-by-hop option header
-        aMessage.Read(0, sizeof(hbh), &hbh);
-        hbhLength = (hbh.GetLength() + 1) * 8;
-
-        // increase existing hop-by-hop option header length by 8 bytes
-        hbh.SetLength(hbh.GetLength() + 1);
-        aMessage.Write(0, sizeof(hbh), &hbh);
-
-        // make space for MPL Option + padding by shifting hop-by-hop option header
-        aMessage.Prepend(NULL, 8);
-        aMessage.CopyTo(8, 0, hbhLength, aMessage);
-
-        // insert MPL Option
-        mMpl.InitOption(mplOption, aIp6Header.GetSource());
-        aMessage.Write(hbhLength, mplOption.GetTotalLength(), &mplOption);
-
-        // insert Pad Option (if needed)
-        if (mplOption.GetTotalLength() % 8)
+        if (aIp6Header.GetNextHeader() == kProtoHopOpts)
         {
-            OptionPadN padOption;
-            padOption.Init(8 - (mplOption.GetTotalLength() % 8));
-            aMessage.Write(hbhLength + mplOption.GetTotalLength(), padOption.GetTotalLength(), &padOption);
+            HopByHopHeader hbh;
+            uint8_t hbhLength = 0;
+            OptionMpl mplOption;
+
+            // read existing hop-by-hop option header
+            aMessage.Read(0, sizeof(hbh), &hbh);
+            hbhLength = (hbh.GetLength() + 1) * 8;
+
+            // increase existing hop-by-hop option header length by 8 bytes
+            hbh.SetLength(hbh.GetLength() + 1);
+            aMessage.Write(0, sizeof(hbh), &hbh);
+
+            // make space for MPL Option + padding by shifting hop-by-hop option header
+            aMessage.Prepend(NULL, 8);
+            aMessage.CopyTo(8, 0, hbhLength, aMessage);
+
+            // insert MPL Option
+            mMpl.InitOption(mplOption, aIp6Header.GetSource());
+            aMessage.Write(hbhLength, mplOption.GetTotalLength(), &mplOption);
+
+            // insert Pad Option (if needed)
+            if (mplOption.GetTotalLength() % 8)
+            {
+                OptionPadN padOption;
+                padOption.Init(8 - (mplOption.GetTotalLength() % 8));
+                aMessage.Write(hbhLength + mplOption.GetTotalLength(), padOption.GetTotalLength(), &padOption);
+            }
+
+            // increase IPv6 Payload Length
+            aIp6Header.SetPayloadLength(aIp6Header.GetPayloadLength() + 8);
+        }
+        else
+        {
+            SuccessOrExit(error = AddMplOption(aMessage, aIp6Header));
         }
 
-        // increase IPv6 Payload Length
-        aIp6Header.SetPayloadLength(aIp6Header.GetPayloadLength() + 8);
+        SuccessOrExit(error = aMessage.Prepend(&aIp6Header, sizeof(aIp6Header)));
     }
     else
     {
-        SuccessOrExit(error = AddMplOption(aMessage, aIp6Header, aIp6Header.GetNextHeader(),
-                                           aIp6Header.GetPayloadLength()));
+        SuccessOrExit(error = AddTunneledMplOption(aMessage, aIp6Header, aMessageInfo));
     }
-
-    SuccessOrExit(error = aMessage.Prepend(&aIp6Header, sizeof(aIp6Header)));
 
 exit:
     return error;
@@ -336,7 +373,8 @@ ThreadError Ip6::SendDatagram(Message &message, MessageInfo &messageInfo, IpProt
 
     if (messageInfo.GetSockAddr().IsUnspecified())
     {
-        VerifyOrExit((source = SelectSourceAddress(messageInfo)) != NULL, error = kThreadError_Error);
+        VerifyOrExit((source = SelectSourceAddress(messageInfo.GetPeerAddr(), messageInfo)) != NULL,
+                     error = kThreadError_Error);
         header.SetSource(source->GetAddress());
     }
     else
@@ -353,10 +391,16 @@ ThreadError Ip6::SendDatagram(Message &message, MessageInfo &messageInfo, IpProt
 
     if (messageInfo.GetPeerAddr().IsRealmLocalMulticast())
     {
-        SuccessOrExit(error = AddMplOption(message, header, ipproto, payloadLength));
+        SuccessOrExit(error = AddMplOption(message, header));
     }
 
     SuccessOrExit(error = message.Prepend(&header, sizeof(header)));
+
+    if (messageInfo.GetPeerAddr().IsMulticast() &&
+        messageInfo.GetPeerAddr().GetScope() > Address::kRealmLocalScope)
+    {
+        SuccessOrExit(error = AddTunneledMplOption(message, header, messageInfo));
+    }
 
     // compute checksum
     checksum = ComputePseudoheaderChecksum(header.GetSource(), header.GetDestination(),
@@ -504,6 +548,8 @@ ThreadError Ip6::HandleExtensionHeaders(Message &message, Header &header, uint8_
             break;
 
         case kProtoIp6:
+            ExitNow();
+
         case kProtoRouting:
         case kProtoNone:
             ExitNow(error = kThreadError_Drop);
@@ -599,6 +645,7 @@ ThreadError Ip6::HandleDatagram(Message &message, Netif *netif, int8_t interface
     uint16_t payloadLength;
     bool receive = false;
     bool forward = false;
+    bool tunnel = false;
     uint8_t nextHeader;
     uint8_t hopLimit;
 
@@ -642,7 +689,7 @@ ThreadError Ip6::HandleDatagram(Message &message, Netif *netif, int8_t interface
 
             if (fromLocalHost)
             {
-                SuccessOrExit(error = InsertMplOption(message, header));
+                SuccessOrExit(error = InsertMplOption(message, header, messageInfo));
             }
         }
     }
@@ -677,6 +724,15 @@ ThreadError Ip6::HandleDatagram(Message &message, Netif *netif, int8_t interface
     // process IPv6 Payload
     if (receive)
     {
+        if (nextHeader == kProtoIp6)
+        {
+            // Remove encapsulating header.
+            message.RemoveHeader(message.GetOffset());
+
+            HandleDatagram(message, netif, interfaceId, linkMessageInfo, fromLocalHost);
+            ExitNow(tunnel = true);
+        }
+
         if (fromLocalHost == false)
         {
             ProcessReceiveCallback(message, messageInfo, nextHeader);
@@ -707,7 +763,7 @@ ThreadError Ip6::HandleDatagram(Message &message, Netif *netif, int8_t interface
 
 exit:
 
-    if (error != kThreadError_None || !forward)
+    if (!tunnel && (error != kThreadError_None || !forward))
     {
         message.Free();
     }
@@ -878,9 +934,8 @@ exit:
     return rval;
 }
 
-const NetifUnicastAddress *Ip6::SelectSourceAddress(MessageInfo &aMessageInfo)
+const NetifUnicastAddress *Ip6::SelectSourceAddress(const Address &aDestination, MessageInfo &aMessageInfo)
 {
-    Address *destination = &aMessageInfo.GetPeerAddr();
     int interfaceId = aMessageInfo.mInterfaceId;
     const NetifUnicastAddress *rvalAddr = NULL;
     const Address *candidateAddr;
@@ -895,7 +950,7 @@ const NetifUnicastAddress *Ip6::SelectSourceAddress(MessageInfo &aMessageInfo)
         {
             candidateAddr = &addr->GetAddress();
 
-            if (destination->IsLinkLocal() || destination->IsMulticast())
+            if (aDestination.IsLinkLocal() || aDestination.IsMulticast())
             {
                 if (interfaceId != candidateId)
                 {
@@ -909,7 +964,7 @@ const NetifUnicastAddress *Ip6::SelectSourceAddress(MessageInfo &aMessageInfo)
                 rvalAddr = addr;
                 rvalIface = candidateId;
             }
-            else if (*candidateAddr == *destination)
+            else if (*candidateAddr == aDestination)
             {
                 // Rule 1: Prefer same address
                 rvalAddr = addr;
@@ -919,7 +974,7 @@ const NetifUnicastAddress *Ip6::SelectSourceAddress(MessageInfo &aMessageInfo)
             else if (candidateAddr->GetScope() < rvalAddr->GetAddress().GetScope())
             {
                 // Rule 2: Prefer appropriate scope
-                if (candidateAddr->GetScope() >= destination->GetScope())
+                if (candidateAddr->GetScope() >= aDestination.GetScope())
                 {
                     rvalAddr = addr;
                     rvalIface = candidateId;
@@ -927,7 +982,7 @@ const NetifUnicastAddress *Ip6::SelectSourceAddress(MessageInfo &aMessageInfo)
             }
             else if (candidateAddr->GetScope() > rvalAddr->GetAddress().GetScope())
             {
-                if (rvalAddr->GetAddress().GetScope() < destination->GetScope())
+                if (rvalAddr->GetAddress().GetScope() < aDestination.GetScope())
                 {
                     rvalAddr = addr;
                     rvalIface = candidateId;
@@ -947,7 +1002,7 @@ const NetifUnicastAddress *Ip6::SelectSourceAddress(MessageInfo &aMessageInfo)
                 rvalAddr = addr;
                 rvalIface = candidateId;
             }
-            else if (destination->PrefixMatch(*candidateAddr) > destination->PrefixMatch(rvalAddr->GetAddress()))
+            else if (aDestination.PrefixMatch(*candidateAddr) > aDestination.PrefixMatch(rvalAddr->GetAddress()))
             {
                 // Rule 6: Prefer matching label
                 // Rule 7: Prefer public address
