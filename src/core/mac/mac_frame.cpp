@@ -251,7 +251,6 @@ ThreadError Frame::ValidatePsdu(void)
     if ((fcf & kFcfFrameTypeMask) == kFcfFrameMacCmd)
     {
         VerifyOrExit((uint8_t)(GetPsduLength() - offset) > kCommandIdSize, ;);
-        offset += kCommandIdSize;
     }
 
     error = kThreadError_None;

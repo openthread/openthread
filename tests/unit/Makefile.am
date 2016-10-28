@@ -33,6 +33,7 @@ include $(abs_top_nlbuild_autotools_dir)/automake/pre.am
 # since they are not part of the package.
 #
 noinst_HEADERS                                                      = \
+    test_platform.h                                                   \
     test_util.h                                                       \
     test_util.hpp                                                     \
     test_vector.h                                                     \
@@ -65,6 +66,7 @@ COMMON_LDADD                                                        = \
 
 check_PROGRAMS                                                      = \
     test-aes                                                          \
+    test-fuzz                                                         \
     test-hmac-sha256                                                  \
     test-lowpan                                                       \
     test-link-quality                                                 \
