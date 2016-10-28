@@ -252,6 +252,15 @@ public:
     ThreadError InitMacHeader(uint16_t aFcf, uint8_t aSecCtl);
 
     /**
+     * This method validates the frame.
+     *
+     * @retval kThreadError_None    Successfully parsed the MAC header.
+     * @retval kThreadError_Parse   Failed to parse through the MAC header.
+     *
+     */
+    ThreadError ValidatePsdu(void);
+
+    /**
      * This method returns the IEEE 802.15.4 Frame Type.
      *
      * @returns The IEEE 802.15.4 Frame Type.

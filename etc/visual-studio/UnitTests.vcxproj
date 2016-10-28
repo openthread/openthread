@@ -163,6 +163,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="..\..\tests\unit\test_aes.cpp" />
+    <ClCompile Include="..\..\tests\unit\test_fuzz.cpp" />
     <ClCompile Include="..\..\tests\unit\test_hmac_sha256.cpp" />
     <ClCompile Include="..\..\tests\unit\test_link_quality.cpp" />
     <ClCompile Include="..\..\tests\unit\test_lowpan.cpp" />
@@ -178,6 +179,7 @@
     <ClCompile Include="..\..\tests\unit\test_windows.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\tests\unit\test_platform.h" />
     <ClInclude Include="..\..\tests\unit\test_util.h" />
     <ClInclude Include="..\..\tests\unit\test_util.hpp" />
     <ClInclude Include="..\..\tests\unit\test_vector.h" />

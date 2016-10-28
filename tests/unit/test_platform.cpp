@@ -26,38 +26,38 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#if _WIN32
-#define _CRT_SECURE_NO_WARNINGS
-#include <windows.h>
-#endif
+#include "test_platform.h"
 
-#include <openthread.h>
+bool                            g_testPlatAlarmSet = false;
+uint32_t                        g_testPlatAlarmNext = 0;
+testPlatAlarmStop               g_testPlatAlarmStop = NULL;
+testPlatAlarmStartAt            g_testPlatAlarmStartAt = NULL;
+testPlatAlarmGetNow             g_testPlatAlarmGetNow = NULL;
 
-#include <common/code_utils.hpp>
-#include <platform/alarm.h>
-#include <platform/logging.h>
-#include <platform/misc.h>
-#include <platform/radio.h>
-#include <platform/random.h>
+otRadioCaps                     g_testPlatRadioCaps = kRadioCapsNone;
+testPlatRadioSetPanId           g_testPlatRadioSetPanId = NULL;
+testPlatRadioSetExtendedAddress g_testPlatRadioSetExtendedAddress = NULL;
+testPlatRadioSetShortAddress    g_testPlatRadioSetShortAddress = NULL;
+testPlatRadioReceive            g_testPlatRadioReceive = NULL;
+testPlatRadioTransmit           g_testPlatRadioTransmit = NULL;
+testPlatRadioGetTransmitBuffer  g_testPlatRadioGetTransmitBuffer = NULL;
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-
-enum
+void testPlatResetToDefaults(void)
 {
-    kCallCountIndexAlarmStop = 0,
-    kCallCountIndexAlarmStart,
-    kCallCountIndexTimerHandler,
+    g_testPlatAlarmSet = false;
+    g_testPlatAlarmNext = 0;
+    g_testPlatAlarmStop = NULL;
+    g_testPlatAlarmStartAt = NULL;
+    g_testPlatAlarmGetNow = NULL;
 
-    kCallCountIndexMax
-};
-
-uint32_t sNow;
-uint32_t sPlatT0;
-uint32_t sPlatDt;
-bool     sTimerOn;
-uint32_t sCallCount[kCallCountIndexMax];
+    g_testPlatRadioCaps = kRadioCapsNone;
+    g_testPlatRadioSetPanId = NULL;
+    g_testPlatRadioSetExtendedAddress = NULL;
+    g_testPlatRadioSetShortAddress = NULL;
+    g_testPlatRadioReceive = NULL;
+    g_testPlatRadioTransmit = NULL;
+    g_testPlatRadioGetTransmitBuffer = NULL;
+}
 
 bool sDiagMode = false;
 
@@ -79,23 +79,53 @@ extern "C" {
     // Alarm
     //
 
-    void otPlatAlarmStop(otInstance *)
+#if _WIN32
+    __forceinline int gettimeofday(struct timeval *tv, struct timezone *)
     {
-        sTimerOn = false;
-        sCallCount[kCallCountIndexAlarmStop]++;
+        DWORD tick = GetTickCount();
+        tv->tv_sec = (long)(tick / 1000);
+        tv->tv_usec = (long)(tick * 1000);
+        return 0;
+    }
+#endif
+
+    void otPlatAlarmStop(otInstance *aInstance)
+    {
+        if (g_testPlatAlarmStop)
+        {
+            g_testPlatAlarmStop(aInstance);
+        }
+        else
+        {
+            g_testPlatAlarmSet = false;
+        }
     }
 
-    void otPlatAlarmStartAt(otInstance *, uint32_t aT0, uint32_t aDt)
+    void otPlatAlarmStartAt(otInstance *aInstance, uint32_t aT0, uint32_t aDt)
     {
-        sTimerOn = true;
-        sCallCount[kCallCountIndexAlarmStart]++;
-        sPlatT0 = aT0;
-        sPlatDt = aDt;
+        if (g_testPlatAlarmStartAt)
+        {
+            g_testPlatAlarmStartAt(aInstance, aT0, aDt);
+        }
+        else
+        {
+            g_testPlatAlarmSet = true;
+            g_testPlatAlarmNext = aT0 + aDt;
+        }
     }
 
     uint32_t otPlatAlarmGetNow(void)
     {
-        return sNow;
+        if (g_testPlatAlarmGetNow)
+        {
+            return g_testPlatAlarmGetNow();
+        }
+        else
+        {
+            struct timeval tv;
+            gettimeofday(&tv, NULL);
+            return (uint32_t)((tv.tv_sec * 1000) + (tv.tv_usec / 1000) + 123456);
+        }
     }
 
     //
@@ -106,16 +136,28 @@ extern "C" {
     {
     }
 
-    void otPlatRadioSetPanId(otInstance *, uint16_t)
+    void otPlatRadioSetPanId(otInstance *aInstance, uint16_t aPanId)
     {
+        if (g_testPlatRadioSetPanId)
+        {
+            g_testPlatRadioSetPanId(aInstance, aPanId);
+        }
     }
 
-    void otPlatRadioSetExtendedAddress(otInstance *, uint8_t *)
+    void otPlatRadioSetExtendedAddress(otInstance *aInstance, uint8_t *aExtAddr)
     {
+        if (g_testPlatRadioSetExtendedAddress)
+        {
+            g_testPlatRadioSetExtendedAddress(aInstance, aExtAddr);
+        }
     }
 
-    void otPlatRadioSetShortAddress(otInstance *, uint16_t)
+    void otPlatRadioSetShortAddress(otInstance *aInstance, uint16_t aShortAddr)
     {
+        if (g_testPlatRadioSetShortAddress)
+        {
+            g_testPlatRadioSetShortAddress(aInstance, aShortAddr);
+        }
     }
 
     void otPlatRadioSetPromiscuous(otInstance *, bool)
@@ -137,19 +179,40 @@ extern "C" {
         return kThreadError_None;
     }
 
-    ThreadError otPlatRadioReceive(otInstance *, uint8_t)
+    ThreadError otPlatRadioReceive(otInstance *aInstance, uint8_t aChannel)
     {
-        return kThreadError_None;
+        if (g_testPlatRadioReceive)
+        {
+            return g_testPlatRadioReceive(aInstance, aChannel);
+        }
+        else
+        {
+            return kThreadError_None;
+        }
     }
 
-    ThreadError otPlatRadioTransmit(otInstance *)
+    ThreadError otPlatRadioTransmit(otInstance *aInstance)
     {
-        return kThreadError_None;
+        if (g_testPlatRadioTransmit)
+        {
+            return g_testPlatRadioTransmit(aInstance);
+        }
+        else
+        {
+            return kThreadError_None;
+        }
     }
 
-    RadioPacket *otPlatRadioGetTransmitBuffer(otInstance *)
+    RadioPacket *otPlatRadioGetTransmitBuffer(otInstance *aInstance)
     {
-        return (RadioPacket *)0;
+        if (g_testPlatRadioGetTransmitBuffer)
+        {
+            return g_testPlatRadioGetTransmitBuffer(aInstance);
+        }
+        else
+        {
+            return (RadioPacket *)0;
+        }
     }
 
     int8_t otPlatRadioGetRssi(otInstance *)
@@ -159,7 +222,7 @@ extern "C" {
 
     otRadioCaps otPlatRadioGetCaps(otInstance *)
     {
-        return kRadioCapsNone;
+        return g_testPlatRadioCaps;
     }
 
     bool otPlatRadioGetPromiscuous(otInstance *)

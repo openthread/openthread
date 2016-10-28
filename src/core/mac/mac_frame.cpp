@@ -145,6 +145,121 @@ ThreadError Frame::InitMacHeader(uint16_t aFcf, uint8_t aSecurityControl)
     return kThreadError_None;
 }
 
+ThreadError Frame::ValidatePsdu(void)
+{
+    ThreadError error = kThreadError_Parse;
+    uint8_t offset = 0;
+    uint16_t fcf;
+
+    VerifyOrExit(GetPsduLength() > kFcfSize + kDsnSize, ;);
+
+    fcf = static_cast<uint16_t>((GetPsdu()[1] << 8) | GetPsdu()[0]);
+
+    offset += kFcfSize + kDsnSize;
+
+    // Destinatino PAN + Address
+    switch (fcf & Frame::kFcfDstAddrMask)
+    {
+    case Frame::kFcfDstAddrNone:
+        break;
+
+    case Frame::kFcfDstAddrShort:
+        VerifyOrExit(GetPsduLength() - offset > sizeof(PanId) + sizeof(ShortAddress), ;);
+        offset += sizeof(PanId) + sizeof(ShortAddress);
+        break;
+
+    case Frame::kFcfDstAddrExt:
+        VerifyOrExit(GetPsduLength() - offset > sizeof(PanId) + sizeof(ExtAddress), ;);
+        offset += sizeof(PanId) + sizeof(ExtAddress);
+        break;
+
+    default:
+        goto exit;
+    }
+
+    // Source PAN + Address
+    switch (fcf & Frame::kFcfSrcAddrMask)
+    {
+    case Frame::kFcfSrcAddrNone:
+        break;
+
+    case Frame::kFcfSrcAddrShort:
+        if ((fcf & Frame::kFcfPanidCompression) == 0)
+        {
+            VerifyOrExit(GetPsduLength() - offset > sizeof(PanId), ;);
+            offset += sizeof(PanId);
+        }
+        
+        VerifyOrExit(GetPsduLength() - offset > sizeof(ShortAddress), ;);
+        offset += sizeof(ShortAddress);
+        break;
+
+    case Frame::kFcfSrcAddrExt:
+        if ((fcf & Frame::kFcfPanidCompression) == 0)
+        {
+            VerifyOrExit(GetPsduLength() - offset > sizeof(PanId), ;);
+            offset += sizeof(PanId);
+        }
+        
+        VerifyOrExit(GetPsduLength() - offset > sizeof(ExtAddress), ;);
+        offset += sizeof(ExtAddress);
+        break;
+
+    default:
+        goto exit;
+    }
+
+    // Security Header
+    if (fcf & Frame::kFcfSecurityEnabled)
+    {
+        VerifyOrExit(GetPsduLength() - offset > sizeof(uint8_t), ;);
+
+        uint8_t secControl = GetPsdu()[offset];
+        offset += sizeof(uint8_t);
+
+        if (secControl & kSecLevelMask)
+        {
+            VerifyOrExit(GetPsduLength() - offset > kSecurityControlSize + kFrameCounterSize, ;);
+            offset += kSecurityControlSize + kFrameCounterSize;
+        }
+
+        switch (secControl & kKeyIdModeMask)
+        {
+        case kKeyIdMode0:
+            VerifyOrExit(GetPsduLength() - offset > kKeySourceSizeMode0, ;);
+            offset += kKeySourceSizeMode0;
+            break;
+
+        case kKeyIdMode1:
+            VerifyOrExit(GetPsduLength() - offset > kKeySourceSizeMode1 + kKeyIndexSize, ;);
+            offset += kKeySourceSizeMode1 + kKeyIndexSize;
+            break;
+
+        case kKeyIdMode2:
+            VerifyOrExit(GetPsduLength() - offset > kKeySourceSizeMode2 + kKeyIndexSize, ;);
+            offset += kKeySourceSizeMode2 + kKeyIndexSize;
+            break;
+
+        case kKeyIdMode3:
+            VerifyOrExit(GetPsduLength() - offset > kKeySourceSizeMode3 + kKeyIndexSize, ;);
+            offset += kKeySourceSizeMode3 + kKeyIndexSize;
+            break;
+        }
+    }
+
+    // Command ID
+    if ((fcf & kFcfFrameTypeMask) == kFcfFrameMacCmd)
+    {
+        VerifyOrExit(GetPsduLength() - offset > kCommandIdSize, ;);
+        offset += kCommandIdSize;
+    }
+
+    error = kThreadError_None;
+
+exit:
+    return error;
+}
+
 uint8_t Frame::GetType(void)
 {
     return GetPsdu()[0] & Frame::kFcfFrameTypeMask;

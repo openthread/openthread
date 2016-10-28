@@ -1142,6 +1142,7 @@ void Mac::ReceiveDoneTask(Frame *aFrame, ThreadError aError)
 
     VerifyOrExit(error == kThreadError_None, ;);
     VerifyOrExit(aFrame != NULL, error = kThreadError_NoFrameReceived);
+    SuccessOrExit(error = aFrame->ValidatePsdu());
 
     aFrame->mSecurityValid = false;
 
