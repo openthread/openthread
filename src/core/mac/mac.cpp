@@ -80,18 +80,27 @@ static_assert(kMinBackoffSum > 0, "The min backoff value should be greater than 
 
 void Mac::StartCsmaBackoff(void)
 {
-    uint32_t backoffExponent = kMinBE + mTransmitAttempts + mCsmaAttempts;
-    uint32_t backoff;
-
-    if (backoffExponent > kMaxBE)
+    if (RadioSupportsRetriesAndCsmaBackoff())
     {
-        backoffExponent = kMaxBE;
+        // If the radio supports the retry and back off logic, immediately schedule the send,
+        // and the radio will take care of everything.
+        mBackoffTimer.Start(0);
     }
+    else
+    {
+        uint32_t backoffExponent = kMinBE + mTransmitAttempts + mCsmaAttempts;
+        uint32_t backoff;
 
-    backoff = kMinBackoff + (kUnitBackoffPeriod * kPhyUsPerSymbol * (1 << backoffExponent)) / 1000;
-    backoff = (otPlatRandomGet() % backoff);
+        if (backoffExponent > kMaxBE)
+        {
+            backoffExponent = kMaxBE;
+        }
 
-    mBackoffTimer.Start(backoff);
+        backoff = kMinBackoff + (kUnitBackoffPeriod * kPhyUsPerSymbol * (1 << backoffExponent)) / 1000;
+        backoff = (otPlatRandomGet() % backoff);
+
+        mBackoffTimer.Start(backoff);
+    }
 }
 
 Mac::Mac(ThreadNetif &aThreadNetif):
@@ -788,7 +797,8 @@ void Mac::TransmitDoneTask(bool aRxPending, ThreadError aError)
 
     mCounters.mTxTotal++;
 
-    if (aError == kThreadError_ChannelAccessFailure &&
+    if (!RadioSupportsRetriesAndCsmaBackoff() &&
+        aError == kThreadError_ChannelAccessFailure &&
         mCsmaAttempts < kMaxCSMABackoffs)
     {
         mCsmaAttempts++;
@@ -904,7 +914,8 @@ void Mac::SentFrame(ThreadError aError)
     case kThreadError_NoAck:
         otDumpDebgMac("NO ACK", sendFrame.GetHeader(), 16);
 
-        if (mTransmitAttempts < kMaxFrameAttempts)
+        if (!RadioSupportsRetriesAndCsmaBackoff() &&
+            mTransmitAttempts < kMaxFrameAttempts)
         {
             mTransmitAttempts++;
             StartCsmaBackoff();
@@ -1374,6 +1385,11 @@ void Mac::SetPromiscuous(bool aPromiscuous)
     {
         NextOperation();
     }
+}
+
+bool Mac::RadioSupportsRetriesAndCsmaBackoff(void)
+{
+    return (otPlatRadioGetCaps(mNetif.GetInstance()) & kRadioCapsTransmitRetries) != 0;
 }
 
 Whitelist &Mac::GetWhitelist(void)
