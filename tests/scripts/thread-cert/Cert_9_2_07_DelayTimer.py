@@ -86,7 +86,7 @@ class Cert_9_2_7_DelayTimer(unittest.TestCase):
         self.assertEqual(self.nodes[COMMISSIONER].get_state(), 'router')
 
         self.nodes[ROUTER].start()
-        time.sleep(5)
+        time.sleep(10)
         self.assertEqual(self.nodes[ROUTER].get_state(), 'leader')
 
         self.nodes[LEADER].add_whitelist(self.nodes[ROUTER].get_addr64())

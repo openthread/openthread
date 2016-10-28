@@ -374,19 +374,23 @@ public:
     /**
      * This method starts the MLE protocol operation.
      *
+     * @param[in]  aEnableReattach  True to enable reattach process using stored dataset, False not.
+     *
      * @retval kThreadError_None     Successfully started the protocol operation.
      * @retval kThreadError_Already  The protocol operation was already started.
      *
      */
-    ThreadError Start(void);
+    ThreadError Start(bool aEnableReattach);
 
     /**
      * This method stops the MLE protocol operation.
      *
+     * @param[in]  aClearNetworkDatasets  True to clear network datasets, False not.
+     *
      * @retval kThreadError_None  Successfully stopped the protocol operation.
      *
      */
-    ThreadError Stop(void);
+    ThreadError Stop(bool aClearNetworkDatasets);
 
     /**
      * This function pointer is called on receiving an MLE Discovery Response message.
@@ -1159,6 +1163,19 @@ protected:
         kChildIdRequest,       ///< Sending a Child ID Request message.
     };
     ParentRequestState mParentRequestState;  ///< The parent request state.
+
+    /**
+     * States when reattaching network using stored dataset
+     *
+     */
+    enum ReattachState
+    {
+        kReattachStop       = 0,   ///< Reattach process is disabled or finished
+        kReattachStart      = 1,   ///< Start reattach process
+        kReattachActive     = 2,   ///< Reattach using stored Active Dataset
+        kReattachPending    = 3,   ///< Reattach using stored Pending Dataset
+    };
+    ReattachState mReattachState;
 
     Timer mParentRequestTimer;  ///< The timer for driving the Parent Request process.
 
