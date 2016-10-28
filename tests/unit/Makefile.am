@@ -52,14 +52,22 @@ AM_CPPFLAGS                                                         = \
     -I$(top_srcdir)/include                                           \
     -I$(top_srcdir)/src                                               \
     -I$(top_srcdir)/src/core                                          \
-    -I$(top_srcdir)/third_party/mbedtls/repo/include                  \
     $(NULL)
 
 COMMON_LDADD                                                        = \
     $(top_builddir)/src/core/libopenthread.a                          \
-    $(top_builddir)/third_party/mbedtls/libmbedcrypto.a               \
     -lpthread                                                         \
     $(NULL)
+
+if OPENTHREAD_ENABLE_BUILTIN_MBEDTLS
+AM_CPPFLAGS                                                        += \
+    -I$(top_srcdir)/third_party/mbedtls/repo/include                  \
+    $(NULL)
+
+COMMON_LDADD                                                       += \
+    $(top_builddir)/third_party/mbedtls/libmbedcrypto.a               \
+    $(NULL)
+endif # OPENTHREAD_ENABLE_BUILTIN_MBEDTLS
 
 # Test applications that should be run when the 'check' target is run.
 

@@ -39,10 +39,10 @@ DIST_SUBDIRS                            = \
     mbedtls                               \
     $(NULL)
 
-# Always build (e.g. for 'make all') these subdirectories.
-
+if OPENTHREAD_ENABLE_BUILTIN_MBEDTLS
 SUBDIRS                                 = \
     mbedtls                               \
     $(NULL)
+endif # OPENTHREAD_ENABLE_BUILTIN_MBEDTLS
 
 include $(abs_top_nlbuild_autotools_dir)/automake/post.am
