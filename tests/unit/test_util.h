@@ -83,7 +83,7 @@ extern "C" {
 typedef void (*utAssertTrue)(bool condition, const wchar_t *message);
 extern utAssertTrue s_AssertTrue;
 
-typedef void (*utLogMessage)(const char* format, ...);
+typedef void (*utLogMessage)(const char *format, ...);
 extern utLogMessage s_LogMessage;
 
 #define SuccessOrQuit(ERR, MSG) s_AssertTrue((ERR) == kThreadError_None, L##MSG)

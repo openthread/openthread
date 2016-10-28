@@ -164,12 +164,12 @@ ThreadError Frame::ValidatePsdu(void)
         break;
 
     case Frame::kFcfDstAddrShort:
-        VerifyOrExit(GetPsduLength() - offset > sizeof(PanId) + sizeof(ShortAddress), ;);
+        VerifyOrExit((uint8_t)(GetPsduLength() - offset) > sizeof(PanId) + sizeof(ShortAddress), ;);
         offset += sizeof(PanId) + sizeof(ShortAddress);
         break;
 
     case Frame::kFcfDstAddrExt:
-        VerifyOrExit(GetPsduLength() - offset > sizeof(PanId) + sizeof(ExtAddress), ;);
+        VerifyOrExit((uint8_t)(GetPsduLength() - offset) > sizeof(PanId) + sizeof(ExtAddress), ;);
         offset += sizeof(PanId) + sizeof(ExtAddress);
         break;
 
@@ -186,22 +186,22 @@ ThreadError Frame::ValidatePsdu(void)
     case Frame::kFcfSrcAddrShort:
         if ((fcf & Frame::kFcfPanidCompression) == 0)
         {
-            VerifyOrExit(GetPsduLength() - offset > sizeof(PanId), ;);
+            VerifyOrExit((uint8_t)(GetPsduLength() - offset) > sizeof(PanId), ;);
             offset += sizeof(PanId);
         }
-        
-        VerifyOrExit(GetPsduLength() - offset > sizeof(ShortAddress), ;);
+
+        VerifyOrExit((uint8_t)(GetPsduLength() - offset) > sizeof(ShortAddress), ;);
         offset += sizeof(ShortAddress);
         break;
 
     case Frame::kFcfSrcAddrExt:
         if ((fcf & Frame::kFcfPanidCompression) == 0)
         {
-            VerifyOrExit(GetPsduLength() - offset > sizeof(PanId), ;);
+            VerifyOrExit((uint8_t)(GetPsduLength() - offset) > sizeof(PanId), ;);
             offset += sizeof(PanId);
         }
-        
-        VerifyOrExit(GetPsduLength() - offset > sizeof(ExtAddress), ;);
+
+        VerifyOrExit((uint8_t)(GetPsduLength() - offset) > sizeof(ExtAddress), ;);
         offset += sizeof(ExtAddress);
         break;
 
@@ -212,36 +212,36 @@ ThreadError Frame::ValidatePsdu(void)
     // Security Header
     if (fcf & Frame::kFcfSecurityEnabled)
     {
-        VerifyOrExit(GetPsduLength() - offset > sizeof(uint8_t), ;);
+        VerifyOrExit((uint8_t)(GetPsduLength() - offset) > sizeof(uint8_t), ;);
 
         uint8_t secControl = GetPsdu()[offset];
         offset += sizeof(uint8_t);
 
         if (secControl & kSecLevelMask)
         {
-            VerifyOrExit(GetPsduLength() - offset > kSecurityControlSize + kFrameCounterSize, ;);
+            VerifyOrExit((uint8_t)(GetPsduLength() - offset) > kSecurityControlSize + kFrameCounterSize, ;);
             offset += kSecurityControlSize + kFrameCounterSize;
         }
 
         switch (secControl & kKeyIdModeMask)
         {
         case kKeyIdMode0:
-            VerifyOrExit(GetPsduLength() - offset > kKeySourceSizeMode0, ;);
+            VerifyOrExit((uint8_t)(GetPsduLength() - offset) > kKeySourceSizeMode0, ;);
             offset += kKeySourceSizeMode0;
             break;
 
         case kKeyIdMode1:
-            VerifyOrExit(GetPsduLength() - offset > kKeySourceSizeMode1 + kKeyIndexSize, ;);
+            VerifyOrExit((uint8_t)(GetPsduLength() - offset) > kKeySourceSizeMode1 + kKeyIndexSize, ;);
             offset += kKeySourceSizeMode1 + kKeyIndexSize;
             break;
 
         case kKeyIdMode2:
-            VerifyOrExit(GetPsduLength() - offset > kKeySourceSizeMode2 + kKeyIndexSize, ;);
+            VerifyOrExit((uint8_t)(GetPsduLength() - offset) > kKeySourceSizeMode2 + kKeyIndexSize, ;);
             offset += kKeySourceSizeMode2 + kKeyIndexSize;
             break;
 
         case kKeyIdMode3:
-            VerifyOrExit(GetPsduLength() - offset > kKeySourceSizeMode3 + kKeyIndexSize, ;);
+            VerifyOrExit((uint8_t)(GetPsduLength() - offset) > kKeySourceSizeMode3 + kKeyIndexSize, ;);
             offset += kKeySourceSizeMode3 + kKeyIndexSize;
             break;
         }
@@ -250,7 +250,7 @@ ThreadError Frame::ValidatePsdu(void)
     // Command ID
     if ((fcf & kFcfFrameTypeMask) == kFcfFrameMacCmd)
     {
-        VerifyOrExit(GetPsduLength() - offset > kCommandIdSize, ;);
+        VerifyOrExit((uint8_t)(GetPsduLength() - offset) > kCommandIdSize, ;);
         offset += kCommandIdSize;
     }
 

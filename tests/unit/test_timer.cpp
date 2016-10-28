@@ -344,7 +344,7 @@ int TestTenTimers(void)
     size_t i;
 
     // Start the Ten timers.
-    
+
     InitTestTimer();
     InitCounters();
 
