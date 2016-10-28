@@ -304,13 +304,12 @@ public:
     /**
      * This method perform default source address selection.
      *
-     * @param[in]  aDestination  A reference to the destination address.
      * @param[in]  aMessageInfo  A reference to the message information.
      *
      * @returns A pointer to the selected IPv6 source address or NULL if no source address was found.
      *
      */
-    const NetifUnicastAddress *SelectSourceAddress(const Address &aDestination, MessageInfo &aMessageInfo);
+    const NetifUnicastAddress *SelectSourceAddress(MessageInfo &aMessageInfo);
 
     /**
      * This method determines which network interface @p aAddress is on-link, if any.

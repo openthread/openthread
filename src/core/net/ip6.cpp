@@ -155,21 +155,21 @@ ThreadError Ip6::AddTunneledMplOption(Message &aMessage, Header &aHeader, Messag
 {
     ThreadError error = kThreadError_None;
     Header tunnelHeader;
-    Address tunnelAddress;
     const NetifUnicastAddress *source;
+    MessageInfo messageInfo(aMessageInfo);
 
     // Use IP-in-IP encapsulation (RFC2473) and ALL_MPL_FORWARDERS address.
-    memset(&tunnelAddress, 0, sizeof(tunnelAddress));
-    tunnelAddress.mFields.m16[0] = HostSwap16(0xff03);
-    tunnelAddress.mFields.m16[7] = HostSwap16(0x00fc);
+    memset(&messageInfo.GetPeerAddr(), 0, sizeof(Address));
+    messageInfo.GetPeerAddr().mFields.m16[0] = HostSwap16(0xff03);
+    messageInfo.GetPeerAddr().mFields.m16[7] = HostSwap16(0x00fc);
 
     tunnelHeader.Init();
     tunnelHeader.SetHopLimit(static_cast<uint8_t>(kDefaultHopLimit));
     tunnelHeader.SetPayloadLength(aHeader.GetPayloadLength() + sizeof(tunnelHeader));
-    tunnelHeader.SetDestination(tunnelAddress);
+    tunnelHeader.SetDestination(messageInfo.GetPeerAddr());
     tunnelHeader.SetNextHeader(kProtoIp6);
 
-    VerifyOrExit((source = SelectSourceAddress(tunnelAddress, aMessageInfo)) != NULL,
+    VerifyOrExit((source = SelectSourceAddress(messageInfo)) != NULL,
                  error = kThreadError_Error);
 
     tunnelHeader.SetSource(source->GetAddress());
@@ -373,7 +373,7 @@ ThreadError Ip6::SendDatagram(Message &message, MessageInfo &messageInfo, IpProt
 
     if (messageInfo.GetSockAddr().IsUnspecified())
     {
-        VerifyOrExit((source = SelectSourceAddress(messageInfo.GetPeerAddr(), messageInfo)) != NULL,
+        VerifyOrExit((source = SelectSourceAddress(messageInfo)) != NULL,
                      error = kThreadError_Error);
         header.SetSource(source->GetAddress());
     }
@@ -934,8 +934,9 @@ exit:
     return rval;
 }
 
-const NetifUnicastAddress *Ip6::SelectSourceAddress(const Address &aDestination, MessageInfo &aMessageInfo)
+const NetifUnicastAddress *Ip6::SelectSourceAddress(MessageInfo &aMessageInfo)
 {
+    Address *destination = &aMessageInfo.GetPeerAddr();
     int interfaceId = aMessageInfo.mInterfaceId;
     const NetifUnicastAddress *rvalAddr = NULL;
     const Address *candidateAddr;
@@ -950,7 +951,7 @@ const NetifUnicastAddress *Ip6::SelectSourceAddress(const Address &aDestination,
         {
             candidateAddr = &addr->GetAddress();
 
-            if (aDestination.IsLinkLocal() || aDestination.IsMulticast())
+            if (destination->IsLinkLocal() || destination->IsMulticast())
             {
                 if (interfaceId != candidateId)
                 {
@@ -964,7 +965,7 @@ const NetifUnicastAddress *Ip6::SelectSourceAddress(const Address &aDestination,
                 rvalAddr = addr;
                 rvalIface = candidateId;
             }
-            else if (*candidateAddr == aDestination)
+            else if (*candidateAddr == *destination)
             {
                 // Rule 1: Prefer same address
                 rvalAddr = addr;
@@ -974,7 +975,7 @@ const NetifUnicastAddress *Ip6::SelectSourceAddress(const Address &aDestination,
             else if (candidateAddr->GetScope() < rvalAddr->GetAddress().GetScope())
             {
                 // Rule 2: Prefer appropriate scope
-                if (candidateAddr->GetScope() >= aDestination.GetScope())
+                if (candidateAddr->GetScope() >= destination->GetScope())
                 {
                     rvalAddr = addr;
                     rvalIface = candidateId;
@@ -982,7 +983,7 @@ const NetifUnicastAddress *Ip6::SelectSourceAddress(const Address &aDestination,
             }
             else if (candidateAddr->GetScope() > rvalAddr->GetAddress().GetScope())
             {
-                if (rvalAddr->GetAddress().GetScope() < aDestination.GetScope())
+                if (rvalAddr->GetAddress().GetScope() < destination->GetScope())
                 {
                     rvalAddr = addr;
                     rvalIface = candidateId;
@@ -1002,7 +1003,7 @@ const NetifUnicastAddress *Ip6::SelectSourceAddress(const Address &aDestination,
                 rvalAddr = addr;
                 rvalIface = candidateId;
             }
-            else if (aDestination.PrefixMatch(*candidateAddr) > aDestination.PrefixMatch(rvalAddr->GetAddress()))
+            else if (destination->PrefixMatch(*candidateAddr) > destination->PrefixMatch(rvalAddr->GetAddress()))
             {
                 // Rule 6: Prefer matching label
                 // Rule 7: Prefer public address
