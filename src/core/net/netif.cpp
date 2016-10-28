@@ -122,7 +122,8 @@ bool Netif::IsMulticastSubscribed(const Address &aAddress) const
 {
     bool rval = false;
 
-    if (aAddress.IsLinkLocalAllNodesMulticast() || aAddress.IsRealmLocalAllNodesMulticast())
+    if (aAddress.IsLinkLocalAllNodesMulticast() || aAddress.IsRealmLocalAllNodesMulticast() ||
+        aAddress.IsRealmLocalAllMplForwarders())
     {
         ExitNow(rval = true);
     }
