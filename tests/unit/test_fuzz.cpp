@@ -65,7 +65,7 @@ void TestFuzz(uint32_t aSeconds)
     // Initialize our timing variables
     uint32_t tStart = otPlatAlarmGetNow();
     uint32_t tEnd = tStart + (aSeconds * 1000);
-    
+
     otInstance *aInstance;
 
 #ifdef OPENTHREAD_MULTIPLE_INSTANCE
@@ -94,6 +94,7 @@ void TestFuzz(uint32_t aSeconds)
     otThreadStart(aInstance);
 
     uint32_t countRecv = 0;
+
     while (otPlatAlarmGetNow() < tEnd)
     {
         otProcessQueuedTasklets(aInstance);
@@ -123,8 +124,10 @@ void TestFuzz(uint32_t aSeconds)
 
             // Populate the length with random
             for (uint8_t i = 0; i < fuzzPacket.mLength; i++)
+            {
                 fuzzRecvBuff[i] = (uint8_t)otPlatRandomGet();
-            
+            }
+
             // Clear the global flag
             g_RecvChannel = 0;
 
@@ -144,7 +147,7 @@ void TestFuzz(uint32_t aSeconds)
 
     // Clean up the instance
     otInstanceFinalize(aInstance);
-    
+
 #ifdef OPENTHREAD_MULTIPLE_INSTANCE
     free(otInstanceBuffer);
 #endif

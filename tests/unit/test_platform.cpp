@@ -28,6 +28,18 @@
 
 #include "test_platform.h"
 
+#if _WIN32
+__forceinline int gettimeofday(struct timeval *tv, struct timezone *)
+{
+    DWORD tick = GetTickCount();
+    tv->tv_sec = (long)(tick / 1000);
+    tv->tv_usec = (long)(tick * 1000);
+    return 0;
+}
+#else
+#include <sys/time.h>
+#endif
+
 bool                            g_testPlatAlarmSet = false;
 uint32_t                        g_testPlatAlarmNext = 0;
 testPlatAlarmStop               g_testPlatAlarmStop = NULL;
@@ -78,16 +90,6 @@ extern "C" {
     //
     // Alarm
     //
-
-#if _WIN32
-    __forceinline int gettimeofday(struct timeval *tv, struct timezone *)
-    {
-        DWORD tick = GetTickCount();
-        tv->tv_sec = (long)(tick / 1000);
-        tv->tv_usec = (long)(tick * 1000);
-        return 0;
-    }
-#endif
 
     void otPlatAlarmStop(otInstance *aInstance)
     {

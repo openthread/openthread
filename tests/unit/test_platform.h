@@ -43,6 +43,8 @@
 #include <platform/radio.h>
 #include <platform/random.h>
 
+#include <string.h>
+
 #include "test_util.h"
 
 //
@@ -64,12 +66,12 @@ extern testPlatAlarmGetNow              g_testPlatAlarmGetNow;
 //
 
 typedef void (*testPlatRadioSetPanId)(otInstance *, uint16_t);
-typedef void (*testPlatRadioSetExtendedAddress)(otInstance *, uint8_t*);
+typedef void (*testPlatRadioSetExtendedAddress)(otInstance *, uint8_t *);
 typedef void (*testPlatRadioSetShortAddress)(otInstance *, uint16_t);
 
-typedef ThreadError (*testPlatRadioReceive)(otInstance *, uint8_t);
-typedef ThreadError (*testPlatRadioTransmit)(otInstance *);
-typedef RadioPacket* (*testPlatRadioGetTransmitBuffer)(otInstance *);
+typedef ThreadError(*testPlatRadioReceive)(otInstance *, uint8_t);
+typedef ThreadError(*testPlatRadioTransmit)(otInstance *);
+typedef RadioPacket *(*testPlatRadioGetTransmitBuffer)(otInstance *);
 
 extern otRadioCaps                      g_testPlatRadioCaps;
 extern testPlatRadioSetPanId            g_testPlatRadioSetPanId;
