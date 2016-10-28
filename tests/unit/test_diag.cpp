@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2016, Nest Labs, Inc.
+ *  Copyright (c) 2016, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -165,9 +165,11 @@ void TestDiag()
     }
 }
 
+#ifdef ENABLE_TEST_MAIN
 int main(void)
 {
     TestDiag();
     printf("All tests passed\n");
     return 0;
 }
+#endif

@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2016, Nest Labs, Inc.
+ *  Copyright (c) 2016, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -34,9 +34,14 @@
 
 #include <openthread-types.h>
 
+#ifndef _WIN32
+
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+// Enable main functions
+#define ENABLE_TEST_MAIN
 
 #define SuccessOrQuit(ERR, MSG)                 \
   do { \
@@ -58,8 +63,30 @@ extern "C" {
     } \
   } while (0)
 
+//#define CompileTimeAssert(COND, MSG) typedef char __C_ASSERT__[(COND)?1:-1]
+
+// I would use the above definition for CompileTimeAssert, but I am getting the following errors
+// when I run 'make -f examples/Makefile-posix distcheck':
+//
+//      error: typedef ‘__C_ASSERT__’ locally defined but not used [-Werror=unused-local-typedefs]
+//
+#define CompileTimeAssert(COND, MSG)
+
 #ifdef __cplusplus
 }
+#endif
+
+#else
+
+typedef void (*utAssertTrue)(bool condition, const wchar_t *message);
+extern utAssertTrue s_AssertTrue;
+
+#define SuccessOrQuit(ERR, MSG) s_AssertTrue((ERR) == kThreadError_None, L##MSG)
+
+#define VerifyOrQuit(ERR, MSG) s_AssertTrue(ERR, L##MSG)
+
+#define CompileTimeAssert(COND, MSG) static_assert(COND, MSG)
+
 #endif
 
 #endif

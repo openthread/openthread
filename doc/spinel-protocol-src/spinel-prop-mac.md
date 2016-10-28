@@ -116,7 +116,7 @@ Structure Parameters:
 * `E`: EUI64 address of node
 * `c`: Optional RSSI-override value. The value 127 indicates
        that the RSSI-override feature is not enabled for this
-       address. If this value is ommitted when setting or
+       address. If this value is omitted when setting or
        inserting, it is assumed to be 127. This parameter is
        ignored when removing.
 

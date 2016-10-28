@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2016, Nest Labs, Inc.
+ *  Copyright (c) 2016, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -34,8 +34,14 @@
 #ifndef COMMISSIONER_HPP_
 #define COMMISSIONER_HPP_
 
+#include <openthread-core-config.h>
+
 #include <coap/coap_server.hpp>
 #include <common/timer.hpp>
+#include <mac/mac_frame.hpp>
+#include <meshcop/announce_begin_client.hpp>
+#include <meshcop/dtls.hpp>
+#include <meshcop/energy_scan_client.hpp>
 #include <meshcop/panid_query_client.hpp>
 #include <net/udp6.hpp>
 #include <thread/mle.hpp>
@@ -60,12 +66,10 @@ public:
     /**
      * This method starts the Commissioner service.
      *
-     * @param[in]  aPSKd  A pointer to the PSKd.
-     *
      * @retval kThreadError_None  Successfully started the Commissioner service.
      *
      */
-    ThreadError Start(const char *aPSKd);
+    ThreadError Start(void);
 
     /**
      * This method stops the Commissioner service.
@@ -76,22 +80,102 @@ public:
     ThreadError Stop(void);
 
     /**
+     * This method clears all Joiner entries.
+     *
+     */
+    void ClearJoiners(void);
+
+    /**
+     * This method adds a Joiner entry.
+     *
+     * @param[in]  aExtAddress      A pointer to the Joiner's extended address or NULL for any Joiner.
+     * @param[in]  aPSKd            A pointer to the PSKd
+     *
+     * @retval kThreadError_None    Successfully added the Joiner.
+     * @retval kThreadError_NoBufs  No buffers available to add the Joiner.
+     *
+     */
+    ThreadError AddJoiner(const Mac::ExtAddress *aExtAddress, const char *aPSKd);
+
+    /**
+     * This method removes a Joiner entry.
+     *
+     * @param[in]  aExtAddress        A pointer to the Joiner's extended address or NULL for any Joiner.
+     *
+     * @retval kThreadError_None      Successfully added the Joiner.
+     * @retval kThreadError_NotFound  The Joiner specified by @p aExtAddress was not found.
+     *
+     */
+    ThreadError RemoveJoiner(const Mac::ExtAddress *aExtAddress);
+
+    /**
+     * This function sets the Provisioning URL.
+     *
+     * @param[in]  aProvisioningUrl  A pointer to the Provisioning URL (may be NULL).
+     *
+     * @retval kThreadError_None         Successfully added the Joiner.
+     * @retval kThreadError_InvalidArgs  @p aProvisioningUrl is invalid.
+     *
+     */
+    ThreadError SetProvisioningUrl(const char *aProvisioningUrl);
+
+    /**
      * This method returns the Commissioner Session ID.
      *
-     * @retuns The Commissioner Session ID.
+     * @returns The Commissioner Session ID.
      *
      */
     uint16_t GetSessionId(void) const;
 
+    /**
+     * This method sends MGMT_COMMISSIONER_GET.
+     *
+     * @param[in]  aTlvs        A pointer to Commissioning Data TLVs.
+     * @param[in]  aLength      The length of requested TLVs in bytes.
+     *
+     * @retval kThreadError_None     Send MGMT_COMMISSIONER_GET successfully.
+     * @retval kThreadError_Failed   Send MGMT_COMMISSIONER_GET fail.
+     *
+     */
+    ThreadError SendMgmtCommissionerGetRequest(const uint8_t *aTlvs, uint8_t aLength);
+
+    /**
+     * This method sends MGMT_COMMISSIONER_SET.
+      *
+     * @param[in]  aDataset     A reference to Commissioning Data.
+     * @param[in]  aTlvs        A pointer to user specific Commissioning Data TLVs.
+     * @param[in]  aLength      The length of user specific TLVs in bytes.
+     *
+     * @retval kThreadError_None     Send MGMT_COMMISSIONER_SET successfully.
+     * @retval kThreadError_Failed   Send MGMT_COMMISSIONER_SET fail.
+     *
+     */
+    ThreadError SendMgmtCommissionerSetRequest(const otCommissioningDataset &aDataset,
+                                               const uint8_t *aTlvs, uint8_t aLength);
+
+    AnnounceBeginClient mAnnounceBegin;
+    EnergyScanClient mEnergyScan;
     PanIdQueryClient mPanIdQuery;
 
 private:
+    enum
+    {
+        kPetitionAttemptDelay = 5,   ///< COMM_PET_ATTEMPT_DELAY (seconds)
+        kPetitionRetryCount   = 2,   ///< COMM_PET_RETRY_COUNT
+        kPetitionRetryDelay   = 1,   ///< COMM_PET_RETRY_DELAY (seconds)
+        kKeepAliveTimeout     = 50,  ///< TIMEOUT_COMM_PET (seconds)
+    };
+
     static void HandleTimer(void *aContext);
     void HandleTimer(void);
 
     static void HandleRelayReceive(void *aContext, Coap::Header &aHeader,
                                    Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
     void HandleRelayReceive(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+
+    static void HandleDatasetChanged(void *aContext, Coap::Header &aHeader,
+                                     Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    void HandleDatasetChanged(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
     static void HandleUdpReceive(void *aContext, otMessage aMessage, const otMessageInfo *aMessageInfo);
     void HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
@@ -106,8 +190,10 @@ private:
     void HandleUdpTransmit(void);
 
     void ReceiveJoinerFinalize(uint8_t *buf, uint16_t length);
-    void SendJoinFinalizeResponse(const Coap::Header &aRequestHeader);
+    void SendJoinFinalizeResponse(const Coap::Header &aRequestHeader, StateTlv::State aState);
 
+    void SendDatasetChangedResponse(const Coap::Header &aRequestHeader, const Ip6::MessageInfo &aMessageInfo);
+    ThreadError SendCommissionerSet(void);
     ThreadError SendPetition(void);
     ThreadError SendKeepAlive(void);
 
@@ -117,17 +203,26 @@ private:
         kStatePetition = 1,
         kStateActive = 2,
     };
-
     uint8_t mState;
 
-    Ip6::Address mJoinerRouterAddress;
+    struct Joiner
+    {
+        Mac::ExtAddress mExtAddress;
+        char mPsk[Dtls::kPskMaxLength + 1];
+        bool mValid : 1;
+        bool mAny : 1;
+    };
+    Joiner mJoiners[OPENTHREAD_CONFIG_MAX_JOINER_ENTRIES];
+
     uint8_t mJoinerIid[8];
     uint16_t mJoinerPort;
+    uint16_t mJoinerRloc;
 
     uint16_t mSessionId;
     Message *mTransmitMessage;
     Timer mTimer;
     Tasklet mTransmitTask;
+    uint8_t mTransmitAttempts;
     bool mSendKek;
 
     Ip6::UdpSocket mSocket;
@@ -135,7 +230,10 @@ private:
     uint16_t mCoapMessageId;
 
     Coap::Resource mRelayReceive;
+    Coap::Resource mDatasetChanged;
+    Coap::Server &mCoapServer;
     ThreadNetif &mNetif;
+    bool mIsSendMgmtCommRequest;
 };
 
 }  // namespace MeshCoP

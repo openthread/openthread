@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2016, Nest Labs, Inc.
+ *  Copyright (c) 2016, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -41,15 +41,14 @@
 namespace Thread {
 namespace MeshCoP {
 
-Dataset::Dataset(void) :
+Dataset::Dataset(const Tlv::Type aType) :
+    mType(aType),
     mLength(0)
 {
-    mTimestamp.Init();
 }
 
 void Dataset::Clear(void)
 {
-    mTimestamp.Init();
     mLength = 0;
 }
 
@@ -93,7 +92,7 @@ exit:
     return rval;
 }
 
-void Dataset::Get(otOperationalDataset &aDataset)
+void Dataset::Get(otOperationalDataset &aDataset) const
 {
     const Tlv *cur = reinterpret_cast<const Tlv *>(mTlvs);
     const Tlv *end = reinterpret_cast<const Tlv *>(mTlvs + mLength);
@@ -110,6 +109,8 @@ void Dataset::Get(otOperationalDataset &aDataset)
             const ActiveTimestampTlv *tlv = static_cast<const ActiveTimestampTlv *>(cur);
             aDataset.mActiveTimestamp = tlv->GetSeconds();
             aDataset.mIsActiveTimestampSet = true;
+
+            GetTimestamp();
             break;
         }
 
@@ -118,6 +119,30 @@ void Dataset::Get(otOperationalDataset &aDataset)
             const ChannelTlv *tlv = static_cast<const ChannelTlv *>(cur);
             aDataset.mChannel = tlv->GetChannel();
             aDataset.mIsChannelSet = true;
+            break;
+        }
+
+        case Tlv::kChannelMask:
+        {
+            uint8_t length = cur->GetLength();
+            const uint8_t *entry = reinterpret_cast<const uint8_t *>(cur) + sizeof(Tlv);
+            const uint8_t *entryEnd =  entry + length;
+
+            while (entry < entryEnd)
+            {
+                if (reinterpret_cast<const ChannelMaskEntry *>(entry)->GetChannelPage() == 0)
+                {
+                    uint8_t i = sizeof(ChannelMaskEntry);
+                    aDataset.mChannelMaskPage0 = static_cast<uint32_t>(entry[i] | (entry[i + 1] << 8) |
+                                                                       (entry[i + 2] << 16) | (entry[i + 3] << 24));
+                    aDataset.mIsChannelMaskPage0Set = true;
+                    break;
+                }
+
+                entry += (reinterpret_cast<const ChannelMaskEntry *>(entry)->GetMaskLength() +
+                          sizeof(ChannelMaskEntry));
+            }
+
             break;
         }
 
@@ -204,30 +229,50 @@ void Dataset::Get(otOperationalDataset &aDataset)
     }
 }
 
-ThreadError Dataset::Set(const otOperationalDataset &aDataset, bool aActive)
+ThreadError Dataset::Set(const Dataset &aDataset)
+{
+    memcpy(mTlvs, aDataset.mTlvs, aDataset.mLength);
+    mLength = aDataset.mLength;
+
+    if (mType == Tlv::kActiveTimestamp)
+    {
+        Remove(Tlv::kPendingTimestamp);
+        Remove(Tlv::kDelayTimer);
+    }
+
+    return kThreadError_None;
+}
+
+ThreadError Dataset::Set(const otOperationalDataset &aDataset)
 {
     ThreadError error = kThreadError_None;
+    MeshCoP::ActiveTimestampTlv activeTimestampTlv;
 
     VerifyOrExit(aDataset.mIsActiveTimestampSet, error = kThreadError_InvalidArgs);
 
-    if (aActive)
+    activeTimestampTlv.Init();
+    activeTimestampTlv.SetSeconds(aDataset.mActiveTimestamp);
+    activeTimestampTlv.SetTicks(0);
+    Set(activeTimestampTlv);
+
+    if (mType == Tlv::kPendingTimestamp)
     {
-        mTimestamp.SetSeconds(aDataset.mActiveTimestamp);
-        mTimestamp.SetTicks(0);
-        mTimestamp.SetAuthoritative(false);
-    }
-    else
-    {
-        MeshCoP::ActiveTimestampTlv tlv;
+        MeshCoP::PendingTimestampTlv pendingTimestampTlv;
 
         VerifyOrExit(aDataset.mIsPendingTimestampSet, error = kThreadError_InvalidArgs);
-        mTimestamp.SetSeconds(aDataset.mPendingTimestamp);
-        mTimestamp.SetTicks(0);
-        mTimestamp.SetAuthoritative(false);
 
-        tlv.Init();
-        tlv.SetSeconds(aDataset.mActiveTimestamp);
-        Set(tlv);
+        pendingTimestampTlv.Init();
+        pendingTimestampTlv.SetSeconds(aDataset.mPendingTimestamp);
+        pendingTimestampTlv.SetTicks(0);
+        Set(pendingTimestampTlv);
+
+        if (aDataset.mIsDelaySet)
+        {
+            MeshCoP::DelayTimerTlv tlv;
+            tlv.Init();
+            tlv.SetDelayTimer(aDataset.mDelay);
+            Set(tlv);
+        }
     }
 
     if (aDataset.mIsChannelSet)
@@ -239,12 +284,28 @@ ThreadError Dataset::Set(const otOperationalDataset &aDataset, bool aActive)
         Set(tlv);
     }
 
-    if (aDataset.mIsDelaySet)
+    if (aDataset.mIsChannelMaskPage0Set)
     {
-        MeshCoP::DelayTimerTlv tlv;
-        tlv.Init();
-        tlv.SetDelayTimer(aDataset.mDelay);
-        Set(tlv);
+        OT_TOOL_PACKED_BEGIN
+        struct
+        {
+            MeshCoP::ChannelMaskTlv tlv;
+            MeshCoP::ChannelMaskEntry entry;
+            uint8_t mask[sizeof(aDataset.mChannelMaskPage0)];
+        } OT_TOOL_PACKED_END channelMask;
+
+        channelMask.tlv.Init();
+        channelMask.tlv.SetLength(sizeof(MeshCoP::ChannelMaskEntry) + sizeof(aDataset.mChannelMaskPage0));
+
+        channelMask.entry.SetChannelPage(0);
+        channelMask.entry.SetMaskLength(sizeof(aDataset.mChannelMaskPage0));
+
+        for (uint8_t index = 0; index < sizeof(aDataset.mChannelMaskPage0); index++)
+        {
+            channelMask.mask[index] = (aDataset.mChannelMaskPage0 >> (8 * index)) & 0xff;
+        }
+
+        Set(channelMask.tlv);
     }
 
     if (aDataset.mIsExtendedPanIdSet)
@@ -308,14 +369,67 @@ exit:
     return error;
 }
 
-const Timestamp &Dataset::GetTimestamp(void) const
+const Timestamp *Dataset::GetTimestamp(void) const
 {
-    return mTimestamp;
+    const Timestamp *timestamp = NULL;
+
+    if (mType == Tlv::kActiveTimestamp)
+    {
+        const ActiveTimestampTlv *tlv = static_cast<const ActiveTimestampTlv *>(Get(mType));
+        VerifyOrExit(tlv != NULL, ;);
+        timestamp = static_cast<const Timestamp *>(tlv);
+    }
+    else
+    {
+        const PendingTimestampTlv *tlv = static_cast<const PendingTimestampTlv *>(Get(mType));
+        VerifyOrExit(tlv != NULL, ;);
+        timestamp = static_cast<const Timestamp *>(tlv);
+    }
+
+exit:
+    return timestamp;
 }
 
 void Dataset::SetTimestamp(const Timestamp &aTimestamp)
 {
-    mTimestamp = aTimestamp;
+    OT_TOOL_PACKED_BEGIN
+    struct
+    {
+        Tlv tlv;
+        Timestamp timestamp;
+    } OT_TOOL_PACKED_END timestampTlv;
+
+    timestampTlv.tlv.SetType(mType);
+    timestampTlv.tlv.SetLength(sizeof(Timestamp));
+    timestampTlv.timestamp = aTimestamp;
+
+    Set(timestampTlv.tlv);
+}
+
+int Dataset::Compare(const Dataset &aCompare) const
+{
+    const Timestamp *thisTimestamp = GetTimestamp();
+    const Timestamp *compareTimestamp = aCompare.GetTimestamp();
+    int rval;
+
+    if (compareTimestamp == NULL && thisTimestamp == NULL)
+    {
+        rval = 0;
+    }
+    else if (compareTimestamp == NULL && thisTimestamp != NULL)
+    {
+        rval = -1;
+    }
+    else if (compareTimestamp != NULL && thisTimestamp == NULL)
+    {
+        rval = 1;
+    }
+    else
+    {
+        rval = thisTimestamp->Compare(*compareTimestamp);
+    }
+
+    return rval;
 }
 
 ThreadError Dataset::Set(const Tlv &aTlv)

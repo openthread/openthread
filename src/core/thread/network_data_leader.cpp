@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2016, Nest Labs, Inc.
+ *  Copyright (c) 2016, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -31,6 +31,8 @@
  *   This file implements the Thread Network Data managed by the Thread Leader.
  */
 
+#define WPP_NAME "network_data_leader.tmh"
+
 #include <coap/coap_header.hpp>
 #include <common/debug.hpp>
 #include <common/logging.hpp>
@@ -52,9 +54,11 @@ namespace Thread {
 namespace NetworkData {
 
 Leader::Leader(ThreadNetif &aThreadNetif):
-    NetworkData(aThreadNetif),
-    mTimer(aThreadNetif.GetIp6().mTimerScheduler, &HandleTimer, this),
-    mServerData(OPENTHREAD_URI_SERVER_DATA, &HandleServerData, this),
+    NetworkData(aThreadNetif, false),
+    mTimer(aThreadNetif.GetIp6().mTimerScheduler, &Leader::HandleTimer, this),
+    mServerData(OPENTHREAD_URI_SERVER_DATA, &Leader::HandleServerData, this),
+    mCommissioningDataGet(OPENTHREAD_URI_COMMISSIONER_GET, &Leader::HandleCommissioningGet, this),
+    mCommissioningDataSet(OPENTHREAD_URI_COMMISSIONER_SET, &Leader::HandleCommissioningSet, this),
     mCoapServer(aThreadNetif.GetCoapServer()),
     mNetif(aThreadNetif)
 {
@@ -75,10 +79,15 @@ void Leader::Reset(void)
 void Leader::Start(void)
 {
     mCoapServer.AddResource(mServerData);
+    mCoapServer.AddResource(mCommissioningDataGet);
+    mCoapServer.AddResource(mCommissioningDataSet);
 }
 
 void Leader::Stop(void)
 {
+    mCoapServer.RemoveResource(mServerData);
+    mCoapServer.RemoveResource(mCommissioningDataGet);
+    mCoapServer.RemoveResource(mCommissioningDataSet);
 }
 
 uint8_t Leader::GetVersion(void) const
@@ -91,6 +100,7 @@ void Leader::IncrementVersion(void)
     if (mMle.GetDeviceState() == Mle::kDeviceStateLeader)
     {
         mVersion++;
+        mNetif.SetStateChangedFlags(OT_THREAD_NETDATA_UPDATED);
     }
 }
 
@@ -141,7 +151,7 @@ ThreadError Leader::GetContext(const Ip6::Address &aAddress, Lowpan::Context &aC
             continue;
         }
 
-        prefix = reinterpret_cast<PrefixTlv *>(cur);
+        prefix = static_cast<PrefixTlv *>(cur);
 
         if (PrefixMatch(prefix->GetPrefix(), aAddress.mFields.m8, prefix->GetPrefixLength()) < 0)
         {
@@ -189,7 +199,7 @@ ThreadError Leader::GetContext(uint8_t aContextId, Lowpan::Context &aContext)
             continue;
         }
 
-        prefix = reinterpret_cast<PrefixTlv *>(cur);
+        prefix = static_cast<PrefixTlv *>(cur);
         contextTlv = FindContext(*prefix);
 
         if (contextTlv == NULL)
@@ -231,7 +241,7 @@ bool Leader::IsOnMesh(const Ip6::Address &aAddress)
             continue;
         }
 
-        prefix = reinterpret_cast<PrefixTlv *>(cur);
+        prefix = static_cast<PrefixTlv *>(cur);
 
         if (PrefixMatch(prefix->GetPrefix(), aAddress.mFields.m8, prefix->GetPrefixLength()) < 0)
         {
@@ -265,7 +275,7 @@ ThreadError Leader::RouteLookup(const Ip6::Address &aSource, const Ip6::Address 
             continue;
         }
 
-        prefix = reinterpret_cast<PrefixTlv *>(cur);
+        prefix = static_cast<PrefixTlv *>(cur);
 
         if (PrefixMatch(prefix->GetPrefix(), aSource.mFields.m8, prefix->GetPrefixLength()) >= 0)
         {
@@ -312,7 +322,7 @@ ThreadError Leader::ExternalRouteLookup(uint8_t aDomainId, const Ip6::Address &a
             continue;
         }
 
-        prefix = reinterpret_cast<PrefixTlv *>(cur);
+        prefix = static_cast<PrefixTlv *>(cur);
 
         if (prefix->GetDomainId() != aDomainId)
         {
@@ -324,16 +334,14 @@ ThreadError Leader::ExternalRouteLookup(uint8_t aDomainId, const Ip6::Address &a
         if (plen > rval_plen)
         {
             // select border router
-            for (subCur = reinterpret_cast<NetworkDataTlv *>(prefix->GetSubTlvs());
-                 subCur < reinterpret_cast<NetworkDataTlv *>(prefix->GetSubTlvs() + prefix->GetSubTlvsLength());
-                 subCur = subCur->GetNext())
+            for (subCur = prefix->GetSubTlvs(); subCur < prefix->GetNext(); subCur = subCur->GetNext())
             {
                 if (subCur->GetType() != NetworkDataTlv::kTypeHasRoute)
                 {
                     continue;
                 }
 
-                hasRoute = reinterpret_cast<HasRouteTlv *>(subCur);
+                hasRoute = static_cast<HasRouteTlv *>(subCur);
 
                 for (uint8_t i = 0; i < hasRoute->GetNumEntries(); i++)
                 {
@@ -378,16 +386,14 @@ ThreadError Leader::DefaultRouteLookup(PrefixTlv &aPrefix, uint16_t *aRloc16)
     BorderRouterEntry *entry;
     BorderRouterEntry *route = NULL;
 
-    for (NetworkDataTlv *cur = reinterpret_cast<NetworkDataTlv *>(aPrefix.GetSubTlvs());
-         cur < reinterpret_cast<NetworkDataTlv *>(aPrefix.GetSubTlvs() + aPrefix.GetSubTlvsLength());
-         cur = cur->GetNext())
+    for (NetworkDataTlv *cur = aPrefix.GetSubTlvs(); cur < aPrefix.GetNext(); cur = cur->GetNext())
     {
         if (cur->GetType() != NetworkDataTlv::kTypeBorderRouter)
         {
             continue;
         }
 
-        borderRouter = reinterpret_cast<BorderRouterTlv *>(cur);
+        borderRouter = static_cast<BorderRouterTlv *>(cur);
 
         for (uint8_t i = 0; i < borderRouter->GetNumEntries(); i++)
         {
@@ -528,8 +534,7 @@ exit:
 void Leader::HandleServerData(void *aContext, Coap::Header &aHeader, Message &aMessage,
                               const Ip6::MessageInfo &aMessageInfo)
 {
-    Leader *obj = reinterpret_cast<Leader *>(aContext);
-    obj->HandleServerData(aHeader, aMessage, aMessageInfo);
+    static_cast<Leader *>(aContext)->HandleServerData(aHeader, aMessage, aMessageInfo);
 }
 
 void Leader::HandleServerData(Coap::Header &aHeader, Message &aMessage,
@@ -555,6 +560,106 @@ void Leader::HandleServerData(Coap::Header &aHeader, Message &aMessage,
     SendServerDataResponse(aHeader, aMessageInfo, NULL, 0);
 }
 
+void Leader::HandleCommissioningSet(void *aContext, Coap::Header &aHeader, Message &aMessage,
+                                    const Ip6::MessageInfo &aMessageInfo)
+{
+    Leader *obj = static_cast<Leader *>(aContext);
+    obj->HandleCommissioningSet(aHeader, aMessage, aMessageInfo);
+}
+
+void Leader::HandleCommissioningSet(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
+{
+    uint16_t offset = aMessage.GetOffset();
+    uint8_t length = static_cast<uint8_t>(aMessage.GetLength() - aMessage.GetOffset());
+    uint8_t tlvs[NetworkData::kMaxSize];
+    MeshCoP::StateTlv::State state = MeshCoP::StateTlv::kAccept;
+    bool hasSessionId = false;
+    uint16_t sessionId = 0;
+
+    VerifyOrExit(mMle.GetDeviceState() == Mle::kDeviceStateLeader, state = MeshCoP::StateTlv::kReject);
+
+    aMessage.Read(offset, length, tlvs);
+
+    // Session Id and Border Router Locator MUST NOT be set, and only includes commissioning data tlvs
+    for (MeshCoP::Tlv *cur = reinterpret_cast<MeshCoP::Tlv *>(tlvs);
+         cur < reinterpret_cast<MeshCoP::Tlv *>(tlvs + length);
+         cur = cur->GetNext())
+    {
+        MeshCoP::Tlv::Type type = cur->GetType();
+
+        VerifyOrExit(type == MeshCoP::Tlv::kCommissionerSessionId ||
+                     type == MeshCoP::Tlv::kJoinerUdpPort || type == MeshCoP::Tlv::kSteeringData,
+                     state = MeshCoP::StateTlv::kReject);
+
+        if (type == MeshCoP::Tlv::kCommissionerSessionId)
+        {
+            hasSessionId = true;
+            sessionId = static_cast<MeshCoP::CommissionerSessionIdTlv *>(cur)->GetCommissionerSessionId();
+        }
+    }
+
+    VerifyOrExit(hasSessionId, state = MeshCoP::StateTlv::kReject);
+
+    for (MeshCoP::Tlv *cur = reinterpret_cast<MeshCoP::Tlv *>(mTlvs + sizeof(CommissioningDataTlv));
+         cur < reinterpret_cast<MeshCoP::Tlv *>(mTlvs + mLength);
+         cur = cur->GetNext())
+    {
+        if (cur->GetType() == MeshCoP::Tlv::kCommissionerSessionId)
+        {
+            VerifyOrExit(sessionId ==
+                         static_cast<MeshCoP::CommissionerSessionIdTlv *>(cur)->GetCommissionerSessionId(),
+                         state = MeshCoP::StateTlv::kReject);
+        }
+        else if (cur->GetType() == MeshCoP::Tlv::kBorderAgentLocator)
+        {
+            memcpy(tlvs + length, reinterpret_cast<uint8_t *>(cur), cur->GetLength() + sizeof(MeshCoP::Tlv));
+            length += (cur->GetLength() + sizeof(MeshCoP::Tlv));
+        }
+    }
+
+    SetCommissioningData(tlvs, length);
+
+exit:
+
+    if (mMle.GetDeviceState() == Mle::kDeviceStateLeader)
+    {
+        SendCommissioningSetResponse(aHeader, aMessageInfo, state);
+    }
+
+    return;
+}
+
+void Leader::HandleCommissioningGet(void *aContext, Coap::Header &aHeader, Message &aMessage,
+                                    const Ip6::MessageInfo &aMessageInfo)
+{
+    Leader *obj = static_cast<Leader *>(aContext);
+    obj->HandleCommissioningGet(aHeader, aMessage, aMessageInfo);
+}
+
+void Leader::HandleCommissioningGet(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
+{
+    MeshCoP::Tlv tlv;
+    uint16_t offset = aMessage.GetOffset();
+    uint8_t tlvs[NetworkData::kMaxSize];
+    uint8_t length = 0;
+
+    while (offset < aMessage.GetLength())
+    {
+        aMessage.Read(offset, sizeof(tlv), &tlv);
+
+        if (tlv.GetType() == MeshCoP::Tlv::kGet)
+        {
+            length = tlv.GetLength();
+            aMessage.Read(offset + sizeof(MeshCoP::Tlv), length, tlvs);
+            break;
+        }
+
+        offset += sizeof(tlv) + tlv.GetLength();
+    }
+
+    SendCommissioningGetResponse(aHeader, aMessageInfo, tlvs, length);
+}
+
 void Leader::SendServerDataResponse(const Coap::Header &aRequestHeader, const Ip6::MessageInfo &aMessageInfo,
                                     const uint8_t *aTlvs, uint8_t aTlvsLength)
 {
@@ -564,12 +669,10 @@ void Leader::SendServerDataResponse(const Coap::Header &aRequestHeader, const Ip
 
     VerifyOrExit((message = mCoapServer.NewMessage(0)) != NULL, error = kThreadError_NoBufs);
     responseHeader.Init();
-    responseHeader.SetVersion(1);
     responseHeader.SetType(Coap::Header::kTypeAcknowledgment);
     responseHeader.SetCode(Coap::Header::kCodeChanged);
     responseHeader.SetMessageId(aRequestHeader.GetMessageId());
     responseHeader.SetToken(aRequestHeader.GetToken(), aRequestHeader.GetTokenLength());
-    responseHeader.AppendContentFormatOption(Coap::Header::kApplicationOctetStream);
     responseHeader.Finalize();
     SuccessOrExit(error = message->Append(responseHeader.GetBytes(), responseHeader.GetLength()));
     SuccessOrExit(error = message->Append(aTlvs, aTlvsLength));
@@ -577,6 +680,105 @@ void Leader::SendServerDataResponse(const Coap::Header &aRequestHeader, const Ip
     SuccessOrExit(error = mCoapServer.SendMessage(*message, aMessageInfo));
 
     otLogInfoNetData("Sent network data registration acknowledgment\n");
+
+exit:
+
+    if (error != kThreadError_None && message != NULL)
+    {
+        message->Free();
+    }
+}
+
+void Leader::SendCommissioningGetResponse(const Coap::Header &aRequestHeader, const Ip6::MessageInfo &aMessageInfo,
+                                          uint8_t *aTlvs, uint8_t aLength)
+{
+    ThreadError error = kThreadError_None;
+    Coap::Header responseHeader;
+    Message *message;
+    uint8_t index;
+    uint8_t *data = NULL;
+    uint8_t length = 0;
+
+    VerifyOrExit((message = mCoapServer.NewMessage(0)) != NULL, error = kThreadError_NoBufs);
+    responseHeader.Init();
+    responseHeader.SetType(Coap::Header::kTypeAcknowledgment);
+    responseHeader.SetCode(Coap::Header::kCodeChanged);
+    responseHeader.SetMessageId(aRequestHeader.GetMessageId());
+    responseHeader.SetToken(aRequestHeader.GetToken(), aRequestHeader.GetTokenLength());
+    responseHeader.Finalize();
+    SuccessOrExit(error = message->Append(responseHeader.GetBytes(), responseHeader.GetLength()));
+
+    for (NetworkDataTlv *cur = reinterpret_cast<NetworkDataTlv *>(mTlvs);
+         cur < reinterpret_cast<NetworkDataTlv *>(mTlvs + mLength);
+         cur = cur->GetNext())
+    {
+        if (cur->GetType() == NetworkDataTlv::kTypeCommissioningData)
+        {
+            data = cur->GetValue();
+            length = cur->GetLength();
+            break;
+        }
+    }
+
+    VerifyOrExit(data && length, error = kThreadError_Drop);
+
+    if (aLength == 0)
+    {
+        SuccessOrExit(error = message->Append(data, length));
+    }
+    else
+    {
+        for (index = 0; index < aLength; index++)
+        {
+            for (MeshCoP::Tlv *cur = reinterpret_cast<MeshCoP::Tlv *>(data);
+                 cur < reinterpret_cast<MeshCoP::Tlv *>(data + length);
+                 cur = cur->GetNext())
+            {
+                if (cur->GetType() == aTlvs[index])
+                {
+                    SuccessOrExit(error = message->Append(cur, sizeof(NetworkDataTlv) + cur->GetLength()));
+                    break;
+                }
+            }
+        }
+    }
+
+    SuccessOrExit(error = mCoapServer.SendMessage(*message, aMessageInfo));
+
+    otLogInfoMeshCoP("sent commissioning dataset get response\n");
+
+exit:
+
+    if (error != kThreadError_None && message != NULL)
+    {
+        message->Free();
+    }
+}
+
+void Leader::SendCommissioningSetResponse(const Coap::Header &aRequestHeader, const Ip6::MessageInfo &aMessageInfo,
+                                          MeshCoP::StateTlv::State aState)
+{
+    ThreadError error = kThreadError_None;
+    Coap::Header responseHeader;
+    Message *message;
+    MeshCoP::StateTlv state;
+
+    VerifyOrExit((message = mCoapServer.NewMessage(0)) != NULL, error = kThreadError_NoBufs);
+    responseHeader.Init();
+    responseHeader.SetType(Coap::Header::kTypeAcknowledgment);
+    responseHeader.SetCode(Coap::Header::kCodeChanged);
+    responseHeader.SetMessageId(aRequestHeader.GetMessageId());
+    responseHeader.SetToken(aRequestHeader.GetToken(), aRequestHeader.GetTokenLength());
+    responseHeader.Finalize();
+    SuccessOrExit(error = message->Append(responseHeader.GetBytes(), responseHeader.GetLength()));
+
+    state.Init();
+    state.SetState(aState);
+    SuccessOrExit(error = message->Append(&state, sizeof(state)));
+
+    SuccessOrExit(error = mCoapServer.SendMessage(*message, aMessageInfo));
+
+    otLogInfoMeshCoP("sent commissioning dataset set response\n");
 
 exit:
 
@@ -602,9 +804,9 @@ void Leader::RlocLookup(uint16_t aRloc16, bool &aIn, bool &aStable, uint8_t *aTl
     {
         if (cur->GetType() == NetworkDataTlv::kTypePrefix)
         {
-            prefix = reinterpret_cast<PrefixTlv *>(cur);
-            subCur = reinterpret_cast<NetworkDataTlv *>(prefix->GetSubTlvs());
-            subEnd = reinterpret_cast<NetworkDataTlv *>(prefix->GetSubTlvs() + prefix->GetSubTlvsLength());
+            prefix = static_cast<PrefixTlv *>(cur);
+            subCur = prefix->GetSubTlvs();
+            subEnd = prefix->GetNext();
 
             while (subCur < subEnd)
             {
@@ -686,7 +888,7 @@ bool Leader::IsStableUpdated(uint16_t aRloc16, uint8_t *aTlvs, uint8_t aTlvsLeng
     {
         if (cur->GetType() == NetworkDataTlv::kTypePrefix)
         {
-            prefix = reinterpret_cast<PrefixTlv *>(cur);
+            prefix = static_cast<PrefixTlv *>(cur);
             context = FindContext(*prefix);
             borderRouter = FindBorderRouter(*prefix);
             hasRoute = FindHasRoute(*prefix);
@@ -776,7 +978,7 @@ ThreadError Leader::AddNetworkData(uint8_t *aTlvs, uint8_t aTlvsLength)
         switch (cur->GetType())
         {
         case NetworkDataTlv::kTypePrefix:
-            AddPrefix(*reinterpret_cast<PrefixTlv *>(cur));
+            AddPrefix(*static_cast<PrefixTlv *>(cur));
             otDumpDebgNetData("add prefix done", mTlvs, mLength);
             break;
 
@@ -795,19 +997,19 @@ ThreadError Leader::AddNetworkData(uint8_t *aTlvs, uint8_t aTlvsLength)
 
 ThreadError Leader::AddPrefix(PrefixTlv &aPrefix)
 {
-    NetworkDataTlv *cur = reinterpret_cast<NetworkDataTlv *>(aPrefix.GetSubTlvs());
-    NetworkDataTlv *end = reinterpret_cast<NetworkDataTlv *>(aPrefix.GetSubTlvs() + aPrefix.GetSubTlvsLength());
+    NetworkDataTlv *cur = aPrefix.GetSubTlvs();
+    NetworkDataTlv *end = aPrefix.GetNext();
 
     while (cur < end)
     {
         switch (cur->GetType())
         {
         case NetworkDataTlv::kTypeHasRoute:
-            AddHasRoute(aPrefix, *reinterpret_cast<HasRouteTlv *>(cur));
+            AddHasRoute(aPrefix, *static_cast<HasRouteTlv *>(cur));
             break;
 
         case NetworkDataTlv::kTypeBorderRouter:
-            AddBorderRouter(aPrefix, *reinterpret_cast<BorderRouterTlv *>(cur));
+            AddBorderRouter(aPrefix, *static_cast<BorderRouterTlv *>(cur));
             break;
 
         default:
@@ -841,7 +1043,7 @@ ThreadError Leader::AddHasRoute(PrefixTlv &aPrefix, HasRouteTlv &aHasRoute)
 
     if ((dstHasRoute = FindHasRoute(*dstPrefix, aHasRoute.IsStable())) == NULL)
     {
-        dstHasRoute = reinterpret_cast<HasRouteTlv *>(dstPrefix->GetNext());
+        dstHasRoute = static_cast<HasRouteTlv *>(dstPrefix->GetNext());
         Insert(reinterpret_cast<uint8_t *>(dstHasRoute), sizeof(HasRouteTlv));
         dstPrefix->SetLength(dstPrefix->GetLength() + sizeof(HasRouteTlv));
         dstHasRoute->Init();
@@ -882,7 +1084,7 @@ ThreadError Leader::AddBorderRouter(PrefixTlv &aPrefix, BorderRouterTlv &aBorder
     }
     else if ((contextId = AllocateContext()) >= 0)
     {
-        dstContext = reinterpret_cast<ContextTlv *>(dstPrefix->GetNext());
+        dstContext = static_cast<ContextTlv *>(dstPrefix->GetNext());
         Insert(reinterpret_cast<uint8_t *>(dstContext), sizeof(ContextTlv));
         dstPrefix->SetLength(dstPrefix->GetLength() + sizeof(ContextTlv));
         dstContext->Init();
@@ -897,7 +1099,7 @@ ThreadError Leader::AddBorderRouter(PrefixTlv &aPrefix, BorderRouterTlv &aBorder
 
     if ((dstBorderRouter = FindBorderRouter(*dstPrefix, aBorderRouter.IsStable())) == NULL)
     {
-        dstBorderRouter = reinterpret_cast<BorderRouterTlv *>(dstPrefix->GetNext());
+        dstBorderRouter = static_cast<BorderRouterTlv *>(dstPrefix->GetNext());
         Insert(reinterpret_cast<uint8_t *>(dstBorderRouter), sizeof(BorderRouterTlv));
         dstPrefix->SetLength(dstPrefix->GetLength() + sizeof(BorderRouterTlv));
         dstBorderRouter->Init();
@@ -960,7 +1162,7 @@ ThreadError Leader::SendServerDataNotification(uint16_t aRloc16)
 
     VerifyOrExit(rlocIn, error = kThreadError_NotFound);
 
-    SuccessOrExit(error = NetworkData::SendServerDataNotification(false, aRloc16));
+    SuccessOrExit(error = NetworkData::SendServerDataNotification(aRloc16));
 
 exit:
     return error;
@@ -985,7 +1187,7 @@ ThreadError Leader::RemoveRloc(uint16_t aRloc16)
         {
         case NetworkDataTlv::kTypePrefix:
         {
-            prefix = reinterpret_cast<PrefixTlv *>(cur);
+            prefix = static_cast<PrefixTlv *>(cur);
             RemoveRloc(*prefix, aRloc16);
 
             if (prefix->GetSubTlvsLength() == 0)
@@ -1015,13 +1217,13 @@ ThreadError Leader::RemoveRloc(uint16_t aRloc16)
 
 ThreadError Leader::RemoveRloc(PrefixTlv &prefix, uint16_t aRloc16)
 {
-    NetworkDataTlv *cur = reinterpret_cast<NetworkDataTlv *>(prefix.GetSubTlvs());
+    NetworkDataTlv *cur = prefix.GetSubTlvs();
     NetworkDataTlv *end;
     ContextTlv *context;
 
     while (1)
     {
-        end = reinterpret_cast<NetworkDataTlv *>(prefix.GetSubTlvs() + prefix.GetSubTlvsLength());
+        end = prefix.GetNext();
 
         if (cur >= end)
         {
@@ -1031,7 +1233,7 @@ ThreadError Leader::RemoveRloc(PrefixTlv &prefix, uint16_t aRloc16)
         switch (cur->GetType())
         {
         case NetworkDataTlv::kTypeHasRoute:
-            RemoveRloc(prefix, *reinterpret_cast<HasRouteTlv *>(cur), aRloc16);
+            RemoveRloc(prefix, *static_cast<HasRouteTlv *>(cur), aRloc16);
 
             // remove has route tlv if empty
             if (cur->GetLength() == 0)
@@ -1044,7 +1246,7 @@ ThreadError Leader::RemoveRloc(PrefixTlv &prefix, uint16_t aRloc16)
             break;
 
         case NetworkDataTlv::kTypeBorderRouter:
-            RemoveRloc(prefix, *reinterpret_cast<BorderRouterTlv *>(cur), aRloc16);
+            RemoveRloc(prefix, *static_cast<BorderRouterTlv *>(cur), aRloc16);
 
             // remove border router tlv if empty
             if (cur->GetLength() == 0)
@@ -1156,7 +1358,7 @@ ThreadError Leader::RemoveContext(uint8_t aContextId)
         {
         case NetworkDataTlv::kTypePrefix:
         {
-            prefix = reinterpret_cast<PrefixTlv *>(cur);
+            prefix = static_cast<PrefixTlv *>(cur);
             RemoveContext(*prefix, aContextId);
 
             if (prefix->GetSubTlvsLength() == 0)
@@ -1186,14 +1388,14 @@ ThreadError Leader::RemoveContext(uint8_t aContextId)
 
 ThreadError Leader::RemoveContext(PrefixTlv &aPrefix, uint8_t aContextId)
 {
-    NetworkDataTlv *cur = reinterpret_cast<NetworkDataTlv *>(aPrefix.GetSubTlvs());
+    NetworkDataTlv *cur = aPrefix.GetSubTlvs();
     NetworkDataTlv *end;
     ContextTlv *context;
     uint8_t length;
 
     while (1)
     {
-        end = reinterpret_cast<NetworkDataTlv *>(aPrefix.GetSubTlvs() + aPrefix.GetSubTlvsLength());
+        end = aPrefix.GetNext();
 
         if (cur >= end)
         {
@@ -1210,7 +1412,7 @@ ThreadError Leader::RemoveContext(PrefixTlv &aPrefix, uint8_t aContextId)
         case NetworkDataTlv::kTypeContext:
         {
             // remove context tlv
-            context = reinterpret_cast<ContextTlv *>(cur);
+            context = static_cast<ContextTlv *>(cur);
 
             if (context->GetContextId() == aContextId)
             {

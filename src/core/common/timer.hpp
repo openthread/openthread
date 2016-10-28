@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2016, Nest Labs, Inc.
+ *  Copyright (c) 2016, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -42,6 +42,8 @@
 #include <platform/alarm.h>
 
 namespace Thread {
+
+namespace Ip6 { class Ip6; }
 
 class Timer;
 
@@ -102,6 +104,14 @@ public:
      *
      */
     void FireTimers(void);
+
+    /**
+     * This method returns the pointer to the parent Ip6 structure.
+     *
+     * @returns The pointer to the parent Ip6 structure.
+     *
+     */
+    Ip6::Ip6 *GetIp6();
 
 private:
     void SetAlarm(void);
@@ -222,6 +232,22 @@ public:
      *
      */
     static uint32_t MsecToSec(uint32_t aMilliseconds) { return aMilliseconds / 1000u; }
+
+    /**
+     * This static method returns the number of milliseconds given hours.
+     *
+     * @returns The number of milliseconds.
+     *
+     */
+    static uint32_t HoursToMsec(uint32_t aHours) { return SecToMsec(aHours * 3600u); }
+
+    /**
+     * This static method returns the number of hours given milliseconds.
+     *
+     * @returns The number of hours.
+     *
+     */
+    static uint32_t MsecToHours(uint32_t aMilliseconds) { return MsecToSec(aMilliseconds / 3600u); }
 
 private:
     void Fired(void) { mHandler(mContext); }

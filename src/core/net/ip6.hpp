@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2016, Nest Labs, Inc.
+ *  Copyright (c) 2016, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -323,9 +323,18 @@ public:
      */
     int8_t GetOnLinkNetif(const Address &aAddress);
 
+    /**
+     * This method returns the pointer to the parent otInstance structure.
+     *
+     * @returns The pointer to the parent otInstance structure.
+     *
+     */
+    otInstance *GetInstance();
+
     Routes mRoutes;
     Icmp mIcmp;
     Udp mUdp;
+    Mpl mMpl;
 
     MessagePool mMessagePool;
     TaskletScheduler mTaskletScheduler;
@@ -335,15 +344,14 @@ private:
     static void HandleSendQueue(void *aContext);
     void HandleSendQueue(void);
 
-    void ProcessReceiveCallback(const Message &aMessage, const MessageInfo &aMessageInfo, uint8_t aIpProto);
-    ThreadError HandleExtensionHeaders(Message &message, uint8_t &nextHeader, bool receive);
+    ThreadError ProcessReceiveCallback(const Message &aMessage, const MessageInfo &aMessageInfo, uint8_t aIpProto);
+    ThreadError HandleExtensionHeaders(Message &message, Header &header, uint8_t &nextHeader, bool receive);
     ThreadError HandleFragment(Message &message);
     ThreadError AddMplOption(Message &message, Header &header, IpProto nextHeader, uint16_t payloadLength);
-    ThreadError HandleOptions(Message &message);
+    ThreadError HandleOptions(Message &message, Header &header);
     ThreadError HandlePayload(Message &message, MessageInfo &messageInfo, uint8_t ipproto);
-    ThreadError ForwardMessage(Message &message, MessageInfo &messageInfo);
+    ThreadError ForwardMessage(Message &message, MessageInfo &messageInfo, uint8_t ipproto);
 
-    Mpl mMpl;
     bool mForwardingEnabled;
 
     MessageQueue mSendQueue;
@@ -356,6 +364,16 @@ private:
     Netif *mNetifListHead;
     int8_t mNextInterfaceId;
 };
+
+static inline Ip6 *Ip6FromTaskletScheduler(TaskletScheduler *aTaskletScheduler)
+{
+    return (Ip6 *)CONTAINING_RECORD(aTaskletScheduler, Ip6, mTaskletScheduler);
+}
+
+static inline Ip6 *Ip6FromTimerScheduler(TimerScheduler *aTimerScheduler)
+{
+    return (Ip6 *)CONTAINING_RECORD(aTimerScheduler, Ip6, mTimerScheduler);
+}
 
 /**
  * @}

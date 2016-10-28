@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2016, Nest Labs, Inc.
+ *  Copyright (c) 2016, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -46,14 +46,17 @@ class Dataset
 public:
     enum
     {
-        kMaxSize = 256,  ///< Maximum size of MeshCoP Dataset (bytes)
+        kMaxSize = 256,      ///< Maximum size of MeshCoP Dataset (bytes)
+        kMaxValueSize = 16,  /// < Maximum size of each Dataset TLV value (bytes)
     };
 
     /**
      * This constructor initializes the object.
      *
+     * @param[in]  aType      The type of the dataset, active or pending.
+     *
      */
-    Dataset(void);
+    Dataset(const Tlv::Type aType);
 
     /**
      * This method clears the Dataset.
@@ -89,7 +92,7 @@ public:
      * This method converts the TLV representation to structure representation.
      *
      */
-    void Get(otOperationalDataset &aDataset);
+    void Get(otOperationalDataset &aDataset) const;
 
     /**
      * This method returns the Dataset size in bytes.
@@ -102,16 +105,28 @@ public:
     /**
      * This method returns a reference to the Timestamp.
      *
-     * @returns A reference to the Timestamp.
+     * @returns A pointer to the Timestamp.
      *
      */
-    const Timestamp &GetTimestamp(void) const;
+    const Timestamp *GetTimestamp(void) const;
 
     /**
      * This method sets the Timestamp value.
      *
      */
     void SetTimestamp(const Timestamp &aTimestamp);
+
+    /**
+     * This method compares this dataset to another based on the timestamp.
+     *
+     * @param[in]  aCompare  A reference to the timestamp to compare.
+     *
+     * @retval -1  if @p aCompare is older than this dataset.
+     * @retval  0  if @p aCompare is equal to this dataset.
+     * @retval  1  if @p aCompare is newer than this dataset.
+     *
+     */
+    int Compare(const Dataset &aCompare) const;
 
     /**
      * This method sets a TLV in the Dataset.
@@ -126,16 +141,18 @@ public:
 
     ThreadError Set(const Message &aMessage, uint16_t aOffset, uint8_t aLength);
 
-    ThreadError Set(const otOperationalDataset &aDataset, bool aActive);
+    ThreadError Set(const Dataset &aDataset);
+
+    ThreadError Set(const otOperationalDataset &aDataset);
 
     void Remove(Tlv::Type aType);
 
 private:
     void Remove(uint8_t *aStart, uint8_t aLength);
 
-    Timestamp mTimestamp;       ///< Active or Pending Timestamp
-    uint8_t   mTlvs[kMaxSize];  ///< The Dataset buffer
-    uint8_t   mLength;          ///< The number of valid bytes in @var mTlvs
+    Tlv::Type  mType;            ///< Active or Pending
+    uint8_t    mTlvs[kMaxSize];  ///< The Dataset buffer
+    uint8_t    mLength;          ///< The number of valid bytes in @var mTlvs
 };
 
 }  // namespace MeshCoP

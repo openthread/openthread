@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2016, Nest Labs, Inc.
+ *  Copyright (c) 2016, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -34,6 +34,10 @@
 
 #ifndef OT_PLATFORM_FLASH_H
 #define OT_PLATFORM_FLASH_H
+
+#include <stdint.h>
+
+#include <openthread-types.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -74,7 +78,7 @@ ThreadError otPlatFlashErasePage(uint32_t aAddress);
 /**
   * Check whether flash is ready or busy.
   *
-  * @param[in]  aTimeout  The interval waiting for the flash operation to be done and become ready again.
+  * @param[in]  aTimeout  The interval in milliseconds waiting for the flash operation to be done and become ready again.
   *                       zero indicates that it is a polling function, and returns current status of flash immediately.
   *                       non-zero indicates that it is blocking there until the operation is done and become ready, or timeout expires.
   *

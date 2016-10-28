@@ -1,0 +1,19 @@
+version: 0.1.{build}
+image: Visual Studio 2015
+configuration:
+- Release
+- Debug
+platform:
+- x64
+- x86
+clone_depth: 10
+build:
+  project: etc/visual-studio/openthread.sln
+  verbosity: minimal
+test_script:
+- cmd: >-
+    set Platform2=%Platform%
+
+    if %Platform2%==x86 set Platform2=Win32
+
+    vstest.console /logger:Appveyor /inIsolation /platform:%Platform% build\bin\%Platform2%\%Configuration%\dll\UnitTests.dll

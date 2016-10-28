@@ -1,5 +1,5 @@
 /*
- *    Copyright (c) 2016, Nest Labs, Inc.
+ *    Copyright (c) 2016, The OpenThread Authors.
  *    All rights reserved.
  *
  *    Redistribution and use in source and binary forms, with or without
@@ -186,7 +186,7 @@ static void signal_SIGTERM(int sig)
     IGNORE_RETURN_VALUE(write(STDERR_FILENO, message, sizeof(message)-1));
 
     // Restore the previous handler so that if we end up getting
-    // this signal again we peform the system default action.
+    // this signal again we perform the system default action.
     signal(SIGTERM, sPreviousHandlerForSIGTERM);
     sPreviousHandlerForSIGTERM = NULL;
     (void) sig;
@@ -1112,8 +1112,6 @@ static bool setup_int_gpio(const char* path)
         }
 
         close(setup_fd);
-
-        setup_fd = -1;
     }
 
     setup_fd = open(edge_path, O_WRONLY);
@@ -1167,7 +1165,7 @@ bail:
 static void print_version(void)
 {
     printf("spi-hdlc " SPI_HDLC_VERSION "(" __TIME__ " " __DATE__ ")\n");
-    printf("Copyright (c) 2016 Nest Labs, All Rights Reserved\n");
+    printf("Copyright (c) 2016 The OpenThread Authors, All Rights Reserved\n");
 }
 
 static void print_help(void)
@@ -1523,7 +1521,7 @@ int main(int argc, char *argv[])
         timeout.tv_usec = (timeout_ms % MSEC_PER_SEC) * USEC_PER_MSEC;
 
         // Wait for something to happen.
-        i = select(max_fd + 1, &read_set, &write_set, &error_set, &timeout);
+        select(max_fd + 1, &read_set, &write_set, &error_set, &timeout);
 
         // Handle serial input.
         if (FD_ISSET(sHdlcInputFd, &read_set))

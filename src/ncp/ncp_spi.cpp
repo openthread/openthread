@@ -1,5 +1,5 @@
 /*
- *    Copyright (c) 2016, Nest Labs, Inc.
+ *    Copyright (c) 2016, The OpenThread Authors.
  *    All rights reserved.
  *
  *    Redistribution and use in source and binary forms, with or without
@@ -37,6 +37,7 @@
 #include <ncp/ncp_spi.hpp>
 #include <platform/spi-slave.h>
 #include <core/openthread-core-config.h>
+#include <openthread-instance.h>
 
 #define SPI_RESET_FLAG          0x80
 #define SPI_CRC_FLAG            0x40
@@ -47,8 +48,6 @@ namespace Thread {
 
 static otDEFINE_ALIGNED_VAR(sNcpRaw, sizeof(NcpSpi), uint64_t);
 static NcpSpi *sNcpSpi;
-
-extern Ip6::Ip6 *sIp6;
 
 extern "C" void otNcpInit(otInstance *aInstance)
 {
@@ -89,9 +88,9 @@ static uint16_t spi_header_get_data_len(const uint8_t *header)
 
 NcpSpi::NcpSpi(otInstance *aInstance):
     NcpBase(aInstance),
-    mHandleRxFrame(sIp6->mTaskletScheduler, &NcpSpi::HandleRxFrame, this),
-    mHandleSendDone(sIp6->mTaskletScheduler, &NcpSpi::PrepareTxFrame, this),
-    mTxFrameBuffer(aInstance, mTxBuffer, sizeof(mTxBuffer))
+    mHandleRxFrameTask(aInstance->mIp6.mTaskletScheduler, &NcpSpi::HandleRxFrame, this),
+    mPrepareTxFrameTask(aInstance->mIp6.mTaskletScheduler, &NcpSpi::PrepareTxFrame, this),
+    mTxFrameBuffer(mTxBuffer, sizeof(mTxBuffer))
 {
     memset(mEmptySendFrame, 0, kSpiHeaderLength);
     memset(mSendFrame, 0, kSpiHeaderLength);

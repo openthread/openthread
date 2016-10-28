@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2016, Nest Labs, Inc.
+ *  Copyright (c) 2016, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -78,7 +78,7 @@ int main(int argc, char *argv[])
 
     while (1)
     {
-        otProcessNextTasklet(sInstance);
+        otProcessQueuedTasklets(sInstance);
         PlatformProcessDrivers(sInstance);
     }
 

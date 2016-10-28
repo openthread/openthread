@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2016, Nest Labs, Inc.
+ *  Copyright (c) 2016, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -35,6 +35,10 @@
 #define CODE_UTILS_HPP_
 
 #include <stdbool.h>
+
+// Calculates the aligned variable size.
+#define otALIGNED_VAR_SIZE(size, align_type)            \
+    (((size) + (sizeof (align_type) - 1)) / sizeof (align_type))
 
 // Allocate the structure using "raw" storage.
 #define otDEFINE_ALIGNED_VAR(name, size, align_type)            \

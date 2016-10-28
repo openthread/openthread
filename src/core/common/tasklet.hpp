@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2016, Nest Labs, Inc.
+ *  Copyright (c) 2016, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -37,6 +37,8 @@
 #include <openthread-types.h>
 
 namespace Thread {
+
+namespace Ip6 { class Ip6; }
 
 class TaskletScheduler;
 
@@ -125,10 +127,18 @@ public:
     bool AreTaskletsPending(void);
 
     /**
-     * This method runs the next tasklet.
+     * This method processes all tasklets queued when this is called.
      *
      */
-    void RunNextTasklet(void);
+    void ProcessQueuedTasklets(void);
+
+    /**
+     * This method returns the pointer to the parent Ip6 structure.
+     *
+     * @returns The pointer to the parent Ip6 structure.
+     *
+     */
+    Ip6::Ip6 *GetIp6();
 
 private:
     Tasklet *PopTasklet(void);

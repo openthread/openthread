@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2016, Nest Labs, Inc.
+ *  Copyright (c) 2016, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -42,7 +42,7 @@
  *
  */
 #ifndef OPENTHREAD_CONFIG_NUM_MESSAGE_BUFFERS
-#define OPENTHREAD_CONFIG_NUM_MESSAGE_BUFFERS               48
+#define OPENTHREAD_CONFIG_NUM_MESSAGE_BUFFERS               40
 #endif  // OPENTHREAD_CONFIG_NUM_MESSAGE_BUFFERS
 
 /**
@@ -166,6 +166,26 @@
 #endif  // OPENTHREAD_CONFIG_JOINER_UDP_PORT
 
 /**
+ * @def OPENTHREAD_CONFIG_MAX_ENERGY_RESULTS
+ *
+ * The maximum number of Energy List entries.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_MAX_ENERGY_RESULTS
+#define OPENTHREAD_CONFIG_MAX_ENERGY_RESULTS                64
+#endif  // OPENTHREAD_CONFIG_MAX_ENERGY_RESULTS
+
+/**
+ * @def OPENTHREAD_CONFIG_MAX_JOINER_ENTRIES
+ *
+ * The maximum number of Joiner entries maintained by the Commissioner.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_MAX_JOINER_ENTRIES
+#define OPENTHREAD_CONFIG_MAX_JOINER_ENTRIES                2
+#endif  // OPENTHREAD_CONFIG_MAX_JOINER_ENTRIES
+
+/**
  * @def OPENTHREAD_CONFIG_LOG_LEVEL
  *
  * The log level.
@@ -238,6 +258,15 @@
  *
  */
 #define OPENTHREAD_CONFIG_LOG_MEM
+
+
+/**
+ * @def OPENTHREAD_CONFIG_LOG_NETDIAG
+ *
+ * Define to enable network diagnostic logging.
+ *
+ */
+#define OPENTHREAD_CONFIG_LOG_NETDIAG
 
 #endif  // OPENTHREAD_CORE_DEFAULT_CONFIG_H_
 

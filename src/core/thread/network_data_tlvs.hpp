@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2016, Nest Labs, Inc.
+ *  Copyright (c) 2016, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -313,7 +313,10 @@ public:
      * @returns A pointer to the Sub-TLVs.
      *
      */
-    uint8_t *GetSubTlvs() { return GetPrefix() + BitVectorBytes(mPrefixLength); }
+    NetworkDataTlv *GetSubTlvs() {
+        return reinterpret_cast<NetworkDataTlv *>(GetPrefix() +
+                                                  BitVectorBytes(mPrefixLength));
+    }
 
     /**
      * This method returns the Sub-TLVs length in bytes.

@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2016, Nest Labs, Inc.
+ *  Copyright (c) 2016, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -131,6 +131,7 @@ private:
     enum
     {
         kMaxArgs = 32,
+        kMaxAutoAddresses = 8,
     };
 
     void AppendResult(ThreadError error);
@@ -153,11 +154,13 @@ private:
 #endif  // OPENTHREAD_ENABLE_DIAG
     void ProcessDiscover(int argc, char *argv[]);
     void ProcessEidCache(int argc, char *argv[]);
+    void ProcessEui64(int argc, char *argv[]);
 #ifdef OPENTHREAD_EXAMPLES_POSIX
     void ProcessExit(int argc, char *argv[]);
 #endif
     void ProcessExtAddress(int argc, char *argv[]);
     void ProcessExtPanId(int argc, char *argv[]);
+    void ProcessHashMacAddress(int argc, char *argv[]);
     void ProcessIfconfig(int argc, char *argv[]);
     void ProcessIpAddr(int argc, char *argv[]);
     ThreadError ProcessIpAddrAdd(int argc, char *argv[]);
@@ -165,6 +168,7 @@ private:
 #if OPENTHREAD_ENABLE_JOINER
     void ProcessJoiner(int argc, char *argv[]);
 #endif  // OPENTHREAD_ENABLE_JOINER
+    void ProcessJoinerPort(int argc, char *argv[]);
     void ProcessKeySequence(int argc, char *argv[]);
     void ProcessLeaderData(int argc, char *argv[]);
     void ProcessLeaderPartitionId(int argc, char *argv[]);
@@ -173,6 +177,7 @@ private:
     void ProcessMasterKey(int argc, char *argv[]);
     void ProcessMode(int argc, char *argv[]);
     void ProcessNetworkDataRegister(int argc, char *argv[]);
+    void ProcessNetworkDiagnostic(int argc, char *argv[]);
     void ProcessNetworkIdTimeout(int argc, char *argv[]);
     void ProcessNetworkName(int argc, char *argv[]);
     void ProcessPanId(int argc, char *argv[]);
@@ -188,7 +193,9 @@ private:
     void ProcessReset(int argc, char *argv[]);
     void ProcessRoute(int argc, char *argv[]);
     void ProcessRouter(int argc, char *argv[]);
+    void ProcessRouterDowngradeThreshold(int argc, char *argv[]);
     void ProcessRouterRole(int argc, char *argv[]);
+    void ProcessRouterSelectionJitter(int argc, char *argv[]);
     ThreadError ProcessRouteAdd(int argc, char *argv[]);
     ThreadError ProcessRouteRemove(int argc, char *argv[]);
     void ProcessRouterUpgradeThreshold(int argc, char *argv[]);
@@ -205,6 +212,8 @@ private:
     static void s_HandleActiveScanResult(otActiveScanResult *aResult, void *aContext);
     static void s_HandleNetifStateChanged(uint32_t aFlags, void *aContext);
     static void s_HandleLinkPcapReceive(const RadioPacket *aFrame, void *aContext);
+    static void s_HandleEnergyReport(uint32_t aChannelMask, const uint8_t *aEnergyList, uint8_t aEnergyListLength,
+                                     void *aContext);
     static void s_HandlePanIdConflict(uint16_t aPanId, uint32_t aChannelMask, void *aContext);
 
     void HandleEchoResponse(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
@@ -212,6 +221,7 @@ private:
     void HandleActiveScanResult(otActiveScanResult *aResult);
     void HandleNetifStateChanged(uint32_t aFlags);
     void HandleLinkPcapReceive(const RadioPacket *aFrame);
+    void HandleEnergyReport(uint32_t aChannelMask, const uint8_t *aEnergyList, uint8_t aEnergyListLength);
     void HandlePanIdConflict(uint16_t aPanId, uint32_t aChannelMask);
 
     static const struct Command sCommands[];
@@ -223,7 +233,7 @@ private:
     uint32_t sInterval;
     Timer sPingTimer;
 
-    otNetifAddress sAutoAddresses[8];
+    otNetifAddress mAutoAddresses[kMaxAutoAddresses];
 
     otInstance *mInstance;
 };

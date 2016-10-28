@@ -1,5 +1,5 @@
 /*
- *    Copyright (c) 2016, Nest Labs, Inc.
+ *    Copyright (c) 2016, The OpenThread Authors.
  *    All rights reserved.
  *
  *    Redistribution and use in source and binary forms, with or without
@@ -30,6 +30,12 @@
  *   This file contains definitions for a UART based NCP interface to the OpenThread stack.
  */
 
+#ifdef OPENTHREAD_CONFIG_FILE
+#include OPENTHREAD_CONFIG_FILE
+#else
+#include <openthread-config.h>
+#endif
+
 #include <stdio.h>
 #include <ncp/ncp.h>
 #include <common/code_utils.hpp>
@@ -37,15 +43,15 @@
 #include <net/ip6.hpp>
 #include <ncp/ncp.h>
 #include <ncp/ncp_uart.hpp>
+#include <platform/logging.h>
 #include <platform/uart.h>
 #include <core/openthread-core-config.h>
+#include <openthread-instance.h>
 
 namespace Thread {
 
 static otDEFINE_ALIGNED_VAR(sNcpRaw, sizeof(NcpUart), uint64_t);
 static NcpUart *sNcpUart;
-
-extern Ip6::Ip6 *sIp6;
 
 extern "C" void otNcpInit(otInstance *aInstance)
 {
@@ -84,7 +90,7 @@ NcpUart::NcpUart(otInstance *aInstance):
     mFrameDecoder(mRxBuffer, sizeof(mRxBuffer), &NcpUart::HandleFrame, &NcpUart::HandleError, this),
     mUartBuffer(),
     mTxFrameBuffer(mTxBuffer, sizeof(mTxBuffer)),
-    mUartSendTask(sIp6->mTaskletScheduler, EncodeAndSendToUart, this)
+    mUartSendTask(aInstance->mIp6.mTaskletScheduler, EncodeAndSendToUart, this)
 {
     mState = kStartingFrame;
 
@@ -257,5 +263,21 @@ void NcpUart::HandleError(ThreadError aError, uint8_t *aBuf, uint16_t aBufLength
     // We skip the first byte since it has a space in it.
     otNcpStreamWrite(0, reinterpret_cast<uint8_t*>(hexbuf + 1), static_cast<int>(strlen(hexbuf) - 1));
 }
+
+#if OPENTHREAD_ENABLE_CLI_LOGGING
+#ifdef __cplusplus
+extern "C" {
+#endif
+void otCliLog(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aFormat, va_list aAp)
+{
+    (void)aLogLevel;
+    (void)aLogRegion;
+    (void)aFormat;
+    (void)aAp;
+}
+#ifdef __cplusplus
+}  // extern "C"
+#endif
+#endif // OPENTHREAD_ENABLE_CLI_LOGGING
 
 }  // namespace Thread

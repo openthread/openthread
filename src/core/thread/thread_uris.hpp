@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2016, Nest Labs, Inc.
+ *  Copyright (c) 2016, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -91,12 +91,36 @@ namespace Thread {
 #define OPENTHREAD_URI_ACTIVE_SET       "c/as"
 
 /**
+ * @def OPENTHREAD_URI_DATASET_CHANGED
+ *
+ * The URI Path for MGMT_DATASET_CHANGED
+ *
+ */
+#define OPENTHREAD_URI_DATASET_CHANGED  "c/dc"
+
+/**
+ * @def OPENTHREAD_URI_ENERGY_SCAN
+ *
+ * The URI Path for Energy Scan
+ *
+ */
+#define OPENTHREAD_URI_ENERGY_SCAN      "c/es"
+
+/**
+ * @def OPENTHREAD_URI_ENERGY_REPORT
+ *
+ * The URI Path for Energy Report
+ *
+ */
+#define OPENTHREAD_URI_ENERGY_REPORT    "c/er"
+
+/**
  * @def OPENTHREAD_URI_PENDING_GET
  *
  * The URI Path for MGMT_PENDING_GET
  *
  */
-#define OPENTHREAD_URI_PENDING_GET       "c/pg"
+#define OPENTHREAD_URI_PENDING_GET      "c/pg"
 
 /**
  * @def OPENTHREAD_URI_PENDING_SET
@@ -104,7 +128,7 @@ namespace Thread {
  * The URI Path for MGMT_PENDING_SET
  *
  */
-#define OPENTHREAD_URI_PENDING_SET       "c/ps"
+#define OPENTHREAD_URI_PENDING_SET      "c/ps"
 
 /**
  * @def OPENTHREAD_URI_SERVER_DATA
@@ -113,6 +137,14 @@ namespace Thread {
  *
  */
 #define OPENTHREAD_URI_SERVER_DATA      "a/sd"
+
+/**
+ * @def OPENTHREAD_URI_ANNOUNCE_BEGIN
+ *
+ * The URI Path for Announce Begin.
+ *
+ */
+#define OPENTHREAD_URI_ANNOUNCE_BEGIN   "c/ab"
 
 /**
  * @def OPENTHREAD_URI_RELAY_RX
@@ -160,7 +192,7 @@ namespace Thread {
  * The URI Path for Leader Keep Alive
  *
  */
-#define OPENTHREAD_URI_LEADER_KEEP_ALIVE  "c/la"
+#define OPENTHREAD_URI_LEADER_KEEP_ALIVE "c/la"
 
 /**
  * @def OPENTHREAD_URI_PANID_CONFLICT
@@ -177,6 +209,38 @@ namespace Thread {
  *
  */
 #define OPENTHREAD_URI_PANID_QUERY      "c/pq"
+
+/**
+ * @def OPENTHREAD_URI_COMMISSIONER_GET
+ *
+ * The URI Path for MGMT_COMMISSIONER_GET
+ *
+ */
+#define OPENTHREAD_URI_COMMISSIONER_GET "c/cg"
+
+/**
+ * @def OPENTHREAD_URI_COMMISSIONER_SET
+ *
+ * The URI Path for MGMT_COMMISSIONER_SET
+ *
+ */
+#define OPENTHREAD_URI_COMMISSIONER_SET "c/cs"
+
+/**
+ * @def OPENTHREAD_URI_DIAGNOSTIC_GET
+ *
+ * The URI Path for Network Diagnostic Get.
+ *
+ */
+#define OPENTHREAD_URI_DIAGNOSTIC_GET   "d/dg"
+
+/**
+ * @def OPENTHREAD_URI_DIAG_RST
+ *
+ * The URI Path for Network Diagnostic Reset.
+ *
+ */
+#define OPENTHREAD_URI_DIAGNOSTIC_RESET "d/dr"
 
 }  // namespace Thread
 

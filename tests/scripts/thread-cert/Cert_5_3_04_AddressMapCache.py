@@ -1,6 +1,6 @@
 #!/usr/bin/python
 #
-#  Copyright (c) 2016, Nest Labs, Inc.
+#  Copyright (c) 2016, The OpenThread Authors.
 #  All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
@@ -27,7 +27,6 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-import pexpect
 import time
 import unittest
 
@@ -61,6 +60,7 @@ class Cert_5_3_4_AddressMapCache(unittest.TestCase):
         self.nodes[ROUTER1].add_whitelist(self.nodes[LEADER].get_addr64())
         self.nodes[ROUTER1].add_whitelist(self.nodes[SED1].get_addr64())
         self.nodes[ROUTER1].enable_whitelist()
+        self.nodes[ROUTER1].set_router_selection_jitter(1)
 
         self.nodes[SED1].set_panid(0xface)
         self.nodes[SED1].set_mode('rsn')
@@ -98,40 +98,40 @@ class Cert_5_3_4_AddressMapCache(unittest.TestCase):
         self.assertEqual(self.nodes[LEADER].get_state(), 'leader')
 
         self.nodes[ROUTER1].start()
-        time.sleep(3)
+        time.sleep(5)
         self.assertEqual(self.nodes[ROUTER1].get_state(), 'router')
 
         self.nodes[SED1].start()
-        time.sleep(3)
+        time.sleep(5)
         self.assertEqual(self.nodes[SED1].get_state(), 'child')
 
         self.nodes[ED2].start()
-        time.sleep(3)
+        time.sleep(5)
         self.assertEqual(self.nodes[ED2].get_state(), 'child')
 
         self.nodes[ED3].start()
-        time.sleep(3)
+        time.sleep(5)
         self.assertEqual(self.nodes[ED3].get_state(), 'child')
 
         self.nodes[ED4].start()
-        time.sleep(3)
+        time.sleep(5)
         self.assertEqual(self.nodes[ED4].get_state(), 'child')
 
         self.nodes[ED5].start()
-        time.sleep(3)
+        time.sleep(5)
         self.assertEqual(self.nodes[ED5].get_state(), 'child')
 
         for i in range(4, 8):
             addrs = self.nodes[i].get_addrs()
             for addr in addrs:
                 if addr[0:4] != 'fe80':
-                    self.nodes[SED1].ping(addr)
+                    self.assertTrue(self.nodes[SED1].ping(addr))
 
         for i in range(4, 8):
             addrs = self.nodes[i].get_addrs()
             for addr in addrs:
                 if addr[0:4] != 'fe80':
-                    self.nodes[SED1].ping(addr)
+                    self.assertTrue(self.nodes[SED1].ping(addr))
 
 if __name__ == '__main__':
     unittest.main()

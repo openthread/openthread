@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2016, Nest Labs, Inc.
+ *  Copyright (c) 2016, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -41,6 +41,7 @@
 #include <thread/thread_netif.hpp>
 #include <thread/thread_tlvs.hpp>
 #include <thread/thread_uris.hpp>
+#include <openthread-instance.h>
 
 using Thread::Encoding::BigEndian::HostSwap16;
 
@@ -67,6 +68,7 @@ ThreadNetif::ThreadNetif(Ip6::Ip6 &aIp6):
     mMleRouter(*this),
     mNetworkDataLocal(*this),
     mNetworkDataLeader(*this),
+    mNetworkDiagnostic(*this),
 #if OPENTHREAD_ENABLE_COMMISSIONER
     mCommissioner(*this),
 #endif  // OPENTHREAD_ENABLE_COMMISSIONER
@@ -78,7 +80,9 @@ ThreadNetif::ThreadNetif(Ip6::Ip6 &aIp6):
 #endif  // OPENTHREAD_ENABLE_JOINER
     mJoinerRouter(*this),
     mLeader(*this),
-    mPanIdQuery(*this)
+    mAnnounceBegin(*this),
+    mPanIdQuery(*this),
+    mEnergyScan(*this)
 {
     mKeyManager.SetMasterKey(kThreadMasterKey, sizeof(kThreadMasterKey));
 }
@@ -129,12 +133,28 @@ ThreadError ThreadNetif::GetLinkAddress(Ip6::LinkAddress &address) const
 
 ThreadError ThreadNetif::RouteLookup(const Ip6::Address &source, const Ip6::Address &destination, uint8_t *prefixMatch)
 {
-    return mNetworkDataLeader.RouteLookup(source, destination, prefixMatch, NULL);
+    ThreadError error;
+    uint16_t rloc;
+
+    SuccessOrExit(error = mNetworkDataLeader.RouteLookup(source, destination, prefixMatch, &rloc));
+
+    if (rloc == mMleRouter.GetRloc16())
+    {
+        error = kThreadError_NoRoute;
+    }
+
+exit:
+    return error;
 }
 
 ThreadError ThreadNetif::SendMessage(Message &message)
 {
     return mMeshForwarder.SendMessage(message);
+}
+
+otInstance *ThreadNetif::GetInstance()
+{
+    return otInstanceFromThreadNetif(this);
 }
 
 }  // namespace Thread

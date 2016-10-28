@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2016, Nest Labs, Inc.
+ *  Copyright (c) 2016, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -50,7 +50,7 @@ ThreadError Server::Start()
     Ip6::SockAddr sockaddr;
     sockaddr.mPort = mPort;
 
-    SuccessOrExit(error = mSocket.Open(&HandleUdpReceive, this));
+    SuccessOrExit(error = mSocket.Open(&Server::HandleUdpReceive, this));
     SuccessOrExit(error = mSocket.Bind(sockaddr));
 
 exit:
@@ -78,10 +78,32 @@ exit:
     return error;
 }
 
+void Server::RemoveResource(Resource &aResource)
+{
+    if (mResources == &aResource)
+    {
+        mResources = aResource.mNext;
+    }
+    else
+    {
+        for (Resource *cur = mResources; cur; cur = cur->mNext)
+        {
+            if (cur->mNext == &aResource)
+            {
+                cur->mNext = aResource.mNext;
+                ExitNow();
+            }
+        }
+    }
+
+exit:
+    aResource.mNext = NULL;
+}
+
 void Server::HandleUdpReceive(void *aContext, otMessage aMessage, const otMessageInfo *aMessageInfo)
 {
-    Server *obj = reinterpret_cast<Server *>(aContext);
-    obj->HandleUdpReceive(*static_cast<Message *>(aMessage), *static_cast<const Ip6::MessageInfo *>(aMessageInfo));
+    static_cast<Server *>(aContext)->HandleUdpReceive(*static_cast<Message *>(aMessage),
+                                                      *static_cast<const Ip6::MessageInfo *>(aMessageInfo));
 }
 
 void Server::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo)

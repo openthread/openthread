@@ -170,7 +170,7 @@ TBD
 
 <!-- RQ -- FIXME: This example session is incomplete. -->
 
-This assuems that the NCP has been initialized.
+This assumes that the NCP has been initialized.
 
 Optionally set the channel:
 

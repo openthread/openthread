@@ -1,6 +1,6 @@
 #!/usr/bin/python
 #
-#  Copyright (c) 2016, Nest Labs, Inc.
+#  Copyright (c) 2016, The OpenThread Authors.
 #  All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
@@ -27,7 +27,6 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-import pexpect
 import time
 import unittest
 
@@ -53,11 +52,13 @@ class Cert_5_2_1_BecomeActiveRouter(unittest.TestCase):
         self.nodes[ROUTER1].add_whitelist(self.nodes[LEADER].get_addr64())
         self.nodes[ROUTER1].add_whitelist(self.nodes[REED].get_addr64())
         self.nodes[ROUTER1].enable_whitelist()
+        self.nodes[ROUTER1].set_router_selection_jitter(1)
 
         self.nodes[REED].set_panid(0xface)
         self.nodes[REED].set_mode('rsdn')
         self.nodes[REED].add_whitelist(self.nodes[ROUTER1].get_addr64())
         self.nodes[REED].enable_whitelist()
+        self.nodes[REED].set_router_selection_jitter(1)
 
     def tearDown(self):
         for node in list(self.nodes.values()):
@@ -70,11 +71,11 @@ class Cert_5_2_1_BecomeActiveRouter(unittest.TestCase):
         self.assertEqual(self.nodes[LEADER].get_state(), 'leader')
 
         self.nodes[ROUTER1].start()
-        time.sleep(3)
+        time.sleep(5)
         self.assertEqual(self.nodes[ROUTER1].get_state(), 'router')
 
         self.nodes[REED].start()
-        time.sleep(3)
+        time.sleep(5)
         self.assertEqual(self.nodes[REED].get_state(), 'router')
 
 if __name__ == '__main__':

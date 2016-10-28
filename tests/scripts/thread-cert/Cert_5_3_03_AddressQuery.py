@@ -1,6 +1,6 @@
 #!/usr/bin/python
 #
-#  Copyright (c) 2016, Nest Labs, Inc.
+#  Copyright (c) 2016, The OpenThread Authors.
 #  All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
@@ -27,7 +27,6 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-import pexpect
 import time
 import unittest
 
@@ -56,6 +55,7 @@ class Cert_5_3_3_AddressQuery(unittest.TestCase):
         self.nodes[BR].set_mode('rsdn')
         self.nodes[BR].add_whitelist(self.nodes[LEADER].get_addr64())
         self.nodes[BR].enable_whitelist()
+        self.nodes[BR].set_router_selection_jitter(1)
 
         self.nodes[ROUTER2].set_panid(0xface)
         self.nodes[ROUTER2].set_mode('rsdn')
@@ -63,12 +63,14 @@ class Cert_5_3_3_AddressQuery(unittest.TestCase):
         self.nodes[ROUTER2].add_whitelist(self.nodes[ROUTER3].get_addr64())
         self.nodes[ROUTER2].add_whitelist(self.nodes[ED2].get_addr64())
         self.nodes[ROUTER2].enable_whitelist()
+        self.nodes[ROUTER2].set_router_selection_jitter(1)
 
         self.nodes[ROUTER3].set_panid(0xface)
         self.nodes[ROUTER3].set_mode('rsdn')
         self.nodes[ROUTER3].add_whitelist(self.nodes[LEADER].get_addr64())
         self.nodes[ROUTER3].add_whitelist(self.nodes[ROUTER2].get_addr64())
         self.nodes[ROUTER3].enable_whitelist()
+        self.nodes[ROUTER3].set_router_selection_jitter(1)
 
         self.nodes[ED2].set_panid(0xface)
         self.nodes[ED2].set_mode('rsn')
@@ -87,7 +89,7 @@ class Cert_5_3_3_AddressQuery(unittest.TestCase):
         self.assertEqual(self.nodes[LEADER].get_state(), 'leader')
 
         self.nodes[BR].start()
-        time.sleep(3)
+        time.sleep(5)
         self.assertEqual(self.nodes[BR].get_state(), 'router')
 
         self.nodes[BR].add_prefix('2003::/64', 'paros')
@@ -95,39 +97,39 @@ class Cert_5_3_3_AddressQuery(unittest.TestCase):
         self.nodes[BR].register_netdata()
 
         self.nodes[ROUTER2].start()
-        time.sleep(3)
+        time.sleep(5)
         self.assertEqual(self.nodes[ROUTER2].get_state(), 'router')
 
         self.nodes[ROUTER3].start()
-        time.sleep(3)
+        time.sleep(5)
         self.assertEqual(self.nodes[ROUTER3].get_state(), 'router')
 
         self.nodes[ED2].start()
-        time.sleep(3)
+        time.sleep(5)
         self.assertEqual(self.nodes[ED2].get_state(), 'child')
 
         addrs = self.nodes[ROUTER3].get_addrs()
         for addr in addrs:
             if addr[0:4] != 'fe80':
-                self.nodes[ED2].ping(addr)
+                self.assertTrue(self.nodes[ED2].ping(addr))
                 time.sleep(1)
 
         addrs = self.nodes[ED2].get_addrs()
         for addr in addrs:
             if addr[0:4] != 'fe80':
-                self.nodes[LEADER].ping(addr)
+                self.assertTrue(self.nodes[LEADER].ping(addr))
                 time.sleep(1)
 
         addrs = self.nodes[BR].get_addrs()
         for addr in addrs:
             if addr[0:4] != 'fe80':
-                self.nodes[ED2].ping(addr)
+                self.assertTrue(self.nodes[ED2].ping(addr))
                 time.sleep(1)
 
         addrs = self.nodes[ROUTER3].get_addrs()
         for addr in addrs:
             if addr[0:4] != 'fe80':
-                self.nodes[ED2].ping(addr)
+                self.assertTrue(self.nodes[ED2].ping(addr))
                 time.sleep(1)
 
         addrs = self.nodes[ROUTER3].get_addrs()
@@ -136,22 +138,14 @@ class Cert_5_3_3_AddressQuery(unittest.TestCase):
 
         for addr in addrs:
             if addr[0:4] != 'fe80':
-                try:
-                    self.nodes[ED2].ping(addr)
-                    self.fail()
-                except pexpect.TIMEOUT:
-                    pass
+                self.assertFalse(self.nodes[ED2].ping(addr))
 
         addrs = self.nodes[ED2].get_addrs()
         self.nodes[ED2].stop()
         time.sleep(10)
         for addr in addrs:
             if addr[0:4] != 'fe80':
-                try:
-                    self.nodes[BR].ping(addr)        
-                    self.fail()
-                except pexpect.TIMEOUT:
-                    pass
+                self.assertFalse(self.nodes[BR].ping(addr))
 
 if __name__ == '__main__':
     unittest.main()

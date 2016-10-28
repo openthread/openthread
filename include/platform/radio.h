@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2016, Nest Labs, Inc.
+ *  Copyright (c) 2016, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -89,6 +89,7 @@ typedef enum otRadioCaps
 {
     kRadioCapsNone          = 0,  ///< None
     kRadioCapsAckTimeout    = 1,  ///< Radio supports AckTime event
+    kRadioCapsEnergyScan    = 2,  ///< Radio supports Enegery Scans
 } otRadioCaps;
 
 /**
@@ -96,12 +97,14 @@ typedef enum otRadioCaps
  */
 typedef struct RadioPacket
 {
-    uint8_t *mPsdu;          ///< The PSDU.
-    uint8_t mLength;         ///< Length of the PSDU.
-    uint8_t mChannel;        ///< Channel used to transmit/receive the frame.
-    int8_t  mPower;          ///< Transmit/receive power in dBm.
-    uint8_t mLqi;            ///< Link Quality Indicator for received frames.
-    bool    mSecurityValid;  ///< Security Enabled flag is set and frame passes security checks.
+    uint8_t  *mPsdu;           ///< The PSDU.
+    uint8_t  mLength;          ///< Length of the PSDU.
+    uint8_t  mChannel;         ///< Channel used to transmit/receive the frame.
+    int8_t   mPower;           ///< Transmit/receive power in dBm.
+    uint8_t  mLqi;             ///< Link Quality Indicator for received frames.
+    bool     mSecurityValid: 1; ///< Security Enabled flag is set and frame passes security checks.
+    bool     mDidTX: 1;        ///< Set to true if this packet sent from the radio. Ignored by radio driver.
+    uint16_t mFcs;             ///< Final checksum (optional)
 } RadioPacket;
 
 /**
@@ -145,36 +148,40 @@ typedef enum PhyState
  */
 
 /**
+ * Get the factory-assigned IEEE EUI-64 for this interface.
+ *
+ * @param[in]  aInstance   The OpenThread instance structure.
+ * @param[out] aIeeeEui64  A pointer to where the factory-assigned IEEE EUI-64 will be placed.
+ *
+ */
+void otPlatRadioGetIeeeEui64(otInstance *aInstance, uint8_t *aIeeeEui64);
+
+/**
  * Set the PAN ID for address filtering.
  *
  * @param[in] aInstance  The OpenThread instance structure.
  * @param[in] aPanId     The IEEE 802.15.4 PAN ID.
  *
- * @retval ::kThreadError_None  If the PAN ID was set properly.
  */
-ThreadError otPlatRadioSetPanId(otInstance *aInstance, uint16_t aPanId);
+void otPlatRadioSetPanId(otInstance *aInstance, uint16_t aPanId);
 
 /**
  * Set the Extended Address for address filtering.
  *
- *
  * @param[in] aInstance         The OpenThread instance structure.
  * @param[in] aExtendedAddress  A pointer to the IEEE 802.15.4 Extended Address.
  *
- * @retval ::kThreadError_None  If the Extended Address was set properly.
  */
-ThreadError otPlatRadioSetExtendedAddress(otInstance *aInstance, uint8_t *aExtendedAddress);
+void otPlatRadioSetExtendedAddress(otInstance *aInstance, uint8_t *aExtendedAddress);
 
 /**
  * Set the Short Address for address filtering.
  *
- *
  * @param[in] aInstance      The OpenThread instance structure.
  * @param[in] aShortAddress  The IEEE 802.15.4 Short Address.
  *
- * @retval ::kThreadError_None  If the Short Address was set properly.
  */
-ThreadError otPlatRadioSetShortAddress(otInstance *aInstance, uint16_t aShortAddress);
+void otPlatRadioSetShortAddress(otInstance *aInstance, uint16_t aShortAddress);
 
 /**
  * @}
@@ -244,8 +251,75 @@ ThreadError otPlatRadioSleep(otInstance *aInstance);
 ThreadError otPlatRadioReceive(otInstance *aInstance, uint8_t aChannel);
 
 /**
- * The radio driver calls this method to notify OpenThread of a received packet.
+ * Enable/Disable source match for AutoPend.
  *
+ * @param[in]  aInstance   The OpenThread instance structure.
+ * @param[in]  aEnable     Enable/disable source match for automatical pending.
+ */
+void otPlatRadioEnableSrcMatch(otInstance *aInstance, bool aEnable);
+
+/**
+ * Adding short address to the source match table.
+ *
+ * @param[in]  aInstance      The OpenThread instance structure.
+ * @param[in]  aShortAddress  The short address to be added.
+ *
+ * @retval ::kThreadError_None     Successfully added short address to the source match table.
+ * @retval ::kThreadError_NoBufs   No available entry in the source match table.
+ */
+ThreadError otPlatRadioAddSrcMatchShortEntry(otInstance *aInstance, const uint16_t aShortAddress);
+
+/**
+ * Adding extended address to the source match table.
+ *
+ * @param[in]  aInstance    The OpenThread instance structure.
+ * @param[in]  aExtAddress  The extended address to be added.
+ *
+ * @retval ::kThreadError_None     Successfully added extended address to the source match table.
+ * @retval ::kThreadError_NoBufs   No available entry in the source match table.
+ */
+ThreadError otPlatRadioAddSrcMatchExtEntry(otInstance *aInstance, const uint8_t *aExtAddress);
+
+/**
+ * Removing short address to the source match table.
+ *
+ * @param[in]  aInstance      The OpenThread instance structure.
+ * @param[in]  aShortAddress  The short address to be removed.
+ *
+ * @retval ::kThreadError_None        Successfully removed short address from the source match table.
+ * @retval ::kThreadError_NoAddress   The short address is not in source match table.
+ */
+ThreadError otPlatRadioClearSrcMatchShortEntry(otInstance *aInstance, const uint16_t aShortAddress);
+
+/**
+ * Removing extended address to the source match table of the radio.
+ *
+ * @param[in]  aInstance    The OpenThread instance structure.
+ * @param[in]  aExtAddress  The extended address to be removed.
+ *
+ * @retval ::kThreadError_None        Successfully removed the extended address from the source match table.
+ * @retval ::kThreadError_NoAddress   The extended address is not in source match table.
+ */
+ThreadError otPlatRadioClearSrcMatchExtEntry(otInstance *aInstance, const uint8_t *aExtAddress);
+
+/**
+ * Removing all the short addresses from the source match table.
+ *
+ * @param[in]  aInstance   The OpenThread instance structure.
+ *
+ */
+void otPlatRadioClearSrcMatchShortEntries(otInstance *aInstance);
+
+/**
+ * Removing all the extended addresses from the source match table.
+ *
+ * @param[in]  aInstance   The OpenThread instance structure.
+ *
+ */
+void otPlatRadioClearSrcMatchExtEntries(otInstance *aInstance);
+
+/**
+ * The radio driver calls this method to notify OpenThread of a received packet.
  *
  * @param[in]  aInstance The OpenThread instance structure.
  * @param[in]  aPacket   A pointer to the received packet or NULL if the receive operation was aborted.
@@ -357,6 +431,27 @@ extern void otPlatDiagRadioTransmitDone(otInstance *aInstance, bool aFramePendin
  *
  */
 extern void otPlatDiagRadioReceiveDone(otInstance *aInstance, RadioPacket *aPacket, ThreadError aError);
+
+/**
+ * This method begins the energy scan sequence on the radio.
+ *
+ * @param[in] aInstance      The OpenThread instance structure.
+ * @param[in] aScanChannel   The channel to perform the energy scan on.
+ * @param[in] aScanDuration  The duration, in milliseconds, for the channel to be scanned.
+ *
+ * @retval ::kThreadError_None            Successfully started scanning the channel.
+ * @retval ::kThreadError_NotImplemented  The radio doesn't support energy scanning.
+ */
+ThreadError otPlatRadioEnergyScan(otInstance *aInstance, uint8_t aScanChannel, uint16_t aScanDuration);
+
+/**
+ * The radio driver calls this method to notify OpenThread that the energy scan is complete.
+ *
+ * @param[in]  aInstance           The OpenThread instance structure.
+ * @param[in]  aEnergyScanMaxRssi  The maximum RSSI encountered on the scanned channel.
+ *
+ */
+extern void otPlatRadioEnergyScanDone(otInstance *aInstance, int8_t aEnergyScanMaxRssi);
 
 /**
  * @}

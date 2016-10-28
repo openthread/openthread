@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2016, Nest Labs, Inc.
+ *  Copyright (c) 2016, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -42,7 +42,7 @@ namespace Ip6 {
 
 Netif::Netif(Ip6 &aIp6):
     mIp6(aIp6),
-    mStateChangedTask(aIp6.mTaskletScheduler, &HandleStateChangedTask, this)
+    mStateChangedTask(aIp6.mTaskletScheduler, &Netif::HandleStateChangedTask, this)
 {
     mCallbacks = NULL;
     mUnicastAddresses = NULL;
@@ -351,8 +351,7 @@ void Netif::SetStateChangedFlags(uint32_t aFlags)
 
 void Netif::HandleStateChangedTask(void *aContext)
 {
-    Netif *obj = reinterpret_cast<Netif *>(aContext);
-    obj->HandleStateChangedTask();
+    static_cast<Netif *>(aContext)->HandleStateChangedTask();
 }
 
 void Netif::HandleStateChangedTask(void)

@@ -38,6 +38,9 @@
 
 #include <driverlib/prcm.h>
 #include <inc/hw_prcm.h>
+#include <inc/hw_memmap.h>
+#include <inc/hw_fcfg1.h>
+#include <inc/hw_ccfg.h>
 #include <driverlib/rfc.h>
 #include <driverlib/osc.h>
 #include <driverlib/rf_data_entry.h>
@@ -46,9 +49,6 @@
 #include <driverlib/rf_ieee_mailbox.h>
 #include <driverlib/rf_ieee_cmd.h>
 #include <driverlib/chipinfo.h>
-
-#define CC2650_CRC_BIT_MASK (1<<8)
-#define CC2650_LQI_BIT_MASK 0x3f
 
 #define IEEE802154_MIN_LENGTH 5
 #define IEEE802154_MAX_LENGTH 127
@@ -126,9 +126,41 @@ static volatile rfc_CMD_SYNC_START_RAT_t cmd_start_rat;
 static volatile rfc_CMD_SYNC_STOP_RAT_t cmd_stop_rat;
 static volatile rfc_CMD_RADIO_SETUP_t cmd_radio_setup;
 static volatile rfc_CMD_FS_POWERDOWN_t cmd_fs_powerdown;
+static volatile rfc_CMD_CLEAR_RX_t cmd_clear_rx;
 static volatile rfc_CMD_IEEE_RX_t cmd_ieee_rx;
 static volatile rfc_CMD_IEEE_TX_t cmd_ieee_tx;
-static volatile rfc_CMD_CLEAR_RX_t cmd_clear_rx;
+static volatile rfc_CMD_IEEE_MOD_FILT_t cmd_ieee_mod_filt;
+static volatile rfc_CMD_IEEE_MOD_SRC_MATCH_t cmd_ieee_mod_src_match;
+
+#define CC2650_SRC_MATCH_NONE 0xFF
+/*
+ * number of extended addresses used for source matching
+ */
+#define CC2650_EXTADD_SRC_MATCH_NUM 10
+/*
+ * structure for source matching data
+ */
+static volatile struct {
+    uint32_t srcMatchEn[CC2650_EXTADD_SRC_MATCH_NUM];
+    uint32_t srcPendEn[CC2650_EXTADD_SRC_MATCH_NUM];
+    uint64_t extAddrEnt[CC2650_EXTADD_SRC_MATCH_NUM];
+} src_match_ext_data __attribute__ ((aligned (4)));
+
+/*
+ * number of short addresses used for source matching
+ */
+#define CC2650_SHORTADD_SRC_MATCH_NUM 10
+/*
+ * structure for source matching data
+ */
+static volatile struct {
+    uint32_t srcMatchEn[CC2650_SHORTADD_SRC_MATCH_NUM];
+    uint32_t srcPendEn[CC2650_SHORTADD_SRC_MATCH_NUM];
+    struct{
+        uint16_t shortAddr;
+        uint16_t panID;
+    }extAddrEnt[CC2650_SHORTADD_SRC_MATCH_NUM];
+} src_match_short_data __attribute__ ((aligned (4)));
 
 /* struct containing radio stats */
 static rfc_ieeeRxOutput_t rf_stats;
@@ -214,13 +246,19 @@ static void rf_core_init_rx_params(void)
     cmd_ieee_rx.frameFiltOpt.frameFiltStop = 0;
     cmd_ieee_rx.frameFiltOpt.autoAckEn = 1;
     cmd_ieee_rx.frameFiltOpt.slottedAckEn = 0;
-    cmd_ieee_rx.frameFiltOpt.autoPendEn = 1;
-    cmd_ieee_rx.frameFiltOpt.defaultPend = 1;
+    cmd_ieee_rx.frameFiltOpt.autoPendEn = 0;
+    cmd_ieee_rx.frameFiltOpt.defaultPend = 0;
     cmd_ieee_rx.frameFiltOpt.bPendDataReqOnly = 0;
     cmd_ieee_rx.frameFiltOpt.bPanCoord = 0;
     cmd_ieee_rx.frameFiltOpt.maxFrameVersion = 3;
     cmd_ieee_rx.frameFiltOpt.bStrictLenFilter = 1;
 
+    cmd_ieee_rx.numShortEntries = CC2650_SHORTADD_SRC_MATCH_NUM;
+    cmd_ieee_rx.pShortEntryList = (uint32_t *)&src_match_short_data;
+    
+    cmd_ieee_rx.numExtEntries = CC2650_EXTADD_SRC_MATCH_NUM;
+    cmd_ieee_rx.pExtEntryList = (uint32_t *)&src_match_ext_data;
+    
     /* Receive all frame types */
     cmd_ieee_rx.frameTypes.bAcceptFt0Beacon = 1;
     cmd_ieee_rx.frameTypes.bAcceptFt1Data = 1;
@@ -241,17 +279,12 @@ static void rf_core_init_rx_params(void)
 
     cmd_ieee_rx.ccaRssiThr = -90;
 
-    cmd_ieee_rx.numExtEntries = 0x00;
-    cmd_ieee_rx.numShortEntries = 0x00;
-    cmd_ieee_rx.pExtEntryList = 0;
-    cmd_ieee_rx.pShortEntryList = 0;
-
     cmd_ieee_rx.endTrigger.triggerType = TRIG_NEVER;
     cmd_ieee_rx.endTime = 0x00000000;
 }
 
 /**
- * @brief sends the immediate abort command to the radio core
+ * @brief sends the direct abort command to the radio core
  *
  * @return the value from the command status register
  * @retval CMDSTA_Done the command completed correctly
@@ -262,7 +295,7 @@ static uint_fast8_t rf_core_cmd_abort(void)
 }
 
 /**
- * @brief sends the immediate ping command to the radio core
+ * @brief sends the direct ping command to the radio core
  *
  * Check that the Radio core is alive and able to respond to commands.
  *
@@ -294,6 +327,107 @@ static uint_fast8_t rf_core_cmd_clear_rx(dataQueue_t *queue)
     cmd_clear_rx.pQueue = queue;
 
     return (RFCDoorbellSendTo((uint32_t)&cmd_clear_rx) & 0xFF);
+}
+
+/**
+ * @brief enable/diable filtering
+ *
+ * Uses the radio core to alter the current running RX command filtering
+ * options. This ensures there is no access fault between the CM3 and CM0 for
+ * the RX command.
+ *
+ * This function leaves the type of frames to be filtered the same as the
+ * receive command.
+ *
+ * @note An IEEE RX command *must* be running while this command executes.
+ *
+ * @param [in] enable TRUE: enable frame filtering, FALSE: disable frame filtering
+ *
+ * @return the value from the command status register
+ * @retval CMDSTA_Done the command completed correctly
+ */
+static uint_fast8_t rf_core_cmd_mod_filt(bool enable)
+{
+    memset((void *)&cmd_ieee_mod_filt, 0, sizeof(cmd_ieee_mod_filt));
+
+    cmd_ieee_mod_filt.commandNo = CMD_IEEE_MOD_FILT;
+    memcpy((void *)&cmd_ieee_mod_filt.newFrameFiltOpt, (void *)&cmd_ieee_rx.frameFiltOpt, sizeof(cmd_ieee_mod_filt.newFrameFiltOpt));
+    memcpy((void *)&cmd_ieee_mod_filt.newFrameTypes, (void *)&cmd_ieee_rx.frameTypes, sizeof(cmd_ieee_mod_filt.newFrameTypes));
+    cmd_ieee_mod_filt.newFrameFiltOpt.frameFiltEn = enable ? 1 : 0;
+
+    return (RFCDoorbellSendTo((uint32_t)&cmd_ieee_mod_filt) & 0xFF);
+}
+
+/**
+ * @brief enable/disable autoPend
+ *
+ * Uses the radio core to alter the current running RX command filtering
+ * options. This ensures there is no access fault between the CM3 and CM0 for
+ * the RX command.
+ *
+ * This function leaves the type of frames to be filtered the same as the
+ * receive command.
+ *
+ * @note An IEEE RX command *must* be running while this command executes.
+ *
+ * @param [in] enable TRUE: enable autoPend, FALSE: disable autoPend 
+ *
+ * @return the value from the command status register
+ * @retval CMDSTA_Done the command completed correctly
+ */
+static uint_fast8_t rf_core_cmd_mod_pend(bool enable)
+{
+    memset((void *)&cmd_ieee_mod_filt, 0, sizeof(cmd_ieee_mod_filt));
+
+    cmd_ieee_mod_filt.commandNo = CMD_IEEE_MOD_FILT;
+    memcpy((void *)&cmd_ieee_mod_filt.newFrameFiltOpt, (void *)&cmd_ieee_rx.frameFiltOpt, sizeof(cmd_ieee_mod_filt.newFrameFiltOpt));
+    memcpy((void *)&cmd_ieee_mod_filt.newFrameTypes, (void *)&cmd_ieee_rx.frameTypes, sizeof(cmd_ieee_mod_filt.newFrameTypes));
+    cmd_ieee_mod_filt.newFrameFiltOpt.autoPendEn = enable ? 1 : 0;
+
+    return (RFCDoorbellSendTo((uint32_t)&cmd_ieee_mod_filt) & 0xFF);
+}
+
+/**
+ * address type for @ref rf_core_cmd_mod_src_match
+ */
+typedef enum {
+    SHORT_ADDRESS = 1,
+    EXT_ADDRESS = 0,
+} cc2650_address_type;
+
+/**
+ * @brief sends the immediate modify source matching command to the radio core
+ *
+ * Uses the radio core to alter the current source matching parameters used by
+ * the running RX command. This ensures there is no access fault between the
+ * CM3 and CM0, and ensures that the RX command has cohesive view of the data.
+ * The CM3 may make alterations to the source matching entries if the entry is
+ * marked as disabled.
+ *
+ * @note An IEEE RX command *must* be running while this command executes.
+ *
+ * @param [in] entryNo the index of the entry to alter
+ * @param [in] type TRUE: the entry is a short address, FALSE: the entry is an extended address
+ * @param [in] enable whether the given entry is to be enabled or disabled
+ *
+ * @return the value from the command status register
+ * @retval CMDSTA_Done the command completed correctly
+ */
+static uint_fast8_t rf_core_cmd_mod_src_match(uint8_t entryNo, cc2650_address_type type, bool enable)
+{
+    memset((void *)&cmd_ieee_mod_src_match, 0, sizeof(cmd_ieee_mod_src_match));
+
+    cmd_ieee_mod_src_match.commandNo = CMD_IEEE_MOD_SRC_MATCH;
+    /* we only use source matching for pending data bit, so enabling and
+     * pending are the same to us.
+     */
+    cmd_ieee_mod_src_match.options.bEnable = enable ? 1 : 0;
+    cmd_ieee_mod_src_match.options.srcPend = enable ? 1 : 0;
+    cmd_ieee_mod_src_match.options.entryType = type;
+
+    cmd_ieee_mod_src_match.entryNo = entryNo;
+
+    return (RFCDoorbellSendTo((uint32_t)&cmd_ieee_mod_src_match) & 0xFF);
 }
 
 /**
@@ -646,7 +780,7 @@ void RFCCPE0IntHandler(void)
             }
         }
     }
-    else if(sState == kStateReceive)
+    else if(sState == kStateReceive && (cmd_ieee_rx.status != ACTIVE && cmd_ieee_rx.status != IEEE_SUSPENDED))
     {
         /* the rx command was probably aborted to change the channel */
         sState = kStateSleep;
@@ -734,7 +868,7 @@ exit:
 bool otPlatRadioIsEnabled(otInstance *aInstance)
 {
     (void)aInstance;
-    return (sState != kStateDisabled) ? true : false;
+    return (sState != kStateDisabled);
 }
 
 ThreadError otPlatRadioDisable(otInstance *aInstance)
@@ -903,6 +1037,222 @@ otRadioCaps otPlatRadioGetCaps(otInstance *aInstance)
 /**
  * Function documented in platform/radio.h
  */
+void otPlatRadioEnableSrcMatch(otInstance *aInstance, bool aEnable)
+{
+    (void)aInstance;
+    if(cmd_ieee_rx.status == ACTIVE || cmd_ieee_rx.status == IEEE_SUSPENDED)
+    {
+        /* we have a running or backgrounded rx command */
+        SuccessOrExit(rf_core_cmd_mod_pend(aEnable) == CMDSTA_Done);
+    }
+    else
+    {
+        /* if we are promiscuous, then frame filtering should be disabled */
+        cmd_ieee_rx.frameFiltOpt.autoPendEn = aEnable ? 1 : 0;
+    }
+exit:
+    return;
+}
+
+/**
+ * @brief walks the short address source match list to find an address
+ *
+ * @param [in] address the short address to search for
+ *
+ * @return the index where the address was found
+ * @retval CC2650_SRC_MATCH_NONE the address was not found
+ */
+static uint8_t rfcore_src_match_short_find_idx(const uint16_t address)
+{
+    uint8_t i;
+    
+    for(i=0; i<CC2650_SHORTADD_SRC_MATCH_NUM; i++)
+    {
+        if(src_match_short_data.extAddrEnt[i].shortAddr == address)
+        {
+            return i;
+        }
+    }
+
+    return CC2650_SRC_MATCH_NONE;
+}
+
+/**
+ * @brief walks the short address source match list to find an empty slot
+ *
+ * @return the index of an unused address slot
+ * @retval CC2650_SRC_MATCH_NONE no unused slots available
+ */
+static uint8_t rfcore_src_match_short_find_empty(void)
+{
+    uint8_t i;
+    
+    for(i=0; i<CC2650_SHORTADD_SRC_MATCH_NUM; i++)
+    {
+        if(src_match_short_data.srcMatchEn[i] == 0x0000)
+        {
+            return i;
+        }
+    }
+    return CC2650_SRC_MATCH_NONE;
+}
+
+/**
+ * Function documented in platform/radio.h
+ */
+ThreadError otPlatRadioAddSrcMatchShortEntry(otInstance *aInstance, const uint16_t aShortAddress)
+{
+    ThreadError error = kThreadError_None;
+    (void)aInstance;
+    uint8_t idx = rfcore_src_match_short_find_idx(aShortAddress);
+    if(idx == CC2650_SRC_MATCH_NONE)
+    {
+        /* the entry does not exist already, add it */
+        VerifyOrExit((idx = rfcore_src_match_short_find_empty()) != CC2650_SRC_MATCH_NONE, error = kThreadError_NoBufs);
+        src_match_short_data.extAddrEnt[idx].shortAddr = aShortAddress;
+        src_match_short_data.extAddrEnt[idx].panID = cmd_ieee_rx.localPanID;
+    }
+
+    if(cmd_ieee_rx.status == ACTIVE || cmd_ieee_rx.status == IEEE_SUSPENDED)
+    {
+        /* we have a running or backgrounded rx command */
+        VerifyOrExit(rf_core_cmd_mod_src_match(idx, SHORT_ADDRESS, true) == CMDSTA_Done, error = kThreadError_Failed);
+    }
+    else
+    {
+        /* we are not running, so we must update the values ourselves */
+        src_match_short_data.srcPendEn[idx] = 1u;
+        src_match_short_data.srcMatchEn[idx] = 1u;
+    }
+exit:
+    return error;
+}
+
+/**
+ * Function documented in platform/radio.h
+ */
+ThreadError otPlatRadioClearSrcMatchShortEntry(otInstance *aInstance, const uint16_t aShortAddress)
+{
+    ThreadError error = kThreadError_None;
+    (void)aInstance;
+    uint8_t idx;
+    VerifyOrExit((idx = rfcore_src_match_short_find_idx(aShortAddress)) != CC2650_SRC_MATCH_NONE, error = kThreadError_NoAddress);
+
+    if(cmd_ieee_rx.status == ACTIVE || cmd_ieee_rx.status == IEEE_SUSPENDED)
+    {
+        /* we have a running or backgrounded rx command */
+        VerifyOrExit(rf_core_cmd_mod_src_match(idx, SHORT_ADDRESS, false) == CMDSTA_Done, error = kThreadError_Failed);
+    }
+    else
+    {
+        /* we are not running, so we must update the values ourselves */
+        src_match_short_data.srcPendEn[idx] = 0u;
+        src_match_short_data.srcMatchEn[idx] = 0u;
+    }
+exit:
+    return error;
+}
+
+/**
+ * @brief walks the ext address source match list to find an address
+ *
+ * @param [in] address the ext address to search for
+ *
+ * @return the index where the address was found
+ * @retval CC2650_SRC_MATCH_NONE the address was not found
+ */
+static uint8_t rfcore_src_match_ext_find_idx(const uint64_t *address)
+{
+    uint8_t i;
+    
+    for(i=0; i<CC2650_EXTADD_SRC_MATCH_NUM; i++)
+    {
+        if(src_match_ext_data.extAddrEnt[i] == *address)
+        {
+            return i;
+        }
+    }
+    return CC2650_SRC_MATCH_NONE;
+}
+
+/**
+ * @brief walks the ext address source match list to find an empty slot
+ *
+ * @return the index of an unused address slot
+ * @retval CC2650_SRC_MATCH_NONE no unused slots available
+ */
+static uint8_t rfcore_src_match_ext_find_empty(void)
+{
+    uint8_t i;
+    
+    for(i=0; i<CC2650_EXTADD_SRC_MATCH_NUM; i++)
+    {
+        if(src_match_ext_data.srcMatchEn[i] != 0x0000)
+        {
+            return i;
+        }
+    }
+    return CC2650_SRC_MATCH_NONE;
+}
+
+/**
+ * Function documented in platform/radio.h
+ */
+ThreadError otPlatRadioAddSrcMatchExtEntry(otInstance *aInstance, const uint8_t *aExtAddress)
+{
+    ThreadError error = kThreadError_None;
+    (void)aInstance;
+    uint8_t idx = rfcore_src_match_ext_find_idx((uint64_t *)aExtAddress);
+    if(idx == CC2650_SRC_MATCH_NONE)
+    {
+        /* the entry does not exist already, add it */
+        VerifyOrExit((idx = rfcore_src_match_ext_find_empty()) != CC2650_SRC_MATCH_NONE, error = kThreadError_NoBufs);
+        src_match_ext_data.extAddrEnt[idx] = *((uint64_t *)aExtAddress);
+    }
+
+    if(cmd_ieee_rx.status == ACTIVE || cmd_ieee_rx.status == IEEE_SUSPENDED)
+    {
+        /* we have a running or backgrounded rx command */
+        VerifyOrExit(rf_core_cmd_mod_src_match(idx, EXT_ADDRESS, true) == CMDSTA_Done, error = kThreadError_Failed);
+    }
+    else
+    {
+        /* we are not running, so we must update the values ourselves */
+        src_match_ext_data.srcPendEn[idx] = 1u;
+        src_match_ext_data.srcMatchEn[idx] = 1u;
+    }
+exit:
+    return error;
+}
+
+/**
+ * Function documented in platform/radio.h
+ */
+ThreadError otPlatRadioClearSrcMatchExtEntry(otInstance *aInstance, const uint8_t *aExtAddress)
+{
+    ThreadError error = kThreadError_None;
+    (void)aInstance;
+    uint8_t idx;
+    VerifyOrExit((idx = rfcore_src_match_ext_find_idx((uint64_t *)aExtAddress)) != CC2650_SRC_MATCH_NONE, error = kThreadError_NoAddress);
+
+    if(cmd_ieee_rx.status == ACTIVE || cmd_ieee_rx.status == IEEE_SUSPENDED)
+    {
+        /* we have a running or backgrounded rx command */
+        VerifyOrExit(rf_core_cmd_mod_src_match(idx, EXT_ADDRESS, false) == CMDSTA_Done, error = kThreadError_Failed);
+    }
+    else
+    {
+        /* we are not running, so we must update the values ourselves */
+        src_match_ext_data.srcPendEn[idx] = 0u;
+        src_match_ext_data.srcMatchEn[idx] = 0u;
+    }
+exit:
+    return error;
+}
+
+/**
+ * Function documented in platform/radio.h
+ */
 bool otPlatRadioGetPromiscuous(otInstance *aInstance)
 {
     (void)aInstance;
@@ -916,20 +1266,17 @@ bool otPlatRadioGetPromiscuous(otInstance *aInstance)
 void otPlatRadioSetPromiscuous(otInstance *aInstance, bool aEnable)
 {
     (void)aInstance;
-    if(aEnable != (cmd_ieee_rx.frameFiltOpt.frameFiltEn == 0))
+    if(cmd_ieee_rx.status == ACTIVE || cmd_ieee_rx.status == IEEE_SUSPENDED)
     {
-        if(sState == kStateReceive)
-        {
-            SuccessOrExit(rf_core_cmd_abort() == CMDSTA_Done);
-            /* if we are promiscuous, disable frame filtering */
-            cmd_ieee_rx.frameFiltOpt.frameFiltEn = aEnable ? 0 : 1;
-            SuccessOrExit(rf_core_cmd_ieee_rx() == CMDSTA_Done);
-        }
-        else if(sState != kStateTransmit)
-        {
-            /* if we are promiscuous, disable frame filtering */
-            cmd_ieee_rx.frameFiltOpt.frameFiltEn = aEnable ? 0 : 1;
-        }
+        /* we have a running or backgrounded rx command */
+        /* if we are promiscuous, then frame filtering should be disabled */
+        SuccessOrExit(rf_core_cmd_mod_filt(!aEnable) == CMDSTA_Done);
+        /* XXX should we dump any queued messages ? */
+    }
+    else
+    {
+        /* if we are promiscuous, then frame filtering should be disabled */
+        cmd_ieee_rx.frameFiltOpt.frameFiltEn = aEnable ? 0 : 1;
     }
 exit:
     return;
@@ -938,72 +1285,120 @@ exit:
 /**
  * Function documented in platform/radio.h
  */
-ThreadError otPlatRadioSetPanId(otInstance *aInstance, uint16_t panid)
+void otPlatRadioGetIeeeEui64(otInstance *aInstance, uint8_t *aIeeeEui64)
 {
-    ThreadError error = kThreadError_None;
+    uint8_t *eui64;
+    unsigned int i;
+    (void)aInstance;
+
+    /* The IEEE MAC address can be stored two places. We check the Customer
+     * Configuration was not set before defaulting to the Factory
+     * Configuration.
+     */
+    eui64 = (uint8_t *)(CCFG_BASE + CCFG_O_IEEE_MAC_0);
+    if(*((uint64_t *)eui64) == 0xFFFFFFFFFFFFFFFF)
+    {
+        eui64 = (uint8_t *)(FCFG1_BASE + FCFG1_O_MAC_15_4_0);
+    }
+
+    /* The IEEE MAC address is stored in network byte order (big endian).
+     * The caller seems to want the address stored in little endian format,
+     * which is backwards of the conventions setup by @ref
+     * otPlatRadioSetExtendedAddress. otPlatRadioSetExtendedAddress assumes
+     * that the address being passed to it is in network byte order (big
+     * endian), so the caller of otPlatRadioSetExtendedAddress must swap the
+     * endianness before calling.
+     *
+     * It may be easier to have the caller of this function store the IEEE
+     * address in network byte order (big endian).
+     */
+    for (i = 0; i < OT_EXT_ADDRESS_SIZE; i++)
+    {
+        aIeeeEui64[i] = eui64[(OT_EXT_ADDRESS_SIZE - 1) - i];
+    }
+}
+
+/**
+ * Function documented in platform/radio.h
+ *
+ * @note it is entirely possible for this function to fail, but there is no
+ * valid way to return that error since the funciton prototype was changed.
+ */
+void otPlatRadioSetPanId(otInstance *aInstance, uint16_t panid)
+{
     (void)aInstance;
     /* XXX: if the pan id is the broadcast pan id (0xFFFF) the auto ack will
      * not work. This is due to the design of the CM0 and follows IEEE 802.15.4
      */
     if(sState == kStateReceive)
     {
-        VerifyOrExit(rf_core_cmd_abort() == CMDSTA_Done, error=kThreadError_Failed);
+        VerifyOrExit(rf_core_cmd_abort() == CMDSTA_Done, ; );
         cmd_ieee_rx.localPanID = panid;
-        VerifyOrExit(rf_core_cmd_clear_rx(&rx_data_queue) == CMDSTA_Done, error=kThreadError_Failed);
-        VerifyOrExit(rf_core_cmd_ieee_rx() == CMDSTA_Done, error=kThreadError_Failed);
+        VerifyOrExit(rf_core_cmd_clear_rx(&rx_data_queue) == CMDSTA_Done, ; );
+        VerifyOrExit(rf_core_cmd_ieee_rx() == CMDSTA_Done, ; );
+        /* the interrupt from abort changed our state to sleep */
+        sState = kStateReceive;
     }
     else if(sState != kStateTransmit)
     {
         cmd_ieee_rx.localPanID = panid;
     }
 exit:
-    return error;
+    return;
 }
 
 /**
  * Function documented in platform/radio.h
+ *
+ * @note it is entirely possible for this function to fail, but there is no
+ * valid way to return that error since the funciton prototype was changed.
  */
-ThreadError otPlatRadioSetExtendedAddress(otInstance *aInstance, uint8_t *address)
+void otPlatRadioSetExtendedAddress(otInstance *aInstance, uint8_t *address)
 {
-    ThreadError error = kThreadError_None;
     (void)aInstance;
     /* XXX: assuming little endian format */
     if(sState == kStateReceive)
     {
-        VerifyOrExit(rf_core_cmd_abort() == CMDSTA_Done, error=kThreadError_Failed);
+        VerifyOrExit(rf_core_cmd_abort() == CMDSTA_Done, ; );
         cmd_ieee_rx.localExtAddr = *((uint64_t *)(address));
-        VerifyOrExit(rf_core_cmd_clear_rx(&rx_data_queue) == CMDSTA_Done, error=kThreadError_Failed);
-        VerifyOrExit(rf_core_cmd_ieee_rx() == CMDSTA_Done, error=kThreadError_Failed);
+        VerifyOrExit(rf_core_cmd_clear_rx(&rx_data_queue) == CMDSTA_Done, ; );
+        VerifyOrExit(rf_core_cmd_ieee_rx() == CMDSTA_Done, ; );
+        /* the interrupt from abort changed our state to sleep */
+        sState = kStateReceive;
     }
     else if(sState != kStateTransmit)
     {
         cmd_ieee_rx.localExtAddr = *((uint64_t *)(address));
     }
 exit:
-    return error;
+    return;
 }
 
 /**
  * Function documented in platform/radio.h
+ *
+ * @note it is entirely possible for this function to fail, but there is no
+ * valid way to return that error since the funciton prototype was changed.
  */
-ThreadError otPlatRadioSetShortAddress(otInstance *aInstance, uint16_t address)
+void otPlatRadioSetShortAddress(otInstance *aInstance, uint16_t address)
 {
-    ThreadError error = kThreadError_None;
     (void)aInstance;
 
     if(sState == kStateReceive)
     {
-        VerifyOrExit(rf_core_cmd_abort() == CMDSTA_Done, error=kThreadError_Failed);
+        VerifyOrExit(rf_core_cmd_abort() == CMDSTA_Done, ; );
         cmd_ieee_rx.localShortAddr = address;
-        VerifyOrExit(rf_core_cmd_clear_rx(&rx_data_queue) == CMDSTA_Done, error=kThreadError_Failed);
-        VerifyOrExit(rf_core_cmd_ieee_rx() == CMDSTA_Done, error=kThreadError_Failed);
+        VerifyOrExit(rf_core_cmd_clear_rx(&rx_data_queue) == CMDSTA_Done, ; );
+        VerifyOrExit(rf_core_cmd_ieee_rx() == CMDSTA_Done, ; );
+        /* the interrupt from abort changed our state to sleep */
+        sState = kStateReceive;
     }
     else if(sState != kStateTransmit)
     {
         cmd_ieee_rx.localShortAddr = address;
     }
 exit:
-    return error;
+    return;
 }
 
 /**
@@ -1015,7 +1410,7 @@ exit:
  */
 static void readFrame(void)
 {
-    uint8_t crcCorr;
+    rfc_ieeeRxCorrCrc_t *crcCorr;
     uint8_t rssi;
     rfc_dataEntryGeneral_t *startEntry =
         (rfc_dataEntryGeneral_t *)rx_data_queue.pCurrEntry;
@@ -1033,16 +1428,15 @@ static void readFrame(void)
              * This array access looks like it is a fencepost error, but the
              * first byte is the number of bytes that follow.
              */
-            crcCorr = payload[len];
+            crcCorr = (rfc_ieeeRxCorrCrc_t *)&payload[len];
             rssi = payload[len - 1];
-            if(!(crcCorr & CC2650_CRC_BIT_MASK)
-                    && (len - 2) < kMaxPHYPacketSize) 
+            if(crcCorr->status.bCrcErr == 0 && (len - 2) < kMaxPHYPacketSize) 
             {
                 sReceiveFrame.mLength = len;
                 memcpy(sReceiveFrame.mPsdu, &(payload[1]), len - 2);
                 sReceiveFrame.mChannel = cmd_ieee_rx.channel;
                 sReceiveFrame.mPower = rssi;
-                sReceiveFrame.mLqi = crcCorr & CC2650_LQI_BIT_MASK;
+                sReceiveFrame.mLqi = crcCorr->status.corr;
                 sReceiveError = kThreadError_None;
             }
             else
@@ -1124,4 +1518,12 @@ int cc2650RadioProcess(otInstance *aInstance)
         sReceiveFrame.mLength = 0;
     }
     return 0;
+}
+
+ThreadError otPlatRadioEnergyScan(otInstance *aInstance, uint8_t aScanChannel, uint16_t aScanDuration)
+{
+    (void)aInstance;
+    (void)aScanChannel;
+    (void)aScanDuration;
+    return kThreadError_NotImplemented;
 }

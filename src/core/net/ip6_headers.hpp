@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2016, Nest Labs, Inc.
+ *  Copyright (c) 2016, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -386,6 +386,72 @@ private:
     uint8_t mType;
     uint8_t mLength;
 } OT_TOOL_PACKED_END;
+
+/**
+ * This class implements IPv6 PadN Option generation and parsing.
+ *
+ */
+OT_TOOL_PACKED_BEGIN
+class OptionPadN : public OptionHeader
+{
+public:
+    enum
+    {
+        kType = 0x01,      ///< PadN type
+        kData = 0x00,      ///< PadN specific data
+        kMaxLength = 0x05  ///< Maximum length of PadN option data
+    };
+
+    /**
+     * This method initializes the PadN header.
+     *
+     * @param[in]  aPadLength  The length of needed padding. Allowed value from
+     *                         range 2-7.
+     *
+     */
+    void Init(uint8_t aPadLength) {
+        OptionHeader::SetType(kType);
+        OptionHeader::SetLength(aPadLength - sizeof(OptionHeader));
+        memset(mPad, kData, aPadLength - sizeof(OptionHeader));
+    }
+
+    /**
+     * This method returns the total IPv6 Option Length value including option
+     * header.
+     *
+     * @returns The total IPv6 Option Length.
+     *
+     */
+    uint8_t GetTotalLength() const { return OptionHeader::GetLength() + sizeof(OptionHeader); }
+
+private:
+    uint8_t mPad[kMaxLength];
+} OT_TOOL_PACKED_END;
+
+/**
+ * This class implements IPv6 Pad1 Option generation and parsing. Pad1 does not
+ * followdefault option header structure.
+ *
+ */
+OT_TOOL_PACKED_BEGIN
+class OptionPad1
+{
+public:
+    enum
+    {
+        kType = 0x00
+    };
+
+    /**
+     * This method initializes the Pad1 header.
+     *
+     */
+    void Init() { mType = kType; }
+
+private:
+    uint8_t mType;
+} OT_TOOL_PACKED_END;
+
 
 /**
  * This class implements IPv6 Fragment Header generation and parsing.

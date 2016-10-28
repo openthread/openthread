@@ -1,7 +1,7 @@
 # OpenThread CLI Reference
 
 The OpenThread CLI exposes configuration and management APIs via a
-command line interface. Use the CLI to play with OpenThread, which 
+command line interface. Use the CLI to play with OpenThread, which
 can also be used with additional application code. The
 OpenThread test scripts use the CLI to execute test cases.
 
@@ -12,15 +12,19 @@ OpenThread test scripts use the CLI to execute test cases.
 * [child](#child)
 * [childmax](#childmax)
 * [childtimeout](#childtimeout)
+* [commissioner](#commissioner)
 * [contextreusedelay](#contextreusedelay)
 * [counter](#counter)
 * [dataset](#dataset)
 * [discover](#discover)
 * [eidcache](#eidcache)
+* [eui64](#eui64)
 * [extaddr](#extaddr)
 * [extpanid](#extpanid)
+* [hashmacaddr](#hashmacaddr)
 * [ifconfig](#ifconfig)
 * [ipaddr](#ipaddr)
+* [joiner](#joiner)
 * [keysequence](#keysequence)
 * [leaderpartitionid](#leaderpartitionid)
 * [leaderweight](#leaderweight)
@@ -41,7 +45,9 @@ OpenThread test scripts use the CLI to execute test cases.
 * [rloc16](#rloc16)
 * [route](#route)
 * [router](#router)
+* [routerdowngradethreshold](#routerdowngradethreshold)
 * [routerrole](#routerrole)
+* [routerselectionjitter](#routerselectionjitter)
 * [routerupgradethreshold](#routerupgradethreshold)
 * [scan](#scan)
 * [singleton](#singleton)
@@ -130,11 +136,24 @@ Done
 
 ### child list
 
-List attached Child IDs
+List attached Child IDs.
 
 ```bash
 > child list
 1 2 3 6 7 8
+Done
+```
+
+### child table
+
+Print table of attached children.
+
+```bash
+> child table
+| ID  | RLOC16 | Timeout    | Age        | LQI In | C_VN |R|S|D|N| Extended MAC     |
++-----+--------+------------+------------+--------+------+-+-+-+-+------------------+
+|   1 | 0xe001 |        240 |         44 |      3 |  237 |1|1|1|1| d28d7f875888fccb |
+|   2 | 0xe002 |        240 |         27 |      3 |  237 |0|1|0|1| e2b3540590b0fd87 |
 Done
 ```
 
@@ -192,6 +211,98 @@ Set the Thread Child Timeout value.
 ```bash
 > childtimeout 300
 Done
+```
+
+### commissioner start \<provisioningUrl\>
+
+Start the Commissioner role.
+
+* provisioningUrl: Provisioning URL for the Joiner (optional).
+
+This command will cause the device to send LEAD_PET and LEAD_KA messages.
+
+```bash
+> commissioner start
+Done
+```
+
+### commissioner stop
+
+Stop the Commissioner role.
+
+This command will cause the device to send LEAD_KA[Reject] messages.
+
+```bash
+> commissioner stop
+Done
+```
+
+### commissioner joiner add \<hashmacaddr\> \<psdk\>
+
+Add a Joiner entry.
+
+* hashmacaddr: The Extended Address of the Joiner or '*' to match any Joiner.
+* pskd: Pre-Shared Key for the Joiner.
+
+```bash
+> commissioner joiner add d45e64fa83f81cf7 PSK
+Done
+```
+
+### commissioner joiner remove \<hashmacaddr\>
+
+Remove a Joiner entry.
+
+* hashmacaddr: The Extended Address of the Joiner or '*' to match any Joiner.
+
+```bash
+> commissioner joiner remove d45e64fa83f81cf7
+Done
+```
+
+### commissioner provisioningurl \<provisioningUrl\>
+
+Set the Provisioning URL.
+
+```bash
+> commissioner provisioningurl http://github.com/openthread/openthread
+Done
+```
+
+### commissioner energy \<mask\> \<count\> \<period\> \<scanDuration\> \<destination\>
+
+Send a MGMT_ED_SCAN message.
+
+* mask: Bitmask identifying channsl to perform IEEE 802.15.4 ED Scans.
+* count: Number of IEEE 802.15.4 ED Scans per channel.
+* period: Period between successive IEEE 802.15.4 ED Scans (milliseconds).
+* scanDuration: IEEE 802.15.4 ScanDuration to use when performing an IEEE 802.15.4 ED Scan (milliseconds).
+* destination: IPv6 destination for the message (may be multicast).
+
+The contents of MGMT_ED_REPORT messages (i.e. Channel Mask and Energy
+List) are printed as they are received.
+
+```bash
+> commissioner energy 0x00050000 2 32 1000 fdde:ad00:beef:0:0:ff:fe00:c00
+Done
+Energy: 00050000 0 0 0 0
+```
+
+### commissioner panid \<panid\> \<mask\> \<destination\>
+
+Send a MGMT_PANID_QUERY message.
+
+* panid: PAN ID to check for conflicts.
+* mask: Bitmask identifying channels to perform IEEE 802.15.4 Active Scans.
+* destination: IPv6 destination for the message (may be multicast).
+
+The contents of MGMT_PANID_CONFLICT messages (i.e. PAN ID and Channel
+Mask) are printed as they are received.
+
+```bash
+> commissioner panid 0xdead 0x7fff800 fdde:ad00:beef:0:0:ff:fe00:c00
+Done
+Conflict: dead, 00000800
 ```
 
 ### contextreusedelay
@@ -551,6 +662,16 @@ fdde:ad00:beef:0:110a:e041:8399:17cd 6000
 Done
 ```
 
+### eui64
+
+Get the factory-assigned IEEE EUI-64.
+
+```bash
+> eui64
+0615aae900124b00
+Done
+```
+
 ### extaddr
 
 Get the IEEE 802.15.4 Extended Address.
@@ -587,6 +708,16 @@ Set the Thread Extended PAN ID value.
 
 ```bash
 > extpanid dead00beef00cafe
+Done
+```
+
+### hashmacaddr
+
+Get the HashMac address.
+
+```bash
+> hashmacaddr
+e0b220eb7d8dda7e
 Done
 ```
 
@@ -646,6 +777,30 @@ Delete an IPv6 address from the Thread interface.
 
 ```bash
 > ipaddr del 2001::dead:beef:cafe
+Done
+```
+
+### joiner start \<pskd\> \<provisioningUrl\>
+
+Start the Joiner role.
+
+* pskd: Pre-Shared Key for the Joiner.
+* provisioningUrl: Provisioning URL for the Joiner (optional).
+
+This command will cause the device to perform an MLE Discovery and
+initiate the Thread Commissioning process.
+
+```bash
+> joiner start PSK
+Done
+```
+
+### joiner stop
+
+Stop the Joiner role.
+
+```bash
+> joiner stop
 Done
 ```
 
@@ -981,11 +1136,24 @@ Done
 
 ### router list
 
-List allocated Router IDs
+List allocated Router IDs.
 
 ```bash
 > router list
 8 24 50
+Done
+```
+
+### router table
+
+Print table of routers.
+
+```bash
+> router table
+| ID | RLOC16 | Next Hop | Path Cost | LQI In | LQI Out | Age | Extended MAC     |
++----+--------+----------+-----------+--------+---------+-----+------------------+
+| 21 | 0x5400 |       21 |         0 |      3 |       3 |   5 | d28d7f875888fccb |
+| 56 | 0xe000 |       56 |         0 |      0 |       0 | 182 | f2d92a82c8d8fe43 |
 Done
 ```
 
@@ -1023,6 +1191,25 @@ Age: 7
 Done
 ```
 
+### routerdowngradethreshold
+
+Get the ROUTER_DOWNGRADE_THRESHOLD value.
+
+```bash
+> routerdowngradethreshold
+23
+Done
+```
+
+### routerdowngradethreshold \<threshold\>
+
+Set the ROUTER_DOWNGRADE_THRESHOLD value.
+
+```bash
+> routerdowngradethreshold 23
+Done
+```
+
 ### routerrole
 
 Indicates whether the router role is enabled or disabled.
@@ -1048,6 +1235,25 @@ Disable the router role.
 
 ```bash
 > routerrole disable
+Done
+```
+
+### routerselectionjitter
+
+Get the ROUTER_SELECTION_JITTER value.
+
+```bash
+> routerselectionjitter
+120
+Done
+```
+
+### routerselectionjitter \<jitter\>
+
+Set the ROUTER_SELECTION_JITTER value.
+
+```bash
+> routerselectionjitter 120
 Done
 ```
 
@@ -1185,4 +1391,3 @@ Diagnostics module is enabled only when building OpenThread with --enable-diag o
 Go [diagnostics module][1] for more information.
 
 [1]:../diag/README.md
-

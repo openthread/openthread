@@ -1,5 +1,5 @@
 #
-#  Copyright (c) 2016, Nest Labs, Inc.
+#  Copyright (c) 2016, The OpenThread Authors.
 #  All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
@@ -41,10 +41,12 @@ libopenthread_a_SOURCES             = \
     openthread.cpp                    \
     coap/coap_header.cpp              \
     coap/coap_server.cpp              \
+    common/crc16.cpp                  \
     common/logging.cpp                \
     common/message.cpp                \
     common/tasklet.cpp                \
     common/timer.cpp                  \
+    common/trickle_timer.cpp          \
     crypto/aes_ccm.cpp                \
     crypto/aes_ecb.cpp                \
     crypto/hmac_sha256.cpp            \
@@ -65,6 +67,8 @@ libopenthread_a_SOURCES             = \
     net/netif.cpp                     \
     net/udp6.cpp                      \
     thread/address_resolver.cpp       \
+    thread/announce_begin_server.cpp  \
+    thread/energy_scan_server.cpp     \
     thread/key_manager.cpp            \
     thread/link_quality.cpp           \
     thread/lowpan.cpp                 \
@@ -79,13 +83,18 @@ libopenthread_a_SOURCES             = \
     thread/network_data_local.cpp     \
     thread/network_data_leader.cpp    \
     thread/panid_query_server.cpp     \
+    thread/network_diag.cpp           \
+    thread/network_diag_tlvs.cpp      \
     thread/thread_netif.cpp           \
     thread/thread_tlvs.cpp            \
+    utils/global_address.cpp          \
     $(NULL)
 
 if OPENTHREAD_ENABLE_COMMISSIONER
 libopenthread_a_SOURCES            += \
+    meshcop/announce_begin_client.cpp \
     meshcop/commissioner.cpp          \
+    meshcop/energy_scan_client.cpp    \
     meshcop/panid_query_client.cpp    \
     $(NULL)
 endif  # OPENTHREAD_ENABLE_COMMISSIONER
@@ -105,9 +114,11 @@ endif  # OPENTHREAD_ENABLE_DTLS
 noinst_HEADERS                      = \
     openthread-core-config.h          \
     openthread-core-default-config.h  \
+    openthread-instance.h             \
     coap/coap_header.hpp              \
     coap/coap_server.hpp              \
     common/code_utils.hpp             \
+    common/crc16.hpp                  \
     common/debug.hpp                  \
     common/encoding.hpp               \
     common/logging.hpp                \
@@ -115,6 +126,7 @@ noinst_HEADERS                      = \
     common/new.hpp                    \
     common/tasklet.hpp                \
     common/timer.hpp                  \
+    common/trickle_timer.hpp          \
     crypto/aes_ccm.hpp                \
     crypto/aes_ecb.hpp                \
     crypto/hmac_sha256.hpp            \
@@ -124,8 +136,10 @@ noinst_HEADERS                      = \
     mac/mac_frame.hpp                 \
     mac/mac_whitelist.hpp             \
     mac/mac_blacklist.hpp             \
+    meshcop/announce_begin_client.hpp \
     meshcop/commissioner.hpp          \
     meshcop/dtls.hpp                  \
+    meshcop/energy_scan_client.hpp    \
     meshcop/joiner.hpp                \
     meshcop/joiner_router.hpp         \
     meshcop/leader.hpp                \
@@ -142,6 +156,8 @@ noinst_HEADERS                      = \
     net/udp6.hpp                      \
     net/tcp.hpp                       \
     thread/address_resolver.hpp       \
+    thread/announce_begin_server.hpp  \
+    thread/energy_scan_server.hpp     \
     thread/key_manager.hpp            \
     thread/link_quality.hpp           \
     thread/lowpan.hpp                 \
@@ -159,10 +175,13 @@ noinst_HEADERS                      = \
     thread/network_data_local.hpp     \
     thread/network_data_tlvs.hpp      \
     thread/panid_query_server.hpp     \
+    thread/network_diag.hpp           \
+    thread/network_diag_tlvs.hpp      \
     thread/thread_netif.hpp           \
     thread/thread_tlvs.hpp            \
     thread/thread_uris.hpp            \
     thread/topology.hpp               \
+    utils/global_address.hpp          \
     $(NULL)
 
 if OPENTHREAD_BUILD_COVERAGE

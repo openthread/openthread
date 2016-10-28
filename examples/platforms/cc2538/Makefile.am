@@ -1,5 +1,5 @@
 #
-#  Copyright (c) 2016, Nest Labs, Inc.
+#  Copyright (c) 2016, The OpenThread Authors.
 #  All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
@@ -38,13 +38,14 @@ libopenthread_cc2538_a_CPPFLAGS           = \
 
 libopenthread_cc2538_a_SOURCES            = \
     alarm.c                                 \
-    misc.c                                  \
+    flash.c                                 \
     logging.c                               \
+    misc.c                                  \
     platform.c                              \
     radio.c                                 \
     random.c                                \
-    uart.c                                  \
     startup-gcc.c                           \
+    uart.c                                  \
     $(NULL)
 
 if OPENTHREAD_ENABLE_DIAG
@@ -56,6 +57,7 @@ endif
 noinst_HEADERS                            = \
     cc2538-reg.h                            \
     platform-cc2538.h                       \
+    rom-utility.h                           \
     $(NULL)
 
 if OPENTHREAD_BUILD_COVERAGE

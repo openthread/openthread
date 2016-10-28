@@ -1,6 +1,6 @@
 #!/usr/bin/python
 #
-#  Copyright (c) 2016, Nest Labs, Inc.
+#  Copyright (c) 2016, The OpenThread Authors.
 #  All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
@@ -50,6 +50,7 @@ class Cert_5_8_2_KeyIncrement(unittest.TestCase):
         self.nodes[ROUTER].set_mode('rsdn')
         self.nodes[ROUTER].add_whitelist(self.nodes[LEADER].get_addr64())
         self.nodes[ROUTER].enable_whitelist()
+        self.nodes[ROUTER].set_router_selection_jitter(1)
 
     def tearDown(self):
         for node in list(self.nodes.values()):
@@ -61,19 +62,19 @@ class Cert_5_8_2_KeyIncrement(unittest.TestCase):
         self.nodes[LEADER].set_state('leader')
 
         self.nodes[ROUTER].start()
-        time.sleep(3)
+        time.sleep(5)
         self.assertEqual(self.nodes[ROUTER].get_state(), "router")
 
         addrs = self.nodes[ROUTER].get_addrs()
         for addr in addrs:
-            self.nodes[LEADER].ping(addr)
+            self.assertTrue(self.nodes[LEADER].ping(addr))
 
         key_sequence = self.nodes[LEADER].get_key_sequence()
         self.nodes[LEADER].set_key_sequence(key_sequence + 1)
 
         addrs = self.nodes[ROUTER].get_addrs()
         for addr in addrs:
-            self.nodes[LEADER].ping(addr)
+            self.assertTrue(self.nodes[LEADER].ping(addr))
 
 if __name__ == '__main__':
     unittest.main()

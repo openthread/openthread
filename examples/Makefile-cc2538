@@ -1,5 +1,5 @@
 #
-#  Copyright (c) 2016, Nest Labs, Inc.
+#  Copyright (c) 2016, The OpenThread Authors.
 #  All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
@@ -48,6 +48,22 @@ configure_OPTIONS               = \
     --with-examples=cc2538        \
     --with-platform-info=CC2538   \
     $(NULL)
+
+ifeq ($(CLI_LOGGING),1)
+configure_OPTIONS              += --enable-cli-logging
+endif
+
+ifeq ($(CERT_LOG),1)
+configure_OPTIONS              += --enable-cert-log
+endif
+
+ifeq ($(COMMISSIONER),1)
+configure_OPTIONS              += --enable-commissioner
+endif
+
+ifeq ($(JOINER),1)
+configure_OPTIONS              += --enable-joiner
+endif
 
 COMMONCFLAGS                   := \
     -fdata-sections               \
