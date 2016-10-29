@@ -224,7 +224,7 @@ AC_PROG_LN_S
 #
 
 PROSPECTIVE_CFLAGS="-Wall -Wextra -Wshadow -Werror -std=c99 -pedantic-errors"
-PROSPECTIVE_CXXFLAGS="-Wall -Wextra -Wshadow -Werror -Wno-c++14-compat"
+PROSPECTIVE_CXXFLAGS="-Wall -Wextra -Wshadow -Werror -std=gnu++98 -Wno-c++14-compat"
 
 AC_CACHE_CHECK([whether $CC is Clang],
     [nl_cv_clang],
@@ -428,10 +428,34 @@ AM_CONDITIONAL([OPENTHREAD_ENABLE_NCP],      [test "${enable_ncp}" != "no"])
 AM_CONDITIONAL([OPENTHREAD_ENABLE_NCP_SPI],  [test "${enable_ncp}"  = "spi"])
 AM_CONDITIONAL([OPENTHREAD_ENABLE_NCP_UART], [test "${enable_ncp}"  = "uart"])
 
-MBEDTLS_CPPFLAGS="-I\${abs_top_srcdir}/third_party/mbedtls"
-MBEDTLS_CPPFLAGS="${MBEDTLS_CPPFLAGS} -I\${abs_top_srcdir}/third_party/mbedtls/repo/include"
-MBEDTLS_CPPFLAGS="${MBEDTLS_CPPFLAGS} -I\${abs_top_srcdir}/third_party/mbedtls/repo/include/mbedtls"
-MBEDTLS_CPPFLAGS="${MBEDTLS_CPPFLAGS} -DMBEDTLS_CONFIG_FILE=\\\"mbedtls-config.h\\\""
+#
+# Builtin mbedtls
+#
+
+AC_ARG_ENABLE(builtin-mbedtls,
+    [AS_HELP_STRING([--enable-builtin-mbedtls],[Enable builtin mbedtls @<:@default=yes@:>@.])],
+    [
+        case "${enableval}" in
+
+        no|yes)
+            enable_builtin_mbedtls=${enableval}
+            ;;
+
+        *)
+            AC_MSG_ERROR([Invalid value ${enable_builtin_mbedtls} for --enable-builtin-mbedtls])
+            ;;
+        esac
+    ],
+    [enable_builtin_mbedtls=yes])
+
+if test "$enable_builtin_mbedtls" = "yes"; then
+    MBEDTLS_CPPFLAGS="-I\${abs_top_srcdir}/third_party/mbedtls"
+    MBEDTLS_CPPFLAGS="${MBEDTLS_CPPFLAGS} -I\${abs_top_srcdir}/third_party/mbedtls/repo/include"
+    MBEDTLS_CPPFLAGS="${MBEDTLS_CPPFLAGS} -I\${abs_top_srcdir}/third_party/mbedtls/repo/include/mbedtls"
+    MBEDTLS_CPPFLAGS="${MBEDTLS_CPPFLAGS} -DMBEDTLS_CONFIG_FILE=\\\"mbedtls-config.h\\\""
+fi
+AC_MSG_RESULT(${enable_builtin_mbedtls})
+AM_CONDITIONAL([OPENTHREAD_ENABLE_BUILTIN_MBEDTLS], [test "${enable_builtin_mbedtls}" = "yes"])
 
 #
 # Thread Commissioner
@@ -498,10 +522,6 @@ AC_DEFINE_UNQUOTED([OPENTHREAD_ENABLE_JOINER],[${OPENTHREAD_ENABLE_JOINER}],[Def
 if test "${enable_commissioner}" = "yes" -o "${enable_joiner}" = "yes"; then
     enable_dtls="yes"
     OPENTHREAD_ENABLE_DTLS=1
-    MBEDTLS_CPPFLAGS="-I\${abs_top_srcdir}/third_party/mbedtls"
-    MBEDTLS_CPPFLAGS="${MBEDTLS_CPPFLAGS} -I\${abs_top_srcdir}/third_party/mbedtls/repo/include"
-    MBEDTLS_CPPFLAGS="${MBEDTLS_CPPFLAGS} -I\${abs_top_srcdir}/third_party/mbedtls/repo/include/mbedtls"
-    MBEDTLS_CPPFLAGS="${MBEDTLS_CPPFLAGS} -DMBEDTLS_CONFIG_FILE=\\\"mbedtls-config.h\\\""
 else
     enable_dtls="no"
     OPENTHREAD_ENABLE_DTLS=0
@@ -853,6 +873,7 @@ AC_MSG_NOTICE([
   Pretty check args                         : ${PRETTY_CHECK_ARGS:--}
   OpenThread CLI support                    : ${enable_cli}
   OpenThread NCP support                    : ${enable_ncp}
+  OpenThread builtin mbedtls support        : ${enable_builtin_mbedtls}
   OpenThread Commissioner support           : ${enable_commissioner}
   OpenThread Joiner support                 : ${enable_joiner}
   OpenThread DTLS support                   : ${enable_dtls}

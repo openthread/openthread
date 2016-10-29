@@ -45,7 +45,6 @@ libopenthread_a_SOURCES             = \
     common/message.cpp                \
     common/tasklet.cpp                \
     common/timer.cpp                  \
-    common/settings.cpp               \
     common/trickle_timer.cpp          \
     crypto/aes_ccm.cpp                \
     crypto/aes_ecb.cpp                \
@@ -125,8 +124,8 @@ noinst_HEADERS                      = \
     common/encoding.hpp               \
     common/logging.hpp                \
     common/message.hpp                \
-    common/new.hpp                    \
     common/settings.hpp               \
+    common/new.hpp                    \
     common/tasklet.hpp                \
     common/timer.hpp                  \
     common/trickle_timer.hpp          \

@@ -279,7 +279,7 @@ ThreadError Frame::ValidatePsdu(void)
     }
 
     // Footer length
-    VerifyOrExit((uint8_t)(GetPsduLength() - offset) > footerLength, ;);
+    VerifyOrExit((uint8_t)(GetPsduLength() - offset) >= footerLength, ;);
 
     error = kThreadError_None;
 

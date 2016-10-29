@@ -33,7 +33,7 @@
 
 #include <openthread-config.h>
 #include <platform/alarm.h>
-#include <platform/flash.h>
+#include <utils/flash.h>
 
 #include <common/code_utils.hpp>
 #include "platform-cc2538.h"
@@ -71,25 +71,25 @@ static ThreadError romStatusToThread(int32_t aStatus)
     return error;
 }
 
-ThreadError otPlatFlashInit(void)
+ThreadError utilsFlashInit(void)
 {
     return kThreadError_None;
 }
 
-uint32_t otPlatFlashGetSize(void)
+uint32_t utilsFlashGetSize(void)
 {
     uint32_t reg = (HWREG(FLASH_CTRL_DIECFG0) & 0x00000070) >> 4;
 
     return reg ? (0x20000 * reg) : 0x10000;
 }
 
-ThreadError otPlatFlashErasePage(uint32_t aAddress)
+ThreadError utilsFlashErasePage(uint32_t aAddress)
 {
     ThreadError error = kThreadError_None;
     int32_t status;
     uint32_t address;
 
-    VerifyOrExit(aAddress < otPlatFlashGetSize(), error = kThreadError_InvalidArgs);
+    VerifyOrExit(aAddress < utilsFlashGetSize(), error = kThreadError_InvalidArgs);
 
     address = FLASH_BASE + aAddress - (aAddress & (FLASH_PAGE_SIZE - 1));
     status = ROM_PageErase(address, FLASH_PAGE_SIZE);
@@ -99,7 +99,7 @@ exit:
     return error;
 }
 
-ThreadError otPlatFlashStatusWait(uint32_t aTimeout)
+ThreadError utilsFlashStatusWait(uint32_t aTimeout)
 {
     ThreadError error = kThreadError_None;
     uint32_t start = otPlatAlarmGetNow();
@@ -116,14 +116,14 @@ exit:
     return error;
 }
 
-uint32_t otPlatFlashWrite(uint32_t aAddress, uint8_t *aData, uint32_t aSize)
+uint32_t utilsFlashWrite(uint32_t aAddress, uint8_t *aData, uint32_t aSize)
 {
     int32_t status;
     uint32_t busy = 1;
     uint32_t *data;
     uint32_t size = 0;
 
-    VerifyOrExit(((aAddress + aSize) < otPlatFlashGetSize()) &&
+    VerifyOrExit(((aAddress + aSize) < utilsFlashGetSize()) &&
                  (!(aAddress & 3)) && (!(aSize & 3)), aSize = 0);
 
     data = (uint32_t *)(aData);
@@ -147,11 +147,11 @@ exit:
     return size;
 }
 
-uint32_t otPlatFlashRead(uint32_t aAddress, uint8_t *aData, uint32_t aSize)
+uint32_t utilsFlashRead(uint32_t aAddress, uint8_t *aData, uint32_t aSize)
 {
     uint32_t size = 0;
 
-    VerifyOrExit((aAddress + aSize) < otPlatFlashGetSize(), ;);
+    VerifyOrExit((aAddress + aSize) < utilsFlashGetSize(), ;);
 
     while (size < aSize)
     {

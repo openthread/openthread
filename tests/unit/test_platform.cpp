@@ -73,14 +73,6 @@ void testPlatResetToDefaults(void)
 
 bool sDiagMode = false;
 
-enum
-{
-    kFlashSize = 0x40000,
-    kFlashPageSize = 0x800,
-};
-
-uint8_t sFlashBuffer[kFlashSize];
-
 extern "C" {
 
     void otSignalTaskletPending(otInstance *)
@@ -376,71 +368,79 @@ exit:
     }
 
     //
-    // Flash
+    // Settings
     //
-    ThreadError otPlatFlashInit(void)
+
+    void otPlatSettingsInit(otInstance *aInstance)
     {
-        memset(sFlashBuffer, 0xff, kFlashSize);
+        (void)aInstance;
+    }
+
+    ThreadError otPlatSettingsBeginChange(otInstance *aInstance)
+    {
+        (void)aInstance;
+
         return kThreadError_None;
     }
 
-    uint32_t otPlatFlashGetSize(void)
+    ThreadError otPlatSettingsCommitChange(otInstance *aInstance)
     {
-        return kFlashSize;
-    }
+        (void)aInstance;
 
-    ThreadError otPlatFlashErasePage(uint32_t aAddress)
-    {
-        ThreadError error = kThreadError_None;
-        uint32_t address;
-
-        VerifyOrExit(aAddress < kFlashSize, error = kThreadError_InvalidArgs);
-
-        // Get start address of the flash page that includes aAddress
-        address = aAddress & (~(uint32_t)(kFlashPageSize - 1));
-        memset(sFlashBuffer + address, 0xff, kFlashPageSize);
-
-exit:
-        return error;
-    }
-
-    ThreadError otPlatFlashStatusWait(uint32_t aTimeout)
-    {
-        (void)aTimeout;
         return kThreadError_None;
     }
 
-    uint32_t otPlatFlashWrite(uint32_t aAddress, uint8_t *aData, uint32_t aSize)
+    ThreadError otPlatSettingsAbandonChange(otInstance *aInstance)
     {
-        uint32_t ret = 0;
-        uint8_t byte;
+        (void)aInstance;
 
-        VerifyOrExit(aAddress < kFlashSize, ;);
-
-        for (uint32_t index = 0; index < aSize; index++)
-        {
-            byte = sFlashBuffer[aAddress + index];
-            byte &= aData[index];
-            sFlashBuffer[aAddress + index] = byte;
-        }
-
-        ret = aSize;
-
-exit:
-        return ret;
+        return kThreadError_None;
     }
 
-    uint32_t otPlatFlashRead(uint32_t aAddress, uint8_t *aData, uint32_t aSize)
+    ThreadError otPlatSettingsGet(otInstance *aInstance, uint16_t aKey, int aIndex, uint8_t *aValue,
+                                  uint16_t *aValueLength)
     {
-        uint32_t ret = 0;
+        (void)aInstance;
+        (void)aKey;
+        (void)aIndex;
+        (void)aValue;
+        (void)aValueLength;
 
-        VerifyOrExit(aAddress < kFlashSize, ;);
+        return kThreadError_None;
+    }
 
-        memcpy(aData, sFlashBuffer + aAddress, aSize);
-        ret = aSize;
+    ThreadError otPlatSettingsSet(otInstance *aInstance, uint16_t aKey, const uint8_t *aValue, uint16_t aValueLength)
+    {
+        (void)aInstance;
+        (void)aKey;
+        (void)aValue;
+        (void)aValueLength;
 
-exit:
-        return ret;
+        return kThreadError_None;
+    }
+
+    ThreadError otPlatSettingsAdd(otInstance *aInstance, uint16_t aKey, const uint8_t *aValue, uint16_t aValueLength)
+    {
+        (void)aInstance;
+        (void)aKey;
+        (void)aValue;
+        (void)aValueLength;
+
+        return kThreadError_None;
+    }
+
+    ThreadError otPlatSettingsDelete(otInstance *aInstance, uint16_t aKey, int aIndex)
+    {
+        (void)aInstance;
+        (void)aKey;
+        (void)aIndex;
+
+        return kThreadError_None;
+    }
+
+    void otPlatSettingsWipe(otInstance *aInstance)
+    {
+        (void)aInstance;
     }
 
 } // extern "C"

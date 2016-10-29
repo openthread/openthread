@@ -81,9 +81,6 @@ void test_packed2();
 void test_packed_union();
 void test_packed_enum();
 
-// test_settings.cpp
-void RunSettingsTests();
-
 // test_fuzz.cpp
 void TestFuzz(uint32_t aSeconds);
 
@@ -158,9 +155,6 @@ namespace Thread
         TEST_METHOD(test_packed2) { ::test_packed2(); }
         TEST_METHOD(test_packed_union) { ::test_packed_union(); }
         TEST_METHOD(test_packed_enum) { ::test_packed_enum(); }
-
-        // test_settings.cpp
-        TEST_METHOD(RunSettingsTests) { ::RunSettingsTests(); }
 
         // test_settings.cpp
         TEST_METHOD(RunTestFuzz) { ::TestFuzz(30); }
