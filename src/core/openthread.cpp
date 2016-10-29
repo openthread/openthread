@@ -66,6 +66,7 @@ static otDEFINE_ALIGNED_VAR(sInstanceRaw, sizeof(otInstance), uint64_t);
 otInstance *sInstance = NULL;
 #endif
 
+void OT_CDECL operator delete(void *) throw() { }
 void OT_CDECL operator delete(void *, size_t) throw() { }
 
 otInstance::otInstance(void) :

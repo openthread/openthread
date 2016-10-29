@@ -1142,7 +1142,6 @@ void Mac::ReceiveDoneTask(Frame *aFrame, ThreadError aError)
 
     VerifyOrExit(error == kThreadError_None, ;);
     VerifyOrExit(aFrame != NULL, error = kThreadError_NoFrameReceived);
-    SuccessOrExit(error = aFrame->ValidatePsdu());
 
     aFrame->mSecurityValid = false;
 
@@ -1151,6 +1150,10 @@ void Mac::ReceiveDoneTask(Frame *aFrame, ThreadError aError)
         aFrame->mDidTX = false;
         mPcapCallback(aFrame, mPcapCallbackContext);
     }
+
+    // Ensure we have a valid frame before attempting to read any contents of
+    // the buffer received from the radio.
+    SuccessOrExit(error = aFrame->ValidatePsdu());
 
     aFrame->GetSrcAddr(srcaddr);
     neighbor = mMle.GetNeighbor(srcaddr);
