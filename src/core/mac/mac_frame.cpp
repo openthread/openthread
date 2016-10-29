@@ -58,7 +58,7 @@ ThreadError Frame::InitMacHeader(uint16_t aFcf, uint8_t aSecurityControl)
     // Sequence Number
     length += kDsnSize;
 
-    // Destinatino PAN + Address
+    // Destinatinon PAN + Address
     switch (aFcf & Frame::kFcfDstAddrMask)
     {
     case Frame::kFcfDstAddrNone:
@@ -150,6 +150,7 @@ ThreadError Frame::ValidatePsdu(void)
     ThreadError error = kThreadError_Parse;
     uint8_t offset = 0;
     uint16_t fcf;
+    uint8_t footerLength = 0;
 
     VerifyOrExit(GetPsduLength() > kFcfSize + kDsnSize, ;);
 
@@ -157,7 +158,7 @@ ThreadError Frame::ValidatePsdu(void)
 
     offset += kFcfSize + kDsnSize;
 
-    // Destinatino PAN + Address
+    // Destinatinon PAN + Address
     switch (fcf & Frame::kFcfDstAddrMask)
     {
     case Frame::kFcfDstAddrNone:
@@ -245,13 +246,42 @@ ThreadError Frame::ValidatePsdu(void)
             offset += kKeySourceSizeMode3 + kKeyIndexSize;
             break;
         }
+
+        footerLength = kFcsSize;
+
+        switch (secControl & kSecLevelMask)
+        {
+        case kSecNone:
+        case kSecEnc:
+            footerLength += kMic0Size;
+            break;
+
+        case kSecMic32:
+        case kSecEncMic32:
+            footerLength += kMic32Size;
+            break;
+
+        case kSecMic64:
+        case kSecEncMic64:
+            footerLength += kMic64Size;
+            break;
+
+        case kSecMic128:
+        case kSecEncMic128:
+            footerLength += kMic128Size;
+            break;
+        }
     }
 
     // Command ID
     if ((fcf & kFcfFrameTypeMask) == kFcfFrameMacCmd)
     {
         VerifyOrExit((uint8_t)(GetPsduLength() - offset) > kCommandIdSize, ;);
+        offset += kCommandIdSize;
     }
+
+    // Footer length
+    VerifyOrExit((uint8_t)(GetPsduLength() - offset) > footerLength, ;);
 
     error = kThreadError_None;
 
