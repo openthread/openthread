@@ -67,6 +67,7 @@ otInstance *sInstance = NULL;
 #endif
 
 void OT_CDECL operator delete(void *, size_t) throw() { }
+void OT_CDECL operator delete(void *) throw() { }
 
 otInstance::otInstance(void) :
     mReceiveIp6DatagramCallback(NULL),
