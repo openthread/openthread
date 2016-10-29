@@ -72,7 +72,7 @@ extern "C" {
 //
 #define CompileTimeAssert(COND, MSG)
 
-#define Log(aFormat, ...) printf(aFormat, ## __VA_ARGS__)
+#define Log(aFormat, ...) printf(aFormat "\n", ## __VA_ARGS__)
 
 #ifdef __cplusplus
 }

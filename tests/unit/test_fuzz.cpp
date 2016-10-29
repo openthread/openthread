@@ -141,12 +141,10 @@ void TestFuzz(uint32_t aSeconds)
 
     Log("%u packets received", countRecv);
 
-    // Stop the Thread network
-    otThreadStop(aInstance);
-    otInterfaceDown(aInstance);
-
+#if _WIN32
     // Clean up the instance
     otInstanceFinalize(aInstance);
+#endif
 
 #ifdef OPENTHREAD_MULTIPLE_INSTANCE
     free(otInstanceBuffer);
