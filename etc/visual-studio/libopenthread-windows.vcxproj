@@ -28,6 +28,7 @@
     <ClCompile Include="..\..\examples\platforms\posix\random.c" />
     <ClCompile Include="..\..\examples\platforms\posix\spi-stubs.c" />
     <ClCompile Include="..\..\examples\platforms\posix\uart-windows.c" />
+    <ClCompile Include="..\..\examples\platforms\utils\settings.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\examples\platforms\posix\platform-posix.h" />

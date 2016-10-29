@@ -72,9 +72,6 @@
     <ClCompile Include="..\..\src\core\common\message.cpp">
       <Filter>Source Files\common</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\core\common\settings.cpp">
-      <Filter>Source Files\common</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\src\core\common\tasklet.cpp">
       <Filter>Source Files\common</Filter>
     </ClCompile>
