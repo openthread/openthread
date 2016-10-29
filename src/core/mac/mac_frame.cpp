@@ -150,7 +150,7 @@ ThreadError Frame::ValidatePsdu(void)
     ThreadError error = kThreadError_Parse;
     uint8_t offset = 0;
     uint16_t fcf;
-    uint8_t footerLength = 0;
+    uint8_t footerLength = kFcsSize;
 
     VerifyOrExit(GetPsduLength() > kFcfSize + kDsnSize, ;);
 
@@ -246,8 +246,6 @@ ThreadError Frame::ValidatePsdu(void)
             offset += kKeySourceSizeMode3 + kKeyIndexSize;
             break;
         }
-
-        footerLength = kFcsSize;
 
         switch (secControl & kSecLevelMask)
         {
