@@ -213,16 +213,10 @@ ThreadError Frame::ValidatePsdu(void)
     // Security Header
     if (fcf & Frame::kFcfSecurityEnabled)
     {
-        VerifyOrExit((uint8_t)(GetPsduLength() - offset) > sizeof(uint8_t), ;);
+        VerifyOrExit((uint8_t)(GetPsduLength() - offset) > kSecurityControlSize + kFrameCounterSize, ;);
 
         uint8_t secControl = GetPsdu()[offset];
-        offset += sizeof(uint8_t);
-
-        if (secControl & kSecLevelMask)
-        {
-            VerifyOrExit((uint8_t)(GetPsduLength() - offset) > kSecurityControlSize + kFrameCounterSize, ;);
-            offset += kSecurityControlSize + kFrameCounterSize;
-        }
+        offset += kSecurityControlSize + kFrameCounterSize;
 
         switch (secControl & kKeyIdModeMask)
         {

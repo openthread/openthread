@@ -65,6 +65,8 @@ ThreadError Lowpan::CopyContext(const Context &aContext, Ip6::Address &aAddress)
 
 ThreadError Lowpan::ComputeIid(const Mac::Address &aMacAddr, const Context &aContext, Ip6::Address &aIpAddress)
 {
+    ThreadError error = kThreadError_None;
+
     switch (aMacAddr.mLength)
     {
     case 2:
@@ -79,7 +81,7 @@ ThreadError Lowpan::ComputeIid(const Mac::Address &aMacAddr, const Context &aCon
         break;
 
     default:
-        assert(false);
+        ExitNow(error = kThreadError_Parse);
     }
 
     if (aContext.mPrefixLength > 64)
@@ -91,7 +93,8 @@ ThreadError Lowpan::ComputeIid(const Mac::Address &aMacAddr, const Context &aCon
         }
     }
 
-    return kThreadError_None;
+exit:
+    return error;
 }
 
 int Lowpan::CompressSourceIid(const Mac::Address &aMacAddr, const Ip6::Address &aIpAddr, const Context &aContext,
@@ -716,7 +719,7 @@ int Lowpan::DecompressBaseHeader(Ip6::Header &ip6Header, const Mac::Address &aMa
             break;
 
         case kHcDstAddrMode3:
-            ComputeIid(aMacDest, dstContext, ip6Header.GetDestination());
+            SuccessOrExit(error = ComputeIid(aMacDest, dstContext, ip6Header.GetDestination()));
             break;
         }
 
@@ -945,6 +948,8 @@ int Lowpan::Decompress(Message &aMessage, const Mac::Address &aMacSource, const 
     uint16_t ip6PayloadLength;
     uint16_t compressedLength = 0;
     uint16_t currentOffset = aMessage.GetOffset();
+
+    VerifyOrExit(aBufLen >= 2, error = kThreadError_Parse);
 
     compressed = (((static_cast<uint16_t>(cur[0]) << 8) | cur[1]) & kHcNextHeader) != 0;
 

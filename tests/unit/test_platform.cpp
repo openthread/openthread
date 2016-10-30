@@ -49,6 +49,8 @@ testPlatAlarmGetNow             g_testPlatAlarmGetNow = NULL;
 otRadioCaps                     g_testPlatRadioCaps = kRadioCapsNone;
 testPlatRadioSetPanId           g_testPlatRadioSetPanId = NULL;
 testPlatRadioSetExtendedAddress g_testPlatRadioSetExtendedAddress = NULL;
+testPlatRadioEnable             g_testPlatRadioEnable = NULL;
+testPlatRadioDisable            g_testPlatRadioDisable = NULL;
 testPlatRadioSetShortAddress    g_testPlatRadioSetShortAddress = NULL;
 testPlatRadioReceive            g_testPlatRadioReceive = NULL;
 testPlatRadioTransmit           g_testPlatRadioTransmit = NULL;
@@ -66,6 +68,8 @@ void testPlatResetToDefaults(void)
     g_testPlatRadioSetPanId = NULL;
     g_testPlatRadioSetExtendedAddress = NULL;
     g_testPlatRadioSetShortAddress = NULL;
+    g_testPlatRadioEnable = NULL;
+    g_testPlatRadioDisable = NULL;
     g_testPlatRadioReceive = NULL;
     g_testPlatRadioTransmit = NULL;
     g_testPlatRadioGetTransmitBuffer = NULL;
@@ -158,14 +162,28 @@ extern "C" {
     {
     }
 
-    ThreadError otPlatRadioEnable(otInstance *)
+    ThreadError otPlatRadioEnable(otInstance *aInstance)
     {
-        return kThreadError_None;
+        if (g_testPlatRadioEnable)
+        {
+            return g_testPlatRadioEnable(aInstance);
+        }
+        else
+        {
+            return kThreadError_None;
+        }
     }
 
-    ThreadError otPlatRadioDisable(otInstance *)
+    ThreadError otPlatRadioDisable(otInstance *aInstance)
     {
-        return kThreadError_None;
+        if (g_testPlatRadioEnable)
+        {
+            return g_testPlatRadioDisable(aInstance);
+        }
+        else
+        {
+            return kThreadError_None;
+        }
     }
 
     ThreadError otPlatRadioSleep(otInstance *)

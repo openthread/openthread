@@ -29,19 +29,46 @@
 #include "test_platform.h"
 //#include <mac/mac_frame.hpp>
 
+//#define DBG_FUZZ 1
+
+bool g_fRadioEnabled = false;
 uint8_t g_RecvChannel = 0;
 uint8_t g_TransmitPsdu[128];
 RadioPacket g_TransmitRadioPacket;
 bool g_fTransmit = false;
 
+ThreadError testFuzzRadioEnable(otInstance *)
+{
+#ifdef DBG_FUZZ
+    Log("Radio enabled");
+#endif
+    g_fRadioEnabled = true;
+    return kThreadError_None;
+}
+
+ThreadError testFuzzRadioDisable(otInstance *)
+{
+#ifdef DBG_FUZZ
+    Log("Radio disabled");
+#endif
+    g_fRadioEnabled = false;
+    return kThreadError_None;
+}
+
 ThreadError testFuzzRadioReceive(otInstance *, uint8_t aChannel)
 {
+#ifdef DBG_FUZZ
+    Log("==> receive");
+#endif
     g_RecvChannel = aChannel;
     return kThreadError_None;
 }
 
 ThreadError testFuzzRadioTransmit(otInstance *)
 {
+#ifdef DBG_FUZZ
+    Log("==> transmit");
+#endif
     g_fTransmit = true;
     return kThreadError_None;
 }
@@ -58,6 +85,8 @@ void TestFuzz(uint32_t aSeconds)
 
     // Set the platform function pointers
     g_TransmitRadioPacket.mPsdu = g_TransmitPsdu;
+    g_testPlatRadioEnable = testFuzzRadioEnable;
+    g_testPlatRadioDisable = testFuzzRadioDisable;
     g_testPlatRadioReceive = testFuzzRadioReceive;
     g_testPlatRadioTransmit = testFuzzRadioTransmit;
     g_testPlatRadioGetTransmitBuffer = testFuzztRadioGetTransmitBuffer;
@@ -67,6 +96,12 @@ void TestFuzz(uint32_t aSeconds)
     uint32_t tEnd = tStart + (aSeconds * 1000);
 
     otInstance *aInstance;
+
+#ifdef _WIN32
+    uint32_t seed = (uint32_t)time(NULL);
+    srand(seed);
+    Log("Initialized seed = 0x%X", seed);
+#endif
 
 #ifdef OPENTHREAD_MULTIPLE_INSTANCE
     uint64_t otInstanceBufferLength = 0;
@@ -93,7 +128,7 @@ void TestFuzz(uint32_t aSeconds)
     otInterfaceUp(aInstance);
     otThreadStart(aInstance);
 
-    uint32_t countRecv = 0;
+    uint64_t countRecv = 0;
 
     while (otPlatAlarmGetNow() < tEnd)
     {
@@ -105,41 +140,52 @@ void TestFuzz(uint32_t aSeconds)
             otPlatAlarmFired(aInstance);
         }
 
-        if (g_fTransmit)
+        if (g_fRadioEnabled)
         {
-            g_fTransmit = false;
-            otPlatRadioTransmitDone(aInstance, true, kThreadError_None);
-        }
-
-        if (g_RecvChannel != 0)
-        {
-            uint8_t fuzzRecvBuff[128];
-            RadioPacket fuzzPacket;
-
-            // Initialize the radio packet with a random length
-            memset(&fuzzPacket, 0, sizeof(fuzzPacket));
-            fuzzPacket.mPsdu = fuzzRecvBuff;
-            fuzzPacket.mChannel = g_RecvChannel;
-            fuzzPacket.mLength = (uint8_t)(otPlatRandomGet() % 127);
-
-            // Populate the length with random
-            for (uint8_t i = 0; i < fuzzPacket.mLength; i++)
+            if (g_fTransmit)
             {
-                fuzzRecvBuff[i] = (uint8_t)otPlatRandomGet();
+                g_fTransmit = false;
+                otPlatRadioTransmitDone(aInstance, true, kThreadError_None);
+#ifdef DBG_FUZZ
+                Log("<== transmit");
+#endif
             }
 
-            // Clear the global flag
-            g_RecvChannel = 0;
+            if (g_RecvChannel != 0)
+            {
+                uint8_t fuzzRecvBuff[128];
+                RadioPacket fuzzPacket;
 
-            countRecv++;
-            Log("recv %u bytes", fuzzPacket.mLength);
+                // Initialize the radio packet with a random length
+                memset(&fuzzPacket, 0, sizeof(fuzzPacket));
+                fuzzPacket.mPsdu = fuzzRecvBuff;
+                fuzzPacket.mChannel = g_RecvChannel;
+                fuzzPacket.mLength = (uint8_t)(otPlatRandomGet() % 127);
 
-            // Indicate the receive complete
-            otPlatRadioReceiveDone(aInstance, &fuzzPacket, kThreadError_None);
+                // Populate the length with random
+                for (uint8_t i = 0; i < fuzzPacket.mLength; i++)
+                {
+                    fuzzRecvBuff[i] = (uint8_t)otPlatRandomGet();
+                }
+
+                // Clear the global flag
+                g_RecvChannel = 0;
+
+                // Indicate the receive complete
+                otPlatRadioReceiveDone(aInstance, &fuzzPacket, kThreadError_None);
+
+                countRecv++;
+#ifdef DBG_FUZZ
+                Log("<== receive (%llu, %u bytes)", countRecv, fuzzPacket.mLength);
+#endif
+
+                // Hack to get a receive poll immediately
+                otSetChannel(aInstance, 11);
+            }
         }
     }
 
-    Log("%u packets received", countRecv);
+    Log("%llu packets received", countRecv);
 
     // Clean up the instance
     otInstanceFinalize(aInstance);

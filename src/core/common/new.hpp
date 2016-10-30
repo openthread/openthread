@@ -39,7 +39,7 @@
 
 inline void *operator new(size_t, void *p) throw() { return p; }
 
-void OT_CDECL operator delete(void *) throw();
 void OT_CDECL operator delete(void *, size_t) throw();
+void OT_CDECL operator delete(void *) throw();
 
 #endif  // NEW_HPP_

@@ -32,6 +32,7 @@
 #if _WIN32
 #define _CRT_SECURE_NO_WARNINGS
 #include <windows.h>
+#include <time.h>
 #endif
 
 #include <openthread.h>
@@ -69,6 +70,8 @@ typedef void (*testPlatRadioSetPanId)(otInstance *, uint16_t);
 typedef void (*testPlatRadioSetExtendedAddress)(otInstance *, uint8_t *);
 typedef void (*testPlatRadioSetShortAddress)(otInstance *, uint16_t);
 
+typedef ThreadError(*testPlatRadioEnable)(otInstance *);
+typedef ThreadError(*testPlatRadioDisable)(otInstance *);
 typedef ThreadError(*testPlatRadioReceive)(otInstance *, uint8_t);
 typedef ThreadError(*testPlatRadioTransmit)(otInstance *);
 typedef RadioPacket *(*testPlatRadioGetTransmitBuffer)(otInstance *);
@@ -77,6 +80,8 @@ extern otRadioCaps                      g_testPlatRadioCaps;
 extern testPlatRadioSetPanId            g_testPlatRadioSetPanId;
 extern testPlatRadioSetExtendedAddress  g_testPlatRadioSetExtendedAddress;
 extern testPlatRadioSetShortAddress     g_testPlatRadioSetShortAddress;
+extern testPlatRadioEnable              g_testPlatRadioEnable;
+extern testPlatRadioDisable             g_testPlatRadioDisable;
 extern testPlatRadioReceive             g_testPlatRadioReceive;
 extern testPlatRadioTransmit            g_testPlatRadioTransmit;
 extern testPlatRadioGetTransmitBuffer   g_testPlatRadioGetTransmitBuffer;
