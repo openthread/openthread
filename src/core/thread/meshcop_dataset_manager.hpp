@@ -72,7 +72,7 @@ protected:
 
     ThreadError Set(const otOperationalDataset &aDataset, uint8_t &aFlags);
 
-    ThreadError Set(const Dataset &aDataset, uint8_t &aFlags);
+    ThreadError Set(const Dataset &aDataset);
 
     ThreadError Set(const Timestamp &aTimestamp, const Message &aMessage, uint16_t aOffset, uint8_t aLength,
                     uint8_t &aFlags);

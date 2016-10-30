@@ -112,10 +112,11 @@ ThreadError DatasetManager::Clear(uint8_t &aFlags)
     return kThreadError_None;
 }
 
-ThreadError DatasetManager::Set(const Dataset &aDataset, uint8_t &aFlags)
+ThreadError DatasetManager::Set(const Dataset &aDataset)
 {
     mNetwork.Set(aDataset);
-    HandleNetworkUpdate(aFlags);
+    mLocal.Set(aDataset);
+    mLocal.Store();
     return kThreadError_None;
 }
 
@@ -496,6 +497,7 @@ ThreadError DatasetManager::SendSetRequest(const otOperationalDataset &aDataset,
     {
         ChannelTlv channel;
         channel.Init();
+        channel.SetChannelPage(0);
         channel.SetChannel(aDataset.mChannel);
         SuccessOrExit(error = message->Append(&channel, sizeof(channel)));
     }
@@ -739,9 +741,8 @@ exit:
 ThreadError ActiveDataset::Set(const Dataset &aDataset)
 {
     ThreadError error = kThreadError_None;
-    uint8_t flags;
 
-    SuccessOrExit(error = DatasetManager::Set(aDataset, flags));
+    SuccessOrExit(error = DatasetManager::Set(aDataset));
     ApplyConfiguration();
 
 exit:
