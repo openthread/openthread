@@ -1569,7 +1569,7 @@ void MeshForwarder::HandleFragment(uint8_t *aFrame, uint8_t aFrameLength,
         aFrame += headerLength;
         aFrameLength -= static_cast<uint8_t>(headerLength);
 
-        VerifyOrExit(datagramLength <= aFrameLength, error = kThreadError_Parse);
+        VerifyOrExit(message->GetOffset() + datagramLength <= aFrameLength, error = kThreadError_Parse);
 
         SuccessOrExit(error = message->SetLength(datagramLength));
 
