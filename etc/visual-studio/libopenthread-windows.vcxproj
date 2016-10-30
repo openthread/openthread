@@ -32,6 +32,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\examples\platforms\posix\platform-posix.h" />
+    <ClInclude Include="..\..\examples\platforms\utils\flash.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{30723C38-BA3B-44C9-8D64-C5861A26934F}</ProjectGuid>

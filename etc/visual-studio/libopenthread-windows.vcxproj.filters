@@ -45,5 +45,8 @@
     <ClInclude Include="..\..\examples\platforms\posix\platform-posix.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\examples\platforms\utils\flash.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
