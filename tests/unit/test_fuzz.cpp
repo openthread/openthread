@@ -128,7 +128,7 @@ void TestFuzz(uint32_t aSeconds)
     otInterfaceUp(aInstance);
     otThreadStart(aInstance);
 
-    uint64_t countRecv = 0;
+    uint32_t countRecv = 0;
 
     while (otPlatAlarmGetNow() < tEnd)
     {
@@ -185,7 +185,7 @@ void TestFuzz(uint32_t aSeconds)
         }
     }
 
-    Log("%llu packets received", countRecv);
+    Log("%u packets received", countRecv);
 
     // Clean up the instance
     otInstanceFinalize(aInstance);
