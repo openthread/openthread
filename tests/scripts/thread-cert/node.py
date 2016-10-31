@@ -65,10 +65,10 @@ class Node:
         cmd += ' %d' % nodeid
         print ("%s" % cmd)
 
-        self.pexpect = pexpect.spawn(cmd, timeout=2)
+        self.pexpect = pexpect.spawn(cmd, timeout=4)
 
         # Add delay to ensure that the process is ready to receive commands.
-        time.sleep(0.1)
+        time.sleep(0.2)
 
 
     def __init_ncp_sim(self, nodeid):
@@ -87,7 +87,7 @@ class Node:
         print ("%s" % cmd)
 
         self.pexpect = pexpect.spawn(cmd, timeout=4)
-        time.sleep(0.1)
+        time.sleep(0.2)
         self.pexpect.expect('spinel-cli >')
         self.debug(int(os.getenv('DEBUG', '0')))
  
@@ -241,16 +241,21 @@ class Node:
         self.send_command(cmd)
         self.pexpect.expect('Done')
 
-    def get_key_sequence(self):
-        self.send_command('keysequence')
+    def get_key_sequence_counter(self):
+        self.send_command('keysequence counter')
         i = self.pexpect.expect('(\d+)\r\n')
         if i == 0:
-            key_sequence = int(self.pexpect.match.groups()[0])
+            key_sequence_counter = int(self.pexpect.match.groups()[0])
         self.pexpect.expect('Done')
-        return key_sequence
+        return key_sequence_counter
 
-    def set_key_sequence(self, key_sequence):
-        cmd = 'keysequence %d' % key_sequence
+    def set_key_sequence_counter(self, key_sequence_counter):
+        cmd = 'keysequence counter %d' % key_sequence_counter
+        self.send_command(cmd)
+        self.pexpect.expect('Done')
+
+    def set_key_switch_guardtime(self, key_switch_guardtime):
+        cmd = 'keysequence guardtime %d' % key_switch_guardtime
         self.send_command(cmd)
         self.pexpect.expect('Done')
 
@@ -337,6 +342,11 @@ class Node:
 
     def set_timeout(self, timeout):
         cmd = 'childtimeout %d' % timeout
+        self.send_command(cmd)
+        self.pexpect.expect('Done')
+
+    def set_max_children(self, number):
+        cmd = 'childmax %d' % number
         self.send_command(cmd)
         self.pexpect.expect('Done')
 
@@ -457,7 +467,7 @@ class Node:
         self.send_command(cmd)
         self.pexpect.expect('Done')
 
-    def set_active_dataset(self, timestamp, panid=None, channel=None, master_key=None):
+    def set_active_dataset(self, timestamp, panid=None, channel=None, channel_mask=None, master_key=None):
         self.send_command('dataset clear')
         self.pexpect.expect('Done')
 
@@ -472,6 +482,11 @@ class Node:
 
         if channel != None:
             cmd = 'dataset channel %d' % channel
+            self.send_command(cmd)
+            self.pexpect.expect('Done')
+
+        if channel_mask != None:
+            cmd = 'dataset channelmask %d' % channel_mask
             self.send_command(cmd)
             self.pexpect.expect('Done')
 
@@ -513,8 +528,8 @@ class Node:
         self.send_command(cmd)
         self.pexpect.expect('Done')
 
-    def send_mgmt_active_set(self, active_timestamp=None, channel=None, panid=None, mesh_local=None,
-                              network_name=None):
+    def send_mgmt_active_set(self, active_timestamp=None, channel=None, channel_mask=None, extended_panid=None,
+                             panid=None, master_key=None, mesh_local=None, network_name=None, binary=None):
         cmd = 'dataset mgmtsetcommand active '
 
         if active_timestamp != None:
@@ -523,8 +538,17 @@ class Node:
         if channel != None:
             cmd += 'channel %d ' % channel
 
+        if channel_mask != None:
+            cmd += 'channelmask %d ' % channel_mask
+
+        if extended_panid != None:
+            cmd += 'extpanid ' + extended_panid + ' '
+
         if panid != None:
             cmd += 'panid %d ' % panid
+
+        if master_key != None:
+            cmd += 'masterkey ' + master_key + ' '
 
         if mesh_local != None:
             cmd += 'localprefix ' + mesh_local + ' '
@@ -532,11 +556,14 @@ class Node:
         if network_name != None:
             cmd += 'networkname ' + network_name + ' '
 
+        if binary != None:
+            cmd += 'binary ' + binary + ' '
+
         self.send_command(cmd)
         self.pexpect.expect('Done')
 
     def send_mgmt_pending_set(self, pending_timestamp=None, active_timestamp=None, delay_timer=None, channel=None,
-                              panid=None, master_key=None, mesh_local=None):
+                              panid=None, master_key=None, mesh_local=None, network_name=None):
         cmd = 'dataset mgmtsetcommand pending '
 
         if pending_timestamp != None:
@@ -559,6 +586,9 @@ class Node:
 
         if mesh_local != None:
             cmd += 'localprefix ' + mesh_local + ' '
+
+        if network_name != None:
+            cmd += 'networkname ' + network_name + ' '
 
         self.send_command(cmd)
         self.pexpect.expect('Done')

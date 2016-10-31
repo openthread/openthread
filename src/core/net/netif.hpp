@@ -176,6 +176,39 @@ public:
         mContext = aContext;
     }
 
+    /**
+     * This method tests whether the object is free or in use.
+     *
+     * @returns True if the object is free, false otherwise.
+     *
+     */
+    bool IsFree(void) {
+        return (mCallback == NULL);
+    }
+
+    /**
+     * This method frees the object.
+     *
+     */
+    void Free(void) {
+        mCallback = NULL;
+        mContext = NULL;
+        mNext = NULL;
+    }
+
+    /**
+     * This method tests whether the object is set to the provided elements.
+     *
+     * @param[in]  aCallback  A pointer to a function that is called when configuration or state changes.
+     * @param[in]  aContext   A pointer to arbitrary context information.
+     *
+     * @returns True if the object elements equal the input params, false otherwise.
+     *
+     */
+    bool IsServing(otStateChangedCallback aCallback, void *aContext) {
+        return (aCallback == mCallback && aContext == mContext);
+    }
+
 private:
     void Callback(uint32_t aFlags) {
         if (mCallback != NULL) {
@@ -200,10 +233,11 @@ public:
     /**
      * This constructor initializes the network interface.
      *
-     * @param[in]  aIp6  A reference to the IPv6 network object.
+     * @param[in]  aIp6             A reference to the IPv6 network object.
+     * @param[in]  aInterfaceId     The interface ID for this object.
      *
      */
-    Netif(Ip6 &aIp6);
+    Netif(Ip6 &aIp6, int8_t aInterfaceId);
 
     /**
      * This method returns a reference to the IPv6 network object.
@@ -241,8 +275,8 @@ public:
      *
      * @param[in]  aAddress  A reference to the unicast address.
      *
-     * @retval kThreadError_None  Successfully added the unicast address.
-     * @retval kThreadError_Busy  The unicast address was already added.
+     * @retval kThreadError_None     Successfully added the unicast address.
+     * @retval kThreadError_Already  The unicast address was already added.
      *
      */
     ThreadError AddUnicastAddress(NetifUnicastAddress &aAddress);
@@ -320,8 +354,8 @@ public:
      *
      * @param[in]  aAddress  A reference to the multicast address.
      *
-     * @retval kThreadError_None   Successfully subscribed to @p aAddress.
-     * @retval kThreadError_Busy   The multicast address is already subscribed.
+     * @retval kThreadError_None     Successfully subscribed to @p aAddress.
+     * @retval kThreadError_Already  The multicast address is already subscribed.
      *
      */
     ThreadError SubscribeMulticast(NetifMulticastAddress &aAddress);
@@ -331,8 +365,8 @@ public:
      *
      * @param[in]  aAddress  A reference to the multicast address.
      *
-     * @retval kThreadError_None   Successfully unsubscribed to @p aAddress.
-     * @retval kThreadError_Busy   The multicast address is already unsubscribed.
+     * @retval kThreadError_None     Successfully unsubscribed to @p aAddress.
+     * @retval kThreadError_Already  The multicast address is already unsubscribed.
      *
      */
     ThreadError UnsubscribeMulticast(const NetifMulticastAddress &aAddress);
@@ -342,10 +376,20 @@ public:
      *
      * @param[in]  aCallback  A reference to the callback.
      *
-     * @retval kThreadError_None   Successfully registered the callback.
-     * @retval kThreadError_Busy   The callback was already registered.
+     * @retval kThreadError_None    Successfully registered the callback.
+     * @retval kThreadError_Already The callback was already registered.
      */
     ThreadError RegisterCallback(NetifCallback &aCallback);
+
+    /**
+     * This method removes a network interface callback.
+     *
+     * @param[in]  aCallback  A reference to the callback.
+     *
+     * @retval kThreadError_None    Successfully removed the callback.
+     * @retval kThreadError_Already The callback was not in the list.
+     */
+    ThreadError RemoveCallback(NetifCallback &aCallback);
 
     /**
      * This method indicates whether or not a state changed callback is pending.
@@ -374,14 +418,6 @@ public:
      *
      */
     virtual ThreadError SendMessage(Message &aMessage) = 0;
-
-    /**
-     * This virtual method returns a NULL-terminated string that names the network interface.
-     *
-     * @returns A NULL-terminated string that names the network interface.
-     *
-     */
-    virtual const char *GetName(void) const = 0;
 
     /**
      * This virtual method fills out @p aAddress with the link address.

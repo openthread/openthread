@@ -29,56 +29,215 @@
 
 
 import logging
-import time
-import threading
+import re
 import serial
+import socket
+import threading
+import time
 
-from pexpect_serial import SerialSpawn
+from . import settings
 
 __all__ = ['OpenThreadController']
 logger = logging.getLogger(__name__)
 
-class OpenThreadController(object):
+linesepx = re.compile(r'\r\n|\n')
+
+class OpenThreadController(threading.Thread):
     """This is an simple wrapper to communicate with openthread"""
+    _lock = threading.Lock()
+    viewing = False
+
     def __init__(self, port, log=False):
         """Initialize the controller
 
         Args:
             port (str): serial port's path or name(windows)
         """
+        super(OpenThreadController, self).__init__()
         self.port = port
+        self.handle = None
         self._log = log
-        self._ss = None
-        self._lv = None
+        self._is_net = False
         self._init()
 
     def _init(self):
-        ser = serial.Serial(self.port, 115200, timeout=2, xonxoff=True)
-        self._ss = SerialSpawn(ser, timeout=2)
+        self._connect()
         if not self._log:
             return
 
-        if self._lv:
-            self._lv.stop()
-        self._lv = OpenThreadLogViewer(ss=self._ss)
-        self._lv.start()
+        self.start()
 
     def __del__(self):
         self.close()
 
     def close(self):
-        if self._lv and self._lv.is_alive():
-            self._lv.viewing = False
-            self._lv.join()
+        if self.is_alive():
+            self.viewing = False
+            self.join()
 
-        if self._ss:
-            self._ss.close()
+        self._close()
 
     def __enter__(self):
         return self
 
     def __exit__(self, type, value, traceback):
         self.close()
+
+    def _close(self):
+        if self.handle:
+            self.handle.close()
+            self.handle = None
+
+    def _connect(self):
+        logger.debug('My port is %s' % self.port)
+        if self.port.startswith('NET'):
+            portnum = settings.SER2NET_PORTBASE + int(self.port.split('NET')[1])
+            logger.debug('My port num is %d' % portnum)
+            address = (settings.SER2NET_HOSTNAME, portnum)
+            self.handle = socket.create_connection(address)
+            self.handle.setblocking(0)
+            self._is_net = True
+        elif ':' in self.port:
+            host, port = self.port.split(':')
+            self.handle = socket.create_connection((host, port))
+            self.handle.setblocking(0)
+            self._is_net = True
+        else:
+            self.handle = serial.Serial(self.port, 115200, timeout=0, xonxoff=True)
+            self._is_net = False
+
+    def _read(self, size=512):
+        if self._is_net:
+            return self.handle.recv(size)
+        else:
+            return self.handle.read(size)
+
+    def _write(self, data):
+        if self._is_net:
+            self.handle.sendall(data)
+        else:
+            self.handle.write(data)
+
+    def _expect(self, expected, times=10):
+        """Find the `expected` line within `times` trials.
+
+        Args:
+            expected    str: the expected string
+            times       int: number of trials
+        """
+        logger.debug('[%s] Expecting [%s]' % (self.port, expected))
+
+        for i in range(0, times):
+            line = self._readline()
+            logger.debug('[%s] Got line [%s]' % (self.port, line))
+
+            if line == expected:
+                logger.debug('[%s] Expected [%s]' % (self.port, expected))
+                return
+
+            if not line:
+                time.sleep(1)
+
+        raise Exception('failed to find expected string[%s]' % expected)
+
+    def _readline(self):
+        """Read exactly one line from the device, nonblocking.
+
+        Returns:
+            None on no data
+        """
+        if len(self.lines) > 1:
+            return self.lines.pop(0)
+
+        tail = ''
+        if len(self.lines):
+            tail = self.lines.pop()
+
+        try:
+            tail += self._read()
+        except socket.error:
+            logging.exception('No new data')
+            time.sleep(0.1)
+
+        self.lines += linesepx.split(tail)
+        if len(self.lines) > 1:
+            return self.lines.pop(0)
+
+    def _sendline(self, line):
+        """Send exactly one line to the device
+
+        Args:
+            line str: data send to device
+        """
+        self.lines = []
+        try:
+            self._read()
+        except socket.error:
+            logging.debug('Nothing cleared')
+
+        logger.debug('sending [%s]' % line)
+        self._write(line + '\r\n')
+
+        # wait for write to complete
+        time.sleep(0.1)
+
+    def _req(self, req):
+        """Send command and wait for response.
+
+        The command will be repeated 3 times at most in case data loss of serial port.
+
+        Args:
+            req (str): Command to send, please do not include new line in the end.
+
+        Returns:
+            [str]: The output lines
+        """
+        logger.debug('DUT> %s', req)
+        self._log and self.pause()
+        times = 3
+        res = None
+
+        while times:
+            times = times - 1
+            try:
+                self._sendline(req)
+                self._expect(req)
+
+                line = None
+                res = []
+
+                while True:
+                    line = self._readline()
+                    logger.debug(line)
+
+                    if line == 'Done':
+                        break
+
+                    if line:
+                        res.append(line)
+                break
+
+            except:
+                logger.exception('Failed to send command')
+                self.close()
+                self._init()
+
+        self._log and self.resume()
+        return res
+
+    def run(self):
+        """Threading callback"""
+
+        self.viewing = True
+        while self.viewing and self._lock.acquire():
+            try:
+                line = self._readline()
+            except:
+                pass
+            else:
+                logger.info(line)
+            self._lock.release()
+            time.sleep(0)
 
     def is_started(self):
         """check if openthread is started
@@ -104,55 +263,20 @@ class OpenThreadController(object):
     def reset(self):
         """Reset openthread device, not equivalent to stop and start
         """
-        logger.info('DUT> reset')
-        self._log and self._lv.pause()
-        self._ss.sendline('reset')
-        self._log and self._lv.resume()
+        logger.debug('DUT> reset')
+        self._log and self.pause()
+        self._sendline('reset')
+        self._read()
+        self._log and self.resume()
 
-    def _req(self, req):
-        """Send command and wait for response.
 
-        The command will be repeated 3 times at most in case data loss of serial port.
+    def resume(self):
+        """Start dumping logs"""
+        self._lock.release()
 
-        Args:
-            req (str): Command to send, please do not include new line in the end.
-
-        Returns:
-            [str]: The output lines
-        """
-        logger.info('DUT> %s', req)
-        self._log and self._lv.pause()
-        times = 3
-        res = None
-
-        while times:
-            times = times - 1
-            try:
-                self._ss.sendline(req)
-                self._ss.expect(req + self._ss.linesep)
-
-                line = None
-                res = []
-
-                while True:
-                    line = self._ss.readline().strip('\0\r\n\t ')
-                    logger.debug(line)
-
-                    if line == 'Done':
-                        break
-
-                    if line:
-                        res.append(line)
-                break
-
-            except:
-                logger.exception('Failed to send command')
-                self.close()
-                self._init()
-
-        self._log and self._lv.resume()
-        return res
-
+    def pause(self):
+        """Start dumping logs"""
+        self._lock.acquire()
     @property
     def networkname(self):
         """str: Thread network name."""
@@ -253,31 +377,3 @@ class OpenThreadController(object):
     def add_blacklist(self, mac):
         """Add a mac address to blacklist"""
         self._req('blacklist add %s' % mac)
-
-
-class OpenThreadLogViewer(threading.Thread):
-    _lock = threading.Lock()
-    viewing = False
-    def __init__(self, *args, **kwargs):
-        self._ss = kwargs.pop('ss')
-        super(OpenThreadLogViewer, self).__init__(*args, **kwargs)
-
-    def run(self):
-        self.viewing = True
-        while self.viewing and self._lock.acquire():
-            try:
-                line = self._ss.readline().strip('\0\r\n\t ')
-            except:
-                pass
-            else:
-                logger.info(line)
-            self._lock.release()
-            time.sleep(0)
-
-    def resume(self):
-        """Start dumping logs"""
-        self._lock.release()
-
-    def pause(self):
-        """Start dumping logs"""
-        self._lock.acquire()

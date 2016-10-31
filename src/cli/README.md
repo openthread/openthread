@@ -21,6 +21,7 @@ OpenThread test scripts use the CLI to execute test cases.
 * [eui64](#eui64)
 * [extaddr](#extaddr)
 * [extpanid](#extpanid)
+* [factoryreset](#factoryreset)
 * [hashmacaddr](#hashmacaddr)
 * [ifconfig](#ifconfig)
 * [ipaddr](#ipaddr)
@@ -711,6 +712,13 @@ Set the Thread Extended PAN ID value.
 Done
 ```
 
+### factoryreset
+Delete all stored settings, and signal a platform reset.
+
+```bash
+> factoryreset
+```
+
 ### hashmacaddr
 
 Get the HashMac address.
@@ -804,22 +812,42 @@ Stop the Joiner role.
 Done
 ```
 
-### keysequence
+### keysequence counter
 
-Get the Thread Key Sequence.
+Get the Thread Key Sequence Counter.
 
 ```bash
-> keysequence
+> keysequence counter
 10
 Done
 ```
 
-### keysequence \<keysequence\>
+### keysequence counter \<counter\>
 
-Set the Thread Key Sequence.
+Set the Thread Key Sequence Counter.
 
 ```bash
-> keysequence 10
+> keysequence counter 10
+Done
+```
+
+### keysequence guardtime
+
+Get Thread Key Switch Guard Time (in hours)
+
+```bash
+> keysequence guardtime
+0
+Done
+```
+
+### keysequence guardtime \<guardtime\>
+
+Set Thread Key Switch Guard Time (in hours)
+0 means Thread Key Switch imediately if key index match
+
+```bash
+> keysequence guardtime 0
 Done
 ```
 

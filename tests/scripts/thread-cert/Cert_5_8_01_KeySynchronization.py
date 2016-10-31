@@ -45,11 +45,13 @@ class Cert_5_8_1_KeySynchronization(unittest.TestCase):
         self.nodes[LEADER].set_mode('rsdn')
         self.nodes[LEADER].add_whitelist(self.nodes[ED].get_addr64())
         self.nodes[LEADER].enable_whitelist()
+        self.nodes[LEADER].set_key_switch_guardtime(0)
 
         self.nodes[ED].set_panid(0xface)
         self.nodes[ED].set_mode('rsn')
         self.nodes[ED].add_whitelist(self.nodes[LEADER].get_addr64())
         self.nodes[ED].enable_whitelist()
+        self.nodes[ED].set_key_switch_guardtime(0)
 
     def tearDown(self):
         for node in list(self.nodes.values()):
@@ -70,8 +72,8 @@ class Cert_5_8_1_KeySynchronization(unittest.TestCase):
             if 'ff:fe00' not in addr:
                 self.assertTrue(self.nodes[ED].ping(addr))
 
-        key_sequence = self.nodes[ED].get_key_sequence()
-        self.nodes[ED].set_key_sequence(key_sequence + 10)
+        key_sequence_counter = self.nodes[ED].get_key_sequence_counter()
+        self.nodes[ED].set_key_sequence_counter(key_sequence_counter + 10)
 
         addrs = self.nodes[LEADER].get_addrs()
         for addr in addrs:

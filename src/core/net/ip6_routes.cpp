@@ -52,7 +52,7 @@ ThreadError Routes::Add(Route &aRoute)
 
     for (Route *cur = mRoutes; cur; cur = cur->mNext)
     {
-        VerifyOrExit(cur != &aRoute, error = kThreadError_Busy);
+        VerifyOrExit(cur != &aRoute, error = kThreadError_Already);
     }
 
     aRoute.mNext = mRoutes;

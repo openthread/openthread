@@ -107,7 +107,7 @@ void AnnounceBeginServer::HandleRequest(Coap::Header &aHeader, Message &aMessage
     MeshCoP::CountTlv count;
     MeshCoP::PeriodTlv period;
 
-    VerifyOrExit(aHeader.GetCode() == Coap::Header::kCodePost, ;);
+    VerifyOrExit(aHeader.GetCode() == kCoapRequestPost, ;);
 
     SuccessOrExit(MeshCoP::Tlv::GetTlv(aMessage, MeshCoP::Tlv::kChannelMask, sizeof(channelMask), channelMask.tlv));
     VerifyOrExit(channelMask.tlv.IsValid() &&
@@ -133,25 +133,20 @@ ThreadError AnnounceBeginServer::SendResponse(const Coap::Header &aRequestHeader
     ThreadError error = kThreadError_None;
     Message *message = NULL;
     Coap::Header responseHeader;
-    Ip6::MessageInfo responseInfo;
+    Ip6::MessageInfo responseInfo(aRequestInfo);
 
-    VerifyOrExit(aRequestHeader.GetType() == Coap::Header::kTypeConfirmable, ;);
+    VerifyOrExit(aRequestHeader.GetType() == kCoapTypeConfirmable, ;);
 
     VerifyOrExit((message = mCoapServer.NewMessage(0)) != NULL, error = kThreadError_NoBufs);
 
-    responseHeader.Init();
-    responseHeader.SetType(Coap::Header::kTypeAcknowledgment);
-    responseHeader.SetCode(Coap::Header::kCodeChanged);
-    responseHeader.SetMessageId(aRequestHeader.GetMessageId());
-    responseHeader.SetToken(aRequestHeader.GetToken(), aRequestHeader.GetTokenLength());
-    responseHeader.Finalize();
+    responseHeader.SetDefaultResponseHeader(aRequestHeader);
+
     SuccessOrExit(error = message->Append(responseHeader.GetBytes(), responseHeader.GetLength()));
 
-    memcpy(&responseInfo, &aRequestInfo, sizeof(responseInfo));
     memset(&responseInfo.mSockAddr, 0, sizeof(responseInfo.mSockAddr));
     SuccessOrExit(error = mCoapServer.SendMessage(*message, responseInfo));
 
-    otLogInfoMeshCoP("sent announce begin response\r\n");
+    otLogInfoMeshCoP("sent announce begin response");
 
 exit:
 
@@ -170,7 +165,7 @@ void AnnounceBeginServer::HandleTimer(void *aContext)
 
 void AnnounceBeginServer::HandleTimer(void)
 {
-    mNetif.GetMle().SendAnnounce(mChannel++);
+    mNetif.GetMle().SendAnnounce(mChannel++, false);
 
     while (mCount > 0)
     {

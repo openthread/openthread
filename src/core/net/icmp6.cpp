@@ -70,7 +70,7 @@ ThreadError Icmp::RegisterCallbacks(IcmpHandler &aHandler)
     {
         if (cur == &aHandler)
         {
-            ExitNow(error = kThreadError_Busy);
+            ExitNow(error = kThreadError_Already);
         }
     }
 
@@ -104,7 +104,7 @@ ThreadError Icmp::SendEchoRequest(Message &aMessage, const MessageInfo &aMessage
     aMessage.SetOffset(0);
     SuccessOrExit(error = mIp6.SendDatagram(aMessage, messageInfoLocal, kProtoIcmp6));
 
-    otLogInfoIcmp("Sent echo request: (seq = %d)\n", icmpHeader.GetSequence());
+    otLogInfoIcmp("Sent echo request: (seq = %d)", icmpHeader.GetSequence());
 
 exit:
     return error;
@@ -128,12 +128,11 @@ ThreadError Icmp::SendError(const Address &aDestination, IcmpHeader::Type aType,
     icmp6Header.SetCode(aCode);
     message->Write(0, sizeof(icmp6Header), &icmp6Header);
 
-    memset(&messageInfo, 0, sizeof(messageInfo));
-    messageInfo.mPeerAddr = aDestination;
+    messageInfo.SetPeerAddr(aDestination);
 
     SuccessOrExit(error = mIp6.SendDatagram(*message, messageInfo, kProtoIcmp6));
 
-    otLogInfoIcmp("Sent ICMPv6 Error\n");
+    otLogInfoIcmp("Sent ICMPv6 Error");
 
 exit:
 
@@ -203,14 +202,14 @@ ThreadError Icmp::HandleEchoRequest(Message &aRequestMessage, const MessageInfo 
 
     VerifyOrExit(mIsEchoEnabled, ;);
 
-    otLogInfoIcmp("Received Echo Request\n");
+    otLogInfoIcmp("Received Echo Request");
 
     icmp6Header.Init();
     icmp6Header.SetType(IcmpHeader::kTypeEchoReply);
 
     if ((replyMessage = mIp6.NewMessage(0)) == NULL)
     {
-        otLogDebgIcmp("icmp fail\n");
+        otLogDebgIcmp("icmp fail");
         ExitNow();
     }
 
@@ -221,20 +220,19 @@ ThreadError Icmp::HandleEchoRequest(Message &aRequestMessage, const MessageInfo 
     aRequestMessage.CopyTo(aRequestMessage.GetOffset() + IcmpHeader::GetDataOffset(),
                            IcmpHeader::GetDataOffset(), payloadLength, *replyMessage);
 
-    memset(&replyMessageInfo, 0, sizeof(replyMessageInfo));
-    replyMessageInfo.GetPeerAddr() = aMessageInfo.GetPeerAddr();
+    replyMessageInfo.SetPeerAddr(aMessageInfo.GetPeerAddr());
 
     if (!aMessageInfo.GetSockAddr().IsMulticast())
     {
-        replyMessageInfo.GetSockAddr() = aMessageInfo.GetSockAddr();
+        replyMessageInfo.SetSockAddr(aMessageInfo.GetSockAddr());
     }
 
-    replyMessageInfo.mInterfaceId = aMessageInfo.mInterfaceId;
+    replyMessageInfo.SetInterfaceId(aMessageInfo.mInterfaceId);
 
     SuccessOrExit(error = mIp6.SendDatagram(*replyMessage, replyMessageInfo, kProtoIcmp6));
 
     replyMessage->Read(replyMessage->GetOffset(), sizeof(icmp6Header), &icmp6Header);
-    otLogInfoIcmp("Sent Echo Reply (seq = %d)\n", icmp6Header.GetSequence());
+    otLogInfoIcmp("Sent Echo Reply (seq = %d)", icmp6Header.GetSequence());
 
 exit:
 

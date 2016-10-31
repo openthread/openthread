@@ -45,6 +45,14 @@ cd /tmp || die
     sudo -H pip install pexpect || die
     pip install pexpect || die
 
+    # Packages used by ncp tools.
+    sudo -H pip install ipaddress || die
+    sudo -H pip install scapy==2.3.2 || die
+    sudo -H pip install pyserial || die
+    pip install ipaddress || die
+    pip install scapy==2.3.2 || die
+    pip install pyserial || die
+
     [ $BUILD_TARGET != pretty-check ] || {
         wget http://jaist.dl.sourceforge.net/project/astyle/astyle/astyle%202.05.1/astyle_2.05.1_linux.tar.gz || die
         tar xzvf astyle_2.05.1_linux.tar.gz || die
@@ -59,7 +67,7 @@ cd /tmp || die
         sudo apt-get install clang || die
     }
 
-    [ $BUILD_TARGET != cc2538 ] || {
+    [ $BUILD_TARGET != arm-gcc49 ] || {
         sudo apt-get install lib32z1 || die
         wget https://launchpad.net/gcc-arm-embedded/4.9/4.9-2015-q3-update/+download/gcc-arm-none-eabi-4_9-2015q3-20150921-linux.tar.bz2 || die
         tar xjf gcc-arm-none-eabi-4_9-2015q3-20150921-linux.tar.bz2 || die
@@ -67,14 +75,16 @@ cd /tmp || die
         arm-none-eabi-gcc --version || die
     }
 
-    [ $BUILD_TARGET != posix-32-bit ] || {
-        sudo apt-get install g++-multilib || die
+    [ $BUILD_TARGET != arm-gcc54 ] || {
+        sudo apt-get install lib32z1 || die
+        wget https://launchpad.net/gcc-arm-embedded/5.0/5-2016-q3-update/+download/gcc-arm-none-eabi-5_4-2016q3-20160926-linux.tar.bz2 || die
+        tar xjf gcc-arm-none-eabi-5_4-2016q3-20160926-linux.tar.bz2 || die
+        export PATH=/tmp/gcc-arm-none-eabi-5_4-2016q3/bin:$PATH || die
+        arm-none-eabi-gcc --version || die
     }
 
-    [ $BUILD_TARGET != posix-ncp ] || {
-        pip install ipaddress || die
-        pip install scapy || die
-        pip install pyserial || die
+    [ $BUILD_TARGET != posix-32-bit ] || {
+        sudo apt-get install g++-multilib || die
     }
 }
 

@@ -138,7 +138,7 @@ public:
      * This method indicates whether or not the IPv6 address is a link-local all nodes multicast address.
      *
      * @retval TRUE   If the IPv6 address is a link-local all nodes multicast address.
-     * @retval FALSE  If the IPv6 address scope is not a link-local all nodes multicast address.
+     * @retval FALSE  If the IPv6 address is not a link-local all nodes multicast address.
      *
      */
     bool IsLinkLocalAllNodesMulticast(void) const;
@@ -147,7 +147,7 @@ public:
      * This method indicates whether or not the IPv6 address is a link-local all routers multicast address.
      *
      * @retval TRUE   If the IPv6 address is a link-local all routers multicast address.
-     * @retval FALSE  If the IPv6 address scope is not a link-local all routers multicast address.
+     * @retval FALSE  If the IPv6 address is not a link-local all routers multicast address.
      *
      */
     bool IsLinkLocalAllRoutersMulticast(void) const;
@@ -165,7 +165,7 @@ public:
      * This method indicates whether or not the IPv6 address is a realm-local all nodes multicast address.
      *
      * @retval TRUE   If the IPv6 address is a realm-local all nodes multicast address.
-     * @retval FALSE  If the IPv6 address scope is not a realm-local all nodes multicast address.
+     * @retval FALSE  If the IPv6 address is not a realm-local all nodes multicast address.
      *
      */
     bool IsRealmLocalAllNodesMulticast(void) const;
@@ -174,10 +174,19 @@ public:
      * This method indicates whether or not the IPv6 address is a realm-local all routers multicast address.
      *
      * @retval TRUE   If the IPv6 address is a realm-local all routers multicast address.
-     * @retval FALSE  If the IPv6 address scope is not a realm-local all routers multicast address.
+     * @retval FALSE  If the IPv6 address is not a realm-local all routers multicast address.
      *
      */
     bool IsRealmLocalAllRoutersMulticast(void) const;
+
+    /**
+     * This method indicates whether or not the IPv6 address is a realm-local all MPL forwarders address.
+     *
+     * @retval TRUE   If the IPv6 address is a realm-local all MPL forwarders address.
+     * @retval FALSE  If the IPv6 address is not a realm-local all MPL forwarders address.
+     *
+     */
+    bool IsRealmLocalAllMplForwarders(void) const;
 
     /**
      * This method indicates whether or not the IPv6 address is a RLOC address.

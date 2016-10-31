@@ -47,6 +47,8 @@ BuildJobs                      ?= 99
 CC2650_MBEDTLS_CPPFLAGS = -DMBEDTLS_CONFIG_FILE=\\\"cc2650-mbedtls-config.h\\\" 
 CC2650_MBEDTLS_CPPFLAGS += -I$(PWD)/examples/platforms/cc2650/crypto
 CC2650_MBEDTLS_CPPFLAGS += -I$(PWD)/third_party/cc26xxware
+CC2650_MBEDTLS_CPPFLAGS += -I$(PWD)/third_party/mbedtls
+CC2650_MBEDTLS_CPPFLAGS += -I$(PWD)/third_party/mbedtls/repo/include
 
 configure_OPTIONS               = \
     --enable-cli                  \
@@ -56,6 +58,22 @@ configure_OPTIONS               = \
     --with-platform-info=cc2650   \
     MBEDTLS_CPPFLAGS="$(CC2650_MBEDTLS_CPPFLAGS)" \
     $(NULL)
+
+ifeq ($(CLI_LOGGING),1)
+configure_OPTIONS              += --enable-cli-logging
+endif
+
+ifeq ($(CERT_LOG),1)
+configure_OPTIONS              += --enable-cert-log
+endif
+
+ifeq ($(COMMISSIONER),1)
+configure_OPTIONS              += --enable-commissioner
+endif
+
+ifeq ($(JOINER),1)
+configure_OPTIONS              += --enable-joiner
+endif
 
 COMMONCFLAGS                   := \
     -fdata-sections               \

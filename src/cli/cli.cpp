@@ -87,6 +87,7 @@ const struct Command Interpreter::sCommands[] =
 #endif
     { "extaddr", &Interpreter::ProcessExtAddress },
     { "extpanid", &Interpreter::ProcessExtPanId },
+    { "factoryreset", &Interpreter::ProcessFactoryReset },
     { "hashmacaddr", &Interpreter::ProcessHashMacAddress },
     { "ifconfig", &Interpreter::ProcessIfconfig },
     { "ipaddr", &Interpreter::ProcessIpAddr },
@@ -650,6 +651,13 @@ exit:
     AppendResult(error);
 }
 
+void Interpreter::ProcessFactoryReset(int argc, char *argv[])
+{
+    otFactoryReset(mInstance);
+    (void)argc;
+    (void)argv;
+}
+
 void Interpreter::ProcessHashMacAddress(int argc, char *argv[])
 {
     ThreadError error = kThreadError_None;
@@ -765,14 +773,31 @@ void Interpreter::ProcessKeySequence(int argc, char *argv[])
     ThreadError error = kThreadError_None;
     long value;
 
-    if (argc == 0)
+    VerifyOrExit(argc == 1 || argc == 2, error = kThreadError_Parse);
+
+    if (strcmp(argv[0], "counter") == 0)
     {
-        sServer->OutputFormat("%d\r\n", otGetKeySequenceCounter(mInstance));
+        if (argc == 1)
+        {
+            sServer->OutputFormat("%d\r\n", otGetKeySequenceCounter(mInstance));
+        }
+        else
+        {
+            SuccessOrExit(error = ParseLong(argv[1], value));
+            otSetKeySequenceCounter(mInstance, static_cast<uint32_t>(value));
+        }
     }
-    else
+    else if (strcmp(argv[0], "guardtime") == 0)
     {
-        SuccessOrExit(error = ParseLong(argv[0], value));
-        otSetKeySequenceCounter(mInstance, static_cast<uint32_t>(value));
+        if (argc == 1)
+        {
+            sServer->OutputFormat("%d\r\n", otGetKeySwitchGuardTime(mInstance));
+        }
+        else
+        {
+            SuccessOrExit(error = ParseLong(argv[1], value));
+            otSetKeySwitchGuardTime(mInstance, static_cast<uint32_t>(value));
+        }
     }
 
 exit:
@@ -1090,7 +1115,7 @@ void Interpreter::ProcessPing(int argc, char *argv[])
 
     memset(&sMessageInfo, 0, sizeof(sMessageInfo));
     SuccessOrExit(error = sMessageInfo.GetPeerAddr().FromString(argv[0]));
-    sMessageInfo.mInterfaceId = 1;
+    sMessageInfo.mInterfaceId = OT_NETIF_INTERFACE_ID_THREAD;
 
     sLength = 8;
     sCount = 1;

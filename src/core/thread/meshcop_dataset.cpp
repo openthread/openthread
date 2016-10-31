@@ -35,21 +35,30 @@
 #include <stdio.h>
 
 #include <common/code_utils.hpp>
+#include <common/settings.hpp>
+#include <platform/settings.h>
 #include <thread/meshcop_tlvs.hpp>
 #include <thread/meshcop_dataset.hpp>
 
 namespace Thread {
 namespace MeshCoP {
 
-Dataset::Dataset(const Tlv::Type aType) :
+Dataset::Dataset(otInstance *aInstance, const Tlv::Type aType) :
     mType(aType),
-    mLength(0)
+    mLength(0),
+    mInstance(aInstance)
 {
 }
 
-void Dataset::Clear(void)
+void Dataset::Clear(bool isLocal)
 {
     mLength = 0;
+
+    if (isLocal)
+    {
+        otPlatSettingsDelete(mInstance, static_cast<uint16_t>(mType == Tlv::kActiveTimestamp ? kKeyActiveDataset :
+                                                              kKeyPendingDataset), -1);
+    }
 }
 
 Tlv *Dataset::Get(Tlv::Type aType)
@@ -109,8 +118,6 @@ void Dataset::Get(otOperationalDataset &aDataset) const
             const ActiveTimestampTlv *tlv = static_cast<const ActiveTimestampTlv *>(cur);
             aDataset.mActiveTimestamp = tlv->GetSeconds();
             aDataset.mIsActiveTimestampSet = true;
-
-            GetTimestamp();
             break;
         }
 
@@ -430,6 +437,18 @@ int Dataset::Compare(const Dataset &aCompare) const
     }
 
     return rval;
+}
+
+ThreadError Dataset::Restore(void)
+{
+    return otPlatSettingsGet(mInstance, static_cast<uint16_t>(mType == Tlv::kActiveTimestamp ? kKeyActiveDataset :
+                                                              kKeyPendingDataset), 0, mTlvs, &mLength);
+}
+
+ThreadError Dataset::Store(void)
+{
+    return otPlatSettingsSet(mInstance, static_cast<uint16_t>(mType == Tlv::kActiveTimestamp ? kKeyActiveDataset :
+                                                              kKeyPendingDataset), mTlvs, mLength);
 }
 
 ThreadError Dataset::Set(const Tlv &aTlv)

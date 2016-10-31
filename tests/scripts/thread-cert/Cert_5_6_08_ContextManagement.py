@@ -78,46 +78,46 @@ class Cert_5_6_8_ContextManagement(unittest.TestCase):
         time.sleep(5)
         self.assertEqual(self.nodes[ED].get_state(), 'child')
 
-        self.nodes[ROUTER].add_prefix('2001::/64', 'paros')
+        self.nodes[ROUTER].add_prefix('2001:2:0:1::/64', 'paros')
         self.nodes[ROUTER].register_netdata()
         time.sleep(2)
 
         addrs = self.nodes[LEADER].get_addrs()
-        self.assertTrue(any('2001' in addr[0:4] for addr in addrs))
+        self.assertTrue(any('2001:2:0:1' in addr[0:10] for addr in addrs))
         for addr in addrs:
             if addr[0:3] == '200':
                 self.assertTrue(self.nodes[ED].ping(addr))
 
-        self.nodes[ROUTER].remove_prefix('2001::/64')
+        self.nodes[ROUTER].remove_prefix('2001:2:0:1::/64')
         self.nodes[ROUTER].register_netdata()
         time.sleep(5)
 
         addrs = self.nodes[LEADER].get_addrs()
-        self.assertFalse(any('2001' in addr[0:4] for addr in addrs))
+        self.assertFalse(any('2001:2:0:1' in addr[0:10] for addr in addrs))
         for addr in addrs:
             if addr[0:3] == '200':
                 self.assertTrue(self.nodes[ED].ping(addr))
 
-        self.nodes[ROUTER].add_prefix('2002::/64', 'paros')
+        self.nodes[ROUTER].add_prefix('2001:2:0:2::/64', 'paros')
         self.nodes[ROUTER].register_netdata()
         time.sleep(5)
 
         addrs = self.nodes[LEADER].get_addrs()
-        self.assertFalse(any('2001' in addr[0:4] for addr in addrs))
-        self.assertTrue(any('2002' in addr[0:4] for addr in addrs))
+        self.assertFalse(any('2001:2:0:1' in addr[0:10] for addr in addrs))
+        self.assertTrue(any('2001:2:0:2' in addr[0:10] for addr in addrs))
         for addr in addrs:
             if addr[0:3] == '200':
                 self.assertTrue(self.nodes[ED].ping(addr))
 
         time.sleep(5)
-        self.nodes[ROUTER].add_prefix('2003::/64', 'paros')
+        self.nodes[ROUTER].add_prefix('2001:2:0:3::/64', 'paros')
         self.nodes[ROUTER].register_netdata()
         time.sleep(5)
 
         addrs = self.nodes[LEADER].get_addrs()
-        self.assertFalse(any('2001' in addr[0:4] for addr in addrs))
-        self.assertTrue(any('2002' in addr[0:4] for addr in addrs))
-        self.assertTrue(any('2003' in addr[0:4] for addr in addrs))
+        self.assertFalse(any('2001:2:0:1' in addr[0:10] for addr in addrs))
+        self.assertTrue(any('2001:2:0:2' in addr[0:10] for addr in addrs))
+        self.assertTrue(any('2001:2:0:3' in addr[0:10] for addr in addrs))
         for addr in addrs:
             if addr[0:3] == '200':
                 self.assertTrue(self.nodes[ED].ping(addr))

@@ -69,7 +69,7 @@
 // ----------------------------------------------------------------------------
 
 #define SPINEL_PROTOCOL_VERSION_THREAD_MAJOR    4
-#define SPINEL_PROTOCOL_VERSION_THREAD_MINOR    1
+#define SPINEL_PROTOCOL_VERSION_THREAD_MINOR    2
 
 #define SPINEL_FRAME_MAX_SIZE                   1300
 
@@ -204,19 +204,9 @@ enum
 
 enum
 {
-    SPINEL_MAC_FILTER_MODE_NORMAL      = 0, ///< Normal MAC filtering is in place.
-    SPINEL_MAC_FILTER_MODE_PROMISCUOUS = 1, ///< All MAC packets matching network are passed up the stack.
-    SPINEL_MAC_FILTER_MODE_MONITOR     = 2, ///< All decoded MAC packets are passed up the stack.
-
-    /// 802.15.4's definition of "Promiscuous" mode.
-    /** 802.15.4 defines promiscuous mode to be what
-     *  is generally considered to be "Monitor" mode.
-     *  This definition will hopefully help people who
-     *  are familiar with the 802.15.4 spec from being
-     *  confused about what they need to set this
-     *  property to in order to get the desired behavior.
-     */
-    SPINEL_MAC_FILTER_MODE_15_4_PROMISCUOUS = SPINEL_MAC_FILTER_MODE_MONITOR,
+    SPINEL_MAC_PROMISCUOUS_MODE_OFF      = 0, ///< Normal MAC filtering is in place.
+    SPINEL_MAC_PROMISCUOUS_MODE_NETWORK  = 1, ///< All MAC packets matching network are passed up the stack.
+    SPINEL_MAC_PROMISCUOUS_MODE_FULL     = 2, ///< All decoded MAC packets are passed up the stack.
 };
 
 typedef struct
@@ -246,11 +236,10 @@ typedef unsigned int spinel_cid_t;
 
 enum
 {
-    SPINEL_MD_FLAG_TX               = 0x0001,
-    SPINEL_MD_FLAG_HAS_FCS          = 0x0002,
-    SPINEL_MD_FLAG_BAD_FCS          = 0x0004,
-    SPINEL_MD_FLAG_DUPE             = 0x0008,
-    SPINEL_MD_FLAG_RESERVED         = 0xFFF0,
+    SPINEL_MD_FLAG_TX               = 0x0001, //!< Packet was transmitted, not received.
+    SPINEL_MD_FLAG_BAD_FCS          = 0x0004, //!< Packet was received with bad FCS
+    SPINEL_MD_FLAG_DUPE             = 0x0008, //!< Packet seems to be a duplicate
+    SPINEL_MD_FLAG_RESERVED         = 0xFFF2, //!< Flags reserved for future use.
 };
 
 enum
@@ -369,7 +358,7 @@ typedef enum
     SPINEL_PROP_MAC_15_4_SADDR         = SPINEL_PROP_MAC__BEGIN + 5, ///< [S]
     SPINEL_PROP_MAC_15_4_PANID         = SPINEL_PROP_MAC__BEGIN + 6, ///< [S]
     SPINEL_PROP_MAC_RAW_STREAM_ENABLED = SPINEL_PROP_MAC__BEGIN + 7, ///< [C]
-    SPINEL_PROP_MAC_FILTER_MODE        = SPINEL_PROP_MAC__BEGIN + 8, ///< [C]
+    SPINEL_PROP_MAC_PROMISCUOUS_MODE   = SPINEL_PROP_MAC__BEGIN + 8, ///< [C]
     SPINEL_PROP_MAC_ENERGY_SCAN_RESULT = SPINEL_PROP_MAC__BEGIN + 9, ///< chan,maxRssi [Cc]
     SPINEL_PROP_MAC__END               = 0x40,
 
@@ -405,7 +394,8 @@ typedef enum
     SPINEL_PROP_NET_NETWORK_NAME     = SPINEL_PROP_NET__BEGIN + 4, ///< [U]
     SPINEL_PROP_NET_XPANID           = SPINEL_PROP_NET__BEGIN + 5, ///< [D]
     SPINEL_PROP_NET_MASTER_KEY       = SPINEL_PROP_NET__BEGIN + 6, ///< [D]
-    SPINEL_PROP_NET_KEY_SEQUENCE     = SPINEL_PROP_NET__BEGIN + 7, ///< [L]
+    SPINEL_PROP_NET_KEY_SEQUENCE_COUNTER
+                                     = SPINEL_PROP_NET__BEGIN + 7, ///< [L]
     SPINEL_PROP_NET_PARTITION_ID     = SPINEL_PROP_NET__BEGIN + 8, ///< [L]
 
     /// Require Join Existing
@@ -428,6 +418,9 @@ typedef enum
      */
     SPINEL_PROP_NET_REQUIRE_JOIN_EXISTING
                                      = SPINEL_PROP_NET__BEGIN + 9,
+
+    SPINEL_PROP_NET_KEY_SWITCH_GUARDTIME
+                                     = SPINEL_PROP_NET__BEGIN + 10, ///< [L]
 
     SPINEL_PROP_NET__END             = 0x50,
 
@@ -527,19 +520,24 @@ typedef enum
     /** Format: `C`
      */
     SPINEL_PROP_THREAD_ROUTER_SELECTION_JITTER
-                                        = SPINEL_PROP_THREAD_EXT__BEGIN + 9,
+                                       = SPINEL_PROP_THREAD_EXT__BEGIN + 9,
 
     /// Thread Preferred Router Id
     /** Format: `C` - Write only
      */
     SPINEL_PROP_THREAD_PREFERRED_ROUTER_ID
-                                        = SPINEL_PROP_THREAD_EXT__BEGIN + 10,
+                                       = SPINEL_PROP_THREAD_EXT__BEGIN + 10,
 
     /// Thread Neighbor Table
     /** Format: `A(T(ESLCcCbLL))`
      *  eui64, rloc16, age, inLqi ,aveRSS, mode, isChild. linkFrameCounter, mleCounter
      */
     SPINEL_PROP_THREAD_NEIGHBOR_TABLE  = SPINEL_PROP_THREAD_EXT__BEGIN + 11,
+
+    /// Thread Max Child Count
+    /** Format: `C`
+     */
+    SPINEL_PROP_THREAD_CHILD_COUNT_MAX = SPINEL_PROP_THREAD_EXT__BEGIN + 12,
 
     SPINEL_PROP_THREAD_EXT__END        = 0x1600,
 

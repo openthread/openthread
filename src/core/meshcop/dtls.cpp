@@ -33,10 +33,8 @@
 
 #define WPP_NAME "dtls.tmh"
 
-#include <assert.h>
-#include <stdio.h>
-
 #include <common/code_utils.hpp>
+#include <common/debug.hpp>
 #include <common/encoding.hpp>
 #include <common/logging.hpp>
 #include <common/timer.hpp>
@@ -57,6 +55,14 @@ Dtls::Dtls(ThreadNetif &aNetif):
     mNetif(aNetif)
 {
     mProvisioningUrl.Init();
+}
+
+Dtls::~Dtls(void)
+{
+    if (mStarted)
+    {
+        Close();
+    }
 }
 
 ThreadError Dtls::Start(bool aClient, ReceiveHandler aReceiveHandler, SendHandler aSendHandler, void *aContext)
@@ -91,7 +97,7 @@ ThreadError Dtls::Start(bool aClient, ReceiveHandler aReceiveHandler, SendHandle
     mbedtls_ssl_conf_ciphersuites(&mConf, ciphersuites);
     mbedtls_ssl_conf_export_keys_cb(&mConf, HandleMbedtlsExportKeys, this);
     mbedtls_ssl_conf_handshake_timeout(&mConf, 8000, 60000);
-    mbedtls_ssl_conf_dbg(&mConf, HandleMbedtlsDebug, stdout);
+    mbedtls_ssl_conf_dbg(&mConf, HandleMbedtlsDebug, NULL);
 
     if (!mClient)
     {
@@ -115,7 +121,7 @@ ThreadError Dtls::Start(bool aClient, ReceiveHandler aReceiveHandler, SendHandle
     mStarted = true;
     Process();
 
-    otLogInfoMeshCoP("DTLS started\r\n");
+    otLogInfoMeshCoP("DTLS started");
 
 exit:
     return MapError(rval);
@@ -194,7 +200,7 @@ int Dtls::HandleMbedtlsTransmit(const unsigned char *aBuf, size_t aLength)
     ThreadError error;
     int rval = 0;
 
-    otLogInfoMeshCoP("Dtls::HandleMbedtlsTransmit\r\n");
+    otLogInfoMeshCoP("Dtls::HandleMbedtlsTransmit");
 
     error = mSendHandler(mContext, aBuf, (uint16_t)aLength);
 
@@ -225,7 +231,7 @@ int Dtls::HandleMbedtlsReceive(unsigned char *aBuf, size_t aLength)
 {
     int rval;
 
-    otLogInfoMeshCoP("Dtls::HandleMbedtlsReceive\r\n");
+    otLogInfoMeshCoP("Dtls::HandleMbedtlsReceive");
 
     VerifyOrExit(mReceiveMessage != NULL && mReceiveLength != 0, rval = MBEDTLS_ERR_SSL_WANT_READ);
 
@@ -251,7 +257,7 @@ int Dtls::HandleMbedtlsGetTimer(void)
 {
     int rval;
 
-    otLogInfoMeshCoP("Dtls::HandleMbedtlsGetTimer\r\n");
+    otLogInfoMeshCoP("Dtls::HandleMbedtlsGetTimer");
 
     if (!mTimerSet)
     {
@@ -280,7 +286,7 @@ void Dtls::HandleMbedtlsSetTimer(void *aContext, uint32_t aIntermediate, uint32_
 
 void Dtls::HandleMbedtlsSetTimer(uint32_t aIntermediate, uint32_t aFinish)
 {
-    otLogInfoMeshCoP("Dtls::SetTimer\r\n");
+    otLogInfoMeshCoP("Dtls::SetTimer");
 
     if (aFinish == 0)
     {
@@ -314,7 +320,7 @@ int Dtls::HandleMbedtlsExportKeys(const unsigned char *aMasterSecret, const unsi
 
     mNetif.GetKeyManager().SetKek(kek);
 
-    otLogInfoMeshCoP("Generated KEK\r\n");
+    otLogInfoMeshCoP("Generated KEK");
 
     (void)aMasterSecret;
     return 0;
@@ -428,14 +434,27 @@ ThreadError Dtls::MapError(int rval)
     return error;
 }
 
-void Dtls::HandleMbedtlsDebug(void *ctx, int level, const char *file, int line, const char *str)
+void Dtls::HandleMbedtlsDebug(void *, int level, const char *, int , const char *str)
 {
-    otLogInfoMeshCoP("%s:%04d: %s\r\n", file, line, str);
-    (void)ctx;
-    (void)level;
-    (void)file;
-    (void)line;
-    (void)str;
+    switch (level)
+    {
+    case 1:
+        otLogCritMbedTls("%s", str);
+        break;
+
+    case 2:
+        otLogWarnMbedTls("%s", str);
+        break;
+
+    case 3:
+        otLogInfoMbedTls("%s", str);
+        break;
+
+    case 4:
+    default:
+        otLogDebgMbedTls("%s", str);
+        break;
+    }
 }
 
 }  // namespace MeshCoP

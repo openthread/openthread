@@ -114,6 +114,10 @@ class SimpleTestResult(unittest.TestResult):
         self.log_handler = None
         time.sleep(2)
 
+        # close explorers
+        os.system('taskkill /f /im explorer.exe && start explorer.exe')
+
+
     def addSuccess(self, test):
         logger.info('case[%s] pass', test.__class__.__name__)
         super(SimpleTestResult, self).addSuccess(test)
@@ -138,8 +142,8 @@ class SimpleTestResult(unittest.TestResult):
         super(SimpleTestResult, self).addError(test, err)
         self.add_result(test, None, str(err[1]))
 
-def discover(names=None, pattern='*.py', skip='efp', dry_run=False,
-             manual_reset=False, delete_blacklist=False, list_devices=False,
+def discover(names=None, pattern='*.py', skip='efp', dry_run=False, blacklist=None,
+             manual_reset=False, delete_history=False, list_devices=False, max_devices=0,
              continue_from=None, result_file='./result.json', auto_reboot=False):
     '''Discover all test cases and skip those passed
 
@@ -162,8 +166,19 @@ def discover(names=None, pattern='*.py', skip='efp', dry_run=False,
                 logger.exception('failed to get version of %s' % port)
         return
 
-    if delete_blacklist:
+    if delete_history:
         os.system('del history.json')
+
+    if blacklist:
+        try:
+            excludes = filter(lambda line: not line.startswith('#'),
+                           map(lambda line: line.strip('\n'),
+                               open(blacklist, 'r').readlines()))
+        except:
+            logger.exception('Failed to open test case black list file')
+            raise
+    else:
+        excludes = []
 
     log = None
     if os.path.isfile(result_file):
@@ -190,30 +205,38 @@ def discover(names=None, pattern='*.py', skip='efp', dry_run=False,
                 case_name = unicode(case.__class__.__name__)
 
                 # whitelist
-                if len(names):
-                    if case_name in names:
-                        suite.addTest(case)
-                        logger.info('case[%s] added', case_name)
+                if len(names) and case_name not in names:
+                    logger.info('case[%s] skipped', case_name)
+                    continue
 
                 # skip cases
-                else:
-                    if case_name in log.keys():
-                        if (log[case_name]['passed'] and ('p' in skip)) \
-                            or (log[case_name]['passed'] is False and ('f' in skip)) \
-                            or (log[case_name]['passed'] is None and ('e' in skip)):
-                            logger.warning('case[%s] skipped', case_name)
-                            continue
+                if case_name in log.keys():
+                    if (log[case_name]['passed'] and ('p' in skip)) \
+                        or (log[case_name]['passed'] is False and ('f' in skip)) \
+                        or (log[case_name]['passed'] is None and ('e' in skip)):
+                        logger.warning('case[%s] skipped for its status[%s]', case_name, log[case_name]['passed'])
+                        continue
 
-                    # continue from
-                    if continue_from:
-                        if continue_from != case_name:
-                            logger.warning('case[%s] skipped', case_name)
-                            continue
-                        else:
-                            continue_from = None
+                # continue from
+                if continue_from:
+                    if continue_from != case_name:
+                        logger.warning('case[%s] skipped for continue from[%s]', case_name, continue_from)
+                        continue
+                    else:
+                        continue_from = None
 
-                    suite.addTest(case)
-                    logger.info('case[%s] added', case_name)
+                # black list
+                if case_name in excludes:
+                    logger.warning('case[%s] skipped for blacklist', case_name)
+                    continue
+
+                # max devices
+                if max_devices and case.golden_devices_required > max_devices:
+                    logger.warning('case[%s] skipped for exceeding max golden devices allowed[%d]', case_name, max_devices)
+                    continue
+
+                suite.addTest(case)
+                logger.info('case[%s] added', case_name)
 
     if auto_reboot:
         argv = []
@@ -226,7 +249,7 @@ def discover(names=None, pattern='*.py', skip='efp', dry_run=False,
         if manual_reset:
             argv.append('-m')
 
-        if delete_blacklist:
+        if delete_history:
             argv.append('-d')
 
         auto_reboot_args = argv + names
@@ -247,14 +270,16 @@ def main():
     parser = argparse.ArgumentParser(description='Thread harness test case runner')
     parser.add_argument('names', metavar='NAME', type=str, nargs='*', default=None,
                         help='test case name, omit to test all')
+    parser.add_argument('--blacklist', '-b', metavar='BLACKLIST_FILE', type=str,
+                        help='file to list test cases to skipt', default=None)
     parser.add_argument('--pattern', '-p', metavar='PATTERN', type=str,
                         help='file name pattern, default to "*.py"', default='*.py')
-    parser.add_argument('--delete-blacklist', '-d', action='store_true', default=False,
-                        help='clear blacklist on startup')
+    parser.add_argument('--delete-history', '-d', action='store_true', default=False,
+                        help='clear history on startup')
     parser.add_argument('--skip', '-k', metavar='SKIP', type=str,
                         help='type of results to skip.' \
                         'e for error, f for fail, p for pass. default to "efp"',
-                        default='efp')
+                        default='')
     parser.add_argument('--dry-run', '-n', action='store_true', default=False,
                         help='just show what to run')
     parser.add_argument('--result-file', '-o', type=str, default=settings.OUTPUT_PATH + '\\result.json',
@@ -269,6 +294,8 @@ def main():
                         help='reset devices manually')
     parser.add_argument('--list-devices', '-l', action='store_true', default=False,
                         help='list devices')
+    parser.add_argument('--max-devices', '-u', type=int, default=0,
+                        help='max golden devices allowed')
 
     args = vars(parser.parse_args())
 
@@ -282,7 +309,6 @@ def main():
             raise
         else:
             args['names'] = args['names'] + names
-
 
     args.pop('list_file')
     discover(**args)

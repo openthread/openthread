@@ -38,6 +38,7 @@
 
 #include <coap/coap_header.hpp>
 #include <coap/coap_server.hpp>
+#include <coap/coap_client.hpp>
 #include <common/timer.hpp>
 #include <common/trickle_timer.hpp>
 #include <mac/mac_frame.hpp>
@@ -219,7 +220,8 @@ public:
      * @param[in]  aStatus  The reason for requesting a Router ID.
      *
      * @retval kThreadError_None          Successfully generated an Address Solicit message.
-     * @retval kThreadError_InvalidState  Not currently an End Device.
+     * @retval kThreadError_NotCapable    Device is not capable of becoming a router
+     * @retval kThreadError_InvalidState  Thread is not enabled
      *
      */
     ThreadError BecomeRouter(ThreadStatusTlv::Status aStatus);
@@ -228,7 +230,8 @@ public:
      * This method causes the Thread interface to become a Leader and start a new partition.
      *
      * @retval kThreadError_None          Successfully become a Leader and started a new partition.
-     * @retval kThreadError_InvalidState  Either MLE is disabled or the interface is already a Leader.
+     * @retval kThreadError_NotCapable    Device is not capable of becoming a leader
+     * @retval kThreadError_InvalidState  Thread is not enabled
      *
      */
     ThreadError BecomeLeader(void);
@@ -684,9 +687,9 @@ private:
     ThreadError UpdateChildAddresses(const AddressRegistrationTlv &aTlv, Child &aChild);
     void UpdateRoutes(const RouteTlv &aTlv, uint8_t aRouterId);
 
-    static void HandleUdpReceive(void *aContext, otMessage aMessage, const otMessageInfo *aMessageInfo);
-    void HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
-    void HandleAddressSolicitResponse(Message &aMessage);
+    static void HandleAddressSolicitResponse(void *aContext, otCoapHeader *aHeader, otMessage aMessage,
+                                             ThreadError result);
+    void HandleAddressSolicitResponse(Coap::Header *aHeader, Message *aMessage, ThreadError result);
     static void HandleAddressRelease(void *aContext, Coap::Header &aHeader, Message &aMessage,
                                      const Ip6::MessageInfo &aMessageInfo);
     void HandleAddressRelease(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
@@ -724,7 +727,6 @@ private:
     Timer mStateUpdateTimer;
     Timer mDelayedResponseTimer;
 
-    Ip6::UdpSocket mSocket;
     Coap::Resource mAddressSolicit;
     Coap::Resource mAddressRelease;
 
@@ -748,8 +750,7 @@ private:
     uint8_t mPreviousRouterId;
 
     Coap::Server &mCoapServer;
-    uint8_t mCoapToken[2];
-    uint16_t mCoapMessageId;
+    Coap::Client &mCoapClient;
 };
 
 }  // namespace Mle

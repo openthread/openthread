@@ -36,6 +36,7 @@
 
 #include <openthread-core-config.h>
 #include <openthread-types.h>
+#include <coap/coap_client.hpp>
 #include <coap/coap_server.hpp>
 #include <net/udp6.hpp>
 
@@ -79,7 +80,7 @@ public:
      * @param[in] aCount        Number of types in aTlvTypes
      *
      */
-    ThreadError SendDiagnosticGet(const Ip6::Address &aDestination, uint8_t aTlvTypes[], uint8_t aCount);
+    ThreadError SendDiagnosticGet(const Ip6::Address &aDestination, const uint8_t aTlvTypes[], uint8_t aCount);
 
     /**
      * This method sends Diagnostic Reset request.
@@ -89,7 +90,7 @@ public:
      * @param[in] aCount        Number of types in aTlvTypes
      *
      */
-    ThreadError SendDiagnosticReset(const Ip6::Address &aDestination, uint8_t aTlvTypes[], uint8_t aCount);
+    ThreadError SendDiagnosticReset(const Ip6::Address &aDestination, const uint8_t aTlvTypes[], uint8_t aCount);
 
     /**
      * This method fills IPv6AddressListTlv.
@@ -108,8 +109,9 @@ public:
     ThreadError AppendChildTable(Message &aMessage);
 
 private:
-    static void HandleUdpReceive(void *aContext, otMessage aMessage, const otMessageInfo *aMessageInfo);
-    void HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    static void HandleDiagnosticGetResponse(void *aContext, otCoapHeader *aHeader, otMessage aMessage,
+                                            ThreadError result);
+    void HandleDiagnosticGetResponse(Coap::Header *aHeader, Message *aMessage, ThreadError result);
 
     static void HandleDiagnosticGet(void *aContext, Coap::Header &aHeader,
                                     Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
@@ -123,11 +125,9 @@ private:
 
     Coap::Resource mDiagnosticGet;
     Coap::Resource mDiagnosticReset;
-    Ip6::UdpSocket mSocket;
-
-    uint8_t mCoapToken[2];
-    uint16_t mCoapMessageId;
     Coap::Server &mCoapServer;
+    Coap::Client &mCoapClient;
+
     Mle::MleRouter &mMle;
     ThreadNetif &mNetif;
 };

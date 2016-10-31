@@ -66,13 +66,13 @@ namespace Mac {
  */
 enum
 {
-    kMinBE                = 3,                     ///< macMinBE (IEEE 802.15.4-2006)
-    kMaxBE                = 6,                     ///< macMaxBE (IEEE 802.15.4-2006)
+    kMinBE                = 1,                     ///< macMinBE (IEEE 802.15.4-2006)
+    kMaxBE                = 5,                     ///< macMaxBE (IEEE 802.15.4-2006)
     kMaxCSMABackoffs      = 4,                     ///< macMaxCSMABackoffs (IEEE 802.15.4-2006)
     kMaxFrameRetries      = 3,                     ///< macMaxFrameRetries (IEEE 802.15.4-2006)
     kUnitBackoffPeriod    = 20,                    ///< Number of symbols (IEEE 802.15.4-2006)
 
-    kMinBackoff           = 16,                    ///< Minimum backoff (milliseconds).
+    kMinBackoff           = 1,                     ///< Minimum backoff (milliseconds).
     kMaxFrameAttempts     = kMaxFrameRetries + 1,  ///< Number of transmission attempts.
 
     kAckTimeout           = 16,                    ///< Timeout for waiting on an ACK (milliseconds).
@@ -265,7 +265,7 @@ public:
      * @param[in]  aReceiver  A reference to the MAC receiver client.
      *
      * @retval kThreadError_None  Successfully registered the receiver.
-     * @retval kThreadError_Busy  The receiver was already registered.
+     * @retval kThreadError_Already  The receiver was already registered.
      *
      */
     ThreadError RegisterReceiver(Receiver &aReceiver);
@@ -276,7 +276,7 @@ public:
      * @param[in]  aSender  A reference to the MAC sender client.
      *
      * @retval kThreadError_None  Successfully registered the sender.
-     * @retval kThreadError_Busy  The sender was already registered.
+     * @retval kThreadError_Already  The sender was already registered.
      *
      */
     ThreadError SendFrameRequest(Sender &aSender);
@@ -294,10 +294,8 @@ public:
      *
      * @param[in]  aExtAddress  A reference to the IEEE 802.15.4 Extended Address.
      *
-     * @retval kThreadError_None  Successfully set the IEEE 802.15.4 Extended Address.
-     *
      */
-    ThreadError SetExtAddress(const ExtAddress &aExtAddress);
+    void SetExtAddress(const ExtAddress &aExtAddress);
 
     /**
      * This method gets the Hash Mac Address.
@@ -546,6 +544,15 @@ public:
      *
      */
     void ClearSrcMatchEntries();
+
+    /**
+     * This function indicates whether or not transmit retries and CSMA backoff logic is supported by the radio layer.
+     *
+     * @retval true   Retries and CSMA are supported by the radio.
+     * @retval false  Retries and CSMA are not supported by the radio.
+     *
+     */
+    bool RadioSupportsRetriesAndCsmaBackoff(void);
 
 private:
     enum ScanType

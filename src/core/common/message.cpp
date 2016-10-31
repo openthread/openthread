@@ -44,6 +44,9 @@ namespace Thread {
 
 MessagePool::MessagePool(void)
 {
+    memset(mBuffers, 0, sizeof(mBuffers));
+    memset(&mAll, 0, sizeof(mAll));
+
     mFreeBuffers = mBuffers;
 
     for (int i = 0; i < kNumBuffers - 1; i++)
@@ -53,6 +56,12 @@ MessagePool::MessagePool(void)
 
     mBuffers[kNumBuffers - 1].SetNextBuffer(NULL);
     mNumFreeBuffers = kNumBuffers;
+
+#if OPENTHREAD_CONFIG_PLATFORM_MESSAGE_MANAGEMENT
+    // Pass the list of free buffers and a pointer to the count of free buffers
+    // to the platform for management.
+    otPlatMessagePoolInit(static_cast<BufferHeader *>(mFreeBuffers), &mNumFreeBuffers, sizeof(Buffer));
+#endif
 }
 
 Message *MessagePool::New(uint8_t aType, uint16_t aReserved)
@@ -88,9 +97,19 @@ Buffer *MessagePool::NewBuffer(void)
 {
     Buffer *buffer = NULL;
 
-    if (mFreeBuffers == NULL)
+#if OPENTHREAD_CONFIG_PLATFORM_MESSAGE_MANAGEMENT
+    buffer = static_cast<Buffer *>(otPlatMessagePoolNew());
+
+    if (buffer == NULL)
     {
         otLogInfoMac("No available message buffer\n");
+    }
+
+#else // OPENTHREAD_CONFIG_PLATFORM_MESSAGE_MANAGEMENT
+
+    if (mFreeBuffers == NULL)
+    {
+        otLogInfoMac("No available message buffer");
         ExitNow();
     }
 
@@ -98,6 +117,7 @@ Buffer *MessagePool::NewBuffer(void)
     mFreeBuffers = mFreeBuffers->GetNextBuffer();
     buffer->SetNextBuffer(NULL);
     mNumFreeBuffers--;
+#endif // OPENTHREAD_CONFIG_PLATFORM_MESSAGE_MANAGEMENT
 
 exit:
     return buffer;
@@ -110,9 +130,13 @@ ThreadError MessagePool::FreeBuffers(Buffer *aBuffer)
     while (aBuffer != NULL)
     {
         tmpBuffer = aBuffer->GetNextBuffer();
+#if OPENTHREAD_CONFIG_PLATFORM_MESSAGE_MANAGEMENT
+        otPlatMessagePoolFree(static_cast<struct BufferHeader *>(aBuffer));
+#else // OPENTHREAD_CONFIG_PLATFORM_MESSAGE_MANAGEMENT
         aBuffer->SetNextBuffer(mFreeBuffers);
         mFreeBuffers = aBuffer;
         mNumFreeBuffers++;
+#endif // OPENTHREAD_CONFIG_PLATFORM_MESSAGE_MANAGEMENT
         aBuffer = tmpBuffer;
     }
 
@@ -209,7 +233,7 @@ ThreadError Message::MoveOffset(int aDelta)
     assert(GetOffset() + aDelta <= GetLength());
     VerifyOrExit(GetOffset() + aDelta <= GetLength(), error = kThreadError_InvalidArgs);
 
-    mInfo.mOffset += static_cast<uint16_t>(aDelta);
+    mInfo.mOffset += static_cast<int16_t>(aDelta);
     assert(mInfo.mOffset <= GetLength());
 
 exit:
@@ -268,17 +292,55 @@ exit:
 ThreadError Message::Prepend(const void *aBuf, uint16_t aLength)
 {
     ThreadError error = kThreadError_None;
+    Buffer *newBuffer = NULL;
 
-    VerifyOrExit(aLength <= GetReserved(), error = kThreadError_NoBufs);
+    while (aLength > GetReserved())
+    {
+        VerifyOrExit((newBuffer = GetMessagePool()->NewBuffer()) != NULL, error = kThreadError_NoBufs);
+
+        newBuffer->SetNextBuffer(GetNextBuffer());
+        SetNextBuffer(newBuffer);
+
+        if (GetReserved() < sizeof(mHeadData))
+        {
+            // Copy payload from the first buffer.
+            memcpy(newBuffer->mHeadData + GetReserved(), mHeadData + GetReserved(),
+                   sizeof(mHeadData) - GetReserved());
+        }
+
+        SetReserved(GetReserved() + kBufferDataSize);
+    }
 
     SetReserved(GetReserved() - aLength);
     mInfo.mLength += aLength;
     SetOffset(GetOffset() + aLength);
 
-    Write(0, aLength, aBuf);
+    if (aBuf != NULL)
+    {
+        Write(0, aLength, aBuf);
+    }
 
 exit:
     return error;
+}
+
+ThreadError Message::RemoveHeader(uint16_t aLength)
+{
+    assert(aLength <= mInfo.mLength);
+
+    mInfo.mReserved += aLength;
+    mInfo.mLength -= aLength;
+
+    if (mInfo.mOffset > aLength)
+    {
+        mInfo.mOffset -= aLength;
+    }
+    else
+    {
+        mInfo.mOffset = 0;
+    }
+
+    return kThreadError_None;
 }
 
 uint16_t Message::Read(uint16_t aOffset, uint16_t aLength, void *aBuf) const
@@ -453,6 +515,32 @@ int Message::CopyTo(uint16_t aSourceOffset, uint16_t aDestinationOffset, uint16_
     }
 
     return bytesCopied;
+}
+
+Message *Message::Clone(uint16_t aLength) const
+{
+    ThreadError error = kThreadError_None;
+    Message *messageCopy;
+
+    VerifyOrExit((messageCopy = GetMessagePool()->New(GetType(), GetReserved())) != NULL, error = kThreadError_NoBufs);
+    SuccessOrExit(error = messageCopy->SetLength(aLength));
+    CopyTo(0, 0, aLength, *messageCopy);
+
+    // Copy selected message information.
+    messageCopy->SetOffset(GetOffset());
+    messageCopy->SetInterfaceId(GetInterfaceId());
+    messageCopy->SetSubType(GetSubType());
+    messageCopy->SetLinkSecurityEnabled(IsLinkSecurityEnabled());
+
+exit:
+
+    if (error != kThreadError_None && messageCopy != NULL)
+    {
+        messageCopy->Free();
+        messageCopy = NULL;
+    }
+
+    return messageCopy;
 }
 
 uint16_t Message::GetDatagramTag(void) const

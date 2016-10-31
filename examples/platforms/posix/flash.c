@@ -53,9 +53,12 @@ enum
 ThreadError otPlatFlashInit(void)
 {
     ThreadError error = kThreadError_None;
-    char fileName[16];
+    char fileName[20];
     struct stat st;
     bool create = false;
+    struct timeval tv;
+
+    gettimeofday(&tv, NULL);
 
     memset(&st, 0, sizeof(st));
 
@@ -64,7 +67,7 @@ ThreadError otPlatFlashInit(void)
         mkdir("tmp", 0777);
     }
 
-    snprintf(fileName, sizeof(fileName), "tmp/%d.flash", NODE_ID);
+    snprintf(fileName, sizeof(fileName), "tmp/%d_%d.flash", NODE_ID, (uint32_t)tv.tv_usec);
 
     if (access(fileName, 0))
     {

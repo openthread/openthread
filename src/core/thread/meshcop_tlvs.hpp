@@ -942,7 +942,7 @@ public:
      * This method initializes the TLV.
      *
      */
-    void Init(void) { SetType(kActiveTimestamp); SetLength(sizeof(*this) - sizeof(Tlv)); }
+    void Init(void) { SetType(kActiveTimestamp); SetLength(sizeof(*this) - sizeof(Tlv)); Timestamp::Init(); }
 
     /**
      * This method indicates whether or not the TLV appears to be well-formed.
@@ -1192,7 +1192,7 @@ public:
      * This method initializes the TLV.
      *
      */
-    void Init(void) { SetType(kPendingTimestamp); SetLength(sizeof(*this) - sizeof(Tlv)); }
+    void Init(void) { SetType(kPendingTimestamp); SetLength(sizeof(*this) - sizeof(Tlv)); Timestamp::Init(); }
 
     /**
      * This method indicates whether or not the TLV appears to be well-formed.
@@ -1347,6 +1347,45 @@ public:
      *
      */
     bool IsValid(void) const { return true; }
+} OT_TOOL_PACKED_END;
+
+/**
+ * This class implements Channel Mask TLV generation and parsing.
+ *
+ */
+OT_TOOL_PACKED_BEGIN
+class ChannelMask0Tlv: public ChannelMaskTlv, public ChannelMaskEntry
+{
+public:
+    /**
+     * This method initializes the TLV.
+     *
+     */
+    void Init(void) {
+        SetType(kChannelMask);
+        SetLength(sizeof(*this) - sizeof(Tlv));
+        SetChannelPage(0);
+        SetMaskLength(sizeof(mMask));
+    }
+
+    /**
+     * This method returns the Channel Mask value.
+     *
+     * @returns The Channel Mask value.
+     *
+     */
+    uint32_t GetMask(void) { return Thread::Encoding::LittleEndian::HostSwap32(mMask); }
+
+    /**
+     * This method sets the Channel Mask value.
+     *
+     * @param[in]  aMask  The Channel Mask value.
+     *
+     */
+    void SetMask(uint32_t aMask) { mMask = Thread::Encoding::LittleEndian::HostSwap32(aMask); }
+
+private:
+    uint32_t mMask;
 } OT_TOOL_PACKED_END;
 
 /**

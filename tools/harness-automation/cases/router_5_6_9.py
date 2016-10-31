@@ -32,7 +32,7 @@ from autothreadharness.harness_case import HarnessCase
 import unittest
 
 class Router_5_6_9(HarnessCase):
-    suite = 2
+    role = HarnessCase.ROLE_ROUTER
     case = '5 6 9'
     golden_devices_required = 4
     def on_dialog(self, dialog, title):

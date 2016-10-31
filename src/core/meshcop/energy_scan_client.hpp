@@ -37,6 +37,7 @@
 #include <openthread-core-config.h>
 #include <openthread-types.h>
 #include <commissioning/commissioner.h>
+#include <coap/coap_client.hpp>
 #include <coap/coap_server.hpp>
 #include <net/ip6_address.hpp>
 #include <net/udp6.hpp>
@@ -81,19 +82,15 @@ private:
                              const Ip6::MessageInfo &aMessageInfo);
     void HandleReport(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
-    static void HandleUdpReceive(void *aContext, otMessage aMessage, const otMessageInfo *aMessageInfo);
-
     ThreadError SendResponse(const Coap::Header &aRequestHeader, const Ip6::MessageInfo &aRequestMessageInfo);
 
     otCommissionerEnergyReportCallback mCallback;
     void *mContext;
 
     Coap::Resource mEnergyScan;
-    Ip6::UdpSocket mSocket;
-
     Coap::Server &mCoapServer;
-    uint8_t mCoapToken[2];
-    uint16_t mCoapMessageId;
+    Coap::Client &mCoapClient;
+
     ThreadNetif &mNetif;
 };
 

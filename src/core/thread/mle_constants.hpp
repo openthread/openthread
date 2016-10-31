@@ -118,6 +118,16 @@ enum
     kMinAssignedLinkMargin0     = 0x00, ///< minimal link margin for LQI 0 (0 - 2)
 };
 
+/**
+ * Multicast Forwarding Constants
+ *
+ */
+enum
+{
+    kMplChildDataMessageTimerExpirations  = 0, ///< Number of MPL retransmissions for Children.
+    kMplRouterDataMessageTimerExpirations = 2, ///< Number of MPL retransmissions for Routers.
+};
+
 }  // namespace Mle
 
 /**

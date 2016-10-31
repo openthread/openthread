@@ -36,6 +36,7 @@
 
 #include <openthread-core-config.h>
 #include <openthread-types.h>
+#include <coap/coap_client.hpp>
 #include <coap/coap_server.hpp>
 #include <common/timer.hpp>
 #include <net/ip6_address.hpp>

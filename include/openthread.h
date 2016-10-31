@@ -59,6 +59,7 @@ extern "C" {
  * @defgroup messages Message Buffers
  * @defgroup ip6 IPv6
  * @defgroup udp UDP
+ * @defgroup coap CoAP
  *
  * @}
  *
@@ -175,7 +176,7 @@ const char *otGetVersionString(void);
  * @retval otInstance*  The new OpenThread instance structure.
  *
  */
-otInstance *otInstanceInit(void *aInstanceBuffer, uint64_t *aInstanceBufferSize);
+otInstance *otInstanceInit(void *aInstanceBuffer, size_t *aInstanceBufferSize);
 #else
 /**
  * This function initializes the static instance of the OpenThread library.
@@ -206,8 +207,8 @@ void otInstanceFinalize(otInstance *aInstance);
  *
  * @param[in] aInstance A pointer to an OpenThread instance.
  *
- * @retval kThreadError_None          Successfully enabled the IPv6 interface.
- * @retval kThreadError_InvalidState  OpenThread is not enabled or the IPv6 interface is already up.
+ * @retval kThreadError_None          Successfully enabled the IPv6 interface,
+ *                                    or the interface was already enabled.
  *
  */
 ThreadError otInterfaceUp(otInstance *aInstance);
@@ -219,8 +220,8 @@ ThreadError otInterfaceUp(otInstance *aInstance);
  *
  * @param[in] aInstance A pointer to an OpenThread instance.
  *
- * @retval kThreadError_None          Successfully brought the interface down.
- * @retval kThreadError_InvalidState  The interface was not up.
+ * @retval kThreadError_None          Successfully brought the interface down,
+ *                                    or the interface was already down.
  *
  */
 ThreadError otInterfaceDown(otInstance *aInstance);
@@ -244,7 +245,7 @@ bool otIsInterfaceUp(otInstance *aInstance);
  * @param[in] aInstance A pointer to an OpenThread instance.
  *
  * @retval kThreadError_None          Successfully started Thread protocol operation.
- * @retval kThreadError_InvalidState  Thread protocol operation is already started or the interface is not up.
+ * @retval kThreadError_InvalidState  The network interface was not not up.
  *
  */
 ThreadError otThreadStart(otInstance *aInstance);
@@ -255,7 +256,6 @@ ThreadError otThreadStart(otInstance *aInstance);
  * @param[in] aInstance A pointer to an OpenThread instance.
  *
  * @retval kThreadError_None          Successfully stopped Thread protocol operation.
- * @retval kThreadError_InvalidState  The Thread protocol operation was not started.
  *
  */
 ThreadError otThreadStop(otInstance *aInstance);
@@ -430,14 +430,17 @@ uint8_t otGetMaxAllowedChildren(otInstance *aInstance);
 /**
  * Set the maximum number of children currently allowed.
  *
+ * This parameter can only be set when Thread protocol operation
+ * has been stopped.
+ *
  * @param[in]  aInstance     A pointer to an OpenThread instance.
  * @param[in]  aMaxChildren  The maximum allowed children.
  *
  * @retval  kThreadErrorNone           Successfully set the max.
  * @retval  kThreadError_InvalidArgs   If @p aMaxChildren is not in the range [1, OPENTHREAD_CONFIG_MAX_CHILDREN].
- * @retval  kThreadError_InvalidState  If Thread has already been started.
+ * @retval  kThreadError_InvalidState  If Thread isn't stopped.
  *
- * @sa otGetMaxAllowedChildren
+ * @sa otGetMaxAllowedChildren, otThreadStop
  */
 ThreadError otSetMaxAllowedChildren(otInstance *aInstance, uint8_t aMaxChildren);
 
@@ -866,8 +869,21 @@ typedef void (*otStateChangedCallback)(uint32_t aFlags, void *aContext);
  * @param[in]  aCallback  A pointer to a function that is called with certain configuration or state changes.
  * @param[in]  aContext   A pointer to application-specific context.
  *
+ * @retval kThreadError_None    Added the callback to the list of callbacks.
+ * @retval kThreadError_NoBufs  Could not add the callback due to resource constraints.
+ *
  */
-void otSetStateChangedCallback(otInstance *aInstance, otStateChangedCallback aCallback, void *aContext);
+ThreadError otSetStateChangedCallback(otInstance *aInstance, otStateChangedCallback aCallback, void *aContext);
+
+/**
+ * This function removes a callback to indicate when certain configuration or state changes within OpenThread.
+ *
+ * @param[in]  aInstance  A pointer to an OpenThread instance.
+ * @param[in]  aCallback  A pointer to a function that is called with certain configuration or state changes.
+ * @param[in]  aContext   A pointer to application-specific context.
+ *
+ */
+void otRemoveStateChangeCallback(otInstance *aInstance, otStateChangedCallback aCallback, void *aCallbackContext);
 
 /**
  * This function gets the Active Operational Dataset.
@@ -892,7 +908,7 @@ ThreadError otGetActiveDataset(otInstance *aInstance, otOperationalDataset *aDat
  * @retval kThreadError_InvalidArgs  @p aDataset was NULL.
  *
  */
-ThreadError otSetActiveDataset(otInstance *aInstance, otOperationalDataset *aDataset);
+ThreadError otSetActiveDataset(otInstance *aInstance, const otOperationalDataset *aDataset);
 
 /**
  * This function gets the Pending Operational Dataset.
@@ -917,7 +933,7 @@ ThreadError otGetPendingDataset(otInstance *aInstance, otOperationalDataset *aDa
  * @retval kThreadError_InvalidArgs  @p aDataset was NULL.
  *
  */
-ThreadError otSetPendingDataset(otInstance *aInstance, otOperationalDataset *aDataset);
+ThreadError otSetPendingDataset(otInstance *aInstance, const otOperationalDataset *aDataset);
 
 /**
  * This function sends MGMT_ACTIVE_GET.
@@ -1269,6 +1285,28 @@ uint32_t otGetKeySequenceCounter(otInstance *aInstance);
 void otSetKeySequenceCounter(otInstance *aInstance, uint32_t aKeySequenceCounter);
 
 /**
+ * Get the thrKeySwitchGuardTime
+ *
+ * @param[in]  aInstance A pointer to an OpenThread instance.
+ *
+ * @returns The thrKeySwitchGuardTime value (in hours).
+ *
+ * @sa otSetKeySwitchGuardTime
+ */
+uint32_t otGetKeySwitchGuardTime(otInstance *aInstance);
+
+/**
+ * Set the thrKeySwitchGuardTime
+ *
+ * @param[in]  aInstance            A pointer to an OpenThread instance.
+ * @param[in]  aKeySwitchGuardTime  The thrKeySwitchGuardTime value (in hours).
+ *
+ * @sa otGetKeySwitchGuardTime
+ */
+void otSetKeySwitchGuardTime(otInstance *aInstance, uint32_t aKeySwitchGuardTime);
+
+
+/**
  * Get the NETWORK_ID_TIMEOUT parameter used in the Router role.
  *
  * @param[in]  aInstance A pointer to an OpenThread instance.
@@ -1450,8 +1488,8 @@ bool otIsMacWhitelistEnabled(otInstance *aInstance);
  *
  * @param[in]  aInstance A pointer to an OpenThread instance.
  *
- * @retval kThreadErrorNone    Successfully detached from the Thread network.
- * @retval kThreadErrorBusy    Thread is disabled.
+ * @retval kThreadErrorNone          Successfully detached from the Thread network.
+ * @retval kThreadErrorInvalidState  Thread is disabled.
  */
 ThreadError otBecomeDetached(otInstance *aInstance);
 
@@ -1461,8 +1499,8 @@ ThreadError otBecomeDetached(otInstance *aInstance);
  * @param[in]  aInstance A pointer to an OpenThread instance.
  * @param[in]  aFilter   Identifies whether to join any, same, or better partition.
  *
- * @retval kThreadErrorNone    Successfully begin attempt to become a child.
- * @retval kThreadErrorBusy    Thread is disabled or in the middle of an attach process.
+ * @retval kThreadErrorNone          Successfully begin attempt to become a child.
+ * @retval kThreadErrorInvalidState  Thread is disabled.
  */
 ThreadError otBecomeChild(otInstance *aInstance, otMleAttachFilter aFilter);
 
@@ -1471,8 +1509,8 @@ ThreadError otBecomeChild(otInstance *aInstance, otMleAttachFilter aFilter);
  *
  * @param[in]  aInstance A pointer to an OpenThread instance.
  *
- * @retval kThreadErrorNone    Successfully begin attempt to become a router.
- * @retval kThreadErrorBusy    Thread is disabled or already operating in a router or leader role.
+ * @retval kThreadErrorNone         Successfully begin attempt to become a router.
+ * @retval kThreadErrorInvalidState Thread is disabled.
  */
 ThreadError otBecomeRouter(otInstance *aInstance);
 
@@ -1481,7 +1519,8 @@ ThreadError otBecomeRouter(otInstance *aInstance);
  *
  * @param[in]  aInstance A pointer to an OpenThread instance.
  *
- * @retval kThreadErrorNone  Successfully became a leader and started a new partition.
+ * @retval kThreadErrorNone          Successfully became a leader and started a new partition.
+ * @retval kThreadErrorInvalidState  Thread is disabled.
  */
 ThreadError otBecomeLeader(otInstance *aInstance);
 
@@ -1617,6 +1656,13 @@ void otSetAssignLinkQuality(otInstance *aInstance, const uint8_t *aExtAddr, uint
  * @param[in]  aInstance A pointer to an OpenThread instance.
  */
 void otPlatformReset(otInstance *aInstance);
+
+/**
+ * This method deletes all the settings stored on non-volatile memory, and then triggers platform reset.
+ *
+ * @param[in]  aInstance A pointer to an OpenThread instance.
+ */
+void otFactoryReset(otInstance *aInstance);
 
 /**
  * Get the ROUTER_DOWNGRADE_THRESHOLD parameter used in the Router role.
@@ -1878,8 +1924,9 @@ bool otIsLinkPromiscuous(otInstance *aInstance);
  * @param[in]  aInstance     A pointer to an OpenThread instance.
  * @param[in]  aPromiscuous  true to enable promiscuous mode, or false otherwise.
  *
- * @retval kThreadError_None  Successfully enabled promiscuous mode.
- * @retval kThreadError_Busy  Could not enable promiscuous mode because the Thread interface is enabled.
+ * @retval kThreadError_None          Successfully enabled promiscuous mode.
+ * @retval kThreadError_InvalidState  Could not enable promiscuous mode because
+ *                                    the Thread interface is enabled.
  *
  */
 ThreadError otSetLinkPromiscuous(otInstance *aInstance, bool aPromiscuous);
@@ -2127,16 +2174,16 @@ typedef void (*otReceiveIp6DatagramCallback)(otMessage aMessage, void *aContext)
 /**
  * This function registers a callback to provide received IPv6 datagrams.
  *
- * By default, this callback does not pass Thread control traffic.  See otSetReceiveIp6FilterEnabled() to change
- * the Thread control traffic filter setting.
+ * By default, this callback does not pass Thread control traffic.  See otSetReceiveIp6DatagramFilterEnabled() to
+ * change the Thread control traffic filter setting.
  *
  * @param[in]  aInstance         A pointer to an OpenThread instance.
  * @param[in]  aCallback         A pointer to a function that is called when an IPv6 datagram is received or
  *                               NULL to disable the callback.
  * @param[in]  aCallbackContext  A pointer to application-specific context.
  *
- * @sa otIsReceiveIp6FilterEnabled
- * @sa otSetReceiveIp6FilterEnabled
+ * @sa otIsReceiveIp6DatagramFilterEnabled
+ * @sa otSetReceiveIp6DatagramFilterEnabled
  *
  */
 void otSetReceiveIp6DatagramCallback(otInstance *aInstance, otReceiveIp6DatagramCallback aCallback,
@@ -2150,8 +2197,8 @@ void otSetReceiveIp6DatagramCallback(otInstance *aInstance, otReceiveIp6Datagram
  *
  * @returns  TRUE if Thread control traffic is filtered out, FALSE otherwise.
  *
- * @sa otSetReceiveDatagramCallback
- * @sa otSetReceiveIp6FilterEnabled
+ * @sa otSetReceiveIp6DatagramCallback
+ * @sa otSetReceiveIp6DatagramFilterEnabled
  *
  */
 bool otIsReceiveIp6DatagramFilterEnabled(otInstance *aInstance);
@@ -2163,8 +2210,8 @@ bool otIsReceiveIp6DatagramFilterEnabled(otInstance *aInstance);
  * @param[in]  aInstance A pointer to an OpenThread instance.
  * @param[in]  aEnabled  TRUE if Thread control traffic is filtered out, FALSE otherwise.
  *
- * @sa otSetReceiveDatagramCallback
- * @sa otIsReceiveIp6FilterEnabled
+ * @sa otSetReceiveIp6DatagramCallback
+ * @sa otIsReceiveIp6DatagramFilterEnabled
  *
  */
 void otSetReceiveIp6DatagramFilterEnabled(otInstance *aInstance, bool aEnabled);
@@ -2227,13 +2274,14 @@ uint8_t otIp6PrefixMatch(const otIp6Address *aFirst, const otIp6Address *aSecond
 /**
  * Allocate a new message buffer for sending a UDP message.
  *
- * @param[in]  aInstance A pointer to an OpenThread instance.
+ * @param[in]  aInstance             A pointer to an OpenThread instance.
+ * @param[in]  aLinkSecurityEnabled  TRUE if the message should be secured at Layer 2.
  *
  * @returns A pointer to the message buffer or NULL if no message buffers are available.
  *
  * @sa otFreeMessage
  */
-otMessage otNewUdpMessage(otInstance *aInstance);
+otMessage otNewUdpMessage(otInstance *aInstance, bool aLinkSecurityEnabled);
 
 /**
  * Open a UDP/IPv6 socket.
@@ -2243,8 +2291,8 @@ otMessage otNewUdpMessage(otInstance *aInstance);
  * @param[in]  aCallback  A pointer to the application callback function.
  * @param[in]  aContext   A pointer to application-specific context.
  *
- * @retval kThreadErrorNone  Successfully opened the socket.
- * @retval kThreadErrorBusy  Socket is already opened.
+ * @retval kThreadErrorNone         Successfully opened the socket.
+ * @retval kThreadErrorInvalidArgs  Given socket structure was already opened.
  *
  * @sa otNewUdpMessage
  * @sa otCloseUdpSocket
@@ -2304,7 +2352,8 @@ ThreadError otSendUdp(otUdpSocket *aSocket, otMessage aMessage, const otMessageI
  * @param[in]  aTlvTypes      An array of Network Diagnostic TLV types.
  * @param[in]  aCount         Number of types in aTlvTypes
  */
-ThreadError otSendDiagnosticGet(otInstance *aInstance, otIp6Address *aDestination, uint8_t aTlvTypes[], uint8_t aCount);
+ThreadError otSendDiagnosticGet(otInstance *aInstance, const otIp6Address *aDestination, const uint8_t aTlvTypes[],
+                                uint8_t aCount);
 
 /**
  * Send a Network Diagnostic Reset request
@@ -2314,7 +2363,7 @@ ThreadError otSendDiagnosticGet(otInstance *aInstance, otIp6Address *aDestinatio
  * @param[in]  aTlvTypes      An array of Network Diagnostic TLV types. Currently only Type 9 is allowed.
  * @param[in]  aCount         Number of types in aTlvTypes
  */
-ThreadError otSendDiagnosticReset(otInstance *aInstance, otIp6Address *aDestination, uint8_t aTlvTypes[],
+ThreadError otSendDiagnosticReset(otInstance *aInstance, const otIp6Address *aDestination, const uint8_t aTlvTypes[],
                                   uint8_t aCount);
 
 /**

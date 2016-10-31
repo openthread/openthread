@@ -90,11 +90,12 @@ ThreadError MeshForwarder::Start()
 {
     ThreadError error = kThreadError_None;
 
-    VerifyOrExit(mEnabled == false, error = kThreadError_Busy);
-    mMac.SetRxOnWhenIdle(true);
-    mEnabled = true;
+    if (mEnabled == false)
+    {
+        mMac.SetRxOnWhenIdle(true);
+        mEnabled = true;
+    }
 
-exit:
     return error;
 }
 
@@ -103,7 +104,7 @@ ThreadError MeshForwarder::Stop()
     ThreadError error = kThreadError_None;
     Message *message;
 
-    VerifyOrExit(mEnabled == true, error = kThreadError_Busy);
+    VerifyOrExit(mEnabled == true,);
 
     mPollTimer.Stop();
     mReassemblyTimer.Stop();
@@ -250,8 +251,8 @@ ThreadError MeshForwarder::AddSrcMatchEntry(Child &aChild)
     ThreadError error = kThreadError_NoBufs;
     Mac::Address macAddr;
 
-    otLogDebgMac("Queuing for child (0x%x)\n", aChild.mValid.mRloc16);
-    otLogDebgMac("SrcMatch %d (0:Dis, 1:En))\n", mSrcMatchEnabled);
+    otLogDebgMac("Queuing for child (0x%x)", aChild.mValid.mRloc16);
+    otLogDebgMac("SrcMatch %d (0:Dis, 1:En))", mSrcMatchEnabled);
 
     // first queued message, to be added into source match table
     if (aChild.mQueuedIndirectMessageCnt == 1)
@@ -293,7 +294,7 @@ exit:
 void MeshForwarder::ClearSrcMatchEntry(Child &aChild)
 {
     Mac::Address macAddr;
-    otLogDebgMac("SrcMatch %d (0:Dis, 1:En))\n", mSrcMatchEnabled);
+    otLogDebgMac("SrcMatch %d (0:Dis, 1:En))", mSrcMatchEnabled);
 
     if (aChild.mAddSrcMatchEntryShort)
     {
@@ -587,6 +588,7 @@ ThreadError MeshForwarder::UpdateIp6Route(Message &aMessage)
     ThreadError error = kThreadError_None;
     Ip6::Header ip6Header;
     uint16_t rloc16;
+    uint16_t aloc16;
     Neighbor *neighbor;
 
     mAddMeshHeader = false;
@@ -651,6 +653,21 @@ ThreadError MeshForwarder::UpdateIp6Route(Message &aMessage)
                 rloc16 = HostSwap16(ip6Header.GetDestination().mFields.m16[7]);
                 VerifyOrExit(mMle.IsRouterIdValid(mMle.GetRouterId(rloc16)), error = kThreadError_Drop);
                 mMeshDest = rloc16;
+            }
+            else if (mMle.IsAnycastLocator(ip6Header.GetDestination()))
+            {
+                // only support Leader ALOC for now
+                aloc16 = HostSwap16(ip6Header.GetDestination().mFields.m16[7]);
+
+                if (aloc16 == Mle::kAloc16Leader)
+                {
+                    mMeshDest = mMle.GetRloc16(mMle.GetLeaderId());
+                }
+                else
+                {
+                    // TODO: support ALOC for DHCPv6 Agent, Service, Commissioner, Neighbor Discovery Agent
+                    ExitNow(error = kThreadError_Drop);
+                }
             }
             else if ((neighbor = mMle.GetNeighbor(ip6Header.GetDestination())) != NULL)
             {
@@ -764,7 +781,7 @@ void MeshForwarder::HandlePollTimer()
     if ((message = mNetif.GetIp6().mMessagePool.New(Message::kTypeMacDataPoll, 0)) != NULL)
     {
         SendMessage(*message);
-        otLogInfoMac("Sent poll\n");
+        otLogInfoMac("Sent poll");
     }
 
     mPollTimer.Start(mPollPeriod);
@@ -1222,7 +1239,7 @@ void MeshForwarder::HandleSentFrame(Mac::Frame &aFrame, ThreadError aError)
             if ((child->mMode & Mle::ModeTlv::kModeRxOnWhenIdle) == 0)
             {
                 child->mQueuedIndirectMessageCnt--;
-                otLogDebgMac("Sent to child (0x%x), still queued message (%d)\n",
+                otLogDebgMac("Sent to child (0x%x), still queued message (%d)",
                              child->mValid.mRloc16, child->mQueuedIndirectMessageCnt);
 
                 if (child->mQueuedIndirectMessageCnt == 0)
@@ -1331,6 +1348,7 @@ void MeshForwarder::HandleReceivedFrame(Mac::Frame &aFrame, ThreadError aError)
     Ip6::Address destination;
     uint8_t commandId;
     Child *child = NULL;
+    ThreadError error = kThreadError_None;
 
 #if 0
     dump("received frame", aFrame.GetHeader(), aFrame.GetLength());
@@ -1338,10 +1356,10 @@ void MeshForwarder::HandleReceivedFrame(Mac::Frame &aFrame, ThreadError aError)
 
     if (!mEnabled)
     {
-        ExitNow();
+        ExitNow(error = kThreadError_InvalidState);
     }
 
-    SuccessOrExit(aFrame.GetSrcAddr(macSource));
+    SuccessOrExit(error = aFrame.GetSrcAddr(macSource));
 
     if (aError == kThreadError_Security)
     {
@@ -1361,11 +1379,11 @@ void MeshForwarder::HandleReceivedFrame(Mac::Frame &aFrame, ThreadError aError)
             break;
 
         default:
-            ExitNow();
+            ExitNow(error = kThreadError_Parse);
         }
 
         mMle.SendLinkReject(destination);
-        ExitNow();
+        ExitNow(error = kThreadError_Security);
     }
 
     SuccessOrExit(aFrame.GetDstAddr(macDest));
@@ -1424,7 +1442,11 @@ void MeshForwarder::HandleReceivedFrame(Mac::Frame &aFrame, ThreadError aError)
     }
 
 exit:
-    {}
+
+    if (error != kThreadError_None)
+    {
+        otLogDebgMacErr(error, "Dropping received frame");
+    }
 }
 
 void MeshForwarder::HandleMesh(uint8_t *aFrame, uint8_t aFrameLength, const ThreadMessageInfo &aMessageInfo)
@@ -1436,7 +1458,7 @@ void MeshForwarder::HandleMesh(uint8_t *aFrame, uint8_t aFrameLength, const Thre
     Lowpan::MeshHeader *meshHeader = reinterpret_cast<Lowpan::MeshHeader *>(aFrame);
 
     // Security Check: only process Mesh Header frames that had security enabled.
-    VerifyOrExit(aMessageInfo.mLinkSecurity && meshHeader->IsValid(), error = kThreadError_Drop);
+    VerifyOrExit(aMessageInfo.mLinkSecurity && meshHeader->IsValid(), error = kThreadError_Security);
 
     meshSource.mLength = sizeof(meshSource.mShortAddress);
     meshSource.mShortAddress = meshHeader->GetSource();
@@ -1458,7 +1480,7 @@ void MeshForwarder::HandleMesh(uint8_t *aFrame, uint8_t aFrameLength, const Thre
         }
         else
         {
-            ExitNow();
+            ExitNow(error = kThreadError_Parse);
         }
     }
     else if (meshHeader->GetHopsLeft() > 0)
@@ -1468,7 +1490,7 @@ void MeshForwarder::HandleMesh(uint8_t *aFrame, uint8_t aFrameLength, const Thre
         meshHeader->SetHopsLeft(meshHeader->GetHopsLeft() - 1);
 
         VerifyOrExit((message = mNetif.GetIp6().mMessagePool.New(Message::kType6lowpan, 0)) != NULL,
-                     error = kThreadError_Drop);
+                     error = kThreadError_NoBufs);
         SuccessOrExit(error = message->SetLength(aFrameLength));
         message->Write(0, aFrameLength, aFrame);
         message->SetLinkSecurityEnabled(aMessageInfo.mLinkSecurity);
@@ -1479,9 +1501,14 @@ void MeshForwarder::HandleMesh(uint8_t *aFrame, uint8_t aFrameLength, const Thre
 
 exit:
 
-    if (error != kThreadError_None && message != NULL)
+    if (error != kThreadError_None)
     {
-        message->Free();
+        otLogDebgMacErr(error, "Dropping received mesh frame");
+
+        if (message != NULL)
+        {
+            message->Free();
+        }
     }
 }
 
@@ -1534,14 +1561,13 @@ void MeshForwarder::HandleFragment(uint8_t *aFrame, uint8_t aFrameLength,
         message->SetLinkSecurityEnabled(aMessageInfo.mLinkSecurity);
         message->SetPanId(aMessageInfo.mPanId);
         headerLength = mLowpan.Decompress(*message, aMacSource, aMacDest, aFrame, aFrameLength, datagramLength);
-        VerifyOrExit(headerLength > 0, error = kThreadError_NoBufs);
+        VerifyOrExit(headerLength > 0, error = kThreadError_Parse);
 
         aFrame += headerLength;
         aFrameLength -= static_cast<uint8_t>(headerLength);
 
-        VerifyOrExit(message->SetLength(datagramLength) == kThreadError_None, error = kThreadError_NoBufs);
-        datagramLength = HostSwap16(datagramLength - sizeof(Ip6::Header));
-        message->Write(Ip6::Header::GetPayloadLengthOffset(), sizeof(datagramLength), &datagramLength);
+        SuccessOrExit(error = message->SetLength(datagramLength));
+
         message->SetDatagramTag(datagramTag);
         message->SetTimeout(kReassemblyTimeout);
 
@@ -1593,9 +1619,14 @@ exit:
             HandleDatagram(*message, aMessageInfo);
         }
     }
-    else if (message != NULL)
+    else
     {
-        message->Free();
+        otLogDebgMacErr(error, "Dropping received fragment");
+
+        if (message != NULL)
+        {
+            message->Free();
+        }
     }
 }
 
@@ -1638,7 +1669,6 @@ void MeshForwarder::HandleLowpanHC(uint8_t *aFrame, uint8_t aFrameLength,
     ThreadError error = kThreadError_None;
     Message *message;
     int headerLength;
-    uint16_t ip6PayloadLength;
 
     VerifyOrExit((message = mNetif.GetIp6().mMessagePool.New(Message::kTypeIp6, 0)) != NULL,
                  error = kThreadError_NoBufs);
@@ -1646,16 +1676,12 @@ void MeshForwarder::HandleLowpanHC(uint8_t *aFrame, uint8_t aFrameLength,
     message->SetPanId(aMessageInfo.mPanId);
 
     headerLength = mLowpan.Decompress(*message, aMacSource, aMacDest, aFrame, aFrameLength, 0);
-    VerifyOrExit(headerLength > 0, error = kThreadError_Drop);
+    VerifyOrExit(headerLength > 0, error = kThreadError_Parse);
 
     aFrame += headerLength;
     aFrameLength -= static_cast<uint8_t>(headerLength);
 
     SuccessOrExit(error = message->SetLength(message->GetLength() + aFrameLength));
-
-    ip6PayloadLength = HostSwap16(message->GetLength() - sizeof(Ip6::Header));
-    message->Write(Ip6::Header::GetPayloadLengthOffset(), sizeof(ip6PayloadLength), &ip6PayloadLength);
-
     message->Write(message->GetOffset(), aFrameLength, aFrame);
 
     // Security Check
@@ -1667,9 +1693,14 @@ exit:
     {
         HandleDatagram(*message, aMessageInfo);
     }
-    else if (message != NULL)
+    else
     {
-        message->Free();
+        otLogDebgMacErr(error, "Dropping received lowpan HC");
+
+        if (message != NULL)
+        {
+            message->Free();
+        }
     }
 }
 

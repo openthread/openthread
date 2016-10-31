@@ -105,6 +105,12 @@ bool Address::IsRealmLocalAllRoutersMulticast(void) const
             mFields.m32[2] == 0 && mFields.m32[3] == HostSwap32(0x02));
 }
 
+bool Address::IsRealmLocalAllMplForwarders(void) const
+{
+    return (mFields.m32[0] == HostSwap32(0xff030000) && mFields.m32[1] == 0 &&
+            mFields.m32[2] == 0 && mFields.m32[3] == HostSwap32(0xfc));
+}
+
 bool Address::IsRoutingLocator(void) const
 {
     return (mFields.m16[4] == HostSwap16(0x0000) && mFields.m16[5] == HostSwap16(0x00ff) &&

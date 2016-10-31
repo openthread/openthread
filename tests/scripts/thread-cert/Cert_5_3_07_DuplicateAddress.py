@@ -111,14 +111,14 @@ class Cert_5_3_7_DuplicateAddress(unittest.TestCase):
         time.sleep(5)
         self.assertEqual(self.nodes[ED3].get_state(), 'child')
 
-        self.nodes[ROUTER2].add_prefix('2001::/64', 'paros')
+        self.nodes[ROUTER2].add_prefix('2001:2:0:1::/64', 'paros')
         self.nodes[ROUTER2].register_netdata()
 
-        self.nodes[ED1].add_ipaddr('2001::1')
-        self.nodes[ED2].add_ipaddr('2001::1')
+        self.nodes[ED1].add_ipaddr('2001:2:0:1::1')
+        self.nodes[ED2].add_ipaddr('2001:2:0:1::1')
         time.sleep(5)
 
-        self.assertTrue(self.nodes[ED3].ping('2001::1'))
+        self.assertTrue(self.nodes[ED3].ping('2001:2:0:1::1'))
 
 if __name__ == '__main__':
     unittest.main()

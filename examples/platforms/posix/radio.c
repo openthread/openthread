@@ -371,43 +371,35 @@ void platformRadioInit(void)
     sAckFrame.mPsdu = sAckMessage.mPsdu;
 }
 
-ThreadError otPlatRadioEnable(otInstance *aInstance)
-{
-    ThreadError error = kThreadError_Busy;
-    (void)aInstance;
-
-    if (sState == kStateSleep || sState == kStateDisabled)
-    {
-        error = kThreadError_None;
-        sState = kStateSleep;
-    }
-
-    return error;
-}
-
-ThreadError otPlatRadioDisable(otInstance *aInstance)
-{
-    ThreadError error = kThreadError_Busy;
-    (void)aInstance;
-
-    if (sState == kStateDisabled || sState == kStateSleep)
-    {
-        error = kThreadError_None;
-        sState = kStateDisabled;
-    }
-
-    return error;
-}
-
 bool otPlatRadioIsEnabled(otInstance *aInstance)
 {
     (void)aInstance;
     return (sState != kStateDisabled) ? true : false;
 }
 
+ThreadError otPlatRadioEnable(otInstance *aInstance)
+{
+    if (!otPlatRadioIsEnabled(aInstance))
+    {
+        sState = kStateSleep;
+    }
+
+    return kThreadError_None;
+}
+
+ThreadError otPlatRadioDisable(otInstance *aInstance)
+{
+    if (otPlatRadioIsEnabled(aInstance))
+    {
+        sState = kStateDisabled;
+    }
+
+    return kThreadError_None;
+}
+
 ThreadError otPlatRadioSleep(otInstance *aInstance)
 {
-    ThreadError error = kThreadError_Busy;
+    ThreadError error = kThreadError_InvalidState;
     (void)aInstance;
 
     if (sState == kStateSleep || sState == kStateReceive)
@@ -421,7 +413,7 @@ ThreadError otPlatRadioSleep(otInstance *aInstance)
 
 ThreadError otPlatRadioReceive(otInstance *aInstance, uint8_t aChannel)
 {
-    ThreadError error = kThreadError_Busy;
+    ThreadError error = kThreadError_InvalidState;
     (void)aInstance;
 
     if (sState != kStateDisabled)
@@ -437,7 +429,7 @@ ThreadError otPlatRadioReceive(otInstance *aInstance, uint8_t aChannel)
 
 ThreadError otPlatRadioTransmit(otInstance *aInstance)
 {
-    ThreadError error = kThreadError_Busy;
+    ThreadError error = kThreadError_InvalidState;
     (void)aInstance;
 
     if (sState == kStateReceive)

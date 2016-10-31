@@ -43,10 +43,11 @@
 #include <stdint.h>
 #include <string.h>
 
-#include <openthread-types.h>
 #include <openthread-core-config.h>
+#include <openthread-types.h>
 #include <common/code_utils.hpp>
 #include <mac/mac_frame.hpp>
+#include <platform/messagepool.h>
 
 namespace Thread {
 
@@ -90,14 +91,7 @@ struct MessageListEntry
     Message            *mPrev;  ///< A pointer to the previous Message in the list.
 };
 
-/**
- * This structure contains a pointer to the next Message buffer.
- *
- */
-struct BufferHeader
-{
-    class Buffer *mNext;  ///< A pointer to the next Message buffer.
-};
+
 
 /**
  * This structure contains metdata about a Message.
@@ -136,7 +130,7 @@ struct MessageInfo
  * This class represents a Message buffer.
  *
  */
-class Buffer
+class Buffer : public ::BufferHeader
 {
     friend class Message;
 
@@ -147,13 +141,13 @@ public:
      * @returns A pointer to the next message buffer.
      *
      */
-    class Buffer *GetNextBuffer(void) const { return mHeader.mNext; }
+    class Buffer *GetNextBuffer(void) const { return static_cast<Buffer *>(mNext); }
 
     /**
      * This method sets the pointer to the next message buffer.
      *
      */
-    void SetNextBuffer(class Buffer *buf) { mHeader.mNext = buf; }
+    void SetNextBuffer(class Buffer *buf) { mNext = static_cast<BufferHeader *>(buf); }
 
 private:
     /**
@@ -194,7 +188,6 @@ private:
         kHeadBufferDataSize = kBufferDataSize - sizeof(struct MessageInfo),
     };
 
-    struct BufferHeader mHeader;
     union
     {
         struct
@@ -334,6 +327,16 @@ public:
     ThreadError Prepend(const void *aBuf, uint16_t aLength);
 
     /**
+     * This method removes header bytes from the message.
+     *
+     * @param[in]  aLength  Number of header bytes to remove.
+     *
+     * @retval kThreadError_None  Successfully removed header bytes from the message.
+     *
+     */
+    ThreadError RemoveHeader(uint16_t aLength);
+
+    /**
      * This method appends bytes to the end of the message.
      *
      * On success, this method grows the message by @p aLength bytes.
@@ -383,6 +386,24 @@ public:
      *
      */
     int CopyTo(uint16_t aSourceOffset, uint16_t aDestinationOffset, uint16_t aLength, Message &aMessage) const;
+
+    /**
+     * This method creates a copy of the current Message. It allocates the new one
+     * from the same Message Poll as the original Message and copies @p aLength octets of a payload.
+     *
+     * @param[in] aLength  Number of payload bytes to copy.
+     *
+     * @returns A pointer to the message or NULL if insufficient message buffers are available.
+     */
+    Message *Clone(uint16_t aLength) const;
+
+    /**
+     * This method creates a copy of the current Message. It allocates the new one
+     * from the same Message Poll as the original Message and copies a full payload.
+     *
+     * @returns A pointer to the message or NULL if insufficient message buffers are available.
+     */
+    Message *Clone(void) const { return Clone(GetLength()); };
 
     /**
      * This method returns the datagram tag used for 6LoWPAN fragmentation.
@@ -559,7 +580,7 @@ public:
     uint16_t UpdateChecksum(uint16_t aChecksum, uint16_t aOffset, uint16_t aLength) const;
 
 private:
-    MessagePool *GetMessagePool(void) { return mInfo.mMessagePool; }
+    MessagePool *GetMessagePool(void) const { return mInfo.mMessagePool; }
 
     void SetMessagePool(MessagePool *aMessagePool) { mInfo.mMessagePool = aMessagePool; }
 
@@ -645,8 +666,8 @@ public:
      *
      * @param[in]  aMessage  The message to add.
      *
-     * @retval kThreadError_None  Successfully added the message to the list.
-     * @retval kThreadError_Busy  The message is already enqueued in a list.
+     * @retval kThreadError_None     Successfully added the message to the list.
+     * @retval kThreadError_Already  The message is already enqueued in a list.
      *
      */
     ThreadError Enqueue(Message &aMessage);
@@ -656,8 +677,8 @@ public:
      *
      * @param[in]  aMessage  The message to remove.
      *
-     * @retval kThreadError_None  Successfully removed the message from the list.
-     * @retval kThreadError_Busy  The message is not enqueued in a list.
+     * @retval kThreadError_None      Successfully removed the message from the list.
+     * @retval kThreadError_NotFound  The message is not enqueued in a list.
      *
      */
     ThreadError Dequeue(Message &aMessage);
@@ -669,8 +690,8 @@ private:
      * @param[in]  aListId   The list to add @p aMessage to.
      * @param[in]  aMessage  The message to add to @p aListId.
      *
-     * @retval kThreadError_None  Successfully added the message to the list.
-     * @retval kThreadError_Busy  The message is already enqueued in a list.
+     * @retval kThreadError_None     Successfully added the message to the list.
+     * @retval kThreadError_Already  The message is already enqueued in a list.
      *
      */
     static ThreadError AddToList(uint8_t aListId, Message &aMessage);
@@ -681,8 +702,8 @@ private:
      * @param[in]  aListId   The list to add @p aMessage to.
      * @param[in]  aMessage  The message to add to @p aListId.
      *
-     * @retval kThreadError_None  Successfully added the message to the list.
-     * @retval kThreadError_Busy  The message is not enqueued in the list.
+     * @retval kThreadError_None      Successfully added the message to the list.
+     * @retval kThreadError_NotFound  The message is not enqueued in the list.
      *
      */
     static ThreadError RemoveFromList(uint8_t aListId, Message &aMessage);

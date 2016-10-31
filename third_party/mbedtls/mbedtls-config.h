@@ -31,6 +31,7 @@
 #include <stdlib.h>
 
 #include <platform/logging.h>
+#include <platform/memory.h>
 
 #if defined(_WIN32)
 #include <stdarg.h>
@@ -40,7 +41,20 @@
 #pragma warning(disable:4244)  // conversion from '*' to '*', possible loss of data
 #endif
 
-#if defined(_MSC_VER) && !defined(_CRT_SECURE_NO_DEPRECATE)
+#if defined(_KERNEL_MODE)
+#define MBEDTLS_PLATFORM_EXIT_MACRO
+__inline int windows_kernel_snprintf(char * s, size_t n, const char * format, ...)
+{
+    va_list argp;
+    va_start( argp, format );
+    int ret = _vsnprintf_s( s, n, _TRUNCATE, format, argp );
+    va_end( argp );
+    return ret;
+}
+#define MBEDTLS_PLATFORM_STD_SNPRINTF    windows_kernel_snprintf
+#endif
+
+#if defined(_MSC_VER) && !defined(_CRT_SECURE_NO_DEPRECATE) && !defined(_KERNEL_MODE)
 #define _CRT_SECURE_NO_DEPRECATE 1
 #endif
 
@@ -1905,7 +1919,9 @@
  *
  * Enable this module to enable the buffer memory allocator.
  */
+#ifndef OPENTHREAD_MULTIPLE_INSTANCE
 #define MBEDTLS_MEMORY_BUFFER_ALLOC_C
+#endif
 
 /**
  * \def MBEDTLS_NET_C
@@ -2475,8 +2491,10 @@
 
 /* Platform options */
 //#define MBEDTLS_PLATFORM_STD_MEM_HDR   <stdlib.h> /**< Header to include if MBEDTLS_PLATFORM_NO_STD_FUNCTIONS is defined. Don't define if no header is needed. */
-//#define MBEDTLS_PLATFORM_STD_CALLOC        calloc /**< Default allocator to use, can be undefined */
-//#define MBEDTLS_PLATFORM_STD_FREE            free /**< Default free to use, can be undefined */
+#ifdef OPENTHREAD_MULTIPLE_INSTANCE
+#define MBEDTLS_PLATFORM_STD_CALLOC    otPlatCAlloc /**< Default allocator to use, can be undefined */
+#define MBEDTLS_PLATFORM_STD_FREE        otPlatFree /**< Default free to use, can be undefined */
+#endif
 //#define MBEDTLS_PLATFORM_STD_EXIT            exit /**< Default exit to use, can be undefined */
 //#define MBEDTLS_PLATFORM_STD_TIME            time /**< Default time to use, can be undefined */
 //#define MBEDTLS_PLATFORM_STD_FPRINTF      fprintf /**< Default fprintf to use, can be undefined */

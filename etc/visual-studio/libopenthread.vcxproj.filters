@@ -57,6 +57,9 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\src\core\coap\coap_client.cpp">
+      <Filter>Source Files\coap</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\src\core\coap\coap_header.cpp">
       <Filter>Source Files\coap</Filter>
     </ClCompile>
@@ -67,6 +70,9 @@
       <Filter>Source Files\common</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\core\common\message.cpp">
+      <Filter>Source Files\common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\core\common\settings.cpp">
       <Filter>Source Files\common</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\core\common\tasklet.cpp">
@@ -216,6 +222,15 @@
     <ClCompile Include="..\..\src\core\utils\global_address.cpp">
       <Filter>Source Files\utils</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\core\meshcop\announce_begin_client.cpp">
+      <Filter>Source Files\meshcop</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\core\thread\announce_begin_server.cpp">
+      <Filter>Source Files\thread</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\core\common\crc16.cpp">
+      <Filter>Source Files\common</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\src\core\openthreadcontext.h">
@@ -223,6 +238,9 @@
     </ClInclude>
     <ClInclude Include="..\..\src\core\openthread-core-config.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\core\coap\coap_client.hpp">
+      <Filter>Header Files\coap</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\core\coap\coap_header.hpp">
       <Filter>Header Files\coap</Filter>
@@ -406,6 +424,15 @@
     </ClInclude>
     <ClInclude Include="..\..\src\core\utils\global_address.hpp">
       <Filter>Header Files\utils</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\core\meshcop\announce_begin_client.hpp">
+      <Filter>Header Files\meshcop</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\core\meshcop\announce_begin_server.hpp">
+      <Filter>Header Files\thread</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\core\common\crc16.hpp">
+      <Filter>Header Files\common</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

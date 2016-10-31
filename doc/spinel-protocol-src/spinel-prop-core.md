@@ -306,13 +306,12 @@ an appropriate transmit power will be chosen by the NCP.
 
 The bit values in `MD_FLAG` are defined as follows:
 
- Bit | Mask   | Name             | Description if set
------|--------|:-----------------|:----------------
-15   | 0x0001 | MD_FLAG_TX       | Packet was transmitted, not received.
-14   | 0x0002 | MD_FLAG_HAS_FCS  | Packet includes received PHY FCS
-13   | 0x0004 | MD_FLAG_BAD_FCS  | Packet was received with bad FCS
-12   | 0x0008 | MD_FLAG_DUPE     | Packet seems to be a duplicate
-0-11 | 0xFFF0 | MD_FLAG_RESERVED | Flags reserved for future use.
+ Bit     | Mask   | Name              | Description if set
+---------|--------|:------------------|:----------------
+15       | 0x0001 | MD_FLAG_TX        | Packet was transmitted, not received.
+13       | 0x0004 | MD_FLAG_BAD_FCS   | Packet was received with bad FCS
+12       | 0x0008 | MD_FLAG_DUPE      | Packet seems to be a duplicate
+0-11, 14 | 0xFFF2 | MD_FLAG_RESERVED  | Flags reserved for future use.
 
 The format of `MD_PHY` is specified by the PHY layer currently in use,
 and may contain information such as the channel, LQI, antenna, or other

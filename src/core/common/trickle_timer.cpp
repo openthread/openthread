@@ -71,7 +71,14 @@ void TrickleTimer::Start(uint32_t aIntervalMin, uint32_t aIntervalMax, Mode aMod
     mMode = aMode;
 
     // Initialize I to [Imin, Imax]
-    I = Imin + otPlatRandomGet() % (Imax - Imin);
+    if (Imin == Imax)
+    {
+        I = Imin;
+    }
+    else
+    {
+        I = Imin + otPlatRandomGet() % (Imax - Imin);
+    }
 
     // Start a new interval
     StartNewInterval();

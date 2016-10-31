@@ -111,25 +111,25 @@ ThreadError Frame::InitMacHeader(uint16_t aFcf, uint8_t aSecurityControl)
 
         if (aSecurityControl & kSecLevelMask)
         {
-            length += 5;
+            length += kSecurityControlSize + kFrameCounterSize;
         }
 
         switch (aSecurityControl & kKeyIdModeMask)
         {
         case kKeyIdMode0:
-            length += kKeyIdLengthMode0;
+            length += kKeySourceSizeMode0;
             break;
 
         case kKeyIdMode1:
-            length += kKeyIdLengthMode1;
+            length += kKeySourceSizeMode1 + kKeyIndexSize;
             break;
 
         case kKeyIdMode2:
-            length += kKeyIdLengthMode2;
+            length += kKeySourceSizeMode2 + kKeyIndexSize;
             break;
 
         case kKeyIdMode3:
-            length += kKeyIdLengthMode3;
+            length += kKeySourceSizeMode3 + kKeyIndexSize;
             break;
         }
     }
@@ -606,15 +606,71 @@ ThreadError Frame::SetFrameCounter(uint32_t aFrameCounter)
     return kThreadError_None;
 }
 
+const uint8_t *Frame::GetKeySource(void)
+{
+    uint8_t *buf;
+
+    buf = FindSecurityHeader();
+    assert(buf != NULL);
+
+    // Security Control
+    buf += kSecurityControlSize + kFrameCounterSize;
+
+    return buf;
+}
+
+uint8_t Frame::GetKeySourceLength(uint8_t aKeyIdMode)
+{
+    uint8_t rval = 0;
+
+    switch (aKeyIdMode)
+    {
+    case kKeyIdMode0:
+        rval = kKeySourceSizeMode0;
+        break;
+
+    case kKeyIdMode1:
+        rval = kKeySourceSizeMode1;
+        break;
+
+    case kKeyIdMode2:
+        rval = kKeySourceSizeMode2;
+        break;
+
+    case kKeyIdMode3:
+        rval = kKeySourceSizeMode3;
+        break;
+    }
+
+    return rval;
+}
+
+void Frame::SetKeySource(const uint8_t *aKeySource)
+{
+    uint8_t keySourceLength;
+    uint8_t *buf;
+
+    buf = FindSecurityHeader();
+    assert(buf != NULL);
+
+    keySourceLength = GetKeySourceLength(buf[0] & kKeyIdModeMask);
+
+    buf += kSecurityControlSize + kFrameCounterSize;
+
+    memcpy(buf, aKeySource, keySourceLength);
+}
+
 ThreadError Frame::GetKeyId(uint8_t &aKeyId)
 {
     ThreadError error = kThreadError_None;
+    uint8_t keySourceLength;
     uint8_t *buf;
 
     VerifyOrExit((buf = FindSecurityHeader()) != NULL, error = kThreadError_Parse);
 
-    // Security Control + Frame Counter
-    buf += kSecurityControlSize + kFrameCounterSize;
+    keySourceLength = GetKeySourceLength(buf[0] & kKeyIdModeMask);
+
+    buf += kSecurityControlSize + kFrameCounterSize + keySourceLength;
 
     aKeyId = buf[0];
 
@@ -624,13 +680,15 @@ exit:
 
 ThreadError Frame::SetKeyId(uint8_t aKeyId)
 {
+    uint8_t keySourceLength;
     uint8_t *buf;
 
     buf = FindSecurityHeader();
     assert(buf != NULL);
 
-    // Security Control + Frame Counter
-    buf += kSecurityControlSize + kFrameCounterSize;
+    keySourceLength = GetKeySourceLength(buf[0] & kKeyIdModeMask);
+
+    buf += kSecurityControlSize + kFrameCounterSize + keySourceLength;
 
     buf[0] = aKeyId;
 
@@ -805,19 +863,19 @@ uint8_t *Frame::GetPayload(void)
         switch (securityControl & kKeyIdModeMask)
         {
         case kKeyIdMode0:
-            cur += kKeyIdLengthMode0;
+            cur += kKeySourceSizeMode0;
             break;
 
         case kKeyIdMode1:
-            cur += kKeyIdLengthMode1;
+            cur += kKeySourceSizeMode1 + kKeyIndexSize;
             break;
 
         case kKeyIdMode2:
-            cur += kKeyIdLengthMode2;
+            cur += kKeySourceSizeMode2 + kKeyIndexSize;
             break;
 
         case kKeyIdMode3:
-            cur += kKeyIdLengthMode3;
+            cur += kKeySourceSizeMode3 + kKeyIndexSize;
             break;
         }
     }

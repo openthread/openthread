@@ -52,8 +52,9 @@ libopenthread_cc2650_a_SOURCES                        = \
     random.c                              \
     uart.c                                \
     misc.c                                \
-	crypto/sha256_alt.c                   \
-	crypto/aes_alt.c                      \
+    flash.c                               \
+    crypto/sha256_alt.c                   \
+    crypto/aes_alt.c                      \
     $(NULL)
 
 libopenthread_cc2650_a_DEPENDENCIES = \

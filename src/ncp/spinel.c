@@ -105,13 +105,21 @@ static size_t spinel_strnlen_(const char *s, size_t maxlen)
 #endif
 
 #ifndef require_action
+#if SPINEL_PLATFORM_SHOULD_LOG_ASSERTS
 #define require_action(c, l, a) \
     do { if (!(c)) { \
         assert_printf("Requirement Failed (%s)", # c); \
         a; \
         goto l; \
     } } while (0)
-#endif
+#else // if DEBUG
+#define require_action(c, l, a) \
+    do { if (!(c)) { \
+        a; \
+        goto l; \
+    } } while (0)
+#endif // else DEBUG
+#endif // ifndef require_action
 
 #ifndef require
 #define require(c, l)   require_action(c, l, {})
@@ -964,8 +972,8 @@ spinel_prop_key_to_cstr(spinel_prop_key_t prop_key)
         ret = "PROP_MAC_RAW_STREAM_ENABLED";
         break;
 
-    case SPINEL_PROP_MAC_FILTER_MODE:
-        ret = "PROP_MAC_FILTER_MODE";
+    case SPINEL_PROP_MAC_PROMISCUOUS_MODE:
+        ret = "PROP_MAC_PROMISCUOUS_MODE";
         break;
 
     case SPINEL_PROP_MAC_SCAN_STATE:
@@ -1028,12 +1036,16 @@ spinel_prop_key_to_cstr(spinel_prop_key_t prop_key)
         ret = "PROP_NET_MASTER_KEY";
         break;
 
-    case SPINEL_PROP_NET_KEY_SEQUENCE:
-        ret = "PROP_NET_KEY_SEQUENCE";
+    case SPINEL_PROP_NET_KEY_SEQUENCE_COUNTER:
+        ret = "PROP_NET_KEY_SEQUENCE_COUNTER";
         break;
 
     case SPINEL_PROP_NET_PARTITION_ID:
         ret = "PROP_NET_PARTITION_ID";
+        break;
+
+    case SPINEL_PROP_NET_KEY_SWITCH_GUARDTIME:
+        ret = "PROP_NET_KEY_SWITCH_GUARDTIME";
         break;
 
     case SPINEL_PROP_THREAD_LEADER_ADDR:

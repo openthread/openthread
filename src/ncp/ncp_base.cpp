@@ -102,7 +102,7 @@ const NcpBase::GetPropertyHandlerEntry NcpBase::mGetPropertyHandlerTable[] =
     { SPINEL_PROP_MAC_15_4_LADDR, &NcpBase::GetPropertyHandler_MAC_15_4_LADDR },
     { SPINEL_PROP_MAC_15_4_SADDR, &NcpBase::GetPropertyHandler_MAC_15_4_SADDR },
     { SPINEL_PROP_MAC_RAW_STREAM_ENABLED, &NcpBase::GetPropertyHandler_MAC_RAW_STREAM_ENABLED },
-    { SPINEL_PROP_MAC_FILTER_MODE, &NcpBase::GetPropertyHandler_MAC_FILTER_MODE },
+    { SPINEL_PROP_MAC_PROMISCUOUS_MODE, &NcpBase::GetPropertyHandler_MAC_PROMISCUOUS_MODE },
 
     { SPINEL_PROP_NET_IF_UP, &NcpBase::GetPropertyHandler_NET_IF_UP },
     { SPINEL_PROP_NET_STACK_UP, &NcpBase::GetPropertyHandler_NET_STACK_UP },
@@ -110,8 +110,9 @@ const NcpBase::GetPropertyHandlerEntry NcpBase::mGetPropertyHandlerTable[] =
     { SPINEL_PROP_NET_NETWORK_NAME, &NcpBase::GetPropertyHandler_NET_NETWORK_NAME },
     { SPINEL_PROP_NET_XPANID, &NcpBase::GetPropertyHandler_NET_XPANID },
     { SPINEL_PROP_NET_MASTER_KEY, &NcpBase::GetPropertyHandler_NET_MASTER_KEY },
-    { SPINEL_PROP_NET_KEY_SEQUENCE, &NcpBase::GetPropertyHandler_NET_KEY_SEQUENCE },
+    { SPINEL_PROP_NET_KEY_SEQUENCE_COUNTER, &NcpBase::GetPropertyHandler_NET_KEY_SEQUENCE_COUNTER },
     { SPINEL_PROP_NET_PARTITION_ID, &NcpBase::GetPropertyHandler_NET_PARTITION_ID },
+    { SPINEL_PROP_NET_KEY_SWITCH_GUARDTIME, &NcpBase::GetPropertyHandler_NET_KEY_SWITCH_GUARDTIME},
 
     { SPINEL_PROP_THREAD_LEADER_ADDR, &NcpBase::GetPropertyHandler_THREAD_LEADER_ADDR },
     { SPINEL_PROP_THREAD_PARENT, &NcpBase::GetPropertyHandler_THREAD_PARENT },
@@ -132,6 +133,7 @@ const NcpBase::GetPropertyHandlerEntry NcpBase::mGetPropertyHandlerTable[] =
     { SPINEL_PROP_MAC_WHITELIST, &NcpBase::GetPropertyHandler_MAC_WHITELIST },
     { SPINEL_PROP_MAC_WHITELIST_ENABLED, &NcpBase::GetPropertyHandler_MAC_WHITELIST_ENABLED },
     { SPINEL_PROP_THREAD_MODE, &NcpBase::GetPropertyHandler_THREAD_MODE },
+    { SPINEL_PROP_THREAD_CHILD_COUNT_MAX, &NcpBase::GetPropertyHandler_THREAD_CHILD_COUNT_MAX },
     { SPINEL_PROP_THREAD_CHILD_TIMEOUT, &NcpBase::GetPropertyHandler_THREAD_CHILD_TIMEOUT },
     { SPINEL_PROP_THREAD_RLOC16, &NcpBase::GetPropertyHandler_THREAD_RLOC16 },
     { SPINEL_PROP_THREAD_ROUTER_UPGRADE_THRESHOLD, &NcpBase::GetPropertyHandler_THREAD_ROUTER_UPGRADE_THRESHOLD },
@@ -196,7 +198,7 @@ const NcpBase::SetPropertyHandlerEntry NcpBase::mSetPropertyHandlerTable[] =
     { SPINEL_PROP_PHY_ENABLED, &NcpBase::SetPropertyHandler_PHY_ENABLED },
     { SPINEL_PROP_PHY_TX_POWER, &NcpBase::SetPropertyHandler_PHY_TX_POWER },
     { SPINEL_PROP_PHY_CHAN, &NcpBase::SetPropertyHandler_PHY_CHAN },
-    { SPINEL_PROP_MAC_FILTER_MODE, &NcpBase::SetPropertyHandler_MAC_FILTER_MODE },
+    { SPINEL_PROP_MAC_PROMISCUOUS_MODE, &NcpBase::SetPropertyHandler_MAC_PROMISCUOUS_MODE },
 
     { SPINEL_PROP_MAC_SCAN_MASK, &NcpBase::SetPropertyHandler_MAC_SCAN_MASK },
     { SPINEL_PROP_MAC_SCAN_STATE, &NcpBase::SetPropertyHandler_MAC_SCAN_STATE },
@@ -210,7 +212,8 @@ const NcpBase::SetPropertyHandlerEntry NcpBase::mSetPropertyHandlerTable[] =
     { SPINEL_PROP_NET_NETWORK_NAME, &NcpBase::SetPropertyHandler_NET_NETWORK_NAME },
     { SPINEL_PROP_NET_XPANID, &NcpBase::SetPropertyHandler_NET_XPANID },
     { SPINEL_PROP_NET_MASTER_KEY, &NcpBase::SetPropertyHandler_NET_MASTER_KEY },
-    { SPINEL_PROP_NET_KEY_SEQUENCE, &NcpBase::SetPropertyHandler_NET_KEY_SEQUENCE },
+    { SPINEL_PROP_NET_KEY_SEQUENCE_COUNTER, &NcpBase::SetPropertyHandler_NET_KEY_SEQUENCE_COUNTER },
+    { SPINEL_PROP_NET_KEY_SWITCH_GUARDTIME, &NcpBase::SetPropertyHandler_NET_KEY_SWITCH_GUARDTIME},
 
     { SPINEL_PROP_THREAD_LOCAL_LEADER_WEIGHT, &NcpBase::SetPropertyHandler_THREAD_LOCAL_LEADER_WEIGHT },
     { SPINEL_PROP_THREAD_ASSISTING_PORTS, &NcpBase::SetPropertyHandler_THREAD_ASSISTING_PORTS },
@@ -228,6 +231,7 @@ const NcpBase::SetPropertyHandlerEntry NcpBase::mSetPropertyHandlerTable[] =
     { SPINEL_PROP_MAC_WHITELIST, &NcpBase::SetPropertyHandler_MAC_WHITELIST },
     { SPINEL_PROP_MAC_WHITELIST_ENABLED, &NcpBase::SetPropertyHandler_MAC_WHITELIST_ENABLED },
     { SPINEL_PROP_THREAD_MODE, &NcpBase::SetPropertyHandler_THREAD_MODE },
+    { SPINEL_PROP_THREAD_CHILD_COUNT_MAX, &NcpBase::SetPropertyHandler_THREAD_CHILD_COUNT_MAX },
     { SPINEL_PROP_THREAD_CHILD_TIMEOUT, &NcpBase::SetPropertyHandler_THREAD_CHILD_TIMEOUT },
     { SPINEL_PROP_THREAD_ROUTER_UPGRADE_THRESHOLD, &NcpBase::SetPropertyHandler_THREAD_ROUTER_UPGRADE_THRESHOLD },
     { SPINEL_PROP_THREAD_ROUTER_DOWNGRADE_THRESHOLD, &NcpBase::SetPropertyHandler_THREAD_ROUTER_DOWNGRADE_THRESHOLD },
@@ -534,10 +538,6 @@ void NcpBase::HandleRawFrame(const RadioPacket *aFrame)
 
     SuccessOrExit(errorCode = OutboundFrameBegin());
 
-    if (aFrame->mFcs != 0x0000)
-    {
-        flags |= SPINEL_MD_FLAG_HAS_FCS;
-    }
 
     if (aFrame->mDidTX)
     {
@@ -551,11 +551,7 @@ void NcpBase::HandleRawFrame(const RadioPacket *aFrame)
             SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0,
             SPINEL_CMD_PROP_VALUE_IS,
             SPINEL_PROP_STREAM_RAW,
-            aFrame->mLength + (
-                ((flags & SPINEL_MD_FLAG_HAS_FCS) == SPINEL_MD_FLAG_HAS_FCS)
-                ? 2 // +2 if we are appending the FCS
-                : 0 // +0 if we aren't appending the FCS
-            )
+            aFrame->mLength
         )
     );
 
@@ -566,18 +562,6 @@ void NcpBase::HandleRawFrame(const RadioPacket *aFrame)
             aFrame->mLength
         )
     );
-
-    if ((flags & SPINEL_MD_FLAG_HAS_FCS) == SPINEL_MD_FLAG_HAS_FCS)
-    {
-        // Append the FCS
-        SuccessOrExit(
-            errorCode = OutboundFrameFeedPacked(
-                "CC",
-                (aFrame->mFcs >> 0) & 0xFF,
-                (aFrame->mFcs >> 8) & 0xFF
-            )
-        );
-    }
 
     // Append metadata (rssi, etc)
     SuccessOrExit(
@@ -758,7 +742,16 @@ void NcpBase::UpdateChangedProps(void)
         {
             if (mRequireJoinExistingNetwork)
             {
-                mRequireJoinExistingNetwork = false;
+                switch (otGetDeviceRole(mInstance))
+                {
+                case kDeviceRoleDetached:
+                case kDeviceRoleDisabled:
+                    break;
+
+                default:
+                    mRequireJoinExistingNetwork = false;
+                    break;
+                }
 
                 if ( (otGetDeviceRole(mInstance) == kDeviceRoleLeader)
                   && otIsSingleton(mInstance)
@@ -802,13 +795,13 @@ void NcpBase::UpdateChangedProps(void)
                           ));
             mChangedFlags &= ~static_cast<uint32_t>(OT_NET_PARTITION_ID);
         }
-        else if ((mChangedFlags & OT_NET_KEY_SEQUENCE) != 0)
+        else if ((mChangedFlags & OT_NET_KEY_SEQUENCE_COUNTER) != 0)
         {
             SuccessOrExit(HandleCommandPropertyGet(
                               SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0,
-                              SPINEL_PROP_NET_KEY_SEQUENCE
+                              SPINEL_PROP_NET_KEY_SEQUENCE_COUNTER
                           ));
-            mChangedFlags &= ~static_cast<uint32_t>(OT_NET_KEY_SEQUENCE);
+            mChangedFlags &= ~static_cast<uint32_t>(OT_NET_KEY_SEQUENCE_COUNTER);
         }
         else if ((mChangedFlags & (OT_IP6_ADDRESS_ADDED | OT_IP6_ADDRESS_REMOVED)) != 0)
         {
@@ -1635,7 +1628,7 @@ ThreadError NcpBase::GetPropertyHandler_MAC_15_4_PANID(uint8_t header, spinel_pr
            );
 }
 
-ThreadError NcpBase::GetPropertyHandler_MAC_FILTER_MODE(uint8_t header, spinel_prop_key_t key)
+ThreadError NcpBase::GetPropertyHandler_MAC_PROMISCUOUS_MODE(uint8_t header, spinel_prop_key_t key)
 {
     return SendPropertyUpdate(
                header,
@@ -1643,8 +1636,8 @@ ThreadError NcpBase::GetPropertyHandler_MAC_FILTER_MODE(uint8_t header, spinel_p
                key,
                SPINEL_DATATYPE_INT8_S,
                otPlatRadioGetPromiscuous(mInstance)
-               ? SPINEL_MAC_FILTER_MODE_15_4_PROMISCUOUS
-               : SPINEL_MAC_FILTER_MODE_NORMAL
+               ? SPINEL_MAC_PROMISCUOUS_MODE_FULL
+               : SPINEL_MAC_PROMISCUOUS_MODE_OFF
            );
 }
 
@@ -1776,7 +1769,7 @@ ThreadError NcpBase::GetPropertyHandler_NET_MASTER_KEY(uint8_t header, spinel_pr
            );
 }
 
-ThreadError NcpBase::GetPropertyHandler_NET_KEY_SEQUENCE(uint8_t header, spinel_prop_key_t key)
+ThreadError NcpBase::GetPropertyHandler_NET_KEY_SEQUENCE_COUNTER(uint8_t header, spinel_prop_key_t key)
 {
     return SendPropertyUpdate(
                header,
@@ -1795,6 +1788,17 @@ ThreadError NcpBase::GetPropertyHandler_NET_PARTITION_ID(uint8_t header, spinel_
                key,
                SPINEL_DATATYPE_UINT32_S,
                otGetPartitionId(mInstance)
+           );
+}
+
+ThreadError NcpBase::GetPropertyHandler_NET_KEY_SWITCH_GUARDTIME(uint8_t header, spinel_prop_key_t key)
+{
+    return SendPropertyUpdate(
+               header,
+               SPINEL_CMD_PROP_VALUE_IS,
+               key,
+               SPINEL_DATATYPE_UINT32_S,
+               otGetKeySwitchGuardTime(mInstance)
            );
 }
 
@@ -2617,6 +2621,17 @@ ThreadError NcpBase::GetPropertyHandler_THREAD_MODE(uint8_t header, spinel_prop_
            );
 }
 
+ThreadError NcpBase::GetPropertyHandler_THREAD_CHILD_COUNT_MAX(uint8_t header, spinel_prop_key_t key)
+{
+    return SendPropertyUpdate(
+               header,
+               SPINEL_CMD_PROP_VALUE_IS,
+               key,
+               SPINEL_DATATYPE_UINT8_S,
+               otGetMaxAllowedChildren(mInstance)
+           );
+}
+
 ThreadError NcpBase::GetPropertyHandler_THREAD_CHILD_TIMEOUT(uint8_t header, spinel_prop_key_t key)
 {
     return SendPropertyUpdate(
@@ -2809,7 +2824,7 @@ ThreadError NcpBase::SetPropertyHandler_PHY_CHAN(uint8_t header, spinel_prop_key
     return errorCode;
 }
 
-ThreadError NcpBase::SetPropertyHandler_MAC_FILTER_MODE(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr,
+ThreadError NcpBase::SetPropertyHandler_MAC_PROMISCUOUS_MODE(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr,
                                                         uint16_t value_len)
 {
     uint8_t i = 0;
@@ -2827,13 +2842,13 @@ ThreadError NcpBase::SetPropertyHandler_MAC_FILTER_MODE(uint8_t header, spinel_p
     {
         switch (i)
         {
-        case SPINEL_MAC_FILTER_MODE_NORMAL:
+        case SPINEL_MAC_PROMISCUOUS_MODE_OFF:
             otPlatRadioSetPromiscuous(mInstance, false);
             errorCode = kThreadError_None;
             break;
 
-        case SPINEL_MAC_FILTER_MODE_PROMISCUOUS:
-        case SPINEL_MAC_FILTER_MODE_MONITOR:
+        case SPINEL_MAC_PROMISCUOUS_MODE_NETWORK:
+        case SPINEL_MAC_PROMISCUOUS_MODE_FULL:
             otPlatRadioSetPromiscuous(mInstance, true);
             errorCode = kThreadError_None;
             break;
@@ -3194,7 +3209,7 @@ ThreadError NcpBase::SetPropertyHandler_NET_ROLE(uint8_t header, spinel_prop_key
         switch (i)
         {
         case SPINEL_NET_ROLE_DETACHED:
-            errorCode = kThreadError_InvalidArgs;
+            errorCode = otBecomeDetached(mInstance);
             break;
 
         case SPINEL_NET_ROLE_ROUTER:
@@ -3329,7 +3344,7 @@ ThreadError NcpBase::SetPropertyHandler_NET_MASTER_KEY(uint8_t header, spinel_pr
     return errorCode;
 }
 
-ThreadError NcpBase::SetPropertyHandler_NET_KEY_SEQUENCE(uint8_t header, spinel_prop_key_t key,
+ThreadError NcpBase::SetPropertyHandler_NET_KEY_SEQUENCE_COUNTER(uint8_t header, spinel_prop_key_t key,
                                                          const uint8_t *value_ptr,
                                                          uint16_t value_len)
 {
@@ -3347,6 +3362,34 @@ ThreadError NcpBase::SetPropertyHandler_NET_KEY_SEQUENCE(uint8_t header, spinel_
     if (parsedLength > 0)
     {
         otSetKeySequenceCounter(mInstance, i);
+        errorCode = HandleCommandPropertyGet(header, key);
+    }
+    else
+    {
+        errorCode = SendLastStatus(header, SPINEL_STATUS_PARSE_ERROR);
+    }
+
+    return errorCode;
+}
+
+ThreadError NcpBase::SetPropertyHandler_NET_KEY_SWITCH_GUARDTIME(uint8_t header, spinel_prop_key_t key,
+                                                         const uint8_t *value_ptr,
+                                                         uint16_t value_len)
+{
+    unsigned int i(0);
+    spinel_ssize_t parsedLength;
+    ThreadError errorCode = kThreadError_None;
+
+    parsedLength = spinel_datatype_unpack(
+                       value_ptr,
+                       value_len,
+                       SPINEL_DATATYPE_UINT32_S,
+                       &i
+                   );
+
+    if (parsedLength > 0)
+    {
+        otSetKeySwitchGuardTime(mInstance, i);
         errorCode = HandleCommandPropertyGet(header, key);
     }
     else
@@ -3951,6 +3994,33 @@ ThreadError NcpBase::SetPropertyHandler_THREAD_MODE(uint8_t header, spinel_prop_
     return errorCode;
 }
 
+ThreadError NcpBase::SetPropertyHandler_THREAD_CHILD_COUNT_MAX(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr, uint16_t value_len)
+{
+    uint8_t n = 0;
+    spinel_ssize_t parsedLength;
+    ThreadError errorCode = kThreadError_None;
+
+    parsedLength = spinel_datatype_unpack(
+                       value_ptr,
+                       value_len,
+                       SPINEL_DATATYPE_UINT8_S,
+                       &n
+                   );
+
+    if (parsedLength > 0)
+    {
+        otSetMaxAllowedChildren(mInstance, n);
+
+        errorCode = HandleCommandPropertyGet(header, key);
+    }
+    else
+    {
+        errorCode = SendLastStatus(header, SPINEL_STATUS_PARSE_ERROR);
+    }
+
+    return errorCode;
+}
+
 ThreadError NcpBase::SetPropertyHandler_THREAD_CHILD_TIMEOUT(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr, uint16_t value_len)
 {
     uint32_t i = 0;
@@ -4505,11 +4575,8 @@ ThreadError NcpBase::RemovePropertyHandler_IPV6_ADDRESS_TABLE(uint8_t header, sp
     parsedLength = spinel_datatype_unpack(
                        value_ptr,
                        value_len,
-                       "6CLL",
-                       &addr_ptr,
-                       NULL,
-                       NULL,
-                       NULL
+                       "6",
+                       &addr_ptr
                    );
 
     if (parsedLength > 0)

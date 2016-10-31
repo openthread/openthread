@@ -31,17 +31,19 @@
  *   This file implements the tasklet scheduler.
  */
 
+#define WPP_NAME "logging.tmh"
+
 #ifdef OPENTHREAD_CONFIG_FILE
 #include OPENTHREAD_CONFIG_FILE
 #else
 #include <openthread-config.h>
 #endif
 
-#include <ctype.h>
-#include <stdio.h>
-#include <string.h>
+#include <common/logging.hpp>
 
-#include <platform/logging.h>
+#ifndef WINDOWS_LOGGING
+#define otLogDump(aFormat, ...) otPlatLog(aLogLevel, aLogRegion, aFormat, ## __VA_ARGS__)
+#endif
 
 #ifdef __cplusplus
 extern "C" {
@@ -103,7 +105,7 @@ static void DumpLine(otLogLevel aLogLevel, otLogRegion aLogRegion, const void *a
         }
     }
 
-    otPlatLog(aLogLevel, aLogRegion, "%s\r\n", buf);
+    otLogDump("%s", buf);
 }
 
 void otDump(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aId, const void *aBuf, const size_t aLength)
@@ -112,8 +114,6 @@ void otDump(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aId, const
     const size_t width = 72;
     char buf[80];
     char *cur = buf;
-
-    otPlatLog(aLogLevel, aLogRegion, "\r\n");
 
     for (size_t i = 0; i < (width - idlen) / 2 - 5; i++)
     {
@@ -130,7 +130,7 @@ void otDump(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aId, const
         cur += strlen(cur);
     }
 
-    otPlatLog(aLogLevel, aLogRegion, "%s\r\n", buf);
+    otLogDump("%s", buf);
 
     for (size_t i = 0; i < aLength; i += 16)
     {
@@ -145,7 +145,7 @@ void otDump(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aId, const
         cur += strlen(cur);
     }
 
-    otPlatLog(aLogLevel, aLogRegion, "%s\r\n", buf);
+    otLogDump("%s", buf);
 }
 
 #ifdef __cplusplus

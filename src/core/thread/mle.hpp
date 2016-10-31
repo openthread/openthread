@@ -104,6 +104,24 @@ enum DeviceState
 };
 
 /**
+ * This enumeration represents the allocation of the ALOC Space
+ *
+ */
+enum AlocAllocation
+{
+    kAloc16Mask                         = 0xfc,
+    kAloc16Leader                       = 0xfc00,
+    kAloc16DHCPv6AgentStart             = 0xfc01,
+    kAloc16DHCPv6AgentEnd               = 0xfc0f,
+    kAloc16ServiceStart                 = 0xfc10,
+    kAloc16ServiceEnd                   = 0xfc2f,
+    kAloc16CommissionerStart            = 0xfc30,
+    kAloc16CommissionerEnd              = 0xfc37,
+    kAloc16NeighborDiscoveryAgentStart  = 0xfc40,
+    kAloc16NeighborDiscoveryAgentEnd    = 0xfc4e,
+};
+
+/**
  * This class implements MLE Header generation and parsing.
  *
  */
@@ -339,8 +357,8 @@ public:
     /**
      * This method enables MLE.
      *
-     * @retval kThreadError_None  Successfully enabled MLE.
-     * @retval kThreadError_Busy  MLE was already enabled.
+     * @retval kThreadError_None     Successfully enabled MLE.
+     * @retval kThreadError_Already  MLE was already enabled.
      *
      */
     ThreadError Enable(void);
@@ -348,8 +366,7 @@ public:
     /**
      * This method disables MLE.
      *
-     * @retval kThreadError_None  Successfully disabled MLE.
-     * @retval kThreadError_Busy  MLE was already disabled.
+     * @retval kThreadError_None     Successfully disabled MLE.
      *
      */
     ThreadError Disable(void);
@@ -357,8 +374,8 @@ public:
     /**
      * This method starts the MLE protocol operation.
      *
-     * @retval kThreadError_None  Successfully started the protocol operation.
-     * @retval kThreadError_Busy  The protocol operation was already started.
+     * @retval kThreadError_None     Successfully started the protocol operation.
+     * @retval kThreadError_Already  The protocol operation was already started.
      *
      */
     ThreadError Start(void);
@@ -367,7 +384,6 @@ public:
      * This method stops the MLE protocol operation.
      *
      * @retval kThreadError_None  Successfully stopped the protocol operation.
-     * @retval kThreadError_Busy  The protocol operation was already stopped.
      *
      */
     ThreadError Stop(void);
@@ -414,19 +430,20 @@ public:
     /**
      * This method generates an MLE Announce message.
      *
-     * @param[in]  aChannel   The channel to use when transmitting.
+     * @param[in]  aChannel        The channel to use when transmitting.
+     * @param[in]  aOrphanAnnounce To indiciate if MLE Announce is sent from an orphan end device.
      *
      * @retval kThreadError_None    Successfully generated an MLE Announce message.
      * @retval kThreadError_NoBufs  Insufficient buffers to generate the MLE Announce message.
      *
      */
-    ThreadError SendAnnounce(uint8_t aChannel);
+    ThreadError SendAnnounce(uint8_t aChannel, bool aOrphanAnnounce);
 
     /**
      * This method causes the Thread interface to detach from the Thread network.
      *
-     * @retval kThreadError_None  Successfully detached from the Thread network.
-     * @retval kThreadError_Busy  The protocol operation was stopped.
+     * @retval kThreadError_None          Successfully detached from the Thread network.
+     * @retval kThreadError_InvalidState  MLE is Disabled.
      *
      */
     ThreadError BecomeDetached(void);
@@ -436,8 +453,9 @@ public:
      *
      * @param[in]  aFilter  Indicates what partitions to attach to.
      *
-     * @retval kThreadError_None  Successfully began the attach process.
-     * @retval kThreadError_Busy  An attach process is in progress or the protocol operation was stopped.
+     * @retval kThreadError_None          Successfully began the attach process.
+     * @retval kThreadError_InvalidState  MLE is Disabled.
+     * @retval kThreadError_Busy          An attach process is in progress.
      *
      */
     ThreadError BecomeChild(otMleAttachFilter aFilter);
@@ -538,6 +556,15 @@ public:
     bool IsRoutingLocator(const Ip6::Address &aAddress) const;
 
     /**
+     * This method indicates whether or not an IPv6 address is an ALOC.
+     *
+     * @retval TRUE   If @p aAddress is an ALOC.
+     * @retval FALSE  If @p aAddress is not an ALOC.
+     *
+     */
+    bool IsAnycastLocator(const Ip6::Address &aAddress) const;
+
+    /**
      * This method returns the MLE Timeout value.
      *
      * @returns The MLE Timeout value.
@@ -560,20 +587,20 @@ public:
     uint16_t GetRloc16(void) const;
 
     /**
-     * This method returns a pointer to the RLOC assigned to the Thread interface.
+     * This method returns a reference to the RLOC assigned to the Thread interface.
      *
-     * @returns A pointer to the RLOC assigned to the Thread interface.
+     * @returns A reference to the RLOC assigned to the Thread interface.
      *
      */
-    const Ip6::Address *GetMeshLocal16(void) const;
+    const Ip6::Address &GetMeshLocal16(void) const;
 
     /**
-     * This method returns a pointer to the ML-EID assigned to the Thread interface.
+     * This method returns a reference to the ML-EID assigned to the Thread interface.
      *
-     * @returns A pointer to the ML-EID assigned to the Thread interface.
+     * @returns A reference to the ML-EID assigned to the Thread interface.
      *
      */
-    const Ip6::Address *GetMeshLocal64(void) const;
+    const Ip6::Address &GetMeshLocal64(void) const;
 
     /**
      * This method returns the Router ID of the Leader.
@@ -593,6 +620,27 @@ public:
      *
      */
     ThreadError GetLeaderAddress(Ip6::Address &aAddress) const;
+
+    /**
+     * This method retrieves the Leader's ALOC.
+     *
+     * @param[out]  aAddress  A reference to the Leader's ALOC.
+     *
+     * @retval kThreadError_None   Successfully retrieved the Leader's ALOC.
+     * @retval kThreadError_Error  The Thread interface is not currently attached to a Thread Partition.
+     *
+     */
+    ThreadError GetLeaderAloc(Ip6::Address &aAddress) const;
+
+    /**
+     * This method adds Leader's ALOC to its Thread interface.
+     *
+     * @retval kThreadError_None           Successfully added the Leader's ALOC.
+     * @retval kThreadError_Busy           The Leader's ALOC address was already added.
+     * @retval kThreadError_InvalidState   The device's role is not Leader.
+     *
+     */
+    ThreadError AddLeaderAloc(void);
 
     /**
      * This method returns the most recently received Leader Data TLV.
@@ -1059,6 +1107,14 @@ protected:
     ThreadError SetStateChild(uint16_t aRloc16);
 
     /**
+     * This method returns a new MLE message.
+     *
+     * @returns A pointer to the message or NULL if no buffers are available.
+     *
+     */
+    Message *NewMessage(void) { return mSocket.NewMessage(0); };
+
+    /**
      * This method sets the Leader's Partition ID, Weighting, and Router ID values.
      *
      * @param[in]  aPartitionId     The Leader's Partition ID value.
@@ -1140,6 +1196,7 @@ private:
     ThreadError SendParentRequest(void);
     ThreadError SendChildIdRequest(void);
     ThreadError SendDiscoveryResponse(const Ip6::Address &aDestination, uint16_t aPanId);
+    void SendOrphanAnnounce(void);
 
     bool IsBetterParent(uint16_t aRloc16, uint8_t aLinkQuality, ConnectivityTlv &aConnectivityTlv) const;
 
@@ -1172,8 +1229,11 @@ private:
     void *mDiscoverContext;
     bool mIsDiscoverInProgress;
 
+    uint8_t mAnnounceChannel;
     uint8_t mPreviousChannel;
     uint16_t mPreviousPanId;
+
+    Ip6::NetifUnicastAddress mLeaderAloc;
 
     Ip6::NetifUnicastAddress mLinkLocal16;
     Ip6::NetifUnicastAddress mLinkLocal64;

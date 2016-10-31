@@ -89,43 +89,43 @@ class Cert_7_1_5_BorderRouterAsRouter(unittest.TestCase):
         time.sleep(5)
         self.assertEqual(self.nodes[SED2].get_state(), 'child')
 
-        self.nodes[ROUTER].add_prefix('2001::/64', 'paros')
-        self.nodes[ROUTER].add_prefix('2002::/64', 'paro')
+        self.nodes[ROUTER].add_prefix('2001:2:0:1::/64', 'paros')
+        self.nodes[ROUTER].add_prefix('2001:2:0:2::/64', 'paro')
         self.nodes[ROUTER].register_netdata()
         time.sleep(5)
 
         addrs = self.nodes[ED2].get_addrs()
-        self.assertTrue(any('2001' in addr[0:4] for addr in addrs))
-        self.assertTrue(any('2002' in addr[0:4] for addr in addrs))
+        self.assertTrue(any('2001:2:0:1' in addr[0:10] for addr in addrs))
+        self.assertTrue(any('2001:2:0:2' in addr[0:10] for addr in addrs))
         for addr in addrs:
-            if addr[0:4] == '2001' or addr[0:4] == '2002':
+            if addr[0:10] == '2001:2:0:1' or addr[0:10] == '2001:2:0:2':
                 self.assertTrue(self.nodes[LEADER].ping(addr))
 
         addrs = self.nodes[SED2].get_addrs()
-        self.assertTrue(any('2001' in addr[0:4] for addr in addrs))
-        self.assertFalse(any('2002' in addr[0:4] for addr in addrs))
+        self.assertTrue(any('2001:2:0:1' in addr[0:10] for addr in addrs))
+        self.assertFalse(any('2001:2:0:2' in addr[0:10] for addr in addrs))
         for addr in addrs:
-            if addr[0:4] == '2001' or addr[0:4] == '2002':
+            if addr[0:10] == '2001:2:0:1' or addr[0:10] == '2001:2:0:2':
                 self.assertTrue(self.nodes[LEADER].ping(addr))
 
-        self.nodes[ROUTER].add_prefix('2003::/64', 'paros')
+        self.nodes[ROUTER].add_prefix('2001:2:0:3::/64', 'paros')
         self.nodes[ROUTER].register_netdata()
         time.sleep(5)
 
         addrs = self.nodes[ED2].get_addrs()
-        self.assertTrue(any('2001' in addr[0:4] for addr in addrs))
-        self.assertTrue(any('2002' in addr[0:4] for addr in addrs))
-        self.assertTrue(any('2003' in addr[0:4] for addr in addrs))
+        self.assertTrue(any('2001:2:0:1' in addr[0:10] for addr in addrs))
+        self.assertTrue(any('2001:2:0:2' in addr[0:10] for addr in addrs))
+        self.assertTrue(any('2001:2:0:3' in addr[0:10] for addr in addrs))
         for addr in addrs:
-            if addr[0:4] == '2001' or addr[0:4] == '2002' or addr[0:4] == '2003':
+            if addr[0:10] == '2001:2:0:1' or addr[0:10] == '2001:2:0:2' or addr[0:10] == '2001:2:0:3':
                 self.assertTrue(self.nodes[LEADER].ping(addr))
 
         addrs = self.nodes[SED2].get_addrs()
-        self.assertTrue(any('2001' in addr[0:4] for addr in addrs))
-        self.assertFalse(any('2002' in addr[0:4] for addr in addrs))
-        self.assertTrue(any('2003' in addr[0:4] for addr in addrs))
+        self.assertTrue(any('2001:2:0:1' in addr[0:10] for addr in addrs))
+        self.assertFalse(any('2001:2:0:2' in addr[0:10] for addr in addrs))
+        self.assertTrue(any('2001:2:0:3' in addr[0:10] for addr in addrs))
         for addr in addrs:
-            if addr[0:4] == '2001' or addr[0:4] == '2002' or addr[0:4] == '2003':
+            if addr[0:10] == '2001:2:0:1' or addr[0:10] == '2001:2:0:2' or addr[0:10] == '2001:2:0:3':
                 self.assertTrue(self.nodes[LEADER].ping(addr))
 
 if __name__ == '__main__':

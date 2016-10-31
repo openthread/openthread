@@ -52,11 +52,9 @@
 namespace Thread {
 
 AnnounceBeginClient::AnnounceBeginClient(ThreadNetif &aThreadNetif) :
-    mSocket(aThreadNetif.GetIp6().mUdp),
-    mNetif(aThreadNetif)
+    mNetif(aThreadNetif),
+    mCoapClient(aThreadNetif.GetCoapClient())
 {
-    mSocket.Open(HandleUdpReceive, this);
-    mCoapMessageId = static_cast<uint8_t>(otPlatRandomGet());
 }
 
 ThreadError AnnounceBeginClient::SendRequest(uint32_t aChannelMask, uint8_t aCount, uint16_t aPeriod,
@@ -80,21 +78,13 @@ ThreadError AnnounceBeginClient::SendRequest(uint32_t aChannelMask, uint8_t aCou
     Ip6::MessageInfo messageInfo;
     Message *message;
 
-    for (size_t i = 0; i < sizeof(mCoapToken); i++)
-    {
-        mCoapToken[i] = static_cast<uint8_t>(otPlatRandomGet());
-    }
-
-    header.Init();
-    header.SetType(aAddress.IsMulticast() ? Coap::Header::kTypeNonConfirmable : Coap::Header::kTypeConfirmable);
-    header.SetCode(Coap::Header::kCodePost);
-    header.SetMessageId(++mCoapMessageId);
-    header.SetToken(mCoapToken, sizeof(mCoapToken));
+    header.Init(aAddress.IsMulticast() ? kCoapTypeNonConfirmable : kCoapTypeConfirmable,
+                kCoapRequestPost);
+    header.SetToken(Coap::Header::kDefaultTokenLength);
     header.AppendUriPathOptions(OPENTHREAD_URI_ANNOUNCE_BEGIN);
-    header.Finalize();
+    header.SetPayloadMarker();
 
-    VerifyOrExit((message = mSocket.NewMessage(0)) != NULL, error = kThreadError_NoBufs);
-    SuccessOrExit(error = message->Append(header.GetBytes(), header.GetLength()));
+    VerifyOrExit((message = mCoapClient.NewMessage(header)) != NULL, error = kThreadError_NoBufs);
 
     sessionId.Init();
     sessionId.SetCommissionerSessionId(mNetif.GetCommissioner().GetSessionId());
@@ -115,13 +105,13 @@ ThreadError AnnounceBeginClient::SendRequest(uint32_t aChannelMask, uint8_t aCou
     period.SetPeriod(aPeriod);
     SuccessOrExit(error = message->Append(&period, sizeof(period)));
 
-    memset(&messageInfo, 0, sizeof(messageInfo));
-    messageInfo.GetPeerAddr() = aAddress;
-    messageInfo.mPeerPort = kCoapUdpPort;
-    messageInfo.mInterfaceId = mNetif.GetInterfaceId();
-    SuccessOrExit(error = mSocket.SendTo(*message, messageInfo));
+    messageInfo.SetPeerAddr(aAddress);
+    messageInfo.SetPeerPort(kCoapUdpPort);
+    messageInfo.SetInterfaceId(mNetif.GetInterfaceId());
 
-    otLogInfoMeshCoP("sent announce begin query\r\n");
+    SuccessOrExit(error = mCoapClient.SendMessage(*message, messageInfo));
+
+    otLogInfoMeshCoP("sent announce begin query");
 
 exit:
 
@@ -131,14 +121,6 @@ exit:
     }
 
     return error;
-}
-
-void AnnounceBeginClient::HandleUdpReceive(void *aContext, otMessage aMessage, const otMessageInfo *aMessageInfo)
-{
-    otLogInfoMeshCoP("received announce begin response\r\n");
-    (void)aContext;
-    (void)aMessage;
-    (void)aMessageInfo;
 }
 
 }  // namespace Thread
