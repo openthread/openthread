@@ -66,7 +66,7 @@ static otDEFINE_ALIGNED_VAR(sInstanceRaw, sizeof(otInstance), uint64_t);
 otInstance *sInstance = NULL;
 #endif
 
-void OT_CDECL operator delete(void *, size_t) throw() { }
+void OT_CDECL operator delete(_In_ void *, _In_ size_t) throw() { }
 
 otInstance::otInstance(void) :
     mReceiveIp6DatagramCallback(NULL),

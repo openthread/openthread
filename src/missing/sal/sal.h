@@ -26,20 +26,24 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-/**
- * @file
- *   This file defines the new operator used by OpenThread.
- */
+#ifndef _SAL_H_
+#define _SAL_H_
 
-#ifndef NEW_HPP_
-#define NEW_HPP_
+#define _In_
+#define _In_opt_
+#define _Out_
+#define _InOut_
 
-#include <sal.h>
-#include <stddef.h>
-#include <platform/toolchain.h>
+#define _In_reads_bytes_(size)
+#define _Out_writes_bytes_(size)
 
-inline _Ret_notnull_ void *operator new(_In_ size_t, _In_ void *p) throw() { return p; }
+#define _Field_size_bytes_full_(size)
 
-void OT_CDECL operator delete(_In_ void *, _In_ size_t) throw();
+#define _Ret_notnull_
 
-#endif  // NEW_HPP_
+#define _Null_terminated_
+
+typedef _Null_terminated_ char *PSTR;
+typedef _Null_terminated_ const char *PCSTR;
+
+#endif  // _SAL_H_

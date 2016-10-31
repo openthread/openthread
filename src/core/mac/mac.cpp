@@ -103,7 +103,7 @@ void Mac::StartCsmaBackoff(void)
     }
 }
 
-Mac::Mac(ThreadNetif &aThreadNetif):
+Mac::Mac(_In_ ThreadNetif &aThreadNetif):
     mMacTimer(aThreadNetif.GetIp6().mTimerScheduler, &Mac::HandleMacTimer, this),
     mBackoffTimer(aThreadNetif.GetIp6().mTimerScheduler, &Mac::HandleBeginTransmit, this),
     mReceiveTimer(aThreadNetif.GetIp6().mTimerScheduler, &Mac::HandleReceiveTimer, this),
@@ -164,7 +164,7 @@ Mac::Mac(ThreadNetif &aThreadNetif):
     otPlatRadioEnable(mNetif.GetInstance());
 }
 
-ThreadError Mac::ActiveScan(uint32_t aScanChannels, uint16_t aScanDuration, ActiveScanHandler aHandler, void *aContext)
+ThreadError Mac::ActiveScan(_In_ uint32_t aScanChannels, _In_ uint16_t aScanDuration, _In_ ActiveScanHandler aHandler, _In_ void *aContext)
 {
     ThreadError error;
 
@@ -175,7 +175,7 @@ exit:
     return error;
 }
 
-ThreadError Mac::EnergyScan(uint32_t aScanChannels, uint16_t aScanDuration, EnergyScanHandler aHandler, void *aContext)
+ThreadError Mac::EnergyScan(_In_ uint32_t aScanChannels, _In_ uint16_t aScanDuration, _In_ EnergyScanHandler aHandler, _In_ void *aContext)
 {
     ThreadError error;
 
@@ -186,7 +186,7 @@ exit:
     return error;
 }
 
-ThreadError Mac::Scan(ScanType aScanType, uint32_t aScanChannels, uint16_t aScanDuration, void *aContext)
+ThreadError Mac::Scan(_In_ ScanType aScanType, _In_ uint32_t aScanChannels, _In_ uint16_t aScanDuration, _In_ void *aContext)
 {
     ThreadError error = kThreadError_None;
 
@@ -266,7 +266,7 @@ extern "C" void otPlatRadioEnergyScanDone(otInstance *aInstance, int8_t aEnergyS
     aInstance->mThreadNetif.GetMac().EnergyScanDone(aEnergyScanMaxRssi);
 }
 
-void Mac::EnergyScanDone(int8_t aEnergyScanMaxRssi)
+void Mac::EnergyScanDone(_In_ int8_t aEnergyScanMaxRssi)
 {
     // Trigger a energy scan handler callback if necessary
     if (aEnergyScanMaxRssi != kInvalidRssiValue)
@@ -302,7 +302,7 @@ exit:
     return;
 }
 
-void Mac::HandleEnergyScanSampleRssi(void *aContext)
+void Mac::HandleEnergyScanSampleRssi(_In_ void *aContext)
 {
     static_cast<Mac *>(aContext)->HandleEnergyScanSampleRssi();
 }
@@ -329,7 +329,7 @@ exit:
     return;
 }
 
-ThreadError Mac::RegisterReceiver(Receiver &aReceiver)
+ThreadError Mac::RegisterReceiver(_In_ Receiver &aReceiver)
 {
     assert(mReceiveTail != &aReceiver && aReceiver.mNext == NULL);
 
@@ -352,7 +352,7 @@ bool Mac::GetRxOnWhenIdle(void) const
     return mRxOnWhenIdle;
 }
 
-void Mac::SetRxOnWhenIdle(bool aRxOnWhenIdle)
+void Mac::SetRxOnWhenIdle(_In_ bool aRxOnWhenIdle)
 {
     mRxOnWhenIdle = aRxOnWhenIdle;
 
@@ -367,7 +367,7 @@ const ExtAddress *Mac::GetExtAddress(void) const
     return &mExtAddress;
 }
 
-void Mac::SetExtAddress(const ExtAddress &aExtAddress)
+void Mac::SetExtAddress(_In_ const ExtAddress &aExtAddress)
 {
     uint8_t buf[sizeof(aExtAddress)];
 
@@ -384,7 +384,7 @@ void Mac::SetExtAddress(const ExtAddress &aExtAddress)
     otLogFuncExit();
 }
 
-void Mac::GetHashMacAddress(ExtAddress *aHashMacAddress)
+void Mac::GetHashMacAddress(_Out_ ExtAddress *aHashMacAddress)
 {
     Crypto::Sha256 sha256;
     uint8_t buf[Crypto::Sha256::kHashSize];
@@ -407,7 +407,7 @@ ShortAddress Mac::GetShortAddress(void) const
     return mShortAddress;
 }
 
-ThreadError Mac::SetShortAddress(ShortAddress aShortAddress)
+ThreadError Mac::SetShortAddress(_In_ ShortAddress aShortAddress)
 {
     otLogFuncEntryMsg("%d", aShortAddress);
     mShortAddress = aShortAddress;
@@ -421,7 +421,7 @@ uint8_t Mac::GetChannel(void) const
     return mChannel;
 }
 
-ThreadError Mac::SetChannel(uint8_t aChannel)
+ThreadError Mac::SetChannel(_In_ uint8_t aChannel)
 {
     otLogFuncEntryMsg("%d", aChannel);
     mChannel = aChannel;
@@ -440,17 +440,17 @@ int8_t Mac::GetMaxTransmitPower(void) const
     return mMaxTransmitPower;
 }
 
-void Mac::SetMaxTransmitPower(int8_t aPower)
+void Mac::SetMaxTransmitPower(_In_ int8_t aPower)
 {
     mMaxTransmitPower = aPower;
 }
 
-const char *Mac::GetNetworkName(void) const
+PCSTR Mac::GetNetworkName(void) const
 {
     return mNetworkName.m8;
 }
 
-ThreadError Mac::SetNetworkName(const char *aNetworkName)
+ThreadError Mac::SetNetworkName(_In_ PCSTR aNetworkName)
 {
     ThreadError error = kThreadError_None;
 
@@ -471,7 +471,7 @@ PanId Mac::GetPanId(void) const
     return mPanId;
 }
 
-ThreadError Mac::SetPanId(PanId aPanId)
+ThreadError Mac::SetPanId(_In_ PanId aPanId)
 {
     otLogFuncEntryMsg("%d", aPanId);
     mPanId = aPanId;
@@ -485,13 +485,13 @@ const uint8_t *Mac::GetExtendedPanId(void) const
     return mExtendedPanId.m8;
 }
 
-ThreadError Mac::SetExtendedPanId(const uint8_t *aExtPanId)
+ThreadError Mac::SetExtendedPanId(_In_reads_bytes_(sizeof(otExtendedPanId)) const uint8_t *aExtPanId)
 {
     memcpy(mExtendedPanId.m8, aExtPanId, sizeof(mExtendedPanId));
     return kThreadError_None;
 }
 
-ThreadError Mac::SendFrameRequest(Sender &aSender)
+ThreadError Mac::SendFrameRequest(_In_ Sender &aSender)
 {
     ThreadError error = kThreadError_None;
 
@@ -573,7 +573,7 @@ void Mac::ScheduleNextTransmission(void)
     NextOperation();
 }
 
-void Mac::GenerateNonce(const ExtAddress &aAddress, uint32_t aFrameCounter, uint8_t aSecurityLevel, uint8_t *aNonce)
+void Mac::GenerateNonce(_In_ const ExtAddress &aAddress, _In_ uint32_t aFrameCounter, _In_ uint8_t aSecurityLevel, _Out_writes_bytes_(13) uint8_t *aNonce)
 {
     // source address
     for (int i = 0; i < 8; i++)
@@ -594,7 +594,7 @@ void Mac::GenerateNonce(const ExtAddress &aAddress, uint32_t aFrameCounter, uint
     aNonce[0] = aSecurityLevel;
 }
 
-void Mac::SendBeaconRequest(Frame &aFrame)
+void Mac::SendBeaconRequest(_In_ Frame &aFrame)
 {
     // initialize MAC header
     uint16_t fcf = Frame::kFcfFrameMacCmd | Frame::kFcfDstAddrShort | Frame::kFcfSrcAddrNone;
@@ -606,7 +606,7 @@ void Mac::SendBeaconRequest(Frame &aFrame)
     otLogInfoMac("Sent Beacon Request");
 }
 
-void Mac::SendBeacon(Frame &aFrame)
+void Mac::SendBeacon(_In_ Frame &aFrame)
 {
     uint8_t numUnsecurePorts;
     Beacon *beacon;
@@ -642,12 +642,12 @@ void Mac::SendBeacon(Frame &aFrame)
     otLogInfoMac("Sent Beacon");
 }
 
-void Mac::HandleBeginTransmit(void *aContext)
+void Mac::HandleBeginTransmit(_In_ void *aContext)
 {
     static_cast<Mac *>(aContext)->HandleBeginTransmit();
 }
 
-void Mac::ProcessTransmitSecurity(Frame &aFrame)
+void Mac::ProcessTransmitSecurity(_In_ Frame &aFrame)
 {
     uint32_t frameCounter = 0;
     uint8_t securityLevel;
@@ -791,7 +791,7 @@ extern "C" void otPlatRadioTransmitDone(otInstance *aInstance, bool aRxPending, 
     otLogFuncExit();
 }
 
-void Mac::TransmitDoneTask(bool aRxPending, ThreadError aError)
+void Mac::TransmitDoneTask(_In_ bool aRxPending, _In_ ThreadError aError)
 {
     mMacTimer.Stop();
 
@@ -835,7 +835,7 @@ exit:
     return;
 }
 
-void Mac::HandleMacTimer(void *aContext)
+void Mac::HandleMacTimer(_In_ void *aContext)
 {
     static_cast<Mac *>(aContext)->HandleMacTimer();
 }
@@ -884,7 +884,7 @@ exit:
     return;
 }
 
-void Mac::HandleReceiveTimer(void *aContext)
+void Mac::HandleReceiveTimer(_In_ void *aContext)
 {
     static_cast<Mac *>(aContext)->HandleReceiveTimer();
 }
@@ -899,7 +899,7 @@ void Mac::HandleReceiveTimer(void)
     }
 }
 
-void Mac::SentFrame(ThreadError aError)
+void Mac::SentFrame(_In_ ThreadError aError)
 {
     Frame &sendFrame(*static_cast<Frame *>(otPlatRadioGetTransmitBuffer(mNetif.GetInstance())));
     Sender *sender;
@@ -995,7 +995,7 @@ exit:
     {}
 }
 
-ThreadError Mac::ProcessReceiveSecurity(Frame &aFrame, const Address &aSrcAddr, Neighbor *aNeighbor)
+ThreadError Mac::ProcessReceiveSecurity(_In_ Frame &aFrame, _In_ const Address &aSrcAddr, _In_ Neighbor *aNeighbor)
 {
     ThreadError error = kThreadError_None;
     uint8_t securityLevel;
@@ -1127,7 +1127,7 @@ extern "C" void otPlatRadioReceiveDone(otInstance *aInstance, RadioPacket *aFram
     otLogFuncExit();
 }
 
-void Mac::ReceiveDoneTask(Frame *aFrame, ThreadError aError)
+void Mac::ReceiveDoneTask(_In_ Frame *aFrame, _In_ ThreadError aError)
 {
     Address srcaddr;
     Address dstaddr;
@@ -1329,7 +1329,7 @@ exit:
     }
 }
 
-ThreadError Mac::HandleMacCommand(Frame &aFrame)
+ThreadError Mac::HandleMacCommand(_In_ Frame &aFrame)
 {
     ThreadError error = kThreadError_None;
     uint8_t commandId;
@@ -1366,7 +1366,7 @@ exit:
     return error;
 }
 
-void Mac::SetPcapCallback(otLinkPcapCallback aPcapCallback, void *aCallbackContext)
+void Mac::SetPcapCallback(_In_ otLinkPcapCallback aPcapCallback, _In_ void *aCallbackContext)
 {
     mPcapCallback = aPcapCallback;
     mPcapCallbackContext = aCallbackContext;
@@ -1377,7 +1377,7 @@ bool Mac::IsPromiscuous(void)
     return otPlatRadioGetPromiscuous(mNetif.GetInstance());
 }
 
-void Mac::SetPromiscuous(bool aPromiscuous)
+void Mac::SetPromiscuous(_In_ bool aPromiscuous)
 {
     otPlatRadioSetPromiscuous(mNetif.GetInstance(), aPromiscuous);
 
@@ -1407,13 +1407,13 @@ otMacCounters &Mac::GetCounters(void)
     return mCounters;
 }
 
-void Mac::EnableSrcMatch(bool aEnable)
+void Mac::EnableSrcMatch(_In_ bool aEnable)
 {
     otPlatRadioEnableSrcMatch(mNetif.GetInstance(), aEnable);
     otLogDebgMac("Enable SrcMatch -- %d(0:Dis, 1:En)", aEnable);
 }
 
-ThreadError Mac::AddSrcMatchEntry(Address &aAddr)
+ThreadError Mac::AddSrcMatchEntry(_In_ Address &aAddr)
 {
     ThreadError error = kThreadError_None;
 
@@ -1439,7 +1439,7 @@ ThreadError Mac::AddSrcMatchEntry(Address &aAddr)
     return error;
 }
 
-ThreadError Mac::ClearSrcMatchEntry(Address &aAddr)
+ThreadError Mac::ClearSrcMatchEntry(_In_ Address &aAddr)
 {
     ThreadError error = kThreadError_None;
 
@@ -1465,7 +1465,7 @@ ThreadError Mac::ClearSrcMatchEntry(Address &aAddr)
     return error;
 }
 
-void Mac::ClearSrcMatchEntries()
+void Mac::ClearSrcMatchEntries(void)
 {
     otPlatRadioClearSrcMatchShortEntries(mNetif.GetInstance());
     otPlatRadioClearSrcMatchExtEntries(mNetif.GetInstance());

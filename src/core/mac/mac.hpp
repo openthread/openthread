@@ -43,6 +43,7 @@
 #include <platform/radio.h>
 #include <thread/key_manager.hpp>
 #include <thread/topology.hpp>
+#include <sal.h>
 
 namespace Thread {
 
@@ -100,7 +101,7 @@ public:
      * @param[in]  aError    Any errors that occurred during reception.
      *
      */
-    typedef void (*ReceiveFrameHandler)(void *aContext, Frame &aFrame, ThreadError aError);
+    typedef void (*ReceiveFrameHandler)(_In_ void *aContext, _In_ Frame &aFrame, _In_ ThreadError aError);
 
     /**
      * This constructor creates a MAC receiver client.
@@ -109,14 +110,14 @@ public:
      * @param[in]  aContext              A pointer to arbitrary context information.
      *
      */
-    Receiver(ReceiveFrameHandler aReceiveFrameHandler, void *aContext) {
+    Receiver(_In_ ReceiveFrameHandler aReceiveFrameHandler, _In_ void *aContext) {
         mReceiveFrameHandler = aReceiveFrameHandler;
         mContext = aContext;
         mNext = NULL;
     }
 
 private:
-    void HandleReceivedFrame(Frame &frame, ThreadError error) { mReceiveFrameHandler(mContext, frame, error); }
+    void HandleReceivedFrame(_In_ Frame &frame, _In_ ThreadError error) { mReceiveFrameHandler(mContext, frame, error); }
 
     ReceiveFrameHandler mReceiveFrameHandler;
     void *mContext;
@@ -139,7 +140,7 @@ public:
      * @param[in]  aFrame    A reference to the MAC frame buffer.
      *
      */
-    typedef ThreadError(*FrameRequestHandler)(void *aContext, Frame &aFrame);
+    typedef ThreadError(*FrameRequestHandler)(_In_ void *aContext, _In_ Frame &aFrame);
 
     /**
      * This function pointer is called when the MAC is done sending the frame.
@@ -149,7 +150,7 @@ public:
      * @param[in]  aError    The status of the last MSDU transmission.
      *
      */
-    typedef void (*SentFrameHandler)(void *aContext, Frame &aFrame, ThreadError aError);
+    typedef void (*SentFrameHandler)(_In_ void *aContext, _In_ Frame &aFrame, _In_ ThreadError aError);
 
     /**
      * This constructor creates a MAC sender client.
@@ -159,7 +160,7 @@ public:
      * @param[in]  aContext              A pointer to arbitrary context information.
      *
      */
-    Sender(FrameRequestHandler aFrameRequestHandler, SentFrameHandler aSentFrameHandler, void *aContext) {
+    Sender(_In_ FrameRequestHandler aFrameRequestHandler, _In_ SentFrameHandler aSentFrameHandler, _In_ void *aContext) {
         mFrameRequestHandler = aFrameRequestHandler;
         mSentFrameHandler = aSentFrameHandler;
         mContext = aContext;
@@ -167,8 +168,8 @@ public:
     }
 
 private:
-    ThreadError HandleFrameRequest(Frame &frame) { return mFrameRequestHandler(mContext, frame); }
-    void HandleSentFrame(Frame &frame, ThreadError error) { mSentFrameHandler(mContext, frame, error); }
+    ThreadError HandleFrameRequest(_In_ Frame &frame) { return mFrameRequestHandler(mContext, frame); }
+    void HandleSentFrame(_In_ Frame &frame, _In_ ThreadError error) { mSentFrameHandler(mContext, frame, error); }
 
     FrameRequestHandler mFrameRequestHandler;
     SentFrameHandler mSentFrameHandler;
@@ -189,7 +190,7 @@ public:
      * @param[in]  aThreadNetif  A reference to the network interface using this MAC.
      *
      */
-    explicit Mac(ThreadNetif &aThreadNetif);
+    explicit Mac(_In_ ThreadNetif &aThreadNetif);
 
     /**
      * This function pointer is called on receiving an IEEE 802.15.4 Beacon during an Active Scan.
@@ -198,7 +199,7 @@ public:
      * @param[in]  aBeaconFrame   A pointer to the Beacon frame.
      *
      */
-    typedef void (*ActiveScanHandler)(void *aContext, Frame *aBeaconFrame);
+    typedef void (*ActiveScanHandler)(_In_ void *aContext, _In_opt_ Frame *aBeaconFrame);
 
     /**
      * This method starts an IEEE 802.15.4 Active Scan.
@@ -209,7 +210,7 @@ public:
      * @param[in]  aContext       A pointer to arbitrary context information.
      *
      */
-    ThreadError ActiveScan(uint32_t aScanChannels, uint16_t aScanDuration, ActiveScanHandler aHandler, void *aContext);
+    ThreadError ActiveScan(_In_ uint32_t aScanChannels, _In_ uint16_t aScanDuration, _In_ ActiveScanHandler aHandler, _In_ void *aContext);
 
     /**
      * This function pointer is called during an "Energy Scan" when the result for a channel is ready or the scan
@@ -219,7 +220,7 @@ public:
      * @param[in]  aContext  A pointer to arbitrary context information.
      *
      */
-    typedef void (*EnergyScanHandler)(void *aContext, otEnergyScanResult *aResult);
+    typedef void (*EnergyScanHandler)(_In_ void *aContext, _In_opt_ otEnergyScanResult *aResult);
 
     /**
      * This function starts an IEEE 802.15.4 Energy Scan.
@@ -233,7 +234,7 @@ public:
      * @retval kThreadError_Busy  Could not start the energy scan.
      *
      */
-    ThreadError EnergyScan(uint32_t aScanChannels, uint16_t aScanDuration, EnergyScanHandler aHandler, void *aContext);
+    ThreadError EnergyScan(_In_ uint32_t aScanChannels, _In_ uint16_t aScanDuration, _In_ EnergyScanHandler aHandler, _In_ void *aContext);
 
     /**
      * This function indicates the energy scan for the current channel is complete.
@@ -241,7 +242,7 @@ public:
      * @param[in]  aEnergyScanMaxRssi  The maximum RSSI encountered on the scanned channel.
      *
      */
-    void EnergyScanDone(int8_t aEnergyScanMaxRssi);
+    void EnergyScanDone(_In_ int8_t aEnergyScanMaxRssi);
 
     /**
      * This method indicates whether or not rx-on-when-idle is enabled.
@@ -257,7 +258,7 @@ public:
      * @param[in]  aRxOnWhenIdle  The rx-on-when-idle mode.
      *
      */
-    void SetRxOnWhenIdle(bool aRxOnWhenIdle);
+    void SetRxOnWhenIdle(_In_ bool aRxOnWhenIdle);
 
     /**
      * This method registers a new MAC receiver client.
@@ -268,7 +269,7 @@ public:
      * @retval kThreadError_Already  The receiver was already registered.
      *
      */
-    ThreadError RegisterReceiver(Receiver &aReceiver);
+    ThreadError RegisterReceiver(_In_ Receiver &aReceiver);
 
     /**
      * This method registers a new MAC sender client.
@@ -279,7 +280,7 @@ public:
      * @retval kThreadError_Already  The sender was already registered.
      *
      */
-    ThreadError SendFrameRequest(Sender &aSender);
+    ThreadError SendFrameRequest(_In_ Sender &aSender);
 
     /**
      * This method returns a pointer to the IEEE 802.15.4 Extended Address.
@@ -295,7 +296,7 @@ public:
      * @param[in]  aExtAddress  A reference to the IEEE 802.15.4 Extended Address.
      *
      */
-    void SetExtAddress(const ExtAddress &aExtAddress);
+    void SetExtAddress(_In_ const ExtAddress &aExtAddress);
 
     /**
      * This method gets the Hash Mac Address.
@@ -306,7 +307,7 @@ public:
      * @param[out]  aHashMacAddress    A pointer to where the Hash Mac Address is placed.
      *
      */
-    void GetHashMacAddress(ExtAddress *aHashMacAddress);
+    void GetHashMacAddress(_Out_ ExtAddress *aHashMacAddress);
 
     /**
      * This method returns the IEEE 802.15.4 Short Address.
@@ -324,7 +325,7 @@ public:
      * @retval kThreadError_None  Successfully set the IEEE 802.15.4 Short Address.
      *
      */
-    ThreadError SetShortAddress(ShortAddress aShortAddress);
+    ThreadError SetShortAddress(_In_ ShortAddress aShortAddress);
 
     /**
      * This method returns the IEEE 802.15.4 Channel.
@@ -342,7 +343,7 @@ public:
      * @retval kThreadError_None  Successfully set the IEEE 802.15.4 Channel.
      *
      */
-    ThreadError SetChannel(uint8_t aChannel);
+    ThreadError SetChannel(_In_ uint8_t aChannel);
 
     /**
      * This method returns the maximum transmit power in dBm.
@@ -358,7 +359,7 @@ public:
      * @param[in]  aPower  The maximum transmit power in dBm.
      *
      */
-    void SetMaxTransmitPower(int8_t aPower);
+    void SetMaxTransmitPower(_In_ int8_t aPower);
 
     /**
      * This method returns the IEEE 802.15.4 Network Name.
@@ -366,7 +367,7 @@ public:
      * @returns A pointer to the IEEE 802.15.4 Network Name.
      *
      */
-    const char *GetNetworkName(void) const;
+    PCSTR GetNetworkName(void) const;
 
     /**
      * This method sets the IEEE 802.15.4 Network Name.
@@ -376,7 +377,7 @@ public:
      * @retval kThreadError_None  Successfully set the IEEE 802.15.4 Network Name.
      *
      */
-    ThreadError SetNetworkName(const char *aNetworkName);
+    ThreadError SetNetworkName(_In_ PCSTR aNetworkName);
 
     /**
      * This method returns the IEEE 802.15.4 PAN ID.
@@ -394,7 +395,7 @@ public:
      * @retval kThreadError_None  Successfully set the IEEE 802.15.4 PAN ID.
      *
      */
-    ThreadError SetPanId(uint16_t aPanId);
+    ThreadError SetPanId(_In_ uint16_t aPanId);
 
     /**
      * This method returns the IEEE 802.15.4 Extended PAN ID.
@@ -412,7 +413,7 @@ public:
      * @retval kThreadError_None  Successfully set the IEEE 802.15.4 Extended PAN ID.
      *
      */
-    ThreadError SetExtendedPanId(const uint8_t *aExtPanId);
+    ThreadError SetExtendedPanId(_In_reads_bytes_(sizeof(otExtendedPanId)) const uint8_t *aExtPanId);
 
     /**
      * This method returns the MAC whitelist filter.
@@ -438,7 +439,7 @@ public:
      *                     was aborted and a frame was not received.
      *
      */
-    void ReceiveDoneTask(Frame *aFrame, ThreadError aError);
+    void ReceiveDoneTask(_In_ Frame *aFrame, _In_ ThreadError aError);
 
     /**
      * This method is called to handle transmit events.
@@ -450,7 +451,7 @@ public:
      *                     was aborted for other reasons.
      *
      */
-    void TransmitDoneTask(bool aRxPending, ThreadError aError);
+    void TransmitDoneTask(_In_ bool aRxPending, _In_ ThreadError aError);
 
     /**
      * This method returns if an active scan is in progress.
@@ -472,7 +473,7 @@ public:
      * @param[in]  aCallbackContext  A pointer to application-specific context.
      *
      */
-    void SetPcapCallback(otLinkPcapCallback aPcapCallback, void *aCallbackContext);
+    void SetPcapCallback(_In_ otLinkPcapCallback aPcapCallback, _In_ void *aCallbackContext);
 
     /**
      * This function indicates whether or not promiscuous mode is enabled at the link layer.
@@ -491,7 +492,7 @@ public:
      * @param[in]  aPromiscuous  true to enable promiscuous mode, or false otherwise.
      *
      */
-    void SetPromiscuous(bool aPromiscuous);
+    void SetPromiscuous(_In_ bool aPromiscuous);
 
     /**
      * This method returns the MAC counter.
@@ -515,7 +516,7 @@ public:
      * @param[in]  aEnable  Enable/disable source match for automatical pending.
      *
      */
-    void EnableSrcMatch(bool aEnable);
+    void EnableSrcMatch(_In_ bool aEnable);
 
     /**
      * This function adds the address into the source match table.
@@ -526,7 +527,7 @@ public:
      * @retval ::kThreadError_NoBufs No available entry in the source match table
      *
      */
-    ThreadError AddSrcMatchEntry(Address &aAddr);
+    ThreadError AddSrcMatchEntry(_In_ Address &aAddr);
 
     /**
      * This function removes the address from the source match table.
@@ -537,13 +538,13 @@ public:
      * @retval ::kThreadError_NoAddress  The address is not in the source match table.
      *
      */
-    ThreadError ClearSrcMatchEntry(Address &aAddr);
+    ThreadError ClearSrcMatchEntry(_In_ Address &aAddr);
 
     /**
      * This function emptys the source match table.
      *
      */
-    void ClearSrcMatchEntries();
+    void ClearSrcMatchEntries(void);
 
     /**
      * This function indicates whether or not transmit retries and CSMA backoff logic is supported by the radio layer.
@@ -567,29 +568,29 @@ private:
         kInvalidRssiValue = 127
     };
 
-    void GenerateNonce(const ExtAddress &aAddress, uint32_t aFrameCounter, uint8_t aSecurityLevel, uint8_t *aNonce);
+    void GenerateNonce(_In_ const ExtAddress &aAddress, _In_ uint32_t aFrameCounter, _In_ uint8_t aSecurityLevel, _Out_writes_bytes_(13) uint8_t *aNonce);
     void NextOperation(void);
-    void ProcessTransmitSecurity(Frame &aFrame);
-    ThreadError ProcessReceiveSecurity(Frame &aFrame, const Address &aSrcAddr, Neighbor *aNeighbor);
+    void ProcessTransmitSecurity(_In_ Frame &aFrame);
+    ThreadError ProcessReceiveSecurity(_In_ Frame &aFrame, _In_ const Address &aSrcAddr, _In_ Neighbor *aNeighbor);
     void ScheduleNextTransmission(void);
-    void SentFrame(ThreadError aError);
-    void SendBeaconRequest(Frame &aFrame);
-    void SendBeacon(Frame &aFrame);
+    void SentFrame(_In_ ThreadError aError);
+    void SendBeaconRequest(_In_ Frame &aFrame);
+    void SendBeacon(_In_ Frame &aFrame);
     void StartBackoff(void);
     void StartEnergyScan(void);
-    ThreadError HandleMacCommand(Frame &aFrame);
+    ThreadError HandleMacCommand(_In_ Frame &aFrame);
 
-    static void HandleMacTimer(void *aContext);
+    static void HandleMacTimer(_In_ void *aContext);
     void HandleMacTimer(void);
-    static void HandleBeginTransmit(void *aContext);
+    static void HandleBeginTransmit(_In_ void *aContext);
     void HandleBeginTransmit(void);
-    static void HandleReceiveTimer(void *aContext);
+    static void HandleReceiveTimer(_In_ void *aContext);
     void HandleReceiveTimer(void);
-    static void HandleEnergyScanSampleRssi(void *aContext);
+    static void HandleEnergyScanSampleRssi(_In_ void *aContext);
     void HandleEnergyScanSampleRssi(void);
 
     void StartCsmaBackoff(void);
-    ThreadError Scan(ScanType aType, uint32_t aScanChannels, uint16_t aScanDuration, void *aContext);
+    ThreadError Scan(_In_ ScanType aType, _In_ uint32_t aScanChannels, _In_ uint16_t aScanDuration, _In_ void *aContext);
 
     Timer mMacTimer;
     Timer mBackoffTimer;

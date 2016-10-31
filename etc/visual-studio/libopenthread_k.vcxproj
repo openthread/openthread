@@ -50,6 +50,8 @@
   <PropertyGroup>
     <OutDir>..\..\build\bin\$(Platform)\$(Configuration)\lib\</OutDir>
     <IntDir>..\..\build\obj\$(Platform)\$(Configuration)\$(ProjectName)\</IntDir>
+    <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
+    <RunCodeAnalysis>true</RunCodeAnalysis>
   </PropertyGroup>
   <ItemDefinitionGroup>
     <ClCompile>
@@ -71,13 +73,14 @@
         ..\..\third_party\mbedtls;
         ..\..\third_party\mbedtls\repo\include;
       </AdditionalIncludeDirectories>
-      <DisableSpecificWarnings>4100;4706;4748;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <DisableSpecificWarnings>4100;4706;4748;6001;28199;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <TreatWarningAsError>true</TreatWarningAsError>
       <WppEnabled>true</WppEnabled>
       <WppScanConfigurationData>..\..\include\platform\logging-windows.h</WppScanConfigurationData>
       <WppAdditionalOptions>-km %(WppAdditionalOptions)</WppAdditionalOptions>
       <WppModuleName>otCore</WppModuleName>
       <WppSearchString>WPP_INIT_TRACING</WppSearchString>
+      <EnablePREfast>true</EnablePREfast>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemGroup>

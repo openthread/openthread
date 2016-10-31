@@ -1082,7 +1082,7 @@ uint8_t MleRouter::GetLinkCost(uint8_t aRouterId)
     uint8_t rval;
 
     // kInvalidRouterId indicates non-existing next hop, hence return kMaxRouteCost for it.
-    assert(aRouterId <= kInvalidRouterId);
+    assert(aRouterId < kInvalidRouterId);
 
     VerifyOrExit(aRouterId != mRouterId &&
                  IsRouterIdValid(aRouterId) &&
