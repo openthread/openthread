@@ -70,6 +70,79 @@ DatasetManager::DatasetManager(ThreadNetif &aThreadNetif, const Tlv::Type aType,
 {
 }
 
+ThreadError DatasetManager::ApplyConfiguration(void)
+{
+    ThreadError error = kThreadError_None;
+    Dataset *dataset;
+    const Tlv *cur;
+    const Tlv *end;
+
+    dataset = mMle.IsAttached() ? &mNetwork : &mLocal;
+
+    cur = reinterpret_cast<const Tlv *>(dataset->GetBytes());
+    end = reinterpret_cast<const Tlv *>(dataset->GetBytes() + dataset->GetSize());
+
+    while (cur < end)
+    {
+        switch (cur->GetType())
+        {
+        case Tlv::kChannel:
+        {
+            const ChannelTlv *channel = static_cast<const ChannelTlv *>(cur);
+            mNetif.GetMac().SetChannel(static_cast<uint8_t>(channel->GetChannel()));
+            break;
+        }
+
+        case Tlv::kPanId:
+        {
+            const PanIdTlv *panid = static_cast<const PanIdTlv *>(cur);
+            mNetif.GetMac().SetPanId(panid->GetPanId());
+            break;
+        }
+
+        case Tlv::kExtendedPanId:
+        {
+            const ExtendedPanIdTlv *extpanid = static_cast<const ExtendedPanIdTlv *>(cur);
+            mNetif.GetMac().SetExtendedPanId(extpanid->GetExtendedPanId());
+            break;
+        }
+
+        case Tlv::kNetworkName:
+        {
+            const NetworkNameTlv *name = static_cast<const NetworkNameTlv *>(cur);
+            otNetworkName networkName;
+            memset(networkName.m8, 0, sizeof(networkName));
+            memcpy(networkName.m8, name->GetNetworkName(), name->GetLength());
+            mNetif.GetMac().SetNetworkName(networkName.m8);
+            break;
+        }
+
+        case Tlv::kNetworkMasterKey:
+        {
+            const NetworkMasterKeyTlv *key = static_cast<const NetworkMasterKeyTlv *>(cur);
+            mNetif.GetKeyManager().SetMasterKey(key->GetNetworkMasterKey(), key->GetLength());
+            break;
+        }
+
+        case Tlv::kMeshLocalPrefix:
+        {
+            const MeshLocalPrefixTlv *prefix = static_cast<const MeshLocalPrefixTlv *>(cur);
+            mMle.SetMeshLocalPrefix(prefix->GetMeshLocalPrefix());
+            break;
+        }
+
+        default:
+        {
+            break;
+        }
+        }
+
+        cur = cur->GetNext();
+    }
+
+    return error;
+}
+
 ThreadError DatasetManager::Set(const otOperationalDataset &aDataset, uint8_t &aFlags)
 {
     ThreadError error = kThreadError_None;
@@ -100,9 +173,9 @@ exit:
     return error;
 }
 
-ThreadError DatasetManager::Clear(uint8_t &aFlags)
+ThreadError DatasetManager::Clear(uint8_t &aFlags, bool aOnlyClearNetwork)
 {
-    if (mLocal.Compare(mNetwork) == 0)
+    if (!aOnlyClearNetwork && mLocal.Compare(mNetwork) == 0)
     {
         mLocal.Clear(true);
     }
@@ -112,10 +185,11 @@ ThreadError DatasetManager::Clear(uint8_t &aFlags)
     return kThreadError_None;
 }
 
-ThreadError DatasetManager::Set(const Dataset &aDataset, uint8_t &aFlags)
+ThreadError DatasetManager::Set(const Dataset &aDataset)
 {
     mNetwork.Set(aDataset);
-    HandleNetworkUpdate(aFlags);
+    mLocal.Set(aDataset);
+    mLocal.Store();
     return kThreadError_None;
 }
 
@@ -496,6 +570,7 @@ ThreadError DatasetManager::SendSetRequest(const otOperationalDataset &aDataset,
     {
         ChannelTlv channel;
         channel.Init();
+        channel.SetChannelPage(0);
         channel.SetChannel(aDataset.mChannel);
         SuccessOrExit(error = message->Append(&channel, sizeof(channel)));
     }
@@ -649,10 +724,15 @@ ActiveDataset::ActiveDataset(ThreadNetif &aThreadNetif):
 {
 }
 
-void ActiveDataset::Restore(void)
+ThreadError ActiveDataset::Restore(void)
 {
-    mLocal.Restore();
-    ApplyConfiguration();
+    ThreadError error = kThreadError_None;
+
+    SuccessOrExit(error = mLocal.Restore());
+    SuccessOrExit(error = DatasetManager::ApplyConfiguration());
+
+exit:
+    return error;
 }
 
 void ActiveDataset::StartLeader(void)
@@ -713,12 +793,12 @@ void ActiveDataset::StopLeader(void)
     mCoapServer.RemoveResource(mResourceSet);
 }
 
-ThreadError ActiveDataset::Clear(void)
+ThreadError ActiveDataset::Clear(bool aOnlyClearNetwork)
 {
     ThreadError error = kThreadError_None;
     uint8_t flags;
 
-    SuccessOrExit(error = DatasetManager::Clear(flags));
+    SuccessOrExit(error = DatasetManager::Clear(flags, aOnlyClearNetwork));
 
 exit:
     return error;
@@ -730,7 +810,7 @@ ThreadError ActiveDataset::Set(const otOperationalDataset &aDataset)
     uint8_t flags;
 
     SuccessOrExit(error = DatasetManager::Set(aDataset, flags));
-    ApplyConfiguration();
+    DatasetManager::ApplyConfiguration();
 
 exit:
     return error;
@@ -739,10 +819,9 @@ exit:
 ThreadError ActiveDataset::Set(const Dataset &aDataset)
 {
     ThreadError error = kThreadError_None;
-    uint8_t flags;
 
-    SuccessOrExit(error = DatasetManager::Set(aDataset, flags));
-    ApplyConfiguration();
+    SuccessOrExit(error = DatasetManager::Set(aDataset));
+    DatasetManager::ApplyConfiguration();
 
 exit:
     return error;
@@ -755,7 +834,7 @@ ThreadError ActiveDataset::Set(const Timestamp &aTimestamp, const Message &aMess
     uint8_t flags;
 
     SuccessOrExit(error = DatasetManager::Set(aTimestamp, aMessage, aOffset, aLength, flags));
-    ApplyConfiguration();
+    DatasetManager::ApplyConfiguration();
 
 exit:
     return error;
@@ -787,79 +866,6 @@ exit:
     return;
 }
 
-ThreadError ActiveDataset::ApplyConfiguration(void)
-{
-    ThreadError error = kThreadError_None;
-    Dataset *dataset;
-    const Tlv *cur;
-    const Tlv *end;
-
-    dataset = mMle.IsAttached() ? &mNetwork : &mLocal;
-
-    cur = reinterpret_cast<const Tlv *>(dataset->GetBytes());
-    end = reinterpret_cast<const Tlv *>(dataset->GetBytes() + dataset->GetSize());
-
-    while (cur < end)
-    {
-        switch (cur->GetType())
-        {
-        case Tlv::kChannel:
-        {
-            const ChannelTlv *channel = static_cast<const ChannelTlv *>(cur);
-            mNetif.GetMac().SetChannel(static_cast<uint8_t>(channel->GetChannel()));
-            break;
-        }
-
-        case Tlv::kPanId:
-        {
-            const PanIdTlv *panid = static_cast<const PanIdTlv *>(cur);
-            mNetif.GetMac().SetPanId(panid->GetPanId());
-            break;
-        }
-
-        case Tlv::kExtendedPanId:
-        {
-            const ExtendedPanIdTlv *extpanid = static_cast<const ExtendedPanIdTlv *>(cur);
-            mNetif.GetMac().SetExtendedPanId(extpanid->GetExtendedPanId());
-            break;
-        }
-
-        case Tlv::kNetworkName:
-        {
-            const NetworkNameTlv *name = static_cast<const NetworkNameTlv *>(cur);
-            otNetworkName networkName;
-            memset(networkName.m8, 0, sizeof(networkName));
-            memcpy(networkName.m8, name->GetNetworkName(), name->GetLength());
-            mNetif.GetMac().SetNetworkName(networkName.m8);
-            break;
-        }
-
-        case Tlv::kNetworkMasterKey:
-        {
-            const NetworkMasterKeyTlv *key = static_cast<const NetworkMasterKeyTlv *>(cur);
-            mNetif.GetKeyManager().SetMasterKey(key->GetNetworkMasterKey(), key->GetLength());
-            break;
-        }
-
-        case Tlv::kMeshLocalPrefix:
-        {
-            const MeshLocalPrefixTlv *prefix = static_cast<const MeshLocalPrefixTlv *>(cur);
-            mMle.SetMeshLocalPrefix(prefix->GetMeshLocalPrefix());
-            break;
-        }
-
-        default:
-        {
-            break;
-        }
-        }
-
-        cur = cur->GetNext();
-    }
-
-    return error;
-}
-
 PendingDataset::PendingDataset(ThreadNetif &aThreadNetif):
     DatasetManager(aThreadNetif, Tlv::kPendingTimestamp, OPENTHREAD_URI_PENDING_SET, OPENTHREAD_URI_PENDING_GET),
     mResourceGet(OPENTHREAD_URI_PENDING_GET, &PendingDataset::HandleGet, this),
@@ -868,10 +874,16 @@ PendingDataset::PendingDataset(ThreadNetif &aThreadNetif):
 {
 }
 
-void PendingDataset::Restore(void)
+ThreadError PendingDataset::Restore(void)
 {
-    mLocal.Restore();
+    ThreadError error = kThreadError_None;
+
+    SuccessOrExit(error = mLocal.Restore());
+
     ResetDelayTimer(kFlagLocalUpdated);
+
+exit:
+    return error;
 }
 
 void PendingDataset::StartLeader(void)
@@ -891,12 +903,12 @@ void PendingDataset::StopLeader(void)
     mCoapServer.RemoveResource(mResourceSet);
 }
 
-ThreadError PendingDataset::Clear(void)
+ThreadError PendingDataset::Clear(bool aOnlyClearNetwork)
 {
     ThreadError error = kThreadError_None;
     uint8_t flags;
 
-    SuccessOrExit(error = DatasetManager::Clear(flags));
+    SuccessOrExit(error = DatasetManager::Clear(flags, aOnlyClearNetwork));
     ResetDelayTimer(flags);
 
 exit:
@@ -910,6 +922,17 @@ ThreadError PendingDataset::Set(const otOperationalDataset &aDataset)
 
     SuccessOrExit(error = DatasetManager::Set(aDataset, flags));
     ResetDelayTimer(flags);
+
+exit:
+    return error;
+}
+
+ThreadError PendingDataset::Set(const Dataset &aDataset)
+{
+    ThreadError error = kThreadError_None;
+
+    SuccessOrExit(error = DatasetManager::Set(aDataset));
+    ResetDelayTimer(kFlagLocalUpdated | kFlagNetworkUpdated);
 
 exit:
     return error;
@@ -1036,7 +1059,7 @@ void PendingDataset::HandleTimer(void)
 
     mNetif.GetActiveDataset().Set(mNetwork);
 
-    Clear();
+    Clear(false);
 }
 
 }  // namespace MeshCoP

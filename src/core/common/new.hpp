@@ -41,5 +41,6 @@
 inline _Ret_notnull_ void *operator new(_In_ size_t, _In_ void *p) throw() { return p; }
 
 void OT_CDECL operator delete(_In_ void *, _In_ size_t) throw();
+void OT_CDECL operator delete(_In_ void *) throw();
 
 #endif  // NEW_HPP_
