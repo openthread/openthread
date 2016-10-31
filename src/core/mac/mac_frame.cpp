@@ -39,13 +39,13 @@
 namespace Thread {
 namespace Mac {
 
-void ExtAddress::Set(const Ip6::Address &aIpAddress)
+void ExtAddress::Set(_In_ const Ip6::Address &aIpAddress)
 {
     memcpy(m8, aIpAddress.GetIid(), sizeof(m8));
     m8[0] ^= 0x02;
 }
 
-ThreadError Frame::InitMacHeader(uint16_t aFcf, uint8_t aSecurityControl)
+ThreadError Frame::InitMacHeader(_In_ uint16_t aFcf, _In_ uint8_t aSecurityControl)
 {
     uint8_t *bytes = GetPsdu();
     uint8_t length = 0;
@@ -160,7 +160,7 @@ bool Frame::GetAckRequest(void)
     return (GetPsdu()[0] & Frame::kFcfAckRequest) != 0;
 }
 
-void Frame::SetAckRequest(bool aAckRequest)
+void Frame::SetAckRequest(_In_ bool aAckRequest)
 {
     if (aAckRequest)
     {
@@ -177,7 +177,7 @@ bool Frame::GetFramePending(void)
     return (GetPsdu()[0] & Frame::kFcfFramePending) != 0;
 }
 
-void Frame::SetFramePending(bool aFramePending)
+void Frame::SetFramePending(_In_ bool aFramePending)
 {
     if (aFramePending)
     {
@@ -205,7 +205,7 @@ uint8_t Frame::GetSequence(void)
     return buf[0];
 }
 
-void Frame::SetSequence(uint8_t aSequence)
+void Frame::SetSequence(_In_ uint8_t aSequence)
 {
     uint8_t *buf = FindSequence();
     buf[0] = aSequence;
@@ -227,7 +227,7 @@ exit:
     return cur;
 }
 
-ThreadError Frame::GetDstPanId(PanId &aPanId)
+ThreadError Frame::GetDstPanId(_Out_ PanId &aPanId)
 {
     ThreadError error = kThreadError_None;
     uint8_t *buf;
@@ -240,7 +240,7 @@ exit:
     return error;
 }
 
-ThreadError Frame::SetDstPanId(PanId aPanId)
+ThreadError Frame::SetDstPanId(_In_ PanId aPanId)
 {
     uint8_t *buf;
 
@@ -267,7 +267,7 @@ uint8_t *Frame::FindDstAddr(void)
     return cur;
 }
 
-ThreadError Frame::GetDstAddr(Address &aAddress)
+ThreadError Frame::GetDstAddr(_Out_ Address &aAddress)
 {
     ThreadError error = kThreadError_None;
     uint8_t *buf;
@@ -301,7 +301,7 @@ exit:
     return error;
 }
 
-ThreadError Frame::SetDstAddr(ShortAddress aShortAddress)
+ThreadError Frame::SetDstAddr(_In_ ShortAddress aShortAddress)
 {
     uint8_t *buf;
     uint16_t fcf = static_cast<uint16_t>((GetPsdu()[1] << 8) | GetPsdu()[0]);
@@ -317,7 +317,7 @@ ThreadError Frame::SetDstAddr(ShortAddress aShortAddress)
     return kThreadError_None;
 }
 
-ThreadError Frame::SetDstAddr(const ExtAddress &aExtAddress)
+ThreadError Frame::SetDstAddr(_In_ const ExtAddress &aExtAddress)
 {
     uint8_t *buf;
     uint16_t fcf = static_cast<uint16_t>((GetPsdu()[1] << 8) | GetPsdu()[0]);
@@ -367,7 +367,7 @@ exit:
     return cur;
 }
 
-ThreadError Frame::GetSrcPanId(PanId &aPanId)
+ThreadError Frame::GetSrcPanId(_Out_ PanId &aPanId)
 {
     ThreadError error = kThreadError_None;
     uint8_t *buf;
@@ -380,7 +380,7 @@ exit:
     return error;
 }
 
-ThreadError Frame::SetSrcPanId(PanId aPanId)
+ThreadError Frame::SetSrcPanId(_In_ PanId aPanId)
 {
     ThreadError error = kThreadError_None;
     uint8_t *buf;
@@ -425,7 +425,7 @@ uint8_t *Frame::FindSrcAddr(void)
     return cur;
 }
 
-ThreadError Frame::GetSrcAddr(Address &address)
+ThreadError Frame::GetSrcAddr(_Out_ Address &address)
 {
     ThreadError error = kThreadError_None;
     uint8_t *buf;
@@ -459,7 +459,7 @@ exit:
     return error;
 }
 
-ThreadError Frame::SetSrcAddr(ShortAddress aShortAddress)
+ThreadError Frame::SetSrcAddr(_In_ ShortAddress aShortAddress)
 {
     uint8_t *buf;
     uint16_t fcf = static_cast<uint16_t>((GetPsdu()[1] << 8) | GetPsdu()[0]);
@@ -475,7 +475,7 @@ ThreadError Frame::SetSrcAddr(ShortAddress aShortAddress)
     return kThreadError_None;
 }
 
-ThreadError Frame::SetSrcAddr(const ExtAddress &aExtAddress)
+ThreadError Frame::SetSrcAddr(_In_ const ExtAddress &aExtAddress)
 {
     uint8_t *buf;
     uint16_t fcf = static_cast<uint16_t>((GetPsdu()[1] << 8) | GetPsdu()[0]);
@@ -543,7 +543,7 @@ exit:
     return cur;
 }
 
-ThreadError Frame::GetSecurityLevel(uint8_t &aSecurityLevel)
+ThreadError Frame::GetSecurityLevel(_Out_ uint8_t &aSecurityLevel)
 {
     ThreadError error = kThreadError_None;
     uint8_t *buf;
@@ -556,7 +556,7 @@ exit:
     return error;
 }
 
-ThreadError Frame::GetKeyIdMode(uint8_t &aKeyIdMode)
+ThreadError Frame::GetKeyIdMode(_Out_ uint8_t &aKeyIdMode)
 {
     ThreadError error = kThreadError_None;
     uint8_t *buf;
@@ -569,7 +569,7 @@ exit:
     return error;
 }
 
-ThreadError Frame::GetFrameCounter(uint32_t &aFrameCounter)
+ThreadError Frame::GetFrameCounter(_Out_ uint32_t &aFrameCounter)
 {
     ThreadError error = kThreadError_None;
     uint8_t *buf;
@@ -588,7 +588,7 @@ exit:
     return error;
 }
 
-ThreadError Frame::SetFrameCounter(uint32_t aFrameCounter)
+ThreadError Frame::SetFrameCounter(_In_ uint32_t aFrameCounter)
 {
     uint8_t *buf;
 
@@ -619,7 +619,7 @@ const uint8_t *Frame::GetKeySource(void)
     return buf;
 }
 
-uint8_t Frame::GetKeySourceLength(uint8_t aKeyIdMode)
+uint8_t Frame::GetKeySourceLength(_In_ uint8_t aKeyIdMode)
 {
     uint8_t rval = 0;
 
@@ -645,7 +645,7 @@ uint8_t Frame::GetKeySourceLength(uint8_t aKeyIdMode)
     return rval;
 }
 
-void Frame::SetKeySource(const uint8_t *aKeySource)
+void Frame::SetKeySource(/* TODO */ const uint8_t *aKeySource)
 {
     uint8_t keySourceLength;
     uint8_t *buf;
@@ -660,7 +660,7 @@ void Frame::SetKeySource(const uint8_t *aKeySource)
     memcpy(buf, aKeySource, keySourceLength);
 }
 
-ThreadError Frame::GetKeyId(uint8_t &aKeyId)
+ThreadError Frame::GetKeyId(_Out_ uint8_t &aKeyId)
 {
     ThreadError error = kThreadError_None;
     uint8_t keySourceLength;
@@ -678,7 +678,7 @@ exit:
     return error;
 }
 
-ThreadError Frame::SetKeyId(uint8_t aKeyId)
+ThreadError Frame::SetKeyId(_In_ uint8_t aKeyId)
 {
     uint8_t keySourceLength;
     uint8_t *buf;
@@ -695,7 +695,7 @@ ThreadError Frame::SetKeyId(uint8_t aKeyId)
     return kThreadError_None;
 }
 
-ThreadError Frame::GetCommandId(uint8_t &aCommandId)
+ThreadError Frame::GetCommandId(_Out_ uint8_t &aCommandId)
 {
     ThreadError error = kThreadError_None;
     uint8_t *buf;
@@ -707,7 +707,7 @@ exit:
     return error;
 }
 
-ThreadError Frame::SetCommandId(uint8_t aCommandId)
+ThreadError Frame::SetCommandId(_In_ uint8_t aCommandId)
 {
     ThreadError error = kThreadError_None;
     uint8_t *buf;
@@ -724,7 +724,7 @@ uint8_t Frame::GetLength() const
     return GetPsduLength();
 }
 
-ThreadError Frame::SetLength(uint8_t aLength)
+ThreadError Frame::SetLength(_In_ uint8_t aLength)
 {
     SetPsduLength(aLength);
     return kThreadError_None;
@@ -782,7 +782,7 @@ uint8_t Frame::GetPayloadLength(void)
     return GetPsduLength() - (GetHeaderLength() + GetFooterLength());
 }
 
-ThreadError Frame::SetPayloadLength(uint8_t aLength)
+ThreadError Frame::SetPayloadLength(_In_ uint8_t aLength)
 {
     SetPsduLength(GetHeaderLength() + GetFooterLength() + aLength);
     return kThreadError_None;
