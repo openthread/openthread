@@ -1140,7 +1140,7 @@ ThreadError otThreadStart(otInstance *aInstance)
 
     VerifyOrExit(aInstance->mThreadNetif.GetMac().GetPanId() != Mac::kPanIdBroadcast, error = kThreadError_InvalidState);
 
-    error = aInstance->mThreadNetif.GetMle().Start();
+    error = aInstance->mThreadNetif.GetMle().Start(true);
 
 exit:
     otLogFuncExitErr(error);
@@ -1153,7 +1153,7 @@ ThreadError otThreadStop(otInstance *aInstance)
 
     otLogFuncEntry();
 
-    error = aInstance->mThreadNetif.GetMle().Stop();
+    error = aInstance->mThreadNetif.GetMle().Stop(true);
 
     otLogFuncExitErr(error);
     return error;
