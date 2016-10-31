@@ -2064,7 +2064,11 @@ ThreadError MleRouter::HandleChildIdRequest(const Message &aMessage, const Ip6::
         }
     }
 
-    child->mState = Neighbor::kStateChildIdRequest;
+    if (child->mState != Neighbor::kStateValid)
+    {
+        child->mState = Neighbor::kStateChildIdRequest;
+    }
+
     child->mLastHeard = Timer::GetNow();
     child->mValid.mLinkFrameCounter = linkFrameCounter.GetFrameCounter();
     child->mValid.mMleFrameCounter = mleFrameCounter.GetFrameCounter();
@@ -2112,6 +2116,7 @@ ThreadError MleRouter::HandleChildIdRequest(const Message &aMessage, const Ip6::
         break;
 
     case kDeviceStateChild:
+        child->mState = Neighbor::kStateChildIdRequest;
         BecomeRouter(ThreadStatusTlv::kHaveChildIdRequest);
         break;
 
@@ -2310,20 +2315,23 @@ ThreadError MleRouter::SendChildIdResponse(Child *aChild)
     SuccessOrExit(error = AppendSourceAddress(*message));
     SuccessOrExit(error = AppendLeaderData(*message));
 
-    // pick next Child ID that is not being used
-    do
+    if (aChild->mState != Neighbor::kStateValid)
     {
-        mNextChildId++;
-
-        if (mNextChildId > kMaxChildId)
+        // pick next Child ID that is not being used
+        do
         {
-            mNextChildId = kMinChildId;
-        }
-    }
-    while (FindChild(mNextChildId) != NULL);
+            mNextChildId++;
 
-    // allocate Child ID
-    aChild->mValid.mRloc16 = mMac.GetShortAddress() | mNextChildId;
+            if (mNextChildId > kMaxChildId)
+            {
+                mNextChildId = kMinChildId;
+            }
+        }
+        while (FindChild(mNextChildId) != NULL);
+
+        // allocate Child ID
+        aChild->mValid.mRloc16 = mMac.GetShortAddress() | mNextChildId;
+    }
 
     SuccessOrExit(error = AppendAddress16(*message, aChild->mValid.mRloc16));
 
