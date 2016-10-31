@@ -40,6 +40,7 @@
 #define _Field_size_bytes_full_(size)
 
 #define _Ret_notnull_
+#define _Return_type_success_(expr)
 
 #define _Null_terminated_
 

@@ -73,8 +73,7 @@ typedef struct otInstance otInstance;
 /**
  * This enumeration represents error codes used throughout OpenThread.
  */
-_Success_(return == 0)
-typedef enum ThreadError
+typedef _Return_type_success_(return == kThreadError_None) enum ThreadError
 {
     kThreadError_None = 0,
     kThreadError_Failed = 1,
