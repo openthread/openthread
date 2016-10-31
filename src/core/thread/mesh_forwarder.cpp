@@ -1725,7 +1725,7 @@ void MeshForwarder::HandleDataRequest(const Mac::Address &aMacSource, const Thre
     // Security Check: only process secure Data Poll frames.
     VerifyOrExit(aMessageInfo.mLinkSecurity, ;);
 
-    assert(mMle.GetDeviceState() != Mle::kDeviceStateDetached);
+    VerifyOrExit(mMle.GetDeviceState() != Mle::kDeviceStateDetached, ;);
 
     VerifyOrExit((child = mMle.GetChild(aMacSource)) != NULL, ;);
     child->mLastHeard = Timer::GetNow();
