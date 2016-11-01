@@ -86,7 +86,6 @@ Mle::Mle(ThreadNetif &aThreadNetif) :
     memset(&mParent, 0, sizeof(mParent));
     memset(&mChildIdRequest, 0, sizeof(mChildIdRequest));
     memset(&mLinkLocal64, 0, sizeof(mLinkLocal64));
-    memset(&mLinkLocal16, 0, sizeof(mLinkLocal16));
     memset(&mMeshLocal64, 0, sizeof(mMeshLocal64));
     memset(&mMeshLocal16, 0, sizeof(mMeshLocal16));
     memset(&mLinkLocalAllThreadNodes, 0, sizeof(mLinkLocalAllThreadNodes));
@@ -100,15 +99,6 @@ Mle::Mle(ThreadNetif &aThreadNetif) :
     mLinkLocal64.mPreferredLifetime = 0xffffffff;
     mLinkLocal64.mValidLifetime = 0xffffffff;
     mNetif.AddUnicastAddress(mLinkLocal64);
-
-    // link-local 16
-    memset(&mLinkLocal16, 0, sizeof(mLinkLocal16));
-    mLinkLocal16.GetAddress().mFields.m16[0] = HostSwap16(0xfe80);
-    mLinkLocal16.GetAddress().mFields.m16[5] = HostSwap16(0x00ff);
-    mLinkLocal16.GetAddress().mFields.m16[6] = HostSwap16(0xfe00);
-    mLinkLocal16.mPrefixLength = 64;
-    mLinkLocal16.mPreferredLifetime = 0xffffffff;
-    mLinkLocal16.mValidLifetime = 0xffffffff;
 
     // Leader Aloc
     memset(&mLeaderAloc, 0, sizeof(mLeaderAloc));
@@ -244,7 +234,6 @@ ThreadError Mle::Stop(bool aClearNetworkDatasets)
     otLogFuncEntry();
     mKeyManager.Stop();
     SetStateDetached();
-    mNetif.RemoveUnicastAddress(mLinkLocal16);
     mNetif.RemoveUnicastAddress(mMeshLocal16);
 
     if (mDeviceState == kDeviceStateLeader)
@@ -596,19 +585,10 @@ uint16_t Mle::GetRloc16(void) const
 
 ThreadError Mle::SetRloc16(uint16_t aRloc16)
 {
-    mNetif.RemoveUnicastAddress(mLinkLocal16);
     mNetif.RemoveUnicastAddress(mMeshLocal16);
 
     if (aRloc16 != Mac::kShortAddrInvalid)
     {
-        // link-local 16
-        // add link-local 16 only for sleepy end device
-        if ((mDeviceMode & ModeTlv::kModeRxOnWhenIdle) == 0)
-        {
-            mLinkLocal16.GetAddress().mFields.m16[7] = HostSwap16(aRloc16);
-            mNetif.AddUnicastAddress(mLinkLocal16);
-        }
-
         // mesh-local 16
         mMeshLocal16.GetAddress().mFields.m16[7] = HostSwap16(aRloc16);
         mNetif.AddUnicastAddress(mMeshLocal16);
@@ -1823,10 +1803,6 @@ void Mle::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageIn
 
     case Header::kCommandLinkAcceptAndRequest:
         mMleRouter.HandleLinkAcceptAndRequest(aMessage, aMessageInfo, keySequence);
-        break;
-
-    case Header::kCommandLinkReject:
-        mMleRouter.HandleLinkReject(aMessage, aMessageInfo);
         break;
 
     case Header::kCommandAdvertisement:

@@ -200,8 +200,8 @@ private:
     ThreadError UpdateMeshRoute(Message &aMessage);
     ThreadError HandleDatagram(Message &aMessage, const ThreadMessageInfo &aMessageInfo);
 
-    static void HandleReceivedFrame(void *aContext, Mac::Frame &aFrame, ThreadError aError);
-    void HandleReceivedFrame(Mac::Frame &aFrame, ThreadError aError);
+    static void HandleReceivedFrame(void *aContext, Mac::Frame &aFrame);
+    void HandleReceivedFrame(Mac::Frame &aFrame);
 
     static ThreadError HandleFrameRequest(void *aContext, Mac::Frame &aFrame);
     ThreadError HandleFrameRequest(Mac::Frame &aFrame);

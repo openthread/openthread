@@ -597,17 +597,6 @@ public:
     ThreadError CheckReachability(uint16_t aMeshSource, uint16_t aMeshDest, Ip6::Header &aIp6Header);
 
     /**
-     * This method generates an MLE Link Reject.
-     *
-     * @param[in]  aDestination  A reference to the destination.
-     *
-     * @retval kThreadError_None    Successfully generated the MLE Link Reject message.
-     * @retval kThreadError_NoBufs  Insufficient buffers to generate the MLE Link Reject message.
-     *
-     */
-    ThreadError SendLinkReject(const Ip6::Address &aDestination);
-
-    /**
      * This method checks if a given Router ID has correct value.
      *
      * @param[in]  aRouterId  The Router ID value.
@@ -655,7 +644,6 @@ private:
                                  bool request);
     ThreadError HandleLinkAcceptAndRequest(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo,
                                            uint32_t aKeySequence);
-    ThreadError HandleLinkReject(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
     ThreadError HandleAdvertisement(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
     ThreadError HandleParentRequest(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
     ThreadError HandleChildIdRequest(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo,

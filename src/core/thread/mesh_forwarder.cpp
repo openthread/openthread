@@ -1358,19 +1358,18 @@ exit:
     mScheduleTransmissionTask.Post();
 }
 
-void MeshForwarder::HandleReceivedFrame(void *aContext, Mac::Frame &aFrame, ThreadError aError)
+void MeshForwarder::HandleReceivedFrame(void *aContext, Mac::Frame &aFrame)
 {
-    static_cast<MeshForwarder *>(aContext)->HandleReceivedFrame(aFrame, aError);
+    static_cast<MeshForwarder *>(aContext)->HandleReceivedFrame(aFrame);
 }
 
-void MeshForwarder::HandleReceivedFrame(Mac::Frame &aFrame, ThreadError aError)
+void MeshForwarder::HandleReceivedFrame(Mac::Frame &aFrame)
 {
     ThreadMessageInfo messageInfo;
     Mac::Address macDest;
     Mac::Address macSource;
     uint8_t *payload;
     uint8_t payloadLength;
-    Ip6::Address destination;
     uint8_t commandId;
     Child *child = NULL;
     ThreadError error = kThreadError_None;
@@ -1385,32 +1384,6 @@ void MeshForwarder::HandleReceivedFrame(Mac::Frame &aFrame, ThreadError aError)
     }
 
     SuccessOrExit(error = aFrame.GetSrcAddr(macSource));
-
-    if (aError == kThreadError_Security)
-    {
-        memset(&destination, 0, sizeof(destination));
-        destination.mFields.m16[0] = HostSwap16(0xfe80);
-
-        switch (macSource.mLength)
-        {
-        case 2:
-            destination.mFields.m16[5] = HostSwap16(0x00ff);
-            destination.mFields.m16[6] = HostSwap16(0xfe00);
-            destination.mFields.m16[7] = HostSwap16(macSource.mShortAddress);
-            break;
-
-        case 8:
-            destination.SetIid(macSource.mExtAddress);
-            break;
-
-        default:
-            ExitNow(error = kThreadError_Parse);
-        }
-
-        mMle.SendLinkReject(destination);
-        ExitNow(error = kThreadError_Security);
-    }
-
     SuccessOrExit(aFrame.GetDstAddr(macDest));
 
     if ((child = mMle.GetChild(macSource)) != NULL)

@@ -975,43 +975,6 @@ exit:
     return error;
 }
 
-ThreadError MleRouter::SendLinkReject(const Ip6::Address &aDestination)
-{
-    ThreadError error = kThreadError_None;
-    Message *message;
-
-    VerifyOrExit((message = NewMessage()) != NULL, ;);
-    message->SetLinkSecurityEnabled(false);
-    SuccessOrExit(error = AppendHeader(*message, Header::kCommandLinkReject));
-    SuccessOrExit(error = AppendStatus(*message, StatusTlv::kError));
-
-    SuccessOrExit(error = SendMessage(*message, aDestination));
-
-    otLogInfoMle("Sent link reject");
-
-exit:
-
-    if (error != kThreadError_None && message != NULL)
-    {
-        message->Free();
-    }
-
-    return error;
-}
-
-ThreadError MleRouter::HandleLinkReject(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
-{
-    Mac::ExtAddress macAddr;
-
-    (void)aMessage;
-
-    otLogInfoMle("Received link reject");
-
-    macAddr.Set(aMessageInfo.GetPeerAddr());
-
-    return kThreadError_None;
-}
-
 Child *MleRouter::NewChild(void)
 {
     for (int i = 0; i < mMaxChildrenAllowed; i++)
