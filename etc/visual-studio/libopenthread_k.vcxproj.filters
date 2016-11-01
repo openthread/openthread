@@ -93,6 +93,12 @@
     <ClCompile Include="..\..\src\core\mac\mac_whitelist.cpp">
       <Filter>Source Files\mac</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\core\net\dhcp6_client.cpp">
+      <Filter>Source Files\net</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\core\net\dhcp6_server.cpp">
+      <Filter>Source Files\net</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\src\core\net\icmp6.cpp">
       <Filter>Source Files\net</Filter>
     </ClCompile>
@@ -213,7 +219,7 @@
     <ClCompile Include="..\..\src\core\crypto\sha256.cpp">
       <Filter>Source Files\crypto</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\core\utils\global_address.cpp">
+    <ClCompile Include="..\..\src\core\utils\slaac_address.cpp">
       <Filter>Source Files\utils</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\core\thread\announce_begin_server.cpp">
@@ -278,6 +284,15 @@
     <ClInclude Include="..\..\src\core\mac\mac_whitelist.hpp">
       <Filter>Header Files\mac</Filter>
     </ClInclude>
+    <ClCompile Include="..\..\src\core\net\dhcp6.hpp">
+      <Filter>Source Files\net</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\core\net\dhcp6_client.hpp">
+      <Filter>Source Files\net</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\core\net\dhcp6_server.hpp">
+      <Filter>Source Files\net</Filter>
+    </ClCompile>
     <ClInclude Include="..\..\src\core\net\icmp6.hpp">
       <Filter>Header Files\net</Filter>
     </ClInclude>
@@ -413,7 +428,7 @@
     <ClInclude Include="..\..\src\core\crypto\sha256.hpp">
       <Filter>Header Files\crypto</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\core\utils\global_address.hpp">
+    <ClInclude Include="..\..\src\core\utils\slaac_address.hpp">
       <Filter>Header Files\utils</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\core\meshcop\announce_begin_server.hpp">

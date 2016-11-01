@@ -28,43 +28,12 @@
 
 include $(abs_top_nlbuild_autotools_dir)/automake/pre.am
 
-# Always package (e.g. for 'make dist') these subdirectories.
-
-DIST_SUBDIRS                            = \
-    cli                                   \
-    commissioning                         \
-    dhcp6                                 \
-    ncp                                   \
-    platform                              \
+ot_dhcp6_headers                = \
+    dhcp6_client.h                \
     $(NULL)
 
-# Always build (e.g. for 'make all') these subdirectories.
-
-SUBDIRS                                 = \
-    cli                                   \
-    commissioning                         \
-    dhcp6                                 \
-    ncp                                   \
-    platform                              \
-    $(NULL)
-
-# Always pretty (e.g. for 'make pretty') these subdirectories.
-
-PRETTY_SUBDIRS                          = \
-    cli                                   \
-    commissioning                         \
-    dhcp6                                 \
-    ncp                                   \
-    platform                              \
-    $(NULL)
-
-include_HEADERS                         = \
-    openthread.h                          \
-    openthread-diag.h                     \
-    openthread-crypto.h                   \
-    openthread-types.h                    \
-    openthread-coap.h                     \
-    $(NULL)
+ot_dhcp6dir = $(includedir)/dhcp6
+dist_ot_dhcp6_HEADERS = $(ot_dhcp6_headers)
 
 install-headers: install-includeHEADERS
 

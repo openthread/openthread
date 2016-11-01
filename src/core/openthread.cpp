@@ -56,7 +56,7 @@
 #include <platform/misc.h>
 #include <thread/thread_netif.hpp>
 #include <thread/thread_uris.hpp>
-#include <utils/global_address.hpp>
+#include <utils/slaac_address.hpp>
 #include <openthread-instance.h>
 #include <coap/coap_header.hpp>
 #include <coap/coap_client.hpp>
@@ -921,6 +921,13 @@ ThreadError otRemoveUnicastAddress(otInstance *aInstance, const otIp6Address *ad
 {
     return aInstance->mThreadNetif.RemoveExternalUnicastAddress(*static_cast<const Ip6::Address *>(address));
 }
+
+#if OPENTHREAD_ENABLE_DHCP6_CLIENT
+void otDhcp6ClientUpdate(otInstance *aInstance, otNetifAddress *aAddresses, uint32_t aNumAddresses, void *aContext)
+{
+    aInstance->mThreadNetif.GetDhcp6Client().UpdateAddresses(aInstance, aAddresses, aNumAddresses, aContext);
+}
+#endif  // OPENTHREAD_ENABLE_DHCP6_CLIENT
 
 void otSlaacUpdate(otInstance *aInstance, otNetifAddress *aAddresses, uint32_t aNumAddresses,
                    otSlaacIidCreate aIidCreate, void *aContext)

@@ -46,6 +46,7 @@
 #include <platform/random.h>
 #include <thread/mesh_forwarder.hpp>
 #include <thread/mle_router.hpp>
+#include <thread/mle.hpp>
 #include <thread/thread_netif.hpp>
 
 using Thread::Encoding::BigEndian::HostSwap16;
@@ -663,6 +664,30 @@ ThreadError MeshForwarder::UpdateIp6Route(Message &aMessage)
                 {
                     mMeshDest = mMle.GetRloc16(mMle.GetLeaderId());
                 }
+
+#if OPENTHREAD_ENABLE_DHCP6_SERVER || OPENTHREAD_ENABLE_DHCP6_CLIENT
+                else if ((aloc16 & Mle::kAloc16DhcpAgentMask) != 0)
+                {
+                    uint16_t agentRloc16;
+                    uint8_t routerId;
+                    VerifyOrExit((mNetworkData.GetRlocByContextId(static_cast<uint8_t>(aloc16 & Mle::kAloc16DhcpAgentMask),
+                                                                  agentRloc16) == kThreadError_None), error = kThreadError_Drop);
+
+                    routerId = mMle.GetRouterId(agentRloc16);
+
+                    // if agent is active router or the child of the device
+                    if ((mMle.IsActiveRouter(agentRloc16)) || (mMle.GetRloc16(routerId) == mMle.GetRloc16()))
+                    {
+                        mMeshDest = agentRloc16;
+                    }
+                    else
+                    {
+                        // use the parent of the ED Agent as Dest
+                        mMeshDest = mMle.GetRloc16(routerId);
+                    }
+                }
+
+#endif  // OPENTHREAD_ENABLE_DHCP6_SERVER || OPENTHREAD_ENABLE_DHCP6_CLIENT
                 else
                 {
                     // TODO: support ALOC for DHCPv6 Agent, Service, Commissioner, Neighbor Discovery Agent

@@ -60,6 +60,7 @@ EXTRA_DIST                                                         = \
     thread-cert/Cert_5_3_06b_RouterIdMask.py                         \
     thread-cert/Cert_5_3_07_DuplicateAddress.py                      \
     thread-cert/Cert_5_3_08_ChildAddressSet.py                       \
+    thread-cert/Cert_5_3_09_AddressQuery.py                          \
     thread-cert/Cert_5_3_10_AddressQuery.py                          \
     thread-cert/Cert_5_5_01_LeaderReset.py                           \
     thread-cert/Cert_5_5_02_LeaderReboot.py                          \
@@ -178,6 +179,7 @@ check_SCRIPTS                                                     += \
     thread-cert/Cert_5_3_06b_RouterIdMask.py                         \
     thread-cert/Cert_5_3_07_DuplicateAddress.py                      \
     thread-cert/Cert_5_3_08_ChildAddressSet.py                       \
+    thread-cert/Cert_5_3_09_AddressQuery.py                       \
     thread-cert/Cert_5_3_10_AddressQuery.py                          \
     thread-cert/Cert_5_5_01_LeaderReset.py                           \
     thread-cert/Cert_5_5_02_LeaderReboot.py                          \
@@ -268,6 +270,7 @@ TESTS                                                              = \
     $(NULL)
 
 XFAIL_NCP_TESTS                                                    = \
+    thread-cert/Cert_5_3_09_AddressQuery.py                          \
     thread-cert/Cert_8_1_01_Commissioning.py                         \
     thread-cert/Cert_8_1_02_Commissioning.py                         \
     thread-cert/Cert_8_2_01_JoinerRouter.py                          \

@@ -47,6 +47,7 @@
 #include <thread/thread_netif.hpp>
 #include <thread/thread_tlvs.hpp>
 #include <thread/thread_uris.hpp>
+#include <thread/lowpan.hpp>
 
 using Thread::Encoding::BigEndian::HostSwap16;
 
@@ -221,6 +222,33 @@ ThreadError Leader::GetContext(uint8_t aContextId, Lowpan::Context &aContext)
 exit:
     return error;
 }
+
+#if OPENTHREAD_ENABLE_DHCP6_SERVER || OPENTHREAD_ENABLE_DHCP6_CLIENT
+ThreadError Leader::GetRlocByContextId(uint8_t aContextId, uint16_t &aRloc16)
+{
+    ThreadError error = kThreadError_NotFound;
+    Lowpan::Context lowpanContext;
+
+    if ((GetContext(aContextId, lowpanContext)) == kThreadError_None)
+    {
+        otNetworkDataIterator iterator = OT_NETWORK_DATA_ITERATOR_INIT;
+        otBorderRouterConfig config;
+
+        while (GetNextOnMeshPrefix(&iterator, &config) == kThreadError_None)
+        {
+            if (otIp6PrefixMatch(&(config.mPrefix.mPrefix),
+                                 reinterpret_cast<const otIp6Address *>(lowpanContext.mPrefix)) >= config.mPrefix.mLength)
+            {
+                aRloc16 = config.mRloc16;
+                ExitNow(error = kThreadError_None);
+            }
+        }
+    }
+
+exit:
+    return error;
+}
+#endif  // OPENTHREAD_ENABLE_DHCP6_SERVER || OPENTHREAD_ENABLE_DHCP6_CLIENT
 
 bool Leader::IsOnMesh(const Ip6::Address &aAddress)
 {
