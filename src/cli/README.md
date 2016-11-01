@@ -360,6 +360,7 @@ RxTotal: 11
     RxOther: 0
     RxWhitelistFiltered: 0
     RxDestAddrFiltered: 0
+    RxDuplicated: 0
     RxErrNoFrame: 0
     RxErrNoUnknownNeighbor: 0
     RxErrInvalidSrcAddr: 0
