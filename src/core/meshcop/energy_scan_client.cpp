@@ -67,12 +67,7 @@ ThreadError EnergyScanClient::SendQuery(uint32_t aChannelMask, uint8_t aCount, u
     ThreadError error = kThreadError_None;
     Coap::Header header;
     MeshCoP::CommissionerSessionIdTlv sessionId;
-    MeshCoP::ChannelMaskTlv channelMask;
-    union
-    {
-        MeshCoP::ChannelMaskEntry channelMaskEntry;
-        uint8_t channelMaskBuf[sizeof(MeshCoP::ChannelMaskEntry) + sizeof(aChannelMask)];
-    };
+    MeshCoP::ChannelMask0Tlv channelMask;
     MeshCoP::CountTlv count;
     MeshCoP::PeriodTlv period;
     MeshCoP::ScanDurationTlv scanDuration;
@@ -92,18 +87,8 @@ ThreadError EnergyScanClient::SendQuery(uint32_t aChannelMask, uint8_t aCount, u
     SuccessOrExit(error = message->Append(&sessionId, sizeof(sessionId)));
 
     channelMask.Init();
-    channelMask.SetLength(sizeof(channelMaskBuf));
+    channelMask.SetMask(aChannelMask);
     SuccessOrExit(error = message->Append(&channelMask, sizeof(channelMask)));
-
-    channelMaskEntry.SetChannelPage(0);
-    channelMaskEntry.SetMaskLength(sizeof(aChannelMask));
-
-    for (size_t i = 0; i < sizeof(aChannelMask); i++)
-    {
-        channelMaskBuf[sizeof(MeshCoP::ChannelMaskEntry) + i] = (aChannelMask >> (8 * i)) & 0xff;
-    }
-
-    SuccessOrExit(error = message->Append(channelMaskBuf, sizeof(channelMaskBuf)));
 
     count.Init();
     count.SetCount(aCount);
@@ -145,13 +130,7 @@ void EnergyScanClient::HandleReport(void *aContext, Coap::Header &aHeader, Messa
 
 void EnergyScanClient::HandleReport(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
-    OT_TOOL_PACKED_BEGIN
-    struct
-    {
-        MeshCoP::ChannelMaskTlv tlv;
-        MeshCoP::ChannelMaskEntry header;
-        uint32_t mask;
-    } OT_TOOL_PACKED_END channelMask;
+    MeshCoP::ChannelMask0Tlv channelMask;
 
     OT_TOOL_PACKED_BEGIN
     struct
@@ -165,17 +144,15 @@ void EnergyScanClient::HandleReport(Coap::Header &aHeader, Message &aMessage, co
 
     otLogInfoMeshCoP("received energy scan report");
 
-    SuccessOrExit(MeshCoP::Tlv::GetTlv(aMessage, MeshCoP::Tlv::kChannelMask, sizeof(channelMask), channelMask.tlv));
-    VerifyOrExit(channelMask.tlv.IsValid() &&
-                 channelMask.header.GetChannelPage() == 0 &&
-                 channelMask.header.GetMaskLength() >= sizeof(uint32_t), ;);
+    SuccessOrExit(MeshCoP::Tlv::GetTlv(aMessage, MeshCoP::Tlv::kChannelMask, sizeof(channelMask), channelMask));
+    VerifyOrExit(channelMask.IsValid(),);
 
     SuccessOrExit(MeshCoP::Tlv::GetTlv(aMessage, MeshCoP::Tlv::kEnergyList, sizeof(energyList), energyList.tlv));
     VerifyOrExit(energyList.tlv.IsValid(), ;);
 
     if (mCallback != NULL)
     {
-        mCallback(HostSwap32(channelMask.mask), energyList.list, energyList.tlv.GetLength(), mContext);
+        mCallback(channelMask.GetMask(), energyList.list, energyList.tlv.GetLength(), mContext);
     }
 
     SendResponse(aHeader, aMessageInfo);
