@@ -1025,9 +1025,8 @@ class ARM(IThci):
             elif eRoleId == Thread_Device_Role.SED:
                 print 'join as sleepy end device'
                 role = 's'
-                if self.AutoDUTEnable is False:
-                    # set data polling rate to 15s for SED
-                    self.setPollingRate(15)
+                # set data polling rate to 15s for SED
+                self.setPollingRate(15)
             elif eRoleId == Thread_Device_Role.EndDevice:
                 print 'join as end device'
                 role = 'rsn'
