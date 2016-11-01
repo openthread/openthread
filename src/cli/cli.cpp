@@ -512,6 +512,7 @@ void Interpreter::ProcessCounters(int argc, char *argv[])
             sServer->OutputFormat("    RxOther: %d\r\n", counters->mRxOther);
             sServer->OutputFormat("    RxWhitelistFiltered: %d\r\n", counters->mRxWhitelistFiltered);
             sServer->OutputFormat("    RxDestAddrFiltered: %d\r\n", counters->mRxDestAddrFiltered);
+            sServer->OutputFormat("    RxDuplicated: %d\r\n", counters->mRxDuplicated);
             sServer->OutputFormat("    RxErrNoFrame: %d\r\n", counters->mRxErrNoFrame);
             sServer->OutputFormat("    RxErrNoUnknownNeighbor: %d\r\n", counters->mRxErrUnknownNeighbor);
             sServer->OutputFormat("    RxErrInvalidSrcAddr: %d\r\n", counters->mRxErrInvalidSrcAddr);

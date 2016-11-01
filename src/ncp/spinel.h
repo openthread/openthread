@@ -728,6 +728,10 @@ typedef enum
     /** Format: `L` (Read-only) */
     SPINEL_PROP_CNTR_RX_ERR_OTHER      = SPINEL_PROP_CNTR__BEGIN + 113,
 
+    /// The number of received duplicated.
+    /** Format: `L` (Read-only) */
+    SPINEL_PROP_CNTR_RX_PKT_DUP        = SPINEL_PROP_CNTR__BEGIN + 114,
+
     /// The total number of secure transmitted IP messages.
     /** Format: `L` (Read-only) */
     SPINEL_PROP_CNTR_TX_IP_SEC_TOTAL   = SPINEL_PROP_CNTR__BEGIN + 200,

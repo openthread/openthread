@@ -167,6 +167,10 @@ typedef enum ThreadError
      */
     kThreadError_ResponseTimeout = 30,
 
+    /**
+     * Received a duplicated frame.
+     */
+    kThreadError_Duplicated = 31,
     kThreadError_Error = 255,
 } ThreadError;
 
@@ -822,6 +826,7 @@ typedef struct otMacCounters
     uint32_t mRxOther;                ///< The number of received other types of frames.
     uint32_t mRxWhitelistFiltered;    ///< The number of received packets filtered by whitelist.
     uint32_t mRxDestAddrFiltered;     ///< The number of received packets filtered by destination check.
+    uint32_t mRxDuplicated;           ///< The number of received duplicated packets.
     uint32_t mRxErrNoFrame;           ///< The number of received packets that do not contain contents.
     uint32_t mRxErrUnknownNeighbor;   ///< The number of received packets from unknown neighbor.
     uint32_t mRxErrInvalidSrcAddr;    ///< The number of received packets whose source address is invalid.

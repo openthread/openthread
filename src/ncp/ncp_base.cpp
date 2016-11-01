@@ -179,6 +179,7 @@ const NcpBase::GetPropertyHandlerEntry NcpBase::mGetPropertyHandlerTable[] =
     { SPINEL_PROP_CNTR_RX_ERR_SECURITY, &NcpBase::GetPropertyHandler_MAC_CNTR },
     { SPINEL_PROP_CNTR_RX_ERR_BAD_FCS, &NcpBase::GetPropertyHandler_MAC_CNTR },
     { SPINEL_PROP_CNTR_RX_ERR_OTHER, &NcpBase::GetPropertyHandler_MAC_CNTR },
+    { SPINEL_PROP_CNTR_RX_PKT_DUP, &NcpBase::GetPropertyHandler_MAC_CNTR },
 
     { SPINEL_PROP_CNTR_TX_IP_SEC_TOTAL, &NcpBase::GetPropertyHandler_NCP_CNTR },
     { SPINEL_PROP_CNTR_TX_IP_INSEC_TOTAL, &NcpBase::GetPropertyHandler_NCP_CNTR },
@@ -2436,6 +2437,10 @@ ThreadError NcpBase::GetPropertyHandler_MAC_CNTR(uint8_t header, spinel_prop_key
 
     case SPINEL_PROP_CNTR_RX_PKT_FILT_DA:
         value = macCounters->mRxDestAddrFiltered;
+        break;
+
+    case SPINEL_PROP_CNTR_RX_PKT_DUP:
+        value = macCounters->mRxDuplicated;
         break;
 
     case SPINEL_PROP_CNTR_RX_ERR_EMPTY:
