@@ -87,7 +87,7 @@ class Cert_5_1_07_MaxChildCount(unittest.TestCase):
 
         for i in range(4, 14):
             self.nodes[i].start()
-            time.sleep(5)
+            time.sleep(7)
             self.assertEqual(self.nodes[i].get_state(), 'child')
 
             if i in range(4, 8):   
