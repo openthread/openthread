@@ -38,6 +38,7 @@
 #include <common/settings.hpp>
 #include <platform/settings.h>
 #include <thread/meshcop_tlvs.hpp>
+#include <thread/mle_tlvs.hpp>
 #include <thread/meshcop_dataset.hpp>
 
 namespace Thread {
@@ -480,6 +481,34 @@ void Dataset::Remove(Tlv::Type aType)
 
 exit:
     return;
+}
+
+ThreadError Dataset::AppendMleDatasetTlv(Message &aMessage)
+{
+    ThreadError error = kThreadError_None;
+    Mle::Tlv tlv;
+    Mle::Tlv::Type type;
+    Tlv *cur = reinterpret_cast<Tlv *>(mTlvs);
+    Tlv *end = reinterpret_cast<Tlv *>(mTlvs + mLength);
+
+    type = (mType == Tlv::kActiveTimestamp ? Mle::Tlv::kActiveDataset : Mle::Tlv::kPendingDataset);
+
+    tlv.SetType(type);
+    tlv.SetLength(static_cast<uint8_t>(mLength) - sizeof(Tlv) - sizeof(Timestamp));
+    SuccessOrExit(error = aMessage.Append(&tlv, sizeof(Tlv)));
+
+    while (cur < end)
+    {
+        if (cur->GetType() != mType)
+        {
+            SuccessOrExit(error = aMessage.Append(cur, sizeof(Tlv) + cur->GetLength()));
+        }
+
+        cur = cur->GetNext();
+    }
+
+exit:
+    return error;
 }
 
 void Dataset::Remove(uint8_t *aStart, uint8_t aLength)
