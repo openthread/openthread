@@ -37,6 +37,7 @@
 #define RADIO_H_
 
 #include <stdint.h>
+#include <sal.h>
 
 #include <openthread-types.h>
 
@@ -98,6 +99,7 @@ typedef enum otRadioCaps
  */
 typedef struct RadioPacket
 {
+    _Field_size_bytes_full_(mLength)
     uint8_t  *mPsdu;           ///< The PSDU.
     uint8_t  mLength;          ///< Length of the PSDU.
     uint8_t  mChannel;         ///< Channel used to transmit/receive the frame.

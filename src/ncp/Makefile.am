@@ -40,6 +40,7 @@ libopenthread_ncp_a_CPPFLAGS        = \
     -I$(top_srcdir)/include           \
     -I$(top_srcdir)/src               \
     -I$(top_srcdir)/src/core          \
+    -I$(top_srcdir)/src/missing/sal   \
     -I$(top_srcdir)/third_party       \
     -D_GNU_SOURCE                     \
     $(OPENTHREAD_TARGET_DEFINES)      \

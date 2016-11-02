@@ -32,6 +32,7 @@ lib_LIBRARIES                       = libopenthread.a
 
 libopenthread_a_CPPFLAGS            = \
     -I$(top_srcdir)/include           \
+    -I$(top_srcdir)/src/missing/sal   \
     $(OPENTHREAD_TARGET_DEFINES)      \
     $(NULL)
 

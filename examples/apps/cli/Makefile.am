@@ -35,6 +35,7 @@ bin_PROGRAMS                                                           = \
 ot_cli_CPPFLAGS                                                        = \
     -I$(top_srcdir)/include                                              \
     -I$(top_srcdir)/src/core                                             \
+    -I$(top_srcdir)/src/missing/sal                                      \
     -I$(top_srcdir)/examples/platforms                                   \
     $(NULL)
 

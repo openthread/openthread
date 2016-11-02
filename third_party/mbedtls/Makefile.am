@@ -36,6 +36,7 @@ MBEDTLS_SRCDIR                                = $(top_srcdir)/third_party/mbedtl
 libmbedcrypto_a_CPPFLAGS                      = \
     -I$(top_srcdir)/include                     \
     -I$(top_srcdir)/src/core                    \
+    -I$(top_srcdir)/src/missing/sal             \
     -I$(MBEDTLS_SRCDIR)/include                 \
     -I$(MBEDTLS_SRCDIR)/include/mbedtls         \
     -DMBEDTLS_CONFIG_FILE=\"mbedtls-config.h\"  \

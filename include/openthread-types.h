@@ -35,6 +35,7 @@
 #ifndef OPENTHREAD_TYPES_H_
 #define OPENTHREAD_TYPES_H_
 
+#include <sal.h>
 #include <stdint.h>
 #include <stdbool.h>
 
@@ -72,7 +73,7 @@ typedef struct otInstance otInstance;
 /**
  * This enumeration represents error codes used throughout OpenThread.
  */
-typedef enum ThreadError
+typedef _Return_type_success_(return == kThreadError_None) enum ThreadError
 {
     kThreadError_None = 0,
     kThreadError_Failed = 1,

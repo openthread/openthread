@@ -137,7 +137,7 @@ public:
      * @param[in]  aIpAddress  A reference to the IPv6 address.
      *
      */
-    void Set(const Ip6::Address &aIpAddress);
+    void Set(_In_ const Ip6::Address &aIpAddress);
 
 private:
     enum
@@ -249,7 +249,7 @@ public:
      * @retval kThreadError_InvalidArgs  Invalid values for @p aFcf and/or @p aSecCtl.
      *
      */
-    ThreadError InitMacHeader(uint16_t aFcf, uint8_t aSecCtl);
+    ThreadError InitMacHeader(_In_ uint16_t aFcf, _In_ uint8_t aSecCtl);
 
     /**
      * This method returns the IEEE 802.15.4 Frame Type.
@@ -283,7 +283,7 @@ public:
      * @param[in]  aFramePending  The Frame Pending bit.
      *
      */
-    void SetFramePending(bool aFramePending);
+    void SetFramePending(_In_ bool aFramePending);
 
     /**
      * This method indicates whether or not the Ack Request bit is set.
@@ -300,7 +300,7 @@ public:
      * @param[in]  aAckRequest  The Ack Request bit.
      *
      */
-    void SetAckRequest(bool aAckRequest);
+    void SetAckRequest(_In_ bool aAckRequest);
 
     /**
      * This method returns the Sequence Number value.
@@ -316,7 +316,7 @@ public:
      * @param[in]  aSequence  The Sequence Number value.
      *
      */
-    void SetSequence(uint8_t aSequence);
+    void SetSequence(_In_ uint8_t aSequence);
 
     /**
      * This method gets the Destination PAN Identifier.
@@ -326,7 +326,7 @@ public:
      * @retval kThreadError_None   Successfully retrieved the Destination PAN Identifier.
      *
      */
-    ThreadError GetDstPanId(PanId &aPanId);
+    ThreadError GetDstPanId(_Out_ PanId &aPanId);
 
     /**
      * This method sets the Destination PAN Identifier.
@@ -336,7 +336,7 @@ public:
      * @retval kThreadError_None   Successfully set the Destination PAN Identifier.
      *
      */
-    ThreadError SetDstPanId(PanId aPanId);
+    ThreadError SetDstPanId(_In_ PanId aPanId);
 
     /**
      * This method gets the Destination Address.
@@ -346,7 +346,7 @@ public:
      * @retval kThreadError_None  Successfully retrieved the Destination Address.
      *
      */
-    ThreadError GetDstAddr(Address &aAddress);
+    ThreadError GetDstAddr(_Out_ Address &aAddress);
 
     /**
      * This method sets the Destination Address.
@@ -356,7 +356,7 @@ public:
      * @retval kThreadError_None  Successfully set the Destination Address.
      *
      */
-    ThreadError SetDstAddr(ShortAddress aShortAddress);
+    ThreadError SetDstAddr(_In_ ShortAddress aShortAddress);
 
     /**
      * This method sets the Destination Address.
@@ -366,7 +366,7 @@ public:
      * @retval kThreadError_None  Successfully set the Destination Address.
      *
      */
-    ThreadError SetDstAddr(const ExtAddress &aExtAddress);
+    ThreadError SetDstAddr(_In_ const ExtAddress &aExtAddress);
 
     /**
      * This method gets the Source PAN Identifier.
@@ -376,7 +376,7 @@ public:
      * @retval kThreadError_None   Successfully retrieved the Source PAN Identifier.
      *
      */
-    ThreadError GetSrcPanId(PanId &aPanId);
+    ThreadError GetSrcPanId(_Out_ PanId &aPanId);
 
     /**
      * This method sets the Source PAN Identifier.
@@ -386,7 +386,7 @@ public:
      * @retval kThreadError_None   Successfully set the Source PAN Identifier.
      *
      */
-    ThreadError SetSrcPanId(PanId aPanId);
+    ThreadError SetSrcPanId(_In_ PanId aPanId);
 
     /**
      * This method gets the Source Address.
@@ -396,7 +396,7 @@ public:
      * @retval kThreadError_None  Successfully retrieved the Source Address.
      *
      */
-    ThreadError GetSrcAddr(Address &aAddress);
+    ThreadError GetSrcAddr(_Out_ Address &aAddress);
 
     /**
      * This method gets the Source Address.
@@ -406,7 +406,7 @@ public:
      * @retval kThreadError_None  Successfully set the Source Address.
      *
      */
-    ThreadError SetSrcAddr(ShortAddress aShortAddress);
+    ThreadError SetSrcAddr(_In_ ShortAddress aShortAddress);
 
     /**
      * This method gets the Source Address.
@@ -416,7 +416,7 @@ public:
      * @retval kThreadError_None  Successfully set the Source Address.
      *
      */
-    ThreadError SetSrcAddr(const ExtAddress &aExtAddress);
+    ThreadError SetSrcAddr(_In_ const ExtAddress &aExtAddress);
 
     /**
      * This method gets the Security Level Identifier.
@@ -426,7 +426,7 @@ public:
      * @retval kThreadError_None  Successfully retrieved the Security Level Identifier.
      *
      */
-    ThreadError GetSecurityLevel(uint8_t &aSecurityLevel);
+    ThreadError GetSecurityLevel(_Out_ uint8_t &aSecurityLevel);
 
     /**
      * This method gets the Key Identifier Mode.
@@ -436,7 +436,7 @@ public:
      * @retval kThreadError_None  Successfully retrieved the Key Identifier Mode.
      *
      */
-    ThreadError GetKeyIdMode(uint8_t &aKeyIdMode);
+    ThreadError GetKeyIdMode(_Out_ uint8_t &aKeyIdMode);
 
     /**
      * This method gets the Frame Counter.
@@ -446,7 +446,7 @@ public:
      * @retval kThreadError_None  Successfully retrieved the Frame Counter.
      *
      */
-    ThreadError GetFrameCounter(uint32_t &aFrameCounter);
+    ThreadError GetFrameCounter(_Out_ uint32_t &aFrameCounter);
 
     /**
      * This method sets the Frame Counter.
@@ -456,7 +456,7 @@ public:
      * @retval kThreadError_None  Successfully set the Frame Counter.
      *
      */
-    ThreadError SetFrameCounter(uint32_t aFrameCounter);
+    ThreadError SetFrameCounter(_In_ uint32_t aFrameCounter);
 
     /**
      * This method returns a pointer to the Key Source.
@@ -472,7 +472,7 @@ public:
      * @param[in]  aKeySource  A pointer to the Key Source value.
      *
      */
-    void SetKeySource(const uint8_t *aKeySource);
+    void SetKeySource(/* TODO */ const uint8_t *aKeySource);
 
     /**
      * This method gets the Key Identifier.
@@ -482,7 +482,7 @@ public:
      * @retval kThreadError_None  Successfully retrieved the Key Identifier.
      *
      */
-    ThreadError GetKeyId(uint8_t &aKeyId);
+    ThreadError GetKeyId(_Out_ uint8_t &aKeyId);
 
     /**
      * This method sets the Key Identifier.
@@ -492,7 +492,7 @@ public:
      * @retval kThreadError_None  Successfully set the Key Identifier.
      *
      */
-    ThreadError SetKeyId(uint8_t aKeyId);
+    ThreadError SetKeyId(_In_ uint8_t aKeyId);
 
     /**
      * This method gets the Command ID.
@@ -502,7 +502,7 @@ public:
      * @retval kThreadError_None  Successfully retrieved the Command ID.
      *
      */
-    ThreadError GetCommandId(uint8_t &aCommandId);
+    ThreadError GetCommandId(_Out_ uint8_t &aCommandId);
 
     /**
      * This method sets the Command ID.
@@ -512,7 +512,7 @@ public:
      * @retval kThreadError_None  Successfully set the Command ID.
      *
      */
-    ThreadError SetCommandId(uint8_t aCommandId);
+    ThreadError SetCommandId(_In_ uint8_t aCommandId);
 
     /**
      * This method returns the MAC Frame Length.
@@ -531,7 +531,7 @@ public:
      * @retval kThreadError_InvalidArgs  The @p aLength value was invalid.
      *
      */
-    ThreadError SetLength(uint8_t aLength);
+    ThreadError SetLength(_In_ uint8_t aLength);
 
     /**
      * This method returns the MAC header size.
@@ -572,7 +572,7 @@ public:
      * @retval kThreadError_InvalidArgs  The @p aLength value was invalid.
      *
      */
-    ThreadError SetPayloadLength(uint8_t aLength);
+    ThreadError SetPayloadLength(_In_ uint8_t aLength);
 
     /**
      * This method returns the IEEE 802.15.4 channel used for transmission or reception.
@@ -588,7 +588,7 @@ public:
      * @param[in]  aChannel  The IEEE 802.15.4 channel used for transmission or reception.
      *
      */
-    void SetChannel(uint8_t aChannel) { mChannel = aChannel; }
+    void SetChannel(_In_ uint8_t aChannel) { mChannel = aChannel; }
 
     /**
      * This method returns the transmit/receive power in dBm used for transmission or reception.
@@ -604,7 +604,7 @@ public:
      * @param[in]  aPower  The transmit/receive power in dBm used for transmission or reception.
      *
      */
-    void SetPower(int8_t aPower) { mPower = aPower; }
+    void SetPower(_In_ int8_t aPower) { mPower = aPower; }
 
     /**
      * This method returns the receive Link Quality Indicator.
@@ -620,7 +620,7 @@ public:
      * @param[in]  aLqi  The receive Link Quality Indicator.
      *
      */
-    void SetLqi(uint8_t aLqi) { mLqi = aLqi; }
+    void SetLqi(_In_ uint8_t aLqi) { mLqi = aLqi; }
 
     /**
      * This method indicates whether or not frame security was enabled and passed security validation.
@@ -637,7 +637,7 @@ public:
      * @param[in]  aSecurityValid  TRUE if frame security was enabled and passed security validation, FALSE otherwise.
      *
      */
-    void SetSecurityValid(bool aSecurityValid) { mSecurityValid = aSecurityValid; }
+    void SetSecurityValid(_In_ bool aSecurityValid) { mSecurityValid = aSecurityValid; }
 
     /**
      * This method returns the IEEE 802.15.4 PSDU length.
@@ -653,7 +653,7 @@ public:
      * @param[in]  aLength  The IEEE 802.15.4 PSDU length.
      *
      */
-    void SetPsduLength(uint8_t aLength) { mLength = aLength; }
+    void SetPsduLength(_In_ uint8_t aLength) { mLength = aLength; }
 
     /**
      * This method returns a pointer to the PSDU.
@@ -694,7 +694,7 @@ private:
     uint8_t *FindSrcPanId(void);
     uint8_t *FindSrcAddr(void);
     uint8_t *FindSecurityHeader(void);
-    static uint8_t GetKeySourceLength(uint8_t aKeyIdMode);
+    static uint8_t GetKeySourceLength(_In_ uint8_t aKeyIdMode);
 };
 
 /**
@@ -816,7 +816,7 @@ public:
      * @returns A pointer to the network name field.
      *
      */
-    const char *GetNetworkName(void) const { return mNetworkName; }
+    PCSTR GetNetworkName(void) const { return mNetworkName; }
 
     /**
      * This method sets the Network Name field.
@@ -824,7 +824,7 @@ public:
      * @param[in]  aNetworkName  A pointer to the Network Name.
      *
      */
-    void SetNetworkName(const char *aNetworkName) {
+    void SetNetworkName(_In_ PCSTR aNetworkName) {
         size_t length = strnlen(aNetworkName, sizeof(mNetworkName));
         memset(mNetworkName, 0, sizeof(mNetworkName));
         memcpy(mNetworkName, aNetworkName, length);
@@ -844,7 +844,7 @@ public:
      * @param[in]  aExtPanId  A pointer to the Extended PAN ID.
      *
      */
-    void SetExtendedPanId(const uint8_t *aExtPanId) { memcpy(mExtendedPanId, aExtPanId, sizeof(mExtendedPanId)); }
+    void SetExtendedPanId(_In_reads_bytes_(kExtPanIdSize) const uint8_t *aExtPanId) { memcpy(mExtendedPanId, aExtPanId, sizeof(mExtendedPanId)); }
 
 private:
     uint16_t mSuperframeSpec;
