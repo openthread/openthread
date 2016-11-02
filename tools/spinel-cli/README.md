@@ -1,13 +1,13 @@
 # Spinel CLI Reference
 
-The Spinel CLI exposes the OpenThread configuration and management APIs 
+The Spinel CLI exposes the OpenThread configuration and management APIs
 running on an NCP build via a command line interface.  Spinel CLI is primarily
 targeted for driving the automated continuous integration tests, and is
 suitable for manual experimentation with controlling OpenThread NCP instances.
 For a production grade host driver, see [wpantund]: https://github.com/openthread/wpantund.
 
-Use the CLI to play with NCP builds of OpenThread on a Linux or Mac OS 
-platform, including starting a basic tunnel interface to allow IPv6 
+Use the CLI to play with NCP builds of OpenThread on a Linux or Mac OS
+platform, including starting a basic tunnel interface to allow IPv6
 applications to run on the HOST and use the Thread network.
 
 The power of this tool is three fold:
@@ -31,9 +31,9 @@ The power of this tool is three fold:
 
 ```
 sudo easy_install pip
-sudo pip install blessed
-sudo pip install ipaddress
-sudo pip install scapy
+sudo pip install --user pyserial
+sudo pip install --user ipaddress
+sudo pip install --user scapy==2.3.2
 ```
 
 ## Usage
@@ -56,7 +56,7 @@ sudo pip install scapy
 
     -p <PIPE>, --pipe=<PIPE>
         Open a piped process connection to the OpenThread NCP device
-        where <PIPE> is the command to start an emulator, such as 
+        where <PIPE> is the command to start an emulator, such as
         "ot-ncp".  Spinel-cli will communicate with the child process
         via stdin/stdout.
 
@@ -80,9 +80,9 @@ sudo pip install scapy
 ## Quick Start
 
 The spinel-cli tool provides an intuitive command line interface, including
-all the standard OpenThread CLI commands, plus full history accessible by 
+all the standard OpenThread CLI commands, plus full history accessible by
 pressing the up/down keys, or searchable via ^R.  There are a few commands
-that spinel-cli provides as well that aren't part of the standard set 
+that spinel-cli provides as well that aren't part of the standard set
 documented in the command reference section.
 
 ```
@@ -118,7 +118,7 @@ spinel-cli >
 
 ## Running the NCP Tests
 
-The OpenThread automated test suite can be run against any of the following 
+The OpenThread automated test suite can be run against any of the following
 node types by passing the NODE_TYPE environment variable:
 
 | NODE_TYPE     |    Description                                     |
@@ -152,7 +152,7 @@ NODE_TYPE=ncp-sim BUILD_TARGET=posix-distcheck DISTCHECK_CONFIGURE_FLAGS="--with
 ### OpenThread CLI Commands
 
 The primary intent of spinel-cli is to support the exact syntax and output
-of the OpenThread CLI command set in order to seamlessly reapply the 
+of the OpenThread CLI command set in order to seamlessly reapply the
 thread-cert automated test suite against NCP targets.
 
 See [cli module][1] for more information on these commands.
@@ -161,7 +161,7 @@ See [cli module][1] for more information on these commands.
 
 ### Diagnostics CLI Commands
 
-The Diagnostics module is enabled only when building OpenThread with 
+The Diagnostics module is enabled only when building OpenThread with
 the --enable-diag configure option.
 
 See [diag module][2] for more information on these commands.
@@ -171,7 +171,7 @@ See [diag module][2] for more information on these commands.
 
 ### NCP CLI Commands
 
-These commands extend beyond the core OpenThread CLI, and are specific to 
+These commands extend beyond the core OpenThread CLI, and are specific to
 the spinel-cli tool for the purposes of debugging, access to NCP-specific
 Spinel parameters, and support of advanced configurations.
 
@@ -287,8 +287,8 @@ DEBUG_ENABLE = 0
 spinel-cli > debug 1
 DEBUG_ENABLE = 1
 spinel-cli > version
-TX Pay: (3) ['81', '02', '02'] 
-RX Pay: (53) ['81', '06', '02', '4F', '50', '45', '4E', '54', '48', '52', '45', '41', '44', '2F', '67', '38', '62', '63', '34', '62', '31', '64', '2D', '64', '69', '72', '74', '79', '3B', '20', '41', '75', '67', '20', '33', '31', '20', '32', '30', '31', '36', '20', '31', '30', '3A', '34', '38', '3A', '35', '33', '00', '40', '33'] 
+TX Pay: (3) ['81', '02', '02']
+RX Pay: (53) ['81', '06', '02', '4F', '50', '45', '4E', '54', '48', '52', '45', '41', '44', '2F', '67', '38', '62', '63', '34', '62', '31', '64', '2D', '64', '69', '72', '74', '79', '3B', '20', '41', '75', '67', '20', '33', '31', '20', '32', '30', '31', '36', '20', '31', '30', '3A', '34', '38', '3A', '35', '33', '00', '40', '33']
 OPENTHREAD/g8bc4b1d-dirty; Aug 31 2016 10:48:53
 Done
 ```
@@ -306,7 +306,7 @@ Set whether debug terminal title bar is enabled.
 Control sideband tunnel interface.
 
 #### ncp-tun up
-        
+
 Bring up Thread TUN interface.
 
 ```bash
@@ -315,7 +315,7 @@ Done
 ```
 
 #### ncp-tun down
-        
+
 Bring down Thread TUN interface.
 
 ```bash
@@ -335,7 +335,7 @@ Done
 #### ncp-tun del \<ipaddr\>
 
 Delete an IPv6 address from the Thread TUN interface.
-        
+
 ```bash
 spinel-cli > ncp-tun del 2001::dead:beef:cafe
 Done

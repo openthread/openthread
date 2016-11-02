@@ -27,6 +27,8 @@
 #
 """ Utility class for creating TUN network interfaces on Linux and OSX. """
 
+from __future__ import print_function
+
 import os
 import sys
 import fcntl
@@ -103,7 +105,7 @@ class TunInterface(object):
     def ping6(self, args):
         """ Ping an address. """
         cmd = 'ping6 ' + args
-        print cmd
+        print(cmd)
         self.command(cmd)
 
     def addr_add(self, addr):
@@ -137,7 +139,7 @@ class TunInterface(object):
                                       util.hexify_str(packet))
                     self.write(packet)
             except:
-                print traceback.format_exc()
+                traceback.print_exc()
                 break
 
         logging.info("TUN: exiting")
