@@ -25,6 +25,7 @@ OpenThread test scripts use the CLI to execute test cases.
 * [hashmacaddr](#hashmacaddr)
 * [ifconfig](#ifconfig)
 * [ipaddr](#ipaddr)
+* [ipmaddr](#ipmaddr)
 * [joiner](#joiner)
 * [keysequence](#keysequence)
 * [leaderpartitionid](#leaderpartitionid)
@@ -786,6 +787,64 @@ Delete an IPv6 address from the Thread interface.
 
 ```bash
 > ipaddr del 2001::dead:beef:cafe
+Done
+```
+
+### ipmaddr
+
+List all IPv6 multicast addresses subscribed to the Thread interface.
+
+```bash
+> ipmaddr
+ff05:0:0:0:0:0:0:1
+ff33:40:fdde:ad00:beef:0:0:1
+ff32:40:fdde:ad00:beef:0:0:1
+Done
+```
+
+### ipmaddr add \<ipaddr\>
+
+Subscribe the Thread interface to the IPv6 multicast address.
+
+```bash
+> ipmaddr add ff05::1
+Done
+```
+
+### ipmaddr del \<ipaddr\>
+
+Unsubscribe the Thread interface to the IPv6 multicast address.
+
+```bash
+> ipmaddr del ff05::1
+Done
+```
+
+### ipmaddr promiscuous
+
+Get multicast promiscuous mode.
+
+```bash
+> ipmaddr promiscuous
+Disabled
+Done
+```
+
+### ipmaddr promiscuous enable
+
+Enable multicast promiscuous mode.
+
+```bash
+> ipmaddr promiscuous enable
+Done
+```
+
+### ipmaddr promiscuous disable
+
+Disable multicast promiscuous mode.
+
+```bash
+> ipmaddr promiscuous disable
 Done
 ```
 
