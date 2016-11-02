@@ -415,6 +415,12 @@ ThreadError DatasetManager::Set(Coap::Header &aHeader, Message &aMessage, const 
     VerifyOrExit((offset - aMessage.GetOffset()) <= Dataset::kMaxSize, state = StateTlv::kReject);
 
     // update dataset
+    if (type == Tlv::kPendingTimestamp && isUpdateFromCommissioner)
+    {
+        mLocal.Clear(true);
+        mLocal.Set(mNetif.GetActiveDataset().GetNetwork());
+    }
+
     offset = aMessage.GetOffset();
 
     while (offset < aMessage.GetLength())
@@ -428,7 +434,12 @@ ThreadError DatasetManager::Set(Coap::Header &aHeader, Message &aMessage, const 
 
         aMessage.Read(offset, sizeof(Tlv), &data.tlv);
         aMessage.Read(offset + sizeof(Tlv), data.tlv.GetLength(), data.value);
-        mLocal.Set(data.tlv);
+
+        if (data.tlv.GetType() != Tlv::kCommissionerSessionId)
+        {
+            mLocal.Set(data.tlv);
+        }
+
         offset += sizeof(Tlv) + data.tlv.GetLength();
     }
 
@@ -499,6 +510,21 @@ ThreadError DatasetManager::SendSetRequest(const otOperationalDataset &aDataset,
     header.SetPayloadMarker();
 
     VerifyOrExit((message = mCoapClient.NewMessage(header)) != NULL, error = kThreadError_NoBufs);
+
+#if OPENTHREAD_ENABLE_COMMISSIONER
+    bool isCommissioner;
+
+    isCommissioner = mNetif.GetCommissioner().GetState() != Commissioner::kStateDisabled ? true : false;
+
+    if (isCommissioner)
+    {
+        CommissionerSessionIdTlv sessionId;
+        sessionId.Init();
+        sessionId.SetCommissionerSessionId(mNetif.GetCommissioner().GetSessionId());
+        SuccessOrExit(error = message->Append(&sessionId, sizeof(sessionId)));
+    }
+
+#endif
 
     if (aDataset.mIsActiveTimestampSet)
     {

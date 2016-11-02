@@ -2338,6 +2338,10 @@ ThreadError Mle::HandleChildIdResponse(const Message &aMessage, const Ip6::Messa
             mNetif.GetPendingDataset().Set(pendingTimestamp, aMessage, offset + sizeof(tlv), tlv.GetLength());
         }
     }
+    else
+    {
+        mNetif.GetPendingDataset().Clear(true);
+    }
 
     // Parent Attach Success
     mParentRequestTimer.Stop();
