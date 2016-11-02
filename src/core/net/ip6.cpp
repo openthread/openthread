@@ -645,6 +645,7 @@ ThreadError Ip6::HandleDatagram(Message &message, Netif *netif, int8_t interface
     bool receive = false;
     bool forward = false;
     bool tunnel = false;
+    bool multicastPromiscuous = false;
     uint8_t nextHeader;
     uint8_t hopLimit;
 
@@ -677,9 +678,16 @@ ThreadError Ip6::HandleDatagram(Message &message, Netif *netif, int8_t interface
     // determine destination of packet
     if (header.GetDestination().IsMulticast())
     {
-        if (netif != NULL && netif->IsMulticastSubscribed(header.GetDestination()))
+        if (netif != NULL)
         {
-            receive = true;
+            if (netif->IsMulticastSubscribed(header.GetDestination()))
+            {
+                receive = true;
+            }
+            else if (netif->IsMulticastPromiscuousModeEnabled())
+            {
+                multicastPromiscuous = true;
+            }
         }
 
         if (netif == NULL)
@@ -738,6 +746,10 @@ ThreadError Ip6::HandleDatagram(Message &message, Netif *netif, int8_t interface
         }
 
         SuccessOrExit(error = HandlePayload(message, messageInfo, nextHeader));
+    }
+    else if (multicastPromiscuous)
+    {
+        ProcessReceiveCallback(message, messageInfo, nextHeader);
     }
 
     if (forward)
