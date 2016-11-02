@@ -209,9 +209,8 @@ class ARM(IThci):
 
             line = None
             response = []
-            max_lines = 50
-            while max_lines:
-                max_lines -= 1
+            retry_times = 10
+            while retry_times:
                 line = self._readline()
                 logging.info('%s: the read line is[%s]', self.port, line)
                 if line:
@@ -219,6 +218,7 @@ class ARM(IThci):
                     if line == 'Done':
                         break
                 else:
+                    retry_times -= 1
                     time.sleep(0.1)
             if line != 'Done':
                 raise Exception('%s: failed to find end of response' % self.port)
@@ -670,6 +670,8 @@ class ARM(IThci):
             self.handle = socket.create_connection((host, port))
             self.handle.setblocking(0)
             self._is_net = True
+            # check connectivity, this make sure bad device fail on initializing
+            self.__sendCommand('state')
         else:
             raise Exception('Unknown port schema')
 
