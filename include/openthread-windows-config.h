@@ -32,6 +32,9 @@
 /* Define to 1 if you want to use diagnostics module */
 #define OPENTHREAD_ENABLE_DIAG 0
 
+/* Define to 1 if you want to enable legacy network. */
+#define OPENTHREAD_ENABLE_LEGACY 0
+
 /* Define to 1 to enable dtls support. */
 #define OPENTHREAD_ENABLE_DTLS 1
 
@@ -85,5 +88,5 @@
 // Disable a few warnings that we don't care about
 #pragma warning(disable:4200)  // nonstandard extension used: zero-sized array in struct/union
 #pragma warning(disable:4201)  // nonstandard extension used : nameless struct/union
-#pragma warning(disable:4291)  // no matching operator delete found 
+#pragma warning(disable:4291)  // no matching operator delete found
 #pragma warning(disable:4815)  // zero-sized array in stack object will have no elements

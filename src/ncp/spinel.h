@@ -772,6 +772,17 @@ typedef enum
 
     SPINEL_PROP_NEST__BEGIN         = 15296,
     SPINEL_PROP_NEST_STREAM_MFG     = SPINEL_PROP_NEST__BEGIN + 0,
+
+    /// The legacy network ULA prefix (8 bytes)
+    /** Format: 'D' */
+    SPINEL_PROP_NEST_LEGACY_ULA_PREFIX
+                                    = SPINEL_PROP_NEST__BEGIN + 1,
+
+    /// A (newly) joined legacy node (this is signaled from NCP)
+    /** Format: 'E' */
+    SPINEL_PROP_NEST_LEGACY_JOINED_NODE
+                                    = SPINEL_PROP_NEST__BEGIN + 2,
+
     SPINEL_PROP_NEST__END           = 15360,
 
     SPINEL_PROP_VENDOR__BEGIN       = 15360,
