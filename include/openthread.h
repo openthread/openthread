@@ -941,12 +941,14 @@ ThreadError otSetPendingDataset(otInstance *aInstance, const otOperationalDatase
  * @param[in]  aInstance  A pointer to an OpenThread instance.
  * @param[in]  aTlvTypes  A pointer to the TLV Types.
  * @param[in]  aLength    The length of TLV Types.
+ * @param[in]  aAddress   A pointer to the IPv6 destination, if it is NULL, will use Leader ALOC as default.
  *
  * @retval kThreadError_None         Successfully send the meshcop dataset command.
  * @retval kThreadError_NoBufs       Insufficient buffer space to send.
  *
  */
-ThreadError otSendActiveGet(otInstance *aInstance, const uint8_t *aTlvTypes, uint8_t aLength);
+ThreadError otSendActiveGet(otInstance *aInstance, const uint8_t *aTlvTypes, uint8_t aLength,
+                            const otIp6Address *aAddress);
 
 /**
  * This function sends MGMT_ACTIVE_SET.
@@ -969,12 +971,14 @@ ThreadError otSendActiveSet(otInstance *aInstance, const otOperationalDataset *a
  * @param[in]  aInstance  A pointer to an OpenThread instance.
  * @param[in]  aTlvTypes  A pointer to the TLV Types.
  * @param[in]  aLength    The length of TLV Types.
+ * @param[in]  aAddress   A pointer to the IPv6 destination, if it is NULL, will use Leader ALOC as default.
  *
  * @retval kThreadError_None         Successfully send the meshcop dataset command.
  * @retval kThreadError_NoBufs       Insufficient buffer space to send.
  *
  */
-ThreadError otSendPendingGet(otInstance *aInstance, const uint8_t *aTlvTypes, uint8_t aLength);
+ThreadError otSendPendingGet(otInstance *aInstance, const uint8_t *aTlvTypes, uint8_t aLength,
+                             const otIp6Address *aAddress);
 
 /**
  * This function sends MGMT_PENDING_SET.

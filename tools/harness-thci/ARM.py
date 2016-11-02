@@ -2149,6 +2149,10 @@ class ARM(IThci):
         try:
             cmd = 'dataset mgmtgetcommand active'
 
+            if Addr != '':
+                cmd += ' address '
+                cmd += Addr
+
             if len(TLVs) != 0:
                 tlvs = "".join(hex(tlv).lstrip("0x").zfill(2) for tlv in TLVs)
                 cmd += ' binary '
@@ -2289,6 +2293,10 @@ class ARM(IThci):
         print '%s call MGMT_PENDING_GET' % self.port
         try:
             cmd = 'dataset mgmtgetcommand pending'
+
+            if Addr != '':
+                cmd += ' address '
+                cmd += Addr
 
             if len(TLVs) != 0:
                 tlvs = "".join(hex(tlv).lstrip("0x").zfill(2) for tlv in TLVs)

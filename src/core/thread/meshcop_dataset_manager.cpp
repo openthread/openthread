@@ -604,7 +604,8 @@ exit:
     return error;
 }
 
-ThreadError DatasetManager::SendGetRequest(const uint8_t *aTlvTypes, const uint8_t aLength)
+ThreadError DatasetManager::SendGetRequest(const uint8_t *aTlvTypes, const uint8_t aLength,
+                                           const otIp6Address *aAddress)
 {
     ThreadError error = kThreadError_None;
     Coap::Header header;
@@ -627,11 +628,19 @@ ThreadError DatasetManager::SendGetRequest(const uint8_t *aTlvTypes, const uint8
         SuccessOrExit(error = message->Append(aTlvTypes, aLength));
     }
 
-    mMle.GetLeaderAloc(messageInfo.GetPeerAddr());
+    if (aAddress != NULL)
+    {
+        messageInfo.SetPeerAddr(*static_cast<const Ip6::Address *>(aAddress));
+    }
+    else
+    {
+        mMle.GetLeaderAloc(messageInfo.GetPeerAddr());
+    }
+
     messageInfo.SetPeerPort(kCoapUdpPort);
     SuccessOrExit(error = mCoapClient.SendMessage(*message, messageInfo));
 
-    otLogInfoMeshCoP("sent dataset get request to leader");
+    otLogInfoMeshCoP("sent dataset get request");
 
 exit:
 
@@ -722,6 +731,7 @@ ActiveDataset::ActiveDataset(ThreadNetif &aThreadNetif):
     mResourceGet(OPENTHREAD_URI_ACTIVE_GET, &ActiveDataset::HandleGet, this),
     mResourceSet(OPENTHREAD_URI_ACTIVE_SET, &ActiveDataset::HandleSet, this)
 {
+    mCoapServer.AddResource(mResourceGet);
 }
 
 ThreadError ActiveDataset::Restore(void)
@@ -783,13 +793,11 @@ void ActiveDataset::StartLeader(void)
 
     mLocal.Store();
     mNetwork = mLocal;
-    mCoapServer.AddResource(mResourceGet);
     mCoapServer.AddResource(mResourceSet);
 }
 
 void ActiveDataset::StopLeader(void)
 {
-    mCoapServer.RemoveResource(mResourceGet);
     mCoapServer.RemoveResource(mResourceSet);
 }
 
@@ -872,6 +880,7 @@ PendingDataset::PendingDataset(ThreadNetif &aThreadNetif):
     mResourceSet(OPENTHREAD_URI_PENDING_SET, &PendingDataset::HandleSet, this),
     mTimer(aThreadNetif.GetIp6().mTimerScheduler, &PendingDataset::HandleTimer, this)
 {
+    mCoapServer.AddResource(mResourceGet);
 }
 
 ThreadError PendingDataset::Restore(void)
@@ -893,13 +902,11 @@ void PendingDataset::StartLeader(void)
     mNetwork = mLocal;
     ResetDelayTimer(kFlagNetworkUpdated);
 
-    mCoapServer.AddResource(mResourceGet);
     mCoapServer.AddResource(mResourceSet);
 }
 
 void PendingDataset::StopLeader(void)
 {
-    mCoapServer.RemoveResource(mResourceGet);
     mCoapServer.RemoveResource(mResourceSet);
 }
 

@@ -1482,9 +1482,10 @@ exit:
     return error;
 }
 
-ThreadError otSendActiveGet(otInstance *aInstance, const uint8_t *aTlvTypes, uint8_t aLength)
+ThreadError otSendActiveGet(otInstance *aInstance, const uint8_t *aTlvTypes, uint8_t aLength,
+                            const otIp6Address *aAddress)
 {
-    return aInstance->mThreadNetif.GetActiveDataset().SendGetRequest(aTlvTypes, aLength);
+    return aInstance->mThreadNetif.GetActiveDataset().SendGetRequest(aTlvTypes, aLength, aAddress);
 }
 
 ThreadError otSendActiveSet(otInstance *aInstance, const otOperationalDataset *aDataset, const uint8_t *aTlvs,
@@ -1493,9 +1494,10 @@ ThreadError otSendActiveSet(otInstance *aInstance, const otOperationalDataset *a
     return aInstance->mThreadNetif.GetActiveDataset().SendSetRequest(*aDataset, aTlvs, aLength);
 }
 
-ThreadError otSendPendingGet(otInstance *aInstance, const uint8_t *aTlvTypes, uint8_t aLength)
+ThreadError otSendPendingGet(otInstance *aInstance, const uint8_t *aTlvTypes, uint8_t aLength,
+                             const otIp6Address *aAddress)
 {
-    return aInstance->mThreadNetif.GetPendingDataset().SendGetRequest(aTlvTypes, aLength);
+    return aInstance->mThreadNetif.GetPendingDataset().SendGetRequest(aTlvTypes, aLength, aAddress);
 }
 
 ThreadError otSendPendingSet(otInstance *aInstance, const otOperationalDataset *aDataset, const uint8_t *aTlvs,

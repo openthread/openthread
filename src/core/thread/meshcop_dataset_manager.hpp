@@ -59,7 +59,7 @@ public:
     ThreadError ApplyConfiguration(void);
 
     ThreadError SendSetRequest(const otOperationalDataset &aDataset, const uint8_t *aTlvs, uint8_t aLength);
-    ThreadError SendGetRequest(const uint8_t *aTlvTypes, uint8_t aLength);
+    ThreadError SendGetRequest(const uint8_t *aTlvTypes, uint8_t aLength, const otIp6Address *aAddress);
 
 protected:
     enum
