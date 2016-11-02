@@ -101,21 +101,20 @@ class ARM(IThci):
             expected    str: the expected string
             times       int: number of trials
         """
-        print('[%s] Expecting [%s]' % (self.port, expected))
+        print '[%s] Expecting [%s]' % (self.port, expected)
 
         for i in range(0, times):
             line = self._readline()
-            print('[%s] Got line [%s]' % (self.port, line))
+            print '[%s] Got line [%s]' % (self.port, line)
 
             if line == expected:
-                print('[%s] Expected [%s]' % (self.port, expected))
+                print '[%s] Expected [%s]' % (self.port, expected)
                 return
 
             if not line:
                 time.sleep(1)
 
         raise Exception('failed to find expected string[%s]' % expected)
-
 
     def _read(self, size=512):
         logging.info('%s: reading', self.port)
@@ -169,7 +168,7 @@ class ARM(IThci):
         except socket.error:
             logging.debug('%s: Nothing cleared', self.port)
 
-        print('sending [%s]' % line)
+        print 'sending [%s]' % line
         self._write(line + '\r\n')
 
         # wait for write to complete
@@ -662,7 +661,7 @@ class ARM(IThci):
             ModuleHelper.WriteIntoDebugLogger("closeConnection() Error: " + str(e))
 
     def _connect(self):
-        print('My port is %s' % self.port)
+        print 'My port is %s' % self.port
         if self.port.startswith('COM'):
             self.handle = serial.Serial(self.port, 115200, timeout=0, xonxoff=True)
             self._is_net = False
@@ -2433,9 +2432,8 @@ class ARM(IThci):
 
     def setPSKc(self, strPSKc):
         print '%s call setPSKc' % self.port
-        return
         try:
-            cmd = 'dataset pskc %s' % strPSKc
+            cmd = 'dataset pskc %s' % str(strPSKc[::-1].encode('hex'))
             print cmd
             if self.__sendCommand(cmd)[0] == 'Done':
                 return self.__sendCommand('dataset commit active')[0] == 'Done'
