@@ -126,6 +126,16 @@
 #endif  // OPENTHREAD_CONFIG_MAX_EXT_IP_ADDRS
 
 /**
+ * @def OPENTHREAD_CONFIG_MAX_EXT_MULTICAST_IP_ADDRS
+ *
+ * The maximum number of supported IPv6 multicast addresses allows to be externally added.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_MAX_EXT_MULTICAST_IP_ADDRS
+#define OPENTHREAD_CONFIG_MAX_EXT_MULTICAST_IP_ADDRS            2
+#endif  // OPENTHREAD_CONFIG_MAX_EXT_MULTICAST_IP_ADDRS
+
+/**
  * @def OPENTHREAD_CONFIG_6LOWPAN_REASSEMBLY_TIMEOUT
  *
  * The 6LoWPAN fragment reassembly timeout in seconds.

@@ -167,6 +167,10 @@ private:
     void ProcessIpAddr(int argc, char *argv[]);
     ThreadError ProcessIpAddrAdd(int argc, char *argv[]);
     ThreadError ProcessIpAddrDel(int argc, char *argv[]);
+    void ProcessIpMulticastAddr(int argc, char *argv[]);
+    ThreadError ProcessIpMulticastAddrAdd(int argc, char *argv[]);
+    ThreadError ProcessIpMulticastAddrDel(int argc, char *argv[]);
+    ThreadError ProcessMulticastPromiscuous(int argc, char *argv[]);
 #if OPENTHREAD_ENABLE_JOINER
     void ProcessJoiner(int argc, char *argv[]);
 #endif  // OPENTHREAD_ENABLE_JOINER

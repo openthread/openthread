@@ -841,17 +841,27 @@ typedef struct otMacCounters
  */
 
 /**
- * This structure represents an IPv6 network interface address.
+ * This structure represents an IPv6 network interface unicast address.
  *
  */
 typedef struct otNetifAddress
 {
-    otIp6Address           mAddress;            ///< The IPv6 address.
+    otIp6Address           mAddress;            ///< The IPv6 unicast address.
     uint32_t               mPreferredLifetime;  ///< The Preferred Lifetime.
     uint32_t               mValidLifetime;      ///< The Valid lifetime.
     uint8_t                mPrefixLength;       ///< The Prefix length.
     struct otNetifAddress *mNext;               ///< A pointer to the next network interface address.
 } otNetifAddress;
+
+/**
+ * This structure represents an IPv6 network interface multicast address.
+ *
+ */
+typedef struct otNetifMulticastAddress
+{
+    otIp6Address                    mAddress;   ///< The IPv6 multicast address.
+    struct otNetifMulticastAddress *mNext;      ///< A pointer to the next network interface multicast address.
+} otNetifMulticastAddress;
 
 /**
  * This enumeration represents the list of allowable values for an InterfaceId.

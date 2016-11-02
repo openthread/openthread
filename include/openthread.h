@@ -791,6 +791,72 @@ ThreadError otAddUnicastAddress(otInstance *aInstance, const otNetifAddress *aAd
 ThreadError otRemoveUnicastAddress(otInstance *aInstance, const otIp6Address *aAddress);
 
 /**
+ * Get the list of IPv6 multicast addresses subscribed to the Thread interface.
+ *
+ * @param[in]  aInstance A pointer to an OpenThread instance.
+ *
+ * @returns A pointer to the first Network Interface Multicast Address.
+ */
+const otNetifMulticastAddress *otGetMulticastAddresses(otInstance *aInstance);
+
+/**
+ * Subscribe the Thread interface to a Network Interface Multicast Address.
+ *
+ * The passed in instance @p aAddress will be copied by the Thread interface. The Thread interface only
+ * supports a fixed number of externally added multicast addresses. See OPENTHREAD_CONFIG_MAX_EXT_MULTICAST_IP_ADDRS.
+ *
+ * @param[in]  aInstance A pointer to an OpenThread instance.
+ * @param[in]  aAddress  A pointer to an IP Address.
+ *
+ * @retval kThreadErrorNone          Successfully subscribed to the Network Interface Multicast Address.
+ * @retval kThreadError_InvalidArgs  The IP Address indicated by @p aAddress is invalid address.
+ * @retval kThreadError_NoBufs       The Network Interface is already storing the maximum allowed external multicast addresses.
+ */
+ThreadError otSubscribeMulticastAddress(otInstance *aInstance, const otIp6Address *aAddress);
+
+/**
+ * Unsubscribe the Thread interface to a Network Interface Multicast Address.
+ *
+ * @param[in]  aInstance A pointer to an OpenThread instance.
+ * @param[in]  aAddress  A pointer to an IP Address.
+ *
+ * @retval kThreadErrorNone          Successfully unsubscribed to the Network Interface Multicast Address.
+ * @retval kThreadError_InvalidArgs  The IP Address indicated by @p aAddress is an internal address.
+ * @retval kThreadError_NotFound     The IP Address indicated by @p aAddress was not found.
+ */
+ThreadError otUnsubscribeMulticastAddress(otInstance *aInstance, const otIp6Address *aAddress);
+
+/**
+ * Check if multicast promiscuous mode is enabled on the Thread interface.
+ *
+ * @param[in]  aInstance A pointer to an OpenThread instance.
+ *
+ * @sa otEnableMulticastPromiscuousMode
+ * @sa otDisableMulticastPromiscuousMode
+ */
+bool otIsMulticastPromiscuousModeEnabled(otInstance *aInstance);
+
+/**
+ * Enable multicast promiscuous mode on the Thread interface.
+ *
+ * @param[in]  aInstance A pointer to an OpenThread instance.
+ *
+ * @sa otIsMulticastPromiscuousModeEnabled
+ * @sa otDisableMulticastPromiscuousMode
+ */
+void otEnableMulticastPromiscuousMode(otInstance *aInstance);
+
+/**
+ * Disable multicast promiscuous mode on the Thread interface.
+ *
+ * @param[in]  aInstance A pointer to an OpenThread instance.
+ *
+ * @sa otIsMulticastPromiscuousModeEnabled
+ * @sa otEnableMulticastPromiscuousMode
+ */
+void otDisableMulticastPromiscuousMode(otInstance *aInstance);
+
+/**
  * This function pointer is called to create IPv6 IID during SLAAC procedure.
  *
  * @param[in]     aInstance  A pointer to an OpenThread instance.
