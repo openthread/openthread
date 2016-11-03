@@ -110,4 +110,4 @@ def debug_set_level(level):
             DEBUG_STREAM_RX = 1
             DEBUG_STREAM_TX = 1
 
-    print "DEBUG_ENABLE = " + str(DEBUG_ENABLE)
+    print("DEBUG_ENABLE = " + str(DEBUG_ENABLE))

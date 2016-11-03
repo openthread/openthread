@@ -57,6 +57,7 @@ import traceback
 
 import optparse
 
+import struct
 import string
 import textwrap
 
@@ -65,7 +66,6 @@ import logging.config
 import logging.handlers
 
 from cmd import Cmd
-from struct import pack
 
 from spinel.const import SPINEL
 from spinel.const import kThread
@@ -79,6 +79,7 @@ import ipaddress
 
 logging.getLogger("scapy.runtime").setLevel(logging.ERROR)
 from scapy.layers.inet6 import IPv6
+from scapy.layers.inet6 import ICMPv6EchoReply
 from scapy.layers.inet6 import ICMPv6EchoRequest
 
 
@@ -96,9 +97,12 @@ class SpinelCliCmd(Cmd, SpinelCodec):
 
     def __init__(self, stream_desc, nodeid, *_a, **kw):
 
+        self.nodeid = kw.get('nodeid', '1')
+
         self.wpan_api = WpanApi(stream_desc, nodeid)
         self.wpan_api.queue_register(SPINEL.HEADER_DEFAULT)
-        self.nodeid = kw.get('nodeid', '1')
+        self.wpan_api.callback_register(SPINEL.PROP_STREAM_NET,
+                                        self.wpan_callback)
 
         Cmd.__init__(self)
         Cmd.identchars = string.ascii_letters + string.digits + '-'
@@ -202,6 +206,26 @@ class SpinelCliCmd(Cmd, SpinelCodec):
         'ncp-filter',
 
     ]
+
+    @classmethod
+    def wpan_callback(cls, prop, value, tid):
+        consumed = False
+
+        if prop == SPINEL.PROP_STREAM_NET:
+            consumed = True
+
+            pkt = IPv6(value[2:])
+
+            if CONFIG.DEBUG_LOG_PKT:
+                pkt.show()
+
+            if ICMPv6EchoReply in pkt:
+                timenow = int(round(time.time() * 1000)) & 0xFFFFFFFF
+                timedelta = (timenow - struct.unpack('>I', pkt.data)[0])
+                print("\n%d bytes from %s: icmp_seq=%d hlim=%d time=%dms" % (
+                    pkt.plen, pkt.src, pkt.seq, pkt.hlim, timedelta))
+
+        return consumed
 
     @classmethod
     def log(cls, text):
@@ -908,11 +932,11 @@ class SpinelCliCmd(Cmd, SpinelCodec):
         args = line.split(" ")
 
         if args[0] == "counter":
-            newline = line.replace("counter","")
+            newline = line.replace("counter", "")
             self.handle_property(newline, SPINEL.PROP_NET_KEY_SEQUENCE_COUNTER, 'L')
 
         elif args[0] == "guardtime":
-            newline = line.replace("guardtime","")
+            newline = line.replace("guardtime", "")
             self.handle_property(newline, SPINEL.PROP_NET_KEY_SWITCH_GUARDTIME, 'L')
 
     def do_leaderdata(self, line):
@@ -1028,7 +1052,7 @@ class SpinelCliCmd(Cmd, SpinelCodec):
             try:
                 # remap string state names to integer
                 line = map_arg_name[line]
-            except KeyError, _ex:
+            except KeyError:
                 print("Error")
                 return
 
@@ -1138,7 +1162,7 @@ class SpinelCliCmd(Cmd, SpinelCodec):
             ml64 = self.prop_get_value(SPINEL.PROP_IPV6_ML_ADDR)
             ml64 = str(ipaddress.IPv6Address(ml64))
             timenow = int(round(time.time() * 1000)) & 0xFFFFFFFF
-            timenow = pack('>I', timenow)
+            timenow = struct.pack('>I', timenow)
             ping_req = str(IPv6(src=ml64, dst=addr) /
                            ICMPv6EchoRequest() / timenow)
             self.wpan_api.ip_send(ping_req)
@@ -1625,13 +1649,13 @@ class SpinelCliCmd(Cmd, SpinelCodec):
                 rssi = int(params[2])
             except:
                 rssi = SPINEL.RSSI_OVERRIDE
-            arr += pack('b', rssi)
+            arr += struct.pack('b', rssi)
             value = self.prop_insert_value(SPINEL.PROP_MAC_WHITELIST, arr,
                                            str(len(arr)) + 's')
 
         elif params[0] == "remove":
             arr = util.hex_to_bytes(params[1])
-            arr += pack('b', SPINEL.RSSI_OVERRIDE)
+            arr += struct.pack('b', SPINEL.RSSI_OVERRIDE)
             value = self.prop_remove_value(SPINEL.PROP_MAC_WHITELIST, arr,
                                            str(len(arr)) + 's')
 
