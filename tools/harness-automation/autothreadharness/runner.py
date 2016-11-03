@@ -142,8 +142,23 @@ class SimpleTestResult(unittest.TestResult):
         super(SimpleTestResult, self).addError(test, err)
         self.add_result(test, None, str(err[1]))
 
-def discover(names=None, pattern='*.py', skip='efp', dry_run=False, blacklist=None,
-             manual_reset=False, delete_history=False, list_devices=False, max_devices=0,
+def list_devices(names=None, continue_from=None, **kwargs):
+    """List devices in settings file and print versions"""
+
+    if continue_from:
+        continue_from = settings.GOLDEN_DEVICES.index(continue_from)
+    else:
+        continue_from = 0
+
+    for port in names or settings.GOLDEN_DEVICES[continue_from:]:
+        try:
+            with OpenThreadController(port) as otc:
+                print('%s: %s' % (port, otc.version))
+        except:
+            logger.exception('failed to get version of %s' % port)
+
+def discover(names=None, pattern=['*.py'], skip='efp', dry_run=False, blacklist=None, name_greps=None,
+             manual_reset=False, delete_history=False, max_devices=0,
              continue_from=None, result_file='./result.json', auto_reboot=False):
     '''Discover all test cases and skip those passed
 
@@ -152,19 +167,6 @@ def discover(names=None, pattern='*.py', skip='efp', dry_run=False, blacklist=No
                        documentation for more details
         skip (str): types cases to skip
     '''
-
-    if list_devices:
-        if continue_from:
-            continue_from = settings.GOLDEN_DEVICES.index(continue_from)
-        else:
-            continue_from = 0
-        for port in names or settings.GOLDEN_DEVICES[continue_from:]:
-            try:
-                with OpenThreadController(port) as otc:
-                    print('%s: %s' % (port, otc.version))
-            except:
-                logger.exception('failed to get version of %s' % port)
-        return
 
     if delete_history:
         os.system('del history.json')
@@ -203,6 +205,11 @@ def discover(names=None, pattern='*.py', skip='efp', dry_run=False, blacklist=No
                 if case.__class__ is HarnessCase:
                     continue
                 case_name = unicode(case.__class__.__name__)
+
+                # grep name
+                if not any(grep in case_name for grep in name_greps):
+                    logger.info('case[%s] skipped by name greps', case_name)
+                    continue
 
                 # whitelist
                 if len(names) and case_name not in names:
@@ -268,32 +275,34 @@ def discover(names=None, pattern='*.py', skip='efp', dry_run=False, blacklist=No
 
 def main():
     parser = argparse.ArgumentParser(description='Thread harness test case runner')
+    parser.add_argument('--auto-reboot', '-a', action='store_true', default=False,
+                        help='restart system when harness service die')
     parser.add_argument('names', metavar='NAME', type=str, nargs='*', default=None,
                         help='test case name, omit to test all')
     parser.add_argument('--blacklist', '-b', metavar='BLACKLIST_FILE', type=str,
                         help='file to list test cases to skipt', default=None)
-    parser.add_argument('--pattern', '-p', metavar='PATTERN', type=str,
-                        help='file name pattern, default to "*.py"', default='*.py')
+    parser.add_argument('--continue-from', '-c', type=str, default=None,
+                        help='first case to test')
     parser.add_argument('--delete-history', '-d', action='store_true', default=False,
                         help='clear history on startup')
+    parser.add_argument('--name-greps', '-g', action='append', default=None,
+                        help='grep case by names')
+    parser.add_argument('--list-file', '-i', type=str, default=None,
+                        help='file to list cases names to test')
     parser.add_argument('--skip', '-k', metavar='SKIP', type=str,
                         help='type of results to skip.' \
                         'e for error, f for fail, p for pass. default to "efp"',
                         default='')
+    parser.add_argument('--list-devices', '-l', action='store_true', default=False,
+                        help='list devices')
+    parser.add_argument('--manual-reset', '-m', action='store_true', default=False,
+                        help='reset devices manually')
     parser.add_argument('--dry-run', '-n', action='store_true', default=False,
                         help='just show what to run')
     parser.add_argument('--result-file', '-o', type=str, default=settings.OUTPUT_PATH + '\\result.json',
                         help='file to store and read current status')
-    parser.add_argument('--list-file', '-i', type=str, default=None,
-                        help='file to list cases names to test')
-    parser.add_argument('--continue-from', '-c', type=str, default=None,
-                        help='first case to test')
-    parser.add_argument('--auto-reboot', '-a', action='store_true', default=False,
-                        help='restart system when harness service die')
-    parser.add_argument('--manual-reset', '-m', action='store_true', default=False,
-                        help='reset devices manually')
-    parser.add_argument('--list-devices', '-l', action='store_true', default=False,
-                        help='list devices')
+    parser.add_argument('--pattern', '-p', metavar='PATTERN', type=str,
+                        help='file name pattern, default to "*.py"', default='*.py')
     parser.add_argument('--max-devices', '-u', type=int, default=0,
                         help='max golden devices allowed')
 
@@ -311,7 +320,11 @@ def main():
             args['names'] = args['names'] + names
 
     args.pop('list_file')
-    discover(**args)
+
+    if args.pop('list_devices', False):
+        list_devices(**args)
+    else:
+        discover(**args)
 
 if __name__ == '__main__':
     main()
