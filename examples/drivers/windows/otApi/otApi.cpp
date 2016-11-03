@@ -2136,7 +2136,8 @@ OTCALL
 otSendActiveGet(
     _In_ otInstance *aInstance, 
     const uint8_t *aTlvTypes, 
-    uint8_t aLength
+    uint8_t aLength,
+    _In_opt_ const otIp6Address *aAddress
     )
 {
     if (aInstance == nullptr) return kThreadError_InvalidArgs;
@@ -2150,6 +2151,9 @@ otSendActiveGet(
     memcpy_s(Buffer + sizeof(GUID), BufferSize - sizeof(GUID), &aLength, sizeof(aLength));
     if (aLength > 0)
         memcpy_s(Buffer + sizeof(GUID) + sizeof(uint8_t), BufferSize - sizeof(GUID) - sizeof(uint8_t), aTlvTypes, aLength);
+
+    // TODO - include aAddress
+    UNREFERENCED_PARAMETER(aAddress);
     
     ThreadError result = 
         DwordToThreadError(SendIOCTL(aInstance->ApiHandle, IOCTL_OTLWF_OT_SEND_ACTIVE_GET, Buffer, BufferSize, nullptr, 0));
@@ -2194,7 +2198,8 @@ OTCALL
 otSendPendingGet(
     _In_ otInstance *aInstance, 
     const uint8_t *aTlvTypes, 
-    uint8_t aLength
+    uint8_t aLength,
+    _In_opt_ const otIp6Address *aAddress
     )
 {
     if (aInstance == nullptr) return kThreadError_InvalidArgs;
@@ -2208,6 +2213,9 @@ otSendPendingGet(
     memcpy_s(Buffer + sizeof(GUID), BufferSize - sizeof(GUID), &aLength, sizeof(aLength));
     if (aLength > 0)
         memcpy_s(Buffer + sizeof(GUID) + sizeof(uint8_t), BufferSize - sizeof(GUID) - sizeof(uint8_t), aTlvTypes, aLength);
+
+    // TODO - include aAddress
+    UNREFERENCED_PARAMETER(aAddress);
     
     ThreadError result = 
         DwordToThreadError(SendIOCTL(aInstance->ApiHandle, IOCTL_OTLWF_OT_SEND_PENDING_GET, Buffer, BufferSize, nullptr, 0));

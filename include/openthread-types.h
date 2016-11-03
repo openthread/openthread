@@ -510,9 +510,7 @@ typedef enum otMeshcopTlvType
 /**
  * This structure represents an MLE Link Mode configuration.
  */
-#ifdef _WIN32
-__declspec(align(4))
-#endif
+OT_TOOL_ALIGN(4)
 typedef struct otLinkModeConfig
 {
     /**
@@ -789,9 +787,7 @@ typedef struct
  * This structure holds diagnostic information for a Thread Router
  *
  */
-#ifdef _WIN32
-__declspec(align(4))
-#endif
+OT_TOOL_ALIGN(4)
 typedef struct
 {
     otExtAddress   mExtAddress;            ///< IEEE 802.15.4 Extended Address

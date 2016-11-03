@@ -37,16 +37,6 @@
 
 #include <openthread-types.h>
 
-#ifdef OTDLL
-#ifndef OTAPI
-#define OTAPI __declspec(dllimport)
-#endif
-#define OTCALL WINAPI
-#else
-#define OTAPI
-#define OTCALL
-#endif
-
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -1124,7 +1114,7 @@ OTAPI ThreadError OTCALL otSendActiveSet(otInstance *aInstance, const otOperatio
  *
  */
 OTAPI ThreadError OTCALL otSendPendingGet(otInstance *aInstance, const uint8_t *aTlvTypes, uint8_t aLength,
-                             const otIp6Address *aAddress);
+                                          const otIp6Address *aAddress);
 
 /**
  * This function sends MGMT_PENDING_SET.

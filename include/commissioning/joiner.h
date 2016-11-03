@@ -35,15 +35,7 @@
 #ifndef OPENTHREAD_JOINER_H_
 #define OPENTHREAD_JOINER_H_
 
-#ifdef OTDLL
-#ifndef OTAPI
-#define OTAPI __declspec(dllimport)
-#endif
-#define OTCALL WINAPI
-#else
-#define OTAPI
-#define OTCALL
-#endif
+#include <platform/toolchain.h>
 
 #ifdef __cplusplus
 extern "C" {

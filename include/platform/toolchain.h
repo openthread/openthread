@@ -96,6 +96,8 @@ extern "C" {
 #define OT_TOOL_PACKED_FIELD                __attribute__((packed))
 #define OT_TOOL_PACKED_END                  __attribute__((packed))
 
+#define OT_TOOL_ALIGN(X)
+
 #elif defined(__ICCARM__) || defined(__ICC8051__)
 
 // http://supp.iar.com/FilesPublic/UPDINFO/004916/arm/doc/EWARM_DevelopmentGuide.ENU.pdf
@@ -106,11 +108,15 @@ extern "C" {
 #define OT_TOOL_PACKED_FIELD
 #define OT_TOOL_PACKED_END
 
+#define OT_TOOL_ALIGN(X)
+
 #elif defined(_MSC_VER)
 
 #define OT_TOOL_PACKED_BEGIN                __pragma(pack(push,1))
 #define OT_TOOL_PACKED_FIELD
 #define OT_TOOL_PACKED_END                  __pragma(pack(pop))
+
+#define OT_TOOL_ALIGN(X)                    __declspec(align(4))
 
 #elif defined(__SDCC)
 
@@ -119,6 +125,8 @@ extern "C" {
 #define OT_TOOL_PACKED_BEGIN
 #define OT_TOOL_PACKED_FIELD
 #define OT_TOOL_PACKED_END
+
+#define OT_TOOL_ALIGN(X)
 
 #else
 
@@ -130,6 +138,8 @@ extern "C" {
 #define OT_TOOL_PACKED_FIELD
 #define OT_TOOL_PACKED_END
 
+#define OT_TOOL_ALIGN(X)
+
 #endif
 
 // =========== TOOLCHAIN SELECTION : END ===========
@@ -137,10 +147,8 @@ extern "C" {
 #ifdef _MSC_VER
 
 #ifdef _WIN64
-#define OT_CALL
 #define OT_CDECL
 #else
-#define OT_CALL  __stdcall
 #define OT_CDECL __cdecl
 #endif
 
@@ -149,6 +157,16 @@ extern "C" {
 #define OT_CALL
 #define OT_CDECL
 
+#endif
+
+#ifdef OTDLL
+#ifndef OTAPI
+#define OTAPI __declspec(dllimport)
+#endif
+#define OTCALL WINAPI
+#else
+#define OTAPI
+#define OTCALL
 #endif
 
 /**
