@@ -1253,7 +1253,6 @@ private:
 
     Ip6::NetifUnicastAddress mLeaderAloc;
 
-    Ip6::NetifUnicastAddress mLinkLocal16;
     Ip6::NetifUnicastAddress mLinkLocal64;
     Ip6::NetifUnicastAddress mMeshLocal64;
     Ip6::NetifUnicastAddress mMeshLocal16;

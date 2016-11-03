@@ -1120,15 +1120,6 @@ ThreadError Mac::ProcessReceiveSecurity(Frame &aFrame, const Address &aSrcAddr, 
     aFrame.SetSecurityValid(true);
 
 exit:
-
-    if (error == kThreadError_Security)
-    {
-        for (Receiver *receiver = mReceiveHead; receiver; receiver = receiver->mNext)
-        {
-            receiver->HandleReceivedFrame(aFrame, error);
-        }
-    }
-
     return error;
 }
 
@@ -1292,7 +1283,7 @@ void Mac::ReceiveDoneTask(Frame *aFrame, ThreadError aError)
 
         for (Receiver *receiver = mReceiveHead; receiver; receiver = receiver->mNext)
         {
-            receiver->HandleReceivedFrame(*aFrame, kThreadError_None);
+            receiver->HandleReceivedFrame(*aFrame);
         }
 
         break;
