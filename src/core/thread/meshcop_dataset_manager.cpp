@@ -188,8 +188,13 @@ ThreadError DatasetManager::Clear(uint8_t &aFlags, bool aOnlyClearNetwork)
 ThreadError DatasetManager::Set(const Dataset &aDataset)
 {
     mNetwork.Set(aDataset);
-    mLocal.Set(aDataset);
-    mLocal.Store();
+
+    if (mLocal.Compare(aDataset) != 0)
+    {
+        mLocal.Set(aDataset);
+        mLocal.Store();
+    }
+
     return kThreadError_None;
 }
 

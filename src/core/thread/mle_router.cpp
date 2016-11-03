@@ -2312,8 +2312,8 @@ ThreadError MleRouter::SendChildIdResponse(Child *aChild)
     SuccessOrExit(error = AppendHeader(*message, Header::kCommandChildIdResponse));
     SuccessOrExit(error = AppendSourceAddress(*message));
     SuccessOrExit(error = AppendLeaderData(*message));
-    SuccessOrExit(error = AppendActiveTimestamp(*message));
-    SuccessOrExit(error = AppendPendingTimestamp(*message));
+    SuccessOrExit(error = AppendActiveTimestamp(*message, false));
+    SuccessOrExit(error = AppendPendingTimestamp(*message, false));
 
     if (aChild->mState != Neighbor::kStateValid)
     {
@@ -2460,8 +2460,8 @@ ThreadError MleRouter::SendDataResponse(const Ip6::Address &aDestination, const 
     SuccessOrExit(error = AppendHeader(*message, Header::kCommandDataResponse));
     SuccessOrExit(error = AppendSourceAddress(*message));
     SuccessOrExit(error = AppendLeaderData(*message));
-    SuccessOrExit(error = AppendActiveTimestamp(*message));
-    SuccessOrExit(error = AppendPendingTimestamp(*message));
+    SuccessOrExit(error = AppendActiveTimestamp(*message, false));
+    SuccessOrExit(error = AppendPendingTimestamp(*message, false));
 
     for (int i = 0; i < aTlvsLength; i++)
     {
