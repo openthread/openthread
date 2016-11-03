@@ -65,6 +65,7 @@ include_HEADERS                         = \
     openthread-diag.h                     \
     openthread-ip6.h                      \
     openthread-message.h                  \
+    openthread-tasklet.h                  \
     openthread-types.h                    \
     openthread-udp.h                      \
     $(NULL)

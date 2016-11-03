@@ -62,6 +62,7 @@ RtlCopyBufferToMdl(
 #include <openthread-core-config.h>
 #include <openthread.h>
 #include <openthread-ip6.h>
+#include <openthread-tasklet.h>
 #include <commissioning/commissioner.h>
 #include <commissioning/joiner.h>
 #include <common/code_utils.hpp>
@@ -71,7 +72,6 @@ RtlCopyBufferToMdl(
 #include <platform/misc.h>
 #include <platform/alarm.h>
 #include <platform/settings.h>
-#include <platform/tasklet.h>
 
 #include <otLwfIoctl.h>
 #include <otOID.h>

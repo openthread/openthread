@@ -32,8 +32,8 @@
  *   This file includes the platform abstraction for the tasklet service.
  */
 
-#ifndef TASKLET_H_
-#define TASKLET_H_
+#ifndef OPENTHREAD_TASKLET_H_
+#define OPENTHREAD_TASKLET_H_
 
 #include <openthread-types.h>
 
@@ -85,4 +85,4 @@ extern void otSignalTaskletPending(otInstance *aInstance);
 }  // extern "C"
 #endif
 
-#endif  // TASKLET_H_
+#endif  // OPENTHREAD_TASKLET_H_

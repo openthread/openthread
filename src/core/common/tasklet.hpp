@@ -35,7 +35,7 @@
 #define TASKLET_HPP_
 
 #include <openthread-types.h>
-#include <platform/tasklet.h>
+#include <openthread-tasklet.h>
 
 namespace Thread {
 

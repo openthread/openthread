@@ -41,7 +41,6 @@ ot_platform_headers                      =\
     spi-slave.h                           \
     settings.h                            \
     messagepool.h                         \
-    tasklet.h                             \
     toolchain.h                           \
     $(NULL)
 
