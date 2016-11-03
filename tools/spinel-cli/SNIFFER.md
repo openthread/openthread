@@ -1,6 +1,6 @@
 # Spinel Sniffer Reference
 
-Any Spinel NCP node can be made into a promiscuous packet sniffer, and this 
+Any Spinel NCP node can be made into a promiscuous packet sniffer, and this
 tool both intializes a device into this mode and outputs a pcap stream that
 can be saved or piped directly into Wireshark.
 
@@ -21,9 +21,8 @@ The tool has been tested on the following platforms:
 
 ```
 sudo easy_install pip
-sudo pip install ipaddress
-sudo pip install scapy
-sudo pip install pyserial
+sudo pip install --user pyserial
+sudo pip install --user ipaddress
 ```
 
 ## Usage
@@ -46,7 +45,7 @@ sudo pip install pyserial
 
     -p <PIPE>, --pipe=<PIPE>
         Open a piped process connection to the OpenThread NCP device
-        where <PIPE> is the command to start an emulator, such as 
+        where <PIPE> is the command to start an emulator, such as
         "ot-ncp".  Spinel-cli will communicate with the child process
         via stdin/stdout.
 
@@ -90,9 +89,9 @@ From openthread root:
     sudo ./tools/spinel-cli/sniffer.py -c 11 -n 1 -u /dev/ttyUSB0 | wireshark -k -i -
 ```
 
-This will connect to stock openthread ncp firmware over the given UART, 
-make the node into a promiscuous mode sniffer on the given channel, 
-open up wireshark, and start streaming packets into wireshark. 
+This will connect to stock openthread ncp firmware over the given UART,
+make the node into a promiscuous mode sniffer on the given channel,
+open up wireshark, and start streaming packets into wireshark.
 
 ## Troubleshooting
 Q: sniffer.py throws ```ImportError: No module named dnet``` on OSX
@@ -107,4 +106,3 @@ echo 'import site; site.addsitedir("/usr/local/lib/python2.7/site-packages")' >>
 you may need to reinstall the scapy pip dependency listed above
 
 you can read more about this issue here: http://stackoverflow.com/questions/26229057/scapy-installation-fails-on-osx-with-dnet-import-error
-

@@ -416,10 +416,10 @@ class HarnessCase(unittest.TestCase):
             device_type_id = 'ARM'
 
         while golden_devices_required:
-            freescale = browser.find_element_by_id(device_type_id)
+            device = browser.find_element_by_id(device_type_id)
             # drag
             action_chains = ActionChains(browser)
-            action_chains.click_and_hold(freescale)
+            action_chains.click_and_hold(device)
             action_chains.move_to_element(test_bed).perform()
             time.sleep(1)
 
@@ -445,19 +445,48 @@ class HarnessCase(unittest.TestCase):
                 self._connect_devices()
                 button_next = browser.find_element_by_id('nextBtn')
                 if not self.wait_until(lambda: 'disabled' not in button_next.get_attribute('class'),
-                                       times=120):
+                                       times=(30 + 3 * golden_devices_required)):
+                    bad_ones = []
                     for selected_hw in selected_hw_set:
                         form_inputs = selected_hw.find_elements_by_tag_name('input')
                         form_port = form_inputs[0]
                         if form_port.is_enabled():
-                            port = form_port.get_attribute('value').encode('utf8')
+                            bad_ones.append(selected_hw)
+
+                    for selected_hw in bad_ones:
+                        port = form_port.get_attribute('value').encode('utf8')
+                        if not settings.APC_HOST:
+                            # port cannot recover without power off
                             self.history.mark_bad_golden_device(port)
-                            if devices:
-                                device = devices.pop()
-                                form_port.clear()
-                                form_port.send_keys(device)
-                            else:
-                                devices = None
+
+                        # remove the bad one
+                        selected_hw.find_element_by_class_name('removeSelectedDevice').click()
+                        time.sleep(0.1)
+
+                        device = browser.find_element_by_id(device_type_id)
+                        # drag
+                        action_chains = ActionChains(browser)
+                        action_chains.click_and_hold(device)
+                        action_chains.move_to_element(test_bed).perform()
+                        time.sleep(1)
+
+                        # drop
+                        drop_hw = browser.find_element_by_class_name('drop-hw')
+                        action_chains = ActionChains(browser)
+                        action_chains.move_to_element(drop_hw)
+                        action_chains.release(drop_hw).perform()
+
+                        time.sleep(0.5)
+
+                        selected_hw = browser.find_element_by_class_name('selected-hw')
+                        form_inputs = selected_hw.find_elements_by_tag_name('input')
+                        form_port = form_inputs[0]
+                        if devices:
+                            device = devices.pop()
+                            form_port.clear()
+                            form_port.send_keys(device)
+                        else:
+                            devices = None
 
                     if devices is None:
                         logger.warning('Golden devices not enough')
