@@ -96,23 +96,14 @@ void AnnounceBeginServer::HandleRequest(void *aContext, Coap::Header &aHeader, M
 
 void AnnounceBeginServer::HandleRequest(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
-    OT_TOOL_PACKED_BEGIN
-    struct
-    {
-        MeshCoP::ChannelMaskTlv tlv;
-        MeshCoP::ChannelMaskEntry entry;
-        uint32_t mask;
-    } OT_TOOL_PACKED_END channelMask;
-
+    MeshCoP::ChannelMask0Tlv channelMask;
     MeshCoP::CountTlv count;
     MeshCoP::PeriodTlv period;
 
     VerifyOrExit(aHeader.GetCode() == kCoapRequestPost, ;);
 
-    SuccessOrExit(MeshCoP::Tlv::GetTlv(aMessage, MeshCoP::Tlv::kChannelMask, sizeof(channelMask), channelMask.tlv));
-    VerifyOrExit(channelMask.tlv.IsValid() &&
-                 channelMask.entry.GetChannelPage() == 0 &&
-                 channelMask.entry.GetMaskLength() == sizeof(uint32_t), ;);
+    SuccessOrExit(MeshCoP::Tlv::GetTlv(aMessage, MeshCoP::Tlv::kChannelMask, sizeof(channelMask), channelMask));
+    VerifyOrExit(channelMask.IsValid(),);
 
     SuccessOrExit(MeshCoP::Tlv::GetTlv(aMessage, MeshCoP::Tlv::kCount, sizeof(count), count));
     VerifyOrExit(count.IsValid(), ;);
@@ -120,7 +111,7 @@ void AnnounceBeginServer::HandleRequest(Coap::Header &aHeader, Message &aMessage
     SuccessOrExit(MeshCoP::Tlv::GetTlv(aMessage, MeshCoP::Tlv::kPeriod, sizeof(period), period));
     VerifyOrExit(period.IsValid(), ;);
 
-    SendAnnounce(HostSwap32(channelMask.mask), count.GetCount(), period.GetPeriod());
+    SendAnnounce(channelMask.GetMask(), count.GetCount(), period.GetPeriod());
 
     SendResponse(aHeader, aMessageInfo);
 
@@ -133,7 +124,7 @@ ThreadError AnnounceBeginServer::SendResponse(const Coap::Header &aRequestHeader
     ThreadError error = kThreadError_None;
     Message *message = NULL;
     Coap::Header responseHeader;
-    Ip6::MessageInfo responseInfo;
+    Ip6::MessageInfo responseInfo(aRequestInfo);
 
     VerifyOrExit(aRequestHeader.GetType() == kCoapTypeConfirmable, ;);
 
@@ -143,7 +134,6 @@ ThreadError AnnounceBeginServer::SendResponse(const Coap::Header &aRequestHeader
 
     SuccessOrExit(error = message->Append(responseHeader.GetBytes(), responseHeader.GetLength()));
 
-    memcpy(&responseInfo, &aRequestInfo, sizeof(responseInfo));
     memset(&responseInfo.mSockAddr, 0, sizeof(responseInfo.mSockAddr));
     SuccessOrExit(error = mCoapServer.SendMessage(*message, responseInfo));
 

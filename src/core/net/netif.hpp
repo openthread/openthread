@@ -121,7 +121,7 @@ public:
  * This class implements an IPv6 network interface multicast address.
  *
  */
-class NetifMulticastAddress
+class NetifMulticastAddress: public otNetifMulticastAddress
 {
     friend class Netif;
 
@@ -143,16 +143,20 @@ public:
     Address &GetAddress(void) { return *static_cast<Address *>(&mAddress); }
 
     /**
-     * This method returns the next multicast address assigned to the interface.
+     * This method returns the next multicast address subscribed to the interface.
      *
      * @returns A pointer to the next multicast address.
      *
      */
-    const NetifMulticastAddress *GetNext(void) const { return mNext; }
+    const NetifMulticastAddress *GetNext(void) const { return static_cast<NetifMulticastAddress *>(mNext); }
 
-private:
-    Address mAddress;
-    NetifMulticastAddress *mNext;
+    /**
+     * This method returns the next multicast address subscribed to the interface.
+     *
+     * @returns A pointer to the next multicast address.
+     *
+     */
+    NetifMulticastAddress *GetNext(void) { return static_cast<NetifMulticastAddress *>(mNext); }
 };
 
 /**
@@ -350,6 +354,14 @@ public:
     void UnsubscribeAllRoutersMulticast(void);
 
     /**
+     * This method returns a pointer to the list of multicast addresses.
+     *
+     * @returns A pointer to the list of multicast addresses.
+     *
+     */
+    const NetifMulticastAddress *GetMulticastAddresses(void) const;
+
+    /**
      * This method subscribes the network interface to a multicast address.
      *
      * @param[in]  aAddress  A reference to the multicast address.
@@ -370,6 +382,51 @@ public:
      *
      */
     ThreadError UnsubscribeMulticast(const NetifMulticastAddress &aAddress);
+
+    /**
+     * This method subscribes the network interface to the external (to OpenThread) multicast address.
+     *
+     * @param[in]  aAddress  A reference to the multicast address.
+     *
+     * @retval kThreadError_None         Successfully subscribed to @p aAddress.
+     * @retval kThreadError_Already      The multicast address is already subscribed.
+     * @retval kThreadError_InvalidArgs  The address indicated by @p aAddress is an internal multicast address.
+     * @retval kThreadError_NoBufs       The maximum number of allowed external multicast addresses are already added.
+     *
+     */
+    ThreadError SubscribeExternalMulticast(const Address &aAddress);
+
+    /**
+     * This method ussubscribes the network interface to the external (to OpenThread) multicast address.
+     *
+     * @param[in]  aAddress  A reference to the multicast address.
+     *
+     * @retval kThreadError_None         Successfully unsubscribed to the unicast address.
+     * @retval kThreadError_InvalidArgs  The address indicated by @p aAddress is an internal address.
+     * @retval kThreadError_NotFound     The multicast address was not found.
+     *
+     */
+    ThreadError UnsubscribeExternalMulticast(const Address &aAddress);
+
+    /**
+     * This method checks if multicast promiscuous mode is enabled on the network interface.
+     *
+     * @retval TRUE   If the multicast promiscuous mode is enabled.
+     * @retval FALSE  If the multicast promiscuous mode is disabled.
+     */
+    bool IsMulticastPromiscuousModeEnabled(void);
+
+    /**
+     * This method enables multicast promiscuous mode on the network interface.
+     *
+     */
+    void EnableMulticastPromiscuousMode(void);
+
+    /**
+     * This method disables multicast promiscuous mode on the network interface.
+     *
+     */
+    void DisableMulticastPromiscuousMode(void);
 
     /**
      * This method registers a network interface callback.
@@ -455,6 +512,7 @@ private:
     NetifMulticastAddress *mMulticastAddresses;
     int8_t mInterfaceId;
     bool mAllRoutersSubscribed;
+    bool mMulticastPromiscuousMode;
     Tasklet mStateChangedTask;
     Netif *mNext;
 
@@ -462,6 +520,9 @@ private:
 
     NetifUnicastAddress mExtUnicastAddresses[OPENTHREAD_CONFIG_MAX_EXT_IP_ADDRS];
     uint8_t mMaskExtUnicastAddresses; // Must have enough bits to hold OPENTHREAD_CONFIG_MAX_EXT_IP_ADDRS
+
+    NetifMulticastAddress mExtMulticastAddresses[OPENTHREAD_CONFIG_MAX_EXT_MULTICAST_IP_ADDRS];
+    uint8_t mMaskExtMulticastAddresses; // Must have enough bits to hold OPENTHREAD_CONFIG_MAX_EXT_MULTICAST_IP_ADDRS
 
     /**
      * This method determines if an address is one of the external unicast addresses, and if so returns
@@ -479,6 +540,24 @@ private:
         }
 
         return static_cast<int8_t>(address - &mExtUnicastAddresses[0]);
+    }
+
+    /**
+     * This method determines if an address is one of the external multicast addresses, and if so returns
+     * the index in the mExtMulticastAddresses array.
+     *
+     * @param[in]  aAddress  A pointer to the Network Interface Multicast address.
+     *
+     * @returns The index in the mExtMulticastAddresses array or -1 if not part of the array.
+     *
+     */
+    int8_t GetExtMulticastAddressIndex(const NetifMulticastAddress *address) {
+        if (address < &mExtMulticastAddresses[0] ||
+            address >= &mExtMulticastAddresses[0] + OPENTHREAD_CONFIG_MAX_EXT_MULTICAST_IP_ADDRS) {
+            return -1;
+        }
+
+        return static_cast<int8_t>(address - &mExtMulticastAddresses[0]);
     }
 };
 

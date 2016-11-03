@@ -56,7 +56,7 @@
 #include <platform/misc.h>
 #include <thread/thread_netif.hpp>
 #include <thread/thread_uris.hpp>
-#include <utils/global_address.hpp>
+#include <utils/slaac_address.hpp>
 #include <openthread-instance.h>
 #include <coap/coap_header.hpp>
 #include <coap/coap_client.hpp>
@@ -67,6 +67,7 @@ otInstance *sInstance = NULL;
 #endif
 
 void OT_CDECL operator delete(void *, size_t) throw() { }
+void OT_CDECL operator delete(void *) throw() { }
 
 otInstance::otInstance(void) :
     mReceiveIp6DatagramCallback(NULL),
@@ -273,7 +274,7 @@ void otSetMaxTransmitPower(otInstance *aInstance, int8_t aPower)
 
 const otIp6Address *otGetMeshLocalEid(otInstance *aInstance)
 {
-    return aInstance->mThreadNetif.GetMle().GetMeshLocal64();
+    return &aInstance->mThreadNetif.GetMle().GetMeshLocal64();
 }
 
 const uint8_t *otGetMeshLocalPrefix(otInstance *aInstance)
@@ -691,6 +692,12 @@ void otPlatformReset(otInstance *aInstance)
     otPlatReset(aInstance);
 }
 
+void otFactoryReset(otInstance *aInstance)
+{
+    otPlatSettingsWipe(aInstance);
+    otPlatReset(aInstance);
+}
+
 uint8_t otGetRouterDowngradeThreshold(otInstance *aInstance)
 {
     return aInstance->mThreadNetif.GetMle().GetRouterDowngradeThreshold();
@@ -915,6 +922,43 @@ ThreadError otRemoveUnicastAddress(otInstance *aInstance, const otIp6Address *ad
     return aInstance->mThreadNetif.RemoveExternalUnicastAddress(*static_cast<const Ip6::Address *>(address));
 }
 
+#if OPENTHREAD_ENABLE_DHCP6_CLIENT
+void otDhcp6ClientUpdate(otInstance *aInstance, otNetifAddress *aAddresses, uint32_t aNumAddresses, void *aContext)
+{
+    aInstance->mThreadNetif.GetDhcp6Client().UpdateAddresses(aInstance, aAddresses, aNumAddresses, aContext);
+}
+#endif  // OPENTHREAD_ENABLE_DHCP6_CLIENT
+
+const otNetifMulticastAddress *otGetMulticastAddresses(otInstance *aInstance)
+{
+    return aInstance->mThreadNetif.GetMulticastAddresses();
+}
+
+ThreadError otSubscribeMulticastAddress(otInstance *aInstance, const otIp6Address *aAddress)
+{
+    return aInstance->mThreadNetif.SubscribeExternalMulticast(*static_cast<const Ip6::Address *>(aAddress));
+}
+
+ThreadError otUnsubscribeMulticastAddress(otInstance *aInstance, const otIp6Address *aAddress)
+{
+    return aInstance->mThreadNetif.UnsubscribeExternalMulticast(*static_cast<const Ip6::Address *>(aAddress));
+}
+
+bool otIsMulticastPromiscuousModeEnabled(otInstance *aInstance)
+{
+    return aInstance->mThreadNetif.IsMulticastPromiscuousModeEnabled();
+}
+
+void otEnableMulticastPromiscuousMode(otInstance *aInstance)
+{
+    aInstance->mThreadNetif.EnableMulticastPromiscuousMode();
+}
+
+void otDisableMulticastPromiscuousMode(otInstance *aInstance)
+{
+    aInstance->mThreadNetif.DisableMulticastPromiscuousMode();
+}
+
 void otSlaacUpdate(otInstance *aInstance, otNetifAddress *aAddresses, uint32_t aNumAddresses,
                    otSlaacIidCreate aIidCreate, void *aContext)
 {
@@ -1133,7 +1177,7 @@ ThreadError otThreadStart(otInstance *aInstance)
 
     VerifyOrExit(aInstance->mThreadNetif.GetMac().GetPanId() != Mac::kPanIdBroadcast, error = kThreadError_InvalidState);
 
-    error = aInstance->mThreadNetif.GetMle().Start();
+    error = aInstance->mThreadNetif.GetMle().Start(true);
 
 exit:
     otLogFuncExitErr(error);
@@ -1146,7 +1190,7 @@ ThreadError otThreadStop(otInstance *aInstance)
 
     otLogFuncEntry();
 
-    error = aInstance->mThreadNetif.GetMle().Stop();
+    error = aInstance->mThreadNetif.GetMle().Stop(true);
 
     otLogFuncExitErr(error);
     return error;
@@ -1468,9 +1512,10 @@ exit:
     return error;
 }
 
-ThreadError otSendActiveGet(otInstance *aInstance, const uint8_t *aTlvTypes, uint8_t aLength)
+ThreadError otSendActiveGet(otInstance *aInstance, const uint8_t *aTlvTypes, uint8_t aLength,
+                            const otIp6Address *aAddress)
 {
-    return aInstance->mThreadNetif.GetActiveDataset().SendGetRequest(aTlvTypes, aLength);
+    return aInstance->mThreadNetif.GetActiveDataset().SendGetRequest(aTlvTypes, aLength, aAddress);
 }
 
 ThreadError otSendActiveSet(otInstance *aInstance, const otOperationalDataset *aDataset, const uint8_t *aTlvs,
@@ -1479,9 +1524,10 @@ ThreadError otSendActiveSet(otInstance *aInstance, const otOperationalDataset *a
     return aInstance->mThreadNetif.GetActiveDataset().SendSetRequest(*aDataset, aTlvs, aLength);
 }
 
-ThreadError otSendPendingGet(otInstance *aInstance, const uint8_t *aTlvTypes, uint8_t aLength)
+ThreadError otSendPendingGet(otInstance *aInstance, const uint8_t *aTlvTypes, uint8_t aLength,
+                             const otIp6Address *aAddress)
 {
-    return aInstance->mThreadNetif.GetPendingDataset().SendGetRequest(aTlvTypes, aLength);
+    return aInstance->mThreadNetif.GetPendingDataset().SendGetRequest(aTlvTypes, aLength, aAddress);
 }
 
 ThreadError otSendPendingSet(otInstance *aInstance, const otOperationalDataset *aDataset, const uint8_t *aTlvs,

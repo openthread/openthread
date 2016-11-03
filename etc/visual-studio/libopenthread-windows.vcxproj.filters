@@ -37,9 +37,15 @@
     <ClCompile Include="..\..\examples\platforms\posix\uart-windows.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\examples\platforms\utils\settings.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\examples\platforms\posix\platform-posix.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\examples\platforms\utils\flash.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

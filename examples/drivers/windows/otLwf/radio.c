@@ -131,6 +131,8 @@ otLwfRadioInit(
     pFilter->otRadioCapabilities = kRadioCapsEnergyScan;
     if ((pFilter->MiniportCapabilities.RadioCapabilities & OT_RADIO_CAP_ACK_TIMEOUT) != 0)
         pFilter->otRadioCapabilities |= kRadioCapsAckTimeout;
+    if ((pFilter->MiniportCapabilities.RadioCapabilities & OT_RADIO_CAP_MAC_RETRY_AND_COLLISION_AVOIDANCE) != 0)
+        pFilter->otRadioCapabilities |= kRadioCapsTransmitRetries;
 
     pFilter->otPhyState = kStateDisabled;
     pFilter->otCurrentListenChannel = 0xFF;

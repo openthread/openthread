@@ -64,30 +64,17 @@ void PanIdQueryServer::HandleQuery(void *aContext, Coap::Header &aHeader, Messag
 void PanIdQueryServer::HandleQuery(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
     MeshCoP::PanIdTlv panId;
-    union
-    {
-        MeshCoP::ChannelMaskEntry channelMaskEntry;
-        uint8_t channelMaskBuf[sizeof(MeshCoP::ChannelMaskEntry) + sizeof(uint32_t)];
-    };
-    uint16_t offset;
-    uint16_t length;
+    MeshCoP::ChannelMask0Tlv channelMask;
 
     VerifyOrExit(aHeader.GetCode() == kCoapRequestPost, ;);
 
-    SuccessOrExit(MeshCoP::Tlv::GetValueOffset(aMessage, MeshCoP::Tlv::kChannelMask, offset, length));
-    aMessage.Read(offset, sizeof(channelMaskBuf), channelMaskBuf);
-    VerifyOrExit(channelMaskEntry.GetChannelPage() == 0 &&
-                 channelMaskEntry.GetMaskLength() == sizeof(uint32_t), ;);
-
-    mChannelMask =
-        (static_cast<uint32_t>(channelMaskBuf[sizeof(MeshCoP::ChannelMaskEntry) + 0]) << 0) |
-        (static_cast<uint32_t>(channelMaskBuf[sizeof(MeshCoP::ChannelMaskEntry) + 1]) << 8) |
-        (static_cast<uint32_t>(channelMaskBuf[sizeof(MeshCoP::ChannelMaskEntry) + 2]) << 16) |
-        (static_cast<uint32_t>(channelMaskBuf[sizeof(MeshCoP::ChannelMaskEntry) + 3]) << 24);
+    SuccessOrExit(MeshCoP::Tlv::GetTlv(aMessage, MeshCoP::Tlv::kChannelMask, sizeof(channelMask), channelMask));
+    VerifyOrExit(channelMask.IsValid(),);
 
     SuccessOrExit(MeshCoP::Tlv::GetTlv(aMessage, MeshCoP::Tlv::kPanId, sizeof(panId), panId));
     VerifyOrExit(panId.IsValid(), ;);
 
+    mChannelMask = channelMask.GetMask();
     mCommissioner = aMessageInfo.GetPeerAddr();
     mPanId = panId.GetPanId();
     mTimer.Start(kScanDelay);
@@ -158,12 +145,7 @@ ThreadError PanIdQueryServer::SendConflict(void)
 {
     ThreadError error = kThreadError_None;
     Coap::Header header;
-    MeshCoP::ChannelMaskTlv channelMask;
-    union
-    {
-        MeshCoP::ChannelMaskEntry channelMaskEntry;
-        uint8_t channelMaskBuf[sizeof(MeshCoP::ChannelMaskEntry) + sizeof(uint32_t)];
-    };
+    MeshCoP::ChannelMask0Tlv channelMask;
     MeshCoP::PanIdTlv panId;
     Ip6::MessageInfo messageInfo;
     Message *message;
@@ -176,26 +158,15 @@ ThreadError PanIdQueryServer::SendConflict(void)
     VerifyOrExit((message = mCoapClient.NewMessage(header)) != NULL, error = kThreadError_NoBufs);
 
     channelMask.Init();
-    channelMask.SetLength(sizeof(channelMaskBuf));
+    channelMask.SetMask(mChannelMask);
     SuccessOrExit(error = message->Append(&channelMask, sizeof(channelMask)));
-
-    channelMaskEntry.SetChannelPage(0);
-    channelMaskEntry.SetMaskLength(sizeof(mChannelMask));
-
-    for (size_t i = 0; i < sizeof(mChannelMask); i++)
-    {
-        channelMaskBuf[sizeof(MeshCoP::ChannelMaskEntry) + i] = (mChannelMask >> (8 * i)) & 0xff;
-    }
-
-    SuccessOrExit(error = message->Append(channelMaskBuf, sizeof(channelMaskBuf)));
 
     panId.Init();
     panId.SetPanId(mPanId);
     SuccessOrExit(error = message->Append(&panId, sizeof(panId)));
 
-    memset(&messageInfo, 0, sizeof(messageInfo));
-    messageInfo.GetPeerAddr() = mCommissioner;
-    messageInfo.mPeerPort = kCoapUdpPort;
+    messageInfo.SetPeerAddr(mCommissioner);
+    messageInfo.SetPeerPort(kCoapUdpPort);
     SuccessOrExit(error = mCoapClient.SendMessage(*message, messageInfo));
 
     otLogInfoMeshCoP("sent panid conflict");

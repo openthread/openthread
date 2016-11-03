@@ -39,7 +39,6 @@ ot_platform_headers                      =\
     random.h                              \
     uart.h                                \
     spi-slave.h                           \
-    flash.h                               \
     settings.h                            \
     messagepool.h                         \
     tasklet.h                             \

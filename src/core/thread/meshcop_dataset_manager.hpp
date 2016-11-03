@@ -56,8 +56,10 @@ public:
     Dataset &GetLocal(void) { return mLocal; }
     Dataset &GetNetwork(void) { return mNetwork; }
 
+    ThreadError ApplyConfiguration(void);
+
     ThreadError SendSetRequest(const otOperationalDataset &aDataset, const uint8_t *aTlvs, uint8_t aLength);
-    ThreadError SendGetRequest(const uint8_t *aTlvTypes, uint8_t aLength);
+    ThreadError SendGetRequest(const uint8_t *aTlvTypes, uint8_t aLength, const otIp6Address *aAddress);
 
 protected:
     enum
@@ -68,11 +70,11 @@ protected:
 
     DatasetManager(ThreadNetif &aThreadNetif, const Tlv::Type aType, const char *aUriSet, const char *aUriGet);
 
-    ThreadError Clear(uint8_t &aFlags);
+    ThreadError Clear(uint8_t &aFlags, bool aOnlyClearNetwork);
 
     ThreadError Set(const otOperationalDataset &aDataset, uint8_t &aFlags);
 
-    ThreadError Set(const Dataset &aDataset, uint8_t &aFlags);
+    ThreadError Set(const Dataset &aDataset);
 
     ThreadError Set(const Timestamp &aTimestamp, const Message &aMessage, uint16_t aOffset, uint8_t aLength,
                     uint8_t &aFlags);
@@ -115,21 +117,19 @@ class ActiveDataset: public DatasetManager
 public:
     ActiveDataset(ThreadNetif &aThreadNetif);
 
-    void Restore(void);
+    ThreadError Restore(void);
 
     void StartLeader(void);
 
     void StopLeader(void);
 
-    ThreadError Clear(void);
+    ThreadError Clear(bool aOnlyClearNetwork);
 
     ThreadError Set(const otOperationalDataset &aDataset);
 
     ThreadError Set(const Dataset &aDataset);
 
     ThreadError Set(const Timestamp &aTimestamp, const Message &aMessage, uint16_t aOffset, uint8_t aLength);
-
-    ThreadError ApplyConfiguration(void);
 
 private:
     static void HandleGet(void *aContext, Coap::Header &aHeader, Message &aMessage,
@@ -149,15 +149,17 @@ class PendingDataset: public DatasetManager
 public:
     PendingDataset(ThreadNetif &aThreadNetif);
 
-    void Restore(void);
+    ThreadError Restore(void);
 
     void StartLeader(void);
 
     void StopLeader(void);
 
-    ThreadError Clear(void);
+    ThreadError Clear(bool aOnlyClearNetwork);
 
     ThreadError Set(const otOperationalDataset &aDataset);
+
+    ThreadError Set(const Dataset &aDataset);
 
     ThreadError Set(const Timestamp &aTimestamp, const Message &aMessage, uint16_t aOffset, uint8_t aLength);
 

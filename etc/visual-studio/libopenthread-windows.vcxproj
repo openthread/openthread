@@ -28,9 +28,11 @@
     <ClCompile Include="..\..\examples\platforms\posix\random.c" />
     <ClCompile Include="..\..\examples\platforms\posix\spi-stubs.c" />
     <ClCompile Include="..\..\examples\platforms\posix\uart-windows.c" />
+    <ClCompile Include="..\..\examples\platforms\utils\settings.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\examples\platforms\posix\platform-posix.h" />
+    <ClInclude Include="..\..\examples\platforms\utils\flash.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{30723C38-BA3B-44C9-8D64-C5861A26934F}</ProjectGuid>
@@ -112,7 +114,7 @@
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_USRDLL;OPENTHREAD_CONFIG_FILE="openthread-windows-config.h";%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>..\..\include;..\..\src\core;..\..examples\platforms</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\include;..\..\src\core;..\..\examples\platforms</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -127,7 +129,7 @@
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>_DEBUG;_WINDOWS;_USRDLL;OPENTHREAD_CONFIG_FILE="openthread-windows-config.h";%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>..\..\include;..\..\src\core;..\..examples\platforms</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\include;..\..\src\core;..\..\examples\platforms</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -143,7 +145,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_USRDLL;OPENTHREAD_CONFIG_FILE="openthread-windows-config.h";%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>..\..\include;..\..\src\core;..\..examples\platforms</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\include;..\..\src\core;..\..\examples\platforms</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -161,7 +163,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>NDEBUG;_WINDOWS;_USRDLL;OPENTHREAD_CONFIG_FILE="openthread-windows-config.h";%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>..\..\include;..\..\src\core;..\..examples\platforms</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\include;..\..\src\core;..\..\examples\platforms</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>

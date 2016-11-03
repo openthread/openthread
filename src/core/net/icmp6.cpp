@@ -128,8 +128,7 @@ ThreadError Icmp::SendError(const Address &aDestination, IcmpHeader::Type aType,
     icmp6Header.SetCode(aCode);
     message->Write(0, sizeof(icmp6Header), &icmp6Header);
 
-    memset(&messageInfo, 0, sizeof(messageInfo));
-    messageInfo.mPeerAddr = aDestination;
+    messageInfo.SetPeerAddr(aDestination);
 
     SuccessOrExit(error = mIp6.SendDatagram(*message, messageInfo, kProtoIcmp6));
 
@@ -221,15 +220,14 @@ ThreadError Icmp::HandleEchoRequest(Message &aRequestMessage, const MessageInfo 
     aRequestMessage.CopyTo(aRequestMessage.GetOffset() + IcmpHeader::GetDataOffset(),
                            IcmpHeader::GetDataOffset(), payloadLength, *replyMessage);
 
-    memset(&replyMessageInfo, 0, sizeof(replyMessageInfo));
-    replyMessageInfo.GetPeerAddr() = aMessageInfo.GetPeerAddr();
+    replyMessageInfo.SetPeerAddr(aMessageInfo.GetPeerAddr());
 
     if (!aMessageInfo.GetSockAddr().IsMulticast())
     {
-        replyMessageInfo.GetSockAddr() = aMessageInfo.GetSockAddr();
+        replyMessageInfo.SetSockAddr(aMessageInfo.GetSockAddr());
     }
 
-    replyMessageInfo.mInterfaceId = aMessageInfo.mInterfaceId;
+    replyMessageInfo.SetInterfaceId(aMessageInfo.mInterfaceId);
 
     SuccessOrExit(error = mIp6.SendDatagram(*replyMessage, replyMessageInfo, kProtoIcmp6));
 

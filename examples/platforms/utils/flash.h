@@ -29,11 +29,11 @@
 /**
  * @file
  * @brief
- *   This file defines flash interface.
+ *   This file defines the flash interface used by settings.cpp.
  */
 
-#ifndef OT_PLATFORM_FLASH_H
-#define OT_PLATFORM_FLASH_H
+#ifndef UTILS_FLASH_H
+#define UTILS_FLASH_H
 
 #include <stdint.h>
 
@@ -49,7 +49,7 @@ extern "C" {
  * @retval ::kThreadError_None    Initialize flash driver success.
  * @retval ::kThreadError_Failed  Initialize flash driver fail.
  */
-ThreadError otPlatFlashInit(void);
+ThreadError utilsFlashInit(void);
 
 /**
  * Get the size of flash that can be read/write by the caller.
@@ -57,11 +57,11 @@ ThreadError otPlatFlashInit(void);
  *
  * @returns The size of the flash.
  */
-uint32_t otPlatFlashGetSize(void);
+uint32_t utilsFlashGetSize(void);
 
 /**
  * Erase one flash page that include the input address.
- * This is a non-blocking function. It can work with otPlatFlashStatusWait to check when erase is done.
+ * This is a non-blocking function. It can work with utilsFlashStatusWait to check when erase is done.
  *
  * The flash address starts from 0, and this function maps the input address to the physical address of flash for erasing.
  * 0 is always mapped to the beginning of one flash page.
@@ -73,7 +73,7 @@ uint32_t otPlatFlashGetSize(void);
  * @retval kThreadError_Failed         Erase flash operation is not started.
  * @retval kThreadError_InvalidArgs    aAddress is out of range of flash or not aligend.
  */
-ThreadError otPlatFlashErasePage(uint32_t aAddress);
+ThreadError utilsFlashErasePage(uint32_t aAddress);
 
 /**
   * Check whether flash is ready or busy.
@@ -85,7 +85,7 @@ ThreadError otPlatFlashErasePage(uint32_t aAddress);
   * @retval kThreadError_None           Flash is ready for any operation.
   * @retval kThreadError_Busy           Flash is busy.
   */
-ThreadError otPlatFlashStatusWait(uint32_t aTimeout);
+ThreadError utilsFlashStatusWait(uint32_t aTimeout);
 
 /**
  * Write flash. The write operation only clears bits, but never set bits.
@@ -102,7 +102,7 @@ ThreadError otPlatFlashStatusWait(uint32_t aTimeout);
  *          It is expected the same as aSize, and may be less than aSize.
  *          0 indicates that something wrong happens when writing.
  */
-uint32_t otPlatFlashWrite(uint32_t aAddress, uint8_t *aData, uint32_t aSize);
+uint32_t utilsFlashWrite(uint32_t aAddress, uint8_t *aData, uint32_t aSize);
 
 /**
  * Read flash.
@@ -119,10 +119,10 @@ uint32_t otPlatFlashWrite(uint32_t aAddress, uint8_t *aData, uint32_t aSize);
  *          It is expected the same as aSize, and may be less than aSize.
  *          0 indicates that something wrong happens when reading.
  */
-uint32_t otPlatFlashRead(uint32_t aAddress, uint8_t *aData, uint32_t aSize);
+uint32_t utilsFlashRead(uint32_t aAddress, uint8_t *aData, uint32_t aSize);
 
 #ifdef __cplusplus
 }  // extern "C"
 #endif
 
-#endif  // OT_PLATFORM_FLASH_H
+#endif  // UTILS_FLASH_H

@@ -25,7 +25,6 @@
     <ClCompile Include="..\..\src\core\common\crc16.cpp" />
     <ClCompile Include="..\..\src\core\common\logging.cpp" />
     <ClCompile Include="..\..\src\core\common\message.cpp" />
-    <ClCompile Include="..\..\src\core\common\settings.cpp" />
     <ClCompile Include="..\..\src\core\common\tasklet.cpp" />
     <ClCompile Include="..\..\src\core\common\timer.cpp" />
     <ClCompile Include="..\..\src\core\common\trickle_timer.cpp" />
@@ -46,6 +45,8 @@
     <ClCompile Include="..\..\src\core\meshcop\joiner_router.cpp" />
     <ClCompile Include="..\..\src\core\meshcop\leader.cpp" />
     <ClCompile Include="..\..\src\core\meshcop\panid_query_client.cpp" />
+    <ClCompile Include="..\..\src\core\net\dhcp6_client.cpp" />
+    <ClCompile Include="..\..\src\core\net\dhcp6_server.cpp" />
     <ClCompile Include="..\..\src\core\net\icmp6.cpp" />
     <ClCompile Include="..\..\src\core\net\ip6.cpp" />
     <ClCompile Include="..\..\src\core\net\ip6_address.cpp" />
@@ -76,7 +77,7 @@
     <ClCompile Include="..\..\src\core\thread\panid_query_server.cpp" />
     <ClCompile Include="..\..\src\core\thread\thread_netif.cpp" />
     <ClCompile Include="..\..\src\core\thread\thread_tlvs.cpp" />
-    <ClCompile Include="..\..\src\core\utils\global_address.cpp" />
+    <ClCompile Include="..\..\src\core\utils\slaac_address.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\src\core\coap\coap_client.hpp" />
@@ -123,6 +124,9 @@
     <ClInclude Include="..\..\src\core\thread\address_resolver.hpp" />
     <ClInclude Include="..\..\src\core\meshcop\announce_begin_server.hpp" />
     <ClInclude Include="..\..\src\core\thread\energy_scan_server.hpp" />
+    <ClInclude Include="..\..\src\core\net\dhcp6.hpp" />
+    <ClInclude Include="..\..\src\core\net\dhcp6_client.hpp" />
+    <ClInclude Include="..\..\src\core\net\dhcp6_server.hpp" />
     <ClInclude Include="..\..\src\core\thread\key_manager.hpp" />
     <ClInclude Include="..\..\src\core\thread\link_quality.hpp" />
     <ClInclude Include="..\..\src\core\thread\lowpan.hpp" />
@@ -145,7 +149,7 @@
     <ClInclude Include="..\..\src\core\thread\thread_tlvs.hpp" />
     <ClInclude Include="..\..\src\core\thread\thread_uris.hpp" />
     <ClInclude Include="..\..\src\core\thread\topology.hpp" />
-    <ClInclude Include="..\..\src\core\utils\global_address.hpp" />
+    <ClInclude Include="..\..\src\core\utils\slaac_address.hpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{DD5018BE-54C6-4FD4-9F8D-08D52FC0CD40}</ProjectGuid>

@@ -45,7 +45,6 @@ libopenthread_a_SOURCES             = \
     common/message.cpp                \
     common/tasklet.cpp                \
     common/timer.cpp                  \
-    common/settings.cpp               \
     common/trickle_timer.cpp          \
     crypto/aes_ccm.cpp                \
     crypto/aes_ecb.cpp                \
@@ -88,7 +87,7 @@ libopenthread_a_SOURCES             = \
     thread/network_diag_tlvs.cpp      \
     thread/thread_netif.cpp           \
     thread/thread_tlvs.cpp            \
-    utils/global_address.cpp          \
+    utils/slaac_address.cpp           \
     $(NULL)
 
 if OPENTHREAD_ENABLE_COMMISSIONER
@@ -112,6 +111,18 @@ libopenthread_a_SOURCES            += \
     $(NULL)
 endif  # OPENTHREAD_ENABLE_DTLS
 
+if OPENTHREAD_ENABLE_DHCP6_CLIENT
+libopenthread_a_SOURCES            += \
+    net/dhcp6_client.cpp              \
+    $(NULL)
+endif  # OPENTHREAD_ENABLE_DHCP6_CLIENT
+
+if OPENTHREAD_ENABLE_DHCP6_SERVER
+libopenthread_a_SOURCES            += \
+    net/dhcp6_server.cpp              \
+    $(NULL)
+endif  # OPENTHREAD_ENABLE_DHCP6_SERVER
+
 noinst_HEADERS                      = \
     openthread-core-config.h          \
     openthread-core-default-config.h  \
@@ -125,8 +136,8 @@ noinst_HEADERS                      = \
     common/encoding.hpp               \
     common/logging.hpp                \
     common/message.hpp                \
-    common/new.hpp                    \
     common/settings.hpp               \
+    common/new.hpp                    \
     common/tasklet.hpp                \
     common/timer.hpp                  \
     common/trickle_timer.hpp          \
@@ -158,6 +169,9 @@ noinst_HEADERS                      = \
     net/socket.hpp                    \
     net/udp6.hpp                      \
     net/tcp.hpp                       \
+    net/dhcp6.hpp                     \
+    net/dhcp6_client.hpp              \
+    net/dhcp6_server.hpp              \
     thread/address_resolver.hpp       \
     thread/announce_begin_server.hpp  \
     thread/energy_scan_server.hpp     \
@@ -184,7 +198,7 @@ noinst_HEADERS                      = \
     thread/thread_tlvs.hpp            \
     thread/thread_uris.hpp            \
     thread/topology.hpp               \
-    utils/global_address.hpp          \
+    utils/slaac_address.hpp           \
     $(NULL)
 
 if OPENTHREAD_BUILD_COVERAGE

@@ -107,7 +107,7 @@ public:
      * @param[in]     aBufferLen     The char buffer length.
      *
      * @retval kThreadError_None     Successfully formed the string in the given char buffer.
-     * @retval kThreadError_NoBuf    The string representation of the average value could not fit in the given buffer.
+     * @retval kThreadError_NoBufs   The string representation of the average value could not fit in the given buffer.
      *
      */
     ThreadError GetAverageRssAsString(char *aCharBuffer, size_t aBufferLen) const;

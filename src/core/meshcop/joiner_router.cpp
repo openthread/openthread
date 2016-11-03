@@ -203,7 +203,7 @@ void JoinerRouter::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &a
     SuccessOrExit(error = message->Append(header.GetBytes(), header.GetLength()));
 
     udpPort.Init();
-    udpPort.SetUdpPort(aMessageInfo.mPeerPort);
+    udpPort.SetUdpPort(aMessageInfo.GetPeerPort());
     SuccessOrExit(error = message->Append(&udpPort, sizeof(udpPort)));
 
     iid.Init();
@@ -234,12 +234,9 @@ void JoinerRouter::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &a
         SuccessOrExit(error = message->Append(tmp, length));
     }
 
-    memset(&messageInfo, 0, sizeof(messageInfo));
-    memcpy(messageInfo.GetPeerAddr().mFields.m8, mNetif.GetMle().GetMeshLocalPrefix(), 8);
-    messageInfo.GetPeerAddr().mFields.m16[5] = HostSwap16(0x00ff);
-    messageInfo.GetPeerAddr().mFields.m16[6] = HostSwap16(0xfe00);
+    messageInfo.SetPeerAddr(mNetif.GetMle().GetMeshLocal16());
     messageInfo.GetPeerAddr().mFields.m16[7] = HostSwap16(borderAgentRloc);
-    messageInfo.mPeerPort = kCoapUdpPort;
+    messageInfo.SetPeerPort(kCoapUdpPort);
 
     SuccessOrExit(error = mSocket.SendTo(*message, messageInfo));
 
@@ -308,11 +305,10 @@ void JoinerRouter::HandleRelayTransmit(Coap::Header &aHeader, Message &aMessage,
 
     aMessage.CopyTo(offset, 0, length, *message);
 
-    memset(&messageInfo, 0, sizeof(messageInfo));
     messageInfo.mPeerAddr.mFields.m16[0] = HostSwap16(0xfe80);
     memcpy(messageInfo.mPeerAddr.mFields.m8 + 8, joinerIid.GetIid(), 8);
-    messageInfo.mPeerPort = joinerPort.GetUdpPort();
-    messageInfo.mInterfaceId = mNetif.GetInterfaceId();
+    messageInfo.SetPeerPort(joinerPort.GetUdpPort());
+    messageInfo.SetInterfaceId(mNetif.GetInterfaceId());
 
     SuccessOrExit(error = mSocket.SendTo(*message, messageInfo));
 
@@ -417,7 +413,7 @@ ThreadError JoinerRouter::SendJoinerEntrust(const Ip6::MessageInfo &aMessageInfo
     }
 
     messageInfo = aMessageInfo;
-    messageInfo.mPeerPort = kCoapUdpPort;
+    messageInfo.SetPeerPort(kCoapUdpPort);
     SuccessOrExit(error = mCoapClient.SendMessage(*message, messageInfo));
 
     otLogInfoMeshCoP("Sent joiner entrust length = %d", message->GetLength());

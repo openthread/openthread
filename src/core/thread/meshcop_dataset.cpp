@@ -293,26 +293,10 @@ ThreadError Dataset::Set(const otOperationalDataset &aDataset)
 
     if (aDataset.mIsChannelMaskPage0Set)
     {
-        OT_TOOL_PACKED_BEGIN
-        struct
-        {
-            MeshCoP::ChannelMaskTlv tlv;
-            MeshCoP::ChannelMaskEntry entry;
-            uint8_t mask[sizeof(aDataset.mChannelMaskPage0)];
-        } OT_TOOL_PACKED_END channelMask;
-
-        channelMask.tlv.Init();
-        channelMask.tlv.SetLength(sizeof(MeshCoP::ChannelMaskEntry) + sizeof(aDataset.mChannelMaskPage0));
-
-        channelMask.entry.SetChannelPage(0);
-        channelMask.entry.SetMaskLength(sizeof(aDataset.mChannelMaskPage0));
-
-        for (uint8_t index = 0; index < sizeof(aDataset.mChannelMaskPage0); index++)
-        {
-            channelMask.mask[index] = (aDataset.mChannelMaskPage0 >> (8 * index)) & 0xff;
-        }
-
-        Set(channelMask.tlv);
+        MeshCoP::ChannelMask0Tlv tlv;
+        tlv.Init();
+        tlv.SetMask(aDataset.mChannelMaskPage0);
+        Set(tlv);
     }
 
     if (aDataset.mIsExtendedPanIdSet)

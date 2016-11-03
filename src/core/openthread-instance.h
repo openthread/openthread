@@ -77,13 +77,6 @@ typedef struct otInstance
     Thread::Ip6::Ip6 mIp6;
     Thread::ThreadNetif mThreadNetif;
 
-    //
-    // Platform specific variables
-    //
-
-    uint32_t mSettingsBaseAddress;
-    uint32_t mSettingsUsedSize;
-
     // Constructor
     otInstance(void);
 

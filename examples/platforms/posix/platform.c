@@ -43,7 +43,6 @@
 
 #include <openthread.h>
 #include <platform/alarm.h>
-#include <platform/flash.h>
 #include <platform/tasklet.h>
 #include <platform/uart.h>
 
@@ -70,7 +69,6 @@ void PlatformInit(int argc, char *argv[])
     platformAlarmInit();
     platformRadioInit();
     platformRandomInit();
-    otPlatFlashInit();
 }
 
 bool UartInitialized = false;

@@ -238,9 +238,8 @@ ThreadError Leader::SendDatasetChanged(const Ip6::Address &aAddress)
 
     VerifyOrExit((message = mCoapClient.NewMessage(header)) != NULL, error = kThreadError_NoBufs);
 
-    memset(&messageInfo, 0, sizeof(messageInfo));
-    messageInfo.GetPeerAddr() = aAddress;
-    messageInfo.mPeerPort = kCoapUdpPort;
+    messageInfo.SetPeerAddr(aAddress);
+    messageInfo.SetPeerPort(kCoapUdpPort);
     SuccessOrExit(error = mCoapClient.SendMessage(*message, messageInfo));
 
     otLogInfoMeshCoP("sent dataset changed");

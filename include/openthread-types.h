@@ -188,6 +188,10 @@ typedef enum ThreadError
      */
     kThreadError_ResponseTimeout = 30,
 
+    /**
+     * Received a duplicated frame.
+     */
+    kThreadError_Duplicated = 31,
     kThreadError_Error = 255,
 } ThreadError;
 
@@ -629,6 +633,11 @@ typedef struct otBorderRouterConfig
      * TRUE, if this configuration is considered Stable Network Data.  FALSE, otherwise.
      */
     bool mStable : 1;
+
+    /**
+     * The Border Agent Rloc.
+     */
+    uint16_t mRloc16;
 } otBorderRouterConfig;
 
 /**
@@ -845,6 +854,7 @@ typedef struct otMacCounters
     uint32_t mRxOther;                ///< The number of received other types of frames.
     uint32_t mRxWhitelistFiltered;    ///< The number of received packets filtered by whitelist.
     uint32_t mRxDestAddrFiltered;     ///< The number of received packets filtered by destination check.
+    uint32_t mRxDuplicated;           ///< The number of received duplicated packets.
     uint32_t mRxErrNoFrame;           ///< The number of received packets that do not contain contents.
     uint32_t mRxErrUnknownNeighbor;   ///< The number of received packets from unknown neighbor.
     uint32_t mRxErrInvalidSrcAddr;    ///< The number of received packets whose source address is invalid.
@@ -859,17 +869,27 @@ typedef struct otMacCounters
  */
 
 /**
- * This structure represents an IPv6 network interface address.
+ * This structure represents an IPv6 network interface unicast address.
  *
  */
 typedef struct otNetifAddress
 {
-    otIp6Address           mAddress;            ///< The IPv6 address.
+    otIp6Address           mAddress;            ///< The IPv6 unicast address.
     uint32_t               mPreferredLifetime;  ///< The Preferred Lifetime.
     uint32_t               mValidLifetime;      ///< The Valid lifetime.
     uint8_t                mPrefixLength;       ///< The Prefix length.
     struct otNetifAddress *mNext;               ///< A pointer to the next network interface address.
 } otNetifAddress;
+
+/**
+ * This structure represents an IPv6 network interface multicast address.
+ *
+ */
+typedef struct otNetifMulticastAddress
+{
+    otIp6Address                    mAddress;   ///< The IPv6 multicast address.
+    struct otNetifMulticastAddress *mNext;      ///< A pointer to the next network interface multicast address.
+} otNetifMulticastAddress;
 
 /**
  * This enumeration represents the list of allowable values for an InterfaceId.

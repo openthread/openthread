@@ -101,21 +101,20 @@ class ARM(IThci):
             expected    str: the expected string
             times       int: number of trials
         """
-        print('[%s] Expecting [%s]' % (self.port, expected))
+        print '[%s] Expecting [%s]' % (self.port, expected)
 
         for i in range(0, times):
             line = self._readline()
-            print('[%s] Got line [%s]' % (self.port, line))
+            print '[%s] Got line [%s]' % (self.port, line)
 
             if line == expected:
-                print('[%s] Expected [%s]' % (self.port, expected))
+                print '[%s] Expected [%s]' % (self.port, expected)
                 return
 
             if not line:
                 time.sleep(1)
 
         raise Exception('failed to find expected string[%s]' % expected)
-
 
     def _read(self, size=512):
         logging.info('%s: reading', self.port)
@@ -169,7 +168,7 @@ class ARM(IThci):
         except socket.error:
             logging.debug('%s: Nothing cleared', self.port)
 
-        print('sending [%s]' % line)
+        print 'sending [%s]' % line
         self._write(line + '\r\n')
 
         # wait for write to complete
@@ -210,9 +209,8 @@ class ARM(IThci):
 
             line = None
             response = []
-            max_lines = 50
-            while max_lines:
-                max_lines -= 1
+            retry_times = 10
+            while retry_times:
                 line = self._readline()
                 logging.info('%s: the read line is[%s]', self.port, line)
                 if line:
@@ -220,6 +218,7 @@ class ARM(IThci):
                     if line == 'Done':
                         break
                 else:
+                    retry_times -= 1
                     time.sleep(0.1)
             if line != 'Done':
                 raise Exception('%s: failed to find end of response' % self.port)
@@ -662,7 +661,7 @@ class ARM(IThci):
             ModuleHelper.WriteIntoDebugLogger("closeConnection() Error: " + str(e))
 
     def _connect(self):
-        print('My port is %s' % self.port)
+        print 'My port is %s' % self.port
         if self.port.startswith('COM'):
             self.handle = serial.Serial(self.port, 115200, timeout=0, xonxoff=True)
             self._is_net = False
@@ -671,6 +670,8 @@ class ARM(IThci):
             self.handle = socket.create_connection((host, port))
             self.handle.setblocking(0)
             self._is_net = True
+            # check connectivity, this make sure bad device fail on initializing
+            self.__sendCommand('state')
         else:
             raise Exception('Unknown port schema')
 
@@ -1025,9 +1026,8 @@ class ARM(IThci):
             elif eRoleId == Thread_Device_Role.SED:
                 print 'join as sleepy end device'
                 role = 's'
-                if self.AutoDUTEnable is False:
-                    # set data polling rate to 15s for SED
-                    self.setPollingRate(15)
+                # set data polling rate to 15s for SED
+                self.setPollingRate(15)
             elif eRoleId == Thread_Device_Role.EndDevice:
                 print 'join as end device'
                 role = 'rsn'
@@ -1103,7 +1103,9 @@ class ARM(IThci):
         """power down the Thread device"""
         print '%s call powerDown' % self.port
         self.isPowerDown = True
-        self.reset()
+        self._sendline('reset')
+        time.sleep(3)
+        self.setMAC(self.mac)
 
     def powerUp(self):
         """power up the Thread device"""
@@ -1225,7 +1227,7 @@ class ARM(IThci):
         """factory reset"""
         print '%s call reset' % self.port
         try:
-            self._sendline('reset')
+            self._sendline('factoryreset')
             self._read()
         except Exception, e:
             ModuleHelper.WriteIntoDebugLogger("reset() Error: " + str(e))
@@ -2148,6 +2150,10 @@ class ARM(IThci):
         try:
             cmd = 'dataset mgmtgetcommand active'
 
+            if Addr != '':
+                cmd += ' address '
+                cmd += Addr
+
             if len(TLVs) != 0:
                 tlvs = "".join(hex(tlv).lstrip("0x").zfill(2) for tlv in TLVs)
                 cmd += ' binary '
@@ -2210,10 +2216,6 @@ class ARM(IThci):
             if xPanId != None:
                 cmd += ' panid '
                 cmd += str(xPanId)
-
-            if xDelayTimer != None:
-                cmd += ' delay '
-                cmd += str(xDelayTimer)
 
             if listChannelMask != None:
                 cmd += ' channelmask '
@@ -2292,6 +2294,10 @@ class ARM(IThci):
         print '%s call MGMT_PENDING_GET' % self.port
         try:
             cmd = 'dataset mgmtgetcommand pending'
+
+            if Addr != '':
+                cmd += ' address '
+                cmd += Addr
 
             if len(TLVs) != 0:
                 tlvs = "".join(hex(tlv).lstrip("0x").zfill(2) for tlv in TLVs)
@@ -2436,9 +2442,8 @@ class ARM(IThci):
 
     def setPSKc(self, strPSKc):
         print '%s call setPSKc' % self.port
-        return
         try:
-            cmd = 'dataset pskc %s' % strPSKc
+            cmd = 'dataset pskc %s' % str(strPSKc[::-1].encode('hex'))
             print cmd
             if self.__sendCommand(cmd)[0] == 'Done':
                 return self.__sendCommand('dataset commit active')[0] == 'Done'
