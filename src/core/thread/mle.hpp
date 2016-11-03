@@ -959,23 +959,25 @@ protected:
      * This method appends a Active Timestamp TLV to a message.
      *
      * @param[in]  aMessage  A reference to the message.
+     * @param[in]  aCouldUseLocal  Ture to use local Active Timestamp when network Active Timestamp is not available, False not.
      *
      * @retval kThreadError_None    Successfully appended the Active Timestamp TLV.
      * @retval kThreadError_NoBufs  Insufficient buffers available to append the Active Timestamp TLV.
      *
      */
-    ThreadError AppendActiveTimestamp(Message &aMessage);
+    ThreadError AppendActiveTimestamp(Message &aMessage, bool aCouldUseLocal);
 
     /**
      * This method appends a Pending Timestamp TLV to a message.
      *
      * @param[in]  aMessage  A reference to the message.
+     * @param[in]  aCouldUseLocal  Ture to use local Pending Timestamp when network Pending Timestamp is not available, False not.
      *
      * @retval kThreadError_None    Successfully appended the Pending Timestamp TLV.
      * @retval kThreadError_NoBufs  Insufficient buffers available to append the Pending Timestamp TLV.
      *
      */
-    ThreadError AppendPendingTimestamp(Message &aMessage);
+    ThreadError AppendPendingTimestamp(Message &aMessage, bool aCouldUseLocal);
 
     /**
      * This method appends a Thread Discovery TLV to a message.
