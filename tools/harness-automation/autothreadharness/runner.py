@@ -29,6 +29,7 @@
 
 
 import argparse
+import fnmatch
 import logging
 import json
 import os
@@ -207,7 +208,7 @@ def discover(names=None, pattern=['*.py'], skip='efp', dry_run=False, blacklist=
                 case_name = unicode(case.__class__.__name__)
 
                 # grep name
-                if not any(grep in case_name for grep in name_greps):
+                if name_greps and not any(fnmatch.fnmatch(case_name, name_grep) for name_grep in name_greps):
                     logger.info('case[%s] skipped by name greps', case_name)
                     continue
 
