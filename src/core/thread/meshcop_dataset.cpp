@@ -383,18 +383,20 @@ exit:
 
 void Dataset::SetTimestamp(const Timestamp &aTimestamp)
 {
-    OT_TOOL_PACKED_BEGIN
-    struct
+    if (mType == Tlv::kActiveTimestamp)
     {
-        Tlv tlv;
-        Timestamp timestamp;
-    } OT_TOOL_PACKED_END timestampTlv;
-
-    timestampTlv.tlv.SetType(mType);
-    timestampTlv.tlv.SetLength(sizeof(Timestamp));
-    timestampTlv.timestamp = aTimestamp;
-
-    Set(timestampTlv.tlv);
+        ActiveTimestampTlv activeTimestamp;
+        activeTimestamp.Init();
+        *static_cast<Timestamp *>(&activeTimestamp) = aTimestamp;
+        Set(activeTimestamp);
+    }
+    else
+    {
+        PendingTimestampTlv pendingTimestamp;
+        pendingTimestamp.Init();
+        *static_cast<Timestamp *>(&pendingTimestamp) = aTimestamp;
+        Set(pendingTimestamp);
+    }
 }
 
 int Dataset::Compare(const Dataset &aCompare) const
