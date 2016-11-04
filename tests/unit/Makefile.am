@@ -33,6 +33,7 @@ include $(abs_top_nlbuild_autotools_dir)/automake/pre.am
 # since they are not part of the package.
 #
 noinst_HEADERS                                                      = \
+    test_platform.h                                                   \
     test_util.h                                                       \
     test_util.hpp                                                     \
     test_vector.h                                                     \
@@ -73,6 +74,7 @@ endif # OPENTHREAD_ENABLE_BUILTIN_MBEDTLS
 
 check_PROGRAMS                                                      = \
     test-aes                                                          \
+    test-fuzz                                                         \
     test-hmac-sha256                                                  \
     test-lowpan                                                       \
     test-link-quality                                                 \
@@ -117,6 +119,9 @@ TESTS_ENVIRONMENT                                                   = \
 
 test_aes_LDADD               = $(COMMON_LDADD)
 test_aes_SOURCES             = test_platform.cpp test_aes.cpp
+
+test_fuzz_LDADD              = $(COMMON_LDADD)
+test_fuzz_SOURCES            = test_platform.cpp test_fuzz.cpp
 
 test_hmac_sha256_LDADD       = $(COMMON_LDADD)
 test_hmac_sha256_SOURCES     = test_platform.cpp test_hmac_sha256.cpp

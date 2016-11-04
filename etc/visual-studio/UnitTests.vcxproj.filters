@@ -21,6 +21,9 @@
     <ClCompile Include="..\..\tests\unit\test_aes.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\tests\unit\test_fuzz.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\tests\unit\test_hmac_sha256.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -56,6 +59,9 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\tests\unit\test_platform.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\tests\unit\test_util.h">
       <Filter>Header Files</Filter>
     </ClInclude>

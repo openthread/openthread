@@ -1154,6 +1154,10 @@ void Mac::ReceiveDoneTask(Frame *aFrame, ThreadError aError)
         mPcapCallback(aFrame, mPcapCallbackContext);
     }
 
+    // Ensure we have a valid frame before attempting to read any contents of
+    // the buffer received from the radio.
+    SuccessOrExit(error = aFrame->ValidatePsdu());
+
     aFrame->GetSrcAddr(srcaddr);
     neighbor = mMle.GetNeighbor(srcaddr);
 

@@ -1413,15 +1413,18 @@ void MeshForwarder::HandleReceivedFrame(Mac::Frame &aFrame)
     switch (aFrame.GetType())
     {
     case Mac::Frame::kFcfFrameData:
-        if (reinterpret_cast<Lowpan::MeshHeader *>(payload)->IsMeshHeader())
+        if (payloadLength >= sizeof(Lowpan::MeshHeader) &&
+            reinterpret_cast<Lowpan::MeshHeader *>(payload)->IsMeshHeader())
         {
             HandleMesh(payload, payloadLength, messageInfo);
         }
-        else if (reinterpret_cast<Lowpan::FragmentHeader *>(payload)->IsFragmentHeader())
+        else if (payloadLength >= sizeof(Lowpan::FragmentHeader) &&
+                 reinterpret_cast<Lowpan::FragmentHeader *>(payload)->IsFragmentHeader())
         {
             HandleFragment(payload, payloadLength, macSource, macDest, messageInfo);
         }
-        else if (Lowpan::Lowpan::IsLowpanHc(payload))
+        else if (payloadLength >= 1 &&
+                 Lowpan::Lowpan::IsLowpanHc(payload))
         {
             HandleLowpanHC(payload, payloadLength, macSource, macDest, messageInfo);
         }
@@ -1563,6 +1566,8 @@ void MeshForwarder::HandleFragment(uint8_t *aFrame, uint8_t aFrameLength,
 
         aFrame += headerLength;
         aFrameLength -= static_cast<uint8_t>(headerLength);
+
+        VerifyOrExit(datagramLength >= message->GetOffset() + aFrameLength, error = kThreadError_Parse);
 
         SuccessOrExit(error = message->SetLength(datagramLength));
 
@@ -1718,7 +1723,7 @@ void MeshForwarder::HandleDataRequest(const Mac::Address &aMacSource, const Thre
     // Security Check: only process secure Data Poll frames.
     VerifyOrExit(aMessageInfo.mLinkSecurity, ;);
 
-    assert(mMle.GetDeviceState() != Mle::kDeviceStateDetached);
+    VerifyOrExit(mMle.GetDeviceState() != Mle::kDeviceStateDetached, ;);
 
     VerifyOrExit((child = mMle.GetChild(aMacSource)) != NULL, ;);
     child->mLastHeard = Timer::GetNow();
