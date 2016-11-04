@@ -336,6 +336,8 @@ by (Miek Gieben) and [xml2rfc (version 2)](http://xml2rfc.ietf.org/).
 
 {{spinel-feature-host-buffer-offload.md}}
 
+{{spinel-feature-jam-detect.md}}
+
 {{spinel-tech-thread.md}}
 
 {{spinel-test-vectors.md}}

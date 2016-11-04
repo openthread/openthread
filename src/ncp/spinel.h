@@ -283,6 +283,7 @@ enum
     SPINEL_CAP_POWER_SAVE            = 4,
 
     SPINEL_CAP_COUNTERS              = 5,
+    SPINEL_CAP_JAM_DETECT            = 6,
 
     SPINEL_CAP_802_15_4__BEGIN        = 16,
     SPINEL_CAP_802_15_4_2003          = (SPINEL_CAP_802_15_4__BEGIN + 0),
@@ -348,6 +349,60 @@ typedef enum
     SPINEL_PROP_PHY_TX_POWER            = SPINEL_PROP_PHY__BEGIN + 5, ///< [c]
     SPINEL_PROP_PHY_RSSI                = SPINEL_PROP_PHY__BEGIN + 6, ///< dBm [c]
     SPINEL_PROP_PHY__END                = 0x30,
+
+    SPINEL_PROP_PHY_EXT__BEGIN          = 0x1200,
+
+    /// Signal Jamming Detection Enable
+    /** Format: `b`
+     *
+     * Indicates if jamming detection is enabled or disabled. Set to true
+     * to enable jamming detection.
+     */
+    SPINEL_PROP_JAM_DETECT_ENABLE       = SPINEL_PROP_PHY_EXT__BEGIN + 0,
+
+    /// Signal Jamming Detected Indicator
+    /** Format: `b` (Read-Only)
+     *
+     * Set to true if radio jamming is detected. Set to false otherwise.
+     *
+     * When jamming detection is enabled, changes to the value of this
+     * property are emitted asynchronously via `CMD_PROP_VALUE_IS`.
+     */
+    SPINEL_PROP_JAM_DETECTED            = SPINEL_PROP_PHY_EXT__BEGIN + 1,
+
+    /// Jamming detection RSSI threshold
+    /** Format: `c`
+     *  Units: dBm
+     *
+     * This parameter describes the threshold RSSI level (measured in
+     * dBm) above which the jamming detection will consider the
+     * channel blocked.
+     */
+    SPINEL_PROP_JAM_DETECT_RSSI_THRESHOLD = SPINEL_PROP_PHY_EXT__BEGIN + 2,
+
+    /// Jamming detection window size
+    /** Format: `c`
+     *  Units: Seconds (1-64)
+     *
+     * This parameter describes the window period for signal jamming
+     * detection.
+     */
+    SPINEL_PROP_JAM_DETECT_WINDOW        = SPINEL_PROP_PHY_EXT__BEGIN + 3,
+
+    /// Jamming detection busy period
+    /** Format: `c`
+     *  Units: Seconds (1-64)
+     *
+     * This parameter describes the number of aggregate seconds within
+     * the detection window where the RSSI must be above
+     * `PROP_JAM_DETECT_RSSI_THRESHOLD` to trigger detection.
+     *
+     * The behavior of the jamming detection feature when `PROP_JAM_DETECT_BUSY`
+     * is larger than `PROP_JAM_DETECT_WINDOW` is undefined.
+     */
+    SPINEL_PROP_JAM_DETECT_BUSY          = SPINEL_PROP_PHY_EXT__BEGIN + 4,
+
+    SPINEL_PROP_PHY_EXT__END            = 0x1300,
 
     SPINEL_PROP_MAC__BEGIN             = 0x30,
     SPINEL_PROP_MAC_SCAN_STATE         = SPINEL_PROP_MAC__BEGIN + 0, ///< [C]

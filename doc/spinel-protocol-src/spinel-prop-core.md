@@ -127,6 +127,8 @@ Currently defined values are:
  * 2: `CAP_NET_SAVE`
  * 3: `CAP_HBO`: Host Buffer Offload. See (#feature-host-buffer-offload).
  * 4: `CAP_POWER_SAVE`
+ * 5: `CAP_COUNTERS`
+ * 6: `CAP_JAM_DETECT`: Jamming detection. See (#feature-jam-detect)
  * 16: `CAP_802_15_4_2003`
  * 17: `CAP_802_15_4_2006`
  * 18: `CAP_802_15_4_2011`
