@@ -47,6 +47,7 @@
 #include <platform/random.h>
 #include <thread/meshcop_dataset.hpp>
 #include <thread/meshcop_dataset_manager.hpp>
+#include <thread/meshcop_tlvs.hpp>
 #include <thread/thread_netif.hpp>
 #include <thread/thread_tlvs.hpp>
 #include <thread/thread_uris.hpp>
@@ -319,6 +320,7 @@ ThreadError DatasetManager::Set(Coap::Header &aHeader, Message &aMessage, const 
     uint16_t offset = aMessage.GetOffset();
     Tlv::Type type;
     bool isUpdateFromCommissioner = false;
+    bool isUpdateAffectConnectivity = false;
     StateTlv::State state = StateTlv::kAccept;
 
     ActiveTimestampTlv activeTimestamp;
@@ -362,7 +364,7 @@ ThreadError DatasetManager::Set(Coap::Header &aHeader, Message &aMessage, const 
             (tlvType == Tlv::kChannel || tlvType == Tlv::kMeshLocalPrefix ||
              tlvType == Tlv::kPanId || tlvType == Tlv::kNetworkMasterKey))
         {
-            ExitNow(state = StateTlv::kReject);
+            isUpdateAffectConnectivity = true;
         }
 
         // verify session id is the same
@@ -401,6 +403,9 @@ ThreadError DatasetManager::Set(Coap::Header &aHeader, Message &aMessage, const 
         offset += sizeof(tlv) + tlv.GetLength();
     }
 
+    // verify the update from commissioner should not contain tlv would affect connectivity
+    VerifyOrExit(!isUpdateFromCommissioner || !isUpdateAffectConnectivity, state = StateTlv::kReject);
+
     // verify the request includes a timestamp that is ahead of the locally stored value
     VerifyOrExit(offset == aMessage.GetLength() && (mLocal.GetTimestamp() == NULL ||
                                                     mLocal.GetTimestamp()->Compare(timestamp) > 0), state = StateTlv::kReject);
@@ -426,32 +431,39 @@ ThreadError DatasetManager::Set(Coap::Header &aHeader, Message &aMessage, const 
         mLocal.Set(mNetif.GetActiveDataset().GetNetwork());
     }
 
-    offset = aMessage.GetOffset();
-
-    while (offset < aMessage.GetLength())
+    if (!isUpdateAffectConnectivity)
     {
-        OT_TOOL_PACKED_BEGIN
-        struct
-        {
-            Tlv tlv;
-            uint8_t value[Dataset::kMaxValueSize];
-        } OT_TOOL_PACKED_END data;
+        offset = aMessage.GetOffset();
 
-        aMessage.Read(offset, sizeof(Tlv), &data.tlv);
-        aMessage.Read(offset + sizeof(Tlv), data.tlv.GetLength(), data.value);
-
-        if (data.tlv.GetType() != Tlv::kCommissionerSessionId)
+        while (offset < aMessage.GetLength())
         {
-            mLocal.Set(data.tlv);
+            OT_TOOL_PACKED_BEGIN
+            struct
+            {
+                Tlv tlv;
+                uint8_t value[Dataset::kMaxValueSize];
+            } OT_TOOL_PACKED_END data;
+
+            aMessage.Read(offset, sizeof(Tlv), &data.tlv);
+            aMessage.Read(offset + sizeof(Tlv), data.tlv.GetLength(), data.value);
+
+            if (data.tlv.GetType() != Tlv::kCommissionerSessionId)
+            {
+                mLocal.Set(data.tlv);
+            }
+
+            offset += sizeof(Tlv) + data.tlv.GetLength();
         }
 
-        offset += sizeof(Tlv) + data.tlv.GetLength();
+        mLocal.Store();
+        mNetwork = mLocal;
+        mNetworkDataLeader.IncrementVersion();
+        mNetworkDataLeader.IncrementStableVersion();
     }
-
-    mLocal.Store();
-    mNetwork = mLocal;
-    mNetworkDataLeader.IncrementVersion();
-    mNetworkDataLeader.IncrementStableVersion();
+    else
+    {
+        mNetif.GetPendingDataset().ApplyActiveDataset(activeTimestamp, aMessage);
+    }
 
     // notify commissioner if update is from thread device
     if (!isUpdateFromCommissioner)
@@ -862,6 +874,12 @@ ThreadError ActiveDataset::Set(const Dataset &aDataset)
     SuccessOrExit(error = DatasetManager::Set(aDataset));
     DatasetManager::ApplyConfiguration();
 
+    if (mMle.GetDeviceState() == Mle::kDeviceStateLeader)
+    {
+        mNetworkDataLeader.IncrementVersion();
+        mNetworkDataLeader.IncrementStableVersion();
+    }
+
 exit:
     return error;
 }
@@ -1098,6 +1116,50 @@ void PendingDataset::HandleTimer(void)
     mNetif.GetActiveDataset().Set(mNetwork);
 
     Clear(false);
+}
+
+void PendingDataset::ApplyActiveDataset(const Timestamp &aTimestamp, Message &aMessage)
+{
+    uint16_t offset = aMessage.GetOffset();
+    DelayTimerTlv delayTimer;
+    uint8_t flags;
+
+    VerifyOrExit(mMle.IsAttached(), ;);
+
+    while (offset < aMessage.GetLength())
+    {
+        OT_TOOL_PACKED_BEGIN
+        struct
+        {
+            Tlv tlv;
+            uint8_t value[Dataset::kMaxValueSize];
+        } OT_TOOL_PACKED_END data;
+
+        aMessage.Read(offset, sizeof(Tlv), &data.tlv);
+        aMessage.Read(offset + sizeof(Tlv), data.tlv.GetLength(), data.value);
+        mNetwork.Set(data.tlv);
+        offset += sizeof(Tlv) + data.tlv.GetLength();
+    }
+
+    // add delay timer tlv
+    delayTimer.Init();
+    delayTimer.SetDelayTimer(Timer::SecToMsec(DelayTimerTlv::kMinDelayTimer));
+    mNetwork.Set(delayTimer);
+
+    // add pending timestamp tlv
+    mNetwork.SetTimestamp(aTimestamp);
+    HandleNetworkUpdate(flags);
+
+    // reset delay timer
+    ResetDelayTimer(kFlagNetworkUpdated);
+
+exit:
+    {}
+}
+
+void PendingDataset::HandleNetworkUpdate(uint8_t &aFlags)
+{
+    DatasetManager::HandleNetworkUpdate(aFlags);
 }
 
 }  // namespace MeshCoP

@@ -1243,6 +1243,12 @@ public:
      */
     void SetDelayTimer(uint32_t aDelayTimer) { mDelayTimer = HostSwap32(aDelayTimer); }
 
+    enum
+    {
+        kMaxDelayTimer = 259200,  ///< maximum delay timer value for a Pending Dataset in seconds
+        kMinDelayTimer = 28800,   ///< minimum delay timer value for a Pending Dataset in seconds
+    };
+
 private:
     uint32_t mDelayTimer;
 } OT_TOOL_PACKED_END;

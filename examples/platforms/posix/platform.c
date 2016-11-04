@@ -42,6 +42,7 @@
 #include <stdlib.h>
 
 #include <openthread.h>
+#include <openthread-tasklet.h>
 #include <platform/alarm.h>
 #include <platform/uart.h>
 

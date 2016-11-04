@@ -60,10 +60,14 @@ PRETTY_SUBDIRS                          = \
 
 include_HEADERS                         = \
     openthread.h                          \
-    openthread-diag.h                     \
-    openthread-crypto.h                   \
-    openthread-types.h                    \
     openthread-coap.h                     \
+    openthread-crypto.h                   \
+    openthread-diag.h                     \
+    openthread-ip6.h                      \
+    openthread-message.h                  \
+    openthread-tasklet.h                  \
+    openthread-types.h                    \
+    openthread-udp.h                      \
     $(NULL)
 
 install-headers: install-includeHEADERS

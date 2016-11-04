@@ -57,6 +57,11 @@ class Resource
     friend class Server;
 
 public:
+    enum
+    {
+        kMaxReceivedUriPath = 32,   ///< Maximum supported URI path on received messages.
+    };
+
     /**
      * This function pointer is called when a CoAP message with a given Uri-Path is received.
      *
@@ -168,11 +173,6 @@ public:
     ThreadError SendMessage(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
 private:
-    enum
-    {
-        kMaxReceivedUriPath = 32,   ///< Maximum supported URI path on received messages.
-    };
-
     static void HandleUdpReceive(void *aContext, otMessage aMessage, const otMessageInfo *aMessageInfo);
     void HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
