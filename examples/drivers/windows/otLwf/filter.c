@@ -523,8 +523,11 @@ Return Value:
 
 --*/
 {
-    NDIS_STATUS     NdisStatus = NDIS_STATUS_SUCCESS;
-    PMS_FILTER      pFilter = (PMS_FILTER)FilterModuleContext;
+    NTSTATUS            NtStatus = STATUS_SUCCESS;
+    NDIS_STATUS         NdisStatus = NDIS_STATUS_SUCCESS;
+    PMS_FILTER          pFilter = (PMS_FILTER)FilterModuleContext;
+    NL_INTERFACE_KEY    key = {0};
+    NL_INTERFACE_RW     interfaceRw;
 
     PNDIS_RESTART_GENERAL_ATTRIBUTES NdisGeneralAttributes;
     PNDIS_RESTART_ATTRIBUTES         NdisRestartAttributes;
@@ -554,6 +557,28 @@ Return Value:
         //
         NdisGeneralAttributes->LookaheadSize = 128;
     }
+  
+    key.Luid = pFilter->InterfaceLuid;
+    NlInitializeInterfaceRw(&interfaceRw);
+    interfaceRw.DadTransmits = 0;
+    interfaceRw.SendUnsolicitedNeighborAdvertisementOnDad = FALSE;
+  
+    NtStatus = 
+        NsiSetAllParameters(
+            NsiActive,  
+            NsiSetDefault,  
+            &NPI_MS_IPV6_MODULEID,  
+            NlInterfaceObject,   
+            &key,   
+            sizeof(key),   
+            &interfaceRw,   
+            sizeof(interfaceRw));
+    if (!NT_SUCCESS(NtStatus))
+    {
+        LogError(DRIVER_DEFAULT, "NsiSetAllParameters (NlInterfaceObject) failed, %!STATUS!", NtStatus);
+        NdisStatus = NDIS_STATUS_FAILURE;
+        goto exit;
+    }
 
     //
     // Enable the data path
@@ -566,6 +591,8 @@ Return Value:
     pFilter->State = FilterRunning; // when successful
     otLwfNotifyDeviceAvailabilityChange(pFilter, TRUE);
     LogInfo(DRIVER_DEFAULT, "Interface %!GUID! arrival, Filter=%p", &pFilter->InterfaceGuid, pFilter);
+
+exit:
 
     //
     // Ensure the state is Paused if restart failed.

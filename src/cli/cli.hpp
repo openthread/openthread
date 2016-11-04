@@ -42,6 +42,8 @@
 
 #include <stdarg.h>
 
+#include <openthread-ip6.h>
+#include <openthread-udp.h>
 #include <cli/cli_server.hpp>
 #include <net/icmp6.hpp>
 #include <common/timer.hpp>

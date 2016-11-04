@@ -37,6 +37,9 @@
 
 #include <stdint.h>
 #include <stdbool.h>
+#ifdef OTDLL
+#include <guiddef.h>
+#endif
 
 #include <platform/toolchain.h>
 
@@ -61,13 +64,31 @@ extern "C" {
 #define myoffsetof(s,m) (((size_t)&(((s*)BASE)->m))-BASE)
 #define CONTAINING_RECORD(address, type, field) \
     ((type *)((uint8_t*)(address) - myoffsetof(type, field)))
-#endif
-#endif
+#endif /* CONTAINING_RECORD */
+#endif /* _WIN32 */
 
 /**
  * This type represents the OpenThread instance structure.
  */
 typedef struct otInstance otInstance;
+
+#ifdef OTDLL
+
+/**
+ * This type represents the handle to the OpenThread API.
+ */
+typedef struct otApiInstance otApiInstance;
+
+/**
+ * This type represents a list of device GUIDs.
+ */
+typedef struct otDeviceList
+{
+    uint16_t aDevicesLength;
+    GUID     aDevices[1];
+} otDeviceList;
+
+#endif
 
 /**
  * This enumeration represents error codes used throughout OpenThread.
@@ -489,6 +510,7 @@ typedef enum otMeshcopTlvType
 /**
  * This structure represents an MLE Link Mode configuration.
  */
+OT_TOOL_ALIGN(4)
 typedef struct otLinkModeConfig
 {
     /**
@@ -709,6 +731,7 @@ typedef struct otMacBlacklistEntry
  */
 typedef enum
 {
+    kDeviceRoleOffline,   ///< The Thread device is offline and unavailable.
     kDeviceRoleDisabled,  ///< The Thread stack is disabled.
     kDeviceRoleDetached,  ///< Not currently participating in a Thread network/partition.
     kDeviceRoleChild,     ///< The Thread Child role.
@@ -764,6 +787,7 @@ typedef struct
  * This structure holds diagnostic information for a Thread Router
  *
  */
+OT_TOOL_ALIGN(4)
 typedef struct
 {
     otExtAddress   mExtAddress;            ///< IEEE 802.15.4 Extended Address

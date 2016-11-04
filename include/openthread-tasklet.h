@@ -29,45 +29,52 @@
 /**
  * @file
  * @brief
- *   This file includes the platform abstraction for the Thread Joiner role.
+ *   This file includes the platform abstraction for the tasklet service.
  */
 
-#ifndef OPENTHREAD_JOINER_H_
-#define OPENTHREAD_JOINER_H_
+#ifndef OPENTHREAD_TASKLET_H_
+#define OPENTHREAD_TASKLET_H_
 
-#include <platform/toolchain.h>
+#include <openthread-types.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 /**
- * @addtogroup core-commissioning
+ * @addtogroup execution  Execution
+ *
+ * @brief
+ *   This module includes functions that control the Thread stack's execution.
  *
  * @{
  *
  */
 
 /**
- * This function enables the Thread Joiner role.
+ * Run all queued OpenThread tasklets at the time this is called.
  *
- * @param[in]  aInstance         A pointer to an OpenThread instance.
- * @param[in]  aPSKd             A pointer to the PSKd.
- * @param[in]  aProvisioningUrl  A pointer to the Provisioning URL (may be NULL).
- *
- * @retval kThreadError_None         Successfully started the Commissioner role.
- * @retval kThreadError_InvalidArgs  @p aPSKd or @p aProvisioningUrl is invalid.
- *
+ * @param[in] aInstance A pointer to an OpenThread instance.
  */
-OTAPI ThreadError OTCALL otJoinerStart(otInstance *aInstance, const char *aPSKd, const char *aProvisioningUrl);
+void otProcessQueuedTasklets(otInstance *aInstance);
 
 /**
- * This function disables the Thread Joiner role.
+ * Indicates whether or not OpenThread has tasklets pending.
  *
- * @param[in]  aInstance  A pointer to an OpenThread instance.
+ * @param[in] aInstance A pointer to an OpenThread instance.
+ *
+ * @retval TRUE   If there are tasklets pending.
+ * @retval FALSE  If there are no tasklets pending.
+ */
+bool otAreTaskletsPending(otInstance *aInstance);
+
+/**
+ * OpenThread calls this function when the tasklet queue transitions from empty to non-empty.
+ *
+ * @param[in] aInstance A pointer to an OpenThread instance.
  *
  */
-OTAPI ThreadError OTCALL otJoinerStop(otInstance *aInstance);
+extern void otSignalTaskletPending(otInstance *aInstance);
 
 /**
  * @}
@@ -75,7 +82,7 @@ OTAPI ThreadError OTCALL otJoinerStop(otInstance *aInstance);
  */
 
 #ifdef __cplusplus
-}  // end of extern "C"
+}  // extern "C"
 #endif
 
-#endif  // OPENTHREAD_JOINER_H_
+#endif  // OPENTHREAD_TASKLET_H_
