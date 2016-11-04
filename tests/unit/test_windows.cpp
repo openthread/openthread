@@ -157,6 +157,6 @@ namespace Thread
         TEST_METHOD(test_packed_enum) { ::test_packed_enum(); }
 
         // test_settings.cpp
-        TEST_METHOD(RunTestFuzz) { ::TestFuzz(30); }
+        TEST_METHOD(RunTestFuzz) { ::TestFuzz(0); }
     };
 }
