@@ -204,8 +204,9 @@ ThreadError Frame::ValidatePsdu(void)
     // Security Header
     if (fcf & Frame::kFcfSecurityEnabled)
     {
-        VerifyOrExit(offset <= GetPsduLength(),);
         uint8_t secControl = GetPsdu()[offset];
+
+        offset += kSecurityControlSize + kFrameCounterSize;
 
         switch (secControl & kKeyIdModeMask)
         {
@@ -974,10 +975,7 @@ uint8_t *Frame::GetPayload(void)
     {
         securityControl = *cur;
 
-        if (securityControl & kSecLevelMask)
-        {
-            cur += kSecurityControlSize + kFrameCounterSize;
-        }
+        cur += kSecurityControlSize + kFrameCounterSize;
 
         switch (securityControl & kKeyIdModeMask)
         {
