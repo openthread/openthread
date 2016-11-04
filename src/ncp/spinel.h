@@ -197,9 +197,9 @@ enum {
 
 enum
 {
-    SPINEL_PROTOCOL_TYPE_ZIGBEE    = 1,
-    SPINEL_PROTOCOL_TYPE_ZIGBEE_IP = 2,
-    SPINEL_PROTOCOL_TYPE_THREAD    = 3,
+    SPINEL_PROTOCOL_TYPE_BOOTLOADER = 0,
+    SPINEL_PROTOCOL_TYPE_ZIGBEE_IP  = 2,
+    SPINEL_PROTOCOL_TYPE_THREAD     = 3,
 };
 
 enum
@@ -265,6 +265,10 @@ enum
     SPINEL_CMD_HBO_RECLAIMED        = 16,
     SPINEL_CMD_HBO_DROPED           = 17,
 
+    SPINEL_CMD_PEEK                 = 18,
+    SPINEL_CMD_PEEK_RET             = 19,
+    SPINEL_CMD_POKE                 = 20,
+
     SPINEL_CMD_NEST__BEGIN          = 15296,
     SPINEL_CMD_NEST__END            = 15360,
 
@@ -284,6 +288,8 @@ enum
 
     SPINEL_CAP_COUNTERS              = 5,
     SPINEL_CAP_JAM_DETECT            = 6,
+
+    SPINEL_CAP_PEEK_POKE             = 7,
 
     SPINEL_CAP_802_15_4__BEGIN        = 16,
     SPINEL_CAP_802_15_4_2003          = (SPINEL_CAP_802_15_4__BEGIN + 0),
@@ -444,7 +450,7 @@ typedef enum
     SPINEL_PROP_NET__BEGIN           = 0x40,
     SPINEL_PROP_NET_SAVED            = SPINEL_PROP_NET__BEGIN + 0, ///< [b]
     SPINEL_PROP_NET_IF_UP            = SPINEL_PROP_NET__BEGIN + 1, ///< [b]
-    SPINEL_PROP_NET_STACK_UP         = SPINEL_PROP_NET__BEGIN + 2, ///< [C]
+    SPINEL_PROP_NET_STACK_UP         = SPINEL_PROP_NET__BEGIN + 2, ///< [b]
     SPINEL_PROP_NET_ROLE             = SPINEL_PROP_NET__BEGIN + 3, ///< [C]
     SPINEL_PROP_NET_NETWORK_NAME     = SPINEL_PROP_NET__BEGIN + 4, ///< [U]
     SPINEL_PROP_NET_XPANID           = SPINEL_PROP_NET__BEGIN + 5, ///< [D]

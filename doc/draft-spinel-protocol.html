@@ -405,6 +405,9 @@
 <link href="#rfc.section.4.7" rel="Chapter" title="4.7 CMD 6: (NCP-&gt;Host) CMD_PROP_VALUE_IS"/>
 <link href="#rfc.section.4.8" rel="Chapter" title="4.8 CMD 7: (NCP-&gt;Host) CMD_PROP_VALUE_INSERTED"/>
 <link href="#rfc.section.4.9" rel="Chapter" title="4.9 CMD 8: (NCP-&gt;Host) CMD_PROP_VALUE_REMOVED"/>
+<link href="#rfc.section.4.10" rel="Chapter" title="4.10 CMD 18: (Host-&gt;NCP) CMD_PEEK"/>
+<link href="#rfc.section.4.11" rel="Chapter" title="4.11 CMD 19: (NCP-&gt;Host) CMD_PEEK_RET"/>
+<link href="#rfc.section.4.12" rel="Chapter" title="4.12 CMD 20: (Host-&gt;NCP) CMD_POKE"/>
 <link href="#rfc.section.5" rel="Chapter" title="5 Properties"/>
 <link href="#rfc.section.5.1" rel="Chapter" title="5.1 Property Sections"/>
 <link href="#rfc.section.5.2" rel="Chapter" title="5.2 Core Properties"/>
@@ -462,10 +465,12 @@
 <link href="#rfc.section.5.7.5" rel="Chapter" title="5.7.5 PROP 101: PROP_IPv6_ICMP_PING_OFFLOAD"/>
 <link href="#rfc.section.6" rel="Chapter" title="6 Status Codes"/>
 <link href="#rfc.section.7" rel="Chapter" title="7 Security Considerations"/>
+<link href="#rfc.section.7.1" rel="Chapter" title="7.1 Raw Application Access"/>
 <link href="#rfc.section.8" rel="Chapter" title="8 Acknowledgments"/>
 <link href="#rfc.appendix.A" rel="Chapter" title="A Framing Protocol"/>
 <link href="#rfc.appendix.A.1" rel="Chapter" title="A.1 UART Recommendations"/>
-<link href="#rfc.appendix.A.1.1" rel="Chapter" title="A.1.1 HDLC-Lite"/>
+<link href="#rfc.appendix.A.1.1" rel="Chapter" title="A.1.1 UART Bit Rate Detection"/>
+<link href="#rfc.appendix.A.1.2" rel="Chapter" title="A.1.2 HDLC-Lite"/>
 <link href="#rfc.appendix.A.2" rel="Chapter" title="A.2 SPI Recommendations"/>
 <link href="#rfc.appendix.A.2.1" rel="Chapter" title="A.2.1 SPI Framing Protocol"/>
 <link href="#rfc.appendix.A.3" rel="Chapter" title="A.3 I&#xB2;C Recommendations"/>
@@ -555,7 +560,7 @@
   <link rel="schema.dct" href="http://purl.org/dc/terms/" />
 
   <meta name="dct.creator" content="Quattlebaum, R." />
-  <meta name="dct.identifier" content="urn:ietf:id:draft-spinel-protocol-4fce7582b" />
+  <meta name="dct.identifier" content="urn:ietf:id:draft-spinel-protocol-f9bf43254" />
   <meta name="dct.issued" scheme="ISO8601" content="2016-11-4" />
   <meta name="dct.abstract" content="This document describes a general management protocol for enabling a host device to communicate with and manage a Network Control Processor (NCP).  " />
   <meta name="description" content="This document describes a general management protocol for enabling a host device to communicate with and manage a Network Control Processor (NCP).  " />
@@ -585,7 +590,7 @@
   </table>
 
   <p class="title">Spinel Host-Controller Protocol<br />
-  <span class="filename">draft-spinel-protocol-4fce7582b</span></p>
+  <span class="filename">draft-spinel-protocol-f9bf43254</span></p>
   
   <h1 id="rfc.abstract">
   <a href="#rfc.abstract">Abstract</a>
@@ -651,6 +656,9 @@
 <li>4.7.   <a href="#rfc.section.4.7">CMD 6: (NCP-&gt;Host) CMD_PROP_VALUE_IS</a></li>
 <li>4.8.   <a href="#rfc.section.4.8">CMD 7: (NCP-&gt;Host) CMD_PROP_VALUE_INSERTED</a></li>
 <li>4.9.   <a href="#rfc.section.4.9">CMD 8: (NCP-&gt;Host) CMD_PROP_VALUE_REMOVED</a></li>
+<li>4.10.   <a href="#rfc.section.4.10">CMD 18: (Host-&gt;NCP) CMD_PEEK</a></li>
+<li>4.11.   <a href="#rfc.section.4.11">CMD 19: (NCP-&gt;Host) CMD_PEEK_RET</a></li>
+<li>4.12.   <a href="#rfc.section.4.12">CMD 20: (Host-&gt;NCP) CMD_POKE</a></li>
 </ul><li>5.   <a href="#rfc.section.5">Properties</a></li>
 <ul><li>5.1.   <a href="#rfc.section.5.1">Property Sections</a></li>
 <li>5.2.   <a href="#rfc.section.5.2">Core Properties</a></li>
@@ -708,10 +716,12 @@
 <li>5.7.5.   <a href="#rfc.section.5.7.5">PROP 101: PROP_IPv6_ICMP_PING_OFFLOAD</a></li>
 </ul></ul><li>6.   <a href="#rfc.section.6">Status Codes</a></li>
 <li>7.   <a href="#rfc.section.7">Security Considerations</a></li>
-<li>8.   <a href="#rfc.section.8">Acknowledgments</a></li>
+<ul><li>7.1.   <a href="#rfc.section.7.1">Raw Application Access</a></li>
+</ul><li>8.   <a href="#rfc.section.8">Acknowledgments</a></li>
 <li>Appendix A.   <a href="#rfc.appendix.A">Framing Protocol</a></li>
 <ul><li>A.1.   <a href="#rfc.appendix.A.1">UART Recommendations</a></li>
-<ul><li>A.1.1.   <a href="#rfc.appendix.A.1.1">HDLC-Lite</a></li>
+<ul><li>A.1.1.   <a href="#rfc.appendix.A.1.1">UART Bit Rate Detection</a></li>
+<li>A.1.2.   <a href="#rfc.appendix.A.1.2">HDLC-Lite</a></li>
 </ul><li>A.2.   <a href="#rfc.appendix.A.2">SPI Recommendations</a></li>
 <ul><li>A.2.1.   <a href="#rfc.appendix.A.2.1">SPI Framing Protocol</a></li>
 </ul><li>A.3.   <a href="#rfc.appendix.A.3">I&#178;C Recommendations</a></li>
@@ -830,7 +840,7 @@
 <p id="rfc.section.1.1.1.p.5">As time has gone by and the protocol has become more fleshed out, it has become clear that some of the initial allocations were inadequate and should be revisited if we want to try to achieve the original goal.  </p>
 <h1 id="rfc.section.1.1.2"><a href="#rfc.section.1.1.2">1.1.2.</a> <a href="#spinel-as-application-api" id="spinel-as-application-api">Spinel as Application API</a></h1>
 <p id="rfc.section.1.1.2.p.1">The current primary host driver implementation is <a href="http://wpantund.org/">wpantund</a>. wpantund manages the NCP using the Spinel protocol and provides a management API for the application using <a href="https://www.freedesktop.org/wiki/Software/dbus/">D-Bus</a> IPC.  </p>
-<p id="rfc.section.1.1.2.p.2">However, some thought has been given to the idea of having a host driver daemon which uses Spinel directly as the management API. You would have user-space daemon similar to wpantund which would communicate directly with the NCP. Using Unix Domain Sockets, applications could connect to the daemon by opening a special socket file. The protocol for that socket might be (for example) HDLC-Lite-encoded (<a href="#hdlc-lite">Appendix A.1.1</a>) spinel frames, as if the application were talking directly to the NCP.  </p>
+<p id="rfc.section.1.1.2.p.2">However, some thought has been given to the idea of having a host driver daemon which uses Spinel directly as the management API. You would have user-space daemon similar to wpantund which would communicate directly with the NCP. Using Unix Domain Sockets, applications could connect to the daemon by opening a special socket file. The protocol for that socket might be (for example) HDLC-Lite-encoded (<a href="#hdlc-lite">Appendix A.1.2</a>) spinel frames, as if the application were talking directly to the NCP.  </p>
 <p id="rfc.section.1.1.2.p.3">Applications aren't necessarily interested in everything that an NCP would normally send out unsolicited, so a mechanism for specifying which properties should be listened to would need to be defined. This mechanism would not be implemented by the NCP but would instead be implemented by the daemon to control which notification packets need to be directed where.  </p>
 <p id="rfc.section.1.1.2.p.4">In the event of transaction ID collisions, the daemon would transparently renumber spinel frames so as to not cause TID collisions.  </p>
 <p id="rfc.section.1.1.2.p.5">Since there can be more than one application that is using the API at a time, the <samp>PROP_LOCK</samp> property (<a href="#prop-lock">Section 5.2.10</a>) would be used to ensure exclusive access to the NCP by an application. Only one process would be allowed to enable the lock at a time.  </p>
@@ -1421,6 +1431,84 @@
 <p id="rfc.section.4.9.p.2">Note that this command operates <em>by value</em>, not by index! </p>
 <p id="rfc.section.4.9.p.3">The payload for this command is the property identifier encoded in the packed unsigned integer format described in <a href="#packed-unsigned-integer">Section 3.2</a>, followed by the value that was removed from the given property.  </p>
 <p id="rfc.section.4.9.p.4">The resulting order of items in the list is defined by the given property.  </p>
+<h1 id="rfc.section.4.10"><a href="#rfc.section.4.10">4.10.</a> <a href="#cmd-peek" id="cmd-peek">CMD 18: (Host-&gt;NCP) CMD_PEEK</a></h1>
+<table cellpadding="3" cellspacing="0" class="tt full center">
+  <thead>
+    <tr>
+      <th class="center">Octets:</th>
+      <th class="center">1</th>
+      <th class="center">1</th>
+      <th class="center">4</th>
+      <th class="center">2</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td class="center">Fields:</td>
+      <td class="center">HEADER</td>
+      <td class="center">CMD_PEEK</td>
+      <td class="center">ADDRESS</td>
+      <td class="center">COUNT</td>
+    </tr>
+  </tbody>
+</table>
+<p id="rfc.section.4.10.p.1">This command allows the NCP to fetch values from the RAM of the NCP for debugging purposes. Upon success, <samp>CMD_PEEK_RET</samp> is sent from the NCP to the host. Upon failure, <samp>PROP_LAST_STATUS</samp> is emitted with the appropriate error indication.  </p>
+<p id="rfc.section.4.10.p.2">Due to the low-level nature of this command, certain error conditions may induce the NCP to reset.  </p>
+<p id="rfc.section.4.10.p.3">The NCP MAY prevent certain regions of memory from being accessed.  </p>
+<p id="rfc.section.4.10.p.4">The implementation of this command has security implications.  See <a href="#security-considerations">Section 7</a> for more information.  </p>
+<p id="rfc.section.4.10.p.5">This command requires the capability <samp>CAP_PEEK_POKE</samp> to be present.  </p>
+<h1 id="rfc.section.4.11"><a href="#rfc.section.4.11">4.11.</a> <a href="#cmd-peek-ret" id="cmd-peek-ret">CMD 19: (NCP-&gt;Host) CMD_PEEK_RET</a></h1>
+<table cellpadding="3" cellspacing="0" class="tt full center">
+  <thead>
+    <tr>
+      <th class="center">Octets:</th>
+      <th class="center">1</th>
+      <th class="center">1</th>
+      <th class="center">4</th>
+      <th class="center">2</th>
+      <th class="center">n</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td class="center">Fields:</td>
+      <td class="center">HEADER</td>
+      <td class="center">CMD_PEEK_RET</td>
+      <td class="center">ADDRESS</td>
+      <td class="center">COUNT</td>
+      <td class="center">BYTES</td>
+    </tr>
+  </tbody>
+</table>
+<p id="rfc.section.4.11.p.1">This command contains the contents of memory that was requested by a previous call to <samp>CMD_PEEK</samp>.  </p>
+<p id="rfc.section.4.11.p.2">This command requires the capability <samp>CAP_PEEK_POKE</samp> to be present.  </p>
+<h1 id="rfc.section.4.12"><a href="#rfc.section.4.12">4.12.</a> <a href="#cmd-poke" id="cmd-poke">CMD 20: (Host-&gt;NCP) CMD_POKE</a></h1>
+<table cellpadding="3" cellspacing="0" class="tt full center">
+  <thead>
+    <tr>
+      <th class="center">Octets:</th>
+      <th class="center">1</th>
+      <th class="center">1</th>
+      <th class="center">4</th>
+      <th class="center">2</th>
+      <th class="center">n</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td class="center">Fields:</td>
+      <td class="center">HEADER</td>
+      <td class="center">CMD_POKE</td>
+      <td class="center">ADDRESS</td>
+      <td class="center">COUNT</td>
+      <td class="center">BYTES</td>
+    </tr>
+  </tbody>
+</table>
+<p id="rfc.section.4.12.p.1">This command writes the bytes to the specified memory address for debugging purposes.  </p>
+<p id="rfc.section.4.12.p.2">Due to the low-level nature of this command, certain error conditions may induce the NCP to reset.  </p>
+<p id="rfc.section.4.12.p.3">The implementation of this command has security implications.  See <a href="#security-considerations">Section 7</a> for more information.  </p>
+<p id="rfc.section.4.12.p.4">This command requires the capability <samp>CAP_PEEK_POKE</samp> to be present.  </p>
 <h1 id="rfc.section.5"><a href="#rfc.section.5">5.</a> <a href="#properties" id="properties">Properties</a></h1>
 <p id="rfc.section.5.p.1">While the majority of the properties that allow the configuration of network connectivity are network protocol specific, there are several properties that are required in all implementations.  </p>
 <p id="rfc.section.5.p.2">Future property allocations SHALL be made from the following allocation plan: </p>
@@ -1652,7 +1740,7 @@ STACK-NAME/STACK-VERSION[BUILD_INFO][; OTHER_INFO]; BUILD_DATE_AND_TIME
 <p/>
 
 <ul>
-  <li>1: ZigBee</li>
+  <li>0: Bootloader</li>
   <li>2: ZigBeeIP</li>
   <li>3: Thread</li>
 </ul>
@@ -1722,6 +1810,7 @@ STACK-NAME/STACK-VERSION[BUILD_INFO][; OTHER_INFO]; BUILD_DATE_AND_TIME
   <li>4: <samp>CAP_POWER_SAVE</samp></li>
   <li>5: <samp>CAP_COUNTERS</samp></li>
   <li>6: <samp>CAP_JAM_DETECT</samp>: Jamming detection. See <a href="#feature-jam-detect">Appendix D</a></li>
+  <li>7: <samp>CAP_PEEK_POKE</samp>: PEEK/POKE debugging commands.</li>
   <li>16: <samp>CAP_802_15_4_2003</samp></li>
   <li>17: <samp>CAP_802_15_4_2006</samp></li>
   <li>18: <samp>CAP_802_15_4_2011</samp></li>
@@ -1861,7 +1950,7 @@ STACK-NAME/STACK-VERSION[BUILD_INFO][; OTHER_INFO]; BUILD_DATE_AND_TIME
     </tr>
   </tbody>
 </table>
-<p id="rfc.section.5.2.9.p.2">The static EUI64 address of the device. This value is read-only, but may be writable under certain vendor-defined circumstances.  </p>
+<p id="rfc.section.5.2.9.p.2">The static EUI64 address of the device, used as a serial number.  This value is read-only, but may be writable under certain vendor-defined circumstances.  </p>
 <h1 id="rfc.section.5.2.10"><a href="#rfc.section.5.2.10">5.2.10.</a> <a href="#prop-lock" id="prop-lock">PROP 9: PROP_LOCK</a></h1>
 <p/>
 
@@ -2597,7 +2686,8 @@ STACK-NAME/STACK-VERSION[BUILD_INFO][; OTHER_INFO]; BUILD_DATE_AND_TIME
 
 <p> </p>
 <h1 id="rfc.section.7"><a href="#rfc.section.7">7.</a> <a href="#security-considerations" id="security-considerations">Security Considerations</a></h1>
-<p id="rfc.section.7.p.1">TBD </p>
+<h1 id="rfc.section.7.1"><a href="#rfc.section.7.1">7.1.</a> <a href="#raw-application-access" id="raw-application-access">Raw Application Access</a></h1>
+<p id="rfc.section.7.1.p.1">Spinel MAY be used as an API boundary for allowing processes to configure the NCP. However, such a system MUST NOT give unprivileged processess the ability to send or receive arbitrary command frames to the NCP. Only the specific commands and properties that are required should be allowed to be passed, and then only after being checked for proper format.  </p>
 <h1 id="rfc.section.8"><a href="#rfc.section.8">8.</a> <a href="#acknowledgments" id="acknowledgments">Acknowledgments</a></h1>
 <p id="rfc.section.8.p.1">Special thanks to Abtin Keshavarzian, Martin Turon, Arjuna Sivasithambaresan and Jonathan Hui for their substantial contributions and feedback related to this document.  </p>
 <p>
@@ -2622,11 +2712,25 @@ STACK-NAME/STACK-VERSION[BUILD_INFO][; OTHER_INFO]; BUILD_DATE_AND_TIME
 <p> </p>
 <p id="rfc.section.A.1.p.3">These values may be adjusted depending on the individual needs of the application or product, but some sort of flow control MUST be used.  Hardware flow control is preferred over software flow control. In the absence of hardware flow control, software flow control (XON/XOFF) MUST be used instead.  </p>
 <p id="rfc.section.A.1.p.4">We also <strong>RECOMMEND</strong> an Arduino-style hardware reset, where the DTR signal is coupled to the <samp>R&#773;E&#773;S&#773;</samp> pin through a 0.01&#181;F capacitor. This causes the NCP to automatically reset whenever the serial port is opened. At the very least we <strong>RECOMMEND</strong> dedicating one of your host pins to controlling the <samp>R&#773;E&#773;S&#773;</samp> pin on the NCP, so that you can easily perform a hardware reset if necessary.  </p>
-<h1 id="rfc.appendix.A.1.1"><a href="#rfc.appendix.A.1.1">A.1.1.</a> <a href="#hdlc-lite" id="hdlc-lite">HDLC-Lite</a></h1>
+<h1 id="rfc.appendix.A.1.1"><a href="#rfc.appendix.A.1.1">A.1.1.</a> <a href="#uart-bit-rate-detection" id="uart-bit-rate-detection">UART Bit Rate Detection</a></h1>
+<p id="rfc.section.A.1.1.p.1">When using a UART, the issue of an appropriate bit rate must be considered. A bitrate of 115200 bits per second has become a defacto standard baud rate for many serial peripherals. This rate, however, is slower than the theoretical maximum bitrate of the 802.15.4 2.4GHz PHY (250kbit). In most circumstances this mismatch is not significant because the overall bitrate will be much lower than either of these rates, but there are circumstances where a faster UART bitrate is desirable. Thus, this document proposes a simple bitrate detection scheme that can be employed by the host to detect when the attached NCP is initially running at a higher bitrate.  </p>
+<p id="rfc.section.A.1.1.p.2">The algorithm is to send successive NOOP commands to the NCP at increasing bitrates. When a valid <samp>CMD_LAST_STATUS</samp> response has been received, we have identified the correct bitrate.  </p>
+<p id="rfc.section.A.1.1.p.3">In order to limit the time spent hunting for the appropriate bitrate, we RECOMMEND that only the following bitrates be checked: </p>
+<p/>
+
+<ul>
+  <li>115200</li>
+  <li>230400</li>
+  <li>1000000 (1Mbit)</li>
+</ul>
+
+<p> </p>
+<p id="rfc.section.A.1.1.p.5">The bitrate MAY also be changed programmatically by adjusting <samp>PROP_UART_BITRATE</samp>, if implemented.  </p>
+<h1 id="rfc.appendix.A.1.2"><a href="#rfc.appendix.A.1.2">A.1.2.</a> <a href="#hdlc-lite" id="hdlc-lite">HDLC-Lite</a></h1>
 <p><em>HDLC-Lite</em> is the recommended framing protocol for transmitting Spinel frames over a UART. HDLC-Lite consists of only the framing, escaping, and CRC parts of the larger HDLC protocol---all other parts of HDLC are omitted. This protocol was chosen because it works well with software flow control and is widely implemented.  </p>
-<p id="rfc.section.A.1.1.p.2">To transmit a frame with HDLC-lite, the 16-bit CRC must first be appended to the frame. The CRC function is defined to be CRC-16/CCITT, otherwise known as the <a href="http://reveng.sourceforge.net/crc-catalogue/16.htm#crc.cat.kermit">KERMIT CRC</a>.  </p>
-<p id="rfc.section.A.1.1.p.3">Individual frames are terminated with a frame delimiter octet called the 'flag' octet (<samp>0x7E</samp>).  </p>
-<p id="rfc.section.A.1.1.p.4">The following octets values are considered <em>special</em> and should be escaped when present in data frames: </p>
+<p id="rfc.section.A.1.2.p.2">To transmit a frame with HDLC-lite, the 16-bit CRC must first be appended to the frame. The CRC function is defined to be CRC-16/CCITT, otherwise known as the <a href="http://reveng.sourceforge.net/crc-catalogue/16.htm#crc.cat.kermit">KERMIT CRC</a>.  </p>
+<p id="rfc.section.A.1.2.p.3">Individual frames are terminated with a frame delimiter octet called the 'flag' octet (<samp>0x7E</samp>).  </p>
+<p id="rfc.section.A.1.2.p.4">The following octets values are considered <em>special</em> and should be escaped when present in data frames: </p>
 <table cellpadding="3" cellspacing="0" class="tt full center">
   <thead>
     <tr>
@@ -2657,10 +2761,10 @@ STACK-NAME/STACK-VERSION[BUILD_INFO][; OTHER_INFO]; BUILD_DATE_AND_TIME
     </tr>
   </tbody>
 </table>
-<p id="rfc.section.A.1.1.p.5">When present in a data frame, these octet values are escaped by prepending the escape octet (<samp>0x7D</samp>) and XORing the value with <samp>0x20</samp>.  </p>
-<p id="rfc.section.A.1.1.p.6">When receiving a frame, the CRC must be verified after the frame is unescaped. If the CRC value does not match what is calculated for the frame data, the frame MUST be discarded. The implementation MAY indicate the failure to higher levels to handle as they see fit, but MUST NOT attempt to process the deceived frame.  </p>
-<p id="rfc.section.A.1.1.p.7">Consecutive flag octets are entirely legal and MUST NOT be treated as a framing error. Consecutive flag octets MAY be used as a way to wake up a sleeping NCP.  </p>
-<p id="rfc.section.A.1.1.p.8">When first establishing a connection to the NCP, it is customary to send one or more flag octets to ensure that any previously received data is discarded.  </p>
+<p id="rfc.section.A.1.2.p.5">When present in a data frame, these octet values are escaped by prepending the escape octet (<samp>0x7D</samp>) and XORing the value with <samp>0x20</samp>.  </p>
+<p id="rfc.section.A.1.2.p.6">When receiving a frame, the CRC must be verified after the frame is unescaped. If the CRC value does not match what is calculated for the frame data, the frame MUST be discarded. The implementation MAY indicate the failure to higher levels to handle as they see fit, but MUST NOT attempt to process the deceived frame.  </p>
+<p id="rfc.section.A.1.2.p.7">Consecutive flag octets are entirely legal and MUST NOT be treated as a framing error. Consecutive flag octets MAY be used as a way to wake up a sleeping NCP.  </p>
+<p id="rfc.section.A.1.2.p.8">When first establishing a connection to the NCP, it is customary to send one or more flag octets to ensure that any previously received data is discarded.  </p>
 <h1 id="rfc.appendix.A.2"><a href="#rfc.appendix.A.2">A.2.</a> <a href="#spi-recommendations" id="spi-recommendations">SPI Recommendations</a></h1>
 <p id="rfc.section.A.2.p.1">We RECOMMEND the use of the following standard SPI signals: </p>
 <p/>
@@ -2723,26 +2827,34 @@ STACK-NAME/STACK-VERSION[BUILD_INFO][; OTHER_INFO]; BUILD_DATE_AND_TIME
 <pre>
   0   1   2   3   4   5   6   7
 +---+---+---+---+---+---+---+---+
-|RST|CRC|    RESERVED   |PATTERN|
+|RST|CRC|CCF|  RESERVED |PATTERN|
 +---+---+---+---+---+---+---+---+
 </pre>
 <p/>
 
 <ul>
   <li><samp>RST</samp>: This bit is set when that device has been reset since the last time <samp>C&#773;S&#773;</samp> was asserted.</li>
-  <li><samp>CRC</samp>: This bit is set when that device supports writing a 16-bit CRC at the end of the data. This CRC is NOT included in DATA_LEN.</li>
+  <li><samp>CRC</samp>: This bit is set when that device supports writing a 16-bit CRC at the end of the data. The CRC length is NOT included in DATA_LEN.</li>
+  <li><samp>CCF</samp>: "CRC Check Failure". Set if the CRC check on the last received frame failed, cleared to zero otherwise. This bit is only used if both sides support CRC.</li>
   <li><samp>RESERVED</samp>: These bits are all reserved for future used. They MUST be cleared to zero and MUST be ignored if set.</li>
   <li><samp>PATTERN</samp>: These bits are set to a fixed value to help distinguish valid SPI frames from garbage (by explicitly making <samp>0xFF</samp> and <samp>0x00</samp> invalid values). Bit 6 MUST be set to be one and bit 7 MUST be cleared (0). A frame received that has any other values for these bits MUST be dropped.</li>
 </ul>
 
 <p> </p>
-<p id="rfc.section.A.2.1.p.5">Prior to a sending or receiving a frame, the master SHOULD send a 5-octet frame with zeros for both the max receive frame size and the the contained frame length. This will induce the slave device to indicate the length of the frame it wants to send (if any) and indicate the largest frame it is capable of receiving at the moment.  This allows the master to calculate the size of the next transaction.  </p>
+<p id="rfc.section.A.2.1.p.5">Prior to a sending or receiving a frame, the master MAY send a 5-octet frame with zeros for both the max receive frame size and the the contained frame length. This will induce the slave device to indicate the length of the frame it wants to send (if any) and indicate the largest frame it is capable of receiving at the moment.  This allows the master to calculate the size of the next transaction.  Alternatively, if the master has a frame to send it can just go ahead and send a frame of that length and determine if the frame was accepted by checking that the <samp>RECV_LEN</samp> from the slave frame is larger than the frame the master just tried to send. If the <samp>RECV_LEN</samp> is smaller then the frame wasn't accepted and will need to be transmitted again.  </p>
 <p id="rfc.section.A.2.1.p.6">This protocol can be used either unidirectionally or bidirectionally, determined by the behavior of the master and the slave.  </p>
 <p id="rfc.section.A.2.1.p.7">If the the master notices <samp>PATTERN</samp> is not set correctly, the master should consider the transaction to have failed and try again after 10 milliseconds, retrying up to 200 times. After unsuccessfully trying 200 times in a row, the master MAY take appropriate remedial action (like a NCP hardware reset, or indicating a communication failure to a user interface).  </p>
+<p id="rfc.section.A.2.1.p.8">At the end of the data of a frame is an optional 16-bit CRC, support for which is indicated by the <samp>CRC</samp> bit of the <samp>HDR</samp> byte being set. If these bits are set for both the master and slave frames, then CRC checking is enabled on both sides, effectively requiring that frame sizes be two bytes longer than would be otherwise required. The CRC is calculated using the same mechanism used for the CRC calculation in HDLC-Lite (See <a href="#hdlc-lite">Appendix A.1.2</a>).  When both of the <samp>CRC</samp> bits are set, both sides must verify that the <samp>CRC</samp> is valid before accepting the frame. If not enough bytes were clocked out for the CRC to be read, then the frame must be ignored. If enough bytes were clocked out to perform a CRC check, but the CRC check fails, then the frame must be rejected and the <samp>CRC_FAIL</samp> bit on the next frame (and ONLY the next frame) MUST be set.  </p>
 <h1 id="rfc.appendix.A.3"><a href="#rfc.appendix.A.3">A.3.</a> <a href="#i2c-recommendations" id="i2c-recommendations">I&#178;C Recommendations</a></h1>
 <p id="rfc.section.A.3.p.1">TBD </p>
+<p>
+  <a id="CREF4" class="info">[CREF4]<span class="info">RQ: It may make sense to have a look at what Bluetooth HCI is doing for native I&#178;C framing and go with that.</span></a>
+</p>
 <h1 id="rfc.appendix.A.4"><a href="#rfc.appendix.A.4">A.4.</a> <a href="#native-usb-recommendations" id="native-usb-recommendations">Native USB Recommendations</a></h1>
 <p id="rfc.section.A.4.p.1">TBD </p>
+<p>
+  <a id="CREF5" class="info">[CREF5]<span class="info">RQ: It may make sense to have a look at what Bluetooth HCI is doing for native USB framing and go with that.</span></a>
+</p>
 <h1 id="rfc.appendix.B"><a href="#rfc.appendix.B">Appendix B.</a> <a href="#feature-network-save" id="feature-network-save">Feature: Network Save</a></h1>
 <p id="rfc.section.B.p.1">The network save feature is an optional NCP capability that, when present, allows the host to save and recall network credentials and state to and from nonvolatile storage.  </p>
 <p id="rfc.section.B.p.2">The presence of this feature can be detected by checking for the presence of the <samp>CAP_NET_SAVE</samp> capability in <samp>PROP_CAPS</samp>.  </p>
@@ -3417,7 +3529,7 @@ STACK-NAME/STACK-VERSION[BUILD_INFO][; OTHER_INFO]; BUILD_DATE_AND_TIME
   </tbody>
 </table>
 <p>
-  <a id="CREF4" class="info">[CREF4]<span class="info">RQ: The PUI test-vector encodings need to be verified.</span></a>
+  <a id="CREF6" class="info">[CREF6]<span class="info">RQ: The PUI test-vector encodings need to be verified.</span></a>
 </p>
 <h1 id="rfc.appendix.F.2"><a href="#rfc.appendix.F.2">F.2.</a> <a href="#test-vector-reset-command" id="test-vector-reset-command">Test Vector: Reset Command</a></h1>
 <p/>
@@ -3470,12 +3582,12 @@ FE
 <h1 id="rfc.appendix.F.5"><a href="#rfc.appendix.F.5">F.5.</a> <a href="#test-vector-inbound-ipv6-packet" id="test-vector-inbound-ipv6-packet">Test Vector: Inbound IPv6 Packet</a></h1>
 <p id="rfc.section.F.5.p.1">CMD_VALUE_IS(PROP_STREAM_NET) </p>
 <p>
-  <a id="CREF5" class="info">[CREF5]<span class="info">RQ: FIXME: This test vector is incomplete.</span></a>
+  <a id="CREF7" class="info">[CREF7]<span class="info">RQ: FIXME: This test vector is incomplete.</span></a>
 </p>
 <h1 id="rfc.appendix.F.6"><a href="#rfc.appendix.F.6">F.6.</a> <a href="#test-vector-outbound-ipv6-packet" id="test-vector-outbound-ipv6-packet">Test Vector: Outbound IPv6 Packet</a></h1>
 <p id="rfc.section.F.6.p.1">CMD_VALUE_SET(PROP_STREAM_NET) </p>
 <p>
-  <a id="CREF6" class="info">[CREF6]<span class="info">RQ: FIXME: This test vector is incomplete.</span></a>
+  <a id="CREF8" class="info">[CREF8]<span class="info">RQ: FIXME: This test vector is incomplete.</span></a>
 </p>
 <h1 id="rfc.appendix.F.7"><a href="#rfc.appendix.F.7">F.7.</a> <a href="#test-vector-fetch-list-of-onmesh-networks" id="test-vector-fetch-list-of-onmesh-networks">Test Vector: Fetch list of on-mesh networks</a></h1>
 <p/>
@@ -3570,7 +3682,7 @@ FE
 01 ?? 01
 </pre>
 <p>
-  <a id="CREF7" class="info">[CREF7]<span class="info">RQ: FIXME: This test vector is incomplete.</span></a>
+  <a id="CREF9" class="info">[CREF9]<span class="info">RQ: FIXME: This test vector is incomplete.</span></a>
 </p>
 <h1 id="rfc.appendix.F.10"><a href="#rfc.appendix.F.10">F.10.</a> <a href="#test-vector-insertion-notification-of-an-onmesh-network" id="test-vector-insertion-notification-of-an-onmesh-network">Test Vector: Insertion notification of an on-mesh network</a></h1>
 <p/>
@@ -3608,7 +3720,7 @@ FE
 01 ?? 01
 </pre>
 <p>
-  <a id="CREF8" class="info">[CREF8]<span class="info">RQ: FIXME: This test vector is incomplete.</span></a>
+  <a id="CREF10" class="info">[CREF10]<span class="info">RQ: FIXME: This test vector is incomplete.</span></a>
 </p>
 <h1 id="rfc.appendix.F.11"><a href="#rfc.appendix.F.11">F.11.</a> <a href="#test-vector-removing-a-local-onmesh-network" id="test-vector-removing-a-local-onmesh-network">Test Vector: Removing a local on-mesh network</a></h1>
 <p/>
@@ -3645,7 +3757,7 @@ FE
 <h1 id="rfc.appendix.G"><a href="#rfc.appendix.G">Appendix G.</a> <a href="#example-sessions" id="example-sessions">Example Sessions</a></h1>
 <h1 id="rfc.appendix.G.1"><a href="#rfc.appendix.G.1">G.1.</a> <a href="#ncp-initialization" id="ncp-initialization">NCP Initialization</a></h1>
 <p>
-  <a id="CREF9" class="info">[CREF9]<span class="info">RQ: FIXME: This example session is incomplete.</span></a>
+  <a id="CREF11" class="info">[CREF11]<span class="info">RQ: FIXME: This example session is incomplete.</span></a>
 </p>
 <p id="rfc.section.G.1.p.2">Check the protocol version to see if it is supported: </p>
 <p/>
@@ -3702,7 +3814,7 @@ FE
 <p> </p>
 <h1 id="rfc.appendix.G.2"><a href="#rfc.appendix.G.2">G.2.</a> <a href="#attaching-to-a-network" id="attaching-to-a-network">Attaching to a network</a></h1>
 <p>
-  <a id="CREF10" class="info">[CREF10]<span class="info">RQ: FIXME: This example session is incomplete.</span></a>
+  <a id="CREF12" class="info">[CREF12]<span class="info">RQ: FIXME: This example session is incomplete.</span></a>
 </p>
 <p id="rfc.section.G.2.p.2">We make the assumption that the NCP is not currently associated with a network.  </p>
 <p id="rfc.section.G.2.p.3">Set the network properties, if they were not already set: </p>
@@ -3756,7 +3868,7 @@ FE
 <p> </p>
 <h1 id="rfc.appendix.G.3"><a href="#rfc.appendix.G.3">G.3.</a> <a href="#successfully-joining-a-preexisting-network" id="successfully-joining-a-preexisting-network">Successfully joining a pre-existing network</a></h1>
 <p>
-  <a id="CREF11" class="info">[CREF11]<span class="info">RQ: FIXME: This example session is incomplete.</span></a>
+  <a id="CREF13" class="info">[CREF13]<span class="info">RQ: FIXME: This example session is incomplete.</span></a>
 </p>
 <p id="rfc.section.G.3.p.2">This example session is identical to the above session up to the point where we set PROP_NET_IF_UP to true. From there, the behavior changes.  </p>
 <p/>
@@ -3826,7 +3938,7 @@ FE
 <p id="rfc.section.G.5.p.1">TBD </p>
 <h1 id="rfc.appendix.G.6"><a href="#rfc.appendix.G.6">G.6.</a> <a href="#attaching-to-a-saved-network" id="attaching-to-a-saved-network">Attaching to a saved network</a></h1>
 <p>
-  <a id="CREF12" class="info">[CREF12]<span class="info">RQ: FIXME: This example session is incomplete.</span></a>
+  <a id="CREF14" class="info">[CREF14]<span class="info">RQ: FIXME: This example session is incomplete.</span></a>
 </p>
 <p id="rfc.section.G.6.p.2">Recall the saved network if you haven't already done so: </p>
 <p/>
@@ -3866,7 +3978,7 @@ FE
 <p> </p>
 <h1 id="rfc.appendix.G.7"><a href="#rfc.appendix.G.7">G.7.</a> <a href="#ncp-software-reset" id="ncp-software-reset">NCP Software Reset</a></h1>
 <p>
-  <a id="CREF13" class="info">[CREF13]<span class="info">RQ: FIXME: This example session is incomplete.</span></a>
+  <a id="CREF15" class="info">[CREF15]<span class="info">RQ: FIXME: This example session is incomplete.</span></a>
 </p>
 <p/>
 
@@ -3883,7 +3995,7 @@ FE
 <p id="rfc.section.G.9.p.1">TBD </p>
 <h1 id="rfc.appendix.G.10"><a href="#rfc.appendix.G.10">G.10.</a> <a href="#sniffing-raw-packets" id="sniffing-raw-packets">Sniffing raw packets</a></h1>
 <p>
-  <a id="CREF14" class="info">[CREF14]<span class="info">RQ: FIXME: This example session is incomplete.</span></a>
+  <a id="CREF16" class="info">[CREF16]<span class="info">RQ: FIXME: This example session is incomplete.</span></a>
 </p>
 <p id="rfc.section.G.10.p.2">This assumes that the NCP has been initialized.  </p>
 <p id="rfc.section.G.10.p.3">Optionally set the channel: </p>
@@ -3935,7 +4047,7 @@ FE
 <p id="rfc.section.G.10.p.13">This mode may be entered even when associated with a network.  In that case, you should set <samp>PROP_MAC_PROMISCUOUS_MODE</samp> to <samp>MAC_PROMISCUOUS_MODE_PROMISCUOUS</samp> or <samp>MAC_PROMISCUOUS_MODE_NORMAL</samp>, so that you can avoid receiving packets from other networks or that are destined for other nodes.  </p>
 <h1 id="rfc.appendix.H"><a href="#rfc.appendix.H">Appendix H.</a> <a href="#glossary" id="glossary">Glossary</a></h1>
 <p>
-  <a id="CREF15" class="info">[CREF15]<span class="info">RQ: Alphabetize before finalization.</span></a>
+  <a id="CREF17" class="info">[CREF17]<span class="info">RQ: Alphabetize before finalization.</span></a>
 </p>
 <p/>
 
