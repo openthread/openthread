@@ -109,7 +109,7 @@ void Server::HandleUdpReceive(void *aContext, otMessage aMessage, const otMessag
 void Server::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
     Header header;
-    char uriPath[kMaxReceivedUriPath];
+    char uriPath[Resource::kMaxReceivedUriPath] = "";
     char *curUriPath = uriPath;
     const Header::Option *coapOption;
 
@@ -123,10 +123,15 @@ void Server::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessag
         switch (coapOption->mNumber)
         {
         case kCoapOptionUriPath:
-            VerifyOrExit(coapOption->mLength < sizeof(uriPath) - static_cast<size_t>(curUriPath - uriPath), ;);
+            if (curUriPath != uriPath)
+            {
+                *curUriPath++ = '/';
+            }
+
+            VerifyOrExit(coapOption->mLength < sizeof(uriPath) - static_cast<size_t>(curUriPath + 1 - uriPath), ;);
+
             memcpy(curUriPath, coapOption->mValue, coapOption->mLength);
-            curUriPath[coapOption->mLength] = '/';
-            curUriPath += coapOption->mLength + 1;
+            curUriPath += coapOption->mLength;
             break;
 
         case kCoapOptionContentFormat:
@@ -139,7 +144,7 @@ void Server::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessag
         coapOption = header.GetNextOption();
     }
 
-    curUriPath[-1] = '\0';
+    curUriPath[0] = '\0';
 
     for (Resource *resource = mResources; resource; resource = resource->mNext)
     {
