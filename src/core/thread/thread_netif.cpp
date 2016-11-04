@@ -58,6 +58,12 @@ ThreadNetif::ThreadNetif(Ip6::Ip6 &aIp6):
     mCoapServer(aIp6.mUdp, kCoapUdpPort),
     mCoapClient(*this),
     mAddressResolver(*this),
+#if OPENTHREAD_ENABLE_DHCP6_CLIENT
+    mDhcp6Client(*this),
+#endif  // OPENTHREAD_ENABLE_DHCP6_CLIENT
+#if OPENTHREAD_ENABLE_DHCP6_SERVER
+    mDhcp6Server(*this),
+#endif  // OPENTHREAD_ENABLE_DHCP6_SERVER
     mActiveDataset(*this),
     mPendingDataset(*this),
     mKeyManager(*this),

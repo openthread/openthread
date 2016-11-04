@@ -1369,12 +1369,26 @@ public:
     }
 
     /**
+     * This method indicates whether or not the TLV appears to be well-formed.
+     *
+     * @retval TRUE   If the TLV appears to be well-formed.
+     * @retval FALSE  If the TLV does not appear to be well-formed.
+     *
+     */
+    bool IsValid(void) const {
+        return
+            GetLength() == sizeof(*this) - sizeof(Tlv) &&
+            GetChannelPage() == 0 &&
+            GetMaskLength() == sizeof(mMask);
+    }
+
+    /**
      * This method returns the Channel Mask value.
      *
      * @returns The Channel Mask value.
      *
      */
-    uint32_t GetMask(void) { return Thread::Encoding::LittleEndian::HostSwap32(mMask); }
+    uint32_t GetMask(void) const { return Thread::Encoding::LittleEndian::HostSwap32(mMask); }
 
     /**
      * This method sets the Channel Mask value.

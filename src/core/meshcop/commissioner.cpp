@@ -63,6 +63,7 @@ Commissioner::Commissioner(ThreadNetif &aThreadNetif):
     mAnnounceBegin(aThreadNetif),
     mEnergyScan(aThreadNetif),
     mPanIdQuery(aThreadNetif),
+    mState(kStateDisabled),
     mTimer(aThreadNetif.GetIp6().mTimerScheduler, HandleTimer, this),
     mTransmitTask(aThreadNetif.GetIp6().mTaskletScheduler, &Commissioner::HandleUdpTransmit, this),
     mSendKek(false),

@@ -383,7 +383,7 @@ fi
 #
 
 AC_ARG_ENABLE(cli,
-    [AS_HELP_STRING([--enable-cli],[Enable CLI suport @<:@default=no@:>@.])],
+    [AS_HELP_STRING([--enable-cli],[Enable CLI support @<:@default=no@:>@.])],
     [
         case "${enableval}" in
 
@@ -405,7 +405,7 @@ AM_CONDITIONAL([OPENTHREAD_ENABLE_CLI], [test "${enable_cli}" = "yes"])
 #
 
 AC_ARG_ENABLE(ncp,
-    [AS_HELP_STRING([--enable-ncp[[=spi|uart]]],[Enable NCP suport @<:@default=no@:>@.])],
+    [AS_HELP_STRING([--enable-ncp[[=spi|uart]]],[Enable NCP support @<:@default=no@:>@.])],
     [
         case "${enableval}" in
 
@@ -462,7 +462,7 @@ AM_CONDITIONAL([OPENTHREAD_ENABLE_BUILTIN_MBEDTLS], [test "${enable_builtin_mbed
 #
 
 AC_ARG_ENABLE(commissioner,
-    [AS_HELP_STRING([--enable-commissioner],[Enable commissioner suport @<:@default=no@:>@.])],
+    [AS_HELP_STRING([--enable-commissioner],[Enable commissioner support @<:@default=no@:>@.])],
     [
         case "${enableval}" in
 
@@ -493,7 +493,7 @@ AC_DEFINE_UNQUOTED([OPENTHREAD_ENABLE_COMMISSIONER],[${OPENTHREAD_ENABLE_COMMISS
 #
 
 AC_ARG_ENABLE(joiner,
-    [AS_HELP_STRING([--enable-joiner],[Enable joiner suport @<:@default=no@:>@.])],
+    [AS_HELP_STRING([--enable-joiner],[Enable joiner support @<:@default=no@:>@.])],
     [
         case "${enableval}" in
 
@@ -537,7 +537,7 @@ AC_DEFINE_UNQUOTED([OPENTHREAD_ENABLE_DTLS],[${OPENTHREAD_ENABLE_DTLS}],[Define 
 #
 
 AC_ARG_ENABLE(diag,
-    [AS_HELP_STRING([--enable-diag],[Enable diagnostics suport @<:@default=no@:>@.])],
+    [AS_HELP_STRING([--enable-diag],[Enable diagnostics support @<:@default=no@:>@.])],
     [
         case "${enableval}" in
 
@@ -568,7 +568,7 @@ AC_DEFINE_UNQUOTED([OPENTHREAD_ENABLE_DIAG],[${OPENTHREAD_ENABLE_DIAG}],[Define 
 #
 
 AC_ARG_ENABLE(cli_logging,
-    [AS_HELP_STRING([--enable-cli-logging],[Enable cli logging suport @<:@default=no@:>@.])],
+    [AS_HELP_STRING([--enable-cli-logging],[Enable cli logging support @<:@default=no@:>@.])],
     [
         case "${enableval}" in
 
@@ -622,6 +622,66 @@ fi
 AC_SUBST(OPENTHREAD_ENABLE_CERT_LOG)
 AM_CONDITIONAL([OPENTHREAD_ENABLE_CERT_LOG], [test "${enable_cert_log}" = "yes"])
 AC_DEFINE_UNQUOTED([OPENTHREAD_ENABLE_CERT_LOG],[${OPENTHREAD_ENABLE_CERT_LOG}],[Define to 1 if you want to enable log for certification test])
+
+#
+# DHCPv6 Client
+#
+
+AC_ARG_ENABLE(dhcp6_client,
+    [AS_HELP_STRING([--enable-dhcp6-client],[Enable DHCPv6 client support @<:@default=no@:>@.])],
+    [
+        case "${enableval}" in
+
+        no|yes)
+            enable_dhcp6_client=${enableval}
+            ;;
+
+        *)
+            AC_MSG_ERROR([Invalid value ${enable_dhcp6_client} for --enable-dhcp6-client])
+            ;;
+        esac
+    ],
+    [enable_dhcp6_client=no])
+
+if test "$enable_dhcp6_client" = "yes"; then
+    OPENTHREAD_ENABLE_DHCP6_CLIENT=1
+else
+    OPENTHREAD_ENABLE_DHCP6_CLIENT=0
+fi
+
+AC_SUBST(OPENTHREAD_ENABLE_DHCP6_CLIENT)
+AM_CONDITIONAL([OPENTHREAD_ENABLE_DHCP6_CLIENT], [test "${enable_dhcp6_client}" = "yes"])
+AC_DEFINE_UNQUOTED([OPENTHREAD_ENABLE_DHCP6_CLIENT],[${OPENTHREAD_ENABLE_DHCP6_CLIENT}],[Define to 1 if you want to enable DHCPv6 Client])
+
+#
+# DHCPv6 Server
+#
+
+AC_ARG_ENABLE(dhcp6_server,
+    [AS_HELP_STRING([--enable-dhcp6-server],[Enable DHCPv6 server support @<:@default=no@:>@.])],
+    [
+        case "${enableval}" in
+
+        no|yes)
+            enable_dhcp6_server=${enableval}
+            ;;
+
+        *)
+            AC_MSG_ERROR([Invalid value ${enable_dhcp6_server} for --enable-dhcp6-server])
+            ;;
+        esac
+    ],
+    [enable_dhcp6_server=no])
+
+if test "$enable_dhcp6_server" = "yes"; then
+    OPENTHREAD_ENABLE_DHCP6_SERVER=1
+else
+    OPENTHREAD_ENABLE_DHCP6_SERVER=0
+fi
+
+AC_SUBST(OPENTHREAD_ENABLE_DHCP6_SERVER)
+AM_CONDITIONAL([OPENTHREAD_ENABLE_DHCP6_SERVER], [test "${enable_dhcp6_server}" = "yes"])
+AC_DEFINE_UNQUOTED([OPENTHREAD_ENABLE_DHCP6_SERVER],[${OPENTHREAD_ENABLE_DHCP6_SERVER}],[Define to 1 if you want to enable DHCPv6 Server])
 
 #
 # Examples
@@ -789,6 +849,7 @@ Makefile
 include/Makefile
 include/cli/Makefile
 include/commissioning/Makefile
+include/dhcp6/Makefile
 include/ncp/Makefile
 include/platform/Makefile
 src/Makefile
@@ -880,6 +941,8 @@ AC_MSG_NOTICE([
   OpenThread Diagnostics support            : ${enable_diag}
   OpenThread Cli logging support            : ${enable_cli_logging}
   OpenThread Certification log support      : ${enable_cert_log}
+  OpenThread DHCPv6 Server support          : ${enable_dhcp6_server}
+  OpenThread DHCPv6 Client support          : ${enable_dhcp6_client}
   OpenThread examples                       : ${OPENTHREAD_EXAMPLES}
   OpenThread platform information           : ${PLATFORM_INFO}
 

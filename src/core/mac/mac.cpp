@@ -1059,10 +1059,22 @@ ThreadError Mac::ProcessReceiveSecurity(Frame &aFrame, const Address &aSrcAddr, 
             ExitNow(error = kThreadError_Security);
         }
 
-        VerifyOrExit((keySequence > aNeighbor->mKeySequence) ||
-                     ((keySequence == aNeighbor->mKeySequence) &&
-                      (frameCounter >= aNeighbor->mValid.mLinkFrameCounter)),
-                     error = kThreadError_Security);
+        if (keySequence < aNeighbor->mKeySequence)
+        {
+            ExitNow(error = kThreadError_Security);
+        }
+        else if (keySequence == aNeighbor->mKeySequence)
+        {
+            if ((frameCounter + 1) < aNeighbor->mValid.mLinkFrameCounter)
+            {
+                ExitNow(error = kThreadError_Security);
+            }
+            else if ((frameCounter + 1) == aNeighbor->mValid.mLinkFrameCounter)
+            {
+                // drop duplicated packets
+                ExitNow(error = kThreadError_Duplicated);
+            }
+        }
 
         extAddress = &aSrcAddr.mExtAddress;
 
@@ -1108,15 +1120,6 @@ ThreadError Mac::ProcessReceiveSecurity(Frame &aFrame, const Address &aSrcAddr, 
     aFrame.SetSecurityValid(true);
 
 exit:
-
-    if (error != kThreadError_None)
-    {
-        for (Receiver *receiver = mReceiveHead; receiver; receiver = receiver->mNext)
-        {
-            receiver->HandleReceivedFrame(aFrame, kThreadError_Security);
-        }
-    }
-
     return error;
 }
 
@@ -1284,7 +1287,7 @@ void Mac::ReceiveDoneTask(Frame *aFrame, ThreadError aError)
 
         for (Receiver *receiver = mReceiveHead; receiver; receiver = receiver->mNext)
         {
-            receiver->HandleReceivedFrame(*aFrame, kThreadError_None);
+            receiver->HandleReceivedFrame(*aFrame);
         }
 
         break;
@@ -1324,6 +1327,10 @@ exit:
 
         case kThreadError_DestinationAddressFiltered:
             mCounters.mRxDestAddrFiltered++;
+            break;
+
+        case kThreadError_Duplicated:
+            mCounters.mRxDuplicated++;
             break;
 
         default:

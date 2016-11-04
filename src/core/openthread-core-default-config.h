@@ -126,6 +126,16 @@
 #endif  // OPENTHREAD_CONFIG_MAX_EXT_IP_ADDRS
 
 /**
+ * @def OPENTHREAD_CONFIG_MAX_EXT_MULTICAST_IP_ADDRS
+ *
+ * The maximum number of supported IPv6 multicast addresses allows to be externally added.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_MAX_EXT_MULTICAST_IP_ADDRS
+#define OPENTHREAD_CONFIG_MAX_EXT_MULTICAST_IP_ADDRS            2
+#endif  // OPENTHREAD_CONFIG_MAX_EXT_MULTICAST_IP_ADDRS
+
+/**
  * @def OPENTHREAD_CONFIG_6LOWPAN_REASSEMBLY_TIMEOUT
  *
  * The 6LoWPAN fragment reassembly timeout in seconds.
@@ -341,5 +351,25 @@
  *
  */
 #define OPENTHREAD_CONFIG_LOG_NETDIAG
+
+/**
+ * @def OPENTHREAD_CONFIG_NUM_DHCP_PREFIXES
+ *
+ * The number of dhcp prefixes.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_NUM_DHCP_PREFIXES
+#define OPENTHREAD_CONFIG_NUM_DHCP_PREFIXES                     4
+#endif  // OPENTHREAD_CONFIG_NUM_DHCP_PREFIXES
+
+/**
+ * @def OPENTHREAD_CONFIG_NUM_SLAAC_ADDRESSES
+ *
+ * The number of autoconfigured SLAAC addresses.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_NUM_SLAAC_ADDRESSES
+#define OPENTHREAD_CONFIG_NUM_SLAAC_ADDRESSES                   4
+#endif  // OPENTHREAD_CONFIG_NUM_SLAAC_ADDRESSES
 
 #endif  // OPENTHREAD_CORE_DEFAULT_CONFIG_H_

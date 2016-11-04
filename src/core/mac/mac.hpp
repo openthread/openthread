@@ -97,10 +97,9 @@ public:
      *
      * @param[in]  aContext  A pointer to arbitrary context information.
      * @param[in]  aFrame    A reference to the MAC frame.
-     * @param[in]  aError    Any errors that occurred during reception.
      *
      */
-    typedef void (*ReceiveFrameHandler)(void *aContext, Frame &aFrame, ThreadError aError);
+    typedef void (*ReceiveFrameHandler)(void *aContext, Frame &aFrame);
 
     /**
      * This constructor creates a MAC receiver client.
@@ -116,7 +115,7 @@ public:
     }
 
 private:
-    void HandleReceivedFrame(Frame &frame, ThreadError error) { mReceiveFrameHandler(mContext, frame, error); }
+    void HandleReceivedFrame(Frame &frame) { mReceiveFrameHandler(mContext, frame); }
 
     ReceiveFrameHandler mReceiveFrameHandler;
     void *mContext;

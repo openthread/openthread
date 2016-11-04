@@ -27,6 +27,7 @@
 #
 """ Unittest for spinel.codec module. """
 
+import time
 import unittest
 
 from spinel.const import SPINEL
@@ -69,3 +70,27 @@ class TestCodec(unittest.TestCase):
             # print "value "+util.hexify_str(value)
             # print "truth "+util.hexify_str(truth_value)
             self.failUnless(value == truth_value)
+
+    def cb_test_callback(self, prop, value, tid):
+        self.test_callback_pass = True
+
+    def test_callback(self):
+        """ Unit test of WpanApi.callback_register. """
+
+        vector = [
+            "800672340060000000000c3a40fe80000000000000020d6f00055715d3fddead00beef0000cd9bb7814c5619ea8100b0ca00000000267fc789"  # PROP_STREAM_NET
+        ]
+
+        mock_stream = MockStream({})
+        nodeid = 1
+        use_hdlc = False
+        wpan_api = WpanApi(mock_stream, nodeid, use_hdlc)
+
+        self.test_callback_pass = False
+        wpan_api.callback_register(SPINEL.PROP_STREAM_NET, self.cb_test_callback)
+
+        for pkt in vector:
+            mock_stream.write_child_hex(pkt)
+            time.sleep(0.1)
+
+        self.failUnless(self.test_callback_pass)

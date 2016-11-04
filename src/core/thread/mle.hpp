@@ -111,8 +111,9 @@ enum AlocAllocation
 {
     kAloc16Mask                         = 0xfc,
     kAloc16Leader                       = 0xfc00,
-    kAloc16DHCPv6AgentStart             = 0xfc01,
-    kAloc16DHCPv6AgentEnd               = 0xfc0f,
+    kAloc16DhcpAgentStart               = 0xfc01,
+    kAloc16DhcpAgentEnd                 = 0xfc0f,
+    kAloc16DhcpAgentMask                = 0x03ff,
     kAloc16ServiceStart                 = 0xfc10,
     kAloc16ServiceEnd                   = 0xfc2f,
     kAloc16CommissionerStart            = 0xfc30,
@@ -374,19 +375,23 @@ public:
     /**
      * This method starts the MLE protocol operation.
      *
+     * @param[in]  aEnableReattach  True to enable reattach process using stored dataset, False not.
+     *
      * @retval kThreadError_None     Successfully started the protocol operation.
      * @retval kThreadError_Already  The protocol operation was already started.
      *
      */
-    ThreadError Start(void);
+    ThreadError Start(bool aEnableReattach);
 
     /**
      * This method stops the MLE protocol operation.
      *
+     * @param[in]  aClearNetworkDatasets  True to clear network datasets, False not.
+     *
      * @retval kThreadError_None  Successfully stopped the protocol operation.
      *
      */
-    ThreadError Stop(void);
+    ThreadError Stop(bool aClearNetworkDatasets);
 
     /**
      * This function pointer is called on receiving an MLE Discovery Response message.
@@ -954,23 +959,25 @@ protected:
      * This method appends a Active Timestamp TLV to a message.
      *
      * @param[in]  aMessage  A reference to the message.
+     * @param[in]  aCouldUseLocal  Ture to use local Active Timestamp when network Active Timestamp is not available, False not.
      *
      * @retval kThreadError_None    Successfully appended the Active Timestamp TLV.
      * @retval kThreadError_NoBufs  Insufficient buffers available to append the Active Timestamp TLV.
      *
      */
-    ThreadError AppendActiveTimestamp(Message &aMessage);
+    ThreadError AppendActiveTimestamp(Message &aMessage, bool aCouldUseLocal);
 
     /**
      * This method appends a Pending Timestamp TLV to a message.
      *
      * @param[in]  aMessage  A reference to the message.
+     * @param[in]  aCouldUseLocal  Ture to use local Pending Timestamp when network Pending Timestamp is not available, False not.
      *
      * @retval kThreadError_None    Successfully appended the Pending Timestamp TLV.
      * @retval kThreadError_NoBufs  Insufficient buffers available to append the Pending Timestamp TLV.
      *
      */
-    ThreadError AppendPendingTimestamp(Message &aMessage);
+    ThreadError AppendPendingTimestamp(Message &aMessage, bool aCouldUseLocal);
 
     /**
      * This method appends a Thread Discovery TLV to a message.
@@ -1160,6 +1167,19 @@ protected:
     };
     ParentRequestState mParentRequestState;  ///< The parent request state.
 
+    /**
+     * States when reattaching network using stored dataset
+     *
+     */
+    enum ReattachState
+    {
+        kReattachStop       = 0,   ///< Reattach process is disabled or finished
+        kReattachStart      = 1,   ///< Start reattach process
+        kReattachActive     = 2,   ///< Reattach using stored Active Dataset
+        kReattachPending    = 3,   ///< Reattach using stored Pending Dataset
+    };
+    ReattachState mReattachState;
+
     Timer mParentRequestTimer;  ///< The timer for driving the Parent Request process.
 
     uint8_t mRouterSelectionJitter;         ///< The variable to save the assigned jitter value.
@@ -1235,7 +1255,6 @@ private:
 
     Ip6::NetifUnicastAddress mLeaderAloc;
 
-    Ip6::NetifUnicastAddress mLinkLocal16;
     Ip6::NetifUnicastAddress mLinkLocal64;
     Ip6::NetifUnicastAddress mMeshLocal64;
     Ip6::NetifUnicastAddress mMeshLocal16;

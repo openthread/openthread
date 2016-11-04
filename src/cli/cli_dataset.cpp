@@ -574,6 +574,8 @@ ThreadError Dataset::ProcessMgmtGetCommand(otInstance *aInstance, int argc, char
     uint8_t tlvs[32];
     long value;
     int length = 0;
+    bool destAddrSpecified = false;
+    otIp6Address address;
 
     VerifyOrExit(argc > 0, error = kThreadError_Parse);
 
@@ -628,6 +630,12 @@ ThreadError Dataset::ProcessMgmtGetCommand(otInstance *aInstance, int argc, char
                          error = kThreadError_Parse);
             length += value;
         }
+        else if (strcmp(argv[index], "address") == 0)
+        {
+            VerifyOrExit(index < argc, error = kThreadError_Parse);
+            SuccessOrExit(error = otIp6AddressFromString(argv[++index], &address));
+            destAddrSpecified = true;
+        }
         else
         {
             ExitNow(error = kThreadError_Parse);
@@ -636,11 +644,13 @@ ThreadError Dataset::ProcessMgmtGetCommand(otInstance *aInstance, int argc, char
 
     if (strcmp(argv[0], "active") == 0)
     {
-        SuccessOrExit(error = otSendActiveGet(aInstance, tlvs, static_cast<uint8_t>(length)));
+        SuccessOrExit(error = otSendActiveGet(aInstance, tlvs, static_cast<uint8_t>(length),
+                                              destAddrSpecified ? &address : NULL));
     }
     else if (strcmp(argv[0], "pending") == 0)
     {
-        SuccessOrExit(error = otSendPendingGet(aInstance, tlvs, static_cast<uint8_t>(length)));
+        SuccessOrExit(error = otSendPendingGet(aInstance, tlvs, static_cast<uint8_t>(length),
+                                               destAddrSpecified ? &address : NULL));
     }
     else
     {
