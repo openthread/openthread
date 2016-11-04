@@ -34,6 +34,7 @@ configuration:
 platform:
 - x64
 - x86
+- arm
 clone_depth: 10
 install:
     - cmd: Bcdedit.exe -set TESTSIGNING ON
@@ -53,7 +54,7 @@ after_build:
     - cmd: .appveyor\install_driver.cmd
 test_script:
     # Run the unit tests
-    - cmd: vstest.console /logger:Appveyor /inIsolation /platform:%Platform% build\bin\%Platform2%\%Configuration%\dll\UnitTests.dll
+    - cmd: .appveyor\run_unit_tests.cmd
     # Run the tests for the driver (only runs on x64)
     - cmd: .appveyor\test_driver.cmd
 artifacts:
