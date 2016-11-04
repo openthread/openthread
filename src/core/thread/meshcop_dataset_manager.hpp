@@ -81,6 +81,8 @@ protected:
 
     void Get(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
+    void HandleNetworkUpdate(uint8_t &aFlags);
+
     ThreadError Set(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
     Dataset mLocal;
@@ -97,8 +99,6 @@ private:
 
     static void HandleTimer(void *aContext);
     void HandleTimer(void);
-
-    void HandleNetworkUpdate(uint8_t &aFlags);
 
     ThreadError Register(void);
     void SendSetResponse(const Coap::Header &aRequestHeader, const Ip6::MessageInfo &aMessageInfo, StateTlv::State aState);
@@ -165,6 +165,8 @@ public:
 
     void UpdateDelayTimer(void);
 
+    void ApplyActiveDataset(const Timestamp &aTimestamp, Message &aMessage);
+
 private:
     static void HandleGet(void *aContext, Coap::Header &aHeader, Message &aMessage,
                           const Ip6::MessageInfo &aMessageInfo);
@@ -179,6 +181,8 @@ private:
 
     void ResetDelayTimer(uint8_t aFlags);
     void UpdateDelayTimer(Dataset &aDataset, uint32_t &aStartTime);
+
+    void HandleNetworkUpdate(uint8_t &aFlags);
 
     Coap::Resource mResourceGet;
     Coap::Resource mResourceSet;
