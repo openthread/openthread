@@ -152,11 +152,8 @@ ThreadError Frame::ValidatePsdu(void)
     uint16_t fcf;
     uint8_t footerLength = kFcsSize;
 
-    VerifyOrExit(GetPsduLength() > kFcfSize + kDsnSize, ;);
-
+    VerifyOrExit((offset += kFcfSize + kDsnSize) <= GetPsduLength(), ;);
     fcf = static_cast<uint16_t>((GetPsdu()[1] << 8) | GetPsdu()[0]);
-
-    offset += kFcfSize + kDsnSize;
 
     // Destinatinon PAN + Address
     switch (fcf & Frame::kFcfDstAddrMask)
@@ -165,12 +162,10 @@ ThreadError Frame::ValidatePsdu(void)
         break;
 
     case Frame::kFcfDstAddrShort:
-        VerifyOrExit((uint8_t)(GetPsduLength() - offset) > sizeof(PanId) + sizeof(ShortAddress), ;);
         offset += sizeof(PanId) + sizeof(ShortAddress);
         break;
 
     case Frame::kFcfDstAddrExt:
-        VerifyOrExit((uint8_t)(GetPsduLength() - offset) > sizeof(PanId) + sizeof(ExtAddress), ;);
         offset += sizeof(PanId) + sizeof(ExtAddress);
         break;
 
@@ -187,22 +182,18 @@ ThreadError Frame::ValidatePsdu(void)
     case Frame::kFcfSrcAddrShort:
         if ((fcf & Frame::kFcfPanidCompression) == 0)
         {
-            VerifyOrExit((uint8_t)(GetPsduLength() - offset) > sizeof(PanId), ;);
             offset += sizeof(PanId);
         }
 
-        VerifyOrExit((uint8_t)(GetPsduLength() - offset) > sizeof(ShortAddress), ;);
         offset += sizeof(ShortAddress);
         break;
 
     case Frame::kFcfSrcAddrExt:
         if ((fcf & Frame::kFcfPanidCompression) == 0)
         {
-            VerifyOrExit((uint8_t)(GetPsduLength() - offset) > sizeof(PanId), ;);
             offset += sizeof(PanId);
         }
 
-        VerifyOrExit((uint8_t)(GetPsduLength() - offset) > sizeof(ExtAddress), ;);
         offset += sizeof(ExtAddress);
         break;
 
@@ -210,33 +201,29 @@ ThreadError Frame::ValidatePsdu(void)
         goto exit;
     }
 
+    VerifyOrExit(offset <= GetPsduLength(), ;);
+
     // Security Header
     if (fcf & Frame::kFcfSecurityEnabled)
     {
-        VerifyOrExit((uint8_t)(GetPsduLength() - offset) > kSecurityControlSize + kFrameCounterSize, ;);
-
+        VerifyOrExit((offset += kSecurityControlSize + kFrameCounterSize) <= GetPsduLength(), ;);
         uint8_t secControl = GetPsdu()[offset];
-        offset += kSecurityControlSize + kFrameCounterSize;
 
         switch (secControl & kKeyIdModeMask)
         {
         case kKeyIdMode0:
-            VerifyOrExit((uint8_t)(GetPsduLength() - offset) > kKeySourceSizeMode0, ;);
             offset += kKeySourceSizeMode0;
             break;
 
         case kKeyIdMode1:
-            VerifyOrExit((uint8_t)(GetPsduLength() - offset) > kKeySourceSizeMode1 + kKeyIndexSize, ;);
             offset += kKeySourceSizeMode1 + kKeyIndexSize;
             break;
 
         case kKeyIdMode2:
-            VerifyOrExit((uint8_t)(GetPsduLength() - offset) > kKeySourceSizeMode2 + kKeyIndexSize, ;);
             offset += kKeySourceSizeMode2 + kKeyIndexSize;
             break;
 
         case kKeyIdMode3:
-            VerifyOrExit((uint8_t)(GetPsduLength() - offset) > kKeySourceSizeMode3 + kKeyIndexSize, ;);
             offset += kKeySourceSizeMode3 + kKeyIndexSize;
             break;
         }
@@ -268,12 +255,10 @@ ThreadError Frame::ValidatePsdu(void)
     // Command ID
     if ((fcf & kFcfFrameTypeMask) == kFcfFrameMacCmd)
     {
-        VerifyOrExit((uint8_t)(GetPsduLength() - offset) > kCommandIdSize, ;);
         offset += kCommandIdSize;
     }
 
-    // Footer length
-    VerifyOrExit((uint8_t)(GetPsduLength() - offset) >= footerLength, ;);
+    VerifyOrExit((offset + footerLength) <= GetPsduLength(), ;);
 
     error = kThreadError_None;
 

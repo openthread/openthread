@@ -198,7 +198,7 @@ void TestFuzz(uint32_t aSeconds)
 #ifdef ENABLE_TEST_MAIN
 int main(void)
 {
-    TestFuzz(10);
+    TestFuzz(0); // For the time being, don't actually fuzz, just validate we can start and clean up
     printf("All tests passed\n");
     return 0;
 }
