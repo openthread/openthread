@@ -1139,6 +1139,7 @@ void Mac::ReceiveDoneTask(Frame *aFrame, ThreadError aError)
     otMacWhitelistEntry *whitelistEntry;
     otMacBlacklistEntry *blacklistEntry;
     int8_t rssi;
+    bool receive = false;
     ThreadError error = aError;
 
     mCounters.mRxTotal++;
@@ -1257,9 +1258,10 @@ void Mac::ReceiveDoneTask(Frame *aFrame, ThreadError aError)
         break;
 
     default:
-        if (dstaddr.mLength != 0)
+        if (!mRxOnWhenIdle && dstaddr.mLength != 0)
         {
             mReceiveTimer.Stop();
+            otPlatRadioSleep(mNetif.GetInstance());
         }
 
         switch (aFrame->GetType())
@@ -1270,14 +1272,17 @@ void Mac::ReceiveDoneTask(Frame *aFrame, ThreadError aError)
                 ExitNow(error = kThreadError_None);
             }
 
+            receive = true;
             break;
 
         case Frame::kFcfFrameBeacon:
             mCounters.mRxBeacon++;
+            receive = true;
             break;
 
         case Frame::kFcfFrameData:
             mCounters.mRxData++;
+            receive = true;
             break;
 
         default:
@@ -1285,9 +1290,12 @@ void Mac::ReceiveDoneTask(Frame *aFrame, ThreadError aError)
             break;
         }
 
-        for (Receiver *receiver = mReceiveHead; receiver; receiver = receiver->mNext)
+        if (receive)
         {
-            receiver->HandleReceivedFrame(*aFrame);
+            for (Receiver *receiver = mReceiveHead; receiver; receiver = receiver->mNext)
+            {
+                receiver->HandleReceivedFrame(*aFrame);
+            }
         }
 
         break;
