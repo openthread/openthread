@@ -181,6 +181,46 @@ void MeshForwarder::ScheduleTransmissionTask(void *aContext)
     static_cast<MeshForwarder *>(aContext)->ScheduleTransmissionTask();
 }
 
+void MeshForwarder::UpdateIndirectMessages(void)
+{
+    Child *children;
+    uint8_t numChildren;
+
+    VerifyOrExit(mSendBusy == false,);
+
+    children = mMle.GetChildren(&numChildren);
+
+    for (uint8_t i = 0; i < numChildren; i++)
+    {
+        Child *child = &children[i];
+        Message *nextMessage;
+
+        if (child->mState == Child::kStateValid || child->mQueuedIndirectMessageCnt == 0)
+        {
+            continue;
+        }
+
+        for (Message *message = mSendQueue.GetHead(); message; message = nextMessage)
+        {
+            nextMessage = message->GetNext();
+
+            message->ClearChildMask(i);
+
+            if (!message->IsChildPending())
+            {
+                mSendQueue.Dequeue(*message);
+                message->Free();
+            }
+        }
+
+        child->mQueuedIndirectMessageCnt = 0;
+        ClearSrcMatchEntry(*child);
+    }
+
+exit:
+    return;
+}
+
 void MeshForwarder::ScheduleTransmissionTask()
 {
     ThreadError error = kThreadError_None;
@@ -188,6 +228,8 @@ void MeshForwarder::ScheduleTransmissionTask()
     Child *children;
 
     VerifyOrExit(mSendBusy == false, error = kThreadError_Busy);
+
+    UpdateIndirectMessages();
 
     children = mMle.GetChildren(&numChildren);
 

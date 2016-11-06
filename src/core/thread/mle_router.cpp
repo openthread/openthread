@@ -1701,12 +1701,28 @@ void MleRouter::HandleStateUpdateTimer(void)
     // update children state
     for (int i = 0; i < mMaxChildrenAllowed; i++)
     {
-        if (mChildren[i].mState == Neighbor::kStateInvalid)
+        uint32_t timeout = 0;
+
+        switch (mChildren[i].mState)
         {
+        case Neighbor::kStateInvalid:
+        case Neighbor::kStateChildIdRequest:
             continue;
+
+        case Neighbor::kStateParentRequest:
+            timeout = kMaxChildIdRequestTimeout;
+            break;
+
+        case Neighbor::kStateValid:
+            timeout = Timer::SecToMsec(mChildren[i].mTimeout);
+            break;
+
+        case Neighbor::kStateLinkRequest:
+            assert(false);
+            break;
         }
 
-        if ((Timer::GetNow() - mChildren[i].mLastHeard) >= Timer::SecToMsec(mChildren[i].mTimeout))
+        if ((Timer::GetNow() - mChildren[i].mLastHeard) >= timeout)
         {
             RemoveNeighbor(mChildren[i]);
         }
@@ -2565,6 +2581,7 @@ ThreadError MleRouter::RemoveNeighbor(Neighbor &aNeighbor)
     case kDeviceStateLeader:
         if (aNeighbor.mState == Neighbor::kStateValid && !IsActiveRouter(aNeighbor.mValid.mRloc16))
         {
+            mMesh.UpdateIndirectMessages();
             mNetif.SetStateChangedFlags(OT_THREAD_CHILD_REMOVED);
             mNetworkData.SendServerDataNotification(aNeighbor.mValid.mRloc16);
         }
