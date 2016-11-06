@@ -504,6 +504,14 @@ public:
      */
     void SetMatchingAddress(const Address &aAddress) { mMatchingAddress = &aAddress; }
 
+    /**
+     * This method returns a reference to the buffered message set.
+     *
+     * @returns A reference to the buffered message set.
+     *
+     */
+    const MessageQueue &GetBufferedMessageSet(void) const { return mBufferedMessageSet; }
+
 private:
     enum
     {

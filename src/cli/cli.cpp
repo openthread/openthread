@@ -67,6 +67,7 @@ const struct Command Interpreter::sCommands[] =
 {
     { "help", &Interpreter::ProcessHelp },
     { "blacklist", &Interpreter::ProcessBlacklist },
+    { "bufferinfo", &Interpreter::ProcessBufferInfo },
     { "channel", &Interpreter::ProcessChannel },
     { "child", &Interpreter::ProcessChild },
     { "childmax", &Interpreter::ProcessChildMax },
@@ -301,6 +302,27 @@ void Interpreter::ProcessBlacklist(int argc, char *argv[])
 
 exit:
     AppendResult(error);
+}
+
+void Interpreter::ProcessBufferInfo(int argc, char *argv[])
+{
+    otBufferInfo bufferInfo;
+    (void)argc;
+    (void)argv;
+
+    otGetMessageBufferInfo(mInstance, &bufferInfo);
+
+    sServer->OutputFormat("total: %d\r\n", bufferInfo.mTotalBuffers);
+    sServer->OutputFormat("free: %d\r\n", bufferInfo.mFreeBuffers);
+    sServer->OutputFormat("6lo send: %d %d\r\n", bufferInfo.m6loSendMessages, bufferInfo.m6loSendBuffers);
+    sServer->OutputFormat("6lo reas: %d %d\r\n", bufferInfo.m6loReassemblyMessages, bufferInfo.m6loReassemblyBuffers);
+    sServer->OutputFormat("ip6: %d %d\r\n", bufferInfo.mIp6Messages, bufferInfo.mIp6Buffers);
+    sServer->OutputFormat("mpl: %d %d\r\n", bufferInfo.mMplMessages, bufferInfo.mMplBuffers);
+    sServer->OutputFormat("mle: %d %d\r\n", bufferInfo.mMleMessages, bufferInfo.mMleBuffers);
+    sServer->OutputFormat("arp: %d %d\r\n", bufferInfo.mArpMessages, bufferInfo.mArpBuffers);
+    sServer->OutputFormat("coap: %d %d\r\n", bufferInfo.mCoapClientMessages, bufferInfo.mCoapClientBuffers);
+
+    AppendResult(kThreadError_None);
 }
 
 void Interpreter::ProcessChannel(int argc, char *argv[])
