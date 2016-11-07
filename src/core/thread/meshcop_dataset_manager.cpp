@@ -132,6 +132,14 @@ ThreadError DatasetManager::ApplyConfiguration(void)
             break;
         }
 
+        case Tlv::kSecurityPolicy:
+        {
+            const SecurityPolicyTlv *securityPolicy = static_cast<const SecurityPolicyTlv *>(cur);
+            mNetif.GetKeyManager().SetKeyRotation(securityPolicy->GetRotationTime());
+            mNetif.GetKeyManager().SetSecurityPolicyFlags(securityPolicy->GetFlags());
+            break;
+        }
+
         default:
         {
             break;
@@ -744,12 +752,30 @@ void DatasetManager::SendGetResponse(const Coap::Header &aRequestHeader, const I
 
     if (aLength == 0)
     {
-        SuccessOrExit(error = message->Append(mNetwork.GetBytes(), mNetwork.GetSize()));
+        const Tlv *cur = reinterpret_cast<const Tlv *>(mNetwork.GetBytes());
+        const Tlv *end = reinterpret_cast<const Tlv *>(mNetwork.GetBytes() + mNetwork.GetSize());
+
+        while (cur < end)
+        {
+            if (cur->GetType() != Tlv::kNetworkMasterKey ||
+                (mNetif.GetKeyManager().GetSecurityPolicyFlags() & OT_SECURITY_POLICY_OBTAIN_MASTER_KEY))
+            {
+                SuccessOrExit(error = message->Append(cur, sizeof(Tlv) + cur->GetLength()));
+            }
+
+            cur = cur->GetNext();
+        }
     }
     else
     {
         for (index = 0; index < aLength; index++)
         {
+            if (aTlvs[index] == Tlv::kNetworkMasterKey &&
+                !(mNetif.GetKeyManager().GetSecurityPolicyFlags() & OT_SECURITY_POLICY_OBTAIN_MASTER_KEY))
+            {
+                continue;
+            }
+
             if ((tlv = mNetwork.Get(static_cast<Tlv::Type>(aTlvs[index]))) != NULL)
             {
                 SuccessOrExit(error = message->Append(tlv, sizeof(Tlv) + tlv->GetLength()));
@@ -815,14 +841,12 @@ void ActiveDataset::StartLeader(void)
         // Master Key
         const uint8_t *key;
         uint8_t keyLength;
-
         key = mNetif.GetKeyManager().GetMasterKey(&keyLength);
         memcpy(dataset.mMasterKey.m8, key, keyLength);
         dataset.mIsMasterKeySet = true;
 
         // Network Name
         const char *name;
-
         name = mNetif.GetMac().GetNetworkName();
         memcpy(dataset.mNetworkName.m8, name, strlen(name));
         dataset.mIsNetworkNameSet = true;
@@ -830,6 +854,11 @@ void ActiveDataset::StartLeader(void)
         // Pan ID
         dataset.mPanId = mNetif.GetMac().GetPanId();
         dataset.mIsPanIdSet = true;
+
+        // Security Policy
+        dataset.mSecurityPolicy.mRotationTime = static_cast<uint16_t>(mNetif.GetKeyManager().GetKeyRotation());
+        dataset.mSecurityPolicy.mFlags = mNetif.GetKeyManager().GetSecurityPolicyFlags();
+        dataset.mIsSecurityPolicySet = true;
 
         mLocal.Set(dataset);
     }

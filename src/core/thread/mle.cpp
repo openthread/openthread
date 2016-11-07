@@ -2651,6 +2651,16 @@ ThreadError Mle::SendDiscoveryResponse(const Ip6::Address &aDestination, uint16_
     // Discovery Response TLV
     discoveryResponse.Init();
     discoveryResponse.SetVersion(kVersion);
+
+    if (mNetif.GetKeyManager().GetSecurityPolicyFlags() & OT_SECURITY_POLICY_NATIVE_COMMISSIONING)
+    {
+        discoveryResponse.SetNativeCommissioner(true);
+    }
+    else
+    {
+        discoveryResponse.SetNativeCommissioner(false);
+    }
+
     SuccessOrExit(error = message->Append(&discoveryResponse, sizeof(discoveryResponse)));
 
     // Extended PAN ID TLV
