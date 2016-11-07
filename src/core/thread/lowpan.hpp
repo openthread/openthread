@@ -72,6 +72,7 @@ struct Context
     const uint8_t *mPrefix;        ///< A pointer to the prefix.
     uint8_t        mPrefixLength;  ///< The prefix length.
     uint8_t        mContextId;     ///< The Context ID.
+    bool           mCompressFlag;  ///< The Context compression flag.
 };
 
 /**
