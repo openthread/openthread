@@ -93,12 +93,6 @@
     <ClCompile Include="..\..\src\core\mac\mac_whitelist.cpp">
       <Filter>Source Files\mac</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\core\net\dhcp6_client.cpp">
-      <Filter>Source Files\net</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\core\net\dhcp6_server.cpp">
-      <Filter>Source Files\net</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\src\core\net\icmp6.cpp">
       <Filter>Source Files\net</Filter>
     </ClCompile>
@@ -284,15 +278,6 @@
     <ClInclude Include="..\..\src\core\mac\mac_whitelist.hpp">
       <Filter>Header Files\mac</Filter>
     </ClInclude>
-    <ClCompile Include="..\..\src\core\net\dhcp6.hpp">
-      <Filter>Source Files\net</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\core\net\dhcp6_client.hpp">
-      <Filter>Source Files\net</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\core\net\dhcp6_server.hpp">
-      <Filter>Source Files\net</Filter>
-    </ClCompile>
     <ClInclude Include="..\..\src\core\net\icmp6.hpp">
       <Filter>Header Files\net</Filter>
     </ClInclude>
@@ -458,5 +443,11 @@
     <ClInclude Include="..\..\src\core\openthread-instance.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\src\core\net\dhcp6.cpp" />
+    <ClInclude Include="..\..\src\core\net\dhcp6_client.cpp" />
+    <ClInclude Include="..\..\src\core\net\dhcp6_server.cpp" />
+    <ClInclude Include="..\..\src\core\net\dhcp6.hpp" />
+    <ClInclude Include="..\..\src\core\net\dhcp6_client.hpp" />
+    <ClInclude Include="..\..\src\core\net\dhcp6_server.hpp" />
   </ItemGroup>
 </Project>
