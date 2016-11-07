@@ -481,7 +481,9 @@ ThreadError otPlatRadioTransmit(_In_ otInstance *otCtx, _In_ RadioPacket *aPacke
     NT_ASSERT(otCtx);
     PMS_FILTER pFilter = otCtxToFilter(otCtx);
     ThreadError error = kThreadError_Busy;
-    
+
+    UNREFERENCED_PARAMETER(aPacket);
+
     LogFuncEntryMsg(DRIVER_DATA_PATH, "Filter: %p", pFilter);
 
     NT_ASSERT(pFilter->otPhyState == kStateReceive);
