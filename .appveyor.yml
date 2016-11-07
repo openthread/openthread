@@ -53,9 +53,6 @@ after_build:
     # Install driver (only runs on x64)
     - cmd: .appveyor\install_driver.cmd
 test_script:
-    # Restart to make sure driver installed
-    - ps: Restart-Computer -Force
-    - ps: Start-Sleep -s 10
     # Run the unit tests
     - cmd: .appveyor\run_unit_tests.cmd
     # Run the tests for the driver (only runs on x64)
