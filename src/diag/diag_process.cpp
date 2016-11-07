@@ -378,6 +378,8 @@ extern "C" void otPlatDiagAlarmFired(otInstance *aInstance)
 
 extern "C" void otPlatDiagRadioTransmitDone(otInstance *aInstance, RadioPacket *aPacket, bool aRxPending, ThreadError aError)
 {
+    (void)aPacket;
+
     Diag::DiagTransmitDone(aInstance, aRxPending, aError);
 }
 
