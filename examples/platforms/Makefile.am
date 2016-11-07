@@ -50,15 +50,15 @@ if OPENTHREAD_EXAMPLES_CC2538
 SUBDIRS                                 = cc2538
 endif
 
-if OPENTHREAD_EXAMPLES_DA15100
+if OPENTHREAD_EXAMPLES_DA15000
 SUBDIRS                                 = da15000
 endif
 
 # Always pretty (e.g. for 'make pretty') these subdirectories.
 
 PRETTY_SUBDIRS                          = \
-    da15000                               \
     cc2538                                \
+    da15000                               \
     posix                                 \
     $(NULL)
 

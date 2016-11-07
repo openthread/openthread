@@ -42,7 +42,7 @@ OBJCOPY                         = arm-none-eabi-objcopy
 configure_OPTIONS               = \
     --enable-cli                  \
     --enable-ncp                  \
-    --with-examples=da15100       \
+    --with-examples=da15000       \
     $(NULL)
 
 COMMONCFLAGS                    = \

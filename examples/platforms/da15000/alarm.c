@@ -40,12 +40,12 @@
 
 static bool s_is_running = false;
 static uint32_t s_alarm = 0;
-static uint32_t counter_;
-volatile bool AlarmFired=false;
+static uint32_t s_counter;
+volatile bool s_alarm_fired=false;
 
 static void timer0_interrupt_cb(void)
 {
-    counter_++;
+    s_counter++;
 }
 
 void da15100AlarmProcess(otInstance *aInstance)
@@ -54,12 +54,12 @@ void da15100AlarmProcess(otInstance *aInstance)
 
     if (s_is_running)
     {
-        remaining = s_alarm - counter_;
+        remaining = s_alarm - s_counter;
 
         if (remaining <= 0)
         {
             s_is_running = false;
-            otPlatAlarmFired(aInstance);
+            otPlats_alarm_fired(aInstance);
         }
     }
 
@@ -80,7 +80,7 @@ void da15100AlarmInit(void)
 
 uint32_t otPlatAlarmGetNow(void)
 {
-    return counter_;
+    return s_counter;
 }
 
 void otPlatAlarmStartAt(otInstance *aInstance, uint32_t t0, uint32_t dt)
@@ -89,7 +89,7 @@ void otPlatAlarmStartAt(otInstance *aInstance, uint32_t t0, uint32_t dt)
     s_alarm = t0 + dt;
     s_is_running = true;
 
-    if(counter_== 0)
+    if(s_counter== 0)
         hw_timer0_enable();
 
 

@@ -165,16 +165,15 @@ void ad_ftdf_init_lmac() {
 
 
 
-ThreadError otPlatRadioSetPanId(otInstance *aInstance, uint16_t panid)
+void otPlatRadioSetPanId(otInstance *aInstance, uint16_t panid)
 {
     (void)aInstance;
 
     s_panid = panid;
     FTDF_setValue(FTDF_PIB_PAN_ID, &panid);
-    return kThreadError_None;
 }
 
-ThreadError otPlatRadioSetExtendedAddress(otInstance *aInstance, uint8_t *address)
+void otPlatRadioSetExtendedAddress(otInstance *aInstance, uint8_t *address)
 {
     (void)aInstance;
 
@@ -184,16 +183,14 @@ ThreadError otPlatRadioSetExtendedAddress(otInstance *aInstance, uint8_t *addres
     }
 
     FTDF_setValue( FTDF_PIB_EXTENDED_ADDRESS,  s_extended_address);
-    return kThreadError_None;
 }
 
-ThreadError otPlatRadioSetShortAddress(otInstance *aInstance, uint16_t address)
+void otPlatRadioSetShortAddress(otInstance *aInstance, uint16_t address)
 {
     (void)aInstance;
 
     s_short_address = address;
     FTDF_setValue(FTDF_PIB_SHORT_ADDRESS, &address);
-    return kThreadError_None;
 }
 
 
