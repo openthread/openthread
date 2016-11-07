@@ -174,6 +174,7 @@ int Lowpan::CompressDestinationIid(const Mac::Address &aMacAddr, const Ip6::Addr
 int Lowpan::CompressMulticast(const Ip6::Address &aIpAddr, uint16_t &aHcCtl, uint8_t *aBuf)
 {
     uint8_t *cur = aBuf;
+    Context multicastContext;
 
     aHcCtl |= kHcMulticast;
 
@@ -194,7 +195,7 @@ int Lowpan::CompressMulticast(const Ip6::Address &aIpAddr, uint16_t &aHcCtl, uin
                 memcpy(cur + 1, aIpAddr.mFields.m8 + 13, 3);
                 cur += 4;
             }
-            else if (i >= 9)
+            else if (i >= 11)
             {
                 aHcCtl |= kHcDstAddrMode1;
                 cur[0] = aIpAddr.mFields.m8[1];
@@ -203,8 +204,21 @@ int Lowpan::CompressMulticast(const Ip6::Address &aIpAddr, uint16_t &aHcCtl, uin
             }
             else
             {
-                memcpy(cur, aIpAddr.mFields.m8, sizeof(Ip6::Address));
-                cur += sizeof(Ip6::Address);
+                // Check if multicast address can be compressed using Context ID 0.
+                if (mNetworkData.GetContext(0, multicastContext) == kThreadError_None &&
+                    multicastContext.mPrefixLength == aIpAddr.mFields.m8[3] &&
+                    memcmp(multicastContext.mPrefix, aIpAddr.mFields.m8 + 4, 8) == 0)
+                {
+                    aHcCtl |= kHcDstAddrContext | kHcDstAddrMode0;
+                    memcpy(cur, aIpAddr.mFields.m8 + 1, 2);
+                    memcpy(cur + 2, aIpAddr.mFields.m8 + 12, 4);
+                    cur += 6;
+                }
+                else
+                {
+                    memcpy(cur, aIpAddr.mFields.m8, sizeof(Ip6::Address));
+                    cur += sizeof(Ip6::Address);
+                }
             }
 
             break;
@@ -223,16 +237,20 @@ int Lowpan::Compress(Message &aMessage, const Mac::Address &aMacSource, const Ma
     Context srcContext, dstContext;
     bool srcContextValid = true, dstContextValid = true;
     uint8_t nextHeader;
+    uint8_t ecn = 0;
+    uint8_t dscp = 0;
 
     aMessage.Read(aMessage.GetOffset(), sizeof(ip6Header), &ip6Header);
 
-    if (mNetworkData.GetContext(ip6Header.GetSource(), srcContext) != kThreadError_None)
+    if (mNetworkData.GetContext(ip6Header.GetSource(), srcContext) != kThreadError_None ||
+        srcContext.mCompressFlag == false)
     {
         mNetworkData.GetContext(0, srcContext);
         srcContextValid = false;
     }
 
-    if (mNetworkData.GetContext(ip6Header.GetDestination(), dstContext) != kThreadError_None)
+    if (mNetworkData.GetContext(ip6Header.GetDestination(), dstContext) != kThreadError_None ||
+        dstContext.mCompressFlag == false)
     {
         mNetworkData.GetContext(0, dstContext);
         dstContextValid = false;
@@ -251,8 +269,11 @@ int Lowpan::Compress(Message &aMessage, const Mac::Address &aMacSource, const Ma
         cur++;
     }
 
+    dscp = ((ip6HeaderBytes[0] << 2) & 0x3c) | (ip6HeaderBytes[1] >> 6);
+    ecn = (ip6HeaderBytes[1] << 2) & 0xc0;
+
     // Traffic Class
-    if (((ip6HeaderBytes[0] & 0x0f) == 0) && ((ip6HeaderBytes[1] & 0xf0) == 0))
+    if (dscp == 0)
     {
         hcCtl |= kHcTrafficClass;
     }
@@ -265,12 +286,16 @@ int Lowpan::Compress(Message &aMessage, const Mac::Address &aMacSource, const Ma
 
     if ((hcCtl & kHcTrafficFlowMask) != kHcTrafficFlow)
     {
-        cur[0] = ((ip6HeaderBytes[1] >> 4) << 6) & 0xff;
+        // Insert ECN at the beginning.
+        cur[0] = ecn;
 
         if ((hcCtl & kHcTrafficClass) == 0)
         {
-            cur[0] |= ((ip6HeaderBytes[0] & 0x0f) << 2) | (ip6HeaderBytes[1] >> 6);
+            cur[0] |= dscp;
             cur++;
+
+            // Clear next byte.
+            cur[0] = 0;
         }
 
         if ((hcCtl & kHcFlowLabel) == 0)
@@ -280,6 +305,11 @@ int Lowpan::Compress(Message &aMessage, const Mac::Address &aMacSource, const Ma
             cur[2] = ip6HeaderBytes[3];
             cur += 3;
         }
+    }
+    else if (ecn != 0)
+    {
+        cur[0] = ecn;
+        cur++;
     }
 
     // Next Header
@@ -703,17 +733,17 @@ int Lowpan::DecompressBaseHeader(Ip6::Header &ip6Header, const Mac::Address &aMa
         break;
     }
 
-    if ((hcCtl & kHcSrcAddrContext) == 0)
+    if ((hcCtl & kHcSrcAddrModeMask) != kHcSrcAddrMode0)
     {
-        if ((hcCtl & kHcSrcAddrModeMask) != 0)
+        if ((hcCtl & kHcSrcAddrContext) == 0)
         {
             ip6Header.GetSource().mFields.m16[0] = HostSwap16(0xfe80);
         }
-    }
-    else
-    {
-        VerifyOrExit(srcContextValid,);
-        CopyContext(srcContext, ip6Header.GetSource());
+        else
+        {
+            VerifyOrExit(srcContextValid,);
+            CopyContext(srcContext, ip6Header.GetSource());
+        }
     }
 
     if ((hcCtl & kHcMulticast) == 0)
@@ -723,6 +753,7 @@ int Lowpan::DecompressBaseHeader(Ip6::Header &ip6Header, const Mac::Address &aMa
         switch (hcCtl & kHcDstAddrModeMask)
         {
         case kHcDstAddrMode0:
+            VerifyOrExit((hcCtl & kHcDstAddrContext) == 0,);
             VerifyOrExit(remaining >= sizeof(Ip6::Address),);
             memcpy(&ip6Header.GetDestination(), cur, sizeof(ip6Header.GetDestination()));
             cur += sizeof(Ip6::Address);
@@ -1019,6 +1050,7 @@ int Lowpan::Decompress(Message &aMessage, const Mac::Address &aMacSource, const 
     compressed = (((static_cast<uint16_t>(cur[0]) << 8) | cur[1]) & kHcNextHeader) != 0;
 
     VerifyOrExit((rval = DecompressBaseHeader(ip6Header, aMacSource, aMacDest, cur, remaining)) >= 0,);
+
     cur += rval;
     remaining -= rval;
 
