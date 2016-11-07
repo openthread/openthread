@@ -88,7 +88,7 @@ Fields: | INTERFACE_TYPE
 This integer identifies what the network protocol for this NCP.
 Currently defined values are:
 
- *  1: ZigBee
+ *  0: Bootloader
  *  2: ZigBeeIP
  *  3: Thread
 
@@ -129,6 +129,7 @@ Currently defined values are:
  * 4: `CAP_POWER_SAVE`
  * 5: `CAP_COUNTERS`
  * 6: `CAP_JAM_DETECT`: Jamming detection. See (#feature-jam-detect)
+ * 7: `CAP_PEEK_POKE`: PEEK/POKE debugging commands.
  * 16: `CAP_802_15_4_2003`
  * 17: `CAP_802_15_4_2006`
  * 18: `CAP_802_15_4_2011`
@@ -208,8 +209,9 @@ Octets: |    8
 --------|------------
 Fields: | HWADDR
 
-The static EUI64 address of the device. This value is read-only, but
-may be writable under certain vendor-defined circumstances.
+The static EUI64 address of the device, used as a serial number.
+This value is read-only, but may be writable under certain
+vendor-defined circumstances.
 
 ### PROP 9: PROP_LOCK {#prop-lock}
 
