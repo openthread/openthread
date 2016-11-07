@@ -256,10 +256,12 @@ typedef enum _OTLWF_NOTIF_TYPE
     // GUID - InterfaceGuid
     // otShortAddress - aShortAddress
     
+/* NOT USED
 #define IOCTL_OTLWF_OT_UNICAST_ADDRESSES \
     OTLWF_CTL_CODE(120, METHOD_BUFFERED, FILE_READ_DATA)
     // GUID - InterfaceGuid
     // otNetifAddress[] - aAddresses
+*/
     
 #define IOCTL_OTLWF_OT_ACTIVE_DATASET \
     OTLWF_CTL_CODE(121, METHOD_BUFFERED, FILE_READ_DATA | FILE_WRITE_DATA)

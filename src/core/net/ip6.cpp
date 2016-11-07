@@ -131,6 +131,8 @@ ThreadError Ip6::AddMplOption(Message &message, Header &header)
     OptionMpl mplOption;
     OptionPadN padOption;
 
+    otLogFuncEntry();
+
     hbhHeader.SetNextHeader(header.GetNextHeader());
     hbhHeader.SetLength(0);
     mMpl.InitOption(mplOption, header.GetSource());
@@ -147,6 +149,7 @@ ThreadError Ip6::AddMplOption(Message &message, Header &header)
     header.SetPayloadLength(header.GetPayloadLength() + sizeof(hbhHeader) + sizeof(mplOption));
     header.SetNextHeader(kProtoHopOpts);
 exit:
+    otLogFuncExitErr(error);
     return error;
 }
 
@@ -184,6 +187,8 @@ ThreadError Ip6::InsertMplOption(Message &aMessage, Header &aIp6Header, MessageI
 {
     ThreadError error = kThreadError_None;
 
+    otLogFuncEntry();
+
     VerifyOrExit(aIp6Header.GetDestination().IsMulticast() &&
                  aIp6Header.GetDestination().GetScope() >= Address::kRealmLocalScope, ;);
 
@@ -196,6 +201,8 @@ ThreadError Ip6::InsertMplOption(Message &aMessage, Header &aIp6Header, MessageI
             HopByHopHeader hbh;
             uint8_t hbhLength = 0;
             OptionMpl mplOption;
+
+            otLogDebgIp6("Inserting MPL option");
 
             // read existing hop-by-hop option header
             aMessage.Read(0, sizeof(hbh), &hbh);
@@ -237,6 +244,8 @@ ThreadError Ip6::InsertMplOption(Message &aMessage, Header &aIp6Header, MessageI
     }
 
 exit:
+
+    otLogFuncExitErr(error);
     return error;
 }
 
@@ -452,6 +461,8 @@ ThreadError Ip6::HandleOptions(Message &message, Header &header, bool &forward)
     OptionHeader optionHeader;
     uint16_t endOffset;
 
+    otLogFuncEntry();
+
     message.Read(message.GetOffset(), sizeof(hbhHeader), &hbhHeader);
     endOffset = message.GetOffset() + (hbhHeader.GetLength() + 1) * 8;
 
@@ -501,6 +512,8 @@ ThreadError Ip6::HandleOptions(Message &message, Header &header, bool &forward)
     }
 
 exit:
+
+    otLogFuncExitMsg("forward=%d, %!otError!", (forward ? 1 : 0), error);
     return error;
 }
 
@@ -525,6 +538,8 @@ ThreadError Ip6::HandleExtensionHeaders(Message &message, Header &header, uint8_
 {
     ThreadError error = kThreadError_None;
     ExtensionHeader extensionHeader;
+
+    otLogFuncEntryMsg("forward=%d, receive=%d", (forward ? 1 : 0), (receive ? 1 : 0));
 
     while (receive == true || nextHeader == kProtoHopOpts)
     {
@@ -561,6 +576,8 @@ ThreadError Ip6::HandleExtensionHeaders(Message &message, Header &header, uint8_
     }
 
 exit:
+
+    otLogFuncExitErr(error);
     return error;
 }
 
@@ -649,7 +666,7 @@ ThreadError Ip6::HandleDatagram(Message &message, Netif *netif, int8_t interface
     uint8_t nextHeader;
     uint8_t hopLimit;
 
-    otLogFuncEntry();
+    otLogFuncEntryMsg("FromLocal=%u", (fromLocalHost ? 1 : 0));
 
 #if 0
     uint8_t buf[1024];

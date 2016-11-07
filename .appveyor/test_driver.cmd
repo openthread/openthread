@@ -34,6 +34,10 @@ REM Query the driver state
 
 sc query otlwf
 
+REM Run the basic driver test
+
+otTestRunner.exe ..\tests\scripts\thread-cert Test_otLwf* appveyor
+
 REM Grab the logs
 
 logman stop Thread -ets
