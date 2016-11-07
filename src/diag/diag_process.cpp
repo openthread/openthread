@@ -61,6 +61,8 @@ uint8_t Diag::sChannel;
 uint8_t Diag::sTxLen;
 uint32_t Diag::sTxPeriod;
 uint32_t Diag::sTxPackets;
+RadioPacket * Diag::sTxPacket;
+
 otInstance *Diag::sContext;
 
 void Diag::Init(otInstance *aInstance)
@@ -72,6 +74,7 @@ void Diag::Init(otInstance *aInstance)
     sTxLen = 0;
     sTxPackets = 0;
     memset(&sStats, 0, sizeof(struct DiagStats));
+    sTxPacket = otPlatRadioGetTransmitBuffer(sContext);
 }
 
 char *Diag::ProcessCmd(int argc, char *argv[])
@@ -174,23 +177,21 @@ ThreadError Diag::ParseLong(char *argv, long &value)
 
 void Diag::TxPacket()
 {
-    RadioPacket *packet = otPlatRadioGetTransmitBuffer(sContext);
-
     if (sTxPackets > 0)
     {
         sTxPackets--;
     }
 
-    packet->mLength = sTxLen;
-    packet->mChannel = sChannel;
-    packet->mPower = sTxPower;
+    sTxPacket->mLength = sTxLen;
+    sTxPacket->mChannel = sChannel;
+    sTxPacket->mPower = sTxPower;
 
     for (uint8_t i = 0; i < sTxLen; i++)
     {
-        packet->mPsdu[i] = i;
+        sTxPacket->mPsdu[i] = i;
     }
 
-    otPlatRadioTransmit(sContext);
+    otPlatRadioTransmit(sContext, sTxPacket);
 }
 
 void Diag::ProcessChannel(int argc, char *argv[], char *aOutput, size_t aOutputMaxLen)
@@ -375,7 +376,7 @@ extern "C" void otPlatDiagAlarmFired(otInstance *aInstance)
     Diag::AlarmFired(aInstance);
 }
 
-extern "C" void otPlatDiagRadioTransmitDone(otInstance *aInstance, bool aRxPending, ThreadError aError)
+extern "C" void otPlatDiagRadioTransmitDone(otInstance *aInstance, RadioPacket *aPacket, bool aRxPending, ThreadError aError)
 {
     Diag::DiagTransmitDone(aInstance, aRxPending, aError);
 }

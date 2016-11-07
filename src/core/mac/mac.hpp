@@ -648,6 +648,8 @@ private:
     Whitelist mWhitelist;
     Blacklist mBlacklist;
 
+    Frame *mTxFrame;
+
     otMacCounters mCounters;
 };
 

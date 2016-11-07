@@ -92,6 +92,7 @@ private:
     static uint8_t sTxLen;
     static uint32_t sTxPeriod;
     static uint32_t sTxPackets;
+    static RadioPacket *sTxPacket;
     static otInstance *sContext;
 };
 

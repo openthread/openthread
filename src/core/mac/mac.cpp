@@ -162,6 +162,7 @@ Mac::Mac(ThreadNetif &aThreadNetif):
     mPcapCallbackContext = NULL;
 
     otPlatRadioEnable(mNetif.GetInstance());
+    mTxFrame = static_cast<Frame *>(otPlatRadioGetTransmitBuffer(mNetif.GetInstance()));
 }
 
 ThreadError Mac::ActiveScan(uint32_t aScanChannels, uint16_t aScanDuration, ActiveScanHandler aHandler, void *aContext)
@@ -288,6 +289,7 @@ void Mac::EnergyScanDone(int8_t aEnergyScanMaxRssi)
         // and start the next transmission task
         if (mScanChannels == 0 || mScanChannel > kPhyMaxChannel)
         {
+            otPlatRadioReceive(mNetif.GetInstance(), mChannel);
             mEnergyScanHandler(mScanContext, NULL);
             ScheduleNextTransmission();
             ExitNow();
@@ -717,7 +719,7 @@ exit:
 
 void Mac::HandleBeginTransmit(void)
 {
-    Frame &sendFrame(*static_cast<Frame *>(otPlatRadioGetTransmitBuffer(mNetif.GetInstance())));
+    Frame &sendFrame(*mTxFrame);
     ThreadError error = kThreadError_None;
 
     if (mCsmaAttempts == 0 && mTransmitAttempts == 0)
@@ -761,7 +763,7 @@ void Mac::HandleBeginTransmit(void)
 
     error = otPlatRadioReceive(mNetif.GetInstance(), sendFrame.GetChannel());
     assert(error == kThreadError_None);
-    error = otPlatRadioTransmit(mNetif.GetInstance());
+    error = otPlatRadioTransmit(mNetif.GetInstance(), static_cast<RadioPacket *>(&sendFrame));
     assert(error == kThreadError_None);
 
     if (sendFrame.GetAckRequest() && !(otPlatRadioGetCaps(mNetif.GetInstance()) & kRadioCapsAckTimeout))
@@ -784,9 +786,11 @@ exit:
     }
 }
 
-extern "C" void otPlatRadioTransmitDone(otInstance *aInstance, bool aRxPending, ThreadError aError)
+extern "C" void otPlatRadioTransmitDone(otInstance *aInstance, RadioPacket *aPacket, bool aRxPending,
+                                        ThreadError aError)
 {
     otLogFuncEntryMsg("%!otError!, aRxPending=%u", aError, aRxPending ? 1 : 0);
+    (void)aPacket;
     aInstance->mThreadNetif.GetMac().TransmitDoneTask(aRxPending, aError);
     otLogFuncExit();
 }
@@ -842,8 +846,6 @@ void Mac::HandleMacTimer(void *aContext)
 
 void Mac::HandleMacTimer(void)
 {
-    otPlatRadioReceive(mNetif.GetInstance(), mChannel);
-
     switch (mState)
     {
     case kStateActiveScan:
@@ -854,6 +856,7 @@ void Mac::HandleMacTimer(void)
 
             if (mScanChannels == 0 || mScanChannel > kPhyMaxChannel)
             {
+                otPlatRadioReceive(mNetif.GetInstance(), mChannel);
                 otPlatRadioSetPanId(mNetif.GetInstance(), mPanId);
                 mActiveScanHandler(mScanContext, NULL);
                 ScheduleNextTransmission();
@@ -871,6 +874,7 @@ void Mac::HandleMacTimer(void)
 
     case kStateTransmitData:
         otLogDebgMac("ack timer fired");
+        otPlatRadioReceive(mNetif.GetInstance(), mChannel);
         mCounters.mTxTotal++;
         SentFrame(kThreadError_NoAck);
         break;
@@ -901,7 +905,7 @@ void Mac::HandleReceiveTimer(void)
 
 void Mac::SentFrame(ThreadError aError)
 {
-    Frame &sendFrame(*static_cast<Frame *>(otPlatRadioGetTransmitBuffer(mNetif.GetInstance())));
+    Frame &sendFrame(*mTxFrame);
     Sender *sender;
 
     switch (aError)
