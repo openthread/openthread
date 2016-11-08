@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="12.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Project="openthread.configuration.props" /> 
+  <Import Project="openthread.configuration.props" />
   <PropertyGroup Label="Globals">
     <ProjectGuid>{9B33C190-5D07-40BF-9536-68843DC5D7AF}</ProjectGuid>
     <TemplateGuid>{8c0e3d8b-df43-455b-815a-4a0e72973bc6}</TemplateGuid>
@@ -123,6 +123,7 @@
     <ClCompile Include="..\..\src\core\thread\thread_netif.cpp" />
     <ClCompile Include="..\..\src\core\thread\thread_tlvs.cpp" />
     <ClCompile Include="..\..\src\core\utils\slaac_address.cpp" />
+    <ClCompile Include="..\..\src\core\utils\jam_detector.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\include\openthread.h" />
@@ -200,6 +201,7 @@
     <ClInclude Include="..\..\src\core\thread\thread_uris.hpp" />
     <ClInclude Include="..\..\src\core\thread\topology.hpp" />
     <ClInclude Include="..\..\src\core\utils\slaac_address.hpp" />
+    <ClInclude Include="..\..\src\core\utils\jam_detector.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets" />

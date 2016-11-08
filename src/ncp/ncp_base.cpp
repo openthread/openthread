@@ -44,6 +44,9 @@
 #include <net/ip6.hpp>
 #include <openthread.h>
 #include <openthread-diag.h>
+#if OPENTHREAD_ENABLE_JAM_DETECTION
+#include <openthread-jam-detection.h>
+#endif
 #include <openthread-instance.h>
 #include <stdarg.h>
 #include <platform/radio.h>
@@ -160,6 +163,14 @@ const NcpBase::GetPropertyHandlerEntry NcpBase::mGetPropertyHandlerTable[] =
 
     { SPINEL_PROP_STREAM_NET, &NcpBase::GetPropertyHandler_STREAM_NET },
 
+#if OPENTHREAD_ENABLE_JAM_DETECTION
+    { SPINEL_PROP_JAM_DETECT_ENABLE, &NcpBase::GetPropertyHandler_JAM_DETECT_ENABLE },
+    { SPINEL_PROP_JAM_DETECTED, &NcpBase::GetPropertyHandler_JAM_DETECTED },
+    { SPINEL_PROP_JAM_DETECT_RSSI_THRESHOLD, &NcpBase::GetPropertyHandler_JAM_DETECT_RSSI_THRESHOLD },
+    { SPINEL_PROP_JAM_DETECT_WINDOW, &NcpBase::GetPropertyHandler_JAM_DETECT_WINDOW },
+    { SPINEL_PROP_JAM_DETECT_BUSY, &NcpBase::GetPropertyHandler_JAM_DETECT_BUSY },
+#endif
+
     { SPINEL_PROP_CNTR_TX_PKT_TOTAL, &NcpBase::GetPropertyHandler_MAC_CNTR },
     { SPINEL_PROP_CNTR_TX_PKT_ACK_REQ, &NcpBase::GetPropertyHandler_MAC_CNTR },
     { SPINEL_PROP_CNTR_TX_PKT_ACKED, &NcpBase::GetPropertyHandler_MAC_CNTR },
@@ -252,6 +263,13 @@ const NcpBase::SetPropertyHandlerEntry NcpBase::mSetPropertyHandlerTable[] =
     { SPINEL_PROP_NET_REQUIRE_JOIN_EXISTING, &NcpBase::SetPropertyHandler_NET_REQUIRE_JOIN_EXISTING },
     { SPINEL_PROP_THREAD_ROUTER_SELECTION_JITTER, &NcpBase::SetPropertyHandler_THREAD_ROUTER_SELECTION_JITTER },
     { SPINEL_PROP_THREAD_PREFERRED_ROUTER_ID, &NcpBase::SetPropertyHandler_THREAD_PREFERRED_ROUTER_ID },
+
+#if OPENTHREAD_ENABLE_JAM_DETECTION
+    { SPINEL_PROP_JAM_DETECT_ENABLE, &NcpBase::SetPropertyHandler_JAM_DETECT_ENABLE },
+    { SPINEL_PROP_JAM_DETECT_RSSI_THRESHOLD, &NcpBase::SetPropertyHandler_JAM_DETECT_RSSI_THRESHOLD },
+    { SPINEL_PROP_JAM_DETECT_WINDOW, &NcpBase::SetPropertyHandler_JAM_DETECT_WINDOW },
+    { SPINEL_PROP_JAM_DETECT_BUSY, &NcpBase::SetPropertyHandler_JAM_DETECT_BUSY },
+#endif
 
 #if OPENTHREAD_ENABLE_DIAG
     { SPINEL_PROP_NEST_STREAM_MFG, &NcpBase::SetPropertyHandler_NEST_STREAM_MFG },
@@ -444,6 +462,9 @@ NcpBase::NcpBase(otInstance *aInstance):
     mChannelMask = mSupportedChannelMask;
     mScanPeriod = 200; // ms
     mShouldSignalEndOfScan = false;
+#if OPENTHREAD_ENABLE_JAM_DETECTION
+    mShouldSignalJamStateChange = false;
+#endif
     sNcpContext = this;
     mChangedFlags = NCP_PLAT_RESET_REASON;
     mAllowLocalNetworkDataChange = false;
@@ -966,6 +987,22 @@ void NcpBase::HandleSpaceAvailableInTxBuffer(void)
         mShouldSignalEndOfScan = false;
     }
 
+#if OPENTHREAD_ENABLE_JAM_DETECTION
+    if (mShouldSignalJamStateChange)
+    {
+        SuccessOrExit(
+            SendPropertyUpdate(
+                SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0,
+                SPINEL_CMD_PROP_VALUE_IS,
+                SPINEL_PROP_JAM_DETECTED,
+                SPINEL_DATATYPE_BOOL_S,
+                otGetJamDetectionState(mInstance)
+        ));
+
+        mShouldSignalJamStateChange = false;
+    }
+#endif  // OPENTHREAD_ENABLE_JAM_DETECTION
+
     UpdateChangedProps();
 
 exit:
@@ -1433,6 +1470,10 @@ ThreadError NcpBase::GetPropertyHandler_CAPS(uint8_t header, spinel_prop_key_t k
     SuccessOrExit(errorCode = OutboundFrameFeedPacked(SPINEL_DATATYPE_UINT_PACKED_S, SPINEL_CAP_COUNTERS));
 
     SuccessOrExit(errorCode = OutboundFrameFeedPacked(SPINEL_DATATYPE_UINT_PACKED_S, SPINEL_CAP_MAC_WHITELIST));
+
+#if OPENTHREAD_ENABLE_JAM_DETECTION
+    SuccessOrExit(errorCode = OutboundFrameFeedPacked(SPINEL_DATATYPE_UINT_PACKED_S, SPINEL_CAP_JAM_DETECT));
+#endif
 
     // TODO: Somehow get the following capability from the radio.
     SuccessOrExit(errorCode = OutboundFrameFeedPacked(SPINEL_DATATYPE_UINT_PACKED_S,
@@ -2378,6 +2419,65 @@ ThreadError NcpBase::GetPropertyHandler_STREAM_NET(uint8_t header, spinel_prop_k
 
     return SendLastStatus(header, SPINEL_STATUS_UNIMPLEMENTED);
 }
+
+#if OPENTHREAD_ENABLE_JAM_DETECTION
+
+ThreadError NcpBase::GetPropertyHandler_JAM_DETECT_ENABLE(uint8_t header, spinel_prop_key_t key)
+{
+   return SendPropertyUpdate(
+               header,
+               SPINEL_CMD_PROP_VALUE_IS,
+               key,
+               SPINEL_DATATYPE_BOOL_S,
+               otIsJamDetectionEnabled(mInstance)
+           );
+}
+
+ThreadError NcpBase::GetPropertyHandler_JAM_DETECTED(uint8_t header, spinel_prop_key_t key)
+{
+   return SendPropertyUpdate(
+               header,
+               SPINEL_CMD_PROP_VALUE_IS,
+               key,
+               SPINEL_DATATYPE_BOOL_S,
+               otGetJamDetectionState(mInstance)
+           );
+}
+
+ThreadError NcpBase::GetPropertyHandler_JAM_DETECT_RSSI_THRESHOLD(uint8_t header, spinel_prop_key_t key)
+{
+    return SendPropertyUpdate(
+               header,
+               SPINEL_CMD_PROP_VALUE_IS,
+               key,
+               SPINEL_DATATYPE_INT8_S,
+               otGetJamDetectionRssiThreshold(mInstance)
+           );
+}
+
+ThreadError NcpBase::GetPropertyHandler_JAM_DETECT_WINDOW(uint8_t header, spinel_prop_key_t key)
+{
+    return SendPropertyUpdate(
+               header,
+               SPINEL_CMD_PROP_VALUE_IS,
+               key,
+               SPINEL_DATATYPE_UINT8_S,
+               otGetJamDetectionWindow(mInstance)
+           );
+}
+
+ThreadError NcpBase::GetPropertyHandler_JAM_DETECT_BUSY(uint8_t header, spinel_prop_key_t key)
+{
+    return SendPropertyUpdate(
+               header,
+               SPINEL_CMD_PROP_VALUE_IS,
+               key,
+               SPINEL_DATATYPE_UINT8_S,
+               otGetJamDetectionBusyPeriod(mInstance)
+           );
+}
+
+#endif // OPENTHREAD_ENABLE_JAM_DETECTION
 
 ThreadError NcpBase::GetPropertyHandler_MAC_CNTR(uint8_t header, spinel_prop_key_t key)
 {
@@ -4327,6 +4427,176 @@ ThreadError NcpBase::SetPropertyHandler_THREAD_NETWORK_ID_TIMEOUT(uint8_t header
 
     return errorCode;
 }
+
+#if OPENTHREAD_ENABLE_JAM_DETECTION
+
+ThreadError NcpBase::SetPropertyHandler_JAM_DETECT_ENABLE(uint8_t header, spinel_prop_key_t key,
+                                                          const uint8_t *value_ptr, uint16_t value_len)
+{
+    bool isEnabled;
+    spinel_ssize_t parsedLength;
+    ThreadError errorCode = kThreadError_None;
+
+    parsedLength = spinel_datatype_unpack(
+                       value_ptr,
+                       value_len,
+                       SPINEL_DATATYPE_BOOL_S,
+                       &isEnabled
+                   );
+
+    if (parsedLength > 0)
+    {
+        if (isEnabled)
+        {
+            otStartJamDetection(mInstance, &NcpBase::HandleJamStateChange_Jump, this);
+        }
+        else
+        {
+            otStopJamDetection(mInstance);
+        }
+
+        errorCode = HandleCommandPropertyGet(header, key);
+    }
+    else
+    {
+        errorCode = SendLastStatus(header, SPINEL_STATUS_PARSE_ERROR);
+    }
+
+    return errorCode;
+}
+
+ThreadError NcpBase::SetPropertyHandler_JAM_DETECT_RSSI_THRESHOLD(uint8_t header, spinel_prop_key_t key,
+                                                                  const uint8_t *value_ptr, uint16_t value_len)
+{
+    int8_t value = 0;
+    spinel_ssize_t parsedLength;
+    ThreadError errorCode = kThreadError_None;
+
+    parsedLength = spinel_datatype_unpack(
+                       value_ptr,
+                       value_len,
+                       SPINEL_DATATYPE_INT8_S,
+                       &value
+                   );
+
+    if (parsedLength > 0)
+    {
+        errorCode = otSetJamDetectionRssiThreshold(mInstance, value);
+
+        if (errorCode == kThreadError_None)
+        {
+            errorCode = HandleCommandPropertyGet(header, key);
+        }
+        else
+        {
+            errorCode = SendLastStatus(header, ThreadErrorToSpinelStatus(errorCode));
+        }
+    }
+    else
+    {
+        errorCode = SendLastStatus(header, SPINEL_STATUS_PARSE_ERROR);
+    }
+
+    return errorCode;
+}
+
+ThreadError NcpBase::SetPropertyHandler_JAM_DETECT_WINDOW(uint8_t header, spinel_prop_key_t key,
+                                                          const uint8_t *value_ptr, uint16_t value_len)
+{
+    uint8_t value = 0;
+    spinel_ssize_t parsedLength;
+    ThreadError errorCode = kThreadError_None;
+
+    parsedLength = spinel_datatype_unpack(
+                       value_ptr,
+                       value_len,
+                       SPINEL_DATATYPE_UINT8_S,
+                       &value
+                   );
+
+    if (parsedLength > 0)
+    {
+        errorCode = otSetJamDetectionWindow(mInstance, value);
+
+        if (errorCode == kThreadError_None)
+        {
+            errorCode = HandleCommandPropertyGet(header, key);
+        }
+        else
+        {
+            errorCode = SendLastStatus(header, ThreadErrorToSpinelStatus(errorCode));
+        }
+    }
+    else
+    {
+        errorCode = SendLastStatus(header, SPINEL_STATUS_PARSE_ERROR);
+    }
+
+    return errorCode;
+}
+
+ThreadError NcpBase::SetPropertyHandler_JAM_DETECT_BUSY(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr,
+                                                        uint16_t value_len)
+{
+    uint8_t value = 0;
+    spinel_ssize_t parsedLength;
+    ThreadError errorCode = kThreadError_None;
+
+    parsedLength = spinel_datatype_unpack(
+                       value_ptr,
+                       value_len,
+                       SPINEL_DATATYPE_UINT8_S,
+                       &value
+                   );
+
+    if (parsedLength > 0)
+    {
+        errorCode = otSetJamDetectionBusyPeriod(mInstance, value);
+
+        if (errorCode == kThreadError_None)
+        {
+            errorCode = HandleCommandPropertyGet(header, key);
+        }
+        else
+        {
+            errorCode = SendLastStatus(header, ThreadErrorToSpinelStatus(errorCode));
+        }
+    }
+    else
+    {
+        errorCode = SendLastStatus(header, SPINEL_STATUS_PARSE_ERROR);
+    }
+
+    return errorCode;
+}
+
+void NcpBase::HandleJamStateChange_Jump(bool aJamState, void *aContext)
+{
+    static_cast<NcpBase *>(aContext)->HandleJamStateChange(aJamState);
+}
+
+void NcpBase::HandleJamStateChange(bool aJamState)
+{
+    ThreadError errorCode;
+
+    errorCode = SendPropertyUpdate(
+        SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0,
+        SPINEL_CMD_PROP_VALUE_IS,
+        SPINEL_PROP_JAM_DETECTED,
+        SPINEL_DATATYPE_BOOL_S,
+        aJamState
+    );
+
+    // If we could not send the jam state change indicator (no
+    // buffer space), we set `mShouldSignalJamStateChange` to true to send
+    // it out when buffer space becomes available.
+    if (errorCode != kThreadError_None)
+    {
+        mShouldSignalJamStateChange = true;
+    }
+}
+
+#endif // OPENTHREAD_ENABLE_JAM_DETECTION
 
 #if OPENTHREAD_ENABLE_DIAG
 ThreadError NcpBase::SetPropertyHandler_NEST_STREAM_MFG(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr, uint16_t value_len)

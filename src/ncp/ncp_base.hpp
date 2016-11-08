@@ -167,6 +167,13 @@ private:
     void HandleEnergyScanResult(otEnergyScanResult *result);
 
     /**
+     * Trampoline for HandleJamStateChange().
+     */
+    static void HandleJamStateChange_Jump(bool aJamState, void *aContext);
+
+    void HandleJamStateChange(bool aJamState);
+
+    /**
      * Trampoline for UpdateChangedProps().
      */
     static void UpdateChangedProps(void *context);
@@ -346,6 +353,14 @@ private:
     ThreadError GetPropertyHandler_THREAD_ON_MESH_NETS(uint8_t header, spinel_prop_key_t key);
     ThreadError GetPropertyHandler_NET_REQUIRE_JOIN_EXISTING(uint8_t header, spinel_prop_key_t key);
 
+#if OPENTHREAD_ENABLE_JAM_DETECTION
+    ThreadError GetPropertyHandler_JAM_DETECT_ENABLE(uint8_t header, spinel_prop_key_t key);
+    ThreadError GetPropertyHandler_JAM_DETECTED(uint8_t header, spinel_prop_key_t key);
+    ThreadError GetPropertyHandler_JAM_DETECT_RSSI_THRESHOLD(uint8_t header, spinel_prop_key_t key);
+    ThreadError GetPropertyHandler_JAM_DETECT_WINDOW(uint8_t header, spinel_prop_key_t key);
+    ThreadError GetPropertyHandler_JAM_DETECT_BUSY(uint8_t header, spinel_prop_key_t key);
+#endif
+
 #if OPENTHREAD_ENABLE_LEGACY
     ThreadError GetPropertyHandler_NEST_LEGACY_ULA_PREFIX(uint8_t header, spinel_prop_key_t key);
 #endif
@@ -389,7 +404,7 @@ private:
     ThreadError SetPropertyHandler_IPV6_ICMP_PING_OFFLOAD(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr,
                                                   uint16_t value_len);
     ThreadError SetPropertyHandler_THREAD_RLOC16_DEBUG_PASSTHRU(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr,
-						       uint16_t value_len);
+                                                                uint16_t value_len);
     ThreadError SetPropertyHandler_PHY_ENABLED(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr,
                                                uint16_t value_len);
     ThreadError SetPropertyHandler_MAC_PROMISCUOUS_MODE(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr,
@@ -421,6 +436,13 @@ private:
                                                    const uint8_t *value_ptr, uint16_t value_len);
     ThreadError SetPropertyHandler_CNTR_RESET(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr,
                                               uint16_t value_len);
+
+#if OPENTHREAD_ENABLE_JAM_DETECTION
+    ThreadError SetPropertyHandler_JAM_DETECT_ENABLE(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr, uint16_t value_len);
+    ThreadError SetPropertyHandler_JAM_DETECT_RSSI_THRESHOLD(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr, uint16_t value_len);
+    ThreadError SetPropertyHandler_JAM_DETECT_WINDOW(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr, uint16_t value_len);
+    ThreadError SetPropertyHandler_JAM_DETECT_BUSY(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr, uint16_t value_len);
+#endif
 
 #if OPENTHREAD_ENABLE_DIAG
     ThreadError SetPropertyHandler_NEST_STREAM_MFG(uint8_t header, spinel_prop_key_t key, const uint8_t *value_ptr,
@@ -478,6 +500,10 @@ private:
     uint32_t mChangedFlags;
 
     bool mShouldSignalEndOfScan;
+
+#if OPENTHREAD_ENABLE_JAM_DETECTION
+    bool mShouldSignalJamStateChange;
+#endif
 
     spinel_tid_t mDroppedReplyTid;
 

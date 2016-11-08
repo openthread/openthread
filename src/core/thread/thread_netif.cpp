@@ -83,11 +83,15 @@ ThreadNetif::ThreadNetif(Ip6::Ip6 &aIp6):
 #if OPENTHREAD_ENABLE_JOINER
     mJoiner(*this),
 #endif  // OPENTHREAD_ENABLE_JOINER
+#if OPENTHREAD_ENABLE_JAM_DETECTION
+    mJamDetector(*this),
+#endif // OPENTHREAD_ENABLE_JAM_DETECTTION
     mJoinerRouter(*this),
     mLeader(*this),
     mAnnounceBegin(*this),
     mPanIdQuery(*this),
     mEnergyScan(*this)
+
 {
     mKeyManager.SetMasterKey(kThreadMasterKey, sizeof(kThreadMasterKey));
 }

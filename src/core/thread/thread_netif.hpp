@@ -64,6 +64,10 @@
 #include <thread/network_data_local.hpp>
 #include <thread/panid_query_server.hpp>
 
+#if OPENTHREAD_ENABLE_JAM_DETECTION
+#include <utils/jam_detector.hpp>
+#endif // OPENTHREAD_ENABLE_JAM_DETECTION
+
 #if OPENTHREAD_ENABLE_COMMISSIONER
 #include <meshcop/commissioner.hpp>
 #endif  // OPENTHREAD_ENABLE_COMMISSIONER
@@ -288,6 +292,16 @@ public:
     MeshCoP::Joiner &GetJoiner(void) { return mJoiner; }
 #endif  // OPENTHREAD_ENABLE_JOINER
 
+#if OPENTHREAD_ENABLE_JAM_DETECTION
+    /**
+     * This method returns the jam detector instance.
+     *
+     * @returns Reference to the JamDetector instance.
+     *
+     */
+    Utils::JamDetector &GetJamDetector(void) { return mJamDetector; }
+#endif // OPENTHREAD_ENABLE_JAM_DETECTION
+
     /**
      * This method returns the pointer to the parent otInstance structure.
      *
@@ -331,11 +345,16 @@ private:
     MeshCoP::Joiner mJoiner;
 #endif  // OPENTHREAD_ENABLE_JOINER
 
+#if OPENTHREAD_ENABLE_JAM_DETECTION
+    Utils::JamDetector mJamDetector;
+#endif // OPENTHREAD_ENABLE_JAM_DETECTION
+
     MeshCoP::JoinerRouter mJoinerRouter;
     MeshCoP::Leader mLeader;
     AnnounceBeginServer mAnnounceBegin;
     PanIdQueryServer mPanIdQuery;
     EnergyScanServer mEnergyScan;
+
 };
 
 /**

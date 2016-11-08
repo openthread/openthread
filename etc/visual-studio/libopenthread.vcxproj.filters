@@ -225,6 +225,9 @@
     <ClCompile Include="..\..\src\core\utils\slaac_address.cpp">
       <Filter>Source Files\utils</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\core\utils\jam_detector.cpp">
+      <Filter>Source Files\utils</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\src\core\meshcop\announce_begin_client.cpp">
       <Filter>Source Files\meshcop</Filter>
     </ClCompile>
@@ -435,6 +438,9 @@
       <Filter>Header Files\crypto</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\core\utils\slaac_address.hpp">
+      <Filter>Header Files\utils</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\core\utils\jam_detector.hpp">
       <Filter>Header Files\utils</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\core\meshcop\announce_begin_client.hpp">

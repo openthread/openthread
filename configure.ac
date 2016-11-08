@@ -533,6 +533,37 @@ AM_CONDITIONAL([OPENTHREAD_ENABLE_DTLS], [test "${enable_dtls}" = "yes"])
 AC_DEFINE_UNQUOTED([OPENTHREAD_ENABLE_DTLS],[${OPENTHREAD_ENABLE_DTLS}],[Define to 1 to enable dtls support.])
 
 #
+# Jam Detection
+#
+
+AC_ARG_ENABLE(jam_detection,
+    [AS_HELP_STRING([--enable-jam-detection],[Enable Jam Detection support @<:@default=no@:>@.])],
+    [
+        case "${enableval}" in
+
+        no|yes)
+            enable_jam_detection=${enableval}
+            ;;
+
+        *)
+            AC_MSG_ERROR([Invalid value ${enable_jam_detection} for --enable-jam-detection])
+            ;;
+        esac
+    ],
+    [enable_jam_detection=no])
+
+if test "$enable_jam_detection" = "yes"; then
+    OPENTHREAD_ENABLE_JAM_DETECTION=1
+else
+    OPENTHREAD_ENABLE_JAM_DETECTION=0
+fi
+
+AC_MSG_RESULT(${enable_jam_detection})
+AC_SUBST(OPENTHREAD_ENABLE_JAM_DETECTION)
+AM_CONDITIONAL([OPENTHREAD_ENABLE_JAM_DETECTION], [test "${enable_jam_detection}" = "yes"])
+AC_DEFINE_UNQUOTED([OPENTHREAD_ENABLE_JAM_DETECTION],[${OPENTHREAD_ENABLE_JAM_DETECTION}],[Define to 1 if you want to use jam detection feature])
+
+#
 # Diagnostics Library
 #
 
@@ -969,6 +1000,7 @@ AC_MSG_NOTICE([
   OpenThread Commissioner support           : ${enable_commissioner}
   OpenThread Joiner support                 : ${enable_joiner}
   OpenThread DTLS support                   : ${enable_dtls}
+  OpenThread Jam Detection support          : ${enable_jam_detection}
   OpenThread Diagnostics support            : ${enable_diag}
   OpenThread Legacy network support         : ${enable_legacy}
   OpenThread Cli logging support            : ${enable_cli_logging}

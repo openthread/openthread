@@ -123,6 +123,12 @@ libopenthread_a_SOURCES            += \
     $(NULL)
 endif  # OPENTHREAD_ENABLE_DHCP6_SERVER
 
+if OPENTHREAD_ENABLE_JAM_DETECTION
+libopenthread_a_SOURCES            += \
+    utils/jam_detector.cpp            \
+    $(NULL)
+endif  # OPENTHREAD_ENABLE_DHCP6_SERVER
+
 noinst_HEADERS                      = \
     openthread-core-config.h          \
     openthread-core-default-config.h  \
@@ -199,6 +205,7 @@ noinst_HEADERS                      = \
     thread/thread_uris.hpp            \
     thread/topology.hpp               \
     utils/slaac_address.hpp           \
+    utils/jam_detector.hpp            \
     $(NULL)
 
 if OPENTHREAD_BUILD_COVERAGE
