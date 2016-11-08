@@ -1780,8 +1780,6 @@ void MeshForwarder::HandleDataRequest(const Mac::Address &aMacSource, const Thre
     child->mLastHeard = Timer::GetNow();
     child->mLinkFailures = 0;
 
-    mMle.HandleMacDataRequest(*child);
-
     if (child->mQueuedIndirectMessageCnt > 0)
     {
         child->mDataRequest = true;

@@ -2276,6 +2276,35 @@ ThreadError MleRouter::HandleNetworkDataUpdateRouter(void)
 
     SendDataResponse(destination, tlvs, sizeof(tlvs));
 
+    for (uint8_t i = 0; i < mMaxChildrenAllowed; i++)
+    {
+        Child *child = &mChildren[i];
+
+        if (child->mState != Neighbor::kStateValid || (child->mMode & ModeTlv::kModeRxOnWhenIdle) != 0)
+        {
+            continue;
+        }
+
+        memset(&destination, 0, sizeof(destination));
+        destination.mFields.m16[0] = HostSwap16(0xfe80);
+        destination.SetIid(child->mMacAddr);
+
+        if (child->mMode & ModeTlv::kModeFullNetworkData)
+        {
+            if (child->mNetworkDataVersion != mNetworkData.GetVersion())
+            {
+                SendDataResponse(destination, tlvs, sizeof(tlvs));
+            }
+        }
+        else
+        {
+            if (child->mNetworkDataVersion != mNetworkData.GetStableVersion())
+            {
+                SendDataResponse(destination, tlvs, sizeof(tlvs));
+            }
+        }
+    }
+
 exit:
     return kThreadError_None;
 }
@@ -2857,36 +2886,6 @@ ThreadError MleRouter::SetPreferredRouterId(uint8_t aRouterId)
 
 exit:
     return error;
-}
-
-void MleRouter::HandleMacDataRequest(const Child &aChild)
-{
-    static const uint8_t tlvs[] = {Tlv::kLeaderData, Tlv::kNetworkData};
-    Ip6::Address destination;
-
-    VerifyOrExit(aChild.mState == Neighbor::kStateValid && (aChild.mMode & ModeTlv::kModeRxOnWhenIdle) == 0, ;);
-
-    memset(&destination, 0, sizeof(destination));
-    destination.mFields.m16[0] = HostSwap16(0xfe80);
-    destination.SetIid(aChild.mMacAddr);
-
-    if (aChild.mMode & ModeTlv::kModeFullNetworkData)
-    {
-        if (aChild.mNetworkDataVersion != mNetworkData.GetVersion())
-        {
-            SendDataResponse(destination, tlvs, sizeof(tlvs));
-        }
-    }
-    else
-    {
-        if (aChild.mNetworkDataVersion != mNetworkData.GetStableVersion())
-        {
-            SendDataResponse(destination, tlvs, sizeof(tlvs));
-        }
-    }
-
-exit:
-    {}
 }
 
 Router *MleRouter::GetRouters(uint8_t *aNumRouters)
