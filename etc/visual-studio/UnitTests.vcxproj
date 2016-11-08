@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Project="openthread.configuration.props" /> 
+  <Import Project="openthread.configuration.props" />
   <PropertyGroup Label="Globals">
     <ProjectGuid>{FD64BF17-8D36-4578-8D13-77B123BE30D3}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
@@ -80,14 +80,13 @@
     <ClCompile Include="..\..\tests\unit\test_timer.cpp" />
     <ClCompile Include="..\..\tests\unit\test_toolchain.cpp" />
     <ClCompile Include="..\..\tests\unit\test_util.cpp" />
-    <ClCompile Include="..\..\tests\unit\test_vector.c" />
     <ClCompile Include="..\..\tests\unit\test_windows.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\tests\unit\test_platform.h" />
+    <ClInclude Include="..\..\tests\unit\test_lowpan.hpp" />
     <ClInclude Include="..\..\tests\unit\test_util.h" />
     <ClInclude Include="..\..\tests\unit\test_util.hpp" />
-    <ClInclude Include="..\..\tests\unit\test_vector.h" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="libopenthread-ncp-uart.vcxproj">

@@ -55,7 +55,7 @@ void otTestPrintHex(uint8_t *aBuffer, int aLength)
 
         if (i % 16 == 7) { printf(" "); }
 
-        if (i % 16 == 15) { printf("\n"); }
+        if (i % 16 == 15 && aLength != i + 1) { printf("\n"); }
     }
 
     printf("\n");
@@ -70,5 +70,3 @@ void otTestPrintHex(std::vector<uint8_t> &aBytes)
 {
     otTestPrintHex((uint8_t *)&aBytes[0], static_cast<int>(aBytes.size()));
 }
-
-
