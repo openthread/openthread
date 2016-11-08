@@ -358,7 +358,6 @@ void Joiner::HandleJoinerEntrust(Coap::Header &aHeader, Message &aMessage, const
     NetworkNameTlv networkName;
     ActiveTimestampTlv activeTimestamp;
 
-
     otLogFuncEntry();
 
     VerifyOrExit(aHeader.GetType() == kCoapTypeConfirmable &&

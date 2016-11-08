@@ -91,7 +91,7 @@ class Node:
             cmd = './ot-ncp'
         cmd += ' %d' % nodeid
         print ("%s" % cmd)
-        
+
         self.pexpect = pexpect.spawn(cmd, timeout=4)
         self.Api = None
 
@@ -663,7 +663,7 @@ class Node:
                 cmd += ' ' + str(size)
 
             self.send_command(cmd)
-        
+
             result = True
             try:
                 responders = {}
