@@ -115,6 +115,11 @@ ThreadError ThreadNetif::Down(void)
     mMeshForwarder.Stop();
     mIp6.RemoveNetif(*this);
     mIsUp = false;
+
+#if OPENTHREAD_ENABLE_DTLS
+    mDtls.Stop();
+#endif
+
     return kThreadError_None;
 }
 

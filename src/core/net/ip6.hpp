@@ -330,6 +330,14 @@ public:
      */
     otInstance *GetInstance();
 
+    /**
+     * This method returns a reference to the send queue.
+     *
+     * @returns A reference to the send queue.
+     *
+     */
+    const MessageQueue &GetSendQueue(void) const { return mSendQueue; }
+
     Routes mRoutes;
     Icmp mIcmp;
     Udp mUdp;

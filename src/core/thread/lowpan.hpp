@@ -142,12 +142,13 @@ public:
      * @param[in]   aMacSource    The MAC source address.
      * @param[in]   aMacDest      The MAC destination address.
      * @param[in]   aBuf          A pointer to the LOWPAN_IPHC header.
+     * @param[in]   aBufLength    The number of bytes in @p aBuf.
      *
      * @returns The size of the compressed header in bytes.
      *
      */
     int DecompressBaseHeader(Ip6::Header &aHeader, const Mac::Address &aMacSource, const Mac::Address &aMacDest,
-                             const uint8_t *aBuf);
+                             const uint8_t *aBuf, uint16_t aBufLength);
 
 private:
     enum

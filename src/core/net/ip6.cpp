@@ -463,14 +463,20 @@ ThreadError Ip6::HandleOptions(Message &message, Header &header, bool &forward)
 
     otLogFuncEntry();
 
-    message.Read(message.GetOffset(), sizeof(hbhHeader), &hbhHeader);
+    VerifyOrExit(message.Read(message.GetOffset(), sizeof(hbhHeader), &hbhHeader) == sizeof(hbhHeader),
+                 error = kThreadError_Drop);
     endOffset = message.GetOffset() + (hbhHeader.GetLength() + 1) * 8;
+
+    VerifyOrExit(endOffset <= message.GetLength(), error = kThreadError_Drop);
 
     message.MoveOffset(sizeof(optionHeader));
 
     while (message.GetOffset() < endOffset)
     {
-        message.Read(message.GetOffset(), sizeof(optionHeader), &optionHeader);
+        VerifyOrExit(message.Read(message.GetOffset(), sizeof(optionHeader), &optionHeader) == sizeof(optionHeader),
+                     error = kThreadError_Drop);
+        VerifyOrExit(message.GetOffset() + sizeof(optionHeader) + optionHeader.GetLength() <= endOffset,
+                     error = kThreadError_Drop);
 
         switch (optionHeader.GetType())
         {
@@ -522,7 +528,8 @@ ThreadError Ip6::HandleFragment(Message &message)
     ThreadError error = kThreadError_None;
     FragmentHeader fragmentHeader;
 
-    message.Read(message.GetOffset(), sizeof(fragmentHeader), &fragmentHeader);
+    VerifyOrExit(message.Read(message.GetOffset(), sizeof(fragmentHeader), &fragmentHeader) == sizeof(fragmentHeader),
+                 error = kThreadError_Drop);
 
     VerifyOrExit(fragmentHeader.GetOffset() == 0 && fragmentHeader.IsMoreFlagSet() == false,
                  error = kThreadError_Drop);
@@ -537,15 +544,14 @@ ThreadError Ip6::HandleExtensionHeaders(Message &message, Header &header, uint8_
                                         bool receive)
 {
     ThreadError error = kThreadError_None;
-    ExtensionHeader extensionHeader;
+    ExtensionHeader extHeader;
 
     otLogFuncEntryMsg("forward=%d, receive=%d", (forward ? 1 : 0), (receive ? 1 : 0));
 
     while (receive == true || nextHeader == kProtoHopOpts)
     {
-        VerifyOrExit(message.GetOffset() <= message.GetLength(), error = kThreadError_Drop);
-
-        message.Read(message.GetOffset(), sizeof(extensionHeader), &extensionHeader);
+        VerifyOrExit(message.Read(message.GetOffset(), sizeof(extHeader), &extHeader) == sizeof(extHeader),
+                     error = kThreadError_Drop);
 
         switch (nextHeader)
         {
@@ -572,7 +578,7 @@ ThreadError Ip6::HandleExtensionHeaders(Message &message, Header &header, uint8_
             ExitNow();
         }
 
-        nextHeader = static_cast<uint8_t>(extensionHeader.GetNextHeader());
+        nextHeader = static_cast<uint8_t>(extHeader.GetNextHeader());
     }
 
 exit:
@@ -675,8 +681,7 @@ ThreadError Ip6::HandleDatagram(Message &message, Netif *netif, int8_t interface
 #endif
 
     // check message length
-    VerifyOrExit(message.GetLength() >= sizeof(header), error = kThreadError_Drop);
-    message.Read(0, sizeof(header), &header);
+    VerifyOrExit(message.Read(0, sizeof(header), &header) == sizeof(header), error = kThreadError_Drop);
     payloadLength = header.GetPayloadLength();
 
     // check Version

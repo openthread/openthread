@@ -107,6 +107,8 @@ ThreadError Commissioner::Stop(void)
 
     mTimer.Stop();
 
+    mNetif.GetDtls().Stop();
+
     SendKeepAlive();
 
 exit:

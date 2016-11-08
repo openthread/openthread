@@ -829,6 +829,29 @@ typedef enum
     /** Format: `L` (Read-only) */
     SPINEL_PROP_CNTR_RX_SPINEL_ERR     = SPINEL_PROP_CNTR__BEGIN + 302,
 
+    /// The message buffer counter info
+    /** Format: `T(SSSSSSSSSSSSSSSS)` (Read-only)
+     *  `T(`
+     *      `S`, (TotalBuffers)           The number of buffers in the pool.
+     *      `S`, (FreeBuffers)            The number of free message buffers.
+     *      `S`, (6loSendMessages)        The number of messages in the 6lo send queue.
+     *      `S`, (6loSendBuffers)         The number of buffers in the 6lo send queue.
+     *      `S`, (6loReassemblyMessages)  The number of messages in the 6LoWPAN reassembly queue.
+     *      `S`, (6loReassemblyBuffers)   The number of buffers in the 6LoWPAN reassembly queue.
+     *      `S`, (Ip6Messages)            The number of messages in the IPv6 send queue.
+     *      `S`, (Ip6Buffers)             The number of buffers in the IPv6 send queue.
+     *      `S`, (MplMessages)            The number of messages in the MPL send queue.
+     *      `S`, (MplBuffers)             The number of buffers in the MPL send queue.
+     *      `S`, (MleMessages)            The number of messages in the MLE send queue.
+     *      `S`, (MleBuffers)             The number of buffers in the MLE send queue.
+     *      `S`, (ArpMessages)            The number of messages in the ARP send queue.
+     *      `S`, (ArpBuffers)             The number of buffers in the ARP send queue.
+     *      `S`, (CoapClientMessages)     The number of messages in the CoAP client send queue.
+     *      `S`, (CoapClientBuffers)      The number of buffers in the CoAP client send queue.
+     *  `)`
+     */
+    SPINEL_PROP_MSG_BUFFER_COUNTERS    = SPINEL_PROP_CNTR__BEGIN + 400,
+
     SPINEL_PROP_CNTR__END       = 2048,
 
     SPINEL_PROP_NEST__BEGIN         = 15296,

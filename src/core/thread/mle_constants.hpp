@@ -62,6 +62,7 @@ enum
     kParentResponseMaxDelayRouters = 500,   ///< Maximum delay for response for Parent Request sent to routers only
     kParentResponseMaxDelayAll     = 1000,  ///< Maximum delay for response for Parent Request sent to all devices
     kMaxResponseDelay              = 1000,  ///< Maximum delay before responding to a multicast request
+    kMaxChildIdRequestTimeout      = 5000,  ///< Maximum delay for receiving a Child ID Request
 };
 
 enum

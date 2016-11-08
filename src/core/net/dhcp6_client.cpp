@@ -513,9 +513,7 @@ void Dhcp6Client::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aM
     Dhcp6Header header;
     (void)aMessageInfo;
 
-    VerifyOrExit(aMessage.GetLength() - aMessage.GetOffset() >= static_cast<uint16_t>(sizeof(Dhcp6Header)), ;);
-
-    aMessage.Read(aMessage.GetOffset(), sizeof(header), &header);
+    VerifyOrExit(aMessage.Read(aMessage.GetOffset(), sizeof(header), &header) == sizeof(header),);
     aMessage.MoveOffset(sizeof(header));
 
     if ((header.GetType() == kTypeReply) && (!memcmp(header.GetTransactionId(), mTransactionId, kTransactionIdSize)))
@@ -561,7 +559,7 @@ uint16_t Dhcp6Client::FindOption(Message &aMessage, uint16_t aOffset, uint16_t a
     while (aOffset <= end)
     {
         Dhcp6Option option;
-        aMessage.Read(aOffset, sizeof(option), &option);
+        VerifyOrExit(aMessage.Read(aOffset, sizeof(option), &option) == sizeof(option),);
 
         if (option.GetCode() == (aCode))
         {
@@ -571,6 +569,7 @@ uint16_t Dhcp6Client::FindOption(Message &aMessage, uint16_t aOffset, uint16_t a
         aOffset += sizeof(option) + option.GetLength();
     }
 
+exit:
     return 0;
 }
 

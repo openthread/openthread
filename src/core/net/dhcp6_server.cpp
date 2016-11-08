@@ -254,9 +254,7 @@ void Dhcp6Server::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aM
     Dhcp6Header header;
     otIp6Address dst = aMessageInfo.mPeerAddr;
 
-    VerifyOrExit(aMessage.GetLength() - aMessage.GetOffset() >= static_cast<uint16_t>(sizeof(Dhcp6Header)), ;);
-
-    aMessage.Read(aMessage.GetOffset(), sizeof(header), &header);
+    VerifyOrExit(aMessage.Read(aMessage.GetOffset(), sizeof(header), &header) == sizeof(header),);
     aMessage.MoveOffset(sizeof(header));
 
     // discard if not solicit type
@@ -309,7 +307,7 @@ uint16_t Dhcp6Server::FindOption(Message &aMessage, uint16_t aOffset, uint16_t a
     while (aOffset <= end)
     {
 	Dhcp6Option option;
-	aMessage.Read(aOffset, sizeof(option), &option);
+	VerifyOrExit(aMessage.Read(aOffset, sizeof(option), &option) == sizeof(option),);
 
 	if (option.GetCode() == aCode)
 	{
@@ -319,6 +317,7 @@ uint16_t Dhcp6Server::FindOption(Message &aMessage, uint16_t aOffset, uint16_t a
 	aOffset += sizeof(option) + option.GetLength();
     }
 
+exit:
     return 0;
 }
 ThreadError Dhcp6Server::ProcessClientIdentifier(Message &aMessage, uint16_t aOffset, ClientIdentifier &aClient)
@@ -350,7 +349,7 @@ ThreadError Dhcp6Server::ProcessIaNa(Message &aMessage, uint16_t aOffset, IaNa &
 {
     ThreadError error = kThreadError_None;
     uint16_t optionOffset;
-    int length;
+    uint16_t length;
 
     VerifyOrExit((aMessage.Read(aOffset, sizeof(aIaNa), &aIaNa) == sizeof(aIaNa)), error = kThreadError_Parse);
 

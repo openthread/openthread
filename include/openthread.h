@@ -1925,6 +1925,15 @@ OTAPI ThreadError OTCALL otSendDiagnosticReset(otInstance *aInstance, const otIp
 OTAPI const otMacCounters *OTCALL otGetMacCounters(otInstance *aInstance);
 
 /**
+ * Get the Message Buffer information.
+ *
+ * @param[in]   aInstance    A pointer to the OpenThread instance.
+ * @param[out]  aBufferInfo  A pointer where the message buffer information is written.
+ *
+ */
+OTAPI void OTCALL otGetMessageBufferInfo(otInstance *aInstance, otBufferInfo *aBufferInfo);
+
+/**
  * @}
  *
  */

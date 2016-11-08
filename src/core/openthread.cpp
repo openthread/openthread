@@ -66,9 +66,6 @@ static otDEFINE_ALIGNED_VAR(sInstanceRaw, sizeof(otInstance), uint64_t);
 otInstance *sInstance = NULL;
 #endif
 
-void OT_CDECL operator delete(void *, size_t) throw() { }
-void OT_CDECL operator delete(void *) throw() { }
-
 otInstance::otInstance(void) :
     mReceiveIp6DatagramCallback(NULL),
     mReceiveIp6DatagramCallbackContext(NULL),
@@ -897,6 +894,34 @@ const otMacCounters *otGetMacCounters(otInstance *aInstance)
     return &aInstance->mThreadNetif.GetMac().GetCounters();
 }
 
+void otGetMessageBufferInfo(otInstance *aInstance, otBufferInfo *aBufferInfo)
+{
+    aBufferInfo->mTotalBuffers = OPENTHREAD_CONFIG_NUM_MESSAGE_BUFFERS;
+
+    aBufferInfo->mFreeBuffers = aInstance->mThreadNetif.GetIp6().mMessagePool.GetFreeBufferCount();
+
+    aInstance->mThreadNetif.GetMeshForwarder().GetSendQueue().GetInfo(aBufferInfo->m6loSendMessages,
+                                                                      aBufferInfo->m6loSendBuffers);
+
+    aInstance->mThreadNetif.GetMeshForwarder().GetReassemblyQueue().GetInfo(aBufferInfo->m6loReassemblyMessages,
+                                                                            aBufferInfo->m6loReassemblyBuffers);
+
+    aInstance->mThreadNetif.GetMeshForwarder().GetResolvingQueue().GetInfo(aBufferInfo->mArpMessages,
+                                                                           aBufferInfo->mArpBuffers);
+
+    aInstance->mThreadNetif.GetIp6().GetSendQueue().GetInfo(aBufferInfo->mIp6Messages,
+                                                            aBufferInfo->mIp6Buffers);
+
+    aInstance->mThreadNetif.GetIp6().mMpl.GetBufferedMessageSet().GetInfo(aBufferInfo->mMplMessages,
+                                                                          aBufferInfo->mMplBuffers);
+
+    aInstance->mThreadNetif.GetMle().GetMessageQueue().GetInfo(aBufferInfo->mMleMessages,
+                                                               aBufferInfo->mMleBuffers);
+
+    aInstance->mThreadNetif.GetCoapClient().GetRequestMessages().GetInfo(aBufferInfo->mCoapClientMessages,
+                                                                         aBufferInfo->mCoapClientBuffers);
+}
+
 bool otIsIp6AddressEqual(const otIp6Address *a, const otIp6Address *b)
 {
     return *static_cast<const Ip6::Address *>(a) == *static_cast<const Ip6::Address *>(b);
@@ -1130,9 +1155,6 @@ void otInstanceFinalize(otInstance *aInstance)
     // Ensure we are disabled
     (void)otThreadStop(aInstance);
     (void)otInterfaceDown(aInstance);
-
-    // Free the otInstance structure
-    delete aInstance;
 
 #ifndef OPENTHREAD_MULTIPLE_INSTANCE
     sInstance = NULL;

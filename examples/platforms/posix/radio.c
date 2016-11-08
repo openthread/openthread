@@ -427,10 +427,11 @@ ThreadError otPlatRadioReceive(otInstance *aInstance, uint8_t aChannel)
     return error;
 }
 
-ThreadError otPlatRadioTransmit(otInstance *aInstance)
+ThreadError otPlatRadioTransmit(otInstance *aInstance, RadioPacket *aPacket)
 {
     ThreadError error = kThreadError_InvalidState;
     (void)aInstance;
+    (void)aPacket;
 
     if (sState == kStateReceive)
     {
@@ -489,12 +490,12 @@ void radioReceive(otInstance *aInstance)
 
         if (otPlatDiagModeGet())
         {
-            otPlatDiagRadioTransmitDone(aInstance, isFramePending(sReceiveFrame.mPsdu), kThreadError_None);
+            otPlatDiagRadioTransmitDone(aInstance, &sTransmitFrame, isFramePending(sReceiveFrame.mPsdu), kThreadError_None);
         }
         else
 #endif
         {
-            otPlatRadioTransmitDone(aInstance, isFramePending(sReceiveFrame.mPsdu), kThreadError_None);
+            otPlatRadioTransmitDone(aInstance, &sTransmitFrame, isFramePending(sReceiveFrame.mPsdu), kThreadError_None);
         }
     }
     else if ((sState == kStateReceive || sState == kStateTransmit) &&
@@ -520,12 +521,12 @@ void radioSendMessage(otInstance *aInstance)
 
         if (otPlatDiagModeGet())
         {
-            otPlatDiagRadioTransmitDone(aInstance, false, kThreadError_None);
+            otPlatDiagRadioTransmitDone(aInstance, &sTransmitFrame, false, kThreadError_None);
         }
         else
 #endif
         {
-            otPlatRadioTransmitDone(aInstance, false, kThreadError_None);
+            otPlatRadioTransmitDone(aInstance, &sTransmitFrame, false, kThreadError_None);
         }
     }
 }
