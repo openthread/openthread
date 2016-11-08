@@ -36,7 +36,7 @@
   </PropertyGroup>
   <PropertyGroup>
     <IntDir>..\..\build\obj\$(Platform)\$(Configuration)\$(ProjectName)\</IntDir>
-    <OutDir>..\..\build\bin\$(Platform)\$(Configuration)\exe\</OutDir>
+    <OutDir>..\..\build\bin\$(Platform)\$(Configuration)\app\</OutDir>
     <AppxAutoIncrementPackageRevision>True</AppxAutoIncrementPackageRevision>
     <AppxPackageDir>C:\Users\nibanks\Source\Repos\openthread-win\build\bin\AppPackages\</AppxPackageDir>
     <AppxBundle>Always</AppxBundle>
