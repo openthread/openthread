@@ -203,8 +203,10 @@ extern "C" {
         }
     }
 
-    ThreadError otPlatRadioTransmit(otInstance *aInstance)
+    ThreadError otPlatRadioTransmit(otInstance *aInstance, RadioPacket *aPacket)
     {
+        (void)aPacket;
+
         if (g_testPlatRadioTransmit)
         {
             return g_testPlatRadioTransmit(aInstance);
@@ -346,7 +348,7 @@ exit:
     {
     }
 
-    void otPlatDiagRadioTransmitDone(otInstance *, bool, ThreadError)
+    void otPlatDiagRadioTransmitDone(otInstance *, RadioPacket *, bool, ThreadError)
     {
     }
 

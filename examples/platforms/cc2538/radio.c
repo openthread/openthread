@@ -251,7 +251,7 @@ ThreadError otPlatRadioReceive(otInstance *aInstance, uint8_t aChannel)
     return error;
 }
 
-ThreadError otPlatRadioTransmit(otInstance *aInstance)
+ThreadError otPlatRadioTransmit(otInstance *aInstance, RadioPacket *aPacket)
 {
     ThreadError error = kThreadError_InvalidState;
     (void)aInstance;
@@ -271,15 +271,15 @@ ThreadError otPlatRadioTransmit(otInstance *aInstance)
         HWREG(RFCORE_SFR_RFST) = RFCORE_SFR_RFST_INSTR_FLUSHTX;
 
         // frame length
-        HWREG(RFCORE_SFR_RFDATA) = sTransmitFrame.mLength;
+        HWREG(RFCORE_SFR_RFDATA) = aPacket->mLength;
 
         // frame data
-        for (i = 0; i < sTransmitFrame.mLength; i++)
+        for (i = 0; i < aPacket->mLength; i++)
         {
-            HWREG(RFCORE_SFR_RFDATA) = sTransmitFrame.mPsdu[i];
+            HWREG(RFCORE_SFR_RFDATA) = aPacket->mPsdu[i];
         }
 
-        setChannel(sTransmitFrame.mChannel);
+        setChannel(aPacket->mChannel);
 
         while ((HWREG(RFCORE_XREG_FSMSTAT1) & 1) == 0);
 
@@ -406,12 +406,12 @@ void cc2538RadioProcess(otInstance *aInstance)
 
             if (otPlatDiagModeGet())
             {
-                otPlatDiagRadioTransmitDone(aInstance, false, sTransmitError);
+                otPlatDiagRadioTransmitDone(aInstance, &sTransmitFrame, false, sTransmitError);
             }
             else
 #endif
             {
-                otPlatRadioTransmitDone(aInstance, false, sTransmitError);
+                otPlatRadioTransmitDone(aInstance, &sTransmitFrame, false, sTransmitError);
             }
         }
         else if (sReceiveFrame.mLength == IEEE802154_ACK_LENGTH &&
@@ -424,12 +424,14 @@ void cc2538RadioProcess(otInstance *aInstance)
 
             if (otPlatDiagModeGet())
             {
-                otPlatDiagRadioTransmitDone(aInstance, (sReceiveFrame.mPsdu[0] & IEEE802154_FRAME_PENDING) != 0, sTransmitError);
+                otPlatDiagRadioTransmitDone(aInstance, &sTransmitFrame, (sReceiveFrame.mPsdu[0] & IEEE802154_FRAME_PENDING) != 0,
+                                            sTransmitError);
             }
             else
 #endif
             {
-                otPlatRadioTransmitDone(aInstance, (sReceiveFrame.mPsdu[0] & IEEE802154_FRAME_PENDING) != 0, sTransmitError);
+                otPlatRadioTransmitDone(aInstance, &sTransmitFrame, (sReceiveFrame.mPsdu[0] & IEEE802154_FRAME_PENDING) != 0,
+                                        sTransmitError);
             }
         }
     }
