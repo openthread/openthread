@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Package xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10" xmlns:mp="http://schemas.microsoft.com/appx/2014/phone/manifest" xmlns:uap="http://schemas.microsoft.com/appx/manifest/uap/windows10" IgnorableNamespaces="uap mp">
-  <Identity Name="7926e3f9-835e-421c-94c1-2812f3569f4a" Publisher="CN=nibanks" Version="1.0.8.0" />
+  <Identity Name="7926e3f9-835e-421c-94c1-2812f3569f4a" Publisher="CN=nibanks" Version="1.0.10.0" />
   <mp:PhoneIdentity PhoneProductId="7926e3f9-835e-421c-94c1-2812f3569f4a" PhonePublisherId="00000000-0000-0000-0000-000000000000" />
   <Properties>
     <DisplayName>OpenThread</DisplayName>

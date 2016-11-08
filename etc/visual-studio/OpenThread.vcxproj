@@ -39,8 +39,7 @@
     <OutDir>..\..\build\bin\$(Platform)\$(Configuration)\app\</OutDir>
     <AppxAutoIncrementPackageRevision>True</AppxAutoIncrementPackageRevision>
     <AppxPackageDir>C:\Users\nibanks\Source\Repos\openthread-win\build\bin\AppPackages\</AppxPackageDir>
-    <AppxBundle>Always</AppxBundle>
-    <AppxBundlePlatforms>x86|x64|arm</AppxBundlePlatforms>
+    <AppxBundle>Never</AppxBundle>
   </PropertyGroup>
   <ItemDefinitionGroup>
     <ClCompile>
