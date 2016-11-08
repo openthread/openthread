@@ -1458,6 +1458,9 @@ void MeshForwarder::HandleMesh(uint8_t *aFrame, uint8_t aFrameLength, const Thre
     Mac::Address meshSource;
     Lowpan::MeshHeader *meshHeader = reinterpret_cast<Lowpan::MeshHeader *>(aFrame);
 
+    // Length Check
+    VerifyOrExit(meshHeader->GetHeaderLength() <= aFrameLength, error = kThreadError_Drop);
+
     // Security Check: only process Mesh Header frames that had security enabled.
     VerifyOrExit(aMessageInfo.mLinkSecurity && meshHeader->IsValid(), error = kThreadError_Security);
 
@@ -1520,24 +1523,30 @@ ThreadError MeshForwarder::CheckReachability(uint8_t *aFrame, uint8_t aFrameLeng
     Ip6::Header ip6Header;
 
     // skip mesh header
+    VerifyOrExit(Lowpan::MeshHeader::GetHeaderLength() <= aFrameLength, error = kThreadError_Drop);
     aFrame += Lowpan::MeshHeader::GetHeaderLength();
+    aFrameLength -= Lowpan::MeshHeader::GetHeaderLength();
 
     // skip fragment header
-    if (reinterpret_cast<Lowpan::FragmentHeader *>(aFrame)->IsFragmentHeader())
+    if (aFrameLength >= 1 &&
+        reinterpret_cast<Lowpan::FragmentHeader *>(aFrame)->IsFragmentHeader())
     {
-        VerifyOrExit(reinterpret_cast<Lowpan::FragmentHeader *>(aFrame)->GetDatagramOffset() == 0, ;);
+        VerifyOrExit(sizeof(Lowpan::FragmentHeader) <= aFrameLength, error = kThreadError_Drop);
+        VerifyOrExit(reinterpret_cast<Lowpan::FragmentHeader *>(aFrame)->GetDatagramOffset() == 0,);
+
         aFrame += reinterpret_cast<Lowpan::FragmentHeader *>(aFrame)->GetHeaderLength();
+        aFrameLength -= reinterpret_cast<Lowpan::FragmentHeader *>(aFrame)->GetHeaderLength();
     }
 
     // only process IPv6 packets
-    VerifyOrExit(Lowpan::Lowpan::IsLowpanHc(aFrame), ;);
+    VerifyOrExit(aFrameLength >= 1 && Lowpan::Lowpan::IsLowpanHc(aFrame),);
 
-    mLowpan.DecompressBaseHeader(ip6Header, aMeshSource, aMeshDest, aFrame);
+    VerifyOrExit(mLowpan.DecompressBaseHeader(ip6Header, aMeshSource, aMeshDest, aFrame, aFrameLength) > 0,
+                 error = kThreadError_Drop);
 
     error = mMle.CheckReachability(aMeshSource.mShortAddress, aMeshDest.mShortAddress, ip6Header);
 
 exit:
-    (void)aFrameLength;
     return error;
 }
 
