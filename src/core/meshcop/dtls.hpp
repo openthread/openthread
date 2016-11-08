@@ -70,12 +70,6 @@ public:
     Dtls(ThreadNetif &aNetif);
 
     /**
-     * This destructor cleans up the DTLS object.
-     *
-     */
-    ~Dtls(void);
-
-    /**
      * This function pointer is called when data is received from the DTLS session.
      *
      * @param[in]  aContext  A pointer to application-specific context.

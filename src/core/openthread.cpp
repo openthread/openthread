@@ -66,9 +66,6 @@ static otDEFINE_ALIGNED_VAR(sInstanceRaw, sizeof(otInstance), uint64_t);
 otInstance *sInstance = NULL;
 #endif
 
-void OT_CDECL operator delete(void *, size_t) throw() { }
-void OT_CDECL operator delete(void *) throw() { }
-
 otInstance::otInstance(void) :
     mReceiveIp6DatagramCallback(NULL),
     mReceiveIp6DatagramCallbackContext(NULL),
@@ -1158,9 +1155,6 @@ void otInstanceFinalize(otInstance *aInstance)
     // Ensure we are disabled
     (void)otThreadStop(aInstance);
     (void)otInterfaceDown(aInstance);
-
-    // Free the otInstance structure
-    delete aInstance;
 
 #ifndef OPENTHREAD_MULTIPLE_INSTANCE
     sInstance = NULL;
