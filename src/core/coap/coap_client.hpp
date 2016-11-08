@@ -241,6 +241,14 @@ public:
     ThreadError SendMessage(Message &aMessage, const Ip6::MessageInfo &aMessageInfo,
                             otCoapResponseHandler aHandler = NULL, void *aContext = NULL);
 
+    /**
+     * This method returns a reference to the request message list.
+     *
+     * @returns A reference to the request message list.
+     *
+     */
+    const MessageQueue &GetRequestMessages(void) const { return mPendingRequests; }
+
 private:
     Message *CopyAndEnqueueMessage(const Message &aMessage, uint16_t aCopyLength,
                                    const RequestMetadata &aRequestMetadata);

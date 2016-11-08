@@ -860,6 +860,29 @@ typedef struct otMacCounters
 } otMacCounters;
 
 /**
+ * This structure represents the message buffer information.
+ */
+typedef struct otBufferInfo
+{
+    uint16_t mTotalBuffers;           ///< The number of buffers in the pool.
+    uint16_t mFreeBuffers;            ///< The number of free message buffers.
+    uint16_t m6loSendMessages;        ///< The number of messages in the 6lo send queue.
+    uint16_t m6loSendBuffers;         ///< The number of buffers in the 6lo send queue.
+    uint16_t m6loReassemblyMessages;  ///< The number of messages in the 6LoWPAN reassembly queue.
+    uint16_t m6loReassemblyBuffers;   ///< The number of buffers in the 6LoWPAN reassembly queue.
+    uint16_t mIp6Messages;            ///< The number of messages in the IPv6 send queue.
+    uint16_t mIp6Buffers;             ///< The number of buffers in the IPv6 send queue.
+    uint16_t mMplMessages;            ///< The number of messages in the MPL send queue.
+    uint16_t mMplBuffers;             ///< The number of buffers in the MPL send queue.
+    uint16_t mMleMessages;            ///< The number of messages in the MLE send queue.
+    uint16_t mMleBuffers;             ///< The number of buffers in the MLE send queue.
+    uint16_t mArpMessages;            ///< The number of messages in the ARP send queue.
+    uint16_t mArpBuffers;             ///< The number of buffers in the ARP send queue.
+    uint16_t mCoapClientMessages;     ///< The number of messages in the CoAP client send queue.
+    uint16_t mCoapClientBuffers;      ///< The number of buffers in the CoAP client send queue.
+} otBufferInfo;
+
+/**
  * @}
  *
  */

@@ -171,6 +171,30 @@ public:
      */
     void SetDiscoverParameters(uint32_t aScanChannels, uint16_t aScanDuration);
 
+    /**
+     * This method returns a reference to the send queue.
+     *
+     * @returns  A reference to the send queue.
+     *
+     */
+    const MessageQueue &GetSendQueue(void) const { return mSendQueue; }
+
+    /**
+     * This method returns a reference to the reassembly queue.
+     *
+     * @returns  A reference to the reassembly queue.
+     *
+     */
+    const MessageQueue &GetReassemblyQueue(void) const { return mReassemblyList; }
+
+    /**
+     * This method returns a reference to the resolving queue.
+     *
+     * @returns  A reference to the resolving queue.
+     *
+     */
+    const MessageQueue &GetResolvingQueue(void) const { return mResolvingQueue; }
+
 private:
     enum
     {

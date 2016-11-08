@@ -141,6 +141,7 @@ private:
     void OutputBytes(const uint8_t *aBytes, uint8_t aLength);
 
     void ProcessHelp(int argc, char *argv[]);
+    void ProcessBufferInfo(int argc, char *argv[]);
     void ProcessBlacklist(int argc, char *argv[]);
     void ProcessChannel(int argc, char *argv[]);
     void ProcessChild(int argc, char *argv[]);

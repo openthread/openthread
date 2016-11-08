@@ -623,6 +623,14 @@ public:
      */
     void FillRouteTlv(RouteTlv &aTlv);
 
+    /**
+     * This method returns a reference to the send queue.
+     *
+     * @returns A reference to the send queue.
+     *
+     */
+    const MessageQueue &GetMessageQueue(void) const { return mDelayedResponses; }
+
 private:
     enum
     {
