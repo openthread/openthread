@@ -50,7 +50,7 @@ copy build\bin\%Platform2%\%Configuration%\exe\otTestRunner.pdb release\symbols
 
 REM Copy the Windows appx files
 
-xcopy build\bin\AppPackages release /S
+xcopy build\bin\AppPackages\* release /S
 
 REM Generate the trace format files to decode the WPP logs
 
