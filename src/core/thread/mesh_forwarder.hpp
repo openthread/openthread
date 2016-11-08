@@ -172,6 +172,12 @@ public:
     void SetDiscoverParameters(uint32_t aScanChannels, uint16_t aScanDuration);
 
     /**
+     * This method frees any indirect messages queued for children that are no longer attached.
+     *
+     */
+    void UpdateIndirectMessages(void);
+
+    /**
      * This method returns a reference to the send queue.
      *
      * @returns  A reference to the send queue.
