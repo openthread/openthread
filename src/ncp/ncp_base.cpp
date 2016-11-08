@@ -197,6 +197,8 @@ const NcpBase::GetPropertyHandlerEntry NcpBase::mGetPropertyHandlerTable[] =
     { SPINEL_PROP_CNTR_RX_SPINEL_TOTAL, &NcpBase::GetPropertyHandler_NCP_CNTR },
     { SPINEL_PROP_CNTR_RX_SPINEL_ERR, &NcpBase::GetPropertyHandler_NCP_CNTR },
 
+    { SPINEL_PROP_MSG_BUFFER_COUNTERS, &NcpBase::GetPropertyHandler_MSG_BUFFER_COUNTERS },
+
 #if OPENTHREAD_ENABLE_LEGACY
     { SPINEL_PROP_NEST_LEGACY_ULA_PREFIX, &NcpBase::GetPropertyHandler_NEST_LEGACY_ULA_PREFIX },
 #endif
@@ -2569,6 +2571,42 @@ ThreadError NcpBase::GetPropertyHandler_NCP_CNTR(uint8_t header, spinel_prop_key
                 );
 
 bail:
+    return errorCode;
+}
+
+ThreadError NcpBase::GetPropertyHandler_MSG_BUFFER_COUNTERS(uint8_t header, spinel_prop_key_t key)
+{
+    ThreadError errorCode = kThreadError_None;
+    otBufferInfo bufferInfo;
+
+    otGetMessageBufferInfo(mInstance, &bufferInfo);
+
+    SuccessOrExit(errorCode = OutboundFrameBegin());
+
+    SuccessOrExit(errorCode = OutboundFrameFeedPacked("Cii", header, SPINEL_CMD_PROP_VALUE_IS, key));
+
+    SuccessOrExit(errorCode = OutboundFrameFeedPacked("T(SSSSSSSSSSSSSSSS)",
+        bufferInfo.mTotalBuffers,
+        bufferInfo.mFreeBuffers,
+        bufferInfo.m6loSendMessages,
+        bufferInfo.m6loSendBuffers,
+        bufferInfo.m6loReassemblyMessages,
+        bufferInfo.m6loReassemblyBuffers,
+        bufferInfo.mIp6Messages,
+        bufferInfo.mIp6Buffers,
+        bufferInfo.mMplMessages,
+        bufferInfo.mMplBuffers,
+        bufferInfo.mMleMessages,
+        bufferInfo.mMleBuffers,
+        bufferInfo.mArpMessages,
+        bufferInfo.mArpBuffers,
+        bufferInfo.mCoapClientMessages,
+        bufferInfo.mCoapClientBuffers
+    ));
+
+    SuccessOrExit(errorCode = OutboundFrameSend());
+
+exit:
     return errorCode;
 }
 

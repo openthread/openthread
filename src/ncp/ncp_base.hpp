@@ -331,6 +331,7 @@ private:
     ThreadError GetPropertyHandler_THREAD_ROUTER_ROLE_ENABLED(uint8_t header, spinel_prop_key_t key);
     ThreadError GetPropertyHandler_MAC_CNTR(uint8_t header, spinel_prop_key_t key);
     ThreadError GetPropertyHandler_NCP_CNTR(uint8_t header, spinel_prop_key_t key);
+    ThreadError GetPropertyHandler_MSG_BUFFER_COUNTERS(uint8_t header, spinel_prop_key_t key);
     ThreadError GetPropertyHandler_MAC_WHITELIST(uint8_t header, spinel_prop_key_t key);
     ThreadError GetPropertyHandler_MAC_WHITELIST_ENABLED(uint8_t header, spinel_prop_key_t key);
     ThreadError GetPropertyHandler_THREAD_MODE(uint8_t header, spinel_prop_key_t key);
