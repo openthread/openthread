@@ -38,6 +38,7 @@
 
 #include <coap/coap_client.hpp>
 #include <coap/coap_server.hpp>
+#include <coap/secure_coap_server.hpp>
 #include <common/timer.hpp>
 #include <mac/mac_frame.hpp>
 #include <meshcop/announce_begin_client.hpp>
@@ -210,17 +211,14 @@ private:
                                      Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
     void HandleDatasetChanged(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
-    static void HandleDtlsReceive(void *aContext, uint8_t *aBuf, uint16_t aLength);
-    void HandleDtlsReceive(uint8_t *aBuf, uint16_t aLength);
+    static void HandleJoinerFinalize(void *aContext, Coap::Header &aHeader,
+                                     Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    void HandleJoinerFinalize(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
-    static ThreadError HandleDtlsSend(void *aContext, const uint8_t *aBuf, uint16_t aLength);
-    ThreadError HandleDtlsSend(const uint8_t *aBuf, uint16_t aLength);
-
-    static void HandleUdpTransmit(void *aContext);
-    void HandleUdpTransmit(void);
-
-    void ReceiveJoinerFinalize(uint8_t *buf, uint16_t length);
     void SendJoinFinalizeResponse(const Coap::Header &aRequestHeader, StateTlv::State aState);
+
+    static ThreadError SendRelayTransmit(void *aContext, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    ThreadError SendRelayTransmit(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
     void SendDatasetChangedResponse(const Coap::Header &aRequestHeader, const Ip6::MessageInfo &aMessageInfo);
     ThreadError SendCommissionerSet(void);
@@ -247,16 +245,16 @@ private:
     uint16_t mJoinerRloc;
 
     uint16_t mSessionId;
-    Message *mTransmitMessage;
     Timer mTimer;
-    Tasklet mTransmitTask;
     uint8_t mTransmitAttempts;
     bool mSendKek;
 
     Coap::Resource mRelayReceive;
     Coap::Resource mDatasetChanged;
+    Coap::Resource mJoinerFinalize;
     Coap::Server &mCoapServer;
     Coap::Client &mCoapClient;
+    Coap::SecureServer &mSecureCoapServer;
 
     ThreadNetif &mNetif;
 };
