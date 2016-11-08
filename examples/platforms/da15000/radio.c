@@ -26,10 +26,10 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
- /**
- * @file radio.cpp
- * Platform abstraction for radio communication.
- */
+/**
+* @file radio.cpp
+* Platform abstraction for radio communication.
+*/
 
 #include <fcntl.h>
 #include <string.h>

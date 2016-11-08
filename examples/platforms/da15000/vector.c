@@ -25,12 +25,12 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
- 
- /**
- * @file     cpu/dialog/da15100/boot/vector.c
- * CpuIrq_da15x -- IRQ driver for ARM Cortex-M series cores.
- *
- */
+
+/**
+* @file     cpu/dialog/da15100/boot/vector.c
+* CpuIrq_da15x -- IRQ driver for ARM Cortex-M series cores.
+*
+*/
 
 #include "cpu.h"
 #include "tool.h"

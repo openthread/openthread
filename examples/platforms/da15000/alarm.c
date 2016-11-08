@@ -26,10 +26,10 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
- /**
- * @file alarm.c
- * Platform abstraction for the alarm
- */
+/**
+* @file alarm.c
+* Platform abstraction for the alarm
+*/
 
 #include <stdbool.h>
 #include <stdint.h>
@@ -59,7 +59,7 @@ void da15100AlarmProcess(otInstance *aInstance)
         if (remaining <= 0)
         {
             s_is_running = false;
-            otPlats_alarm_fired(aInstance);
+            otPlatAlarmFired(aInstance);
         }
     }
 

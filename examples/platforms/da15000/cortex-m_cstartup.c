@@ -26,12 +26,12 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
- /**
- * @file     cortex-m_cstartup.c
- * ARM Cortex-M generic cstartup.
- *
- * Setup RAM as needed based on GCC linker script sections.
- */
+/**
+* @file     cortex-m_cstartup.c
+* ARM Cortex-M generic cstartup.
+*
+* Setup RAM as needed based on GCC linker script sections.
+*/
 
 #include <stdint.h>
 #include <tool.h>

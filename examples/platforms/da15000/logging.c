@@ -26,11 +26,11 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
- /**
- * @file logging.c
- * Platform abstraction for the logging
- *
- */
+/**
+* @file logging.c
+* Platform abstraction for the logging
+*
+*/
 
 #include <ctype.h>
 #include <inttypes.h>

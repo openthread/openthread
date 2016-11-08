@@ -26,10 +26,10 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
- /**
- * Stubs out exception handling and general C++ bloat
- * for suitability for embedded environments.
- */
+/**
+* Stubs out exception handling and general C++ bloat
+* for suitability for embedded environments.
+*/
 
 #include <stdint.h>
 

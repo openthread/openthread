@@ -26,10 +26,10 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
- /**
- * @file     cpu.h
- * CPU abstraction -- maps to raw register file.
- */
+/**
+* @file     cpu.h
+* CPU abstraction -- maps to raw register file.
+*/
 
 #ifndef _CPU_H_
 #define _CPU_H_

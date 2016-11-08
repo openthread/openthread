@@ -26,12 +26,12 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
- /**
- * @file     core/tool.h
- * TOOL abstraction -- common coding convention for multiple toolchains:
- *      GCC, IAR, ARM, SDCC (8051)
- *
- */
+/**
+* @file     core/tool.h
+* TOOL abstraction -- common coding convention for multiple toolchains:
+*      GCC, IAR, ARM, SDCC (8051)
+*
+*/
 
 #ifndef _TOOL_H_
 #define _TOOL_H_
