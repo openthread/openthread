@@ -60,3 +60,5 @@ test_script:
 artifacts:
 - path: release
   name: release
+- path: build\bin\AppPackages
+  name: app
