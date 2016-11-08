@@ -54,9 +54,12 @@
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\src\core\coap\coap_base.cpp" />
     <ClCompile Include="..\..\src\core\coap\coap_client.cpp" />
     <ClCompile Include="..\..\src\core\coap\coap_header.cpp" />
     <ClCompile Include="..\..\src\core\coap\coap_server.cpp" />
+    <ClCompile Include="..\..\src\core\coap\secure_coap_client.cpp" />
+    <ClCompile Include="..\..\src\core\coap\secure_coap_server.cpp" />
     <ClCompile Include="..\..\src\core\common\crc16.cpp" />
     <ClCompile Include="..\..\src\core\common\logging.cpp" />
     <ClCompile Include="..\..\src\core\common\message.cpp" />
@@ -116,9 +119,12 @@
     <ClCompile Include="..\..\src\core\utils\jam_detector.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\src\core\coap\coap_base.hpp" />
     <ClInclude Include="..\..\src\core\coap\coap_client.hpp" />
     <ClInclude Include="..\..\src\core\coap\coap_header.hpp" />
     <ClInclude Include="..\..\src\core\coap\coap_server.hpp" />
+    <ClInclude Include="..\..\src\core\coap\secure_coap_client.hpp" />
+    <ClInclude Include="..\..\src\core\coap\secure_coap_server.hpp" />
     <ClInclude Include="..\..\src\core\common\code_utils.hpp" />
     <ClInclude Include="..\..\src\core\common\crc16.hpp" />
     <ClInclude Include="..\..\src\core\common\debug.hpp" />
