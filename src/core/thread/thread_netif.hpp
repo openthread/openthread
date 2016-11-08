@@ -290,12 +290,12 @@ public:
 
 #if OPENTHREAD_ENABLE_DTLS
     MeshCoP::Dtls &GetDtls(void) { return mDtls; }
-
-    Coap::SecureClient &GetSecureCoapClient(void) { return mSecureCoapClient; }
 #endif  // OPENTHREAD_ENABLE_DTLS
 
 #if OPENTHREAD_ENABLE_JOINER
     MeshCoP::Joiner &GetJoiner(void) { return mJoiner; }
+
+    Coap::SecureClient &GetSecureCoapClient(void) { return mSecureCoapClient; }
 #endif  // OPENTHREAD_ENABLE_JOINER
 
 #if OPENTHREAD_ENABLE_JAM_DETECTION
@@ -345,11 +345,11 @@ private:
 #endif  // OPENTHREAD_ENABLE_COMMISSIONER
 
 #if OPENTHREAD_ENABLE_DTLS
-    Coap::SecureClient mSecureCoapClient;
     MeshCoP::Dtls mDtls;
 #endif// OPENTHREAD_ENABLE_DTLS
 
 #if OPENTHREAD_ENABLE_JOINER
+    Coap::SecureClient mSecureCoapClient;
     MeshCoP::Joiner mJoiner;
 #endif  // OPENTHREAD_ENABLE_JOINER
 

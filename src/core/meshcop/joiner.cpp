@@ -167,7 +167,6 @@ void Joiner::HandleDiscoverResult(otActiveScanResult *aResult)
         mNetif.GetMac().SetChannel(mJoinerRouterChannel);
         mNetif.GetIp6Filter().AddUnsecurePort(mSecureCoapClient.GetPort());
 
-        memset(&messageInfo, 0, sizeof(messageInfo));
         messageInfo.GetPeerAddr().mFields.m16[0] = HostSwap16(0xfe80);
         messageInfo.GetPeerAddr().SetIid(mJoinerRouter);
         messageInfo.mPeerPort = mJoinerUdpPort;
