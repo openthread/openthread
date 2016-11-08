@@ -30,17 +30,22 @@
 import time
 import unittest
 
+import config
+import mle
 import node
 
 LEADER = 1
 REED = 2
 ROUTER2 = 3
 ROUTER1 = 4
+SNIFFER = 5
+
 
 class Cert_5_1_11_REEDAttachLinkQuality(unittest.TestCase):
+
     def setUp(self):
         self.nodes = {}
-        for i in range(1,5):
+        for i in range(1, 5):
             self.nodes[i] = node.Node(i)
 
         self.nodes[LEADER].set_panid(0xface)
@@ -70,7 +75,13 @@ class Cert_5_1_11_REEDAttachLinkQuality(unittest.TestCase):
         self.nodes[ROUTER1].enable_whitelist()
         self.nodes[ROUTER1].set_router_selection_jitter(1)
 
+        self.sniffer = config.create_default_thread_sniffer(SNIFFER)
+        self.sniffer.start()
+
     def tearDown(self):
+        self.sniffer.stop()
+        del self.sniffer
+
         for node in list(self.nodes.values()):
             node.stop()
         del self.nodes
@@ -92,6 +103,47 @@ class Cert_5_1_11_REEDAttachLinkQuality(unittest.TestCase):
         time.sleep(10)
         self.assertEqual(self.nodes[ROUTER1].get_state(), 'router')
         self.assertEqual(self.nodes[REED].get_state(), 'router')
+
+        leader_messages = self.sniffer.get_messages_sent_by(LEADER)
+        router1_messages = self.sniffer.get_messages_sent_by(ROUTER1)
+        reed_messages = self.sniffer.get_messages_sent_by(REED)
+        router2_messages = self.sniffer.get_messages_sent_by(ROUTER2)
+
+        # 1 - Leader. REED1, Router2
+        leader_messages.next_mle_message(mle.CommandType.ADVERTISEMENT)
+        reed_messages.next_mle_message(mle.CommandType.ADVERTISEMENT)
+        router2_messages.next_mle_message(mle.CommandType.ADVERTISEMENT)
+
+        # 3 - Router1
+        msg = router1_messages.next_mle_message(mle.CommandType.PARENT_REQUEST)
+        msg.assertSentWithHopLimit(255)
+        msg.assertSentToDestinationAddress("ff02::2")
+        msg.assertMleMessageContainsTlv(mle.Mode)
+        msg.assertMleMessageContainsTlv(mle.Challenge)
+        msg.assertMleMessageContainsTlv(mle.ScanMask)
+        msg.assertMleMessageContainsTlv(mle.Version)
+
+        scan_mask_tlv = msg.get_mle_message_tlv(mle.ScanMask)
+        self.assertEqual(1, scan_mask_tlv.router)
+        self.assertEqual(0, scan_mask_tlv.end_device)
+
+        # 4 - Router2
+        msg = router2_messages.next_mle_message(mle.CommandType.PARENT_RESPONSE)
+        msg.assertSentToNode(self.nodes[ROUTER1])
+
+        # 5 - Router1
+        msg = router1_messages.next_mle_message(mle.CommandType.PARENT_REQUEST)
+        msg.assertSentWithHopLimit(255)
+        msg.assertSentToDestinationAddress("ff02::2")
+        msg.assertMleMessageContainsTlv(mle.Mode)
+        msg.assertMleMessageContainsTlv(mle.Challenge)
+        msg.assertMleMessageContainsTlv(mle.ScanMask)
+        msg.assertMleMessageContainsTlv(mle.Version)
+
+        scan_mask_tlv = msg.get_mle_message_tlv(mle.ScanMask)
+        self.assertEqual(1, scan_mask_tlv.router)
+        self.assertEqual(1, scan_mask_tlv.end_device)
+
 
 if __name__ == '__main__':
     unittest.main()
