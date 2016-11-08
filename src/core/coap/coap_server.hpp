@@ -34,6 +34,7 @@
 #ifndef COAP_SERVER_HPP_
 #define COAP_SERVER_HPP_
 
+#include <coap/coap_base.hpp>
 #include <coap/coap_header.hpp>
 #include <common/message.hpp>
 #include <net/udp6.hpp>
@@ -103,17 +104,20 @@ private:
  * This class implements the CoAP server.
  *
  */
-class Server
+class Server : public CoapBase
 {
 public:
     /**
      * This constructor initializes the object.
      *
-     * @param[in]  aUdp   A reference to the UDP object.
-     * @param[in]  aPort  The port to listen on.
+     * @param[in]  aUdp      A reference to the UDP object.
+     * @param[in]  aPort     The port to listen on.
+     * @param[in]  aSender   A pointer to a function for sending messages.
+     * @param[in]  aReceiver A pointer to a function for handling received messages.
      *
      */
-    Server(Ip6::Udp &aUdp, uint16_t aPort);
+    Server(Ip6::Udp &aUdp, uint16_t aPort, SenderFunction aSender = &Server::Send,
+           ReceiverFunction aReceiver = &Server::Receive);
 
     /**
      * This method starts the CoAP server.
@@ -161,6 +165,16 @@ public:
     Message *NewMessage(uint16_t aReserved);
 
     /**
+     * This method creates a new message with a CoAP header.
+     *
+     * @param[in]  aHeader  A reference to a CoAP header that is used to create the message.
+     *
+     * @returns A pointer to the message or NULL if failed to allocate message.
+     *
+     */
+    Message *NewMessage(const Header &aHeader) { return CoapBase::NewMessage(aHeader); };
+
+    /**
      * This method sends a CoAP response from the server.
      *
      * @param[in]  aMessage      The CoAP response to send.
@@ -172,11 +186,18 @@ public:
      */
     ThreadError SendMessage(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
-private:
-    static void HandleUdpReceive(void *aContext, otMessage aMessage, const otMessageInfo *aMessageInfo);
-    void HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+protected:
+    void ProcessReceivedMessage(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
-    Ip6::UdpSocket mSocket;
+private:
+    static ThreadError Send(void *aContext, Message &aMessage, const Ip6::MessageInfo &aMessageInfo) {
+        return (static_cast<Server *>(aContext))->mSocket.SendTo(aMessage, aMessageInfo);
+    }
+
+    static void Receive(void *aContext, Message &aMessage, const Ip6::MessageInfo &aMessageInfo) {
+        (static_cast<Server *>(aContext))->ProcessReceivedMessage(aMessage, aMessageInfo);
+    }
+
     uint16_t mPort;
     Resource *mResources;
 };

@@ -59,6 +59,7 @@ public:
     enum
     {
         kPskMaxLength = 32,
+        kApplicationDataMaxLength = 128,
     };
 
     /**
@@ -152,13 +153,14 @@ public:
     /**
      * This method sends data within the DTLS session.
      *
-     * @param[in]  aBuf     A pointer to the data buffer.
-     * @param[in]  aLength  Number of bytes in the data buffer.
+     * @param[in]  aMessage  A message to send via DTLS.
+     * @param[in]  aLength   Number of bytes in the data buffer.
      *
-     * @retval kThreadError_None  Successfully sent the data via the DTLS session.
+     * @retval kThreadError_None    Successfully sent the data via the DTLS session.
+     * @retval kThreadError_NoBufs  A message is too long.
      *
      */
-    ThreadError Send(const uint8_t *aBuf, uint16_t aLength);
+    ThreadError Send(Message &aMessage, uint16_t aLength);
 
     /**
      * This method provides a received DTLS message to the DTLS object.
