@@ -59,7 +59,7 @@ void da15100AlarmProcess(otInstance *aInstance)
         if (remaining <= 0)
         {
             s_is_running = false;
-            otPlats_alarm_fired(aInstance);
+            otPlatAlarmFired(aInstance);
         }
     }
 
