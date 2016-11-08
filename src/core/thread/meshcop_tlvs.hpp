@@ -685,8 +685,7 @@ public:
      * @retval FALSE  If the TLV does not appear to be well-formed.
      *
      */
-    bool IsValid(void) const
-    {
+    bool IsValid(void) const {
         return GetLength() <= sizeof(*this) - sizeof(Tlv) &&
                strnlen(mCommissionerId, sizeof(mCommissionerId)) != sizeof(mCommissionerId);
     }
