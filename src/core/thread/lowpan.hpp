@@ -72,6 +72,7 @@ struct Context
     const uint8_t *mPrefix;        ///< A pointer to the prefix.
     uint8_t        mPrefixLength;  ///< The prefix length.
     uint8_t        mContextId;     ///< The Context ID.
+    bool           mCompressFlag;  ///< The Context compression flag.
 };
 
 /**
@@ -332,7 +333,7 @@ public:
      * This method initializes the Fragment Header.
      *
      */
-    void Init() { mDispatchOffsetSize = kDispatch; }
+    void Init() { mDispatchSize = HostSwap16(kDispatch); }
 
     /**
      * This method indicates whether or not the header is a Fragment Header.
@@ -341,7 +342,7 @@ public:
      * @retval FALSE  If the header does not match the Fragment Header dispatch value.
      *
      */
-    bool IsFragmentHeader() { return (mDispatchOffsetSize & kDispatchMask) == kDispatch; }
+    bool IsFragmentHeader() { return (HostSwap16(mDispatchSize) & kDispatchMask) == kDispatch; }
 
     /**
      * This method returns the Fragment Header length.
@@ -350,7 +351,7 @@ public:
      *
      */
     uint8_t GetHeaderLength() {
-        return (mDispatchOffsetSize & kOffset) ? sizeof(*this) : sizeof(*this) - sizeof(mOffset);
+        return (HostSwap16(mDispatchSize) & kOffset) ? sizeof(*this) : sizeof(*this) - sizeof(mOffset);
     }
 
     /**
@@ -359,7 +360,7 @@ public:
      * @returns The Datagram Size value.
      *
      */
-    uint16_t GetDatagramSize() { return HostSwap16(mSize) & kSizeMask; }
+    uint16_t GetDatagramSize() { return HostSwap16(mDispatchSize) & kSizeMask; }
 
     /**
      * This method sets the Datagram Size value.
@@ -368,7 +369,7 @@ public:
      *
      */
     void SetDatagramSize(uint16_t aSize) {
-        mSize = HostSwap16((HostSwap16(mSize) & ~kSizeMask) | (aSize & kSizeMask));
+        mDispatchSize = HostSwap16((HostSwap16(mDispatchSize) & ~kSizeMask) | (aSize & kSizeMask));
     }
 
     /**
@@ -393,7 +394,7 @@ public:
      * @returns The Datagram Offset value.
      *
      */
-    uint16_t GetDatagramOffset() { return (mDispatchOffsetSize & kOffset) ? static_cast<uint16_t>(mOffset) * 8 : 0; }
+    uint16_t GetDatagramOffset() { return (HostSwap16(mDispatchSize) & kOffset) ? static_cast<uint16_t>(mOffset) * 8 : 0; }
 
     /**
      * This method sets the Datagram Offset value.
@@ -403,10 +404,10 @@ public:
      */
     void SetDatagramOffset(uint16_t aOffset) {
         if (aOffset == 0) {
-            mDispatchOffsetSize &= ~kOffset;
+            mDispatchSize = HostSwap16(HostSwap16(mDispatchSize) & ~kOffset);
         }
         else {
-            mDispatchOffsetSize |= kOffset;
+            mDispatchSize = HostSwap16(HostSwap16(mDispatchSize) | kOffset);
             mOffset = (aOffset >> 3) & kOffsetMask;
         }
     }
@@ -414,20 +415,16 @@ public:
 private:
     enum
     {
-        kDispatch     = 3 << 6,
-        kDispatchMask = 3 << 6,
-        kOffset       = 1 << 5,
+        kDispatch     = 3 << 14,
+        kOffset       = 1 << 13,
+        kDispatchMask = 0xd800,  ///< Accept FRAG1 and FRAGN only.
         kSizeMask     = 0x7ff,
         kOffsetMask   = 0xff,
     };
 
-    union
-    {
-        uint8_t mDispatchOffsetSize;
-        uint16_t mSize;
-    } OT_TOOL_PACKED_FIELD;
+    uint16_t mDispatchSize;
     uint16_t mTag;
-    uint8_t mOffset;
+    uint8_t  mOffset;
 } OT_TOOL_PACKED_END;
 
 /**

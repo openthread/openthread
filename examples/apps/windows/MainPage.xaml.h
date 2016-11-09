@@ -1,4 +1,4 @@
-/*
+﻿/*
  *  Copyright (c) 2016, The OpenThread Authors.
  *  All rights reserved.
  *
@@ -26,47 +26,55 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "test_util.h"
+#pragma once
 
-#include <vector>
-#include <string>
-#include <sstream>
-#include <iostream>
+#include "MainPage.g.h"
 
-void otTestHexToVector(std::string &aHex, std::vector<uint8_t> &aOutBytes)
+namespace Thread
 {
-    std::istringstream ss(aHex);
-    std::string word;
-
-    while (ss >> word)
+    /// <summary>
+    /// An empty page that can be used on its own or navigated to within a Frame.
+    /// </summary>
+    public ref class MainPage sealed
     {
-        uint8_t n = static_cast<uint8_t>(strtol(word.data(), NULL, 16));
-        aOutBytes.push_back(n);
-    }
-}
+    public:
+        MainPage();
 
-void otTestPrintHex(uint8_t *aBuffer, int aLength)
-{
-    int i;
+        void OnResuming();
 
-    for (i = 0; i < aLength; i++)
-    {
-        printf("%02x ", aBuffer[i]);
+        void BuildInterfaceList();
 
-        if (i % 16 == 7) { printf(" "); }
+        void ConnectNetwork(Platform::Guid InterfaceGuid);
+        void ShowInterfaceDetails(Platform::Guid InterfaceGuid);
+        void DisconnectNetwork(Platform::Guid InterfaceGuid);
 
-        if (i % 16 == 15 && aLength != i + 1) { printf("\n"); }
-    }
+    protected:
+        virtual void OnNavigatedTo(Windows::UI::Xaml::Navigation::NavigationEventArgs^ e) override;
 
-    printf("\n");
-}
+    private:
 
-void otTestPrintHex(std::string &aString)
-{
-    otTestPrintHex((uint8_t *)aString.data(), static_cast<int>(aString.size()));
-}
+        void OnLoaded(Platform::Object^ sender, Windows::UI::Xaml::RoutedEventArgs^ e);
+        void OnUnloaded(Platform::Object^ sender, Windows::UI::Xaml::RoutedEventArgs^ e);
 
-void otTestPrintHex(std::vector<uint8_t> &aBytes)
-{
-    otTestPrintHex((uint8_t *)&aBytes[0], static_cast<int>(aBytes.size()));
+        void OnWindowSizeChanged(Object^ sender, Windows::UI::Xaml::SizeChangedEventArgs^ args);
+        void OnVisibilityChanged(Windows::UI::Core::CoreWindow^ coreWindow, Windows::UI::Core::VisibilityChangedEventArgs^ args);
+
+        UIElement^ CreateNewInterface(Platform::Guid InterfaceGuid); 
+
+        bool _isVisible;
+        bool _isFullScreen;
+
+        Windows::Foundation::Size _windowSize;
+        
+        void *_apiInstance;
+        #define ApiInstance ((otApiInstance*)_apiInstance)
+
+        std::vector<void*> _devices;
+
+        Platform::Guid _currentInterface;
+
+    internal:
+        static MainPage^ Current;
+
+    };
 }

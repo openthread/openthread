@@ -71,8 +71,6 @@ otInstance::otInstance(void) :
     mReceiveIp6DatagramCallbackContext(NULL),
     mActiveScanCallback(NULL),
     mActiveScanCallbackContext(NULL),
-    mDiscoverCallback(NULL),
-    mDiscoverCallbackContext(NULL),
     mThreadNetif(mIp6)
 {
 }
@@ -85,7 +83,6 @@ extern "C" {
 
 static void HandleActiveScanResult(void *aContext, Mac::Frame *aFrame);
 static void HandleEnergyScanResult(void *aContext, otEnergyScanResult *aResult);
-static void HandleMleDiscover(otActiveScanResult *aResult, void *aContext);
 
 void otProcessQueuedTasklets(otInstance *aInstance)
 {
@@ -1302,20 +1299,12 @@ bool otIsEnergyScanInProgress(otInstance *aInstance)
 ThreadError otDiscover(otInstance *aInstance, uint32_t aScanChannels, uint16_t aScanDuration, uint16_t aPanId,
                        otHandleActiveScanResult aCallback, void *aCallbackContext)
 {
-    aInstance->mDiscoverCallback = aCallback;
-    aInstance->mDiscoverCallbackContext = aCallbackContext;
-    return aInstance->mThreadNetif.GetMle().Discover(aScanChannels, aScanDuration, aPanId, &HandleMleDiscover, aInstance);
+    return aInstance->mThreadNetif.GetMle().Discover(aScanChannels, aScanDuration, aPanId, aCallback, aCallbackContext);
 }
 
 bool otIsDiscoverInProgress(otInstance *aInstance)
 {
     return aInstance->mThreadNetif.GetMle().IsDiscoverInProgress();
-}
-
-void HandleMleDiscover(otActiveScanResult *aResult, void *aContext)
-{
-    otInstance *aInstance = static_cast<otInstance *>(aContext);
-    aInstance->mDiscoverCallback(aResult, aInstance->mDiscoverCallbackContext);
 }
 
 void otSetReceiveIp6DatagramCallback(otInstance *aInstance, otReceiveIp6DatagramCallback aCallback,

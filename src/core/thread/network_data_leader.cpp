@@ -141,6 +141,7 @@ ThreadError Leader::GetContext(const Ip6::Address &aAddress, Lowpan::Context &aC
         aContext.mPrefix = mMle.GetMeshLocalPrefix();
         aContext.mPrefixLength = 64;
         aContext.mContextId = 0;
+        aContext.mCompressFlag = true;
     }
 
     for (NetworkDataTlv *cur = reinterpret_cast<NetworkDataTlv *>(mTlvs);
@@ -171,6 +172,7 @@ ThreadError Leader::GetContext(const Ip6::Address &aAddress, Lowpan::Context &aC
             aContext.mPrefix = prefix->GetPrefix();
             aContext.mPrefixLength = prefix->GetPrefixLength();
             aContext.mContextId = contextTlv->GetContextId();
+            aContext.mCompressFlag = contextTlv->IsCompress();
         }
     }
 
@@ -188,6 +190,7 @@ ThreadError Leader::GetContext(uint8_t aContextId, Lowpan::Context &aContext)
         aContext.mPrefix = mMle.GetMeshLocalPrefix();
         aContext.mPrefixLength = 64;
         aContext.mContextId = 0;
+        aContext.mCompressFlag = true;
         ExitNow(error = kThreadError_None);
     }
 
@@ -216,6 +219,7 @@ ThreadError Leader::GetContext(uint8_t aContextId, Lowpan::Context &aContext)
         aContext.mPrefix = prefix->GetPrefix();
         aContext.mPrefixLength = prefix->GetPrefixLength();
         aContext.mContextId = contextTlv->GetContextId();
+        aContext.mCompressFlag = contextTlv->IsCompress();
         ExitNow(error = kThreadError_None);
     }
 

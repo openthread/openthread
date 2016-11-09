@@ -1,4 +1,4 @@
-/*
+﻿/*
  *  Copyright (c) 2016, The OpenThread Authors.
  *  All rights reserved.
  *
@@ -26,49 +26,4 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef TEST_VECTOR_H
-#define TEST_VECTOR_H
-
-#include <stdint.h>
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-typedef const struct
-{
-    const char *mResult;
-
-    uint16_t mFcf;
-    uint16_t mSeq;
-    uint16_t mPanid;       ///< default panid is destination panid
-    const char *mSrc;
-    const char *mDst;
-} test_mac_vector_t;
-
-typedef const struct
-{
-    const char *mTest;
-    const char *mCompressed;
-    const char *mRaw;
-
-    const char *mPrefix;
-
-    test_mac_vector_t mMac;
-
-    uint16_t mTraffic;
-    uint16_t mFlow;
-    uint16_t mHops;
-    const char *mSrc;
-    const char *mDst;
-} test_lowpan_vector_t;
-
-
-extern test_lowpan_vector_t sTestVectorLowpan[];
-extern const unsigned sTestVectorLowpanLen;
-
-#ifdef __cplusplus
-}
-#endif
-
-#endif
+#include "pch.h"

@@ -251,6 +251,28 @@ public:
      */
     void SetKeySwitchGuardTime(uint32_t aKeySwitchGuardTime) { mKeySwitchGuardTime = aKeySwitchGuardTime; }
 
+    /**
+     * This method returns the Security Policy Flags.
+     *
+     * The Security Policy Flags specifies network administrator preferences for which
+     * security-related operations are allowed or disallowed.
+     *
+     * @returns The SecurityPolicy Flags.
+     *
+     */
+    uint8_t GetSecurityPolicyFlags(void) const { return mSecurityPolicyFlags; }
+
+    /**
+     * This method sets the Security Policy Flags.
+     *
+     * The Security Policy Flags specifies network administrator preferences for which
+     * security-related operations are allowed or disallowed.
+     *
+     * @param[in]  aSecurityPolicyFlags  The Security Policy Flags.
+     *
+     */
+    void SetSecurityPolicyFlags(uint8_t aSecurityPolicyFlags) { mSecurityPolicyFlags = aSecurityPolicyFlags; }
+
 private:
     enum
     {
@@ -286,6 +308,8 @@ private:
 
     uint8_t mKek[kMaxKeyLength];
     uint32_t mKekFrameCounter;
+
+    uint8_t mSecurityPolicyFlags;
 };
 
 /**

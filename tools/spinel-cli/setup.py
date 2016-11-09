@@ -1,3 +1,4 @@
+#!/usr/bin/python -u
 #
 #  Copyright (c) 2016, The OpenThread Authors.
 #  All rights reserved.
@@ -25,40 +26,37 @@
 #  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 #  POSSIBILITY OF SUCH DAMAGE.
 #
+from setuptools import setup, find_packages
 
-version: 0.1.{build}
-image: Visual Studio 2015
-configuration:
-- Release
-- Debug
-platform:
-- x64
-- x86
-- arm
-clone_depth: 10
-install:
-    - cmd: Bcdedit.exe -set TESTSIGNING ON
-    # Configure logging
-    - cmd: reg import .appveyor\ThreadEtw.reg
-    - ps: Restart-Computer -Force
-    - ps: Start-Sleep -s 10
-build:
-  project: etc/visual-studio/openthread.sln
-  verbosity: minimal
-after_build:
-    - ps: $env:Platform2 = $env:Platform
-    - ps: If ($env:Platform2 -eq "x86") { $env:Platform2 = "Win32" }
-    # Set up the release directories
-    - cmd: .appveyor\make_release.cmd
-    # Install driver (only runs on x64)
-    - cmd: .appveyor\install_driver.cmd
-test_script:
-    # Run the unit tests
-    - cmd: .appveyor\run_unit_tests.cmd
-    # Run the tests for the driver (only runs on x64)
-    - cmd: .appveyor\test_driver.cmd
-artifacts:
-- path: release
-  name: release
-- path: build\bin\AppPackages
-  name: app
+setup(
+    name='spinel',
+    version='1.0.0a1',
+    description='A Python interface to the OpenThread Network Co-Processor (NCP)',
+    url='https://github.com/openthread/openthread',
+    author='The OpenThread Authors',
+    author_email='openthread-users@googlegroups.com',
+    license='BSD',
+    classifiers=[
+        'Development Status :: 3 - Alpha',
+        'Intended Audience :: Developers',
+
+        'Operating System :: MacOS',
+        'Operating System :: POSIX :: Linux',
+
+        'License :: OSI Approved :: BSD License',
+
+        'Topic :: System :: Networking',
+        'Topic :: System :: Hardware :: Hardware Drivers',
+        'Topic :: Software Development :: Embedded Systems',
+
+        'Programming Language :: Python :: 2.7',
+    ],
+    keywords='openthread thread spinel ncp',
+    packages=find_packages(),
+    install_requires=[
+        'pyserial',
+        'ipaddress',
+        'scapy==2.3.2'
+    ],
+    scripts=['spinel-cli.py', 'sniffer.py']
+)

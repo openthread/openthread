@@ -124,7 +124,8 @@ ThreadError Leader::SendPetitionResponse(const Coap::Header &aRequestHeader, con
 
     if (mTimer.IsRunning())
     {
-        SuccessOrExit(error = message->Append(&mCommissionerId, sizeof(mCommissionerId)));
+        uint16_t len = sizeof(Tlv) + mCommissionerId.GetLength();
+        SuccessOrExit(error = message->Append(&mCommissionerId, len));
     }
 
     if (aState == StateTlv::kAccept)

@@ -1104,7 +1104,7 @@ class ARM(IThci):
         print '%s call powerDown' % self.port
         self.isPowerDown = True
         self._sendline('reset')
-        time.sleep(3)
+        time.sleep(5)
         self.setMAC(self.mac)
 
     def powerUp(self):
@@ -1271,7 +1271,7 @@ class ARM(IThci):
             self.setNetworkKey(self.networkKey)
             self.setMLPrefix(self.localprefix)
             self.setPSKc(self.pskc)
-            self.__setSecurityPolicy(self.securityPolicySecs)
+            self.__setSecurityPolicy("672 onrcb")
             self.__setChannelMask("0xffff")
             self.isWhiteListEnabled = False
             self.isBlackListEnabled = False
@@ -1913,7 +1913,16 @@ class ARM(IThci):
         return self.__sendCommand(cmd)
 
     def startNativeCommissioner(self, strPSKc='GRLpassWord'):
-        pass
+        #TODO: Support the whole Native Commissioner functionality
+        #      Currently it only aims to trigger a Discovery Request message to pass Certification test 5.8.4
+        print '%s call startNativeCommissioner' % self.port
+        self.__sendCommand('ifconfig up')
+        cmd = 'joiner start %s' %(strPSKc)
+        print cmd
+        if self.__sendCommand(cmd)[0] == "Done":
+            return True
+        else:
+            return False
 
     def startCollapsedCommissioner(self):
         """start Collapsed Commissioner
@@ -2493,6 +2502,8 @@ class ARM(IThci):
 
     def sendBeacons(self, sAddr, xCommissionerSessionId, listChannelMask, xPanId):
         print '%s call sendBeacons' % self.port
+        self._sendline('scan')
+        return True
 
     def updateRouterStatus(self):
         print '%s call updateRouterStatus' % self.port

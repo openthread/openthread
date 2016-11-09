@@ -1,4 +1,4 @@
-/*
+﻿/*
  *  Copyright (c) 2016, The OpenThread Authors.
  *  All rights reserved.
  *
@@ -26,47 +26,25 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "test_util.h"
+#pragma once
 
-#include <vector>
-#include <string>
-#include <sstream>
-#include <iostream>
+#include "App.g.h"
 
-void otTestHexToVector(std::string &aHex, std::vector<uint8_t> &aOutBytes)
+namespace Thread
 {
-    std::istringstream ss(aHex);
-    std::string word;
-
-    while (ss >> word)
+    /// <summary>
+    /// Provides application-specific behavior to supplement the default Application class.
+    /// </summary>
+    ref class App sealed
     {
-        uint8_t n = static_cast<uint8_t>(strtol(word.data(), NULL, 16));
-        aOutBytes.push_back(n);
-    }
-}
+    protected:
+        virtual void OnLaunched(Windows::ApplicationModel::Activation::LaunchActivatedEventArgs^ e) override;
 
-void otTestPrintHex(uint8_t *aBuffer, int aLength)
-{
-    int i;
+    internal:
+        App();
 
-    for (i = 0; i < aLength; i++)
-    {
-        printf("%02x ", aBuffer[i]);
-
-        if (i % 16 == 7) { printf(" "); }
-
-        if (i % 16 == 15 && aLength != i + 1) { printf("\n"); }
-    }
-
-    printf("\n");
-}
-
-void otTestPrintHex(std::string &aString)
-{
-    otTestPrintHex((uint8_t *)aString.data(), static_cast<int>(aString.size()));
-}
-
-void otTestPrintHex(std::vector<uint8_t> &aBytes)
-{
-    otTestPrintHex((uint8_t *)&aBytes[0], static_cast<int>(aBytes.size()));
+    private:
+        void OnSuspending(Platform::Object^ sender, Windows::ApplicationModel::SuspendingEventArgs^ e);
+        void OnNavigationFailed(Platform::Object ^sender, Windows::UI::Xaml::Navigation::NavigationFailedEventArgs ^e);
+    };
 }

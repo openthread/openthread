@@ -64,9 +64,6 @@ typedef struct otInstance
     otHandleEnergyScanResult mEnergyScanCallback;
     void *mEnergyScanCallbackContext;
 
-    otHandleActiveScanResult mDiscoverCallback;
-    void *mDiscoverCallbackContext;
-
     //
     // State
     //

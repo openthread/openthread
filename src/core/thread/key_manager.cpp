@@ -57,6 +57,8 @@ KeyManager::KeyManager(ThreadNetif &aThreadNetif):
     mKeyRotationTime = kDefaultKeyRotationTime;
     mKeySwitchGuardTime = kDefaultKeySwitchGuardTime;
     mKeySwitchGuardEnabled = false;
+
+    mSecurityPolicyFlags = 0xff;
 }
 
 void KeyManager::Start(void)

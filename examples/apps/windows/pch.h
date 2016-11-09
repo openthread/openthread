@@ -1,4 +1,4 @@
-/*
+﻿/*
  *  Copyright (c) 2016, The OpenThread Authors.
  *  All rights reserved.
  *
@@ -26,47 +26,21 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "test_util.h"
+#pragma once
 
-#include <vector>
-#include <string>
-#include <sstream>
-#include <iostream>
+#define _CRT_SECURE_NO_WARNINGS
 
-void otTestHexToVector(std::string &aHex, std::vector<uint8_t> &aOutBytes)
-{
-    std::istringstream ss(aHex);
-    std::string word;
+#include <WinSock2.h>
+#include <Windows.h>
+#include <collection.h>
+#include <ppltasks.h>
 
-    while (ss >> word)
-    {
-        uint8_t n = static_cast<uint8_t>(strtol(word.data(), NULL, 16));
-        aOutBytes.push_back(n);
-    }
-}
+#include <ws2def.h>
+#include <ws2ipdef.h>
+#include <mstcpip.h>
+#define OTDLL 1
+#include <openthread.h>
+#include <commissioning/commissioner.h>
+#include <commissioning/joiner.h>
 
-void otTestPrintHex(uint8_t *aBuffer, int aLength)
-{
-    int i;
-
-    for (i = 0; i < aLength; i++)
-    {
-        printf("%02x ", aBuffer[i]);
-
-        if (i % 16 == 7) { printf(" "); }
-
-        if (i % 16 == 15 && aLength != i + 1) { printf("\n"); }
-    }
-
-    printf("\n");
-}
-
-void otTestPrintHex(std::string &aString)
-{
-    otTestPrintHex((uint8_t *)aString.data(), static_cast<int>(aString.size()));
-}
-
-void otTestPrintHex(std::vector<uint8_t> &aBytes)
-{
-    otTestPrintHex((uint8_t *)&aBytes[0], static_cast<int>(aBytes.size()));
-}
+#include "App.xaml.h"
