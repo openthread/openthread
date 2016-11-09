@@ -44,6 +44,7 @@
 #include <net/socket.hpp>
 
 using Thread::Encoding::BigEndian::HostSwap16;
+using Thread::Encoding::BigEndian::HostSwap32;
 
 namespace Thread {
 
@@ -137,6 +138,12 @@ public:
      *
      */
     void Init() { mVersionClassFlow.m32[0] = 0; mVersionClassFlow.m8[0] = kVersion6; }
+
+    /**
+     * This method initializes the IPv6 header and sets Version, Traffic Control and Flow Label fields.
+     *
+     */
+    void Init(uint32_t aVersionClassFlow) { mVersionClassFlow.m32[0] = HostSwap32(aVersionClassFlow); }
 
     /**
      * This method indicates whether or not the IPv6 Version is set to 6.

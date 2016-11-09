@@ -34,9 +34,9 @@ include $(abs_top_nlbuild_autotools_dir)/automake/pre.am
 #
 noinst_HEADERS                                                      = \
     test_platform.h                                                   \
+    test_lowpan.hpp                                                   \
     test_util.h                                                       \
     test_util.hpp                                                     \
-    test_vector.h                                                     \
     $(NULL)
 
 #
@@ -130,7 +130,7 @@ test_link_quality_LDADD      = $(COMMON_LDADD)
 test_link_quality_SOURCES    = test_platform.cpp test_link_quality.cpp
 
 test_lowpan_LDADD            = $(COMMON_LDADD)
-test_lowpan_SOURCES          = test_platform.cpp test_lowpan.cpp test_util.cpp test_vector.c
+test_lowpan_SOURCES          = test_platform.cpp test_lowpan.cpp test_util.cpp
 
 test_mac_frame_LDADD         = $(COMMON_LDADD)
 test_mac_frame_SOURCES       = test_platform.cpp test_mac_frame.cpp

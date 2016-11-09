@@ -15,9 +15,6 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\tests\unit\test_vector.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\tests\unit\test_aes.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -62,13 +59,13 @@
     <ClInclude Include="..\..\tests\unit\test_platform.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\tests\unit\test_lowpan.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\tests\unit\test_util.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\tests\unit\test_util.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\tests\unit\test_vector.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
