@@ -30,9 +30,9 @@ pushd %APPVEYOR_BUILD_FOLDER%
 
 REM Make the release directory
 mkdir release
+mkdir release\libs
 mkdir release\symbols
 mkdir release\symbols\TraceFormat
-mkdir release\logs
 
 REM Copy the relavant binaries
 
@@ -40,8 +40,10 @@ copy build\bin\%Platform2%\%Configuration%\sys\otlwf\* release
 copy build\bin\%Platform2%\%Configuration%\sys\otlwf.cer release
 copy build\bin\%Platform2%\%Configuration%\sys\otlwf.pdb release\symbols
 copy build\bin\%Platform2%\%Configuration%\dll\otApi.dll release
+copy build\bin\%Platform2%\%Configuration%\dll\otApi.lib release\libs
 copy build\bin\%Platform2%\%Configuration%\dll\otApi.pdb release\symbols
 copy build\bin\%Platform2%\%Configuration%\dll\otNodeApi.dll release
+copy build\bin\%Platform2%\%Configuration%\dll\otNodeApi.lib release\libs
 copy build\bin\%Platform2%\%Configuration%\dll\otNodeApi.pdb release\symbols
 copy build\bin\%Platform2%\%Configuration%\exe\otCli.exe release
 copy build\bin\%Platform2%\%Configuration%\exe\otCli.pdb release\symbols
