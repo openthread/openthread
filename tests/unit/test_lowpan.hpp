@@ -183,10 +183,10 @@ public:
     }
 
     /**
-     * This method initializes IPHC Header.
+     * This method initializes LOWPAN_IPHC Header.
      *
-     * @param aIphc        Pointer to the IPHC header.
-     * @param aIphcLength  Length of the IPHC header.
+     * @param aIphc        Pointer to the LOWPAN_IPHC header.
+     * @param aIphcLength  Length of the LOWPAN_IPHC header.
      *
      */
     void SetIphcHeader(const uint8_t *aIphc, uint16_t aIphcLength) {
@@ -225,7 +225,7 @@ public:
     void SetPayloadOffset(uint16_t aPayloadOffset) { mPayloadOffset = aPayloadOffset; }
 
     /**
-     * This method returns compressed IPHC frame.
+     * This method returns compressed LOWPAN_IPHC frame.
      *
      * @returns The compressed stream.
      *

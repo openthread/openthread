@@ -182,12 +182,14 @@ int Lowpan::CompressMulticast(const Ip6::Address &aIpAddr, uint16_t &aHcCtl, uin
     {
         if (aIpAddr.mFields.m8[i])
         {
+            // Check if multicast address can be compressed to 8-bits (ff02::00xx)
             if (aIpAddr.mFields.m8[1] == 0x02 && i >= 15)
             {
                 aHcCtl |= kHcDstAddrMode3;
                 cur[0] = aIpAddr.mFields.m8[15];
                 cur++;
             }
+            // Check if multicast address can be compressed to 32-bits (ffxx::00xx:xxxx)
             else if (i >= 13)
             {
                 aHcCtl |= kHcDstAddrMode2;
@@ -195,6 +197,7 @@ int Lowpan::CompressMulticast(const Ip6::Address &aIpAddr, uint16_t &aHcCtl, uin
                 memcpy(cur + 1, aIpAddr.mFields.m8 + 13, 3);
                 cur += 4;
             }
+            // Check if multicast address can be compressed to 48-bits (ffxx::00xx:xxxx:xxxx)
             else if (i >= 11)
             {
                 aHcCtl |= kHcDstAddrMode1;
@@ -272,44 +275,39 @@ int Lowpan::Compress(Message &aMessage, const Mac::Address &aMacSource, const Ma
     dscp = ((ip6HeaderBytes[0] << 2) & 0x3c) | (ip6HeaderBytes[1] >> 6);
     ecn = (ip6HeaderBytes[1] << 2) & 0xc0;
 
-    // Traffic Class
-    if (dscp == 0)
-    {
-        hcCtl |= kHcTrafficClass;
-    }
-
     // Flow Label
     if (((ip6HeaderBytes[1] & 0x0f) == 0) && ((ip6HeaderBytes[2]) == 0) && ((ip6HeaderBytes[3]) == 0))
     {
-        hcCtl |= kHcFlowLabel;
-    }
-
-    if ((hcCtl & kHcTrafficFlowMask) != kHcTrafficFlow)
-    {
-        // Insert ECN at the beginning.
-        cur[0] = ecn;
-
-        if ((hcCtl & kHcTrafficClass) == 0)
+        if (dscp == 0 && ecn == 0)
         {
-            cur[0] |= dscp;
+            // Elide Flow Label and Traffic Class.
+            hcCtl |= kHcTrafficClass | kHcFlowLabel;
+        }
+        else
+        {
+            // Elide Flow Label and carry Traffic Class in-line.
+            hcCtl |= kHcFlowLabel;
+
+            cur[0] = ecn | dscp;
             cur++;
-
-            // Clear next byte.
-            cur[0] = 0;
-        }
-
-        if ((hcCtl & kHcFlowLabel) == 0)
-        {
-            cur[0] |= ip6HeaderBytes[1] & 0x0f;
-            cur[1] = ip6HeaderBytes[2];
-            cur[2] = ip6HeaderBytes[3];
-            cur += 3;
         }
     }
-    else if (ecn != 0)
+    else if (dscp == 0)
     {
-        cur[0] = ecn;
-        cur++;
+        // Carry Flow Label and ECN only with 2-bit padding.
+        hcCtl |= kHcTrafficClass;
+
+        cur[0] = ecn | (ip6HeaderBytes[1] & 0x0f);
+        memcpy(cur + 1, ip6HeaderBytes + 2, 2);
+        cur += 3;
+    }
+    else
+    {
+        // Carry Flow Label and Traffic Class in-line.
+        cur[0] = ecn | dscp;
+        cur[1] = ip6HeaderBytes[1] & 0x0f;
+        memcpy(cur + 2, ip6HeaderBytes + 2, 2);
+        cur += 4;
     }
 
     // Next Header

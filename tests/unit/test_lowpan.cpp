@@ -134,9 +134,9 @@ static void Init()
 /**
  * This function performs compression or/and decompression based on the given test vector.
  *
- * @note Performing decompression and compression on the same IPHC frame may give different result.
+ * @note Performing decompression and compression on the same LOWPAN_IPHC frame may give different result.
  *       This situation may occur when sender does not use the best possible compression,
- *       e.g. doesn't use NHC for UDP - which is still valid.
+ *       e.g. doesn't use LOWPAN_NHC for UDP - which is still valid.
  *
  * @param aVector     Test vector that has to be tested.
  * @param aCompress   Set to TRUE, if compression should be tested.
@@ -160,14 +160,14 @@ static void Test(TestIphcVector &aVector, bool aCompress, bool aDecompress)
     printf("UDP present ----------------- %s\n", aVector.mUdpHeader.GetLength() ? "yes" : "no");
     printf("Extension Headers present --- %s\n", aVector.mExtHeader.mLength ? "yes" : "no");
     printf("IP-in-IP present ------------ %s\n", aVector.mIpTunneledHeader.GetPayloadLength() ? "yes" : "no");
-    printf("IPHC length ----------------- %d\n", aVector.mIphcHeader.mLength);
+    printf("LOWPAN_IPHC length ---------- %d\n", aVector.mIphcHeader.mLength);
     printf("IPv6 uncompressed offset ---- %d\n\n", aVector.mPayloadOffset);
 
     printf("Expected IPv6 uncompressed packet: \n");
     otTestPrintHex(ip6, ip6Length);
     printf("\n");
 
-    printf("Expected IPHC compressed frame: \n");
+    printf("Expected LOWPAN_IPHC compressed frame: \n");
     otTestPrintHex(iphc, iphcLength);
     printf("\n");
 
@@ -183,12 +183,12 @@ static void Test(TestIphcVector &aVector, bool aCompress, bool aDecompress)
 
         if (aVector.mError == kThreadError_None)
         {
-            // Append payload to the IPHC.
+            // Append payload to the LOWPAN_IPHC.
             message->Read(message->GetOffset(),
                           message->GetLength() - message->GetOffset(),
                           result + compressBytes);
 
-            printf("Resulted IPHC compressed frame: \n");
+            printf("Resulted LOWPAN_IPHC compressed frame: \n");
             otTestPrintHex(result, compressBytes + message->GetLength() - message->GetOffset());
             printf("\n");
 
@@ -272,7 +272,7 @@ static void TestFullyCompressableLongAddresses(void)
                            "fe80::200:5eef:1022:1100",
                            "fe80::200:5eef:10aa:bbcc");
 
-    // Set IPHC header.
+    // Set LOWPAN_IPHC header.
     uint8_t iphc[] = {0x7a, 0x33, 0x3a};
     testVector.SetIphcHeader(iphc, sizeof(iphc));
 
@@ -298,7 +298,7 @@ static void TestFullyCompressableShortAddresses(void)
                            "fe80::ff:fe00:0000",
                            "fe80::ff:fe00:c003");
 
-    // Set IPHC header.
+    // Set LOWPAN_IPHC header.
     uint8_t iphc[] = {0x7a, 0x33, 0x3a};
     testVector.SetIphcHeader(iphc, sizeof(iphc));
 
@@ -324,7 +324,7 @@ static void TestFullyCompressableShortLongAddresses(void)
                            "fe80::ff:fe00:0000",
                            "fe80::200:5eef:10aa:bbcc");
 
-    // Set IPHC header.
+    // Set LOWPAN_IPHC header.
     uint8_t iphc[] = {0x7a, 0x33, 0x3a};
     testVector.SetIphcHeader(iphc, sizeof(iphc));
 
@@ -350,7 +350,7 @@ static void TestFullyCompressableLongShortAddresses(void)
                            "fe80::200:5eef:1022:1100",
                            "fe80::ff:fe00:c003");
 
-    // Set IPHC header.
+    // Set LOWPAN_IPHC header.
     uint8_t iphc[] = {0x7a, 0x33, 0x3a};
     testVector.SetIphcHeader(iphc, sizeof(iphc));
 
@@ -376,7 +376,7 @@ static void TestSourceUnspecifiedAddress(void)
                            "::",
                            "fe80::ff:fe00:c003");
 
-    // Set IPHC header.
+    // Set LOWPAN_IPHC header.
     uint8_t iphc[] = {0x7a, 0x43, 0x3a};
     testVector.SetIphcHeader(iphc, sizeof(iphc));
 
@@ -402,7 +402,7 @@ static void TestSource128bitDestination128bitAddresses(void)
                            "2001:2:0:3:aaaa:bbbb:cccc:dddd",
                            "2001:2:0:4::");
 
-    // Set IPHC header.
+    // Set LOWPAN_IPHC header.
     uint8_t iphc[] = {0x7a, 0x00, 0x3a, 0x20, 0x01, 0x00, 0x02, 0x00,
                       0x00, 0x00, 0x03, 0xaa, 0xaa, 0xbb, 0xbb, 0xcc,
                       0xcc, 0xdd, 0xdd, 0x20, 0x01, 0x00, 0x02, 0x00,
@@ -433,7 +433,7 @@ static void TestSource64bitDestination64bitLongAddresses(void)
                            "fe80::200:5eef:1022:1101",
                            "fe80::200:5eef:10aa:bbcd");
 
-    // Set IPHC header.
+    // Set LOWPAN_IPHC header.
     uint8_t iphc[] = {0x7a, 0x11, 0x3a, 0x02, 0x00, 0x5e, 0xef, 0x10,
                       0x22, 0x11, 0x01, 0x02, 0x00, 0x5e, 0xef, 0x10,
                       0xaa, 0xbb, 0xcd
@@ -462,7 +462,7 @@ static void TestSource64bitDestination64bitShortAddresses(void)
                            "fe80::200:5eef:1022:1101",
                            "fe80::200:5eef:10aa:bbcd");
 
-    // Set IPHC header.
+    // Set LOWPAN_IPHC header.
     uint8_t iphc[] = {0x7a, 0x11, 0x3a, 0x02, 0x00, 0x5e, 0xef, 0x10,
                       0x22, 0x11, 0x01, 0x02, 0x00, 0x5e, 0xef, 0x10,
                       0xaa, 0xbb, 0xcd
@@ -491,7 +491,7 @@ static void TestSource16bitDestination16bitAddresses(void)
                            "fe80::ff:fe00:0001",
                            "fe80::ff:fe00:c004");
 
-    // Set IPHC header.
+    // Set LOWPAN_IPHC header.
     uint8_t iphc[] = {0x7a, 0x22, 0x3a, 0x00, 0x01, 0xc0, 0x04};
     testVector.SetIphcHeader(iphc, sizeof(iphc));
 
@@ -517,7 +517,7 @@ static void TestSourceCompressedDestination16bitAddresses(void)
                            "fe80::200:5eef:1022:1100",
                            "fe80::ff:fe00:beaf");
 
-    // Set IPHC header.
+    // Set LOWPAN_IPHC header.
     uint8_t iphc[] = {0x7a, 0x32, 0x3a, 0xbe, 0xaf};
     testVector.SetIphcHeader(iphc, sizeof(iphc));
 
@@ -543,7 +543,7 @@ static void TestSourceCompressedDestination128bitAddresses(void)
                            "fe80::200:5eef:1022:1100",
                            "2001:2:0:4::");
 
-    // Set IPHC header.
+    // Set LOWPAN_IPHC header.
     uint8_t iphc[] = {0x7a, 0x30, 0x3a, 0x20, 0x01, 0x00, 0x02, 0x00,
                       0x00, 0x00, 0x04, 0x00, 0x00, 0x00, 0x00, 0x00,
                       0x00, 0x00, 0x00
@@ -573,7 +573,7 @@ static void TestMulticast128bitAddress(void)
                            "fe80::200:5eef:1022:1100",
                            "ff05::100:0030:0001");
 
-    // Set IPHC header.
+    // Set LOWPAN_IPHC header.
     uint8_t iphc[] = {0x7a, 0x38, 0x3a, 0xff, 0x05, 0x00, 0x00, 0x00,
                       0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00,
                       0x30, 0x00, 0x01
@@ -602,7 +602,7 @@ static void TestMulticast48bitAddress(void)
                            "fe80::200:5eef:1022:1100",
                            "ff05::1:0030:0001");
 
-    // Set IPHC header.
+    // Set LOWPAN_IPHC header.
     uint8_t iphc[] = {0x7a, 0x39, 0x3a, 0x05, 0x01, 0x00, 0x30, 0x00,
                       0x01
                      };
@@ -630,7 +630,7 @@ static void TestMulticast32bitAddress(void)
                            "fe80::200:5eef:1022:1100",
                            "ff03::fc");
 
-    // Set IPHC header.
+    // Set LOWPAN_IPHC header.
     uint8_t iphc[] = {0x7a, 0x1a, 0x3a, 0x02, 0x00, 0x5e, 0xef, 0x10,
                       0x22, 0x11, 0x00, 0x03, 0x00, 0x00, 0xfc
                      };
@@ -658,7 +658,7 @@ static void TestMulticast8bitAddress(void)
                            "fe80::200:5eef:1022:1100",
                            "ff02::2");
 
-    // Set IPHC header.
+    // Set LOWPAN_IPHC header.
     uint8_t iphc[] = {0x7a, 0x3b, 0x3a, 0x02};
     testVector.SetIphcHeader(iphc, sizeof(iphc));
 
@@ -684,7 +684,7 @@ static void TestStatefulSource64bitDestination64bitContext0(void)
                            "fd00:cafe:face:1234:abcd:ef01:2345:6789",
                            "fd00:cafe:face:1234:c31d:a702:0d41:beef");
 
-    // Set IPHC header.
+    // Set LOWPAN_IPHC header.
     uint8_t iphc[] = {0x7a, 0x55, 0x3a, 0xab, 0xcd, 0xef, 0x01, 0x23,
                       0x45, 0x67, 0x89, 0xc3, 0x1d, 0xa7, 0x02, 0x0d,
                       0x41, 0xbe, 0xef
@@ -713,7 +713,7 @@ static void TestStatefulSource64bitDestination64bitContext0IfContextInLine(void)
                            "fd00:cafe:face:1234:abcd:ef01:2345:6789",
                            "fd00:cafe:face:1234:c31d:a702:0d41:beef");
 
-    // Set IPHC header.
+    // Set LOWPAN_IPHC header.
     uint8_t iphc[] = {0x7a, 0xd5, 0x00, 0x3a, 0xab, 0xcd, 0xef, 0x01, 0x23,
                       0x45, 0x67, 0x89, 0xc3, 0x1d, 0xa7, 0x02, 0x0d,
                       0x41, 0xbe, 0xef
@@ -742,7 +742,7 @@ static void TestStatefulSource16bitDestination16bitContext0(void)
                            "fd00:cafe:face:1234::ff:fe00:fffc",
                            "fd00:cafe:face:1234::ff:fe00:fffe");
 
-    // Set IPHC header.
+    // Set LOWPAN_IPHC header.
     uint8_t iphc[] = {0x7a, 0x66, 0x3a, 0xff, 0xfc, 0xff, 0xfe};
     testVector.SetIphcHeader(iphc, sizeof(iphc));
 
@@ -768,7 +768,7 @@ static void TestStatefulCompressableLongAddressesContext0(void)
                            "fd00:cafe:face:1234:0200:5eef:1022:1100",
                            "fd00:cafe:face:1234:0200:5eef:10aa:bbcc");
 
-    // Set IPHC header.
+    // Set LOWPAN_IPHC header.
     uint8_t iphc[] = {0x7a, 0x77, 0x3a};
     testVector.SetIphcHeader(iphc, sizeof(iphc));
 
@@ -794,7 +794,7 @@ static void TestStatefulCompressableShortAddressesContext0(void)
                            "fd00:cafe:face:1234::ff:fe00:0000",
                            "fd00:cafe:face:1234::ff:fe00:c003");
 
-    // Set IPHC header.
+    // Set LOWPAN_IPHC header.
     uint8_t iphc[] = {0x7a, 0x77, 0x3a};
     testVector.SetIphcHeader(iphc, sizeof(iphc));
 
@@ -820,7 +820,7 @@ static void TestStatefulCompressableLongShortAddressesContext0(void)
                            "fd00:cafe:face:1234:0200:5eef:1022:1100",
                            "fd00:cafe:face:1234::ff:fe00:c003");
 
-    // Set IPHC header.
+    // Set LOWPAN_IPHC header.
     uint8_t iphc[] = {0x7a, 0x77, 0x3a};
     testVector.SetIphcHeader(iphc, sizeof(iphc));
 
@@ -846,7 +846,7 @@ static void TestStatefulSource64bitDestination128bitContext1(void)
                            "2001:2:0:1:abcd:ef01:2345:6789",
                            "2001:2:0:3:c31d:a702:0d41:beef");
 
-    // Set IPHC header.
+    // Set LOWPAN_IPHC header.
     uint8_t iphc[] = {0x7a, 0xd0, 0x10, 0x3a, 0xab, 0xcd, 0xef, 0x01, 0x23,
                       0x45, 0x67, 0x89, 0x20, 0x01, 0x00, 0x02, 0x00, 0x00,
                       0x00, 0x03, 0xc3, 0x1d, 0xa7, 0x02, 0x0d, 0x41, 0xbe,
@@ -876,7 +876,7 @@ static void TestStatefulSource64bitDestination64bitContext1(void)
                            "2001:2:0:1:abcd:ef01:2345:6789",
                            "2001:2:0:1:c31d:a702:0d41:beef");
 
-    // Set IPHC header.
+    // Set LOWPAN_IPHC header.
     uint8_t iphc[] = {0x7a, 0xd5, 0x11, 0x3a, 0xab, 0xcd, 0xef, 0x01, 0x23,
                       0x45, 0x67, 0x89, 0xc3, 0x1d, 0xa7, 0x02, 0x0d, 0x41,
                       0xbe, 0xef
@@ -905,7 +905,7 @@ static void TestStatefulSourceDestinationInlineContext2CIDFalse(void)
                            "2001:2:0:2:abcd:ef01:2345:6789",
                            "2001:2:0:2:c31d:a702:0d41:beef");
 
-    // Set IPHC header.
+    // Set LOWPAN_IPHC header.
     uint8_t iphc[] = {0x7a, 0x00, 0x3a, 0x20, 0x01, 0x00, 0x02, 0x00,
                       0x00, 0x00, 0x02, 0xab, 0xcd, 0xef, 0x01, 0x23,
                       0x45, 0x67, 0x89, 0x20, 0x01, 0x00, 0x02, 0x00,
@@ -936,7 +936,7 @@ static void TestStatefulMulticastDestination48bitContext0(void)
                            "fd00:cafe:face:1234:0200:5eef:1022:1100",
                            "ff33:0040:fd00:cafe:face:1234:0000:0001");
 
-    // Set IPHC header.
+    // Set LOWPAN_IPHC header.
     uint8_t iphc[] = {0x7a, 0x7c, 0x3a, 0x33, 0x00, 0x00, 0x00, 0x00,
                       0x01
                      };
@@ -964,7 +964,7 @@ static void TestTrafficClassFlowLabel3Bytes(void)
                            "fe80::200:5eef:1022:1100",
                            "fe80::200:5eef:10aa:bbcc");
 
-    // Set IPHC header.
+    // Set LOWPAN_IPHC header.
     uint8_t iphc[] = {0x6a, 0x33, 0x41, 0xac, 0x59, 0x3a};
     testVector.SetIphcHeader(iphc, sizeof(iphc));
 
@@ -990,8 +990,34 @@ static void TestTrafficClassFlowLabel1Byte(void)
                            "fe80::200:5eef:1022:1100",
                            "fe80::200:5eef:10aa:bbcc");
 
-    // Set IPHC header.
+    // Set LOWPAN_IPHC header.
     uint8_t iphc[] = {0x72, 0x33, 0x43, 0x3a};
+    testVector.SetIphcHeader(iphc, sizeof(iphc));
+
+    // Set payload and error.
+    testVector.SetPayload(sTestPayloadDefault, sizeof(sTestPayloadDefault));
+    testVector.SetPayloadOffset(40);
+    testVector.SetError(kThreadError_None);
+
+    // Perform compression and decompression tests.
+    Test(testVector, true, true);
+}
+
+static void TestTrafficClassFlowLabel1ByteEcnOnly(void)
+{
+    TestIphcVector testVector("Traffic Class and Flow Label 1 byte with ecn only");
+
+    // Setup MAC addresses.
+    testVector.SetMacSource(sTestMacSourceDefaultLong);
+    testVector.SetMacDestination(sTestMacDestinationDefaultLong);
+
+    // Setup IPv6 header.
+    testVector.SetIpHeader(0x60100000, sizeof(sTestPayloadDefault), Ip6::kProtoIcmp6, 64,
+                           "fe80::200:5eef:1022:1100",
+                           "fe80::200:5eef:10aa:bbcc");
+
+    // Set LOWPAN_IPHC header.
+    uint8_t iphc[] = {0x72, 0x33, 0x40, 0x3a};
     testVector.SetIphcHeader(iphc, sizeof(iphc));
 
     // Set payload and error.
@@ -1016,7 +1042,7 @@ static void TestTrafficClassFlowLabelInline(void)
                            "fe80::200:5eef:1022:1100",
                            "fe80::200:5eef:10aa:bbcc");
 
-    // Set IPHC header.
+    // Set LOWPAN_IPHC header.
     uint8_t iphc[] = {0x62, 0x33, 0xBA, 0x01, 0x23, 0x45, 0x3a};
     testVector.SetIphcHeader(iphc, sizeof(iphc));
 
@@ -1042,7 +1068,7 @@ static void TestHopLimit1(void)
                            "fe80::ff:fe00:0000",
                            "fe80::ff:fe00:c003");
 
-    // Set IPHC header.
+    // Set LOWPAN_IPHC header.
     uint8_t iphc[] = {0x79, 0x33, 0x3a};
     testVector.SetIphcHeader(iphc, sizeof(iphc));
 
@@ -1068,7 +1094,7 @@ static void TestHopLimit255(void)
                            "fe80::ff:fe00:0000",
                            "fe80::ff:fe00:c003");
 
-    // Set IPHC header.
+    // Set LOWPAN_IPHC header.
     uint8_t iphc[] = {0x7B, 0x33, 0x3a};
     testVector.SetIphcHeader(iphc, sizeof(iphc));
 
@@ -1094,7 +1120,7 @@ static void TestHopLimitInline(void)
                            "fe80::ff:fe00:0000",
                            "fe80::ff:fe00:c003");
 
-    // Set IPHC header.
+    // Set LOWPAN_IPHC header.
     uint8_t iphc[] = {0x78, 0x33, 0x3a, 0x3f};
     testVector.SetIphcHeader(iphc, sizeof(iphc));
 
@@ -1123,7 +1149,7 @@ static void TestUdpSourceDestinationInline(void)
     // Setup UDP header.
     testVector.SetUDPHeader(5683, 5684, sizeof(sTestPayloadDefault) + 8, 0xbeef);
 
-    // Set IPHC header.
+    // Set LOWPAN_IPHC header.
     uint8_t iphc[] = {0x7e, 0x33, 0xf0, 0x16, 0x33, 0x16, 0x34, 0xbe, 0xef};
     testVector.SetIphcHeader(iphc, sizeof(iphc));
 
@@ -1152,7 +1178,7 @@ static void TestUdpSourceInlineDestination8bit(void)
     // Setup UDP header.
     testVector.SetUDPHeader(5683, 61441, sizeof(sTestPayloadDefault) + 8, 0xbeef);
 
-    // Set IPHC header.
+    // Set LOWPAN_IPHC header.
     uint8_t iphc[] = {0x7e, 0x33, 0xf1, 0x16, 0x33, 0x01, 0xbe, 0xef};
     testVector.SetIphcHeader(iphc, sizeof(iphc));
 
@@ -1181,7 +1207,7 @@ static void TestUdpSource8bitDestinationInline(void)
     // Setup UDP header.
     testVector.SetUDPHeader(61695, 5683, sizeof(sTestPayloadDefault) + 8, 0xbeef);
 
-    // Set IPHC header.
+    // Set LOWPAN_IPHC header.
     uint8_t iphc[] = {0x7e, 0x33, 0xf2, 0xff, 0x16, 0x33, 0xbe, 0xef};
     testVector.SetIphcHeader(iphc, sizeof(iphc));
 
@@ -1210,7 +1236,7 @@ static void TestUdpFullyCompressed(void)
     // Setup UDP header.
     testVector.SetUDPHeader(61616, 61631, sizeof(sTestPayloadDefault) + 8, 0xface);
 
-    // Set IPHC header.
+    // Set LOWPAN_IPHC header.
     uint8_t iphc[] = {0x7e, 0x33, 0xf3, 0x0f, 0xfa, 0xce};
     testVector.SetIphcHeader(iphc, sizeof(iphc));
 
@@ -1239,7 +1265,7 @@ static void TestUdpFullyCompressedMulticast(void)
     // Setup UDP header.
     testVector.SetUDPHeader(61616, 61631, sizeof(sTestPayloadDefault) + 8, 0xface);
 
-    // Set IPHC header.
+    // Set LOWPAN_IPHC header.
     uint8_t iphc[] = {0x7e, 0x3b, 0x01, 0xf3, 0x0f, 0xfa, 0xce};
     testVector.SetIphcHeader(iphc, sizeof(iphc));
 
@@ -1252,9 +1278,9 @@ static void TestUdpFullyCompressedMulticast(void)
     Test(testVector, true, true);
 }
 
-static void TestUdpWithoutNHC(void)
+static void TestUdpWithoutNhc(void)
 {
-    TestIphcVector testVector("UDP without NHC compression");
+    TestIphcVector testVector("UDP without LOWPAN_NHC compression");
 
     // Setup MAC addresses.
     testVector.SetMacSource(sTestMacSourceDefaultShort);
@@ -1265,7 +1291,7 @@ static void TestUdpWithoutNHC(void)
                            "fe80::ff:fe00:0000",
                            "fe80::ff:fe00:c003");
 
-    // Set IPHC header.
+    // Set LOWPAN_IPHC header.
     uint8_t iphc[] = {0x7a, 0x33, 0x11};
     testVector.SetIphcHeader(iphc, sizeof(iphc));
 
@@ -1295,7 +1321,7 @@ static void TestExtensionHeaderHopByHopNoPadding(void)
     uint8_t extHeader[] = {0x3a, 0x00, 0x6d, 0x04, 0x60, 0x11, 0x00, 0x0c};
     testVector.SetExtHeader(extHeader, sizeof(extHeader));
 
-    // Set IPHC header.
+    // Set LOWPAN_IPHC header.
     uint8_t iphc[] = {0x7e, 0x7a, 0x03, 0x00, 0x00, 0x01, 0xe0, 0x3a,
                       0x06, 0x6d, 0x04, 0x60, 0x11, 0x00, 0x0c
                      };
@@ -1327,7 +1353,7 @@ static void TestExtensionHeaderHopByHopPad1(void)
     uint8_t extHeader[] = {0x3a, 0x00, 0x6d, 0x03, 0x60, 0x11, 0x00, 0x00};
     testVector.SetExtHeader(extHeader, sizeof(extHeader));
 
-    // Set IPHC header.
+    // Set LOWPAN_IPHC header.
     uint8_t iphc[] = {0x7e, 0x7a, 0x03, 0x00, 0x00, 0x01, 0xe0, 0x3a,
                       0x05, 0x6d, 0x03, 0x60, 0x11, 0x00
                      };
@@ -1359,7 +1385,7 @@ static void TestExtensionHeaderHopByHopPadN2(void)
     uint8_t extHeader[] = {0x3a, 0x00, 0x6d, 0x02, 0x60, 0x11, 0x01, 0x00};
     testVector.SetExtHeader(extHeader, sizeof(extHeader));
 
-    // Set IPHC header.
+    // Set LOWPAN_IPHC header.
     uint8_t iphc[] = {0x7e, 0x7a, 0x03, 0x00, 0x00, 0x01, 0xe0, 0x3a,
                       0x04, 0x6d, 0x02, 0x60, 0x11
                      };
@@ -1391,7 +1417,7 @@ static void TestExtensionHeaderHopByHopPadN3(void)
     uint8_t extHeader[] = {0x3a, 0x00, 0x6d, 0x01, 0x60, 0x01, 0x01, 0x00};
     testVector.SetExtHeader(extHeader, sizeof(extHeader));
 
-    // Set IPHC header.
+    // Set LOWPAN_IPHC header.
     uint8_t iphc[] = {0x7e, 0x7a, 0x03, 0x00, 0x00, 0x01, 0xe0, 0x3a,
                       0x03, 0x6d, 0x01, 0x60
                      };
@@ -1423,7 +1449,7 @@ static void TestExtensionHeaderHopByHopPadN4(void)
     uint8_t extHeader[] = {0x3a, 0x00, 0x6d, 0x00, 0x01, 0x02, 0x00, 0x00};
     testVector.SetExtHeader(extHeader, sizeof(extHeader));
 
-    // Set IPHC header.
+    // Set LOWPAN_IPHC header.
     uint8_t iphc[] = {0x7e, 0x7a, 0x03, 0x00, 0x00, 0x01, 0xe0, 0x3a,
                       0x02, 0x6d, 0x00
                      };
@@ -1457,7 +1483,7 @@ static void TestExtensionHeaderHopByHopPadN5(void)
                           };
     testVector.SetExtHeader(extHeader, sizeof(extHeader));
 
-    // Set IPHC header.
+    // Set LOWPAN_IPHC header.
     uint8_t iphc[] = {0x7e, 0x7a, 0x03, 0x00, 0x00, 0x01, 0xe0, 0x3a,
                       0x09, 0x6d, 0x07, 0x01, 0x02, 0x01, 0x00, 0x00,
                       0x00, 0x33
@@ -1493,7 +1519,7 @@ static void TestExtensionHeaderHopByHopPadN6(void)
                           };
     testVector.SetExtHeader(extHeader, sizeof(extHeader));
 
-    // Set IPHC header.
+    // Set LOWPAN_IPHC header.
     uint8_t iphc[] = {0x7e, 0x7a, 0x03, 0x00, 0x00, 0x01, 0xe0, 0x3a,
                       0x10, 0x6d, 0x0e, 0x01, 0x02, 0x01, 0x00, 0x00,
                       0x00, 0x33, 0x01, 0x03, 0x00, 0x00, 0x00, 0x11,
@@ -1530,7 +1556,7 @@ static void TestExtensionHeaderHopByHopPadN7(void)
                           };
     testVector.SetExtHeader(extHeader, sizeof(extHeader));
 
-    // Set IPHC header.
+    // Set LOWPAN_IPHC header.
     uint8_t iphc[] = {0x7e, 0x7a, 0x03, 0x00, 0x00, 0x01, 0xe0, 0x3a,
                       0x0f, 0x6d, 0x0d, 0x01, 0x02, 0x01, 0x00, 0x00,
                       0x00, 0x33, 0x01, 0x03, 0x00, 0x00, 0x00, 0x11
@@ -1548,7 +1574,7 @@ static void TestExtensionHeaderHopByHopPadN7(void)
 
 static void TestExtensionHeaderHopByHopPadN2UdpFullyCompressed(void)
 {
-    TestIphcVector testVector("Extension Header - Hop-by-Hop with PadN2 and UDP NHC");
+    TestIphcVector testVector("Extension Header - Hop-by-Hop with PadN2 and UDP");
 
     // Setup MAC addresses.
     testVector.SetMacSource(sTestMacSourceDefaultShort);
@@ -1566,7 +1592,7 @@ static void TestExtensionHeaderHopByHopPadN2UdpFullyCompressed(void)
     // Setup UDP header.
     testVector.SetUDPHeader(61616, 61631, sizeof(sTestPayloadDefault) + 8, 0xface);
 
-    // Set IPHC header.
+    // Set LOWPAN_IPHC header.
     uint8_t iphc[] = {0x7e, 0x7a, 0x03, 0x00, 0x00, 0x01, 0xe1, 0x04,
                       0x6d, 0x02, 0x60, 0x11, 0xf3, 0x0f, 0xfa, 0xce
                      };
@@ -1583,7 +1609,7 @@ static void TestExtensionHeaderHopByHopPadN2UdpFullyCompressed(void)
 
 static void TestIpInIpHopByHopPadN2UdpSourceDestinationInline(void)
 {
-    TestIphcVector testVector("IP-in-IP with Hop-by-Hop with PadN2 and UDP NHC");
+    TestIphcVector testVector("IP-in-IP with Hop-by-Hop with PadN2 and UDP");
 
     // Setup MAC addresses.
     testVector.SetMacSource(sTestMacSourceDefaultShort);
@@ -1606,7 +1632,7 @@ static void TestIpInIpHopByHopPadN2UdpSourceDestinationInline(void)
     // Setup UDP header.
     testVector.SetUDPHeader(5683, 5684, sizeof(sTestPayloadDefault) + 8, 0xbeef);
 
-    // Set IPHC header.
+    // Set LOWPAN_IPHC header.
     uint8_t iphc[] = {0x7e, 0x7a, 0x03, 0x00, 0x00, 0xfc, 0xe1, 0x04,
                       0x6d, 0x02, 0x00, 0x11, 0xee, 0x7e, 0x7a, 0x05,
                       0x00, 0x00, 0x01, 0xf0, 0x16, 0x33, 0x16, 0x34,
@@ -1641,7 +1667,7 @@ static void TestIpInIpWithoutExtensionHeader(void)
                                    "fe80::200:5eef:1022:1100",
                                    "fe80::200:5eef:10aa:bbcc");
 
-    // Set IPHC header.
+    // Set LOWPAN_IPHC header.
     uint8_t iphc[] = {0x7e, 0x3a, 0x03, 0x00, 0x00, 0x01, 0xee, 0x79,
                       0x33, 0x3a
                      };
@@ -1656,7 +1682,7 @@ static void TestIpInIpWithoutExtensionHeader(void)
     Test(testVector, true, true);
 }
 
-static void TestErrorNoIPHCDispatch(void)
+static void TestErrorNoIphcDispatch(void)
 {
     TestIphcVector testVector("Invalid dispatch");
 
@@ -1664,7 +1690,7 @@ static void TestErrorNoIPHCDispatch(void)
     testVector.SetMacSource(sTestMacSourceDefaultLong);
     testVector.SetMacDestination(sTestMacDestinationDefaultLong);
 
-    // Set IPHC header.
+    // Set LOWPAN_IPHC header.
     uint8_t iphc[] = {0x40, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06};
     testVector.SetIphcHeader(iphc, sizeof(iphc));
 
@@ -1675,15 +1701,15 @@ static void TestErrorNoIPHCDispatch(void)
     Test(testVector, false, true);
 }
 
-static void TestErrorTruncatedIPHC(void)
+static void TestErrorTruncatedIphc(void)
 {
-    TestIphcVector testVector("Truncated IPHC");
+    TestIphcVector testVector("Truncated LOWPAN_IPHC");
 
     // Setup MAC addresses.
     testVector.SetMacSource(sTestMacSourceDefaultLong);
     testVector.SetMacDestination(sTestMacDestinationDefaultLong);
 
-    // Set IPHC header.
+    // Set LOWPAN_IPHC header.
     uint8_t iphc[] = {0x7a, 0x00};
     testVector.SetIphcHeader(iphc, sizeof(iphc));
 
@@ -1702,7 +1728,7 @@ static void TestErrorReservedValueDestination0100(void)
     testVector.SetMacSource(sTestMacSourceDefaultLong);
     testVector.SetMacDestination(sTestMacDestinationDefaultLong);
 
-    // Set IPHC header.
+    // Set LOWPAN_IPHC header.
     uint8_t iphc[] = {0x7a, 0x34, 0x3A};
     testVector.SetIphcHeader(iphc, sizeof(iphc));
 
@@ -1721,7 +1747,7 @@ static void TestErrorReservedValueDestination1101(void)
     testVector.SetMacSource(sTestMacSourceDefaultLong);
     testVector.SetMacDestination(sTestMacDestinationDefaultLong);
 
-    // Set IPHC header.
+    // Set LOWPAN_IPHC header.
     uint8_t iphc[] = {0x7a, 0x3D, 0x3A};
     testVector.SetIphcHeader(iphc, sizeof(iphc));
 
@@ -1740,7 +1766,7 @@ static void TestErrorReservedValueDestination1110(void)
     testVector.SetMacSource(sTestMacSourceDefaultLong);
     testVector.SetMacDestination(sTestMacDestinationDefaultLong);
 
-    // Set IPHC header.
+    // Set LOWPAN_IPHC header.
     uint8_t iphc[] = {0x7a, 0x3E, 0x3A};
     testVector.SetIphcHeader(iphc, sizeof(iphc));
 
@@ -1759,7 +1785,7 @@ static void TestErrorReservedValueDestination1111(void)
     testVector.SetMacSource(sTestMacSourceDefaultLong);
     testVector.SetMacDestination(sTestMacDestinationDefaultLong);
 
-    // Set IPHC header.
+    // Set LOWPAN_IPHC header.
     uint8_t iphc[] = {0x7a, 0x3F, 0x3A};
     testVector.SetIphcHeader(iphc, sizeof(iphc));
 
@@ -1770,15 +1796,15 @@ static void TestErrorReservedValueDestination1111(void)
     Test(testVector, false, true);
 }
 
-static void TestErrorUnknownNHC(void)
+static void TestErrorUnknownNhc(void)
 {
-    TestIphcVector testVector("Unknown value of NHC");
+    TestIphcVector testVector("Unknown value of LOWPAN_NHC ID");
 
     // Setup MAC addresses.
     testVector.SetMacSource(sTestMacSourceDefaultLong);
     testVector.SetMacDestination(sTestMacDestinationDefaultLong);
 
-    // Set IPHC header.
+    // Set LOWPAN_IPHC header.
     uint8_t iphc[] = {0x7e, 0x33, 0x00};
     testVector.SetIphcHeader(iphc, sizeof(iphc));
 
@@ -1789,15 +1815,15 @@ static void TestErrorUnknownNHC(void)
     Test(testVector, false, true);
 }
 
-static void TestErrorReservedNHC5(void)
+static void TestErrorReservedNhc5(void)
 {
-    TestIphcVector testVector("Reserved value of NHC EID - 0x05");
+    TestIphcVector testVector("Reserved value of LOWPAN_NHC EID - 0x05");
 
     // Setup MAC addresses.
     testVector.SetMacSource(sTestMacSourceDefaultLong);
     testVector.SetMacDestination(sTestMacDestinationDefaultLong);
 
-    // Set IPHC header.
+    // Set LOWPAN_IPHC header.
     uint8_t iphc[] = {0x7e, 0x33, 0xea};
     testVector.SetIphcHeader(iphc, sizeof(iphc));
 
@@ -1808,15 +1834,15 @@ static void TestErrorReservedNHC5(void)
     Test(testVector, false, true);
 }
 
-static void TestErrorReservedNHC6(void)
+static void TestErrorReservedNhc6(void)
 {
-    TestIphcVector testVector("Reserved value of NHC EID - 0x06");
+    TestIphcVector testVector("Reserved value of LOWPAN_NHC EID - 0x06");
 
     // Setup MAC addresses.
     testVector.SetMacSource(sTestMacSourceDefaultLong);
     testVector.SetMacDestination(sTestMacDestinationDefaultLong);
 
-    // Set IPHC header.
+    // Set LOWPAN_IPHC header.
     uint8_t iphc[] = {0x7e, 0x33, 0xec};
     testVector.SetIphcHeader(iphc, sizeof(iphc));
 
@@ -1871,6 +1897,7 @@ void TestLowpanIphc(void)
     // Traffic Class and Flow Label compression / decompression tests.
     TestTrafficClassFlowLabel3Bytes();
     TestTrafficClassFlowLabel1Byte();
+    TestTrafficClassFlowLabel1ByteEcnOnly();
     TestTrafficClassFlowLabelInline();
 
     // Hop Limit compression / decompression tests.
@@ -1884,7 +1911,7 @@ void TestLowpanIphc(void)
     TestUdpSource8bitDestinationInline();
     TestUdpFullyCompressed();
     TestUdpFullyCompressedMulticast();
-    TestUdpWithoutNHC();
+    TestUdpWithoutNhc();
 
     // Extension Headers compression / decompression tests.
     TestExtensionHeaderHopByHopNoPadding();
@@ -1902,15 +1929,15 @@ void TestLowpanIphc(void)
     TestIpInIpWithoutExtensionHeader();
 
     // Invalid frame to be decompressed.
-    TestErrorNoIPHCDispatch();
-    TestErrorTruncatedIPHC();
+    TestErrorNoIphcDispatch();
+    TestErrorTruncatedIphc();
     TestErrorReservedValueDestination0100();
     TestErrorReservedValueDestination1101();
     TestErrorReservedValueDestination1110();
     TestErrorReservedValueDestination1111();
-    TestErrorUnknownNHC();
-    TestErrorReservedNHC5();
-    TestErrorReservedNHC6();
+    TestErrorUnknownNhc();
+    TestErrorReservedNhc5();
+    TestErrorReservedNhc6();
 }
 
 }  // namespace Thread
