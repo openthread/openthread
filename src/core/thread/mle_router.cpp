@@ -3729,12 +3729,10 @@ exit:
 ThreadError MleRouter::AppendActiveDataset(Message &aMessage)
 {
     ThreadError error = kThreadError_None;
-    Tlv tlv;
 
-    tlv.SetType(Tlv::kActiveDataset);
-    tlv.SetLength(static_cast<uint8_t>(mNetif.GetActiveDataset().GetNetwork().GetSize()));
-    SuccessOrExit(error = aMessage.Append(&tlv, sizeof(tlv)));
-    SuccessOrExit(error = aMessage.Append(mNetif.GetActiveDataset().GetNetwork().GetBytes(), tlv.GetLength()));
+    VerifyOrExit(mNetif.GetActiveDataset().GetNetwork().GetSize() > 0,);
+
+    SuccessOrExit(error = mNetif.GetActiveDataset().GetNetwork().AppendMleDatasetTlv(aMessage));
 
 exit:
     return error;
@@ -3743,13 +3741,11 @@ exit:
 ThreadError MleRouter::AppendPendingDataset(Message &aMessage)
 {
     ThreadError error = kThreadError_None;
-    Tlv tlv;
 
-    tlv.SetType(Tlv::kPendingDataset);
-    tlv.SetLength(static_cast<uint8_t>(mNetif.GetPendingDataset().GetNetwork().GetSize()));
-    SuccessOrExit(error = aMessage.Append(&tlv, sizeof(tlv)));
+    VerifyOrExit(mNetif.GetPendingDataset().GetNetwork().GetSize() > 0,);
+
     mNetif.GetPendingDataset().UpdateDelayTimer();
-    SuccessOrExit(error = aMessage.Append(mNetif.GetPendingDataset().GetNetwork().GetBytes(), tlv.GetLength()));
+    SuccessOrExit(error = mNetif.GetPendingDataset().GetNetwork().AppendMleDatasetTlv(aMessage));
 
 exit:
     return error;
