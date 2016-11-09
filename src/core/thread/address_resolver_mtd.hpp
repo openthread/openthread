@@ -26,8 +26,28 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifdef OPENTHREAD_MTD
-#include "address_resolver_mtd.hpp"
-#else
-#include "address_resolver_ftd.hpp"
-#endif
+/**
+ * @file
+ *   This file includes definitions for Thread EID-to-RLOC mapping and caching.
+ */
+
+#ifndef ADDRESS_RESOLVER_HPP_
+#define ADDRESS_RESOLVER_HPP_
+
+#include <openthread-types.h>
+
+namespace Thread {
+
+class AddressResolver
+{
+public:
+    explicit AddressResolver(ThreadNetif &) { }
+    void Clear(void) { }
+    ThreadError GetEntry(uint8_t, otEidCacheEntry &) const { return kThreadError_NotImplemented; }
+    void Remove(uint8_t) { }
+    ThreadError Resolve(const Ip6::Address &, Mac::ShortAddress &) { return kThreadError_NotImplemented; }
+};
+
+}  // namespace Thread
+
+#endif  // ADDRESS_RESOLVER_HPP_
