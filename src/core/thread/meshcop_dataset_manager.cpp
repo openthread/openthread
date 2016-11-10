@@ -45,6 +45,7 @@
 #include <common/logging.hpp>
 #include <common/timer.hpp>
 #include <platform/random.h>
+#include <platform/radio.h>
 #include <thread/meshcop_dataset.hpp>
 #include <thread/meshcop_dataset_manager.hpp>
 #include <thread/meshcop_tlvs.hpp>
@@ -830,6 +831,10 @@ void ActiveDataset::StartLeader(void)
         dataset.mChannel = mNetif.GetMac().GetChannel();
         dataset.mIsChannelSet = true;
 
+        // channelMask
+        dataset.mChannelMaskPage0 = kPhySupportedChannelMask;
+        dataset.mIsChannelMaskPage0Set = true;
+
         // Extended PAN ID
         memcpy(dataset.mExtendedPanId.m8, mNetif.GetMac().GetExtendedPanId(), sizeof(dataset.mExtendedPanId));
         dataset.mIsExtendedPanIdSet = true;
@@ -854,6 +859,10 @@ void ActiveDataset::StartLeader(void)
         // Pan ID
         dataset.mPanId = mNetif.GetMac().GetPanId();
         dataset.mIsPanIdSet = true;
+
+        // PSKc
+        memset(dataset.mPSKc.m8, 0, OT_PSKC_MAX_SIZE);
+        dataset.mIsPSKcSet = true;
 
         // Security Policy
         dataset.mSecurityPolicy.mRotationTime = static_cast<uint16_t>(mNetif.GetKeyManager().GetKeyRotation());
