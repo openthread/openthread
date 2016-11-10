@@ -36,6 +36,7 @@ sc query otlwf
 
 REM Grab the logs
 
+mkdir logs
 logman stop Thread -ets
 copy %SystemRoot%\System32\LogFiles\WMI\Thread.* logs
 
