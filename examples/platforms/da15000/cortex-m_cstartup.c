@@ -51,7 +51,8 @@ extern uint32_t __init_array_start;
 extern uint32_t __init_array_end;
 
 /********************************************************************/
-void cstartup_rwdata() {
+void cstartup_rwdata()
+{
 
     // Get the addresses for the .data section (initialized data section)
     uint32_t *data_rom = (uint32_t *) &__rwdata_start__;
@@ -65,11 +66,13 @@ void cstartup_rwdata() {
     }
 }
 
-void cstartup_bss() {
+void cstartup_bss()
+{
 
     /* Clear the zero-initialized data section */
     uint32_t *bss_start = (uint32_t *) &__bss_start__;
     uint32_t *bss_end   = (uint32_t *) &__bss_end__;
+
     while (bss_start < bss_end)
     {
         *bss_start++ = 0;
@@ -88,13 +91,15 @@ void cstartup(void)
 #ifdef SUPPORT_CPP_RUNTIME
     // copy static C++ initializations
     // Loop through all the __static_initializers and call them.
-    irq_handler_t* fp = (irq_handler_t*) &__init_array_start;
-    irq_handler_t* fp_end = (irq_handler_t*) &__init_array_end;
+    irq_handler_t *fp = (irq_handler_t *) &__init_array_start;
+    irq_handler_t *fp_end = (irq_handler_t *) &__init_array_end;
+
     while (fp < fp_end)
     {
         (*fp)();
         fp++;
     }
+
 #endif
 }
 
@@ -120,7 +125,7 @@ void __USED __NAKED __NO_RETURN __gcc_program_start(void)
     main();
 
     // No actions to perform after this so wait forever
-    while(1);
+    while (1);
 }
 
 

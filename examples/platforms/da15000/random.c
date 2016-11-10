@@ -58,15 +58,19 @@ int zhal_get_entropy(uint8_t *outEntropy, size_t inSize)
 
     hw_trng_enable(NULL);
 
-    for (pbuf = outEntropy; pbuf < preq_words_end; pbuf += 4) {
+    for (pbuf = outEntropy; pbuf < preq_words_end; pbuf += 4)
+    {
         /* Wait for a random word to become available in the TRNG FIFO. */
         while ((TRNG->TRNG_FIFOLVL_REG & TRNG_TRNG_FIFOLVL_REG_TRNG_FIFOLVL_Msk) == 0);
+
         randword = *((volatile uint32_t *)HW_TRNG_RAM);
         memcpy(pbuf, &randword, 4);
     }
 
-    if (remainder_bytes) {
+    if (remainder_bytes)
+    {
         while ((TRNG->TRNG_FIFOLVL_REG & TRNG_TRNG_FIFOLVL_REG_TRNG_FIFOLVL_Msk) == 0);
+
         randword = *((volatile uint32_t *)HW_TRNG_RAM);
         memcpy(pbuf, &randword, remainder_bytes);
     }
@@ -78,7 +82,7 @@ int zhal_get_entropy(uint8_t *outEntropy, size_t inSize)
 
 void da15100RandomInit(void)
 {
-    zhal_get_entropy((uint8_t*)&seed, sizeof(seed));
+    zhal_get_entropy((uint8_t *)&seed, sizeof(seed));
     s_state = seed;
 }
 

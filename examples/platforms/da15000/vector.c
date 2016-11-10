@@ -38,12 +38,15 @@
 #pragma GCC diagnostic ignored "-Wpedantic"
 #pragma location=".isr_vector"
 /// Declaration of default interrupt service routine
-static void halt_isr(void)           {
-    __asm ("BKPT 255");
-    while(1);
+static void halt_isr(void)
+{
+    __asm("BKPT 255");
+
+    while (1);
 }
-static void default_isr(void)        {
-    while(1);
+static void default_isr(void)
+{
+    while (1);
 }
 
 /* The kernel interrupts - in their CMSIS form.
@@ -51,129 +54,169 @@ static void default_isr(void)        {
    give conflicting definition for __vector_table.
  */
 __WEAK void NMI_Handler()            { }
-__WEAK void HardFault_Handler()      {
+__WEAK void HardFault_Handler()
+{
     halt_isr();
 }
-__WEAK void SVC_Handler()            {
+__WEAK void SVC_Handler()
+{
     halt_isr();
 }
-__WEAK void PendSV_Handler()         {
+__WEAK void PendSV_Handler()
+{
     halt_isr();
 }
-__WEAK void SysTick_Handler()        {
+__WEAK void SysTick_Handler()
+{
     halt_isr();
 }
 
-__WEAK void MemManage_Handler()      {
+__WEAK void MemManage_Handler()
+{
     halt_isr();
 }
-__WEAK void DebugMon_Handler()       {
+__WEAK void DebugMon_Handler()
+{
     halt_isr();
 }
-__WEAK void BusFault_Handler()       {
+__WEAK void BusFault_Handler()
+{
     halt_isr();
 }
 
 /* Default handlers for other DA15X peripheral interrupts. */
-__WEAK void DEBUG_IRQHandler()       {
+__WEAK void DEBUG_IRQHandler()
+{
     default_isr();
 }
 
 
-__WEAK void BLE_WAKEUP_LP_Handler()  {
+__WEAK void BLE_WAKEUP_LP_Handler()
+{
     default_isr();    /*  0 */
 }
-__WEAK void BLE_GEN_Handler()        {
+__WEAK void BLE_GEN_Handler()
+{
     default_isr();    /*  1 */
 }
-__WEAK void FTDF_WAKEUP_Handler()    {
+__WEAK void FTDF_WAKEUP_Handler()
+{
     default_isr();    /*  2 */
 }
-__WEAK void FTDF_GEN_Handler()       {
+__WEAK void FTDF_GEN_Handler()
+{
     default_isr();    /*  3 */
 }
-__WEAK void RFCAL_Handler()          {
+__WEAK void RFCAL_Handler()
+{
     default_isr();    /*  4 */
 }
-__WEAK void COEX_Handler()           {
+__WEAK void COEX_Handler()
+{
     default_isr();    /*  5 */
 }
-__WEAK void CRYPTO_Handler()         {
+__WEAK void CRYPTO_Handler()
+{
     default_isr();    /*  6 */
 }
-__WEAK void MRM_Handler()            {
+__WEAK void MRM_Handler()
+{
     default_isr();    /*  7 */
 }
-__WEAK void UART_Handler()           {
+__WEAK void UART_Handler()
+{
     default_isr();    /*  8 */
 }
-__WEAK void UART2_Handler()          {
+__WEAK void UART2_Handler()
+{
     default_isr();    /*  9 */
 }
-__WEAK void I2C_Handler()            {
+__WEAK void I2C_Handler()
+{
     default_isr();    /* 10 */
 }
-__WEAK void I2C2_Handler()           {
+__WEAK void I2C2_Handler()
+{
     default_isr();    /* 11 */
 }
-__WEAK void SPI_Handler()            {
+__WEAK void SPI_Handler()
+{
     default_isr();    /* 12 */
 }
-__WEAK void SPI2_Handler()           {
+__WEAK void SPI2_Handler()
+{
     default_isr();    /* 13 */
 }
-__WEAK void ADC_Handler()            {
+__WEAK void ADC_Handler()
+{
     default_isr();    /* 14 */
 }
-__WEAK void KEYBRD_Handler()         {
+__WEAK void KEYBRD_Handler()
+{
     default_isr();    /* 15 */
 }
-__WEAK void IRGEN_Handler()          {
+__WEAK void IRGEN_Handler()
+{
     default_isr();    /* 16 */
 }
-__WEAK void WKUP_GPIO_Handler()      {
+__WEAK void WKUP_GPIO_Handler()
+{
     default_isr();    /* 17 */
 }
-__WEAK void SWTIM0_Handler()         {
+__WEAK void SWTIM0_Handler()
+{
     default_isr();    /* 18 */
 }
-__WEAK void SWTIM1_Handler()         {
+__WEAK void SWTIM1_Handler()
+{
     default_isr();    /* 19 */
 }
-__WEAK void QUADEC_Handler()         {
+__WEAK void QUADEC_Handler()
+{
     default_isr();    /* 20 */
 }
-__WEAK void USB_Handler()            {
+__WEAK void USB_Handler()
+{
     default_isr();    /* 21 */
 }
-__WEAK void PCM_Handler()            {
+__WEAK void PCM_Handler()
+{
     default_isr();    /* 22 */
 }
-__WEAK void SRC_IN_Handler()         {
+__WEAK void SRC_IN_Handler()
+{
     default_isr();    /* 23 */
 }
-__WEAK void SRC_OUT_Handler()        {
+__WEAK void SRC_OUT_Handler()
+{
     default_isr();    /* 24 */
 }
-__WEAK void VBUS_Handler()           {
+__WEAK void VBUS_Handler()
+{
     default_isr();    /* 25 */
 }
-__WEAK void DMA_Handler()            {
+__WEAK void DMA_Handler()
+{
     default_isr();    /* 26 */
 }
-__WEAK void RF_DIAG_Handler()        {
+__WEAK void RF_DIAG_Handler()
+{
     default_isr();    /* 27 */
 }
-__WEAK void TRNG_Handler()           {
+__WEAK void TRNG_Handler()
+{
     default_isr();    /* 28 */
 }
-__WEAK void DCDC_Handler()           {
+__WEAK void DCDC_Handler()
+{
     default_isr();    /* 29 */
 }
-__WEAK void XTAL16RDY_Handler()      {
+__WEAK void XTAL16RDY_Handler()
+{
     default_isr();    /* 30 */
 }
-__WEAK void RESERVED31_Handler()     {
+__WEAK void RESERVED31_Handler()
+{
     default_isr();    /* 31 */
 }
 

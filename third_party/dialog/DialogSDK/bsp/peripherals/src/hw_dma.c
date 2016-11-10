@@ -14,28 +14,28 @@
  *
  * Copyright (c) 2016, Dialog Semiconductor
  * All rights reserved.
- * Redistribution and use in source and binary forms, with or without modification, 
+ * Redistribution and use in source and binary forms, with or without modification,
  * are permitted provided that the following conditions are met:
- * 1. Redistributions of source code must retain the above copyright notice, 
+ * 1. Redistributions of source code must retain the above copyright notice,
  *    this list of conditions and the following disclaimer.
  * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation 
+ *    this list of conditions and the following disclaimer in the documentation
  *    and/or other materials provided with the distribution.
- * 3. Neither the name of the copyright holder nor the names of its contributors 
- *    may be used to endorse or promote products derived from this software without 
+ * 3. Neither the name of the copyright holder nor the names of its contributors
+ *    may be used to endorse or promote products derived from this software without
  *    specific prior written permission.
  *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" 
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED 
- * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. 
- * IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, 
- * INDIRECT, INCIDENTAL,  SPECIAL,  EXEMPLARY,  OR CONSEQUENTIAL DAMAGES (INCLUDING, 
- * BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, 
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+ * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+ * IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
+ * INDIRECT, INCIDENTAL,  SPECIAL,  EXEMPLARY,  OR CONSEQUENTIAL DAMAGES (INCLUDING,
+ * BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA,
  * OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
- * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) 
- * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED 
+ * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
- *   
+ *
  *
  ****************************************************************************************
  */
@@ -54,9 +54,10 @@
 #  define SEGGER_SYSTEMVIEW_ISR_EXIT()
 #endif
 
-static struct hw_dma_callback_data {
-        hw_dma_transfer_cb callback;
-        void *user_data;
+static struct hw_dma_callback_data
+{
+    hw_dma_transfer_cb callback;
+    void *user_data;
 } dma_callbacks_user_data[8];
 
 #define DMA_CHN_REG(reg, chan) ((uint16 *) (((int) &(reg)) + ((chan) << 4)))
@@ -69,107 +70,122 @@ static struct hw_dma_callback_data {
  */
 void hw_dma_channel_initialization(DMA_setup *channel_setup)
 {
-        volatile uint16 *dma_x_ctrl_reg;
-        volatile uint16 *dma_x_a_start_low_reg;
-        volatile uint16 *dma_x_a_start_high_reg;
-        volatile uint16 *dma_x_b_start_low_reg;
-        volatile uint16 *dma_x_b_start_high_reg;
-        volatile uint16 *dma_x_len_reg;
-        volatile uint16 *dma_x_int_reg;
-        uint32 src_address;
-        uint32 dest_address;
+    volatile uint16 *dma_x_ctrl_reg;
+    volatile uint16 *dma_x_a_start_low_reg;
+    volatile uint16 *dma_x_a_start_high_reg;
+    volatile uint16 *dma_x_b_start_low_reg;
+    volatile uint16 *dma_x_b_start_high_reg;
+    volatile uint16 *dma_x_len_reg;
+    volatile uint16 *dma_x_int_reg;
+    uint32 src_address;
+    uint32 dest_address;
 
-        /* Make sure the DMA channel length is not zero */
-        ASSERT_WARNING(channel_setup->length > 0);
+    /* Make sure the DMA channel length is not zero */
+    ASSERT_WARNING(channel_setup->length > 0);
 
-        // Look up DMAx_CTRL_REG address
-        dma_x_ctrl_reg = DMA_CHN_REG(DMA->DMA0_CTRL_REG, channel_setup->channel_number);
+    // Look up DMAx_CTRL_REG address
+    dma_x_ctrl_reg = DMA_CHN_REG(DMA->DMA0_CTRL_REG, channel_setup->channel_number);
 
-        // Look up DMAx_A_STARTL_REG address
-        dma_x_a_start_low_reg = DMA_CHN_REG(DMA->DMA0_A_STARTL_REG, channel_setup->channel_number);
+    // Look up DMAx_A_STARTL_REG address
+    dma_x_a_start_low_reg = DMA_CHN_REG(DMA->DMA0_A_STARTL_REG, channel_setup->channel_number);
 
-        // Look up DMAx_A_STARTH_REG address
-        dma_x_a_start_high_reg = DMA_CHN_REG(DMA->DMA0_A_STARTH_REG, channel_setup->channel_number);
+    // Look up DMAx_A_STARTH_REG address
+    dma_x_a_start_high_reg = DMA_CHN_REG(DMA->DMA0_A_STARTH_REG, channel_setup->channel_number);
 
-        // Look up DMAx_B_STARTL_REG address
-        dma_x_b_start_low_reg = DMA_CHN_REG(DMA->DMA0_B_STARTL_REG, channel_setup->channel_number);
+    // Look up DMAx_B_STARTL_REG address
+    dma_x_b_start_low_reg = DMA_CHN_REG(DMA->DMA0_B_STARTL_REG, channel_setup->channel_number);
 
-        // Look up DMAx_B_STARTH_REG address
-        dma_x_b_start_high_reg = DMA_CHN_REG(DMA->DMA0_B_STARTH_REG, channel_setup->channel_number);
+    // Look up DMAx_B_STARTH_REG address
+    dma_x_b_start_high_reg = DMA_CHN_REG(DMA->DMA0_B_STARTH_REG, channel_setup->channel_number);
 
-        // Look up DMAX_LEN_REG address
-        dma_x_len_reg = DMA_CHN_REG(DMA->DMA0_LEN_REG, channel_setup->channel_number);
+    // Look up DMAX_LEN_REG address
+    dma_x_len_reg = DMA_CHN_REG(DMA->DMA0_LEN_REG, channel_setup->channel_number);
 
-        // Look up DMAX_INT
-        dma_x_int_reg = DMA_CHN_REG(DMA->DMA0_INT_REG, channel_setup->channel_number);
+    // Look up DMAX_INT
+    dma_x_int_reg = DMA_CHN_REG(DMA->DMA0_INT_REG, channel_setup->channel_number);
 
-        // Make sure DMA channel is disabled first
-        REG_SET_FIELD(DMA, DMA0_CTRL_REG, DMA_ON, *dma_x_ctrl_reg, HW_DMA_STATE_DISABLED);
+    // Make sure DMA channel is disabled first
+    REG_SET_FIELD(DMA, DMA0_CTRL_REG, DMA_ON, *dma_x_ctrl_reg, HW_DMA_STATE_DISABLED);
 
-        // Set DMAx_CTRL_REG width provided settings, but do not start the channel.
-        // Start the channel with the "dma_channel_enable" function separately.
-        *dma_x_ctrl_reg =
-                  channel_setup->bus_width |
-                  channel_setup->irq_enable |
-                  channel_setup->dreq_mode |
-                  channel_setup->b_inc |
-                  channel_setup->a_inc |
-                  channel_setup->circular |
-                  channel_setup->dma_prio |
-                  channel_setup->dma_idle |
-                  channel_setup->dma_init;
+    // Set DMAx_CTRL_REG width provided settings, but do not start the channel.
+    // Start the channel with the "dma_channel_enable" function separately.
+    *dma_x_ctrl_reg =
+        channel_setup->bus_width |
+        channel_setup->irq_enable |
+        channel_setup->dreq_mode |
+        channel_setup->b_inc |
+        channel_setup->a_inc |
+        channel_setup->circular |
+        channel_setup->dma_prio |
+        channel_setup->dma_idle |
+        channel_setup->dma_init;
 
-        // Set DMA_REQ_MUX_REG for the requested channel / trigger combination
-        if(channel_setup->dma_req_mux != HW_DMA_TRIG_NONE) {
-                switch (channel_setup->channel_number) {
-                case HW_DMA_CHANNEL_0:
-                case HW_DMA_CHANNEL_1:
-                        REG_SETF(DMA, DMA_REQ_MUX_REG, DMA01_SEL, channel_setup->dma_req_mux);
-                        break;
-                case HW_DMA_CHANNEL_2:
-                case HW_DMA_CHANNEL_3:
-                        REG_SETF(DMA, DMA_REQ_MUX_REG, DMA23_SEL, channel_setup->dma_req_mux);
-                        break;
-                case HW_DMA_CHANNEL_4:
-                case HW_DMA_CHANNEL_5:
-                        REG_SETF(DMA, DMA_REQ_MUX_REG, DMA45_SEL, channel_setup->dma_req_mux);
-                        break;
-                case HW_DMA_CHANNEL_6:
-                case HW_DMA_CHANNEL_7:
-                        REG_SETF(DMA, DMA_REQ_MUX_REG, DMA67_SEL, channel_setup->dma_req_mux);
-                        break;
-                default:
-                        break;
-                }
+    // Set DMA_REQ_MUX_REG for the requested channel / trigger combination
+    if (channel_setup->dma_req_mux != HW_DMA_TRIG_NONE)
+    {
+        switch (channel_setup->channel_number)
+        {
+        case HW_DMA_CHANNEL_0:
+        case HW_DMA_CHANNEL_1:
+            REG_SETF(DMA, DMA_REQ_MUX_REG, DMA01_SEL, channel_setup->dma_req_mux);
+            break;
+
+        case HW_DMA_CHANNEL_2:
+        case HW_DMA_CHANNEL_3:
+            REG_SETF(DMA, DMA_REQ_MUX_REG, DMA23_SEL, channel_setup->dma_req_mux);
+            break;
+
+        case HW_DMA_CHANNEL_4:
+        case HW_DMA_CHANNEL_5:
+            REG_SETF(DMA, DMA_REQ_MUX_REG, DMA45_SEL, channel_setup->dma_req_mux);
+            break;
+
+        case HW_DMA_CHANNEL_6:
+        case HW_DMA_CHANNEL_7:
+            REG_SETF(DMA, DMA_REQ_MUX_REG, DMA67_SEL, channel_setup->dma_req_mux);
+            break;
+
+        default:
+            break;
         }
-        src_address = black_orca_phy_addr(channel_setup->src_address);
-        dest_address = black_orca_phy_addr(channel_setup->dest_address);
+    }
 
-        // Set source address registers
-        *dma_x_a_start_low_reg = (src_address & 0xffff);
-        *dma_x_a_start_high_reg = (src_address >> 16);
+    src_address = black_orca_phy_addr(channel_setup->src_address);
+    dest_address = black_orca_phy_addr(channel_setup->dest_address);
 
-        // Set destination address registers
-        *dma_x_b_start_low_reg = (dest_address & 0xffff);
-        *dma_x_b_start_high_reg = (dest_address >> 16);
+    // Set source address registers
+    *dma_x_a_start_low_reg = (src_address & 0xffff);
+    *dma_x_a_start_high_reg = (src_address >> 16);
 
-        // Set IRQ number of transfers
-        if (channel_setup->irq_nr_of_trans > 0) {
-                // If user explicitly set this number use it
-                *dma_x_int_reg = channel_setup->irq_nr_of_trans - 1;
-        } else {
-                // If user passed 0, use transfer length to fire interrupt after transfer ends
-                *dma_x_int_reg = channel_setup->length - 1;
-        }
+    // Set destination address registers
+    *dma_x_b_start_low_reg = (dest_address & 0xffff);
+    *dma_x_b_start_high_reg = (dest_address >> 16);
 
-        // Set the transfer length
-        *dma_x_len_reg = (channel_setup->length) - 1;
+    // Set IRQ number of transfers
+    if (channel_setup->irq_nr_of_trans > 0)
+    {
+        // If user explicitly set this number use it
+        *dma_x_int_reg = channel_setup->irq_nr_of_trans - 1;
+    }
+    else
+    {
+        // If user passed 0, use transfer length to fire interrupt after transfer ends
+        *dma_x_int_reg = channel_setup->length - 1;
+    }
 
-        if (channel_setup->irq_enable)
-                dma_callbacks_user_data[channel_setup->channel_number].callback = channel_setup->callback;
-        else
-                dma_callbacks_user_data[channel_setup->channel_number].callback = NULL;
-        dma_callbacks_user_data[channel_setup->channel_number].user_data = channel_setup->user_data;
+    // Set the transfer length
+    *dma_x_len_reg = (channel_setup->length) - 1;
+
+    if (channel_setup->irq_enable)
+    {
+        dma_callbacks_user_data[channel_setup->channel_number].callback = channel_setup->callback;
+    }
+    else
+    {
+        dma_callbacks_user_data[channel_setup->channel_number].callback = NULL;
+    }
+
+    dma_callbacks_user_data[channel_setup->channel_number].user_data = channel_setup->user_data;
 }
 
 /**
@@ -181,59 +197,70 @@ void hw_dma_channel_initialization(DMA_setup *channel_setup)
  */
 void hw_dma_channel_enable(HW_DMA_CHANNEL channel_number, HW_DMA_STATE dma_on)
 {
-        volatile uint16 *dma_x_ctrl_reg;
+    volatile uint16 *dma_x_ctrl_reg;
 
-        // Look up DMAx_CTRL_REG address
-        dma_x_ctrl_reg = DMA_CHN_REG(DMA->DMA0_CTRL_REG, channel_number);
+    // Look up DMAx_CTRL_REG address
+    dma_x_ctrl_reg = DMA_CHN_REG(DMA->DMA0_CTRL_REG, channel_number);
 
 
-        if (dma_on == HW_DMA_STATE_ENABLED) {
-                uint16_t dma_ctrl = *dma_x_ctrl_reg;
+    if (dma_on == HW_DMA_STATE_ENABLED)
+    {
+        uint16_t dma_ctrl = *dma_x_ctrl_reg;
 
-                REG_SET_FIELD(DMA, DMA0_CTRL_REG, DMA_ON, dma_ctrl, 1);
-                if (dma_callbacks_user_data[channel_number].callback) {
-                        REG_SET_FIELD(DMA, DMA0_CTRL_REG, IRQ_ENABLE, dma_ctrl, 1);
-                }
-                // Start the chosen DMA channel
-                *dma_x_ctrl_reg = dma_ctrl;
-                NVIC_EnableIRQ(DMA_IRQn);
-        } else {
-                // Stop the chosen DMA channel
-                REG_SET_FIELD(DMA, DMA0_CTRL_REG, DMA_ON, *dma_x_ctrl_reg, 0);
-                REG_SET_FIELD(DMA, DMA0_CTRL_REG, IRQ_ENABLE, *dma_x_ctrl_reg, 0);
+        REG_SET_FIELD(DMA, DMA0_CTRL_REG, DMA_ON, dma_ctrl, 1);
+
+        if (dma_callbacks_user_data[channel_number].callback)
+        {
+            REG_SET_FIELD(DMA, DMA0_CTRL_REG, IRQ_ENABLE, dma_ctrl, 1);
         }
+
+        // Start the chosen DMA channel
+        *dma_x_ctrl_reg = dma_ctrl;
+        NVIC_EnableIRQ(DMA_IRQn);
+    }
+    else
+    {
+        // Stop the chosen DMA channel
+        REG_SET_FIELD(DMA, DMA0_CTRL_REG, DMA_ON, *dma_x_ctrl_reg, 0);
+        REG_SET_FIELD(DMA, DMA0_CTRL_REG, IRQ_ENABLE, *dma_x_ctrl_reg, 0);
+    }
 }
 
 static inline void dma_helper(HW_DMA_CHANNEL channel_number, uint16_t len, bool stop_dma)
 {
-        hw_dma_transfer_cb cb;
+    hw_dma_transfer_cb cb;
 
-        NVIC_DisableIRQ(DMA_IRQn);
-        cb = dma_callbacks_user_data[channel_number].callback;
-        if (stop_dma) {
-                dma_callbacks_user_data[channel_number].callback = NULL;
-                hw_dma_channel_enable(channel_number, HW_DMA_STATE_DISABLED);
-        }
-        if (cb) {
-                cb(dma_callbacks_user_data[channel_number].user_data, len);
-        }
-        NVIC_EnableIRQ(DMA_IRQn);
+    NVIC_DisableIRQ(DMA_IRQn);
+    cb = dma_callbacks_user_data[channel_number].callback;
+
+    if (stop_dma)
+    {
+        dma_callbacks_user_data[channel_number].callback = NULL;
+        hw_dma_channel_enable(channel_number, HW_DMA_STATE_DISABLED);
+    }
+
+    if (cb)
+    {
+        cb(dma_callbacks_user_data[channel_number].user_data, len);
+    }
+
+    NVIC_EnableIRQ(DMA_IRQn);
 }
 
 bool hw_dma_channel_active(void)
 {
-        int dma_on;
+    int dma_on;
 
-        dma_on = REG_GETF(DMA, DMA0_CTRL_REG, DMA_ON);
-        dma_on |= REG_GETF(DMA, DMA1_CTRL_REG, DMA_ON);
-        dma_on |= REG_GETF(DMA, DMA2_CTRL_REG, DMA_ON);
-        dma_on |= REG_GETF(DMA, DMA3_CTRL_REG, DMA_ON);
-        dma_on |= REG_GETF(DMA, DMA4_CTRL_REG, DMA_ON);
-        dma_on |= REG_GETF(DMA, DMA5_CTRL_REG, DMA_ON);
-        dma_on |= REG_GETF(DMA, DMA6_CTRL_REG, DMA_ON);
-        dma_on |= REG_GETF(DMA, DMA7_CTRL_REG, DMA_ON);
+    dma_on = REG_GETF(DMA, DMA0_CTRL_REG, DMA_ON);
+    dma_on |= REG_GETF(DMA, DMA1_CTRL_REG, DMA_ON);
+    dma_on |= REG_GETF(DMA, DMA2_CTRL_REG, DMA_ON);
+    dma_on |= REG_GETF(DMA, DMA3_CTRL_REG, DMA_ON);
+    dma_on |= REG_GETF(DMA, DMA4_CTRL_REG, DMA_ON);
+    dma_on |= REG_GETF(DMA, DMA5_CTRL_REG, DMA_ON);
+    dma_on |= REG_GETF(DMA, DMA6_CTRL_REG, DMA_ON);
+    dma_on |= REG_GETF(DMA, DMA7_CTRL_REG, DMA_ON);
 
-        return (dma_on == 1);
+    return (dma_on == 1);
 }
 
 /**
@@ -244,60 +271,62 @@ bool hw_dma_channel_active(void)
  */
 void DMA_Handler(void)
 {
-        SEGGER_SYSTEMVIEW_ISR_ENTER();
+    SEGGER_SYSTEMVIEW_ISR_ENTER();
 
-        uint16_t risen;
-        uint16_t i;
-        volatile uint16 *dma_x_len_reg;
-        volatile uint16 *dma_x_int_reg;
-        volatile uint16 *dma_x_ctrl_reg;
+    uint16_t risen;
+    uint16_t i;
+    volatile uint16 *dma_x_len_reg;
+    volatile uint16 *dma_x_int_reg;
+    volatile uint16 *dma_x_ctrl_reg;
 
-        risen = DMA->DMA_INT_STATUS_REG;
+    risen = DMA->DMA_INT_STATUS_REG;
 
-        for (i = 0; risen != 0 && i < 8; ++i, risen >>= 1) {
-                if (risen & 1) {
-                        bool stop;
+    for (i = 0; risen != 0 && i < 8; ++i, risen >>= 1)
+    {
+        if (risen & 1)
+        {
+            bool stop;
 
-                        /*
-                         * DMAx_INT_REG shows after how many transfers the interrupt
-                         * is generated
-                         */
-                        dma_x_int_reg = DMA_CHN_REG(DMA->DMA0_INT_REG, i);
+            /*
+             * DMAx_INT_REG shows after how many transfers the interrupt
+             * is generated
+             */
+            dma_x_int_reg = DMA_CHN_REG(DMA->DMA0_INT_REG, i);
 
-                        /*
-                         * DMAx_LEN_REG shows the length of the DMA transfer
-                         */
-                        dma_x_len_reg = DMA_CHN_REG(DMA->DMA0_LEN_REG, i);
+            /*
+             * DMAx_LEN_REG shows the length of the DMA transfer
+             */
+            dma_x_len_reg = DMA_CHN_REG(DMA->DMA0_LEN_REG, i);
 
-                        dma_x_ctrl_reg = DMA_CHN_REG(DMA->DMA0_CTRL_REG, i);
+            dma_x_ctrl_reg = DMA_CHN_REG(DMA->DMA0_CTRL_REG, i);
 
-                        /*
-                         * Stop DMA if:
-                         *  - transfer is completed
-                         *  - mode is not circular
-                         */
-                        stop = (*dma_x_int_reg == *dma_x_len_reg)
-                                && (!REG_GET_FIELD(DMA, DMA0_CTRL_REG, CIRCULAR, *dma_x_ctrl_reg));
-                        DMA->DMA_CLEAR_INT_REG = 1 << i;
-                        dma_helper(i, *dma_x_int_reg + 1, stop);
-                }
+            /*
+             * Stop DMA if:
+             *  - transfer is completed
+             *  - mode is not circular
+             */
+            stop = (*dma_x_int_reg == *dma_x_len_reg)
+                   && (!REG_GET_FIELD(DMA, DMA0_CTRL_REG, CIRCULAR, *dma_x_ctrl_reg));
+            DMA->DMA_CLEAR_INT_REG = 1 << i;
+            dma_helper(i, *dma_x_int_reg + 1, stop);
         }
+    }
 
-        SEGGER_SYSTEMVIEW_ISR_EXIT();
+    SEGGER_SYSTEMVIEW_ISR_EXIT();
 }
 
 void hw_dma_channel_stop(HW_DMA_CHANNEL channel_number)
 {
-        // Stopping DMA will clear DMAx_IDX_REG so read it before
-        uint16 *dma_x_idx_reg = DMA_CHN_REG(DMA->DMA0_IDX_REG, channel_number);
-        dma_helper(channel_number, *dma_x_idx_reg, true);
+    // Stopping DMA will clear DMAx_IDX_REG so read it before
+    uint16 *dma_x_idx_reg = DMA_CHN_REG(DMA->DMA0_IDX_REG, channel_number);
+    dma_helper(channel_number, *dma_x_idx_reg, true);
 }
 
 uint16_t hw_dma_transfered_bytes(HW_DMA_CHANNEL channel_number)
 {
-        uint16 *dma_x_int_reg = dma_x_int_reg = DMA_CHN_REG(DMA->DMA0_IDX_REG, channel_number);
+    uint16 *dma_x_int_reg = dma_x_int_reg = DMA_CHN_REG(DMA->DMA0_IDX_REG, channel_number);
 
-        return *dma_x_int_reg;
+    return *dma_x_int_reg;
 }
 
 #endif /* dg_configUSE_HW_DMA */

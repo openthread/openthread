@@ -47,7 +47,8 @@ void UartBuffClear(void);
 ThreadError otPlatUartEnable(void)
 {
     ThreadError error = kThreadError_None;
-    uart_config uart_init = {
+    uart_config uart_init =
+    {
         .baud_rate = HW_UART_BAUDRATE_9600,
         .data      = HW_UART_DATABITS_8,
         .stop      = HW_UART_STOPBITS_1,
@@ -63,7 +64,7 @@ ThreadError otPlatUartEnable(void)
                              HW_GPIO_MODE_OUTPUT, HW_GPIO_FUNC_UART_TX);
     hw_gpio_set_pin_function(HW_GPIO_PORT_2, HW_GPIO_PIN_3,
                              HW_GPIO_MODE_OUTPUT, HW_GPIO_FUNC_UART_RX);
-    hw_gpio_set_pin_function(HW_GPIO_PORT_1,HW_GPIO_PIN_5, HW_GPIO_MODE_OUTPUT,
+    hw_gpio_set_pin_function(HW_GPIO_PORT_1, HW_GPIO_PIN_5, HW_GPIO_MODE_OUTPUT,
                              HW_GPIO_FUNC_GPIO);
     UartBuffClear();
 
@@ -86,7 +87,7 @@ void da15100UartProcess(void)
     uint8_t aBuf;
 
     // Wait until received data are available
-    if( hw_uart_read_buf_empty(HW_UART1) )
+    if (hw_uart_read_buf_empty(HW_UART1))
     {
         return;
     }
@@ -101,9 +102,11 @@ void UartBuffClear(void)
 {
 
     volatile uint8_t aBuf;
-    while(1)
+
+    while (1)
     {
-        if( hw_uart_read_buf_empty(HW_UART1) ) break;
+        if (hw_uart_read_buf_empty(HW_UART1)) { break; }
+
         aBuf += UBA(HW_UART1)->UART2_RBR_THR_DLL_REG;
     }
 

@@ -78,7 +78,7 @@ static uint16_t s_panid;
 
 static bool s_promiscuous = false;
 
-static uint8_t sleep_init_delay =0;
+static uint8_t sleep_init_delay = 0;
 static bool SED = false;
 static uint32_t sleep_const_delay;
 
@@ -86,17 +86,20 @@ static otInstance *First_Instace;
 
 #define RF_MODE_BLE             0
 
-void disable_interrupt() {
+void disable_interrupt()
+{
     NVIC_DisableIRQ(FTDF_GEN_IRQn);
 }
 
-void enable_interrupt() {
+void enable_interrupt()
+{
     NVIC_ClearPendingIRQ(FTDF_GEN_IRQn);
     NVIC_EnableIRQ(FTDF_GEN_IRQn);
 }
 
 
-void phy_power_init() {
+void phy_power_init()
+{
     // Set the radio_ldo voltage to 1.4 Volts
     REG_SETF(CRG_TOP, LDO_CTRL1_REG, LDO_RADIO_SETVDD, 2);
     // Switch on the RF LDO
@@ -105,33 +108,38 @@ void phy_power_init() {
 }
 
 
-void ad_ftdf_init_phy_api_V2(void) {
+void ad_ftdf_init_phy_api_V2(void)
+{
     NVIC_ClearPendingIRQ(FTDF_WAKEUP_IRQn);
     NVIC_EnableIRQ(FTDF_WAKEUP_IRQn);
 
     NVIC_ClearPendingIRQ(FTDF_GEN_IRQn);
     NVIC_EnableIRQ(FTDF_GEN_IRQn);
 
-    volatile uint32_t* lmacReset = FTDF_GET_REG_ADDR(ON_OFF_REGMAP_LMACRESET);
+    volatile uint32_t *lmacReset = FTDF_GET_REG_ADDR(ON_OFF_REGMAP_LMACRESET);
     *lmacReset = MSK_R_FTDF_ON_OFF_REGMAP_LMACRESET;
 
-    volatile uint32_t* controlStatus = FTDF_GET_REG_ADDR(ON_OFF_REGMAP_LMAC_CONTROL_STATUS);
+    volatile uint32_t *controlStatus = FTDF_GET_REG_ADDR(ON_OFF_REGMAP_LMAC_CONTROL_STATUS);
+
     while ((*controlStatus & MSK_F_FTDF_ON_OFF_REGMAP_LMACREADY4SLEEP) == 0) {}
 
-    volatile uint32_t* wakeupTimerEnableStatus = FTDF_GET_FIELD_ADDR(ON_OFF_REGMAP_WAKEUPTIMERENABLESTATUS);
+    volatile uint32_t *wakeupTimerEnableStatus = FTDF_GET_FIELD_ADDR(ON_OFF_REGMAP_WAKEUPTIMERENABLESTATUS);
     FTDF_SET_FIELD(ALWAYS_ON_REGMAP_WAKEUPTIMERENABLE, 0);
+
     while (*wakeupTimerEnableStatus & MSK_F_FTDF_ON_OFF_REGMAP_WAKEUPTIMERENABLESTATUS) {}
 
     FTDF_SET_FIELD(ALWAYS_ON_REGMAP_WAKEUPTIMERENABLE, 1);
+
     while ((*wakeupTimerEnableStatus & MSK_F_FTDF_ON_OFF_REGMAP_WAKEUPTIMERENABLESTATUS) == 0) {}
 }
 
-void ad_ftdf_init_lmac() {
+void ad_ftdf_init_lmac()
+{
     FTDF_SET_FIELD(ON_OFF_REGMAP_CCAIDLEWAIT, 192);
-    volatile uint32_t* txFlagClear = FTDF_GET_FIELD_ADDR(ON_OFF_REGMAP_TX_FLAG_CLEAR);
+    volatile uint32_t *txFlagClear = FTDF_GET_FIELD_ADDR(ON_OFF_REGMAP_TX_FLAG_CLEAR);
     *txFlagClear = MSK_F_FTDF_ON_OFF_REGMAP_TX_FLAG_CLEAR;
 
-    volatile uint32_t* phyParams = FTDF_GET_REG_ADDR(ON_OFF_REGMAP_PHY_PARAMETERS_2);
+    volatile uint32_t *phyParams = FTDF_GET_REG_ADDR(ON_OFF_REGMAP_PHY_PARAMETERS_2);
     *phyParams = (FTDF_PHYTXSTARTUP << OFF_F_FTDF_ON_OFF_REGMAP_PHYTXSTARTUP) |
                  (FTDF_PHYTXLATENCY << OFF_F_FTDF_ON_OFF_REGMAP_PHYTXLATENCY) |
                  (FTDF_PHYTXFINISH << OFF_F_FTDF_ON_OFF_REGMAP_PHYTXFINISH) |
@@ -142,21 +150,21 @@ void ad_ftdf_init_lmac() {
                  (FTDF_PHYRXLATENCY << OFF_F_FTDF_ON_OFF_REGMAP_PHYRXLATENCY) |
                  (FTDF_PHYENABLE << OFF_F_FTDF_ON_OFF_REGMAP_PHYENABLE);
 
-    volatile uint32_t* ftdfCm = FTDF_GET_REG_ADDR(ON_OFF_REGMAP_FTDF_CM);
+    volatile uint32_t *ftdfCm = FTDF_GET_REG_ADDR(ON_OFF_REGMAP_FTDF_CM);
     *ftdfCm = FTDF_MSK_TX_CE | FTDF_MSK_RX_CE | FTDF_MSK_SYMBOL_TMR_CE;
 
-    volatile uint32_t* rxMask = FTDF_GET_REG_ADDR(ON_OFF_REGMAP_RX_MASK);
+    volatile uint32_t *rxMask = FTDF_GET_REG_ADDR(ON_OFF_REGMAP_RX_MASK);
     *rxMask = MSK_R_FTDF_ON_OFF_REGMAP_RX_MASK;
 
-    volatile uint32_t* lmacMask = FTDF_GET_REG_ADDR(ON_OFF_REGMAP_LMAC_MASK);
+    volatile uint32_t *lmacMask = FTDF_GET_REG_ADDR(ON_OFF_REGMAP_LMAC_MASK);
     *lmacMask = MSK_F_FTDF_ON_OFF_REGMAP_RXTIMEREXPIRED_M;
 
-    volatile uint32_t* lmacCtrlMask = FTDF_GET_REG_ADDR(ON_OFF_REGMAP_LMAC_CONTROL_MASK);
+    volatile uint32_t *lmacCtrlMask = FTDF_GET_REG_ADDR(ON_OFF_REGMAP_LMAC_CONTROL_MASK);
     *lmacCtrlMask = MSK_F_FTDF_ON_OFF_REGMAP_SYMBOLTIMETHR_M |
                     MSK_F_FTDF_ON_OFF_REGMAP_SYMBOLTIME2THR_M |
                     MSK_F_FTDF_ON_OFF_REGMAP_SYNCTIMESTAMP_M;
 
-    volatile uint32_t* txFlagClearM;
+    volatile uint32_t *txFlagClearM;
     txFlagClearM   = FTDF_GET_FIELD_ADDR_INDEXED(ON_OFF_REGMAP_TX_FLAG_CLEAR_M, FTDF_TX_DATA_BUFFER);
     *txFlagClearM |= MSK_F_FTDF_ON_OFF_REGMAP_TX_FLAG_CLEAR_M;
     txFlagClearM   = FTDF_GET_FIELD_ADDR_INDEXED(ON_OFF_REGMAP_TX_FLAG_CLEAR_M, FTDF_TX_WAKEUP_BUFFER);
@@ -182,7 +190,7 @@ void otPlatRadioSetExtendedAddress(otInstance *aInstance, uint8_t *address)
         s_extended_address[i] = address[i];
     }
 
-    FTDF_setValue( FTDF_PIB_EXTENDED_ADDRESS,  s_extended_address);
+    FTDF_setValue(FTDF_PIB_EXTENDED_ADDRESS,  s_extended_address);
 }
 
 void otPlatRadioSetShortAddress(otInstance *aInstance, uint16_t address)
@@ -198,8 +206,11 @@ void da15100RadioInit(void)
 {
     /* Wake up power domains */
     REG_CLR_BIT(CRG_TOP, PMU_CTRL_REG, FTDF_SLEEP);
+
     while (REG_GETF(CRG_TOP, SYS_STAT_REG, FTDF_IS_UP) == 0x0);
+
     REG_CLR_BIT(CRG_TOP, PMU_CTRL_REG, RADIO_SLEEP);
+
     while (REG_GETF(CRG_TOP, SYS_STAT_REG, RAD_IS_UP) == 0x0);
 
     REG_SETF(CRG_TOP, CLK_RADIO_REG, FTDF_MAC_ENABLE, 1);
@@ -214,7 +225,7 @@ void da15100RadioInit(void)
     hw_rf_dc_offset_calibration();
 
     // ad_ftdf_init_phy_api();
-    FTDF_pib.CCAMode=2;
+    FTDF_pib.CCAMode = 2;
     ad_ftdf_init_phy_api_V2();
     ad_ftdf_init_lmac();
 
@@ -224,7 +235,7 @@ void da15100RadioInit(void)
 
 ThreadError otPlatRadioEnable(otInstance *aInstance)
 {
-    First_Instace=aInstance;
+    First_Instace = aInstance;
     (void)aInstance;
     ThreadError error = kThreadError_None;
     uint16_t DefaultChannel = 11;
@@ -269,19 +280,21 @@ ThreadError otPlatRadioSleep(otInstance *aInstance)
     (void)aInstance;
 
 
-    if(s_state==kStateReceive && sleep_init_delay==0)
+    if (s_state == kStateReceive && sleep_init_delay == 0)
     {
-        sleep_init_delay=otPlatAlarmGetNow();
+        sleep_init_delay = otPlatAlarmGetNow();
         return kThreadError_None; //error;
     }
-    else if((otPlatAlarmGetNow()-sleep_init_delay)<3000)
-        return kThreadError_None; //error;
+    else if ((otPlatAlarmGetNow() - sleep_init_delay) < 3000)
+    {
+        return kThreadError_None;    //error;
+    }
 
     if (s_state == kStateSleep || s_state == kStateReceive)
     {
         error = kThreadError_None;
-        SED=true;
-        sleep_const_delay=otPlatAlarmGetNow();
+        SED = true;
+        sleep_const_delay = otPlatAlarmGetNow();
     }
 
     return error;
@@ -325,7 +338,8 @@ ThreadError otPlatRadioTransmit(otInstance *aInstance)
     FTDF_Boolean csmaSuppress = 0;
     VerifyOrExit(s_state == kStateReceive, error = kThreadError_Busy);
 
-    ad_ftdf_send_frame_simple(s_transmit_frame.mLength, s_transmit_frame.mPsdu, s_transmit_frame.mChannel, 0, csmaSuppress); //Prio 0 for all.
+    ad_ftdf_send_frame_simple(s_transmit_frame.mLength, s_transmit_frame.mPsdu, s_transmit_frame.mChannel, 0,
+                              csmaSuppress); //Prio 0 for all.
     s_state = kStateTransmit;
     s_data_pending = false;
 #if DEBUG_LOG_ENABLE
@@ -383,21 +397,28 @@ exit:
 
 
 
-void FTDF_sendFrameTransparentConfirm( void*         handle,
-                                       FTDF_Bitmap32 status )
+void FTDF_sendFrameTransparentConfirm(void         *handle,
+                                      FTDF_Bitmap32 status)
 {
     //   ThreadError transmit_error_ = kThreadError_None;
 
     (void)handle;
     (void)status;
-    volatile uint32_t* txStatus = FTDF_GET_REG_ADDR_INDEXED(RETENTION_RAM_TX_RETURN_STATUS_1, FTDF_TX_DATA_BUFFER);
-    if (*txStatus & MSK_F_FTDF_RETENTION_RAM_ACKFAIL) {
-        //   transmit_error_ = kThreadError_None;
-    } else if (*txStatus & MSK_F_FTDF_RETENTION_RAM_CSMACAFAIL) {
-        //   transmit_error_ = kThreadError_Abort;
-    } else {
+    volatile uint32_t *txStatus = FTDF_GET_REG_ADDR_INDEXED(RETENTION_RAM_TX_RETURN_STATUS_1, FTDF_TX_DATA_BUFFER);
+
+    if (*txStatus & MSK_F_FTDF_RETENTION_RAM_ACKFAIL)
+    {
         //   transmit_error_ = kThreadError_None;
     }
+    else if (*txStatus & MSK_F_FTDF_RETENTION_RAM_CSMACAFAIL)
+    {
+        //   transmit_error_ = kThreadError_Abort;
+    }
+    else
+    {
+        //   transmit_error_ = kThreadError_None;
+    }
+
     SendFrameDone = true;
 
 #if DEBUG_LOG_ENABLE
@@ -411,21 +432,23 @@ void FTDF_sendFrameTransparentConfirm( void*         handle,
 void da15100RadioProcess(otInstance *aInstance)
 {
     bool rxPending;
-    uint8_t value=0;
-    if(SendFrameDone)
+    uint8_t value = 0;
+
+    if (SendFrameDone)
     {
         FTDF_SET_FIELD(ON_OFF_REGMAP_RXENABLE, 1);
         otPlatRadioHandleTransmitDone(&rxPending);
         otPlatRadioTransmitDone(aInstance, false, kThreadError_None);
         SendFrameDone = false;
     }
-    if(SED)
+
+    if (SED)
     {
-        if((otPlatAlarmGetNow()-sleep_const_delay)>100)
+        if ((otPlatAlarmGetNow() - sleep_const_delay) > 100)
         {
             FTDF_setValue(FTDF_PIB_RX_ON_WHEN_IDLE, &value);
             s_state = kStateSleep;
-            SED=false;
+            SED = false;
         }
 
     }
@@ -433,9 +456,9 @@ void da15100RadioProcess(otInstance *aInstance)
 
 
 
-void FTDF_rcvFrameTransparent( FTDF_DataLength frameLength,
-                               FTDF_Octet*     frame,
-                               FTDF_Bitmap32   status )
+void FTDF_rcvFrameTransparent(FTDF_DataLength frameLength,
+                              FTDF_Octet     *frame,
+                              FTDF_Bitmap32   status)
 {
     (void)status;
     RadioPacket otRadioPacket;
@@ -445,8 +468,10 @@ void FTDF_rcvFrameTransparent( FTDF_DataLength frameLength,
     otRadioPacket.mPower = -20;           //FIX THIS -actual measurements shall be placed here
     otRadioPacket.mLqi = kPhyNoLqi;
 
-    if( s_receive_frame.mChannel == 0)
-        s_receive_frame.mChannel = 11;  //FIX this - dirty fix for channel handling.
+    if (s_receive_frame.mChannel == 0)
+    {
+        s_receive_frame.mChannel = 11;    //FIX this - dirty fix for channel handling.
+    }
 
 
     otRadioPacket.mChannel =  s_receive_frame.mChannel;
@@ -454,6 +479,7 @@ void FTDF_rcvFrameTransparent( FTDF_DataLength frameLength,
     otRadioPacket.mPsdu = frame;
 
     otPlatRadioReceiveDone(First_Instace, &otRadioPacket, kThreadError_None);
+
     if (s_state != kStateDisabled)
     {
         s_state = kStateReceive;
