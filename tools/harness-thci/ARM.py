@@ -1841,7 +1841,8 @@ class ARM(IThci):
     def getChildTimeoutValue(self):
         """get child timeout"""
         print '%s call getChildTimeoutValue' % self.port
-        return self.__sendCommand('childtimeout')[0]
+        childTimeout = self.__sendCommand('childtimeout')[0]
+        return int(childTimeout)
 
     def diagnosticGet(self, strDestinationAddr, listTLV_ids=[]):
         if not listTLV_ids:
