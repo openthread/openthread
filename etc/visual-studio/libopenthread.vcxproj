@@ -109,6 +109,7 @@
     <ClCompile Include="..\..\src\core\thread\mle_tlvs.cpp" />
     <ClCompile Include="..\..\src\core\thread\network_data.cpp" />
     <ClCompile Include="..\..\src\core\thread\network_data_leader.cpp" />
+    <ClCompile Include="..\..\src\core\thread\network_data_leader_ftd.cpp" />
     <ClCompile Include="..\..\src\core\thread\network_data_local.cpp" />
     <ClCompile Include="..\..\src\core\thread\network_diag.cpp" />
     <ClCompile Include="..\..\src\core\thread\network_diag_tlvs.cpp" />

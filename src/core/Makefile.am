@@ -140,6 +140,7 @@ libopenthread_ftd_a_SOURCES         = \
     meshcop/leader.cpp                \
     thread/address_resolver.cpp       \
     thread/mle_router.cpp             \
+    thread/network_data_leader_ftd.cpp \
     thread/network_data_local.cpp     \
     $(NULL)
 
@@ -229,6 +230,8 @@ noinst_HEADERS                      = \
     thread/mle_tlvs.hpp               \
     thread/network_data.hpp           \
     thread/network_data_leader.hpp    \
+    thread/network_data_leader_ftd.hpp \
+    thread/network_data_leader_mtd.hpp \
     thread/network_data_local.hpp     \
     thread/network_data_local_ftd.hpp \
     thread/network_data_local_mtd.hpp \
