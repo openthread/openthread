@@ -34,6 +34,7 @@
 #ifndef COAP_SERVER_HPP_
 #define COAP_SERVER_HPP_
 
+#include <openthread-coap.h>
 #include <coap/coap_base.hpp>
 #include <coap/coap_header.hpp>
 #include <common/message.hpp>
@@ -53,7 +54,7 @@ namespace Coap {
  * This class implements CoAP resource handling.
  *
  */
-class Resource
+class Resource : public otCoapResource
 {
     friend class Server;
 
@@ -64,40 +65,31 @@ public:
     };
 
     /**
-     * This function pointer is called when a CoAP message with a given Uri-Path is received.
-     *
-     * @param[in]  aContext      A pointer to arbitrary context information.
-     * @param[in]  aHeader       A reference to the CoAP header.
-     * @param[in]  aMessage      A reference to the message.
-     * @param[in]  aMessageInfo  A reference to the message info for @p aMessage.
-     *
-     */
-    typedef void (*CoapMessageHandler)(void *aContext, Header &aHeader, Message &aMessage,
-                                       const Ip6::MessageInfo &aMessageInfo);
-
-    /**
      * This constructor initializes the resource.
      *
      * @param[in]  aUriPath  A pointer to a NULL-terminated string for the Uri-Path.
      * @param[in]  aHandler  A function pointer that is called when receiving a CoAP message for @p aUriPath.
      * @param[in]  aContext  A pointer to arbitrary context information.
      */
-    Resource(const char *aUriPath, CoapMessageHandler aHandler, void *aContext) {
+    Resource(const char *aUriPath, otCoapRequestHandler aHandler, void *aContext) {
         mUriPath = aUriPath;
         mHandler = aHandler;
         mContext = aContext;
         mNext = NULL;
     }
 
+    /**
+     * This method returns a pointer to the next resource.
+     *
+     * @returns A Pointer to the next resource.
+     *
+     */
+    Resource *GetNext(void) const { return static_cast<Resource *>(mNext); };
+
 private:
     void HandleRequest(Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo) {
-        mHandler(mContext, aHeader, aMessage, aMessageInfo);
+        mHandler(mContext, &aHeader, &aMessage, &aMessageInfo);
     }
-
-    const char *mUriPath;
-    CoapMessageHandler mHandler;
-    void *mContext;
-    Resource *mNext;
 };
 
 /**
@@ -185,6 +177,16 @@ public:
      *
      */
     ThreadError SendMessage(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+
+    /**
+     * This method sets CoAP server's port number.
+     *
+     * @param[in]  aPort  A port number to set.
+     *
+     * @retval kThreadError_None  Binding with a port succeeded.
+     *
+     */
+    ThreadError SetPort(uint16_t aPort);
 
 protected:
     void ProcessReceivedMessage(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);

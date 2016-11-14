@@ -746,6 +746,36 @@ AM_CONDITIONAL([OPENTHREAD_ENABLE_DHCP6_SERVER], [test "${enable_dhcp6_server}" 
 AC_DEFINE_UNQUOTED([OPENTHREAD_ENABLE_DHCP6_SERVER],[${OPENTHREAD_ENABLE_DHCP6_SERVER}],[Define to 1 if you want to enable DHCPv6 Server])
 
 #
+# Application CoAP
+#
+
+AC_ARG_ENABLE(application_coap,
+    [AS_HELP_STRING([--enable-application-coap],[Enable CoAP to an application.@<:@default=no@:>@.])],
+    [
+        case "${enableval}" in
+
+        no|yes)
+            enable_application_coap=${enableval}
+            ;;
+
+        *)
+            AC_MSG_ERROR([Invalid value ${enable_application_coap} for --enable-application-coap])
+            ;;
+        esac
+    ],
+    [enable_application_coap=no])
+
+if test "$enable_application_coap" = "yes"; then
+    OPENTHREAD_ENABLE_APPLICATION_COAP=1
+else
+    OPENTHREAD_ENABLE_APPLICATION_COAP=0
+fi
+
+AC_SUBST(OPENTHREAD_ENABLE_APPLICATION_COAP)
+AM_CONDITIONAL([OPENTHREAD_ENABLE_APPLICATION_COAP], [test "${enable_application_coap}" = "yes"])
+AC_DEFINE_UNQUOTED([OPENTHREAD_ENABLE_APPLICATION_COAP],[${OPENTHREAD_ENABLE_APPLICATION_COAP}],[Define to 1 if you want to enable CoAP to an application.])
+
+#
 # Examples
 #
 
@@ -1007,6 +1037,7 @@ AC_MSG_NOTICE([
   OpenThread Certification log support      : ${enable_cert_log}
   OpenThread DHCPv6 Server support          : ${enable_dhcp6_server}
   OpenThread DHCPv6 Client support          : ${enable_dhcp6_client}
+  Openthread Application CoAP support       : ${enable_application_coap}
   OpenThread examples                       : ${OPENTHREAD_EXAMPLES}
   OpenThread platform information           : ${PLATFORM_INFO}
 
