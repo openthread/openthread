@@ -44,6 +44,8 @@
 
 #include <coap/coap_server.hpp>
 #include <coap/coap_client.hpp>
+#include <coap/secure_coap_client.hpp>
+#include <coap/secure_coap_server.hpp>
 #include <mac/mac.hpp>
 #include <meshcop/joiner_router.hpp>
 #include <meshcop/leader.hpp>
@@ -282,6 +284,8 @@ public:
 
 #if OPENTHREAD_ENABLE_COMMISSIONER
     MeshCoP::Commissioner &GetCommissioner(void) { return mCommissioner; }
+
+    Coap::SecureServer &GetSecureCoapServer(void) { return mSecureCoapServer; }
 #endif  // OPENTHREAD_ENABLE_COMMISSIONER
 
 #if OPENTHREAD_ENABLE_DTLS
@@ -290,6 +294,8 @@ public:
 
 #if OPENTHREAD_ENABLE_JOINER
     MeshCoP::Joiner &GetJoiner(void) { return mJoiner; }
+
+    Coap::SecureClient &GetSecureCoapClient(void) { return mSecureCoapClient; }
 #endif  // OPENTHREAD_ENABLE_JOINER
 
 #if OPENTHREAD_ENABLE_JAM_DETECTION
@@ -334,6 +340,7 @@ private:
     bool mIsUp;
 
 #if OPENTHREAD_ENABLE_COMMISSIONER
+    Coap::SecureServer mSecureCoapServer;
     MeshCoP::Commissioner mCommissioner;
 #endif  // OPENTHREAD_ENABLE_COMMISSIONER
 
@@ -342,6 +349,7 @@ private:
 #endif// OPENTHREAD_ENABLE_DTLS
 
 #if OPENTHREAD_ENABLE_JOINER
+    Coap::SecureClient mSecureCoapClient;
     MeshCoP::Joiner mJoiner;
 #endif  // OPENTHREAD_ENABLE_JOINER
 

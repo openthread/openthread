@@ -32,6 +32,7 @@
 #include <common/debug.hpp>
 #include <common/code_utils.hpp>
 #include <net/ip6.hpp>
+#include <net/udp6.hpp>
 #include <platform/random.h>
 
 /**
@@ -42,8 +43,8 @@
 namespace Thread {
 namespace Coap {
 
-Client::Client(Ip6::Netif &aNetif):
-    mSocket(aNetif.GetIp6().mUdp),
+Client::Client(Ip6::Netif &aNetif, SenderFunction aSender, ReceiverFunction aReceiver):
+    CoapBase(aNetif.GetIp6().mUdp, aSender, aReceiver),
     mRetransmissionTimer(aNetif.GetIp6().mTimerScheduler, &Client::HandleRetransmissionTimer, this)
 {
     mMessageId = static_cast<uint16_t>(otPlatRandomGet());
@@ -51,7 +52,10 @@ Client::Client(Ip6::Netif &aNetif):
 
 ThreadError Client::Start()
 {
-    return mSocket.Open(&Client::HandleUdpReceive, this);
+    Ip6::SockAddr addr;
+    addr.mPort = static_cast<Ip6::Udp *>(mSocket.mTransport)->GetEphemeralPort();
+
+    return CoapBase::Start(addr);
 }
 
 ThreadError Client::Stop()
@@ -70,22 +74,7 @@ ThreadError Client::Stop()
         FinalizeCoapTransaction(*messageToRemove, requestMetadata, NULL, NULL, kThreadError_Abort);
     }
 
-    return mSocket.Close();
-}
-
-Message *Client::NewMessage(const Header &aHeader)
-{
-    Message *message = NULL;
-
-    // Ensure that header has minimum required length.
-    VerifyOrExit(aHeader.GetLength() >= Header::kMinHeaderLength, ;);
-
-    VerifyOrExit((message = mSocket.NewMessage(aHeader.GetLength())) != NULL, ;);
-    message->Prepend(aHeader.GetBytes(), aHeader.GetLength());
-    message->SetOffset(0);
-
-exit:
-    return message;
+    return CoapBase::Stop();
 }
 
 ThreadError Client::SendMessage(Message &aMessage, const Ip6::MessageInfo &aMessageInfo,
@@ -124,7 +113,7 @@ ThreadError Client::SendMessage(Message &aMessage, const Ip6::MessageInfo &aMess
                      error = kThreadError_NoBufs);
     }
 
-    SuccessOrExit(error = mSocket.SendTo(aMessage, aMessageInfo));
+    SuccessOrExit(error = mSender(this, aMessage, aMessageInfo));
 
 exit:
 
@@ -206,7 +195,7 @@ ThreadError Client::SendCopy(const Message &aMessage, const Ip6::MessageInfo &aM
                  error = kThreadError_NoBufs);
 
     // Send the copy.
-    SuccessOrExit(error = mSocket.SendTo(*messageCopy, aMessageInfo));
+    SuccessOrExit(error = mSender(this, *messageCopy, aMessageInfo));
 
 exit:
 
@@ -233,7 +222,7 @@ void Client::SendEmptyMessage(const Ip6::Address &aAddress, uint16_t aPort, uint
     messageInfo.SetPeerAddr(aAddress);
     messageInfo.SetPeerPort(aPort);
 
-    SuccessOrExit(error = mSocket.SendTo(*message, messageInfo));
+    SuccessOrExit(error = mSender(this, *message, messageInfo));
 
 exit:
 
@@ -364,13 +353,7 @@ void Client::FinalizeCoapTransaction(Message &aRequest, const RequestMetadata &a
     }
 }
 
-void Client::HandleUdpReceive(void *aContext, otMessage aMessage, const otMessageInfo *aMessageInfo)
-{
-    static_cast<Client *>(aContext)->HandleUdpReceive(*static_cast<Message *>(aMessage),
-                                                      *static_cast<const Ip6::MessageInfo *>(aMessageInfo));
-}
-
-void Client::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
+void Client::ProcessReceivedMessage(Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
     Header responseHeader;
     Header requestHeader;

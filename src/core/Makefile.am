@@ -37,6 +37,7 @@ libopenthread_a_CPPFLAGS            = \
 
 libopenthread_a_SOURCES             = \
     openthread.cpp                    \
+    coap/coap_base.cpp                \
     coap/coap_client.cpp              \
     coap/coap_header.cpp              \
     coap/coap_server.cpp              \
@@ -92,6 +93,7 @@ libopenthread_a_SOURCES             = \
 
 if OPENTHREAD_ENABLE_COMMISSIONER
 libopenthread_a_SOURCES            += \
+    coap/secure_coap_server.cpp       \
     meshcop/announce_begin_client.cpp \
     meshcop/commissioner.cpp          \
     meshcop/energy_scan_client.cpp    \
@@ -107,6 +109,7 @@ endif  # OPENTHREAD_ENABLE_JOINER
 
 if OPENTHREAD_ENABLE_DTLS
 libopenthread_a_SOURCES            += \
+    coap/secure_coap_client.cpp       \
     meshcop/dtls.cpp                  \
     $(NULL)
 endif  # OPENTHREAD_ENABLE_DTLS
@@ -133,9 +136,12 @@ noinst_HEADERS                      = \
     openthread-core-config.h          \
     openthread-core-default-config.h  \
     openthread-instance.h             \
+    coap/coap_base.hpp                \
     coap/coap_client.hpp              \
     coap/coap_header.hpp              \
     coap/coap_server.hpp              \
+    coap/secure_coap_client.hpp       \
+    coap/secure_coap_server.hpp       \
     common/code_utils.hpp             \
     common/crc16.hpp                  \
     common/debug.hpp                  \

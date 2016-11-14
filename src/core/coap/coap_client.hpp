@@ -31,6 +31,7 @@
 
 #include <openthread-types.h>
 #include <openthread-coap.h>
+#include <coap/coap_base.hpp>
 #include <coap/coap_header.hpp>
 #include <common/message.hpp>
 #include <common/timer.hpp>
@@ -184,17 +185,19 @@ private:
  * This class implements CoAP client.
  *
  */
-class Client
+class Client : public CoapBase
 {
 public:
 
     /**
      * This constructor initializes the object.
      *
-     * @param[in]  aNetif  A reference to the network interface that CoAP client should be assigned to.
+     * @param[in]  aNetif    A reference to the network interface that CoAP client should be assigned to.
+     * @param[in]  aSender   A pointer to a function for sending messages.
+     * @param[in]  aReceiver A pointer to a function for handling received messages.
      *
      */
-    Client(Ip6::Netif &aNetif);
+    Client(Ip6::Netif &aNetif, SenderFunction aSender = &Client::Send, ReceiverFunction aReceiver = &Client::Receive);
 
     /**
      * This method starts the CoAP client.
@@ -211,16 +214,6 @@ public:
      *
      */
     ThreadError Stop(void);
-
-    /**
-     * This method creates a new message with a CoAP header.
-     *
-     * @param[in]  aHeader  A reference to a CoAP header that is used to create the message.
-     *
-     * @returns A pointer to the message or NULL if failed to allocate message.
-     *
-     */
-    Message *NewMessage(const Header &aHeader);
 
     /**
      * This method sends a CoAP message.
@@ -249,6 +242,9 @@ public:
      */
     const MessageQueue &GetRequestMessages(void) const { return mPendingRequests; }
 
+protected:
+    void ProcessReceivedMessage(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+
 private:
     Message *CopyAndEnqueueMessage(const Message &aMessage, uint16_t aCopyLength,
                                    const RequestMetadata &aRequestMetadata);
@@ -270,10 +266,14 @@ private:
     static void HandleRetransmissionTimer(void *aContext);
     void HandleRetransmissionTimer(void);
 
-    static void HandleUdpReceive(void *aContext, otMessage aMessage, const otMessageInfo *aMessageInfo);
-    void HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    static ThreadError Send(void *aContext, Message &aMessage, const Ip6::MessageInfo &aMessageInfo) {
+        return (static_cast<Client *>(aContext))->mSocket.SendTo(aMessage, aMessageInfo);
+    }
 
-    Ip6::UdpSocket mSocket;
+    static void Receive(void *aContext, Message &aMessage, const Ip6::MessageInfo &aMessageInfo) {
+        (static_cast<Client *>(aContext))->ProcessReceivedMessage(aMessage, aMessageInfo);
+    }
+
     MessageQueue mPendingRequests;
     uint16_t mMessageId;
     Timer mRetransmissionTimer;
