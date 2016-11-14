@@ -35,7 +35,7 @@
 #include <common/code_utils.hpp>
 #include <platform/uart.h>
 #include "hw_gpio.h"
-#include "platform-da15100.h"
+#include "platform-da15000.h"
 
 //static uint8_t s_receive_buffer[128];
 //static const uint8_t *s_write_buffer;
@@ -82,7 +82,7 @@ ThreadError otPlatUartDisable(void)
 }
 
 
-void da15100UartProcess(void)
+void da15000UartProcess(void)
 {
     uint8_t aBuf;
 

@@ -36,7 +36,7 @@
 #include <platform/alarm.h>
 #include "hw_timer0.h"
 #include "hw_gpio.h"
-#include "platform-da15100.h"
+#include "platform-da15000.h"
 
 static bool s_is_running = false;
 static uint32_t s_alarm = 0;
@@ -48,7 +48,7 @@ static void timer0_interrupt_cb(void)
     s_counter++;
 }
 
-void da15100AlarmProcess(otInstance *aInstance)
+void da15000AlarmProcess(otInstance *aInstance)
 {
     int32_t remaining;
 
@@ -64,7 +64,7 @@ void da15100AlarmProcess(otInstance *aInstance)
     }
 }
 
-void da15100AlarmInit(void)
+void da15000AlarmInit(void)
 {
     hw_timer0_init(NULL);
     hw_timer0_set_clock_source(HW_TIMER0_CLK_SRC_FAST);

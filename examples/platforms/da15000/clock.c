@@ -28,7 +28,7 @@
 
 /**
  * @file     clock.c
- * Clock init for Dialog da15100.
+ * Clock init for Dialog da15000.
  *
  */
 

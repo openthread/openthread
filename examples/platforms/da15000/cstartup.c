@@ -28,7 +28,7 @@
 
 /**
  * @file     cstartup.c
- * cstartup for Dialog da15100.
+ * cstartup for Dialog da15000.
  * Called by __BOOT_STARTUP to initialize the processor on boot.
  * The caller is aliased in tool.h to a compiler dependant value:
  *   IAR: __low_level_init

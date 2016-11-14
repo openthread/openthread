@@ -40,7 +40,7 @@
 #include <platform/alarm.h>
 #include <platform/radio.h>
 #include <openthread.h>
-#include "platform-da15100.h"
+#include "platform-da15000.h"
 
 #define DEBUG_LOG_ENABLE (0)
 
@@ -202,7 +202,7 @@ void otPlatRadioSetShortAddress(otInstance *aInstance, uint16_t address)
 }
 
 
-void da15100RadioInit(void)
+void da15000RadioInit(void)
 {
     /* Wake up power domains */
     REG_CLR_BIT(CRG_TOP, PMU_CTRL_REG, FTDF_SLEEP);
@@ -429,7 +429,7 @@ void FTDF_sendFrameTransparentConfirm(void         *handle,
 
 
 
-void da15100RadioProcess(otInstance *aInstance)
+void da15000RadioProcess(otInstance *aInstance)
 {
     bool rxPending;
     uint8_t value = 0;

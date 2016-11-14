@@ -26,8 +26,8 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef PLATFORM_DA15100_H_
-#define PLATFORM_DA15100_H_
+#ifndef PLATFORM_DA15000_H_
+#define PLATFORM_DA15000_H_
 
 #include <openthread-types.h>
 
@@ -41,7 +41,7 @@ extern uint32_t NODE_ID;
  * This function initializes the radio service used by OpenThread.
  *
  */
-void da15100RadioInit(void);
+void da15000RadioInit(void);
 
 /**
  * This function performs radio driver processing.
@@ -49,13 +49,13 @@ void da15100RadioInit(void);
  * @param[in]  aInstance  The OpenThread instance structure.
  *
  */
-void da15100RadioProcess(otInstance *aInstance);
+void da15000RadioProcess(otInstance *aInstance);
 
 /**
  * This function initializes the alarm service used by OpenThread.
  *
  */
-void da15100AlarmInit(void);
+void da15000AlarmInit(void);
 
 /**
  * This function performs alarm driver processing.
@@ -63,18 +63,18 @@ void da15100AlarmInit(void);
  * @param[in]  aInstance  The OpenThread instance structure.
  *
  */
-void da15100AlarmProcess(otInstance *aInstance);
+void da15000AlarmProcess(otInstance *aInstance);
 
 /**
  * This function initializes the random number service used by OpenThread.
  *
  */
-void da15100RandomInit(void);
+void da15000RandomInit(void);
 
 /**
  * This function performs UART driver processing.
  *
  */
-void da15100UartProcess(void);
+void da15000UartProcess(void);
 
-#endif /* PLATFORM_PLATFORM_DA15100_H_ */
+#endif /* PLATFORM_PLATFORM_DA15000_H_ */

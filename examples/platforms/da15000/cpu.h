@@ -47,23 +47,12 @@ extern "C" {
 #endif
 
 // =========== CPU SELECTION : START ===========
-
-#ifdef CPU_POSIX
-
-#include <pthread.h>
-#include <sys/signal.h>
-#include <sys/time.h>
-
-#elif CPU_DA15100
+#if CPU_DA15000
 #include "bsp/include/black_orca.h"
 #include "bsp/include/core_cm0.h"
-
 #else
-
 #error "Error: No valid CPU specified"
-
 #endif
-
 // =========== CPU SELECTION : END ===========
 
 #ifdef __cplusplus

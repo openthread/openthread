@@ -35,7 +35,7 @@
  */
 
 #include <platform/random.h>
-#include "platform-da15100.h"
+#include "platform-da15000.h"
 #include "black_orca.h"
 #include "hw_trng.h"
 #include <string.h>
@@ -80,7 +80,7 @@ int zhal_get_entropy(uint8_t *outEntropy, size_t inSize)
     return 0;
 }
 
-void da15100RandomInit(void)
+void da15000RandomInit(void)
 {
     zhal_get_entropy((uint8_t *)&seed, sizeof(seed));
     s_state = seed;

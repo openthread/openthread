@@ -103,7 +103,7 @@
  * OS specific config
  */
 #define OS_BAREMETAL
-#define CPU_DA15100                             (1)
+#define CPU_DA15000                             (1)
 /*************************************************************************************************\
  * Peripheral specific config
  */

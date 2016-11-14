@@ -29,9 +29,9 @@
 include $(abs_top_nlbuild_autotools_dir)/automake/pre.am
 
 
-lib_LIBRARIES                             = libopenthread-da15100.a
+lib_LIBRARIES                             = libopenthread-da15000.a
 
-libopenthread_da15100_a_CPPFLAGS          = \
+libopenthread_da15000_a_CPPFLAGS          = \
     -I$(top_srcdir)/include                 \
     -I$(top_srcdir)/src/core                \
     -I$(top_srcdir)/third_party/dialog/DialogSDK/bsp/include\
@@ -53,7 +53,7 @@ libopenthread_da15100_a_CPPFLAGS          = \
     -fno-strict-aliasing\
     $(NULL)
 
-libopenthread_da15100_a_SOURCES          = \
+libopenthread_da15000_a_SOURCES          = \
     alarm.c                                \
     logging.c                              \
     platform.c                             \
@@ -91,7 +91,7 @@ $(NULL)
  
 
 noinst_HEADERS                            = \
-    platform-da15100.h                      \
+    platform-da15000.h                      \
     $(NULL)
 
 if OPENTHREAD_BUILD_COVERAGE

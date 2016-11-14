@@ -27,7 +27,7 @@
  */
 
 /**
-* @file     cpu/dialog/da15100/boot/vector.c
+* @file     cpu/dialog/da15000/boot/vector.c
 * CpuIrq_da15x -- IRQ driver for ARM Cortex-M series cores.
 *
 */
@@ -244,7 +244,7 @@ const irq_handler_t __vector_table[] =
     PendSV_Handler,                       //INT_PendableSrvReq           = 14, // Pendable request for system service (PendableSrvReq)
     SysTick_Handler,                      //INT_SysTick                  = 15, // SysTick Interrupt
 
-    // Dialog DA15100 vector table
+    // Dialog DA15000 vector table
     BLE_WAKEUP_LP_Handler,                //BLE_WAKEUP_LP_IRQn           =   0, // Wakeup from Sleep by BLE Interrupt request.
     BLE_GEN_Handler,                      //BLE_GEN_IRQn                 =   1, // BLE Interrupt request. Sources:
     FTDF_WAKEUP_Handler,                  //FTDF_WAKEUP_IRQn             =   2, // Wakeup from Sleep by FTDF Interrupt request.

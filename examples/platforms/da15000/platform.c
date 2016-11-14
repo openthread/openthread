@@ -37,7 +37,7 @@
 #include <openthread.h>
 #include "platform/alarm.h"
 #include <openthread-types.h>
-#include "platform-da15100.h"
+#include "platform-da15000.h"
 #include "black_orca.h"
 #include "hw_cpm.h"
 #include "hw_watchdog.h"
@@ -140,11 +140,11 @@ void PlatformInit(int argc, char *argv[])
     // Initialize System Clock
     ClkInit();
     // Initialize Random number generator
-    da15100RandomInit();
+    da15000RandomInit();
     // Initialize Alarm
-    da15100AlarmInit();
+    da15000AlarmInit();
     // Initialize Radio
-    da15100RadioInit();
+    da15000RadioInit();
     // Initialize UART
     otPlatUartEnable();
     // enable interrupts
@@ -159,8 +159,8 @@ void PlatformProcessDrivers(otInstance *aInstance)
 {
     sInstance = aInstance;
 
-    da15100AlarmProcess(aInstance);
-    da15100UartProcess();
-    da15100RadioProcess(aInstance);
+    da15000AlarmProcess(aInstance);
+    da15000UartProcess();
+    da15000RadioProcess(aInstance);
     ExampleProcess(aInstance);
 }
