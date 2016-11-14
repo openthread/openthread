@@ -499,3 +499,72 @@ void otPlatRadioGetIeeeEui64(otInstance *aInstance, uint8_t *aIeeeEui64)
     aIeeeEui64[6] = (NODE_ID >> 8) & 0xff;
     aIeeeEui64[7] = NODE_ID & 0xff;
 }
+
+ThreadError otPlatRadioEnergyScan(otInstance *aInstance, uint8_t aScanChannel, uint16_t aScanDuration)
+{
+    (void)aInstance;
+    (void)aScanChannel;
+    (void)aScanDuration;
+    return kThreadError_NotImplemented;
+}
+
+void otPlatRadioEnableSrcMatch(otInstance *aInstance, bool aEnable)
+{
+
+    (void)aInstance;
+
+}
+
+ThreadError otPlatRadioAddSrcMatchShortEntry(otInstance *aInstance, const uint16_t aShortAddress)
+{
+
+    ThreadError error = kThreadError_None;
+    (void)aInstance;
+
+    return error;
+
+}
+
+ThreadError otPlatRadioAddSrcMatchExtEntry(otInstance *aInstance, const uint8_t *aExtAddress)
+{
+
+    ThreadError error = kThreadError_None;
+    (void)aInstance;
+
+    return error;
+}
+
+ThreadError otPlatRadioClearSrcMatchShortEntry(otInstance *aInstance, const uint16_t aShortAddress)
+{
+
+    ThreadError error = kThreadError_None;
+    (void)aInstance;
+
+    return error;
+}
+
+ThreadError otPlatRadioClearSrcMatchExtEntry(otInstance *aInstance, const uint8_t *aExtAddress)
+{
+
+    ThreadError error = kThreadError_None;
+    (void)aInstance;
+
+    return error;
+}
+
+void otPlatRadioClearSrcMatchShortEntries(otInstance *aInstance)
+{
+
+    (void)aInstance;
+}
+
+void otPlatRadioClearSrcMatchExtEntries(otInstance *aInstance)
+{
+
+    (void)aInstance;
+}
+
+
+
+
+

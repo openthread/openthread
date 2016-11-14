@@ -33,10 +33,12 @@ lib_LIBRARIES                             = libopenthread-da15000.a
 
 libopenthread_da15000_a_CPPFLAGS          = \
     -I$(top_srcdir)/include                 \
+    -I$(top_srcdir)/examples/platforms      \
     -I$(top_srcdir)/src/core                \
     -I$(top_srcdir)/third_party/dialog/DialogSDK/bsp/include\
     -I$(top_srcdir)/third_party/dialog/DialogSDK/bsp/peripherals/include\
     -I$(top_srcdir)/third_party/dialog/DialogSDK/bsp/adapters/include\
+    -I$(top_srcdir)/third_party/dialog/DialogSDK/bsp/memory/include\
     -I$(top_srcdir)/third_party/dialog/DialogSDK/interfaces/ftdf/include\
     -I$(top_srcdir)/third_party/dialog/DialogSDK/bsp/config\
     -I$(top_srcdir)/third_party/dialog/DialogSDK\
@@ -53,8 +55,15 @@ libopenthread_da15000_a_CPPFLAGS          = \
     -fno-strict-aliasing\
     $(NULL)
 
+
+libopenthread_da15000_settings.cpp: $(srcdir)/../utils/settings.cpp
+	cp $? $@
+
+CLEANFILES = libopenthread_da15000_settings.cpp
+
 libopenthread_da15000_a_SOURCES          = \
     alarm.c                                \
+    flash.c                                \
     logging.c                              \
     platform.c                             \
     radio.c                                \
@@ -64,6 +73,7 @@ libopenthread_da15000_a_SOURCES          = \
     uart.c                                 \
     cortex-m_cstartup.c                    \
     cxx-symbols.c                          \
+    libopenthread_da15000_settings.cpp      \
     clock.c                                \
     misc.c                                 \
 ./../../../third_party/dialog/DialogSDK/bsp/memory/src/qspi_automode.c \
@@ -95,7 +105,7 @@ noinst_HEADERS                            = \
     $(NULL)
 
 if OPENTHREAD_BUILD_COVERAGE
-CLEANFILES                                = $(wildcard *.gcda *.gcno)
+CLEANFILES                                += $(wildcard *.gcda *.gcno)
 endif # OPENTHREAD_BUILD_COVERAGE
 
 include $(abs_top_nlbuild_autotools_dir)/automake/post.am

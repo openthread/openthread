@@ -88,22 +88,7 @@ void da15000RandomInit(void)
 
 uint32_t otPlatRandomGet(void)
 {
-    uint32_t mlcg, p, q;
-    uint64_t tmpstate;
-
-    tmpstate = (uint64_t)33614 * (uint64_t)s_state;
-    q = tmpstate & 0xffffffff;
-    q = q >> 1;
-    p = tmpstate >> 32;
-    mlcg = p + q;
-
-    if (mlcg & 0x80000000)
-    {
-        mlcg &= 0x7fffffff;
-        mlcg++;
-    }
-
-    s_state = mlcg;
-
+    uint32_t mlcg;
+    zhal_get_entropy((uint8_t *)&mlcg, sizeof(mlcg));
     return mlcg;
 }
