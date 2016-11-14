@@ -105,10 +105,12 @@ exit:
     return error;
 }
 
-void PanIdQueryClient::HandleConflict(void *aContext, Coap::Header &aHeader, Message &aMessage,
-                                      const Ip6::MessageInfo &aMessageInfo)
+void PanIdQueryClient::HandleConflict(void *aContext, otCoapHeader *aHeader, otMessage aMessage,
+                                      const otMessageInfo *aMessageInfo)
 {
-    static_cast<PanIdQueryClient *>(aContext)->HandleConflict(aHeader, aMessage, aMessageInfo);
+    static_cast<PanIdQueryClient *>(aContext)->HandleConflict(
+        *static_cast<Coap::Header *>(aHeader), *static_cast<Message *>(aMessage),
+        *static_cast<const Ip6::MessageInfo *>(aMessageInfo));
 }
 
 void PanIdQueryClient::HandleConflict(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo)

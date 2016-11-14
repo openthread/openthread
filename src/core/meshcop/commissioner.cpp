@@ -636,10 +636,12 @@ exit:
     otLogFuncExit();
 }
 
-void Commissioner::HandleRelayReceive(void *aContext, Coap::Header &aHeader,
-                                      Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
+void Commissioner::HandleRelayReceive(void *aContext, otCoapHeader *aHeader, otMessage aMessage,
+                                      const otMessageInfo *aMessageInfo)
 {
-    static_cast<Commissioner *>(aContext)->HandleRelayReceive(aHeader, aMessage, aMessageInfo);
+    static_cast<Commissioner *>(aContext)->HandleRelayReceive(
+        *static_cast<Coap::Header *>(aHeader), *static_cast<Message *>(aMessage),
+        *static_cast<const Ip6::MessageInfo *>(aMessageInfo));
 }
 
 void Commissioner::HandleRelayReceive(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
@@ -720,10 +722,12 @@ exit:
     otLogFuncExit();
 }
 
-void Commissioner::HandleDatasetChanged(void *aContext, Coap::Header &aHeader,
-                                        Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
+void Commissioner::HandleDatasetChanged(void *aContext, otCoapHeader *aHeader, otMessage aMessage,
+                                        const otMessageInfo *aMessageInfo)
 {
-    static_cast<Commissioner *>(aContext)->HandleDatasetChanged(aHeader, aMessage, aMessageInfo);
+    static_cast<Commissioner *>(aContext)->HandleDatasetChanged(
+        *static_cast<Coap::Header *>(aHeader), *static_cast<Message *>(aMessage),
+        *static_cast<const Ip6::MessageInfo *>(aMessageInfo));
 }
 
 void Commissioner::HandleDatasetChanged(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
@@ -768,10 +772,12 @@ exit:
     otLogFuncExit();
 }
 
-void Commissioner::HandleJoinerFinalize(void *aContext, Coap::Header &aHeader,
-                                        Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
+void Commissioner::HandleJoinerFinalize(void *aContext, otCoapHeader *aHeader, otMessage aMessage,
+                                        const otMessageInfo *aMessageInfo)
 {
-    static_cast<Commissioner *>(aContext)->HandleJoinerFinalize(aHeader, aMessage, aMessageInfo);
+    static_cast<Commissioner *>(aContext)->HandleJoinerFinalize(
+        *static_cast<Coap::Header *>(aHeader), *static_cast<Message *>(aMessage),
+        *static_cast<const Ip6::MessageInfo *>(aMessageInfo));
 }
 
 void Commissioner::HandleJoinerFinalize(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo)

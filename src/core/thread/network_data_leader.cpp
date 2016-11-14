@@ -563,10 +563,12 @@ exit:
     return error;
 }
 
-void Leader::HandleServerData(void *aContext, Coap::Header &aHeader, Message &aMessage,
-                              const Ip6::MessageInfo &aMessageInfo)
+void Leader::HandleServerData(void *aContext, otCoapHeader *aHeader, otMessage aMessage,
+                              const otMessageInfo *aMessageInfo)
 {
-    static_cast<Leader *>(aContext)->HandleServerData(aHeader, aMessage, aMessageInfo);
+    static_cast<Leader *>(aContext)->HandleServerData(
+        *static_cast<Coap::Header *>(aHeader), *static_cast<Message *>(aMessage),
+        *static_cast<const Ip6::MessageInfo *>(aMessageInfo));
 }
 
 void Leader::HandleServerData(Coap::Header &aHeader, Message &aMessage,
@@ -596,11 +598,12 @@ exit:
     return;
 }
 
-void Leader::HandleCommissioningSet(void *aContext, Coap::Header &aHeader, Message &aMessage,
-                                    const Ip6::MessageInfo &aMessageInfo)
+void Leader::HandleCommissioningSet(void *aContext, otCoapHeader *aHeader, otMessage aMessage,
+                                    const otMessageInfo *aMessageInfo)
 {
-    Leader *obj = static_cast<Leader *>(aContext);
-    obj->HandleCommissioningSet(aHeader, aMessage, aMessageInfo);
+    static_cast<Leader *>(aContext)->HandleCommissioningSet(
+        *static_cast<Coap::Header *>(aHeader), *static_cast<Message *>(aMessage),
+        *static_cast<const Ip6::MessageInfo *>(aMessageInfo));
 }
 
 void Leader::HandleCommissioningSet(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
@@ -665,11 +668,12 @@ exit:
     return;
 }
 
-void Leader::HandleCommissioningGet(void *aContext, Coap::Header &aHeader, Message &aMessage,
-                                    const Ip6::MessageInfo &aMessageInfo)
+void Leader::HandleCommissioningGet(void *aContext, otCoapHeader *aHeader, otMessage aMessage,
+                                    const otMessageInfo *aMessageInfo)
 {
-    Leader *obj = static_cast<Leader *>(aContext);
-    obj->HandleCommissioningGet(aHeader, aMessage, aMessageInfo);
+    static_cast<Leader *>(aContext)->HandleCommissioningGet(
+        *static_cast<Coap::Header *>(aHeader), *static_cast<Message *>(aMessage),
+        *static_cast<const Ip6::MessageInfo *>(aMessageInfo));
 }
 
 void Leader::HandleCommissioningGet(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo)

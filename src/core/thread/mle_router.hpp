@@ -678,11 +678,11 @@ private:
     static void HandleAddressSolicitResponse(void *aContext, otCoapHeader *aHeader, otMessage aMessage,
                                              ThreadError result);
     void HandleAddressSolicitResponse(Coap::Header *aHeader, Message *aMessage, ThreadError result);
-    static void HandleAddressRelease(void *aContext, Coap::Header &aHeader, Message &aMessage,
-                                     const Ip6::MessageInfo &aMessageInfo);
+    static void HandleAddressRelease(void *aContext, otCoapHeader *aHeader, otMessage aMessage,
+                                     const otMessageInfo *aMessageInfo);
     void HandleAddressRelease(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
-    static void HandleAddressSolicit(void *aContext, Coap::Header &aHeader, Message &aMessage,
-                                     const Ip6::MessageInfo &aMessageInfo);
+    static void HandleAddressSolicit(void *aContext, otCoapHeader *aHeader, otMessage aMessage,
+                                     const otMessageInfo *aMessageInfo);
     void HandleAddressSolicit(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
     static uint8_t LqiToCost(uint8_t aLqi);

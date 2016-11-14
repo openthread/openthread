@@ -256,8 +256,8 @@ public:
 #endif  // OPENTHREAD_ENABLE_DHCP6_SERVER || OPENTHREAD_ENABLE_DHCP6_CLIENT
 
 private:
-    static void HandleServerData(void *aContext, Coap::Header &aHeader, Message &aMessage,
-                                 const Ip6::MessageInfo &aMessageInfo);
+    static void HandleServerData(void *aContext, otCoapHeader *aHeader, otMessage aMessage,
+                                 const otMessageInfo *aMessageInfo);
     void HandleServerData(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
     void SendServerDataResponse(const Coap::Header &aRequestHeader, const Ip6::MessageInfo &aMessageInfo,
                                 const uint8_t *aTlvs, uint8_t aTlvsLength);
@@ -295,12 +295,12 @@ private:
     bool IsStableUpdated(uint16_t aRloc16, uint8_t *aTlvs, uint8_t aTlvsLength, uint8_t *aTlvsBase,
                          uint8_t aTlvsBaseLength);
 
-    static void HandleCommissioningSet(void *aContext, Coap::Header &aHeader, Message &aMessage,
-                                       const Ip6::MessageInfo &aMessageInfo);
+    static void HandleCommissioningSet(void *aContext, otCoapHeader *aHeader, otMessage aMessage,
+                                       const otMessageInfo *aMessageInfo);
     void HandleCommissioningSet(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
-    static void HandleCommissioningGet(void *aContext, Coap::Header &aHeader, Message &aMessage,
-                                       const Ip6::MessageInfo &aMessageInfo);
+    static void HandleCommissioningGet(void *aContext, otCoapHeader *aHeader, otMessage aMessage,
+                                       const otMessageInfo *aMessageInfo);
     void HandleCommissioningGet(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
     void SendCommissioningGetResponse(const Coap::Header &aRequestHeader, const Ip6::MessageInfo &aMessageInfo,
