@@ -384,20 +384,21 @@ typedef enum
      * dBm) above which the jamming detection will consider the
      * channel blocked.
      */
-    SPINEL_PROP_JAM_DETECT_RSSI_THRESHOLD = SPINEL_PROP_PHY_EXT__BEGIN + 2,
+    SPINEL_PROP_JAM_DETECT_RSSI_THRESHOLD
+                                        = SPINEL_PROP_PHY_EXT__BEGIN + 2,
 
     /// Jamming detection window size
-    /** Format: `c`
-     *  Units: Seconds (1-64)
+    /** Format: `C`
+     *  Units: Seconds (1-63)
      *
      * This parameter describes the window period for signal jamming
      * detection.
      */
-    SPINEL_PROP_JAM_DETECT_WINDOW        = SPINEL_PROP_PHY_EXT__BEGIN + 3,
+    SPINEL_PROP_JAM_DETECT_WINDOW       = SPINEL_PROP_PHY_EXT__BEGIN + 3,
 
     /// Jamming detection busy period
-    /** Format: `c`
-     *  Units: Seconds (1-64)
+    /** Format: `C`
+     *  Units: Seconds (1-63)
      *
      * This parameter describes the number of aggregate seconds within
      * the detection window where the RSSI must be above
@@ -406,7 +407,7 @@ typedef enum
      * The behavior of the jamming detection feature when `PROP_JAM_DETECT_BUSY`
      * is larger than `PROP_JAM_DETECT_WINDOW` is undefined.
      */
-    SPINEL_PROP_JAM_DETECT_BUSY          = SPINEL_PROP_PHY_EXT__BEGIN + 4,
+    SPINEL_PROP_JAM_DETECT_BUSY         = SPINEL_PROP_PHY_EXT__BEGIN + 4,
 
     SPINEL_PROP_PHY_EXT__END            = 0x1300,
 

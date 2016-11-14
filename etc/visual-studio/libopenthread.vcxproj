@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Project="openthread.configuration.props" /> 
+  <Import Project="openthread.configuration.props" />
   <PropertyGroup Label="Globals">
     <ProjectGuid>{DD5018BE-54C6-4FD4-9F8D-08D52FC0CD40}</ProjectGuid>
     <Keyword>StaticLibrary</Keyword>
@@ -113,6 +113,7 @@
     <ClCompile Include="..\..\src\core\thread\thread_netif.cpp" />
     <ClCompile Include="..\..\src\core\thread\thread_tlvs.cpp" />
     <ClCompile Include="..\..\src\core\utils\slaac_address.cpp" />
+    <ClCompile Include="..\..\src\core\utils\jam_detector.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\src\core\coap\coap_client.hpp" />
@@ -185,6 +186,7 @@
     <ClInclude Include="..\..\src\core\thread\thread_uris.hpp" />
     <ClInclude Include="..\..\src\core\thread\topology.hpp" />
     <ClInclude Include="..\..\src\core\utils\slaac_address.hpp" />
+    <ClInclude Include="..\..\src\core\utils\jam_detector.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

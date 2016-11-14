@@ -78,6 +78,7 @@ enum
     kPhyUsPerSymbol     = ((kPhyBitsPerOctet / kPhySymbolsPerOctet) * 1000000) / kPhyBitRate,
 
     kPhyNoLqi           = 0,       ///< LQI measurement not supported
+    kPhyInvalidRssi     = 127,     ///< Invalid or unknown RSSI value
 };
 
 /**
