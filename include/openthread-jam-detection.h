@@ -130,7 +130,7 @@ uint8_t otGetJamDetectionBusyPeriod(otInstance *aInstance);
  * Start the jamming detection.
  *
  * @param[in]  aInstance            A pointer to an OpenThread instance.
- * @param[in]  aCallback            A pointer to a function called when jamming state changes.
+ * @param[in]  aCallback            A pointer to a function called to notify of jamming state change.
  * @param[in]  aContext             A pointer to application-specific context.
  *
  * @retval kThreadErrorNone         Successfully started the jamming detection.
@@ -158,7 +158,6 @@ ThreadError otStopJamDetection(otInstance *aInstance);
  * @returns The Jam Detection status (true if enabled, false otherwise).
  */
 bool otIsJamDetectionEnabled(otInstance *aInstance);
-
 
 /**
  * Get the Jam Detection State

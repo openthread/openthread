@@ -183,6 +183,8 @@ exit:
 
 void JamDetector::UpdateHistory(bool aDidExceedThreshold)
 {
+    uint32_t now = Timer::GetNow();
+
     // If the RSSI is ever below the threshold, update mAlwaysAboveThreshold
     // for current second interval.
     if (!aDidExceedThreshold)
@@ -191,7 +193,7 @@ void JamDetector::UpdateHistory(bool aDidExceedThreshold)
     }
 
     // If we reached end of current one second interval, update the history bitmap
-    if (Timer::GetNow() - mCurSecondStartTime >= kOneSecondInterval)
+    if (now - mCurSecondStartTime >= kOneSecondInterval)
     {
         mHistoryBitmap <<= 1;
 
@@ -201,7 +203,11 @@ void JamDetector::UpdateHistory(bool aDidExceedThreshold)
         }
 
         mAlwaysAboveThreshold = true;
-        mCurSecondStartTime += kOneSecondInterval;
+
+        while (now - mCurSecondStartTime >= kOneSecondInterval)
+        {
+            mCurSecondStartTime += kOneSecondInterval;
+        }
 
         UpdateJamState();
     }
@@ -227,7 +233,7 @@ void JamDetector::UpdateJamState(void)
     mJamState = (numJammedSeconds >= mBusyPeriod);
 
     // If there is a change, invoke the handler.
-    if (mJamState != oldJamState)
+    if ((mJamState != oldJamState) || (mJamState == true))
     {
         mHandler(mJamState, mContext);
     }
