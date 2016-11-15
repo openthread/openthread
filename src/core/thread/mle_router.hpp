@@ -551,6 +551,26 @@ public:
     Router *GetRouters(uint8_t *aNumRouters);
 
     /**
+     * This method returns a pointer to a Router entry.
+     *
+     * @param[in]  aRouterId  The Router ID.
+     *
+     * @returns A pointer to a Router entry or NULL if @p aRouterId is out-of-range.
+     *
+     */
+    Router *GetRouter(uint8_t aRouterId);
+
+    /**
+     * This method returns a pointer to a Router entry.
+     *
+     * @param[in]  aRouterId  The Router ID.
+     *
+     * @returns A pointer to a Router entry or NULL if @p aRouterId is out-of-range.
+     *
+     */
+    const Router *GetRouter(uint8_t aRouterId) const;
+
+    /**
      * This method retains diagnostic information for a given router.
      *
      * @param[in]   aRouterId    The router ID or RLOC16 for a given router.
