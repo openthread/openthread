@@ -71,7 +71,9 @@ enum
     kProcessingDelay            = kAckTimeout,
     kMaxRtt                     = 2 * kMaxLatency + kProcessingDelay,
     kExchangeLifetime           = kMaxTransmitSpan + 2 * (kMaxLatency) + kProcessingDelay,
-    kNonLifetime                = kMaxTransmitSpan + kMaxLatency
+    kNonLifetime                = kMaxTransmitSpan + kMaxLatency,
+
+    kPayloadMarker              = 0xff
 };
 
 /**
@@ -90,6 +92,7 @@ public:
      *
      */
     RequestMetadata(void):
+        mPayloadMarker(kPayloadMarker),
         mDestinationPort(0),
         mResponseHandler(NULL),
         mResponseContext(NULL),
@@ -169,7 +172,7 @@ public:
     bool IsLater(uint32_t aTime) const { return (static_cast<int32_t>(aTime - mNextTimerShot) < 0); };
 
 private:
-
+    uint8_t               mPayloadMarker;         ///< A value indicating beginning of the metadata.
     Ip6::Address          mDestinationAddress;    ///< IPv6 address of the message destination.
     uint16_t              mDestinationPort;       ///< UDP port of the message destination.
     otCoapResponseHandler mResponseHandler;       ///< A function pointer that is called on response reception.

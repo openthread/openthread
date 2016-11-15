@@ -935,10 +935,12 @@ exit:
     return error;
 }
 
-void ActiveDataset::HandleGet(void *aContext, Coap::Header &aHeader, Message &aMessage,
-                              const Ip6::MessageInfo &aMessageInfo)
+void ActiveDataset::HandleGet(void *aContext, otCoapHeader *aHeader, otMessage aMessage,
+                              const otMessageInfo *aMessageInfo)
 {
-    static_cast<ActiveDataset *>(aContext)->HandleGet(aHeader, aMessage, aMessageInfo);
+    static_cast<ActiveDataset *>(aContext)->HandleGet(
+        *static_cast<Coap::Header *>(aHeader), *static_cast<Message *>(aMessage),
+        *static_cast<const Ip6::MessageInfo *>(aMessageInfo));
 }
 
 void ActiveDataset::HandleGet(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
@@ -946,10 +948,12 @@ void ActiveDataset::HandleGet(Coap::Header &aHeader, Message &aMessage, const Ip
     DatasetManager::Get(aHeader, aMessage, aMessageInfo);
 }
 
-void ActiveDataset::HandleSet(void *aContext, Coap::Header &aHeader, Message &aMessage,
-                              const Ip6::MessageInfo &aMessageInfo)
+void ActiveDataset::HandleSet(void *aContext, otCoapHeader *aHeader, otMessage aMessage,
+                              const otMessageInfo *aMessageInfo)
 {
-    static_cast<ActiveDataset *>(aContext)->HandleSet(aHeader, aMessage, aMessageInfo);
+    static_cast<ActiveDataset *>(aContext)->HandleSet(
+        *static_cast<Coap::Header *>(aHeader), *static_cast<Message *>(aMessage),
+        *static_cast<const Ip6::MessageInfo *>(aMessageInfo));
 }
 
 void ActiveDataset::HandleSet(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
@@ -1045,10 +1049,12 @@ exit:
     return error;
 }
 
-void PendingDataset::HandleGet(void *aContext, Coap::Header &aHeader, Message &aMessage,
-                               const Ip6::MessageInfo &aMessageInfo)
+void PendingDataset::HandleGet(void *aContext, otCoapHeader *aHeader, otMessage aMessage,
+                               const otMessageInfo *aMessageInfo)
 {
-    static_cast<PendingDataset *>(aContext)->HandleGet(aHeader, aMessage, aMessageInfo);
+    static_cast<PendingDataset *>(aContext)->HandleGet(
+        *static_cast<Coap::Header *>(aHeader), *static_cast<Message *>(aMessage),
+        *static_cast<const Ip6::MessageInfo *>(aMessageInfo));
 }
 
 void PendingDataset::HandleGet(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
@@ -1056,10 +1062,12 @@ void PendingDataset::HandleGet(Coap::Header &aHeader, Message &aMessage, const I
     DatasetManager::Get(aHeader, aMessage, aMessageInfo);
 }
 
-void PendingDataset::HandleSet(void *aContext, Coap::Header &aHeader, Message &aMessage,
-                               const Ip6::MessageInfo &aMessageInfo)
+void PendingDataset::HandleSet(void *aContext, otCoapHeader *aHeader, otMessage aMessage,
+                               const otMessageInfo *aMessageInfo)
 {
-    static_cast<PendingDataset *>(aContext)->HandleSet(aHeader, aMessage, aMessageInfo);
+    static_cast<PendingDataset *>(aContext)->HandleSet(
+        *static_cast<Coap::Header *>(aHeader), *static_cast<Message *>(aMessage),
+        *static_cast<const Ip6::MessageInfo *>(aMessageInfo));
 }
 
 void PendingDataset::HandleSet(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo)

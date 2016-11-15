@@ -90,14 +90,14 @@ private:
     static void HandleTimer(void *aContext);
     void HandleTimer(void);
 
-    static void HandlePetition(void *aContext, Coap::Header &aHeader, Message &aMessage,
-                               const Ip6::MessageInfo &aMessageInfo);
+    static void HandlePetition(void *aContext, otCoapHeader *aHeader, otMessage aMessage,
+                               const otMessageInfo *aMessageInfo);
     void HandlePetition(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
     ThreadError SendPetitionResponse(const Coap::Header &aRequestHeader, const Ip6::MessageInfo &aMessageInfo,
                                      StateTlv::State aState);
 
-    static void HandleKeepAlive(void *aContext, Coap::Header &aHeader, Message &aMessage,
-                                const Ip6::MessageInfo &aMessageInfo);
+    static void HandleKeepAlive(void *aContext, otCoapHeader *aHeader, otMessage aMessage,
+                                const otMessageInfo *aMessageInfo);
     void HandleKeepAlive(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
     ThreadError SendKeepAliveResponse(const Coap::Header &aRequestHeader, const Ip6::MessageInfo &aMessageInfo,
                                       StateTlv::State aState);

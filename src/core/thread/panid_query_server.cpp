@@ -55,10 +55,12 @@ PanIdQueryServer::PanIdQueryServer(ThreadNetif &aThreadNetif) :
     mCoapServer.AddResource(mPanIdQuery);
 }
 
-void PanIdQueryServer::HandleQuery(void *aContext, Coap::Header &aHeader, Message &aMessage,
-                                   const Ip6::MessageInfo &aMessageInfo)
+void PanIdQueryServer::HandleQuery(void *aContext, otCoapHeader *aHeader, otMessage aMessage,
+                                   const otMessageInfo *aMessageInfo)
 {
-    static_cast<PanIdQueryServer *>(aContext)->HandleQuery(aHeader, aMessage, aMessageInfo);
+    static_cast<PanIdQueryServer *>(aContext)->HandleQuery(
+        *static_cast<Coap::Header *>(aHeader), *static_cast<Message *>(aMessage),
+        *static_cast<const Ip6::MessageInfo *>(aMessageInfo));
 }
 
 void PanIdQueryServer::HandleQuery(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo)

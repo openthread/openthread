@@ -159,16 +159,16 @@ private:
 
     static void HandleUdpReceive(void *aContext, otMessage aMessage, const otMessageInfo *aMessageInfo);
 
-    static void HandleAddressError(void *aContext, Coap::Header &aHeader,
-                                   Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    static void HandleAddressError(void *aContext, otCoapHeader *aHeader, otMessage aMessage,
+                                   const otMessageInfo *aMessageInfo);
     void HandleAddressError(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
-    static void HandleAddressQuery(void *aContext, Coap::Header &aHeader,
-                                   Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    static void HandleAddressQuery(void *aContext, otCoapHeader *aHeader, otMessage aMessage,
+                                   const otMessageInfo *aMessageInfo);
     void HandleAddressQuery(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
-    static void HandleAddressNotification(void *aContext, Coap::Header &aHeader,
-                                          Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    static void HandleAddressNotification(void *aContext, otCoapHeader *aHeader, otMessage aMessage,
+                                          const otMessageInfo *aMessageInfo);
     void HandleAddressNotification(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
     static void HandleDstUnreach(void *aContext, Message &aMessage, const Ip6::MessageInfo &aMessageInfo,

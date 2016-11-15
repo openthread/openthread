@@ -85,8 +85,8 @@ private:
     static void HandleUdpReceive(void *aContext, otMessage aMessage, const otMessageInfo *aMessageInfo);
     void HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
-    static void HandleRelayTransmit(void *aContext, Coap::Header &aHeader,
-                                    Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    static void HandleRelayTransmit(void *aContext, otCoapHeader *aHeader, otMessage aMessage,
+                                    const otMessageInfo *aMessageInfo);
     void HandleRelayTransmit(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
     ThreadError SendJoinerEntrust(const Ip6::MessageInfo &aMessageInfo);

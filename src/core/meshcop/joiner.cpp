@@ -252,10 +252,12 @@ exit:
     otLogFuncExit();
 }
 
-void Joiner::HandleJoinerEntrust(void *aContext, Coap::Header &aHeader,
-                                 Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
+void Joiner::HandleJoinerEntrust(void *aContext, otCoapHeader *aHeader, otMessage aMessage,
+                                 const otMessageInfo *aMessageInfo)
 {
-    static_cast<Joiner *>(aContext)->HandleJoinerEntrust(aHeader, aMessage, aMessageInfo);
+    static_cast<Joiner *>(aContext)->HandleJoinerEntrust(
+        *static_cast<Coap::Header *>(aHeader), *static_cast<Message *>(aMessage),
+        *static_cast<const Ip6::MessageInfo *>(aMessageInfo));
 }
 
 void Joiner::HandleJoinerEntrust(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo)

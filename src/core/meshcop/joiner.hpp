@@ -101,8 +101,8 @@ private:
                                              otMessage aMessage, ThreadError result);
     void HandleJoinerFinalizeResponse(Coap::Header *aHeader, Message *aMessage, ThreadError result);
 
-    static void HandleJoinerEntrust(void *aContext, Coap::Header &aHeader,
-                                    Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    static void HandleJoinerEntrust(void *aContext, otCoapHeader *aHeader, otMessage aMessage,
+                                    const otMessageInfo *aMessageInfo);
     void HandleJoinerEntrust(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
     void SendJoinerEntrustResponse(const Coap::Header &aRequestHeader, const Ip6::MessageInfo &aRequestInfo);
 

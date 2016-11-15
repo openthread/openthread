@@ -203,16 +203,16 @@ private:
                                               otMessage aMessage, ThreadError aResult);
     void HandleLeaderKeepAliveResponse(Coap::Header *aHeader, Message *aMessage, ThreadError aResult);
 
-    static void HandleRelayReceive(void *aContext, Coap::Header &aHeader,
-                                   Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    static void HandleRelayReceive(void *aContext, otCoapHeader *aHeader, otMessage aMessage,
+                                   const otMessageInfo *aMessageInfo);
     void HandleRelayReceive(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
-    static void HandleDatasetChanged(void *aContext, Coap::Header &aHeader,
-                                     Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    static void HandleDatasetChanged(void *aContext, otCoapHeader *aHeader, otMessage aMessage,
+                                     const otMessageInfo *aMessageInfo);
     void HandleDatasetChanged(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
-    static void HandleJoinerFinalize(void *aContext, Coap::Header &aHeader,
-                                     Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    static void HandleJoinerFinalize(void *aContext, otCoapHeader *aHeader, otMessage aMessage,
+                                     const otMessageInfo *aMessageInfo);
     void HandleJoinerFinalize(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
     void SendJoinFinalizeResponse(const Coap::Header &aRequestHeader, StateTlv::State aState);

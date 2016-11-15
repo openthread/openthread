@@ -3287,10 +3287,12 @@ exit:
     {}
 }
 
-void MleRouter::HandleAddressSolicit(void *aContext, Coap::Header &aHeader, Message &aMessage,
-                                     const Ip6::MessageInfo &aMessageInfo)
+void MleRouter::HandleAddressSolicit(void *aContext, otCoapHeader *aHeader, otMessage aMessage,
+                                     const otMessageInfo *aMessageInfo)
 {
-    static_cast<MleRouter *>(aContext)->HandleAddressSolicit(aHeader, aMessage, aMessageInfo);
+    static_cast<MleRouter *>(aContext)->HandleAddressSolicit(
+        *static_cast<Coap::Header *>(aHeader), *static_cast<Message *>(aMessage),
+        *static_cast<const Ip6::MessageInfo *>(aMessageInfo));
 }
 
 void MleRouter::HandleAddressSolicit(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
@@ -3447,10 +3449,12 @@ exit:
     }
 }
 
-void MleRouter::HandleAddressRelease(void *aContext, Coap::Header &aHeader, Message &aMessage,
-                                     const Ip6::MessageInfo &aMessageInfo)
+void MleRouter::HandleAddressRelease(void *aContext, otCoapHeader *aHeader, otMessage aMessage,
+                                     const otMessageInfo *aMessageInfo)
 {
-    static_cast<MleRouter *>(aContext)->HandleAddressRelease(aHeader, aMessage, aMessageInfo);
+    static_cast<MleRouter *>(aContext)->HandleAddressRelease(
+        *static_cast<Coap::Header *>(aHeader), *static_cast<Message *>(aMessage),
+        *static_cast<const Ip6::MessageInfo *>(aMessageInfo));
 }
 
 void MleRouter::HandleAddressRelease(Coap::Header &aHeader, Message &aMessage,

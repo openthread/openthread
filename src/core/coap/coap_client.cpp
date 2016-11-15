@@ -436,6 +436,7 @@ exit:
 RequestMetadata::RequestMetadata(bool aConfirmable, const Ip6::MessageInfo &aMessageInfo,
                                  otCoapResponseHandler aHandler, void *aContext)
 {
+    mPayloadMarker = kPayloadMarker;
     mDestinationPort = aMessageInfo.GetPeerPort();
     mDestinationAddress = aMessageInfo.GetPeerAddr();
     mResponseHandler = aHandler;

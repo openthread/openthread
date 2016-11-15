@@ -61,7 +61,7 @@ ThreadError Server::AddResource(Resource &aResource)
 {
     ThreadError error = kThreadError_None;
 
-    for (Resource *cur = mResources; cur; cur = cur->mNext)
+    for (Resource *cur = mResources; cur; cur = cur->GetNext())
     {
         VerifyOrExit(cur != &aResource, error = kThreadError_Already);
     }
@@ -77,11 +77,11 @@ void Server::RemoveResource(Resource &aResource)
 {
     if (mResources == &aResource)
     {
-        mResources = aResource.mNext;
+        mResources = aResource.GetNext();
     }
     else
     {
-        for (Resource *cur = mResources; cur; cur = cur->mNext)
+        for (Resource *cur = mResources; cur; cur = cur->GetNext())
         {
             if (cur->mNext == &aResource)
             {
@@ -145,7 +145,7 @@ void Server::ProcessReceivedMessage(Message &aMessage, const Ip6::MessageInfo &a
 
     curUriPath[0] = '\0';
 
-    for (Resource *resource = mResources; resource; resource = resource->mNext)
+    for (Resource *resource = mResources; resource; resource = resource->GetNext())
     {
         if (strcmp(resource->mUriPath, uriPath) == 0)
         {
@@ -156,6 +156,16 @@ void Server::ProcessReceivedMessage(Message &aMessage, const Ip6::MessageInfo &a
 
 exit:
     {}
+}
+
+ThreadError Server::SetPort(uint16_t aPort)
+{
+    mPort = aPort;
+
+    Ip6::SockAddr sockaddr;
+    sockaddr.mPort = mPort;
+
+    return mSocket.Bind(sockaddr);
 }
 
 }  // namespace Coap
