@@ -799,7 +799,14 @@ void Commissioner::HandleJoinerFinalize(Coap::Header &aHeader, Message &aMessage
         }
     }
 
-    otLogCertMeshCoP("[THCI] direction=recv | type=JOIN_FIN.req");
+#if OPENTHREAD_ENABLE_CERT_LOG
+    uint8_t buf[OPENTHREAD_CONFIG_MESSAGE_BUFFER_SIZE];
+    VerifyOrExit(aMessage.GetLength() <= sizeof(buf), ;);
+    aMessage.Read(aHeader.GetLength(), aMessage.GetLength() - aHeader.GetLength(), buf);
+    otDumpCertMeshCoP("[THCI] direction=recv | type=JOIN_FIN.req |", buf, aMessage.GetLength() - aHeader.GetLength());
+
+exit:
+#endif
 
     SendJoinFinalizeResponse(aHeader, state);
 

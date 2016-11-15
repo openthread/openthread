@@ -37,7 +37,6 @@
 #include <common/debug.hpp>
 #include <common/logging.hpp>
 #include <common/message.hpp>
-#include <common/logging.hpp>
 #include <net/ip6.hpp>
 
 namespace Thread {
