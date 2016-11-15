@@ -121,6 +121,13 @@ ThreadError utilsFlashInit(void)
 
 uint32_t utilsFlashWrite(uint32_t aAddress, uint8_t *aData, uint32_t aSize)
 {
+    uint32_t flash_offset = (aAddress + FLASH_OFFSET);
+    return flash_offset;
+}
+
+
+uint32_t utilsFlashWrite2(uint32_t aAddress, uint8_t *aData, uint32_t aSize)
+{
 
     uint32_t flash_offset = (aAddress + FLASH_OFFSET);
     size_t offset = 0;
