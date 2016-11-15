@@ -92,3 +92,16 @@ uint32_t otPlatRandomGet(void)
     zhal_get_entropy((uint8_t *)&mlcg, sizeof(mlcg));
     return mlcg;
 }
+
+ThreadError otPlatRandomSecureGet(uint16_t aInputLength, uint8_t *aOutput, uint16_t *aOutputLength)
+{
+
+    for (uint16_t length = 0; length < aInputLength; length++)
+    {
+        aOutput[length] = (uint8_t)otPlatRandomGet();
+    }
+
+    *aOutputLength = aInputLength;
+
+    return kThreadError_None;
+}
