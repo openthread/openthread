@@ -220,7 +220,7 @@ static void Test(TestIphcVector &aVector, bool aCompress, bool aDecompress)
         {
             // Append payload to the IPv6 Packet.
             memcpy(result + message->GetLength(), iphc + decompressedBytes,
-                   iphcLength - decompressedBytes);
+                   iphcLength - static_cast<uint16_t>(decompressedBytes));
 
             printf("Resulted IPv6 uncompressed packet: \n");
             otTestPrintHex(result, message->GetLength() + iphcLength - decompressedBytes);
