@@ -37,7 +37,7 @@ set -x
 cd /tmp || die
 
 [ $TRAVIS_OS_NAME != linux ] || {    
-    sudo apt-get update || die
+    # sudo apt-get update || die
 
     sudo -H pip install --upgrade pip || die
     pip install --upgrade pip || die
