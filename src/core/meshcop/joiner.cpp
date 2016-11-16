@@ -207,13 +207,20 @@ void Joiner::SendJoinerFinalize(void)
 
     if (length > 0)
     {
-        SuccessOrExit(error = message->Append(&stateTlv, length + sizeof(Tlv)));
+        SuccessOrExit(error = message->Append(&mSecureCoapClient.GetDtls().mProvisioningUrl, length + sizeof(Tlv)));
     }
+
+#if OPENTHREAD_ENABLE_CERT_LOG
+    uint8_t buf[OPENTHREAD_CONFIG_MESSAGE_BUFFER_SIZE];
+    VerifyOrExit(message->GetLength() <= sizeof(buf), ;);
+    message->Read(header.GetLength(), message->GetLength() - header.GetLength(), buf);
+    otDumpCertMeshCoP("[THCI] direction=send | type=JOIN_FIN.req |", buf, message->GetLength() - header.GetLength());
+#endif
 
     mSecureCoapClient.SendMessage(*message, Joiner::HandleJoinerFinalizeResponse, this);
 
     otLogInfoMeshCoP("Sent joiner finalize");
-    otLogCertMeshCoP("[THCI] direction=send | type=JOIN_FIN.req");
+
 exit:
 
     if (error != kThreadError_None && message != NULL)
