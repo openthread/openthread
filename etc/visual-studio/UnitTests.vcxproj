@@ -59,12 +59,6 @@
         %(AdditionalLibraryDirectories);
         $(VCInstallDir)UnitTest\lib;
         </AdditionalLibraryDirectories>
-      <AdditionalDependencies>
-        %(AdditionalDependencies);
-        ..\..\build\bin\$(Platform)\$(Configuration)\lib\libopenthread.lib;
-        ..\..\build\bin\$(Platform)\$(Configuration)\lib\libopenthread-ncp-uart.lib;
-        ..\..\build\bin\$(Platform)\$(Configuration)\lib\mbedtls.lib;
-      </AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>

@@ -373,7 +373,7 @@ otLwfEventProcessingAddressChanged(
 
 _IRQL_requires_max_(PASSIVE_LEVEL)
 VOID 
-otLwfAddressesUpdated(
+otLwfRadioAddressesUpdated(
     _In_ PMS_FILTER pFilter
     )
 {
@@ -382,6 +382,8 @@ otLwfAddressesUpdated(
     ULONG FoundInOpenThread = 0; // Bit field
     ULONG OriginalCacheLength = pFilter->otCachedAddrCount;
     
+    NT_ASSERT(pFilter->MiniportCapabilities.MiniportMode == OT_MP_MODE_RADIO);
+
     const otNetifAddress* addr = otGetUnicastAddresses(pFilter->otCtx);
 
     // Process the addresses
@@ -406,6 +408,79 @@ otLwfAddressesUpdated(
         if ((FoundInOpenThread & (1 << i)) == 0)
         {
             otLwfOnAddressRemoved(pFilter, (ULONG)i, TRUE);
+        }
+    }
+    
+    LogFuncExit(DRIVER_DEFAULT);
+}
+
+_IRQL_requires_max_(PASSIVE_LEVEL)
+VOID 
+otLwfTunAddressesUpdated(
+    _In_ PMS_FILTER pFilter,
+    _In_reads_bytes_(value_data_len) const uint8_t* value_data_ptr,
+    _In_ spinel_size_t value_data_len,
+    _Out_ uint32_t *aNotifFlags
+    )
+{
+    ULONG FoundInOpenThread = 0; // Bit field
+    ULONG OriginalCacheLength = pFilter->otCachedAddrCount;
+
+    LogFuncEntry(DRIVER_DEFAULT);
+    
+    NT_ASSERT (pFilter->MiniportCapabilities.MiniportMode == OT_MP_MODE_THREAD);
+
+    *aNotifFlags = 0;
+
+    while (value_data_len > 0)
+    {
+        const uint8_t *entry_ptr = NULL;
+        spinel_size_t entry_len = 0;
+
+        spinel_ssize_t len = spinel_datatype_unpack(value_data_ptr, value_data_len, "D.", &entry_ptr, &entry_len);
+        if (len < 1) break;
+
+        {
+            PIN6_ADDR pAddr = NULL;
+            otNetifAddress addr = { { 0 }, 0xFFFFFFFF, 0xFFFFFFFF, 0, NULL };
+
+            spinel_datatype_unpack(
+                entry_ptr, 
+                entry_len, 
+                "6CLL", 
+                &pAddr, 
+                &addr.mPrefixLength, 
+                &addr.mValidLifetime, 
+                &addr.mPreferredLifetime);
+
+            if (pAddr)
+            {
+                int index = otLwfFindCachedAddrIndex(pFilter, pAddr);
+                if (index == -1)
+                {
+                    memcpy_s(&addr.mAddress, sizeof(addr.mAddress), pAddr, sizeof(IN6_ADDR));
+                    otLwfOnAddressAdded(pFilter, &addr, TRUE);
+                    *aNotifFlags |= OT_IP6_ADDRESS_ADDED;
+                }
+                else
+                {
+                    NT_ASSERT(index < 8 * sizeof(FoundInOpenThread));
+                    FoundInOpenThread |= 1 << index;
+                }
+            }
+        }
+
+        value_data_len -= len;
+        value_data_ptr += len;
+    }
+
+    // Look for missing addresses and mark them as removed
+    for (int i = OriginalCacheLength - 1; i >= 0; i--)
+    {
+        if ((FoundInOpenThread & (1 << i)) == 0)
+        {
+            otLwfOnAddressRemoved(pFilter, (ULONG)i, TRUE);
+            *aNotifFlags |= OT_IP6_ADDRESS_REMOVED;
         }
     }
     
