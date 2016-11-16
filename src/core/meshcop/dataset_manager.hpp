@@ -39,8 +39,8 @@
 
 #include <coap/coap_server.hpp>
 #include <common/timer.hpp>
+#include <meshcop/dataset.hpp>
 #include <net/udp6.hpp>
-#include <thread/meshcop_dataset.hpp>
 #include <thread/mle.hpp>
 #include <thread/network_data_leader.hpp>
 

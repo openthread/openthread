@@ -60,6 +60,9 @@ SOURCES_COMMON                      = \
     mac/mac_frame.cpp                 \
     mac/mac_whitelist.cpp             \
     mac/mac_blacklist.cpp             \
+    meshcop/dataset.cpp               \
+    meshcop/dataset_manager.cpp       \
+    meshcop/tlvs.cpp                  \
     net/icmp6.cpp                     \
     net/ip6.cpp                       \
     net/ip6_address.cpp               \
@@ -73,9 +76,6 @@ SOURCES_COMMON                      = \
     thread/key_manager.cpp            \
     thread/link_quality.cpp           \
     thread/lowpan.cpp                 \
-    thread/meshcop_dataset.cpp        \
-    thread/meshcop_dataset_manager.cpp \
-    thread/meshcop_tlvs.cpp           \
     thread/mesh_forwarder.cpp         \
     thread/mle.cpp                    \
     thread/mle_tlvs.cpp               \
@@ -185,6 +185,8 @@ noinst_HEADERS                      = \
     mac/mac_blacklist.hpp             \
     meshcop/announce_begin_client.hpp \
     meshcop/commissioner.hpp          \
+    meshcop/dataset.hpp               \
+    meshcop/dataset_manager.hpp       \
     meshcop/dtls.hpp                  \
     meshcop/energy_scan_client.hpp    \
     meshcop/joiner.hpp                \
@@ -195,6 +197,7 @@ noinst_HEADERS                      = \
     meshcop/leader_ftd.hpp            \
     meshcop/leader_mtd.hpp            \
     meshcop/panid_query_client.hpp    \
+    meshcop/tlvs.hpp                  \
     net/icmp6.hpp                     \
     net/ip6.hpp                       \
     net/ip6_address.hpp               \
@@ -217,11 +220,7 @@ noinst_HEADERS                      = \
     thread/key_manager.hpp            \
     thread/link_quality.hpp           \
     thread/lowpan.hpp                 \
-    thread/meshcop_tlvs.hpp           \
     thread/mesh_forwarder.hpp         \
-    thread/meshcop_dataset.hpp        \
-    thread/meshcop_dataset_manager.hpp \
-    thread/meshcop_tlvs.hpp           \
     thread/mle.hpp                    \
     thread/mle_constants.hpp          \
     thread/mle_router.hpp             \

@@ -85,6 +85,8 @@
     <ClCompile Include="..\..\src\core\mac\mac_frame.cpp" />
     <ClCompile Include="..\..\src\core\mac\mac_whitelist.cpp" />
     <ClCompile Include="..\..\src\core\meshcop\commissioner.cpp" />
+    <ClCompile Include="..\..\src\core\meshcop\dataset.cpp" />
+    <ClCompile Include="..\..\src\core\meshcop\dataset_manager.cpp" />
     <ClCompile Include="..\..\src\core\meshcop\dtls.cpp" />
     <ClCompile Include="..\..\src\core\meshcop\announce_begin_client.cpp" />
     <ClCompile Include="..\..\src\core\meshcop\energy_scan_client.cpp" />
@@ -92,6 +94,7 @@
     <ClCompile Include="..\..\src\core\meshcop\joiner_router.cpp" />
     <ClCompile Include="..\..\src\core\meshcop\leader.cpp" />
     <ClCompile Include="..\..\src\core\meshcop\panid_query_client.cpp" />
+    <ClCompile Include="..\..\src\core\meshcop\tlvs.cpp" />
     <ClCompile Include="..\..\src\core\net\dhcp6_client.cpp" />
     <ClCompile Include="..\..\src\core\net\dhcp6_server.cpp" />
     <ClCompile Include="..\..\src\core\net\icmp6.cpp" />
@@ -109,9 +112,6 @@
     <ClCompile Include="..\..\src\core\thread\key_manager.cpp" />
     <ClCompile Include="..\..\src\core\thread\link_quality.cpp" />
     <ClCompile Include="..\..\src\core\thread\lowpan.cpp" />
-    <ClCompile Include="..\..\src\core\thread\meshcop_dataset.cpp" />
-    <ClCompile Include="..\..\src\core\thread\meshcop_dataset_manager.cpp" />
-    <ClCompile Include="..\..\src\core\thread\meshcop_tlvs.cpp" />
     <ClCompile Include="..\..\src\core\thread\mesh_forwarder.cpp" />
     <ClCompile Include="..\..\src\core\thread\mle.cpp" />
     <ClCompile Include="..\..\src\core\thread\mle_router.cpp" />
@@ -159,12 +159,15 @@
     <ClInclude Include="..\..\src\core\mac\mac_whitelist.hpp" />
     <ClInclude Include="..\..\src\core\meshcop\announce_begin_client.hpp" />
     <ClInclude Include="..\..\src\core\meshcop\commissioner.hpp" />
+    <ClInclude Include="..\..\src\core\meshcop\dataset.hpp" />
+    <ClInclude Include="..\..\src\core\meshcop\dataset_manager.hpp" />
     <ClInclude Include="..\..\src\core\meshcop\dtls.hpp" />
     <ClInclude Include="..\..\src\core\meshcop\energy_scan_client.hpp" />
     <ClInclude Include="..\..\src\core\meshcop\joiner.hpp" />
     <ClInclude Include="..\..\src\core\meshcop\joiner_router.hpp" />
     <ClInclude Include="..\..\src\core\meshcop\leader.hpp" />
     <ClInclude Include="..\..\src\core\meshcop\panid_query_client.hpp" />
+    <ClInclude Include="..\..\src\core\meshcop\tlvs.hpp" />
     <ClInclude Include="..\..\src\core\net\dhcp6.hpp" />
     <ClInclude Include="..\..\src\core\net\dhcp6_client.hpp" />
     <ClInclude Include="..\..\src\core\net\dhcp6_server.hpp" />
@@ -187,9 +190,6 @@
     <ClInclude Include="..\..\src\core\thread\key_manager.hpp" />
     <ClInclude Include="..\..\src\core\thread\link_quality.hpp" />
     <ClInclude Include="..\..\src\core\thread\lowpan.hpp" />
-    <ClInclude Include="..\..\src\core\thread\meshcop_dataset.hpp" />
-    <ClInclude Include="..\..\src\core\thread\meshcop_dataset_manager.hpp" />
-    <ClInclude Include="..\..\src\core\thread\meshcop_tlvs.hpp" />
     <ClInclude Include="..\..\src\core\thread\mesh_forwarder.hpp" />
     <ClInclude Include="..\..\src\core\thread\mle.hpp" />
     <ClInclude Include="..\..\src\core\thread\mle_constants.hpp" />

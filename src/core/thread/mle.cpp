@@ -40,12 +40,12 @@
 #include <common/encoding.hpp>
 #include <crypto/aes_ccm.hpp>
 #include <mac/mac_frame.hpp>
+#include <meshcop/tlvs.hpp>
 #include <net/netif.hpp>
 #include <net/udp6.hpp>
 #include <platform/radio.h>
 #include <platform/random.h>
 #include <thread/address_resolver.hpp>
-#include <thread/meshcop_tlvs.hpp>
 #include <thread/key_manager.hpp>
 #include <thread/mle_router.hpp>
 #include <thread/thread_netif.hpp>

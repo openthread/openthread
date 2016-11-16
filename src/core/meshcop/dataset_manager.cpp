@@ -32,7 +32,7 @@
  *
  */
 
-#define WPP_NAME "meshcop_dataset_manager.tmh"
+#define WPP_NAME "dataset_manager.tmh"
 
 #include <stdio.h>
 
@@ -44,11 +44,11 @@
 #include <common/code_utils.hpp>
 #include <common/logging.hpp>
 #include <common/timer.hpp>
+#include <meshcop/dataset.hpp>
+#include <meshcop/dataset_manager.hpp>
+#include <meshcop/tlvs.hpp>
 #include <platform/random.h>
 #include <platform/radio.h>
-#include <thread/meshcop_dataset.hpp>
-#include <thread/meshcop_dataset_manager.hpp>
-#include <thread/meshcop_tlvs.hpp>
 #include <thread/thread_netif.hpp>
 #include <thread/thread_tlvs.hpp>
 #include <thread/thread_uris.hpp>

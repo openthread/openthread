@@ -42,7 +42,7 @@
 #include <common/message.hpp>
 #include <net/udp6.hpp>
 #include <meshcop/dtls.hpp>
-#include <thread/meshcop_tlvs.hpp>
+#include <meshcop/tlvs.hpp>
 
 namespace Thread {
 
