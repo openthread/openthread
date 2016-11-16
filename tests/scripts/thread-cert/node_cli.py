@@ -61,7 +61,6 @@ class otCli:
         print ("%s" % cmd)
 
         self.pexpect = pexpect.spawn(cmd, timeout=4)
-        self.Api = None
 
         # Add delay to ensure that the process is ready to receive commands.
         time.sleep(0.2)
@@ -83,7 +82,6 @@ class otCli:
         print ("%s" % cmd)
 
         self.pexpect = pexpect.spawn(cmd, timeout=4)
-        self.Api = None
 
         time.sleep(0.2)
         self.pexpect.expect('spinel-cli >')
@@ -94,7 +92,6 @@ class otCli:
         import fdpexpect
         serialPort = '/dev/ttyUSB%d' % ((nodeid-1)*2)
         self.pexpect = fdpexpect.fdspawn(os.open(serialPort, os.O_RDWR|os.O_NONBLOCK|os.O_NOCTTY))
-        self.Api = None
 
     def __del__(self):
         if self.pexpect.isalive():
@@ -104,8 +101,6 @@ class otCli:
             self.pexpect.close(force=True)
 
     def send_command(self, cmd):
-        if self.Api:
-            raise OSError("Unsupported on Windows!")
         print ("%d: %s" % (self.nodeid, cmd))
         self.pexpect.sendline(cmd)
 
