@@ -329,7 +329,7 @@ private:
     const uint16_t  mBufferLength;              // Length of the the buffer.
 
     BufferCallback  mEmptyBufferCallback;       // Callback to signal when buffer becomes empty.
-    BufferCallback  mNonEmtyBufferCallback;     // Callback to signal when buffer becomes non-empty.
+    BufferCallback  mNonEmptyBufferCallback;    // Callback to signal when buffer becomes non-empty.
     void *          mCallbackContext;           // Context passed to callbacks.
 
     MessageQueue    mMessageQueue;              // Main message queue.

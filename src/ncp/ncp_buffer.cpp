@@ -100,7 +100,7 @@ void NcpFrameBuffer::SetCallbacks(BufferCallback aEmptyBufferCallback, BufferCal
                                   void *aContext)
 {
     mEmptyBufferCallback = aEmptyBufferCallback;
-    mNonEmtyBufferCallback = aNonEmptyBufferCallback;
+    mNonEmptyBufferCallback = aNonEmptyBufferCallback;
     mCallbackContext = aContext;
 }
 
@@ -316,9 +316,9 @@ ThreadError NcpFrameBuffer::InFrameEnd(void)
     // If buffer was empty before, invoke the callback to signal that buffer is now non-empty.
     if (wasEmpty)
     {
-        if (mNonEmtyBufferCallback != NULL)
+        if (mNonEmptyBufferCallback != NULL)
         {
-            mNonEmtyBufferCallback(mCallbackContext, this);
+            mNonEmptyBufferCallback(mCallbackContext, this);
         }
     }
 
