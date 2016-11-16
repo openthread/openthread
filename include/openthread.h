@@ -1802,7 +1802,7 @@ OTAPI void OTCALL otPlatformReset(otInstance *aInstance);
  *
  * @param[in]  aInstance A pointer to an OpenThread instance.
  */
-void otFactoryReset(otInstance *aInstance);
+OTAPI void OTCALL otFactoryReset(otInstance *aInstance);
 
 /**
  * Get the ROUTER_DOWNGRADE_THRESHOLD parameter used in the Router role.
