@@ -112,7 +112,7 @@ void Server::ProcessReceivedMessage(Message &aMessage, const Ip6::MessageInfo &a
     char *curUriPath = uriPath;
     const Header::Option *coapOption;
 
-    SuccessOrExit(header.FromMessage(aMessage));
+    SuccessOrExit(header.FromMessage(aMessage, false));
     aMessage.MoveOffset(header.GetLength());
 
     coapOption = header.GetCurrentOption();

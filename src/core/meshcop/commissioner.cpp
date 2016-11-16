@@ -755,8 +755,6 @@ void Commissioner::SendDatasetChangedResponse(const Coap::Header &aRequestHeader
     VerifyOrExit((message = mCoapServer.NewMessage(0)) != NULL, error = kThreadError_NoBufs);
 
     responseHeader.SetDefaultResponseHeader(aRequestHeader);
-    responseHeader.SetPayloadMarker();
-
     SuccessOrExit(error = message->Append(responseHeader.GetBytes(), responseHeader.GetLength()));
     SuccessOrExit(error = mCoapServer.SendMessage(*message, aMessageInfo));
 

@@ -86,7 +86,7 @@ ThreadError Client::SendMessage(Message &aMessage, const Ip6::MessageInfo &aMess
     Message *storedCopy = NULL;
     uint16_t copyLength = 0;
 
-    SuccessOrExit(error = header.FromMessage(aMessage));
+    SuccessOrExit(error = header.FromMessage(aMessage, false));
 
     // Set Message Id if it was not already set.
     if (header.GetMessageId() == 0)
@@ -310,7 +310,7 @@ Message *Client::FindRelatedRequest(const Header &aResponseHeader, const Ip6::Me
         if ((aRequestMetadata.mDestinationAddress == aMessageInfo.GetPeerAddr()) &&
             (aRequestMetadata.mDestinationPort == aMessageInfo.GetPeerPort()))
         {
-            assert(aRequestHeader.FromMessage(*message) == kThreadError_None);
+            assert(aRequestHeader.FromMessage(*message, true) == kThreadError_None);
 
             switch (aResponseHeader.GetType())
             {
@@ -361,7 +361,7 @@ void Client::ProcessReceivedMessage(Message &aMessage, const Ip6::MessageInfo &a
     Message *message = NULL;
     ThreadError error;
 
-    SuccessOrExit(error = responseHeader.FromMessage(aMessage));
+    SuccessOrExit(error = responseHeader.FromMessage(aMessage, false));
     aMessage.MoveOffset(responseHeader.GetLength());
 
     message = FindRelatedRequest(responseHeader, aMessageInfo, requestHeader, requestMetadata);
@@ -436,7 +436,6 @@ exit:
 RequestMetadata::RequestMetadata(bool aConfirmable, const Ip6::MessageInfo &aMessageInfo,
                                  otCoapResponseHandler aHandler, void *aContext)
 {
-    mPayloadMarker = kPayloadMarker;
     mDestinationPort = aMessageInfo.GetPeerPort();
     mDestinationAddress = aMessageInfo.GetPeerAddr();
     mResponseHandler = aHandler;
