@@ -143,7 +143,7 @@ class Node:
         return self.interface.get_panid()
 
     def set_panid(self, panid):
-        self.interface.set_panid()
+        self.interface.set_panid(panid)
 
     def get_partition_id(self):
         return self.interface.get_partition_id()
