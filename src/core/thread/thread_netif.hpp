@@ -44,6 +44,8 @@
 
 #include <coap/coap_server.hpp>
 #include <coap/coap_client.hpp>
+#include <coap/secure_coap_client.hpp>
+#include <coap/secure_coap_server.hpp>
 #include <mac/mac.hpp>
 #include <meshcop/joiner_router.hpp>
 #include <meshcop/leader.hpp>
@@ -63,6 +65,10 @@
 #include <thread/mle_router.hpp>
 #include <thread/network_data_local.hpp>
 #include <thread/panid_query_server.hpp>
+
+#if OPENTHREAD_ENABLE_JAM_DETECTION
+#include <utils/jam_detector.hpp>
+#endif // OPENTHREAD_ENABLE_JAM_DETECTION
 
 #if OPENTHREAD_ENABLE_COMMISSIONER
 #include <meshcop/commissioner.hpp>
@@ -278,6 +284,8 @@ public:
 
 #if OPENTHREAD_ENABLE_COMMISSIONER
     MeshCoP::Commissioner &GetCommissioner(void) { return mCommissioner; }
+
+    Coap::SecureServer &GetSecureCoapServer(void) { return mSecureCoapServer; }
 #endif  // OPENTHREAD_ENABLE_COMMISSIONER
 
 #if OPENTHREAD_ENABLE_DTLS
@@ -286,7 +294,19 @@ public:
 
 #if OPENTHREAD_ENABLE_JOINER
     MeshCoP::Joiner &GetJoiner(void) { return mJoiner; }
+
+    Coap::SecureClient &GetSecureCoapClient(void) { return mSecureCoapClient; }
 #endif  // OPENTHREAD_ENABLE_JOINER
+
+#if OPENTHREAD_ENABLE_JAM_DETECTION
+    /**
+     * This method returns the jam detector instance.
+     *
+     * @returns Reference to the JamDetector instance.
+     *
+     */
+    Utils::JamDetector &GetJamDetector(void) { return mJamDetector; }
+#endif // OPENTHREAD_ENABLE_JAM_DETECTION
 
     /**
      * This method returns the pointer to the parent otInstance structure.
@@ -320,6 +340,7 @@ private:
     bool mIsUp;
 
 #if OPENTHREAD_ENABLE_COMMISSIONER
+    Coap::SecureServer mSecureCoapServer;
     MeshCoP::Commissioner mCommissioner;
 #endif  // OPENTHREAD_ENABLE_COMMISSIONER
 
@@ -328,14 +349,20 @@ private:
 #endif// OPENTHREAD_ENABLE_DTLS
 
 #if OPENTHREAD_ENABLE_JOINER
+    Coap::SecureClient mSecureCoapClient;
     MeshCoP::Joiner mJoiner;
 #endif  // OPENTHREAD_ENABLE_JOINER
+
+#if OPENTHREAD_ENABLE_JAM_DETECTION
+    Utils::JamDetector mJamDetector;
+#endif // OPENTHREAD_ENABLE_JAM_DETECTION
 
     MeshCoP::JoinerRouter mJoinerRouter;
     MeshCoP::Leader mLeader;
     AnnounceBeginServer mAnnounceBegin;
     PanIdQueryServer mPanIdQuery;
     EnergyScanServer mEnergyScan;
+
 };
 
 /**

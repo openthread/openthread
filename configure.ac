@@ -533,6 +533,37 @@ AM_CONDITIONAL([OPENTHREAD_ENABLE_DTLS], [test "${enable_dtls}" = "yes"])
 AC_DEFINE_UNQUOTED([OPENTHREAD_ENABLE_DTLS],[${OPENTHREAD_ENABLE_DTLS}],[Define to 1 to enable dtls support.])
 
 #
+# Jam Detection
+#
+
+AC_ARG_ENABLE(jam_detection,
+    [AS_HELP_STRING([--enable-jam-detection],[Enable Jam Detection support @<:@default=no@:>@.])],
+    [
+        case "${enableval}" in
+
+        no|yes)
+            enable_jam_detection=${enableval}
+            ;;
+
+        *)
+            AC_MSG_ERROR([Invalid value ${enable_jam_detection} for --enable-jam-detection])
+            ;;
+        esac
+    ],
+    [enable_jam_detection=no])
+
+if test "$enable_jam_detection" = "yes"; then
+    OPENTHREAD_ENABLE_JAM_DETECTION=1
+else
+    OPENTHREAD_ENABLE_JAM_DETECTION=0
+fi
+
+AC_MSG_RESULT(${enable_jam_detection})
+AC_SUBST(OPENTHREAD_ENABLE_JAM_DETECTION)
+AM_CONDITIONAL([OPENTHREAD_ENABLE_JAM_DETECTION], [test "${enable_jam_detection}" = "yes"])
+AC_DEFINE_UNQUOTED([OPENTHREAD_ENABLE_JAM_DETECTION],[${OPENTHREAD_ENABLE_JAM_DETECTION}],[Define to 1 if you want to use jam detection feature])
+
+#
 # Diagnostics Library
 #
 
@@ -713,6 +744,36 @@ fi
 AC_SUBST(OPENTHREAD_ENABLE_DHCP6_SERVER)
 AM_CONDITIONAL([OPENTHREAD_ENABLE_DHCP6_SERVER], [test "${enable_dhcp6_server}" = "yes"])
 AC_DEFINE_UNQUOTED([OPENTHREAD_ENABLE_DHCP6_SERVER],[${OPENTHREAD_ENABLE_DHCP6_SERVER}],[Define to 1 if you want to enable DHCPv6 Server])
+
+#
+# Application CoAP
+#
+
+AC_ARG_ENABLE(application_coap,
+    [AS_HELP_STRING([--enable-application-coap],[Enable CoAP to an application.@<:@default=no@:>@.])],
+    [
+        case "${enableval}" in
+
+        no|yes)
+            enable_application_coap=${enableval}
+            ;;
+
+        *)
+            AC_MSG_ERROR([Invalid value ${enable_application_coap} for --enable-application-coap])
+            ;;
+        esac
+    ],
+    [enable_application_coap=no])
+
+if test "$enable_application_coap" = "yes"; then
+    OPENTHREAD_ENABLE_APPLICATION_COAP=1
+else
+    OPENTHREAD_ENABLE_APPLICATION_COAP=0
+fi
+
+AC_SUBST(OPENTHREAD_ENABLE_APPLICATION_COAP)
+AM_CONDITIONAL([OPENTHREAD_ENABLE_APPLICATION_COAP], [test "${enable_application_coap}" = "yes"])
+AC_DEFINE_UNQUOTED([OPENTHREAD_ENABLE_APPLICATION_COAP],[${OPENTHREAD_ENABLE_APPLICATION_COAP}],[Define to 1 if you want to enable CoAP to an application.])
 
 #
 # Examples
@@ -969,12 +1030,14 @@ AC_MSG_NOTICE([
   OpenThread Commissioner support           : ${enable_commissioner}
   OpenThread Joiner support                 : ${enable_joiner}
   OpenThread DTLS support                   : ${enable_dtls}
+  OpenThread Jam Detection support          : ${enable_jam_detection}
   OpenThread Diagnostics support            : ${enable_diag}
   OpenThread Legacy network support         : ${enable_legacy}
   OpenThread Cli logging support            : ${enable_cli_logging}
   OpenThread Certification log support      : ${enable_cert_log}
   OpenThread DHCPv6 Server support          : ${enable_dhcp6_server}
   OpenThread DHCPv6 Client support          : ${enable_dhcp6_client}
+  Openthread Application CoAP support       : ${enable_application_coap}
   OpenThread examples                       : ${OPENTHREAD_EXAMPLES}
   OpenThread platform information           : ${PLATFORM_INFO}
 

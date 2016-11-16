@@ -38,7 +38,7 @@ set -x
 
 [ $BUILD_TARGET != pretty-check ] || {
     export PATH=/tmp/astyle/build/gcc/bin:$PATH || die
-    ./configure --enable-cli --enable-diag --enable-commissioner --enable-joiner --with-examples=posix || die
+    ./configure --enable-cli --enable-diag --enable-dhcp6-client --enable-dhcp6-server --enable-commissioner --enable-joiner --with-examples=posix || die
     make pretty-check || die
 }
 
@@ -50,14 +50,16 @@ set -x
 [ $BUILD_TARGET != arm-gcc49 ] || {
     export PATH=/tmp/gcc-arm-none-eabi-4_9-2015q3/bin:$PATH || die
     COMMISSIONER=1 JOINER=1 DHCP6_CLIENT=1 DHCP6_SERVER=1 make -f examples/Makefile-cc2538 || die
-    arm-none-eabi-size  output/bin/arm-none-eabi-ot-cli || die
+    arm-none-eabi-size  output/bin/arm-none-eabi-ot-cli-ftd || die
+    arm-none-eabi-size  output/bin/arm-none-eabi-ot-cli-mtd || die
     arm-none-eabi-size  output/bin/arm-none-eabi-ot-ncp || die
 }
 
 [ $BUILD_TARGET != arm-gcc54 ] || {
     export PATH=/tmp/gcc-arm-none-eabi-5_4-2016q3/bin:$PATH || die
     COMMISSIONER=1 JOINER=1 DHCP6_CLIENT=1 DHCP6_SERVER=1 make -f examples/Makefile-cc2538 || die
-    arm-none-eabi-size  output/bin/arm-none-eabi-ot-cli || die
+    arm-none-eabi-size  output/bin/arm-none-eabi-ot-cli-ftd || die
+    arm-none-eabi-size  output/bin/arm-none-eabi-ot-cli-mtd || die
     arm-none-eabi-size  output/bin/arm-none-eabi-ot-ncp || die
 }
 

@@ -168,10 +168,21 @@ bool Dtls::IsConnected(void)
     return mSsl.state == MBEDTLS_SSL_HANDSHAKE_OVER;
 }
 
-ThreadError Dtls::Send(const uint8_t *aBuf, uint16_t aLength)
+ThreadError Dtls::Send(Message &aMessage, uint16_t aLength)
 {
-    int rval = mbedtls_ssl_write(&mSsl, aBuf, aLength);
-    return MapError(rval);
+    ThreadError error = kThreadError_None;
+    uint8_t buffer[kApplicationDataMaxLength];
+
+    VerifyOrExit(aLength <= kApplicationDataMaxLength, error = kThreadError_NoBufs);
+
+    aMessage.Read(0, aLength, buffer);
+
+    SuccessOrExit(error = MapError(mbedtls_ssl_write(&mSsl, buffer, aLength)));
+
+    aMessage.Free();
+
+exit:
+    return error;
 }
 
 ThreadError Dtls::Receive(Message &aMessage, uint16_t aOffset, uint16_t aLength)

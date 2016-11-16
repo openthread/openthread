@@ -57,6 +57,9 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\src\core\coap\coap_base.cpp">
+      <Filter>Source Files\coap</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\src\core\coap\coap_client.cpp">
       <Filter>Source Files\coap</Filter>
     </ClCompile>
@@ -64,6 +67,12 @@
       <Filter>Source Files\coap</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\core\coap\coap_server.cpp">
+      <Filter>Source Files\coap</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\core\coap\secure_coap_client.cpp">
+      <Filter>Source Files\coap</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\core\coap\secure_coap_server.cpp">
       <Filter>Source Files\coap</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\core\common\logging.cpp">
@@ -225,6 +234,9 @@
     <ClCompile Include="..\..\src\core\utils\slaac_address.cpp">
       <Filter>Source Files\utils</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\core\utils\jam_detector.cpp">
+      <Filter>Source Files\utils</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\src\core\meshcop\announce_begin_client.cpp">
       <Filter>Source Files\meshcop</Filter>
     </ClCompile>
@@ -242,6 +254,9 @@
     <ClInclude Include="..\..\src\core\openthread-core-config.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\src\core\coap\coap_base.hpp">
+      <Filter>Header Files\coap</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\src\core\coap\coap_client.hpp">
       <Filter>Header Files\coap</Filter>
     </ClInclude>
@@ -249,6 +264,12 @@
       <Filter>Header Files\coap</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\core\coap\coap_server.hpp">
+      <Filter>Header Files\coap</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\core\coap\secure_coap_client.hpp">
+      <Filter>Header Files\coap</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\core\coap\secure_coap_server.hpp">
       <Filter>Header Files\coap</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\core\common\code_utils.hpp">
@@ -435,6 +456,9 @@
       <Filter>Header Files\crypto</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\core\utils\slaac_address.hpp">
+      <Filter>Header Files\utils</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\core\utils\jam_detector.hpp">
       <Filter>Header Files\utils</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\core\meshcop\announce_begin_client.hpp">

@@ -48,8 +48,8 @@ namespace Thread {
 namespace MeshCoP {
 
 Leader::Leader(ThreadNetif &aThreadNetif):
-    mPetition(OPENTHREAD_URI_LEADER_PETITION, HandlePetition, this),
-    mKeepAlive(OPENTHREAD_URI_LEADER_KEEP_ALIVE, HandleKeepAlive, this),
+    mPetition(OPENTHREAD_URI_LEADER_PETITION, Leader::HandlePetition, this),
+    mKeepAlive(OPENTHREAD_URI_LEADER_KEEP_ALIVE, Leader::HandleKeepAlive, this),
     mCoapServer(aThreadNetif.GetCoapServer()),
     mCoapClient(aThreadNetif.GetCoapClient()),
     mNetworkData(aThreadNetif.GetNetworkDataLeader()),
@@ -61,10 +61,12 @@ Leader::Leader(ThreadNetif &aThreadNetif):
     mCoapServer.AddResource(mKeepAlive);
 }
 
-void Leader::HandlePetition(void *aContext, Coap::Header &aHeader, Message &aMessage,
-                            const Ip6::MessageInfo &aMessageInfo)
+void Leader::HandlePetition(void *aContext, otCoapHeader *aHeader, otMessage aMessage,
+                            const otMessageInfo *aMessageInfo)
 {
-    static_cast<Leader *>(aContext)->HandlePetition(aHeader, aMessage, aMessageInfo);
+    static_cast<Leader *>(aContext)->HandlePetition(
+        *static_cast<Coap::Header *>(aHeader), *static_cast<Message *>(aMessage),
+        *static_cast<const Ip6::MessageInfo *>(aMessageInfo));
 }
 
 void Leader::HandlePetition(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
@@ -149,10 +151,12 @@ exit:
     return error;
 }
 
-void Leader::HandleKeepAlive(void *aContext, Coap::Header &aHeader, Message &aMessage,
-                             const Ip6::MessageInfo &aMessageInfo)
+void Leader::HandleKeepAlive(void *aContext, otCoapHeader *aHeader, otMessage aMessage,
+                             const otMessageInfo *aMessageInfo)
 {
-    static_cast<Leader *>(aContext)->HandleKeepAlive(aHeader, aMessage, aMessageInfo);
+    static_cast<Leader *>(aContext)->HandleKeepAlive(
+        *static_cast<Coap::Header *>(aHeader), *static_cast<Message *>(aMessage),
+        *static_cast<const Ip6::MessageInfo *>(aMessageInfo));
 }
 
 void Leader::HandleKeepAlive(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
@@ -235,7 +239,6 @@ ThreadError Leader::SendDatasetChanged(const Ip6::Address &aAddress)
     header.Init(kCoapTypeConfirmable, kCoapRequestPost);
     header.SetToken(Coap::Header::kDefaultTokenLength);
     header.AppendUriPathOptions(OPENTHREAD_URI_DATASET_CHANGED);
-    header.SetPayloadMarker();
 
     VerifyOrExit((message = mCoapClient.NewMessage(header)) != NULL, error = kThreadError_NoBufs);
 

@@ -34,6 +34,8 @@
 #ifndef COAP_SERVER_HPP_
 #define COAP_SERVER_HPP_
 
+#include <openthread-coap.h>
+#include <coap/coap_base.hpp>
 #include <coap/coap_header.hpp>
 #include <common/message.hpp>
 #include <net/udp6.hpp>
@@ -52,7 +54,7 @@ namespace Coap {
  * This class implements CoAP resource handling.
  *
  */
-class Resource
+class Resource : public otCoapResource
 {
     friend class Server;
 
@@ -63,57 +65,51 @@ public:
     };
 
     /**
-     * This function pointer is called when a CoAP message with a given Uri-Path is received.
-     *
-     * @param[in]  aContext      A pointer to arbitrary context information.
-     * @param[in]  aHeader       A reference to the CoAP header.
-     * @param[in]  aMessage      A reference to the message.
-     * @param[in]  aMessageInfo  A reference to the message info for @p aMessage.
-     *
-     */
-    typedef void (*CoapMessageHandler)(void *aContext, Header &aHeader, Message &aMessage,
-                                       const Ip6::MessageInfo &aMessageInfo);
-
-    /**
      * This constructor initializes the resource.
      *
      * @param[in]  aUriPath  A pointer to a NULL-terminated string for the Uri-Path.
      * @param[in]  aHandler  A function pointer that is called when receiving a CoAP message for @p aUriPath.
      * @param[in]  aContext  A pointer to arbitrary context information.
      */
-    Resource(const char *aUriPath, CoapMessageHandler aHandler, void *aContext) {
+    Resource(const char *aUriPath, otCoapRequestHandler aHandler, void *aContext) {
         mUriPath = aUriPath;
         mHandler = aHandler;
         mContext = aContext;
         mNext = NULL;
     }
 
+    /**
+     * This method returns a pointer to the next resource.
+     *
+     * @returns A Pointer to the next resource.
+     *
+     */
+    Resource *GetNext(void) const { return static_cast<Resource *>(mNext); };
+
 private:
     void HandleRequest(Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo) {
-        mHandler(mContext, aHeader, aMessage, aMessageInfo);
+        mHandler(mContext, &aHeader, &aMessage, &aMessageInfo);
     }
-
-    const char *mUriPath;
-    CoapMessageHandler mHandler;
-    void *mContext;
-    Resource *mNext;
 };
 
 /**
  * This class implements the CoAP server.
  *
  */
-class Server
+class Server : public CoapBase
 {
 public:
     /**
      * This constructor initializes the object.
      *
-     * @param[in]  aUdp   A reference to the UDP object.
-     * @param[in]  aPort  The port to listen on.
+     * @param[in]  aUdp      A reference to the UDP object.
+     * @param[in]  aPort     The port to listen on.
+     * @param[in]  aSender   A pointer to a function for sending messages.
+     * @param[in]  aReceiver A pointer to a function for handling received messages.
      *
      */
-    Server(Ip6::Udp &aUdp, uint16_t aPort);
+    Server(Ip6::Udp &aUdp, uint16_t aPort, SenderFunction aSender = &Server::Send,
+           ReceiverFunction aReceiver = &Server::Receive);
 
     /**
      * This method starts the CoAP server.
@@ -161,6 +157,16 @@ public:
     Message *NewMessage(uint16_t aReserved);
 
     /**
+     * This method creates a new message with a CoAP header.
+     *
+     * @param[in]  aHeader  A reference to a CoAP header that is used to create the message.
+     *
+     * @returns A pointer to the message or NULL if failed to allocate message.
+     *
+     */
+    Message *NewMessage(const Header &aHeader) { return CoapBase::NewMessage(aHeader); };
+
+    /**
      * This method sends a CoAP response from the server.
      *
      * @param[in]  aMessage      The CoAP response to send.
@@ -172,11 +178,28 @@ public:
      */
     ThreadError SendMessage(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
-private:
-    static void HandleUdpReceive(void *aContext, otMessage aMessage, const otMessageInfo *aMessageInfo);
-    void HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    /**
+     * This method sets CoAP server's port number.
+     *
+     * @param[in]  aPort  A port number to set.
+     *
+     * @retval kThreadError_None  Binding with a port succeeded.
+     *
+     */
+    ThreadError SetPort(uint16_t aPort);
 
-    Ip6::UdpSocket mSocket;
+protected:
+    void ProcessReceivedMessage(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+
+private:
+    static ThreadError Send(void *aContext, Message &aMessage, const Ip6::MessageInfo &aMessageInfo) {
+        return (static_cast<Server *>(aContext))->mSocket.SendTo(aMessage, aMessageInfo);
+    }
+
+    static void Receive(void *aContext, Message &aMessage, const Ip6::MessageInfo &aMessageInfo) {
+        (static_cast<Server *>(aContext))->ProcessReceivedMessage(aMessage, aMessageInfo);
+    }
+
     uint16_t mPort;
     Resource *mResources;
 };

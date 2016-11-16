@@ -165,11 +165,12 @@ exit:
     return error;
 }
 
-void NetworkDiagnostic::HandleDiagnosticGet(void *aContext, Coap::Header &aHeader,
-                                            Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
+void NetworkDiagnostic::HandleDiagnosticGet(void *aContext, otCoapHeader *aHeader, otMessage aMessage,
+                                            const otMessageInfo *aMessageInfo)
 {
-    NetworkDiagnostic *obj = reinterpret_cast<NetworkDiagnostic *>(aContext);
-    obj->HandleDiagnosticGet(aHeader, aMessage, aMessageInfo);
+    static_cast<NetworkDiagnostic *>(aContext)->HandleDiagnosticGet(
+        *static_cast<Coap::Header *>(aHeader), *static_cast<Message *>(aMessage),
+        *static_cast<const Ip6::MessageInfo *>(aMessageInfo));
 }
 
 ThreadError NetworkDiagnostic::AppendIPv6AddressList(Message &aMessage)
@@ -430,11 +431,12 @@ exit:
     }
 }
 
-void NetworkDiagnostic::HandleDiagnosticReset(void *aContext, Coap::Header &aHeader, Message &aMessage,
-                                              const Ip6::MessageInfo &aMessageInfo)
+void NetworkDiagnostic::HandleDiagnosticReset(void *aContext, otCoapHeader *aHeader, otMessage aMessage,
+                                              const otMessageInfo *aMessageInfo)
 {
-    NetworkDiagnostic *obj = reinterpret_cast<NetworkDiagnostic *>(aContext);
-    obj->HandleDiagnosticReset(aHeader, aMessage, aMessageInfo);
+    static_cast<NetworkDiagnostic *>(aContext)->HandleDiagnosticReset(
+        *static_cast<Coap::Header *>(aHeader), *static_cast<Message *>(aMessage),
+        *static_cast<const Ip6::MessageInfo *>(aMessageInfo));
 }
 
 void NetworkDiagnostic::HandleDiagnosticReset(Coap::Header &aHeader, Message &aMessage,

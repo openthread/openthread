@@ -64,9 +64,9 @@ class Node:
             cmd = os.environ['OT_CLI_PATH']
         elif "top_builddir" in os.environ.keys():
             srcdir = os.environ['top_builddir']
-            cmd = '%s/examples/apps/cli/ot-cli' % srcdir
+            cmd = '%s/examples/apps/cli/ot-cli-ftd' % srcdir
         else:
-            cmd = './ot-cli'
+            cmd = './ot-cli-ftd'
         cmd += ' %d' % nodeid
         print ("%s" % cmd)
 

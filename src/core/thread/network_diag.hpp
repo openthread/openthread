@@ -113,13 +113,13 @@ private:
                                             ThreadError result);
     void HandleDiagnosticGetResponse(Coap::Header *aHeader, Message *aMessage, ThreadError result);
 
-    static void HandleDiagnosticGet(void *aContext, Coap::Header &aHeader,
-                                    Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    static void HandleDiagnosticGet(void *aContext, otCoapHeader *aHeader, otMessage aMessage,
+                                    const otMessageInfo *aMessageInfo);
     void HandleDiagnosticGet(Thread::Coap::Header &aHeader, Thread::Message &aMessage,
                              const Thread::Ip6::MessageInfo &aMessageInfo);
 
-    static void HandleDiagnosticReset(void *aContext, Thread::Coap::Header &aHeader, Thread::Message &,
-                                      const Thread::Ip6::MessageInfo &aMessageInfo);
+    static void HandleDiagnosticReset(void *aContext, otCoapHeader *aHeader, otMessage aMessage,
+                                      const otMessageInfo *aMessageInfo);
     void HandleDiagnosticReset(Coap::Header &aHeader, Message &aMessage,
                                const Ip6::MessageInfo &aMessageInfo);
 

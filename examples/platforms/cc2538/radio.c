@@ -381,7 +381,9 @@ void cc2538RadioProcess(otInstance *aInstance)
 {
     readFrame();
 
-    if ((sState == kStateReceive) && (sReceiveFrame.mLength > 0))
+    if ((sState == kStateReceive && sReceiveFrame.mLength > 0) ||
+        (sState == kStateTransmit && sReceiveFrame.mLength > 0 &&
+         (sReceiveFrame.mPsdu[0] & IEEE802154_FRAME_TYPE_MASK) != IEEE802154_FRAME_TYPE_ACK))
     {
 #if OPENTHREAD_ENABLE_DIAG
 

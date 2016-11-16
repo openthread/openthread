@@ -37,8 +37,8 @@
 namespace Thread {
 namespace Coap {
 
-Server::Server(Ip6::Udp &aUdp, uint16_t aPort):
-    mSocket(aUdp)
+Server::Server(Ip6::Udp &aUdp, uint16_t aPort, SenderFunction aSender, ReceiverFunction aReceiver):
+    CoapBase(aUdp, aSender, aReceiver)
 {
     mPort = aPort;
     mResources = NULL;
@@ -46,27 +46,22 @@ Server::Server(Ip6::Udp &aUdp, uint16_t aPort):
 
 ThreadError Server::Start()
 {
-    ThreadError error;
     Ip6::SockAddr sockaddr;
     sockaddr.mPort = mPort;
 
-    SuccessOrExit(error = mSocket.Open(&Server::HandleUdpReceive, this));
-    SuccessOrExit(error = mSocket.Bind(sockaddr));
-
-exit:
-    return error;
+    return CoapBase::Start(sockaddr);
 }
 
 ThreadError Server::Stop()
 {
-    return mSocket.Close();
+    return CoapBase::Stop();
 }
 
 ThreadError Server::AddResource(Resource &aResource)
 {
     ThreadError error = kThreadError_None;
 
-    for (Resource *cur = mResources; cur; cur = cur->mNext)
+    for (Resource *cur = mResources; cur; cur = cur->GetNext())
     {
         VerifyOrExit(cur != &aResource, error = kThreadError_Already);
     }
@@ -82,11 +77,11 @@ void Server::RemoveResource(Resource &aResource)
 {
     if (mResources == &aResource)
     {
-        mResources = aResource.mNext;
+        mResources = aResource.GetNext();
     }
     else
     {
-        for (Resource *cur = mResources; cur; cur = cur->mNext)
+        for (Resource *cur = mResources; cur; cur = cur->GetNext())
         {
             if (cur->mNext == &aResource)
             {
@@ -100,20 +95,24 @@ exit:
     aResource.mNext = NULL;
 }
 
-void Server::HandleUdpReceive(void *aContext, otMessage aMessage, const otMessageInfo *aMessageInfo)
+Message *Server::NewMessage(uint16_t aReserved)
 {
-    static_cast<Server *>(aContext)->HandleUdpReceive(*static_cast<Message *>(aMessage),
-                                                      *static_cast<const Ip6::MessageInfo *>(aMessageInfo));
+    return mSocket.NewMessage(aReserved);
 }
 
-void Server::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
+ThreadError Server::SendMessage(Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
+{
+    return mSender(this, aMessage, aMessageInfo);
+}
+
+void Server::ProcessReceivedMessage(Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
     Header header;
     char uriPath[Resource::kMaxReceivedUriPath] = "";
     char *curUriPath = uriPath;
     const Header::Option *coapOption;
 
-    SuccessOrExit(header.FromMessage(aMessage));
+    SuccessOrExit(header.FromMessage(aMessage, false));
     aMessage.MoveOffset(header.GetLength());
 
     coapOption = header.GetCurrentOption();
@@ -146,7 +145,7 @@ void Server::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessag
 
     curUriPath[0] = '\0';
 
-    for (Resource *resource = mResources; resource; resource = resource->mNext)
+    for (Resource *resource = mResources; resource; resource = resource->GetNext())
     {
         if (strcmp(resource->mUriPath, uriPath) == 0)
         {
@@ -159,14 +158,14 @@ exit:
     {}
 }
 
-Message *Server::NewMessage(uint16_t aReserved)
+ThreadError Server::SetPort(uint16_t aPort)
 {
-    return mSocket.NewMessage(aReserved);
-}
+    mPort = aPort;
 
-ThreadError Server::SendMessage(Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
-{
-    return mSocket.SendTo(aMessage, aMessageInfo);
+    Ip6::SockAddr sockaddr;
+    sockaddr.mPort = mPort;
+
+    return mSocket.Bind(sockaddr);
 }
 
 }  // namespace Coap

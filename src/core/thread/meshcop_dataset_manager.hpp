@@ -132,12 +132,12 @@ public:
     ThreadError Set(const Timestamp &aTimestamp, const Message &aMessage, uint16_t aOffset, uint8_t aLength);
 
 private:
-    static void HandleGet(void *aContext, Coap::Header &aHeader, Message &aMessage,
-                          const Ip6::MessageInfo &aMessageInfo);
+    static void HandleGet(void *aContext, otCoapHeader *aHeader, otMessage aMessage,
+                          const otMessageInfo *aMessageInfo);
     void HandleGet(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
-    static void HandleSet(void *aContext, Coap::Header &aHeader, Message &aMessage,
-                          const Ip6::MessageInfo &aMessageInfo);
+    static void HandleSet(void *aContext, otCoapHeader *aHeader, otMessage aMessage,
+                          const otMessageInfo *aMessageInfo);
     void HandleSet(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
     Coap::Resource mResourceGet;
@@ -168,12 +168,12 @@ public:
     void ApplyActiveDataset(const Timestamp &aTimestamp, Message &aMessage);
 
 private:
-    static void HandleGet(void *aContext, Coap::Header &aHeader, Message &aMessage,
-                          const Ip6::MessageInfo &aMessageInfo);
+    static void HandleGet(void *aContext, otCoapHeader *aHeader, otMessage aMessage,
+                          const otMessageInfo *aMessageInfo);
     void HandleGet(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
-    static void HandleSet(void *aContext, Coap::Header &aHeader, Message &aMessage,
-                          const Ip6::MessageInfo &aMessageInfo);
+    static void HandleSet(void *aContext, otCoapHeader *aHeader, otMessage aMessage,
+                          const otMessageInfo *aMessageInfo);
     void HandleSet(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
     static void HandleTimer(void *aContext);

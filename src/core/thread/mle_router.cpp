@@ -143,13 +143,17 @@ exit:
 uint8_t MleRouter::AllocateRouterId(uint8_t aRouterId)
 {
     uint8_t rval = kInvalidRouterId;
+    Router *router;
 
-    VerifyOrExit(!mRouters[aRouterId].mAllocated, rval = kInvalidRouterId);
+    router = GetRouter(aRouterId);
+    assert(router != NULL);
+
+    VerifyOrExit(!router->mAllocated, rval = kInvalidRouterId);
 
     // init router state
-    mRouters[aRouterId].mAllocated = true;
-    mRouters[aRouterId].mLastHeard = Timer::GetNow();
-    memset(&mRouters[aRouterId].mMacAddr, 0, sizeof(mRouters[aRouterId].mMacAddr));
+    router->mAllocated = true;
+    router->mLastHeard = Timer::GetNow();
+    memset(&router->mMacAddr, 0, sizeof(router->mMacAddr));
 
     // bump sequence number
     mRouterIdSequence++;
@@ -164,11 +168,15 @@ exit:
 
 ThreadError MleRouter::ReleaseRouterId(uint8_t aRouterId)
 {
+    Router *router = GetRouter(aRouterId);
+
+    assert(router != NULL);
+
     otLogInfoMle("delete router id %d", aRouterId);
-    mRouters[aRouterId].mAllocated = false;
-    mRouters[aRouterId].mReclaimDelay = true;
-    mRouters[aRouterId].mState = Neighbor::kStateInvalid;
-    mRouters[aRouterId].mNextHop = kInvalidRouterId;
+    router->mAllocated = false;
+    router->mReclaimDelay = true;
+    router->mState = Neighbor::kStateInvalid;
+    router->mNextHop = kInvalidRouterId;
 
     for (uint8_t i = 0; i <= kMaxRouterId; i++)
     {
@@ -235,6 +243,7 @@ ThreadError MleRouter::BecomeLeader(void)
 {
     ThreadError error = kThreadError_None;
     uint8_t routerId;
+    Router *router;
 
     VerifyOrExit(mDeviceState != kDeviceStateDisabled, error = kThreadError_InvalidState);
     VerifyOrExit(mDeviceState != kDeviceStateLeader, error = kThreadError_None);
@@ -253,12 +262,13 @@ ThreadError MleRouter::BecomeLeader(void)
     mAddressResolver.Clear();
 
     routerId = IsRouterIdValid(mPreviousRouterId) ? AllocateRouterId(mPreviousRouterId) : AllocateRouterId();
-    VerifyOrExit(IsRouterIdValid(routerId), error = kThreadError_NoBufs);
+    router = GetRouter(routerId);
+    VerifyOrExit(router != NULL, error = kThreadError_NoBufs);
 
     mRouterId = routerId;
     mPreviousRouterId = mRouterId;
 
-    memcpy(&mRouters[mRouterId].mMacAddr, mMac.GetExtAddress(), sizeof(mRouters[mRouterId].mMacAddr));
+    memcpy(&router->mMacAddr, mMac.GetExtAddress(), sizeof(router->mMacAddr));
 
     if (mFixedLeaderPartitionId != 0)
     {
@@ -634,7 +644,8 @@ ThreadError MleRouter::HandleLinkRequest(const Message &aMessage, const Ip6::Mes
         if (IsActiveRouter(rloc16))
         {
             // source is a router
-            neighbor = &mRouters[GetRouterId(rloc16)];
+            neighbor = GetRouter(GetRouterId(rloc16));
+            VerifyOrExit(neighbor != NULL, error = kThreadError_Parse);
 
             if (neighbor->mState != Neighbor::kStateValid)
             {
@@ -791,7 +802,8 @@ ThreadError MleRouter::HandleLinkAccept(const Message &aMessage, const Ip6::Mess
 {
     ThreadError error = kThreadError_None;
     const ThreadMessageInfo *threadMessageInfo = static_cast<const ThreadMessageInfo *>(aMessageInfo.GetLinkInfo());
-    Neighbor *neighbor = NULL;
+    Router *router;
+    Neighbor *neighbor;
     Mac::ExtAddress macAddr;
     VersionTlv version;
     ResponseTlv response;
@@ -825,7 +837,6 @@ ThreadError MleRouter::HandleLinkAccept(const Message &aMessage, const Ip6::Mess
         neighbor->mValid.mRloc16 != sourceAddress.GetRloc16())
     {
         RemoveNeighbor(*neighbor);
-        neighbor = NULL;
     }
 
     // Link-Layer Frame Counter
@@ -844,23 +855,18 @@ ThreadError MleRouter::HandleLinkAccept(const Message &aMessage, const Ip6::Mess
         mleFrameCounter.SetFrameCounter(linkFrameCounter.GetFrameCounter());
     }
 
-    routerId = GetRouterId(sourceAddress.GetRloc16());
-    VerifyOrExit(IsRouterIdValid(routerId), error = kThreadError_Parse);
+    VerifyOrExit(IsActiveRouter(sourceAddress.GetRloc16()), error = kThreadError_Parse);
 
-    if (routerId != mRouterId)
-    {
-        neighbor = &mRouters[routerId];
-    }
-    else
-    {
-        VerifyOrExit((neighbor = FindChild(macAddr)) != NULL, error = kThreadError_Error);
-    }
+    routerId = GetRouterId(sourceAddress.GetRloc16());
+    router = GetRouter(routerId);
+
+    VerifyOrExit(router != NULL, error = kThreadError_Parse);
 
     // verify response
-    switch (neighbor->mState)
+    switch (router->mState)
     {
     case Neighbor::kStateLinkRequest:
-        VerifyOrExit(memcmp(neighbor->mPending.mChallenge, response.GetResponse(), sizeof(neighbor->mPending.mChallenge)) == 0,
+        VerifyOrExit(memcmp(router->mPending.mChallenge, response.GetResponse(), sizeof(router->mPending.mChallenge)) == 0,
                      error = kThreadError_Error);
         break;
 
@@ -912,8 +918,7 @@ ThreadError MleRouter::HandleLinkAccept(const Message &aMessage, const Ip6::Mess
     case kDeviceStateChild:
         SuccessOrExit(error = Tlv::GetTlv(aMessage, Tlv::kLinkMargin, sizeof(linkMargin), linkMargin));
         VerifyOrExit(linkMargin.IsValid(), error = kThreadError_Parse);
-        mRouters[routerId].mLinkQualityOut =
-            LinkQualityInfo::ConvertLinkMarginToLinkQuality(linkMargin.GetLinkMargin());
+        router->mLinkQualityOut = LinkQualityInfo::ConvertLinkMarginToLinkQuality(linkMargin.GetLinkMargin());
         break;
 
     case kDeviceStateRouter:
@@ -926,13 +931,12 @@ ThreadError MleRouter::HandleLinkAccept(const Message &aMessage, const Ip6::Mess
         // Link Margin
         SuccessOrExit(error = Tlv::GetTlv(aMessage, Tlv::kLinkMargin, sizeof(linkMargin), linkMargin));
         VerifyOrExit(linkMargin.IsValid(), error = kThreadError_Parse);
-        mRouters[routerId].mLinkQualityOut =
-            LinkQualityInfo::ConvertLinkMarginToLinkQuality(linkMargin.GetLinkMargin());
+        router->mLinkQualityOut = LinkQualityInfo::ConvertLinkMarginToLinkQuality(linkMargin.GetLinkMargin());
 
         // update routing table
-        if (routerId != mRouterId && !IsRouterIdValid(mRouters[routerId].mNextHop))
+        if (routerId != mRouterId && !IsRouterIdValid(router->mNextHop))
         {
-            mRouters[routerId].mNextHop = routerId;
+            router->mNextHop = routerId;
             ResetAdvertiseInterval();
         }
 
@@ -940,17 +944,17 @@ ThreadError MleRouter::HandleLinkAccept(const Message &aMessage, const Ip6::Mess
     }
 
     // finish link synchronization
-    memcpy(&neighbor->mMacAddr, &macAddr, sizeof(neighbor->mMacAddr));
-    neighbor->mValid.mRloc16 = sourceAddress.GetRloc16();
-    neighbor->mValid.mLinkFrameCounter = linkFrameCounter.GetFrameCounter();
-    neighbor->mValid.mMleFrameCounter = mleFrameCounter.GetFrameCounter();
-    neighbor->mLastHeard = Timer::GetNow();
-    neighbor->mMode = ModeTlv::kModeFFD | ModeTlv::kModeRxOnWhenIdle | ModeTlv::kModeFullNetworkData;
-    neighbor->mLinkInfo.Clear();
-    neighbor->mLinkInfo.AddRss(mMac.GetNoiseFloor(), threadMessageInfo->mRss);
-    neighbor->mLinkFailures = 0;
-    neighbor->mState = Neighbor::kStateValid;
-    neighbor->mKeySequence = aKeySequence;
+    memcpy(&router->mMacAddr, &macAddr, sizeof(router->mMacAddr));
+    router->mValid.mRloc16 = sourceAddress.GetRloc16();
+    router->mValid.mLinkFrameCounter = linkFrameCounter.GetFrameCounter();
+    router->mValid.mMleFrameCounter = mleFrameCounter.GetFrameCounter();
+    router->mLastHeard = Timer::GetNow();
+    router->mMode = ModeTlv::kModeFFD | ModeTlv::kModeRxOnWhenIdle | ModeTlv::kModeFullNetworkData;
+    router->mLinkInfo.Clear();
+    router->mLinkInfo.AddRss(mMac.GetNoiseFloor(), threadMessageInfo->mRss);
+    router->mLinkFailures = 0;
+    router->mState = Neighbor::kStateValid;
+    router->mKeySequence = aKeySequence;
 
     if (aRequest)
     {
@@ -968,7 +972,7 @@ ThreadError MleRouter::HandleLinkAccept(const Message &aMessage, const Ip6::Mess
             tlvRequest.SetLength(0);
         }
 
-        SuccessOrExit(error = SendLinkAccept(aMessageInfo, neighbor, tlvRequest, challenge));
+        SuccessOrExit(error = SendLinkAccept(aMessageInfo, router, tlvRequest, challenge));
     }
 
 exit:
@@ -1042,26 +1046,23 @@ uint8_t MleRouter::LqiToCost(uint8_t aLqi)
 
 uint8_t MleRouter::GetLinkCost(uint8_t aRouterId)
 {
-    uint8_t rval;
+    uint8_t rval = kMaxRouteCost;
+    Router *router;
 
-    // kInvalidRouterId indicates non-existing next hop, hence return kMaxRouteCost for it.
-    assert(aRouterId <= kInvalidRouterId);
+    router = GetRouter(aRouterId);
 
-    VerifyOrExit(aRouterId != mRouterId &&
-                 IsRouterIdValid(aRouterId) &&
-                 mRouters[aRouterId].mState == Neighbor::kStateValid,
-                 rval = kMaxRouteCost);
+    // NULL aRouterId indicates non-existing next hop, hence return kMaxRouteCost for it.
+    VerifyOrExit(aRouterId != mRouterId && router != NULL && router->mState == Neighbor::kStateValid,);
 
-    rval = mRouters[aRouterId].mLinkInfo.GetLinkQuality(mMac.GetNoiseFloor());
+    rval = router->mLinkInfo.GetLinkQuality(mMac.GetNoiseFloor());
 
-    if (rval > mRouters[aRouterId].mLinkQualityOut)
+    if (rval > router->mLinkQualityOut)
     {
-        rval = mRouters[aRouterId].mLinkQualityOut;
+        rval = router->mLinkQualityOut;
     }
 
     // add for certification testing
-    if (isAssignLinkQuality &&
-        (memcmp(mRouters[aRouterId].mMacAddr.m8, mAddr64.m8, OT_EXT_ADDRESS_SIZE) == 0))
+    if (isAssignLinkQuality && (memcmp(router->mMacAddr.m8, mAddr64.m8, OT_EXT_ADDRESS_SIZE) == 0))
     {
         rval = mAssignLinkQuality;
     }
@@ -1266,7 +1267,8 @@ ThreadError MleRouter::HandleAdvertisement(const Message &aMessage, const Ip6::M
 
     VerifyOrExit(IsActiveRouter(sourceAddress.GetRloc16()), ;);
     routerId = GetRouterId(sourceAddress.GetRloc16());
-    VerifyOrExit(IsRouterIdValid(routerId), error = kThreadError_Parse);
+    router = GetRouter(routerId);
+    VerifyOrExit(router != NULL, error = kThreadError_Parse);
 
     if ((mDeviceMode & ModeTlv::kModeFFD) &&
         static_cast<int8_t>(route.GetRouterIdSequence() - mRouterIdSequence) > 0)
@@ -1295,8 +1297,6 @@ ThreadError MleRouter::HandleAdvertisement(const Message &aMessage, const Ip6::M
         }
     }
 
-    router = NULL;
-
     switch (GetDeviceState())
     {
     case kDeviceStateDisabled:
@@ -1312,17 +1312,17 @@ ThreadError MleRouter::HandleAdvertisement(const Message &aMessage, const Ip6::M
             ExitNow();
         }
 
-        router = &mParent;
-
-        if (memcmp(&router->mMacAddr, &macAddr, sizeof(router->mMacAddr)) == 0)
+        if (memcmp(&mParent.mMacAddr, &macAddr, sizeof(mParent.mMacAddr)) == 0)
         {
-            if (router->mValid.mRloc16 != sourceAddress.GetRloc16())
+            router = &mParent;
+
+            if (mParent.mValid.mRloc16 != sourceAddress.GetRloc16())
             {
                 SetStateDetached();
                 ExitNow(error = kThreadError_NoRoute);
             }
 
-            if ((mDeviceMode & ModeTlv::kModeFFD))
+            if (mDeviceMode & ModeTlv::kModeFFD)
             {
                 for (uint8_t i = 0, routeCount = 0; i <= kMaxRouterId; i++)
                 {
@@ -1350,20 +1350,15 @@ ThreadError MleRouter::HandleAdvertisement(const Message &aMessage, const Ip6::M
                 }
             }
         }
-        else
+        else if (router->mState != Neighbor::kStateValid)
         {
-            router = &mRouters[routerId];
-
-            if (router->mState != Neighbor::kStateValid)
-            {
-                memcpy(&router->mMacAddr, &macAddr, sizeof(router->mMacAddr));
-                router->mLinkInfo.Clear();
-                router->mLinkInfo.AddRss(mMac.GetNoiseFloor(), threadMessageInfo->mRss);
-                router->mLinkFailures = 0;
-                router->mState = Neighbor::kStateLinkRequest;
-                SendLinkRequest(router);
-                ExitNow(error = kThreadError_NoRoute);
-            }
+            memcpy(&router->mMacAddr, &macAddr, sizeof(router->mMacAddr));
+            router->mLinkInfo.Clear();
+            router->mLinkInfo.AddRss(mMac.GetNoiseFloor(), threadMessageInfo->mRss);
+            router->mLinkFailures = 0;
+            router->mState = Neighbor::kStateLinkRequest;
+            SendLinkRequest(router);
+            ExitNow(error = kThreadError_NoRoute);
         }
 
         router->mLastHeard = Timer::GetNow();
@@ -1394,7 +1389,6 @@ ThreadError MleRouter::HandleAdvertisement(const Message &aMessage, const Ip6::M
     // fall through
 
     case kDeviceStateLeader:
-        router = &mRouters[routerId];
 
         // router is not in list, reject
         if (!router->mAllocated)
@@ -2813,36 +2807,35 @@ exit:
 
 uint16_t MleRouter::GetNextHop(uint16_t aDestination) const
 {
-    uint16_t nextHopRloc16 = Mac::kShortAddrInvalid;
-    uint8_t nextHopRouterId;
-    uint8_t routerId;
+    uint16_t rval = Mac::kShortAddrInvalid;
+    const Router *router;
 
     if (mDeviceState == kDeviceStateChild)
     {
-        ExitNow(nextHopRloc16 = Mle::GetNextHop(aDestination));
+        ExitNow(rval = Mle::GetNextHop(aDestination));
     }
 
-    routerId = GetRouterId(aDestination);
+    router = GetRouter(GetRouterId(aDestination));
+    VerifyOrExit(router != NULL,);
 
-    if (IsRouterIdValid(routerId))
-    {
-        nextHopRouterId = mRouters[routerId].mNextHop;
-        VerifyOrExit(IsRouterIdValid(nextHopRouterId) && mRouters[nextHopRouterId].mState != Neighbor::kStateInvalid, ;);
-        nextHopRloc16 = GetRloc16(mRouters[nextHopRouterId].mNextHop);
-    }
+    router = GetRouter(router->mNextHop);
+    VerifyOrExit(router != NULL && router->mState != Neighbor::kStateInvalid,);
+
+    rval = GetRloc16(router->mNextHop);
 
 exit:
-    return nextHopRloc16;
+    return rval;
 }
 
 uint8_t MleRouter::GetRouteCost(uint16_t aRloc16) const
 {
-    uint8_t routerId = GetRouterId(aRloc16);
-    uint8_t rval;
+    uint8_t rval = kMaxRouteCost;
+    const Router *router;
 
-    VerifyOrExit(IsRouterIdValid(routerId) && IsRouterIdValid(mRouters[routerId].mNextHop), rval = kMaxRouteCost);
+    router = GetRouter(GetRouterId(aRloc16));
+    VerifyOrExit(router != NULL && GetRouter(router->mNextHop) != NULL,);
 
-    rval = mRouters[routerId].mCost;
+    rval = router->mCost;
 
 exit:
     return rval;
@@ -2898,6 +2891,30 @@ Router *MleRouter::GetRouters(uint8_t *aNumRouters)
     return mRouters;
 }
 
+Router *MleRouter::GetRouter(uint8_t aRouterId)
+{
+    Router *rval = NULL;
+
+    VerifyOrExit(aRouterId <= kMaxRouterId,);
+
+    rval = &mRouters[aRouterId];
+
+exit:
+    return rval;
+}
+
+const Router *MleRouter::GetRouter(uint8_t aRouterId) const
+{
+    const Router *rval = NULL;
+
+    VerifyOrExit(aRouterId <= kMaxRouterId,);
+
+    rval = &mRouters[aRouterId];
+
+exit:
+    return rval;
+}
+
 ThreadError MleRouter::GetChildInfoById(uint16_t aChildId, otChildInfo &aChildInfo)
 {
     ThreadError error = kThreadError_None;
@@ -2951,6 +2968,7 @@ void MleRouter::GetChildInfo(Child &aChild, otChildInfo &aChildInfo)
 ThreadError MleRouter::GetRouterInfo(uint16_t aRouterId, otRouterInfo &aRouterInfo)
 {
     ThreadError error = kThreadError_None;
+    Router *router;
     uint8_t routerId;
 
     if (aRouterId > kMaxRouterId && IsActiveRouter(aRouterId))
@@ -2962,18 +2980,19 @@ ThreadError MleRouter::GetRouterInfo(uint16_t aRouterId, otRouterInfo &aRouterIn
         routerId = static_cast<uint8_t>(aRouterId);
     }
 
-    VerifyOrExit(IsRouterIdValid(routerId), error = kThreadError_InvalidArgs);
+    router = GetRouter(routerId);
+    VerifyOrExit(router != NULL, error = kThreadError_InvalidArgs);
 
-    memcpy(&aRouterInfo.mExtAddress, &mRouters[routerId].mMacAddr, sizeof(aRouterInfo.mExtAddress));
-    aRouterInfo.mAllocated = mRouters[routerId].mAllocated;
+    memcpy(&aRouterInfo.mExtAddress, &router->mMacAddr, sizeof(aRouterInfo.mExtAddress));
+    aRouterInfo.mAllocated = router->mAllocated;
     aRouterInfo.mRouterId = routerId;
     aRouterInfo.mRloc16 = GetRloc16(routerId);
-    aRouterInfo.mNextHop = mRouters[routerId].mNextHop;
-    aRouterInfo.mLinkEstablished = mRouters[routerId].mState == Neighbor::kStateValid;
-    aRouterInfo.mPathCost = mRouters[routerId].mCost;
-    aRouterInfo.mLinkQualityIn = mRouters[routerId].mLinkInfo.GetLinkQuality(mMac.GetNoiseFloor());
-    aRouterInfo.mLinkQualityOut = mRouters[routerId].mLinkQualityOut;
-    aRouterInfo.mAge = static_cast<uint8_t>(Timer::MsecToSec(Timer::GetNow() - mRouters[routerId].mLastHeard));
+    aRouterInfo.mNextHop = router->mNextHop;
+    aRouterInfo.mLinkEstablished = router->mState == Neighbor::kStateValid;
+    aRouterInfo.mPathCost = router->mCost;
+    aRouterInfo.mLinkQualityIn = router->mLinkInfo.GetLinkQuality(mMac.GetNoiseFloor());
+    aRouterInfo.mLinkQualityOut = router->mLinkQualityOut;
+    aRouterInfo.mAge = static_cast<uint8_t>(Timer::MsecToSec(Timer::GetNow() - router->mLastHeard));
 
 exit:
     return error;
@@ -3268,10 +3287,12 @@ exit:
     {}
 }
 
-void MleRouter::HandleAddressSolicit(void *aContext, Coap::Header &aHeader, Message &aMessage,
-                                     const Ip6::MessageInfo &aMessageInfo)
+void MleRouter::HandleAddressSolicit(void *aContext, otCoapHeader *aHeader, otMessage aMessage,
+                                     const otMessageInfo *aMessageInfo)
 {
-    static_cast<MleRouter *>(aContext)->HandleAddressSolicit(aHeader, aMessage, aMessageInfo);
+    static_cast<MleRouter *>(aContext)->HandleAddressSolicit(
+        *static_cast<Coap::Header *>(aHeader), *static_cast<Message *>(aMessage),
+        *static_cast<const Ip6::MessageInfo *>(aMessageInfo));
 }
 
 void MleRouter::HandleAddressSolicit(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
@@ -3281,6 +3302,7 @@ void MleRouter::HandleAddressSolicit(Coap::Header &aHeader, Message &aMessage, c
     ThreadRloc16Tlv rlocTlv;
     ThreadStatusTlv statusTlv;
     uint8_t routerId = kInvalidRouterId;
+    Router *router = NULL;
 
     VerifyOrExit(aHeader.GetType() == kCoapTypeConfirmable && aHeader.GetCode() == kCoapRequestPost,
                  error = kThreadError_Parse);
@@ -3323,27 +3345,24 @@ void MleRouter::HandleAddressSolicit(Coap::Header &aHeader, Message &aMessage, c
         // specific Router ID requested
         VerifyOrExit(rlocTlv.IsValid(), error = kThreadError_Parse);
         routerId = GetRouterId(rlocTlv.GetRloc16());
+        router = GetRouter(routerId);
 
-        if (!IsRouterIdValid(routerId))
+        if (router != NULL)
         {
-            // requested Router ID is out of range
-            routerId = kInvalidRouterId;
-        }
-        else if (mRouters[routerId].mAllocated &&
-                 memcmp(&mRouters[routerId].mMacAddr, macAddr64Tlv.GetMacAddr(),
-                        sizeof(mRouters[routerId].mMacAddr)))
-        {
-            // requested Router ID is allocated to another device
-            routerId = kInvalidRouterId;
-        }
-        else if (!mRouters[routerId].mAllocated && mRouters[routerId].mReclaimDelay)
-        {
-            // requested Router ID is deallocated but within ID_REUSE_DELAY period
-            routerId = kInvalidRouterId;
-        }
-        else
-        {
-            routerId = AllocateRouterId(routerId);
+            if (router->mAllocated && memcmp(&router->mMacAddr, macAddr64Tlv.GetMacAddr(), sizeof(router->mMacAddr)))
+            {
+                // requested Router ID is allocated to another device
+                routerId = kInvalidRouterId;
+            }
+            else if (!router->mAllocated && router->mReclaimDelay)
+            {
+                // requested Router ID is deallocated but within ID_REUSE_DELAY period
+                routerId = kInvalidRouterId;
+            }
+            else
+            {
+                routerId = AllocateRouterId(routerId);
+            }
         }
     }
 
@@ -3357,9 +3376,11 @@ void MleRouter::HandleAddressSolicit(Coap::Header &aHeader, Message &aMessage, c
         otLogInfoMle("router id requested and provided!");
     }
 
-    if (IsRouterIdValid(routerId))
+    router = GetRouter(routerId);
+
+    if (router != NULL)
     {
-        memcpy(&mRouters[routerId].mMacAddr, macAddr64Tlv.GetMacAddr(), sizeof(mRouters[routerId].mMacAddr));
+        memcpy(&router->mMacAddr, macAddr64Tlv.GetMacAddr(), sizeof(router->mMacAddr));
     }
     else
     {
@@ -3428,16 +3449,17 @@ exit:
     }
 }
 
-void MleRouter::HandleAddressRelease(void *aContext, Coap::Header &aHeader, Message &aMessage,
-                                     const Ip6::MessageInfo &aMessageInfo)
+void MleRouter::HandleAddressRelease(void *aContext, otCoapHeader *aHeader, otMessage aMessage,
+                                     const otMessageInfo *aMessageInfo)
 {
-    static_cast<MleRouter *>(aContext)->HandleAddressRelease(aHeader, aMessage, aMessageInfo);
+    static_cast<MleRouter *>(aContext)->HandleAddressRelease(
+        *static_cast<Coap::Header *>(aHeader), *static_cast<Message *>(aMessage),
+        *static_cast<const Ip6::MessageInfo *>(aMessageInfo));
 }
 
 void MleRouter::HandleAddressRelease(Coap::Header &aHeader, Message &aMessage,
                                      const Ip6::MessageInfo &aMessageInfo)
 {
-    ThreadError error = kThreadError_None;
     ThreadRloc16Tlv rlocTlv;
     ThreadExtMacAddressTlv macAddr64Tlv;
     uint8_t routerId;
@@ -3449,15 +3471,16 @@ void MleRouter::HandleAddressRelease(Coap::Header &aHeader, Message &aMessage,
     otLogInfoMle("Received address release");
 
     SuccessOrExit(ThreadTlv::GetTlv(aMessage, ThreadTlv::kRloc16, sizeof(rlocTlv), rlocTlv));
-    VerifyOrExit(rlocTlv.IsValid(), ;);
+    VerifyOrExit(rlocTlv.IsValid(),);
 
-    SuccessOrExit(error = ThreadTlv::GetTlv(aMessage, ThreadTlv::kExtMacAddress, sizeof(macAddr64Tlv), macAddr64Tlv));
-    VerifyOrExit(macAddr64Tlv.IsValid(), error = kThreadError_Parse);
+    SuccessOrExit(ThreadTlv::GetTlv(aMessage, ThreadTlv::kExtMacAddress, sizeof(macAddr64Tlv), macAddr64Tlv));
+    VerifyOrExit(macAddr64Tlv.IsValid(),);
 
-    VerifyOrExit(IsRouterIdValid(routerId = GetRouterId(rlocTlv.GetRloc16())), error = kThreadError_Parse);
+    routerId = GetRouterId(rlocTlv.GetRloc16());
+    router = GetRouter(routerId);
 
-    router = &mRouters[routerId];
-    VerifyOrExit(memcmp(&router->mMacAddr, macAddr64Tlv.GetMacAddr(), sizeof(router->mMacAddr)) == 0, ;);
+    VerifyOrExit(router != NULL &&
+                 memcmp(&router->mMacAddr, macAddr64Tlv.GetMacAddr(), sizeof(router->mMacAddr)) == 0,);
 
     ReleaseRouterId(routerId);
     SendAddressReleaseResponse(aHeader, aMessageInfo);

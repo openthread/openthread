@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="12.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Project="openthread.configuration.props" /> 
+  <Import Project="openthread.configuration.props" />
   <PropertyGroup Label="Globals">
     <ProjectGuid>{9B33C190-5D07-40BF-9536-68843DC5D7AF}</ProjectGuid>
     <TemplateGuid>{8c0e3d8b-df43-455b-815a-4a0e72973bc6}</TemplateGuid>
@@ -64,9 +64,12 @@
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\src\core\coap\coap_base.cpp" />
     <ClCompile Include="..\..\src\core\coap\coap_client.cpp" />
     <ClCompile Include="..\..\src\core\coap\coap_header.cpp" />
     <ClCompile Include="..\..\src\core\coap\coap_server.cpp" />
+    <ClCompile Include="..\..\src\core\coap\secure_coap_client.cpp" />
+    <ClCompile Include="..\..\src\core\coap\secure_coap_server.cpp" />
     <ClCompile Include="..\..\src\core\common\crc16.cpp" />
     <ClCompile Include="..\..\src\core\common\logging.cpp" />
     <ClCompile Include="..\..\src\core\common\message.cpp" />
@@ -123,14 +126,18 @@
     <ClCompile Include="..\..\src\core\thread\thread_netif.cpp" />
     <ClCompile Include="..\..\src\core\thread\thread_tlvs.cpp" />
     <ClCompile Include="..\..\src\core\utils\slaac_address.cpp" />
+    <ClCompile Include="..\..\src\core\utils\jam_detector.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\include\openthread.h" />
     <ClInclude Include="..\..\include\openthread-types.h" />
     <ClInclude Include="..\..\include\openthread-windows-config.h" />
+    <ClInclude Include="..\..\src\core\coap\coap_base.hpp" />
     <ClInclude Include="..\..\src\core\coap\coap_client.hpp" />
     <ClInclude Include="..\..\src\core\coap\coap_header.hpp" />
     <ClInclude Include="..\..\src\core\coap\coap_server.hpp" />
+    <ClInclude Include="..\..\src\core\coap\secure_coap_client.hpp" />
+    <ClInclude Include="..\..\src\core\coap\secure_coap_server.hpp" />
     <ClInclude Include="..\..\src\core\common\code_utils.hpp" />
     <ClInclude Include="..\..\src\core\common\crc16.hpp" />
     <ClInclude Include="..\..\src\core\common\debug.hpp" />
@@ -200,6 +207,7 @@
     <ClInclude Include="..\..\src\core\thread\thread_uris.hpp" />
     <ClInclude Include="..\..\src\core\thread\topology.hpp" />
     <ClInclude Include="..\..\src\core\utils\slaac_address.hpp" />
+    <ClInclude Include="..\..\src\core\utils\jam_detector.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets" />

@@ -252,10 +252,12 @@ exit:
     otLogFuncExitErr(error);
 }
 
-void JoinerRouter::HandleRelayTransmit(void *aContext, Coap::Header &aHeader,
-                                       Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
+void JoinerRouter::HandleRelayTransmit(void *aContext, otCoapHeader *aHeader, otMessage aMessage,
+                                       const otMessageInfo *aMessageInfo)
 {
-    static_cast<JoinerRouter *>(aContext)->HandleRelayTransmit(aHeader, aMessage, aMessageInfo);
+    static_cast<JoinerRouter *>(aContext)->HandleRelayTransmit(
+        *static_cast<Coap::Header *>(aHeader), *static_cast<Message *>(aMessage),
+        *static_cast<const Ip6::MessageInfo *>(aMessageInfo));
 }
 
 void JoinerRouter::HandleRelayTransmit(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
@@ -417,7 +419,7 @@ ThreadError JoinerRouter::SendJoinerEntrust(const Ip6::MessageInfo &aMessageInfo
     SuccessOrExit(error = mCoapClient.SendMessage(*message, messageInfo));
 
     otLogInfoMeshCoP("Sent joiner entrust length = %d", message->GetLength());
-    otLogCertMeshCoP("[THCI] direction=send | msg_type=JOIN_ENT.ntf");
+    otLogCertMeshCoP("[THCI] direction=send | type=JOIN_ENT.ntf");
 
 exit:
 

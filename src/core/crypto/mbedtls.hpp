@@ -64,7 +64,7 @@ public:
 #if OPENTHREAD_ENABLE_DTLS
         kMemorySize = 2048 * sizeof(void *), ///< Size of memory buffer (bytes).
 #else
-        kMemorySize = 512,                   ///< Size of memory buffer (bytes).
+        kMemorySize = 384,                   ///< Size of memory buffer (bytes).
 #endif
     };
 
